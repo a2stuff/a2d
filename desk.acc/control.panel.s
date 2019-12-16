@@ -1585,10 +1585,13 @@ done:   rts
 filename:
         PASCAL_STRING "DESKTOP2"
 
+filename_buffer:
+        .res 65
+
 write_buffer:
         .res DeskTop::Settings::length
 
-        DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
+        DEFINE_OPEN_PARAMS open_params, filename_buffer, DA_IO_BUFFER
         DEFINE_SET_MARK_PARAMS set_mark_params, DESKTOP2_SETTINGS_OFFSET
         DEFINE_WRITE_PARAMS write_params, write_buffer, DeskTop::Settings::length
         DEFINE_CLOSE_PARAMS close_params
@@ -1602,6 +1605,40 @@ write_buffer:
         sta     ALTZPOFF        ; Main ZP, ROM in, like ProDOS MLI wants.
         lda     ROMIN2
 
+        ;; Write to the original file location
+        ldax    #filename_buffer
+        jsr     copy_desktop_orig_prefix
+        jsr     do_write
+
+        ;; Write to RAMCard copy, if necessary
+        jsr     get_copied_to_ramcard_flag
+        beq     done
+        ldax    #filename_buffer
+        jsr     copy_ramcard_prefix
+        jsr     do_write
+
+done:   sta     ALTZPON         ; Aux ZP, LCBANK1 in, like DeskTop wants.
+        lda     LCBANK1
+        lda     LCBANK1
+        rts
+
+.proc do_write
+        ;; Append filename to buffer
+        inc     filename_buffer ; Add '/' separator
+        ldx     filename_buffer
+        lda     #'/'
+        sta     filename_buffer,x
+
+        ldx     #0              ; Append filename
+        ldy     filename_buffer
+:       inx
+        iny
+        lda     filename,x
+        sta     filename_buffer,y
+        cpx     filename
+        bne     :-
+        sty     filename_buffer
+
         ;; Write to the file
         MLI_CALL OPEN, open_params
         bcs     done
@@ -1613,13 +1650,65 @@ write_buffer:
         bcs     close
         MLI_CALL WRITE, write_params
 close:  MLI_CALL CLOSE, close_params
+done:   rts
+.endproc
 
-done:   sta     ALTZPON         ; Aux ZP, LCBANK1 in, like DeskTop wants.
+.endproc
+
+
+;;; ============================================================
+
+        dummy_address := $1234
+
+
+
+;;; Assert: ALTZPOFF
+.proc get_copied_to_ramcard_flag
+        lda     LCBANK2
+        lda     LCBANK2
+        lda     COPIED_TO_RAMCARD_FLAG
+        tax
+        lda     LCBANK1
+        lda     LCBANK1
+        txa
+        rts
+.endproc
+
+;;; Assert: ALTZPOFF
+.proc copy_ramcard_prefix
+        stax    @addr
+        lda     LCBANK2
+        lda     LCBANK2
+
+        ldx     RAMCARD_PREFIX
+:       lda     RAMCARD_PREFIX,x
+        @addr := *+1
+        sta     dummy_address,x
+        dex
+        bpl     :-
+
         lda     LCBANK1
         lda     LCBANK1
         rts
 .endproc
 
+;;; Assert: ALTZPOFF
+.proc copy_desktop_orig_prefix
+        stax    @addr
+        lda     LCBANK2
+        lda     LCBANK2
+
+        ldx     DESKTOP_ORIG_PREFIX
+:       lda     DESKTOP_ORIG_PREFIX,x
+        @addr := *+1
+        sta     dummy_address,x
+        dex
+        bpl     :-
+
+        lda     LCBANK1
+        lda     LCBANK1
+        rts
+.endproc
 
 ;;; ============================================================
 

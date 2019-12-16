@@ -1251,24 +1251,28 @@ L9C09:  sta     warning_dialog_num
         yax_call desktop_main::invoke_dialog_proc, $0C, warning_dialog_num
         rts
 
-        DEFINE_OPEN_PARAMS open_params, $1C00, $800
+filename_buffer := $1C00
+
+        DEFINE_OPEN_PARAMS open_params, filename_buffer, $800
         DEFINE_WRITE_PARAMS write_params, $C00, $800
         DEFINE_CLOSE_PARAMS flush_close_params
 
-L9C26:  addr_call copy_desktop_orig_prefix, $1C00
-        inc     $1C00
-        ldx     $1C00
+L9C26:  addr_call copy_desktop_orig_prefix, filename_buffer
+        inc     filename_buffer ; Append '/' separator
+        ldx     filename_buffer
         lda     #'/'
-        sta     $1C00,x
-        ldx     #$00
-        ldy     $1C00
-L9C3D:  inx
+        sta     filename_buffer,x
+
+        ldx     #$00            ; Append filename
+        ldy     filename_buffer
+:       inx
         iny
-        lda     L9C9A,x
-        sta     $1C00,y
-        cpx     L9C9A
-        bne     L9C3D
-        sty     $1C00
+        lda     filename,x
+        sta     filename_buffer,y
+        cpx     filename
+        bne     :-
+        sty     filename_buffer
+
 L9C4D:  yax_call MLI_RELAY, OPEN, open_params
         beq     L9C60
         lda     #$00
@@ -1292,9 +1296,10 @@ L9C81:  yax_call MLI_RELAY, FLUSH, flush_close_params
         yax_call MLI_RELAY, CLOSE, flush_close_params
         rts
 
-        DEFINE_OPEN_PARAMS open_params2, L9C9A, $800
+        DEFINE_OPEN_PARAMS open_params2, filename, $800
 
-L9C9A:  PASCAL_STRING "Selector.List"
+filename:
+        PASCAL_STRING "Selector.List"
 
         DEFINE_READ_PARAMS read_params2, $C00, $800
         DEFINE_WRITE_PARAMS write_params2, $C00, $800
