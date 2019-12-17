@@ -44,17 +44,17 @@ entry:
 
 ;;; ============================================================
 
-da_window_id    = 60
-da_width        = screen_width / 3
-da_height       = screen_height / 3
-da_left         = (screen_width - da_width)/2
+kDAWindowId    = 60
+da_width        = kScreenWidth / 3
+da_height       = kScreenHeight / 3
+da_left         = (kScreenWidth - da_width)/2
 da_top          = 50
 
 str_title:
         PASCAL_STRING "Eyes"
 
 .proc winfo
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
 title:          .addr   str_title
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -65,10 +65,10 @@ vthumbmax:      .byte   32
 vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   screen_width / 5
-mincontlength:  .word   screen_height / 5
-maxcontwidth:   .word   screen_width
-maxcontlength:  .word   screen_height
+mincontwidth:   .word   kScreenWidth / 5
+mincontlength:  .word   kScreenHeight / 5
+maxcontwidth:   .word   kScreenWidth
+maxcontlength:  .word   kScreenHeight
 port:
 viewloc:        DEFINE_POINT da_left, da_top
 mapbits:        .addr   MGTK::screen_mapbits
@@ -120,7 +120,7 @@ moved:          .byte   0
 .endproc
 
 .proc winport_params
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endproc
 
@@ -134,7 +134,7 @@ flag:   .byte   MGTK::zp_overwrite
 .endproc
 
 .proc screentowindow_params
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
         DEFINE_POINT 0, 0, screen
         DEFINE_POINT 0, 0, window
 .endproc
@@ -156,8 +156,8 @@ textback:       .byte   0
 textfont:       .addr   0
 .endproc
 
-grow_box_width = 17
-grow_box_height = 7
+kGrowBoxWidth = 17
+kGrowBoxHeight = 7
 
 .proc grow_box_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
@@ -325,10 +325,10 @@ common: lda     dragwindow_params::moved
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         sub16   winfo::maprect::x2, mx, tmpw
-        cmp16   #grow_box_width, tmpw
+        cmp16   #kGrowBoxWidth, tmpw
         bcc     nope
         sub16   winfo::maprect::y2, my, tmpw
-        cmp16   #grow_box_height, tmpw
+        cmp16   #kGrowBoxHeight, tmpw
         bcc     nope
 
         ;; Initiate the grow... re-using the drag logic
@@ -410,8 +410,8 @@ pos_r:        DEFINE_POINT 0, 0, pos_r
 
         ;; Draw resize box
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        sub16   winfo::maprect::x2, #grow_box_width, grow_box_params::viewloc::xcoord
-        sub16   winfo::maprect::y2, #grow_box_height, grow_box_params::viewloc::ycoord
+        sub16   winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
+        sub16   winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
         MGTK_CALL MGTK::PaintBits, grow_box_params
 
         ;; Draw outline

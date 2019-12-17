@@ -12,12 +12,12 @@
 
 ;;; Constants needed in both main and aux
 
-        menu_id_apple = 1
-        menu_id_file = 2
-        menu_id_view = 4
-        menu_id_special = 5
-        menu_id_startup = 8
-        menu_id_selector = 3
+        kMenuIdApple = 1
+        kMenuIdFile = 2
+        kMenuIdView = 4
+        kMenuIdSpecial = 5
+        kMenuIdStartup = 8
+        kMenuIdSelector = 3
 
 ;;; Various routines callable from MAIN
 

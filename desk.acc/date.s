@@ -209,10 +209,10 @@ which_area:.byte   0
 window_id: .byte   0
 .endproc
 
-        da_window_id = 100
+        kDAWindowId = 100
 
 .proc screentowindow_params
-window_id:     .byte   da_window_id
+window_id:     .byte   kDAWindowId
 screen:
 screenx:.word   0
 screeny:.word   0
@@ -222,7 +222,7 @@ windowy:.word   0
 .endproc
 
 .proc closewindow_params
-window_id:     .byte   da_window_id
+window_id:     .byte   kDAWindowId
 .endproc
         .byte $00,$01           ; ???
 
@@ -232,7 +232,7 @@ penmode:   .byte   $02             ; this should be normal, but we do inverts ??
         .byte   $06             ; ???
 
 .proc winfo
-window_id:     .byte   da_window_id
+window_id:     .byte   kDAWindowId
 options:.byte   MGTK::Option::dialog_box
 title:  .addr   0
 hscroll:.byte   MGTK::Scroll::option_none
@@ -387,7 +387,7 @@ update_selection:
         MGTK_CALL MGTK::SetPenMode, penmode_params
         MGTK_CALL MGTK::SetPattern, white_pattern
         lda     findwindow_params::window_id
-        cmp     #da_window_id
+        cmp     #kDAWindowId
         bne     miss
         lda     findwindow_params::which_area
         bne     hit
@@ -520,20 +520,20 @@ decrement_table:
         .addr   0, decrement_day, decrement_month, decrement_year
 
 
-        day_min = 1
-        day_max = 31
-        month_min = 1
-        month_max = 12
-        year_min = 0
-        year_max = 99
+        kDayMin = 1
+        kDayMax = 31
+        kMonthMin = 1
+        kMonthMax = 12
+        kYearMin = 0
+        kYearMax = 99
 
 increment_day:
         clc
         lda     day
         adc     #1
-        cmp     #day_max+1
+        cmp     #kDayMax+1
         bne     :+
-        lda     #month_min
+        lda     #kMonthMin
 :       sta     day
         jmp     prepare_day_string
 
@@ -541,9 +541,9 @@ increment_month:
         clc
         lda     month
         adc     #1
-        cmp     #month_max+1
+        cmp     #kMonthMax+1
         bne     :+
-        lda     #month_min
+        lda     #kMonthMin
 :       sta     month
         jmp     prepare_month_string
 
@@ -551,30 +551,30 @@ increment_year:
         clc
         lda     year
         adc     #1
-        cmp     #year_max+1
+        cmp     #kYearMax+1
         bne     :+
-        lda     #year_min
+        lda     #kYearMin
 :       sta     year
         jmp     prepare_year_string
 
 decrement_day:
         dec     day
         bne     :+
-        lda     #day_max
+        lda     #kDayMax
         sta     day
 :       jmp     prepare_day_string
 
 decrement_month:
         dec     month
         bne     :+
-        lda     #month_max
+        lda     #kMonthMax
         sta     month
 :       jmp     prepare_month_string
 
 decrement_year:
         dec     year
         bpl     :+
-        lda     #year_max
+        lda     #kYearMax
         sta     year
 :       jmp     prepare_year_string
 

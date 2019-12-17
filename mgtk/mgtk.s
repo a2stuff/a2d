@@ -13,8 +13,8 @@
 .proc mgtk
         .org $4000
 
-        screen_width := 560
-        screen_height := 192
+        kScreenWidth := 560
+        kScreenHeight := 192
 
 ;;; ============================================================
 
@@ -3948,7 +3948,7 @@ stack_ptr_stash:
 viewloc:        .word   0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        .word   0, 0, screen_width-1, screen_height-1
+maprect:        .word   0, 0, kScreenWidth-1, kScreenHeight-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         .word   0, 0
@@ -3965,7 +3965,7 @@ textfont:       .addr   0
 viewloc:        .word   0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        .word   0, 0, screen_width-1, screen_height-1
+maprect:        .word   0, 0, kScreenWidth-1, kScreenHeight-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         .word   0, 0
@@ -4937,8 +4937,8 @@ desktop_port_y := set_desktop_port::port_y
 .proc fill_rect_params
 left:   .word   0
 top:    .word   0
-right:  .word   screen_width-1
-bottom: .word   screen_height-1
+right:  .word   kScreenWidth-1
+bottom: .word   kScreenHeight-1
 .endproc
         fill_rect_top := fill_rect_params::top
 
@@ -9759,16 +9759,16 @@ fail:   clc
         bcc     :-
 
         sec
-        lda     #<(screen_width-1)
+        lda     #<(kScreenWidth-1)
         sbc     drag_initialpos::xcoord
-        lda     #>(screen_width-1)
+        lda     #>(kScreenWidth-1)
         sbc     drag_initialpos::xcoord+1
         bmi     no_grow
 
         sec
-        lda     #<(screen_height-1)
+        lda     #<(kScreenHeight-1)
         sbc     drag_initialpos::ycoord
-        lda     #>(screen_height-1)
+        lda     #>(kScreenHeight-1)
         sbc     drag_initialpos::ycoord+1
         bmi     no_grow
         jsr     position_kbd_mouse
@@ -9843,15 +9843,15 @@ xpositive:
         sta     kbd_mouse_y
         plp
         bpl     yclamp
-        cmp     #<screen_height
+        cmp     #<kScreenHeight
         bcc     :+
         lda     #0
         sta     kbd_mouse_y
 :       jmp     position_kbd_mouse
 
-yclamp: cmp     #<screen_height
+yclamp: cmp     #<kScreenHeight
         bcc     :-
-        lda     #<(screen_height-1)
+        lda     #<(kScreenHeight-1)
         sta     kbd_mouse_y
         bne     :-                  ; always
 .endproc
@@ -9928,14 +9928,14 @@ not_down:
         sta     kbd_mouse_x+1
         sec
         lda     kbd_mouse_x
-        sbc     #<(screen_width-1)
+        sbc     #<(kScreenWidth-1)
         lda     kbd_mouse_x+1
-        sbc     #>(screen_width-1)
+        sbc     #>(kScreenWidth-1)
         bmi     out_of_bounds
 
-        lda     #>(screen_width-1)
+        lda     #>(kScreenWidth-1)
         sta     kbd_mouse_x+1
-        lda     #<(screen_width-1)
+        lda     #<(kScreenWidth-1)
         sta     kbd_mouse_x
 out_of_bounds:
         jmp     position_kbd_mouse
@@ -10063,9 +10063,9 @@ min_ok: inc     force_tracking_change
         bmi     :+
 
         lda     kbd_mouse_x
-        sbc     #<(screen_width-1)
+        sbc     #<(kScreenWidth-1)
         lda     kbd_mouse_x+1
-        sbc     #>(screen_width-1)
+        sbc     #>(kScreenWidth-1)
         beq     is_max
         sec
 
@@ -10074,10 +10074,10 @@ min_ok: inc     force_tracking_change
 
 is_max: jsr     get_winframerect
         sec
-        lda     #<(screen_width-1)
+        lda     #<(kScreenWidth-1)
         sbc     winrect::x1
         tax
-        lda     #>(screen_width-1)
+        lda     #>(kScreenWidth-1)
         sbc     winrect::x1+1
         beq     :+
 
@@ -10225,8 +10225,8 @@ set_clamps:
         jsr     call_mouse
 end:    rts
 
-clamp_x_table:  .word   screen_width-1, screen_width/2-1, screen_width/4-1, screen_width/8-1
-clamp_y_table:  .word   screen_height-1, screen_height/2-1, screen_height/4-1, screen_height/8-1
+clamp_x_table:  .word   kScreenWidth-1, kScreenWidth/2-1, kScreenWidth/4-1, kScreenWidth/8-1
+clamp_y_table:  .word   kScreenHeight-1, kScreenHeight/2-1, kScreenHeight/4-1, kScreenHeight/8-1
 
 .endproc
 

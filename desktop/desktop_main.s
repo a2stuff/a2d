@@ -347,7 +347,7 @@ dispatch_table:
         menu1_start := *
         .addr   cmd_about
         .addr   cmd_noop        ; --------
-        .repeat ::max_desk_acc_count
+        .repeat ::kMaxDeskAccCount
         .addr   cmd_deskacc
         .endrepeat
 
@@ -600,12 +600,12 @@ start:  jsr     clear_selection
         ldy     #IconEntry::state ; set state to open
         lda     (ptr),y
         beq     continue
-        ora     #icon_entry_open_mask
+        ora     #kIconEntryOpenMask
         sta     (ptr),y
 
         iny                     ; IconEntry::win_type
         lda     (ptr),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         sta     winid
         jsr     zero_grafport5_coords
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
@@ -697,21 +697,21 @@ changed:
 
 ;;; ============================================================
 
-max_removable_devices = 8
+kMaxRemovableDevices = 8
 
 removable_device_table:
         .byte   0               ; num entries
-        .res    max_removable_devices, 0
+        .res    kMaxRemovableDevices, 0
 
 ;;; Updated by check_disks_in_devices
 disk_in_device_table:
         .byte   0               ; num entries
-        .res    max_removable_devices, 0
+        .res    kMaxRemovableDevices, 0
 
 ;;; Snapshot of previous results; used to detect changes.
 last_disk_in_devices_table:
         .byte   0               ; num entries
-        .res    max_removable_devices, 0
+        .res    kMaxRemovableDevices, 0
 
 ;;; ============================================================
 
@@ -928,7 +928,7 @@ begin:
         bne     :+
         addr_jump invoke_desk_acc, path
 
-:       lda     #ERR_FILE_NOT_OPENABLE
+:       lda     #kErrFileNotOpenable
         jsr     show_alert_and_fail
 
 launch: ITK_RELAY_CALL IconTK::RemoveAll, 0 ; volume icons
@@ -984,7 +984,7 @@ not_found:
         dex
         bne     :-
 
-no_bs:  lda     #ERR_BASIC_SYS_NOT_FOUND
+no_bs:  lda     #kErrBasicSysNotFound
 
 show_alert_and_fail:
         jsr     ShowAlert
@@ -1860,11 +1860,11 @@ done:   rts
 
         ldy     #IconEntry::win_type
         lda     (ptr),y
-        and     #icon_entry_type_mask
+        and     #kIconEntryTypeMask
 
-        cmp     #icon_entry_type_trash
+        cmp     #kIconEntryTypeTrash
         beq     next_file
-        cmp     #icon_entry_type_dir
+        cmp     #kIconEntryTypeDir
         bne     maybe_open_file
 
         ;; Directory
@@ -2375,7 +2375,7 @@ L5265:  .byte   0
 
 :       dex
         lda     win_view_by_table,x
-        cmp     #view_by_name
+        cmp     #kViewByName
         bne     :+
         rts
 
@@ -2383,7 +2383,7 @@ L5265:  .byte   0
         bne     :+
         jsr     close_active_window
 :       jsr     update_view_menu_check
-        lda     #view_by_name
+        lda     #kViewByName
         jmp     view_by_nonicon_common
 .endproc
 
@@ -2396,7 +2396,7 @@ L5265:  .byte   0
 
 :       dex
         lda     win_view_by_table,x
-        cmp     #view_by_date
+        cmp     #kViewByDate
         bne     :+
         rts
 
@@ -2404,7 +2404,7 @@ L5265:  .byte   0
         bne     :+
         jsr     close_active_window
 :       jsr     update_view_menu_check
-        lda     #view_by_date
+        lda     #kViewByDate
         jmp     view_by_nonicon_common
 .endproc
 
@@ -2417,7 +2417,7 @@ L5265:  .byte   0
 
 :       dex
         lda     win_view_by_table,x
-        cmp     #view_by_size
+        cmp     #kViewBySize
         bne     :+
         rts
 
@@ -2425,7 +2425,7 @@ L5265:  .byte   0
         bne     :+
         jsr     close_active_window
 :       jsr     update_view_menu_check
-        lda     #view_by_size
+        lda     #kViewBySize
         jmp     view_by_nonicon_common
 .endproc
 
@@ -2438,7 +2438,7 @@ L5265:  .byte   0
 
 :       dex
         lda     win_view_by_table,x
-        cmp     #view_by_type
+        cmp     #kViewByType
         bne     :+
         rts
 
@@ -2446,7 +2446,7 @@ L5265:  .byte   0
         bne     :+
         jsr     close_active_window
 :       jsr     update_view_menu_check
-        lda     #view_by_type
+        lda     #kViewByType
         jmp     view_by_nonicon_common
 .endproc
 
@@ -2875,7 +2875,7 @@ L55D1:  ldx     L544A
         stax    $06
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         sta     selected_window_index
         lda     #1
         sta     selected_icon_count
@@ -2888,7 +2888,7 @@ L55F0:  ldx     L544A
         stax    $06
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         sta     getwinport_params2::window_id
         beq     L5614
         jsr     L56F9
@@ -2907,7 +2907,7 @@ L562C:  lda     icon_param
         stax    $06
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         sta     getwinport_params2::window_id
         beq     L564A
         jsr     L56F9
@@ -3274,7 +3274,7 @@ L5942:  dex
         jsr     create_volume_icon ; A = unit num, Y = device num, X = icon index
         cmp     #ERR_DUPLICATE_VOLUME
         bne     :+
-        lda     #ERR_DUPLICATE_VOL_NAME
+        lda     #kErrDuplicateVolName
         sta     pending_alert
 :       dec     devlst_index
         lda     devlst_index
@@ -3900,11 +3900,11 @@ handle_double_click:
         stax    $06
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #icon_entry_type_mask
+        and     #kIconEntryTypeMask
 
-        cmp     #icon_entry_type_trash
+        cmp     #kIconEntryTypeTrash
         beq     done
-        cmp     #icon_entry_type_dir
+        cmp     #kIconEntryTypeDir
         bne     file
 
         ;; Directory
@@ -4303,14 +4303,14 @@ cont:   sta     cached_window_icon_count
 
         ldy     #IconEntry::state
         lda     (icon_ptr),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         beq     no_icon         ; ???
 
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
-        and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
+        and     #AS_BYTE(~kIconEntryOpenMask) ; clear open_flag
         sta     (icon_ptr),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         sta     selected_window_index
         jsr     zero_grafport5_coords
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
@@ -4679,7 +4679,7 @@ disable_menu_items:
         MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
 
         copy    #MGTK::disableitem_disable, disableitem_params::disable
-        copy    #menu_id_file, disableitem_params::menu_id
+        copy    #kMenuIdFile, disableitem_params::menu_id
         copy    #desktop_aux::menu_item_id_new_folder, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         copy    #desktop_aux::menu_item_id_close, disableitem_params::menu_item
@@ -4710,7 +4710,7 @@ check_view_menu_items:
         copy    #MGTK::disableitem_disable, disableitem_params::disable
 
         ;; File
-        copy    #menu_id_file, disableitem_params::menu_id
+        copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_open
         jsr     disable_menu_item
         lda     #desktop_aux::menu_item_id_get_info
@@ -4719,7 +4719,7 @@ check_view_menu_items:
         jsr     disable_menu_item
 
         ;; Special
-        copy    #menu_id_special, disableitem_params::menu_id
+        copy    #kMenuIdSpecial, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_lock
         jsr     disable_menu_item
         lda     #desktop_aux::menu_item_id_unlock
@@ -4740,7 +4740,7 @@ disable_menu_item:
         copy    #MGTK::disableitem_enable, disableitem_params::disable
 
         ;; File
-        copy    #menu_id_file, disableitem_params::menu_id
+        copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_open
         jsr     enable_menu_item
         lda     #desktop_aux::menu_item_id_get_info
@@ -4749,7 +4749,7 @@ disable_menu_item:
         jsr     enable_menu_item
 
         ;; Special
-        copy    #menu_id_special, disableitem_params::menu_id
+        copy    #kMenuIdSpecial, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_lock
         jsr     enable_menu_item
         lda     #desktop_aux::menu_item_id_unlock
@@ -4774,11 +4774,11 @@ enable:
 disable:
         copy    #MGTK::disableitem_disable, disableitem_params::disable
 
-:       copy    #menu_id_special, disableitem_params::menu_id
+:       copy    #kMenuIdSpecial, disableitem_params::menu_id
         copy    #desktop_aux::menu_item_id_eject, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
-        copy    #menu_id_special, disableitem_params::menu_id
+        copy    #kMenuIdSpecial, disableitem_params::menu_id
         copy    #desktop_aux::menu_item_id_check_drive, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
@@ -4798,7 +4798,7 @@ disable:
 enable:
         copy    #MGTK::disableitem_enable, disableitem_params::disable
 
-:       copy    #menu_id_selector, disableitem_params::menu_id
+:       copy    #kMenuIdSelector, disableitem_params::menu_id
         lda     #menu_item_id_selector_edit
         jsr     configure_menu_item
         lda     #menu_item_id_selector_delete
@@ -5188,7 +5188,7 @@ no_win:
         jsr     check_item
 
 update_view:
-        lda     #desktop_aux::menu_item_id_view_by_icon
+        lda     #desktop_aux::kMenuItemIdViewByIcon
         sta     checkitem_params::menu_item
         sta     checkitem_params::check
         jsr     check_item
@@ -5239,12 +5239,12 @@ done:   copy    cached_window_id, active_window_id
 
         ldy     #IconEntry::win_type
         lda     (ptr),y
-        ora     #icon_entry_open_mask ; set open_flag
+        ora     #kIconEntryOpenMask ; set open_flag
         sta     (ptr),y
 
         ldy     #IconEntry::win_type ; get window id
         lda     (ptr),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         sta     getwinport_params2::window_id
 
         beq     :+               ; window 0 = desktop
@@ -5585,7 +5585,7 @@ flag:   .byte   0
         MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
 
         copy    #MGTK::disableitem_enable, disableitem_params::disable
-        copy    #menu_id_file, disableitem_params::menu_id
+        copy    #kMenuIdFile, disableitem_params::menu_id
         copy    #desktop_aux::menu_item_id_new_folder, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         copy    #desktop_aux::menu_item_id_close, disableitem_params::menu_item
@@ -6212,7 +6212,7 @@ L7449:  .word   0
         pha
         add16   icon_ptr, #IconEntry::len, name_ptr
         pla
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         bne     has_parent      ; A = window_id
 
         ;; --------------------------------------------------
@@ -6412,7 +6412,7 @@ has_parent:
         stax    icon_ptr
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         beq     :+
 
         ;; Windowed (folder) icon
@@ -6452,10 +6452,10 @@ icon_type:      .byte   0
 icon_height:    .word   0
 L7625:  .byte   0               ; ???
 
-        max_icon_height = 17
+        kMaxIconHeight = 17
 
 initial_coords:                 ; first icon in window
-        DEFINE_POINT  52,16 + max_icon_height, initial_coords
+        DEFINE_POINT  52,16 + kMaxIconHeight, initial_coords
 
 row_coords:                     ; first icon in current row
         DEFINE_POINT 0, 0, row_coords
@@ -7196,7 +7196,7 @@ more:   tax
         stax    entry_ptr
         ldy     #IconEntry::win_type
         lda     (entry_ptr),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         cmp     hi           ; BUG: from old code that iterated all icons???
         bne     :+
         inc     icon_num
@@ -7435,7 +7435,7 @@ break:  lda     LCBANK1         ; Done copying records
         ldx     cached_window_id
         dex
         lda     win_view_by_table,x
-        cmp     #view_by_name
+        cmp     #kViewByName
         beq     :+
         jmp     check_date
 
@@ -7543,7 +7543,7 @@ inext:  inc     record_num
         ;; --------------------------------------------------
 
 check_date:
-        cmp     #view_by_date
+        cmp     #kViewByDate
         beq     :+
         jmp     check_size
 
@@ -7627,7 +7627,7 @@ next:   inc     index
         ;; --------------------------------------------------
 
 check_size:
-        cmp     #view_by_size
+        cmp     #kViewBySize
         beq     :+
         jmp     check_type
 
@@ -7724,7 +7724,7 @@ next:   inc     index
         ;; --------------------------------------------------
 
 check_type:
-        cmp     #view_by_type
+        cmp     #kViewByType
         beq     :+
         rts
 
@@ -8922,8 +8922,8 @@ buffer: .res    16, 0            ; length overwritten with '/'
         DEFINE_ON_LINE_PARAMS on_line_params,, cvi_data_buffer
 
 .proc create_volume_icon
-        max_icon_width = 53
-        max_icon_height = 15
+        kMaxIconWidth = 53
+        kMaxIconHeight = 15
 
         sta     unit_number
         dex                     ; icon numbers are 1-based, and Trash is #1,
@@ -9028,14 +9028,14 @@ create_icon:
 
         ;; Center it horizontally
         ldy     #IconDefinition::maprect + MGTK::Rect::x2
-        sub16in #max_icon_width, (icon_defn_ptr),y, offset
+        sub16in #kMaxIconWidth, (icon_defn_ptr),y, offset
         lsr16   offset          ; offset = (max_width - icon_width) / 2
         ldy     #IconEntry::iconx
         add16in (icon_ptr),y, offset, (icon_ptr),y
 
         ;; Adjust vertically
         ldy     #IconDefinition::maprect + MGTK::Rect::y2
-        sub16in #max_icon_height, (icon_defn_ptr),y, offset
+        sub16in #kMaxIconHeight, (icon_defn_ptr),y, offset
         ldy     #IconEntry::icony
         add16in (icon_ptr),y, offset, (icon_ptr),y
 
@@ -9066,8 +9066,8 @@ offset:         .word   0
 ;;;  | 10  9   8   7   6 Trash |
 ;;;  +-------------------------+
 
-        trash_iconx = 506
-        trash_icony = 160
+        kTrashIconX = 506
+        kTrashIconY = 160
 
         deltay = 29
 
@@ -9077,11 +9077,11 @@ desktop_icon_coords_table:
         DEFINE_POINT 490,15 + deltay*2    ; 3
         DEFINE_POINT 490,15 + deltay*3    ; 4
         DEFINE_POINT 490,15 + deltay*4    ; 5
-        DEFINE_POINT 400,trash_icony+2    ; 6
-        DEFINE_POINT 310,trash_icony+2    ; 7
-        DEFINE_POINT 220,trash_icony+2    ; 8
-        DEFINE_POINT 130,trash_icony+2    ; 9
-        DEFINE_POINT  40,trash_icony+2    ; 10
+        DEFINE_POINT 400,kTrashIconY+2    ; 6
+        DEFINE_POINT 310,kTrashIconY+2    ; 7
+        DEFINE_POINT 220,kTrashIconY+2    ; 8
+        DEFINE_POINT 130,kTrashIconY+2    ; 9
+        DEFINE_POINT  40,kTrashIconY+2    ; 10
         DEFINE_POINT 400,15 + deltay*4    ; 11
         DEFINE_POINT 310,15 + deltay*4    ; 12
         DEFINE_POINT 220,15 + deltay*4    ; 13
@@ -9158,7 +9158,7 @@ skip:   lda     icon_params2
         stax    ptr
         ldy     #IconEntry::win_type
         lda     (ptr),y
-        and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
+        and     #AS_BYTE(~kIconEntryOpenMask) ; clear open_flag
         sta     (ptr),y
         jsr     redraw_selected_icons
         jsr     pop_pointers
@@ -9925,7 +9925,7 @@ compute_target_prefix:
         ;; (lower 4 bits are containing window id)
 check_icon_drop_type:
         jsr     get_icon_entry_win_type
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         beq     drop_on_volume_icon ; 0 = desktop (so, volume icon)
 
         ;; Drop is on a file icon.
@@ -12659,10 +12659,10 @@ flag_clear:
 not_found:
         bit     flag
         bpl     :+
-        lda     #ERR_INSERT_DST_DISK
+        lda     #kErrInsertDstDisk
         jmp     show
 
-:       lda     #ERR_INSERT_SRC_DISK
+:       lda     #kErrInsertSrcDisk
 show:   jsr     JT_SHOW_ALERT0
         bne     LA4C2
         jmp     do_on_line
@@ -13660,7 +13660,7 @@ LAEC6:  jsr     prompt_input_loop
         beq     LAEC6
         cmp     #16             ; max filename length
         bcc     LAEE1
-LAED6:  lda     #ERR_NAME_TOO_LONG
+LAED6:  lda     #kErrNameTooLong
         jsr     JT_SHOW_ALERT0
         jsr     draw_filename_prompt
         jmp     LAEC6
@@ -14196,8 +14196,8 @@ set_penmode_xor2:
 ;;; Returns with A=0 if double click, A=$FF otherwise.
 
 .proc detect_double_click
-        double_click_deltax = 5
-        double_click_deltay = 4
+        kDoubleClickDeltaX = 5
+        kDoubleClickDeltaY = 4
 
         ;; Stash initial coords
         ldx     #3
@@ -14254,13 +14254,13 @@ exit:   return  #$FF            ; not double-click
 
         ;; is -delta < x < 0 ?
         lda     delta
-        cmp     #AS_BYTE(-double_click_deltax)
+        cmp     #AS_BYTE(-kDoubleClickDeltaX)
         bcs     check_y
 fail:   return  #$FF
 
         ;; is 0 < x < delta ?
 :       lda     delta
-        cmp     #double_click_deltax
+        cmp     #kDoubleClickDeltaX
         bcs     fail
 
         ;; compute y delta
@@ -14275,12 +14275,12 @@ check_y:
 
         ;; is -delta < y < 0 ?
         lda     delta
-        cmp     #AS_BYTE(-double_click_deltay)
+        cmp     #AS_BYTE(-kDoubleClickDeltaY)
         bcs     ok
 
         ;; is 0 < y < delta ?
 :       lda     delta
-        cmp     #double_click_deltay
+        cmp     #kDoubleClickDeltaY
         bcs     fail
 ok:     return  #0
 .endproc
@@ -14371,9 +14371,9 @@ done:   jmp     reset_grafport3a
         sub16   #200, result, dialog_label_pos
         pla
 
-        ;; y = base + desktop_aux::dialog_label_height * line
+        ;; y = base + desktop_aux::kDialogLabelHeight * line
 skip:   ldx     #0
-        ldy     #desktop_aux::dialog_label_height
+        ldy     #desktop_aux::kDialogLabelHeight
         jsr     Multiply_16_8_16
         stax    dialog_label_pos::ycoord
         add16   dialog_label_pos::ycoord, dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
@@ -15602,7 +15602,7 @@ end:
         jsr     desktop_main::push_pointers
         copy16  #icon_entries, ptr
         ldx     #1
-loop:   cpx     #max_icon_count
+loop:   cpx     #kMaxIconCount
         bne     :+
         jsr     desktop_main::pop_pointers
         jmp     end
@@ -15665,12 +15665,12 @@ trash_name:  PASCAL_STRING " Trash "
         jsr     desktop_main::icon_entry_lookup
         stax    ptr
         ldy     #IconEntry::win_type
-        copy    #icon_entry_type_trash, (ptr),y
+        copy    #kIconEntryTypeTrash, (ptr),y
 
         ldy     #IconEntry::iconx
-        copy16in #desktop_main::create_volume_icon::trash_iconx, (ptr),y
+        copy16in #desktop_main::create_volume_icon::kTrashIconX, (ptr),y
         ldy     #IconEntry::icony
-        copy16in #desktop_main::create_volume_icon::trash_icony, (ptr),y
+        copy16in #desktop_main::create_volume_icon::kTrashIconY, (ptr),y
         ldy     #IconEntry::iconbits
         copy16in #trash_icon, (ptr),y
 
@@ -16069,7 +16069,7 @@ loop:   lda     (da_ptr),y
 next_entry:
         ;; Room for more DAs?
         lda     desk_acc_num
-        cmp     #max_desk_acc_count
+        cmp     #kMaxDeskAccCount
         bcc     :+
         jmp     close_dir
 
@@ -16184,7 +16184,7 @@ process_volume:
 
 :       cmp     #ERR_DUPLICATE_VOLUME
         bne     select_template
-        lda     #ERR_DUPLICATE_VOL_NAME
+        lda     #kErrDuplicateVolName
         sta     desktop_main::pending_alert
 
         ;; This section populates device_name_table -

@@ -227,7 +227,7 @@ L72E2:  lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_ALERT_0
 L72E7:  rts
 
-L72E8:  lda     #ERR_NAME_TOO_LONG
+L72E8:  lda     #kErrNameTooLong
         jsr     JUMP_TABLE_ALERT_0
         rts
 

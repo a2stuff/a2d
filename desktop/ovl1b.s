@@ -60,15 +60,15 @@ key_mods  := * + 3
 ;;; ============================================================
 ;;; Menu definition
 
-        menu_id_apple = 1
-        menu_id_file = 2
-        menu_id_facilities = 3
+        kMenuIdApple = 1
+        kMenuIdFile = 2
+        kMenuIdFacilities = 3
 
 menu_definition:
         DEFINE_MENU_BAR 3
-        DEFINE_MENU_BAR_ITEM menu_id_apple, label_apple, menu_apple
-        DEFINE_MENU_BAR_ITEM menu_id_file, label_file, menu_file
-        DEFINE_MENU_BAR_ITEM menu_id_facilities, label_facilities, menu_facilities
+        DEFINE_MENU_BAR_ITEM kMenuIdApple, label_apple, menu_apple
+        DEFINE_MENU_BAR_ITEM kMenuIdFile, label_file, menu_file
+        DEFINE_MENU_BAR_ITEM kMenuIdFacilities, label_facilities, menu_facilities
 
 menu_apple:
         DEFINE_MENU 5

@@ -64,7 +64,7 @@ stash_stack:  .byte   0
         jmp     create_window
 .endproc
 
-        da_window_id = 51
+        kDAWindowId = 51
 
 ;;; ============================================================
 ;;; Redraw the screen (all windows) after a EventKind::drag
@@ -78,7 +78,7 @@ stash_stack:  .byte   0
         jsr     dest
 
         ;; now check the window pos
-        lda     #da_window_id
+        lda     #kDAWindowId
         jsr     check_window_pos
 
         bit     window_pos_flag
@@ -111,7 +111,7 @@ window_pos_flag:
 check_window_pos:
         sta     getwinport_params_window_id
         lda     winfo_viewloc_ycoord ; is top on screen?
-        cmp     #screen_height-1
+        cmp     #kScreenHeight-1
         bcc     :+              ; yes
         lda     #$80            ; no, so ... ???
         sta     window_pos_flag
@@ -120,7 +120,7 @@ check_window_pos:
 :       MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, setport_params
         lda     getwinport_params_window_id
-        cmp     #da_window_id
+        cmp     #kDAWindowId
         bne     :+
         jmp     draw_window
 
@@ -558,7 +558,7 @@ draw_end:  .byte   $00
 draw_inc:  .byte   $00
 
 .proc closewindow_params
-window_id:     .byte   da_window_id
+window_id:     .byte   kDAWindowId
 .endproc
 
         .byte   $73,$00,$F7,$FF
@@ -585,7 +585,7 @@ setport_params:
         default_height  = $44
 
 .proc winfo
-window_id:     .byte   da_window_id
+window_id:     .byte   kDAWindowId
 options:  .byte   MGTK::Option::go_away_box
 title:  .addr   name
 hscroll:.byte   MGTK::Scroll::option_none
@@ -652,7 +652,7 @@ loop:   tya
         dey
         bpl     loop
 
-        lda     #da_window_id
+        lda     #kDAWindowId
         jsr     check_window_pos
         MGTK_CALL MGTK::FlushEvents
 
@@ -711,7 +711,7 @@ ploop:  lda     position_table+1,y
 on_click:
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-        cmp     #da_window_id
+        cmp     #kDAWindowId
         bne     bail
         lda     findwindow_params::which_area
         bne     :+
@@ -749,7 +749,7 @@ destroy:
 check_title:
         cmp     #MGTK::Area::dragbar
         bne     bail
-        lda     #da_window_id
+        lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         ldx     #$23            ; ???
@@ -770,7 +770,7 @@ check_key:
 ;;; Map click to piece x/y
 
 .proc find_click_piece
-        lda     #da_window_id
+        lda     #kDAWindowId
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     screentowindow_params::windowx+1
@@ -975,7 +975,7 @@ draw_window:
 
         jsr     draw_all
 
-        lda     #da_window_id
+        lda     #kDAWindowId
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, setport_params
@@ -1041,7 +1041,7 @@ saved_zp:
         tya
         pha
         MGTK_CALL MGTK::HideCursor
-        lda     #da_window_id
+        lda     #kDAWindowId
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, setport_params

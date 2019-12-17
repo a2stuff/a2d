@@ -43,6 +43,7 @@ cases, e.g. `HideCursor`, `HideCursorImpl`, etc.
 * Equates from ROM (Applesoft, Monitor, Firmware, etc) and ProDOS are in
 `UPPERCASE`.
 
+* Prefer `kTitleCase` for constants, and define with `=` e.g. `kExample = 1234`
 
 ## Flow control
 

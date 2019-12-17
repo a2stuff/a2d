@@ -71,7 +71,7 @@ abort:  rts
         ;; Exit if a directory.
         ldy     #2              ; 2nd byte of entry
         lda     (src),y
-        and     #icon_entry_type_mask
+        and     #kIconEntryTypeMask
         bne     :+
         rts                     ; 000 = directory
 
@@ -167,14 +167,14 @@ end:    rts
 
 ;;; ============================================================
 
-da_window_id    = 60
+kDAWindowId    = 60
 da_width        = 380
 da_height       = 140
-da_left         = (screen_width - da_width)/2
-da_top          = (screen_height - da_height)/2
+da_left         = (kScreenWidth - da_width)/2
+da_top          = (kScreenHeight - da_height)/2
 
 .proc winfo
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
 title:          .addr   0       ; overwritten to point at filename
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -240,7 +240,7 @@ moved:          .byte   0
 .endproc
 
 .proc winport_params
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endproc
 

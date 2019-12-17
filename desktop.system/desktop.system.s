@@ -116,7 +116,7 @@ str_f8: PASCAL_STRING "Quit.tmp"
 filename_table:
         .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8
 
-num_filenames = 8
+kNumFilenames = 8
 
 str_copying_to_ramcard:
         PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
@@ -364,7 +364,7 @@ file_loop:
         jsr     copy_file
         inc     filenum
         lda     filenum
-        cmp     #num_filenames
+        cmp     #kNumFilenames
         bne     file_loop
         jmp     fail2
 .endproc

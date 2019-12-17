@@ -53,10 +53,10 @@ save_stack:.byte   0
         toaster_count = 4
 
 xpos_table:
-        .word   screen_width+toaster_width
-        .word   screen_width+toaster_width+150
-        .word   screen_width+toaster_width+300
-        .word   screen_width+toaster_width+450
+        .word   kScreenWidth+toaster_width
+        .word   kScreenWidth+toaster_width+150
+        .word   kScreenWidth+toaster_width+300
+        .word   kScreenWidth+toaster_width+450
 
 ypos_table:
         .word   AS_WORD(-toaster_height)
@@ -70,7 +70,7 @@ frame_table:
 ;;; ============================================================
 ;;; Graphics Resources
 
-        da_window_id = 100
+        kDAWindowId = 100
 
 event_params:   .tag MGTK::Event
 
@@ -79,7 +79,7 @@ event_params:   .tag MGTK::Event
 .endproc
 
 .proc winfo
-window_id:      .byte   da_window_id ; window identifier
+window_id:      .byte   kDAWindowId ; window identifier
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   window_title
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -90,15 +90,15 @@ vthumbmax:      .byte   32
 vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   screen_width
-mincontlength:  .word   screen_height
-maxcontwidth:   .word   screen_width
-maxcontlength:  .word   screen_height
+mincontwidth:   .word   kScreenWidth
+mincontlength:  .word   kScreenHeight
+maxcontwidth:   .word   kScreenWidth
+maxcontlength:  .word   kScreenHeight
 .proc port
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, screen_width, screen_height
+maprect:        DEFINE_RECT 0, 0, kScreenWidth, kScreenHeight
 .endproc
 pattern:        .res    8, 0
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -123,7 +123,7 @@ notpencopy:     .byte   MGTK::notpencopy
 penXOR:         .byte   MGTK::penXOR
 
 .proc getwinport_params
-window_id:     .byte   da_window_id
+window_id:     .byte   kDAWindowId
         .addr   grafport
 .endproc
 
@@ -211,7 +211,7 @@ loop:
         sub16   xpos, #4, xpos
 
         ;; Wrap Y
-        cmp16   ypos, #screen_height
+        cmp16   ypos, #kScreenHeight
         bvc     :+
         eor     #$80
 :       bmi     :+
@@ -223,7 +223,7 @@ loop:
         bvc     :+
         eor     #$80
 :       bpl     :+
-        copy16  #screen_width+toaster_width, xpos
+        copy16  #kScreenWidth+toaster_width, xpos
 :
 
         ;; Next frame

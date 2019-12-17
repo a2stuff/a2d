@@ -185,7 +185,7 @@ black_pattern:
 white_pattern:
         .res    $8, $FF
 
-        da_window_id = 100
+        kDAWindowId = 100
 
         line_spacing = 10
         right_const = 506
@@ -233,7 +233,7 @@ window_id:    .byte   0
 .endproc
 
 .proc growwindow_params
-window_id:     .byte   da_window_id
+window_id:     .byte   kDAWindowId
 mousex: .word   0
 mousey: .word   0
 it_grew:        .byte   0
@@ -277,7 +277,7 @@ textlen:        .byte   0       ; length
         default_top = 28
 
 .proc winfo
-window_id:      .byte   da_window_id ; window identifier
+window_id:      .byte   kDAWindowId ; window identifier
 options:        .byte   MGTK::Option::go_away_box ; window flags (2=include close port)
 title:          .addr   dummy1000 ; overwritten to point at filename
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -363,7 +363,7 @@ abort:  rts
         ;; Exit if a directory.
         ldy     #2              ; 2nd byte of entry
         lda     (src),y
-        and     #icon_entry_type_mask
+        and     #kIconEntryTypeMask
         bne     :+
         rts                     ; 000 = directory
 
@@ -459,7 +459,7 @@ input_loop:
 
         MGTK_CALL MGTK::FindWindow, event_params::coords
         lda     findwindow_params::window_id ; in our window?
-        cmp     #da_window_id
+        cmp     #kDAWindowId
         bne     input_loop
 
         ;; which part of the window?

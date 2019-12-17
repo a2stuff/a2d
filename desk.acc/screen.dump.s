@@ -27,8 +27,8 @@
         SLOT1   := $C100
 
         hbasl := $6
-        screen_width  = 560
-        screen_height = 192
+        kScreenWidth  = 560
+        kScreenHeight = 192
 
         lda     ROMIN2
         jsr     print_screen
@@ -112,10 +112,10 @@ y_loop: lda     y_coord
 
         ;; Done all pixels across?
         lda     x_coord
-        cmp     #<(screen_width-1)
+        cmp     #<(kScreenWidth-1)
         bne     :+
         lda     x_coord+1
-        cmp     #>(screen_width-1)
+        cmp     #>(kScreenWidth-1)
         beq     done
 
         ;; Next pixel to the right
@@ -151,7 +151,7 @@ loop:   jsr     send_row
 
         lda     y_coord
         sta     y_row
-        cmp     #screen_height
+        cmp     #kScreenHeight
         bcc     loop
 
         ;; Finish up

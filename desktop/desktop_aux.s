@@ -346,7 +346,7 @@ window_id:      .byte   0
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, screen_width-1, screen_height-1
+cliprect:       DEFINE_RECT 0, 0, kScreenWidth-1, kScreenHeight-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc: DEFINE_POINT 0, 0
@@ -781,7 +781,7 @@ start:  lda     HighlightIconImpl ; ???
 
 start2:
         ;; Zero out buffer
-        ldx     #max_icon_count-1
+        ldx     #kMaxIconCount-1
         lda     #0
 :       sta     buffer,x
         dex
@@ -797,7 +797,7 @@ loop:   lda     icon_table,x
         copy16  icon_ptrs,y, ptr
         ldy     #IconEntry::win_type
         lda     (ptr),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         ldy     #0
         cmp     (params::ptr_window_id),y
         bne     :+
@@ -867,7 +867,7 @@ loop:   ldx     count
         copy16  icon_ptrs,x, icon_ptr
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         ldy     #0
         cmp     (params::ptr_window_id),y
         bne     loop
@@ -909,7 +909,7 @@ L96E5:  dec     count
         copy16  icon_ptrs,x, ptr
         ldy     #IconEntry::win_type
         lda     (ptr),y
-        and     #icon_entry_winid_mask ; check window
+        and     #kIconEntryWinIdMask ; check window
         ldy     #0
         cmp     (params::window_id),y ; match?
         bne     loop                 ; nope
@@ -1012,7 +1012,7 @@ L97B9:  txa
         copy16  icon_ptrs,x, $06
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         cmp     L97F5
         bne     L97E0
         jsr     calc_icon_poly
@@ -1059,7 +1059,7 @@ L97F6:  .byte   0
         stax    $06
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         sta     win_id
         jmp     L983D           ; skip over data
 
@@ -1143,7 +1143,7 @@ is_drag:
         stax    $06
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         sta     L9832
 
         ;; Prepare grafports
@@ -1330,7 +1330,7 @@ L9AAF:  add16   L9C7A,x, L9C96,x, L9C7A,x
         sta     L9C75
         lda     L9C76+1
         bmi     L9AF7
-        cmp16   L9C7A, #screen_width
+        cmp16   L9C7A, #kScreenWidth
         bcs     L9AFE
         jsr     L9DFA
         jmp     L9B0E
@@ -1348,7 +1348,7 @@ L9B0E:  lda     L9C78+1
         bmi     L9B31
         cmp16   L9C78, #13
         bcc     L9B31
-        cmp16   L9C7C, #screen_height
+        cmp16   L9C7C, #kScreenHeight
         bcs     L9B38
         jsr     L9E07
         jmp     L9B48
@@ -1487,8 +1487,8 @@ L9C7A:  .word   0
 L9C7C:  .word   0
 L9C7E:  .word   0
 L9C80:  .word   13
-const_screen_width:  .word   screen_width
-const_screen_height:  .word   screen_height
+const_screen_width:  .word   kScreenWidth
+const_screen_height:  .word   kScreenHeight
 L9C86:  .word   0
 L9C88:  .word   0
 L9C8A:  .word   0
@@ -1525,7 +1525,7 @@ L9CD1:  lda     L9C7A
         bne     L9CE4
         return  #0
 
-L9CE4:  sub16   #screen_width, L9C8A, L9C96
+L9CE4:  sub16   #kScreenWidth, L9C8A, L9C96
 L9CF5:  add16   L9C86, L9C96, L9C76
         add16   L9C8A, L9C96, L9C7A
         add16   L9C8E, L9C96, L9C8E
@@ -1550,7 +1550,7 @@ L9D58:  lda     L9C7C
         bne     L9D6B
         return  #0
 
-L9D6B:  sub16   #screen_height-1, L9C8C, L9C98
+L9D6B:  sub16   #kScreenHeight-1, L9C8C, L9C98
 L9D7C:  add16   L9C88, L9C98, L9C78
         add16   L9C8C, L9C98, L9C7C
         add16   L9C90, L9C98, L9C90
@@ -1610,10 +1610,10 @@ L9E3D:  cmp     highlight_list,x
         copy16  icon_ptrs,x, $06
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         sta     L9831
         lda     ($06),y
-        and     #icon_entry_type_mask
+        and     #kIconEntryTypeMask
         bne     L9E97
         lda     L9EB3
 :       sta     highlight_icon_id
@@ -1764,12 +1764,12 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         ;; Test if icon is open volume/folder
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #icon_entry_open_mask
+        and     #kIconEntryOpenMask
         sta     open_flag
 
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #icon_entry_winid_mask
+        and     #kIconEntryWinIdMask
         bne     :+
 
         ;;  Mark as "volume icon" on desktop (needs background)
@@ -2110,7 +2110,7 @@ loop:   bmi     done
         copy16  icon_ptrs,x, ptr
         ldy     #IconEntry::win_type
         lda     (ptr),y
-        and     #icon_entry_winid_mask ; desktop icon
+        and     #kIconEntryWinIdMask ; desktop icon
         bne     next                   ; no, skip it
 
         ldy     #IconEntry::id
@@ -2599,13 +2599,13 @@ cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
         dex
         bpl     :-
 
-        ;; if (bounds_r > screen_width - 1) bounds_r = screen_width - 2
-        cmp16   bounds_r, #screen_width - 1
+        ;; if (bounds_r > kScreenWidth - 1) bounds_r = kScreenWidth - 2
+        cmp16   bounds_r, #kScreenWidth - 1
         bmi     done
-        lda     #<(screen_width - 2)
+        lda     #<(kScreenWidth - 2)
         sta     bounds_r
         sta     portbits::cliprect::x2
-        lda     #>(screen_width - 2)
+        lda     #>(kScreenWidth - 2)
         sta     bounds_r+1
         sta     portbits::cliprect::x2+1
 
@@ -3236,12 +3236,12 @@ label_rename_icon:
 
 desktop_menu:
         DEFINE_MENU_BAR 6
-        DEFINE_MENU_BAR_ITEM menu_id_apple, label_apple, apple_menu
-        DEFINE_MENU_BAR_ITEM menu_id_file, label_file, file_menu
-        DEFINE_MENU_BAR_ITEM menu_id_view, label_view, view_menu
-        DEFINE_MENU_BAR_ITEM menu_id_special, label_special, special_menu
-        DEFINE_MENU_BAR_ITEM menu_id_startup, label_startup, startup_menu
-        DEFINE_MENU_BAR_ITEM menu_id_selector, label_selector, selector_menu
+        DEFINE_MENU_BAR_ITEM kMenuIdApple, label_apple, apple_menu
+        DEFINE_MENU_BAR_ITEM kMenuIdFile, label_file, file_menu
+        DEFINE_MENU_BAR_ITEM kMenuIdView, label_view, view_menu
+        DEFINE_MENU_BAR_ITEM kMenuIdSpecial, label_special, special_menu
+        DEFINE_MENU_BAR_ITEM kMenuIdStartup, label_startup, startup_menu
+        DEFINE_MENU_BAR_ITEM kMenuIdSelector, label_selector, selector_menu
 
 file_menu:
         DEFINE_MENU 13
@@ -3281,11 +3281,11 @@ view_menu:
         DEFINE_MENU_ITEM label_by_size, 'K', 'k'
         DEFINE_MENU_ITEM label_by_type, 'L', 'l'
 
-        menu_item_id_view_by_icon = 1
-        menu_item_id_view_by_name = 2
-        menu_item_id_view_by_date = 3
-        menu_item_id_view_by_size = 4
-        menu_item_id_view_by_type = 5
+        kMenuItemIdViewByIcon = 1
+        kMenuItemIdViewByName = 2
+        kMenuItemIdViewByDate = 3
+        kMenuItemIdViewBySize = 4
+        kMenuItemIdViewByType = 5
 
 special_menu:
         DEFINE_MENU 11
@@ -3318,26 +3318,26 @@ special_menu:
 ;;; ============================================================
 
         ;; Rects
-        alert_dialog_width = 400
-        alert_dialog_height = 107
+        kAlertDialogWidth = 400
+        kAlertDialogHeight = 107
 
-confirm_dialog_outer_rect:  DEFINE_RECT 4,2,alert_dialog_width-4,alert_dialog_height-2
-confirm_dialog_inner_rect:  DEFINE_RECT 5,3,alert_dialog_width-5,alert_dialog_height-3
-cancel_button_rect:  DEFINE_RECT 40,alert_dialog_height-19,140,alert_dialog_height-8
+confirm_dialog_outer_rect:  DEFINE_RECT 4,2,kAlertDialogWidth-4,kAlertDialogHeight-2
+confirm_dialog_inner_rect:  DEFINE_RECT 5,3,kAlertDialogWidth-5,kAlertDialogHeight-3
+cancel_button_rect:  DEFINE_RECT 40,kAlertDialogHeight-19,140,kAlertDialogHeight-8
 LAE18:  DEFINE_RECT 193,30,293,41
-ok_button_rect:  DEFINE_RECT 260,alert_dialog_height-19,360,alert_dialog_height-8
-yes_button_rect:  DEFINE_RECT 200,alert_dialog_height-19,240,alert_dialog_height-8
-no_button_rect:  DEFINE_RECT 260,alert_dialog_height-19,300,alert_dialog_height-8
-all_button_rect:  DEFINE_RECT 320,alert_dialog_height-19,360,alert_dialog_height-8
+ok_button_rect:  DEFINE_RECT 260,kAlertDialogHeight-19,360,kAlertDialogHeight-8
+yes_button_rect:  DEFINE_RECT 200,kAlertDialogHeight-19,240,kAlertDialogHeight-8
+no_button_rect:  DEFINE_RECT 260,kAlertDialogHeight-19,300,kAlertDialogHeight-8
+all_button_rect:  DEFINE_RECT 320,kAlertDialogHeight-19,360,kAlertDialogHeight-8
 
 str_ok_label:
         PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
-ok_label_pos:  DEFINE_POINT 265,alert_dialog_height-9
-cancel_label_pos:  DEFINE_POINT 45,alert_dialog_height-9
-yes_label_pos:  DEFINE_POINT 205,alert_dialog_height-9
-no_label_pos:  DEFINE_POINT 265,alert_dialog_height-9
-all_label_pos:  DEFINE_POINT 325,alert_dialog_height-9
+ok_label_pos:  DEFINE_POINT 265,kAlertDialogHeight-9
+cancel_label_pos:  DEFINE_POINT 45,kAlertDialogHeight-9
+yes_label_pos:  DEFINE_POINT 205,kAlertDialogHeight-9
+no_label_pos:  DEFINE_POINT 265,kAlertDialogHeight-9
+all_label_pos:  DEFINE_POINT 325,kAlertDialogHeight-9
 
         .byte   $1C,$00,$70,$00
         .byte   $1C,$00,$87,$00
@@ -3345,11 +3345,11 @@ all_label_pos:  DEFINE_POINT 325,alert_dialog_height-9
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
 
-        dialog_label_height = 9
-        dialog_label_base_y = 30
-        .define dialog_label_row_y(num) (((num)*(dialog_label_height))+(dialog_label_base_y))
+        kDialogLabelHeight = 9
+        kDialogLabelBaseY = 30
+        .define dialog_label_row_y(num) (((num)*(kDialogLabelHeight))+(kDialogLabelBaseY))
 
-clear_dialog_labels_rect:  DEFINE_RECT 39,25,360,alert_dialog_height-20
+clear_dialog_labels_rect:  DEFINE_RECT 39,25,360,kAlertDialogHeight-20
 prompt_rect:  DEFINE_RECT 40,(dialog_label_row_y {5})+1,360,(dialog_label_row_y {6})
 current_target_file_pos:  DEFINE_POINT 75,dialog_label_row_y {2}
 current_dest_file_pos:  DEFINE_POINT 75,dialog_label_row_y {3}
@@ -3370,11 +3370,11 @@ LAEC7:  PASCAL_STRING "Destination filename:"
 
         ;; "About" dialog resources
 
-        about_dialog_width = 400
-        about_dialog_height = 120
+        kAboutDialogWidth = 400
+        kAboutDialogHeight = 120
 
-about_dialog_outer_rect:  DEFINE_RECT 4, 2, about_dialog_width-4, about_dialog_height-2
-about_dialog_inner_rect:  DEFINE_RECT 5, 3, about_dialog_width-5, about_dialog_height-3
+about_dialog_outer_rect:  DEFINE_RECT 4, 2, kAboutDialogWidth-4, kAboutDialogHeight-2
+about_dialog_inner_rect:  DEFINE_RECT 5, 3, kAboutDialogWidth-5, kAboutDialogHeight-3
 
 str_about1:  PASCAL_STRING "Apple II DeskTop"
 str_about2:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"

@@ -273,9 +273,9 @@ L0B48:  cmp16   screentowindow_windowx, #40
         return  #$FF
 :       sta     screentowindow_windowy+1
 
-        ;; Divide by desktop_aux::dialog_label_height
+        ;; Divide by desktop_aux::kDialogLabelHeight
         ldax    screentowindow_windowy
-        ldy     #desktop_aux::dialog_label_height
+        ldy     #desktop_aux::kDialogLabelHeight
         jsr     Divide_16_8_16
         stax    screentowindow_windowy
 
@@ -357,13 +357,13 @@ L0C1F:  .byte   0
         sbc     L0CA9           ; entry % 4
         ldx     #0
 
-        ldy     #desktop_aux::dialog_label_height
+        ldy     #desktop_aux::kDialogLabelHeight
         jsr     Multiply_16_8_16
         stax    select_volume_rect::y1
         add16_8 select_volume_rect::y1, #labels_voffset, select_volume_rect::y1
 
         add16   select_volume_rect::x1, #label_width-1, select_volume_rect::x2
-        add16   select_volume_rect::y1, #desktop_aux::dialog_label_height-1, select_volume_rect::y2
+        add16   select_volume_rect::y1, #desktop_aux::kDialogLabelHeight-1, select_volume_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, select_volume_rect
         rts

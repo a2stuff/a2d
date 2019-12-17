@@ -133,7 +133,7 @@ goaway:  .byte   0
 .endproc
 
 .proc getwinport_params
-window_id:     .byte   da_window_id
+window_id:     .byte   kDAWindowId
         .addr   grafport
 .endproc
         getwinport_params_window_id := getwinport_params::window_id
@@ -536,10 +536,10 @@ textlen:    .byte   15              ; ???
 result:  .word   0
 .endproc
 
-        da_window_id = 52
+        kDAWindowId = 52
 
 .proc closewindow_params
-window_id:     .byte   da_window_id
+window_id:     .byte   kDAWindowId
 .endproc
 
 .proc text_pos_params3
@@ -602,8 +602,8 @@ mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 hoff:           .word   0
 voff:           .word   0
-width:          .word   screen_width - 1
-height:         .word   screen_height - menu_bar_height - 2
+width:          .word   kScreenWidth - 1
+height:         .word   kScreenHeight - menu_bar_height - 2
 .endproc
 
 .proc penmode_normal
@@ -622,7 +622,7 @@ penmode:   .byte   MGTK::notpenXOR
         default_top = 60
 
 .proc winfo
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
 title:          .addr   window_title
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -744,7 +744,7 @@ on_click:
         cmp     #MGTK::Area::content
         bcc     ignore_click
         lda     findwindow_params::window_id
-        cmp     #da_window_id      ; This window?
+        cmp     #kDAWindowId      ; This window?
         beq     :+
 
 ignore_click:
@@ -770,7 +770,7 @@ exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
 
 :       cmp     #MGTK::Area::dragbar ; Title bar?
         bne     ignore_click
-        lda     #da_window_id
+        lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         jsr     redraw_screen_and_window
@@ -808,7 +808,7 @@ rts1:  rts                     ; used by next proc
 ;;; If a button was clicked, carry is set and accum has key char
 
 .proc map_click_to_button
-        lda     #da_window_id
+        lda     #kDAWindowId
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     screentowindow_params::windowx+1        ; ensure high bits of coords are 0
@@ -1301,7 +1301,7 @@ check_button:
         lda     event_params::kind
         cmp     #MGTK::EventKind::drag ; Button down?
         bne     done            ; Nope, done immediately
-        lda     #da_window_id
+        lda     #kDAWindowId
         sta     screentowindow_params::window_id
 
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params

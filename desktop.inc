@@ -2,13 +2,13 @@
 ;;; DeskTop - Public Definitions
 ;;; ============================================================
 
-screen_width    = 560
-screen_height   = 192
+kScreenWidth    = 560
+kScreenHeight   = 192
 
 ;;; ============================================================
 
 DA_FILE_TYPE    = $F1
-DA_Aux_TYPE     = $640          ; High bit set = don't show in Apple menu
+DA_AUX_TYPE     = $640          ; High bit set = don't show in Apple menu
 
 APP_FILE_TYPE   = $01           ; FT_SYS w/ ".SYSTEM" (FT_BAD mapped to FT_TYPELESS)
 
@@ -83,12 +83,12 @@ JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in R
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors
 
-ERR_DUPLICATE_VOL_NAME  = $F9
-ERR_FILE_NOT_OPENABLE   = $FA
-ERR_NAME_TOO_LONG       = $FB
-ERR_INSERT_SRC_DISK     = $FC
-ERR_INSERT_DST_DISK     = $FD
-ERR_BASIC_SYS_NOT_FOUND = $FE
+kErrDuplicateVolName    = $F9
+kErrFileNotOpenable     = $FA
+kErrNameTooLong         = $FB
+kErrInsertSrcDisk       = $FC
+kErrInsertDstDisk       = $FD
+kErrBasicSysNotFound    = $FE
 
 ;;; ============================================================
 ;;; Icon ToolKit Calls (from aux memory)
@@ -197,17 +197,17 @@ last_menu_click_params := $E23D
         name            .res 17 ; 10 (15 chars plus leading/trailing spaces)
 .endstruct
 
-max_icon_count  = 127
+kMaxIconCount   = 127
 
-icon_entry_open_mask    = %10000000
-icon_entry_type_mask    = %01110000
-icon_entry_winid_mask   = %00001111
-icon_entry_type_dir     = %00000000
-icon_entry_type_system  = %00010000
-icon_entry_type_binary  = %00100000
-icon_entry_type_basic   = %00110000
-icon_entry_type_generic = %01010000
-icon_entry_type_trash   = %01110000
+kIconEntryOpenMask    = %10000000
+kIconEntryTypeMask    = %01110000
+kIconEntryWinIdMask   = %00001111
+kIconEntryTypeDir     = %00000000
+kIconEntryTypeSystem  = %00010000
+kIconEntryTypeBinary  = %00100000
+kIconEntryTypeBasic   = %00110000
+kIconEntryTypeGeneric = %01010000
+kIconEntryTypeTrash   = %01110000
 
 ;;; ============================================================
 ;;; Internals - Default Font

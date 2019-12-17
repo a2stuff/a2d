@@ -313,7 +313,7 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (screen_width - width) / 2, (screen_height - height) / 2
+viewloc:        DEFINE_POINT (kScreenWidth - width) / 2, (kScreenHeight - height) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, width, height
@@ -418,7 +418,7 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (screen_width - width) / 2, (screen_height - height) / 2
+viewloc:        DEFINE_POINT (kScreenWidth - width) / 2, (kScreenHeight - height) / 2
 
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
@@ -457,7 +457,7 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (screen_width - width) / 2, (screen_height - height) / 2
+viewloc:        DEFINE_POINT (kScreenWidth - width) / 2, (kScreenHeight - height) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, width, height
@@ -1172,7 +1172,7 @@ apple_menu:
         DEFINE_MENU 1
         DEFINE_MENU_ITEM label_about
         DEFINE_MENU_SEPARATOR
-        .repeat max_desk_acc_count, i
+        .repeat kMaxDeskAccCount, i
         DEFINE_MENU_ITEM desk_acc_names + i * 16
         .endrepeat
 
@@ -1180,7 +1180,7 @@ label_about:
         PASCAL_STRING "About Apple II DeskTop ... "
 
 desk_acc_names:
-        .res    max_desk_acc_count * 16, 0
+        .res    kMaxDeskAccCount * 16, 0
 
 splash_menu:
         DEFINE_MENU_BAR 1
@@ -1218,11 +1218,11 @@ window_title_addr_table:
         .addr   winfo8title_ptr
 
         ;; (low nibble must match menu order)
-        view_by_icon = $00
-        view_by_name = $81
-        view_by_date = $82
-        view_by_size = $83
-        view_by_type = $84
+        kViewByIcon = $00
+        kViewByName = $81
+        kViewByDate = $82
+        kViewBySize = $83
+        kViewByType = $84
 
 win_view_by_table:
         .res    8, 0
@@ -1539,21 +1539,21 @@ type_names_table:
 
 
 icon_type_table:
-        .byte   icon_entry_type_generic ; typeless
-        .byte   icon_entry_type_generic ; src
-        .byte   icon_entry_type_generic ; rel
-        .byte   icon_entry_type_generic ; cmd
-        .byte   icon_entry_type_generic ; text
-        .byte   icon_entry_type_binary  ; binary
-        .byte   icon_entry_type_dir     ; directory
-        .byte   icon_entry_type_system  ; system
-        .byte   icon_entry_type_basic   ; basic
-        .byte   icon_entry_type_generic ; graphics
-        .byte   icon_entry_type_generic ; appleworks db
-        .byte   icon_entry_type_generic ; appleworks wp
-        .byte   icon_entry_type_generic ; appleworks sp
-        .byte   icon_entry_type_generic ; desk accessory
-        .byte   icon_entry_type_system  ; system (see below)
+        .byte   kIconEntryTypeGeneric ; typeless
+        .byte   kIconEntryTypeGeneric ; src
+        .byte   kIconEntryTypeGeneric ; rel
+        .byte   kIconEntryTypeGeneric ; cmd
+        .byte   kIconEntryTypeGeneric ; text
+        .byte   kIconEntryTypeBinary  ; binary
+        .byte   kIconEntryTypeDir     ; directory
+        .byte   kIconEntryTypeSystem  ; system
+        .byte   kIconEntryTypeBasic   ; basic
+        .byte   kIconEntryTypeGeneric ; graphics
+        .byte   kIconEntryTypeGeneric ; appleworks db
+        .byte   kIconEntryTypeGeneric ; appleworks wp
+        .byte   kIconEntryTypeGeneric ; appleworks sp
+        .byte   kIconEntryTypeGeneric ; desk accessory
+        .byte   kIconEntryTypeSystem  ; system (see below)
 
 type_icons_table:               ; map into definitions below
         .addr   gen ; typeless

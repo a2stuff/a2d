@@ -43,17 +43,17 @@ entry:
 
 ;;; ============================================================
 
-da_window_id    := 61
+kDAWindowId    := 61
 da_width        := 416
 da_height       := 122
-da_left         := (screen_width - da_width)/2
-da_top          := (screen_height - 10 - da_height)/2 + 10
+da_left         := (kScreenWidth - da_width)/2
+da_top          := (kScreenHeight - 10 - da_height)/2 + 10
 
 str_title:
         PASCAL_STRING "Control Panel"
 
 .proc winfo
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
 title:          .addr   str_title
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -98,7 +98,7 @@ frame_rect:     DEFINE_RECT AS_WORD(-1), AS_WORD(-1), da_width - 4 + 2, da_heigh
 
 
 .proc winfo_fullscreen
-window_id:      .byte   da_window_id+1
+window_id:      .byte   kDAWindowId+1
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   str_title
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -109,15 +109,15 @@ vthumbmax:      .byte   32
 vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   screen_width
-mincontlength:  .word   screen_height
-maxcontwidth:   .word   screen_width
-maxcontlength:  .word   screen_height
+mincontwidth:   .word   kScreenWidth
+mincontlength:  .word   kScreenHeight
+maxcontwidth:   .word   kScreenWidth
+maxcontlength:  .word   kScreenHeight
 port:
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, screen_width, screen_height
+maprect:        DEFINE_RECT 0, 0, kScreenWidth, kScreenHeight
 pattern:        .res    8, 0
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -165,13 +165,13 @@ moved:          .byte   0
 .endproc
 
 .proc winport_params
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endproc
 
 
 .proc screentowindow_params
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
 screen: DEFINE_POINT 0, 0, screen
 window: DEFINE_POINT 0, 0, window
 .endproc
@@ -197,15 +197,15 @@ textfont:       .addr   0
 ;;; ============================================================
 ;;; Common Resources
 
-radio_button_w = 15
-radio_button_h = 7
+kRadioButtonWidth = 15
+kRadioButtonHeight = 7
 
 .proc checked_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   checked_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, radio_button_w, radio_button_h
+cliprect:       DEFINE_RECT 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endproc
 
 checked_bitmap:
@@ -223,7 +223,7 @@ viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   unchecked_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, radio_button_w, radio_button_h
+cliprect:       DEFINE_RECT 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endproc
 
 unchecked_bitmap:
@@ -360,11 +360,11 @@ dblclick_arrow_pos6:
         DEFINE_POINT dblclick_x + 155, dblclick_y + 23
 
 dblclick_button_rect1:
-        DEFINE_RECT dblclick_x + 175, dblclick_y + 25, dblclick_x + 175 + radio_button_w, dblclick_y + 25 + radio_button_h
+        DEFINE_RECT dblclick_x + 175, dblclick_y + 25, dblclick_x + 175 + kRadioButtonWidth, dblclick_y + 25 + kRadioButtonHeight
 dblclick_button_rect2:
-        DEFINE_RECT dblclick_x + 130, dblclick_y + 25, dblclick_x + 130 + radio_button_w, dblclick_y + 25 + radio_button_h
+        DEFINE_RECT dblclick_x + 130, dblclick_y + 25, dblclick_x + 130 + kRadioButtonWidth, dblclick_y + 25 + kRadioButtonHeight
 dblclick_button_rect3:
-        DEFINE_RECT dblclick_x +  85, dblclick_y + 25, dblclick_x +  85 + radio_button_w, dblclick_y + 25 + radio_button_h
+        DEFINE_RECT dblclick_x +  85, dblclick_y + 25, dblclick_x +  85 + kRadioButtonWidth, dblclick_y + 25 + kRadioButtonHeight
 
 dblclick_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000011),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
@@ -523,11 +523,11 @@ ipblink_fast_pos:
         DEFINE_POINT ipblink_x + 140 + 4 + 4, ipblink_y + 16 + 5 + 12 + 1
 
 ipblink_btn1_rect:
-        DEFINE_RECT ipblink_x + 110 + 2, ipblink_y + 16, ipblink_x + 110 + 2 + radio_button_w, ipblink_y + 16 + radio_button_h
+        DEFINE_RECT ipblink_x + 110 + 2, ipblink_y + 16, ipblink_x + 110 + 2 + kRadioButtonWidth, ipblink_y + 16 + kRadioButtonHeight
 ipblink_btn2_rect:
-        DEFINE_RECT ipblink_x + 130 + 2, ipblink_y + 16, ipblink_x + 130 + 2 + radio_button_w, ipblink_y + 16 + radio_button_h
+        DEFINE_RECT ipblink_x + 130 + 2, ipblink_y + 16, ipblink_x + 130 + 2 + kRadioButtonWidth, ipblink_y + 16 + kRadioButtonHeight
 ipblink_btn3_rect:
-        DEFINE_RECT ipblink_x + 150 + 2, ipblink_y + 16, ipblink_x + 150 + 2 + radio_button_w, ipblink_y + 16 + radio_button_h
+        DEFINE_RECT ipblink_x + 150 + 2, ipblink_y + 16, ipblink_x + 150 + 2 + kRadioButtonWidth, ipblink_y + 16 + kRadioButtonHeight
 
 
 

@@ -44,14 +44,14 @@ entry:
         key_width = 22
         key_height = 15
 
-da_window_id    = 60
+kDAWindowId    = 60
 da_width        = key_width * 31/2
 da_height       = key_height * 6
-da_left         = (screen_width - da_width)/2
+da_left         = (kScreenWidth - da_width)/2
 da_top          = 50
 
 .proc winfo
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
 title:          .addr   str_title
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -139,7 +139,7 @@ moved:          .byte   0
 .endproc
 
 .proc winport_params
-window_id:      .byte   da_window_id
+window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endproc
 

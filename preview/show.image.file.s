@@ -197,7 +197,7 @@ data:   .res    64, 0
 params_end:
 ;;; ----------------------------------------
 
-        da_window_id = 100
+        kDAWindowId = 100
 
 .proc line_pos
 left:   .word   0
@@ -212,7 +212,7 @@ event_params:   .tag MGTK::Event
 .endproc
 
 .proc winfo
-window_id:     .byte   da_window_id       ; window identifier
+window_id:     .byte   kDAWindowId       ; window identifier
 options:  .byte   MGTK::Option::dialog_box
 title:  .addr   window_title
 hscroll:.byte   MGTK::Scroll::option_none
@@ -223,16 +223,16 @@ vthumbmax:  .byte   32
 vthumbpos:  .byte   0
 status: .byte   0
 reserved:       .byte   0
-mincontwidth:     .word   screen_width
-mincontlength:     .word   screen_height
-maxcontwidth:     .word   screen_width
-maxcontlength:     .word   screen_height
+mincontwidth:     .word   kScreenWidth
+mincontlength:     .word   kScreenHeight
+maxcontwidth:     .word   kScreenWidth
+maxcontlength:     .word   kScreenHeight
 
 .proc port
 viewloc:        DEFINE_POINT 0, 0
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, screen_width, screen_height
+maprect:        DEFINE_RECT 0, 0, kScreenWidth, kScreenHeight
 .endproc
 
 pattern:.res    8, 0
@@ -506,7 +506,7 @@ exit:
         minipix_height = 52
 
 .proc paintbits_params
-viewloc:        DEFINE_POINT (screen_width - minipix_width)/2, (screen_height - minipix_height)/2
+viewloc:        DEFINE_POINT (kScreenWidth - minipix_width)/2, (kScreenHeight - minipix_height)/2
 mapbits:        .addr   minipix_dst_buf
 mapwidth:       .byte   26
 reserved:       .byte   0
