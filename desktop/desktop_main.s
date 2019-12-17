@@ -935,7 +935,7 @@ launch: ITK_RELAY_CALL IconTK::RemoveAll, 0 ; volume icons
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetMenu, blank_menu
         ldx     buf_win_path
-:       copy    buf_win_path,x, path,x
+:       copy    buf_win_path,x, INVOKER_PREFIX,x
         dex
         bpl     :-
         ldx     buf_filename2

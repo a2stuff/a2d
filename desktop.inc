@@ -19,6 +19,9 @@ APP_FILE_TYPE   = $01           ; FT_SYS w/ ".SYSTEM" (FT_BAD mapped to FT_TYPEL
 
 max_desk_acc_count = 12
 
+;;; Invoker routine locations
+
+INVOKER_PREFIX          := $220 ; Prefix to set
 INVOKER                 := $290 ; Invoke other programs
 INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 

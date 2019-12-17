@@ -8,9 +8,6 @@
 .proc invoker
         .org $290
 
-PREFIX          := $220
-FILENAME        := $280                 ; File to invoke, set by caller
-
 start:
         jmp     begin
 
@@ -18,15 +15,15 @@ start:
 
         default_start_address := $2000
 
-        DEFINE_SET_PREFIX_PARAMS set_prefix_params, PREFIX
+        DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
 
 prefix_length:
         .byte   0
 
-        DEFINE_OPEN_PARAMS open_params, FILENAME, $800, 1
+        DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
         DEFINE_READ_PARAMS read_params, default_start_address, $9F00
         DEFINE_CLOSE_PARAMS close_params
-        DEFINE_GET_FILE_INFO_PARAMS get_info_params, FILENAME
+        DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
 
         .res    3
 
@@ -34,7 +31,7 @@ bs_path:
         PASCAL_STRING "BASIC.SYSTEM"
 
         ;; $EE = extended call signature for IIgs/GS/OS variation.
-        DEFINE_QUIT_PARAMS quit_params, $EE, FILENAME
+        DEFINE_QUIT_PARAMS quit_params, $EE, INVOKER_FILENAME
 
 ;;; ============================================================
 
@@ -65,7 +62,7 @@ begin:  lda     ROMIN2
         bne     :-
 
         jsr     set_prefix
-        lda     PREFIX
+        lda     INVOKER_PREFIX
         sta     prefix_length
         MLI_CALL GET_FILE_INFO, get_info_params
         beq     :+
@@ -105,8 +102,8 @@ not_binary:
 check_for_bs:
         jsr     open
         beq     found_bs
-        ldy     PREFIX          ; Pop a path segment to try
-:       lda     PREFIX,y        ; parent directory.
+        ldy     INVOKER_PREFIX  ; Pop a path segment to try
+:       lda     INVOKER_PREFIX,y ; parent directory.
         cmp     #'/'
         beq     update_prefix
         dey
@@ -116,13 +113,13 @@ check_for_bs:
 
 update_prefix:                  ; Update prefix and try again.
         dey
-        sty     PREFIX
+        sty     INVOKER_PREFIX
         jsr     set_prefix
         jmp     check_for_bs
 
 found_bs:
         lda     prefix_length
-        sta     PREFIX
+        sta     INVOKER_PREFIX
         jmp     do_read
 
 load_target:
@@ -141,8 +138,8 @@ do_read:
         cmp     #FT_BASIC
         bne     update_stack
         jsr     set_prefix
-        ldy     FILENAME
-:       lda     FILENAME,y
+        ldy     INVOKER_FILENAME
+:       lda     INVOKER_FILENAME,y
         sta     $2006,y
         dey
         bpl     :-
