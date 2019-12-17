@@ -12,8 +12,7 @@
 ;;; DeskTop - the actual application
 ;;; ============================================================
 
-        dummy0000 := $0000         ; overwritten by self-modified code
-        dummy1234 := $1234         ; overwritten by self-modified code
+        .include "internal.inc"
 
         ;; TODO: Replace this with linker magic
 

@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; DeskTop Internals
+;;; DeskTop - Public Definitions
 ;;; ============================================================
 
 screen_width    = 560
@@ -7,23 +7,10 @@ screen_height   = 192
 
 ;;; ============================================================
 
-VERSION_MAJOR = 1
-VERSION_MINOR = 2
-.define VERSION_SUFFIX "-alpha8"
-.define RELEASE_DATE "July 30, 2019"
-
 DA_FILE_TYPE    = $F1
 DA_Aux_TYPE     = $640          ; High bit set = don't show in Apple menu
 
 APP_FILE_TYPE   = $01           ; FT_SYS w/ ".SYSTEM" (FT_BAD mapped to FT_TYPELESS)
-
-max_desk_acc_count = 12
-
-;;; Invoker routine locations
-
-INVOKER_PREFIX          := $220 ; Prefix to set
-INVOKER                 := $290 ; Invoke other programs
-INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 
 ;;; Desk Accessories are loaded in Main ($800-$1BFF) using
 ;;; an I/O buffer (Main $1C00-1FFF). DAs often copy themselves
@@ -160,28 +147,6 @@ label   := *
 
 
 ;;; ============================================================
-;;; Relays from Main to Aux (params must be in ZP or LC)
-
-MGTK_RELAY      := $D000
-ITK_RELAY       := $D040
-
-.macro MGTK_RELAY_CALL call, addr
-    .if .paramcount > 1
-        yax_call        MGTK_RELAY, (call), (addr)
-    .else
-        yax_call        MGTK_RELAY, (call), 0
-    .endif
-.endmacro
-
-.macro ITK_RELAY_CALL call, addr
-    .if .paramcount > 1
-        yax_call        ITK_RELAY, (call), (addr)
-    .else
-        yax_call        ITK_RELAY, (call), 0
-    .endif
-.endmacro
-
-;;; ============================================================
 ;;; Internals - Windows (paths) and Icons (files)
 
 ;;; NOTE: Some of these are used by Desk Accessories
@@ -292,44 +257,6 @@ GLYPH_SAPPLE  = $1E
 ;;;   Check       $1D
 ;;;   Control     $01
 ;;;   Inactive    $7F
-
-;;; ============================================================
-;;; Internals - miscellaneous structures
-
-.struct IconDefinition
-        ;; First part is MGTK::MapInfo without leading viewloc
-        mapbits         .addr   ; address of bitmap bits
-        mapwidth        .byte   ; stride of bitmap bits
-        reserved        .byte   ; 0
-        maprect         .res 8  ; x1,y1 must be 0,0
-
-        ;; Next part is address of mask bits; must be same
-        ;; dimensions as rect of icon.
-        maskbits        .addr
-.endstruct
-
-.macro  DEFICON mapbits, mapwidth, dx, dy, maskbits
-        ;; First part is MGTK::MapInfo without leading viewloc
-        .addr   mapbits
-        .byte   mapwidth
-        .byte   0             ; reserved
-        .word   0, 0, dx, dy  ; maprect
-        ;; Next part is link to mask
-        .addr   maskbits
-.endmacro
-
-.struct FileRecord
-        name                    .res 16
-        file_type               .byte ; 16 $10
-        blocks                  .word ; 17 $11
-        creation_date           .word ; 19 $13
-        creation_time           .word ; 21 $15
-        modification_date       .word ; 23 $17
-        modification_time       .word ; 25 $19
-        access                  .byte ; 27 $1B
-        header_pointer          .word ; 28 $1C
-        aux_type                .word ; 30 $1E
-.endstruct
 
 ;;; ============================================================
 ;;; Internals - Settings (modified by Control Panel)
