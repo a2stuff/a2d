@@ -45,10 +45,10 @@ entry:
 ;;; ============================================================
 
 kDAWindowId    = 60
-da_width        = kScreenWidth / 3
-da_height       = kScreenHeight / 3
-da_left         = (kScreenWidth - da_width)/2
-da_top          = 50
+kDAWidth        = kScreenWidth / 3
+kDAHeight       = kScreenHeight / 3
+kDALeft         = (kScreenWidth - kDAWidth)/2
+kDATop          = 50
 
 str_title:
         PASCAL_STRING "Eyes"
@@ -70,10 +70,10 @@ mincontlength:  .word   kScreenHeight / 5
 maxcontwidth:   .word   kScreenWidth
 maxcontlength:  .word   kScreenHeight
 port:
-viewloc:        DEFINE_POINT da_left, da_top
+viewloc:        DEFINE_POINT kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, da_width, da_height, maprect
+maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight, maprect
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:          DEFINE_POINT 0, 0
@@ -678,7 +678,7 @@ drawpos:        DEFINE_POINT 0, 0, drawpos
 
 ;;; ============================================================
 
-da_end  = *
+da_end := *
 .assert * < $1B00, error, "DA too big"
         ;; I/O Buffer starts at MAIN $1C00
         ;; ... but icon tables start at AUX $1B00

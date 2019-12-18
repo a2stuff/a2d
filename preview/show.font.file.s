@@ -168,10 +168,10 @@ end:    rts
 ;;; ============================================================
 
 kDAWindowId    = 60
-da_width        = 380
-da_height       = 140
-da_left         = (kScreenWidth - da_width)/2
-da_top          = (kScreenHeight - da_height)/2
+kDAWidth        = 380
+kDAHeight       = 140
+kDALeft         = (kScreenWidth - kDAWidth)/2
+kDATop          = (kScreenHeight - kDAHeight)/2
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -185,15 +185,15 @@ vthumbmax:      .byte   32
 vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   da_width
-mincontlength:  .word   da_height
-maxcontwidth:   .word   da_width
-maxcontlength:  .word   da_height
+mincontwidth:   .word   kDAWidth
+mincontlength:  .word   kDAHeight
+maxcontwidth:   .word   kDAWidth
+maxcontlength:  .word   kDAHeight
 port:
-viewloc:        DEFINE_POINT da_left, da_top
+viewloc:        DEFINE_POINT kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, da_width, da_height
+maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:          DEFINE_POINT 0, 0
@@ -421,7 +421,7 @@ loop:   lda     index
 
         ;; Position the string
         MGTK_CALL MGTK::TextWidth, params
-        sub16   #da_width, params::width, pos::xcoord ; center it
+        sub16   #kDAWidth, params::width, pos::xcoord ; center it
         lsr16   pos::xcoord
         add16   pos::ycoord, #line_height, pos::ycoord ; next row
 

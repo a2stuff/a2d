@@ -44,10 +44,10 @@ entry:
 ;;; ============================================================
 
 kDAWindowId    := 61
-da_width        := 416
-da_height       := 122
-da_left         := (kScreenWidth - da_width)/2
-da_top          := (kScreenHeight - 10 - da_height)/2 + 10
+kDAWidth        := 416
+kDAHeight       := 122
+kDALeft         := (kScreenWidth - kDAWidth)/2
+kDATop          := (kScreenHeight - 10 - kDAHeight)/2 + 10
 
 str_title:
         PASCAL_STRING "Control Panel"
@@ -64,15 +64,15 @@ vthumbmax:      .byte   32
 vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   da_width
-mincontlength:  .word   da_height
-maxcontwidth:   .word   da_width
-maxcontlength:  .word   da_height
+mincontwidth:   .word   kDAWidth
+mincontlength:  .word   kDAHeight
+maxcontwidth:   .word   kDAWidth
+maxcontlength:  .word   kDAHeight
 port:
-viewloc:        DEFINE_POINT da_left, da_top
+viewloc:        DEFINE_POINT kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, da_width, da_height, maprect
+maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight, maprect
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:          DEFINE_POINT 0, 0
@@ -90,11 +90,11 @@ penheight:      .byte   2
 .endparams
 
 frame_p1:       DEFINE_POINT 0, 58
-frame_p2:       DEFINE_POINT da_width, 58
+frame_p2:       DEFINE_POINT kDAWidth, 58
 frame_p3:       DEFINE_POINT 190, 0
-frame_p4:       DEFINE_POINT 190, da_height
+frame_p4:       DEFINE_POINT 190, kDAHeight
 
-frame_rect:     DEFINE_RECT AS_WORD(-1), AS_WORD(-1), da_width - 4 + 2, da_height - 2 + 2
+frame_rect:     DEFINE_RECT AS_WORD(-1), AS_WORD(-1), kDAWidth - 4 + 2, kDAHeight - 2 + 2
 
 
 .params winfo_fullscreen
@@ -326,7 +326,7 @@ dblclick_selection:
         .byte   1
 
         ;; Computed counter values
-dblclick_speed_table_size = 3
+kDblClickSpeedTableSize = 3
 dblclick_speed_table:
         .word   DeskTop::Settings::kDefaultDblClickSpeed * 1
         .word   DeskTop::Settings::kDefaultDblClickSpeed * 4
@@ -844,7 +844,7 @@ mask:   .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
 
 .proc init_dblclick
         ;; Find matching index in word table, or 0
-        ldx     #dblclick_speed_table_size * 2
+        ldx     #kDblClickSpeedTableSize * 2
 loop:   lda     DeskTop::Settings::dblclick_speed
         cmp     dblclick_speed_table-2,x
         bne     next
@@ -1368,7 +1368,7 @@ pattern_cE:      .res 8, $77     ; E = aqua
 ;;; ============================================================
 
         ;; TODO: Read and visualize all 4 paddles.
-        num_paddles = 2
+        kNumPaddles = 2
 
 .struct InputState
         pdl0    .byte
@@ -1387,7 +1387,7 @@ pattern_cE:      .res 8, $77     ; E = aqua
 
         ;; TODO: Visualize all 4 paddles.
 
-        ldx     #num_paddles-1
+        ldx     #kNumPaddles-1
 :       lda     pdl0,x
         lsr                     ; clamp range to 0...63
         lsr
@@ -1488,7 +1488,7 @@ pdl2:   .byte   0
 pdl3:   .byte   0
 
 .proc read_paddles
-        ldx     #num_paddles - 1
+        ldx     #kNumPaddles - 1
 :       jsr     pread
         tya
         sta     pdl0,x
@@ -1522,7 +1522,7 @@ done:   rts
 ;;; ============================================================
 ;;; IP Blink
 
-ipblink_speed_table_size = 3
+kIPBlinkSpeedTableSize = 3
 
 ipblink_speed_table:
         .byte   0
@@ -1535,7 +1535,7 @@ ipblink_counter:
 
 .proc init_ipblink
         lda     DeskTop::Settings::ip_blink_speed
-        ldx     #ipblink_speed_table_size
+        ldx     #kIPBlinkSpeedTableSize
 :       cmp     ipblink_speed_table-1,x
         beq     done
         dex
@@ -1712,7 +1712,7 @@ done:   rts
 
 ;;; ============================================================
 
-da_end  = *
+da_end  := *
 .assert * < WINDOW_ICON_TABLES, error, "DA too big"
         ;; I/O Buffer starts at MAIN $1C00
         ;; ... but icon tables start at AUX $1B00

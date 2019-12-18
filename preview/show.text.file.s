@@ -271,10 +271,10 @@ textptr:        .addr   0       ; address
 textlen:        .byte   0       ; length
 .endparams
 
-        default_width = 512
-        default_height = 150
-        default_left = 10
-        default_top = 28
+        kDefaultWidth = 512
+        kDefaultHeight = 150
+        kDefaultLeft = 10
+        kDefaultTop = 28
 
 .params winfo
 window_id:      .byte   kDAWindowId ; window identifier
@@ -290,13 +290,13 @@ status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   200
 mincontlength:  .word   51
-maxcontwidth:   .word   default_width
-maxcontlength:  .word   default_height
+maxcontwidth:   .word   kDefaultWidth
+maxcontlength:  .word   kDefaultHeight
 port:
-viewloc:        DEFINE_POINT default_left, default_top, viewloc
+viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, default_width, default_height, maprect
+maprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight, maprect
 pattern:        .res    8, $00
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -311,10 +311,10 @@ nextwinfo:      .addr   0
 
         ;; gets copied over winfo::port after mode is drawn
 .params default_port
-viewloc:        DEFINE_POINT default_left, default_top
+viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop
 mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, default_width, default_height
+maprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
 .endparams
 
 .proc init

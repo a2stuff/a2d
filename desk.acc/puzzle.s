@@ -500,7 +500,7 @@ piece16:
 
 
 .params paintrect_params
-        DEFINE_RECT 1, 0, default_width, default_height
+        DEFINE_RECT 1, 0, kDefaultWidth, kDefaultHeight
 .endparams
 
 .params pattern_speckles
@@ -579,10 +579,10 @@ setport_params:
         .byte   $00,$2F,$02,$B1,$00,$00,$01,$02
         .byte   $06
 
-        default_left    = 220
-        default_top     = 80
-        default_width   = $79
-        default_height  = $44
+        kDefaultLeft    = 220
+        kDefaultTop     = 80
+        kDefaultWidth   = $79
+        kDefaultHeight  = $44
 
 .params winfo
 window_id:     .byte   kDAWindowId
@@ -596,15 +596,15 @@ vthumbmax:  .byte   0
 vthumbpos:  .byte   0
 status: .byte   0
 reserved:       .byte   0
-mincontwidth:     .word   default_width
-mincontlength:     .word   default_height
-maxcontwidth:     .word   default_width
-maxcontlength:     .word   default_height
+mincontwidth:     .word   kDefaultWidth
+mincontlength:     .word   kDefaultHeight
+maxcontwidth:     .word   kDefaultWidth
+maxcontlength:     .word   kDefaultHeight
 port:
-        DEFINE_POINT default_left, default_top, viewloc
+        DEFINE_POINT kDefaultLeft, kDefaultTop, viewloc
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-cliprect:        DEFINE_RECT 0, 0, default_width, default_height
+cliprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
 pattern:.res    8, $FF
 colormasks:      .byte MGTK::colormask_and, MGTK::colormask_or
 penloc: DEFINE_POINT 0, 0
@@ -619,10 +619,10 @@ nextwinfo:   .addr   0
 
         ;; This is grafport cruft only below
 .params port_cruft                 ; Unknown usage
-viewloc:        DEFINE_POINT default_left, default_top
+viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-cliprect:        DEFINE_RECT 0, 0, default_width, default_height
+cliprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
 pattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc: DEFINE_POINT 0, 0

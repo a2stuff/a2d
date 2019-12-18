@@ -47,22 +47,22 @@ save_stack:.byte   0
 ;;; ============================================================
 ;;; Animation Resources
 
-        toaster_height = 32
-        toaster_width  = 64
+        kToasterHeight = 32
+        kToasterWidth  = 64
 
         toaster_count = 4
 
 xpos_table:
-        .word   kScreenWidth+toaster_width
-        .word   kScreenWidth+toaster_width+150
-        .word   kScreenWidth+toaster_width+300
-        .word   kScreenWidth+toaster_width+450
+        .word   kScreenWidth+kToasterWidth
+        .word   kScreenWidth+kToasterWidth+150
+        .word   kScreenWidth+kToasterWidth+300
+        .word   kScreenWidth+kToasterWidth+450
 
 ypos_table:
-        .word   AS_WORD(-toaster_height)
-        .word   AS_WORD(-toaster_height)+160
-        .word   AS_WORD(-toaster_height)+40
-        .word   AS_WORD(-toaster_height)+99
+        .word   AS_WORD(-kToasterHeight)
+        .word   AS_WORD(-kToasterHeight)+160
+        .word   AS_WORD(-kToasterHeight)+40
+        .word   AS_WORD(-kToasterHeight)+99
 
 frame_table:
         .byte   0,1,2,3
@@ -116,7 +116,7 @@ viewloc:        DEFINE_POINT 0,0,viewloc
 mapbits:        .addr   0
 mapwidth:       .byte   10
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0,0,toaster_width-1,toaster_height-1
+maprect:        DEFINE_RECT 0,0,kToasterWidth-1,kToasterHeight-1
 .endparams
 
 notpencopy:     .byte   MGTK::notpencopy
@@ -215,15 +215,15 @@ loop:
         bvc     :+
         eor     #$80
 :       bmi     :+
-        copy16  #AS_WORD(-toaster_height), ypos
+        copy16  #AS_WORD(-kToasterHeight), ypos
 :
 
         ;; Wrap X
-        cmp16   xpos, #AS_WORD(-toaster_width)
+        cmp16   xpos, #AS_WORD(-kToasterWidth)
         bvc     :+
         eor     #$80
 :       bpl     :+
-        copy16  #kScreenWidth+toaster_width, xpos
+        copy16  #kScreenWidth+kToasterWidth, xpos
 :
 
         ;; Next frame

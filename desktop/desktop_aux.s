@@ -1178,7 +1178,7 @@ L9909:  sta     L9834
 
         lda     $08
         sec
-        sbc     #icon_poly_size
+        sbc     #kIconPolySize
         sta     $08
         bcs     L992D
         dec     $08+1
@@ -1187,8 +1187,8 @@ L992D:  ldy     #IconEntry::state
         lda     #$80            ; Highlighted
         sta     ($08),y
         jsr     pop_pointers
-L9936:  ldx     #icon_poly_size-1
-        ldy     #icon_poly_size-1
+L9936:  ldx     #kIconPolySize-1
+        ldy     #kIconPolySize-1
 
 L993A:  lda     poly,x
         sta     ($08),y
@@ -1201,7 +1201,7 @@ L993A:  lda     poly,x
         sta     ($08),y
         lda     $08
         clc
-        adc     #icon_poly_size
+        adc     #kIconPolySize
         sta     $08
         bcc     L9954
         inc     $08+1
@@ -1276,12 +1276,12 @@ L99C7:  dey
         iny
 
 L99E1:  iny
-        cpy     #icon_poly_size
+        cpy     #kIconPolySize
         bne     L9974
         ldy     #IconEntry::state
         lda     ($08),y
         beq     L99FC
-        add16   $08, #icon_poly_size, $08
+        add16   $08, #kIconPolySize, $08
         jmp     L9972
 
 L99FC:  jsr     xdraw_outline
@@ -1374,14 +1374,14 @@ L9B62:  add16in ($08),y, L9C96, ($08),y
         iny
         add16in ($08),y, L9C98, ($08),y
         iny
-        cpy     #icon_poly_size
+        cpy     #kIconPolySize
         bne     L9B62
         ldy     #IconEntry::state
         lda     ($08),y
         beq     L9B9C
         lda     $08
         clc
-        adc     #icon_poly_size
+        adc     #kIconPolySize
         sta     $08
         bcc     L9B99
         inc     $08+1
@@ -1460,7 +1460,7 @@ L9C29:  lda     highlight_list,x
         pha
         lda     $08
         clc
-        adc     #icon_poly_size
+        adc     #kIconPolySize
         sta     $08
         bcc     L9C60
         inc     $08+1
@@ -1947,7 +1947,7 @@ loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params:
 ;;;
 ;;; (Label is always at least as wide as the icon)
 
-icon_poly_size = (8 * .sizeof(MGTK::Point)) + 2
+kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
 .proc calc_icon_poly
         entry_ptr := $6
@@ -3259,19 +3259,19 @@ file_menu:
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_quit, 'Q', 'q'
 
-        menu_item_id_new_folder   = 1
-        menu_item_id_open         = 2
-        menu_item_id_close        = 3
-        menu_item_id_close_all    = 4
-        menu_item_id_select_all   = 5
+        kMenuItemIdNewFolder   = 1
+        kMenuItemIdOpen         = 2
+        kMenuItemIdClose        = 3
+        kMenuItemIdCloseAll    = 4
+        kMenuItemIdSelectAll   = 5
         ;; --------------------
-        menu_item_id_get_info     = 7
-        menu_item_id_rename_icon  = 8
+        kMenuItemIdGetInfo     = 7
+        kMenuItemIdRenameIcon  = 8
         ;; --------------------
-        menu_item_id_copy_file    = 10
-        menu_item_id_delete_file  = 11
+        kMenuItemIdCopyFile    = 10
+        kMenuItemIdDeleteFile  = 11
         ;; --------------------
-        menu_item_id_quit         = 13
+        kMenuItemIdQuit         = 13
 
 view_menu:
         DEFINE_MENU 5
@@ -3301,17 +3301,17 @@ special_menu:
         DEFINE_MENU_ITEM label_unlock
         DEFINE_MENU_ITEM label_get_size
 
-        menu_item_id_check_all    = 1
-        menu_item_id_check_drive  = 2
-        menu_item_id_eject        = 3
+        kMenuItemIdCheckAll    = 1
+        kMenuItemIdCheckDrive  = 2
+        kMenuItemIdEject        = 3
         ;; --------------------
-        menu_item_id_format_disk  = 5
-        menu_item_id_erase_disk   = 6
-        menu_item_id_disk_copy    = 7
+        kMenuItemIdFormatDisk  = 5
+        kMenuItemIdEraseDisk   = 6
+        kMenuItemIdDiskCopy    = 7
         ;; --------------------
-        menu_item_id_lock         = 9
-        menu_item_id_unlock       = 10
-        menu_item_id_get_size     = 11
+        kMenuItemIdLock         = 9
+        kMenuItemIdUnlock       = 10
+        kMenuItemIdGetSize     = 11
 
         PAD_TO $AE00
 

@@ -43,10 +43,10 @@ entry:
 ;;; ============================================================
 
 kDAWindowId    = 60
-da_width        = 400
-da_height       = 118
-da_left         = (kScreenWidth - da_width)/2
-da_top          = 45
+kDAWidth        = 400
+kDAHeight       = 118
+kDALeft         = (kScreenWidth - kDAWidth)/2
+kDATop          = 45
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -60,15 +60,15 @@ vthumbmax:      .byte   32
 vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   da_width
-mincontlength:  .word   da_height
-maxcontwidth:   .word   da_width
-maxcontlength:  .word   da_height
+mincontwidth:   .word   kDAWidth
+mincontlength:  .word   kDAHeight
+maxcontwidth:   .word   kDAWidth
+maxcontlength:  .word   kDAHeight
 port:
-viewloc:        DEFINE_POINT da_left, da_top
+viewloc:        DEFINE_POINT kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, da_width, da_height
+maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:          DEFINE_POINT 0, 0
@@ -427,7 +427,7 @@ model_str_ptr:        .addr   0
 model_pix_ptr:        .addr   0
 
 line1:  DEFINE_POINT 0, 37
-line2:  DEFINE_POINT da_width, 37
+line2:  DEFINE_POINT kDAWidth, 37
 
 pos_slot1:      DEFINE_POINT    45, 50
 pos_slot2:      DEFINE_POINT    45, 61
@@ -1430,7 +1430,7 @@ p65802: result  str_65802       ; Other boards support 65802
 
 ;;; ============================================================
 
-da_end  = *
+da_end  := *
 .assert * < $1B00, error, "DA too big"
         ;; I/O Buffer starts at MAIN $1C00
         ;; ... but icon tables start at AUX $1B00

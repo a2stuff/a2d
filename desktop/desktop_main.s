@@ -1083,7 +1083,7 @@ show_cursor:
 
 .proc warning_dialog_proc_num
         sta     warning_dialog_num
-        yax_call invoke_dialog_proc, index_warning_dialog, warning_dialog_num
+        yax_call invoke_dialog_proc, kIndexWarningDialog, warning_dialog_num
         rts
 .endproc
 
@@ -1504,7 +1504,7 @@ prefix_length:
 ;;; ============================================================
 
 .proc cmd_about
-        yax_call invoke_dialog_proc, index_about_dialog, $0000
+        yax_call invoke_dialog_proc, kIndexAboutDialog, $0000
         jmp     redraw_windows_and_desktop
 .endproc
 
@@ -2005,14 +2005,14 @@ path_buffer:
         .res    65, 0              ; buffer is used elsewhere too
 
 start:  copy    active_window_id, new_folder_dialog_params::phase
-        yax_call invoke_dialog_proc, index_new_folder_dialog, new_folder_dialog_params
+        yax_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
 
 L4FC6:  lda     active_window_id
         beq     L4FD4
         jsr     window_path_lookup
         stax    new_folder_dialog_params::win_path_ptr
 L4FD4:  copy    #$80, new_folder_dialog_params::phase
-        yax_call invoke_dialog_proc, index_new_folder_dialog, new_folder_dialog_params
+        yax_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
         beq     :+
         jmp     done            ; Cancelled
 :       stx     ptr+1
@@ -2043,7 +2043,7 @@ L4FD4:  copy    #$80, new_folder_dialog_params::phase
 
 success:
         copy    #$40, new_folder_dialog_params::phase
-        yax_call invoke_dialog_proc, index_new_folder_dialog, new_folder_dialog_params
+        yax_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
         addr_call find_last_path_segment, path_buffer
         sty     path_buffer
         addr_call find_window_for_path, path_buffer
@@ -4680,11 +4680,11 @@ disable_menu_items:
 
         copy    #MGTK::disableitem_disable, disableitem_params::disable
         copy    #kMenuIdFile, disableitem_params::menu_id
-        copy    #desktop_aux::menu_item_id_new_folder, disableitem_params::menu_item
+        copy    #desktop_aux::kMenuItemIdNewFolder, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #desktop_aux::menu_item_id_close, disableitem_params::menu_item
+        copy    #desktop_aux::kMenuItemIdClose, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #desktop_aux::menu_item_id_close_all, disableitem_params::menu_item
+        copy    #desktop_aux::kMenuItemIdCloseAll, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
         copy    #0, menu_dispatch_flag
@@ -4711,20 +4711,20 @@ check_view_menu_items:
 
         ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #desktop_aux::menu_item_id_open
+        lda     #desktop_aux::kMenuItemIdOpen
         jsr     disable_menu_item
-        lda     #desktop_aux::menu_item_id_get_info
+        lda     #desktop_aux::kMenuItemIdGetInfo
         jsr     disable_menu_item
-        lda     #desktop_aux::menu_item_id_rename_icon
+        lda     #desktop_aux::kMenuItemIdRenameIcon
         jsr     disable_menu_item
 
         ;; Special
         copy    #kMenuIdSpecial, disableitem_params::menu_id
-        lda     #desktop_aux::menu_item_id_lock
+        lda     #desktop_aux::kMenuItemIdLock
         jsr     disable_menu_item
-        lda     #desktop_aux::menu_item_id_unlock
+        lda     #desktop_aux::kMenuItemIdUnlock
         jsr     disable_menu_item
-        lda     #desktop_aux::menu_item_id_get_size
+        lda     #desktop_aux::kMenuItemIdGetSize
         jsr     disable_menu_item
         rts
 
@@ -4741,20 +4741,20 @@ disable_menu_item:
 
         ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #desktop_aux::menu_item_id_open
+        lda     #desktop_aux::kMenuItemIdOpen
         jsr     enable_menu_item
-        lda     #desktop_aux::menu_item_id_get_info
+        lda     #desktop_aux::kMenuItemIdGetInfo
         jsr     enable_menu_item
-        lda     #desktop_aux::menu_item_id_rename_icon
+        lda     #desktop_aux::kMenuItemIdRenameIcon
         jsr     enable_menu_item
 
         ;; Special
         copy    #kMenuIdSpecial, disableitem_params::menu_id
-        lda     #desktop_aux::menu_item_id_lock
+        lda     #desktop_aux::kMenuItemIdLock
         jsr     enable_menu_item
-        lda     #desktop_aux::menu_item_id_unlock
+        lda     #desktop_aux::kMenuItemIdUnlock
         jsr     enable_menu_item
-        lda     #desktop_aux::menu_item_id_get_size
+        lda     #desktop_aux::kMenuItemIdGetSize
         jsr     enable_menu_item
         rts
 
@@ -4775,11 +4775,11 @@ disable:
         copy    #MGTK::disableitem_disable, disableitem_params::disable
 
 :       copy    #kMenuIdSpecial, disableitem_params::menu_id
-        copy    #desktop_aux::menu_item_id_eject, disableitem_params::menu_item
+        copy    #desktop_aux::kMenuItemIdEject, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
         copy    #kMenuIdSpecial, disableitem_params::menu_id
-        copy    #desktop_aux::menu_item_id_check_drive, disableitem_params::menu_item
+        copy    #desktop_aux::kMenuItemIdCheckDrive, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
         rts
@@ -4799,11 +4799,11 @@ enable:
         copy    #MGTK::disableitem_enable, disableitem_params::disable
 
 :       copy    #kMenuIdSelector, disableitem_params::menu_id
-        lda     #menu_item_id_selector_edit
+        lda     #kMenuItemIdSelectorEdit
         jsr     configure_menu_item
-        lda     #menu_item_id_selector_delete
+        lda     #kMenuItemIdSelectorDelete
         jsr     configure_menu_item
-        lda     #menu_item_id_selector_run
+        lda     #kMenuItemIdSelectorRun
         jsr     configure_menu_item
         copy    #$80, LD344
         rts
@@ -5586,11 +5586,11 @@ flag:   .byte   0
 
         copy    #MGTK::disableitem_enable, disableitem_params::disable
         copy    #kMenuIdFile, disableitem_params::menu_id
-        copy    #desktop_aux::menu_item_id_new_folder, disableitem_params::menu_item
+        copy    #desktop_aux::kMenuItemIdNewFolder, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #desktop_aux::menu_item_id_close, disableitem_params::menu_item
+        copy    #desktop_aux::kMenuItemIdClose, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #desktop_aux::menu_item_id_close_all, disableitem_params::menu_item
+        copy    #desktop_aux::kMenuItemIdCloseAll, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
         copy    #$80, menu_dispatch_flag
@@ -6443,8 +6443,8 @@ has_parent:
 
 .proc create_file_icon
 
-        icon_x_spacing  = 80
-        icon_y_spacing  = 32
+        kIconSpacingX  = 80
+        kIconSpacingY  = 32
 
 window_id:      .byte   0
 iconbits:       .addr   0
@@ -6728,7 +6728,7 @@ L7826:  copy16  row_coords::ycoord, icon_coords::ycoord
         ;; Next column otherwise
 L7862:  lda     row_coords::xcoord
         clc
-        adc     #icon_x_spacing
+        adc     #kIconSpacingX
         sta     row_coords::xcoord
         bcc     L7870
         inc     row_coords::xcoord+1
@@ -6743,7 +6743,7 @@ L7870:  lda     cached_window_id
         dex
         lda     cached_window_icon_list,x
         jsr     icon_window_to_screen
-        add16   file_entry, #icon_y_spacing, file_entry
+        add16   file_entry, #kIconSpacingY, file_entry
         rts
 .endproc
 
@@ -6758,7 +6758,7 @@ L7870:  lda     cached_window_id
 
         ;; Find index of file type
         copy16  #type_table, ptr
-        ldy     #num_file_types-1
+        ldy     #kNumFileTypes-1
 :       lda     (ptr),y
         cmp     file_type
         beq     found
@@ -7737,8 +7737,8 @@ check_type:
 
         ;; Copy type_table prefixed by length to $807
         copy16  #type_table, $08
-        copy    #num_file_types, type_table_copy
-        ldy     #num_file_types-1
+        copy    #kNumFileTypes, type_table_copy
+        ldy     #kNumFileTypes-1
 :       lda     ($08),y
         sta     type_table_copy+1,y
         dey
@@ -8468,7 +8468,7 @@ tmp:    .byte   0
 
         sta     file_type
         copy16  #type_table, ptr
-        ldy     #num_file_types-1
+        ldy     #kNumFileTypes-1
 :       lda     (ptr),y
         cmp     file_type
         beq     found
@@ -8843,7 +8843,7 @@ device_type_to_icon_address_table:
         lda     (slot_addr),y   ; bit 0 = is RAM Card?
         and     #%00000001
         beq     :+
-ram:    return  #device_type_ramdisk
+ram:    return  #kDeviceTypeRAMDisk
 
 :       lda     unit_number     ; low nibble is high nibble of $CnFE
 
@@ -8860,16 +8860,16 @@ ram:    return  #device_type_ramdisk
         stax    blocks
         cmp16   blocks, #1601
         bcs     hd
-        return  #device_type_removable
+        return  #kDeviceTypeRemovable
 
         ;; Try AppleTalk
 unk:    MLI_RELAY_CALL READ_BLOCK, block_params
         beq     hd
         cmp     #ERR_NETWORK_ERROR
         bne     hd
-        return  #device_type_fileshare
+        return  #kDeviceTypeFileShare
 
-hd:     return  #device_type_profile
+hd:     return  #kDeviceTypeProFile
 
         DEFINE_READ_BLOCK_PARAMS block_params, $800, 2
         unit_number := block_params::unit_num
@@ -10679,7 +10679,7 @@ str_vol:
         PASCAL_STRING " VOL"
 
 .proc run_get_info_dialog_proc
-        yax_call invoke_dialog_proc, index_get_info_dialog, get_info_dialog_params
+        yax_call invoke_dialog_proc, kIndexGetInfoDialog, get_info_dialog_params
         rts
 .endproc
 .endproc
@@ -10855,7 +10855,7 @@ L96EB:  lda     ($06),y
         jmp     L9576
 
 L96F8:  sta     rename_dialog_params
-        yax_call invoke_dialog_proc, index_rename_dialog, rename_dialog_params
+        yax_call invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
         rts
 
 L9705:  .byte   $00
@@ -11165,14 +11165,14 @@ count:  .addr   0
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #copy_dialog_phase0_callback2, dialog_phase0_callback
         copy16  #copy_dialog_phase1_callback2, dialog_phase1_callback
-        yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
 .proc copy_dialog_phase0_callback2
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::populate, copy_dialog_params::phase
-        yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
@@ -11191,13 +11191,13 @@ count:  .addr   0
 
 .proc copy_dialog_phase1_callback2
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
-        yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
 .proc copy_dialog_phase3_callback
         copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
-        yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         cmp     #PromptResult::yes
         bne     cancel
         rts
@@ -11453,7 +11453,7 @@ done:   rts
 ;;; ============================================================
 
 .proc run_copy_dialog_proc
-        yax_call invoke_dialog_proc, index_copy_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
         rts
 .endproc
 
@@ -11724,7 +11724,7 @@ create: MLI_RELAY_CALL CREATE, create_params3
         bit     all_flag
         bmi     yes
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
-        yax_call invoke_dialog_proc, index_copy_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
         pha
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         pla
@@ -11943,7 +11943,7 @@ loop:   MLI_RELAY_CALL DESTROY, destroy_params
         bit     all_flag
         bmi     unlock
         copy    #DeleteDialogLifecycle::locked, delete_dialog_params::phase
-        yax_call invoke_dialog_proc, index_delete_dialog, delete_dialog_params
+        yax_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
         pha
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         pla
@@ -11985,7 +11985,7 @@ done:   rts
 .endproc
 
 .proc run_delete_dialog_proc
-        yax_call invoke_dialog_proc, index_delete_dialog, delete_dialog_params
+        yax_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
         rts
 .endproc
 
@@ -12090,11 +12090,11 @@ files_remaining_count:
 .endproc
 
 lock_dialog_lifecycle:
-        yax_call invoke_dialog_proc, index_lock_dialog, lock_unlock_dialog_params
+        yax_call invoke_dialog_proc, kIndexLockDialog, lock_unlock_dialog_params
         rts
 
 unlock_dialog_lifecycle:
-        yax_call invoke_dialog_proc, index_unlock_dialog, lock_unlock_dialog_params
+        yax_call invoke_dialog_proc, kIndexUnlockDialog, lock_unlock_dialog_params
         rts
 
 ;;; ============================================================
@@ -12219,13 +12219,13 @@ do_get_size_dialog_phase:
         copy    #0, get_size_dialog_params::phase
         copy16  #get_size_dialog_phase2_callback, dialog_phase2_callback
         copy16  #get_size_dialog_phase0_callback, dialog_phase0_callback
-        yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
+        yax_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
         copy16  #get_size_dialog_phase1_callback, dialog_phase1_callback
         rts
 
 .proc get_size_dialog_phase0_callback
         copy    #1, get_size_dialog_params::phase
-        yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
+        yax_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
         ;; fall through
 .endproc
 get_size_rts1:
@@ -12233,14 +12233,14 @@ get_size_rts1:
 
 .proc get_size_dialog_phase2_callback
         copy    #2, get_size_dialog_params::phase
-        yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
+        yax_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
         beq     get_size_rts1
         jmp     close_files_cancel_dialog
 .endproc
 
 .proc get_size_dialog_phase1_callback
         copy    #3, get_size_dialog_params::phase
-        yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
+        yax_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
 .endproc
 get_size_rts2:
         rts
@@ -12574,13 +12574,13 @@ done:   rts
 
 .proc dec_file_count_and_run_delete_dialog_proc
         sub16   op_file_count, #1, delete_dialog_params::count
-        yax_call invoke_dialog_proc, index_delete_dialog, delete_dialog_params
+        yax_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
         rts
 .endproc
 
 .proc dec_file_count_and_run_copy_dialog_proc
         sub16   op_file_count, #1, copy_dialog_params::count
-        yax_call invoke_dialog_proc, index_copy_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
         rts
 .endproc
 
@@ -12685,12 +12685,12 @@ do_on_line:
 ;;; assumes hires screen (main and aux) are safe to destroy.
 
 .proc maybe_reformat_ram
-        ram_unit_number = (1<<7 | 3<<4 | DT_RAM)
+        kRAMUnitNumber = (1<<7 | 3<<4 | DT_RAM)
 
         ;; Search DEVLST to see if S3D2 RAM was restored
         ldx     DEVCNT
 :       lda     DEVLST,x
-        cmp     #ram_unit_number
+        cmp     #kRAMUnitNumber
         beq     format
         dex
         bpl     :-
@@ -12701,7 +12701,7 @@ do_on_line:
 
         ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
 format: copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
-        copy    #ram_unit_number, DRIVER_UNIT_NUMBER
+        copy    #kRAMUnitNumber, DRIVER_UNIT_NUMBER
         copy16  #$2000, DRIVER_BUFFER
         lda     LCBANK1
         lda     LCBANK1
@@ -12743,17 +12743,17 @@ coords: DEFINE_POINT 0,0
 ;;; ============================================================
 ;;; Dialog Launcher (or just proc handler???)
 
-        index_about_dialog              = 0
-        index_copy_dialog               = 1
-        index_delete_dialog             = 2
-        index_new_folder_dialog         = 3
-        index_get_info_dialog           = 6
-        index_lock_dialog               = 7
-        index_unlock_dialog             = 8
-        index_rename_dialog             = 9
-        index_download_dialog           = 10
-        index_get_size_dialog           = 11
-        index_warning_dialog            = 12
+        kIndexAboutDialog              = 0
+        kIndexCopyDialog               = 1
+        kIndexDeleteDialog             = 2
+        kIndexNewFolderDialog         = 3
+        kIndexGetInfoDialog           = 6
+        kIndexLockDialog               = 7
+        kIndexUnlockDialog             = 8
+        kIndexRenameDialog             = 9
+        kIndexDownloadDialog           = 10
+        kIndexGetSizeDialog           = 11
+        kIndexWarningDialog            = 12
 
 invoke_dialog_proc:
         .assert * = $A500, error, "Entry point used by overlay"
@@ -13184,7 +13184,7 @@ jump_relay:
         yax_call draw_dialog_label, 9, desktop_aux::str_about8
         copy16  #310 - (7 * .strlen(VERSION_SUFFIX)), dialog_label_pos
         yax_call draw_dialog_label, 9, desktop_aux::str_about9
-        copy16  #dialog_label_default_x, dialog_label_pos
+        copy16  #kDialogLabelDefaultX, dialog_label_pos
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -13649,7 +13649,7 @@ LAE90:  lda     ($08),y
         yax_call draw_dialog_label, 2, desktop_aux::str_in_colon
         copy    #55, dialog_label_pos
         yax_call draw_dialog_label, 2, path_buf0
-        copy    #dialog_label_default_x, dialog_label_pos
+        copy    #kDialogLabelDefaultX, dialog_label_pos
         yax_call draw_dialog_label, 4, desktop_aux::str_enter_folder_name
         jsr     draw_filename_prompt
 LAEC6:  jsr     prompt_input_loop
@@ -14380,7 +14380,7 @@ skip:   ldx     #0
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         addr_call_indirect draw_text1, ptr
         ldx     dialog_label_pos
-        copy    #dialog_label_default_x,dialog_label_pos::xcoord ; restore original x coord
+        copy    #kDialogLabelDefaultX,dialog_label_pos::xcoord ; restore original x coord
         rts
 .endproc
 

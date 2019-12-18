@@ -592,18 +592,18 @@ textfont:       .addr   0
 
         .byte   0               ; ???
 
-        menu_bar_height = 13
+        kMenuBarHeight = 13
 
         ;; params for MGTK::SetPortBits when decorating title bar
 .params screen_port
 left:           .word   0
-top:            .word   menu_bar_height
+top:            .word   kMenuBarHeight
 mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 hoff:           .word   0
 voff:           .word   0
 width:          .word   kScreenWidth - 1
-height:         .word   kScreenHeight - menu_bar_height - 2
+height:         .word   kScreenHeight - kMenuBarHeight - 2
 .endparams
 
 .params penmode_normal
@@ -618,8 +618,8 @@ penmode:   .byte   MGTK::notpenXOR
 
         window_width = 130
         window_height = 96
-        default_left = 210
-        default_top = 60
+        kDefaultLeft = 210
+        kDefaultTop = 60
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -637,8 +637,8 @@ mincontwidth:   .word   window_width
 mincontlength:  .word   window_height
 maxcontwidth:   .word   window_width
 maxcontlength:  .word   window_height
-left:           .word   default_left
-top:            .word   default_top
+left:           .word   kDefaultLeft
+top:            .word   kDefaultTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, window_width, window_height

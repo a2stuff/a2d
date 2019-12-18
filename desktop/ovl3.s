@@ -453,7 +453,7 @@ L9441:  cmp     #8              ; 2nd column (8-15)
 
         ;; A has row
 L9448:  ldx     #0
-        ldy     #entry_picker_item_height
+        ldy     #kEntryPickerItemHeight
         jsr     Multiply_16_8_16 ; A,X = A,X * Y
         clc
         adc     #32
@@ -682,7 +682,7 @@ L9736:  lda     #0
         ;; Determine row
 L9738:  pha
         ldax    screentowindow_windowy
-        ldy     #entry_picker_item_height
+        ldy     #kEntryPickerItemHeight
         jsr     Divide_16_8_16
         stax    screentowindow_windowy
         cmp     #8
@@ -758,7 +758,7 @@ L97B6:  clc
 L97D1:  sec
         sbc     #16
 L97D4:  ldx     #0
-        ldy     #entry_picker_item_height
+        ldy     #kEntryPickerItemHeight
         jsr     Multiply_16_8_16
         clc
         adc     #24
@@ -767,7 +767,7 @@ L97D4:  ldx     #0
         adc     #0
         sta     entry_picker_item_rect::y1+1
         add16   entry_picker_item_rect::x1, #106, entry_picker_item_rect::x2
-        add16   entry_picker_item_rect::y1, #entry_picker_item_height-1, entry_picker_item_rect::y2
+        add16   entry_picker_item_rect::y1, #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_item_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy

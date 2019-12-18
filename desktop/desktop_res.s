@@ -485,9 +485,9 @@ point7: DEFINE_POINT 40,18, point7
 dialog_label_base_pos:
         DEFINE_POINT 40,35-5, dialog_label_base_pos
 
-        dialog_label_default_x = 40
+        kDialogLabelDefaultX = 40
 dialog_label_pos:
-        DEFINE_POINT dialog_label_default_x,0, dialog_label_pos
+        DEFINE_POINT kDialogLabelDefaultX,0, dialog_label_pos
 
 .params name_input_mapinfo
         DEFINE_POINT 80, 35+7
@@ -497,7 +497,7 @@ dialog_label_pos:
         DEFINE_RECT 0, 0, 358, 100
 .endparams
 
-        entry_picker_item_height = 9 ; default font height
+        kEntryPickerItemHeight = 9 ; default font height
 
 entry_picker_outer_rect:
         DEFINE_RECT 4,2,winfo_entry_picker::width-4,winfo_entry_picker::height-2
@@ -864,15 +864,15 @@ selector_menu_addr:
         .addr   selector_menu
 
         ;; Buffer for Run List entries
-        max_run_list_entries = 8
+        kMaxRunListEntries = 8
 
         ;; Names
 run_list_entries:
-        .res    max_run_list_entries * 16, 0
+        .res    kMaxRunListEntries * 16, 0
 
         ;; Paths
 run_list_paths:
-        .res    max_run_list_entries * 64, 0
+        .res    kMaxRunListEntries * 64, 0
 
 ;;; ============================================================
 ;;; Window & Icon State
@@ -1094,12 +1094,12 @@ startup_menu_item_5:    PASCAL_STRING "Slot 0 "
 startup_menu_item_6:    PASCAL_STRING "Slot 0 "
 startup_menu_item_7:    PASCAL_STRING "Slot 0 "
 
-        device_type_disk_ii     = 0
-        device_type_ramdisk     = 1
-        device_type_profile     = 2
-        device_type_removable   = 3
-        device_type_fileshare   = 4
-        device_type_unknown     = 5
+        kDeviceTypeDiskII     = 0
+        kDeviceTypeRAMDisk     = 1
+        kDeviceTypeProFile     = 2
+        kDeviceTypeRemovable   = 3
+        kDeviceTypeFileShare   = 4
+        kDeviceTypeUnknown     = 5
 
 ;;; Templates used for device names
 device_template_table:
@@ -1149,14 +1149,14 @@ selector_menu:
         DEFINE_MENU_ITEM label_del
         DEFINE_MENU_ITEM label_run, '0', '0'
         DEFINE_MENU_SEPARATOR
-        .repeat max_run_list_entries, i
+        .repeat kMaxRunListEntries, i
         DEFINE_MENU_ITEM run_list_entries + i * $10, .string(i+1), .string(i+1)
         .endrepeat
 
-        menu_item_id_selector_add       = 1
-        menu_item_id_selector_edit      = 2
-        menu_item_id_selector_delete    = 3
-        menu_item_id_selector_run       = 4
+        kMenuItemIdSelectorAdd       = 1
+        kMenuItemIdSelectorEdit      = 2
+        kMenuItemIdSelectorDelete    = 3
+        kMenuItemIdSelectorRun       = 4
 
 label_add:
         PASCAL_STRING "Add an Entry ..."
@@ -1437,7 +1437,7 @@ fto_blocks:     .word   0
         FTO_FLAGS_AUX    = %10000000
         FTO_FLAGS_BLOCKS = %01000000
 
-fto_table_record_size = 8
+kFTOTableRecordSize = 8
 fto_table:
         DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_NONE, 0, 0, FT_TYPELESS ; Reserve BAD for tmp
 
@@ -1491,7 +1491,7 @@ icon_entries:
 
         .org $FB00
 
-        num_file_types = 15
+        kNumFileTypes = 15
 
 type_table:
         .byte   FT_TYPELESS   ; typeless
