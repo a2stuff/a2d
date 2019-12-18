@@ -2,9 +2,9 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../mgtk/mgtk.inc"
         .include "../desktop.inc"
-        .include "../inc/macros.inc"
 
 ;;; ============================================================
 
@@ -93,7 +93,7 @@ save_stack:  .byte   0
 
         ;; The following params blocks overlap for data re-use
 
-.proc screentowindow_params
+.params screentowindow_params
 window_id      := *
 screen  := * + 1
 screenx := * + 1 ; aligns with event_params::xcoord
@@ -101,50 +101,50 @@ screeny := * + 3 ; aligns with event_params::ycoord
 window  := * + 5
 windowx := * + 5
 windowy := * + 7
-.endproc
+.endparams
 
-.proc dragwindow_params
+.params dragwindow_params
 window_id      := *
 xcoord  := * + 1 ; aligns with event_params::xcoord
 ycoord  := * + 3 ; aligns with event_params::ycoord
 moved   := * + 5 ; ignored
-.endproc
+.endparams
 
-.proc event_params
+.params event_params
 kind:  .byte   0
 xcoord    := *                  ; if state is 0,1,2,4
 ycoord    := * + 2              ; "
 key       := *                  ; if state is 3
 modifiers := * + 1              ; "
-.endproc
+.endparams
 
-.proc findwindow_params
+.params findwindow_params
 mousex: .word   0               ; aligns with event_params::xcoord
 mousey: .word   0               ; aligns with event_params::ycoord
 which_area:   .byte   0
 window_id:     .byte   0
-.endproc
+.endparams
 
         .byte 0, 0              ; fills out space for screentowindow_params
         .byte 0, 0              ; ???
 
-.proc trackgoaway_params
+.params trackgoaway_params
 goaway:  .byte   0
-.endproc
+.endparams
 
-.proc getwinport_params
+.params getwinport_params
 window_id:     .byte   kDAWindowId
         .addr   grafport
-.endproc
+.endparams
         getwinport_params_window_id := getwinport_params::window_id
 
-.proc preserve_zp_params
+.params preserve_zp_params
 flag:   .byte   MGTK::zp_preserve
-.endproc
+.endparams
 
-.proc overwrite_zp_params
+.params overwrite_zp_params
 flag:   .byte   MGTK::zp_overwrite
-.endproc
+.endparams
 
 ;;; ============================================================
 ;;; Button Definitions
@@ -175,7 +175,7 @@ flag:   .byte   MGTK::zp_overwrite
         border_lt = 1          ; border width pixels (left/top)
         border_br = 2          ; (bottom/right)
 
-.proc btn_c
+.params btn_c
 viewloc:        DEFINE_POINT col1_left - border_lt, row1_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -184,9 +184,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   'c'
 pos:    .word   col1_left + 6, row1_bot
 port:    .word   col1_left,row1_top,col1_right,row1_bot
-.endproc
+.endparams
 
-.proc btn_e
+.params btn_e
 viewloc:        DEFINE_POINT col2_left - border_lt, row1_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -195,9 +195,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   'e'
 pos:    .word   col2_left + 6, row1_bot
 port:    .word   col2_left,row1_top,col2_right,row1_bot
-.endproc
+.endparams
 
-.proc btn_eq
+.params btn_eq
 viewloc:        DEFINE_POINT col3_left - border_lt, row1_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -206,9 +206,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '='
 pos:    .word   col3_left + 6, row1_bot
 port:    .word   col3_left,row1_top,col3_right,row1_bot
-.endproc
+.endparams
 
-.proc btn_mul
+.params btn_mul
 viewloc:        DEFINE_POINT col4_left - border_lt, row1_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -217,9 +217,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '*'
 pos:    .word   col4_left + 6, row1_bot
 port:    .word   col4_left,row1_top,col4_right,row1_bot
-.endproc
+.endparams
 
-.proc btn_7
+.params btn_7
 viewloc:        DEFINE_POINT col1_left - border_lt, row2_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -228,9 +228,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '7'
 pos:    .word   col1_left + 6, row2_bot
 port:    .word   col1_left,row2_top,col1_right,row2_bot
-.endproc
+.endparams
 
-.proc btn_8
+.params btn_8
 viewloc:        DEFINE_POINT col2_left - border_lt, row2_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -239,9 +239,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '8'
 pos:    .word   col2_left + 6, row2_bot
 port:    .word   col2_left,row2_top,col2_right,row2_bot
-.endproc
+.endparams
 
-.proc btn_9
+.params btn_9
 viewloc:        DEFINE_POINT col3_left - border_lt, row2_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -250,9 +250,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '9'
 pos:    .word   col3_left + 6, row2_bot
 port:    .word   col3_left,row2_top,col3_right,row2_bot
-.endproc
+.endparams
 
-.proc btn_div
+.params btn_div
 viewloc:        DEFINE_POINT col4_left - border_lt, row2_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -261,9 +261,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '/'
 pos:    .word   col4_left + 6, row2_bot
 port:    .word   col4_left,row2_top,col4_right,row2_bot
-.endproc
+.endparams
 
-.proc btn_4
+.params btn_4
 viewloc:        DEFINE_POINT col1_left - border_lt, row3_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -272,9 +272,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '4'
 pos:    .word   col1_left + 6, row3_bot
 port:    .word   col1_left,row3_top,col1_right,row3_bot
-.endproc
+.endparams
 
-.proc btn_5
+.params btn_5
 viewloc:        DEFINE_POINT col2_left - border_lt, row3_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -283,9 +283,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '5'
 pos:    .word   col2_left + 6, row3_bot
 port:    .word   col2_left,row3_top,col2_right,row3_bot
-.endproc
+.endparams
 
-.proc btn_6
+.params btn_6
 viewloc:        DEFINE_POINT col3_left - border_lt, row3_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -294,9 +294,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '6'
 pos:    .word   col3_left + 6, row3_bot
 port:    .word   col3_left,row3_top,col3_right,row3_bot
-.endproc
+.endparams
 
-.proc btn_sub
+.params btn_sub
 viewloc:        DEFINE_POINT col4_left - border_lt, row3_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -305,9 +305,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '-'
 pos:    .word   col4_left + 6, row3_bot
 port:    .word   col4_left,row3_top,col4_right,row3_bot
-.endproc
+.endparams
 
-.proc btn_1
+.params btn_1
 viewloc:        DEFINE_POINT col1_left - border_lt, row4_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -316,9 +316,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '1'
 pos:    .word   col1_left + 6, row4_bot
 port:    .word   col1_left,row4_top,col1_right,row4_bot
-.endproc
+.endparams
 
-.proc btn_2
+.params btn_2
 viewloc:        DEFINE_POINT col2_left - border_lt, row4_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -327,9 +327,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '2'
 pos:    .word   col2_left + 6, row4_bot
 port:    .word   col2_left,row4_top,col2_right,row4_bot
-.endproc
+.endparams
 
-.proc btn_3
+.params btn_3
 viewloc:        DEFINE_POINT col3_left - border_lt, row4_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -338,9 +338,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '3'
 pos:    .word   col3_left + 6, row4_bot
 port:    .word   col3_left,row4_top,col3_right,row4_bot
-.endproc
+.endparams
 
-.proc btn_0
+.params btn_0
 viewloc:        DEFINE_POINT col1_left - border_lt, row5_top - border_lt
 mapbits: .addr   wide_button_bitmap
 mapwidth: .byte   8                   ; bitmap_stride (bytes)
@@ -349,9 +349,9 @@ maprect:         DEFINE_RECT 0, 0, 49, button_height + border_lt + border_br ; 0
 label:  .byte   '0'
 pos:    .word   col1_left + 6, row5_bot
 port:    .word   col1_left,row5_top,col2_right,row5_bot
-.endproc
+.endparams
 
-.proc btn_dec
+.params btn_dec
 viewloc:        DEFINE_POINT col3_left - border_lt, row5_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -360,9 +360,9 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_
 label:  .byte   '.'
 pos:    .word   col3_left + 6 + 2, row5_bot ; + 2 to center the label
 port:    .word   col3_left,row5_top,col3_right,row5_bot
-.endproc
+.endparams
 
-.proc btn_add
+.params btn_add
 viewloc:        DEFINE_POINT col4_left - border_lt, row4_top - border_lt
 mapbits: .addr   tall_button_bitmap
 mapwidth: .byte   bitmap_stride
@@ -371,7 +371,7 @@ maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, 27 ; + 
 label:  .byte   '+'
 pos:    .word   col4_left + 6, row5_bot
 port:    .word   col4_left,row4_top,col4_right,row5_bot
-.endproc
+.endparams
         .byte   0               ; sentinel
 
         ;; Button bitmaps. These are used as bitmaps for
@@ -457,12 +457,12 @@ calc_l: .byte   $00             ; input length
 ;;; ============================================================
 ;;; Miscellaneous param blocks
 
-.proc background_box_params
+.params background_box_params
 left:   .word   1
 top:    .word   0
 right:  .word   129
 bottom: .word   96
-.endproc
+.endparams
 
 background_pattern:
         .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
@@ -476,50 +476,50 @@ white_pattern:
         .res    8, $FF
         .byte   $00
 
-.proc settextbg_params
+.params settextbg_params
 backcolor:  .byte   $7F
-.endproc
+.endparams
 
         display_left    = 10
         display_top     = 5
         display_width   = 120
         display_height  = 17
 
-.proc frame_display_params
+.params frame_display_params
 left:   .word   display_left
 top:    .word   display_top
 width:  .word   display_width
 height: .word   display_height
-.endproc
+.endparams
 
-.proc clear_display_params
+.params clear_display_params
 left:   .word   display_left+1
 top:    .word   display_top+1
 width:  .word   display_width-1
 height: .word   display_height-1
-.endproc
+.endparams
 
         ;; For drawing 1-character strings (button labels)
-.proc drawtext_params_label
+.params drawtext_params_label
         .addr   label
         .byte   1
-.endproc
+.endparams
 label:  .byte   0               ; modified with char to draw
 
-.proc drawtext_params1
+.params drawtext_params1
 textptr:   .addr   text_buffer1
 textlen: .byte   15
-.endproc
+.endparams
 
 text_buffer_size = 14
 
 text_buffer1:
         .res    text_buffer_size+2, 0
 
-.proc drawtext_params2
+.params drawtext_params2
 textptr:   .addr   text_buffer2
 textlen: .byte   15
-.endproc
+.endparams
 
 text_buffer2:
         .res    text_buffer_size+2, 0
@@ -530,36 +530,36 @@ error_string:
         DEFINE_STRING "Error "
 
         ;;  used when clearing display; params to a $18 call
-.proc textwidth_params
+.params textwidth_params
 textptr:   .addr   text_buffer1
 textlen:    .byte   15              ; ???
 result:  .word   0
-.endproc
+.endparams
 
         kDAWindowId = 52
 
-.proc closewindow_params
+.params closewindow_params
 window_id:     .byte   kDAWindowId
-.endproc
+.endparams
 
-.proc text_pos_params3
+.params text_pos_params3
 left:   .word   0
 base:   .word   16
-.endproc
+.endparams
 
-.proc text_pos_params2
+.params text_pos_params2
 left:   .word   15
 base:   .word   16
-.endproc
+.endparams
 
-.proc error_pos
+.params error_pos
 left:   .word   69
 base:   .word   16
-.endproc
+.endparams
 
 farg:   .byte   $00,$00,$00,$00,$00,$00
 
-.proc title_bar_bitmap      ; Params for MGTK::PaintBits
+.params title_bar_bitmap      ; Params for MGTK::PaintBits
 viewloc:        DEFINE_POINT 115, AS_WORD -9, viewloc
 mapbits:        .addr   pixels
 mapwidth:       .byte   1
@@ -572,9 +572,9 @@ pixels: .byte   px(%1000001)
         .byte   px(%1110110)
         .byte   px(%0110110)
         .byte   px(%1001001)
-.endproc
+.endparams
 
-.proc grafport
+.params grafport
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .word   0
 mapwidth:       .word   0
@@ -587,7 +587,7 @@ penheight:      .byte   0
 penmode:        .byte   0
 textback:       .byte   0
 textfont:       .addr   0
-.endproc
+.endparams
         .assert * - grafport = 36, error
 
         .byte   0               ; ???
@@ -595,7 +595,7 @@ textfont:       .addr   0
         menu_bar_height = 13
 
         ;; params for MGTK::SetPortBits when decorating title bar
-.proc screen_port
+.params screen_port
 left:           .word   0
 top:            .word   menu_bar_height
 mapbits:        .word   MGTK::screen_mapbits
@@ -604,24 +604,24 @@ hoff:           .word   0
 voff:           .word   0
 width:          .word   kScreenWidth - 1
 height:         .word   kScreenHeight - menu_bar_height - 2
-.endproc
+.endparams
 
-.proc penmode_normal
+.params penmode_normal
 penmode:   .byte   MGTK::pencopy
-.endproc
+.endparams
 
         .byte   $01,$02         ; ??
 
-.proc penmode_xor
+.params penmode_xor
 penmode:   .byte   MGTK::notpenXOR
-.endproc
+.endparams
 
         window_width = 130
         window_height = 96
         default_left = 210
         default_top = 60
 
-.proc winfo
+.params winfo
 window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
 title:          .addr   window_title
@@ -651,7 +651,7 @@ penmode:        .byte   0
 textback:       .byte   $7f
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 openwindow_params_top := winfo::top
 
 window_title:

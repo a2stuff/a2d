@@ -1,3 +1,5 @@
+.feature leading_dot_in_identifiers
+
 ;;; ============================================================
 ;;; Generic Macros
 ;;; ============================================================
@@ -597,7 +599,7 @@ skip:   dec     arg
 .endmacro
 
 ;;; ============================================================
-;;; Param Blocks
+;;; Placed Param Blocks
 ;;; ============================================================
 
 ;;; Helper macros to set up a scoped block of parameters at a pre-determined
@@ -695,20 +697,43 @@ loop:   lda     src,x
 ;;; ============================================================
 ;;; Temporary org change, for relocated routines
 ;;; ============================================================
+;;; Example:
+;;; .pushorg $380
+;;;     lda #$12
+;;;     rts
+;;; .poporg
 
 __pushorg_depth__ .set 0
 
-.macro pushorg addr
+.macro .pushorg addr
         ::__pushorg_depth__ .set ::__pushorg_depth__ + 1
         .ident(.sprintf("__pushorg_saved__%d", ::__pushorg_depth__)) := *
         .org addr
         .ident(.sprintf("__pushorg_start__%d", ::__pushorg_depth__)) := *
 .endmacro
 
-.macro poporg
+.macro .poporg
         .org .ident(.sprintf("__pushorg_saved__%d", ::__pushorg_depth__)) + (* - .ident(.sprintf("__pushorg_start__%d", ::__pushorg_depth__)))
         ::__pushorg_depth__ .set ::__pushorg_depth__ - 1
 .endmacro
+
+;;; ============================================================
+;;; Parameter Blocks - named scopes that indicate data
+;;; ============================================================
+;;; Example:
+;;; .params label
+;;; p1: .byte 0
+;;; p2: .word 1234
+;;; .endparams
+
+.macro .params label
+        .proc label
+.endmacro
+
+.macro .endparams
+        .endproc
+.endmacro
+
 
 ;;; ============================================================
 ;;; Flow Control

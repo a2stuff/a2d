@@ -2,10 +2,10 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../desktop.inc"
-        .include "../inc/macros.inc"
 
 ;;; ============================================================
 ;;; Memory map
@@ -188,10 +188,10 @@ params_start:
 
         DEFINE_CLOSE_PARAMS close_params
 
-.proc pathbuff                 ; 1st byte is length, rest is full path
+.params pathbuff                 ; 1st byte is length, rest is full path
 length: .byte   $00
 data:   .res    64, 0
-.endproc
+.endparams
 
 
 params_end:
@@ -199,19 +199,19 @@ params_end:
 
         kDAWindowId = 100
 
-.proc line_pos
+.params line_pos
 left:   .word   0
 base:   .word   0
-.endproc
+.endparams
 
 
 event_params:   .tag MGTK::Event
 
-.proc window_title
+.params window_title
         .byte 0                 ; length
-.endproc
+.endparams
 
-.proc winfo
+.params winfo
 window_id:     .byte   kDAWindowId       ; window identifier
 options:  .byte   MGTK::Option::dialog_box
 title:  .addr   window_title
@@ -228,12 +228,12 @@ mincontlength:     .word   kScreenHeight
 maxcontwidth:     .word   kScreenWidth
 maxcontlength:     .word   kScreenHeight
 
-.proc port
+.params port
 viewloc:        DEFINE_POINT 0, 0
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
 maprect:        DEFINE_RECT 0, 0, kScreenWidth, kScreenHeight
-.endproc
+.endparams
 
 pattern:.res    8, 0
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -244,7 +244,7 @@ penmode:   .byte   MGTK::notpencopy
 textback:  .byte   $7F
 textfont:   .addr   DEFAULT_FONT
 nextwinfo:   .addr   0
-.endproc
+.endparams
 
 
 .proc init
@@ -505,13 +505,13 @@ exit:
         minipix_width = 88 * 2
         minipix_height = 52
 
-.proc paintbits_params
+.params paintbits_params
 viewloc:        DEFINE_POINT (kScreenWidth - minipix_width)/2, (kScreenHeight - minipix_height)/2
 mapbits:        .addr   minipix_dst_buf
 mapwidth:       .byte   26
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0,0,minipix_width-1,minipix_height-1
-.endproc
+.endparams
 
 .endproc
 

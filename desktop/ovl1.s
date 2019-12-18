@@ -14,7 +14,7 @@
 
         menu_target := $D400
 
-.proc menu_bar
+.params menu_bar
         DEFINE_MENU_BAR 1
         DEFINE_MENU_BAR_ITEM 1, menu_target + (menu_label - menu_bar), menu_target + (menu - menu_bar)
 
@@ -25,7 +25,7 @@ menu_label:
         PASCAL_STRING .sprintf("       Disk copy version %d.%d   ",::VERSION_MAJOR,::VERSION_MINOR)
 item_label:
         PASCAL_STRING "Rien"
-.endproc
+.endparams
 
 ;;; ============================================================
 

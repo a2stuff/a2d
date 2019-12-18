@@ -2,8 +2,8 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
-        .include "../inc/prodos.inc"
         .include "../inc/macros.inc"
+        .include "../inc/prodos.inc"
 
 DESKTOP_INIT    := $0800        ; init location
 L7ECA           := $7ECA        ; ???

@@ -740,12 +740,12 @@ done:   rts
 smartport_call:
         jmp     ($06)
 
-.proc control_params
+.params control_params
 param_count:    .byte   3
 unit_number:    .byte   0
 control_list:   .addr   L0D22
 control_code:   .byte   $04     ; Control Code: Eject disk
-.endproc
+.endparams
 control_params_unit_number := control_params::unit_number
 
 L0D22:  .byte   0, 0

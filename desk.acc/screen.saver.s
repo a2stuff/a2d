@@ -2,9 +2,9 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../mgtk/mgtk.inc"
         .include "../desktop.inc"
-        .include "../inc/macros.inc"
 
 
 ;;; ============================================================
@@ -74,11 +74,11 @@ frame_table:
 
 event_params:   .tag MGTK::Event
 
-.proc window_title
+.params window_title
         .byte 0                 ; length
-.endproc
+.endparams
 
-.proc winfo
+.params winfo
 window_id:      .byte   kDAWindowId ; window identifier
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   window_title
@@ -94,12 +94,12 @@ mincontwidth:   .word   kScreenWidth
 mincontlength:  .word   kScreenHeight
 maxcontwidth:   .word   kScreenWidth
 maxcontlength:  .word   kScreenHeight
-.proc port
+.params port
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 maprect:        DEFINE_RECT 0, 0, kScreenWidth, kScreenHeight
-.endproc
+.endparams
 pattern:        .res    8, 0
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -109,23 +109,23 @@ penmode:        .byte   MGTK::notpencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
-.proc paintbits_params
+.params paintbits_params
 viewloc:        DEFINE_POINT 0,0,viewloc
 mapbits:        .addr   0
 mapwidth:       .byte   10
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0,0,toaster_width-1,toaster_height-1
-.endproc
+.endparams
 
 notpencopy:     .byte   MGTK::notpencopy
 penXOR:         .byte   MGTK::penXOR
 
-.proc getwinport_params
+.params getwinport_params
 window_id:     .byte   kDAWindowId
         .addr   grafport
-.endproc
+.endparams
 
 grafport:       .tag MGTK::GrafPort
 

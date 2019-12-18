@@ -264,7 +264,7 @@ DRIVER_COMMAND_FORMAT  = 3
     .if .xmatch(.string(io), "io_buffer")
         .error "Can't pass 'io_buffer' label to DEFINE_*_PARAMS"
     .endif
-.proc name
+.params name
 param_count:    .byte   3
 pathname:       .addr   pn
 io_buffer:      .addr   io
@@ -273,41 +273,41 @@ ref_num:        .byte   rn
     .else
 ref_num:        .byte   0
     .endif
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_READ_PARAMS name, db, rc
-.proc name
+.params name
 param_count:    .byte   4
 ref_num:        .byte   0
 data_buffer:    .addr   db
 request_count:  .word   rc
 trans_count:    .word   0
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_WRITE_PARAMS name, db, rc
-.proc name
+.params name
 param_count:    .byte   4
 ref_num:        .byte   0
 data_buffer:    .addr   db
 request_count:  .word   rc
 trans_count:    .word   0
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_CLOSE_PARAMS name
-.proc name
+.params name
 param_count:    .byte   1
 ref_num:        .byte   0
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_FLUSH_PARAMS name
-.proc name
+.params name
 param_count:    .byte   1
 ref_num:        .byte   0
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_GET_FILE_INFO_PARAMS name, pn
@@ -315,7 +315,7 @@ ref_num:        .byte   0
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
-.proc name
+.params name
 param_count:    .byte  $A
 pathname:       .addr   pn
 access:         .byte   0
@@ -327,19 +327,19 @@ mod_date:       .word   0
 mod_time:       .word   0
 create_date:    .word   0
 create_time:    .word   0
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_SET_MARK_PARAMS name, pos
-.proc name
+.params name
 param_count:    .byte   2
 ref_num:        .byte   0
 position:       .faraddr pos
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_ON_LINE_PARAMS name, un, db
-.proc name
+.params name
 param_count:    .byte   2
 
     .ifnblank un
@@ -349,45 +349,45 @@ unit_num:       .byte   0
     .endif
 
 data_buffer:    .addr   db
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_READ_BLOCK_PARAMS name, db, bn
-.proc name
+.params name
 param_count:    .byte   3
 unit_num:       .byte   0
 data_buffer:    .addr   db
 block_num:      .word   bn
-.endproc
+.endparams
 .endmacro
 
 
 .macro DEFINE_WRITE_BLOCK_PARAMS name, db, bn
-.proc name
+.params name
 param_count:    .byte   3
 unit_num:       .byte   0
 data_buffer:    .addr   db
 block_num:      .word   bn
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_ALLOC_INTERRUPT_PARAMS name, ic
-.proc alloc_interrupt_params
+.params alloc_interrupt_params
 param_count:    .byte   2
 int_num:        .byte   0
 int_code:       .addr   ic
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_DEALLOC_INTERRUPT_PARAMS name
-.proc dealloc_interrupt_params
+.params dealloc_interrupt_params
 param_count:    .byte   1
 int_num:        .byte   0
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_QUIT_PARAMS name, ext, pathname
-.proc name
+.params name
 param_count:    .byte   4
     .ifnblank ext
         .byte   ext
@@ -401,7 +401,7 @@ param_count:    .byte   4
     .endif
         .byte   0
         .word   0
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_SET_PREFIX_PARAMS name, pn
@@ -409,10 +409,10 @@ param_count:    .byte   4
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
-.proc name
+.params name
 param_count:    .byte   1
 pathname:       .addr   pn
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_GET_PREFIX_PARAMS name, pn
@@ -420,10 +420,10 @@ pathname:       .addr   pn
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
-.proc name
+.params name
 param_count:    .byte   1
 pathname:       .addr   pn
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_DESTROY_PARAMS name, pn
@@ -431,10 +431,10 @@ pathname:       .addr   pn
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
-.proc name
+.params name
 param_count:    .byte   1
 pathname:       .addr   pn
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_CREATE_PARAMS name, pn, ac, ft, at, st
@@ -442,7 +442,7 @@ pathname:       .addr   pn
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
-.proc name
+.params name
 param_count:    .byte   7
 pathname:       .addr   pn
 
@@ -472,23 +472,23 @@ storage_type:   .byte   0
 
 create_date:    .word   0
 create_time:    .word   0
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_SET_EOF_PARAMS name, eo
-.proc name
+.params name
 param_count:    .byte   2
 ref_num:        .byte   0
 eof:            .faraddr eo
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_GET_EOF_PARAMS name
-.proc name
+.params name
 param_count:    .byte   2
 ref_num:        .byte   0
 eof:            .faraddr 0
-.endproc
+.endparams
 .endmacro
 
 .macro DEFINE_RENAME_PARAMS name, pn, np
@@ -496,9 +496,9 @@ eof:            .faraddr 0
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
-.proc name
+.params name
 param_count:    .byte   2
 pathname:       .addr   pn
 new_pathname:   .addr   np
-.endproc
+.endparams
 .endmacro

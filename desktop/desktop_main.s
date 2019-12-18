@@ -770,12 +770,12 @@ unit_number:
 result: .byte   0
 
         ;; params for call
-.proc status_params
+.params status_params
 param_count:    .byte   3
 unit_num:       .byte   1
 list_ptr:       .addr   status_buffer
 status_code:    .byte   0
-.endproc
+.endparams
 status_unit_num := status_params::unit_num
 .endproc
 
@@ -1993,10 +1993,10 @@ fail:   rts
 
         ptr := $06
 
-.proc new_folder_dialog_params
+.params new_folder_dialog_params
 phase:  .byte   0               ; window_id?
 win_path_ptr:  .word   0
-.endproc
+.endparams
 
         ;; access = destroy/rename/write/read
         DEFINE_CREATE_PARAMS create_params, path_buffer, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
@@ -10309,12 +10309,12 @@ found:  lda     DEVLST,y        ;
 smartport_call:
         jmp     (smartport_addr)
 
-.proc control_params
+.params control_params
 param_count:    .byte   3
 unit_number:    .byte   0
 control_list:   .addr   list
 control_code:   .byte   4       ; Eject disk
-.endproc
+.endparams
         control_unit_number := control_params::unit_number
 list:   .word   0               ; 0 items in list
 unit_number:
@@ -10329,11 +10329,11 @@ unit_number:
 
         DEFINE_READ_BLOCK_PARAMS block_params, $800, $A
 
-.proc get_info_dialog_params
+.params get_info_dialog_params
 L92E3:  .byte   0
 L92E4:  .word   0
 L92E6:  .byte   0
-.endproc
+.endparams
 
 ;;; ============================================================
 ;;; Look up device driver address.
@@ -11124,12 +11124,12 @@ callbacks_for_copy:
         close           = 5
 .endenum
 
-.proc copy_dialog_params
+.params copy_dialog_params
 phase:  .byte   0
 count:  .addr   0
         .addr   src_path_buf
         .addr   dst_path_buf
-.endproc
+.endparams
 
 .proc do_copy_dialog_phase
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
@@ -11769,11 +11769,11 @@ callbacks_for_delete:
         .addr   do_nothing
         .addr   delete_finish_directory
 
-.proc delete_dialog_params
+.params delete_dialog_params
 phase:  .byte   0
 count:  .word   0
         .addr   src_path_buf
-.endproc
+.endparams
 
 .proc do_delete_dialog_phase
         sta     delete_dialog_params::phase
@@ -12012,12 +12012,12 @@ callbacks_for_lock:
         close           = 4 ; destroy window
 .endenum
 
-.proc lock_unlock_dialog_params
+.params lock_unlock_dialog_params
 phase:  .byte   0
 files_remaining_count:
         .word   0
         .addr   src_path_buf
-.endproc
+.endparams
 
 .proc do_lock_dialog_phase
         copy    #LockDialogLifecycle::open, lock_unlock_dialog_params::phase
@@ -12210,10 +12210,10 @@ LA1DC:  jmp     lock_dialog_lifecycle
 ;;; other operations (copy, delete, lock, unlock) to populate
 ;;; confirmation dialog.
 
-.proc get_size_dialog_params
+.params get_size_dialog_params
 phase:  .byte   0
         .addr   op_file_count, op_block_count
-.endproc
+.endparams
 
 do_get_size_dialog_phase:
         copy    #0, get_size_dialog_params::phase

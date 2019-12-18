@@ -2,9 +2,9 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../mgtk/mgtk.inc"
         .include "../desktop.inc"
-        .include "../inc/macros.inc"
         .include "../inc/fp_macros.inc"
 
 ;;; ============================================================
@@ -53,7 +53,7 @@ da_top          = 50
 str_title:
         PASCAL_STRING "Eyes"
 
-.proc winfo
+.params winfo
 window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
 title:          .addr   str_title
@@ -83,12 +83,12 @@ penmode:        .byte   0
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
 ;;; ============================================================
 
 
-.proc event_params
+.params event_params
 kind:  .byte   0
 ;;; EventKind::key_down
 key             := *
@@ -99,49 +99,49 @@ window_id       := *
 xcoord          := *
 ycoord          := * + 2
         .res    4
-.endproc
+.endparams
 
-.proc findwindow_params
+.params findwindow_params
 mousex:         .word   0
 mousey:         .word   0
 which_area:     .byte   0
 window_id:      .byte   0
-.endproc
+.endparams
 
-.proc trackgoaway_params
+.params trackgoaway_params
 clicked:        .byte   0
-.endproc
+.endparams
 
-.proc dragwindow_params
+.params dragwindow_params
 window_id:      .byte   0
 dragx:          .word   0
 dragy:          .word   0
 moved:          .byte   0
-.endproc
+.endparams
 
-.proc winport_params
+.params winport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
-.endproc
+.endparams
 
 
-.proc preserve_zp_params
+.params preserve_zp_params
 flag:   .byte   MGTK::zp_preserve
-.endproc
+.endparams
 
-.proc overwrite_zp_params
+.params overwrite_zp_params
 flag:   .byte   MGTK::zp_overwrite
-.endproc
+.endparams
 
-.proc screentowindow_params
+.params screentowindow_params
 window_id:      .byte   kDAWindowId
         DEFINE_POINT 0, 0, screen
         DEFINE_POINT 0, 0, window
-.endproc
+.endparams
         mx := screentowindow_params::window::xcoord
         my := screentowindow_params::window::ycoord
 
-.proc grafport
+.params grafport
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .word   0
 mapwidth:       .word   0
@@ -154,18 +154,18 @@ penheight:      .byte   0
 penmode:        .byte   0
 textback:       .byte   0
 textfont:       .addr   0
-.endproc
+.endparams
 
 kGrowBoxWidth = 17
 kGrowBoxHeight = 7
 
-.proc grow_box_params
+.params grow_box_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   grow_box_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 2, 2, 19, 9
-.endproc
+.endparams
 
 grow_box_bitmap:
         .byte   px(%1111111),px(%1111111),px(%1111111)
@@ -353,15 +353,15 @@ penh    = 4
 pupilw  = penw * 2
 pupilh  = penh * 2
 
-.proc outline_pensize
+.params outline_pensize
 penwidth:       .byte   penw
 penheight:      .byte   penh
-.endproc
+.endparams
 
-.proc pupil_pensize
+.params pupil_pensize
 penwidth:       .byte   pupilw
 penheight:      .byte   pupilh
-.endproc
+.endparams
 
 ;;; Flag set once we have coords from a move event
 has_last_coords:

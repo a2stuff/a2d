@@ -231,7 +231,7 @@ basic_mask:
 
 ;;; ============================================================
 
-.proc poly
+.params poly
 num_vertices:   .byte   8
 lastpoly:       .byte   0       ; 0 = last poly
 vertices:
@@ -243,37 +243,37 @@ v4:     DEFINE_POINT 0, 0, v4
 v5:     DEFINE_POINT 0, 0, v5
 v6:     DEFINE_POINT 0, 0, v6
 v7:     DEFINE_POINT 0, 0, v7
-.endproc
+.endparams
 
-.proc icon_paintbits_params
+.params icon_paintbits_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0,0,0,0,maprect
-.endproc
+.endparams
 
-.proc mask_paintbits_params
+.params mask_paintbits_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0,0,0,0,maprect
-.endproc
+.endparams
 
 rect_opendir:      DEFINE_RECT 0,0,0,0, rect_opendir
 
-.proc textwidth_params
+.params textwidth_params
 textptr:        .addr   text_buffer
 textlen:        .byte   0
 result: .word   0
-.endproc
+.endparams
 settextbg_params    := textwidth_params::result + 1  ; re-used
 
-.proc drawtext_params
+.params drawtext_params
 textptr:        .addr   text_buffer
 textlen:        .byte   0
-.endproc
+.endparams
 
 text_buffer:
         .res    19, 0
@@ -331,18 +331,18 @@ highlight_list:                 ; selected icons
 
 ;;; ============================================================
 
-.proc peekevent_params
+.params peekevent_params
 kind:   .byte   0               ; spills into next block
-.endproc
+.endparams
 
-.proc findwindow_params2
+.params findwindow_params2
 mousex: .word   0
 mousey: .word   0
 which_area:     .byte   0
 window_id:      .byte   0
-.endproc
+.endparams
 
-.proc grafport
+.params grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
@@ -355,10 +355,10 @@ penheight:      .byte   1
 penmode:        .byte   $96     ; ???
 textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   DEFAULT_FONT
-.endproc
+.endparams
 
 ;;; Grafport used to draw icon outlines during drag
-.proc drag_outline_grafport
+.params drag_outline_grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .word   0
@@ -371,14 +371,14 @@ penheight:      .byte   0
 penmode:        .byte   0
 textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   0
-.endproc
+.endparams
 
-.proc getwinport_params
+.params getwinport_params
 window_id:      .byte   0
 a_grafport:     .addr   icon_grafport
-.endproc
+.endparams
 
-.proc icon_grafport
+.params icon_grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .word   0
@@ -391,7 +391,7 @@ penheight:      .byte   0
 penmode:        .byte   0
 textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   0
-.endproc
+.endparams
 
 ;;; ============================================================
 ;;; IconTK command jump table
@@ -477,10 +477,10 @@ dispatch:
 call_params:  .addr     0
 .endproc
 
-.proc moveto_params2
+.params moveto_params2
 xcoord: .word   0
 ycoord: .word   0
-.endproc
+.endparams
 
 ;;; ============================================================
 ;;; AddIcon
@@ -2288,9 +2288,9 @@ LA3B3:  .byte   0
         .byte   0
 LA3B7:  .byte   0
 
-.proc frontwindow_params
+.params frontwindow_params
 window_id:      .byte   0
-.endproc
+.endparams
 
 .proc LA3B9
         ldy     #0
@@ -2561,12 +2561,12 @@ bounds_t:  .word   0
 bounds_r:  .word   0
 bounds_b:  .word   0
 
-.proc portbits
+.params portbits
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
-.endproc
+.endparams
 
 .proc set_port_for_vol_icon
         jsr     calc_icon_poly
@@ -2622,12 +2622,12 @@ done:   MGTK_CALL MGTK::SetPortBits, portbits
 
 ;;; findwindow_params::window_id is used as first part of
 ;;; GetWinPtr params structure including window_ptr.
-.proc findwindow_params
+.params findwindow_params
 mousex: .word   0
 mousey: .word   0
 which_area:     .byte   0
 window_id:      .byte   0
-.endproc
+.endparams
 window_ptr:  .word   0          ; do not move this; see above
 
 pt_num: .byte   0
@@ -3582,13 +3582,13 @@ alert_bitmap:
         .byte   px(%0111111),px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-.proc alert_bitmap_params
+.params alert_bitmap_params
         DEFINE_POINT 20, 8      ; viewloc
         .addr   alert_bitmap    ; mapbits
         .byte   7               ; mapwidth
         .byte   0               ; reserved
         DEFINE_RECT 0, 0, 36, 23 ; maprect
-.endproc
+.endparams
 
 alert_rect:
         DEFINE_RECT 65, 87, 485, 142
@@ -3597,13 +3597,13 @@ alert_inner_frame_rect1:
 alert_inner_frame_rect2:
         DEFINE_RECT 5, 3, 415, 52
 
-.proc portmap
+.params portmap
 viewloc:        DEFINE_POINT 65, 87, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 420, 55, maprect
-.endproc
+.endparams
 
 
 ;;; ============================================================

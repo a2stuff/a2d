@@ -2,10 +2,10 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../desktop.inc"
-        .include "../inc/macros.inc"
 
 ;;; ============================================================
 
@@ -48,7 +48,7 @@ da_height       = 118
 da_left         = (kScreenWidth - da_width)/2
 da_top          = 45
 
-.proc winfo
+.params winfo
 window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
 title:          .addr   str_title
@@ -78,68 +78,68 @@ penmode:        .byte   0
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
 str_title:
         PASCAL_STRING "About this Apple II"
 
 ;;; ============================================================
 
-.proc ii_bitmap
+.params ii_bitmap
 viewloc:        DEFINE_POINT 59, 8
 mapbits:        .addr   ii_bits
 mapwidth:       .byte   8
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 50, 18
-.endproc
+.endparams
 
-.proc iie_bitmap
+.params iie_bitmap
 viewloc:        DEFINE_POINT 59, 5
 mapbits:        .addr   iie_bits
 mapwidth:       .byte   8
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 50, 25
-.endproc
+.endparams
 
-.proc iic_bitmap
+.params iic_bitmap
 viewloc:        DEFINE_POINT 62, 4
 mapbits:        .addr   iic_bits
 mapwidth:       .byte   7
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 45, 27
-.endproc
+.endparams
 
-.proc iigs_bitmap
+.params iigs_bitmap
 viewloc:        DEFINE_POINT 65, 5
 mapbits:        .addr   iigs_bits
 mapwidth:       .byte   6
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 38, 25
-.endproc
+.endparams
 
-.proc iii_bitmap
+.params iii_bitmap
 viewloc:        DEFINE_POINT 57, 5
 mapbits:        .addr   iii_bits
 mapwidth:       .byte   8
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 54, 24
-.endproc
+.endparams
 
-.proc iie_card_bitmap
+.params iie_card_bitmap
 viewloc:        DEFINE_POINT 56, 9
 mapbits:        .addr   iie_card_bits
 mapwidth:       .byte   8
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 55, 21
-.endproc
+.endparams
 
-.proc laser128_bitmap
+.params laser128_bitmap
 viewloc:        DEFINE_POINT 60, 4
 mapbits:        .addr   laser128_bits
 mapwidth:       .byte   7
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 47, 29
-.endproc
+.endparams
 
 ii_bits:
         .byte   px(%0000000),px(%1111111),px(%1111111),px(%1111111),px(%1000000),px(%0000000),px(%0000000),px(%0000000)
@@ -446,7 +446,7 @@ model_pos:      DEFINE_POINT 150, 12
 pdver_pos:      DEFINE_POINT 150, 23
 mem_pos:        DEFINE_POINT 150, 34
 
-.proc event_params
+.params event_params
 kind:  .byte   0
 ;;; EventKind::key_down
 key             := *
@@ -457,32 +457,32 @@ window_id       := *
 xcoord          := *
 ycoord          := * + 2
         .res    4
-.endproc
+.endparams
 
-.proc findwindow_params
+.params findwindow_params
 mousex:         .word   0
 mousey:         .word   0
 which_area:     .byte   0
 window_id:      .byte   0
-.endproc
+.endparams
 
-.proc trackgoaway_params
+.params trackgoaway_params
 clicked:        .byte   0
-.endproc
+.endparams
 
-.proc dragwindow_params
+.params dragwindow_params
 window_id:      .byte   0
 dragx:          .word   0
 dragy:          .word   0
 moved:          .byte   0
-.endproc
+.endparams
 
-.proc winport_params
+.params winport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
-.endproc
+.endparams
 
-.proc grafport
+.params grafport
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .word   0
 mapwidth:       .word   0
@@ -495,7 +495,7 @@ penheight:      .byte   0
 penmode:        .byte   0
 textback:       .byte   0
 textfont:       .addr   0
-.endproc
+.endparams
 
 
 ;;; ============================================================

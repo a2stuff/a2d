@@ -34,19 +34,19 @@ notpenBIC:      .byte   7
 
 stack_stash:  .byte   0
 
-.proc hilitemenu_params
+.params hilitemenu_params
 menu_id   := * + 0
-.endproc
-.proc menuselect_params
+.endparams
+.params menuselect_params
 menu_id   := * + 0
 menu_item := * + 1
-.endproc
-.proc menukey_params
+.endparams
+.params menukey_params
 menu_id   := * + 0
 menu_item := * + 1
 which_key := * + 2
 key_mods  := * + 3
-.endproc
+.endparams
         .res    4, 0
 
 
@@ -118,16 +118,16 @@ label_disk_copy:
 
 ;;; ============================================================
 
-.proc disablemenu_params
+.params disablemenu_params
 menu_id:        .byte   3
 disable:        .byte   0
-.endproc
+.endparams
 
-.proc checkitem_params
+.params checkitem_params
 menu_id:        .byte   3
 menu_item:      .byte   0
 check:          .byte   0
-.endproc
+.endparams
 
 event_params := *
         event_kind := event_params + 0
@@ -170,17 +170,17 @@ LD133:  .byte   0
 
 grafport:  .res .sizeof(MGTK::GrafPort), 0
 
-.proc getwinport_params
+.params getwinport_params
 window_id:      .byte   0
 port:           .addr   grafport_win
-.endproc
+.endparams
 
 grafport_win:  .res    .sizeof(MGTK::GrafPort), 0
 
         ;; Rest of a winfo???
         .byte   $06, $EA, 0, 0, 0, 0, $88, 0, $08, 0, $08
 
-.proc winfo_dialog
+.params winfo_dialog
 window_id:      .byte   1
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -210,9 +210,9 @@ penmode:        .byte   0
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
-.proc winfo_drive_select
+.params winfo_drive_select
 window_id:      .byte   $02
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -242,7 +242,7 @@ penmode:        .byte   0
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
 rect_outer_frame:      DEFINE_RECT 4, 2, 496, 148
 rect_inner_frame:      DEFINE_RECT 5, 3, 495, 147
@@ -2294,33 +2294,33 @@ alert_bitmap:
         .byte   px(%0111111),px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-.proc alert_bitmap_mapinfo
+.params alert_bitmap_mapinfo
 viewloc:        DEFINE_POINT 20, 8
 mapbits:        .addr   alert_bitmap
 mapwidth:       .byte   7
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 36, 23
-.endproc
+.endparams
 
 rect_E89F:      DEFINE_RECT 65, 45, 485, 100
 rect_E8A7:      DEFINE_RECT 4, 2, 416, 53
 rect_E8AF:      DEFINE_RECT 5, 3, 415, 52
 
-.proc portbits1
+.params portbits1
 viewloc:        DEFINE_POINT 65, 45, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 420, 55
-.endproc
+.endparams
 
-.proc portbits2
+.params portbits2
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 559, 191
-.endproc
+.endparams
 
 str_ok_btn:
         PASCAL_STRING {"OK            ",GLYPH_RETURN}

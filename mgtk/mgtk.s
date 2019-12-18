@@ -2,9 +2,9 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "mgtk.inc"
-        .include "../inc/macros.inc"
 
 ;;; ============================================================
 ;;; MouseGraphics ToolKit
@@ -3919,14 +3919,14 @@ loop:   lda     version,y
         bpl     loop
         rts
 
-.proc version
+.params version
 major:  .byte   1               ; 1.0.0
 minor:  .byte   0
 patch:  .byte   0
 status: .byte   'F'             ; Final???
 release:.byte   1               ; ???
         .byte   0               ; ???
-.endproc
+.endparams
 .endproc
 
 ;;; ============================================================
@@ -3944,7 +3944,7 @@ stack_ptr_stash:
 
 ;;; Standard GrafPort
 
-.proc standard_port
+.params standard_port
 viewloc:        .word   0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
@@ -3957,11 +3957,11 @@ penheight:      .byte   1
 mode:           .byte   0
 textback:       .byte   0
 textfont:       .addr   0
-.endproc
+.endparams
 
 ;;; ============================================================
 
-.proc saved_port
+.params saved_port
 viewloc:        .word   0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
@@ -3974,7 +3974,7 @@ penheight:      .byte   1
 mode:           .byte   0
 textback:       .byte   0
 textfont:       .addr   0
-.endproc
+.endparams
 
 active_saved:           ; saved copy of $F4...$FF when ZP swapped
         .addr   saved_port
@@ -3989,10 +3989,10 @@ cursor_flag:                    ; high bit clear if cursor drawn, set if not dra
 cursor_count:
         .byte   $FF             ; decremented on hide, incremented on shown; 0 = visible
 
-.proc set_pos_params
+.params set_pos_params
 xcoord: .word   0
 ycoord: .word   0
-.endproc
+.endparams
 
 mouse_state:
 mouse_x:        .word   0
@@ -4934,12 +4934,12 @@ port_y:
 desktop_port_y := set_desktop_port::port_y
 
 
-.proc fill_rect_params
+.params fill_rect_params
 left:   .word   0
 top:    .word   0
 right:  .word   kScreenWidth-1
 bottom: .word   kScreenHeight-1
-.endproc
+.endparams
         fill_rect_top := fill_rect_params::top
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -5118,7 +5118,7 @@ error_return:
 ;;; CheckEvents
 
 
-.proc input
+.params input
 state:  .byte   0
 
 key        := *
@@ -5129,7 +5129,7 @@ ypos       := * + 2
 modifiers  := * + 3
 
         .res    4, 0
-.endproc
+.endparams
 
 .proc CheckEventsImpl
         bit     use_interrupts
@@ -5366,40 +5366,40 @@ sysfont_height:     .byte   0
 active_menu:
         .addr   0
 
-.proc test_rect_params
+.params test_rect_params
 left:   .word   $ffff
 top:    .word   $ffff
 right:  .word   $230
 bottom: .word   $C
-.endproc
+.endparams
         test_rect_top := test_rect_params::top
         test_rect_bottom := test_rect_params::bottom
 
-.proc fill_rect_params2
+.params fill_rect_params2
 left:   .word   0
 top:    .word   0
 width:  .word   0
 height: .word   11
-.endproc
+.endparams
         fill_rect_params2_height := fill_rect_params2::height
 
 savebehind_buffer:
         .word   0
 
-.proc test_rect_params2
+.params test_rect_params2
 left:   .word   0
 top:    .word   12
 right:  .word   0
 bottom: .word   0
-.endproc
+.endparams
         test_rect_params2_top := test_rect_params2::top
 
-.proc fill_rect_params4
+.params fill_rect_params4
 left:   .word   0
 top:    .word   12
 right:  .word   0
 bottom: .word   0
-.endproc
+.endparams
         fill_rect_params4_top := fill_rect_params4::top
 
 menu_item_y_table:
@@ -6514,12 +6514,12 @@ light_speckle_pattern:
         .byte   %10001000
         .byte   %01010101
 
-.proc fill_rect_params3
+.params fill_rect_params3
 left:   .word   0
 top:    .word   0
 right:  .word   0
 bottom: .word   0
-.endproc
+.endparams
         fill_rect_params3_left := fill_rect_params3::left
         fill_rect_params3_top := fill_rect_params3::top
         fill_rect_params3_right := fill_rect_params3::right
@@ -6645,40 +6645,40 @@ icon_offset_height := 5
 icon_offset_bits   := 6
 
 
-.proc up_scroll_params
+.params up_scroll_params
 xcoord: .res    2
 ycoord: .res    2
         .byte   19,10
         .addr   up_scroll_bitmap
-.endproc
+.endparams
 
-.proc down_scroll_params
+.params down_scroll_params
 xcoord: .res    2
 ycoord: .res    2
         .byte   19,10
         .addr   down_scroll_bitmap
-.endproc
+.endparams
 
-.proc left_scroll_params
+.params left_scroll_params
 xcoord: .res    2
 ycoord: .res    2
         .byte   20,9
         .addr   left_scroll_bitmap
-.endproc
+.endparams
 
-.proc right_scroll_params
+.params right_scroll_params
 xcoord: .res    2
 ycoord: .res    2
         .byte   18,9
         .addr   right_scroll_bitmap
-.endproc
+.endparams
 
-.proc resize_box_params
+.params resize_box_params
 xcoord: .res    2
 ycoord: .res    2
         .byte   20,10
         .addr   resize_box_bitmap
-.endproc
+.endparams
 
         ;;  Up Scroll
 up_scroll_bitmap:
@@ -6809,21 +6809,21 @@ reserved:  .byte   0
 
         ;; First 16 bytes of win's grafport only
         PARAM_BLOCK current_winport, $B7
-.proc viewloc
+.params viewloc
 xcoord:    .word   0
 ycoord:    .word   0
-.endproc
+.endparams
 
 mapbits:   .addr   0
 mapwidth:  .byte   0
            .byte   0
 
-.proc maprect
+.params maprect
 x1:        .word   0
 y1:        .word   0
 x2:        .word   0
 y2:        .word   0
-.endproc
+.endparams
         END_PARAM_BLOCK
 
 
@@ -7910,20 +7910,20 @@ end:    sta     (params_addr),y
 
         .byte   $00
 
-.proc drag_initialpos
+.params drag_initialpos
 xcoord: .res    2
 ycoord: .res    2
-.endproc
+.endparams
 
-.proc drag_curpos
+.params drag_curpos
 xcoord: .res    2
 ycoord: .res    2
-.endproc
+.endparams
 
-.proc drag_delta
+.params drag_delta
 xdelta: .res    2
 ydelta: .res    2
-.endproc
+.endparams
 
         ;; High bit set if window is being resized, clear if moved.
 drag_resize_flag:
@@ -8267,7 +8267,7 @@ goaway_height:  .word   8       ; font height - 1
 wintitle_height:.word  12       ; font height + 3
 winframe_top:   .word  13       ; font height + 4
 
-.proc set_port_params
+.params set_port_params
 left:           .word   0
 top:            .word   $D
 mapbits:        .addr   MGTK::screen_mapbits
@@ -8276,7 +8276,7 @@ hoffset:        .word   0
 voffset:        .word   0
 width:          .word   0
 height:         .word   0
-.endproc
+.endparams
         set_port_top  := set_port_params::top
         set_port_size := set_port_params::width
         set_port_maprect  := set_port_params::hoffset ; Re-used since h/voff are 0
@@ -9994,12 +9994,12 @@ not_left:
         rts
 .endproc
 
-.proc set_input_params          ; 1 byte shorter than normal, since KEY
+.params set_input_params          ; 1 byte shorter than normal, since KEY
 state:  .byte   MGTK::EventKind::key_down
 key:    .byte   0
 modifiers:
         .byte   0
-.endproc
+.endparams
         set_input_key := set_input_params::key
         set_input_modifiers := set_input_params::modifiers
 

@@ -2,8 +2,8 @@
         .setcpu "6502"
 
         .include "apple2.inc"
-        .include "../inc/macros.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../desktop.inc"
@@ -173,7 +173,7 @@ da_height       = 140
 da_left         = (kScreenWidth - da_width)/2
 da_top          = (kScreenHeight - da_height)/2
 
-.proc winfo
+.params winfo
 window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
 title:          .addr   0       ; overwritten to point at filename
@@ -203,12 +203,12 @@ penmode:        .byte   0
 textback:       .byte   $7F
 textfont:       .addr   font_buffer
 nextwinfo:      .addr   0
-.endproc
+.endparams
         winfo_title := winfo::title
 
 ;;; ============================================================
 
-.proc event_params
+.params event_params
 kind:  .byte   0
 ;;; EventKind::key_down
 key             := *
@@ -219,32 +219,32 @@ window_id       := *
 xcoord          := *
 ycoord          := * + 2
         .res    4
-.endproc
+.endparams
 
-.proc findwindow_params
+.params findwindow_params
 mousex:         .word   0
 mousey:         .word   0
 which_area:     .byte   0
 window_id:      .byte   0
-.endproc
+.endparams
 
-.proc trackgoaway_params
+.params trackgoaway_params
 clicked:        .byte   0
-.endproc
+.endparams
 
-.proc dragwindow_params
+.params dragwindow_params
 window_id:      .byte   0
 dragx:          .word   0
 dragy:          .word   0
 moved:          .byte   0
-.endproc
+.endparams
 
-.proc winport_params
+.params winport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
-.endproc
+.endparams
 
-.proc grafport
+.params grafport
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .word   0
 mapwidth:       .word   0
@@ -257,12 +257,12 @@ penheight:      .byte   0
 penmode:        .byte   0
 textback:       .byte   0
 textfont:       .addr   0
-.endproc
+.endparams
 
-.proc drawtext_params_char
+.params drawtext_params_char
         .addr   char_label
         .byte   1
-.endproc
+.endparams
 char_label:  .byte   0
 
 ;;; ============================================================

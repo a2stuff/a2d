@@ -3,10 +3,10 @@
         .include "apple2.inc"
         .include "opcodes.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../desktop.inc"
-        .include "../inc/macros.inc"
 
 ;;; ============================================================
 
@@ -52,7 +52,7 @@ da_top          := (kScreenHeight - 10 - da_height)/2 + 10
 str_title:
         PASCAL_STRING "Control Panel"
 
-.proc winfo
+.params winfo
 window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
 title:          .addr   str_title
@@ -82,12 +82,12 @@ penmode:        .byte   0
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
-.proc frame_pensize
+.params frame_pensize
 penwidth:       .byte   4
 penheight:      .byte   2
-.endproc
+.endparams
 
 frame_p1:       DEFINE_POINT 0, 58
 frame_p2:       DEFINE_POINT da_width, 58
@@ -97,7 +97,7 @@ frame_p4:       DEFINE_POINT 190, da_height
 frame_rect:     DEFINE_RECT AS_WORD(-1), AS_WORD(-1), da_width - 4 + 2, da_height - 2 + 2
 
 
-.proc winfo_fullscreen
+.params winfo_fullscreen
 window_id:      .byte   kDAWindowId+1
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   str_title
@@ -127,13 +127,13 @@ penmode:        .byte   0
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
 
 ;;; ============================================================
 
 
-.proc event_params
+.params event_params
 kind:  .byte   0
 ;;; event_kind_key_down
 key             := *
@@ -144,41 +144,41 @@ window_id       := *
 xcoord          := *
 ycoord          := * + 2
         .res    4
-.endproc
+.endparams
 
-.proc findwindow_params
+.params findwindow_params
 mousex:         .word   0
 mousey:         .word   0
 which_area:     .byte   0
 window_id:      .byte   0
-.endproc
+.endparams
 
-.proc trackgoaway_params
+.params trackgoaway_params
 clicked:        .byte   0
-.endproc
+.endparams
 
-.proc dragwindow_params
+.params dragwindow_params
 window_id:      .byte   0
 dragx:          .word   0
 dragy:          .word   0
 moved:          .byte   0
-.endproc
+.endparams
 
-.proc winport_params
+.params winport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
-.endproc
+.endparams
 
 
-.proc screentowindow_params
+.params screentowindow_params
 window_id:      .byte   kDAWindowId
 screen: DEFINE_POINT 0, 0, screen
 window: DEFINE_POINT 0, 0, window
-.endproc
+.endparams
         mx := screentowindow_params::window::xcoord
         my := screentowindow_params::window::ycoord
 
-.proc grafport
+.params grafport
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .word   0
 mapwidth:       .word   0
@@ -191,7 +191,7 @@ penheight:      .byte   0
 penmode:        .byte   0
 textback:       .byte   0
 textfont:       .addr   0
-.endproc
+.endparams
 
 
 ;;; ============================================================
@@ -200,13 +200,13 @@ textfont:       .addr   0
 kRadioButtonWidth = 15
 kRadioButtonHeight = 7
 
-.proc checked_params
+.params checked_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   checked_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, kRadioButtonWidth, kRadioButtonHeight
-.endproc
+.endparams
 
 checked_bitmap:
         .byte   px(%0000111),px(%1111100),px(%0000000)
@@ -218,13 +218,13 @@ checked_bitmap:
         .byte   px(%0011100),px(%0000111),px(%0000000)
         .byte   px(%0000111),px(%1111100),px(%0000000)
 
-.proc unchecked_params
+.params unchecked_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   unchecked_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, kRadioButtonWidth, kRadioButtonHeight
-.endproc
+.endparams
 
 unchecked_bitmap:
         .byte   px(%0000111),px(%1111100),px(%0000000)
@@ -283,21 +283,21 @@ preview_frame:
         larr_r := larr_l + arr_w - 1
         larr_b := larr_t + arr_h - 1
 
-.proc larr_params
+.params larr_params
 viewloc:        DEFINE_POINT larr_l, larr_t
 mapbits:        .addr   larr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, arr_w-1, arr_h-1
-.endproc
+.endparams
 
-.proc rarr_params
+.params rarr_params
 viewloc:        DEFINE_POINT rarr_l, rarr_t
 mapbits:        .addr   rarr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, arr_w-1, arr_h-1
-.endproc
+.endparams
 
 larr_rect:      DEFINE_RECT larr_l-2, larr_t, larr_r+2, larr_b
 rarr_rect:      DEFINE_RECT rarr_l-2, rarr_t, rarr_r+2, rarr_b
@@ -338,13 +338,13 @@ str_dblclick_speed:
 dblclick_label_pos:
         DEFINE_POINT dblclick_x + 45, dblclick_y + 47
 
-.proc dblclick_params
+.params dblclick_params
 viewloc:        DEFINE_POINT dblclick_x, dblclick_y
 mapbits:        .addr   dblclick_bitmap
 mapwidth:       .byte   8
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 53, 33
-.endproc
+.endparams
 
 dblclick_arrow_pos1:
         DEFINE_POINT dblclick_x + 65, dblclick_y + 7
@@ -403,13 +403,13 @@ dblclick_bitmap:
         .byte   px(%1100000),px(%0000000),px(%0000110),px(%0000000),px(%0000001),px(%1000000),px(%0000000),px(%0001100)
 
 
-.proc darrow_params
+.params darrow_params
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .addr   darr_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 16, 7
-.endproc
+.endparams
 
 darr_bitmap:
         .byte   px(%0000011),px(%1111100),px(%0000000)
@@ -449,13 +449,13 @@ joy_btn1_lpos: DEFINE_POINT joy_disp_x + 48 + 4, joy_disp_y + 5 + 8
 joy_btn0_label:   DEFINE_STRING "0"
 joy_btn1_label:   DEFINE_STRING "1"
 
-.proc joy_marker
+.params joy_marker
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   joy_marker_bitmap
 mapwidth:       .byte   2
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 7, 4
-.endproc
+.endparams
 
 joy_marker_bitmap:
         .byte   px(%0011110),px(%0000000)
@@ -465,13 +465,13 @@ joy_marker_bitmap:
         .byte   px(%0011110),px(%0000000)
 
 
-.proc joystick_params
+.params joystick_params
 viewloc:        DEFINE_POINT joycal_x+1, joycal_y + 6
 mapbits:        .addr   joystick_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 35, 18
-.endproc
+.endparams
 
 joystick_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000001),px(%1100000),px(%0000000)
@@ -532,13 +532,13 @@ ipblink_btn3_rect:
 
 
 
-.proc ipblink_bitmap_params
+.params ipblink_bitmap_params
 viewloc:        DEFINE_POINT ipblink_x + 120 - 1, ipblink_y
 mapbits:        .addr   ipblink_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 37, 12
-.endproc
+.endparams
 
 ipblink_bitmap:
         .byte   px(%0000110),px(%0000000),px(%0000001),px(%1000000),px(%0000000),px(%0110000)
@@ -555,13 +555,13 @@ ipblink_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000001),px(%1000000),px(%0000000),px(%0000000)
         .byte   px(%0000110),px(%0000000),px(%0000001),px(%1000000),px(%0000000),px(%0110000)
 
-.proc ipblink_bitmap_ip_params
+.params ipblink_bitmap_ip_params
 viewloc:        DEFINE_POINT ipblink_x + 120 - 1 + 20, ipblink_y
 mapbits:        .addr   ipblink_ip_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 1, 12
-.endproc
+.endparams
 
 ipblink_ip_bitmap:
         .byte   px(%1100000)

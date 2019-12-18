@@ -2,10 +2,10 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../desktop.inc"
-        .include "../inc/macros.inc"
 
 ;;; ============================================================
 
@@ -148,16 +148,16 @@ month_rect:
 year_rect:
         .word   $7F,$14,$95,$1E
 
-.proc settextbg_params
+.params settextbg_params
 backcolor:   .byte   0          ; black
-.endproc
+.endparams
 
         .res    7, $00          ; ???
         .byte   $FF
 
-.proc white_pattern
+.params white_pattern
         .res    8, $FF
-.endproc
+.endparams
         .byte   $FF             ; ??
 
 selected_field:                 ; 1 = day, 2 = month, 3 = year, 0 = none (init)
@@ -191,7 +191,7 @@ year_pos:
 year_string:
         DEFINE_STRING "  "
 
-.proc event_params
+.params event_params
 kind:  .byte   0
 
 key       := *
@@ -200,18 +200,18 @@ modifiers := *+1
 xcoord    := *
 ycoord    := *+2
         .byte   0,0,0,0
-.endproc
+.endparams
         ;; xcoord/ycoord are used to query...
-.proc findwindow_params
+.params findwindow_params
 mousex    := *
 mousey    := *+2
 which_area:.byte   0
 window_id: .byte   0
-.endproc
+.endparams
 
         kDAWindowId = 100
 
-.proc screentowindow_params
+.params screentowindow_params
 window_id:     .byte   kDAWindowId
 screen:
 screenx:.word   0
@@ -219,19 +219,19 @@ screeny:.word   0
 window:
 windowx:.word   0
 windowy:.word   0
-.endproc
+.endparams
 
-.proc closewindow_params
+.params closewindow_params
 window_id:     .byte   kDAWindowId
-.endproc
+.endparams
         .byte $00,$01           ; ???
 
-.proc penmode_params
+.params penmode_params
 penmode:   .byte   $02             ; this should be normal, but we do inverts ???
-.endproc
+.endparams
         .byte   $06             ; ???
 
-.proc winfo
+.params winfo
 window_id:     .byte   kDAWindowId
 options:.byte   MGTK::Option::dialog_box
 title:  .addr   0
@@ -261,7 +261,7 @@ penmode:   .byte   0
 textback:  .byte   $7F
 textfont:   .addr   DEFAULT_FONT
 nextwinfo:   .addr   0
-.endproc
+.endparams
 
 ;;; ============================================================
 ;;; Initialize window, unpack the date.
@@ -737,10 +737,10 @@ label_uparrow_pos:
 label_downarrow_pos:
         .word   $AC,$27
 
-.proc setpensize_params
+.params setpensize_params
 penwidth: .byte   1
 penheight: .byte   1
-.endproc
+.endparams
 
 ;;; ============================================================
 ;;; Render the window contents

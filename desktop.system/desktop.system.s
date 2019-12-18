@@ -4,8 +4,8 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
-        .include "../inc/prodos.inc"
         .include "../inc/macros.inc"
+        .include "../inc/prodos.inc"
 
         ;; TODO: Refactor so only a subset is included
         .include "../desktop.inc"
@@ -28,10 +28,10 @@ L2005:
 
         path_buf := $D00
 
-.proc get_prefix_params2
+.params get_prefix_params2
 param_count:    .byte   2       ; GET_PREFIX, but param_count is 2 ??? Bug???
 data_buffer:    .addr   path_buf
-.endproc
+.endparams
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buf
 
@@ -299,14 +299,14 @@ str_slash_desktop:
         PASCAL_STRING "/DeskTop"
 
         ;; Overwrite first bytes of get_file_info_params
-.proc dir_file_info
+.params dir_file_info
         .byte   $A              ; param_count
         .addr   0               ; pathname
         .byte   ACCESS_DEFAULT  ; access
         .byte   FT_DIRECTORY    ; filetype
         .word   0               ; aux_type
         .byte   ST_LINKED_DIRECTORY ; storage_type
-.endproc
+.endparams
 
 .proc start_copy
         ptr := $06

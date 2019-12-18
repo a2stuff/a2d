@@ -2,9 +2,9 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../mgtk/mgtk.inc"
         .include "../desktop.inc"
-        .include "../inc/macros.inc"
 
 ;;; ============================================================
 
@@ -130,49 +130,49 @@ check_window_pos:
 ;;; Param Blocks
 
         ;; following memory space is re-used so x/y overlap
-.proc dragwindow_params
+.params dragwindow_params
 window_id      := * + 0
 dragx  := * + 1                ; x overlap
 dragy  := * + 3                ; y overlap
 it_moved   := * + 5                ; ignored
-.endproc
+.endparams
 
-.proc screentowindow_params
+.params screentowindow_params
 window_id      := * + 0
 screenx := * + 1                ; x overlap
 screeny := * + 3                ; y overlap
 windowx := * + 5
 windowy := * + 7
-.endproc
+.endparams
 
-.proc event_params
+.params event_params
 kind:  .byte   0
 key       := *
 modifiers := *+1
 
 xcoord    := *                  ; x overlap
 ycoord    := *+2                ; y overlap
-.endproc
+.endparams
 
-.proc findwindow_params
+.params findwindow_params
 mousex  := *                    ; x overlap
 mousey  := *+2                  ; y overlap
 which_area := *+4
 window_id      := *+5
-.endproc
+.endparams
 
         .res    8, 0            ; storage for above
 
         .byte   0,0             ; ???
 
-.proc trackgoaway_params
+.params trackgoaway_params
 goaway:.byte   0
-.endproc
+.endparams
 
-.proc getwinport_params
+.params getwinport_params
 window_id:     .byte   0
 a_grafport:   .addr   setport_params
-.endproc
+.endparams
 getwinport_params_window_id := getwinport_params::window_id
 
         ;; Puzzle piece row/columns
@@ -205,25 +205,25 @@ space_positions:                 ; left, top for all 16 holes
         .word   c3,r4
         .word   c4,r4
 
-.proc bitmap_table
+.params bitmap_table
         .addr   piece1, piece2, piece3, piece4
         .addr   piece5, piece6, piece7, piece8
         .addr   piece9, piece10, piece11, piece12
         .addr   piece13, piece14, piece15, piece16
-.endproc
+.endparams
 
         ;; Current position table
 position_table:
         .res    16, 0
 
-.proc paintbits_params
+.params paintbits_params
 left:   .word   0
 top:    .word   0
 mapbits:   .addr   0
 mapwidth: .byte   4
         .byte   0               ; reserved
         DEFINE_RECT 0, 0, 27, 15
-.endproc
+.endparams
 
 piece1:
         .byte px(%0111111),px(%1111111),px(%1111111),px(%1111110)
@@ -499,11 +499,11 @@ piece16:
         .byte px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 
-.proc paintrect_params
+.params paintrect_params
         DEFINE_RECT 1, 0, default_width, default_height
-.endproc
+.endparams
 
-.proc pattern_speckles
+.params pattern_speckles
         .byte %01110111
         .byte %11011101
         .byte %01110111
@@ -512,11 +512,11 @@ piece16:
         .byte %11011101
         .byte %01110111
         .byte %11011101
-.endproc
+.endparams
 
         .byte   $00             ; ???
 
-.proc pattern_black
+.params pattern_black
         .byte %00000000
         .byte %00000000
         .byte %00000000
@@ -525,7 +525,7 @@ piece16:
         .byte %00000000
         .byte %00000000
         .byte %00000000
-.endproc
+.endparams
 
         ;; ???
         .byte   $00
@@ -533,14 +533,14 @@ piece16:
         .byte   $00
 
 ;; line across top of puzzle (bitmaps include bottom edges)
-.proc moveto_params
+.params moveto_params
 xcoord: .word   5
 ycoord: .word   2
-.endproc
-.proc line_params
+.endparams
+.params line_params
 xdelta: .word   112
 ydelta: .word   0
-.endproc
+.endparams
 
         ;; hole position (0..3, 0..3)
 hole_x: .byte   0
@@ -557,9 +557,9 @@ draw_rc:  .byte   $00
 draw_end:  .byte   $00
 draw_inc:  .byte   $00
 
-.proc closewindow_params
+.params closewindow_params
 window_id:     .byte   kDAWindowId
-.endproc
+.endparams
 
         .byte   $73,$00,$F7,$FF
         .addr   str
@@ -584,7 +584,7 @@ setport_params:
         default_width   = $79
         default_height  = $44
 
-.proc winfo
+.params winfo
 window_id:     .byte   kDAWindowId
 options:  .byte   MGTK::Option::go_away_box
 title:  .addr   name
@@ -614,11 +614,11 @@ penmode:   .byte   0
 textback:  .byte   $7F
 textfont:   .addr   DEFAULT_FONT
 nextwinfo:   .addr   0
-.endproc
+.endparams
         winfo_viewloc_ycoord := winfo::viewloc::ycoord
 
         ;; This is grafport cruft only below
-.proc port_cruft                 ; Unknown usage
+.params port_cruft                 ; Unknown usage
 viewloc:        DEFINE_POINT default_left, default_top
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
@@ -631,7 +631,7 @@ penheight: .byte   1
 penmode:   .byte   0
 textback:  .byte   $7F
 textfont:   .addr   DEFAULT_FONT
-.endproc
+.endparams
 
         .byte   0,0             ; ???
 

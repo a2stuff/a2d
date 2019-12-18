@@ -90,12 +90,12 @@ findicon_window_id := findicon_params + 5
 
 ;;; ============================================================
 
-.proc getwinport_params2
+.params getwinport_params2
 window_id:     .byte   0
 a_grafport:     .addr   grafport2
-.endproc
+.endparams
 
-.proc grafport2
+.params grafport2
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .word   0
@@ -108,9 +108,9 @@ penheight:      .byte   0
 penmode:        .byte   0
 textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   0
-.endproc
+.endparams
 
-.proc grafport3
+.params grafport3
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .word   0
@@ -123,13 +123,13 @@ penheight:      .byte   0
 penmode:        .byte   0
 textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   0
-.endproc
+.endparams
         grafport3_viewloc_xcoord := grafport3::viewloc::xcoord
         grafport3_cliprect_x1 := grafport3::cliprect::x1
         grafport3_cliprect_x2 := grafport3::cliprect::x2
         grafport3_cliprect_y2 := grafport3::cliprect::y2
 
-.proc grafport5
+.params grafport5
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
@@ -142,12 +142,12 @@ penheight:      .byte   1
 penmode:        .byte   0
 textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   DEFAULT_FONT
-.endproc
+.endparams
 
 ;;; ============================================================
 
         ;; Copies of ROM bytes used for machine identification
-.proc startdesktop_params
+.params startdesktop_params
 machine:        .byte   $06     ; ROM FBB3 ($06 = IIe or later)
 subid:          .byte   $EA     ; ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
 op_sys:         .byte   0       ; 0=ProDOS
@@ -156,14 +156,14 @@ use_interrupts: .byte   0       ; 0=passive
 sysfontptr:     .addr   DEFAULT_FONT
 savearea:       .addr   SAVE_AREA_BUFFER
 savesize:       .word   SAVE_AREA_SIZE
-.endproc
+.endparams
 
 zp_use_flag0:
         .byte   0
 
-.proc trackgoaway_params        ; next 3 bytes???
+.params trackgoaway_params        ; next 3 bytes???
 goaway:.byte   0
-.endproc
+.endparams
 LD2A9:  .byte   0
 double_click_flag:
         .byte   0               ; high bit clear if double-clicked, set otherwise
@@ -293,7 +293,7 @@ alert_bitmap2_params:
         .byte   0               ; reserved
         DEFINE_RECT 0, 0, 36, 23 ; maprect
 
-.proc winfo_alert_dialog
+.params winfo_alert_dialog
         width = 400
         height = 107
 
@@ -326,11 +326,11 @@ penmode:        .byte   0
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
 ;;; Dialog used for Selector > Add/Edit an Entry...
 
-.proc winfo_entrydlg
+.params winfo_entrydlg
 window_id:      .byte   $12
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -360,11 +360,11 @@ penmode:        .byte   0
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
 ;;; File picker within Add/Edit an Entry dialog
 
-.proc winfo_entrydlg_file_picker
+.params winfo_entrydlg_file_picker
 window_id:      .byte   $15
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -394,11 +394,11 @@ penmode:        .byte   0
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
 ;;; "About Apple II Desktop" Dialog
 
-.proc winfo_about_dialog
+.params winfo_about_dialog
         width = 400
         height = 120
 
@@ -432,12 +432,12 @@ penmode:        .byte   0
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 winfo_about_dialog_port    := winfo_about_dialog::port
 
 ;;; Dialog used for Edit/Delete/Run an Entry ...
 
-.proc winfo_entry_picker
+.params winfo_entry_picker
         width = 350
         height = 118
 
@@ -470,7 +470,7 @@ penmode:        .byte   0
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
         ;; Unused rect/pos?
         .word   40,37,360,47
@@ -489,13 +489,13 @@ dialog_label_base_pos:
 dialog_label_pos:
         DEFINE_POINT dialog_label_default_x,0, dialog_label_pos
 
-.proc name_input_mapinfo
+.params name_input_mapinfo
         DEFINE_POINT 80, 35+7
         .addr   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   0
         DEFINE_RECT 0, 0, 358, 100
-.endproc
+.endparams
 
         entry_picker_item_height = 9 ; default font height
 
@@ -815,10 +815,10 @@ str_pm: PASCAL_STRING " PM"
 dow_strings:
         .byte   "Sun ", "Mon ", "Tue ", "Wed ", "Thu ", "Fri ", "Sat "
 
-.proc dow_str_params
+.params dow_str_params
 addr:   .addr   0
 length: .byte   4               ; includes trailing space
-.endproc
+.endparams
 
 month_offset_table:
         .byte   1,5,6,3,1,5,3,0,4,2,6,4
@@ -1027,32 +1027,32 @@ saved_stack:
         .byte   0
 
 .assert * = last_menu_click_params, error, "Entry point mismatch"
-.proc menu_click_params
+.params menu_click_params
 menu_id:.byte   0
 item_num:.byte  0
-.endproc
+.endparams
 
 LE25C:  .byte   0
 LE25D:  .byte   0
         .byte   $00,$00,$00,$00
         .byte   $00,$04,$00,$00,$00
 
-.proc checkitem_params
+.params checkitem_params
 menu_id:        .byte   4
 menu_item:      .byte   0
 check:          .byte   0
-.endproc
+.endparams
 
-.proc disablemenu_params
+.params disablemenu_params
 menu_id:        .byte   4
 disable:        .byte   0
-.endproc
+.endparams
 
-.proc disableitem_params
+.params disableitem_params
 menu_id:        .byte   0
 menu_item:      .byte   0
 disable:        .byte   0
-.endproc
+.endparams
 
 LE26F:  .byte   $00
 
@@ -1232,11 +1232,11 @@ pos_col_type: DEFINE_POINT 112, 0, pos_col_type
 pos_col_size: DEFINE_POINT 140, 0, pos_col_size
 pos_col_date: DEFINE_POINT 231, 0, pos_col_date
 
-.proc text_buffer2
+.params text_buffer2
         .addr   data
 length: .byte   0
 data:   .res    49, 0
-.endproc
+.endparams
 
 LE71D:  .word   0
 LE71F:  .byte   0
@@ -1245,7 +1245,7 @@ LE71F:  .byte   0
 ;;; ============================================================
 
 .macro WINFO_DEFN id, label, buflabel
-.proc label
+.params label
 window_id:      .byte   id
 options:        .byte   MGTK::Option::go_away_box | MGTK::Option::grow_box
 title:          .addr   buflabel
@@ -1275,7 +1275,7 @@ penmode:        .byte   0
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
 buflabel:       .res    18, 0
 .endmacro

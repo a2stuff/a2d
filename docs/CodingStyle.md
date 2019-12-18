@@ -135,24 +135,27 @@ start:  lda     ptr
 * Use `inc/macros.inc` and extend as needed to capture patterns such as
    16-bit operations
 * API calls such as ProDOS MLI calls should be done with macros
-
+* Macros should be named with `SHOUTY_CASE`
+  * Exception: Macros that mimic ca65 control commands, e.g. `.pushorg` (like `.pushseg`), `.params` (like `.proc`)
 
 ## Param Blocks
 
-Parameter blocks are used for ProDOS MLI calls and MGTK calls.
+Parameter blocks are used for ProDOS MLI, MGTK and IconTK calls.
 
-* Wrap param data in `.proc` blocks:
+* Wrap param data in `.params` blocks:
 
 ```asm
-.proc textwidth_params
+.params textwidth_params
 textptr:        .addr   text_buffer
 textlen:        .byte   0
 result:         .word   0
-.endproc
+.endparams
 
         ;; elsewhere...
         MGTK_CALL MGTK::TextWidth, textwidth_params
 ```
+
+(`.params` is an alias for `.proc`)
 
 ## Namespaces
 

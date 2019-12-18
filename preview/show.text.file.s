@@ -2,10 +2,10 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../desktop.inc"
-        .include "../inc/macros.inc"
 
 ;;; ============================================================
 
@@ -193,10 +193,10 @@ white_pattern:
 L095A:  .byte   $00
 L095B:  .word   right_const
 
-.proc line_pos
+.params line_pos
 left:   .word   0
 base:   .word   0
-.endproc
+.endparams
 
 window_width:  .word   0
 window_height: .word   0
@@ -212,7 +212,7 @@ track_scroll_delta:
 fixed_mode_flag:
         .byte   $00             ; 0 = proportional, otherwise = fixed
 
-.proc event_params
+.params event_params
 kind:  .byte   0
 
 ;;; if state is MGTK::EventKind::key_down
@@ -225,58 +225,58 @@ mousex  := *                      ; spills into target query
 mousey  := *+2
 
         .res    4               ; space for both
-.endproc
+.endparams
 
-.proc findwindow_params
+.params findwindow_params
 which_area:   .byte   0
 window_id:    .byte   0
-.endproc
+.endparams
 
-.proc growwindow_params
+.params growwindow_params
 window_id:     .byte   kDAWindowId
 mousex: .word   0
 mousey: .word   0
 it_grew:        .byte   0
-.endproc
+.endparams
 
-.proc trackgoaway_params ; queried after close clicked to see if aborted/finished
+.params trackgoaway_params ; queried after close clicked to see if aborted/finished
 goaway: .byte   0        ; 0 = aborted, 1 = clicked
-.endproc
+.endparams
 
         .byte   0,0             ; ???
 
-.proc findcontrol_params        ; queried after a client click to identify target
+.params findcontrol_params        ; queried after a client click to identify target
 mousex: .word   0
 mousey: .word   0
 which_ctl:      .byte   0       ; 0 = client, 1 = vscroll, 2 = hscroll
 which_part:     .byte   0       ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
-.endproc
+.endparams
 
-.proc updatethumb_params      ; called to update scroll bar position
+.params updatethumb_params      ; called to update scroll bar position
 which_ctl:   .byte   0               ; 1 = vscroll, 2 = hscroll
 thumbpos:    .byte   0               ; new position
-.endproc
+.endparams
 
 ;;; Used when dragging vscroll thumb
-.proc trackthumb_params
+.params trackthumb_params
 which_ctl:   .byte   0               ; 1 = vscroll, 2 = hscroll
 mousex: .word   0
 mousey: .word   0
 thumbpos:    .byte   0               ; position
 thumbmoved:  .byte   0               ; 0 if not moved, 1 if moved
-.endproc
+.endparams
 
-.proc drawtext_params
+.params drawtext_params
 textptr:        .addr   0       ; address
 textlen:        .byte   0       ; length
-.endproc
+.endparams
 
         default_width = 512
         default_height = 150
         default_left = 10
         default_top = 28
 
-.proc winfo
+.params winfo
 window_id:      .byte   kDAWindowId ; window identifier
 options:        .byte   MGTK::Option::go_away_box ; window flags (2=include close port)
 title:          .addr   dummy1000 ; overwritten to point at filename
@@ -306,16 +306,16 @@ penmode:        .byte   0
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-.endproc
+.endparams
 
 
         ;; gets copied over winfo::port after mode is drawn
-.proc default_port
+.params default_port
 viewloc:        DEFINE_POINT default_left, default_top
 mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 maprect:        DEFINE_RECT 0, 0, default_width, default_height
-.endproc
+.endparams
 
 .proc init
         sta     ALTZPON
@@ -1312,19 +1312,19 @@ prop_str:       DEFINE_STRING "Proportional"
         label_width = 50
         title_bar_height = 12
 
-.proc mode_mapinfo                  ; bounding port for mode label
+.params mode_mapinfo                  ; bounding port for mode label
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 80, 10, maprect
-.endproc
+.endparams
 mode_mapinfo_viewloc_xcoord := mode_mapinfo::viewloc::xcoord
 
-.proc mode_pos
+.params mode_pos
 left:   .word   0               ; horizontal text offset
 base:   .word   10              ; vertical text offset (to baseline)
-.endproc
+.endparams
 
 .proc calc_and_draw_mode
         sec
