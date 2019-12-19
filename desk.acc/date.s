@@ -129,10 +129,10 @@ start_da:
         ;; a hit target for a click.
 
         kNumHitRects = 7
-        first_hit_rect = *
         kUpRectIndex = 3
         kDownRectIndex = 4
 
+        first_hit_rect := *
 ok_button_rect:
         .word   $6A,$2E,$B5,$39
 cancel_button_rect:

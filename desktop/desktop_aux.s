@@ -327,7 +327,7 @@ highlight_list:                 ; selected icons
 ;;; this kOperation.
 
         drag_outline_buffer := SAVE_AREA_BUFFER
-        max_draggable_items = SAVE_AREA_SIZE / (.sizeof(MGTK::Point) * 8 + 2)
+        kMaxDraggableItems = SAVE_AREA_SIZE / (.sizeof(MGTK::Point) * 8 + 2)
 
 ;;; ============================================================
 
@@ -1127,7 +1127,7 @@ y_lo:   lda     kDeltaU
         ;; Meets the threshold - it is a drag, not just a click.
 is_drag:
         lda     highlight_count
-        cmp     #max_draggable_items + 1
+        cmp     #kMaxDraggableItems + 1
         bcc     :+
         jmp     ignore_drag     ; too many
 

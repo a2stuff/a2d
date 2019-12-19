@@ -7445,7 +7445,7 @@ break:  lda     LCBANK1         ; Done copying records
         ;; Sorted in increasing lexicographical order
 .scope
         name := $807
-        name_size = $F
+        kNameSize = $F
         name_len  := $804
 
         lda     LCBANK2
@@ -7453,7 +7453,7 @@ break:  lda     LCBANK1         ; Done copying records
 
         ;; Set up highest value ("ZZZZZZZZZZZZZZZ")
         lda     #'Z'
-        ldx     #name_size
+        ldx     #kNameSize
 :       sta     name+1,x
         dex
         bpl     :-
@@ -7493,7 +7493,7 @@ cloop:  lda     (ptr),y
 place:  lda     record_num
         sta     $0806
 
-        ldx     #name_size
+        ldx     #kNameSize
         lda     #' '
 :       sta     name+1,x
         dex
@@ -9976,7 +9976,7 @@ L9076:  ldy     #$FF
         ;; fall through
 
 ;;; --------------------------------------------------
-;;; Start the actual kOperation
+;;; Start the actual operation
 
 .proc begin_operation
         copy    #0, L97E4
@@ -10005,7 +10005,7 @@ L9076:  ldy     #$FF
 @size:  jsr     do_get_size_dialog_phase
         jmp     iterate_selection
 
-;;; Perform kOperation
+;;; Perform operation
 
 L90BA:  bit     operation_flags
         bvs     @size
@@ -11109,7 +11109,7 @@ op_jt3: jmp     (op_jt_addr3)
 ;;; maybe_finish_file_move
 ;;;  - c/o process_dir after exiting; deletes dir if moving
 
-;;; Overlays for copy kOperation (op_jt_addrs)
+;;; Overlays for copy operation (op_jt_addrs)
 callbacks_for_copy:
         .addr   copy_process_directory_entry
         .addr   copy_pop_directory
@@ -11120,7 +11120,7 @@ callbacks_for_copy:
         populate        = 1
         show            = 2
         exists          = 3     ; show "file exists" prompt
-        kTooLarge       = 4     ; show "too large" prompt
+        too_large       = 4     ; show "too large" prompt
         close           = 5
 .endenum
 
@@ -11196,7 +11196,7 @@ count:  .addr   0
 .endproc
 
 .proc copy_dialog_phase3_callback
-        copy    #CopyDialogLifecycle::kTooLarge, copy_dialog_params::phase
+        copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
         yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         cmp     #PromptResult::yes
         bne     cancel
@@ -11481,7 +11481,7 @@ blocks_free:
 .proc check_space_and_show_prompt
         jsr     check_space
         bcc     done
-        copy    #CopyDialogLifecycle::kTooLarge, copy_dialog_params::phase
+        copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
         jsr     run_copy_dialog_proc
         beq     :+
         jmp     close_files_cancel_dialog
@@ -11763,7 +11763,7 @@ failure:
 ;;; delete_finish_directory
 ;;;  - c/o process_dir when exiting dir; deletes it
 
-;;; Overlays for delete kOperation (op_jt_addrs)
+;;; Overlays for delete operation (op_jt_addrs)
 callbacks_for_delete:
         .addr   delete_process_directory_entry
         .addr   do_nothing
@@ -11998,7 +11998,7 @@ done:   rts
 ;;; lock_process_directory_entry
 ;;;  - c/o process_dir for each file in dir; skips if dir, locks otherwise
 
-;;; Overlays for lock/unlock kOperation (op_jt_addrs)
+;;; Overlays for lock/unlock operation (op_jt_addrs)
 callbacks_for_lock:
         .addr   lock_process_directory_entry
         .addr   do_nothing
@@ -12006,9 +12006,9 @@ callbacks_for_lock:
 
 .enum LockDialogLifecycle
         open            = 0 ; opening window, initial label
-        populate        = 1 ; show kOperation details (e.g. file count)
+        populate        = 1 ; show operation details (e.g. file count)
         loop            = 2 ; draw buttons, input loop
-        kOperation       = 3 ; performing kOperation
+        operation       = 3 ; performing operation
         close           = 4 ; destroy window
 .endenum
 
@@ -12102,7 +12102,7 @@ unlock_dialog_lifecycle:
 ;;; Calls into the recursion logic of |process_dir| as necessary.
 
 .proc lock_process_selected_file
-        copy    #LockDialogLifecycle::kOperation, lock_unlock_dialog_params::phase
+        copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
         jsr     copy_paths_to_src_and_dst_paths
         ldx     dst_path_buf
         ldy     src_path_slash_index
@@ -12206,7 +12206,7 @@ LA1DC:  jmp     lock_dialog_lifecycle
 ;;; "Get Size" dialog state and logic
 ;;; ============================================================
 
-;;; Logic also used for "count" kOperation which precedes most
+;;; Logic also used for "count" operation which precedes most
 ;;; other operations (copy, delete, lock, unlock) to populate
 ;;; confirmation dialog.
 
@@ -12249,7 +12249,7 @@ get_size_rts2:
 ;;; Most operations start by doing a traversal to just count
 ;;; the files.
 
-;;; Overlays for size kOperation (op_jt_addrs)
+;;; Overlays for size operation (op_jt_addrs)
 callbacks_for_size_or_count:
         .addr   size_or_count_process_directory_entry
         .addr   do_nothing
@@ -12320,7 +12320,7 @@ size_or_count_process_directory_entry:
         bit     operation_flags
         bvc     :+              ; not size
 
-        ;; If kOperation is "get size", add the block count to the sum
+        ;; If operation is "get size", add the block count to the sum
         jsr     append_to_src_path
         MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         bne     :+
@@ -13224,7 +13224,7 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
 :       cmp     #CopyDialogLifecycle::exists
         bne     :+
         jmp     do3
-:       cmp     #CopyDialogLifecycle::kTooLarge
+:       cmp     #CopyDialogLifecycle::too_large
         bne     :+
         jmp     do4
 :       cmp     #CopyDialogLifecycle::close
@@ -13316,7 +13316,7 @@ LAA7F:  jsr     prompt_input_loop
         pla
         rts
 
-        ;; CopyDialogLifecycle::kTooLarge
+        ;; CopyDialogLifecycle::too_large
 do4:    jsr     bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
@@ -13807,7 +13807,7 @@ row:    .byte   0
 :       cmp     #LockDialogLifecycle::loop
         bne     :+
         jmp     do2
-:       cmp     #LockDialogLifecycle::kOperation
+:       cmp     #LockDialogLifecycle::operation
         bne     :+
         jmp     do3
 :       cmp     #LockDialogLifecycle::close
@@ -13834,7 +13834,7 @@ do1:    ldy     #1
         addr_call draw_text1, str_files
         rts
 
-        ;; LockDialogLifecycle::kOperation
+        ;; LockDialogLifecycle::operation
 do3:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
@@ -13894,7 +13894,7 @@ do4:    jsr     reset_grafport3a
 :       cmp     #LockDialogLifecycle::loop
         bne     :+
         jmp     do2
-:       cmp     #LockDialogLifecycle::kOperation
+:       cmp     #LockDialogLifecycle::operation
         bne     :+
         jmp     do3
 :       cmp     #LockDialogLifecycle::close
@@ -13921,7 +13921,7 @@ do1:    ldy     #1
         addr_call draw_text1, str_files
         rts
 
-        ;; LockDialogLifecycle::kOperation
+        ;; LockDialogLifecycle::operation
 do3:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix

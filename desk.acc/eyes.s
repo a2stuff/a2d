@@ -348,14 +348,14 @@ tmpw:   .word   0
 penxor: .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
 
-penw    = 8
-penh    = 4
-kPupilW  = penw * 2
-kPupilH  = penh * 2
+kPenW    = 8
+kPenH    = 4
+kPupilW  = kPenW * 2
+kPupilH  = kPenH * 2
 
 .params outline_pensize
-penwidth:       .byte   penw
-penheight:      .byte   penh
+penwidth:       .byte   kPenW
+penheight:      .byte   kPenH
 .endparams
 
 .params pupil_pensize
@@ -492,12 +492,12 @@ ppy:    .word   0
         fac_store       cyf
 
         ;; pupil shouldn't overlap border
-        sub16  rx, #penw, tmpw
+        sub16  rx, #kPenW, tmpw
         sub16  tmpw, #kPupilW, tmpw
         fac_load_int tmpw
         fac_store prx
 
-        sub16  ry, #penh, tmpw
+        sub16  ry, #kPenH, tmpw
         sub16  tmpw, #kPupilH, tmpw
         fac_load_int    tmpw
         fac_store       pry
@@ -591,7 +591,7 @@ cyf:    DEFINE_FLOAT
 ;;; Inputs: cx, cy, rx, ry
 
 .proc draw_outline
-        segments = 36
+        kSegments = 36
 
         lda     ROMIN2
 
@@ -599,23 +599,23 @@ cyf:    DEFINE_FLOAT
         fac_div         CON_TWO_PI
         fac_store       step
 
-        sub16   cx, #penw/2, tmpw
+        sub16   cx, #kPenW/2, tmpw
         fac_load_int    tmpw
         fac_store       cxf
 
-        sub16   cy, #penh/2, tmpw
+        sub16   cy, #kPenH/2, tmpw
         fac_load_int    tmpw
         fac_store       cyf
 
-        sub16   rx, #penw/2, tmpw
+        sub16   rx, #kPenW/2, tmpw
         fac_load_int    tmpw
         fac_store       rxf
 
-        sub16   ry, #penh/2, tmpw
+        sub16   ry, #kPenH/2, tmpw
         fac_load_int    tmpw
         fac_store       ryf
 
-        lda     #segments
+        lda     #kSegments
         sta     count
 
         jsr     ZERO_FAC
@@ -661,7 +661,7 @@ loop:
         rts
 
 count:  .byte   0
-segw:   .word   segments
+segw:   .word   kSegments
 tmpw:   .word   0
 step:   DEFINE_FLOAT
 theta:  DEFINE_FLOAT

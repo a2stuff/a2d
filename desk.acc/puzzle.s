@@ -734,7 +734,7 @@ destroy:
         MGTK_CALL MGTK::CloseWindow, closewindow_params
         ITK_CALL IconTK::RedrawIcons
 
-        target = $20            ; copy following to ZP and run it
+        target := $20           ; copy following to ZP and run it
         COPY_BYTES sizeof_routine+1, routine, target
         jmp     target
 

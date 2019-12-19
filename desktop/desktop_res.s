@@ -294,8 +294,8 @@ alert_bitmap2_params:
         DEFINE_RECT 0, 0, 36, 23 ; maprect
 
 .params winfo_alert_dialog
-        width = 400
-        height = 107
+        kWidth = 400
+        kHeight = 107
 
 window_id:      .byte   $0F
 options:        .byte   MGTK::Option::dialog_box
@@ -313,10 +313,10 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (kScreenWidth - width) / 2, (kScreenHeight - height) / 2
+viewloc:        DEFINE_POINT (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, width, height
+cliprect:       DEFINE_RECT 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -399,8 +399,8 @@ nextwinfo:      .addr   0
 ;;; "About Apple II Desktop" Dialog
 
 .params winfo_about_dialog
-        width = 400
-        height = 120
+        kWidth = 400
+        kHeight = 120
 
 window_id:      .byte   $18
 options:        .byte   MGTK::Option::dialog_box
@@ -418,11 +418,11 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (kScreenWidth - width) / 2, (kScreenHeight - height) / 2
+viewloc:        DEFINE_POINT (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
 
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, width, height
+cliprect:       DEFINE_RECT 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -438,8 +438,8 @@ winfo_about_dialog_port    := winfo_about_dialog::port
 ;;; Dialog used for Edit/Delete/Run an Entry ...
 
 .params winfo_entry_picker
-        width = 350
-        height = 118
+        kWidth = 350
+        kHeight = 118
 
 window_id:      .byte   $1B
 options:        .byte   MGTK::Option::dialog_box
@@ -457,10 +457,10 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (kScreenWidth - width) / 2, (kScreenHeight - height) / 2
+viewloc:        DEFINE_POINT (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, width, height
+cliprect:       DEFINE_RECT 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -500,9 +500,9 @@ dialog_label_pos:
         kEntryPickerItemHeight = 9 ; default font height
 
 entry_picker_outer_rect:
-        DEFINE_RECT 4,2,winfo_entry_picker::width-4,winfo_entry_picker::height-2
+        DEFINE_RECT 4,2,winfo_entry_picker::kWidth-4,winfo_entry_picker::kHeight-2
 entry_picker_inner_rect:
-        DEFINE_RECT 5,3,winfo_entry_picker::width-5,winfo_entry_picker::height-3
+        DEFINE_RECT 5,3,winfo_entry_picker::kWidth-5,winfo_entry_picker::kHeight-3
 
         ;; Line endpoints
 entry_picker_line1_start:
@@ -512,20 +512,20 @@ entry_picker_line1_end:
 
         ;; Line endpoints
 entry_picker_line2_start:
-        DEFINE_POINT 6,winfo_entry_picker::height-21
+        DEFINE_POINT 6,winfo_entry_picker::kHeight-21
 entry_picker_line2_end:
-        DEFINE_POINT 344,winfo_entry_picker::height-21
+        DEFINE_POINT 344,winfo_entry_picker::kHeight-21
 
 entry_picker_ok_rect:
-        DEFINE_RECT 210,winfo_entry_picker::height-18,310,winfo_entry_picker::height-7
+        DEFINE_RECT 210,winfo_entry_picker::kHeight-18,310,winfo_entry_picker::kHeight-7
 
 entry_picker_cancel_rect:
-        DEFINE_RECT 40,winfo_entry_picker::height-18,140,winfo_entry_picker::height-7
+        DEFINE_RECT 40,winfo_entry_picker::kHeight-18,140,winfo_entry_picker::kHeight-7
 
 entry_picker_ok_pos:
-        DEFINE_POINT 215,winfo_entry_picker::height-8
+        DEFINE_POINT 215,winfo_entry_picker::kHeight-8
 entry_picker_cancel_pos:
-        DEFINE_POINT 45,winfo_entry_picker::height-8
+        DEFINE_POINT 45,winfo_entry_picker::kHeight-8
 
         ;; ???
         .word   130,7,220,19
@@ -568,7 +568,7 @@ entry_picker_item_rect:
         DEFINE_RECT 0,0,0,0,entry_picker_item_rect
 
 entry_picker_all_items_rect:
-        DEFINE_RECT 6,23,344,winfo_entry_picker::height-23
+        DEFINE_RECT 6,23,344,winfo_entry_picker::kHeight-23
 
 LD887:
         .byte   0

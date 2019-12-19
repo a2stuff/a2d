@@ -885,7 +885,7 @@ next:   dex
 
 
 .proc init_pattern
-        ptr = $06
+        ptr := $06
 
         MGTK_CALL MGTK::GetDeskPat, ptr
         ldy     #.sizeof(MGTK::Pattern)-1

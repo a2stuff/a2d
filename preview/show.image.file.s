@@ -525,8 +525,8 @@ maprect:        DEFINE_RECT 0,0,kMinipixWidth-1,kMinipixHeight-1
 
 .proc hr_to_dhr
         ptr     := $06
-        rows    = 192
-        cols    = 40
+        kRows   = 192
+        kCols   = 40
         spill   := $08          ; spill-over
 
         lda     #0              ; row
@@ -535,7 +535,7 @@ rloop:  pha
         copy    hires_table_lo,x, ptr
         copy    hires_table_hi,x, ptr+1
 
-        ldy     #cols-1         ; col
+        ldy     #kCols-1         ; col
 
         copy    #0, spill       ; spill-over
 
@@ -577,7 +577,7 @@ next:
         pla
         clc
         adc     #1
-        cmp     #rows
+        cmp     #kRows
         bne     rloop
 
         ;; TODO: Restore PAGE2 state?
@@ -589,8 +589,8 @@ done:   sta     PAGE2OFF
 ;;; Minipix images
 
 .proc convert_minipix_to_bitmap
-        rows    = 52
-        cols    = 88            ; pixels
+        kRows   = 52
+        kCols   = 88            ; pixels
 
         src := $06
         dst := $08
@@ -601,7 +601,7 @@ done:   sta     PAGE2OFF
         ;; c/o Kent Dickey on comp.sys.apple2.programmer
         ;; https://groups.google.com/d/msg/comp.sys.apple2.programmer/XB0jUEvrAhE/loRorS5fBwAJ
 
-        ldx     #rows
+        ldx     #kRows
         stx     row
         ldy     #0              ; Y remains unchanged throughout
 
@@ -610,7 +610,7 @@ dorow:  ldx     #8
         stx     srcbit
         ldx     #7
         stx     dstbit
-        ldx     #cols
+        ldx     #kCols
 
         ;; Process each bit
 :       jsr     getbit
