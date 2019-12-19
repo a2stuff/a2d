@@ -41,12 +41,12 @@ entry:
 
 ;;; ============================================================
 
-        key_width = 22
-        key_height = 15
+        kKeyWidth = 22
+        kKeyHeight = 15
 
 kDAWindowId    = 60
-kDAWidth        = key_width * 31/2
-kDAHeight       = key_height * 6
+kDAWidth        = kKeyWidth * 31/2
+kDAHeight       = kKeyHeight * 6
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = 50
 
@@ -166,33 +166,33 @@ char_label:  .byte   0
 
 ;;; ============================================================
 
-        kb_left = key_width/2
-        kb_top  = key_height/2
+        kKeyboardLeft = kKeyWidth/2
+        kKeyboardTop  = kKeyHeight/2
 
-        kb_right = kb_left + key_width * 29/2
+        kKeyboardRight = kKeyboardLeft + kKeyWidth * 29/2
 
-        kLeft0 = kb_left + key_width
-        kLeft1 = kb_left + key_width *  6/4
-        kLeft2 = kb_left + key_width *  7/4
-        kLeft3 = kb_left + key_width *  9/4
-        kLeft4 = kb_left + key_width
+        kLeft0 = kKeyboardLeft + kKeyWidth
+        kLeft1 = kKeyboardLeft + kKeyWidth *  6/4
+        kLeft2 = kKeyboardLeft + kKeyWidth *  7/4
+        kLeft3 = kKeyboardLeft + kKeyWidth *  9/4
+        kLeft4 = kKeyboardLeft + kKeyWidth
 
-        kRow0 = kb_top
-        kRow1 = kb_top + 1 * key_height
-        kRow2 = kb_top + 2 * key_height
-        kRow3 = kb_top + 3 * key_height
-        kRow4 = kb_top + 4 * key_height
+        kRow0 = kKeyboardTop
+        kRow1 = kKeyboardTop + 1 * kKeyHeight
+        kRow2 = kKeyboardTop + 2 * kKeyHeight
+        kRow3 = kKeyboardTop + 3 * kKeyHeight
+        kRow4 = kKeyboardTop + 4 * kKeyHeight
 
 keys_bg_rect:
-        DEFINE_RECT kb_left, kb_top, kb_right, kb_top + key_height * 5
+        DEFINE_RECT kKeyboardLeft, kKeyboardTop, kKeyboardRight, kKeyboardTop + kKeyHeight * 5
 
 .macro KEY_RECT left, top, right, bottom
     .if .paramcount = 0
         DEFINE_RECT 0,0,0,0
     .elseif .paramcount = 2
-        DEFINE_RECT left, top, left + key_width, top + key_height
+        DEFINE_RECT left, top, left + kKeyWidth, top + kKeyHeight
     .elseif .paramcount = 3
-        DEFINE_RECT left, top, right, top + key_height
+        DEFINE_RECT left, top, right, top + kKeyHeight
     .else
         DEFINE_RECT left, top, right, bottom
     .endif
@@ -200,292 +200,292 @@ keys_bg_rect:
 
 key_locations:
 
-kr00:   KEY_RECT kLeft0 +  1 * key_width, kRow0 ; Ctrl-@
-kr01:   KEY_RECT kLeft2 +  0 * key_width, kRow2 ; Ctrl-A
-kr02:   KEY_RECT kLeft3 +  4 * key_width, kRow3 ; Ctrl-B
-kr03:   KEY_RECT kLeft3 +  2 * key_width, kRow3 ; Ctrl-C
-kr04:   KEY_RECT kLeft2 +  2 * key_width, kRow2 ; Ctrl-D
-kr05:   KEY_RECT kLeft1 +  2 * key_width, kRow1 ; Ctrl-E
-kr06:   KEY_RECT kLeft2 +  3 * key_width, kRow2 ; Ctrl-F
-kr07:   KEY_RECT kLeft2 +  4 * key_width, kRow2 ; Ctrl-G
-kr08:   KEY_RECT kb_right - key_width * 4, kRow4, kb_right - key_width * 3 ; Ctrl-H (left arrow)
-kr09:   KEY_RECT kb_left, kRow1, kLeft1         ; Ctrl-I (tab)
-kr0A:   KEY_RECT kb_right - key_width * 2, kRow4, kb_right - key_width * 1 ; Ctrl-J (down arrow)
-kr0B:   KEY_RECT kb_right - key_width * 1, kRow4, kb_right - key_width * 0 ; Ctrl-K (up arrow)
-kr0C:   KEY_RECT kLeft2 +  8 * key_width, kRow2 ; Ctrl-L
-kr0D:   KEY_RECT kb_right - key_width *  7/4 - 1, kRow2, kb_right ; Ctrl-M (return)
-kr0E:   KEY_RECT kLeft3 +  5 * key_width, kRow3 ; Ctrl-N
-kr0F:   KEY_RECT kLeft1 +  8 * key_width, kRow1 ; Ctrl-O
+kr00:   KEY_RECT kLeft0 +  1 * kKeyWidth, kRow0 ; Ctrl-@
+kr01:   KEY_RECT kLeft2 +  0 * kKeyWidth, kRow2 ; Ctrl-A
+kr02:   KEY_RECT kLeft3 +  4 * kKeyWidth, kRow3 ; Ctrl-B
+kr03:   KEY_RECT kLeft3 +  2 * kKeyWidth, kRow3 ; Ctrl-C
+kr04:   KEY_RECT kLeft2 +  2 * kKeyWidth, kRow2 ; Ctrl-D
+kr05:   KEY_RECT kLeft1 +  2 * kKeyWidth, kRow1 ; Ctrl-E
+kr06:   KEY_RECT kLeft2 +  3 * kKeyWidth, kRow2 ; Ctrl-F
+kr07:   KEY_RECT kLeft2 +  4 * kKeyWidth, kRow2 ; Ctrl-G
+kr08:   KEY_RECT kKeyboardRight - kKeyWidth * 4, kRow4, kKeyboardRight - kKeyWidth * 3 ; Ctrl-H (left arrow)
+kr09:   KEY_RECT kKeyboardLeft, kRow1, kLeft1         ; Ctrl-I (tab)
+kr0A:   KEY_RECT kKeyboardRight - kKeyWidth * 2, kRow4, kKeyboardRight - kKeyWidth * 1 ; Ctrl-J (down arrow)
+kr0B:   KEY_RECT kKeyboardRight - kKeyWidth * 1, kRow4, kKeyboardRight - kKeyWidth * 0 ; Ctrl-K (up arrow)
+kr0C:   KEY_RECT kLeft2 +  8 * kKeyWidth, kRow2 ; Ctrl-L
+kr0D:   KEY_RECT kKeyboardRight - kKeyWidth *  7/4 - 1, kRow2, kKeyboardRight ; Ctrl-M (return)
+kr0E:   KEY_RECT kLeft3 +  5 * kKeyWidth, kRow3 ; Ctrl-N
+kr0F:   KEY_RECT kLeft1 +  8 * kKeyWidth, kRow1 ; Ctrl-O
 
-kr10:   KEY_RECT kLeft1 +  9 * key_width, kRow1 ; Ctrl-P
-kr11:   KEY_RECT kLeft1 +  0 * key_width, kRow1 ; Ctrl-Q
-kr12:   KEY_RECT kLeft1 +  3 * key_width, kRow1 ; Ctrl-R
-kr13:   KEY_RECT kLeft2 +  1 * key_width, kRow2 ; Ctrl-S
-kr14:   KEY_RECT kLeft1 +  4 * key_width, kRow1 ; Ctrl-T
-kr15:   KEY_RECT kb_right - key_width * 3, kRow4, kb_right - key_width * 2 ; Ctrl-U (right arrow)
-kr16:   KEY_RECT kLeft3 +  3 * key_width, kRow3 ; Ctrl-V
-kr17:   KEY_RECT kLeft1 +  1 * key_width, kRow1 ; Ctrl-W
-kr18:   KEY_RECT kLeft3 +  1 * key_width, kRow3 ; Ctrl-X
-kr19:   KEY_RECT kLeft1 +  5 * key_width, kRow1 ; Ctrl-Y
-kr1A:   KEY_RECT kLeft3 +  0 * key_width, kRow3 ; Ctrl-Z
-kr1B:   KEY_RECT kb_left, kRow0, kLeft0         ; Ctrl-[ (escape)
-kr1C:   KEY_RECT kLeft1 + 12 * key_width, kRow1 ; Ctrl-\
-kr1D:   KEY_RECT kLeft1 + 11 * key_width, kRow1 ; Ctrl-]
-kr1E:   KEY_RECT kLeft0 +  5 * key_width, kRow0 ; Ctrl-^
-kr1F:   KEY_RECT kLeft0 + 10 * key_width, kRow0 ; Ctrl-_
+kr10:   KEY_RECT kLeft1 +  9 * kKeyWidth, kRow1 ; Ctrl-P
+kr11:   KEY_RECT kLeft1 +  0 * kKeyWidth, kRow1 ; Ctrl-Q
+kr12:   KEY_RECT kLeft1 +  3 * kKeyWidth, kRow1 ; Ctrl-R
+kr13:   KEY_RECT kLeft2 +  1 * kKeyWidth, kRow2 ; Ctrl-S
+kr14:   KEY_RECT kLeft1 +  4 * kKeyWidth, kRow1 ; Ctrl-T
+kr15:   KEY_RECT kKeyboardRight - kKeyWidth * 3, kRow4, kKeyboardRight - kKeyWidth * 2 ; Ctrl-U (right arrow)
+kr16:   KEY_RECT kLeft3 +  3 * kKeyWidth, kRow3 ; Ctrl-V
+kr17:   KEY_RECT kLeft1 +  1 * kKeyWidth, kRow1 ; Ctrl-W
+kr18:   KEY_RECT kLeft3 +  1 * kKeyWidth, kRow3 ; Ctrl-X
+kr19:   KEY_RECT kLeft1 +  5 * kKeyWidth, kRow1 ; Ctrl-Y
+kr1A:   KEY_RECT kLeft3 +  0 * kKeyWidth, kRow3 ; Ctrl-Z
+kr1B:   KEY_RECT kKeyboardLeft, kRow0, kLeft0         ; Ctrl-[ (escape)
+kr1C:   KEY_RECT kLeft1 + 12 * kKeyWidth, kRow1 ; Ctrl-\
+kr1D:   KEY_RECT kLeft1 + 11 * kKeyWidth, kRow1 ; Ctrl-]
+kr1E:   KEY_RECT kLeft0 +  5 * kKeyWidth, kRow0 ; Ctrl-^
+kr1F:   KEY_RECT kLeft0 + 10 * kKeyWidth, kRow0 ; Ctrl-_
 
-kr20:   KEY_RECT kb_left + key_width * 4, kRow4, kb_right - key_width * 5 ; (space)
-kr21:   KEY_RECT kLeft0 +  0 * key_width, kRow0 ; !
-kr22:   KEY_RECT kLeft2 + 10 * key_width, kRow2 ; "
-kr23:   KEY_RECT kLeft0 +  2 * key_width, kRow0 ; #
-kr24:   KEY_RECT kLeft0 +  3 * key_width, kRow0 ; $
-kr25:   KEY_RECT kLeft0 +  4 * key_width, kRow0 ; %
-kr26:   KEY_RECT kLeft0 +  6 * key_width, kRow0 ; &
-kr27:   KEY_RECT kLeft2 + 10 * key_width, kRow2 ; '
-kr28:   KEY_RECT kLeft0 +  8 * key_width, kRow0 ; (
-kr29:   KEY_RECT kLeft0 +  9 * key_width, kRow0 ; )
-kr2A:   KEY_RECT kLeft0 +  7 * key_width, kRow0 ; *
-kr2B:   KEY_RECT kLeft0 + 11 * key_width, kRow0 ; +
-kr2C:   KEY_RECT kLeft3 +  7 * key_width, kRow3 ; ,
-kr2D:   KEY_RECT kLeft0 + 10 * key_width, kRow0 ; -
-kr2E:   KEY_RECT kLeft3 +  8 * key_width, kRow3 ; .
-kr2F:   KEY_RECT kLeft3 +  9 * key_width, kRow3 ; /
+kr20:   KEY_RECT kKeyboardLeft + kKeyWidth * 4, kRow4, kKeyboardRight - kKeyWidth * 5 ; (space)
+kr21:   KEY_RECT kLeft0 +  0 * kKeyWidth, kRow0 ; !
+kr22:   KEY_RECT kLeft2 + 10 * kKeyWidth, kRow2 ; "
+kr23:   KEY_RECT kLeft0 +  2 * kKeyWidth, kRow0 ; #
+kr24:   KEY_RECT kLeft0 +  3 * kKeyWidth, kRow0 ; $
+kr25:   KEY_RECT kLeft0 +  4 * kKeyWidth, kRow0 ; %
+kr26:   KEY_RECT kLeft0 +  6 * kKeyWidth, kRow0 ; &
+kr27:   KEY_RECT kLeft2 + 10 * kKeyWidth, kRow2 ; '
+kr28:   KEY_RECT kLeft0 +  8 * kKeyWidth, kRow0 ; (
+kr29:   KEY_RECT kLeft0 +  9 * kKeyWidth, kRow0 ; )
+kr2A:   KEY_RECT kLeft0 +  7 * kKeyWidth, kRow0 ; *
+kr2B:   KEY_RECT kLeft0 + 11 * kKeyWidth, kRow0 ; +
+kr2C:   KEY_RECT kLeft3 +  7 * kKeyWidth, kRow3 ; ,
+kr2D:   KEY_RECT kLeft0 + 10 * kKeyWidth, kRow0 ; -
+kr2E:   KEY_RECT kLeft3 +  8 * kKeyWidth, kRow3 ; .
+kr2F:   KEY_RECT kLeft3 +  9 * kKeyWidth, kRow3 ; /
 
-kr30:   KEY_RECT kLeft0 +  9 * key_width, kRow0 ; 0
-kr31:   KEY_RECT kLeft0 +  0 * key_width, kRow0 ; 1
-kr32:   KEY_RECT kLeft0 +  1 * key_width, kRow0 ; 2
-kr33:   KEY_RECT kLeft0 +  2 * key_width, kRow0 ; 3
-kr34:   KEY_RECT kLeft0 +  3 * key_width, kRow0 ; 4
-kr35:   KEY_RECT kLeft0 +  4 * key_width, kRow0 ; 5
-kr36:   KEY_RECT kLeft0 +  5 * key_width, kRow0 ; 6
-kr37:   KEY_RECT kLeft0 +  6 * key_width, kRow0 ; 7
-kr38:   KEY_RECT kLeft0 +  7 * key_width, kRow0 ; 8
-kr39:   KEY_RECT kLeft0 +  8 * key_width, kRow0 ; 9
-kr3A:   KEY_RECT kLeft2 +  9 * key_width, kRow2 ; :
-kr3B:   KEY_RECT kLeft2 +  9 * key_width, kRow2 ; ;
-kr3C:   KEY_RECT kLeft3 +  7 * key_width, kRow3 ; <
-kr3D:   KEY_RECT kLeft0 + 11 * key_width, kRow0 ; =
-kr3E:   KEY_RECT kLeft3 +  8 * key_width, kRow3 ; >
-kr3F:   KEY_RECT kLeft3 +  9 * key_width, kRow3 ; ?
+kr30:   KEY_RECT kLeft0 +  9 * kKeyWidth, kRow0 ; 0
+kr31:   KEY_RECT kLeft0 +  0 * kKeyWidth, kRow0 ; 1
+kr32:   KEY_RECT kLeft0 +  1 * kKeyWidth, kRow0 ; 2
+kr33:   KEY_RECT kLeft0 +  2 * kKeyWidth, kRow0 ; 3
+kr34:   KEY_RECT kLeft0 +  3 * kKeyWidth, kRow0 ; 4
+kr35:   KEY_RECT kLeft0 +  4 * kKeyWidth, kRow0 ; 5
+kr36:   KEY_RECT kLeft0 +  5 * kKeyWidth, kRow0 ; 6
+kr37:   KEY_RECT kLeft0 +  6 * kKeyWidth, kRow0 ; 7
+kr38:   KEY_RECT kLeft0 +  7 * kKeyWidth, kRow0 ; 8
+kr39:   KEY_RECT kLeft0 +  8 * kKeyWidth, kRow0 ; 9
+kr3A:   KEY_RECT kLeft2 +  9 * kKeyWidth, kRow2 ; :
+kr3B:   KEY_RECT kLeft2 +  9 * kKeyWidth, kRow2 ; ;
+kr3C:   KEY_RECT kLeft3 +  7 * kKeyWidth, kRow3 ; <
+kr3D:   KEY_RECT kLeft0 + 11 * kKeyWidth, kRow0 ; =
+kr3E:   KEY_RECT kLeft3 +  8 * kKeyWidth, kRow3 ; >
+kr3F:   KEY_RECT kLeft3 +  9 * kKeyWidth, kRow3 ; ?
 
-kr40:   KEY_RECT kLeft0 +  1 * key_width, kRow0 ; @
-kr41:   KEY_RECT kLeft2 +  0 * key_width, kRow2 ; A
-kr42:   KEY_RECT kLeft3 +  4 * key_width, kRow3 ; B
-kr43:   KEY_RECT kLeft3 +  2 * key_width, kRow3 ; C
-kr44:   KEY_RECT kLeft2 +  2 * key_width, kRow2 ; D
-kr45:   KEY_RECT kLeft1 +  2 * key_width, kRow1 ; E
-kr46:   KEY_RECT kLeft2 +  3 * key_width, kRow2 ; F
-kr47:   KEY_RECT kLeft2 +  4 * key_width, kRow2 ; G
-kr48:   KEY_RECT kLeft2 +  5 * key_width, kRow2 ; H
-kr49:   KEY_RECT kLeft1 +  7 * key_width, kRow1 ; I
-kr4A:   KEY_RECT kLeft2 +  6 * key_width, kRow2 ; J
-kr4B:   KEY_RECT kLeft2 +  7 * key_width, kRow2 ; K
-kr4C:   KEY_RECT kLeft2 +  8 * key_width, kRow2 ; L
-kr4D:   KEY_RECT kLeft3 +  6 * key_width, kRow3 ; M
-kr4E:   KEY_RECT kLeft3 +  5 * key_width, kRow3 ; N
-kr4F:   KEY_RECT kLeft1 +  8 * key_width, kRow1 ; O
+kr40:   KEY_RECT kLeft0 +  1 * kKeyWidth, kRow0 ; @
+kr41:   KEY_RECT kLeft2 +  0 * kKeyWidth, kRow2 ; A
+kr42:   KEY_RECT kLeft3 +  4 * kKeyWidth, kRow3 ; B
+kr43:   KEY_RECT kLeft3 +  2 * kKeyWidth, kRow3 ; C
+kr44:   KEY_RECT kLeft2 +  2 * kKeyWidth, kRow2 ; D
+kr45:   KEY_RECT kLeft1 +  2 * kKeyWidth, kRow1 ; E
+kr46:   KEY_RECT kLeft2 +  3 * kKeyWidth, kRow2 ; F
+kr47:   KEY_RECT kLeft2 +  4 * kKeyWidth, kRow2 ; G
+kr48:   KEY_RECT kLeft2 +  5 * kKeyWidth, kRow2 ; H
+kr49:   KEY_RECT kLeft1 +  7 * kKeyWidth, kRow1 ; I
+kr4A:   KEY_RECT kLeft2 +  6 * kKeyWidth, kRow2 ; J
+kr4B:   KEY_RECT kLeft2 +  7 * kKeyWidth, kRow2 ; K
+kr4C:   KEY_RECT kLeft2 +  8 * kKeyWidth, kRow2 ; L
+kr4D:   KEY_RECT kLeft3 +  6 * kKeyWidth, kRow3 ; M
+kr4E:   KEY_RECT kLeft3 +  5 * kKeyWidth, kRow3 ; N
+kr4F:   KEY_RECT kLeft1 +  8 * kKeyWidth, kRow1 ; O
 
-kr50:   KEY_RECT kLeft1 +  9 * key_width, kRow1 ; P
-kr51:   KEY_RECT kLeft1 +  0 * key_width, kRow1 ; Q
-kr52:   KEY_RECT kLeft1 +  3 * key_width, kRow1 ; R
-kr53:   KEY_RECT kLeft2 +  1 * key_width, kRow2 ; S
-kr54:   KEY_RECT kLeft1 +  4 * key_width, kRow1 ; T
-kr55:   KEY_RECT kLeft1 +  6 * key_width, kRow1 ; U
-kr56:   KEY_RECT kLeft3 +  3 * key_width, kRow3 ; V
-kr57:   KEY_RECT kLeft1 +  1 * key_width, kRow1 ; W
-kr58:   KEY_RECT kLeft3 +  1 * key_width, kRow3 ; X
-kr59:   KEY_RECT kLeft1 +  5 * key_width, kRow1 ; Y
-kr5A:   KEY_RECT kLeft3 +  0 * key_width, kRow3 ; Z
-kr5B:   KEY_RECT kLeft1 + 10 * key_width, kRow1 ; [
-kr5C:   KEY_RECT kLeft1 + 12 * key_width, kRow1 ; \
-kr5D:   KEY_RECT kLeft1 + 11 * key_width, kRow1 ; ]
-kr5E:   KEY_RECT kLeft0 +  5 * key_width, kRow0 ; ^
-kr5F:   KEY_RECT kLeft0 + 10 * key_width, kRow0 ; _
+kr50:   KEY_RECT kLeft1 +  9 * kKeyWidth, kRow1 ; P
+kr51:   KEY_RECT kLeft1 +  0 * kKeyWidth, kRow1 ; Q
+kr52:   KEY_RECT kLeft1 +  3 * kKeyWidth, kRow1 ; R
+kr53:   KEY_RECT kLeft2 +  1 * kKeyWidth, kRow2 ; S
+kr54:   KEY_RECT kLeft1 +  4 * kKeyWidth, kRow1 ; T
+kr55:   KEY_RECT kLeft1 +  6 * kKeyWidth, kRow1 ; U
+kr56:   KEY_RECT kLeft3 +  3 * kKeyWidth, kRow3 ; V
+kr57:   KEY_RECT kLeft1 +  1 * kKeyWidth, kRow1 ; W
+kr58:   KEY_RECT kLeft3 +  1 * kKeyWidth, kRow3 ; X
+kr59:   KEY_RECT kLeft1 +  5 * kKeyWidth, kRow1 ; Y
+kr5A:   KEY_RECT kLeft3 +  0 * kKeyWidth, kRow3 ; Z
+kr5B:   KEY_RECT kLeft1 + 10 * kKeyWidth, kRow1 ; [
+kr5C:   KEY_RECT kLeft1 + 12 * kKeyWidth, kRow1 ; \
+kr5D:   KEY_RECT kLeft1 + 11 * kKeyWidth, kRow1 ; ]
+kr5E:   KEY_RECT kLeft0 +  5 * kKeyWidth, kRow0 ; ^
+kr5F:   KEY_RECT kLeft0 + 10 * kKeyWidth, kRow0 ; _
 
 
-kr60:   KEY_RECT kLeft4 +  0 * key_width, kRow4 ; `
-kr61:   KEY_RECT kLeft2 +  0 * key_width, kRow2 ; a
-kr62:   KEY_RECT kLeft3 +  4 * key_width, kRow3 ; b
-kr63:   KEY_RECT kLeft3 +  2 * key_width, kRow3 ; c
-kr64:   KEY_RECT kLeft2 +  2 * key_width, kRow2 ; d
-kr65:   KEY_RECT kLeft1 +  2 * key_width, kRow1 ; e
-kr66:   KEY_RECT kLeft2 +  3 * key_width, kRow2 ; f
-kr67:   KEY_RECT kLeft2 +  4 * key_width, kRow2 ; g
-kr68:   KEY_RECT kLeft2 +  5 * key_width, kRow2 ; h
-kr69:   KEY_RECT kLeft1 +  7 * key_width, kRow1 ; i
-kr6A:   KEY_RECT kLeft2 +  6 * key_width, kRow2 ; j
-kr6B:   KEY_RECT kLeft2 +  7 * key_width, kRow2 ; k
-kr6C:   KEY_RECT kLeft2 +  8 * key_width, kRow2 ; l
-kr6D:   KEY_RECT kLeft3 +  6 * key_width, kRow3 ; m
-kr6E:   KEY_RECT kLeft3 +  5 * key_width, kRow3 ; n
-kr6F:   KEY_RECT kLeft1 +  8 * key_width, kRow1 ; o
+kr60:   KEY_RECT kLeft4 +  0 * kKeyWidth, kRow4 ; `
+kr61:   KEY_RECT kLeft2 +  0 * kKeyWidth, kRow2 ; a
+kr62:   KEY_RECT kLeft3 +  4 * kKeyWidth, kRow3 ; b
+kr63:   KEY_RECT kLeft3 +  2 * kKeyWidth, kRow3 ; c
+kr64:   KEY_RECT kLeft2 +  2 * kKeyWidth, kRow2 ; d
+kr65:   KEY_RECT kLeft1 +  2 * kKeyWidth, kRow1 ; e
+kr66:   KEY_RECT kLeft2 +  3 * kKeyWidth, kRow2 ; f
+kr67:   KEY_RECT kLeft2 +  4 * kKeyWidth, kRow2 ; g
+kr68:   KEY_RECT kLeft2 +  5 * kKeyWidth, kRow2 ; h
+kr69:   KEY_RECT kLeft1 +  7 * kKeyWidth, kRow1 ; i
+kr6A:   KEY_RECT kLeft2 +  6 * kKeyWidth, kRow2 ; j
+kr6B:   KEY_RECT kLeft2 +  7 * kKeyWidth, kRow2 ; k
+kr6C:   KEY_RECT kLeft2 +  8 * kKeyWidth, kRow2 ; l
+kr6D:   KEY_RECT kLeft3 +  6 * kKeyWidth, kRow3 ; m
+kr6E:   KEY_RECT kLeft3 +  5 * kKeyWidth, kRow3 ; n
+kr6F:   KEY_RECT kLeft1 +  8 * kKeyWidth, kRow1 ; o
 
-kr70:   KEY_RECT kLeft1 +  9 * key_width, kRow1 ; p
-kr71:   KEY_RECT kLeft1 +  0 * key_width, kRow1 ; q
-kr72:   KEY_RECT kLeft1 +  3 * key_width, kRow1 ; r
-kr73:   KEY_RECT kLeft2 +  1 * key_width, kRow2 ; s
-kr74:   KEY_RECT kLeft1 +  4 * key_width, kRow1 ; t
-kr75:   KEY_RECT kLeft1 +  6 * key_width, kRow1 ; u
-kr76:   KEY_RECT kLeft3 +  3 * key_width, kRow3 ; v
-kr77:   KEY_RECT kLeft1 +  1 * key_width, kRow1 ; w
-kr78:   KEY_RECT kLeft3 +  1 * key_width, kRow3 ; x
-kr79:   KEY_RECT kLeft1 +  5 * key_width, kRow1 ; y
-kr7A:   KEY_RECT kLeft3 +  0 * key_width, kRow3 ; z
-kr7B:   KEY_RECT kLeft1 + 10 * key_width, kRow1 ; {
-kr7C:   KEY_RECT kLeft1 + 12 * key_width, kRow1 ; |
-kr7D:   KEY_RECT kLeft1 + 11 * key_width, kRow1 ; }
-kr7E:   KEY_RECT kLeft4 +  0 * key_width, kRow4 ; ~
-kr7F:   KEY_RECT kb_right - key_width *  6/4, kRow0, kb_right ; (delete)
+kr70:   KEY_RECT kLeft1 +  9 * kKeyWidth, kRow1 ; p
+kr71:   KEY_RECT kLeft1 +  0 * kKeyWidth, kRow1 ; q
+kr72:   KEY_RECT kLeft1 +  3 * kKeyWidth, kRow1 ; r
+kr73:   KEY_RECT kLeft2 +  1 * kKeyWidth, kRow2 ; s
+kr74:   KEY_RECT kLeft1 +  4 * kKeyWidth, kRow1 ; t
+kr75:   KEY_RECT kLeft1 +  6 * kKeyWidth, kRow1 ; u
+kr76:   KEY_RECT kLeft3 +  3 * kKeyWidth, kRow3 ; v
+kr77:   KEY_RECT kLeft1 +  1 * kKeyWidth, kRow1 ; w
+kr78:   KEY_RECT kLeft3 +  1 * kKeyWidth, kRow3 ; x
+kr79:   KEY_RECT kLeft1 +  5 * kKeyWidth, kRow1 ; y
+kr7A:   KEY_RECT kLeft3 +  0 * kKeyWidth, kRow3 ; z
+kr7B:   KEY_RECT kLeft1 + 10 * kKeyWidth, kRow1 ; {
+kr7C:   KEY_RECT kLeft1 + 12 * kKeyWidth, kRow1 ; |
+kr7D:   KEY_RECT kLeft1 + 11 * kKeyWidth, kRow1 ; }
+kr7E:   KEY_RECT kLeft4 +  0 * kKeyWidth, kRow4 ; ~
+kr7F:   KEY_RECT kKeyboardRight - kKeyWidth *  6/4, kRow0, kKeyboardRight ; (delete)
 
         ;; shift/plain
-        kmode_s = $80           ; shifted (symbols)/unshifted (letters) - don't draw
-        kmode_c = $80           ; unrepresented control - don't draw
-        kmode_p = 0             ; plain - draw
+        kModeS = $80           ; shifted (symbols)/unshifted (letters) - don't draw
+        kModeC = $80           ; unrepresented control - don't draw
+        kModeP = 0             ; plain - draw
 
 key_mode:
-        .byte   kmode_c         ; Ctrl-@
-        .byte   kmode_c         ; Ctrl-A
-        .byte   kmode_c         ; Ctrl-B
-        .byte   kmode_c         ; Ctrl-C
-        .byte   kmode_c         ; Ctrl-D
-        .byte   kmode_c         ; Ctrl-E
-        .byte   kmode_c         ; Ctrl-F
-        .byte   kmode_c         ; Ctrl-G
-        .byte   kmode_p         ; Ctrl-H (left arrow)
-        .byte   kmode_p         ; Ctrl-I (tab)
-        .byte   kmode_p         ; Ctrl-J (down arrow)
-        .byte   kmode_p         ; Ctrl-K (up arrow)
-        .byte   kmode_c         ; Ctrl-L
-        .byte   kmode_p         ; Ctrl-M (return)
-        .byte   kmode_c         ; Ctrl-N
-        .byte   kmode_c         ; Ctrl-O
+        .byte   kModeC         ; Ctrl-@
+        .byte   kModeC         ; Ctrl-A
+        .byte   kModeC         ; Ctrl-B
+        .byte   kModeC         ; Ctrl-C
+        .byte   kModeC         ; Ctrl-D
+        .byte   kModeC         ; Ctrl-E
+        .byte   kModeC         ; Ctrl-F
+        .byte   kModeC         ; Ctrl-G
+        .byte   kModeP         ; Ctrl-H (left arrow)
+        .byte   kModeP         ; Ctrl-I (tab)
+        .byte   kModeP         ; Ctrl-J (down arrow)
+        .byte   kModeP         ; Ctrl-K (up arrow)
+        .byte   kModeC         ; Ctrl-L
+        .byte   kModeP         ; Ctrl-M (return)
+        .byte   kModeC         ; Ctrl-N
+        .byte   kModeC         ; Ctrl-O
 
-        .byte   kmode_c         ; Ctrl-P
-        .byte   kmode_c         ; Ctrl-Q
-        .byte   kmode_c         ; Ctrl-R
-        .byte   kmode_c         ; Ctrl-S
-        .byte   kmode_c         ; Ctrl-T
-        .byte   kmode_p         ; Ctrl-U (right arrow)
-        .byte   kmode_c         ; Ctrl-V
-        .byte   kmode_c         ; Ctrl-W
-        .byte   kmode_c         ; Ctrl-X
-        .byte   kmode_c         ; Ctrl-Y
-        .byte   kmode_c         ; Ctrl-Z
-        .byte   kmode_p         ; Ctrl-[ (escape)
-        .byte   kmode_c         ; Ctrl-\
-        .byte   kmode_c         ; Ctrl-]
-        .byte   kmode_c         ; Ctrl-^
-        .byte   kmode_c         ; Ctrl-_
+        .byte   kModeC         ; Ctrl-P
+        .byte   kModeC         ; Ctrl-Q
+        .byte   kModeC         ; Ctrl-R
+        .byte   kModeC         ; Ctrl-S
+        .byte   kModeC         ; Ctrl-T
+        .byte   kModeP         ; Ctrl-U (right arrow)
+        .byte   kModeC         ; Ctrl-V
+        .byte   kModeC         ; Ctrl-W
+        .byte   kModeC         ; Ctrl-X
+        .byte   kModeC         ; Ctrl-Y
+        .byte   kModeC         ; Ctrl-Z
+        .byte   kModeP         ; Ctrl-[ (escape)
+        .byte   kModeC         ; Ctrl-\
+        .byte   kModeC         ; Ctrl-]
+        .byte   kModeC         ; Ctrl-^
+        .byte   kModeC         ; Ctrl-_
 
-        .byte   kmode_p         ; (space)
-        .byte   kmode_s         ; !
-        .byte   kmode_s         ; "
-        .byte   kmode_s         ; #
-        .byte   kmode_s         ; $
-        .byte   kmode_s         ; %
-        .byte   kmode_s         ; &
-        .byte   kmode_p         ; '
-        .byte   kmode_s         ; (
-        .byte   kmode_s         ; )
-        .byte   kmode_s         ; *
-        .byte   kmode_s         ; +
-        .byte   kmode_p         ; ,
-        .byte   kmode_p         ; -
-        .byte   kmode_p         ; .
-        .byte   kmode_p         ; /
+        .byte   kModeP         ; (space)
+        .byte   kModeS         ; !
+        .byte   kModeS         ; "
+        .byte   kModeS         ; #
+        .byte   kModeS         ; $
+        .byte   kModeS         ; %
+        .byte   kModeS         ; &
+        .byte   kModeP         ; '
+        .byte   kModeS         ; (
+        .byte   kModeS         ; )
+        .byte   kModeS         ; *
+        .byte   kModeS         ; +
+        .byte   kModeP         ; ,
+        .byte   kModeP         ; -
+        .byte   kModeP         ; .
+        .byte   kModeP         ; /
 
-        .byte   kmode_p         ; 0
-        .byte   kmode_p         ; 1
-        .byte   kmode_p         ; 2
-        .byte   kmode_p         ; 3
-        .byte   kmode_p         ; 4
-        .byte   kmode_p         ; 5
-        .byte   kmode_p         ; 6
-        .byte   kmode_p         ; 7
-        .byte   kmode_p         ; 8
-        .byte   kmode_p         ; 9
-        .byte   kmode_s         ; :
-        .byte   kmode_p         ; ;
-        .byte   kmode_s         ; <
-        .byte   kmode_p         ; =
-        .byte   kmode_s         ; >
-        .byte   kmode_s         ; ?
+        .byte   kModeP         ; 0
+        .byte   kModeP         ; 1
+        .byte   kModeP         ; 2
+        .byte   kModeP         ; 3
+        .byte   kModeP         ; 4
+        .byte   kModeP         ; 5
+        .byte   kModeP         ; 6
+        .byte   kModeP         ; 7
+        .byte   kModeP         ; 8
+        .byte   kModeP         ; 9
+        .byte   kModeS         ; :
+        .byte   kModeP         ; ;
+        .byte   kModeS         ; <
+        .byte   kModeP         ; =
+        .byte   kModeS         ; >
+        .byte   kModeS         ; ?
 
-        .byte   kmode_s         ; @
-        .byte   kmode_p         ; A
-        .byte   kmode_p         ; B
-        .byte   kmode_p         ; C
-        .byte   kmode_p         ; D
-        .byte   kmode_p         ; E
-        .byte   kmode_p         ; F
-        .byte   kmode_p         ; G
-        .byte   kmode_p         ; H
-        .byte   kmode_p         ; I
-        .byte   kmode_p         ; J
-        .byte   kmode_p         ; K
-        .byte   kmode_p         ; L
-        .byte   kmode_p         ; M
-        .byte   kmode_p         ; N
-        .byte   kmode_p         ; O
+        .byte   kModeS         ; @
+        .byte   kModeP         ; A
+        .byte   kModeP         ; B
+        .byte   kModeP         ; C
+        .byte   kModeP         ; D
+        .byte   kModeP         ; E
+        .byte   kModeP         ; F
+        .byte   kModeP         ; G
+        .byte   kModeP         ; H
+        .byte   kModeP         ; I
+        .byte   kModeP         ; J
+        .byte   kModeP         ; K
+        .byte   kModeP         ; L
+        .byte   kModeP         ; M
+        .byte   kModeP         ; N
+        .byte   kModeP         ; O
 
-        .byte   kmode_p         ; P
-        .byte   kmode_p         ; Q
-        .byte   kmode_p         ; R
-        .byte   kmode_p         ; S
-        .byte   kmode_p         ; T
-        .byte   kmode_p         ; U
-        .byte   kmode_p         ; V
-        .byte   kmode_p         ; W
-        .byte   kmode_p         ; X
-        .byte   kmode_p         ; Y
-        .byte   kmode_p         ; Z
-        .byte   kmode_p         ; [
-        .byte   kmode_p         ; \
-        .byte   kmode_p         ; ]
-        .byte   kmode_s         ; ^
-        .byte   kmode_s         ; _
+        .byte   kModeP         ; P
+        .byte   kModeP         ; Q
+        .byte   kModeP         ; R
+        .byte   kModeP         ; S
+        .byte   kModeP         ; T
+        .byte   kModeP         ; U
+        .byte   kModeP         ; V
+        .byte   kModeP         ; W
+        .byte   kModeP         ; X
+        .byte   kModeP         ; Y
+        .byte   kModeP         ; Z
+        .byte   kModeP         ; [
+        .byte   kModeP         ; \
+        .byte   kModeP         ; ]
+        .byte   kModeS         ; ^
+        .byte   kModeS         ; _
 
-        .byte   kmode_p         ; `
-        .byte   kmode_s         ; a
-        .byte   kmode_s         ; b
-        .byte   kmode_s         ; c
-        .byte   kmode_s         ; d
-        .byte   kmode_s         ; e
-        .byte   kmode_s         ; f
-        .byte   kmode_s         ; g
-        .byte   kmode_s         ; h
-        .byte   kmode_s         ; i
-        .byte   kmode_s         ; j
-        .byte   kmode_s         ; k
-        .byte   kmode_s         ; l
-        .byte   kmode_s         ; m
-        .byte   kmode_s         ; n
-        .byte   kmode_s         ; o
+        .byte   kModeP         ; `
+        .byte   kModeS         ; a
+        .byte   kModeS         ; b
+        .byte   kModeS         ; c
+        .byte   kModeS         ; d
+        .byte   kModeS         ; e
+        .byte   kModeS         ; f
+        .byte   kModeS         ; g
+        .byte   kModeS         ; h
+        .byte   kModeS         ; i
+        .byte   kModeS         ; j
+        .byte   kModeS         ; k
+        .byte   kModeS         ; l
+        .byte   kModeS         ; m
+        .byte   kModeS         ; n
+        .byte   kModeS         ; o
 
-        .byte   kmode_s         ; p
-        .byte   kmode_s         ; q
-        .byte   kmode_s         ; r
-        .byte   kmode_s         ; s
-        .byte   kmode_s         ; t
-        .byte   kmode_s         ; u
-        .byte   kmode_s         ; v
-        .byte   kmode_s         ; w
-        .byte   kmode_s         ; x
-        .byte   kmode_s         ; y
-        .byte   kmode_s         ; z
-        .byte   kmode_s         ; {
-        .byte   kmode_s         ; |
-        .byte   kmode_s         ; }
-        .byte   kmode_s         ; ~
-        .byte   kmode_p         ; DEL (FIX)
+        .byte   kModeS         ; p
+        .byte   kModeS         ; q
+        .byte   kModeS         ; r
+        .byte   kModeS         ; s
+        .byte   kModeS         ; t
+        .byte   kModeS         ; u
+        .byte   kModeS         ; v
+        .byte   kModeS         ; w
+        .byte   kModeS         ; x
+        .byte   kModeS         ; y
+        .byte   kModeS         ; z
+        .byte   kModeS         ; {
+        .byte   kModeS         ; |
+        .byte   kModeS         ; }
+        .byte   kModeS         ; ~
+        .byte   kModeP         ; DEL (FIX)
 
-rect_ctl: KEY_RECT   kb_left, kRow2, kLeft2
-rect_shl: KEY_RECT   kb_left, kRow3, kLeft3
-rect_cap: KEY_RECT   kb_left, kRow4, kLeft4
-rect_gap: KEY_RECT   kb_left + key_width * 2, kRow4
-rect_oap: KEY_RECT   kb_left + key_width * 3, kRow4
-rect_sap: KEY_RECT   kb_right - key_width * 5, kRow4, kb_right - key_width * 4
-rect_shr: KEY_RECT   kb_right - key_width *  9/4 - 1, kRow3, kb_right
+rect_ctl: KEY_RECT   kKeyboardLeft, kRow2, kLeft2
+rect_shl: KEY_RECT   kKeyboardLeft, kRow3, kLeft3
+rect_cap: KEY_RECT   kKeyboardLeft, kRow4, kLeft4
+rect_gap: KEY_RECT   kKeyboardLeft + kKeyWidth * 2, kRow4
+rect_oap: KEY_RECT   kKeyboardLeft + kKeyWidth * 3, kRow4
+rect_sap: KEY_RECT   kKeyboardRight - kKeyWidth * 5, kRow4, kKeyboardRight - kKeyWidth * 4
+rect_shr: KEY_RECT   kKeyboardRight - kKeyWidth *  9/4 - 1, kRow3, kKeyboardRight
 
 label_relpos:   DEFINE_POINT 8, 12
 
@@ -495,15 +495,15 @@ empty_rect:       DEFINE_RECT 0, 0, 0, 0
 ;;;
 
 rect_new_oap:                   ; Open Apple
-        KEY_RECT kb_left + key_width * 2, kRow4, kb_left + key_width * 4
+        KEY_RECT kKeyboardLeft + kKeyWidth * 2, kRow4, kKeyboardLeft + kKeyWidth * 4
 rect_new_sap:                   ; Solid Apple
-        KEY_RECT kLeft4 +  0 * key_width, kRow4
+        KEY_RECT kLeft4 +  0 * kKeyWidth, kRow4
 rect_new_apos:                  ; Apostrophe/Tilde
-        KEY_RECT kb_left + key_width * 4, kRow4
+        KEY_RECT kKeyboardLeft + kKeyWidth * 4, kRow4
 rect_new_bshl:                  ; Backslash/Vertical Bar
-        KEY_RECT kb_right - key_width * 5, kRow4, kb_right - key_width * 4
+        KEY_RECT kKeyboardRight - kKeyWidth * 5, kRow4, kKeyboardRight - kKeyWidth * 4
 rect_new_spc:                   ; Space
-        KEY_RECT kb_left + key_width * 5, kRow4, kb_right - key_width * 5
+        KEY_RECT kKeyboardLeft + kKeyWidth * 5, kRow4, kKeyboardRight - kKeyWidth * 5
 
 ;;; Non-rectangular Return key handled by a Polygon:
 ;;;
@@ -516,24 +516,24 @@ rect_new_spc:                   ; Space
 poly_new_ret:
         .byte   7               ; vertex count
         .byte   0               ; no more polys
-        DEFINE_POINT kLeft1 + 12 * key_width, kRow1
-        DEFINE_POINT kb_right, kRow1
-        DEFINE_POINT kb_right, kRow3
-        DEFINE_POINT kb_right - key_width *  7/4 - 1, kRow3
-        DEFINE_POINT kb_right - key_width *  7/4 - 1, kRow2
-        DEFINE_POINT kLeft1 + 12 * key_width, kRow2
-        DEFINE_POINT kLeft1 + 12 * key_width, kRow1
+        DEFINE_POINT kLeft1 + 12 * kKeyWidth, kRow1
+        DEFINE_POINT kKeyboardRight, kRow1
+        DEFINE_POINT kKeyboardRight, kRow3
+        DEFINE_POINT kKeyboardRight - kKeyWidth *  7/4 - 1, kRow3
+        DEFINE_POINT kKeyboardRight - kKeyWidth *  7/4 - 1, kRow2
+        DEFINE_POINT kLeft1 + 12 * kKeyWidth, kRow2
+        DEFINE_POINT kLeft1 + 12 * kKeyWidth, kRow1
 
 poly_new_ret_inner:
         .byte   7               ; vertex count
         .byte   0               ; no more polys
-        DEFINE_POINT kLeft1 + 12 * key_width + 4, kRow1 + 2
-        DEFINE_POINT kb_right - 3, kRow1 + 2
-        DEFINE_POINT kb_right - 3, kRow3 - 1
-        DEFINE_POINT kb_right - key_width *  7/4 - 1 + 4, kRow3 - 1
-        DEFINE_POINT kb_right - key_width *  7/4 - 1 + 4, kRow2 + 2
-        DEFINE_POINT kLeft1 + 12 * key_width + 4, kRow2 + 2
-        DEFINE_POINT kLeft1 + 12 * key_width + 4, kRow1 + 2
+        DEFINE_POINT kLeft1 + 12 * kKeyWidth + 4, kRow1 + 2
+        DEFINE_POINT kKeyboardRight - 3, kRow1 + 2
+        DEFINE_POINT kKeyboardRight - 3, kRow3 - 1
+        DEFINE_POINT kKeyboardRight - kKeyWidth *  7/4 - 1 + 4, kRow3 - 1
+        DEFINE_POINT kKeyboardRight - kKeyWidth *  7/4 - 1 + 4, kRow2 + 2
+        DEFINE_POINT kLeft1 + 12 * kKeyWidth + 4, kRow2 + 2
+        DEFINE_POINT kLeft1 + 12 * kKeyWidth + 4, kRow1 + 2
 
 extended_layout_flag:           ; high bit set if IIgs/IIc+
         .byte   0

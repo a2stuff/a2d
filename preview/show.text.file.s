@@ -56,7 +56,7 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
         sta     RAMWRTON
         rts
 .endproc
-        sizeof_call_main_template = * - call_main_template
+        sizeof_call_main_template = .sizeof(call_main_template)
 
 .proc call_init
         ;; run the DA

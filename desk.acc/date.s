@@ -598,11 +598,11 @@ decrement_year:
 
         ptr := $07
         str := month_string + 3
-        len = 3
+        kLength = 3
 
         copy16  #str, ptr
 
-        ldy     #len - 1
+        ldy     #kLength - 1
 loop:   lda     month_name_table,x
         sta     (ptr),y
         dex
@@ -661,7 +661,7 @@ skip:   jmp     dest
         sta     RAMWRTOFF
         jmp     save_date_and_exit
 .endproc
-        sizeof_routine = * - routine
+        sizeof_routine = .sizeof(routine)
 .endproc
 
 ;;; ============================================================

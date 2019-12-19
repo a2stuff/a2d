@@ -2968,10 +2968,10 @@ vert:   cmp16   win_t, cr_t
 
 .proc shift_port_down
         ;; For window's items/used/free space bar
-        offset = 15
+        kOffset = 15
 
-        add16   icon_grafport::viewloc::ycoord, #offset, icon_grafport::viewloc::ycoord
-        add16   icon_grafport::cliprect::y1, #offset, icon_grafport::cliprect::y1
+        add16   icon_grafport::viewloc::ycoord, #kOffset, icon_grafport::viewloc::ycoord
+        add16   icon_grafport::cliprect::y1, #kOffset, icon_grafport::cliprect::y1
         MGTK_CALL MGTK::SetPort, icon_grafport
         rts
 .endproc

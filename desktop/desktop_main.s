@@ -10879,15 +10879,15 @@ pointers_buf:  .res    4, 0
         DEFINE_READ_PARAMS read_src_dir_skip5_params, skip5_buf, 5 ; ???
 skip5_buf:  .res    5, 0
 
-        buf_size = $AC0
+        kBufSize = $AC0
 
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
         DEFINE_DESTROY_PARAMS destroy_params, src_path_buf
         DEFINE_OPEN_PARAMS open_src_params, src_path_buf, $0D00
         DEFINE_OPEN_PARAMS open_dst_params, dst_path_buf, $1100
-        DEFINE_READ_PARAMS read_src_params, $1500, buf_size
-        DEFINE_WRITE_PARAMS write_dst_params, $1500, buf_size
+        DEFINE_READ_PARAMS read_src_params, $1500, kBufSize
+        DEFINE_WRITE_PARAMS write_dst_params, $1500, kBufSize
         DEFINE_CREATE_PARAMS create_params3, dst_path_buf, ACCESS_DEFAULT
         DEFINE_CREATE_PARAMS create_params2, dst_path_buf
 
@@ -11662,7 +11662,7 @@ done:   rts
 .endproc
 
 .proc read_src
-        copy16  #buf_size, read_src_params::request_count
+        copy16  #kBufSize, read_src_params::request_count
 @retry: MLI_RELAY_CALL READ, read_src_params
         beq     :+
         cmp     #ERR_END_OF_FILE
@@ -15289,10 +15289,10 @@ done:   rts
         target          := $20
 
         ;; Backup copy of $20
-        COPY_BYTES proc_len+1, target, saved_proc_buf
+        COPY_BYTES sizeof_proc+1, target, saved_proc_buf
 
         ;; Overwrite with proc
-        ldx     #proc_len
+        ldx     #sizeof_proc
 :       lda     proc,x
         sta     target,x
         dex
@@ -15303,7 +15303,7 @@ done:   rts
         pha
 
         ;; Restore copy
-        COPY_BYTES proc_len+1, saved_proc_buf, target
+        COPY_BYTES sizeof_proc+1, saved_proc_buf, target
 
         pla
         rts
@@ -15317,7 +15317,7 @@ done:   rts
         sta     RAMWRTOFF
         rts
 .endproc
-        proc_len = .sizeof(proc)
+        sizeof_proc = .sizeof(proc)
 
 saved_proc_buf:
         .res    20, 0

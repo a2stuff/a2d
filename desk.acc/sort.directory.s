@@ -13,7 +13,7 @@
 
 
 dir_data_buffer     := $0E00
-dir_data_buffer_len  = $0E00
+kDirDataBufferLen  = $0E00
 
 ;;; ============================================================
 
@@ -139,7 +139,7 @@ on_line_buffer:
 
         io_buf := $1C00
         buffer := dir_data_buffer
-        kBufferLen = dir_data_buffer_len
+        kBufferLen = kDirDataBufferLen
 
         DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
         DEFINE_READ_PARAMS read_params, buffer, kBufferLen

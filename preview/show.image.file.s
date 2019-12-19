@@ -35,9 +35,9 @@
         kHiresSize = $2000
 
         ;; Minipix/Print Shop images are loaded/converted
-        minipix_src_buf = $1200   ; Load address
+        minipix_src_buf := $1200 ; Load address
         kMinipixSrcSize = 576
-        minipix_dst_buf = $1580  ; Convert address
+        minipix_dst_buf := $1580 ; Convert address
         kMinipixDstSize = 26*52
 
         .assert (minipix_src_buf + kMinipixSrcSize) < minipix_dst_buf, error, "Not enough room for Minipix load buffer"
@@ -50,7 +50,8 @@
 da_start:
         jmp     start
 
-save_stack:.byte   0
+save_stack:
+        .byte   0
 
 .proc start
         tsx
@@ -94,8 +95,7 @@ call_main_addr         := call_main_trampoline+7 ; address patched in here
         sta     RAMWRTON
         rts
 .endproc
-        sizeof_routine = * - routine ; can't .sizeof(proc) before declaration
-        ;;  https://github.com/cc65/cc
+        sizeof_routine = .sizeof(routine) ; can't .sizeof(proc) before declaration
 
 ;;; ============================================================
 ;;; ProDOS MLI calls

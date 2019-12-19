@@ -98,7 +98,7 @@ skip:   lda     #0
         sta     RAMWRTON
         rts
 .endproc
-        sizeof_routine = * - routine
+        sizeof_routine = .sizeof(routine)
 .endproc
 
 ;;; ============================================================
@@ -176,34 +176,34 @@ a_grafport:   .addr   setport_params
 getwinport_params_window_id := getwinport_params::window_id
 
         ;; Puzzle piece row/columns
-        cw = 28
-        c1 = 5
-        c2 = c1 + cw
-        c3 = c2 + cw
-        c4 = c3 + cw
-        rh = 16
-        r1 = 3
-        r2 = r1 + rh
-        r3 = r2 + rh
-        r4 = r3 + rh
+        kColWidth = 28
+        kCol1 = 5
+        kCol2 = kCol1 + kColWidth
+        kCol3 = kCol2 + kColWidth
+        kCol4 = kCol3 + kColWidth
+        kRowHeight = 16
+        kRow1 = 3
+        kRow2 = kRow1 + kRowHeight
+        kRow3 = kRow2 + kRowHeight
+        kRow4 = kRow3 + kRowHeight
 
 space_positions:                 ; left, top for all 16 holes
-        .word   c1,r1
-        .word   c2,r1
-        .word   c3,r1
-        .word   c4,r1
-        .word   c1,r2
-        .word   c2,r2
-        .word   c3,r2
-        .word   c4,r2
-        .word   c1,r3
-        .word   c2,r3
-        .word   c3,r3
-        .word   c4,r3
-        .word   c1,r4
-        .word   c2,r4
-        .word   c3,r4
-        .word   c4,r4
+        .word   kCol1,kRow1
+        .word   kCol2,kRow1
+        .word   kCol3,kRow1
+        .word   kCol4,kRow1
+        .word   kCol1,kRow2
+        .word   kCol2,kRow2
+        .word   kCol3,kRow2
+        .word   kCol4,kRow2
+        .word   kCol1,kRow3
+        .word   kCol2,kRow3
+        .word   kCol3,kRow3
+        .word   kCol4,kRow3
+        .word   kCol1,kRow4
+        .word   kCol2,kRow4
+        .word   kCol3,kRow4
+        .word   kCol4,kRow4
 
 .params bitmap_table
         .addr   piece1, piece2, piece3, piece4
@@ -743,7 +743,7 @@ destroy:
         sta     RAMWRTOFF
         jmp     exit_da
 .endproc
-        sizeof_routine = * - routine
+        sizeof_routine = .sizeof(routine)
 
         ;; title bar?
 check_title:
@@ -780,27 +780,27 @@ check_key:
         lda     screentowindow_params::windowy
         ldx     screentowindow_params::windowx
 
-        cmp     #r1
+        cmp     #kRow1
         bcc     nope
-        cmp     #r2+1
+        cmp     #kRow2+1
         bcs     :+
         jsr     find_click_x
         bcc     nope
         lda     #0
         beq     yep
-:       cmp     #r3+1
+:       cmp     #kRow3+1
         bcs     :+
         jsr     find_click_x
         bcc     nope
         lda     #1
         bne     yep
-:       cmp     #r4+1
+:       cmp     #kRow4+1
         bcs     :+
         jsr     find_click_x
         bcc     nope
         lda     #2
         bne     yep
-:       cmp     #r4+rh+1
+:       cmp     #kRow4+kRowHeight+1
         bcs     nope
         jsr     find_click_x
         bcc     nope
@@ -815,21 +815,21 @@ nope:   clc
 .endproc
 
 .proc find_click_x
-        cpx     #c1
+        cpx     #kCol1
         bcc     nope
-        cpx     #c2
+        cpx     #kCol2
         bcs     :+
         lda     #0
         beq     yep
-:       cpx     #c3+1
+:       cpx     #kCol3+1
         bcs     :+
         lda     #1
         bne     yep
-:       cpx     #c4+1
+:       cpx     #kCol4+1
         bcs     :+
         lda     #2
         bne     yep
-:       cpx     #c4+cw
+:       cpx     #kCol4+kColWidth
         bcs     nope
         lda     #3
 
