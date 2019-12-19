@@ -350,8 +350,8 @@ notpencopy:     .byte   MGTK::notpencopy
 
 penw    = 8
 penh    = 4
-pupilw  = penw * 2
-pupilh  = penh * 2
+kPupilW  = penw * 2
+kPupilH  = penh * 2
 
 .params outline_pensize
 penwidth:       .byte   penw
@@ -359,8 +359,8 @@ penheight:      .byte   penh
 .endparams
 
 .params pupil_pensize
-penwidth:       .byte   pupilw
-penheight:      .byte   pupilh
+penwidth:       .byte   kPupilW
+penheight:      .byte   kPupilH
 .endparams
 
 ;;; Flag set once we have coords from a move event
@@ -445,16 +445,16 @@ draw_pupils:
         copy16  rx, cx
         copy16  ry, cy
         jsr     compute_pupil_pos
-        sub16  ppx, #pupilw/2, pos_l::xcoord
-        sub16  ppy, #pupilh/2, pos_l::ycoord
+        sub16  ppx, #kPupilW/2, pos_l::xcoord
+        sub16  ppy, #kPupilH/2, pos_l::ycoord
         MGTK_CALL MGTK::MoveTo, pos_l
         MGTK_CALL MGTK::LineTo, pos_l
 
         add16   rx, cx, cx
         add16   rx, cx, cx
         jsr     compute_pupil_pos
-        sub16  ppx, #pupilw/2, pos_r::xcoord
-        sub16  ppy, #pupilh/2, pos_r::ycoord
+        sub16  ppx, #kPupilW/2, pos_r::xcoord
+        sub16  ppy, #kPupilH/2, pos_r::ycoord
         MGTK_CALL MGTK::MoveTo, pos_r
         MGTK_CALL MGTK::LineTo, pos_r
 
@@ -493,12 +493,12 @@ ppy:    .word   0
 
         ;; pupil shouldn't overlap border
         sub16  rx, #penw, tmpw
-        sub16  tmpw, #pupilw, tmpw
+        sub16  tmpw, #kPupilW, tmpw
         fac_load_int tmpw
         fac_store prx
 
         sub16  ry, #penh, tmpw
-        sub16  tmpw, #pupilh, tmpw
+        sub16  tmpw, #kPupilH, tmpw
         fac_load_int    tmpw
         fac_store       pry
 

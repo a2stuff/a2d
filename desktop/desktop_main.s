@@ -17,15 +17,15 @@ dst_path_buf   := $1FC0
         dynamic_routine_7000 := $7000
         dynamic_routine_9000 := $9000
 
-        dynamic_routine_disk_copy    = 0
-        dynamic_routine_format_erase = 1
-        dynamic_routine_selector1    = 2
-        dynamic_routine_common       = 3
-        dynamic_routine_file_copy    = 4
-        dynamic_routine_file_delete  = 5
-        dynamic_routine_selector2    = 6
-        dynamic_routine_restore5000  = 7
-        dynamic_routine_restore9000  = 8
+        kDynamicRoutineDiskCopy    = 0
+        kDynamicRoutineFormatErase = 1
+        kDynamicRoutineSelector1    = 2
+        kDynamicRoutineCommon       = 3
+        kDynamicRoutineFileCopy    = 4
+        kDynamicRoutineFileDelete  = 5
+        kDynamicRoutineSelector2    = 6
+        kDynamicRoutineRestore5000  = 7
+        kDynamicRoutineRestore9000  = 8
 
 
         .org $4000
@@ -1118,16 +1118,16 @@ set_penmode_copy:
 
 .proc cmd_selector_action
         jsr     set_watch_cursor
-        lda     #dynamic_routine_selector1
+        lda     #kDynamicRoutineSelector1
         jsr     load_dynamic_routine
         bmi     done
         lda     menu_click_params::item_num
         cmp     #3              ; 1 = Add, 2 = Edit (need more overlays)
         bcs     :+              ; 3 = Delete, 4 = Run (can skip)
-        lda     #dynamic_routine_selector2
+        lda     #kDynamicRoutineSelector2
         jsr     load_dynamic_routine
         bmi     done
-        lda     #dynamic_routine_common
+        lda     #kDynamicRoutineCommon
         jsr     load_dynamic_routine
         bmi     done
 
@@ -1138,7 +1138,7 @@ set_penmode_copy:
         sta     result
         jsr     set_watch_cursor
         ;; Restore from overlays
-        lda     #dynamic_routine_restore9000
+        lda     #kDynamicRoutineRestore9000
         jsr     restore_dynamic_routine
 
         lda     menu_click_params::item_num
@@ -1458,7 +1458,7 @@ slash_index:
         addax   #run_list_paths, $06
         ldy     #0
         lda     ($06),y
-        sta     prefix_length
+        sta     kPrefixLength
 
         ;; Walk back one segment
         tay
@@ -1487,7 +1487,7 @@ slash_index:
         iny
         lda     ($06),y
         sta     path_buffer,x
-        cpy     prefix_length
+        cpy     kPrefixLength
         bne     :-
 
         stx     path_buffer
@@ -1497,7 +1497,7 @@ slash_index:
 entry_num:
         .byte   0
 
-prefix_length:
+kPrefixLength:
         .byte   0
 .endproc
 
@@ -1514,10 +1514,10 @@ prefix_length:
         ptr := $6
 
         .define prefix "Desk.acc/"
-        prefix_length = .strlen(prefix)
+        kPrefixLength = .strlen(prefix)
 
 str_desk_acc:
-        PASCAL_STRING prefix, prefix_length + 15
+        PASCAL_STRING prefix, kPrefixLength + 15
 
 start:  jsr     reset_grafport3
         jsr     set_watch_cursor
@@ -1534,7 +1534,7 @@ start:  jsr     reset_grafport3
         lda     (ptr),y
         tay
         clc
-        adc     #prefix_length
+        adc     #kPrefixLength
         pha
         tax
 
@@ -1595,7 +1595,7 @@ done:   jsr     set_pointer_cursor
 open:   yax_call MLI_RELAY, OPEN, open_params
         bne     :+
         rts
-:       lda     #warning_msg_insert_system_disk
+:       lda     #kWarningMsgInsertSystemDisk
         jsr     warning_dialog_proc_num
         beq     open            ; ok, so try again
         return  #$FF            ; cancel, so fail
@@ -1629,10 +1629,10 @@ running_da_flag:
 
 .proc cmd_copy_file
         jsr     set_watch_cursor
-        lda     #dynamic_routine_common
+        lda     #kDynamicRoutineCommon
         jsr     load_dynamic_routine
         bmi     L4CD6
-        lda     #dynamic_routine_file_copy
+        lda     #kDynamicRoutineFileCopy
         jsr     load_dynamic_routine
         bmi     L4CD6
         jsr     set_pointer_cursor
@@ -1640,7 +1640,7 @@ running_da_flag:
         jsr     dynamic_routine_5000
         pha
         jsr     set_watch_cursor
-        lda     #dynamic_routine_restore5000
+        lda     #kDynamicRoutineRestore5000
         jsr     restore_dynamic_routine
         jsr     set_pointer_cursor
         pla
@@ -1741,11 +1741,11 @@ L4CD6:  pha
 
 .proc cmd_delete_file
         jsr     set_watch_cursor
-        lda     #dynamic_routine_common
+        lda     #kDynamicRoutineCommon
         jsr     load_dynamic_routine
         bmi     L4D9D
 
-        lda     #dynamic_routine_file_delete
+        lda     #kDynamicRoutineFileDelete
         jsr     load_dynamic_routine
         bmi     L4D9D
 
@@ -1754,7 +1754,7 @@ L4CD6:  pha
         jsr     dynamic_routine_5000
         pha
         jsr     set_watch_cursor
-        lda     #dynamic_routine_restore5000
+        lda     #kDynamicRoutineRestore5000
         jsr     restore_dynamic_routine
         jsr     set_pointer_cursor
         pla
@@ -1979,7 +1979,7 @@ done:   rts
 ;;; ============================================================
 
 .proc cmd_disk_copy
-        lda     #dynamic_routine_disk_copy
+        lda     #kDynamicRoutineDiskCopy
         jsr     load_dynamic_routine
         bmi     fail
         jmp     dynamic_routine_800
@@ -2523,7 +2523,7 @@ drive_to_refresh:
 ;;; ============================================================
 
 .proc cmd_format_disk
-        lda     #dynamic_routine_format_erase
+        lda     #kDynamicRoutineFormatErase
         jsr     load_dynamic_routine
         bmi     fail
 
@@ -2541,7 +2541,7 @@ fail:   rts
 ;;; ============================================================
 
 .proc cmd_erase_disk
-        lda     #dynamic_routine_format_erase
+        lda     #kDynamicRoutineFormatErase
         jsr     load_dynamic_routine
         bmi     done
 
@@ -4197,7 +4197,7 @@ L60D5:  jsr     push_pointers
 :       ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
         sub16in (ptr),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::xcoord, deltax
         iny
-        sub16in (ptr),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, deltay
+        sub16in (ptr),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, kDeltaU
 
         ldx     active_window_id
         dex
@@ -4222,7 +4222,7 @@ next:   cpx     cached_window_icon_count
         ldy     #IconEntry::iconx
         add16in (ptr),y, deltax, (ptr),y
         iny
-        add16in (ptr),y, deltay, (ptr),y
+        add16in (ptr),y, kDeltaU, (ptr),y
         pla
         tax
         inx
@@ -4231,7 +4231,7 @@ next:   cpx     cached_window_icon_count
 done:   rts
 
 deltax: .word   0
-deltay: .word   0
+kDeltaU: .word   0
 
 .endproc
 
@@ -5151,7 +5151,7 @@ no_win:
         bcc     :+
 
         ;; Nope, show error.
-        lda     #warning_msg_too_many_windows
+        lda     #kWarningMsgTooManyWindows
         jsr     warning_dialog_proc_num
         ldx     saved_stack
         txs
@@ -5868,7 +5868,7 @@ L7147:  lda     num_open_windows
         beq     L715F
         lda     #$03
         bne     L7161
-L715F:  lda     #warning_msg_window_must_be_closed2
+L715F:  lda     #kWarningMsgWindowMustBeClosed2
 L7161:  jsr     warning_dialog_proc_num
         ldx     saved_stack
         txs
@@ -9069,22 +9069,22 @@ offset:         .word   0
         kTrashIconX = 506
         kTrashIconY = 160
 
-        deltay = 29
+        kDeltaU = 29
 
 desktop_icon_coords_table:
-        DEFINE_POINT 490,15 + deltay*0    ; 1
-        DEFINE_POINT 490,15 + deltay*1    ; 2
-        DEFINE_POINT 490,15 + deltay*2    ; 3
-        DEFINE_POINT 490,15 + deltay*3    ; 4
-        DEFINE_POINT 490,15 + deltay*4    ; 5
+        DEFINE_POINT 490,15 + kDeltaU*0    ; 1
+        DEFINE_POINT 490,15 + kDeltaU*1    ; 2
+        DEFINE_POINT 490,15 + kDeltaU*2    ; 3
+        DEFINE_POINT 490,15 + kDeltaU*3    ; 4
+        DEFINE_POINT 490,15 + kDeltaU*4    ; 5
         DEFINE_POINT 400,kTrashIconY+2    ; 6
         DEFINE_POINT 310,kTrashIconY+2    ; 7
         DEFINE_POINT 220,kTrashIconY+2    ; 8
         DEFINE_POINT 130,kTrashIconY+2    ; 9
         DEFINE_POINT  40,kTrashIconY+2    ; 10
-        DEFINE_POINT 400,15 + deltay*4    ; 11
-        DEFINE_POINT 310,15 + deltay*4    ; 12
-        DEFINE_POINT 220,15 + deltay*4    ; 13
+        DEFINE_POINT 400,15 + kDeltaU*4    ; 11
+        DEFINE_POINT 310,15 + kDeltaU*4    ; 12
+        DEFINE_POINT 220,15 + kDeltaU*4    ; 13
         ;; Maximum of 13 devices:
         ;; 7 slots * 2 drives = 14 (size of DEVLST)
         ;; ... but RAM in Slot 3 Drive 2 is disconnected.
@@ -9543,7 +9543,7 @@ restore:
 open:   MLI_RELAY_CALL OPEN, open_params
         beq     :+
 
-        lda     #warning_msg_insert_system_disk
+        lda     #kWarningMsgInsertSystemDisk
         ora     restore_flag    ; high bit set = no cancel
         jsr     warning_dialog_proc_num
         beq     open
@@ -9976,7 +9976,7 @@ L9076:  ldy     #$FF
         ;; fall through
 
 ;;; --------------------------------------------------
-;;; Start the actual operation
+;;; Start the actual kOperation
 
 .proc begin_operation
         copy    #0, L97E4
@@ -10005,7 +10005,7 @@ L9076:  ldy     #$FF
 @size:  jsr     do_get_size_dialog_phase
         jmp     iterate_selection
 
-;;; Perform operation
+;;; Perform kOperation
 
 L90BA:  bit     operation_flags
         bvs     @size
@@ -11109,7 +11109,7 @@ op_jt3: jmp     (op_jt_addr3)
 ;;; maybe_finish_file_move
 ;;;  - c/o process_dir after exiting; deletes dir if moving
 
-;;; Overlays for copy operation (op_jt_addrs)
+;;; Overlays for copy kOperation (op_jt_addrs)
 callbacks_for_copy:
         .addr   copy_process_directory_entry
         .addr   copy_pop_directory
@@ -11120,7 +11120,7 @@ callbacks_for_copy:
         populate        = 1
         show            = 2
         exists          = 3     ; show "file exists" prompt
-        too_large       = 4     ; show "too large" prompt
+        kTooLarge       = 4     ; show "too large" prompt
         close           = 5
 .endenum
 
@@ -11196,7 +11196,7 @@ count:  .addr   0
 .endproc
 
 .proc copy_dialog_phase3_callback
-        copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
+        copy    #CopyDialogLifecycle::kTooLarge, copy_dialog_params::phase
         yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         cmp     #PromptResult::yes
         bne     cancel
@@ -11481,7 +11481,7 @@ blocks_free:
 .proc check_space_and_show_prompt
         jsr     check_space
         bcc     done
-        copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
+        copy    #CopyDialogLifecycle::kTooLarge, copy_dialog_params::phase
         jsr     run_copy_dialog_proc
         beq     :+
         jmp     close_files_cancel_dialog
@@ -11763,7 +11763,7 @@ failure:
 ;;; delete_finish_directory
 ;;;  - c/o process_dir when exiting dir; deletes it
 
-;;; Overlays for delete operation (op_jt_addrs)
+;;; Overlays for delete kOperation (op_jt_addrs)
 callbacks_for_delete:
         .addr   delete_process_directory_entry
         .addr   do_nothing
@@ -11998,7 +11998,7 @@ done:   rts
 ;;; lock_process_directory_entry
 ;;;  - c/o process_dir for each file in dir; skips if dir, locks otherwise
 
-;;; Overlays for lock/unlock operation (op_jt_addrs)
+;;; Overlays for lock/unlock kOperation (op_jt_addrs)
 callbacks_for_lock:
         .addr   lock_process_directory_entry
         .addr   do_nothing
@@ -12006,9 +12006,9 @@ callbacks_for_lock:
 
 .enum LockDialogLifecycle
         open            = 0 ; opening window, initial label
-        populate        = 1 ; show operation details (e.g. file count)
+        populate        = 1 ; show kOperation details (e.g. file count)
         loop            = 2 ; draw buttons, input loop
-        operation       = 3 ; performing operation
+        kOperation       = 3 ; performing kOperation
         close           = 4 ; destroy window
 .endenum
 
@@ -12102,7 +12102,7 @@ unlock_dialog_lifecycle:
 ;;; Calls into the recursion logic of |process_dir| as necessary.
 
 .proc lock_process_selected_file
-        copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
+        copy    #LockDialogLifecycle::kOperation, lock_unlock_dialog_params::phase
         jsr     copy_paths_to_src_and_dst_paths
         ldx     dst_path_buf
         ldy     src_path_slash_index
@@ -12206,7 +12206,7 @@ LA1DC:  jmp     lock_dialog_lifecycle
 ;;; "Get Size" dialog state and logic
 ;;; ============================================================
 
-;;; Logic also used for "count" operation which precedes most
+;;; Logic also used for "count" kOperation which precedes most
 ;;; other operations (copy, delete, lock, unlock) to populate
 ;;; confirmation dialog.
 
@@ -12249,7 +12249,7 @@ get_size_rts2:
 ;;; Most operations start by doing a traversal to just count
 ;;; the files.
 
-;;; Overlays for size operation (op_jt_addrs)
+;;; Overlays for size kOperation (op_jt_addrs)
 callbacks_for_size_or_count:
         .addr   size_or_count_process_directory_entry
         .addr   do_nothing
@@ -12320,7 +12320,7 @@ size_or_count_process_directory_entry:
         bit     operation_flags
         bvc     :+              ; not size
 
-        ;; If operation is "get size", add the block count to the sum
+        ;; If kOperation is "get size", add the block count to the sum
         jsr     append_to_src_path
         MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         bne     :+
@@ -13224,7 +13224,7 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
 :       cmp     #CopyDialogLifecycle::exists
         bne     :+
         jmp     do3
-:       cmp     #CopyDialogLifecycle::too_large
+:       cmp     #CopyDialogLifecycle::kTooLarge
         bne     :+
         jmp     do4
 :       cmp     #CopyDialogLifecycle::close
@@ -13316,7 +13316,7 @@ LAA7F:  jsr     prompt_input_loop
         pla
         rts
 
-        ;; CopyDialogLifecycle::too_large
+        ;; CopyDialogLifecycle::kTooLarge
 do4:    jsr     bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
@@ -13807,7 +13807,7 @@ row:    .byte   0
 :       cmp     #LockDialogLifecycle::loop
         bne     :+
         jmp     do2
-:       cmp     #LockDialogLifecycle::operation
+:       cmp     #LockDialogLifecycle::kOperation
         bne     :+
         jmp     do3
 :       cmp     #LockDialogLifecycle::close
@@ -13834,7 +13834,7 @@ do1:    ldy     #1
         addr_call draw_text1, str_files
         rts
 
-        ;; LockDialogLifecycle::operation
+        ;; LockDialogLifecycle::kOperation
 do3:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
@@ -13894,7 +13894,7 @@ do4:    jsr     reset_grafport3a
 :       cmp     #LockDialogLifecycle::loop
         bne     :+
         jmp     do2
-:       cmp     #LockDialogLifecycle::operation
+:       cmp     #LockDialogLifecycle::kOperation
         bne     :+
         jmp     do3
 :       cmp     #LockDialogLifecycle::close
@@ -13921,7 +13921,7 @@ do1:    ldy     #1
         addr_call draw_text1, str_files
         rts
 
-        ;; LockDialogLifecycle::operation
+        ;; LockDialogLifecycle::kOperation
 do3:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
@@ -14112,13 +14112,13 @@ warning_message_table:
         .addr   desktop_aux::str_too_many_windows,desktop_aux::str_1_space
         .addr   desktop_aux::str_save_selector_list,desktop_aux::str_on_system_disk
 .endproc
-        warning_msg_insert_system_disk          = 0
-        warning_msg_selector_list_full          = 1
-        warning_msg_selector_list_full2         = 2
-        warning_msg_window_must_be_closed       = 3
-        warning_msg_window_must_be_closed2      = 4
-        warning_msg_too_many_windows            = 5
-        warning_msg_save_selector_list          = 6
+        kWarningMsgInsertSystemDisk          = 0
+        kWarningMsgSelectorListFull          = 1
+        kWarningMsgSelectorListFull2         = 2
+        kWarningMsgWindowMustBeClosed       = 3
+        kWarningMsgWindowMustBeClosed2      = 4
+        kWarningMsgTooManyWindows            = 5
+        kWarningMsgSaveSelectorList          = 6
 
 ;;; ============================================================
 

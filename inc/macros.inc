@@ -244,7 +244,7 @@ end:
     .endif
 .endmacro
 
-;;; Core for add16/sub16, with leading carry operation
+;;; Core for add16/sub16, with leading carry kOperation
 .macro _addsub16lc op, opc, arg1, arg2, arg3, arg4, arg5, arg6
         opc
     .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}

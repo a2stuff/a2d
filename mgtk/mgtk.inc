@@ -25,11 +25,11 @@ MLI     := $4000
 .endstruct
 
 .struct Pattern
-        row0    .byte
-        row1    .byte
-        row2    .byte
-        row3    .byte
-        row4    .byte
+        kRow0    .byte
+        kRow1    .byte
+        kRow2    .byte
+        kRow3    .byte
+        kRow4    .byte
         row5    .byte
         row6    .byte
         row7    .byte
@@ -74,7 +74,7 @@ MLI     := $4000
         lastchar        .byte   ; char code of last character (usually $7F)
         height          .byte   ; pixels (1-16)
         charwidth       .byte   ; pixels, for each char
-        ;; row0         .res N    bits
+        ;; kRow0         .res N    bits
         ;; row0right    .res N    bits (double-width only)
 .endstruct
 
@@ -222,7 +222,7 @@ ScaleMouse      = $21           ; Set mouse/screen scaling
 ;;; .byte       x_exponent      x-scale factor for mouse, 0...3
 ;;; .byte       y_exponent      y-scale factor for mouse, 0...3
 
-KeyboardMouse   = $22           ; Next operation will be performed by keyboard
+KeyboardMouse   = $22           ; Next kOperation will be performed by keyboard
 ;;; (no parameters)
 
 GetIntHandler   = $23           ; Get address of interrupt handler

@@ -653,14 +653,14 @@ done:   rts
 
         open_io_buffer := $A000
         dir_buffer := $A400
-        dir_bufsize = BLOCK_SIZE
+        kDirBufSize = BLOCK_SIZE
 
         entry_length_offset := $23
         file_count_offset := $25
         header_length := $2B
 
         DEFINE_OPEN_PARAMS open_params, buffer, open_io_buffer
-        DEFINE_READ_PARAMS read_params, dir_buffer, dir_bufsize
+        DEFINE_READ_PARAMS read_params, dir_buffer, kDirBufSize
         DEFINE_CLOSE_PARAMS close_params
 
 start:  jsr     create_file_for_copy
@@ -728,7 +728,7 @@ L29B1:  ldy     #0
         inc     L2A10
 L29F6:  add16_8 ptr, dir_buffer + entry_length_offset, ptr
         lda     ptr+1
-        cmp     #>(dir_buffer + dir_bufsize)
+        cmp     #>(dir_buffer + kDirBufSize)
         bcs     :+
         jmp     L2997
 

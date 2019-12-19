@@ -149,228 +149,228 @@ flag:   .byte   MGTK::zp_overwrite
 ;;; ============================================================
 ;;; Button Definitions
 
-        button_width = 17
-        button_height = 9
+        kButtonWidth = 17
+        kButtonHeight = 9
 
-        col1_left = 13
-        col1_right = col1_left+button_width ; 30
-        col2_left = 42
-        col2_right = col2_left+button_width ; 59
-        col3_left = 70
-        col3_right = col3_left+button_width ; 87
-        col4_left = 98
-        col4_right = col4_left+button_width ; 115
+        kCol1Left = 13
+        kCol1Right = kCol1Left+kButtonWidth ; 30
+        kCol2Left = 42
+        kCol2Right = kCol2Left+kButtonWidth ; 59
+        kCol3Left = 70
+        kCol3Right = kCol3Left+kButtonWidth ; 87
+        kCol4Left = 98
+        kCol4Right = kCol4Left+kButtonWidth ; 115
 
-        row1_top = 22
-        row1_bot = row1_top+button_height ; 31
-        row2_top = 38
-        row2_bot = row2_top+button_height ; 47
-        row3_top = 53
-        row3_bot = row3_top+button_height ; 62
-        row4_top = 68
-        row4_bot = row4_top+button_height ; 77
-        row5_top = 83
-        row5_bot = row5_top+button_height ; 92
+        kRow1Top = 22
+        kRow1Bot = kRow1Top+kButtonHeight ; 31
+        kRow2Top = 38
+        kRow2Bot = kRow2Top+kButtonHeight ; 47
+        kRow3Top = 53
+        kRow3Bot = kRow3Top+kButtonHeight ; 62
+        kRow4Top = 68
+        kRow4Bot = kRow4Top+kButtonHeight ; 77
+        kRow5Top = 83
+        kRow5Bot = kRow5Top+kButtonHeight ; 92
 
-        border_lt = 1          ; border width pixels (left/top)
-        border_br = 2          ; (bottom/right)
+        kBorderLeftTop = 1          ; border width pixels (left/top)
+        kBorderBottomRight = 2          ; (bottom/right)
 
 .params btn_c
-viewloc:        DEFINE_POINT col1_left - border_lt, row1_top - border_lt
+viewloc:        DEFINE_POINT kCol1Left - kBorderLeftTop, kRow1Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved:       .byte   0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   'c'
-pos:    .word   col1_left + 6, row1_bot
-port:    .word   col1_left,row1_top,col1_right,row1_bot
+pos:    .word   kCol1Left + 6, kRow1Bot
+port:    .word   kCol1Left,kRow1Top,kCol1Right,kRow1Bot
 .endparams
 
 .params btn_e
-viewloc:        DEFINE_POINT col2_left - border_lt, row1_top - border_lt
+viewloc:        DEFINE_POINT kCol2Left - kBorderLeftTop, kRow1Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   'e'
-pos:    .word   col2_left + 6, row1_bot
-port:    .word   col2_left,row1_top,col2_right,row1_bot
+pos:    .word   kCol2Left + 6, kRow1Bot
+port:    .word   kCol2Left,kRow1Top,kCol2Right,kRow1Bot
 .endparams
 
 .params btn_eq
-viewloc:        DEFINE_POINT col3_left - border_lt, row1_top - border_lt
+viewloc:        DEFINE_POINT kCol3Left - kBorderLeftTop, kRow1Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '='
-pos:    .word   col3_left + 6, row1_bot
-port:    .word   col3_left,row1_top,col3_right,row1_bot
+pos:    .word   kCol3Left + 6, kRow1Bot
+port:    .word   kCol3Left,kRow1Top,kCol3Right,kRow1Bot
 .endparams
 
 .params btn_mul
-viewloc:        DEFINE_POINT col4_left - border_lt, row1_top - border_lt
+viewloc:        DEFINE_POINT kCol4Left - kBorderLeftTop, kRow1Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '*'
-pos:    .word   col4_left + 6, row1_bot
-port:    .word   col4_left,row1_top,col4_right,row1_bot
+pos:    .word   kCol4Left + 6, kRow1Bot
+port:    .word   kCol4Left,kRow1Top,kCol4Right,kRow1Bot
 .endparams
 
 .params btn_7
-viewloc:        DEFINE_POINT col1_left - border_lt, row2_top - border_lt
+viewloc:        DEFINE_POINT kCol1Left - kBorderLeftTop, kRow2Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '7'
-pos:    .word   col1_left + 6, row2_bot
-port:    .word   col1_left,row2_top,col1_right,row2_bot
+pos:    .word   kCol1Left + 6, kRow2Bot
+port:    .word   kCol1Left,kRow2Top,kCol1Right,kRow2Bot
 .endparams
 
 .params btn_8
-viewloc:        DEFINE_POINT col2_left - border_lt, row2_top - border_lt
+viewloc:        DEFINE_POINT kCol2Left - kBorderLeftTop, kRow2Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '8'
-pos:    .word   col2_left + 6, row2_bot
-port:    .word   col2_left,row2_top,col2_right,row2_bot
+pos:    .word   kCol2Left + 6, kRow2Bot
+port:    .word   kCol2Left,kRow2Top,kCol2Right,kRow2Bot
 .endparams
 
 .params btn_9
-viewloc:        DEFINE_POINT col3_left - border_lt, row2_top - border_lt
+viewloc:        DEFINE_POINT kCol3Left - kBorderLeftTop, kRow2Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '9'
-pos:    .word   col3_left + 6, row2_bot
-port:    .word   col3_left,row2_top,col3_right,row2_bot
+pos:    .word   kCol3Left + 6, kRow2Bot
+port:    .word   kCol3Left,kRow2Top,kCol3Right,kRow2Bot
 .endparams
 
 .params btn_div
-viewloc:        DEFINE_POINT col4_left - border_lt, row2_top - border_lt
+viewloc:        DEFINE_POINT kCol4Left - kBorderLeftTop, kRow2Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '/'
-pos:    .word   col4_left + 6, row2_bot
-port:    .word   col4_left,row2_top,col4_right,row2_bot
+pos:    .word   kCol4Left + 6, kRow2Bot
+port:    .word   kCol4Left,kRow2Top,kCol4Right,kRow2Bot
 .endparams
 
 .params btn_4
-viewloc:        DEFINE_POINT col1_left - border_lt, row3_top - border_lt
+viewloc:        DEFINE_POINT kCol1Left - kBorderLeftTop, kRow3Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '4'
-pos:    .word   col1_left + 6, row3_bot
-port:    .word   col1_left,row3_top,col1_right,row3_bot
+pos:    .word   kCol1Left + 6, kRow3Bot
+port:    .word   kCol1Left,kRow3Top,kCol1Right,kRow3Bot
 .endparams
 
 .params btn_5
-viewloc:        DEFINE_POINT col2_left - border_lt, row3_top - border_lt
+viewloc:        DEFINE_POINT kCol2Left - kBorderLeftTop, kRow3Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '5'
-pos:    .word   col2_left + 6, row3_bot
-port:    .word   col2_left,row3_top,col2_right,row3_bot
+pos:    .word   kCol2Left + 6, kRow3Bot
+port:    .word   kCol2Left,kRow3Top,kCol2Right,kRow3Bot
 .endparams
 
 .params btn_6
-viewloc:        DEFINE_POINT col3_left - border_lt, row3_top - border_lt
+viewloc:        DEFINE_POINT kCol3Left - kBorderLeftTop, kRow3Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '6'
-pos:    .word   col3_left + 6, row3_bot
-port:    .word   col3_left,row3_top,col3_right,row3_bot
+pos:    .word   kCol3Left + 6, kRow3Bot
+port:    .word   kCol3Left,kRow3Top,kCol3Right,kRow3Bot
 .endparams
 
 .params btn_sub
-viewloc:        DEFINE_POINT col4_left - border_lt, row3_top - border_lt
+viewloc:        DEFINE_POINT kCol4Left - kBorderLeftTop, kRow3Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '-'
-pos:    .word   col4_left + 6, row3_bot
-port:    .word   col4_left,row3_top,col4_right,row3_bot
+pos:    .word   kCol4Left + 6, kRow3Bot
+port:    .word   kCol4Left,kRow3Top,kCol4Right,kRow3Bot
 .endparams
 
 .params btn_1
-viewloc:        DEFINE_POINT col1_left - border_lt, row4_top - border_lt
+viewloc:        DEFINE_POINT kCol1Left - kBorderLeftTop, kRow4Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '1'
-pos:    .word   col1_left + 6, row4_bot
-port:    .word   col1_left,row4_top,col1_right,row4_bot
+pos:    .word   kCol1Left + 6, kRow4Bot
+port:    .word   kCol1Left,kRow4Top,kCol1Right,kRow4Bot
 .endparams
 
 .params btn_2
-viewloc:        DEFINE_POINT col2_left - border_lt, row4_top - border_lt
+viewloc:        DEFINE_POINT kCol2Left - kBorderLeftTop, kRow4Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '2'
-pos:    .word   col2_left + 6, row4_bot
-port:    .word   col2_left,row4_top,col2_right,row4_bot
+pos:    .word   kCol2Left + 6, kRow4Bot
+port:    .word   kCol2Left,kRow4Top,kCol2Right,kRow4Bot
 .endparams
 
 .params btn_3
-viewloc:        DEFINE_POINT col3_left - border_lt, row4_top - border_lt
+viewloc:        DEFINE_POINT kCol3Left - kBorderLeftTop, kRow4Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '3'
-pos:    .word   col3_left + 6, row4_bot
-port:    .word   col3_left,row4_top,col3_right,row4_bot
+pos:    .word   kCol3Left + 6, kRow4Bot
+port:    .word   kCol3Left,kRow4Top,kCol3Right,kRow4Bot
 .endparams
 
 .params btn_0
-viewloc:        DEFINE_POINT col1_left - border_lt, row5_top - border_lt
+viewloc:        DEFINE_POINT kCol1Left - kBorderLeftTop, kRow5Top - kBorderLeftTop
 mapbits: .addr   wide_button_bitmap
-mapwidth: .byte   8                   ; bitmap_stride (bytes)
+mapwidth: .byte   8                   ; kBitmapStride (bytes)
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, 49, button_height + border_lt + border_br ; 0 is extra wide
+maprect:         DEFINE_RECT 0, 0, 49, kButtonHeight + kBorderLeftTop + kBorderBottomRight ; 0 is extra wide
 label:  .byte   '0'
-pos:    .word   col1_left + 6, row5_bot
-port:    .word   col1_left,row5_top,col2_right,row5_bot
+pos:    .word   kCol1Left + 6, kRow5Bot
+port:    .word   kCol1Left,kRow5Top,kCol2Right,kRow5Bot
 .endparams
 
 .params btn_dec
-viewloc:        DEFINE_POINT col3_left - border_lt, row5_top - border_lt
+viewloc:        DEFINE_POINT kCol3Left - kBorderLeftTop, kRow5Top - kBorderLeftTop
 mapbits: .addr   button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:  .byte   '.'
-pos:    .word   col3_left + 6 + 2, row5_bot ; + 2 to center the label
-port:    .word   col3_left,row5_top,col3_right,row5_bot
+pos:    .word   kCol3Left + 6 + 2, kRow5Bot ; + 2 to center the label
+port:    .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
 .endparams
 
 .params btn_add
-viewloc:        DEFINE_POINT col4_left - border_lt, row4_top - border_lt
+viewloc:        DEFINE_POINT kCol4Left - kBorderLeftTop, kRow4Top - kBorderLeftTop
 mapbits: .addr   tall_button_bitmap
-mapwidth: .byte   bitmap_stride
+mapwidth: .byte   kBitmapStride
 reserved: .byte 0
-maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, 27 ; + is extra tall
+maprect:         DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, 27 ; + is extra tall
 label:  .byte   '+'
-pos:    .word   col4_left + 6, row5_bot
-port:    .word   col4_left,row4_top,col4_right,row5_bot
+pos:    .word   kCol4Left + 6, kRow5Bot
+port:    .word   kCol4Left,kRow4Top,kCol4Right,kRow5Bot
 .endparams
         .byte   0               ; sentinel
 
@@ -378,7 +378,7 @@ port:    .word   col4_left,row4_top,col4_right,row5_bot
         ;; drawing the shadowed buttons.
 
         ;; bitmaps are low 7 bits, 0=black 1=white
-        bitmap_stride   = 3    ; bytes
+        kBitmapStride   = 3    ; bytes
 button_bitmap:                  ; bitmap for normal buttons
         .byte   px(%0000000),px(%0000000),px(%0000001)
         .byte   px(%0111111),px(%1111111),px(%1111100)
@@ -394,7 +394,7 @@ button_bitmap:                  ; bitmap for normal buttons
         .byte   px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%1000000),px(%0000000),px(%0000000)
 
-        wide_bitmap_stride = 8
+        kWideBitmapStride = 8
 wide_button_bitmap:             ; bitmap for '0' button
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%1111111)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
@@ -480,23 +480,23 @@ white_pattern:
 backcolor:  .byte   $7F
 .endparams
 
-        display_left    = 10
-        display_top     = 5
-        display_width   = 120
-        display_height  = 17
+        kDisplayLeft    = 10
+        kDisplayTop     = 5
+        kDisplayWidth   = 120
+        kDisplayHeight  = 17
 
 .params frame_display_params
-left:   .word   display_left
-top:    .word   display_top
-width:  .word   display_width
-height: .word   display_height
+left:   .word   kDisplayLeft
+top:    .word   kDisplayTop
+width:  .word   kDisplayWidth
+height: .word   kDisplayHeight
 .endparams
 
 .params clear_display_params
-left:   .word   display_left+1
-top:    .word   display_top+1
-width:  .word   display_width-1
-height: .word   display_height-1
+left:   .word   kDisplayLeft+1
+top:    .word   kDisplayTop+1
+width:  .word   kDisplayWidth-1
+height: .word   kDisplayHeight-1
 .endparams
 
         ;; For drawing 1-character strings (button labels)
@@ -511,10 +511,10 @@ textptr:   .addr   text_buffer1
 textlen: .byte   15
 .endparams
 
-text_buffer_size = 14
+kTextBufferSize = 14
 
 text_buffer1:
-        .res    text_buffer_size+2, 0
+        .res    kTextBufferSize+2, 0
 
 .params drawtext_params2
 textptr:   .addr   text_buffer2
@@ -522,7 +522,7 @@ textlen: .byte   15
 .endparams
 
 text_buffer2:
-        .res    text_buffer_size+2, 0
+        .res    kTextBufferSize+2, 0
 
 spaces_string:
         DEFINE_STRING "          "
@@ -616,8 +616,8 @@ penmode:   .byte   MGTK::pencopy
 penmode:   .byte   MGTK::notpenXOR
 .endparams
 
-        window_width = 130
-        window_height = 96
+        kWindowWidth = 130
+        kWindowHeight = 96
         kDefaultLeft = 210
         kDefaultTop = 60
 
@@ -633,15 +633,15 @@ vthumbmax:      .byte   0
 vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   window_width
-mincontlength:  .word   window_height
-maxcontwidth:   .word   window_width
-maxcontlength:  .word   window_height
+mincontwidth:   .word   kWindowWidth
+mincontlength:  .word   kWindowHeight
+maxcontwidth:   .word   kWindowWidth
+maxcontlength:  .word   kWindowHeight
 left:           .word   kDefaultLeft
 top:            .word   kDefaultTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, window_width, window_height
+cliprect:       DEFINE_RECT 0, 0, kWindowWidth, kWindowHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -670,7 +670,7 @@ init:   MGTK_CALL MGTK::OpenWindow, winfo
         jsr     draw_content
         jsr     reset_buffers_and_display
 
-        lda     #'='            ; last operation
+        lda     #'='            ; last kOperation
         sta     calc_op
 
         lda     #0              ; clear registers
@@ -818,36 +818,36 @@ rts1:  rts                     ; used by next proc
         ldx     screentowindow_params::windowx
 
 .proc find_button_row
-        cmp     #row1_top+border_lt - 1 ; row 1 ? (- 1 is bug in original?)
+        cmp     #kRow1Top+kBorderLeftTop - 1 ; row 1 ? (- 1 is bug in original?)
         bcc     miss
-        cmp     #row1_bot+border_br + 1 ; (+ 1 is bug in original?)
+        cmp     #kRow1Bot+kBorderBottomRight + 1 ; (+ 1 is bug in original?)
         bcs     :+
         jsr     find_button_col
         bcc     miss
         lda     row1_lookup,x
         rts
 
-:       cmp     #row2_top-border_lt             ; row 2?
+:       cmp     #kRow2Top-kBorderLeftTop             ; row 2?
         bcc     miss
-        cmp     #row2_bot+border_br
+        cmp     #kRow2Bot+kBorderBottomRight
         bcs     :+
         jsr     find_button_col
         bcc     miss
         lda     row2_lookup,x
         rts
 
-:       cmp     #row3_top-border_lt             ; row 3?
+:       cmp     #kRow3Top-kBorderLeftTop             ; row 3?
         bcc     miss
-        cmp     #row3_bot+border_br
+        cmp     #kRow3Bot+kBorderBottomRight
         bcs     :+
         jsr     find_button_col
         bcc     miss
         lda     row3_lookup,x
         rts
 
-:       cmp     #row4_top-border_lt             ; row 4?
+:       cmp     #kRow4Top-kBorderLeftTop             ; row 4?
         bcc     miss
-        cmp     #row4_bot+border_br
+        cmp     #kRow4Bot+kBorderBottomRight
         bcs     :+
         jsr     find_button_col
         bcc     miss
@@ -855,18 +855,18 @@ rts1:  rts                     ; used by next proc
         lda     row4_lookup,x
         rts
 
-:       cmp     #row5_top-border_lt             ; special case for tall + button
+:       cmp     #kRow5Top-kBorderLeftTop             ; special case for tall + button
         bcs     :+
         lda     screentowindow_params::windowx
-        cmp     #col4_left-border_lt
+        cmp     #kCol4Left-kBorderLeftTop
         bcc     miss
-        cmp     #col4_right+border_br-1         ; is -1 bug in original?
+        cmp     #kCol4Right+kBorderBottomRight-1         ; is -1 bug in original?
         bcs     miss
         lda     #'+'
         sec
         rts
 
-:       cmp     #row5_bot+border_br             ; row 5?
+:       cmp     #kRow5Bot+kBorderBottomRight             ; row 5?
         bcs     miss
         jsr     find_button_col
         bcc     :+
@@ -874,9 +874,9 @@ rts1:  rts                     ; used by next proc
         rts
 
 :       lda     screentowindow_params::windowx ; special case for wide 0 button
-        cmp     #col1_left-border_lt
+        cmp     #kCol1Left-kBorderLeftTop
         bcc     miss
-        cmp     #col2_right+border_br
+        cmp     #kCol2Right+kBorderBottomRight
         bcs     miss
         lda     #'0'
         sec
@@ -898,33 +898,33 @@ miss:   clc
         .byte   '0', '0', '.', '+'
 
 .proc find_button_col
-        cpx     #col1_left-border_lt             ; col 1?
+        cpx     #kCol1Left-kBorderLeftTop             ; col 1?
         bcc     miss
-        cpx     #col1_right+border_br
+        cpx     #kCol1Right+kBorderBottomRight
         bcs     :+
         ldx     #1
         sec
         rts
 
-:       cpx     #col2_left-border_lt             ; col 2?
+:       cpx     #kCol2Left-kBorderLeftTop             ; col 2?
         bcc     miss
-        cpx     #col2_right+border_br
+        cpx     #kCol2Right+kBorderBottomRight
         bcs     :+
         ldx     #2
         sec
         rts
 
-:       cpx     #col3_left-border_lt             ; col 3?
+:       cpx     #kCol3Left-kBorderLeftTop             ; col 3?
         bcc     miss
-        cpx     #col3_right+border_br
+        cpx     #kCol3Right+kBorderBottomRight
         bcs     :+
         ldx     #3
         sec
         rts
 
-:       cpx     #col4_left-border_lt            ; col 4?
+:       cpx     #kCol4Left-kBorderLeftTop            ; col 4?
         bcc     miss
-        cpx     #col4_right+border_br - 1       ; bug in original?
+        cpx     #kCol4Right+kBorderBottomRight - 1       ; bug in original?
         bcs     miss
         ldx     #4
         sec
@@ -973,8 +973,8 @@ miss:   clc
         bne     :+
         inc     calc_l
         lda     #'1'
-        sta     text_buffer1 + text_buffer_size
-        sta     text_buffer2 + text_buffer_size
+        sta     text_buffer1 + kTextBufferSize
+        sta     text_buffer2 + kTextBufferSize
 :       lda     #'E'
         sta     calc_e
         jmp     update
@@ -1110,7 +1110,7 @@ trydiv: cmp     #'/'            ; Divide?
 
 :       dec     calc_l
         ldx     #0
-        lda     text_buffer1 + text_buffer_size
+        lda     text_buffer1 + kTextBufferSize
         cmp     #'.'
         bne     :+
         stx     calc_d
@@ -1120,7 +1120,7 @@ trydiv: cmp     #'/'            ; Divide?
 :       cmp     #'-'
         bne     :+
         stx     calc_n
-:       ldx     #text_buffer_size-1
+:       ldx     #kTextBufferSize-1
 loop:   lda     text_buffer1,x
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
@@ -1172,8 +1172,8 @@ update: sec
         bne     :-
 empty:  inc     calc_l
         pla
-        sta     text_buffer1 + text_buffer_size
-        sta     text_buffer2 + text_buffer_size
+        sta     text_buffer1 + kTextBufferSize
+        sta     text_buffer2 + kTextBufferSize
         jmp     display_buffer1
 
 rts3:   rts
@@ -1237,7 +1237,7 @@ do_op:  pla
 .endproc
 
 .proc post_op
-        ldxy    #farg          ; after the FP operation is done
+        ldxy    #farg          ; after the FP kOperation is done
         jsr     CALL_ROUND
         jsr     CALL_FOUT            ; output as null-terminated string to FBUFFR
 
@@ -1247,7 +1247,7 @@ sloop:  lda     FBUFFR,y
         iny
         bne     sloop
 
-:       ldx     #text_buffer_size ; copy to text buffers
+:       ldx     #kTextBufferSize ; copy to text buffers
 cloop:  lda     FBUFFR-1,y
         sta     text_buffer1,x
         sta     text_buffer2,x
@@ -1335,24 +1335,24 @@ done:   lda     button_state                    ; high bit set if button down
 ;;; Value Display
 
 .proc reset_buffer1
-        ldy     #text_buffer_size
+        ldy     #kTextBufferSize
 loop:   lda     #' '
         sta     text_buffer1-1,y
         dey
         bne     loop
         lda     #'0'
-        sta     text_buffer1 + text_buffer_size
+        sta     text_buffer1 + kTextBufferSize
         rts
 .endproc
 
 .proc reset_buffer2
-        ldy     #text_buffer_size
+        ldy     #kTextBufferSize
 loop:   lda     #' '
         sta     text_buffer2-1,y
         dey
         bne     loop
         lda     #'0'
-        sta     text_buffer2 + text_buffer_size
+        sta     text_buffer2 + kTextBufferSize
         rts
 .endproc
 
@@ -1387,7 +1387,7 @@ end:    rts
         stx     textwidth_params::textptr ; text buffer address in x,y
         sty     textwidth_params::textptr+1
         MGTK_CALL MGTK::TextWidth, textwidth_params
-        lda     #display_width-15 ; ???
+        lda     #kDisplayWidth-15 ; ???
         sec
         sbc     textwidth_params::result
         sta     text_pos_params3::left
@@ -1458,12 +1458,12 @@ loop:   ldy     #0
 ;;; Draw the title bar decoration
 
 draw_title_bar:
-        offset_left     = 115  ; pixels from left of client area
-        offset_top      = 22   ; pixels from top of client area (up!)
+        kOffsetLeft     = 115  ; pixels from left of client area
+        kOffsetTop      = 22   ; pixels from top of client area (up!)
         ldx     winfo::left+1
         lda     winfo::left
         clc
-        adc     #offset_left
+        adc     #kOffsetLeft
         sta     title_bar_bitmap::viewloc::xcoord
         bcc     :+
         inx
@@ -1471,7 +1471,7 @@ draw_title_bar:
         ldx     winfo::top+1
         lda     winfo::top
         sec
-        sbc     #offset_top
+        sbc     #kOffsetTop
         sta     title_bar_bitmap::viewloc::ycoord
         bcs     :+
         dex

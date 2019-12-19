@@ -255,7 +255,7 @@ L0B47:  .byte   0
 
 ;;; ============================================================
 
-        labels_voffset = 49
+        kLabelsVOffset = 49
 
 L0B48:  cmp16   screentowindow_windowx, #40
         bpl     :+
@@ -265,7 +265,7 @@ L0B48:  cmp16   screentowindow_windowx, #40
         return  #$FF
 :       lda     screentowindow_windowy
         sec
-        sbc     #labels_voffset
+        sbc     #kLabelsVOffset
         sta     screentowindow_windowy
         lda     screentowindow_windowy+1
         sbc     #0
@@ -333,7 +333,7 @@ L0C1F:  .byte   0
 ;;; Hilight volume label
 ;;; Input: A = volume index
 
-        label_width = 120
+        kLabelWidth = 120
 
 .proc hilight_volume_label
         ldy     #39
@@ -349,7 +349,7 @@ L0C1F:  .byte   0
         lda     L0CA9
         cmp     #1
         beq     :+
-        add16   select_volume_rect::x1, #label_width, select_volume_rect::x1
+        add16   select_volume_rect::x1, #kLabelWidth, select_volume_rect::x1
 :       asl     L0CA9           ; * 4
         asl     L0CA9
         txa
@@ -360,9 +360,9 @@ L0C1F:  .byte   0
         ldy     #desktop_aux::kDialogLabelHeight
         jsr     Multiply_16_8_16
         stax    select_volume_rect::y1
-        add16_8 select_volume_rect::y1, #labels_voffset, select_volume_rect::y1
+        add16_8 select_volume_rect::y1, #kLabelsVOffset, select_volume_rect::y1
 
-        add16   select_volume_rect::x1, #label_width-1, select_volume_rect::x2
+        add16   select_volume_rect::x1, #kLabelWidth-1, select_volume_rect::x2
         add16   select_volume_rect::y1, #desktop_aux::kDialogLabelHeight-1, select_volume_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, select_volume_rect

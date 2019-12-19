@@ -20,10 +20,10 @@ pathbuf:        .res    65, 0
 
 font_buffer     := $D00
 io_buf          := WINDOW_ICON_TABLES
-read_length      = WINDOW_ICON_TABLES-font_buffer
+kReadLength      = WINDOW_ICON_TABLES-font_buffer
 
         DEFINE_OPEN_PARAMS open_params, pathbuf, io_buf
-        DEFINE_READ_PARAMS read_params, font_buffer, read_length
+        DEFINE_READ_PARAMS read_params, font_buffer, kReadLength
         DEFINE_CLOSE_PARAMS close_params
 
 ;;; ============================================================
@@ -378,14 +378,14 @@ line6:  PASCAL_STRING "P Q R S T U V W X Y Z [ \x5C ] ^ _"
 line7:  PASCAL_STRING "` a b c d e f g h i j k l m n o"
 line8:  PASCAL_STRING "p q r s t u v w x y z { | } ~ \x7F"
 
-        line_count = 8
+        kLineCount = 8
 line_addrs:
         .addr line1, line2, line3, line4, line5, line6, line7, line8
 
 pos:    DEFINE_POINT 0,0, pos
 
-        initial_y = 5
-        line_height = 15
+        kInitialY = 5
+        kLineHeight = 15
 
 
 .proc draw_window
@@ -405,7 +405,7 @@ END_PARAM_BLOCK
 :       MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
-        copy16  #initial_y, pos::ycoord
+        copy16  #kInitialY, pos::ycoord
 
 
         copy    #0, index
@@ -423,14 +423,14 @@ loop:   lda     index
         MGTK_CALL MGTK::TextWidth, params
         sub16   #kDAWidth, params::width, pos::xcoord ; center it
         lsr16   pos::xcoord
-        add16   pos::ycoord, #line_height, pos::ycoord ; next row
+        add16   pos::ycoord, #kLineHeight, pos::ycoord ; next row
 
         MGTK_CALL MGTK::MoveTo, pos
         MGTK_CALL MGTK::DrawText, params
 
         inc     index
         lda     index
-        cmp     #line_count
+        cmp     #kLineCount
         bne     loop
 
         MGTK_CALL MGTK::ShowCursor

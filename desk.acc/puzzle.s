@@ -844,7 +844,7 @@ nope:   clc
 ;;; ============================================================
 ;;; Process piece click
 
-        hole_piece = 12
+        kHolePiece = 12
 
 .proc process_click
 
@@ -932,12 +932,12 @@ aloop:  lda     position_table+4,y
         bne     aloop
 .endproc
 
-col:    lda     #hole_piece
+col:    lda     #kHolePiece
         sta     position_table,y
         jsr     draw_col
         jmp     done
 
-row:    lda     #hole_piece
+row:    lda     #kHolePiece
         sta     position_table,y
         jsr     draw_row
 
@@ -1169,7 +1169,7 @@ nope:   clc
 .proc find_hole
         ldy     #15
 loop:   lda     position_table,y
-        cmp     #hole_piece
+        cmp     #kHolePiece
         beq     :+
         dey
         bpl     loop

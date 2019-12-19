@@ -324,7 +324,7 @@ highlight_list:                 ; selected icons
 
 ;;; Polygon holding the composite outlines of all icons being dragged.
 ;;; Re-use the "save area" ($800-$1AFF) since menus won't show during
-;;; this operation.
+;;; this kOperation.
 
         drag_outline_buffer := SAVE_AREA_BUFFER
         max_draggable_items = SAVE_AREA_SIZE / (.sizeof(MGTK::Point) * 8 + 2)
@@ -1069,7 +1069,7 @@ icon_id:
         .byte   $00
 
 deltax: .word   0
-deltay: .word   0
+kDeltaU: .word   0
 
         ;; IconTK::HighlightIcon params
 highlight_icon_id:  .byte   $00
@@ -1096,7 +1096,7 @@ ignore_drag:
 
         ;; Compute mouse delta
 L9857:  sub16   findwindow_params2::mousex, L9C8E, deltax
-        sub16   findwindow_params2::mousey, L9C90, deltay
+        sub16   findwindow_params2::mousey, L9C90, kDeltaU
 
         drag_delta := 5
 
@@ -1113,13 +1113,13 @@ x_lo:   lda     deltax
 
         ;; compare y delta
 check_deltay:
-        lda     deltay+1
+        lda     kDeltaU+1
         bpl     y_lo
-        lda     deltay
+        lda     kDeltaU
         cmp     #AS_BYTE(-drag_delta)
         bcc     is_drag
         jmp     peek_loop
-y_lo:   lda     deltay
+y_lo:   lda     kDeltaU
         cmp     #drag_delta
         bcs     is_drag
         jmp     peek_loop

@@ -160,10 +160,10 @@ params_start:
 
 io_buf          := $0C00
 default_buffer  := $1200
-read_length      = $0100
+kReadLength      = $0100
 
         DEFINE_OPEN_PARAMS open_params, pathbuf, io_buf
-        DEFINE_READ_PARAMS read_params, default_buffer, read_length
+        DEFINE_READ_PARAMS read_params, default_buffer, kReadLength
         DEFINE_GET_EOF_PARAMS get_eof_params
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
         DEFINE_CLOSE_PARAMS close_params
@@ -187,22 +187,22 @@ white_pattern:
 
         kDAWindowId = 100
 
-        line_spacing = 10
-        right_const = 506
+        kLineSpacing = 10
+        kRightConst = 506
 
 L095A:  .byte   $00
-L095B:  .word   right_const
+L095B:  .word   kRightConst
 
 .params line_pos
 left:   .word   0
 base:   .word   0
 .endparams
 
-window_width:  .word   0
-window_height: .word   0
+kWindowWidth:  .word   0
+kWindowHeight: .word   0
 
 y_remaining:  .word   0
-line_count:  .word   0
+kLineCount:  .word   0
 L096A:  .word   0
 L096C:  .word   0
 
@@ -655,7 +655,7 @@ end:    rts
 end:    rts
 .endproc
 
-vscroll_max = $FA
+kVScrollMax = $FA
 
 .proc on_vscroll_below_click
 loop:   jsr     page_down
@@ -666,17 +666,17 @@ end:    rts
 
 .proc page_down
         lda     winfo::vthumbpos
-        cmp     #vscroll_max    ; pos == max ?
+        cmp     #kVScrollMax    ; pos == max ?
         beq     end
         jsr     calc_track_scroll_delta
         clc
         lda     winfo::vthumbpos
         adc     track_scroll_delta ; pos + delta
         bcs     overflow
-        cmp     #vscroll_max+1  ; > max ?
+        cmp     #kVScrollMax+1  ; > max ?
         bcc     store           ; nope, it's good
 overflow:
-        lda     #vscroll_max    ; set to max
+        lda     #kVScrollMax    ; set to max
 store:  sta     updatethumb_params::thumbpos
         jsr     update_scroll_pos
 end:    rts
@@ -691,7 +691,7 @@ end:    rts
 
 .proc scroll_down
         lda     winfo::vthumbpos
-        cmp     #vscroll_max
+        cmp     #kVScrollMax
         beq     end
         clc
         adc     #1
@@ -702,9 +702,9 @@ end:    rts
 
 .proc scroll_bottom
         lda     winfo::vthumbpos
-        cmp     #vscroll_max
+        cmp     #kVScrollMax
         beq     end
-        copy    #vscroll_max, updatethumb_params::thumbpos
+        copy    #kVScrollMax, updatethumb_params::thumbpos
         jsr     update_scroll_pos
 end:    rts
 .endproc
@@ -725,7 +725,7 @@ end:    rts
 .endproc
 
 .proc calc_track_scroll_delta
-        lda     window_height   ; ceil(height / 50)
+        lda     kWindowHeight   ; ceil(height / 50)
         ldx     #0
 loop:   inx
         sec
@@ -765,11 +765,11 @@ loop:   inx
         clc
         lda     res
         sta     winfo::maprect::x1
-        adc     window_width
+        adc     kWindowWidth
         sta     winfo::maprect::x2
         lda     res+1
         sta     winfo::maprect::x1+1
-        adc     window_width+1
+        adc     kWindowWidth+1
         sta     winfo::maprect::x2+1
         rts
 .endproc
@@ -793,10 +793,10 @@ loop:   beq     adjust_box_height
 .proc adjust_box_height
         clc
         lda     winfo::maprect::y1
-        adc     window_height
+        adc     kWindowHeight
         sta     winfo::maprect::y2
         lda     winfo::maprect::y1+1
-        adc     window_height+1
+        adc     kWindowHeight+1
         sta     winfo::maprect::y2+1
         jsr     calc_line_position
         lda     #0
@@ -879,7 +879,7 @@ end:    rts
         sta     L096C
         sta     L096C+1
         sta     L0948
-        lda     #line_spacing
+        lda     #kLineSpacing
         sta     line_pos::base
         jsr     reset_line
 
@@ -912,16 +912,16 @@ do_line:
         bne     do_line
         clc
         lda     line_pos::base
-        adc     #line_spacing
+        adc     #kLineSpacing
         sta     line_pos::base
         bcc     :+
         inc     line_pos::base+1
 :       jsr     reset_line
         lda     L096C
-        cmp     line_count
+        cmp     kLineCount
         bne     :+
         lda     L096C+1
-        cmp     line_count+1
+        cmp     kLineCount+1
         beq     done
 :       inc     L096C
         bne     :+
@@ -935,7 +935,7 @@ done:   jsr     restore_proportional_font_table_if_needed
 ;;; ============================================================
 
 .proc reset_line
-        copy16  #right_const, L095B
+        copy16  #kRightConst, L095B
         copy16  #3, line_pos::left
         sta     L095A
         rts
@@ -1157,15 +1157,15 @@ end:    rts
         sec
         lda     winfo::maprect::x2
         sbc     winfo::maprect::x1
-        sta     window_width
+        sta     kWindowWidth
         lda     winfo::maprect::x2+1
         sbc     winfo::maprect::x1+1
-        sta     window_width+1
+        sta     kWindowWidth+1
 
         sec
         lda     winfo::maprect::y2
         sbc     winfo::maprect::y1
-        sta     window_height
+        sta     kWindowHeight
         ;; fall through
 .endproc
 
@@ -1175,24 +1175,24 @@ end:    rts
         copy16  winfo::maprect::y2, y_remaining
 
         lda     #0
-        sta     line_count
-        sta     line_count+1
+        sta     kLineCount
+        sta     kLineCount+1
 
 loop:   lda     y_remaining+1
         bne     :+
         lda     y_remaining
-        cmp     #line_spacing
+        cmp     #kLineSpacing
         bcc     end
 
 :       sec
         lda     y_remaining
-        sbc     #line_spacing
+        sbc     #kLineSpacing
         sta     y_remaining
         bcs     :+
         dec     y_remaining+1
-:       inc     line_count
+:       inc     kLineCount
         bne     loop
-        inc     line_count+1
+        inc     kLineCount+1
         jmp     loop
 
 end:    rts
@@ -1309,8 +1309,8 @@ ignore: clc                     ; Click ignored
 
 fixed_str:      DEFINE_STRING "Fixed        "
 prop_str:       DEFINE_STRING "Proportional"
-        label_width = 50
-        title_bar_height = 12
+        kLabelWidth = 50
+        kTitleBarHeight = 12
 
 .params mode_mapinfo                  ; bounding port for mode label
 viewloc:        DEFINE_POINT 0, 0, viewloc
@@ -1329,21 +1329,21 @@ base:   .word   10              ; vertical text offset (to baseline)
 .proc calc_and_draw_mode
         sec
         lda     winfo::viewloc::ycoord
-        sbc     #title_bar_height
+        sbc     #kTitleBarHeight
         sta     mode_mapinfo::viewloc::ycoord
         clc
         lda     winfo::viewloc::xcoord
-        adc     window_width
+        adc     kWindowWidth
         pha
         lda     winfo::viewloc::xcoord+1
-        adc     window_width+1
+        adc     kWindowWidth+1
         tax
         sec
         pla
-        sbc     #<label_width
+        sbc     #<kLabelWidth
         sta     mode_mapinfo::viewloc::xcoord
         txa
-        sbc     #>label_width
+        sbc     #>kLabelWidth
         sta     mode_mapinfo::viewloc::xcoord+1
         ;; fall through...
 .endproc

@@ -32,16 +32,16 @@
 ;;;
 
         hires   := $2000        ; HR/DHR images are loaded directly into screen buffer
-        hires_size = $2000
+        kHiresSize = $2000
 
         ;; Minipix/Print Shop images are loaded/converted
         minipix_src_buf = $1200   ; Load address
-        minipix_src_size = 576
+        kMinipixSrcSize = 576
         minipix_dst_buf = $1580  ; Convert address
-        minipix_dst_size = 26*52
+        kMinipixDstSize = 26*52
 
-        .assert (minipix_src_buf + minipix_src_size) < minipix_dst_buf, error, "Not enough room for Minipix load buffer"
-        .assert (minipix_dst_buf + minipix_dst_size) < WINDOW_ICON_TABLES, error, "Not enough room for Minipix convert buffer"
+        .assert (minipix_src_buf + kMinipixSrcSize) < minipix_dst_buf, error, "Not enough room for Minipix load buffer"
+        .assert (minipix_dst_buf + kMinipixDstSize) < WINDOW_ICON_TABLES, error, "Not enough room for Minipix convert buffer"
 
 ;;; ============================================================
 
@@ -183,8 +183,8 @@ params_start:
         DEFINE_OPEN_PARAMS open_params, pathbuff, DA_IO_BUFFER
         DEFINE_GET_EOF_PARAMS get_eof_params
 
-        DEFINE_READ_PARAMS read_params, hires, hires_size
-        DEFINE_READ_PARAMS read_minipix_params, minipix_src_buf, minipix_src_size
+        DEFINE_READ_PARAMS read_params, hires, kHiresSize
+        DEFINE_READ_PARAMS read_minipix_params, minipix_src_buf, kMinipixSrcSize
 
         DEFINE_CLOSE_PARAMS close_params
 
@@ -402,20 +402,20 @@ exit:
         ;; If bigger than $2000, assume DHR
 
         lda     get_eof_params::eof ; fancy 3-byte unsigned compare
-        cmp     #<(hires_size+1)
+        cmp     #<(kHiresSize+1)
         lda     get_eof_params::eof+1
-        sbc     #>(hires_size+1)
+        sbc     #>(kHiresSize+1)
         lda     get_eof_params::eof+2
-        sbc     #^(hires_size+1)
+        sbc     #^(kHiresSize+1)
         bcc     :+
         jmp     show_dhr_file
 
         ;; If bigger than 576, assume HR
 
 :       lda     get_eof_params::eof
-        cmp     #<(minipix_src_size+1)
+        cmp     #<(kMinipixSrcSize+1)
         lda     get_eof_params::eof+1
-        sbc     #>(minipix_src_size+1)
+        sbc     #>(kMinipixSrcSize+1)
         bcc     :+
         jmp     show_hr_file
 
@@ -453,7 +453,7 @@ exit:
         sta     RAMWRTON
 
         copy16  #hires, ptr
-        ldx     #>hires_size    ; number of pages to copy
+        ldx     #>kHiresSize    ; number of pages to copy
         ldy     #0
 :       lda     (ptr),y
         sta     (ptr),y
@@ -493,7 +493,7 @@ exit:
         ;; Copy main>aux
         copy16  #minipix_dst_buf, STARTLO
         copy16  #minipix_dst_buf, DESTINATIONLO
-        copy16  #(minipix_dst_buf+minipix_dst_size), ENDLO
+        copy16  #(minipix_dst_buf+kMinipixDstSize), ENDLO
         sec                     ; main>aux
         jsr     AUXMOVE
 
@@ -502,15 +502,15 @@ exit:
 
         rts
 
-        minipix_width = 88 * 2
-        minipix_height = 52
+        kMinipixWidth = 88 * 2
+        kMinipixHeight = 52
 
 .params paintbits_params
-viewloc:        DEFINE_POINT (kScreenWidth - minipix_width)/2, (kScreenHeight - minipix_height)/2
+viewloc:        DEFINE_POINT (kScreenWidth - kMinipixWidth)/2, (kScreenHeight - kMinipixHeight)/2
 mapbits:        .addr   minipix_dst_buf
 mapwidth:       .byte   26
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0,0,minipix_width-1,minipix_height-1
+maprect:        DEFINE_RECT 0,0,kMinipixWidth-1,kMinipixHeight-1
 .endparams
 
 .endproc

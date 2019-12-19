@@ -139,11 +139,11 @@ on_line_buffer:
 
         io_buf := $1C00
         buffer := dir_data_buffer
-        buffer_len = dir_data_buffer_len
+        kBufferLen = dir_data_buffer_len
 
         DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
-        DEFINE_READ_PARAMS read_params, buffer, buffer_len
-        DEFINE_WRITE_PARAMS write_params, buffer, buffer_len
+        DEFINE_READ_PARAMS read_params, buffer, kBufferLen
+        DEFINE_WRITE_PARAMS write_params, buffer, kBufferLen
         DEFINE_CLOSE_PARAMS close_params
 
         DEFINE_GET_FILE_INFO_PARAMS file_info_params, path_buf

@@ -50,7 +50,7 @@ save_stack:.byte   0
         kToasterHeight = 32
         kToasterWidth  = 64
 
-        toaster_count = 4
+        kToasterCount = 4
 
 xpos_table:
         .word   kScreenWidth+kToasterWidth
@@ -183,7 +183,7 @@ exit:
         MGTK_CALL MGTK::SetPenMode, penXOR
 
         ;; For each toaster...
-        copy    #toaster_count-1, index
+        copy    #kToasterCount-1, index
 loop:
 
         ;; Stash current toaster's values

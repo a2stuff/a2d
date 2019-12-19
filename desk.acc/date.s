@@ -128,10 +128,10 @@ start_da:
         ;; The following 7 rects are iterated over to identify
         ;; a hit target for a click.
 
-        num_hit_rects = 7
+        kNumHitRects = 7
         first_hit_rect = *
-        up_rect_index = 3
-        down_rect_index = 4
+        kUpRectIndex = 3
+        kDownRectIndex = 4
 
 ok_button_rect:
         .word   $6A,$2E,$B5,$39
@@ -345,7 +345,7 @@ init_window:
 
 on_key_up:
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
-        lda     #up_rect_index
+        lda     #kUpRectIndex
         sta     hit_rect_index
         jsr     do_inc_or_dec
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
@@ -353,7 +353,7 @@ on_key_up:
 
 on_key_down:
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
-        lda     #down_rect_index
+        lda     #kDownRectIndex
         sta     hit_rect_index
         jsr     do_inc_or_dec
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
@@ -476,7 +476,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         jmp     loop
 
 :       lda     hit_rect_index
-        cmp     #up_rect_index
+        cmp     #kUpRectIndex
         beq     :+
 
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
@@ -491,7 +491,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
         jsr     delay
         lda     hit_rect_index
-        cmp     #up_rect_index
+        cmp     #kUpRectIndex
         beq     incr
 
 decr:   copy16  #decrement_table, ptr
@@ -698,7 +698,7 @@ next:   clc
 :       pla
         tax
         inx
-        cpx     #num_hit_rects+1
+        cpx     #kNumHitRects+1
         bne     loop
 
         ldx     #0
