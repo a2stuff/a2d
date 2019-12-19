@@ -35,20 +35,62 @@ syntax details.
 
 ## Naming
 
-* Prefer `snake_case` for procedures and labels
+The naming style is in flux: see https://github.com/a2stuff/a2d/issues/112
 
-NOTE: MGTK uses `TitleCase` for procedures, so that is used in limited
-cases, e.g. `HideCursor`, `HideCursorImpl`, etc.
+* Internal labels (for both code and data) should use `snake_case`; this include parameter blocks.
 
-* Equates from ROM (Applesoft, Monitor, Firmware, etc) and ProDOS are in
-`UPPERCASE`.
+* External labels ("equates") should use `UPPERCASE`, and are defined with `:=`, e.g. `SPKR := $C030`
 
-* Prefer `kTitleCase` for constants, and define with `=` e.g. `kExample = 1234`
+* Constants (symbols) should use `kTitleCase`, and are defined with `=`, e.g. `kExample = 1234`
+
+* Callable procedures should use `snake_case` or `TitleCase`, and are defined with `.proc`
+
+* Structure definitions (`.struct`) should use `TitleCase`, with member labels in `snake_case`.
+
+* Enumeration definitions (`.enum`) should use `TitleCase`, with members in `snake_case`.
+
+* Macros:
+    * Macros that mimic ca65 control commands should be lowercase, dot-prefixed, e.g. `.pushorg`, `.params`
+    * Macros that provide pseudo-opcodes should be lowercase, e.g. `ldax`, `add16`
+    * Other macros should be named with `SHOUTY_CASE`
+
+
+```asm
+
+0123456701234567
+
+SPKR    := $C030                ; external label
+
+flag:   .byte   0               ; internal label
+there   := * - 1                ; internal label
+
+kTrue   = $80                   ; constant
+
+.params get_flag_params         ; paramter block
+result: .byte   0
+.endparams
+
+.proc SetFlag                   ; procedure
+        lda     #kTrue
+done:   sta     flag            ; internal label
+.endproc
+
+.struct Point                   ; structure
+xcoord: .word
+xcoord: .word
+.endstruct
+
+.enum Options                   ; enum
+        first   = 1
+        second  = 2
+.endenum
+```
+
 
 ## Flow control
 
-* **Do** make use of [unnamed labels](http://cc65.github.io/doc/ca65.html#ss6.6) for
-   local loops and forward branches to avoid pointless names. Only use one level.
+* **Do** make use of [unnamed labels](http://cc65.github.io/doc/ca65.html#ss6.6) for local loops and forward branches to avoid pointless names.
+* **Do Not** use more than one level (i.e. no `:--` or `:++`)
 
 ```asm
         ;; Copy the thing
@@ -86,6 +128,7 @@ cases, e.g. `HideCursor`, `HideCursorImpl`, etc.
    * Use `.struct` definitions to define offsets into structures
    * Use math where necessary (e.g. `ldy #offset2 - offset1`)
    * Use `.sizeof()` (or math if needed) rather than hardcoding sizes
+
 
 ## Structure
 
@@ -132,11 +175,13 @@ start:  lda     ptr
 
 * Macro use is **encouraged**.
 * Use local macros to avoid repeating code.
-* Use `inc/macros.inc` and extend as needed to capture patterns such as
-   16-bit operations
+* Use `inc/macros.inc` and extend as needed to capture patterns such as 16-bit operations
 * API calls such as ProDOS MLI calls should be done with macros
-* Macros should be named with `SHOUTY_CASE`
-  * Exception: Macros that mimic ca65 control commands, e.g. `.pushorg` (like `.pushseg`), `.params` (like `.proc`)
+* Naming:
+  * Macros that mimic ca65 control commands should be lowercase, dot-prefixed, e.g. `.pushorg`, `.params`
+  * Macros that provide pseudo-opcodes should be lowercase, e.g. `ldax`, `add16`
+  * Other macros should be named with `SHOUTY_CASE`
+
 
 ## Param Blocks
 
@@ -156,6 +201,7 @@ result:         .word   0
 ```
 
 (`.params` is an alias for `.proc`)
+
 
 ## Namespaces
 
@@ -185,4 +231,36 @@ well in the future.
         @count := *+1
         cpy     #00
         bne     :-
+```
+
+
+## Work-Arounds
+
+* ca65 does not allow using `.sizeof()` to get the size of scope/procedure before its definition appears. (https://github.com/cc65/cc65/issues/478) To work around this, add a `sizeof_proc` definition after the procedure:
+
+```asm
+        ldy     #sizeof_relocate - 1
+:       lda     relocate,y
+        sta     dst,y
+        dey
+        bpl     :-
+        rts
+
+.proc   relocate
+        ...
+.endproc
+        sizeof_relocate = .sizeof(relocate)
+```
+
+* ca65 does not allow the members of a named scope to be referenced before the scope definition. (https://github.com/cc65/cc65/issues/479) To work around this, add a label definition after the procedure.
+
+```asm
+        sta     data_ref
+        rts
+
+.params data        ; alias for .proc
+ref:    .byte   0
+buf:    .res    16
+.endparams          ; alias for .endproc
+        data_ref = data::ref
 ```
