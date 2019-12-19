@@ -43,11 +43,11 @@ entry:
 
 ;;; ============================================================
 
-kDAWindowId    := 61
-kDAWidth        := 416
-kDAHeight       := 122
-kDALeft         := (kScreenWidth - kDAWidth)/2
-kDATop          := (kScreenHeight - 10 - kDAHeight)/2 + 10
+kDAWindowId     = 61
+kDAWidth        = 416
+kDAHeight       = 122
+kDALeft         = (kScreenWidth - kDAWidth)/2
+kDATop          = (kScreenHeight - 10 - kDAHeight)/2 + 10
 
 str_title:
         PASCAL_STRING "Control Panel"
@@ -200,8 +200,8 @@ textfont:       .addr   0
 ;;; ============================================================
 ;;; Common Resources
 
-kRadioButtonWidth = 15
-kRadioButtonHeight = 7
+kRadioButtonWidth       = 15
+kRadioButtonHeight      = 7
 
 .params checked_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
@@ -242,68 +242,68 @@ unchecked_bitmap:
 ;;; ============================================================
 ;;; Desktop Pattern Editor Resources
 
-pedit_x := 12
-pedit_y := 6
+kPatternEditX   = 12
+kPatternEditY   = 6
 
-fatbit_w := 8
-fatbit_ws := 3                  ; shift
-fatbit_h := 4
-fatbit_hs := 2                  ; shift
+kFatBitWidth            = 8
+kFatBitWidthShift       = 3
+kFatBitHeight           = 4
+kFatBitHeightShift      = 2
 fatbits_rect:
-        DEFINE_RECT pedit_x, pedit_y, pedit_x + 8 * fatbit_w + 1, pedit_y + 8 * fatbit_h + 1, fatbits_rect
+        DEFINE_RECT kPatternEditX, kPatternEditY, kPatternEditX + 8 * kFatBitWidth + 1, kPatternEditY + 8 * kFatBitHeight + 1, fatbits_rect
 
 str_desktop_pattern:
         DEFINE_STRING "Desktop Pattern"
 pattern_label_pos:
-        DEFINE_POINT pedit_x + 35, pedit_y + 47
+        DEFINE_POINT kPatternEditX + 35, kPatternEditY + 47
 
-preview_l       := pedit_x + 79
-preview_t       := pedit_y
-preview_r       := preview_l + 81
-preview_b       := preview_t + 33
-preview_s       := preview_t + 6
+kPreviewLeft    = kPatternEditX + 79
+kPreviewTop     = kPatternEditY
+kPreviewRight   = kPreviewLeft + 81
+kPreviewBottom  = kPreviewTop + 33
+kPreviewSpacing = kPreviewTop + 6
 
 preview_rect:
-        DEFINE_RECT preview_l+1, preview_s + 1, preview_r - 1, preview_b - 1
+        DEFINE_RECT kPreviewLeft+1, kPreviewSpacing + 1, kPreviewRight - 1, kPreviewBottom - 1
 
 preview_line:
-        DEFINE_RECT preview_l, preview_s, preview_r, preview_s
+        DEFINE_RECT kPreviewLeft, kPreviewSpacing, kPreviewRight, kPreviewSpacing
 
 preview_frame:
-        DEFINE_RECT preview_l, preview_t, preview_r, preview_b
+        DEFINE_RECT kPreviewLeft, kPreviewTop, kPreviewRight, kPreviewBottom
 
-        arr_w := 6
-        arr_h := 5
-        arr_inset := 5
+kArrowWidth     = 6
+kArrowHeight    = 5
+kArrowInset     = 5
 
-        rarr_l := preview_r - arr_inset - arr_w
-        rarr_t := preview_t+1
-        rarr_r := rarr_l + arr_w - 1
-        rarr_b := rarr_t + arr_h - 1
+kRightArrowLeft         = kPreviewRight - kArrowInset - kArrowWidth
+kRightArrowTop          = kPreviewTop+1
+kRightArrowRight        = kRightArrowLeft + kArrowWidth - 1
+kRightArrowBottom       = kRightArrowTop + kArrowHeight - 1
 
-        larr_l := preview_l + arr_inset + 1
-        larr_t := preview_t + 1
-        larr_r := larr_l + arr_w - 1
-        larr_b := larr_t + arr_h - 1
+kLeftArrowLeft          = kPreviewLeft + kArrowInset + 1
+kLeftArrowTop           = kPreviewTop + 1
+kLeftArrowRight         = kLeftArrowLeft + kArrowWidth - 1
+kLeftArrowBottom        = kLeftArrowTop + kArrowHeight - 1
 
 .params larr_params
-viewloc:        DEFINE_POINT larr_l, larr_t
+viewloc:        DEFINE_POINT kLeftArrowLeft, kLeftArrowTop
 mapbits:        .addr   larr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, arr_w-1, arr_h-1
+cliprect:       DEFINE_RECT 0, 0, kArrowWidth-1, kArrowHeight-1
 .endparams
 
 .params rarr_params
-viewloc:        DEFINE_POINT rarr_l, rarr_t
+viewloc:        DEFINE_POINT kRightArrowLeft, kRightArrowTop
 mapbits:        .addr   rarr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, arr_w-1, arr_h-1
+cliprect:       DEFINE_RECT 0, 0, kArrowWidth-1, kArrowHeight-1
 .endparams
 
-larr_rect:      DEFINE_RECT larr_l-2, larr_t, larr_r+2, larr_b
-rarr_rect:      DEFINE_RECT rarr_l-2, rarr_t, rarr_r+2, rarr_b
+larr_rect:      DEFINE_RECT kLeftArrowLeft-2, kLeftArrowTop, kLeftArrowRight+2, kLeftArrowBottom
+rarr_rect:      DEFINE_RECT kRightArrowLeft-2, kRightArrowTop, kRightArrowRight+2, kRightArrowBottom
 
 larr_bitmap:
         .byte   px(%0000110)
@@ -321,8 +321,8 @@ rarr_bitmap:
 ;;; ============================================================
 ;;; Double-Click Speed Resources
 
-dblclick_x := 208
-dblclick_y := 6
+kDblClickX      = 208
+kDblClickY      = 6
 
         ;; Selected index (1-3, or 0 for 'no match')
 dblclick_selection:
@@ -339,10 +339,10 @@ str_dblclick_speed:
         DEFINE_STRING "Double-Click Speed"
 
 dblclick_label_pos:
-        DEFINE_POINT dblclick_x + 45, dblclick_y + 47
+        DEFINE_POINT kDblClickX + 45, kDblClickY + 47
 
 .params dblclick_params
-viewloc:        DEFINE_POINT dblclick_x, dblclick_y
+viewloc:        DEFINE_POINT kDblClickX, kDblClickY
 mapbits:        .addr   dblclick_bitmap
 mapwidth:       .byte   8
 reserved:       .byte   0
@@ -350,24 +350,24 @@ cliprect:       DEFINE_RECT 0, 0, 53, 33
 .endparams
 
 dblclick_arrow_pos1:
-        DEFINE_POINT dblclick_x + 65, dblclick_y + 7
+        DEFINE_POINT kDblClickX + 65, kDblClickY + 7
 dblclick_arrow_pos2:
-        DEFINE_POINT dblclick_x + 65, dblclick_y + 22
+        DEFINE_POINT kDblClickX + 65, kDblClickY + 22
 dblclick_arrow_pos3:
-        DEFINE_POINT dblclick_x + 110, dblclick_y + 10
+        DEFINE_POINT kDblClickX + 110, kDblClickY + 10
 dblclick_arrow_pos4:
-        DEFINE_POINT dblclick_x + 110, dblclick_y + 22
+        DEFINE_POINT kDblClickX + 110, kDblClickY + 22
 dblclick_arrow_pos5:
-        DEFINE_POINT dblclick_x + 155, dblclick_y + 13
+        DEFINE_POINT kDblClickX + 155, kDblClickY + 13
 dblclick_arrow_pos6:
-        DEFINE_POINT dblclick_x + 155, dblclick_y + 23
+        DEFINE_POINT kDblClickX + 155, kDblClickY + 23
 
 dblclick_button_rect1:
-        DEFINE_RECT dblclick_x + 175, dblclick_y + 25, dblclick_x + 175 + kRadioButtonWidth, dblclick_y + 25 + kRadioButtonHeight
+        DEFINE_RECT kDblClickX + 175, kDblClickY + 25, kDblClickX + 175 + kRadioButtonWidth, kDblClickY + 25 + kRadioButtonHeight
 dblclick_button_rect2:
-        DEFINE_RECT dblclick_x + 130, dblclick_y + 25, dblclick_x + 130 + kRadioButtonWidth, dblclick_y + 25 + kRadioButtonHeight
+        DEFINE_RECT kDblClickX + 130, kDblClickY + 25, kDblClickX + 130 + kRadioButtonWidth, kDblClickY + 25 + kRadioButtonHeight
 dblclick_button_rect3:
-        DEFINE_RECT dblclick_x +  85, dblclick_y + 25, dblclick_x +  85 + kRadioButtonWidth, dblclick_y + 25 + kRadioButtonHeight
+        DEFINE_RECT kDblClickX +  85, kDblClickY + 25, kDblClickX +  85 + kRadioButtonWidth, kDblClickY + 25 + kRadioButtonHeight
 
 dblclick_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000011),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
@@ -427,27 +427,27 @@ darr_bitmap:
 ;;; ============================================================
 ;;; Joystick Calibration Resources
 
-joycal_x := 12
-joycal_y := 68
+kJoystickCalibrationX = 12
+kJoystickCalibrationY = 68
 
 str_calibrate_joystick:
         DEFINE_STRING "Calibrate Joystick"
 joystick_label_pos:
-        DEFINE_POINT joycal_x + 30, joycal_y + 48
+        DEFINE_POINT kJoystickCalibrationX + 30, kJoystickCalibrationY + 48
 
-joy_disp_x := joycal_x + 80
-joy_disp_y := joycal_y + 20 - 6
+kJoystickDisplayX = kJoystickCalibrationX + 80
+kJoystickDisplayY = kJoystickCalibrationY + 20 - 6
 
 joy_disp_frame_rect:
-        DEFINE_RECT joy_disp_x - 32    , joy_disp_y - 16    , joy_disp_x + 32 + 7 + 1    , joy_disp_y + 16 + 4 + 1
+        DEFINE_RECT kJoystickDisplayX - 32    , kJoystickDisplayY - 16    , kJoystickDisplayX + 32 + 7 + 1    , kJoystickDisplayY + 16 + 4 + 1
 joy_disp_rect:
-        DEFINE_RECT joy_disp_x - 32 + 1, joy_disp_y - 16 + 1, joy_disp_x + 32 + 7 + 1 - 1, joy_disp_y + 16 + 4 + 1 - 1
+        DEFINE_RECT kJoystickDisplayX - 32 + 1, kJoystickDisplayY - 16 + 1, kJoystickDisplayX + 32 + 7 + 1 - 1, kJoystickDisplayY + 16 + 4 + 1 - 1
 
-joy_btn0:       DEFINE_POINT joy_disp_x + 58 + 4, joy_disp_y - 8, joy_btn0
-joy_btn1:       DEFINE_POINT joy_disp_x + 58 + 4, joy_disp_y + 5, joy_btn1
+joy_btn0:       DEFINE_POINT kJoystickDisplayX + 58 + 4, kJoystickDisplayY - 8, joy_btn0
+joy_btn1:       DEFINE_POINT kJoystickDisplayX + 58 + 4, kJoystickDisplayY + 5, joy_btn1
 
-joy_btn0_lpos: DEFINE_POINT joy_disp_x + 48 + 4, joy_disp_y - 8 + 8
-joy_btn1_lpos: DEFINE_POINT joy_disp_x + 48 + 4, joy_disp_y + 5 + 8
+joy_btn0_lpos: DEFINE_POINT kJoystickDisplayX + 48 + 4, kJoystickDisplayY - 8 + 8
+joy_btn1_lpos: DEFINE_POINT kJoystickDisplayX + 48 + 4, kJoystickDisplayY + 5 + 8
 
 joy_btn0_label:   DEFINE_STRING "0"
 joy_btn1_label:   DEFINE_STRING "1"
@@ -469,7 +469,7 @@ joy_marker_bitmap:
 
 
 .params joystick_params
-viewloc:        DEFINE_POINT joycal_x+1, joycal_y + 6
+viewloc:        DEFINE_POINT kJoystickCalibrationX+1, kJoystickCalibrationY + 6
 mapbits:        .addr   joystick_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
@@ -500,8 +500,8 @@ joystick_bitmap:
 ;;; ============================================================
 ;;; IP Blink Speed Resources
 
-ipblink_x := 214
-ipblink_y := 75
+kIPBlinkDisplayX = 214
+kIPBlinkDisplayY = 75
 
         ;; Selected index (1-3, or 0 for 'no match')
 ipblink_selection:
@@ -517,26 +517,26 @@ str_ipblink_fast:
         DEFINE_STRING "Fast"
 
 ipblink_label1_pos:
-        DEFINE_POINT ipblink_x, ipblink_y + 11
+        DEFINE_POINT kIPBlinkDisplayX, kIPBlinkDisplayY + 11
 ipblink_label2_pos:
-        DEFINE_POINT ipblink_x, ipblink_y + 10 + 11
+        DEFINE_POINT kIPBlinkDisplayX, kIPBlinkDisplayY + 10 + 11
 ipblink_slow_pos:
-        DEFINE_POINT ipblink_x + 110 - 4 + 2, ipblink_y + 16 + 5 + 12 + 1
+        DEFINE_POINT kIPBlinkDisplayX + 110 - 4 + 2, kIPBlinkDisplayY + 16 + 5 + 12 + 1
 ipblink_fast_pos:
-        DEFINE_POINT ipblink_x + 140 + 4 + 4, ipblink_y + 16 + 5 + 12 + 1
+        DEFINE_POINT kIPBlinkDisplayX + 140 + 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
 
 ipblink_btn1_rect:
-        DEFINE_RECT ipblink_x + 110 + 2, ipblink_y + 16, ipblink_x + 110 + 2 + kRadioButtonWidth, ipblink_y + 16 + kRadioButtonHeight
+        DEFINE_RECT kIPBlinkDisplayX + 110 + 2, kIPBlinkDisplayY + 16, kIPBlinkDisplayX + 110 + 2 + kRadioButtonWidth, kIPBlinkDisplayY + 16 + kRadioButtonHeight
 ipblink_btn2_rect:
-        DEFINE_RECT ipblink_x + 130 + 2, ipblink_y + 16, ipblink_x + 130 + 2 + kRadioButtonWidth, ipblink_y + 16 + kRadioButtonHeight
+        DEFINE_RECT kIPBlinkDisplayX + 130 + 2, kIPBlinkDisplayY + 16, kIPBlinkDisplayX + 130 + 2 + kRadioButtonWidth, kIPBlinkDisplayY + 16 + kRadioButtonHeight
 ipblink_btn3_rect:
-        DEFINE_RECT ipblink_x + 150 + 2, ipblink_y + 16, ipblink_x + 150 + 2 + kRadioButtonWidth, ipblink_y + 16 + kRadioButtonHeight
+        DEFINE_RECT kIPBlinkDisplayX + 150 + 2, kIPBlinkDisplayY + 16, kIPBlinkDisplayX + 150 + 2 + kRadioButtonWidth, kIPBlinkDisplayY + 16 + kRadioButtonHeight
 
 
 
 
 .params ipblink_bitmap_params
-viewloc:        DEFINE_POINT ipblink_x + 120 - 1, ipblink_y
+viewloc:        DEFINE_POINT kIPBlinkDisplayX + 120 - 1, kIPBlinkDisplayY
 mapbits:        .addr   ipblink_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
@@ -559,7 +559,7 @@ ipblink_bitmap:
         .byte   px(%0000110),px(%0000000),px(%0000001),px(%1000000),px(%0000000),px(%0110000)
 
 .params ipblink_bitmap_ip_params
-viewloc:        DEFINE_POINT ipblink_x + 120 - 1 + 20, ipblink_y
+viewloc:        DEFINE_POINT kIPBlinkDisplayX + 120 - 1 + 20, kIPBlinkDisplayY
 mapbits:        .addr   ipblink_ip_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
@@ -765,7 +765,7 @@ common: bit     dragwindow_params::moved
         inc     pattern_index
 
         lda     pattern_index
-        cmp     #pattern_count
+        cmp     #kPatternCount
         IF_GE
         copy    #0, pattern_index
         END_IF
@@ -778,7 +778,7 @@ common: bit     dragwindow_params::moved
 
         lda     pattern_index
         IF_NEG
-        copy    #pattern_count-1, pattern_index
+        copy    #kPatternCount-1, pattern_index
         END_IF
 
         jmp     update_pattern
@@ -808,14 +808,14 @@ common: bit     dragwindow_params::moved
         dec16   mx
         dec16   my
 
-        ldy     #fatbit_ws
+        ldy     #kFatBitWidthShift
 :       lsr16   mx
         dey
         bne     :-
         cmp16   mx, #8
         bcs     done
 
-        ldy     #fatbit_hs
+        ldy     #kFatBitHeightShift
 :       lsr16   my
         dey
         bne     :-
@@ -1154,7 +1154,7 @@ store:  sta     mode
         lda     xpos
         cmp     #8
         IF_NE
-        add16   bitpos::xcoord, #fatbit_w, bitpos::xcoord
+        add16   bitpos::xcoord, #kFatBitWidth, bitpos::xcoord
         jmp     xloop
         END_IF
 
@@ -1163,7 +1163,7 @@ store:  sta     mode
         lda     ypos
         cmp     #8
         IF_NE
-        add16   bitpos::ycoord, #fatbit_h, bitpos::ycoord
+        add16   bitpos::ycoord, #kFatBitHeight, bitpos::ycoord
         jmp     yloop
         END_IF
 
@@ -1174,7 +1174,7 @@ ypos:   .byte   0
 row:    .byte   0
 
 mode:   .byte   0
-size:   .byte fatbit_w, fatbit_h
+size:   .byte kFatBitWidth, kFatBitHeight
 
 .endproc
 
@@ -1191,7 +1191,7 @@ pattern:
         .byte   %10101010
 
 pattern_index:  .byte   0
-pattern_count := 15+14
+kPatternCount = 15 + 14         ; 15 B&W patterns, 14 solid color patterns
 patterns:
         .addr pattern_checkerboard, pattern_dark, pattern_vdark, pattern_black
         .addr pattern_olives, pattern_scales, pattern_stripes
@@ -1433,13 +1433,13 @@ changed:
         copy    curr+InputState::pdl0, joy_x
         copy    #0, joy_x+1
         sub16   joy_x, #31, joy_x
-        add16   joy_x, #joy_disp_x, joy_x
+        add16   joy_x, #kJoystickDisplayX, joy_x
 
         joy_y := joy_marker::viewloc::ycoord
         copy    curr+InputState::pdl1, joy_y
         copy    #0, joy_y+1
         sub16   joy_y, #15, joy_y
-        add16   joy_y, #joy_disp_y, joy_y
+        add16   joy_y, #kJoystickDisplayY, joy_y
 
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, winport_params
