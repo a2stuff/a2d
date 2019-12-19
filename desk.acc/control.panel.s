@@ -71,7 +71,8 @@ maxcontlength:  .word   kDAHeight
 port:
 viewloc:        DEFINE_POINT kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
 maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight, maprect
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -116,7 +117,8 @@ maxcontlength:  .word   kScreenHeight
 port:
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
 maprect:        DEFINE_RECT 0, 0, kScreenWidth, kScreenHeight
 pattern:        .res    8, 0
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -181,7 +183,8 @@ window: DEFINE_POINT 0, 0, window
 .params grafport
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .word   0
-mapwidth:       .word   0
+mapwidth:       .byte   0
+reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 0, 0
 pattern:        .res    8, 0
 colormasks:     .byte   0, 0

@@ -199,7 +199,8 @@ maxcontlength:  .word   140
 port:
 viewloc:        DEFINE_POINT 25, 20
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
 cliprect:       DEFINE_RECT 0, 0, 500, 150
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -231,7 +232,8 @@ maxcontlength:  .word   150
 port:
 viewloc:        DEFINE_POINT 45, 50
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
 cliprect:       DEFINE_RECT 0, 0, 150, 70
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or

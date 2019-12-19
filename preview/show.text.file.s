@@ -295,7 +295,8 @@ maxcontlength:  .word   kDefaultHeight
 port:
 viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
 maprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight, maprect
 pattern:        .res    8, $00
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -313,7 +314,8 @@ nextwinfo:      .addr   0
 .params default_port
 viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop
 mapbits:        .word   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
 .endparams
 

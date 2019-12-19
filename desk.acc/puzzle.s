@@ -603,7 +603,8 @@ maxcontlength:  .word   kDefaultHeight
 port:
 viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
 cliprect:       DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -621,7 +622,8 @@ nextwinfo:      .addr   0
 .params port_cruft                 ; Unknown usage
 viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or

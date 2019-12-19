@@ -3947,7 +3947,8 @@ stack_ptr_stash:
 .params standard_port
 viewloc:        .word   0, 0
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
 maprect:        .word   0, 0, kScreenWidth-1, kScreenHeight-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -3964,7 +3965,8 @@ textfont:       .addr   0
 .params saved_port
 viewloc:        .word   0, 0
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
 maprect:        .word   0, 0, kScreenWidth-1, kScreenHeight-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -8271,7 +8273,8 @@ winframe_top:   .word  13       ; font height + 4
 left:           .word   0
 top:            .word   $D
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
 hoffset:        .word   0
 voffset:        .word   0
 width:          .word   0

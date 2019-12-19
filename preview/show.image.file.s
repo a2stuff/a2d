@@ -212,38 +212,39 @@ event_params:   .tag MGTK::Event
 .endparams
 
 .params winfo
-window_id:     .byte   kDAWindowId       ; window identifier
-options:  .byte   MGTK::Option::dialog_box
-title:  .addr   window_title
-hscroll:.byte   MGTK::Scroll::option_none
-vscroll:.byte   MGTK::Scroll::option_none
-hthumbmax:  .byte   32
-hthumbpos:  .byte   0
-vthumbmax:  .byte   32
-vthumbpos:  .byte   0
-status: .byte   0
+window_id:      .byte   kDAWindowId ; window identifier
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   window_title
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   32
+hthumbpos:      .byte   0
+vthumbmax:      .byte   32
+vthumbpos:      .byte   0
+status:         .byte   0
 reserved:       .byte   0
-mincontwidth:     .word   kScreenWidth
-mincontlength:     .word   kScreenHeight
-maxcontwidth:     .word   kScreenWidth
-maxcontlength:     .word   kScreenHeight
+mincontwidth:   .word   kScreenWidth
+mincontlength:  .word   kScreenHeight
+maxcontwidth:   .word   kScreenWidth
+maxcontlength:  .word   kScreenHeight
 
 .params port
 viewloc:        DEFINE_POINT 0, 0
-mapbits:   .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, kScreenWidth, kScreenHeight
 .endparams
 
-pattern:.res    8, 0
+pattern:        .res    8, 0
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   MGTK::notpencopy
-textback:  .byte   $7F
-textfont:   .addr   DEFAULT_FONT
-nextwinfo:   .addr   0
+penloc:         DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::notpencopy
+textback:       .byte   $7F
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
 .endparams
 
 

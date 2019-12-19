@@ -97,7 +97,8 @@ maxcontlength:  .word   kScreenHeight
 .params port
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, kScreenWidth, kScreenHeight
 .endparams
 pattern:        .res    8, 0

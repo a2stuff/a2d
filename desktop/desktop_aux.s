@@ -345,7 +345,8 @@ window_id:      .byte   0
 .params grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, kScreenWidth-1, kScreenHeight-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -361,7 +362,8 @@ fontptr:        .addr   DEFAULT_FONT
 .params drag_outline_grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
-mapwidth:       .word   0
+mapwidth:       .byte   0
+reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 0, 0
 penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
@@ -381,7 +383,8 @@ a_grafport:     .addr   icon_grafport
 .params icon_grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
-mapwidth:       .word   0
+mapwidth:       .byte   0
+reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
@@ -2564,7 +2567,8 @@ bounds_b:  .word   0
 .params portbits
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 .endparams
 

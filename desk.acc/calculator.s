@@ -577,7 +577,8 @@ pixels: .byte   px(%1000001)
 .params grafport
 viewloc:        DEFINE_POINT 0, 0
 mapbits:        .word   0
-mapwidth:       .word   0
+mapwidth:       .byte   0
+reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, 0, 0
 pattern:        .res    8, 0
 colormasks:     .byte   0, 0
@@ -599,7 +600,8 @@ textfont:       .addr   0
 left:           .word   0
 top:            .word   kMenuBarHeight
 mapbits:        .word   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
 hoff:           .word   0
 voff:           .word   0
 width:          .word   kScreenWidth - 1
@@ -640,7 +642,8 @@ maxcontlength:  .word   kWindowHeight
 left:           .word   kDefaultLeft
 top:            .word   kDefaultTop
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
 cliprect:       DEFINE_RECT 0, 0, kWindowWidth, kWindowHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
