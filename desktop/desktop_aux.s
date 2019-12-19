@@ -1072,7 +1072,7 @@ icon_id:
         .byte   $00
 
 deltax: .word   0
-kDeltaU: .word   0
+deltay: .word   0
 
         ;; IconTK::HighlightIcon params
 highlight_icon_id:  .byte   $00
@@ -1099,31 +1099,31 @@ ignore_drag:
 
         ;; Compute mouse delta
 L9857:  sub16   findwindow_params2::mousex, L9C8E, deltax
-        sub16   findwindow_params2::mousey, L9C90, kDeltaU
+        sub16   findwindow_params2::mousey, L9C90, deltay
 
-        drag_delta := 5
+        kDragDelta = 5
 
         ;; compare x delta
         lda     deltax+1
         bpl     x_lo
         lda     deltax
-        cmp     #AS_BYTE(-drag_delta)
+        cmp     #AS_BYTE(-kDragDelta)
         bcc     is_drag
         jmp     check_deltay
 x_lo:   lda     deltax
-        cmp     #drag_delta
+        cmp     #kDragDelta
         bcs     is_drag
 
         ;; compare y delta
 check_deltay:
-        lda     kDeltaU+1
+        lda     deltay+1
         bpl     y_lo
-        lda     kDeltaU
-        cmp     #AS_BYTE(-drag_delta)
+        lda     deltay
+        cmp     #AS_BYTE(-kDragDelta)
         bcc     is_drag
         jmp     peek_loop
-y_lo:   lda     kDeltaU
-        cmp     #drag_delta
+y_lo:   lda     deltay
+        cmp     #kDragDelta
         bcs     is_drag
         jmp     peek_loop
 

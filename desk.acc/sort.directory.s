@@ -672,11 +672,11 @@ match2: .byte   0
 .proc compare_entry_types_and_names
         ptr1 := $06
         ptr2 := $08
-        max_length := 16
+        kMaxLength = 16
 
         sta     type0
 
-        ldy     #max_length
+        ldy     #kMaxLength
         lda     (ptr2),y
         sta     type2
         lda     (ptr1),y

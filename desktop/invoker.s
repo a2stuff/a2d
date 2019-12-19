@@ -17,7 +17,7 @@ start:
 
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
 
-kPrefixLength:
+prefix_length:
         .byte   0
 
         DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
@@ -63,7 +63,7 @@ begin:  lda     ROMIN2
 
         jsr     set_prefix
         lda     INVOKER_PREFIX
-        sta     kPrefixLength
+        sta     prefix_length
         MLI_CALL GET_FILE_INFO, get_info_params
         beq     :+
         jmp     exit
@@ -118,7 +118,7 @@ update_prefix:                  ; Update prefix and try again.
         jmp     check_for_bs
 
 found_bs:
-        lda     kPrefixLength
+        lda     prefix_length
         sta     INVOKER_PREFIX
         jmp     do_read
 

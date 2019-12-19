@@ -1458,7 +1458,7 @@ slash_index:
         addax   #run_list_paths, $06
         ldy     #0
         lda     ($06),y
-        sta     kPrefixLength
+        sta     prefix_length
 
         ;; Walk back one segment
         tay
@@ -1487,7 +1487,7 @@ slash_index:
         iny
         lda     ($06),y
         sta     path_buffer,x
-        cpy     kPrefixLength
+        cpy     prefix_length
         bne     :-
 
         stx     path_buffer
@@ -1497,7 +1497,7 @@ slash_index:
 entry_num:
         .byte   0
 
-kPrefixLength:
+prefix_length:
         .byte   0
 .endproc
 
@@ -4197,7 +4197,7 @@ L60D5:  jsr     push_pointers
 :       ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
         sub16in (ptr),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::xcoord, deltax
         iny
-        sub16in (ptr),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, kDeltaU
+        sub16in (ptr),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, deltay
 
         ldx     active_window_id
         dex
@@ -4222,7 +4222,7 @@ next:   cpx     cached_window_icon_count
         ldy     #IconEntry::iconx
         add16in (ptr),y, deltax, (ptr),y
         iny
-        add16in (ptr),y, kDeltaU, (ptr),y
+        add16in (ptr),y, deltay, (ptr),y
         pla
         tax
         inx
@@ -4231,7 +4231,7 @@ next:   cpx     cached_window_icon_count
 done:   rts
 
 deltax: .word   0
-kDeltaU: .word   0
+deltay: .word   0
 
 .endproc
 
@@ -9069,22 +9069,22 @@ offset:         .word   0
         kTrashIconX = 506
         kTrashIconY = 160
 
-        kDeltaU = 29
+        kDeltaY = 29
 
 desktop_icon_coords_table:
-        DEFINE_POINT 490,15 + kDeltaU*0    ; 1
-        DEFINE_POINT 490,15 + kDeltaU*1    ; 2
-        DEFINE_POINT 490,15 + kDeltaU*2    ; 3
-        DEFINE_POINT 490,15 + kDeltaU*3    ; 4
-        DEFINE_POINT 490,15 + kDeltaU*4    ; 5
-        DEFINE_POINT 400,kTrashIconY+2    ; 6
-        DEFINE_POINT 310,kTrashIconY+2    ; 7
-        DEFINE_POINT 220,kTrashIconY+2    ; 8
-        DEFINE_POINT 130,kTrashIconY+2    ; 9
-        DEFINE_POINT  40,kTrashIconY+2    ; 10
-        DEFINE_POINT 400,15 + kDeltaU*4    ; 11
-        DEFINE_POINT 310,15 + kDeltaU*4    ; 12
-        DEFINE_POINT 220,15 + kDeltaU*4    ; 13
+        DEFINE_POINT 490,15 + kDeltaY*0    ; 1
+        DEFINE_POINT 490,15 + kDeltaY*1    ; 2
+        DEFINE_POINT 490,15 + kDeltaY*2    ; 3
+        DEFINE_POINT 490,15 + kDeltaY*3    ; 4
+        DEFINE_POINT 490,15 + kDeltaY*4    ; 5
+        DEFINE_POINT 400,kTrashIconY+2     ; 6
+        DEFINE_POINT 310,kTrashIconY+2     ; 7
+        DEFINE_POINT 220,kTrashIconY+2     ; 8
+        DEFINE_POINT 130,kTrashIconY+2     ; 9
+        DEFINE_POINT  40,kTrashIconY+2     ; 10
+        DEFINE_POINT 400,15 + kDeltaY*4    ; 11
+        DEFINE_POINT 310,15 + kDeltaY*4    ; 12
+        DEFINE_POINT 220,15 + kDeltaY*4    ; 13
         ;; Maximum of 13 devices:
         ;; 7 slots * 2 drives = 14 (size of DEVLST)
         ;; ... but RAM in Slot 3 Drive 2 is disconnected.
@@ -10907,7 +10907,8 @@ skip5_buf:  .res    5, 0
 file_entry_buf:  .res    .sizeof(FileEntry), 0
 
         ;; overlayed indirect jump table
-        op_jt_addrs_size := 6
+        kOpJTAddrsSize = 6
+
 op_jt_addrs:
 op_jt_addr1:  .addr   copy_process_directory_entry     ; defaults are for copy
 op_jt_addr2:  .addr   copy_pop_directory
@@ -11145,7 +11146,7 @@ count:  .addr   0
 .endproc
 
 .proc prep_callbacks_for_copy
-        ldy     #op_jt_addrs_size-1
+        ldy     #kOpJTAddrsSize-1
 :       copy    callbacks_for_copy,y,  op_jt_addrs,y
         dey
         bpl     :-
@@ -11179,7 +11180,7 @@ count:  .addr   0
 .proc L99BC
         copy    #$80, all_flag
 
-        ldy     #op_jt_addrs_size-1
+        ldy     #kOpJTAddrsSize-1
 :       copy    callbacks_for_copy,y, op_jt_addrs,y
         dey
         bpl     :-
@@ -11802,7 +11803,7 @@ count:  .word   0
 ;;; ============================================================
 
 .proc prep_callbacks_for_delete
-        ldy     #op_jt_addrs_size-1
+        ldy     #kOpJTAddrsSize-1
 :       copy    callbacks_for_delete,y, op_jt_addrs,y
         dey
         bpl     :-
@@ -12071,7 +12072,7 @@ files_remaining_count:
 .proc prep_callbacks_for_lock
         copy    #0, LA425
 
-        ldy     #op_jt_addrs_size-1
+        ldy     #kOpJTAddrsSize-1
 :       copy    callbacks_for_lock,y, op_jt_addrs,y
         dey
         bpl     :-
@@ -12258,7 +12259,7 @@ callbacks_for_size_or_count:
 .proc prep_callbacks_for_size_or_count
         copy    #0, LA425
 
-        ldy     #op_jt_addrs_size-1
+        ldy     #kOpJTAddrsSize-1
 :       copy    callbacks_for_size_or_count,y, op_jt_addrs,y
         dey
         bpl     :-

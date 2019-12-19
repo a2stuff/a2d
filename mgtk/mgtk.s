@@ -13,8 +13,8 @@
 .proc mgtk
         .org $4000
 
-        kScreenWidth := 560
-        kScreenHeight := 192
+kScreenWidth    = 560
+kScreenHeight   = 192
 
 ;;; ============================================================
 
@@ -1450,8 +1450,8 @@ rl_ge256:                               ; Divmod for right limit >= 256
         ;; Set up destination (for either on-screen or off-screen bitmap.)
 
 .proc set_dest
-        DEST_NDBM       := 0            ; draw to off-screen bitmap
-        DEST_DHGR       := 1            ; draw to DHGR screen
+kDestNDBM       = 0             ; draw to off-screen bitmap
+kDestDHGR       = 1             ; draw to DHGR screen
 
         lda     left_bytes
         ldx     top
@@ -1464,7 +1464,7 @@ rl_ge256:                               ; Divmod for right limit >= 256
         adc     current_mapbits+1
         sta     vid_addr+1
 
-        lda     #2*DEST_DHGR
+        lda     #2*kDestDHGR
         tax
         tay
         bit     current_mapwidth
@@ -1479,9 +1479,9 @@ rl_ge256:                               ; Divmod for right limit >= 256
         jsr     set_up_fill_mode::set_width
 
         copy16  shift_line_jmp_addr, dhgr_get_srcbits::shift_bits_jmp_addr
-        lda     #2*DEST_NDBM
-        ldx     #2*DEST_NDBM
-        ldy     #2*DEST_NDBM
+        lda     #2*kDestNDBM
+        ldx     #2*kDestNDBM
+        ldy     #2*kDestNDBM
 
 on_screen:
         pha
@@ -1520,7 +1520,7 @@ ndbm_fix_width:
 :       sta     right_sidemask
         rts
 
-;;              DEST_NDBM        DEST_DHGR
+;;              kDestNDBM        kDestDHGR
 shift_line_jmp_addr:
         .addr   shift_line_jmp
 
@@ -1535,8 +1535,8 @@ shift_line_table:
         ;; Set source for bitmap transfer (either on-screen or off-screen bitmap.)
 
 .proc set_source
-        SRC_NDBM        := 0
-        SRC_DHGR        := 1
+kSrcNDBM        = 0
+kSrcDHGR        = 1
 
         ldx     src_y_coord
         ldy     src_mapwidth
@@ -1550,15 +1550,15 @@ shift_line_table:
         adc     bits_addr+1
         sta     ndbm_get_srcbits::load_addr+1
 
-        ldx     #2*SRC_DHGR
+        ldx     #2*kSrcDHGR
         bit     src_mapwidth
         bmi     :+
 
-        ldx     #2*SRC_NDBM
+        ldx     #2*kSrcNDBM
 :       copy16  get_srcbits_table,x, fill_next_line::get_srcbits_jmp_addr
         rts
 
-;;              SRC_NDBM           SRC_DHGR
+;;              kSrcNDBM           kSrcDHGR
 get_srcbits_table:
         .addr   ndbm_get_srcbits,  dhgr_get_srcbits
 .endproc
@@ -2076,7 +2076,7 @@ unused_width:
         dec     shift_bytes
 :       tay                                     ; check if bit shift required
         bne     :+
-        ldx     #2*BITS_NO_BITSHIFT
+        ldx     #2*kBitsNoBitShift
         beq     no_bitshift
 
 :       tya
@@ -2091,15 +2091,15 @@ unused_width:
         dey
         sty     dhgr_shift_bits::offset1_addr
 
-        ldx     #2*BITS_BITSHIFT
+        ldx     #2*kBitsBitShift
 no_bitshift:
         copy16  shift_bits_table,x, dhgr_get_srcbits::shift_bits_jmp_addr
         jmp     bit_blit
 
-BITS_NO_BITSHIFT := 0
-BITS_BITSHIFT := 1
+kBitsNoBitShift = 0
+kBitsBitShift   = 1
 
-;;              BITS_NO_BITSHIFT   BITS_BITSHIFT
+;;              kBitsNoBitShift    kBitsBitShift
 shift_bits_table:
         .addr   shift_line_jmp,    dhgr_shift_bits
 .endproc
@@ -2127,7 +2127,7 @@ shift_bits_table:
         point_index      := $82
         low_point        := $A7
 
-        max_poly_points  := 60
+        kMaxPolyPoints   = 60
 
         stx     $B0
         asl     a
@@ -2222,7 +2222,7 @@ set_low_point:
 
         ldx     point_index
         inx
-        cpx     #max_poly_points
+        cpx     #kMaxPolyPoints
         beq     bad_poly
         cpy     vertex_limit
         bcc     loop
@@ -2282,7 +2282,7 @@ InPolyImpl:
         ;; also called from the end of LineToImpl
 
         num_maxima       := $AD
-        max_num_maxima   := 8
+        kMaxNumMaxima    = 8
 
         low_vertex       := $B0
 
@@ -2372,7 +2372,7 @@ vloop:  sty     $A9              ; starting from next vertex, search ahead
 
 new_maxima:
         ldx     num_maxima
-        cpx     #2*max_num_maxima         ; too many maxima points (documented limitation)
+        cpx     #2*kMaxNumMaxima         ; too many maxima points (documented limitation)
         bcs     bad_poly
 
         sta     poly_maxima_prev_vertex,x ; vertex before new vertex
@@ -5274,7 +5274,7 @@ int_handler_addr:
 eventbuf_tail:  .byte   0
 eventbuf_head:  .byte   0
 
-        eventbuf_size := 33             ; max # of events in queue
+kEventBufSize   = 33              ; max # of events in queue
 
 eventbuf:
         .scope  eventbuf
@@ -5284,7 +5284,7 @@ eventbuf:
         window_id := *+1
         .endscope
 
-        .res    eventbuf_size*MGTK::short_event_size
+        .res    kEventBufSize*MGTK::short_event_size
 
 
 .proc FlushEventsImpl
@@ -5299,7 +5299,7 @@ eventbuf:
         ;; called during PostEvent and a few other places
 .proc put_event
         lda     eventbuf_head
-        cmp     #(eventbuf_size-1)*MGTK::short_event_size
+        cmp     #(kEventBufSize-1)*MGTK::short_event_size
         bne     :+                      ; if head is not at end, advance
         lda     #0                      ; otherwise reset to 0
         bcs     compare
@@ -6640,12 +6640,13 @@ mark_char: .byte   0
         jmp     put_menu_item
 .endproc
 
-
-icon_offset_pos    := 0
-icon_offset_width  := 4
-icon_offset_height := 5
-icon_offset_bits   := 6
-
+.struct Bitmap
+xcoord  .word
+ycoord  .word
+width   .byte
+height  .byte
+bits    .addr
+.endstruct
 
 .params up_scroll_params
 xcoord: .res    2
@@ -8363,7 +8364,7 @@ windowy:        .word   0       ; out
         iny
         sty     $91             ; zero
 
-        ldy     #icon_offset_width
+        ldy     #Bitmap::width
         lda     (icon_ptr),y
         tax
         lda     div7_table+7,x
@@ -8590,8 +8591,8 @@ return_winrect_jmp:
         thumb_max := $A3
         thumb_pos := $A1
 
-        xthumb_width := 20
-        ythumb_height := 12
+        kXThumbWidth  = 20
+        kYThumbHeight = 12
 
 
 .proc get_thumb_rect
@@ -8622,13 +8623,13 @@ return_winrect_jmp:
         sty     thumb_coord+1
 
         ldx     #0              ; x-coords
-        lda     #xthumb_width
+        lda     #kXThumbWidth
 
         bit     which_control
         bpl     :+
 
         ldx     #2              ; y-coords
-        lda     #ythumb_height
+        lda     #kYThumbHeight
 :       pha
         add16   winrect,x, thumb_coord, winrect,x
         pla
@@ -8889,13 +8890,13 @@ no_change:
         jsr     get_thumb_rect
 
         ldx     #0
-        lda     #xthumb_width
+        lda     #kXThumbWidth
 
         bit     which_control
         bpl     :+
 
         ldx     #2
-        lda     #ythumb_height
+        lda     #kYThumbHeight
 
 :       sta     thumb_dim
 
@@ -9047,13 +9048,13 @@ is_horiz:
         offset := $82
 
         ldx     #0
-        lda     #xthumb_width
+        lda     #kXThumbWidth
 
         bit     which_control
         bpl     :+
 
         ldx     #2
-        lda     #ythumb_height
+        lda     #kYThumbHeight
 :
         sta     offset
 
@@ -9160,8 +9161,8 @@ menu_item_index:        .res 1
 kbd_mouse_state:
         .byte   0
 
-kbd_mouse_state_menu := 1
-kbd_mouse_state_mousekeys := 4
+kKeyboardMouseStateMenu = 1
+kKeyboardMouseStateMouseKeys = 4
 
 
 kbd_mouse_x:  .word     0
@@ -9356,13 +9357,13 @@ no_modifiers:
         bne     :+
         rts
 
-:       cmp     #kbd_mouse_state_mousekeys
+:       cmp     #kKeyboardMouseStateMouseKeys
         beq     kbd_mouse_mousekeys
 
         jsr     kbd_mouse_sync_cursor
 
         lda     kbd_mouse_state
-        cmp     #kbd_mouse_state_menu
+        cmp     #kKeyboardMouseStateMenu
         bne     :+
         jmp     kbd_mouse_do_menu
 
@@ -9444,7 +9445,7 @@ waitloop:
 ret:    rts
 
 in_kbd_mouse:
-        cmp     #kbd_mouse_state_mousekeys
+        cmp     #kKeyboardMouseStateMouseKeys
         bne     pla_ret
         pla
         and     #1              ; modifiers
@@ -9490,7 +9491,7 @@ kbd_mouse_to_mouse_jmp:
         sei
         jsr     save_mouse_pos
 
-        lda     #kbd_mouse_state_menu
+        lda     #kKeyboardMouseStateMenu
         sta     kbd_mouse_state
 
         jsr     position_menu_item
@@ -10014,7 +10015,7 @@ force_tracking_change:
 
 .proc kbd_mouse_check_xmin
         lda     kbd_mouse_state
-        cmp     #kbd_mouse_state_mousekeys
+        cmp     #kKeyboardMouseStateMouseKeys
         beq     ret_ok
 
         lda     kbd_mouse_x
@@ -10059,7 +10060,7 @@ min_ok: inc     force_tracking_change
 
 .proc kbd_mouse_check_xmax
         lda     kbd_mouse_state
-        cmp     #kbd_mouse_state_mousekeys
+        cmp     #kKeyboardMouseStateMouseKeys
         beq     :+
 
         bit     drag_resize_flag

@@ -198,11 +198,11 @@ left:   .word   0
 base:   .word   0
 .endparams
 
-kWindowWidth:  .word   0
-kWindowHeight: .word   0
+window_width:   .word   0
+window_height:  .word   0
 
-y_remaining:  .word   0
-kLineCount:  .word   0
+y_remaining:    .word   0
+line_count:     .word   0
 L096A:  .word   0
 L096C:  .word   0
 
@@ -727,7 +727,7 @@ end:    rts
 .endproc
 
 .proc calc_track_scroll_delta
-        lda     kWindowHeight   ; ceil(height / 50)
+        lda     window_height   ; ceil(height / 50)
         ldx     #0
 loop:   inx
         sec
@@ -767,11 +767,11 @@ loop:   inx
         clc
         lda     res
         sta     winfo::maprect::x1
-        adc     kWindowWidth
+        adc     window_width
         sta     winfo::maprect::x2
         lda     res+1
         sta     winfo::maprect::x1+1
-        adc     kWindowWidth+1
+        adc     window_width+1
         sta     winfo::maprect::x2+1
         rts
 .endproc
@@ -795,10 +795,10 @@ loop:   beq     adjust_box_height
 .proc adjust_box_height
         clc
         lda     winfo::maprect::y1
-        adc     kWindowHeight
+        adc     window_height
         sta     winfo::maprect::y2
         lda     winfo::maprect::y1+1
-        adc     kWindowHeight+1
+        adc     window_height+1
         sta     winfo::maprect::y2+1
         jsr     calc_line_position
         lda     #0
@@ -920,10 +920,10 @@ do_line:
         inc     line_pos::base+1
 :       jsr     reset_line
         lda     L096C
-        cmp     kLineCount
+        cmp     line_count
         bne     :+
         lda     L096C+1
-        cmp     kLineCount+1
+        cmp     line_count+1
         beq     done
 :       inc     L096C
         bne     :+
@@ -1159,15 +1159,15 @@ end:    rts
         sec
         lda     winfo::maprect::x2
         sbc     winfo::maprect::x1
-        sta     kWindowWidth
+        sta     window_width
         lda     winfo::maprect::x2+1
         sbc     winfo::maprect::x1+1
-        sta     kWindowWidth+1
+        sta     window_width+1
 
         sec
         lda     winfo::maprect::y2
         sbc     winfo::maprect::y1
-        sta     kWindowHeight
+        sta     window_height
         ;; fall through
 .endproc
 
@@ -1177,8 +1177,8 @@ end:    rts
         copy16  winfo::maprect::y2, y_remaining
 
         lda     #0
-        sta     kLineCount
-        sta     kLineCount+1
+        sta     line_count
+        sta     line_count+1
 
 loop:   lda     y_remaining+1
         bne     :+
@@ -1192,9 +1192,9 @@ loop:   lda     y_remaining+1
         sta     y_remaining
         bcs     :+
         dec     y_remaining+1
-:       inc     kLineCount
+:       inc     line_count
         bne     loop
-        inc     kLineCount+1
+        inc     line_count+1
         jmp     loop
 
 end:    rts
@@ -1335,10 +1335,10 @@ base:   .word   10              ; vertical text offset (to baseline)
         sta     mode_mapinfo::viewloc::ycoord
         clc
         lda     winfo::viewloc::xcoord
-        adc     kWindowWidth
+        adc     window_width
         pha
         lda     winfo::viewloc::xcoord+1
-        adc     kWindowWidth+1
+        adc     window_width+1
         tax
         sec
         pla
