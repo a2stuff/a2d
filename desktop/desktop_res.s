@@ -102,11 +102,11 @@ mapwidth:       .word   0
 cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
-penloc: DEFINE_POINT 0, 0
+penloc:         DEFINE_POINT 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
-textbg: .byte   MGTK::textbg_black
+textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endparams
 
@@ -117,11 +117,11 @@ mapwidth:       .word   0
 cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
-penloc: DEFINE_POINT 0, 0
+penloc:         DEFINE_POINT 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
-textbg: .byte   MGTK::textbg_black
+textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endparams
         grafport3_viewloc_xcoord := grafport3::viewloc::xcoord
@@ -136,11 +136,11 @@ mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, 10, 10, cliprect
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
+penloc:         DEFINE_POINT 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
-textbg: .byte   MGTK::textbg_black
+textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   DEFAULT_FONT
 .endparams
 

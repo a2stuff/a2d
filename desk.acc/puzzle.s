@@ -131,34 +131,34 @@ check_window_pos:
 
         ;; following memory space is re-used so x/y overlap
 .params dragwindow_params
-window_id      := * + 0
-dragx  := * + 1                ; x overlap
-dragy  := * + 3                ; y overlap
-it_moved   := * + 5                ; ignored
+window_id       := * + 0
+dragx           := * + 1                 ; x overlap
+dragy           := * + 3                 ; y overlap
+it_moved        := * + 5                 ; ignored
 .endparams
 
 .params screentowindow_params
-window_id      := * + 0
-screenx := * + 1                ; x overlap
-screeny := * + 3                ; y overlap
-windowx := * + 5
-windowy := * + 7
+window_id       := * + 0
+screenx         := * + 1                 ; x overlap
+screeny         := * + 3                 ; y overlap
+windowx         := * + 5
+windowy         := * + 7
 .endparams
 
 .params event_params
-kind:  .byte   0
-key       := *
-modifiers := *+1
+kind:           .byte   0
+key             := *
+modifiers       := *+1
 
-xcoord    := *                  ; x overlap
-ycoord    := *+2                ; y overlap
+xcoord          := *            ; x overlap
+ycoord          := *+2          ; y overlap
 .endparams
 
 .params findwindow_params
-mousex  := *                    ; x overlap
-mousey  := *+2                  ; y overlap
-which_area := *+4
-window_id      := *+5
+mousex          := *            ; x overlap
+mousey          := * + 2        ; y overlap
+which_area      := * + 4
+window_id       := * + 5
 .endparams
 
         .res    8, 0            ; storage for above
@@ -166,12 +166,12 @@ window_id      := *+5
         .byte   0,0             ; ???
 
 .params trackgoaway_params
-goaway:.byte   0
+goaway: .byte   0
 .endparams
 
 .params getwinport_params
-window_id:     .byte   0
-a_grafport:   .addr   setport_params
+window_id:      .byte   0
+a_grafport:     .addr   setport_params
 .endparams
 getwinport_params_window_id := getwinport_params::window_id
 
@@ -217,10 +217,10 @@ position_table:
         .res    16, 0
 
 .params paintbits_params
-left:   .word   0
-top:    .word   0
-mapbits:   .addr   0
-mapwidth: .byte   4
+left:           .word   0
+top:            .word   0
+mapbits:        .addr   0
+mapwidth:       .byte   4
         .byte   0               ; reserved
         DEFINE_RECT 0, 0, 27, 15
 .endparams
@@ -585,52 +585,52 @@ setport_params:
         kDefaultHeight  = $44
 
 .params winfo
-window_id:     .byte   kDAWindowId
-options:  .byte   MGTK::Option::go_away_box
-title:  .addr   name
-hscroll:.byte   MGTK::Scroll::option_none
-vscroll:.byte   MGTK::Scroll::option_none
-hthumbmax:  .byte   0
-hthumbpos:  .byte   0
-vthumbmax:  .byte   0
-vthumbpos:  .byte   0
-status: .byte   0
+window_id:      .byte   kDAWindowId
+options:        .byte   MGTK::Option::go_away_box
+title:          .addr   name
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
 reserved:       .byte   0
-mincontwidth:     .word   kDefaultWidth
-mincontlength:     .word   kDefaultHeight
-maxcontwidth:     .word   kDefaultWidth
-maxcontlength:     .word   kDefaultHeight
+mincontwidth:   .word   kDefaultWidth
+mincontlength:  .word   kDefaultHeight
+maxcontwidth:   .word   kDefaultWidth
+maxcontlength:  .word   kDefaultHeight
 port:
-        DEFINE_POINT kDefaultLeft, kDefaultTop, viewloc
-mapbits:   .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
-cliprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
-pattern:.res    8, $FF
-colormasks:      .byte MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textback:  .byte   $7F
-textfont:   .addr   DEFAULT_FONT
-nextwinfo:   .addr   0
+viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop, viewloc
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+cliprect:       DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:         DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textback:       .byte   $7F
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
 .endparams
         winfo_viewloc_ycoord := winfo::viewloc::ycoord
 
         ;; This is grafport cruft only below
 .params port_cruft                 ; Unknown usage
 viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop
-mapbits:   .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
-cliprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
-pattern:.res    8, $FF
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+cliprect:       DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textback:  .byte   $7F
-textfont:   .addr   DEFAULT_FONT
+penloc:         DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textback:       .byte   $7F
+textfont:       .addr   DEFAULT_FONT
 .endparams
 
         .byte   0,0             ; ???

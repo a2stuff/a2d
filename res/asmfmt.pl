@@ -15,8 +15,12 @@ sub respace_comment($) {
     return $s;
 }
 
+sub max ($$) { $_[$_[0] < $_[1]] }
+sub min ($$) { $_[$_[0] > $_[1]] }
+
 my $tab = 8;
 my $comment_column = 32;
+my $tabstop = 0;
 
 # TODO: untabify input
 # TODO: sigils to disable/enable formatting around blocks
@@ -28,16 +32,19 @@ while (<STDIN>) {
 
     if (m/^$/) {
         # empty line - ignore
+        $tabstop = 0;
 
     } elsif (m/^(;;;.*)/) {
 
         # full line comment - flush left
         $_ = respace_comment($1);
+        $tabstop = 0;
 
     } elsif (m/^(;;.*)/) {
 
         # indented comment - one tab stop
         $_ = (' ' x $tab) . respace_comment($1);
+        $tabstop = 0;
 
     } else {
 
@@ -55,13 +62,32 @@ while (<STDIN>) {
             $_ = '';
             $_ .= $identifier . ' ';
             $_ .= ' ' while length($_) % $tab;
+
+            $tabstop = max($tabstop, length($_));
+            $_ .= ' ' while length($_) < $tabstop;
+
             $_ .= ':= ' . $expression . ' ';
+
+        } elsif (m/^(\w+)\s*=\s*(.*)$/) {
+
+            # symbol - flush left (!!), spaced out
+            my ($identifier, $expression) = ($1 // '', $2 // '', $3 // '');
+
+            $_ = '';
+            $_ .= $identifier . ' ';
+            $_ .= ' ' while length($_) % $tab;
+
+            $tabstop = max($tabstop, length($_));
+            $_ .= ' ' while length($_) < $tabstop;
+
+            $_ .= '= ' . $expression . ' ';
 
         } elsif (m/^(\.(?:end)?(?:proc|scope|macro|struct|enum|params)\b)\s*(.*)$/ ||
                  m/^(\b(?:END_)?(?:PROC_AT)\b)\s*(.*)$/) {
 
             # scope - flush left
             my ($opcode, $arguments) = ($1 // '', $2 // '');
+            $tabstop = 0;
 
             $_ = $opcode . ' ' . $arguments;
 
@@ -70,6 +96,7 @@ while (<STDIN>) {
 
             # conditional - half indent left
             my ($opcode, $arguments) = ($1 // '', $2 // '');
+            $tabstop = 0;
 
             $_ = ' ' x ($tab/2);
             $_ .= $opcode . ' ' . $arguments;
@@ -81,7 +108,13 @@ while (<STDIN>) {
 
             $_ = '';
             $_ .= $label     . ' ';
+            $tabstop = 0 unless $label;
+
             $_ .= ' ' while length($_) % $tab;
+
+            $tabstop = max($tabstop, length($_));
+            $_ .= ' ' while length($_) < $tabstop;
+
             $_ .= $opcode    . ' ';
             if ($opcode =~ m/^([a-z]{3}\w*)$|^(\.(byte|word|addr|res))$/) {
                 $_ .= ' ' while length($_) % $tab;
