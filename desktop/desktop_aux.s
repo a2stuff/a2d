@@ -210,7 +210,7 @@ basic_mask:
 ;;; ============================================================
 
         .assert * = DEFAULT_FONT, error, "Entry point mismatch"
-        .incbin "../fonts/A2D.FONT"
+        .incbin "../mgtk/fonts/A2D.FONT"
 
         font_height     := DEFAULT_FONT+2
 
