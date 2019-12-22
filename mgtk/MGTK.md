@@ -361,37 +361,37 @@ Parameters:
 
 ### Event
 ```
-.byte       kind            event_kind_*
+.byte       kind            MGTK::EventKind::*
 .res 4
 ```
-if `kind` is `event_kind_key_down`:
+if `kind` is `MGTK::EventKind::key_down`:
 ```
-.byte       kind            event_kind_*
+.byte       kind            MGTK::EventKind::*
 .byte       key             (ASCII code; high bit clear)
 .byte       modifiers       (0=none, 1=open-apple, 2=solid-apple, 3=both)
 .res 2      reserved
 ```
-if `kind` is `event_kind_update:`
+if `kind` is `MGTK::EventKind::update:`
 ```
-.byte       kind            event_kind_*
+.byte       kind            MGTK::EventKind::*
 .byte       window_id
 .res 3      reserved
 ```
 otherwise:
 ```
-.byte       kind            event_kind_*
+.byte       kind            MGTK::EventKind::*
 .word       mousex
 .word       mousey
 ```
 
 ```
-event_kind_no_event        = 0    ; No mouse or keypress
-event_kind_button_down     = 1    ; Mouse button was depressed
-event_kind_button_up       = 2    ; Mouse button was released
-event_kind_key_down        = 3    ; Key was pressed
-event_kind_drag            = 4    ; Mouse button still down
-event_kind_apple_key       = 5    ; Mouse button was depressed, modifier key down
-event_kind_update          = 6    ; Window update needed
+MGTK::EventKind::no_event        = 0    ; No mouse or keypress
+MGTK::EventKind::button_down     = 1    ; Mouse button was depressed
+MGTK::EventKind::button_up       = 2    ; Mouse button was released
+MGTK::EventKind::key_down        = 3    ; Key was pressed
+MGTK::EventKind::drag            = 4    ; Mouse button still down
+MGTK::EventKind::apple_key       = 5    ; Mouse button was depressed, modifier key down
+MGTK::EventKind::update          = 6    ; Window update needed
 
 event_modifier_open_apple  = 1 << 0
 event_modifier_solid_apple = 1 << 1
@@ -427,10 +427,10 @@ Menu record:
 ### Window "winfo"
 ```
 .byte       id
-.byte       options         option_*
+.byte       options         MGTK::Option::*
 .addr       title
-.byte       hscroll         scroll_option_*
-.byte       vscroll         scroll_option_*
+.byte       hscroll         MGTK::Scroll::option_*
+.byte       vscroll         MGTK::Scroll::option_*
 .byte       hthumbmax
 .byte       hthumbpos
 .byte       vthumbmax
@@ -450,15 +450,15 @@ _title bar_ which in turn has an optional _close box_. Within the content area a
 optional _resize box_ and optional _scroll bars_.
 
 ```
-option_dialog_box       = 1 << 0
-option_go_away_box      = 1 << 1
-option_grow_box         = 1 << 2
+MGTK::Option::dialog_box       = 1 << 0
+MGTK::Option::go_away_box      = 1 << 1
+MGTK::Option::grow_box         = 1 << 2
 
-scroll_option_none      = 0
-scroll_option_present   = 1 << 7
-scroll_option_thumb     = 1 << 6
-scroll_option_active    = 1 << 0
-scroll_option_normal    = scroll_option_present | scroll_option_thumb | scroll_option_active
+MGTK::Scroll::option_none      = 0
+MGTK::Scroll::option_present   = 1 << 7
+MGTK::Scroll::option_thumb     = 1 << 6
+MGTK::Scroll::option_active    = 1 << 0
+MGTK::Scroll::option_normal    = option_present | option_thumb | option_active
 ```
 ## Commands
 
@@ -780,7 +780,7 @@ Parameters:
 ```
 .word       mousex          screen coordinates
 .word       mousey
-.byte       which_area      (out) area_*
+.byte       which_area      (out) MGTK::Area::*
 .byte       window_id       (out) of window
 ```
 
@@ -865,8 +865,8 @@ Parameters:
 ```
 .word       mousex
 .word       mousey
-.byte       which_ctl       ctl_*
-.byte       which_part      part_*
+.byte       which_ctl       MGTK::Ctl::*
+.byte       which_part      MGTK::Part::*
 ```
 
 #### SetCtlMax ($49)
@@ -874,7 +874,7 @@ Parameters:
 
 Parameters:
 ```
-.byte       which_ctl       ctl_*_scroll_bar
+.byte       which_ctl       MGTK::Ctl::*_scroll_bar
 .byte       ctlmax          maximum value
 ```
 
@@ -883,7 +883,7 @@ Parameters:
 
 Parameters:
 ```
-.byte       which_ctl       ctl_*_scroll_bar
+.byte       which_ctl       MGTK::Ctl::*_scroll_bar
 .word       mousex
 .word       mousey
 .byte       thumbpos        (out) 0...255
@@ -896,7 +896,7 @@ Parameters:
 
 Parameters:
 ```
-.byte       which_ctl       ctl_*_scroll_bar
+.byte       which_ctl       MGTK::Ctl::*_scroll_bar
 .byte       thumbpos        new position 0...250
 ```
 
@@ -905,7 +905,7 @@ Activate/deactivate scroll bar
 
 Parameters:
 ```
-.byte       which_ctl       ctl_*_scroll_bar
+.byte       which_ctl       MGTK::Ctl::*_scroll_bar
 .byte       activate        0=deactivate, 1=activate
 ```
 
@@ -956,25 +956,25 @@ _Notes specific to DeskTop Desk Accessories (DA) are included where usage differ
 #### Main Loop
 
 * `GetEvent`
-* If `event_kind_button_down` or `event_kind_apple_key`:
+* If `MGTK::EventKind::button_down` or `MGTK::EventKind::apple_key`:
    * `FindWindow` to figure out what was clicked
-   * If `area_desktop` - ignore
-   * If `area_menubar` - handle menu
-   * If `area_dragbar` - [handle window drag](#handle-window-drag)
-   * If `area_grow_box` - [handle window resize](#handle-window-resize)
-   * If `area_close_box` - [handle window close](#handle-window-close)
-   * If `area_content`:
+   * If `MGTK::Area::desktop` - ignore
+   * If `MGTK::Area::menubar` - [handle menu](#handle-menu)
+   * If `MGTK::Area::dragbar` - [handle window drag](#handle-window-drag)
+   * If `MGTK::Area::grow_box` - [handle window resize](#handle-window-resize)
+   * If `MGTK::Area::close_box` - [handle window close](#handle-window-close)
+   * If `MGTK::Area::content`:
      * `FindControl`
-     * If `ctl_*_scroll_bar` - [handle scrolling](#handle-scrolling)
-     * If `ctl_dead_zone` - ignore
-     * If `ctl_not_a_control`:
+     * If `MGTK::Ctl::*_scroll_bar` - [handle scrolling](#handle-scrolling)
+     * If `MGTK::Ctl::dead_zone` - ignore
+     * If `MGTK::Ctl::not_a_control`:
        * If not topmost:
          * `SelectWindow`
        * Otherwise, handle content click per app
-* If `event_kind_key_down` - [handle key](#handle-key)
-* If `event_kind_drag`:
+* If `MGTK::EventKind::key_down` - [handle key](#handle-key)
+* If `MGTK::EventKind::drag`:
   * TODO
-* If `event_kind_update`:
+* If `MGTK::EventKind::update`:
    * [Redraw](#redraw-window) contents of `window_id`
 
 
@@ -1036,16 +1036,16 @@ _DA specific: Use the following steps instead:_
 
 #### Handle Scrolling
 
-* If `part_thumb`:
+* If `MGTK::Part::thumb`:
   * `TrackThumb` to initiate modal scroll loop
   * If thumb did not move - done
   * [Redraw](#redraw-window) window content
   * `UpdateThumb`
-* If `part_page_*`:
+* If `MGTK::Part::page_*`:
   * Scroll by a "page"
   * [Redraw](#redraw-window) window content
   * `UpdateThumb`
-* If `part_*_arrow`:
+* If `MGTK::Part::*_arrow`:
   * Scroll by a "line"
   * [Redraw](#redraw-window) window content
   * `UpdateThumb`
@@ -1069,7 +1069,7 @@ In addition to the above steps:
 
 * Repeat:
   * `PeekEvent`
-  * If not `event_kind_update` - exit these steps
+  * If not `MGTK::EventKind::update` - exit these steps
   * Otherwise:
     * `GetEvent`
     * `BeginUpdate`
