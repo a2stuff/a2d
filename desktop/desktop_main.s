@@ -10330,10 +10330,22 @@ unit_number:
         DEFINE_READ_BLOCK_PARAMS block_params, $800, $A
 
 .params get_info_dialog_params
-L92E3:  .byte   0
-L92E4:  .word   0
-L92E6:  .byte   0
+state:  .byte   0
+addr:   .addr   0               ; e.g. string address
+index:  .byte   0               ; index in selected icon list
 .endparams
+
+.enum GetInfoDialogState
+        name    = 1
+        locked  = 2             ; locked (file)/protected (volume)
+        size    = 3             ; blocks (file)/size (volume)
+        created = 4
+        modified = 5
+        type    = 6             ; blank for vol, but signifies end-of-data
+
+        prepare_file = $80      ; +2 if multiple
+        prepare_vol  = $81      ; +2 if multiple
+.endenum
 
 ;;; ============================================================
 ;;; Look up device driver address.
@@ -10435,9 +10447,9 @@ mapped_slot:                    ; from unit_number, not driver
         bne     :+
         rts
 
-:       copy    #0, get_info_dialog_params::L92E6
+:       copy    #0, get_info_dialog_params::index
         jsr     prep_grafport3
-loop:   ldx     get_info_dialog_params::L92E6
+loop:   ldx     get_info_dialog_params::index
         cpx     selected_icon_count
         bne     :+
         jmp     done
@@ -10449,7 +10461,7 @@ loop:   ldx     get_info_dialog_params::L92E6
         asl     a
         tax
         copy16  window_path_addr_table,x, $08
-        ldx     get_info_dialog_params::L92E6
+        ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         jsr     join_paths
@@ -10465,7 +10477,7 @@ loop:   ldx     get_info_dialog_params::L92E6
 
         ;; Volume icon
 vol_icon:
-        ldx     get_info_dialog_params::L92E6
+        ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
         cmp     #1              ; trash icon?
         bne     :+
@@ -10491,29 +10503,29 @@ common: MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params5
         beq     vol_icon2
 
         ;; File icon
-        copy    #$80, get_info_dialog_params::L92E3
-        lda     get_info_dialog_params::L92E6
+        copy    #GetInfoDialogState::prepare_file, get_info_dialog_params::state
+        lda     get_info_dialog_params::index
         clc
         adc     #1
         cmp     selected_icon_count
         beq     :+
-        inc     get_info_dialog_params::L92E3
-        inc     get_info_dialog_params::L92E3
+        inc     get_info_dialog_params::state
+        inc     get_info_dialog_params::state
 :       jsr     run_get_info_dialog_proc
         jmp     common2
 
 vol_icon2:
-        copy    #$81, get_info_dialog_params::L92E3
-        lda     get_info_dialog_params::L92E6
+        copy    #GetInfoDialogState::prepare_vol, get_info_dialog_params::state
+        lda     get_info_dialog_params::index
         clc
         adc     #1
         cmp     selected_icon_count
         beq     :+
-        inc     get_info_dialog_params::L92E3
-        inc     get_info_dialog_params::L92E3
+        inc     get_info_dialog_params::state
+        inc     get_info_dialog_params::state
 :       jsr     run_get_info_dialog_proc
         copy    #0, write_protected_flag
-        ldx     get_info_dialog_params::L92E6
+        ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
 
         ;; Map icon to unit number
@@ -10533,22 +10545,25 @@ vol_icon2:
         copy    #$80, write_protected_flag
 
 common2:
-        ldx     get_info_dialog_params::L92E6
+        ;; Name
+        ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
-        copy    #1, get_info_dialog_params::L92E3
-        copy16  ptr, get_info_dialog_params::L92E4
+        copy    #GetInfoDialogState::name, get_info_dialog_params::state
+        copy16  ptr, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
-        copy    #2, get_info_dialog_params::L92E3
+
+        ;; Locked/Protected
+        copy    #GetInfoDialogState::locked, get_info_dialog_params::state
         lda     selected_window_index
         bne     is_file
         bit     write_protected_flag
         bmi     is_protected
-        copy    #0, get_info_dialog_params::L92E4
+        copy    #0, get_info_dialog_params::addr ; false
         beq     L9428           ; always
 
 is_protected:
-        copy    #1, get_info_dialog_params::L92E4
+        copy    #1, get_info_dialog_params::addr ; true
         bne     L9428           ; always
 
 is_file:
@@ -10556,17 +10571,18 @@ is_file:
         and     #ACCESS_DEFAULT
         cmp     #ACCESS_DEFAULT
         beq     L9423
-        copy    #1, get_info_dialog_params::L92E4
+        copy    #1, get_info_dialog_params::addr
         bne     L9428           ; always
 
-L9423:  copy    #0, get_info_dialog_params::L92E4
+L9423:  copy    #0, get_info_dialog_params::addr
 L9428:  jsr     run_get_info_dialog_proc
         jmp     L942F
 
 write_protected_flag:
         .byte   0
 
-L942F:  copy    #3, get_info_dialog_params::L92E3
+        ;; Size/BLocks
+L942F:  copy    #GetInfoDialogState::size, get_info_dialog_params::state
 
         ;; Compose " 12345 Blocks" or " 12345 / 67890 Blocks" string
         buf := $220
@@ -10643,20 +10659,25 @@ compute_suffix:
         dex
         bpl     :-
 
-        copy16  #path_buf4, get_info_dialog_params::L92E4
+        copy16  #path_buf4, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
 
-        copy    #4, get_info_dialog_params::L92E3
+        ;; Created date
+        copy    #GetInfoDialogState::created, get_info_dialog_params::state
         copy16  get_file_info_params5::create_date, date
         jsr     JT_DATE_STRING
-        copy16  #text_buffer2::length, get_info_dialog_params::L92E4
+        copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
-        copy    #5, get_info_dialog_params::L92E3
+
+        ;; Modified date
+        copy    #GetInfoDialogState::modified, get_info_dialog_params::state
         copy16  get_file_info_params5::mod_date, date
         jsr     JT_DATE_STRING
-        copy16  #text_buffer2::length, get_info_dialog_params::L92E4
+        copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
-        copy    #6, get_info_dialog_params::L92E3
+
+
+        copy    #GetInfoDialogState::type, get_info_dialog_params::state
         lda     selected_window_index
         bne     L9519
 
@@ -10665,11 +10686,11 @@ compute_suffix:
 
 L9519:  lda     get_file_info_params5::file_type
         jsr     JT_FILE_TYPE_STRING
-L951F:  copy16  #str_file_type, get_info_dialog_params::L92E4
+L951F:  copy16  #str_file_type, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
         bne     done
 
-next:   inc     get_info_dialog_params::L92E6
+next:   inc     get_info_dialog_params::index
         jmp     loop
 
 done:   copy    #0, path_buf4
@@ -13703,18 +13724,21 @@ LAF16:  jsr     reset_grafport3a
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     (ptr),y
-        bmi     LAF34
-        jmp     LAFB9
+        bmi     prepare_window
+        jmp     populate_value
 
-LAF34:  copy    #0, has_input_field_flag
+        ;; Draw the field labels (e.g. "Size:")
+prepare_window:
+        copy    #0, has_input_field_flag
         lda     (ptr),y
-        lsr     a
-        lsr     a
+        lsr     a               ; bit 1 set if multiple
+        lsr     a               ; so configure buttons appropriately
         ror     a
         eor     #$80
         jsr     open_prompt_window
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
+
         addr_call draw_dialog_title, desktop_aux::str_info_title
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
@@ -13722,26 +13746,35 @@ LAF34:  copy    #0, has_input_field_flag
         and     #$7F
         lsr     a
         ror     a
-        sta     LB01D
+        sta     is_volume_flag
+
+        ;; Draw labels
         yax_call draw_dialog_label, 1, desktop_aux::str_info_name
-        bit     LB01D
-        bmi     LAF78
+
+        ;; Locked (file) or Protected (volume)
+        bit     is_volume_flag
+        bmi     :+
         yax_call draw_dialog_label, 2, desktop_aux::str_info_locked
-        jmp     LAF81
+        jmp     draw_size_label
+:       yax_call draw_dialog_label, 2, desktop_aux::str_info_protected
 
-LAF78:  yax_call draw_dialog_label, 2, desktop_aux::str_info_protected
-LAF81:  bit     LB01D
-        bpl     LAF92
+        ;; Blocks (file) or Size (volume)
+draw_size_label:
+        bit     is_volume_flag
+        bpl     :+
         yax_call draw_dialog_label, 3, desktop_aux::str_info_blocks
-        jmp     LAF9B
+        jmp     draw_final_labels
+:       yax_call draw_dialog_label, 3, desktop_aux::str_info_size
 
-LAF92:  yax_call draw_dialog_label, 3, desktop_aux::str_info_size
-LAF9B:  yax_call draw_dialog_label, 4, desktop_aux::str_info_create
+draw_final_labels:
+        yax_call draw_dialog_label, 4, desktop_aux::str_info_create
         yax_call draw_dialog_label, 5, desktop_aux::str_info_mod
         yax_call draw_dialog_label, 6, desktop_aux::str_info_type
         jmp     reset_grafport3a
 
-LAFB9:  lda     winfo_alert_dialog
+        ;; Draw a specific value
+populate_value:
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
@@ -13750,24 +13783,30 @@ LAFB9:  lda     winfo_alert_dialog
         jsr     draw_colon
         copy    #165, dialog_label_pos
         jsr     copy_dialog_param_addr_to_ptr
+
+        ;; Row 2 = locked/protected (so string is yes/no)
         lda     row
-        cmp     #2
-        bne     LAFF0
+        cmp     #GetInfoDialogState::locked
+        bne     arbitrary_string
         ldy     #1
         lda     (ptr),y
         beq     :+
         addr_jump LAFF8, desktop_aux::str_yes_label
 :       addr_jump LAFF8, desktop_aux::str_no_label
 
-LAFF0:  ldy     #2
+        ;; Otherwise, use supplied string
+arbitrary_string:
+        ldy     #2
         lda     (ptr),y
         tax
         dey
         lda     (ptr),y
 LAFF8:  ldy     row
         jsr     draw_dialog_label
+
+        ;; If not 6 (the last one), run modal loop
         lda     row
-        cmp     #6
+        cmp     #GetInfoDialogState::type
         beq     :+
         rts
 
@@ -13781,7 +13820,9 @@ LAFF8:  ldy     row
         pla
         rts
 
-LB01D:  .byte   0
+is_volume_flag:
+        .byte   0               ; high bit set if volume, clear if file
+
 row:    .byte   0
 .endproc
 
