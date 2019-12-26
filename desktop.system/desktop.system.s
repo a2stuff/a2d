@@ -40,14 +40,12 @@ data_buffer:    .addr   path_buf
 L2362:  .byte   0
 L2363:  .res    15, 0
 
-butn1:  .byte   0               ; written, but not read
-
 unit_num:
         .byte   0
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 
-copy_flag:
+copied_flag:
         .byte   0
 L2379:  .byte   0
 
@@ -196,22 +194,33 @@ nomatch:
 match:  sta     $D3AC
 
         lda     ROMIN2
+
+        ;; Clear flag - ramcard not found or unknown state.
         ldx     #0
         jsr     set_copied_to_ramcard_flag
 
-        ;; Point $8 at $C100
+        ;; Skip RAMCard install if button is down
+        lda     BUTN0
+        ora     BUTN1
+        bpl     scan_slots
+        jmp     did_not_copy
+
+        ;; Start at $C100
+        slot_ptr = $8
+
+scan_slots:
         lda     #0
         sta     flag
-        sta     $08
+        sta     slot_ptr
         lda     #$C1
-        sta     $08+1
+        sta     slot_ptr+1
 
         ;; Check slot for signature bytes
 check_slot:
         ldx     #0
 :       lda     sig_offsets,x   ; Check $CnXX
         tay
-        lda     ($08),y
+        lda     (slot_ptr),y
         cmp     sig_bytes,x
         bne     next_slot
         inx
@@ -219,30 +228,33 @@ check_slot:
         bcc     :-
 
         ldy     #$FB
-        lda     ($08),y         ; Also check $CnFB for low bit
+        lda     (slot_ptr),y         ; Also check $CnFB for low bit
         and     #$01
         beq     next_slot
         bne     found_slot
 
 next_slot:
-        inc     $08+1
-        lda     $08+1
+        inc     slot_ptr+1
+        lda     slot_ptr+1
         cmp     #$C8            ; stop at $C800
         bcc     check_slot
 
-
+        ;; Did not find signature in any slot - look for
+        ;; RAM.DRV.SYSTEM signature in DEVLST.
         ldy     DEVCNT
 :       lda     DEVLST,y
-        cmp     #$3E
+        cmp     #kRamDrvSystemUnitNum
         beq     :+
         dey
         bpl     :-
-        jmp     fail
+        jmp     did_not_copy
 
 :       lda     #$03
-        bne     :+
+        bne     :+              ; always
+
+        ;; RAM device was found!
 found_slot:
-        lda     $08+1
+        lda     slot_ptr+1
         and     #$0F            ; slot # in A
 :       sta     slot
 
@@ -255,7 +267,7 @@ found_slot:
         sta     unit_num
         MLI_CALL ON_LINE, on_line_params
         beq     :+
-        jmp     fail
+        jmp     did_not_copy
 
 :       lda     unit_num
         cmp     #$30            ; make sure it's not slot 3 (aux)
@@ -279,21 +291,20 @@ found_slot:
         dey
         bne     :-
 
+        ;; Record that candidate device is found.
         ldx     #$C0
         jsr     set_copied_to_ramcard_flag
+
+        ;; Already installed?
         addr_call set_ramcard_prefix, path0
         jsr     check_desktop2_on_device
-        bcs     :+
+        bcs     start_copy      ; No, start copy.
+
+        ;; Already copied - record that it was installed and grab path.
         ldx     #$80
         jsr     set_copied_to_ramcard_flag
         jsr     copy_2005_to_desktop_orig_prefix
-        jmp     fail
-
-:       lda     BUTN1
-        sta     butn1
-        lda     BUTN0
-        bpl     start_copy
-        jmp     fail
+        jmp     did_not_copy
 
 str_slash_desktop:
         PASCAL_STRING "/DeskTop"
@@ -316,6 +327,8 @@ str_slash_desktop:
         beq     :+
         jmp     fail_copy
 :       dec     buffer
+
+        ;; Record that the copy was performed.
         ldx     #$80
         jsr     set_copied_to_ramcard_flag
 
@@ -344,10 +357,8 @@ str_slash_desktop:
         bne     :-
 
         jsr     create_file_for_copy
-        lda     path0
-        sta     copy_flag
-        lda     #0
-        sta     filenum
+        copy    path0, copied_flag
+        copy    #0, filenum
 
 file_loop:
         lda     filenum
@@ -369,7 +380,7 @@ file_loop:
         jmp     fail2
 .endproc
 
-fail2:  lda     copy_flag
+fail2:  lda     copied_flag
         beq     :+
         sta     path0
         MLI_CALL SET_PREFIX, set_prefix_params
@@ -435,9 +446,12 @@ fail2:  lda     copy_flag
 
 ;;; ============================================================
 
-fail:   lda     #0
-        sta     flag
+.proc did_not_copy
+        copy    #0, flag
         jmp     fail2
+.endproc
+
+;;; ============================================================
 
         .byte   0, $D, 0, 0, 0
 
@@ -589,9 +603,8 @@ done:   dex
 ;;; ============================================================
 
 .proc fail_copy
-        lda     #0
-        sta     copy_flag
-        jmp     fail
+        copy    #0, copied_flag
+        jmp     did_not_copy
 .endproc
 
 ;;; ============================================================
@@ -620,7 +633,7 @@ done:   sty     buffer
         beq     :+
         cmp     #ERR_FILE_NOT_FOUND
         beq     cleanup
-        jmp     fail
+        jmp     did_not_copy
 
 :       lda     get_file_info_params::file_type
         sta     file_type
@@ -813,8 +826,10 @@ done:   MLI_CALL CLOSE, close_srcfile_params
 ;;; ============================================================
 
 .proc check_desktop2_on_device
+        slot_ptr = $8
+
         lda     active_device
-        cmp     #$3E            ; ???
+        cmp     #kRamDrvSystemUnitNum
         bne     :+
         jmp     next
 
@@ -825,20 +840,20 @@ done:   MLI_CALL CLOSE, close_srcfile_params
         lsr     a
         lsr     a
         ora     #$C0
-        sta     $08+1
+        sta     slot_ptr+1
         lda     #0
-        sta     $08
+        sta     slot_ptr
         ldx     #0              ; Compare signature bytes
 bloop:  lda     sig_offsets,x
         tay
-        lda     ($08),y
+        lda     (slot_ptr),y
         cmp     sig_bytes,x
         bne     error
         inx
         cpx     #4              ; Number of signature bytes
         bcc     bloop
         ldy     #$FB            ; Also check $CnFB
-        lda     ($08),y
+        lda     (slot_ptr),y
         and     #$01
         bne     next
 error:  sec

@@ -5,6 +5,10 @@
 kScreenWidth    = 560
 kScreenHeight   = 192
 
+;;; UnitNum used by Glen E. Bredon's RAM.DRV.SYSTEM
+;;; RAM disk driver for RamWorks.
+kRamDrvSystemUnitNum = $3E
+
 ;;; ============================================================
 
 DA_FILE_TYPE    = $F1
@@ -46,6 +50,9 @@ ENTRY_COPIED_FLAGS      := $D395
 DESKTOP_ORIG_PREFIX     := $D3AD
 RAMCARD_PREFIX          := $D3EE
 
+;;; $00 = no ramcard found
+;;; $C0 = ramcard found, but not copied (internal state)
+;;; $80 = ramcard found, DeskTop copied
 COPIED_TO_RAMCARD_FLAG  := $D3FF
 
 
