@@ -10545,6 +10545,7 @@ vol_icon2:
         copy    #$80, write_protected_flag
 
 common2:
+        ;; --------------------------------------------------
         ;; Name
         ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
@@ -10553,36 +10554,33 @@ common2:
         copy16  ptr, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
 
+        ;; --------------------------------------------------
         ;; Locked/Protected
         copy    #GetInfoDialogState::locked, get_info_dialog_params::state
         lda     selected_window_index
         bne     is_file
-        bit     write_protected_flag
-        bmi     is_protected
-        copy    #0, get_info_dialog_params::addr ; false
-        beq     L9428           ; always
 
-is_protected:
-        copy    #1, get_info_dialog_params::addr ; true
-        bne     L9428           ; always
+        bit     write_protected_flag ; Volume
+        bmi     is_protected
+        bpl     not_protected
 
 is_file:
-        lda     get_file_info_params5::access
+        lda     get_file_info_params5::access ; File
         and     #ACCESS_DEFAULT
         cmp     #ACCESS_DEFAULT
-        beq     L9423
-        copy    #1, get_info_dialog_params::addr
-        bne     L9428           ; always
+        beq     not_protected
 
-L9423:  copy    #0, get_info_dialog_params::addr
-L9428:  jsr     run_get_info_dialog_proc
-        jmp     L942F
+is_protected:
+        copy16  #desktop_aux::str_yes_label, get_info_dialog_params::addr
+        bne     show_protected           ; always
+not_protected:
+        copy16  #desktop_aux::str_no_label, get_info_dialog_params::addr
+show_protected:
+        jsr     run_get_info_dialog_proc
 
-write_protected_flag:
-        .byte   0
-
-        ;; Size/BLocks
-L942F:  copy    #GetInfoDialogState::size, get_info_dialog_params::state
+        ;; --------------------------------------------------
+        ;; Size/Blocks
+        copy    #GetInfoDialogState::size, get_info_dialog_params::state
 
         ;; Compose " 12345 Blocks" or " 12345 / 67890 Blocks" string
         buf := $220
@@ -10662,6 +10660,7 @@ compute_suffix:
         copy16  #path_buf4, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
 
+        ;; --------------------------------------------------
         ;; Created date
         copy    #GetInfoDialogState::created, get_info_dialog_params::state
         copy16  get_file_info_params5::create_date, date
@@ -10669,6 +10668,7 @@ compute_suffix:
         copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
 
+        ;; --------------------------------------------------
         ;; Modified date
         copy    #GetInfoDialogState::modified, get_info_dialog_params::state
         copy16  get_file_info_params5::mod_date, date
@@ -10677,16 +10677,22 @@ compute_suffix:
         jsr     run_get_info_dialog_proc
 
 
+        ;; --------------------------------------------------
+        ;; Type
         copy    #GetInfoDialogState::type, get_info_dialog_params::state
         lda     selected_window_index
-        bne     L9519
+        bne     :+
 
+        ;; Volume
         COPY_STRING str_vol, str_file_type
-        bmi     L951F           ; always
+        bmi     show_type           ; always
 
-L9519:  lda     get_file_info_params5::file_type
+        ;; File
+:       lda     get_file_info_params5::file_type
         jsr     JT_FILE_TYPE_STRING
-L951F:  copy16  #str_file_type, get_info_dialog_params::addr
+
+show_type:
+        copy16  #str_file_type, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
         bne     done
 
@@ -10695,6 +10701,9 @@ next:   inc     get_info_dialog_params::index
 
 done:   copy    #0, path_buf4
         rts
+
+write_protected_flag:
+        .byte   0
 
 str_vol:
         PASCAL_STRING " VOL"
@@ -13784,18 +13793,7 @@ populate_value:
         copy    #165, dialog_label_pos
         jsr     copy_dialog_param_addr_to_ptr
 
-        ;; Row 2 = locked/protected (so string is yes/no)
-        lda     row
-        cmp     #GetInfoDialogState::locked
-        bne     arbitrary_string
-        ldy     #1
-        lda     (ptr),y
-        beq     :+
-        addr_jump LAFF8, desktop_aux::str_yes_label
-:       addr_jump LAFF8, desktop_aux::str_no_label
-
-        ;; Otherwise, use supplied string
-arbitrary_string:
+        ;; Draw the string at addr
         ldy     #2
         lda     (ptr),y
         tax
