@@ -1513,11 +1513,11 @@ prefix_length:
 .proc cmd_deskacc_impl
         ptr := $6
 
-        .define prefix "Desk.acc/"
-        kPrefixLength = .strlen(prefix)
+        .define kDeskAccPrefixStr "Desk.acc/"
+        kPrefixLength = .strlen(kDeskAccPrefixStr)
 
 str_desk_acc:
-        PASCAL_STRING prefix, kPrefixLength + 15
+        PASCAL_STRING kDeskAccPrefixStr, kPrefixLength + 15
 
 start:  jsr     reset_grafport3
         jsr     set_watch_cursor
@@ -8521,6 +8521,59 @@ file_type:
 .endproc
 
 ;;; ============================================================
+;;; Append aux type (in A,X) to text_buffer2
+
+.proc append_aux_type
+        stax    auxtype
+        ldy     text_buffer2::length
+
+        ;; Append prefix
+        ldx     #0
+:       lda     prefix+1,x
+        sta     text_buffer2::data,y
+        inx
+        iny
+        cpx     prefix
+        bne     :-
+
+        ;; Append type
+        lda     auxtype+1
+        jsr     do_byte
+        lda     auxtype
+        jsr     do_byte
+
+        ;; Append suffix
+        lda     #')'
+        sta     text_buffer2::data,y
+        iny
+        sty     text_buffer2::length
+        rts
+
+do_byte:
+        pha
+        lsr
+        lsr
+        lsr
+        lsr
+        tax
+        lda     hex_digits,x
+        sta     text_buffer2::data,y
+        iny
+        pla
+        and     #%00001111
+        tax
+        lda     hex_digits,x
+        sta     text_buffer2::data,y
+        iny
+        rts
+
+prefix: PASCAL_STRING "   (AuxType: $"
+
+auxtype:
+        .word 0
+.endproc
+
+;;; ============================================================
 ;;; Draw text, pascal string address in A,X
 
 .proc draw_pascal_string
@@ -10684,15 +10737,18 @@ compute_suffix:
         bne     :+
 
         ;; Volume
-        COPY_STRING str_vol, str_file_type
+        COPY_STRING str_vol, text_buffer2::length
         bmi     show_type           ; always
 
         ;; File
 :       lda     get_file_info_params5::file_type
         jsr     JT_FILE_TYPE_STRING
+        COPY_STRING str_file_type, text_buffer2::length
+        ldax    get_file_info_params5::aux_type
+        jsr     append_aux_type
 
 show_type:
-        copy16  #str_file_type, get_info_dialog_params::addr
+        copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
         bne     done
 
@@ -10706,7 +10762,7 @@ write_protected_flag:
         .byte   0
 
 str_vol:
-        PASCAL_STRING " VOL"
+        PASCAL_STRING " Volume"
 
 .proc run_get_info_dialog_proc
         yax_call invoke_dialog_proc, kIndexGetInfoDialog, get_info_dialog_params

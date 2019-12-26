@@ -52,6 +52,7 @@ The naming style is in flux: see https://github.com/a2stuff/a2d/issues/112
 * Macros:
     * Macros that mimic ca65 control commands should be lowercase, dot-prefixed, e.g. `.pushorg`, `.params`
     * Macros that provide pseudo-opcodes should be lowercase, e.g. `ldax`, `add16`
+    * Macros `.define`-ing pseudo-constant strings should use `kTitleCase`
     * Other macros should be named with `SHOUTY_CASE`
 
 

@@ -25,6 +25,7 @@ https://github.com/inexorabletash/a2d/issues
 * Holding Apple while double-clicking or using File>Open closes parent folder. (#9)
 * Apple-` or Apple-Tab keypress cycles through open windows. (#143)
 * Apple-Delete deletes selected files. (#150)
+* File > Get Info command shows Aux Type for files. (#148)
 
 ### Desk Accessory Enhancements
 
