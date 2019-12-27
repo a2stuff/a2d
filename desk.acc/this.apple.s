@@ -984,69 +984,64 @@ penmode:.byte   MGTK::notpencopy
         sta     ptr
 
         ;; Get Firmware Byte
-.macro getfwb offset
+.macro GET_FWB offset
         ldy     #offset
         lda     (ptr),y
 .endmacro
 
         ;; Compare Firmware Byte
-.macro cmpfwb offset, value
-        getfwb  offset
+.macro COMPARE_FWB offset, value
+        GET_FWB  offset
         cmp     #value
-.endmacro
-
-.macro result arg
-        ldax    #arg
-        rts
 .endmacro
 
 ;;; ---------------------------------------------
 ;;; Per Miscellaneous Technical Note #8
 ;;; ProDOS and SmartPort Devices
 
-        cmpfwb  $01, $20        ; $Cn01 == $20 ?
+        COMPARE_FWB $01, $20    ; $Cn01 == $20 ?
         bne     notpro
 
-        cmpfwb  $03, $00        ; $Cn03 == $00 ?
+        COMPARE_FWB $03, $00    ; $Cn03 == $00 ?
         bne     notpro
 
-        cmpfwb  $05, $03        ; $Cn05 == $03 ?
+        COMPARE_FWB $05, $03    ; $Cn05 == $03 ?
         bne     notpro
 
 ;;; Per ProDOS Technical Note #21
-        cmpfwb  $FF, $00        ; $CnFF == $00 ?
+        COMPARE_FWB $FF, $00    ; $CnFF == $00 ?
         bne     :+
-        result  str_diskii
+        return16 #str_diskii
 :
 
-        cmpfwb  $07, $00        ; $Cn07 == $00 ?
+        COMPARE_FWB $07, $00    ; $Cn07 == $00 ?
         beq     :+
-        result  str_block
+        return16 #str_block
 
 ;;; TODO: Follow SmartPort Technical Note #4
 ;;; and identify specific device type via STATUS call
 :
-        result  str_smartport
+        return16 #str_smartport
 notpro:
 ;;; ---------------------------------------------
 ;;; Per Miscellaneous Technical Note #8
 ;;; Pascal 1.1 Devices
 
-        cmpfwb  $05, $38        ; $Cn05 == $38 ?
+        COMPARE_FWB $05, $38    ; $Cn05 == $38 ?
         bne     notpas
 
-        cmpfwb  $07, $18        ; $Cn07 == $18 ?
+        COMPARE_FWB $07, $18    ; $Cn07 == $18 ?
         bne     notpas
 
-        cmpfwb  $0B, $01        ; $Cn0B == $01 ?
+        COMPARE_FWB $0B, $01    ; $Cn0B == $01 ?
         bne     notpas
 
-        getfwb  $0C             ; $Cn0C == ....
+        GET_FWB  $0C            ; $Cn0C == ....
 
 .macro sig     byte, arg
         cmp     #byte
         bne     :+
-        result  arg
+        return16 #arg
 :
 .endmacro
 
@@ -1059,53 +1054,53 @@ notpas:
 ;;; Based on ProDOS BASIC Programming Examples
 
 ;;; Silentype
-        cmpfwb  23, 201
+        COMPARE_FWB 23, 201
         bne     :+
-        cmpfwb  55, 207
+        COMPARE_FWB 55, 207
         bne     :+
-        cmpfwb  76, 234
+        COMPARE_FWB 76, 234
         bne     :+
-        result  str_silentype
+        return16 #str_silentype
 :
 
 ;;; Clock
-        cmpfwb  0, 8
+        COMPARE_FWB 0, 8
         bne     :+
-        cmpfwb  1, 120
+        COMPARE_FWB 1, 120
         bne     :+
-        cmpfwb  2, 40
+        COMPARE_FWB 2, 40
         bne     :+
-        result  str_clock
+        return16 #str_clock
 :
 
 ;;; Communications Card
-        cmpfwb  5, 24
+        COMPARE_FWB 5, 24
         bne     :+
-        cmpfwb  7, 56
+        COMPARE_FWB 7, 56
         bne     :+
-        result  str_comm
+        return16 #str_comm
 :
 
 ;;; Serial Card
-        cmpfwb  5, 56
+        COMPARE_FWB 5, 56
         bne     :+
-        cmpfwb  7, 24
+        COMPARE_FWB 7, 24
         bne     :+
-        result  str_serial
+        return16 #str_serial
 :
 
 ;;; Parallel Card
-        cmpfwb  5, 72
+        COMPARE_FWB 5, 72
         bne     :+
-        cmpfwb  7, 72
+        COMPARE_FWB 7, 72
         bne     :+
-        result  str_parallel
+        return16 #str_parallel
 :
 
 ;;; Generic Devices
-        cmpfwb  11, 1
+        COMPARE_FWB 11, 1
         bne     :+
-        getfwb  12
+        GET_FWB  12
         clc
         ror
         ror
@@ -1114,49 +1109,49 @@ notpas:
 
         cmp     #0
         bne     :+
-        result  str_used
+        return16 #str_used
 :
         cmp     #1
         bne     :+
-        result  str_printer
+        return16 #str_printer
 :
         cmp     #2
         bne     :+
-        result  str_joystick
+        return16 #str_joystick
 :
         cmp     #3
         bne     :+
-        result  str_io
+        return16 #str_io
 :
         cmp     #4
         bne     :+
-        result  str_modem
+        return16 #str_modem
 :
         cmp     #5
         bne     :+
-        result  str_audio
+        return16 #str_audio
 :
         cmp     #6
         bne     :+
-        result  str_clock
+        return16 #str_clock
 :
         cmp     #7
         bne     :+
-        result  str_storage
+        return16 #str_storage
 :
         cmp     #8
         bne     :+
-        result  str_80col
+        return16 #str_80col
 :
         cmp     #9
         bne     :+
-        result  str_network
+        return16 #str_network
 :
         jsr     detect_mockingboard
         bcc     :+
-        result  str_mockingboard
+        return16 #str_mockingboard
 :
-        result  str_unknown
+        return16 #str_unknown
 .endproc
 
 
@@ -1416,8 +1411,8 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
         .popcpu
         bcs     p658xx
         ; 65C02
-        result  str_65C02
-p6502:  result  str_6502
+        return16 #str_65C02
+p6502:  return16 #str_6502
 
         ;; Distinguish 65802 and 65816 by machine ID
 p658xx: lda     ROMIN2
@@ -1426,8 +1421,8 @@ p658xx: lda     ROMIN2
         lda     LCBANK1
         lda     LCBANK1
         bcs     p65802
-        result  str_65816       ; Only IIgs supports 65816
-p65802: result  str_65802       ; Other boards support 65802
+        return16 #str_65816     ; Only IIgs supports 65816
+p65802: return16 #str_65802     ; Other boards support 65802
 .endproc
 
 ;;; ============================================================

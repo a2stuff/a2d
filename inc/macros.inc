@@ -61,12 +61,18 @@ end:
 .define AS_BYTE(arg)        arg & $FF
 .define AS_WORD(arg)        arg & $FFFF
 
-
+;;; Return a value in A - immediate or absolute
 .macro return arg
         lda     arg
         rts
 .endmacro
 
+;;; Return a value in A,X - immediate or absolute
+.macro return16 arg
+        _op_lo  lda, {arg}
+        _op_hi  ldx, {arg}
+        rts
+.endmacro
 
 .macro copy arg1, arg2, arg3, arg4
     .if _is_register {arg2} && _is_register {arg4}
