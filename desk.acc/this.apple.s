@@ -1038,16 +1038,16 @@ notpro:
 
         GET_FWB  $0C            ; $Cn0C == ....
 
-.macro sig     byte, arg
+.macro IF_SIGNATURE_THEN_RETURN     byte, arg
         cmp     #byte
         bne     :+
         return16 #arg
 :
 .endmacro
 
-        sig     $31, str_ssc
-        sig     $88, str_80col
-        sig     $20, str_mouse
+    IF_SIGNATURE_THEN_RETURN $31, str_ssc
+    IF_SIGNATURE_THEN_RETURN $88, str_80col
+    IF_SIGNATURE_THEN_RETURN $20, str_mouse
 
 notpas:
 ;;; ---------------------------------------------
@@ -1101,52 +1101,22 @@ notpas:
         COMPARE_FWB 11, 1
         bne     :+
         GET_FWB  12
-        clc
-        ror
-        ror
-        ror
-        ror
+        lsr
+        lsr
+        lsr
+        lsr
 
-        cmp     #0
-        bne     :+
-        return16 #str_used
-:
-        cmp     #1
-        bne     :+
-        return16 #str_printer
-:
-        cmp     #2
-        bne     :+
-        return16 #str_joystick
-:
-        cmp     #3
-        bne     :+
-        return16 #str_io
-:
-        cmp     #4
-        bne     :+
-        return16 #str_modem
-:
-        cmp     #5
-        bne     :+
-        return16 #str_audio
-:
-        cmp     #6
-        bne     :+
-        return16 #str_clock
-:
-        cmp     #7
-        bne     :+
-        return16 #str_storage
-:
-        cmp     #8
-        bne     :+
-        return16 #str_80col
-:
-        cmp     #9
-        bne     :+
-        return16 #str_network
-:
+        IF_SIGNATURE_THEN_RETURN 0, str_used
+        IF_SIGNATURE_THEN_RETURN 1, str_printer
+        IF_SIGNATURE_THEN_RETURN 2, str_joystick
+        IF_SIGNATURE_THEN_RETURN 3, str_io
+        IF_SIGNATURE_THEN_RETURN 4, str_modem
+        IF_SIGNATURE_THEN_RETURN 5, str_audio
+        IF_SIGNATURE_THEN_RETURN 6, str_clock
+        IF_SIGNATURE_THEN_RETURN 7, str_storage
+        IF_SIGNATURE_THEN_RETURN 8, str_80col
+        IF_SIGNATURE_THEN_RETURN 9, str_network
+
         jsr     detect_mockingboard
         bcc     :+
         return16 #str_mockingboard
