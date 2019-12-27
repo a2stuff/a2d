@@ -211,7 +211,7 @@ rts2:   rts
 
         ;; TODO: Macro for exit_with_a
 
-.macro exit_call arg
+.macro EXIT_CALL arg
         lda     #arg
         jmp     exit_with_a
 .endmacro
@@ -1779,7 +1779,7 @@ do_paint:
         cmp     bottom
         bcc     :+
         bne     fail
-:       exit_call MGTK::inrect_inside           ; success!
+:       EXIT_CALL MGTK::inrect_inside           ; success!
 
 fail:   rts
 .endproc
@@ -1911,7 +1911,7 @@ in_top: ldy     #0
         rts
 
 bad_rect:
-        exit_call MGTK::Error::empty_object
+        EXIT_CALL MGTK::Error::empty_object
 .endproc
 
 
@@ -2304,7 +2304,7 @@ next:   jsr     next_poly
         jmp     fill_polys
 
 bad_poly:
-        exit_call MGTK::Error::bad_object
+        EXIT_CALL MGTK::Error::bad_object
 .endproc
 
 
@@ -3142,7 +3142,7 @@ loop:   sta     glyph_row_lo,y
         bne     loop
         rts
 
-end:    exit_call MGTK::Error::font_too_big
+end:    EXIT_CALL MGTK::Error::font_too_big
 .endproc
 
 glyph_row_lo:
@@ -4635,14 +4635,14 @@ savesize:   .res 2
         bpl     found_mouse
         cpx     #0
         bne     :+
-        exit_call MGTK::Error::no_mouse
+        EXIT_CALL MGTK::Error::no_mouse
 
 :       lda     slot_num
         and     #$7F
         beq     found_mouse
         cpx     slot_num
         beq     found_mouse
-        exit_call $91
+        EXIT_CALL $91
 
 found_mouse:
         stx     slot_num
@@ -4730,7 +4730,7 @@ irq_on:
 irts:   rts
 
 irq_err:
-        exit_call MGTK::Error::invalid_irq_setting
+        EXIT_CALL MGTK::Error::invalid_irq_setting
 .endproc
 
 .proc set_op_sys
@@ -4739,7 +4739,7 @@ irq_err:
         cmp     #1
         beq     is_pascal
 
-        exit_call MGTK::Error::invalid_op_sys
+        EXIT_CALL MGTK::Error::invalid_op_sys
 
 is_prodos:
         lda     #$80
@@ -4819,7 +4819,7 @@ clear_after_events_hook:
         rts
 
 invalid_hook:
-        exit_call MGTK::Error::invalid_hook
+        EXIT_CALL MGTK::Error::invalid_hook
 .endproc
 
 
@@ -4978,7 +4978,7 @@ mouse_state: .res 2
         ldy     #2
         jmp     store_xa_at_y
 
-fail:   exit_call MGTK::Error::desktop_already_initialized
+fail:   EXIT_CALL MGTK::Error::desktop_already_initialized
 
 mouse_state_addr:
         .addr   mouse_state
@@ -5136,7 +5136,7 @@ modifiers  := * + 3
 .proc CheckEventsImpl
         bit     use_interrupts
         bpl     irq_entry
-        exit_call MGTK::Error::irq_in_use
+        EXIT_CALL MGTK::Error::irq_in_use
 
 irq_entry:
         sec                     ; called from interrupt handler
@@ -5776,7 +5776,7 @@ filler: ldx     menu_item_index
         lda     savebehind_size+1
         sbc     savebehind_usage+1
         bpl     :+
-        exit_call MGTK::Error::insufficient_savebehind_area
+        EXIT_CALL MGTK::Error::insufficient_savebehind_area
 
 :       rts
 .endproc
@@ -5808,7 +5808,7 @@ filler: ldx     menu_item_index
 .proc find_menu_by_id_or_fail
         jsr     find_menu_by_id
         bne     :+
-        exit_call MGTK::Error::menu_not_found
+        EXIT_CALL MGTK::Error::menu_not_found
 :       rts
 .endproc
 
@@ -6023,7 +6023,7 @@ rrts:   rts
 .proc find_menu_item_or_fail
         jsr     find_menu_and_menu_item
         bne     rrts
-        exit_call MGTK::Error::menu_item_not_found
+        EXIT_CALL MGTK::Error::menu_item_not_found
 .endproc
 
 
@@ -6909,7 +6909,7 @@ end:    rts
         jsr     window_by_id
         beq     nope
         rts
-nope:   exit_call MGTK::Error::window_not_found
+nope:   EXIT_CALL MGTK::Error::window_not_found
 .endproc
 
 
@@ -7570,12 +7570,12 @@ not_selected:
         ldy     #MGTK::Winfo::window_id
         lda     (window),y
         bne     :+
-        exit_call MGTK::Error::window_id_required
+        EXIT_CALL MGTK::Error::window_id_required
 
 :       sta     win_id
         jsr     window_by_id
         beq     :+
-        exit_call MGTK::Error::window_already_exists
+        EXIT_CALL MGTK::Error::window_already_exists
 
 :       copy16  params_addr, window
 
@@ -7708,7 +7708,7 @@ update_port:
 .endproc
 
 err_obscured:
-        exit_call MGTK::Error::window_obscured
+        EXIT_CALL MGTK::Error::window_obscured
 
 ;;; ============================================================
 ;;; EndUpdate
@@ -8652,7 +8652,7 @@ return_winrect_jmp:
 
         jsr     top_window
         bne     :+
-        exit_call MGTK::Error::no_active_window
+        EXIT_CALL MGTK::Error::no_active_window
 
 :       bit     current_winfo::vscroll
         bpl     no_vscroll
@@ -8794,13 +8794,13 @@ ctlmax:    .byte  0
         sta     params::which_ctl
         beq     got_ctl        ; always
 
-:       exit_call MGTK::Error::control_not_found
+:       EXIT_CALL MGTK::Error::control_not_found
 
 got_ctl:
         jsr     top_window
         bne     :+
 
-        exit_call MGTK::Error::no_active_window
+        EXIT_CALL MGTK::Error::no_active_window
 
 :       ldy     #MGTK::Winfo::hthumbmax
         bit     params::which_ctl
@@ -8846,7 +8846,7 @@ thumbmoved: .byte   0
         sta     params::which_ctl
         beq     got_ctl                    ; always
 
-:       exit_call MGTK::Error::control_not_found
+:       EXIT_CALL MGTK::Error::control_not_found
 
 got_ctl:lda     params::which_ctl
         sta     which_control
@@ -8860,7 +8860,7 @@ got_ctl:lda     params::which_ctl
 
         jsr     top_window
         bne     :+
-        exit_call MGTK::Error::no_active_window
+        EXIT_CALL MGTK::Error::no_active_window
 
 :       jsr     get_thumb_rect
         jsr     save_params_and_stack
@@ -9101,12 +9101,12 @@ thumbpos:   .byte   0
         beq     check_win
 
 bad_ctl:
-        exit_call MGTK::Error::control_not_found
+        EXIT_CALL MGTK::Error::control_not_found
 
 check_win:
         jsr     top_window
         bne     :+
-        exit_call MGTK::Error::no_active_window
+        EXIT_CALL MGTK::Error::no_active_window
 
 :       ldy     #MGTK::Winfo::hthumbpos
         bit     which_control
@@ -9794,7 +9794,7 @@ do_drag:
 
         lda     #0
         sta     kbd_mouse_state
-        exit_call MGTK::Error::window_not_draggable
+        EXIT_CALL MGTK::Error::window_not_draggable
 
 no_dialog:
         ldx     #0
