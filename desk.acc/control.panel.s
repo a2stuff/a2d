@@ -1594,7 +1594,7 @@ filename_buffer:
 write_buffer:
         .res DeskTop::Settings::length
 
-        DEFINE_OPEN_PARAMS open_params, filename_buffer, DA_IO_BUFFER
+        DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
         DEFINE_SET_MARK_PARAMS set_mark_params, DESKTOP2_SETTINGS_OFFSET
         DEFINE_WRITE_PARAMS write_params, write_buffer, DeskTop::Settings::length
         DEFINE_CLOSE_PARAMS close_params
@@ -1608,16 +1608,17 @@ write_buffer:
         sta     ALTZPOFF        ; Main ZP, ROM in, like ProDOS MLI wants.
         lda     ROMIN2
 
-        ;; Write to the original file location
-        ldax    #filename_buffer
-        jsr     copy_desktop_orig_prefix
+        ;; Write to desktop current prefix
+        copy16  #filename, open_params::pathname
         jsr     do_write
 
-        ;; Write to RAMCard copy, if necessary
+        ;; Write to the original file location, if necessary
         jsr     get_copied_to_ramcard_flag
         beq     done
         ldax    #filename_buffer
-        jsr     copy_ramcard_prefix
+        stax    open_params::pathname
+        jsr     copy_desktop_orig_prefix
+        jsr     append_filename
         jsr     do_write
 
 done:   sta     ALTZPON         ; Aux ZP, LCBANK1 in, like DeskTop wants.
@@ -1625,7 +1626,7 @@ done:   sta     ALTZPON         ; Aux ZP, LCBANK1 in, like DeskTop wants.
         lda     LCBANK1
         rts
 
-.proc do_write
+.proc append_filename
         ;; Append filename to buffer
         inc     filename_buffer ; Add '/' separator
         ldx     filename_buffer
@@ -1641,7 +1642,10 @@ done:   sta     ALTZPON         ; Aux ZP, LCBANK1 in, like DeskTop wants.
         cpx     filename
         bne     :-
         sty     filename_buffer
+        rts
+.endproc
 
+.proc do_write
         ;; Write to the file
         MLI_CALL OPEN, open_params
         bcs     done
