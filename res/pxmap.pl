@@ -13,5 +13,5 @@ while (<STDIN>) {
 
     my @a = m/(.......)/g;
 
-    print '        .byte   ' . join(',', map { "px(\%$_)" } @a) . "\n";
+    print '        .byte   ' . join(',', map { "PX(\%$_)" } @a) . "\n";
 }

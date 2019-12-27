@@ -6,7 +6,7 @@ use warnings;
 
 while (<STDIN>) {
     chomp;
-    next unless m/px\(/i;
+    next unless m/PX\(/i;
     s/[^01]//g;
     tr/01/ #/;
     print $_, "\n";

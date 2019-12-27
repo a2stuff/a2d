@@ -3088,7 +3088,7 @@ paint_poly_points:
 ;;; ============================================================
 ;;; SetFont
 
-.define max_font_height 16
+.define kMaxFontHeight 16
 
 .proc SetFontImpl
         copy16  params_addr, current_textfont ; set font to passed address
@@ -3102,7 +3102,7 @@ prepare_font:
         cpy     #3
         bne     :-
 
-        cmp     #max_font_height+1       ; if height >= 17, skip this next bit
+        cmp     #kMaxFontHeight+1       ; if height >= 17, skip this next bit
         bcs     end
 
         ldax    current_textfont
@@ -3384,7 +3384,7 @@ do_draw:
         sta     clipped_top
         tay
 
-        ldx     #(max_font_height-1)*shifted_draw_line_size
+        ldx     #(kMaxFontHeight-1)*shifted_draw_line_size
         sec
 
 :       lda     glyph_row_lo,y
@@ -3399,7 +3399,7 @@ do_draw:
         bpl     :-
 
         ldy     clipped_top
-        ldx     #(max_font_height-1)*unshifted_draw_line_size
+        ldx     #(kMaxFontHeight-1)*unshifted_draw_line_size
         sec
 :       lda     glyph_row_lo,y
         sta     unshifted_draw_linemax+1,x
@@ -3485,12 +3485,12 @@ unshifted_draw_jmp_addr := *+1
         jmp     unshifted_draw_linemax           ; patched to jump into following block
 
 
-        ;; Unrolled loop from max_font_height-1 down to 0
+        ;; Unrolled loop from kMaxFontHeight-1 down to 0
 unshifted_draw_linemax:
-        .repeat max_font_height, line
-        .ident (.sprintf ("unshifted_draw_line_%d", max_font_height-line-1)):
+        .repeat kMaxFontHeight, line
+        .ident (.sprintf ("unshifted_draw_line_%d", kMaxFontHeight-line-1)):
 :       lda     $FFFF,x
-        sta     text_bits_buf+max_font_height-line-1
+        sta     text_bits_buf+kMaxFontHeight-line-1
 
         .ifndef unshifted_draw_line_size
         unshifted_draw_line_size := * - :-
@@ -3519,17 +3519,17 @@ shifted_draw_jmp_addr := *+1
         jmp     shifted_draw_linemax      ; patched to jump into following block
 
 
-        ;; Unrolled loop from max_font_height-1 down to 0
+        ;; Unrolled loop from kMaxFontHeight-1 down to 0
 shifted_draw_linemax:
-        .repeat max_font_height, line
-        .ident (.sprintf ("shifted_draw_line_%d", max_font_height-line-1)):
+        .repeat kMaxFontHeight, line
+        .ident (.sprintf ("shifted_draw_line_%d", kMaxFontHeight-line-1)):
 
 :       ldy     $FFFF,x             ; All of these $FFFFs are modified
         lda     (shift_main_ptr),y
-        sta     text_bits_buf+16+max_font_height-line-1
+        sta     text_bits_buf+16+kMaxFontHeight-line-1
         lda     (shift_aux_ptr),y
-        ora     text_bits_buf+max_font_height-line-1
-        sta     text_bits_buf+max_font_height-line-1
+        ora     text_bits_buf+kMaxFontHeight-line-1
+        sta     text_bits_buf+kMaxFontHeight-line-1
 
         .ifndef shifted_draw_line_size
         shifted_draw_line_size := * - :-
@@ -3598,13 +3598,13 @@ unmasked_blit_jmp_addr := *+1
 
 ;;; Per JB: "looks like the quickdraw fast-path draw unclipped pattern slab"
 
-        ;; Unrolled loop from max_font_height-1 down to 0
+        ;; Unrolled loop from kMaxFontHeight-1 down to 0
 unmasked_blit_linemax:
-        .repeat max_font_height, line
-        .ident (.sprintf ("unmasked_blit_line_%d", max_font_height-line-1)):
-:       lda     text_bits_buf+max_font_height-line-1
+        .repeat kMaxFontHeight, line
+        .ident (.sprintf ("unmasked_blit_line_%d", kMaxFontHeight-line-1)):
+:       lda     text_bits_buf+kMaxFontHeight-line-1
         eor     current_textback
-        sta     (vid_addrs_table + 2*(max_font_height-line-1)),y
+        sta     (vid_addrs_table + 2*(kMaxFontHeight-line-1)),y
 
         .ifndef unmasked_blit_line_size
         unmasked_blit_line_size := * - :-
@@ -3663,16 +3663,16 @@ masked_blit_jmp_addr := *+1
 
 ;;; Per JB: "looks like the quickdraw slow-path draw clipped pattern slab"
 
-        ;; Unrolled loop from max_font_height-1 down to 0
+        ;; Unrolled loop from kMaxFontHeight-1 down to 0
 masked_blit_linemax:
-        .repeat max_font_height, line
-        .ident (.sprintf ("masked_blit_line_%d", max_font_height-line-1)):
-:       lda     text_bits_buf+max_font_height-line-1
+        .repeat kMaxFontHeight, line
+        .ident (.sprintf ("masked_blit_line_%d", kMaxFontHeight-line-1)):
+:       lda     text_bits_buf+kMaxFontHeight-line-1
         eor     current_textback
-        eor     (vid_addrs_table + 2*(max_font_height-line-1)),y
+        eor     (vid_addrs_table + 2*(kMaxFontHeight-line-1)),y
         and     blit_mask
-        eor     (vid_addrs_table + 2*(max_font_height-line-1)),y
-        sta     (vid_addrs_table + 2*(max_font_height-line-1)),y
+        eor     (vid_addrs_table + 2*(kMaxFontHeight-line-1)),y
+        sta     (vid_addrs_table + 2*(kMaxFontHeight-line-1)),y
 
         .ifndef masked_blit_line_size
         masked_blit_line_size := * - :-
@@ -3686,22 +3686,22 @@ masked_blit_linemax:
 
 
 shifted_draw_line_table:
-        .repeat max_font_height, line
+        .repeat kMaxFontHeight, line
         .addr   .ident (.sprintf ("shifted_draw_line_%d", line))
         .endrepeat
 
 unshifted_draw_line_table:
-        .repeat max_font_height, line
+        .repeat kMaxFontHeight, line
         .addr   .ident (.sprintf ("unshifted_draw_line_%d", line))
         .endrepeat
 
 unmasked_blit_line_table:
-        .repeat max_font_height, line
+        .repeat kMaxFontHeight, line
         .addr   .ident (.sprintf ("unmasked_blit_line_%d", line))
         .endrepeat
 
 masked_blit_line_table:
-        .repeat max_font_height, line
+        .repeat kMaxFontHeight, line
         .addr   .ident (.sprintf ("masked_blit_line_%d", line))
         .endrepeat
 
@@ -4028,31 +4028,31 @@ cursor_data:
         .res    4                               ; Saved values of cursor_char..cursor_y2.
 
 pointer_cursor:
-        .byte   px(%0000000),px(%0000000)
-        .byte   px(%0100000),px(%0000000)
-        .byte   px(%0110000),px(%0000000)
-        .byte   px(%0111000),px(%0000000)
-        .byte   px(%0111100),px(%0000000)
-        .byte   px(%0111110),px(%0000000)
-        .byte   px(%0111111),px(%0000000)
-        .byte   px(%0101100),px(%0000000)
-        .byte   px(%0000110),px(%0000000)
-        .byte   px(%0000110),px(%0000000)
-        .byte   px(%0000011),px(%0000000)
+        .byte   PX(%0000000),PX(%0000000)
+        .byte   PX(%0100000),PX(%0000000)
+        .byte   PX(%0110000),PX(%0000000)
+        .byte   PX(%0111000),PX(%0000000)
+        .byte   PX(%0111100),PX(%0000000)
+        .byte   PX(%0111110),PX(%0000000)
+        .byte   PX(%0111111),PX(%0000000)
+        .byte   PX(%0101100),PX(%0000000)
+        .byte   PX(%0000110),PX(%0000000)
+        .byte   PX(%0000110),PX(%0000000)
+        .byte   PX(%0000011),PX(%0000000)
 
-        .byte   px(%0000000),px(%0000000)
-        .byte   px(%1100000),px(%0000000)
-        .byte   px(%1110000),px(%0000000)
-        .byte   px(%1111000),px(%0000000)
-        .byte   px(%1111100),px(%0000000)
-        .byte   px(%1111110),px(%0000000)
-        .byte   px(%1111111),px(%0000000)
-        .byte   px(%1111111),px(%1000000)
-        .byte   px(%1111111),px(%0000000)
-        .byte   px(%0001111),px(%0000000)
-        .byte   px(%0001111),px(%0000000)
-        .byte   px(%0000111),px(%1000000)
-        .byte   px(%0000111),px(%1000000)
+        .byte   PX(%0000000),PX(%0000000)
+        .byte   PX(%1100000),PX(%0000000)
+        .byte   PX(%1110000),PX(%0000000)
+        .byte   PX(%1111000),PX(%0000000)
+        .byte   PX(%1111100),PX(%0000000)
+        .byte   PX(%1111110),PX(%0000000)
+        .byte   PX(%1111111),PX(%0000000)
+        .byte   PX(%1111111),PX(%1000000)
+        .byte   PX(%1111111),PX(%0000000)
+        .byte   PX(%0001111),PX(%0000000)
+        .byte   PX(%0001111),PX(%0000000)
+        .byte   PX(%0000111),PX(%1000000)
+        .byte   PX(%0000111),PX(%1000000)
 
         .byte   1,1
 
@@ -6685,73 +6685,73 @@ ycoord: .res    2
 
         ;;  Up Scroll
 up_scroll_bitmap:
-        .byte   px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0000000),px(%0001100),px(%0000000)
-        .byte   px(%0000000),px(%0110011),px(%0000000)
-        .byte   px(%0000001),px(%1000000),px(%1100000)
-        .byte   px(%0000110),px(%0000000),px(%0011000)
-        .byte   px(%0011111),px(%1000000),px(%1111110)
-        .byte   px(%0000001),px(%1000000),px(%1100000)
-        .byte   px(%0000001),px(%1000000),px(%1100000)
-        .byte   px(%0000001),px(%1111111),px(%1100000)
-        .byte   px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111111),px(%1111111)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0001100),PX(%0000000)
+        .byte   PX(%0000000),PX(%0110011),PX(%0000000)
+        .byte   PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000110),PX(%0000000),PX(%0011000)
+        .byte   PX(%0011111),PX(%1000000),PX(%1111110)
+        .byte   PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1111111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111)
 
         ;; Down Scroll
 down_scroll_bitmap:
-        .byte   px(%0111111),px(%1111111),px(%1111111)
-        .byte   px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0000001),px(%1111111),px(%1100000)
-        .byte   px(%0000001),px(%1000000),px(%1100000)
-        .byte   px(%0000001),px(%1000000),px(%1100000)
-        .byte   px(%0011111),px(%1000000),px(%1111110)
-        .byte   px(%0000110),px(%0000000),px(%0011000)
-        .byte   px(%0000001),px(%1000000),px(%1100000)
-        .byte   px(%0000000),px(%0110011),px(%0000000)
-        .byte   px(%0000000),px(%0001100),px(%0000000)
-        .byte   px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000001),PX(%1111111),PX(%1100000)
+        .byte   PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0011111),PX(%1000000),PX(%1111110)
+        .byte   PX(%0000110),PX(%0000000),PX(%0011000)
+        .byte   PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000000),PX(%0110011),PX(%0000000)
+        .byte   PX(%0000000),PX(%0001100),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000)
 
         ;;  Left Scroll
 left_scroll_bitmap:
-        .byte   px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0000000),px(%0001100),px(%0000001)
-        .byte   px(%0000000),px(%0111100),px(%0000001)
-        .byte   px(%0000001),px(%1001111),px(%1111001)
-        .byte   px(%0000110),px(%0000000),px(%0011001)
-        .byte   px(%0011000),px(%0000000),px(%0011001)
-        .byte   px(%0000110),px(%0000000),px(%0011001)
-        .byte   px(%0000001),px(%1001111),px(%1111001)
-        .byte   px(%0000000),px(%0111100),px(%0000001)
-        .byte   px(%0000000),px(%0001100),px(%0000001)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0001100),PX(%0000001)
+        .byte   PX(%0000000),PX(%0111100),PX(%0000001)
+        .byte   PX(%0000001),PX(%1001111),PX(%1111001)
+        .byte   PX(%0000110),PX(%0000000),PX(%0011001)
+        .byte   PX(%0011000),PX(%0000000),PX(%0011001)
+        .byte   PX(%0000110),PX(%0000000),PX(%0011001)
+        .byte   PX(%0000001),PX(%1001111),PX(%1111001)
+        .byte   PX(%0000000),PX(%0111100),PX(%0000001)
+        .byte   PX(%0000000),PX(%0001100),PX(%0000001)
 
         ;; Right Scroll
 right_scroll_bitmap:
-        .byte   px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%1000000),px(%0011000),px(%0000000)
-        .byte   px(%1000000),px(%0011110),px(%0000000)
-        .byte   px(%1001111),px(%1111001),px(%1000000)
-        .byte   px(%1001100),px(%0000000),px(%0110000)
-        .byte   px(%1001100),px(%0000000),px(%0001100)
-        .byte   px(%1001100),px(%0000000),px(%0110000)
-        .byte   px(%1001111),px(%1111001),px(%1000000)
-        .byte   px(%1000000),px(%0011110),px(%0000000)
-        .byte   px(%1000000),px(%0011000),px(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%1000000),PX(%0011000),PX(%0000000)
+        .byte   PX(%1000000),PX(%0011110),PX(%0000000)
+        .byte   PX(%1001111),PX(%1111001),PX(%1000000)
+        .byte   PX(%1001100),PX(%0000000),PX(%0110000)
+        .byte   PX(%1001100),PX(%0000000),PX(%0001100)
+        .byte   PX(%1001100),PX(%0000000),PX(%0110000)
+        .byte   PX(%1001111),PX(%1111001),PX(%1000000)
+        .byte   PX(%1000000),PX(%0011110),PX(%0000000)
+        .byte   PX(%1000000),PX(%0011000),PX(%0000000)
 
         .byte   0         ; unreferenced ???
 
         ;; Resize Box
 resize_box_bitmap:
-        .byte   px(%1111111),px(%1111111),px(%1111111)
-        .byte   px(%1000000),px(%0000000),px(%0000001)
-        .byte   px(%1001111),px(%1111110),px(%0000001)
-        .byte   px(%1001100),px(%0000111),px(%1111001)
-        .byte   px(%1001100),px(%0000110),px(%0011001)
-        .byte   px(%1001100),px(%0000110),px(%0011001)
-        .byte   px(%1001111),px(%1111110),px(%0011001)
-        .byte   px(%1000011),px(%0000000),px(%0011001)
-        .byte   px(%1000011),px(%1111111),px(%1111001)
-        .byte   px(%1000000),px(%0000000),px(%0000001)
-        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   PX(%1111111),PX(%1111111),PX(%1111111)
+        .byte   PX(%1000000),PX(%0000000),PX(%0000001)
+        .byte   PX(%1001111),PX(%1111110),PX(%0000001)
+        .byte   PX(%1001100),PX(%0000111),PX(%1111001)
+        .byte   PX(%1001100),PX(%0000110),PX(%0011001)
+        .byte   PX(%1001100),PX(%0000110),PX(%0011001)
+        .byte   PX(%1001111),PX(%1111110),PX(%0011001)
+        .byte   PX(%1000011),PX(%0000000),PX(%0011001)
+        .byte   PX(%1000011),PX(%1111111),PX(%1111001)
+        .byte   PX(%1000000),PX(%0000000),PX(%0000001)
+        .byte   PX(%1111111),PX(%1111111),PX(%1111111)
 
 up_scroll_addr:
         .addr   up_scroll_params
