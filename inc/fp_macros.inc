@@ -6,14 +6,14 @@
 
 
 ;;; FAC = int
-.macro  fac_load_int arg
+.macro  FAC_LOAD_INT arg
         _op_lo ldy, {arg}
         _op_hi lda, {arg}
         jsr     GIVAYF
 .endmacro
 
 ;;; int = FAC
-.macro fac_store_int int
+.macro FAC_STORE_INT int
         jsr     QINT
         lda     FAC+4
         sta     int
@@ -22,43 +22,43 @@
 .endmacro
 
 ;;; FAC = float
-.macro  fac_load float
+.macro  FAC_LOAD float
         lday    #float
         jsr     MOVFM
 .endmacro
 
 ;;; float = FAC
-.macro  fac_store float
+.macro  FAC_STORE float
         ldxy    #float
         jsr     MOVMF
 .endmacro
 
 ;;; FAC = float / FAC
-.macro  fac_div float
+.macro  FAC_DIV float
         lday    #float
         jsr     FDIV
 .endmacro
 
 ;;; FAC = float * FAC
-.macro  fac_mul float
+.macro  FAC_MUL float
         lday    #float
         jsr     FMULT
 .endmacro
 
 ;;; FAC = float - FAC
-.macro  fac_sub float
+.macro  FAC_SUB float
         lday    #float
         jsr     FSUB
 .endmacro
 
 ;;; FAC = float + FAC
-.macro  fac_add float
+.macro  FAC_ADD float
         lday    #float
         jsr     FADD
 .endmacro
 
 ;;; A = float <=> FAC
-.macro  fac_comp float
+.macro  FAC_COMP float
         lday    #float
         jsr     FCOMP
 .endmacro

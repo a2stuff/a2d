@@ -487,55 +487,55 @@ ppy:    .word   0
 .proc compute_pupil_pos
         lda     ROMIN2
 
-        fac_load_int    cx
-        fac_store       cxf
+        FAC_LOAD_INT    cx
+        FAC_STORE       cxf
 
-        fac_load_int    cy
-        fac_store       cyf
+        FAC_LOAD_INT    cy
+        FAC_STORE       cyf
 
         ;; pupil shouldn't overlap border
         sub16  rx, #kPenW, tmpw
         sub16  tmpw, #kPupilW, tmpw
-        fac_load_int tmpw
-        fac_store prx
+        FAC_LOAD_INT tmpw
+        FAC_STORE prx
 
         sub16  ry, #kPenH, tmpw
         sub16  tmpw, #kPupilH, tmpw
-        fac_load_int    tmpw
-        fac_store       pry
+        FAC_LOAD_INT    tmpw
+        FAC_STORE       pry
 
         ;; x scale, so math is circular
         ;; xs = pry / prx
 
-        fac_load        prx
-        fac_div         pry
-        fac_store       scale
+        FAC_LOAD        prx
+        FAC_DIV         pry
+        FAC_STORE       scale
 
         ;; mouse delta, in transformed space
         ;; dx = (mx - cx) * xs
         ;; dy = mx - cy
 
-        fac_load_int    mx      ; dx = (mx - cx) * xs
-        fac_store       tmpf
-        fac_load        cxf
-        fac_sub         tmpf
-        fac_mul         scale
-        fac_store       dx
+        FAC_LOAD_INT    mx      ; dx = (mx - cx) * xs
+        FAC_STORE       tmpf
+        FAC_LOAD        cxf
+        FAC_SUB         tmpf
+        FAC_MUL         scale
+        FAC_STORE       dx
 
-        fac_load_int    my      ; dy = mx - cy
-        fac_store       tmpf
-        fac_load        cyf
-        fac_sub         tmpf
-        fac_store       dy
+        FAC_LOAD_INT    my      ; dy = mx - cy
+        FAC_STORE       tmpf
+        FAC_LOAD        cyf
+        FAC_SUB         tmpf
+        FAC_STORE       dy
 
         ;; d = SQR(dx * dx + dy * dy)
 
-        fac_load        dx
-        fac_mul         dx
-        fac_store       tmpf
-        fac_load        dy
-        fac_mul         dy
-        fac_add         tmpf
+        FAC_LOAD        dx
+        FAC_MUL         dx
+        FAC_STORE       tmpf
+        FAC_LOAD        dy
+        FAC_MUL         dy
+        FAC_ADD         tmpf
 
         jsr             SQR     ; ??? Crashes here after window drag
 
@@ -544,32 +544,32 @@ ppy:    .word   0
         ;;   dx = f * dx
         ;;   dy = f * dy
 
-        fac_comp pry
+        FAC_COMP pry
         bmi     skip
 
-        fac_div         pry     ; f = pry / d
-        fac_store       tmpf
+        FAC_DIV         pry     ; f = pry / d
+        FAC_STORE       tmpf
 
-        fac_mul         dx      ; dx = f * dx
-        fac_store       dx
+        FAC_MUL         dx      ; dx = f * dx
+        FAC_STORE       dx
 
-        fac_load        tmpf    ; dy = f * dy
-        fac_mul         dy
-        fac_store       dy
+        FAC_LOAD        tmpf    ; dy = f * dy
+        FAC_MUL         dy
+        FAC_STORE       dy
 skip:
 
         ;; plot coords
         ;; ppx = (dx / xs) + cx
         ;; ppy = dy + cy
 
-        fac_load        scale   ; ppx = (dx / xs) + cx
-        fac_div         dx
-        fac_add         cxf
-        fac_store_int   ppx
+        FAC_LOAD        scale   ; ppx = (dx / xs) + cx
+        FAC_DIV         dx
+        FAC_ADD         cxf
+        FAC_STORE_INT   ppx
 
-        fac_load        dy      ; ppy = dy + cy
-        fac_add         cyf
-        fac_store_int   ppy
+        FAC_LOAD        dy      ; ppy = dy + cy
+        FAC_ADD         cyf
+        FAC_STORE_INT   ppy
 
         lda     LCBANK1
         lda     LCBANK1
@@ -597,38 +597,38 @@ cyf:    DEFINE_FLOAT
 
         lda     ROMIN2
 
-        fac_load_int    segw
-        fac_div         CON_TWO_PI
-        fac_store       step
+        FAC_LOAD_INT    segw
+        FAC_DIV         CON_TWO_PI
+        FAC_STORE       step
 
         sub16   cx, #kPenW/2, tmpw
-        fac_load_int    tmpw
-        fac_store       cxf
+        FAC_LOAD_INT    tmpw
+        FAC_STORE       cxf
 
         sub16   cy, #kPenH/2, tmpw
-        fac_load_int    tmpw
-        fac_store       cyf
+        FAC_LOAD_INT    tmpw
+        FAC_STORE       cyf
 
         sub16   rx, #kPenW/2, tmpw
-        fac_load_int    tmpw
-        fac_store       rxf
+        FAC_LOAD_INT    tmpw
+        FAC_STORE       rxf
 
         sub16   ry, #kPenH/2, tmpw
-        fac_load_int    tmpw
-        fac_store       ryf
+        FAC_LOAD_INT    tmpw
+        FAC_STORE       ryf
 
         lda     #kSegments
         sta     count
 
         jsr     ZERO_FAC
-        fac_store theta
+        FAC_STORE theta
 
-        fac_load rxf
-        fac_add  cxf
-        fac_store_int ptx
+        FAC_LOAD rxf
+        FAC_ADD  cxf
+        FAC_STORE_INT ptx
 
-        fac_load cyf
-        fac_store_int pty
+        FAC_LOAD cyf
+        FAC_STORE_INT pty
 
         lda     LCBANK1
         lda     LCBANK1
@@ -638,20 +638,20 @@ cyf:    DEFINE_FLOAT
 loop:
         lda     ROMIN2
 
-        fac_load theta
-        fac_add step
-        fac_store theta
+        FAC_LOAD theta
+        FAC_ADD step
+        FAC_STORE theta
 
         jsr COS
-        fac_mul rxf
-        fac_add cxf
-        fac_store_int ptx
+        FAC_MUL rxf
+        FAC_ADD cxf
+        FAC_STORE_INT ptx
 
-        fac_load theta
+        FAC_LOAD theta
         jsr SIN
-        fac_mul ryf
-        fac_add cyf
-        fac_store_int pty
+        FAC_MUL ryf
+        FAC_ADD cyf
+        FAC_STORE_INT pty
 
         lda     LCBANK1
         lda     LCBANK1
