@@ -15555,6 +15555,36 @@ start:
         sta     RESETVEC+2
 
 .endscope
+
+;;; ============================================================
+;;; Clear DHR screen to black before it is shown
+
+.scope clear_screen
+        ptr := $6
+        HIRES_ADDR = $2000
+        kHiresSize = $2000
+
+        sta     PAGE2ON         ; Clear aux
+        jsr     clear
+        sta     PAGE2OFF        ; Clear main
+        jsr     clear
+        jmp     done
+
+clear:  copy16  #HIRES_ADDR, ptr
+        lda     #0              ; clear to black
+        ldx     #>kHiresSize    ; number of pages
+        ldy     #0              ; pointer within page
+:       sta     (ptr),y
+        iny
+        bne     :-
+        inc     ptr+1
+        dex
+        bne     :-
+        rts
+
+done:
+.endscope
+
 ;;; ============================================================
 ;;; Detect Machine Type
 
