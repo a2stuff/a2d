@@ -1504,19 +1504,26 @@ pdl3:   .byte   0
         ;; Let any previous timer reset (but don't wait forever)
         ldy     #0
 :       dey
+        nop                     ; Empirically, 4 NOPs are needed here.
+        nop                     ; https://github.com/a2stuff/a2d/issues/173
+        nop
+        nop
         beq     :+
         lda     PADDL0,x
         bmi     :-
 
         ;; Read paddle
-:       lda     PTRIG
-        ldy     #0
+        ;; Apple IIe Tech Note #6 - The Apple II Paddle Circuits
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.06.html
+:       lda     PTRIG           ; Trigger paddles
+        ldy     #0              ; Init counter
+        nop                     ; ... and wait for first count
         nop
-        nop
-:       lda     PADDL0,X
+:       lda     PADDL0,X        ; 11 microsecond loop
         bpl     done
         iny
         bne     :-
+        dey                     ; handle overflow
 done:   rts
 .endproc
 
