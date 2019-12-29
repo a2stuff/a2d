@@ -131,7 +131,7 @@ sig_offsets:
 active_device:
         .byte   0
 
-        ;; Selector signature
+        ;; Selector signature (65816 opcodes used)
 selector_signature:
         .byte   $AD,$8B,$C0,$18,$FB,$5C,$04,$D0,$E0
 
@@ -163,6 +163,10 @@ start:  sta     MIXCLR
         DEFINE_QUIT_PARAMS quit_params
 
 have128k:
+        ;; Turn on 80-column mode
+        jsr     SLOT3ENTRY
+        jsr     HOME
+
         ;; Save original Quit routine and small loader
         ;; TODO: Assumes prefix is retained. Compose correct path.
 
@@ -191,7 +195,7 @@ resume: lda     #$00
 nomatch:
         lda     #$80
 
-match:  sta     $D3AC
+match:  sta     $D3AC           ; ???
 
         lda     ROMIN2
 
@@ -557,10 +561,6 @@ done:   dex
 ;;; ============================================================
 
 .proc show_copying_screen
-        ;; Turn on 80-column mode
-        jsr     SLOT3ENTRY
-        jsr     HOME
-
         ;; Center string
         lda     #80
         sec
