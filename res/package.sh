@@ -35,11 +35,11 @@ rm -f $IMGFILE_COMPLETE
 rm -f $IMGFILE_PART1
 rm -f $IMGFILE_PART2
 
-$CADIUS CREATEVOLUME $IMGFILE_COMPLETE $VOLNAME_COMPLETE 800KB --quiet
+$CADIUS CREATEVOLUME $IMGFILE_COMPLETE $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
 
 # BUG: Should be 140KB. https://github.com/mach-kernel/cadius/issues/28
-$CADIUS CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 143KB --quiet
-$CADIUS CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 143KB --quiet
+$CADIUS CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 143KB --quiet --no-case-bits
+$CADIUS CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 143KB --quiet --no-case-bits
 
 # Add the files into the disk images.
 
@@ -52,7 +52,7 @@ add_file () {
     tmp_file="$PACKDIR/$dst_file#$suffix"
 
     cp "$src_file" "$tmp_file"
-    $CADIUS ADDFILE "$img_file" "$folder" "$tmp_file" --quiet
+    $CADIUS ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits
     rm "$tmp_file"
 }
 
@@ -70,8 +70,8 @@ add_file $IMGFILE_PART1 "desktop/out/DESKTOP2.built" "/$VOLNAME_PART1" "DeskTop2
 for da_dir in $DA_DIRS; do
     folder1="/$VOLNAME_COMPLETE/$(titlecase $da_dir)"
     folder2="/$VOLNAME_PART2/$(titlecase $da_dir)"
-    $CADIUS CREATEFOLDER $IMGFILE_COMPLETE $folder1 --quiet
-    $CADIUS CREATEFOLDER $IMGFILE_PART2 $folder2 --quiet
+    $CADIUS CREATEFOLDER $IMGFILE_COMPLETE $folder1 --quiet --no-case-bits
+    $CADIUS CREATEFOLDER $IMGFILE_PART2 $folder2 --quiet --no-case-bits
     for file in $(cat $da_dir/TARGETS); do
         add_file "$IMGFILE_COMPLETE" "$da_dir/out/$file.da" $folder1 $(titlecase $file) F10640
         add_file "$IMGFILE_PART2" "$da_dir/out/$file.da" $folder2 $(titlecase $file) F10640
