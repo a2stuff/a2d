@@ -4,6 +4,6 @@
 # changes to the code (e.g. bulk label renames) to ensure that no
 # output changes were introduced.
 
-MD5=$((which -s md5 && echo 'md5') || (which -s md5sum && echo 'md5sum'))
+MD5=$((command -v md5) || (command -v md5sum))
 
 $MD5 $(find */out -name '*.da' -o -name '*.seg' -o -name '*.SYS')

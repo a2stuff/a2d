@@ -7,7 +7,7 @@
 
 set -e
 
-PNULIB2=`which nulib2`
+PNULIB2=$(command -v nulib2)
 PNULIB2="${PNULIB2:-$HOME/dev/nulib2/nulib2/nulib2}"
 NULIB2="${NULIB2:-$PNULIB2}"
 
