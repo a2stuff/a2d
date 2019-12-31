@@ -9240,9 +9240,9 @@ open:   ldy     #$00
         ;; Get window rect
         jsr     window_lookup
         stax    ptr
-        lda     #$14
-        clc
-        adc     #$23
+        lda     #MGTK::Winfo::port
+        clc                     ; Why add instead of just loading Y with constant ???
+        adc     #.sizeof(MGTK::GrafPort)-1
         tay
 
         ldx     #.sizeof(MGTK::GrafPort)-1
@@ -9296,51 +9296,57 @@ open:   ldy     #$00
         add16   $0858, L8D54, $085C
         add16   $085A, L8D56, $085E
         lda     #$00
-        sta     L8D4E
-        sta     L8D4F
-        sta     L8D4D
+        sta     flag
+        sta     flag2
+        sta     step
         sub16   $0858, rect_table, L8D50
         sub16   $085A, $0802, L8D52
-        bit     L8D51
-        bpl     L8C6A
-        copy    #$80, L8D4E
-        lda     L8D50
+
+        bit     L8D50+1
+        bpl     :+
+
+        copy    #$80, flag
+        lda     L8D50           ; negate
         eor     #$FF
         sta     L8D50
-        lda     L8D51
+        lda     L8D50+1
         eor     #$FF
-        sta     L8D51
+        sta     L8D50+1
         inc16   L8D50
-L8C6A:  bit     L8D53
-        bpl     L8C8C
-        copy    #$80, L8D4F
-        lda     L8D52
+:
+
+        bit     L8D52+1
+        bpl     :+
+
+        copy    #$80, flag2
+        lda     L8D52           ; negate
         eor     #$FF
         sta     L8D52
-        lda     L8D53
+        lda     L8D52+1
         eor     #$FF
-        sta     L8D53
+        sta     L8D52+1
         inc16   L8D52
+:
 
-L8C8C:  lsr16   L8D50
+L8C8C:  lsr16   L8D50           ; divide by two
         lsr16   L8D52
         lsr16   L8D54
         lsr16   L8D56
-        lda     #$0A
+        lda     #10
         sec
-        sbc     L8D4D
+        sbc     step
         asl     a
         asl     a
         asl     a
         tax
-        bit     L8D4E
+        bit     flag
         bpl     :+
         sub16   rect_table, L8D50, rect_table,x
         jmp     L8CDC
 
 :       add16   rect_table, L8D50, rect_table,x
 
-L8CDC:  bit     L8D4F
+L8CDC:  bit     flag2
         bpl     L8CF7
         sub16   $0802, L8D52, $0802,x
         jmp     L8D0A
@@ -9350,8 +9356,8 @@ L8CF7:  add16   rect_table+2, L8D52, rect_table+2,x
 L8D0A:  add16   rect_table,x, L8D54, rect_table+4,x ; right
         add16   rect_table+2,x, L8D56, rect_table+6,x ; bottom
 
-        inc     L8D4D
-        lda     L8D4D
+        inc     step
+        lda     step
         cmp     #10
         beq     :+
         jmp     L8C8C
@@ -9372,13 +9378,11 @@ icon_id:
 window_id:
         .byte   0
 
-L8D4D:  .byte   0
-L8D4E:  .byte   0
-L8D4F:  .byte   0
-L8D50:  .byte   0
-L8D51:  .byte   0
-L8D52:  .byte   0
-L8D53:  .byte   0
+step:   .byte   0
+flag:   .byte   0               ; ???
+flag2:  .byte   0               ; ???
+L8D50:  .word   0
+L8D52:  .word   0
 L8D54:  .word   0
 L8D56:  .word   0
 .endproc
@@ -9387,9 +9391,15 @@ L8D56:  .word   0
 
 ;;; ============================================================
 
+kMaxAnimationStep = 11
+
 .proc animate_window_open_impl
 
         rect_table := $800
+
+        ;; Loop N = 0 to 13
+        ;; If N in 0..11, draw N
+        ;; If N in 2..13, erase N-2 (i.e. 0..11, 2 behind)
 
         lda     #0
         sta     step
@@ -9397,8 +9407,9 @@ L8D56:  .word   0
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
 
-loop:   lda     step
-        cmp     #12
+        ;; If N in 0..11, draw N
+loop:   lda     step            ; draw the Nth
+        cmp     #kMaxAnimationStep+1
         bcs     erase
 
         ;; Compute offset into rect table
@@ -9406,11 +9417,11 @@ loop:   lda     step
         asl     a
         asl     a
         clc
-        adc     #7
+        adc     #.sizeof(MGTK::Rect)-1
         tax
 
         ;; Copy rect to draw
-        ldy     #7
+        ldy     #.sizeof(MGTK::Rect)-1
 :       lda     rect_table,x
         sta     tmp_rect,y
         dex
@@ -9419,16 +9430,18 @@ loop:   lda     step
 
         jsr     draw_anim_window_rect
 
-        ;; Compute offset into rect table
+        ;; If N in 2..13, erase N-2 (i.e. 0..11, 2 behind)
 erase:  lda     step
         sec
-        sbc     #2
+        sbc     #2              ; erase the (N-2)th
         bmi     next
+
+        ;; Compute offset into rect table
         asl     a               ; * 8 (size of Rect)
         asl     a
         asl     a
         clc
-        adc     #$07
+        adc     #.sizeof(MGTK::Rect)-1
         tax
 
         ;; Copy rect to erase
@@ -9443,7 +9456,7 @@ erase:  lda     step
 
 next:   inc     step
         lda     step
-        cmp     #$0E
+        cmp     #kMaxAnimationStep+3
         bne     loop
         rts
 
@@ -9456,22 +9469,26 @@ step:   .byte   0
 
         rect_table := $800
 
-        lda     #11
+        ;; Loop N = 11 to -2
+        ;; If N in 0..11, draw N
+        ;; If N in -2..9, erase N+2 (0..11, i.e. 2 behind)
+
+        lda     #kMaxAnimationStep
         sta     step
         jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
 
+        ;; If N in 0..11, draw N
 loop:   lda     step
         bmi     erase
-        beq     erase
 
         ;; Compute offset into rect table
         asl     a               ; * 8 (size of Rect)
         asl     a
         asl     a
         clc
-        adc     #$07
+        adc     #.sizeof(MGTK::Rect)-1
         tax
 
         ;; Copy rect to draw
@@ -9484,17 +9501,19 @@ loop:   lda     step
 
         jsr     draw_anim_window_rect
 
-        ;; Compute offset into rect table
+        ;; If N in -2..9, erase N+2 (0..11, i.e. 2 behind)
 erase:  lda     step
         clc
         adc     #2
-        cmp     #13
+        cmp     #kMaxAnimationStep+1
         bcs     next
+
+        ;; Compute offset into rect table
         asl     a
         asl     a
         asl     a
         clc
-        adc     #$07
+        adc     #.sizeof(MGTK::Rect)-1
         tax
 
         ;; Copy rect to erase
