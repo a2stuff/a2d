@@ -46,16 +46,16 @@ add_file () {
     rm "$tmp_file"
 }
 
-cadius CREATEFOLDER $INSTALL_IMG $INSTALL_PATH --quiet --no-case-bits
+cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet --no-case-bits
 
-add_file $INSTALL_IMG "desktop.system/out/desktop.system.SYS" "$INSTALL_PATH" "DeskTop.system" FF0000
-add_file $INSTALL_IMG "desktop/out/DESKTOP2.built" "$INSTALL_PATH" "DeskTop2" F10000
+add_file "$INSTALL_IMG" "desktop.system/out/desktop.system.SYS" "$INSTALL_PATH" "DeskTop.system" FF0000
+add_file "$INSTALL_IMG" "desktop/out/DESKTOP2.built" "$INSTALL_PATH" "DeskTop2" F10000
 
 for da_dir in $DA_DIRS; do
     folder="$INSTALL_PATH/$da_dir"
-    cadius CREATEFOLDER $INSTALL_IMG $folder --quiet --no-case-bits
+    cadius CREATEFOLDER "$INSTALL_IMG" "$folder" --quiet --no-case-bits
     for file in $(cat $da_dir/TARGETS); do
-        add_file "$INSTALL_IMG" "$da_dir/out/$file.da" $folder $file F10640
+        add_file "$INSTALL_IMG" "$da_dir/out/$file.da" "$folder" $file F10640
     done
 done
 
