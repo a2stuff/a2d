@@ -7576,20 +7576,24 @@ iloop:  jsr     ptr_calc
         bmi     inext
 
         ;; Compare dates
-        ldy     #FileRecord::modification_date
-        copy16in (ptr),y, date_a
-        copy16  date, date_b
+        ldy     #FileRecord::modification_date + .sizeof(DateTime)-1
+        ldx     #.sizeof(DateTime)-1
+:       copy    (ptr),y, date_a,x ; current
+        copy    date,x, date_b,x  ; maximum
+        dey
+        dex
+        bpl     :-
         jsr     compare_dates
         beq     inext
         bcc     inext
 
         ;; if greater than
-place:  ldy     #FileRecord::modification_date+1
-        lda     (ptr),y
-        sta     date+1
+place:  ldy     #FileRecord::modification_date + .sizeof(DateTime)-1
+        ldx     #.sizeof(DateTime)-1
+:       copy    (ptr),y, date,x ; new maximum
         dey
-        lda     (ptr),y
-        sta     date
+        dex
+        bpl     :-
 
         lda     record_num
         sta     $0806
@@ -7610,9 +7614,11 @@ next:   inc     index
         ora     #$80
         sta     (ptr),y
 
-        lda     #0
-        sta     date
-        sta     date+1
+        lda     #0              ; Zero out date
+        ldx     #.sizeof(DateTime)-1
+:       sta     date,x
+        dex
+        bpl     :-
 
         ldx     index
         dex
@@ -7846,18 +7852,18 @@ L809E:  inc     index
 
 ;;; --------------------------------------------------
 
-date_a: .word   0
-date_b: .word   0
+date_a: .tag    DateTime
+date_b: .tag    DateTime
 
 .proc compare_dates
         ptr := $0A
 
         copy16  #parsed_a, ptr
-        ldax    date_a
+        ldax    #date_a
         jsr     parse_date
 
         copy16  #parsed_b, ptr
-        ldax    date_b
+        ldax    #date_b
         jsr     parse_date
 
         lda     year_a+1
@@ -8125,15 +8131,15 @@ value:  .word   0
         lda     #1
         sta     text_buffer2::length
         copy16  #text_buffer2::length, $8
-        lda     date            ; any bits set?
-        ora     date+1
+        lda     datetime_for_conversion ; any bits set?
+        ora     datetime_for_conversion+1
         bne     append_date_strings
         sta     month           ; 0 is "no date" string
         jmp     append_month_string
 
 append_date_strings:
         copy16  #parsed_date, $0A
-        ldax    date
+        ldax    #datetime_for_conversion
         jsr     parse_date
 
         jsr     append_month_string
@@ -8227,60 +8233,82 @@ concat_len:
 
 ;;; ============================================================
 ;;; Parse date
-;;; Input: A,X = Date lo/hi
+;;; Input: A,X = addr of datetime to parse
 ;;; $0A points at {year:.word, month:.byte, day:.byte} to be filled
 
 .proc parse_date
-        ptr := $0A
+        parsed_ptr := $0A
+        datetime_ptr := $0C
+
+        stax    datetime_ptr
 
         ;; TODO: Handle ProDOS 2.5 extended dates
         ;; (additional year bits packed into time bytes)
 
-        stax    date
+        ;; DateTime:
+        ;;       byte 1            byte 0
+        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;; |    Year     |  Month  |   Day   |
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;;
+        ;;       byte 3            byte 2
+        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;; |0 0 0|  Hour   | |0 0|  Minute   |
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
 
         ;; Null date? Leave as all zeros.
-        ora     date+1          ; null date?
+        ldy     #DateTime::datelo
+        lda     (datetime_ptr),y
+        iny                      ; DateTime::datehi
+        ora     (datetime_ptr),y         ; null date?
         bne     year
         ldy     #3
-:       sta     (ptr),y
+:       sta     (parsed_ptr),y
         dey
         bpl     :-
         rts
 
         ;; Year
-year:   lda     date+1          ; First, calculate year-1900
+        ;; (top 7 bits of datehi)
+year:   ldy     #DateTime::datehi
+        lda     (datetime_ptr),y         ; First, calculate year-1900
         lsr     a
         php                     ; Save Carry bit
         cmp     #40             ; Per ProDOS Tech Note #28, 0-39 is 2000-2039
         bcs     :+
         adc     #100
-:       adc     #<1900
-        ldy     #0
-        sta     (ptr),y
-        iny
+:       clc
+        adc     #<1900
+        dey                     ; DateTime::datelo
+        sta     (parsed_ptr),y
+        iny                     ; DateTime::datehi
         lda     #0
         adc     #>1900
-        sta     (ptr),y
+        sta     (parsed_ptr),y
 
         ;; Month
+        ;; (mix low bit from datehi with top 3 bits from datelo)
 month:  plp                     ; Restore Carry bit
-        lda     date
+        ldy     #DateTime::datelo
+        lda     (datetime_ptr),y
         ror     a
         lsr     a
         lsr     a
         lsr     a
         lsr     a
         ldy     #2
-        sta     (ptr),y
+        sta     (parsed_ptr),y
 
         ;; Day
-day:    lda     date
+        ;; (low 5 bits of datelo)
+day:    ldy     #DateTime::datelo
+        lda     (datetime_ptr),y
         and     #%00011111
         ldy     #3
-        sta     (ptr),y
+        sta     (parsed_ptr),y
         rts
-
-date:   .word   0
 
 .endproc
 
@@ -10741,7 +10769,7 @@ compute_suffix:
         ;; --------------------------------------------------
         ;; Created date
         copy    #GetInfoDialogState::created, get_info_dialog_params::state
-        copy16  get_file_info_params5::create_date, date
+        COPY_STRUCT DateTime, get_file_info_params5::create_date, datetime_for_conversion
         jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
@@ -10749,7 +10777,7 @@ compute_suffix:
         ;; --------------------------------------------------
         ;; Modified date
         copy    #GetInfoDialogState::modified, get_info_dialog_params::state
-        copy16  get_file_info_params5::mod_date, date
+        COPY_STRUCT DateTime, get_file_info_params5::mod_date, datetime_for_conversion
         jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc

@@ -5,7 +5,7 @@
 #
 # Usage:
 #
-#   INSTALL_IMG=/path/to/hd.2mg INSTALL_PATH=/hd/a2.desktop install.sh
+#   INSTALL_IMG=/path/to/hd.2mg INSTALL_PATH=/hd/a2.desktop res/install.sh
 
 set -e
 
@@ -22,7 +22,7 @@ if ! command -v "cadius" >/dev/null; then
     exit 1
 fi
 
-tput setaf 2 && echo "Installing into image: $INSTALL_IMG at path: $INSTALL_PATH" && tput sgr0
+tput setaf 3 && echo "Installing into image: $INSTALL_IMG at path: $INSTALL_PATH" && tput sgr0
 
 DA_DIRS="desk.acc preview"
 
@@ -40,20 +40,22 @@ add_file () {
     suffix="$5"
     tmp_file="$PACKDIR/$dst_file#$suffix"
 
+    tput setaf 2 && echo "- $folder/$dst_file" && tput sgr0
+
     cp "$src_file" "$tmp_file"
-    cadius DELETEFILE "$img_file" "$folder/$dst_file" > /dev/null # Ignore errors
-    cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits
+    cadius DELETEFILE "$img_file" "$folder/$dst_file" > /dev/null
+    cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits > /dev/null
     rm "$tmp_file"
 }
 
-cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet --no-case-bits
+cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet --no-case-bits > /dev/null
 
 add_file "$INSTALL_IMG" "desktop.system/out/desktop.system.SYS" "$INSTALL_PATH" "DeskTop.system" FF0000
 add_file "$INSTALL_IMG" "desktop/out/DESKTOP2.built" "$INSTALL_PATH" "DeskTop2" F10000
 
 for da_dir in $DA_DIRS; do
     folder="$INSTALL_PATH/$da_dir"
-    cadius CREATEFOLDER "$INSTALL_IMG" "$folder" --quiet --no-case-bits
+    cadius CREATEFOLDER "$INSTALL_IMG" "$folder" --quiet --no-case-bits > /dev/null
     for file in $(cat $da_dir/TARGETS); do
         add_file "$INSTALL_IMG" "$da_dir/out/$file.da" "$folder" $file F10640
     done

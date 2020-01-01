@@ -1398,7 +1398,9 @@ LEC2F:  .res    20, 0          ; unreferenced???
 list_view_filerecord:
         .tag FileRecord
 
-date := list_view_filerecord + FileRecord::modification_date
+;;; Used elsewhere for converting date to string
+datetime_for_conversion := list_view_filerecord + FileRecord::modification_date
+
 ;;; --------------------------------------------------
 
 hex_digits:
