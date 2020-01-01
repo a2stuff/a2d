@@ -7965,9 +7965,9 @@ start:  ldy     #$00
         sta     $06+1
         lda     LCBANK2
         lda     LCBANK2
-        ldy     #$1F
+        ldy     #.sizeof(FileRecord)-1
 L8171:  lda     ($06),y
-        sta     LEC43,y
+        sta     list_view_filerecord,y
         dey
         bpl     L8171
         lda     LCBANK1
@@ -8030,11 +8030,13 @@ L81F7:  jsr     prepare_col_name
 ;;; ============================================================
 
 .proc prepare_col_name
-        lda     LEC43
+        name := list_view_filerecord + FileRecord::name
+
+        lda     name
         and     #$0F
         sta     text_buffer2::length
         tax
-loop:   lda     LEC43,x
+loop:   lda     name,x
         sta     text_buffer2::data,x
         dex
         bne     loop
@@ -8045,7 +8047,9 @@ loop:   lda     LEC43,x
 .endproc
 
 .proc prepare_col_type
-        lda     LEC53
+        file_type := list_view_filerecord + FileRecord::file_type
+
+        lda     file_type
         jsr     compose_file_type_string
 
         ;; BUG: should be 4 not 5???
@@ -8055,7 +8059,9 @@ loop:   lda     LEC43,x
 .endproc
 
 .proc prepare_col_size
-        ldax    LEC54
+        blocks := list_view_filerecord + FileRecord::blocks
+
+        ldax    blocks
         ;; fall through
 .endproc
 

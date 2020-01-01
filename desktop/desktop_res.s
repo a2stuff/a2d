@@ -1392,14 +1392,14 @@ num_open_windows:
 
 LEC2F:  .res    20, 0          ; unreferenced???
 
-LEC43:  .res    16, 0          ; ???
-LEC53:  .byte   0
-LEC54:  .word   0
-        .res    4, 0
+;;; --------------------------------------------------
+;;; FileRecord for list view
 
-date:   .word   0
+list_view_filerecord:
+        .tag FileRecord
 
-        .res    7, 0            ; Used! But where ???
+date := list_view_filerecord + FileRecord::modification_date
+;;; --------------------------------------------------
 
 hex_digits:
         .byte   "0123456789ABCDEF"
