@@ -3774,27 +3774,10 @@ L5CFB:  bit     BUTN0
         beq     :+               ; if so, retain selection
 replace:
         jsr     clear_selection
-:       ldx     selected_icon_count
+:
         lda     icon_num
-        sta     selected_icon_list,x
-        inc     selected_icon_count
+        jsr     select_file_icon
 
-        copy    active_window_id, selected_window_index
-
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
-
-        copy    icon_num, icon_param
-        jsr     icon_screen_to_window
-        jsr     offset_grafport2_and_set
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
-
-        lda     icon_num
-        jsr     icon_window_to_screen
-        jsr     reset_grafport3
         bit     double_click_flag
         bmi     start_icon_drag
         jmp     handle_double_click
@@ -3971,6 +3954,37 @@ L5E77:  .byte   0
         handle_file_icon_click := handle_file_icon_click_impl::start
         swap_in_desktop_icon_table := handle_file_icon_click_impl::swap_in_desktop_icon_table
         process_drop := handle_file_icon_click_impl::process_drop
+
+;;; ============================================================
+;;; Add specified icon (in active window!) to selection list,
+;;; and redraw.
+;;; Input: A = icon number
+
+.proc select_file_icon
+        sta     icon_num
+        ldx     selected_icon_count
+        sta     selected_icon_list,x
+        inc     selected_icon_count
+        copy    active_window_id, selected_window_index
+        copy    active_window_id, getwinport_params2::window_id
+
+        jsr     get_set_port2
+
+        copy    icon_num, icon_param
+        jsr     icon_screen_to_window
+
+        jsr     offset_grafport2_and_set
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        copy    active_window_id, getwinport_params2::window_id
+        jsr     get_set_port2
+
+        lda     icon_num
+        jsr     icon_window_to_screen
+        jmp     reset_grafport3
+
+icon_num:
+        .byte   0
+.endproc
 
 ;;; ============================================================
 
