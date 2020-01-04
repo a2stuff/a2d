@@ -2253,23 +2253,27 @@ entry:
         jsr     compute_window_dimensions
         stax    L51EB
         sty     L51ED
+
+        ptr = $06
+
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$1F
-        lda     #$00
-L5162:  sta     ($06),y
-        dey
-        cpy     #$1B
-        bne     L5162
+        stax    ptr
 
-        ldy     #$23
-        ldx     #$03
-L516D:  lda     L51EB,x
-        sta     ($06),y
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Point) - 1
+        lda     #0
+:       sta     (ptr),y
+        dey
+        cpy     #MGTK::Winfo::port + MGTK::GrafPort::maprect - 1
+        bne     :-
+
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     L51EB,x
+        sta     (ptr),y
         dey
         dex
-        bpl     L516D
+        bpl     :-
 
         lda     active_window_id
         jsr     create_file_icon_ep2
@@ -2335,20 +2339,24 @@ L51EF:  .byte   0
         jsr     compute_window_dimensions
         stax    L5263
         sty     L5265
+
+        ptr := $06
+
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$1F
-        lda     #$00
-L523B:  sta     ($06),y
-        dey
-        cpy     #$1B
-        bne     L523B
+        stax    ptr
 
-        ldy     #$23
-        ldx     #$03
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Point) - 1
+        lda     #0
+:       sta     (ptr),y
+        dey
+        cpy     #MGTK::Winfo::port + MGTK::GrafPort::maprect - 1
+        bne     :-
+
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Point)-1
 L5246:  lda     L5263,x
-        sta     ($06),y
+        sta     (ptr),y
         dey
         dex
         bpl     L5246
@@ -13845,7 +13853,7 @@ LAEE1:  lda     path_buf0
         adc     path_buf1
         clc
         adc     #$01
-        cmp     #$41
+        cmp     #65             ; max path length+1
         bcs     LAED6
         inc     path_buf0
         ldx     path_buf0

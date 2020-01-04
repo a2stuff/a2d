@@ -694,7 +694,7 @@ LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         addr_call draw_text, str_formatting
         jsr     disk_copy_overlay4_L0CAF
         bcc     LD8A9
-        cmp     #$2B
+        cmp     #ERR_WRITE_PROTECTED
         beq     LD89F
 
         lda     #4              ; Format error
@@ -2177,7 +2177,7 @@ LE6FB:  .byte   0
 LE6FC:  .byte   0
 LE6FD:  stx     LE765
 
-        cmp     #$2B
+        cmp     #ERR_WRITE_PROTECTED
         bne     LE71A
         jsr     disk_copy_overlay4_L127E
         lda     #5              ; Destination protected

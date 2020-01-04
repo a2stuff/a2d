@@ -22,7 +22,7 @@ L0800:  php
 
 L080C:  cmp     #$02
         bne     L0815
-        lda     #$2B
+        lda     #ERR_WRITE_PROTECTED
         jmp     L0821
 
 L0815:  cmp     #$01

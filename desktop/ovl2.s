@@ -112,7 +112,7 @@ L0942:  lda     winfo_alert_dialog
         lda     #$00
         jmp     L09C2
 
-L0980:  cmp     #$2B
+L0980:  cmp     #ERR_WRITE_PROTECTED
         bne     L098C
         jsr     JUMP_TABLE_ALERT_0
         bne     L09C2
@@ -125,7 +125,7 @@ L098C:  jsr     desktop_main::bell
 L099B:  pha
         jsr     desktop_main::set_cursor_pointer
         pla
-        cmp     #$2B
+        cmp     #ERR_WRITE_PROTECTED
         bne     L09AC
         jsr     JUMP_TABLE_ALERT_0
         bne     L09C2
@@ -231,7 +231,7 @@ L0AD1:  lda     winfo_alert_dialog
         lda     #$00
         jmp     L0B31
 
-L0B12:  cmp     #$2B
+L0B12:  cmp     #ERR_WRITE_PROTECTED
         bne     L0B1E
         jsr     JUMP_TABLE_ALERT_0
         bne     L0B31
@@ -529,7 +529,7 @@ L0E00:  php
 
 L0E0C:  cmp     #$02
         bne     L0E15
-        lda     #$2B
+        lda     #ERR_WRITE_PROTECTED
         jmp     L0E21
 
 L0E15:  cmp     #$01
