@@ -609,7 +609,7 @@ continue:
         beq     exit
 
 start:  lda     KBD
-        and     #$7F
+        and     #CHAR_MASK
         sta     last_char
 
         jsr     construct_key_poly
@@ -626,7 +626,7 @@ start:  lda     KBD
         bpl     :+
 
         lda     KBD
-        and     #$7F
+        and     #CHAR_MASK
         cmp     last_char
         beq     :-
         MGTK_CALL MGTK::PaintPoly, tmp_poly
