@@ -720,13 +720,13 @@ date_rect:
         .word   $20,$0F,$9A,$23
 
 label_ok:
-        DEFINE_STRING {"OK         ",GLYPH_RETURN} ;
+        DEFINE_STRING {"OK         ",kGlyphReturn} ;
 label_cancel:
         DEFINE_STRING "Cancel  ESC"
 label_uparrow:
-        DEFINE_STRING GLYPH_UARROW
+        DEFINE_STRING kGlyphUpArrow
 label_downarrow:
-        DEFINE_STRING GLYPH_DARROW
+        DEFINE_STRING kGlyphDdownArrow
 
 label_cancel_pos:
         .word   $15,$38

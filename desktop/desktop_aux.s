@@ -3175,7 +3175,7 @@ trash_mask:
 ;;; ============================================================
 
 label_apple:
-        PASCAL_STRING GLYPH_SAPPLE
+        PASCAL_STRING kGlyphSolidApple
 label_file:
         PASCAL_STRING "File"
 label_view:
@@ -3335,7 +3335,7 @@ no_button_rect:  DEFINE_RECT 260,kAlertDialogHeight-19,300,kAlertDialogHeight-8
 all_button_rect:  DEFINE_RECT 320,kAlertDialogHeight-19,360,kAlertDialogHeight-8
 
 str_ok_label:
-        PASCAL_STRING {"OK            ",GLYPH_RETURN}
+        PASCAL_STRING {"OK            ",kGlyphReturn}
 
 ok_label_pos:  DEFINE_POINT 265,kAlertDialogHeight-9
 cancel_label_pos:  DEFINE_POINT 45,kAlertDialogHeight-9
@@ -3617,7 +3617,7 @@ maprect:        DEFINE_RECT 0, 0, 420, 55, maprect
 .proc show_alert_dialog_impl
 
 ok_label:
-        PASCAL_STRING {"OK            ",GLYPH_RETURN}
+        PASCAL_STRING {"OK            ",kGlyphReturn}
 
 try_again_rect:
         DEFINE_RECT 20,37,120,48

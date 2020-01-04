@@ -557,17 +557,17 @@ enter_the_name_to_appear_label:
 add_a_new_entry_to_label:
         PASCAL_STRING "Add a new entry to the:"
 run_list_label:
-        PASCAL_STRING {GLYPH_OAPPLE,"1 Run list"}
+        PASCAL_STRING {kGlyphOpenApple,"1 Run list"}
 other_run_list_label:
-        PASCAL_STRING {GLYPH_OAPPLE,"2 Other Run list"}
+        PASCAL_STRING {kGlyphOpenApple,"2 Other Run list"}
 down_load_label:
         PASCAL_STRING "Copy to RAMCard:"
 at_first_boot_label:
-        PASCAL_STRING {GLYPH_OAPPLE,"3 at first boot"}
+        PASCAL_STRING {kGlyphOpenApple,"3 at first boot"}
 at_first_use_label:
-        PASCAL_STRING {GLYPH_OAPPLE,"4 at first use"}
+        PASCAL_STRING {kGlyphOpenApple,"4 at first use"}
 never_label:
-        PASCAL_STRING {GLYPH_OAPPLE,"5 never"}
+        PASCAL_STRING {kGlyphOpenApple,"5 never"}
 
 enter_the_full_pathname_label2:
         PASCAL_STRING "Enter the full pathname of the run list file:"
@@ -619,7 +619,7 @@ format_erase_overlay_flag:
         .byte   0
 
 str_insertion_point:
-        PASCAL_STRING {GLYPH_INSPT}
+        PASCAL_STRING {kGlyphInsertionPoint}
 
 LD8F0:  .byte   0
 LD8F1:  .byte   0
@@ -661,7 +661,7 @@ picker_entry_pos:
         .byte   $00,$00
 
 str_folder:
-        PASCAL_STRING {GLYPH_FOLDERL,GLYPH_FOLDERR}
+        PASCAL_STRING {kGlyphFolderLeft,kGlyphFolderRight}
 
 LD920:  .byte   0
 LD921:  .byte   0
@@ -748,7 +748,7 @@ common_dialog_sep_end:
 ok_button_pos:
         .word   198,99
 ok_button_label:
-        PASCAL_STRING {"OK            ",GLYPH_RETURN}
+        PASCAL_STRING {"OK            ",kGlyphReturn}
 
 close_button_pos:
         .word   198,68

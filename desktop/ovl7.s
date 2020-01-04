@@ -81,7 +81,7 @@ L70B0:  lda     jt_pathname+1,x
         lda     #$80
         sta     common_overlay::L5104
         copy    #1, path_buf2
-        copy    #GLYPH_INSPT, path_buf2+1
+        copy    #kGlyphInsertionPoint, path_buf2+1
         lda     winfo_entrydlg
         jsr     common_overlay::set_port_for_window
         lda     L73A9
@@ -211,7 +211,7 @@ L72AF:  iny
         bne     L72AF
         sty     path_buf1
 L72BF:  copy    #1, path_buf2
-        copy    #GLYPH_INSPT, path_buf2+1
+        copy    #kGlyphInsertionPoint, path_buf2+1
         jsr     common_overlay::jt_redraw_input
         rts
 
@@ -269,7 +269,7 @@ L737C:  lda     jt_pathname+1,x
         dex
         bpl     L737C
         copy    #1, path_buf2
-        copy    #GLYPH_INSPT, path_buf2+1
+        copy    #kGlyphInsertionPoint, path_buf2+1
         jsr     common_overlay::jt_redraw_input
         lda     #$00
         sta     common_overlay::L5105

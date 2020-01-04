@@ -83,7 +83,7 @@ menu_file:
         DEFINE_MENU_ITEM label_quit, 'Q', 'q'
 
 label_apple:
-        PASCAL_STRING GLYPH_SAPPLE
+        PASCAL_STRING kGlyphSolidApple
 
 menu_facilities:
         DEFINE_MENU 2
@@ -288,7 +288,7 @@ str_reading:
 str_unknown:
         PASCAL_STRING "Unknown"
 str_select_quit:
-        PASCAL_STRING {"Select Quit from the file menu (",GLYPH_OAPPLE,"Q) to go back to the DeskTop"}
+        PASCAL_STRING {"Select Quit from the file menu (",kGlyphOpenApple,"Q) to go back to the DeskTop"}
 
 bg_black:
         .byte   0
@@ -2325,7 +2325,7 @@ maprect:        DEFINE_RECT 0, 0, 559, 191
 .endparams
 
 str_ok_btn:
-        PASCAL_STRING {"OK            ",GLYPH_RETURN}
+        PASCAL_STRING {"OK            ",kGlyphReturn}
 
 str_cancel_btn:
         PASCAL_STRING "Cancel     Esc"

@@ -244,19 +244,19 @@ DEFAULT_FONT := $8800
 ;;; $0E = (C)                  $1E = solid apple  (MT:@)
 ;;; $0F = (R)                  $1F = open apple   (MT:A)
 
-GLYPH_FOLDERL = $01
-GLYPH_FOLDERR = $02
+kGlyphFolderLeft        = $01
+kGlyphFolderRight       = $02
 
-GLYPH_SPC     = $00
-GLYPH_INSPT   = $06
+kGlyphSpacer            = $00
+kGlyphInsertionPoint    = $06
 
-GLYPH_LARROW  = $08
-GLYPH_RARROW  = $15
-GLYPH_UARROW  = $0B
-GLYPH_DARROW  = $0A
-GLYPH_RETURN  = $0D
-GLYPH_OAPPLE  = $1F
-GLYPH_SAPPLE  = $1E
+kGlyphLeftArrow         = $08
+kGlyphRightArrow        = $15
+kGlyphUpArrow           = $0B
+kGlyphDdownArrow        = $0A
+kGlyphReturn            = $0D
+kGlyphOpenApple         = $1F
+kGlyphSolidApple        = $1E
 
 ;;; Menu (by default) uses:
 ;;;   Solid Mod   $1E

@@ -2509,7 +2509,7 @@ L6B23:  lda     path_buf0,y
         ldx     path_buf0
         inx
         stx     path_buf2
-        lda     #GLYPH_INSPT
+        lda     #kGlyphInsertionPoint
         sta     path_buf2+1
         lda     #$00
         sta     path_buf0
@@ -2536,7 +2536,7 @@ L6B51:  inx
         bne     L6B51
         sty     path_buf0
         copy    #1, path_buf2
-        copy    #GLYPH_INSPT, path_buf2+1
+        copy    #kGlyphInsertionPoint, path_buf2+1
         jsr     jt_redraw_input
         jsr     L6EA3
         rts
@@ -2684,7 +2684,7 @@ L6CCF:  lda     path_buf1,y
         ldx     path_buf1
         inx
         stx     path_buf2
-        lda     #GLYPH_INSPT
+        lda     #kGlyphInsertionPoint
         sta     path_buf2+1
         lda     #$00
         sta     path_buf1
@@ -2711,7 +2711,7 @@ L6CFD:  inx
         bne     L6CFD
         sty     path_buf1
         copy    #1, path_buf2
-        copy    #GLYPH_INSPT, path_buf2+1
+        copy    #kGlyphInsertionPoint, path_buf2+1
         jsr     jt_redraw_input
         jsr     L6E9F
         rts
