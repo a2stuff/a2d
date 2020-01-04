@@ -158,7 +158,7 @@ slot_num:       .byte   0       ; Mouse slot, 0 = search
 use_interrupts: .byte   0       ; 0=passive
 sysfontptr:     .addr   DEFAULT_FONT
 savearea:       .addr   SAVE_AREA_BUFFER
-savesize:       .word   SAVE_AREA_SIZE
+savesize:       .word   kSaveAreaSize
 .endparams
 
 zp_use_flag0:

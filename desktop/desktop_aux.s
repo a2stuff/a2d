@@ -327,7 +327,7 @@ highlight_list:                 ; selected icons
 ;;; this kOperation.
 
         drag_outline_buffer := SAVE_AREA_BUFFER
-        kMaxDraggableItems = SAVE_AREA_SIZE / (.sizeof(MGTK::Point) * 8 + 2)
+        kMaxDraggableItems = kSaveAreaSize / (.sizeof(MGTK::Point) * 8 + 2)
 
 ;;; ============================================================
 

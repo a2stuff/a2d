@@ -1611,7 +1611,7 @@ zp_use_flag1:
         open_ref_num := open_params::ref_num
         open_pathname := open_params::pathname
 
-        DEFINE_READ_PARAMS read_params, DA_LOAD_ADDRESS, DA_MAX_SIZE
+        DEFINE_READ_PARAMS read_params, DA_LOAD_ADDRESS, kDAMaxSize
         read_ref_num := read_params::ref_num
 
         DEFINE_CLOSE_PARAMS close_params
