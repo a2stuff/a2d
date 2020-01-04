@@ -6568,11 +6568,14 @@ L76BB:  bit     flag
 :       jsr     compute_icons_bbox
         lda     window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$16
+
+        winfo_ptr := $06
+
+        stax    winfo_ptr
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 2 ; ycoord
         lda     iconbb_rect+MGTK::Rect::y2
         sec
-        sbc     ($06),y
+        sbc     (winfo_ptr),y
         sta     iconbb_rect+MGTK::Rect::y2
         lda     iconbb_rect+MGTK::Rect::y2+1
         sbc     #0
@@ -6584,14 +6587,15 @@ L76BB:  bit     flag
         ldax    iconbb_rect+MGTK::Rect::x2
         jmp     L7710
 
-L7705:  addr_jump L7710, $00AA
+L7705:  ldax    #170
+        jmp     L7710
 
 L770C:  ldax    #450
-L7710:  ldy     #$20
-        sta     ($06),y
+L7710:  ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
+        sta     (winfo_ptr),y
         txa
         iny
-        sta     ($06),y
+        sta     (winfo_ptr),y
 
         cmp16   iconbb_rect+MGTK::Rect::y2, #50
         bmi     L7739
@@ -6600,19 +6604,20 @@ L7710:  ldy     #$20
         ldax    iconbb_rect+MGTK::Rect::y2
         jmp     L7744
 
-L7739:  addr_jump L7744, $0032
+L7739:  ldax    #50
+        jmp     L7744
 
 L7740:  ldax    #108
-L7744:  ldy     #$22
-        sta     ($06),y
+L7744:  ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::y2
+        sta     (winfo_ptr),y
         txa
         iny
-        sta     ($06),y
-        lda     L7767
-        ldy     #$06
-        sta     ($06),y
-        ldy     #$08
-        sta     ($06),y
+        sta     (winfo_ptr),y
+        lda     thumbmax
+        ldy     #MGTK::Winfo::hthumbmax
+        sta     (winfo_ptr),y
+        ldy     #MGTK::Winfo::vthumbmax
+        sta     (winfo_ptr),y
         lda     icon_params2
         ldx     window_id
         jsr     animate_window_open
@@ -6620,7 +6625,9 @@ L7744:  ldy     #$22
         rts
 
 L7764:  .byte   $00,$00,$00
-L7767:  .byte   $14
+
+thumbmax:
+        .byte   20
 
 .endproc
 
