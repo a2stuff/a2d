@@ -3688,7 +3688,7 @@ done_client_click:
         copy    updatethumb_stash, updatethumb_thumbpos
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     apply_active_winfo_to_grafport2
-        jsr     L84D1
+        jsr     compute_new_scroll_max
         bit     active_window_view_by
         bmi     :+              ; list view, no icons
         jsr     cached_icons_window_to_screen
@@ -4361,79 +4361,87 @@ no_icon:
 .endproc
 
 ;;; ============================================================
+;;; Input:
+;;;   Y = thumbmax
+;;;   X = iconbb size - window size (scaled to fit in one byte)
+;;;   A = cliprect edge - iconbb edge (i.e. old pos???)
+;;; Output:
+;;;   A = new thumbpos
 
-.proc L62BC
-        cmp     #$01
-        bcc     L62C2
-        bne     L62C5
-L62C2:  return  #0
+;;; Seems to be a generic scaling function ???
 
-L62C5:  sta     L638B
-        stx     L6386
-        sty     L638A
-        cmp     L6386
-        bcc     L62D5
+.proc calculate_thumb_pos
+        cmp     #1
+        bcc     :+
+        bne     start
+:       return  #0
+
+        ;; TODO: This looks like a division routine ???
+        ;; n / d => A / 256 ???
+
+start:  sta     L638B
+        stx     L6385+1
+        sty     L6389+1
+        cmp     L6385+1
+        bcc     :+
         tya
         rts
 
-L62D5:  lda     #$00
+:       lda     #0
         sta     L6385
         sta     L6389
-        clc
-        ror     L6386
+        clc                     ; Why not lsr ???
+        ror     L6385+1
         ror     L6385
-        clc
-        ror     L638A
+        clc                     ; Why not lsr ???
+        ror     L6389+1
         ror     L6389
-        lda     #$00
+
+        lda     #0
         sta     L6383
         sta     L6387
-        sta     L6384
-        sta     L6388
-L62F9:  lda     L6384
+        sta     L6383+1
+        sta     L6387+1
+
+loop:   lda     L6383+1
         cmp     L638B
-        beq     L630F
-        bcc     L6309
-        jsr     L6319
-        jmp     L62F9
+        beq     finish
+        bcc     :+              ; less?
+        jsr     do_sub
+        jmp     loop
+:       jsr     do_add
+        jmp     loop
 
-L6309:  jsr     L634E
-        jmp     L62F9
+finish: lda     L6387+1
+        cmp     #1              ; why not bne ???
+        bcs     :+
+        lda     #1
+:       rts
 
-L630F:  lda     L6388
-        cmp     #$01
-        bcs     L6318
-        lda     #$01
-L6318:  rts
-
-L6319:  sub16   L6383, L6385, L6383
+do_sub: sub16   L6383, L6385, L6383
         sub16   L6387, L6389, L6387
         clc
-        ror     L6386
+        ror     L6385+1         ; why not lsr ???
         ror     L6385
         clc
-        ror     L638A
+        ror     L6389+1         ; why not lsr ???
         ror     L6389
         rts
 
-L634E:  add16   L6383, L6385, L6383
+do_add: add16   L6383, L6385, L6383
         add16   L6387, L6389, L6387
         clc
-        ror     L6386
+        ror     L6385+1         ; why not lsr ???
         ror     L6385
         clc
-        ror     L638A
+        ror     L6389+1         ; why not lsr ???
         ror     L6389
         rts
 
-L6383:  .byte   0
-L6384:  .byte   0
-L6385:  .byte   0
-L6386:  .byte   0
-L6387:  .byte   0
-L6388:  .byte   0
-L6389:  .byte   0
-L638A:  .byte   0
+L6383:  .word   0
+L6385:  .word   0
+L6387:  .word   0
+L6389:  .word   0
 L638B:  .byte   0
 
 .endproc
@@ -4606,23 +4614,23 @@ L650D:  .word   0
         lda     (winfo_ptr),y
         tay
 
-        sub16   iconbb_rect+MGTK::Rect::x2, iconbb_rect+MGTK::Rect::x1, delta
-        sub16   delta, win_width, delta
-        lsr16   delta           ; / 2
-        ldx     delta
-        sub16   grafport2::cliprect::x1, iconbb_rect+MGTK::Rect::x1, delta
+        sub16   iconbb_rect+MGTK::Rect::x2, iconbb_rect+MGTK::Rect::x1, size
+        sub16   size, win_width, size
+        lsr16   size            ; / 2
+        ldx     size
+        sub16   grafport2::cliprect::x1, iconbb_rect+MGTK::Rect::x1, size
         bpl     pos
         lda     #0
-        beq     neg             ; always
+        beq     calc            ; always
 
 pos:    cmp16   grafport2::cliprect::x2, iconbb_rect+MGTK::Rect::x2
-        bmi     L65E2
+        bmi     neg
         tya
         jmp     L65EE
 
-L65E2:  lsr16   delta           ; / 2
-        lda     delta
-neg:    jsr     L62BC
+neg:    lsr16   size            ; / 2
+        lda     size
+calc:   jsr     calculate_thumb_pos
 
 L65EE:  sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::horizontal_scroll_bar
@@ -4632,7 +4640,7 @@ L65EE:  sta     updatethumb_thumbpos
 
 win_width:
         .word   0
-delta:  .word   0
+size:   .word   0
 .endproc
 
 ;;; ============================================================
@@ -4650,25 +4658,25 @@ delta:  .word   0
         lda     (winfo_ptr),y
         tay
 
-        sub16   iconbb_rect+MGTK::Rect::y2, iconbb_rect+MGTK::Rect::y1, delta
-        sub16_8 delta, win_height, delta
-        lsr16   delta           ; / 4
-        lsr16   delta
-        ldx     delta
-        sub16   grafport2::cliprect::y1, iconbb_rect+MGTK::Rect::y1, delta
+        sub16   iconbb_rect+MGTK::Rect::y2, iconbb_rect+MGTK::Rect::y1, size
+        sub16_8 size, win_height, size
+        lsr16   size            ; / 4
+        lsr16   size
+        ldx     size
+        sub16   grafport2::cliprect::y1, iconbb_rect+MGTK::Rect::y1, size
         bpl     pos
         lda     #0
-        beq     neg             ; always
+        beq     calc            ; always
 
 pos:    cmp16   grafport2::cliprect::y2, iconbb_rect+MGTK::Rect::y2
-        bmi     L667B
+        bmi     neg
         tya
         jmp     L668D
 
-L667B:  lsr16   delta           ; / 4
-        lsr16   delta
-        lda     delta
-neg:    jsr     L62BC
+neg:    lsr16   size            ; / 4
+        lsr16   size
+        lda     size
+calc:   jsr     calculate_thumb_pos
 
 L668D:  sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
@@ -4678,7 +4686,7 @@ L668D:  sta     updatethumb_thumbpos
 
 win_height:
         .byte   0
-delta:  .word   0
+size:   .word   0
 .endproc
 
 ;;; ============================================================
@@ -8327,52 +8335,62 @@ day:    ldy     #DateTime::datelo
 .endproc
 
 ;;; ============================================================
+;;; After a scroll, compute the new scroll maximum and update
+;;; window clipping region
 
-.proc L84D1
+.proc compute_new_scroll_max
         jsr     push_pointers
+
         bit     active_window_view_by
-        bmi     L84DC
+        bmi     :+
         jsr     cached_icons_screen_to_window
-L84DC:  sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L85F8
-        sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, L85FA
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_down
+:
+        ;; View bounds
+        sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, clip_w
+        sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, clip_h
+
+        lda     updatethumb_which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     L850C
         asl     a
-        bne     L850E
+        bne     L850E           ; always
 L850C:  lda     #$00
-L850E:  sta     L85F1
+L850E:  sta     dir
+
+        ptr := $06
+
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        lda     #$06
+        stax    ptr
+        lda     #MGTK::Winfo::hthumbmax
         clc
-        adc     L85F1
+        adc     dir             ; MGTK::Winfo::vthumbmax if dir is set
         tay
-        lda     ($06),y
+        lda     (ptr),y
         pha
         jsr     compute_icons_bbox
-        ldx     L85F1
 
+        ldx     dir
         sub16   iconbb_rect::x2,x, iconbb_rect::x1,x, L85F2
 
-        ldx     L85F1
+        ldx     dir
+        sub16   L85F2, clip,x, L85F2
 
-        sub16   L85F2, L85F8,x, L85F2
-
-        bpl     L8562
-        lda     L85F8,x
+        bpl     :+
+        lda     clip,x          ; if negative, use original bounds
         sta     L85F2
-        lda     L85F9,x
-        sta     L85F3
-L8562:  lsr16   L85F2
+        lda     clip+1,x
+        sta     L85F2+1
+:
+
+        lsr16   L85F2           ; / 4
         lsr16   L85F2
-        lda     L85F2
+        lda     L85F2           ; which should bring it into single byte range
         tay
         pla
         tax
-        lda     event_params+1
-        jsr     L62BC
+        lda     updatethumb_thumbpos
+        jsr     calculate_thumb_pos
         ldx     #$00
         stx     L85F2
         asl     a
@@ -8380,7 +8398,7 @@ L8562:  lsr16   L85F2
         asl     a
         rol     L85F2
 
-        ldx     L85F1
+        ldx     dir
         clc
         adc     iconbb_rect::x1,x
         sta     grafport2::cliprect::x1,x
@@ -8390,36 +8408,39 @@ L8562:  lsr16   L85F2
 
         lda     active_window_id
         jsr     compute_window_dimensions
-        stax    L85F4
-        sty     L85F6
-        lda     L85F1
-        beq     L85C3
-        add16_8 grafport2::cliprect::y1, L85F6, grafport2::cliprect::y2
-        jmp     L85D6
+        stax    new_w
+        sty     new_h
+        lda     dir
+        beq     :+
+        add16_8 grafport2::cliprect::y1, new_h, grafport2::cliprect::y2
+        jmp     update_port
+:       add16 grafport2::cliprect::x1, new_w, grafport2::cliprect::x2
 
-L85C3:  add16 grafport2::cliprect::x1, L85F4, grafport2::cliprect::x2
-L85D6:  lda     active_window_id
+        ;; Update window's port
+update_port:
+        lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$23
-        ldx     #$07
-L85E4:  lda     grafport2::cliprect::x1,x
-        sta     ($06),y
+        stax    ptr
+
+        ldy     #.sizeof(MGTK::GrafPort)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     grafport2::cliprect::x1,x
+        sta     (ptr),y
         dey
         dex
-        bpl     L85E4
+        bpl     :-
+
         jsr     pop_pointers
         rts
 
-L85F1:  .byte   0
-L85F2:  .byte   0
-L85F3:  .byte   0
-L85F4:  .word   0
-L85F6:  .byte   0
-        .byte   0
-L85F8:  .byte   0
-L85F9:  .byte   0
-L85FA:  .word   0
+dir:    .byte   0               ; 0 if horizontal, 2 if vertical (word offset)
+L85F2:  .word   0
+new_w:  .word   0
+new_h:  .word   0
+
+clip:
+clip_w: .word   0
+clip_h: .word   0
 .endproc
 
 

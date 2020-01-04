@@ -375,23 +375,23 @@ SetMark         = $37
 ;;; Window Manager Calls
 
 .struct Winfo
-        window_id          .byte
-        options            .byte ; Option::*
-        title              .addr
-        hscroll            .byte ; Scroll::option_*
-        vscroll            .byte ; Scroll::option_*
-        hthumbmax          .byte
-        hthumbpos          .byte
-        vthumbmax          .byte
-        vthumbpos          .byte
-        status             .byte
-        reserved           .byte
-        mincontwidth       .word ; minimum content size (horizontal)
-        mincontheight      .word ; minimum content size (vertical)
-        maxcontwidth       .word ; maximum content size (horizontal)
-        maxcontheight      .word ; maximum content size (vertical)
-        port               .tag GrafPort
-        nextwinfo          .addr ; address of next lower window in stack
+        window_id          .byte ; 0
+        options            .byte ; 1 Option::*
+        title              .addr ; 2
+        hscroll            .byte ; 4 Scroll::option_*
+        vscroll            .byte ; 5 Scroll::option_*
+        hthumbmax          .byte ; 6
+        hthumbpos          .byte ; 7
+        vthumbmax          .byte ; 8
+        vthumbpos          .byte ; 9
+        status             .byte ; 10
+        reserved           .byte ; 11
+        mincontwidth       .word ; 12 minimum content size (horizontal)
+        mincontheight      .word ; 14 minimum content size (vertical)
+        maxcontwidth       .word ; 16 maximum content size (horizontal)
+        maxcontheight      .word ; 18 maximum content size (vertical)
+        port               .tag GrafPort ; 20
+        nextwinfo          .addr ; 54 address of next lower window in stack
 .endstruct
 
 OpenWindow      = $38
