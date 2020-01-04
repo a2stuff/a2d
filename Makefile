@@ -1,6 +1,6 @@
 targets := desktop desktop.system desk.acc preview
 
-.PHONY: all $(targets) mount
+.PHONY: all $(targets) mount install
 
 all: $(targets) mount
 
@@ -14,6 +14,10 @@ $(targets):
 # If mount/ exists, populate as a mountable directory for Virtual ][
 mount:
 	@if [ -d mount ]; then res/mount.sh; fi
+
+# Optional target: run install script. Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
+install:
+	res/install.sh
 
 # Clean all temporary/target files
 clean:

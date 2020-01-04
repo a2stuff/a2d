@@ -18,6 +18,8 @@ There are a handful of approaches for getting the files on your real or virtual 
 
 ### Create a Disk Image
 
+> Useful with ADTPro, solid-state drives like Floppy Emu, or emulators.
+
 To produce a ProDOS disk image, install and build [Cadius](https://github.com/mach-kernel/cadius):
 
 ```
@@ -29,11 +31,28 @@ CADIUS=/tmp/cadius/bin/release/cadius
 
 Then run: `res/package.sh`
 
-This will generate: `out/A2.DeskTop.po` (an 800k image containing the full application) and A2DeskTop.1.po and A2DeskTop.2.po (the files split into two 143k images).
+This will generate: `out/A2.DeskTop.po` (an 800k image containing the full application) and `A2DeskTop.1.po` and `A2DeskTop.2.po` (the files split into two 143k images).
 
 Mount these disk images in your emulator, or transfer them to real floppies with [ADTPro](http://adtpro.com/), then follow the install instructions below.
 
+### Install to an Existing Disk Image
+
+> Useful with solid-state drives like Floppy Emu, or emulators.
+
+Install and build [Cadius](https://github.com/mach-kernel/cadius) (instructions above)
+
+Set these environment variables:
+
+```sh
+INSTALL_IMG=/path/to/image/file.2mg
+INSTALL_PATH=/prodos/folder
+```
+
+Then run: `make && make install`. This will create the target ProDOS directory if necessary, then copy the built files in, overwriting an existing files.
+
 ### Mount Folder in Virtual ]\[
+
+> Useful with the Virtual ]\[ emulator
 
 If you use [Virtual \]\[](http://www.virtualii.com/) as your emulator, you can skip creating a disk image.
 
