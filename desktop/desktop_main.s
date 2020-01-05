@@ -242,7 +242,7 @@ L41CB:  ldx     cached_window_id
         dex
         lda     win_view_by_table,x
         bpl     by_icon
-        jsr     L6C19
+        jsr     draw_window_entries
         copy    #0, draw_window_header_flag
         lda     active_window_id
         jmp     assign_window_portbits
@@ -619,7 +619,7 @@ continue:
         MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         copy    findwindow_window_id, active_window_id
         jsr     LoadActiveWindowIconTable
-        jsr     L6C19
+        jsr     draw_window_entries
         jsr     LoadDesktopIconTable
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
@@ -2363,7 +2363,7 @@ L5246:  lda     L5263,x
 
         copy    #$80, draw_window_header_flag
         jsr     reset_grafport3
-        jsr     L6C19
+        jsr     draw_window_entries
         jsr     update_scrollbars
         copy    #0, draw_window_header_flag
         rts
@@ -3706,7 +3706,7 @@ done_client_click:
 
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         jsr     reset_grafport3
-        jmp     L6C19
+        jmp     draw_window_entries
 .endproc
 
 ;;; ============================================================
@@ -4604,7 +4604,7 @@ L650D:  .word   0
         jsr     cached_icons_window_to_screen
 :       MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         jsr     reset_grafport3
-        jmp     L6C19
+        jmp     draw_window_entries
 .endproc
 
 ;;; ============================================================
@@ -5148,7 +5148,7 @@ found_win:
 :       MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         lda     cached_window_id
         sta     active_window_id
-        jsr     L6C19
+        jsr     draw_window_entries
         jsr     redraw_windows
         jmp     LoadDesktopIconTable
 
@@ -5306,16 +5306,21 @@ num:    .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Draw all entries (icons or list items) in (cached) window
 
-.proc L6C19
+.proc draw_window_entries
+        ptr := $06
+
         ldx     cached_window_id
         dex
         lda     win_view_by_table,x
-        bmi     L6C25           ; list view, not icons
-        jmp     L6CCD
+        bmi     list_view           ; list view, not icons
+        jmp     icon_view
 
+        ;; --------------------------------------------------
         ;; List view
-L6C25:  jsr     push_pointers
+list_view:
+        jsr     push_pointers
 
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
@@ -5345,21 +5350,21 @@ L6C5F:  txa
         asl     a
         tax
         lda     window_filerecord_table,x
-        sta     LE71D
-        sta     $06
+        sta     file_record_ptr ; points at head of list (entry count)
+        sta     ptr
         lda     window_filerecord_table+1,x
-        sta     LE71D+1
-        sta     $06+1
+        sta     file_record_ptr+1
+        sta     ptr+1
         lda     LCBANK2
         lda     LCBANK2
-        ldy     #$00
-        lda     ($06),y
+        ldy     #0
+        lda     (ptr),y         ; entry count
         tay
         lda     LCBANK1
         lda     LCBANK1
         tya
-        sta     LE71F
-        inc16   LE71D
+        sta     file_record_count
+        inc16   file_record_ptr ; now points at first entry in list
 
         ;; First row
         lda     #16
@@ -5372,6 +5377,8 @@ L6C5F:  txa
         sta     pos_col_type::ycoord+1
         sta     pos_col_size::ycoord+1
         sta     pos_col_date::ycoord+1
+
+        ;; Draw each list view row
         lda     #0
         sta     rows_done
 rloop:  lda     rows_done
@@ -5379,7 +5386,7 @@ rloop:  lda     rows_done
         beq     done
         tax
         lda     cached_window_icon_list,x
-        jsr     L813F
+        jsr     draw_list_view_row
         inc     rows_done
         jmp     rloop
 
@@ -5390,8 +5397,10 @@ done:   jsr     reset_grafport3
 rows_done:
         .byte   0
 
+        ;; --------------------------------------------------
         ;; Icon view
-L6CCD:  copy    cached_window_id, getwinport_params2::window_id
+icon_view:
+        copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
 
         bit     draw_window_header_flag
@@ -5405,28 +5414,28 @@ L6CCD:  copy    cached_window_id, getwinport_params2::window_id
         ldx     #0
         txa
         pha
-L6CF3:  cpx     cached_window_icon_count
-        bne     L6D09
-        pla
-        jsr     reset_grafport3
 
+loop:   cpx     cached_window_icon_count ; done?
+        bne     draw                     ; nope...
+
+        pla                     ; finish up...
+        jsr     reset_grafport3
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
-
         jsr     cached_icons_window_to_screen
         rts
 
-L6D09:  txa
+draw:   txa
         pha
         lda     cached_window_icon_list,x
         sta     icon_param
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
-        beq     L6D25
+        beq     :+
         ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-L6D25:  pla
+:       pla
         tax
         inx
-        jmp     L6CF3
+        jmp     loop
 .endproc
 
 ;;; ============================================================
@@ -7978,88 +7987,110 @@ done:   lda     LCBANK1
 
 
 ;;; ============================================================
+;;; A = entry number
 
-.proc L813F_impl
+.proc draw_list_view_row_impl
 
-L813C:  .byte   0
+addr_lo:
         .byte   0
-L813E:  .byte   8
+        .byte   0               ; Unused
 
-start:  ldy     #$00
-        tax
+row_height:
+        .byte   8
+
+        ptr := $06
+
+start:
+        ;; Compute address of (A-1)th file record
+        ldy     #0
+        tax                     ; 1-based to 0-based
         dex
         txa
-        sty     L813C
+        sty     addr_lo
+        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        asl     a               ; * 32
+        rol     addr_lo
         asl     a
-        rol     L813C
+        rol     addr_lo
         asl     a
-        rol     L813C
+        rol     addr_lo
         asl     a
-        rol     L813C
+        rol     addr_lo
         asl     a
-        rol     L813C
-        asl     a
-        rol     L813C
+        rol     addr_lo
         clc
-        adc     LE71D
-        sta     $06
-        lda     LE71D+1
-        adc     L813C
-        sta     $06+1
+        adc     file_record_ptr
+        sta     ptr
+        lda     file_record_ptr+1
+        adc     addr_lo
+        sta     ptr+1
+
+        ;; Copy into more convenient location (LCBANK1)
         lda     LCBANK2
         lda     LCBANK2
         ldy     #.sizeof(FileRecord)-1
-L8171:  lda     ($06),y
+:       lda     (ptr),y
         sta     list_view_filerecord,y
         dey
-        bpl     L8171
+        bpl     :-
         lda     LCBANK1
         lda     LCBANK1
-        ldx     #$31
+
+        ;; Clear out string
+        ldx     #49
         lda     #' '
-L8183:  sta     text_buffer2::data-1,x
+:       sta     text_buffer2::data-1,x
         dex
-        bpl     L8183
+        bpl     :-
         copy    #0, text_buffer2::length
+
         lda     pos_col_type::ycoord
         clc
-        adc     L813E
+        adc     row_height
         sta     pos_col_type::ycoord
-        bcc     L819D
+        bcc     :+
         inc     pos_col_type::ycoord+1
-L819D:  lda     pos_col_size::ycoord
+:
+        lda     pos_col_size::ycoord
         clc
-        adc     L813E
+        adc     row_height
         sta     pos_col_size::ycoord
-        bcc     L81AC
+        bcc     :+
         inc     pos_col_size::ycoord+1
-L81AC:  lda     pos_col_date::ycoord
+:
+        lda     pos_col_date::ycoord
         clc
-        adc     L813E
+        adc     row_height
         sta     pos_col_date::ycoord
-        bcc     L81BB
+        bcc     :+
         inc     pos_col_date::ycoord+1
-L81BB:  cmp16   pos_col_name::ycoord, grafport2::cliprect::y2
-        bmi     L81D9
+:
+        ;; Below bottom?
+        cmp16   pos_col_name::ycoord, grafport2::cliprect::y2
+        bmi     check_top
         lda     pos_col_name::ycoord
         clc
-        adc     L813E
+        adc     row_height
         sta     pos_col_name::ycoord
-        bcc     L81D8
+        bcc     :+
         inc     pos_col_name::ycoord+1
-L81D8:  rts
+:       rts
 
-L81D9:  lda     pos_col_name::ycoord
+        ;; Above top?
+check_top:
+        lda     pos_col_name::ycoord
         clc
-        adc     L813E
+        adc     row_height
         sta     pos_col_name::ycoord
-        bcc     L81E8
+        bcc     :+
         inc     pos_col_name::ycoord+1
-L81E8:  cmp16   pos_col_name::ycoord, grafport2::cliprect::y1
-        bpl     L81F7
+:       cmp16   pos_col_name::ycoord, grafport2::cliprect::y1
+        bpl     in_range
         rts
 
-L81F7:  jsr     prepare_col_name
+        ;; Draw it!
+in_range:
+        jsr     prepare_col_name
         addr_call SetPosDrawText, pos_col_name
         jsr     prepare_col_type
         addr_call SetPosDrawText, pos_col_type
@@ -8068,7 +8099,7 @@ L81F7:  jsr     prepare_col_name
         jsr     compose_date_string
         addr_jump SetPosDrawText, pos_col_date
 .endproc
-        L813F := L813F_impl::start
+        draw_list_view_row := draw_list_view_row_impl::start
 
 ;;; ============================================================
 

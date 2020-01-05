@@ -1246,8 +1246,11 @@ length: .byte   0
 data:   .res    49, 0
 .endparams
 
-LE71D:  .word   0
-LE71F:  .byte   0
+file_record_ptr:
+        .addr   0
+file_record_count:              ; TODO: Written but not read???
+        .byte   0
+
         .byte   0,0,0
 
 ;;; ============================================================
