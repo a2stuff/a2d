@@ -5943,7 +5943,6 @@ L7169:  copy16  filerecords_free_start, record_ptr
 
         ;; Record is temporarily constructed at $1F00 then copied into place.
         record := $1F00
-        record_size := $20
 
 do_entry:
         inc     L70C4
@@ -6058,8 +6057,8 @@ L7223:  iny
         ;; Copy entry composed at $1F00 to buffer in Aux LC Bank 2
         lda     LCBANK2
         lda     LCBANK2
-        ldx     #record_size-1
-        ldy     #record_size-1
+        ldx     #.sizeof(FileRecord)-1
+        ldy     #.sizeof(FileRecord)-1
 :       lda     record,x
         sta     (record_ptr),y
         dex
@@ -6067,7 +6066,7 @@ L7223:  iny
         bpl     :-
         lda     LCBANK1
         lda     LCBANK1
-        lda     #record_size
+        lda     #.sizeof(FileRecord)
         clc
         adc     record_ptr
         sta     record_ptr

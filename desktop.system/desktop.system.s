@@ -668,10 +668,6 @@ done:   rts
         dir_buffer := $A400
         kDirBufSize = BLOCK_SIZE
 
-        entry_length_offset := $23
-        file_count_offset := $25
-        header_length := $2B
-
         DEFINE_OPEN_PARAMS open_params, buffer, open_io_buffer
         DEFINE_READ_PARAMS read_params, dir_buffer, kDirBufSize
         DEFINE_CLOSE_PARAMS close_params
@@ -694,11 +690,11 @@ bail:   rts
 
 :       lda     #0
         sta     L2A10
-        lda     #<(dir_buffer + header_length)
+        lda     #<(dir_buffer + .sizeof(SubdirectoryHeader))
         sta     ptr
-        lda     #>(dir_buffer + header_length)
+        lda     #>(dir_buffer + .sizeof(SubdirectoryHeader))
         sta     ptr+1
-L2997:  lda     dir_buffer + file_count_offset
+L2997:  lda     dir_buffer + SubdirectoryHeader::file_count
         cmp     L2A10
         bne     L29B1
 L299F:  MLI_CALL CLOSE, close_params
@@ -739,7 +735,7 @@ L29B1:  ldy     #0
 :       jsr     remove_filename_from_buffer
         jsr     remove_filename_from_path0
         inc     L2A10
-L29F6:  add16_8 ptr, dir_buffer + entry_length_offset, ptr
+L29F6:  add16_8 ptr, dir_buffer + SubdirectoryHeader::entry_length, ptr
         lda     ptr+1
         cmp     #>(dir_buffer + kDirBufSize)
         bcs     :+
