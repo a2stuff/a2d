@@ -1029,8 +1029,8 @@ done:   rts
 ;;; with a one byte length prefix, then sequential FileRecords.
 ;;; Not counting the prefix, this gives room for 128 entries.
 ;;; Only 127 icons are supported and volumes don't get entries,
-;;; so this is enough, but free space is not compacted so it
-;;; can run out. https://github.com/a2stuff/a2d/issues/19
+;;; so this is enough, but free space is not properly compacted
+;;; so it can run out. https://github.com/a2stuff/a2d/issues/19
 
 ;;; `window_icon_to_filerecord_list` maps volume icon to list num
 ;;; `window_filerecord_table` maps from list num to address
@@ -1038,14 +1038,13 @@ done:   rts
 ;;; TODO:
 ;;; * Move list size to a table outside the buffer to keep
 ;;;   everything aligned
-;;; * Introduce compaction
 
 ;;; This remains constant:
-filerecords_end:
+filerecords_free_end:
         .word   $E000
 
 ;;; This tracks the start of free space.
-filerecords_start:
+filerecords_free_start:
         .word   $D000
 
 ;;; ============================================================
@@ -4016,7 +4015,7 @@ icon_num:
         lda     window_to_dir_icon_table,x
         ;; BUG: What if dir icon is freed? ($FF)
         pha
-        jsr     L7345
+        jsr     remove_window_filerecord_entries
         lda     window_id
         tax
         dex
@@ -4343,7 +4342,7 @@ cont:   sta     cached_window_icon_count
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
-        jsr     L7345
+        jsr     remove_window_filerecord_entries
 
         ;; Animate closing into dir (vol/folder) icon
         ldx     active_window_id
@@ -5881,7 +5880,7 @@ L70C4:  .byte   $00
         cpx     #4
         bne     :-
 
-        sub16   filerecords_end, filerecords_start, L72A8
+        sub16   filerecords_free_end, filerecords_free_start, L72A8
         ldx     #$05
 L710A:  lsr16   L72A8
         dex
@@ -5915,7 +5914,7 @@ L7161:  jsr     warning_dialog_proc_num
 
         record_ptr := $06
 
-L7169:  copy16  filerecords_start, record_ptr
+L7169:  copy16  filerecords_free_start, record_ptr
         lda     window_icon_to_filerecord_list
         asl     a
         tax
@@ -6080,7 +6079,7 @@ L7223:  iny
         inc     record_ptr+1
 L7293:  jmp     do_entry
 
-L7296:  copy16  record_ptr, filerecords_start
+L7296:  copy16  record_ptr, filerecords_free_start
         jsr     do_close
         jsr     pop_pointers
         rts
@@ -6147,20 +6146,27 @@ get_vol_free_used:
         get_vol_free_used := open_directory::get_vol_free_used
 
 ;;; ============================================================
-;;; ???
+;;; Remove the FileRecord entries for a window, and free/compact
+;;; the space.
+;;; A = icon (of volume/folder)
 
-.proc L7345
-        sta     L7445
+;;; BUG: If window doesn't have an icon, this can't work ???
+
+.proc remove_window_filerecord_entries
+        sta     icon_num
+
+        ;; Find address of FileRecord list
         ldx     #0
-L734A:  lda     window_icon_to_filerecord_list+1,x
-        cmp     L7445
+:       lda     window_icon_to_filerecord_list+1,x
+        cmp     icon_num
         beq     :+
         inx
         cpx     #8
-        bne     L734A
+        bne     :-
         rts
 
-:       stx     L7446
+        ;; Move list entries down by one
+:       stx     index
         dex
 :       inx
         lda     window_icon_to_filerecord_list+2,x
@@ -6168,70 +6174,100 @@ L734A:  lda     window_icon_to_filerecord_list+1,x
         cpx     window_icon_to_filerecord_list
         bne     :-
 
+        ;; List is now shorter by one...
         dec     window_icon_to_filerecord_list
-        lda     L7446
+
+        ;; Was that the last one?
+        lda     index
         cmp     window_icon_to_filerecord_list
         bne     :+
-        ldx     L7446
-        asl     a
+        ldx     index           ; yes...
+        asl     a               ; so update the start of free space
         tax
-        copy16  window_filerecord_table,x, filerecords_start
-        rts
+        copy16  window_filerecord_table,x, filerecords_free_start
+        rts                     ; and done!
 
-:       lda     L7446
+        ;; --------------------------------------------------
+        ;; Compact FileRecords
+
+        ptr_src := $08
+        ptr_dst := $06
+
+        ;; Need to compact FileRecords space - shift memory down.
+        ;;  +----------+------+----------+---------+
+        ;;  |##########|xxxxxx|mmmmmmmmmm|         |
+        ;;  +----------+------+----------+---------+
+        ;;             1      2          3
+        ;; 1 = ptr_dst (start of newly freed space)
+        ;; 2 = ptr_src (next list)
+        ;; 3 = filerecords_free_start (top of used space)
+        ;; x = freed, m = moved, # = unchanged
+
+:       lda     index
         asl     a
         tax
-        copy16  window_filerecord_table,x, $06
+        copy16  window_filerecord_table,x, ptr_dst
         inx
         inx
-        copy16  window_filerecord_table,x, $08
-        ldy     #$00
+        copy16  window_filerecord_table,x, ptr_src
+
+        ldy     #0
         jsr     push_pointers
-L73A5:  lda     LCBANK2
+
+loop:   lda     LCBANK2
         lda     LCBANK2
-        lda     ($08),y
-        sta     ($06),y
+        lda     (ptr_src),y
+        sta     (ptr_dst),y
         lda     LCBANK1
         lda     LCBANK1
-        inc16   $06
-        inc16   $08
-        lda     $08+1
-        cmp     filerecords_start+1
-        bne     L73A5
-        lda     $08
-        cmp     filerecords_start
-        bne     L73A5
+        inc16   ptr_dst
+        inc16   ptr_src
+
+        ;; All the way to top of used space
+        lda     ptr_src+1
+        cmp     filerecords_free_start+1
+        bne     loop
+        lda     ptr_src
+        cmp     filerecords_free_start
+        bne     loop
+
         jsr     pop_pointers
+
+        ;; Offset affected list pointers down
         lda     window_icon_to_filerecord_list
         asl     a
         tax
-        sub16   filerecords_start, window_filerecord_table,x, L7447
-        inc     L7446
-L73ED:  lda     L7446
+        sub16   filerecords_free_start, window_filerecord_table,x, deltam
+        inc     index
+
+loop2:  lda     index
         cmp     window_icon_to_filerecord_list
         bne     :+
-        jmp     L7429
+        jmp     finish
 
-:       lda     L7446
+:       lda     index
         asl     a
         tax
-        sub16   window_filerecord_table+2,x, window_filerecord_table,x, L7449
-        add16   window_filerecord_table-2,x, L7449, window_filerecord_table,x
-        inc     L7446
-        jmp     L73ED
+        sub16   window_filerecord_table+2,x, window_filerecord_table,x, size
+        add16   window_filerecord_table-2,x, size, window_filerecord_table,x
+        inc     index
+        jmp     loop2
 
-L7429:  lda     window_icon_to_filerecord_list
+finish:
+        ;; Update "start of free memory" pointer
+        lda     window_icon_to_filerecord_list
         sec
-        sbc     #$01
+        sbc     #1
         asl     a
         tax
-        add16   window_filerecord_table,x, L7447, filerecords_start
+        add16   window_filerecord_table,x, deltam, filerecords_free_start
         rts
 
-L7445:  .byte   0
-L7446:  .byte   0
-L7447:  .word   0
-L7449:  .word   0
+icon_num:
+        .byte   0
+index:  .byte   0
+deltam: .word   0               ; memory delta
+size:   .word   0               ; size of a window's list
 .endproc
 
 ;;; ============================================================
@@ -9308,7 +9344,7 @@ L8B1F:  lda     icon_params2
         rts
 :       jsr     push_pointers
         lda     icon_params2
-        jsr     L7345           ; ???
+        jsr     remove_window_filerecord_entries
         ;; fall through
 
         ;; Find open window for the icon
