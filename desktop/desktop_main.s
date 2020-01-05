@@ -1032,12 +1032,8 @@ done:   rts
 ;;; so this is enough, but free space is not properly compacted
 ;;; so it can run out. https://github.com/a2stuff/a2d/issues/19
 
-;;; `window_icon_to_filerecord_list` maps volume icon to list num
+;;; `window_icon_to_filerecord_list_*` maps volume icon to list num
 ;;; `window_filerecord_table` maps from list num to address
-
-;;; TODO:
-;;; * Move list size to a table outside the buffer to keep
-;;;   everything aligned
 
 ;;; This remains constant:
 filerecords_free_end:
@@ -5137,9 +5133,9 @@ found_win:
         jsr     update_icon
 
         lda     icon_params2
-        ldx     window_icon_to_filerecord_list
+        ldx     window_icon_to_filerecord_list_count
         dex
-:       cmp     window_icon_to_filerecord_list+1,x
+:       cmp     window_icon_to_filerecord_list_entries,x
         beq     :+
         dex
         bpl     :-
@@ -5338,10 +5334,10 @@ list_view:
         lda     window_to_dir_icon_table,x
         ;; BUG: What if dir icon is freed? ($FF)
         ldx     #0
-L6C53:  cmp     window_icon_to_filerecord_list+1,x
+L6C53:  cmp     window_icon_to_filerecord_list_entries,x
         beq     L6C5F
         inx
-        cpx     window_icon_to_filerecord_list
+        cpx     window_icon_to_filerecord_list_count
         bne     L6C53
         rts
 
@@ -5915,14 +5911,14 @@ L7161:  jsr     warning_dialog_proc_num
         record_ptr := $06
 
 L7169:  copy16  filerecords_free_start, record_ptr
-        lda     window_icon_to_filerecord_list
+        lda     window_icon_to_filerecord_list_count
         asl     a
         tax
         copy16  record_ptr, window_filerecord_table,x
-        ldx     window_icon_to_filerecord_list
+        ldx     window_icon_to_filerecord_list_count
         lda     L72A7
-        sta     window_icon_to_filerecord_list+1,x
-        inc     window_icon_to_filerecord_list
+        sta     window_icon_to_filerecord_list_entries,x
+        inc     window_icon_to_filerecord_list_count
         lda     L70C1
 
         ;; Store entry count
@@ -6157,7 +6153,7 @@ get_vol_free_used:
 
         ;; Find address of FileRecord list
         ldx     #0
-:       lda     window_icon_to_filerecord_list+1,x
+:       lda     window_icon_to_filerecord_list_entries,x
         cmp     icon_num
         beq     :+
         inx
@@ -6169,17 +6165,17 @@ get_vol_free_used:
 :       stx     index
         dex
 :       inx
-        lda     window_icon_to_filerecord_list+2,x
-        sta     window_icon_to_filerecord_list+1,x
-        cpx     window_icon_to_filerecord_list
+        lda     window_icon_to_filerecord_list_entries+1,x
+        sta     window_icon_to_filerecord_list_entries,x
+        cpx     window_icon_to_filerecord_list_count
         bne     :-
 
         ;; List is now shorter by one...
-        dec     window_icon_to_filerecord_list
+        dec     window_icon_to_filerecord_list_count
 
         ;; Was that the last one?
         lda     index
-        cmp     window_icon_to_filerecord_list
+        cmp     window_icon_to_filerecord_list_count
         bne     :+
         ldx     index           ; yes...
         asl     a               ; so update the start of free space
@@ -6234,14 +6230,14 @@ loop:   lda     LCBANK2
         jsr     pop_pointers
 
         ;; Offset affected list pointers down
-        lda     window_icon_to_filerecord_list
+        lda     window_icon_to_filerecord_list_count
         asl     a
         tax
         sub16   filerecords_free_start, window_filerecord_table,x, deltam
         inc     index
 
 loop2:  lda     index
-        cmp     window_icon_to_filerecord_list
+        cmp     window_icon_to_filerecord_list_count
         bne     :+
         jmp     finish
 
@@ -6255,7 +6251,7 @@ loop2:  lda     index
 
 finish:
         ;; Update "start of free memory" pointer
-        lda     window_icon_to_filerecord_list
+        lda     window_icon_to_filerecord_list_count
         sec
         sbc     #1
         asl     a
@@ -6576,9 +6572,9 @@ L7647:  sta     flag
         bpl     :-
 
         lda     icon_params2
-        ldx     window_icon_to_filerecord_list
+        ldx     window_icon_to_filerecord_list_count
         dex
-:       cmp     window_icon_to_filerecord_list+1,x
+:       cmp     window_icon_to_filerecord_list_entries,x
         beq     :+
         dex
         bpl     :-
@@ -7453,10 +7449,10 @@ start:  ldx     cached_window_id
         ;; BUG: What if dir icon is freed? ($FF)
 
         ldx     #0
-:       cmp     window_icon_to_filerecord_list+1,x
+:       cmp     window_icon_to_filerecord_list_entries,x
         beq     found
         inx
-        cpx     window_icon_to_filerecord_list
+        cpx     window_icon_to_filerecord_list_count
         bne     :-
         rts
 
