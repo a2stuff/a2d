@@ -1,4 +1,4 @@
-#!/usr/bin/env/bash
+#!/usr/bin/env bash
 
 # Use Cadius to create disk images for distribution
 # https://github.com/mach-kernel/cadius
