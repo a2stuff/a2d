@@ -991,12 +991,12 @@ device_to_icon_map:
 open_dir_path_buf:
         .res    65, 0
 
-;;; Icon to window file record mapping list. Each entry is an icon
-;;; number. Position in the list is the same as position in the
+;;; Window to file record mapping list. Each entry is a window
+;;; id. Position in the list is the same as position in the
 ;;; subsequent file record list.
-window_icon_to_filerecord_list_count:
+window_id_to_filerecord_list_count:
         .byte   0
-window_icon_to_filerecord_list_entries:
+window_id_to_filerecord_list_entries:
         .res    8, 0            ; 8 entries + length
 
         .res    6               ; Unused ???

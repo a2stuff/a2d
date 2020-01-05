@@ -1032,7 +1032,7 @@ done:   rts
 ;;; so this is enough, but free space is not properly compacted
 ;;; so it can run out. https://github.com/a2stuff/a2d/issues/19
 
-;;; `window_icon_to_filerecord_list_*` maps volume icon to list num
+;;; `window_id_to_filerecord_list_*` maps win id to list num
 ;;; `window_filerecord_table` maps from list num to address
 
 ;;; This remains constant:
@@ -4006,12 +4006,11 @@ icon_num:
 
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
-        ldx     active_window_id
-        dex
-        lda     window_to_dir_icon_table,x
-        ;; BUG: What if dir icon is freed? ($FF)
+
+        lda     active_window_id
         pha
         jsr     remove_window_filerecord_entries
+
         lda     window_id
         tax
         dex
@@ -4032,7 +4031,7 @@ icon_num:
         dey
         bpl     :-
 
-        pla
+        pla                     ; window id
         jsr     open_directory
         jsr     cmd_view_by_icon::entry
         jsr     StoreWindowIconTable
@@ -4335,9 +4334,7 @@ cont:   sta     cached_window_icon_count
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
 
-        ldx     active_window_id
-        dex
-        lda     window_to_dir_icon_table,x
+        lda     active_window_id
         jsr     remove_window_filerecord_entries
 
         ;; Animate closing into dir (vol/folder) icon
@@ -5132,15 +5129,18 @@ found_win:
 
         jsr     update_icon
 
-        lda     icon_params2
-        ldx     window_icon_to_filerecord_list_count
+        ;; Find FileRecord list
+        lda     cached_window_id
+        ldx     window_id_to_filerecord_list_count
         dex
-:       cmp     window_icon_to_filerecord_list_entries,x
-        beq     :+
+:       cmp     window_id_to_filerecord_list_entries,x
+        beq     select          ; found - skip loading
         dex
         bpl     :-
-        jsr     open_directory
-:       MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
+
+        jsr     open_directory  ; not found - load it
+
+select: MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         lda     cached_window_id
         sta     active_window_id
         jsr     draw_window_entries
@@ -5329,19 +5329,19 @@ list_view:
         bit     draw_window_header_flag
         bmi     :+
         jsr     offset_grafport2_and_set
-:       ldx     cached_window_id
-        dex
-        lda     window_to_dir_icon_table,x
-        ;; BUG: What if dir icon is freed? ($FF)
+:
+
+        ;; Find FileRecord list
+        lda     cached_window_id
         ldx     #0
-L6C53:  cmp     window_icon_to_filerecord_list_entries,x
-        beq     L6C5F
+:       cmp     window_id_to_filerecord_list_entries,x
+        beq     :+
         inx
-        cpx     window_icon_to_filerecord_list_count
-        bne     L6C53
+        cpx     window_id_to_filerecord_list_count
+        bne     :-
         rts
 
-L6C5F:  txa
+:       txa
         asl     a
         tax
         lda     window_filerecord_table,x
@@ -5857,7 +5857,7 @@ L70C3:  .byte   $00
 L70C4:  .byte   $00
 
 .proc start
-        sta     L72A7
+        sta     window_id
         jsr     push_pointers
 
         COPY_BYTES 65, open_dir_path_buf, path_buffer
@@ -5911,17 +5911,19 @@ L7161:  jsr     warning_dialog_proc_num
         record_ptr := $06
 
 L7169:  copy16  filerecords_free_start, record_ptr
-        lda     window_icon_to_filerecord_list_count
+
+        ;; Append entry to list
+        lda     window_id_to_filerecord_list_count ; get pointer offset
         asl     a
         tax
-        copy16  record_ptr, window_filerecord_table,x
-        ldx     window_icon_to_filerecord_list_count
-        lda     L72A7
-        sta     window_icon_to_filerecord_list_entries,x
-        inc     window_icon_to_filerecord_list_count
-        lda     L70C1
+        copy16  record_ptr, window_filerecord_table,x ; update pointer table
+        ldx     window_id_to_filerecord_list_count    ; get window id offset
+        lda     window_id
+        sta     window_id_to_filerecord_list_entries,x ; update window id list
+        inc     window_id_to_filerecord_list_count
 
         ;; Store entry count
+        lda     L70C1
         pha
         lda     LCBANK2
         lda     LCBANK2
@@ -6078,7 +6080,10 @@ L7296:  copy16  record_ptr, filerecords_free_start
         jsr     do_close
         jsr     pop_pointers
         rts
-L72A7:  .byte   0
+
+window_id:
+        .byte   0
+
 L72A8:  .word   0
 .endproc
 
@@ -6143,17 +6148,15 @@ get_vol_free_used:
 ;;; ============================================================
 ;;; Remove the FileRecord entries for a window, and free/compact
 ;;; the space.
-;;; A = icon (of volume/folder)
-
-;;; BUG: If window doesn't have an icon, this can't work ???
+;;; A = window id
 
 .proc remove_window_filerecord_entries
-        sta     icon_num
+        sta     window_id
 
         ;; Find address of FileRecord list
         ldx     #0
-:       lda     window_icon_to_filerecord_list_entries,x
-        cmp     icon_num
+:       lda     window_id_to_filerecord_list_entries,x
+        cmp     window_id
         beq     :+
         inx
         cpx     #8
@@ -6164,17 +6167,17 @@ get_vol_free_used:
 :       stx     index
         dex
 :       inx
-        lda     window_icon_to_filerecord_list_entries+1,x
-        sta     window_icon_to_filerecord_list_entries,x
-        cpx     window_icon_to_filerecord_list_count
+        lda     window_id_to_filerecord_list_entries+1,x
+        sta     window_id_to_filerecord_list_entries,x
+        cpx     window_id_to_filerecord_list_count
         bne     :-
 
         ;; List is now shorter by one...
-        dec     window_icon_to_filerecord_list_count
+        dec     window_id_to_filerecord_list_count
 
         ;; Was that the last one?
         lda     index
-        cmp     window_icon_to_filerecord_list_count
+        cmp     window_id_to_filerecord_list_count
         bne     :+
         ldx     index           ; yes...
         asl     a               ; so update the start of free space
@@ -6229,14 +6232,14 @@ loop:   lda     LCBANK2
         jsr     pop_pointers
 
         ;; Offset affected list pointers down
-        lda     window_icon_to_filerecord_list_count
+        lda     window_id_to_filerecord_list_count
         asl     a
         tax
         sub16   filerecords_free_start, window_filerecord_table,x, deltam
         inc     index
 
 loop2:  lda     index
-        cmp     window_icon_to_filerecord_list_count
+        cmp     window_id_to_filerecord_list_count
         bne     :+
         jmp     finish
 
@@ -6250,7 +6253,7 @@ loop2:  lda     index
 
 finish:
         ;; Update "start of free memory" pointer
-        lda     window_icon_to_filerecord_list_count
+        lda     window_id_to_filerecord_list_count
         sec
         sbc     #1
         asl     a
@@ -6258,7 +6261,7 @@ finish:
         add16   window_filerecord_table,x, deltam, filerecords_free_start
         rts
 
-icon_num:
+window_id:
         .byte   0
 index:  .byte   0
 deltam: .word   0               ; memory delta
@@ -6474,7 +6477,7 @@ has_parent:
 
         ;; --------------------------------------------------
 
-        lda     icon_params2
+        lda     cached_window_id
         jsr     open_directory
 
         lda     icon_params2
@@ -6570,10 +6573,10 @@ L7647:  sta     flag
         dex
         bpl     :-
 
-        lda     icon_params2
-        ldx     window_icon_to_filerecord_list_count
+        lda     cached_window_id
+        ldx     window_id_to_filerecord_list_count
         dex
-:       cmp     window_icon_to_filerecord_list_entries,x
+:       cmp     window_id_to_filerecord_list_entries,x
         beq     :+
         dex
         bpl     :-
@@ -7442,16 +7445,12 @@ index           := $805
 
         jmp     start
 
-start:  ldx     cached_window_id
-        dex
-        lda     window_to_dir_icon_table,x
-        ;; BUG: What if dir icon is freed? ($FF)
-
+start:  lda     cached_window_id
         ldx     #0
-:       cmp     window_icon_to_filerecord_list_entries,x
+:       cmp     window_id_to_filerecord_list_entries,x
         beq     found
         inx
-        cpx     window_icon_to_filerecord_list_count
+        cpx     window_id_to_filerecord_list_count
         bne     :-
         rts
 
@@ -9334,12 +9333,18 @@ done:   rts
 L8B19:  jsr     push_pointers
         jmp     start
 
+        ;; This entry point removes filerecords associated with window
 L8B1F:  lda     icon_params2
         bne     :+
         rts
 :       jsr     push_pointers
         lda     icon_params2
+        jsr     find_window_for_dir_icon
+        bne     :+
+        inx
+        txa
         jsr     remove_window_filerecord_entries
+:
         ;; fall through
 
         ;; Find open window for the icon
