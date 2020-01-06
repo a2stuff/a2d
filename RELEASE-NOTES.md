@@ -78,6 +78,7 @@ menu.
 ### Notable Fixes
 
 * Dates 00-39 are treated as 2000-2039; dates 100-127 are treated as 2000-2027. (#15)
+* Fix resource exhaustion when opening/closing many windows. (#19)
 * File > Quit returns to ProDOS 8 selector, and /RAM is reattached. (#3)
 * SELECTOR.LIST created if missing. (#92)
 * Prevent crash after renaming volume. (#99)
