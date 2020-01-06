@@ -1,6 +1,11 @@
 # MouseGraphics ToolKit
 
-This is a complex API library written by Apple circa 1985. It consists of:
+This is a complex API library written by Apple circa 1985. The Apple Programmers and Developers Association (APDA) documentation can be found at:
+
+* [Graphics Primitives](https://drive.google.com/open?id=1YqdtxkMlzEebU5HxL6sOv6PhhddSLhHe)
+* [Mouse Graphics Tool Kit](https://drive.google.com/open?id=1EHjwyu77FJAjNhAt8DwMxBhAdUL0RKMM)
+
+---
 
 * [Graphics Primitives](#graphics-primitives) - screen management, lines, rects, polys, text, patterns, pens
   * [Concepts](#concepts)
