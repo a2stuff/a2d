@@ -584,7 +584,8 @@ LD887:
 select_volume_rect:
         DEFINE_RECT 0,0,0,0,select_volume_rect
 
-LD890:
+;;; Used in Format/Erase dialogs
+num_volumes:
         .byte   0
 
 the_dos_33_disk_label:
@@ -1121,34 +1122,34 @@ device_template_table:
         .addr   str_slot_drive
 
 device_template_slot_offset_table:
-        .byte   15, 15, 15, 15, 18, 6
+        .byte   15, 15, 15, 15, 14, 6
 
 device_template_drive_offset_table:
-        .byte   19, 0, 0, 19, 0, 15 ; 0 = no drive # for this type
+        .byte   19, 19, 19, 19, 18, 15 ; 0 = no drive # for this type
 
 ;;; Disk II
 str_disk_ii_sd:
         PASCAL_STRING "Disk II  Slot x, Dy "
 
+;;; RAM disks
+str_ramcard_slot_x:
+        PASCAL_STRING "RAMCard  Slot x, Dy "
+
 ;;; Fixed drives that aren't RAM disks
 str_profile_slot_x:
-        PASCAL_STRING "ProFile  Slot x     "
+        PASCAL_STRING "ProFile  Slot x, Dy "
 
 ;;; Removable drives
 str_unidisk_xy:
         PASCAL_STRING "UniDisk 3.5  Sx, Dy "
 
-;;; RAM disks
-str_ramcard_slot_x:
-        PASCAL_STRING "RAMCard  Slot x     "
-
 ;;; File Share
 str_fileshare_x:
-        PASCAL_STRING "AppleShare  Slot x  "
+        PASCAL_STRING "AppleShare  Sx, Dy  "
 
 ;;; Unknown devices
 str_slot_drive:
-        PASCAL_STRING "Slot x  drive y     "
+        PASCAL_STRING "Slot x, Drive y     "
 
 ;;; ============================================================
 

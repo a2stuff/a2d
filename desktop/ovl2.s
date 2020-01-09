@@ -23,7 +23,7 @@ L080C:  copy    #$00, has_input_field_flag
         jsr     desktop_main::set_port_from_window_id
         addr_call desktop_main::draw_dialog_title, desktop_aux::str_format_disk
         yax_call desktop_main::draw_dialog_label, 1, desktop_aux::str_select_format
-        jsr     L0D31
+        jsr     draw_volume_labels
         copy    #$FF, LD887
 L0832:  copy16  #L0B48, desktop_main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
@@ -159,7 +159,7 @@ L09D9:  lda     #$00
         jsr     desktop_main::set_port_from_window_id
         addr_call desktop_main::draw_dialog_title, desktop_aux::str_erase_disk
         yax_call desktop_main::draw_dialog_label, 1, desktop_aux::str_select_erase
-        jsr     L0D31
+        jsr     draw_volume_labels
         copy    #$FF, LD887
         copy16  #L0B48, desktop_main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
@@ -295,7 +295,7 @@ L0BBB:  lda     L0C1F
         asl     a
         clc
         adc     screentowindow_windowy
-        cmp     LD890
+        cmp     num_volumes
         bcc     L0BDC
         lda     LD887
         bmi     L0BD9
@@ -345,7 +345,7 @@ L0C1F:  .byte   0
         lsr     a
         sta     L0CA9           ; column (0, 1, or 2)
         beq     :+
-        add16   select_volume_rect::x1, #120, select_volume_rect::x1
+        add16   select_volume_rect::x1, #kLabelWidth, select_volume_rect::x1
         lda     L0CA9
         cmp     #1
         beq     :+
@@ -391,7 +391,7 @@ L0CA9:  .byte   0
         beq     L0CCE
 L0CC1:  clc
         adc     #4
-        cmp     LD890
+        cmp     num_volumes
         bcs     L0CD4
         pha
         jsr     L0CAA
@@ -407,7 +407,7 @@ L0CD4:  return  #$FF
 .proc prompt_handle_key_right
         lda     LD887
         bpl     L0CE6
-        lda     LD890
+        lda     num_volumes
         lsr     a
         lsr     a
         asl     a
@@ -432,7 +432,7 @@ L0CF6:  return  #$FF
         lda     LD887
         clc
         adc     #1
-        cmp     LD890
+        cmp     num_volumes
         bcc     L0D06
         lda     #0
 L0D06:  pha
@@ -452,7 +452,7 @@ L0D06:  pha
         sec
         sbc     #$01
         bpl     L0D23
-L0D1E:  ldx     LD890
+L0D1E:  ldx     num_volumes
         dex
         txa
 L0D23:  pha
@@ -464,55 +464,65 @@ L0D23:  pha
 .endproc
 
 ;;; ============================================================
+;;; Draw volume labels
 
-L0D31:  ldx     DEVCNT
+.proc draw_volume_labels
+        ldx     DEVCNT
         inx
-        stx     LD890
-        lda     #$00
-        sta     L0D8C
-L0D3D:  lda     L0D8C
-        cmp     LD890
-        bne     L0D46
+        stx     num_volumes
+
+        lda     #0
+        sta     vol
+loop:   lda     vol
+        cmp     num_volumes
+        bne     :+
+        copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
         rts
 
-L0D46:  cmp     #$08
-        bcc     L0D50
-        ldx     #$01
-        lda     #$40
-        bne     L0D5A
-L0D50:  cmp     #$04
-        bcc     L0D60
-        ldx     #$00
-        lda     #$A0
-        bne     L0D5A
-L0D5A:  stax    dialog_label_pos
-L0D60:  lda     L0D8C
+:       cmp     #8              ; third column?
+        bcc     :+
+        ldax    #kDialogLabelDefaultX + kLabelWidth*2
+        bne     setpos          ; always
+
+:       cmp     #4              ; second column?
+        bcc     skip
+        ldax    #kDialogLabelDefaultX + kLabelWidth
+        bne     setpos          ; always
+
+setpos: stax    dialog_label_pos::xcoord
+skip:
+
+        lda     vol
         asl     a
         tay
         lda     device_name_table+1,y
         tax
-        lda     device_name_table,y
-        pha
-        lda     L0D8C
+        lda     device_name_table,y ; now A,X has pointer
+        pha                         ; save A
+
+        ;; Compute label line into Y
+        lda     vol
         lsr     a
         lsr     a
         asl     a
         asl     a
-        sta     L0D8D
-        lda     L0D8C
+        sta     tmp
+        lda     vol
         sec
-        sbc     L0D8D
+        sbc     tmp
         tay
         iny
         iny
         iny
-        pla
-        jsr     desktop_main::draw_dialog_label
-        inc     L0D8C
-        jmp     L0D3D
 
-L0D8C:  .byte   0
-L0D8D:  .byte   0
+        pla                     ; A,X has pointer again
+        jsr     desktop_main::draw_dialog_label
+        inc     vol
+        jmp     loop
+
+vol:    .byte   0               ; volume being drawn
+tmp:    .byte   0
+.endproc
 
         PAD_TO $E00
 
