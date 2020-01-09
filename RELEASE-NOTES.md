@@ -26,6 +26,7 @@ https://github.com/inexorabletash/a2d/issues
 * Apple-` or Apple-Tab keypress cycles through open windows. (#143)
 * Apple-Delete deletes selected files. (#150)
 * File > Get Info command shows Aux Type for files. (#148)
+* ProDOS 2.5 extended dates (through 2923) are supported. (#169)
 
 ### Desk Accessory Enhancements
 

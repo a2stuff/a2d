@@ -8338,10 +8338,13 @@ concat_len:
         parsed_ptr := $0A
         datetime_ptr := $0C
 
-        stax    datetime_ptr
+.struct ParsedDate
+        year    .word
+        month   .byte
+        day     .byte
+.endstruct
 
-        ;; TODO: Handle ProDOS 2.5 extended dates
-        ;; (additional year bits packed into time bytes)
+        stax    datetime_ptr
 
         ;; DateTime:
         ;;       byte 1            byte 0
@@ -8353,7 +8356,7 @@ concat_len:
         ;;       byte 3            byte 2
         ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
         ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
-        ;; |0 0 0|  Hour   | |0 0|  Minute   |
+        ;; |YearX|  Hour   | |0 0|  Minute   |
         ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
 
         ;; Null date? Leave as all zeros.
@@ -8362,30 +8365,48 @@ concat_len:
         iny                      ; DateTime::datehi
         ora     (datetime_ptr),y         ; null date?
         bne     year
-        ldy     #3
+        ldy     #.sizeof(ParsedDate)
 :       sta     (parsed_ptr),y
         dey
         bpl     :-
         rts
 
+        ;; --------------------------------------------------
         ;; Year
-        ;; (top 7 bits of datehi)
-year:   ldy     #DateTime::datehi
-        lda     (datetime_ptr),y         ; First, calculate year-1900
+        ;; (top 7 bits of datehi, top 3 bits of timehi)
+year:   lda     #0
+        sta     ytmp+1
+        ldy     #DateTime::datehi
+        lda     (datetime_ptr),y ; First, calculate year-1900
         lsr     a
         php                     ; Save Carry bit
-        cmp     #40             ; Per ProDOS Tech Note #28, 0-39 is 2000-2039
+        sta     ytmp
+
+        ;; ProDOS 2.5 extended date?
+        ldy     #DateTime::timehi
+        lda     (datetime_ptr),y
+        and     #%11100000
+        beq     tn28
+        asl     a               ; top 2 bits go into hi byte of year
+        rol     ytmp+1
+        asl     a
+        rol     ytmp+1
+        ora     ytmp            ; third bit goes into top bit of lo byte
+        sta     ytmp
+        jmp     do1900
+
+        ;; Per ProDOS Tech Note #28, 0-39 is 2000-2039
+tn28:   lda     ytmp            ; ytmp is still just one byte
+        cmp     #40
         bcs     :+
         adc     #100
-:       clc
-        adc     #<1900
-        dey                     ; DateTime::datelo
-        sta     (parsed_ptr),y
-        iny                     ; DateTime::datehi
-        lda     #0
-        adc     #>1900
-        sta     (parsed_ptr),y
+        sta     ytmp
+:
 
+do1900: ldy     #ParsedDate::year
+        add16in ytmp, #1900, (parsed_ptr),y
+
+        ;; --------------------------------------------------
         ;; Month
         ;; (mix low bit from datehi with top 3 bits from datelo)
 month:  plp                     ; Restore Carry bit
@@ -8396,17 +8417,20 @@ month:  plp                     ; Restore Carry bit
         lsr     a
         lsr     a
         lsr     a
-        ldy     #2
+        ldy     #ParsedDate::month
         sta     (parsed_ptr),y
 
+        ;; --------------------------------------------------
         ;; Day
         ;; (low 5 bits of datelo)
 day:    ldy     #DateTime::datelo
         lda     (datetime_ptr),y
         and     #%00011111
-        ldy     #3
+        ldy     #ParsedDate::day
         sta     (parsed_ptr),y
         rts
+
+ytmp:   .word   0
 
 .endproc
 
