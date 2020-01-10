@@ -1606,7 +1606,7 @@ L9E3D:  cmp     highlight_list,x
         dex
         bpl     L9E3D
         sta     L9EB3
-        cmp     #1              ; Trash?
+        cmp     #kTrashIconNum
         beq     :+
         asl     a
         tax

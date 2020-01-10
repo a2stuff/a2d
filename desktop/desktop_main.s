@@ -2612,7 +2612,7 @@ done:   jmp     redraw_windows_and_desktop
         ldx     #0
         ldy     #0
 loop:   lda     selected_icon_list,x
-        cmp     #1              ; Trash
+        cmp     #kTrashIconNum
         beq     :+
         sta     selected_vol_icon_list,y
         iny
@@ -10109,7 +10109,7 @@ do_unlock:
 
 .proc do_drop
         lda     drag_drop_param
-        cmp     #1              ; Trash (BUG: Should use trash_icon_num)
+        cmp     #kTrashIconNum
         bne     :+
         lda     #$80
         bne     set           ; always
@@ -10282,7 +10282,7 @@ iterate_selection:
 loop:   jsr     get_window_path_ptr
         ldx     icon_count
         lda     selected_icon_list,x
-        cmp     #1              ; icon #1 is always Trash (BUG: should use trash_icon_num)
+        cmp     #kTrashIconNum
         beq     next_icon
         jsr     icon_entry_name_lookup
         jsr     join_paths
@@ -10726,7 +10726,7 @@ loop:   ldx     get_info_dialog_params::index
 vol_icon:
         ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
-        cmp     #1              ; trash icon?
+        cmp     #kTrashIconNum
         bne     :+
         jmp     next
 :       jsr     icon_entry_name_lookup
@@ -10966,183 +10966,241 @@ str_vol:
 
 ;;; ============================================================
 
+.enum RenameDialogState
+        open  = $00
+        run   = $80
+        close = $40
+.endenum
+
 .proc do_rename_icon_impl
 
         src_path_buf := $220
 
         DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
 
-rename_dialog_params:
-        .byte   0
+.params rename_dialog_params
+state:  .byte   0
         .addr   $1F00
+.endparams
 
 start:
-        copy    #0, L9706
-L9576:  lda     L9706
+        copy    #0, index
+
+        ;; Loop over all selected icons
+loop:   lda     index
         cmp     selected_icon_count
-        bne     L9581
+        bne     :+
         return  #0
 
-L9581:  ldx     L9706
+:       ldx     index
         lda     selected_icon_list,x
-        cmp     #$01
-        bne     L9591
-        inc     L9706
-        jmp     L9576
+        cmp     #kTrashIconNum  ; Skip trash
+        bne     :+
+        inc     index
+        jmp     loop
+:
+        ;; File or Volume?
+        lda     selected_window_index
+        beq     is_vol          ; no window, selection is volumes
 
-L9591:  lda     selected_window_index
-        beq     L95C2
+        ;; File - compose full path
         asl     a
         tax
         copy16  window_path_addr_table,x, $08
-        ldx     L9706
+        ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         jsr     join_paths
-        ldy     #$00
-L95B0:  lda     path_buf3,y
-        sta     src_path_buf,y
-        iny
-        cpy     src_path_buf
-        bne     L95B0
-        dec     src_path_buf
-        jmp     L95E0
 
-L95C2:  ldx     L9706
-        lda     selected_icon_list,x
-        jsr     icon_entry_name_lookup
-        ldy     #$00
-L95CD:  lda     ($06),y
+        ldy     #0              ; copy into src_path_buf
+:       lda     path_buf3,y
         sta     src_path_buf,y
         iny
         cpy     src_path_buf
-        bne     L95CD
+        bne     :-
         dec     src_path_buf
-        lda     #'/'
-        sta     src_path_buf+1
-L95E0:  ldx     L9706
+
+        jmp     common          ; proceed with rename
+
+        ;; Volume - compose full path (add '/' prefix)
+is_vol: ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
-        ldy     #$00
-        lda     ($06),y
+
+        ldy     #0              ; copy into src_path_buf
+:       lda     ($06),y         ; this copies leading space...
+        sta     src_path_buf,y
+        iny
+        cpy     src_path_buf
+        bne     :-
+        dec     src_path_buf    ; remove trailing space
+        lda     #'/'            ; overwrite leading space with '/'
+        sta     src_path_buf+1
+
+common:
+        ldx     index
+        lda     selected_icon_list,x
+        jsr     icon_entry_name_lookup
+
+        ldy     #0              ; copy icon name (with spaces)
+        lda     ($06),y         ; to $1F12
         tay
-L95EE:  lda     ($06),y
+:       lda     ($06),y
         sta     $1F12,y
         dey
-        bpl     L95EE
-        ldy     #$00
-        lda     ($06),y
+        bpl     :-
+
+        ldy     #0              ; copy name again (without spaces)
+        lda     ($06),y         ; to $1F00
         tay
         dey
         sec
-        sbc     #$02
+        sbc     #2              ; remove two spaces
         sta     $1F00
-L9602:  lda     ($06),y
-        sta     $1F00-1,y
+:       lda     ($06),y
+        sta     $1F00-1,y       ; offset by leading space
         dey
-        cpy     #$01
-        bne     L9602
-        lda     #$00
-        jsr     L96F8
-L9611:  lda     #$80
-        jsr     L96F8
+        cpy     #1
+        bne     :-
+
+        ;; Open the dialog
+        lda     #RenameDialogState::open
+        jsr     run_dialog_proc
+
+        ;; Run the dialog
+retry:  lda     #RenameDialogState::run
+        jsr     run_dialog_proc
         beq     L962F
-L9618:  ldx     L9706
+
+        ;; Failure
+fail:   ldx     index
         lda     selected_icon_list,x
-        jsr     icon_entry_name_lookup
+        jsr     icon_entry_name_lookup ; Replace name (Why???)
         ldy     $1F12
-L9624:  lda     $1F12,y
+:       lda     $1F12,y
         sta     ($06),y
         dey
-        bpl     L9624
+        bpl     :-
         return  #$FF
 
-L962F:  sty     $08
-        sty     L9707
-        stx     $08+1
-        stx     L9708
+        ;; Success, new name in Y,X
+        new_name_ptr := $08
+
+L962F:  sty     new_name_ptr
+        sty     new_name_addr
+        stx     new_name_ptr+1
+        stx     new_name_addr+1
+
+        ;; File or Volume?
         lda     selected_window_index
-        beq     L964D
+        beq     is_vol2
         asl     a
         tax
         copy16  window_path_addr_table,x, $06
-        jmp     L9655
+        jmp     common2
 
-L964D:  copy16  #L9705, $06
-L9655:  ldy     #$00
+is_vol2:
+        copy16  #L9705, $06     ; BUG: Isn't L9705+1 the index!?!?!?!
+
+common2:
+        ;; Copy window path as prefix
+        ldy     #0
         lda     ($06),y
         tay
-L965A:  lda     ($06),y
+:       lda     ($06),y
         sta     dst_path_buf,y
         dey
-        bpl     L965A
+        bpl     :-
+
+        ;; Append '/'
         inc     dst_path_buf
         ldx     dst_path_buf
         lda     #'/'
         sta     dst_path_buf,x
-        ldy     #$00
-        lda     ($08),y
-        sta     L9709
-L9674:  inx
+
+        ;; Append new filename
+        ldy     #0
+        lda     (new_name_ptr),y
+        sta     len
+:       inx
         iny
-        lda     ($08),y
+        lda     (new_name_ptr),y
         sta     dst_path_buf,x
-        cpy     L9709
-        bne     L9674
+        cpy     len
+        bne     :-
         stx     dst_path_buf
+
+        ;; Try to rename
         MLI_RELAY_CALL RENAME, rename_params
-        beq     L969E
+        beq     finish
+
+        ;; Failed, maybe retry
         jsr     JT_SHOW_ALERT0
-        bne     L9696
-        jmp     L9611
+        bne     :+
+        jmp     retry
+:       lda     #RenameDialogState::close
+        jsr     run_dialog_proc
+        jmp     fail
 
-L9696:  lda     #$40
-        jsr     L96F8
-        jmp     L9618
+        ;; Completed - tear down the dialog...
+finish: lda     #RenameDialogState::close
+        jsr     run_dialog_proc
 
-L969E:  lda     #$40
-        jsr     L96F8
-        ldx     L9706
+        ;; Replace the icon name
+        ldx     index
         lda     selected_icon_list,x
         sta     icon_param2
-        yax_call JT_ITK_RELAY, IconTK::EraseIcon, icon_param2
-        copy16  L9707, $08
-        ldx     L9706
+        yax_call JT_ITK_RELAY, IconTK::EraseIcon, icon_param2 ; in case name is shorter
+        copy16  new_name_addr, new_name_ptr
+        ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
-        ldy     #$00
-        lda     ($08),y
+
+        icon_name_ptr := $06
+
+        ;; Copy new string in (preserving leading/adding trailing space)
+        ldy     #0
+        lda     (new_name_ptr),y
         clc
-        adc     #$02
-        sta     ($06),y
-        lda     ($08),y
+        adc     #2              ; for spaces
+        sta     (icon_name_ptr),y
+        lda     (new_name_ptr),y
         tay
-        inc16   $06
-L96DA:  lda     ($08),y
-        sta     ($06),y
+        inc16   icon_name_ptr   ; advance past leading space
+:       lda     (new_name_ptr),y
+        sta     (icon_name_ptr),y
         dey
-        bne     L96DA
-        dec     $06
-        lda     $06
+        bne     :-
+
+        dec     icon_name_ptr   ; TODO: use dec16 macro
+        lda     icon_name_ptr
         cmp     #$FF
-        bne     L96EB
-        dec     $06+1
-L96EB:  lda     ($06),y
+        bne     :+
+        dec     icon_name_ptr+1
+:
+
+        lda     (icon_name_ptr),y ; apply trailing space
         tay
         lda     #' '
-        sta     ($06),y
-        inc     L9706
-        jmp     L9576
+        sta     (icon_name_ptr),y
 
-L96F8:  sta     rename_dialog_params
+        ;; Totally done - advance to next selected icon
+        inc     index
+        jmp     loop
+
+run_dialog_proc:
+        sta     rename_dialog_params
         yax_call invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
         rts
 
 L9705:  .byte   $00
-L9706:  .byte   $00
-L9707:  .byte   $00
-L9708:  .byte   $00
-L9709:  .byte   $00
+
+index:  .byte   0               ; selected icon index
+
+new_name_addr:
+        .addr   0
+
+len:    .byte   0
 .endproc
         do_rename_icon := do_rename_icon_impl::start
 
@@ -14261,18 +14319,21 @@ do4:    jsr     reset_grafport3a
 ;;; "Rename" dialog
 
 .proc rename_dialog_proc
+        params_ptr := $06
+
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
-        lda     ($06),y
-        cmp     #$80
-        bne     LB276
-        jmp     LB2ED
+        lda     (params_ptr),y
+        cmp     #RenameDialogState::run
+        bne     :+
+        jmp     run_loop
 
-LB276:  cmp     #$40
-        bne     LB27D
-        jmp     LB313
+:       cmp     #RenameDialogState::close
+        bne     open_win
+        jmp     close_win
 
-LB27D:  jsr     clear_path_buf1
+open_win:
+        jsr     clear_path_buf1
         jsr     copy_dialog_param_addr_to_ptr
         copy    #$80, has_input_field_flag
         jsr     clear_path_buf2
@@ -14300,20 +14361,24 @@ LB2CA:  copy    ($08),y, buf_filename,y
         jsr     draw_filename_prompt
         rts
 
-LB2ED:  copy16  #$8000, LD8E7
+run_loop:
+        copy16  #$8000, LD8E7
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-LB2FD:  jsr     prompt_input_loop
-        bmi     LB2FD
-        bne     LB313
+:       jsr     prompt_input_loop
+        bmi     :-              ; continue?
+
+        bne     close_win       ; canceled!
         lda     path_buf1
-        beq     LB2FD
-        jsr     input_field_ip_end
+        beq     :-              ; name is empty, retry
+
+        jsr     input_field_ip_end ; collapse name
         ldy     #<path_buf1
         ldx     #>path_buf1
         return  #0
 
-LB313:  jsr     reset_grafport3a
+close_win:
+        jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         return  #1

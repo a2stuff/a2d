@@ -16,6 +16,9 @@ VERSION_MINOR = 2
 
 kMaxDeskAccCount        = 12
 
+;;; icon #1 is always Trash (BUG: should use trash_icon_num)
+kTrashIconNum   = 1
+
 ;;; ============================================================
 ;;; Invoker routine locations
 
