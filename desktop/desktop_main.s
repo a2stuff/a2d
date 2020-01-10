@@ -10975,12 +10975,16 @@ str_vol:
 .proc do_rename_icon_impl
 
         src_path_buf := $220
+        old_name_buf := $1F00
+
+        ;; Old icon name is preserved/restored
+        old_icon_name_stash := $1F12
 
         DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
 
 .params rename_dialog_params
 state:  .byte   0
-        .addr   $1F00
+addr:   .addr   old_name_buf
 .endparams
 
 start:
@@ -11022,13 +11026,16 @@ loop:   lda     index
 
         jmp     common          ; proceed with rename
 
+        icon_name_ptr := $06
+
         ;; Volume - compose full path (add '/' prefix)
 is_vol: ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
 
+
         ldy     #0              ; copy into src_path_buf
-:       lda     ($06),y         ; this copies leading space...
+:       lda     (icon_name_ptr),y ; this copies leading space...
         sta     src_path_buf,y
         iny
         cpy     src_path_buf
@@ -11043,22 +11050,24 @@ common:
         jsr     icon_entry_name_lookup
 
         ldy     #0              ; copy icon name (with spaces)
-        lda     ($06),y         ; to $1F12
+        lda     (icon_name_ptr),y ; to old_icon_name_stash
         tay
-:       lda     ($06),y
-        sta     $1F12,y
+:       lda     (icon_name_ptr),y
+        sta     old_icon_name_stash,y
         dey
         bpl     :-
 
+        ptr := $06
+
         ldy     #0              ; copy name again (without spaces)
-        lda     ($06),y         ; to $1F00
+        lda     (ptr),y         ; to old_name_buf
         tay
         dey
         sec
         sbc     #2              ; remove two spaces
-        sta     $1F00
-:       lda     ($06),y
-        sta     $1F00-1,y       ; offset by leading space
+        sta     old_name_buf
+:       lda     (ptr),y
+        sta     old_name_buf-1,y       ; offset by leading space
         dey
         cpy     #1
         bne     :-
@@ -11076,14 +11085,15 @@ retry:  lda     #RenameDialogState::run
 fail:   ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup ; Replace name (Why???)
-        ldy     $1F12
-:       lda     $1F12,y
-        sta     ($06),y
+        ldy     old_icon_name_stash
+:       lda     old_icon_name_stash,y
+        sta     (icon_name_ptr),y
         dey
         bpl     :-
         return  #$FF
 
         ;; Success, new name in Y,X
+        win_path_ptr := $06
         new_name_ptr := $08
 
 L962F:  sty     new_name_ptr
@@ -11096,18 +11106,18 @@ L962F:  sty     new_name_ptr
         beq     is_vol2
         asl     a
         tax
-        copy16  window_path_addr_table,x, $06
+        copy16  window_path_addr_table,x, win_path_ptr
         jmp     common2
 
 is_vol2:
-        copy16  #L9705, $06     ; BUG: Isn't L9705+1 the index!?!?!?!
+        copy16  #str_empty, win_path_ptr
 
 common2:
         ;; Copy window path as prefix
         ldy     #0
-        lda     ($06),y
+        lda     (win_path_ptr),y
         tay
-:       lda     ($06),y
+:       lda     (win_path_ptr),y
         sta     dst_path_buf,y
         dey
         bpl     :-
@@ -11156,8 +11166,6 @@ finish: lda     #RenameDialogState::close
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
 
-        icon_name_ptr := $06
-
         ;; Copy new string in (preserving leading/adding trailing space)
         ldy     #0
         lda     (new_name_ptr),y
@@ -11193,7 +11201,8 @@ run_dialog_proc:
         yax_call invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
         rts
 
-L9705:  .byte   $00
+str_empty:
+        PASCAL_STRING ""
 
 index:  .byte   0               ; selected icon index
 
@@ -14347,7 +14356,7 @@ open_win:
         yax_call draw_dialog_label, 2, desktop_aux::str_rename_old
         copy    #85, dialog_label_pos
         jsr     copy_dialog_param_addr_to_ptr
-        ldy     #1
+        ldy     #1              ; rename_dialog_params::addr offset
         copy16in ($06),y, $08
         ldy     #0
         lda     ($08),y
