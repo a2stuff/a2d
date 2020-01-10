@@ -10977,9 +10977,6 @@ str_vol:
         src_path_buf := $220
         old_name_buf := $1F00
 
-        ;; Old icon name is preserved/restored
-        old_icon_name_stash := $1F12
-
         DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
 
 .params rename_dialog_params
@@ -11049,14 +11046,6 @@ common:
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
 
-        ldy     #0              ; copy icon name (with spaces)
-        lda     (icon_name_ptr),y ; to old_icon_name_stash
-        tay
-:       lda     (icon_name_ptr),y
-        sta     old_icon_name_stash,y
-        dey
-        bpl     :-
-
         ptr := $06
 
         ldy     #0              ; copy name again (without spaces)
@@ -11082,15 +11071,7 @@ retry:  lda     #RenameDialogState::run
         beq     L962F
 
         ;; Failure
-fail:   ldx     index
-        lda     selected_icon_list,x
-        jsr     icon_entry_name_lookup ; Replace name (Why???)
-        ldy     old_icon_name_stash
-:       lda     old_icon_name_stash,y
-        sta     (icon_name_ptr),y
-        dey
-        bpl     :-
-        return  #$FF
+fail:   return  #$FF
 
         ;; Success, new name in Y,X
         win_path_ptr := $06
@@ -11147,7 +11128,7 @@ common2:
         ;; Failed, maybe retry
         jsr     JT_SHOW_ALERT0
         bne     :+
-        jmp     retry
+        jmp     retry           ; TODO: Retry isn't offered???
 :       lda     #RenameDialogState::close
         jsr     run_dialog_proc
         jmp     fail
@@ -11180,12 +11161,7 @@ finish: lda     #RenameDialogState::close
         dey
         bne     :-
 
-        dec     icon_name_ptr   ; TODO: use dec16 macro
-        lda     icon_name_ptr
-        cmp     #$FF
-        bne     :+
-        dec     icon_name_ptr+1
-:
+        dec16   icon_name_ptr
 
         lda     (icon_name_ptr),y ; apply trailing space
         tay
