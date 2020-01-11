@@ -7600,8 +7600,10 @@ check_date:
         lda     LCBANK2
 
         lda     #0
-        sta     date
-        sta     date+1
+        ldx     #.sizeof(DateTime)-1
+:       sta     date,x
+        dex
+        bpl     :-
         sta     index
         sta     record_num
 
@@ -8331,7 +8333,7 @@ concat_len:
         iny                      ; DateTime::datehi
         ora     (datetime_ptr),y         ; null date?
         bne     year
-        ldy     #.sizeof(ParsedDate)
+        ldy     #.sizeof(ParsedDate)-1
 :       sta     (parsed_ptr),y
         dey
         bpl     :-
