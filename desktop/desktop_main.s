@@ -2319,9 +2319,28 @@ L51EF:  .byte   0
 ;;; ============================================================
 
 .proc view_by_nonicon_common
+        sta     view
+
+        ldx     active_window_id
+        bne     :+
+        rts
+:
+        dex
+        lda     win_view_by_table,x
+        cmp     view
+        bne     :+
+        rts
+:
+        cmp     #$00
+        bne     :+
+        jsr     close_active_window
+:       jsr     update_view_menu_check
+
+        lda     view
         ldx     active_window_id
         dex
         sta     win_view_by_table,x
+
         jsr     LoadActiveWindowIconTable
         jsr     sort_records
         jsr     StoreWindowIconTable
@@ -2361,31 +2380,20 @@ L5246:  lda     L5263,x
         jsr     draw_window_entries
         jsr     update_scrollbars
         copy    #0, draw_window_header_flag
-        rts
+
+done:   rts
 
 L5263:  .word   0
 
 L5265:  .byte   0
         .byte   0
+
+view:   .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_view_by_name
-        ldx     active_window_id
-        bne     :+
-        rts
-
-:       dex
-        lda     win_view_by_table,x
-        cmp     #kViewByName
-        bne     :+
-        rts
-
-:       cmp     #$00
-        bne     :+
-        jsr     close_active_window
-:       jsr     update_view_menu_check
         lda     #kViewByName
         jmp     view_by_nonicon_common
 .endproc
@@ -2393,20 +2401,6 @@ L5265:  .byte   0
 ;;; ============================================================
 
 .proc cmd_view_by_date
-        ldx     active_window_id
-        bne     :+
-        rts
-
-:       dex
-        lda     win_view_by_table,x
-        cmp     #kViewByDate
-        bne     :+
-        rts
-
-:       cmp     #$00
-        bne     :+
-        jsr     close_active_window
-:       jsr     update_view_menu_check
         lda     #kViewByDate
         jmp     view_by_nonicon_common
 .endproc
@@ -2414,20 +2408,6 @@ L5265:  .byte   0
 ;;; ============================================================
 
 .proc cmd_view_by_size
-        ldx     active_window_id
-        bne     :+
-        rts
-
-:       dex
-        lda     win_view_by_table,x
-        cmp     #kViewBySize
-        bne     :+
-        rts
-
-:       cmp     #$00
-        bne     :+
-        jsr     close_active_window
-:       jsr     update_view_menu_check
         lda     #kViewBySize
         jmp     view_by_nonicon_common
 .endproc
@@ -2435,20 +2415,6 @@ L5265:  .byte   0
 ;;; ============================================================
 
 .proc cmd_view_by_type
-        ldx     active_window_id
-        bne     :+
-        rts
-
-:       dex
-        lda     win_view_by_table,x
-        cmp     #kViewByType
-        bne     :+
-        rts
-
-:       cmp     #$00
-        bne     :+
-        jsr     close_active_window
-:       jsr     update_view_menu_check
         lda     #kViewByType
         jmp     view_by_nonicon_common
 .endproc
