@@ -3574,13 +3574,13 @@ down:   jsr     scroll_down
 
 :       cmp     #MGTK::Part::page_down
         beq     pgdn
-pgup:   jsr     L638C
+pgup:   jsr     scroll_page_up
         lda     #MGTK::Part::page_up
         jsr     check_control_repeat
         bpl     pgup
         jmp     done_client_click
 
-pgdn:   jsr     L63EC
+pgdn:   jsr     scroll_page_down
         lda     #MGTK::Part::page_down
         jsr     check_control_repeat
         bpl     pgdn
@@ -3620,13 +3620,13 @@ rght:   jsr     scroll_right
 
 :       cmp     #MGTK::Part::page_right
         beq     pgrt
-pglt:   jsr     L6451
+pglt:   jsr     scroll_page_left
         lda     #MGTK::Part::page_left
         jsr     check_control_repeat
         bpl     pglt
         jmp     done_client_click
 
-pgrt:   jsr     L64B0
+pgrt:   jsr     scroll_page_right
         lda     #MGTK::Part::page_right
         jsr     check_control_repeat
         bpl     pgrt
@@ -4414,109 +4414,130 @@ L638B:  .byte   0
 
 ;;; ============================================================
 
-.proc L638C
-        jsr     L650F
-        sty     L63E9
-        jsr     L644C
-        sta     L63E8
-        sub16_8 grafport2::cliprect::y1, L63E8, L63EA
-        cmp16   L63EA, iconbb_rect+MGTK::Rect::y1
-        bmi     L63C1
-        ldax    L63EA
-        jmp     L63C7
+.proc scroll_page_up
+        jsr     compute_active_window_dimensions
+        sty     height
+        jsr     calc_height_minus_header
+        sta     useful_height
 
-L63C1:  ldax    iconbb_rect+MGTK::Rect::y1
-L63C7:  stax    grafport2::cliprect::y1
-        add16_8 grafport2::cliprect::y1, L63E9, grafport2::cliprect::y2
+        sub16_8 grafport2::cliprect::y1, useful_height, delta
+        cmp16   delta, iconbb_rect+MGTK::Rect::y1
+        bmi     clamp
+        ldax    delta
+        jmp     adjust
+
+clamp:  ldax    iconbb_rect+MGTK::Rect::y1
+
+adjust: stax    grafport2::cliprect::y1
+        add16_8 grafport2::cliprect::y1, height, grafport2::cliprect::y2
         jsr     assign_active_window_cliprect
         jsr     update_scrollbars
-        jmp     L6556
+        jmp     redraw_window_after_scroll
 
-L63E8:  .byte   0
-L63E9:  .byte   0
-L63EA:  .word   0
+useful_height:
+        .byte   0               ; without header
+height: .byte   0               ; of window's port
+delta:  .word   0
 
 .endproc
 
 ;;; ============================================================
 
-.proc L63EC
-        jsr     L650F
-        sty     L6449
-        jsr     L644C
-        sta     L6448
-        add16_8 grafport2::cliprect::y2, L6448, L644A
-        cmp16   L644A, iconbb_rect+MGTK::Rect::y2
-        bpl     L6421
-        ldax    L644A
-        jmp     L6427
+.proc scroll_page_down
+        jsr     compute_active_window_dimensions
+        sty     height
+        jsr     calc_height_minus_header
+        sta     useful_height
 
-L6421:  ldax    iconbb_rect+MGTK::Rect::y2
-L6427:  stax    grafport2::cliprect::y2
-        sub16_8 grafport2::cliprect::y2, L6449, grafport2::cliprect::y1
+        add16_8 grafport2::cliprect::y2, useful_height, delta
+        cmp16   delta, iconbb_rect+MGTK::Rect::y2
+        bpl     clamp
+        ldax    delta
+        jmp     adjust
+
+clamp:  ldax    iconbb_rect+MGTK::Rect::y2
+
+adjust: stax    grafport2::cliprect::y2
+        sub16_8 grafport2::cliprect::y2, height, grafport2::cliprect::y1
         jsr     assign_active_window_cliprect
         jsr     update_scrollbars
-        jmp     L6556
+        jmp     redraw_window_after_scroll
 
-L6448:  .byte   0
-L6449:  .byte   0
-L644A:  .word   0
+useful_height:
+        .byte   0               ; without header
+height: .byte   0               ; of window's port
+delta:  .word   0
 .endproc
 
 ;;; ============================================================
+;;; Input: Y = window height
+;;; Output: A = Window height without items/used/free header
 
-.proc L644C
+.proc calc_height_minus_header
+
+        kWindowHeaderHeight = 14 ; TODO: move somewhere common
+
         tya
         sec
-        sbc     #$0E
+        sbc     #14
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc L6451
-        jsr     L650F
-        stax    L64AC
-        sub16   grafport2::cliprect::x1, L64AC, L64AE
-        cmp16   L64AE, iconbb_rect+MGTK::Rect::x1
-        bmi     L6484
-        ldax    L64AE
-        jmp     L648A
+.proc scroll_page_left
+        jsr     compute_active_window_dimensions
+        stax    width
 
-L6484:  ldax    iconbb_rect+MGTK::Rect::x1
-L648A:  stax    grafport2::cliprect::x1
-        add16   grafport2::cliprect::x1, L64AC, grafport2::cliprect::x2
+        sub16   grafport2::cliprect::x1, width, delta
+        cmp16   delta, iconbb_rect+MGTK::Rect::x1
+        bmi     clamp
+
+        ldax    delta
+        jmp     adjust
+
+clamp:  ldax    iconbb_rect+MGTK::Rect::x1
+
+adjust: stax    grafport2::cliprect::x1
+        add16   grafport2::cliprect::x1, width, grafport2::cliprect::x2
         jsr     assign_active_window_cliprect
         jsr     update_scrollbars
-        jmp     L6556
+        jmp     redraw_window_after_scroll
 
-L64AC:  .word   0
-L64AE:  .word   0
+width:  .word   0               ; of window's port
+delta:  .word   0
 .endproc
 
 ;;; ============================================================
 
-.proc L64B0
-        jsr     L650F
-        stax    L650B
-        add16   grafport2::cliprect::x2, L650B, L650D
-        cmp16   L650D, iconbb_rect+MGTK::Rect::x2
-        bpl     L64E3
-        ldax    L650D
-        jmp     L64E9
+.proc scroll_page_right
+        jsr     compute_active_window_dimensions
+        stax    width
 
-L64E3:  ldax    iconbb_rect+MGTK::Rect::x2
-L64E9:  stax    grafport2::cliprect::x2
-        sub16   grafport2::cliprect::x2, L650B, grafport2::cliprect::x1
+        add16   grafport2::cliprect::x2, width, delta
+        cmp16   delta, iconbb_rect+MGTK::Rect::x2
+        bpl     clamp
+        ldax    delta
+        jmp     adjust
+
+clamp:  ldax    iconbb_rect+MGTK::Rect::x2
+
+adjust: stax    grafport2::cliprect::x2
+        sub16   grafport2::cliprect::x2, width, grafport2::cliprect::x1
         jsr     assign_active_window_cliprect
         jsr     update_scrollbars
-        jmp     L6556
+        jmp     redraw_window_after_scroll
 
-L650B:  .word   0
-L650D:  .word   0
+width:  .word   0               ; of window's port
+delta:  .word   0
 .endproc
 
-.proc L650F
+;;; ============================================================
+;;; Computes dimensions of active window (leaves icons
+;;; mapped to screen coords, if not a list view)
+;;; Returns: Width in A,X, height in Y
+
+.proc compute_active_window_dimensions
         bit     active_window_view_by
         bmi     :+              ; list view, not icons
         jsr     cached_icons_screen_to_window
@@ -4525,6 +4546,8 @@ L650D:  .word   0
         lda     active_window_id
         jmp     compute_window_dimensions
 .endproc
+
+;;; ============================================================
 
 .proc apply_active_winfo_to_grafport2
         ptr := $06
@@ -4556,7 +4579,10 @@ L650D:  .word   0
         rts
 .endproc
 
-.proc L6556
+;;; ============================================================
+;;; Redraw windows after scrolling
+
+.proc redraw_window_after_scroll
         bit     active_window_view_by
         bmi     :+
         jsr     cached_icons_window_to_screen
