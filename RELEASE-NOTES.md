@@ -27,6 +27,7 @@ https://github.com/inexorabletash/a2d/issues
 * Apple-Delete deletes selected files. (#150)
 * File > Get Info command shows Aux Type for files. (#148)
 * ProDOS 2.5 extended dates (through 2923) are supported. (#169)
+* File > New Folder scrolls new folder icon into view. (#16)
 
 ### Desk Accessory Enhancements
 
