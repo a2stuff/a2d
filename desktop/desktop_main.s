@@ -2122,7 +2122,37 @@ name_ptr:
         path_buffer := cmd_new_folder_impl::path_buffer ; ???
 
 ;;; ============================================================
+;;; Grab the coordinates (MGTK::Point) of an icon.
+;;; Inputs: A = icon number
+;;; Outputs: cur_icon_pos is filled, $06 points at icon entry
+
+cur_icon_pos:
+        DEFINE_POINT 0,0,cur_icon_pos
+
+.proc cache_icon_pos
+        entry_ptr := $06
+
+        jsr     icon_entry_lookup
+        stax    entry_ptr
+
+        ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     (entry_ptr),y
+        sta     cur_icon_pos::xcoord,x
+        dey
+        dex
+        bpl     :-
+
+        rts
+.endproc
+
+;;; ============================================================
 ;;; Input: Icon number in A. Must be in active window.
+
+kIconBBoxOffsetTop     = 15
+kIconBBoxOffsetLeft    = 50
+kIconBBoxOffsetBottom  = 32          ; includes height of icon + label
+kIconBBoxOffsetRight   = 50          ; includes width of icon + label
 
 .proc scroll_icon_into_view
         icon_ptr := $06
@@ -2134,16 +2164,7 @@ name_ptr:
 
         ;; Grab the icon coords
         lda     icon_num
-        jsr     icon_entry_lookup
-
-        stax    icon_ptr
-        ldy     #IconEntry::iconx + .sizeof(MGTK::Rect)-1
-        ldx     #.sizeof(MGTK::Rect)-1
-:       lda     (icon_ptr),y
-        sta     icon_coords,x
-        dey
-        dex
-        bpl     :-
+        jsr     cache_icon_pos
 
         ;; Restore coordinates
         lda     icon_num
@@ -2156,16 +2177,13 @@ name_ptr:
         ;; --------------------------------------------------
         ;; X adjustment
 
-        kMaxIconWidth = 27
-        kIconXPadding = 10
-
         ;; Is left of icon beyond window? If so, adjust by delta (negative)
-        sub16   icon_x, grafport2::cliprect::x1, delta
+        sub16   cur_icon_pos::xcoord, grafport2::cliprect::x1, delta
         bmi     adjustx
 
         ;; Is right of icon beyond window? If so, adjust by delta (positive)
-        add16_8 icon_x, #kMaxIconWidth + kIconXPadding, icon_x
-        sub16   icon_x, grafport2::cliprect::x2, delta
+        add16_8 cur_icon_pos::xcoord, #kIconBBoxOffsetRight, cur_icon_pos::xcoord
+        sub16   cur_icon_pos::xcoord, grafport2::cliprect::x2, delta
         bmi     donex
 
 adjustx:
@@ -2182,12 +2200,12 @@ donex:
         kIconLabelHeight = 8
 
         ;; Is top of icon beyond window? If so, adjust by delta (negative)
-        sub16   icon_y, grafport2::cliprect::y1, delta
+        sub16   cur_icon_pos::ycoord, grafport2::cliprect::y1, delta
         bmi     adjusty
 
         ;; Is bottom of icon beyond window? If so, adjust by delta (positive)
-        add16_8 icon_y, #kMaxIconHeight + kIconLabelHeight, icon_y
-        sub16   icon_y, grafport2::cliprect::y2, delta
+        add16_8 cur_icon_pos::ycoord, #kIconBBoxOffsetBottom, cur_icon_pos::ycoord
+        sub16   cur_icon_pos::ycoord, grafport2::cliprect::y2, delta
         bmi     doney
 
 adjusty:
@@ -2208,10 +2226,6 @@ icon_num:
         .byte   0
 
 dirty:  .byte   0
-
-icon_coords:
-icon_x: .word   0
-icon_y: .word   0
 
 delta: .word   0
 .endproc
@@ -7313,18 +7327,9 @@ iconbb_rect:
 
 .proc compute_icons_bbox_impl
 
-cur_icon_pos:
-        DEFINE_POINT 0,0,cur_icon_pos
-
         entry_ptr := $06
 
         kIntMax = $7FFF
-
-        kPadTop    = 15
-        kPadLeft   = 50
-        kPadBottom = 32
-        kPadRight  = 50
-
 
 start:  ldx     #3
         lda     #0
@@ -7348,10 +7353,11 @@ start:  ldx     #3
         ;; List view
         lda     cached_window_icon_count
         bne     L7BA1
-L7B96:  ldax    #$0300
-L7B9A:  sta     iconbb_rect::x1,x
+L7B96:  lda     #0
+        ldx     #3
+:       sta     iconbb_rect::x1,x
         dex
-        bpl     L7B9A
+        bpl     :-
         rts
 
         ;; iconbb_rect::x2 = 360
@@ -7377,19 +7383,9 @@ L7BCB:  lda     cached_window_icon_count
         cmp     #1
         bne     check_icon
 
-        ;; First icon - copy coords
+        ;; Only one icon - copy coords
         lda     cached_window_icon_list
-        jsr     icon_entry_lookup
-        stax    entry_ptr
-
-        ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     (entry_ptr),y
-        sta     iconbb_rect::x1,x
-        sta     iconbb_rect::x2,x
-        dey
-        dex
-        bpl     :-
+        jsr     cache_icon_pos
 
         jmp     finish
 
@@ -7398,34 +7394,26 @@ check_icon:
         cmp     cached_window_icon_count
         bne     more
 
+        ;; Add padding around bbox
 finish: lda     iconbb_rect::x2
         clc
-        adc     #kPadRight
+        adc     #kIconBBoxOffsetRight
         sta     iconbb_rect::x2
         bcc     :+
         inc     iconbb_rect::x2+1
 :       lda     iconbb_rect::y2
         clc
-        adc     #kPadBottom
+        adc     #kIconBBoxOffsetBottom
         sta     iconbb_rect::y2
         bcc     :+
         inc     iconbb_rect::y2+1
-:       sub16   iconbb_rect::x1, #kPadLeft, iconbb_rect::x1
-        sub16   iconbb_rect::y1, #kPadTop, iconbb_rect::y1
+:       sub16   iconbb_rect::x1, #kIconBBoxOffsetLeft, iconbb_rect::x1
+        sub16   iconbb_rect::y1, #kIconBBoxOffsetTop, iconbb_rect::y1
         rts
 
 more:   tax
         lda     cached_window_icon_list,x
-        jsr     icon_entry_lookup
-        stax    entry_ptr
-
-        ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     (entry_ptr),y
-        sta     cur_icon_pos::xcoord,x
-        dey
-        dex
-        bpl     :-
+        jsr     cache_icon_pos
 
         ;; --------------------------------------------------
         ;; Compare X coords
