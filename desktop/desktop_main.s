@@ -7419,41 +7419,41 @@ more:   tax
         ;; Compare X coords
 
         bit     iconbb_rect::x1+1         ; negative?
-        bmi     pt0x_neg
+        bmi     minx_neg
 
         bit     cur_icon_pos::xcoord+1
-        bmi     adjust_pt0_x
+        bmi     adjust_min_x
 
-        ;; X: cur and pt0 are positive
+        ;; X: cur and min are positive
         cmp16   cur_icon_pos::xcoord, iconbb_rect::x1
-        bmi     adjust_pt0_x
+        bmi     adjust_min_x
         cmp16   cur_icon_pos::xcoord, iconbb_rect::x2
-        bpl     adjust_pt1_x
+        bpl     adjust_max_x
         jmp     compare_y
 
-pt0x_neg:
+minx_neg:
         bit     cur_icon_pos::xcoord+1
         bmi     bothx_neg
 
-        ;; X: cur positive, pt0 negative
+        ;; X: cur positive, min negative
         bit     iconbb_rect::x2+1
         bmi     compare_y
         cmp16   cur_icon_pos::xcoord, iconbb_rect::x2
         bmi     compare_y
-        jmp     adjust_pt1_x
+        jmp     adjust_max_x
 
-        ;; X: cur and pt0 are negative
+        ;; X: cur and min are negative
 bothx_neg:
         cmp16   cur_icon_pos::xcoord, iconbb_rect::x1
-        bmi     adjust_pt0_x
+        bmi     adjust_min_x
         cmp16   cur_icon_pos::xcoord, iconbb_rect::x2
         bmi     compare_y
 
-adjust_pt1_x:
+adjust_max_x:
         copy16  cur_icon_pos::xcoord, iconbb_rect::x2
         jmp     compare_y
 
-adjust_pt0_x:
+adjust_min_x:
         copy16  cur_icon_pos::xcoord, iconbb_rect::x1
 
         ;; --------------------------------------------------
@@ -7461,40 +7461,40 @@ adjust_pt0_x:
 
 compare_y:
         bit     iconbb_rect::y1+1
-        bmi     pt0y_neg
+        bmi     miny_neg
         bit     cur_icon_pos::ycoord+1
-        bmi     adjust_pt0_y
+        bmi     adjust_min_y
 
-        ;; Y: cur and pt0 are positive
+        ;; Y: cur and min are positive
         cmp16   cur_icon_pos::ycoord, iconbb_rect::y1
-        bmi     adjust_pt0_y
+        bmi     adjust_min_y
         cmp16   cur_icon_pos::ycoord, iconbb_rect::y2
-        bpl     adjust_pt1_y
+        bpl     adjust_max_y
         jmp     next
 
-pt0y_neg:
+miny_neg:
         bit     cur_icon_pos::ycoord+1
         bmi     bothy_neg
 
-        ;; Y: cur positive, pt0 negative
+        ;; Y: cur positive, min negative
         bit     iconbb_rect::y2+1
         bmi     next
         cmp16   cur_icon_pos::ycoord, iconbb_rect::y2
         bmi     next
-        jmp     adjust_pt1_y
+        jmp     adjust_max_y
 
-        ;; Y: cur and pt0 are negative
+        ;; Y: cur and min are negative
 bothy_neg:
         cmp16   cur_icon_pos::ycoord, iconbb_rect::y1
-        bmi     adjust_pt0_y
+        bmi     adjust_min_y
         cmp16   cur_icon_pos::ycoord, iconbb_rect::y2
         bmi     next
 
-adjust_pt1_y:
+adjust_max_y:
         copy16  cur_icon_pos::ycoord, iconbb_rect::y2
         jmp     next
 
-adjust_pt0_y:
+adjust_min_y:
         copy16  cur_icon_pos::ycoord, iconbb_rect::y1
 
 next:   inc     icon_num
