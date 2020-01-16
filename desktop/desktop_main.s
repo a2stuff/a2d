@@ -7418,15 +7418,8 @@ more:   tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
         stax    entry_ptr
-        ldy     #IconEntry::win_type
-        lda     (entry_ptr),y
-        and     #kIconEntryWinIdMask
-        cmp     hi           ; BUG: from old code that iterated all icons???
-        bne     :+
-        inc     icon_num
-        jmp     check_icon
 
-:       ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
+        ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     (entry_ptr),y
         sta     cur_icon_pos::xcoord,x
