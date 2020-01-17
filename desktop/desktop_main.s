@@ -7331,12 +7331,15 @@ iconbb_rect:
 
         kIntMax = $7FFF
 
-start:  ldx     #3
+start:
+        ;; max.x = max.y = 0
+        ldx     #.sizeof(MGTK::Point)-1
         lda     #0
 :       sta     iconbb_rect::x2,x
         dex
         bpl     :-
 
+        ;; min.x = min.y = kIntMax
         sta     icon_num
         lda     #<kIntMax
         sta     iconbb_rect::x1
@@ -7345,24 +7348,30 @@ start:  ldx     #3
         sta     iconbb_rect::x1+1
         sta     iconbb_rect+MGTK::Rect::y1+1
 
+        ;; Icon view?
         ldx     cached_window_id
         dex
         lda     win_view_by_table,x
-        bpl     L7BCB           ; icon view
+        bpl     icon_view           ; icon view
 
+        ;; --------------------------------------------------
         ;; List view
         lda     cached_window_icon_count
-        bne     L7BA1
-L7B96:  lda     #0
-        ldx     #3
+        bne     list_view_non_empty
+
+        ;; min.x = min.y = 0
+zero_min:
+        lda     #0
+        ldx     #.sizeof(MGTK::Point)-1
 :       sta     iconbb_rect::x1,x
         dex
         bpl     :-
         rts
 
-        ;; iconbb_rect::x2 = 360
-        ;; iconbb_rect::y2 = (A + 2) * 8
-L7BA1:  clc
+        ;; min.x = 360
+        ;; min.y = (A + 2) * 8
+list_view_non_empty:
+        clc
         adc     #2
         ldx     #0
         stx     hi
@@ -7376,10 +7385,12 @@ L7BA1:  clc
         lda     hi
         sta     iconbb_rect::y2+1
         copy16  #360, iconbb_rect::x2
-        jmp     L7B96
+        jmp     zero_min
 
+        ;; --------------------------------------------------
         ;; Icon view
-L7BCB:  lda     cached_window_icon_count
+icon_view:
+        lda     cached_window_icon_count
         cmp     #1
         bne     check_icon
 
