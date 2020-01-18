@@ -7339,8 +7339,10 @@ start:
         dex
         bpl     :-
 
-        ;; min.x = min.y = kIntMax
+        ;; icon_num = 0
         sta     icon_num
+
+        ;; min.x = min.y = kIntMax
         lda     #<kIntMax
         sta     iconbb_rect::x1
         sta     iconbb_rect+MGTK::Rect::y1
@@ -7356,8 +7358,13 @@ start:
 
         ;; --------------------------------------------------
         ;; List view
+
+        ;; If no items, simply zero out min and done. Otherwise,
+        ;; do an actual calculation.
+
         lda     cached_window_icon_count
         bne     list_view_non_empty
+        ;; Just fall through if no items (min = max = 0)
 
         ;; min.x = min.y = 0
 zero_min:
@@ -7385,20 +7392,13 @@ list_view_non_empty:
         lda     hi
         sta     iconbb_rect::y2+1
         copy16  #360, iconbb_rect::x2
+
+        ;; Now zero out min (and done
         jmp     zero_min
 
         ;; --------------------------------------------------
         ;; Icon view
 icon_view:
-        lda     cached_window_icon_count
-        cmp     #1
-        bne     check_icon
-
-        ;; Only one icon - copy coords
-        lda     cached_window_icon_list
-        jsr     cache_icon_pos
-
-        jmp     finish
 
 check_icon:
         lda     icon_num
@@ -7426,9 +7426,22 @@ more:   tax
         lda     cached_window_icon_list,x
         jsr     cache_icon_pos
 
+        ;; First icon (index 0) - just use its coordinates as min/max
+        lda     icon_num
+        bne     compare_x
+
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     cur_icon_pos,x
+        sta     iconbb_rect::x1,x
+        sta     iconbb_rect::x2,x
+        dex
+        bpl     :-
+        jmp     next
+
         ;; --------------------------------------------------
         ;; Compare X coords
 
+compare_x:
         bit     iconbb_rect::x1+1         ; negative?
         bmi     minx_neg
 
