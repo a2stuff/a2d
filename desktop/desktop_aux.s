@@ -1709,30 +1709,47 @@ start:  ldy     #0
         copy16  icon_ptrs,x, $06
         jsr     calc_icon_poly
 
-        cmp16   poly::v0::ycoord, rect::y2
-        bpl     done
+        ;; See vertex diagram in calc_icon_poly
 
+        ;; ----------------------------------------
+        ;; Easy parts: extremes
+
+        ;; top of icon > bottom of rect --> outside
+        cmp16   rect::y2, poly::v0::ycoord
+        bmi     outside
+
+        ;; bottom of icon < top of rect --> outside
         cmp16   poly::v5::ycoord, rect::y1
-        bmi     done
+        bmi     outside
 
+        ;; left of icon text >= right of rect --> outside
         cmp16   poly::v5::xcoord, rect::x2
-        bpl     done
+        bpl     outside
 
+        ;; right of icon text < left of rect --> outside
         cmp16   poly::v4::xcoord, rect::x1
-        bmi     done
+        bmi     outside
 
+        ;; ----------------------------------------
+        ;; Harder parts: rect above text on left/right
+
+        ;; top of icon text < bottom of rect --> inside
         cmp16   poly::v7::ycoord, rect::y2
-        bmi     L9F8F
+        bmi     inside
 
+        ;; left of icon bitmap >= right of rect --> outside
         cmp16   poly::v7::xcoord, rect::x2
-        bpl     done
+        bpl     outside
 
+        ;; right of icon bitmap >= left of rect --> inside
         cmp16   poly::v2::xcoord, rect::x1
-        bpl     L9F8F
+        bpl     inside
 
-done:   return  #0
+outside:
+        return  #0
 
-L9F8F:  return  #1
+inside:
+        return  #1
 .endproc
 
 ;;; ============================================================
