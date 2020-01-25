@@ -12,7 +12,7 @@ make ca65 ld65 avail
 
 Within the `a2d` repo, `make` should build all targets, including DeskTop itself, desk accessories, and preview accessories.
 
-## Getting The DAs Onto Your Apple II
+## Getting DeskTop Onto Your Apple II
 
 There are a handful of approaches for getting the files on your real or virtual Apple II.
 

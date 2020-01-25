@@ -8,19 +8,28 @@ Contributions welcome! Preliminaries:
 
 ## Sub-Projects
 
-1. Disassembly of the MouseGraphics ToolKit
-   * Continue the effort to understand this powerful GUI library.
-   * Make it relocatable, work on C bindings for cc65.
-   * Pure disassembly changes take place in the `disasm` branch, which builds identically to the original.
-1. Disassembly of DeskTop itself
-   * The core bits of DeskTop.
-   * The various overlays.
-   * The DiskCopy overlay is basically a stand-alone app. Could be fun.
-1. Disassembly of [Selector](https://github.com/a2stuff/a2d/issues/63)
-1. Bug fixes
-   * Try and tackle some of the bugs in the [issue tracker](https://github.com/a2stuff/a2d/issues?q=is%3Aissue+is%3Aopen+label%3Abug-in-original).
-1. Add new Desk Accessories
-   * List of ideas in the [issue tracker](https://github.com/a2stuff/a2d/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3A%22Desk+Accessories%22+label%3A%22feature+request%22)
+### Disassembly
+
+Pure disassembly changes take place in the `disasm` branch, which builds identically to the original. The `master` branch is based on `disasm`. (NOTE: Some disassembly has been done in `master` and should be 'upstreamed', time permitting.)
+
+Disassembly efforts include:
+
+1. DeskTop itself
+   * The core bits of DeskTop (mostly done)
+   * The various overlays (work in progress)
+   * The DiskCopy overlay is basically a stand-alone app.
+1. [Selector](https://github.com/a2stuff/a2d/issues/63)
+
+### Bug Fixes & Enhancements
+
+* [Bugs in DeskTop](https://github.com/a2stuff/a2d/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3A%22bug%22+label%3ADeskTop)
+* [Bugs in MGTK](https://github.com/a2stuff/a2d/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3A%22bug%22+label%3AMGTK)
+* [Bugs in Desk Accessories](https://github.com/a2stuff/a2d/issues?q=is%3Aissue+is%3Aopen+label%3Abug+label%3A%22Desk+Accessories%22)
+
+* [Feature requests for DeskTop](https://github.com/a2stuff/a2d/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+label%3ADeskTop)
+* [Feature requests for Desk Accessories](https://github.com/a2stuff/a2d/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+label%3A%22Desk+Accessories%22)
+* [Feature requests for Control Panel](https://github.com/a2stuff/a2d/issues?q=is%3Aissue+is%3Aopen+label%3A%22Control+Panel+DA%22)
+
 
 ## DeskTop Disassembly Burn-Down
 
