@@ -3645,8 +3645,10 @@ maprect:        DEFINE_RECT 0, 0, 420, 55, maprect
 ok_label:
         PASCAL_STRING {"OK            ",kGlyphReturn}
 
+ok_rect:
 try_again_rect:
         DEFINE_RECT 20,37,120,48
+ok_pos:
 try_again_pos:
         DEFINE_POINT 25,47
 
@@ -3861,8 +3863,8 @@ draw_buttons:
 
         ;; OK button
 ok_button:
-        MGTK_CALL MGTK::FrameRect, try_again_rect
-        MGTK_CALL MGTK::MoveTo, try_again_pos
+        MGTK_CALL MGTK::FrameRect, ok_rect
+        MGTK_CALL MGTK::MoveTo, ok_pos
         addr_call draw_pascal_string, ok_label
 
         ;; Prompt string
@@ -3916,34 +3918,42 @@ check_ok:
         cmp     #CHAR_RETURN
         bne     :+
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
+        MGTK_CALL MGTK::PaintRect, ok_rect
         lda     #kAlertResultOK
         jmp     finish
 
 :       jmp     event_loop
 
+        ;; --------------------------------------------------
+        ;; Buttons
+
 handle_button_down:
-        jsr     LBDE1
+        jsr     event_coords_to_local
+
         MGTK_CALL MGTK::MoveTo, event_coords
         bit     alert_action
-        bpl     LBC42
-        MGTK_CALL MGTK::InRect, cancel_rect
+        bpl     check_ok_rect
+
+        MGTK_CALL MGTK::InRect, cancel_rect ; Cancel?
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     LBCE9
+        jmp     do_cancel_button
 :       bit     alert_action
-        bvs     LBC42
-        MGTK_CALL MGTK::InRect, try_again_rect
-        cmp     #MGTK::inrect_inside
-        bne     LBC52
-        jmp     LBC6D
+        bvs     check_ok_rect
 
-LBC42:  MGTK_CALL MGTK::InRect, try_again_rect
+        MGTK_CALL MGTK::InRect, try_again_rect ; Try Again?
         cmp     #MGTK::inrect_inside
-        bne     LBC52
-        jmp     LBD65
+        bne     no_button
+        jmp     do_try_again_button
 
-LBC52:  jmp     event_loop
+check_ok_rect:
+        MGTK_CALL MGTK::InRect, ok_rect ; OK?
+        cmp     #MGTK::inrect_inside
+        bne     no_button
+        jmp     do_ok_button
+
+no_button:
+        jmp     event_loop
 
 finish: pha
         MGTK_CALL MGTK::HideCursor
@@ -3952,122 +3962,151 @@ finish: pha
         pla
         rts
 
-LBC6D:  MGTK_CALL MGTK::SetPenMode, penXOR
+        ;; --------------------------------------------------
+        ;; Try Again button
+
+.proc do_try_again_button
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     #0
-        sta     LBCE8
-LBC84:  MGTK_CALL MGTK::GetEvent, event_params
+        sta     flag
+
+        ;; event loop
+loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LBCDB
-        jsr     LBDE1
+        beq     button_up
+        jsr     event_coords_to_local
         MGTK_CALL MGTK::MoveTo, event_coords
         MGTK_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
-        beq     LBCB5
-        lda     LBCE8
-        beq     LBCBD
-        jmp     LBC84
+        beq     inside
+        lda     flag
+        beq     toggle
+        jmp     loop
 
-LBCB5:  lda     LBCE8
-        bne     LBCBD
-        jmp     LBC84
+inside: lda     flag
+        bne     toggle
+        jmp     loop
 
-LBCBD:  MGTK_CALL MGTK::SetPenMode, penXOR
+toggle: MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, try_again_rect
-        lda     LBCE8
-        clc
+        lda     flag
+        clc                     ; TODO: why not eor #$80 ???
         adc     #$80
-        sta     LBCE8
-        jmp     LBC84
+        sta     flag
+        jmp     loop
 
-LBCDB:  lda     LBCE8
-        beq     LBCE3
+button_up:
+        lda     flag
+        beq     :+
         jmp     event_loop
-
-LBCE3:  lda     #kAlertResultTryAgain
+:       lda     #kAlertResultTryAgain
         jmp     finish
 
-LBCE8:  .byte   0
-LBCE9:  MGTK_CALL MGTK::SetPenMode, penXOR
+        ;; high bit clear if button is down
+flag:   .byte   0
+.endproc
+
+        ;; --------------------------------------------------
+        ;; Cancel button
+
+.proc do_cancel_button
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, cancel_rect
         lda     #0
-        sta     LBD64
-LBD00:  MGTK_CALL MGTK::GetEvent, event_params
+        sta     flag
+
+        ;; event loop
+loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LBD57
-        jsr     LBDE1
+        beq     button_up
+        jsr     event_coords_to_local
         MGTK_CALL MGTK::MoveTo, event_coords
         MGTK_CALL MGTK::InRect, cancel_rect
         cmp     #MGTK::inrect_inside
-        beq     LBD31
-        lda     LBD64
-        beq     LBD39
-        jmp     LBD00
+        beq     inside
+        lda     flag
+        beq     toggle
+        jmp     loop
 
-LBD31:  lda     LBD64
-        bne     LBD39
-        jmp     LBD00
+inside: lda     flag
+        bne     toggle
+        jmp     loop
 
-LBD39:  MGTK_CALL MGTK::SetPenMode, penXOR
+toggle: MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, cancel_rect
-        lda     LBD64
-        clc
+        lda     flag
+        clc                     ; TODO: why not eor #$80 ???
         adc     #$80
-        sta     LBD64
-        jmp     LBD00
+        sta     flag
+        jmp     loop
 
-LBD57:  lda     LBD64
-        beq     LBD5F
+button_up:
+        lda     flag
+        beq     :+
         jmp     event_loop
-
-LBD5F:  lda     #kAlertResultCancel
+:       lda     #kAlertResultCancel
         jmp     finish
 
-LBD64:  .byte   0
-LBD65:  lda     #0
-        sta     LBDE0
+        ;; High bit clear if button is depressed
+flag:   .byte   0
+.endproc
+
+        ;; --------------------------------------------------
+        ;; OK button
+
+.proc do_ok_button
+        lda     #0
+        sta     flag
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
-LBD7C:  MGTK_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::PaintRect, ok_rect
+
+        ;; event loop
+loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LBDD3
-        jsr     LBDE1
+        beq     button_up
+        jsr     event_coords_to_local
         MGTK_CALL MGTK::MoveTo, event_coords
-        MGTK_CALL MGTK::InRect, try_again_rect
+        MGTK_CALL MGTK::InRect, ok_rect
         cmp     #MGTK::inrect_inside
-        beq     LBDAD
-        lda     LBDE0
-        beq     LBDB5
-        jmp     LBD7C
+        beq     inside
+        lda     flag
+        beq     toggle
+        jmp     loop
 
-LBDAD:  lda     LBDE0
-        bne     LBDB5
-        jmp     LBD7C
+inside: lda     flag
+        bne     toggle
+        jmp     loop
 
-LBDB5:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
-        lda     LBDE0
-        clc
+toggle: MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, ok_rect
+        lda     flag
+        clc                     ; TODO: why not eor #$80 ???
         adc     #$80
-        sta     LBDE0
-        jmp     LBD7C
+        sta     flag
+        jmp     loop
 
-LBDD3:  lda     LBDE0
-        beq     LBDDB
+button_up:
+        lda     flag
+        beq     :+
         jmp     event_loop
-
-LBDDB:  lda     #kAlertResultOK
+:       lda     #kAlertResultOK
         jmp     finish
 
+        ;; High bit clear if button is depressed
+flag:   .byte   0
+.endproc
 
-LBDE0:  .byte   0
+        ;; --------------------------------------------------
 
-LBDE1:  sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
+.proc event_coords_to_local
+        sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
         sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
         rts
+.endproc
 
 .endproc
         show_alert_dialog := show_alert_dialog_impl::start
