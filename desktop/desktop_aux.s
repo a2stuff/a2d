@@ -4160,35 +4160,44 @@ col:    lda     xbyte
         rts
 
         .byte   0               ; Unused ???
+
 xbyte:  .byte   0
 .endproc
 
-;;; TODO: Why is this so much more complicated than save proc???
+;;; Restore handles masking off the left/right edges correctly
+;;; TODO: Is that really necessary?
 
 .proc restore
         copy16  #SAVE_AREA_BUFFER, addr
         ldx     save_x1_bit
         ldy     save_x2_bit
+
+        ;; x1 mask
         lda     #$FF
         cpx     #0
-        beq     LBE78
-LBE73:  clc
+        beq     done_mask1
+:       clc
         rol     a
         dex
-        bne     LBE73
-LBE78:  sta     LBF0C
+        bne     :-
+done_mask1:
+        sta     mask1
         eor     #$FF
-        sta     LBF0D
+        sta     mask1_inv
+
+        ;; x2 mask
         lda     #$01
         cpy     #$00
-        beq     LBE8B
-LBE86:  sec
+        beq     done_mask2
+:       sec
         rol     a
         dey
-        bne     LBE86
-LBE8B:  sta     LBF0E
+        bne     :-
+done_mask2:
+        sta     mask2
         eor     #$FF
-        sta     LBF0F
+        sta     mask2_inv
+
         lda     save_y1
         jsr     set_ptr_for_row
         lda     save_y2
@@ -4196,15 +4205,16 @@ LBE8B:  sta     LBF0E
         sbc     save_y1
         tax
         inx
-        lda     save_x1_byte
-        sta     LBF0B
+
+        lda     save_x1_byte    ; TODO: These 2 lines are redundant, remove!
+        sta     xbyte
 
         ;; Loop over rows
 loop:   lda     save_x1_byte
-        sta     LBF0B
+        sta     xbyte
 
         ;; Loop over columns (bytes)
-col:    lda     LBF0B
+col:    lda     xbyte
         lsr     a
         tay
         sta     PAGE2OFF        ; main $2000-$3FFF
@@ -4215,34 +4225,40 @@ col:    lda     LBF0B
 :       lda     SAVE_AREA_BUFFER ; self-modified
 
         pha
-        lda     LBF0B
-        cmp     save_x1_byte
-        beq     LBEDD
-        cmp     save_x2_byte
-        bne     LBEEB
-        lda     (ptr),y
-        and     LBF0F
-        sta     (ptr),y
-        pla
-        and     LBF0E
-        ora     (ptr),y
-        pha
-        jmp     LBEEB
+        lda     xbyte
+        cmp     save_x1_byte    ; left edge?
+        beq     left            ; yes, mask it
 
-LBEDD:  lda     (ptr),y
-        and     LBF0D
+        cmp     save_x2_byte    ; right edge?
+        bne     store           ; no
+
+        ;; right edge
+        lda     (ptr),y         ; yes, mask it!
+        and     mask2_inv
         sta     (ptr),y
         pla
-        and     LBF0C
+        and     mask2
         ora     (ptr),y
         pha
-LBEEB:  pla
+        jmp     store
+
+        ;; left edge
+left:   lda     (ptr),y
+        and     mask1_inv
+        sta     (ptr),y
+        pla
+        and     mask1
+        ora     (ptr),y
+        pha
+
+        ;; store the byte, advance to next
+store:  pla
         sta     (ptr),y
         inc16   addr
-        lda     LBF0B
+        lda     xbyte
         cmp     save_x2_byte
         bcs     :+
-        inc     LBF0B
+        inc     xbyte
         bne     col             ; always
 
 :       jsr     next_ptr_for_row
@@ -4250,12 +4266,18 @@ LBEEB:  pla
         bne     loop
         rts
 
-        .byte   $00
-LBF0B:  .byte   $00
-LBF0C:  .byte   $00
-LBF0D:  .byte   $00
-LBF0E:  .byte   $00
-LBF0F:  .byte   $00
+        .byte   0               ; Unused ???
+
+xbyte:  .byte   0
+
+
+mask1:  .byte   0
+mask1_inv:
+        .byte   0
+
+mask2:  .byte   0
+mask2_inv:
+        .byte   0
 .endproc
 
 ;;; Address calculations for dialog background display buffer.
