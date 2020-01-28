@@ -102,11 +102,11 @@ No-Op command (RTS)
 
 #### `JUMP_TABLE_ALERT_0` ($4030)
 
-Show alert in A, default options
+Show alert in A, default button options for error number
 
 #### `JUMP_TABLE_ALERT_X` ($4033)
 
-Show alert in A, options in X
+Show alert in A, button options in X
 
 #### `JUMP_TABLE_LAUNCH_FILE` ($4036)
 

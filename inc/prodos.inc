@@ -133,6 +133,7 @@ ST_VOLUME_DIRECTORY     = $0F
 ;;; Errors
 ;;; ============================================================
 
+ERR_IO_ERROR          = $27
 ERR_DEVICE_NOT_CONNECTED = $28
 ERR_WRITE_PROTECTED   = $2B
 ERR_INVALID_PATHNAME  = $40
@@ -145,6 +146,7 @@ ERR_OVERRUN_ERROR     = $48
 ERR_VOLUME_DIR_FULL   = $49
 ERR_END_OF_FILE       = $4C
 ERR_ACCESS_ERROR      = $4E
+ERR_NOT_PRODOS_VOLUME = $52
 ERR_DUPLICATE_VOLUME  = $57
 ERR_NETWORK_ERROR     = $88
 

@@ -87,6 +87,18 @@ JUMP_TABLE_COLOR_MODE   := $4042 ; Set DHR color mode (IIgs, AppleColor, Le Chat
 JUMP_TABLE_MONO_MODE    := $4045 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in ROM and ZP. *
 
+
+;;; ============================================================
+;;; Options/Results from JUMP_TABLE_ALERT_0 / JUMP_TABLE_ALERT_X
+
+kAlertOptionsDefault            = 0
+kAlertOptionsTryAgainCancel     = $80
+kAlertOptionsOKCancel           = $C0
+
+kAlertResultTryAgain    = 0
+kAlertResultCancel      = 1
+kAlertResultOK          = 2
+
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors
 

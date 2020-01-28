@@ -3630,6 +3630,15 @@ maprect:        DEFINE_RECT 0, 0, 420, 55, maprect
 ;;; ============================================================
 ;;; Show Alert Dialog
 ;;; Call show_alert_dialog with prompt number A, options in X
+;;; Options:
+;;;    0 = use defaults for alert number; otherwise, look at top 2 bits
+;;;  %0....... e.g. $01 = OK
+;;;  %10...... e.g. $80 = Try Again, Cancel
+;;;  %11...... e.g. $C0 = OK, Cancel
+;;; Return value:
+;;;   0 = Try Again
+;;;   1 = Cancel
+;;;   2 = OK
 
 .proc show_alert_dialog_impl
 
@@ -3686,10 +3695,15 @@ alert_count:
         ;; (look up by scan to determine index)
 alert_table:
         ;; ProDOS MLI error codes:
-        .byte   $00,$27,$28,$2B,$40,$44,$45,$46
-        .byte   $47,$48,$49,$4E,$52,$57
+        .byte   $00, ERR_IO_ERROR,ERR_DEVICE_NOT_CONNECTED, ERR_WRITE_PROTECTED
+        .byte   ERR_INVALID_PATHNAME, ERR_PATH_NOT_FOUND, ERR_VOL_NOT_FOUND
+        .byte   ERR_FILE_NOT_FOUND, ERR_DUPLICATE_FILENAME, ERR_OVERRUN_ERROR
+        .byte   ERR_VOLUME_DIR_FULL, ERR_ACCESS_ERROR, ERR_NOT_PRODOS_VOLUME
+        .byte   ERR_DUPLICATE_VOLUME
+
         ;; Internal error codes:
-        .byte   $F9,$FA,$FB,$FC,$FD,$FE
+        .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
+        .byte   kErrInsertSrcDisk, kErrInsertDstDisk, kErrBasicSysNotFound
 
         ;; alert index to string address
 prompt_table:
@@ -3699,14 +3713,21 @@ prompt_table:
 
         ;; alert index to action (0 = Cancel, $80 = Try Again)
 alert_action_table:
-        .byte   $00,$00,$00,$80,$00,$80,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$80,$80,$00
+        .byte   kAlertOptionsDefault, kAlertOptionsDefault
+        .byte   kAlertOptionsDefault, kAlertOptionsTryAgainCancel
+        .byte   kAlertOptionsDefault, kAlertOptionsTryAgainCancel
+        .byte   kAlertOptionsDefault, kAlertOptionsDefault
+        .byte   kAlertOptionsDefault, kAlertOptionsDefault
+        .byte   kAlertOptionsDefault, kAlertOptionsDefault
+        .byte   kAlertOptionsDefault, kAlertOptionsDefault
+        .byte   kAlertOptionsDefault, kAlertOptionsDefault
+        .byte   kAlertOptionsDefault, kAlertOptionsTryAgainCancel
+        .byte   kAlertOptionsTryAgainCancel, kAlertOptionsDefault
 
         ;; Actual entry point
 start:  pha                     ; error code
         txa
-        pha                     ; options???
+        pha                     ; options
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, pointer_cursor
         MGTK_CALL MGTK::ShowCursor
@@ -3719,17 +3740,22 @@ start:  pha                     ; error code
         lda     LCBANK1
         lda     LCBANK1
 
+        ;; Set up GrafPort
         ldx     #.sizeof(MGTK::Point)-1
-        lda     #$00
-LBA0B:  sta     grafport3_viewloc_xcoord,x
+        lda     #0
+:       sta     grafport3_viewloc_xcoord,x
         sta     grafport3_cliprect_x1,x
         dex
-        bpl     LBA0B
+        bpl     :-
 
         copy16  #550, grafport3_cliprect_x2
         copy16  #185, grafport3_cliprect_y2
         MGTK_CALL MGTK::SetPort, grafport3
-        addr_call_indirect LBF8B, portmap::viewloc::xcoord
+
+        ;; Compute save bounds
+        ldax    portmap::viewloc::xcoord
+        jsr     LBF8B
+
         sty     LBFCA
         sta     LBFCD
         lda     portmap::viewloc::xcoord
@@ -3739,8 +3765,9 @@ LBA0B:  sta     grafport3_viewloc_xcoord,x
         lda     portmap::viewloc::xcoord+1
         adc     portmap::maprect::x2+1
         tax
-        pla                     ; options???
+        pla
         jsr     LBF8B
+
         sty     LBFCC
         sta     LBFCE
         lda     portmap::viewloc::ycoord
@@ -3748,9 +3775,12 @@ LBA0B:  sta     grafport3_viewloc_xcoord,x
         clc
         adc     portmap::maprect::y2
         sta     LBFCB
+
         MGTK_CALL MGTK::HideCursor
         jsr     save_dialog_background
         MGTK_CALL MGTK::ShowCursor
+
+        ;; Draw alert box and bitmap
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, alert_rect ; alert background
         MGTK_CALL MGTK::SetPenMode, penXOR ; ensures corners are inverted
@@ -3759,98 +3789,141 @@ LBA0B:  sta     grafport3_viewloc_xcoord,x
         MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect1 ; inner 2x border
         MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect2
         MGTK_CALL MGTK::SetPenMode, pencopy
+
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintBits, alert_bitmap_params
         MGTK_CALL MGTK::ShowCursor
 
-        pla
+        ;; --------------------------------------------------
+        ;; Process Options
+
+        ;; A=alert/X=options
+        pla                     ; options
         tax
-        pla
+        pla                     ; alert number
+
+        ;; Search for alert in table, populate prompt_addr
         ldy     alert_count
         dey
-LBAE5:  cmp     alert_table,y
-        beq     LBAEF
+:       cmp     alert_table,y
+        beq     :+
         dey
-        bpl     LBAE5
-        ldy     #0
-LBAEF:  tya
+        bpl     :-
+
+        ldy     #0              ; default
+:       tya
         asl     a
         tay
         copy16  prompt_table,y, prompt_addr
-        cpx     #0
-        beq     LBB0B
-        txa
-        and     #$FE
-        sta     alert_action
-        jmp     LBB14
 
-LBB0B:  tya
+        ;; If options is 0, use table value; otherwise,
+        ;; mask off low bit and it's the action (N and V bits)
+
+        ;; %00000000 = Use default options
+        ;; %0....... e.g. $01 = OK
+        ;; %10...... e.g. $80 = Try Again, Cancel
+        ;; %11...... e.g. $C0 = OK, Cancel
+
+        cpx     #0
+        beq     :+
+        txa
+        and     #$FE            ; ignore low bit, e.g. treat $01 as $00
+        sta     alert_action
+        jmp     draw_buttons
+
+:       tya
         lsr     a
         tay
         lda     alert_action_table,y
         sta     alert_action
-LBB14:  MGTK_CALL MGTK::SetPenMode, penXOR
-        bit     alert_action
-        bpl     LBB5C
+
+        ;; Draw appropriate buttons
+draw_buttons:
+        MGTK_CALL MGTK::SetPenMode, penXOR
+
+        bit     alert_action    ; high bit clear = Cancel
+        bpl     ok_button
+
+        ;; Cancel button
         MGTK_CALL MGTK::FrameRect, cancel_rect
         MGTK_CALL MGTK::MoveTo, cancel_pos
         addr_call draw_pascal_string, cancel_label
+
         bit     alert_action
-        bvs     LBB5C
+        bvs     ok_button
+
+        ;; Try Again button
         MGTK_CALL MGTK::FrameRect, try_again_rect
         MGTK_CALL MGTK::MoveTo, try_again_pos
         addr_call draw_pascal_string, try_again_label
-        jmp     LBB75
 
-LBB5C:  MGTK_CALL MGTK::FrameRect, try_again_rect
+        jmp     draw_prompt
+
+        ;; OK button
+ok_button:
+        MGTK_CALL MGTK::FrameRect, try_again_rect
         MGTK_CALL MGTK::MoveTo, try_again_pos
         addr_call draw_pascal_string, ok_label
-LBB75:  MGTK_CALL MGTK::MoveTo, pos_prompt
+
+        ;; Prompt string
+draw_prompt:
+        MGTK_CALL MGTK::MoveTo, pos_prompt
         addr_call_indirect draw_pascal_string, prompt_addr
-LBB87:  MGTK_CALL MGTK::GetEvent, event_params
+
+        ;; --------------------------------------------------
+        ;; Event Loop
+
+event_loop:
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
-        bne     LBB9A
-        jmp     LBC0C
+        bne     :+
+        jmp     handle_button_down
 
-LBB9A:  cmp     #MGTK::EventKind::key_down
-        bne     LBB87
+:       cmp     #MGTK::EventKind::key_down
+        bne     event_loop
+
+        ;; --------------------------------------------------
+        ;; Key Down
         lda     event_key
         and     #CHAR_MASK
-        bit     alert_action
-        bpl     LBBEE
-        cmp     #CHAR_ESCAPE
-        bne     LBBC3
+        bit     alert_action    ; has Cancel?
+        bpl     check_ok        ; nope
+        cmp     #CHAR_ESCAPE    ; yes, maybe Escape?
+        bne     :+
+
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, cancel_rect
-        lda     #1
-        jmp     LBC55
+        lda     #kAlertResultCancel
+        jmp     finish
 
-LBBC3:  bit     alert_action
-        bvs     LBBEE
-        cmp     #'a'
-        bne     LBBE3
-LBBCC:  MGTK_CALL MGTK::SetPenMode, penXOR
+:       bit     alert_action    ; has Try Again?
+        bvs     check_ok        ; nope
+        cmp     #'a'            ; yes, maybe A/a ?
+        bne     :+
+was_a:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, try_again_rect
-        lda     #0
-        jmp     LBC55
+        lda     #kAlertResultTryAgain
+        jmp     finish
 
-LBBE3:  cmp     #'A'
-        beq     LBBCC
+:       cmp     #'A'
+        beq     was_a
+        cmp     #CHAR_RETURN    ; also allow Return as default
+        beq     was_a
+        jmp     event_loop
+
+check_ok:
         cmp     #CHAR_RETURN
-        beq     LBBCC
-        jmp     LBB87
-
-LBBEE:  cmp     #CHAR_RETURN
-        bne     LBC09
+        bne     :+
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, try_again_rect
-        lda     #2
-        jmp     LBC55
+        lda     #kAlertResultOK
+        jmp     finish
 
-LBC09:  jmp     LBB87
+:       jmp     event_loop
 
-LBC0C:  jsr     LBDE1
+handle_button_down:
+        jsr     LBDE1
         MGTK_CALL MGTK::MoveTo, event_coords
         bit     alert_action
         bpl     LBC42
@@ -3870,9 +3943,9 @@ LBC42:  MGTK_CALL MGTK::InRect, try_again_rect
         bne     LBC52
         jmp     LBD65
 
-LBC52:  jmp     LBB87
+LBC52:  jmp     event_loop
 
-LBC55:  pha
+finish: pha
         MGTK_CALL MGTK::HideCursor
         jsr     restore_dialog_background
         MGTK_CALL MGTK::ShowCursor
@@ -3910,10 +3983,10 @@ LBCBD:  MGTK_CALL MGTK::SetPenMode, penXOR
 
 LBCDB:  lda     LBCE8
         beq     LBCE3
-        jmp     LBB87
+        jmp     event_loop
 
-LBCE3:  lda     #0
-        jmp     LBC55
+LBCE3:  lda     #kAlertResultTryAgain
+        jmp     finish
 
 LBCE8:  .byte   0
 LBCE9:  MGTK_CALL MGTK::SetPenMode, penXOR
@@ -3947,10 +4020,10 @@ LBD39:  MGTK_CALL MGTK::SetPenMode, penXOR
 
 LBD57:  lda     LBD64
         beq     LBD5F
-        jmp     LBB87
+        jmp     event_loop
 
-LBD5F:  lda     #1
-        jmp     LBC55
+LBD5F:  lda     #kAlertResultCancel
+        jmp     finish
 
 LBD64:  .byte   0
 LBD65:  lda     #0
@@ -3984,10 +4057,10 @@ LBDB5:  MGTK_CALL MGTK::SetPenMode, penXOR
 
 LBDD3:  lda     LBDE0
         beq     LBDDB
-        jmp     LBB87
+        jmp     event_loop
 
-LBDDB:  lda     #2
-        jmp     LBC55
+LBDDB:  lda     #kAlertResultOK
+        jmp     finish
 
 
 LBDE0:  .byte   0

@@ -11383,7 +11383,7 @@ L97E4:  .byte   $00
 
 @retry: MLI_RELAY_CALL OPEN, open_src_dir_params
         beq     :+
-        ldx     #$80
+        ldx     #kAlertOptionsTryAgainCancel
         jsr     JT_SHOW_ALERT
         beq     @retry
         jmp     close_files_cancel_dialog
@@ -11394,7 +11394,7 @@ L97E4:  .byte   $00
 
 @retry2:MLI_RELAY_CALL READ, read_src_dir_header_params
         beq     :+
-        ldx     #$80
+        ldx     #kAlertOptionsTryAgainCancel
         jsr     JT_SHOW_ALERT
         beq     @retry2
         jmp     close_files_cancel_dialog
@@ -11407,7 +11407,7 @@ L97E4:  .byte   $00
         sta     close_src_dir_params::ref_num
 @retry: MLI_RELAY_CALL CLOSE, close_src_dir_params
         beq     :+
-        ldx     #$80
+        ldx     #kAlertOptionsTryAgainCancel
         jsr     JT_SHOW_ALERT
         beq     @retry
         jmp     close_files_cancel_dialog
@@ -11423,7 +11423,7 @@ L97E4:  .byte   $00
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
-        ldx     #$80
+        ldx     #kAlertOptionsTryAgainCancel
         jsr     JT_SHOW_ALERT
         beq     @retry
         jmp     close_files_cancel_dialog
