@@ -4301,11 +4301,14 @@ mask2_inv:
         and     #%11000000
         sta     bits_hi
 
-        jsr     LBF2C
+        jsr     update_ptr      ; TODO: jmp
         rts
 .endproc
 
-.proc LBF2C
+.proc update_ptr
+
+        HIRES_ADDR := $2000
+
         lda     bits_hi
         lsr     a
         lsr     a
@@ -4316,20 +4319,20 @@ mask2_inv:
         lsr     a
         lsr     a
         lsr     a
-        sta     LBF51
+        sta     tmp
         pla
         ror     a
         sta     ptr
         lda     bits_lo
         asl     a
         asl     a
-        ora     LBF51
-        ora     #$20
+        ora     tmp
+        ora     #>HIRES_ADDR
         sta     ptr+1
         clc
         rts
 
-LBF51:  .byte   0
+tmp:    .byte   0
 
 .endproc
 
@@ -4340,21 +4343,21 @@ LBF51:  .byte   0
 .proc next_ptr_for_row
         lda     bits_lo
         cmp     #7
-        beq     LBF5F
+        beq     :+
         inc     bits_lo
-        jmp     LBF2C
+        jmp     update_ptr
 
-LBF5F:  lda     #0
+:       lda     #0
         sta     bits_lo
         lda     bits_mid
         cmp     #56
-        beq     LBF74
+        beq     :+
         clc
         adc     #8
         sta     bits_mid
-        jmp     LBF2C
+        jmp     update_ptr
 
-LBF74:  lda     #0
+:       lda     #0
         sta     bits_mid
         lda     bits_hi
         clc
@@ -4362,7 +4365,7 @@ LBF74:  lda     #0
         sta     bits_hi
         cmp     #192
         beq     :+
-        jmp     LBF2C
+        jmp     update_ptr
 
 :       sec
         rts
@@ -4401,11 +4404,11 @@ LBF74:  lda     #0
 .endproc
 
 bits_hi:
-        .byte   $00
+        .byte   0
 bits_mid:
-        .byte   $00
+        .byte   0
 bits_lo:
-        .byte   $00
+        .byte   0
 
         ;; Unused??
         .byte   $FF,$00,$00,$00,$00,$00,$00,$00
@@ -4414,19 +4417,19 @@ bits_lo:
 
 ;;; Dialog bound coordinates
 
-save_y1:.byte   $00
+save_y1:.byte   0
 save_x1_byte:
-        .byte   $00
-save_y2:.byte   $00
+        .byte   0
+save_y2:.byte   0
 save_x2_byte:
-        .byte   $00
+        .byte   0
 save_x1_bit:
-        .byte   $00
+        .byte   0
 save_x2_bit:
-        .byte   $00
+        .byte   0
 
 row_tmp:
-        .byte   $00
+        .byte   0
 
 .endproc
         show_alert_dialog := show_alert_dialog_impl::start
