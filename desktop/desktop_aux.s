@@ -3755,12 +3755,12 @@ start:  pha                     ; error code
         MGTK_CALL MGTK::SetPort, grafport3
 
         ;; Compute save bounds
-        ldax    portmap::viewloc::xcoord
-        jsr     LBF8B
+        ldax    portmap::viewloc::xcoord ; left
+        jsr     calc_x_save_bounds
+        sty     save_x1_byte
+        sta     save_x1_bit
 
-        sty     LBFCA
-        sta     LBFCD
-        lda     portmap::viewloc::xcoord
+        lda     portmap::viewloc::xcoord ; right
         clc
         adc     portmap::maprect::x2
         pha
@@ -3768,15 +3768,15 @@ start:  pha                     ; error code
         adc     portmap::maprect::x2+1
         tax
         pla
-        jsr     LBF8B
+        jsr     calc_x_save_bounds
+        sty     save_x2_byte
+        sta     save_x2_bit
 
-        sty     LBFCC
-        sta     LBFCE
-        lda     portmap::viewloc::ycoord
-        sta     LBFC9
+        lda     portmap::viewloc::ycoord ; top
+        sta     save_y1
         clc
-        adc     portmap::maprect::y2
-        sta     LBFCB
+        adc     portmap::maprect::y2 ; bottom
+        sta     save_y2
 
         MGTK_CALL MGTK::HideCursor
         jsr     save_dialog_background
@@ -4108,8 +4108,6 @@ flag:   .byte   0
         rts
 .endproc
 
-.endproc
-        show_alert_dialog := show_alert_dialog_impl::start
 
 
 ;;; ============================================================
@@ -4124,44 +4122,53 @@ flag:   .byte   0
 
 .proc save
         copy16  #SAVE_AREA_BUFFER, addr
-        lda     LBFC9
-        jsr     LBF10
-        lda     LBFCB
+        lda     save_y1
+        jsr     set_ptr_for_row
+        lda     save_y2
         sec
-        sbc     LBFC9
+        sbc     save_y1
         tax
         inx
-LBE21:  lda     LBFCA
-        sta     LBE5C
-LBE27:  lda     LBE5C
+
+        ;; Loop over rows
+loop:   lda     save_x1_byte
+        sta     xbyte
+
+        ;; Loop over columns (bytes)
+col:    lda     xbyte
         lsr     a
         tay
         sta     PAGE2OFF        ; main $2000-$3FFF
-        bcs     LBE34
+        bcs     :+
         sta     PAGE2ON         ; aux $2000-$3FFF
-LBE34:  lda     (ptr),y
+:       lda     (ptr),y
         addr := *+1
         sta     dummy1234
         inc16   addr
-        lda     LBE5C
-        cmp     LBFCC
-        bcs     LBE4E
-        inc     LBE5C
-        bne     LBE27
-LBE4E:  jsr     LBF52
+        lda     xbyte
+        cmp     save_x2_byte
+        bcs     :+
+        inc     xbyte
+        bne     col
+
+        ;; next row
+:       jsr     next_ptr_for_row
         dex
-        bne     LBE21
+        bne     loop
+
         ldax    addr
         rts
 
-        .byte   0
-LBE5C:  .byte   0
+        .byte   0               ; Unused ???
+xbyte:  .byte   0
 .endproc
+
+;;; TODO: Why is this so much more complicated than save proc???
 
 .proc restore
         copy16  #SAVE_AREA_BUFFER, addr
-        ldx     LBFCD
-        ldy     LBFCE
+        ldx     save_x1_bit
+        ldy     save_x2_bit
         lda     #$FF
         cpx     #0
         beq     LBE78
@@ -4182,18 +4189,22 @@ LBE86:  sec
 LBE8B:  sta     LBF0E
         eor     #$FF
         sta     LBF0F
-        lda     LBFC9
-        jsr     LBF10
-        lda     LBFCB
+        lda     save_y1
+        jsr     set_ptr_for_row
+        lda     save_y2
         sec
-        sbc     LBFC9
+        sbc     save_y1
         tax
         inx
-        lda     LBFCA
+        lda     save_x1_byte
         sta     LBF0B
-LBEA8:  lda     LBFCA
+
+        ;; Loop over rows
+loop:   lda     save_x1_byte
         sta     LBF0B
-LBEAE:  lda     LBF0B
+
+        ;; Loop over columns (bytes)
+col:    lda     LBF0B
         lsr     a
         tay
         sta     PAGE2OFF        ; main $2000-$3FFF
@@ -4205,9 +4216,9 @@ LBEAE:  lda     LBF0B
 
         pha
         lda     LBF0B
-        cmp     LBFCA
+        cmp     save_x1_byte
         beq     LBEDD
-        cmp     LBFCC
+        cmp     save_x2_byte
         bne     LBEEB
         lda     (ptr),y
         and     LBF0F
@@ -4229,13 +4240,14 @@ LBEEB:  pla
         sta     (ptr),y
         inc16   addr
         lda     LBF0B
-        cmp     LBFCC
-        bcs     LBF03
+        cmp     save_x2_byte
+        bcs     :+
         inc     LBF0B
-        bne     LBEAE
-LBF03:  jsr     LBF52
+        bne     col             ; always
+
+:       jsr     next_ptr_for_row
         dex
-        bne     LBEA8
+        bne     loop
         rts
 
         .byte   $00
@@ -4248,27 +4260,36 @@ LBF0F:  .byte   $00
 
 ;;; Address calculations for dialog background display buffer.
 
-.proc LBF10
-        sta     LBFCF
-        and     #$07
-        sta     LBFB0
-        lda     LBFCF
-        and     #$38
-        sta     LBFAF
-        lda     LBFCF
-        and     #$C0
-        sta     LBFAE
+;;; TODO: This seems inefficient compared to HBASL calculation.
+
+;;; ============================================================
+;;; Input: A=row (0...191)
+;;; Output: $06 set to base address of row
+
+.proc set_ptr_for_row
+        sta     row_tmp
+        and     #%00000111
+        sta     bits_lo
+
+        lda     row_tmp
+        and     #%00111000
+        sta     bits_mid
+
+        lda     row_tmp
+        and     #%11000000
+        sta     bits_hi
+
         jsr     LBF2C
         rts
 .endproc
 
 .proc LBF2C
-        lda     LBFAE
+        lda     bits_hi
         lsr     a
         lsr     a
-        ora     LBFAE
+        ora     bits_hi
         pha
-        lda     LBFAF
+        lda     bits_mid
         lsr     a
         lsr     a
         lsr     a
@@ -4277,7 +4298,7 @@ LBF0F:  .byte   $00
         pla
         ror     a
         sta     ptr
-        lda     LBFB0
+        lda     bits_lo
         asl     a
         asl     a
         ora     LBF51
@@ -4290,34 +4311,38 @@ LBF51:  .byte   0
 
 .endproc
 
-.proc LBF52
-        lda     LBFB0
+;;; ============================================================
+;;; Increment ptr ($06) to next row
+;;; Output: $06 set to base address of row
+
+.proc next_ptr_for_row
+        lda     bits_lo
         cmp     #7
         beq     LBF5F
-        inc     LBFB0
+        inc     bits_lo
         jmp     LBF2C
 
 LBF5F:  lda     #0
-        sta     LBFB0
-        lda     LBFAF
+        sta     bits_lo
+        lda     bits_mid
         cmp     #56
         beq     LBF74
         clc
         adc     #8
-        sta     LBFAF
+        sta     bits_mid
         jmp     LBF2C
 
 LBF74:  lda     #0
-        sta     LBFAF
-        lda     LBFAE
+        sta     bits_mid
+        lda     bits_hi
         clc
         adc     #64
-        sta     LBFAE
+        sta     bits_hi
         cmp     #192
-        beq     LBF89
+        beq     :+
         jmp     LBF2C
 
-LBF89:  sec
+:       sec
         rts
 .endproc
 
@@ -4326,8 +4351,9 @@ LBF89:  sec
         restore_dialog_background := dialog_background::restore
 
 ;;; ============================================================
+;;; Map X coord (A=lo, X=hi) to byte/bit (Y=byte, A=bit)
 
-.proc LBF8B
+.proc calc_x_save_bounds
         ldy     #0
         cpx     #2
         bne     :+
@@ -4352,21 +4378,40 @@ LBF89:  sec
 :       rts
 .endproc
 
-LBFAE:  .byte   $00
-LBFAF:  .byte   $00
-LBFB0:  .byte   $00,$FF,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+bits_hi:
         .byte   $00
-LBFC9:  .byte   $00
-LBFCA:  .byte   $00
-LBFCB:  .byte   $00
-LBFCC:  .byte   $00
-LBFCD:  .byte   $00
-LBFCE:  .byte   $00
-LBFCF:  .byte   $00
+bits_mid:
+        .byte   $00
+bits_lo:
+        .byte   $00
 
-        ;; Draw pascal string; address in (X,A)
+        ;; Unused??
+        .byte   $FF,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+;;; Dialog bound coordinates
+
+save_y1:.byte   $00
+save_x1_byte:
+        .byte   $00
+save_y2:.byte   $00
+save_x2_byte:
+        .byte   $00
+save_x1_bit:
+        .byte   $00
+save_x2_bit:
+        .byte   $00
+
+row_tmp:
+        .byte   $00
+
+.endproc
+        show_alert_dialog := show_alert_dialog_impl::start
+
+;;; ============================================================
+;;; Draw pascal string; address in (X,A)
+
 .proc draw_pascal_string
         PARAM_BLOCK drawtext_params, $06
 data:   .addr   0
