@@ -557,8 +557,6 @@ not_menu:
         pla
         cmp     #MGTK::Area::content
         bne     :+
-        jsr     detect_double_click
-        sta     double_click_flag
         jmp     handle_client_click
 :       cmp     #MGTK::Area::dragbar
         bne     :+
@@ -3691,16 +3689,10 @@ active_window_view_by:
         lda     win_view_by_table,x
         sta     active_window_view_by
 
-        ;; Restore event coords (following detect_double_click)
-        COPY_STRUCT MGTK::Point, saved_event_coords, event_coords
-
         MGTK_RELAY_CALL MGTK::FindControl, event_coords
         lda     findcontrol_which_ctl
         bne     :+
         jmp     handle_content_click ; 0 = ctl_not_a_control
-:       bit     double_click_flag
-        bmi     :+
-        jmp     done_client_click ; ignore double click
 :       cmp     #MGTK::Ctl::dead_zone
         bne     :+
         rts
@@ -3867,6 +3859,9 @@ ctl:    .byte   0
         ;; Subsequent action was not triggered by a menu, so hilite is not
         ;; necessary. https://github.com/a2stuff/a2d/issues/139
         copy    #$FF, menu_click_params::menu_id
+
+        jsr     detect_double_click
+        sta     double_click_flag
 
         bit     active_window_view_by
         bpl     :+
@@ -14656,13 +14651,6 @@ set_penmode_xor2:
 .proc detect_double_click
         kDoubleClickDeltaX = 5
         kDoubleClickDeltaY = 4
-
-        ;; Stash initial coords
-        ldx     #3
-:       copy    event_coords,x, coords,x
-        sta     saved_event_coords,x ; for double-click in windows
-        dex
-        bpl     :-
 
         copy16  DeskTop::Settings::dblclick_speed, counter
 
