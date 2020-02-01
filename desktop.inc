@@ -92,6 +92,7 @@ JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in R
 ;;; Options/Results from JUMP_TABLE_ALERT_0 / JUMP_TABLE_ALERT_X
 
 kAlertOptionsDefault            = 0
+kAlertOptionsOK                 = 0 ; Used internally only, callers would pass $01
 kAlertOptionsTryAgainCancel     = $80
 kAlertOptionsOKCancel           = $C0
 

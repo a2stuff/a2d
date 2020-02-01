@@ -3718,16 +3718,16 @@ prompt_table:
 
         ;; alert index to action (0 = Cancel, $80 = Try Again)
 alert_action_table:
-        .byte   kAlertOptionsDefault, kAlertOptionsDefault
-        .byte   kAlertOptionsDefault, kAlertOptionsTryAgainCancel
-        .byte   kAlertOptionsDefault, kAlertOptionsTryAgainCancel
-        .byte   kAlertOptionsDefault, kAlertOptionsDefault
-        .byte   kAlertOptionsDefault, kAlertOptionsDefault
-        .byte   kAlertOptionsDefault, kAlertOptionsDefault
-        .byte   kAlertOptionsDefault, kAlertOptionsDefault
-        .byte   kAlertOptionsDefault, kAlertOptionsDefault
-        .byte   kAlertOptionsDefault, kAlertOptionsTryAgainCancel
-        .byte   kAlertOptionsTryAgainCancel, kAlertOptionsDefault
+        .byte   kAlertOptionsOK, kAlertOptionsOK
+        .byte   kAlertOptionsOK, kAlertOptionsTryAgainCancel
+        .byte   kAlertOptionsOK, kAlertOptionsTryAgainCancel
+        .byte   kAlertOptionsOK, kAlertOptionsOK
+        .byte   kAlertOptionsOK, kAlertOptionsOK
+        .byte   kAlertOptionsOK, kAlertOptionsOK
+        .byte   kAlertOptionsOK, kAlertOptionsOK
+        .byte   kAlertOptionsOK, kAlertOptionsOK
+        .byte   kAlertOptionsOK, kAlertOptionsTryAgainCancel
+        .byte   kAlertOptionsTryAgainCancel, kAlertOptionsOK
         .assert * - alert_action_table = kNumAlerts, error, "Table size mismatch"
 
         ;; Actual entry point
