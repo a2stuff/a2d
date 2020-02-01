@@ -3690,14 +3690,15 @@ err_FD:  PASCAL_STRING "Please insert destination disk"
 err_FE:  PASCAL_STRING "BASIC.SYSTEM not found"
 
         ;; number of alert messages
+        kNumAlerts = 20
 alert_count:
-        .byte   20
+        .byte   kNumAlerts
 
         ;; message number-to-index table
         ;; (look up by scan to determine index)
 alert_table:
         ;; ProDOS MLI error codes:
-        .byte   $00, ERR_IO_ERROR,ERR_DEVICE_NOT_CONNECTED, ERR_WRITE_PROTECTED
+        .byte   $00, ERR_IO_ERROR, ERR_DEVICE_NOT_CONNECTED, ERR_WRITE_PROTECTED
         .byte   ERR_INVALID_PATHNAME, ERR_PATH_NOT_FOUND, ERR_VOL_NOT_FOUND
         .byte   ERR_FILE_NOT_FOUND, ERR_DUPLICATE_FILENAME, ERR_OVERRUN_ERROR
         .byte   ERR_VOLUME_DIR_FULL, ERR_ACCESS_ERROR, ERR_NOT_PRODOS_VOLUME
@@ -3706,12 +3707,14 @@ alert_table:
         ;; Internal error codes:
         .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
         .byte   kErrInsertSrcDisk, kErrInsertDstDisk, kErrBasicSysNotFound
+        .assert * - alert_table = kNumAlerts, error, "Table size mismatch"
 
         ;; alert index to string address
 prompt_table:
         .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
         .addr   err_47,err_48,err_49,err_4E,err_52,err_57,err_F9,err_FA
         .addr   err_FB,err_FC,err_FD,err_FE
+        .assert * - prompt_table = kNumAlerts * 2, error, "Table size mismatch"
 
         ;; alert index to action (0 = Cancel, $80 = Try Again)
 alert_action_table:
@@ -3725,6 +3728,7 @@ alert_action_table:
         .byte   kAlertOptionsDefault, kAlertOptionsDefault
         .byte   kAlertOptionsDefault, kAlertOptionsTryAgainCancel
         .byte   kAlertOptionsTryAgainCancel, kAlertOptionsDefault
+        .assert * - alert_action_table = kNumAlerts, error, "Table size mismatch"
 
         ;; Actual entry point
 start:  pha                     ; error code
@@ -4158,46 +4162,12 @@ col:    lda     xbyte
 
         ldax    addr
         rts
-
-        .byte   0               ; Unused ???
-
-xbyte:  .byte   0
 .endproc
 
-;;; Restore handles masking off the left/right edges correctly
-;;; TODO: Is that really necessary?
+;;; Restore
 
 .proc restore
         copy16  #SAVE_AREA_BUFFER, addr
-        ldx     save_x1_bit
-        ldy     save_x2_bit
-
-        ;; x1 mask
-        lda     #$FF
-        cpx     #0
-        beq     done_mask1
-:       clc
-        rol     a
-        dex
-        bne     :-
-done_mask1:
-        sta     mask1
-        eor     #$FF
-        sta     mask1_inv
-
-        ;; x2 mask
-        lda     #$01
-        cpy     #$00
-        beq     done_mask2
-:       sec
-        rol     a
-        dey
-        bne     :-
-done_mask2:
-        sta     mask2
-        eor     #$FF
-        sta     mask2_inv
-
         lda     save_y1
         jsr     set_ptr_for_row
         lda     save_y2
@@ -4205,9 +4175,6 @@ done_mask2:
         sbc     save_y1
         tax
         inx
-
-        lda     save_x1_byte    ; TODO: These 2 lines are redundant, remove!
-        sta     xbyte
 
         ;; Loop over rows
 loop:   lda     save_x1_byte
@@ -4222,37 +4189,7 @@ col:    lda     xbyte
         sta     PAGE2ON         ; aux $2000-$3FFF
 
         addr := *+1
-:       lda     SAVE_AREA_BUFFER ; self-modified
-
-        pha
-        lda     xbyte
-        cmp     save_x1_byte    ; left edge?
-        beq     left            ; yes, mask it
-
-        cmp     save_x2_byte    ; right edge?
-        bne     store           ; no
-
-        ;; right edge
-        lda     (ptr),y         ; yes, mask it!
-        and     mask2_inv
-        sta     (ptr),y
-        pla
-        and     mask2
-        ora     (ptr),y
-        pha
-        jmp     store
-
-        ;; left edge
-left:   lda     (ptr),y
-        and     mask1_inv
-        sta     (ptr),y
-        pla
-        and     mask1
-        ora     (ptr),y
-        pha
-
-        ;; store the byte, advance to next
-store:  pla
+:       lda     dummy1234       ; self-modified
         sta     (ptr),y
         inc16   addr
         lda     xbyte
@@ -4265,24 +4202,9 @@ store:  pla
         dex
         bne     loop
         rts
-
-        .byte   0               ; Unused ???
-
-xbyte:  .byte   0
-
-
-mask1:  .byte   0
-mask1_inv:
-        .byte   0
-
-mask2:  .byte   0
-mask2_inv:
-        .byte   0
 .endproc
 
 ;;; Address calculations for dialog background display buffer.
-
-;;; TODO: This seems inefficient compared to HBASL calculation.
 
 ;;; ============================================================
 ;;; Input: A=row (0...191)
@@ -4290,50 +4212,7 @@ mask2_inv:
 
 .proc set_ptr_for_row
         sta     row_tmp
-        and     #%00000111
-        sta     bits_lo
-
-        lda     row_tmp
-        and     #%00111000
-        sta     bits_mid
-
-        lda     row_tmp
-        and     #%11000000
-        sta     bits_hi
-
-        jsr     update_ptr      ; TODO: jmp
-        rts
-.endproc
-
-.proc update_ptr
-
-        HIRES_ADDR := $2000
-
-        lda     bits_hi
-        lsr     a
-        lsr     a
-        ora     bits_hi
-        pha
-        lda     bits_mid
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        sta     tmp
-        pla
-        ror     a
-        sta     ptr
-        lda     bits_lo
-        asl     a
-        asl     a
-        ora     tmp
-        ora     #>HIRES_ADDR
-        sta     ptr+1
-        clc
-        rts
-
-tmp:    .byte   0
-
+        jmp     compute_hbasl
 .endproc
 
 ;;; ============================================================
@@ -4341,35 +4220,40 @@ tmp:    .byte   0
 ;;; Output: $06 set to base address of row
 
 .proc next_ptr_for_row
-        lda     bits_lo
-        cmp     #7
-        beq     :+
-        inc     bits_lo
-        jmp     update_ptr
+        inc     row_tmp
+        lda     row_tmp
+        jmp     compute_hbasl
+.endproc
 
-:       lda     #0
-        sta     bits_lo
-        lda     bits_mid
-        cmp     #56
-        beq     :+
-        clc
-        adc     #8
-        sta     bits_mid
-        jmp     update_ptr
+;;; ============================================================
+;;; Input: A = row
+;;; Output: $06 points at first byte of row
+.proc compute_hbasl
+        hbasl := $06
 
-:       lda     #0
-        sta     bits_mid
-        lda     bits_hi
-        clc
-        adc     #64
-        sta     bits_hi
-        cmp     #192
-        beq     :+
-        jmp     update_ptr
-
-:       sec
+        pha
+        and     #$C7
+        eor     #$08
+        sta     hbasl+1
+        and     #$F0
+        lsr     a
+        lsr     a
+        lsr     a
+        sta     hbasl
+        pla
+        and     #$38
+        asl     a
+        asl     a
+        eor     hbasl
+        asl     a
+        rol     hbasl+1
+        asl     a
+        rol     hbasl+1
+        eor     hbasl
+        sta     hbasl
         rts
 .endproc
+
 
 .endproc ; dialog_background
         save_dialog_background := dialog_background::save
@@ -4403,18 +4287,6 @@ tmp:    .byte   0
 :       rts
 .endproc
 
-bits_hi:
-        .byte   0
-bits_mid:
-        .byte   0
-bits_lo:
-        .byte   0
-
-        ;; Unused??
-        .byte   $FF,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-
 ;;; Dialog bound coordinates
 
 save_y1:.byte   0
@@ -4428,8 +4300,10 @@ save_x1_bit:
 save_x2_bit:
         .byte   0
 
+;;; Coordinates when looping save/restore
 row_tmp:
         .byte   0
+xbyte:  .byte   0
 
 .endproc
         show_alert_dialog := show_alert_dialog_impl::start

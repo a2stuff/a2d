@@ -169,7 +169,7 @@ loop:   jsr     send_row
         pha
         and     #$C7
         eor     #$08
-        sta     $07
+        sta     hbasl+1
         and     #$F0
         lsr     a
         lsr     a
