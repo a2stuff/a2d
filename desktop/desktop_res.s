@@ -1398,11 +1398,12 @@ width_right_labels:     .word   0
 ;;; Assigned during startup
 trash_icon_num:  .byte   0
 
-;;; Selection drag/drop param/result
-drag_drop_param:
-        .byte   0
-
-saved_event_coords: DEFINE_POINT 0, 0
+;;; Selection drag/drop icon/result, and coords
+.params drag_drop_params
+icon:
+result:  .byte   0
+coords: DEFINE_POINT 0, 0
+.endparams
 
 ;;; ============================================================
 

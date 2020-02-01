@@ -210,7 +210,7 @@ Find the icon number at the given coordinates.
 
 ### `IconTK::DragHighlighted` ($0A)
 
-Parameters: { byte param }
+Parameters: { byte param, word mousex, word mousey }
 
 Initiates a drag of the highlighted icon(s). On entry, set param to
 the specific icon being dragged. On return, the param has 0 if the

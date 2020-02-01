@@ -2721,7 +2721,7 @@ done:   jmp     redraw_windows_and_desktop
 ;;; ============================================================
 
 .proc cmd_delete_selection
-        copy    trash_icon_num, drag_drop_param
+        copy    trash_icon_num, drag_drop_params::icon
         jmp     process_drop
 .endproc
 
@@ -3916,10 +3916,10 @@ replace:
         ;; --------------------------------------------------
 
 start_icon_drag:
-        copy    icon_num, drag_drop_param
-        ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_param
+        copy    icon_num, drag_drop_params::icon
+        ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_params
         tax
-        lda     drag_drop_param
+        lda     drag_drop_params::result
         beq     desktop
 
 process_drop:
@@ -3939,7 +3939,7 @@ process_drop:
         ;; fall through
 
         ;; Dropped on trash?
-:       lda     drag_drop_param
+:       lda     drag_drop_params::result
         cmp     trash_icon_num
         bne     :+
         ;; Update used/free for same-vol windows
@@ -3947,7 +3947,7 @@ process_drop:
         jmp     redraw_windows_and_desktop
 
         ;; Dropped on icon?
-:       lda     drag_drop_param
+:       lda     drag_drop_params::result
         bmi     :+
         ;; Update used/free for same-vol windows
         jsr     update_vol_free_used_for_icon
@@ -5039,22 +5039,22 @@ L6834:  bit     double_click_flag
         bpl     L6880
 
         ;; Drag of volume icon
-        copy    findicon_which_icon, drag_drop_param
-        ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_param
+        copy    findicon_which_icon, drag_drop_params::icon
+        ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_params
         tax
-        lda     drag_drop_param
+        lda     drag_drop_params::result
         beq     L6878
         jsr     jt_drop
         cmp     #$FF
         bne     L6858
         jmp     redraw_windows_and_desktop
 
-L6858:  lda     drag_drop_param
+L6858:  lda     drag_drop_params::result
         cmp     trash_icon_num
         bne     L6863
         jmp     redraw_windows_and_desktop
 
-L6863:  lda     drag_drop_param
+L6863:  lda     drag_drop_params::result
         bpl     L6872
         and     #$7F
         pha
@@ -10219,7 +10219,7 @@ do_unlock:
 .endproc
 
 .proc do_drop
-        lda     drag_drop_param
+        lda     drag_drop_params::result
         cmp     #kTrashIconNum
         bne     :+
         lda     #$80
@@ -10266,7 +10266,7 @@ L8FEB:  tsx
         ;; hi bit clear = target is an icon
         ;; hi bit set = target is a window; get window number
 compute_target_prefix:
-        lda     drag_drop_param
+        lda     drag_drop_params::result
         bpl     check_icon_drop_type
 
         ;; Drop is on a window
@@ -10290,7 +10290,7 @@ check_icon_drop_type:
         asl     a
         tax
         copy16  window_path_addr_table,x, $08
-        lda     drag_drop_param
+        lda     drag_drop_params::result
         jsr     icon_entry_name_lookup
         jsr     join_paths
         jmp     L9076
@@ -10298,7 +10298,7 @@ check_icon_drop_type:
         ;; Drop is on a volume icon.
         ;;
 drop_on_volume_icon:
-        lda     drag_drop_param
+        lda     drag_drop_params::result
 
         ;; Prefix name with '/'
         jsr     icon_entry_name_lookup
@@ -14651,6 +14651,14 @@ set_penmode_xor2:
 .proc detect_double_click
         kDoubleClickDeltaX = 5
         kDoubleClickDeltaY = 4
+
+        ;; Stash initial coords
+        ldx     #.sizeof(MGTK::Point)-1
+:       copy    event_coords,x, coords,x
+        sta     drag_drop_params::coords,x ; for double-click in windows
+
+        dex
+        bpl     :-
 
         copy16  DeskTop::Settings::dblclick_speed, counter
 
