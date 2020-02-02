@@ -3707,14 +3707,14 @@ alert_table:
         ;; Internal error codes:
         .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
         .byte   kErrInsertSrcDisk, kErrInsertDstDisk, kErrBasicSysNotFound
-        .assert * - alert_table = kNumAlerts, error, "Table size mismatch"
+        ASSERT_TABLE_SIZE alert_table, kNumAlerts
 
         ;; alert index to string address
 prompt_table:
         .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
         .addr   err_47,err_48,err_49,err_4E,err_52,err_57,err_F9,err_FA
         .addr   err_FB,err_FC,err_FD,err_FE
-        .assert * - prompt_table = kNumAlerts * 2, error, "Table size mismatch"
+        ASSERT_ADDRESS_TABLE_SIZE prompt_table, kNumAlerts
 
         ;; alert index to action (0 = Cancel, $80 = Try Again)
 alert_action_table:
@@ -3728,7 +3728,7 @@ alert_action_table:
         .byte   kAlertOptionsOK, kAlertOptionsOK
         .byte   kAlertOptionsOK, kAlertOptionsTryAgainCancel
         .byte   kAlertOptionsTryAgainCancel, kAlertOptionsOK
-        .assert * - alert_action_table = kNumAlerts, error, "Table size mismatch"
+        ASSERT_TABLE_SIZE alert_action_table, kNumAlerts
 
         ;; Actual entry point
 start:  pha                     ; error code

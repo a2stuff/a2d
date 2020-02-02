@@ -14,6 +14,10 @@ kMaxDeskAccCount        = 12
 ;;; icon #1 is always Trash (BUG: should use trash_icon_num)
 kTrashIconNum   = 1
 
+;;; Internally, FT_SYS files with ".SYSTEM" are represented as this type.
+;;; (FT_BAD files are remapped to FT_TYPELESS)
+kAppFileType    = $01
+
 ;;; ============================================================
 ;;; Invoker routine locations
 

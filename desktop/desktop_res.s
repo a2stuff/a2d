@@ -829,7 +829,7 @@ addr:   .addr   0
 length: .byte   4               ; includes trailing space
 .endparams
 
-month_offset_table:
+month_offset_table:             ; for Day-of-Week calculations
         .byte   1,5,6,3,1,5,3,0,4,2,6,4
 
 ;;; ============================================================
@@ -876,6 +876,8 @@ trash_icon:
 
         kVolIconDeltaY = 29
 
+        kMaxVolumes = 13
+
 desktop_icon_coords_table:
         DEFINE_POINT 490,15 + kVolIconDeltaY*0 ; 1
         DEFINE_POINT 490,15 + kVolIconDeltaY*1 ; 2
@@ -893,7 +895,7 @@ desktop_icon_coords_table:
         ;; Maximum of 13 devices:
         ;; 7 slots * 2 drives = 14 (size of DEVLST)
         ;; ... but RAM in Slot 3 Drive 2 is disconnected.
-
+        ASSERT_RECORD_TABLE_SIZE desktop_icon_coords_table, kMaxVolumes, .sizeof(MGTK::Point)
 ;;; ============================================================
 
         PAD_TO $DB00
@@ -903,6 +905,7 @@ desktop_icon_coords_table:
 device_name_table:
         .addr   dev0s, dev1s, dev2s, dev3s, dev4s, dev5s, dev6s
         .addr   dev7s, dev8s, dev9s, dev10s, dev11s, dev12s, dev13s
+        ASSERT_ADDRESS_TABLE_SIZE device_name_table, kMaxVolumes + 1
 
 selector_menu_addr:
         .addr   selector_menu
@@ -953,9 +956,12 @@ selected_icon_list:            ; index of selected icon (global, not w/in window
         .assert * = selected_file_list, error, "Entry point mismatch"
         .res    127, 0
 
+kMaxNumWindows = 8
+
         ;; Buffer for desktop windows
 win_table:
         .addr   0,winfo1,winfo2,winfo3,winfo4,winfo5,winfo6,winfo7,winfo8
+        ASSERT_ADDRESS_TABLE_SIZE win_table, kMaxNumWindows + 1
 
         ;; Window to Path mapping table
 window_path_addr_table:
@@ -964,6 +970,7 @@ window_path_addr_table:
         .repeat 8,i
         .addr   window_path_table+i*65
         .endrepeat
+        ASSERT_ADDRESS_TABLE_SIZE window_path_addr_table, kMaxNumWindows + 1
 
 ;;; ============================================================
 
@@ -1103,8 +1110,10 @@ disable:        .byte   0
 
 LE26F:  .byte   $00
 
+kNumStartupMenuItems = 7
+
 startup_menu:
-        DEFINE_MENU 7
+        DEFINE_MENU kNumStartupMenuItems
         DEFINE_MENU_ITEM startup_menu_item_1
         DEFINE_MENU_ITEM startup_menu_item_2
         DEFINE_MENU_ITEM startup_menu_item_3
@@ -1141,7 +1150,9 @@ startup_menu_item_5:    PASCAL_STRING "Slot 0 "
 startup_menu_item_6:    PASCAL_STRING "Slot 0 "
 startup_menu_item_7:    PASCAL_STRING "Slot 0 "
 
-        kDeviceTypeDiskII     = 0
+kNumDeviceTypes = 6
+
+        kDeviceTypeDiskII      = 0
         kDeviceTypeRAMDisk     = 1
         kDeviceTypeProFile     = 2
         kDeviceTypeRemovable   = 3
@@ -1156,12 +1167,15 @@ device_template_table:
         .addr   str_unidisk_xy
         .addr   str_fileshare_x
         .addr   str_slot_drive
+        ASSERT_ADDRESS_TABLE_SIZE device_template_table, kNumDeviceTypes
 
 device_template_slot_offset_table:
         .byte   15, 15, 15, 15, 14, 6
+        ASSERT_TABLE_SIZE device_template_slot_offset_table, kNumDeviceTypes
 
 device_template_drive_offset_table:
         .byte   19, 19, 19, 19, 18, 15 ; 0 = no drive # for this type
+        ASSERT_TABLE_SIZE device_template_drive_offset_table, kNumDeviceTypes
 
 ;;; Disk II
 str_disk_ii_sd:
@@ -1263,6 +1277,7 @@ window_title_addr_table:
         .addr   winfo6title_ptr
         .addr   winfo7title_ptr
         .addr   winfo8title_ptr
+        ASSERT_ADDRESS_TABLE_SIZE window_title_addr_table, kMaxNumWindows + 1
 
         ;; (low nibble must match menu order)
         kViewByIcon = $00
@@ -1272,7 +1287,7 @@ window_title_addr_table:
         kViewByType = $84
 
 win_view_by_table:
-        .res    8, 0
+        .res    kMaxNumWindows, 0
 
 pos_col_name: DEFINE_POINT 0, 0, pos_col_name
 pos_col_type: DEFINE_POINT 112, 0, pos_col_type
@@ -1348,13 +1363,13 @@ buflabel:       .res    18, 0
 ;;; * length-prefixed path string (no trailing /)
 ;;; Windows 1...8 (since 0 is desktop)
 window_path_table:
-        .res    (8*65), 0
+        .res    (kMaxNumWindows*65), 0
 
 ;;; Window used/free (in kilobytes)
 ;;; Two tables, 8 entries each
 ;;; Windows 1...8 (since 0 is desktop)
-window_k_used_table:  .res    16, 0
-window_k_free_table:  .res    16, 0
+window_k_used_table:  .res    kMaxNumWindows*2, 0
+window_k_free_table:  .res    kMaxNumWindows*2, 0
 
         .res    8, 0            ; ???
 
@@ -1412,12 +1427,12 @@ coords: DEFINE_POINT 0, 0
 ;;; window_icon_list_table = first entry in buffer (length = 127)
 
 window_icon_count_table:
-        .repeat 9,i
+        .repeat kMaxNumWindows+1,i
         .addr   WINDOW_ICON_TABLES + $80 * i
         .endrepeat
 
 window_icon_list_table:
-        .repeat 9,i
+        .repeat kMaxNumWindows+1,i
         .addr   WINDOW_ICON_TABLES + $80 * i + 1
         .endrepeat
 
@@ -1428,7 +1443,7 @@ active_window_id:
 ;;; $FF = window in use, but dir (vol/folder) icon deleted
 ;;; Otherwise, dir (vol/folder) icon associated with window.
 window_to_dir_icon_table:
-        .res    8, 0
+        .res    kMaxNumWindows, 0
 
 num_open_windows:
         .byte   0
@@ -1491,14 +1506,13 @@ fto_blocks:     .word   0
         FTO_FLAGS_AUX    = %10000000
         FTO_FLAGS_BLOCKS = %01000000
 
-kFTOTableRecordSize = 8
 fto_table:
         DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_NONE, 0, 0, FT_TYPELESS ; Reserve BAD for tmp
 
         ;; Desk Accessories/Applets
-        DEFINE_FTORECORD $FF, DA_FILE_TYPE, FTO_FLAGS_NONE, 0, 0, FT_BAD ; Remap $F1 by default...
-        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_AUX, $640, 0, DA_FILE_TYPE ; Restore $F1/$0640 as DA
-        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_AUX, $8640, 0, DA_FILE_TYPE ; Restore $F1/$8640 as DA
+        DEFINE_FTORECORD $FF, kDAFileType, FTO_FLAGS_NONE, 0, 0, FT_BAD ; Remap $F1 by default...
+        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_AUX, kDAFileAuxType, 0, kDAFileType ; Restore $F1/$0640 as DA
+        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_AUX, kDAFileAuxType|$8000, 0, kDAFileType ; Restore $F1/$8640 as DA
         DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_NONE, 0, 0, FT_TYPELESS ; Reserve BAD for tmp
 
         ;; Graphics Files
@@ -1509,7 +1523,7 @@ fto_table:
         DEFINE_FTORECORD $FF, FT_BINARY, FTO_FLAGS_AUX|FTO_FLAGS_BLOCKS, $5800, 3,  FT_GRAPHICS ; Minipix as FOT
 
         ;; Applications
-        DEFINE_FTORECORD $FF, FT_S16, FTO_FLAGS_NONE, 0, 0, APP_FILE_TYPE ; IIgs System => "App"
+        DEFINE_FTORECORD $FF, FT_S16, FTO_FLAGS_NONE, 0, 0, kAppFileType ; IIgs System => "App"
 
         ;; IIgs-Specific Files (ranges)
         DEFINE_FTORECORD $F0, $50, FTO_FLAGS_NONE, 0, 0, FT_SRC ; IIgs General  => SRC
@@ -1561,8 +1575,9 @@ type_table:
         .byte   FT_ADB        ; appleworks db
         .byte   FT_AWP        ; appleworks wp
         .byte   FT_ASP        ; appleworks sp
-        .byte   DA_FILE_TYPE  ; desk accessory
+        .byte   kDAFileType   ; desk accessory
         .byte   FT_BAD        ; bad block
+        ASSERT_TABLE_SIZE type_table, kNumFileTypes
 
 type_names_table:
         .byte   " ???" ; typeless
@@ -1580,6 +1595,7 @@ type_names_table:
         .byte   " ASP" ; appleworks sp
         .byte   " $F1" ; desk accessory
         .byte   " BAD" ; bad block
+        ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 4
 
 ;;; The icon-related tables (below) use a distinguishing icon
 ;;; for "apps" (SYS files with ".SYSTEM" name suffix, and IIgs
@@ -1589,7 +1605,7 @@ type_names_table:
 ;;; Similarly, IIgs-specific types ($5x, $Ax-$Cx) are all
 ;;; mapped to $B0 (SRC).
 
-        .assert FT_BAD = APP_FILE_TYPE, error, "Mismatched file type remapping"
+        .assert FT_BAD = kAppFileType, error, "Mismatched file type remapping"
 
 
 icon_type_table:
@@ -1608,6 +1624,7 @@ icon_type_table:
         .byte   kIconEntryTypeGeneric ; appleworks sp
         .byte   kIconEntryTypeGeneric ; desk accessory
         .byte   kIconEntryTypeSystem  ; system (see below)
+        ASSERT_TABLE_SIZE icon_type_table, kNumFileTypes
 
 type_icons_table:               ; map into definitions below
         .addr   gen ; typeless
@@ -1625,6 +1642,7 @@ type_icons_table:               ; map into definitions below
         .addr   asp ; appleworks sp
         .addr   a2d ; desk accessory
         .addr   app ; system (see below)
+        ASSERT_ADDRESS_TABLE_SIZE type_icons_table, kNumFileTypes
 
 gen:    DEFICON generic_icon, 4, 27, 15, generic_mask
 src:    DEFICON desktop_aux::iigs_file_icon, 4, 27, 15, generic_mask

@@ -18,10 +18,8 @@ kRamDrvSystemUnitNum = $3E
 
 ;;; ============================================================
 
-DA_FILE_TYPE    = $F1
-DA_AUX_TYPE     = $640          ; High bit set = don't show in Apple menu
-
-APP_FILE_TYPE   = $01           ; FT_SYS w/ ".SYSTEM" (FT_BAD mapped to FT_TYPELESS)
+kDAFileType     = $F1
+kDAFileAuxType  = $640          ; High bit set = don't show in Apple menu
 
 ;;; DeskTop init routine, after all segments are loaded.
 

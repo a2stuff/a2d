@@ -907,7 +907,7 @@ begin:
 :       cmp     #FT_SYSTEM
         beq     launch
 
-        cmp     #APP_FILE_TYPE
+        cmp     #kAppFileType
         beq     launch
 
         cmp     #FT_GRAPHICS
@@ -922,7 +922,7 @@ begin:
         bne     :+
         addr_jump invoke_desk_acc, str_preview_fnt
 
-:       cmp     #DA_FILE_TYPE
+:       cmp     #kDAFileType
         bne     :+
         addr_jump invoke_desk_acc, path
 
@@ -6896,7 +6896,7 @@ cloop:  lda     (file_entry),y
         bne     cloop
 
 is_app:
-        lda     #APP_FILE_TYPE  ; overloaded meaning in icon tables
+        lda     #kAppFileType   ; overloaded meaning in icon tables
         bne     got_type        ; always
 
 str_sys_suffix:
@@ -8426,6 +8426,7 @@ month_table:
         .addr   str_no_date
         .addr   str_jan,str_feb,str_mar,str_apr,str_may,str_jun
         .addr   str_jul,str_aug,str_sep,str_oct,str_nov,str_dec
+        ASSERT_ADDRESS_TABLE_SIZE month_table, 13
 
 str_no_date:
         PASCAL_STRING "no date"
@@ -9851,13 +9852,20 @@ step:   .byte   0
 
 .proc load_dynamic_routine_impl
 
+kNumOverlays = 9
+
 pos_table:
         .dword  $00012FE0,$000160E0,$000174E0,$000184E0,$0001A4E0
         .dword  $0001ACE0,$0001B4E0,$0000B780,$0000F780
+        ASSERT_RECORD_TABLE_SIZE pos_table, kNumOverlays, 4
+
 len_table:
         .word   $0200,$1400,$1000,$2000,$0800,$0800,$0800,$2800,$1000
+        ASSERT_RECORD_TABLE_SIZE len_table, kNumOverlays, 2
+
 addr_table:
         .addr   $0800,$0800,$9000,$5000,$7000,$7000,$7000,$5000,$9000
+        ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
 
         DEFINE_OPEN_PARAMS open_params, str_desktop2, $1C00
 
@@ -13178,17 +13186,19 @@ coords: DEFINE_POINT 0,0
 ;;; ============================================================
 ;;; Dialog Launcher (or just proc handler???)
 
-        kIndexAboutDialog              = 0
-        kIndexCopyDialog               = 1
-        kIndexDeleteDialog             = 2
-        kIndexNewFolderDialog         = 3
-        kIndexGetInfoDialog           = 6
-        kIndexLockDialog               = 7
-        kIndexUnlockDialog             = 8
-        kIndexRenameDialog             = 9
-        kIndexDownloadDialog           = 10
-        kIndexGetSizeDialog           = 11
-        kIndexWarningDialog            = 12
+kNumDialogTypes = 13
+
+kIndexAboutDialog       = 0
+kIndexCopyDialog        = 1
+kIndexDeleteDialog      = 2
+kIndexNewFolderDialog   = 3
+kIndexGetInfoDialog     = 6
+kIndexLockDialog        = 7
+kIndexUnlockDialog      = 8
+kIndexRenameDialog      = 9
+kIndexDownloadDialog    = 10
+kIndexGetSizeDialog     = 11
+kIndexWarningDialog     = 12
 
 invoke_dialog_proc:
         .assert * = $A500, error, "Entry point used by overlay"
@@ -13208,6 +13218,7 @@ dialog_proc_table:
         .addr   download_dialog_proc
         .addr   get_size_dialog_proc
         .addr   warning_dialog_proc
+        ASSERT_ADDRESS_TABLE_SIZE dialog_proc_table, kNumDialogTypes
 
 dialog_param_addr:
         .addr   0
@@ -14486,6 +14497,16 @@ close_win:
 ;;; "Warning!" dialog
 ;;; $6 ptr to message num
 
+kNumWarningTypes = 7
+
+kWarningMsgInsertSystemDisk     = 0
+kWarningMsgSelectorListFull     = 1
+kWarningMsgSelectorListFull2    = 2
+kWarningMsgWindowMustBeClosed   = 3
+kWarningMsgWindowMustBeClosed2  = 4
+kWarningMsgTooManyWindows       = 5
+kWarningMsgSaveSelectorList     = 6
+
 .proc warning_dialog_proc
         ptr := $6
 
@@ -14555,6 +14576,7 @@ draw_string:
         ;; high bit set if "cancel" should be an option
 warning_cancel_table:
         .byte   $80,$00,$00,$80,$00,$00,$80
+        ASSERT_TABLE_SIZE warning_cancel_table, desktop_main::kNumWarningTypes
 
 warning_message_table:
         .addr   desktop_aux::str_insert_system_disk,desktop_aux::str_1_space
@@ -14564,14 +14586,8 @@ warning_message_table:
         .addr   desktop_aux::str_window_must_be_closed,desktop_aux::str_1_space
         .addr   desktop_aux::str_too_many_windows,desktop_aux::str_1_space
         .addr   desktop_aux::str_save_selector_list,desktop_aux::str_on_system_disk
+        ASSERT_RECORD_TABLE_SIZE warning_message_table, desktop_main::kNumWarningTypes, 4
 .endproc
-        kWarningMsgInsertSystemDisk          = 0
-        kWarningMsgSelectorListFull          = 1
-        kWarningMsgSelectorListFull2         = 2
-        kWarningMsgWindowMustBeClosed       = 3
-        kWarningMsgWindowMustBeClosed2      = 4
-        kWarningMsgTooManyWindows            = 5
-        kWarningMsgSaveSelectorList          = 6
 
 ;;; ============================================================
 
@@ -16497,7 +16513,7 @@ process_block:
 :       inc     entry_num
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
-        cmp     #DA_FILE_TYPE
+        cmp     #kDAFileType
         bne     next_entry
         ldy     #FileEntry::aux_type+1 ; high bit set = skip
         lda     (dir_ptr),y
@@ -16830,7 +16846,7 @@ slot_string_table:
         .addr   startup_menu_item_5
         .addr   startup_menu_item_6
         .addr   startup_menu_item_7
-
+        ASSERT_ADDRESS_TABLE_SIZE slot_string_table, ::kNumStartupMenuItems
 .endproc
 
 ;;; ============================================================

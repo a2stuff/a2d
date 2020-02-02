@@ -740,6 +740,22 @@ __pushorg_depth__ .set 0
         .endproc
 .endmacro
 
+;;; ============================================================
+;;; Assertions
+;;; ============================================================
+
+.macro ASSERT_TABLE_SIZE name, size
+        .assert * - name = size, error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), size, * - name)
+.endmacro
+
+.macro ASSERT_ADDRESS_TABLE_SIZE name, size
+        .assert (* - name) = (size) * 2, error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), (size) * 2, * - name)
+.endmacro
+
+.macro ASSERT_RECORD_TABLE_SIZE name, size, record_length
+        .assert (* - name) = (size) * (record_length), error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), (size) * (record_length), * - name)
+.endmacro
+
 
 ;;; ============================================================
 ;;; Flow Control
