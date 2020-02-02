@@ -22,7 +22,7 @@ menu:   DEFINE_MENU 1
         DEFINE_MENU_ITEM menu_target + (item_label - menu_bar)
 
 menu_label:
-        PASCAL_STRING .sprintf("       Disk copy version %d.%d   ",::VERSION_MAJOR,::VERSION_MINOR)
+        PASCAL_STRING .sprintf("       Disk copy version %d.%d   ",::kDeskTopVersionMajor,::kDeskTopVersionMinor)
 item_label:
         PASCAL_STRING "Rien"
 .endparams

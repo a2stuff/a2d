@@ -96,7 +96,7 @@ label_facilities:
         PASCAL_STRING "Facilities"
 
 label_desktop:
-        PASCAL_STRING .sprintf("Apple II DeskTop version %d.%d",::VERSION_MAJOR,::VERSION_MINOR)
+        PASCAL_STRING .sprintf("Apple II DeskTop version %d.%d",::kDeskTopVersionMajor,::kDeskTopVersionMinor)
 
 label_blank:
         PASCAL_STRING " "

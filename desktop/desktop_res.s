@@ -1242,7 +1242,7 @@ dummy_dd_menu:
         DEFINE_MENU_ITEM dummy_dd_item
 
 splash_menu_label:
-        PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d%s", ::VERSION_MAJOR,::VERSION_MINOR,VERSION_SUFFIX)
+        PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d%s", kDeskTopVersionMajor, kDeskTopVersionMinor, kDeskTopVersionSuffix)
 
 blank_dd_label:
         PASCAL_STRING " "
@@ -1860,7 +1860,10 @@ app_mask:
 .scope settings
         .assert * = DeskTop::Settings::address, error, "Address mismatch"
 
-        ;; This is offset $A700 into DESKTOP2 file
+        .assert * = DeskTop::Settings::version_major, error, "Address mismatch"
+        .byte   kDeskTopVersionMajor
+        .assert * = DeskTop::Settings::version_minor, error, "Address mismatch"
+        .byte   kDeskTopVersionMinor
 
         .assert * = DeskTop::Settings::pattern, error, "Address mismatch"
         .byte   %01010101

@@ -1590,10 +1590,10 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Save Settings - written back to DESKTOP2
+;;; Save Settings
 
 filename:
-        PASCAL_STRING "DESKTOP2"
+        PASCAL_STRING "DeskTop.config"
 
 filename_buffer:
         .res 65
@@ -1601,8 +1601,8 @@ filename_buffer:
 write_buffer:
         .res DeskTop::Settings::length
 
+        DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_SET_MARK_PARAMS set_mark_params, DESKTOP2_SETTINGS_OFFSET
         DEFINE_WRITE_PARAMS write_params, write_buffer, DeskTop::Settings::length
         DEFINE_CLOSE_PARAMS close_params
 
@@ -1653,15 +1653,16 @@ done:   sta     ALTZPON         ; Aux ZP, LCBANK1 in, like DeskTop wants.
 .endproc
 
 .proc do_write
-        ;; Write to the file
+        ;; Create if necessary
+        copy16  DATELO, create_params::create_date
+        copy16  TIMELO, create_params::create_time
+        MLI_CALL CREATE, create_params
+
         MLI_CALL OPEN, open_params
         bcs     done
         lda     open_params::ref_num
-        sta     set_mark_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-        MLI_CALL SET_MARK, set_mark_params
-        bcs     close
         MLI_CALL WRITE, write_params
 close:  MLI_CALL CLOSE, close_params
 done:   rts

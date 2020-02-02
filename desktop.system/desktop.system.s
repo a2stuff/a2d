@@ -101,6 +101,8 @@ L23DF:  .byte   $00,$00,$00
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, buffer
         .byte   0
 
+kNumFilenames = 9
+
         ;; Files/Directories to copy
 str_f1: PASCAL_STRING "DESKTOP.SYSTEM"
 str_f2: PASCAL_STRING "DESKTOP2"
@@ -110,11 +112,11 @@ str_f5: PASCAL_STRING "SELECTOR.LIST"
 str_f6: PASCAL_STRING "SELECTOR"
 str_f7: PASCAL_STRING "PRODOS"
 str_f8: PASCAL_STRING "Quit.tmp"
+str_f9: PASCAL_STRING "DeskTop.config"
 
 filename_table:
-        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8
-
-kNumFilenames = 8
+        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8,str_f9
+        .assert *-filename_table = kNumFilenames*2, error, "Table length mismatch"
 
 str_copying_to_ramcard:
         PASCAL_STRING "Copying Apple II DeskTop into RAMCard"

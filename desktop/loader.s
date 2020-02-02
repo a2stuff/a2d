@@ -4,9 +4,7 @@
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
-
-DESKTOP_INIT    := $0800        ; init location
-L7ECA           := $7ECA        ; ???
+        .include "../desktop.inc"
 
 ;;; ============================================================
 ;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)
@@ -281,11 +279,11 @@ loop:   lda     segment_num
         cmp     num_segments
         bne     continue
 
-        ;; Close and invoke DeskTop init routine
+        ;; Close
         MLI_CALL CLOSE, close_params
         beq     :+
         brk                     ; crash
-:       jmp     DESKTOP_INIT
+:       jmp     load_settings
 
 continue:
         asl     a
@@ -396,13 +394,73 @@ max_page:
         .byte   0
 .endproc
 
+;;; ============================================================
+;;; Load settings file (if present), and copy into LC,
+;;; overwriting default settings.
+
+.proc load_settings
+
+        jmp     start
+
+        io_buf := $1A00
+        read_buf := $1E00
+
+        ;; DeskTop::Settings::address
+
+        DEFINE_OPEN_PARAMS open_params, filename, io_buf
+        DEFINE_READ_PARAMS read_params, read_buf, DeskTop::Settings::length
+        DEFINE_CLOSE_PARAMS close_params
+
+filename:
+        PASCAL_STRING "DeskTop.config"
+
+start:
+        ;; Load the settings file; on failure, just skip
+        MLI_CALL OPEN, open_params
+        bcs     finish
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL READ, read_params
+        bcs     close
+
+        ;; Check version bytes; ignore on mismatch
+        lda     read_buf + (DeskTop::Settings::version_major - DeskTop::Settings::address)
+        cmp     #kDeskTopVersionMajor
+        bne     close
+        lda     read_buf + (DeskTop::Settings::version_minor - DeskTop::Settings::address)
+        cmp     #kDeskTopVersionMinor
+        bne     close
+
+        ;; Move settings block into place
+        sta     ALTZPON         ; Bank in Aux LC Bank 1
+        lda     LCBANK1
+        lda     LCBANK1
+
+        COPY_BYTES DeskTop::Settings::length, read_buf, DeskTop::Settings::address
+
+        sta     ALTZPOFF        ; Bank in Main ZP/LC and ROM
+        lda     ROMIN2
+
+        ;; Finish up
+close:  MLI_CALL CLOSE, close_params
+
+finish: jmp     DESKTOP_INIT
+
+.endproc
+
         PAD_TO $2200
 .endproc ; install_segments
 
+;;; ============================================================
+
 ;;; Unused space - previously the screen dump code lived here, now
 ;;; moved to a Desk Accessory.
+
 .proc unused
         .res $180
 .endproc
+
+;;; ============================================================
 
         .assert .sizeof(install_as_quit) + .sizeof(quit_routine) + .sizeof(install_segments) + .sizeof(unused) = $580, error, "Size mismatch"

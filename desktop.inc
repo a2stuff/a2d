@@ -2,6 +2,13 @@
 ;;; DeskTop - Public Definitions
 ;;; ============================================================
 
+kDeskTopVersionMajor = 1
+kDeskTopVersionMinor = 2
+.define kDeskTopVersionSuffix "-alpha9"
+.define kDeskTopReleaseDate "January 5, 2020"
+
+;;; ============================================================
+
 kScreenWidth    = 560
 kScreenHeight   = 192
 
@@ -16,9 +23,14 @@ DA_AUX_TYPE     = $640          ; High bit set = don't show in Apple menu
 
 APP_FILE_TYPE   = $01           ; FT_SYS w/ ".SYSTEM" (FT_BAD mapped to FT_TYPELESS)
 
+;;; DeskTop init routine, after all segments are loaded.
+
+DESKTOP_INIT    := $0800
+
 ;;; Desk Accessories are loaded in Main ($800-$1BFF) using
 ;;; an I/O buffer (Main $1C00-1FFF). DAs often copy themselves
 ;;; into Aux but can only use $800-$1AFF due to icon tables.
+;;; If they show alerts, they must not use scratch area (below).
 
 DA_LOAD_ADDRESS := $800         ; Loaded into Main
 DA_IO_BUFFER    := $1C00        ; ...through $1FFF
@@ -281,19 +293,20 @@ kGlyphSolidApple        = $1E
 ;;; ============================================================
 ;;; Internals - Settings (modified by Control Panel)
 
-DESKTOP2_SETTINGS_OFFSET = $A700
-
 .scope DeskTop
 .scope Settings
         address := $FF80
         length  = $80
 
-        pattern        := $FF80 ; .res 8
+        version_major   := $FF80
+        version_minor   := $FF81
 
-        dblclick_speed := $FF88 ; .word
+        pattern         := $FF82 ; .res 8
+
+        dblclick_speed  := $FF8A ; .word
         kDefaultDblClickSpeed = $12C
 
-        ip_blink_speed := $FF8A ; .byte
+        ip_blink_speed  := $FF8C ; .byte
         kDefaultIPBlinkSpeed = 60
 
 .endscope

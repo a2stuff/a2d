@@ -7,11 +7,6 @@
 
 ;;; ============================================================
 
-VERSION_MAJOR = 1
-VERSION_MINOR = 2
-.define VERSION_SUFFIX "-alpha9"
-.define RELEASE_DATE "January 5, 2020"
-
 ;;; ============================================================
 
 kMaxDeskAccCount        = 12

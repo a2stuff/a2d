@@ -13617,7 +13617,7 @@ jump_relay:
         yax_call draw_dialog_label, 6 | DDL_CENTER, desktop_aux::str_about6
         yax_call draw_dialog_label, 7, desktop_aux::str_about7
         yax_call draw_dialog_label, 9, desktop_aux::str_about8
-        copy16  #310 - (7 * .strlen(VERSION_SUFFIX)), dialog_label_pos
+        copy16  #310 - (7 * .strlen(kDeskTopVersionSuffix)), dialog_label_pos
         yax_call draw_dialog_label, 9, desktop_aux::str_about9
         copy16  #kDialogLabelDefaultX, dialog_label_pos
 
@@ -15896,7 +15896,7 @@ str_preview_txt:
 
 .proc desktop_800
 
-        .org $800
+        .org ::DESKTOP_INIT
 
 start:
 
