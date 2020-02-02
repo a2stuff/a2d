@@ -289,13 +289,6 @@ path_buf0:  .res    65, 0
 path_buf1:  .res    65, 0
 path_buf2:  .res    65, 0
 
-alert_bitmap2_params:
-        DEFINE_POINT 40, 8      ; viewloc
-        .addr   desktop_aux::alert_bitmap   ; mapbits
-        .byte   7               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT 0, 0, 36, 23 ; maprect
-
 .params winfo_alert_dialog
         kWidth = 400
         kHeight = 107
