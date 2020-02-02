@@ -108,19 +108,19 @@ L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::FrameRect, common_input2_rect
         addr_call common_overlay::L5E57, enter_the_full_pathname_label1
         addr_call common_overlay::L5E6F, enter_the_name_to_appear_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D922
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_add_a_new_entry_to_label
         addr_call common_overlay::draw_string, add_a_new_entry_to_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D926
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_run_list_label
         addr_call common_overlay::draw_string, run_list_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D92A
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_other_run_list_label
         addr_call common_overlay::draw_string, other_run_list_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D92E
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_down_load_label
         addr_call common_overlay::draw_string, down_load_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D932
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_at_first_boot_label
         addr_call common_overlay::draw_string, at_first_boot_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D936
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_at_first_use_label
         addr_call common_overlay::draw_string, at_first_use_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D93A
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_never_label
         addr_call common_overlay::draw_string, never_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, rect_D93E

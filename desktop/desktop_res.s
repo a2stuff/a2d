@@ -660,19 +660,19 @@ str_folder:
 LD920:  .byte   0
 LD921:  .byte   0
 
-pos_D922:
+pos_add_a_new_entry_to_label:
         DEFINE_POINT 343,40
-pos_D926:
+pos_run_list_label:
         DEFINE_POINT 363,48
-pos_D92A:
+pos_other_run_list_label:
         DEFINE_POINT 363,56
-pos_D92E:
+pos_down_load_label:
         DEFINE_POINT 343,75
-pos_D932:
+pos_at_first_boot_label:
         DEFINE_POINT 363,83
-pos_D936:
+pos_at_first_use_label:
         DEFINE_POINT 363,91
-pos_D93A:
+pos_never_label:
         DEFINE_POINT 363,99
 
 rect_D93E:
