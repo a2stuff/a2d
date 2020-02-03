@@ -28,5 +28,5 @@ deploy:
     - $TRAVIS_BUILD_DIR/res/README.txt
   skip_cleanup: true
   on:
-    repo: inexorabletash/a2d
+    repo: a2stuff/a2d
     tags: true
