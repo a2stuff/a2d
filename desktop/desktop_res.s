@@ -1033,7 +1033,7 @@ open_dir_path_buf:
 window_id_to_filerecord_list_count:
         .byte   0
 window_id_to_filerecord_list_entries:
-        .res    8, 0            ; 8 entries + length
+        .res    kMaxNumWindows, 0 ; 8 entries + length
 
         .res    6               ; Unused ???
 
@@ -1041,7 +1041,7 @@ LE200:  .word   0               ; Unused ???
 
 ;;; Mapping from position in above table to FileRecord entry
 window_filerecord_table:
-        .res    8*2
+        .res    kMaxNumWindows*2
 
         .res    8, 0            ; Unused ???
         .byte   $00,$00,$00,$00,$7F,$64,$00,$1C
