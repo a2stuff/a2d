@@ -4462,9 +4462,6 @@ cont:   sta     cached_window_icon_count
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
 
-        lda     active_window_id
-        jsr     remove_window_filerecord_entries
-
         ;; Animate closing into dir (vol/folder) icon
         ldx     active_window_id
         dex
@@ -4473,6 +4470,9 @@ cont:   sta     cached_window_icon_count
         jsr     animate_window_close
 
 no_icon:
+        lda     active_window_id
+        jsr     remove_window_filerecord_entries
+
         ldx     active_window_id
         dex
         lda     #0
@@ -5310,14 +5310,18 @@ no_linked_win:
         stax    ptr
         jsr     compose_icon_full_path
 
+        ;; Alternate entry point: opening via path.
+check_path:
         addr_call find_window_for_path, open_dir_path_buf
         beq     no_win
 
         ;; Found a match - associate the window.
         tax
         dex                     ; 1-based to 0-based
-        copy    icon_params2, window_to_dir_icon_table,x
-        jmp     found_win
+        lda     icon_params2    ; set to $FF if opening via path
+        bmi     :+
+        sta     window_to_dir_icon_table,x
+:       jmp     found_win
 
         ;; --------------------------------------------------
         ;; No window - need to open one.
@@ -5343,7 +5347,7 @@ no_win:
         jmp     :-
 
         ;; Map the window to its source icon
-:       lda     icon_params2
+:       lda     icon_params2    ; set to $FF if opening via path
         sta     window_to_dir_icon_table,x
         inx                     ; 0-based to 1-based
 
@@ -5411,7 +5415,9 @@ done:   copy    cached_window_id, active_window_id
 
 ;;; Common code to update the dir (vol/folder) icon.
 .proc update_icon
-        lda     icon_params2
+        lda     icon_params2    ; set to $FF if opening via path
+        bmi     calc_name_ptr
+
         jsr     icon_entry_lookup
         stax    ptr
 
@@ -5441,9 +5447,48 @@ done:   copy    cached_window_id, active_window_id
         jsr     reset_grafport3
 
 done:   rts
+
+calc_name_ptr:
+        ;; Find last '/'
+        ldy     open_dir_path_buf
+:       lda     open_dir_path_buf,y
+        cmp     #'/'
+        beq     :+
+        dey
+        bpl     :-
+:
+        ;; Start building string
+        ldx     #0
+        copy    #' ', buf_filename2+1,x ; leading space
+
+:       iny
+        inx
+        lda     open_dir_path_buf,y
+        sta     buf_filename2+1,x
+        cpy     open_dir_path_buf
+        bne     :-
+
+        inx
+        copy    #' ', buf_filename2+1,x ; trailing space
+        stx     buf_filename2
+
+        ;; Adjust ptr as if it's pointing at an IconEntry
+        copy16  #buf_filename2 - IconEntry::len, ptr
+        rts
 .endproc
 
 num:    .byte   0
+.endproc
+
+;;; ============================================================
+;;; Open a folder/volume icon
+;;; Input: |open_dir_path_buf| should have full path.
+;;;   If a case match for existing window path, it will be activated.
+;;; Note: stack will be restored via saved_stack on failure
+
+.proc open_window_for_path
+        copy    #$FF, icon_params2
+        jmp     open_folder_or_volume_icon::check_path
 .endproc
 
 ;;; ============================================================
@@ -5955,8 +6000,13 @@ check_window:
         bne     loop
         dey
 
+        ;; Case-insensitive comparison
 :       lda     (ptr),y
-        cmp     path_buffer,y
+        jsr     upcase_char
+        sta     char
+        lda     path_buffer,y
+        jsr     upcase_char
+        cmp     char
         bne     loop
         dey
         bne     :-
@@ -5975,6 +6025,7 @@ window_num:
         .byte   0
 exact_match_flag:
         .byte   0
+char:   .byte   0
 .endproc
         find_window_for_path := find_windows::exact
         find_windows_for_prefix := find_windows::prefix
