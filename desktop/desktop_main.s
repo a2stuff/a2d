@@ -202,7 +202,7 @@ draw_window_header_flag:  .byte   0
 
 .proc update_window
         lda     event_window_id
-        cmp     #9              ; only handle windows 1...8
+        cmp     #kMaxNumWindows+1 ; directory windows are 1-8
         bcc     L415B
         rts
 
@@ -3148,7 +3148,7 @@ L56F8:  .byte   0
         ;; Search upwards through window-icon map to find next.
         ;; ID is 1-based, table is 0-based, so don't need to start
         ;; with an increment
-loop:   cpx     #8
+loop:   cpx     #kMaxNumWindows
         bne     :+
         ldx     #0
 :       lda     window_to_dir_icon_table,x
@@ -5325,7 +5325,7 @@ no_linked_win:
 no_win:
         ;; Is there a free window?
         lda     num_open_windows
-        cmp     #8
+        cmp     #kMaxNumWindows
         bcc     :+
 
         ;; Nope, show error.
@@ -5923,7 +5923,7 @@ start:  sta     exact_match_flag
 
 loop:   inc     window_num
         lda     window_num
-        cmp     #9              ; windows are 1-8
+        cmp     #kMaxNumWindows+1 ; directory windows are 1-8
         bcc     check_window
         bit     exact_match_flag
         bpl     :+
@@ -6312,7 +6312,7 @@ get_vol_free_used:
         cmp     window_id
         beq     :+
         inx
-        cpx     #8
+        cpx     #kMaxNumWindows
         bne     :-
         rts
 
