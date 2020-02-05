@@ -5891,15 +5891,15 @@ slash:  cpy     #1
 
 ;;; ============================================================
 
-        ;; If 'set' version called, length in Y; otherwise use str len
+        ;; If 'prefix' version called, length in Y; otherwise use str len
 .proc find_windows
         ptr := $6
 
-set:    stax    ptr
+exact:  stax    ptr
         lda     #$80
         bne     start
 
-unset:  stax    ptr
+prefix: stax    ptr
         lda     #0
 
 start:  sta     exact_match_flag
@@ -5976,8 +5976,8 @@ window_num:
 exact_match_flag:
         .byte   0
 .endproc
-        find_window_for_path := find_windows::set
-        find_windows_for_prefix := find_windows::unset
+        find_window_for_path := find_windows::exact
+        find_windows_for_prefix := find_windows::prefix
 
 found_windows_count:
         .byte   0
