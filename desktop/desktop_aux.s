@@ -2620,13 +2620,13 @@ cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
         dex
         bpl     :-
 
-        ;; if (bounds_r > kScreenWidth - 1) bounds_r = kScreenWidth - 2
+        ;; if (bounds_r > kScreenWidth - 1) bounds_r = kScreenWidth - 1
         cmp16   bounds_r, #kScreenWidth - 1
         bmi     done
-        lda     #<(kScreenWidth - 2)
+        lda     #<(kScreenWidth - 1)
         sta     bounds_r
         sta     portbits::cliprect::x2
-        lda     #>(kScreenWidth - 2)
+        lda     #>(kScreenWidth - 1)
         sta     bounds_r+1
         sta     portbits::cliprect::x2+1
 
@@ -2751,7 +2751,14 @@ next_pt:
         ;; Finish up
 
 set_bits:
-        MGTK_CALL MGTK::SetPortBits, portbits
+        ;; Ensure clip right does not exceed screen bounds.
+        ;; Fixes https://github.com/a2stuff/a2d/issues/182
+        ;; TODO: Enforce this in the algorithm instead?
+        cmp16   cr_r, bounds_r
+        bcc     :+
+        copy16  bounds_r, cr_r
+
+:       MGTK_CALL MGTK::SetPortBits, portbits
         ;; if (cr_r < bounds_r) more drawing is needed
         cmp16   cr_r, bounds_r
         bmi     :+
