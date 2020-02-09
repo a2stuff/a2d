@@ -228,46 +228,51 @@ found_unit_num:
         bne     exit1
         ldx     #$02
 
-        L09BC := *+2
-L09BA:  lda     buffer + 2
+        buf_ptr1_hi := *+2
+:       lda     buffer + 2
 
         sta     L0A95,x
 
-        L09C2 := *+2
+        buf_ptr2_hi := *+2
         lda     buffer + 3
 
         sta     L0A95+1,x
 
         ora     L0A95,x
-        beq     L09DD
-        inc     L09BC
-        inc     L09BC
-        inc     L09C2
-        inc     L09C2
+        beq     :+
+
+        inc     buf_ptr1_hi
+        inc     buf_ptr1_hi
+        inc     buf_ptr2_hi
+        inc     buf_ptr2_hi
+
         inx
         inx
         cpx     #$0E
-        bne     L09BA
+        bne     :-
 
-L09DD:  txa
+:       txa
         clc
         adc     #$0E
         sta     L0A93
-        jsr     L0B40
-L09E7:  jsr     L0B16
-        bcs     L0A3B
+        jsr     set_ptr_to_first_entry
+
+:       jsr     set_ptr_to_next_entry
+        bcs     jmp_exit
         ldy     #0
         lda     ($06),y
         and     #STORAGE_TYPE_MASK
-        beq     L09E7
+        beq     :-
+
         ldy     #SubdirectoryHeader::file_count
         copy16in ($06),y, L0A95
-        jsr     L0AE8
+        jsr     bubble_sort
         lda     unit_num
         sta     block_params::unit_num
-        lda     #$00
+        lda     #0
         sta     L0A94
-L0A0F:  lda     L0A94
+
+:       lda     L0A94
         asl     a
         tay
         copy16  L0A95,y, block_params::block_num
@@ -280,14 +285,16 @@ L0A0F:  lda     L0A94
         lda     #$00
         sta     block_params::data_buffer
         jsr     write_block
-        bne     L0A3B
+        bne     jmp_exit
         inc     L0A94
-        bne     L0A0F
-L0A3B:  jmp     exit
+        bne     :-
+
+jmp_exit:
+        jmp     exit
 
 L0A3E:  copy16  #$1C00, block_params::data_buffer
-        jsr     L0B40
-L0A4B:  jsr     L0B16
+        jsr     set_ptr_to_first_entry
+L0A4B:  jsr     set_ptr_to_next_entry
         bcs     L0A8E
         ldy     #0
         lda     ($06),y
@@ -305,7 +312,7 @@ L0A4B:  jsr     L0B16
         and     #$FE
         tay
         copy16  L0A95,y, $1C27
-        copy    L0AAF, $1C29
+        copy    entry_num, $1C29
         jsr     write_block
         jmp     L0A4B
 
@@ -320,7 +327,7 @@ L0A94:  .byte   0
 
 L0A95:  .res 26, 0
 
-L0AAF:  .byte   0
+entry_num:  .byte   0
 
 ;;; ============================================================
 ;;; Compare path from ON_LINE vs. path from window, since we
@@ -358,34 +365,41 @@ fail:   return  #$FF
 .endproc
 
 ;;; ============================================================
+;;; Bubble sort entries
 
-.proc L0AE8
-        lda     #0
-        sta     L0B15
-        jsr     L0B40
-        jsr     L0B16
-loop:   copy16  $06, $08
-        jsr     L0B16
+.proc bubble_sort
+        ptr1 := $06
+        ptr2 := $08
+
+start:  lda     #0
+        sta     flag
+        jsr     set_ptr_to_first_entry
+        jsr     set_ptr_to_next_entry
+
+loop:   copy16  ptr1, ptr2
+        jsr     set_ptr_to_next_entry
         bcs     done
+
         jsr     compare_file_entries
         bcc     loop
         jsr     swap_entries
         lda     #$FF
-        sta     L0B15
+        sta     flag
         bne     loop
-done:   lda     L0B15
-        bne     L0AE8
+
+done:   lda     flag
+        bne     start
         rts
 
-L0B15:  .byte   0
+flag:   .byte   0
 .endproc
 
 ;;; ============================================================
 
-.proc L0B16
+.proc set_ptr_to_next_entry
         ptr := $06
 
-        inc     L0AAF
+        inc     entry_num
         lda     ptr
         clc
         adc     #.sizeof(FileEntry)
@@ -398,7 +412,7 @@ L0B15:  .byte   0
         bne     rtcc
         inc     ptr+1
         lda     #1
-        sta     L0AAF
+        sta     entry_num
         lda     #$04            ; skip over block header ???
         sta     ptr
         lda     ptr+1
@@ -414,10 +428,14 @@ rtcs:   sec
 
 ;;; ============================================================
 
-L0B40:  lda     #1
-        sta     L0AAF
-        copy16  #dir_data_buffer + 4, $06
+.proc set_ptr_to_first_entry
+        ptr := $06
+
+        lda     #1
+        sta     entry_num
+        copy16  #dir_data_buffer + 4, ptr
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Swap file entries
