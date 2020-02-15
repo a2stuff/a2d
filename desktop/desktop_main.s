@@ -1867,52 +1867,64 @@ next_file:
 
         ;; File (executable or data)
 maybe_open_file:
-        sta     L4E71
+        sta     icon_type
         lda     selected_icon_count
         cmp     #2              ; multiple files open?
         bcs     next_file       ; don't try to invoke
 
         pla
+
+        ;; Copy window path to buf_win_path
+        win_path_ptr := $06
+
         lda     active_window_id
         jsr     window_path_lookup
-        stax    $06
+        stax    win_path_ptr
 
         ldy     #0
-        lda     ($06),y
+        lda     (win_path_ptr),y
         tay
-L4E34:  lda     ($06),y
+:       lda     (win_path_ptr),y
         sta     buf_win_path,y
         dey
-        bpl     L4E34
+        bpl     :-
+
+        ;; Copy file path (without leading/trailing spaces) to buf_filename2
+        icon_ptr := $06
+
         lda     selected_icon_list
         jsr     icon_entry_lookup
-        stax    $06
-        ldy     #$09
-        lda     ($06),y
+        stax    icon_ptr
+        ldy     #IconEntry::len
+        lda     (icon_ptr),y
         tax
         clc
-        adc     #$09
+        adc     #IconEntry::len
         tay
         dex
         dey
-L4E51:  lda     ($06),y
+:       lda     (icon_ptr),y
         sta     buf_filename2-1,x
         dey
         dex
-        bne     L4E51
-        ldy     #$09
-        lda     ($06),y
+        bne     :-
+        ldy     #IconEntry::len
+        lda     (icon_ptr),y
         tax
-        dex
+        dex                     ; -2 for leading/trailing spaces
         dex
         stx     buf_filename2
-        lda     L4E71
-        cmp     #$20
-        bcc     L4E6E
-        lda     L4E71
-L4E6E:  jmp     launch_file
 
-L4E71:  .byte   0
+        ;; Check type ??? and invoke
+        lda     icon_type
+        cmp     #kIconEntryTypeBinary
+        bcc     :+              ; < Binary is System and Dir
+        lda     icon_type       ; no-op - BUG ???
+:       jmp     launch_file
+
+        ;; Type bits from IconEntry::win_type
+icon_type:
+        .byte   0
 
         ;; Count of opened volumes/folders; if non-zero,
         ;; selection must be cleared before finishing.
