@@ -4003,8 +4003,7 @@ inside: lda     flag
 toggle: MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     flag
-        clc                     ; TODO: why not eor #$80 ???
-        adc     #$80
+        eor     #$80
         sta     flag
         jmp     loop
 
@@ -4049,8 +4048,7 @@ inside: lda     flag
 toggle: MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, cancel_rect
         lda     flag
-        clc                     ; TODO: why not eor #$80 ???
-        adc     #$80
+        eor     #$80
         sta     flag
         jmp     loop
 
@@ -4095,8 +4093,7 @@ inside: lda     flag
 toggle: MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_rect
         lda     flag
-        clc                     ; TODO: why not eor #$80 ???
-        adc     #$80
+        eor     #$80
         sta     flag
         jmp     loop
 

@@ -991,7 +991,7 @@ show_alert_and_fail:
         rts
 
 found_slash:
-        cpx     #$01
+        cpx     #1
         beq     no_bs
         stx     path
         dex
@@ -1568,8 +1568,8 @@ nope:   dex
         lda     open_ref_num
         sta     read_ref_num
         sta     close_ref_num
-        jsr     read
-        jsr     close
+        MLI_RELAY_CALL READ, read_params
+        MLI_RELAY_CALL CLOSE, close_params
         copy    #$80, running_da_flag
 
         ;; Invoke it
@@ -1585,20 +1585,13 @@ nope:   dex
 done:   jsr     set_pointer_cursor
         rts
 
-open:   yax_call MLI_RELAY, OPEN, open_params
+open:   MLI_RELAY_CALL OPEN, open_params
         bne     :+
         rts
 :       lda     #kWarningMsgInsertSystemDisk
         jsr     warning_dialog_proc_num
         beq     open            ; ok, so try again
         return  #$FF            ; cancel, so fail
-
-read:   yax_jump MLI_RELAY, READ, read_params
-
-close:  yax_jump MLI_RELAY, CLOSE, close_params
-
-zp_use_flag1:
-        .byte   $80
 
         DEFINE_OPEN_PARAMS open_params, 0, DA_IO_BUFFER
         open_ref_num := open_params::ref_num
@@ -3605,7 +3598,7 @@ not_in_map:
         ;; Explicit command
         and     #$FF            ; check create_volume_icon results
         beq     add_icon
-        cmp     #$2F            ; there was an error ($2F = ???)
+        cmp     #ERR_IO_ERROR   ; there was an error
         beq     add_icon
         pha
         jsr     StoreWindowIconTable
@@ -4321,6 +4314,8 @@ L60D5:  jsr     push_pointers
 .proc handle_title_click
         ptr := $06
 
+        kMinYPosition = kMenuBarHeight + kTitleBarHeight
+
         jmp     :+
 
 :       copy    active_window_id, event_params
@@ -4333,9 +4328,9 @@ L60D5:  jsr     push_pointers
         stax    ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         lda     (ptr),y
-        cmp     #$19            ; ???
+        cmp     #kMinYPosition
         bcs     :+
-        lda     #$19
+        lda     #kMinYPosition
         sta     (ptr),y
 
 :       ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
@@ -4518,12 +4513,8 @@ start:  sta     L638B
 :       lda     #0
         sta     L6385
         sta     L6389
-        clc                     ; Why not lsr ???
-        ror     L6385+1
-        ror     L6385
-        clc                     ; Why not lsr ???
-        ror     L6389+1
-        ror     L6389
+        lsr16   L6385
+        lsr16   L6389
 
         lda     #0
         sta     L6383
@@ -4548,22 +4539,14 @@ finish: lda     L6387+1
 
 do_sub: sub16   L6383, L6385, L6383
         sub16   L6387, L6389, L6387
-        clc
-        ror     L6385+1         ; why not lsr ???
-        ror     L6385
-        clc
-        ror     L6389+1         ; why not lsr ???
-        ror     L6389
+        lsr16   L6385
+        lsr16   L6389
         rts
 
 do_add: add16   L6383, L6385, L6383
         add16   L6387, L6389, L6387
-        clc
-        ror     L6385+1         ; why not lsr ???
-        ror     L6385
-        clc
-        ror     L6389+1         ; why not lsr ???
-        ror     L6389
+        lsr16   L6385
+        lsr16   L6389
         rts
 
 L6383:  .word   0

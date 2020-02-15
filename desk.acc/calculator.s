@@ -593,8 +593,6 @@ textfont:       .addr   0
 
         .byte   0               ; ???
 
-        kMenuBarHeight = 13
-
         ;; params for MGTK::SetPortBits when decorating title bar
 .params screen_port
 left:           .word   0

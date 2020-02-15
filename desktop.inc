@@ -16,6 +16,9 @@ kScreenHeight   = 192
 ;;; RAM disk driver for RamWorks.
 kRamDrvSystemUnitNum = $3E
 
+kMenuBarHeight  = 13
+kTitleBarHeight = 12
+
 ;;; ============================================================
 
 kDAFileType     = $F1

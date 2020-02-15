@@ -1312,7 +1312,6 @@ ignore: clc                     ; Click ignored
 fixed_str:      DEFINE_STRING "Fixed        "
 prop_str:       DEFINE_STRING "Proportional"
         kLabelWidth = 50
-        kTitleBarHeight = 12
 
 .params mode_mapinfo                  ; bounding port for mode label
 viewloc:        DEFINE_POINT 0, 0, viewloc
