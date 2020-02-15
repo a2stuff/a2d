@@ -849,7 +849,7 @@ params: .addr   dummy0000
 .endmacro
 
 ;;; ============================================================
-;;; Launch file (double-click) ???
+;;; Launch file (File > Open, Selector menu, or double-click)
 
 .proc launch_file
         path := $220
@@ -899,7 +899,7 @@ begin:
 :       cmp     #FT_BINARY
         bne     :+
         lda     BUTN0           ; Only launch if a button is down
-        ora     BUTN1           ; BUG: Never gets this far ???
+        ora     BUTN1
         bmi     launch
         jsr     set_pointer_cursor
         rts
@@ -1867,7 +1867,6 @@ next_file:
 
         ;; File (executable or data)
 maybe_open_file:
-        sta     icon_type
         lda     selected_icon_count
         cmp     #2              ; multiple files open?
         bcs     next_file       ; don't try to invoke
@@ -1915,16 +1914,7 @@ maybe_open_file:
         dex
         stx     buf_filename2
 
-        ;; Check type ??? and invoke
-        lda     icon_type
-        cmp     #kIconEntryTypeBinary
-        bcc     :+              ; < Binary is System and Dir
-        lda     icon_type       ; no-op - BUG ???
-:       jmp     launch_file
-
-        ;; Type bits from IconEntry::win_type
-icon_type:
-        .byte   0
+        jmp     launch_file
 
         ;; Count of opened volumes/folders; if non-zero,
         ;; selection must be cleared before finishing.
