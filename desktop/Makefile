@@ -21,7 +21,7 @@ clean:
 $(OUTDIR)/mgtk.o: ../mgtk/mgtk.s $(HEADERS)
 	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
-$(OUTDIR)/desktop.o: desktop.s $(HEADERS) desktop_*.s ovl*.s
+$(OUTDIR)/desktop.o: desktop.s $(HEADERS) desktop_*.s ovl*.s invoker.s
 	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Built DeskTop segments
