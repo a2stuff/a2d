@@ -13,11 +13,16 @@ start:
 
 ;;; ============================================================
 
-        default_start_address := $2000
+        default_start_address := $2000 ; for SYS files
 
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
 
 prefix_length:
+        .byte   0
+
+;;; High bit set if an interpreter is being invoked, and
+;;; the start protcol must be followed.
+interpreter_flag:
         .byte   0
 
         DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
@@ -25,10 +30,9 @@ prefix_length:
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
 
-        .res    3
-
-bs_path:
-        PASCAL_STRING "BASIC.SYSTEM"
+kBSOffset       = 5             ; Offset of 'C' in BASIC.SYSTEM
+str_basix_system:
+        PASCAL_STRING "BASIx.SYSTEM" ; May be modified by DeskTop
 
         ;; $EE = extended call signature for IIgs/GS/OS variation.
         DEFINE_QUIT_PARAMS quit_params, $EE, INVOKER_FILENAME
@@ -68,14 +72,20 @@ begin:  lda     ROMIN2
         beq     :+
         jmp     exit
 :       lda     get_info_params::file_type
+
+
+;;; ProDOS 16 System file (S16) - invoke via QUIT call
         cmp     #FT_S16
         bne     not_s16
+
         jsr     update_bitmap
         jmp     quit_call
 not_s16:
 
+;;; Binary file (BIN) - load and invoke at A$=AuxType
         cmp     #FT_BINARY
         bne     not_binary
+
         lda     get_info_params::aux_type
         sta     jmp_addr
         sta     read_params::data_buffer
@@ -92,17 +102,19 @@ not_s16:
         bne     load_target     ; always
 not_binary:
 
+;;; BASIC file (BAS) - invoke interpreter as path instead.
+;;; (If not found, ProDOS QUIT will be invoked.)
         cmp     #FT_BASIC       ; BASIC?
-        bne     load_target
+        bne     not_basic
 
-        ;; Invoke BASIC.SYSTEM as path instead.
-        copy16  #bs_path, open_params::pathname
+        copy    #'C', str_basix_system + kBSOffset ; "BASI?" -> "BASIC"
+        copy16  #str_basix_system, open_params::pathname
 
-        ;; Try opening BASIC.SYSTEM with current prefix.
-check_for_bs:
+        ;; Try opening interpreter with current prefix.
+check_for_interpreter:
         jsr     open
-        beq     found_bs
-        ldy     INVOKER_PREFIX  ; Pop a path segment to try
+        beq     found_interpreter
+        ldy     INVOKER_PREFIX   ; Pop a path segment to try
 :       lda     INVOKER_PREFIX,y ; parent directory.
         cmp     #'/'
         beq     update_prefix
@@ -115,12 +127,36 @@ update_prefix:                  ; Update prefix and try again.
         dey
         sty     INVOKER_PREFIX
         jsr     set_prefix
-        jmp     check_for_bs
+        jmp     check_for_interpreter
 
-found_bs:
+found_interpreter:
+        copy    #$80, interpreter_flag
         lda     prefix_length
         sta     INVOKER_PREFIX
         jmp     do_read
+
+not_basic:
+
+;;; ProDOS 8 System file (SYS) - load at default $2000
+        cmp     #FT_SYSTEM
+        beq     load_target
+
+;;; Use BASIS.SYSTEM as fallback if present.
+;;; (If not found, ProDOS QUIT will be invoked.)
+        copy    #'S', str_basix_system + kBSOffset ; "BASI?" -> "BASIS"
+        copy16  #str_basix_system, open_params::pathname
+        jmp     check_for_interpreter
+
+;;; TODO: ProDOS 2.4's Bitsy Bye invokes BASIS.SYSTEM with:
+;;; * [x] ProDOS prefix set to directory containing file.
+;;; * [x] Path buffer in BASIS.SYSTEM set to filename.
+;;; * [ ] $280 set to name of root volume
+;;; * [ ] $380 set to path of launched SYS (i.e. path to BASIS.SYSTEM)
+;;; Not all should be necessary, but not doing so may lead to future
+;;; compatiblity issues. Those addresses conflict with this code.
+
+;;; ============================================================
+;;; Load target at given address
 
 load_target:
         jsr     open
@@ -133,10 +169,11 @@ do_read:
         MLI_CALL CLOSE, close_params
         bne     exit
 
-        ;; If it's BASIC, set prefix and copy filename to interpreter buffer.
+        ;; If interpreter, set prefix and copy filename to interpreter buffer.
         lda     get_info_params::file_type
-        cmp     #FT_BASIC
-        bne     update_stack
+        bit     interpreter_flag
+        bpl     update_stack
+
         jsr     set_prefix
         ldy     INVOKER_FILENAME
 :       lda     INVOKER_FILENAME,y
@@ -164,13 +201,15 @@ update_bitmap:
         sta     BITMAP+BITMAP_SIZE-1
         lda     #%11001111      ; ZP, Stack, Text Page 1
         sta     BITMAP
-        rts
+        ;; fall through
 
 exit:   rts
+
 
         ;; Pad to $160 bytes
         PAD_TO $3F0
 
 .endproc ; invoker
 
-        invoker_str_basic_system := invoker::bs_path
+        invoker_str_basix_system := invoker::str_basix_system
+        invoker_kBSOffset := invoker::kBSOffset

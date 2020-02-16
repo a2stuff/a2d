@@ -894,7 +894,9 @@ begin:
         cmp     #FT_BASIC
         bne     :+
         jsr     check_basic_system ; Only launch if BASIC.SYSTEM is found
-        jmp     launch
+        beq     launch
+        lda     #kErrBasicSysNotFound
+        jmp     ShowAlert
 
 :       cmp     #FT_BINARY
         bne     :+
@@ -926,8 +928,10 @@ begin:
         bne     :+
         addr_jump invoke_desk_acc, path
 
-:       lda     #kErrFileNotOpenable
-        jsr     show_alert_and_fail
+:       jsr     check_basis_system ; Is fallback BASIS.SYSTEM present?
+        beq     launch
+        lda     #kErrFileNotOpenable
+        jmp     ShowAlert
 
 launch: ITK_RELAY_CALL IconTK::RemoveAll, 0 ; volume icons
         MGTK_RELAY_CALL MGTK::CloseAll
@@ -944,13 +948,29 @@ launch: ITK_RELAY_CALL IconTK::RemoveAll, 0 ; volume icons
         jmp     reset_and_invoke
 
 ;;; --------------------------------------------------
+;;; Check buf_win_path and ancestors to see if the desired interpreter
+;;; (BASIC.SYSTEM or BASIS.SYSTEM) is present.
+;;; Input: buf_win_path set to initial search path
+;;; Output: zero if found, non-zero if not found
 
-.proc check_basic_system_impl
+.proc check_basix_system_impl
         path := $1800
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, path
 
-start:  ldx     buf_win_path
+;;; From Invoker, to save space
+str_basix_system := invoker_str_basix_system
+kBSOffset = invoker_kBSOffset
+
+basic:  lda     #'C'            ; "BASI?" -> "BASIC"
+        bne     start           ; always
+
+basis:  lda     #'S'            ; "BASI?" -> "BASIS"
+        ;; fall through
+
+start:  sta     str_basix_system + kBSOffset
+
+        ldx     buf_win_path
         stx     path_length
 :       copy    buf_win_path,x, path,x
         dex
@@ -960,18 +980,18 @@ start:  ldx     buf_win_path
         ldx     path
         copy    #'/', path,x
 loop:
-        ;; Append BASIC.SYSTEM to path and check for file.
+        ;; Append BASI?.SYSTEM to path and check for file.
         ldx     path
         ldy     #0
 :       inx
         iny
-        copy    str_basic_system,y, path,x
-        cpy     str_basic_system
+        copy    str_basix_system,y, path,x
+        cpy     str_basix_system
         bne     :-
         stx     path
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params2
         bne     not_found
-        rts
+        rts                     ; zero is success
 
         ;; Pop off a path segment and try again.
 not_found:
@@ -982,13 +1002,7 @@ not_found:
         dex
         bne     :-
 
-no_bs:  lda     #kErrBasicSysNotFound
-
-show_alert_and_fail:
-        jsr     ShowAlert
-        pla                     ; pop caller address, return to its caller
-        pla
-        rts
+no_bs:  return  #$FF            ; non-zero is failure
 
 found_slash:
         cpx     #1
@@ -1001,11 +1015,9 @@ found_slash:
 path_length:
         .byte   0
 
-str_basic_system := invoker_str_basic_system ; in Invoker
-
 .endproc
-        check_basic_system := check_basic_system_impl::start
-        show_alert_and_fail := check_basic_system_impl::show_alert_and_fail
+        check_basic_system := check_basix_system_impl::basic
+        check_basis_system := check_basix_system_impl::basis
 
 ;;; --------------------------------------------------
 
