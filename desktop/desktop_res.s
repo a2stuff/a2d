@@ -661,49 +661,47 @@ LD920:  .byte   0
 LD921:  .byte   0
 
 pos_add_a_new_entry_to_label:
-        DEFINE_POINT 343,40
+        DEFINE_POINT 343,39
 pos_run_list_label:
         DEFINE_POINT 363,48
 pos_other_run_list_label:
-        DEFINE_POINT 363,56
+        DEFINE_POINT 363,57
 pos_down_load_label:
-        DEFINE_POINT 343,75
+        DEFINE_POINT 343,73
 pos_at_first_boot_label:
-        DEFINE_POINT 363,83
+        DEFINE_POINT 363,82
 pos_at_first_use_label:
         DEFINE_POINT 363,91
 pos_never_label:
-        DEFINE_POINT 363,99
+        DEFINE_POINT 363,100
+
+kRadioButtonWidth = 10
+kRadioButtonHeight = 6
 
 rect_run_list_radiobtn:
-        DEFINE_RECT 346,41,356,47
-
+        DEFINE_RECT_SZ 346,41,kRadioButtonWidth,kRadioButtonHeight
 rect_other_run_list_radiobtn:
-        DEFINE_RECT 346,49,356,55
-
+        DEFINE_RECT_SZ 346,50,kRadioButtonWidth,kRadioButtonHeight
 rect_at_first_boot_radiobtn:
-        DEFINE_RECT 346,76,356,82
-
+        DEFINE_RECT_SZ 346,75,kRadioButtonWidth,kRadioButtonHeight
 rect_at_first_use_radiobtn:
-        DEFINE_RECT 346,84,356,90
-
+        DEFINE_RECT_SZ 346,84,kRadioButtonWidth,kRadioButtonHeight
 rect_never_radiobtn:
-        DEFINE_RECT 346,92,356,98
+        DEFINE_RECT_SZ 346,93,kRadioButtonWidth,kRadioButtonHeight
+
+kRadioControlWidth = 134
+kRadioControlHeight = 8
 
 rect_run_list_ctrl:
-        DEFINE_RECT 346,41,480,48
-
+        DEFINE_RECT_SZ 346,40,kRadioControlWidth,kRadioControlHeight
 rect_other_run_list_ctrl:
-        DEFINE_RECT 346,49,480,55
-
+        DEFINE_RECT_SZ 346,49,kRadioControlWidth,kRadioControlHeight
 rect_at_first_boot_ctrl:
-        DEFINE_RECT 346,76,480,83
-
+        DEFINE_RECT_SZ 346,74,kRadioControlWidth,kRadioControlHeight
 rect_at_first_use_ctrl:
-        DEFINE_RECT 346,84,480,91
-
+        DEFINE_RECT_SZ 346,83,kRadioControlWidth,kRadioControlHeight
 rect_never_ctrl:
-        DEFINE_RECT 346,92,480,99
+        DEFINE_RECT_SZ 346,92,kRadioControlWidth,kRadioControlHeight
 
 rect_scratch:
         DEFINE_RECT 0,0,0,0, rect_scratch

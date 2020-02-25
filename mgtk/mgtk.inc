@@ -708,6 +708,23 @@ y2:     .word   bottom
     .endif
 .endmacro
 
+;;; Define a rect by size (right = left + width, bottom = top + height)
+.macro DEFINE_RECT_SZ left, top, width, height, opt_scope
+    .if .paramcount > 4
+.scope opt_scope
+x1:     .word   left
+y1:     .word   top
+x2:     .word   (left + width)
+y2:     .word   (top + height)
+.endscope
+    .else
+        .word   left
+        .word   top
+        .word   (left + width)
+        .word   (top + height)
+    .endif
+.endmacro
+
 ;;; Point definition. Option third param gives scope.
 ;;;    DEFINE_POINT 10,20
 ;;;    DEFINE_POINT 10,20,pt ; pt::xcoord, pt::ycoord
