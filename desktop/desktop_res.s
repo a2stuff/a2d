@@ -714,21 +714,23 @@ common_dialog_frame_rect:
 rect_D9C8:
         DEFINE_RECT 27,16,174,26
 
-common_close_button_rect:
-        DEFINE_RECT 193,58,293,69
+kCommonButtonWidth = 100
+kCommonButtonHeight = 11
 
+common_close_button_rect:
+        DEFINE_RECT_SZ 193,58,kCommonButtonWidth,kCommonButtonHeight
 
 common_ok_button_rect:
-        DEFINE_RECT 193,89,293,100
+        DEFINE_RECT_SZ 193,89,kCommonButtonWidth,kCommonButtonHeight
 
 common_open_button_rect:
-        DEFINE_RECT 193,44,293,55
+        DEFINE_RECT_SZ 193,44,kCommonButtonWidth,kCommonButtonHeight
 
 common_cancel_button_rect:
-        DEFINE_RECT 193,73,293,84
+        DEFINE_RECT_SZ 193,73,kCommonButtonWidth,kCommonButtonHeight
 
 common_change_drive_button_rect:
-        DEFINE_RECT 193,30,293,41
+        DEFINE_RECT_SZ 193,30,kCommonButtonWidth,kCommonButtonHeight
 
 common_dialog_sep_start:
         DEFINE_POINT 323,30
@@ -787,10 +789,13 @@ source_filename_label:
 destination_filename_label:
         PASCAL_STRING "Destination filename:"
 
-common_input1_rect:   DEFINE_RECT 28, 113, 463, 124
+kCommonInputWidth = 435
+kCommonInputHeight = 11
+
+common_input1_rect:   DEFINE_RECT_SZ 28, 113, kCommonInputWidth, kCommonInputHeight
 common_input1_textpos:      DEFINE_POINT 30,123
 
-common_input2_rect:   DEFINE_RECT 28, 136, 463, 147
+common_input2_rect:   DEFINE_RECT_SZ 28, 136, kCommonInputWidth, kCommonInputHeight
 common_input2_textpos:      DEFINE_POINT 30,146
 
 delete_a_file_label:
