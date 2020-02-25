@@ -675,34 +675,34 @@ pos_at_first_use_label:
 pos_never_label:
         DEFINE_POINT 363,99
 
-rect_D93E:
+rect_run_list_radiobtn:
         DEFINE_RECT 346,41,356,47
 
-rect_D946:
+rect_other_run_list_radiobtn:
         DEFINE_RECT 346,49,356,55
 
-rect_D94E:
+rect_at_first_boot_radiobtn:
         DEFINE_RECT 346,76,356,82
 
-rect_D956:
+rect_at_first_use_radiobtn:
         DEFINE_RECT 346,84,356,90
 
-rect_D95E:
+rect_never_radiobtn:
         DEFINE_RECT 346,92,356,98
 
-rect_D966:
+rect_run_list_ctrl:
         DEFINE_RECT 346,41,480,48
 
-rect_D96E:
+rect_other_run_list_ctrl:
         DEFINE_RECT 346,49,480,55
 
-rect_D976:
+rect_at_first_boot_ctrl:
         DEFINE_RECT 346,76,480,83
 
-rect_D97E:
+rect_at_first_use_ctrl:
         DEFINE_RECT 346,84,480,91
 
-rect_D986:
+rect_never_ctrl:
         DEFINE_RECT 346,92,480,99
 
 rect_scratch:

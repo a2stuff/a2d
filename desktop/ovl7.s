@@ -123,11 +123,11 @@ L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::MoveTo, pos_never_label
         addr_call common_overlay::draw_string, never_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D93E
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D946
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D94E
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D956
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D95E
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_run_list_radiobtn
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_other_run_list_radiobtn
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_at_first_boot_radiobtn
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_at_first_use_radiobtn
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_never_radiobtn
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
@@ -281,23 +281,23 @@ L737C:  lda     jt_pathname+1,x
 L73A9:  .byte   0
 L73AA:  .byte   0
 
-L73AB:  MGTK_RELAY_CALL MGTK::InRect, rect_D966
+L73AB:  MGTK_RELAY_CALL MGTK::InRect, rect_run_list_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
         jmp     L73FE
-:       MGTK_RELAY_CALL MGTK::InRect, rect_D96E
+:       MGTK_RELAY_CALL MGTK::InRect, rect_other_run_list_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
         jmp     L7413
-:       MGTK_RELAY_CALL MGTK::InRect, rect_D976
+:       MGTK_RELAY_CALL MGTK::InRect, rect_at_first_boot_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
         jmp     L7428
-:       MGTK_RELAY_CALL MGTK::InRect, rect_D97E
+:       MGTK_RELAY_CALL MGTK::InRect, rect_at_first_use_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
         jmp     L743D
-:       MGTK_RELAY_CALL MGTK::InRect, rect_D986
+:       MGTK_RELAY_CALL MGTK::InRect, rect_never_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
         jmp     L7452
@@ -350,23 +350,23 @@ L7464:  return  #$FF
 
 L7467:  cmp     #1
         bne     L7473
-        addr_call draw_inset_rect, rect_D93E
+        addr_call draw_inset_rect, rect_run_list_radiobtn
         rts
 
-L7473:  addr_call draw_inset_rect, rect_D946
+L7473:  addr_call draw_inset_rect, rect_other_run_list_radiobtn
         rts
 
 L747B:  cmp     #1
         bne     L7487
-        addr_call draw_inset_rect, rect_D94E
+        addr_call draw_inset_rect, rect_at_first_boot_radiobtn
         rts
 
 L7487:  cmp     #2
         bne     L7493
-        addr_call draw_inset_rect, rect_D956
+        addr_call draw_inset_rect, rect_at_first_use_radiobtn
         rts
 
-L7493:  addr_call draw_inset_rect, rect_D95E
+L7493:  addr_call draw_inset_rect, rect_never_radiobtn
         rts
 
 ;;; ============================================================
