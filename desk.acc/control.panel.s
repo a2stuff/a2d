@@ -250,7 +250,7 @@ kFatBitWidthShift       = 3
 kFatBitHeight           = 4
 kFatBitHeightShift      = 2
 fatbits_rect:
-        DEFINE_RECT kPatternEditX, kPatternEditY, kPatternEditX + 8 * kFatBitWidth + 1, kPatternEditY + 8 * kFatBitHeight + 1, fatbits_rect
+        DEFINE_RECT_SZ kPatternEditX, kPatternEditY,  8 * kFatBitWidth + 1, 8 * kFatBitHeight + 1, fatbits_rect
 
 str_desktop_pattern:
         DEFINE_STRING "Desktop Pattern"
@@ -363,11 +363,11 @@ dblclick_arrow_pos6:
         DEFINE_POINT kDblClickX + 155, kDblClickY + 23
 
 dblclick_button_rect1:
-        DEFINE_RECT kDblClickX + 175, kDblClickY + 25, kDblClickX + 175 + kRadioButtonWidth, kDblClickY + 25 + kRadioButtonHeight
+        DEFINE_RECT_SZ kDblClickX + 175, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
 dblclick_button_rect2:
-        DEFINE_RECT kDblClickX + 130, kDblClickY + 25, kDblClickX + 130 + kRadioButtonWidth, kDblClickY + 25 + kRadioButtonHeight
+        DEFINE_RECT_SZ kDblClickX + 130, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
 dblclick_button_rect3:
-        DEFINE_RECT kDblClickX +  85, kDblClickY + 25, kDblClickX +  85 + kRadioButtonWidth, kDblClickY + 25 + kRadioButtonHeight
+        DEFINE_RECT_SZ kDblClickX +  85, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
 
 dblclick_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -437,11 +437,13 @@ joystick_label_pos:
 
 kJoystickDisplayX = kJoystickCalibrationX + 80
 kJoystickDisplayY = kJoystickCalibrationY + 20 - 6
+kJoystickDisplayW = 64
+kJoystickDisplayH = 32
 
 joy_disp_frame_rect:
-        DEFINE_RECT kJoystickDisplayX - 32    , kJoystickDisplayY - 16    , kJoystickDisplayX + 32 + 7 + 1    , kJoystickDisplayY + 16 + 4 + 1
+        DEFINE_RECT_SZ kJoystickDisplayX - 32    , kJoystickDisplayY - 16    , kJoystickDisplayW + 7 + 1, kJoystickDisplayH + 4 + 1
 joy_disp_rect:
-        DEFINE_RECT kJoystickDisplayX - 32 + 1, kJoystickDisplayY - 16 + 1, kJoystickDisplayX + 32 + 7 + 1 - 1, kJoystickDisplayY + 16 + 4 + 1 - 1
+        DEFINE_RECT_SZ kJoystickDisplayX - 32 + 1, kJoystickDisplayY - 16 + 1, kJoystickDisplayW + 7 - 1, kJoystickDisplayH + 4 - 1
 
 joy_btn0:       DEFINE_POINT kJoystickDisplayX + 58 + 4, kJoystickDisplayY - 8, joy_btn0
 joy_btn1:       DEFINE_POINT kJoystickDisplayX + 58 + 4, kJoystickDisplayY + 5, joy_btn1
@@ -526,11 +528,11 @@ ipblink_fast_pos:
         DEFINE_POINT kIPBlinkDisplayX + 140 + 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
 
 ipblink_btn1_rect:
-        DEFINE_RECT kIPBlinkDisplayX + 110 + 2, kIPBlinkDisplayY + 16, kIPBlinkDisplayX + 110 + 2 + kRadioButtonWidth, kIPBlinkDisplayY + 16 + kRadioButtonHeight
+        DEFINE_RECT_SZ kIPBlinkDisplayX + 110 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
 ipblink_btn2_rect:
-        DEFINE_RECT kIPBlinkDisplayX + 130 + 2, kIPBlinkDisplayY + 16, kIPBlinkDisplayX + 130 + 2 + kRadioButtonWidth, kIPBlinkDisplayY + 16 + kRadioButtonHeight
+        DEFINE_RECT_SZ kIPBlinkDisplayX + 130 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
 ipblink_btn3_rect:
-        DEFINE_RECT kIPBlinkDisplayX + 150 + 2, kIPBlinkDisplayY + 16, kIPBlinkDisplayX + 150 + 2 + kRadioButtonWidth, kIPBlinkDisplayY + 16 + kRadioButtonHeight
+        DEFINE_RECT_SZ kIPBlinkDisplayX + 150 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
 
 
 

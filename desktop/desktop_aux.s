@@ -3618,19 +3618,24 @@ alert_bitmap:
         DEFINE_RECT 0, 0, 36, 23 ; maprect
 .endparams
 
+kAlertRectLeft = 65
+kAlertRectTop = 87
+kAlertRectWidth = 420
+kAlertRectHeight = 55
+
 alert_rect:
-        DEFINE_RECT 65, 87, 485, 142
+        DEFINE_RECT_SZ kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
 alert_inner_frame_rect1:
-        DEFINE_RECT 4, 2, 416, 53
+        DEFINE_RECT 4, 2, kAlertRectWidth-4, kAlertRectHeight-2
 alert_inner_frame_rect2:
-        DEFINE_RECT 5, 3, 415, 52
+        DEFINE_RECT 5, 3, kAlertRectWidth-5, kAlertRectHeight-3
 
 .params portmap
-viewloc:        DEFINE_POINT 65, 87, viewloc
+viewloc:        DEFINE_POINT kAlertRectLeft, kAlertRectTop, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 420, 55, maprect
+maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
 .endparams
 
 
@@ -3652,21 +3657,24 @@ maprect:        DEFINE_RECT 0, 0, 420, 55, maprect
 ok_label:
         PASCAL_STRING {"OK            ",kGlyphReturn}
 
+kAlertButtonWidth = 100
+kAlertButtonHeight = 11
+
 ok_rect:
 try_again_rect:
-        DEFINE_RECT 20,37,120,48
+        DEFINE_RECT_SZ 20,37,kAlertButtonWidth,kAlertButtonHeight
 ok_pos:
 try_again_pos:
         DEFINE_POINT 25,47
 
 cancel_rect:
-        DEFINE_RECT 300,37,400,48
+        DEFINE_RECT_SZ 300,37,kAlertButtonWidth,kAlertButtonHeight
 cancel_pos:
         DEFINE_POINT 305,47
 
 pos_prompt: DEFINE_POINT 75,29, pos_prompt
 
-alert_action:  .byte   $00
+alert_action:   .byte   0
 prompt_addr:    .addr   0
 
 try_again_label:
