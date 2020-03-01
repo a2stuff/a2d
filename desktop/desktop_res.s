@@ -289,11 +289,13 @@ path_buf0:  .res    65, 0
 path_buf1:  .res    65, 0
 path_buf2:  .res    65, 0
 
+kAlertDialogID = $0F
+
 .params winfo_alert_dialog
         kWidth = 400
         kHeight = 107
 
-window_id:      .byte   $0F
+window_id:      .byte   kAlertDialogID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
