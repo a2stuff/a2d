@@ -23,11 +23,11 @@
 
         .include "invoker.s"
 
-        .include "ovl1.s"
-        .include "ovl1a.s"
-        .include "ovl1b.s"
-        .include "ovl1c.s"
-        .include "ovl2.s"
+        .include "ovl_disk_copy1.s"
+        .include "ovl_disk_copy2.s"
+        .include "ovl_disk_copy3.s"
+        .include "ovl_disk_copy4.s"
+        .include "ovl_format_erase.s"
 
 .macro jump_table_entry addr
         .byte 0
@@ -37,10 +37,10 @@
 ;;; ============================================================
 ;;; Interdependent Overlays
 
-        .include "ovl3.s"       ; Selector (1/2) @ $9000-$9FFF
-        .include "ovl4.s"       ; Common         @ $5000-$6FFF
-        .include "ovl5.s"       ; File Copy      @ $7000-$77FF
-        .include "ovl6.s"       ; File Delete    @ $7000-$77FF
-        .include "ovl7.s"       ; Selector (2/2) @ $7000-$77FF
+        .include "ovl_selector_pick.s" ; Selector (1/2) @ $9000-$9FFF
+        .include "ovl_file_dialog.s"   ; File Dialog    @ $5000-$6FFF
+        .include "ovl_file_copy.s"     ; File Copy      @ $7000-$77FF
+        .include "ovl_file_delete.s"   ; File Delete    @ $7000-$77FF
+        .include "ovl_selector_edit.s" ; Selector (2/2) @ $7000-$77FF
 
         common_overlay_L5000 := common_overlay::L5000

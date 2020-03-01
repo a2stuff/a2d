@@ -17,16 +17,16 @@ The file is broken down into multiple segments:
 | DeskTop       | B$00A780    | Main   | A$4000-$BEFF | L$7F00 | `desktop_main.s`               |
 | Initializer   | B$012680    | Main   | A$0800-$0FFF | L$0800 | `desktop_main.s`               |
 | Invoker       | B$012E80    | Main   | A$0290-$03EF | L$0160 | `invoker.s`                    |
-| Disk Copy 1/4 | B$012FE0    | Main   | A$0800-$09FF | L$0200 | `ovl1.s`                       |
-| Disk Copy 2/4 | B$0131E0    | Main   | A$1800-$19FF | L$0200 | `ovl1a.s`                      |
-| Disk Copy 3/4 | B$0133E0    | Aux LC | A$D000-$F1FF | L$2200 | `ovl1b.s`                      |
-| Disk Copy 4/4 | B$0155E0    | Main   | A$0800-$12FF | L$0B00 | `ovl1c.s`                      |
-| Format/Erase  | B$0160E0    | Main   | A$0800-$1BFF | L$1400 | `ovl2.s`                       |
-| Selector 1/2  | B$0174E0    | Main   | A$9000-$9FFF | L$1000 | `ovl3.s`                       |
-| Common        | B$0184E0    | Main   | A$5000-$6FFF | L$2000 | `ovl4.s`                       |
-| File Copy     | B$01A4E0    | Main   | A$7000-$77FF | L$0800 | `ovl5.s`                       |
-| File Delete   | B$01ACE0    | Main   | A$7000-$77FF | L$0800 | `ovl6.s`                       |
-| Selector 2/2  | B$01B4E0    | Main   | A$7000-$77FF | L$0800 | `ovl7.s`                       |
+| Disk Copy 1/4 | B$012FE0    | Main   | A$0800-$09FF | L$0200 | `ovl_disk_copy1.s`             |
+| Disk Copy 2/4 | B$0131E0    | Main   | A$1800-$19FF | L$0200 | `ovl_disk_copy2.s`             |
+| Disk Copy 3/4 | B$0133E0    | Aux LC | A$D000-$F1FF | L$2200 | `ovl_disk_copy3.s`             |
+| Disk Copy 4/4 | B$0155E0    | Main   | A$0800-$12FF | L$0B00 | `ovl_disk_copy4.s`             |
+| Format/Erase  | B$0160E0    | Main   | A$0800-$1BFF | L$1400 | `ovl_format_erase.s`           |
+| Selector 1/2  | B$0174E0    | Main   | A$9000-$9FFF | L$1000 | `ovl_selector_pick.s`          |
+| File Dialog   | B$0184E0    | Main   | A$5000-$6FFF | L$2000 | `ovl_file_dialog.s`            |
+| File Copy     | B$01A4E0    | Main   | A$7000-$77FF | L$0800 | `ovl_file_copy.s`              |
+| File Delete   | B$01ACE0    | Main   | A$7000-$77FF | L$0800 | `ovl_file_delete.s`            |
+| Selector 2/2  | B$01B4E0    | Main   | A$7000-$77FF | L$0800 | `ovl_selector_edit.s`          |
 
 (EOF is $01BCE0)
 
@@ -146,7 +146,7 @@ name) but is used for operations such as alternate view types.
 
 ### Overlays
 
-`ovl1.s` etc
+`ovl_*.s`
 
 Interactive commands including disk copy/format/erase, file
 copy/delete, and Selector add/edit/delete/run all dynamically load
@@ -154,43 +154,43 @@ main memory code overlays. When complete, any original code above
 $4000 is reloaded (unless a full restart is required.)
 
 Several of the overlays also use a common file selector dialog overlay
-`ovl4.s` ($5000-$6FFF).
+`ovl_file_dialog.s` ($5000-$6FFF).
 
 #### Disk Copy Overlay
 
 The Disk Copy command replaces large chunks of memory and is best
 thought of as a separate application.
 
-The first part (`ovl1.s`, $800-$9FF) loads into main memory the other
+The first part (`ovl_disk_copy1.s`, $800-$9FF) loads into main memory the other
 overlays, but in turn it loads a second short ($200-byte) overlay
-(`ovl1a.s`, $1800-$19FF). This then loads a replacement for the
-resources in the aux language card area (`ovl1b.s`, Aux LC
-$D000-$F1FF) and another block of code in main memory (`ovl1c.s`, Main
+(`ovl_disk_copy2.s`, $1800-$19FF). This then loads a replacement for the
+resources in the aux language card area (`ovl_disk_copy3.s`, Aux LC
+$D000-$F1FF) and another block of code in main memory (`ovl_disk_copy4.s`, Main
 $0800-$12FF). When exiting, the DeskTop is restarted from the
 beginning.
 
 #### Disk Format/Disk Erase
 
-Simple overlay: `ovl2.s`, loaded into Main A$0800-$1BFF.
+Simple overlay: `ovl_format_erase.s`, loaded into Main A$0800-$1BFF.
 
 #### Selector - Delete Entry / Run Entry
 
-Simple overlay: `ovl3.s` ($9000-$9FFF).
+Simple overlay: `ovl_selector_pick.s` ($9000-$9FFF).
 
 #### Selector - Add Entry / Edit Entry
 
-Also uses `ovl3.s` ($9000-$9FFF) but additionally uses overlay
-`ovl7.s` ($7000-$77FF) and the file selector dialog `ovl4.s`
+Also uses `ovl_selector_pick.s` ($9000-$9FFF) but additionally uses overlay
+`ovl_selector_edit.s` ($7000-$77FF) and the file selector dialog `ovl_file_dialog.s`
 ($5000-$6FFF).
 
 #### File Copy
 
-Overlay `ovl5.s` ($7000-$77FF), uses file selector dialog `ovl4.s`
+Overlay `ovl_file_copy.s` ($7000-$77FF), uses file selector dialog `ovl_file_dialog.s`
 ($5000-$6FFF).
 
 #### File Delete
 
-Overlay `ovl6.s` ($7000-$77FF), uses file selector dialog `ovl4.s`
+Overlay `ovl_file_delete.s` ($7000-$77FF), uses file selector dialog `ovl_file_dialog.s`
 ($5000-$6FFF).
 
 

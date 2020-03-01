@@ -637,8 +637,8 @@ str_files:
 str_file_count:                 ; populated with number of files
         PASCAL_STRING "       "
 
-        ;; This location also used as path buffer by ovl2
-ovl2_path_buf:
+        ;; This location also used as path buffer by ovl_format_erase
+ovl_path_buf:
 
 file_count:
         .word   0
