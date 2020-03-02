@@ -537,82 +537,9 @@ L94F0:  stax    $06
         rts
 
 L9539:  .byte   0
-L953A:  lda     #$00
-        sta     L95BF
-L953F:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     L95A2
-        lda     winfo_entry_picker
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
-        cmp     #MGTK::inrect_inside
-        beq     L957C
-        lda     L95BF
-        beq     L9584
-        jmp     L953F
 
-L957C:  lda     L95BF
-        bne     L9584
-        jmp     L953F
+;;; ============================================================
 
-L9584:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
-        lda     L95BF
-        clc
-        adc     #$80
-        sta     L95BF
-        jmp     L953F
-
-L95A2:  lda     L95BF
-        beq     L95AA
-        return  #$FF
-
-L95AA:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
-        return  #$00
-
-L95BF:  .byte   0
-L95C0:  lda     #$00
-        sta     L9645
-L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     L9628
-        lda     winfo_entry_picker
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
-        cmp     #MGTK::inrect_inside
-        beq     L9602
-        lda     L9645
-        beq     L960A
-        jmp     L95C5
-
-L9602:  lda     L9645
-        bne     L960A
-        jmp     L95C5
-
-L960A:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
-        lda     L9645
-        clc
-        adc     #$80
-        sta     L9645
-        jmp     L95C5
-
-L9628:  lda     L9645
-        beq     L9630
-        return  #$FF
-
-L9630:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
-        return  #$01
-
-L9645:  .byte   0
 L9646:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -646,9 +573,7 @@ L9683:  lda     winfo_entry_picker
         MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
         cmp     #MGTK::inrect_inside
         bne     L96C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
-        jsr     L953A
+        yax_call desktop_main::button_event_loop, kEntryDialogID, entry_picker_ok_rect
         bmi     L96C7
         lda     #$00
 L96C7:  rts
@@ -656,9 +581,7 @@ L96C7:  rts
 L96C8:  MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
         cmp     #MGTK::inrect_inside
         bne     L96EF
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
-        jsr     L95C0
+        yax_call desktop_main::button_event_loop, kEntryDialogID, entry_picker_cancel_rect
         bmi     L96EE
         lda     #$01
 L96EE:  rts

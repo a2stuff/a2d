@@ -366,10 +366,10 @@ nextwinfo:      .addr   0
 
 ;;; File picker within Add/Edit an Entry dialog
 
-kEntryDlgWindowID = $15
+kEntryListCtlWindowID = $15
 
 .params winfo_entrydlg_file_picker
-window_id:      .byte   kEntryDlgWindowID
+window_id:      .byte   kEntryListCtlWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -443,11 +443,13 @@ winfo_about_dialog_port    := winfo_about_dialog::port
 
 ;;; Dialog used for Edit/Delete/Run an Entry ...
 
+kEntryDialogID = $1B
+
 .params winfo_entry_picker
         kWidth = 350
         kHeight = 118
 
-window_id:      .byte   $1B
+window_id:      .byte   kEntryDialogID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
