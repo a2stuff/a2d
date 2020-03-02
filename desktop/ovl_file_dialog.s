@@ -171,9 +171,7 @@ L5213:  jmp     set_up_ports
 
 L5216:  lda     winfo_entrydlg
         jsr     set_port_for_window
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
-        jsr     track_open_button_click
+        yax_call desktop_main::button_event_loop, kFilePickerDlgWindowID, common_open_button_rect
         bmi     L5213
         jsr     L5607
         jmp     set_up_ports
@@ -186,9 +184,7 @@ L5216:  lda     winfo_entrydlg
         jmp     check_close_button
 :       bit     L5105
         bmi     L5268
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
-        jsr     track_change_drive_button_click
+        yax_call desktop_main::button_event_loop, kFilePickerDlgWindowID, common_change_drive_button_rect
         bmi     L5268
         jsr     L565C
 L5268:  jmp     set_up_ports
@@ -201,9 +197,7 @@ L5268:  jmp     set_up_ports
         jmp     check_ok_button
 :       bit     L5105
         bmi     L529A
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
-        jsr     track_close_button_click
+        yax_call desktop_main::button_event_loop, kFilePickerDlgWindowID, common_close_button_rect
         bmi     L529A
         jsr     L567F
 L529A:  jmp     set_up_ports
@@ -214,9 +208,7 @@ L529A:  jmp     set_up_ports
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_cancel_button
-:       MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
-        jsr     track_ok_button_click
+:       yax_call desktop_main::button_event_loop, kFilePickerDlgWindowID, common_ok_button_rect
         bmi     L52CA
         jsr     jt_handle_meta_right_key
         jsr     jt_handle_ok
@@ -228,9 +220,7 @@ L52CA:  jmp     set_up_ports
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_other_click
-:       MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
-        jsr     track_cancel_button_click
+:       yax_call desktop_main::button_event_loop, kFilePickerDlgWindowID, common_cancel_button_rect
         bmi     L52F7
         jsr     jt_handle_cancel
 L52F7:  jmp     set_up_ports
@@ -627,221 +617,6 @@ L56E2:  .byte   0
 L56E3:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
-
-;;; ============================================================
-
-.proc track_ok_button_click
-        lda     #$00
-        sta     L577B
-L56FB:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     L575E
-        lda     winfo_entrydlg
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, common_ok_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     L5738
-        lda     L577B
-        beq     L5740
-        jmp     L56FB
-
-L5738:  lda     L577B
-        bne     L5740
-        jmp     L56FB
-
-L5740:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
-        lda     L577B
-        clc
-        adc     #$80
-        sta     L577B
-        jmp     L56FB
-
-L575E:  lda     L577B
-        beq     L5766
-        return  #$FF
-
-L5766:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
-        return  #$00
-
-L577B:  .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc track_close_button_click
-        lda     #$00
-        sta     L5801
-L5781:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     L57E4
-        lda     winfo_entrydlg
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, common_close_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     L57BE
-        lda     L5801
-        beq     L57C6
-        jmp     L5781
-
-L57BE:  lda     L5801
-        bne     L57C6
-        jmp     L5781
-
-L57C6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
-        lda     L5801
-        clc
-        adc     #$80
-        sta     L5801
-        jmp     L5781
-
-L57E4:  lda     L5801
-        beq     L57EC
-        return  #$FF
-
-L57EC:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
-        return  #$00
-
-L5801:  .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc track_cancel_button_click
-        lda     #$00
-        sta     L5887
-L5807:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     L586A
-        lda     winfo_entrydlg
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, common_cancel_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     L5844
-        lda     L5887
-        beq     L584C
-        jmp     L5807
-
-L5844:  lda     L5887
-        bne     L584C
-        jmp     L5807
-
-L584C:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
-        lda     L5887
-        clc
-        adc     #$80
-        sta     L5887
-        jmp     L5807
-
-L586A:  lda     L5887
-        beq     L5872
-        return  #$FF
-
-L5872:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
-        return  #$01
-
-L5887:  .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc track_open_button_click
-        lda     #$00
-        sta     L590D
-L588D:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     L58F0
-        lda     winfo_entrydlg
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, common_open_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     L58CA
-        lda     L590D
-        beq     L58D2
-        jmp     L588D
-
-L58CA:  lda     L590D
-        bne     L58D2
-        jmp     L588D
-
-L58D2:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
-        lda     L590D
-        clc
-        adc     #$80
-        sta     L590D
-        jmp     L588D
-
-L58F0:  lda     L590D
-        beq     L58F8
-        return  #$FF
-
-L58F8:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
-        return  #$00
-
-L590D:  .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc track_change_drive_button_click
-        lda     #$00
-        sta     L5993
-L5913:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     L5976
-        lda     winfo_entrydlg
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, common_change_drive_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     L5950
-        lda     L5993
-        beq     L5958
-        jmp     L5913
-
-L5950:  lda     L5993
-        bne     L5958
-        jmp     L5913
-
-L5958:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
-        lda     L5993
-        clc
-        adc     #$80
-        sta     L5993
-        jmp     L5913
-
-L5976:  lda     L5993
-        beq     L597E
-        return  #$FF
-
-L597E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
-        return  #$01
-
-L5993:  .byte   0
-.endproc
 
 ;;; ============================================================
 

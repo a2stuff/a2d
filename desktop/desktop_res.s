@@ -329,8 +329,10 @@ nextwinfo:      .addr   0
 
 ;;; Dialog used for Selector > Add/Edit an Entry...
 
+kFilePickerDlgWindowID = $12
+
 .params winfo_entrydlg
-window_id:      .byte   $12
+window_id:      .byte   kFilePickerDlgWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -364,8 +366,10 @@ nextwinfo:      .addr   0
 
 ;;; File picker within Add/Edit an Entry dialog
 
+kEntryDlgWindowID = $15
+
 .params winfo_entrydlg_file_picker
-window_id:      .byte   $15
+window_id:      .byte   kEntryDlgWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
