@@ -13389,7 +13389,7 @@ content:
         jmp     maybe_check_button_cancel
 
 check_button_ok:
-        yax_call button_event_loop, kAlertDialogID, desktop_aux::ok_button_rect
+        yax_call button_event_loop, kAlertDialogWindowID, desktop_aux::ok_button_rect
         bmi     :+
         lda     #PromptResult::ok
 :       rts
@@ -13398,7 +13398,7 @@ check_button_yes:
         MGTK_RELAY_CALL MGTK::InRect, desktop_aux::yes_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_no
-        yax_call button_event_loop, kAlertDialogID, desktop_aux::yes_button_rect
+        yax_call button_event_loop, kAlertDialogWindowID, desktop_aux::yes_button_rect
         bmi     :+
         lda     #PromptResult::yes
 :       rts
@@ -13407,7 +13407,7 @@ check_button_no:
         MGTK_RELAY_CALL MGTK::InRect, desktop_aux::no_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_all
-        yax_call button_event_loop, kAlertDialogID, desktop_aux::no_button_rect
+        yax_call button_event_loop, kAlertDialogWindowID, desktop_aux::no_button_rect
         bmi     :+
         lda     #PromptResult::no
 :       rts
@@ -13416,7 +13416,7 @@ check_button_all:
         MGTK_RELAY_CALL MGTK::InRect, desktop_aux::all_button_rect
         cmp     #MGTK::inrect_inside
         bne     maybe_check_button_cancel
-        yax_call button_event_loop, kAlertDialogID, desktop_aux::all_button_rect
+        yax_call button_event_loop, kAlertDialogWindowID, desktop_aux::all_button_rect
         bmi     :+
         lda     #PromptResult::all
 :       rts
@@ -13431,7 +13431,7 @@ check_button_cancel:
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     LA6ED
-:       yax_call button_event_loop, kAlertDialogID, desktop_aux::cancel_button_rect
+:       yax_call button_event_loop, kAlertDialogWindowID, desktop_aux::cancel_button_rect
         bmi     :+
         lda     #PromptResult::cancel
 :       rts

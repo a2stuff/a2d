@@ -289,13 +289,13 @@ path_buf0:  .res    65, 0
 path_buf1:  .res    65, 0
 path_buf2:  .res    65, 0
 
-kAlertDialogID = $0F
+kAlertDialogWindowID = $0F
 
 .params winfo_alert_dialog
         kWidth = 400
         kHeight = 107
 
-window_id:      .byte   kAlertDialogID
+window_id:      .byte   kAlertDialogWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -443,13 +443,13 @@ winfo_about_dialog_port    := winfo_about_dialog::port
 
 ;;; Dialog used for Edit/Delete/Run an Entry ...
 
-kEntryDialogID = $1B
+kEntryDialogWindowID = $1B
 
 .params winfo_entry_picker
         kWidth = 350
         kHeight = 118
 
-window_id:      .byte   kEntryDialogID
+window_id:      .byte   kEntryDialogWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
