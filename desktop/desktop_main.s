@@ -472,11 +472,11 @@ handle_keydown:
 cycle:  jmp     cmd_cycle_windows
 
 menu_accelerators:
-        copy    event_key, LE25C
+        copy    event_key, menu_click_params::which_key
         lda     event_modifiers
         beq     :+
         lda     #1
-:       sta     LE25D
+:       sta     menu_click_params::key_mods
         copy    #$80, menu_kbd_flag ; note that source is keyboard
         MGTK_RELAY_CALL MGTK::MenuKey, menu_click_params
 

@@ -1066,21 +1066,21 @@ window_filerecord_table:
         .byte   $00,$1E,$00,$32,$00,$1E,$00,$40
         .byte   $00
 
-        ;; IconTK::HIGHLIGHT_ICON params
+        ;; IconTK::HighlightIcon params
 icon_param2:
         .byte   0
 
 LE22C:  .byte   0
 
-        ;; IconTK::HIGHLIGHT_ICON params
+        ;; IconTK::HighlightIcon params
 icon_param3:
         .byte   0
 
 redraw_icon_param:
         .byte   0
 
-        ;; IconTK::HIGHLIGHT_ICON params
-        ;; IconTK::UNHIGHLIGHT_ICON params
+        ;; IconTK::HighlightIcon params
+        ;; IconTK::Icon params
 icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
@@ -1092,13 +1092,13 @@ saved_stack:
         .byte   0
 
 .assert * = last_menu_click_params, error, "Entry point mismatch"
-.params menu_click_params
+.params menu_click_params       ; used for MGTK::MenuKey as well
 menu_id:.byte   0
 item_num:.byte  0
+which_key:      .byte   0
+key_mods:       .byte   0
 .endparams
 
-LE25C:  .byte   0
-LE25D:  .byte   0
         .byte   $00,$00,$00,$00
         .byte   $00,$04,$00,$00,$00
 
