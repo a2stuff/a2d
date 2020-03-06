@@ -573,7 +573,7 @@ L9683:  lda     winfo_entry_picker
         MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
         cmp     #MGTK::inrect_inside
         bne     L96C8
-        yax_call desktop_main::button_event_loop, kEntryDialogWindowID, entry_picker_ok_rect
+        yax_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_ok_rect
         bmi     L96C7
         lda     #$00
 L96C7:  rts
@@ -581,7 +581,7 @@ L96C7:  rts
 L96C8:  MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
         cmp     #MGTK::inrect_inside
         bne     L96EF
-        yax_call desktop_main::button_event_loop, kEntryDialogWindowID, entry_picker_cancel_rect
+        yax_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_cancel_rect
         bmi     L96EE
         lda     #$01
 L96EE:  rts

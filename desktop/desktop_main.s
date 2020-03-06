@@ -13389,7 +13389,7 @@ content:
         jmp     maybe_check_button_cancel
 
 check_button_ok:
-        yax_call button_event_loop, kAlertDialogWindowID, desktop_aux::ok_button_rect
+        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, desktop_aux::ok_button_rect
         bmi     :+
         lda     #PromptResult::ok
 :       rts
@@ -13398,7 +13398,7 @@ check_button_yes:
         MGTK_RELAY_CALL MGTK::InRect, desktop_aux::yes_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_no
-        yax_call button_event_loop, kAlertDialogWindowID, desktop_aux::yes_button_rect
+        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, desktop_aux::yes_button_rect
         bmi     :+
         lda     #PromptResult::yes
 :       rts
@@ -13407,7 +13407,7 @@ check_button_no:
         MGTK_RELAY_CALL MGTK::InRect, desktop_aux::no_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_all
-        yax_call button_event_loop, kAlertDialogWindowID, desktop_aux::no_button_rect
+        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, desktop_aux::no_button_rect
         bmi     :+
         lda     #PromptResult::no
 :       rts
@@ -13416,7 +13416,7 @@ check_button_all:
         MGTK_RELAY_CALL MGTK::InRect, desktop_aux::all_button_rect
         cmp     #MGTK::inrect_inside
         bne     maybe_check_button_cancel
-        yax_call button_event_loop, kAlertDialogWindowID, desktop_aux::all_button_rect
+        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, desktop_aux::all_button_rect
         bmi     :+
         lda     #PromptResult::all
 :       rts
@@ -13431,7 +13431,7 @@ check_button_cancel:
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     LA6ED
-:       yax_call button_event_loop, kAlertDialogWindowID, desktop_aux::cancel_button_rect
+:       yax_call ButtonEventLoopRelay, kAlertDialogWindowID, desktop_aux::cancel_button_rect
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
@@ -15147,79 +15147,6 @@ version_bytes:
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
-.endproc
-
-;;; ============================================================
-;;; Event loop during button press - initial invert and
-;;; inverting as mouse is dragged in/out.
-;;; Input: A,X = rect address, Y = window_id
-;;; Output: A=0/N=0/Z=1 = click, A=$FF/N=1/Z=0 = cancel
-
-.proc button_event_loop
-        stax    rect_addr
-        sty     window_id
-
-        ;; Initial state
-        copy    #0, down_flag
-
-        ;; Do initial inversion
-        jsr     set_penmode_xor2
-        jsr     invert
-
-        ;; Event loop
-loop:   MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     exit
-        lda     window_id
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-
-        ldax    rect_addr
-        ldy     #MGTK::InRect
-        jsr     MGTK_RELAY
-
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     down_flag       ; outside but was inside?
-        beq     toggle
-        jmp     loop
-
-inside: lda     down_flag       ; already depressed?
-        bne     toggle
-        jmp     loop
-
-toggle: jsr     invert
-        lda     down_flag
-        eor     #$80
-        sta     down_flag
-        jmp     loop
-
-exit:   lda     down_flag       ; was depressed?
-        beq     clicked
-        return  #$FF            ; hi bit = cancelled
-
-clicked:
-        jsr     invert
-        return  #0
-
-        ;; --------------------------------------------------
-
-invert: ldax    rect_addr
-        ldy     #MGTK::PaintRect
-        jmp     MGTK_RELAY
-
-        ;; --------------------------------------------------
-
-down_flag:
-        .byte   0
-
-rect_addr:
-        .addr   0
-
-window_id:
-        .byte   0
 .endproc
 
 ;;; ============================================================

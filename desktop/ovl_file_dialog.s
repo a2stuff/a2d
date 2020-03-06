@@ -171,7 +171,7 @@ L5213:  jmp     set_up_ports
 
 L5216:  lda     winfo_entrydlg
         jsr     set_port_for_window
-        yax_call desktop_main::button_event_loop, kFilePickerDlgWindowID, common_open_button_rect
+        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, common_open_button_rect
         bmi     L5213
         jsr     L5607
         jmp     set_up_ports
@@ -184,7 +184,7 @@ L5216:  lda     winfo_entrydlg
         jmp     check_close_button
 :       bit     L5105
         bmi     L5268
-        yax_call desktop_main::button_event_loop, kFilePickerDlgWindowID, common_change_drive_button_rect
+        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, common_change_drive_button_rect
         bmi     L5268
         jsr     L565C
 L5268:  jmp     set_up_ports
@@ -197,7 +197,7 @@ L5268:  jmp     set_up_ports
         jmp     check_ok_button
 :       bit     L5105
         bmi     L529A
-        yax_call desktop_main::button_event_loop, kFilePickerDlgWindowID, common_close_button_rect
+        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, common_close_button_rect
         bmi     L529A
         jsr     L567F
 L529A:  jmp     set_up_ports
@@ -208,7 +208,7 @@ L529A:  jmp     set_up_ports
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_cancel_button
-:       yax_call desktop_main::button_event_loop, kFilePickerDlgWindowID, common_ok_button_rect
+:       yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, common_ok_button_rect
         bmi     L52CA
         jsr     jt_handle_meta_right_key
         jsr     jt_handle_ok
@@ -220,7 +220,7 @@ L52CA:  jmp     set_up_ports
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_other_click
-:       yax_call desktop_main::button_event_loop, kFilePickerDlgWindowID, common_cancel_button_rect
+:       yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, common_cancel_button_rect
         bmi     L52F7
         jsr     jt_handle_cancel
 L52F7:  jmp     set_up_ports

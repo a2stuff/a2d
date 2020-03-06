@@ -342,5 +342,17 @@ remainder:
 .endproc
 
 ;;; ============================================================
+;;; ButtonEventLoop
+
+.proc ButtonEventLoopRelay
+        sta     RAMRDON
+        sta     RAMWRTON
+        jsr     desktop_aux::button_event_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        rts
+.endproc
+
+;;; ============================================================
 
         PAD_TO $D200
