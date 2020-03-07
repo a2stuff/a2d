@@ -724,23 +724,20 @@ common_dialog_frame_rect:
 rect_D9C8:
         DEFINE_RECT 27,16,174,26
 
-kCommonButtonWidth = 100
-kCommonButtonHeight = 11
-
 common_close_button_rect:
-        DEFINE_RECT_SZ 193,58,kCommonButtonWidth,kCommonButtonHeight
+        DEFINE_RECT_SZ 193,58,kButtonWidth,kButtonHeight
 
 common_ok_button_rect:
-        DEFINE_RECT_SZ 193,89,kCommonButtonWidth,kCommonButtonHeight
+        DEFINE_RECT_SZ 193,89,kButtonWidth,kButtonHeight
 
 common_open_button_rect:
-        DEFINE_RECT_SZ 193,44,kCommonButtonWidth,kCommonButtonHeight
+        DEFINE_RECT_SZ 193,44,kButtonWidth,kButtonHeight
 
 common_cancel_button_rect:
-        DEFINE_RECT_SZ 193,73,kCommonButtonWidth,kCommonButtonHeight
+        DEFINE_RECT_SZ 193,73,kButtonWidth,kButtonHeight
 
 common_change_drive_button_rect:
-        DEFINE_RECT_SZ 193,30,kCommonButtonWidth,kCommonButtonHeight
+        DEFINE_RECT_SZ 193,30,kButtonWidth,kButtonHeight
 
 common_dialog_sep_start:
         DEFINE_POINT 323,30
