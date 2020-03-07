@@ -167,7 +167,9 @@ zp_use_flag0:
 .params trackgoaway_params        ; next 3 bytes???
 goaway:.byte   0
 .endparams
-LD2A9:  .byte   0
+
+LD2A9:  .byte   0               ; Unused ???
+
 double_click_flag:
         .byte   0               ; high bit clear if double-clicked, set otherwise
 
@@ -491,7 +493,7 @@ name_input_rect:  DEFINE_RECT 40,61+6,360,71+6, name_input_rect
 name_input_textpos: DEFINE_POINT 45,70+6, name_input_textpos
 pos_dialog_title: DEFINE_POINT 0, 18, pos_dialog_title
 
-point7: DEFINE_POINT 40,18, point7
+point7: DEFINE_POINT 40,18, point7 ; Unused ???
 
 dialog_label_base_pos:
         DEFINE_POINT 40,35-5, dialog_label_base_pos
@@ -581,7 +583,9 @@ entry_picker_item_rect:
 entry_picker_all_items_rect:
         DEFINE_RECT 6,23,344,winfo_entry_picker::kHeight-23
 
-LD887:
+;;; In Format/Erase Disk picker dialog, this is the selected index (0-based),
+;;; or $FF if no drive is selected
+selected_device_index:
         .byte   0
 
 select_volume_rect:

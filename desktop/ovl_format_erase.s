@@ -24,7 +24,7 @@ L080C:  copy    #$00, has_input_field_flag
         addr_call desktop_main::draw_dialog_title, desktop_aux::str_format_disk
         yax_call desktop_main::draw_dialog_label, 1, desktop_aux::str_select_format
         jsr     draw_volume_labels
-        copy    #$FF, LD887
+        copy    #$FF, selected_device_index
 L0832:  copy16  #L0B48, desktop_main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
 L0841:  jsr     desktop_main::prompt_input_loop
@@ -38,7 +38,7 @@ L0841:  jsr     desktop_main::prompt_input_loop
         beq     L085F
         jmp     L09C2
 
-L085F:  bit     LD887
+L085F:  bit     selected_device_index
         bmi     L0832
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
@@ -68,7 +68,7 @@ L08B7:  lda     path_buf1
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
-        ldx     LD887
+        ldx     selected_device_index
         lda     DEVLST,x
         sta     L09D8
         sta     L09D7
@@ -160,7 +160,7 @@ L09D9:  lda     #$00
         addr_call desktop_main::draw_dialog_title, desktop_aux::str_erase_disk
         yax_call desktop_main::draw_dialog_label, 1, desktop_aux::str_select_erase
         jsr     draw_volume_labels
-        copy    #$FF, LD887
+        copy    #$FF, selected_device_index
         copy16  #L0B48, desktop_main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
 L0A0E:  jsr     desktop_main::prompt_input_loop
@@ -168,7 +168,7 @@ L0A0E:  jsr     desktop_main::prompt_input_loop
         beq     L0A18
         jmp     L0B31
 
-L0A18:  bit     LD887
+L0A18:  bit     selected_device_index
         bmi     L0A0E
         copy16  #$A898, desktop_main::jump_relay+1
         lda     winfo_alert_dialog
@@ -200,7 +200,7 @@ L0A7A:  lda     path_buf1
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         copy    #$00, has_input_field_flag
-        ldx     LD887
+        ldx     selected_device_index
         lda     DEVLST,x
         sta     L0B47
         sta     L0B46
@@ -297,15 +297,15 @@ L0BBB:  lda     L0C1F
         adc     screentowindow_windowy
         cmp     num_volumes
         bcc     L0BDC
-        lda     LD887
+        lda     selected_device_index
         bmi     L0BD9
-        lda     LD887
+        lda     selected_device_index
         jsr     hilight_volume_label
         lda     #$FF
-        sta     LD887
+        sta     selected_device_index
 L0BD9:  return  #$FF
 
-L0BDC:  cmp     LD887
+L0BDC:  cmp     selected_device_index
         bne     L0C04
         jsr     desktop_main::detect_double_click
         bmi     L0C03
@@ -316,11 +316,11 @@ L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
 L0C03:  rts
 
 L0C04:  sta     L0C1E
-        lda     LD887
+        lda     selected_device_index
         bmi     L0C0F
         jsr     hilight_volume_label
 L0C0F:  lda     L0C1E
-        sta     LD887
+        sta     selected_device_index
         jsr     hilight_volume_label
         jsr     desktop_main::detect_double_click
         beq     L0BE6
@@ -374,10 +374,10 @@ L0CA9:  .byte   0
 ;;; ============================================================
 
 .proc L0CAA
-        lda     LD887
+        lda     selected_device_index
         bmi     :+
         jsr     hilight_volume_label
-        copy    #$FF, LD887
+        copy    #$FF, selected_device_index
 :       rts
 .endproc
 
@@ -385,7 +385,7 @@ L0CA9:  .byte   0
 
         ;; Called from desktop_main
 .proc prompt_handle_key_left
-        lda     LD887
+        lda     selected_device_index
         bpl     L0CC1
         lda     #0
         beq     L0CCE
@@ -396,7 +396,7 @@ L0CC1:  clc
         pha
         jsr     L0CAA
         pla
-L0CCE:  sta     LD887
+L0CCE:  sta     selected_device_index
         jsr     hilight_volume_label
 L0CD4:  return  #$FF
 .endproc
@@ -405,7 +405,7 @@ L0CD4:  return  #$FF
 
         ;; Called from desktop_main
 .proc prompt_handle_key_right
-        lda     LD887
+        lda     selected_device_index
         bpl     L0CE6
         lda     num_volumes
         lsr     a
@@ -420,7 +420,7 @@ L0CE6:  sec
         pha
         jsr     L0CAA
         pla
-L0CF0:  sta     LD887
+L0CF0:  sta     selected_device_index
         jsr     hilight_volume_label
 L0CF6:  return  #$FF
 .endproc
@@ -429,7 +429,7 @@ L0CF6:  return  #$FF
 
         ;; Called from desktop_main
 .proc prompt_handle_key_down
-        lda     LD887
+        lda     selected_device_index
         clc
         adc     #1
         cmp     num_volumes
@@ -438,7 +438,7 @@ L0CF6:  return  #$FF
 L0D06:  pha
         jsr     L0CAA
         pla
-        sta     LD887
+        sta     selected_device_index
         jsr     hilight_volume_label
         return  #$FF
 .endproc
@@ -447,7 +447,7 @@ L0D06:  pha
 
         ;; Called from desktop_main
 .proc prompt_handle_key_up
-        lda     LD887
+        lda     selected_device_index
         bmi     L0D1E
         sec
         sbc     #$01
@@ -458,7 +458,7 @@ L0D1E:  ldx     num_volumes
 L0D23:  pha
         jsr     L0CAA
         pla
-        sta     LD887
+        sta     selected_device_index
         jsr     hilight_volume_label
         return  #$FF
 .endproc
