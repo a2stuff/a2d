@@ -725,6 +725,23 @@ y2:     .word   (top + height)
     .endif
 .endmacro
 
+;;; Define an inset rect rect by size
+.macro DEFINE_RECT_INSET left, top, width, height
+    .if .paramcount > 4
+.scope opt_scope
+x1:     .word   left
+y1:     .word   top
+x2:     .word   (width - left)
+y2:     .word   (height - top)
+.endscope
+    .else
+        .word   left
+        .word   top
+        .word   (width - left)
+        .word   (height - top)
+    .endif
+.endmacro
+
 ;;; Point definition. Option third param gives scope.
 ;;;    DEFINE_POINT 10,20
 ;;;    DEFINE_POINT 10,20,pt ; pt::xcoord, pt::ycoord

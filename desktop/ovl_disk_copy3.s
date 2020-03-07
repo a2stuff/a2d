@@ -180,6 +180,9 @@ grafport_win:  .res    .sizeof(MGTK::GrafPort), 0
         ;; Rest of a winfo???
         .byte   $06, $EA, 0, 0, 0, 0, $88, 0, $08, 0, $08
 
+kDialogWidth    = 500
+kDialogHeight   = 150
+
 .params winfo_dialog
 window_id:      .byte   1
 options:        .byte   MGTK::Option::dialog_box
@@ -201,7 +204,7 @@ viewloc:        DEFINE_POINT 25, 20
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, 500, 150
+cliprect:       DEFINE_RECT 0, 0, kDialogWidth, kDialogHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -246,12 +249,12 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-rect_outer_frame:      DEFINE_RECT 4, 2, 496, 148
-rect_inner_frame:      DEFINE_RECT 5, 3, 495, 147
+rect_outer_frame:      DEFINE_RECT_INSET 4, 2, kDialogWidth, kDialogHeight
+rect_inner_frame:      DEFINE_RECT_INSET 5, 3, kDialogWidth, kDialogHeight
 rect_D211:      DEFINE_RECT 6, 20, 494, 102
 rect_D219:      DEFINE_RECT 6, 103, 494, 145
-rect_ok_button:      DEFINE_RECT 350, 90, 450, 101
-rect_read_drive:      DEFINE_RECT 210, 90, 310, 101
+rect_ok_button:      DEFINE_RECT_SZ 350, 90, kButtonWidth, kButtonHeight
+rect_read_drive:      DEFINE_RECT_SZ 210, 90, kButtonWidth, kButtonHeight
 point_ok_label:     DEFINE_POINT 355, 100
 
 str_ok_label:
@@ -2305,8 +2308,8 @@ maprect:        DEFINE_RECT 0, 0, 36, 23
 .endparams
 
 rect_E89F:      DEFINE_RECT 65, 45, 485, 100
-rect_E8A7:      DEFINE_RECT 4, 2, 416, 53
-rect_E8AF:      DEFINE_RECT 5, 3, 415, 52
+rect_E8A7:      DEFINE_RECT_INSET 4, 2, 420, 55
+rect_E8AF:      DEFINE_RECT_INSET 5, 3, 420, 55
 
 .params portbits1
 viewloc:        DEFINE_POINT 65, 45, viewloc
@@ -2339,16 +2342,16 @@ str_yes_btn:
 str_no_btn:
         PASCAL_STRING "No"
 
-yes_rect:  DEFINE_RECT 250, 37, 300, 48
+yes_rect:  DEFINE_RECT_SZ 250, 37, 50, kButtonHeight
 yes_pos:  DEFINE_POINT 255, 47
 
-no_rect:  DEFINE_RECT 350, 37, 400, 48
+no_rect:  DEFINE_RECT_SZ 350, 37, 50, kButtonHeight
 no_pos:  DEFINE_POINT 355, 47
 
-ok_try_again_rect:  DEFINE_RECT 300, 37, 400, 48
+ok_try_again_rect:  DEFINE_RECT_SZ 300, 37, kButtonWidth, kButtonHeight
 ok_try_again_pos:  DEFINE_POINT 305, 47
 
-cancel_rect:  DEFINE_RECT 20, 37, 120, 48
+cancel_rect:  DEFINE_RECT_SZ 20, 37, kButtonWidth, kButtonHeight
 cancel_pos:  DEFINE_POINT 25, 47
 
 LE93D:  DEFINE_POINT 100, 24

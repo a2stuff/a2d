@@ -3349,14 +3349,14 @@ special_menu:
         kAlertDialogWidth = 400
         kAlertDialogHeight = 107
 
-confirm_dialog_outer_rect:  DEFINE_RECT 4,2,kAlertDialogWidth-4,kAlertDialogHeight-2
-confirm_dialog_inner_rect:  DEFINE_RECT 5,3,kAlertDialogWidth-5,kAlertDialogHeight-3
-cancel_button_rect:  DEFINE_RECT 40,kAlertDialogHeight-19,140,kAlertDialogHeight-8
-LAE18:  DEFINE_RECT 193,30,293,41
-ok_button_rect:  DEFINE_RECT 260,kAlertDialogHeight-19,360,kAlertDialogHeight-8
-yes_button_rect:  DEFINE_RECT 200,kAlertDialogHeight-19,240,kAlertDialogHeight-8
-no_button_rect:  DEFINE_RECT 260,kAlertDialogHeight-19,300,kAlertDialogHeight-8
-all_button_rect:  DEFINE_RECT 320,kAlertDialogHeight-19,360,kAlertDialogHeight-8
+confirm_dialog_outer_rect:  DEFINE_RECT_INSET 4,2,kAlertDialogWidth,kAlertDialogHeight
+confirm_dialog_inner_rect:  DEFINE_RECT_INSET 5,3,kAlertDialogWidth,kAlertDialogHeight
+cancel_button_rect:  DEFINE_RECT_SZ 40,kAlertDialogHeight-19,kButtonWidth,kButtonHeight
+LAE18:  DEFINE_RECT_SZ 193,30,kButtonWidth,kButtonHeight
+ok_button_rect:  DEFINE_RECT_SZ 260,kAlertDialogHeight-19,kButtonWidth,kButtonHeight
+yes_button_rect:  DEFINE_RECT_SZ 200,kAlertDialogHeight-19,40,kButtonHeight
+no_button_rect:  DEFINE_RECT_SZ 260,kAlertDialogHeight-19,40,kButtonHeight
+all_button_rect:  DEFINE_RECT_SZ 320,kAlertDialogHeight-19,40,kButtonHeight
 
 str_ok_label:
         PASCAL_STRING {"OK            ",kGlyphReturn}
@@ -3401,8 +3401,8 @@ LAEC7:  PASCAL_STRING "Destination filename:"
         kAboutDialogWidth = 400
         kAboutDialogHeight = 120
 
-about_dialog_outer_rect:  DEFINE_RECT 4, 2, kAboutDialogWidth-4, kAboutDialogHeight-2
-about_dialog_inner_rect:  DEFINE_RECT 5, 3, kAboutDialogWidth-5, kAboutDialogHeight-3
+about_dialog_outer_rect:  DEFINE_RECT_INSET 4, 2, kAboutDialogWidth, kAboutDialogHeight
+about_dialog_inner_rect:  DEFINE_RECT_INSET 5, 3, kAboutDialogWidth, kAboutDialogHeight
 
 str_about1:  PASCAL_STRING "Apple II DeskTop"
 str_about2:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"
@@ -3626,9 +3626,9 @@ kAlertRectHeight = 55
 alert_rect:
         DEFINE_RECT_SZ kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
 alert_inner_frame_rect1:
-        DEFINE_RECT 4, 2, kAlertRectWidth-4, kAlertRectHeight-2
+        DEFINE_RECT_INSET 4, 2, kAlertRectWidth, kAlertRectHeight
 alert_inner_frame_rect2:
-        DEFINE_RECT 5, 3, kAlertRectWidth-5, kAlertRectHeight-3
+        DEFINE_RECT_INSET 5, 3, kAlertRectWidth, kAlertRectHeight
 
 .params portmap
 viewloc:        DEFINE_POINT kAlertRectLeft, kAlertRectTop, viewloc
