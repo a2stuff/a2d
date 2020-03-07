@@ -3956,20 +3956,33 @@ handle_button_down:
         MGTK_CALL MGTK::InRect, cancel_rect ; Cancel?
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     do_cancel_button
+        ldax    #cancel_rect
+        jsr     alert_button_event_loop
+        bne     no_button
+        lda     #kAlertResultCancel
+        jmp     finish
+
 :       bit     alert_action
         bvs     check_ok_rect
 
         MGTK_CALL MGTK::InRect, try_again_rect ; Try Again?
         cmp     #MGTK::inrect_inside
         bne     no_button
-        jmp     do_try_again_button
+        ldax    #try_again_rect
+        jsr     alert_button_event_loop
+        bne     no_button
+        lda     #kAlertResultTryAgain
+        jmp     finish
 
 check_ok_rect:
         MGTK_CALL MGTK::InRect, ok_rect ; OK?
         cmp     #MGTK::inrect_inside
         bne     no_button
-        jmp     do_ok_button
+        ldax    #ok_rect
+        jsr     alert_button_event_loop
+        bne     no_button
+        lda     #kAlertResultOK
+        jmp     finish
 
 no_button:
         jmp     event_loop
@@ -3981,23 +3994,29 @@ finish: pha
         pla
         rts
 
-        ;; --------------------------------------------------
-        ;; Try Again button
+;;; ------------------------------------------------------------
+;;; Event loop during button press - initial invert and
+;;; inverting as mouse is dragged in/out.
+;;; (The |button_event_loop| proc is not used as these buttons
+;;; are not in a window, so ScreenToWindow can not be used.)
+;;; Inputs: A,X = rect address
+;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
 
-.proc do_try_again_button
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
+.proc alert_button_event_loop
+        stax    rect_addr1
+        stax    rect_addr2
         lda     #0
         sta     flag
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        jsr     invert
 
-        ;; event loop
 loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     button_up
         jsr     event_coords_to_local
         MGTK_CALL MGTK::MoveTo, event_coords
-        MGTK_CALL MGTK::InRect, try_again_rect
+        MGTK_CALL MGTK::InRect, dummy0000, rect_addr1
         cmp     #MGTK::inrect_inside
         beq     inside
         lda     flag
@@ -4008,8 +4027,7 @@ inside: lda     flag
         bne     toggle
         jmp     loop
 
-toggle: MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
+toggle: jsr     invert
         lda     flag
         eor     #$80
         sta     flag
@@ -4017,100 +4035,11 @@ toggle: MGTK_CALL MGTK::SetPenMode, penXOR
 
 button_up:
         lda     flag
-        beq     :+
-        jmp     event_loop
-:       lda     #kAlertResultTryAgain
-        jmp     finish
+        rts
 
-        ;; high bit clear if button is down
-flag:   .byte   0
-.endproc
+invert: MGTK_CALL MGTK::PaintRect, dummy0000, rect_addr2
+        rts
 
-        ;; --------------------------------------------------
-        ;; Cancel button
-
-.proc do_cancel_button
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_rect
-        lda     #0
-        sta     flag
-
-        ;; event loop
-loop:   MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     button_up
-        jsr     event_coords_to_local
-        MGTK_CALL MGTK::MoveTo, event_coords
-        MGTK_CALL MGTK::InRect, cancel_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     flag
-        beq     toggle
-        jmp     loop
-
-inside: lda     flag
-        bne     toggle
-        jmp     loop
-
-toggle: MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_rect
-        lda     flag
-        eor     #$80
-        sta     flag
-        jmp     loop
-
-button_up:
-        lda     flag
-        beq     :+
-        jmp     event_loop
-:       lda     #kAlertResultCancel
-        jmp     finish
-
-        ;; High bit clear if button is depressed
-flag:   .byte   0
-.endproc
-
-        ;; --------------------------------------------------
-        ;; OK button
-
-.proc do_ok_button
-        lda     #0
-        sta     flag
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_rect
-
-        ;; event loop
-loop:   MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     button_up
-        jsr     event_coords_to_local
-        MGTK_CALL MGTK::MoveTo, event_coords
-        MGTK_CALL MGTK::InRect, ok_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     flag
-        beq     toggle
-        jmp     loop
-
-inside: lda     flag
-        bne     toggle
-        jmp     loop
-
-toggle: MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_rect
-        lda     flag
-        eor     #$80
-        sta     flag
-        jmp     loop
-
-button_up:
-        lda     flag
-        beq     :+
-        jmp     event_loop
-:       lda     #kAlertResultOK
-        jmp     finish
 
         ;; High bit clear if button is depressed
 flag:   .byte   0
@@ -4343,7 +4272,7 @@ end:    rts
 ;;; Event loop during button press - initial invert and
 ;;; inverting as mouse is dragged in/out.
 ;;; Input: A,X = rect address, Y = window_id
-;;; Output: A=0/N=0/Z=1 = click, A=$FF/N=1/Z=0 = cancel
+;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
 
 .proc button_event_loop
         sty     window_id
@@ -4366,7 +4295,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, dummy1234, rect_addr1
+        MGTK_CALL MGTK::InRect, dummy0000, rect_addr1
 
         cmp     #MGTK::inrect_inside
         beq     inside
@@ -4385,16 +4314,14 @@ toggle: jsr     invert
         jmp     loop
 
 exit:   lda     down_flag       ; was depressed?
-        beq     clicked
-        return  #$FF            ; hi bit = cancelled
-
-clicked:
+        bne     :+
         jsr     invert
-        return  #0
+:       lda     down_flag
+        rts
 
         ;; --------------------------------------------------
 
-invert: MGTK_CALL MGTK::PaintRect, dummy1234, rect_addr2
+invert: MGTK_CALL MGTK::PaintRect, dummy0000, rect_addr2
         rts
 
         ;; --------------------------------------------------
