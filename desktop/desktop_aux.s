@@ -3197,6 +3197,7 @@ trash_mask:
         .byte   PX(%1111111),PX(%1111111),PX(%1111111)
 
 ;;; ============================================================
+;;; Menus
 
 label_apple:
         PASCAL_STRING kGlyphSolidApple
@@ -3264,16 +3265,17 @@ label_rename_icon:
 
 desktop_menu:
         DEFINE_MENU_BAR 6
-        DEFINE_MENU_BAR_ITEM kMenuIdApple, label_apple, apple_menu
+@items: DEFINE_MENU_BAR_ITEM kMenuIdApple, label_apple, apple_menu
         DEFINE_MENU_BAR_ITEM kMenuIdFile, label_file, file_menu
         DEFINE_MENU_BAR_ITEM kMenuIdView, label_view, view_menu
         DEFINE_MENU_BAR_ITEM kMenuIdSpecial, label_special, special_menu
         DEFINE_MENU_BAR_ITEM kMenuIdStartup, label_startup, startup_menu
         DEFINE_MENU_BAR_ITEM kMenuIdSelector, label_selector, selector_menu
+        ASSERT_RECORD_TABLE_SIZE @items, 6, .sizeof(MGTK::MenuBarItem)
 
 file_menu:
         DEFINE_MENU 13
-        DEFINE_MENU_ITEM label_new_folder, 'F', 'f'
+@items: DEFINE_MENU_ITEM label_new_folder, 'F', 'f'
         DEFINE_MENU_ITEM label_open, 'O', 'o'
         DEFINE_MENU_ITEM label_close, 'W', 'w'
         DEFINE_MENU_ITEM label_close_all
@@ -3286,10 +3288,11 @@ file_menu:
         DEFINE_MENU_ITEM label_delete_file, 'D', 'd'
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_quit, 'Q', 'q'
+        ASSERT_RECORD_TABLE_SIZE @items, 13, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdNewFolder   = 1
-        kMenuItemIdOpen         = 2
-        kMenuItemIdClose        = 3
+        kMenuItemIdOpen        = 2
+        kMenuItemIdClose       = 3
         kMenuItemIdCloseAll    = 4
         kMenuItemIdSelectAll   = 5
         ;; --------------------
@@ -3299,15 +3302,16 @@ file_menu:
         kMenuItemIdCopyFile    = 10
         kMenuItemIdDeleteFile  = 11
         ;; --------------------
-        kMenuItemIdQuit         = 13
+        kMenuItemIdQuit        = 13
 
 view_menu:
         DEFINE_MENU 5
-        DEFINE_MENU_ITEM label_by_icon, 'J', 'j'
+@items: DEFINE_MENU_ITEM label_by_icon, 'J', 'j'
         DEFINE_MENU_ITEM label_by_name, 'N', 'n'
         DEFINE_MENU_ITEM label_by_date, 'T', 't'
         DEFINE_MENU_ITEM label_by_size, 'K', 'k'
         DEFINE_MENU_ITEM label_by_type, 'L', 'l'
+        ASSERT_RECORD_TABLE_SIZE @items, 5, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdViewByIcon = 1
         kMenuItemIdViewByName = 2
@@ -3317,7 +3321,7 @@ view_menu:
 
 special_menu:
         DEFINE_MENU 11
-        DEFINE_MENU_ITEM label_check_all_drives
+@items: DEFINE_MENU_ITEM label_check_all_drives
         DEFINE_MENU_ITEM label_check_drive
         DEFINE_MENU_ITEM label_eject, 'E', 'e'
         DEFINE_MENU_SEPARATOR
@@ -3328,17 +3332,18 @@ special_menu:
         DEFINE_MENU_ITEM label_lock
         DEFINE_MENU_ITEM label_unlock
         DEFINE_MENU_ITEM label_get_size
+        ASSERT_RECORD_TABLE_SIZE @items, 11, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdCheckAll    = 1
         kMenuItemIdCheckDrive  = 2
-        kMenuItemIdEject        = 3
+        kMenuItemIdEject       = 3
         ;; --------------------
         kMenuItemIdFormatDisk  = 5
         kMenuItemIdEraseDisk   = 6
         kMenuItemIdDiskCopy    = 7
         ;; --------------------
-        kMenuItemIdLock         = 9
-        kMenuItemIdUnlock       = 10
+        kMenuItemIdLock        = 9
+        kMenuItemIdUnlock      = 10
         kMenuItemIdGetSize     = 11
 
         PAD_TO $AE00
@@ -3373,16 +3378,25 @@ all_label_pos:  DEFINE_POINT 325,kAlertDialogHeight-9
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
 
-        kDialogLabelHeight = 9
-        kDialogLabelBaseY = 30
-        .define DIALOG_LABEL_Y(num) (((num)*(kDialogLabelHeight))+(kDialogLabelBaseY))
+;;; ============================================================
+
+kDialogLabelHeight      = 9
+kDialogLabelBaseY       = 30
+kDialogLabelRow1        = kDialogLabelBaseY + kDialogLabelHeight * 1
+kDialogLabelRow2        = kDialogLabelBaseY + kDialogLabelHeight * 2
+kDialogLabelRow3        = kDialogLabelBaseY + kDialogLabelHeight * 3
+kDialogLabelRow4        = kDialogLabelBaseY + kDialogLabelHeight * 4
+kDialogLabelRow5        = kDialogLabelBaseY + kDialogLabelHeight * 5
+kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
+
+;;; ============================================================
 
 clear_dialog_labels_rect:  DEFINE_RECT 39,25,360,kAlertDialogHeight-20
-prompt_rect:  DEFINE_RECT 40,(DIALOG_LABEL_Y {5})+1,360,(DIALOG_LABEL_Y {6})
-current_target_file_pos:  DEFINE_POINT 75,DIALOG_LABEL_Y {2}
-current_dest_file_pos:  DEFINE_POINT 75,DIALOG_LABEL_Y {3}
-current_target_file_rect:  DEFINE_RECT 75,(DIALOG_LABEL_Y {1})+1,394,(DIALOG_LABEL_Y {2})
-current_dest_file_rect:  DEFINE_RECT 75,(DIALOG_LABEL_Y {2})+1,394,(DIALOG_LABEL_Y {3})
+prompt_rect:  DEFINE_RECT 40,kDialogLabelRow5+1,360,kDialogLabelRow6
+current_target_file_pos:  DEFINE_POINT 75,kDialogLabelRow2
+current_dest_file_pos:  DEFINE_POINT 75,kDialogLabelRow3
+current_target_file_rect:  DEFINE_RECT 75,(kDialogLabelRow1)+1,394,kDialogLabelRow2
+current_dest_file_rect:  DEFINE_RECT 75,kDialogLabelRow2+1,394,kDialogLabelRow3
 
 str_cancel_label:
         PASCAL_STRING "Cancel        Esc"
@@ -3396,10 +3410,12 @@ str_all_label:
 LAEB6:  PASCAL_STRING "Source filename:"
 LAEC7:  PASCAL_STRING "Destination filename:"
 
-        ;; "About" dialog resources
 
-        kAboutDialogWidth = 400
-        kAboutDialogHeight = 120
+;;; ============================================================
+;;; "About" dialog resources
+
+kAboutDialogWidth       = 400
+kAboutDialogHeight      = 120
 
 about_dialog_outer_rect:  DEFINE_RECT_INSET 4, 2, kAboutDialogWidth, kAboutDialogHeight
 about_dialog_inner_rect:  DEFINE_RECT_INSET 5, 3, kAboutDialogWidth, kAboutDialogHeight
@@ -3440,9 +3456,9 @@ str_large_prompt:
         PASCAL_STRING "This file is too large to copy, click OK to continue."
 
 copy_file_count_pos:
-        DEFINE_POINT 110, DIALOG_LABEL_Y {1}
+        DEFINE_POINT 110, kDialogLabelRow1
 copy_file_count_pos2:
-        DEFINE_POINT 170, DIALOG_LABEL_Y {4}
+        DEFINE_POINT 170, kDialogLabelRow4
 
         ;; "Delete" dialog strings
 str_delete_title:
@@ -3459,13 +3475,13 @@ str_delete_locked_file:
         PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
 
 delete_file_count_pos:
-        DEFINE_POINT 145, DIALOG_LABEL_Y {4}
+        DEFINE_POINT 145, kDialogLabelRow4
 
 delete_remaining_count_pos:
-        DEFINE_POINT 204, DIALOG_LABEL_Y {4}
+        DEFINE_POINT 204, kDialogLabelRow4
 
 delete_file_count_pos2:
-        DEFINE_POINT 300, DIALOG_LABEL_Y {4}
+        DEFINE_POINT 300, kDialogLabelRow4
 
         ;; "New Folder" dialog strings
 str_new_folder_title:
@@ -3506,12 +3522,12 @@ str_info_blocks:
 str_colon:
         PASCAL_STRING ": "
 
-unlock_remaining_count_pos2:  DEFINE_POINT 160,DIALOG_LABEL_Y {4}
-lock_remaining_count_pos2:  DEFINE_POINT 145,DIALOG_LABEL_Y {4}
-files_pos:  DEFINE_POINT 200,DIALOG_LABEL_Y {4}
-files_pos2:  DEFINE_POINT 185,DIALOG_LABEL_Y {4}
-unlock_remaining_count_pos:  DEFINE_POINT 205,DIALOG_LABEL_Y {4}
-lock_remaining_count_pos: DEFINE_POINT 195,DIALOG_LABEL_Y {4}
+unlock_remaining_count_pos2:  DEFINE_POINT 160,kDialogLabelRow4
+lock_remaining_count_pos2:  DEFINE_POINT 145,kDialogLabelRow4
+files_pos:  DEFINE_POINT 200,kDialogLabelRow4
+files_pos2:  DEFINE_POINT 185,kDialogLabelRow4
+unlock_remaining_count_pos:  DEFINE_POINT 205,kDialogLabelRow4
+lock_remaining_count_pos: DEFINE_POINT 195,kDialogLabelRow4
 
 str_format_disk:  PASCAL_STRING "Format a Disk ..."
 str_select_format:  PASCAL_STRING "Select the location where the disk is to be formatted"

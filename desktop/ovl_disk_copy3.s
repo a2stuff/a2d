@@ -66,29 +66,33 @@ key_mods  := * + 3
 
 menu_definition:
         DEFINE_MENU_BAR 3
-        DEFINE_MENU_BAR_ITEM kMenuIdApple, label_apple, menu_apple
+@items: DEFINE_MENU_BAR_ITEM kMenuIdApple, label_apple, menu_apple
         DEFINE_MENU_BAR_ITEM kMenuIdFile, label_file, menu_file
         DEFINE_MENU_BAR_ITEM kMenuIdFacilities, label_facilities, menu_facilities
+        ASSERT_RECORD_TABLE_SIZE @items, 3, .sizeof(MGTK::MenuBarItem)
 
 menu_apple:
         DEFINE_MENU 5
-        DEFINE_MENU_ITEM label_desktop
+@items: DEFINE_MENU_ITEM label_desktop
         DEFINE_MENU_ITEM label_blank
         DEFINE_MENU_ITEM label_copyright1
         DEFINE_MENU_ITEM label_copyright2
         DEFINE_MENU_ITEM label_rights
+        ASSERT_RECORD_TABLE_SIZE @items, 5, .sizeof(MGTK::MenuItem)
 
 menu_file:
         DEFINE_MENU 1
-        DEFINE_MENU_ITEM label_quit, 'Q', 'q'
+@items: DEFINE_MENU_ITEM label_quit, 'Q', 'q'
+        ASSERT_RECORD_TABLE_SIZE @items, 1, .sizeof(MGTK::MenuItem)
 
 label_apple:
         PASCAL_STRING kGlyphSolidApple
 
 menu_facilities:
         DEFINE_MENU 2
-        DEFINE_MENU_ITEM label_quick_copy
+@items: DEFINE_MENU_ITEM label_quick_copy
         DEFINE_MENU_ITEM label_disk_copy
+        ASSERT_RECORD_TABLE_SIZE @items, 2, .sizeof(MGTK::MenuItem)
 
 label_file:
         PASCAL_STRING "File"

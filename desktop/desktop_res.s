@@ -1124,13 +1124,14 @@ kNumStartupMenuItems = 7
 
 startup_menu:
         DEFINE_MENU kNumStartupMenuItems
-        DEFINE_MENU_ITEM startup_menu_item_1
+@items: DEFINE_MENU_ITEM startup_menu_item_1
         DEFINE_MENU_ITEM startup_menu_item_2
         DEFINE_MENU_ITEM startup_menu_item_3
         DEFINE_MENU_ITEM startup_menu_item_4
         DEFINE_MENU_ITEM startup_menu_item_5
         DEFINE_MENU_ITEM startup_menu_item_6
         DEFINE_MENU_ITEM startup_menu_item_7
+        ASSERT_RECORD_TABLE_SIZE @items, kNumStartupMenuItems, .sizeof(MGTK::MenuItem)
 
 str_all:PASCAL_STRING "All"
 
@@ -1215,7 +1216,7 @@ str_slot_drive:
 
 selector_menu:
         DEFINE_MENU 5
-        DEFINE_MENU_ITEM label_add
+@items: DEFINE_MENU_ITEM label_add
         DEFINE_MENU_ITEM label_edit
         DEFINE_MENU_ITEM label_del
         DEFINE_MENU_ITEM label_run, '0', '0'
@@ -1223,6 +1224,7 @@ selector_menu:
         .repeat kMaxRunListEntries, i
         DEFINE_MENU_ITEM run_list_entries + i * $10, .string(i+1), .string(i+1)
         .endrepeat
+        ASSERT_RECORD_TABLE_SIZE @items, 5 + kMaxRunListEntries, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdSelectorAdd       = 1
         kMenuItemIdSelectorEdit      = 2
@@ -1241,11 +1243,12 @@ label_run:
         ;; Apple Menu
 apple_menu:
         DEFINE_MENU 1
-        DEFINE_MENU_ITEM label_about
+@items: DEFINE_MENU_ITEM label_about
         DEFINE_MENU_SEPARATOR
         .repeat kMaxDeskAccCount, i
         DEFINE_MENU_ITEM desk_acc_names + i * 16
         .endrepeat
+        ASSERT_RECORD_TABLE_SIZE @items, 2 + kMaxDeskAccCount, .sizeof(MGTK::MenuItem)
 
 label_about:
         PASCAL_STRING "About Apple II DeskTop ... "
