@@ -249,8 +249,10 @@ kFatBitWidth            = 8
 kFatBitWidthShift       = 3
 kFatBitHeight           = 4
 kFatBitHeightShift      = 2
-fatbits_rect:
-        DEFINE_RECT_SZ kPatternEditX, kPatternEditY,  8 * kFatBitWidth + 1, 8 * kFatBitHeight + 1, fatbits_rect
+fatbits_frame:
+        DEFINE_RECT_SZ kPatternEditX, kPatternEditY,  8 * kFatBitWidth + 1, 8 * kFatBitHeight + 1, fatbits_frame
+fatbits_rect:                   ; For hit testing
+        DEFINE_RECT_SZ kPatternEditX+1, kPatternEditY+1,  8 * kFatBitWidth - 1, 8 * kFatBitHeight - 1, fatbits_rect
 
 str_desktop_pattern:
         DEFINE_STRING "Desktop Pattern"
@@ -805,35 +807,89 @@ common: bit     dragwindow_params::moved
 ;;; ============================================================
 
 .proc handle_bits_click
+
+        ;; Determine sense flag (0=clear, $FF=set)
+        jsr     map_coords
+        ldx     mx
+        ldy     my
+
+        stx     lastx
+        sty     lasty
+
+        lda     pattern,y
+        and     mask1,x
+        beq     :+
+        lda     #0
+        jmp     @store
+:       lda     #$FF
+@store: sta     flag
+
+        ;; Toggle pattern bit
+loop:   ldx     mx
+        ldy     my
+        lda     pattern,y
+        bit     flag
+        bpl     :+
+        ora     mask1,x         ; set bit
+        jmp     @store
+:       and     mask2,x         ; clear bit
+@store: sta     pattern,y
+        jsr     update_bits
+
+        ;; Repeat until mouse-up
+event:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::button_up
+        bne     :+
+        jmp     input_loop
+
+:       copy16  event_params::xcoord, screentowindow_params::screen::xcoord
+        copy16  event_params::ycoord, screentowindow_params::screen::ycoord
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::InRect, fatbits_rect
+        cmp     #MGTK::inrect_inside
+        bne     event
+
+        jsr     map_coords
+        lda     mx
+        cmp     lastx
+        bne     moved
+        lda     my
+        cmp     lasty
+        bne     moved
+        jmp     event
+
+moved:  copy    mx, lastx
+        copy    my, lasty
+        jmp     loop
+
+mask1:  .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
+mask2:  .byte   AS_BYTE(~(1<<0)), AS_BYTE(~(1<<1)), AS_BYTE(~(1<<2)), AS_BYTE(~(1<<3)), AS_BYTE(~(1<<4)), AS_BYTE(~(1<<5)), AS_BYTE(~(1<<6)), AS_BYTE(~(1<<7))
+
+flag:   .byte   0
+
+lastx:  .byte   0
+lasty:  .byte   0
+.endproc
+
+;;; Assumes click is within fatbits_rect
+.proc map_coords
         sub16   mx, fatbits_rect::x1, mx
         sub16   my, fatbits_rect::y1, my
-        dec16   mx
-        dec16   my
 
         ldy     #kFatBitWidthShift
 :       lsr16   mx
         dey
         bne     :-
-        cmp16   mx, #8
-        bcs     done
 
         ldy     #kFatBitHeightShift
 :       lsr16   my
         dey
         bne     :-
-        cmp16   my, #8
-        bcs     done
 
-        ldx     mx
-        ldy     my
-        lda     pattern,y
-        eor     mask,x
-        sta     pattern,y
-
-        jsr     update_bits
-done:   jmp     input_loop
-
-mask:   .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
+        rts
 .endproc
 
 .proc update_bits
@@ -952,7 +1008,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::DrawText, str_desktop_pattern
 
         MGTK_CALL MGTK::SetPenMode, penBIC
-        MGTK_CALL MGTK::FrameRect, fatbits_rect
+        MGTK_CALL MGTK::FrameRect, fatbits_frame
         MGTK_CALL MGTK::PaintBits, larr_params
         MGTK_CALL MGTK::PaintBits, rarr_params
 
@@ -1133,10 +1189,10 @@ bitpos:    DEFINE_POINT    0, 0, bitpos
         MGTK_CALL MGTK::SetPenSize, size
 
         copy    #0, ypos
-        add16   fatbits_rect::y1, #1, bitpos::ycoord
+        copy16  fatbits_rect::y1, bitpos::ycoord
 
 yloop:  copy    #0, xpos
-        add16   fatbits_rect::x1, #1, bitpos::xcoord
+        copy16  fatbits_rect::x1, bitpos::xcoord
         ldy     ypos
         copy    pattern,y, row
 
