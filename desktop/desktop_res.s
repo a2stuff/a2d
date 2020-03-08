@@ -830,6 +830,7 @@ str_pm: PASCAL_STRING " PM"
 
 dow_strings:
         .byte   "Sun ", "Mon ", "Tue ", "Wed ", "Thu ", "Fri ", "Sat "
+        ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
 
 .params dow_str_params
 addr:   .addr   0
@@ -838,6 +839,7 @@ length: .byte   4               ; includes trailing space
 
 month_offset_table:             ; for Day-of-Week calculations
         .byte   1,5,6,3,1,5,3,0,4,2,6,4
+        ASSERT_TABLE_SIZE month_offset_table, 12
 
 ;;; ============================================================
 
@@ -902,7 +904,7 @@ desktop_icon_coords_table:
         DEFINE_POINT kVolIconCol3,kTrashIconY+2         ; 7
         DEFINE_POINT kVolIconCol4,kTrashIconY+2         ; 8
         DEFINE_POINT kVolIconCol5,kTrashIconY+2         ; 9
-        DEFINE_POINT kVolIconCol6,kTrashIconY+2          ; 10
+        DEFINE_POINT kVolIconCol6,kTrashIconY+2         ; 10
         DEFINE_POINT kVolIconCol2,15 + kVolIconDeltaY*4 ; 11
         DEFINE_POINT kVolIconCol3,15 + kVolIconDeltaY*4 ; 12
         DEFINE_POINT kVolIconCol4,15 + kVolIconDeltaY*4 ; 13
