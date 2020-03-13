@@ -12,9 +12,10 @@ script:
 
 before_deploy:
 - git clone https://github.com/mach-kernel/cadius /tmp/cadius &&
-  make -C /tmp/cadius
+  make -C /tmp/cadius &&
+  make -C /tmp/cadius install
 - cd $TRAVIS_BUILD_DIR/ &&
-  CADIUS="/tmp/cadius/bin/release/cadius" res/package.sh
+  res/package.sh
 
 deploy:
   provider: releases
