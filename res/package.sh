@@ -40,9 +40,8 @@ rm -f $IMGFILE_PART2
 
 cadius CREATEVOLUME $IMGFILE_COMPLETE $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
 
-# BUG: Should be 140KB. https://github.com/mach-kernel/cadius/issues/28
-cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 143KB --quiet --no-case-bits
-cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 143KB --quiet --no-case-bits
+cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet --no-case-bits
+cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-case-bits
 
 # Add the files into the disk images.
 
@@ -92,10 +91,10 @@ fi
 tput setaf 2 && echo "Catalog of 800k disk:" && tput sgr0
 cadius CATALOG $IMGFILE_COMPLETE --quiet
 
-tput setaf 2 && echo "Catalog of 143k disk 1:" && tput sgr0
+tput setaf 2 && echo "Catalog of 140k disk 1:" && tput sgr0
 cadius CATALOG $IMGFILE_PART1 --quiet
 
-tput setaf 2 && echo "Catalog of 143k disk 2:" && tput sgr0
+tput setaf 2 && echo "Catalog of 140k disk 2:" && tput sgr0
 cadius CATALOG $IMGFILE_PART2 --quiet
 
 rmdir "$PACKDIR"
