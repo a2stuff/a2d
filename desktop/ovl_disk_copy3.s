@@ -2186,7 +2186,7 @@ LE6FD:  stx     LE765
 
         cmp     #ERR_WRITE_PROTECTED
         bne     LE71A
-        jsr     disk_copy_overlay4_L127E
+        jsr     disk_copy_overlay4_bell
         lda     #5              ; Destination protected
         jsr     show_alert_dialog
         bne     LE714
@@ -2196,7 +2196,7 @@ LE6FD:  stx     LE765
 LE714:  jsr     disk_copy_overlay4_L10FB
         return  #$80
 
-LE71A:  jsr     disk_copy_overlay4_L127E
+LE71A:  jsr     disk_copy_overlay4_bell
         lda     winfo_dialog::window_id
         jsr     set_win_port
         lda     disk_copy_overlay4_block_params_block_num
@@ -3079,7 +3079,7 @@ LF1CC:  cmp     #$03
         bcc     LF1D7
         cmp     #$06
         bcs     LF1D7
-        jsr     disk_copy_overlay4_L127E
+        jsr     disk_copy_overlay4_bell
 LF1D7:  rts
 
 .endproc

@@ -56,7 +56,7 @@ L08A7:  jsr     desktop_main::prompt_input_loop
         beq     L08B7
         jmp     L09C2
 
-L08B1:  jsr     desktop_main::bell
+L08B1:  jsr     Bell
         jmp     L08A7
 
 L08B7:  lda     path_buf1
@@ -118,7 +118,7 @@ L0980:  cmp     #ERR_WRITE_PROTECTED
         bne     L09C2
         jmp     L090C
 
-L098C:  jsr     desktop_main::bell
+L098C:  jsr     Bell
         yax_call desktop_main::draw_dialog_label, 6, desktop_aux::str_erasing_error
         jmp     L09B8
 
@@ -131,7 +131,7 @@ L099B:  pha
         bne     L09C2
         jmp     L090C
 
-L09AC:  jsr     desktop_main::bell
+L09AC:  jsr     Bell
         yax_call desktop_main::draw_dialog_label, 6, desktop_aux::str_formatting_error
 L09B8:  jsr     desktop_main::prompt_input_loop
         bmi     L09B8
@@ -187,7 +187,7 @@ L0A6A:  jsr     desktop_main::prompt_input_loop
         beq     L0A7A
         jmp     L0B31
 
-L0A74:  jsr     desktop_main::bell
+L0A74:  jsr     Bell
         jmp     L0A6A
 
 L0A7A:  lda     path_buf1
@@ -237,7 +237,7 @@ L0B12:  cmp     #ERR_WRITE_PROTECTED
         bne     L0B31
         jmp     L0AD1
 
-L0B1E:  jsr     desktop_main::bell
+L0B1E:  jsr     Bell
         yax_call desktop_main::draw_dialog_label, 6, desktop_aux::str_erasing_error
 L0B2A:  jsr     desktop_main::prompt_input_loop
         bmi     L0B2A

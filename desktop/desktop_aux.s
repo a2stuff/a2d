@@ -3770,12 +3770,7 @@ start:  pha                     ; error code
         MGTK_CALL MGTK::ShowCursor
 
         ;; play bell
-        sta     ALTZPOFF
-        sta     ROMIN2
-        jsr     BELL1
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        jsr     Bell
 
         ;; Set up GrafPort
         ldx     #.sizeof(MGTK::Point)-1
@@ -4425,6 +4420,46 @@ divisor:
 remainder:
         .word   0
 .endproc
+
+;;; ============================================================
+;;; Bell
+;;;
+;;; From ProDOS 8 Technical Reference Manual 5.4:
+;;; "The standard Apple II "Air-raid" bell has been replaced with a
+;;; gentler tone. Use it to give users some aural feedback that
+;;; they are using a ProDOS program."
+
+.proc Bell
+
+;;; Generate a nice little tone
+;;; Exits with Z-flag set (BEQ) for branching
+;;; Destroys the contents of the accumulator
+        lda     #32             ;duration of tone
+        sta     length
+bell1:  lda     #2              ;short delay...click
+        jsr     wait
+        sta     SPKR
+        lda     #32             ;long delay...click
+        jsr     wait
+        sta     SPKR
+        dec     length
+        bne     bell1           ;repeat length times
+        rts
+
+;;; This is the wait routine from the Monitor ROM.
+wait:   sec
+wait2:  pha
+wait3:  sbc     #1
+        bne     wait3
+        pla
+        sbc     #1
+        bne     wait2
+        rts
+
+length: .byte   1               ;duration of tone
+.endproc
+
+;;; ============================================================
 
         PAD_TO $C000
 

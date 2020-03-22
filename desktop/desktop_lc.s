@@ -303,5 +303,17 @@ op:     lda     dummy1234
 .endproc
 
 ;;; ============================================================
+;;; Bell
+
+.proc Bell
+        sta     RAMRDON
+        sta     RAMWRTON
+        jsr     desktop_aux::Bell
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        rts
+.endproc
+
+;;; ============================================================
 
         PAD_TO $D200

@@ -1415,7 +1415,7 @@ L127D:  rts
 
 ;;; ============================================================
 
-L127E:  sta     ALTZPOFF
+bell:   sta     ALTZPOFF
         sta     ROMIN2
         jsr     BELL1
         sta     ALTZPON
@@ -1486,7 +1486,7 @@ disk_copy_overlay4_L0DB5        := disk_copy_overlay4::L0DB5
 disk_copy_overlay4_L0EB2        := disk_copy_overlay4::L0EB2
 disk_copy_overlay4_L0ED7        := disk_copy_overlay4::L0ED7
 disk_copy_overlay4_L10FB        := disk_copy_overlay4::L10FB
-disk_copy_overlay4_L127E        := disk_copy_overlay4::L127E
+disk_copy_overlay4_bell         := disk_copy_overlay4::bell
 disk_copy_overlay4_L1291        := disk_copy_overlay4::L1291
 disk_copy_overlay4_L129B        := disk_copy_overlay4::L129B
 disk_copy_overlay4_L12A5        := disk_copy_overlay4::L12A5

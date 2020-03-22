@@ -13786,7 +13786,7 @@ do5:    jsr     reset_grafport3a
         rts
 
         ;; CopyDialogLifecycle::exists
-do3:    jsr     bell
+do3:    jsr     Bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         yax_call draw_dialog_label, 6, desktop_aux::str_exists_prompt
@@ -13801,7 +13801,7 @@ LAA7F:  jsr     prompt_input_loop
         rts
 
         ;; CopyDialogLifecycle::too_large
-do4:    jsr     bell
+do4:    jsr     Bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         yax_call draw_dialog_label, 6, desktop_aux::str_large_prompt
@@ -13885,7 +13885,7 @@ do3:    jsr     reset_grafport3a
         jsr     set_cursor_pointer
         rts
 
-do4:    jsr     bell
+do4:    jsr     Bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         yax_call draw_dialog_label, 6, desktop_aux::str_ramcard_full
@@ -14662,16 +14662,6 @@ cursor_ip_flag:                 ; high bit set if IP, clear if pointer
 ;;; ============================================================
 
         .assert * >= $A000, error, "Routine used by overlays in overlay zone"
-
-.proc bell
-        sta     ALTZPOFF
-        sta     ROMIN2
-        jsr     BELL1
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
-.endproc
 
 .proc set_cursor_watch
         MGTK_RELAY_CALL MGTK::HideCursor
