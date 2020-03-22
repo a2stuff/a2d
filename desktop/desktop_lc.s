@@ -269,33 +269,12 @@ op:     lda     dummy1234
 ;;; Output: number in A,X (unsigned)
 
 .proc Multiply_16_8_16
-        stax    num1
-        sty     num2
-
-        ;; Accumulate directly into A,X
-        lda     #0
-        tax
-        beq     test
-
-add:    clc
-        adc     num1
-        tay
-
-        txa
-        adc     num1+1
-        tax
-        tya
-
-loop:   asl     num1
-        rol     num1+1
-test:   lsr     num2
-        bcs     add
-        bne     loop
-
+        sta     RAMRDON
+        sta     RAMWRTON
+        jsr     desktop_aux::Multiply_16_8_16
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
         rts
-
-num1:   .word   0
-num2:   .byte   0
 .endproc
 
 ;;; ============================================================
@@ -303,42 +282,12 @@ num2:   .byte   0
 ;;; Output: quotient in A,X (unsigned)
 
 .proc Divide_16_8_16
-        result := dividend
-
-        stax    dividend
-        sty     divisor
-        lda     #0
-        sta     divisor+1
-        sta     remainder
-        sta     remainder+1
-        ldx     #16
-
-loop:   asl     dividend
-        rol     dividend+1
-        rol     remainder
-        rol     remainder+1
-        lda     remainder
-        sec
-        sbc     divisor
-        tay
-        lda     remainder+1
-        sbc     divisor+1
-        bcc     skip
-        sta     remainder+1
-        sty     remainder
-        inc     result
-
-skip:   dex
-        bne     loop
-        ldax    dividend
+        sta     RAMRDON
+        sta     RAMWRTON
+        jsr     desktop_aux::Divide_16_8_16
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
         rts
-
-dividend:
-        .word   0
-divisor:
-        .word   0
-remainder:
-        .word   0
 .endproc
 
 ;;; ============================================================
