@@ -4623,7 +4623,7 @@ savesize:   .res 2
         bit     subid
         bvs     :+
 
-        ;; Apple IIc Tech Note #1 - Mouse Differences on IIe and IIc
+        ;; Per Technical Note: Apple IIc #1: Mouse Differences on IIe and IIc
         ;; http://www.1000bit.it/support/manuali/apple/technotes/aiic/tn.aiic.1.html
         lda     #2                       ; default scaling for IIc/IIc+
         sta     mouse_scale_x

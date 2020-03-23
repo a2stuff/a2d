@@ -501,7 +501,8 @@ textfont:       .addr   0
 
 
 ;;; ============================================================
-;;; Per Tech Note: Apple II Miscellaneous #7: Apple II Family Identification,
+;;; Per Technical Note: Apple II Miscellaneous #7: Apple II Family Identification
+;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.07.html
 ;;; and c/o JohnMBrooks
 
 ;;; Machine                    $FBB3    $FB1E    $FBC0    $FBDD    $FBBE    $FBBF
@@ -579,8 +580,8 @@ model_pix_table:
         .addr   laser128_bitmap ; Laser 128
 
 
-;;; Based on Tech Note Miscellaneous #2 "Apple II Family Identification Routines"
-;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.02.html
+;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
+;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.07.html
 ;;; Note that IIgs resolves as IIe (enh.) and is identified by ROM call.
 ;;;
 ;;; Format is: model (enum), then byte pairs [$FFxx, expected], then $00
@@ -969,8 +970,10 @@ penmode:.byte   MGTK::notpencopy
 ;;; Firmware Detector: Slot # in A, returns string ptr in A,X
 ;;;
 ;;; Uses a variety of sources:
-;;; * TechNote ProDOS #21: Identifying ProDOS Devices
-;;; * TechNote Miscellaneous #8: Pascal 1.1 Firmware Protocol ID Bytes
+;;; * Technical Note: ProDOS #21: Identifying ProDOS Devices
+;;;   http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+;;; * Technical Note: Miscellaneous #8: Pascal 1.1 Firmware Protocol ID Bytes
+;;;   http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
 ;;; * "ProDOS BASIC Programming Examples" disk
 
 .proc probe_slot
@@ -996,7 +999,9 @@ penmode:.byte   MGTK::notpencopy
 .endmacro
 
 ;;; ---------------------------------------------
-;;; Per Miscellaneous Technical Note #8
+;;; Per Technical Note: Miscellaneous #8: Pascal 1.1 Firmware Protocol ID Bytes
+;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
+
 ;;; ProDOS and SmartPort Devices
 
         COMPARE_FWB $01, $20    ; $Cn01 == $20 ?
@@ -1008,7 +1013,8 @@ penmode:.byte   MGTK::notpencopy
         COMPARE_FWB $05, $03    ; $Cn05 == $03 ?
         bne     notpro
 
-;;; Per ProDOS Technical Note #21
+;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
+;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
         COMPARE_FWB $FF, $00    ; $CnFF == $00 ?
         bne     :+
         return16 #str_diskii
@@ -1018,14 +1024,15 @@ penmode:.byte   MGTK::notpencopy
         beq     :+
         return16 #str_block
 
-;;; TODO: Follow SmartPort Technical Note #4
+;;; TODO: Follow Technical Note: SmartPort #4: SmartPort Device Types
+;;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
 ;;; and identify specific device type via STATUS call
 :
         return16 #str_smartport
 notpro:
 ;;; ---------------------------------------------
-;;; Per Miscellaneous Technical Note #8
-;;; Pascal 1.1 Devices
+;;; Per Technical Note: Miscellaneous #8: Pascal 1.1 Firmware Protocol ID Bytes
+;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
 
         COMPARE_FWB $05, $38    ; $Cn05 == $38 ?
         bne     notpas

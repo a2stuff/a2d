@@ -8590,7 +8590,9 @@ year:   lda     #0
         sta     ytmp
         jmp     do1900
 
-        ;; Per ProDOS Tech Note #28, 0-39 is 2000-2039
+        ;; 0-39 is 2000-2039
+        ;; Per Technical Note: ProDOS #28: ProDOS Dates -- 2000 and Beyond
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.28.html
 tn28:   lda     ytmp            ; ytmp is still just one byte
         cmp     #40
         bcs     :+
@@ -9992,11 +9994,14 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ;; --------------------------------------------------
         ;; Day of Week
 
+        ;; TODO: Handle ProDOS 2.5 dates
+        ;; https://prodos8.com/releases/prodos-25/
+
         lda     DATEHI          ; Year-1900 (bits 15-9)
         lsr     a
         php                     ; Save Carry bit
-        cmp     #40             ; Per ProDOS Tech Note #18, 0-39 is 2000-2039
-        bcs     :+
+        cmp     #40             ; 0-39 is 2000-2039
+        bcs     :+              ; Per Technical Note: ProDOS #28: ProDOS Dates -- 2000 and Beyond
         adc     #100
 :       tay
         plp                     ; Restore Carry bit
@@ -15008,6 +15013,7 @@ hi:  .byte   0
 
 ;;; ============================================================
 ;;; Adjust filename case, using GS/OS bits or heuristics
+;;; Per Technical Note: GS/OS #8: Filenames With More Than CAPS and Numerals
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
 
 ;;; adjust_fileeentry_case:
@@ -15119,7 +15125,7 @@ check_alpha:
 
 ;;; --------------------------------------------------
 ;;; GS/OS bits are present - apply to recase string.
-;;; Per Tech Note GS/OS #08
+;;; Per Technical Note: GS/OS #8: Filenames With More Than CAPS and Numerals
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
 ;;;
 ;;; "If version is read as a word value, bit 7 of min_version would be the
@@ -15142,7 +15148,11 @@ apply_bits:
 
 ;;; --------------------------------------------------
 ;;; AppleWorks
-;;; Per File Type Notes for File Type $19/$1A/$1B
+;;; Per File Type Notes: File Type $19 (25) All Auxiliary Types
+;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
+;;; Per File Type Notes: File Type $1A (26) All Auxiliary Types
+;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
+;;; Per File Type Notes: File Type $1B (27) All Auxiliary Types
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
 ;;;
 ;;; "The volume or subdirectory auxiliary type word for this file type is
@@ -16010,7 +16020,9 @@ end:
         ;; Look for /RAM
         ldx     DEVCNT
 :       lda     DEVLST,x
-        ;; BUG: ProDOS Tech Note #21 says $B3,$B7,$BB or $BF could be /RAM
+        ;; BUG: /RAM could be $B3,$B7,$BB or $BF
+        ;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
         cmp     #(1<<7 | 3<<4 | DT_RAM) ; unit_num for /RAM is Slot 3, Drive 2
         beq     found_ram
         dex

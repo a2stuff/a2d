@@ -1571,7 +1571,7 @@ pdl3:   .byte   0
         bmi     :-
 
         ;; Read paddle
-        ;; Apple IIe Tech Note #6 - The Apple II Paddle Circuits
+        ;; Per Technical Note: Apple IIe #6: The Apple II Paddle Circuits
         ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.06.html
 :       lda     PTRIG           ; Trigger paddles
         ldy     #0              ; Init counter

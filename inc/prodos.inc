@@ -78,9 +78,10 @@ DT_PROFILE      = $4
 DT_REMOVABLE    = $B
 DT_RAM          = $F
 
-;;; See ProDOS Tech Note #21 - other than the above types, there
-;;; is not an "ID nibble". The nibble is a copy of $CnFE's high
-;;; nibble, with this meaning:
+;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
+;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+;;; Other than the above types, there is not an "ID nibble". The
+;;; nibble is a copy of $CnFE's high nibble, with this meaning:
 ;;;   bit 3   = removable
 ;;;   bit 2   = interruptable
 ;;;   bit 1-0 = number of volumes (0-1)
