@@ -20,11 +20,10 @@
 ;;;  $1B00   |           | +-----------+
 ;;;          |           | |           |
 ;;;          |           | |           |
-;;;          | MP Dst    | | MP Dst    |
+;;;          | MP Src    | | MP Dst    |
 ;;;  $1580   +-----------+ +-----------+
 ;;;          |           | |           |
-;;;          | MP Src    | |           |
-;;;  $1100   +-----------+ +-----------+
+;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          | DA        | | DA (Copy) |
 ;;;   $800   +-----------+ +-----------+
@@ -35,12 +34,12 @@
         kHiresSize = $2000
 
         ;; Minipix/Print Shop images are loaded/converted
-        minipix_src_buf := $1200 ; Load address
+        minipix_src_buf := $1580 ; Load address (main)
         kMinipixSrcSize = 576
-        minipix_dst_buf := $1580 ; Convert address
+        minipix_dst_buf := $1580 ; Convert address (aux)
         kMinipixDstSize = 26*52
 
-        .assert (minipix_src_buf + kMinipixSrcSize) < minipix_dst_buf, error, "Not enough room for Minipix load buffer"
+        .assert (minipix_src_buf + kMinipixSrcSize) < DA_IO_BUFFER, error, "Not enough room for Minipix load buffer"
         .assert (minipix_dst_buf + kMinipixDstSize) < WINDOW_ICON_TABLES, error, "Not enough room for Minipix convert buffer"
 
 ;;; ============================================================
@@ -484,19 +483,8 @@ exit:
         jsr     read_minipix_file
         jsr     close_file
 
-        ;; Convert (in main)
-        sta     RAMWRTOFF
-        sta     RAMRDOFF
+        ;; Convert (main to aux)
         jsr     convert_minipix_to_bitmap
-        sta     RAMWRTON
-        sta     RAMRDON
-
-        ;; Copy main>aux
-        copy16  #minipix_dst_buf, STARTLO
-        copy16  #minipix_dst_buf, DESTINATIONLO
-        copy16  #(minipix_dst_buf+kMinipixDstSize), ENDLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
 
         ;; Draw
         MGTK_CALL MGTK::PaintBits, paintbits_params
@@ -589,12 +577,19 @@ done:   sta     PAGE2OFF
 ;;; ============================================================
 ;;; Minipix images
 
+;;; Assert: Running from Aux
+;;; Source is in Main, destination is in Aux
+
 .proc convert_minipix_to_bitmap
         kRows   = 52
         kCols   = 88            ; pixels
 
         src := $06
         dst := $08
+
+        srcbit := $0A
+        dstbit := $0B
+        row    := $0C
 
         copy16  #minipix_src_buf, src
         copy16  #minipix_dst_buf, dst
@@ -630,9 +625,16 @@ dorow:  ldx     #8
 
         dec     row
         bne     dorow
+
+        ;; Resume running from Aux
+        sta     RAMRDON
+        sta     RAMWRTON
         rts
 
 .proc getbit
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+
         lda     (src),y
         rol
         sta     (src),y
@@ -655,6 +657,9 @@ done:   rts
         ;; fall through
 .endproc
 .proc putbit1
+        sta     RAMRDON
+        sta     RAMWRTON
+
         lda     (dst),y
         ror
         sta     (dst),y
@@ -671,10 +676,6 @@ done:   rts
 
 done:   rts
 .endproc
-
-srcbit: .byte   0
-dstbit: .byte   0
-row:    .byte   0
 
 .endproc
 
