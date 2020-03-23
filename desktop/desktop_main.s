@@ -15064,6 +15064,16 @@ file_entry:
 
         .assert FileEntry::file_name = 1, error, "bad assumptions in structure"
 
+        ;; AppleWorks?
+        ldy     #FileEntry::file_type
+        lda     (ptr),y
+        cmp     #FT_ADB
+        beq     appleworks
+        cmp     #FT_AWP
+        beq     appleworks
+        cmp     #FT_ASP
+        beq     appleworks
+
         ldy     #FileEntry::version
         copy16in (ptr),y, version_bytes
         ;; fall through
@@ -15109,19 +15119,57 @@ check_alpha:
 
 ;;; --------------------------------------------------
 ;;; GS/OS bits are present - apply to recase string.
+;;; Per Tech Note GS/OS #08
+;;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
+;;;
+;;; "If version is read as a word value, bit 7 of min_version would be the
+;;; highest bit (bit 15) of the word. If that bit is set, the remaining 15
+;;; bits of the word are interpreted as flags that indicate whether the
+;;; corresponding character in the filename is uppercase or lowercase, with
+;;; set indicating lowercase."
 
 apply_bits:
         ldy     #1
-bloop:  asl16   version_bytes
+@bloop: asl16   version_bytes   ; NOTE: Shift out high byte first
         bcc     :+
         lda     (ptr),y
         ora     #AS_BYTE(~CASE_MASK)
         sta     (ptr),y
 :       iny
         cpy     #16
-        bcc     bloop
+        bcc     @bloop
         rts
 
+;;; --------------------------------------------------
+;;; AppleWorks
+;;; Per File Type Notes for File Type $19/$1A/$1B
+;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
+;;;
+;;; "The volume or subdirectory auxiliary type word for this file type is
+;;; defined to control uppercase and lowercase display of filenames. The
+;;; highest bit of the least significant byte corresponds to the first
+;;; character of the filename, the next highest bit of the least significant
+;;; byte corresponds to the second character, etc., through the second bit
+;;; of the most significant byte, which corresponds to the fifteenth
+;;; character of the filename."
+
+appleworks:
+        ldy     #FileEntry::aux_type
+        copy16in (ptr),y, version_bytes
+
+        ldy     #1
+@bloop: asl     version_bytes+1 ; NOTE: Shift out low byte first
+        rol     version_bytes
+        bcc     :+
+        lda     (ptr),y
+        ora     #AS_BYTE(~CASE_MASK)
+        sta     (ptr),y
+:       iny
+        cpy     #16
+        bcc     @bloop
+        rts
+
+;;; --------------------------------------------------
 
 version_bytes:
         .word   0
