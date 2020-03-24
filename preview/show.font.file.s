@@ -9,6 +9,27 @@
         .include "../desktop.inc"
 
 ;;; ============================================================
+;;; Memory map
+;;;
+;;;              Main           Aux
+;;;          :           : :           :
+;;;          |           | |           |
+;;;          | DHR       | | DHR       |
+;;;  $2000   +-----------+ +-----------+
+;;;          | IO Buffer | |Win Tables |
+;;;  $1C00   +-----------+ |           |
+;;;  $1B00   |           | +-----------+
+;;;          |           | |           |
+;;;          |           | |           |
+;;;          |           | | Font      |
+;;;          | Font      | | (Copy)    |
+;;;   $D00   +-----------+ +-----------+
+;;;          |           | |           |
+;;;          |           | |           |
+;;;          | DA        | | DA (Copy) |
+;;;   $800   +-----------+ +-----------+
+;;;          :           : :           :
+;;;
 
         .org $800
 
@@ -21,6 +42,9 @@ pathbuf:        .res    65, 0
 font_buffer     := $D00
 io_buf          := WINDOW_ICON_TABLES
 kReadLength      = WINDOW_ICON_TABLES-font_buffer
+
+;;; Maximum font size is $E00 = 3584 bytes
+;;; (largest known is Athens, 3203 bytes)
 
         DEFINE_OPEN_PARAMS open_params, pathbuf, io_buf
         DEFINE_READ_PARAMS read_params, font_buffer, kReadLength
@@ -124,10 +148,8 @@ end:    rts
 ;;; Load the file
 
 .proc load_file_and_run_da
-        ;; TODO: Ensure there's enough room, fail if not
 
-        ;; NOTE: This only leaves $1000-$1AFF (2816 bytes)
-        ;; which is not enough for all the wide fonts.
+        ;; TODO: Ensure there's enough room, fail if not
 
         ;; --------------------------------------------------
         ;; Load the file
