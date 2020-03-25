@@ -22,6 +22,24 @@ kAppFileType    = $01
 kButtonWidth  = 100
 kButtonHeight = 11
 
+
+;;; ============================================================
+;;; Menu Constants
+
+kMenuIdApple    = 1
+kMenuIdFile     = 2
+kMenuIdView     = 4
+kMenuIdSpecial  = 5
+kMenuIdStartup  = 8
+kMenuIdSelector = 3
+
+kMenuSizeApple    = 14
+kMenuSizeFile     = 13
+kMenuSizeView     = 5
+kMenuSizeSpecial  = 11
+kMenuSizeStartup  = 7
+kMenuSizeSelector = 13
+
 ;;; ============================================================
 ;;; Invoker routine locations
 

@@ -350,6 +350,7 @@ dispatch_table:
         .repeat ::kMaxDeskAccCount
         .addr   cmd_deskacc
         .endrepeat
+        ASSERT_ADDRESS_TABLE_SIZE menu1_start, ::kMenuSizeApple
 
         ;; File menu (2)
         menu2_start := *
@@ -366,6 +367,7 @@ dispatch_table:
         .addr   cmd_delete_file
         .addr   cmd_noop        ; --------
         .addr   cmd_quit
+        ASSERT_ADDRESS_TABLE_SIZE menu2_start, ::kMenuSizeFile
 
         ;; Selector menu (3)
         menu3_start := *
@@ -382,6 +384,7 @@ dispatch_table:
         .addr   cmd_selector_item
         .addr   cmd_selector_item
         .addr   cmd_selector_item
+        ASSERT_ADDRESS_TABLE_SIZE menu3_start, ::kMenuSizeSelector
 
         ;; View menu (4)
         menu4_start := *
@@ -390,6 +393,7 @@ dispatch_table:
         .addr   cmd_view_by_date
         .addr   cmd_view_by_size
         .addr   cmd_view_by_type
+        ASSERT_ADDRESS_TABLE_SIZE menu4_start, ::kMenuSizeView
 
         ;; Special menu (5)
         menu5_start := *
@@ -404,6 +408,7 @@ dispatch_table:
         .addr   cmd_lock
         .addr   cmd_unlock
         .addr   cmd_get_size
+        ASSERT_ADDRESS_TABLE_SIZE menu5_start, ::kMenuSizeSpecial
 
         ;; 6/7 unused
         menu6_start := *
@@ -418,6 +423,7 @@ dispatch_table:
         .addr   cmd_startup_item
         .addr   cmd_startup_item
         .addr   cmd_startup_item
+        ASSERT_ADDRESS_TABLE_SIZE menu8_start, ::kMenuSizeStartup
 
         menu_end := *
 
@@ -16801,7 +16807,7 @@ slot_string_table:
         .addr   startup_menu_item_5
         .addr   startup_menu_item_6
         .addr   startup_menu_item_7
-        ASSERT_ADDRESS_TABLE_SIZE slot_string_table, ::kNumStartupMenuItems
+        ASSERT_ADDRESS_TABLE_SIZE slot_string_table, ::kMenuSizeStartup
 .endproc
 
 ;;; ============================================================

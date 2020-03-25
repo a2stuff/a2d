@@ -3274,7 +3274,7 @@ desktop_menu:
         ASSERT_RECORD_TABLE_SIZE @items, 6, .sizeof(MGTK::MenuBarItem)
 
 file_menu:
-        DEFINE_MENU 13
+        DEFINE_MENU kMenuSizeFile
 @items: DEFINE_MENU_ITEM label_new_folder, 'F', 'f'
         DEFINE_MENU_ITEM label_open, 'O', 'o'
         DEFINE_MENU_ITEM label_close, 'W', 'w'
@@ -3288,7 +3288,7 @@ file_menu:
         DEFINE_MENU_ITEM label_delete_file, 'D', 'd'
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_quit, 'Q', 'q'
-        ASSERT_RECORD_TABLE_SIZE @items, 13, .sizeof(MGTK::MenuItem)
+        ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeFile, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdNewFolder   = 1
         kMenuItemIdOpen        = 2
@@ -3305,13 +3305,13 @@ file_menu:
         kMenuItemIdQuit        = 13
 
 view_menu:
-        DEFINE_MENU 5
+        DEFINE_MENU kMenuSizeView
 @items: DEFINE_MENU_ITEM label_by_icon, 'J', 'j'
         DEFINE_MENU_ITEM label_by_name, 'N', 'n'
         DEFINE_MENU_ITEM label_by_date, 'T', 't'
         DEFINE_MENU_ITEM label_by_size, 'K', 'k'
         DEFINE_MENU_ITEM label_by_type, 'L', 'l'
-        ASSERT_RECORD_TABLE_SIZE @items, 5, .sizeof(MGTK::MenuItem)
+        ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeView, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdViewByIcon = 1
         kMenuItemIdViewByName = 2
@@ -3320,7 +3320,7 @@ view_menu:
         kMenuItemIdViewByType = 5
 
 special_menu:
-        DEFINE_MENU 11
+        DEFINE_MENU kMenuSizeSpecial
 @items: DEFINE_MENU_ITEM label_check_all_drives
         DEFINE_MENU_ITEM label_check_drive
         DEFINE_MENU_ITEM label_eject, 'E', 'e'
@@ -3332,7 +3332,7 @@ special_menu:
         DEFINE_MENU_ITEM label_lock
         DEFINE_MENU_ITEM label_unlock
         DEFINE_MENU_ITEM label_get_size
-        ASSERT_RECORD_TABLE_SIZE @items, 11, .sizeof(MGTK::MenuItem)
+        ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeSpecial, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdCheckAll    = 1
         kMenuItemIdCheckDrive  = 2

@@ -10,15 +10,6 @@
 
         .org $D000
 
-;;; Constants needed in both main and aux
-
-        kMenuIdApple = 1
-        kMenuIdFile = 2
-        kMenuIdView = 4
-        kMenuIdSpecial = 5
-        kMenuIdStartup = 8
-        kMenuIdSelector = 3
-
 ;;; Various routines callable from MAIN
 
 ;;; ============================================================

@@ -1126,10 +1126,8 @@ disable:        .byte   0
 
 LE26F:  .byte   $00
 
-kNumStartupMenuItems = 7
-
 startup_menu:
-        DEFINE_MENU kNumStartupMenuItems
+        DEFINE_MENU kMenuSizeStartup
 @items: DEFINE_MENU_ITEM startup_menu_item_1
         DEFINE_MENU_ITEM startup_menu_item_2
         DEFINE_MENU_ITEM startup_menu_item_3
@@ -1137,7 +1135,7 @@ startup_menu:
         DEFINE_MENU_ITEM startup_menu_item_5
         DEFINE_MENU_ITEM startup_menu_item_6
         DEFINE_MENU_ITEM startup_menu_item_7
-        ASSERT_RECORD_TABLE_SIZE @items, kNumStartupMenuItems, .sizeof(MGTK::MenuItem)
+        ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeStartup, .sizeof(MGTK::MenuItem)
 
 str_all:PASCAL_STRING "All"
 
@@ -1230,7 +1228,8 @@ selector_menu:
         .repeat kMaxRunListEntries, i
         DEFINE_MENU_ITEM run_list_entries + i * $10, .string(i+1), .string(i+1)
         .endrepeat
-        ASSERT_RECORD_TABLE_SIZE @items, 5 + kMaxRunListEntries, .sizeof(MGTK::MenuItem)
+        .assert 5 + kMaxRunListEntries = kMenuSizeSelector, error, "Menu size mismatch"
+        ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeSelector, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdSelectorAdd       = 1
         kMenuItemIdSelectorEdit      = 2
@@ -1254,7 +1253,8 @@ apple_menu:
         .repeat kMaxDeskAccCount, i
         DEFINE_MENU_ITEM desk_acc_names + i * 16
         .endrepeat
-        ASSERT_RECORD_TABLE_SIZE @items, 2 + kMaxDeskAccCount, .sizeof(MGTK::MenuItem)
+        .assert 2 + kMaxDeskAccCount = kMenuSizeApple, error, "Menu size mismatch"
+        ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
 
 label_about:
         PASCAL_STRING "About Apple II DeskTop ... "
