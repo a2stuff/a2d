@@ -28,6 +28,8 @@ LD23E           := $D23E
 LF0A5           := $F0A5
 LFFFF           := $FFFF
 
+;;; MGTK library
+
 MGTK:   bit     L5F0D
         bpl     L401C
         ldx     #$7F
@@ -10992,6 +10994,9 @@ L8CA6:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $0B,$0B,$0B,$0B,$0B,$0C,$0C,$0C
         .byte   $0C,$0C,$0C,$0C,$0C,$0D,$0D,$0D
         .byte   $0D,$0D
+
+;;; Application entry point
+
 START:  jmp     L912A
 
         .byte   0
@@ -11642,7 +11647,7 @@ L912A:  cli
         ora     L9127
 L913F           := * + 1
         bne     L9151
-L9140:  yax_call L95A0, $C4, $90F2
+L9140:  yax_call MLI_WRAPPER, GET_FILE_INFO, $90F2
         beq     L914E
         jmp     L91B2
 
@@ -11777,7 +11782,7 @@ L920D:  lda     L8F71
         MGTK_CALL MGTK::InitMenu, $8E15
         MGTK_CALL MGTK::SetCursor, $0000
         MGTK_CALL MGTK::GetEvent, $0000
-        yax_call L95A0, $C4, $90F2
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $90F2
         beq     L929A
         lda     #$80
 L929A:  sta     L910D
@@ -11820,7 +11825,7 @@ L92E9:  cmp     #$03
         beq     L92FF
         cmp     #$71
         bne     L9316
-L92FF:  yax_call L95A0, $C4, $90F2
+L92FF:  yax_call MLI_WRAPPER, GET_FILE_INFO, $90F2
         beq     L9313
         lda     #$FE
         jsr     L9F74
@@ -11938,14 +11943,14 @@ L93F1           := * + 2
         lda     #$FF
         sta     L910E
 L93FF:  jsr     L98C1
-        yax_call L95A0, $C8, $90C7
+        yax_call MLI_WRAPPER, OPEN, $90C7
         bne     L9443
         lda     L90CC
         sta     L90D7
         sta     L90E1
-        yax_call L95A0, $CE, $90D6
-        yax_call L95A0, $CA, $90E0
-        yax_call L95A0, $CC, $90F0
+        yax_call MLI_WRAPPER, SET_MARK, $90D6
+        yax_call MLI_WRAPPER, READ, $90E0
+        yax_call MLI_WRAPPER, CLOSE, $90F0
         jsr     LA000
         bne     L943F
 L9436:  tya
@@ -12015,7 +12020,7 @@ L94C8:  MGTK_CALL MGTK::SetPenMode, $8E05
         MGTK_CALL MGTK::PaintRect, $9023
         jsr     L9E8E
         bmi     L94B5
-L94D9:  yax_call L95A0, $C4, $90F2
+L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, $90F2
         beq     L94ED
         lda     #$FE
         jsr     L9F74
@@ -12087,7 +12092,7 @@ L9596:  lda     L959E
 L959D:  .byte   0
 L959E:  .byte   0
 L959F:  .byte   0
-L95A0:  sty     $95AE
+MLI_WRAPPER:  sty     $95AE
         stax    $95AF
         php
         sei
@@ -12098,7 +12103,7 @@ L95A0:  sty     $95AE
 
         rts
 
-L95B6:  yax_call L95A0, $C8, $90A0
+L95B6:  yax_call MLI_WRAPPER, OPEN, $90A0
         lda     L90A5
         sta     L90A7
         sta     DHIRESOFF
@@ -12110,8 +12115,8 @@ L95B6:  yax_call L95A0, $C8, $90A0
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
-        yax_call L95A0, $CA, $90A6
-        yax_call L95A0, $CC, $90C5
+        yax_call MLI_WRAPPER, READ, $90A6
+        yax_call MLI_WRAPPER, CLOSE, $90C5
         jmp     L2000
 
 L95F5:  lda     L8FD9
@@ -12395,22 +12400,22 @@ L97E1:  lda     L97F6
 L97F5:  rts
 
 L97F6:  .byte   0
-L97F7:  yax_call L95A0, $C8, $9092
+L97F7:  yax_call MLI_WRAPPER, OPEN, $9092
         lda     L9097
         sta     L9099
-        yax_call L95A0, $CA, $9098
-        yax_call L95A0, $CC, $90C5
+        yax_call MLI_WRAPPER, READ, $9098
+        yax_call MLI_WRAPPER, CLOSE, $90C5
         copy16  $B300, L9127
         rts
 
-L9825:  yax_call L95A0, $C8, $90C7
+L9825:  yax_call MLI_WRAPPER, OPEN, $90C7
         bne     L9855
         lda     L90CC
         sta     L90DC
         sta     L90E9
-        yax_call L95A0, $CE, $90DB
-        yax_call L95A0, $CA, $90E8
-        yax_call L95A0, $CC, $90F0
+        yax_call MLI_WRAPPER, SET_MARK, $90DB
+        yax_call MLI_WRAPPER, READ, $90E8
+        yax_call MLI_WRAPPER, CLOSE, $90F0
         rts
 
 L9855:  lda     #$FE
@@ -12942,7 +12947,7 @@ L9C87:  lda     ($06),y
         sta     $0220,y
         dey
         bpl     L9C87
-        yax_call L95A0, $C4, $9BF5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $9BF5
         beq     L9CB7
         tax
         lda     L9129
@@ -13071,7 +13076,7 @@ L9D91:  inx
         cpy     L9DD7
         bne     L9D91
         stx     $1C00
-        yax_call L95A0, $C4, $9D4F
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $9D4F
         bne     L9DAD
         rts
 
@@ -13130,7 +13135,7 @@ L9E0E:  lda     ($06),y
         sta     $0220,y
         dey
         bpl     L9E0E
-        yax_call L95A0, $C4, $9BF5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $9BF5
         rts
 
 L9E20:  lda     #$00
