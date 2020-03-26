@@ -5,6 +5,35 @@ use warnings;
 
 my $text = do { local $/; <STDIN> };
 
+my %mli = (
+    '$C0' => 'CREATE',
+    '$C1' => 'DESTROY',
+    '$C2' => 'RENAME',
+    '$C3' => 'SET_FILE_INFO',
+    '$C4' => 'GET_FILE_INFO',
+    '$C5' => 'ON_LINE',
+    '$C6' => 'SET_PREFIX',
+    '$C7' => 'GET_PREFIX',
+    '$C8' => 'OPEN',
+    '$C9' => 'NEWLINE',
+    '$CA' => 'READ',
+    '$CB' => 'WRITE',
+    '$CC' => 'CLOSE',
+    '$CD' => 'FLUSH',
+    '$CE' => 'SET_MARK',
+    '$CF' => 'GET_MARK',
+    '$D0' => 'SET_EOF',
+    '$D1' => 'GET_EOF',
+    '$D2' => 'SET_BUF',
+    '$D3' => 'GET_BUF',
+    '$82' => 'GET_TIME',
+    '$40' => 'ALLOC_INTERRUPT',
+    '$41' => 'DEALLOC_INTERRUPT',
+    '$65' => 'QUIT',
+    '$80' => 'READ_BLOCK',
+    '$81' => 'WRITE_BLOCK',
+    );
+
 my %mgtk = (
     '$00' => 'NoOp',
     '$01' => 'InitGraf',
@@ -84,6 +113,16 @@ my %mgtk = (
     '$4B' => 'UpdateThumb',
     '$4C' => 'ActivateCtl',
     );
+
+$text =~ s/
+     \b  jsr \s+ MGTK \n
+     \s+ \.byte \s+ (\$[0-9A-F]{2}),\$([0-9A-F]{2}),\$([0-9A-F]{2}) \b
+     /"MGTK_CALL " . (exists $mgtk{$1} ? "MGTK::$mgtk{$1}" : $1) . ", \$$3$2"/egx;
+
+$text =~ s/
+     \b  jsr \s+ MLI \n
+     \s+ \.byte \s+ (\$[0-9A-F]{2}),\$([0-9A-F]{2}),\$([0-9A-F]{2}) \b
+     /"MLI_CALL " . (exists $mli{$1} ? "$mli{$1}" : $1) . ", \$$3$2"/egx;
 
 $text =~ s/
      \b  ldy \s+ \#(\$[0-9A-F]{2}) \n
