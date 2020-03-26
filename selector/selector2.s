@@ -1,3 +1,14 @@
+;;; ============================================================
+;;; Bootstrap #2
+;;; ============================================================
+
+        .org    $1000
+
+;;; This gets invoked via ProDOS QUIT, which relocated it to
+;;; $1000 Main.
+
+.scope
+
 L120F           := $120F
 L1214           := $1214
 L2000           := $2000
@@ -264,6 +275,10 @@ L118B:  sta     $06
         .byte   0
         .byte   0
         .byte   0
+
+;;; Does this ever get invoked? From where?
+;;; See README.md
+
         ldx     $3D20,y
         tay
         bcs     L1214
@@ -287,3 +302,5 @@ L118B:  sta     $06
         bcc     L120F
         jsr     LB7D0
         .byte   $90
+
+.endscope
