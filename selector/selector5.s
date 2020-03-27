@@ -11312,40 +11312,25 @@ L901A           := * + 1
         cli
         ora     ($68,x)
         .byte   0
-        .byte   $0F
-        jsr     L4B4F
-        jsr     L2020
-        jsr     L2020
-        jsr     L2020
-        jsr     L0D20
+
+        PASCAL_STRING {" OK           ",CHAR_RETURN}
+
         rti
 
         .byte   0
         pla
         .byte   0
-        ora     (WNDLFT),y
-        .byte   $44
-        adc     HIMEM
-        .byte   $6B
-        .byte   $54
-        .byte   $6F
-        bvs     L906D
-        jsr     L2020
-        jsr     L2020
-        eor     (WNDLFT),y
+
+        PASCAL_STRING " DeskTop       Q "
         .byte   $02
 L9057           := * + 1
         ora     (L0000,x)
 L9058:  .byte   0
         .byte   $0F
         .byte   0
-        php
-        .byte   $53
-        adc     $6C
-        adc     $63
-        .byte   $74
-        .byte   $6F
-        .byte   $72
+
+        PASCAL_STRING "Selector"
+
         ora     L0000
 L9066:
 L9067           := * + 1
@@ -11415,24 +11400,11 @@ L90A7:  .byte   0
         jsr     L0400
         .byte   0
         .byte   0
-        ora     L6553
-        jmp     (L6365)
 
-        .byte   $74
-        .byte   $6F
-        .byte   $72
-        rol     L694C
-        .byte   $73
-        .byte   $74
-        php
-        .byte   $44
-        adc     HIMEM
-        .byte   $6B
-        .byte   $54
-        .byte   $6F
-        bvs     L90F7
-        ora     (L0000,x)
-        .byte   $03
+        PASCAL_STRING "Selector.List"
+        PASCAL_STRING "DeskTop2"
+
+        .byte   $01, $00, $03
         cmp     a:$90
         php
 L90CC:  .byte   0
@@ -11483,13 +11455,9 @@ L90F7:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-        php
-        .byte   $44
-        adc     HIMEM
-        .byte   $6B
-        .byte   $54
-        .byte   $6F
-        bvs     L913F
+
+        PASCAL_STRING "DeskTop2"
+
 L910D:  .byte   0
 L910E:  .byte   0
         .byte   0

@@ -198,27 +198,12 @@ LD0DD           := * + 1
         ldy     $01
 LD0DE:  .byte   $37
         .byte   0
-        ora     $6143
-        ror     $6563
-        jmp     (L2020)
 
-        jsr     L4520
-        .byte   $73
-        .byte   $63
-        .byte   $0F
-        .byte   $4F
-        .byte   $4B
-        jsr     L2020
-        jsr     L2020
-        jsr     L2020
-        jsr     L2020
-        ora     $540C
-        .byte   $72
-        adc     $4120,y
-        .byte   $67
-        adc     ($69,x)
-        ror     L2020
-        eor     ($2C,x)
+        PASCAL_STRING "Cancel    Esc"
+        PASCAL_STRING {"OK            ", CHAR_RETURN}
+        PASCAL_STRING "Try Again  A"
+
+        .byte   $2C
         ora     (CV,x)
         .byte   0
         bcc     LD112
@@ -238,144 +223,23 @@ LD11F:  ora     $2F00,y
         ldx     $1000,y
         .byte   0
         .byte   $4B
-        .byte   0
-        ora     $1600,x
-        .byte   $53
-        adc     $7473,y
-        adc     $6D
-        jsr     L7245
-        .byte   $72
-        .byte   $6F
-        .byte   $72
-        jsr     L756E
-        adc     L6562
-        .byte   $72
-        jsr     L5858
+        .byte   0, $1D, $00
+
+        PASCAL_STRING "System Error number XX"
+
 LD142:  .byte   0
 LD143:  .byte   0
 LD144:  .byte   0
-        rol     a
-        .byte   $54
-        pla
-        adc     WNDLFT
-        .byte   $53
-        adc     $6C
-        adc     $63
-        .byte   $74
-        .byte   $6F
-        .byte   $72
-        jsr     L7369
-        jsr     L6E75
-        adc     ($62,x)
-        jmp     (L2065)
 
-        .byte   $74
-        .byte   $6F
-        jsr     L7572
-        ror     $7420
-        pla
-        adc     WNDLFT
-        bvs     LD1DC
-        .byte   $6F
-        .byte   $67
-        .byte   $72
-        adc     ($6D,x)
-        rol     $4909
-        .byte   $2F
-        .byte   $4F
-        jsr     L7245
-        .byte   $72
-        .byte   $6F
-        .byte   $72
-        .byte   $14
-        lsr     $206F
-        .byte   $64
-        adc     $76
-        adc     #$63
-        adc     WNDLFT
-        .byte   $63
-        .byte   $6F
-        ror     $656E
-        .byte   $63
-        .byte   $74
-        adc     $64
-        rol     $5023
-        adc     ($72,x)
-        .byte   $74
-        jsr     L666F
-        jsr     L6874
-        adc     WNDLFT
-        bvs     LD1FF
-        .byte   $74
-        pla
-        ror     $6D61
-        adc     WNDLFT
-        .byte   $64
-        .byte   $6F
-        adc     HIMEM
-        ror     $7427
-        jsr     L7865
-        adc     #$73
-        .byte   $74
-        rol     $501A
-        jmp     (L6165)
+        PASCAL_STRING "The Selector is unable to run the program."
+        PASCAL_STRING "I/O Error"
+        PASCAL_STRING "No device connected."
+        PASCAL_STRING "Part of the pathname doesn't exist."
+        PASCAL_STRING "Please insert source disk."
+        PASCAL_STRING "The file cannot be found."
+        PASCAL_STRING "Please insert the system disk"
+        PASCAL_STRING "BASIC.SYSTEM not found"
 
-        .byte   $73
-        adc     WNDLFT
-        adc     #$6E
-        .byte   $73
-        adc     $72
-        .byte   $74
-        jsr     L6F73
-        adc     $72,x
-        .byte   $63
-        adc     WNDLFT
-        .byte   $64
-        adc     #$73
-        .byte   $6B
-        rol     $5419
-        pla
-        adc     WNDLFT
-        ror     $69
-        jmp     (L2065)
-
-        .byte   $63
-        adc     ($6E,x)
-LD1DC           := * + 1
-        ror     $746F
-        jsr     L6562
-        jsr     L6F66
-        adc     $6E,x
-        .byte   $64
-        rol     $501D
-        jmp     (L6165)
-
-        .byte   $73
-        adc     WNDLFT
-        adc     #$6E
-        .byte   $73
-        adc     $72
-        .byte   $74
-        jsr     L6874
-        adc     WNDLFT
-        .byte   $73
-        adc     $7473,y
-LD1FF:  adc     $6D
-        jsr     L6964
-        .byte   $73
-        .byte   $6B
-        asl     $42,x
-        eor     ($53,x)
-        eor     #$43
-        rol     $5953
-        .byte   $53
-        .byte   $54
-        eor     $4D
-        jsr     L6F6E
-        .byte   $74
-        jsr     L6F66
-        adc     $6E,x
-        .byte   $64
 LD21D:  php
 LD21E:  .byte   0
         .byte   $27
