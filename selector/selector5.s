@@ -5729,7 +5729,7 @@ L63EB:  ldy     #$03
         bpl     L6408
         bit     L6329
         bpl     L6408
-        MLI_CALL ALLOC_INTERRUPT, $6447
+        MLI_CALL ALLOC_INTERRUPT, alloc_interrupt_params
 L6408:  lda     VERSION
         pha
         lda     #$06
@@ -5754,9 +5754,8 @@ L6432:  jsr     L650F
         MGTK_CALL MGTK::PaintRect, $656A
         jmp     L6526
 
-        .byte   $02
-L6448:  .byte   0
-        cmp     ($66,x)
+        DEFINE_ALLOC_INTERRUPT_PARAMS alloc_interrupt_params, $66C1
+
 L644C           := * + 1
         ora     (L0000,x)
 L644D:  lda     L632B
@@ -5790,7 +5789,7 @@ L6474:  rts
         bpl     L6497
         bit     L6329
         bpl     L6497
-        lda     L6448
+        lda     alloc_interrupt_params::int_num
         sta     L644C
         MLI_CALL DEALLOC_INTERRUPT, $644B
 L6497:  lda     L6331
@@ -11378,84 +11377,33 @@ L908E:  .byte   0
 L908F:  .byte   0
         .byte   0
         .byte   $7F
-        .byte   $03
-        ldx     a:$90
-        .byte   $BB
-L9097:  .byte   0
-        .byte   $04
-L9099:  .byte   0
-        .byte   0
-        .byte   $B3
-        .byte   0
-        php
-        .byte   0
-        .byte   0
-        .byte   $03
-        ldy     a:$90,x
-        .byte   $1C
-L90A5:  .byte   0
-        .byte   $04
-L90A7:  .byte   0
-        .byte   0
-        jsr     L0400
-        .byte   0
-        .byte   0
 
+        DEFINE_OPEN_PARAMS open_params, str_selector_list, $BB00
+        DEFINE_READ_PARAMS read_params, $B300, $800
+
+        DEFINE_OPEN_PARAMS open_params3, $90BC, $1C00
+        DEFINE_READ_PARAMS read_params4, $2000, $400
+
+str_selector_list:
         PASCAL_STRING "Selector.List"
+
+str_desktop2:
         PASCAL_STRING "DeskTop2"
 
-        .byte   $01, $00, $03
-        cmp     a:$90
-        php
-L90CC:  .byte   0
-        php
-        .byte   $73
-        adc     $6C
-        adc     $63
-        .byte   $74
-        .byte   $6F
-        .byte   $72
-        .byte   $02
-L90D7:  .byte   0
-        rts
+        DEFINE_CLOSE_PARAMS close_params
+        DEFINE_OPEN_PARAMS open_params2, str_selector, $800
 
-        .byte   $6F
-        .byte   0
-        .byte   $02
-L90DC:  .byte   0
-        rts
+str_selector:
+        PASCAL_STRING "selector"
 
-        stx     L0400
-L90E1:  .byte   0
-        .byte   0
-        ldy     #$00
-        .byte   $1F
-        .byte   0
-        .byte   0
-        .byte   $04
-L90E9:  .byte   0
-        .byte   0
-        ldy     #$00
-        ora     a:L0000
-        ora     (L0000,x)
-        asl     a
-        .byte   $04
-        sta     (L0000),y
-        .byte   0
-L90F7:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        DEFINE_SET_MARK_PARAMS set_mark_params, $6F60
+        DEFINE_SET_MARK_PARAMS set_mark_params2, $8E60
+        DEFINE_READ_PARAMS read_params2, $A000, $1F00
+        DEFINE_READ_PARAMS read_params3, $A000, $D00
+        DEFINE_CLOSE_PARAMS close_params2
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $9104
 
+str_desktop2_2:
         PASCAL_STRING "DeskTop2"
 
 L910D:  .byte   0
@@ -11497,7 +11445,7 @@ L912A:  cli
         ora     L9127
 L913F           := * + 1
         bne     L9151
-L9140:  yax_call MLI_WRAPPER, GET_FILE_INFO, $90F2
+L9140:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L914E
         jmp     L91B2
 
@@ -11632,7 +11580,7 @@ L920D:  lda     L8F71
         MGTK_CALL MGTK::InitMenu, $8E15
         MGTK_CALL MGTK::SetCursor, $0000
         MGTK_CALL MGTK::GetEvent, $0000
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $90F2
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L929A
         lda     #$80
 L929A:  sta     L910D
@@ -11675,7 +11623,7 @@ L92E9:  cmp     #$03
         beq     L92FF
         cmp     #$71
         bne     L9316
-L92FF:  yax_call MLI_WRAPPER, GET_FILE_INFO, $90F2
+L92FF:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L9313
         lda     #$FE
         jsr     L9F74
@@ -11793,14 +11741,14 @@ L93F1           := * + 2
         lda     #$FF
         sta     L910E
 L93FF:  jsr     L98C1
-        yax_call MLI_WRAPPER, OPEN, $90C7
+        yax_call MLI_WRAPPER, OPEN, open_params2
         bne     L9443
-        lda     L90CC
-        sta     L90D7
-        sta     L90E1
-        yax_call MLI_WRAPPER, SET_MARK, $90D6
-        yax_call MLI_WRAPPER, READ, $90E0
-        yax_call MLI_WRAPPER, CLOSE, $90F0
+        lda     open_params2::ref_num
+        sta     set_mark_params::ref_num
+        sta     read_params2::ref_num
+        yax_call MLI_WRAPPER, SET_MARK, set_mark_params
+        yax_call MLI_WRAPPER, READ, read_params2
+        yax_call MLI_WRAPPER, CLOSE, close_params2
         jsr     LA000
         bne     L943F
 L9436:  tya
@@ -11870,7 +11818,7 @@ L94C8:  MGTK_CALL MGTK::SetPenMode, $8E05
         MGTK_CALL MGTK::PaintRect, $9023
         jsr     L9E8E
         bmi     L94B5
-L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, $90F2
+L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L94ED
         lda     #$FE
         jsr     L9F74
@@ -11942,7 +11890,9 @@ L9596:  lda     L959E
 L959D:  .byte   0
 L959E:  .byte   0
 L959F:  .byte   0
-MLI_WRAPPER:  sty     $95AE
+
+MLI_WRAPPER:
+        sty     $95AE
         stax    $95AF
         php
         sei
@@ -11953,9 +11903,9 @@ MLI_WRAPPER:  sty     $95AE
 
         rts
 
-L95B6:  yax_call MLI_WRAPPER, OPEN, $90A0
-        lda     L90A5
-        sta     L90A7
+L95B6:  yax_call MLI_WRAPPER, OPEN, open_params3
+        lda     open_params3::ref_num
+        sta     read_params4::ref_num
         sta     DHIRESOFF
         sta     TXTCLR
         sta     CLR80VID
@@ -11965,8 +11915,8 @@ L95B6:  yax_call MLI_WRAPPER, OPEN, $90A0
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
-        yax_call MLI_WRAPPER, READ, $90A6
-        yax_call MLI_WRAPPER, CLOSE, $90C5
+        yax_call MLI_WRAPPER, READ, read_params4
+        yax_call MLI_WRAPPER, CLOSE, close_params
         jmp     L2000
 
 L95F5:  lda     L8FD9
@@ -11977,16 +11927,16 @@ L95F5:  lda     L8FD9
         bcs     L9607
         jmp     L9638
 
-L9607:  cmp     #$31
+L9607:  cmp     #'1'
         bcs     L960C
         rts
 
-L960C:  cmp     #$39
+L960C:  cmp     #'9'
         bcc     L9611
         rts
 
 L9611:  sec
-        sbc     #$31
+        sbc     #'1'
         sta     L97BC
         cmp     L9127
         bcc     L961D
@@ -12250,22 +12200,22 @@ L97E1:  lda     L97F6
 L97F5:  rts
 
 L97F6:  .byte   0
-L97F7:  yax_call MLI_WRAPPER, OPEN, $9092
-        lda     L9097
-        sta     L9099
-        yax_call MLI_WRAPPER, READ, $9098
-        yax_call MLI_WRAPPER, CLOSE, $90C5
+L97F7:  yax_call MLI_WRAPPER, OPEN, open_params
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        yax_call MLI_WRAPPER, READ, read_params
+        yax_call MLI_WRAPPER, CLOSE, close_params
         copy16  $B300, L9127
         rts
 
-L9825:  yax_call MLI_WRAPPER, OPEN, $90C7
+L9825:  yax_call MLI_WRAPPER, OPEN, open_params2
         bne     L9855
-        lda     L90CC
-        sta     L90DC
-        sta     L90E9
-        yax_call MLI_WRAPPER, SET_MARK, $90DB
-        yax_call MLI_WRAPPER, READ, $90E8
-        yax_call MLI_WRAPPER, CLOSE, $90F0
+        lda     open_params2::ref_num
+        sta     set_mark_params2::ref_num
+        sta     read_params3::ref_num
+        yax_call MLI_WRAPPER, SET_MARK, set_mark_params2
+        yax_call MLI_WRAPPER, READ, read_params3
+        yax_call MLI_WRAPPER, CLOSE, close_params2
         rts
 
 L9855:  lda     #$FE
@@ -12721,22 +12671,8 @@ L9BBC:  .byte   0
 L9BF4           := * + 2
         jmp     L0000
 
-        asl     a
-        jsr     L0002
-L9BF9:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, $220
+
 L9C07:  lda     L9129
         bne     L9C17
         jsr     L98C1
@@ -12797,7 +12733,7 @@ L9C87:  lda     ($06),y
         sta     $0220,y
         dey
         bpl     L9C87
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $9BF5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params3
         beq     L9CB7
         tax
         lda     L9129
@@ -12816,17 +12752,17 @@ L9C87:  lda     ($06),y
 
 L9CB4:  jmp     L9D44
 
-L9CB7:  lda     L9BF9
-        cmp     #$FC
+L9CB7:  lda     get_file_info_params3::file_type
+        cmp     #FT_BASIC
         bne     L9CC4
         jsr     L9D61
         jmp     L9CD8
 
-L9CC4:  cmp     #$06
+L9CC4:  cmp     #FT_BINARY
         beq     L9CD8
-        cmp     #$FF
+        cmp     #FT_SYSTEM
         beq     L9CD8
-        cmp     #$B3
+        cmp     #FT_S16
         beq     L9CD8
         lda     #$00
         jsr     L9F74
@@ -12880,24 +12816,8 @@ L9D44:  lda     L9129
         sta     L910E
 L9D4E:  rts
 
-        asl     a
-        .byte   0
-        .byte   $1C
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, $1C00
+
 L9D61:  ldx     $0220
 L9D64:  lda     $0220,x
         cmp     #$2F
@@ -12926,7 +12846,7 @@ L9D91:  inx
         cpy     L9DD7
         bne     L9D91
         stx     $1C00
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $9D4F
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params4
         bne     L9DAD
         rts
 
@@ -12985,7 +12905,7 @@ L9E0E:  lda     ($06),y
         sta     $0220,y
         dey
         bpl     L9E0E
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $9BF5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params3
         rts
 
 L9E20:  lda     #$00
