@@ -25,35 +25,15 @@ LB7D0           := $B7D0
 
 L1000:  jmp     L103A
 
-L1003:  .byte   0
-        .byte   $53
-        adc     $6C
-        adc     $63
-        .byte   $74
-        .byte   $6F
-        .byte   $72
-        .byte   0
+L1003:  .byte   0, "Selector", 0
+
 L100D:
 L100E           := * + 1
-        bpl     L105B
-        .byte   $6F
-        adc     ($64,x)
-        adc     #$6E
-        .byte   $67
-        jsr     L6553
-        jmp     (L6365)
+        PASCAL_STRING "Loading Selector"
+        PASCAL_STRING "Selector"
 
-        .byte   $74
-        .byte   $6F
-        .byte   $72
-        php
-        .byte   $53
-        adc     $6C
-        adc     $63
-        .byte   $74
-        .byte   $6F
-        .byte   $72
-        .byte   $04
+        ;; ProDOS MLI call param blocks
+        .byte   4
 L1028:  .byte   0
         .byte   0
         .byte   $1C
@@ -184,28 +164,10 @@ L1150:  lda     CLR80COL
         bne     L114D
         jmp     L103A
 
-L115E:  rol     a
-L115F:  eor     #$6E
-        .byte   $73
-        adc     $72
-        .byte   $74
-        jsr     L6874
-        adc     WNDLFT
-        .byte   $73
-        adc     $7473,y
-        adc     $6D
-        jsr     L6964
-        .byte   $73
-        .byte   $6B
-        jsr     L6E61
-        .byte   $64
-        jsr     L7270
-        adc     HIMEM
-        .byte   $73
-        jsr     L523C
-        adc     $74
-        adc     $72,x
-        ror     $2E3E
+L115E:
+L115F:= *+1
+        PASCAL_STRING "Insert the system disk and press <Return>."
+
 L1189:  .byte   0
 L118A:  .byte   0
 L118B:  sta     $06

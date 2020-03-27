@@ -53,14 +53,9 @@ L02AD:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-        .byte   $0C
-        .byte   $42
-        eor     ($53,x)
-        eor     #$43
-        rol     $5953
-        .byte   $53
-        .byte   $54
-        eor     $4D
+
+        PASCAL_STRING "BASIC.SYSTEM"
+
         .byte   $04
         inc     $0280
         .byte   0

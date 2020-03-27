@@ -11089,174 +11089,56 @@ L8E6B:  ora     (L0000,x)
         ora     (L0000,x)
 L8E73:
 L8E74           := * + 1
-        bmi     L8EA5
+        bmi     $8EA5
         and     $018F,y
         .byte   0
 L8E79:
 L8E7A           := * + 1
-        bmi     L8EAB
+        bmi     $8EAB
         eor     ($8F,x)
         ora     (L0000,x)
 L8E7F:
 L8E80           := * + 1
-        bmi     L8EB1
+        bmi     $8EB1
         eor     #$8F
         ora     (L0000,x)
 L8E85:
 L8E86           := * + 1
-        bmi     L8EB7
+        bmi     $8EB7
         eor     ($8F),y
         ora     (L0000,x)
 L8E8B:
 L8E8C           := * + 1
-        bmi     L8EBD
+        bmi     $8EBD
 L8E8D:  eor     $018F,y
         .byte   0
 L8E91:
 L8E92           := * + 1
-        bmi     L8EC3
+        bmi     $8EC3
         adc     ($8F,x)
         ora     (L0000,x)
 L8E97:
 L8E98           := * + 1
-        bmi     L8EC9
+        bmi     $8EC9
         adc     #$8F
         ora     ($1E,x)
-        .byte   $04
-        lsr     $69
-        jmp     (L0765)
 
-        .byte   $53
-        .byte   $74
-L8EA5:  adc     ($72,x)
-        .byte   $74
-        adc     $70,x
-        .byte   $1C
-L8EAB:  eor     ($70,x)
-        bvs     L8F1B
-        adc     WNDLFT
-L8EB1:  eor     #$49
-        jsr     L6544
-        .byte   $73
-L8EB7:  .byte   $6B
-        .byte   $54
-        .byte   $6F
-        bvs     L8EDC
-L8EBD           := * + 1
-        lsr     $65,x
-        .byte   $72
-        .byte   $73
-        adc     #$6F
-L8EC3           := * + 1
-        ror     $3120
-        rol     $0131
-L8EC9           := * + 1
-        jsr     L4324
-        .byte   $6F
-        bvs     L8F47
-        .byte   $72
-        adc     #$67
-        pla
-        .byte   $74
-        jsr     L7041
-        bvs     L8F44
-        adc     WNDLFT
-        .byte   $43
-        .byte   $6F
-L8EDC:  adc     L7570
-        .byte   $74
-        adc     $72
-        jsr     L6E49
-        .byte   $63
-        rol     $202C
-        and     ($39),y
-        sec
-        rol     WNDLFT,x
-        .byte   $23
-        .byte   $43
-        .byte   $6F
-        bvs     L8F6C
-        .byte   $72
-        adc     #$67
-        pla
-        .byte   $74
-        jsr     L6556
-        .byte   $72
-        .byte   $73
-        adc     #$6F
-        ror     L5320
-        .byte   $6F
-        ror     $74
-        bit     $3120
-        and     $3538,y
-        jsr     L202D
-        and     ($39),y
-        sec
-        rol     $14,x
-        eor     ($6C,x)
-        jmp     (L5220)
+        PASCAL_STRING "File"
+        PASCAL_STRING "Startup"
+        PASCAL_STRING "Apple II DeskTop Version 1.1"
+        PASCAL_STRING " "
+        PASCAL_STRING "Copyright Apple Computer Inc., 1986 "
+        PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
+        PASCAL_STRING "All Rights reserved "
+        PASCAL_STRING "Run a Program ..."
+        PASCAL_STRING "Slot x "
+        PASCAL_STRING "Slot x "
+        PASCAL_STRING "Slot x "
+        PASCAL_STRING "Slot x "
+        PASCAL_STRING "Slot x "
+        PASCAL_STRING "Slot x "
+        PASCAL_STRING "Slot x "
 
-        adc     #$67
-        pla
-L8F1B:  .byte   $74
-        .byte   $73
-        jsr     L6572
-        .byte   $73
-        adc     $72
-        ror     $65,x
-        .byte   $64
-        jsr     L5211
-        adc     $6E,x
-        jsr     L2061
-        bvc     L8FA2
-        .byte   $6F
-        .byte   $67
-        .byte   $72
-        adc     ($6D,x)
-        jsr     L2E2E
-        rol     L5307
-        jmp     (L746F)
-
-L8F3F           := * + 1
-        jsr     L2078
-        .byte   $07
-        .byte   $53
-L8F44           := * + 1
-        jmp     (L746F)
-
-L8F47           := * + 1
-        jsr     L2078
-        .byte   $07
-        .byte   $53
-        jmp     (L746F)
-
-L8F4F           := * + 1
-        jsr     L2078
-        .byte   $07
-        .byte   $53
-        jmp     (L746F)
-
-L8F57           := * + 1
-        jsr     L2078
-        .byte   $07
-        .byte   $53
-        jmp     (L746F)
-
-L8F5F           := * + 1
-        jsr     L2078
-        .byte   $07
-        .byte   $53
-        jmp     (L746F)
-
-L8F67           := * + 1
-        jsr     L2078
-        .byte   $07
-        .byte   $53
-L8F6C           := * + 1
-        jmp     (L746F)
-
-L8F6F           := * + 1
-        jsr     L2078
 L8F71:  .byte   0
 L8F72:  .byte   0
 L8F73:  .byte   0
@@ -11745,39 +11627,39 @@ L920D:  lda     L8F71
         sta     L8E6B
         lda     L8F72
         ora     #$30
-        sta     L8F3F
+        sta     $8F3F
         sta     L8E73
         sta     L8E74
         lda     L8F73
         ora     #$30
-        sta     L8F47
+        sta     $8F47
         sta     L8E79
         sta     L8E7A
         lda     L8F74
         ora     #$30
-        sta     L8F4F
+        sta     $8F4F
         sta     L8E7F
         sta     L8E80
         lda     L8F75
         ora     #$30
-        sta     L8F57
+        sta     $8F57
         sta     L8E85
         sta     L8E86
         lda     L8F76
         ora     #$30
-        sta     L8F5F
+        sta     $8F5F
         sta     L8E8B
         sta     L8E8C
-        lda     L8F77
+        lda     $8F77
         ora     #$30
-        sta     L8F67
+        sta     $8F67
         sta     L8E91
         sta     L8E92
         lda     L8F78
         ora     #$30
         sta     L8E97
         sta     L8E98
-        sta     L8F6F
+        sta     $8F6F
         MGTK_CALL MGTK::StartDeskTop, $8FCE
         MGTK_CALL MGTK::InitMenu, $8E15
         MGTK_CALL MGTK::SetCursor, $0000
