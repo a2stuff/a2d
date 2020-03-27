@@ -1,3 +1,17 @@
+
+The file is broken down into multiple segments:
+
+| Purpose       | File Offset | Bank   | Address      | Length | Source                    |
+|---------------|-------------|--------|--------------|--------|---------------------------|
+| Bootstrap     | B$00000000  | Main   | $A2000-$2026 | L$0027 | `selector1.s`             |
+| Loader        |             | Main   | $A1000       |        | `selector2.s`             |
+|               |             | Main   |              |        | `selector3.s`             |
+| Invoker       |             | Main   | $A0290       | L$0160 | `selector4.s`             |
+| MGTK + App    |             |        | $A4000-$9FFF | L$6000 | `selector5.s`             |
+| Resources     |             | Aux LC | $AD000-$D800 | L$0800 | `selector6.s`             |
+| Overlay 1     |             | Main   | $AA000-$BEFF | L$1F00 | `selector7.s`             |
+| Overlay 2     |             | Main   | $AA000-      | L$0D00 | `selector8.s`             |
+
 0000-00026 org $2000 - copies 0027x$200 to LC2 $D100 (quit handler) then invokes QUIT
 
 0027x$200  org $1000 - stashes prefix (etc)
@@ -17,34 +31,17 @@ open questions:
                      - copies $3400-$3BFF to LC1 $D000-$D7FF
                      - jumps to $8E00
 
-0600x$160
+0600x$160  org $290 - Invoker code
 
 0760x$6000 org $4000 - MGTK ($4000), Font ($8800), ...
 
 6760x$800 org $D000  - resources
 
-6F60 ...             - ???????? overlays?
+6F60x$1F00 org $A000 - overlay1
 
+8E60x$D00 org $A000 - overlay2
 
-
-
-
-dd skip=$((0x0000)) count=$((0x0027)) bs=1 if=orig/SELECTOR.\$F1 of=orig/selector1
-dd skip=$((0x0027)) count=$((0x0200)) bs=1 if=orig/SELECTOR.\$F1 of=orig/selector2
-dd skip=$((0x0227)) count=$((0x03D9)) bs=1 if=orig/SELECTOR.\$F1 of=orig/selector3 # ???
-dd skip=$((0x0600)) count=$((0x0160)) bs=1 if=orig/SELECTOR.\$F1 of=orig/selector4
-dd skip=$((0x0760)) count=$((0x6000)) bs=1 if=orig/SELECTOR.\$F1 of=orig/selector5
-dd skip=$((0x6760)) count=$((0x0800)) bs=1 if=orig/SELECTOR.\$F1 of=orig/selector6
-dd skip=$((0x6F60)) count=$((0xFFFF)) bs=1 if=orig/SELECTOR.\$F1 of=orig/selector7
-
-
-../res/make_info.pl 2000 > selector.info && da65 -i selector.info orig/selector1 | ../res/refactor.pl > selector1.s
-../res/make_info.pl 1000 > selector.info && da65 -i selector.info orig/selector2 | ../res/refactor.pl > selector2.s
-../res/make_info.pl 1E27 > selector.info && da65 -i selector.info orig/selector3 | ../res/refactor.pl > selector3.s
-../res/make_info.pl 0290 > selector.info && da65 -i selector.info orig/selector4 | ../res/refactor.pl > selector4.s
-../res/make_info.pl 4000 > selector.info && da65 -i selector.info orig/selector5 | ../res/refactor.pl > selector5.s
-../res/make_info.pl D000 > selector.info && da65 -i selector.info orig/selector6 | ../res/refactor.pl > selector6.s
-
+9B60 == EOF
 
 ## Memory Map
 
@@ -63,9 +60,8 @@ $D000 +------+-----------+  +------+-----------+  +-------------+
 $C000 +-------------+       +-------------+       +-------------+
       | ProDOS GP   |       |             |
 $BF00 +-------------+       |             |
-      |             |       |             |
-      |             |       |             |
-      |  (Unused?)  |       |             |
+      | Selector    |       |             |
+      | Overlays    |       |             |
       |             |       |             |
       |             |       |             |
       |             |       |             |
