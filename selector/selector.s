@@ -28,4 +28,13 @@
 
         .include "selector6.s"
 
-        .incbin "orig/selector7"
+
+        .org $A000
+        .scope
+        .include "selector7.s"
+        .endscope
+
+        .org $A000
+        .scope
+        .include "selector8.s"
+        .endscope

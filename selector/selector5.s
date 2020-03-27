@@ -12770,7 +12770,7 @@ L9CC4:  cmp     #FT_BINARY
 
 L9CD8:  ldy     $0220
 L9CDB:  lda     $0220,y
-        cmp     #$2F
+        cmp     #'/'
         beq     L9CEF
         dey
         bne     L9CDB
