@@ -435,28 +435,8 @@ L2177:  lda     CLR80COL
         bne     L2174
         jmp     L103A
 
-        rol     a
-        eor     #$6E
-        .byte   $73
-        adc     $72
-        .byte   $74
-        jsr     L6874
-        adc     WNDLFT
-        .byte   $73
-        adc     $7473,y
-        adc     $6D
-        jsr     L6964
-        .byte   $73
-        .byte   $6B
-        jsr     L6E61
-        .byte   $64
-        jsr     L7270
-        adc     HIMEM
-        .byte   $73
-        jsr     L523C
-        adc     $74
-        adc     $72,x
-        ror     $2E3E
+        PASCAL_STRING "Insert the system disk and press <Return>."
+
         .byte   0
         .byte   0
         sta     $06
