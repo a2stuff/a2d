@@ -1,67 +1,31 @@
 ;;; ============================================================
-;;; Bootstrap
+;;; Invoker
 ;;; ============================================================
 
         .org $290
 
 .scope
+        jmp     start
 
+        DEFINE_SET_PREFIX_PARAMS set_prefix_params, $220
 
-L118B           := $118B
-L2000           := $2000
-MGTK            := $4000
-FONT            := $8800
-START           := $8E00
-L9F00           := $9F00
-
-
-        jmp     L02E5
-
-        ora     (WNDLFT,x)
-        .byte   $02
 L0296:  .byte   0
-        .byte   $03
-L0298:  .byte   $80
-L0299:  .byte   $02
-        .byte   0
-L029B:  php
-L029C:  ora     ($04,x)
-L029E:  .byte   0
-L029F:  .byte   0
-L02A0:  jsr     L9F00
-        .byte   0
-        .byte   0
-        ora     ($00,x)
-        asl     a
-        .byte   $80
-        .byte   $02
-        .byte   0
-L02AB:  .byte   0
-L02AC:  .byte   0
-L02AD:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+        DEFINE_OPEN_PARAMS open_params, $280, $800, 1
+
+        DEFINE_READ_PARAMS read_params, $2000, $9F00
+
+        DEFINE_CLOSE_PARAMS close_params
+
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $280
+
+        .byte   0,0,0
 
         PASCAL_STRING "BASIC.SYSTEM"
 
-        .byte   $04
-        inc     $0280
-        .byte   0
-        .byte   0
-        .byte   0
-L02D0:  MLI_CALL SET_PREFIX, $0293
+        DEFINE_QUIT_PARAMS quit_params, $EE, $280
+
+L02D0:  MLI_CALL SET_PREFIX, set_prefix_params
         beq     L02DD
         pla
         pla
@@ -69,11 +33,14 @@ L02D0:  MLI_CALL SET_PREFIX, $0293
 
 L02DD:  rts
 
-L02DE:  MLI_CALL OPEN, $0297
+L02DE:  MLI_CALL OPEN, open_params
         rts
 
-L02E5:  lda     ROMIN2
-        copy16  #$2000, L03BF
+
+;;; ============================================================
+
+start:  lda     ROMIN2
+        copy16  #$2000, invoke_addr
         ldx     #$16
         lda     #$00
 L02F6:  sta     $BF58,x
@@ -82,34 +49,37 @@ L02F6:  sta     $BF58,x
         jsr     L02D0
         lda     $0220
         sta     L0296
-        MLI_CALL GET_FILE_INFO, $02A7
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     L0310
         jmp     L03CB
 
-L0310:  lda     L02AB
-        cmp     #$B3
+L0310:  lda     get_file_info_params::file_type
+        cmp     #FT_S16
         bne     L031A
         jmp     L03C2
 
-L031A:  cmp     #$06
+L031A:  cmp     #FT_BINARY
         bne     L0342
-        lda     L02AC
-        sta     L03BF
-        sta     L029F
-        lda     L02AD
-        sta     L03C0
-        sta     L02A0
+
+        lda     get_file_info_params::aux_type
+        sta     invoke_addr
+        sta     read_params::data_buffer
+
+        lda     get_file_info_params::aux_type+1
+        sta     invoke_addr+1
+        sta     read_params::data_buffer+1
+
         cmp     #$0C
         bcs     L033B
         lda     #$BB
-        sta     L029B
+        sta     open_params::io_buffer+1
         bne     L037A
 L033B:  lda     #$08
-        sta     L029B
+        sta     open_params::io_buffer+1
         bne     L037A
-L0342:  cmp     #$FC
+L0342:  cmp     #FT_BASIC
         bne     L037A
-        copy16  #$02BC, L0298
+        copy16  #$02BC, open_params::pathname
 L0350:  jsr     L02DE
         beq     L0371
         ldy     $0220
@@ -132,14 +102,14 @@ L0371:  lda     L0296
 
 L037A:  jsr     L02DE
         bne     L03CB
-L037F:  lda     L029C
-        sta     L029E
-        MLI_CALL READ, $029D
+L037F:  lda     open_params::ref_num
+        sta     read_params::ref_num
+        MLI_CALL READ, read_params
         bne     L03CB
-        MLI_CALL CLOSE, $02A5
+        MLI_CALL CLOSE, close_params
         bne     L03CB
-        lda     L02AB
-        cmp     #$FC
+        lda     get_file_info_params::file_type
+        cmp     #FT_BASIC
         bne     L03AB
         jsr     L02D0
         ldy     $0280
@@ -153,29 +123,31 @@ L03AB:  lda     #$03
         pha
         jsr     L03C1
         lda     #$01
-MOUSE_X_LO      := * + 2
         sta     $BF6F
         lda     #$CF
         sta     $BF58
-L03BF           := * + 1
-L03C0           := * + 2
-        jmp     L2000
+
+        invoke_addr := *+1
+        jmp     $2000
 
 L03C1:  rts
 
 L03C2:  jsr     L03C1
-        MLI_CALL QUIT, $02C9
+        MLI_CALL QUIT, quit_params
 L03CB:  rts
+
+        ;; ???
+
+L118B           := $118B
 
         .byte   $03
         jmp     L118B
 
-; DOS warmstart vector
-DOSWARM:MLI_CALL CLOSE, $102F
+        MLI_CALL CLOSE, $102F
         beq     L03DB
         jmp     L118B
 
-L03DB:  jmp     L2000
+L03DB:  jmp     $2000
 
         jsr     SLOT3ENTRY
         jsr     HOME
@@ -183,9 +155,7 @@ L03DB:  jmp     L2000
         sta     CV
         jsr     VTAB
         lda     #$50
-XFERSTARTLO:
         sec
-XFERSTARTHI:
         .byte   $ED
         .byte   $5E
 
