@@ -715,8 +715,8 @@ LA379:  ldx     LA449
         return  #$00
 
         .byte   0
-LA387:  MGTK_CALL MGTK::OpenWindow, $A1CE
-        MGTK_CALL MGTK::OpenWindow, $A194
+LA387:  MGTK_CALL MGTK::CloseWindow, $A1CE
+        MGTK_CALL MGTK::CloseWindow, $A194
         lda     #$00
         sta     LA20D
         jsr     LA8AE
@@ -928,7 +928,7 @@ LA492:  bit     LA214
         bne     LA4A1
         lda     #$00
         sta     LA214
-LA4A1:  MGTK_CALL MGTK::CheckEvents, $A00E
+LA4A1:  MGTK_CALL MGTK::GetEvent, $A00E
         lda     LA00E
         cmp     #$01
         bne     LA4B4
@@ -938,7 +938,7 @@ LA4A1:  MGTK_CALL MGTK::CheckEvents, $A00E
 LA4B4:  cmp     #$03
         bne     LA4BB
         jsr     LAC1D
-LA4BB:  MGTK_CALL MGTK::EndUpdate, $A00F
+LA4BB:  MGTK_CALL MGTK::FindWindow, $A00F
         lda     LA013
         bne     LA4C9
         jmp     LA480
@@ -952,7 +952,7 @@ LA4D4:  lda     LA194
         jsr     LB443
         lda     LA194
         sta     LA00E
-        MGTK_CALL MGTK::GrowWindow, $A00E
+        MGTK_CALL MGTK::ScreenToWindow, $A00E
         MGTK_CALL MGTK::MoveTo, $A013
         MGTK_CALL MGTK::InRect, $A2D2
         cmp     #$80
@@ -966,7 +966,7 @@ LA4FF:  MGTK_CALL MGTK::InitPort, $A03F
         jmp     LA480
 
 LA50E:  .byte   0
-LA50F:  MGTK_CALL MGTK::EndUpdate, $A00F
+LA50F:  MGTK_CALL MGTK::FindWindow, $A00F
         lda     LA013
         bne     LA51B
         rts
@@ -988,7 +988,7 @@ LA52F:  lda     LA194
         jsr     LB443
         lda     LA194
         sta     LA00E
-        MGTK_CALL MGTK::GrowWindow, $A00E
+        MGTK_CALL MGTK::ScreenToWindow, $A00E
         MGTK_CALL MGTK::MoveTo, $A013
         MGTK_CALL MGTK::InRect, $A253
         cmp     #$80
@@ -1084,7 +1084,7 @@ LA63F:  jsr     LAEA6
 
 LA643:  bit     LA47F
         bmi     LA661
-        MGTK_CALL MGTK::WindowToScreen, $A00F
+        MGTK_CALL MGTK::FindControl, $A00F
         lda     LA013
         beq     LA662
         cmp     #$01
@@ -1098,7 +1098,7 @@ LA661:  rts
 
 LA662:  lda     LA1CE
         sta     LA00E
-        MGTK_CALL MGTK::GrowWindow, $A00E
+        MGTK_CALL MGTK::ScreenToWindow, $A00E
         add16   LA015, LA1EC, LA015
         lsr16   LA015
         lsr16   LA015
@@ -1213,7 +1213,7 @@ LA793:  cmp     #$04
 
 LA79A:  lda     #$01
         sta     LA00E
-        MGTK_CALL MGTK::SetCtlMax, $A00E
+        MGTK_CALL MGTK::TrackThumb, $A00E
         lda     LA014
         bne     LA7AB
         rts
@@ -1222,7 +1222,7 @@ LA7AB:  lda     LA013
         sta     LA00F
         lda     #$01
         sta     LA00E
-        MGTK_CALL MGTK::TrackThumb, $A00E
+        MGTK_CALL MGTK::UpdateThumb, $A00E
         lda     LA013
         jsr     LB3B7
         jsr     LB22A
@@ -1236,7 +1236,7 @@ LA7C6:  lda     LA1D7
 LA7D0:  sta     LA00F
         lda     #$01
         sta     LA00E
-        MGTK_CALL MGTK::TrackThumb, $A00E
+        MGTK_CALL MGTK::UpdateThumb, $A00E
         lda     LA00F
         jsr     LB3B7
         jsr     LB22A
@@ -1252,7 +1252,7 @@ LA7E8:  lda     LA1D7
 LA7F8:  sta     LA00F
         lda     #$01
         sta     LA00E
-        MGTK_CALL MGTK::TrackThumb, $A00E
+        MGTK_CALL MGTK::UpdateThumb, $A00E
         lda     LA00F
         jsr     LB3B7
         jsr     LB22A
@@ -1267,7 +1267,7 @@ LA816:  sec
         sta     LA00F
         lda     #$01
         sta     LA00E
-        MGTK_CALL MGTK::TrackThumb, $A00E
+        MGTK_CALL MGTK::UpdateThumb, $A00E
         lda     LA00F
         jsr     LB3B7
         jsr     LB22A
@@ -1284,14 +1284,14 @@ LA83F:  clc
         sta     LA00F
         lda     #$01
         sta     LA00E
-        MGTK_CALL MGTK::TrackThumb, $A00E
+        MGTK_CALL MGTK::UpdateThumb, $A00E
         lda     LA00F
         jsr     LB3B7
         jsr     LB22A
         jsr     LA85F
         jmp     LA836
 
-LA85F:  MGTK_CALL MGTK::FlushEvents, $A00E
+LA85F:  MGTK_CALL MGTK::PeekEvent, $A00E
         lda     LA00E
         cmp     #$01
         beq     LA873
@@ -1301,8 +1301,8 @@ LA85F:  MGTK_CALL MGTK::FlushEvents, $A00E
         pla
         rts
 
-LA873:  MGTK_CALL MGTK::CheckEvents, $A00E
-        MGTK_CALL MGTK::EndUpdate, $A00F
+LA873:  MGTK_CALL MGTK::GetEvent, $A00E
+        MGTK_CALL MGTK::FindWindow, $A00F
         lda     LA014
         cmp     LA1CE
         beq     LA88A
@@ -1317,7 +1317,7 @@ LA88A:  lda     LA013
         pla
         rts
 
-LA894:  MGTK_CALL MGTK::WindowToScreen, $A00F
+LA894:  MGTK_CALL MGTK::FindControl, $A00F
         lda     LA013
         cmp     #$01
         beq     LA8A4
@@ -1339,16 +1339,16 @@ LA8AE:  bit     LA8EC
         sta     LA8EC
 LA8BB:  rts
 
-LA8BC:  MGTK_CALL MGTK::ShowCursor, $0000
-        MGTK_CALL MGTK::GetIntHandler, $A064
-        MGTK_CALL MGTK::SetCursor, $0000
+LA8BC:  MGTK_CALL MGTK::HideCursor, $0000
+        MGTK_CALL MGTK::SetCursor, $A064
+        MGTK_CALL MGTK::ShowCursor, $0000
         rts
 
 LA8CF:  bit     LA8EC
         bmi     LA8EB
+        MGTK_CALL MGTK::HideCursor, $0000
+        MGTK_CALL MGTK::SetCursor, $A096
         MGTK_CALL MGTK::ShowCursor, $0000
-        MGTK_CALL MGTK::GetIntHandler, $A096
-        MGTK_CALL MGTK::SetCursor, $0000
         lda     #$80
         sta     LA8EC
 LA8EB:  rts
@@ -1469,13 +1469,13 @@ LA9D3:  sta     LA03F,x
 
 LA9F7:  lda     #$00
         sta     LAA64
-LA9FC:  MGTK_CALL MGTK::CheckEvents, $A00E
+LA9FC:  MGTK_CALL MGTK::GetEvent, $A00E
         lda     LA00E
         cmp     #$02
         beq     LAA4D
         lda     LA194
         sta     LA00E
-        MGTK_CALL MGTK::GrowWindow, $A00E
+        MGTK_CALL MGTK::ScreenToWindow, $A00E
         MGTK_CALL MGTK::MoveTo, $A013
         MGTK_CALL MGTK::InRect, $A24B
         cmp     #$80
@@ -1507,13 +1507,13 @@ LAA55:  MGTK_CALL MGTK::SetPenMode, $A008
 LAA64:  .byte   0
 LAA65:  lda     #$00
         sta     LAAD2
-LAA6A:  MGTK_CALL MGTK::CheckEvents, $A00E
+LAA6A:  MGTK_CALL MGTK::GetEvent, $A00E
         lda     LA00E
         cmp     #$02
         beq     LAABB
         lda     LA194
         sta     LA00E
-        MGTK_CALL MGTK::GrowWindow, $A00E
+        MGTK_CALL MGTK::ScreenToWindow, $A00E
         MGTK_CALL MGTK::MoveTo, $A013
         MGTK_CALL MGTK::InRect, $A25B
         cmp     #$80
@@ -1545,13 +1545,13 @@ LAAC3:  MGTK_CALL MGTK::SetPenMode, $A008
 LAAD2:  .byte   0
 LAAD3:  lda     #$00
         sta     LAB40
-LAAD8:  MGTK_CALL MGTK::CheckEvents, $A00E
+LAAD8:  MGTK_CALL MGTK::GetEvent, $A00E
         lda     LA00E
         cmp     #$02
         beq     LAB29
         lda     LA194
         sta     LA00E
-        MGTK_CALL MGTK::GrowWindow, $A00E
+        MGTK_CALL MGTK::ScreenToWindow, $A00E
         MGTK_CALL MGTK::MoveTo, $A013
         MGTK_CALL MGTK::InRect, $A253
         cmp     #$80
@@ -1583,13 +1583,13 @@ LAB31:  MGTK_CALL MGTK::SetPenMode, $A008
 LAB40:  .byte   0
 LAB41:  lda     #$00
         sta     LABAE
-LAB46:  MGTK_CALL MGTK::CheckEvents, $A00E
+LAB46:  MGTK_CALL MGTK::GetEvent, $A00E
         lda     LA00E
         cmp     #$02
         beq     LAB97
         lda     LA194
         sta     LA00E
-        MGTK_CALL MGTK::GrowWindow, $A00E
+        MGTK_CALL MGTK::ScreenToWindow, $A00E
         MGTK_CALL MGTK::MoveTo, $A013
         MGTK_CALL MGTK::InRect, $A263
         cmp     #$80
@@ -1621,13 +1621,13 @@ LAB9F:  MGTK_CALL MGTK::SetPenMode, $A008
 LABAE:  .byte   0
 LABAF:  lda     #$00
         sta     LAC1C
-LABB4:  MGTK_CALL MGTK::CheckEvents, $A00E
+LABB4:  MGTK_CALL MGTK::GetEvent, $A00E
         lda     LA00E
         cmp     #$02
         beq     LAC05
         lda     LA194
         sta     LA00E
-        MGTK_CALL MGTK::GrowWindow, $A00E
+        MGTK_CALL MGTK::ScreenToWindow, $A00E
         MGTK_CALL MGTK::MoveTo, $A013
         MGTK_CALL MGTK::InRect, $A243
         cmp     #$80
@@ -1961,7 +1961,7 @@ LAEA9:  lda     LA00F,x
         sta     LAF3E
 LAEB8:  dec     LAF3E
         beq     LAEF5
-        MGTK_CALL MGTK::FlushEvents, $A00E
+        MGTK_CALL MGTK::PeekEvent, $A00E
         jsr     LAEF8
         bmi     LAEF5
         lda     #$FF
@@ -1974,12 +1974,12 @@ LAEB8:  dec     LAF3E
         beq     LAEB8
         cmp     #$02
         bne     LAEE8
-        MGTK_CALL MGTK::CheckEvents, $A00E
+        MGTK_CALL MGTK::GetEvent, $A00E
         jmp     LAEB8
 
 LAEE8:  cmp     #$01
         bne     LAEF5
-        MGTK_CALL MGTK::CheckEvents, $A00E
+        MGTK_CALL MGTK::GetEvent, $A00E
         return  #$00
 
 LAEF5:  return  #$FF
@@ -2022,8 +2022,8 @@ LAF42:  .byte   0
 LAF43:  .byte   0
 LAF44:  .byte   0
 LAF45:  .byte   0
-        MGTK_CALL MGTK::SetMark, $A194
-        MGTK_CALL MGTK::SetMark, $A1CE
+        MGTK_CALL MGTK::OpenWindow, $A194
+        MGTK_CALL MGTK::OpenWindow, $A1CE
         lda     LA194
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, $A008
@@ -2397,7 +2397,7 @@ LB30B:  sta     LB34F
         cmp     #$0A
         bcs     LB326
         copy16  #$0001, LA00E
-        MGTK_CALL MGTK::UpdateThumb, $A00E
+        MGTK_CALL MGTK::ActivateCtl, $A00E
         rts
 
 LB326:  lda     $177F
@@ -2405,13 +2405,13 @@ LB326:  lda     $177F
         lda     #$01
         sta     LA00E
         sta     LA00F
-        MGTK_CALL MGTK::UpdateThumb, $A00E
+        MGTK_CALL MGTK::ActivateCtl, $A00E
         lda     LB34F
         sta     LA00F
         jsr     LB3B7
         lda     #$01
         sta     LA00E
-        MGTK_CALL MGTK::TrackThumb, $A00E
+        MGTK_CALL MGTK::UpdateThumb, $A00E
         rts
 
 LB34F:  .byte   0
@@ -2513,7 +2513,7 @@ LB404:  ldx     #$00
 
 LB442:  .byte   0
 LB443:  sta     LA018
-        MGTK_CALL MGTK::GetWinPtr, $A018
+        MGTK_CALL MGTK::GetWinPort, $A018
         MGTK_CALL MGTK::SetPort, $A01B
         rts
 
@@ -2982,7 +2982,7 @@ LB78A:  addr_call LAFE7, $A150
 
 LB799:  lda     LA194
         sta     LA00E
-        MGTK_CALL MGTK::GrowWindow, $A00E
+        MGTK_CALL MGTK::ScreenToWindow, $A00E
         lda     LA194
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $A013
