@@ -6,6 +6,11 @@
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk_100B4.inc"
 
+INVOKER         := $0290
+LOADER          := $2000
+MGTK            := $4000
+START           := $8E00
+
 
 ;;; ============================================================
 ;;; Selector application
@@ -14,27 +19,12 @@
         .include "selector1.s"
         .include "selector2.s"
 
-        .org $1E27
-        .scope
+        ;; Random chunk of BASIC.SYSTEM 1.1 padding out the file
+        .incbin "inc/bs.dat"
+
         .include "selector3.s"
-        .endscope
-
         .include "selector4.s"
-
-        .org $4000
-        .scope
         .include "selector5.s"
-        .endscope
-
         .include "selector6.s"
-
-
-        .org $A000
-        .scope
         .include "selector7.s"
-        .endscope
-
-        .org $A000
-        .scope
         .include "selector8.s"
-        .endscope
