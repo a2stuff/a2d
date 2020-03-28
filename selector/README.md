@@ -35,7 +35,7 @@ open questions:
 ### Loader - `selector3.s`
 
 Loads the Invoker (page 2/3), MGTK and App (above graphics pages), and
-(Resources Aux LC), then invokes the app.
+Resources (Aux LC), then invokes the app.
 
 ### Invoker - `selector4.s`
 
@@ -49,9 +49,9 @@ appropriate IO buffer location based on load address.
 * The font is at $8800.
 * The application entry point is $8E00.
 
-The MGTK copy is not identical to what DeskTop uses. It appears to be
-an older copy, and is running from Main rather than Aux. Some command
-numbers are also different.
+The MGTK copy runs out of Main (rather than Aux) and is version
+1.0.0 Beta 4, slightly older than the 1.0.0 Final 1 used in DeskTop.
+Some command numbers are different.
 
 ### Resources - `selector6.s`
 

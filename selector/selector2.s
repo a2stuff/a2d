@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; Bootstrap #2
+;;; Quit Handler
 ;;; ============================================================
 
         .org    $1000
@@ -8,20 +8,6 @@
 ;;; $1000 Main.
 
 .scope
-
-L120F           := $120F
-L1214           := $1214
-L2000           := $2000
-L523C           := $523C
-L6365           := $6365
-L6553           := $6553
-L6874           := $6874
-L6964           := $6964
-L6E61           := $6E61
-L7270           := $7270
-FONT            := $8800
-START           := $8E00
-LB7D0           := $B7D0
 
 L1000:  jmp     L103A
 
@@ -137,7 +123,7 @@ L1119:  MLI_CALL CLOSE, $102F
         beq     L1124
         jmp     L118B
 
-L1124:  jmp     L2000
+L1124:  jmp     LOADER
 
 L1127:  jsr     SLOT3ENTRY
         jsr     HOME
@@ -173,96 +159,6 @@ L118A:  .byte   0
 L118B:  sta     $06
         jmp     MONZ
 
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
-;;; Does this ever get invoked? From where?
-;;; See README.md
-
-        ldx     $3D20,y
-        tay
-        bcs     L1214
-        lda     $BE53
-        asl     a
-        tax
-        lda     $B8E9,x
-        sta     $BCAB
-        lda     $B8EA,x
-        sta     $BCAC
-        clc
-        txa
-        beq     L120F
-        eor     #$32
-        beq     L120F
-        lda     $BE55
-        and     #$04
-        beq     L120F
-        lda     $BE56
-        lsr     a
-        bcc     L120F
-        jsr     LB7D0
-        .byte   $90
+        PAD_TO  $11D0
 
 .endscope

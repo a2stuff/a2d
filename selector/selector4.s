@@ -4,6 +4,8 @@
 
         .org $290
 
+;;; Used to invoke the selected program (BIN, BAS, SYS, S16).
+
 .scope
         jmp     start
 

@@ -6,6 +6,7 @@
 
 ;;; Copy the subsequent routine to the ProDOS QUIT routine
 ;;; (Main, LCBANK2) and invoke it.
+
 .scope
         dest := $D100
 
