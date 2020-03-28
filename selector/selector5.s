@@ -37,18 +37,6 @@ LF0A5           := $F0A5
 LFFFF           := $FFFF
 
 
-;;; Pointers into the guts of MGTK ???
-;;; (possibly from bogus code, e.g. chunks of BASIC.SYSTEM etc)
-
-L4E7F := $4E7F
-L5158 := $5158
-L5159 := $5159
-L4DAE := $4DAE
-L5099 := $5099
-L7973 := $7973
-L5400 := $5400
-L5F8E := $5F8E
-
 ;;; ============================================================
 ;;; MGTK library
 ;;; ============================================================
@@ -217,7 +205,7 @@ L8E0F:  .byte   0
         .byte   0
         .byte   $02
         .byte   0
-        sta     L5F8E,x
+        sta     $5F8E,x
         stx     a:L0000
         .byte   0
         .byte   0
@@ -486,7 +474,7 @@ L8FD9:  ora     ($01,x)
         .byte   0
         beq     L901A
 L901A           := * + 1
-        jmp     (L5400)
+        jmp     ($5400)
 
         ora     ($5E,x)
         .byte   0
@@ -2035,7 +2023,7 @@ L9DD7:  .byte   $0C
         .byte   $42
         adc     (HIMEM,x)
         adc     #$63
-        rol     L7973
+        rol     $7973
         .byte   $73
         .byte   $74
         adc     $6D
@@ -2213,70 +2201,5 @@ L9F74:  pha
         sta     ALTZPOFF
         sta     ROMIN2
         rts
-
-        sta     $85,x
-        .byte   $83
-        lda     $9D
-        sta     $94
-        clc
-        adc     $82
-        sta     $98
-        lda     $9E
-        sta     $95
-        adc     $83
-        sta     $99
-        lda     #$00
-        sta     $9B
-        sta     $9C
-        sta     $9D
-        lda     $8F
-        sta     L0080
-        jsr     L5099
-        bcs     L9FB5
-        rts
-
-L9FB5:  jsr     L4DAE
-        lda     $91
-        asl     a
-        ldx     $93
-        beq     L9FC1
-        adc     #$01
-L9FC1:  ldx     $96
-        beq     L9FC7
-        adc     #$01
-L9FC7:  sta     L5159
-        sta     L5158
-        lda     #$02
-        sta     $81
-        lda     #$00
-        sec
-        sbc     $9D
-        clc
-        adc     $8C
-        sta     $8C
-        lda     #$00
-        sec
-        sbc     $9B
-        tax
-        lda     #$00
-        sbc     $9C
-        tay
-        txa
-        clc
-        adc     $8A
-        tax
-        tya
-        adc     $8B
-        jsr     L4E7F
-        sta     $8A
-        tya
-        rol     a
-        cmp     #$07
-        ldx     #$01
-        bcc     L9FFE
-        dex
-        sbc     #$07
-L9FFE:  .byte   $8E
-        .byte   $7C
 
 .endscope

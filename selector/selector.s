@@ -25,6 +25,10 @@ START           := $8E00
         .include "selector3.s"
         .include "selector4.s"
         .include "selector5.s"
+
+        ;; Random chunk of MGTK padding out the file
+        .incbin "inc/mgtk.dat"
+
         .include "selector6.s"
         .include "selector7.s"
         .include "selector8.s"
