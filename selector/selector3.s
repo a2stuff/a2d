@@ -9,18 +9,11 @@
 
 .scope
 
-L103A           := $103A
-L10F2           := $10F2
-L1127           := $1127
-L118B           := $118B
-L223B           := $223B
-L3000           := $3000
-
 L2000:  jmp     L2031
 
         .byte   $03
         plp
-        jsr     L3000
+        jsr     $3000
 L2008:  .byte   0
         .byte   $04
 L200A:  .byte   0
@@ -137,6 +130,17 @@ L209B:  lda     $3400,x
         and     #$FF
         jmp     START
 
+;;; ============================================================
+;;; This seems to be random junk from some system file.
+
+.scope
+
+L103A           := $103A
+L10F2           := $10F2
+L1127           := $1127
+L118B           := $118B
+L223B           := $223B
+
         .byte   $03
         bpl     L2092
         inc     $8D03,x
@@ -221,5 +225,7 @@ L2177:  lda     CLR80COL
         tay
         bcs     L223B
         lda     $BE53
+
+.endscope
 
 .endscope

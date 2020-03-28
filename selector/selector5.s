@@ -6,36 +6,11 @@
 
 .scope
 
-L0000           := $0000
-L0002           := $0002
-L000C           := $000C
-L0030           := $0030
-L0080           := $0080
-L0088           := $0088
-L0290           := $0290
-L0400           := $0400
-L05A3           := $05A3
-L0765           := $0765
-L0D20           := $0D20
 L1234           := $1234
-L17D5           := $17D5
 L2000           := $2000
-L2020           := $2020
-L202D           := $202D
-L2061           := $2061
-L2078           := $2078
-L2120           := $2120
-L2121           := $2121
-L2824           := $2824
-L2E2E           := $2E2E
-L3028           := $3028
 LA000           := $A000
 LA003           := $A003
-
 LD23E           := $D23E
-LF0A5           := $F0A5
-LFFFF           := $FFFF
-
 
 ;;; ============================================================
 ;;; MGTK library
@@ -177,7 +152,7 @@ MGTK:
 START:  jmp     L912A
 
         .byte   0
-        ora     (L0002,x)
+        ora     ($0002,x)
         .byte   $03
         .byte   $04
         ora     $06
@@ -194,7 +169,7 @@ L8E0F:  .byte   0
         .byte   0
         .byte   $03
         .byte   0
-        ora     (L0000,x)
+        ora     ($0000,x)
         .byte   $9B
         stx     L8E3B
         .byte   0
@@ -206,7 +181,7 @@ L8E0F:  .byte   0
         .byte   $02
         .byte   0
         sta     $5F8E,x
-        stx     a:L0000
+        stx     a:$0000
         .byte   0
         .byte   0
         .byte   0
@@ -215,12 +190,12 @@ L8E0F:  .byte   0
         .byte   0
         ldx     #$8E
         .byte   $6B
-        stx     a:L0000
+        stx     a:$0000
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-L8E3B:  ora     L0000
+L8E3B:  ora     $0000
         .byte   0
         .byte   0
         .byte   0
@@ -230,11 +205,11 @@ L8E3B:  ora     L0000
         .byte   0
         .byte   0
         tax
-        stx     a:L0000
+        stx     a:$0000
         .byte   0
         .byte   0
         .byte   $C7
-        stx     a:L0000
+        stx     a:$0000
         .byte   0
         .byte   0
         cmp     #$8E
@@ -248,22 +223,22 @@ L8E3B:  ora     L0000
         .byte   0
         .byte   $12
         .byte   $8F
-        ora     (L0000,x)
+        ora     ($0000,x)
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        ora     (L0000,x)
+        ora     ($0000,x)
         .byte   $52
         .byte   $72
         .byte   $27
         .byte   $8F
-L8E6B:  ora     (L0000,x)
+L8E6B:  ora     ($0000,x)
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        ora     (L0000,x)
+        ora     ($0000,x)
 L8E73:
 L8E74           := * + 1
         bmi     $8EA5
@@ -273,17 +248,17 @@ L8E79:
 L8E7A           := * + 1
         bmi     $8EAB
         eor     ($8F,x)
-        ora     (L0000,x)
+        ora     ($0000,x)
 L8E7F:
 L8E80           := * + 1
         bmi     $8EB1
         eor     #$8F
-        ora     (L0000,x)
+        ora     ($0000,x)
 L8E85:
 L8E86           := * + 1
         bmi     $8EB7
         eor     ($8F),y
-        ora     (L0000,x)
+        ora     ($0000,x)
 L8E8B:
 L8E8C           := * + 1
         bmi     $8EBD
@@ -293,7 +268,7 @@ L8E91:
 L8E92           := * + 1
         bmi     $8EC3
         adc     ($8F,x)
-        ora     (L0000,x)
+        ora     ($0000,x)
 L8E97:
 L8E98           := * + 1
         bmi     $8EC9
@@ -430,7 +405,7 @@ L8FD9:  ora     ($01,x)
         .byte   0
         .byte   0
         .byte   0
-        stx     L0000,y
+        stx     $0000,y
         .byte   $32
         .byte   0
         .byte   $F4
@@ -439,7 +414,7 @@ L8FD9:  ora     ($01,x)
         ora     $2800,y
         .byte   0
         .byte   0
-        jsr     L0080
+        jsr     $0080
         .byte   0
         .byte   0
         .byte   0
@@ -501,24 +476,24 @@ L901A           := * + 1
         PASCAL_STRING " DeskTop       Q "
         .byte   $02
 L9057           := * + 1
-        ora     (L0000,x)
+        ora     ($0000,x)
 L9058:  .byte   0
         .byte   $0F
         .byte   0
 
         PASCAL_STRING "Selector"
 
-        ora     L0000
+        ora     $0000
 L9066:
 L9067           := * + 1
-        asl     L0000,x
-        ora     L0000
+        asl     $0000,x
+        ora     $0000
         .byte   $14
         .byte   0
         .byte   $EF
 L906D:  ora     ($14,x)
         .byte   0
-        ora     L0000
+        ora     $0000
         .byte   $5A
         .byte   0
         .byte   $EF
@@ -529,23 +504,23 @@ L9079:  .byte   0
 L907A:
 L907B           := * + 1
 L907C           := * + 2
-        asl     a:L0000,x
+        asl     a:$0000,x
 L907D:  .byte   0
 L907E:  .byte   0
 L907F:  .byte   0
 L9080:
 L9081           := * + 1
-        ora     L0000
+        ora     $0000
 L9082:
 L9083           := * + 1
-        ora     L0000,x
+        ora     $0000,x
 L9084:
 L9085           := * + 1
-        sty     L0000
+        sty     $0000
 L9086:
 L9087           := * + 1
 L9088           := * + 2
-        ora     a:L0000,x
+        ora     a:$0000,x
 L9089:  .byte   0
 L908A:  .byte   0
 L908B:  .byte   0
@@ -1816,7 +1791,7 @@ L9BBC:  .byte   0
         jsr     INIT
         jsr     HOME
 L9BF4           := * + 2
-        jmp     L0000
+        jmp     $0000
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, $220
 
@@ -1955,7 +1930,7 @@ L9CF5:  iny
         sta     CLRALTCHAR
         sta     CLR80VID
         sta     CLR80COL
-        jsr     L0290
+        jsr     INVOKER
         jsr     L98E7
 L9D44:  lda     L9129
         bne     L9D4E
