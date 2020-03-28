@@ -294,9 +294,9 @@ LD248:  jsr     L98D4
         clc
         adc     LD0DE
         sta     LD765
-        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::HideCursor, $0000
         jsr     LD5A2
-        MGTK_CALL MGTK::SetCursor, $0000
+        MGTK_CALL MGTK::ShowCursor, $0000
         ldx     #$03
         lda     #$00
 LD29F:  sta     $8F83,x
@@ -314,9 +314,9 @@ LD29F:  sta     $8F83,x
         MGTK_CALL MGTK::FrameRect, $D0C0
         MGTK_CALL MGTK::FrameRect, $D0C8
         MGTK_CALL MGTK::SetPenMode, $8E03
-        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::HideCursor, $0000
         MGTK_CALL MGTK::PaintBits, $D0A8
-        MGTK_CALL MGTK::SetCursor, $0000
+        MGTK_CALL MGTK::ShowCursor, $0000
         pla
         ldy     #$00
 LD307:  cmp     LD21E,y
@@ -357,7 +357,7 @@ LD378:  MGTK_CALL MGTK::MoveTo, $D127
         lda     LD143
         ldx     LD144
         jsr     L9984
-LD387:  MGTK_CALL MGTK::CheckEvents, $8F79
+LD387:  MGTK_CALL MGTK::GetEvent, $8F79
         lda     $8F79
         cmp     #$01
         bne     LD397
@@ -424,9 +424,9 @@ LD424:  MGTK_CALL MGTK::InRect, $D10B
 LD431:  jmp     LD387
 
 LD434:  pha
-        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::HideCursor, $0000
         jsr     LD5F7
-        MGTK_CALL MGTK::SetCursor, $0000
+        MGTK_CALL MGTK::ShowCursor, $0000
         pla
         rts
 
@@ -434,7 +434,7 @@ LD446:  MGTK_CALL MGTK::SetPenMode, $8E05
         MGTK_CALL MGTK::PaintRect, $D10B
         lda     #$00
         sta     LD4AC
-LD457:  MGTK_CALL MGTK::CheckEvents, $8F79
+LD457:  MGTK_CALL MGTK::GetEvent, $8F79
         lda     $8F79
         cmp     #$02
         beq     LD49F
@@ -471,7 +471,7 @@ LD4AD:  MGTK_CALL MGTK::SetPenMode, $8E05
         MGTK_CALL MGTK::PaintRect, $D117
         lda     #$00
         sta     LD513
-LD4BE:  MGTK_CALL MGTK::CheckEvents, $8F79
+LD4BE:  MGTK_CALL MGTK::GetEvent, $8F79
         lda     $8F79
         cmp     #$02
         beq     LD506
@@ -508,7 +508,7 @@ LD514:  lda     #$00
         sta     LD57A
         MGTK_CALL MGTK::SetPenMode, $8E05
         MGTK_CALL MGTK::PaintRect, $D10B
-LD525:  MGTK_CALL MGTK::CheckEvents, $8F79
+LD525:  MGTK_CALL MGTK::GetEvent, $8F79
         lda     $8F79
         cmp     #$02
         beq     LD56D

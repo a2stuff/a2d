@@ -1543,7 +1543,7 @@ LA9B4           := * + 2
         .byte   $3A
         jsr     L2004
         jsr     L2020
-LAA01:  MGTK_CALL MGTK::SetMark, $A85A
+LAA01:  MGTK_CALL MGTK::OpenWindow, $A85A
         lda     LA85A
 LAA0A:  jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, $8E05
@@ -1623,7 +1623,7 @@ LAB16:  lda     LA85A
         jmp     LAC54
 
 LAB61:  jsr     L98D4
-LAB64:  MGTK_CALL MGTK::CheckEvents, $8F79
+LAB64:  MGTK_CALL MGTK::GetEvent, $8F79
         lda     $8F79
         cmp     #$01
         beq     LAB98
@@ -1640,7 +1640,7 @@ LAB64:  MGTK_CALL MGTK::CheckEvents, $8F79
         jsr     L98C1
         rts
 
-LAB98:  MGTK_CALL MGTK::EndUpdate, $8F7A
+LAB98:  MGTK_CALL MGTK::FindWindow, $8F7A
         lda     $8F7E
         beq     LAB64
         cmp     #$02
@@ -1652,7 +1652,7 @@ LAB98:  MGTK_CALL MGTK::EndUpdate, $8F7A
         jsr     L9A15
         lda     LA85A
         sta     $8F79
-        MGTK_CALL MGTK::GrowWindow, $8F79
+        MGTK_CALL MGTK::ScreenToWindow, $8F79
         MGTK_CALL MGTK::MoveTo, $8F7E
         MGTK_CALL MGTK::InRect, $A894
         cmp     #$80
@@ -1666,13 +1666,13 @@ LAB98:  MGTK_CALL MGTK::EndUpdate, $8F7A
 
 LABE6:  lda     #$00
         sta     LAC53
-LABEB:  MGTK_CALL MGTK::CheckEvents, $8F79
+LABEB:  MGTK_CALL MGTK::GetEvent, $8F79
         lda     $8F79
         cmp     #$02
         beq     LAC3C
         lda     LA85A
         sta     $8F79
-        MGTK_CALL MGTK::GrowWindow, $8F79
+        MGTK_CALL MGTK::ScreenToWindow, $8F79
         MGTK_CALL MGTK::MoveTo, $8F7E
         MGTK_CALL MGTK::InRect, $A894
         cmp     #$80
@@ -1706,7 +1706,7 @@ LAC54:  ldx     LA4FB
         txs
         return  #$FF
 
-LAC5B:  MGTK_CALL MGTK::OpenWindow, $A85A
+LAC5B:  MGTK_CALL MGTK::CloseWindow, $A85A
         rts
 
 LAC62:  copy16  LA759, LACE2

@@ -759,14 +759,14 @@ L920D:  lda     L8F71
         sta     L8E98
         sta     $8F6F
         MGTK_CALL MGTK::StartDeskTop, $8FCE
-        MGTK_CALL MGTK::InitMenu, $8E15
-        MGTK_CALL MGTK::SetCursor, $0000
-        MGTK_CALL MGTK::GetEvent, $0000
+        MGTK_CALL MGTK::SetMenu, $8E15
+        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::FlushEvents, $0000
         yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L929A
         lda     #$80
 L929A:  sta     L910D
-        MGTK_CALL MGTK::SetMark, $8FD9
+        MGTK_CALL MGTK::OpenWindow, $8FD9
         jsr     L9914
         lda     #$00
         sta     L9112
@@ -788,7 +788,7 @@ L92C2:  bit     L9112
         bne     L92D6
         lda     #$00
         sta     L9112
-L92D6:  MGTK_CALL MGTK::CheckEvents, $8F79
+L92D6:  MGTK_CALL MGTK::GetEvent, $8F79
         lda     L8F79
         cmp     #$01
         bne     L92E9
@@ -821,18 +821,18 @@ L931C:  cmp     #$06
         jsr     L9339
 L9323:  jmp     L92C2
 
-L9326:  MGTK_CALL MGTK::FlushEvents, $8F79
+L9326:  MGTK_CALL MGTK::PeekEvent, $8F79
         lda     L8F79
         cmp     #$06
         bne     L9351
-        MGTK_CALL MGTK::CheckEvents, $8F79
+        MGTK_CALL MGTK::GetEvent, $8F79
 L9339:  jsr     L933F
         jmp     L9326
 
-L933F:  MGTK_CALL MGTK::SetWinPort, $8F7A
+L933F:  MGTK_CALL MGTK::BeginUpdate, $8F7A
         bne     L9351
         jsr     L9352
-        MGTK_CALL MGTK::BeginUpdate, $0000
+        MGTK_CALL MGTK::EndUpdate, $0000
         rts
 
 L9351:  rts
@@ -884,7 +884,7 @@ L938C:  lda     L8F7A
 L93A5:  sta     L8E0E
         lda     L8F7B
         sta     L8E0F
-        MGTK_CALL MGTK::MenuSelect, $8E0C
+        MGTK_CALL MGTK::MenuKey, $8E0C
 L93B4:  ldx     L8E0D
         beq     L93BE
         ldx     L8E0C
@@ -908,7 +908,7 @@ L93C1:  dex
         lda     L935A,x
         sta     L93F1
         jsr     L93EB
-        MGTK_CALL MGTK::MenuKey, $8E0C
+        MGTK_CALL MGTK::HiliteMenu, $8E0C
         rts
 
 L93EB:  tsx
@@ -948,14 +948,14 @@ L9443:  lda     #$FE
 
 L9450:  rts
 
-L9451:  MGTK_CALL MGTK::EndUpdate, $8F7A
+L9451:  MGTK_CALL MGTK::FindWindow, $8F7A
         lda     L8F7E
         bne     L945D
         rts
 
 L945D:  cmp     #$01
         bne     L946A
-        MGTK_CALL MGTK::SetMenu, $8E0C
+        MGTK_CALL MGTK::MenuSelect, $8E0C
         jmp     L93B4
 
 L946A:  cmp     #$02
@@ -975,7 +975,7 @@ L947C:  lda     L8FD9
         jsr     L9A15
         lda     L8FD9
         sta     L8F79
-        MGTK_CALL MGTK::GrowWindow, $8F79
+        MGTK_CALL MGTK::ScreenToWindow, $8F79
         MGTK_CALL MGTK::MoveTo, $8F7E
         MGTK_CALL MGTK::InRect, $901B
         cmp     #$80
@@ -1461,14 +1461,14 @@ watch_cursor:
 
 
 
-L98C1:  MGTK_CALL MGTK::ShowCursor, $0000
-        MGTK_CALL MGTK::GetIntHandler, watch_cursor
-        MGTK_CALL MGTK::SetCursor, $0000
+L98C1:  MGTK_CALL MGTK::HideCursor, $0000
+        MGTK_CALL MGTK::SetCursor, watch_cursor
+        MGTK_CALL MGTK::ShowCursor, $0000
         rts
 
-L98D4:  MGTK_CALL MGTK::ShowCursor, $0000
-        MGTK_CALL MGTK::GetIntHandler, pointer_cursor
-        MGTK_CALL MGTK::SetCursor, $0000
+L98D4:  MGTK_CALL MGTK::HideCursor, $0000
+        MGTK_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::ShowCursor, $0000
         rts
 
 L98E7:  ldx     $BF31
@@ -1591,7 +1591,7 @@ L9A10:  dey
 
         .byte   0
 L9A15:  sta     L8FA7
-        MGTK_CALL MGTK::GetWinPtr, $8FA7
+        MGTK_CALL MGTK::GetWinPort, $8FA7
         MGTK_CALL MGTK::SetPort, $8FAA
         rts
 
@@ -2061,13 +2061,13 @@ L9E0E:  lda     ($06),y
 
 L9E20:  lda     #$00
         sta     L9E8D
-L9E25:  MGTK_CALL MGTK::CheckEvents, $8F79
+L9E25:  MGTK_CALL MGTK::GetEvent, $8F79
         lda     L8F79
         cmp     #$02
         beq     L9E76
         lda     L8FD9
         sta     L8F79
-        MGTK_CALL MGTK::GrowWindow, $8F79
+        MGTK_CALL MGTK::ScreenToWindow, $8F79
         MGTK_CALL MGTK::MoveTo, $8F7E
         MGTK_CALL MGTK::InRect, $901B
         cmp     #$80
@@ -2099,13 +2099,13 @@ L9E7E:  MGTK_CALL MGTK::SetPenMode, $8E05
 L9E8D:  .byte   0
 L9E8E:  lda     #$00
         sta     L9EFB
-L9E93:  MGTK_CALL MGTK::CheckEvents, $8F79
+L9E93:  MGTK_CALL MGTK::GetEvent, $8F79
         lda     L8F79
         cmp     #$02
         beq     L9EE4
         lda     L8FD9
         sta     L8F79
-        MGTK_CALL MGTK::GrowWindow, $8F79
+        MGTK_CALL MGTK::ScreenToWindow, $8F79
         MGTK_CALL MGTK::MoveTo, $8F7E
         MGTK_CALL MGTK::InRect, $9023
         cmp     #$80
