@@ -9,30 +9,28 @@
 
 .scope
 
-L1000:  jmp     L103A
+        jmp     start
 
-L1003:  .byte   0, "Selector", 0
+flag:   .byte   0
+L1004:  .byte   "Selector"
+L100C:  .byte   0
 
-L100D:
-L100E           := * + 1
+str_loading:
         PASCAL_STRING "Loading Selector"
+
+str_selector:
         PASCAL_STRING "Selector"
 
         ;; ProDOS MLI call param blocks
-        .byte   4
-L1028:  .byte   0
-        .byte   0
-        .byte   $1C
-        .byte   0
-        asl     $00
-        .byte   0
-        ora     ($00,x)
-        ora     ($90,x)
-        ora     ($03),y
-        asl     a:$10,x
-        clc
-L1039:  .byte   0
-L103A:  lda     ROMIN2
+
+        DEFINE_READ_PARAMS read_params, $1C00, $600
+        DEFINE_CLOSE_PARAMS close_params
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buf
+        DEFINE_OPEN_PARAMS open_params, str_selector, $1800
+
+start:
+        ;; Show and clear 80-column text screen
+        lda     ROMIN2
         jsr     SETVID
         jsr     SETKBD
         sta     CLR80VID
@@ -41,124 +39,155 @@ L103A:  lda     ROMIN2
         jsr     SLOT3ENTRY
         jsr     HOME
         lda     #$00
-        sta     SHADOW
+        sta     SHADOW          ; TODO: Only do this on IIgs
         lda     #$80
-L105B           := * + 2
         sta     ALTZPON
         sta     FBUFFR
         sta     $0101
         sta     ALTZPOFF
+
+        ;; Disable IIgs video
+        ;; TODO: Only do this on IIgs
         lda     NEWVIDEO
         ora     #$20
         sta     NEWVIDEO
-        lda     #$0C
+
+        ;; Display the loading string
+        lda     #12             ; vtab
         sta     CV
         jsr     VTAB
-        lda     #$50
+        lda     #80             ; htab - center the string
         sec
-        sbc     L100D
-        lsr     a
+        sbc     str_loading
+        lsr     a               ; /= 2
         sta     CH
-        ldy     #$00
-L107F:  lda     L100E,y
+        ldy     #0
+:       lda     str_loading+1,y
         ora     #$80
         jsr     COUT
         iny
-        cpy     L100D
-        bne     L107F
-        MLI_CALL CLOSE, $102F
-        ldx     #$17
-        lda     #$01
-        sta     $BF58,x
+        cpy     str_loading
+        bne     :-
+
+        ;; Close all open files
+        MLI_CALL CLOSE, close_params
+
+        ;; Initialize system bitmap
+        ldx     #BITMAP_SIZE-1
+        lda     #$01            ; Protect ProDOS global page
+        sta     BITMAP,x
         dex
         lda     #$00
-L109D:  sta     $BF58,x
+:       sta     BITMAP,x
         dex
-        bpl     L109D
-        lda     #$CF
-        sta     $BF58
-        lda     L1003
-        bne     L10E6
-        MLI_CALL GET_PREFIX, $1031
-        beq     L10B8
-        jmp     L118B
+        bpl     :-
+        lda     #%11001111      ; Protect ZP, Stack, Text Page 1
+        sta     BITMAP
 
-L10B8:  lda     #$FF
-        sta     L1003
-        lda     IRQ_VECTOR
-        sta     L1189
-        lda     $03FF
-        sta     L118A
+        lda     flag
+        bne     proceed
+        MLI_CALL GET_PREFIX, get_prefix_params
+        beq     install
+        jmp     error_handler
+
+        ;; --------------------------------------------------
+
+install:
+        lda     #$FF
+        sta     flag
+        copy16  IRQ_VECTOR, irq_vector_stash
+
+        ;; Copy self into the ProDOS QUIT routine
+        ;; TODO: Why do this again?
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
-L10D1:  lda     L1000,y
+:       lda     $1000,y
         sta     $D100,y
-        lda     L1000+$100,y
+        lda     $1000+$100,y
         sta     $D200,y
         dey
-        bne     L10D1
+        bne     :-
         lda     ROMIN2
+
         jmp     L10F2
 
-L10E6:  lda     L1189
-        sta     IRQ_VECTOR
-        lda     L118A
-        sta     $03FF
-L10F2:  MLI_CALL SET_PREFIX, $1031
-        beq     L10FD
-        jmp     L1127
+proceed:
+        copy16  irq_vector_stash, IRQ_VECTOR
 
-L10FD:  MLI_CALL OPEN, $1034
-        beq     L1108
-        jmp     L118B
+;;; ============================================================
+;;; Load the Loader at $2000 and invoke it.
+;;; The code is at offset $400 length $200 in the file; load it
+;;; by loading $600 at $2000-$400=$1C00 as a shortcut (?!?).
 
-L1108:  lda     L1039
-        sta     L1028
-        MLI_CALL READ, $1027
-        beq     L1119
-        jmp     L118B
+L10F2:  MLI_CALL SET_PREFIX, get_prefix_params
+        beq     :+
+        jmp     disk_prompt
 
-L1119:  MLI_CALL CLOSE, $102F
-        beq     L1124
-        jmp     L118B
+:       MLI_CALL OPEN, open_params
+        beq     :+
+        jmp     error_handler
 
-L1124:  jmp     LOADER
+:       lda     open_params::ref_num
+        sta     read_params::ref_num
+        MLI_CALL READ, read_params
+        beq     :+
+        jmp     error_handler
 
-L1127:  jsr     SLOT3ENTRY
+:       MLI_CALL CLOSE, close_params
+        beq     :+
+        jmp     error_handler
+
+:       jmp     LOADER
+
+;;; ============================================================
+
+disk_prompt:
+        ;; Clear screen and center text
+        jsr     SLOT3ENTRY
         jsr     HOME
-        lda     #$0C
+        lda     #12
         sta     CV
         jsr     VTAB
-        lda     #$50
+        lda     #80
         sec
-        sbc     L115E
-        lsr     a
+        sbc     prompt
+        lsr     a               ; /= 2
         sta     CH
-        ldy     #$00
-L113F:  lda     L115F,y
+
+        ;; Display prompt
+        ldy     #0
+:       lda     prompt+1,y
         ora     #$80
         jsr     COUT
         iny
-        cpy     L115E
-        bne     L113F
-L114D:  sta     KBDSTRB
-L1150:  lda     CLR80COL
-        bpl     L1150
-        and     #$7F
-        cmp     #$0D
-        bne     L114D
-        jmp     L103A
+        cpy     prompt
+        bne     :-
 
-L115E:
-L115F:= *+1
+
+loop:   sta     KBDSTRB
+:       lda     CLR80COL
+        bpl     :-
+        and     #CHAR_MASK
+        cmp     #CHAR_RETURN
+        bne     loop
+        jmp     start
+
+prompt:
         PASCAL_STRING "Insert the system disk and press <Return>."
 
-L1189:  .byte   0
-L118A:  .byte   0
-L118B:  sta     $06
-        jmp     MONZ
+irq_vector_stash:
+        .word   0
 
-        PAD_TO  $11D0
+;;; ============================================================
+;;; Error Handler
+
+.proc error_handler
+        sta     $06
+        jmp     MONZ
+.endproc
+
+prefix_buf:
+        .res 64, 0
 
 .endscope

@@ -131,7 +131,7 @@ L209B:  lda     $3400,x
         jmp     START
 
 ;;; ============================================================
-;;; This seems to be random junk from some system file.
+;;; Duplicated from selector2.s - unused?
 
 .scope
 
