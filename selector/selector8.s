@@ -1365,36 +1365,19 @@ LA85A:
         .byte   $64
         .byte   $00
         .byte   $10,$00
-        .byte   $18
 
 
-        .byte   $44
-        .byte   $6F
-        .byte   $77
-        .byte   $6E,$20,$6C
-        .byte   $6F
-        .byte   $61,$64
-        .byte   $20,$69,$6E
-        .byte   $20,$74,$68
-        .byte   $65,$20
-        .byte   $52
-        .byte   $41,$4D
-        .byte   $43
-        .byte   $61,$72
-        .byte   $64
+        PASCAL_STRING "Down load in the RAMCard"
+
         .byte   $14
         .byte   $00
         .byte   $20,$00,$14
         .byte   $00
         .byte   $28
         .byte   $00
-        .byte   $08
-        .byte   $43
-        .byte   $6F
-        .byte   $70,$79
-        .byte   $69,$6E
-        .byte   $67
-        .byte   $3A
+
+        PASCAL_STRING "Copying:"
+
         .byte   $12
         .byte   $00
         .byte   $18
@@ -1446,130 +1429,14 @@ LA85A:
         .byte   $88
         .byte   $00
         .byte   $00
-        .byte   $37
-        .byte   $4E,$6F,$74
-        .byte   $20,$65,$6E
-        .byte   $6F
-        .byte   $75,$67
-        .byte   $68
-        .byte   $20,$72,$6F
 
-
-        .byte   $6F
-        .byte   $6D,$20,$69
-        .byte   $6E,$20,$74
-        .byte   $68
-        .byte   $65,$20
-        .byte   $52
-        .byte   $41,$4D
-        .byte   $43
-        .byte   $61,$72
-        .byte   $64
-        .byte   $20,$74,$6F
-        .byte   $20,$63,$6F
-        .byte   $70,$79
-        .byte   $20,$74,$68
-        .byte   $65,$20
-        .byte   $61,$70
-        .byte   $70,$6C
-        .byte   $69,$63
-        .byte   $61,$74
-        .byte   $69,$6F
-        .byte   $6E,$2E,$15
-        .byte   $43
-        .byte   $6C,$69,$63
-
-
-
-
-        .byte   $6B
-        .byte   $20,$4F,$4B
-        .byte   $20,$74,$6F
-        .byte   $20,$63,$6F
-        .byte   $6E,$74,$69
-        .byte   $6E,$75,$65
-        .byte   $2E,$25,$41
-LA965   := * + 1
-        .byte   $6E,$20,$65
-        .byte   $72
-        .byte   $72
-        .byte   $6F
-        .byte   $72
-        .byte   $20,$6F,$63
-        .byte   $63
-        .byte   $75,$72
-        .byte   $65,$64
-        .byte   $20,$64,$75
-        .byte   $72
-        .byte   $69,$6E
-        .byte   $67
-        .byte   $20,$74,$68
-        .byte   $65,$20
-        .byte   $64
-        .byte   $6F
-        .byte   $77
-        .byte   $6E,$6C,$6F
-        .byte   $61,$64
-        .byte   $2E,$30,$54
-        .byte   $68
-        .byte   $65,$20
-        .byte   $63
-        .byte   $6F
-        .byte   $70,$79
-
-
-
-        .byte   $20,$77,$61
-        .byte   $73
-        .byte   $6E,$27,$74
-        .byte   $20,$63,$6F
-        .byte   $6D,$70,$6C
-        .byte   $65,$74
-        .byte   $65,$64
-        .byte   $2C,$20,$63
-        .byte   $6C,$69,$63
-        .byte   $6B
-        .byte   $20,$4F,$4B
-        .byte   $20,$74,$6F
-        .byte   $20,$63,$6F
-        .byte   $6E,$74,$69
-        .byte   $6E,$75,$65
-        .byte   $2E,$23,$46
-        .byte   $69,$6C
-        .byte   $65,$73
-        .byte   $20,$74,$6F
-        .byte   $20,$62,$65
-        .byte   $20,$63,$6F
-        .byte   $70,$69
-        .byte   $65,$64
-        .byte   $20,$69,$6E
-        .byte   $20,$74,$68
-        .byte   $65,$20
-
-
-        .byte   $52
-        .byte   $41,$4D
-        .byte   $43
-        .byte   $61,$72
-        .byte   $64
-        .byte   $3A
-        .byte   $20,$1E,$46
-        .byte   $69,$6C
-        .byte   $65,$73
-        .byte   $20,$72,$65
-        .byte   $6D,$61,$69
-        .byte   $6E,$69,$6E
-        .byte   $67
-        .byte   $20,$74,$6F
-        .byte   $20,$62,$65
-        .byte   $20,$63,$6F
-        .byte   $70,$69
-        .byte   $65,$64
-        .byte   $3A
-        .byte   $20,$04,$20
-        .byte   $20,$20,$20
-
-
+        PASCAL_STRING "Not enough room in the RAMCard to copy the application."
+        PASCAL_STRING "Click OK to continue."
+        PASCAL_STRING "An error occured during the download."
+        PASCAL_STRING "The copy wasn't completed, click OK to continue."
+        PASCAL_STRING "Files to be copied in the RAMCard: "
+        PASCAL_STRING "Files remaining to be copied: "
+        PASCAL_STRING "    "
 
 LAA01:  MGTK_CALL MGTK::OpenWindow, $A85A
         lda     LA85A
@@ -1814,7 +1681,7 @@ LACE8   := * + 1
 
         MGTK_CALL MGTK::PaintRect, $A243
         MGTK_CALL MGTK::PaintRect, $A243
-        jsr     LA965
+        jsr     $A965           ; ???
         jmp     LAD11
 
         .byte   $C9
