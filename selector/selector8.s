@@ -52,35 +52,41 @@ LAD11           := $AD11
         pla
         rts
 
-LA027:  .byte   0
+LA027:
+        .byte   $00
         .byte   $03
-        and     $A1,x
-        .byte   0
-        php
-LA02D:  .byte   0
+        .byte   $35,$A1
+        .byte   $00
+        .byte   $08
+LA02D:
+        .byte   $00
         .byte   $04
-LA02F:  .byte   0
-        rol     $A0,x
+LA02F:
+        .byte   $00
+        .byte   $36,$A0
         .byte   $04
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA03B           := * + 1
-        ora     ($00,x)
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+LA03B   := * + 1
+        .byte   $01,$00
         .byte   $04
-LA03D:  .byte   0
-        ldy     $27A0,x
-        .byte   0
-        .byte   0
-        .byte   0
+LA03D:
+        .byte   $00
+        .byte   $BC,$A0,$27
+        .byte   $00
+        .byte   $00
+        .byte   $00
         .byte   $04
-LA045:  .byte   0
-LA048           := * + 2
-        jmp     L05A0
+LA045:
+        .byte   $00
+LA048   := * + 2
+        .byte   $4C,$A0,$05
+
 
         .byte   0
 LA04A:  .byte   0
@@ -94,39 +100,53 @@ LA04A:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-LA056           := * + 1
-        ora     ($00,x)
-LA058           := * + 1
-        ora     ($00,x)
-        ora     ($35,x)
-        lda     ($03,x)
-        and     $A1,x
-        .byte   0
-LA061           := * + 1
-        ora     $0300
+
+
+LA056   := * + 1
+        .byte   $01,$00
+LA058   := * + 1
+        .byte   $01,$00
+        .byte   $01,$35
+        .byte   $A1,$03
+        .byte   $35,$A1
+        .byte   $00
+LA061   := * + 1
+        .byte   $0D,$00,$03
         .byte   $F4
-        ldy     #$00
-LA067           := * + 1
-        ora     ($00),y
+        .byte   $A0,$00
+LA067   := * + 1
+        .byte   $11,$00
         .byte   $04
-LA069:  .byte   0
-        .byte   0
-LA06C           := * + 1
-        ora     $00,x
-LA06D:  .byte   $0B
-LA06E:  .byte   0
-LA06F:  .byte   0
+LA069:
+        .byte   $00
+        .byte   $00
+LA06C   := * + 1
+        .byte   $15,$00
+LA06D:
+        .byte   $0B
+LA06E:
+        .byte   $00
+LA06F:
+        .byte   $00
         .byte   $04
-LA071:  .byte   0
-        .byte   0
-LA074           := * + 1
-        ora     $00,x
-LA075:  .byte   $0B
-LA076:  .byte   0
-LA077:  .byte   0
-LA078:  .byte   $07
+LA071:
+        .byte   $00
+        .byte   $00
+LA074   := * + 1
+        .byte   $15,$00
+LA075:
+        .byte   $0B
+LA076:
+        .byte   $00
+LA077:
+        .byte   $00
+LA078:
+        .byte   $07
         .byte   $F4
-        ldy     #$C3
+        .byte   $A0,$C3
+
+
+
         .byte   0
         .byte   0
         .byte   0
@@ -138,7 +158,7 @@ LA078:  .byte   $07
 LA084:  .byte   $07
         .byte   $F4
 LA087           := * + 1
-        ldy     #$00
+        .byte   $A0, $00
         .byte   0
         .byte   0
         .byte   0
@@ -149,8 +169,9 @@ LA08B:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-LA092:  asl     a
-        and     $A1,x
+LA092:
+        .byte   $0A
+        .byte   $35,$A1
         .byte   0
         .byte   0
         .byte   0
@@ -167,9 +188,10 @@ LA09B:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-        asl     a
+        .byte   $0A
         .byte   $F4
-        ldy     #$00
+        .byte   $A0,$00
+
         .byte   0
 LA0AA:  .byte   0
 LA0AB:  .byte   0
@@ -237,12 +259,13 @@ LA0CC:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-LA0EC:  .byte   $FF
-LA0EE           := * + 1
-        ldy     $FC
-LA0F0           := * + 1
-        ldy     $F2
-        ldy     #$60
+LA0EC:
+        .byte   $FF
+LA0EE   := * + 1
+        .byte   $A4,$FC
+LA0F0   := * + 1
+        .byte   $A4,$F2
+        .byte   $A0,$60
         .byte   0
 LA0F4:  .byte   0
 LA0F5:  .byte   0
@@ -522,7 +545,7 @@ LA206:  .byte   0
 LA207:
 LA208           := * + 1
 LA209           := * + 2
-        ora     a:$00
+        .byte   $0D, $00, $00
 LA20A:  .byte   0
 LA20B:  .byte   0
         .byte   0
@@ -1283,34 +1306,38 @@ LA84D:  lda     $D3EE,y
         lda     ROMIN2
         rts
 
-LA85A:  .byte   $0B
-        ora     ($00,x)
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        stx     $00,y
+
+LA85A:
+        .byte   $0B
+        .byte   $01,$00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $96,$00
         .byte   $32
-        .byte   0
+        .byte   $00
         .byte   $F4
-        ora     ($8C,x)
-        .byte   0
+        .byte   $01,$8C
+        .byte   $00
         .byte   $64
-        .byte   0
+        .byte   $00
         .byte   $32
-        .byte   0
-        .byte   0
-        jsr     L0080
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        lsr     $4601,x
+        .byte   $00
+        .byte   $00
+        .byte   $20,$80,$00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $5E,$01,$46
+
+
         .byte   0
         .byte   $FF
         .byte   $FF
@@ -1326,94 +1353,102 @@ LA85A:  .byte   $0B
         .byte   0
         .byte   0
         .byte   0
-        ora     ($01,x)
-        .byte   0
+
+        .byte   $01,$01
+        .byte   $00
         .byte   $7F
-        .byte   0
-        dey
-        .byte   0
-        .byte   0
+        .byte   $00
+        .byte   $88
+        .byte   $00
+        .byte   $00
         .byte   $14
-        .byte   0
-        and     ($00),y
-        sei
-        .byte   0
+        .byte   $00
+        .byte   $31,$00
+        .byte   $78
+        .byte   $00
         .byte   $3C
-        .byte   0
-        clc
-        .byte   0
+        .byte   $00
+        .byte   $18
+        .byte   $00
         .byte   $3B
-        .byte   0
+        .byte   $00
         .byte   $04
-        .byte   0
+        .byte   $00
         .byte   $02
-        .byte   0
+        .byte   $00
         .byte   $5C
-        ora     ($44,x)
-        .byte   0
-        ora     $00
+        .byte   $01,$44
+        .byte   $00
+        .byte   $05,$00
         .byte   $03
-        .byte   0
+        .byte   $00
         .byte   $5B
-        ora     ($43,x)
-        .byte   0
+        .byte   $01,$43
+        .byte   $00
         .byte   $64
-        .byte   0
-        bpl     LA8B4
-LA8B4:  clc
+        .byte   $00
+        .byte   $10,$00
+LA8B4:
+        .byte   $18
+
+
         .byte   $44
         .byte   $6F
         .byte   $77
-        ror     $6C20
+        .byte   $6E,$20,$6C
         .byte   $6F
-        adc     ($64,x)
-        jsr     L6E69
-        jsr     L6874
-        adc     WNDLFT
+        .byte   $61,$64
+        .byte   $20,$69,$6E
+        .byte   $20,$74,$68
+        .byte   $65,$20
         .byte   $52
-        eor     ($4D,x)
+        .byte   $41,$4D
         .byte   $43
-        adc     ($72,x)
+        .byte   $61,$72
         .byte   $64
         .byte   $14
-        .byte   0
-        jsr     L1400
-        .byte   0
-        plp
-        .byte   0
-        php
+        .byte   $00
+        .byte   $20,$00,$14
+        .byte   $00
+        .byte   $28
+        .byte   $00
+        .byte   $08
         .byte   $43
         .byte   $6F
-        bvs     LA953
-        adc     #$6E
+        .byte   $70,$79
+        .byte   $69,$6E
         .byte   $67
         .byte   $3A
         .byte   $12
-        .byte   0
-        clc
-        .byte   0
+        .byte   $00
+        .byte   $18
+        .byte   $00
         .byte   $5A
-        ora     (WNDLFT,x)
-        .byte   0
-        asl     $00
-        clc
-        .byte   0
+        .byte   $01,$20
+        .byte   $00
+        .byte   $06,$00
+        .byte   $18
+        .byte   $00
         .byte   $5A
-        ora     ($42,x)
+        .byte   $01,$42
+
+
+
         .byte   0
         .byte   $64
         .byte   0
         .byte   $32
         .byte   0
         .byte   0
-        jsr     L0080
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+        .byte   $20,$80,$00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
         .byte   $5A
-        ora     ($42,x)
-        .byte   0
+        .byte   $01,$42
+        .byte   $00
         .byte   $FF
         .byte   $FF
         .byte   $FF
@@ -1423,25 +1458,28 @@ LA8B4:  clc
         .byte   $FF
         .byte   $FF
         .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        ora     ($01,x)
-        .byte   0
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $01,$01
+        .byte   $00
         .byte   $7F
-        .byte   0
-        dey
-        .byte   0
-        .byte   0
+        .byte   $00
+        .byte   $88
+        .byte   $00
+        .byte   $00
         .byte   $37
-        lsr     $746F
-        jsr     L6E65
+        .byte   $4E,$6F,$74
+        .byte   $20,$65,$6E
         .byte   $6F
-        adc     $67,x
-        pla
-        jsr     L6F72
+        .byte   $75,$67
+        .byte   $68
+        .byte   $20,$72,$6F
+
+
+
         .byte   $6F
         adc     $6920
         ror     $7420
