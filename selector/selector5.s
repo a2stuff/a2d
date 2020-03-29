@@ -174,128 +174,59 @@ L8E0F:
         .byte   $00
         .byte   $00
         .byte   $00
-        .byte   $03
-        .byte   $00
-        .byte   $01,$00
-        .byte   $9B
-        .byte   $8E,$3B,$8E
 
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $02
-        .byte   $00
-        .byte   $9D,$8E,$5F
-        .byte   $8E,$00,$00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $03
-        .byte   $00
-        .byte   $A2,$8E
-        .byte   $6B
-        .byte   $8E,$00,$00
+menu:   DEFINE_MENU_BAR 3
+        DEFINE_MENU_BAR_ITEM 1, str_apple, apple_menu
+        DEFINE_MENU_BAR_ITEM 2, str_file, file_menu
+        DEFINE_MENU_BAR_ITEM 3, str_startup, startup_menu
 
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $05,$00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $AA
-        .byte   $8E,$00,$00
-        .byte   $00
-        .byte   $00
-        .byte   $C7
-        .byte   $8E,$00,$00
-        .byte   $00
-        .byte   $00
-        .byte   $C9,$8E
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $EE,$8E,$00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $12
-        .byte   $8F
-        .byte   $01,$00
+apple_menu:
+        DEFINE_MENU 5
+        DEFINE_MENU_ITEM str_a2desktop
+        DEFINE_MENU_ITEM str_blank
+        DEFINE_MENU_ITEM str_copyright1
+        DEFINE_MENU_ITEM str_copyright2
+        DEFINE_MENU_ITEM str_copyright3
 
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $01,$00
-        .byte   $52
-        .byte   $72
-        .byte   $27
-        .byte   $8F
-L8E6B:
-        .byte   $01,$00
-        .byte   $00
+file_menu:
+        DEFINE_MENU 1
+        DEFINE_MENU_ITEM str_run_a_program, 'R', 'r'
 
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $01,$00
-L8E73:
-L8E74   := * + 1
-        .byte   $30,$30
-        .addr   str_slot_x1
-        .byte   $01
-        .byte   $00
-L8E79:
-L8E7A   := * + 1
-        .byte   $30,$30
-        .addr   str_slot_x2
-        .byte   $01,$00
-L8E7F:
-L8E80   := * + 1
-        .byte   $30,$30
-        .addr   str_slot_x3
-        .byte   $01,$00
-L8E85:
-L8E86   := * + 1
-        .byte   $30,$30
-        .addr   str_slot_x4
-        .byte   $01,$00
-L8E8B:
-L8E8C   := * + 1
-        .byte   $30,$30
-        .addr   str_slot_x5
-        .byte   $01,$00
-L8E91:
-L8E92   := * + 1
-        .byte   $30,$30
-        .addr   str_slot_x6
-        .byte   $01,$00
-L8E97:
-L8E98   := * + 1
-        .byte   $30,$30
-        .addr   str_slot_x7
-        .byte   $01,$1E
+startup_menu:
+        DEFINE_MENU 1
 
+kMenuItemShortcutOffset = 2
+
+mi_x1:  DEFINE_MENU_ITEM str_slot_x1, '0', '0'
+mi_x2:  DEFINE_MENU_ITEM str_slot_x2, '0', '0'
+mi_x3:  DEFINE_MENU_ITEM str_slot_x3, '0', '0'
+mi_x4:  DEFINE_MENU_ITEM str_slot_x4, '0', '0'
+mi_x5:  DEFINE_MENU_ITEM str_slot_x5, '0', '0'
+mi_x6:  DEFINE_MENU_ITEM str_slot_x6, '0', '0'
+mi_x7:  DEFINE_MENU_ITEM str_slot_x7, '0', '0'
+
+str_apple:
+        PASCAL_STRING $1E       ; TODO: GLYPH_SAPPLE
+
+str_file:
         PASCAL_STRING "File"
+str_startup:
         PASCAL_STRING "Startup"
+
+str_a2desktop:
         PASCAL_STRING "Apple II DeskTop Version 1.1"
+str_blank:
         PASCAL_STRING " "
+str_copyright1:
         PASCAL_STRING "Copyright Apple Computer Inc., 1986 "
+str_copyright2:
         PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
+str_copyright3:
         PASCAL_STRING "All Rights reserved "
+
+str_run_a_program:
         PASCAL_STRING "Run a Program ..."
+
 
         kStrSlotXOffset = 6
 str_slot_x1:
@@ -746,52 +677,52 @@ L920C           := * + 2
         jmp     CLR80COL
 
 L920D:  lda     L8F71
-        sta     L8E6B
+        sta     startup_menu
 
         lda     slot_x1
         ora     #$30            ; number to ASCII digit
         sta     str_slot_x1 + kStrSlotXOffset
-        sta     L8E73
-        sta     L8E74
+        sta     mi_x1 + kMenuItemShortcutOffset
+        sta     mi_x1 + kMenuItemShortcutOffset + 1
 
         lda     slot_x2
         ora     #$30            ; number to ASCII digit
         sta     str_slot_x2 + kStrSlotXOffset
-        sta     L8E79
-        sta     L8E7A
+        sta     mi_x2 + kMenuItemShortcutOffset
+        sta     mi_x2 + kMenuItemShortcutOffset + 1
 
         lda     slot_x3
         ora     #$30            ; number to ASCII digit
         sta     str_slot_x3 + kStrSlotXOffset
-        sta     L8E7F
-        sta     L8E80
+        sta     mi_x3 + kMenuItemShortcutOffset
+        sta     mi_x3 + kMenuItemShortcutOffset + 1
 
         lda     slot_x4
         ora     #$30            ; number to ASCII digit
         sta     str_slot_x4 + kStrSlotXOffset
-        sta     L8E85
-        sta     L8E86
+        sta     mi_x4 + kMenuItemShortcutOffset
+        sta     mi_x4 + kMenuItemShortcutOffset + 1
 
         lda     slot_x5
         ora     #$30            ; number to ASCII digit
         sta     str_slot_x5 + kStrSlotXOffset
-        sta     L8E8B
-        sta     L8E8C
+        sta     mi_x5 + kMenuItemShortcutOffset
+        sta     mi_x5 + kMenuItemShortcutOffset + 1
 
         lda     slot_x6
         ora     #$30            ; number to ASCII digit
         sta     str_slot_x6 + kStrSlotXOffset
-        sta     L8E91
-        sta     L8E92
+        sta     mi_x6 + kMenuItemShortcutOffset
+        sta     mi_x6 + kMenuItemShortcutOffset + 1
 
         lda     slot_x7
         ora     #$30            ; number to ASCII digit
-        sta     L8E97
-        sta     L8E98
+        sta     mi_x7 + kMenuItemShortcutOffset
+        sta     mi_x7 + kMenuItemShortcutOffset + 1
         sta     str_slot_x7 + kStrSlotXOffset
 
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
-        MGTK_CALL MGTK::SetMenu, $8E15
+        MGTK_CALL MGTK::SetMenu, menu
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
         yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
