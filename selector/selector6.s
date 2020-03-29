@@ -224,34 +224,46 @@ LD142:  .byte   0
 LD143:  .byte   0
 LD144:  .byte   0
 
+;;; ============================================================
+
+
+str_selector_unable_to_run:
         PASCAL_STRING "The Selector is unable to run the program."
+str_io_error:
         PASCAL_STRING "I/O Error"
+str_no_device:
         PASCAL_STRING "No device connected."
+str_pathname_does_not_exist:
         PASCAL_STRING "Part of the pathname doesn't exist."
+str_insert_source_disk:
         PASCAL_STRING "Please insert source disk."
+str_file_not_found:
         PASCAL_STRING "The file cannot be found."
+str_insert_system_disk:
         PASCAL_STRING "Please insert the system disk"
+str_basic_system_not_found:
         PASCAL_STRING "BASIC.SYSTEM not found"
 
-LD21D:
-        .byte   $08
-LD21E:
-        .byte   $00
-        .byte   $27
-        .byte   $28
-        .byte   $44
-        .byte   $45,$46
-LD226   := * + 2
-        .byte   $FE,$FF,$45
-LD227:
-        .byte   $D1,$70
-        .byte   $D1,$7A
-        .byte   $D1,$8F
-        .byte   $D1,$B3
-        .byte   $D1,$CE
-        .byte   $D1,$E8
-        .byte   $D1,$06
-        .byte   $D2
+kNumErrorMessages = 8
+
+num_error_messages:
+        .byte   kNumErrorMessages
+
+error_message_index_table:
+        .byte   $00,$27,$28,$44,$45,$46,$FE,$FF
+        ;; ASSERT_TABLE_SIZE error_message_index_table, kNumErrorMessages
+
+error_message_table:
+        .addr   str_selector_unable_to_run
+        .addr   str_io_error
+        .addr   str_no_device
+        .addr   str_pathname_does_not_exist
+        .addr   str_insert_source_disk
+        .addr   str_file_not_found
+        .addr   str_insert_system_disk
+        .addr   str_basic_system_not_found
+        ;; ASSERT_ADDRESS_TABLE_SIZE error_message_table, kNumErrorMessages
+
 LD236:
         .byte   $00
         .byte   $00
@@ -317,18 +329,18 @@ LD29F:  sta     $8F83,x
         MGTK_CALL MGTK::ShowCursor
         pla
         ldy     #$00
-LD307:  cmp     LD21E,y
+LD307:  cmp     error_message_index_table,y
         beq     LD314
         iny
-        cpy     LD21D
+        cpy     num_error_messages
         bne     LD307
         ldy     #$00
 LD314:  tya
         asl     a
         tay
-        lda     LD226,y
+        lda     error_message_table,y
         sta     LD143
-        lda     LD227,y
+        lda     error_message_table+1,y
         sta     LD144
         tya
         lsr     a
@@ -783,77 +795,8 @@ LD767:  .byte   0
 LD768:  .byte   0
 LD769:  .byte   0
 
-;;; ============================================================
-;;; Everything after here is a chunk of selector5.s
-
-.scope
-L9582           := $9582
-L95A0           := $95A0
-L9A15           := $9A15
-L9AFD           := $9AFD
-L9B42           := $9B42
-
-
-        cmp     #$08
-        bcc     LD771
-        jmp     L9582
-
-LD771:  cmp     $9127
-        bcc     LD796
-        lda     $910E
-        jsr     L9B42
-        lda     #$FF
-        sta     $910E
-        rts
-
-        sec
-        sbc     #$08
-        cmp     $9128
-        bcc     LD796
-        lda     $910E
-        jsr     L9B42
-        lda     #$FF
-        sta     $910E
-        rts
-
-LD796:  lda     $959E
-        jsr     L9AFD
-        rts
-
-        .byte   0
-        .byte   0
-        .byte   0
-        sty     $95AE
-        stax    $95AF
-        php
-        sei
-        MLI_CALL $00, $0000
-        plp
-        and     #$FF
-        rts
-
-        rts
-
-        yax_call L95A0, $C8, $90A0
-        lda     $90A5
-        sta     $90A7
-        sta     DHIRESOFF
-        sta     TXTCLR
-        sta     CLR80VID
-        sta     SETALTCHAR
-        sta     CLR80COL
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
-        yax_call L95A0, $CA, $90A6
-        yax_call L95A0, $CC, $90C5
-        jmp     L2000
-
-        lda     $8FD9
-        jsr     L9A15
-        lda     $8F7A
-        and     #$7F
 .endscope
 
-.endscope
+        .incbin "inc/junk4.dat"
+
+        ASSERT_ADDRESS $D800

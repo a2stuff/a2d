@@ -1,16 +1,16 @@
 
 The file is broken down into multiple segments:
 
-| Purpose       | File Offset | Bank   | Address      | Length | Source                    |
-|---------------|-------------|--------|--------------|--------|---------------------------|
-| Bootstrap     | B$00000000  | Main   | $A2000-$2026 | L$0027 | `selector1.s`             |
-| Quit Handler  | B$00000027  | Main   | $A1000-$11FF | L$0200 | `selector2.s`             |
-| Loader        | B$00000400  | Main   |              |        | `selector3.s`             |
-| Invoker       | B$00000600  | Main   | $A0290-$03FF | L$0160 | `selector4.s`             |
-| MGTK + App    | B$00000760  |        | $A4000-$9FFF | L$6000 | `selector5.s`             |
-| Resources     | B$00006760  | Aux LC | $AD000-$D7FF | L$0800 | `selector6.s`             |
-| Overlay 1     | B$00006F60  | Main   | $AA000-$BEFF | L$1F00 | `selector7.s`             |
-| Overlay 2     | B$00008E60  | Main   | $AA000-$ACFF | L$0D00 | `selector8.s`             |
+| Purpose      | File Offset | Bank   | Address      | Length | Source        |
+|--------------|-------------|--------|--------------|--------|---------------|
+| Bootstrap    | B$00000000  | Main   | $A2000-$2026 | L$0027 | `selector1.s` |
+| Quit Handler | B$00000027  | Main   | $A1000-$11FF | L$0200 | `selector2.s` |
+| Loader       | B$00000400  | Main   | $A2000-$21FF | L$0200 | `selector3.s` |
+| Invoker      | B$00000600  | Main   | $A0290-$03EF | L$0160 | `selector4.s` |
+| MGTK + App   | B$00000760  |        | $A4000-$9FFF | L$6000 | `selector5.s` |
+| Resources    | B$00006760  | Aux LC | $AD000-$D7FF | L$0800 | `selector6.s` |
+| Overlay 1    | B$00006F60  | Main   | $AA000-$BEFF | L$1F00 | `selector7.s` |
+| Overlay 2    | B$00008E60  | Main   | $AA000-$ACFF | L$0D00 | `selector8.s` |
 
 ## Segments
 
@@ -29,11 +29,6 @@ Loads the Loader - reads SELECTOR $600 bytes at $1C00, and jumps to $2000
 (Note that the first chunk of bytes that end up at $1C00 are not used
 as that is the Bootstrap and the Quit Handler code; this is followed by
 padding.)
-
-open questions:
-* does the code from $0227 to $03FF get used? (loaded $1E27..$1FFF)
-* does the code just before $0227 get used? (loaded just before $1E27..$1FFF)
-  (probably copied incidentally to LC2)
 
 ### Loader - `selector3.s`
 
@@ -62,11 +57,11 @@ A handful of resources for MGTK and routines. Loaded to Aux LC1
 
 ### Overlay 1 - `selector7.s`
 
-TBD.
+TBD. Loaded to $A000.
 
 ### Overlay 2 - `selector8.s`
 
-TBD.
+TBD. Loaded to $A000.
 
 
 ## Memory Map

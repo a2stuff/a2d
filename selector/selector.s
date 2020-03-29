@@ -33,25 +33,8 @@ overlay2_size   = $D00
         .incbin "inc/bs.dat"
 
         .include "selector3.s"
-
-        ;; Random chunk of selector2 itself (including the BS junk!)
-        .incbin "inc/junk.dat"
-
         .include "selector4.s"
-
-        ;; Random chunk of selector2 itself
-        .incbin "inc/junk2.dat"
-
         .include "selector5.s"
-
-        ;; Random chunk of MGTK padding out the file
-        .incbin "inc/mgtk.dat"
-
         .include "selector6.s"
-
         .include "selector7.s"
-
-        ;; Random chunk of MGTK padding out the file
-        .incbin "inc/junk3.dat"
-
         .include "selector8.s"

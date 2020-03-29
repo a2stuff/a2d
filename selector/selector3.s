@@ -90,3 +90,7 @@ L2049:  lda     open_params::ref_num
         jmp     START
 
 .endscope
+
+        .incbin "inc/junk.dat"
+
+        ASSERT_ADDRESS $2200

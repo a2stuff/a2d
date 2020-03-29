@@ -3439,3 +3439,8 @@ LBBE2:  .byte   0
 
 
 .endscope
+
+        ;; Random chunk of MGTK padding out the file
+        .incbin "inc/junk3.dat"
+
+        ASSERT_ADDRESS $BF00
