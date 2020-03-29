@@ -6,6 +6,8 @@
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk_100B4.inc"
 
+INVOKER_PREFIX  := $0220
+INVOKER_FILENAME:= $0280
 INVOKER         := $0290
 LOADER          := $2000
 MGTK            := $4000
@@ -28,6 +30,10 @@ START           := $8E00
         .incbin "inc/junk.dat"
 
         .include "selector4.s"
+
+        ;; Random chunk of selector2 itself
+        .incbin "inc/junk2.dat"
+
         .include "selector5.s"
 
         ;; Random chunk of MGTK padding out the file
