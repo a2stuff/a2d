@@ -1,3 +1,5 @@
+.feature leading_dot_in_identifiers
+
 ;;; ============================================================
 ;;; Generic Macros
 ;;; ============================================================
@@ -700,11 +702,41 @@ loop:   lda     src,x
 
 
 ;;; ============================================================
+;;; Parameter Blocks - named scopes that indicate data
+;;; ============================================================
+;;; Example:
+;;; .params label
+;;; p1: .byte 0
+;;; p2: .word 1234
+;;; .endparams
+
+.macro .params label
+        .proc label
+.endmacro
+
+.macro .endparams
+        .endproc
+.endmacro
+
+
+;;; ============================================================
 ;;; Assertions
 ;;; ============================================================
 
 .macro ASSERT_ADDRESS addr
         .assert * = (addr), error, .sprintf("Address mismatch, expected $%X actual $%X", (addr), *)
+.endmacro
+
+.macro ASSERT_TABLE_SIZE name, size
+        .assert * - name = size, error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), size, * - name)
+.endmacro
+
+.macro ASSERT_ADDRESS_TABLE_SIZE name, size
+        .assert (* - name) = (size) * 2, error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), (size) * 2, * - name)
+.endmacro
+
+.macro ASSERT_RECORD_TABLE_SIZE name, size, record_length
+        .assert (* - name) = (size) * (record_length), error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), (size) * (record_length), * - name)
 .endmacro
 
 

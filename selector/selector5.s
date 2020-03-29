@@ -150,12 +150,15 @@ MGTK:
 
 START:  jmp     L912A
 
-        .byte   $00
-        .byte   $01,$02
-        .byte   $03
-        .byte   $04
-        .byte   $05,$06
-        .byte   $07
+pencopy:        .byte   0
+penOR:          .byte   1
+penXOR:         .byte   2
+penBIC:         .byte   3
+notpencopy:     .byte   4
+notpenOR:       .byte   5
+notpenXOR:      .byte   6
+notpenBIC:      .byte   7
+
 L8E0B:
         .byte   $00
 L8E0C:
@@ -251,37 +254,38 @@ L8E6B:
 L8E73:
 L8E74   := * + 1
         .byte   $30,$30
-        .byte   $39,$8F,$01
+        .addr   str_slot_x1
+        .byte   $01
         .byte   $00
 L8E79:
 L8E7A   := * + 1
         .byte   $30,$30
-        .byte   $41,$8F
+        .addr   str_slot_x2
         .byte   $01,$00
 L8E7F:
 L8E80   := * + 1
         .byte   $30,$30
-        .byte   $49,$8F
+        .addr   str_slot_x3
         .byte   $01,$00
 L8E85:
 L8E86   := * + 1
         .byte   $30,$30
-        .byte   $51,$8F
+        .addr   str_slot_x4
         .byte   $01,$00
 L8E8B:
 L8E8C   := * + 1
         .byte   $30,$30
-        .byte   $59,$8F,$01
-        .byte   $00
+        .addr   str_slot_x5
+        .byte   $01,$00
 L8E91:
 L8E92   := * + 1
         .byte   $30,$30
-        .byte   $61,$8F
+        .addr   str_slot_x6
         .byte   $01,$00
 L8E97:
 L8E98   := * + 1
         .byte   $30,$30
-        .byte   $69,$8F
+        .addr   str_slot_x7
         .byte   $01,$1E
 
         PASCAL_STRING "File"
@@ -292,23 +296,60 @@ L8E98   := * + 1
         PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
         PASCAL_STRING "All Rights reserved "
         PASCAL_STRING "Run a Program ..."
+
+        kStrSlotXOffset = 6
+str_slot_x1:
         PASCAL_STRING "Slot x "
+str_slot_x2:
         PASCAL_STRING "Slot x "
+str_slot_x3:
         PASCAL_STRING "Slot x "
+str_slot_x4:
         PASCAL_STRING "Slot x "
+str_slot_x5:
         PASCAL_STRING "Slot x "
+str_slot_x6:
         PASCAL_STRING "Slot x "
+str_slot_x7:
         PASCAL_STRING "Slot x "
 
 L8F71:  .byte   0
-L8F72:  .byte   0
-L8F73:  .byte   0
-L8F74:  .byte   0
-L8F75:  .byte   0
-L8F76:  .byte   0
+
+;;; Slot numbers
+
+slot_x1:  .byte   0
+slot_x2:  .byte   0
+slot_x3:  .byte   0
+slot_x4:  .byte   0
+slot_x5:  .byte   0
+slot_x6:  .byte   0
+slot_x7:  .byte   0
+
+;;; ============================================================
+;;; Event Params (and overlapping param structs)
+
+event_params := *
+event_kind := event_params + 0
+        ;; if kind is key_down
+event_key := event_params + 1
+event_modifiers := event_params + 2
+        ;; if kind is no_event, button_down/up, drag, or apple_key:
+event_coords := event_params + 1
+event_xcoord := event_params + 1
+event_ycoord := event_params + 3
+        ;; if kind is update:
+event_window_id := event_params + 1
+
+screentowindow_params := *
+screentowindow_window_id := screentowindow_params + 0
+screentowindow_screenx := screentowindow_params + 1
+screentowindow_screeny := screentowindow_params + 3
+screentowindow_windowx := screentowindow_params + 5
+screentowindow_windowy := screentowindow_params + 7
+        .assert screentowindow_screenx = event_xcoord, error, "param mismatch"
+        .assert screentowindow_screeny = event_ycoord, error, "param mismatch"
+
         .byte   0
-L8F78:  .byte   0
-L8F79:  .byte   0
 L8F7A:  .byte   0
 L8F7B:  .byte   0
         .byte   0
@@ -393,16 +434,18 @@ L8FA7:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-        .byte   $06, $EA
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $88
-        .byte   0
-        .byte   $08
-        .byte   0
-        .byte   $08
+
+.params startdesktop_params
+machine:        .byte   $06
+subid:          .byte   $EA
+op_sys:         .byte   0
+slot_num:       .byte   0
+use_interrupts: .byte   0
+sysfontptr:     .addr   FONT
+savearea:       .addr   $800
+savesize:       .word   $800
+.endparams
+
 L8FD9:  .byte   $01, $01
         .byte   0
         .byte   0
@@ -456,35 +499,23 @@ L8FD9:  .byte   $01, $01
         .byte   $88
         .byte   0
         .byte   0
-        .byte   $04
-        .byte   0
-        .byte   $02
-        .byte   0
 
-        .byte   $F0,$01
-        .byte   $6C,$00,$54
-        .byte   $01,$5E
-        .byte   $00
-        .byte   $B8
-        .byte   $01,$69
-        .byte   $00
-        .byte   $3C
-        .byte   $00
-        .byte   $5E,$00,$A0
-        .byte   $00
-        .byte   $69,$00
-        .byte   $58
-        .byte   $01,$68
-        .byte   $00
+        DEFINE_RECT 4, 2, 496, 108
 
+rect_ok_btn:
+        DEFINE_RECT 340, 94, 440, 105
 
+rect_desktop_btn:
+        DEFINE_RECT 60, 94, 160, 105
+
+pos_ok_label:
+        DEFINE_POINT 344, 104
+str_ok_btn:
         PASCAL_STRING {" OK           ",CHAR_RETURN}
 
-        .byte   $40
-        .byte   0
-        .byte   $68
-        .byte   0
-
+pos_desktop_label:
+        DEFINE_POINT 64, 104
+str_desktop_btn:
         PASCAL_STRING " DeskTop       Q "
 
         .byte   $02
@@ -579,7 +610,10 @@ str_selector:
 str_desktop2_2:
         PASCAL_STRING "DeskTop2"
 
-L910D:  .byte   0
+desktop_available_flag:
+        .byte   0
+
+
 L910E:  .byte   0
         .byte   0
 L9110:  .byte   0
@@ -713,49 +747,57 @@ L920C           := * + 2
 
 L920D:  lda     L8F71
         sta     L8E6B
-        lda     L8F72
-        ora     #$30
-        sta     $8F3F
+
+        lda     slot_x1
+        ora     #$30            ; number to ASCII digit
+        sta     str_slot_x1 + kStrSlotXOffset
         sta     L8E73
         sta     L8E74
-        lda     L8F73
-        ora     #$30
-        sta     $8F47
+
+        lda     slot_x2
+        ora     #$30            ; number to ASCII digit
+        sta     str_slot_x2 + kStrSlotXOffset
         sta     L8E79
         sta     L8E7A
-        lda     L8F74
-        ora     #$30
-        sta     $8F4F
+
+        lda     slot_x3
+        ora     #$30            ; number to ASCII digit
+        sta     str_slot_x3 + kStrSlotXOffset
         sta     L8E7F
         sta     L8E80
-        lda     L8F75
-        ora     #$30
-        sta     $8F57
+
+        lda     slot_x4
+        ora     #$30            ; number to ASCII digit
+        sta     str_slot_x4 + kStrSlotXOffset
         sta     L8E85
         sta     L8E86
-        lda     L8F76
-        ora     #$30
-        sta     $8F5F
+
+        lda     slot_x5
+        ora     #$30            ; number to ASCII digit
+        sta     str_slot_x5 + kStrSlotXOffset
         sta     L8E8B
         sta     L8E8C
-        lda     $8F77
-        ora     #$30
-        sta     $8F67
+
+        lda     slot_x6
+        ora     #$30            ; number to ASCII digit
+        sta     str_slot_x6 + kStrSlotXOffset
         sta     L8E91
         sta     L8E92
-        lda     L8F78
-        ora     #$30
+
+        lda     slot_x7
+        ora     #$30            ; number to ASCII digit
         sta     L8E97
         sta     L8E98
-        sta     $8F6F
-        MGTK_CALL MGTK::StartDeskTop, $8FCE
+        sta     str_slot_x7 + kStrSlotXOffset
+
+        MGTK_CALL MGTK::StartDeskTop, startdesktop_params
         MGTK_CALL MGTK::SetMenu, $8E15
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
         yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L929A
         lda     #$80
-L929A:  sta     L910D
+L929A:  sta     desktop_available_flag
         MGTK_CALL MGTK::OpenWindow, $8FD9
         jsr     L9914
         lda     #$00
@@ -778,8 +820,8 @@ L92C2:  bit     L9112
         bne     L92D6
         lda     #$00
         sta     L9112
-L92D6:  MGTK_CALL MGTK::GetEvent, $8F79
-        lda     L8F79
+L92D6:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_kind
         cmp     #$01
         bne     L92E9
         jsr     L9451
@@ -787,7 +829,7 @@ L92D6:  MGTK_CALL MGTK::GetEvent, $8F79
 
 L92E9:  cmp     #$03
         bne     L931C
-        bit     L910D
+        bit     desktop_available_flag
         bmi     L9316
         lda     L8F7A
         and     #$7F
@@ -811,11 +853,11 @@ L931C:  cmp     #$06
         jsr     L9339
 L9323:  jmp     L92C2
 
-L9326:  MGTK_CALL MGTK::PeekEvent, $8F79
-        lda     L8F79
+L9326:  MGTK_CALL MGTK::PeekEvent, event_params
+        lda     event_kind
         cmp     #$06
         bne     L9351
-        MGTK_CALL MGTK::GetEvent, $8F79
+        MGTK_CALL MGTK::GetEvent, event_params
 L9339:  jsr     L933F
         jmp     L9326
 
@@ -966,30 +1008,30 @@ L9473:  lda     L8F7F
 L947C:  lda     L8FD9
         jsr     L9A15
         lda     L8FD9
-        sta     L8F79
-        MGTK_CALL MGTK::ScreenToWindow, $8F79
-        MGTK_CALL MGTK::MoveTo, $8F7E
-        MGTK_CALL MGTK::InRect, $901B
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::InRect, rect_ok_btn
         cmp     #$80
         beq     L94A1
         jmp     L94B6
 
-L94A1:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $901B
+L94A1:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect_ok_btn
         jsr     L9E20
         bmi     L94B5
         jsr     L97BD
 L94B5:  rts
 
-L94B6:  bit     L910D
+L94B6:  bit     desktop_available_flag
         bmi     L94F0
-        MGTK_CALL MGTK::InRect, $9023
+        MGTK_CALL MGTK::InRect, rect_desktop_btn
         cmp     #$80
         beq     L94C8
         jmp     L94F0
 
-L94C8:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $9023
+L94C8:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect_desktop_btn
         jsr     L9E8E
         bmi     L94B5
 L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
@@ -1133,9 +1175,9 @@ L9638:  cmp     #$0D
         bne     L9658
         lda     L8FD9
         jsr     L9A15
-        MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $901B
-        MGTK_CALL MGTK::PaintRect, $901B
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect_ok_btn
+        MGTK_CALL MGTK::PaintRect, rect_ok_btn
         jsr     L97BD
         rts
 
@@ -1496,39 +1538,53 @@ L9904:  dec     DEVCNT
 
 L9914:  lda     L8FD9
         jsr     L9A15
-L991A:  MGTK_CALL MGTK::SetPenMode, $8E05
+L991A:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::SetPenSize, $9055
+
         MGTK_CALL MGTK::FrameRect, $9013
-        MGTK_CALL MGTK::FrameRect, $901B
-        bit     L910D
-        bmi     L993D
-        MGTK_CALL MGTK::FrameRect, $9023
-L993D:  addr_call L999B, $905B
-        jsr     L9968
-        bit     L910D
-        bmi     L994F
-        jsr     L9976
-L994F:  MGTK_CALL MGTK::MoveTo, $9068
+        MGTK_CALL MGTK::FrameRect, rect_ok_btn
+
+        bit     desktop_available_flag
+        bmi     :+
+        MGTK_CALL MGTK::FrameRect, rect_desktop_btn
+:
+        addr_call L999B, $905B
+        jsr     draw_ok_label
+        bit     desktop_available_flag
+        bmi     :+
+        jsr     draw_desktop_label
+:
+        MGTK_CALL MGTK::MoveTo, $9068
         MGTK_CALL MGTK::LineTo, $906C
         MGTK_CALL MGTK::MoveTo, $9070
         MGTK_CALL MGTK::LineTo, $9074
         rts
 
-L9968:  MGTK_CALL MGTK::MoveTo, $902B
-        addr_call L9984, $902F
+;;; ============================================================
+
+draw_ok_label:
+        MGTK_CALL MGTK::MoveTo, pos_ok_label
+        addr_call draw_string, str_ok_btn
         rts
 
-L9976:  MGTK_CALL MGTK::MoveTo, $903F
-        addr_call L9984, $9043
+draw_desktop_label:
+        MGTK_CALL MGTK::MoveTo, pos_desktop_label
+        addr_call draw_string, str_desktop_btn
         rts
 
-L9984:  stax    $06
+;;; ============================================================
+
+.proc draw_string
+        stax    $06
         ldy     #$00
         lda     ($06),y
         sta     $08
         inc16   $06
         MGTK_CALL MGTK::DrawText, $0006
         rts
+.endproc
+
+;;; ============================================================
 
 L999B:  stax    $06
         ldy     #$00
@@ -1706,7 +1762,7 @@ L9AE5:  lda     L8FD9
         pla
         jsr     L9A62
         MGTK_CALL MGTK::MoveTo, $907C
-        addr_call L9984, $9113
+        addr_call draw_string, $9113
         rts
 
 L9AFD:  cmp     L910E
@@ -1793,7 +1849,7 @@ L9B42:  pha
         lda     #$00
         adc     L9087
         sta     L908F
-        MGTK_CALL MGTK::SetPenMode, $8E05
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $9088
         rts
 
@@ -2060,15 +2116,15 @@ L9E0E:  lda     ($06),y
 
 L9E20:  lda     #$00
         sta     L9E8D
-L9E25:  MGTK_CALL MGTK::GetEvent, $8F79
-        lda     L8F79
+L9E25:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_kind
         cmp     #$02
         beq     L9E76
         lda     L8FD9
-        sta     L8F79
-        MGTK_CALL MGTK::ScreenToWindow, $8F79
-        MGTK_CALL MGTK::MoveTo, $8F7E
-        MGTK_CALL MGTK::InRect, $901B
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::InRect, rect_ok_btn
         cmp     #$80
         beq     L9E56
         lda     L9E8D
@@ -2079,8 +2135,8 @@ L9E56:  lda     L9E8D
         bne     L9E5E
         jmp     L9E25
 
-L9E5E:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $901B
+L9E5E:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect_ok_btn
         lda     L9E8D
         clc
         adc     #$80
@@ -2091,22 +2147,22 @@ L9E76:  lda     L9E8D
         beq     L9E7E
         return  #$FF
 
-L9E7E:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $901B
+L9E7E:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect_ok_btn
         return  #$00
 
 L9E8D:  .byte   0
 L9E8E:  lda     #$00
         sta     L9EFB
-L9E93:  MGTK_CALL MGTK::GetEvent, $8F79
-        lda     L8F79
+L9E93:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_kind
         cmp     #$02
         beq     L9EE4
         lda     L8FD9
-        sta     L8F79
-        MGTK_CALL MGTK::ScreenToWindow, $8F79
-        MGTK_CALL MGTK::MoveTo, $8F7E
-        MGTK_CALL MGTK::InRect, $9023
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::InRect, rect_desktop_btn
         cmp     #$80
         beq     L9EC4
         lda     L9EFB
@@ -2117,8 +2173,8 @@ L9EC4:  lda     L9EFB
         bne     L9ECC
         jmp     L9E93
 
-L9ECC:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $9023
+L9ECC:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect_desktop_btn
         lda     L9EFB
         clc
         adc     #$80
@@ -2129,8 +2185,8 @@ L9EE4:  lda     L9EFB
         beq     L9EEC
         return  #$FF
 
-L9EEC:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $9023
+L9EEC:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect_desktop_btn
         return  #$01
 
 L9EFB:  .byte   0

@@ -7,9 +7,6 @@
 .scope
 
 L2000           := $2000
-MGTK            := $4000
-FONT            := $8800
-START           := $8E00
 L98D4           := $98D4
 L9984           := $9984
 
@@ -251,7 +248,7 @@ num_error_messages:
 
 error_message_index_table:
         .byte   $00,$27,$28,$44,$45,$46,$FE,$FF
-        ;; ASSERT_TABLE_SIZE error_message_index_table, kNumErrorMessages
+        ASSERT_TABLE_SIZE error_message_index_table, kNumErrorMessages
 
 error_message_table:
         .addr   str_selector_unable_to_run
@@ -262,7 +259,7 @@ error_message_table:
         .addr   str_file_not_found
         .addr   str_insert_system_disk
         .addr   str_basic_system_not_found
-        ;; ASSERT_ADDRESS_TABLE_SIZE error_message_table, kNumErrorMessages
+        ASSERT_ADDRESS_TABLE_SIZE error_message_table, kNumErrorMessages
 
 LD236:
         .byte   $00
