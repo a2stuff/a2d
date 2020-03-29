@@ -2205,3 +2205,7 @@ L9F74:  pha
         rts
 
 .endscope
+
+        .incbin "inc/mgtk.dat"
+
+        ASSERT_ADDRESS $A000

@@ -744,6 +744,10 @@ __pushorg_depth__ .set 0
 ;;; Assertions
 ;;; ============================================================
 
+.macro ASSERT_ADDRESS addr
+        .assert * = (addr), error, .sprintf("Address mismatch, expected $%X actual $%X", (addr), *)
+.endmacro
+
 .macro ASSERT_TABLE_SIZE name, size
         .assert * - name = size, error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), size, * - name)
 .endmacro
@@ -754,7 +758,6 @@ __pushorg_depth__ .set 0
 
 .macro ASSERT_RECORD_TABLE_SIZE name, size, record_length
         .assert (* - name) = (size) * (record_length), error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), (size) * (record_length), * - name)
-.endmacro
 
 
 ;;; ============================================================

@@ -176,3 +176,7 @@ quit_call:
 exit:   rts
 
 .endscope
+
+        .incbin "inc/junk2.dat"
+
+        ASSERT_ADDRESS $3F0
