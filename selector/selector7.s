@@ -1347,16 +1347,16 @@ LA8AE:  bit     LA8EC
         sta     LA8EC
 LA8BB:  rts
 
-LA8BC:  MGTK_CALL MGTK::HideCursor, $0000
+LA8BC:  MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, $A064
-        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::ShowCursor
         rts
 
 LA8CF:  bit     LA8EC
         bmi     LA8EB
-        MGTK_CALL MGTK::HideCursor, $0000
+        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, $A096
-        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::ShowCursor
         lda     #$80
         sta     LA8EC
 LA8EB:  rts
@@ -3794,6 +3794,10 @@ LBE06:  .byte   0
         .byte   0
         .byte   0
         .byte   0
+
+
+;;; Another chunk of BASIC.SYSTEM 1.1 ???
+
         lda     #$41
         sta     $82
         jsr     L5E6A

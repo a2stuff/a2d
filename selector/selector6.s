@@ -8,34 +8,11 @@
 
 L0080           := $0080
 L2000           := $2000
-L2020           := $2020
-L2065           := $2065
 MGTK            := $4000
-L4520           := $4520
-L5858           := $5858
-L6165           := $6165
-L6562           := $6562
-L666F           := $666F
-L6874           := $6874
-L6964           := $6964
-L6E75           := $6E75
-L6F66           := $6F66
-L6F6E           := $6F6E
-L6F73           := $6F73
-L7245           := $7245
-L7369           := $7369
-L756E           := $756E
-L7572           := $7572
-L7865           := $7865
 FONT            := $8800
 START           := $8E00
-L9582           := $9582
-L95A0           := $95A0
 L98D4           := $98D4
 L9984           := $9984
-L9A15           := $9A15
-L9AFD           := $9AFD
-L9B42           := $9B42
 
         .byte   0
         .byte   0
@@ -44,108 +21,113 @@ L9B42           := $9B42
         .byte   0
         .byte   0
         .byte   0
-        inc     a:$1F,x
+        .byte   $FE, $1F, $00
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        inc     a:$1F,x
+        .byte   $FE, $1F, $00
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        inc     a:$1F,x
+        .byte   $FE, $1F, $00
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        inc     a:$1F,x
+        .byte   $FE, $1F, $00
         .byte   $FF
         .byte   $FF
         .byte   0
         .byte   0
-        asl     $401F,x
+        .byte   $1E,$1F,$40
         .byte   $07
-        beq     LD029
-LD029:  .byte   0
-        asl     $601F,x
+        .byte   $F0,$00
+LD029:
+        .byte   $00
+        .byte   $1E,$1F,$60
         .byte   $03
-        rts
+        .byte   $60
 
-        .byte   0
-        .byte   0
-        inc     $F01F,x
+
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$1F,$F0
         .byte   $F3
         .byte   $4F
-        .byte   0
-        .byte   0
-        inc     $F81F,x
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$1F,$F8
         .byte   $F3
         .byte   $4F
-        .byte   0
-        .byte   0
-        inc     $FC1F,x
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$1F,$FC
         .byte   $FF
         .byte   $4F
-        .byte   0
-        .byte   0
-        inc     $FC1F,x
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$1F,$FC
         .byte   $FF
         .byte   $67
-        .byte   0
-        .byte   0
-        inc     $FC1F,x
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$1F,$FC
         .byte   $FF
         .byte   $F3
-        .byte   0
-        .byte   0
-        inc     $FC1F,x
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$1F,$FC
         .byte   $FF
-        sbc     $00,y
-        inc     $FC1F,x
+        .byte   $F9,$00,$00
+        .byte   $FE,$1F,$FC
         .byte   $FF
         .byte   $FC
-        .byte   0
-        .byte   0
-        inc     $FC1F,x
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$1F,$FC
         .byte   $3F
-        inc     a:$00,x
-        inc     $FC1F,x
+        .byte   $FE,$00,$00
+        .byte   $FE,$1F,$FC
         .byte   $1F
         .byte   $FF
+
         .byte   0
         .byte   0
-        inc     $FC1F,x
+        .byte   $FE,$1F,$FC
         .byte   $1F
         .byte   $FF
-        .byte   0
-        .byte   0
-        rol     $FE00,x
+        .byte   $00
+        .byte   $00
+        .byte   $3E,$00,$FE
         .byte   $FF
         .byte   $FF
-        .byte   0
-        .byte   0
-        inc     $FF03,x
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$03,$FF
         .byte   $1F
         .byte   $FF
-        .byte   0
-        .byte   0
-        inc     $FF43,x
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$43,$FF
         .byte   $FF
         .byte   $FF
-        .byte   0
-        .byte   0
-        asl     $FF60
+        .byte   $00
+        .byte   $00
+        .byte   $0E,$60,$FF
         .byte   $FF
         .byte   $3F
-        .byte   0
-        .byte   0
-        inc     a:$03,x
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        inc     a:$03,x
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$03,$00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $FE,$03,$00
+
+
         .byte   0
         .byte   0
         .byte   0
@@ -159,76 +141,89 @@ LD029:  .byte   0
         .byte   0
         .byte   $14
         .byte   0
-        php
-        .byte   0
-        .byte   0
-        bne     LD0B6
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        bit     $00
-LD0B6:  .byte   $17
-        .byte   0
-        eor     ($00,x)
+
+
+
+        .byte   $08
+        .byte   $00
+        .byte   $00
+        .byte   $D0,$07
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $24,$00
+LD0B6:
+        .byte   $17
+        .byte   $00
+        .byte   $41,$00
         .byte   $57
-        .byte   0
-        sbc     $01
-        stx     $0400
-        .byte   0
+        .byte   $00
+        .byte   $E5,$01
+        .byte   $8E,$00,$04
+        .byte   $00
         .byte   $02
-        .byte   0
-        ldy     #$01
-        and     $00,x
-        ora     $00
+        .byte   $00
+        .byte   $A0,$01
+        .byte   $35,$00
+        .byte   $05,$00
         .byte   $03
-        .byte   0
+        .byte   $00
         .byte   $9F
-        ora     ($34,x)
-        .byte   0
+        .byte   $01,$34
+        .byte   $00
 LD0D0:
-LD0D1           := * + 1
-        eor     ($00,x)
-LD0D2:  .byte   $57
-LD0D3:  .byte   0
-        .byte   0
-        jsr     L0080
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+LD0D1   := * + 1
+        .byte   $41,$00
+LD0D2:
+        .byte   $57
+LD0D3:
+        .byte   $00
+        .byte   $00
+        .byte   $20,$80,$00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+
+
 LD0DC:
-LD0DD           := * + 1
-        ldy     $01
-LD0DE:  .byte   $37
-        .byte   0
+LD0DD := *+1
+        .byte   $A4,$01
+LD0DE:
+        .byte   $37
+        .byte   $00
+
 
         PASCAL_STRING "Cancel    Esc"
         PASCAL_STRING {"OK            ", CHAR_RETURN}
         PASCAL_STRING "Try Again  A"
 
         .byte   $2C
-        ora     (CV,x)
-        .byte   0
-        bcc     LD112
-LD112           := * + 1
-        bmi     LD113
-LD113:  and     ($01),y
+        .byte   $01,$25
+        .byte   $00
+        .byte   $90,$01
+LD112   := * + 1
+        .byte   $30,$00
+LD113:
+        .byte   $31,$01
         .byte   $2F
-        .byte   0
+        .byte   $00
         .byte   $14
-        .byte   0
-        and     $00
-        sei
-        .byte   0
-        bmi     LD11F
-LD11F:  ora     $2F00,y
-        .byte   0
-        ldx     $1000,y
-        .byte   0
+        .byte   $00
+        .byte   $25,$00
+        .byte   $78
+        .byte   $00
+        .byte   $30,$00
+LD11F:
+        .byte   $19,$00,$2F
+        .byte   $00
+        .byte   $BE,$00,$10
+        .byte   $00
         .byte   $4B
-        .byte   0, $1D, $00
+        .byte   $00,$1D,$00
+
 
         PASCAL_STRING "System Error number XX"
 
@@ -245,35 +240,40 @@ LD144:  .byte   0
         PASCAL_STRING "Please insert the system disk"
         PASCAL_STRING "BASIC.SYSTEM not found"
 
-LD21D:  php
-LD21E:  .byte   0
+LD21D:
+        .byte   $08
+LD21E:
+        .byte   $00
         .byte   $27
-        plp
+        .byte   $28
         .byte   $44
-        eor     $46
-LD226           := * + 2
-        inc     $45FF,x
-LD227:  cmp     ($70),y
-        cmp     ($7A),y
-        cmp     ($8F),y
-        cmp     ($B3),y
-        cmp     ($CE),y
-        cmp     ($E8),y
-        cmp     ($06),y
+        .byte   $45,$46
+LD226   := * + 2
+        .byte   $FE,$FF,$45
+LD227:
+        .byte   $D1,$70
+        .byte   $D1,$7A
+        .byte   $D1,$8F
+        .byte   $D1,$B3
+        .byte   $D1,$CE
+        .byte   $D1,$E8
+        .byte   $D1,$06
         .byte   $D2
-LD236:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+LD236:
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
         .byte   $80
-        .byte   0
+        .byte   $00
         .byte   $80
-        .byte   0
-        pha
-        lda     $9129
-        beq     LD248
-        pla
-        return  #$01
+        .byte   $00
+        .byte   $48
+        .byte   $AD,$29,$91
+        .byte   $F0,$04
+        .byte   $68
+        .byte   $A9,$01,$60
+
 
 LD248:  jsr     L98D4
         MGTK_CALL MGTK::InitPort, $8F83
@@ -299,9 +299,9 @@ LD248:  jsr     L98D4
         clc
         adc     LD0DE
         sta     LD765
-        MGTK_CALL MGTK::HideCursor, $0000
+        MGTK_CALL MGTK::HideCursor
         jsr     LD5A2
-        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::ShowCursor
         ldx     #$03
         lda     #$00
 LD29F:  sta     $8F83,x
@@ -319,9 +319,9 @@ LD29F:  sta     $8F83,x
         MGTK_CALL MGTK::FrameRect, $D0C0
         MGTK_CALL MGTK::FrameRect, $D0C8
         MGTK_CALL MGTK::SetPenMode, $8E03
-        MGTK_CALL MGTK::HideCursor, $0000
+        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintBits, $D0A8
-        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::ShowCursor
         pla
         ldy     #$00
 LD307:  cmp     LD21E,y
@@ -429,9 +429,9 @@ LD424:  MGTK_CALL MGTK::InRect, $D10B
 LD431:  jmp     LD387
 
 LD434:  pha
-        MGTK_CALL MGTK::HideCursor, $0000
+        MGTK_CALL MGTK::HideCursor
         jsr     LD5F7
-        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::ShowCursor
         pla
         rts
 
@@ -790,6 +790,18 @@ LD766:  .byte   0
 LD767:  .byte   0
 LD768:  .byte   0
 LD769:  .byte   0
+
+;;; ============================================================
+;;; Everything after here is a chunk of selector5.s
+
+.scope
+L9582           := $9582
+L95A0           := $95A0
+L9A15           := $9A15
+L9AFD           := $9AFD
+L9B42           := $9B42
+
+
         cmp     #$08
         bcc     LD771
         jmp     L9582
@@ -850,5 +862,6 @@ LD796:  lda     $959E
         jsr     L9A15
         lda     $8F7A
         and     #$7F
+.endscope
 
 .endscope
