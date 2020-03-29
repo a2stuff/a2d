@@ -1470,115 +1470,122 @@ LA85A:
         .byte   $20,$72,$6F
 
 
-
         .byte   $6F
-        adc     $6920
-        ror     $7420
-        pla
-        adc     WNDLFT
+        .byte   $6D,$20,$69
+        .byte   $6E,$20,$74
+        .byte   $68
+        .byte   $65,$20
         .byte   $52
-        eor     ($4D,x)
+        .byte   $41,$4D
         .byte   $43
-        adc     ($72,x)
+        .byte   $61,$72
         .byte   $64
-        jsr     L6F74
-        jsr     L6F63
-        bvs     LA9B4
-        jsr     L6874
-        adc     WNDLFT
-        adc     ($70,x)
-        bvs     LA9B0
-        adc     #$63
-        adc     ($74,x)
-        adc     #$6F
-        ror     $152E
+        .byte   $20,$74,$6F
+        .byte   $20,$63,$6F
+        .byte   $70,$79
+        .byte   $20,$74,$68
+        .byte   $65,$20
+        .byte   $61,$70
+        .byte   $70,$6C
+        .byte   $69,$63
+        .byte   $61,$74
+        .byte   $69,$6F
+        .byte   $6E,$2E,$15
         .byte   $43
-        jmp     (L6369)
+        .byte   $6C,$69,$63
+
+
+
 
         .byte   $6B
-        jsr     L4B4F
-        jsr     L6F74
-        jsr     L6F63
-        ror     $6974
-        ror     $6575
-        rol     $4125
-LA965           := * + 1
-        ror     $6520
+        .byte   $20,$4F,$4B
+        .byte   $20,$74,$6F
+        .byte   $20,$63,$6F
+        .byte   $6E,$74,$69
+        .byte   $6E,$75,$65
+        .byte   $2E,$25,$41
+LA965   := * + 1
+        .byte   $6E,$20,$65
         .byte   $72
         .byte   $72
         .byte   $6F
         .byte   $72
-        jsr     L636F
+        .byte   $20,$6F,$63
         .byte   $63
-        adc     $72,x
-        adc     $64
-        jsr     L7564
+        .byte   $75,$72
+        .byte   $65,$64
+        .byte   $20,$64,$75
         .byte   $72
-        adc     #$6E
+        .byte   $69,$6E
         .byte   $67
-        jsr     L6874
-        adc     WNDLFT
+        .byte   $20,$74,$68
+        .byte   $65,$20
         .byte   $64
         .byte   $6F
         .byte   $77
-        ror     $6F6C
-        adc     ($64,x)
-        rol     $5430
-        pla
-        adc     WNDLFT
+        .byte   $6E,$6C,$6F
+        .byte   $61,$64
+        .byte   $2E,$30,$54
+        .byte   $68
+        .byte   $65,$20
         .byte   $63
         .byte   $6F
-        bvs     LAA0A
-        jsr     L6177
-        .byte   $73
-        ror     $7427
-        jsr     L6F63
-        adc     $6C70
-        adc     $74
-        adc     $64
-        bit     $6320
-        jmp     (L6369)
+        .byte   $70,$79
 
+
+
+        .byte   $20,$77,$61
+        .byte   $73
+        .byte   $6E,$27,$74
+        .byte   $20,$63,$6F
+        .byte   $6D,$70,$6C
+        .byte   $65,$74
+        .byte   $65,$64
+        .byte   $2C,$20,$63
+        .byte   $6C,$69,$63
         .byte   $6B
-        jsr     L4B4F
-        jsr     L6F74
-LA9B0           := * + 1
-        jsr     L6F63
-LA9B4           := * + 2
-        ror     $6974
-        ror     $6575
-        rol     $4623
-        adc     #$6C
-        adc     HIMEM
-        jsr     L6F74
-        jsr     L6562
-        jsr     L6F63
-        bvs     LAA33
-        adc     $64
-        jsr     L6E69
-        jsr     L6874
-        adc     WNDLFT
+        .byte   $20,$4F,$4B
+        .byte   $20,$74,$6F
+LA9B0   := * + 1
+        .byte   $20,$63,$6F
+LA9B4   := * + 2
+        .byte   $6E,$74,$69
+        .byte   $6E,$75,$65
+        .byte   $2E,$23,$46
+        .byte   $69,$6C
+        .byte   $65,$73
+        .byte   $20,$74,$6F
+        .byte   $20,$62,$65
+        .byte   $20,$63,$6F
+        .byte   $70,$69
+        .byte   $65,$64
+        .byte   $20,$69,$6E
+        .byte   $20,$74,$68
+        .byte   $65,$20
+
+
         .byte   $52
-        eor     ($4D,x)
+        .byte   $41,$4D
         .byte   $43
-        adc     ($72,x)
+        .byte   $61,$72
         .byte   $64
         .byte   $3A
-        jsr     L461E
-        adc     #$6C
-        adc     HIMEM
-        jsr     L6572
-        adc     $6961
-        ror     L6E69
+        .byte   $20,$1E,$46
+        .byte   $69,$6C
+        .byte   $65,$73
+        .byte   $20,$72,$65
+        .byte   $6D,$61,$69
+        .byte   $6E,$69,$6E
         .byte   $67
-        jsr     L6F74
-        jsr     L6562
-        jsr     L6F63
-        bvs     LAA61
-        adc     $64
+        .byte   $20,$74,$6F
+        .byte   $20,$62,$65
+        .byte   $20,$63,$6F
+        .byte   $70,$69
+        .byte   $65,$64
         .byte   $3A
-        jsr     L2004
-        jsr     L2020
+        .byte   $20,$04,$20
+        .byte   $20,$20,$20
+
 
 
 LAA01:  MGTK_CALL MGTK::OpenWindow, $A85A
