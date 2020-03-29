@@ -4,9 +4,11 @@
 
         .org $A000
 
+
+
 .scope
 
-L95A0           := $95A0
+MLI_WRAPPER           := $95A0
 L98C1           := $98C1
 L98D4           := $98D4
 L9984           := $9984
@@ -713,14 +715,14 @@ LA2C5:  ldx     LA2B5
 LA2D3:  lda     #$00
         sta     LA208
         sta     LA2B6
-        yax_call L95A0, $C8, $A028
+        yax_call MLI_WRAPPER, OPEN, $A028
         beq     LA2E9
         jmp     LAB16
 
 LA2E9:  lda     LA02D
         sta     LA209
         sta     LA02F
-        yax_call L95A0, $CA, $A02E
+        yax_call MLI_WRAPPER, READ, $A02E
         beq     LA300
         jmp     LAB16
 
@@ -729,7 +731,7 @@ LA300:  jsr     LA319
 
 LA304:  lda     LA209
         sta     LA03B
-        yax_call L95A0, $CC, $A03A
+        yax_call MLI_WRAPPER, CLOSE, $A03A
         beq     LA318
         jmp     LAB16
 
@@ -738,7 +740,7 @@ LA318:  rts
 LA319:  inc     LA208
         lda     LA209
         sta     LA03D
-        yax_call L95A0, $CA, $A03C
+        yax_call MLI_WRAPPER, READ, $A03C
         beq     LA330
         jmp     LAB16
 
@@ -750,7 +752,7 @@ LA330:  inc     LA2B6
         sta     LA2B6
         lda     LA209
         sta     LA045
-        yax_call L95A0, $CA, $A044
+        yax_call MLI_WRAPPER, READ, $A044
         beq     LA354
         jmp     LAB16
 
@@ -844,7 +846,7 @@ LA3F8           := * + 1
         lda     #$FF
         sta     LA4F9
         jsr     LA7D9
-        yax_call L95A0, $C4, $A0A5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $A0A5
         beq     LA41B
         jmp     LAB16
 
@@ -854,7 +856,7 @@ LA41B:  sub16   LA0AA, LA0AD, LA4F3
         jmp     LAACB
 
 LA43F:  ldx     LA0F4
-        lda     #$2F
+        lda     #'/'
         sta     LA0F5,x
         inc     LA0F4
         ldy     #$00
@@ -866,8 +868,8 @@ LA44F:  iny
         cpy     LA1F6
         bne     LA44F
         stx     LA0F4
-        yax_call L95A0, $C4, $A0A5
-        cmp     #$46
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $A0A5
+        cmp     #$46            ; Error code
         beq     LA475
         cmp     #$45
         beq     LA475
@@ -875,7 +877,7 @@ LA44F:  iny
         beq     LA475
         rts
 
-LA475:  yax_call L95A0, $C4, $A092
+LA475:  yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
         beq     LA491
         cmp     #$45
         beq     LA488
@@ -920,7 +922,7 @@ LA4C3:  lda     LA092,y
         bne     LA4DB
         lda     #$0D
         sta     LA08B
-LA4DB:  yax_call L95A0, $C0, $A084
+LA4DB:  yax_call MLI_WRAPPER, CREATE, $A084
         beq     LA4E9
         jmp     LAB16
 
@@ -946,7 +948,7 @@ LA4FB:  .byte   0
         bne     LA536
         jsr     LA75D
         jsr     LAA3F
-        yax_call L95A0, $C4, $A092
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
         beq     LA528
         jmp     LAB16
 
@@ -965,7 +967,7 @@ LA528:  jsr     LA79B
 LA536:  jsr     LA79B
         jsr     LA75D
         jsr     LAA3F
-        yax_call L95A0, $C4, $A092
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
         beq     LA54D
         jmp     LAB16
 
@@ -983,14 +985,14 @@ LA555:  jsr     LA782
 LA569:  rts
 
 LA56A:  jsr     LA7C0
-LA56D:  yax_call L95A0, $C4, $A092
+LA56D:  yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
         beq     LA57B
         jmp     LAB16
 
 LA57B:  lda     #$00
         sta     LA60E
         sta     LA60F
-        yax_call L95A0, $C4, $A0A5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $A0A5
         beq     LA595
         cmp     #$46
         beq     LA5A1
@@ -1004,12 +1006,12 @@ LA5A9:  iny
         cpy     LA0F4
         bcs     LA602
         lda     LA0F4,y
-        cmp     #$2F
+        cmp     #'/'
         bne     LA5A9
         tya
         sta     LA0F4
         sta     LA60D
-        yax_call L95A0, $C4, $A0A5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $A0A5
         beq     LA5CB
         jmp     LAB16
 
@@ -1030,10 +1032,10 @@ LA60C:  .byte   0
 LA60D:  .byte   0
 LA60E:  .byte   0
 LA60F:  .byte   0
-LA610:  yax_call L95A0, $C8, $A05C
+LA610:  yax_call MLI_WRAPPER, OPEN, $A05C
         beq     LA61E
         jsr     LAB16
-LA61E:  yax_call L95A0, $C8, $A062
+LA61E:  yax_call MLI_WRAPPER, OPEN, $A062
         beq     LA62C
         jmp     LAB16
 
@@ -1044,7 +1046,7 @@ LA62C:  lda     LA061
         sta     LA071
         sta     LA058
 LA63E:  copy16  #$0B00, LA06C
-        yax_call L95A0, $CA, $A068
+        yax_call MLI_WRAPPER, READ, $A068
         beq     LA65A
         cmp     #$4C
         beq     LA687
@@ -1053,7 +1055,7 @@ LA63E:  copy16  #$0B00, LA06C
 LA65A:  copy16  LA06E, LA074
         ora     LA06E
         beq     LA687
-        yax_call L95A0, $CB, $A070
+        yax_call MLI_WRAPPER, WRITE, $A070
         beq     LA679
         jmp     LAB16
 
@@ -1063,8 +1065,8 @@ LA679:  lda     LA076
         lda     LA077
         cmp     #$0B
         beq     LA63E
-LA687:  yax_call L95A0, $CC, $A057
-        yax_call L95A0, $CC, $A055
+LA687:  yax_call MLI_WRAPPER, CLOSE, $A057
+        yax_call MLI_WRAPPER, CLOSE, $A055
         rts
 
 LA69A:  ldx     #$07
@@ -1073,7 +1075,7 @@ LA69C:  lda     LA092,x
         dex
         cpx     #$03
         bne     LA69C
-        yax_call L95A0, $C0, $A078
+        yax_call MLI_WRAPPER, CREATE, $A078
         clc
         beq     LA6B6
         jmp     LAB16
@@ -1103,7 +1105,7 @@ LA6DA:  sta     $BF58,y
         dey
         bpl     LA6DA
         jsr     LA7D9
-LA6E3:  yax_call L95A0, $C4, $A092
+LA6E3:  yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
         beq     LA6FF
         cmp     #$45
         beq     LA6F6
@@ -1138,7 +1140,7 @@ LA725:  jmp     LA729
         rts
 
 LA729:  jsr     LA75D
-        yax_call L95A0, $C4, $A092
+        yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
         bne     LA74A
         add16   LA75B, LA09A, LA75B
 LA74A:  inc16   LA759
@@ -1156,7 +1158,7 @@ LA75D:  lda     LA0BC
 
 LA763:  ldx     #$00
         ldy     LA135
-        lda     #$2F
+        lda     #'/'
         sta     LA136,y
         iny
 LA76E:  cpx     LA0BC
@@ -1175,7 +1177,7 @@ LA782:  ldx     LA135
         rts
 
 LA788:  lda     LA135,x
-        cmp     #$2F
+        cmp     #'/'
         beq     LA796
         dex
         bne     LA788
@@ -1192,7 +1194,7 @@ LA79B:  lda     LA0BC
 
 LA7A1:  ldx     #$00
         ldy     LA0F4
-        lda     #$2F
+        lda     #'/'
         sta     LA0F5,y
         iny
 LA7AC:  cpx     LA0BC
@@ -1211,7 +1213,7 @@ LA7C0:  ldx     LA0F4
         rts
 
 LA7C6:  lda     LA0F4,x
-        cmp     #$2F
+        cmp     #'/'
         beq     LA7D4
         dex
         bne     LA7C6
@@ -1227,7 +1229,7 @@ LA7D9:  ldy     #$00
         dey
 LA7DF:  iny
         lda     LA1B6,y
-        cmp     #$2F
+        cmp     #'/'
         bne     LA7EA
         sty     LA4FA
 LA7EA:  sta     LA135,y
@@ -1252,16 +1254,16 @@ LA80B:  lda     ($06),y
         bpl     LA80B
         ldy     LA1B6
 LA816:  lda     LA1B6,y
-        and     #$7F
-        cmp     #$2F
+        and     #CHAR_MASK
+        cmp     #'/'
         beq     LA822
         dey
         bne     LA816
 LA822:  dey
         sty     LA1B6
 LA826:  lda     LA1B6,y
-        and     #$7F
-        cmp     #$2F
+        and     #CHAR_MASK
+        cmp     #'/'
         beq     LA832
         dey
         bpl     LA826
