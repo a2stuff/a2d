@@ -13,6 +13,7 @@ INVOKER_FILENAME:= $0280
 INVOKER         := $0290
 LOADER          := $2000
 MGTK            := $4000
+FONT            := $8800
 START           := $8E00
 
 
