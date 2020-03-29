@@ -9,156 +9,170 @@
 .scope
         jmp     start
 
-        DEFINE_SET_PREFIX_PARAMS set_prefix_params, $220
+;;; ============================================================
 
-L0296:  .byte   0
+        default_start_address := $2000 ; for SYS files
 
-        DEFINE_OPEN_PARAMS open_params, $280, $800, 1
+        DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
 
-        DEFINE_READ_PARAMS read_params, $2000, $9F00
+prefix_length:
+        .byte   0
 
+        DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
+        DEFINE_READ_PARAMS read_params, default_start_address, $9F00
         DEFINE_CLOSE_PARAMS close_params
+        DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $280
+        .byte   0,0,0           ; Unused
 
-        .byte   0,0,0
-
+str_basic_system:
         PASCAL_STRING "BASIC.SYSTEM"
 
+        ;; $EE = extended call signature for IIgs/GS/OS variation.
         DEFINE_QUIT_PARAMS quit_params, $EE, $280
 
-L02D0:  MLI_CALL SET_PREFIX, set_prefix_params
-        beq     L02DD
+;;; ============================================================
+
+.proc set_prefix
+        MLI_CALL SET_PREFIX, set_prefix_params
+        beq     :+
         pla
         pla
-        jmp     L03CB
+        jmp     exit
+:       rts
+.endproc
 
-L02DD:  rts
+;;; ============================================================
 
-L02DE:  MLI_CALL OPEN, open_params
+.proc open
+        MLI_CALL OPEN, open_params
         rts
-
+.endproc
 
 ;;; ============================================================
 
 start:  lda     ROMIN2
-        copy16  #$2000, invoke_addr
-        ldx     #$16
-        lda     #$00
-L02F6:  sta     $BF58,x
+
+        copy16  #default_start_address, invoke_addr
+
+        ;; Clear system memory bitmap
+        ldx     #BITMAP_SIZE-2
+        lda     #0
+:       sta     BITMAP,x
         dex
-        bne     L02F6
-        jsr     L02D0
-        lda     $0220
-        sta     L0296
-        MLI_CALL GET_FILE_INFO, get_file_info_params
-        beq     L0310
-        jmp     L03CB
+        bne     :-
 
-L0310:  lda     get_file_info_params::file_type
+        jsr     set_prefix
+        lda     INVOKER_PREFIX
+        sta     prefix_length
+        MLI_CALL GET_FILE_INFO, get_info_params
+        beq     :+
+        jmp     exit
+:       lda     get_info_params::file_type
+
+;;; ProDOS 16 System file (S16) - invoke via QUIT call
         cmp     #FT_S16
-        bne     L031A
-        jmp     L03C2
+        bne     not_s16
+        jmp     quit_call
 
-L031A:  cmp     #FT_BINARY
-        bne     L0342
+not_s16:
 
-        lda     get_file_info_params::aux_type
+;;; Binary file (BIN) - load and invoke at A$=AuxType
+        cmp     #FT_BINARY
+        bne     not_binary
+
+        lda     get_info_params::aux_type
         sta     invoke_addr
         sta     read_params::data_buffer
-
-        lda     get_file_info_params::aux_type+1
+        lda     get_info_params::aux_type+1
         sta     invoke_addr+1
         sta     read_params::data_buffer+1
 
-        cmp     #$0C
-        bcs     L033B
-        lda     #$BB
+        cmp     #$0C            ; If loading at page < $0C
+        bcs     :+
+        lda     #$BB            ; ... use a high address buffer ($BB)
         sta     open_params::io_buffer+1
-        bne     L037A
-L033B:  lda     #$08
+        bne     load_target
+:       lda     #$08            ; otherwise a low address buffer ($08)
         sta     open_params::io_buffer+1
-        bne     L037A
-L0342:  cmp     #FT_BASIC
-        bne     L037A
-        copy16  #$02BC, open_params::pathname
-L0350:  jsr     L02DE
-        beq     L0371
-        ldy     $0220
-L0358:  lda     $0220,y
-        cmp     #$2F
-        beq     L0367
+        bne     load_target
+not_binary:
+
+;;; BASIC file (BAS) - invoke interpreter as path instead.
+;;; (If not found, ProDOS QUIT will be invoked.)
+        cmp     #FT_BASIC
+        bne     load_target
+        copy16  #str_basic_system, open_params::pathname
+
+        ;;  Try opening interpreter with current prefix.
+check_for_intepreter:
+        jsr     open
+        beq     found_interpreter
+        ldy     INVOKER_PREFIX
+:       lda     INVOKER_PREFIX,y
+        cmp     #'/'
+        beq     update_prefix
         dey
-        cpy     #$01
-        bne     L0358
-        jmp     L03CB
+        cpy     #1
+        bne     :-
+        jmp     exit
 
-L0367:  dey
-        sty     $0220
-        jsr     L02D0
-        jmp     L0350
+update_prefix:
+        dey
+        sty     INVOKER_PREFIX
+        jsr     set_prefix
+        jmp     check_for_intepreter
 
-L0371:  lda     L0296
-        sta     $0220
-        jmp     L037F
+found_interpreter:
+        lda     prefix_length
+        sta     INVOKER_PREFIX
+        jmp     do_read
 
-L037A:  jsr     L02DE
-        bne     L03CB
-L037F:  lda     open_params::ref_num
+not_basic:
+
+load_target:
+        jsr     open
+        bne     exit
+do_read:
+        lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
-        bne     L03CB
+        bne     exit
         MLI_CALL CLOSE, close_params
-        bne     L03CB
-        lda     get_file_info_params::file_type
+        bne     exit
+        lda     get_info_params::file_type
         cmp     #FT_BASIC
-        bne     L03AB
-        jsr     L02D0
-        ldy     $0280
-L03A2:  lda     $0280,y
+        bne     update_stack
+
+        jsr     set_prefix
+        ldy     INVOKER_FILENAME
+:       lda     INVOKER_FILENAME,y
         sta     $2006,y
         dey
-        bpl     L03A2
-L03AB:  lda     #$03
+        bpl     :-
+
+        ;; Set return address to the QUIT call below
+update_stack:
+        lda     #>(quit_call-1)
         pha
-        lda     #$C1
+        lda     #<(quit_call-1)
         pha
-        jsr     L03C1
-        lda     #$01
+        jsr     update_bitmap   ; WTF?
+
+        lda     #%00000001      ; ProDOS global page
         sta     $BF6F
-        lda     #$CF
+        lda     #%11001111      ; ZP, Stack, Text Page 1
         sta     $BF58
 
         invoke_addr := *+1
         jmp     $2000
 
-L03C1:  rts
+update_bitmap:
+        rts                     ; no-op?
 
-L03C2:  jsr     L03C1
+quit_call:
+        jsr     update_bitmap
         MLI_CALL QUIT, quit_params
-L03CB:  rts
-
-        ;; ???
-
-L118B           := $118B
-
-        .byte   $03
-        jmp     L118B
-
-        MLI_CALL CLOSE, $102F
-        beq     L03DB
-        jmp     L118B
-
-L03DB:  jmp     $2000
-
-        jsr     SLOT3ENTRY
-        jsr     HOME
-        lda     #$0C
-        sta     CV
-        jsr     VTAB
-        lda     #$50
-        sec
-        .byte   $ED
-        .byte   $5E
+exit:   rts
 
 .endscope
