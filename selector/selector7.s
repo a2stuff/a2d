@@ -692,27 +692,10 @@ LA2DC   := * + 2
         .byte   $00
         .byte   $1E,$00,$92
         .byte   $00
-        .byte   $11,$52
-        .byte   $75,$6E
-        .byte   $20,$61,$20
-        .byte   $50,$72
-        .byte   $6F
-        .byte   $67
-        .byte   $72
-        .byte   $61,$6D
-        .byte   $20,$2E,$2E
-        .byte   $2E,$0C,$46
-        .byte   $69,$6C
-        .byte   $65,$20
-        .byte   $74
-        .byte   $6F
-        .byte   $20,$72,$75
+        PASCAL_STRING "Run a Program ..."
+        PASCAL_STRING "File to run:"
 
-
-
-        LA309           := * + 2
-        ror     $203A
-        lsr     $AF
+LA309:  jsr     LAF46
         jsr     LA342
         jsr     LB051
         jsr     LB118
@@ -2064,7 +2047,8 @@ LAF42:  .byte   0
 LAF43:  .byte   0
 LAF44:  .byte   0
 LAF45:  .byte   0
-        MGTK_CALL MGTK::OpenWindow, $A194
+
+LAF46:  MGTK_CALL MGTK::OpenWindow, $A194
         MGTK_CALL MGTK::OpenWindow, $A1CE
         lda     LA194
         jsr     LB443
