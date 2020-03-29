@@ -1441,8 +1441,8 @@ LA965:  lda     #$00
         jmp     LA9C7
 
 LA972:  lda     LA3C7,x
-        and     #$7F
-        cmp     #$2F
+        and     #CHAR_MASK
+        cmp     #'/'
         beq     LA981
         dex
         bpl     LA972
@@ -1685,28 +1685,28 @@ LAC1C:  .byte   0
 LAC1D:  lda     LA010
         beq     LAC5B
         lda     LA00F
-        and     #$7F
-        cmp     #$08
+        and     #CHAR_MASK
+        cmp     #CHAR_LEFT
         bne     LAC2E
         jmp     LBA1B
 
-LAC2E:  cmp     #$15
+LAC2E:  cmp     #CHAR_RIGHT
         bne     LAC35
         jmp     LBA5E
 
 LAC35:  bit     LA47F
         bmi     LAC48
-        cmp     #$0A
+        cmp     #CHAR_DOWN
         bne     LAC41
         jmp     LAE50
 
-LAC41:  cmp     #$0B
+LAC41:  cmp     #CHAR_UP
         bne     LAC48
         jmp     LAE38
 
-LAC48:  cmp     #$30
+LAC48:  cmp     #'0'
         bcc     LAC53
-        cmp     #$3A
+        cmp     #'9'+1
         bcs     LAC53
         jmp     LAD65
 
@@ -1715,24 +1715,24 @@ LAC53:  bit     LA47F
         jmp     LADB2
 
 LAC5B:  lda     LA00F
-        and     #$7F
-        cmp     #$08
+        and     #CHAR_MASK
+        cmp     #CHAR_LEFT
         bne     LAC67
         jmp     LB973
 
-LAC67:  cmp     #$15
+LAC67:  cmp     #CHAR_RIGHT
         bne     LAC6E
         jmp     LB9C9
 
-LAC6E:  cmp     #$0D
+LAC6E:  cmp     #CHAR_RETURN
         bne     LAC75
         jmp     LAD15
 
-LAC75:  cmp     #$1B
+LAC75:  cmp     #CHAR_ESCAPE
         bne     LAC7C
         jmp     LAD42
 
-LAC7C:  cmp     #$7F
+LAC7C:  cmp     #CHAR_DELETE
         bne     LAC83
         jmp     LAD61
 
@@ -1858,15 +1858,15 @@ LADAA:  ldx     $177F
         txa
         jmp     LAE71
 
-LADB2:  cmp     #$41
+LADB2:  cmp     #'A'
         bcs     LADB7
 LADB6:  rts
 
-LADB7:  cmp     #$5B
+LADB7:  cmp     #'Z'+1
         bcc     LADC5
-        cmp     #$61
+        cmp     #'a'
         bcc     LADB6
-        cmp     #$7B
+        cmp     #'z'+1
         bcs     LADB6
         and     #$5F
 LADC5:  jsr     LADDF
@@ -2179,7 +2179,7 @@ LB0D4:  rts
 LB0D5:  .byte   0
 LB0D6:  stax    $06
         ldx     LA3C7
-        lda     #$2F
+        lda     #'/'
         sta     LA3C8,x
         inc     LA3C7
         ldy     #$00
@@ -2206,7 +2206,7 @@ LB106:  ldx     LA3C7
         beq     LB117
         dec     LA3C7
         lda     LA3C7,x
-        cmp     #$2F
+        cmp     #'/'
         bne     LB106
 LB117:  rts
 
@@ -2397,7 +2397,7 @@ LB2E2:  rts
 
 LB2E3:  lda     ($0A),y
         and     #$7F
-        cmp     #$2F
+        cmp     #'/'
         beq     LB2EF
         cmp     #$2E
         bne     LB2F3
@@ -2407,12 +2407,12 @@ LB2EF:  dey
 LB2F3:  iny
         lda     ($0A),y
         and     #$7F
-        cmp     #$41
+        cmp     #'A'
         bcc     LB305
-        cmp     #$5B
+        cmp     #'Z'+1
         bcs     LB305
         clc
-        adc     #$20
+        adc     #$20            ; to lower case
         sta     ($0A),y
 LB305:  dey
         jmp     LB2DD
@@ -2452,7 +2452,7 @@ LB350:  lda     LA194
         iny
 LB372:  iny
         lda     ($06),y
-        cmp     #$2F
+        cmp     #'/'
         beq     LB380
         cpy     LB3B6
         bne     LB372
@@ -2817,7 +2817,7 @@ LB5F0:  .byte   0
 LB5F1:  stax    $06
         ldy     #$01
         lda     ($06),y
-        cmp     #$2F
+        cmp     #'/'
         bne     LB65A
         dey
         lda     ($06),y
@@ -2825,12 +2825,12 @@ LB5F1:  stax    $06
         bcc     LB65A
         tay
         lda     ($06),y
-        cmp     #$2F
+        cmp     #'/'
         beq     LB65A
         ldx     #$00
         stx     LB65D
 LB610:  lda     ($06),y
-        cmp     #$2F
+        cmp     #'/'
         beq     LB620
         inx
         cpx     #$10
@@ -2850,19 +2850,19 @@ LB628:  lda     LB65D
         tay
 LB634:  lda     ($06),y
         and     #$7F
-        cmp     #$2E
+        cmp     #'.'
         beq     LB654
-        cmp     #$2F
+        cmp     #'/'
         bcc     LB65A
-        cmp     #$3A
+        cmp     #'9'+1
         bcc     LB654
-        cmp     #$41
+        cmp     #'A'
         bcc     LB65A
-        cmp     #$5B
+        cmp     #'Z'+1
         bcc     LB654
-        cmp     #$61
+        cmp     #'a'
         bcc     LB65A
-        cmp     #$7B
+        cmp     #'z'+1
         bcs     LB65A
 LB654:  dey
         bne     LB634
@@ -3278,7 +3278,7 @@ LBA6B:  inx
 
 LBA8C:  stax    $06
         ldx     LA10C
-        lda     #$2F
+        lda     #'/'
         sta     LA10D,x
         inc     LA10C
         ldy     #$00
@@ -3303,7 +3303,7 @@ LBAB7:  ldx     LA10C
         beq     LBAC8
         dec     LA10C
         lda     LA10C,x
-        cmp     #$2F
+        cmp     #'/'
         bne     LBAB7
 LBAC8:  rts
 

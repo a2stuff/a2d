@@ -449,13 +449,10 @@ pos_desktop_label:
 str_desktop_btn:
         PASCAL_STRING " DeskTop       Q "
 
-        .byte   $02
-L9057   := * + 1
-        .byte   $01,$00
-L9058:
-        .byte   $00
-        .byte   $0F
-        .byte   $00
+        .byte   $02, $01
+
+pos_title_string:
+        .word   0, $F
 
         PASCAL_STRING "Selector"
 
@@ -593,23 +590,23 @@ L9151:  lda     #$00
         lda     CLR80COL
         bpl     L91B2
         sta     KBDSTRB
-        and     #$7F
+        and     #CHAR_MASK
         bit     BUTN0
         bmi     L916A
         bit     BUTN1
         bpl     L917B
-L916A:  cmp     #$31
+L916A:  cmp     #'1'
         bcc     L917B
-        cmp     #$38
+        cmp     #'8'
         bcs     L917B
         sec
-        sbc     #$30
+        sbc     #$30            ; ASCII to number
         sta     L92C1
         jmp     L91B2
 
-L917B:  cmp     #$51
+L917B:  cmp     #'Q'
         beq     L9140
-        cmp     #$71
+        cmp     #'q'
         beq     L9140
         sec
         sbc     #$31
@@ -763,10 +760,10 @@ L92E9:  cmp     #$03
         bit     desktop_available_flag
         bmi     L9316
         lda     L8F7A
-        and     #$7F
-        cmp     #$51
+        and     #CHAR_MASK
+        cmp     #'Q'
         beq     L92FF
-        cmp     #$71
+        cmp     #'q'
         bne     L9316
 L92FF:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L9313
@@ -829,22 +826,22 @@ L9377   := * + 2
 L937B:  lda     L8F7B
         bne     L938C
         lda     L8F7A
-        and     #$7F
-        cmp     #$1B
+        and     #CHAR_MASK
+        cmp     #CHAR_ESCAPE
         beq     L93A5
 L9389:  jmp     L95F5
 
 L938C:  lda     L8F7A
-        and     #$7F
-        cmp     #$1B
+        and     #CHAR_MASK
+        cmp     #CHAR_ESCAPE
         beq     L93A5
-        cmp     #$52
+        cmp     #'R'
         beq     L93A5
-        cmp     #$72
+        cmp     #'r'
         beq     L93A5
-        cmp     #$3A
+        cmp     #'9'+1
         bcs     L9389
-        cmp     #$31
+        cmp     #'1'
         bcc     L9389
 L93A5:  sta     L8E0E
         lda     L8F7B
@@ -887,7 +884,7 @@ L93F1           := * + 2
         jsr     L9B42
         lda     #$FF
         sta     L910E
-L93FF:  jsr     L98C1
+L93FF:  jsr     set_watch_cursor
         yax_call MLI_WRAPPER, OPEN, open_params2
         bne     L9443
         lda     open_params2::ref_num
@@ -908,7 +905,7 @@ L943F:  jsr     L97F7
 L9443:  lda     #$FE
         jsr     L9F74
         bne     L9450
-        jsr     L98C1
+        jsr     set_watch_cursor
         jmp     L93FF
 
 L9450:  rts
@@ -1069,8 +1066,8 @@ L95B6:  yax_call MLI_WRAPPER, OPEN, open_params3
 L95F5:  lda     L8FD9
         jsr     L9A15
         lda     L8F7A
-        and     #$7F
-        cmp     #$1C
+        and     #CHAR_MASK
+        cmp     #$1C            ; ??? CHAR_ESCAPE + 1 ?
         bcs     L9607
         jmp     L9638
 
@@ -1102,7 +1099,7 @@ L962E:  lda     L97BC
         jsr     L9B42
         rts
 
-L9638:  cmp     #$0D
+L9638:  cmp     #CHAR_RETURN
         bne     L9658
         lda     L8FD9
         jsr     L9A15
@@ -1424,17 +1421,23 @@ watch_cursor:
         .byte   px(%0000000),px(%0000000)
         .byte   5, 5
 
+;;; ============================================================
 
-
-L98C1:  MGTK_CALL MGTK::HideCursor
+.proc set_watch_cursor
+        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, watch_cursor
         MGTK_CALL MGTK::ShowCursor
         rts
+.endproc
 
-L98D4:  MGTK_CALL MGTK::HideCursor
+.proc set_pointer_cursor
+        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, pointer_cursor
         MGTK_CALL MGTK::ShowCursor
         rts
+.endproc
+
+;;; ============================================================
 
 ;;; Disconnect /RAM
 .proc disconnect_ramdisk
@@ -1466,6 +1469,7 @@ L9904:  dec     DEVCNT
         rts
 .endproc
 
+;;; ============================================================
 
 L9914:  lda     L8FD9
         jsr     L9A15
@@ -1504,6 +1508,8 @@ draw_desktop_label:
         rts
 
 ;;; ============================================================
+;;; Draw Pascal String
+;;; Input: A,X = string address
 
 .proc draw_string
         stax    $06
@@ -1516,6 +1522,8 @@ draw_desktop_label:
 .endproc
 
 ;;; ============================================================
+;;; Draw Title String (centered at top of port)
+;;; Input: A,X = string address
 
 L999B:  stax    $06
         ldy     #$00
@@ -1525,21 +1533,25 @@ L999B:  stax    $06
         MGTK_CALL MGTK::TextWidth, $0006
         lsr16   $09
         lda     #$01
-        sta     L99DB
+        sta     tmp
         lda     #$F4
-        lsr     L99DB
+        lsr     tmp
         ror     a
         sec
         sbc     $09
-        sta     L9057
-        lda     L99DB
+        sta     pos_title_string
+        lda     tmp
         sbc     $0A
-        sta     L9058
+        sta     pos_title_string+1
+
         MGTK_CALL MGTK::MoveTo, $9057
         MGTK_CALL MGTK::DrawText, $0006
         rts
 
-L99DB:  .byte   0
+tmp:    .byte   0
+
+;;; ============================================================
+
         stx     $0B
         sta     $0A
         ldy     #$00
@@ -1554,23 +1566,23 @@ L99E8:  dey
 L99ED:  rts
 
 L99EE:  lda     ($0A),y
-        and     #$7F
-        cmp     #$2F
+        and     #CHAR_MASK
+        cmp     #'/'
         beq     L99FA
-        cmp     #$2E
+        cmp     #'.'
         bne     L99FE
 L99FA:  dey
         jmp     L99E8
 
 L99FE:  iny
         lda     ($0A),y
-        and     #$7F
-        cmp     #$41
+        and     #CHAR_MASK
+        cmp     #'A'
         bcc     L9A10
-        cmp     #$5B
+        cmp     #'Z'+1
         bcs     L9A10
         clc
-        adc     #$20
+        adc     #$20            ; to lower case
         sta     ($0A),y
 L9A10:  dey
         jmp     L99E8
@@ -1812,7 +1824,7 @@ L9BF4           := * + 2
 
 L9C07:  lda     L9129
         bne     L9C17
-        jsr     L98C1
+        jsr     set_watch_cursor
         lda     L910E
         bmi     L9C17
         jsr     L9B42
@@ -1849,7 +1861,7 @@ L9C32:  lda     L910E
         jsr     L9326
         pla
         beq     L9C6F
-        jsr     L98D4
+        jsr     set_pointer_cursor
         jmp     L9D44
 
 L9C65:  lda     L9129
@@ -1884,7 +1896,7 @@ L9C87:  lda     ($06),y
         bne     L9CB4
         txa
         bne     L9CB4
-        jsr     L98C1
+        jsr     set_watch_cursor
         jmp     L9C78
 
 L9CB4:  jmp     L9D44
@@ -1956,11 +1968,11 @@ L9D4E:  rts
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, $1C00
 
 L9D61:  ldx     INVOKER_PREFIX
-L9D64:  lda     INVOKER_PREFIX,x
-        cmp     #$2F
+:       lda     INVOKER_PREFIX,x
+        cmp     #'/'
         beq     L9D71
         dex
-        bne     L9D64
+        bne     :-
         jmp     L9DBA
 
 L9D71:  dex
@@ -1972,7 +1984,7 @@ L9D78:  lda     INVOKER_PREFIX,x
         bne     L9D78
         inc     $1C00
         ldx     $1C00
-        lda     #$2F
+        lda     #'/'
         sta     $1C00,x
 L9D8C:  ldx     $1C00
         ldy     #$00
@@ -1989,14 +2001,14 @@ L9D91:  inx
 
 L9DAD:  ldx     L9DD6
 L9DB0:  lda     $1C00,x
-        cmp     #$2F
+        cmp     #'/'
         beq     L9DC8
         dex
         bne     L9DB0
 L9DBA:  lda     #$FF
         jsr     L9F74
         jsr     L9D44
-        jsr     L98D4
+        jsr     set_pointer_cursor
         pla
         pla
         rts
@@ -2022,11 +2034,11 @@ L9DE4:  stax    $06
         lda     ($06),y
         tay
 L9DED:  lda     ($06),y
-        cmp     #$61
+        cmp     #'a'
         bcc     L9DFB
-        cmp     #$7B
+        cmp     #'z'+1
         bcs     L9DFB
-        and     #$DF
+        and     #CASE_MASK
         sta     ($06),y
 L9DFB:  dey
         bne     L9DED
@@ -2151,15 +2163,15 @@ L9F27:  sta     L9F72
         sta     L9F73
         tay
 L9F43:  lda     ($06),y
-        and     #$7F
-        cmp     #$2F
+        and     #CHAR_MASK
+        cmp     #'/'
         beq     L9F4E
         dey
         bne     L9F43
 L9F4E:  dey
 L9F4F:  lda     ($06),y
-        and     #$7F
-        cmp     #$2F
+        and     #CHAR_MASK
+        cmp     #'/'
         beq     L9F5A
         dey
         bne     L9F4F

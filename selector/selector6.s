@@ -370,13 +370,13 @@ LD387:  MGTK_CALL MGTK::GetEvent, $8F79
         bne     LD397
         jmp     LD3F7
 
-LD397:  cmp     #$03
+LD397:  cmp     #$03            ; Ctrl+C ???
         bne     LD387
         lda     $8F7A
-        and     #$7F
+        and     #CHAR_MASK
         bit     LD142
         bpl     LD3DF
-        cmp     #$1B
+        cmp     #CHAR_ESCAPE
         bne     LD3BA
         MGTK_CALL MGTK::SetPenMode, $8E05
         MGTK_CALL MGTK::PaintRect, $D117
@@ -385,20 +385,20 @@ LD397:  cmp     #$03
 
 LD3BA:  bit     LD142
         bvs     LD3DF
-        cmp     #$61
+        cmp     #'a'
         bne     LD3D4
 LD3C3:  MGTK_CALL MGTK::SetPenMode, $8E05
         MGTK_CALL MGTK::PaintRect, $D10B
         lda     #$00
         jmp     LD434
 
-LD3D4:  cmp     #$41
+LD3D4:  cmp     #'A'
         beq     LD3C3
-        cmp     #$0D
+        cmp     #CHAR_RETURN
         beq     LD3C3
         jmp     LD387
 
-LD3DF:  cmp     #$0D
+LD3DF:  cmp     #CHAR_RETURN
         bne     LD3F4
         MGTK_CALL MGTK::SetPenMode, $8E05
         MGTK_CALL MGTK::PaintRect, $D10B
