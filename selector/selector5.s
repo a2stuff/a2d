@@ -151,129 +151,141 @@ MGTK:
 
 START:  jmp     L912A
 
-        .byte   0
-        ora     ($0002,x)
+        .byte   $00
+        .byte   $01,$02
         .byte   $03
         .byte   $04
-        ora     $06
+        .byte   $05,$06
         .byte   $07
-L8E0B:  .byte   0
-L8E0C:  .byte   0
-L8E0D:  .byte   0
-L8E0E:  .byte   0
-L8E0F:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+L8E0B:
+        .byte   $00
+L8E0C:
+        .byte   $00
+L8E0D:
+        .byte   $00
+L8E0E:
+        .byte   $00
+L8E0F:
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
         .byte   $03
-        .byte   0
-        ora     ($0000,x)
+        .byte   $00
+        .byte   $01,$00
         .byte   $9B
-        stx     L8E3B
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        .byte   $8E,$3B,$8E
+
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
         .byte   $02
-        .byte   0
-        sta     $5F8E,x
-        stx     a:$0000
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        .byte   $00
+        .byte   $9D,$8E,$5F
+        .byte   $8E,$00,$00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
         .byte   $03
-        .byte   0
-        ldx     #$8E
+        .byte   $00
+        .byte   $A2,$8E
         .byte   $6B
-        stx     a:$0000
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-L8E3B:  ora     $0000
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        tax
-        stx     a:$0000
-        .byte   0
-        .byte   0
+        .byte   $8E,$00,$00
+
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+L8E3B:
+        .byte   $05,$00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $AA
+        .byte   $8E,$00,$00
+        .byte   $00
+        .byte   $00
         .byte   $C7
-        stx     a:$0000
-        .byte   0
-        .byte   0
-        cmp     #$8E
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        inc     a:$8E
-        .byte   0
-        .byte   0
-        .byte   0
+        .byte   $8E,$00,$00
+        .byte   $00
+        .byte   $00
+        .byte   $C9,$8E
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $EE,$8E,$00
+        .byte   $00
+        .byte   $00
+        .byte   $00
         .byte   $12
         .byte   $8F
-        ora     ($0000,x)
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        ora     ($0000,x)
+        .byte   $01,$00
+
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $01,$00
         .byte   $52
         .byte   $72
         .byte   $27
         .byte   $8F
-L8E6B:  ora     ($0000,x)
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        ora     ($0000,x)
+L8E6B:
+        .byte   $01,$00
+        .byte   $00
+
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $01,$00
 L8E73:
-L8E74           := * + 1
-        bmi     $8EA5
-        and     $018F,y
-        .byte   0
+L8E74   := * + 1
+        .byte   $30,$30
+        .byte   $39,$8F,$01
+        .byte   $00
 L8E79:
-L8E7A           := * + 1
-        bmi     $8EAB
-        eor     ($8F,x)
-        ora     ($0000,x)
+L8E7A   := * + 1
+        .byte   $30,$30
+        .byte   $41,$8F
+        .byte   $01,$00
 L8E7F:
-L8E80           := * + 1
-        bmi     $8EB1
-        eor     #$8F
-        ora     ($0000,x)
+L8E80   := * + 1
+        .byte   $30,$30
+        .byte   $49,$8F
+        .byte   $01,$00
 L8E85:
-L8E86           := * + 1
-        bmi     $8EB7
-        eor     ($8F),y
-        ora     ($0000,x)
+L8E86   := * + 1
+        .byte   $30,$30
+        .byte   $51,$8F
+        .byte   $01,$00
 L8E8B:
-L8E8C           := * + 1
-        bmi     $8EBD
-L8E8D:  eor     $018F,y
-        .byte   0
+L8E8C   := * + 1
+        .byte   $30,$30
+L8E8D:
+        .byte   $59,$8F,$01
+        .byte   $00
 L8E91:
-L8E92           := * + 1
-        bmi     $8EC3
-        adc     ($8F,x)
-        ora     ($0000,x)
+L8E92   := * + 1
+        .byte   $30,$30
+        .byte   $61,$8F
+        .byte   $01,$00
 L8E97:
-L8E98           := * + 1
-        bmi     $8EC9
-        adc     #$8F
-        ora     ($1E,x)
+L8E98   := * + 1
+        .byte   $30,$30
+        .byte   $69,$8F
+        .byte   $01,$1E
 
         PASCAL_STRING "File"
         PASCAL_STRING "Startup"
@@ -346,7 +358,7 @@ L8FA2:  .byte   0
         .byte   0
         .byte   0
 L8FA7:  .byte   0
-        tax
+        .byte   $AA
         .byte   $8F
         .byte   0
         .byte   0
@@ -384,43 +396,47 @@ L8FA7:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-        asl     $EA
+        .byte   $06, $EA
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        dey
+        .byte   $88
         .byte   0
-        php
+        .byte   $08
         .byte   0
-        php
-L8FD9:  ora     ($01,x)
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        .byte   $08
+L8FD9:  .byte   $01, $01
         .byte   0
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        stx     $0000,y
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+
+
+        .byte   $96,$00
         .byte   $32
-        .byte   0
+        .byte   $00
         .byte   $F4
-        ora     ($8C,x)
-        .byte   0
-        ora     $2800,y
-        .byte   0
-        .byte   0
-        jsr     $0080
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        .byte   $01,$8C
+        .byte   $00
+        .byte   $19,$00,$28
+        .byte   $00
+        .byte   $00
+        .byte   $20,$80,$00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
         .byte   $F4
-        ora     ($6E,x)
+        .byte   $01,$6E
+
+
         .byte   0
         .byte   $FF
         .byte   $FF
@@ -436,91 +452,101 @@ L8FD9:  ora     ($01,x)
         .byte   0
         .byte   0
         .byte   0
-        ora     ($01,x)
+        .byte   1, 1
         .byte   0
         .byte   $7F
         .byte   0
-        dey
+        .byte   $88
         .byte   0
         .byte   0
         .byte   $04
         .byte   0
         .byte   $02
         .byte   0
-        beq     L901A
-L901A           := * + 1
-        jmp     ($5400)
 
-        ora     ($5E,x)
-        .byte   0
-        clv
-        ora     ($69,x)
-        .byte   0
+        .byte   $F0,$01
+L901A   := * + 1
+        .byte   $6C,$00,$54
+        .byte   $01,$5E
+        .byte   $00
+        .byte   $B8
+        .byte   $01,$69
+        .byte   $00
         .byte   $3C
-        .byte   0
-        lsr     LA000,x
-        .byte   0
-        adc     #$00
-        cli
-        ora     ($68,x)
-        .byte   0
+        .byte   $00
+        .byte   $5E,$00,$A0
+        .byte   $00
+        .byte   $69,$00
+        .byte   $58
+        .byte   $01,$68
+        .byte   $00
+
 
         PASCAL_STRING {" OK           ",CHAR_RETURN}
 
-        rti
-
+        .byte   $40
         .byte   0
-        pla
+        .byte   $68
         .byte   0
 
         PASCAL_STRING " DeskTop       Q "
+
         .byte   $02
-L9057           := * + 1
-        ora     ($0000,x)
-L9058:  .byte   0
+L9057   := * + 1
+        .byte   $01,$00
+L9058:
+        .byte   $00
         .byte   $0F
-        .byte   0
+        .byte   $00
 
         PASCAL_STRING "Selector"
 
-        ora     $0000
+        .byte   $05,$00
 L9066:
-L9067           := * + 1
-        asl     $0000,x
-        ora     $0000
+L9067   := * + 1
+        .byte   $16,$00
+        .byte   $05,$00
         .byte   $14
-        .byte   0
+        .byte   $00
         .byte   $EF
-L906D:  ora     ($14,x)
-        .byte   0
-        ora     $0000
+L906D:
+        .byte   $01,$14
+        .byte   $00
+        .byte   $05,$00
         .byte   $5A
-        .byte   0
+        .byte   $00
         .byte   $EF
-        ora     ($5A,x)
-        .byte   0
-L9078:  asl     a
-L9079:  .byte   0
+        .byte   $01,$5A
+        .byte   $00
+L9078:
+        .byte   $0A
+L9079:
+        .byte   $00
 L907A:
-L907B           := * + 1
-L907C           := * + 2
-        asl     a:$0000,x
-L907D:  .byte   0
-L907E:  .byte   0
-L907F:  .byte   0
+L907B   := * + 1
+L907C   := * + 2
+        .byte   $1E,$00,$00
+L907D:
+        .byte   $00
+L907E:
+        .byte   $00
+L907F:
+        .byte   $00
 L9080:
-L9081           := * + 1
-        ora     $0000
+L9081   := * + 1
+        .byte   $05,$00
 L9082:
-L9083           := * + 1
-        ora     $0000,x
+L9083   := * + 1
+        .byte   $15,$00
 L9084:
-L9085           := * + 1
-        sty     $0000
+L9085   := * + 1
+        .byte   $84,$00
 L9086:
-L9087           := * + 1
-L9088           := * + 2
-        ora     a:$0000,x
+L9087   := * + 1
+L9088   := * + 2
+        .byte   $1D,$00,$00
+
+
 L9089:  .byte   0
 L908A:  .byte   0
 L908B:  .byte   0
@@ -731,8 +757,8 @@ L920D:  lda     L8F71
         sta     $8F6F
         MGTK_CALL MGTK::StartDeskTop, $8FCE
         MGTK_CALL MGTK::SetMenu, $8E15
-        MGTK_CALL MGTK::ShowCursor, $0000
-        MGTK_CALL MGTK::FlushEvents, $0000
+        MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::FlushEvents
         yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L929A
         lda     #$80
@@ -803,7 +829,7 @@ L9339:  jsr     L933F
 L933F:  MGTK_CALL MGTK::BeginUpdate, $8F7A
         bne     L9351
         jsr     L9352
-        MGTK_CALL MGTK::EndUpdate, $0000
+        MGTK_CALL MGTK::EndUpdate
         rts
 
 L9351:  rts
@@ -813,25 +839,27 @@ L9352:  jsr     L991A
         rts
 
 L9359:
-L935A           := * + 1
-        lda     $95,x
-        lda     $95,x
-        lda     $95,x
-        lda     $95,x
-        lda     $95,x
-        lda     $95,x
-        lda     $95,x
+L935A   := * + 1
+        .byte   $B5,$95
+        .byte   $B5,$95
+        .byte   $B5,$95
+        .byte   $B5,$95
+        .byte   $B5,$95
+        .byte   $B5,$95
+        .byte   $B5,$95
         .byte   $F2
         .byte   $93
-        lda     $BD9B,x
+        .byte   $BD,$9B,$BD
         .byte   $9B
-        lda     $BD9B,x
+        .byte   $BD,$9B,$BD
         .byte   $9B
-        lda     $BD9B,x
+        .byte   $BD,$9B,$BD
         .byte   $9B
-L9377           := * + 2
-        lda     a:$9B,x
-        asl     $1E10
+L9377   := * + 2
+        .byte   $BD,$9B,$00
+        .byte   $0E,$10,$1E
+
+
 L937B:  lda     L8F7B
         bne     L938C
         lda     L8F7A
@@ -1432,14 +1460,14 @@ watch_cursor:
 
 
 
-L98C1:  MGTK_CALL MGTK::HideCursor, $0000
+L98C1:  MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, watch_cursor
-        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::ShowCursor
         rts
 
-L98D4:  MGTK_CALL MGTK::HideCursor, $0000
+L98D4:  MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, pointer_cursor
-        MGTK_CALL MGTK::ShowCursor, $0000
+        MGTK_CALL MGTK::ShowCursor
         rts
 
 L98E7:  ldx     $BF31
