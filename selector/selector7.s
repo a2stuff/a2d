@@ -6,31 +6,6 @@
 
 .scope
 
-L001C           := $001C
-L0080           := $0080
-L2020           := $2020
-L2061           := $2061
-L2E2E           := $2E2E
-L4084           := $4084
-L40C2           := $40C2
-L4DA1           := $4DA1
-L4F7F           := $4F7F
-L5030           := $5030
-L507E           := $507E
-L5861           := $5861
-L5A70           := $5A70
-L5BEE           := $5BEE
-L5C13           := $5C13
-L5C73           := $5C73
-L5C91           := $5C91
-L5CA4           := $5CA4
-L5CA8           := $5CA8
-L5CAF           := $5CAF
-L5E6A           := $5E6A
-L5E92           := $5E92
-L6944           := $6944
-L736F           := $736F
-L7572           := $7572
 
         jmp     LA44A
 
@@ -58,7 +33,6 @@ LA014:
         .byte   $00
 LA015:
         .byte   $00
-LA016:
         .byte   $00
         .byte   $00
 LA018:
@@ -115,9 +89,9 @@ LA047:  .byte   0
         .byte   0
         .byte   0
 LA04B:  .byte   0
-LA04C:  .byte   0
+        .byte   0
 LA04D:  .byte   0
-LA04E:  .byte   0
+        .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -153,9 +127,7 @@ LA063:  .byte   $FF
         .byte   $1A
         .byte   $00
         .byte   $30,$00
-LA076:
         .byte   $30,$00
-LA078:
         .byte   $60
 
 
@@ -184,9 +156,7 @@ LA078:
         .byte   $78
         .byte   $00
         .byte   $70,$01
-LA093   := * + 1
         .byte   $70,$01
-LA095   := * + 1
         .byte   $01,$01
         .byte   $00
         .byte   $00
@@ -194,18 +164,10 @@ LA095   := * + 1
         .byte   $28
         .byte   $00
         .byte   $10,$00
-LA09E:
         .byte   $10,$00
-LA0A0:
         .byte   $10,$00
-LA0A2:
         .byte   $10,$00
-LA0A4:
         .byte   $10,$00
-
-
-
-LA0A6:
         .byte   $28
         .byte   $00
         .byte   $46,$01
@@ -612,12 +574,10 @@ LA231:
         .byte   $00
         .byte   $F0,$01
         .byte   $97
-LA23A:
         .byte   $00
         .byte   $1B
         .byte   $00
         .byte   $10,$00
-LA23F:
         .byte   $AE,$00,$1A
         .byte   $00
         .byte   $C1,$00
@@ -701,10 +661,7 @@ LA23F:
         .byte   $19,$00,$1C
         .byte   $00
         .byte   $70,$00
-
-
-
-LA2C4:  .byte   $1C
+        .byte   $1C
         .byte   0
         .byte   $87
         .byte   0
@@ -726,7 +683,6 @@ LA2DA:
 LA2DB   := * + 1
 LA2DC   := * + 2
         .byte   $1E,$00,$7B
-LA2DD:
         .byte   $00
         .byte   $1C
         .byte   $00
@@ -746,7 +702,6 @@ LA2DD:
         .byte   $61,$6D
         .byte   $20,$2E,$2E
         .byte   $2E,$0C,$46
-LA2FE:
         .byte   $69,$6C
         .byte   $65,$20
         .byte   $74
@@ -818,7 +773,6 @@ LA3A3:
         .byte   $00
 LA3AB := * + 1
         .byte   $10,$00
-LA3AC:
         .byte   $04
 LA3AD:
         .byte   $00
@@ -2156,7 +2110,7 @@ LAFE7:  stax    $06
         lda     ($06),y
         sta     $08
         inc16   $06
-LAFF7:  MGTK_CALL MGTK::DrawText, $0006
+        MGTK_CALL MGTK::DrawText, $0006
         rts
 
 LAFFE:  stax    $06
@@ -2164,7 +2118,7 @@ LAFFE:  stax    $06
         lda     ($06),y
         sta     $08
         inc16   $06
-LB00E:  MGTK_CALL MGTK::TextWidth, $0006
+        MGTK_CALL MGTK::TextWidth, $0006
         lsr16   $09
         lda     #$01
         sta     LB03E
@@ -2190,7 +2144,7 @@ LB03F:  stax    $06
         rts
 
 LB051:  ldx     LA3C6
-        lda     $BF32,x
+        lda     DEVLST,x
         and     #$F0
         sta     LA3A3
         yax_call LAE91, $C5, $A3A2
@@ -2208,7 +2162,7 @@ LB075:  lda     #$00
 
 LB082:  inc     LA3C6
         lda     LA3C6
-        cmp     $BF31
+        cmp     DEVCNT
         beq     LB094
         bcc     LB094
         lda     #$00
@@ -3188,8 +3142,7 @@ LB8E3:  jsr     LB760
         jsr     LBB5B
         rts
 
-LB8EA:  .byte   0
-LB8EB:  .byte   0
+LB8EA:  .word   0
 LB8EC:  sta     LB8FB
         lda     LA10C
         clc
@@ -3499,485 +3452,6 @@ LBBDD:  jsr     LB106
 
 LBBE1:  .byte   0
 LBBE2:  .byte   0
-        lda     #$07
-        clc
-        adc     $87
-        cmp     #$07
-        bcs     LBBFC
-        sta     $87
-        ldy     $9F
-        cpy     $A3
-        beq     LBBF7
-        jmp     L5A70
 
-LBBF7:  ldy     $A0
-        jmp     L5CA4
-
-LBBFC:  sbc     #$07
-        sta     $87
-        ldy     $A0
-        bne     LBC07
-        jmp     L5C91
-
-LBC07:  bmi     LBC73
-        dec     $91
-        bne     LBC10
-        jmp     L5CA4
-
-LBC10:  jmp     L5C13
-
-        lda     $0F
-        eor     $F1
-        sta     ($3E),y
-        lda     $0E
-        eor     $F1
-        sta     ($3C),y
-        lda     $0D
-        eor     $F1
-        sta     ($3A),y
-        lda     $0C
-        eor     $F1
-        sta     ($38),y
-        lda     $0B
-        eor     $F1
-        sta     ($36),y
-        lda     $0A
-        eor     $F1
-        sta     ($34),y
-        lda     $09
-        eor     $F1
-        sta     (INVFLG),y
-        lda     $08
-        eor     $F1
-        sta     ($30),y
-        lda     $07
-        eor     $F1
-        sta     ($2E),y
-        lda     $06
-        eor     $F1
-        sta     ($2C),y
-        lda     $05
-        eor     $F1
-        sta     ($2A),y
-        lda     $04
-        eor     $F1
-        sta     (BASL),y
-        lda     $03
-        eor     $F1
-        sta     ($26),y
-        lda     $02
-        eor     $F1
-        sta     (CH),y
-        lda     $01
-        eor     $F1
-        sta     (WNDTOP),y
-        lda     $00
-        eor     $F1
-        sta     (WNDLFT),y
-LBC73:  bit     $D6
-        bpl     LBC83
-        lda     $9C
-        eor     #$01
-        tax
-        sta     $9C
-        sta     LOWSCR,x
-        beq     LBC85
-LBC83:  inc     $A0
-LBC85:  ldx     #$0F
-LBC87:  lda     $10,x
-        sta     $00,x
-        dex
-        bpl     LBC87
-        jmp     L5BEE
-
-        ldx     $9C
-        lda     $92,x
-        dec     $91
-        beq     LBC9F
-        jsr     L5CA8
-        jmp     L5C73
-
-LBC9F:  and     $96,x
-        bne     LBCA8
-        rts
-
-        ldx     $9C
-        lda     $96,x
-LBCA8:  ora     #$80
-        sta     L0080
-        jmp     L5CAF
-
-        lda     $0F
-        eor     $F1
-        eor     ($3E),y
-        and     L0080
-        eor     ($3E),y
-        sta     ($3E),y
-        lda     $0E
-        eor     $F1
-        eor     ($3C),y
-        and     L0080
-        eor     ($3C),y
-        sta     ($3C),y
-        lda     $0D
-        eor     $F1
-        eor     ($3A),y
-        and     L0080
-        eor     ($3A),y
-        sta     ($3A),y
-        lda     $0C
-        eor     $F1
-        eor     ($38),y
-        and     L0080
-        eor     ($38),y
-        sta     ($38),y
-        lda     $0B
-        eor     $F1
-        eor     ($36),y
-        and     L0080
-        eor     ($36),y
-        sta     ($36),y
-        lda     $0A
-        eor     $F1
-        eor     ($34),y
-        and     L0080
-        eor     ($34),y
-        sta     ($34),y
-        lda     $09
-        eor     $F1
-        eor     (INVFLG),y
-        and     L0080
-        eor     (INVFLG),y
-        sta     (INVFLG),y
-        lda     $08
-        eor     $F1
-        eor     ($30),y
-        and     L0080
-        eor     ($30),y
-        sta     ($30),y
-        lda     $07
-        eor     $F1
-        eor     ($2E),y
-        and     L0080
-        eor     ($2E),y
-        sta     ($2E),y
-        lda     $06
-        eor     $F1
-        eor     ($2C),y
-        and     L0080
-        eor     ($2C),y
-        sta     ($2C),y
-        lda     $05
-        eor     $F1
-        eor     ($2A),y
-        and     L0080
-        eor     ($2A),y
-        sta     ($2A),y
-        lda     $04
-        eor     $F1
-        eor     (BASL),y
-        and     L0080
-        eor     (BASL),y
-        sta     (BASL),y
-        lda     $03
-        eor     $F1
-        eor     ($26),y
-        and     L0080
-        eor     ($26),y
-        sta     ($26),y
-        lda     $02
-        eor     $F1
-        eor     (CH),y
-        and     L0080
-        eor     (CH),y
-        sta     (CH),y
-        lda     $01
-        eor     $F1
-        eor     (WNDTOP),y
-        and     L0080
-        eor     (WNDTOP),y
-        sta     (WNDTOP),y
-        lda     $00
-        eor     $F1
-        eor     (WNDLFT),y
-        and     L0080
-        eor     (WNDLFT),y
-        sta     (WNDLFT),y
-        rts
-
-        ldx     $5B,y
-        lda     #$5B
-        .byte   $9C
-        .byte   $5B
-        .byte   $8F
-        .byte   $5B
-        .byte   $82
-        .byte   $5B
-        adc     $5B,x
-        pla
-        .byte   $5B
-        .byte   $5B
-        .byte   $5B
-        lsr     $415B
-        .byte   $5B
-        .byte   $34
-        .byte   $5B
-        .byte   $27
-        .byte   $5B
-        .byte   $1A
-        .byte   $5B
-        ora     a:$5B
-        .byte   $5B
-        .byte   $F3
-        .byte   $5A
-        cmp     ($5A),y
-        cpy     $C75A
-        .byte   $5A
-        .byte   $C2
-        .byte   $5A
-        lda     LB85A,x
-        .byte   $5A
-        .byte   $B3
-        .byte   $5A
-        ldx     LA95A
-        .byte   $5A
-        ldy     $5A
-        .byte   $9F
-        .byte   $5A
-        txs
-        .byte   $5A
-        sta     $5A,x
-        bcc     LBE06
-        .byte   $8B
-        .byte   $5A
-        stx     $5A
-        adc     $675C
-        .byte   $5C
-        adc     ($5C,x)
-        .byte   $5B
-        .byte   $5C
-        eor     $5C,x
-        .byte   $4F
-        .byte   $5C
-        eor     #$5C
-        .byte   $43
-        .byte   $5C
-        and     $375C,x
-        .byte   $5C
-        and     ($5C),y
-        .byte   $2B
-        .byte   $5C
-        and     $5C
-        .byte   $1F
-        .byte   $5C
-        ora     $135C,y
-        .byte   $5C
-        .byte   $63
-        eor     $5D57,x
-        .byte   $4B
-        eor     $5D3F,x
-        .byte   $33
-        eor     $5D27,x
-        .byte   $1B
-        eor     $5D0F,x
-        .byte   $03
-        eor     $5CF7,x
-        .byte   $EB
-        .byte   $5C
-        .byte   $DF
-        .byte   $5C
-        .byte   $D3
-        .byte   $5C
-        .byte   $C7
-        .byte   $5C
-        .byte   $BB
-        .byte   $5C
-        .byte   $AF
-        .byte   $5C
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LBE06:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
-
-;;; Another chunk of BASIC.SYSTEM 1.1 ???
-
-        lda     #$41
-        sta     $82
-        jsr     L5E6A
-        ldx     #$23
-LBE49:  lda     $5F10,x
-        sta     $8A,x
-        sta     $D0,x
-        dex
-        bpl     LBE49
-        lda     $5E68
-        ldx     $5E69
-        jsr     L5E92
-        lda     #$7F
-        sta     $F6
-        jsr     L5030
-        lda     #$00
-        sta     $F6
-        rts
-
-        .byte   $34
-        .byte   $5F
-        lda     AN3_OFF
-        sta     SET80VID
-        ldx     #$06
-LBE72:  lsr     $82
-        lda     $5E87,x
-        rol     a
-        tay
-        bcs     LBE80
-        lda     CLR80COL,y
-        bcc     LBE83
-LBE80:  sta     CLR80COL,y
-LBE83:  dex
-        bpl     LBE72
-        rts
-
-        .byte   $80
-        sta     ($82,x)
-        plp
-        and     #$2A
-        .byte   $2B
-        lda     L0080
-        ldx     $81
-        stax    $F4
-        lda     $F3
-        beq     LBE9D
-        jsr     L5861
-LBE9D:  jsr     L507E
-        jsr     L4F7F
-        jmp     L4DA1
-
-        jsr     L40C2
-        lda     $F4
-        ldx     $F5
-        ldy     #$00
-        sta     (L0080),y
-        txa
-        iny
-        sta     (L0080),y
-        rts
-
-        ldy     #$23
-LBEB8:  lda     $5F10,y
-        sta     (L0080),y
-        dey
-        bpl     LBEB8
-LBEC0:  rts
-
-        lda     $82
-        cmp     $5F0D
-        beq     LBEC0
-        sta     $5F0D
-        bcc     LBEC0
-        jmp     L4084
-
-        lda     $82
-        cmp     $5F0E
-        beq     LBEC0
-        sta     $5F0E
-        bcc     LBEF1
-        bit     $5F0E
-        bpl     LBEEB
-        ldx     #$43
-LBEE3:  lda     $5DF0,x
-        sta     $00,x
-        dex
-        bpl     LBEE3
-LBEEB:  rts
-
-        bit     $5F0E
-        bpl     LBEEB
-LBEF1:  ldx     #$43
-LBEF3:  lda     $00,x
-        sta     $5DF0,x
-        dex
-        bpl     LBEF3
-        rts
-
-        ldy     #$05
-        .byte   $B9
-        .byte   $07
 
 .endscope

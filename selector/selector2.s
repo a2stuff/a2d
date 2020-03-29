@@ -12,8 +12,10 @@
         jmp     start
 
 flag:   .byte   0
-L1004:  .byte   "Selector"
-L100C:  .byte   0
+
+        ;; Unreferenced?
+        .byte   "Selector"
+        .byte   0
 
 str_loading:
         PASCAL_STRING "Loading Selector"
@@ -43,7 +45,7 @@ start:
         lda     #$80
         sta     ALTZPON
         sta     FBUFFR
-        sta     $0101
+        sta     $0101           ; ???
         sta     ALTZPOFF
 
         ;; Disable IIgs video

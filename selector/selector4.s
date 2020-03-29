@@ -147,7 +147,7 @@ do_read:
         jsr     set_prefix
         ldy     INVOKER_FILENAME
 :       lda     INVOKER_FILENAME,y
-        sta     $2006,y
+        sta     $2006,y         ; ProDOS interpreter protocol
         dey
         bpl     :-
 
@@ -160,9 +160,9 @@ update_stack:
         jsr     update_bitmap   ; WTF?
 
         lda     #%00000001      ; ProDOS global page
-        sta     $BF6F
+        sta     BITMAP+BITMAP_SIZE-1
         lda     #%11001111      ; ZP, Stack, Text Page 1
-        sta     $BF58
+        sta     BITMAP
 
         invoke_addr := *+1
         jmp     $2000

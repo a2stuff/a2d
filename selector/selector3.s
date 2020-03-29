@@ -39,7 +39,7 @@ start:
         ;; Clear ProDOS memory bitmap
         lda     #0
         ldx     #$17
-:       sta     $BF59,x
+:       sta     BITMAP+1,x
         dex
         bpl     :-
 

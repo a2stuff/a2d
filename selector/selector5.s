@@ -6,7 +6,6 @@
 
 .scope
 
-L1234           := $1234
 L2000           := $2000
 LA000           := $A000
 LA003           := $A003
@@ -202,7 +201,6 @@ L8E0F:
         .byte   $00
         .byte   $00
         .byte   $00
-L8E3B:
         .byte   $05,$00
         .byte   $00
         .byte   $00
@@ -273,7 +271,6 @@ L8E86   := * + 1
 L8E8B:
 L8E8C   := * + 1
         .byte   $30,$30
-L8E8D:
         .byte   $59,$8F,$01
         .byte   $00
 L8E91:
@@ -309,7 +306,7 @@ L8F73:  .byte   0
 L8F74:  .byte   0
 L8F75:  .byte   0
 L8F76:  .byte   0
-L8F77:  .byte   0
+        .byte   0
 L8F78:  .byte   0
 L8F79:  .byte   0
 L8F7A:  .byte   0
@@ -352,7 +349,7 @@ L8F81:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-L8FA2:  .byte   0
+        .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -465,7 +462,6 @@ L8FD9:  .byte   $01, $01
         .byte   0
 
         .byte   $F0,$01
-L901A   := * + 1
         .byte   $6C,$00,$54
         .byte   $01,$5E
         .byte   $00
@@ -503,13 +499,11 @@ L9058:
 
         .byte   $05,$00
 L9066:
-L9067   := * + 1
         .byte   $16,$00
         .byte   $05,$00
         .byte   $14
         .byte   $00
         .byte   $EF
-L906D:
         .byte   $01,$14
         .byte   $00
         .byte   $05,$00
@@ -575,10 +569,10 @@ str_desktop2:
 str_selector:
         PASCAL_STRING "selector"
 
-        DEFINE_SET_MARK_PARAMS set_mark_params, $6F60
-        DEFINE_SET_MARK_PARAMS set_mark_params2, $8E60
-        DEFINE_READ_PARAMS read_params2, $A000, $1F00
-        DEFINE_READ_PARAMS read_params3, $A000, $D00
+        DEFINE_SET_MARK_PARAMS set_mark_params, overlay1_offset
+        DEFINE_SET_MARK_PARAMS set_mark_params2, overlay2_offset
+        DEFINE_READ_PARAMS read_params2, overlay_addr, overlay1_size
+        DEFINE_READ_PARAMS read_params3, overlay_addr, overlay2_size
         DEFINE_CLOSE_PARAMS close_params2
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $9104
 
@@ -622,7 +616,6 @@ L912A:  cli
         sta     L9129
         lda     L9128
         ora     L9127
-L913F           := * + 1
         bne     L9151
 L9140:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L914E
@@ -676,14 +669,14 @@ L91AC:  lda     L910E
 L91B2:  sta     KBDSTRB
         lda     #$00
         sta     L9129
-        jsr     L98E7
+        jsr     disconnect_ramdisk
         ldx     #$01
 L91BF:  cpx     #$03
         beq     L91DE
         cpx     #$02
         beq     L91DE
-        ldy     $BF31
-L91CA:  lda     $BF32,y
+        ldy     DEVCNT
+L91CA:  lda     DEVLST,y
         and     #$70
         lsr     a
         lsr     a
@@ -914,7 +907,7 @@ L93EB:  tsx
         stx     L8E0B
 L93F0           := * + 1
 L93F1           := * + 2
-        jmp     L1234
+        jmp     dummy1234
 
         lda     L910E
         bmi     L93FF
@@ -1470,29 +1463,36 @@ L98D4:  MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::ShowCursor
         rts
 
-L98E7:  ldx     $BF31
-L98EA:  lda     $BF32,x
+;;; Disconnect /RAM
+.proc disconnect_ramdisk
+        ldx     DEVCNT
+:       lda     DEVLST,x
         cmp     #$BF
-        beq     L98F5
+        beq     loop
         dex
-        bpl     L98EA
+        bpl     :-
         rts
 
-L98F5:  lda     $BF33,x
-        sta     $BF32,x
-        cpx     $BF31
+loop:   lda     DEVLST+1,x
+        sta     DEVLST,x
+        cpx     DEVCNT
         beq     L9904
         inx
-        jmp     L98F5
+        jmp     loop
 
-L9904:  dec     $BF31
+L9904:  dec     DEVCNT
         rts
+.endproc
 
-L9908:  inc     $BF31
-        ldx     $BF31
+;;; Restore /RAM
+.proc reconnect_ramdisk
+        inc     DEVCNT
+        ldx     DEVCNT
         lda     #$BF
-        sta     $BF32,x
+        sta     DEVLST,x
         rts
+.endproc
+
 
 L9914:  lda     L8FD9
         jsr     L9A15
@@ -1527,7 +1527,7 @@ L9984:  stax    $06
         lda     ($06),y
         sta     $08
         inc16   $06
-L9994:  MGTK_CALL MGTK::DrawText, $0006
+        MGTK_CALL MGTK::DrawText, $0006
         rts
 
 L999B:  stax    $06
@@ -1535,7 +1535,7 @@ L999B:  stax    $06
         lda     ($06),y
         sta     $08
         inc16   $06
-L99AB:  MGTK_CALL MGTK::TextWidth, $0006
+        MGTK_CALL MGTK::TextWidth, $0006
         lsr16   $09
         lda     #$01
         sta     L99DB
@@ -1821,7 +1821,7 @@ L9BBC:  .byte   0
 L9BF4           := * + 2
         jmp     $0000
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, $220
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, INVOKER_PREFIX
 
 L9C07:  lda     L9129
         bne     L9C17
@@ -1880,7 +1880,7 @@ L9C7E:  stax    $06
         lda     ($06),y
         tay
 L9C87:  lda     ($06),y
-        sta     $0220,y
+        sta     INVOKER_PREFIX,y
         dey
         bpl     L9C87
         yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params3
@@ -1918,8 +1918,8 @@ L9CC4:  cmp     #FT_BINARY
         jsr     L9F74
         jmp     L9D44
 
-L9CD8:  ldy     $0220
-L9CDB:  lda     $0220,y
+L9CD8:  ldy     INVOKER_PREFIX
+L9CDB:  lda     INVOKER_PREFIX,y
         cmp     #'/'
         beq     L9CEF
         dey
@@ -1936,16 +1936,16 @@ L9CEF:  dey
         ldx     #$00
 L9CF5:  iny
         inx
-        lda     $0220,y
-        sta     $0280,x
-        cpy     $0220
+        lda     INVOKER_PREFIX,y
+        sta     INVOKER_FILENAME,x
+        cpy     INVOKER_PREFIX
         bne     L9CF5
-        stx     $0280
+        stx     INVOKER_FILENAME
         pla
-        sta     $0220
-        addr_call L9DE4, $0220
-        addr_call L9DE4, $0280
-        jsr     L9908
+        sta     INVOKER_PREFIX
+        addr_call L9DE4, INVOKER_PREFIX
+        addr_call L9DE4, INVOKER_FILENAME
+        jsr     reconnect_ramdisk
         jsr     SETVID
         jsr     SETKBD
         jsr     INIT
@@ -1959,7 +1959,7 @@ L9CF5:  iny
         sta     CLR80VID
         sta     CLR80COL
         jsr     INVOKER
-        jsr     L98E7
+        jsr     disconnect_ramdisk
 L9D44:  lda     L9129
         bne     L9D4E
         lda     #$FF
@@ -1968,8 +1968,8 @@ L9D4E:  rts
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, $1C00
 
-L9D61:  ldx     $0220
-L9D64:  lda     $0220,x
+L9D61:  ldx     INVOKER_PREFIX
+L9D64:  lda     INVOKER_PREFIX,x
         cmp     #$2F
         beq     L9D71
         dex
@@ -1979,7 +1979,7 @@ L9D64:  lda     $0220,x
 L9D71:  dex
         stx     L9DD6
         stx     $1C00
-L9D78:  lda     $0220,x
+L9D78:  lda     INVOKER_PREFIX,x
         sta     $1C00,x
         dex
         bne     L9D78
@@ -2052,7 +2052,7 @@ L9DFF:  lda     L910E
         lda     ($06),y
         tay
 L9E0E:  lda     ($06),y
-        sta     $0220,y
+        sta     INVOKER_PREFIX,y
         dey
         bpl     L9E0E
         yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params3
@@ -2148,8 +2148,7 @@ L9F0B:  stax    L9F1E
         ldx     $D3EE
 L9F1A:  lda     $D3EE,x
 L9F1E           := * + 1
-L9F1F           := * + 2
-        sta     L1234,x
+        sta     dummy1234,x
         dex
         bpl     L9F1A
         lda     ROMIN2
