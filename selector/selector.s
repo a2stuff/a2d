@@ -23,6 +23,10 @@ START           := $8E00
         .incbin "inc/bs.dat"
 
         .include "selector3.s"
+
+        ;; Random chunk of selector2 itself (including the BS junk!)
+        .incbin "inc/junk.dat"
+
         .include "selector4.s"
         .include "selector5.s"
 

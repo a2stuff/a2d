@@ -26,8 +26,9 @@ Invoked via ProDOS QUIT, so relocated/executed at $1000.
 
 Loads the Loader - reads SELECTOR $600 bytes at $1C00, and jumps to $2000
 
-(Note that the first chunk of bytes that end up at $1C00 are obviously
-not used (the Bootstrap and the Quit Handler itself). dummy data is not known.
+(Note that the first chunk of bytes that end up at $1C00 are not used
+as that is the Bootstrap and the Quit Handler code; this is followed by
+padding.)
 
 open questions:
 * does the code from $0227 to $03FF get used? (loaded $1E27..$1FFF)

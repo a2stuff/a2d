@@ -43,6 +43,7 @@ start:
         dex
         bpl     :-
 
+        ;; Open up Selectot itself
         WRAPPED_MLI_CALL OPEN, open_params
         beq     L2049
         brk
@@ -53,26 +54,21 @@ L2049:  lda     open_params::ref_num
         sta     read_params2::ref_num
         sta     read_params3::ref_num
 
+        ;; Read various segments into final or temp locations
         WRAPPED_MLI_CALL SET_MARK, set_mark_params
         beq     :+
         brk
-
 :       WRAPPED_MLI_CALL READ, read_params1
         beq     :+
         brk
-
 :       WRAPPED_MLI_CALL READ, read_params2
         beq     :+
         brk
-
 :       WRAPPED_MLI_CALL READ, read_params3
         beq     :+
         brk
-
 :
-L2092           := * + 2
-
-        ;; Copy last Resources segment to Aux LC1
+        ;; Copy Resources segment to Aux LC1
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
@@ -90,104 +86,7 @@ L2092           := * + 2
 
         WRAPPED_MLI_CALL CLOSE, close_params
 
+        ;; Invoke the Selector application
         jmp     START
-
-;;; ============================================================
-;;; Duplicated from selector2.s - unused?
-
-.scope
-
-L103A           := $103A
-L10F2           := $10F2
-L1127           := $1127
-L118B           := $118B
-L223B           := $223B
-
-        .byte   $03
-        bpl     L2092
-        inc     $8D03,x
-        .byte   $89
-        ora     ($AD),y
-        .byte   $FF
-        .byte   $03
-        sta     $118A
-        lda     LCBANK2
-        lda     LCBANK2
-        ldy     #$00
-L20F8:  lda     $1000,y
-        sta     $D100,y
-        lda     $1100,y
-        sta     $D200,y
-        dey
-        bne     L20F8
-        lda     ROMIN2
-        jmp     L10F2
-
-        lda     $1189
-        sta     IRQ_VECTOR
-        lda     $118A
-        sta     $03FF
-        MLI_CALL SET_PREFIX, $1031
-        beq     L2124
-        jmp     L1127
-
-L2124:  MLI_CALL OPEN, $1034
-        beq     L212F
-        jmp     L118B
-
-L212F:  lda     $1039
-        sta     $1028
-        MLI_CALL READ, $1027
-        beq     L2140
-        jmp     L118B
-
-L2140:  MLI_CALL CLOSE, $102F
-        beq     L214B
-        jmp     L118B
-
-L214B:  jmp     $2000
-
-        jsr     SLOT3ENTRY
-        jsr     HOME
-        lda     #$0C
-        sta     CV
-        jsr     VTAB
-        lda     #$50
-        sec
-        sbc     $115E
-        lsr     a
-        sta     CH
-        ldy     #$00
-L2166:  lda     $115F,y
-        ora     #$80
-        jsr     COUT
-        iny
-        cpy     $115E
-        bne     L2166
-L2174:  sta     KBDSTRB
-L2177:  lda     CLR80COL
-        bpl     L2177
-        and     #$7F
-        cmp     #$0D
-        bne     L2174
-        jmp     L103A
-
-        PASCAL_STRING "Insert the system disk and press <Return>."
-
-        .byte   0
-        .byte   0
-        sta     $06
-        jmp     MONZ
-
-        PAD_TO $21F7
-
-        ;; Probably part of BASIC.SYSTEM ???
-
-        ldx     $3D20,y
-        tay
-        bcs     L223B
-        lda     $BE53
-
-.endscope
 
 .endscope
