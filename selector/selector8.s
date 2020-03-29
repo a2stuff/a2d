@@ -6,9 +6,6 @@
 
 .scope
 
-L0080           := $0080
-L05A0           := $05A0
-L1400           := $1400
 L2004           := $2004
 L2020           := $2020
 L461E           := $461E
@@ -19,10 +16,8 @@ L636F           := $636F
 L6562           := $6562
 L6572           := $6572
 L6874           := $6874
-L6E65           := $6E65
 L6E69           := $6E69
 L6F63           := $6F63
-L6F72           := $6F72
 L6F74           := $6F74
 L7564           := $7564
 L95A0           := $95A0
@@ -122,11 +117,9 @@ LA069:
         .byte   $00
 LA06C   := * + 1
         .byte   $15,$00
-LA06D:
         .byte   $0B
 LA06E:
         .byte   $00
-LA06F:
         .byte   $00
         .byte   $04
 LA071:
@@ -134,7 +127,6 @@ LA071:
         .byte   $00
 LA074   := * + 1
         .byte   $15,$00
-LA075:
         .byte   $0B
 LA076:
         .byte   $00
@@ -178,7 +170,7 @@ LA092:
         .byte   0
 LA099:  .byte   0
 LA09A:  .byte   0
-LA09B:  .byte   0
+        .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -194,10 +186,10 @@ LA09B:  .byte   0
 
         .byte   0
 LA0AA:  .byte   0
-LA0AB:  .byte   0
+        .byte   0
         .byte   0
 LA0AD:  .byte   0
-LA0AE:  .byte   0
+        .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -955,7 +947,7 @@ LA4E9:  lda     LA4F8
         rts
 
 LA4F3:  .byte   0
-LA4F4:  .byte   0
+        .byte   0
 LA4F5:  jmp     LA610
 
 LA4F8:  .byte   0
@@ -1048,7 +1040,7 @@ LA603:  lda     LA60C
         rts
 
 LA60A:  .byte   0
-LA60B:  .byte   0
+        .byte   0
 LA60C:  .byte   0
 LA60D:  .byte   0
 LA60E:  .byte   0
@@ -1165,7 +1157,7 @@ LA729:  jsr     LA75D
         bne     LA74A
         add16   LA75B, LA09A, LA75B
 LA74A:  inc16   LA759
-LA752:  jsr     LA782
+        jsr     LA782
         jsr     LAA98
         rts
 
@@ -1388,7 +1380,6 @@ LA85A:
         .byte   $64
         .byte   $00
         .byte   $10,$00
-LA8B4:
         .byte   $18
 
 
@@ -1505,7 +1496,6 @@ LA8B4:
         jmp     (L6369)
 
         .byte   $6B
-LA953           := * + 1
         jsr     L4B4F
         jsr     L6F74
         jsr     L6F63
@@ -1589,6 +1579,8 @@ LA9B4           := * + 2
         .byte   $3A
         jsr     L2004
         jsr     L2020
+
+
 LAA01:  MGTK_CALL MGTK::OpenWindow, $A85A
         lda     LA85A
 LAA0A:  jsr     L9A15

@@ -6,6 +6,8 @@
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk_100B4.inc"
 
+dummy1234       := $1234
+
 INVOKER_PREFIX  := $0220
 INVOKER_FILENAME:= $0280
 INVOKER         := $0290
@@ -13,6 +15,12 @@ LOADER          := $2000
 MGTK            := $4000
 START           := $8E00
 
+
+overlay_addr    := $A000
+overlay1_offset = $6F60
+overlay1_size   = $1F00
+overlay2_offset = $8E60
+overlay2_size   = $D00
 
 ;;; ============================================================
 ;;; Selector application
@@ -40,5 +48,10 @@ START           := $8E00
         .incbin "inc/mgtk.dat"
 
         .include "selector6.s"
+
         .include "selector7.s"
+
+        ;; Random chunk of MGTK padding out the file
+        .incbin "inc/junk3.dat"
+
         .include "selector8.s"

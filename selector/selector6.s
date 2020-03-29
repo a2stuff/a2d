@@ -6,7 +6,6 @@
 
 .scope
 
-L0080           := $0080
 L2000           := $2000
 MGTK            := $4000
 FONT            := $8800
@@ -44,7 +43,6 @@ L9984           := $9984
         .byte   $1E,$1F,$40
         .byte   $07
         .byte   $F0,$00
-LD029:
         .byte   $00
         .byte   $1E,$1F,$60
         .byte   $03
@@ -154,7 +152,6 @@ LD029:
         .byte   $00
         .byte   $00
         .byte   $24,$00
-LD0B6:
         .byte   $17
         .byte   $00
         .byte   $41,$00
@@ -178,7 +175,6 @@ LD0D1   := * + 1
         .byte   $41,$00
 LD0D2:
         .byte   $57
-LD0D3:
         .byte   $00
         .byte   $00
         .byte   $20,$80,$00
@@ -204,9 +200,7 @@ LD0DE:
         .byte   $01,$25
         .byte   $00
         .byte   $90,$01
-LD112   := * + 1
         .byte   $30,$00
-LD113:
         .byte   $31,$01
         .byte   $2F
         .byte   $00
@@ -216,7 +210,6 @@ LD113:
         .byte   $78
         .byte   $00
         .byte   $30,$00
-LD11F:
         .byte   $19,$00,$2F
         .byte   $00
         .byte   $BE,$00,$10
@@ -275,7 +268,7 @@ LD236:
         .byte   $A9,$01,$60
 
 
-LD248:  jsr     L98D4
+        jsr     L98D4
         MGTK_CALL MGTK::InitPort, $8F83
         MGTK_CALL MGTK::SetPort, $8F83
         lda     LD0D0
@@ -569,9 +562,9 @@ LD5C1:  lda     LD5F6
 LD5CE:  lda     ($06),y
 LD5D1           := * + 1
 LD5D2           := * + 2
-        sta     $1234
+        sta     dummy1234
         inc16   LD5D1
-LD5DB:  lda     LD5F6
+        lda     LD5F6
         cmp     LD766
         bcs     LD5E8
         inc     LD5F6
@@ -627,7 +620,6 @@ LD648:  lda     LD6A5
         sta     HISCR
 LD655:
 LD656           := * + 1
-LD657           := * + 2
         lda     $0800
         pha
         lda     LD6A5
@@ -654,7 +646,7 @@ LD677:  lda     ($06),y
 LD685:  pla
         sta     ($06),y
         inc16   LD656
-LD690:  lda     LD6A5
+        lda     LD6A5
         cmp     LD766
         bcs     LD69D
         inc     LD6A5
