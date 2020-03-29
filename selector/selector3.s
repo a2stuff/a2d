@@ -11,50 +11,21 @@
 
         jmp     start
 
+        resources_load_addr := $3400
+        resources_final_addr := $D000
+
         ;; ProDOS parameter blocks
 
-        .byte   $03
-        plp
-        jsr     $3000
-L2008:  .byte   0
-        .byte   $04
-L200A:  .byte   0
-        bcc     L200F
-        rts
+        DEFINE_OPEN_PARAMS open_params, str_selector, $3000
+        DEFINE_READ_PARAMS read_params1, INVOKER, $160
+        DEFINE_READ_PARAMS read_params2, MGTK, $6000
+        DEFINE_READ_PARAMS read_params3, resources_load_addr, $800
 
-L200F           := * + 1
-        ora     ($00,x)
-        .byte   0
-        .byte   $04
-L2012:  .byte   0
-        .byte   0
-        rti
+        DEFINE_SET_MARK_PARAMS set_mark_params, $600
+        DEFINE_CLOSE_PARAMS close_params
 
-        .byte   0
-        rts
-
-        .byte   0
-        .byte   0
-        .byte   $04
-L201A:  .byte   0
-        .byte   0
-        .byte   $34
-        .byte   0
-        php
-        .byte   0
-        .byte   0
-        .byte   $02
-L2022:  .byte   0
-        .byte   0
-        asl     $00
-        ora     ($00,x)
-        php
-        .byte   $53
-        adc     $6C
-        adc     $63
-        .byte   $74
-        .byte   $6F
-        .byte   $72
+str_selector:
+        PASCAL_STRING "Selector"
 
 .macro  WRAPPED_MLI_CALL op, params
         php
@@ -72,29 +43,29 @@ start:
         dex
         bpl     :-
 
-        WRAPPED_MLI_CALL OPEN, $2003
+        WRAPPED_MLI_CALL OPEN, open_params
         beq     L2049
         brk
 
-L2049:  lda     L2008
-        sta     L2022
-        sta     L200A
-        sta     L2012
-        sta     L201A
+L2049:  lda     open_params::ref_num
+        sta     set_mark_params::ref_num
+        sta     read_params1::ref_num
+        sta     read_params2::ref_num
+        sta     read_params3::ref_num
 
-        WRAPPED_MLI_CALL SET_MARK, $2021
+        WRAPPED_MLI_CALL SET_MARK, set_mark_params
         beq     :+
         brk
 
-:       WRAPPED_MLI_CALL READ, $2009
+:       WRAPPED_MLI_CALL READ, read_params1
         beq     :+
         brk
 
-:       WRAPPED_MLI_CALL READ, $2011
+:       WRAPPED_MLI_CALL READ, read_params2
         beq     :+
         brk
 
-:       WRAPPED_MLI_CALL READ, $2019
+:       WRAPPED_MLI_CALL READ, read_params3
         beq     :+
         brk
 
@@ -106,30 +77,18 @@ L2092           := * + 2
         lda     LCBANK1
         lda     LCBANK1
 
-        ldx     #$00
-:       lda     $3400,x
-        sta     $D000,x
-        lda     $3500,x
-        sta     $D100,x
-        lda     $3600,x
-        sta     $D200,x
-        lda     $3700,x
-        sta     $D300,x
-        lda     $3800,x
-        sta     $D400,x
-        lda     $3900,x
-        sta     $D500,x
-        lda     $3A00,x
-        sta     $D600,x
-        lda     $3B00,x
-        sta     $D700,x
+        ldx     #0
+:       .repeat 8, i
+        lda     resources_load_addr + ($100 * i),x
+        sta     resources_final_addr + ($100 * i),x
+        .endrepeat
         inx
         bne     :-
 
         sta     ALTZPOFF
         sta     ROMIN2
 
-        WRAPPED_MLI_CALL CLOSE, $2026
+        WRAPPED_MLI_CALL CLOSE, close_params
 
         jmp     START
 
