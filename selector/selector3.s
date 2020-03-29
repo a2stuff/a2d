@@ -9,7 +9,9 @@
 
 .scope
 
-L2000:  jmp     L2031
+        jmp     start
+
+        ;; ProDOS parameter blocks
 
         .byte   $03
         plp
@@ -53,57 +55,59 @@ L2022:  .byte   0
         .byte   $74
         .byte   $6F
         .byte   $72
-L2031:  ldax    #$1700
-L2035:  sta     $BF59,x
-        dex
-        bpl     L2035
+
+.macro  WRAPPED_MLI_CALL op, params
         php
         sei
-        MLI_CALL OPEN, $2003
+        MLI_CALL op, params
         plp
-        and     #$FF
+        and     #$FF            ; restore Z flag
+.endmacro
+
+start:
+        ;; Clear ProDOS memory bitmap
+        lda     #0
+        ldx     #$17
+:       sta     $BF59,x
+        dex
+        bpl     :-
+
+        WRAPPED_MLI_CALL OPEN, $2003
         beq     L2049
-        .byte   0
+        brk
+
 L2049:  lda     L2008
         sta     L2022
         sta     L200A
         sta     L2012
         sta     L201A
-        php
-        sei
-        MLI_CALL SET_MARK, $2021
-        plp
-        and     #$FF
-        beq     L2066
-        .byte   0
-L2066:  php
-        sei
-        MLI_CALL READ, $2009
-        plp
-        and     #$FF
-        beq     L2074
-        .byte   0
-L2074:  php
-        sei
-        MLI_CALL READ, $2011
-        plp
-        and     #$FF
-        beq     L2082
-        .byte   0
-L2082:  php
-        sei
-        MLI_CALL READ, $2019
-        plp
-        and     #$FF
-        beq     L2090
-        .byte   0
-L2090:
+
+        WRAPPED_MLI_CALL SET_MARK, $2021
+        beq     :+
+        brk
+
+:       WRAPPED_MLI_CALL READ, $2009
+        beq     :+
+        brk
+
+:       WRAPPED_MLI_CALL READ, $2011
+        beq     :+
+        brk
+
+:       WRAPPED_MLI_CALL READ, $2019
+        beq     :+
+        brk
+
+:
 L2092           := * + 2
+
+        ;; Copy last Resources segment to Aux LC1
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
+
         ldx     #$00
-L209B:  lda     $3400,x
+:       lda     $3400,x
         sta     $D000,x
         lda     $3500,x
         sta     $D100,x
@@ -120,14 +124,13 @@ L209B:  lda     $3400,x
         lda     $3B00,x
         sta     $D700,x
         inx
-        bne     L209B
+        bne     :-
+
         sta     ALTZPOFF
         sta     ROMIN2
-        php
-        sei
-        MLI_CALL CLOSE, $2026
-        plp
-        and     #$FF
+
+        WRAPPED_MLI_CALL CLOSE, $2026
+
         jmp     START
 
 ;;; ============================================================
@@ -183,7 +186,7 @@ L2140:  MLI_CALL CLOSE, $102F
         beq     L214B
         jmp     L118B
 
-L214B:  jmp     L2000
+L214B:  jmp     $2000
 
         jsr     SLOT3ENTRY
         jsr     HOME
@@ -219,7 +222,7 @@ L2177:  lda     CLR80COL
 
         PAD_TO $21F7
 
-        ;; ???
+        ;; Probably part of BASIC.SYSTEM ???
 
         ldx     $3D20,y
         tay
