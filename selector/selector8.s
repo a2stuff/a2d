@@ -6,20 +6,6 @@
 
 .scope
 
-L2004           := $2004
-L2020           := $2020
-L461E           := $461E
-L4B4F           := $4B4F
-L6177           := $6177
-L6369           := $6369
-L636F           := $636F
-L6562           := $6562
-L6572           := $6572
-L6874           := $6874
-L6E69           := $6E69
-L6F63           := $6F63
-L6F74           := $6F74
-L7564           := $7564
 L95A0           := $95A0
 L98C1           := $98C1
 L98D4           := $98D4
@@ -28,7 +14,6 @@ L99DC           := $99DC
 L9A15           := $9A15
 L9A47           := $9A47
 L9F74           := $9F74
-LAD03           := $AD03
 LAD11           := $AD11
 
         sta     LA027
@@ -1546,9 +1531,7 @@ LA965   := * + 1
         .byte   $6B
         .byte   $20,$4F,$4B
         .byte   $20,$74,$6F
-LA9B0   := * + 1
         .byte   $20,$63,$6F
-LA9B4   := * + 2
         .byte   $6E,$74,$69
         .byte   $6E,$75,$65
         .byte   $2E,$23,$46
@@ -1590,7 +1573,7 @@ LA9B4   := * + 2
 
 LAA01:  MGTK_CALL MGTK::OpenWindow, $A85A
         lda     LA85A
-LAA0A:  jsr     L9A15
+        jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, $8E05
         MGTK_CALL MGTK::FrameRect, $A8A0
         MGTK_CALL MGTK::FrameRect, $A8A8
@@ -1600,7 +1583,7 @@ LAA0A:  jsr     L9A15
 
 LAA2D:  lda     LA85A
         jsr     L9A15
-LAA33:  MGTK_CALL MGTK::SetPenMode, $8E03
+        MGTK_CALL MGTK::SetPenMode, $8E03
         MGTK_CALL MGTK::PaintRect, $A8E6
 LAA3F:  dec     LA759
         lda     LA759
@@ -1611,7 +1594,7 @@ LAA4C:  jsr     LAC62
         MGTK_CALL MGTK::SetPortBits, $A8EE
         MGTK_CALL MGTK::SetPenMode, $8E03
         MGTK_CALL MGTK::PaintRect, $A8DE
-LAA61:  addr_call L99DC, $A135
+        addr_call L99DC, $A135
         MGTK_CALL MGTK::MoveTo, $A8CD
         addr_call L9984, $A8D5
         addr_call L9984, $A135
@@ -1806,22 +1789,29 @@ LACD1:  lda     LACE2
         rts
 
 LACDA:
-LACDB           := * + 1
-        bpl     LAD03
-        inx
+LACDB   := * + 1
+        .byte   $10,$27
+        .byte   $E8
         .byte   $03
         .byte   $64
-        .byte   0
-        asl     a
-        .byte   0
-LACE2:  .byte   0
-LACE3:  .byte   0
-LACE4:  .byte   0
-LACE5:  .byte   0
-LACE6:  .byte   $07
-LACE8           := * + 1
-        jsr     L2020
-        jsr     L2020
+        .byte   $00
+        .byte   $0A
+        .byte   $00
+LACE2:
+        .byte   $00
+LACE3:
+        .byte   $00
+LACE4:
+        .byte   $00
+LACE5:
+        .byte   $00
+LACE6:
+        .byte   $07
+LACE8   := * + 1
+        .byte   $20,$20,$20
+        .byte   $20,$20,$20
+
+
         MGTK_CALL MGTK::PaintRect, $A243
         MGTK_CALL MGTK::PaintRect, $A243
         jsr     LA965
