@@ -8,7 +8,7 @@
 
 .scope
 
-MLI_WRAPPER           := $95A0
+MLI_WRAPPER     := $95A0
 L98C1           := $98C1
 L98D4           := $98D4
 L9984           := $9984
@@ -38,17 +38,15 @@ LA027:
         .byte   $00
 
         DEFINE_OPEN_PARAMS open_params, $A135, $800
-        DEFINE_READ_PARAMS read_params, $A036, $4
-
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-
+        DEFINE_READ_PARAMS read_params, read_buf, 4
+read_buf:
+        .res 4, 0
         DEFINE_CLOSE_PARAMS close_params
-        DEFINE_READ_PARAMS read_params2, $A0BC, $27
-        DEFINE_READ_PARAMS read_params3, $A04C, 5
-        .byte   0
+
+        DEFINE_READ_PARAMS read_params2, LA0BC, $27
+        DEFINE_READ_PARAMS read_params3, LA04C, 5
+
+LA04C:  .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -59,38 +57,26 @@ LA027:
         .byte   0
 
 
-        DEFINE_CLOSE_PARAMS close_params2
-        DEFINE_CLOSE_PARAMS close_params3
+        DEFINE_CLOSE_PARAMS close_params_src
+        DEFINE_CLOSE_PARAMS close_params_dst
 
         .byte   $01,$35,$A1
 
-        DEFINE_OPEN_PARAMS open_params_src, $A135, $D00
-        DEFINE_OPEN_PARAMS open_params_dst, $A0F4, $1100
+        DEFINE_OPEN_PARAMS open_params_src, LA135, $D00
+        DEFINE_OPEN_PARAMS open_params_dst, LA0F4, $1100
 
         DEFINE_READ_PARAMS read_params_src, $1500, $B00
         DEFINE_WRITE_PARAMS write_params_dst, $1500, $B00
 
-LA078:
-        .byte   $07
-        .byte   $F4
-        .byte   $A0,$C3
+        DEFINE_CREATE_PARAMS create_params2, LA0F4, $C3
 
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
-        DEFINE_CREATE_PARAMS create_params, $A0F4,
+        DEFINE_CREATE_PARAMS create_params, LA0F4,
         .byte   0, 0
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, $A135
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, LA135
         .byte   0
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $A0F4
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, LA0F4
         .byte   0
 
         .byte   $02
@@ -948,10 +934,10 @@ LA61E:  yax_call MLI_WRAPPER, OPEN, open_params_dst
 
 LA62C:  lda     open_params_src::ref_num
         sta     read_params_src::ref_num
-        sta     close_params2::ref_num
+        sta     close_params_src::ref_num
         lda     open_params_dst::ref_num
         sta     write_params_dst::ref_num
-        sta     close_params3::ref_num
+        sta     close_params_dst::ref_num
 LA63E:  copy16  #$0B00, read_params_src::request_count
         yax_call MLI_WRAPPER, READ, read_params_src
         beq     LA65A
@@ -972,17 +958,17 @@ LA679:  lda     write_params_dst::trans_count
         lda     write_params_dst::trans_count+1
         cmp     #$0B
         beq     LA63E
-LA687:  yax_call MLI_WRAPPER, CLOSE, close_params3
-        yax_call MLI_WRAPPER, CLOSE, close_params2
+LA687:  yax_call MLI_WRAPPER, CLOSE, close_params_dst
+        yax_call MLI_WRAPPER, CLOSE, close_params_src
         rts
 
 LA69A:  ldx     #$07
 LA69C:  lda     get_file_info_params2,x
-        sta     LA078,x
+        sta     create_params2,x
         dex
         cpx     #$03
         bne     LA69C
-        yax_call MLI_WRAPPER, CREATE, $A078
+        yax_call MLI_WRAPPER, CREATE, create_params2
         clc
         beq     LA6B6
         jmp     LAB16
