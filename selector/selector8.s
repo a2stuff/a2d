@@ -123,24 +123,8 @@ LA08B:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-LA092:
-        .byte   $0A
-        .byte   $35,$A1
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA099:  .byte   0
-LA09A:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, $A135
         .byte   0
 
 
@@ -838,7 +822,7 @@ LA44F:  iny
         beq     LA475
         rts
 
-LA475:  yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
+LA475:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA491
         cmp     #$45
         beq     LA488
@@ -849,7 +833,7 @@ LA488:  jsr     LAABD
 
 LA48E:  jmp     LAB16
 
-LA491:  lda     LA099
+LA491:  lda     get_file_info_params2::storage_type
         cmp     #$0F
         beq     LA4A0
         cmp     #$0D
@@ -859,7 +843,7 @@ LA491:  lda     LA099
 LA4A0:  lda     #$FF
 LA4A2:  sta     LA4F8
         ldy     #$07
-LA4A7:  lda     LA092,y
+LA4A7:  lda     get_file_info_params2,y
         sta     LA084,y
         dey
         cpy     #$02
@@ -872,7 +856,7 @@ LA4A7:  lda     LA092,y
 
 LA4BF:  ldy     #$11
         ldx     #$0B
-LA4C3:  lda     LA092,y
+LA4C3:  lda     get_file_info_params2,y
         sta     LA084,x
         dex
         dey
@@ -909,7 +893,7 @@ LA4FB:  .byte   0
         bne     LA536
         jsr     LA75D
         jsr     LAA3F
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA528
         jmp     LAB16
 
@@ -928,7 +912,7 @@ LA528:  jsr     LA79B
 LA536:  jsr     LA79B
         jsr     LA75D
         jsr     LAA3F
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA54D
         jmp     LAB16
 
@@ -946,7 +930,7 @@ LA555:  jsr     LA782
 LA569:  rts
 
 LA56A:  jsr     LA7C0
-LA56D:  yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
+LA56D:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA57B
         jmp     LAB16
 
@@ -978,7 +962,7 @@ LA5A9:  iny
 
 LA5CB:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, LA60A
         sub16   LA60A, LA60E, LA60A
-        cmp16   LA60A, LA09A
+        cmp16   LA60A, get_file_info_params2::blocks_used
         bcs     LA602
         sec
         bcs     LA603
@@ -1031,7 +1015,7 @@ LA687:  yax_call MLI_WRAPPER, CLOSE, $A057
         rts
 
 LA69A:  ldx     #$07
-LA69C:  lda     LA092,x
+LA69C:  lda     get_file_info_params2,x
         sta     LA078,x
         dex
         cpx     #$03
@@ -1066,7 +1050,7 @@ LA6DA:  sta     $BF58,y
         dey
         bpl     LA6DA
         jsr     LA7D9
-LA6E3:  yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
+LA6E3:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA6FF
         cmp     #$45
         beq     LA6F6
@@ -1077,7 +1061,7 @@ LA6F6:  jsr     LAABD
 
 LA6FC:  jmp     LAB16
 
-LA6FF:  lda     LA099
+LA6FF:  lda     get_file_info_params2::storage_type
         sta     LA724
         cmp     #$0F
         beq     LA711
@@ -1101,9 +1085,9 @@ LA725:  jmp     LA729
         rts
 
 LA729:  jsr     LA75D
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $A092
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         bne     LA74A
-        add16   LA75B, LA09A, LA75B
+        add16   LA75B, get_file_info_params2::blocks_used, LA75B
 LA74A:  inc16   LA759
         jsr     LA782
         jsr     LAA98
