@@ -36,43 +36,18 @@ LAD11           := $AD11
 
 LA027:
         .byte   $00
-        .byte   $03
-        .byte   $35,$A1
-        .byte   $00
-        .byte   $08
-LA02D:
-        .byte   $00
-        .byte   $04
-LA02F:
-        .byte   $00
-        .byte   $36,$A0
-        .byte   $04
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-LA03B   := * + 1
-        .byte   $01,$00
-        .byte   $04
-LA03D:
-        .byte   $00
-        .byte   $BC,$A0,$27
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $04
-LA045:
-        .byte   $00
-LA048   := * + 2
-        .byte   $4C,$A0,$05
 
+        DEFINE_OPEN_PARAMS open_params, $A135, $800
+        DEFINE_READ_PARAMS read_params, $A036, $4
 
-        .byte   0
-LA04A:  .byte   0
-        .byte   0
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .byte   $00
+
+        DEFINE_CLOSE_PARAMS close_params
+        DEFINE_READ_PARAMS read_params2, $A0BC, $27
+        DEFINE_READ_PARAMS read_params3, $A04C, 5
         .byte   0
         .byte   0
         .byte   0
@@ -167,25 +142,12 @@ LA09A:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-        .byte   $0A
-        .byte   $F4
-        .byte   $A0,$00
 
+
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $A0F4
         .byte   0
-LA0AA:  .byte   0
-        .byte   0
-        .byte   0
-LA0AD:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+
         .byte   $02
         .byte   0
         .byte   0
@@ -715,14 +677,14 @@ LA2C5:  ldx     LA2B5
 LA2D3:  lda     #$00
         sta     LA208
         sta     LA2B6
-        yax_call MLI_WRAPPER, OPEN, $A028
+        yax_call MLI_WRAPPER, OPEN, open_params
         beq     LA2E9
         jmp     LAB16
 
-LA2E9:  lda     LA02D
+LA2E9:  lda     open_params::ref_num
         sta     LA209
-        sta     LA02F
-        yax_call MLI_WRAPPER, READ, $A02E
+        sta     read_params::ref_num
+        yax_call MLI_WRAPPER, READ, read_params
         beq     LA300
         jmp     LAB16
 
@@ -730,8 +692,8 @@ LA300:  jsr     LA319
         rts
 
 LA304:  lda     LA209
-        sta     LA03B
-        yax_call MLI_WRAPPER, CLOSE, $A03A
+        sta     close_params::ref_num
+        yax_call MLI_WRAPPER, CLOSE, close_params
         beq     LA318
         jmp     LAB16
 
@@ -739,8 +701,8 @@ LA318:  rts
 
 LA319:  inc     LA208
         lda     LA209
-        sta     LA03D
-        yax_call MLI_WRAPPER, READ, $A03C
+        sta     read_params2::ref_num
+        yax_call MLI_WRAPPER, READ, read_params2
         beq     LA330
         jmp     LAB16
 
@@ -751,13 +713,13 @@ LA330:  inc     LA2B6
         lda     #$00
         sta     LA2B6
         lda     LA209
-        sta     LA045
-        yax_call MLI_WRAPPER, READ, $A044
+        sta     read_params3::ref_num
+        yax_call MLI_WRAPPER, READ, read_params3
         beq     LA354
         jmp     LAB16
 
-LA354:  lda     LA04A
-        cmp     LA048
+LA354:  lda     read_params3::trans_count
+        cmp     read_params3::request_count
         rts
 
 LA35B:  return  #$00
@@ -846,11 +808,11 @@ LA3F8           := * + 1
         lda     #$FF
         sta     LA4F9
         jsr     LA7D9
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $A0A5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     LA41B
         jmp     LAB16
 
-LA41B:  sub16   LA0AA, LA0AD, LA4F3
+LA41B:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, LA4F3
         cmp16   LA4F3, LA75B
         bcs     LA43F
         jmp     LAACB
@@ -998,7 +960,7 @@ LA57B:  lda     #$00
         beq     LA5A1
         jmp     LAB16
 
-LA595:  copy16  LA0AD, LA60E
+LA595:  copy16  get_file_info_params::blocks_used, LA60E
 LA5A1:  lda     LA0F4
         sta     LA60C
         ldy     #$01
@@ -1015,7 +977,7 @@ LA5A9:  iny
         beq     LA5CB
         jmp     LAB16
 
-LA5CB:  sub16   LA0AA, LA0AD, LA60A
+LA5CB:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, LA60A
         sub16   LA60A, LA60E, LA60A
         cmp16   LA60A, LA09A
         bcs     LA602
