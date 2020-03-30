@@ -147,7 +147,6 @@ LA09A:  .byte   0
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $A0F4
         .byte   0
 
-
         .byte   $02
         .byte   0
         .byte   0
@@ -830,7 +829,7 @@ LA44F:  iny
         cpy     LA1F6
         bne     LA44F
         stx     LA0F4
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $A0A5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         cmp     #$46            ; Error code
         beq     LA475
         cmp     #$45
