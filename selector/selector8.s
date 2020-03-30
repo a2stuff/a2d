@@ -59,47 +59,21 @@ LA027:
         .byte   0
 
 
-LA056   := * + 1
-        .byte   $01,$00
-LA058   := * + 1
-        .byte   $01,$00
-        .byte   $01,$35
-        .byte   $A1,$03
-        .byte   $35,$A1
-        .byte   $00
-LA061   := * + 1
-        .byte   $0D,$00,$03
-        .byte   $F4
-        .byte   $A0,$00
-LA067   := * + 1
-        .byte   $11,$00
-        .byte   $04
-LA069:
-        .byte   $00
-        .byte   $00
-LA06C   := * + 1
-        .byte   $15,$00
-        .byte   $0B
-LA06E:
-        .byte   $00
-        .byte   $00
-        .byte   $04
-LA071:
-        .byte   $00
-        .byte   $00
-LA074   := * + 1
-        .byte   $15,$00
-        .byte   $0B
-LA076:
-        .byte   $00
-LA077:
-        .byte   $00
+        DEFINE_CLOSE_PARAMS close_params2
+        DEFINE_CLOSE_PARAMS close_params3
+
+        .byte   $01,$35,$A1
+
+        DEFINE_OPEN_PARAMS open_params_src, $A135, $D00
+        DEFINE_OPEN_PARAMS open_params_dst, $A0F4, $1100
+
+        DEFINE_READ_PARAMS read_params_src, $1500, $B00
+        DEFINE_WRITE_PARAMS write_params_dst, $1500, $B00
+
 LA078:
         .byte   $07
         .byte   $F4
         .byte   $A0,$C3
-
-
 
         .byte   0
         .byte   0
@@ -925,7 +899,7 @@ LA56D:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
 LA57B:  lda     #$00
         sta     LA60E
         sta     LA60F
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $A0A5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     LA595
         cmp     #$46
         beq     LA5A1
@@ -944,7 +918,7 @@ LA5A9:  iny
         tya
         sta     LA0F4
         sta     LA60D
-        yax_call MLI_WRAPPER, GET_FILE_INFO, $A0A5
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     LA5CB
         jmp     LAB16
 
@@ -965,41 +939,41 @@ LA60C:  .byte   0
 LA60D:  .byte   0
 LA60E:  .byte   0
 LA60F:  .byte   0
-LA610:  yax_call MLI_WRAPPER, OPEN, $A05C
+LA610:  yax_call MLI_WRAPPER, OPEN, open_params_src
         beq     LA61E
         jsr     LAB16
-LA61E:  yax_call MLI_WRAPPER, OPEN, $A062
+LA61E:  yax_call MLI_WRAPPER, OPEN, open_params_dst
         beq     LA62C
         jmp     LAB16
 
-LA62C:  lda     LA061
-        sta     LA069
-        sta     LA056
-        lda     LA067
-        sta     LA071
-        sta     LA058
-LA63E:  copy16  #$0B00, LA06C
-        yax_call MLI_WRAPPER, READ, $A068
+LA62C:  lda     open_params_src::ref_num
+        sta     read_params_src::ref_num
+        sta     close_params2::ref_num
+        lda     open_params_dst::ref_num
+        sta     write_params_dst::ref_num
+        sta     close_params3::ref_num
+LA63E:  copy16  #$0B00, read_params_src::request_count
+        yax_call MLI_WRAPPER, READ, read_params_src
         beq     LA65A
         cmp     #$4C
         beq     LA687
         jmp     LAB16
 
-LA65A:  copy16  LA06E, LA074
-        ora     LA06E
+LA65A:  copy16  read_params_src::trans_count, write_params_dst::request_count
+        ora     read_params_src::trans_count
         beq     LA687
-        yax_call MLI_WRAPPER, WRITE, $A070
+        yax_call MLI_WRAPPER, WRITE, write_params_dst
         beq     LA679
         jmp     LAB16
 
-LA679:  lda     LA076
+LA679:  lda     write_params_dst::trans_count
         cmp     #$00
         bne     LA687
-        lda     LA077
+        lda     write_params_dst::trans_count+1
         cmp     #$0B
         beq     LA63E
-LA687:  yax_call MLI_WRAPPER, CLOSE, $A057
-        yax_call MLI_WRAPPER, CLOSE, $A055
+LA687:  yax_call MLI_WRAPPER, CLOSE, close_params3
+        yax_call MLI_WRAPPER, CLOSE, close_params2
         rts
 
 LA69A:  ldx     #$07
