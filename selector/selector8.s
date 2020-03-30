@@ -109,24 +109,12 @@ LA078:
         .byte   0
         .byte   0
         .byte   0
-LA084:  .byte   $07
-        .byte   $F4
-LA087           := * + 1
-        .byte   $A0, $00
-        .byte   0
-        .byte   0
-        .byte   0
-LA08B:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+        DEFINE_CREATE_PARAMS create_params, $A0F4,
+        .byte   0, 0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, $A135
         .byte   0
-
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $A0F4
         .byte   0
@@ -844,12 +832,12 @@ LA4A0:  lda     #$FF
 LA4A2:  sta     LA4F8
         ldy     #$07
 LA4A7:  lda     get_file_info_params2,y
-        sta     LA084,y
+        sta     create_params,y
         dey
         cpy     #$02
         bne     LA4A7
         lda     #$C3
-        sta     LA087
+        sta     create_params::access
         jsr     LA56D
         bcc     LA4BF
         jmp     LAACB
@@ -857,17 +845,17 @@ LA4A7:  lda     get_file_info_params2,y
 LA4BF:  ldy     #$11
         ldx     #$0B
 LA4C3:  lda     get_file_info_params2,y
-        sta     LA084,x
+        sta     create_params,x
         dex
         dey
         cpy     #$0D
         bne     LA4C3
-        lda     LA08B
+        lda     create_params::storage_type
         cmp     #$0F
         bne     LA4DB
         lda     #$0D
-        sta     LA08B
-LA4DB:  yax_call MLI_WRAPPER, CREATE, $A084
+        sta     create_params::storage_type
+LA4DB:  yax_call MLI_WRAPPER, CREATE, create_params
         beq     LA4E9
         jmp     LAB16
 
