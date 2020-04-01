@@ -1335,7 +1335,7 @@ LA85A:
 LAA01:  MGTK_CALL MGTK::OpenWindow, $A85A
         lda     LA85A
         jsr     L9A15
-        MGTK_CALL MGTK::SetPenMode, $8E05
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, $A8A0
         MGTK_CALL MGTK::FrameRect, $A8A8
         MGTK_CALL MGTK::MoveTo, $A8B0
@@ -1344,7 +1344,7 @@ LAA01:  MGTK_CALL MGTK::OpenWindow, $A85A
 
 LAA2D:  lda     LA85A
         jsr     L9A15
-        MGTK_CALL MGTK::SetPenMode, $8E03
+        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8E6
 LAA3F:  dec     LA759
         lda     LA759
@@ -1353,7 +1353,7 @@ LAA3F:  dec     LA759
         dec     LA75A
 LAA4C:  jsr     LAC62
         MGTK_CALL MGTK::SetPortBits, $A8EE
-        MGTK_CALL MGTK::SetPenMode, $8E03
+        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8DE
         addr_call L99DC, $A135
         MGTK_CALL MGTK::MoveTo, $A8CD
@@ -1383,13 +1383,13 @@ LAAC8:  jmp     LAC54
 
 LAACB:  lda     LA85A
         jsr     L9A15
-        MGTK_CALL MGTK::SetPenMode, $8E03
+        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8E6
         MGTK_CALL MGTK::MoveTo, $A8CD
         addr_call L9984, $A914
         MGTK_CALL MGTK::MoveTo, $A8D1
         addr_call L9984, $A94C
-        MGTK_CALL MGTK::SetPenMode, $8E05
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, $A894
         MGTK_CALL MGTK::MoveTo, $A89C
         addr_call L9984, $902F
@@ -1398,13 +1398,13 @@ LAACB:  lda     LA85A
 
 LAB16:  lda     LA85A
         jsr     L9A15
-        MGTK_CALL MGTK::SetPenMode, $8E03
+        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8E6
         MGTK_CALL MGTK::MoveTo, $A8CD
         addr_call L9984, $A962
         MGTK_CALL MGTK::MoveTo, $A8D1
         addr_call L9984, $A988
-        MGTK_CALL MGTK::SetPenMode, $8E05
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, $A894
         MGTK_CALL MGTK::MoveTo, $A89C
         addr_call L9984, $902F
@@ -1477,7 +1477,7 @@ LAC1C:  lda     LAC53
         bne     LAC24
         jmp     LABEB
 
-LAC24:  MGTK_CALL MGTK::SetPenMode, $8E05
+LAC24:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, $A894
         lda     LAC53
         clc
@@ -1489,7 +1489,7 @@ LAC3C:  lda     LAC53
         beq     LAC44
         return  #$FF
 
-LAC44:  MGTK_CALL MGTK::SetPenMode, $8E05
+LAC44:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, $A894
         return  #$00
 

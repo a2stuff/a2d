@@ -162,17 +162,19 @@ notpenBIC:      .byte   MGTK::notpenBIC
 L8E0B:
         .byte   $00
 
-.params menukey_params
+;;; for MenuSelect, HiliteMenu, MenuKey
+.params menu_params
 menu_id:
         .byte   $00
 menu_item:
         .byte   $00
+
+;;; for MenuKey only
 which_key:
         .byte   $00
 key_mods:
         .byte   $00
 .endparams
-
 
         .byte   $00
         .byte   $00
@@ -306,42 +308,9 @@ L8F7F:  .byte   0
 L8F80:  .byte   0
 L8F81:  .byte   0
         .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+grafport2:
+        .tag    MGTK::GrafPort
 
 .params getwinport_params
 window_id:     .byte   0
@@ -818,20 +787,20 @@ L938C:  lda     event_key
         bcs     L9389
         cmp     #'1'
         bcc     L9389
-L93A5:  sta     menukey_params::which_key
+L93A5:  sta     menu_params::which_key
         lda     L8F7B
-        sta     menukey_params::key_mods
-        MGTK_CALL MGTK::MenuKey, menukey_params::menu_id
-L93B4:  ldx     menukey_params::menu_item
+        sta     menu_params::key_mods
+        MGTK_CALL MGTK::MenuKey, menu_params::menu_id
+L93B4:  ldx     menu_params::menu_item
         beq     L93BE
-        ldx     menukey_params::menu_id
+        ldx     menu_params::menu_id
         bne     L93C1
 L93BE:  jmp     event_loop
 
 L93C1:  dex
         lda     L9377,x
         tax
-        ldy     menukey_params::menu_item
+        ldy     menu_params::menu_item
         dey
         tya
         asl     a
@@ -845,7 +814,7 @@ L93C1:  dex
         lda     L935A,x
         sta     L93F1
         jsr     L93EB
-        MGTK_CALL MGTK::HiliteMenu, $8E0C
+        MGTK_CALL MGTK::HiliteMenu, menu_params
         rts
 
 L93EB:  tsx
@@ -886,14 +855,14 @@ L9443:  lda     #AlertID::insert_system_disk
 L9450:  rts
 
 handle_button_down:
-        MGTK_CALL MGTK::FindWindow, $8F7A
+        MGTK_CALL MGTK::FindWindow, selector5::event_coords
         lda     L8F7E
         bne     L945D
         rts
 
 L945D:  cmp     #$01
         bne     L946A
-        MGTK_CALL MGTK::MenuSelect, $8E0C
+        MGTK_CALL MGTK::MenuSelect, menu_params
         jmp     L93B4
 
 L946A:  cmp     #$02
@@ -1775,7 +1744,7 @@ L9B42:  pha
 L9BBA:  .byte   0
 L9BBB:  .byte   0
 L9BBC:  .byte   0
-        ldy     menukey_params::menu_item
+        ldy     menu_params::menu_item
         lda     L8F71,y
         ora     #$C0
         sta     L9BF4
