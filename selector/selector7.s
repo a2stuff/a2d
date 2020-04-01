@@ -341,43 +341,41 @@ rect3:  DEFINE_RECT $C1, $2C, $125, $37
 rect4:  DEFINE_RECT $C1, $49, $125, $54
 rect5:  DEFINE_RECT $C1, $1E, $125, $29
 
-        .byte   $43
-        .byte   $01,$1E
-        .byte   $00
-        .byte   $43
-        .byte   $01,$64
-        .byte   $00
-        .byte   $C6,$00
-        .byte   $63
-        .byte   $00
+;;; Dividing line
+pt1:    DEFINE_POINT 323, 30
+pt2:    DEFINE_POINT 323, 100
 
+pos_ok_btn:
+        DEFINE_POINT 198,99
 str_ok_btn:
         PASCAL_STRING {"OK            ",CHAR_RETURN}
-        .byte   $C6,$00
-        .byte   $44
-        .byte   $00
+
+pos_close_btn:
+        DEFINE_POINT 198,68
 str_close_btn:
         PASCAL_STRING "Close"
-        .byte   $C6
-        .byte   $00
-        .byte   $36,$00
+
+pos_open_btn:
+        DEFINE_POINT 198, 54
 str_open_btn:
         PASCAL_STRING "Open"
-        .byte   $C6,$00
-        .byte   $53
-        .byte   $00
+
+pos_cancel_btn:
+        DEFINE_POINT 198, 83
 str_cancel_btn:
         PASCAL_STRING "Cancel   Esc"
-        .byte   $C6,$00
-        .byte   $28
-        .byte   $00
+
+pos_change_drive_btn:
+        DEFINE_POINT 198, 40
 str_change_drive_btn:
         PASCAL_STRING "Change Drive"
+
         .byte   $1C
         .byte   $00
         .byte   $19,$00,$1C
         .byte   $00
         .byte   $70,$00
+
         .byte   $1C
         .byte   0
         .byte   $87
@@ -386,11 +384,10 @@ str_change_drive_btn:
         .byte   $7F
 str_disk:
         PASCAL_STRING " Disk: "
-        .byte   $1C,$00
 
-        .byte   $71,$00
-        .byte   $AC,$01,$7C
-        .byte   $00
+rect_input:
+        DEFINE_RECT 28, 113, 428, 124
+
 LA2DA:
 LA2DB   := * + 1
 LA2DC   := * + 2
@@ -434,7 +431,7 @@ LA342:  lda     winfo1::window_id
         addr_call LAFFE, $A2EA
         addr_call LB03F, $A2FC
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FrameRect, $A2D2
+        MGTK_CALL MGTK::FrameRect, rect_input
         MGTK_CALL MGTK::InitPort, grafport2
         MGTK_CALL MGTK::SetPort, grafport2
         rts
@@ -693,7 +690,7 @@ LA4D4:  lda     winfo1::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, $A2D2
+        MGTK_CALL MGTK::InRect, rect_input
         cmp     #MGTK::inrect_inside
         bne     LA4FC
         jsr     set_ip_cursor
@@ -1785,28 +1782,28 @@ LAF46:  MGTK_CALL MGTK::OpenWindow, winfo1
         jsr     LAFBD
         jsr     LAFCB
         jsr     LAFD9
-        MGTK_CALL MGTK::MoveTo, $A26B
-        MGTK_CALL MGTK::LineTo, $A26F
+        MGTK_CALL MGTK::MoveTo, pt1
+        MGTK_CALL MGTK::LineTo, pt2
         jsr     LA9C9
         rts
 
-LAFA1:  MGTK_CALL MGTK::MoveTo, $A273
+LAFA1:  MGTK_CALL MGTK::MoveTo, pos_ok_btn
         addr_call draw_string, str_ok_btn
         rts
 
-LAFAF:  MGTK_CALL MGTK::MoveTo, $A291
+LAFAF:  MGTK_CALL MGTK::MoveTo, pos_open_btn
         addr_call draw_string, str_open_btn
         rts
 
-LAFBD:  MGTK_CALL MGTK::MoveTo, $A287
+LAFBD:  MGTK_CALL MGTK::MoveTo, pos_close_btn
         addr_call draw_string, str_close_btn
         rts
 
-LAFCB:  MGTK_CALL MGTK::MoveTo, $A29A
+LAFCB:  MGTK_CALL MGTK::MoveTo, pos_cancel_btn
         addr_call draw_string, str_cancel_btn
         rts
 
-LAFD9:  MGTK_CALL MGTK::MoveTo, $A2AB
+LAFD9:  MGTK_CALL MGTK::MoveTo, pos_change_drive_btn
         addr_call draw_string, str_change_drive_btn
         rts
 
@@ -2721,9 +2718,9 @@ LB749:  copy16  #$A210, $06
 
 LB760:  lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::PaintRect, $A2D2
+        MGTK_CALL MGTK::PaintRect, rect_input
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FrameRect, $A2D2
+        MGTK_CALL MGTK::FrameRect, rect_input
         MGTK_CALL MGTK::MoveTo, $A2DA
         lda     LA10C
         beq     LB78A
@@ -2738,7 +2735,7 @@ LB799:  lda     winfo1::window_id
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, $A2D2
+        MGTK_CALL MGTK::InRect, rect_input
         cmp     #MGTK::inrect_inside
         beq     LB7BC
         rts
