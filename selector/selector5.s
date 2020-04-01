@@ -4,7 +4,7 @@
 
         .org $4000
 
-.scope
+.scope selector5
 
 L2000           := $2000
 LA000           := $A000
@@ -744,29 +744,32 @@ event_loop:
 L92D6:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
-        bne     L92E9
-        jsr     L9451
+        bne     :+
+        jsr     handle_button_down
         jmp     event_loop
-
-L92E9:  cmp     #MGTK::EventKind::key_down
+:       cmp     #MGTK::EventKind::key_down
         bne     not_key
+
+        ;; Key Down
         bit     desktop_available_flag
-        bmi     L9316
+        bmi     not_desktop
         lda     update_params::window_id
         and     #CHAR_MASK
         cmp     #'Q'
-        beq     L92FF
+        beq     :+
         cmp     #'q'
-        bne     L9316
-L92FF:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
-        beq     L9313
-        lda     #$FE
-        jsr     L9F74
-        bne     L9316
-        beq     L92FF
-L9313:  jmp     L95B6
+        bne     not_desktop
+:       yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+        beq     found_desktop
+        lda     #AlertID::insert_system_disk
+        jsr     ShowAlert
+        bne     not_desktop
+        beq     :-
+found_desktop:
+        jmp     L95B6
 
-L9316:  jsr     L937B
+not_desktop:
+        jsr     L937B
         jmp     event_loop
 
         ;; --------------------------------------------------
@@ -900,15 +903,16 @@ L9436:  tya
 L943F:  jsr     L97F7
         rts
 
-L9443:  lda     #$FE
-        jsr     L9F74
+L9443:  lda     #AlertID::insert_system_disk
+        jsr     ShowAlert
         bne     L9450
         jsr     set_watch_cursor
         jmp     L93FF
 
 L9450:  rts
 
-L9451:  MGTK_CALL MGTK::FindWindow, $8F7A
+handle_button_down:
+        MGTK_CALL MGTK::FindWindow, $8F7A
         lda     L8F7E
         bne     L945D
         rts
@@ -938,7 +942,7 @@ L947C:  lda     winfo::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, rect_ok_btn
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L94A1
         jmp     L94B6
 
@@ -952,7 +956,7 @@ L94B5:  rts
 L94B6:  bit     desktop_available_flag
         bmi     L94F0
         MGTK_CALL MGTK::InRect, rect_desktop_btn
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L94C8
         jmp     L94F0
 
@@ -962,8 +966,8 @@ L94C8:  MGTK_CALL MGTK::SetPenMode, penXOR
         bmi     L94B5
 L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L94ED
-        lda     #$FE
-        jsr     L9F74
+        lda     #AlertID::insert_system_disk
+        jsr     ShowAlert
         bne     L94B5
         beq     L94D9
 L94ED:  jmp     L95B6
@@ -1360,8 +1364,8 @@ L9825:  yax_call MLI_WRAPPER, OPEN, open_params2
         yax_call MLI_WRAPPER, CLOSE, close_params2
         rts
 
-L9855:  lda     #$FE
-        jsr     L9F74
+L9855:  lda     #AlertID::insert_system_disk
+        jsr     ShowAlert
         beq     L9825
         rts
 
@@ -1887,7 +1891,7 @@ L9C87:  lda     ($06),y
         bne     L9CB4
         txa
         pha
-        jsr     L9F74
+        jsr     ShowAlert
         tax
         pla
         cmp     #$45
@@ -1911,8 +1915,8 @@ L9CC4:  cmp     #FT_BINARY
         beq     L9CD8
         cmp     #FT_S16
         beq     L9CD8
-        lda     #$00
-        jsr     L9F74
+        lda     #AlertID::selector_unable_to_run
+        jsr     ShowAlert
         jmp     L9D44
 
 L9CD8:  ldy     INVOKER_PREFIX
@@ -1921,8 +1925,8 @@ L9CDB:  lda     INVOKER_PREFIX,y
         beq     L9CEF
         dey
         bne     L9CDB
-        lda     #$45
-        jsr     L9F74
+        lda     #AlertID::insert_source_disk
+        jsr     ShowAlert
         bne     L9D44
         jmp     L9C1D
 
@@ -2003,8 +2007,8 @@ L9DB0:  lda     $1C00,x
         beq     L9DC8
         dex
         bne     L9DB0
-L9DBA:  lda     #$FF
-        jsr     L9F74
+L9DBA:  lda     #AlertID::basic_system_not_found
+        jsr     ShowAlert
         jsr     L9D44
         jsr     set_pointer_cursor
         pla
@@ -2066,7 +2070,7 @@ L9E25:  MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, rect_ok_btn
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L9E56
         lda     L9E8D
         beq     L9E5E
@@ -2104,7 +2108,7 @@ L9E93:  MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, rect_desktop_btn
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L9EC4
         lda     L9EFB
         beq     L9ECC
@@ -2187,7 +2191,14 @@ L9F5E:  inx
 
 L9F72:  .byte   0
 L9F73:  .byte   0
-L9F74:  pha
+
+;;; ============================================================
+;;; Show Alert Message
+;;; Inputs: A=AlertID
+
+        ASSERT_ADDRESS ::ShowAlert
+.proc ShowAlert
+        pha
         jsr     BELL1
         pla
         tax
@@ -2200,6 +2211,9 @@ L9F74:  pha
         sta     ALTZPOFF
         sta     ROMIN2
         rts
+.endproc
+
+;;; ============================================================
 
 .endscope
 

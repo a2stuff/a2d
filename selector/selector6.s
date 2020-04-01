@@ -246,8 +246,17 @@ kNumErrorMessages = 8
 num_error_messages:
         .byte   kNumErrorMessages
 
+
+
 error_message_index_table:
-        .byte   $00,$27,$28,$44,$45,$46,$FE,$FF
+        .byte   AlertID::selector_unable_to_run
+        .byte   AlertID::io_error
+        .byte   AlertID::no_device
+        .byte   AlertID::pathname_does_not_exist
+        .byte   AlertID::insert_source_disk
+        .byte   AlertID::file_not_found
+        .byte   AlertID::insert_system_disk
+        .byte   AlertID::basic_system_not_found
         ASSERT_TABLE_SIZE error_message_index_table, kNumErrorMessages
 
 error_message_table:
@@ -270,6 +279,9 @@ LD236:
         .byte   $00
         .byte   $80
         .byte   $00
+
+        ASSERT_ADDRESS $D23E
+
         .byte   $48
         .byte   $AD,$29,$91
         .byte   $F0,$04
@@ -313,14 +325,14 @@ LD29F:  sta     $8F83,x
         copy16  #$0226, $8F8F
         copy16  #$00B9, $8F91
         MGTK_CALL MGTK::SetPort, $8F83
-        MGTK_CALL MGTK::SetPenMode, $8E03
+        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $D0B8
-        MGTK_CALL MGTK::SetPenMode, $8E05
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, $D0B8
         MGTK_CALL MGTK::SetPortBits, $D0D0
         MGTK_CALL MGTK::FrameRect, $D0C0
         MGTK_CALL MGTK::FrameRect, $D0C8
-        MGTK_CALL MGTK::SetPenMode, $8E03
+        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintBits, $D0A8
         MGTK_CALL MGTK::ShowCursor
@@ -344,7 +356,7 @@ LD314:  tya
         tay
         lda     LD236,y
         sta     LD142
-        MGTK_CALL MGTK::SetPenMode, $8E05
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         bit     LD142
         bpl     LD365
         MGTK_CALL MGTK::FrameRect, $D117
@@ -364,14 +376,17 @@ LD378:  MGTK_CALL MGTK::MoveTo, $D127
         lda     LD143
         ldx     LD144
         jsr     L9984
-LD387:  MGTK_CALL MGTK::GetEvent, $8F79
-        lda     $8F79
-        cmp     #$01
-        bne     LD397
+
+
+event_loop:
+        MGTK_CALL MGTK::GetEvent, selector5::event_params
+        lda     selector5::event_kind
+        cmp     #MGTK::EventKind::button_down
+        bne     :+
         jmp     LD3F7
 
-LD397:  cmp     #$03            ; Ctrl+C ???
-        bne     LD387
+:       cmp     #MGTK::EventKind::key_down
+        bne     event_loop
         lda     $8F7A
         and     #CHAR_MASK
         bit     LD142
@@ -396,7 +411,7 @@ LD3D4:  cmp     #'A'
         beq     LD3C3
         cmp     #CHAR_RETURN
         beq     LD3C3
-        jmp     LD387
+        jmp     event_loop
 
 LD3DF:  cmp     #CHAR_RETURN
         bne     LD3F4
@@ -405,30 +420,30 @@ LD3DF:  cmp     #CHAR_RETURN
         lda     #$00
         jmp     LD434
 
-LD3F4:  jmp     LD387
+LD3F4:  jmp     event_loop
 
 LD3F7:  jsr     LD57B
         MGTK_CALL MGTK::MoveTo, $8F7A
         bit     LD142
         bpl     LD424
         MGTK_CALL MGTK::InRect, $D117
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     LD412
         jmp     LD4AD
 
 LD412:  bit     LD142
         bvs     LD424
         MGTK_CALL MGTK::InRect, $D10B
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     LD431
         jmp     LD446
 
 LD424:  MGTK_CALL MGTK::InRect, $D10B
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     LD431
         jmp     LD514
 
-LD431:  jmp     LD387
+LD431:  jmp     event_loop
 
 LD434:  pha
         MGTK_CALL MGTK::HideCursor
@@ -448,7 +463,7 @@ LD457:  MGTK_CALL MGTK::GetEvent, $8F79
         jsr     LD57B
         MGTK_CALL MGTK::MoveTo, $8F7A
         MGTK_CALL MGTK::InRect, $D10B
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LD47F
         lda     LD4AC
         beq     LD487
@@ -468,7 +483,7 @@ LD487:  MGTK_CALL MGTK::SetPenMode, $8E05
 
 LD49F:  lda     LD4AC
         beq     LD4A7
-        jmp     LD387
+        jmp     event_loop
 
 LD4A7:  lda     #$00
         jmp     LD434
@@ -485,7 +500,7 @@ LD4BE:  MGTK_CALL MGTK::GetEvent, $8F79
         jsr     LD57B
         MGTK_CALL MGTK::MoveTo, $8F7A
         MGTK_CALL MGTK::InRect, $D117
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LD4E6
         lda     LD513
         beq     LD4EE
@@ -505,7 +520,7 @@ LD4EE:  MGTK_CALL MGTK::SetPenMode, $8E05
 
 LD506:  lda     LD513
         beq     LD50E
-        jmp     LD387
+        jmp     event_loop
 
 LD50E:  lda     #$01
         jmp     LD434
@@ -513,16 +528,16 @@ LD50E:  lda     #$01
 LD513:  .byte   0
 LD514:  lda     #$00
         sta     LD57A
-        MGTK_CALL MGTK::SetPenMode, $8E05
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, $D10B
-LD525:  MGTK_CALL MGTK::GetEvent, $8F79
-        lda     $8F79
-        cmp     #$02
+LD525:  MGTK_CALL MGTK::GetEvent, selector5::event_params
+        lda     selector5::event_kind
+        cmp     #MGTK::EventKind::button_up
         beq     LD56D
         jsr     LD57B
-        MGTK_CALL MGTK::MoveTo, $8F7A
+        MGTK_CALL MGTK::MoveTo, selector5::event_coords
         MGTK_CALL MGTK::InRect, $D10B
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LD54D
         lda     LD57A
         beq     LD555
@@ -532,7 +547,7 @@ LD54D:  lda     LD57A
         bne     LD555
         jmp     LD525
 
-LD555:  MGTK_CALL MGTK::SetPenMode, $8E05
+LD555:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, $D10B
         lda     LD57A
         clc
@@ -542,7 +557,7 @@ LD555:  MGTK_CALL MGTK::SetPenMode, $8E05
 
 LD56D:  lda     LD57A
         beq     LD575
-        jmp     LD387
+        jmp     event_loop
 
 LD575:  lda     #$00
         jmp     LD434

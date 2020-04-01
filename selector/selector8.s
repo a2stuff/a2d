@@ -15,7 +15,6 @@ L9984           := $9984
 L99DC           := $99DC
 L9A15           := $9A15
 L9A47           := $9A47
-L9F74           := $9F74
 LAD11           := $AD11
 
         sta     LA027
@@ -772,7 +771,7 @@ LA44F:  iny
 
 LA475:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA491
-        cmp     #$45
+        cmp     #ERR_VOL_NOT_FOUND
         beq     LA488
         cmp     #$46
         bne     LA48E
@@ -782,9 +781,9 @@ LA488:  jsr     LAABD
 LA48E:  jmp     LAB16
 
 LA491:  lda     get_file_info_params2::storage_type
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         beq     LA4A0
-        cmp     #$0D
+        cmp     #ST_LINKED_DIRECTORY
         beq     LA4A0
         lda     #$00
         beq     LA4A2
@@ -811,7 +810,7 @@ LA4C3:  lda     get_file_info_params2,y
         cpy     #$0D
         bne     LA4C3
         lda     create_params::storage_type
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         bne     LA4DB
         lda     #$0D
         sta     create_params::storage_type
@@ -887,7 +886,7 @@ LA57B:  lda     #$00
         sta     LA60F
         yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     LA595
-        cmp     #$46
+        cmp     #ERR_FILE_NOT_FOUND
         beq     LA5A1
         jmp     LAB16
 
@@ -941,7 +940,7 @@ LA62C:  lda     open_params_src::ref_num
 LA63E:  copy16  #$0B00, read_params_src::request_count
         yax_call MLI_WRAPPER, READ, read_params_src
         beq     LA65A
-        cmp     #$4C
+        cmp     #ERR_END_OF_FILE
         beq     LA687
         jmp     LAB16
 
@@ -1000,9 +999,9 @@ LA6DA:  sta     $BF58,y
         jsr     LA7D9
 LA6E3:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA6FF
-        cmp     #$45
+        cmp     #ERR_VOL_NOT_FOUND
         beq     LA6F6
-        cmp     #$46
+        cmp     #ERR_FILE_NOT_FOUND
         bne     LA6FC
 LA6F6:  jsr     LAABD
         jmp     LA6E3
@@ -1011,9 +1010,9 @@ LA6FC:  jmp     LAB16
 
 LA6FF:  lda     get_file_info_params2::storage_type
         sta     LA724
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         beq     LA711
-        cmp     #$0D
+        cmp     #ST_LINKED_DIRECTORY
         beq     LA711
         lda     #$00
         beq     LA713
@@ -1374,8 +1373,8 @@ LAA98:  jsr     LAC62
         addr_call L9984, $A9FC
         rts
 
-LAABD:  lda     #$FD
-        jsr     L9F74
+LAABD:  lda     #$FD            ; ???
+        jsr     ShowAlert
         bne     LAAC8
         jsr     L98C1
         rts
@@ -1413,31 +1412,34 @@ LAB16:  lda     LA85A
         jmp     LAC54
 
 LAB61:  jsr     L98D4
-LAB64:  MGTK_CALL MGTK::GetEvent, $8F79
+
+event_loop:
+        MGTK_CALL MGTK::GetEvent, $8F79
         lda     $8F79
-        cmp     #$01
-        beq     LAB98
-        cmp     #$03
-        bne     LAB64
+        cmp     #MGTK::EventKind::button_down
+        beq     handle_button_down
+        cmp     #MGTK::EventKind::key_down
+        bne     event_loop
         lda     $8F7A
-        cmp     #$0D
-        bne     LAB64
+        cmp     #CHAR_RETURN
+        bne     event_loop
         lda     LA85A
         jsr     L9A15
-        MGTK_CALL MGTK::SetPenMode, $8E05
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, $A894
         MGTK_CALL MGTK::PaintRect, $A894
         jsr     L98C1
         rts
 
-LAB98:  MGTK_CALL MGTK::FindWindow, $8F7A
+handle_button_down:
+        MGTK_CALL MGTK::FindWindow, $8F7A
         lda     $8F7E
-        beq     LAB64
+        beq     event_loop
         cmp     #$02
-        bne     LAB64
+        bne     event_loop
         lda     $8F7F
         cmp     LA85A
-        bne     LAB64
+        bne     event_loop
         lda     LA85A
         jsr     L9A15
         lda     LA85A
@@ -1445,12 +1447,12 @@ LAB98:  MGTK_CALL MGTK::FindWindow, $8F7A
         MGTK_CALL MGTK::ScreenToWindow, $8F79
         MGTK_CALL MGTK::MoveTo, $8F7E
         MGTK_CALL MGTK::InRect, $A894
-        cmp     #$80
-        bne     LAB64
-        MGTK_CALL MGTK::SetPenMode, $8E05
+        cmp     #MGTK::inrect_inside
+        bne     event_loop
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, $A894
         jsr     LABE6
-        bmi     LAB64
+        bmi     event_loop
         jsr     L98C1
         rts
 
@@ -1465,7 +1467,7 @@ LABEB:  MGTK_CALL MGTK::GetEvent, $8F79
         MGTK_CALL MGTK::ScreenToWindow, $8F79
         MGTK_CALL MGTK::MoveTo, $8F7E
         MGTK_CALL MGTK::InRect, $A894
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LAC1C
         lda     LAC53
         beq     LAC24
