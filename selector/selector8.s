@@ -1232,13 +1232,9 @@ LA85A:
         .byte   $88
         .byte   $00
         .byte   $00
-        .byte   $14
-        .byte   $00
-        .byte   $31,$00
-        .byte   $78
-        .byte   $00
-        .byte   $3C
-        .byte   $00
+
+rect1:  DEFINE_RECT $14, $31, $78, $3C
+
         .byte   $18
         .byte   $00
         .byte   $3B
@@ -1390,7 +1386,7 @@ LAACB:  lda     LA85A
         MGTK_CALL MGTK::MoveTo, $A8D1
         addr_call L9984, $A94C
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::FrameRect, $A894
+        MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, $A89C
         addr_call L9984, $902F
         jsr     LAB61
@@ -1405,7 +1401,7 @@ LAB16:  lda     LA85A
         MGTK_CALL MGTK::MoveTo, $A8D1
         addr_call L9984, $A988
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::FrameRect, $A894
+        MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, $A89C
         addr_call L9984, $902F
         jsr     LAB61
@@ -1426,8 +1422,8 @@ event_loop:
         lda     LA85A
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, $A894
-        MGTK_CALL MGTK::PaintRect, $A894
+        MGTK_CALL MGTK::PaintRect, rect1
+        MGTK_CALL MGTK::PaintRect, rect1
         jsr     L98C1
         rts
 
@@ -1446,11 +1442,11 @@ handle_button_down:
         sta     $8F79
         MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
         MGTK_CALL MGTK::MoveTo, selector5::screentowindow_windowx
-        MGTK_CALL MGTK::InRect, $A894
+        MGTK_CALL MGTK::InRect, rect1
         cmp     #MGTK::inrect_inside
         bne     event_loop
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, $A894
+        MGTK_CALL MGTK::PaintRect, rect1
         jsr     LABE6
         bmi     event_loop
         jsr     L98C1
@@ -1466,7 +1462,7 @@ LABEB:  MGTK_CALL MGTK::GetEvent, selector5::event_params
         sta     selector5::screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
         MGTK_CALL MGTK::MoveTo, selector5::screentowindow_windowx
-        MGTK_CALL MGTK::InRect, $A894
+        MGTK_CALL MGTK::InRect, rect1
         cmp     #MGTK::inrect_inside
         beq     LAC1C
         lda     LAC53
@@ -1478,7 +1474,7 @@ LAC1C:  lda     LAC53
         jmp     LABEB
 
 LAC24:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, $A894
+        MGTK_CALL MGTK::PaintRect, rect1
         lda     LAC53
         clc
         adc     #$80
@@ -1490,7 +1486,7 @@ LAC3C:  lda     LAC53
         return  #$FF
 
 LAC44:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, $A894
+        MGTK_CALL MGTK::PaintRect, rect1
         return  #$00
 
 LAC53:  .byte   0
@@ -1575,6 +1571,8 @@ LACE8   := * + 1
         .byte   $20,$20,$20
         .byte   $20,$20,$20
 
+
+        ;; Junk ???
 
         MGTK_CALL MGTK::PaintRect, $A243
         MGTK_CALL MGTK::PaintRect, $A243

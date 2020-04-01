@@ -309,58 +309,38 @@ LA223:
 LA226   := * + 2
         .byte   $7D,$00,$00
 
-
-
 LA227:  .byte   0
-LA228:  .byte   $02
-        .byte   0
-LA22A:  .byte   0
-LA22B:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   $02
 
-        .byte   $01,$02
+
+pos:    DEFINE_POINT 2, 0, pos
+
+
+
+        .byte   0
+        .byte   0
+
+str_folder:
+        PASCAL_STRING {$01, $02} ; kGlyphFolderLeft, kGlyphFolderRight
+
 LA231:
         .byte   $00
         .byte   $00
-        .byte   $04
-        .byte   $00
-        .byte   $02
-        .byte   $00
-        .byte   $F0,$01
-        .byte   $97
-        .byte   $00
+
+rect_frame:
+        DEFINE_RECT 4, 2, 496, 151
+
         .byte   $1B
         .byte   $00
         .byte   $10,$00
         .byte   $AE,$00,$1A
         .byte   $00
-        .byte   $C1,$00
-        .byte   $3A
-        .byte   $00
-        .byte   $25,$01
-        .byte   $45,$00
-        .byte   $C1,$00
-        .byte   $59,$00,$25
-        .byte   $01,$64
-        .byte   $00
-        .byte   $C1,$00
-        .byte   $2C,$00,$25
-        .byte   $01,$37
-        .byte   $00
-        .byte   $C1,$00
-        .byte   $49,$00
-        .byte   $25,$01
 
+rect1:  DEFINE_RECT $C1, $3A, $125, $45
+rect2:  DEFINE_RECT $C1, $59, $125, $64
+rect3:  DEFINE_RECT $C1, $2C, $125, $37
+rect4:  DEFINE_RECT $C1, $49, $125, $54
+rect5:  DEFINE_RECT $C1, $1E, $125, $29
 
-        .byte   $54
-        .byte   0
-
-        .byte   $C1,$00
-        .byte   $1E,$00,$25
-        .byte   $01,$29
-        .byte   $00
         .byte   $43
         .byte   $01,$1E
         .byte   $00
@@ -749,7 +729,7 @@ LA52F:  lda     winfo1::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, $A253
+        MGTK_CALL MGTK::InRect, rect3
         cmp     #MGTK::inrect_inside
         beq     LA554
         jmp     LA587
@@ -768,13 +748,13 @@ LA567:  jmp     LA632
 LA56A:  lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A253
+        MGTK_CALL MGTK::PaintRect, rect3
         jsr     LAAD3
         bmi     LA567
         jsr     LA8ED
         jmp     LA632
 
-LA587:  MGTK_CALL MGTK::InRect, $A263
+LA587:  MGTK_CALL MGTK::InRect, rect5
         cmp     #MGTK::inrect_inside
         beq     LA594
         jmp     LA5B0
@@ -782,13 +762,13 @@ LA587:  MGTK_CALL MGTK::InRect, $A263
 LA594:  bit     LA47F
         bmi     LA5AD
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A263
+        MGTK_CALL MGTK::PaintRect, rect5
         jsr     LAB41
         bmi     LA5AD
         jsr     LA942
 LA5AD:  jmp     LA632
 
-LA5B0:  MGTK_CALL MGTK::InRect, $A243
+LA5B0:  MGTK_CALL MGTK::InRect, rect1
         cmp     #MGTK::inrect_inside
         beq     LA5BD
         jmp     LA5D9
@@ -796,32 +776,32 @@ LA5B0:  MGTK_CALL MGTK::InRect, $A243
 LA5BD:  bit     LA47F
         bmi     LA5D6
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A243
+        MGTK_CALL MGTK::PaintRect, rect1
         jsr     LABAF
         bmi     LA5D6
         jsr     LA965
 LA5D6:  jmp     LA632
 
-LA5D9:  MGTK_CALL MGTK::InRect, $A24B
+LA5D9:  MGTK_CALL MGTK::InRect, rect2
         cmp     #MGTK::inrect_inside
         beq     LA5E6
         jmp     LA600
 
 LA5E6:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A24B
+        MGTK_CALL MGTK::PaintRect, rect2
         jsr     LA9F7
         bmi     LA5FD
         jsr     LBA5E
         jsr     LA36F
 LA5FD:  jmp     LA632
 
-LA600:  MGTK_CALL MGTK::InRect, $A25B
+LA600:  MGTK_CALL MGTK::InRect, rect4
         cmp     #MGTK::inrect_inside
         beq     LA60D
         jmp     LA624
 
 LA60D:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A25B
+        MGTK_CALL MGTK::PaintRect, rect4
         jsr     LAA65
         bmi     LA621
         jsr     LA387
@@ -881,8 +861,8 @@ LA6AE:  ldx     LA231
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A24B
-        MGTK_CALL MGTK::PaintRect, $A24B
+        MGTK_CALL MGTK::PaintRect, rect2
+        MGTK_CALL MGTK::PaintRect, rect2
         jsr     LA36F
         jmp     LA661
 
@@ -891,8 +871,8 @@ LA6D4:  and     #$7F
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A253
-        MGTK_CALL MGTK::PaintRect, $A253
+        MGTK_CALL MGTK::PaintRect, rect3
+        MGTK_CALL MGTK::PaintRect, rect3
         lda     #$00
         sta     LA73E
         lda     #$00
@@ -1238,7 +1218,7 @@ LA9FC:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, $A24B
+        MGTK_CALL MGTK::InRect, rect2
         cmp     #MGTK::inrect_inside
         beq     LAA2D
         lda     LAA64
@@ -1250,7 +1230,7 @@ LAA2D:  lda     LAA64
         jmp     LA9FC
 
 LAA35:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A24B
+        MGTK_CALL MGTK::PaintRect, rect2
         lda     LAA64
         clc
         adc     #$80
@@ -1262,7 +1242,7 @@ LAA4D:  lda     LAA64
         return  #$FF
 
 LAA55:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A24B
+        MGTK_CALL MGTK::PaintRect, rect2
         return  #$00
 
 LAA64:  .byte   0
@@ -1276,7 +1256,7 @@ LAA6A:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, $A25B
+        MGTK_CALL MGTK::InRect, rect4
         cmp     #MGTK::inrect_inside
         beq     LAA9B
         lda     LAAD2
@@ -1288,7 +1268,7 @@ LAA9B:  lda     LAAD2
         jmp     LAA6A
 
 LAAA3:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A25B
+        MGTK_CALL MGTK::PaintRect, rect4
         lda     LAAD2
         clc
         adc     #$80
@@ -1300,7 +1280,7 @@ LAABB:  lda     LAAD2
         return  #$FF
 
 LAAC3:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A25B
+        MGTK_CALL MGTK::PaintRect, rect4
         return  #$01
 
 LAAD2:  .byte   0
@@ -1314,7 +1294,7 @@ LAAD8:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, $A253
+        MGTK_CALL MGTK::InRect, rect3
         cmp     #MGTK::inrect_inside
         beq     LAB09
         lda     LAB40
@@ -1326,7 +1306,7 @@ LAB09:  lda     LAB40
         jmp     LAAD8
 
 LAB11:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A253
+        MGTK_CALL MGTK::PaintRect, rect3
         lda     LAB40
         clc
         adc     #$80
@@ -1338,7 +1318,7 @@ LAB29:  lda     LAB40
         return  #$FF
 
 LAB31:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A253
+        MGTK_CALL MGTK::PaintRect, rect3
         return  #$00
 
 LAB40:  .byte   0
@@ -1352,7 +1332,7 @@ LAB46:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, $A263
+        MGTK_CALL MGTK::InRect, rect5
         cmp     #MGTK::inrect_inside
         beq     LAB77
         lda     LABAE
@@ -1364,7 +1344,7 @@ LAB77:  lda     LABAE
         jmp     LAB46
 
 LAB7F:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A263
+        MGTK_CALL MGTK::PaintRect, rect5
         lda     LABAE
         clc
         adc     #$80
@@ -1376,7 +1356,7 @@ LAB97:  lda     LABAE
         return  #$FF
 
 LAB9F:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A263
+        MGTK_CALL MGTK::PaintRect, rect5
         return  #$01
 
 LABAE:  .byte   0
@@ -1390,7 +1370,7 @@ LABB4:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, $A243
+        MGTK_CALL MGTK::InRect, rect1
         cmp     #MGTK::inrect_inside
         beq     LABE5
         lda     LAC1C
@@ -1402,7 +1382,7 @@ LABE5:  lda     LAC1C
         jmp     LABB4
 
 LABED:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A243
+        MGTK_CALL MGTK::PaintRect, rect1
         lda     LAC1C
         clc
         adc     #$80
@@ -1414,7 +1394,7 @@ LAC05:  lda     LAC1C
         return  #$FF
 
 LAC0D:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A243
+        MGTK_CALL MGTK::PaintRect, rect1
         return  #$00
 
 LAC1C:  .byte   0
@@ -1481,8 +1461,8 @@ LAC8B:  cmp     #$09
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A263
-        MGTK_CALL MGTK::PaintRect, $A263
+        MGTK_CALL MGTK::PaintRect, rect5
+        MGTK_CALL MGTK::PaintRect, rect5
         jsr     LA942
 LACAA:  jmp     LAD11
 
@@ -1498,8 +1478,8 @@ LACAD:  cmp     #$0F
 LACBF:  lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A253
-        MGTK_CALL MGTK::PaintRect, $A253
+        MGTK_CALL MGTK::PaintRect, rect3
+        MGTK_CALL MGTK::PaintRect, rect3
         jsr     LA8ED
         jmp     LAD11
 
@@ -1508,8 +1488,8 @@ LACDD:  cmp     #$03
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A243
-        MGTK_CALL MGTK::PaintRect, $A243
+        MGTK_CALL MGTK::PaintRect, rect1
+        MGTK_CALL MGTK::PaintRect, rect1
         jsr     LA965
         jmp     LAD11
 
@@ -1536,8 +1516,8 @@ LAD15:  lda     LA231
 LAD20:  lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A24B
-        MGTK_CALL MGTK::PaintRect, $A24B
+        MGTK_CALL MGTK::PaintRect, rect2
+        MGTK_CALL MGTK::PaintRect, rect2
         jsr     LBA5E
         jsr     LA36F
         jsr     LA9C9
@@ -1546,8 +1526,8 @@ LAD20:  lda     winfo1::window_id
 LAD42:  lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A25B
-        MGTK_CALL MGTK::PaintRect, $A25B
+        MGTK_CALL MGTK::PaintRect, rect4
+        MGTK_CALL MGTK::PaintRect, rect4
         jsr     LA387
         jsr     LA9C9
         rts
@@ -1794,12 +1774,12 @@ LAF46:  MGTK_CALL MGTK::OpenWindow, winfo1
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FrameRect, $A233
-        MGTK_CALL MGTK::FrameRect, $A24B
-        MGTK_CALL MGTK::FrameRect, $A253
-        MGTK_CALL MGTK::FrameRect, $A243
-        MGTK_CALL MGTK::FrameRect, $A25B
-        MGTK_CALL MGTK::FrameRect, $A263
+        MGTK_CALL MGTK::FrameRect, rect_frame
+        MGTK_CALL MGTK::FrameRect, rect2
+        MGTK_CALL MGTK::FrameRect, rect3
+        MGTK_CALL MGTK::FrameRect, rect1
+        MGTK_CALL MGTK::FrameRect, rect4
+        MGTK_CALL MGTK::FrameRect, rect5
         jsr     LAFA1
         jsr     LAFAF
         jsr     LAFBD
@@ -2063,16 +2043,19 @@ LB226:  .byte   0
 LB227:  .byte   0
 LB228:  .byte   0
 LB229:  .byte   0
+
+
+
 LB22A:  jsr     LA9C9
         lda     winfo2::window_id
         jsr     LB443
         MGTK_CALL MGTK::PaintRect, $A1EA
-        lda     #$10
-        sta     LA228
-        lda     #$08
-        sta     LA22A
-        lda     #$00
-        sta     LA22B
+        lda     #16
+        sta     pos::xcoord
+        lda     #8
+        sta     pos::ycoord
+        lda     #0
+        sta     pos::ycoord+1
         sta     LB2D0
 LB24B:  lda     LB2D0
         cmp     $177F
@@ -2080,7 +2063,7 @@ LB24B:  lda     LB2D0
         jsr     LA9C9
         rts
 
-LB257:  MGTK_CALL MGTK::MoveTo, $A228
+LB257:  MGTK_CALL MGTK::MoveTo, pos
         ldx     LB2D0
         lda     $1780,x
         and     #$7F
@@ -2106,11 +2089,11 @@ LB257:  MGTK_CALL MGTK::MoveTo, $A228
         lda     $1780,x
         bpl     LB2A7
         lda     #$01
-        sta     LA228
-        MGTK_CALL MGTK::MoveTo, $A228
-        addr_call draw_string, $A22E
+        sta     pos
+        MGTK_CALL MGTK::MoveTo, pos
+        addr_call draw_string, str_folder
         lda     #$10
-        sta     LA228
+        sta     pos
 LB2A7:  lda     LB2D0
         cmp     LA231
         bne     LB2B8
@@ -2118,7 +2101,7 @@ LB2A7:  lda     LB2D0
         lda     winfo2::window_id
         jsr     LB443
 LB2B8:  inc     LB2D0
-        add16   LA22A, #$0008, LA22A
+        add16   pos::ycoord, #8, pos::ycoord
         jmp     LB24B
 
 LB2CF:  .byte   0
