@@ -209,10 +209,8 @@ window_id:
         .byte   $01,$01
         .byte   $00
         .byte   $7F
-        .byte   $00
-        .byte   $88
-        .byte   $00
-        .byte   $00
+        .addr   $8800
+        .addr   0
 .endparams
 
 
