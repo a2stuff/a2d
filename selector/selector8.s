@@ -1414,8 +1414,8 @@ LAB16:  lda     LA85A
 LAB61:  jsr     L98D4
 
 event_loop:
-        MGTK_CALL MGTK::GetEvent, $8F79
-        lda     $8F79
+        MGTK_CALL MGTK::GetEvent, selector5::event_params
+        lda     selector5::event_kind
         cmp     #MGTK::EventKind::button_down
         beq     handle_button_down
         cmp     #MGTK::EventKind::key_down
@@ -1432,10 +1432,10 @@ event_loop:
         rts
 
 handle_button_down:
-        MGTK_CALL MGTK::FindWindow, $8F7A
-        lda     $8F7E
+        MGTK_CALL MGTK::FindWindow, selector5::findwindow_params
+        lda     selector5::findwindow_which_area
         beq     event_loop
-        cmp     #$02
+        cmp     #MGTK::Area::content
         bne     event_loop
         lda     $8F7F
         cmp     LA85A
@@ -1444,8 +1444,8 @@ handle_button_down:
         jsr     L9A15
         lda     LA85A
         sta     $8F79
-        MGTK_CALL MGTK::ScreenToWindow, $8F79
-        MGTK_CALL MGTK::MoveTo, $8F7E
+        MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
+        MGTK_CALL MGTK::MoveTo, selector5::screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A894
         cmp     #MGTK::inrect_inside
         bne     event_loop
@@ -1458,14 +1458,14 @@ handle_button_down:
 
 LABE6:  lda     #$00
         sta     LAC53
-LABEB:  MGTK_CALL MGTK::GetEvent, $8F79
+LABEB:  MGTK_CALL MGTK::GetEvent, selector5::event_params
         lda     $8F79
         cmp     #$02
         beq     LAC3C
         lda     LA85A
-        sta     $8F79
-        MGTK_CALL MGTK::ScreenToWindow, $8F79
-        MGTK_CALL MGTK::MoveTo, $8F7E
+        sta     selector5::screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
+        MGTK_CALL MGTK::MoveTo, selector5::screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A894
         cmp     #MGTK::inrect_inside
         beq     LAC1C

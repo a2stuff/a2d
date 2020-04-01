@@ -86,7 +86,7 @@ LA015:
         .byte   $00
         .byte   $00
 
-.params winport_params
+.params getwinport_params
 window_id:     .byte   0
 a_grafport:    .addr   grafport
 .endparams
@@ -2280,8 +2280,8 @@ LB404:  ldx     #$00
         rts
 
 LB442:  .byte   0
-LB443:  sta     winport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, winport_params
+LB443:  sta     getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         rts
 
