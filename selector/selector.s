@@ -16,6 +16,8 @@ MGTK            := $4000
 FONT            := $8800
 START           := $8E00
 
+DrawString      := $9984
+
 ShowAlert       := $9F74
 .enum AlertID
 selector_unable_to_run  = $00
