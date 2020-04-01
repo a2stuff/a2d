@@ -16,6 +16,18 @@ MGTK            := $4000
 FONT            := $8800
 START           := $8E00
 
+ShowAlert       := $9F74
+.enum AlertID
+selector_unable_to_run  = $00
+io_error                = $27
+no_device               = $28
+pathname_does_not_exist = $44
+insert_source_disk      = $45
+file_not_found          = $46
+insert_system_disk      = $FE
+basic_system_not_found  = $FF
+.endenum
+
 
 overlay_addr    := $A000
 overlay1_offset = $6F60

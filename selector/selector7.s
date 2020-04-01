@@ -714,7 +714,7 @@ LA4D4:  lda     winfo1::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A2D2
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     LA4FC
         jsr     set_ip_cursor
         jmp     LA4FF
@@ -750,7 +750,7 @@ LA52F:  lda     winfo1::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A253
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LA554
         jmp     LA587
 
@@ -775,7 +775,7 @@ LA56A:  lda     winfo1::window_id
         jmp     LA632
 
 LA587:  MGTK_CALL MGTK::InRect, $A263
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LA594
         jmp     LA5B0
 
@@ -789,7 +789,7 @@ LA594:  bit     LA47F
 LA5AD:  jmp     LA632
 
 LA5B0:  MGTK_CALL MGTK::InRect, $A243
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LA5BD
         jmp     LA5D9
 
@@ -803,7 +803,7 @@ LA5BD:  bit     LA47F
 LA5D6:  jmp     LA632
 
 LA5D9:  MGTK_CALL MGTK::InRect, $A24B
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LA5E6
         jmp     LA600
 
@@ -816,7 +816,7 @@ LA5E6:  MGTK_CALL MGTK::SetPenMode, penXOR
 LA5FD:  jmp     LA632
 
 LA600:  MGTK_CALL MGTK::InRect, $A25B
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LA60D
         jmp     LA624
 
@@ -1239,7 +1239,7 @@ LA9FC:  MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A24B
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LAA2D
         lda     LAA64
         beq     LAA35
@@ -1277,7 +1277,7 @@ LAA6A:  MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A25B
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LAA9B
         lda     LAAD2
         beq     LAAA3
@@ -1315,7 +1315,7 @@ LAAD8:  MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A253
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LAB09
         lda     LAB40
         beq     LAB11
@@ -1353,7 +1353,7 @@ LAB46:  MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A263
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LAB77
         lda     LABAE
         beq     LAB7F
@@ -1391,7 +1391,7 @@ LABB4:  MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A243
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LABE5
         lda     LAC1C
         beq     LABED
@@ -2756,7 +2756,7 @@ LB799:  lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A2D2
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LB7BC
         rts
 
