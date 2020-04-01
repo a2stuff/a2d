@@ -1177,7 +1177,8 @@ LA84D:  lda     $D3EE,y
         rts
 
 
-LA85A:
+.proc winfo
+window_id:
         .byte   $0B
         .byte   $01,$00
         .byte   $00
@@ -1210,14 +1211,7 @@ LA85A:
 
         .byte   0
         .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
+        .res    8, $FF
         .byte   0
         .byte   0
         .byte   0
@@ -1227,10 +1221,9 @@ LA85A:
         .byte   $01,$01
         .byte   $00
         .byte   $7F
-        .byte   $00
-        .byte   $88
-        .byte   $00
-        .byte   $00
+        .addr   $8800
+        .addr   0
+.endproc
 
 rect1:  DEFINE_RECT $14, $31, $78, $3C
 
@@ -1323,8 +1316,8 @@ LA8D1:  DEFINE_POINT 20, 40
         PASCAL_STRING "Files remaining to be copied: "
         PASCAL_STRING "    "
 
-LAA01:  MGTK_CALL MGTK::OpenWindow, $A85A
-        lda     LA85A
+LAA01:  MGTK_CALL MGTK::OpenWindow, winfo
+        lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, $A8A0
@@ -1333,7 +1326,7 @@ LAA01:  MGTK_CALL MGTK::OpenWindow, $A85A
         addr_call DrawString, $A8B4
         rts
 
-LAA2D:  lda     LA85A
+LAA2D:  lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8E6
@@ -1372,7 +1365,7 @@ LAABD:  lda     #$FD            ; ???
 
 LAAC8:  jmp     LAC54
 
-LAACB:  lda     LA85A
+LAACB:  lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8E6
@@ -1387,7 +1380,7 @@ LAACB:  lda     LA85A
         jsr     LAB61
         jmp     LAC54
 
-LAB16:  lda     LA85A
+LAB16:  lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8E6
@@ -1414,7 +1407,7 @@ event_loop:
         lda     $8F7A
         cmp     #CHAR_RETURN
         bne     event_loop
-        lda     LA85A
+        lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, rect1
@@ -1429,11 +1422,11 @@ handle_button_down:
         cmp     #MGTK::Area::content
         bne     event_loop
         lda     $8F7F
-        cmp     LA85A
+        cmp     winfo::window_id
         bne     event_loop
-        lda     LA85A
+        lda     winfo::window_id
         jsr     L9A15
-        lda     LA85A
+        lda     winfo::window_id
         sta     $8F79
         MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
         MGTK_CALL MGTK::MoveTo, selector5::screentowindow_windowx
@@ -1453,7 +1446,7 @@ LABEB:  MGTK_CALL MGTK::GetEvent, selector5::event_params
         lda     $8F79
         cmp     #$02
         beq     LAC3C
-        lda     LA85A
+        lda     winfo::window_id
         sta     selector5::screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
         MGTK_CALL MGTK::MoveTo, selector5::screentowindow_windowx
@@ -1489,7 +1482,7 @@ LAC54:  ldx     LA4FB
         txs
         return  #$FF
 
-LAC5B:  MGTK_CALL MGTK::CloseWindow, $A85A
+LAC5B:  MGTK_CALL MGTK::CloseWindow, winfo
         rts
 
 LAC62:  copy16  LA759, LACE2
