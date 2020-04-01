@@ -1420,19 +1420,20 @@ L991A:  MGTK_CALL MGTK::SetPenMode, penXOR
 
 draw_ok_label:
         MGTK_CALL MGTK::MoveTo, pos_ok_label
-        addr_call draw_string, str_ok_btn
+        addr_call DrawString, str_ok_btn
         rts
 
 draw_desktop_label:
         MGTK_CALL MGTK::MoveTo, pos_desktop_label
-        addr_call draw_string, str_desktop_btn
+        addr_call DrawString, str_desktop_btn
         rts
 
 ;;; ============================================================
 ;;; Draw Pascal String
 ;;; Input: A,X = string address
 
-.proc draw_string
+        ASSERT_ADDRESS ::DrawString
+.proc DrawString
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -1639,7 +1640,7 @@ L9AE5:  lda     winfo::window_id
         pla
         jsr     L9A62
         MGTK_CALL MGTK::MoveTo, L907C
-        addr_call draw_string, $9113
+        addr_call DrawString, $9113
         rts
 
 L9AFD:  cmp     L910E

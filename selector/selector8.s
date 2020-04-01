@@ -11,7 +11,6 @@
 MLI_WRAPPER     := $95A0
 L98C1           := $98C1
 L98D4           := $98D4
-L9984           := $9984
 L99DC           := $99DC
 L9A15           := $9A15
 L9A47           := $9A47
@@ -1259,12 +1258,8 @@ rect1:  DEFINE_RECT $14, $31, $78, $3C
 
         PASCAL_STRING "Down load in the RAMCard"
 
-        .byte   $14
-        .byte   $00
-        .byte   $20,$00,$14
-        .byte   $00
-        .byte   $28
-        .byte   $00
+LA8CD:  DEFINE_POINT 20, 32
+LA8D1:  DEFINE_POINT 20, 40
 
         PASCAL_STRING "Copying:"
 
@@ -1335,7 +1330,7 @@ LAA01:  MGTK_CALL MGTK::OpenWindow, $A85A
         MGTK_CALL MGTK::FrameRect, $A8A0
         MGTK_CALL MGTK::FrameRect, $A8A8
         MGTK_CALL MGTK::MoveTo, $A8B0
-        addr_call L9984, $A8B4
+        addr_call DrawString, $A8B4
         rts
 
 LAA2D:  lda     LA85A
@@ -1352,21 +1347,21 @@ LAA4C:  jsr     LAC62
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8DE
         addr_call L99DC, $A135
-        MGTK_CALL MGTK::MoveTo, $A8CD
-        addr_call L9984, $A8D5
-        addr_call L9984, $A135
-        MGTK_CALL MGTK::MoveTo, $A8D1
-        addr_call L9984, $A9DD
-        addr_call L9984, $ACE6
-        addr_call L9984, $A9FC
+        MGTK_CALL MGTK::MoveTo, LA8CD
+        addr_call DrawString, $A8D5
+        addr_call DrawString, $A135
+        MGTK_CALL MGTK::MoveTo, LA8D1
+        addr_call DrawString, $A9DD
+        addr_call DrawString, $ACE6
+        addr_call DrawString, $A9FC
         rts
 
 LAA98:  jsr     LAC62
         MGTK_CALL MGTK::SetPortBits, $A8EE
-        MGTK_CALL MGTK::MoveTo, $A8CD
-        addr_call L9984, $A9B9
-        addr_call L9984, $ACE6
-        addr_call L9984, $A9FC
+        MGTK_CALL MGTK::MoveTo, LA8CD
+        addr_call DrawString, $A9B9
+        addr_call DrawString, $ACE6
+        addr_call DrawString, $A9FC
         rts
 
 LAABD:  lda     #$FD            ; ???
@@ -1381,14 +1376,14 @@ LAACB:  lda     LA85A
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8E6
-        MGTK_CALL MGTK::MoveTo, $A8CD
-        addr_call L9984, $A914
-        MGTK_CALL MGTK::MoveTo, $A8D1
-        addr_call L9984, $A94C
+        MGTK_CALL MGTK::MoveTo, LA8CD
+        addr_call DrawString, $A914
+        MGTK_CALL MGTK::MoveTo, LA8D1
+        addr_call DrawString, $A94C
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, $A89C
-        addr_call L9984, $902F
+        addr_call DrawString, $902F
         jsr     LAB61
         jmp     LAC54
 
@@ -1396,14 +1391,14 @@ LAB16:  lda     LA85A
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8E6
-        MGTK_CALL MGTK::MoveTo, $A8CD
-        addr_call L9984, $A962
-        MGTK_CALL MGTK::MoveTo, $A8D1
-        addr_call L9984, $A988
+        MGTK_CALL MGTK::MoveTo, LA8CD
+        addr_call DrawString, $A962
+        MGTK_CALL MGTK::MoveTo, LA8D1
+        addr_call DrawString, $A988
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, $A89C
-        addr_call L9984, $902F
+        addr_call DrawString, $902F
         jsr     LAB61
         jmp     LAC54
 

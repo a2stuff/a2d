@@ -8,7 +8,6 @@
 
 L2000           := $2000
 L98D4           := $98D4
-L9984           := $9984
 
         .byte   0
         .byte   0
@@ -353,21 +352,21 @@ LD314:  tya
         bpl     LD365
         MGTK_CALL MGTK::FrameRect, try_again_rect
         MGTK_CALL MGTK::MoveTo, try_again_pos
-        addr_call L9984, $D0E0
+        addr_call DrawString, $D0E0
         bit     LD142
         bvs     LD365
         MGTK_CALL MGTK::FrameRect, cancel_rect
         MGTK_CALL MGTK::MoveTo, cancel_pos
-        addr_call L9984, $D0FE
+        addr_call DrawString, $D0FE
         jmp     LD378
 
 LD365:  MGTK_CALL MGTK::FrameRect, cancel_rect
         MGTK_CALL MGTK::MoveTo, cancel_pos
-        addr_call L9984, $D0EE
+        addr_call DrawString, $D0EE
 LD378:  MGTK_CALL MGTK::MoveTo, $D127
         lda     LD143
         ldx     LD144
-        jsr     L9984
+        jsr     DrawString
 
 
 event_loop:
