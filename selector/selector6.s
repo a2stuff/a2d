@@ -193,26 +193,18 @@ LD0DE:
         PASCAL_STRING {"OK            ", CHAR_RETURN}
         PASCAL_STRING "Try Again  A"
 
-        .byte   $2C
-        .byte   $01,$25
-        .byte   $00
-        .byte   $90,$01
-        .byte   $30,$00
-        .byte   $31,$01
-        .byte   $2F
-        .byte   $00
-        .byte   $14
-        .byte   $00
-        .byte   $25,$00
-        .byte   $78
-        .byte   $00
-        .byte   $30,$00
-        .byte   $19,$00,$2F
-        .byte   $00
-        .byte   $BE,$00,$10
-        .byte   $00
-        .byte   $4B
-        .byte   $00,$1D,$00
+cancel_rect:
+        DEFINE_RECT 300, 37, 400, 48
+cancel_pos:
+        DEFINE_POINT 305, 47
+
+try_again_rect:
+        DEFINE_RECT 20, 37, 120, 48
+try_again_pos:
+        DEFINE_POINT 25,47
+
+        DEFINE_POINT 190,16
+        DEFINE_POINT 75,29
 
 
         PASCAL_STRING "System Error number XX"
@@ -290,8 +282,8 @@ LD236:
 
 
         jsr     L98D4
-        MGTK_CALL MGTK::InitPort, $8F83
-        MGTK_CALL MGTK::SetPort, $8F83
+        MGTK_CALL MGTK::InitPort, selector5::grafport2
+        MGTK_CALL MGTK::SetPort, selector5::grafport2
         lda     LD0D0
         ldx     LD0D1
         jsr     LD725
@@ -316,15 +308,15 @@ LD236:
         MGTK_CALL MGTK::HideCursor
         jsr     LD5A2
         MGTK_CALL MGTK::ShowCursor
-        ldx     #$03
-        lda     #$00
-LD29F:  sta     $8F83,x
-        sta     $8F8B,x
+        ldx     #.sizeof(MGTK::Point)-1
+        lda     #0
+LD29F:  sta     selector5::grafport2+MGTK::GrafPort::viewloc,x
+        sta     selector5::grafport2+MGTK::GrafPort::maprect,x
         dex
         bpl     LD29F
         copy16  #$0226, $8F8F
         copy16  #$00B9, $8F91
-        MGTK_CALL MGTK::SetPort, $8F83
+        MGTK_CALL MGTK::SetPort, selector5::grafport2
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $D0B8
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
@@ -359,18 +351,18 @@ LD314:  tya
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         bit     LD142
         bpl     LD365
-        MGTK_CALL MGTK::FrameRect, $D117
-        MGTK_CALL MGTK::MoveTo, $D11F
+        MGTK_CALL MGTK::FrameRect, try_again_rect
+        MGTK_CALL MGTK::MoveTo, try_again_pos
         addr_call L9984, $D0E0
         bit     LD142
         bvs     LD365
-        MGTK_CALL MGTK::FrameRect, $D10B
-        MGTK_CALL MGTK::MoveTo, $D113
+        MGTK_CALL MGTK::FrameRect, cancel_rect
+        MGTK_CALL MGTK::MoveTo, cancel_pos
         addr_call L9984, $D0FE
         jmp     LD378
 
-LD365:  MGTK_CALL MGTK::FrameRect, $D10B
-        MGTK_CALL MGTK::MoveTo, $D113
+LD365:  MGTK_CALL MGTK::FrameRect, cancel_rect
+        MGTK_CALL MGTK::MoveTo, cancel_pos
         addr_call L9984, $D0EE
 LD378:  MGTK_CALL MGTK::MoveTo, $D127
         lda     LD143
@@ -387,14 +379,14 @@ event_loop:
 
 :       cmp     #MGTK::EventKind::key_down
         bne     event_loop
-        lda     $8F7A
+        lda     selector5::event_key
         and     #CHAR_MASK
         bit     LD142
         bpl     LD3DF
         cmp     #CHAR_ESCAPE
         bne     LD3BA
-        MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $D117
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     #$01
         jmp     LD434
 
@@ -402,8 +394,8 @@ LD3BA:  bit     LD142
         bvs     LD3DF
         cmp     #'a'
         bne     LD3D4
-LD3C3:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $D10B
+LD3C3:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::PaintRect, cancel_rect
         lda     #$00
         jmp     LD434
 
@@ -415,30 +407,30 @@ LD3D4:  cmp     #'A'
 
 LD3DF:  cmp     #CHAR_RETURN
         bne     LD3F4
-        MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $D10B
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::PaintRect, cancel_rect
         lda     #$00
         jmp     LD434
 
 LD3F4:  jmp     event_loop
 
 LD3F7:  jsr     LD57B
-        MGTK_CALL MGTK::MoveTo, $8F7A
+        MGTK_CALL MGTK::MoveTo, selector5::event_coords
         bit     LD142
         bpl     LD424
-        MGTK_CALL MGTK::InRect, $D117
+        MGTK_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
         bne     LD412
         jmp     LD4AD
 
 LD412:  bit     LD142
         bvs     LD424
-        MGTK_CALL MGTK::InRect, $D10B
+        MGTK_CALL MGTK::InRect, cancel_rect
         cmp     #MGTK::inrect_inside
         bne     LD431
         jmp     LD446
 
-LD424:  MGTK_CALL MGTK::InRect, $D10B
+LD424:  MGTK_CALL MGTK::InRect, cancel_rect
         cmp     #MGTK::inrect_inside
         bne     LD431
         jmp     LD514
@@ -452,17 +444,17 @@ LD434:  pha
         pla
         rts
 
-LD446:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $D10B
+LD446:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::PaintRect, cancel_rect
         lda     #$00
         sta     LD4AC
-LD457:  MGTK_CALL MGTK::GetEvent, $8F79
-        lda     $8F79
-        cmp     #$02
+LD457:  MGTK_CALL MGTK::GetEvent, selector5::event_params
+        lda     selector5::event_kind
+        cmp     #MGTK::EventKind::button_up
         beq     LD49F
         jsr     LD57B
-        MGTK_CALL MGTK::MoveTo, $8F7A
-        MGTK_CALL MGTK::InRect, $D10B
+        MGTK_CALL MGTK::MoveTo, selector5::event_coords
+        MGTK_CALL MGTK::InRect, cancel_rect
         cmp     #MGTK::inrect_inside
         beq     LD47F
         lda     LD4AC
@@ -473,8 +465,8 @@ LD47F:  lda     LD4AC
         bne     LD487
         jmp     LD457
 
-LD487:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $D10B
+LD487:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::PaintRect, cancel_rect
         lda     LD4AC
         clc
         adc     #$80
@@ -489,17 +481,17 @@ LD4A7:  lda     #$00
         jmp     LD434
 
 LD4AC:  .byte   0
-LD4AD:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $D117
+LD4AD:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     #$00
         sta     LD513
-LD4BE:  MGTK_CALL MGTK::GetEvent, $8F79
-        lda     $8F79
-        cmp     #$02
+LD4BE:  MGTK_CALL MGTK::GetEvent, selector5::event_params
+        lda     selector5::event_kind
+        cmp     #MGTK::EventKind::button_up
         beq     LD506
         jsr     LD57B
-        MGTK_CALL MGTK::MoveTo, $8F7A
-        MGTK_CALL MGTK::InRect, $D117
+        MGTK_CALL MGTK::MoveTo, selector5::event_coords
+        MGTK_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
         beq     LD4E6
         lda     LD513
@@ -510,8 +502,8 @@ LD4E6:  lda     LD513
         bne     LD4EE
         jmp     LD4BE
 
-LD4EE:  MGTK_CALL MGTK::SetPenMode, $8E05
-        MGTK_CALL MGTK::PaintRect, $D117
+LD4EE:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     LD513
         clc
         adc     #$80
@@ -529,14 +521,14 @@ LD513:  .byte   0
 LD514:  lda     #$00
         sta     LD57A
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, $D10B
+        MGTK_CALL MGTK::PaintRect, cancel_rect
 LD525:  MGTK_CALL MGTK::GetEvent, selector5::event_params
         lda     selector5::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LD56D
         jsr     LD57B
         MGTK_CALL MGTK::MoveTo, selector5::event_coords
-        MGTK_CALL MGTK::InRect, $D10B
+        MGTK_CALL MGTK::InRect, cancel_rect
         cmp     #MGTK::inrect_inside
         beq     LD54D
         lda     LD57A
@@ -548,7 +540,7 @@ LD54D:  lda     LD57A
         jmp     LD525
 
 LD555:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, $D10B
+        MGTK_CALL MGTK::PaintRect, cancel_rect
         lda     LD57A
         clc
         adc     #$80
@@ -563,8 +555,8 @@ LD575:  lda     #$00
         jmp     LD434
 
 LD57A:  .byte   0
-LD57B:  sub16   $8F7A, LD0D0, $8F7A
-        sub16   $8F7C, LD0D2, $8F7C
+LD57B:  sub16   selector5::event_xcoord, LD0D0, selector5::event_xcoord
+        sub16   selector5::event_ycoord, LD0D2, selector5::event_ycoord
         rts
 
 LD5A2:  copy16  #$0800, LD5D1
