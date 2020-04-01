@@ -367,6 +367,7 @@ viewloc:.word   25, 40
         .byte   0
 .endparams
 
+rect_frame:
         DEFINE_RECT 4, 2, 496, 108
 
 rect_ok_btn:
@@ -385,7 +386,8 @@ pos_desktop_label:
 str_desktop_btn:
         PASCAL_STRING " DeskTop       Q "
 
-        .byte   $02, $01
+setpensize_params:
+        .byte   2, 1
 
 pos_title_string:
         .word   0, $F
@@ -395,44 +397,18 @@ pos_title_string:
         .byte   $05,$00
 L9066:
         .byte   $16,$00
-        .byte   $05,$00
-        .byte   $14
-        .byte   $00
-        .byte   $EF
-        .byte   $01,$14
-        .byte   $00
-        .byte   $05,$00
-        .byte   $5A
-        .byte   $00
-        .byte   $EF
-        .byte   $01,$5A
-        .byte   $00
-L9078:
-        .byte   $0A
-L9079:
-        .byte   $00
-L907A:
-L907B   := * + 1
-L907C   := * + 2
-        .byte   $1E,$00,$00
-L907D:
-        .byte   $00
-L907E:
-        .byte   $00
-L907F:
-        .byte   $00
-L9080:
-L9081   := * + 1
-        .byte   $05,$00
-L9082:
-L9083   := * + 1
-        .byte   $15,$00
-L9084:
-L9085   := * + 1
-        .byte   $84,$00
-L9086:
-        .byte   $1D
-L9087:  .byte   $00
+
+pt1:    DEFINE_POINT   5, 20
+pt2:    DEFINE_POINT   495, 20
+pt3:    DEFINE_POINT   5, 90
+pt4:    DEFINE_POINT   495, 90
+
+L9078:  .word   10
+L907A:  .word   30
+L907C:  .word   0
+L907E:  .word   0
+
+rect2:  DEFINE_RECT 5, 21, 132, 29, rect2
 
 rect1:  DEFINE_RECT 0, 0, 0, 0, rect1
 
@@ -1419,9 +1395,9 @@ L9904:  dec     DEVCNT
 L9914:  lda     winfo::window_id
         jsr     L9A15
 L991A:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::SetPenSize, $9055
+        MGTK_CALL MGTK::SetPenSize, setpensize_params
 
-        MGTK_CALL MGTK::FrameRect, $9013
+        MGTK_CALL MGTK::FrameRect, rect_frame
         MGTK_CALL MGTK::FrameRect, rect_ok_btn
 
         bit     desktop_available_flag
@@ -1434,10 +1410,10 @@ L991A:  MGTK_CALL MGTK::SetPenMode, penXOR
         bmi     :+
         jsr     draw_desktop_label
 :
-        MGTK_CALL MGTK::MoveTo, $9068
-        MGTK_CALL MGTK::LineTo, $906C
-        MGTK_CALL MGTK::MoveTo, $9070
-        MGTK_CALL MGTK::LineTo, $9074
+        MGTK_CALL MGTK::MoveTo, pt1
+        MGTK_CALL MGTK::LineTo, pt2
+        MGTK_CALL MGTK::MoveTo, pt3
+        MGTK_CALL MGTK::LineTo, pt4
         rts
 
 ;;; ============================================================
@@ -1489,7 +1465,7 @@ L999B:  stax    $06
         sbc     $0A
         sta     pos_title_string+1
 
-        MGTK_CALL MGTK::MoveTo, $9057
+        MGTK_CALL MGTK::MoveTo, pos_title_string
         MGTK_CALL MGTK::DrawText, $0006
         rts
 
@@ -1558,14 +1534,18 @@ L9A25:  ldx     #$00
         rts
 
 L9A46:  .byte   0
-L9A47:  ldx     #$00
-        stx     L9A61
+
+;;; ============================================================
+
+.proc L9A47
+        ldx     #$00
+        stx     tmp
         lsr     a
-        ror     L9A61
+        ror     tmp
         lsr     a
-        ror     L9A61
+        ror     tmp
         pha
-        lda     L9A61
+        lda     tmp
         adc     #$82
         tay
         pla
@@ -1574,32 +1554,37 @@ L9A47:  ldx     #$00
         tya
         rts
 
-L9A61:  .byte   0
-L9A62:  pha
+tmp:    .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc L9A62
+        pha
         lsr     a
         lsr     a
         lsr     a
         pha
-        ldx     #$00
-        stx     L9AA1
+        ldx     #0
+        stx     tmp
         lsr     a
-        ror     L9AA1
+        ror     tmp
         tay
-        lda     L9AA1
+        lda     tmp
         clc
         adc     L9078
         sta     L907C
         tya
-        adc     L9079
-        sta     L907D
+        adc     L9078+1
+        sta     L907C+1
         pla
         asl     a
         asl     a
         asl     a
-        sta     L9AA1
+        sta     tmp
         pla
         sec
-        sbc     L9AA1
+        sbc     tmp
         asl     a
         asl     a
         asl     a
@@ -1607,11 +1592,15 @@ L9A62:  pha
         adc     L907A
         sta     L907E
         lda     #$00
-        adc     L907B
-        sta     L907F
+        adc     L907A+1
+        sta     L907E+1
         rts
 
-L9AA1:  .byte   0
+tmp:    .byte   0
+.endproc
+
+;;; ============================================================
+
 L9AA2:  pha
         jsr     L9A25
         stax    $06
@@ -1649,7 +1638,7 @@ L9AE5:  lda     winfo::window_id
         jsr     L9A15
         pla
         jsr     L9A62
-        MGTK_CALL MGTK::MoveTo, $907C
+        MGTK_CALL MGTK::MoveTo, L907C
         addr_call draw_string, $9113
         rts
 
@@ -1706,18 +1695,18 @@ L9B42:  pha
         pha
         lda     L9BBA
         clc
-        adc     L9080
+        adc     rect2::x1
         sta     rect1::x1
         pla
         pha
-        adc     L9081
+        adc     rect2::x1+1
         sta     rect1::x1+1
         lda     L9BBA
         clc
-        adc     L9084
+        adc     rect2::x2
         sta     rect1::x2
         pla
-        adc     L9085
+        adc     rect2::x2+1
         sta     rect1::x2+1
         lda     L9BBB
         asl     a
@@ -1725,17 +1714,17 @@ L9B42:  pha
         asl     a
         pha
         clc
-        adc     L9082
+        adc     rect2::y1
         sta     rect1::y1
         lda     #$00
-        adc     L9083
+        adc     rect2::y1+1
         sta     rect1::y1+1
         pla
         clc
-        adc     L9086
+        adc     rect2::y2
         sta     rect1::y2
         lda     #$00
-        adc     L9087
+        adc     rect2::y2+1
         sta     rect1::y2+1
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect1
