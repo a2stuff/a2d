@@ -5,404 +5,164 @@
         .org $A000
 
 .scope
-
-
         jmp     LA44A
 
         jmp     LA480
 
+pencopy:        .byte   MGTK::pencopy
+penOR:          .byte   MGTK::penOR
+penXOR:         .byte   MGTK::penXOR
+penBIC:         .byte   MGTK::penBIC
+notpencopy:     .byte   MGTK::notpencopy
+notpenOR:       .byte   MGTK::notpenOR
+notpenXOR:      .byte   MGTK::notpenXOR
+notpenBIC:      .byte   MGTK::notpenBIC
+
+event_params := *
+event_kind := event_params + 0
+        ;; if kind is key_down
+event_key := event_params + 1
+event_modifiers := event_params + 2
+        ;; if kind is no_event, button_down/up, drag, or apple_key:
+event_coords := event_params + 1
+event_xcoord := event_params + 1
+event_ycoord := event_params + 3
+        ;; if kind is update:
+event_window_id := event_params + 1
+
+activatectl_params := *
+activatectl_which_ctl := activatectl_params + 0
+activatectl_activate  := activatectl_params + 1
+
+trackthumb_params := *
+trackthumb_which_ctl := trackthumb_params + 0
+trackthumb_mousex := trackthumb_params + 1
+trackthumb_mousey := trackthumb_params + 3
+trackthumb_thumbpos := trackthumb_params + 5
+trackthumb_thumbmoved := trackthumb_params + 6
+        .assert trackthumb_mousex = event_xcoord, error, "param mismatch"
+        .assert trackthumb_mousey = event_ycoord, error, "param mismatch"
+
+updatethumb_params := *
+updatethumb_which_ctl := updatethumb_params
+updatethumb_thumbpos := updatethumb_params + 1
+updatethumb_stash := updatethumb_params + 5 ; not part of struct
+
+screentowindow_params := *
+screentowindow_window_id := screentowindow_params + 0
+screentowindow_screenx := screentowindow_params + 1
+screentowindow_screeny := screentowindow_params + 3
+screentowindow_windowx := screentowindow_params + 5
+screentowindow_windowy := screentowindow_params + 7
+        .assert screentowindow_screenx = event_xcoord, error, "param mismatch"
+        .assert screentowindow_screeny = event_ycoord, error, "param mismatch"
+
+findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
+findwindow_mousex := findwindow_params + 0
+findwindow_mousey := findwindow_params + 2
+findwindow_which_area := findwindow_params + 4
+findwindow_window_id := findwindow_params + 5
+        .assert findwindow_mousex = event_xcoord, error, "param mismatch"
+        .assert findwindow_mousey = event_ycoord, error, "param mismatch"
+
+findcontrol_params := * + 1   ; offset to x/y overlap event_params x/y
+findcontrol_mousex := findcontrol_params + 0
+findcontrol_mousey := findcontrol_params + 2
+findcontrol_which_ctl := findcontrol_params + 4
+findcontrol_which_part := findcontrol_params + 5
+        .assert findcontrol_mousex = event_xcoord, error, "param mismatch"
+        .assert findcontrol_mousey = event_ycoord, error, "param mismatch"
+
+;;; UNION of preceding param blocks
         .byte   $00
-        .byte   $01,$02
-        .byte   $03
-        .byte   $04
-        .byte   $05,$06
-        .byte   $07
-LA00E:
         .byte   $00
-LA00F:
         .byte   $00
-LA010:
         .byte   $00
-LA011:
         .byte   $00
-LA012:
-        .byte   $00
-LA013:
-        .byte   $00
-LA014:
+LA013:  .byte   $00
         .byte   $00
 LA015:
         .byte   $00
         .byte   $00
         .byte   $00
-LA018:
-        .byte   $00
-        .byte   $1B
-        .byte   $A0,$00
+
+.params winport_params
+window_id:     .byte   0
+a_grafport:    .addr   grafport
+.endparams
+
+grafport:
+        .tag    MGTK::GrafPort
+grafport2:
+        .tag    MGTK::GrafPort
+
+double_click_counter_init:
+        .byte   $FF
+
+pointer_cursor:
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%0100000),px(%0000000)
+        .byte   px(%0110000),px(%0000000)
+        .byte   px(%0111000),px(%0000000)
+        .byte   px(%0111100),px(%0000000)
+        .byte   px(%0111110),px(%0000000)
+        .byte   px(%0111111),px(%0000000)
+        .byte   px(%0101100),px(%0000000)
+        .byte   px(%0000110),px(%0000000)
+        .byte   px(%0000110),px(%0000000)
+        .byte   px(%0000011),px(%0000000)
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%1100000),px(%0000000)
+        .byte   px(%1110000),px(%0000000)
+        .byte   px(%1111000),px(%0000000)
+        .byte   px(%1111100),px(%0000000)
+        .byte   px(%1111110),px(%0000000)
+        .byte   px(%1111111),px(%0000000)
+        .byte   px(%1111111),px(%1000000)
+        .byte   px(%1111111),px(%0000000)
+        .byte   px(%0001111),px(%0000000)
+        .byte   px(%0001111),px(%0000000)
+        .byte   px(%0000111),px(%1000000)
+        .byte   px(%0000111),px(%1000000)
+        .byte   1,1
+
+insertion_point_cursor:
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%0110001),px(%1000000)
+        .byte   px(%0001010),px(%0000000)
+        .byte   px(%0000100),px(%0000000)
+        .byte   px(%0000100),px(%0000000)
+        .byte   px(%0000100),px(%0000000)
+        .byte   px(%0000100),px(%0000000)
+        .byte   px(%0000100),px(%0000000)
+        .byte   px(%0001010),px(%0000000)
+        .byte   px(%0110001),px(%1000000)
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%0110001),px(%1000000)
+        .byte   px(%1111011),px(%1100000)
+        .byte   px(%0111111),px(%1000000)
+        .byte   px(%0001110),px(%0000000)
+        .byte   px(%0001110),px(%0000000)
+        .byte   px(%0001110),px(%0000000)
+        .byte   px(%0001110),px(%0000000)
+        .byte   px(%0001110),px(%0000000)
+        .byte   px(%0111111),px(%1000000)
+        .byte   px(%1111011),px(%1100000)
+        .byte   px(%0110001),px(%1000000)
+        .byte   px(%0000000),px(%0000000)
+        .byte   4, 5
+
+;;; Text Input Field
+LA0C8:  .res    68, 0
+LA10C:  .res    68, 0
+LA150:  .res    68, 0
 
 
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA03F:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA047:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA04B:  .byte   0
-        .byte   0
-LA04D:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA063:  .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   $02
-        .byte   0
-
-
-        .byte   $06,$00
-        .byte   $0E,$00,$1E
-        .byte   $00
-        .byte   $3E,$00,$7E
-        .byte   $00
-        .byte   $1A
-        .byte   $00
-        .byte   $30,$00
-        .byte   $30,$00
-        .byte   $60
-
-
-
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $03
-        .byte   0
-        .byte   $07
-        .byte   0
-        .byte   $0F
-        .byte   0
-        .byte   $1F
-        .byte   0
-        .byte   $3F
-        .byte   0
-        .byte   $7F
-        .byte   0
-        .byte   $7F
-
-        .byte   $01,$7F
-        .byte   $00
-        .byte   $78
-        .byte   $00
-        .byte   $78
-        .byte   $00
-        .byte   $70,$01
-        .byte   $70,$01
-        .byte   $01,$01
-        .byte   $00
-        .byte   $00
-        .byte   $46,$01
-        .byte   $28
-        .byte   $00
-        .byte   $10,$00
-        .byte   $10,$00
-        .byte   $10,$00
-        .byte   $10,$00
-        .byte   $10,$00
-        .byte   $28
-        .byte   $00
-        .byte   $46,$01
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $46,$01
-        .byte   $6F
-        .byte   $03
-        .byte   $7E,$01,$38
-        .byte   $00
-        .byte   $38
-        .byte   $00
-        .byte   $38
-        .byte   $00
-        .byte   $38
-        .byte   $00
-        .byte   $38
-        .byte   $00
-        .byte   $7E,$01,$6F
-        .byte   $03
-        .byte   $46,$01
-        .byte   $00
-        .byte   $00
-        .byte   $04
-LA0C8   := * + 1
-        .byte   $05,$00
-
-
-
-LA0C9:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA10C:  .byte   0
-LA10D:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA150:  .byte   0
-LA151:  .byte   0
-LA152:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA194:  .byte   $3E, $01, $00
+.params winfo1
+window_id:
+        .byte   $3E
+        .byte   $01, $00
         .byte   0
         .byte   0
         .byte   0
@@ -430,8 +190,6 @@ LA194:  .byte   $3E, $01, $00
         .byte   $F4
         .byte   $01,$99
 
-
-
         .byte   0
         .byte   $FF
         .byte   $FF
@@ -455,17 +213,21 @@ LA194:  .byte   $3E, $01, $00
         .byte   $88
         .byte   $00
         .byte   $00
-LA1CE:
+.endparams
+
+
+.params winfo2
+window_id:
         .byte   $3F
         .byte   $01,$00
         .byte   $00
         .byte   $00
-LA1D3:
+vscroll:
         .byte   $C1,$00
         .byte   $00
-LA1D6:
+vthumbmax:
         .byte   $03
-LA1D7:
+vthumbpos:
         .byte   $00
         .byte   $00
         .byte   $00
@@ -480,20 +242,11 @@ LA1D7:
         .byte   $00
         .byte   $00
         .byte   $20,$80,$00
-        .byte   $00
-        .byte   $00
-LA1EC:
-        .byte   $00
-LA1ED:
-        .byte   $00
-LA1F0   := * + 2
-        .byte   $7D,$00,$46
-
-
-
-
-LA1F1:  .byte   0
-        .byte   $FF
+x1:     .word   0
+y1:     .word   0
+x2:     .word   125
+y2:     .word   70
+pattern:.byte   $FF
         .byte   $FF
         .byte   $FF
         .byte   $FF
@@ -515,6 +268,9 @@ LA1F1:  .byte   0
         .byte   $88
         .byte   $00
         .byte   $00
+.endparams
+
+
         .byte   $00
         .byte   $00
 LA20A:
@@ -614,49 +370,30 @@ LA231:
         .byte   $C6,$00
         .byte   $63
         .byte   $00
-        .byte   $0F
-        .byte   $4F
-        .byte   $4B
-        .byte   $20,$20,$20
-        .byte   $20,$20,$20
-        .byte   $20,$20,$20
-        .byte   $20,$20,$20
-        .byte   $0D,$C6,$00
+
+str_ok_btn:
+        PASCAL_STRING {"OK            ",CHAR_RETURN}
+        .byte   $C6,$00
         .byte   $44
         .byte   $00
-        .byte   $05,$43
-        .byte   $6C,$6F,$73
-
-        .byte   $65,$C6
+str_close_btn:
+        PASCAL_STRING "Close"
+        .byte   $C6
         .byte   $00
         .byte   $36,$00
-        .byte   $04
-        .byte   $4F
-        .byte   $70,$65
-        .byte   $6E,$C6,$00
+str_open_btn:
+        PASCAL_STRING "Open"
+        .byte   $C6,$00
         .byte   $53
         .byte   $00
-        .byte   $0C
-        .byte   $43
-        .byte   $61,$6E
-        .byte   $63
-        .byte   $65,$6C
-        .byte   $20,$20,$20
-        .byte   $45,$73
-        .byte   $63
+str_cancel_btn:
+        PASCAL_STRING "Cancel   Esc"
         .byte   $C6,$00
         .byte   $28
         .byte   $00
-        .byte   $0C
-        .byte   $43
-        .byte   $68
-        .byte   $61,$6E
-        .byte   $67
-        .byte   $65,$20
-        .byte   $44
-        .byte   $72
-        .byte   $69,$76
-        .byte   $65,$1C
+str_change_drive_btn:
+        PASCAL_STRING "Change Drive"
+        .byte   $1C
         .byte   $00
         .byte   $19,$00,$1C
         .byte   $00
@@ -667,14 +404,9 @@ LA231:
         .byte   0
         .byte   0
         .byte   $7F
-        .byte   $07
-
-
-        .byte   $20,$44,$69
-        .byte   $73
-        .byte   $6B
-        .byte   $3A
-        .byte   $20,$1C,$00
+str_disk:
+        PASCAL_STRING " Disk: "
+        .byte   $1C,$00
 
         .byte   $71,$00
         .byte   $AC,$01,$7C
@@ -692,7 +424,9 @@ LA2DC   := * + 2
         .byte   $00
         .byte   $1E,$00,$92
         .byte   $00
+str_run_a_program:
         PASCAL_STRING "Run a Program ..."
+str_file_to_run:
         PASCAL_STRING "File to run:"
 
 LA309:  jsr     LAF46
@@ -715,17 +449,17 @@ LA32F:  lda     #$00
         copy16  #$0601, LA150
         rts
 
-LA342:  lda     LA194
+LA342:  lda     winfo1::window_id
         jsr     LB443
         addr_call LAFFE, $A2EA
         addr_call LB03F, $A2FC
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, $A2D2
-        MGTK_CALL MGTK::InitPort, $A03F
-        MGTK_CALL MGTK::SetPort, $A03F
+        MGTK_CALL MGTK::InitPort, grafport2
+        MGTK_CALL MGTK::SetPort, grafport2
         rts
 
-LA36F:  addr_call LB5F1, $A10C
+LA36F:  addr_call LB5F1, LA10C
         beq     LA379
         rts
 
@@ -737,8 +471,8 @@ LA379:  ldx     LA449
         return  #$00
 
         .byte   0
-LA387:  MGTK_CALL MGTK::CloseWindow, $A1CE
-        MGTK_CALL MGTK::CloseWindow, $A194
+LA387:  MGTK_CALL MGTK::CloseWindow, winfo2
+        MGTK_CALL MGTK::CloseWindow, winfo1
         lda     #$00
         sta     LA20D
         jsr     LA8AE
@@ -918,7 +652,7 @@ LA448:  .byte   0
 LA449:  .byte   0
 LA44A:  tsx
         stx     LA449
-        jsr     LA8BC
+        jsr     set_pointer_cursor
         lda     #$00
         sta     LA3C6
         sta     LA214
@@ -953,8 +687,8 @@ LA492:  bit     LA214
         bne     LA4A1
         lda     #$00
         sta     LA214
-LA4A1:  MGTK_CALL MGTK::GetEvent, $A00E
-        lda     LA00E
+LA4A1:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_kind
         cmp     #$01
         bne     LA4B4
         jsr     LA50F
@@ -963,36 +697,36 @@ LA4A1:  MGTK_CALL MGTK::GetEvent, $A00E
 LA4B4:  cmp     #$03
         bne     LA4BB
         jsr     LAC1D
-LA4BB:  MGTK_CALL MGTK::FindWindow, $A00F
-        lda     LA013
+LA4BB:  MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_which_area
         bne     LA4C9
         jmp     LA480
 
-LA4C9:  lda     LA014
-        cmp     LA194
+LA4C9:  lda     findwindow_window_id
+        cmp     winfo1::window_id
         beq     LA4D4
         jmp     LA480
 
-LA4D4:  lda     LA194
+LA4D4:  lda     winfo1::window_id
         jsr     LB443
-        lda     LA194
-        sta     LA00E
-        MGTK_CALL MGTK::ScreenToWindow, $A00E
-        MGTK_CALL MGTK::MoveTo, $A013
+        lda     winfo1::window_id
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A2D2
         cmp     #$80
         bne     LA4FC
-        jsr     LA8CF
+        jsr     set_ip_cursor
         jmp     LA4FF
 
 LA4FC:  jsr     LA8AE
-LA4FF:  MGTK_CALL MGTK::InitPort, $A03F
-        MGTK_CALL MGTK::SetPort, $A03F
+LA4FF:  MGTK_CALL MGTK::InitPort, grafport2
+        MGTK_CALL MGTK::SetPort, grafport2
         jmp     LA480
 
 LA50E:  .byte   0
-LA50F:  MGTK_CALL MGTK::FindWindow, $A00F
-        lda     LA013
+LA50F:  MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_which_area
         bne     LA51B
         rts
 
@@ -1004,17 +738,17 @@ LA51B:  cmp     #$02
 
 LA523:  rts
 
-LA524:  lda     LA014
-        cmp     LA194
+LA524:  lda     findwindow_window_id
+        cmp     winfo1::window_id
         beq     LA52F
         jmp     LA643
 
-LA52F:  lda     LA194
+LA52F:  lda     winfo1::window_id
         jsr     LB443
-        lda     LA194
-        sta     LA00E
-        MGTK_CALL MGTK::ScreenToWindow, $A00E
-        MGTK_CALL MGTK::MoveTo, $A013
+        lda     winfo1::window_id
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A253
         cmp     #$80
         beq     LA554
@@ -1031,9 +765,9 @@ LA561:  tax
         bmi     LA56A
 LA567:  jmp     LA632
 
-LA56A:  lda     LA194
+LA56A:  lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A253
         jsr     LAAD3
         bmi     LA567
@@ -1047,7 +781,7 @@ LA587:  MGTK_CALL MGTK::InRect, $A263
 
 LA594:  bit     LA47F
         bmi     LA5AD
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A263
         jsr     LAB41
         bmi     LA5AD
@@ -1061,7 +795,7 @@ LA5B0:  MGTK_CALL MGTK::InRect, $A243
 
 LA5BD:  bit     LA47F
         bmi     LA5D6
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A243
         jsr     LABAF
         bmi     LA5D6
@@ -1073,7 +807,7 @@ LA5D9:  MGTK_CALL MGTK::InRect, $A24B
         beq     LA5E6
         jmp     LA600
 
-LA5E6:  MGTK_CALL MGTK::SetPenMode, $A008
+LA5E6:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A24B
         jsr     LA9F7
         bmi     LA5FD
@@ -1086,7 +820,7 @@ LA600:  MGTK_CALL MGTK::InRect, $A25B
         beq     LA60D
         jmp     LA624
 
-LA60D:  MGTK_CALL MGTK::SetPenMode, $A008
+LA60D:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A25B
         jsr     LAA65
         bmi     LA621
@@ -1100,8 +834,8 @@ LA624:  bit     LA47D
 LA62E:  jsr     LB799
         rts
 
-LA632:  MGTK_CALL MGTK::InitPort, $A03F
-        MGTK_CALL MGTK::SetPort, $A01B
+LA632:  MGTK_CALL MGTK::InitPort, grafport2
+        MGTK_CALL MGTK::SetPort, grafport
         rts
 
 LA63F:  jsr     LAEA6
@@ -1109,27 +843,27 @@ LA63F:  jsr     LAEA6
 
 LA643:  bit     LA47F
         bmi     LA661
-        MGTK_CALL MGTK::FindControl, $A00F
-        lda     LA013
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_which_ctl
         beq     LA662
         cmp     #$01
         bne     LA661
-        lda     LA1D3
+        lda     winfo2::vscroll
         and     #$01
         beq     LA661
         jmp     LA77B
 
 LA661:  rts
 
-LA662:  lda     LA1CE
-        sta     LA00E
-        MGTK_CALL MGTK::ScreenToWindow, $A00E
-        add16   LA015, LA1EC, LA015
-        lsr16   LA015
-        lsr16   LA015
-        lsr16   LA015
+LA662:  lda     winfo2::window_id
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        add16   screentowindow_windowy, winfo2::y1, screentowindow_windowy
+        lsr16   screentowindow_windowy
+        lsr16   screentowindow_windowy
+        lsr16   screentowindow_windowy
         lda     LA231
-        cmp     LA015
+        cmp     screentowindow_windowy
         beq     LA69E
         jmp     LA73F
 
@@ -1144,9 +878,9 @@ LA69E:  bit     LA214
 LA6AE:  ldx     LA231
         lda     $1780,x
         bmi     LA6D4
-        lda     LA194
+        lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A24B
         MGTK_CALL MGTK::PaintRect, $A24B
         jsr     LA36F
@@ -1154,9 +888,9 @@ LA6AE:  ldx     LA231
 
 LA6D4:  and     #$7F
         pha
-        lda     LA194
+        lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A253
         MGTK_CALL MGTK::PaintRect, $A253
         lda     #$00
@@ -1189,8 +923,8 @@ LA6D4:  and     #$7F
         jsr     LB3B7
         jsr     LB350
         jsr     LB22A
-        MGTK_CALL MGTK::InitPort, $A03F
-        MGTK_CALL MGTK::SetPort, $A01B
+        MGTK_CALL MGTK::InitPort, grafport2
+        MGTK_CALL MGTK::SetPort, grafport
         rts
 
 LA73E:  .byte   0
@@ -1219,7 +953,7 @@ LA767:  lda     LA231
         sta     LA214
         rts
 
-LA77B:  lda     LA014
+LA77B:  lda     findcontrol_which_part
         cmp     #$01
         bne     LA785
         jmp     LA810
@@ -1237,87 +971,87 @@ LA793:  cmp     #$04
         jmp     LA7E8
 
 LA79A:  lda     #$01
-        sta     LA00E
-        MGTK_CALL MGTK::TrackThumb, $A00E
-        lda     LA014
+        sta     trackthumb_which_ctl
+        MGTK_CALL MGTK::TrackThumb, trackthumb_params
+        lda     trackthumb_thumbmoved
         bne     LA7AB
         rts
 
-LA7AB:  lda     LA013
-        sta     LA00F
+LA7AB:  lda     trackthumb_thumbpos
+        sta     updatethumb_thumbpos
         lda     #$01
-        sta     LA00E
-        MGTK_CALL MGTK::UpdateThumb, $A00E
-        lda     LA013
+        sta     updatethumb_which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        lda     updatethumb_stash
         jsr     LB3B7
         jsr     LB22A
         rts
 
-LA7C6:  lda     LA1D7
+LA7C6:  lda     winfo2::vthumbpos
         sec
         sbc     #$09
-        bpl     LA7D0
+        bpl     :+
         lda     #$00
-LA7D0:  sta     LA00F
+:       sta     updatethumb_thumbpos
         lda     #$01
-        sta     LA00E
-        MGTK_CALL MGTK::UpdateThumb, $A00E
-        lda     LA00F
+        sta     updatethumb_which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        lda     updatethumb_thumbpos
         jsr     LB3B7
         jsr     LB22A
         rts
 
-LA7E8:  lda     LA1D7
+LA7E8:  lda     winfo2::vthumbpos
         clc
         adc     #$09
         cmp     $177F
         beq     LA7F8
         bcc     LA7F8
         lda     $177F
-LA7F8:  sta     LA00F
+LA7F8:  sta     updatethumb_thumbpos
         lda     #$01
-        sta     LA00E
-        MGTK_CALL MGTK::UpdateThumb, $A00E
-        lda     LA00F
+        sta     updatethumb_which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        lda     updatethumb_thumbpos
         jsr     LB3B7
         jsr     LB22A
         rts
 
-LA810:  lda     LA1D7
+LA810:  lda     winfo2::vthumbpos
         bne     LA816
         rts
 
 LA816:  sec
         sbc     #$01
-        sta     LA00F
+        sta     updatethumb_thumbpos
         lda     #$01
-        sta     LA00E
-        MGTK_CALL MGTK::UpdateThumb, $A00E
-        lda     LA00F
+        sta     updatethumb_which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        lda     updatethumb_thumbpos
         jsr     LB3B7
         jsr     LB22A
         jsr     LA85F
         jmp     LA810
 
-LA836:  lda     LA1D7
-        cmp     LA1D6
+LA836:  lda     winfo2::vthumbpos
+        cmp     winfo2::vthumbmax
         bne     LA83F
         rts
 
 LA83F:  clc
         adc     #$01
-        sta     LA00F
+        sta     updatethumb_thumbpos
         lda     #$01
-        sta     LA00E
-        MGTK_CALL MGTK::UpdateThumb, $A00E
-        lda     LA00F
+        sta     updatethumb_which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        lda     updatethumb_thumbpos
         jsr     LB3B7
         jsr     LB22A
         jsr     LA85F
         jmp     LA836
 
-LA85F:  MGTK_CALL MGTK::PeekEvent, $A00E
-        lda     LA00E
+LA85F:  MGTK_CALL MGTK::PeekEvent, event_params
+        lda     event_kind
         cmp     #$01
         beq     LA873
         cmp     #$04
@@ -1326,31 +1060,31 @@ LA85F:  MGTK_CALL MGTK::PeekEvent, $A00E
         pla
         rts
 
-LA873:  MGTK_CALL MGTK::GetEvent, $A00E
-        MGTK_CALL MGTK::FindWindow, $A00F
-        lda     LA014
-        cmp     LA1CE
+LA873:  MGTK_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_window_id
+        cmp     winfo2::window_id
         beq     LA88A
         pla
         pla
         rts
 
-LA88A:  lda     LA013
+LA88A:  lda     findwindow_which_area
         cmp     #$02
         beq     LA894
         pla
         pla
         rts
 
-LA894:  MGTK_CALL MGTK::FindControl, $A00F
-        lda     LA013
+LA894:  MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_which_ctl
         cmp     #$01
         beq     LA8A4
         pla
         pla
         rts
 
-LA8A4:  lda     LA014
+LA8A4:  lda     findcontrol_which_part
         cmp     #$03
         bcc     LA8AD
         pla
@@ -1358,21 +1092,23 @@ LA8A4:  lda     LA014
 LA8AD:  rts
 
 LA8AE:  bit     LA8EC
-        bpl     LA8BB
-        jsr     LA8BC
+        bpl     :+
+        jsr     set_pointer_cursor
         lda     #$00
         sta     LA8EC
-LA8BB:  rts
+:       rts
 
-LA8BC:  MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::SetCursor, $A064
+set_pointer_cursor:
+        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::SetCursor, pointer_cursor
         MGTK_CALL MGTK::ShowCursor
         rts
 
-LA8CF:  bit     LA8EC
+set_ip_cursor:
+        bit     LA8EC
         bmi     LA8EB
         MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::SetCursor, $A096
+        MGTK_CALL MGTK::SetCursor, insertion_point_cursor
         MGTK_CALL MGTK::ShowCursor
         lda     #$80
         sta     LA8EC
@@ -1384,9 +1120,9 @@ LA8ED:  ldx     LA231
         and     #$7F
         pha
         bit     LA211
-        bpl     LA8FE
+        bpl     :+
         jsr     LBB1D
-LA8FE:  lda     #$00
+:       lda     #$00
         sta     LA941
         lda     #$00
         sta     $08
@@ -1480,28 +1216,28 @@ LA9C2:  lda     #$FF
 LA9C7:  rts
 
 LA9C8:  .byte   0
-LA9C9:  MGTK_CALL MGTK::InitPort, $A03F
+LA9C9:  MGTK_CALL MGTK::InitPort, grafport2
         ldx     #$03
         lda     #$00
-LA9D3:  sta     LA03F,x
-        sta     LA047,x
+:       sta     grafport2,x
+        sta     grafport2++MGTK::GrafPort::maprect,x
         dex
-        bpl     LA9D3
-        copy16  #$0226, LA04B
-        copy16  #$00B9, LA04D
-        MGTK_CALL MGTK::SetPort, $A03F
+        bpl     :-
+        copy16  #$0226, grafport2+MGTK::GrafPort::maprect+MGTK::Rect::x2
+        copy16  #$00B9, grafport2+MGTK::GrafPort::maprect+MGTK::Rect::y2
+        MGTK_CALL MGTK::SetPort, grafport2
         rts
 
 LA9F7:  lda     #$00
         sta     LAA64
-LA9FC:  MGTK_CALL MGTK::GetEvent, $A00E
-        lda     LA00E
+LA9FC:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_kind
         cmp     #$02
         beq     LAA4D
-        lda     LA194
-        sta     LA00E
-        MGTK_CALL MGTK::ScreenToWindow, $A00E
-        MGTK_CALL MGTK::MoveTo, $A013
+        lda     winfo1::window_id
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A24B
         cmp     #$80
         beq     LAA2D
@@ -1513,7 +1249,7 @@ LAA2D:  lda     LAA64
         bne     LAA35
         jmp     LA9FC
 
-LAA35:  MGTK_CALL MGTK::SetPenMode, $A008
+LAA35:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A24B
         lda     LAA64
         clc
@@ -1525,21 +1261,21 @@ LAA4D:  lda     LAA64
         beq     LAA55
         return  #$FF
 
-LAA55:  MGTK_CALL MGTK::SetPenMode, $A008
+LAA55:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A24B
         return  #$00
 
 LAA64:  .byte   0
 LAA65:  lda     #$00
         sta     LAAD2
-LAA6A:  MGTK_CALL MGTK::GetEvent, $A00E
-        lda     LA00E
+LAA6A:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_kind
         cmp     #$02
         beq     LAABB
-        lda     LA194
-        sta     LA00E
-        MGTK_CALL MGTK::ScreenToWindow, $A00E
-        MGTK_CALL MGTK::MoveTo, $A013
+        lda     winfo1::window_id
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A25B
         cmp     #$80
         beq     LAA9B
@@ -1551,7 +1287,7 @@ LAA9B:  lda     LAAD2
         bne     LAAA3
         jmp     LAA6A
 
-LAAA3:  MGTK_CALL MGTK::SetPenMode, $A008
+LAAA3:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A25B
         lda     LAAD2
         clc
@@ -1563,21 +1299,21 @@ LAABB:  lda     LAAD2
         beq     LAAC3
         return  #$FF
 
-LAAC3:  MGTK_CALL MGTK::SetPenMode, $A008
+LAAC3:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A25B
         return  #$01
 
 LAAD2:  .byte   0
 LAAD3:  lda     #$00
         sta     LAB40
-LAAD8:  MGTK_CALL MGTK::GetEvent, $A00E
-        lda     LA00E
+LAAD8:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_kind
         cmp     #$02
         beq     LAB29
-        lda     LA194
-        sta     LA00E
-        MGTK_CALL MGTK::ScreenToWindow, $A00E
-        MGTK_CALL MGTK::MoveTo, $A013
+        lda     winfo1::window_id
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A253
         cmp     #$80
         beq     LAB09
@@ -1589,7 +1325,7 @@ LAB09:  lda     LAB40
         bne     LAB11
         jmp     LAAD8
 
-LAB11:  MGTK_CALL MGTK::SetPenMode, $A008
+LAB11:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A253
         lda     LAB40
         clc
@@ -1601,21 +1337,21 @@ LAB29:  lda     LAB40
         beq     LAB31
         return  #$FF
 
-LAB31:  MGTK_CALL MGTK::SetPenMode, $A008
+LAB31:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A253
         return  #$00
 
 LAB40:  .byte   0
 LAB41:  lda     #$00
         sta     LABAE
-LAB46:  MGTK_CALL MGTK::GetEvent, $A00E
-        lda     LA00E
+LAB46:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_kind
         cmp     #$02
         beq     LAB97
-        lda     LA194
-        sta     LA00E
-        MGTK_CALL MGTK::ScreenToWindow, $A00E
-        MGTK_CALL MGTK::MoveTo, $A013
+        lda     winfo1::window_id
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A263
         cmp     #$80
         beq     LAB77
@@ -1627,7 +1363,7 @@ LAB77:  lda     LABAE
         bne     LAB7F
         jmp     LAB46
 
-LAB7F:  MGTK_CALL MGTK::SetPenMode, $A008
+LAB7F:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A263
         lda     LABAE
         clc
@@ -1639,21 +1375,21 @@ LAB97:  lda     LABAE
         beq     LAB9F
         return  #$FF
 
-LAB9F:  MGTK_CALL MGTK::SetPenMode, $A008
+LAB9F:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A263
         return  #$01
 
 LABAE:  .byte   0
 LABAF:  lda     #$00
         sta     LAC1C
-LABB4:  MGTK_CALL MGTK::GetEvent, $A00E
-        lda     LA00E
+LABB4:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_kind
         cmp     #$02
         beq     LAC05
-        lda     LA194
-        sta     LA00E
-        MGTK_CALL MGTK::ScreenToWindow, $A00E
-        MGTK_CALL MGTK::MoveTo, $A013
+        lda     winfo1::window_id
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A243
         cmp     #$80
         beq     LABE5
@@ -1665,7 +1401,7 @@ LABE5:  lda     LAC1C
         bne     LABED
         jmp     LABB4
 
-LABED:  MGTK_CALL MGTK::SetPenMode, $A008
+LABED:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A243
         lda     LAC1C
         clc
@@ -1677,14 +1413,14 @@ LAC05:  lda     LAC1C
         beq     LAC0D
         return  #$FF
 
-LAC0D:  MGTK_CALL MGTK::SetPenMode, $A008
+LAC0D:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A243
         return  #$00
 
 LAC1C:  .byte   0
-LAC1D:  lda     LA010
+LAC1D:  lda     event_modifiers
         beq     LAC5B
-        lda     LA00F
+        lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_LEFT
         bne     LAC2E
@@ -1714,7 +1450,7 @@ LAC53:  bit     LA47F
         bmi     LACAA
         jmp     LADB2
 
-LAC5B:  lda     LA00F
+LAC5B:  lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_LEFT
         bne     LAC67
@@ -1742,9 +1478,9 @@ LAC83:  bit     LA47F
 
 LAC8B:  cmp     #$09
         bne     LACAD
-        lda     LA194
+        lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A263
         MGTK_CALL MGTK::PaintRect, $A263
         jsr     LA942
@@ -1759,9 +1495,9 @@ LACAD:  cmp     #$0F
         bmi     LACBF
         jmp     LAD11
 
-LACBF:  lda     LA194
+LACBF:  lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A253
         MGTK_CALL MGTK::PaintRect, $A253
         jsr     LA8ED
@@ -1769,9 +1505,9 @@ LACBF:  lda     LA194
 
 LACDD:  cmp     #$03
         bne     LACFF
-        lda     LA194
+        lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A243
         MGTK_CALL MGTK::PaintRect, $A243
         jsr     LA965
@@ -1797,9 +1533,9 @@ LAD15:  lda     LA231
         bmi     LAD20
         rts
 
-LAD20:  lda     LA194
+LAD20:  lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A24B
         MGTK_CALL MGTK::PaintRect, $A24B
         jsr     LBA5E
@@ -1807,9 +1543,9 @@ LAD20:  lda     LA194
         jsr     LA9C9
         rts
 
-LAD42:  lda     LA194
+LAD42:  lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A25B
         MGTK_CALL MGTK::PaintRect, $A25B
         jsr     LA387
@@ -1977,82 +1713,87 @@ LAE91:  sty     $AE9F
 
 LAEA6:  rts
 
-        ldx     #$03
-LAEA9:  lda     LA00F,x
-        sta     LAF3F,x
+.proc detect_double_click
+
+        ldx     #.sizeof(MGTK::Point)-1
+:       copy    event_coords,x, xcoord,x
         dex
-        bpl     LAEA9
-        lda     LA063
-        sta     LAF3E
-LAEB8:  dec     LAF3E
+        bpl     :-
+        lda     double_click_counter_init
+        sta     counter
+LAEB8:  dec     counter
         beq     LAEF5
-        MGTK_CALL MGTK::PeekEvent, $A00E
-        jsr     LAEF8
+        MGTK_CALL MGTK::PeekEvent, event_params
+        jsr     check_delta
         bmi     LAEF5
         lda     #$FF
         sta     LAF45
-        lda     LA00E
-        sta     LAF44
+        lda     event_kind      ; TODO: wrong ???
+        sta     kind
         cmp     #$00
         beq     LAEB8
         cmp     #$04
         beq     LAEB8
         cmp     #$02
         bne     LAEE8
-        MGTK_CALL MGTK::GetEvent, $A00E
+        MGTK_CALL MGTK::GetEvent, event_params
         jmp     LAEB8
 
 LAEE8:  cmp     #$01
         bne     LAEF5
-        MGTK_CALL MGTK::GetEvent, $A00E
+        MGTK_CALL MGTK::GetEvent, event_params
         return  #$00
 
 LAEF5:  return  #$FF
 
-LAEF8:  lda     LA00F
+check_delta:
+        lda     event_xcoord
         sec
-        sbc     LAF3F
-        sta     LAF43
-        lda     LA010
-        sbc     LAF40
+        sbc     xcoord
+        sta     mouse_delta
+        lda     event_xcoord+1
+        sbc     xcoord+1
         bpl     LAF14
-        lda     LAF43
+        lda     mouse_delta
         cmp     #$FB
         bcs     LAF1B
 LAF11:  return  #$FF
 
-LAF14:  lda     LAF43
+LAF14:  lda     mouse_delta
         cmp     #$05
         bcs     LAF11
-LAF1B:  lda     LA011
+LAF1B:  lda     event_ycoord
         sec
-        sbc     LAF41
-        sta     LAF43
-        lda     LA012
-        sbc     LAF42
+        sbc     ycoord
+        sta     mouse_delta
+        lda     event_ycoord+1
+        sbc     ycoord+1
         bpl     LAF34
-        lda     LAF43
+        lda     mouse_delta
         cmp     #$FC
         bcs     LAF3B
-LAF34:  lda     LAF43
+LAF34:  lda     mouse_delta
         cmp     #$04
         bcs     LAF11
 LAF3B:  return  #$00
 
-LAF3E:  .byte   0
-LAF3F:  .byte   0
-LAF40:  .byte   0
-LAF41:  .byte   0
-LAF42:  .byte   0
-LAF43:  .byte   0
-LAF44:  .byte   0
-LAF45:  .byte   0
+counter:
+        .byte   0
+xcoord: .word   0
+ycoord: .word   0
 
-LAF46:  MGTK_CALL MGTK::OpenWindow, $A194
-        MGTK_CALL MGTK::OpenWindow, $A1CE
-        lda     LA194
+mouse_delta:
+        .byte   0
+
+kind:   .byte   0
+LAF45:  .byte   0
+.endproc
+
+LAF46:  MGTK_CALL MGTK::OpenWindow, winfo1
+        MGTK_CALL MGTK::OpenWindow, winfo2
+        lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, $A233
         MGTK_CALL MGTK::FrameRect, $A24B
         MGTK_CALL MGTK::FrameRect, $A253
@@ -2070,26 +1811,26 @@ LAF46:  MGTK_CALL MGTK::OpenWindow, $A194
         rts
 
 LAFA1:  MGTK_CALL MGTK::MoveTo, $A273
-        addr_call LAFE7, $A277
+        addr_call draw_string, str_ok_btn
         rts
 
 LAFAF:  MGTK_CALL MGTK::MoveTo, $A291
-        addr_call LAFE7, $A295
+        addr_call draw_string, str_open_btn
         rts
 
 LAFBD:  MGTK_CALL MGTK::MoveTo, $A287
-        addr_call LAFE7, $A28B
+        addr_call draw_string, str_close_btn
         rts
 
 LAFCB:  MGTK_CALL MGTK::MoveTo, $A29A
-        addr_call LAFE7, $A29E
+        addr_call draw_string, str_cancel_btn
         rts
 
 LAFD9:  MGTK_CALL MGTK::MoveTo, $A2AB
-        addr_call LAFE7, $A2AF
+        addr_call draw_string, str_change_drive_btn
         rts
 
-LAFE7:  stax    $06
+draw_string:  stax    $06
         ldy     #$00
         lda     ($06),y
         sta     $08
@@ -2124,7 +1865,7 @@ LB03F:  stax    $06
         MGTK_CALL MGTK::MoveTo, $A2C0
         lda     $06
         ldx     $07
-        jsr     LAFE7
+        jsr     draw_string
         rts
 
 LB051:  ldx     LA3C6
@@ -2273,10 +2014,10 @@ LB17E:  ldy     #$00
         ldy     #$00
         lda     ($06),y
         tay
-LB1B7:  lda     ($06),y
+:       lda     ($06),y
         sta     ($08),y
         dey
-        bpl     LB1B7
+        bpl     :-
         inc     LB224
         inc     LB225
 LB1C4:  inc     LB226
@@ -2285,10 +2026,10 @@ LB1C4:  inc     LB226
         bne     LB1F2
 LB1CF:  yax_call LAE91, $CC, $A3B4
         bit     LA447
-        bpl     LB1E3
+        bpl     :+
         lda     LA448
         sta     $177F
-LB1E3:  jsr     LB453
+:       jsr     LB453
         jsr     LB65E
         lda     LB0D5
         bpl     LB1F0
@@ -2323,7 +2064,7 @@ LB227:  .byte   0
 LB228:  .byte   0
 LB229:  .byte   0
 LB22A:  jsr     LA9C9
-        lda     LA1CE
+        lda     winfo2::window_id
         jsr     LB443
         MGTK_CALL MGTK::PaintRect, $A1EA
         lda     #$10
@@ -2360,21 +2101,21 @@ LB257:  MGTK_CALL MGTK::MoveTo, $A228
         adc     #$18
         tax
         tya
-        jsr     LAFE7
+        jsr     draw_string
         ldx     LB2D0
         lda     $1780,x
         bpl     LB2A7
         lda     #$01
         sta     LA228
         MGTK_CALL MGTK::MoveTo, $A228
-        addr_call LAFE7, $A22E
+        addr_call draw_string, $A22E
         lda     #$10
         sta     LA228
 LB2A7:  lda     LB2D0
         cmp     LA231
         bne     LB2B8
         jsr     LB404
-        lda     LA1CE
+        lda     winfo2::window_id
         jsr     LB443
 LB2B8:  inc     LB2D0
         add16   LA22A, #$0008, LA22A
@@ -2422,29 +2163,30 @@ LB30B:  sta     LB34F
         lda     $177F
         cmp     #$0A
         bcs     LB326
-        copy16  #$0001, LA00E
-        MGTK_CALL MGTK::ActivateCtl, $A00E
+        copy    #$01, activatectl_which_ctl
+        copy    #$00, activatectl_activate
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
 
 LB326:  lda     $177F
-        sta     LA1D6
+        sta     winfo2::vthumbmax
         lda     #$01
-        sta     LA00E
-        sta     LA00F
-        MGTK_CALL MGTK::ActivateCtl, $A00E
+        sta     activatectl_which_ctl
+        sta     activatectl_activate
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
         lda     LB34F
-        sta     LA00F
+        sta     updatethumb_thumbpos
         jsr     LB3B7
         lda     #$01
-        sta     LA00E
-        MGTK_CALL MGTK::UpdateThumb, $A00E
+        sta     updatethumb_which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
 LB34F:  .byte   0
-LB350:  lda     LA194
+LB350:  lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::PaintRect, $A23B
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         copy16  #$A3C7, $06
         ldy     #$00
         lda     ($06),y
@@ -2470,8 +2212,8 @@ LB388:  inx
         stx     $0220
         addr_call LB2D1, $0220
         MGTK_CALL MGTK::MoveTo, $A2BC
-        addr_call LAFE7, $A2CA
-        addr_call LAFE7, $0220
+        addr_call draw_string, str_disk
+        addr_call draw_string, $0220
         jsr     LA9C9
         rts
 
@@ -2501,15 +2243,15 @@ LB3DA:  ldx     #$00
         rol     LB403
         asl     a
         rol     LB403
-        sta     LA1EC
+        sta     winfo2::y1
         ldx     LB403
-        stx     LA1ED
+        stx     winfo2::y1+1
         clc
         adc     #$46
-        sta     LA1F0
+        sta     winfo2::y2
         lda     LB403
         adc     #$00
-        sta     LA1F1
+        sta     winfo2::y2+1
         rts
 
 LB403:  .byte   0
@@ -2530,23 +2272,24 @@ LB404:  ldx     #$00
         lda     LB442
         adc     #$00
         sta     LA227
-        lda     LA1CE
+        lda     winfo2::window_id
         jsr     LB443
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, $A220
         jsr     LA9C9
         rts
 
 LB442:  .byte   0
-LB443:  sta     LA018
-        MGTK_CALL MGTK::GetWinPort, $A018
-        MGTK_CALL MGTK::SetPort, $A01B
+LB443:  sta     winport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::SetPort, grafport
         rts
 
-LB453:  ldax    #$0F5A
-LB457:  sta     LB537,x
+LB453:  lda     #$5A
+        ldx     #$0F
+:       sta     LB537,x
         dex
-        bpl     LB457
+        bpl     :-
         lda     #$00
         sta     LB534
         sta     LB533
@@ -2578,9 +2321,9 @@ LB497:  lda     LB533
         sta     LB535
         ldx     #$0F
         lda     #$20
-LB4A1:  sta     LB537,x
+:       sta     LB537,x
         dex
-        bpl     LB4A1
+        bpl     :-
         ldy     LB536
 LB4AA:  lda     ($06),y
         sta     LB536,y
@@ -2599,9 +2342,9 @@ LB4C0:  lda     LB535
         ora     #$80
         sta     ($06),y
         ldax    #$0F5A
-LB4D2:  sta     LB537,x
+:       sta     LB537,x
         dex
-        bpl     LB4D2
+        bpl     :-
         ldx     LB534
         lda     LB535
         sta     LB547,x
@@ -2630,10 +2373,10 @@ LB50F:  dex
         ldx     $177F
         beq     LB521
         dex
-LB518:  lda     LB547,x
+:       lda     LB547,x
         sta     $1780,x
         dex
-        bpl     LB518
+        bpl     :-
 LB521:  rts
 
 LB522:  jsr     LB5C6
@@ -2901,10 +2644,10 @@ LB691:  .byte   0
         ldy     #$00
         lda     ($06),y
         tay
-LB69B:  lda     ($06),y
+:       lda     ($06),y
         sta     LB6F2,y
         dey
-        bpl     LB69B
+        bpl     :-
         lda     #$00
         sta     LB6F1
         lda     #$00
@@ -2971,7 +2714,7 @@ LB707:  cmp     #$09
         sbc     #$08
         rts
 
-LB70F:  lda     LA194
+LB70F:  lda     winfo1::window_id
         jsr     LB443
         jsr     LBB31
         stax    $06
@@ -2993,25 +2736,25 @@ LB749:  copy16  #$A210, $06
         jsr     LA9C9
         rts
 
-LB760:  lda     LA194
+LB760:  lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::PaintRect, $A2D2
-        MGTK_CALL MGTK::SetPenMode, $A008
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, $A2D2
         MGTK_CALL MGTK::MoveTo, $A2DA
         lda     LA10C
         beq     LB78A
-        addr_call LAFE7, $A10C
-LB78A:  addr_call LAFE7, $A150
-        addr_call LAFE7, $A219
+        addr_call draw_string, LA10C
+LB78A:  addr_call draw_string, $A150
+        addr_call draw_string, $A219
         rts
 
-LB799:  lda     LA194
-        sta     LA00E
-        MGTK_CALL MGTK::ScreenToWindow, $A00E
-        lda     LA194
+LB799:  lda     winfo1::window_id
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::MoveTo, $A013
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, $A2D2
         cmp     #$80
         beq     LB7BC
@@ -3077,7 +2820,7 @@ LB85D:  dey
         sty     LA150
         jmp     LB8E3
 
-LB864:  copy16  #$A10C, $06
+LB864:  copy16  #LA10C, $06
         lda     LA10C
         sta     $08
 LB871:  MGTK_CALL MGTK::TextWidth, $0006
@@ -3098,7 +2841,7 @@ LB8A3:  cpx     LA10C
         inx
         iny
         lda     LA10C,x
-        sta     LA0C9,y
+        sta     LA0C8+1,y
         jmp     LB8A3
 
 LB8B3:  iny
@@ -3115,11 +2858,11 @@ LB8BC:  cpx     LA150
 
 LB8CC:  sty     LA0C8
         lda     LA210
-        sta     LA0C9
-LB8D5:  lda     LA0C8,y
+        sta     LA0C8+1
+:       lda     LA0C8,y
         sta     LA150,y
         dey
-        bpl     LB8D5
+        bpl     :-
         lda     $08
         sta     LA10C
 LB8E3:  jsr     LB760
@@ -3145,11 +2888,11 @@ LB8FC:  lda     LB8FB
         inc     LA10C
         stax    $06
         copy16  LA2DC, $08
-        lda     LA194
+        lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
-        addr_call LAFE7, $A217
-        addr_call LAFE7, $A150
+        addr_call draw_string, $A217
+        addr_call draw_string, $A150
         jsr     LBB5B
         rts
 
@@ -3161,11 +2904,11 @@ LB941:  dec     LA10C
         jsr     LBB31
         stax    $06
         copy16  LA2DC, $08
-        lda     LA194
+        lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
-        addr_call LAFE7, $A150
-        addr_call LAFE7, $A219
+        addr_call draw_string, $A150
+        addr_call draw_string, $A219
         jsr     LBB5B
         rts
 
@@ -3177,23 +2920,23 @@ LB979:  ldx     LA150
         cpx     #$01
         beq     LB98B
 LB980:  lda     LA150,x
-        sta     LA151,x
+        sta     LA150+1,x
         dex
         cpx     #$01
         bne     LB980
 LB98B:  ldx     LA10C
         lda     LA10C,x
-        sta     LA152
+        sta     LA150+2
         dec     LA10C
         inc     LA150
         jsr     LBB31
         stax    $06
         copy16  LA2DC, $08
-        lda     LA194
+        lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
-        addr_call LAFE7, $A150
-        addr_call LAFE7, $A219
+        addr_call draw_string, $A150
+        addr_call draw_string, $A219
         jsr     LBB5B
         rts
 
@@ -3204,25 +2947,25 @@ LB9C9:  lda     LA150
 
 LB9D1:  ldx     LA10C
         inx
-        lda     LA152
+        lda     LA150+2
         sta     LA10C,x
         inc     LA10C
         ldx     LA150
         cpx     #$03
         bcc     LB9F3
         ldx     #$02
-LB9E7:  lda     LA151,x
+LB9E7:  lda     LA150+1,x
         sta     LA150,x
         inx
         cpx     LA150
         bne     LB9E7
 LB9F3:  dec     LA150
-        lda     LA194
+        lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $A2DA
-        addr_call LAFE7, $A10C
-        addr_call LAFE7, $A150
-        addr_call LAFE7, $A219
+        addr_call draw_string, LA10C
+        addr_call draw_string, $A150
+        addr_call draw_string, $A219
         jsr     LBB5B
         rts
 
@@ -3243,14 +2986,14 @@ LBA2D:  iny
         bne     LBA2D
 LBA3A:  sty     LA10C
 LBA3D:  lda     LA10C,y
-        sta     LA151,y
+        sta     LA150+1,y
         dey
         bne     LBA3D
         ldx     LA10C
         inx
         stx     LA150
         lda     #$06
-        sta     LA151
+        sta     LA150+1
         lda     #$00
         sta     LA10C
         jsr     LB760
@@ -3279,7 +3022,7 @@ LBA6B:  inx
 LBA8C:  stax    $06
         ldx     LA10C
         lda     #'/'
-        sta     LA10D,x
+        sta     LA10C+1,x
         inc     LA10C
         ldy     #$00
         lda     ($06),y
@@ -3339,19 +3082,19 @@ LBAD0:  copy16  #$1800, $06
 LBB07:  .byte   0
         .byte   0
         ldx     LA3C7
-LBB0C:  lda     LA3C7,x
+:       lda     LA3C7,x
         sta     LA10C,x
         dex
-        bpl     LBB0C
-        addr_call LB2D1, $A10C
+        bpl     :-
+        addr_call LB2D1, LA10C
         rts
 
 LBB1D:  ldx     LA3C7
-LBB20:  lda     LA3C7,x
+:       lda     LA3C7,x
         sta     LA10C,x
         dex
-        bpl     LBB20
-        addr_call LB2D1, $A10C
+        bpl     :-
+        addr_call LB2D1, LA10C
         rts
 
 LBB31:  lda     #$00
@@ -3360,7 +3103,7 @@ LBB31:  lda     #$00
         lda     LA10C
         beq     LBB4C
         sta     $08
-        copy16  #$A10D, $06
+        copy16  #LA10C+1, $06
         MGTK_CALL MGTK::TextWidth, $0006
 LBB4C:  lda     $09
         clc
@@ -3373,10 +3116,10 @@ LBB4C:  lda     $09
         rts
 
 LBB5B:  ldx     LA10C
-LBB5E:  lda     LA10C,x
+:       lda     LA10C,x
         sta     LA0C8,x
         dex
-        bpl     LBB5E
+        bpl     :-
         lda     LA231
         sta     LBBE2
         bmi     LBBA0
