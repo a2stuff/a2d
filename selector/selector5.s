@@ -285,13 +285,19 @@ screentowindow_windowy := screentowindow_params + 7
         .assert screentowindow_screenx = event_xcoord, error, "param mismatch"
         .assert screentowindow_screeny = event_ycoord, error, "param mismatch"
 
-        .byte   0
+findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
+findwindow_mousex := findwindow_params + 0
+findwindow_mousey := findwindow_params + 2
+findwindow_which_area := findwindow_params + 4
+findwindow_window_id := findwindow_params + 5
+        .assert findwindow_mousex = event_xcoord, error, "param mismatch"
+        .assert findwindow_mousey = event_ycoord, error, "param mismatch"
 
-.params update_params
-window_id:
-        .byte   0
-.endparams
+beginupdate_params := * + 1
+beginupdate_window_id := beginupdate_params + 0
 
+        .byte   0
+        .byte   0
 L8F7B:  .byte   0
         .byte   0
         .byte   0
@@ -336,45 +342,13 @@ L8F81:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-L8FA7:  .byte   0
-        .byte   $AA
-        .byte   $8F
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+.params getwinport_params
+window_id:     .byte   0
+a_grafport:    .addr   grafport
+.endparams
+
+grafport:       .tag    MGTK::GrafPort
 
 .params startdesktop_params
 machine:        .byte   $06
@@ -753,7 +727,7 @@ L92D6:  MGTK_CALL MGTK::GetEvent, event_params
         ;; Key Down
         bit     desktop_available_flag
         bmi     not_desktop
-        lda     update_params::window_id
+        lda     event_key
         and     #CHAR_MASK
         cmp     #'Q'
         beq     :+
@@ -790,7 +764,7 @@ L9326:  MGTK_CALL MGTK::PeekEvent, event_params
 L9339:  jsr     L933F
         jmp     L9326
 
-L933F:  MGTK_CALL MGTK::BeginUpdate, $8F7A
+L933F:  MGTK_CALL MGTK::BeginUpdate, beginupdate_params
         bne     L9351
         jsr     L9352
         MGTK_CALL MGTK::EndUpdate
@@ -826,13 +800,13 @@ L9377   := * + 2
 
 L937B:  lda     L8F7B
         bne     L938C
-        lda     update_params::window_id
+        lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     L93A5
 L9389:  jmp     L95F5
 
-L938C:  lda     update_params::window_id
+L938C:  lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     L93A5
@@ -1067,7 +1041,7 @@ L95B6:  yax_call MLI_WRAPPER, OPEN, open_params3
 
 L95F5:  lda     winfo::window_id
         jsr     L9A15
-        lda     update_params::window_id
+        lda     event_key
         and     #CHAR_MASK
         cmp     #$1C            ; ??? CHAR_ESCAPE + 1 ?
         bcs     L9607
@@ -1590,9 +1564,9 @@ L9A10:  dey
         jmp     L99E8
 
         .byte   0
-L9A15:  sta     L8FA7
-        MGTK_CALL MGTK::GetWinPort, $8FA7
-        MGTK_CALL MGTK::SetPort, $8FAA
+L9A15:  sta     getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, grafport
         rts
 
 L9A25:  ldx     #$00
