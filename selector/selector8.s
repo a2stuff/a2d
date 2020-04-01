@@ -1231,22 +1231,13 @@ rect1:  DEFINE_RECT $14, $31, $78, $3C
         .byte   $00
         .byte   $3B
         .byte   $00
-        .byte   $04
-        .byte   $00
-        .byte   $02
-        .byte   $00
-        .byte   $5C
-        .byte   $01,$44
-        .byte   $00
-        .byte   $05,$00
-        .byte   $03
-        .byte   $00
-        .byte   $5B
-        .byte   $01,$43
-        .byte   $00
-        .byte   $64
-        .byte   $00
-        .byte   $10,$00
+
+rect_frame1:
+        DEFINE_RECT 4, 2, 348, 68
+rect_frame2:
+        DEFINE_RECT 5, 3, 347, 67
+
+pos1:   DEFINE_POINT 100, 16
 
 
         PASCAL_STRING "Down load in the RAMCard"
@@ -1263,15 +1254,9 @@ LA8D1:  DEFINE_POINT 20, 40
         .byte   $5A
         .byte   $01,$20
         .byte   $00
-        .byte   $06,$00
-        .byte   $18
-        .byte   $00
-        .byte   $5A
-        .byte   $01,$42
 
+rect2:  DEFINE_RECT 6, 24, 346, 66
 
-
-        .byte   0
         .byte   $64
         .byte   0
         .byte   $32
@@ -1320,16 +1305,16 @@ LAA01:  MGTK_CALL MGTK::OpenWindow, winfo
         lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::FrameRect, $A8A0
-        MGTK_CALL MGTK::FrameRect, $A8A8
-        MGTK_CALL MGTK::MoveTo, $A8B0
+        MGTK_CALL MGTK::FrameRect, rect_frame1
+        MGTK_CALL MGTK::FrameRect, rect_frame2
+        MGTK_CALL MGTK::MoveTo, pos1
         addr_call DrawString, $A8B4
         rts
 
 LAA2D:  lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
-        MGTK_CALL MGTK::PaintRect, $A8E6
+        MGTK_CALL MGTK::PaintRect, rect2
 LAA3F:  dec     LA759
         lda     LA759
         cmp     #$FF
@@ -1368,7 +1353,7 @@ LAAC8:  jmp     LAC54
 LAACB:  lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
-        MGTK_CALL MGTK::PaintRect, $A8E6
+        MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::MoveTo, LA8CD
         addr_call DrawString, $A914
         MGTK_CALL MGTK::MoveTo, LA8D1
@@ -1383,7 +1368,7 @@ LAACB:  lda     winfo::window_id
 LAB16:  lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
-        MGTK_CALL MGTK::PaintRect, $A8E6
+        MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::MoveTo, LA8CD
         addr_call DrawString, $A962
         MGTK_CALL MGTK::MoveTo, LA8D1
@@ -1488,9 +1473,9 @@ LAC5B:  MGTK_CALL MGTK::CloseWindow, winfo
 LAC62:  copy16  LA759, LACE2
         ldx     #$07
         lda     #$20
-LAC72:  sta     LACE6,x
+:       sta     LACE6,x
         dex
-        bne     LAC72
+        bne     :-
         lda     #$00
         sta     LACE5
         ldy     #$00
