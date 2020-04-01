@@ -148,27 +148,32 @@ MGTK:
 
 ;;; Application entry point
 
-START:  jmp     L912A
+START:  jmp     entry
 
-pencopy:        .byte   0
-penOR:          .byte   1
-penXOR:         .byte   2
-penBIC:         .byte   3
-notpencopy:     .byte   4
-notpenOR:       .byte   5
-notpenXOR:      .byte   6
-notpenBIC:      .byte   7
+pencopy:        .byte   MGTK::pencopy
+penOR:          .byte   MGTK::penOR
+penXOR:         .byte   MGTK::penXOR
+penBIC:         .byte   MGTK::penBIC
+notpencopy:     .byte   MGTK::notpencopy
+notpenOR:       .byte   MGTK::notpenOR
+notpenXOR:      .byte   MGTK::notpenXOR
+notpenBIC:      .byte   MGTK::notpenBIC
 
 L8E0B:
         .byte   $00
-L8E0C:
+
+.params menukey_params
+menu_id:
         .byte   $00
-L8E0D:
+menu_item:
         .byte   $00
-L8E0E:
+which_key:
         .byte   $00
-L8E0F:
+key_mods:
         .byte   $00
+.endparams
+
+
         .byte   $00
         .byte   $00
         .byte   $00
@@ -281,7 +286,12 @@ screentowindow_windowy := screentowindow_params + 7
         .assert screentowindow_screeny = event_ycoord, error, "param mismatch"
 
         .byte   0
-L8F7A:  .byte   0
+
+.params update_params
+window_id:
+        .byte   0
+.endparams
+
 L8F7B:  .byte   0
         .byte   0
         .byte   0
@@ -377,7 +387,11 @@ savearea:       .addr   $800
 savesize:       .word   $800
 .endparams
 
-L8FD9:  .byte   $01, $01
+.params winfo
+window_id:
+        .byte   $01
+        .byte   $01
+        .addr   0
         .byte   0
         .byte   0
         .byte   0
@@ -386,50 +400,29 @@ L8FD9:  .byte   $01, $01
         .byte   0
         .byte   0
         .byte   0
-        .byte   0
-        .byte   0
+        .word   150
+        .word   50
+        .word   500
+        .word   140
 
+viewloc:.word   25, 40
+        .word   $2000
+        .byte   $80
+        .byte   $00
 
-        .byte   $96,$00
-        .byte   $32
-        .byte   $00
-        .byte   $F4
-        .byte   $01,$8C
-        .byte   $00
-        .byte   $19,$00,$28
-        .byte   $00
-        .byte   $00
-        .byte   $20,$80,$00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $F4
-        .byte   $01,$6E
+        .word   0, 0, 500, 110
 
-
-        .byte   0
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
+        .res    8, $FF
         .byte   $FF
         .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        .word   0, 0
         .byte   1, 1
         .byte   0
         .byte   $7F
+        .word   $8800
         .byte   0
-        .byte   $88
         .byte   0
-        .byte   0
+.endparams
 
         DEFINE_RECT 4, 2, 496, 108
 
@@ -495,18 +488,11 @@ L9084:
 L9085   := * + 1
         .byte   $84,$00
 L9086:
-L9087   := * + 1
-L9088   := * + 2
-        .byte   $1D,$00,$00
+        .byte   $1D
+L9087:  .byte   $00
 
+rect1:  DEFINE_RECT 0, 0, 0, 0, rect1
 
-L9089:  .byte   0
-L908A:  .byte   0
-L908B:  .byte   0
-L908C:  .byte   0
-L908D:  .byte   0
-L908E:  .byte   0
-L908F:  .byte   0
         .byte   0
         .byte   $7F
 
@@ -570,7 +556,10 @@ L9116:  .byte   0
 L9127:  .byte   0
 L9128:  .byte   0
 L9129:  .byte   0
-L912A:  cli
+
+;;; ============================================================
+
+entry:  cli
         lda     #$FF
         sta     L910E
         jsr     L97F7
@@ -726,7 +715,7 @@ L920D:  lda     L8F71
         beq     L929A
         lda     #$80
 L929A:  sta     desktop_available_flag
-        MGTK_CALL MGTK::OpenWindow, $8FD9
+        MGTK_CALL MGTK::OpenWindow, winfo
         jsr     L9914
         lda     #$00
         sta     L9112
@@ -737,10 +726,14 @@ L929A:  sta     desktop_available_flag
         sta     L910E
         jsr     L97F7
         jsr     L97C6
-        jmp     L92C2
+        jmp     event_loop
 
 L92C1:  .byte   0
-L92C2:  bit     L9112
+
+;;; ============================================================
+
+event_loop:
+        bit     L9112
         bpl     L92D6
         dec     L9110
         bne     L92D6
@@ -750,16 +743,16 @@ L92C2:  bit     L9112
         sta     L9112
 L92D6:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #$01
+        cmp     #MGTK::EventKind::button_down
         bne     L92E9
         jsr     L9451
-        jmp     L92C2
+        jmp     event_loop
 
-L92E9:  cmp     #$03
-        bne     L931C
+L92E9:  cmp     #MGTK::EventKind::key_down
+        bne     not_key
         bit     desktop_available_flag
         bmi     L9316
-        lda     L8F7A
+        lda     update_params::window_id
         and     #CHAR_MASK
         cmp     #'Q'
         beq     L92FF
@@ -774,12 +767,17 @@ L92FF:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
 L9313:  jmp     L95B6
 
 L9316:  jsr     L937B
-        jmp     L92C2
+        jmp     event_loop
 
-L931C:  cmp     #$06
-        bne     L9323
+        ;; --------------------------------------------------
+
+not_key:
+        cmp     #MGTK::EventKind::update
+        bne     not_update
         jsr     L9339
-L9323:  jmp     L92C2
+
+not_update:
+        jmp     event_loop
 
 L9326:  MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_kind
@@ -825,13 +823,13 @@ L9377   := * + 2
 
 L937B:  lda     L8F7B
         bne     L938C
-        lda     L8F7A
+        lda     update_params::window_id
         and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     L93A5
 L9389:  jmp     L95F5
 
-L938C:  lda     L8F7A
+L938C:  lda     update_params::window_id
         and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     L93A5
@@ -843,20 +841,20 @@ L938C:  lda     L8F7A
         bcs     L9389
         cmp     #'1'
         bcc     L9389
-L93A5:  sta     L8E0E
+L93A5:  sta     menukey_params::which_key
         lda     L8F7B
-        sta     L8E0F
-        MGTK_CALL MGTK::MenuKey, $8E0C
-L93B4:  ldx     L8E0D
+        sta     menukey_params::key_mods
+        MGTK_CALL MGTK::MenuKey, menukey_params::menu_id
+L93B4:  ldx     menukey_params::menu_item
         beq     L93BE
-        ldx     L8E0C
+        ldx     menukey_params::menu_id
         bne     L93C1
-L93BE:  jmp     L92C2
+L93BE:  jmp     event_loop
 
 L93C1:  dex
         lda     L9377,x
         tax
-        ldy     L8E0D
+        ldy     menukey_params::menu_item
         dey
         tya
         asl     a
@@ -929,13 +927,13 @@ L946A:  cmp     #$02
 L9472:  rts
 
 L9473:  lda     L8F7F
-        cmp     L8FD9
+        cmp     winfo::window_id
         beq     L947C
         rts
 
-L947C:  lda     L8FD9
+L947C:  lda     winfo::window_id
         jsr     L9A15
-        lda     L8FD9
+        lda     winfo::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
@@ -1063,9 +1061,9 @@ L95B6:  yax_call MLI_WRAPPER, OPEN, open_params3
         yax_call MLI_WRAPPER, CLOSE, close_params
         jmp     L2000
 
-L95F5:  lda     L8FD9
+L95F5:  lda     winfo::window_id
         jsr     L9A15
-        lda     L8F7A
+        lda     update_params::window_id
         and     #CHAR_MASK
         cmp     #$1C            ; ??? CHAR_ESCAPE + 1 ?
         bcs     L9607
@@ -1101,7 +1099,7 @@ L962E:  lda     L97BC
 
 L9638:  cmp     #CHAR_RETURN
         bne     L9658
-        lda     L8FD9
+        lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_btn
@@ -1471,7 +1469,7 @@ L9904:  dec     DEVCNT
 
 ;;; ============================================================
 
-L9914:  lda     L8FD9
+L9914:  lda     winfo::window_id
         jsr     L9A15
 L991A:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::SetPenSize, $9055
@@ -1700,7 +1698,7 @@ L9AD5:  pla
         lda     #$20
         sta     L9115
         sta     L9116
-L9AE5:  lda     L8FD9
+L9AE5:  lda     winfo::window_id
         jsr     L9A15
         pla
         jsr     L9A62
@@ -1762,18 +1760,18 @@ L9B42:  pha
         lda     L9BBA
         clc
         adc     L9080
-        sta     L9088
+        sta     rect1::x1
         pla
         pha
         adc     L9081
-        sta     L9089
+        sta     rect1::x1+1
         lda     L9BBA
         clc
         adc     L9084
-        sta     L908C
+        sta     rect1::x2
         pla
         adc     L9085
-        sta     L908D
+        sta     rect1::x2+1
         lda     L9BBB
         asl     a
         asl     a
@@ -1781,25 +1779,25 @@ L9B42:  pha
         pha
         clc
         adc     L9082
-        sta     L908A
+        sta     rect1::y1
         lda     #$00
         adc     L9083
-        sta     L908B
+        sta     rect1::y1+1
         pla
         clc
         adc     L9086
-        sta     L908E
+        sta     rect1::y2
         lda     #$00
         adc     L9087
-        sta     L908F
+        sta     rect1::y2+1
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $9088
+        MGTK_CALL MGTK::PaintRect, rect1
         rts
 
 L9BBA:  .byte   0
 L9BBB:  .byte   0
 L9BBC:  .byte   0
-        ldy     L8E0D
+        ldy     menukey_params::menu_item
         lda     L8F71,y
         ora     #$C0
         sta     L9BF4
@@ -2063,7 +2061,7 @@ L9E25:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #$02
         beq     L9E76
-        lda     L8FD9
+        lda     winfo::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
@@ -2101,7 +2099,7 @@ L9E93:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #$02
         beq     L9EE4
-        lda     L8FD9
+        lda     winfo::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
