@@ -309,10 +309,10 @@ LD236:
         MGTK_CALL MGTK::ShowCursor
         ldx     #.sizeof(MGTK::Point)-1
         lda     #0
-LD29F:  sta     selector5::grafport2+MGTK::GrafPort::viewloc,x
+:       sta     selector5::grafport2+MGTK::GrafPort::viewloc,x
         sta     selector5::grafport2+MGTK::GrafPort::maprect,x
         dex
-        bpl     LD29F
+        bpl     :-
         copy16  #$0226, $8F8F
         copy16  #$00B9, $8F91
         MGTK_CALL MGTK::SetPort, selector5::grafport2
