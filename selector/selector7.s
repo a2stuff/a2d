@@ -9,6 +9,8 @@
 
         jmp     LA480
 
+;;; ============================================================
+
 pencopy:        .byte   MGTK::pencopy
 penOR:          .byte   MGTK::penOR
 penXOR:         .byte   MGTK::penXOR
@@ -73,7 +75,7 @@ findcontrol_which_part := findcontrol_params + 5
         .assert findcontrol_mousex = event_xcoord, error, "param mismatch"
         .assert findcontrol_mousey = event_ycoord, error, "param mismatch"
 
-;;; UNION of preceding param blocks
+;;; Union of preceding param blocks
         .byte   $00
         .byte   $00
         .byte   $00
@@ -494,137 +496,13 @@ LA3B6:  .byte   0
         .byte   0
         .byte   0
 LA3C6:  .byte   0
-LA3C7:  .byte   0
-LA3C8:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+LA3C7:  .res    128, 0
 LA447:  .byte   0
 LA448:  .byte   0
 LA449:  .byte   0
+
+;;; ============================================================
+
 LA44A:  tsx
         stx     LA449
         jsr     set_pointer_cursor
@@ -649,6 +527,9 @@ LA44A:  tsx
 LA47D:  .byte   0
         .byte   0
 LA47F:  .byte   0
+
+;;; ============================================================
+
 LA480:  bit     LA20D
         bpl     LA492
         dec     LA20A
@@ -1907,7 +1788,7 @@ LB0D5:  .byte   0
 LB0D6:  stax    $06
         ldx     LA3C7
         lda     #'/'
-        sta     LA3C8,x
+        sta     LA3C7+1,x
         inc     LA3C7
         ldy     #$00
         lda     ($06),y
