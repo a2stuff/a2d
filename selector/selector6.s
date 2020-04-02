@@ -150,60 +150,42 @@ L98D4           := $98D4
         .byte   $24,$00
         .byte   $17
         .byte   $00
-        .byte   $41,$00
-        .byte   $57
-        .byte   $00
-        .byte   $E5,$01
-        .byte   $8E,$00,$04
-        .byte   $00
-        .byte   $02
-        .byte   $00
-        .byte   $A0,$01
-        .byte   $35,$00
-        .byte   $05,$00
-        .byte   $03
-        .byte   $00
-        .byte   $9F
-        .byte   $01,$34
-        .byte   $00
-LD0D0:
-LD0D1   := * + 1
-        .byte   $41,$00
-LD0D2:
-        .byte   $57
-        .byte   $00
-        .byte   $00
-        .byte   $20,$80,$00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
 
+rect1:
+        DEFINE_RECT 65,87,485,142
 
-LD0DC:
-LD0DD := *+1
-        .byte   $A4,$01
-LD0DE:
-        .byte   $37
+rect_frame1:
+        DEFINE_RECT 4, 2, 416, 53
+rect_frame2:
+        DEFINE_RECT 5, 3, 415, 52
+
+.params mapinfo
+        DEFINE_POINT 65, 87, viewloc
+        .addr   $2000
+        .byte   $80
         .byte   $00
+        DEFINE_RECT 0, 0, 420, 55, maprect
+.endparams
 
-
+str_cancel_btn:
         PASCAL_STRING "Cancel    Esc"
+str_ok_btn:
         PASCAL_STRING {"OK            ", CHAR_RETURN}
+str_try_again_btn:
         PASCAL_STRING "Try Again  A"
 
-cancel_rect:
+rect_ok_try_again_btn:
         DEFINE_RECT 300, 37, 400, 48
-cancel_pos:
+pos_ok_try_again_btn:
         DEFINE_POINT 305, 47
 
-try_again_rect:
+rect_cancel_btn:
         DEFINE_RECT 20, 37, 120, 48
-try_again_pos:
+pos_cancel_btn:
         DEFINE_POINT 25,47
 
         DEFINE_POINT 190,16
-        DEFINE_POINT 75,29
+pt2:    DEFINE_POINT 75,29
 
 
         PASCAL_STRING "System Error number XX"
@@ -283,26 +265,25 @@ LD236:
         jsr     L98D4
         MGTK_CALL MGTK::InitPort, selector5::grafport2
         MGTK_CALL MGTK::SetPort, selector5::grafport2
-        lda     LD0D0
-        ldx     LD0D1
+        ldax    mapinfo::viewloc::xcoord
         jsr     LD725
         sty     LD764
         sta     LD767
-        lda     LD0D0
+        lda     mapinfo::viewloc::xcoord
         clc
-        adc     LD0DC
+        adc     mapinfo::maprect::x2
         pha
-        lda     LD0D1
-        adc     LD0DD
+        lda     mapinfo::viewloc::xcoord+1
+        adc     mapinfo::maprect::x2+1
         tax
         pla
         jsr     LD725
         sty     LD766
         sta     LD768
-        lda     LD0D2
+        lda     mapinfo::viewloc::ycoord
         sta     LD763
         clc
-        adc     LD0DE
+        adc     mapinfo::maprect::y2
         sta     LD765
         MGTK_CALL MGTK::HideCursor
         jsr     LD5A2
@@ -317,12 +298,12 @@ LD236:
         copy16  #$00B9, $8F91
         MGTK_CALL MGTK::SetPort, selector5::grafport2
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
-        MGTK_CALL MGTK::PaintRect, $D0B8
+        MGTK_CALL MGTK::PaintRect, rect1
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::FrameRect, $D0B8
-        MGTK_CALL MGTK::SetPortBits, $D0D0
-        MGTK_CALL MGTK::FrameRect, $D0C0
-        MGTK_CALL MGTK::FrameRect, $D0C8
+        MGTK_CALL MGTK::FrameRect, rect1
+        MGTK_CALL MGTK::SetPortBits, mapinfo
+        MGTK_CALL MGTK::FrameRect, rect_frame1
+        MGTK_CALL MGTK::FrameRect, rect_frame2
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintBits, $D0A8
@@ -350,20 +331,21 @@ LD314:  tya
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         bit     LD142
         bpl     LD365
-        MGTK_CALL MGTK::FrameRect, try_again_rect
-        MGTK_CALL MGTK::MoveTo, try_again_pos
-        addr_call DrawString, $D0E0
+        MGTK_CALL MGTK::FrameRect, rect_cancel_btn
+        MGTK_CALL MGTK::MoveTo, pos_cancel_btn
+        addr_call DrawString, str_cancel_btn
         bit     LD142
         bvs     LD365
-        MGTK_CALL MGTK::FrameRect, cancel_rect
-        MGTK_CALL MGTK::MoveTo, cancel_pos
-        addr_call DrawString, $D0FE
+        MGTK_CALL MGTK::FrameRect, rect_ok_try_again_btn
+        MGTK_CALL MGTK::MoveTo, pos_ok_try_again_btn
+        addr_call DrawString, str_try_again_btn
         jmp     LD378
 
-LD365:  MGTK_CALL MGTK::FrameRect, cancel_rect
-        MGTK_CALL MGTK::MoveTo, cancel_pos
-        addr_call DrawString, $D0EE
-LD378:  MGTK_CALL MGTK::MoveTo, $D127
+LD365:  MGTK_CALL MGTK::FrameRect, rect_ok_try_again_btn
+        MGTK_CALL MGTK::MoveTo, pos_ok_try_again_btn
+        addr_call DrawString, str_ok_btn
+
+LD378:  MGTK_CALL MGTK::MoveTo, pt2
         lda     LD143
         ldx     LD144
         jsr     DrawString
@@ -385,7 +367,7 @@ event_loop:
         cmp     #CHAR_ESCAPE
         bne     LD3BA
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
+        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
         lda     #$01
         jmp     LD434
 
@@ -394,7 +376,7 @@ LD3BA:  bit     LD142
         cmp     #'a'
         bne     LD3D4
 LD3C3:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_rect
+        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     #$00
         jmp     LD434
 
@@ -407,7 +389,7 @@ LD3D4:  cmp     #'A'
 LD3DF:  cmp     #CHAR_RETURN
         bne     LD3F4
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_rect
+        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     #$00
         jmp     LD434
 
@@ -417,19 +399,19 @@ LD3F7:  jsr     LD57B
         MGTK_CALL MGTK::MoveTo, selector5::event_coords
         bit     LD142
         bpl     LD424
-        MGTK_CALL MGTK::InRect, try_again_rect
+        MGTK_CALL MGTK::InRect, rect_cancel_btn
         cmp     #MGTK::inrect_inside
         bne     LD412
         jmp     LD4AD
 
 LD412:  bit     LD142
         bvs     LD424
-        MGTK_CALL MGTK::InRect, cancel_rect
+        MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
         cmp     #MGTK::inrect_inside
         bne     LD431
         jmp     LD446
 
-LD424:  MGTK_CALL MGTK::InRect, cancel_rect
+LD424:  MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
         cmp     #MGTK::inrect_inside
         bne     LD431
         jmp     LD514
@@ -444,7 +426,7 @@ LD434:  pha
         rts
 
 LD446:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_rect
+        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     #$00
         sta     LD4AC
 LD457:  MGTK_CALL MGTK::GetEvent, selector5::event_params
@@ -453,7 +435,7 @@ LD457:  MGTK_CALL MGTK::GetEvent, selector5::event_params
         beq     LD49F
         jsr     LD57B
         MGTK_CALL MGTK::MoveTo, selector5::event_coords
-        MGTK_CALL MGTK::InRect, cancel_rect
+        MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
         cmp     #MGTK::inrect_inside
         beq     LD47F
         lda     LD4AC
@@ -465,7 +447,7 @@ LD47F:  lda     LD4AC
         jmp     LD457
 
 LD487:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_rect
+        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     LD4AC
         clc
         adc     #$80
@@ -481,7 +463,7 @@ LD4A7:  lda     #$00
 
 LD4AC:  .byte   0
 LD4AD:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
+        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
         lda     #$00
         sta     LD513
 LD4BE:  MGTK_CALL MGTK::GetEvent, selector5::event_params
@@ -490,7 +472,7 @@ LD4BE:  MGTK_CALL MGTK::GetEvent, selector5::event_params
         beq     LD506
         jsr     LD57B
         MGTK_CALL MGTK::MoveTo, selector5::event_coords
-        MGTK_CALL MGTK::InRect, try_again_rect
+        MGTK_CALL MGTK::InRect, rect_cancel_btn
         cmp     #MGTK::inrect_inside
         beq     LD4E6
         lda     LD513
@@ -502,7 +484,7 @@ LD4E6:  lda     LD513
         jmp     LD4BE
 
 LD4EE:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
+        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
         lda     LD513
         clc
         adc     #$80
@@ -520,14 +502,14 @@ LD513:  .byte   0
 LD514:  lda     #$00
         sta     LD57A
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_rect
+        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
 LD525:  MGTK_CALL MGTK::GetEvent, selector5::event_params
         lda     selector5::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LD56D
         jsr     LD57B
         MGTK_CALL MGTK::MoveTo, selector5::event_coords
-        MGTK_CALL MGTK::InRect, cancel_rect
+        MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
         cmp     #MGTK::inrect_inside
         beq     LD54D
         lda     LD57A
@@ -539,7 +521,7 @@ LD54D:  lda     LD57A
         jmp     LD525
 
 LD555:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_rect
+        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     LD57A
         clc
         adc     #$80
@@ -554,8 +536,8 @@ LD575:  lda     #$00
         jmp     LD434
 
 LD57A:  .byte   0
-LD57B:  sub16   selector5::event_xcoord, LD0D0, selector5::event_xcoord
-        sub16   selector5::event_ycoord, LD0D2, selector5::event_ycoord
+LD57B:  sub16   selector5::event_xcoord, mapinfo::viewloc::xcoord, selector5::event_xcoord
+        sub16   selector5::event_ycoord, mapinfo::viewloc::ycoord, selector5::event_ycoord
         rts
 
 LD5A2:  copy16  #$0800, LD5D1
