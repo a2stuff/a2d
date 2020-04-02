@@ -294,12 +294,12 @@ LA215:
 LA218   := * + 1
         .byte   $01,$00
         .byte   $02
-LA21C   := * + 2
-        .byte   $20,$20,$00
-LA21D:
-        .byte   $00
-        .byte   $0D,$00,$00
-        .byte   $00
+        .byte   $20,$20
+
+pt3:    DEFINE_POINT 0, 13, pt3
+
+
+        .byte   $00,$00
 LA222:
         .byte   $00
 LA223:
@@ -1836,11 +1836,11 @@ LAFD9:  MGTK_CALL MGTK::MoveTo, pos_change_drive_btn
         ror     a
         sec
         sbc     $09
-        sta     LA21C
+        sta     pt3::xcoord
         lda     LB03E
         sbc     $0A
-        sta     LA21D
-        MGTK_CALL MGTK::MoveTo, LA21C
+        sta     pt3::xcoord+1
+        MGTK_CALL MGTK::MoveTo, pt3
         MGTK_CALL MGTK::DrawText, params
         rts
 

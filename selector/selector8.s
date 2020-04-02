@@ -1237,14 +1237,15 @@ rect_frame1:
 rect_frame2:
         DEFINE_RECT 5, 3, 347, 67
 
-pos1:   DEFINE_POINT 100, 16
-
-
+pos_download:
+        DEFINE_POINT 100, 16
+str_download:
         PASCAL_STRING "Down load in the RAMCard"
 
-LA8CD:  DEFINE_POINT 20, 32
-LA8D1:  DEFINE_POINT 20, 40
+pos_copying:    DEFINE_POINT 20, 32
+pt2:    DEFINE_POINT 20, 40
 
+str_copying:
         PASCAL_STRING "Copying:"
 
         .byte   $12
@@ -1293,12 +1294,19 @@ rect2:  DEFINE_RECT 6, 24, 346, 66
         .byte   $00
         .byte   $00
 
+str_not_enough_room:
         PASCAL_STRING "Not enough room in the RAMCard to copy the application."
+str_click_ok:
         PASCAL_STRING "Click OK to continue."
+str_error_download:
         PASCAL_STRING "An error occured during the download."
+str_copy_incomplete:
         PASCAL_STRING "The copy wasn't completed, click OK to continue."
+str_files_to_copy:
         PASCAL_STRING "Files to be copied in the RAMCard: "
+str_files_remaining:
         PASCAL_STRING "Files remaining to be copied: "
+str_spaces:
         PASCAL_STRING "    "
 
 LAA01:  MGTK_CALL MGTK::OpenWindow, winfo
@@ -1307,8 +1315,8 @@ LAA01:  MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect_frame1
         MGTK_CALL MGTK::FrameRect, rect_frame2
-        MGTK_CALL MGTK::MoveTo, pos1
-        addr_call DrawString, $A8B4
+        MGTK_CALL MGTK::MoveTo, pos_download
+        addr_call DrawString, str_download
         rts
 
 LAA2D:  lda     winfo::window_id
@@ -1325,21 +1333,21 @@ LAA4C:  jsr     LAC62
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8DE
         addr_call L99DC, $A135
-        MGTK_CALL MGTK::MoveTo, LA8CD
-        addr_call DrawString, $A8D5
+        MGTK_CALL MGTK::MoveTo, pos_copying
+        addr_call DrawString, str_copying
         addr_call DrawString, $A135
-        MGTK_CALL MGTK::MoveTo, LA8D1
-        addr_call DrawString, $A9DD
+        MGTK_CALL MGTK::MoveTo, pt2
+        addr_call DrawString, str_files_remaining
         addr_call DrawString, $ACE6
-        addr_call DrawString, $A9FC
+        addr_call DrawString, str_spaces
         rts
 
 LAA98:  jsr     LAC62
         MGTK_CALL MGTK::SetPortBits, $A8EE
-        MGTK_CALL MGTK::MoveTo, LA8CD
-        addr_call DrawString, $A9B9
+        MGTK_CALL MGTK::MoveTo, pos_copying
+        addr_call DrawString, str_files_to_copy
         addr_call DrawString, $ACE6
-        addr_call DrawString, $A9FC
+        addr_call DrawString, str_spaces
         rts
 
 LAABD:  lda     #$FD            ; ???
@@ -1354,10 +1362,10 @@ LAACB:  lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
-        MGTK_CALL MGTK::MoveTo, LA8CD
-        addr_call DrawString, $A914
-        MGTK_CALL MGTK::MoveTo, LA8D1
-        addr_call DrawString, $A94C
+        MGTK_CALL MGTK::MoveTo, pos_copying
+        addr_call DrawString, str_not_enough_room
+        MGTK_CALL MGTK::MoveTo, pt2
+        addr_call DrawString, str_click_ok
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, $A89C
@@ -1369,10 +1377,10 @@ LAB16:  lda     winfo::window_id
         jsr     L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
-        MGTK_CALL MGTK::MoveTo, LA8CD
-        addr_call DrawString, $A962
-        MGTK_CALL MGTK::MoveTo, LA8D1
-        addr_call DrawString, $A988
+        MGTK_CALL MGTK::MoveTo, pos_copying
+        addr_call DrawString, str_error_download
+        MGTK_CALL MGTK::MoveTo, pt2
+        addr_call DrawString, str_copy_incomplete
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, $A89C
