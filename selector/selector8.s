@@ -1314,7 +1314,7 @@ LAA4C:  jsr     LAC62
         addr_call DrawString, LA135
         MGTK_CALL MGTK::MoveTo, pt2
         addr_call DrawString, str_files_remaining
-        addr_call DrawString, LACE6
+        addr_call DrawString, str_count
         addr_call DrawString, str_spaces
         rts
 
@@ -1322,7 +1322,7 @@ LAA98:  jsr     LAC62
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call DrawString, str_files_to_copy
-        addr_call DrawString, $ACE6
+        addr_call DrawString, str_count
         addr_call DrawString, str_spaces
         rts
 
@@ -1457,7 +1457,7 @@ LAC5B:  MGTK_CALL MGTK::CloseWindow, winfo
 LAC62:  copy16  LA759, LACE2
         ldx     #$07
         lda     #$20
-:       sta     LACE6,x
+:       sta     str_count,x
         dex
         bne     :-
         lda     #$00
@@ -1482,7 +1482,7 @@ LACA2:  ora     #$30
         lda     #$80
         sta     LACE5
         pla
-LACAB:  sta     LACE8,y
+LACAB:  sta     str_count+2,y
         iny
         inx
         inx
@@ -1501,8 +1501,8 @@ LACB8:  inc     LACE4
         jmp     LAC86
 
 LACD1:  lda     LACE2
-        ora     #$30
-        sta     LACE8,y
+        ora     #$30            ; number to ASCII digit
+        sta     str_count+2,y
         rts
 
 LACDA:
@@ -1522,17 +1522,14 @@ LACE4:
         .byte   $00
 LACE5:
         .byte   $00
-LACE6:
-        .byte   $07
-LACE8   := * + 1
-        .byte   $20,$20,$20
-        .byte   $20,$20,$20
+
+str_count:
+        PASCAL_STRING "       "
 
 
         ;; Junk ???
-
-        MGTK_CALL MGTK::PaintRect, $A243
-        MGTK_CALL MGTK::PaintRect, $A243
+        .byte   0, $40, $11, $43, $a2
+        .byte   $20, $00, $40, $11, $43, $A2
         jsr     $A965           ; ???
         jmp     $AD11
 
