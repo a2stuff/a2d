@@ -8,23 +8,15 @@
 
 .scope
 
-MLI_WRAPPER     := $95A0
-L98C1           := $98C1
-L98D4           := $98D4
-L99DC           := $99DC
-L9A15           := $9A15
-L9A47           := $9A47
-LAD11           := $AD11
-
         sta     LA027
         jsr     LAA01
         lda     LA027
-        jsr     L9A47
+        jsr     selector5::L9A47
         jsr     LA802
         jsr     LA6BD
         jsr     LAA2D
         lda     LA027
-        jsr     L9A47
+        jsr     selector5::L9A47
         jsr     LA802
         jsr     LA3F6
         pha
@@ -606,14 +598,14 @@ LA2C5:  ldx     LA2B5
 LA2D3:  lda     #$00
         sta     LA208
         sta     LA2B6
-        yax_call MLI_WRAPPER, OPEN, open_params
+        yax_call selector5::MLI_WRAPPER, OPEN, open_params
         beq     LA2E9
         jmp     LAB16
 
 LA2E9:  lda     open_params::ref_num
         sta     LA209
         sta     read_params::ref_num
-        yax_call MLI_WRAPPER, READ, read_params
+        yax_call selector5::MLI_WRAPPER, READ, read_params
         beq     LA300
         jmp     LAB16
 
@@ -622,7 +614,7 @@ LA300:  jsr     LA319
 
 LA304:  lda     LA209
         sta     close_params::ref_num
-        yax_call MLI_WRAPPER, CLOSE, close_params
+        yax_call selector5::MLI_WRAPPER, CLOSE, close_params
         beq     LA318
         jmp     LAB16
 
@@ -631,7 +623,7 @@ LA318:  rts
 LA319:  inc     LA208
         lda     LA209
         sta     read_params2::ref_num
-        yax_call MLI_WRAPPER, READ, read_params2
+        yax_call selector5::MLI_WRAPPER, READ, read_params2
         beq     LA330
         jmp     LAB16
 
@@ -643,7 +635,7 @@ LA330:  inc     LA2B6
         sta     LA2B6
         lda     LA209
         sta     read_params3::ref_num
-        yax_call MLI_WRAPPER, READ, read_params3
+        yax_call selector5::MLI_WRAPPER, READ, read_params3
         beq     LA354
         jmp     LAB16
 
@@ -737,7 +729,7 @@ LA3F8           := * + 1
         lda     #$FF
         sta     LA4F9
         jsr     LA7D9
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     LA41B
         jmp     LAB16
 
@@ -759,7 +751,7 @@ LA44F:  iny
         cpy     LA1F6
         bne     LA44F
         stx     LA0F4
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         cmp     #$46            ; Error code
         beq     LA475
         cmp     #$45
@@ -768,7 +760,7 @@ LA44F:  iny
         beq     LA475
         rts
 
-LA475:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+LA475:  yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA491
         cmp     #ERR_VOL_NOT_FOUND
         beq     LA488
@@ -813,7 +805,7 @@ LA4C3:  lda     get_file_info_params2,y
         bne     LA4DB
         lda     #$0D
         sta     create_params::storage_type
-LA4DB:  yax_call MLI_WRAPPER, CREATE, create_params
+LA4DB:  yax_call selector5::MLI_WRAPPER, CREATE, create_params
         beq     LA4E9
         jmp     LAB16
 
@@ -839,7 +831,7 @@ LA4FB:  .byte   0
         bne     LA536
         jsr     LA75D
         jsr     LAA3F
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA528
         jmp     LAB16
 
@@ -858,7 +850,7 @@ LA528:  jsr     LA79B
 LA536:  jsr     LA79B
         jsr     LA75D
         jsr     LAA3F
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA54D
         jmp     LAB16
 
@@ -876,14 +868,14 @@ LA555:  jsr     LA782
 LA569:  rts
 
 LA56A:  jsr     LA7C0
-LA56D:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+LA56D:  yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA57B
         jmp     LAB16
 
 LA57B:  lda     #$00
         sta     LA60E
         sta     LA60F
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     LA595
         cmp     #ERR_FILE_NOT_FOUND
         beq     LA5A1
@@ -902,7 +894,7 @@ LA5A9:  iny
         tya
         sta     LA0F4
         sta     LA60D
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     LA5CB
         jmp     LAB16
 
@@ -923,10 +915,10 @@ LA60C:  .byte   0
 LA60D:  .byte   0
 LA60E:  .byte   0
 LA60F:  .byte   0
-LA610:  yax_call MLI_WRAPPER, OPEN, open_params_src
+LA610:  yax_call selector5::MLI_WRAPPER, OPEN, open_params_src
         beq     LA61E
         jsr     LAB16
-LA61E:  yax_call MLI_WRAPPER, OPEN, open_params_dst
+LA61E:  yax_call selector5::MLI_WRAPPER, OPEN, open_params_dst
         beq     LA62C
         jmp     LAB16
 
@@ -937,7 +929,7 @@ LA62C:  lda     open_params_src::ref_num
         sta     write_params_dst::ref_num
         sta     close_params_dst::ref_num
 LA63E:  copy16  #$0B00, read_params_src::request_count
-        yax_call MLI_WRAPPER, READ, read_params_src
+        yax_call selector5::MLI_WRAPPER, READ, read_params_src
         beq     LA65A
         cmp     #ERR_END_OF_FILE
         beq     LA687
@@ -946,7 +938,7 @@ LA63E:  copy16  #$0B00, read_params_src::request_count
 LA65A:  copy16  read_params_src::trans_count, write_params_dst::request_count
         ora     read_params_src::trans_count
         beq     LA687
-        yax_call MLI_WRAPPER, WRITE, write_params_dst
+        yax_call selector5::MLI_WRAPPER, WRITE, write_params_dst
         beq     LA679
         jmp     LAB16
 
@@ -956,8 +948,8 @@ LA679:  lda     write_params_dst::trans_count
         lda     write_params_dst::trans_count+1
         cmp     #$0B
         beq     LA63E
-LA687:  yax_call MLI_WRAPPER, CLOSE, close_params_dst
-        yax_call MLI_WRAPPER, CLOSE, close_params_src
+LA687:  yax_call selector5::MLI_WRAPPER, CLOSE, close_params_dst
+        yax_call selector5::MLI_WRAPPER, CLOSE, close_params_src
         rts
 
 LA69A:  ldx     #$07
@@ -966,7 +958,7 @@ LA69C:  lda     get_file_info_params2,x
         dex
         cpx     #$03
         bne     LA69C
-        yax_call MLI_WRAPPER, CREATE, create_params2
+        yax_call selector5::MLI_WRAPPER, CREATE, create_params2
         clc
         beq     LA6B6
         jmp     LAB16
@@ -996,7 +988,7 @@ LA6DA:  sta     $BF58,y
         dey
         bpl     LA6DA
         jsr     LA7D9
-LA6E3:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+LA6E3:  yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA6FF
         cmp     #ERR_VOL_NOT_FOUND
         beq     LA6F6
@@ -1031,7 +1023,7 @@ LA725:  jmp     LA729
         rts
 
 LA729:  jsr     LA75D
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         bne     LA74A
         add16   LA75B, get_file_info_params2::blocks_used, LA75B
 LA74A:  inc16   LA759
@@ -1311,7 +1303,7 @@ str_spaces:
 
 LAA01:  MGTK_CALL MGTK::OpenWindow, winfo
         lda     winfo::window_id
-        jsr     L9A15
+        jsr     selector5::L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect_frame1
         MGTK_CALL MGTK::FrameRect, rect_frame2
@@ -1320,7 +1312,7 @@ LAA01:  MGTK_CALL MGTK::OpenWindow, winfo
         rts
 
 LAA2D:  lda     winfo::window_id
-        jsr     L9A15
+        jsr     selector5::L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
 LAA3F:  dec     LA759
@@ -1332,13 +1324,13 @@ LAA4C:  jsr     LAC62
         MGTK_CALL MGTK::SetPortBits, $A8EE
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, $A8DE
-        addr_call L99DC, $A135
+        addr_call selector5::L99DC, LA135
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call DrawString, str_copying
-        addr_call DrawString, $A135
+        addr_call DrawString, LA135
         MGTK_CALL MGTK::MoveTo, pt2
         addr_call DrawString, str_files_remaining
-        addr_call DrawString, $ACE6
+        addr_call DrawString, LACE6
         addr_call DrawString, str_spaces
         rts
 
@@ -1353,13 +1345,13 @@ LAA98:  jsr     LAC62
 LAABD:  lda     #$FD            ; ???
         jsr     ShowAlert
         bne     LAAC8
-        jsr     L98C1
+        jsr     selector5::set_watch_cursor
         rts
 
 LAAC8:  jmp     LAC54
 
 LAACB:  lda     winfo::window_id
-        jsr     L9A15
+        jsr     selector5::L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::MoveTo, pos_copying
@@ -1374,7 +1366,7 @@ LAACB:  lda     winfo::window_id
         jmp     LAC54
 
 LAB16:  lda     winfo::window_id
-        jsr     L9A15
+        jsr     selector5::L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::MoveTo, pos_copying
@@ -1388,7 +1380,7 @@ LAB16:  lda     winfo::window_id
         jsr     LAB61
         jmp     LAC54
 
-LAB61:  jsr     L98D4
+LAB61:  jsr     selector5::set_pointer_cursor
 
 event_loop:
         MGTK_CALL MGTK::GetEvent, selector5::event_params
@@ -1401,11 +1393,11 @@ event_loop:
         cmp     #CHAR_RETURN
         bne     event_loop
         lda     winfo::window_id
-        jsr     L9A15
+        jsr     selector5::L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, rect1
         MGTK_CALL MGTK::PaintRect, rect1
-        jsr     L98C1
+        jsr     selector5::set_watch_cursor
         rts
 
 handle_button_down:
@@ -1418,7 +1410,7 @@ handle_button_down:
         cmp     winfo::window_id
         bne     event_loop
         lda     winfo::window_id
-        jsr     L9A15
+        jsr     selector5::L9A15
         lda     winfo::window_id
         sta     $8F79
         MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
@@ -1430,7 +1422,7 @@ handle_button_down:
         MGTK_CALL MGTK::PaintRect, rect1
         jsr     LABE6
         bmi     event_loop
-        jsr     L98C1
+        jsr     selector5::set_watch_cursor
         rts
 
 LABE6:  lda     #$00
@@ -1558,7 +1550,7 @@ LACE8   := * + 1
         MGTK_CALL MGTK::PaintRect, $A243
         MGTK_CALL MGTK::PaintRect, $A243
         jsr     $A965           ; ???
-        jmp     LAD11
+        jmp     $AD11
 
         .byte   $C9
 
