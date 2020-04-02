@@ -1217,12 +1217,8 @@ window_id:
         .addr   0
 .endproc
 
-rect1:  DEFINE_RECT $14, $31, $78, $3C
-
-        .byte   $18
-        .byte   $00
-        .byte   $3B
-        .byte   $00
+rect1:  DEFINE_RECT 20, 49, 120, 60
+pos1:   DEFINE_POINT 24, 59
 
 rect_frame1:
         DEFINE_RECT 4, 2, 348, 68
@@ -1240,30 +1236,18 @@ pt2:    DEFINE_POINT 20, 40
 str_copying:
         PASCAL_STRING "Copying:"
 
-        .byte   $12
-        .byte   $00
-        .byte   $18
-        .byte   $00
-        .byte   $5A
-        .byte   $01,$20
-        .byte   $00
+rect3:  DEFINE_RECT 18, 24, 346, 32
 
 rect2:  DEFINE_RECT 6, 24, 346, 66
 
-        .byte   $64
-        .byte   0
-        .byte   $32
-        .byte   0
-        .byte   0
+.params setportbits_params
+viewloc:        DEFINE_POINT 100, 50
+mapbits:        .addr   $2000
+mapwidth:       .byte   $80
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, 346, 66
+.endparams
 
-        .byte   $20,$80,$00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $5A
-        .byte   $01,$42
-        .byte   $00
         .byte   $FF
         .byte   $FF
         .byte   $FF
@@ -1321,9 +1305,9 @@ LAA3F:  dec     LA759
         bne     LAA4C
         dec     LA75A
 LAA4C:  jsr     LAC62
-        MGTK_CALL MGTK::SetPortBits, $A8EE
+        MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
-        MGTK_CALL MGTK::PaintRect, $A8DE
+        MGTK_CALL MGTK::PaintRect, rect3
         addr_call selector5::L99DC, LA135
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call DrawString, str_copying
@@ -1335,7 +1319,7 @@ LAA4C:  jsr     LAC62
         rts
 
 LAA98:  jsr     LAC62
-        MGTK_CALL MGTK::SetPortBits, $A8EE
+        MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call DrawString, str_files_to_copy
         addr_call DrawString, $ACE6
@@ -1360,8 +1344,8 @@ LAACB:  lda     winfo::window_id
         addr_call DrawString, str_click_ok
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
-        MGTK_CALL MGTK::MoveTo, $A89C
-        addr_call DrawString, $902F
+        MGTK_CALL MGTK::MoveTo, pos1
+        addr_call DrawString, selector5::str_ok_btn
         jsr     LAB61
         jmp     LAC54
 
@@ -1375,8 +1359,8 @@ LAB16:  lda     winfo::window_id
         addr_call DrawString, str_copy_incomplete
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
-        MGTK_CALL MGTK::MoveTo, $A89C
-        addr_call DrawString, $902F
+        MGTK_CALL MGTK::MoveTo, pos1
+        addr_call DrawString, selector5::str_ok_btn
         jsr     LAB61
         jmp     LAC54
 
