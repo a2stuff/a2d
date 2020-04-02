@@ -7,7 +7,6 @@
 .scope
 
 L2000           := $2000
-L98D4           := $98D4
 
         .byte   0
         .byte   0
@@ -262,7 +261,7 @@ LD236:
         .byte   $A9,$01,$60
 
 
-        jsr     L98D4
+        jsr     selector5::set_pointer_cursor
         MGTK_CALL MGTK::InitPort, selector5::grafport2
         MGTK_CALL MGTK::SetPort, selector5::grafport2
         ldax    mapinfo::viewloc::xcoord
