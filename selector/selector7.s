@@ -4,7 +4,8 @@
 
         .org $A000
 
-.scope
+.scope selector7
+
         jmp     LA44A
 
         jmp     LA480
@@ -242,6 +243,7 @@ vthumbpos:
         .byte   $00
         .byte   $00
         .byte   $20,$80,$00
+maprect:
 x1:     .word   0
 y1:     .word   0
 x2:     .word   125
@@ -300,21 +302,9 @@ LA218   := * + 1
 
 pt3:    DEFINE_POINT 0, 13, pt3
 
-
-        .byte   $00,$00
-LA222:
-        .byte   $00
-LA223:
-        .byte   $00
-LA226   := * + 2
-        .byte   $7D,$00,$00
-
-LA227:  .byte   0
-
+rect:   DEFINE_RECT 0, 0, 125, 0, rect
 
 pos:    DEFINE_POINT 2, 0, pos
-
-
 
         .byte   0
         .byte   0
@@ -329,11 +319,7 @@ LA231:
 rect_frame:
         DEFINE_RECT 4, 2, 496, 151
 
-        .byte   $1B
-        .byte   $00
-        .byte   $10,$00
-        .byte   $AE,$00,$1A
-        .byte   $00
+rect0:  DEFINE_RECT $1B, $10, $AE, $1A
 
 rect1:  DEFINE_RECT $C1, $3A, $125, $45
 rect2:  DEFINE_RECT $C1, $59, $125, $64
@@ -370,17 +356,13 @@ pos_change_drive_btn:
 str_change_drive_btn:
         PASCAL_STRING "Change Drive"
 
-        .byte   $1C
-        .byte   $00
-        .byte   $19,$00,$1C
-        .byte   $00
-        .byte   $70,$00
+pos_disk:   DEFINE_POINT 28, 25
+pos1:   DEFINE_POINT 28, 112
+pos2:   DEFINE_POINT 28, 135
 
-        .byte   $1C
+textbg1:
         .byte   0
-        .byte   $87
-        .byte   0
-        .byte   0
+textbg2:
         .byte   $7F
 str_disk:
         PASCAL_STRING " Disk: "
@@ -388,15 +370,8 @@ str_disk:
 rect_input:
         DEFINE_RECT 28, 113, 428, 124
 
-LA2DA:
-LA2DB   := * + 1
-LA2DC   := * + 2
-        .byte   $1E,$00,$7B
-        .byte   $00
-        .byte   $1C
-        .byte   $00
-        .byte   $88
-        .byte   $00
+rect6:  DEFINE_RECT $1E, $7B, $1C, $88, rect6
+
         .byte   $AC,$01,$93
         .byte   $00
         .byte   $1E,$00,$92
@@ -1729,7 +1704,7 @@ LB03E:  .byte   0
 .endproc
 
 LB03F:  stax    $06
-        MGTK_CALL MGTK::MoveTo, $A2C0
+        MGTK_CALL MGTK::MoveTo, pos1
         lda     $06
         ldx     $07
         jsr     draw_string
@@ -1936,7 +1911,7 @@ LB229:  .byte   0
 LB22A:  jsr     LA9C9
         lda     winfo2::window_id
         jsr     LB443
-        MGTK_CALL MGTK::PaintRect, $A1EA
+        MGTK_CALL MGTK::PaintRect, winfo2::maprect
         lda     #16
         sta     pos::xcoord
         lda     #8
@@ -2055,7 +2030,7 @@ LB326:  lda     $177F
 LB34F:  .byte   0
 LB350:  lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::PaintRect, $A23B
+        MGTK_CALL MGTK::PaintRect, rect0
         MGTK_CALL MGTK::SetPenMode, penXOR
         copy16  #$A3C7, $06
         ldy     #$00
@@ -2081,7 +2056,7 @@ LB388:  inx
         bne     LB388
         stx     $0220
         addr_call LB2D1, $0220
-        MGTK_CALL MGTK::MoveTo, $A2BC
+        MGTK_CALL MGTK::MoveTo, pos_disk
         addr_call draw_string, str_disk
         addr_call draw_string, $0220
         jsr     LA9C9
@@ -2133,19 +2108,19 @@ LB404:  ldx     #$00
         rol     LB442
         asl     a
         rol     LB442
-        sta     LA222
+        sta     rect::y1
         ldx     LB442
-        stx     LA223
+        stx     rect::y1+1
         clc
         adc     #$07
-        sta     LA226
+        sta     rect::y2
         lda     LB442
         adc     #$00
-        sta     LA227
+        sta     rect::y2+1
         lda     winfo2::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, $A220
+        MGTK_CALL MGTK::PaintRect, rect
         jsr     LA9C9
         rts
 
@@ -2588,15 +2563,15 @@ LB70F:  lda     winfo1::window_id
         jsr     LB443
         jsr     LBB31
         stax    $06
-        copy16  LA2DC, $08
+        copy16  rect6::y1, $08
         MGTK_CALL MGTK::MoveTo, $0006
         bit     LA20C
         bpl     LB73E
-        MGTK_CALL MGTK::SetTextBG, $A2C8
+        MGTK_CALL MGTK::SetTextBG, textbg1
         lda     #$00
         sta     LA20C
         beq     LB749
-LB73E:  MGTK_CALL MGTK::SetTextBG, $A2C9
+LB73E:  MGTK_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
         sta     LA20C
 LB749:  copy16  #$A210, $06
@@ -2611,7 +2586,7 @@ LB760:  lda     winfo1::window_id
         MGTK_CALL MGTK::PaintRect, rect_input
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect_input
-        MGTK_CALL MGTK::MoveTo, $A2DA
+        MGTK_CALL MGTK::MoveTo, rect6
         lda     LA10C
         beq     LB78A
         addr_call draw_string, LA10C
@@ -2694,7 +2669,7 @@ LB864:  copy16  #LA10C, $06
         lda     LA10C
         sta     $08
 LB871:  MGTK_CALL MGTK::TextWidth, $0006
-        add16   $09, LA2DA, $09
+        add16   $09, rect6::x1, $09
         cmp16   $09, LA013
         bcc     LB89D
         dec     $08
@@ -2757,7 +2732,7 @@ LB8FC:  lda     LB8FB
         jsr     LBB31
         inc     LA10C
         stax    $06
-        copy16  LA2DC, $08
+        copy16  rect6::y1, $08
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
@@ -2773,7 +2748,7 @@ LB93B:  lda     LA10C
 LB941:  dec     LA10C
         jsr     LBB31
         stax    $06
-        copy16  LA2DC, $08
+        copy16  rect6::y1, $08
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
@@ -2801,7 +2776,7 @@ LB98B:  ldx     LA10C
         inc     LA150
         jsr     LBB31
         stax    $06
-        copy16  LA2DC, $08
+        copy16  rect6::y1, $08
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
@@ -2832,7 +2807,7 @@ LB9E7:  lda     LA150+1,x
 LB9F3:  dec     LA150
         lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::MoveTo, $A2DA
+        MGTK_CALL MGTK::MoveTo, rect6
         addr_call draw_string, LA10C
         addr_call draw_string, $A150
         addr_call draw_string, $A219
@@ -2980,10 +2955,10 @@ LBB1D:  ldx     LA3C7
         MGTK_CALL MGTK::TextWidth, params
 LBB4C:  lda     $09
         clc
-        adc     LA2DA
+        adc     rect6::x1
         tay
         lda     $0A
-        adc     LA2DB
+        adc     rect6::x1+1
         tax
         tya
         rts
