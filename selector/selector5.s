@@ -394,19 +394,15 @@ pos_title_string:
 
         PASCAL_STRING "Selector"
 
-        .byte   $05,$00
-L9066:
-        .byte   $16,$00
+pt0:    DEFINE_POINT 5, 22, pt0
 
 pt1:    DEFINE_POINT   5, 20
 pt2:    DEFINE_POINT   495, 20
 pt3:    DEFINE_POINT   5, 90
 pt4:    DEFINE_POINT   495, 90
 
-L9078:  .word   10
-L907A:  .word   30
-L907C:  .word   0
-L907E:  .word   0
+pt5:    DEFINE_POINT 10, 30, pt5
+pt6:    DEFINE_POINT 0, 0, pt6
 
 rect2:  DEFINE_RECT 5, 21, 132, 29, rect2
 
@@ -891,8 +887,8 @@ L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     L94D9
 L94ED:  jmp     L95B6
 
-L94F0:  sub16   L8F7E, L9078, L8F7E
-        sub16   L8F80, L9066, L8F80
+L94F0:  sub16   L8F7E, pt5::xcoord, L8F7E
+        sub16   L8F80, pt0::ycoord, L8F80
         lda     L8F81
         bpl     L9527
         lda     L910E
@@ -1582,11 +1578,11 @@ tmp:    .byte   0
         tay
         lda     tmp
         clc
-        adc     L9078
-        sta     L907C
+        adc     pt5::xcoord
+        sta     pt6::xcoord
         tya
-        adc     L9078+1
-        sta     L907C+1
+        adc     pt5::xcoord+1
+        sta     pt6::xcoord+1
         pla
         asl     a
         asl     a
@@ -1599,11 +1595,11 @@ tmp:    .byte   0
         asl     a
         asl     a
         clc
-        adc     L907A
-        sta     L907E
+        adc     pt5::ycoord
+        sta     pt6::ycoord
         lda     #$00
-        adc     L907A+1
-        sta     L907E+1
+        adc     pt5::ycoord+1
+        sta     pt6::ycoord+1
         rts
 
 tmp:    .byte   0
@@ -1648,7 +1644,7 @@ L9AE5:  lda     winfo::window_id
         jsr     L9A15
         pla
         jsr     L9A62
-        MGTK_CALL MGTK::MoveTo, L907C
+        MGTK_CALL MGTK::MoveTo, pt6
         addr_call DrawString, $9113
         rts
 
