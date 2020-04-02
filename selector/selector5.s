@@ -7,9 +7,9 @@
 .scope selector5
 
 L2000           := $2000
-LA000           := $A000
-LA003           := $A003
-LD23E           := $D23E
+LA000           := $A000        ; selector7/8 entry points
+LA003           := $A003        ; selector7 entry point
+LD23E           := $D23E        ; in selector6
 
 ;;; ============================================================
 ;;; MGTK library

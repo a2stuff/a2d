@@ -8,147 +8,39 @@
 
 L2000           := $2000
 
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $00
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $00
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $00
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $00
-        .byte   $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   $1E,$1F,$40
-        .byte   $07
-        .byte   $F0,$00
-        .byte   $00
-        .byte   $1E,$1F,$60
-        .byte   $03
-        .byte   $60
+alert_bitmap:
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),px(%0000000),PX(%1111111),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   px(%0111100),px(%1111100),px(%0000001),px(%1110000),PX(%0000111),px(%0000000),px(%0000000)
+        .byte   px(%0111100),px(%1111100),px(%0000011),px(%1100000),px(%0000011),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0000111),PX(%1100111),px(%1111001),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0001111),PX(%1100111),px(%1111001),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),PX(%1111111),px(%1111001),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),PX(%1111111),px(%1110011),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),PX(%1111111),PX(%1100111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),PX(%1111111),PX(%1001111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),PX(%1111111),PX(%0011111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),px(%1111110),PX(%0111111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),px(%1111100),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),px(%1111100),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   px(%0111110),px(%0000000),PX(%0111111),PX(%1111111),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1100000),PX(%1111111),px(%1111100),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1100001),PX(%1111111),PX(%1111111),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   px(%0111000),px(%0000011),PX(%1111111),PX(%1111111),px(%1111110),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$1F,$F0
-        .byte   $F3
-        .byte   $4F
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$1F,$F8
-        .byte   $F3
-        .byte   $4F
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$1F,$FC
-        .byte   $FF
-        .byte   $4F
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$1F,$FC
-        .byte   $FF
-        .byte   $67
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$1F,$FC
-        .byte   $FF
-        .byte   $F3
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$1F,$FC
-        .byte   $FF
-        .byte   $F9,$00,$00
-        .byte   $FE,$1F,$FC
-        .byte   $FF
-        .byte   $FC
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$1F,$FC
-        .byte   $3F
-        .byte   $FE,$00,$00
-        .byte   $FE,$1F,$FC
-        .byte   $1F
-        .byte   $FF
-
-        .byte   0
-        .byte   0
-        .byte   $FE,$1F,$FC
-        .byte   $1F
-        .byte   $FF
-        .byte   $00
-        .byte   $00
-        .byte   $3E,$00,$FE
-        .byte   $FF
-        .byte   $FF
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$03,$FF
-        .byte   $1F
-        .byte   $FF
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$43,$FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $00
-        .byte   $00
-        .byte   $0E,$60,$FF
-        .byte   $FF
-        .byte   $3F
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$03,$00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $FE,$03,$00
-
-
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $14
-        .byte   0
-
-
-
-        .byte   $08
-        .byte   $00
-        .byte   $00
-        .byte   $D0,$07
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $24,$00
-        .byte   $17
-        .byte   $00
+.params alert_bitmap_params
+viewloc:        DEFINE_POINT 20, 8
+mapbits:        .addr   $D000
+mapwidth:       .byte   7
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, 36, 23
+.endparams
 
 rect1:
         DEFINE_RECT 65,87,485,142
@@ -253,15 +145,12 @@ LD236:
         .byte   $00
 
         ASSERT_ADDRESS $D23E
-
-        .byte   $48
-        .byte   $AD,$29,$91
-        .byte   $F0,$04
-        .byte   $68
-        .byte   $A9,$01,$60
-
-
-        jsr     selector5::set_pointer_cursor
+LD23E:  pha
+        lda     $9129
+        beq     :+
+        pla
+        return  #$01
+:       jsr     selector5::set_pointer_cursor
         MGTK_CALL MGTK::InitPort, selector5::grafport2
         MGTK_CALL MGTK::SetPort, selector5::grafport2
         ldax    mapinfo::viewloc::xcoord
@@ -305,7 +194,7 @@ LD236:
         MGTK_CALL MGTK::FrameRect, rect_frame2
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::PaintBits, $D0A8
+        MGTK_CALL MGTK::PaintBits, alert_bitmap_params
         MGTK_CALL MGTK::ShowCursor
         pla
         ldy     #$00
