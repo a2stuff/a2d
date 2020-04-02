@@ -426,7 +426,7 @@ LA32F:  lda     #$00
 
 LA342:  lda     winfo1::window_id
         jsr     LB443
-        addr_call LAFFE, $A2EA
+        addr_call draw_title_centered, $A2EA
         addr_call LB03F, $A2FC
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect_input
@@ -1805,20 +1805,29 @@ LAFD9:  MGTK_CALL MGTK::MoveTo, pos_change_drive_btn
         addr_call draw_string, str_change_drive_btn
         rts
 
-draw_string:  stax    $06
-        ldy     #$00
-        lda     ($06),y
-        sta     $08
-        inc16   $06
-        MGTK_CALL MGTK::DrawText, $0006
-        rts
+.proc draw_string
+        ptr := $06
+        params := $06
 
-LAFFE:  stax    $06
+        stax    ptr
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         sta     $08
-        inc16   $06
-        MGTK_CALL MGTK::TextWidth, $0006
+        inc16   params
+        MGTK_CALL MGTK::DrawText, params
+        rts
+.endproc
+
+.proc draw_title_centered
+        ptr := $06
+        params := $06
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     $08
+        inc16   params
+        MGTK_CALL MGTK::TextWidth, params
         lsr16   $09
         lda     #$01
         sta     LB03E
@@ -1831,11 +1840,13 @@ LAFFE:  stax    $06
         lda     LB03E
         sbc     $0A
         sta     LA21D
-        MGTK_CALL MGTK::MoveTo, $A21C
-        MGTK_CALL MGTK::DrawText, $0006
+        MGTK_CALL MGTK::MoveTo, LA21C
+        MGTK_CALL MGTK::DrawText, params
         rts
 
 LB03E:  .byte   0
+.endproc
+
 LB03F:  stax    $06
         MGTK_CALL MGTK::MoveTo, $A2C0
         lda     $06
@@ -3075,14 +3086,17 @@ LBB1D:  ldx     LA3C7
         addr_call LB2D1, LA10C
         rts
 
-LBB31:  lda     #$00
+.proc LBB31
+        params := $06
+
+        lda     #$00
         sta     $09
         sta     $0A
         lda     LA10C
         beq     LBB4C
         sta     $08
-        copy16  #LA10C+1, $06
-        MGTK_CALL MGTK::TextWidth, $0006
+        copy16  #LA10C+1, params
+        MGTK_CALL MGTK::TextWidth, params
 LBB4C:  lda     $09
         clc
         adc     LA2DA
@@ -3092,6 +3106,7 @@ LBB4C:  lda     $09
         tax
         tya
         rts
+.endproc
 
 LBB5B:  ldx     LA10C
 :       lda     LA10C,x

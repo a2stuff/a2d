@@ -1434,12 +1434,15 @@ draw_desktop_label:
 
         ASSERT_ADDRESS ::DrawString
 .proc DrawString
-        stax    $06
-        ldy     #$00
-        lda     ($06),y
+        ptr := $06
+        params := $06
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
         sta     $08
-        inc16   $06
-        MGTK_CALL MGTK::DrawText, $0006
+        inc16   ptr
+        MGTK_CALL MGTK::DrawText, params
         rts
 .endproc
 
@@ -1447,16 +1450,21 @@ draw_desktop_label:
 ;;; Draw Title String (centered at top of port)
 ;;; Input: A,X = string address
 
-L999B:  stax    $06
+.proc L999B
+        ptr := $06
+        params := $06
+
+        stax    ptr
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         sta     $08
-        inc16   $06
-        MGTK_CALL MGTK::TextWidth, $0006
+        inc16   ptr
+        MGTK_CALL MGTK::TextWidth, params
+
         lsr16   $09
-        lda     #$01
+        lda     #1
         sta     tmp
-        lda     #$F4
+        lda     #244
         lsr     tmp
         ror     a
         sec
@@ -1467,10 +1475,11 @@ L999B:  stax    $06
         sta     pos_title_string+1
 
         MGTK_CALL MGTK::MoveTo, pos_title_string
-        MGTK_CALL MGTK::DrawText, $0006
+        MGTK_CALL MGTK::DrawText, params
         rts
 
 tmp:    .byte   0
+.endproc
 
 ;;; ============================================================
 
