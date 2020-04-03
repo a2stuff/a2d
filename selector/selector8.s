@@ -7,12 +7,12 @@
 .scope
 
         sta     LA027
-        jsr     LAA01
+        jsr     open_window
         lda     LA027
         jsr     selector5::L9A47
         jsr     LA802
         jsr     LA6BD
-        jsr     LAA2D
+        jsr     draw_window_content
         lda     LA027
         jsr     selector5::L9A47
         jsr     LA802
@@ -351,7 +351,7 @@ LA4FC:  jmp     LA7C0
         cmp     #$0F
         bne     LA536
         jsr     LA75D
-        jsr     LAA3F
+        jsr     draw_window_content_ep2
         yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA528
         jmp     handle_error_code
@@ -370,7 +370,7 @@ LA528:  jsr     LA79B
 
 LA536:  jsr     LA79B
         jsr     LA75D
-        jsr     LAA3F
+        jsr     draw_window_content_ep2
         yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA54D
         jmp     handle_error_code
@@ -562,7 +562,7 @@ LA729:  jsr     LA75D
         add16   LA75B, get_file_info_params2::blocks_used, LA75B
 LA74A:  inc16   LA759
         jsr     LA782
-        jsr     LAA98
+        jsr     update_file_count_display
         rts
 
 LA759:  .byte   0
@@ -661,7 +661,10 @@ LA7F5:  lda     LA176,y
 
         return  #$00
 
-LA802:  stax    $06
+;;; ============================================================
+
+.proc LA802
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -701,7 +704,9 @@ LA84D:  lda     $D3EE,y
         bpl     LA84D
         lda     ROMIN2
         rts
+.endproc
 
+;;; ============================================================
 
 .proc winfo
 window_id:
@@ -805,7 +810,10 @@ str_files_remaining:
 str_spaces:
         PASCAL_STRING "    "
 
-LAA01:  MGTK_CALL MGTK::OpenWindow, winfo
+;;; ============================================================
+
+.proc open_window
+        MGTK_CALL MGTK::OpenWindow, winfo
         lda     winfo::window_id
         jsr     selector5::L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
@@ -814,12 +822,16 @@ LAA01:  MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::MoveTo, pos_download
         addr_call DrawString, str_download
         rts
+.endproc
 
-LAA2D:  lda     winfo::window_id
+;;; ============================================================
+
+.proc draw_window_content
+        lda     winfo::window_id
         jsr     selector5::L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
-LAA3F:  dec     LA759
+ep2:    dec     LA759
         lda     LA759
         cmp     #$FF
         bne     LAA4C
@@ -837,22 +849,31 @@ LAA4C:  jsr     populate_count
         addr_call DrawString, str_count
         addr_call DrawString, str_spaces
         rts
+.endproc
+        draw_window_content_ep2 := draw_window_content::ep2
+;;; ============================================================
 
-LAA98:  jsr     populate_count
+.proc update_file_count_display
+        jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call DrawString, str_files_to_copy
         addr_call DrawString, str_count
         addr_call DrawString, str_spaces
         rts
+.endproc
+
+;;; ============================================================
 
 LAABD:  lda     #$FD            ; ???
         jsr     ShowAlert
-        bne     LAAC8
+        bne     :+
         jsr     selector5::set_watch_cursor
         rts
 
-LAAC8:  jmp     restore_stack_and_return
+:       jmp     restore_stack_and_return
+
+;;; ============================================================
 
 LAACB:  lda     winfo::window_id
         jsr     selector5::L9A15
