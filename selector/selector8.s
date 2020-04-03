@@ -4,8 +4,6 @@
 
         .org $A000
 
-
-
 .scope
 
         sta     LA027
@@ -20,567 +18,85 @@
         jsr     LA802
         jsr     LA3F6
         pha
-        jsr     LAC5B
+        jsr     close_window
         pla
         rts
 
 LA027:
         .byte   $00
 
-        DEFINE_OPEN_PARAMS open_params, $A135, $800
-        DEFINE_READ_PARAMS read_params, read_buf, 4
-read_buf:
+        DEFINE_OPEN_PARAMS open_params, pathname1, $800
+        DEFINE_READ_PARAMS read_params, buf_read_ptr, 4 ; next/prev blocks
+buf_read_ptr:
         .res 4, 0
         DEFINE_CLOSE_PARAMS close_params
 
-        DEFINE_READ_PARAMS read_params2, LA0BC, $27
-        DEFINE_READ_PARAMS read_params3, LA04C, 5
+        DEFINE_READ_PARAMS read_params2, buf_dir_header, .sizeof(SubdirectoryHeader)-4
+        DEFINE_READ_PARAMS read_params3, buf_5_bytes, 5
+buf_5_bytes:
+        .res    5, 0
 
-LA04C:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        .res    4, 0            ; Unused???
 
 
         DEFINE_CLOSE_PARAMS close_params_src
         DEFINE_CLOSE_PARAMS close_params_dst
 
-        .byte   $01,$35,$A1
+        .byte   $01
+        .addr   pathname1
 
-        DEFINE_OPEN_PARAMS open_params_src, LA135, $D00
-        DEFINE_OPEN_PARAMS open_params_dst, LA0F4, $1100
+        DEFINE_OPEN_PARAMS open_params_src, pathname1, $D00
+        DEFINE_OPEN_PARAMS open_params_dst, pathname_dst, $1100
 
-        DEFINE_READ_PARAMS read_params_src, $1500, $B00
-        DEFINE_WRITE_PARAMS write_params_dst, $1500, $B00
+        kDirCopyBufSize = $B00
 
-        DEFINE_CREATE_PARAMS create_params2, LA0F4, $C3
+        DEFINE_READ_PARAMS read_params_src, $1500, kDirCopyBufSize
+        DEFINE_WRITE_PARAMS write_params_dst, $1500, kDirCopyBufSize
 
-        DEFINE_CREATE_PARAMS create_params, LA0F4,
+        DEFINE_CREATE_PARAMS create_params2, pathname_dst, $C3
+
+        DEFINE_CREATE_PARAMS create_params, pathname_dst,
         .byte   0, 0
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, LA135
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, pathname1
         .byte   0
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, LA0F4
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, pathname_dst
         .byte   0
 
         .byte   $02
         .byte   0
         .byte   0
         .byte   0
-LA0BC:  .byte   0
-LA0BD:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA0CC:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA0EC:
-        .byte   $FF
-LA0EE   := * + 1
-        .byte   $A4,$FC
-LA0F0   := * + 1
-        .byte   $A4,$F2
-        .byte   $A0,$60
-        .byte   0
-LA0F4:  .byte   0
-LA0F5:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA135:  .byte   0
-LA136:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA176:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA1B6:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LA1F6:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+buf_dir_header:
+        .res    48, 0
+
+LA0EC:  .word   do_copy
+LA0EE:  .word   LA4FC
+LA0F0:  .word   LA0F2
+
+LA0F2:  rts
+
+        .byte   0
+
+pathname_dst:  .res    65, 0
+
+
+pathname1:  .res    65, 0
+LA176:  .res    64, 0
+LA1B6:  .res    64, 0
+LA1F6:  .res    16, 0
 LA206:  .byte   0
 LA207:
 LA208           := * + 1
 LA209           := * + 2
         .byte   $0D, $00, $00
 LA20A:  .byte   0
-LA20B:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+LA20B:  .res    170, 0
 LA2B5:  .byte   0
 LA2B6:  .byte   0
+
 LA2B7:  ldx     LA2B5
         lda     LA20A
         sta     LA20B,x
@@ -600,14 +116,14 @@ LA2D3:  lda     #$00
         sta     LA2B6
         yax_call selector5::MLI_WRAPPER, OPEN, open_params
         beq     LA2E9
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA2E9:  lda     open_params::ref_num
         sta     LA209
         sta     read_params::ref_num
         yax_call selector5::MLI_WRAPPER, READ, read_params
         beq     LA300
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA300:  jsr     LA319
         rts
@@ -616,7 +132,7 @@ LA304:  lda     LA209
         sta     close_params::ref_num
         yax_call selector5::MLI_WRAPPER, CLOSE, close_params
         beq     LA318
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA318:  rts
 
@@ -625,7 +141,7 @@ LA319:  inc     LA208
         sta     read_params2::ref_num
         yax_call selector5::MLI_WRAPPER, READ, read_params2
         beq     LA330
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA330:  inc     LA2B6
         lda     LA2B6
@@ -637,7 +153,7 @@ LA330:  inc     LA2B6
         sta     read_params3::ref_num
         yax_call selector5::MLI_WRAPPER, READ, read_params3
         beq     LA354
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA354:  lda     read_params3::trans_count
         cmp     read_params3::request_count
@@ -675,18 +191,18 @@ LA396:  lda     #$00
         jsr     LA2D3
 LA39E:  jsr     LA319
         bne     LA3D0
-        lda     LA0BC
+        lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
         beq     LA39E
-        lda     LA0BC
+        lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
         sta     LA3EC
-        and     #$0F
-        sta     LA0BC
+        and     #NAME_LENGTH_MASK
+        sta     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
         lda     #$00
         sta     LA3E2
         jsr     LA3E3
         lda     LA3E2
         bne     LA39E
-        lda     LA0CC
+        lda     buf_dir_header+SubdirectoryHeader::reserved-4
         cmp     #$0F
         bne     LA39E
         jsr     LA35E
@@ -703,10 +219,9 @@ LA3DE:  jsr     LA304
         rts
 
 LA3E2:  .byte   0
+
 LA3E3:  jmp     (LA0EC)
-
 LA3E6:  jmp     (LA0EE)
-
 LA3E9:  jmp     (LA0F0)
 
 LA3EC:  .byte   0
@@ -725,32 +240,32 @@ LA3F8           := * + 1
         dey
         bpl     LA3F8
         tsx
-        stx     LA4FB
+        stx     saved_stack
         lda     #$FF
         sta     LA4F9
         jsr     LA7D9
         yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     LA41B
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA41B:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, LA4F3
         cmp16   LA4F3, LA75B
         bcs     LA43F
         jmp     LAACB
 
-LA43F:  ldx     LA0F4
+LA43F:  ldx     pathname_dst
         lda     #'/'
-        sta     LA0F5,x
-        inc     LA0F4
+        sta     pathname_dst+1,x
+        inc     pathname_dst
         ldy     #$00
-        ldx     LA0F4
+        ldx     pathname_dst
 LA44F:  iny
         inx
         lda     LA1F6,y
-        sta     LA0F4,x
+        sta     pathname_dst,x
         cpy     LA1F6
         bne     LA44F
-        stx     LA0F4
+        stx     pathname_dst
         yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         cmp     #$46            ; Error code
         beq     LA475
@@ -769,7 +284,7 @@ LA475:  yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
 LA488:  jsr     LAABD
         jmp     LA475
 
-LA48E:  jmp     LAB16
+LA48E:  jmp     handle_error_code
 
 LA491:  lda     get_file_info_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
@@ -786,7 +301,7 @@ LA4A7:  lda     get_file_info_params2,y
         dey
         cpy     #$02
         bne     LA4A7
-        lda     #$C3
+        lda     #ACCESS_DEFAULT
         sta     create_params::access
         jsr     LA56D
         bcc     LA4BF
@@ -807,7 +322,7 @@ LA4C3:  lda     get_file_info_params2,y
         sta     create_params::storage_type
 LA4DB:  yax_call selector5::MLI_WRAPPER, CREATE, create_params
         beq     LA4E9
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA4E9:  lda     LA4F8
         beq     LA4F5
@@ -818,22 +333,28 @@ LA4E9:  lda     LA4F8
 
 LA4F3:  .byte   0
         .byte   0
-LA4F5:  jmp     LA610
+LA4F5:  jmp     copy_dir
 
 LA4F8:  .byte   0
 LA4F9:  .byte   0
 LA4FA:  .byte   0
-LA4FB:  .byte   0
-        jmp     LA7C0
 
-        lda     LA0CC
+saved_stack:
+        .byte   0
+
+LA4FC:  jmp     LA7C0
+
+;;; ============================================================
+
+.proc do_copy
+        lda     buf_dir_header+SubdirectoryHeader::reserved-4
         cmp     #$0F
         bne     LA536
         jsr     LA75D
         jsr     LAA3F
         yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA528
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA51A:  jsr     LA7C0
         jsr     LA782
@@ -852,7 +373,7 @@ LA536:  jsr     LA79B
         jsr     LAA3F
         yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA54D
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA54D:  jsr     LA56D
         bcc     LA555
@@ -862,15 +383,20 @@ LA555:  jsr     LA782
         jsr     LA69A
         bcs     LA56A
         jsr     LA75D
-        jsr     LA610
+        jsr     copy_dir
         jsr     LA782
         jsr     LA7C0
 LA569:  rts
 
+.endproc
+
+;;; ============================================================
+
+
 LA56A:  jsr     LA7C0
 LA56D:  yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA57B
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA57B:  lda     #$00
         sta     LA60E
@@ -879,24 +405,24 @@ LA57B:  lda     #$00
         beq     LA595
         cmp     #ERR_FILE_NOT_FOUND
         beq     LA5A1
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA595:  copy16  get_file_info_params::blocks_used, LA60E
-LA5A1:  lda     LA0F4
+LA5A1:  lda     pathname_dst
         sta     LA60C
         ldy     #$01
 LA5A9:  iny
-        cpy     LA0F4
+        cpy     pathname_dst
         bcs     LA602
-        lda     LA0F4,y
+        lda     pathname_dst,y
         cmp     #'/'
         bne     LA5A9
         tya
-        sta     LA0F4
+        sta     pathname_dst
         sta     LA60D
         yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
         beq     LA5CB
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA5CB:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, LA60A
         sub16   LA60A, LA60E, LA60A
@@ -906,7 +432,7 @@ LA5CB:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_use
         bcs     LA603
 LA602:  clc
 LA603:  lda     LA60C
-        sta     LA0F4
+        sta     pathname_dst
         rts
 
 LA60A:  .byte   0
@@ -915,12 +441,16 @@ LA60C:  .byte   0
 LA60D:  .byte   0
 LA60E:  .byte   0
 LA60F:  .byte   0
-LA610:  yax_call selector5::MLI_WRAPPER, OPEN, open_params_src
+
+;;; ============================================================
+
+.proc copy_dir
+        yax_call selector5::MLI_WRAPPER, OPEN, open_params_src
         beq     LA61E
-        jsr     LAB16
+        jsr     handle_error_code
 LA61E:  yax_call selector5::MLI_WRAPPER, OPEN, open_params_dst
         beq     LA62C
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA62C:  lda     open_params_src::ref_num
         sta     read_params_src::ref_num
@@ -928,29 +458,33 @@ LA62C:  lda     open_params_src::ref_num
         lda     open_params_dst::ref_num
         sta     write_params_dst::ref_num
         sta     close_params_dst::ref_num
-LA63E:  copy16  #$0B00, read_params_src::request_count
+LA63E:  copy16  #kDirCopyBufSize, read_params_src::request_count
         yax_call selector5::MLI_WRAPPER, READ, read_params_src
         beq     LA65A
         cmp     #ERR_END_OF_FILE
         beq     LA687
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA65A:  copy16  read_params_src::trans_count, write_params_dst::request_count
         ora     read_params_src::trans_count
         beq     LA687
         yax_call selector5::MLI_WRAPPER, WRITE, write_params_dst
         beq     LA679
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA679:  lda     write_params_dst::trans_count
-        cmp     #$00
+        cmp     #<kDirCopyBufSize
         bne     LA687
         lda     write_params_dst::trans_count+1
-        cmp     #$0B
+        cmp     #>kDirCopyBufSize
         beq     LA63E
 LA687:  yax_call selector5::MLI_WRAPPER, CLOSE, close_params_dst
         yax_call selector5::MLI_WRAPPER, CLOSE, close_params_src
         rts
+.endproc
+
+;;; ============================================================
+
 
 LA69A:  ldx     #$07
 LA69C:  lda     get_file_info_params2,x
@@ -961,7 +495,7 @@ LA69C:  lda     get_file_info_params2,x
         yax_call selector5::MLI_WRAPPER, CREATE, create_params2
         clc
         beq     LA6B6
-        jmp     LAB16
+        jmp     handle_error_code
 
 LA6B6:  rts
 
@@ -997,7 +531,7 @@ LA6E3:  yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
 LA6F6:  jsr     LAABD
         jmp     LA6E3
 
-LA6FC:  jmp     LAB16
+LA6FC:  jmp     handle_error_code
 
 LA6FF:  lda     get_file_info_params2::storage_type
         sta     LA724
@@ -1035,76 +569,76 @@ LA759:  .byte   0
 LA75A:  .byte   0
 LA75B:  .byte   0
 LA75C:  .byte   0
-LA75D:  lda     LA0BC
+LA75D:  lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
         bne     LA763
         rts
 
 LA763:  ldx     #$00
-        ldy     LA135
+        ldy     pathname1
         lda     #'/'
-        sta     LA136,y
+        sta     pathname1+1,y
         iny
-LA76E:  cpx     LA0BC
+LA76E:  cpx     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
         bcs     LA77E
-        lda     LA0BD,x
-        sta     LA136,y
+        lda     buf_dir_header+SubdirectoryHeader::file_name-4,x
+        sta     pathname1+1,y
         inx
         iny
         jmp     LA76E
 
-LA77E:  sty     LA135
+LA77E:  sty     pathname1
         rts
 
-LA782:  ldx     LA135
+LA782:  ldx     pathname1
         bne     LA788
         rts
 
-LA788:  lda     LA135,x
+LA788:  lda     pathname1,x
         cmp     #'/'
         beq     LA796
         dex
         bne     LA788
-        stx     LA135
+        stx     pathname1
         rts
 
 LA796:  dex
-        stx     LA135
+        stx     pathname1
         rts
 
-LA79B:  lda     LA0BC
+LA79B:  lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
         bne     LA7A1
         rts
 
 LA7A1:  ldx     #$00
-        ldy     LA0F4
+        ldy     pathname_dst
         lda     #'/'
-        sta     LA0F5,y
+        sta     pathname_dst+1,y
         iny
-LA7AC:  cpx     LA0BC
+LA7AC:  cpx     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
         bcs     LA7BC
-        lda     LA0BD,x
-        sta     LA0F5,y
+        lda     buf_dir_header+SubdirectoryHeader::file_name-4,x
+        sta     pathname_dst+1,y
         inx
         iny
         jmp     LA7AC
 
-LA7BC:  sty     LA0F4
+LA7BC:  sty     pathname_dst
         rts
 
-LA7C0:  ldx     LA0F4
+LA7C0:  ldx     pathname_dst
         bne     LA7C6
         rts
 
-LA7C6:  lda     LA0F4,x
+LA7C6:  lda     pathname_dst,x
         cmp     #'/'
         beq     LA7D4
         dex
         bne     LA7C6
-        stx     LA0F4
+        stx     pathname_dst
         rts
 
 LA7D4:  dex
-        stx     LA0F4
+        stx     pathname_dst
         rts
 
 LA7D9:  ldy     #$00
@@ -1115,12 +649,12 @@ LA7DF:  iny
         cmp     #'/'
         bne     LA7EA
         sty     LA4FA
-LA7EA:  sta     LA135,y
+LA7EA:  sta     pathname1,y
         cpy     LA1B6
         bne     LA7DF
         ldy     LA176
 LA7F5:  lda     LA176,y
-        sta     LA0F4,y
+        sta     pathname_dst,y
         dey
         bpl     LA7F5
         rts
@@ -1246,29 +780,15 @@ mapbits:        .addr   $2000
 mapwidth:       .byte   $80
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 346, 66
+pattern:        .res    8, $FF
+masks:          .byte   $FF, $00
+penloc:         .word   0, 0
+pensize:        .byte   1, 1
+penmode:        .byte   0
+textback:       .byte   $7F
+textfont:       .addr   $8800
+next:           .addr   0
 .endparams
-
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $01,$01
-        .byte   $00
-        .byte   $7F
-        .byte   $00
-        .byte   $88
-        .byte   $00
-        .byte   $00
 
 str_not_enough_room:
         PASCAL_STRING "Not enough room in the RAMCard to copy the application."
@@ -1304,21 +824,21 @@ LAA3F:  dec     LA759
         cmp     #$FF
         bne     LAA4C
         dec     LA75A
-LAA4C:  jsr     LAC62
+LAA4C:  jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect3
-        addr_call selector5::L99DC, LA135
+        addr_call selector5::L99DC, pathname1
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call DrawString, str_copying
-        addr_call DrawString, LA135
+        addr_call DrawString, pathname1
         MGTK_CALL MGTK::MoveTo, pt2
         addr_call DrawString, str_files_remaining
         addr_call DrawString, str_count
         addr_call DrawString, str_spaces
         rts
 
-LAA98:  jsr     LAC62
+LAA98:  jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call DrawString, str_files_to_copy
@@ -1332,7 +852,7 @@ LAABD:  lda     #$FD            ; ???
         jsr     selector5::set_watch_cursor
         rts
 
-LAAC8:  jmp     LAC54
+LAAC8:  jmp     restore_stack_and_return
 
 LAACB:  lda     winfo::window_id
         jsr     selector5::L9A15
@@ -1346,10 +866,13 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, pos1
         addr_call DrawString, selector5::str_ok_btn
-        jsr     LAB61
-        jmp     LAC54
+        jsr     set_pointer_cursor
+        jmp     restore_stack_and_return
 
-LAB16:  lda     winfo::window_id
+;;; ============================================================
+
+.proc handle_error_code
+        lda     winfo::window_id
         jsr     selector5::L9A15
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
@@ -1361,10 +884,16 @@ LAB16:  lda     winfo::window_id
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, pos1
         addr_call DrawString, selector5::str_ok_btn
-        jsr     LAB61
-        jmp     LAC54
+        jsr     set_pointer_cursor
+        jmp     restore_stack_and_return
+.endproc
 
-LAB61:  jsr     selector5::set_pointer_cursor
+;;; ============================================================
+
+set_pointer_cursor:
+        jsr     selector5::set_pointer_cursor
+
+;;; ============================================================
 
 event_loop:
         MGTK_CALL MGTK::GetEvent, selector5::event_params
@@ -1447,85 +976,87 @@ LAC44:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         return  #$00
 
 LAC53:  .byte   0
-LAC54:  ldx     LA4FB
+
+;;; ============================================================
+
+.proc restore_stack_and_return
+        ldx     saved_stack
         txs
         return  #$FF
+.endproc
 
-LAC5B:  MGTK_CALL MGTK::CloseWindow, winfo
+;;; ============================================================
+
+.proc close_window
+        MGTK_CALL MGTK::CloseWindow, winfo
         rts
+.endproc
 
-LAC62:  copy16  LA759, LACE2
-        ldx     #$07
-        lda     #$20
+;;; ============================================================
+
+.proc populate_count
+        copy16  LA759, value
+        ldx     #7
+        lda     #' '
 :       sta     str_count,x
         dex
         bne     :-
-        lda     #$00
-        sta     LACE5
-        ldy     #$00
-        ldx     #$00
-LAC81:  lda     #$00
-        sta     LACE4
-LAC86:  lda     LACE2
-        cmp     LACDA,x
-        lda     LACE3
-        sbc     LACDB,x
-        bpl     LACB8
-        lda     LACE4
-        bne     LACA2
-        bit     LACE5
-        bmi     LACA2
-        lda     #$20
-        bne     LACAB
-LACA2:  ora     #$30
+        lda     #0
+        sta     nonzero_flag
+        ldy     #0
+        ldx     #0
+
+loop:   lda     #0
+        sta     digit
+sloop:  cmp16   value, powers,x
+        bpl     subtract
+        lda     digit
+        bne     not_pad
+        bit     nonzero_flag
+        bmi     not_pad
+        lda     #' '
+        bne     store
+not_pad:
+        ora     #$30            ; to ASCII digit
         pha
         lda     #$80
-        sta     LACE5
+        sta     nonzero_flag
         pla
-LACAB:  sta     str_count+2,y
+store:  sta     str_count+2,y
         iny
         inx
         inx
-        cpx     #$08
-        beq     LACD1
-        jmp     LAC81
+        cpx     #8
+        beq     done
+        jmp     loop
 
-LACB8:  inc     LACE4
-        lda     LACE2
+subtract:
+        inc     digit
+        lda     value
         sec
-        sbc     LACDA,x
-        sta     LACE2
-        lda     LACE3
-        sbc     LACDB,x
-        sta     LACE3
-        jmp     LAC86
+        sbc     powers,x
+        sta     value
+        lda     value+1
+        sbc     powers+1,x
+        sta     value+1
+        jmp     sloop
 
-LACD1:  lda     LACE2
+done:   lda     value
         ora     #$30            ; number to ASCII digit
         sta     str_count+2,y
         rts
 
-LACDA:
-LACDB   := * + 1
-        .byte   $10,$27
-        .byte   $E8
-        .byte   $03
-        .byte   $64
-        .byte   $00
-        .byte   $0A
-        .byte   $00
-LACE2:
-        .byte   $00
-LACE3:
-        .byte   $00
-LACE4:
-        .byte   $00
-LACE5:
-        .byte   $00
+powers: .word   10000, 1000, 100, 10
+value:  .word   0
+digit:  .byte   0
+nonzero_flag:
+        .byte   0
+.endproc
 
 str_count:
         PASCAL_STRING "       "
 
+;;; ============================================================
 
         ;; Junk ???
         .byte   0, $40, $11, $43, $a2
