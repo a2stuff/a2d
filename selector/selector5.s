@@ -406,9 +406,11 @@ pt4:    DEFINE_POINT   495, 90
 pt5:    DEFINE_POINT 10, 30, pt5
 pt6:    DEFINE_POINT 0, 0, pt6
 
-rect2:  DEFINE_RECT 5, 21, 132, 29, rect2
+rect_entry_base:
+        DEFINE_RECT 5, 21, 132, 29, rect_entry_base
 
-rect1:  DEFINE_RECT 0, 0, 0, 0, rect1
+rect_entry:
+        DEFINE_RECT 0, 0, 0, 0, rect_entry
 
         .byte   0
         .byte   $7F
@@ -858,7 +860,7 @@ L93EB:  tsx
 .proc cmd_run_a_program
         lda     selected_entry
         bmi     L93FF
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         lda     #$FF
         sta     selected_entry
 L93FF:  jsr     set_watch_cursor
@@ -956,7 +958,7 @@ L94F0:  sub16   L8F7E, pt5::xcoord, L8F7E
         lda     L8F81
         bpl     L9527
         lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         lda     #$FF
         sta     selected_entry
         rts
@@ -968,7 +970,7 @@ L9527:  lsr16   L8F80
         cmp     #$08
         bcc     L954C
         lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         lda     #$FF
         sta     selected_entry
         rts
@@ -993,7 +995,7 @@ L954C:  sta     L959D
 L9571:  cmp     num_run_list_entries
         bcc     L9596
         lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         lda     #$FF
         sta     selected_entry
         rts
@@ -1003,7 +1005,7 @@ L9582:  sec
         cmp     num_other_run_list_entries
         bcc     L9596
         lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         lda     #$FF
         sta     selected_entry
         rts
@@ -1082,10 +1084,10 @@ L961D:  lda     selected_entry
         rts
 
 L9628:  lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
 L962E:  lda     L97BC
         sta     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         rts
 
 L9638:  cmp     #CHAR_RETURN
@@ -1112,7 +1114,7 @@ L966A:  lda     selected_entry
         bpl     L9678
         lda     #$00
         sta     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         rts
 
 L9678:  lda     selected_entry
@@ -1128,10 +1130,10 @@ L9688:  clc
         adc     #$08
         pha
         lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         pla
         sta     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         rts
 
 L969A:  cmp     num_other_run_list_entries
@@ -1143,10 +1145,10 @@ L96A0:  lda     selected_entry
         adc     #$08
         pha
         lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         pla
         sta     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         rts
 
 L96B5:  cmp     #$08
@@ -1171,12 +1173,12 @@ L96C7:  lda     selected_entry
         rts
 
 L96D7:  lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         lda     selected_entry
         sec
         sbc     #$08
         sta     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         rts
 
 L96EA:  cmp     #$0B
@@ -1188,7 +1190,7 @@ L96F1:  lda     selected_entry
         rts
 
 L96F7:  lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         jsr     L9728
         lda     selected_entry
         cmp     #$08
@@ -1208,7 +1210,7 @@ L970E:  sec
 L971D:  tax
         lda     L974B,x
         sta     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         rts
 
 L9728:  ldx     #$00
@@ -1278,11 +1280,11 @@ L977B:  lda     selected_entry
         bpl     L9789
         lda     #$00
         sta     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         rts
 
 L9789:  lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         jsr     L9728
         lda     num_run_list_entries
         clc
@@ -1301,7 +1303,7 @@ L97AA:  inx
         ldx     #$00
 L97B2:  lda     L974B,x
         sta     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         rts
 
 L97BC:  .byte   0
@@ -1612,8 +1614,8 @@ L9A15:  sta     getwinport_params::window_id
         rts
 
 ;;; ============================================================
-;;; Input: Entry number in A
-;;; Output: Entry address in A,X
+;;; Input: A = Entry number
+;;; Output: A,X = Entry address
 
 .proc get_selector_list_entry_addr
         ldx     #$00
@@ -1774,75 +1776,93 @@ L9B22:  pha
         lda     selected_entry
         bmi     L9B2E
         lda     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
 L9B2E:  pla
         sta     selected_entry
-        jsr     L9B42
+        jsr     toggle_entry_hilite
         lda     #$FF
         sta     L9112
         lda     #$1E
         sta     L9110
         jmp     L9B17
 
-L9B42:  pha
+;;; ============================================================
+;;; Toggle the highlight on an entry in the list
+;;; Input: A = entry number
+
+;;; NOTE: Assumes font height is 8px
+
+.proc toggle_entry_hilite
+        pha
+
         lsr     a
         lsr     a
         lsr     a
-        sta     L9BBC
+        sta     col      ; col
+
         asl     a
         asl     a
         asl     a
-        sta     L9BBA
+        sta     tmp
+
         pla
         sec
-        sbc     L9BBA
-        sta     L9BBB
-        lda     #$00
-        sta     L9BBA
-        lda     L9BBC
+        sbc     tmp
+        sta     row
+
+        lda     #0
+        sta     tmp
+        lda     col
         lsr     a
-        ror     L9BBA
+        ror     tmp
         pha
-        lda     L9BBA
+
+        ;; X coords
+        lda     tmp
         clc
-        adc     rect2::x1
-        sta     rect1::x1
+        adc     rect_entry_base::x1
+        sta     rect_entry::x1
         pla
         pha
-        adc     rect2::x1+1
-        sta     rect1::x1+1
-        lda     L9BBA
+        adc     rect_entry_base::x1+1
+        sta     rect_entry::x1+1
+        lda     tmp
         clc
-        adc     rect2::x2
-        sta     rect1::x2
+        adc     rect_entry_base::x2
+        sta     rect_entry::x2
         pla
-        adc     rect2::x2+1
-        sta     rect1::x2+1
-        lda     L9BBB
+        adc     rect_entry_base::x2+1
+        sta     rect_entry::x2+1
+
+        ;; Y coords
+        lda     row
         asl     a
         asl     a
         asl     a
         pha
         clc
-        adc     rect2::y1
-        sta     rect1::y1
-        lda     #$00
-        adc     rect2::y1+1
-        sta     rect1::y1+1
+        adc     rect_entry_base::y1
+        sta     rect_entry::y1
+        lda     #0
+        adc     rect_entry_base::y1+1
+        sta     rect_entry::y1+1
         pla
         clc
-        adc     rect2::y2
-        sta     rect1::y2
-        lda     #$00
-        adc     rect2::y2+1
-        sta     rect1::y2+1
+        adc     rect_entry_base::y2
+        sta     rect_entry::y2
+        lda     #0
+        adc     rect_entry_base::y2+1
+        sta     rect_entry::y2+1
+
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect1
+        MGTK_CALL MGTK::PaintRect, rect_entry
+
         rts
 
-L9BBA:  .byte   0
-L9BBB:  .byte   0
-L9BBC:  .byte   0
+tmp:    .byte   0
+row:    .byte   0
+col:    .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -1872,20 +1892,20 @@ L9BBC:  .byte   0
 
 ;;; ============================================================
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, INVOKER_PREFIX
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_invoke_params, INVOKER_PREFIX
 
 .proc invoke_entry
         lda     L9129
-        bne     L9C17
+        bne     :+
         jsr     set_watch_cursor
         lda     selected_entry
-        bmi     L9C17
-        jsr     L9B42
-L9C17:  jmp     L9C1D
+        bmi     :+
+        jsr     toggle_entry_hilite
+:       jmp     try
 
 ep2:    jmp     L9C7E
 
-L9C1D:  lda     L9129
+try:    lda     L9129
         bne     L9C32
         bit     BUTN0
         bpl     L9C2A
@@ -1925,6 +1945,8 @@ L9C6F:  lda     selected_entry
         jsr     L9F27
         jmp     L9C7E
 
+        ;; --------------------------------------------------
+
 L9C78:  lda     selected_entry
         jsr     L9A47
 L9C7E:  stax    $06
@@ -1935,51 +1957,64 @@ L9C87:  lda     ($06),y
         sta     INVOKER_PREFIX,y
         dey
         bpl     L9C87
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params3
-        beq     L9CB7
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_invoke_params
+        beq     check_type
+
         tax
         lda     L9129
-        bne     L9CB4
+        bne     fail
         txa
         pha
         jsr     ShowAlert
         tax
         pla
-        cmp     #$45
-        bne     L9CB4
+        cmp     #ERR_VOL_NOT_FOUND
+        bne     fail
         txa
-        bne     L9CB4
+        bne     fail
         jsr     set_watch_cursor
         jmp     L9C78
 
-L9CB4:  jmp     clear_selected_entry
+fail:   jmp     clear_selected_entry
 
-L9CB7:  lda     get_file_info_params3::file_type
+        ;; --------------------------------------------------
+        ;; Check file type
+
+        ;; Ensure it's BIN, SYS, S16 or BAS (if BS is present)
+
+check_type:
+        lda     get_file_info_invoke_params::file_type
         cmp     #FT_BASIC
-        bne     L9CC4
+        bne     not_basic
         jsr     check_basic_system
-        jmp     L9CD8
+        jmp     check_path
 
-L9CC4:  cmp     #FT_BINARY
-        beq     L9CD8
+not_basic:
+        cmp     #FT_BINARY
+        beq     check_path
         cmp     #FT_SYSTEM
-        beq     L9CD8
+        beq     check_path
         cmp     #FT_S16
-        beq     L9CD8
+        beq     check_path
+        ;; Don't know how to invoke
         lda     #AlertID::selector_unable_to_run
         jsr     ShowAlert
         jmp     clear_selected_entry
 
-L9CD8:  ldy     INVOKER_PREFIX
-L9CDB:  lda     INVOKER_PREFIX,y
+        ;; --------------------------------------------------
+        ;; Check Path
+
+check_path:
+        ldy     INVOKER_PREFIX
+:       lda     INVOKER_PREFIX,y
         cmp     #'/'
         beq     L9CEF
         dey
-        bne     L9CDB
+        bne     :-
         lda     #AlertID::insert_source_disk
         jsr     ShowAlert
         bne     clear_selected_entry
-        jmp     L9C1D
+        jmp     try
 
 L9CEF:  dey
         tya
@@ -1995,8 +2030,12 @@ L9CF5:  iny
         stx     INVOKER_FILENAME
         pla
         sta     INVOKER_PREFIX
-        addr_call L9DE4, INVOKER_PREFIX
-        addr_call L9DE4, INVOKER_FILENAME
+        addr_call upcase_string, INVOKER_PREFIX
+        addr_call upcase_string, INVOKER_FILENAME
+
+        ;; --------------------------------------------------
+        ;; Invoke
+
         jsr     reconnect_ramdisk
         jsr     SETVID
         jsr     SETKBD
@@ -2094,38 +2133,44 @@ str_basic_system:
 .endproc
 
 ;;; ============================================================
+;;; Uppercase a string
+;;; Input: A,X = Address
 
-.proc L9DE4
-        stax    $06
+.proc upcase_string
+        ptr := $06
+
+        stax    ptr
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         tay
-L9DED:  lda     ($06),y
+@loop:  lda     (ptr),y
         cmp     #'a'
-        bcc     L9DFB
+        bcc     :+
         cmp     #'z'+1
-        bcs     L9DFB
+        bcs     :+
         and     #CASE_MASK
-        sta     ($06),y
-L9DFB:  dey
-        bne     L9DED
+        sta     (ptr),y
+:       dey
+        bne     @loop
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc L9DFF
+        ptr := $06
+
         lda     selected_entry
         jsr     L9F27
-        stax    $06
+        stax    ptr
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         tay
-L9E0E:  lda     ($06),y
+L9E0E:  lda     (ptr),y
         sta     INVOKER_PREFIX,y
         dey
         bpl     L9E0E
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params3
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_invoke_params
         rts
 .endproc
 
@@ -2248,7 +2293,8 @@ ramcard_prefix          := $D3EE
 
 ;;; ============================================================
 
-L9F27:  sta     L9F72
+.proc L9F27
+        sta     L9F72
         addr_call copy_ramcard_prefix, $0800
         lda     L9F72
         jsr     L9A47
@@ -2284,10 +2330,11 @@ L9F5E:  inx
 
 L9F72:  .byte   0
 L9F73:  .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Show Alert Message
-;;; Inputs: A=AlertID
+;;; Input: A = AlertID
 
         ASSERT_ADDRESS ::ShowAlert
 .proc ShowAlert
