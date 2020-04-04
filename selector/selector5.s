@@ -435,8 +435,8 @@ str_selector:
         DEFINE_READ_PARAMS read_overlay1_params, overlay_addr, overlay1_size
         DEFINE_READ_PARAMS read_overlay2_params, overlay_addr, overlay2_size
         DEFINE_CLOSE_PARAMS close_params2
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $9104
 
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_desktop2_params, str_desktop2_2
 str_desktop2_2:
         PASCAL_STRING "DeskTop2"
 
@@ -484,7 +484,7 @@ entry:  cli
         lda     L9128
         ora     L9127
         bne     L9151
-L9140:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+L9140:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
         beq     L914E
         jmp     L91B2
 
@@ -525,7 +525,7 @@ L917B:  cmp     #'Q'
         lda     ($06),y
         cmp     #$C0
         beq     L91AC
-        jsr     L9EFC
+        jsr     get_copied_to_ramcard_flag
         beq     L91B2
         jsr     L9DFF
         beq     L91AC
@@ -627,7 +627,9 @@ L920D:  lda     L8F71
         MGTK_CALL MGTK::SetMenu, menu
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+
+        ;; Is DeskTop available?
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
         beq     L929A
         lda     #$80
 L929A:  sta     desktop_available_flag
@@ -675,7 +677,7 @@ L92D6:  MGTK_CALL MGTK::GetEvent, event_params
         beq     :+
         cmp     #'q'
         bne     not_desktop
-:       yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+:       yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
         beq     found_desktop
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
@@ -732,7 +734,7 @@ menu1:  .addr   noop
         .addr   noop
 
         ;; File menu
-menu2:  .addr   load_overlay1
+menu2:  .addr   cmd_run_a_program
 
         ;; Startup menu
 menu3:  .addr   L9BBD
@@ -807,9 +809,8 @@ L93EB:  tsx
 
 
 ;;; ============================================================
-;;; 93F2
 
-.proc load_overlay1
+.proc cmd_run_a_program
         lda     L910E
         bmi     L93FF
         jsr     L9B42
@@ -881,7 +882,7 @@ L947C:  lda     winfo::window_id
 
 L94A1:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_btn
-        jsr     L9E20
+        jsr     ok_btn_event_loop
         bmi     L94B5
         jsr     L97BD
 L94B5:  rts
@@ -895,9 +896,9 @@ L94B6:  bit     desktop_available_flag
 
 L94C8:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_desktop_btn
-        jsr     L9E8E
+        jsr     desktop_btn_event_loop
         bmi     L94B5
-L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
         beq     L94ED
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
@@ -1805,7 +1806,7 @@ L9C1D:  lda     L9129
         bpl     L9C2A
         jmp     L9C78
 
-L9C2A:  jsr     L9EFC
+L9C2A:  jsr     get_copied_to_ramcard_flag
         bne     L9C32
         jmp     L9C78
 
@@ -2024,7 +2025,10 @@ L9E0E:  lda     ($06),y
         yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params3
         rts
 
-L9E20:  lda     #$00
+;;; ============================================================
+
+.proc ok_btn_event_loop
+        lda     #$00
         sta     L9E8D
 L9E25:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -2062,7 +2066,12 @@ L9E7E:  MGTK_CALL MGTK::SetPenMode, penXOR
         return  #$00
 
 L9E8D:  .byte   0
-L9E8E:  lda     #$00
+.endproc
+
+;;; ============================================================
+
+.proc desktop_btn_event_loop
+        lda     #$00
         sta     L9EFB
 L9E93:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -2100,28 +2109,43 @@ L9EEC:  MGTK_CALL MGTK::SetPenMode, penXOR
         return  #$01
 
 L9EFB:  .byte   0
-L9EFC:  lda     LCBANK2
+.endproc
+
+;;; ============================================================
+
+;;; DESKTOP.SYSTEM flags/state
+
+copied_to_ramcard_flag  := $D3FF
+ramcard_prefix          := $D3EE
+
+.proc get_copied_to_ramcard_flag
         lda     LCBANK2
-        lda     $D3FF
+        lda     LCBANK2
+        lda     copied_to_ramcard_flag
         tax
         lda     ROMIN2
         txa
         rts
+.endproc
 
-L9F0B:  stax    L9F1E
+.proc copy_ramcard_prefix
+        stax    @addr
         lda     LCBANK2
         lda     LCBANK2
-        ldx     $D3EE
-L9F1A:  lda     $D3EE,x
-L9F1E           := * + 1
+        ldx     ramcard_prefix
+:       lda     ramcard_prefix,x
+        @addr := * + 1
         sta     dummy1234,x
         dex
-        bpl     L9F1A
+        bpl     :-
         lda     ROMIN2
         rts
+.endproc
+
+;;; ============================================================
 
 L9F27:  sta     L9F72
-        addr_call L9F0B, $0800
+        addr_call copy_ramcard_prefix, $0800
         lda     L9F72
         jsr     L9A47
         stax    $06
