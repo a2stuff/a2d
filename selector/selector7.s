@@ -297,8 +297,9 @@ LA215:
         .byte   $00
 LA218   := * + 1
         .byte   $01,$00
-        .byte   $02
-        .byte   $20,$20
+
+str_two_spaces:
+        PASCAL_STRING "  "
 
 pt3:    DEFINE_POINT 0, 13, pt3
 
@@ -370,7 +371,7 @@ str_disk:
 rect_input:
         DEFINE_RECT 28, 113, 428, 124
 
-rect6:  DEFINE_RECT $1E, $7B, $1C, $88, rect6
+rect6:  DEFINE_RECT 30, 123, 28, 136, rect6
 
         .byte   $AC,$01,$93
         .byte   $00
@@ -677,10 +678,10 @@ LA643:  bit     LA47F
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_which_ctl
         beq     LA662
-        cmp     #$01
+        cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     LA661
         lda     winfo2::vscroll
-        and     #$01
+        and     #MGTK::Ctl::vertical_scroll_bar
         beq     LA661
         jmp     LA77B
 
@@ -801,7 +802,7 @@ LA793:  cmp     #$04
         bne     LA79A
         jmp     LA7E8
 
-LA79A:  lda     #$01
+LA79A:  lda     #MGTK::Ctl::vertical_scroll_bar
         sta     trackthumb_which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_thumbmoved
@@ -810,7 +811,7 @@ LA79A:  lda     #$01
 
 LA7AB:  lda     trackthumb_thumbpos
         sta     updatethumb_thumbpos
-        lda     #$01
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_stash
@@ -824,7 +825,7 @@ LA7C6:  lda     winfo2::vthumbpos
         bpl     :+
         lda     #$00
 :       sta     updatethumb_thumbpos
-        lda     #$01
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
@@ -840,7 +841,7 @@ LA7E8:  lda     winfo2::vthumbpos
         bcc     LA7F8
         lda     $177F
 LA7F8:  sta     updatethumb_thumbpos
-        lda     #$01
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
@@ -855,7 +856,7 @@ LA810:  lda     winfo2::vthumbpos
 LA816:  sec
         sbc     #$01
         sta     updatethumb_thumbpos
-        lda     #$01
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
@@ -872,7 +873,7 @@ LA836:  lda     winfo2::vthumbpos
 LA83F:  clc
         adc     #$01
         sta     updatethumb_thumbpos
-        lda     #$01
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
@@ -909,7 +910,7 @@ LA88A:  lda     findwindow_which_area
 
 LA894:  MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_which_ctl
-        cmp     #$01
+        cmp     #MGTK::Ctl::vertical_scroll_bar
         beq     LA8A4
         pla
         pla
@@ -2008,21 +2009,21 @@ LB30B:  sta     LB34F
         lda     $177F
         cmp     #$0A
         bcs     LB326
-        copy    #$01, activatectl_which_ctl
-        copy    #$00, activatectl_activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
+        copy    #MGTK::activatectl_deactivate, activatectl_activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
 
 LB326:  lda     $177F
         sta     winfo2::vthumbmax
-        lda     #$01
+        lda     #MGTK::Ctl::vertical_scroll_bar ; also activate
         sta     activatectl_which_ctl
         sta     activatectl_activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         lda     LB34F
         sta     updatethumb_thumbpos
         jsr     LB3B7
-        lda     #$01
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
@@ -2561,7 +2562,7 @@ LB707:  cmp     #$09
 
 LB70F:  lda     winfo1::window_id
         jsr     LB443
-        jsr     LBB31
+        jsr     calc_input_endpos
         stax    $06
         copy16  rect6::y1, $08
         MGTK_CALL MGTK::MoveTo, $0006
@@ -2590,8 +2591,8 @@ LB760:  lda     winfo1::window_id
         lda     LA10C
         beq     LB78A
         addr_call draw_string, LA10C
-LB78A:  addr_call draw_string, $A150
-        addr_call draw_string, $A219
+LB78A:  addr_call draw_string, LA150
+        addr_call draw_string, str_two_spaces
         rts
 
 LB799:  lda     winfo1::window_id
@@ -2602,23 +2603,23 @@ LB799:  lda     winfo1::window_id
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, rect_input
         cmp     #MGTK::inrect_inside
-        beq     LB7BC
+        beq     :+
         rts
 
-LB7BC:  jsr     LBB31
+:       jsr     calc_input_endpos
         stax    $06
         cmp16   LA013, $06
         bcs     LB7D2
         jmp     LB864
 
-LB7D2:  jsr     LBB31
+LB7D2:  jsr     calc_input_endpos
         stax    LB8EA
         ldx     LA150
         inx
         lda     #$20
         sta     LA150,x
         inc     LA150
-        copy16  #$A150, $06
+        copy16  #LA150, $06
         lda     LA150
         sta     $08
 LB7F4:  MGTK_CALL MGTK::TextWidth, $0006
@@ -2729,7 +2730,7 @@ LB8FC:  lda     LB8FB
         inx
         sta     LA10C,x
         sta     LA218
-        jsr     LBB31
+        jsr     calc_input_endpos
         inc     LA10C
         stax    $06
         copy16  rect6::y1, $08
@@ -2737,7 +2738,7 @@ LB8FC:  lda     LB8FB
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
         addr_call draw_string, $A217
-        addr_call draw_string, $A150
+        addr_call draw_string, LA150
         jsr     LBB5B
         rts
 
@@ -2746,14 +2747,14 @@ LB93B:  lda     LA10C
         rts
 
 LB941:  dec     LA10C
-        jsr     LBB31
+        jsr     calc_input_endpos
         stax    $06
         copy16  rect6::y1, $08
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
-        addr_call draw_string, $A150
-        addr_call draw_string, $A219
+        addr_call draw_string, LA150
+        addr_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
 
@@ -2774,14 +2775,14 @@ LB98B:  ldx     LA10C
         sta     LA150+2
         dec     LA10C
         inc     LA150
-        jsr     LBB31
+        jsr     calc_input_endpos
         stax    $06
         copy16  rect6::y1, $08
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
-        addr_call draw_string, $A150
-        addr_call draw_string, $A219
+        addr_call draw_string, LA150
+        addr_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
 
@@ -2809,8 +2810,8 @@ LB9F3:  dec     LA150
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, rect6
         addr_call draw_string, LA10C
-        addr_call draw_string, $A150
-        addr_call draw_string, $A219
+        addr_call draw_string, LA150
+        addr_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
 
@@ -2899,6 +2900,8 @@ LBAC9:  jsr     LBAB7
         jsr     LB760
         rts
 
+;;; ============================================================
+
 LBAD0:  copy16  #$1800, $06
         ldx     LA231
         lda     $1780,x
@@ -2925,7 +2928,11 @@ LBAD0:  copy16  #$1800, $06
         rts
 
 LBB07:  .byte   0
-        .byte   0
+
+        .byte   0               ; Unused ???
+
+;;; ============================================================
+
         ldx     LA3C7
 :       lda     LA3C7,x
         sta     LA10C,x
@@ -2933,6 +2940,8 @@ LBB07:  .byte   0
         bpl     :-
         addr_call LB2D1, LA10C
         rts
+
+;;; ============================================================
 
 LBB1D:  ldx     LA3C7
 :       lda     LA3C7,x
@@ -2942,27 +2951,36 @@ LBB1D:  ldx     LA3C7
         addr_call LB2D1, LA10C
         rts
 
-.proc LBB31
-        params := $06
+;;; ============================================================
+;;; Output: A,X = coordinates of input string end
 
-        lda     #$00
-        sta     $09
-        sta     $0A
+.proc calc_input_endpos
+        PARAM_BLOCK params, $06
+data:   .addr   0
+length: .byte   0
+width:  .word   0
+        END_PARAM_BLOCK
+
+        lda     #0
+        sta     params::width
+        sta     params::width+1
         lda     LA10C
-        beq     LBB4C
-        sta     $08
-        copy16  #LA10C+1, params
+        beq     :+
+        sta     params::length
+        copy16  #LA10C+1, params::data
         MGTK_CALL MGTK::TextWidth, params
-LBB4C:  lda     $09
+:       lda     params::width
         clc
         adc     rect6::x1
         tay
-        lda     $0A
+        lda     params::width+1
         adc     rect6::x1+1
         tax
         tya
         rts
 .endproc
+
+;;; ============================================================
 
 LBB5B:  ldx     LA10C
 :       lda     LA10C,x
@@ -2997,7 +3015,7 @@ LBB5B:  ldx     LA10C
         tax
         tya
         jsr     LB0D6
-LBBA0:  addr_call LB2D1, $A0C8
+LBBA0:  addr_call LB2D1, LA0C8
         addr_call LB2D1, $A3C7
         lda     LA0C8
         cmp     LA3C7
