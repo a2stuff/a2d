@@ -550,7 +550,7 @@ check_key:
         jmp     done_keys
 
 L91AC:  lda     selected_entry
-        jsr     L9C07
+        jsr     invoke_entry
 
         ;; --------------------------------------------------
 
@@ -873,7 +873,7 @@ L93FF:  jsr     set_watch_cursor
         jsr     LA000
         bne     L943F
 L9436:  tya
-        jsr     L9C1A
+        jsr     invoke_entry_ep2
         jsr     LA003
         beq     L9436
 L943F:  jsr     load_selector_list
@@ -1307,7 +1307,7 @@ L97B2:  lda     L974B,x
 L97BC:  .byte   0
 L97BD:  lda     selected_entry
         bmi     L97C5
-        jsr     L9C07
+        jsr     invoke_entry
 L97C5:  rts
 
 ;;; ============================================================
@@ -1758,7 +1758,7 @@ L9AFD:  cmp     selected_entry
 
 L9B05:  bit     L9112
         bpl     L9B17
-        jsr     L9C07
+        jsr     invoke_entry
         jsr     BELL1
         jsr     BELL1
         jsr     BELL1
@@ -1874,7 +1874,8 @@ L9BBC:  .byte   0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, INVOKER_PREFIX
 
-L9C07:  lda     L9129
+.proc invoke_entry
+        lda     L9129
         bne     L9C17
         jsr     set_watch_cursor
         lda     selected_entry
@@ -1882,7 +1883,7 @@ L9C07:  lda     L9129
         jsr     L9B42
 L9C17:  jmp     L9C1D
 
-L9C1A:  jmp     L9C7E
+ep2:    jmp     L9C7E
 
 L9C1D:  lda     L9129
         bne     L9C32
@@ -1914,7 +1915,7 @@ L9C32:  lda     selected_entry
         pla
         beq     L9C6F
         jsr     set_pointer_cursor
-        jmp     L9D44
+        jmp     clear_selected_entry
 
 L9C65:  lda     L9129
         bne     L9C6F
@@ -1951,12 +1952,12 @@ L9C87:  lda     ($06),y
         jsr     set_watch_cursor
         jmp     L9C78
 
-L9CB4:  jmp     L9D44
+L9CB4:  jmp     clear_selected_entry
 
 L9CB7:  lda     get_file_info_params3::file_type
         cmp     #FT_BASIC
         bne     L9CC4
-        jsr     L9D61
+        jsr     check_basic_system
         jmp     L9CD8
 
 L9CC4:  cmp     #FT_BINARY
@@ -1967,7 +1968,7 @@ L9CC4:  cmp     #FT_BINARY
         beq     L9CD8
         lda     #AlertID::selector_unable_to_run
         jsr     ShowAlert
-        jmp     L9D44
+        jmp     clear_selected_entry
 
 L9CD8:  ldy     INVOKER_PREFIX
 L9CDB:  lda     INVOKER_PREFIX,y
@@ -1977,7 +1978,7 @@ L9CDB:  lda     INVOKER_PREFIX,y
         bne     L9CDB
         lda     #AlertID::insert_source_disk
         jsr     ShowAlert
-        bne     L9D44
+        bne     clear_selected_entry
         jmp     L9C1D
 
 L9CEF:  dey
@@ -2010,56 +2011,69 @@ L9CF5:  iny
         sta     CLR80VID
         sta     CLR80COL
         jsr     INVOKER
+        ;; If we got here, invoker failed.
         jsr     disconnect_ramdisk
-L9D44:  lda     L9129
-        bne     L9D4E
+        ;; fall through...
+.endproc
+        invoke_entry_ep2 := invoke_entry::ep2
+
+.proc clear_selected_entry
+        lda     L9129
+        bne     :+
         lda     #$FF
         sta     selected_entry
-L9D4E:  rts
+:       rts
+.endproc
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, $1C00
+;;; ============================================================
 
-L9D61:  ldx     INVOKER_PREFIX
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_bs_params, $1C00
+
+.proc check_basic_system
+        path_buf := $1C00
+
+        ;; Find last '/'
+start:  ldx     INVOKER_PREFIX
 :       lda     INVOKER_PREFIX,x
         cmp     #'/'
-        beq     L9D71
+        beq     :+
         dex
         bne     :-
         jmp     L9DBA
 
-L9D71:  dex
-        stx     L9DD6
-        stx     $1C00
+:       dex
+        stx     len
+        stx     path_buf
 L9D78:  lda     INVOKER_PREFIX,x
-        sta     $1C00,x
+        sta     path_buf,x
         dex
         bne     L9D78
-        inc     $1C00
-        ldx     $1C00
+        inc     path_buf
+        ldx     path_buf
         lda     #'/'
-        sta     $1C00,x
-L9D8C:  ldx     $1C00
+        sta     path_buf,x
+L9D8C:  ldx     path_buf
         ldy     #$00
 L9D91:  inx
         iny
-        lda     L9DD7,y
-        sta     $1C00,x
-        cpy     L9DD7
+        lda     str_basic_system,y
+        sta     path_buf,x
+        cpy     str_basic_system
         bne     L9D91
-        stx     $1C00
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params4
+        stx     path_buf
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_bs_params
         bne     L9DAD
         rts
 
-L9DAD:  ldx     L9DD6
-L9DB0:  lda     $1C00,x
+L9DAD:  ldx     len
+L9DB0:  lda     path_buf,x
         cmp     #'/'
         beq     L9DC8
         dex
         bne     L9DB0
 L9DBA:  lda     #AlertID::basic_system_not_found
         jsr     ShowAlert
-        jsr     L9D44
+        jsr     clear_selected_entry
         jsr     set_pointer_cursor
         pla
         pla
@@ -2067,21 +2081,22 @@ L9DBA:  lda     #AlertID::basic_system_not_found
 
 L9DC8:  cpx     #$01
         beq     L9DBA
-        stx     $1C00
+        stx     path_buf
         dex
-        stx     L9DD6
+        stx     len
         jmp     L9D8C
 
-L9DD6:  .byte   0
-L9DD7:  .byte   $0C
-        .byte   $42
-        adc     (HIMEM,x)
-        adc     #$63
-        rol     $7973
-        .byte   $73
-        .byte   $74
-        adc     $6D
-L9DE4:  stax    $06
+len:    .byte   0
+
+str_basic_system:
+        PASCAL_STRING "Basic.system"
+
+.endproc
+
+;;; ============================================================
+
+.proc L9DE4
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -2095,8 +2110,12 @@ L9DED:  lda     ($06),y
 L9DFB:  dey
         bne     L9DED
         rts
+.endproc
 
-L9DFF:  lda     selected_entry
+;;; ============================================================
+
+.proc L9DFF
+        lda     selected_entry
         jsr     L9F27
         stax    $06
         ldy     #$00
@@ -2108,6 +2127,7 @@ L9E0E:  lda     ($06),y
         bpl     L9E0E
         yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_params3
         rts
+.endproc
 
 ;;; ============================================================
 
