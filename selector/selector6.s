@@ -175,7 +175,7 @@ alert_message_flag_table:
         adc     mapinfo::maprect::y2
         sta     LD765
         MGTK_CALL MGTK::HideCursor
-        jsr     LD5A2
+        jsr     dialog_background_save
         MGTK_CALL MGTK::ShowCursor
         ldx     #.sizeof(MGTK::Point)-1
         lda     #0
@@ -245,13 +245,16 @@ event_loop:
         lda     selector5::event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jmp     LD3F7
+        jmp     handle_button
 
 :       cmp     #MGTK::EventKind::key_down
         bne     event_loop
+
+        ;; Key Press
+
         lda     selector5::event_key
         and     #CHAR_MASK
-        bit     LD142
+        bit     LD142           ; Escape = Cancel?
         bpl     LD3DF
         cmp     #CHAR_ESCAPE
         bne     LD3BA
@@ -260,7 +263,7 @@ event_loop:
         lda     #$01
         jmp     LD434
 
-LD3BA:  bit     LD142
+LD3BA:  bit     LD142           ; A = Try Again?
         bvs     LD3DF
         cmp     #'a'
         bne     LD3D4
@@ -275,7 +278,7 @@ LD3D4:  cmp     #'A'
         beq     LD3C3
         jmp     event_loop
 
-LD3DF:  cmp     #CHAR_RETURN
+LD3DF:  cmp     #CHAR_RETURN    ; Return = OK?
         bne     LD3F4
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
@@ -284,37 +287,45 @@ LD3DF:  cmp     #CHAR_RETURN
 
 LD3F4:  jmp     event_loop
 
-LD3F7:  jsr     LD57B
+        ;; Button Press
+
+handle_button:
+        jsr     map_alert_coords
         MGTK_CALL MGTK::MoveTo, selector5::event_coords
-        bit     LD142
+
+        bit     LD142           ; Cancel?
         bpl     LD424
         MGTK_CALL MGTK::InRect, rect_cancel_btn
         cmp     #MGTK::inrect_inside
         bne     LD412
-        jmp     LD4AD
+        jmp     cancel_btn_event_loop
 
-LD412:  bit     LD142
+LD412:  bit     LD142           ; Try Again?
         bvs     LD424
         MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
         cmp     #MGTK::inrect_inside
         bne     LD431
-        jmp     LD446
+        jmp     try_again_btn_event_loop
 
 LD424:  MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
-        cmp     #MGTK::inrect_inside
+        cmp     #MGTK::inrect_inside ; OK?
         bne     LD431
-        jmp     LD514
+        jmp     ok_button_event_loop
 
 LD431:  jmp     event_loop
 
 LD434:  pha
         MGTK_CALL MGTK::HideCursor
-        jsr     LD5F7
+        jsr     dialog_background_restore
         MGTK_CALL MGTK::ShowCursor
         pla
         rts
 
-LD446:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        ;; --------------------------------------------------
+        ;; Try Again Button Event Loop
+
+.proc try_again_btn_event_loop
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     #$00
         sta     LD4AC
@@ -322,7 +333,7 @@ LD457:  MGTK_CALL MGTK::GetEvent, selector5::event_params
         lda     selector5::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LD49F
-        jsr     LD57B
+        jsr     map_alert_coords
         MGTK_CALL MGTK::MoveTo, selector5::event_coords
         MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
         cmp     #MGTK::inrect_inside
@@ -351,7 +362,13 @@ LD4A7:  lda     #$00
         jmp     LD434
 
 LD4AC:  .byte   0
-LD4AD:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+.endproc
+
+        ;; --------------------------------------------------
+        ;; Cancel Button Event Loop
+
+.proc cancel_btn_event_loop
+        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, rect_cancel_btn
         lda     #$00
         sta     LD513
@@ -359,7 +376,7 @@ LD4BE:  MGTK_CALL MGTK::GetEvent, selector5::event_params
         lda     selector5::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LD506
-        jsr     LD57B
+        jsr     map_alert_coords
         MGTK_CALL MGTK::MoveTo, selector5::event_coords
         MGTK_CALL MGTK::InRect, rect_cancel_btn
         cmp     #MGTK::inrect_inside
@@ -388,7 +405,13 @@ LD50E:  lda     #$01
         jmp     LD434
 
 LD513:  .byte   0
-LD514:  lda     #$00
+.endproc
+
+        ;; --------------------------------------------------
+        ;; OK Button Event Loop
+
+.proc ok_button_event_loop
+        lda     #$00
         sta     LD57A
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
@@ -396,7 +419,7 @@ LD525:  MGTK_CALL MGTK::GetEvent, selector5::event_params
         lda     selector5::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LD56D
-        jsr     LD57B
+        jsr     map_alert_coords
         MGTK_CALL MGTK::MoveTo, selector5::event_coords
         MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
         cmp     #MGTK::inrect_inside
@@ -430,11 +453,17 @@ LD57A:  .byte   0
 ;;; ============================================================
 
 
-LD57B:  sub16   selector5::event_xcoord, mapinfo::viewloc::xcoord, selector5::event_xcoord
+.proc map_alert_coords
+        sub16   selector5::event_xcoord, mapinfo::viewloc::xcoord, selector5::event_xcoord
         sub16   selector5::event_ycoord, mapinfo::viewloc::ycoord, selector5::event_ycoord
         rts
+.endproc
 
-LD5A2:  copy16  #$0800, LD5D1
+;;; ============================================================
+
+.scope dialog_background
+.proc save
+        copy16  #$0800, LD5D1
         lda     LD763
         jsr     LD6AA
         lda     LD765
@@ -469,7 +498,12 @@ LD5E8:  jsr     LD6EC
 
         .byte   0
 LD5F6:  .byte   0
-LD5F7:  copy16  #$0800, LD656
+.endproc
+
+;;; ============================================================
+
+.proc restore
+        copy16  #$0800, LD656
         ldx     LD767
         ldy     LD768
         lda     #$FF
@@ -553,6 +587,10 @@ LD6A6:  .byte   0
 LD6A7:  .byte   0
 LD6A8:  .byte   0
 LD6A9:  .byte   0
+.endproc
+
+;;; ============================================================
+
 LD6AA:  sta     LD769
         and     #$07
         sta     LD74A
@@ -589,6 +627,9 @@ LD6C6:  lda     LD748
         rts
 
 LD6EB:  .byte   0
+
+;;; ============================================================
+
 LD6EC:  lda     LD74A
         cmp     #$07
         beq     LD6F9
@@ -617,6 +658,12 @@ LD70E:  lda     #$00
 
 LD723:  sec
         rts
+
+.endscope
+        dialog_background_save := dialog_background::save
+        dialog_background_restore := dialog_background::restore
+
+
 
 LD725:  ldy     #$00
         cpx     #$02
@@ -666,6 +713,8 @@ LD74A:  .byte   0
         .byte   0
         .byte   0
         .byte   0
+
+
 LD763:  .byte   0
 LD764:  .byte   0
 LD765:  .byte   0
@@ -673,6 +722,11 @@ LD766:  .byte   0
 LD767:  .byte   0
 LD768:  .byte   0
 LD769:  .byte   0
+
+.endproc
+
+
+;;; ============================================================
 
 .endscope
 
