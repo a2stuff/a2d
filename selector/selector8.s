@@ -9,12 +9,12 @@
         sta     LA027
         jsr     open_window
         lda     LA027
-        jsr     selector5::L9A47
+        jsr     selector5::get_selector_list_path_addr
         jsr     LA802
         jsr     LA6BD
         jsr     draw_window_content
         lda     LA027
-        jsr     selector5::L9A47
+        jsr     selector5::get_selector_list_path_addr
         jsr     LA802
         jsr     LA3F6
         pha

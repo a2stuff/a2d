@@ -11,7 +11,10 @@ LA000           := $A000        ; selector7/8 entry points
 LA003           := $A003        ; selector7 entry point
 LD23E           := $D23E        ; in selector6
 
-selector_list := $B300
+selector_list   := $B300
+kSelectorListEntriesOffset      = 2
+kSelectorListPathsOffset        = 2 + 24 * 16
+
 
 ;;; ============================================================
 ;;; MGTK library
@@ -1675,10 +1678,10 @@ L9A10:  dey
         asl     a
         rol     tmp
         clc
-        adc     #$02
+        adc     #<(selector_list+kSelectorListEntriesOffset)
         tay
         lda     tmp
-        adc     #>selector_list
+        adc     #>(selector_list+kSelectorListEntriesOffset)
         tax
         tya
         rts
@@ -1688,7 +1691,8 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-.proc L9A47
+.proc get_selector_list_path_addr
+
         ldx     #$00
         stx     tmp
         lsr     a
@@ -1697,10 +1701,10 @@ tmp:    .byte   0
         ror     tmp
         pha
         lda     tmp
-        adc     #$82
+        adc     #<(selector_list+kSelectorListPathsOffset)
         tay
         pla
-        adc     #$B4
+        adc     #>(selector_list+kSelectorListPathsOffset)
         tax
         tya
         rts
@@ -1994,7 +1998,7 @@ L9C6F:  lda     selected_entry
         ;; --------------------------------------------------
 
 L9C78:  lda     selected_entry
-        jsr     L9A47
+        jsr     get_selector_list_path_addr
 L9C7E:  stax    $06
         ldy     #$00
         lda     ($06),y
@@ -2343,7 +2347,7 @@ ramcard_prefix          := $D3EE
         sta     L9F72
         addr_call copy_ramcard_prefix, $0800
         lda     L9F72
-        jsr     L9A47
+        jsr     get_selector_list_path_addr
         stax    $06
         ldy     #$00
         lda     ($06),y
