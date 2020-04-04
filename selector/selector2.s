@@ -168,7 +168,7 @@ disk_prompt:
 
 
 loop:   sta     KBDSTRB
-:       lda     CLR80COL
+:       lda     KBD
         bpl     :-
         and     #CHAR_MASK
         cmp     #CHAR_RETURN
