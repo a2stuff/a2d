@@ -815,7 +815,7 @@ str_spaces:
 .proc open_window
         MGTK_CALL MGTK::OpenWindow, winfo
         lda     winfo::window_id
-        jsr     selector5::L9A15
+        jsr     selector5::get_window_port
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect_frame1
         MGTK_CALL MGTK::FrameRect, rect_frame2
@@ -828,7 +828,7 @@ str_spaces:
 
 .proc draw_window_content
         lda     winfo::window_id
-        jsr     selector5::L9A15
+        jsr     selector5::get_window_port
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
 ep2:    dec     LA759
@@ -840,7 +840,7 @@ LAA4C:  jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect3
-        addr_call selector5::L99DC, pathname1
+        addr_call selector5::AdjustPathCase, pathname1
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call DrawString, str_copying
         addr_call DrawString, pathname1
@@ -876,7 +876,7 @@ LAABD:  lda     #$FD            ; ???
 ;;; ============================================================
 
 LAACB:  lda     winfo::window_id
-        jsr     selector5::L9A15
+        jsr     selector5::get_window_port
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::MoveTo, pos_copying
@@ -894,7 +894,7 @@ LAACB:  lda     winfo::window_id
 
 .proc handle_error_code
         lda     winfo::window_id
-        jsr     selector5::L9A15
+        jsr     selector5::get_window_port
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::MoveTo, pos_copying
@@ -927,7 +927,7 @@ event_loop:
         cmp     #CHAR_RETURN
         bne     event_loop
         lda     winfo::window_id
-        jsr     selector5::L9A15
+        jsr     selector5::get_window_port
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::PaintRect, rect1
         MGTK_CALL MGTK::PaintRect, rect1
@@ -944,7 +944,7 @@ handle_button_down:
         cmp     winfo::window_id
         bne     event_loop
         lda     winfo::window_id
-        jsr     selector5::L9A15
+        jsr     selector5::get_window_port
         lda     winfo::window_id
         sta     $8F79
         MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
