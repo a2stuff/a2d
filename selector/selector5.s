@@ -300,16 +300,14 @@ findwindow_window_id := findwindow_params + 5
 beginupdate_params := * + 1
 beginupdate_window_id := beginupdate_params + 0
 
-        .byte   0
-        .byte   0
-L8F7B:  .byte   0
-        .byte   0
-        .byte   0
-L8F7E:  .byte   0
-L8F7F:  .byte   0
-L8F80:  .byte   0
-L8F81:  .byte   0
-        .byte   0
+;;; Coords used when entry is clicked
+entry_click_x := * + 5
+entry_click_y := * + 7
+
+;;; Union of above params
+        .res    10, 0
+
+;;; ============================================================
 
 grafport2:
         .tag    MGTK::GrafPort
@@ -394,6 +392,7 @@ setpensize_params:
 pos_title_string:
         .word   0, $F
 
+str_selector_title:
         PASCAL_STRING "Selector"
 
 pt0:    DEFINE_POINT 5, 22, pt0
@@ -678,7 +677,7 @@ set_startup_menu_items:
         ;; Open the window
 
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     L9914
+        jsr     get_port_and_draw_window
         lda     #0
         sta     L9112
         sta     L9110
@@ -734,7 +733,7 @@ found_desktop:
         jmp     run_desktop
 
 not_desktop:
-        jsr     L937B
+        jsr     handle_key
         jmp     event_loop
 
         ;; --------------------------------------------------
@@ -763,7 +762,7 @@ L933F:  MGTK_CALL MGTK::BeginUpdate, beginupdate_params
 
 L9351:  rts
 
-L9352:  jsr     L991A
+L9352:  jsr     draw_window
         jsr     draw_entries
         rts
 
@@ -801,31 +800,42 @@ menu_addr_table:
 
 ;;; ============================================================
 
-L937B:  lda     L8F7B
-        bne     L938C
+.proc handle_key
+        lda     event_modifiers
+        bne     has_modifiers
         lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
-        beq     L93A5
-L9389:  jmp     L95F5
+        beq     menukey
 
-L938C:  lda     event_key
+other:  jmp     handle_nonmenu_key
+
+has_modifiers:
+        lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
-        beq     L93A5
+        beq     menukey
         cmp     #'R'
-        beq     L93A5
+        beq     menukey
         cmp     #'r'
-        beq     L93A5
+        beq     menukey
         cmp     #'9'+1
-        bcs     L9389
+        bcs     other
         cmp     #'1'
-        bcc     L9389
-L93A5:  sta     menu_params::which_key
-        lda     L8F7B
+        bcc     other
+
+menukey:
+        sta     menu_params::which_key
+        lda     event_modifiers
         sta     menu_params::key_mods
         MGTK_CALL MGTK::MenuKey, menu_params::menu_id
-L93B4:  ldx     menu_params::menu_item
+        ;; Fall through
+.endproc
+
+;;; ==================================================
+
+.proc handle_menu
+        ldx     menu_params::menu_item
         beq     L93BE
         ldx     menu_params::menu_id
         bne     L93C1
@@ -853,7 +863,7 @@ L93EB:  tsx
 
         addr := *+1
         jmp     dummy1234
-
+.endproc
 
 ;;; ============================================================
 
@@ -892,49 +902,54 @@ L9450:  rts
 
 ;;; ============================================================
 
-handle_button_down:
-        MGTK_CALL MGTK::FindWindow, selector5::event_coords
-        lda     L8F7E
-        bne     L945D
+.proc handle_button_down
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_which_area
+        bne     :+
         rts
 
-L945D:  cmp     #$01
-        bne     L946A
+:       cmp     #MGTK::Area::menubar
+        bne     :+
         MGTK_CALL MGTK::MenuSelect, menu_params
-        jmp     L93B4
+        jmp     handle_menu
 
-L946A:  cmp     #$02
-        bne     L9472
-        jmp     L9473
+:       cmp     #MGTK::Area::content
+        bne     :+
+        jmp     click
+        rts                     ; TODO: Unreached
 
-        rts
+:       rts
 
-L9472:  rts
-
-L9473:  lda     L8F7F
+click:  lda     findwindow_window_id
         cmp     winfo::window_id
-        beq     L947C
+        beq     :+
         rts
 
-L947C:  lda     winfo::window_id
-        jsr     L9A15
+:       lda     winfo::window_id
+        jsr     get_window_port
         lda     winfo::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+
+        ;; OK button?
+
         MGTK_CALL MGTK::InRect, rect_ok_btn
         cmp     #MGTK::inrect_inside
         beq     L94A1
-        jmp     L94B6
+        jmp     not_ok
 
 L94A1:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_btn
         jsr     ok_btn_event_loop
         bmi     L94B5
-        jsr     L97BD
+        jsr     try_invoke_selected_entry
 L94B5:  rts
 
-L94B6:  bit     desktop_available_flag
+        ;; DeskTop button?
+
+not_ok:
+        bit     desktop_available_flag
         bmi     L94F0
         MGTK_CALL MGTK::InRect, rect_desktop_btn
         cmp     #MGTK::inrect_inside
@@ -953,36 +968,35 @@ L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
         beq     L94D9
 L94ED:  jmp     run_desktop
 
-L94F0:  sub16   L8F7E, pt5::xcoord, L8F7E
-        sub16   L8F80, pt0::ycoord, L8F80
-        lda     L8F81
-        bpl     L9527
+        ;; Entry selection?
+
+L94F0:  sub16   entry_click_x, pt5::xcoord, entry_click_x
+        sub16   entry_click_y, pt0::ycoord, entry_click_y
+        lda     entry_click_y+1
+        bpl     :+
         lda     selected_entry
         jsr     toggle_entry_hilite
-        lda     #$FF
-        sta     selected_entry
+        copy    #$FF, selected_entry
         rts
 
-L9527:  lsr16   L8F80
-        lsr16   L8F80
-        lsr16   L8F80
-        lda     L8F80
-        cmp     #$08
+:       lsr16   entry_click_y   ; /= 8
+        lsr16   entry_click_y
+        lsr16   entry_click_y
+        lda     entry_click_y
+        cmp     #8
         bcc     L954C
         lda     selected_entry
         jsr     toggle_entry_hilite
-        lda     #$FF
-        sta     selected_entry
+        copy    #$FF, selected_entry
         rts
 
 L954C:  sta     L959D
         lda     #$00
         sta     L959F
-        asl     L8F7E
-        rol     L8F7F
+        asl16   entry_click_x
         rol     L959F
-        lda     L8F7F
-        asl     a
+        lda     entry_click_x+1
+        asl     a               ; *= 8
         asl     a
         asl     a
         clc
@@ -993,24 +1007,22 @@ L954C:  sta     L959D
         jmp     L9582
 
 L9571:  cmp     num_run_list_entries
-        bcc     L9596
+        bcc     finish
         lda     selected_entry
         jsr     toggle_entry_hilite
-        lda     #$FF
-        sta     selected_entry
+        copy    #$FF, selected_entry
         rts
 
 L9582:  sec
-        sbc     #$08
+        sbc     #8
         cmp     num_other_run_list_entries
-        bcc     L9596
+        bcc     finish
         lda     selected_entry
         jsr     toggle_entry_hilite
-        lda     #$FF
-        sta     selected_entry
+        copy    #$FF, selected_entry
         rts
 
-L9596:  lda     L959E
+finish: lda     L959E
         jsr     L9AFD
         rts
 
@@ -1018,7 +1030,11 @@ L959D:  .byte   0
 L959E:  .byte   0
 L959F:  .byte   0
 
-MLI_WRAPPER:
+.endproc
+
+;;; ============================================================
+
+.proc MLI_WRAPPER
         sty     $95AE
         stax    $95AF
         php
@@ -1027,6 +1043,7 @@ MLI_WRAPPER:
         plp
         and     #$FF
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -1054,19 +1071,25 @@ noop:   rts
 
 ;;; ============================================================
 
-L95F5:  lda     winfo::window_id
-        jsr     L9A15
+.proc handle_nonmenu_key
+
+        lda     winfo::window_id
+        jsr     get_window_port
         lda     event_key
         and     #CHAR_MASK
-        cmp     #$1C            ; ??? CHAR_ESCAPE + 1 ?
-        bcs     L9607
-        jmp     L9638
+        cmp     #$1C            ; Control character?
+        bcs     :+
+        jmp     control_char
 
-L9607:  cmp     #'1'
-        bcs     L960C
+        ;; --------------------------------------------------
+
+        ;; 1-8 to select entry
+
+:       cmp     #'1'
+        bcs     :+
         rts
 
-L960C:  cmp     #'9'
+:       cmp     #'9'
         bcc     L9611
         rts
 
@@ -1090,35 +1113,45 @@ L962E:  lda     L97BC
         jsr     toggle_entry_hilite
         rts
 
-L9638:  cmp     #CHAR_RETURN
-        bne     L9658
+        ;; --------------------------------------------------
+        ;; Control characters - return and arrows
+
+        ;; Return ?
+
+control_char:
+        cmp     #CHAR_RETURN
+        bne     not_return
         lda     winfo::window_id
-        jsr     L9A15
+        jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_btn
         MGTK_CALL MGTK::PaintRect, rect_ok_btn
-        jsr     L97BD
+        jsr     try_invoke_selected_entry
         rts
+not_return:
 
-L9658:  cmp     #$15
-        beq     L965F
-        jmp     L96B5
+        ;; --------------------------------------------------
+        ;; Right Arrow ?
 
-L965F:  lda     num_run_list_entries
-        bne     L966A
+        cmp     #CHAR_RIGHT
+        beq     :+
+        jmp     not_right
+
+:       lda     num_run_list_entries
+        bne     :+
         lda     num_other_run_list_entries
-        bne     L966A
+        bne     :+
         rts
 
-L966A:  lda     selected_entry
-        bpl     L9678
-        lda     #$00
+:       lda     selected_entry
+        bpl     :+
+        lda     #0
         sta     selected_entry
         jsr     toggle_entry_hilite
         rts
 
-L9678:  lda     selected_entry
-        cmp     #$08
+:       lda     selected_entry
+        cmp     #8
         bcc     L9682
         jmp     L969A
 
@@ -1127,7 +1160,7 @@ L9682:  cmp     num_other_run_list_entries
         rts
 
 L9688:  clc
-        adc     #$08
+        adc     #8
         pha
         lda     selected_entry
         jsr     toggle_entry_hilite
@@ -1142,7 +1175,7 @@ L969A:  cmp     num_other_run_list_entries
 
 L96A0:  lda     selected_entry
         clc
-        adc     #$08
+        adc     #8
         pha
         lda     selected_entry
         jsr     toggle_entry_hilite
@@ -1150,140 +1183,126 @@ L96A0:  lda     selected_entry
         sta     selected_entry
         jsr     toggle_entry_hilite
         rts
+not_right:
 
-L96B5:  cmp     #$08
-        beq     L96BC
-        jmp     L96EA
+        ;; --------------------------------------------------
+        ;; Left Arrow ?
 
-L96BC:  lda     selected_entry
-        bpl     L96C2
+        cmp     #CHAR_LEFT
+        beq     :+
+        jmp     not_left
+
+:       lda     selected_entry
+        bpl     :+
         rts
 
-L96C2:  cmp     #$08
-        bcs     L96C7
+:       cmp     #8
+        bcs     :+
         rts
 
-L96C7:  lda     selected_entry
+:       lda     selected_entry
         sec
-        sbc     #$08
-        cmp     #$08
-        bcs     L96D7
+        sbc     #8
+        cmp     #8
+        bcs     :+
         cmp     num_run_list_entries
-        bcc     L96D7
+        bcc     :+
         rts
 
-L96D7:  lda     selected_entry
+:       lda     selected_entry
         jsr     toggle_entry_hilite
         lda     selected_entry
         sec
-        sbc     #$08
+        sbc     #8
         sta     selected_entry
         jsr     toggle_entry_hilite
         rts
 
-L96EA:  cmp     #$0B
-        beq     L96F1
-        jmp     L976B
+not_left:
 
-L96F1:  lda     selected_entry
-        bpl     L96F7
+        ;; --------------------------------------------------
+        ;; Up Arrow ?
+
+        cmp     #CHAR_UP
+        beq     :+
+        jmp     not_up
+
+:       lda     selected_entry
+        bpl     :+
         rts
 
-L96F7:  lda     selected_entry
+:       lda     selected_entry
         jsr     toggle_entry_hilite
         jsr     L9728
         lda     selected_entry
-        cmp     #$08
+        cmp     #8
         bcc     L970E
         sec
-        sbc     #$08
+        sbc     #8
         clc
         adc     num_run_list_entries
 L970E:  sec
-        sbc     #$01
+        sbc     #1
         bpl     L971D
         lda     num_run_list_entries
         clc
         adc     num_other_run_list_entries
         sec
-        sbc     #$01
+        sbc     #1
 L971D:  tax
-        lda     L974B,x
+        lda     buf,x
         sta     selected_entry
         jsr     toggle_entry_hilite
         rts
 
-L9728:  ldx     #$00
+L9728:
+        ldx     #0
 L972A:  cpx     num_run_list_entries
         beq     L9737
         txa
-        sta     L974B,x
+        sta     buf,x
         inx
         jmp     L972A
 
-L9737:  ldy     #$00
+L9737:  ldy     #0
 L9739:  cpy     num_other_run_list_entries
         bne     L973F
         rts
 
 L973F:  tya
         clc
-        adc     #$08
-        sta     L974B,x
+        adc     #8
+        sta     buf,x
         inx
         iny
         jmp     L9739
 
-L974B:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-L976B:  cmp     #$0A
-        beq     L9770
+;;; ???
+buf:    .res    32, 0
+
+not_up:
+
+        ;; --------------------------------------------------
+        ;; Down Arrow ?
+
+        cmp     #CHAR_DOWN
+        beq     :+
         rts
 
-L9770:  lda     num_run_list_entries
-        bne     L977B
+:       lda     num_run_list_entries
+        bne     :+
         lda     num_other_run_list_entries
-        bne     L977B
+        bne     :+
         rts
 
-L977B:  lda     selected_entry
-        bpl     L9789
+:       lda     selected_entry
+        bpl     :+
         lda     #$00
         sta     selected_entry
         jsr     toggle_entry_hilite
         rts
 
-L9789:  lda     selected_entry
+:       lda     selected_entry
         jsr     toggle_entry_hilite
         jsr     L9728
         lda     num_run_list_entries
@@ -1291,26 +1310,32 @@ L9789:  lda     selected_entry
         adc     num_other_run_list_entries
         sta     L97BC
         ldx     #$00
-L979E:  lda     L974B,x
+:       lda     buf,x
         cmp     selected_entry
         beq     L97AA
         inx
-        jmp     L979E
+        jmp     :-
 
 L97AA:  inx
         cpx     L97BC
         bne     L97B2
         ldx     #$00
-L97B2:  lda     L974B,x
+L97B2:  lda     buf,x
         sta     selected_entry
         jsr     toggle_entry_hilite
         rts
 
 L97BC:  .byte   0
-L97BD:  lda     selected_entry
-        bmi     L97C5
+.endproc
+
+;;; ============================================================
+
+.proc try_invoke_selected_entry
+        lda     selected_entry
+        bmi     :+
         jsr     invoke_entry
-L97C5:  rts
+:       rts
+.endproc
 
 ;;; ============================================================
 
@@ -1481,9 +1506,13 @@ L9904:  dec     DEVCNT
 
 ;;; ============================================================
 
-L9914:  lda     winfo::window_id
-        jsr     L9A15
-L991A:  MGTK_CALL MGTK::SetPenMode, penXOR
+get_port_and_draw_window:
+        lda     winfo::window_id
+        jsr     get_window_port
+        ;; Fall through
+
+.proc draw_window
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::SetPenSize, setpensize_params
 
         MGTK_CALL MGTK::FrameRect, rect_frame
@@ -1493,7 +1522,7 @@ L991A:  MGTK_CALL MGTK::SetPenMode, penXOR
         bmi     :+
         MGTK_CALL MGTK::FrameRect, rect_desktop_btn
 :
-        addr_call L999B, $905B
+        addr_call draw_title_string, str_selector_title
         jsr     draw_ok_label
         bit     desktop_available_flag
         bmi     :+
@@ -1504,18 +1533,21 @@ L991A:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::MoveTo, pt3
         MGTK_CALL MGTK::LineTo, pt4
         rts
+.endproc
 
 ;;; ============================================================
 
-draw_ok_label:
+.proc draw_ok_label
         MGTK_CALL MGTK::MoveTo, pos_ok_label
         addr_call DrawString, str_ok_btn
         rts
+.endproc
 
-draw_desktop_label:
+.proc draw_desktop_label
         MGTK_CALL MGTK::MoveTo, pos_desktop_label
         addr_call DrawString, str_desktop_btn
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Draw Pascal String
@@ -1539,7 +1571,7 @@ draw_desktop_label:
 ;;; Draw Title String (centered at top of port)
 ;;; Input: A,X = string address
 
-.proc L999B
+.proc draw_title_string
         ptr := $06
         params := $06
 
@@ -1571,31 +1603,37 @@ tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Inputs: A,X = Address
 
-L99DC:  stx     $0B
-        sta     $0A
+.proc AdjustPathCase
+        ptr := $0A
+
+        stx     ptr+1
+        sta     ptr
         ldy     #$00
-        lda     ($0A),y
+        lda     (ptr),y
         tay
-        bne     L99E8
+        bne     loop
         rts
 
-L99E8:  dey
-        beq     L99ED
-        bpl     L99EE
-L99ED:  rts
+loop:   dey
+        beq     done
+        bpl     :+
+done:   rts
 
-L99EE:  lda     ($0A),y
+        ;; Seek to next boundary
+:       lda     (ptr),y
         and     #CHAR_MASK
         cmp     #'/'
         beq     L99FA
         cmp     #'.'
         bne     L99FE
 L99FA:  dey
-        jmp     L99E8
+        jmp     loop
 
+        ;; Adjust case
 L99FE:  iny
-        lda     ($0A),y
+        lda     (ptr),y
         and     #CHAR_MASK
         cmp     #'A'
         bcc     L9A10
@@ -1603,15 +1641,23 @@ L99FE:  iny
         bcs     L9A10
         clc
         adc     #$20            ; to lower case
-        sta     ($0A),y
+        sta     (ptr),y
 L9A10:  dey
-        jmp     L99E8
+        jmp     loop
 
         .byte   0
-L9A15:  sta     getwinport_params::window_id
+.endproc
+
+;;; ============================================================
+;;; Set the active GrafPort to the selected window's port
+;;; Input: A = window id
+
+.proc get_window_port
+        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Input: A = Entry number
@@ -1744,7 +1790,7 @@ L9AD5:  pla
         sta     L9115
         sta     L9116
 L9AE5:  lda     winfo::window_id
-        jsr     L9A15
+        jsr     get_window_port
         pla
         jsr     L9A62
         MGTK_CALL MGTK::MoveTo, pt6
