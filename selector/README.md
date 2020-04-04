@@ -57,11 +57,17 @@ A handful of resources for MGTK and routines. Loaded to Aux LC1
 
 ### Overlay 1 - `selector7.s`
 
-TBD. Loaded to $A000.
+The File > Run a Program... implementation. Loaded to $A000.
+
+Shows a file picker, and allow selecting an arbitrary program
+to run.
 
 ### Overlay 2 - `selector8.s`
 
-TBD. Loaded to $A000.
+Recursive copy implementation. Loaded to $A000.
+
+Used when invoking a program via the selector with the option
+"Down load to RAMCard" / "On first use" specified.
 
 
 ## Memory Map
@@ -134,7 +140,7 @@ $0800 +-------------+       +-------------+
       | Drawing     |       |             |
       | Temp Buffer |       |             |
 $0400 +-------------+       +-------------+
-      | ???         |       |             |
+      | Invoker     |       |             |
 $0300 +-------------+       +-------------+
       | Input Buf   |       | Input Buf   |
 $0200 +-------------+       +-------------+
