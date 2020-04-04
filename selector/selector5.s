@@ -159,7 +159,7 @@ notpenOR:       .byte   MGTK::notpenOR
 notpenXOR:      .byte   MGTK::notpenXOR
 notpenBIC:      .byte   MGTK::notpenBIC
 
-L8E0B:
+saved_stack:
         .byte   $00
 
 ;;; for MenuSelect, HiliteMenu, MenuKey
@@ -411,8 +411,8 @@ rect1:  DEFINE_RECT 0, 0, 0, 0, rect1
         .byte   0
         .byte   $7F
 
-        DEFINE_OPEN_PARAMS open_params, str_selector_list, $BB00
-        DEFINE_READ_PARAMS read_params, $B300, $800
+        DEFINE_OPEN_PARAMS open_selector_list_params, str_selector_list, $BB00
+        DEFINE_READ_PARAMS read_selector_list_params, $B300, $800
 
         DEFINE_OPEN_PARAMS open_params3, $90BC, $1C00
         DEFINE_READ_PARAMS read_params4, $2000, $400
@@ -424,15 +424,16 @@ str_desktop2:
         PASCAL_STRING "DeskTop2"
 
         DEFINE_CLOSE_PARAMS close_params
-        DEFINE_OPEN_PARAMS open_params2, str_selector, $800
+
+        DEFINE_OPEN_PARAMS open_selector_params, str_selector, $800
 
 str_selector:
         PASCAL_STRING "selector"
 
-        DEFINE_SET_MARK_PARAMS set_mark_params, overlay1_offset
-        DEFINE_SET_MARK_PARAMS set_mark_params2, overlay2_offset
-        DEFINE_READ_PARAMS read_params2, overlay_addr, overlay1_size
-        DEFINE_READ_PARAMS read_params3, overlay_addr, overlay2_size
+        DEFINE_SET_MARK_PARAMS set_mark_overlay1_params, overlay1_offset
+        DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, overlay2_offset
+        DEFINE_READ_PARAMS read_overlay1_params, overlay_addr, overlay1_size
+        DEFINE_READ_PARAMS read_overlay2_params, overlay_addr, overlay2_size
         DEFINE_CLOSE_PARAMS close_params2
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $9104
 
@@ -717,27 +718,39 @@ L9352:  jsr     L991A
         jsr     L97C6
         rts
 
-L9359:
-L935A   := * + 1
-        .byte   $B5,$95
-        .byte   $B5,$95
-        .byte   $B5,$95
-        .byte   $B5,$95
-        .byte   $B5,$95
-        .byte   $B5,$95
-        .byte   $B5,$95
-        .byte   $F2
-        .byte   $93
-        .byte   $BD,$9B,$BD
-        .byte   $9B
-        .byte   $BD,$9B,$BD
-        .byte   $9B
-        .byte   $BD,$9B,$BD
-        .byte   $9B
-L9377   := * + 2
-        .byte   $BD,$9B,$00
-        .byte   $0E,$10,$1E
+;;; ============================================================
+;;; Menu dispatch tables
 
+menu_dispatch_table:
+        ;; Apple menu
+menu1:  .addr   noop
+        .addr   noop
+        .addr   noop
+        .addr   noop
+        .addr   noop
+        .addr   noop
+        .addr   noop
+
+        ;; File menu
+menu2:  .addr   load_overlay1
+
+        ;; Startup menu
+menu3:  .addr   L9BBD
+        .addr   L9BBD
+        .addr   L9BBD
+        .addr   L9BBD
+        .addr   L9BBD
+        .addr   L9BBD
+        .addr   L9BBD
+menu_end:
+
+menu_addr_table:
+        .byte   menu1 - menu_dispatch_table
+        .byte   menu2 - menu_dispatch_table
+        .byte   menu3 - menu_dispatch_table
+        .byte   menu_end - menu_dispatch_table
+
+;;; ============================================================
 
 L937B:  lda     L8F7B
         bne     L938C
@@ -770,44 +783,46 @@ L93B4:  ldx     menu_params::menu_item
 L93BE:  jmp     event_loop
 
 L93C1:  dex
-        lda     L9377,x
+        lda     menu_addr_table,x
         tax
         ldy     menu_params::menu_item
         dey
         tya
         asl     a
-        sta     L93F0
+        sta     addr
         txa
         clc
-        adc     L93F0
+        adc     addr
         tax
-        lda     L9359,x
-        sta     L93F0
-        lda     L935A,x
-        sta     L93F1
+        copy16  menu_dispatch_table,x, addr
         jsr     L93EB
         MGTK_CALL MGTK::HiliteMenu, menu_params
         rts
 
 L93EB:  tsx
-        stx     L8E0B
-L93F0           := * + 1
-L93F1           := * + 2
+        stx     saved_stack
+
+        addr := *+1
         jmp     dummy1234
 
+
+;;; ============================================================
+;;; 93F2
+
+.proc load_overlay1
         lda     L910E
         bmi     L93FF
         jsr     L9B42
         lda     #$FF
         sta     L910E
 L93FF:  jsr     set_watch_cursor
-        yax_call MLI_WRAPPER, OPEN, open_params2
+        yax_call MLI_WRAPPER, OPEN, open_selector_params
         bne     L9443
-        lda     open_params2::ref_num
-        sta     set_mark_params::ref_num
-        sta     read_params2::ref_num
-        yax_call MLI_WRAPPER, SET_MARK, set_mark_params
-        yax_call MLI_WRAPPER, READ, read_params2
+        lda     open_selector_params::ref_num
+        sta     set_mark_overlay1_params::ref_num
+        sta     read_overlay1_params::ref_num
+        yax_call MLI_WRAPPER, SET_MARK, set_mark_overlay1_params
+        yax_call MLI_WRAPPER, READ, read_overlay1_params
         yax_call MLI_WRAPPER, CLOSE, close_params2
         jsr     LA000
         bne     L943F
@@ -825,6 +840,9 @@ L9443:  lda     #AlertID::insert_system_disk
         jmp     L93FF
 
 L9450:  rts
+.endproc
+
+;;; ============================================================
 
 handle_button_down:
         MGTK_CALL MGTK::FindWindow, selector5::event_coords
@@ -962,7 +980,7 @@ MLI_WRAPPER:
         and     #$FF
         rts
 
-        rts
+noop:   rts
 
 L95B6:  yax_call MLI_WRAPPER, OPEN, open_params3
         lda     open_params3::ref_num
@@ -1261,28 +1279,34 @@ L97E1:  lda     L97F6
 L97F5:  rts
 
 L97F6:  .byte   0
-L97F7:  yax_call MLI_WRAPPER, OPEN, open_params
-        lda     open_params::ref_num
-        sta     read_params::ref_num
-        yax_call MLI_WRAPPER, READ, read_params
+L97F7:  yax_call MLI_WRAPPER, OPEN, open_selector_list_params
+        lda     open_selector_list_params::ref_num
+        sta     read_selector_list_params::ref_num
+        yax_call MLI_WRAPPER, READ, read_selector_list_params
         yax_call MLI_WRAPPER, CLOSE, close_params
         copy16  $B300, L9127
         rts
 
-L9825:  yax_call MLI_WRAPPER, OPEN, open_params2
-        bne     L9855
-        lda     open_params2::ref_num
-        sta     set_mark_params2::ref_num
-        sta     read_params3::ref_num
-        yax_call MLI_WRAPPER, SET_MARK, set_mark_params2
-        yax_call MLI_WRAPPER, READ, read_params3
+;;; ============================================================
+
+.proc load_overlay2
+start:  yax_call MLI_WRAPPER, OPEN, open_selector_params
+        bne     error
+        lda     open_selector_params::ref_num
+        sta     set_mark_overlay2_params::ref_num
+        sta     read_overlay2_params::ref_num
+        yax_call MLI_WRAPPER, SET_MARK, set_mark_overlay2_params
+        yax_call MLI_WRAPPER, READ, read_overlay2_params
         yax_call MLI_WRAPPER, CLOSE, close_params2
         rts
 
-L9855:  lda     #AlertID::insert_system_disk
+error:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        beq     L9825
+        beq     start
         rts
+.endproc
+
+;;; ============================================================
 
 pointer_cursor:
         .byte   px(%0000000),px(%0000000)
@@ -1739,7 +1763,10 @@ L9B42:  pha
 L9BBA:  .byte   0
 L9BBB:  .byte   0
 L9BBC:  .byte   0
-        ldy     menu_params::menu_item
+
+;;; ============================================================
+
+L9BBD:  ldy     menu_params::menu_item
         lda     L8F71,y
         ora     #$C0
         sta     L9BF4
@@ -1794,7 +1821,7 @@ L9C32:  lda     L910E
         bne     L9C6F
         jsr     L9DFF
         beq     L9C6F
-        jsr     L9825
+        jsr     load_overlay2
         lda     L910E
         jsr     LA000
         pha
