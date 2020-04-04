@@ -11,6 +11,8 @@ LA000           := $A000        ; selector7/8 entry points
 LA003           := $A003        ; selector7 entry point
 LD23E           := $D23E        ; in selector6
 
+selector_list := $B300
+
 ;;; ============================================================
 ;;; MGTK library
 ;;; ============================================================
@@ -251,17 +253,17 @@ str_slot_x6:
 str_slot_x7:
         PASCAL_STRING "Slot x "
 
-L8F71:  .byte   0
 
 ;;; Slot numbers
+slot_table:     .byte   0       ; number of entries
 
-slot_x1:  .byte   0
-slot_x2:  .byte   0
-slot_x3:  .byte   0
-slot_x4:  .byte   0
-slot_x5:  .byte   0
-slot_x6:  .byte   0
-slot_x7:  .byte   0
+slot_x1:        .byte   0
+slot_x2:        .byte   0
+slot_x3:        .byte   0
+slot_x4:        .byte   0
+slot_x5:        .byte   0
+slot_x6:        .byte   0
+slot_x7:        .byte   0
 
 ;;; ============================================================
 ;;; Event Params (and overlapping param structs)
@@ -412,10 +414,10 @@ rect1:  DEFINE_RECT 0, 0, 0, 0, rect1
         .byte   $7F
 
         DEFINE_OPEN_PARAMS open_selector_list_params, str_selector_list, $BB00
-        DEFINE_READ_PARAMS read_selector_list_params, $B300, $800
+        DEFINE_READ_PARAMS read_selector_list_params, selector_list, $800
 
-        DEFINE_OPEN_PARAMS open_params3, $90BC, $1C00
-        DEFINE_READ_PARAMS read_params4, $2000, $400
+        DEFINE_OPEN_PARAMS open_desktop2_params, str_desktop2, $1C00
+        DEFINE_READ_PARAMS read_desktop2_params, $2000, $400
 
 str_selector_list:
         PASCAL_STRING "Selector.List"
@@ -444,7 +446,10 @@ desktop_available_flag:
         .byte   0
 
 
-L910E:  .byte   0
+;;; Index of selected entry, or $FF if none
+selected_entry:
+        .byte   0
+
         .byte   0
 L9110:  .byte   0
 L9111:  .byte   0
@@ -469,81 +474,104 @@ L9116:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-L9127:  .byte   0
-L9128:  .byte   0
+
+num_run_list_entries:
+        .byte   0
+num_other_run_list_entries:
+        .byte   0
+
 L9129:  .byte   0
 
 ;;; ============================================================
+;;; App Initialization
 
-entry:  cli
-        lda     #$FF
-        sta     L910E
-        jsr     L97F7
-        lda     #$01
-        sta     L9129
-        lda     L9128
-        ora     L9127
-        bne     L9151
-L9140:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
-        beq     L914E
-        jmp     L91B2
+entry:
+.proc app_init
+        cli
+        copy    #$FF, selected_entry
+        jsr     load_selector_list
+        copy    #1, L9129
+        lda     num_other_run_list_entries
+        ora     num_run_list_entries
+        bne     check_key_down
 
-L914E:  jmp     L95B6
+quick_run_desktop:
+        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
+        beq     :+
+        jmp     done_keys
+:       jmp     run_desktop
 
-L9151:  lda     #$00
-        sta     L92C1
-        lda     CLR80COL
-        bpl     L91B2
+        ;; --------------------------------------------------
+        ;; Check for key down
+
+check_key_down:
+        lda     #0
+        sta     quick_boot_slot
+
+        lda     KBD
+        bpl     done_keys
         sta     KBDSTRB
         and     #CHAR_MASK
-        bit     BUTN0
-        bmi     L916A
-        bit     BUTN1
-        bpl     L917B
-L916A:  cmp     #'1'
-        bcc     L917B
+        bit     BUTN0           ; Open Apple?
+        bmi     :+
+        bit     BUTN1           ; Solid Apple?
+        bpl     check_key
+:       cmp     #'1'            ; Solid Apple + 1...7 = boot slot
+        bcc     check_key
         cmp     #'8'
-        bcs     L917B
+        bcs     check_key
         sec
         sbc     #$30            ; ASCII to number
-        sta     L92C1
-        jmp     L91B2
+        sta     quick_boot_slot
+        jmp     done_keys
 
-L917B:  cmp     #'Q'
-        beq     L9140
+check_key:
+        cmp     #'Q'            ; If Q is down, try launching DeskTop
+        beq     quick_run_desktop
         cmp     #'q'
-        beq     L9140
+        beq     quick_run_desktop
+
         sec
-        sbc     #$31
-        bmi     L91B2
-        cmp     L9127
-        bcs     L91B2
-        sta     L910E
-        jsr     L9A25
+        sbc     #'1'            ; 1-8 run that selector entry
+        bmi     done_keys
+        cmp     num_run_list_entries
+        bcs     done_keys
+        sta     selected_entry
+        jsr     get_selector_list_entry_addr
         stax    $06
         ldy     #$0F
         lda     ($06),y
         cmp     #$C0
         beq     L91AC
         jsr     get_copied_to_ramcard_flag
-        beq     L91B2
+        beq     done_keys
         jsr     L9DFF
         beq     L91AC
-        jmp     L91B2
+        jmp     done_keys
 
-L91AC:  lda     L910E
+L91AC:  lda     selected_entry
         jsr     L9C07
-L91B2:  sta     KBDSTRB
-        lda     #$00
-        sta     L9129
+
+        ;; --------------------------------------------------
+
+done_keys:
+        sta     KBDSTRB
+        copy    #0, L9129
+
+        ;; --------------------------------------------------
+
         jsr     disconnect_ramdisk
-        ldx     #$01
-L91BF:  cpx     #$03
+
+        ;; --------------------------------------------------
+        ;; Find slots with devices
+
+        ldx     #1
+sloop:  cpx     #3
         beq     L91DE
-        cpx     #$02
+        cpx     #2
         beq     L91DE
         ldy     DEVCNT
-L91CA:  lda     DEVLST,y
+:       lda     DEVLST,y
         and     #$70
         lsr     a
         lsr     a
@@ -551,34 +579,42 @@ L91CA:  lda     DEVLST,y
         lsr     a
         sta     L91E5
         cpx     L91E5
-        beq     L91E6
+        beq     add_slot_table_entry
         dey
-        bpl     L91CA
+        bpl     :-
+
 L91DE:  cpx     #$07
         beq     L91F2
         inx
-        bne     L91BF
+        bne     sloop
+
 L91E5:  .byte   0
-L91E6:  inc     L8F71
-        ldy     L8F71
-        sta     L8F71,y
+
+add_slot_table_entry:
+        inc     slot_table
+        ldy     slot_table
+        sta     slot_table,y
         jmp     L91DE
 
-L91F2:  lda     L92C1
-        beq     L920D
-        ldy     L8F71
-L91FA:  cmp     L8F71,y
+        ;; --------------------------------------------------
+        ;; Set up Startup menu
+
+L91F2:  lda     quick_boot_slot
+        beq     set_startup_menu_items
+        ldy     slot_table
+L91FA:  cmp     slot_table,y
         beq     L9205
         dey
         bne     L91FA
-        jmp     L920D
+        jmp     set_startup_menu_items
 
 L9205:  ora     #$C0
-        sta     L920C
-L920C           := * + 2
+        sta     @addr+1
+        @addr := *+1
         jmp     CLR80COL
 
-L920D:  lda     L8F71
+set_startup_menu_items:
+        lda     slot_table
         sta     startup_menu
 
         lda     slot_x1
@@ -628,27 +664,36 @@ L920D:  lda     L8F71
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
 
+        ;; --------------------------------------------------
+
         ;; Is DeskTop available?
         yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
-        beq     L929A
+        beq     :+
         lda     #$80
-L929A:  sta     desktop_available_flag
+:       sta     desktop_available_flag
+
+        ;; --------------------------------------------------
+        ;; Open the window
+
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     L9914
-        lda     #$00
+        lda     #0
         sta     L9112
         sta     L9110
         lda     #$01
         sta     L9111
         lda     #$FF
-        sta     L910E
-        jsr     L97F7
-        jsr     L97C6
+        sta     selected_entry
+        jsr     load_selector_list
+        jsr     draw_entries
         jmp     event_loop
 
-L92C1:  .byte   0
+quick_boot_slot:
+        .byte   0
+.endproc
 
 ;;; ============================================================
+;;; Event Loop
 
 event_loop:
         bit     L9112
@@ -684,7 +729,7 @@ L92D6:  MGTK_CALL MGTK::GetEvent, event_params
         bne     not_desktop
         beq     :-
 found_desktop:
-        jmp     L95B6
+        jmp     run_desktop
 
 not_desktop:
         jsr     L937B
@@ -717,7 +762,7 @@ L933F:  MGTK_CALL MGTK::BeginUpdate, beginupdate_params
 L9351:  rts
 
 L9352:  jsr     L991A
-        jsr     L97C6
+        jsr     draw_entries
         rts
 
 ;;; ============================================================
@@ -737,13 +782,13 @@ menu1:  .addr   noop
 menu2:  .addr   cmd_run_a_program
 
         ;; Startup menu
-menu3:  .addr   L9BBD
-        .addr   L9BBD
-        .addr   L9BBD
-        .addr   L9BBD
-        .addr   L9BBD
-        .addr   L9BBD
-        .addr   L9BBD
+menu3:  .addr   cmd_startup
+        .addr   cmd_startup
+        .addr   cmd_startup
+        .addr   cmd_startup
+        .addr   cmd_startup
+        .addr   cmd_startup
+        .addr   cmd_startup
 menu_end:
 
 menu_addr_table:
@@ -811,11 +856,11 @@ L93EB:  tsx
 ;;; ============================================================
 
 .proc cmd_run_a_program
-        lda     L910E
+        lda     selected_entry
         bmi     L93FF
         jsr     L9B42
         lda     #$FF
-        sta     L910E
+        sta     selected_entry
 L93FF:  jsr     set_watch_cursor
         yax_call MLI_WRAPPER, OPEN, open_selector_params
         bne     L9443
@@ -831,7 +876,7 @@ L9436:  tya
         jsr     L9C1A
         jsr     LA003
         beq     L9436
-L943F:  jsr     L97F7
+L943F:  jsr     load_selector_list
         rts
 
 L9443:  lda     #AlertID::insert_system_disk
@@ -904,16 +949,16 @@ L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
         jsr     ShowAlert
         bne     L94B5
         beq     L94D9
-L94ED:  jmp     L95B6
+L94ED:  jmp     run_desktop
 
 L94F0:  sub16   L8F7E, pt5::xcoord, L8F7E
         sub16   L8F80, pt0::ycoord, L8F80
         lda     L8F81
         bpl     L9527
-        lda     L910E
+        lda     selected_entry
         jsr     L9B42
         lda     #$FF
-        sta     L910E
+        sta     selected_entry
         rts
 
 L9527:  lsr16   L8F80
@@ -922,10 +967,10 @@ L9527:  lsr16   L8F80
         lda     L8F80
         cmp     #$08
         bcc     L954C
-        lda     L910E
+        lda     selected_entry
         jsr     L9B42
         lda     #$FF
-        sta     L910E
+        sta     selected_entry
         rts
 
 L954C:  sta     L959D
@@ -945,22 +990,22 @@ L954C:  sta     L959D
         bcc     L9571
         jmp     L9582
 
-L9571:  cmp     L9127
+L9571:  cmp     num_run_list_entries
         bcc     L9596
-        lda     L910E
+        lda     selected_entry
         jsr     L9B42
         lda     #$FF
-        sta     L910E
+        sta     selected_entry
         rts
 
 L9582:  sec
         sbc     #$08
-        cmp     L9128
+        cmp     num_other_run_list_entries
         bcc     L9596
-        lda     L910E
+        lda     selected_entry
         jsr     L9B42
         lda     #$FF
-        sta     L910E
+        sta     selected_entry
         rts
 
 L9596:  lda     L959E
@@ -981,11 +1026,16 @@ MLI_WRAPPER:
         and     #$FF
         rts
 
+;;; ============================================================
+
 noop:   rts
 
-L95B6:  yax_call MLI_WRAPPER, OPEN, open_params3
-        lda     open_params3::ref_num
-        sta     read_params4::ref_num
+;;; ============================================================
+
+.proc run_desktop
+        yax_call MLI_WRAPPER, OPEN, open_desktop2_params
+        lda     open_desktop2_params::ref_num
+        sta     read_desktop2_params::ref_num
         sta     DHIRESOFF
         sta     TXTCLR
         sta     CLR80VID
@@ -995,9 +1045,12 @@ L95B6:  yax_call MLI_WRAPPER, OPEN, open_params3
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
-        yax_call MLI_WRAPPER, READ, read_params4
+        yax_call MLI_WRAPPER, READ, read_desktop2_params
         yax_call MLI_WRAPPER, CLOSE, close_params
         jmp     L2000
+.endproc
+
+;;; ============================================================
 
 L95F5:  lda     winfo::window_id
         jsr     L9A15
@@ -1018,20 +1071,20 @@ L960C:  cmp     #'9'
 L9611:  sec
         sbc     #'1'
         sta     L97BC
-        cmp     L9127
+        cmp     num_run_list_entries
         bcc     L961D
         rts
 
-L961D:  lda     L910E
+L961D:  lda     selected_entry
         bmi     L962E
         cmp     L97BC
         bne     L9628
         rts
 
-L9628:  lda     L910E
+L9628:  lda     selected_entry
         jsr     L9B42
 L962E:  lda     L97BC
-        sta     L910E
+        sta     selected_entry
         jsr     L9B42
         rts
 
@@ -1049,50 +1102,50 @@ L9658:  cmp     #$15
         beq     L965F
         jmp     L96B5
 
-L965F:  lda     L9127
+L965F:  lda     num_run_list_entries
         bne     L966A
-        lda     L9128
+        lda     num_other_run_list_entries
         bne     L966A
         rts
 
-L966A:  lda     L910E
+L966A:  lda     selected_entry
         bpl     L9678
         lda     #$00
-        sta     L910E
+        sta     selected_entry
         jsr     L9B42
         rts
 
-L9678:  lda     L910E
+L9678:  lda     selected_entry
         cmp     #$08
         bcc     L9682
         jmp     L969A
 
-L9682:  cmp     L9128
+L9682:  cmp     num_other_run_list_entries
         bcc     L9688
         rts
 
 L9688:  clc
         adc     #$08
         pha
-        lda     L910E
+        lda     selected_entry
         jsr     L9B42
         pla
-        sta     L910E
+        sta     selected_entry
         jsr     L9B42
         rts
 
-L969A:  cmp     L9128
+L969A:  cmp     num_other_run_list_entries
         bcc     L96A0
         rts
 
-L96A0:  lda     L910E
+L96A0:  lda     selected_entry
         clc
         adc     #$08
         pha
-        lda     L910E
+        lda     selected_entry
         jsr     L9B42
         pla
-        sta     L910E
+        sta     selected_entry
         jsr     L9B42
         rts
 
@@ -1100,7 +1153,7 @@ L96B5:  cmp     #$08
         beq     L96BC
         jmp     L96EA
 
-L96BC:  lda     L910E
+L96BC:  lda     selected_entry
         bpl     L96C2
         rts
 
@@ -1108,21 +1161,21 @@ L96C2:  cmp     #$08
         bcs     L96C7
         rts
 
-L96C7:  lda     L910E
+L96C7:  lda     selected_entry
         sec
         sbc     #$08
         cmp     #$08
         bcs     L96D7
-        cmp     L9127
+        cmp     num_run_list_entries
         bcc     L96D7
         rts
 
-L96D7:  lda     L910E
+L96D7:  lda     selected_entry
         jsr     L9B42
-        lda     L910E
+        lda     selected_entry
         sec
         sbc     #$08
-        sta     L910E
+        sta     selected_entry
         jsr     L9B42
         rts
 
@@ -1130,36 +1183,36 @@ L96EA:  cmp     #$0B
         beq     L96F1
         jmp     L976B
 
-L96F1:  lda     L910E
+L96F1:  lda     selected_entry
         bpl     L96F7
         rts
 
-L96F7:  lda     L910E
+L96F7:  lda     selected_entry
         jsr     L9B42
         jsr     L9728
-        lda     L910E
+        lda     selected_entry
         cmp     #$08
         bcc     L970E
         sec
         sbc     #$08
         clc
-        adc     L9127
+        adc     num_run_list_entries
 L970E:  sec
         sbc     #$01
         bpl     L971D
-        lda     L9127
+        lda     num_run_list_entries
         clc
-        adc     L9128
+        adc     num_other_run_list_entries
         sec
         sbc     #$01
 L971D:  tax
         lda     L974B,x
-        sta     L910E
+        sta     selected_entry
         jsr     L9B42
         rts
 
 L9728:  ldx     #$00
-L972A:  cpx     L9127
+L972A:  cpx     num_run_list_entries
         beq     L9737
         txa
         sta     L974B,x
@@ -1167,7 +1220,7 @@ L972A:  cpx     L9127
         jmp     L972A
 
 L9737:  ldy     #$00
-L9739:  cpy     L9128
+L9739:  cpy     num_other_run_list_entries
         bne     L973F
         rts
 
@@ -1215,29 +1268,29 @@ L976B:  cmp     #$0A
         beq     L9770
         rts
 
-L9770:  lda     L9127
+L9770:  lda     num_run_list_entries
         bne     L977B
-        lda     L9128
+        lda     num_other_run_list_entries
         bne     L977B
         rts
 
-L977B:  lda     L910E
+L977B:  lda     selected_entry
         bpl     L9789
         lda     #$00
-        sta     L910E
+        sta     selected_entry
         jsr     L9B42
         rts
 
-L9789:  lda     L910E
+L9789:  lda     selected_entry
         jsr     L9B42
         jsr     L9728
-        lda     L9127
+        lda     num_run_list_entries
         clc
-        adc     L9128
+        adc     num_other_run_list_entries
         sta     L97BC
         ldx     #$00
 L979E:  lda     L974B,x
-        cmp     L910E
+        cmp     selected_entry
         beq     L97AA
         inx
         jmp     L979E
@@ -1247,46 +1300,59 @@ L97AA:  inx
         bne     L97B2
         ldx     #$00
 L97B2:  lda     L974B,x
-        sta     L910E
+        sta     selected_entry
         jsr     L9B42
         rts
 
 L97BC:  .byte   0
-L97BD:  lda     L910E
+L97BD:  lda     selected_entry
         bmi     L97C5
         jsr     L9C07
 L97C5:  rts
 
-L97C6:  lda     #$00
-        sta     L97F6
-L97CB:  lda     L97F6
-        cmp     L9127
-        beq     L97DC
-        jsr     L9AA2
-        inc     L97F6
-        jmp     L97CB
+;;; ============================================================
 
-L97DC:  lda     #$00
-        sta     L97F6
-L97E1:  lda     L97F6
-        cmp     L9128
-        beq     L97F5
+.proc draw_entries
+
+        ;; Run List
+        lda     #0
+        sta     count
+:       lda     count
+        cmp     num_run_list_entries
+        beq     :+
+        jsr     draw_list_entry
+        inc     count
+        jmp     :-
+
+        ;; Other Run List
+:       lda     #0
+        sta     count
+:       lda     count
+        cmp     num_other_run_list_entries
+        beq     done
         clc
-        adc     #$08
-        jsr     L9AA2
-        inc     L97F6
-        jmp     L97E1
+        adc     #8
+        jsr     draw_list_entry
+        inc     count
+        jmp     :-
 
-L97F5:  rts
+done:   rts
 
-L97F6:  .byte   0
-L97F7:  yax_call MLI_WRAPPER, OPEN, open_selector_list_params
+count:  .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc load_selector_list
+        yax_call MLI_WRAPPER, OPEN, open_selector_list_params
         lda     open_selector_list_params::ref_num
         sta     read_selector_list_params::ref_num
         yax_call MLI_WRAPPER, READ, read_selector_list_params
         yax_call MLI_WRAPPER, CLOSE, close_params
-        copy16  $B300, L9127
+        copy    selector_list, num_run_list_entries
+        copy    selector_list+1, num_other_run_list_entries
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -1545,26 +1611,32 @@ L9A15:  sta     getwinport_params::window_id
         MGTK_CALL MGTK::SetPort, grafport
         rts
 
-L9A25:  ldx     #$00
-        stx     L9A46
+;;; ============================================================
+;;; Input: Entry number in A
+;;; Output: Entry address in A,X
+
+.proc get_selector_list_entry_addr
+        ldx     #$00
+        stx     tmp
         asl     a
-        rol     L9A46
+        rol     tmp
         asl     a
-        rol     L9A46
+        rol     tmp
         asl     a
-        rol     L9A46
+        rol     tmp
         asl     a
-        rol     L9A46
+        rol     tmp
         clc
         adc     #$02
         tay
-        lda     L9A46
-        adc     #$B3
+        lda     tmp
+        adc     #>selector_list
         tax
         tya
         rts
 
-L9A46:  .byte   0
+tmp:    .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -1631,19 +1703,23 @@ tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Input: A = entry number
 
-L9AA2:  pha
-        jsr     L9A25
-        stax    $06
+.proc draw_list_entry
+        ptr := $06
+
+        pha
+        jsr     get_selector_list_entry_addr
+        stax    ptr
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         tay
-L9AAF:  lda     ($06),y
+L9AAF:  lda     (ptr),y
         sta     L9116,y
         dey
         bne     L9AAF
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         clc
         adc     #$03
         sta     L9113
@@ -1672,8 +1748,11 @@ L9AE5:  lda     winfo::window_id
         MGTK_CALL MGTK::MoveTo, pt6
         addr_call DrawString, $9113
         rts
+.endproc
 
-L9AFD:  cmp     L910E
+;;; ============================================================
+
+L9AFD:  cmp     selected_entry
         beq     L9B05
         jmp     L9B22
 
@@ -1692,12 +1771,12 @@ L9B17:  lda     #$FF
         rts
 
 L9B22:  pha
-        lda     L910E
+        lda     selected_entry
         bmi     L9B2E
-        lda     L910E
+        lda     selected_entry
         jsr     L9B42
 L9B2E:  pla
-        sta     L910E
+        sta     selected_entry
         jsr     L9B42
         lda     #$FF
         sta     L9112
@@ -1767,10 +1846,11 @@ L9BBC:  .byte   0
 
 ;;; ============================================================
 
-L9BBD:  ldy     menu_params::menu_item
-        lda     L8F71,y
+.proc cmd_startup
+        ldy     menu_params::menu_item
+        lda     slot_table,y
         ora     #$C0
-        sta     L9BF4
+        sta     @addr+1
         sta     ALTZPOFF
         lda     ROMIN2
         sta     TXTSET
@@ -1785,15 +1865,19 @@ L9BBD:  ldy     menu_params::menu_item
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
-L9BF4           := * + 2
+
+        @addr := * + 1
         jmp     $0000
+.endproc
+
+;;; ============================================================
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, INVOKER_PREFIX
 
 L9C07:  lda     L9129
         bne     L9C17
         jsr     set_watch_cursor
-        lda     L910E
+        lda     selected_entry
         bmi     L9C17
         jsr     L9B42
 L9C17:  jmp     L9C1D
@@ -1810,8 +1894,8 @@ L9C2A:  jsr     get_copied_to_ramcard_flag
         bne     L9C32
         jmp     L9C78
 
-L9C32:  lda     L910E
-        jsr     L9A25
+L9C32:  lda     selected_entry
+        jsr     get_selector_list_entry_addr
         stax    $06
         ldy     #$0F
         lda     ($06),y
@@ -1823,7 +1907,7 @@ L9C32:  lda     L910E
         jsr     L9DFF
         beq     L9C6F
         jsr     load_overlay2
-        lda     L910E
+        lda     selected_entry
         jsr     LA000
         pha
         jsr     L9326
@@ -1836,11 +1920,11 @@ L9C65:  lda     L9129
         bne     L9C6F
         jsr     L9DFF
         bne     L9C78
-L9C6F:  lda     L910E
+L9C6F:  lda     selected_entry
         jsr     L9F27
         jmp     L9C7E
 
-L9C78:  lda     L910E
+L9C78:  lda     selected_entry
         jsr     L9A47
 L9C7E:  stax    $06
         ldy     #$00
@@ -1930,7 +2014,7 @@ L9CF5:  iny
 L9D44:  lda     L9129
         bne     L9D4E
         lda     #$FF
-        sta     L910E
+        sta     selected_entry
 L9D4E:  rts
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, $1C00
@@ -2012,7 +2096,7 @@ L9DFB:  dey
         bne     L9DED
         rts
 
-L9DFF:  lda     L910E
+L9DFF:  lda     selected_entry
         jsr     L9F27
         stax    $06
         ldy     #$00
