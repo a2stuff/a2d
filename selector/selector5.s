@@ -9,7 +9,7 @@
 L2000           := $2000
 LA000           := $A000        ; selector7/8 entry points
 LA003           := $A003        ; selector7 entry point
-LD23E           := $D23E        ; in selector6
+ShowAlertImpl   := $D23E        ; in selector6
 
 selector_list   := $B300
 kSelectorListEntriesOffset      = 2
@@ -2396,7 +2396,7 @@ L9F73:  .byte   0
         lda     LCBANK1
         lda     LCBANK1
         txa
-        jsr     LD23E
+        jsr     ShowAlertImpl
         tax
         sta     ALTZPOFF
         sta     ROMIN2

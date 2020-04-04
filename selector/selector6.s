@@ -86,7 +86,7 @@ LD143:  .byte   0
 LD144:  .byte   0
 
 ;;; ============================================================
-
+;;; Alert Dialog
 
 str_selector_unable_to_run:
         PASCAL_STRING "The Selector is unable to run the program."
@@ -110,8 +110,6 @@ kNumErrorMessages = 8
 num_error_messages:
         .byte   kNumErrorMessages
 
-
-
 error_message_index_table:
         .byte   AlertID::selector_unable_to_run
         .byte   AlertID::io_error
@@ -134,7 +132,7 @@ error_message_table:
         .addr   str_basic_system_not_found
         ASSERT_ADDRESS_TABLE_SIZE error_message_table, kNumErrorMessages
 
-LD236:
+alert_message_flag_table:
         .byte   $00
         .byte   $00
         .byte   $00
@@ -143,9 +141,12 @@ LD236:
         .byte   $00
         .byte   $80
         .byte   $00
+        ASSERT_TABLE_SIZE alert_message_flag_table, kNumErrorMessages
+
 
         ASSERT_ADDRESS $D23E
-LD23E:  pha
+.proc ShowAlertImpl
+        pha
         lda     $9129
         beq     :+
         pla
@@ -214,7 +215,7 @@ LD314:  tya
         tya
         lsr     a
         tay
-        lda     LD236,y
+        lda     alert_message_flag_table,y
         sta     LD142
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         bit     LD142
@@ -424,6 +425,11 @@ LD575:  lda     #$00
         jmp     LD434
 
 LD57A:  .byte   0
+.endproc
+
+;;; ============================================================
+
+
 LD57B:  sub16   selector5::event_xcoord, mapinfo::viewloc::xcoord, selector5::event_xcoord
         sub16   selector5::event_ycoord, mapinfo::viewloc::ycoord, selector5::event_ycoord
         rts
