@@ -6,9 +6,9 @@
 
 .scope selector7
 
-        jmp     LA44A
+        jmp     init
 
-        jmp     LA480
+        jmp     event_loop
 
 ;;; ============================================================
 
@@ -397,7 +397,7 @@ LA309:  jsr     LAF46
         jsr     redraw_input
         lda     #$FF
         sta     LA20D
-        jmp     LA480
+        jmp     event_loop
 
 LA32F:  lda     #$00
         sta     buf_input_left
@@ -420,7 +420,7 @@ LA36F:  addr_call LB5F1, buf_input_left
         beq     LA379
         rts
 
-LA379:  ldx     LA449
+LA379:  ldx     saved_stack
         txs
         ldy     #$0C
         ldx     #$A1
@@ -433,7 +433,7 @@ LA387:  MGTK_CALL MGTK::CloseWindow, winfo2
         lda     #$00
         sta     LA20D
         jsr     LA8AE
-        ldx     LA449
+        ldx     saved_stack
         txs
         return  #$FF
 
@@ -479,12 +479,14 @@ LA3C6:  .byte   0
 LA3C7:  .res    128, 0
 LA447:  .byte   0
 LA448:  .byte   0
-LA449:  .byte   0
+
+saved_stack:
+        .byte   0
 
 ;;; ============================================================
 
-LA44A:  tsx
-        stx     LA449
+init:   tsx
+        stx     saved_stack
         jsr     set_pointer_cursor
         lda     #$00
         sta     LA3C6
@@ -496,8 +498,7 @@ LA44A:  tsx
         sta     LA8EC
         sta     LA47D
         sta     LA47F
-        lda     #$28
-        sta     prompt_ip_counter
+        copy    #kIPCounterDefault, prompt_ip_counter
         lda     #$FF
         sta     LA231
         jmp     LA309
@@ -510,13 +511,15 @@ LA47F:  .byte   0
 
 ;;; ============================================================
 
-LA480:  bit     LA20D
+kIPCounterDefault = $28
+
+event_loop:
+        bit     LA20D
         bpl     LA492
         dec     prompt_ip_counter
         bne     LA492
         jsr     blink_ip
-        lda     #$28
-        sta     prompt_ip_counter
+        copy    #kIPCounterDefault, prompt_ip_counter
 LA492:  bit     LA214
         bpl     LA4A1
         dec     LA215
@@ -525,23 +528,23 @@ LA492:  bit     LA214
         sta     LA214
 LA4A1:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #$01
+        cmp     #MGTK::EventKind::button_down
         bne     LA4B4
         jsr     LA50F
-        jmp     LA480
+        jmp     event_loop
 
-LA4B4:  cmp     #$03
+LA4B4:  cmp     #MGTK::EventKind::key_down
         bne     LA4BB
-        jsr     LAC1D
+        jsr     handle_key
 LA4BB:  MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
         bne     LA4C9
-        jmp     LA480
+        jmp     event_loop
 
 LA4C9:  lda     findwindow_window_id
         cmp     winfo1::window_id
         beq     LA4D4
-        jmp     LA480
+        jmp     event_loop
 
 LA4D4:  lda     winfo1::window_id
         jsr     LB443
@@ -558,7 +561,7 @@ LA4D4:  lda     winfo1::window_id
 LA4FC:  jsr     LA8AE
 LA4FF:  MGTK_CALL MGTK::InitPort, grafport2
         MGTK_CALL MGTK::SetPort, grafport2
-        jmp     LA480
+        jmp     event_loop
 
 LA50E:  .byte   0
 LA50F:  MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -647,7 +650,7 @@ LA5E6:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect2
         jsr     LA9F7
         bmi     LA5FD
-        jsr     LBA5E
+        jsr     handle_key_right
         jsr     LA36F
 LA5FD:  jmp     LA632
 
@@ -771,7 +774,7 @@ LA73F:  lda     LA015
 
 LA748:  lda     LA231
         bmi     LA756
-        jsr     LBAC9
+        jsr     strip_path_segment_left_and_redraw
         lda     LA231
         jsr     LB404
 LA756:  lda     LA015
@@ -1039,10 +1042,10 @@ LA988:  jsr     LB106
         sta     LA231
         bit     LA9C8
         bmi     LA9BC
-        jsr     LBAC9
+        jsr     strip_path_segment_left_and_redraw
         lda     LA231
         bmi     LA9C2
-        jsr     LBAC9
+        jsr     strip_path_segment_left_and_redraw
         jmp     LA9C2
 
 LA9BC:  jsr     LBB1D
@@ -1254,29 +1257,30 @@ LAC0D:  MGTK_CALL MGTK::SetPenMode, penXOR
         return  #$00
 
 LAC1C:  .byte   0
-LAC1D:  lda     event_modifiers
+
+;;; ============================================================
+
+handle_key:
+        lda     event_modifiers
         beq     LAC5B
         lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_LEFT
-        bne     LAC2E
-        jmp     LBA1B
-
-LAC2E:  cmp     #CHAR_RIGHT
-        bne     LAC35
-        jmp     LBA5E
-
-LAC35:  bit     LA47F
-        bmi     LAC48
+        bne     :+
+        jmp     handle_key_left
+:       cmp     #CHAR_RIGHT
+        bne     :+
+        jmp     handle_key_right
+:       bit     LA47F
+        bmi     not_arrow
         cmp     #CHAR_DOWN
-        bne     LAC41
-        jmp     LAE50
-
-LAC41:  cmp     #CHAR_UP
-        bne     LAC48
-        jmp     LAE38
-
-LAC48:  cmp     #'0'
+        bne     :+
+        jmp     handle_key_down
+:       cmp     #CHAR_UP
+        bne     not_arrow
+        jmp     handle_key_up
+not_arrow:
+        cmp     #'0'
         bcc     LAC53
         cmp     #'9'+1
         bcs     LAC53
@@ -1297,18 +1301,18 @@ LAC67:  cmp     #CHAR_RIGHT
         jmp     LB9C9
 
 LAC6E:  cmp     #CHAR_RETURN
-        bne     LAC75
-        jmp     LAD15
+        bne     :+
+        jmp     handle_key_return
 
-LAC75:  cmp     #CHAR_ESCAPE
-        bne     LAC7C
-        jmp     LAD42
+:       cmp     #CHAR_ESCAPE
+        bne     :+
+        jmp     handle_key_escape
 
-LAC7C:  cmp     #CHAR_DELETE
-        bne     LAC83
-        jmp     LAD61
+:       cmp     #CHAR_DELETE
+        bne     :+
+        jmp     handle_key_delete
 
-LAC83:  bit     LA47F
+:       bit     LA47F
         bpl     LAC8B
         jmp     LAD0D
 
@@ -1363,23 +1367,32 @@ LAD0D:  jsr     LB8EC
 LAD11:  jsr     LA9C9
         rts
 
-LAD15:  lda     LA231
+;;; ============================================================
+
+.proc handle_key_return
+        lda     LA231
         bpl     LAD20
         bit     LA211
         bmi     LAD20
         rts
+.endproc
+
+;;; ============================================================
 
 LAD20:  lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::PaintRect, rect2
-        jsr     LBA5E
+        jsr     handle_key_right
         jsr     LA36F
         jsr     LA9C9
         rts
 
-LAD42:  lda     winfo1::window_id
+;;; ============================================================
+
+.proc handle_key_escape
+        lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect4
@@ -1387,9 +1400,16 @@ LAD42:  lda     winfo1::window_id
         jsr     LA387
         jsr     LA9C9
         rts
+.endproc
 
-LAD61:  jsr     LB93B
+;;; ============================================================
+
+.proc handle_key_delete
+        jsr     LB93B
         rts
+.endproc
+
+;;; ============================================================
 
 LAD65:  jmp     LAEA6
 
@@ -1404,7 +1424,7 @@ LAD68:  lda     $177F
 LAD79:  rts
 
 LAD7A:  jsr     LB404
-        jsr     LBAC9
+        jsr     strip_path_segment_left_and_redraw
         inc     LA231
         lda     LA231
         jmp     LAE71
@@ -1420,7 +1440,7 @@ LAD8E:  lda     $177F
 LAD9A:  rts
 
 LAD9B:  jsr     LB404
-        jsr     LBAC9
+        jsr     strip_path_segment_left_and_redraw
         dec     LA231
         lda     LA231
         jmp     LAE71
@@ -1449,7 +1469,7 @@ LADC5:  jsr     LADDF
         lda     LA231
         bmi     LADDB
         jsr     LB404
-        jsr     LBAC9
+        jsr     strip_path_segment_left_and_redraw
 LADDB:  pla
         jmp     LAE71
 
@@ -1498,35 +1518,46 @@ LAE0D:  tax
 LAE35:  .byte   0
 LAE36:  .byte   0
 LAE37:  .byte   0
-LAE38:  lda     $177F
+
+;;; ============================================================
+
+.proc handle_key_up
+        lda     $177F
         beq     LAE44
         lda     LA231
         bmi     LAE4B
-        bne     LAE45
+        bne     :+
 LAE44:  rts
 
-LAE45:  jsr     LB404
-        jsr     LBAC9
+:       jsr     LB404
+        jsr     strip_path_segment_left_and_redraw
 LAE4B:  lda     #$00
         jmp     LAE71
+.endproc
 
-LAE50:  lda     $177F
+;;; ============================================================
+
+.proc handle_key_down
+        lda     $177F
         beq     LAE60
         ldx     LA231
         bmi     LAE69
         inx
         cpx     $177F
-        bne     LAE61
+        bne     :+
 LAE60:  rts
 
-LAE61:  dex
+:       dex
         txa
         jsr     LB404
-        jsr     LBAC9
+        jsr     strip_path_segment_left_and_redraw
 LAE69:  ldx     $177F
         dex
         txa
         jmp     LAE71
+.endproc
+
+;;; ============================================================
 
 LAE71:  sta     LA231
         jsr     LBAD0
@@ -2656,7 +2687,7 @@ LB823:  lda     $08
         cmp     buf_input_right
         bcc     LB830
         dec     buf_input_right
-        jmp     LBA5E
+        jmp     handle_key_right
 
 LB830:  ldx     #$02
         ldy     buf_input_left
@@ -2696,7 +2727,7 @@ LB871:  MGTK_CALL MGTK::TextWidth, $0006
         lda     $08
         cmp     #$01
         bcs     LB871
-        jmp     LBA1B
+        jmp     handle_key_left
 
 LB89D:  inc     $08
         ldy     #$00
@@ -2735,6 +2766,9 @@ LB8E3:  jsr     redraw_input
         rts
 
 LB8EA:  .word   0
+
+;;; ============================================================
+
 LB8EC:  sta     LB8FB
         lda     buf_input_left
         clc
@@ -2744,6 +2778,7 @@ LB8EC:  sta     LB8FB
         rts
 
 LB8FB:  .byte   0
+
 LB8FC:  lda     LB8FB
         ldx     buf_input_left
         inx
@@ -2834,7 +2869,8 @@ LB9F3:  dec     buf_input_right
         jsr     LBB5B
         rts
 
-LBA1B:  lda     buf_input_left
+handle_key_left:
+        lda     buf_input_left
         bne     LBA21
         rts
 
@@ -2863,25 +2899,31 @@ LBA3D:  lda     buf_input_left,y
         jsr     LBB5B
         rts
 
-LBA5E:  lda     buf_input_right
-        cmp     #$02
-        bcs     LBA66
+;;; ============================================================
+
+.proc handle_key_right
+        lda     buf_input_right
+        cmp     #2
+        bcs     :+
         rts
 
-LBA66:  ldx     #1
+:       ldx     #1
         ldy     buf_input_left
-LBA6B:  inx
+@loop:  inx
         iny
         lda     buf_input_right,x
         sta     buf_input_left,y
         cpx     buf_input_right
-        bne     LBA6B
+        bne     @loop
         sty     buf_input_left
         copy    #1, buf_input_right
         copy    #GLYPH_INSPT, buf_input_right+1
         jsr     redraw_input
         jsr     LBB5B
         rts
+.endproc
+
+;;; ============================================================
 
 LBA8C:  stax    $06
         ldx     buf_input_left
@@ -2905,39 +2947,49 @@ LBAA6:  lda     ($06),y
         sta     buf_input_left
         rts
 
-LBAB7:  ldx     buf_input_left
-        cpx     #$00
-        beq     LBAC8
+;;; ============================================================
+;;; Trim end of left segment to rightmost '/'
+
+.proc strip_path_segment_left
+@loop:  ldx     buf_input_left
+        cpx     #0
+        beq     done
         dec     buf_input_left
         lda     buf_input_left,x
         cmp     #'/'
-        bne     LBAB7
-LBAC8:  rts
-
-LBAC9:  jsr     LBAB7
-        jsr     redraw_input
-        rts
+        bne     @loop
+done:   rts
+.endproc
 
 ;;; ============================================================
 
-LBAD0:  copy16  #$1800, $06
+.proc strip_path_segment_left_and_redraw
+        jsr     strip_path_segment_left
+        jsr     redraw_input
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc LBAD0
+        copy16  #$1800, $06
         ldx     LA231
         lda     $1780,x
         and     #$7F
         ldx     #$00
-        stx     LBB07
+        stx     tmp
         asl     a
-        rol     LBB07
+        rol     tmp
         asl     a
-        rol     LBB07
+        rol     tmp
         asl     a
-        rol     LBB07
+        rol     tmp
         asl     a
-        rol     LBB07
+        rol     tmp
         clc
         adc     $06
         tay
-        lda     LBB07
+        lda     tmp
         adc     $07
         tax
         tya
@@ -2945,7 +2997,8 @@ LBAD0:  copy16  #$1800, $06
         jsr     redraw_input
         rts
 
-LBB07:  .byte   0
+tmp:    .byte   0
+.endproc
 
         .byte   0               ; Unused ???
 
@@ -2961,13 +3014,15 @@ LBB07:  .byte   0
 
 ;;; ============================================================
 
-LBB1D:  ldx     LA3C7
+.proc LBB1D
+        ldx     LA3C7
 :       lda     LA3C7,x
         sta     buf_input_left,x
         dex
         bpl     :-
         addr_call LB2D1, buf_input_left
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Output: A,X = coordinates of input string end
