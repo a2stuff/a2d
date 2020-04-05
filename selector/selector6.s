@@ -6,8 +6,6 @@
 
 .scope
 
-L2000           := $2000
-
 alert_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   PX(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
@@ -36,7 +34,7 @@ alert_bitmap:
 
 .params alert_bitmap_params
 viewloc:        DEFINE_POINT 20, 8
-mapbits:        .addr   $D000
+mapbits:        .addr   alert_bitmap
 mapwidth:       .byte   7
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 36, 23
@@ -52,8 +50,8 @@ rect_frame2:
 
 .params mapinfo
         DEFINE_POINT 65, 87, viewloc
-        .addr   $2000
-        .byte   $80
+        .addr   MGTK::screen_mapbits
+        .byte   MGTK::screen_mapwidth
         .byte   $00
         DEFINE_RECT 0, 0, 420, 55, maprect
 .endparams
@@ -147,7 +145,7 @@ alert_message_flag_table:
         ASSERT_ADDRESS $D23E
 .proc ShowAlertImpl
         pha
-        lda     $9129
+        lda     selector5::L9129
         beq     :+
         pla
         return  #$01
@@ -183,8 +181,8 @@ alert_message_flag_table:
         sta     selector5::grafport2+MGTK::GrafPort::maprect,x
         dex
         bpl     :-
-        copy16  #$0226, $8F8F
-        copy16  #$00B9, $8F91
+        copy16  #550, selector5::grafport2 + MGTK::GrafPort::maprect + MGTK::Rect::x2
+        copy16  #185, selector5::grafport2 + MGTK::GrafPort::maprect + MGTK::Rect::y2
         MGTK_CALL MGTK::SetPort, selector5::grafport2
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect1
@@ -462,8 +460,11 @@ LD57A:  .byte   0
 ;;; ============================================================
 
 .scope dialog_background
+
+        save_buffer := $800
+
 .proc save
-        copy16  #$0800, LD5D1
+        copy16  #save_buffer, LD5D1
         lda     LD763
         jsr     LD6AA
         lda     LD765
@@ -503,7 +504,7 @@ LD5F6:  .byte   0
 ;;; ============================================================
 
 .proc restore
-        copy16  #$0800, LD656
+        copy16  #save_buffer, LD656
         ldx     LD767
         ldy     LD768
         lda     #$FF
@@ -545,7 +546,7 @@ LD648:  lda     LD6A5
         sta     HISCR
 LD655:
 LD656           := * + 1
-        lda     $0800
+        lda     save_buffer
         pha
         lda     LD6A5
         cmp     LD764
