@@ -273,11 +273,11 @@ LA44F:  iny
         bne     LA44F
         stx     pathname_dst
         yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
-        cmp     #$46            ; Error code
+        cmp     #ERR_FILE_NOT_FOUND
         beq     LA475
-        cmp     #$45
+        cmp     #ERR_VOL_NOT_FOUND
         beq     LA475
-        cmp     #$44
+        cmp     #ERR_PATH_NOT_FOUND
         beq     LA475
         rts
 
@@ -285,7 +285,7 @@ LA475:  yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
         beq     LA491
         cmp     #ERR_VOL_NOT_FOUND
         beq     LA488
-        cmp     #$46
+        cmp     #ERR_FILE_NOT_FOUND
         bne     LA48E
 LA488:  jsr     LAABD
         jmp     LA475
@@ -735,8 +735,9 @@ window_id:
         .byte   $00
         .byte   $32
         .byte   $00
+        .addr   MGTK::screen_mapbits
+        .byte   MGTK::screen_mapwidth
         .byte   $00
-        .byte   $20,$80,$00
         .byte   $00
         .byte   $00
         .byte   $00
@@ -1083,12 +1084,7 @@ str_count:
 
 ;;; ============================================================
 
-        ;; Junk ???
-        .byte   0, $40, $11, $43, $a2
-        .byte   $20, $00, $40, $11, $43, $A2
-        jsr     $A965           ; ???
-        jmp     $AD11
-
-        .byte   $C9
+        ;; Junk from selector7
+        .incbin "inc/junk5.dat"
 
 .endscope
