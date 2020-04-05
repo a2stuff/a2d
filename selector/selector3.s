@@ -16,10 +16,15 @@
 
         ;; ProDOS parameter blocks
 
-        DEFINE_OPEN_PARAMS open_params, str_selector, $3000
-        DEFINE_READ_PARAMS read_params1, INVOKER, $160
-        DEFINE_READ_PARAMS read_params2, MGTK, $6000
-        DEFINE_READ_PARAMS read_params3, resources_load_addr, $800
+        io_buf := $3000
+        kInvokerSegmentSize = $160
+        kAppSegmentSize = $6000
+        kResourcesSegmentSize = $800
+
+        DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
+        DEFINE_READ_PARAMS read_params1, INVOKER, kInvokerSegmentSize
+        DEFINE_READ_PARAMS read_params2, MGTK, kAppSegmentSize
+        DEFINE_READ_PARAMS read_params3, resources_load_addr, kResourcesSegmentSize
 
         DEFINE_SET_MARK_PARAMS set_mark_params, $600
         DEFINE_CLOSE_PARAMS close_params
