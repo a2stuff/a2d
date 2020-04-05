@@ -1475,8 +1475,6 @@ L12B9:  .byte   0
 
         PAD_TO $1300
 
-        .assert * = $1300, error, "Segment length mismatch"
-
 .endproc
 
 disk_copy_overlay4_L0CAF        := disk_copy_overlay4::L0CAF

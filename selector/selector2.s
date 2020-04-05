@@ -202,3 +202,5 @@ prefix_buf:
         .res 64, 0
 
 .endscope
+
+        PAD_TO $1200

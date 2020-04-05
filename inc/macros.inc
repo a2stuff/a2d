@@ -746,8 +746,12 @@ __pushorg_depth__ .set 0
 ;;; Assertions
 ;;; ============================================================
 
-.macro ASSERT_ADDRESS addr
+.macro ASSERT_ADDRESS addr, opt_message
+    .if .paramcount = 2
+        .assert * = (addr), error, .sprintf("%s mismatch, expected $%X actual $%X", opt_message, (addr), *)
+    .else
         .assert * = (addr), error, .sprintf("Address mismatch, expected $%X actual $%X", (addr), *)
+    .endif
 .endmacro
 
 .macro ASSERT_TABLE_SIZE name, size

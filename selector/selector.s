@@ -55,8 +55,8 @@ ramcard_prefix          := $D3EE
         .include "selector1.s"
         .include "selector2.s"
 
-        ;; Random chunk of BASIC.SYSTEM 1.1 padding out the file
-        .incbin "inc/bs.dat"
+        ;; Ensure selector3 starts at correct offset from start of file.
+        .res 473
 
         .include "selector3.s"
         .include "selector4.s"

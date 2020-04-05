@@ -116,7 +116,7 @@ str_f9: PASCAL_STRING "DeskTop.config"
 
 filename_table:
         .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8,str_f9
-        .assert *-filename_table = kNumFilenames*2, error, "Table length mismatch"
+        ASSERT_ADDRESS_TABLE_SIZE filename_table, kNumFilenames
 
 str_copying_to_ramcard:
         PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
@@ -937,14 +937,13 @@ slot:   .byte   0
 ;;; ============================================================
 
 prodos_loader_blocks:
-        .assert * = $2D00, error, "Segment length mismatch"
+        ASSERT_ADDRESS $2D00
         .incbin "../inc/pdload.dat"
 
 .endproc ; copy_desktop_to_ramcard
 
 ;;; ============================================================
-
-        .assert * = $3100, error, "Segment length mismatch"
+        ASSERT_ADDRESS $3100
 
 ;;; SPECULATION: This copies Selector entries marked
 ;;; "Down load" / "At boot" to the RAMCard as well
@@ -2156,5 +2155,3 @@ done:   rts
 
 
         PAD_TO $4000
-
-        .assert * = $4000, error, "Segment size mismatch"

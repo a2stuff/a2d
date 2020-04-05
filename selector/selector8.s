@@ -1084,7 +1084,6 @@ str_count:
 
 ;;; ============================================================
 
-        ;; Junk from selector7
-        .incbin "inc/junk5.dat"
-
 .endscope
+
+        PAD_TO $AD00

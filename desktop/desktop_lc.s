@@ -16,7 +16,7 @@
 ;;; MGTK call from main>aux, call in Y, params at (X,A)
 
 .proc MGTKRelayImpl
-        .assert * = MGTK_RELAY, error, "Entry point mismatch"
+        ASSERT_ADDRESS ::MGTK_RELAY, "Entry point"
         sty     addr-1
         stax    addr
         sta     RAMRDON
@@ -47,7 +47,7 @@
 ;;; IconTK call from main>aux, call in Y params at (X,A)
 
 .proc ITKRelayImpl
-        .assert * = ITK_RELAY, error, "Entry point mismatch"
+        ASSERT_ADDRESS ::ITK_RELAY, "Entry point"
         sty     addr-1
         stax    addr
         sta     RAMRDON

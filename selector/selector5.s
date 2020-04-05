@@ -114,7 +114,7 @@ MGTK:
         .byte   $FB,$28,$6B,$38,$FB,$20,$00,$BF
 
 ;;; Font
-        .assert * = FONT, error, "Font location mismatch"
+        ASSERT_ADDRESS ::FONT, "Font location"
         .incbin "../mgtk/fonts/SELECTOR.FONT"
 
 ;;; ???
@@ -2414,6 +2414,4 @@ L9F73:  .byte   0
 
 .endscope
 
-        .incbin "inc/mgtk.dat"
-
-        ASSERT_ADDRESS $A000
+        PAD_TO $A000

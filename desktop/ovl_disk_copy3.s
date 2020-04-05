@@ -15,7 +15,7 @@
 
 ;;; ============================================================
 
-        .assert *= $D000, error, "Entry point mismatch"
+        ASSERT_ADDRESS $D000, "Entry point"
 
 start:
         jmp     init

@@ -54,6 +54,7 @@ cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/optional" --quiet --no-case-bi
 add_file "$INSTALL_IMG" "desktop.system/out/desktop.system.SYS" "$INSTALL_PATH" "DeskTop.system" FF0000
 add_file "$INSTALL_IMG" "desktop/out/DESKTOP2.built" "$INSTALL_PATH" "DeskTop2" F10000
 add_file "$INSTALL_IMG" "selector/out/selector.built" "$INSTALL_PATH/optional" "Selector" F10000
+cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/selector" > /dev/null
 
 for da_dir in $DA_DIRS; do
     folder="$INSTALL_PATH/$da_dir"

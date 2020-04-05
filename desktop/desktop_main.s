@@ -13260,7 +13260,7 @@ kIndexGetSizeDialog     = 11
 kIndexWarningDialog     = 12
 
 invoke_dialog_proc:
-        .assert * = $A500, error, "Entry point used by overlay"
+        ASSERT_ADDRESS $A500, "Overlay entry point"
         jmp     invoke_dialog_proc_impl
 
 dialog_proc_table:

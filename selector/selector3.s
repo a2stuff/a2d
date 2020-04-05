@@ -96,6 +96,4 @@ L2049:  lda     open_params::ref_num
 
 .endscope
 
-        .incbin "inc/junk.dat"
-
-        ASSERT_ADDRESS $2200
+        PAD_TO $2200

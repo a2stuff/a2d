@@ -91,7 +91,7 @@ kScreenHeight   = 192
 ;;; MGTK
 
 .proc dispatch
-        .assert * = MGTK::MLI, error, "Entry point must be at $4000"
+        ASSERT_ADDRESS MGTK::MLI, "Entry point"
 
         lda     LOWSCR
         sta     SET80COL

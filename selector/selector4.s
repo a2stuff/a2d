@@ -179,6 +179,4 @@ exit:   rts
 
 .endscope
 
-        .incbin "inc/junk2.dat"
-
-        ASSERT_ADDRESS $3F0
+        PAD_TO $3F0

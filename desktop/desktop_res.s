@@ -8,7 +8,7 @@
 ;;; Segment loaded into AUX $D200-$ECFF
 ;;; ============================================================
 
-        .assert * = $D200, error, "Addr mismatch"
+        ASSERT_ADDRESS $D200
 
 pencopy:        .byte   0
 penOR:          .byte   1
@@ -947,7 +947,7 @@ icon_count:
 
         ;; Pointers into icon_entries buffer
 icon_entry_address_table:
-        .assert * = file_table, error, "Entry point mismatch"
+        ASSERT_ADDRESS file_table, "Entry point"
         .res    256, 0
 
 ;;; Copy from aux memory of icon list for active window (0=desktop)
@@ -961,15 +961,15 @@ cached_window_icon_list:   .res    127, 0
 
 
 selected_window_index: ; index of selected window (used to get prefix)
-        .assert * = path_index, error, "Entry point mismatch"
+        ASSERT_ADDRESS path_index, "Entry point"
         .byte   0
 
 selected_icon_count:            ; number of selected icons
-        .assert * = selected_file_count, error, "Entry point mismatch"
+        ASSERT_ADDRESS selected_file_count, "Entry point"
         .byte   0
 
 selected_icon_list:            ; index of selected icon (global, not w/in window)
-        .assert * = selected_file_list, error, "Entry point mismatch"
+        ASSERT_ADDRESS selected_file_list, "Entry point"
         .res    127, 0
 
 kMaxNumWindows = 8
@@ -981,7 +981,7 @@ win_table:
 
         ;; Window to Path mapping table
 window_path_addr_table:
-        .assert * = path_table, error, "Entry point mismatch"
+        ASSERT_ADDRESS path_table, "Entry point"
         .addr   $0000
         .repeat 8,i
         .addr   window_path_table+i*65
@@ -1096,7 +1096,7 @@ tmp_rect:
 saved_stack:
         .byte   0
 
-.assert * = last_menu_click_params, error, "Entry point mismatch"
+        ASSERT_ADDRESS last_menu_click_params, "Entry point"
 .params menu_click_params       ; used for MGTK::MenuKey as well
 menu_id:.byte   0
 item_num:.byte  0
@@ -1895,14 +1895,14 @@ app_mask:
 ;;; ============================================================
 
 .scope settings
-        .assert * = DeskTop::Settings::address, error, "Address mismatch"
+        ASSERT_ADDRESS DeskTop::Settings::address
 
-        .assert * = DeskTop::Settings::version_major, error, "Address mismatch"
+        ASSERT_ADDRESS DeskTop::Settings::version_major
         .byte   kDeskTopVersionMajor
-        .assert * = DeskTop::Settings::version_minor, error, "Address mismatch"
+        ASSERT_ADDRESS DeskTop::Settings::version_minor
         .byte   kDeskTopVersionMinor
 
-        .assert * = DeskTop::Settings::pattern, error, "Address mismatch"
+        ASSERT_ADDRESS DeskTop::Settings::pattern
         .byte   %01010101
         .byte   %10101010
         .byte   %01010101
@@ -1912,10 +1912,10 @@ app_mask:
         .byte   %01010101
         .byte   %10101010
 
-        .assert * = DeskTop::Settings::dblclick_speed, error, "Address mismatch"
+        ASSERT_ADDRESS DeskTop::Settings::dblclick_speed
         .word   0               ; $12C * 1, * 4, or * 32, 0 if not set
 
-        .assert * = DeskTop::Settings::ip_blink_speed, error, "Address mismatch"
+        ASSERT_ADDRESS DeskTop::Settings::ip_blink_speed
         .byte   60              ; 120, 60 or 30; lower is faster
 
         ;; Reserved for future use...
@@ -1923,4 +1923,4 @@ app_mask:
         PAD_TO DeskTop::Settings::address + DeskTop::Settings::length
 .endscope
 
-        .assert * = $10000, error, "Segment length mismatch"
+        ASSERT_ADDRESS $10000

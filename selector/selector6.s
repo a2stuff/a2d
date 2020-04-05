@@ -731,6 +731,4 @@ LD769:  .byte   0
 
 .endscope
 
-        .incbin "inc/junk4.dat"
-
-        ASSERT_ADDRESS $D800
+        PAD_TO $D800

@@ -209,21 +209,21 @@ basic_mask:
 
 ;;; ============================================================
 
-        .assert * = DEFAULT_FONT, error, "Entry point mismatch"
+        ASSERT_ADDRESS ::DEFAULT_FONT
         .incbin "../mgtk/fonts/A2D.FONT"
 
         font_height     := DEFAULT_FONT+2
 
 ;;; ============================================================
 
-        .assert * = $8D03, error, "Segment length mismatch"
+        ASSERT_ADDRESS $8D03
         PAD_TO $8E00
 
 ;;; ============================================================
 ;;; Entry point for "Icon TookKit"
 ;;; ============================================================
 
-        .assert * = IconTK::MLI, error, "IconTK entry point must be at $8E00"
+        ASSERT_ADDRESS IconTK::MLI, "IconTK entry point"
 
 .proc icon_toolkit
 
