@@ -1,13 +1,6 @@
-
-CC65 = ~/dev/cc65/bin
-CAFLAGS = --target apple2enh --list-bytes 0
-CCFLAGS = --config asm.cfg
-
-OUTDIR = out
-
 HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard ../mgtk/*.inc) $(wildcard *.inc)
 
-SEGMENTS = selector
+include ../res/Makefile.common
 
 TARGETS = $(OUTDIR)/selector.built
 
@@ -20,13 +13,11 @@ $(OUTDIR):
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
-	rm -f $(OUTDIR)/*.inc
-	rm -f $(OUTDIR)/*.built
-	rm -f $(OUTDIR)/*.sys
+	rm -f $(TARGETS)
 
 $(OUTDIR)/selector.o: selector.s $(HEADERS) selector*.s
-	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Built segments
 $(OUTDIR)/%.built: $(OUTDIR)/%.o asm.cfg
-	$(CC65)/ld65 $(CCFLAGS) -o '$@' $<
+	ld65 $(LDFLAGS) -o '$@' $<
