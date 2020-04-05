@@ -81,17 +81,7 @@ findcontrol_which_part := findcontrol_params + 5
         .assert findcontrol_mousey = event_ycoord, error, "param mismatch"
 
 ;;; Union of preceding param blocks
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-LA013:  .byte   $00
-        .byte   $00
-LA015:
-        .byte   $00
-        .byte   $00
-        .byte   $00
+        .res    10, 0
 
 .params getwinport_params
 window_id:     .byte   0
@@ -785,7 +775,7 @@ LA6D4:  and     #$7F
 
 LA73E:  .byte   0
 
-LA73F:  lda     LA015
+LA73F:  lda     screentowindow_windowy
         cmp     num_files_in_dir
         bcc     LA748
         rts
@@ -795,7 +785,7 @@ LA748:  lda     LA231
         jsr     strip_path_segment_left_and_redraw
         lda     LA231
         jsr     LB404
-LA756:  lda     LA015
+LA756:  lda     screentowindow_windowy
         sta     LA231
         bit     LA211
         bpl     LA767
@@ -1011,7 +1001,8 @@ ip_cursor_flag:
 ;;; ============================================================
 
 
-LA8ED:  ldx     LA231
+.proc LA8ED
+        ldx     LA231
         lda     file_table,x
         and     #$7F
         pha
@@ -1051,7 +1042,7 @@ LA8ED:  ldx     LA231
         rts
 
 LA941:  .byte   0
-
+.endproc
 ;;; ============================================================
 
 .proc change_drive
@@ -1688,7 +1679,7 @@ LAE69:  ldx     num_files_in_dir
         sta     LA231
         jsr     LBAD0
         lda     LA231
-        jsr     LB702
+        jsr     selection_second_col
         jsr     LB30B
         jsr     draw_filenames
         copy    #1, buf_input_right
@@ -2384,7 +2375,8 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-LB453:  lda     #$5A
+.proc LB453
+        lda     #$5A
         ldx     #$0F
 :       sta     LB537,x
         dex
@@ -2493,10 +2485,12 @@ LB535:  .byte   0
 LB536:  .byte   0
 LB537:  .res    16, 0
 LB547:  .res    127, 0
+.endproc
 
 ;;; ============================================================
 
-LB5C6:  ldx     #$00
+.proc LB5C6
+        ldx     #$00
         stx     $06
         ldx     #$18
         stx     $07
@@ -2519,10 +2513,12 @@ LB5C6:  ldx     #$00
         rts
 
 LB5F0:  .byte   0
+.endproc
 
 ;;; ============================================================
 
-LB5F1:  stax    $06
+.proc LB5F1
+        stax    $06
         ldy     #$01
         lda     ($06),y
         cmp     #'/'
@@ -2579,10 +2575,12 @@ LB654:  dey
 LB65A:  return  #$FF
 
 LB65D:  .byte   0
+.endproc
 
 ;;; ============================================================
 
-LB65E:  lda     num_files_in_dir
+.proc LB65E
+        lda     num_files_in_dir
         bne     LB664
 LB663:  rts
 
@@ -2608,9 +2606,11 @@ LB671:  lda     LB691
         jmp     LB671
 
 LB691:  .byte   0
+.endproc
 
 ;;; ============================================================
 
+.proc LB629                     ; Unreferenced ???
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -2661,17 +2661,23 @@ LB6E9:  dex
 
 LB6F1:  .byte   0
 LB6F2:  .res    16, 0
+.endproc
 
 ;;; ============================================================
+;;; Input: A = Selection (0-15, or $FF)
+;;; Output: 0 if no selection or in first col, else mod 8
 
-LB702:  bpl     LB707
-LB704:  return  #$00
+.proc selection_second_col
+        bpl     has_sel
+:       return  #0
 
-LB707:  cmp     #$09
-        bcc     LB704
+has_sel:
+        cmp     #9
+        bcc     :-
         sec
-        sbc     #$08
+        sbc     #8
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -2738,7 +2744,7 @@ LB78A:  addr_call draw_string, buf_input_right
 
 :       jsr     calc_input_endpos
         stax    $06
-        cmp16   LA013, $06
+        cmp16   screentowindow_windowx, $06
         bcs     LB7D2
         jmp     LB864
 
@@ -2754,7 +2760,7 @@ LB7D2:  jsr     calc_input_endpos
         sta     $08
 @loop:  MGTK_CALL MGTK::TextWidth, $06
         add16   $09, LB8EA, $09
-        cmp16   $09, LA013
+        cmp16   $09, screentowindow_windowx
         bcc     LB823
         dec     $08
         lda     $08
@@ -2801,7 +2807,7 @@ LB864:  copy16  #buf_input_left, $06
         sta     $08
 LB871:  MGTK_CALL MGTK::TextWidth, $06
         add16   $09, rect_input_text::x1, $09
-        cmp16   $09, LA013
+        cmp16   $09, screentowindow_windowx
         bcc     LB89D
         dec     $08
         lda     $08
@@ -3111,6 +3117,7 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
+.proc LBB09                     ; Unreferenced ???
         ldx     LA3C7
 :       lda     LA3C7,x
         sta     buf_input_left,x
@@ -3118,6 +3125,7 @@ tmp:    .byte   0
         bpl     :-
         addr_call adjust_path_case, buf_input_left
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -3162,7 +3170,8 @@ width:  .word   0
 
 ;;; ============================================================
 
-LBB5B:  ldx     buf_input_left
+.proc LBB5B
+        ldx     buf_input_left
 :       lda     buf_input_left,x
         sta     LA0C8,x
         dex
@@ -3226,6 +3235,7 @@ LBBDD:  jsr     LB106
 
 LBBE1:  .byte   0
 LBBE2:  .byte   0
+.endproc
 
 
 .endscope
