@@ -6,8 +6,8 @@
 
 .scope selector7
 
-num_files_in_dir = $177F
-
+num_files_in_dir := $177F
+buf_filenames    := $1800
 
         jmp     init
 
@@ -471,7 +471,7 @@ start:  jsr     open_window
         DEFINE_CLOSE_PARAMS close_params
 
 buf_on_line:  .res    16, 0
-LA3C6:  .byte   0
+device_index:  .byte   0        ; current drive, index in DEVLST
 LA3C7:  .res    128, 0
 LA447:  .byte   0
 LA448:  .byte   0
@@ -485,7 +485,7 @@ init:   tsx
         stx     saved_stack
         jsr     set_pointer_cursor
         lda     #$00
-        sta     LA3C6
+        sta     device_index
         sta     LA214
         sta     LA215
         sta     LA447
@@ -620,7 +620,7 @@ LA594:  bit     LA47F
         MGTK_CALL MGTK::PaintRect, rect_change_drive_btn
         jsr     event_loop_change_drive_btn
         bmi     LA5AD
-        jsr     LA942
+        jsr     change_drive
 LA5AD:  jmp     LA632
 
 LA5B0:  MGTK_CALL MGTK::InRect, rect_cancel_btn
@@ -666,7 +666,7 @@ LA624:  bit     LA47D
         bpl     LA62E
         jsr     LA63F
         bmi     LA632
-LA62E:  jsr     LB799
+LA62E:  jsr     check_input_click_and_move_ip
         rts
 
 LA632:  MGTK_CALL MGTK::InitPort, grafport2
@@ -730,10 +730,7 @@ LA6D4:  and     #$7F
         MGTK_CALL MGTK::PaintRect, rect_open_btn
         lda     #$00
         sta     LA73E
-        lda     #$00
-        sta     $08
-        lda     #$18
-        sta     $09
+        copy16  #buf_filenames, $08
         pla
         asl     a
         rol     LA73E
@@ -990,7 +987,11 @@ LA8ED:  ldx     LA231
         rts
 
 LA941:  .byte   0
-LA942:  lda     #$FF
+
+;;; ============================================================
+
+.proc change_drive
+        lda     #$FF
         sta     LA231
         jsr     LB082
         jsr     LB051
@@ -998,14 +999,17 @@ LA942:  lda     #$FF
         jsr     LB309
         lda     #$00
         jsr     LB3B7
-LA95A           := * + 2
         jsr     LB350
         jsr     draw_filenames
         jsr     LBB1D
         jsr     redraw_input
         rts
+.endproc
 
-LA965:  lda     #$00
+;;; ============================================================
+
+.proc LA965
+        lda     #$00
         sta     LA9C8
         ldx     LA3C7
         bne     LA972
@@ -1051,6 +1055,7 @@ LA9C2:  lda     #$FF
 LA9C7:  rts
 
 LA9C8:  .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -1118,7 +1123,7 @@ LAA64:  .byte   0
         sta     LAAD2
 LAA6A:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #$02
+        cmp     #MGTK::EventKind::button_up
         beq     LAABB
         lda     winfo1::window_id
         sta     screentowindow_window_id
@@ -1161,7 +1166,7 @@ LAAD2:  .byte   0
         sta     LAB40
 LAAD8:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #$02
+        cmp     #MGTK::EventKind::button_up
         beq     LAB29
         lda     winfo1::window_id
         sta     screentowindow_window_id
@@ -1204,7 +1209,7 @@ LAB40:  .byte   0
         sta     LABAE
 LAB46:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #$02
+        cmp     #MGTK::EventKind::button_up
         beq     LAB97
         lda     winfo1::window_id
         sta     screentowindow_window_id
@@ -1247,7 +1252,7 @@ LABAE:  .byte   0
         sta     LAC1C
 LABB4:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #$02
+        cmp     #MGTK::EventKind::button_up
         beq     LAC05
         lda     winfo1::window_id
         sta     screentowindow_window_id
@@ -1328,11 +1333,11 @@ no_modifiers:
         and     #CHAR_MASK
         cmp     #CHAR_LEFT
         bne     LAC67
-        jmp     LB973
+        jmp     input_ip_left
 
 LAC67:  cmp     #CHAR_RIGHT
         bne     LAC6E
-        jmp     LB9C9
+        jmp     input_ip_right
 
 LAC6E:  cmp     #CHAR_RETURN
         bne     :+
@@ -1357,7 +1362,7 @@ LAC6E:  cmp     #CHAR_RETURN
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_change_drive_btn
         MGTK_CALL MGTK::PaintRect, rect_change_drive_btn
-        jsr     LA942
+        jsr     change_drive
 LACAA:  jmp     exit
 
 not_tab:
@@ -1397,7 +1402,7 @@ not_ctrl_o:
         bne     finish
         jmp     select_up
 
-finish: jsr     LB8EC
+finish: jsr     input_insert_char
         rts
 
 exit:   jsr     LA9C9
@@ -1442,7 +1447,7 @@ LAD20:  lda     winfo1::window_id
 ;;; ============================================================
 
 .proc handle_key_delete
-        jsr     LB93B
+        jsr     input_delete_char
         rts
 .endproc
 
@@ -1561,10 +1566,10 @@ LAE09:  return  LAE35
         asl     a
         rol     LAE36
         clc
-        adc     #$00
+        adc     #<buf_filenames
         sta     $06
         lda     LAE36
-        adc     #$18
+        adc     #>buf_filenames
         sta     $07
         rts
 .endproc
@@ -1663,23 +1668,26 @@ LAEB8:  dec     counter
         bmi     LAEF5
         lda     #$FF
         sta     LAF45
-        lda     event_kind      ; TODO: wrong ???
+        lda     event_kind
         sta     kind
-        cmp     #$00
+        cmp     #MGTK::EventKind::no_event
         beq     LAEB8
-        cmp     #$04
+        cmp     #MGTK::EventKind::drag
         beq     LAEB8
-        cmp     #$02
+        cmp     #MGTK::EventKind::button_up
         bne     LAEE8
         MGTK_CALL MGTK::GetEvent, event_params
         jmp     LAEB8
 
-LAEE8:  cmp     #$01
+LAEE8:  cmp     #MGTK::EventKind::button_down
         bne     LAEF5
         MGTK_CALL MGTK::GetEvent, event_params
         return  #$00
 
 LAEF5:  return  #$FF
+
+        kMaxDeltaX = 5
+        kMaxDeltaY = 4
 
 check_delta:
         lda     event_xcoord
@@ -1690,12 +1698,12 @@ check_delta:
         sbc     xcoord+1
         bpl     LAF14
         lda     mouse_delta
-        cmp     #$FB
+        cmp     #AS_BYTE(-kMaxDeltaX)
         bcs     LAF1B
 LAF11:  return  #$FF
 
 LAF14:  lda     mouse_delta
-        cmp     #$05
+        cmp     #kMaxDeltaX
         bcs     LAF11
 LAF1B:  lda     event_ycoord
         sec
@@ -1705,10 +1713,10 @@ LAF1B:  lda     event_ycoord
         sbc     ycoord+1
         bpl     LAF34
         lda     mouse_delta
-        cmp     #$FC
+        cmp     #AS_BYTE(-kMaxDeltaY)
         bcs     LAF3B
 LAF34:  lda     mouse_delta
-        cmp     #$04
+        cmp     #kMaxDeltaY
         bcs     LAF11
 LAF3B:  return  #$00
 
@@ -1833,7 +1841,7 @@ LB03E:  .byte   0
 
 ;;; ============================================================
 
-LB051:  ldx     LA3C6
+LB051:  ldx     device_index
         lda     DEVLST,x
         and     #$F0
         sta     on_line_params::unit_num
@@ -1850,13 +1858,13 @@ LB075:  lda     #$00
         addr_call LB0D6, $A3B6
         rts
 
-LB082:  inc     LA3C6
-        lda     LA3C6
+LB082:  inc     device_index
+        lda     device_index
         cmp     DEVCNT
         beq     LB094
         bcc     LB094
         lda     #$00
-        sta     LA3C6
+        sta     device_index
 LB094:  rts
 
 LB095:  lda     #$00
@@ -1958,7 +1966,7 @@ LB17E:  ldy     #$00
         lda     ($06),y
         and     #$0F
         sta     ($06),y
-        copy16  #$1800, $08
+        copy16  #buf_filenames, $08
         lda     #$00
         sta     LB229
         lda     LB224
@@ -2096,8 +2104,10 @@ LB2D0:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Input: A,X = Address of string
 
-LB2D1:  stx     $0B
+.proc adjust_path_case
+        stx     $0B
         sta     $0A
         ldy     #$00
         lda     ($0A),y
@@ -2131,6 +2141,7 @@ LB2F3:  iny
         sta     ($0A),y
 LB305:  dey
         jmp     LB2DD
+.endproc
 
 ;;; ============================================================
 
@@ -2193,7 +2204,7 @@ LB388:  inx
         cpy     LB3B6
         bne     LB388
         stx     $0220
-        addr_call LB2D1, $0220
+        addr_call adjust_path_case, $0220
         MGTK_CALL MGTK::MoveTo, pos_disk
         addr_call draw_string, str_disk
         addr_call draw_string, $0220
@@ -2390,149 +2401,11 @@ LB533:  .byte   0
 LB534:  .byte   0
 LB535:  .byte   0
 LB536:  .byte   0
-LB537:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LB547:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+LB537:  .res    16, 0
+LB547:  .res    127, 0
+
+;;; ============================================================
+
 LB5C6:  ldx     #$00
         stx     $06
         ldx     #$18
@@ -2556,6 +2429,9 @@ LB5C6:  ldx     #$00
         rts
 
 LB5F0:  .byte   0
+
+;;; ============================================================
+
 LB5F1:  stax    $06
         ldy     #$01
         lda     ($06),y
@@ -2613,6 +2489,9 @@ LB654:  dey
 LB65A:  return  #$FF
 
 LB65D:  .byte   0
+
+;;; ============================================================
+
 LB65E:  lda     num_files_in_dir
         bne     LB664
 LB663:  rts
@@ -2628,7 +2507,7 @@ LB671:  lda     LB691
         beq     LB663
         lda     $06
         ldx     $07
-        jsr     LB2D1
+        jsr     adjust_path_case
         inc     LB691
         lda     $06
         clc
@@ -2639,6 +2518,9 @@ LB671:  lda     LB691
         jmp     LB671
 
 LB691:  .byte   0
+
+;;; ============================================================
+
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -2688,22 +2570,10 @@ LB6E9:  dex
         rts
 
 LB6F1:  .byte   0
-LB6F2:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+LB6F2:  .res    16, 0
+
+;;; ============================================================
+
 LB702:  bpl     LB707
 LB704:  return  #$00
 
@@ -2763,7 +2633,9 @@ LB78A:  addr_call draw_string, buf_input_right
 
 ;;; ============================================================
 
-LB799:  lda     winfo1::window_id
+.proc check_input_click_and_move_ip
+
+        lda     winfo1::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     winfo1::window_id
@@ -2790,14 +2662,14 @@ LB7D2:  jsr     calc_input_endpos
         copy16  #buf_input_right, $06
         lda     buf_input_right
         sta     $08
-LB7F4:  MGTK_CALL MGTK::TextWidth, $0006
+@loop:  MGTK_CALL MGTK::TextWidth, $0006
         add16   $09, LB8EA, $09
         cmp16   $09, LA013
         bcc     LB823
         dec     $08
         lda     $08
         cmp     #$01
-        bne     LB7F4
+        bne     @loop
         dec     buf_input_right
         jmp     LB8E3
 
@@ -2884,20 +2756,23 @@ LB8E3:  jsr     redraw_input
         rts
 
 LB8EA:  .word   0
+.endproc
 
 ;;; ============================================================
 
-LB8EC:  sta     LB8FB
+.proc input_insert_char
+        sta     tmp
         lda     buf_input_left
         clc
         adc     buf_input_right
         cmp     #$41
-        bcc     LB8FC
+        bcc     continue
         rts
 
-LB8FB:  .byte   0
+tmp:    .byte   0
 
-LB8FC:  lda     LB8FB
+continue:
+        lda     tmp
         ldx     buf_input_left
         inx
         sta     buf_input_left,x
@@ -2913,12 +2788,16 @@ LB8FC:  lda     LB8FB
         addr_call draw_string, buf_input_right
         jsr     LBB5B
         rts
+.endproc
 
-LB93B:  lda     buf_input_left
-        bne     LB941
+;;; ============================================================
+
+.proc input_delete_char
+        lda     buf_input_left
+        bne     :+
         rts
 
-LB941:  dec     buf_input_left
+:       dec     buf_input_left
         jsr     calc_input_endpos
         stax    $06
         copy16  rect_input_text::y1, $08
@@ -2929,8 +2808,12 @@ LB941:  dec     buf_input_left
         addr_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
+.endproc
 
-LB973:  lda     buf_input_left
+;;; ============================================================
+
+.proc input_ip_left
+        lda     buf_input_left
         bne     LB979
         rts
 
@@ -2957,8 +2840,12 @@ LB98B:  ldx     buf_input_left
         addr_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
+.endproc
 
-LB9C9:  lda     buf_input_right
+;;; ============================================================
+
+.proc input_ip_right
+        lda     buf_input_right
         cmp     #$02
         bcs     LB9D1
         rts
@@ -2986,6 +2873,7 @@ LB9F3:  dec     buf_input_right
         addr_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -3045,8 +2933,10 @@ LBA3D:  lda     buf_input_left,y
 .endproc
 
 ;;; ============================================================
+;;; Input: A,X = string address
 
-LBA8C:  stax    $06
+.proc append_segment_to_input
+        stax    $06
         ldx     buf_input_left
         lda     #'/'
         sta     buf_input_left+1,x
@@ -3058,15 +2948,16 @@ LBA8C:  stax    $06
         adc     buf_input_left
         pha
         tax
-LBAA6:  lda     ($06),y
+:       lda     ($06),y
         sta     buf_input_left,x
         dey
         dex
         cpx     buf_input_left
-        bne     LBAA6
+        bne     :-
         pla
         sta     buf_input_left
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Trim end of left segment to rightmost '/'
@@ -3093,13 +2984,17 @@ done:   rts
 ;;; ============================================================
 
 .proc LBAD0
-        copy16  #$1800, $06
+        ptr := $06
+
+        copy16  #buf_filenames, ptr
         ldx     LA231
         lda     $1780,x
         and     #$7F
-        ldx     #$00
+
+        ldx     #0
         stx     tmp
-        asl     a
+
+        asl     a               ; *= 16
         rol     tmp
         asl     a
         rol     tmp
@@ -3107,14 +3002,15 @@ done:   rts
         rol     tmp
         asl     a
         rol     tmp
+
         clc
-        adc     $06
+        adc     ptr
         tay
         lda     tmp
-        adc     $07
+        adc     ptr+1
         tax
         tya
-        jsr     LBA8C
+        jsr     append_segment_to_input
         jsr     redraw_input
         rts
 
@@ -3130,7 +3026,7 @@ tmp:    .byte   0
         sta     buf_input_left,x
         dex
         bpl     :-
-        addr_call LB2D1, buf_input_left
+        addr_call adjust_path_case, buf_input_left
         rts
 
 ;;; ============================================================
@@ -3141,7 +3037,7 @@ tmp:    .byte   0
         sta     buf_input_left,x
         dex
         bpl     :-
-        addr_call LB2D1, buf_input_left
+        addr_call adjust_path_case, buf_input_left
         rts
 .endproc
 
@@ -3209,8 +3105,8 @@ LBB5B:  ldx     buf_input_left
         tax
         tya
         jsr     LB0D6
-LBBA0:  addr_call LB2D1, LA0C8
-        addr_call LB2D1, $A3C7
+LBBA0:  addr_call adjust_path_case, LA0C8
+        addr_call adjust_path_case, $A3C7
         lda     LA0C8
         cmp     LA3C7
         bne     LBBCB
