@@ -37,6 +37,11 @@ overlay1_size   = $1F00
 overlay2_offset = $8E60
 overlay2_size   = $D00
 
+GLYPH_FOLDERL   = $01
+GLYPH_FOLDERR   = $02
+GLYPH_INSPT     = $06
+GLYPH_RETURN    = $0D
+
 ;;; ============================================================
 ;;; Selector application
 ;;; ============================================================
