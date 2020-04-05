@@ -6,9 +6,10 @@
 
 .scope selector5
 
-L2000           := $2000
-LA000           := $A000        ; selector7/8 entry points
-LA003           := $A003        ; selector7 entry point
+overlay1_init   := $A000        ; selector7 entry point
+overlay1_loop   := $A003        ; selector7 event loop
+overlay2_exec   := $A000        ; selector8 entry point
+
 ShowAlertImpl   := $D23E        ; in selector6
 
 selector_list   := $B300
@@ -113,7 +114,7 @@ MGTK:
         .byte   $FB,$28,$6B,$38,$FB,$20,$00,$BF
 
 ;;; Font
-        .assert * = $8800, error, "Font location mismatch"
+        .assert * = FONT, error, "Font location mismatch"
         .incbin "../fonts/SELECTOR.FONT"
 
 ;;; ???
@@ -352,8 +353,8 @@ window_id:
         .word   140
 
 viewloc:.word   25, 40
-        .word   $2000
-        .byte   $80
+        .word   MGTK::screen_mapbits
+        .byte   MGTK::screen_mapwidth
         .byte   $00
 
         .word   0, 0, 500, 110
@@ -365,7 +366,7 @@ viewloc:.word   25, 40
         .byte   1, 1
         .byte   0
         .byte   $7F
-        .word   $8800
+        .word   FONT
         .byte   0
         .byte   0
 .endparams
@@ -417,11 +418,18 @@ rect_entry:
         .byte   0
         .byte   $7F
 
-        DEFINE_OPEN_PARAMS open_selector_list_params, str_selector_list, $BB00
-        DEFINE_READ_PARAMS read_selector_list_params, selector_list, $800
+        io_buf_sl = $BB00
+        kSelectorListBufSize = $800
 
-        DEFINE_OPEN_PARAMS open_desktop2_params, str_desktop2, $1C00
-        DEFINE_READ_PARAMS read_desktop2_params, $2000, $400
+        DEFINE_OPEN_PARAMS open_selector_list_params, str_selector_list, io_buf_sl
+        DEFINE_READ_PARAMS read_selector_list_params, selector_list, kSelectorListBufSize
+
+        io_buf_desktop = $1C00
+        desktop_load_addr = $2000
+        kDeskTopLoadSize = $400
+
+        DEFINE_OPEN_PARAMS open_desktop2_params, str_desktop2, io_buf_desktop
+        DEFINE_READ_PARAMS read_desktop2_params, desktop_load_addr, kDeskTopLoadSize
 
 str_selector_list:
         PASCAL_STRING "Selector.List"
@@ -885,11 +893,11 @@ L93FF:  jsr     set_watch_cursor
         yax_call MLI_WRAPPER, SET_MARK, set_mark_overlay1_params
         yax_call MLI_WRAPPER, READ, read_overlay1_params
         yax_call MLI_WRAPPER, CLOSE, close_params2
-        jsr     LA000
+        jsr     overlay1_init
         bne     L943F
 L9436:  tya
         jsr     invoke_entry_ep2
-        jsr     LA003
+        jsr     overlay1_loop
         beq     L9436
 L943F:  jsr     load_selector_list
         rts
@@ -1038,11 +1046,12 @@ L959F:  .byte   0
 ;;; ============================================================
 
 .proc MLI_WRAPPER
-        sty     $95AE
-        stax    $95AF
+        sty     @addr
+        stax    @addr+1
         php
         sei
-        MLI_CALL $00, $0000
+        @addr := * + 3
+        MLI_CALL $00, dummy0000
         plp
         and     #$FF
         rts
@@ -1069,7 +1078,7 @@ noop:   rts
         jsr     HOME
         yax_call MLI_WRAPPER, READ, read_desktop2_params
         yax_call MLI_WRAPPER, CLOSE, close_params
-        jmp     L2000
+        jmp     desktop_load_addr
 .endproc
 
 ;;; ============================================================
@@ -1798,7 +1807,7 @@ L9AE5:  lda     winfo::window_id
         pla
         jsr     L9A62
         MGTK_CALL MGTK::MoveTo, pt6
-        addr_call DrawString, $9113
+        addr_call DrawString, L9113
         rts
 .endproc
 
@@ -1937,7 +1946,7 @@ col:    .byte   0
         jsr     HOME
 
         @addr := * + 1
-        jmp     $0000
+        jmp     dummy0000
 .endproc
 
 ;;; ============================================================
@@ -1979,7 +1988,7 @@ L9C32:  lda     selected_entry
         beq     L9C6F
         jsr     load_overlay2
         lda     selected_entry
-        jsr     LA000
+        jsr     overlay2_exec
         pha
         jsr     L9326
         pla
@@ -2116,7 +2125,8 @@ L9CF5:  iny
 
 ;;; ============================================================
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_bs_params, $1C00
+        scratch_buf := $1C00
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_bs_params, scratch_buf
 
 .proc check_basic_system
         path_buf := $1C00
@@ -2312,11 +2322,6 @@ L9EFB:  .byte   0
 
 ;;; ============================================================
 
-;;; DESKTOP.SYSTEM flags/state
-
-copied_to_ramcard_flag  := $D3FF
-ramcard_prefix          := $D3EE
-
 .proc get_copied_to_ramcard_flag
         lda     LCBANK2
         lda     LCBANK2
@@ -2344,8 +2349,10 @@ ramcard_prefix          := $D3EE
 ;;; ============================================================
 
 .proc L9F27
+        buf := $800
+
         sta     L9F72
-        addr_call copy_ramcard_prefix, $0800
+        addr_call copy_ramcard_prefix, buf
         lda     L9F72
         jsr     get_selector_list_path_addr
         stax    $06
@@ -2367,15 +2374,15 @@ L9F4F:  lda     ($06),y
         dey
         bne     L9F4F
 L9F5A:  dey
-        ldx     $0800
+        ldx     buf
 L9F5E:  inx
         iny
         lda     ($06),y
-        sta     $0800,x
+        sta     buf,x
         cpy     L9F73
         bne     L9F5E
-        stx     $0800
-        ldax    #$0800
+        stx     buf
+        ldax    #buf
         rts
 
 L9F72:  .byte   0

@@ -8,8 +8,13 @@
 ;;; $1000 Main.
 
 .scope
+        self := *
 
         jmp     start
+
+
+        PRODOS_QUIT_ROUTINE := $D100
+
 
 flag:   .byte   0
 
@@ -25,10 +30,14 @@ str_selector:
 
         ;; ProDOS MLI call param blocks
 
-        DEFINE_READ_PARAMS read_params, $1C00, $600
+        io_buf := $1800
+        load_target := $1C00
+        kLoadSize = $600
+
+        DEFINE_READ_PARAMS read_params, load_target, kLoadSize
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buf
-        DEFINE_OPEN_PARAMS open_params, str_selector, $1800
+        DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
 
 start:
         ;; Show and clear 80-column text screen
@@ -44,7 +53,7 @@ start:
         sta     SHADOW          ; TODO: Only do this on IIgs
         lda     #$80
         sta     ALTZPON
-        sta     FBUFFR
+        sta     $0100           ; ???
         sta     $0101           ; ???
         sta     ALTZPOFF
 
@@ -104,10 +113,10 @@ install:
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
-:       lda     $1000,y
-        sta     $D100,y
-        lda     $1000+$100,y
-        sta     $D200,y
+:       lda     self,y
+        sta     PRODOS_QUIT_ROUTINE,y
+        lda     self+$100,y
+        sta     PRODOS_QUIT_ROUTINE+$100,y
         dey
         bne     :-
         lda     ROMIN2

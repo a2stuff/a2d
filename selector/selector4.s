@@ -11,7 +11,9 @@
 
 ;;; ============================================================
 
-        default_start_address := $2000 ; for SYS files
+        PRODOS_SYS_START := $2000 ; for SYS files
+        PRODOS_INTERPRETER_BUF := $2006
+
 
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
 
@@ -19,7 +21,7 @@ prefix_length:
         .byte   0
 
         DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
-        DEFINE_READ_PARAMS read_params, default_start_address, $9F00
+        DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI - PRODOS_SYS_START
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
 
@@ -53,7 +55,7 @@ str_basic_system:
 
 start:  lda     ROMIN2
 
-        copy16  #default_start_address, invoke_addr
+        copy16  #PRODOS_SYS_START, invoke_addr
 
         ;; Clear system memory bitmap
         ldx     #BITMAP_SIZE-2
@@ -147,7 +149,7 @@ do_read:
         jsr     set_prefix
         ldy     INVOKER_FILENAME
 :       lda     INVOKER_FILENAME,y
-        sta     $2006,y         ; ProDOS interpreter protocol
+        sta     PRODOS_INTERPRETER_BUF,y         ; ProDOS interpreter protocol
         dey
         bpl     :-
 
@@ -165,7 +167,7 @@ update_stack:
         sta     BITMAP
 
         invoke_addr := *+1
-        jmp     $2000
+        jmp     PRODOS_SYS_START
 
 update_bitmap:
         rts                     ; no-op?

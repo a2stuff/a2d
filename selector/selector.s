@@ -6,6 +6,7 @@
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk_100B4.inc"
 
+dummy0000       := $0000
 dummy1234       := $1234
 
 INVOKER_PREFIX  := $0220
@@ -41,6 +42,11 @@ GLYPH_FOLDERL   = $01
 GLYPH_FOLDERR   = $02
 GLYPH_INSPT     = $06
 GLYPH_RETURN    = $0D
+
+;;; DESKTOP.SYSTEM flags/state
+
+copied_to_ramcard_flag  := $D3FF
+ramcard_prefix          := $D3EE
 
 ;;; ============================================================
 ;;; Selector application

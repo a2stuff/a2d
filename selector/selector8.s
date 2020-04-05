@@ -45,13 +45,17 @@ buf_5_bytes:
         .byte   $01
         .addr   pathname1
 
-        DEFINE_OPEN_PARAMS open_params_src, pathname1, $D00
-        DEFINE_OPEN_PARAMS open_params_dst, pathname_dst, $1100
+        io_buf_src = $D00
+        io_buf_dst = $1100
+        data_buf = $1500
+
+        DEFINE_OPEN_PARAMS open_params_src, pathname1, io_buf_src
+        DEFINE_OPEN_PARAMS open_params_dst, pathname_dst, io_buf_dst
 
         kDirCopyBufSize = $B00
 
-        DEFINE_READ_PARAMS read_params_src, $1500, kDirCopyBufSize
-        DEFINE_WRITE_PARAMS write_params_dst, $1500, kDirCopyBufSize
+        DEFINE_READ_PARAMS read_params_src, data_buf, kDirCopyBufSize
+        DEFINE_WRITE_PARAMS write_params_dst, data_buf, kDirCopyBufSize
 
         DEFINE_CREATE_PARAMS create_params2, pathname_dst, $C3
 
@@ -71,6 +75,8 @@ buf_5_bytes:
 
 buf_dir_header:
         .res    48, 0
+
+addr_table:
 
 LA0EC:  .word   do_copy
 LA0EE:  .word   LA4FC
@@ -499,26 +505,24 @@ LA69C:  lda     get_file_info_params2,x
 
 LA6B6:  rts
 
-        and     #$A7
-        plp
-        .byte   $A7
-        .byte   $F2
-LA6BD           := * + 1
-        ldy     #$A0
-LA6BF           := * + 1
-        ora     $B9
-        .byte   $B7
-        ldx     $99
-        cpx     $88A0
-        bpl     LA6BF
+LA6B7:  .addr   LA729
+        .addr   LA728
+        .addr   LA0F2
+
+LA6BD:  ldy     #5
+:       lda     LA6B7,y
+        sta     addr_table,y
+        dey
+        bpl     :-
+
         lda     #$00
         sta     LA759
         sta     LA75A
         sta     LA75B
         sta     LA75C
-        ldy     #$17
+        ldy     #BITMAP_SIZE-1
         lda     #$00
-LA6DA:  sta     $BF58,y
+LA6DA:  sta     BITMAP,y
         dey
         bpl     LA6DA
         jsr     LA7D9
@@ -554,7 +558,7 @@ LA723:  .byte   0
 LA724:  .byte   0
 LA725:  jmp     LA729
 
-        rts
+LA728:  rts
 
 LA729:  jsr     LA75D
         yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
@@ -697,8 +701,8 @@ LA834:  iny
         stx     LA1F6
         lda     LCBANK2
         lda     LCBANK2
-        ldy     $D3EE
-LA84D:  lda     $D3EE,y
+        ldy     ramcard_prefix
+LA84D:  lda     ramcard_prefix,y
         sta     LA176,y
         dey
         bpl     LA84D
@@ -752,7 +756,7 @@ window_id:
         .byte   $01,$01
         .byte   $00
         .byte   $7F
-        .addr   $8800
+        .addr   FONT
         .addr   0
 .endproc
 
@@ -781,8 +785,8 @@ rect2:  DEFINE_RECT 6, 24, 346, 66
 
 .params setportbits_params
 viewloc:        DEFINE_POINT 100, 50
-mapbits:        .addr   $2000
-mapwidth:       .byte   $80
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 346, 66
 pattern:        .res    8, $FF
@@ -791,7 +795,7 @@ penloc:         .word   0, 0
 pensize:        .byte   1, 1
 penmode:        .byte   0
 textback:       .byte   $7F
-textfont:       .addr   $8800
+textfont:       .addr   FONT
 next:           .addr   0
 .endparams
 
@@ -923,7 +927,7 @@ event_loop:
         beq     handle_button_down
         cmp     #MGTK::EventKind::key_down
         bne     event_loop
-        lda     $8F7A
+        lda     selector5::event_key
         cmp     #CHAR_RETURN
         bne     event_loop
         lda     winfo::window_id
@@ -940,13 +944,13 @@ handle_button_down:
         beq     event_loop
         cmp     #MGTK::Area::content
         bne     event_loop
-        lda     $8F7F
+        lda     selector5::findwindow_window_id
         cmp     winfo::window_id
         bne     event_loop
         lda     winfo::window_id
         jsr     selector5::get_window_port
         lda     winfo::window_id
-        sta     $8F79
+        sta     selector5::screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
         MGTK_CALL MGTK::MoveTo, selector5::screentowindow_windowx
         MGTK_CALL MGTK::InRect, rect1
@@ -962,8 +966,8 @@ handle_button_down:
 LABE6:  lda     #$00
         sta     LAC53
 LABEB:  MGTK_CALL MGTK::GetEvent, selector5::event_params
-        lda     $8F79
-        cmp     #$02
+        lda     selector5::event_kind
+        cmp     #MGTK::EventKind::button_up
         beq     LAC3C
         lda     winfo::window_id
         sta     selector5::screentowindow_window_id
