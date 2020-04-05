@@ -219,7 +219,7 @@ mi_x6:  DEFINE_MENU_ITEM str_slot_x6, '0', '0'
 mi_x7:  DEFINE_MENU_ITEM str_slot_x7, '0', '0'
 
 str_apple:
-        PASCAL_STRING $1E       ; TODO: GLYPH_SAPPLE
+        PASCAL_STRING GLYPH_SAPPLE
 
 str_file:
         PASCAL_STRING "File"
@@ -383,7 +383,7 @@ rect_desktop_btn:
 pos_ok_label:
         DEFINE_POINT 344, 104
 str_ok_btn:
-        PASCAL_STRING {" OK           ",CHAR_RETURN}
+        PASCAL_STRING {" OK           ",GLYPH_RETURN}
 
 pos_desktop_label:
         DEFINE_POINT 64, 104

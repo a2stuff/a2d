@@ -325,7 +325,7 @@ pt2:    DEFINE_POINT 323, 100
 pos_ok_btn:
         DEFINE_POINT 198,99
 str_ok_btn:
-        PASCAL_STRING {"OK            ",CHAR_RETURN}
+        PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
 pos_close_btn:
         DEFINE_POINT 198,68
