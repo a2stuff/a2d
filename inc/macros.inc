@@ -760,10 +760,7 @@ __pushorg_depth__ .set 0
 
 .macro ASSERT_RECORD_TABLE_SIZE name, size, record_length
         .assert (* - name) = (size) * (record_length), error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), (size) * (record_length), * - name)
-<<<<<<< HEAD
-=======
 .endmacro
->>>>>>> 625858b... disasm: Selector MGTK params
 
 
 ;;; ============================================================

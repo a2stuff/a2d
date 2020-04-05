@@ -1,4 +1,4 @@
-targets := desktop desktop.system desk.acc preview
+targets := desktop desktop.system desk.acc preview selector
 
 .PHONY: all $(targets) mount install
 

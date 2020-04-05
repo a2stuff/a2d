@@ -26,10 +26,6 @@ VOLNAME_COMPLETE="A2.DeskTop"
 VOLNAME_PART1="A2.DeskTop.1"
 VOLNAME_PART2="A2.DeskTop.2"
 
-function titlecase {
-    echo "$@" | perl -pne 's/(^(.)|\.(.))/uc($1)/eg'
-}
-
 mkdir -p $PACKDIR
 
 # Create disk images.
@@ -69,14 +65,20 @@ add_file $IMGFILE_PART1 "desktop.system/out/desktop.system.SYS" "/$VOLNAME_PART1
 add_file $IMGFILE_COMPLETE "desktop/out/DESKTOP2.built" "/$VOLNAME_COMPLETE" "DeskTop2" F10000
 add_file $IMGFILE_PART1 "desktop/out/DESKTOP2.built" "/$VOLNAME_PART1" "DeskTop2" F10000
 
+cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/Optional" --quiet --no-case-bits
+cadius CREATEFOLDER $IMGFILE_PART2 "/$VOLNAME_PART2/Optional" --quiet --no-case-bits
+
+add_file $IMGFILE_COMPLETE "selector/out/selector.built" "/$VOLNAME_COMPLETE/Optional" "Selector" F10000
+add_file $IMGFILE_PART2 "selector/out/selector.built" "/$VOLNAME_PART2/Optional" "Selector" F10000
+
 for da_dir in $DA_DIRS; do
-    folder1="/$VOLNAME_COMPLETE/$(titlecase $da_dir)"
-    folder2="/$VOLNAME_PART2/$(titlecase $da_dir)"
+    folder1="/$VOLNAME_COMPLETE/$da_dir"
+    folder2="/$VOLNAME_PART2/$da_dir"
     cadius CREATEFOLDER $IMGFILE_COMPLETE $folder1 --quiet --no-case-bits
     cadius CREATEFOLDER $IMGFILE_PART2 $folder2 --quiet --no-case-bits
     for file in $(cat $da_dir/TARGETS); do
-        add_file "$IMGFILE_COMPLETE" "$da_dir/out/$file.da" $folder1 $(titlecase $file) F10640
-        add_file "$IMGFILE_PART2" "$da_dir/out/$file.da" $folder2 $(titlecase $file) F10640
+        add_file "$IMGFILE_COMPLETE" "$da_dir/out/$file.da" $folder1 $file F10640
+        add_file "$IMGFILE_PART2" "$da_dir/out/$file.da" $folder2 $file F10640
     done
 done
 

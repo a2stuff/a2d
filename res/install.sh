@@ -49,9 +49,11 @@ add_file () {
 }
 
 cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet --no-case-bits > /dev/null
+cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/optional" --quiet --no-case-bits > /dev/null
 
 add_file "$INSTALL_IMG" "desktop.system/out/desktop.system.SYS" "$INSTALL_PATH" "DeskTop.system" FF0000
 add_file "$INSTALL_IMG" "desktop/out/DESKTOP2.built" "$INSTALL_PATH" "DeskTop2" F10000
+add_file "$INSTALL_IMG" "selector/out/selector.built" "$INSTALL_PATH/optional" "Selector" F10000
 
 for da_dir in $DA_DIRS; do
     folder="$INSTALL_PATH/$da_dir"
@@ -60,5 +62,7 @@ for da_dir in $DA_DIRS; do
         add_file "$INSTALL_IMG" "$da_dir/out/$file.da" "$folder" $file F10640
     done
 done
+
+
 
 rmdir "$PACKDIR"

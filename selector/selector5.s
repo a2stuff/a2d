@@ -115,7 +115,7 @@ MGTK:
 
 ;;; Font
         .assert * = FONT, error, "Font location mismatch"
-        .incbin "../fonts/SELECTOR.FONT"
+        .incbin "../mgtk/fonts/SELECTOR.FONT"
 
 ;;; ???
         .byte   $8D,$3F,$07
