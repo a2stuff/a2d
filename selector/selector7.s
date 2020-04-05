@@ -8,6 +8,7 @@
 
 num_files_in_dir := $177F
 buf_filenames    := $1800
+file_table    := $1780
 
         jmp     init
 
@@ -216,7 +217,7 @@ window_id:
         .byte   $01,$01
         .byte   $00
         .byte   $7F
-        .addr   $8800
+        .addr   FONT
         .addr   0
 .endparams
 
@@ -245,21 +246,15 @@ vthumbpos:
         .byte   $35,$00
         .byte   $32
         .byte   $00
+        .addr   MGTK::screen_mapbits
+        .byte   MGTK::screen_mapwidth
         .byte   $00
-        .byte   $20,$80,$00
 maprect:
 x1:     .word   0
 y1:     .word   0
 x2:     .word   125
 y2:     .word   70
-pattern:.byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
+pattern:.res    8, $FF
         .byte   $FF
         .byte   0
         .byte   0
@@ -270,8 +265,7 @@ pattern:.byte   $FF
         .byte   $01,$01
         .byte   $00
         .byte   $7F
-        .byte   $00
-        .byte   $88
+        .addr   FONT
         .byte   $00
         .byte   $00
 .endparams
@@ -465,9 +459,15 @@ start:  jsr     open_window
 
 ;;; ============================================================
 
+
         DEFINE_ON_LINE_PARAMS on_line_params, 0, buf_on_line
-        DEFINE_OPEN_PARAMS open_params, LA3C7, $1000
-        DEFINE_READ_PARAMS read_params, $1400, $200
+
+        io_buf := $1000
+        dir_read_buf := $1400
+        kDirReadSize = $200
+
+        DEFINE_OPEN_PARAMS open_params, LA3C7, io_buf
+        DEFINE_READ_PARAMS read_params, dir_read_buf, kDirReadSize
         DEFINE_CLOSE_PARAMS close_params
 
 buf_on_line:  .res    16, 0
@@ -596,7 +596,7 @@ LA554:  bit     LA47F
 LA55E:  jmp     LA632
 
 LA561:  tax
-        lda     $1780,x
+        lda     file_table,x
         bmi     LA56A
 LA567:  jmp     LA632
 
@@ -711,7 +711,7 @@ LA69E:  bit     LA214
         rts
 
 LA6AE:  ldx     LA231
-        lda     $1780,x
+        lda     file_table,x
         bmi     LA6D4
         lda     winfo1::window_id
         jsr     get_window_port
@@ -948,7 +948,7 @@ LA8EB:  rts
 
 LA8EC:  .byte   0
 LA8ED:  ldx     LA231
-        lda     $1780,x
+        lda     file_table,x
         and     #$7F
         pha
         bit     LA211
@@ -1067,8 +1067,8 @@ LA9C8:  .byte   0
         sta     grafport2++MGTK::GrafPort::maprect,x
         dex
         bpl     :-
-        copy16  #$0226, grafport2+MGTK::GrafPort::maprect+MGTK::Rect::x2
-        copy16  #$00B9, grafport2+MGTK::GrafPort::maprect+MGTK::Rect::y2
+        copy16  #550, grafport2+MGTK::GrafPort::maprect+MGTK::Rect::x2
+        copy16  #185, grafport2+MGTK::GrafPort::maprect+MGTK::Rect::y2
         MGTK_CALL MGTK::SetPort, grafport2
         rts
 .endproc
@@ -1371,7 +1371,7 @@ not_tab:
         lda     LA231
         bmi     exit
         tax
-        lda     $1780,x
+        lda     file_table,x
         bmi     LACBF
         jmp     exit
 
@@ -1553,7 +1553,7 @@ LAE09:  return  LAE35
 
 .proc LAE0D
         tax
-        lda     $1780,x
+        lda     file_table,x
         and     #$7F
         ldx     #$00
         stx     LAE36
@@ -1641,7 +1641,7 @@ LAE69:  ldx     num_files_in_dir
         php
         sei
         @call := *+3
-        MLI_CALL $00, $0000
+        MLI_CALL $00, dummy0000
         plp
         and     #$FF
         rts
@@ -1855,7 +1855,7 @@ LB051:  ldx     device_index
 
 LB075:  lda     #$00
         sta     LA3C7
-        addr_call LB0D6, $A3B6
+        addr_call LB0D6, buf_on_line
         rts
 
 LB082:  inc     device_index
@@ -1931,14 +1931,14 @@ LB118:  jsr     LB095
         sta     LA448
         lda     #$01
         sta     LB226
-        copy16  $1423, LB227
-        lda     $1425
+        copy16  dir_read_buf+$23, LB227
+        lda     dir_read_buf+$25
         and     #$7F
         sta     num_files_in_dir
         bne     LB144
         jmp     LB1CF
 
-LB144:  copy16  #$142B, $06
+LB144:  copy16  #dir_read_buf+$2B, $06
 LB14C:  ldy     #$00
         lda     ($06),y
         and     #$0F
@@ -1947,7 +1947,7 @@ LB14C:  ldy     #$00
 
 LB157:  ldx     LB224
         txa
-        sta     $1780,x
+        sta     file_table,x
         ldy     #$00
         lda     ($06),y
         and     #$F0
@@ -1958,9 +1958,9 @@ LB157:  ldx     LB224
         inc     LB225
         jmp     LB1C4
 
-LB173:  lda     $1780,x
+LB173:  lda     file_table,x
         ora     #$80
-        sta     $1780,x
+        sta     file_table,x
         inc     LA448
 LB17E:  ldy     #$00
         lda     ($06),y
@@ -2025,7 +2025,7 @@ LB1F2:  lda     LB226
         jmp     LB14C
 
 LB20B:  yax_call MLI_WRAPPER, READ, read_params
-        copy16  #$1404, $06
+        copy16  #dir_read_buf+$04, $06
         lda     #$00
         sta     LB226
         jmp     LB14C
@@ -2060,7 +2060,7 @@ loop:   lda     LB2D0
 
 LB257:  MGTK_CALL MGTK::MoveTo, pos
         ldx     LB2D0
-        lda     $1780,x
+        lda     file_table,x
         and     #$7F
         ldx     #$00
         stx     LB2CF
@@ -2081,7 +2081,7 @@ LB257:  MGTK_CALL MGTK::MoveTo, pos
         tya
         jsr     draw_string
         ldx     LB2D0
-        lda     $1780,x
+        lda     file_table,x
         bpl     LB2A7
         lda     #$01
         sta     pos
@@ -2181,7 +2181,7 @@ LB34F:  .byte   0
         jsr     get_window_port
         MGTK_CALL MGTK::PaintRect, rect0
         MGTK_CALL MGTK::SetPenMode, penXOR
-        copy16  #$A3C7, $06
+        copy16  #LA3C7, $06
         ldy     #$00
         lda     ($06),y
         sta     LB3B6
@@ -2200,14 +2200,14 @@ LB384:  ldy     #$00
 LB388:  inx
         iny
         lda     ($06),y
-        sta     $0220,x
+        sta     INVOKER_PREFIX,x
         cpy     LB3B6
         bne     LB388
-        stx     $0220
-        addr_call adjust_path_case, $0220
+        stx     INVOKER_PREFIX
+        addr_call adjust_path_case, INVOKER_PREFIX
         MGTK_CALL MGTK::MoveTo, pos_disk
         addr_call draw_string, str_disk
-        addr_call draw_string, $0220
+        addr_call draw_string, INVOKER_PREFIX
         jsr     LA9C9
         rts
 
@@ -2351,7 +2351,8 @@ LB4C0:  lda     LB535
         lda     ($06),y
         ora     #$80
         sta     ($06),y
-        ldax    #$0F5A
+        lda     #'Z'
+        ldx     #$0F
 :       sta     LB537,x
         dex
         bpl     :-
@@ -2373,7 +2374,7 @@ LB4F3:  lda     LB534
         dex
 LB4FE:  lda     LB547,x
         tay
-        lda     $1780,y
+        lda     file_table,y
         bpl     LB50F
         lda     LB547,x
         ora     #$80
@@ -2384,7 +2385,7 @@ LB50F:  dex
         beq     LB521
         dex
 :       lda     LB547,x
-        sta     $1780,x
+        sta     file_table,x
         dex
         bpl     :-
 LB521:  rts
@@ -2564,7 +2565,7 @@ LB6E0:  return  #$FF
 LB6E3:  ldx     num_files_in_dir
         lda     LB6F1
 LB6E9:  dex
-        cmp     $1780,x
+        cmp     file_table,x
         bne     LB6E9
         txa
         rts
@@ -2662,7 +2663,7 @@ LB7D2:  jsr     calc_input_endpos
         copy16  #buf_input_right, $06
         lda     buf_input_right
         sta     $08
-@loop:  MGTK_CALL MGTK::TextWidth, $0006
+@loop:  MGTK_CALL MGTK::TextWidth, $06
         add16   $09, LB8EA, $09
         cmp16   $09, LA013
         bcc     LB823
@@ -2709,7 +2710,7 @@ LB85D:  dey
 LB864:  copy16  #buf_input_left, $06
         lda     buf_input_left
         sta     $08
-LB871:  MGTK_CALL MGTK::TextWidth, $0006
+LB871:  MGTK_CALL MGTK::TextWidth, $06
         add16   $09, rect_input_text::x1, $09
         cmp16   $09, LA013
         bcc     LB89D
@@ -2783,7 +2784,7 @@ continue:
         copy16  rect_input_text::y1, $08
         lda     winfo1::window_id
         jsr     get_window_port
-        MGTK_CALL MGTK::MoveTo, $0006
+        MGTK_CALL MGTK::MoveTo, $06
         addr_call draw_string, str_1_char
         addr_call draw_string, buf_input_right
         jsr     LBB5B
@@ -2803,7 +2804,7 @@ continue:
         copy16  rect_input_text::y1, $08
         lda     winfo1::window_id
         jsr     get_window_port
-        MGTK_CALL MGTK::MoveTo, $0006
+        MGTK_CALL MGTK::MoveTo, $06
         addr_call draw_string, buf_input_right
         addr_call draw_string, str_two_spaces
         jsr     LBB5B
@@ -2835,7 +2836,7 @@ LB98B:  ldx     buf_input_left
         copy16  rect_input_text::y1, $08
         lda     winfo1::window_id
         jsr     get_window_port
-        MGTK_CALL MGTK::MoveTo, $0006
+        MGTK_CALL MGTK::MoveTo, $06
         addr_call draw_string, buf_input_right
         addr_call draw_string, str_two_spaces
         jsr     LBB5B
@@ -2988,7 +2989,7 @@ done:   rts
 
         copy16  #buf_filenames, ptr
         ldx     LA231
-        lda     $1780,x
+        lda     file_table,x
         and     #$7F
 
         ldx     #0
@@ -3087,7 +3088,7 @@ LBB5B:  ldx     buf_input_left
         ldx     #$00
         stx     LBBE1
         tax
-        lda     $1780,x
+        lda     file_table,x
         and     #$7F
         asl     a
         rol     LBBE1
@@ -3106,7 +3107,7 @@ LBB5B:  ldx     buf_input_left
         tya
         jsr     LB0D6
 LBBA0:  addr_call adjust_path_case, LA0C8
-        addr_call adjust_path_case, $A3C7
+        addr_call adjust_path_case, LA3C7
         lda     LA0C8
         cmp     LA3C7
         bne     LBBCB
