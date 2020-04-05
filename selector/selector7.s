@@ -450,7 +450,7 @@ start:  jsr     open_window
         MGTK_CALL MGTK::CloseWindow, winfo1
         lda     #$00
         sta     LA20D
-        jsr     LA8AE
+        jsr     unset_ip_cursor
         ldx     saved_stack
         txs
         return  #$FF
@@ -491,7 +491,7 @@ init:   tsx
         sta     LA447
         sta     prompt_ip_flag
         sta     LA211
-        sta     LA8EC
+        sta     ip_cursor_flag
         sta     LA47D
         sta     LA47F
         copy    #kIPCounterDefault, prompt_ip_counter
@@ -509,7 +509,7 @@ LA47F:  .byte   0
 
 kIPCounterDefault = $28
 
-event_loop:
+.proc event_loop
         bit     LA20D
         bpl     LA492
         dec     prompt_ip_counter
@@ -526,7 +526,7 @@ LA4A1:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     LA4B4
-        jsr     LA50F
+        jsr     handle_button_down
         jmp     event_loop
 
 LA4B4:  cmp     #MGTK::EventKind::key_down
@@ -554,29 +554,37 @@ LA4D4:  lda     winfo1::window_id
         jsr     set_ip_cursor
         jmp     LA4FF
 
-LA4FC:  jsr     LA8AE
+LA4FC:  jsr     unset_ip_cursor
 LA4FF:  MGTK_CALL MGTK::InitPort, grafport2
         MGTK_CALL MGTK::SetPort, grafport2
         jmp     event_loop
 
+.endproc
+
 LA50E:  .byte   0
-LA50F:  MGTK_CALL MGTK::FindWindow, findwindow_params
+
+;;; ============================================================
+
+.proc handle_button_down
+        MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
-        bne     LA51B
+        bne     :+
         rts
 
-LA51B:  cmp     #$02
-        bne     LA523
-        jmp     LA524
+:       cmp     #MGTK::Area::content
+        bne     :+
+        jmp     handle_content_click
 
         rts
 
-LA523:  rts
+:       rts
+.endproc
 
-LA524:  lda     findwindow_window_id
+.proc handle_content_click
+        lda     findwindow_window_id
         cmp     winfo1::window_id
         beq     LA52F
-        jmp     LA643
+        jmp     handle_list_click
 
 LA52F:  lda     winfo1::window_id
         jsr     get_window_port
@@ -584,21 +592,23 @@ LA52F:  lda     winfo1::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+
+        ;; Open ?
         MGTK_CALL MGTK::InRect, rect_open_btn
         cmp     #MGTK::inrect_inside
         beq     LA554
-        jmp     LA587
+        jmp     not_open
 
 LA554:  bit     LA47F
         bmi     LA55E
         lda     LA231
         bpl     LA561
-LA55E:  jmp     LA632
+LA55E:  jmp     finish
 
 LA561:  tax
         lda     file_table,x
         bmi     LA56A
-LA567:  jmp     LA632
+LA567:  jmp     finish
 
 LA56A:  lda     winfo1::window_id
         jsr     get_window_port
@@ -607,12 +617,14 @@ LA56A:  lda     winfo1::window_id
         jsr     event_loop_open_btn
         bmi     LA567
         jsr     LA8ED
-        jmp     LA632
+        jmp     finish
 
-LA587:  MGTK_CALL MGTK::InRect, rect_change_drive_btn
+not_open:
+        ;; Change Drive ?
+        MGTK_CALL MGTK::InRect, rect_change_drive_btn
         cmp     #MGTK::inrect_inside
         beq     LA594
-        jmp     LA5B0
+        jmp     not_change_drive
 
 LA594:  bit     LA47F
         bmi     LA5AD
@@ -621,12 +633,14 @@ LA594:  bit     LA47F
         jsr     event_loop_change_drive_btn
         bmi     LA5AD
         jsr     change_drive
-LA5AD:  jmp     LA632
+LA5AD:  jmp     finish
 
-LA5B0:  MGTK_CALL MGTK::InRect, rect_cancel_btn
+not_change_drive:
+        ;; Cancel ?
+        MGTK_CALL MGTK::InRect, rect_cancel_btn
         cmp     #MGTK::inrect_inside
         beq     LA5BD
-        jmp     LA5D9
+        jmp     not_cancel
 
 LA5BD:  bit     LA47F
         bmi     LA5D6
@@ -635,12 +649,14 @@ LA5BD:  bit     LA47F
         jsr     event_loop_cancel_btn
         bmi     LA5D6
         jsr     LA965
-LA5D6:  jmp     LA632
+LA5D6:  jmp     finish
 
-LA5D9:  MGTK_CALL MGTK::InRect, rect_ok_btn
+not_cancel:
+        ;; OK ?
+        MGTK_CALL MGTK::InRect, rect_ok_btn
         cmp     #MGTK::inrect_inside
         beq     LA5E6
-        jmp     LA600
+        jmp     not_ok
 
 LA5E6:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_btn
@@ -648,35 +664,43 @@ LA5E6:  MGTK_CALL MGTK::SetPenMode, penXOR
         bmi     LA5FD
         jsr     input_ip_to_end
         jsr     LA36F
-LA5FD:  jmp     LA632
+LA5FD:  jmp     finish
 
-LA600:  MGTK_CALL MGTK::InRect, rect_close_btn
+not_ok:
+        ;; Close ?
+        MGTK_CALL MGTK::InRect, rect_close_btn
         cmp     #MGTK::inrect_inside
         beq     LA60D
-        jmp     LA624
+        jmp     not_close
 
 LA60D:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_close_btn
         jsr     event_loop_close_btn
         bmi     LA621
         jsr     LA387
-LA621:  jmp     LA632
+LA621:  jmp     finish
 
-LA624:  bit     LA47D
+not_close:
+        ;; Input ?
+        bit     LA47D
         bpl     LA62E
         jsr     LA63F
-        bmi     LA632
+        bmi     finish
 LA62E:  jsr     check_input_click_and_move_ip
         rts
 
-LA632:  MGTK_CALL MGTK::InitPort, grafport2
+finish: MGTK_CALL MGTK::InitPort, grafport2
         MGTK_CALL MGTK::SetPort, grafport
         rts
 
 LA63F:  jsr     noop
         rts
+.endproc
 
-LA643:  bit     LA47F
+;;; ============================================================
+
+.proc handle_list_click
+        bit     LA47F
         bmi     LA661
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_which_ctl
@@ -686,7 +710,7 @@ LA643:  bit     LA47F
         lda     winfo2::vscroll
         and     #MGTK::Ctl::vertical_scroll_bar
         beq     LA661
-        jmp     LA77B
+        jmp     handle_scrollbar_click
 
 LA661:  rts
 
@@ -760,6 +784,7 @@ LA6D4:  and     #$7F
         rts
 
 LA73E:  .byte   0
+
 LA73F:  lda     LA015
         cmp     num_files_in_dir
         bcc     LA748
@@ -784,32 +809,37 @@ LA767:  lda     LA231
         lda     #$FF
         sta     LA214
         rts
+.endproc
 
-LA77B:  lda     findcontrol_which_part
-        cmp     #$01
-        bne     LA785
-        jmp     LA810
+;;; ============================================================
 
-LA785:  cmp     #$02
-        bne     LA78C
-        jmp     LA836
+.proc handle_scrollbar_click
+        lda     findcontrol_which_part
+        cmp     #MGTK::Part::up_arrow
+        bne     :+
+        jmp     handle_up_arrow_click
 
-LA78C:  cmp     #$03
-        bne     LA793
-        jmp     LA7C6
+:       cmp     #MGTK::Part::down_arrow
+        bne     :+
+        jmp     handle_down_arrow_click
 
-LA793:  cmp     #$04
-        bne     LA79A
-        jmp     LA7E8
+:       cmp     #MGTK::Part::page_up
+        bne     :+
+        jmp     handle_page_up_click
 
-LA79A:  lda     #MGTK::Ctl::vertical_scroll_bar
+:       cmp     #MGTK::Part::page_down
+        bne     :+
+        jmp     handle_page_down_click
+
+        ;; Track thumb
+:       lda     #MGTK::Ctl::vertical_scroll_bar
         sta     trackthumb_which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_thumbmoved
-        bne     LA7AB
+        bne     :+
         rts
 
-LA7AB:  lda     trackthumb_thumbpos
+:       lda     trackthumb_thumbpos
         sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
@@ -818,8 +848,12 @@ LA7AB:  lda     trackthumb_thumbpos
         jsr     LB3B7
         jsr     draw_filenames
         rts
+.endproc
 
-LA7C6:  lda     winfo2::vthumbpos
+;;; ============================================================
+
+.proc handle_page_up_click
+        lda     winfo2::vthumbpos
         sec
         sbc     #$09
         bpl     :+
@@ -832,8 +866,12 @@ LA7C6:  lda     winfo2::vthumbpos
         jsr     LB3B7
         jsr     draw_filenames
         rts
+.endproc
 
-LA7E8:  lda     winfo2::vthumbpos
+;;; ============================================================
+
+.proc handle_page_down_click
+        lda     winfo2::vthumbpos
         clc
         adc     #$09
         cmp     num_files_in_dir
@@ -848,8 +886,12 @@ LA7F8:  sta     updatethumb_thumbpos
         jsr     LB3B7
         jsr     draw_filenames
         rts
+.endproc
 
-LA810:  lda     winfo2::vthumbpos
+;;; ============================================================
+
+.proc handle_up_arrow_click
+        lda     winfo2::vthumbpos
         bne     LA816
         rts
 
@@ -863,9 +905,13 @@ LA816:  sec
         jsr     LB3B7
         jsr     draw_filenames
         jsr     LA85F
-        jmp     LA810
+        jmp     handle_up_arrow_click
+.endproc
 
-LA836:  lda     winfo2::vthumbpos
+;;; ============================================================
+
+.proc handle_down_arrow_click
+        lda     winfo2::vthumbpos
         cmp     winfo2::vthumbmax
         bne     LA83F
         rts
@@ -880,73 +926,91 @@ LA83F:  clc
         jsr     LB3B7
         jsr     draw_filenames
         jsr     LA85F
-        jmp     LA836
+        jmp     handle_down_arrow_click
+.endproc
 
-LA85F:  MGTK_CALL MGTK::PeekEvent, event_params
+;;; ============================================================
+
+.proc LA85F
+        MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_kind
-        cmp     #$01
-        beq     LA873
-        cmp     #$04
-        beq     LA873
+        cmp     #MGTK::EventKind::button_down
+        beq     :+
+        cmp     #MGTK::EventKind::drag
+        beq     :+
         pla
         pla
         rts
 
-LA873:  MGTK_CALL MGTK::GetEvent, event_params
+:       MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_window_id
         cmp     winfo2::window_id
-        beq     LA88A
+        beq     :+
         pla
         pla
         rts
 
-LA88A:  lda     findwindow_which_area
-        cmp     #$02
-        beq     LA894
+:       lda     findwindow_which_area
+        cmp     #MGTK::Area::content
+        beq     :+
         pla
         pla
         rts
 
-LA894:  MGTK_CALL MGTK::FindControl, findcontrol_params
+:       MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        beq     LA8A4
+        beq     :+
         pla
         pla
         rts
 
-LA8A4:  lda     findcontrol_which_part
-        cmp     #$03
-        bcc     LA8AD
+:       lda     findcontrol_which_part
+        cmp     #MGTK::Part::page_up
+        bcc     :+
         pla
         pla
-LA8AD:  rts
+:       rts
+.endproc
 
-LA8AE:  bit     LA8EC
+;;; ============================================================
+
+.proc unset_ip_cursor
+        bit     ip_cursor_flag
         bpl     :+
         jsr     set_pointer_cursor
-        lda     #$00
-        sta     LA8EC
+        copy    #0, ip_cursor_flag
 :       rts
+.endproc
 
-set_pointer_cursor:
+;;; ============================================================
+
+.proc set_pointer_cursor
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, pointer_cursor
         MGTK_CALL MGTK::ShowCursor
         rts
+.endproc
 
-set_ip_cursor:
-        bit     LA8EC
-        bmi     LA8EB
+;;; ============================================================
+
+.proc set_ip_cursor
+        bit     ip_cursor_flag
+        bmi     :+
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, insertion_point_cursor
         MGTK_CALL MGTK::ShowCursor
-        lda     #$80
-        sta     LA8EC
-LA8EB:  rts
+        copy    #$80, ip_cursor_flag
+:       rts
+.endproc
 
-LA8EC:  .byte   0
+ip_cursor_flag:
+        .byte   0
+
+;;; ============================================================
+
+
 LA8ED:  ldx     LA231
         lda     file_table,x
         and     #$7F
@@ -1841,7 +1905,8 @@ LB03E:  .byte   0
 
 ;;; ============================================================
 
-LB051:  ldx     device_index
+.proc LB051
+        ldx     device_index
         lda     DEVLST,x
         and     #$F0
         sta     on_line_params::unit_num
@@ -1857,8 +1922,12 @@ LB075:  lda     #$00
         sta     LA3C7
         addr_call LB0D6, buf_on_line
         rts
+.endproc
 
-LB082:  inc     device_index
+;;; ============================================================
+
+.proc LB082
+        inc     device_index
         lda     device_index
         cmp     DEVCNT
         beq     LB094
@@ -1866,8 +1935,12 @@ LB082:  inc     device_index
         lda     #$00
         sta     device_index
 LB094:  rts
+.endproc
 
-LB095:  lda     #$00
+;;; ============================================================
+
+.proc LB095
+        lda     #$00
         sta     LB0D5
         yax_call MLI_WRAPPER, OPEN, open_params
         beq     LB0B5
@@ -1889,9 +1962,14 @@ LB0B5:  lda     open_params::ref_num
         jmp     LB095
 
 LB0D4:  rts
+.endproc
 
 LB0D5:  .byte   0
-LB0D6:  stax    $06
+
+;;; ============================================================
+
+.proc LB0D6
+        stax    $06
         ldx     LA3C7
         lda     #'/'
         sta     LA3C7+1,x
@@ -1914,8 +1992,12 @@ LB0F0:  lda     ($06),y
         lda     #$FF
         sta     LA231
         rts
+.endproc
 
-LB106:  ldx     LA3C7
+;;; ============================================================
+
+.proc LB106
+        ldx     LA3C7
         cpx     #$00
         beq     LB117
         dec     LA3C7
@@ -1923,8 +2005,12 @@ LB106:  ldx     LA3C7
         cmp     #'/'
         bne     LB106
 LB117:  rts
+.endproc
 
-LB118:  jsr     LB095
+;;; ============================================================
+
+.proc LB118
+        jsr     LB095
         lda     #$00
         sta     LB224
         sta     LB225
@@ -2036,6 +2122,7 @@ LB226:  .byte   0
 LB227:  .byte   0
 LB228:  .byte   0
 LB229:  .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -2258,21 +2345,22 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-LB404:  ldx     #$00
-        stx     LB442
+.proc LB404
+        ldx     #$00
+        stx     tmp
         asl     a
-        rol     LB442
+        rol     tmp
         asl     a
-        rol     LB442
+        rol     tmp
         asl     a
-        rol     LB442
+        rol     tmp
         sta     rect::y1
-        ldx     LB442
+        ldx     tmp
         stx     rect::y1+1
         clc
         adc     #$07
         sta     rect::y2
-        lda     LB442
+        lda     tmp
         adc     #$00
         sta     rect::y2+1
         lda     winfo2::window_id
@@ -2282,7 +2370,8 @@ LB404:  ldx     #$00
         jsr     LA9C9
         rts
 
-LB442:  .byte   0
+tmp:    .byte   0
+.endproc
 
 ;;; ============================================================
 
