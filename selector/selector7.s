@@ -1,5 +1,5 @@
 ;; ============================================================
-;;; Overlay #1 ???
+;;; Run a Program File Picker Dialog - Overlay #1
 ;;; ============================================================
 
         .org $A000
@@ -2701,7 +2701,7 @@ LB84D:  lda     buf_input_right,x
         beq     LB85D
         iny
         inx
-LB85A:  jmp     LB84D
+        jmp     LB84D
 
 LB85D:  dey
         sty     buf_input_right

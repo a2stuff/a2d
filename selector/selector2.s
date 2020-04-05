@@ -2,7 +2,7 @@
 ;;; Quit Handler
 ;;; ============================================================
 
-        .org    $1000
+        .org $1000
 
 ;;; This gets invoked via ProDOS QUIT, which relocated it to
 ;;; $1000 Main.
