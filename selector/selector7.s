@@ -158,9 +158,10 @@ insertion_point_cursor:
 
 ;;; Text Input Field
 LA0C8:  .res    68, 0
-LA10C:  .res    68, 0
-LA150:  .res    68, 0
 
+;;; String being edited:
+buf_input_left:         .res    68, 0 ; left of IP
+buf_input_right:        .res    68, 0 ; IP and right
 
 .params winfo1
 window_id:
@@ -275,17 +276,18 @@ pattern:.byte   $FF
 
         .byte   $00
         .byte   $00
-LA20A:
+prompt_ip_counter:
         .byte   $14
         .byte   $00
-LA20C:
+prompt_ip_flag:
         .byte   $00
 LA20D:
         .byte   $00
         .byte   $00
-LA20F:
-LA210   := * + 1
-        .byte   $01,$06
+
+str_ip:
+        PASCAL_STRING {GLYPH_INSPT}
+
 LA211:
         .byte   $00
         .byte   $00
@@ -295,8 +297,9 @@ LA214:
 LA215:
         .byte   $00
         .byte   $00
-LA218   := * + 1
-        .byte   $01,$00
+
+str_1_char:
+        PASCAL_STRING 0
 
 str_two_spaces:
         PASCAL_STRING "  "
@@ -311,7 +314,7 @@ pos:    DEFINE_POINT 2, 0, pos
         .byte   0
 
 str_folder:
-        PASCAL_STRING {$01, $02} ; kGlyphFolderLeft, kGlyphFolderRight
+        PASCAL_STRING {GLYPH_FOLDERL, GLYPH_FOLDERR}
 
 LA231:
         .byte   $00
@@ -368,15 +371,15 @@ textbg2:
 str_disk:
         PASCAL_STRING " Disk: "
 
-rect_input:
+rect_input:                     ; Frame
         DEFINE_RECT 28, 113, 428, 124
 
-rect6:  DEFINE_RECT 30, 123, 28, 136, rect6
+rect_input_text:                ; Text bounds
+        DEFINE_RECT 30, 123, 28, 136, rect_input_text
 
-        .byte   $AC,$01,$93
-        .byte   $00
-        .byte   $1E,$00,$92
-        .byte   $00
+        .word   428, 147
+        .word   30, 146
+
 str_run_a_program:
         PASCAL_STRING "Run a Program ..."
 str_file_to_run:
@@ -391,15 +394,16 @@ LA309:  jsr     LAF46
         jsr     LB22A
         jsr     LA32F
         jsr     LBB1D
-        jsr     LB760
+        jsr     redraw_input
         lda     #$FF
         sta     LA20D
         jmp     LA480
 
 LA32F:  lda     #$00
-        sta     LA10C
+        sta     buf_input_left
         sta     LA50E
-        copy16  #$0601, LA150
+        copy    #1, buf_input_right
+        copy    #GLYPH_INSPT, buf_input_right+1
         rts
 
 LA342:  lda     winfo1::window_id
@@ -412,7 +416,7 @@ LA342:  lda     winfo1::window_id
         MGTK_CALL MGTK::SetPort, grafport2
         rts
 
-LA36F:  addr_call LB5F1, LA10C
+LA36F:  addr_call LB5F1, buf_input_left
         beq     LA379
         rts
 
@@ -487,13 +491,13 @@ LA44A:  tsx
         sta     LA214
         sta     LA215
         sta     LA447
-        sta     LA20C
+        sta     prompt_ip_flag
         sta     LA211
         sta     LA8EC
         sta     LA47D
         sta     LA47F
         lda     #$28
-        sta     LA20A
+        sta     prompt_ip_counter
         lda     #$FF
         sta     LA231
         jmp     LA309
@@ -508,11 +512,11 @@ LA47F:  .byte   0
 
 LA480:  bit     LA20D
         bpl     LA492
-        dec     LA20A
+        dec     prompt_ip_counter
         bne     LA492
-        jsr     LB70F
+        jsr     blink_ip
         lda     #$28
-        sta     LA20A
+        sta     prompt_ip_counter
 LA492:  bit     LA214
         bpl     LA4A1
         dec     LA215
@@ -775,7 +779,7 @@ LA756:  lda     LA015
         bit     LA211
         bpl     LA767
         jsr     LBB1D
-        jsr     LB760
+        jsr     redraw_input
 LA767:  lda     LA231
         jsr     LB404
         jsr     LBAD0
@@ -999,7 +1003,7 @@ LA95A           := * + 2
         jsr     LB350
         jsr     LB22A
         jsr     LBB1D
-        jsr     LB760
+        jsr     redraw_input
         rts
 
 LA965:  lda     #$00
@@ -1042,7 +1046,7 @@ LA988:  jsr     LB106
         jmp     LA9C2
 
 LA9BC:  jsr     LBB1D
-        jsr     LB760
+        jsr     redraw_input
 LA9C2:  lda     #$FF
         sta     LA231
 LA9C7:  rts
@@ -1530,8 +1534,8 @@ LAE71:  sta     LA231
         jsr     LB702
         jsr     LB30B
         jsr     LB22A
-        copy16  #$2001, LA150
-        jsr     LB760
+        copy16  #$2001, buf_input_right
+        jsr     redraw_input
         rts
 
 LAE91:  sty     $AE9F
@@ -2560,40 +2564,55 @@ LB707:  cmp     #$09
         sbc     #$08
         rts
 
-LB70F:  lda     winfo1::window_id
+;;; ============================================================
+
+.proc blink_ip
+        pt := $06
+
+        lda     winfo1::window_id
         jsr     LB443
         jsr     calc_input_endpos
-        stax    $06
-        copy16  rect6::y1, $08
-        MGTK_CALL MGTK::MoveTo, $0006
-        bit     LA20C
+        stax    pt
+        copy16  rect_input_text::y1, pt+2
+        MGTK_CALL MGTK::MoveTo, pt
+        bit     prompt_ip_flag
         bpl     LB73E
         MGTK_CALL MGTK::SetTextBG, textbg1
         lda     #$00
-        sta     LA20C
+        sta     prompt_ip_flag
         beq     LB749
 LB73E:  MGTK_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
-        sta     LA20C
-LB749:  copy16  #$A210, $06
-        lda     LA20F
-        sta     $08
-        MGTK_CALL MGTK::DrawText, $0006
+        sta     prompt_ip_flag
+
+        params := $06
+
+LB749:  copy16  #str_ip+1, params
+        lda     str_ip
+        sta     params+2
+        MGTK_CALL MGTK::DrawText, params
         jsr     LA9C9
         rts
+.endproc
 
-LB760:  lda     winfo1::window_id
+;;; ============================================================
+
+.proc redraw_input
+        lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::PaintRect, rect_input
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect_input
-        MGTK_CALL MGTK::MoveTo, rect6
-        lda     LA10C
+        MGTK_CALL MGTK::MoveTo, rect_input_text
+        lda     buf_input_left
         beq     LB78A
-        addr_call draw_string, LA10C
-LB78A:  addr_call draw_string, LA150
+        addr_call draw_string, buf_input_left
+LB78A:  addr_call draw_string, buf_input_right
         addr_call draw_string, str_two_spaces
         rts
+.endproc
+
+;;; ============================================================
 
 LB799:  lda     winfo1::window_id
         sta     screentowindow_window_id
@@ -2614,13 +2633,13 @@ LB799:  lda     winfo1::window_id
 
 LB7D2:  jsr     calc_input_endpos
         stax    LB8EA
-        ldx     LA150
+        ldx     buf_input_right
         inx
         lda     #$20
-        sta     LA150,x
-        inc     LA150
-        copy16  #LA150, $06
-        lda     LA150
+        sta     buf_input_right,x
+        inc     buf_input_right
+        copy16  #buf_input_right, $06
+        lda     buf_input_right
         sta     $08
 LB7F4:  MGTK_CALL MGTK::TextWidth, $0006
         add16   $09, LB8EA, $09
@@ -2630,47 +2649,47 @@ LB7F4:  MGTK_CALL MGTK::TextWidth, $0006
         lda     $08
         cmp     #$01
         bne     LB7F4
-        dec     LA150
+        dec     buf_input_right
         jmp     LB8E3
 
 LB823:  lda     $08
-        cmp     LA150
+        cmp     buf_input_right
         bcc     LB830
-        dec     LA150
+        dec     buf_input_right
         jmp     LBA5E
 
 LB830:  ldx     #$02
-        ldy     LA10C
+        ldy     buf_input_left
         iny
-LB836:  lda     LA150,x
-        sta     LA10C,y
+LB836:  lda     buf_input_right,x
+        sta     buf_input_left,y
         cpx     $08
         beq     LB845
         iny
         inx
         jmp     LB836
 
-LB845:  sty     LA10C
+LB845:  sty     buf_input_left
         ldy     #$02
         ldx     $08
         inx
-LB84D:  lda     LA150,x
-        sta     LA150,y
-        cpx     LA150
+LB84D:  lda     buf_input_right,x
+        sta     buf_input_right,y
+        cpx     buf_input_right
         beq     LB85D
         iny
         inx
 LB85A:  jmp     LB84D
 
 LB85D:  dey
-        sty     LA150
+        sty     buf_input_right
         jmp     LB8E3
 
-LB864:  copy16  #LA10C, $06
-        lda     LA10C
+LB864:  copy16  #buf_input_left, $06
+        lda     buf_input_left
         sta     $08
 LB871:  MGTK_CALL MGTK::TextWidth, $0006
-        add16   $09, rect6::x1, $09
+        add16   $09, rect_input_text::x1, $09
         cmp16   $09, LA013
         bcc     LB89D
         dec     $08
@@ -2682,11 +2701,11 @@ LB871:  MGTK_CALL MGTK::TextWidth, $0006
 LB89D:  inc     $08
         ldy     #$00
         ldx     $08
-LB8A3:  cpx     LA10C
+LB8A3:  cpx     buf_input_left
         beq     LB8B3
         inx
         iny
-        lda     LA10C,x
+        lda     buf_input_left,x
         sta     LA0C8+1,y
         jmp     LB8A3
 
@@ -2694,210 +2713,209 @@ LB8B3:  iny
         sty     LA0C8
         ldx     #$01
         ldy     LA0C8
-LB8BC:  cpx     LA150
+LB8BC:  cpx     buf_input_right
         beq     LB8CC
         inx
         iny
-        lda     LA150,x
+        lda     buf_input_right,x
         sta     LA0C8,y
         jmp     LB8BC
 
 LB8CC:  sty     LA0C8
-        lda     LA210
+        lda     str_ip+1
         sta     LA0C8+1
 :       lda     LA0C8,y
-        sta     LA150,y
+        sta     buf_input_right,y
         dey
         bpl     :-
         lda     $08
-        sta     LA10C
-LB8E3:  jsr     LB760
+        sta     buf_input_left
+LB8E3:  jsr     redraw_input
         jsr     LBB5B
         rts
 
 LB8EA:  .word   0
 LB8EC:  sta     LB8FB
-        lda     LA10C
+        lda     buf_input_left
         clc
-        adc     LA150
+        adc     buf_input_right
         cmp     #$41
         bcc     LB8FC
         rts
 
 LB8FB:  .byte   0
 LB8FC:  lda     LB8FB
-        ldx     LA10C
+        ldx     buf_input_left
         inx
-        sta     LA10C,x
-        sta     LA218
+        sta     buf_input_left,x
+        sta     str_1_char+1
         jsr     calc_input_endpos
-        inc     LA10C
+        inc     buf_input_left
         stax    $06
-        copy16  rect6::y1, $08
+        copy16  rect_input_text::y1, $08
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
-        addr_call draw_string, $A217
-        addr_call draw_string, LA150
+        addr_call draw_string, str_1_char
+        addr_call draw_string, buf_input_right
         jsr     LBB5B
         rts
 
-LB93B:  lda     LA10C
+LB93B:  lda     buf_input_left
         bne     LB941
         rts
 
-LB941:  dec     LA10C
+LB941:  dec     buf_input_left
         jsr     calc_input_endpos
         stax    $06
-        copy16  rect6::y1, $08
+        copy16  rect_input_text::y1, $08
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
-        addr_call draw_string, LA150
+        addr_call draw_string, buf_input_right
         addr_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
 
-LB973:  lda     LA10C
+LB973:  lda     buf_input_left
         bne     LB979
         rts
 
-LB979:  ldx     LA150
+LB979:  ldx     buf_input_right
         cpx     #$01
         beq     LB98B
-LB980:  lda     LA150,x
-        sta     LA150+1,x
+LB980:  lda     buf_input_right,x
+        sta     buf_input_right+1,x
         dex
         cpx     #$01
         bne     LB980
-LB98B:  ldx     LA10C
-        lda     LA10C,x
-        sta     LA150+2
-        dec     LA10C
-        inc     LA150
+LB98B:  ldx     buf_input_left
+        lda     buf_input_left,x
+        sta     buf_input_right+2
+        dec     buf_input_left
+        inc     buf_input_right
         jsr     calc_input_endpos
         stax    $06
-        copy16  rect6::y1, $08
+        copy16  rect_input_text::y1, $08
         lda     winfo1::window_id
         jsr     LB443
         MGTK_CALL MGTK::MoveTo, $0006
-        addr_call draw_string, LA150
+        addr_call draw_string, buf_input_right
         addr_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
 
-LB9C9:  lda     LA150
+LB9C9:  lda     buf_input_right
         cmp     #$02
         bcs     LB9D1
         rts
 
-LB9D1:  ldx     LA10C
+LB9D1:  ldx     buf_input_left
         inx
-        lda     LA150+2
-        sta     LA10C,x
-        inc     LA10C
-        ldx     LA150
+        lda     buf_input_right+2
+        sta     buf_input_left,x
+        inc     buf_input_left
+        ldx     buf_input_right
         cpx     #$03
         bcc     LB9F3
         ldx     #$02
-LB9E7:  lda     LA150+1,x
-        sta     LA150,x
+LB9E7:  lda     buf_input_right+1,x
+        sta     buf_input_right,x
         inx
-        cpx     LA150
+        cpx     buf_input_right
         bne     LB9E7
-LB9F3:  dec     LA150
+LB9F3:  dec     buf_input_right
         lda     winfo1::window_id
         jsr     LB443
-        MGTK_CALL MGTK::MoveTo, rect6
-        addr_call draw_string, LA10C
-        addr_call draw_string, LA150
+        MGTK_CALL MGTK::MoveTo, rect_input_text
+        addr_call draw_string, buf_input_left
+        addr_call draw_string, buf_input_right
         addr_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
 
-LBA1B:  lda     LA10C
+LBA1B:  lda     buf_input_left
         bne     LBA21
         rts
 
-LBA21:  ldy     LA10C
-        lda     LA150
+LBA21:  ldy     buf_input_left
+        lda     buf_input_right
         cmp     #$02
         bcc     LBA3A
         ldx     #$01
 LBA2D:  iny
         inx
-        lda     LA150,x
-        sta     LA10C,y
-        cpx     LA150
+        lda     buf_input_right,x
+        sta     buf_input_left,y
+        cpx     buf_input_right
         bne     LBA2D
-LBA3A:  sty     LA10C
-LBA3D:  lda     LA10C,y
-        sta     LA150+1,y
+LBA3A:  sty     buf_input_left
+LBA3D:  lda     buf_input_left,y
+        sta     buf_input_right+1,y
         dey
         bne     LBA3D
-        ldx     LA10C
+        ldx     buf_input_left
         inx
-        stx     LA150
-        lda     #$06
-        sta     LA150+1
-        lda     #$00
-        sta     LA10C
-        jsr     LB760
+        stx     buf_input_right
+        copy    #GLYPH_INSPT, buf_input_right+1
+        copy    #0, buf_input_left
+        jsr     redraw_input
         jsr     LBB5B
         rts
 
-LBA5E:  lda     LA150
+LBA5E:  lda     buf_input_right
         cmp     #$02
         bcs     LBA66
         rts
 
-LBA66:  ldx     #$01
-        ldy     LA10C
+LBA66:  ldx     #1
+        ldy     buf_input_left
 LBA6B:  inx
         iny
-        lda     LA150,x
-        sta     LA10C,y
-        cpx     LA150
+        lda     buf_input_right,x
+        sta     buf_input_left,y
+        cpx     buf_input_right
         bne     LBA6B
-        sty     LA10C
-        copy16  #$0601, LA150
-        jsr     LB760
+        sty     buf_input_left
+        copy    #1, buf_input_right
+        copy    #GLYPH_INSPT, buf_input_right+1
+        jsr     redraw_input
         jsr     LBB5B
         rts
 
 LBA8C:  stax    $06
-        ldx     LA10C
+        ldx     buf_input_left
         lda     #'/'
-        sta     LA10C+1,x
-        inc     LA10C
+        sta     buf_input_left+1,x
+        inc     buf_input_left
         ldy     #$00
         lda     ($06),y
         tay
         clc
-        adc     LA10C
+        adc     buf_input_left
         pha
         tax
 LBAA6:  lda     ($06),y
-        sta     LA10C,x
+        sta     buf_input_left,x
         dey
         dex
-        cpx     LA10C
+        cpx     buf_input_left
         bne     LBAA6
         pla
-        sta     LA10C
+        sta     buf_input_left
         rts
 
-LBAB7:  ldx     LA10C
+LBAB7:  ldx     buf_input_left
         cpx     #$00
         beq     LBAC8
-        dec     LA10C
-        lda     LA10C,x
+        dec     buf_input_left
+        lda     buf_input_left,x
         cmp     #'/'
         bne     LBAB7
 LBAC8:  rts
 
 LBAC9:  jsr     LBAB7
-        jsr     LB760
+        jsr     redraw_input
         rts
 
 ;;; ============================================================
@@ -2924,7 +2942,7 @@ LBAD0:  copy16  #$1800, $06
         tax
         tya
         jsr     LBA8C
-        jsr     LB760
+        jsr     redraw_input
         rts
 
 LBB07:  .byte   0
@@ -2935,20 +2953,20 @@ LBB07:  .byte   0
 
         ldx     LA3C7
 :       lda     LA3C7,x
-        sta     LA10C,x
+        sta     buf_input_left,x
         dex
         bpl     :-
-        addr_call LB2D1, LA10C
+        addr_call LB2D1, buf_input_left
         rts
 
 ;;; ============================================================
 
 LBB1D:  ldx     LA3C7
 :       lda     LA3C7,x
-        sta     LA10C,x
+        sta     buf_input_left,x
         dex
         bpl     :-
-        addr_call LB2D1, LA10C
+        addr_call LB2D1, buf_input_left
         rts
 
 ;;; ============================================================
@@ -2964,17 +2982,17 @@ width:  .word   0
         lda     #0
         sta     params::width
         sta     params::width+1
-        lda     LA10C
+        lda     buf_input_left
         beq     :+
         sta     params::length
-        copy16  #LA10C+1, params::data
+        copy16  #buf_input_left+1, params::data
         MGTK_CALL MGTK::TextWidth, params
 :       lda     params::width
         clc
-        adc     rect6::x1
+        adc     rect_input_text::x1
         tay
         lda     params::width+1
-        adc     rect6::x1+1
+        adc     rect_input_text::x1+1
         tax
         tya
         rts
@@ -2982,8 +3000,8 @@ width:  .word   0
 
 ;;; ============================================================
 
-LBB5B:  ldx     LA10C
-:       lda     LA10C,x
+LBB5B:  ldx     buf_input_left
+:       lda     buf_input_left,x
         sta     LA0C8,x
         dex
         bpl     :-
