@@ -1,6 +1,6 @@
 targets := desktop desktop.system desk.acc preview selector
 
-.PHONY: all $(targets) mount install
+.PHONY: all $(targets) mount install package
 
 all: $(targets) mount
 
@@ -18,6 +18,10 @@ mount:
 # Optional target: run install script. Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
 install:
 	res/install.sh
+
+# Optional target: run package script. Requires Cadius.
+package:
+	res/package.sh
 
 # Clean all temporary/target files
 clean:

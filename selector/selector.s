@@ -4,7 +4,7 @@
         .include "../inc/macros.inc"
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
-        .include "../mgtk/mgtk_100B4.inc"
+        .include "../mgtk/mgtk.inc"
 
 dummy0000       := $0000
 dummy1234       := $1234

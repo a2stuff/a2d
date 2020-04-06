@@ -47,10 +47,6 @@ appropriate IO buffer location based on load address.
 * The font is at $8800.
 * The application entry point is $8E00.
 
-The MGTK copy runs out of Main (rather than Aux) and is version
-1.0.0 Beta 4, slightly older than the 1.0.0 Final 1 used in DeskTop.
-Some command numbers are different.
-
 ### Resources - `selector6.s`
 
 A handful of resources for MGTK and routines. Loaded to Aux LC1
