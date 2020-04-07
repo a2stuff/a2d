@@ -5,6 +5,7 @@
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../common.inc"
 
 dummy0000       := $0000
 dummy1234       := $1234
@@ -17,9 +18,6 @@ MGTK            := $4000
 FONT            := $8800
 START           := $8E00
 
-DrawString      := $9984
-
-ShowAlert       := $9F74
 .enum AlertID
 selector_unable_to_run  = $00
 io_error                = $27
@@ -31,23 +29,16 @@ insert_system_disk      = $FE
 basic_system_not_found  = $FF
 .endenum
 
+;;; SELECTOR file structure
 
-overlay_addr    := $A000
-overlay1_offset = $6F60
-overlay1_size   = $1F00
-overlay2_offset = $8E60
-overlay2_size   = $D00
-
-GLYPH_FOLDERL   = $01
-GLYPH_FOLDERR   = $02
-GLYPH_INSPT     = $06
-GLYPH_RETURN    = $0D
-GLYPH_SAPPLE    = $1E
-
-;;; DESKTOP.SYSTEM flags/state
-
-copied_to_ramcard_flag  := $D3FF
-ramcard_prefix          := $D3EE
+kInvokerSegmentSize     = $160
+kAppSegmentSize         = $6000
+kResourcesSegmentSize   = $800
+OVERLAY_ADDR            := $A000
+kOverlay1Offset         = $6F60
+kOverlay1Size           = $1F00
+kOverlay2Offset         = $8E60
+kOverlay2Size           = $D00
 
 ;;; ============================================================
 ;;; Selector application

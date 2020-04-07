@@ -6,7 +6,8 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
-        .include "../desktop.inc"
+        .include "../common.inc"
+        .include "../desktop/desktop.inc"
 
 ;;; ============================================================
 ;;; Memory map

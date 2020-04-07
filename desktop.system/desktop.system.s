@@ -7,8 +7,7 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
 
-        ;; TODO: Refactor so only a subset is included
-        .include "../desktop.inc"
+        .include "../common.inc"
 
 ;;; ============================================================
 .proc copy_desktop_to_ramcard

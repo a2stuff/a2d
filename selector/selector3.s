@@ -17,9 +17,6 @@
         ;; ProDOS parameter blocks
 
         io_buf := $3000
-        kInvokerSegmentSize = $160
-        kAppSegmentSize = $6000
-        kResourcesSegmentSize = $800
 
         DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
         DEFINE_READ_PARAMS read_params1, INVOKER, kInvokerSegmentSize

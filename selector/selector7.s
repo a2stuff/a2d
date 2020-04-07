@@ -273,7 +273,7 @@ LA20D:
         .byte   $00
 
 str_ip:
-        PASCAL_STRING {GLYPH_INSPT}
+        PASCAL_STRING {kGlyphInsertionPoint}
 
 LA211:
         .byte   $00
@@ -301,7 +301,7 @@ pos:    DEFINE_POINT 2, 0, pos
         .byte   0
 
 str_folder:
-        PASCAL_STRING {GLYPH_FOLDERL, GLYPH_FOLDERR}
+        PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight}
 
 LA231:
         .byte   $00
@@ -325,7 +325,7 @@ pt2:    DEFINE_POINT 323, 100
 pos_ok_btn:
         DEFINE_POINT 198,99
 str_ok_btn:
-        PASCAL_STRING {"OK            ",GLYPH_RETURN}
+        PASCAL_STRING {"OK            ",kGlyphReturn}
 
 pos_close_btn:
         DEFINE_POINT 198,68
@@ -398,7 +398,7 @@ start:  jsr     open_window
         sta     buf_input_left
         sta     LA50E
         copy    #1, buf_input_right
-        copy    #GLYPH_INSPT, buf_input_right+1
+        copy    #kGlyphInsertionPoint, buf_input_right+1
         rts
 .endproc
 
@@ -2997,7 +2997,7 @@ LBA3D:  lda     buf_input_left,y
         ldx     buf_input_left
         inx
         stx     buf_input_right
-        copy    #GLYPH_INSPT, buf_input_right+1
+        copy    #kGlyphInsertionPoint, buf_input_right+1
         copy    #0, buf_input_left
         jsr     redraw_input
         jsr     LBB5B
@@ -3022,7 +3022,7 @@ LBA3D:  lda     buf_input_left,y
         bne     @loop
         sty     buf_input_left
         copy    #1, buf_input_right
-        copy    #GLYPH_INSPT, buf_input_right+1
+        copy    #kGlyphInsertionPoint, buf_input_right+1
         jsr     redraw_input
         jsr     LBB5B
         rts

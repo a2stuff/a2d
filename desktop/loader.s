@@ -4,7 +4,8 @@
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
-        .include "../desktop.inc"
+        .include "../common.inc"
+        .include "../desktop/desktop.inc"
 
 ;;; ============================================================
 ;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)

@@ -701,8 +701,8 @@ LA834:  iny
         stx     LA1F6
         lda     LCBANK2
         lda     LCBANK2
-        ldy     ramcard_prefix
-LA84D:  lda     ramcard_prefix,y
+        ldy     RAMCARD_PREFIX
+LA84D:  lda     RAMCARD_PREFIX,y
         sta     LA176,y
         dey
         bpl     LA84D
@@ -825,7 +825,7 @@ str_spaces:
         MGTK_CALL MGTK::FrameRect, rect_frame1
         MGTK_CALL MGTK::FrameRect, rect_frame2
         MGTK_CALL MGTK::MoveTo, pos_download
-        addr_call DrawString, str_download
+        addr_call selector5::DrawString, str_download
         rts
 .endproc
 
@@ -847,12 +847,12 @@ LAA4C:  jsr     populate_count
         MGTK_CALL MGTK::PaintRect, rect3
         addr_call selector5::AdjustPathCase, pathname1
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call DrawString, str_copying
-        addr_call DrawString, pathname1
+        addr_call selector5::DrawString, str_copying
+        addr_call selector5::DrawString, pathname1
         MGTK_CALL MGTK::MoveTo, pt2
-        addr_call DrawString, str_files_remaining
-        addr_call DrawString, str_count
-        addr_call DrawString, str_spaces
+        addr_call selector5::DrawString, str_files_remaining
+        addr_call selector5::DrawString, str_count
+        addr_call selector5::DrawString, str_spaces
         rts
 .endproc
         draw_window_content_ep2 := draw_window_content::ep2
@@ -862,16 +862,16 @@ LAA4C:  jsr     populate_count
         jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call DrawString, str_files_to_copy
-        addr_call DrawString, str_count
-        addr_call DrawString, str_spaces
+        addr_call selector5::DrawString, str_files_to_copy
+        addr_call selector5::DrawString, str_count
+        addr_call selector5::DrawString, str_spaces
         rts
 .endproc
 
 ;;; ============================================================
 
 LAABD:  lda     #$FD            ; ???
-        jsr     ShowAlert
+        jsr     selector5::ShowAlert
         bne     :+
         jsr     selector5::set_watch_cursor
         rts
@@ -885,13 +885,13 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call DrawString, str_not_enough_room
+        addr_call selector5::DrawString, str_not_enough_room
         MGTK_CALL MGTK::MoveTo, pt2
-        addr_call DrawString, str_click_ok
+        addr_call selector5::DrawString, str_click_ok
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, pos1
-        addr_call DrawString, selector5::str_ok_btn
+        addr_call selector5::DrawString, selector5::str_ok_btn
         jsr     set_pointer_cursor
         jmp     restore_stack_and_return
 
@@ -903,13 +903,13 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::SetPenMode, selector5::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call DrawString, str_error_download
+        addr_call selector5::DrawString, str_error_download
         MGTK_CALL MGTK::MoveTo, pt2
-        addr_call DrawString, str_copy_incomplete
+        addr_call selector5::DrawString, str_copy_incomplete
         MGTK_CALL MGTK::SetPenMode, selector5::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, pos1
-        addr_call DrawString, selector5::str_ok_btn
+        addr_call selector5::DrawString, selector5::str_ok_btn
         jsr     set_pointer_cursor
         jmp     restore_stack_and_return
 .endproc

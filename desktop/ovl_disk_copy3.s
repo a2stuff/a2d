@@ -100,7 +100,7 @@ label_facilities:
         PASCAL_STRING "Facilities"
 
 label_desktop:
-        PASCAL_STRING .sprintf("Apple II DeskTop version %d.%d",::kDeskTopVersionMajor,::kDeskTopVersionMinor)
+        PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d",::kDeskTopVersionMajor,::kDeskTopVersionMinor)
 
 label_blank:
         PASCAL_STRING " "
@@ -262,7 +262,7 @@ rect_read_drive:      DEFINE_RECT_SZ 210, 90, kButtonWidth, kButtonHeight
 point_ok_label:     DEFINE_POINT 355, 100
 
 str_ok_label:
-        PASCAL_STRING {"OK            ",CHAR_RETURN}
+        PASCAL_STRING {"OK            ",kGlyphReturn}
 
 ;;; Label positions
 point_read_drive:     DEFINE_POINT 215, 100

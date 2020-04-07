@@ -100,7 +100,7 @@ mi_x6:  DEFINE_MENU_ITEM str_slot_x6, '0', '0'
 mi_x7:  DEFINE_MENU_ITEM str_slot_x7, '0', '0'
 
 str_apple:
-        PASCAL_STRING GLYPH_SAPPLE
+        PASCAL_STRING kGlyphSolidApple
 
 str_file:
         PASCAL_STRING "File"
@@ -108,7 +108,8 @@ str_startup:
         PASCAL_STRING "Startup"
 
 str_a2desktop:
-        PASCAL_STRING "Apple II DeskTop Version 1.1"
+        PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d", ::kDeskTopVersionMajor, ::kDeskTopVersionMinor)
+
 str_blank:
         PASCAL_STRING " "
 str_copyright1:
@@ -264,7 +265,7 @@ rect_desktop_btn:
 pos_ok_label:
         DEFINE_POINT 344, 104
 str_ok_btn:
-        PASCAL_STRING {" OK           ",GLYPH_RETURN}
+        PASCAL_STRING {" OK           ",kGlyphReturn}
 
 pos_desktop_label:
         DEFINE_POINT 64, 104
@@ -325,10 +326,10 @@ str_desktop2:
 str_selector:
         PASCAL_STRING "selector"
 
-        DEFINE_SET_MARK_PARAMS set_mark_overlay1_params, overlay1_offset
-        DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, overlay2_offset
-        DEFINE_READ_PARAMS read_overlay1_params, overlay_addr, overlay1_size
-        DEFINE_READ_PARAMS read_overlay2_params, overlay_addr, overlay2_size
+        DEFINE_SET_MARK_PARAMS set_mark_overlay1_params, kOverlay1Offset
+        DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, kOverlay2Offset
+        DEFINE_READ_PARAMS read_overlay1_params, OVERLAY_ADDR, kOverlay1Size
+        DEFINE_READ_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlay2Size
         DEFINE_CLOSE_PARAMS close_params2
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_desktop2_params, str_desktop2_2
@@ -1446,7 +1447,6 @@ get_port_and_draw_window:
 ;;; Draw Pascal String
 ;;; Input: A,X = string address
 
-        ASSERT_ADDRESS ::DrawString
 .proc DrawString
         ptr := $06
         params := $06
@@ -2206,7 +2206,7 @@ L9EFB:  .byte   0
 .proc get_copied_to_ramcard_flag
         lda     LCBANK2
         lda     LCBANK2
-        lda     copied_to_ramcard_flag
+        lda     COPIED_TO_RAMCARD_FLAG
         tax
         lda     ROMIN2
         txa
@@ -2217,8 +2217,8 @@ L9EFB:  .byte   0
         stax    @addr
         lda     LCBANK2
         lda     LCBANK2
-        ldx     ramcard_prefix
-:       lda     ramcard_prefix,x
+        ldx     RAMCARD_PREFIX
+:       lda     RAMCARD_PREFIX,x
         @addr := * + 1
         sta     dummy1234,x
         dex
@@ -2274,7 +2274,6 @@ L9F73:  .byte   0
 ;;; Show Alert Message
 ;;; Input: A = AlertID
 
-        ASSERT_ADDRESS ::ShowAlert
 .proc ShowAlert
         pha
         jsr     BELL1

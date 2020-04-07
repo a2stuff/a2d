@@ -59,7 +59,7 @@ rect_frame2:
 str_cancel_btn:
         PASCAL_STRING "Cancel    Esc"
 str_ok_btn:
-        PASCAL_STRING {"OK            ", CHAR_RETURN}
+        PASCAL_STRING {"OK            ", kGlyphReturn}
 str_try_again_btn:
         PASCAL_STRING "Try Again  A"
 
@@ -220,22 +220,22 @@ LD314:  tya
         bpl     LD365
         MGTK_CALL MGTK::FrameRect, rect_cancel_btn
         MGTK_CALL MGTK::MoveTo, pos_cancel_btn
-        addr_call DrawString, str_cancel_btn
+        addr_call selector5::DrawString, str_cancel_btn
         bit     LD142
         bvs     LD365
         MGTK_CALL MGTK::FrameRect, rect_ok_try_again_btn
         MGTK_CALL MGTK::MoveTo, pos_ok_try_again_btn
-        addr_call DrawString, str_try_again_btn
+        addr_call selector5::DrawString, str_try_again_btn
         jmp     LD378
 
 LD365:  MGTK_CALL MGTK::FrameRect, rect_ok_try_again_btn
         MGTK_CALL MGTK::MoveTo, pos_ok_try_again_btn
-        addr_call DrawString, str_ok_btn
+        addr_call selector5::DrawString, str_ok_btn
 
 LD378:  MGTK_CALL MGTK::MoveTo, pt2
         lda     LD143
         ldx     LD144
-        jsr     DrawString
+        jsr     selector5::DrawString
 
 
 event_loop:

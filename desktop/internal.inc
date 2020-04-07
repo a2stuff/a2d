@@ -7,7 +7,8 @@
 
 ;;; ============================================================
 
-;;; ============================================================
+kDAFileType     = $F1
+kDAFileAuxType  = $640          ; High bit set = don't show in Apple menu
 
 kMaxDeskAccCount        = 12
 

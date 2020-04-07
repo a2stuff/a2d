@@ -4,7 +4,8 @@
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../mgtk/mgtk.inc"
-        .include "../desktop.inc"
+        .include "../common.inc"
+        .include "../desktop/desktop.inc"
         .include "../inc/fp_macros.inc"
 
 ;;; ============================================================
