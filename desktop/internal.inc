@@ -19,11 +19,6 @@ kTrashIconNum   = 1
 ;;; (FT_BAD files are remapped to FT_TYPELESS)
 kAppFileType    = $01
 
-;;; Standard button sizes; sometimes narrower
-kButtonWidth  = 100
-kButtonHeight = 11
-
-
 ;;; ============================================================
 ;;; Menu Constants
 

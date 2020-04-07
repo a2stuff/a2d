@@ -713,6 +713,8 @@ LA84D:  lda     RAMCARD_PREFIX,y
 ;;; ============================================================
 
 .proc winfo
+        kWidth = 500
+        kHeight = 140
 window_id:
         .byte   $0B
         .byte   $01,$00
@@ -728,9 +730,8 @@ window_id:
         .byte   $96,$00
         .byte   $32
         .byte   $00
-        .byte   $F4
-        .byte   $01,$8C
-        .byte   $00
+        .word   kWidth
+        .word   kHeight
         .byte   $64
         .byte   $00
         .byte   $32
@@ -742,10 +743,7 @@ window_id:
         .byte   $00
         .byte   $00
         .byte   $00
-        .byte   $5E,$01,$46
-
-
-        .byte   0
+        .word   350, 70
         .byte   $FF
         .res    8, $FF
         .byte   0
@@ -761,11 +759,11 @@ window_id:
         .addr   0
 .endproc
 
-rect1:  DEFINE_RECT 20, 49, 120, 60
+rect1:  DEFINE_RECT_SZ 20, 49, kButtonWidth, kButtonHeight
 pos1:   DEFINE_POINT 24, 59
 
 rect_frame1:
-        DEFINE_RECT 4, 2, 348, 68
+        DEFINE_RECT 4, 2, 348, 68 ; TODO: Too narrow by 2px ???
 rect_frame2:
         DEFINE_RECT 5, 3, 347, 67
 

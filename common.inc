@@ -15,6 +15,10 @@ kScreenHeight   = 192
 kMenuBarHeight  = 13
 kTitleBarHeight = 12
 
+;;; Standard button sizes; sometimes narrower
+kButtonWidth  = 100
+kButtonHeight = 11
+
 ;;; ============================================================
 ;;; RAM Disk
 

@@ -158,6 +158,8 @@ buf_input_left:         .res    68, 0 ; left of IP
 buf_input_right:        .res    68, 0 ; IP and right
 
 .params winfo1
+        kWidth = 500
+        kHeight = 153
 window_id:
         .byte   $3E
         .byte   $01, $00
@@ -171,32 +173,19 @@ window_id:
         .byte   0
         .byte   0
 
-        .byte   $96,$00
-        .byte   $32
-        .byte   $00
-        .byte   $F4
-        .byte   $01,$8C
-        .byte   $00
+        .word   150, 50
+        .word   500, 140
         .byte   $19,$00,$14
         .byte   $00
-        .byte   $00
-        .byte   $20,$80,$00
-        .byte   $00
-        .byte   $00
+        .addr   MGTK::screen_mapbits
+        .byte   MGTK::screen_mapwidth
         .byte   $00
         .byte   $00
-        .byte   $F4
-        .byte   $01,$99
-
-        .byte   0
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
+        .byte   $00
+        .byte   $00
+        .byte   $00
+        .word   kWidth, kHeight
+        .res    8, $FF
         .byte   $FF
         .byte   0
         .byte   0
@@ -308,15 +297,15 @@ LA231:
         .byte   $00
 
 rect_frame:
-        DEFINE_RECT 4, 2, 496, 151
+        DEFINE_RECT_INSET 4, 2, winfo1::kWidth, winfo1::kHeight
 
 rect0:  DEFINE_RECT 27, 16, 174, 26
 
-rect_cancel_btn:        DEFINE_RECT 193, 58, 293, 69
-rect_ok_btn:            DEFINE_RECT 193, 89, 293, 100
-rect_open_btn:          DEFINE_RECT 193, 44, 293, 55
-rect_close_btn:         DEFINE_RECT 193, 73, 293, 84
-rect_change_drive_btn:  DEFINE_RECT 193, 30, 293, 41
+rect_cancel_btn:        DEFINE_RECT_SZ 193, 58, kButtonWidth, kButtonHeight
+rect_ok_btn:            DEFINE_RECT_SZ 193, 89, kButtonWidth, kButtonHeight
+rect_open_btn:          DEFINE_RECT_SZ 193, 44, kButtonWidth, kButtonHeight
+rect_close_btn:         DEFINE_RECT_SZ 193, 73, kButtonWidth, kButtonHeight
+rect_change_drive_btn:  DEFINE_RECT_SZ 193, 30, kButtonWidth, kButtonHeight
 
 ;;; Dividing line
 pt1:    DEFINE_POINT 323, 30

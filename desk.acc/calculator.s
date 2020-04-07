@@ -150,28 +150,28 @@ flag:   .byte   MGTK::zp_overwrite
 ;;; ============================================================
 ;;; Button Definitions
 
-        kButtonWidth = 17
-        kButtonHeight = 9
+        kCalcButtonWidth = 17
+        kCalcButtonHeight = 9
 
         kCol1Left = 13
-        kCol1Right = kCol1Left+kButtonWidth ; 30
+        kCol1Right = kCol1Left+kCalcButtonWidth ; 30
         kCol2Left = 42
-        kCol2Right = kCol2Left+kButtonWidth ; 59
+        kCol2Right = kCol2Left+kCalcButtonWidth ; 59
         kCol3Left = 70
-        kCol3Right = kCol3Left+kButtonWidth ; 87
+        kCol3Right = kCol3Left+kCalcButtonWidth ; 87
         kCol4Left = 98
-        kCol4Right = kCol4Left+kButtonWidth ; 115
+        kCol4Right = kCol4Left+kCalcButtonWidth ; 115
 
         kRow1Top = 22
-        kRow1Bot = kRow1Top+kButtonHeight ; 31
+        kRow1Bot = kRow1Top+kCalcButtonHeight ; 31
         kRow2Top = 38
-        kRow2Bot = kRow2Top+kButtonHeight ; 47
+        kRow2Bot = kRow2Top+kCalcButtonHeight ; 47
         kRow3Top = 53
-        kRow3Bot = kRow3Top+kButtonHeight ; 62
+        kRow3Bot = kRow3Top+kCalcButtonHeight ; 62
         kRow4Top = 68
-        kRow4Bot = kRow4Top+kButtonHeight ; 77
+        kRow4Bot = kRow4Top+kCalcButtonHeight ; 77
         kRow5Top = 83
-        kRow5Bot = kRow5Top+kButtonHeight ; 92
+        kRow5Bot = kRow5Top+kCalcButtonHeight ; 92
 
         kBorderLeftTop = 1          ; border width pixels (left/top)
         kBorderBottomRight = 2          ; (bottom/right)
@@ -182,10 +182,10 @@ viewloc:        DEFINE_POINT left - kBorderLeftTop, top - kBorderLeftTop
 mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
+maprect:        DEFINE_RECT 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:          .byte   labelchar
-pos:            .word   left + 6, top+kButtonHeight
-port:           .word   left, top, left+kButtonWidth, top+kButtonHeight
+pos:            .word   left + 6, top+kCalcButtonHeight
+port:           .word   left, top, left+kCalcButtonWidth, top+kCalcButtonHeight
 .endparams
 .endmacro
 
@@ -214,7 +214,7 @@ viewloc:        DEFINE_POINT kCol1Left - kBorderLeftTop, kRow5Top - kBorderLeftT
 mapbits:        .addr   wide_button_bitmap
 mapwidth:       .byte   8       ; kBitmapStride (bytes)
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 49, kButtonHeight + kBorderLeftTop + kBorderBottomRight ; 0 is extra wide
+maprect:        DEFINE_RECT 0, 0, 49, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight ; 0 is extra wide
 label:          .byte   '0'
 pos:            .word   kCol1Left + 6, kRow5Bot
 port:           .word   kCol1Left,kRow5Top,kCol2Right,kRow5Bot
@@ -225,7 +225,7 @@ viewloc:        DEFINE_POINT kCol3Left - kBorderLeftTop, kRow5Top - kBorderLeftT
 mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, kButtonHeight + kBorderLeftTop + kBorderBottomRight
+maprect:        DEFINE_RECT 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:          .byte   '.'
 pos:            .word   kCol3Left + 6 + 2, kRow5Bot ; + 2 to center the label
 port:           .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
@@ -236,7 +236,7 @@ viewloc:        DEFINE_POINT kCol4Left - kBorderLeftTop, kRow4Top - kBorderLeftT
 mapbits:        .addr   tall_button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, kButtonWidth + kBorderLeftTop + kBorderBottomRight, 27 ; + is extra tall
+maprect:        DEFINE_RECT 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, 27 ; + is extra tall
 label:          .byte   '+'
 pos:            .word   kCol4Left + 6, kRow5Bot
 port:           .word   kCol4Left,kRow4Top,kCol4Right,kRow5Bot

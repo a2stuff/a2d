@@ -217,6 +217,8 @@ savesize:       .word   $800
 .endparams
 
 .params winfo
+        kWidth = 500
+        kHeight = 110
 window_id:
         .byte   $01
         .byte   $01
@@ -239,7 +241,7 @@ viewloc:.word   25, 40
         .byte   MGTK::screen_mapwidth
         .byte   $00
 
-        .word   0, 0, 500, 110
+        .word   0, 0, kWidth, kHeight
 
         .res    8, $FF
         .byte   $FF
@@ -254,13 +256,13 @@ viewloc:.word   25, 40
 .endparams
 
 rect_frame:
-        DEFINE_RECT 4, 2, 496, 108
+        DEFINE_RECT_INSET 4, 2, winfo::kWidth, winfo::kHeight
 
 rect_ok_btn:
-        DEFINE_RECT 340, 94, 440, 105
+        DEFINE_RECT_SZ 340, 94, kButtonWidth, kButtonHeight
 
 rect_desktop_btn:
-        DEFINE_RECT 60, 94, 160, 105
+        DEFINE_RECT_SZ 60, 94, kButtonWidth, kButtonHeight
 
 pos_ok_label:
         DEFINE_POINT 344, 104

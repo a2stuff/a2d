@@ -69,7 +69,7 @@ pos_ok_try_again_btn:
         DEFINE_POINT 305, 47
 
 rect_cancel_btn:
-        DEFINE_RECT 20, 37, 120, 48
+        DEFINE_RECT_SZ 20, 37, kButtonWidth, kButtonHeight
 pos_cancel_btn:
         DEFINE_POINT 25,47
 
