@@ -1,7 +1,16 @@
+;;; ============================================================
+;;; CONTROL.PANEL - Desk Accessory
+;;;
+;;; A control panel offering system settings:
+;;;   * DeskTop pattern
+;;;   * Joystick calibration
+;;;   * Double-click speed
+;;;   * Insertion point blink rate
+;;; ============================================================
+
         .setcpu "6502"
 
         .include "apple2.inc"
-        .include "opcodes.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"

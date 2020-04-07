@@ -1,3 +1,12 @@
+;;; ============================================================
+;;; SORT.DIRECTORY - Desk Accessory
+;;;
+;;; Sorts the contents of the directory (current window).
+;;; If there is a selection, selected files are placed first
+;;; following selection order. If there is no selection, all
+;;; files are sorted by type then by name.
+;;; ============================================================
+
         .setcpu "6502"
 
         .include "apple2.inc"
@@ -11,7 +20,6 @@
 ;;; ============================================================
 
         .org $800
-
 
 dir_data_buffer     := $0E00
 kDirDataBufferLen  = $0E00

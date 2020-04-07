@@ -1,3 +1,10 @@
+;;; ============================================================
+;;; DATE - Desk Accessory
+;;;
+;;; Shows the current ProDOS date, and allows editing if there
+;;; is no clock driver installed.
+;;; ============================================================
+
         .setcpu "6502"
 
         .include "apple2.inc"

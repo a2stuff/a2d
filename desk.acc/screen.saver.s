@@ -1,3 +1,9 @@
+;;; ============================================================
+;;; SCREEN.SAVER - Desk Accessory
+;;;
+;;; Clears the screen and animates a pleasing distraction.
+;;; ============================================================
+
         .setcpu "6502"
 
         .include "apple2.inc"
@@ -6,7 +12,6 @@
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
-
 
 ;;; ============================================================
 

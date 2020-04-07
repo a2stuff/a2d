@@ -1,3 +1,9 @@
+;;; ============================================================
+;;; EYES - Desk Accessory
+;;;
+;;; Shows a resizable window with eyes that follow the mouse.
+;;; ============================================================
+
         .setcpu "6502"
 
         .include "apple2.inc"

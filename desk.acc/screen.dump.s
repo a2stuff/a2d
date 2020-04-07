@@ -1,3 +1,10 @@
+;;; ============================================================
+;;; SCREEN.DUMP - Desk Accessory
+;;;
+;;; Dumps the contents of the graphics screen to an ImageWriter
+;;; printer connected to a Super Serial Card in Slot 1.
+;;; ============================================================
+
         .setcpu "6502"
 
         .include "apple2.inc"

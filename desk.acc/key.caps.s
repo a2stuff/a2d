@@ -1,3 +1,9 @@
+;;; ============================================================
+;;; KEY.CAPS - Desk Accessory
+;;;
+;;; Displays a map of the keyboard, showing what key is pressed.
+;;; ============================================================
+
         .setcpu "6502"
 
         .include "apple2.inc"

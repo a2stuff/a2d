@@ -1,3 +1,15 @@
+;;; ============================================================
+;;; THIS.APPLE - Desk Accessory
+;;;
+;;; Displays information about the current computer. The data
+;;; shown includes:
+;;;    * Model
+;;;    * CPU
+;;;    * Expanded/RAMWorks Memory
+;;;    * ProDOS version
+;;;    * Contents of each expansion slot
+;;; ============================================================
+
         .setcpu "6502"
 
         .include "apple2.inc"
