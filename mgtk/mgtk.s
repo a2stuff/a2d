@@ -3763,7 +3763,7 @@ saved_port_addr:
 
 .proc SetSwitchesImpl
         PARAM_BLOCK params, $82
-switches:       .res 1
+switches:       .byte   0
         END_PARAM_BLOCK
 
         lda     DHIRESON        ; enable dhr graphics
@@ -3850,7 +3850,7 @@ rts3:   rts
 
 .proc SetZP1Impl
         PARAM_BLOCK params, $82
-flag:   .res 1
+flag:   .byte   0
         END_PARAM_BLOCK
 
         lda     params::flag
@@ -3871,7 +3871,7 @@ flag:   .res 1
 
 .proc SetZP2Impl
         PARAM_BLOCK params, $82
-flag:   .res 1
+flag:   .byte   0
         END_PARAM_BLOCK
 
         lda     params::flag
@@ -4545,14 +4545,14 @@ save_p_reg:
 
 .proc StartDeskTopImpl
         PARAM_BLOCK params, $82
-machine:    .res 1
-subid:      .res 1
-op_sys:     .res 1
-slot_num:   .res 1
-use_irq:    .res 1
-sysfontptr: .res 2
-savearea:   .res 2
-savesize:   .res 2
+machine:        .byte   0
+subid:          .byte   0
+op_sys:         .byte   0
+slot_num:       .byte   0
+use_irq:        .byte   0
+sysfontptr:     .addr   0
+savearea:       .addr   0
+savesize:       .word   0
         END_PARAM_BLOCK
 
 
@@ -4776,8 +4776,8 @@ is_pascal:
 
 .proc SetUserHookImpl
         PARAM_BLOCK params, $82
-hook_id:        .res 1
-routine_ptr:    .res 2
+hook_id:        .byte   0
+routine_ptr:    .addr   0
         END_PARAM_BLOCK
 
         lda     params::hook_id
@@ -4960,8 +4960,8 @@ checkerboard_pattern:
 
 .proc AttachDriverImpl
         PARAM_BLOCK params, $82
-hook:        .res 2
-mouse_state: .res 2
+hook:        .addr      0
+mouse_state: .word      0
         END_PARAM_BLOCK
 
         bit     desktop_initialized_flag
@@ -5339,7 +5339,7 @@ check_kbd_flag:  .byte   $80
 
 .proc SetKeyEventImpl
         PARAM_BLOCK params, $82
-handle_keys:    .res    1
+handle_keys:    .byte   0
         END_PARAM_BLOCK
 
         asl     check_kbd_flag
@@ -6564,10 +6564,10 @@ hmrts:  rts
 
 .proc InitMenuImpl
         PARAM_BLOCK params, $82
-solid_char:     .res    1
-open_char:      .res    1
-check_char:     .res    1
-control_char:   .res    1
+solid_char:     .byte   0
+open_char:      .byte   0
+check_char:     .byte   0
+control_char:   .byte   0
         END_PARAM_BLOCK
 
         COPY_BYTES 4, params, menu_glyphs
@@ -9136,8 +9136,8 @@ check_win:
 
 .proc SetMenuSelectionImpl
         PARAM_BLOCK params, $82
-menu_index:             .res 1
-menu_item_index:        .res 1
+menu_index:             .byte   0
+menu_item_index:        .byte   0
         END_PARAM_BLOCK
 
         lda     params::menu_index
@@ -10158,8 +10158,8 @@ grts:   rts
 
 .proc ScaleMouseImpl
         PARAM_BLOCK params, $82
-x_exponent:     .res 1
-y_exponent:     .res 1
+x_exponent:     .byte   0
+y_exponent:     .byte   0
         END_PARAM_BLOCK
 
         lda     params::x_exponent

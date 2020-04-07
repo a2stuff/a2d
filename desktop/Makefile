@@ -18,7 +18,7 @@ clean:
 	rm -f $(OUTDIR)/*.seg
 	rm -f $(TARGETS)
 
-$(OUTDIR)/mgtk.o: mgtk_segment.s $(HEADERS)
+$(OUTDIR)/mgtk.o: mgtk_segment.s ../mgtk/mgtk.s $(HEADERS)
 	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 $(OUTDIR)/desktop.o: desktop.s $(HEADERS) desktop_*.s ovl*.s invoker.s
