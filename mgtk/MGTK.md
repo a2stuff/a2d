@@ -915,6 +915,8 @@ Parameters:
 ```
 
 
+### Miscellaneous
+
 #### GetDeskPat ($4F)
 Get address of desktop pattern.
 
@@ -937,10 +939,7 @@ Redraws the current menu bar. Useful after full-screen operations.
 Note that hilite state of menu bar items is not restored; this must
 be done by manual calls to `HiliteMenu`
 
-Parameters:
-```
-.res 8      pattern         8x8 pixel pattern
-```
+No parameters.
 
 
 # Creating Applications and DeskTop Desk Accessories

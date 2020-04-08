@@ -1763,9 +1763,10 @@ L6553:  inc     L6575
 L6564:  return  #$FF
 
 L6567:  ldx     $177F
-        lda     L6575
 L656D:  dex
-        cmp     $1780,x
+        lda     $1780,x
+        and     #$7F
+        cmp     L6575
         bne     L656D
         txa
         rts
