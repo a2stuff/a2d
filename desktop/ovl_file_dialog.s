@@ -5,6 +5,15 @@
 .proc common_overlay
         .org $5000
 
+;;; Map from index in files_names to list entry; high bit is
+;;; set for directories.
+file_list_index := $1780
+
+num_file_names  := $177F
+
+;;; Sequence of 16-byte records, filenames in current directory.
+file_names      := $1800
+
 ;;; ============================================================
 
 L5000:  jmp     L50B1
@@ -165,7 +174,7 @@ clicked:
 L520A:  jmp     set_up_ports
 
 L520D:  tax
-        lda     $1780,x
+        lda     file_list_index,x
         bmi     L5216
 L5213:  jmp     set_up_ports
 
@@ -274,7 +283,7 @@ L5380:  jsr     desktop_main::detect_double_click
         rts
 
 L5386:  ldx     LD920
-        lda     $1780,x
+        lda     file_list_index,x
         bmi     L53B5
         lda     winfo_entrydlg
         jsr     set_port_for_window
@@ -293,7 +302,7 @@ L53B5:  and     #$7F
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         lda     #$00
         sta     L542E
-        copy16  #$1800, $08
+        copy16  #file_names, $08
         pla
         asl     a
         rol     L542E
@@ -325,7 +334,7 @@ L53B5:  and     #$7F
 L542E:  .byte   0
 
 L542F:  lda     screentowindow_windowy
-        cmp     $177F
+        cmp     num_file_names
         bcc     L5438
         rts
 
@@ -399,10 +408,10 @@ L54C4:  sta     updatethumb_thumbpos
 L54DF:  lda     winfo_entrydlg_file_picker::vthumbpos
         clc
         adc     #$09
-        cmp     $177F
+        cmp     num_file_names
         beq     L54EF
         bcc     L54EF
-        lda     $177F
+        lda     num_file_names
 L54EF:  sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
@@ -516,7 +525,7 @@ cursor_ip_flag:                 ; high bit set when cursor is IP
 ;;; ============================================================
 
 L5607:  ldx     LD920
-        lda     $1780,x
+        lda     file_list_index,x
         and     #$7F
         pha
         bit     LD8F0
@@ -524,7 +533,7 @@ L5607:  ldx     LD920
         jsr     jt_prep_path
 L5618:  lda     #$00
         sta     L565B
-        copy16  #$1800, $08
+        copy16  #file_names, $08
         pla
         asl     a
         rol     L565B
@@ -726,7 +735,7 @@ L5A52:  cmp     #CHAR_CTRL_O    ; Open
         lda     LD920
         bmi     L5AC8
         tax
-        lda     $1780,x
+        lda     file_list_index,x
         bmi     :+
         jmp     L5AC8
 :       lda     winfo_entrydlg
@@ -790,13 +799,13 @@ key_meta_digit:
         jmp     noop
 
 .proc key_down
-        lda     $177F
+        lda     num_file_names
         beq     L5B37
         lda     LD920
         bmi     L5B47
         tax
         inx
-        cpx     $177F
+        cpx     num_file_names
         bcc     L5B38
 L5B37:  rts
 
@@ -811,7 +820,7 @@ L5B47:  lda     #0
 .endproc
 
 .proc key_up
-        lda     $177F
+        lda     num_file_names
         beq     L5B58
         lda     LD920
         bmi     L5B68
@@ -824,7 +833,7 @@ L5B59:  jsr     L6274
         lda     LD920
         jmp     update_list_selection
 
-L5B68:  ldx     $177F
+L5B68:  ldx     num_file_names
         dex
         txa
         jmp     update_list_selection
@@ -857,7 +866,7 @@ L5B9D:  sta     L5BF5
         lda     #0
         sta     L5BF3
 L5BA5:  lda     L5BF3
-        cmp     $177F
+        cmp     num_file_names
         beq     L5BC4
         jsr     L5BCB
         ldy     #1
@@ -875,7 +884,7 @@ L5BC4:  return  #$FF
 L5BC7:  return  L5BF3
 
 L5BCB:  tax
-        lda     $1780,x
+        lda     file_list_index,x
         and     #$7F
         ldx     #$00
         stx     L5BF4
@@ -903,7 +912,7 @@ L5BF5:  .byte   0
 ;;; ============================================================
 
 .proc scroll_list_top
-        lda     $177F
+        lda     num_file_names
         beq     L5C02
         lda     LD920
         bmi     L5C09
@@ -917,12 +926,12 @@ L5C09:  lda     #$00
 .endproc
 
 .proc scroll_list_bottom
-        lda     $177F
+        lda     num_file_names
         beq     L5C1E
         ldx     LD920
         bmi     L5C27
         inx
-        cpx     $177F
+        cpx     num_file_names
         bne     L5C1F
 L5C1E:  rts
 
@@ -930,7 +939,7 @@ L5C1F:  dex
         txa
         jsr     L6274
         jsr     jt_strip_path_segment
-L5C27:  ldx     $177F
+L5C27:  ldx     num_file_names
         dex
         txa
         jmp     update_list_selection
@@ -1199,7 +1208,7 @@ L5F5B:  jsr     L5ECB
         copy16  $1423, L606A
         lda     $1425
         and     #$7F
-        sta     $177F
+        sta     num_file_names
         bne     L5F87
         jmp     L6012
 
@@ -1214,7 +1223,7 @@ L5F8F:  addr_call_indirect desktop_main::adjust_fileentry_case, $06
 
 L5F9A:  ldx     L6067
         txa
-        sta     $1780,x
+        sta     file_list_index,x
         ldy     #$00
         lda     ($06),y
         and     #STORAGE_TYPE_MASK
@@ -1225,15 +1234,15 @@ L5F9A:  ldx     L6067
         inc     L6068
         jmp     L6007
 
-L5FB6:  lda     $1780,x
+L5FB6:  lda     file_list_index,x
         ora     #$80
-        sta     $1780,x
+        sta     file_list_index,x
         inc     L50A9
 L5FC1:  ldy     #$00
         lda     ($06),y
         and     #$0F
         sta     ($06),y
-        copy16  #$1800, $08
+        copy16  #file_names, $08
         lda     #$00
         sta     L606C
         lda     L6067
@@ -1262,13 +1271,13 @@ L5FFA:  lda     ($06),y
         inc     L6068
 L6007:  inc     L6069
         lda     L6068
-        cmp     $177F
+        cmp     num_file_names
         bne     L6035
 L6012:  yax_call MLI_RELAY, CLOSE, close_params
         bit     L50A8
         bpl     L6026
         lda     L50A9
-        sta     $177F
+        sta     num_file_names
 L6026:  jsr     L62DE
         jsr     L64E2
         lda     L5F0C
@@ -1311,7 +1320,7 @@ L606D:  lda     winfo_entrydlg_file_picker
         sta     picker_entry_pos+3
         sta     L6128
 L608E:  lda     L6128
-        cmp     $177F
+        cmp     num_file_names
         bne     L60A9
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
@@ -1319,7 +1328,7 @@ L608E:  lda     L6128
 
 L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
         ldx     L6128
-        lda     $1780,x
+        lda     file_list_index,x
         and     #$7F
         ldx     #$00
         stx     L6127
@@ -1340,7 +1349,7 @@ L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
         tya
         jsr     draw_string
         ldx     L6128
-        lda     $1780,x
+        lda     file_list_index,x
         bpl     L60FF
         lda     #$01
         sta     picker_entry_pos
@@ -1367,7 +1376,7 @@ L6128:  .byte   0
 
 L6161:  lda     #$00
 L6163:  sta     L61B0
-        lda     $177F
+        lda     num_file_names
         cmp     #$0A
         bcs     L6181
         lda     #MGTK::Ctl::vertical_scroll_bar
@@ -1377,7 +1386,7 @@ L6163:  sta     L61B0
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         rts
 
-L6181:  lda     $177F
+L6181:  lda     num_file_names
         sta     winfo_entrydlg_file_picker::vthumbmax
         .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::Ctl::vertical_scroll_bar
@@ -1436,13 +1445,13 @@ L6226:  .byte   0
 L6227:  sta     L6273
         clc
         adc     #$09
-        cmp     $177F
+        cmp     num_file_names
         beq     L6234
         bcs     L623A
 L6234:  lda     L6273
         jmp     L624A
 
-L623A:  lda     $177F
+L623A:  lda     num_file_names
         cmp     #$0A
         bcs     L6247
         lda     L6273
@@ -1520,7 +1529,7 @@ L62DE:  lda     #'Z'
         sta     L63BF
         sta     L63BE
 L62F0:  lda     L63BF
-        cmp     $177F
+        cmp     num_file_names
         bne     L62FB
         jmp     L6377
 
@@ -1557,7 +1566,7 @@ L6335:  lda     ($06),y
         bne     L6335
 L633D:  inc     L63BE
         lda     L63BE
-        cmp     $177F
+        cmp     num_file_names
         beq     L634B
         jmp     L62FB
 
@@ -1582,28 +1591,28 @@ L634B:  lda     L63C0
         inc     L63BF
         jmp     L62F0
 
-L6377:  ldx     $177F
+L6377:  ldx     num_file_names
         dex
         stx     L63BF
 L637E:  lda     L63BF
         bpl     L63AD
-        ldx     $177F
+        ldx     num_file_names
         beq     L63AC
         dex
 L6389:  lda     L63D2,x
         tay
-        lda     $1780,y
+        lda     file_list_index,y
         bpl     L639A
         lda     L63D2,x
         ora     #$80
         sta     L63D2,x
 L639A:  dex
         bpl     L6389
-        ldx     $177F
+        ldx     num_file_names
         beq     L63AC
         dex
 L63A3:  lda     L63D2,x
-        sta     $1780,x
+        sta     file_list_index,x
         dex
         bpl     L63A3
 L63AC:  rts
@@ -1702,15 +1711,15 @@ L64D8:  dey
 L64DE:  return  #$FF
 
 L64E1:  .byte   0
-L64E2:  lda     $177F
+L64E2:  lda     num_file_names
         bne     L64E8
 L64E7:  rts
 
 L64E8:  lda     #$00
         sta     L6515
-        copy16  #$1800, $06
+        copy16  #file_names, $06
 L64F5:  lda     L6515
-        cmp     $177F
+        cmp     num_file_names
         beq     L64E7
         inc     L6515
         lda     $06
@@ -1735,9 +1744,9 @@ L651F:  lda     ($06),y
         bpl     L651F
         lda     #$00
         sta     L6575
-        copy16  #$1800, $06
+        copy16  #file_names, $06
 L6534:  lda     L6575
-        cmp     $177F
+        cmp     num_file_names
         beq     L6564
         ldy     #$00
         lda     ($06),y
@@ -1762,9 +1771,9 @@ L6553:  inc     L6575
 
 L6564:  return  #$FF
 
-L6567:  ldx     $177F
+L6567:  ldx     num_file_names
 L656D:  dex
-        lda     $1780,x
+        lda     file_list_index,x
         and     #$7F
         cmp     L6575
         bne     L656D
@@ -2632,9 +2641,9 @@ jt_handle_f2_tbd05:
         ptr := $06
 
         sta     flag
-        copy16  #$1800, ptr
+        copy16  #file_names, ptr
         ldx     LD920
-        lda     $1780,x
+        lda     file_list_index,x
         and     #$7F
 
         ldx     #0
@@ -2769,7 +2778,7 @@ L6EC2:  lda     LD920
         ldx     #$00
         stx     L6F3C
         tax
-        lda     $1780,x
+        lda     file_list_index,x
         and     #$7F
         asl     a
         rol     L6F3C
