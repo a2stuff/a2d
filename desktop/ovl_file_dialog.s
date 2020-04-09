@@ -79,7 +79,7 @@ L5105:  .byte   0               ; ??? something about the picker
 
 ;;; ============================================================
 
-.proc L5106
+.proc event_loop
         bit     LD8EC
         bpl     :+
 
@@ -92,24 +92,24 @@ L5105:  .byte   0               ; ??? something about the picker
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jsr     L51AF
-        jmp     L5106
+        jsr     handle_button_down
+        jmp     event_loop
 
 :       cmp     #MGTK::EventKind::key_down
         bne     :+
         jsr     L59B9
-        jmp     L5106
+        jmp     event_loop
 
 :       jsr     desktop_main::check_mouse_moved
-        bcc     L5106
+        bcc     event_loop
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
         bne     :+
-        jmp     L5106
+        jmp     event_loop
 :       lda     findwindow_window_id
         cmp     winfo_entrydlg
         beq     L5151
-        jmp     L5106
+        jmp     event_loop
 
 L5151:  lda     winfo_entrydlg
         jsr     set_port_for_window
@@ -132,14 +132,14 @@ L5190:  jsr     set_cursor_insertion
 L5196:  jsr     set_cursor_pointer
 L5199:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
-        jmp     L5106
+        jmp     event_loop
 .endproc
 
 L51AE:  .byte   0
 
 ;;; ============================================================
 
-.proc L51AF
+.proc handle_button_down
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
         bne     :+
@@ -147,21 +147,22 @@ L51AE:  .byte   0
 :       cmp     #MGTK::Area::content
         bne     :+
         jmp     L51C7
-        rts                     ; ???
+        rts                     ; Unreached ???
 :       rts
 
 L51C7:  lda     findwindow_window_id
         cmp     winfo_entrydlg
-        beq     L51D2
-        jmp     L531F
+        beq     :+
+        jmp     handle_list_button_down
 
-L51D2:  lda     winfo_entrydlg
+:       lda     winfo_entrydlg
         jsr     set_port_for_window
         lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
 
+        ;; --------------------------------------------------
         ;; In open button?
 .proc check_open_button
         MGTK_RELAY_CALL MGTK::InRect, common_open_button_rect
@@ -189,17 +190,18 @@ L5216:  lda     winfo_entrydlg
         jmp     set_up_ports
 .endproc
 
+        ;; --------------------------------------------------
 .proc check_change_drive_button
         MGTK_RELAY_CALL MGTK::InRect, common_change_drive_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_close_button
 :       bit     L5105
-        bmi     L5268
+        bmi     :+
         yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, common_change_drive_button_rect
-        bmi     L5268
+        bmi     :+
         jsr     L565C
-L5268:  jmp     set_up_ports
+:       jmp     set_up_ports
 .endproc
 
 .proc check_close_button
@@ -208,36 +210,39 @@ L5268:  jmp     set_up_ports
         beq     :+
         jmp     check_ok_button
 :       bit     L5105
-        bmi     L529A
+        bmi     :+
         yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, common_close_button_rect
-        bmi     L529A
+        bmi     :+
         jsr     L567F
-L529A:  jmp     set_up_ports
+:       jmp     set_up_ports
 .endproc
 
+        ;; --------------------------------------------------
 .proc check_ok_button
         MGTK_RELAY_CALL MGTK::InRect, common_ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_cancel_button
 :       yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, common_ok_button_rect
-        bmi     L52CA
+        bmi     :+
         jsr     jt_handle_meta_right_key
         jsr     jt_handle_ok
-L52CA:  jmp     set_up_ports
+:       jmp     set_up_ports
 .endproc
 
+        ;; --------------------------------------------------
 .proc check_cancel_button
         MGTK_RELAY_CALL MGTK::InRect, common_cancel_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_other_click
 :       yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, common_cancel_button_rect
-        bmi     L52F7
+        bmi     :+
         jsr     jt_handle_cancel
-L52F7:  jmp     set_up_ports
+:       jmp     set_up_ports
 .endproc
 
+        ;; --------------------------------------------------
 .proc check_other_click
         bit     L5103
         bpl     :+
@@ -263,19 +268,20 @@ L531B:  jsr     noop
 
 ;;; ============================================================
 
-L531F:  bit     L5105
-        bmi     L5340
+.proc handle_list_button_down
+        bit     L5105
+        bmi     rts1
         MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_which_ctl
         beq     L5341
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        bne     L5340
+        bne     rts1
         lda     winfo_entrydlg_file_picker::vscroll
-        and     #$01
-        beq     L5340
-        jmp     L5469
+        and     #$01            ; vertical scroll enabled?
+        beq     rts1
+        jmp     handle_vscroll_click
 
-L5340:  rts
+rts1:   rts
 
 L5341:  lda     winfo_entrydlg_file_picker
         sta     screentowindow_window_id
@@ -286,10 +292,10 @@ L5341:  lda     winfo_entrydlg_file_picker
         lsr16   screentowindow_windowy
         lda     LD920
         cmp     screentowindow_windowy
-        beq     L5380
+        beq     :+
         jmp     L542F
 
-L5380:  jsr     desktop_main::detect_double_click
+:       jsr     desktop_main::detect_double_click
         beq     L5386
         rts
 
@@ -302,7 +308,7 @@ L5386:  ldx     LD920
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         jsr     jt_handle_ok
-        jmp     L5340
+        jmp     rts1
 
 L53B5:  and     #$7F
         pha
@@ -334,10 +340,10 @@ L53B5:  and     #$7F
         jsr     L5F0D
         jsr     L5F5B
         jsr     L6161
-        lda     #$00
-        jsr     L6227
+        lda     #0
+        jsr     scroll_clip_rect
         jsr     L61B1
-        jsr     L606D
+        jsr     draw_list_entries
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
@@ -368,25 +374,30 @@ L5457:  lda     LD920
         jmp     L5386
 
 L5468:  rts
+.endproc
 
-L5469:  lda     findcontrol_which_part
+;;; ============================================================
+
+.proc handle_vscroll_click
+        lda     findcontrol_which_part
         cmp     #MGTK::Part::up_arrow
-        bne     L5473
-        jmp     L550A
+        bne     :+
+        jmp     handle_line_up
 
-L5473:  cmp     #MGTK::Part::down_arrow
-        bne     L547A
-        jmp     L5533
+:       cmp     #MGTK::Part::down_arrow
+        bne     :+
+        jmp     handle_line_down
 
-L547A:  cmp     #MGTK::Part::page_up
-        bne     L5481
-        jmp     L54BA
+:       cmp     #MGTK::Part::page_up
+        bne     :+
+        jmp     handle_page_up
 
-L5481:  cmp     #MGTK::Part::page_down
-        bne     L5488
-        jmp     L54DF
+:       cmp     #MGTK::Part::page_down
+        bne     :+
+        jmp     handle_page_down
 
-L5488:  lda     #MGTK::Ctl::vertical_scroll_bar
+        ;; Thumb
+:       lda     #MGTK::Ctl::vertical_scroll_bar
         sta     trackthumb_params
         MGTK_RELAY_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_thumbmoved
@@ -398,84 +409,99 @@ L5488:  lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_stash
-        jsr     L6227
-        jsr     L606D
+        jsr     scroll_clip_rect
+        jsr     draw_list_entries
         rts
+.endproc
 
-L54BA:  lda     winfo_entrydlg_file_picker::vthumbpos
+        kLineDelta = 1
+        kPageDelta = 9
+
+.proc handle_page_up
+        lda     winfo_entrydlg_file_picker::vthumbpos
         sec
-        sbc     #$09
-        bpl     L54C4
-        lda     #$00
-L54C4:  sta     updatethumb_thumbpos
+        sbc     #kPageDelta
+        bpl     :+
+        lda     #0
+:       sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
-        jsr     L6227
-        jsr     L606D
+        jsr     scroll_clip_rect
+        jsr     draw_list_entries
         rts
+.endproc
 
-L54DF:  lda     winfo_entrydlg_file_picker::vthumbpos
+.proc handle_page_down
+        lda     winfo_entrydlg_file_picker::vthumbpos
         clc
-        adc     #$09
+        adc     #kPageDelta
         cmp     num_file_names
-        beq     L54EF
-        bcc     L54EF
+        beq     :+
+        bcc     :+
         lda     num_file_names
-L54EF:  sta     updatethumb_thumbpos
+:       sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
-        jsr     L6227
-        jsr     L606D
+        jsr     scroll_clip_rect
+        jsr     draw_list_entries
+        rts
+.endproc
+
+.proc handle_line_up
+        lda     winfo_entrydlg_file_picker::vthumbpos
+        bne     :+
         rts
 
-L550A:  lda     winfo_entrydlg_file_picker::vthumbpos
-        bne     L5510
-        rts
-
-L5510:  sec
-        sbc     #$01
+:       sec
+        sbc     #kLineDelta
         sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
-        jsr     L6227
-        jsr     L606D
-        jsr     L555F
-        jmp     L550A
+        jsr     scroll_clip_rect
+        jsr     draw_list_entries
+        jsr     check_arrow_repeat
+        jmp     handle_line_up
+.endproc
 
-L5533:  lda     winfo_entrydlg_file_picker::vthumbpos
+.proc handle_line_down
+        lda     winfo_entrydlg_file_picker::vthumbpos
         cmp     winfo_entrydlg_file_picker::vthumbmax
-        bne     L553C
+        bne     :+
         rts
 
-L553C:  clc
-        adc     #$01
+:       clc
+        adc     #kLineDelta
         sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
-        jsr     L6227
-        jsr     L606D
-        jsr     L555F
-        jmp     L5533
+        jsr     scroll_clip_rect
+        jsr     draw_list_entries
+        jsr     check_arrow_repeat
+        jmp     handle_line_down
+.endproc
 
-L555F:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
+;;; ============================================================
+
+.proc check_arrow_repeat
+        MGTK_RELAY_CALL MGTK::PeekEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
-        beq     L5576
+        beq     :+
         cmp     #MGTK::EventKind::drag
-        beq     L5576
+        beq     :+
         pla
         pla
         rts
 
-L5576:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+:       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_window_id
         cmp     winfo_entrydlg_file_picker
@@ -500,11 +526,12 @@ L5576:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         rts
 
 :       lda     findcontrol_which_part
-        cmp     #MGTK::Part::page_up
-        bcc     L55B9
+        cmp     #MGTK::Part::page_up ; up_arrow or down_arrow ?
+        bcc     :+                   ; Yes, continue
         pla
         pla
-L55B9:  rts
+:       rts
+.endproc
 
 ;;; ============================================================
 
@@ -569,9 +596,9 @@ L5618:  lda     #$00
         jsr     L5F5B
         jsr     L6161
         lda     #$00
-        jsr     L6227
+        jsr     scroll_clip_rect
         jsr     L61B1
-        jsr     L606D
+        jsr     draw_list_entries
         rts
 
 L565B:  .byte   0
@@ -586,9 +613,9 @@ L565C:  lda     #$FF
         jsr     L5F5B
         jsr     L6161
         lda     #$00
-        jsr     L6227
+        jsr     scroll_clip_rect
         jsr     L61B1
-        jsr     L606D
+        jsr     draw_list_entries
         jsr     jt_prep_path
         jsr     jt_redraw_input
         rts
@@ -619,9 +646,9 @@ L56A2:  jsr     L5F49
         jsr     L5F5B
         jsr     L6161
         lda     #$00
-        jsr     L6227
+        jsr     scroll_clip_rect
         jsr     L61B1
-        jsr     L606D
+        jsr     draw_list_entries
         pla
         sta     LD920
         bit     L56E2
@@ -970,7 +997,7 @@ L5C27:  ldx     num_file_names
         lda     LD920
         jsr     L6586
         jsr     L6163
-        jsr     L606D
+        jsr     draw_list_entries
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
@@ -1326,7 +1353,7 @@ L606C:  .byte   0
 
 ;;; ============================================================
 
-.proc L606D
+.proc draw_list_entries
         lda     winfo_entrydlg_file_picker
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, winfo_entrydlg_file_picker::cliprect
@@ -1416,7 +1443,7 @@ L6181:  lda     num_file_names
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         lda     L61B0
         sta     updatethumb_thumbpos
-        jsr     L6227
+        jsr     scroll_clip_rect
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
@@ -1466,7 +1493,7 @@ L6226:  .byte   0
 
 ;;; ============================================================
 
-.proc L6227
+.proc scroll_clip_rect
         sta     L6273
         clc
         adc     #$09

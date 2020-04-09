@@ -5,7 +5,8 @@
 .proc selector_overlay
         .org $7000
 
-L7000:  stx     L73A9
+.proc L7000
+        stx     L73A9
         sty     L73AA
         jsr     common_overlay::create_common_dialog
         jsr     L7101
@@ -46,7 +47,7 @@ L7056:  jsr     common_overlay::L5F5B
         jsr     common_overlay::L6586
 L706A:  jsr     common_overlay::L6163
         jsr     common_overlay::L61B1
-        jsr     common_overlay::L606D
+        jsr     common_overlay::draw_list_entries
         lda     path_buf0
         bne     L707B
         jsr     common_overlay::jt_prep_path
@@ -58,16 +59,17 @@ L707B:  copy    #1, path_buf2
         copy    #' ', path_buf2+1
         lda     #$FF
         sta     LD8EC
-        jmp     common_overlay::L5106
-
-;;; ============================================================
+        jmp     common_overlay::event_loop
 
 L709D:  .res 16, 0
 
+.endproc
+
 ;;; ============================================================
 
 
-L70AD:  ldx     jt_pathname
+.proc L70AD
+        ldx     jt_pathname
 L70B0:  lda     jt_pathname+1,x
         sta     common_overlay::jump_table,x
         dex
@@ -93,8 +95,12 @@ L70B0:  lda     jt_pathname+1,x
         copy16  #L73AB, common_overlay::L531B+1
         copy16  #L74F4, common_overlay::L59B9::key_meta_digit+1
         rts
+.endproc
 
-L7101:  lda     winfo_entrydlg
+;;; ============================================================
+
+.proc L7101
+        lda     winfo_entrydlg
         jsr     common_overlay::set_port_for_window
         lda     path_buf0
         beq     L7116
@@ -131,6 +137,7 @@ L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -170,7 +177,8 @@ jt_entry_name:  .byte   $29
 
 ;;; ============================================================
 
-L725D:  copy    #1, path_buf2
+.proc L725D
+        copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     common_overlay::jt_redraw_input
         ldx     jt_entry_name
@@ -214,8 +222,12 @@ L72BF:  copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
         jsr     common_overlay::jt_redraw_input
         rts
+.endproc
 
-L72CD:  addr_call common_overlay::L647C, path_buf0
+;;; ============================================================
+
+.proc L72CD
+        addr_call common_overlay::L647C, path_buf0
         bne     L72E2
         lda     path_buf1
         beq     L72E7
@@ -243,8 +255,12 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         ldx     L73A9
         ldy     L73AA
         return  #$00
+.endproc
 
-L732F:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
+;;; ============================================================
+
+.proc L732F
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
@@ -255,8 +271,12 @@ L732F:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         ldx     common_overlay::stash_stack
         txs
         return  #$FF
+.endproc
 
-L736C:  copy    #1, path_buf2
+;;; ============================================================
+
+.proc L736C
+        copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     common_overlay::jt_redraw_input
         ldx     jt_pathname
@@ -277,76 +297,95 @@ L737C:  lda     jt_pathname+1,x
         lda     LD8F1
         sta     LD8F0
         rts
+.endproc
+
+;;; ============================================================
 
 L73A9:  .byte   0
 L73AA:  .byte   0
 
-L73AB:  MGTK_RELAY_CALL MGTK::InRect, rect_run_list_ctrl
+;;; ============================================================
+
+.proc L73AB
+        MGTK_RELAY_CALL MGTK::InRect, rect_run_list_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     L73FE
+        jmp     click_run_list_ctrl
 :       MGTK_RELAY_CALL MGTK::InRect, rect_other_run_list_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     L7413
+        jmp     click_other_run_list_ctrl
 :       MGTK_RELAY_CALL MGTK::InRect, rect_at_first_boot_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     L7428
+        jmp     click_at_first_boot_ctrl
 :       MGTK_RELAY_CALL MGTK::InRect, rect_at_first_use_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     L743D
+        jmp     click_at_first_use_ctrl
 :       MGTK_RELAY_CALL MGTK::InRect, rect_never_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     L7452
+        jmp     click_never_ctrl
 :       return  #0
+.endproc
 
-L73FE:  lda     L73A9
+.proc click_run_list_ctrl
+        lda     L73A9
         cmp     #1
-        beq     L7410
+        beq     :+
         jsr     L7467
         lda     #1
         sta     L73A9
         jsr     L7467
-L7410:  return  #$FF
+:       return  #$FF
+.endproc
 
-L7413:  lda     L73A9
+.proc click_other_run_list_ctrl
+        lda     L73A9
         cmp     #2
-        beq     L7425
+        beq     :+
         jsr     L7467
         lda     #2
         sta     L73A9
         jsr     L7467
-L7425:  return  #$FF
+:       return  #$FF
+.endproc
 
-L7428:  lda     L73AA
+.proc click_at_first_boot_ctrl
+        lda     L73AA
         cmp     #1
-        beq     L743A
+        beq     :+
         jsr     L747B
         lda     #1
         sta     L73AA
         jsr     L747B
-L743A:  return  #$FF
+:       return  #$FF
+.endproc
 
-L743D:  lda     L73AA
+.proc click_at_first_use_ctrl
+        lda     L73AA
         cmp     #2
-        beq     L744F
+        beq     :+
         jsr     L747B
         lda     #2
         sta     L73AA
         jsr     L747B
-L744F:  return  #$FF
+:       return  #$FF
+.endproc
 
-L7452:  lda     L73AA
+.proc click_never_ctrl
+        lda     L73AA
         cmp     #3
-        beq     L7464
+        beq     :+
         jsr     L747B
         lda     #3
         sta     L73AA
         jsr     L747B
-L7464:  return  #$FF
+:       return  #$FF
+.endproc
+
+;;; ============================================================
 
 L7467:  cmp     #1
         bne     L7473
@@ -428,23 +467,23 @@ L7500:  lda     event_key
         and     #CHAR_MASK
         cmp     #'1'
         bne     L750C
-        jmp     L73FE
+        jmp     click_run_list_ctrl
 
 L750C:  cmp     #'2'
         bne     L7513
-        jmp     L7413
+        jmp     click_other_run_list_ctrl
 
 L7513:  cmp     #'3'
         bne     L751A
-        jmp     L7428
+        jmp     click_at_first_boot_ctrl
 
 L751A:  cmp     #'4'
         bne     L7521
-        jmp     L743D
+        jmp     click_at_first_use_ctrl
 
 L7521:  cmp     #'5'
         bne     L7528
-        jmp     L7452
+        jmp     click_never_ctrl
 
 L7528:  rts
 

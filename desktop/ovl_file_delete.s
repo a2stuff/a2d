@@ -11,13 +11,13 @@ L7000:  jsr     common_overlay::create_common_dialog
         jsr     common_overlay::L5F5B
         jsr     common_overlay::L6161
         jsr     common_overlay::L61B1
-        jsr     common_overlay::L606D
+        jsr     common_overlay::draw_list_entries
         jsr     L7026
         jsr     common_overlay::jt_prep_path
         jsr     common_overlay::jt_redraw_input
         lda     #$FF
         sta     LD8EC
-        jmp     common_overlay::L5106
+        jmp     common_overlay::event_loop
 
 L7026:  ldx     jt_filename
 L7029:  lda     jt_filename+1,x

@@ -11,12 +11,12 @@ L7000:  jsr     common_overlay::create_common_dialog
         jsr     common_overlay::L5F5B
         jsr     common_overlay::L6161
         jsr     common_overlay::L61B1
-        jsr     common_overlay::L606D
+        jsr     common_overlay::draw_list_entries
         jsr     L7026
         jsr     common_overlay::jt_prep_path
         jsr     common_overlay::jt_redraw_input
         copy    #$FF, LD8EC
-        jmp     common_overlay::L5106
+        jmp     common_overlay::event_loop
 
 L7026:  ldx     jt_source_filename
 L7029:  lda     jt_source_filename+1,x
@@ -114,7 +114,7 @@ L70F1:  lda     #1
         jsr     common_overlay::L6161
         jsr     common_overlay::L61B1
 
-        jsr     common_overlay::L606D
+        jsr     common_overlay::draw_list_entries
         ldx     common_overlay::path_buf
 L7137:  lda     common_overlay::path_buf,x
         sta     path_buf1,x
@@ -228,11 +228,11 @@ L7209:  lda     jt_source_filename+1,x
         bpl     L726D
         jsr     common_overlay::device_on_line
         lda     #0
-        jsr     common_overlay::L6227
+        jsr     common_overlay::scroll_clip_rect
         jsr     common_overlay::L5F5B
         jsr     common_overlay::L6161
         jsr     common_overlay::L61B1
-        jsr     common_overlay::L606D
+        jsr     common_overlay::draw_list_entries
         jsr     common_overlay::jt_redraw_input
         jmp     L7295
 
@@ -240,7 +240,7 @@ L726D:  lda     common_overlay::path_buf
         bne     L7281
 L7272:  jsr     common_overlay::device_on_line
         lda     #$00
-        jsr     common_overlay::L6227
+        jsr     common_overlay::scroll_clip_rect
         jsr     common_overlay::L5F5B
         lda     #$FF
         bne     L7289
@@ -250,7 +250,7 @@ L7281:  jsr     common_overlay::L5F5B
 L7289:  sta     LD920
         jsr     common_overlay::L6163
         jsr     common_overlay::L61B1
-        jsr     common_overlay::L606D
+        jsr     common_overlay::draw_list_entries
 L7295:  rts
 
 ;;; ============================================================
