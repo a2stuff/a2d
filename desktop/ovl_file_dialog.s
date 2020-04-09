@@ -79,7 +79,8 @@ L5105:  .byte   0               ; ??? something about the picker
 
 ;;; ============================================================
 
-L5106:  bit     LD8EC
+.proc L5106
+        bit     LD8EC
         bpl     :+
 
         dec     prompt_ip_counter
@@ -132,12 +133,14 @@ L5196:  jsr     set_cursor_pointer
 L5199:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         jmp     L5106
+.endproc
 
 L51AE:  .byte   0
 
 ;;; ============================================================
 
-L51AF:  MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+.proc L51AF
+        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
         bne     :+
         rts
@@ -243,14 +246,22 @@ L52F7:  jmp     set_up_ports
 :       jsr     jt_handle_click
         rts
 .endproc
+.endproc
 
-set_up_ports:
+;;; ============================================================
+
+.proc set_up_ports
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
+.endproc
+
+;;; ============================================================
 
 L531B:  jsr     noop
         rts
+
+;;; ============================================================
 
 L531F:  bit     L5105
         bmi     L5340
@@ -508,6 +519,8 @@ L55B9:  rts
 done:   rts
 .endproc
 
+;;; ============================================================
+
 .proc set_cursor_insertion
         bit     cursor_ip_flag
         bmi     done
@@ -524,7 +537,8 @@ cursor_ip_flag:                 ; high bit set when cursor is IP
 
 ;;; ============================================================
 
-L5607:  ldx     LD920
+.proc L5607
+        ldx     LD920
         lda     file_list_index,x
         and     #$7F
         pha
@@ -561,6 +575,9 @@ L5618:  lda     #$00
         rts
 
 L565B:  .byte   0
+.endproc
+
+;;; ============================================================
 
 L565C:  lda     #$FF
         sta     LD920
@@ -1309,7 +1326,8 @@ L606C:  .byte   0
 
 ;;; ============================================================
 
-L606D:  lda     winfo_entrydlg_file_picker
+.proc L606D
+        lda     winfo_entrydlg_file_picker
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, winfo_entrydlg_file_picker::cliprect
         lda     #$10
@@ -1369,13 +1387,16 @@ L6110:  inc     L6128
 
 L6127:  .byte   0
 L6128:  .byte   0
+.endproc
 
         PAD_TO $6161            ; Maintain previous addresses
 
 ;;; ============================================================
 
 L6161:  lda     #$00
-L6163:  sta     L61B0
+
+.proc L6163
+        sta     L61B0
         lda     num_file_names
         cmp     #$0A
         bcs     L6181
@@ -1402,10 +1423,12 @@ L6181:  lda     num_file_names
         rts
 
 L61B0:  .byte   0
+.endproc
 
 ;;; ============================================================
 
-L61B1:  lda     winfo_entrydlg
+.proc L61B1
+        lda     winfo_entrydlg
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D9C8
         copy16  #path_buf, $06
@@ -1439,10 +1462,12 @@ L61E6:  inx
         rts
 
 L6226:  .byte   0
+.endproc
 
 ;;; ============================================================
 
-L6227:  sta     L6273
+.proc L6227
+        sta     L6273
         clc
         adc     #$09
         cmp     num_file_names
@@ -1479,9 +1504,12 @@ L624A:  ldx     #$00
         rts
 
 L6273:  .byte   0
+.endproc
 
+;;; ============================================================
 
-L6274:  ldx     #0
+.proc L6274
+        ldx     #0
         stx     L62C7
         asl     a
         rol     L62C7
@@ -1507,6 +1535,7 @@ L6274:  ldx     #0
         rts
 
 L62C7:  .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -1519,7 +1548,8 @@ L62C7:  .byte   0
 
 ;;; ============================================================
 
-L62DE:  lda     #'Z'
+.proc L62DE
+        lda     #'Z'
         ldx     #15
 :       sta     L63C2,x
         dex
@@ -1654,10 +1684,12 @@ L6451:  ldx     #$00
         rts
 
 L647B:  .byte   0
+.endproc
 
 ;;; ============================================================
 
-L647C:  stax    $06
+.proc L647C
+        stax    $06
         ldy     #$01
         lda     ($06),y
         cmp     #'/'
@@ -1711,7 +1743,12 @@ L64D8:  dey
 L64DE:  return  #$FF
 
 L64E1:  .byte   0
-L64E2:  lda     num_file_names
+.endproc
+
+;;; ============================================================
+
+.proc L64E2
+        lda     num_file_names
         bne     L64E8
 L64E7:  rts
 
@@ -1731,10 +1768,15 @@ L64F5:  lda     L6515
         jmp     L64F5
 
 L6515:  .byte   0
+.endproc
 
 ;;; ============================================================
+;;; Find index to filename in file_list_index.
+;;; Input: $06 = ptr to filename
+;;; Output: A = index, or $FF if not found
 
-L6516:  stax    $06
+.proc L6516
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -1782,10 +1824,12 @@ L656D:  dex
 
 L6575:  .byte   0
 L6576:  .res 16, 0
+.endproc
 
 ;;; ============================================================
 
-L6586:  bpl     L658B
+.proc L6586
+        bpl     L658B
 L6588:  return  #$00
 
 L658B:  cmp     #$09
@@ -1793,6 +1837,7 @@ L658B:  cmp     #$09
         sec
         sbc     #$08
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -2755,7 +2800,10 @@ flag:   .byte   0
 L6E9F:  lda     #$FF
         bmi     L6EA5
 L6EA3:  lda     #$00
-L6EA5:  bmi     L6EB6
+
+
+.proc L6EA5
+        bmi     L6EB6
         ldx     path_buf0
 L6EAA:  lda     path_buf0,x
         sta     split_buf,x
@@ -2825,6 +2873,7 @@ L6F38:  jsr     L5F49
 
 L6F3C:  .byte   0
 L6F3D:  .byte   0
+.endproc
 
 ;;; ============================================================
 
