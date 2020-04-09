@@ -1895,14 +1895,14 @@ app_mask:
 ;;; ============================================================
 
 .scope settings
-        ASSERT_ADDRESS DeskTop::Settings::address
+        ASSERT_ADDRESS ::SETTINGS
 
-        ASSERT_ADDRESS DeskTop::Settings::version_major
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::version_major
         .byte   kDeskTopVersionMajor
-        ASSERT_ADDRESS DeskTop::Settings::version_minor
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::version_minor
         .byte   kDeskTopVersionMinor
 
-        ASSERT_ADDRESS DeskTop::Settings::pattern
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::pattern
         .byte   %01010101
         .byte   %10101010
         .byte   %01010101
@@ -1912,15 +1912,15 @@ app_mask:
         .byte   %01010101
         .byte   %10101010
 
-        ASSERT_ADDRESS DeskTop::Settings::dblclick_speed
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::dblclick_speed
         .word   0               ; $12C * 1, * 4, or * 32, 0 if not set
 
-        ASSERT_ADDRESS DeskTop::Settings::ip_blink_speed
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::ip_blink_speed
         .byte   60              ; 120, 60 or 30; lower is faster
 
         ;; Reserved for future use...
 
-        PAD_TO DeskTop::Settings::address + DeskTop::Settings::length
+        PAD_TO ::SETTINGS + .sizeof(DeskTopSettings)
 .endscope
 
         ASSERT_ADDRESS $10000

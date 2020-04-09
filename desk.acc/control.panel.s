@@ -343,9 +343,9 @@ dblclick_selection:
         ;; Computed counter values
 kDblClickSpeedTableSize = 3
 dblclick_speed_table:
-        .word   DeskTop::Settings::kDefaultDblClickSpeed * 1
-        .word   DeskTop::Settings::kDefaultDblClickSpeed * 4
-        .word   DeskTop::Settings::kDefaultDblClickSpeed * 16
+        .word   kDefaultDblClickSpeed * 1
+        .word   kDefaultDblClickSpeed * 4
+        .word   kDefaultDblClickSpeed * 16
 
 str_dblclick_speed:
         DEFINE_STRING "Double-Click Speed"
@@ -916,10 +916,10 @@ lasty:  .byte   0
 .proc init_dblclick
         ;; Find matching index in word table, or 0
         ldx     #kDblClickSpeedTableSize * 2
-loop:   lda     DeskTop::Settings::dblclick_speed
+loop:   lda     SETTINGS + DeskTopSettings::dblclick_speed
         cmp     dblclick_speed_table-2,x
         bne     next
-        lda     DeskTop::Settings::dblclick_speed+1
+        lda     SETTINGS + DeskTopSettings::dblclick_speed+1
         cmp     dblclick_speed_table-2+1,x
         bne     next
         ;; Found a match
@@ -942,7 +942,7 @@ next:   dex
         dex
         dex                     ; 0, 2 or 4
 
-        copy16  dblclick_speed_table,x, DeskTop::Settings::dblclick_speed
+        copy16  dblclick_speed_table,x, SETTINGS + DeskTopSettings::dblclick_speed
 
         MGTK_CALL MGTK::GetWinPort, winport_params
         MGTK_CALL MGTK::SetPort, grafport
@@ -969,7 +969,7 @@ next:   dex
 
 .proc handle_pattern_click
         MGTK_CALL MGTK::SetDeskPat, pattern
-        COPY_STRUCT MGTK::Pattern, pattern, DeskTop::Settings::pattern
+        COPY_STRUCT MGTK::Pattern, pattern, SETTINGS + DeskTopSettings::pattern
 
         MGTK_CALL MGTK::OpenWindow, winfo_fullscreen
         MGTK_CALL MGTK::CloseWindow, winfo_fullscreen
@@ -1604,15 +1604,15 @@ kIPBlinkSpeedTableSize = 3
 
 ipblink_speed_table:
         .byte   0
-        .byte   DeskTop::Settings::kDefaultIPBlinkSpeed * 2
-        .byte   DeskTop::Settings::kDefaultIPBlinkSpeed * 1
-        .byte   DeskTop::Settings::kDefaultIPBlinkSpeed * 1/2
+        .byte   kDefaultIPBlinkSpeed * 2
+        .byte   kDefaultIPBlinkSpeed * 1
+        .byte   kDefaultIPBlinkSpeed * 1/2
 
 ipblink_counter:
         .byte   120
 
 .proc init_ipblink
-        lda     DeskTop::Settings::ip_blink_speed
+        lda     SETTINGS + DeskTopSettings::ip_blink_speed
         ldx     #kIPBlinkSpeedTableSize
 :       cmp     ipblink_speed_table-1,x
         beq     done
@@ -1628,7 +1628,7 @@ done:   stx     ipblink_selection
 
         tax
         lda     ipblink_speed_table-1,x
-        sta     DeskTop::Settings::ip_blink_speed
+        sta     SETTINGS + DeskTopSettings::ip_blink_speed
         sta     ipblink_counter
 
         MGTK_CALL MGTK::GetWinPort, winport_params
@@ -1644,7 +1644,7 @@ done:   stx     ipblink_selection
         lda     ipblink_counter
         bne     done
 
-        copy    DeskTop::Settings::ip_blink_speed, ipblink_counter
+        copy    SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_counter
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, winport_params
         cmp     #MGTK::Error::window_obscured
@@ -1667,18 +1667,18 @@ filename_buffer:
         .res 65
 
 write_buffer:
-        .res DeskTop::Settings::length
+        .res .sizeof(DeskTopSettings)
 
         DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_WRITE_PARAMS write_params, write_buffer, DeskTop::Settings::length
+        DEFINE_WRITE_PARAMS write_params, write_buffer, .sizeof(DeskTopSettings)
         DEFINE_CLOSE_PARAMS close_params
 
 .proc save_settings
         ;; Run from Main, but with LCBANK1 in
 
         ;; Copy from LCBANK to somewhere ProDOS can read.
-        COPY_BYTES DeskTop::Settings::length, DeskTop::Settings::address, write_buffer
+        COPY_STRUCT DeskTopSettings, SETTINGS, write_buffer
 
         sta     ALTZPOFF        ; Main ZP, ROM in, like ProDOS MLI wants.
         lda     ROMIN2

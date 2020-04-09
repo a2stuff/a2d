@@ -406,10 +406,8 @@ max_page:
         io_buf := $1A00
         read_buf := $1E00
 
-        ;; DeskTop::Settings::address
-
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
-        DEFINE_READ_PARAMS read_params, read_buf, DeskTop::Settings::length
+        DEFINE_READ_PARAMS read_params, read_buf, .sizeof(DeskTopSettings)
         DEFINE_CLOSE_PARAMS close_params
 
 filename:
@@ -426,10 +424,10 @@ start:
         bcs     close
 
         ;; Check version bytes; ignore on mismatch
-        lda     read_buf + (DeskTop::Settings::version_major - DeskTop::Settings::address)
+        lda     read_buf + DeskTopSettings::version_major
         cmp     #kDeskTopVersionMajor
         bne     close
-        lda     read_buf + (DeskTop::Settings::version_minor - DeskTop::Settings::address)
+        lda     read_buf + DeskTopSettings::version_minor
         cmp     #kDeskTopVersionMinor
         bne     close
 
@@ -438,7 +436,7 @@ start:
         lda     LCBANK1
         lda     LCBANK1
 
-        COPY_BYTES DeskTop::Settings::length, read_buf, DeskTop::Settings::address
+        COPY_STRUCT DeskTopSettings, read_buf, SETTINGS
 
         sta     ALTZPOFF        ; Bank in Main ZP/LC and ROM
         lda     ROMIN2

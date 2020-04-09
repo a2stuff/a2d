@@ -52,7 +52,7 @@ routine_table:  .addr   $7000, $7000, $7000
         sta     L5104
         sta     L5103
         sta     L5105
-        lda     DeskTop::Settings::ip_blink_speed
+        lda     SETTINGS + DeskTopSettings::ip_blink_speed
         sta     prompt_ip_counter
         lda     #$FF
         sta     LD920
@@ -86,7 +86,7 @@ L5105:  .byte   0               ; ??? something about the picker
         dec     prompt_ip_counter
         bne     :+
         jsr     jt_blink_ip
-        copy    DeskTop::Settings::ip_blink_speed, prompt_ip_counter
+        copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind

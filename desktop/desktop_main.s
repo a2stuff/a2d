@@ -13301,7 +13301,7 @@ dialog_param_addr:
         sta     format_erase_overlay_flag
         sta     cursor_ip_flag
 
-        copy    DeskTop::Settings::ip_blink_speed, prompt_ip_counter
+        copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
         copy16  #rts1, jump_relay+1
         jsr     set_cursor_pointer
@@ -13322,7 +13322,7 @@ dialog_param_addr:
         dec     prompt_ip_counter
         bne     :+
         jsr     redraw_prompt_insertion_point
-        copy    DeskTop::Settings::ip_blink_speed, prompt_ip_counter
+        copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
         ;; Dispatch event types - mouse down, key press
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -14715,7 +14715,7 @@ set_penmode_xor2:
         dex
         bpl     :-
 
-        copy16  DeskTop::Settings::dblclick_speed, counter
+        copy16  SETTINGS + DeskTopSettings::dblclick_speed, counter
 
         ;; Decrement counter, bail if time delta exceeded
 loop:   dec16   counter
@@ -15966,18 +15966,18 @@ done:
         bne     is_iie
         copy    #$80, is_laser128_flag
         lda     #$FD ; Assume accelerated?
-        ldxy    #DeskTop::Settings::kDefaultDblClickSpeed*4
+        ldxy    #kDefaultDblClickSpeed*4
         jmp     end
 
         ;; IIe (or IIe Option Card)
 is_iie: lda     #$96
-        ldxy    #DeskTop::Settings::kDefaultDblClickSpeed*1
+        ldxy    #kDefaultDblClickSpeed*1
         jmp     end
 
         ;; IIgs
 is_iigs:
         lda     #$FD
-        ldxy    #DeskTop::Settings::kDefaultDblClickSpeed*4
+        ldxy    #kDefaultDblClickSpeed*4
         jmp     end
 
         ;; IIc or IIc+
@@ -15986,7 +15986,7 @@ is_iic: lda     id_FBBF            ; ROM version
         bne     :+
         copy    #$80, is_iic_plus_flag
 :       lda     #$FA
-        ldxy    #DeskTop::Settings::kDefaultDblClickSpeed*4
+        ldxy    #kDefaultDblClickSpeed*4
         jmp     end
 
 id_FB1E: .byte   0
@@ -15998,10 +15998,10 @@ end:
         sta     machine_type
 
         ;; Only set if not previously configured
-        lda     DeskTop::Settings::dblclick_speed
-        ora     DeskTop::Settings::dblclick_speed+1
+        lda     SETTINGS + DeskTopSettings::dblclick_speed
+        ora     SETTINGS + DeskTopSettings::dblclick_speed+1
         bne     :+
-        stxy    DeskTop::Settings::dblclick_speed
+        stxy    SETTINGS + DeskTopSettings::dblclick_speed
 :
 .endscope
 
@@ -16045,7 +16045,7 @@ end:
 ;;; Initialize MGTK
 
 .scope
-        MGTK_RELAY_CALL MGTK::SetDeskPat, DeskTop::Settings::pattern
+        MGTK_RELAY_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
         jsr     desktop_main::set_mono_mode
         MGTK_RELAY_CALL MGTK::SetMenu, splash_menu

@@ -216,21 +216,17 @@ DEFAULT_FONT := $8800
 ;;; ============================================================
 ;;; Internals - Settings (modified by Control Panel)
 
-.scope DeskTop
-.scope Settings
-        address := $FF80
-        length  = $80
+SETTINGS        := $FF80
+kDefaultDblClickSpeed   = $12C
+kDefaultIPBlinkSpeed    = 60
 
-        version_major   := $FF80
-        version_minor   := $FF81
+.struct DeskTopSettings
+        version_major   .byte
+        version_minor   .byte
+        pattern         .res 8
+        dblclick_speed  .word
+        ip_blink_speed  .byte
 
-        pattern         := $FF82 ; .res 8
-
-        dblclick_speed  := $FF8A ; .word
-        kDefaultDblClickSpeed = $12C
-
-        ip_blink_speed  := $FF8C ; .byte
-        kDefaultIPBlinkSpeed = 60
-
-.endscope
-.endscope
+        reserved        .res 115
+.endstruct
+        .assert .sizeof(DeskTopSettings) = $80, error, .sprintf("Expected $80, was $%0X", .sizeof(DeskTopSettings))
