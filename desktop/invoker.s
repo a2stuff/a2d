@@ -1,6 +1,5 @@
-
 ;;; ============================================================
-;;; Segment loaded into MAIN $290-$3EF
+;;; Invoker - loaded into MAIN $290-$3EF
 ;;; ============================================================
 
 ;;; Used to invoke other programs (system, binary, BASIC)
@@ -13,7 +12,8 @@ start:
 
 ;;; ============================================================
 
-        default_start_address := $2000 ; for SYS files
+        PRODOS_SYS_START := $2000 ; for SYS files
+        PRODOS_INTERPRETER_BUF := $2006
 
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
 
@@ -26,7 +26,7 @@ interpreter_flag:
         .byte   0
 
         DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
-        DEFINE_READ_PARAMS read_params, default_start_address, $9F00
+        DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI - PRODOS_SYS_START
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
 
@@ -39,26 +39,29 @@ str_basix_system:
 
 ;;; ============================================================
 
-set_prefix:
+.proc set_prefix
         MLI_CALL SET_PREFIX, set_prefix_params
         beq     :+
         pla
         pla
         jmp     exit
 :       rts
+.endproc
 
 ;;; ============================================================
 
-open:   MLI_CALL OPEN, open_params
+.proc open
+        MLI_CALL OPEN, open_params
         rts
+.endproc
 
 ;;; ============================================================
 
 begin:  lda     ROMIN2
 
-        copy16  #default_start_address, jmp_addr
+        copy16  #PRODOS_SYS_START, jmp_addr
 
-        ;; clear system memory bitmap
+        ;; Clear system memory bitmap
         ldx     #BITMAP_SIZE-2
         lda     #0
 :       sta     BITMAP,x
@@ -92,6 +95,7 @@ not_s16:
         lda     get_info_params::aux_type+1
         sta     jmp_addr+1
         sta     read_params::data_buffer+1
+
         cmp     #$0C            ; If loading at page < $0C
         bcs     :+
         lda     #$BB            ; ... use a high address buffer ($BB)
@@ -177,7 +181,7 @@ do_read:
         jsr     set_prefix
         ldy     INVOKER_FILENAME
 :       lda     INVOKER_FILENAME,y
-        sta     $2006,y
+        sta     PRODOS_INTERPRETER_BUF,y         ; ProDOS interpreter protocol
         dey
         bpl     :-
 
@@ -190,7 +194,7 @@ update_stack:
         jsr     update_bitmap
 
         jmp_addr := *+1
-        jmp     default_start_address
+        jmp     PRODOS_SYS_START
 
 quit_call:
         MLI_CALL QUIT, quit_params
@@ -206,10 +210,10 @@ update_bitmap:
 exit:   rts
 
 
-        ;; Pad to $160 bytes
-        PAD_TO $3F0
-
 .endproc ; invoker
 
         invoker_str_basix_system := invoker::str_basix_system
         invoker_kBSOffset := invoker::kBSOffset
+
+        ;; Pad to $160 bytes
+        PAD_TO $3F0
