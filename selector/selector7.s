@@ -1679,20 +1679,6 @@ LAE69:  ldx     num_files_in_dir
 
 ;;; ============================================================
 
-.proc MLI_WRAPPER
-        sty     @call
-        stax    @call + 1
-        php
-        sei
-        @call := *+3
-        MLI_CALL $00, dummy0000
-        plp
-        and     #$FF
-        rts
-.endproc
-
-;;; ============================================================
-
 noop:   rts
 
 ;;; ============================================================
@@ -1890,7 +1876,7 @@ LB03E:  .byte   0
         lda     DEVLST,x
         and     #$F0
         sta     on_line_params::unit_num
-        yax_call MLI_WRAPPER, ON_LINE, on_line_params
+        MLI_CALL ON_LINE, on_line_params
         lda     buf_on_line
         and     #$0F
         sta     buf_on_line
@@ -1922,7 +1908,7 @@ LB094:  rts
 .proc LB095
         lda     #$00
         sta     LB0D5
-        yax_call MLI_WRAPPER, OPEN, open_params
+        MLI_CALL OPEN, open_params
         beq     LB0B5
         jsr     LB051
         lda     #$FF
@@ -1934,7 +1920,7 @@ LB094:  rts
 LB0B5:  lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        yax_call MLI_WRAPPER, READ, read_params
+        MLI_CALL READ, read_params
         beq     LB0D4
         jsr     LB051
         lda     #$FF
@@ -2063,7 +2049,7 @@ LB1C4:  inc     LB226
         lda     LB225
         cmp     num_files_in_dir
         bne     LB1F2
-LB1CF:  yax_call MLI_WRAPPER, CLOSE, close_params
+LB1CF:  MLI_CALL CLOSE, close_params
         bit     LA447
         bpl     :+
         lda     LA448
@@ -2090,7 +2076,7 @@ LB1F2:  lda     LB226
         sta     $07
         jmp     LB14C
 
-LB20B:  yax_call MLI_WRAPPER, READ, read_params
+LB20B:  MLI_CALL READ, read_params
         copy16  #dir_read_buf+$04, $06
         lda     #$00
         sta     LB226

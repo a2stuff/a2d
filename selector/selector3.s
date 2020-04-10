@@ -29,14 +29,6 @@
 str_selector:
         PASCAL_STRING "Selector"
 
-.macro  WRAPPED_MLI_CALL op, params
-        php
-        sei
-        MLI_CALL op, params
-        plp
-        and     #$FF            ; restore Z flag
-.endmacro
-
 start:
         ;; Clear ProDOS memory bitmap
         lda     #0
@@ -45,8 +37,8 @@ start:
         dex
         bpl     :-
 
-        ;; Open up Selectot itself
-        WRAPPED_MLI_CALL OPEN, open_params
+        ;; Open up Selector itself
+        MLI_CALL OPEN, open_params
         beq     L2049
         brk
 
@@ -57,16 +49,16 @@ L2049:  lda     open_params::ref_num
         sta     read_params3::ref_num
 
         ;; Read various segments into final or temp locations
-        WRAPPED_MLI_CALL SET_MARK, set_mark_params
+        MLI_CALL SET_MARK, set_mark_params
         beq     :+
         brk
-:       WRAPPED_MLI_CALL READ, read_params1
+:       MLI_CALL READ, read_params1
         beq     :+
         brk
-:       WRAPPED_MLI_CALL READ, read_params2
+:       MLI_CALL READ, read_params2
         beq     :+
         brk
-:       WRAPPED_MLI_CALL READ, read_params3
+:       MLI_CALL READ, read_params3
         beq     :+
         brk
 :
@@ -86,7 +78,7 @@ L2049:  lda     open_params::ref_num
         sta     ALTZPOFF
         sta     ROMIN2
 
-        WRAPPED_MLI_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_params
 
         ;; Invoke the Selector application
         jmp     START

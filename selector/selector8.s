@@ -120,14 +120,14 @@ LA2C5:  ldx     LA2B5
 LA2D3:  lda     #$00
         sta     LA208
         sta     LA2B6
-        yax_call selector5::MLI_WRAPPER, OPEN, open_params
+        MLI_CALL OPEN, open_params
         beq     LA2E9
         jmp     handle_error_code
 
 LA2E9:  lda     open_params::ref_num
         sta     LA209
         sta     read_params::ref_num
-        yax_call selector5::MLI_WRAPPER, READ, read_params
+        MLI_CALL READ, read_params
         beq     LA300
         jmp     handle_error_code
 
@@ -136,7 +136,7 @@ LA300:  jsr     LA319
 
 LA304:  lda     LA209
         sta     close_params::ref_num
-        yax_call selector5::MLI_WRAPPER, CLOSE, close_params
+        MLI_CALL CLOSE, close_params
         beq     LA318
         jmp     handle_error_code
 
@@ -145,7 +145,7 @@ LA318:  rts
 LA319:  inc     LA208
         lda     LA209
         sta     read_params2::ref_num
-        yax_call selector5::MLI_WRAPPER, READ, read_params2
+        MLI_CALL READ, read_params2
         beq     LA330
         jmp     handle_error_code
 
@@ -157,7 +157,7 @@ LA330:  inc     LA2B6
         sta     LA2B6
         lda     LA209
         sta     read_params3::ref_num
-        yax_call selector5::MLI_WRAPPER, READ, read_params3
+        MLI_CALL READ, read_params3
         beq     LA354
         jmp     handle_error_code
 
@@ -250,7 +250,7 @@ LA3F8           := * + 1
         lda     #$FF
         sta     LA4F9
         jsr     LA7D9
-        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     LA41B
         jmp     handle_error_code
 
@@ -272,7 +272,7 @@ LA44F:  iny
         cpy     LA1F6
         bne     LA44F
         stx     pathname_dst
-        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         cmp     #ERR_FILE_NOT_FOUND
         beq     LA475
         cmp     #ERR_VOL_NOT_FOUND
@@ -281,7 +281,7 @@ LA44F:  iny
         beq     LA475
         rts
 
-LA475:  yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+LA475:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA491
         cmp     #ERR_VOL_NOT_FOUND
         beq     LA488
@@ -326,7 +326,7 @@ LA4C3:  lda     get_file_info_params2,y
         bne     LA4DB
         lda     #$0D
         sta     create_params::storage_type
-LA4DB:  yax_call selector5::MLI_WRAPPER, CREATE, create_params
+LA4DB:  MLI_CALL CREATE, create_params
         beq     LA4E9
         jmp     handle_error_code
 
@@ -358,7 +358,7 @@ LA4FC:  jmp     LA7C0
         bne     LA536
         jsr     LA75D
         jsr     draw_window_content_ep2
-        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+        MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA528
         jmp     handle_error_code
 
@@ -377,7 +377,7 @@ LA528:  jsr     LA79B
 LA536:  jsr     LA79B
         jsr     LA75D
         jsr     draw_window_content_ep2
-        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+        MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA54D
         jmp     handle_error_code
 
@@ -400,14 +400,14 @@ LA569:  rts
 
 
 LA56A:  jsr     LA7C0
-LA56D:  yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+LA56D:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA57B
         jmp     handle_error_code
 
 LA57B:  lda     #$00
         sta     LA60E
         sta     LA60F
-        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     LA595
         cmp     #ERR_FILE_NOT_FOUND
         beq     LA5A1
@@ -426,7 +426,7 @@ LA5A9:  iny
         tya
         sta     pathname_dst
         sta     LA60D
-        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     LA5CB
         jmp     handle_error_code
 
@@ -451,10 +451,10 @@ LA60F:  .byte   0
 ;;; ============================================================
 
 .proc copy_dir
-        yax_call selector5::MLI_WRAPPER, OPEN, open_params_src
+        MLI_CALL OPEN, open_params_src
         beq     LA61E
         jsr     handle_error_code
-LA61E:  yax_call selector5::MLI_WRAPPER, OPEN, open_params_dst
+LA61E:  MLI_CALL OPEN, open_params_dst
         beq     LA62C
         jmp     handle_error_code
 
@@ -465,7 +465,7 @@ LA62C:  lda     open_params_src::ref_num
         sta     write_params_dst::ref_num
         sta     close_params_dst::ref_num
 LA63E:  copy16  #kDirCopyBufSize, read_params_src::request_count
-        yax_call selector5::MLI_WRAPPER, READ, read_params_src
+        MLI_CALL READ, read_params_src
         beq     LA65A
         cmp     #ERR_END_OF_FILE
         beq     LA687
@@ -474,7 +474,7 @@ LA63E:  copy16  #kDirCopyBufSize, read_params_src::request_count
 LA65A:  copy16  read_params_src::trans_count, write_params_dst::request_count
         ora     read_params_src::trans_count
         beq     LA687
-        yax_call selector5::MLI_WRAPPER, WRITE, write_params_dst
+        MLI_CALL WRITE, write_params_dst
         beq     LA679
         jmp     handle_error_code
 
@@ -484,8 +484,8 @@ LA679:  lda     write_params_dst::trans_count
         lda     write_params_dst::trans_count+1
         cmp     #>kDirCopyBufSize
         beq     LA63E
-LA687:  yax_call selector5::MLI_WRAPPER, CLOSE, close_params_dst
-        yax_call selector5::MLI_WRAPPER, CLOSE, close_params_src
+LA687:  MLI_CALL CLOSE, close_params_dst
+        MLI_CALL CLOSE, close_params_src
         rts
 .endproc
 
@@ -498,7 +498,7 @@ LA69C:  lda     get_file_info_params2,x
         dex
         cpx     #$03
         bne     LA69C
-        yax_call selector5::MLI_WRAPPER, CREATE, create_params2
+        MLI_CALL CREATE, create_params2
         clc
         beq     LA6B6
         jmp     handle_error_code
@@ -526,7 +526,7 @@ LA6DA:  sta     BITMAP,y
         dey
         bpl     LA6DA
         jsr     LA7D9
-LA6E3:  yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+LA6E3:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA6FF
         cmp     #ERR_VOL_NOT_FOUND
         beq     LA6F6
@@ -561,7 +561,7 @@ LA725:  jmp     LA729
 LA728:  rts
 
 LA729:  jsr     LA75D
-        yax_call selector5::MLI_WRAPPER, GET_FILE_INFO, get_file_info_params2
+        MLI_CALL GET_FILE_INFO, get_file_info_params2
         bne     LA74A
         add16   LA75B, get_file_info_params2::blocks_used, LA75B
 LA74A:  inc16   LA759

@@ -392,7 +392,7 @@ entry:
         bne     check_key_down
 
 quick_run_desktop:
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
+        MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     :+
         jmp     done_keys
 :       jmp     run_desktop
@@ -563,7 +563,7 @@ set_startup_menu_items:
         ;; --------------------------------------------------
 
         ;; Is DeskTop available?
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
+        MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     :+
         lda     #$80
 :       sta     desktop_available_flag
@@ -618,7 +618,7 @@ L92D6:  MGTK_CALL MGTK::GetEvent, event_params
         beq     :+
         cmp     #'q'
         bne     not_desktop
-:       yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
+:       MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     found_desktop
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
@@ -769,14 +769,14 @@ L93EB:  tsx
         lda     #$FF
         sta     selected_entry
 L93FF:  jsr     set_watch_cursor
-        yax_call MLI_WRAPPER, OPEN, open_selector_params
+        MLI_CALL OPEN, open_selector_params
         bne     L9443
         lda     open_selector_params::ref_num
         sta     set_mark_overlay1_params::ref_num
         sta     read_overlay1_params::ref_num
-        yax_call MLI_WRAPPER, SET_MARK, set_mark_overlay1_params
-        yax_call MLI_WRAPPER, READ, read_overlay1_params
-        yax_call MLI_WRAPPER, CLOSE, close_params2
+        MLI_CALL SET_MARK, set_mark_overlay1_params
+        MLI_CALL READ, read_overlay1_params
+        MLI_CALL CLOSE, close_params2
         jsr     overlay1_init
         bne     L943F
 L9436:  tya
@@ -855,7 +855,7 @@ L94C8:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_desktop_btn
         jsr     desktop_btn_event_loop
         bmi     L94B5
-L94D9:  yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_desktop2_params
+L94D9:  MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     L94ED
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
@@ -929,26 +929,12 @@ L959F:  .byte   0
 
 ;;; ============================================================
 
-.proc MLI_WRAPPER
-        sty     @addr
-        stax    @addr+1
-        php
-        sei
-        @addr := * + 3
-        MLI_CALL $00, dummy0000
-        plp
-        and     #$FF
-        rts
-.endproc
-
-;;; ============================================================
-
 noop:   rts
 
 ;;; ============================================================
 
 .proc run_desktop
-        yax_call MLI_WRAPPER, OPEN, open_desktop2_params
+        MLI_CALL OPEN, open_desktop2_params
         lda     open_desktop2_params::ref_num
         sta     read_desktop2_params::ref_num
         sta     DHIRESOFF
@@ -960,8 +946,8 @@ noop:   rts
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
-        yax_call MLI_WRAPPER, READ, read_desktop2_params
-        yax_call MLI_WRAPPER, CLOSE, close_params
+        MLI_CALL READ, read_desktop2_params
+        MLI_CALL CLOSE, close_params
         jmp     desktop_load_addr
 .endproc
 
@@ -1267,11 +1253,11 @@ count:  .byte   0
 ;;; ============================================================
 
 .proc load_selector_list
-        yax_call MLI_WRAPPER, OPEN, open_selector_list_params
+        MLI_CALL OPEN, open_selector_list_params
         lda     open_selector_list_params::ref_num
         sta     read_selector_list_params::ref_num
-        yax_call MLI_WRAPPER, READ, read_selector_list_params
-        yax_call MLI_WRAPPER, CLOSE, close_params
+        MLI_CALL READ, read_selector_list_params
+        MLI_CALL CLOSE, close_params
         copy    selector_list, num_run_list_entries
         copy    selector_list+1, num_other_run_list_entries
         rts
@@ -1280,14 +1266,14 @@ count:  .byte   0
 ;;; ============================================================
 
 .proc load_overlay2
-start:  yax_call MLI_WRAPPER, OPEN, open_selector_params
+start:  MLI_CALL OPEN, open_selector_params
         bne     error
         lda     open_selector_params::ref_num
         sta     set_mark_overlay2_params::ref_num
         sta     read_overlay2_params::ref_num
-        yax_call MLI_WRAPPER, SET_MARK, set_mark_overlay2_params
-        yax_call MLI_WRAPPER, READ, read_overlay2_params
-        yax_call MLI_WRAPPER, CLOSE, close_params2
+        MLI_CALL SET_MARK, set_mark_overlay2_params
+        MLI_CALL READ, read_overlay2_params
+        MLI_CALL CLOSE, close_params2
         rts
 
 error:  lda     #AlertID::insert_system_disk
@@ -1899,7 +1885,7 @@ L9C87:  lda     ($06),y
         sta     INVOKER_PREFIX,y
         dey
         bpl     L9C87
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_invoke_params
+        MLI_CALL GET_FILE_INFO, get_file_info_invoke_params
         beq     check_type
 
         tax
@@ -2043,7 +2029,7 @@ L9D91:  inx
         cpy     str_basic_system
         bne     L9D91
         stx     path_buf
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_bs_params
+        MLI_CALL GET_FILE_INFO, get_file_info_bs_params
         bne     L9DAD
         rts
 
@@ -2113,7 +2099,7 @@ L9E0E:  lda     (ptr),y
         sta     INVOKER_PREFIX,y
         dey
         bpl     L9E0E
-        yax_call MLI_WRAPPER, GET_FILE_INFO, get_file_info_invoke_params
+        MLI_CALL GET_FILE_INFO, get_file_info_invoke_params
         rts
 .endproc
 
