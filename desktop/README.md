@@ -8,25 +8,25 @@ more code segments swapped in dynamically.
 
 The file is broken down into multiple segments:
 
-| Purpose       | File Offset | Bank   | Address      | Length | Sources                        |
-|---------------|-------------|--------|--------------|--------|--------------------------------|
-| Loader        | B$000000    | Main   | A$2000-$257F | L$0580 | `loader.s`                     |
-| MGTK/DeskTop  | B$000580    | Aux    | A$4000-$BFFF | L$8000 | `mgtk.s`, `desktop_aux.s`      |
-| DeskTop       | B$008580    | Aux LC | A$D000-$ECFF | L$1D00 | `desktop_lc.s`,`desktop_res.s` |
-| DeskTop       | B$00A280    | Aux LC | A$FB00-$FFFF | L$0500 | `desktop_res.s`                |
-| DeskTop       | B$00A780    | Main   | A$4000-$BEFF | L$7F00 | `desktop_main.s`               |
-| Initializer   | B$012680    | Main   | A$0800-$0FFF | L$0800 | `desktop_main.s`               |
-| Invoker       | B$012E80    | Main   | A$0290-$03EF | L$0160 | `invoker.s`                    |
-| Disk Copy 1/4 | B$012FE0    | Main   | A$0800-$09FF | L$0200 | `ovl_disk_copy1.s`             |
-| Disk Copy 2/4 | B$0131E0    | Main   | A$1800-$19FF | L$0200 | `ovl_disk_copy2.s`             |
-| Disk Copy 3/4 | B$0133E0    | Aux LC | A$D000-$F1FF | L$2200 | `ovl_disk_copy3.s`             |
-| Disk Copy 4/4 | B$0155E0    | Main   | A$0800-$12FF | L$0B00 | `ovl_disk_copy4.s`             |
-| Format/Erase  | B$0160E0    | Main   | A$0800-$1BFF | L$1400 | `ovl_format_erase.s`           |
-| Selector 1/2  | B$0174E0    | Main   | A$9000-$9FFF | L$1000 | `ovl_selector_pick.s`          |
-| File Dialog   | B$0184E0    | Main   | A$5000-$6FFF | L$2000 | `ovl_file_dialog.s`            |
-| File Copy     | B$01A4E0    | Main   | A$7000-$77FF | L$0800 | `ovl_file_copy.s`              |
-| File Delete   | B$01ACE0    | Main   | A$7000-$77FF | L$0800 | `ovl_file_delete.s`            |
-| Selector 2/2  | B$01B4E0    | Main   | A$7000-$77FF | L$0800 | `ovl_selector_edit.s`          |
+| Purpose       | File Offset | Bank    | Address      | Length | Sources                        |
+|---------------|-------------|---------|--------------|--------|--------------------------------|
+| Loader        | B$000000    | Main    | A$2000-$257F | L$0580 | `loader.s`                     |
+| MGTK/DeskTop  | B$000580    | Aux     | A$4000-$BFFF | L$8000 | `mgtk.s`, `desktop_aux.s`      |
+| DeskTop       | B$008580    | Aux LC1 | A$D000-$ECFF | L$1D00 | `desktop_lc.s`,`desktop_res.s` |
+| DeskTop       | B$00A280    | Aux LC1 | A$FB00-$FFFF | L$0500 | `desktop_res.s`                |
+| DeskTop       | B$00A780    | Main    | A$4000-$BEFF | L$7F00 | `desktop_main.s`               |
+| Initializer   | B$012680    | Main    | A$0800-$0FFF | L$0800 | `desktop_main.s`               |
+| Invoker       | B$012E80    | Main    | A$0290-$03EF | L$0160 | `invoker.s`                    |
+| Disk Copy 1/4 | B$012FE0    | Main    | A$0800-$09FF | L$0200 | `ovl_disk_copy1.s`             |
+| Disk Copy 2/4 | B$0131E0    | Main    | A$1800-$19FF | L$0200 | `ovl_disk_copy2.s`             |
+| Disk Copy 3/4 | B$0133E0    | Aux LC1 | A$D000-$F1FF | L$2200 | `ovl_disk_copy3.s`             |
+| Disk Copy 4/4 | B$0155E0    | Main    | A$0800-$12FF | L$0B00 | `ovl_disk_copy4.s`             |
+| Format/Erase  | B$0160E0    | Main    | A$0800-$1BFF | L$1400 | `ovl_format_erase.s`           |
+| Selector 1/2  | B$0174E0    | Main    | A$9000-$9FFF | L$1000 | `ovl_selector_pick.s`          |
+| File Dialog   | B$0184E0    | Main    | A$5000-$6FFF | L$2000 | `ovl_file_dialog.s`            |
+| File Copy     | B$01A4E0    | Main    | A$7000-$77FF | L$0800 | `ovl_file_copy.s`              |
+| File Delete   | B$01ACE0    | Main    | A$7000-$77FF | L$0800 | `ovl_file_delete.s`            |
+| Selector 2/2  | B$01B4E0    | Main    | A$7000-$77FF | L$0800 | `ovl_selector_edit.s`          |
 
 (EOF is $01BCE0)
 

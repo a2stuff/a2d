@@ -44,15 +44,15 @@ kOverlay2Size           = $D00
 ;;; Selector application
 ;;; ============================================================
 
-        .include "selector1.s"
-        .include "selector2.s"
+        .include "bootstrap.s"
+        .include "quit_handler.s"
 
-        ;; Ensure selector3 starts at correct offset from start of file.
+        ;; Ensure loader.starts at correct offset from start of file.
         .res 473
 
-        .include "selector3.s"
-        .include "selector4.s"
-        .include "selector5.s"
-        .include "selector6.s"
-        .include "selector7.s"
-        .include "selector8.s"
+        .include "loader.s"
+        .include "invoker.s"
+        .include "app.s"
+        .include "alert_dialog.s"
+        .include "ovl_file_dialog.s"
+        .include "ovl_file_copy.s"
