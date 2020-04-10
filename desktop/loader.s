@@ -71,8 +71,13 @@ start:  lda     ROMIN2
         jsr     SLOT3ENTRY
         jsr     HOME
 
-        lda     #$00            ; IIgs specific ???
-        sta     SHADOW
+        ;; IIgs: Reset shadowing
+        sec
+        jsr     IDROUTINE
+        bcs     :+
+        copy    #0, SHADOW
+:
+
         lda     #$40
         sta     RAMWRTON
         sta     $0100           ; ???

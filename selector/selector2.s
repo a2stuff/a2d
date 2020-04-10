@@ -49,19 +49,23 @@ start:
         sta     CLR80COL
         jsr     SLOT3ENTRY
         jsr     HOME
-        lda     #$00
-        sta     SHADOW          ; TODO: Only do this on IIgs
+
+        ;; IIgs: Reset shadowing
+        sec
+        jsr     IDROUTINE
+        bcs     :+
+        copy    #0, SHADOW
+:
+
         lda     #$80
         sta     ALTZPON
         sta     $0100           ; ???
         sta     $0101           ; ???
         sta     ALTZPOFF
 
-        ;; Disable IIgs video
-        ;; TODO: Only do this on IIgs
-        lda     NEWVIDEO
-        ora     #$20
-        sta     NEWVIDEO
+        jsr     SetMonoMode
+
+        ;; --------------------------------------------------
 
         ;; Display the loading string
         lda     #12             ; vtab
@@ -200,6 +204,41 @@ irq_vector_stash:
 
 prefix_buf:
         .res 64, 0
+
+
+;;; ============================================================
+
+.proc SetMonoMode
+        ;; AppleColor Card - Mode 1 (Monochrome 560x192)
+        sta     CLR80VID
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+        lda     AN3_ON
+        sta     SET80VID
+        lda     AN3_OFF
+
+        ;; IIgs?
+        sec
+        jsr     IDROUTINE
+        bcc     iigs
+
+        ;; Le Chat Mauve - BW560 mode
+        ;; (AN3 off, HR1 off, HR2 on, HR3 on)
+        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
+        sta     HR2_ON
+        sta     HR3_ON
+        bcs     done
+
+        ;; Apple IIgs - DHR B&W
+iigs:   lda     NEWVIDEO
+        ora     #(1<<5)         ; B&W
+        sta     NEWVIDEO
+
+done:   rts
+.endproc
+
+;;; ============================================================
 
 .endscope
 

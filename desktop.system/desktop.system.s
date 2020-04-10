@@ -175,8 +175,13 @@ have128k:
 
         ;; (Original code from here on)
 
-resume: lda     #$00
-        sta     SHADOW          ; IIgs ???
+resume:
+        ;; IIgs: Reset shadowing
+        sec
+        jsr     IDROUTINE
+        bcs     :+
+        copy    #0, SHADOW
+:
 
         lda     DEVNUM          ; Most recent device
         sta     active_device

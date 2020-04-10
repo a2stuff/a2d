@@ -1975,11 +1975,14 @@ L9CF5:  iny
         sta     LORES
         sta     MIXCLR
         sta     CLRALTCHAR
+        jsr     SetColorMode
         sta     CLR80VID
         sta     CLR80COL
+
         jsr     INVOKER
         ;; If we got here, invoker failed.
         jsr     disconnect_ramdisk
+        ;; TODO: SetMonoMode ???
         ;; fall through...
 .endproc
         invoke_entry_ep2 := invoke_entry::ep2
@@ -2276,6 +2279,37 @@ L9F73:  .byte   0
         sta     ALTZPOFF
         sta     ROMIN2
         rts
+.endproc
+
+;;; ============================================================
+
+.proc SetColorMode
+        ;; AppleColor Card - Mode 2 (Color 140x192)
+        sta     SET80VID
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+
+        ;; IIgs?
+        sec
+        jsr     IDROUTINE
+        bcc     iigs
+
+        ;; Le Chat Mauve - COL140 mode
+        ;; (AN3 off, HR1 off, HR2 off, HR3 off)
+        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
+        sta     HR2_OFF
+        sta     HR3_OFF
+        bcs     done
+
+        ;; Apple IIgs - DHR Color
+iigs:   lda     NEWVIDEO
+        and     #<~(1<<5)       ; Color
+        sta     NEWVIDEO
+
+done:   rts
 .endproc
 
 ;;; ============================================================

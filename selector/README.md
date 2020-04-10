@@ -8,7 +8,7 @@ The file is broken down into multiple segments:
 | Loader       | B$00000400  | Main   | $A2000-$21FF | L$0200 | `selector3.s` |
 | Invoker      | B$00000600  | Main   | $A0290-$03EF | L$0160 | `selector4.s` |
 | MGTK + App   | B$00000760  |        | $A4000-$9FFF | L$6000 | `selector5.s` |
-| Resources    | B$00006760  | Aux LC | $AD000-$D7FF | L$0800 | `selector6.s` |
+| Alert Dialog | B$00006760  | Aux LC | $AD000-$D7FF | L$0800 | `selector6.s` |
 | Overlay 1    | B$00006F60  | Main   | $AA000-$BEFF | L$1F00 | `selector7.s` |
 | Overlay 2    | B$00008E60  | Main   | $AA000-$ACFF | L$0D00 | `selector8.s` |
 
@@ -47,9 +47,9 @@ appropriate IO buffer location based on load address.
 * The font is at $8800.
 * The application entry point is $8E00.
 
-### Resources - `selector6.s`
+### Alert Dialog - `selector6.s`
 
-A handful of resources for MGTK and routines. Loaded to Aux LC1
+Shows a modal alert dialog. Loaded to Aux LC1
 
 ### Overlay 1 - `selector7.s`
 
@@ -73,11 +73,11 @@ Used when invoking a program via the selector with the option
 $FFFF +-------------+       +-------------+       +-------------+
       | ProDOS      |       |             |       | Monitor     |
 $F800 |             |       |             |       +-------------+
-      |             |       |  (Unused?)  |       | Applesoft   |
+      |             |       |   Unused    |       | Applesoft   |
       |             |Bank2  |             |Bank2  |             |
-$E000 |      +-----------+  |      +-----------+  |             |
-      |      | ProDOS    |  | Res  | (Unused?) |  |             |
-$D000 +------+-----------+  +------+-----------+  +-------------+
+$E000 |      +-----------+  |       +----------+  |             |
+      |      | ProDOS    |  | Alert |  Unused  |  |             |
+$D000 +------+-----------+  +-------+----------+  +-------------+
                                                   | I/O         |
                                                   |             |
 $C000 +-------------+       +-------------+       +-------------+
@@ -101,13 +101,13 @@ $A000 +-------------+       |             |
       |             |       |             |
 $8E00 +-------------+       |             |
       |             |       |             |
-      | Resources?  |       |             |
-      |             |       |  (Unused?)  |
-      |             |       |             |
-      |    ???      |       |             |
+      | Unused      |       |             |
+      |             |       |   Unused    |
       |             |       |             |
       |             |       |             |
-$8800 | Font?       |       |             |
+      |             |       |             |
+      |             |       |             |
+$8800 | Font        |       |             |
       |             |       |             |
 $8580 +-------------+       |             |
       | MGTK        |       |             |
@@ -129,8 +129,8 @@ $4000 +-------------+       +-------------+
       |             |       |             |
 $2000 +-------------+       +-------------+
       | I/O Buffer  |       |             |
-$1C00 +-------------+       |  (Unused?)  |
-      |             |       |             |
+$1C00 +-------------+       |   Unused    |
+      | Save Area   |       |             |
       |             |       |             |
       |             |       |             |
       |             |       |             |
@@ -147,6 +147,3 @@ $0100 +-------------+       +-------------+
       | Zero Page   |       | Zero Page   |
 $0000 +-------------+       +-------------+
 ```
-
-To Identify:
-* Save Area
