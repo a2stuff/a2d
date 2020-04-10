@@ -675,7 +675,7 @@ fail:   ldy     #0
 match:  tya
         ;; A has model; but now test for IIgs
         sec
-        jsr     ID_BYTE_FE1F
+        jsr     IDROUTINE
         bcs     :+              ; not IIgs
 
         ;; Is IIgs; Y holds ROM revision
@@ -1407,7 +1407,7 @@ p6502:  return16 #str_6502
         ;; Distinguish 65802 and 65816 by machine ID
 p658xx: lda     ROMIN2
         sec
-        jsr     ID_BYTE_FE1F
+        jsr     IDROUTINE
         lda     LCBANK1
         lda     LCBANK1
         bcs     p65802

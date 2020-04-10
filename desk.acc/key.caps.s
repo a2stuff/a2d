@@ -824,15 +824,15 @@ char:   .byte   0
 
         ;; Is IIgs?
 check:  sec
-        jsr     ID_BYTE_FE1F    ; Clears carry if IIgs
+        jsr     IDROUTINE       ; Clears carry if IIgs
         bcs     :+              ; No, carry still set
         sec                     ; Yes, is a IIgs
         rts
 
         ;; Is IIc+?
-:       lda     ID_BYTE_FBC0    ; $00 = IIc
+:       lda     ZIDBYTE         ; $00 = IIc
         bne     done
-        lda     ID_BYTE_FBBF    ; $05 = IIc Plus
+        lda     ZIDBYTE2        ; $05 = IIc Plus
         cmp     #$05
         bne     done
         sec                     ; Yes, is a IIc+

@@ -10161,7 +10161,7 @@ done:   rts
 .proc test_iigs
         lda     ROMIN2
         sec
-        jsr     ID_BYTE_FE1F
+        jsr     IDROUTINE
         lda     LCBANK1
         lda     LCBANK1
         rts
@@ -15928,15 +15928,15 @@ done:
 
         ;; First, detect IIgs
         sec                     ; Follow detection protocol
-        jsr     ID_BYTE_FE1F    ; RTS on pre-IIgs
+        jsr     IDROUTINE       ; RTS on pre-IIgs
         bcs     :+              ; carry clear = IIgs
         copy    #$80, is_iigs_flag
 :
         ;; Now stash the bytes we need
-        copy    ID_BYTE_FBB3, id_FBB3 ; $06 = IIe or later
-        copy    ID_BYTE_FBC0, id_FBC0 ; $00 = IIc or later
-        copy    ID_BYTE_FBBF, id_FBBF ; IIc ROM version (IIc+ = $05)
-        copy    ID_BYTE_FB1E, id_FB1E ; $AC = Laser 128
+        copy    VERSION, id_version ; $06 = IIe or later
+        copy    ZIDBYTE, id_idbyte ; $00 = IIc or later
+        copy    ZIDBYTE2, id_idbyte2 ; IIc ROM version (IIc+ = $05)
+        copy    IDBYTELASER128, id_idlaser ; $AC = Laser 128
 
         ;; ... and page in LCBANK1
         sta     ALTZPON
@@ -15945,23 +15945,23 @@ done:
         sta     SET80COL
 
         ;; Ensure we're on a IIe or later
-        lda     id_FBB3
+        lda     id_version
         cmp     #$06            ; Ensure a IIe or later
         beq     :+
         brk                     ; Otherwise (][, ][+, ///), just crash
 
         ;; State needed by MGTK
-:       copy    id_FBB3, startdesktop_params::machine
-        copy    id_FBC0, startdesktop_params::subid
+:       copy    id_version, startdesktop_params::machine
+        copy    id_idbyte, startdesktop_params::subid
 
         ;; Identify machine type (double-click timer, other flags)
-        lda     id_FBC0
+        lda     id_idbyte
         beq     is_iic          ; $FBC0 = $00 -> is IIc or IIc+
         bit     is_iigs_flag
         bmi     is_iigs
 
         ;; IIe (or IIe Option Card, or Laser 128)
-        lda     id_FB1E           ; Is it a Laser 128?
+        lda     id_idlaser           ; Is it a Laser 128?
         cmp     #$AC
         bne     is_iie
         copy    #$80, is_laser128_flag
@@ -15981,7 +15981,7 @@ is_iigs:
         jmp     end
 
         ;; IIc or IIc+
-is_iic: lda     id_FBBF            ; ROM version
+is_iic: lda     id_idbyte2            ; ROM version
         cmp     #$05               ; IIc Plus = $05
         bne     :+
         copy    #$80, is_iic_plus_flag
@@ -15989,10 +15989,10 @@ is_iic: lda     id_FBBF            ; ROM version
         ldxy    #kDefaultDblClickSpeed*4
         jmp     end
 
-id_FB1E: .byte   0
-id_FBB3: .byte   0
-id_FBC0: .byte   0
-id_FBBF: .byte   0
+id_idlaser:     .byte   0
+id_version:     .byte   0
+id_idbyte:      .byte   0
+id_idbyte2:     .byte   0
 
 end:
         sta     machine_type

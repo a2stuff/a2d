@@ -46,15 +46,19 @@ HR3_OFF         := $C0B6
 ;;; ============================================================
 
 ;;; Monitor
+IDBYTELASER128  := $FB1E        ; $AC = Laser 128
 INIT            := $FB2F
 SETPWRC         := $FB6F
-VERSION         := $FBB3
+VERSION         := $FBB3        ; $06 = IIe or later
+ZIDBYTE2        := $FBBF        ; IIc ROM version ($05 = IIc+)
+ZIDBYTE         := $FBC0        ; $EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+
 BELL1           := $FBDD
 VTAB            := $FC22
 VTABZ           := $FC24
 HOME            := $FC58
 PRBYTE          := $FDDA
 COUT            := $FDED
+IDROUTINE       := $FE1F         ; RTS ($60) on pre-IIgs, clears carry on IIgs
 MOVE            := $FE2C
 SETKBD          := $FE89
 SETVID          := $FE93
@@ -65,11 +69,6 @@ F8VERSION       := $06
 ;;; Miscellaneous
 IRQ_VECTOR      := $3FE
 
-ID_BYTE_FB1E    := $FB1E        ; $AC = Laser 128
-ID_BYTE_FBB3    := $FBB3        ; $06 = IIe or later
-ID_BYTE_FBC0    := $FBC0        ; $EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+
-ID_BYTE_FBBF    := $FBBF        ; IIc ROM version ($05 = IIc+)
-ID_BYTE_FE1F    := $FE1F        ; RTS ($60) on pre-IIgs, clears carry on IIgs
 
 
 ;;; ============================================================
