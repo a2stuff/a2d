@@ -38,6 +38,22 @@ kSelectorEntryCopyNever         = $C0
 ;;; This much is consistently reserved/written.
 kSelectorListBufSize = $800
 
+;;; ============================================================
+;;; Settings Config File
+
+kDefaultDblClickSpeed   = $12C
+kDefaultIPBlinkSpeed    = 60
+
+.struct DeskTopSettings
+        version_major   .byte
+        version_minor   .byte
+        pattern         .res 8
+        dblclick_speed  .word
+        ip_blink_speed  .byte
+
+        reserved        .res 115
+.endstruct
+        .assert .sizeof(DeskTopSettings) = $80, error, .sprintf("Expected $80, was $%0X", .sizeof(DeskTopSettings))
 
 ;;; ============================================================
 ;;; RAM Disk

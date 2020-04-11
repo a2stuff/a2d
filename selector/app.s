@@ -27,6 +27,39 @@ selector_list   := $B300
         ASSERT_ADDRESS ::FONT, "Font location"
         .incbin "../mgtk/fonts/A2D.FONT"
 
+        PAD_TO ::SETTINGS
+
+;;; Settings
+
+.scope settings
+        ASSERT_ADDRESS ::SETTINGS
+
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::version_major
+        .byte   kDeskTopVersionMajor
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::version_minor
+        .byte   kDeskTopVersionMinor
+
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::pattern
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::dblclick_speed
+        .word   0               ; $12C * 1, * 4, or * 32, 0 if not set
+
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::ip_blink_speed
+        .byte   60              ; 120, 60 or 30; lower is faster
+
+        ;; Reserved for future use...
+
+        PAD_TO ::SETTINGS + .sizeof(DeskTopSettings)
+.endscope
+
         PAD_TO ::START
 
 ;;; ============================================================
@@ -555,6 +588,7 @@ set_startup_menu_items:
         sta     mi_x7 + kMenuItemShortcutOffset + 1
         sta     str_slot_x7 + kStrSlotXOffset
 
+        MGTK_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
         MGTK_CALL MGTK::SetMenu, menu
         MGTK_CALL MGTK::ShowCursor

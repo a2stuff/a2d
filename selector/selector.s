@@ -18,6 +18,8 @@ MGTK            := $4000
 FONT            := $8800
 START           := $8E00
 
+SETTINGS        := $8D80
+
 .enum AlertID
 selector_unable_to_run  = $00
 io_error                = $27

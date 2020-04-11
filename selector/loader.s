@@ -29,6 +29,14 @@
 str_selector:
         PASCAL_STRING "Selector"
 
+        DEFINE_OPEN_PARAMS open_config_params, str_config, io_buf
+        DEFINE_READ_PARAMS read_config_params, SETTINGS, .sizeof(DeskTopSettings)
+
+str_config:
+        PASCAL_STRING "DeskTop.config"
+
+;;; ============================================================
+
 start:
         ;; Clear ProDOS memory bitmap
         lda     #0
@@ -80,6 +88,29 @@ L2049:  lda     open_params::ref_num
 
         MLI_CALL CLOSE, close_params
 
+        ;; --------------------------------------------------
+        ;; Try loading settings
+
+        ;; Load the settings file; on failure, just skip
+        MLI_CALL OPEN, open_config_params
+        bcs     :+
+        lda     open_config_params::ref_num
+        sta     read_config_params::ref_num
+        MLI_CALL READ, read_config_params
+        bcs     :+
+
+        ;; Check version bytes; ignore on mismatch
+        lda     SETTINGS + DeskTopSettings::version_major
+        cmp     #kDeskTopVersionMajor
+        bne     :+
+        lda     SETTINGS + DeskTopSettings::version_minor
+        cmp     #kDeskTopVersionMinor
+        bne     :+
+
+        ;; Finish up
+:       MLI_CALL CLOSE, close_params
+
+        ;; --------------------------------------------------
         ;; Invoke the Selector application
         jmp     START
 
