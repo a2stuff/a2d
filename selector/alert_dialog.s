@@ -4,7 +4,7 @@
 
         .org $D000
 
-.scope
+.scope alert
 
 alert_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -141,17 +141,15 @@ alert_message_flag_table:
         .byte   $00
         ASSERT_TABLE_SIZE alert_message_flag_table, kNumErrorMessages
 
-
-        ASSERT_ADDRESS $D23E
 .proc ShowAlertImpl
         pha
-        lda     selector5::L9129
+        lda     app::L9129
         beq     :+
         pla
         return  #$01
-:       jsr     selector5::set_pointer_cursor
-        MGTK_CALL MGTK::InitPort, selector5::grafport2
-        MGTK_CALL MGTK::SetPort, selector5::grafport2
+:       jsr     app::set_pointer_cursor
+        MGTK_CALL MGTK::InitPort, app::grafport2
+        MGTK_CALL MGTK::SetPort, app::grafport2
         ldax    mapinfo::viewloc::xcoord
         jsr     LD725
         sty     LD764
@@ -177,21 +175,21 @@ alert_message_flag_table:
         MGTK_CALL MGTK::ShowCursor
         ldx     #.sizeof(MGTK::Point)-1
         lda     #0
-:       sta     selector5::grafport2+MGTK::GrafPort::viewloc,x
-        sta     selector5::grafport2+MGTK::GrafPort::maprect,x
+:       sta     app::grafport2+MGTK::GrafPort::viewloc,x
+        sta     app::grafport2+MGTK::GrafPort::maprect,x
         dex
         bpl     :-
-        copy16  #550, selector5::grafport2 + MGTK::GrafPort::maprect + MGTK::Rect::x2
-        copy16  #185, selector5::grafport2 + MGTK::GrafPort::maprect + MGTK::Rect::y2
-        MGTK_CALL MGTK::SetPort, selector5::grafport2
-        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
+        copy16  #550, app::grafport2 + MGTK::GrafPort::maprect + MGTK::Rect::x2
+        copy16  #185, app::grafport2 + MGTK::GrafPort::maprect + MGTK::Rect::y2
+        MGTK_CALL MGTK::SetPort, app::grafport2
+        MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect1
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::SetPortBits, mapinfo
         MGTK_CALL MGTK::FrameRect, rect_frame1
         MGTK_CALL MGTK::FrameRect, rect_frame2
-        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
+        MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintBits, alert_bitmap_params
         MGTK_CALL MGTK::ShowCursor
@@ -215,32 +213,32 @@ LD314:  tya
         tay
         lda     alert_message_flag_table,y
         sta     LD142
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         bit     LD142
         bpl     LD365
         MGTK_CALL MGTK::FrameRect, rect_cancel_btn
         MGTK_CALL MGTK::MoveTo, pos_cancel_btn
-        addr_call selector5::DrawString, str_cancel_btn
+        addr_call app::DrawString, str_cancel_btn
         bit     LD142
         bvs     LD365
         MGTK_CALL MGTK::FrameRect, rect_ok_try_again_btn
         MGTK_CALL MGTK::MoveTo, pos_ok_try_again_btn
-        addr_call selector5::DrawString, str_try_again_btn
+        addr_call app::DrawString, str_try_again_btn
         jmp     LD378
 
 LD365:  MGTK_CALL MGTK::FrameRect, rect_ok_try_again_btn
         MGTK_CALL MGTK::MoveTo, pos_ok_try_again_btn
-        addr_call selector5::DrawString, str_ok_btn
+        addr_call app::DrawString, str_ok_btn
 
 LD378:  MGTK_CALL MGTK::MoveTo, pt2
         lda     LD143
         ldx     LD144
-        jsr     selector5::DrawString
+        jsr     app::DrawString
 
 
 event_loop:
-        MGTK_CALL MGTK::GetEvent, selector5::event_params
-        lda     selector5::event_kind
+        MGTK_CALL MGTK::GetEvent, app::event_params
+        lda     app::event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
         jmp     handle_button
@@ -250,13 +248,13 @@ event_loop:
 
         ;; Key Press
 
-        lda     selector5::event_key
+        lda     app::event_key
         and     #CHAR_MASK
         bit     LD142           ; Escape = Cancel?
         bpl     LD3DF
         cmp     #CHAR_ESCAPE
         bne     LD3BA
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect_cancel_btn
         lda     #$01
         jmp     LD434
@@ -265,7 +263,7 @@ LD3BA:  bit     LD142           ; A = Try Again?
         bvs     LD3DF
         cmp     #'a'
         bne     LD3D4
-LD3C3:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+LD3C3:  MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     #$00
         jmp     LD434
@@ -278,7 +276,7 @@ LD3D4:  cmp     #'A'
 
 LD3DF:  cmp     #CHAR_RETURN    ; Return = OK?
         bne     LD3F4
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     #$00
         jmp     LD434
@@ -289,7 +287,7 @@ LD3F4:  jmp     event_loop
 
 handle_button:
         jsr     map_alert_coords
-        MGTK_CALL MGTK::MoveTo, selector5::event_coords
+        MGTK_CALL MGTK::MoveTo, app::event_coords
 
         bit     LD142           ; Cancel?
         bpl     LD424
@@ -323,16 +321,16 @@ LD434:  pha
         ;; Try Again Button Event Loop
 
 .proc try_again_btn_event_loop
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     #$00
         sta     LD4AC
-LD457:  MGTK_CALL MGTK::GetEvent, selector5::event_params
-        lda     selector5::event_kind
+LD457:  MGTK_CALL MGTK::GetEvent, app::event_params
+        lda     app::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LD49F
         jsr     map_alert_coords
-        MGTK_CALL MGTK::MoveTo, selector5::event_coords
+        MGTK_CALL MGTK::MoveTo, app::event_coords
         MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
         cmp     #MGTK::inrect_inside
         beq     LD47F
@@ -344,7 +342,7 @@ LD47F:  lda     LD4AC
         bne     LD487
         jmp     LD457
 
-LD487:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+LD487:  MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     LD4AC
         clc
@@ -366,16 +364,16 @@ LD4AC:  .byte   0
         ;; Cancel Button Event Loop
 
 .proc cancel_btn_event_loop
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect_cancel_btn
         lda     #$00
         sta     LD513
-LD4BE:  MGTK_CALL MGTK::GetEvent, selector5::event_params
-        lda     selector5::event_kind
+LD4BE:  MGTK_CALL MGTK::GetEvent, app::event_params
+        lda     app::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LD506
         jsr     map_alert_coords
-        MGTK_CALL MGTK::MoveTo, selector5::event_coords
+        MGTK_CALL MGTK::MoveTo, app::event_coords
         MGTK_CALL MGTK::InRect, rect_cancel_btn
         cmp     #MGTK::inrect_inside
         beq     LD4E6
@@ -387,7 +385,7 @@ LD4E6:  lda     LD513
         bne     LD4EE
         jmp     LD4BE
 
-LD4EE:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+LD4EE:  MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect_cancel_btn
         lda     LD513
         clc
@@ -411,14 +409,14 @@ LD513:  .byte   0
 .proc ok_button_event_loop
         lda     #$00
         sta     LD57A
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
-LD525:  MGTK_CALL MGTK::GetEvent, selector5::event_params
-        lda     selector5::event_kind
+LD525:  MGTK_CALL MGTK::GetEvent, app::event_params
+        lda     app::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LD56D
         jsr     map_alert_coords
-        MGTK_CALL MGTK::MoveTo, selector5::event_coords
+        MGTK_CALL MGTK::MoveTo, app::event_coords
         MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
         cmp     #MGTK::inrect_inside
         beq     LD54D
@@ -430,7 +428,7 @@ LD54D:  lda     LD57A
         bne     LD555
         jmp     LD525
 
-LD555:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+LD555:  MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
         lda     LD57A
         clc
@@ -452,8 +450,8 @@ LD57A:  .byte   0
 
 
 .proc map_alert_coords
-        sub16   selector5::event_xcoord, mapinfo::viewloc::xcoord, selector5::event_xcoord
-        sub16   selector5::event_ycoord, mapinfo::viewloc::ycoord, selector5::event_ycoord
+        sub16   app::event_xcoord, mapinfo::viewloc::xcoord, app::event_xcoord
+        sub16   app::event_ycoord, mapinfo::viewloc::ycoord, app::event_ycoord
         rts
 .endproc
 
@@ -730,5 +728,6 @@ LD769:  .byte   0
 ;;; ============================================================
 
 .endscope
+        ShowAlertImpl := alert::ShowAlertImpl
 
         PAD_TO $D800

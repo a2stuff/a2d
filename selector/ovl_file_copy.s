@@ -4,17 +4,17 @@
 
         .org $A000
 
-.scope
-
+.scope file_copier
+exec:
         sta     LA027
         jsr     open_window
         lda     LA027
-        jsr     selector5::get_selector_list_path_addr
+        jsr     app::get_selector_list_path_addr
         jsr     LA802
         jsr     LA6BD
         jsr     draw_window_content
         lda     LA027
-        jsr     selector5::get_selector_list_path_addr
+        jsr     app::get_selector_list_path_addr
         jsr     LA802
         jsr     LA3F6
         pha
@@ -818,12 +818,12 @@ str_spaces:
 .proc open_window
         MGTK_CALL MGTK::OpenWindow, winfo
         lda     winfo::window_id
-        jsr     selector5::get_window_port
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        jsr     app::get_window_port
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::FrameRect, rect_frame1
         MGTK_CALL MGTK::FrameRect, rect_frame2
         MGTK_CALL MGTK::MoveTo, pos_download
-        addr_call selector5::DrawString, str_download
+        addr_call app::DrawString, str_download
         rts
 .endproc
 
@@ -831,8 +831,8 @@ str_spaces:
 
 .proc draw_window_content
         lda     winfo::window_id
-        jsr     selector5::get_window_port
-        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
+        jsr     app::get_window_port
+        MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
 ep2:    dec     LA759
         lda     LA759
@@ -841,16 +841,16 @@ ep2:    dec     LA759
         dec     LA75A
 LAA4C:  jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
-        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
+        MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect3
-        addr_call selector5::AdjustPathCase, pathname1
+        addr_call app::AdjustPathCase, pathname1
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call selector5::DrawString, str_copying
-        addr_call selector5::DrawString, pathname1
+        addr_call app::DrawString, str_copying
+        addr_call app::DrawString, pathname1
         MGTK_CALL MGTK::MoveTo, pt2
-        addr_call selector5::DrawString, str_files_remaining
-        addr_call selector5::DrawString, str_count
-        addr_call selector5::DrawString, str_spaces
+        addr_call app::DrawString, str_files_remaining
+        addr_call app::DrawString, str_count
+        addr_call app::DrawString, str_spaces
         rts
 .endproc
         draw_window_content_ep2 := draw_window_content::ep2
@@ -860,18 +860,18 @@ LAA4C:  jsr     populate_count
         jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call selector5::DrawString, str_files_to_copy
-        addr_call selector5::DrawString, str_count
-        addr_call selector5::DrawString, str_spaces
+        addr_call app::DrawString, str_files_to_copy
+        addr_call app::DrawString, str_count
+        addr_call app::DrawString, str_spaces
         rts
 .endproc
 
 ;;; ============================================================
 
 LAABD:  lda     #$FD            ; ???
-        jsr     selector5::ShowAlert
+        jsr     app::ShowAlert
         bne     :+
-        jsr     selector5::set_watch_cursor
+        jsr     app::set_watch_cursor
         rts
 
 :       jmp     restore_stack_and_return
@@ -879,17 +879,17 @@ LAABD:  lda     #$FD            ; ???
 ;;; ============================================================
 
 LAACB:  lda     winfo::window_id
-        jsr     selector5::get_window_port
-        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
+        jsr     app::get_window_port
+        MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call selector5::DrawString, str_not_enough_room
+        addr_call app::DrawString, str_not_enough_room
         MGTK_CALL MGTK::MoveTo, pt2
-        addr_call selector5::DrawString, str_click_ok
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        addr_call app::DrawString, str_click_ok
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, pos1
-        addr_call selector5::DrawString, selector5::str_ok_btn
+        addr_call app::DrawString, app::str_ok_btn
         jsr     set_pointer_cursor
         jmp     restore_stack_and_return
 
@@ -897,17 +897,17 @@ LAACB:  lda     winfo::window_id
 
 .proc handle_error_code
         lda     winfo::window_id
-        jsr     selector5::get_window_port
-        MGTK_CALL MGTK::SetPenMode, selector5::pencopy
+        jsr     app::get_window_port
+        MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect2
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call selector5::DrawString, str_error_download
+        addr_call app::DrawString, str_error_download
         MGTK_CALL MGTK::MoveTo, pt2
-        addr_call selector5::DrawString, str_copy_incomplete
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        addr_call app::DrawString, str_copy_incomplete
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, pos1
-        addr_call selector5::DrawString, selector5::str_ok_btn
+        addr_call app::DrawString, app::str_ok_btn
         jsr     set_pointer_cursor
         jmp     restore_stack_and_return
 .endproc
@@ -915,63 +915,63 @@ LAACB:  lda     winfo::window_id
 ;;; ============================================================
 
 set_pointer_cursor:
-        jsr     selector5::set_pointer_cursor
+        jsr     app::set_pointer_cursor
 
 ;;; ============================================================
 
 event_loop:
-        MGTK_CALL MGTK::GetEvent, selector5::event_params
-        lda     selector5::event_kind
+        MGTK_CALL MGTK::GetEvent, app::event_params
+        lda     app::event_kind
         cmp     #MGTK::EventKind::button_down
         beq     handle_button_down
         cmp     #MGTK::EventKind::key_down
         bne     event_loop
-        lda     selector5::event_key
+        lda     app::event_key
         cmp     #CHAR_RETURN
         bne     event_loop
         lda     winfo::window_id
-        jsr     selector5::get_window_port
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        jsr     app::get_window_port
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect1
         MGTK_CALL MGTK::PaintRect, rect1
-        jsr     selector5::set_watch_cursor
+        jsr     app::set_watch_cursor
         rts
 
 handle_button_down:
-        MGTK_CALL MGTK::FindWindow, selector5::findwindow_params
-        lda     selector5::findwindow_which_area
+        MGTK_CALL MGTK::FindWindow, app::findwindow_params
+        lda     app::findwindow_which_area
         beq     event_loop
         cmp     #MGTK::Area::content
         bne     event_loop
-        lda     selector5::findwindow_window_id
+        lda     app::findwindow_window_id
         cmp     winfo::window_id
         bne     event_loop
         lda     winfo::window_id
-        jsr     selector5::get_window_port
+        jsr     app::get_window_port
         lda     winfo::window_id
-        sta     selector5::screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
-        MGTK_CALL MGTK::MoveTo, selector5::screentowindow_windowx
+        sta     app::screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, app::screentowindow_params
+        MGTK_CALL MGTK::MoveTo, app::screentowindow_windowx
         MGTK_CALL MGTK::InRect, rect1
         cmp     #MGTK::inrect_inside
         bne     event_loop
-        MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect1
         jsr     LABE6
         bmi     event_loop
-        jsr     selector5::set_watch_cursor
+        jsr     app::set_watch_cursor
         rts
 
 LABE6:  lda     #$00
         sta     LAC53
-LABEB:  MGTK_CALL MGTK::GetEvent, selector5::event_params
-        lda     selector5::event_kind
+LABEB:  MGTK_CALL MGTK::GetEvent, app::event_params
+        lda     app::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LAC3C
         lda     winfo::window_id
-        sta     selector5::screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, selector5::screentowindow_params
-        MGTK_CALL MGTK::MoveTo, selector5::screentowindow_windowx
+        sta     app::screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, app::screentowindow_params
+        MGTK_CALL MGTK::MoveTo, app::screentowindow_windowx
         MGTK_CALL MGTK::InRect, rect1
         cmp     #MGTK::inrect_inside
         beq     LAC1C
@@ -983,7 +983,7 @@ LAC1C:  lda     LAC53
         bne     LAC24
         jmp     LABEB
 
-LAC24:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+LAC24:  MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect1
         lda     LAC53
         clc
@@ -995,7 +995,7 @@ LAC3C:  lda     LAC53
         beq     LAC44
         return  #$FF
 
-LAC44:  MGTK_CALL MGTK::SetPenMode, selector5::penXOR
+LAC44:  MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect1
         return  #$00
 
@@ -1083,5 +1083,7 @@ str_count:
 ;;; ============================================================
 
 .endscope
+
+file_copier_exec   := file_copier::exec
 
         PAD_TO $AD00

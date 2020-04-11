@@ -4,14 +4,16 @@
 
         .org $A000
 
-.scope selector7
+.scope file_dialog
 
 num_files_in_dir := $177F
 buf_filenames    := $1800
 file_table    := $1780
 
+ep_init:
         jmp     init
 
+ep_loop:
         jmp     event_loop
 
 ;;; ============================================================
@@ -270,9 +272,6 @@ LA211:
         .byte   $00
         .byte   $00
         .byte   $00
-clicked_flag:
-        .byte   $00
-
         .byte   $00
 
 str_1_char:
@@ -467,7 +466,6 @@ init:   tsx
         jsr     set_pointer_cursor
         lda     #$00
         sta     device_index
-        sta     clicked_flag
         sta     LA447
         sta     prompt_ip_flag
         sta     LA211
@@ -3263,7 +3261,9 @@ coords: DEFINE_POINT 0,0
 
 ;;; ============================================================
 
-
 .endscope
+
+file_dialog_init   := file_dialog::ep_init
+file_dialog_loop   := file_dialog::ep_loop
 
         PAD_TO $BF00

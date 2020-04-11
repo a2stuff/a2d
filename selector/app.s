@@ -4,13 +4,7 @@
 
         .org $4000
 
-.scope selector5
-
-overlay1_init   := $A000        ; selector7 entry point
-overlay1_loop   := $A003        ; selector7 event loop
-overlay2_exec   := $A000        ; selector8 entry point
-
-ShowAlertImpl   := $D23E        ; in selector6
+.scope app
 
 ;;; See docs/Selector_List_Format.md for file format
 selector_list   := $B300
@@ -828,11 +822,11 @@ L93FF:  jsr     set_watch_cursor
         MLI_CALL SET_MARK, set_mark_overlay1_params
         MLI_CALL READ, read_overlay1_params
         MLI_CALL CLOSE, close_params2
-        jsr     overlay1_init
+        jsr     file_dialog_init
         bne     L943F
 L9436:  tya
         jsr     invoke_entry_ep2
-        jsr     overlay1_loop
+        jsr     file_dialog_loop
         beq     L9436
 L943F:  jsr     load_selector_list
         rts
@@ -1918,7 +1912,7 @@ L9C32:  lda     selected_entry
         beq     L9C6F
         jsr     load_overlay2
         lda     selected_entry
-        jsr     overlay2_exec
+        jsr     file_copier_exec
         pha
         jsr     check_and_handle_updates
         pla
