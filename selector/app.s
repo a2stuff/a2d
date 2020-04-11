@@ -377,9 +377,12 @@ selected_entry:
         .byte   0
 
         .byte   0
-L9110:  .byte   0
-L9111:  .byte   0
-L9112:  .byte   0
+
+dblclick_counter:
+        .word   0
+clicked_flag:                   ; Set to determine if next is a double click.
+        .byte   0
+
 L9113:  .byte   0
 L9114:  .byte   0
 L9115:  .byte   0
@@ -608,12 +611,10 @@ set_startup_menu_items:
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     get_port_and_draw_window
         lda     #0
-        sta     L9112
-        sta     L9110
-        lda     #$01
-        sta     L9111
-        lda     #$FF
-        sta     selected_entry
+        sta     clicked_flag
+        sta     dblclick_counter
+        copy    #$01, dblclick_counter+1
+        copy    #$FF, selected_entry
         jsr     load_selector_list
         jsr     draw_entries
         jmp     event_loop
@@ -625,25 +626,28 @@ quick_boot_slot:
 ;;; ============================================================
 ;;; Event Loop
 
-event_loop:
-        bit     L9112
-        bpl     L92D6
-        dec     L9110
-        bne     L92D6
-        dec     L9111
-        bne     L92D6
-        lda     #$00
-        sta     L9112
-L92D6:  MGTK_CALL MGTK::GetEvent, event_params
+.proc event_loop
+        bit     clicked_flag
+        bpl     :+
+        dec     dblclick_counter
+        bne     :+
+        dec     dblclick_counter+1
+        bne     :+
+        copy    #0, clicked_flag
+
+:       MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
         jsr     handle_button_down
         jmp     event_loop
+
 :       cmp     #MGTK::EventKind::key_down
         bne     not_key
 
+        ;; --------------------------------------------------
         ;; Key Down
+
         bit     desktop_available_flag
         bmi     not_desktop
         lda     event_key
@@ -670,30 +674,43 @@ not_desktop:
 not_key:
         cmp     #MGTK::EventKind::update
         bne     not_update
-        jsr     L9339
+        jsr     handle_updates
 
 not_update:
         jmp     event_loop
+.endproc
 
-L9326:  MGTK_CALL MGTK::PeekEvent, event_params
+;;; ============================================================
+;;; Handle update events
+
+check_and_handle_updates:
+        MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_kind
-        cmp     #$06
-        bne     L9351
+        cmp     #MGTK::EventKind::update
+        bne     done
         MGTK_CALL MGTK::GetEvent, event_params
-L9339:  jsr     L933F
-        jmp     L9326
+        ;; Fall through.
 
-L933F:  MGTK_CALL MGTK::BeginUpdate, beginupdate_params
-        bne     L9351
-        jsr     L9352
+handle_updates:
+        jsr     @do_update
+        jmp     check_and_handle_updates
+
+@do_update:
+        MGTK_CALL MGTK::BeginUpdate, beginupdate_params
+        bne     done
+        jsr     draw_window_and_entries
         MGTK_CALL MGTK::EndUpdate
         rts
 
-L9351:  rts
+done:   rts
 
-L9352:  jsr     draw_window
+;;; ============================================================
+
+.proc draw_window_and_entries
+        jsr     draw_window
         jsr     draw_entries
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Menu dispatch tables
@@ -952,7 +969,7 @@ L9582:  sec
         rts
 
 finish: lda     L959E
-        jsr     L9AFD
+        jsr     handle_entry_click
         rts
 
 L959D:  .byte   0
@@ -1718,38 +1735,43 @@ L9AE5:  lda     winfo::window_id
 .endproc
 
 ;;; ============================================================
+;;; Input: A = clicked entry
 
-L9AFD:  cmp     selected_entry
-        beq     L9B05
-        jmp     L9B22
+.proc handle_entry_click
+        cmp     selected_entry
+        beq     same
+        jmp     different
 
-L9B05:  bit     L9112
-        bpl     L9B17
+        ;; --------------------------------------------------
+
+same:   bit     clicked_flag
+        bpl     reset
         jsr     invoke_entry
-        jsr     BELL1
-        jsr     BELL1
+        jsr     BELL1           ; TODO: Does this even work ???
+        jsr     BELL1           ; TODO: ProDOS QUIT here ???
         jsr     BELL1
         rts
 
-L9B17:  lda     #$FF
-        sta     L9112
-        lda     #$1E
-        sta     L9110
+reset:  copy    #$FF, clicked_flag
+        copy    #$1E, dblclick_counter
         rts
 
-L9B22:  pha
+        ;; --------------------------------------------------
+
+different:
+        pha
         lda     selected_entry
-        bmi     L9B2E
+        bmi     :+
         lda     selected_entry
-        jsr     toggle_entry_hilite
-L9B2E:  pla
+        jsr     toggle_entry_hilite ; un-highlight old entry
+:       pla
         sta     selected_entry
-        jsr     toggle_entry_hilite
-        lda     #$FF
-        sta     L9112
-        lda     #$1E
-        sta     L9110
-        jmp     L9B17
+        jsr     toggle_entry_hilite ; highlight new entry
+
+        copy    #$FF, clicked_flag ; TODO: Redundant ???
+        copy    #$1E, dblclick_counter
+        jmp     reset
+.endproc
 
 ;;; ============================================================
 ;;; Toggle the highlight on an entry in the list
@@ -1898,7 +1920,7 @@ L9C32:  lda     selected_entry
         lda     selected_entry
         jsr     overlay2_exec
         pha
-        jsr     L9326
+        jsr     check_and_handle_updates
         pla
         beq     L9C6F
         jsr     set_pointer_cursor
