@@ -19,6 +19,26 @@ kTitleBarHeight = 12
 kButtonWidth  = 100
 kButtonHeight = 11
 
+
+;;; ============================================================
+;;; Selector List file
+
+;;; See docs/Selector_List_Format.md for file format.
+
+kSelectorListNumRunListOffset   = 0
+kSelectorListNumOtherListOffset = 1
+kSelectorListEntriesOffset      = 2
+kSelectorListPathsOffset        = 2 + 24 * 16
+
+kSelectorEntryFlagsOffset       = $F
+kSelectorEntryCopyOnBoot        = $00
+kSelectorEntryCopyOnUse         = $80
+kSelectorEntryCopyNever         = $C0
+
+;;; This much is consistently reserved/written.
+kSelectorListBufSize = $800
+
+
 ;;; ============================================================
 ;;; RAM Disk
 

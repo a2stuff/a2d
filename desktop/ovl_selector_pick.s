@@ -2,8 +2,14 @@
 ;;; Overlay for Selector (part of it, anyway)
 ;;; ============================================================
 
+;;; See docs/Selector_List_Format.md for file format
+
 .proc selector_overlay2
         .org $9000
+
+io_buf := $0800
+
+selector_list   := $0C00
 
         sta     L938E
         ldx     #$FF
@@ -18,9 +24,9 @@ L900F:  pha
 L9015:  pla
 L9016:  rts
 
-L9017:  lda     $0C00
+L9017:  lda     selector_list + kSelectorListNumRunListOffset
         clc
-        adc     $0C01
+        adc     selector_list + kSelectorListNumOtherListOffset
         sta     num_selector_list_items
         lda     #$00
         sta     LD344
@@ -63,8 +69,8 @@ L9052:  lda     #$00
         pla
         bne     L900F
         inc     L938F
-        stx     L9103
-        sty     L9104
+        stx     which_run_list
+        sty     copy_when
         lda     #$00
 L9080:  dey
         beq     L9088
@@ -72,22 +78,22 @@ L9080:  dey
         ror     a
         jmp     L9080
 
-L9088:  sta     L9104
+L9088:  sta     copy_when
         jsr     L9CBA
         bpl     L9093
         jmp     L9016
 
-L9093:  copy16  $0C00, L938B
-        lda     L9103
+L9093:  copy16  selector_list, L938B
+        lda     which_run_list
         cmp     #$01
         bne     L90D3
         lda     L938B
         cmp     #$08
         beq     L90F4
-        ldy     L9104
+        ldy     copy_when
         lda     L938B
         jsr     L9A0A
-        inc     $0C00
+        inc     selector_list + kSelectorListNumRunListOffset
         copy16  selector_menu_addr, @addr
         @addr := *+1
         inc     dummy1234
@@ -100,12 +106,12 @@ L90D0:  jmp     L900F
 L90D3:  lda     L938C
         cmp     #$10
         beq     L90FF
-        ldy     L9104
+        ldy     copy_when
         lda     L938C
         clc
         adc     #$08
         jsr     L9A61
-        inc     $0C01
+        inc     selector_list + kSelectorListNumOtherListOffset
         jsr     L9CEA
         bpl     L90F1
         jmp     L9016
@@ -119,8 +125,12 @@ L90F6:  jsr     L9C09
 
 L90FF:  lda     #$02
         bne     L90F6
-L9103:  .byte   0
-L9104:  .byte   0
+
+
+which_run_list:  .byte   0
+copy_when:  .byte   0
+
+
 L9105:  lda     #$00
         sta     L938B
         sta     L938C
@@ -173,7 +183,7 @@ L9174:  lda     L938D
         jsr     L979D
         jsr     L936E
         lda     L938D
-        jsr     L9BD5
+        jsr     get_file_entry_addr
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -182,11 +192,11 @@ L918C:  lda     ($06),y
         sta     path_buf1,y
         dey
         bpl     L918C
-        ldy     #$0F
+        ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
         sta     L9281
         lda     L938D
-        jsr     L9BE2
+        jsr     get_file_path_addr
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -225,16 +235,16 @@ L91BC:  clc
         rts
 
 L91DF:  inc     L938F
-        stx     L9103
-        sty     L9104
+        stx     which_run_list
+        sty     copy_when
         lda     #$00
-L91EA:  dey
+L91EA:  dey                     ; map 0/1/2 to $00/$80/$C0
         beq     L91F2
         sec
         ror     a
         jmp     L91EA
 
-L91F2:  sta     L9104
+L91F2:  sta     copy_when
         jsr     L9CBA
         bpl     L91FD
         jmp     L936E
@@ -242,7 +252,7 @@ L91F2:  sta     L9104
 L91FD:  lda     L938D
         cmp     #$09
         bcc     L923C
-        lda     L9103
+        lda     which_run_list
         cmp     #$02
         beq     L926A
         lda     L938B
@@ -257,14 +267,14 @@ L9215:  lda     L938D
 
 L9220:  ldx     L938B
         inc     L938B
-        inc     $0C00
+        inc     selector_list + kSelectorListNumRunListOffset
         copy16  selector_menu_addr, @addr
         @addr := *+1
         inc     dummy1234
         txa
         jmp     L926D
 
-L923C:  lda     L9103
+L923C:  lda     which_run_list
         cmp     #$01
         beq     L926A
         lda     L938C
@@ -279,14 +289,14 @@ L924D:  lda     L938D
 
 L9258:  ldx     L938C
         inc     L938C
-        inc     $0C01
+        inc     selector_list + kSelectorListNumOtherListOffset
         lda     L938C
         clc
         adc     #$07
         jmp     L926D
 
 L926A:  lda     L938D
-L926D:  ldy     L9104
+L926D:  ldy     copy_when
         jsr     L9A0A
         jsr     L9CEA
         beq     L927B
@@ -300,11 +310,11 @@ L9282:  lda     L938D
         jsr     L979D
         jsr     desktop_main::set_cursor_watch
         lda     L938D
-        jsr     L9BD5
+        jsr     get_file_entry_addr
         stax    $06
-        ldy     #$0F
+        ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
-        cmp     #$C0
+        cmp     #kSelectorEntryCopyNever
         beq     L92F0
         sta     L938A
         jsr     get_copied_to_ramcard_flag
@@ -315,7 +325,7 @@ L9282:  lda     L938D
         jsr     L9E61
         beq     L92D6
         lda     L938D
-        jsr     L9BE2
+        jsr     get_file_path_addr
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -343,7 +353,7 @@ L92E5:  lda     ($06),y
         jmp     L9307
 
 L92F0:  lda     L938D
-        jsr     L9BE2
+        jsr     get_file_path_addr
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -920,7 +930,9 @@ L99F5:  MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
 
         rts
 
-L9A0A:  cmp     #$08
+;;; Input: A = index, Y = copy_when (1=boot, 2=use, 3=never)
+
+L9A0A:  cmp     #8
         bcc     L9A11
         jmp     L9A61
 
@@ -928,10 +940,10 @@ L9A11:  sta     L9A60
         tya
         pha
         lda     L9A60
-        jsr     L9BD5
+        jsr     get_file_entry_addr
         stax    $06
         lda     L9A60
-        jsr     L9BEF
+        jsr     get_resource_entry_addr
         stax    $08
         ldy     path_buf1
 L9A2D:  lda     path_buf1,y
@@ -939,15 +951,15 @@ L9A2D:  lda     path_buf1,y
         sta     ($08),y
         dey
         bpl     L9A2D
-        ldy     #$0F
+        ldy     #kSelectorEntryFlagsOffset
         pla
         sta     ($06),y
         sta     ($08),y
         lda     L9A60
-        jsr     L9BE2
+        jsr     get_file_path_addr
         stax    $06
         lda     L9A60
-        jsr     L9BFC
+        jsr     get_resource_path_addr
         stax    $08
         ldy     path_buf0
 L9A55:  lda     path_buf0,y
@@ -958,22 +970,25 @@ L9A55:  lda     path_buf0,y
         rts
 
 L9A60:  .byte   0
+
+;;; ============================================================
+
 L9A61:  sta     L9A96
         tya
         pha
         lda     L9A96
-        jsr     L9BD5
+        jsr     get_file_entry_addr
         stax    $06
         ldy     path_buf1
 L9A73:  lda     path_buf1,y
         sta     ($06),y
         dey
         bpl     L9A73
-        ldy     #$0F
+        ldy     #kSelectorEntryFlagsOffset
         pla
         sta     ($06),y
         lda     L9A96
-        jsr     L9BE2
+        jsr     get_file_path_addr
         stax    $06
         ldy     path_buf0
 L9A8D:  lda     path_buf0,y
@@ -992,7 +1007,7 @@ L9AA1:  tax
         inx
         cpx     L938B
         bne     L9AC0
-L9AA8:  dec     $0C00
+L9AA8:  dec     selector_list + kSelectorListNumRunListOffset
         dec     L938B
         copy16  selector_menu_addr, @addr
         @addr := *+1
@@ -1002,7 +1017,7 @@ L9AA8:  dec     $0C00
 L9AC0:  lda     L9BD4
         cmp     L938B
         beq     L9AA8
-        jsr     L9BD5
+        jsr     get_file_entry_addr
         stax    $06
         lda     $06
         adc     #$10
@@ -1017,11 +1032,11 @@ L9AE0:  lda     ($08),y
         sta     ($06),y
         dey
         bpl     L9AE0
-        ldy     #$0F
+        ldy     #kSelectorEntryFlagsOffset
         lda     ($08),y
         sta     ($06),y
         lda     L9BD4
-        jsr     L9BEF
+        jsr     get_resource_entry_addr
         stax    $06
         lda     $06
         adc     #$10
@@ -1036,11 +1051,11 @@ L9B08:  lda     ($08),y
         sta     ($06),y
         dey
         bpl     L9B08
-        ldy     #$0F
+        ldy     #kSelectorEntryFlagsOffset
         lda     ($08),y
         sta     ($06),y
         lda     L9BD4
-        jsr     L9BE2
+        jsr     get_file_path_addr
         stax    $06
         lda     $06
         adc     #$40
@@ -1056,7 +1071,7 @@ L9B30:  lda     ($08),y
         dey
         bpl     L9B30
         lda     L9BD4
-        jsr     L9BFC
+        jsr     get_resource_path_addr
         stax    $06
         lda     $06
         adc     #$40
@@ -1078,7 +1093,7 @@ L9B5F:  sec
         sbc     #$07
         cmp     L938C
         bne     L9B70
-        dec     $0C01
+        dec     selector_list + kSelectorListNumOtherListOffset
         dec     L938C
         jmp     L9CEA
 
@@ -1087,12 +1102,12 @@ L9B70:  lda     L9BD4
         sbc     #$08
         cmp     L938C
         bne     L9B84
-        dec     $0C01
+        dec     selector_list + kSelectorListNumOtherListOffset
         dec     L938C
         jmp     L9CEA
 
 L9B84:  lda     L9BD4
-        jsr     L9BD5
+        jsr     get_file_entry_addr
         stax    $06
         lda     $06
         adc     #$10
@@ -1108,7 +1123,7 @@ L9B9F:  lda     ($08),y
         dey
         bpl     L9B9F
         lda     L9BD4
-        jsr     L9BE2
+        jsr     get_file_path_addr
         stax    $06
         lda     $06
         adc     #$40
@@ -1123,52 +1138,86 @@ L9BC1:  lda     ($08),y
         sta     ($06),y
         dey
         bpl     L9BC1
-        ldy     #$0F
+        ldy     #kSelectorEntryFlagsOffset
         lda     ($08),y
         sta     ($06),y
         inc     L9BD4
         jmp     L9B70
 
 L9BD4:  .byte   0
-L9BD5:  jsr     L9D8D
-        clc
-        adc     #$02
-        tay
-        txa
-        adc     #$0C
-        tax
-        tya
-        rts
 
-L9BE2:  jsr     L9DA7
-        clc
-        adc     #$82
-        tay
-        txa
-        adc     #$0D
-        tax
-        tya
-        rts
+;;; ============================================================
+;;; Entry name address in the file buffer
+;;; Input: A = Entry
+;;; Output: A,X = Address
 
-L9BEF:  jsr     L9D8D
+.proc get_file_entry_addr
+        addr := selector_list + kSelectorListEntriesOffset
+        jsr     times16
         clc
-        adc     #$1E
+        adc     #<addr
         tay
         txa
-        adc     #$DB
+        adc     #>addr
         tax
         tya
         rts
+.endproc
 
-L9BFC:  jsr     L9DA7
+;;; ============================================================
+;;; Path address in the file buffer
+;;; Input: A = Entry
+;;; Output: A,X = Address
+
+.proc get_file_path_addr
+        addr := selector_list + kSelectorListPathsOffset
+
+        jsr     times64
         clc
-        adc     #$9E
+        adc     #<addr
         tay
         txa
-        adc     #$DB
+        adc     #>addr
         tax
         tya
         rts
+.endproc
+
+;;; ============================================================
+;;; Entry name address in the resource block (used for menu items)
+;;; Input: A = Entry
+;;; Output: A,X = Address
+
+.proc get_resource_entry_addr
+        jsr     times16
+        clc
+        adc     #<run_list_entries
+        tay
+        txa
+        adc     #>run_list_entries
+        tax
+        tya
+        rts
+.endproc
+
+;;; ============================================================
+;;; Path address in the resource block (used for invoking)
+;;; Input: A = Entry
+;;; Output: A,X = Address
+
+.proc get_resource_path_addr
+        jsr     times64
+        clc
+        adc     #<run_list_paths
+        tay
+        txa
+        adc     #>run_list_paths
+        tax
+        tya
+        rts
+.endproc
+
+;;; ============================================================
 
 L9C09:  sta     warning_dialog_num
         yax_call desktop_main::invoke_dialog_proc, $0C, warning_dialog_num
@@ -1176,8 +1225,8 @@ L9C09:  sta     warning_dialog_num
 
 filename_buffer := $1C00
 
-        DEFINE_OPEN_PARAMS open_params, filename_buffer, $800
-        DEFINE_WRITE_PARAMS write_params, $C00, $800
+        DEFINE_OPEN_PARAMS open_params, filename_buffer, io_buf
+        DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS flush_close_params
 
 L9C26:  addr_call copy_desktop_orig_prefix, filename_buffer
@@ -1219,13 +1268,13 @@ L9C81:  yax_call MLI_RELAY, FLUSH, flush_close_params
         yax_call MLI_RELAY, CLOSE, flush_close_params
         rts
 
-        DEFINE_OPEN_PARAMS open_params2, filename, $800
+        DEFINE_OPEN_PARAMS open_params2, filename, io_buf
 
 filename:
         PASCAL_STRING "Selector.List"
 
-        DEFINE_READ_PARAMS read_params2, $C00, $800
-        DEFINE_WRITE_PARAMS write_params2, $C00, $800
+        DEFINE_READ_PARAMS read_params2, selector_list, kSelectorListBufSize
+        DEFINE_WRITE_PARAMS write_params2, selector_list, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS close_params2
 
 L9CBA:  yax_call MLI_RELAY, OPEN, open_params2
@@ -1264,7 +1313,7 @@ L9D22:  jsr     L9CBA
         bpl     L9D28
         rts
 
-L9D28:  lda     $0C00
+L9D28:  lda     selector_list + kSelectorListNumRunListOffset
         sta     L938B
         beq     L9D55
         lda     #$00
@@ -1272,9 +1321,9 @@ L9D28:  lda     $0C00
 L9D35:  lda     L9D8C
         cmp     L938B
         beq     L9D55
-        jsr     L9D8D
+        jsr     times16
         clc
-        adc     #$02
+        adc     #kSelectorListEntriesOffset
         pha
         txa
         adc     #$0C
@@ -1285,7 +1334,7 @@ L9D35:  lda     L9D8C
         inc     L9D8C
         jmp     L9D35
 
-L9D55:  lda     $0C01
+L9D55:  lda     selector_list + kSelectorListNumOtherListOffset
         sta     L938C
         beq     L9D89
         lda     #$00
@@ -1295,9 +1344,9 @@ L9D62:  lda     L9D8C
         beq     L9D89
         clc
         adc     #$08
-        jsr     L9D8D
+        jsr     times16
         clc
-        adc     #$02
+        adc     #kSelectorListEntriesOffset
         pha
         txa
         adc     #$0C
@@ -1314,38 +1363,54 @@ L9D62:  lda     L9D8C
 L9D89:  return  #$00
 
 L9D8C:  .byte   0
-L9D8D:  ldx     #$00
-        stx     L9DA6
+
+;;; ============================================================
+;;; Times 16 - for computing entry list offsets
+;;; Input: A = number
+;;; Output: A,X = result
+
+.proc times16
+        ldx     #0
+        stx     hi
         asl     a
-        rol     L9DA6
+        rol     hi
         asl     a
-        rol     L9DA6
+        rol     hi
         asl     a
-        rol     L9DA6
+        rol     hi
         asl     a
-        rol     L9DA6
-        ldx     L9DA6
+        rol     hi
+        ldx     hi
         rts
 
-L9DA6:  .byte   0
-L9DA7:  ldx     #$00
-        stx     L9DC8
+hi:     .byte   0
+.endproc
+
+;;; ============================================================
+;;; Times 64 - for computing path list offsets
+;;; Input: A = number
+;;; Output: A,X = result
+
+.proc times64
+        ldx     #0
+        stx     hi
         asl     a
-        rol     L9DC8
+        rol     hi
         asl     a
-        rol     L9DC8
+        rol     hi
         asl     a
-        rol     L9DC8
+        rol     hi
         asl     a
-        rol     L9DC8
+        rol     hi
         asl     a
-        rol     L9DC8
+        rol     hi
         asl     a
-        rol     L9DC8
-        ldx     L9DC8
+        rol     hi
+        ldx     hi
         rts
 
-L9DC8:  .byte   0
+hi:     .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -1430,7 +1495,7 @@ L9E61:  jsr     L9E74
 L9E74:  sta     L9EBF
         addr_call copy_ramcard_prefix, L9EC1
         lda     L9EBF
-        jsr     L9BE2
+        jsr     get_file_path_addr
         stax    $06
         ldy     #$00
         lda     ($06),y

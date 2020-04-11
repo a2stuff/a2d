@@ -16026,10 +16026,7 @@ end:
         ;; Look for /RAM
         ldx     DEVCNT
 :       lda     DEVLST,x
-        ;; BUG: /RAM could be $B3,$B7,$BB or $BF
-        ;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
-        cmp     #(1<<7 | 3<<4 | DT_RAM) ; unit_num for /RAM is Slot 3, Drive 2
+        cmp     #RAM_DISK_UNITNUM
         beq     found_ram
         dex
         bpl     :-
@@ -16217,13 +16214,16 @@ end:
 
 ;;; ============================================================
 
+
+;;; See docs/Selector_List_Format.md for file format
+
 .proc load_selector_list
         ptr1 := $6
         ptr2 := $8
 
         selector_list_io_buf := $1000
         selector_list_data_buf := $1400
-        selector_list_data_len := $400
+        kSelectorListShortSize = $400
 
         MGTK_RELAY_CALL MGTK::CheckEvents
 
@@ -16334,7 +16334,7 @@ calc_data_str:
 str_selector_list:
         PASCAL_STRING "Selector.List"
 
-        DEFINE_READ_PARAMS read_params, selector_list_data_buf, selector_list_data_len
+        DEFINE_READ_PARAMS read_params, selector_list_data_buf, kSelectorListShortSize
         DEFINE_CLOSE_PARAMS close_params
 
 .proc read_selector_list
@@ -16350,14 +16350,14 @@ done:   rts
 .endproc
 
         DEFINE_CREATE_PARAMS create_params, str_selector_list, ACCESS_DEFAULT, $F1
-        DEFINE_WRITE_PARAMS write_params, selector_list_data_buf, selector_list_data_len
+        DEFINE_WRITE_PARAMS write_params, selector_list_data_buf, kSelectorListShortSize
 
 .proc write_selector_list
         ptr := $06
 
         ;; Clear buffer
         copy16  #selector_list_data_buf, ptr
-        ldx     #>selector_list_data_len ; number of pages
+        ldx     #>kSelectorListShortSize ; number of pages
         lda     #0
 ploop:  ldy     #0
 :       sta     (ptr),y

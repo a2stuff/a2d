@@ -12,10 +12,8 @@ overlay2_exec   := $A000        ; selector8 entry point
 
 ShowAlertImpl   := $D23E        ; in selector6
 
+;;; See docs/Selector_List_Format.md for file format
 selector_list   := $B300
-kSelectorListEntriesOffset      = 2
-kSelectorListPathsOffset        = 2 + 24 * 16
-
 
 ;;; ============================================================
 ;;; MGTK library
@@ -303,7 +301,6 @@ rect_entry:
         .byte   $7F
 
         io_buf_sl = $BB00
-        kSelectorListBufSize = $800
 
         DEFINE_OPEN_PARAMS open_selector_list_params, str_selector_list, io_buf_sl
         DEFINE_READ_PARAMS read_selector_list_params, selector_list, kSelectorListBufSize
@@ -434,18 +431,21 @@ check_key:
         bcs     done_keys
         sta     selected_entry
         jsr     get_selector_list_entry_addr
-        stax    $06
-        ldy     #$0F
-        lda     ($06),y
-        cmp     #$C0
-        beq     L91AC
+
+        entry_ptr := $06
+
+        stax    entry_ptr
+        ldy     #kSelectorEntryFlagsOffset
+        lda     (entry_ptr),y
+        cmp     #kSelectorEntryCopyNever
+        beq     :+
         jsr     get_copied_to_ramcard_flag
         beq     done_keys
-        jsr     L9DFF
-        beq     L91AC
+        jsr     get_selected_entry_file_info
+        beq     :+
         jmp     done_keys
 
-L91AC:  lda     selected_entry
+:       lda     selected_entry
         jsr     invoke_entry
 
         ;; --------------------------------------------------
@@ -1258,8 +1258,8 @@ count:  .byte   0
         sta     read_selector_list_params::ref_num
         MLI_CALL READ, read_selector_list_params
         MLI_CALL CLOSE, close_params
-        copy    selector_list, num_run_list_entries
-        copy    selector_list+1, num_other_run_list_entries
+        copy    selector_list + kSelectorListNumRunListOffset, num_run_list_entries
+        copy    selector_list + kSelectorListNumOtherListOffset, num_other_run_list_entries
         rts
 .endproc
 
@@ -1360,7 +1360,7 @@ watch_cursor:
 .proc disconnect_ramdisk
         ldx     DEVCNT
 :       lda     DEVLST,x
-        cmp     #$BF
+        cmp     #RAM_DISK_UNITNUM
         beq     loop
         dex
         bpl     :-
@@ -1381,7 +1381,7 @@ L9904:  dec     DEVCNT
 .proc reconnect_ramdisk
         inc     DEVCNT
         ldx     DEVCNT
-        lda     #$BF
+        lda     #RAM_DISK_UNITNUM
         sta     DEVLST,x
         rts
 .endproc
@@ -1545,49 +1545,52 @@ L9A10:  dey
 ;;; Output: A,X = Entry address
 
 .proc get_selector_list_entry_addr
-        ldx     #$00
-        stx     tmp
+        addr := selector_list + kSelectorListEntriesOffset
+
+        ldx     #0
+        stx     hi
         asl     a
-        rol     tmp
+        rol     hi
         asl     a
-        rol     tmp
+        rol     hi
         asl     a
-        rol     tmp
+        rol     hi
         asl     a
-        rol     tmp
+        rol     hi
         clc
-        adc     #<(selector_list+kSelectorListEntriesOffset)
+        adc     #<addr
         tay
-        lda     tmp
-        adc     #>(selector_list+kSelectorListEntriesOffset)
+        lda     hi
+        adc     #>addr
         tax
         tya
         rts
 
-tmp:    .byte   0
+hi:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc get_selector_list_path_addr
+        addr := selector_list + kSelectorListPathsOffset
 
-        ldx     #$00
-        stx     tmp
+        ldx     #0
+        stx     hi
         lsr     a
-        ror     tmp
+        ror     hi
         lsr     a
-        ror     tmp
+        ror     hi
         pha
-        lda     tmp
-        adc     #<(selector_list+kSelectorListPathsOffset)
+        lda     hi
+        adc     #<addr
         tay
         pla
-        adc     #>(selector_list+kSelectorListPathsOffset)
+        adc     #>addr
         tax
         tya
         rts
 
-tmp:    .byte   0
+hi:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1846,14 +1849,16 @@ L9C2A:  jsr     get_copied_to_ramcard_flag
 L9C32:  lda     selected_entry
         jsr     get_selector_list_entry_addr
         stax    $06
-        ldy     #$0F
+        ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
         asl     a
-        bmi     L9C78
-        bcc     L9C65
+        bmi     L9C78           ; bit 6 (now 7) = never copy
+        bcc     L9C65           ; bit 8 (now C) = copy on boot
+
+        ;; Copy on boot
         lda     L9129
         bne     L9C6F
-        jsr     L9DFF
+        jsr     get_selected_entry_file_info
         beq     L9C6F
         jsr     load_overlay2
         lda     selected_entry
@@ -1867,10 +1872,10 @@ L9C32:  lda     selected_entry
 
 L9C65:  lda     L9129
         bne     L9C6F
-        jsr     L9DFF
+        jsr     get_selected_entry_file_info
         bne     L9C78
 L9C6F:  lda     selected_entry
-        jsr     L9F27
+        jsr     compose_dst_path
         jmp     L9C7E
 
         ;; --------------------------------------------------
@@ -1936,7 +1941,7 @@ check_path:
         ldy     INVOKER_PREFIX
 :       lda     INVOKER_PREFIX,y
         cmp     #'/'
-        beq     L9CEF
+        beq     :+
         dey
         bne     :-
         lda     #AlertID::insert_source_disk
@@ -1944,17 +1949,17 @@ check_path:
         bne     clear_selected_entry
         jmp     try
 
-L9CEF:  dey
+:       dey
         tya
         pha
         iny
         ldx     #$00
-L9CF5:  iny
+:       iny
         inx
         lda     INVOKER_PREFIX,y
         sta     INVOKER_FILENAME,x
         cpy     INVOKER_PREFIX
-        bne     L9CF5
+        bne     :-
         stx     INVOKER_FILENAME
         pla
         sta     INVOKER_PREFIX
@@ -1983,6 +1988,7 @@ L9CF5:  iny
         ;; If we got here, invoker failed.
         jsr     disconnect_ramdisk
         ;; TODO: SetMonoMode ???
+        ;; TODO: QUIT ???
         ;; fall through...
 .endproc
         invoke_entry_ep2 := invoke_entry::ep2
@@ -2089,19 +2095,19 @@ str_basic_system:
 
 ;;; ============================================================
 
-.proc L9DFF
+.proc get_selected_entry_file_info
         ptr := $06
 
         lda     selected_entry
-        jsr     L9F27
+        jsr     compose_dst_path
         stax    ptr
-        ldy     #$00
+        ldy     #0
         lda     (ptr),y
         tay
-L9E0E:  lda     (ptr),y
+:       lda     (ptr),y
         sta     INVOKER_PREFIX,y
         dey
-        bpl     L9E0E
+        bpl     :-
         MLI_CALL GET_FILE_INFO, get_file_info_invoke_params
         rts
 .endproc
@@ -2220,45 +2226,50 @@ L9EFB:  .byte   0
 
 ;;; ============================================================
 
-.proc L9F27
+.proc compose_dst_path
         buf := $800
 
-        sta     L9F72
+        sta     tmp
         addr_call copy_ramcard_prefix, buf
-        lda     L9F72
+        lda     tmp
         jsr     get_selector_list_path_addr
-        stax    $06
-        ldy     #$00
-        lda     ($06),y
-        sta     L9F73
+
+        path_addr := $06
+
+        stax    path_addr
+        ldy     #0
+        lda     (path_addr),y
+        sta     len
         tay
-L9F43:  lda     ($06),y
+:       lda     (path_addr),y
         and     #CHAR_MASK
         cmp     #'/'
-        beq     L9F4E
+        beq     :+
         dey
-        bne     L9F43
-L9F4E:  dey
-L9F4F:  lda     ($06),y
+        bne     :-
+
+:       dey
+:       lda     (path_addr),y
         and     #CHAR_MASK
         cmp     #'/'
-        beq     L9F5A
+        beq     :+
         dey
-        bne     L9F4F
-L9F5A:  dey
+        bne     :-
+
+:       dey
         ldx     buf
-L9F5E:  inx
+:       inx
         iny
-        lda     ($06),y
+        lda     (path_addr),y
         sta     buf,x
-        cpy     L9F73
-        bne     L9F5E
+        cpy     len
+        bne     :-
         stx     buf
         ldax    #buf
         rts
 
-L9F72:  .byte   0
-L9F73:  .byte   0
+tmp:    .byte   0
+len:    .byte   0
 .endproc
 
 ;;; ============================================================

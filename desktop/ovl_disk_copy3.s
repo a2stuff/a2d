@@ -1376,10 +1376,8 @@ LDF72:  .byte   0
 
 ;;; ============================================================
 
-RAM_DISK_UNITNUM = $BF
-
 .proc remove_ram_disk
-        ;; Find Slot 3 Drive 2 RAM disk (unit number $BF)
+        ;; Find Slot 3 Drive 2 RAM disk
         ldx     DEVCNT
 :       lda     DEVLST,x
         cmp     #RAM_DISK_UNITNUM

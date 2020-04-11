@@ -87,6 +87,11 @@ DT_RAM          = $F
 ;;;   bit 1-0 = number of volumes (0-1)
 ;;; "You should ignore the low nibble in the unit number..."
 
+;;; BUG: /RAM could be $B3,$B7,$BB or $BF
+;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
+;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+RAM_DISK_UNITNUM = (1<<7 | 3<<4 | DT_RAM) ; unit_num for /RAM is Slot 3, Drive 2
+
 ;;; ============================================================
 ;;; File Types
 ;;; ============================================================

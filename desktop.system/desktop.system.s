@@ -949,23 +949,12 @@ prodos_loader_blocks:
 ;;; ============================================================
         ASSERT_ADDRESS $3100
 
-;;; SPECULATION: This copies Selector entries marked
-;;; "Down load" / "At boot" to the RAMCard as well
 
 .proc copy_selector_entries_to_ramcard
 
-        ;; File format:
-        ;; $  0 - number of entries (0-7) in first batch (Run List???)
-        ;; $  1 - number of entries (0-15) in second batch (Other Run List???)
-        ;; $  2 - 24 * 16-byte data entries
-        ;;   $0 - label (length-prefixed, 15 bytes)
-        ;;   $F - active_flag (other flags, i.e. download on ... ?)
-        ;;          bit 6 = "down loaded" flag ???
-        ;; $182 - 24 * 64-byte pathname
-        ;; $782 - EOF
+;;; See docs/Selector_List_Format.md for file format
 
         selector_buffer := $4400
-        selector_buflen := $800
 
 .proc process_selector_list
         ptr := $6
@@ -998,14 +987,14 @@ prodos_loader_blocks:
         sta     entry_num
 entry_loop:
         lda     entry_num
-        cmp     selector_buffer ; done?
+        cmp     selector_buffer + kSelectorListNumRunListOffset
         beq     done_entries
         jsr     compute_label_addr
         stax    ptr
 
-        ldy     #$0F            ; check active flag
+        ldy     #kSelectorEntryFlagsOffset ; Check Copy-to-RamCARD flags
         lda     (ptr),y
-        bne     next_entry
+        bne     next_entry      ; not "On first use"
         lda     entry_num
         jsr     compute_path_addr
 
@@ -1030,7 +1019,7 @@ done_entries:
 
 entry_loop2:
         lda     entry_num
-        cmp     selector_buffer + 1 ; ???
+        cmp     selector_buffer + kSelectorListNumOtherListOffset
         beq     bail
         clc
         adc     #8              ; offset by 8 ???
@@ -1731,7 +1720,7 @@ fail:   pla
 ;;; Compute first offset into selector file - A*16 + 2
 
 .proc compute_label_addr
-        addr := selector_buffer + $2
+        addr := selector_buffer + kSelectorListEntriesOffset
 
         jsr     ax_times_16
         clc
@@ -1748,7 +1737,7 @@ fail:   pla
 ;;; Compute second offset into selector file - A*64 + $182
 
 .proc compute_path_addr
-        addr := selector_buffer + $182
+        addr := selector_buffer + kSelectorListPathsOffset
 
         jsr     ax_times_64
         clc
@@ -1773,7 +1762,7 @@ fail:   pla
         DEFINE_OPEN_PARAMS open_params, str_selector_list, open_io_buffer
 str_selector_list:
         PASCAL_STRING "Selector.List"
-        DEFINE_READ_PARAMS read_params, selector_buffer, selector_buflen
+        DEFINE_READ_PARAMS read_params, selector_buffer, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS close_params
 
 start:  MLI_CALL OPEN, open_params

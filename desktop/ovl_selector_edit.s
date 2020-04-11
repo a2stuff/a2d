@@ -6,8 +6,8 @@
         .org $7000
 
 .proc L7000
-        stx     L73A9
-        sty     L73AA
+        stx     which_run_list
+        sty     copy_when
         jsr     common_overlay::create_common_dialog
         jsr     L7101
         jsr     L70AD
@@ -86,9 +86,9 @@ L70B0:  lda     jt_pathname+1,x
         copy    #kGlyphInsertionPoint, path_buf2+1
         lda     winfo_entrydlg
         jsr     common_overlay::set_port_for_window
-        lda     L73A9
+        lda     which_run_list
         jsr     L7467
-        lda     L73AA
+        lda     copy_when
         jsr     L747B
         lda     #$80
         sta     common_overlay::L5103
@@ -225,6 +225,10 @@ L72BF:  copy    #1, path_buf2
 .endproc
 
 ;;; ============================================================
+;;; Close window and finish (via saved_stack) if OK
+;;; Outputs: A = 0 if OK
+;;;          X = which run list (1=run list, 2=other run list)
+;;;          Y = copy when (1=boot, 2=use, 3=never)
 
 .proc L72CD
         addr_call common_overlay::L647C, path_buf0
@@ -252,8 +256,8 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         copy16  #common_overlay::noop, common_overlay::L59B9::key_meta_digit+1
         ldx     common_overlay::stash_stack
         txs
-        ldx     L73A9
-        ldy     L73AA
+        ldx     which_run_list
+        ldy     copy_when
         return  #$00
 .endproc
 
@@ -301,8 +305,10 @@ L737C:  lda     jt_pathname+1,x
 
 ;;; ============================================================
 
-L73A9:  .byte   0
-L73AA:  .byte   0
+which_run_list:
+        .byte   0
+copy_when:
+        .byte   0
 
 ;;; ============================================================
 
@@ -331,56 +337,56 @@ L73AA:  .byte   0
 .endproc
 
 .proc click_run_list_ctrl
-        lda     L73A9
+        lda     which_run_list
         cmp     #1
         beq     :+
         jsr     L7467
         lda     #1
-        sta     L73A9
+        sta     which_run_list
         jsr     L7467
 :       return  #$FF
 .endproc
 
 .proc click_other_run_list_ctrl
-        lda     L73A9
+        lda     which_run_list
         cmp     #2
         beq     :+
         jsr     L7467
         lda     #2
-        sta     L73A9
+        sta     which_run_list
         jsr     L7467
 :       return  #$FF
 .endproc
 
 .proc click_at_first_boot_ctrl
-        lda     L73AA
+        lda     copy_when
         cmp     #1
         beq     :+
         jsr     L747B
         lda     #1
-        sta     L73AA
+        sta     copy_when
         jsr     L747B
 :       return  #$FF
 .endproc
 
 .proc click_at_first_use_ctrl
-        lda     L73AA
+        lda     copy_when
         cmp     #2
         beq     :+
         jsr     L747B
         lda     #2
-        sta     L73AA
+        sta     copy_when
         jsr     L747B
 :       return  #$FF
 .endproc
 
 .proc click_never_ctrl
-        lda     L73AA
+        lda     copy_when
         cmp     #3
         beq     :+
         jsr     L747B
         lda     #3
-        sta     L73AA
+        sta     copy_when
         jsr     L747B
 :       return  #$FF
 .endproc
