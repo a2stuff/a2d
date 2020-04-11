@@ -19,6 +19,9 @@ kTitleBarHeight = 12
 kButtonWidth  = 100
 kButtonHeight = 11
 
+;;; Mouse threshold for double click detection.
+kDoubleClickDeltaX      = 5
+kDoubleClickDeltaY      = 4
 
 ;;; ============================================================
 ;;; Selector List file

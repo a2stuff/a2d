@@ -272,9 +272,6 @@ LA211:
         .byte   $00
 clicked_flag:
         .byte   $00
-dblclick_counter:
-        .byte   0
-kDoubleClickCounterInit = $30
 
         .byte   $00
 
@@ -471,7 +468,6 @@ init:   tsx
         lda     #$00
         sta     device_index
         sta     clicked_flag
-        sta     dblclick_counter
         sta     LA447
         sta     prompt_ip_flag
         sta     LA211
@@ -499,12 +495,6 @@ LA47F:  .byte   0
         bne     :+
         jsr     blink_ip
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
-
-:       bit     clicked_flag
-        bpl     :+
-        dec     dblclick_counter
-        bne     :+
-        copy    #0, clicked_flag
 
 :       MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -717,11 +707,8 @@ LA662:  lda     winfo_list::window_id
         ;; --------------------------------------------------
         ;; Click on the previous entry
 
-same:   bit     clicked_flag
-        bmi     open
-        lda     #kDoubleClickCounterInit
-        sta     dblclick_counter
-        copy    #$FF, clicked_flag
+same:   jsr     detect_double_click
+        beq     open
         rts
 
 open:   ldx     selected_index
@@ -804,10 +791,11 @@ different:
         jsr     LB404
         jsr     LBAD0
 
-        lda     #kDoubleClickCounterInit
-        sta     dblclick_counter
-        copy    #$FF, clicked_flag
-        rts
+        jsr     detect_double_click
+        bmi     :+
+        jmp     open
+
+:       rts
 .endproc
 
 ;;; ============================================================
@@ -1703,83 +1691,103 @@ noop:   rts
 
 ;;; ============================================================
 
-.proc detect_double_click
+;;; ============================================================
+;;; Double Click Detection
+;;; Returns with A=0 if double click, A=$FF otherwise.
 
+.proc detect_double_click
+        ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
-:       copy    event_coords,x, xcoord,x
+:       copy    event_coords,x, coords,x
+
         dex
         bpl     :-
-        lda     double_click_counter_init
-        sta     counter
-LAEB8:  dec     counter
-        beq     LAEF5
+
+        copy16  SETTINGS + DeskTopSettings::dblclick_speed, counter
+
+        ;; Decrement counter, bail if time delta exceeded
+loop:   dec16   counter
+        lda     counter
+        ora     counter+1
+        beq     exit
+
         MGTK_CALL MGTK::PeekEvent, event_params
+
+        ;; Check coords, bail if pixel delta exceeded
         jsr     check_delta
-        bmi     LAEF5
-        lda     #$FF
-        sta     LAF45
+        bmi     exit            ; moved past delta; no double-click
+
         lda     event_kind
-        sta     kind
         cmp     #MGTK::EventKind::no_event
-        beq     LAEB8
+        beq     loop
         cmp     #MGTK::EventKind::drag
-        beq     LAEB8
+        beq     loop
         cmp     #MGTK::EventKind::button_up
-        bne     LAEE8
+        bne     :+
+
         MGTK_CALL MGTK::GetEvent, event_params
-        jmp     LAEB8
+        jmp     loop
 
-LAEE8:  cmp     #MGTK::EventKind::button_down
-        bne     LAEF5
-        MGTK_CALL MGTK::GetEvent, event_params
-        return  #$00
+:       cmp     #MGTK::EventKind::button_down
+        beq     :+
+        cmp     #MGTK::EventKind::apple_key ; modified-click
+        bne     exit
 
-LAEF5:  return  #$FF
+:       MGTK_CALL MGTK::GetEvent, event_params
+        return  #0              ; double-click
 
-        kMaxDeltaX = 5
-        kMaxDeltaY = 4
+exit:   return  #$FF            ; not double-click
 
-check_delta:
+        ;; Is the new coord within range of the old coord?
+.proc check_delta
+        ;; compute x delta
         lda     event_xcoord
         sec
         sbc     xcoord
-        sta     mouse_delta
+        sta     delta
         lda     event_xcoord+1
         sbc     xcoord+1
-        bpl     LAF14
-        lda     mouse_delta
-        cmp     #AS_BYTE(-kMaxDeltaX)
-        bcs     LAF1B
-LAF11:  return  #$FF
+        bpl     :+
 
-LAF14:  lda     mouse_delta
-        cmp     #kMaxDeltaX
-        bcs     LAF11
-LAF1B:  lda     event_ycoord
+        ;; is -delta < x < 0 ?
+        lda     delta
+        cmp     #AS_BYTE(-kDoubleClickDeltaX)
+        bcs     check_y
+fail:   return  #$FF
+
+        ;; is 0 < x < delta ?
+:       lda     delta
+        cmp     #kDoubleClickDeltaX
+        bcs     fail
+
+        ;; compute y delta
+check_y:
+        lda     event_ycoord
         sec
         sbc     ycoord
-        sta     mouse_delta
+        sta     delta
         lda     event_ycoord+1
         sbc     ycoord+1
-        bpl     LAF34
-        lda     mouse_delta
-        cmp     #AS_BYTE(-kMaxDeltaY)
-        bcs     LAF3B
-LAF34:  lda     mouse_delta
-        cmp     #kMaxDeltaY
-        bcs     LAF11
-LAF3B:  return  #$00
+        bpl     :+
+
+        ;; is -delta < y < 0 ?
+        lda     delta
+        cmp     #AS_BYTE(-kDoubleClickDeltaY)
+        bcs     ok
+
+        ;; is 0 < y < delta ?
+:       lda     delta
+        cmp     #kDoubleClickDeltaY
+        bcs     fail
+ok:     return  #0
+.endproc
 
 counter:
-        .byte   0
+        .word   0
+coords:
 xcoord: .word   0
 ycoord: .word   0
-
-mouse_delta:
-        .byte   0
-
-kind:   .byte   0
-LAF45:  .byte   0
+delta:  .byte   0
 .endproc
 
 ;;; ============================================================

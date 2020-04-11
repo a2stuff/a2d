@@ -14704,9 +14704,6 @@ set_penmode_xor2:
 ;;; Returns with A=0 if double click, A=$FF otherwise.
 
 .proc detect_double_click
-        kDoubleClickDeltaX = 5
-        kDoubleClickDeltaY = 4
-
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
 :       copy    event_coords,x, coords,x
