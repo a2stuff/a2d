@@ -253,8 +253,10 @@ pattern:.res    8, $FF
         .byte   $00
         .byte   $00
 prompt_ip_counter:
-        .byte   $14
+        .byte   1             ; immediately decremented to 0 and reset
+
         .byte   $00
+
 prompt_ip_flag:
         .byte   $00
 LA20D:
@@ -268,10 +270,12 @@ LA211:
         .byte   $00
         .byte   $00
         .byte   $00
-LA214:
+clicked_flag:
         .byte   $00
-LA215:
-        .byte   $00
+dblclick_counter:
+        .byte   0
+kDoubleClickCounterInit = $30
+
         .byte   $00
 
 str_1_char:
@@ -465,15 +469,15 @@ init:   tsx
         jsr     set_pointer_cursor
         lda     #$00
         sta     device_index
-        sta     LA214
-        sta     LA215
+        sta     clicked_flag
+        sta     dblclick_counter
         sta     LA447
         sta     prompt_ip_flag
         sta     LA211
         sta     ip_cursor_flag
         sta     LA47D
         sta     LA47F
-        copy    #kIPCounterDefault, prompt_ip_counter
+        copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
         lda     #$FF
         sta     LA231
         jmp     start
@@ -486,37 +490,41 @@ LA47F:  .byte   0
 
 ;;; ============================================================
 
-kIPCounterDefault = $28
-
 .proc event_loop
         bit     LA20D
-        bpl     LA492
+        bpl     :+
+
         dec     prompt_ip_counter
-        bne     LA492
+        bne     :+
         jsr     blink_ip
-        copy    #kIPCounterDefault, prompt_ip_counter
-LA492:  bit     LA214
-        bpl     LA4A1
-        dec     LA215
-        bne     LA4A1
-        lda     #$00
-        sta     LA214
-LA4A1:  MGTK_CALL MGTK::GetEvent, event_params
+        copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
+
+:       bit     clicked_flag
+        bpl     :+
+        dec     dblclick_counter
+        bne     :+
+        copy    #0, clicked_flag
+
+:       MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
-        bne     LA4B4
+        bne     :+
         jsr     handle_button_down
         jmp     event_loop
 
-LA4B4:  cmp     #MGTK::EventKind::key_down
-        bne     LA4BB
+:       cmp     #MGTK::EventKind::key_down
+        bne     :+
         jsr     handle_key
-LA4BB:  MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_which_area
-        bne     LA4C9
         jmp     event_loop
 
-LA4C9:  lda     findwindow_window_id
+:       jsr     check_mouse_moved
+        bcc     event_loop
+
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_which_area
+        bne     :+
+        jmp     event_loop
+:       lda     findwindow_window_id
         cmp     winfo1::window_id
         beq     LA4D4
         jmp     event_loop
@@ -705,12 +713,11 @@ LA662:  lda     winfo2::window_id
         beq     LA69E
         jmp     LA73F
 
-LA69E:  bit     LA214
+LA69E:  bit     clicked_flag
         bmi     LA6AE
-        lda     #$30
-        sta     LA215
-        lda     #$FF
-        sta     LA214
+        lda     #kDoubleClickCounterInit
+        sta     dblclick_counter
+        copy    #$FF, clicked_flag
         rts
 
 LA6AE:  ldx     LA231
@@ -783,10 +790,9 @@ LA756:  lda     screentowindow_windowy
 LA767:  lda     LA231
         jsr     LB404
         jsr     LBAD0
-        lda     #$30
-        sta     LA215
-        lda     #$FF
-        sta     LA214
+        lda     #kDoubleClickCounterInit
+        sta     dblclick_counter
+        copy    #$FF, clicked_flag
         rts
 .endproc
 
@@ -3211,6 +3217,29 @@ LBBDD:  jsr     LB106
 LBBE1:  .byte   0
 LBBE2:  .byte   0
 .endproc
+
+;;; ============================================================
+;;; Determine if mouse moved
+;;; Output: C=1 if mouse moved
+
+.proc check_mouse_moved
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     event_coords,x
+        cmp     coords,x
+        bne     diff
+        dex
+        bpl     :-
+        clc
+        rts
+
+diff:   COPY_STRUCT MGTK::Point, event_coords, coords
+        sec
+        rts
+
+coords: DEFINE_POINT 0,0
+.endproc
+
+;;; ============================================================
 
 
 .endscope

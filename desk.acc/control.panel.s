@@ -1603,7 +1603,6 @@ done:   rts
 kIPBlinkSpeedTableSize = 3
 
 ipblink_speed_table:
-        .byte   0
         .byte   kDefaultIPBlinkSpeed * 2
         .byte   kDefaultIPBlinkSpeed * 1
         .byte   kDefaultIPBlinkSpeed * 1/2

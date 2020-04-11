@@ -93,7 +93,7 @@ L70B0:  lda     jt_pathname+1,x
         lda     #$80
         sta     common_overlay::L5103
         copy16  #L73AB, common_overlay::L531B+1
-        copy16  #L74F4, common_overlay::L59B9::key_meta_digit+1
+        copy16  #L74F4, common_overlay::handle_key::key_meta_digit+1
         rts
 .endproc
 
@@ -253,7 +253,7 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         sta     LD8EC
         jsr     common_overlay::set_cursor_pointer
-        copy16  #common_overlay::noop, common_overlay::L59B9::key_meta_digit+1
+        copy16  #common_overlay::noop, common_overlay::handle_key::key_meta_digit+1
         ldx     common_overlay::stash_stack
         txs
         ldx     which_run_list
@@ -271,7 +271,7 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         lda     #$00
         sta     LD8EC
         jsr     common_overlay::set_cursor_pointer
-        copy16  #common_overlay::noop, common_overlay::L59B9::key_meta_digit+1
+        copy16  #common_overlay::noop, common_overlay::handle_key::key_meta_digit+1
         ldx     common_overlay::stash_stack
         txs
         return  #$FF

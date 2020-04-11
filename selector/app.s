@@ -50,10 +50,10 @@ selector_list   := $B300
         .byte   %10101010
 
         ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::dblclick_speed
-        .word   0               ; $12C * 1, * 4, or * 32, 0 if not set
+        .word   kDefaultDblClickSpeed ; $12C * 1, * 4, or * 32, 0 if not set
 
         ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::ip_blink_speed
-        .byte   60              ; 120, 60 or 30; lower is faster
+        .byte   kDefaultIPBlinkSpeed ; 120, 60 or 30; lower is faster
 
         ;; Reserved for future use...
 

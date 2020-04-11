@@ -97,11 +97,12 @@ L5105:  .byte   0               ; ??? something about the picker
 
 :       cmp     #MGTK::EventKind::key_down
         bne     :+
-        jsr     L59B9
+        jsr     handle_key
         jmp     event_loop
 
 :       jsr     desktop_main::check_mouse_moved
         bcc     event_loop
+
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
         bne     :+
@@ -698,7 +699,7 @@ params: .addr   0
 ;;; ============================================================
 ;;; Key handler
 
-.proc L59B9
+.proc handle_key
         lda     event_modifiers
         beq     L59F7
 
