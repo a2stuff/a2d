@@ -105,10 +105,10 @@ L70F1:  lda     #1
         lda     #$80
         sta     common_overlay::L50A8
         sta     common_overlay::L51AE
-        lda     LD920
+        lda     selected_index
         sta     LD921
         lda     #$FF
-        sta     LD920
+        sta     selected_index
         jsr     common_overlay::device_on_line
         jsr     common_overlay::L5F5B
         jsr     common_overlay::L6161
@@ -209,7 +209,7 @@ L7209:  lda     jt_source_filename+1,x
         lda     #$00
         sta     common_overlay::L50A8
         lda     #$FF
-        sta     LD920
+        sta     selected_index
         lda     #$00
         sta     common_overlay::L51AE
         lda     LD8F0
@@ -247,7 +247,7 @@ L7272:  jsr     common_overlay::device_on_line
 L7281:  jsr     common_overlay::L5F5B
         bcs     L7272
         lda     LD921
-L7289:  sta     LD920
+L7289:  sta     selected_index
         jsr     common_overlay::L6163
         jsr     common_overlay::L61B1
         jsr     common_overlay::draw_list_entries

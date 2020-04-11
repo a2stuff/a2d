@@ -55,7 +55,7 @@ routine_table:  .addr   $7000, $7000, $7000
         lda     SETTINGS + DeskTopSettings::ip_blink_speed
         sta     prompt_ip_counter
         lda     #$FF
-        sta     LD920
+        sta     selected_index
         pla
         asl     a
         tax
@@ -174,7 +174,7 @@ L51C7:  lda     findwindow_window_id
 clicked:
         bit     L5105
         bmi     L520A
-        lda     LD920
+        lda     selected_index
         bpl     L520D
 L520A:  jmp     set_up_ports
 
@@ -278,7 +278,7 @@ L531B:  jsr     noop
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     rts1
         lda     winfo_entrydlg_file_picker::vscroll
-        and     #$01            ; vertical scroll enabled?
+        and     #MGTK::Ctl::vertical_scroll_bar ; vertical scroll enabled?
         beq     rts1
         jmp     handle_vscroll_click
 
@@ -291,18 +291,23 @@ L5341:  lda     winfo_entrydlg_file_picker
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
-        lda     LD920
+        lda     selected_index
         cmp     screentowindow_windowy
-        beq     :+
-        jmp     L542F
+        beq     same
+        jmp     different
 
-:       jsr     desktop_main::detect_double_click
-        beq     L5386
+        ;; --------------------------------------------------
+        ;; Click on the previous entry
+
+same:   jsr     desktop_main::detect_double_click
+        beq     open
         rts
 
-L5386:  ldx     LD920
+open:   ldx     selected_index
         lda     file_list_index,x
-        bmi     L53B5
+        bmi     folder
+
+        ;; File - select it.
         lda     winfo_entrydlg
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -311,33 +316,36 @@ L5386:  ldx     LD920
         jsr     jt_handle_ok
         jmp     rts1
 
-L53B5:  and     #$7F
+        ;; Folder - open it.
+folder: and     #$7F
         pha
         lda     winfo_entrydlg
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
-        lda     #$00
-        sta     L542E
+        lda     #0
+        sta     hi
+
+        ptr := $08
         copy16  #file_names, $08
         pla
         asl     a
-        rol     L542E
+        rol     hi
         asl     a
-        rol     L542E
+        rol     hi
         asl     a
-        rol     L542E
+        rol     hi
         asl     a
-        rol     L542E
+        rol     hi
         clc
-        adc     $08
-        sta     $08
-        lda     L542E
-        adc     $09
-        sta     $09
-        ldx     $09
-        lda     $08
+        adc     ptr
+        sta     ptr
+        lda     hi
+        adc     ptr+1
+        sta     ptr+1
+        ldx     ptr+1
+        lda     ptr
         jsr     L5F0D
         jsr     L5F5B
         jsr     L6161
@@ -349,32 +357,37 @@ L53B5:  and     #$7F
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
 
-L542E:  .byte   0
+hi:     .byte   0
 
-L542F:  lda     screentowindow_windowy
+        ;; --------------------------------------------------
+        ;; Click on a different entry
+
+different:
+        lda     screentowindow_windowy
         cmp     num_file_names
-        bcc     L5438
+        bcc     :+
         rts
 
-L5438:  lda     LD920
-        bmi     L5446
+:       lda     selected_index
+        bmi     :+
         jsr     jt_strip_path_segment
-        lda     LD920
+        lda     selected_index
         jsr     L6274
-L5446:  lda     screentowindow_windowy
-        sta     LD920
+:       lda     screentowindow_windowy
+        sta     selected_index
         bit     LD8F0
-        bpl     L5457
+        bpl     :+
         jsr     jt_prep_path
         jsr     jt_redraw_input
-L5457:  lda     LD920
+:       lda     selected_index
         jsr     L6274
         jsr     jt_05
-        jsr     desktop_main::detect_double_click
-        bmi     L5468
-        jmp     L5386
 
-L5468:  rts
+        jsr     desktop_main::detect_double_click
+        bmi     :+
+        jmp     open
+
+:       rts
 .endproc
 
 ;;; ============================================================
@@ -566,7 +579,7 @@ cursor_ip_flag:                 ; high bit set when cursor is IP
 ;;; ============================================================
 
 .proc L5607
-        ldx     LD920
+        ldx     selected_index
         lda     file_list_index,x
         and     #$7F
         pha
@@ -608,7 +621,7 @@ L565B:  .byte   0
 ;;; ============================================================
 
 L565C:  lda     #$FF
-        sta     LD920
+        sta     selected_index
         jsr     inc_device_num
         jsr     device_on_line
         jsr     L5F5B
@@ -640,10 +653,10 @@ L569B:  cpx     #$01
         jmp     L56E1
 
 L56A2:  jsr     L5F49
-        lda     LD920
+        lda     selected_index
         pha
         lda     #$FF
-        sta     LD920
+        sta     selected_index
         jsr     L5F5B
         jsr     L6161
         lda     #$00
@@ -651,11 +664,11 @@ L56A2:  jsr     L5F49
         jsr     L61B1
         jsr     draw_list_entries
         pla
-        sta     LD920
+        sta     selected_index
         bit     L56E2
         bmi     L56D6
         jsr     jt_strip_path_segment
-        lda     LD920
+        lda     selected_index
         bmi     L56DC
         jsr     jt_strip_path_segment
         jmp     L56DC
@@ -663,7 +676,7 @@ L56A2:  jsr     L5F49
 L56D6:  jsr     jt_prep_path
         jsr     jt_redraw_input
 L56DC:  lda     #$FF
-        sta     LD920
+        sta     selected_index
 L56E1:  rts
 
 L56E2:  .byte   0
@@ -777,7 +790,7 @@ L5A4F:  jmp     L5AC8
 
 L5A52:  cmp     #CHAR_CTRL_O    ; Open
         bne     L5A8B
-        lda     LD920
+        lda     selected_index
         bmi     L5AC8
         tax
         lda     file_list_index,x
@@ -846,7 +859,7 @@ key_meta_digit:
 .proc key_down
         lda     num_file_names
         beq     L5B37
-        lda     LD920
+        lda     selected_index
         bmi     L5B47
         tax
         inx
@@ -856,8 +869,8 @@ L5B37:  rts
 
 L5B38:  jsr     L6274
         jsr     jt_strip_path_segment
-        inc     LD920
-        lda     LD920
+        inc     selected_index
+        lda     selected_index
         jmp     update_list_selection
 
 L5B47:  lda     #0
@@ -867,15 +880,15 @@ L5B47:  lda     #0
 .proc key_up
         lda     num_file_names
         beq     L5B58
-        lda     LD920
+        lda     selected_index
         bmi     L5B68
         bne     L5B59
 L5B58:  rts
 
 L5B59:  jsr     L6274
         jsr     jt_strip_path_segment
-        dec     LD920
-        lda     LD920
+        dec     selected_index
+        lda     selected_index
         jmp     update_list_selection
 
 L5B68:  ldx     num_file_names
@@ -897,10 +910,10 @@ done:   rts
 
 L5B83:  jsr     L5B9D
         bmi     done
-        cmp     LD920
+        cmp     selected_index
         beq     done
         pha
-        lda     LD920
+        lda     selected_index
         bmi     L5B99
         jsr     L6274
         jsr     jt_strip_path_segment
@@ -959,7 +972,7 @@ L5BF5:  .byte   0
 .proc scroll_list_top
         lda     num_file_names
         beq     L5C02
-        lda     LD920
+        lda     selected_index
         bmi     L5C09
         bne     L5C03
 L5C02:  rts
@@ -973,7 +986,7 @@ L5C09:  lda     #$00
 .proc scroll_list_bottom
         lda     num_file_names
         beq     L5C1E
-        ldx     LD920
+        ldx     selected_index
         bmi     L5C27
         inx
         cpx     num_file_names
@@ -993,9 +1006,9 @@ L5C27:  ldx     num_file_names
 ;;; ============================================================
 
 .proc update_list_selection
-        sta     LD920
+        sta     selected_index
         jsr     jt_05
-        lda     LD920
+        lda     selected_index
         jsr     L6586
         jsr     L6163
         jsr     draw_list_entries
@@ -1183,7 +1196,7 @@ L5ED0:  yax_call MLI_RELAY, OPEN, open_params
         beq     L5EE9
         jsr     device_on_line
         lda     #$FF
-        sta     LD920
+        sta     selected_index
         sta     L5F0C
         jmp     L5ED0
 
@@ -1194,7 +1207,7 @@ L5EE9:  lda     open_params::ref_num
         beq     L5F0B
         jsr     device_on_line
         lda     #$FF
-        sta     LD920
+        sta     selected_index
         sta     L5F0C
         jmp     L5ED0
 
@@ -1227,7 +1240,7 @@ L5F31:  lda     ($06),y
         pla
         sta     path_buf
         lda     #$FF
-        sta     LD920
+        sta     selected_index
         return  #$00
 
 ;;; ============================================================
@@ -1404,7 +1417,7 @@ L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
         lda     #$10
         sta     picker_entry_pos
 L60FF:  lda     L6128
-        cmp     LD920
+        cmp     selected_index
         bne     L6110
         jsr     L6274
         lda     winfo_entrydlg_file_picker
@@ -2715,7 +2728,7 @@ jt_handle_f2_tbd05:
 
         sta     flag
         copy16  #file_names, ptr
-        ldx     LD920
+        ldx     selected_index
         lda     file_list_index,x
         and     #$7F
 
@@ -2844,7 +2857,7 @@ L6EB9:  lda     path_buf1,x
         sta     split_buf,x
         dex
         bpl     L6EB9
-L6EC2:  lda     LD920
+L6EC2:  lda     selected_index
         sta     L6F3D
         bmi     L6EFB
         ldx     #$00
@@ -2892,7 +2905,7 @@ L6F26:  lda     #$FF
         rts
 
 L6F2F:  lda     L6F3D
-        sta     LD920
+        sta     selected_index
         bpl     L6F38
         rts
 

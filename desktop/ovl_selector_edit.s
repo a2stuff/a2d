@@ -43,7 +43,7 @@ L7056:  jsr     common_overlay::L5F5B
         lda     #$00
         bcs     L706A
         addr_call common_overlay::L6516, L709D
-        sta     LD920
+        sta     selected_index
         jsr     common_overlay::L6586
 L706A:  jsr     common_overlay::L6163
         jsr     common_overlay::L61B1

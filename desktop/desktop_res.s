@@ -669,9 +669,12 @@ picker_entry_pos:
         .byte   $00,$00
 
 str_folder:
-        PASCAL_STRING {kGlyphFolderLeft,kGlyphFolderRight}
+        PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight}
 
-LD920:  .byte   0
+selected_index:                 ; $FF if none
+        .byte   0
+
+
 LD921:  .byte   0
 
 pos_add_a_new_entry_to_label:
