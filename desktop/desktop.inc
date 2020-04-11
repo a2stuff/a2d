@@ -20,15 +20,6 @@ DA_LOAD_ADDRESS := $800         ; Loaded into Main
 DA_IO_BUFFER    := $1C00        ; ...through $1FFF
 kDAMaxSize      = DA_IO_BUFFER - DA_LOAD_ADDRESS
 
-;;; Scratch area (in Aux) used during modal operations:
-;;; * Given to MGTK to save background while menus are shown
-;;; * Used by DeskTop to save background while alert dialog shown
-;;; * Used by IconTK to store icon outlines during DragHighlighted
-;;; * Used by IconTK for a temp buffer during HighlightAll
-
-SAVE_AREA_BUFFER := $800        ; through $1AFF
-kSaveAreaSize   = $1300
-
 ;;; Memory in Aux - $80 bytes for desktop and 8 windows. First byte is a
 ;;; count, up to 127 icon entries. $1F80-$1FFF is a map of used/free icon
 ;;; numbers.

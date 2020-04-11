@@ -216,7 +216,7 @@ $BF00 +-------------+       | Utilities & |
       |             |       | * Icon TK   |
       |             |       | * Alerts    |
       |             |       |             |
-$AE00 |             |       | Alert Entry |
+      |             |       |             |
       |             |       |             |
 $A000 |      +------+       |             |
       |      | Ovl  |       |             |
@@ -262,7 +262,7 @@ $2000 +-------------+       +-------------+
       | Initializer |       | Win/Icn Map |
 $1B00 | & Desk Acc  |       +-------------+
       | & Overlays  |       | Desk Acc &  |
-      |             |       | Save Area   |
+      | & I/O       |       | Save Area   |
       |             |       |             |
 $0800 +-------------+       +-------------+
       | Drawing     |       | Drawing     |

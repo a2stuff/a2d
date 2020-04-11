@@ -829,6 +829,3 @@ end:
 ;;; Define pattern for PaintBits - low 7 bits are reversed
 ;;; e.g. .byte PX(%1000000)
 .define PX(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))
-
-
-.define px(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))
