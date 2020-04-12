@@ -869,7 +869,7 @@ LAA4C:  jsr     populate_count
 
 ;;; ============================================================
 
-LAABD:  lda     #$FD            ; ???
+LAABD:  lda     #$FD            ; Unknown alert number ???
         jsr     app::ShowAlert
         bne     :+
         jsr     app::set_watch_cursor

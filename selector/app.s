@@ -1728,10 +1728,7 @@ L9AE5:  lda     winfo::window_id
         jsr     detect_double_click
         bne     :+
 
-        jsr     invoke_entry
-        jsr     BELL1           ; TODO: Does this even work ???
-        jsr     BELL1           ; TODO: ProDOS QUIT here ???
-        jsr     BELL1
+        jmp     invoke_entry
 
 :       rts
 
@@ -2008,13 +2005,18 @@ check_path:
         sta     CLR80COL
 
         jsr     INVOKER
-        ;; If we got here, invoker failed.
-        jsr     disconnect_ramdisk
-        ;; TODO: SetMonoMode ???
-        ;; TODO: QUIT ???
-        ;; fall through...
+
+        ;; If we got here, invoker failed somehow. Relaunch.
+        jsr     BELL1
+        jsr     BELL1
+        jsr     BELL1
+        MLI_CALL QUIT, quit_params
+        brk
+
 .endproc
         invoke_entry_ep2 := invoke_entry::ep2
+
+        DEFINE_QUIT_PARAMS quit_params
 
 .proc clear_selected_entry
         lda     L9129
