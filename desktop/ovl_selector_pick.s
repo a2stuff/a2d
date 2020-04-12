@@ -134,8 +134,7 @@ copy_when:  .byte   0
 L9105:  lda     #$00
         sta     L938B
         sta     L938C
-        lda     #$FF
-        sta     L938D
+        copy    #$FF, selected_index
         jsr     L9390
         jsr     L9D22
         bpl     L911D
@@ -147,7 +146,7 @@ L9120:  jsr     L9646
         beq     L912A
         jmp     L933F
 
-L912A:  lda     L938D
+L912A:  lda     selected_index
         bmi     L9120
         lda     L938E
         cmp     #$02
@@ -161,28 +160,27 @@ L913F:  cmp     #$04
         bne     L9120
         jmp     L9282
 
-L9146:  lda     L938D
-        jsr     L979D
+L9146:  lda     selected_index
+        jsr     maybe_toggle_entry_hilite
         jsr     desktop_main::set_cursor_watch
-        lda     L938D
+        lda     selected_index
         jsr     L9A97
         beq     L915D
         jsr     desktop_main::set_cursor_pointer
         jmp     L933F
 
 L915D:  jsr     desktop_main::set_cursor_pointer
-        lda     #$FF
-        sta     L938D
+        copy    #$FF, selected_index
         jsr     L99F5
         jsr     L9D28
         jsr     L99B3
         inc     L938F
         jmp     L9120
 
-L9174:  lda     L938D
-        jsr     L979D
+L9174:  lda     selected_index
+        jsr     maybe_toggle_entry_hilite
         jsr     L936E
-        lda     L938D
+        lda     selected_index
         jsr     get_file_entry_addr
         stax    $06
         ldy     #$00
@@ -195,7 +193,7 @@ L918C:  lda     ($06),y
         ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
         sta     L9281
-        lda     L938D
+        lda     selected_index
         jsr     get_file_path_addr
         stax    $06
         ldy     #$00
@@ -206,7 +204,7 @@ L91AA:  lda     ($06),y
         dey
         bpl     L91AA
         ldx     #$01
-        lda     L938D
+        lda     selected_index
         cmp     #$09
         bcc     L91BC
         inx
@@ -249,7 +247,7 @@ L91F2:  sta     copy_when
         bpl     L91FD
         jmp     L936E
 
-L91FD:  lda     L938D
+L91FD:  lda     selected_index
         cmp     #$09
         bcc     L923C
         lda     which_run_list
@@ -260,7 +258,7 @@ L91FD:  lda     L938D
         bne     L9215
         jmp     L90F4
 
-L9215:  lda     L938D
+L9215:  lda     selected_index
         jsr     L9A97
         beq     L9220
         jmp     L936E
@@ -282,7 +280,7 @@ L923C:  lda     which_run_list
         bne     L924D
         jmp     L9105
 
-L924D:  lda     L938D
+L924D:  lda     selected_index
         jsr     L9A97
         beq     L9258
         jmp     L936E
@@ -295,7 +293,7 @@ L9258:  ldx     L938C
         adc     #$07
         jmp     L926D
 
-L926A:  lda     L938D
+L926A:  lda     selected_index
 L926D:  ldy     copy_when
         jsr     L9A0A
         jsr     L9CEA
@@ -306,10 +304,10 @@ L927B:  jsr     desktop_main::set_cursor_pointer
         jmp     L900F
 
 L9281:  .byte   0
-L9282:  lda     L938D
-        jsr     L979D
+L9282:  lda     selected_index
+        jsr     maybe_toggle_entry_hilite
         jsr     desktop_main::set_cursor_watch
-        lda     L938D
+        lda     selected_index
         jsr     get_file_entry_addr
         stax    $06
         ldy     #kSelectorEntryFlagsOffset
@@ -321,10 +319,10 @@ L9282:  lda     L938D
         beq     L92F0
         lda     L938A
         beq     L92CE
-        lda     L938D
+        lda     selected_index
         jsr     L9E61
         beq     L92D6
-        lda     L938D
+        lda     selected_index
         jsr     get_file_path_addr
         stax    $06
         ldy     #$00
@@ -337,10 +335,10 @@ L92C1:  lda     ($06),y
         lda     #$FF
         jmp     L933F
 
-L92CE:  lda     L938D
+L92CE:  lda     selected_index
         jsr     L9E61
         bne     L92F0
-L92D6:  lda     L938D
+L92D6:  lda     selected_index
         jsr     L9E74
         stax    $06
         ldy     #$00
@@ -352,7 +350,7 @@ L92E5:  lda     ($06),y
         bpl     L92E5
         jmp     L9307
 
-L92F0:  lda     L938D
+L92F0:  lda     selected_index
         jsr     get_file_path_addr
         stax    $06
         ldy     #$00
@@ -383,8 +381,7 @@ L931B:  iny
         sta     buf_win_path
         jsr     JUMP_TABLE_LAUNCH_FILE
         jsr     desktop_main::set_cursor_pointer
-        lda     #$FF
-        sta     L938D
+        copy    #$FF, selected_index
         jmp     L936E
 
 L933F:  pha
@@ -408,7 +405,10 @@ L936E:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
 L938A:  .byte   0
 L938B:  .byte   0
 L938C:  .byte   0
-L938D:  .byte   0
+
+selected_index:
+        .byte   0
+
 L938E:  .byte   0
 L938F:  .byte   0
 
@@ -629,19 +629,20 @@ L9738:  pha
         asl     a
         clc
         adc     screentowindow_windowy
-        sta     L979C
+        sta     new_selection
         cmp     #8
         bcs     L9782
         cmp     L938B
         bcs     L9790
-L976A:  cmp     L938D
-        beq     L977E
-        lda     L938D
-        jsr     L979D
-        lda     L979C
-        sta     L938D
-        jsr     L979D
-L977E:  jsr     desktop_main::detect_double_click
+
+L976A:  cmp     selected_index           ; same as previous selection?
+        beq     :+
+        lda     selected_index
+        jsr     maybe_toggle_entry_hilite
+        lda     new_selection
+        sta     selected_index
+        jsr     maybe_toggle_entry_hilite
+:       jsr     desktop_main::detect_double_click
         rts
 
 L9782:  sec
@@ -652,14 +653,18 @@ L9782:  sec
         adc     #8
         jmp     L976A
 
-L9790:  lda     L938D
-        jsr     L979D
-        lda     #$FF
-        sta     L938D
+L9790:  lda     selected_index
+        jsr     maybe_toggle_entry_hilite
+        copy    #$FF, selected_index
         rts
 
-L979C:  .byte   0
-L979D:  bpl     L97A0
+new_selection:
+        .byte   0
+
+;;; ============================================================
+
+maybe_toggle_entry_hilite:
+        bpl     L97A0
         rts
 
 L97A0:  pha
@@ -755,7 +760,7 @@ L9885:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
 L98AC:  lda     L938B
         ora     L938C
         beq     L98F5
-        lda     L938D
+        lda     selected_index
         bpl     L98CE
         ldx     #$00
         lda     L99DD
@@ -766,9 +771,9 @@ L98AC:  lda     L938B
         ldx     #$10
         lda     L99ED
         bpl     L98EE
-L98CE:  lda     L938D
-        jsr     L979D
-        lda     L938D
+L98CE:  lda     selected_index
+        jsr     maybe_toggle_entry_hilite
+        lda     selected_index
 L98D7:  clc
         adc     #$08
         cmp     #$18
@@ -784,14 +789,14 @@ L98E4:  tax
         jmp     L98D7
 
 L98EE:  txa
-        sta     L938D
-        jsr     L979D
+        sta     selected_index
+        jsr     maybe_toggle_entry_hilite
 L98F5:  return  #$FF
 
 L98F8:  lda     L938B
         ora     L938C
         beq     L993C
-        lda     L938D
+        lda     selected_index
         bpl     L9917
         ldx     #$10
         lda     L99ED
@@ -801,9 +806,9 @@ L98F8:  lda     L938B
         bpl     L9935
         lda     #$00
         beq     L9936
-L9917:  lda     L938D
-        jsr     L979D
-        lda     L938D
+L9917:  lda     selected_index
+        jsr     maybe_toggle_entry_hilite
+        lda     selected_index
 L9920:  sec
         sbc     #$08
         bpl     L992B
@@ -818,23 +823,23 @@ L992B:  tax
         jmp     L9920
 
 L9935:  txa
-L9936:  sta     L938D
-        jsr     L979D
+L9936:  sta     selected_index
+        jsr     maybe_toggle_entry_hilite
 L993C:  return  #$FF
 
 L993F:  lda     L938B
         ora     L938C
         beq     L9975
-        lda     L938D
+        lda     selected_index
         bpl     L9956
         ldx     #$17
 L994E:  lda     L99DD,x
         bpl     L996F
         dex
         bpl     L994E
-L9956:  lda     L938D
-        jsr     L979D
-        ldx     L938D
+L9956:  lda     selected_index
+        jsr     maybe_toggle_entry_hilite
+        ldx     selected_index
 L995F:  dex
         bmi     L996A
         lda     L99DD,x
@@ -844,23 +849,23 @@ L995F:  dex
 L996A:  ldx     #$18
         jmp     L995F
 
-L996F:  sta     L938D
-        jsr     L979D
+L996F:  sta     selected_index
+        jsr     maybe_toggle_entry_hilite
 L9975:  return  #$FF
 
 L9978:  lda     L938B
         ora     L938C
         beq     L99B0
-        lda     L938D
+        lda     selected_index
         bpl     L998F
         ldx     #$00
 L9987:  lda     L99DD,x
         bpl     L99AA
         inx
         bne     L9987
-L998F:  lda     L938D
-        jsr     L979D
-        ldx     L938D
+L998F:  lda     selected_index
+        jsr     maybe_toggle_entry_hilite
+        ldx     selected_index
 L9998:  inx
         cpx     #$18
         bcs     L99A5
@@ -871,8 +876,8 @@ L9998:  inx
 L99A5:  ldx     #$FF
         jmp     L9998
 
-L99AA:  sta     L938D
-        jsr     L979D
+L99AA:  sta     selected_index
+        jsr     maybe_toggle_entry_hilite
 L99B0:  return  #$FF
 
 L99B3:  ldx     #$17
@@ -1529,6 +1534,105 @@ L9EAB:  inx
 L9EBF:  .byte   0
 L9EC0:  .byte   0
 L9EC1:  .byte   0
+
+;;; ============================================================
+;;; Double Click Detection
+;;; Returns with A=0 if double click, A=$FF otherwise.
+
+.proc detect_double_click
+        ;; Stash initial coords
+        ldx     #.sizeof(MGTK::Point)-1
+:       copy    event_coords,x, coords,x
+
+        dex
+        bpl     :-
+
+        copy16  SETTINGS + DeskTopSettings::dblclick_speed, counter
+
+        ;; Decrement counter, bail if time delta exceeded
+loop:   dec16   counter
+        lda     counter
+        ora     counter+1
+        beq     exit
+
+        MGTK_CALL MGTK::PeekEvent, event_params
+
+        ;; Check coords, bail if pixel delta exceeded
+        jsr     check_delta
+        bmi     exit            ; moved past delta; no double-click
+
+        lda     event_kind
+        cmp     #MGTK::EventKind::no_event
+        beq     loop
+        cmp     #MGTK::EventKind::drag
+        beq     loop
+        cmp     #MGTK::EventKind::button_up
+        bne     :+
+
+        MGTK_CALL MGTK::GetEvent, event_params
+        jmp     loop
+
+:       cmp     #MGTK::EventKind::button_down
+        beq     :+
+        cmp     #MGTK::EventKind::apple_key ; modified-click
+        bne     exit
+
+:       MGTK_CALL MGTK::GetEvent, event_params
+        return  #0              ; double-click
+
+exit:   return  #$FF            ; not double-click
+
+        ;; Is the new coord within range of the old coord?
+.proc check_delta
+        ;; compute x delta
+        lda     event_xcoord
+        sec
+        sbc     xcoord
+        sta     delta
+        lda     event_xcoord+1
+        sbc     xcoord+1
+        bpl     :+
+
+        ;; is -delta < x < 0 ?
+        lda     delta
+        cmp     #AS_BYTE(-kDoubleClickDeltaX)
+        bcs     check_y
+fail:   return  #$FF
+
+        ;; is 0 < x < delta ?
+:       lda     delta
+        cmp     #kDoubleClickDeltaX
+        bcs     fail
+
+        ;; compute y delta
+check_y:
+        lda     event_ycoord
+        sec
+        sbc     ycoord
+        sta     delta
+        lda     event_ycoord+1
+        sbc     ycoord+1
+        bpl     :+
+
+        ;; is -delta < y < 0 ?
+        lda     delta
+        cmp     #AS_BYTE(-kDoubleClickDeltaY)
+        bcs     ok
+
+        ;; is 0 < y < delta ?
+:       lda     delta
+        cmp     #kDoubleClickDeltaY
+        bcs     fail
+ok:     return  #0
+.endproc
+
+counter:
+        .word   0
+coords:
+xcoord: .word   0
+ycoord: .word   0
+delta:  .byte   0
+.endproc
 
 ;;; ============================================================
 

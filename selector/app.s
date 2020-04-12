@@ -372,11 +372,6 @@ selected_entry:
 
         .byte   0
 
-dblclick_counter:
-        .word   0
-clicked_flag:                   ; Set to determine if next is a double click.
-        .byte   0
-
 L9113:  .byte   0
 L9114:  .byte   0
 L9115:  .byte   0
@@ -604,10 +599,6 @@ set_startup_menu_items:
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     get_port_and_draw_window
-        lda     #0
-        sta     clicked_flag
-        sta     dblclick_counter
-        copy    #$01, dblclick_counter+1
         copy    #$FF, selected_entry
         jsr     load_selector_list
         jsr     draw_entries
@@ -621,15 +612,7 @@ quick_boot_slot:
 ;;; Event Loop
 
 .proc event_loop
-        bit     clicked_flag
-        bpl     :+
-        dec     dblclick_counter
-        bne     :+
-        dec     dblclick_counter+1
-        bne     :+
-        copy    #0, clicked_flag
-
-:       MGTK_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
@@ -810,7 +793,7 @@ L93EB:  tsx
 .proc cmd_run_a_program
         lda     selected_entry
         bmi     L93FF
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         lda     #$FF
         sta     selected_entry
 L93FF:  jsr     set_watch_cursor
@@ -915,7 +898,7 @@ L94F0:  sub16   entry_click_x, pt5::xcoord, entry_click_x
         lda     entry_click_y+1
         bpl     :+
         lda     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         copy    #$FF, selected_entry
         rts
 
@@ -926,7 +909,7 @@ L94F0:  sub16   entry_click_x, pt5::xcoord, entry_click_x
         cmp     #8
         bcc     L954C
         lda     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         copy    #$FF, selected_entry
         rts
 
@@ -949,7 +932,7 @@ L954C:  sta     L959D
 L9571:  cmp     num_run_list_entries
         bcc     finish
         lda     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         copy    #$FF, selected_entry
         rts
 
@@ -958,7 +941,7 @@ L9582:  sec
         cmp     num_other_run_list_entries
         bcc     finish
         lda     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         copy    #$FF, selected_entry
         rts
 
@@ -1034,10 +1017,10 @@ L961D:  lda     selected_entry
         rts
 
 L9628:  lda     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
 L962E:  lda     L97BC
         sta     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         rts
 
         ;; --------------------------------------------------
@@ -1074,7 +1057,7 @@ not_return:
         bpl     :+
         lda     #0
         sta     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         rts
 
 :       lda     selected_entry
@@ -1090,10 +1073,10 @@ L9688:  clc
         adc     #8
         pha
         lda     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         pla
         sta     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         rts
 
 L969A:  cmp     num_other_run_list_entries
@@ -1105,10 +1088,10 @@ L96A0:  lda     selected_entry
         adc     #8
         pha
         lda     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         pla
         sta     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         rts
 not_right:
 
@@ -1137,12 +1120,12 @@ not_right:
         rts
 
 :       lda     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         lda     selected_entry
         sec
         sbc     #8
         sta     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         rts
 
 not_left:
@@ -1159,7 +1142,7 @@ not_left:
         rts
 
 :       lda     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         jsr     L9728
         lda     selected_entry
         cmp     #8
@@ -1179,7 +1162,7 @@ L970E:  sec
 L971D:  tax
         lda     buf,x
         sta     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         rts
 
 L9728:
@@ -1226,11 +1209,11 @@ not_up:
         bpl     :+
         lda     #$00
         sta     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         rts
 
 :       lda     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         jsr     L9728
         lda     num_run_list_entries
         clc
@@ -1249,7 +1232,7 @@ L97AA:  inx
         ldx     #$00
 L97B2:  lda     buf,x
         sta     selected_entry
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
         rts
 
 L97BC:  .byte   0
@@ -1732,39 +1715,26 @@ L9AE5:  lda     winfo::window_id
 ;;; Input: A = clicked entry
 
 .proc handle_entry_click
-        cmp     selected_entry
-        beq     same
-        jmp     different
+        cmp     selected_entry  ; same as previous selection?
+        beq     :+
+        pha
+        lda     selected_entry
+        jsr     maybe_toggle_entry_hilite ; un-highlight old entry
+        pla
+        sta     selected_entry
+        jsr     maybe_toggle_entry_hilite ; highlight new entry
+:
 
-        ;; --------------------------------------------------
+        jsr     detect_double_click
+        bne     :+
 
-same:   bit     clicked_flag
-        bpl     reset
         jsr     invoke_entry
         jsr     BELL1           ; TODO: Does this even work ???
         jsr     BELL1           ; TODO: ProDOS QUIT here ???
         jsr     BELL1
-        rts
 
-reset:  copy    #$FF, clicked_flag
-        copy    #$1E, dblclick_counter
-        rts
+:       rts
 
-        ;; --------------------------------------------------
-
-different:
-        pha
-        lda     selected_entry
-        bmi     :+
-        lda     selected_entry
-        jsr     toggle_entry_hilite ; un-highlight old entry
-:       pla
-        sta     selected_entry
-        jsr     toggle_entry_hilite ; highlight new entry
-
-        copy    #$FF, clicked_flag ; TODO: Redundant ???
-        copy    #$1E, dblclick_counter
-        jmp     reset
 .endproc
 
 ;;; ============================================================
@@ -1773,8 +1743,11 @@ different:
 
 ;;; NOTE: Assumes font height is 8px
 
-.proc toggle_entry_hilite
-        pha
+.proc maybe_toggle_entry_hilite
+        bpl     :+
+        rts
+
+:       pha
 
         lsr     a
         lsr     a
@@ -1881,7 +1854,7 @@ col:    .byte   0
         jsr     set_watch_cursor
         lda     selected_entry
         bmi     :+
-        jsr     toggle_entry_hilite
+        jsr     maybe_toggle_entry_hilite
 :       jmp     try
 
 ep2:    jmp     L9C7E
@@ -2371,6 +2344,105 @@ iigs:   lda     NEWVIDEO
         sta     NEWVIDEO
 
 done:   rts
+.endproc
+
+;;; ============================================================
+;;; Double Click Detection
+;;; Returns with A=0 if double click, A=$FF otherwise.
+
+.proc detect_double_click
+        ;; Stash initial coords
+        ldx     #.sizeof(MGTK::Point)-1
+:       copy    event_coords,x, coords,x
+
+        dex
+        bpl     :-
+
+        copy16  SETTINGS + DeskTopSettings::dblclick_speed, counter
+
+        ;; Decrement counter, bail if time delta exceeded
+loop:   dec16   counter
+        lda     counter
+        ora     counter+1
+        beq     exit
+
+        MGTK_CALL MGTK::PeekEvent, event_params
+
+        ;; Check coords, bail if pixel delta exceeded
+        jsr     check_delta
+        bmi     exit            ; moved past delta; no double-click
+
+        lda     event_kind
+        cmp     #MGTK::EventKind::no_event
+        beq     loop
+        cmp     #MGTK::EventKind::drag
+        beq     loop
+        cmp     #MGTK::EventKind::button_up
+        bne     :+
+
+        MGTK_CALL MGTK::GetEvent, event_params
+        jmp     loop
+
+:       cmp     #MGTK::EventKind::button_down
+        beq     :+
+        cmp     #MGTK::EventKind::apple_key ; modified-click
+        bne     exit
+
+:       MGTK_CALL MGTK::GetEvent, event_params
+        return  #0              ; double-click
+
+exit:   return  #$FF            ; not double-click
+
+        ;; Is the new coord within range of the old coord?
+.proc check_delta
+        ;; compute x delta
+        lda     event_xcoord
+        sec
+        sbc     xcoord
+        sta     delta
+        lda     event_xcoord+1
+        sbc     xcoord+1
+        bpl     :+
+
+        ;; is -delta < x < 0 ?
+        lda     delta
+        cmp     #AS_BYTE(-kDoubleClickDeltaX)
+        bcs     check_y
+fail:   return  #$FF
+
+        ;; is 0 < x < delta ?
+:       lda     delta
+        cmp     #kDoubleClickDeltaX
+        bcs     fail
+
+        ;; compute y delta
+check_y:
+        lda     event_ycoord
+        sec
+        sbc     ycoord
+        sta     delta
+        lda     event_ycoord+1
+        sbc     ycoord+1
+        bpl     :+
+
+        ;; is -delta < y < 0 ?
+        lda     delta
+        cmp     #AS_BYTE(-kDoubleClickDeltaY)
+        bcs     ok
+
+        ;; is 0 < y < delta ?
+:       lda     delta
+        cmp     #kDoubleClickDeltaY
+        bcs     fail
+ok:     return  #0
+.endproc
+
+counter:
+        .word   0
+coords:
+xcoord: .word   0
+ycoord: .word   0
+delta:  .byte   0
 .endproc
 
 ;;; ============================================================
