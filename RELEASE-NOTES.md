@@ -109,7 +109,6 @@ menu.
 
 ### Known Issues
 
-* Selector app is unmodified.
 * Special > Disk Copy app is not substantially modified, and may suffer bugs fixed in DeskTop (e.g. SmartPort behavior)
 
 # 1.1

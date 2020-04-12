@@ -581,6 +581,10 @@ set_startup_menu_items:
         sta     str_slot_x7 + kStrSlotXOffset
 
         MGTK_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
+
+        copy    VERSION, startdesktop_params::machine
+        copy    ZIDBYTE, startdesktop_params::subid
+
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
         MGTK_CALL MGTK::SetMenu, menu
         MGTK_CALL MGTK::ShowCursor
