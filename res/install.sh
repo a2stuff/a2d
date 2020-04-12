@@ -49,15 +49,23 @@ add_file () {
 }
 
 cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet --no-case-bits > /dev/null
-cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/optional" --quiet --no-case-bits > /dev/null
 
 perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
 add_file "$INSTALL_IMG" "res/package/READ.ME" "$INSTALL_PATH" "Read.Me" 040000
 
 add_file "$INSTALL_IMG" "desktop.system/out/desktop.system.SYS" "$INSTALL_PATH" "DeskTop.system" FF0000
 add_file "$INSTALL_IMG" "desktop/out/DESKTOP2.built" "$INSTALL_PATH" "DeskTop2" F10000
-add_file "$INSTALL_IMG" "selector/out/selector.built" "$INSTALL_PATH/optional" "Selector" F10000
-cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/selector" > /dev/null
+
+
+if [ "$1" = "selector" ]; then
+    cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/optional/selector" > /dev/null
+    cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/optional" > /dev/null
+    add_file "$INSTALL_IMG" "selector/out/selector.built" "$INSTALL_PATH" "Selector" F10000
+else
+    cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/selector" > /dev/null
+    cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/optional" --quiet --no-case-bits > /dev/null
+    add_file "$INSTALL_IMG" "selector/out/selector.built" "$INSTALL_PATH/optional" "Selector" F10000
+fi
 
 for da_dir in $DA_DIRS; do
     folder="$INSTALL_PATH/$da_dir"

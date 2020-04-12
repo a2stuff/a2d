@@ -713,8 +713,8 @@ LA84D:  lda     RAMCARD_PREFIX,y
 ;;; ============================================================
 
 .proc winfo
-        kWidth = 500
-        kHeight = 140
+        kWidth = 350
+        kHeight = 70
 window_id:
         .byte   $0B
         .byte   $01,$00
@@ -730,8 +730,8 @@ window_id:
         .byte   $96,$00
         .byte   $32
         .byte   $00
-        .word   kWidth
-        .word   kHeight
+        .word   500
+        .word   140
         .byte   $64
         .byte   $00
         .byte   $32
@@ -763,9 +763,9 @@ rect1:  DEFINE_RECT_SZ 20, 49, kButtonWidth, kButtonHeight
 pos1:   DEFINE_POINT 24, 59
 
 rect_frame1:
-        DEFINE_RECT 4, 2, 348, 68 ; TODO: Too narrow by 2px ???
+        DEFINE_RECT_INSET 4, 2, winfo::kWidth, winfo::kHeight
 rect_frame2:
-        DEFINE_RECT 5, 3, 347, 67
+        DEFINE_RECT_INSET 5, 3, winfo::kWidth, winfo::kHeight
 
 pos_download:
         DEFINE_POINT 100, 16
@@ -778,9 +778,9 @@ pt2:    DEFINE_POINT 20, 40
 str_copying:
         PASCAL_STRING "Copying:"
 
-rect3:  DEFINE_RECT 18, 24, 346, 32
+rect_clear_count:  DEFINE_RECT 18, 24, 344, 32
 
-rect2:  DEFINE_RECT 6, 24, 346, 66
+rect_clear_details:  DEFINE_RECT 6, 24, 344, 66
 
 .params setportbits_params
 viewloc:        DEFINE_POINT 100, 50
@@ -833,7 +833,7 @@ str_spaces:
         lda     winfo::window_id
         jsr     app::get_window_port
         MGTK_CALL MGTK::SetPenMode, app::pencopy
-        MGTK_CALL MGTK::PaintRect, rect2
+        MGTK_CALL MGTK::PaintRect, rect_clear_details
 ep2:    dec     LA759
         lda     LA759
         cmp     #$FF
@@ -842,7 +842,7 @@ ep2:    dec     LA759
 LAA4C:  jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::SetPenMode, app::pencopy
-        MGTK_CALL MGTK::PaintRect, rect3
+        MGTK_CALL MGTK::PaintRect, rect_clear_count
         addr_call app::AdjustPathCase, pathname1
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call app::DrawString, str_copying
@@ -881,7 +881,7 @@ LAABD:  lda     #$FD            ; ???
 LAACB:  lda     winfo::window_id
         jsr     app::get_window_port
         MGTK_CALL MGTK::SetPenMode, app::pencopy
-        MGTK_CALL MGTK::PaintRect, rect2
+        MGTK_CALL MGTK::PaintRect, rect_clear_details
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call app::DrawString, str_not_enough_room
         MGTK_CALL MGTK::MoveTo, pt2
@@ -899,7 +899,7 @@ LAACB:  lda     winfo::window_id
         lda     winfo::window_id
         jsr     app::get_window_port
         MGTK_CALL MGTK::SetPenMode, app::pencopy
-        MGTK_CALL MGTK::PaintRect, rect2
+        MGTK_CALL MGTK::PaintRect, rect_clear_details
         MGTK_CALL MGTK::MoveTo, pos_copying
         addr_call app::DrawString, str_error_download
         MGTK_CALL MGTK::MoveTo, pt2
