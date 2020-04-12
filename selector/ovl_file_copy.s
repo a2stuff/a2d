@@ -234,14 +234,14 @@ LA3EC:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-        .byte   $FF
-        ldy     $FC
-        ldy     $F2
-LA3F6           := * + 1
-        ldy     #$A0
-LA3F8           := * + 1
-        ora     $B9
-        beq     LA39E
+
+
+LA3F0:  .addr   do_copy
+        .addr   LA4FC
+        .addr   LA0F2
+
+LA3F6:  ldy     #5
+LA3F8:  lda     LA3F0,y
         sta     LA0EC,y
         dey
         bpl     LA3F8
@@ -313,18 +313,20 @@ LA4A7:  lda     get_file_info_params2,y
         bcc     LA4BF
         jmp     LAACB
 
-LA4BF:  ldy     #$11
-        ldx     #$0B
-LA4C3:  lda     get_file_info_params2,y
+        ;; Copy creation date/time
+LA4BF:  ldy     #(get_file_info_params2::create_time+1 - get_file_info_params2)
+        ldx     #(create_params::create_time+1 - create_params)
+:       lda     get_file_info_params2,y
         sta     create_params,x
         dex
         dey
-        cpy     #$0D
-        bne     LA4C3
+        cpy     #(get_file_info_params2::create_date-1 - get_file_info_params2)
+        bne     :-
+
         lda     create_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         bne     LA4DB
-        lda     #$0D
+        lda     #ST_LINKED_DIRECTORY
         sta     create_params::storage_type
 LA4DB:  MLI_CALL CREATE, create_params
         beq     LA4E9
@@ -441,8 +443,7 @@ LA603:  lda     LA60C
         sta     pathname_dst
         rts
 
-LA60A:  .byte   0
-        .byte   0
+LA60A:  .word   0
 LA60C:  .byte   0
 LA60D:  .byte   0
 LA60E:  .byte   0
@@ -492,7 +493,7 @@ LA687:  MLI_CALL CLOSE, close_params_dst
 ;;; ============================================================
 
 
-LA69A:  ldx     #$07
+LA69A:  ldx     #(get_file_info_params2::storage_type - get_file_info_params2)
 LA69C:  lda     get_file_info_params2,x
         sta     create_params2,x
         dex
