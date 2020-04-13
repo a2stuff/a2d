@@ -110,13 +110,12 @@ start:
 install:
         lda     #$FF
         sta     flag
-        copy16  IRQ_VECTOR, irq_vector_stash
+        copy16  IRQLOC, irq_vector_stash
 
         ;; Copy self into the ProDOS QUIT routine
-        ;; TODO: Why do this again?
         lda     LCBANK2
         lda     LCBANK2
-        ldy     #$00
+        ldy     #0
 :       lda     self,y
         sta     PRODOS_QUIT_ROUTINE,y
         lda     self+$100,y
@@ -128,7 +127,7 @@ install:
         jmp     L10F2
 
 proceed:
-        copy16  irq_vector_stash, IRQ_VECTOR
+        copy16  irq_vector_stash, IRQLOC
 
 ;;; ============================================================
 ;;; Load the Loader at $2000 and invoke it.

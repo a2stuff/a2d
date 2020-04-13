@@ -127,7 +127,7 @@ start:  lda     ROMIN2
 :       lda     #$FF
         sta     reinstall_flag
 
-        copy16  IRQ_VECTOR, irq_saved
+        copy16  IRQLOC, irq_saved
         lda     LCBANK2
         lda     LCBANK2
 
@@ -143,7 +143,7 @@ start:  lda     ROMIN2
         jmp     done_reinstall
 
 no_reinstall:
-        copy16  irq_saved, IRQ_VECTOR
+        copy16  irq_saved, IRQLOC
 
 done_reinstall:
         ;; Set the prefix, read the first $400 bytes of this system

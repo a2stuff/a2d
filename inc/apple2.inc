@@ -13,32 +13,11 @@ COUT_HOOK       := $36
 IN              := $200
 
 
-;;; Soft Switches
+;;; ============================================================
+;;; Vectors
+;;; ============================================================
 
-SPKR            := $C030
-ROMIN2          := $C082
-
-NEWVIDEO        := $C029        ; IIgs - new video modes
-        ;; Bit 7 = 1 = Enable Super-Hi-Res
-        ;; Bit 6 = 1 = Linearize SHR
-        ;; Bit 5 = 0 = Color DHR, 1 = B/W DHR
-        ;; Bits 4-0 must be 0
-
-SHADOW          := $C035        ; IIgs - inhibit shadowing
-
-AN3_ON          := $C05F        ; AppleColor Adapter Card / Le Chat Mauve
-AN3_OFF         := $C05E
-
-BUTN2           := $C063
-
-RAMWORKS_BANK   := $C071        ; RAMWorks bank selection ???
-
-HR1_ON          := $C0B3
-HR1_OFF         := $C0B2
-HR2_ON          := $C0B5
-HR2_OFF         := $C0B4
-HR3_ON          := $C0B7
-HR3_OFF         := $C0B6
+IRQLOC          := $3FE
 
 
 ;;; ============================================================
@@ -47,28 +26,24 @@ HR3_OFF         := $C0B6
 
 ;;; Monitor
 IDBYTELASER128  := $FB1E        ; $AC = Laser 128
-INIT            := $FB2F
-SETPWRC         := $FB6F
-VERSION         := $FBB3        ; $06 = IIe or later
-ZIDBYTE2        := $FBBF        ; IIc ROM version ($05 = IIc+)
-ZIDBYTE         := $FBC0        ; $EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+
-BELL1           := $FBDD
-VTAB            := $FC22
-VTABZ           := $FC24
-HOME            := $FC58
-PRBYTE          := $FDDA
-COUT            := $FDED
-IDROUTINE       := $FE1F         ; RTS ($60) on pre-IIgs, clears carry on IIgs
-MOVE            := $FE2C
-SETKBD          := $FE89
-SETVID          := $FE93
-MONZ            := $FF69
+INIT            := $FB2F        ; Initialize text screen.
+SETPWRC         := $FB6F        ; Create power-up byte.
+VERSION         := $FBB3        ; Monitor ROM ID byte. $06 = IIe or later
+ZIDBYTE2        := $FBBF        ; * IIc ROM version ($05 = IIc+)
+ZIDBYTE         := $FBC0        ; * $EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+
+BELL1           := $FBDD        ; Generate tone.
+VTAB            := $FC22        ; Vertical tab. Uses value at CV.
+VTABZ           := $FC24        ; Vertical tab (alternate entry). Uses A.
+HOME            := $FC58        ; Home cursor and clear to end of page.
+PRBYTE          := $FDDA        ; Print a hexadecimal byte.
+COUT            := $FDED        ; Output a character.
+IDROUTINE       := $FE1F        ; RTS ($60) on pre-IIgs, clears carry on IIgs
+MOVE            := $FE2C        ; Original Monitor Move routine.
+SETKBD          := $FE89        ; Reset input to keyboard.
+SETVID          := $FE93        ; Reset output to screen.
+MONZ            := $FF69        ; Standard Monitor entry point.
 
 F8VERSION       := $06
-
-;;; Miscellaneous
-IRQ_VECTOR      := $3FE
-
 
 
 ;;; ============================================================
@@ -145,23 +120,32 @@ FBUFFR          := $100
 
 
 ;;; ============================================================
-;;; Aux Memory / Extended 80 Column Card
+;;; Softswitches
 ;;; ============================================================
 
-;;; Softswitches
-RAMRDOFF        := $C002
-RAMRDON         := $C003
-RAMWRTOFF       := $C004
-RAMWRTON        := $C005
-ALTZPOFF        := $C008
-ALTZPON         := $C009
+RAMRDOFF        := $C002        ; Read from main 48K RAM
+RAMRDON         := $C003        ; Read from alternate 48K RAM
+RAMWRTOFF       := $C004        ; Write to main 48K RAM
+RAMWRTON        := $C005        ; Write to alternate 48K RAM
+ALTZPOFF        := $C008        ; Use main zero page/stack
+ALTZPON         := $C009        ; Use alternate zero page/stack
 
-CLR80VID        := $C00C
-SET80VID        := $C00D
-RDALTZP         := $C016
-RD80STORE       := $C018
+CLR80VID        := $C00C        ; Disable 80-column hardware
+SET80VID        := $C00D        ; Enable 80-column hardware
+RDALTZP         := $C016        ; Bit 7 = 1 if slot zp enabled
+RD80STORE       := $C018        ; Bit 7 = 1 if 80-column store
 RDPAGE2         := $C01C
 
+NEWVIDEO        := $C029        ; IIgs - new video modes
+        ;; Bit 7 = 1 = Enable Super-Hi-Res
+        ;; Bit 6 = 1 = Linearize SHR
+        ;; Bit 5 = 0 = Color DHR, 1 = B/W DHR
+        ;; Bits 4-0 must be 0
+
+SPKR            := $C030
+SHADOW          := $C035        ; IIgs - inhibit shadowing
+
+;;; Video mode
 PAGE2OFF        := $C054
 PAGE2ON         := $C055
 HIRESON         := $C056
@@ -169,8 +153,30 @@ HIRESOFF        := $C057
 DHIRESON        := $C05E
 DHIRESOFF       := $C05F
 
+AN3_OFF         := $C05E
+AN3_ON          := $C05F
+
+;;; Game controller
+BUTN2           := $C063
 PADDL0          := $C064
+
 PTRIG           := $C070
+RAMWORKS_BANK   := $C071        ; RAMWorks bank selection ???
+
+ROMIN2          := $C082
+
+
+HR1_ON          := $C0B3
+HR1_OFF         := $C0B2
+HR2_ON          := $C0B5
+HR2_OFF         := $C0B4
+HR3_ON          := $C0B7
+HR3_OFF         := $C0B6
+
+
+;;; ============================================================
+;;; Aux Memory / Extended 80 Column Card
+;;; ============================================================
 
 ;;; Routines
 SLOT3ENTRY      := $C300
@@ -188,7 +194,6 @@ DESTINATIONHI   := $43
 ;;; Other Locations
 XFERSTARTLO     := $03ED
 XFERSTARTHI     := $03EE
-RESETVEC        := $03F2
 
 
 ;;; ============================================================
@@ -257,7 +262,7 @@ MOUSE_MODE      := $0738
 
 
 ;;; ============================================================
-;;; Character Constants (Screen/Key Codes)
+;;; ASCII Character Constants
 ;;; ============================================================
 
 CHAR_MASK       = $7F

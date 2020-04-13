@@ -15878,11 +15878,11 @@ start:
 
         ;; Main hook
         lda     #<desktop_main::reset_handler
-        sta     RESETVEC
+        sta     SOFTEV
         lda     #>desktop_main::reset_handler
-        sta     RESETVEC+1
+        sta     SOFTEV+1
         eor     #$A5
-        sta     RESETVEC+2
+        sta     SOFTEV+2
 
 .endscope
 

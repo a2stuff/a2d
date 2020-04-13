@@ -160,6 +160,8 @@ params_start:
 ;;; ProDOS MLI param blocks
 
 io_buf          := $0C00
+
+;;; Two pages of data are read, but separately.
 default_buffer  := $1200
 kReadLength      = $0100
 
@@ -272,10 +274,10 @@ textptr:        .addr   0       ; address
 textlen:        .byte   0       ; length
 .endparams
 
-        kDefaultWidth = 512
-        kDefaultHeight = 150
-        kDefaultLeft = 10
-        kDefaultTop = 28
+kDefaultLeft    = 10
+kDefaultTop     = 28
+kDefaultWidth   = 512
+kDefaultHeight  = 150
 
 .params winfo
 window_id:      .byte   kDAWindowId ; window identifier
@@ -1089,14 +1091,14 @@ end:    rts
 .proc ensure_page_buffered
         ptr := $06
 
+        ;; Pointing at second page already?
         lda     drawtext_params::textptr+1
         cmp     #>default_buffer
         beq     read
 
-        ;; TODO: Where does $1300 come from ???
-        ;; copy a page of characters from $1300 to the buffer
+        ;; No, shift second page down.
         ldy     #0
-loop:   lda     $1300,y
+loop:   lda     default_buffer+$100,y
         sta     default_buffer,y
         iny
         bne     loop
@@ -1104,6 +1106,7 @@ loop:   lda     $1300,y
         dec     drawtext_params::textptr+1
         copy16  drawtext_params::textptr, ptr
 
+        ;; Read into second page.
 read:   lda     #0
         sta     L0945
         jsr     read_file_page
