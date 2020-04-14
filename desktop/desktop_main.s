@@ -701,7 +701,7 @@ changed:
 
 ;;; ============================================================
 
-kMaxRemovableDevices = kMaxVolumes
+kMaxRemovableDevices = ::kMaxVolumes
 
 removable_device_table:
         .byte   0               ; num entries
