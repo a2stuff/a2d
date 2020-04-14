@@ -95,6 +95,7 @@ menu.
 * Prevent occasional rectangle drawn on desktop after window close. (#120)
 * Empty directories can be copied/moved. (#121)
 * Ctrl+Reset quits cleanly back to ProDOS (except buggy emulators). (#141)
+* Prevent crash with more than 8 removable devices.
 * Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. (#30, #39)
   * Calculator: don't mis-paint when moved offscreen and other fixes. (#33, #34)

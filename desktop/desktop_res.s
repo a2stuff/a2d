@@ -888,8 +888,6 @@ trash_icon:
 
         kVolIconDeltaY = 29
 
-        kMaxVolumes = 13
-
         kVolIconCol1 = 490
         kVolIconCol2 = 400
         kVolIconCol3 = 310

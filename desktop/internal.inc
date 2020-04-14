@@ -8,16 +8,21 @@
 ;;; ============================================================
 
 kDAFileType     = $F1
-kDAFileAuxType  = $640          ; High bit set = don't show in Apple menu
+kDAFileAuxType  = $640           ; High bit set = don't show in Apple menu
+
+;;; Internally, FT_SYS files with ".SYSTEM" are represented as this type.
+;;; (FT_BAD files are remapped to FT_TYPELESS)
+kAppFileType    = $01
 
 kMaxDeskAccCount        = 12
 
 ;;; icon #1 is always Trash (BUG: should use trash_icon_num)
 kTrashIconNum   = 1
 
-;;; Internally, FT_SYS files with ".SYSTEM" are represented as this type.
-;;; (FT_BAD files are remapped to FT_TYPELESS)
-kAppFileType    = $01
+;;; Maximum number of volumes displayed/tracked. This is two per slot,
+;;; except S3,D2 is assumed to be /RAM which is disconnected.
+kMaxVolumes     = 13
+
 
 ;;; ============================================================
 ;;; Memory Areas
