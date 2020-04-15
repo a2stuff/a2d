@@ -1242,7 +1242,7 @@ label_add:
 label_edit:
         PASCAL_STRING "Edit an Entry ..."
 label_del:
-        PASCAL_STRING "Delete an Entry ...      "
+        PASCAL_STRING "Delete an Entry ..."
 label_run:
         PASCAL_STRING "Run an Entry ..."
 
@@ -1258,7 +1258,7 @@ apple_menu:
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
 
 label_about:
-        PASCAL_STRING "About Apple II DeskTop ... "
+        PASCAL_STRING "About Apple II DeskTop ..."
 
 desk_acc_names:
         .res    kMaxDeskAccCount * 16, 0

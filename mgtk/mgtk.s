@@ -5677,8 +5677,6 @@ itemloop:
         jsr     do_measure_text
         stax    temp
 
-        add16_8 temp, offset_text, temp
-
         lda     curmenuitem::options
         and     #3                      ; OA+SA
         bne     :+
@@ -5706,6 +5704,8 @@ filler: ldx     menu_item_index
         inx
         cpx     menu_item_count
         bne     itemloop
+
+        add16_8 max_width, offset_text, max_width
 
         lda     menu_item_count
         tax
