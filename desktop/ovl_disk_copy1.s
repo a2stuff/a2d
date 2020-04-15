@@ -24,7 +24,7 @@ menu:   DEFINE_MENU 1
 menu_label:
         PASCAL_STRING .sprintf("       Disk copy version %d.%d   ",::kDeskTopVersionMajor,::kDeskTopVersionMinor)
 item_label:
-        PASCAL_STRING "Rien"
+        PASCAL_STRING "Rien"    ; French for "nothing"
 .endparams
 
 ;;; ============================================================

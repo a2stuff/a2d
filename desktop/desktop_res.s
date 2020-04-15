@@ -1158,13 +1158,13 @@ dev11:   DEFINE_STRING "Slot    drive       ", dev11s
 dev12:   DEFINE_STRING "Slot    drive       ", dev12s
 dev13:   DEFINE_STRING "Slot    drive       ", dev13s
 
-startup_menu_item_1:    PASCAL_STRING "Slot 0 "
-startup_menu_item_2:    PASCAL_STRING "Slot 0 "
-startup_menu_item_3:    PASCAL_STRING "Slot 0 "
-startup_menu_item_4:    PASCAL_STRING "Slot 0 "
-startup_menu_item_5:    PASCAL_STRING "Slot 0 "
-startup_menu_item_6:    PASCAL_STRING "Slot 0 "
-startup_menu_item_7:    PASCAL_STRING "Slot 0 "
+startup_menu_item_1:    PASCAL_STRING "Slot 0"
+startup_menu_item_2:    PASCAL_STRING "Slot 0"
+startup_menu_item_3:    PASCAL_STRING "Slot 0"
+startup_menu_item_4:    PASCAL_STRING "Slot 0"
+startup_menu_item_5:    PASCAL_STRING "Slot 0"
+startup_menu_item_6:    PASCAL_STRING "Slot 0"
+startup_menu_item_7:    PASCAL_STRING "Slot 0"
 
 kNumDeviceTypes = 6
 
@@ -1281,7 +1281,7 @@ splash_menu_label:
 blank_dd_label:
         PASCAL_STRING " "
 dummy_dd_item:
-        PASCAL_STRING "Rien"    ; ???
+        PASCAL_STRING "Rien"    ; French for "nothing"
 
         ;; IconTK::UNHIGHLIGHT_ICON params
 icon_params2:

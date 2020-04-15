@@ -3275,7 +3275,7 @@ desktop_menu:
 
 file_menu:
         DEFINE_MENU kMenuSizeFile
-@items: DEFINE_MENU_ITEM label_new_folder, 'F', 'f'
+@items: DEFINE_MENU_ITEM label_new_folder, 'N', 'n'
         DEFINE_MENU_ITEM label_open, 'O', 'o'
         DEFINE_MENU_ITEM label_close, 'W', 'w'
         DEFINE_MENU_ITEM label_close_all
@@ -3284,8 +3284,8 @@ file_menu:
         DEFINE_MENU_ITEM label_get_info, 'I', 'i'
         DEFINE_MENU_ITEM label_rename_icon
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM label_copy_file, 'Y', 'y'
-        DEFINE_MENU_ITEM label_delete_file, 'D', 'd'
+        DEFINE_MENU_ITEM label_copy_file
+        DEFINE_MENU_ITEM label_delete_file
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_quit, 'Q', 'q'
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeFile, .sizeof(MGTK::MenuItem)
@@ -3306,11 +3306,11 @@ file_menu:
 
 view_menu:
         DEFINE_MENU kMenuSizeView
-@items: DEFINE_MENU_ITEM label_by_icon, 'J', 'j'
-        DEFINE_MENU_ITEM label_by_name, 'N', 'n'
-        DEFINE_MENU_ITEM label_by_date, 'T', 't'
-        DEFINE_MENU_ITEM label_by_size, 'K', 'k'
-        DEFINE_MENU_ITEM label_by_type, 'L', 'l'
+@items: DEFINE_MENU_ITEM label_by_icon
+        DEFINE_MENU_ITEM label_by_name
+        DEFINE_MENU_ITEM label_by_date
+        DEFINE_MENU_ITEM label_by_size
+        DEFINE_MENU_ITEM label_by_type
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeView, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdViewByIcon = 1
@@ -3325,8 +3325,8 @@ special_menu:
         DEFINE_MENU_ITEM label_check_drive
         DEFINE_MENU_ITEM label_eject, 'E', 'e'
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM label_format_disk, 'S', 's'
-        DEFINE_MENU_ITEM label_erase_disk, 'Z', 'z'
+        DEFINE_MENU_ITEM label_format_disk
+        DEFINE_MENU_ITEM label_erase_disk
         DEFINE_MENU_ITEM label_disk_copy
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_lock

@@ -5677,6 +5677,8 @@ itemloop:
         jsr     do_measure_text
         stax    temp
 
+        add16_8 temp, offset_text, temp
+
         lda     curmenuitem::options
         and     #3                      ; OA+SA
         bne     :+
