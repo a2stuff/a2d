@@ -641,7 +641,6 @@ ignore_click:
         beq     ignore_click
 
 exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
-        ITK_CALL IconTK::RedrawIcons
         jmp     exit_da
 
 :       cmp     #MGTK::Area::dragbar ; Title bar?

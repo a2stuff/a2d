@@ -626,7 +626,6 @@ ipblink_ip_bitmap:
 
 .proc exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        ITK_CALL IconTK::RedrawIcons
         rts
 .endproc
 

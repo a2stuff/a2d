@@ -144,8 +144,9 @@ nextwinfo:      .addr   0
         jmp     input_loop
 
 exit:
-        ;; TODO: Why does this need to preceed DrawMenu if a window is open ???
+        ;; Force desktop redraw
         MGTK_CALL MGTK::OpenWindow, winfo
+        MGTK_CALL MGTK::CloseWindow, winfo
 
         MGTK_CALL MGTK::DrawMenu
         sta     RAMWRTOFF
@@ -153,10 +154,6 @@ exit:
         yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, last_menu_click_params
         sta     RAMWRTON
         sta     RAMRDON
-
-        ;; Force desktop redraw
-        MGTK_CALL MGTK::CloseWindow, winfo
-        ITK_CALL IconTK::RedrawIcons
 
         MGTK_CALL MGTK::ShowCursor
         rts                     ; exits input loop

@@ -321,7 +321,6 @@ char_label:  .byte   0
 
 .proc exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        ITK_CALL IconTK::RedrawIcons
         rts                     ; exits input loop
 .endproc
 

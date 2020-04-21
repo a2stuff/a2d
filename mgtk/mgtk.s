@@ -5633,12 +5633,13 @@ need_savebehind:
         temp      := $82
         max_width := $C5
 
-        lda     #0
-        sta     savebehind_usage
-        sta     savebehind_usage+1
         copy16  params_addr, active_menu
 
 draw_menu_impl:
+        lda     #0
+        sta     savebehind_usage
+        sta     savebehind_usage+1
+
         jsr     get_menu_count  ; into menu_count
         jsr     hide_cursor_save_params
         jsr     set_standard_port

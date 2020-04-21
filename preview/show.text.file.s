@@ -558,7 +558,6 @@ no_mod:
 .proc do_close
         jsr     close_file
         MGTK_CALL MGTK::CloseWindow, winfo
-        ITK_CALL IconTK::RedrawIcons
         rts                     ; exits input loop
 .endproc
 
