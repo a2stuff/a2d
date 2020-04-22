@@ -156,7 +156,7 @@ Commands:
 
 ### `IconTK::AddIcon` ($01)
 
-Parameters: { addr icondata }
+Parameters: address of IconEntry
 
 Inserts an icon record into the table.
 
@@ -198,9 +198,9 @@ Remove all icons associated with the specified window. No redrawing is done.
 
 ### `IconTK::GetHighlighted` ($08)
 
-Parameters: { .res 20 }
+Parameters: { .res 127 }
 
-Copies the numbers of the first 20 selected icons to the given buffer.
+Copies the selected icon numbers to the given buffer.
 
 ### `IconTK::FindIcon` ($09)
 
@@ -220,9 +220,9 @@ target was a window (and the low bits are the window number).
 
 ### `IconTK::UnhighlightIcon` ($0B)
 
-Parameters: { addr iconentry }
+Parameters: { byte icon }
 
-Unhighlights the specified icon. Note that the address of the IconEntry is passed, not the number.
+Unhighlights the specified icon.
 
 ### `IconTK::RedrawIcons` ($0C)
 
