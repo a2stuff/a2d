@@ -22,6 +22,8 @@
         .include "desktop_res.s"
         .include "desktop_main.s"
 
+        .include "init.s"
+
         .include "invoker.s"
 
 ;;; ============================================================
