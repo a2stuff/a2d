@@ -1,5 +1,7 @@
 ;;; ============================================================
 ;;; Overlay for Common Routines (Selector, File Copy/Delete)
+;;;
+;;; Compiled as part of desktop.s
 ;;; ============================================================
 
 .proc common_overlay

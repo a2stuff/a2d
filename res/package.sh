@@ -66,8 +66,8 @@ add_file $IMGFILE_PART1 "res/package/READ.ME" "/$VOLNAME_PART1" "Read.Me" 040000
 add_file $IMGFILE_COMPLETE "desktop.system/out/desktop.system.SYS" "/$VOLNAME_COMPLETE" "DeskTop.system" FF0000
 add_file $IMGFILE_PART1 "desktop.system/out/desktop.system.SYS" "/$VOLNAME_PART1" "DeskTop.system" FF0000
 
-add_file $IMGFILE_COMPLETE "desktop/out/DESKTOP2.built" "/$VOLNAME_COMPLETE" "DeskTop2" F10000
-add_file $IMGFILE_PART1 "desktop/out/DESKTOP2.built" "/$VOLNAME_PART1" "DeskTop2" F10000
+add_file $IMGFILE_COMPLETE "desktop/out/desktop.built" "/$VOLNAME_COMPLETE" "DeskTop2" F10000
+add_file $IMGFILE_PART1 "desktop/out/desktop.built" "/$VOLNAME_PART1" "DeskTop2" F10000
 
 cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/Optional" --quiet --no-case-bits > /dev/null
 cadius CREATEFOLDER $IMGFILE_PART2 "/$VOLNAME_PART2/Optional" --quiet --no-case-bits > /dev/null

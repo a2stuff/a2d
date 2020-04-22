@@ -1,5 +1,7 @@
 ;;; ============================================================
 ;;; Overlay for Selector (part of it, anyway)
+;;;
+;;; Compiled as part of desktop.s
 ;;; ============================================================
 
 ;;; See docs/Selector_List_Format.md for file format

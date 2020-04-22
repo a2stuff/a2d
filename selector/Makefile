@@ -15,9 +15,9 @@ clean:
 	rm -f $(OUTDIR)/*.list
 	rm -f $(TARGETS)
 
-$(OUTDIR)/selector.o: selector.s $(HEADERS) bootstrap.s quit_handler.s loader.s invoker.s app.s alert_dialog.s ovl_*.s
+$(OUTDIR)/selector.o: selector.s $(HEADERS) bootstrap.s quit_handler.s loader.s invoker.s app.s alert_dialog.s ovl_*.s ../mgtk/mgtk.s
 	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Built segments
-$(OUTDIR)/%.built: $(OUTDIR)/%.o asm.cfg
+$(OUTDIR)/%.built: $(OUTDIR)/%.o ../res/asm.cfg
 	ld65 $(LDFLAGS) -o '$@' $<

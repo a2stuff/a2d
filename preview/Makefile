@@ -15,5 +15,4 @@ $(OUTDIR):
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
-	rm -f $(OUTDIR)/*.seg
 	rm -f $(TARGETS)

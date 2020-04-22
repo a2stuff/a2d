@@ -1,5 +1,7 @@
 ;;; ============================================================
 ;;; Overlay for Selector (part of it, anyway)
+;;;
+;;; Compiled as part of desktop.s
 ;;; ============================================================
 
 .proc selector_overlay

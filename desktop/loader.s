@@ -1,11 +1,8 @@
-        .setcpu "6502"
-
-        .include "apple2.inc"
-        .include "../inc/apple2.inc"
-        .include "../inc/macros.inc"
-        .include "../inc/prodos.inc"
-        .include "../common.inc"
-        .include "../desktop/desktop.inc"
+;;; ============================================================
+;;; Loader
+;;;
+;;; Compiled as part of desktop.s
+;;; ============================================================
 
 ;;; ============================================================
 ;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)

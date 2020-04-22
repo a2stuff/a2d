@@ -2,9 +2,7 @@ HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard ../mgtk/*.inc
 
 include ../res/Makefile.common
 
-SEGMENTS = loader mgtk desktop
-
-TARGETS = $(OUTDIR)/DESKTOP2.built
+TARGETS = $(OUTDIR)/desktop.built
 
 .PHONY: clean all
 all: $(OUTDIR) $(TARGETS)
@@ -15,19 +13,11 @@ $(OUTDIR):
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
-	rm -f $(OUTDIR)/*.seg
 	rm -f $(TARGETS)
 
-$(OUTDIR)/mgtk.o: mgtk_segment.s ../mgtk/mgtk.s $(HEADERS)
+$(OUTDIR)/desktop.o: desktop.s $(HEADERS) loader.s desktop_*.s ovl*.s invoker.s ../mgtk/mgtk.s
 	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
-$(OUTDIR)/desktop.o: desktop.s $(HEADERS) desktop_*.s ovl*.s invoker.s
-	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
-
-# Built DeskTop segments
-$(OUTDIR)/%.seg: $(OUTDIR)/%.o ../res/asm.cfg
+# Built segments
+$(OUTDIR)/%.built: $(OUTDIR)/%.o ../res/asm.cfg
 	ld65 $(LDFLAGS) -o '$@' $<
-
-# DeskTop combined
-$(OUTDIR)/DESKTOP2.built: $(patsubst %,$(OUTDIR)/%.seg,$(SEGMENTS))
-	cat $(patsubst %,$(OUTDIR)/%.seg,$(SEGMENTS)) > $@

@@ -6,4 +6,4 @@
 
 MD5=$((command -v md5) || (command -v md5sum))
 
-$MD5 $(find */out -name '*.da' -o -name '*.seg' -o -name '*.SYS' -o -name '*.built')
+$MD5 $(find */out -name '*.da' -o -name '*.SYS' -o -name '*.built')

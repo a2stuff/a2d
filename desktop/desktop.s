@@ -15,7 +15,7 @@
 
         .include "internal.inc"
 
-        ;; TODO: Replace this with linker magic
+        .include "loader.s"
 
         .include "desktop_aux.s"
         .include "desktop_lc.s"
@@ -24,20 +24,23 @@
 
         .include "invoker.s"
 
+;;; ============================================================
+;;; Disk Copy Overlays
+
         .include "ovl_disk_copy1.s"
         .include "ovl_disk_copy2.s"
         .include "ovl_disk_copy3.s"
         .include "ovl_disk_copy4.s"
-        .include "ovl_format_erase.s"
+
+;;; ============================================================
+;;; Other Overlays
 
 .macro jump_table_entry addr
         .byte 0
         .addr addr
 .endmacro
 
-;;; ============================================================
-;;; Interdependent Overlays
-
+        .include "ovl_format_erase.s"
         .include "ovl_selector_pick.s" ; Selector (1/2) @ $9000-$9FFF
         .include "ovl_file_dialog.s"   ; File Dialog    @ $5000-$6FFF
         .include "ovl_file_copy.s"     ; File Copy      @ $7000-$77FF

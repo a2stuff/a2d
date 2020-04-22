@@ -1,5 +1,7 @@
 ;;; ============================================================
 ;;; Invoker - loaded into MAIN $290-$3EF
+;;;
+;;; Compiled as part of selector.s
 ;;; ============================================================
 
 ;;; Used to invoke other programs (system, binary, BASIC)

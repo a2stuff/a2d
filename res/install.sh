@@ -54,7 +54,7 @@ perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
 add_file "$INSTALL_IMG" "res/package/READ.ME" "$INSTALL_PATH" "Read.Me" 040000
 
 add_file "$INSTALL_IMG" "desktop.system/out/desktop.system.SYS" "$INSTALL_PATH" "DeskTop.system" FF0000
-add_file "$INSTALL_IMG" "desktop/out/DESKTOP2.built" "$INSTALL_PATH" "DeskTop2" F10000
+add_file "$INSTALL_IMG" "desktop/out/desktop.built" "$INSTALL_PATH" "DeskTop2" F10000
 
 
 if [ "$1" = "selector" ]; then

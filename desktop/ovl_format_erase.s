@@ -1,5 +1,7 @@
 ;;; ============================================================
 ;;; Overlay for Format/Erase
+;;;
+;;; Compiled as part of desktop.s
 ;;; ============================================================
 
 .proc format_erase_overlay

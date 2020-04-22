@@ -1,5 +1,7 @@
 ;;; ============================================================
 ;;; Invoker - loaded into MAIN $290-$3EF
+;;;
+;;; Compiled as part of desktop.s
 ;;; ============================================================
 
 ;;; Used to invoke other programs (system, binary, BASIC)
