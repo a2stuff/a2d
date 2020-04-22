@@ -1,10 +1,10 @@
 ;;; ============================================================
-;;; Overlay for Common Routines (Selector, File Copy/Delete)
+;;; Overlay for File Dialog (used by Copy/Delete/Add/Edit)
 ;;;
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc common_overlay
+.proc file_dialog
         .org $5000
 
 ;;; Map from index in files_names to list entry; high bit is
@@ -18,6 +18,7 @@ file_names      := $1800
 
 ;;; ============================================================
 
+exec:
 L5000:  jmp     L50B1
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
@@ -2922,4 +2923,6 @@ L6F3D:  .byte   0
 
         PAD_TO $7000
 
-.endproc ; common_overlay
+.endproc ; file_dialog
+
+file_dialog_exec := file_dialog::exec

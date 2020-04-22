@@ -12,20 +12,15 @@
 
 dst_path_buf   := $1FC0
 
-        dynamic_routine_800  := $0800
-        dynamic_routine_5000 := $5000
-        dynamic_routine_7000 := $7000
-        dynamic_routine_9000 := $9000
-
-        kDynamicRoutineDiskCopy    = 0
-        kDynamicRoutineFormatErase = 1
-        kDynamicRoutineSelector1    = 2
-        kDynamicRoutineCommon       = 3
-        kDynamicRoutineFileCopy    = 4
-        kDynamicRoutineFileDelete  = 5
-        kDynamicRoutineSelector2    = 6
-        kDynamicRoutineRestore5000  = 7
-        kDynamicRoutineRestore9000  = 8
+kDynamicRoutineDiskCopy         = 0
+kDynamicRoutineFormatErase      = 1
+kDynamicRoutineSelector1        = 2
+kDynamicRoutineFileDialog       = 3
+kDynamicRoutineFileCopy         = 4
+kDynamicRoutineFileDelete       = 5
+kDynamicRoutineSelector2        = 6
+kDynamicRoutineRestore5000      = 7
+kDynamicRoutineRestore9000      = 8
 
 
         .org $4000
@@ -1138,14 +1133,14 @@ set_penmode_copy:
         lda     #kDynamicRoutineSelector2
         jsr     load_dynamic_routine
         bmi     done
-        lda     #kDynamicRoutineCommon
+        lda     #kDynamicRoutineFileDialog
         jsr     load_dynamic_routine
         bmi     done
 
 :       jsr     set_pointer_cursor
         ;; Invoke routine
         lda     menu_click_params::item_num
-        jsr     dynamic_routine_9000
+        jsr     selector_picker_exec
         sta     result
         jsr     set_watch_cursor
         ;; Restore from overlays
@@ -1633,7 +1628,7 @@ running_da_flag:
 
 .proc cmd_copy_file
         jsr     set_watch_cursor
-        lda     #kDynamicRoutineCommon
+        lda     #kDynamicRoutineFileDialog
         jsr     load_dynamic_routine
         bmi     L4CD6
         lda     #kDynamicRoutineFileCopy
@@ -1641,7 +1636,7 @@ running_da_flag:
         bmi     L4CD6
         jsr     set_pointer_cursor
         lda     #$00
-        jsr     dynamic_routine_5000
+        jsr     file_dialog_exec
         pha
         jsr     set_watch_cursor
         lda     #kDynamicRoutineRestore5000
@@ -1745,7 +1740,7 @@ L4CD6:  pha
 
 .proc cmd_delete_file
         jsr     set_watch_cursor
-        lda     #kDynamicRoutineCommon
+        lda     #kDynamicRoutineFileDialog
         jsr     load_dynamic_routine
         bmi     L4D9D
 
@@ -1755,7 +1750,7 @@ L4CD6:  pha
 
         jsr     set_pointer_cursor
         lda     #$01
-        jsr     dynamic_routine_5000
+        jsr     file_dialog_exec
         pha
         jsr     set_watch_cursor
         lda     #kDynamicRoutineRestore5000
@@ -1988,7 +1983,7 @@ done:   rts
         lda     #kDynamicRoutineDiskCopy
         jsr     load_dynamic_routine
         bmi     fail
-        jmp     dynamic_routine_800
+        jmp     format_erase_overlay_exec
 
 fail:   rts
 .endproc
@@ -2676,7 +2671,7 @@ drive_to_refresh:
         bmi     fail
 
         lda     #$04
-        jsr     dynamic_routine_800
+        jsr     format_erase_overlay_exec
         bne     :+
         stx     drive_to_refresh ; unit number
         jsr     redraw_windows_and_desktop
@@ -2694,7 +2689,7 @@ fail:   rts
         bmi     done
 
         lda     #$05
-        jsr     dynamic_routine_800
+        jsr     format_erase_overlay_exec
         bne     done
 
         stx     drive_to_refresh ; unit number

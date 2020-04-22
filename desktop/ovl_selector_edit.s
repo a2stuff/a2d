@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; Overlay for Selector (part of it, anyway)
+;;; Overlay for Selector Edit - drives File Picker dialog
 ;;;
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
@@ -10,18 +10,18 @@
 .proc L7000
         stx     which_run_list
         sty     copy_when
-        jsr     common_overlay::create_common_dialog
+        jsr     file_dialog::create_common_dialog
         jsr     L7101
         jsr     L70AD
-        jsr     common_overlay::device_on_line
+        jsr     file_dialog::device_on_line
         lda     path_buf0
         beq     L7056
         ldy     path_buf0
 L7021:  lda     path_buf0,y
-        sta     common_overlay::path_buf,y
+        sta     file_dialog::path_buf,y
         dey
         bpl     L7021
-        jsr     common_overlay::L5F49
+        jsr     file_dialog::L5F49
         ldy     path_buf0
 L7030:  lda     path_buf0,y
         cmp     #'/'
@@ -41,27 +41,27 @@ L7046:  iny
         cpy     path_buf0
         bne     L7046
         stx     L709D
-L7056:  jsr     common_overlay::L5F5B
+L7056:  jsr     file_dialog::L5F5B
         lda     #$00
         bcs     L706A
-        addr_call common_overlay::L6516, L709D
+        addr_call file_dialog::L6516, L709D
         sta     selected_index
-        jsr     common_overlay::L6586
-L706A:  jsr     common_overlay::L6163
-        jsr     common_overlay::L61B1
-        jsr     common_overlay::draw_list_entries
+        jsr     file_dialog::L6586
+L706A:  jsr     file_dialog::L6163
+        jsr     file_dialog::L61B1
+        jsr     file_dialog::draw_list_entries
         lda     path_buf0
         bne     L707B
-        jsr     common_overlay::jt_prep_path
+        jsr     file_dialog::jt_prep_path
 L707B:  copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     common_overlay::jt_redraw_input
-        jsr     common_overlay::redraw_f2
+        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::redraw_f2
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
         lda     #$FF
         sta     LD8EC
-        jmp     common_overlay::event_loop
+        jmp     file_dialog::event_loop
 
 L709D:  .res 16, 0
 
@@ -73,29 +73,29 @@ L709D:  .res 16, 0
 .proc L70AD
         ldx     jt_pathname
 L70B0:  lda     jt_pathname+1,x
-        sta     common_overlay::jump_table,x
+        sta     file_dialog::jump_table,x
         dex
         lda     jt_pathname+1,x
-        sta     common_overlay::jump_table,x
+        sta     file_dialog::jump_table,x
         dex
         dex
         bpl     L70B0
         lda     #$00
-        sta     common_overlay::L51AE
+        sta     file_dialog::L51AE
         lda     #$80
-        sta     common_overlay::L5104
+        sta     file_dialog::L5104
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
         lda     winfo_entrydlg
-        jsr     common_overlay::set_port_for_window
+        jsr     file_dialog::set_port_for_window
         lda     which_run_list
         jsr     L7467
         lda     copy_when
         jsr     L747B
         lda     #$80
-        sta     common_overlay::L5103
-        copy16  #L73AB, common_overlay::L531B+1
-        copy16  #L74F4, common_overlay::handle_key::key_meta_digit+1
+        sta     file_dialog::L5103
+        copy16  #L73AB, file_dialog::L531B+1
+        copy16  #L74F4, file_dialog::handle_key::key_meta_digit+1
         rts
 .endproc
 
@@ -103,33 +103,33 @@ L70B0:  lda     jt_pathname+1,x
 
 .proc L7101
         lda     winfo_entrydlg
-        jsr     common_overlay::set_port_for_window
+        jsr     file_dialog::set_port_for_window
         lda     path_buf0
         beq     L7116
-        addr_call common_overlay::L5E0A, edit_an_entry_label
+        addr_call file_dialog::L5E0A, edit_an_entry_label
         jmp     L711D
 
-L7116:  addr_call common_overlay::L5E0A, add_an_entry_label
-L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
+L7116:  addr_call file_dialog::L5E0A, add_an_entry_label
+L711D:  addr_call file_dialog::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, common_input1_rect
         MGTK_RELAY_CALL MGTK::FrameRect, common_input2_rect
-        addr_call common_overlay::L5E57, enter_the_full_pathname_label1
-        addr_call common_overlay::L5E6F, enter_the_name_to_appear_label
+        addr_call file_dialog::L5E57, enter_the_full_pathname_label1
+        addr_call file_dialog::L5E6F, enter_the_name_to_appear_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_add_a_new_entry_to_label
-        addr_call common_overlay::draw_string, add_a_new_entry_to_label
+        addr_call file_dialog::draw_string, add_a_new_entry_to_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_run_list_label
-        addr_call common_overlay::draw_string, run_list_label
+        addr_call file_dialog::draw_string, run_list_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_other_run_list_label
-        addr_call common_overlay::draw_string, other_run_list_label
+        addr_call file_dialog::draw_string, other_run_list_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_down_load_label
-        addr_call common_overlay::draw_string, down_load_label
+        addr_call file_dialog::draw_string, down_load_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_at_first_boot_label
-        addr_call common_overlay::draw_string, at_first_boot_label
+        addr_call file_dialog::draw_string, at_first_boot_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_at_first_use_label
-        addr_call common_overlay::draw_string, at_first_use_label
+        addr_call file_dialog::draw_string, at_first_use_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_never_label
-        addr_call common_overlay::draw_string, never_label
+        addr_call file_dialog::draw_string, never_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, rect_run_list_radiobtn
         MGTK_RELAY_CALL MGTK::FrameRect, rect_other_run_list_radiobtn
@@ -148,53 +148,53 @@ L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
 jt_pathname:  .byte   $29
         jump_table_entry L725D
         jump_table_entry L732F
-        jump_table_entry common_overlay::blink_f1_ip
-        jump_table_entry common_overlay::redraw_f1
-        jump_table_entry common_overlay::strip_f1_path_segment
-        jump_table_entry common_overlay::jt_handle_f1_tbd05
-        jump_table_entry common_overlay::prep_path_buf0
-        jump_table_entry common_overlay::handle_f1_other_key
-        jump_table_entry common_overlay::handle_f1_delete_key
-        jump_table_entry common_overlay::handle_f1_left_key
-        jump_table_entry common_overlay::handle_f1_right_key
-        jump_table_entry common_overlay::handle_f1_meta_left_key
-        jump_table_entry common_overlay::handle_f1_meta_right_key
-        jump_table_entry common_overlay::handle_f1_click
+        jump_table_entry file_dialog::blink_f1_ip
+        jump_table_entry file_dialog::redraw_f1
+        jump_table_entry file_dialog::strip_f1_path_segment
+        jump_table_entry file_dialog::jt_handle_f1_tbd05
+        jump_table_entry file_dialog::prep_path_buf0
+        jump_table_entry file_dialog::handle_f1_other_key
+        jump_table_entry file_dialog::handle_f1_delete_key
+        jump_table_entry file_dialog::handle_f1_left_key
+        jump_table_entry file_dialog::handle_f1_right_key
+        jump_table_entry file_dialog::handle_f1_meta_left_key
+        jump_table_entry file_dialog::handle_f1_meta_right_key
+        jump_table_entry file_dialog::handle_f1_click
 
 jt_entry_name:  .byte   $29
         jump_table_entry L72CD
         jump_table_entry L736C
-        jump_table_entry common_overlay::blink_f2_ip
-        jump_table_entry common_overlay::redraw_f2
-        jump_table_entry common_overlay::strip_f2_path_segment
-        jump_table_entry common_overlay::jt_handle_f2_tbd05
-        jump_table_entry common_overlay::prep_path_buf1
-        jump_table_entry common_overlay::handle_f2_other_key
-        jump_table_entry common_overlay::handle_f2_delete_key
-        jump_table_entry common_overlay::handle_f2_left_key
-        jump_table_entry common_overlay::handle_f2_right_key
-        jump_table_entry common_overlay::handle_f2_meta_left_key
-        jump_table_entry common_overlay::handle_f2_meta_right_key
-        jump_table_entry common_overlay::handle_f2_click
+        jump_table_entry file_dialog::blink_f2_ip
+        jump_table_entry file_dialog::redraw_f2
+        jump_table_entry file_dialog::strip_f2_path_segment
+        jump_table_entry file_dialog::jt_handle_f2_tbd05
+        jump_table_entry file_dialog::prep_path_buf1
+        jump_table_entry file_dialog::handle_f2_other_key
+        jump_table_entry file_dialog::handle_f2_delete_key
+        jump_table_entry file_dialog::handle_f2_left_key
+        jump_table_entry file_dialog::handle_f2_right_key
+        jump_table_entry file_dialog::handle_f2_meta_left_key
+        jump_table_entry file_dialog::handle_f2_meta_right_key
+        jump_table_entry file_dialog::handle_f2_click
 
 ;;; ============================================================
 
 .proc L725D
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     common_overlay::jt_redraw_input
+        jsr     file_dialog::jt_redraw_input
         ldx     jt_entry_name
 L726D:  lda     jt_entry_name+1,x
-        sta     common_overlay::jump_table,x
+        sta     file_dialog::jump_table,x
         dex
         lda     jt_entry_name+1,x
-        sta     common_overlay::jump_table,x
+        sta     file_dialog::jump_table,x
         dex
         dex
         bpl     L726D
         lda     #$80
-        sta     common_overlay::L51AE
-        sta     common_overlay::L5105
+        sta     file_dialog::L51AE
+        sta     file_dialog::L5105
         lda     LD8F0
         sta     LD8F1
         lda     #$00
@@ -222,7 +222,7 @@ L72AF:  iny
         sty     path_buf1
 L72BF:  copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        jsr     common_overlay::jt_redraw_input
+        jsr     file_dialog::jt_redraw_input
         rts
 .endproc
 
@@ -233,7 +233,7 @@ L72BF:  copy    #1, path_buf2
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
 .proc L72CD
-        addr_call common_overlay::L647C, path_buf0
+        addr_call file_dialog::L647C, path_buf0
         bne     L72E2
         lda     path_buf1
         beq     L72E7
@@ -254,9 +254,9 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         sta     LD8EC
-        jsr     common_overlay::set_cursor_pointer
-        copy16  #common_overlay::noop, common_overlay::handle_key::key_meta_digit+1
-        ldx     common_overlay::stash_stack
+        jsr     file_dialog::set_cursor_pointer
+        copy16  #file_dialog::noop, file_dialog::handle_key::key_meta_digit+1
+        ldx     file_dialog::stash_stack
         txs
         ldx     which_run_list
         ldy     copy_when
@@ -272,9 +272,9 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #$00
         sta     LD8EC
-        jsr     common_overlay::set_cursor_pointer
-        copy16  #common_overlay::noop, common_overlay::handle_key::key_meta_digit+1
-        ldx     common_overlay::stash_stack
+        jsr     file_dialog::set_cursor_pointer
+        copy16  #file_dialog::noop, file_dialog::handle_key::key_meta_digit+1
+        ldx     file_dialog::stash_stack
         txs
         return  #$FF
 .endproc
@@ -284,22 +284,22 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
 .proc L736C
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     common_overlay::jt_redraw_input
+        jsr     file_dialog::jt_redraw_input
         ldx     jt_pathname
 L737C:  lda     jt_pathname+1,x
-        sta     common_overlay::jump_table,x
+        sta     file_dialog::jump_table,x
         dex
         lda     jt_pathname+1,x
-        sta     common_overlay::jump_table,x
+        sta     file_dialog::jump_table,x
         dex
         dex
         bpl     L737C
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        jsr     common_overlay::jt_redraw_input
+        jsr     file_dialog::jt_redraw_input
         lda     #$00
-        sta     common_overlay::L5105
-        sta     common_overlay::L51AE
+        sta     file_dialog::L5105
+        sta     file_dialog::L51AE
         lda     LD8F1
         sta     LD8F0
         rts
@@ -466,7 +466,7 @@ L7493:  addr_call draw_inset_rect, rect_never_radiobtn
 ;;; ============================================================
 
 L74F4:  lda     winfo_entrydlg
-        jsr     common_overlay::set_port_for_window
+        jsr     file_dialog::set_port_for_window
         lda     event_modifiers
         bne     L7500
         rts

@@ -49,4 +49,4 @@
         .include "ovl_file_delete.s"   ; File Delete    @ $7000-$77FF
         .include "ovl_selector_edit.s" ; Selector (2/2) @ $7000-$77FF
 
-        common_overlay_L5000 := common_overlay::L5000
+        common_overlay_L5000 := file_dialog::L5000

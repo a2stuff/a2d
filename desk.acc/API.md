@@ -23,10 +23,9 @@ DAs are documented here.
   * Normal event processing per MGTK
   * In addition, following a window drag/resize, DeskTop calls must be made:
      * `JUMP_TABLE_REDRAW_ALL` - redraw all windows
-     * `IconTK::REDRAW_ICONS` - redraw desktop (volume) icons
+     * `IconTK::RedrawIcons` - redraw desktop (volume) icons
   * ...
 * Destroy window (`CloseWindow`)
-* Tell DeskTop to redraw desktop icons (`IconTK::REDRAW_ICONS`)
 * Switch control back to Main (`RAMRDOFF`/`RAMWRTOFF`)
 * Ensure ALTZP and LCBANK1 are still on
 * Restore stack pointer

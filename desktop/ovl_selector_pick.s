@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; Overlay for Selector (part of it, anyway)
+;;; Overlay for Selector Picker
 ;;;
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
@@ -13,6 +13,7 @@ io_buf := $0800
 
 selector_list   := $0C00
 
+exec:
         sta     L938E
         ldx     #$FF
         stx     L938F
@@ -1641,3 +1642,5 @@ delta:  .byte   0
         PAD_TO $A000
 
 .endproc ; selector_overlay2
+
+selector_picker_exec    := selector_overlay2::exec

@@ -22,6 +22,8 @@ New desk accessories:
   * Launches BASIC.SYSTEM with PREFIX set to current window's directory.
 * [Screen Saver](screen.saver.s)
   * Visual distractions.
+* [Melt](melt.saver.s)
+  * Visual distractions.
 
 Note that the new desk accessories require an updated version of Apple II DeskTop and **will not work** with DeskTop 1.1 or MouseDesk.
 

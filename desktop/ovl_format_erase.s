@@ -9,6 +9,8 @@
 
         block_buffer := $1A00
 
+exec:
+
 L0800:  pha
         jsr     desktop_main::set_cursor_pointer
         pla
@@ -1573,3 +1575,5 @@ format_erase_overlay_prompt_handle_key_left     := format_erase_overlay::prompt_
 format_erase_overlay_prompt_handle_key_right    := format_erase_overlay::prompt_handle_key_right
 format_erase_overlay_prompt_handle_key_down     := format_erase_overlay::prompt_handle_key_down
 format_erase_overlay_prompt_handle_key_up       := format_erase_overlay::prompt_handle_key_up
+
+format_erase_overlay_exec := format_erase_overlay::exec
