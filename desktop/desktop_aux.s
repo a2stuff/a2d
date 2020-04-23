@@ -8,7 +8,7 @@
 ;;; Segment loaded into AUX $4000-$BFFF
 ;;; ============================================================
 
-.proc desktop_aux
+.proc aux
 
         .org $4000
 
@@ -4467,4 +4467,4 @@ length: .byte   1               ;duration of tone
 
         PAD_TO $C000
 
-.endproc ; desktop_aux
+.endproc ; aux

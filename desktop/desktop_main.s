@@ -334,7 +334,7 @@ num:    .byte   0
 
 .proc handle_keydown_impl
 
-        ;; Keep in sync with desktop_aux::menu_item_id_*
+        ;; Keep in sync with aux::menu_item_id_*
 
         ;; jump table for menu item handlers
 dispatch_table:
@@ -4853,11 +4853,11 @@ disable_menu_items:
 
         copy    #MGTK::disableitem_disable, disableitem_params::disable
         copy    #kMenuIdFile, disableitem_params::menu_id
-        copy    #desktop_aux::kMenuItemIdNewFolder, disableitem_params::menu_item
+        copy    #aux::kMenuItemIdNewFolder, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #desktop_aux::kMenuItemIdClose, disableitem_params::menu_item
+        copy    #aux::kMenuItemIdClose, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #desktop_aux::kMenuItemIdCloseAll, disableitem_params::menu_item
+        copy    #aux::kMenuItemIdCloseAll, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
         copy    #0, menu_dispatch_flag
@@ -4884,20 +4884,20 @@ check_view_menu_items:
 
         ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #desktop_aux::kMenuItemIdOpen
+        lda     #aux::kMenuItemIdOpen
         jsr     disable_menu_item
-        lda     #desktop_aux::kMenuItemIdGetInfo
+        lda     #aux::kMenuItemIdGetInfo
         jsr     disable_menu_item
-        lda     #desktop_aux::kMenuItemIdRenameIcon
+        lda     #aux::kMenuItemIdRenameIcon
         jsr     disable_menu_item
 
         ;; Special
         copy    #kMenuIdSpecial, disableitem_params::menu_id
-        lda     #desktop_aux::kMenuItemIdLock
+        lda     #aux::kMenuItemIdLock
         jsr     disable_menu_item
-        lda     #desktop_aux::kMenuItemIdUnlock
+        lda     #aux::kMenuItemIdUnlock
         jsr     disable_menu_item
-        lda     #desktop_aux::kMenuItemIdGetSize
+        lda     #aux::kMenuItemIdGetSize
         jsr     disable_menu_item
         rts
 
@@ -4914,20 +4914,20 @@ disable_menu_item:
 
         ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #desktop_aux::kMenuItemIdOpen
+        lda     #aux::kMenuItemIdOpen
         jsr     enable_menu_item
-        lda     #desktop_aux::kMenuItemIdGetInfo
+        lda     #aux::kMenuItemIdGetInfo
         jsr     enable_menu_item
-        lda     #desktop_aux::kMenuItemIdRenameIcon
+        lda     #aux::kMenuItemIdRenameIcon
         jsr     enable_menu_item
 
         ;; Special
         copy    #kMenuIdSpecial, disableitem_params::menu_id
-        lda     #desktop_aux::kMenuItemIdLock
+        lda     #aux::kMenuItemIdLock
         jsr     enable_menu_item
-        lda     #desktop_aux::kMenuItemIdUnlock
+        lda     #aux::kMenuItemIdUnlock
         jsr     enable_menu_item
-        lda     #desktop_aux::kMenuItemIdGetSize
+        lda     #aux::kMenuItemIdGetSize
         jsr     enable_menu_item
         rts
 
@@ -4948,11 +4948,11 @@ disable:
         copy    #MGTK::disableitem_disable, disableitem_params::disable
 
 :       copy    #kMenuIdSpecial, disableitem_params::menu_id
-        copy    #desktop_aux::kMenuItemIdEject, disableitem_params::menu_item
+        copy    #aux::kMenuItemIdEject, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
         copy    #kMenuIdSpecial, disableitem_params::menu_id
-        copy    #desktop_aux::kMenuItemIdCheckDrive, disableitem_params::menu_item
+        copy    #aux::kMenuItemIdCheckDrive, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
         rts
@@ -5368,7 +5368,7 @@ no_win:
         jsr     check_item
 
 update_view:
-        lda     #desktop_aux::kMenuItemIdViewByIcon
+        lda     #aux::kMenuItemIdViewByIcon
         sta     checkitem_params::menu_item
         sta     checkitem_params::check
         jsr     check_item
@@ -5816,11 +5816,11 @@ flag:   .byte   0
 
         copy    #MGTK::disableitem_enable, disableitem_params::disable
         copy    #kMenuIdFile, disableitem_params::menu_id
-        copy    #desktop_aux::kMenuItemIdNewFolder, disableitem_params::menu_item
+        copy    #aux::kMenuItemIdNewFolder, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #desktop_aux::kMenuItemIdClose, disableitem_params::menu_item
+        copy    #aux::kMenuItemIdClose, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #desktop_aux::kMenuItemIdCloseAll, disableitem_params::menu_item
+        copy    #aux::kMenuItemIdCloseAll, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
         copy    #$80, menu_dispatch_flag
@@ -9989,7 +9989,7 @@ open:   MLI_RELAY_CALL OPEN, open_params
 :       MLI_RELAY_CALL GET_TIME, 0
 
         ;; Assumes call from main loop, where grafport3 is initialized.
-        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_white
+        MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
         MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
 
         ;; --------------------------------------------------
@@ -10991,10 +10991,10 @@ is_file:
         beq     not_protected
 
 is_protected:
-        copy16  #desktop_aux::str_yes_label, get_info_dialog_params::addr
+        copy16  #aux::str_yes_label, get_info_dialog_params::addr
         bne     show_protected           ; always
 not_protected:
-        copy16  #desktop_aux::str_no_label, get_info_dialog_params::addr
+        copy16  #aux::str_no_label, get_info_dialog_params::addr
 show_protected:
         jsr     run_get_info_dialog_proc
 
@@ -13389,40 +13389,40 @@ content:
         bvc     :+
         jmp     check_button_yes
 
-:       MGTK_RELAY_CALL MGTK::InRect, desktop_aux::ok_button_rect
+:       MGTK_RELAY_CALL MGTK::InRect, aux::ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     check_button_ok
         jmp     maybe_check_button_cancel
 
 check_button_ok:
-        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, desktop_aux::ok_button_rect
+        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, aux::ok_button_rect
         bmi     :+
         lda     #PromptResult::ok
 :       rts
 
 check_button_yes:
-        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, aux::yes_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_no
-        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, desktop_aux::yes_button_rect
+        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, aux::yes_button_rect
         bmi     :+
         lda     #PromptResult::yes
 :       rts
 
 check_button_no:
-        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, aux::no_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_all
-        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, desktop_aux::no_button_rect
+        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, aux::no_button_rect
         bmi     :+
         lda     #PromptResult::no
 :       rts
 
 check_button_all:
-        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::all_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, aux::all_button_rect
         cmp     #MGTK::inrect_inside
         bne     maybe_check_button_cancel
-        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, desktop_aux::all_button_rect
+        yax_call ButtonEventLoopRelay, kAlertDialogWindowID, aux::all_button_rect
         bmi     :+
         lda     #PromptResult::all
 :       rts
@@ -13433,11 +13433,11 @@ maybe_check_button_cancel:
         return  #$FF
 
 check_button_cancel:
-        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, aux::cancel_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     LA6ED
-:       yax_call ButtonEventLoopRelay, kAlertDialogWindowID, desktop_aux::cancel_button_rect
+:       yax_call ButtonEventLoopRelay, kAlertDialogWindowID, aux::cancel_button_rect
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
@@ -13578,15 +13578,15 @@ LA7DD:  ldx     has_input_field_flag
 LA7E5:  return  #$FF
 
 do_yes: jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::yes_button_rect
         return  #PromptResult::yes
 
 do_no:  jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::no_button_rect
         return  #PromptResult::no
 
 do_all: jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::all_button_rect
         return  #PromptResult::all
 
 .proc left_with_mod
@@ -13628,15 +13628,15 @@ done:   return  #$FF
 LA851:  lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         return  #0
 
 LA86F:  lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
         return  #1
 
 LA88D:  lda     has_input_field_flag
@@ -13662,18 +13662,18 @@ jump_relay:
         lda     winfo_about_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_outer_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_inner_rect
-        addr_call draw_dialog_title, desktop_aux::str_about1
-        yax_call draw_dialog_label, 1 | DDL_CENTER, desktop_aux::str_about2
-        yax_call draw_dialog_label, 2 | DDL_CENTER, desktop_aux::str_about3
-        yax_call draw_dialog_label, 3 | DDL_CENTER, desktop_aux::str_about4
-        yax_call draw_dialog_label, 5, desktop_aux::str_about5
-        yax_call draw_dialog_label, 6 | DDL_CENTER, desktop_aux::str_about6
-        yax_call draw_dialog_label, 7, desktop_aux::str_about7
-        yax_call draw_dialog_label, 9, desktop_aux::str_about8
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_outer_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_inner_rect
+        addr_call draw_dialog_title, aux::str_about1
+        yax_call draw_dialog_label, 1 | DDL_CENTER, aux::str_about2
+        yax_call draw_dialog_label, 2 | DDL_CENTER, aux::str_about3
+        yax_call draw_dialog_label, 3 | DDL_CENTER, aux::str_about4
+        yax_call draw_dialog_label, 5, aux::str_about5
+        yax_call draw_dialog_label, 6 | DDL_CENTER, aux::str_about6
+        yax_call draw_dialog_label, 7, aux::str_about7
+        yax_call draw_dialog_label, 9, aux::str_about8
         copy16  #310 - (7 * .strlen(kDeskTopVersionSuffix)), dialog_label_pos
-        yax_call draw_dialog_label, 9, desktop_aux::str_about9
+        yax_call draw_dialog_label, 9, aux::str_about9
         copy16  #kDialogLabelDefaultX, dialog_label_pos
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -13725,17 +13725,17 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
 
-        yax_call draw_dialog_label, 2, desktop_aux::str_copy_from
-        yax_call draw_dialog_label, 3, desktop_aux::str_copy_to
+        yax_call draw_dialog_label, 2, aux::str_copy_from
+        yax_call draw_dialog_label, 3, aux::str_copy_to
         bit     move_flag
         bmi     :+
-        addr_call draw_dialog_title, desktop_aux::str_copy_title
-        yax_call draw_dialog_label, 1, desktop_aux::str_copy_copying
-        yax_call draw_dialog_label, 4, desktop_aux::str_copy_remaining
+        addr_call draw_dialog_title, aux::str_copy_title
+        yax_call draw_dialog_label, 1, aux::str_copy_copying
+        yax_call draw_dialog_label, 4, aux::str_copy_remaining
         rts
-:       addr_call draw_dialog_title, desktop_aux::str_move_title
-        yax_call draw_dialog_label, 1, desktop_aux::str_move_moving
-        yax_call draw_dialog_label, 4, desktop_aux::str_move_remaining
+:       addr_call draw_dialog_title, aux::str_move_title
+        yax_call draw_dialog_label, 1, aux::str_move_moving
+        yax_call draw_dialog_label, 4, aux::str_move_remaining
         rts
 
         ;; CopyDialogLifecycle::populate
@@ -13745,7 +13745,7 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::copy_file_count_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         addr_call draw_text1, str_file_count
         addr_call draw_text1, str_files
         rts
@@ -13768,7 +13768,7 @@ do2:    ldy     #1
         sta     ptr+1
         stx     ptr
         jsr     copy_name_to_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         addr_call draw_text1, path_buf0
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$05
@@ -13779,9 +13779,9 @@ do2:    ldy     #1
         sta     ptr+1
         stx     ptr
         jsr     copy_name_to_buf1
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_dest_file_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_dest_file_pos
         addr_call draw_text1, path_buf1
-        yax_call MGTK_RELAY, MGTK::MoveTo, desktop_aux::copy_file_count_pos2
+        yax_call MGTK_RELAY, MGTK::MoveTo, aux::copy_file_count_pos2
         addr_call draw_text1, str_file_count
         rts
 
@@ -13795,14 +13795,14 @@ do5:    jsr     reset_grafport3a
 do3:    jsr     Bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        yax_call draw_dialog_label, 6, desktop_aux::str_exists_prompt
+        yax_call draw_dialog_label, 6, aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
 LAA7F:  jsr     prompt_input_loop
         bmi     LAA7F
         pha
         jsr     erase_yes_no_all_cancel_buttons
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect
         pla
         rts
 
@@ -13810,14 +13810,14 @@ LAA7F:  jsr     prompt_input_loop
 do4:    jsr     Bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        yax_call draw_dialog_label, 6, desktop_aux::str_large_prompt
+        yax_call draw_dialog_label, 6, aux::str_large_prompt
         jsr     draw_ok_cancel_buttons
 :       jsr     prompt_input_loop
         bmi     :-
         pha
         jsr     erase_ok_cancel_buttons
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect
         pla
         rts
 .endproc
@@ -13846,11 +13846,11 @@ do4:    jsr     Bell
 
 else:   copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        addr_call draw_dialog_title, desktop_aux::str_download
-        yax_call draw_dialog_label, 1, desktop_aux::str_copy_copying
-        yax_call draw_dialog_label, 2, desktop_aux::str_copy_from
-        yax_call draw_dialog_label, 3, desktop_aux::str_copy_to
-        yax_call draw_dialog_label, 4, desktop_aux::str_copy_remaining
+        addr_call draw_dialog_title, aux::str_download
+        yax_call draw_dialog_label, 1, aux::str_copy_copying
+        yax_call draw_dialog_label, 2, aux::str_copy_from
+        yax_call draw_dialog_label, 3, aux::str_copy_to
+        yax_call draw_dialog_label, 4, aux::str_copy_remaining
         rts
 
 do1:    ldy     #1
@@ -13859,7 +13859,7 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::copy_file_count_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         addr_call draw_text1, str_file_count
         addr_call draw_text1, str_files
         rts
@@ -13880,9 +13880,9 @@ do2:    ldy     #1
         sta     ptr+1
         stx     ptr
         jsr     copy_name_to_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::copy_file_count_pos2
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         addr_call draw_text1, str_file_count
         rts
 
@@ -13894,14 +13894,14 @@ do3:    jsr     reset_grafport3a
 do4:    jsr     Bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        yax_call draw_dialog_label, 6, desktop_aux::str_ramcard_full
+        yax_call draw_dialog_label, 6, aux::str_ramcard_full
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
         bmi     :-
         pha
         jsr     erase_ok_button
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect
         pla
         rts
 .endproc
@@ -13926,11 +13926,11 @@ do4:    jsr     Bell
         jmp     do3
 
 else:   jsr     open_dialog_window
-        addr_call draw_dialog_title, desktop_aux::str_size_title
-        yax_call draw_dialog_label, 1, desktop_aux::str_size_number
+        addr_call draw_dialog_title, aux::str_size_title
+        yax_call draw_dialog_label, 1, aux::str_size_number
         ldy     #1
         jsr     draw_colon
-        yax_call draw_dialog_label, 2, desktop_aux::str_size_blocks
+        yax_call draw_dialog_label, 2, aux::str_size_blocks
         ldy     #2
         jsr     draw_colon
         rts
@@ -13976,7 +13976,7 @@ do2:    lda     winfo_alert_dialog
 :       jsr     prompt_input_loop
         bmi     :-
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         jsr     erase_ok_button
         return  #0
 .endproc
@@ -14009,14 +14009,14 @@ do2:    lda     winfo_alert_dialog
 :       sta     LAD1F
         copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        addr_call draw_dialog_title, desktop_aux::str_delete_title
+        addr_call draw_dialog_title, aux::str_delete_title
         lda     LAD1F
         beq     LAD20
-        yax_call draw_dialog_label, 4, desktop_aux::str_ok_empty
+        yax_call draw_dialog_label, 4, aux::str_ok_empty
         rts
 
 LAD1F:  .byte   0
-LAD20:  yax_call draw_dialog_label, 4, desktop_aux::str_delete_ok
+LAD20:  yax_call draw_dialog_label, 4, aux::str_delete_ok
         rts
 
         ;; DeleteDialogLifecycle::populate
@@ -14028,10 +14028,10 @@ do1:    ldy     #1
         jsr     set_port_from_window_id
         lda     LAD1F
         bne     LAD54
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::delete_file_count_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_file_count_pos
         jmp     LAD5D
 
-LAD54:  MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::delete_file_count_pos2
+LAD54:  MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_file_count_pos2
 LAD5D:  addr_call draw_text1, str_file_count
         addr_call draw_text1, str_files
         rts
@@ -14053,9 +14053,9 @@ do3:    ldy     #1
         sta     $06+1
         stx     $06
         jsr     copy_name_to_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::delete_remaining_count_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
         addr_call draw_text1, str_file_count
         rts
 
@@ -14067,10 +14067,10 @@ LADC4:  jsr     prompt_input_loop
         bmi     LADC4
         bne     LADF4
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         jsr     erase_ok_cancel_buttons
-        yax_call draw_dialog_label, 2, desktop_aux::str_file_colon
-        yax_call draw_dialog_label, 4, desktop_aux::str_delete_remaining
+        yax_call draw_dialog_label, 2, aux::str_file_colon
+        yax_call draw_dialog_label, 4, aux::str_delete_remaining
         lda     #$00
 LADF4:  rts
 
@@ -14083,14 +14083,14 @@ do5:    jsr     reset_grafport3a
         ;; DeleteDialogLifecycle::locked
 do4:    lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        yax_call draw_dialog_label, 6, desktop_aux::str_delete_locked_file
+        yax_call draw_dialog_label, 6, aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
 LAE17:  jsr     prompt_input_loop
         bmi     LAE17
         pha
         jsr     erase_yes_no_all_cancel_buttons
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy ; white
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect ; erase prompt
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect ; erase prompt
         pla
         rts
 .endproc
@@ -14116,7 +14116,7 @@ LAE49:  copy    #$80, has_input_field_flag
         jsr     open_prompt_window
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        addr_call draw_dialog_title, desktop_aux::str_new_folder_title
+        addr_call draw_dialog_title, aux::str_new_folder_title
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         rts
@@ -14136,11 +14136,11 @@ LAE90:  lda     ($08),y
         bpl     LAE90
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        yax_call draw_dialog_label, 2, desktop_aux::str_in_colon
+        yax_call draw_dialog_label, 2, aux::str_in_colon
         copy    #55, dialog_label_pos
         yax_call draw_dialog_label, 2, path_buf0
         copy    #kDialogLabelDefaultX, dialog_label_pos
-        yax_call draw_dialog_label, 4, desktop_aux::str_enter_folder_name
+        yax_call draw_dialog_label, 4, aux::str_enter_folder_name
         jsr     draw_filename_prompt
 LAEC6:  jsr     prompt_input_loop
         bmi     LAEC6
@@ -14207,7 +14207,7 @@ prepare_window:
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
 
-        addr_call draw_dialog_title, desktop_aux::str_info_title
+        addr_call draw_dialog_title, aux::str_info_title
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     (ptr),y
@@ -14217,27 +14217,27 @@ prepare_window:
         sta     is_volume_flag
 
         ;; Draw labels
-        yax_call draw_dialog_label, 1, desktop_aux::str_info_name
+        yax_call draw_dialog_label, 1, aux::str_info_name
 
         ;; Locked (file) or Protected (volume)
         bit     is_volume_flag
         bmi     :+
-        yax_call draw_dialog_label, 2, desktop_aux::str_info_locked
+        yax_call draw_dialog_label, 2, aux::str_info_locked
         jmp     draw_size_label
-:       yax_call draw_dialog_label, 2, desktop_aux::str_info_protected
+:       yax_call draw_dialog_label, 2, aux::str_info_protected
 
         ;; Blocks (file) or Size (volume)
 draw_size_label:
         bit     is_volume_flag
         bpl     :+
-        yax_call draw_dialog_label, 3, desktop_aux::str_info_blocks
+        yax_call draw_dialog_label, 3, aux::str_info_blocks
         jmp     draw_final_labels
-:       yax_call draw_dialog_label, 3, desktop_aux::str_info_size
+:       yax_call draw_dialog_label, 3, aux::str_info_size
 
 draw_final_labels:
-        yax_call draw_dialog_label, 4, desktop_aux::str_info_create
-        yax_call draw_dialog_label, 5, desktop_aux::str_info_mod
-        yax_call draw_dialog_label, 6, desktop_aux::str_info_type
+        yax_call draw_dialog_label, 4, aux::str_info_create
+        yax_call draw_dialog_label, 5, aux::str_info_mod
+        yax_call draw_dialog_label, 6, aux::str_info_type
         jmp     reset_grafport3a
 
         ;; Draw a specific value
@@ -14288,7 +14288,7 @@ row:    .byte   0
 
 .proc draw_colon
         copy    #160, dialog_label_pos
-        addr_call draw_dialog_label, desktop_aux::str_colon
+        addr_call draw_dialog_label, aux::str_colon
         rts
 .endproc
 
@@ -14316,8 +14316,8 @@ row:    .byte   0
         ;; LockDialogLifecycle::open
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        addr_call draw_dialog_title, desktop_aux::str_lock_title
-        yax_call draw_dialog_label, 4, desktop_aux::str_lock_ok
+        addr_call draw_dialog_title, aux::str_lock_title
+        yax_call draw_dialog_label, 4, aux::str_lock_ok
         rts
 
         ;; LockDialogLifecycle::populate
@@ -14327,9 +14327,9 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::lock_remaining_count_pos2
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos2
         addr_call draw_text1, str_file_count
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::files_pos2
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::files_pos2
         addr_call draw_text1, str_files
         rts
 
@@ -14350,9 +14350,9 @@ do3:    ldy     #1
         sta     $06+1
         stx     $06
         jsr     copy_name_to_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::lock_remaining_count_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
         addr_call draw_text1, str_file_count
         rts
 
@@ -14364,11 +14364,11 @@ LB0FA:  jsr     prompt_input_loop
         bmi     LB0FA
         bne     LB139
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
-        yax_call draw_dialog_label, 2, desktop_aux::str_file_colon
-        yax_call draw_dialog_label, 4, desktop_aux::str_lock_remaining
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
+        yax_call draw_dialog_label, 2, aux::str_file_colon
+        yax_call draw_dialog_label, 4, aux::str_lock_remaining
         lda     #$00
 LB139:  rts
 
@@ -14403,8 +14403,8 @@ do4:    jsr     reset_grafport3a
         ;; LockDialogLifecycle::open
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        addr_call draw_dialog_title, desktop_aux::str_unlock_title
-        yax_call draw_dialog_label, 4, desktop_aux::str_unlock_ok
+        addr_call draw_dialog_title, aux::str_unlock_title
+        yax_call draw_dialog_label, 4, aux::str_unlock_ok
         rts
 
         ;; LockDialogLifecycle::populate
@@ -14414,9 +14414,9 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::unlock_remaining_count_pos2
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos2
         addr_call draw_text1, str_file_count
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::files_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::files_pos
         addr_call draw_text1, str_files
         rts
 
@@ -14437,9 +14437,9 @@ do3:    ldy     #1
         sta     $06+1
         stx     $06
         jsr     copy_name_to_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::unlock_remaining_count_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
         addr_call draw_text1, str_file_count
         rts
 
@@ -14451,11 +14451,11 @@ LB218:  jsr     prompt_input_loop
         bmi     LB218
         bne     LB257
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
-        yax_call draw_dialog_label, 2, desktop_aux::str_file_colon
-        yax_call draw_dialog_label, 4, desktop_aux::str_unlock_remaining
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
+        yax_call draw_dialog_label, 2, aux::str_file_colon
+        yax_call draw_dialog_label, 4, aux::str_unlock_remaining
         lda     #$00
 LB257:  rts
 
@@ -14492,10 +14492,10 @@ open_win:
         jsr     open_prompt_window
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        addr_call draw_dialog_title, desktop_aux::str_rename_title
+        addr_call draw_dialog_title, aux::str_rename_title
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        yax_call draw_dialog_label, 2, desktop_aux::str_rename_old
+        yax_call draw_dialog_label, 2, aux::str_rename_old
         copy    #85, dialog_label_pos
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #1              ; rename_dialog_params::addr offset
@@ -14507,7 +14507,7 @@ LB2CA:  copy    ($08),y, buf_filename,y
         dey
         bpl     LB2CA
         yax_call draw_dialog_label, 2, buf_filename
-        yax_call draw_dialog_label, 4, desktop_aux::str_rename_new
+        yax_call draw_dialog_label, 4, aux::str_rename_new
         copy    #0, path_buf1
         jsr     draw_filename_prompt
         rts
@@ -14559,7 +14559,7 @@ kWarningMsgSaveSelectorList     = 6
         jsr     open_alert_window
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        addr_call draw_dialog_title, desktop_aux::str_warning
+        addr_call draw_dialog_title, aux::str_warning
         MGTK_RELAY_CALL MGTK::ShowCursor
         jsr     copy_dialog_param_addr_to_ptr
 
@@ -14623,13 +14623,13 @@ warning_cancel_table:
         ASSERT_TABLE_SIZE warning_cancel_table, desktop_main::kNumWarningTypes
 
 warning_message_table:
-        .addr   desktop_aux::str_insert_system_disk,desktop_aux::str_1_space
-        .addr   desktop_aux::str_selector_list_full,desktop_aux::str_before_new_entries
-        .addr   desktop_aux::str_selector_list_full,desktop_aux::str_before_new_entries
-        .addr   desktop_aux::str_window_must_be_closed,desktop_aux::str_1_space
-        .addr   desktop_aux::str_window_must_be_closed,desktop_aux::str_1_space
-        .addr   desktop_aux::str_too_many_windows,desktop_aux::str_1_space
-        .addr   desktop_aux::str_save_selector_list,desktop_aux::str_on_system_disk
+        .addr   aux::str_insert_system_disk,aux::str_1_space
+        .addr   aux::str_selector_list_full,aux::str_before_new_entries
+        .addr   aux::str_selector_list_full,aux::str_before_new_entries
+        .addr   aux::str_window_must_be_closed,aux::str_1_space
+        .addr   aux::str_window_must_be_closed,aux::str_1_space
+        .addr   aux::str_too_many_windows,aux::str_1_space
+        .addr   aux::str_save_selector_list,aux::str_on_system_disk
         ASSERT_RECORD_TABLE_SIZE warning_message_table, desktop_main::kNumWarningTypes, 4
 .endproc
 
@@ -14804,11 +14804,11 @@ delta:  .byte   0
         jsr     draw_yes_no_all_cancel_buttons
         jmp     no_ok
 
-:       MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
+:       MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
         jsr     draw_ok_label
 no_ok:  bit     LD8E7
         bmi     done
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
         jsr     draw_cancel_label
 done:   jmp     reset_grafport3a
 .endproc
@@ -14820,8 +14820,8 @@ done:   jmp     reset_grafport3a
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_outer_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_inner_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_inner_rect
         rts
 .endproc
 
@@ -14832,10 +14832,10 @@ done:   jmp     reset_grafport3a
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintBits, desktop_aux::alert_bitmap_params
+        MGTK_RELAY_CALL MGTK::PaintBits, aux::alert_bitmap_params
         jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_outer_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_inner_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_inner_rect
         rts
 .endproc
 
@@ -14872,9 +14872,9 @@ done:   jmp     reset_grafport3a
         sub16   #200, result, dialog_label_pos
         pla
 
-        ;; y = base + desktop_aux::kDialogLabelHeight * line
+        ;; y = base + aux::kDialogLabelHeight * line
 skip:   ldx     #0
-        ldy     #desktop_aux::kDialogLabelHeight
+        ldy     #aux::kDialogLabelHeight
         jsr     Multiply_16_8_16
         stax    dialog_label_pos::ycoord
         add16   dialog_label_pos::ycoord, dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
@@ -14888,36 +14888,36 @@ skip:   ldx     #0
 ;;; ============================================================
 
 draw_ok_label:
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::ok_label_pos
-        addr_call draw_text1, desktop_aux::str_ok_label
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::ok_label_pos
+        addr_call draw_text1, aux::str_ok_label
         rts
 
 draw_cancel_label:
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::cancel_label_pos
-        addr_call draw_text1, desktop_aux::str_cancel_label
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::cancel_label_pos
+        addr_call draw_text1, aux::str_cancel_label
         rts
 
 draw_yes_label:
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::yes_label_pos
-        addr_call draw_text1, desktop_aux::str_yes_label
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::yes_label_pos
+        addr_call draw_text1, aux::str_yes_label
         rts
 
 draw_no_label:
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::no_label_pos
-        addr_call draw_text1, desktop_aux::str_no_label
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::no_label_pos
+        addr_call draw_text1, aux::str_no_label
         rts
 
 draw_all_label:
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::all_label_pos
-        addr_call draw_text1, desktop_aux::str_all_label
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::all_label_pos
+        addr_call draw_text1, aux::str_all_label
         rts
 
 draw_yes_no_all_cancel_buttons:
         jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::yes_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::no_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::all_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::all_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
         jsr     draw_yes_label
         jsr     draw_no_label
         jsr     draw_all_label
@@ -14927,16 +14927,16 @@ draw_yes_no_all_cancel_buttons:
 
 erase_yes_no_all_cancel_buttons:
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::all_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
         rts
 
 draw_ok_cancel_buttons:
         jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
         jsr     draw_ok_label
         jsr     draw_cancel_label
         copy    #$00, LD8E7
@@ -14944,20 +14944,20 @@ draw_ok_cancel_buttons:
 
 erase_ok_cancel_buttons:
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
         rts
 
 draw_ok_button:
         jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
         jsr     draw_ok_label
         copy    #$80, LD8E7
         rts
 
 erase_ok_button:
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         rts
 
 ;;; ============================================================
@@ -15217,12 +15217,12 @@ version_bytes:
         bpl     set_flag
 
 clear_flag:
-        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_black
+        MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_black
         copy    #0, prompt_ip_flag
         beq     draw            ; always
 
 set_flag:
-        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_white
+        MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
         copy    #$FF, prompt_ip_flag
 
         drawtext_params := $6
@@ -15233,7 +15233,7 @@ draw:   copy16  #str_insertion_point+1, textptr
         lda     str_insertion_point
         sta     textlen
         MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
-        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_white
+        MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         rts
@@ -15818,12 +15818,12 @@ saved_proc_buf:
 
 clear_target_file_rect:
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::current_target_file_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::current_target_file_rect
         rts
 
 clear_dest_file_rect:
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::current_dest_file_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::current_dest_file_rect
         rts
 
 set_fill_white:

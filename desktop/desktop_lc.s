@@ -249,7 +249,7 @@ op:     lda     dummy1234
 .proc ShowAlertOption
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     desktop_aux::show_alert_indirection
+        jsr     aux::show_alert_indirection
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -262,7 +262,7 @@ op:     lda     dummy1234
 .proc Multiply_16_8_16
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     desktop_aux::Multiply_16_8_16
+        jsr     aux::Multiply_16_8_16
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -275,7 +275,7 @@ op:     lda     dummy1234
 .proc Divide_16_8_16
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     desktop_aux::Divide_16_8_16
+        jsr     aux::Divide_16_8_16
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -287,7 +287,7 @@ op:     lda     dummy1234
 .proc ButtonEventLoopRelay
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     desktop_aux::button_event_loop
+        jsr     aux::button_event_loop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -299,7 +299,7 @@ op:     lda     dummy1234
 .proc Bell
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     desktop_aux::Bell
+        jsr     aux::Bell
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts

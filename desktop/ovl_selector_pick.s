@@ -508,11 +508,11 @@ L947F:  clc
 L94A8:  .byte   0
 
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_ok_pos
-        addr_call desktop_main::draw_text1, desktop_aux::str_ok_label
+        addr_call desktop_main::draw_text1, aux::str_ok_label
         rts
 
 L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_cancel_pos
-        addr_call desktop_main::draw_text1, desktop_aux::str_cancel_label
+        addr_call desktop_main::draw_text1, aux::str_cancel_label
         rts
 
 L94CB:  stax    $06

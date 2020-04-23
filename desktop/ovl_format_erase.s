@@ -25,8 +25,8 @@ L080C:  copy    #$00, has_input_field_flag
         jsr     desktop_main::open_prompt_window
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
-        addr_call desktop_main::draw_dialog_title, desktop_aux::str_format_disk
-        yax_call desktop_main::draw_dialog_label, 1, desktop_aux::str_select_format
+        addr_call desktop_main::draw_dialog_title, aux::str_format_disk
+        yax_call desktop_main::draw_dialog_label, 1, aux::str_select_format
         jsr     draw_volume_labels
         copy    #$FF, selected_device_index
 L0832:  copy16  #L0B48, desktop_main::jump_relay+1
@@ -47,14 +47,14 @@ L085F:  bit     selected_device_index
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
         jsr     desktop_main::clear_path_buf2
-        yax_call desktop_main::draw_dialog_label, 3, desktop_aux::str_new_volume
+        yax_call desktop_main::draw_dialog_label, 3, aux::str_new_volume
 L08A7:  jsr     desktop_main::prompt_input_loop
         bmi     L08A7
         beq     L08B7
@@ -71,14 +71,14 @@ L08B7:  lda     path_buf1
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         ldx     selected_device_index
         lda     DEVLST,x
         sta     L09D8
         sta     L09D7
         lda     #$00
         sta     has_input_field_flag
-        yax_call desktop_main::draw_dialog_label, 3, desktop_aux::str_confirm_format
+        yax_call desktop_main::draw_dialog_label, 3, aux::str_confirm_format
         lda     L09D7
         jsr     L1A2D
         addr_call desktop_main::draw_text1, ovl_path_buf
@@ -90,8 +90,8 @@ L0902:  jsr     desktop_main::prompt_input_loop
 L090C:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
-        yax_call desktop_main::draw_dialog_label, 1, desktop_aux::str_formatting
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        yax_call desktop_main::draw_dialog_label, 1, aux::str_formatting
         lda     L09D7
         jsr     L12C1
         and     #$FF
@@ -103,8 +103,8 @@ L090C:  lda     winfo_alert_dialog
 L0942:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
-        yax_call desktop_main::draw_dialog_label, 1, desktop_aux::str_erasing
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        yax_call desktop_main::draw_dialog_label, 1, aux::str_erasing
         addr_call upcase_string, path_buf1
         ldxy    #path_buf1
         lda     L09D7
@@ -123,7 +123,7 @@ L0980:  cmp     #ERR_WRITE_PROTECTED
         jmp     L090C
 
 L098C:  jsr     Bell
-        yax_call desktop_main::draw_dialog_label, 6, desktop_aux::str_erasing_error
+        yax_call desktop_main::draw_dialog_label, 6, aux::str_erasing_error
         jmp     L09B8
 
 L099B:  pha
@@ -136,7 +136,7 @@ L099B:  pha
         jmp     L090C
 
 L09AC:  jsr     Bell
-        yax_call desktop_main::draw_dialog_label, 6, desktop_aux::str_formatting_error
+        yax_call desktop_main::draw_dialog_label, 6, aux::str_formatting_error
 L09B8:  jsr     desktop_main::prompt_input_loop
         bmi     L09B8
         bne     L09C2
@@ -161,8 +161,8 @@ L09D9:  lda     #$00
         jsr     desktop_main::open_prompt_window
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
-        addr_call desktop_main::draw_dialog_title, desktop_aux::str_erase_disk
-        yax_call desktop_main::draw_dialog_label, 1, desktop_aux::str_select_erase
+        addr_call desktop_main::draw_dialog_title, aux::str_erase_disk
+        yax_call desktop_main::draw_dialog_label, 1, aux::str_select_erase
         jsr     draw_volume_labels
         copy    #$FF, selected_device_index
         copy16  #L0B48, desktop_main::jump_relay+1
@@ -178,14 +178,14 @@ L0A18:  bit     selected_device_index
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
         jsr     desktop_main::clear_path_buf2
-        yax_call desktop_main::draw_dialog_label, 3, desktop_aux::str_new_volume
+        yax_call desktop_main::draw_dialog_label, 3, aux::str_new_volume
 L0A6A:  jsr     desktop_main::prompt_input_loop
         bmi     L0A6A
         beq     L0A7A
@@ -202,13 +202,13 @@ L0A7A:  lda     path_buf1
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         copy    #$00, has_input_field_flag
         ldx     selected_device_index
         lda     DEVLST,x
         sta     L0B47
         sta     L0B46
-        yax_call desktop_main::draw_dialog_label, 3, desktop_aux::str_confirm_erase
+        yax_call desktop_main::draw_dialog_label, 3, aux::str_confirm_erase
         lda     L0B46
         and     #$F0
         jsr     L1A2D
@@ -221,8 +221,8 @@ L0AC7:  jsr     desktop_main::prompt_input_loop
 L0AD1:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
-        yax_call desktop_main::draw_dialog_label, 1, desktop_aux::str_erasing
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        yax_call desktop_main::draw_dialog_label, 1, aux::str_erasing
         addr_call upcase_string, path_buf1
         jsr     desktop_main::set_cursor_watch
         ldxy    #path_buf1
@@ -242,7 +242,7 @@ L0B12:  cmp     #ERR_WRITE_PROTECTED
         jmp     L0AD1
 
 L0B1E:  jsr     Bell
-        yax_call desktop_main::draw_dialog_label, 6, desktop_aux::str_erasing_error
+        yax_call desktop_main::draw_dialog_label, 6, aux::str_erasing_error
 L0B2A:  jsr     desktop_main::prompt_input_loop
         bmi     L0B2A
         beq     L0AD1
@@ -277,9 +277,9 @@ L0B48:  cmp16   screentowindow_windowx, #40
         return  #$FF
 :       sta     screentowindow_windowy+1
 
-        ;; Divide by desktop_aux::kDialogLabelHeight
+        ;; Divide by aux::kDialogLabelHeight
         ldax    screentowindow_windowy
-        ldy     #desktop_aux::kDialogLabelHeight
+        ldy     #aux::kDialogLabelHeight
         jsr     Divide_16_8_16
         stax    screentowindow_windowy
 
@@ -314,8 +314,8 @@ L0BDC:  cmp     selected_device_index
         jsr     desktop_main::detect_double_click
         bmi     L0C03
 L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         lda     #$00
 L0C03:  rts
 
@@ -361,13 +361,13 @@ L0C1F:  .byte   0
         sbc     L0CA9           ; entry % 4
         ldx     #0
 
-        ldy     #desktop_aux::kDialogLabelHeight
+        ldy     #aux::kDialogLabelHeight
         jsr     Multiply_16_8_16
         stax    select_volume_rect::y1
         add16_8 select_volume_rect::y1, #kLabelsVOffset, select_volume_rect::y1
 
         add16   select_volume_rect::x1, #kLabelWidth-1, select_volume_rect::x2
-        add16   select_volume_rect::y1, #desktop_aux::kDialogLabelHeight-1, select_volume_rect::y2
+        add16   select_volume_rect::y1, #aux::kDialogLabelHeight-1, select_volume_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, select_volume_rect
         rts

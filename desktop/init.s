@@ -1010,7 +1010,7 @@ append: lda     DEVLST,y        ; add it to the list
 .proc final_setup
         ;; Final MGTK configuration
         MGTK_RELAY_CALL MGTK::CheckEvents
-        MGTK_RELAY_CALL MGTK::SetMenu, desktop_aux::desktop_menu
+        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         lda     #0
         sta     active_window_id

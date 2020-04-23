@@ -848,27 +848,27 @@ month_offset_table:             ; for Day-of-Week calculations
 
 ;;; 5.25" Floppy Disk
 floppy140_icon:
-        DEFICON desktop_aux::floppy140_pixels, 4, 26, 14, desktop_aux::floppy140_mask
+        DEFICON aux::floppy140_pixels, 4, 26, 14, aux::floppy140_mask
 
 ;;; RAM Disk
 ramdisk_icon:
-        DEFICON desktop_aux::ramdisk_pixels, 6, 39, 11, desktop_aux::ramdisk_mask
+        DEFICON aux::ramdisk_pixels, 6, 39, 11, aux::ramdisk_mask
 
 ;;; 3.5" Floppy Disk
 floppy800_icon:
-        DEFICON desktop_aux::floppy800_pixels, 3, 20, 11, desktop_aux::floppy800_mask
+        DEFICON aux::floppy800_pixels, 3, 20, 11, aux::floppy800_mask
 
 ;;; Hard Disk
 profile_icon:
-        DEFICON desktop_aux::profile_pixels, 8, 52, 9, desktop_aux::profile_mask
+        DEFICON aux::profile_pixels, 8, 52, 9, aux::profile_mask
 
 ;;; File Share
 fileshare_icon:
-        DEFICON desktop_aux::fileshare_pixels, 5, 34, 14, desktop_aux::fileshare_mask
+        DEFICON aux::fileshare_pixels, 5, 34, 14, aux::fileshare_mask
 
 ;;; Trash Can
 trash_icon:
-        DEFICON desktop_aux::trash_pixels, 3, 20, 17, desktop_aux::trash_mask
+        DEFICON aux::trash_pixels, 3, 20, 17, aux::trash_mask
 
 
 ;;; ============================================================
@@ -1665,19 +1665,19 @@ type_icons_table:               ; map into definitions below
         ASSERT_ADDRESS_TABLE_SIZE type_icons_table, kNumFileTypes
 
 gen:    DEFICON generic_icon, 4, 27, 15, generic_mask
-src:    DEFICON desktop_aux::iigs_file_icon, 4, 27, 15, generic_mask
-rel:    DEFICON desktop_aux::rel_file_icon, 4, 27, 14, binary_mask
-cmd:    DEFICON desktop_aux::cmd_file_icon, 4, 27, 8, desktop_aux::graphics_mask
+src:    DEFICON aux::iigs_file_icon, 4, 27, 15, generic_mask
+rel:    DEFICON aux::rel_file_icon, 4, 27, 14, binary_mask
+cmd:    DEFICON aux::cmd_file_icon, 4, 27, 8, aux::graphics_mask
 txt:    DEFICON text_icon, 4, 27, 15, generic_mask
 bin:    DEFICON binary_icon, 4, 27, 14, binary_mask
 dir:    DEFICON folder_icon, 4, 27, 11, folder_mask
 sys:    DEFICON sys_icon, 4, 27, 17, sys_mask
-bas:    DEFICON desktop_aux::basic_icon, 4, 27, 14, desktop_aux::basic_mask
-fot:    DEFICON desktop_aux::graphics_icon, 4, 27, 12, desktop_aux::graphics_mask
-adb:    DEFICON desktop_aux::adb_icon, 4, 27, 15, generic_mask
-awp:    DEFICON desktop_aux::awp_icon, 4, 27, 15, generic_mask
-asp:    DEFICON desktop_aux::asp_icon, 4, 27, 15, generic_mask
-a2d:    DEFICON desktop_aux::a2d_file_icon, 4, 27, 15, generic_mask
+bas:    DEFICON aux::basic_icon, 4, 27, 14, aux::basic_mask
+fot:    DEFICON aux::graphics_icon, 4, 27, 12, aux::graphics_mask
+adb:    DEFICON aux::adb_icon, 4, 27, 15, generic_mask
+awp:    DEFICON aux::awp_icon, 4, 27, 15, generic_mask
+asp:    DEFICON aux::asp_icon, 4, 27, 15, generic_mask
+a2d:    DEFICON aux::a2d_file_icon, 4, 27, 15, generic_mask
 app:    DEFICON app_icon, 5, 34, 16, app_mask
 
 ;;; Generic
