@@ -12,7 +12,7 @@
 exec:
 
 L0800:  pha
-        jsr     desktop_main::set_cursor_pointer
+        jsr     main::set_cursor_pointer
         pla
         cmp     #$04
         beq     L080C
@@ -22,19 +22,19 @@ L0800:  pha
 ;;; Format Disk
 
 L080C:  copy    #$00, has_input_field_flag
-        jsr     desktop_main::open_prompt_window
+        jsr     main::open_prompt_window
         lda     winfo_alert_dialog
-        jsr     desktop_main::set_port_from_window_id
-        addr_call desktop_main::draw_dialog_title, aux::str_format_disk
-        yax_call desktop_main::draw_dialog_label, 1, aux::str_select_format
+        jsr     main::set_port_from_window_id
+        addr_call main::draw_dialog_title, aux::str_format_disk
+        yax_call main::draw_dialog_label, 1, aux::str_select_format
         jsr     draw_volume_labels
         copy    #$FF, selected_device_index
-L0832:  copy16  #L0B48, desktop_main::jump_relay+1
+L0832:  copy16  #L0B48, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
-L0841:  jsr     desktop_main::prompt_input_loop
+L0841:  jsr     main::prompt_input_loop
         bmi     L0841
         pha
-        copy16  #desktop_main::noop, desktop_main::jump_relay+1
+        copy16  #main::noop, main::jump_relay+1
         lda     #$00
         sta     LD8F3
         sta     format_erase_overlay_flag
@@ -45,17 +45,17 @@ L0841:  jsr     desktop_main::prompt_input_loop
 L085F:  bit     selected_device_index
         bmi     L0832
         lda     winfo_alert_dialog
-        jsr     desktop_main::set_port_from_window_id
+        jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        jsr     desktop_main::clear_path_buf1
+        jsr     main::clear_path_buf1
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
-        jsr     desktop_main::clear_path_buf2
-        yax_call desktop_main::draw_dialog_label, 3, aux::str_new_volume
-L08A7:  jsr     desktop_main::prompt_input_loop
+        jsr     main::clear_path_buf2
+        yax_call main::draw_dialog_label, 3, aux::str_new_volume
+L08A7:  jsr     main::prompt_input_loop
         bmi     L08A7
         beq     L08B7
         jmp     L09C2
@@ -67,9 +67,9 @@ L08B7:  lda     path_buf1
         beq     L08B1
         cmp     #$10
         bcs     L08B1
-        jsr     desktop_main::set_cursor_pointer
+        jsr     main::set_cursor_pointer
         lda     winfo_alert_dialog
-        jsr     desktop_main::set_port_from_window_id
+        jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         ldx     selected_device_index
@@ -78,39 +78,39 @@ L08B7:  lda     path_buf1
         sta     L09D7
         lda     #$00
         sta     has_input_field_flag
-        yax_call desktop_main::draw_dialog_label, 3, aux::str_confirm_format
+        yax_call main::draw_dialog_label, 3, aux::str_confirm_format
         lda     L09D7
         jsr     L1A2D
-        addr_call desktop_main::draw_text1, ovl_path_buf
-L0902:  jsr     desktop_main::prompt_input_loop
+        addr_call main::draw_text1, ovl_path_buf
+L0902:  jsr     main::prompt_input_loop
         bmi     L0902
         beq     L090C
         jmp     L09C2
 
 L090C:  lda     winfo_alert_dialog
-        jsr     desktop_main::set_port_from_window_id
+        jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        yax_call desktop_main::draw_dialog_label, 1, aux::str_formatting
+        yax_call main::draw_dialog_label, 1, aux::str_formatting
         lda     L09D7
         jsr     L12C1
         and     #$FF
         bne     L0942
-        jsr     desktop_main::set_cursor_watch
+        jsr     main::set_cursor_watch
         lda     L09D7
         jsr     L126F
         bcs     L099B
 L0942:  lda     winfo_alert_dialog
-        jsr     desktop_main::set_port_from_window_id
+        jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        yax_call desktop_main::draw_dialog_label, 1, aux::str_erasing
+        yax_call main::draw_dialog_label, 1, aux::str_erasing
         addr_call upcase_string, path_buf1
         ldxy    #path_buf1
         lda     L09D7
         jsr     L1307
         pha
-        jsr     desktop_main::set_cursor_pointer
+        jsr     main::set_cursor_pointer
         pla
         bne     L0980
         lda     #$00
@@ -123,11 +123,11 @@ L0980:  cmp     #ERR_WRITE_PROTECTED
         jmp     L090C
 
 L098C:  jsr     Bell
-        yax_call desktop_main::draw_dialog_label, 6, aux::str_erasing_error
+        yax_call main::draw_dialog_label, 6, aux::str_erasing_error
         jmp     L09B8
 
 L099B:  pha
-        jsr     desktop_main::set_cursor_pointer
+        jsr     main::set_cursor_pointer
         pla
         cmp     #ERR_WRITE_PROTECTED
         bne     L09AC
@@ -136,15 +136,15 @@ L099B:  pha
         jmp     L090C
 
 L09AC:  jsr     Bell
-        yax_call desktop_main::draw_dialog_label, 6, aux::str_formatting_error
-L09B8:  jsr     desktop_main::prompt_input_loop
+        yax_call main::draw_dialog_label, 6, aux::str_formatting_error
+L09B8:  jsr     main::prompt_input_loop
         bmi     L09B8
         bne     L09C2
         jmp     L090C
 
 L09C2:  pha
-        jsr     desktop_main::set_cursor_pointer
-        jsr     desktop_main::reset_grafport3a
+        jsr     main::set_cursor_pointer
+        jsr     main::reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         ldx     L09D8
         pla
@@ -158,35 +158,35 @@ L09D8:  .byte   0
 
 L09D9:  lda     #$00
         sta     has_input_field_flag
-        jsr     desktop_main::open_prompt_window
+        jsr     main::open_prompt_window
         lda     winfo_alert_dialog
-        jsr     desktop_main::set_port_from_window_id
-        addr_call desktop_main::draw_dialog_title, aux::str_erase_disk
-        yax_call desktop_main::draw_dialog_label, 1, aux::str_select_erase
+        jsr     main::set_port_from_window_id
+        addr_call main::draw_dialog_title, aux::str_erase_disk
+        yax_call main::draw_dialog_label, 1, aux::str_select_erase
         jsr     draw_volume_labels
         copy    #$FF, selected_device_index
-        copy16  #L0B48, desktop_main::jump_relay+1
+        copy16  #L0B48, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
-L0A0E:  jsr     desktop_main::prompt_input_loop
+L0A0E:  jsr     main::prompt_input_loop
         bmi     L0A0E
         beq     L0A18
         jmp     L0B31
 
 L0A18:  bit     selected_device_index
         bmi     L0A0E
-        copy16  #$A898, desktop_main::jump_relay+1
+        copy16  #$A898, main::jump_relay+1
         lda     winfo_alert_dialog
-        jsr     desktop_main::set_port_from_window_id
+        jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        jsr     desktop_main::clear_path_buf1
+        jsr     main::clear_path_buf1
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
-        jsr     desktop_main::clear_path_buf2
-        yax_call desktop_main::draw_dialog_label, 3, aux::str_new_volume
-L0A6A:  jsr     desktop_main::prompt_input_loop
+        jsr     main::clear_path_buf2
+        yax_call main::draw_dialog_label, 3, aux::str_new_volume
+L0A6A:  jsr     main::prompt_input_loop
         bmi     L0A6A
         beq     L0A7A
         jmp     L0B31
@@ -198,9 +198,9 @@ L0A7A:  lda     path_buf1
         beq     L0A74
         cmp     #$10
         bcs     L0A74
-        jsr     desktop_main::set_cursor_pointer
+        jsr     main::set_cursor_pointer
         lda     winfo_alert_dialog
-        jsr     desktop_main::set_port_from_window_id
+        jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         copy    #$00, has_input_field_flag
@@ -208,28 +208,28 @@ L0A7A:  lda     path_buf1
         lda     DEVLST,x
         sta     L0B47
         sta     L0B46
-        yax_call desktop_main::draw_dialog_label, 3, aux::str_confirm_erase
+        yax_call main::draw_dialog_label, 3, aux::str_confirm_erase
         lda     L0B46
         and     #$F0
         jsr     L1A2D
-        addr_call desktop_main::draw_text1, ovl_path_buf
-L0AC7:  jsr     desktop_main::prompt_input_loop
+        addr_call main::draw_text1, ovl_path_buf
+L0AC7:  jsr     main::prompt_input_loop
         bmi     L0AC7
         beq     L0AD1
         jmp     L0B31
 
 L0AD1:  lda     winfo_alert_dialog
-        jsr     desktop_main::set_port_from_window_id
+        jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        yax_call desktop_main::draw_dialog_label, 1, aux::str_erasing
+        yax_call main::draw_dialog_label, 1, aux::str_erasing
         addr_call upcase_string, path_buf1
-        jsr     desktop_main::set_cursor_watch
+        jsr     main::set_cursor_watch
         ldxy    #path_buf1
         lda     L0B46
         jsr     L1307
         pha
-        jsr     desktop_main::set_cursor_pointer
+        jsr     main::set_cursor_pointer
         pla
         bne     L0B12
         lda     #$00
@@ -242,13 +242,13 @@ L0B12:  cmp     #ERR_WRITE_PROTECTED
         jmp     L0AD1
 
 L0B1E:  jsr     Bell
-        yax_call desktop_main::draw_dialog_label, 6, aux::str_erasing_error
-L0B2A:  jsr     desktop_main::prompt_input_loop
+        yax_call main::draw_dialog_label, 6, aux::str_erasing_error
+L0B2A:  jsr     main::prompt_input_loop
         bmi     L0B2A
         beq     L0AD1
 L0B31:  pha
-        jsr     desktop_main::set_cursor_pointer
-        jsr     desktop_main::reset_grafport3a
+        jsr     main::set_cursor_pointer
+        jsr     main::reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         ldx     L0B47
         pla
@@ -311,7 +311,7 @@ L0BD9:  return  #$FF
 
 L0BDC:  cmp     selected_device_index
         bne     L0C04
-        jsr     desktop_main::detect_double_click
+        jsr     main::detect_double_click
         bmi     L0C03
 L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
@@ -326,7 +326,7 @@ L0C04:  sta     L0C1E
 L0C0F:  lda     L0C1E
         sta     selected_device_index
         jsr     hilight_volume_label
-        jsr     desktop_main::detect_double_click
+        jsr     main::detect_double_click
         beq     L0BE6
         rts
 
@@ -387,7 +387,7 @@ L0CA9:  .byte   0
 
 ;;; ============================================================
 
-        ;; Called from desktop_main
+        ;; Called from main
 .proc prompt_handle_key_left
         lda     selected_device_index
         bpl     L0CC1
@@ -407,7 +407,7 @@ L0CD4:  return  #$FF
 
 ;;; ============================================================
 
-        ;; Called from desktop_main
+        ;; Called from main
 .proc prompt_handle_key_right
         lda     selected_device_index
         bpl     L0CE6
@@ -431,7 +431,7 @@ L0CF6:  return  #$FF
 
 ;;; ============================================================
 
-        ;; Called from desktop_main
+        ;; Called from main
 .proc prompt_handle_key_down
         lda     selected_device_index
         clc
@@ -449,7 +449,7 @@ L0D06:  pha
 
 ;;; ============================================================
 
-        ;; Called from desktop_main
+        ;; Called from main
 .proc prompt_handle_key_up
         lda     selected_device_index
         bmi     L0D1E
@@ -520,7 +520,7 @@ skip:
         iny
 
         pla                     ; A,X has pointer again
-        jsr     desktop_main::draw_dialog_label
+        jsr     main::draw_dialog_label
         inc     vol
         jmp     loop
 

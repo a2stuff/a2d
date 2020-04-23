@@ -103,7 +103,7 @@ L5105:  .byte   0               ; ??? something about the picker
         jsr     handle_key
         jmp     event_loop
 
-:       jsr     desktop_main::check_mouse_moved
+:       jsr     main::check_mouse_moved
         bcc     event_loop
 
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
@@ -302,7 +302,7 @@ L5341:  lda     winfo_entrydlg_file_picker
         ;; --------------------------------------------------
         ;; Click on the previous entry
 
-same:   jsr     desktop_main::detect_double_click
+same:   jsr     main::detect_double_click
         beq     open
         rts
 
@@ -386,7 +386,7 @@ different:
         jsr     L6274
         jsr     jt_05
 
-        jsr     desktop_main::detect_double_click
+        jsr     main::detect_double_click
         bmi     :+
         jmp     open
 
@@ -1170,7 +1170,7 @@ L5E6F:  jsr     copy_string_to_lcbuf
         jsr     inc_device_num
         jmp     :-
 
-found:  addr_call desktop_main::adjust_volname_case, on_line_buffer
+found:  addr_call main::adjust_volname_case, on_line_buffer
         lda     #0
         sta     path_buf
         addr_call L5F0D, on_line_buffer
@@ -1274,7 +1274,7 @@ L5F5B:  jsr     L5ECB
         jmp     L6012
 
 L5F87:  copy16  #$142B, $06
-L5F8F:  addr_call_indirect desktop_main::adjust_fileentry_case, $06
+L5F8F:  addr_call_indirect main::adjust_fileentry_case, $06
 
         ldy     #$00
         lda     ($06),y

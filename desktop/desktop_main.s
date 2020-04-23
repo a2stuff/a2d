@@ -8,7 +8,7 @@
 ;;; Segment loaded into MAIN $4000-$BEFF
 ;;; ============================================================
 
-.proc desktop_main
+.proc main
 
 dst_path_buf   := $1FC0
 
@@ -846,7 +846,7 @@ params: .addr   dummy0000
 .endproc
 
 .macro MLI_RELAY_CALL call, addr
-        yax_call desktop_main::MLI_RELAY, call, addr
+        yax_call main::MLI_RELAY, call, addr
 .endmacro
 
 ;;; ============================================================
@@ -14620,7 +14620,7 @@ draw_string:
         ;; high bit set if "cancel" should be an option
 warning_cancel_table:
         .byte   $80,$00,$00,$80,$00,$00,$80
-        ASSERT_TABLE_SIZE warning_cancel_table, desktop_main::kNumWarningTypes
+        ASSERT_TABLE_SIZE warning_cancel_table, main::kNumWarningTypes
 
 warning_message_table:
         .addr   aux::str_insert_system_disk,aux::str_1_space
@@ -14630,7 +14630,7 @@ warning_message_table:
         .addr   aux::str_window_must_be_closed,aux::str_1_space
         .addr   aux::str_too_many_windows,aux::str_1_space
         .addr   aux::str_save_selector_list,aux::str_on_system_disk
-        ASSERT_RECORD_TABLE_SIZE warning_message_table, desktop_main::kNumWarningTypes, 4
+        ASSERT_RECORD_TABLE_SIZE warning_message_table, main::kNumWarningTypes, 4
 .endproc
 
 ;;; ============================================================
@@ -15851,6 +15851,6 @@ str_preview_txt:
 
         PAD_TO $BF00
 
-.endproc ; desktop_main
-        desktop_main_pop_pointers := desktop_main::pop_pointers
-        desktop_main_push_pointers := desktop_main::push_pointers
+.endproc ; main
+        desktop_main_pop_pointers := main::pop_pointers
+        desktop_main_push_pointers := main::push_pointers

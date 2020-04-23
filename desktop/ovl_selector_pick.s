@@ -165,14 +165,14 @@ L913F:  cmp     #$04
 
 L9146:  lda     selected_index
         jsr     maybe_toggle_entry_hilite
-        jsr     desktop_main::set_cursor_watch
+        jsr     main::set_cursor_watch
         lda     selected_index
         jsr     L9A97
         beq     L915D
-        jsr     desktop_main::set_cursor_pointer
+        jsr     main::set_cursor_pointer
         jmp     L933F
 
-L915D:  jsr     desktop_main::set_cursor_pointer
+L915D:  jsr     main::set_cursor_pointer
         copy    #$FF, selected_index
         jsr     L99F5
         jsr     L9D28
@@ -303,13 +303,13 @@ L926D:  ldy     copy_when
         beq     L927B
         jmp     L936E
 
-L927B:  jsr     desktop_main::set_cursor_pointer
+L927B:  jsr     main::set_cursor_pointer
         jmp     L900F
 
 L9281:  .byte   0
 L9282:  lda     selected_index
         jsr     maybe_toggle_entry_hilite
-        jsr     desktop_main::set_cursor_watch
+        jsr     main::set_cursor_watch
         lda     selected_index
         jsr     get_file_entry_addr
         stax    $06
@@ -383,7 +383,7 @@ L931B:  iny
         lda     L938A
         sta     buf_win_path
         jsr     JUMP_TABLE_LAUNCH_FILE
-        jsr     desktop_main::set_cursor_pointer
+        jsr     main::set_cursor_pointer
         copy    #$FF, selected_index
         jmp     L936E
 
@@ -418,7 +418,7 @@ L938F:  .byte   0
 
 L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     winfo_entry_picker
-        jsr     desktop_main::set_port_from_window_id
+        jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_inner_rect
@@ -508,11 +508,11 @@ L947F:  clc
 L94A8:  .byte   0
 
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_ok_pos
-        addr_call desktop_main::draw_text1, aux::str_ok_label
+        addr_call main::draw_text1, aux::str_ok_label
         rts
 
 L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_cancel_pos
-        addr_call desktop_main::draw_text1, aux::str_cancel_label
+        addr_call main::draw_text1, aux::str_cancel_label
         rts
 
 L94CB:  stax    $06
@@ -578,7 +578,7 @@ L9678:  lda     findwindow_window_id
         return  #$FF
 
 L9683:  lda     winfo_entry_picker
-        jsr     desktop_main::set_port_from_window_id
+        jsr     main::set_port_from_window_id
         lda     winfo_entry_picker
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -645,7 +645,7 @@ L976A:  cmp     selected_index           ; same as previous selection?
         lda     new_selection
         sta     selected_index
         jsr     maybe_toggle_entry_hilite
-:       jsr     desktop_main::detect_double_click
+:       jsr     main::detect_double_click
         rts
 
 L9782:  sec
@@ -1228,7 +1228,7 @@ L9BD4:  .byte   0
 ;;; ============================================================
 
 L9C09:  sta     warning_dialog_num
-        yax_call desktop_main::invoke_dialog_proc, $0C, warning_dialog_num
+        yax_call main::invoke_dialog_proc, $0C, warning_dialog_num
         rts
 
 filename_buffer := $1C00

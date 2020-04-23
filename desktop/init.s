@@ -21,9 +21,9 @@ start:
 .scope hook_reset_vector
 
         ;; Main hook
-        lda     #<desktop_main::reset_handler
+        lda     #<main::reset_handler
         sta     SOFTEV
-        lda     #>desktop_main::reset_handler
+        lda     #>main::reset_handler
         sta     SOFTEV+1
         eor     #$A5
         sta     SOFTEV+2
@@ -185,7 +185,7 @@ end:
 .scope
         MGTK_RELAY_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
-        jsr     desktop_main::set_mono_mode
+        jsr     main::set_mono_mode
         MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
@@ -198,12 +198,12 @@ end:
 .scope
         ptr := $6
 
-        jsr     desktop_main::push_pointers
+        jsr     main::push_pointers
         copy16  #icon_entries, ptr
         ldx     #1
 loop:   cpx     #kMaxIconCount
         bne     :+
-        jsr     desktop_main::pop_pointers
+        jsr     main::pop_pointers
         jmp     end
 :       txa
         pha
@@ -261,7 +261,7 @@ trash_name:  PASCAL_STRING " Trash "
         jsr     AllocateIcon
         sta     trash_icon_num
         sta     cached_window_icon_list
-        jsr     desktop_main::icon_entry_lookup
+        jsr     main::icon_entry_lookup
         stax    ptr
         ldy     #IconEntry::win_type
         copy    #kIconEntryTypeTrash, (ptr),y
@@ -315,7 +315,7 @@ trash_name:  PASCAL_STRING " Trash "
         stx     index
 
         sp_addr := $0A
-        jsr     desktop_main::find_smartport_dispatch_address
+        jsr     main::find_smartport_dispatch_address
         bne     done            ; not SmartPort
 
         ;; Execute SmartPort call
@@ -425,7 +425,7 @@ L0A93:  .byte   0
 ;;; --------------------------------------------------
 
 calc_data_addr:
-        jsr     desktop_main::a_times_16
+        jsr     main::a_times_16
         clc
         adc     #<(selector_list_data_buf+2)
         tay
@@ -436,7 +436,7 @@ calc_data_addr:
         rts
 
 calc_entry_addr:
-        jsr     desktop_main::a_times_16
+        jsr     main::a_times_16
         clc
         adc     #<run_list_entries
         tay
@@ -447,7 +447,7 @@ calc_entry_addr:
         rts
 
 calc_entry_str:
-        jsr     desktop_main::a_times_64
+        jsr     main::a_times_64
         clc
         adc     #<run_list_paths
         tay
@@ -458,7 +458,7 @@ calc_entry_str:
         rts
 
 calc_data_str:
-        jsr     desktop_main::a_times_64
+        jsr     main::a_times_64
         clc
         adc     #<(selector_list_data_buf+2 + $180)
         tay
@@ -527,19 +527,19 @@ done:   rts
 
 .proc calc_header_item_widths
         ;; Enough space for "123456"
-        addr_call desktop_main::measure_text1, str_from_int
+        addr_call main::measure_text1, str_from_int
         stax    dx
 
         ;; Width of "123456 Items"
-        addr_call desktop_main::measure_text1, str_items
+        addr_call main::measure_text1, str_items
         addax   dx, width_items_label
 
         ;; Width of "123456K in disk"
-        addr_call desktop_main::measure_text1, str_k_in_disk
+        addr_call main::measure_text1, str_k_in_disk
         addax   dx, width_k_in_disk_label
 
         ;; Width of "123456K available"
-        addr_call desktop_main::measure_text1, str_k_available
+        addr_call main::measure_text1, str_k_available
         addax   dx, width_k_available_label
 
         add16   width_k_in_disk_label, width_k_available_label, width_right_labels
@@ -604,7 +604,7 @@ open_dir:
 
 process_block:
         ;; TODO: Adjust case
-        addr_call_indirect desktop_main::adjust_fileentry_case, dir_ptr
+        addr_call_indirect main::adjust_fileentry_case, dir_ptr
 
         ldy     #FileEntry::storage_type_name_length
         lda     (dir_ptr),y
@@ -737,7 +737,7 @@ end:
         devname_ptr := $08
 
         ldy     #0
-        sty     desktop_main::pending_alert
+        sty     main::pending_alert
 
         ;; Enumerate DEVLST in reverse order (most important volumes first)
         lda     DEVCNT
@@ -761,7 +761,7 @@ process_volume:
         inc     icon_count
         lda     DEVLST,y
         ldx     cached_window_icon_count
-        jsr     desktop_main::create_volume_icon ; A = unit number, X = icon index, Y = device number
+        jsr     main::create_volume_icon ; A = unit number, X = icon index, Y = device number
         sta     cvi_result
         MGTK_RELAY_CALL MGTK::CheckEvents
 
@@ -787,7 +787,7 @@ process_volume:
 :       cmp     #ERR_DUPLICATE_VOLUME
         bne     select_template
         lda     #kErrDuplicateVolName
-        sta     desktop_main::pending_alert
+        sta     main::pending_alert
 
         ;; This section populates device_name_table -
         ;; it determines which device type string to use, and
@@ -802,7 +802,7 @@ process_volume:
         pla                     ; unit number into A
         pha
 
-        jsr     desktop_main::get_device_type
+        jsr     main::get_device_type
         sta     device_type
 
         ;; Copy template to device name
@@ -968,14 +968,14 @@ loop:   lda     DEVLST,y
 next:   dey
         bpl     loop
 
-        stx     desktop_main::removable_device_table
-        stx     desktop_main::disk_in_device_table
-        jsr     desktop_main::check_disks_in_devices
+        stx     main::removable_device_table
+        stx     main::disk_in_device_table
+        jsr     main::check_disks_in_devices
 
         ;; Make copy of table
-        ldx     desktop_main::disk_in_device_table
+        ldx     main::disk_in_device_table
         beq     done
-:       copy    desktop_main::disk_in_device_table,x, desktop_main::last_disk_in_devices_table,x
+:       copy    main::disk_in_device_table,x, main::last_disk_in_devices_table,x
         dex
         bpl     :-
 
@@ -1001,7 +1001,7 @@ append: lda     DEVLST,y        ; add it to the list
 :       lda     DEVLST,y
 
         inx
-        sta     desktop_main::removable_device_table,x
+        sta     main::removable_device_table,x
         bne     next            ; always
 .endproc
 
@@ -1014,10 +1014,10 @@ append: lda     DEVLST,y        ; add it to the list
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         lda     #0
         sta     active_window_id
-        jsr     desktop_main::update_window_menu_items
-        jsr     desktop_main::disable_eject_menu_item
-        jsr     desktop_main::disable_file_menu_items
-        jmp     desktop_main::enter_main_loop
+        jsr     main::update_window_menu_items
+        jsr     main::disable_eject_menu_item
+        jsr     main::disable_file_menu_items
+        jmp     main::enter_main_loop
 .endproc
 
 ;;; ============================================================
