@@ -56,6 +56,18 @@ JUMP_TABLE_COLOR_MODE   := $4042 ; Set DHR color mode (IIgs, AppleColor, Le Chat
 JUMP_TABLE_MONO_MODE    := $4045 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in ROM and ZP. *
 
+;;; ============================================================
+;;; Overlay routines, for JUMP_TABLE_LOAD_OVL
+
+kDynamicRoutineDiskCopy         = 0
+kDynamicRoutineFormatErase      = 1
+kDynamicRoutineSelector1        = 2
+kDynamicRoutineFileDialog       = 3
+kDynamicRoutineFileCopy         = 4
+kDynamicRoutineFileDelete       = 5
+kDynamicRoutineSelector2        = 6
+kDynamicRoutineRestore5000      = 7
+kDynamicRoutineRestore9000      = 8
 
 ;;; ============================================================
 ;;; Options/Results from JUMP_TABLE_ALERT_0 / JUMP_TABLE_ALERT_X

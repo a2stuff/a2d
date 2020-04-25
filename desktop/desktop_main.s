@@ -12,17 +12,6 @@
 
 dst_path_buf   := $1FC0
 
-kDynamicRoutineDiskCopy         = 0
-kDynamicRoutineFormatErase      = 1
-kDynamicRoutineSelector1        = 2
-kDynamicRoutineFileDialog       = 3
-kDynamicRoutineFileCopy         = 4
-kDynamicRoutineFileDelete       = 5
-kDynamicRoutineSelector2        = 6
-kDynamicRoutineRestore5000      = 7
-kDynamicRoutineRestore9000      = 8
-
-
         .org $4000
 
         ;; Jump table

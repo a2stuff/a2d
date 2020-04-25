@@ -1,13 +1,15 @@
+
 # DeskTop APIs
 
-There are three distinct API classes that need to be used:
+There are three distinct API classes that are used within DeskTop and
+Desk Accessories:
 
 * MouseGraphics ToolKit - graphics primitives, windowing and events
 * Icon ToolKit - internal API, MLI-style interface providing icon services
 * DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
 
-In addition, some DeskTop data structures can be accessed directly.
-
+In addition, some DeskTop data structures must be accessed directly in
+Desk Accessories.
 
 <!-- ============================================================ -->
 
@@ -20,7 +22,7 @@ This is a complex API library written by Apple circa 1985. It consists of:
 
 Entry point is fixed at $4000 AUX, called MLI-style (JSR followed by command type and address of param block).
 
-See [MGTK.md](mgtk/MGTK.md) for further documentation.
+See [MGTK.md](../mgtk/MGTK.md) for further documentation.
 
 <!-- ============================================================ -->
 
@@ -41,40 +43,53 @@ Enter DeskTop main loop
 
 #### `JUMP_TABLE_MGTK_RELAY` ($4003)
 
-MGTK relay call (main>aux)
+MouseGraphics ToolKit call (main>aux). Y = call number, A,X = params address.
+
+(Params must reside in aux memory, lower 48k or LC banks.)
 
 #### `JUMP_TABLE_SIZE_STRING` ($4006)
 
 Compose "nnn Blocks" string into internal buffer
 
+Input is block count in (A,X).
+Output string is in `text_buffer2`.
+
 #### `JUMP_TABLE_DATE_STRING` ($4009)
 
-Compose date string into internal buffer
+Compose date string into internal buffer.
 
-#### `JUMP_TABLE_0C` ($400C)
+Input date/time must be in `datetime_for_conversion`.
+Output string is in `text_buffer2`.
 
-???
+#### `JUMP_TABLE_SELECT_WINDOW` ($400C)
 
-#### `JUMP_TABLE_0F` ($400F)
+Select and refresh the specified window (A = window id)
 
-Auxload
+#### `JUMP_TABLE_AUXLOAD` ($400F)
+
+Load (A,X) from Aux memory into A.
 
 #### `JUMP_TABLE_EJECT` ($4012)
 
-Eject command
+Eject selected drive icon.
 
 #### `JUMP_TABLE_REDRAW_ALL` ($4015) *
 
-Redraws all DeskTop windows. Required after a drag or resize.
-Follow with `IconTK::RedrawIcons` call.
+Redraws all DeskTop windows.
+
+Required after a drag or resize in a DA. Follow with `IconTK::RedrawIcons` call.
 
 #### `JUMP_TABLE_ITK_RELAY` ($4018)
 
-Icon ToolKit relay call (main>aux)
+Icon ToolKit call (main>aux). Y = call number, A,X = params address.
+
+(Params must reside in aux memory, lower 48k or LC banks.)
 
 #### `JUMP_TABLE_LOAD_OVL` ($401B)
 
-Load overlay routine
+Load overlay routine.
+
+Routines are defined in `desktop/desktop.inc`.
 
 #### `JUMP_TABLE_CLEAR_SEL` ($401E) *
 
@@ -82,35 +97,46 @@ Deselect all DeskTop icons (volumes/files).
 
 #### `JUMP_TABLE_MLI` ($4021)
 
-ProDOS MLI call (Y=call, X,A=params addr) *
+ProDOS MLI call. Y=call number, X,A=params address. *
+
+(Params must reside in main memory, lower 48k.)
 
 #### `JUMP_TABLE_COPY_TO_BUF` ($4024)
 
-Copy to buffer
+Copy to buffer.
 
 #### `JUMP_TABLE_COPY_FROM_BUF` ($4027)
 
-Copy from buffer
+Copy from buffer.
 
 #### `JUMP_TABLE_NOOP` ($402A)
 
 No-Op command (RTS)
 
-#### `JUMP_TABLE_2D` ($402D)
+#### `JUMP_TABLE_FILE_TYPE_STRING` ($402D)
 
-??? (Draw type/size/date in non-icon views?)
+Composes file type string.
+
+Input is ProDOS file type in A.
+Output string is in `str_file_type`.
 
 #### `JUMP_TABLE_ALERT_0` ($4030)
 
-Show alert in A, default button options for error number
+Show alert, with default button options for error number
+
+Error number is in A - either a ProDOS error number, or a DeskTop error as defined in `desktop/desktop.inc`.
 
 #### `JUMP_TABLE_ALERT_X` ($4033)
 
-Show alert in A, button options in X
+Show alert, with custom button options.
+
+Error number is in A - either a ProDOS error number, or a DeskTop error as defined in `desktop/desktop.inc`.
+
+Button options are in X per `desktop/desktop.inc`.
 
 #### `JUMP_TABLE_LAUNCH_FILE` ($4036)
 
-Launch file
+Launch file. Equivalent of **File > Open** command.
 
 #### `JUMP_TABLE_CUR_POINTER` ($4039)
 
@@ -123,6 +149,8 @@ Changes mouse cursor to watch.
 #### `JUMP_TABLE_RESTORE_OVL` ($403F)
 
 Restore from overlay routine
+
+Routines are defined in `desktop/desktop.inc`.
 
 #### `JUMP_TABLE_COLOR_MODE` ($4042) *
 #### `JUMP_TABLE_MONO_MODE` ($4045) *
