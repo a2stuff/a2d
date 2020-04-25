@@ -714,7 +714,7 @@ done:   rts
 
 ;;; ============================================================
 
-        .include "inc/hires_table.inc"
+        .include "../inc/hires_table.inc"
         .include "inc/hr_to_dhr.inc"
 
 ;;; ============================================================

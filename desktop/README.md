@@ -34,6 +34,10 @@ The DeskTop segments loaded into the Aux bank switched ("language
 card") memory can be used from both main and aux, so contain relay
 routines, resources, and buffers. More details below.
 
+A monolithic source file `desktop.s` is used to assemble the entire
+target. It includes other source files for each of the various
+segments.
+
 ## Structure
 
 ### Loader
@@ -44,18 +48,11 @@ Invoked at $2000; patches the ProDOS QUIT routine (at LC2 $D100) then
 invokes it. That gets copied to $1000-$11FF and run by ProDOS.
 
 The invoked code stashes the current prefix and re-patches ProDOS with
-itself. It then (in a convoluted way) loads in the second $200 bytes of
-`DESKTOP2` at $2000 and invokes that.
+itself. It then (in a convoluted way) loads in the second $200 bytes
+of `DESKTOP2` at $2000 and invokes that.
 
 This code then loads the rest of the file as a sequence of segments,
 moving them to the appropriate destination in aux/banked/main memory.
-
-There's fourth chunk of code, which expects to live at $280 so it
-can't co-exist with the Invoker; it may be temporary code, as there is
-no sign that it is ever moved into place. It's also unclear how it
-would be hooked in. The routine detects OA+SA+P and prints the DHR
-screen to an ImageWriter II printer attached to Slot 1. (This may have
-been used to produce screenshots during development for manuals.)
 
 ### Invoker
 
@@ -65,79 +62,71 @@ Loaded at $290-$03EF, this small routine is used to invoke a target,
 e.g. a double-clicked file. System files are loaded/run at $2000,
 binary files at the location specified by their aux type, and BASIC
 files loaded by searching for BASIC.SYSTEM and running it with the
-pathname passed at $2006 (see ProDOS TLM).
+pathname passed at $2006 (see ProDOS TLM). Other file types are
+invoked using BASIS.SYSTEM, if present.
 
 ### Initializer
 
-(in `desktop_main.s`)
+(in `init.s`)
 
 Loaded at $800-$FFF, this does one-time initialization of the
 DeskTop. It is later overwritten when any desk accessories are
 run.
 
-### MouseGraphics ToolKit (MGTK)
-
-`mgtk.s`
-
-Aux $4000-$8580 is the [MouseGraphics ToolKit](../mgtk/MGTK.md) - a
-GUI library used for the DeskTop application.
-
-Since this resides in Aux memory, DeskTop spends most of its time
-with Aux read/write enabled. The state and logic for rendering
-the desktop and window contents resides in Aux to avoid proxying
-data.
-
 ### "DeskTop" Application
 
-`desktop.s` which includes in:
+The main application includes:
+* `desktop_main.s`
 * `desktop_aux.s`
 * `desktop_lc.s`
 * `desktop_res.s`
-* `desktop_main.s`
 
-DeskTop application code is in the lower 48k of both Aux and Main:
+DeskTop code is in the lower 48k of both Main and Aux banks, and the
+Aux language card areas. The main application logic is in Main, with
+Aux and LC memory used for Mouse/Graphics, Icon, and Alert toolkits
+and resources.
 
-* Aux $8580-$BFFF - sitting above the GUI library (`desktop_aux.s`)
+When running, memory use includes:
+
+* Main
+ * $800-$1BFF is used as scratch space for a variety of routines.
+ * $1C00-$1FFF is used as a 1k ProDOS I/O buffer.
+ * $2000-$3FFF is the hires graphics page.
+ * $4000-$BEFF (`desktop_main.s`) is the main app logic.
+
+($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
+
+* Aux
+ * $0800-$1AFF is a "save area"; used by MGTK to store the background
+     when menus are drawn so it can be restored without redrawing. The
+     save area is also used by DeskTop to save the background for
+     alert dialogs, and icon outlines when dragging - basically, any
+     modal operation.
+ * $1B00-$1F7F holds lists of icons, one for the desktop then one for up
+     to 8 windows. First byte is a count, up to 127 icon entries. Icon numbers
+     map indirectly into a table at $ED00 that holds the type, coordinates, etc.
+ * $1F80-$1FFF is a map of used/free icon numbers, as they are reassigned
+     as windows are opened and closed.
+ * $2000-$3FFF is the hires graphics page.
+ * $4000-$BFFF (`desktop_aux.s`) includes these:
+ * $4000-$8580 is the [MouseGraphics ToolKit](../mgtk/MGTK.md)
  * $8580-$8DFF - Resources, including icons and font
- * $8E00-$A6xx - Icon ToolKit
+ * $8E00-$A6xx - [Icon ToolKit](APIs.md)
  * $A6xx-$ADFF - Resources, including menu definitions
  * $AE00-$BFFF - Alert dialog resources/code
-* Main $4000-$BEFF (`desktop_main.s`)
 
 ...and in the Aux language card area (accessible from both aux and
 main code) are relays, buffers and resources:
 
-* Aux $D000-$D1FF - main-to-aux relay calls
-* Aux $D200-$ECFF - resources (menus, strings, window)
-* Aux $ED00-$FAFF - hole for IconEntries
-* Aux $FB00-$FFFF - more resources (file types, icons)
-
-($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
+* Aux LC
+ * $D000-$D1FF - main-to-aux relay calls (`desktop_lc.s`)
+ * $D200-$ECFF - resources (menus, strings, window)
+ * $ED00-$FAFF - buffer for IconEntries
+ * $FB00-$FFFF - more resources (file types, icons)
 
 `desktop_res.s` defines these common resources. It is built as part of
 `desktop.s`. Many additional resources needed for MGTK operations
 exist in `desktop_aux.s` as well.
-
-The DeskTop code in Aux primarily implements the actual desktop GUI,
-drawing file icons in windows, volume icons on the desktop, handling
-selection and dragging, and tracking icons in windows; this code is
-implemented as a library with MLI-style calls. The code in Main
-handles the bulk of the application logic.
-
-When running, lower memory use includes:
-
-* Main $800-$1BFF is used as scratch space for a variety of routines.
-* Main $1C00-$1FFF is used as a 1k ProDOS I/O buffer.
-
-* Aux $0800-$1AFF is a "save area"; used by MGTK to store the background
-    when menus are drawn so it can be restored without redrawing. The
-    save area is also used by DeskTop to save the background for alert
-    dialogs, and icon outlines when dragging.
-* Aux $1B00-$1F7F holds lists of icons, one for the desktop then one for up
-    to 8 windows. First byte is a count, up to 127 icon entries. Icon numbers
-    map indirectly into a table at $ED00 that holds the type, coordinates, etc.
-* Aux $1F80-$1FFF is a map of used/free icon numbers, as they are reassigned
-    as windows are opened and closed.
 
 The Aux memory language card bank 2 ($D000-$DFFF) holds `FileRecord`
 entries, 32-byte structures which hold metadata for files in open

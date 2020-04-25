@@ -271,33 +271,7 @@ Parameters: { byte icon }
 
 Erases the specified icon by number. No error checking is done.
 
-
-<!-- ============================================================ -->
-
-## DeskTop Data Structures
-
-DeskTop's state - selection, windows, icons - is only partially accessible
-via APIs. Operations such as opening the selected file requires accessing
-internal data structures directly.
-
-### Window - representing an open directory
-
-* `path_index` (byte) - id of active window in `path_table`
-* `path_table` (array of addrs) - maps window id to window record address
-
-Window record: 65-byte pathname buffer; it is a length-prefixed
-absolute path (e.g. `/VOL/GAMES`)
-
-### Selection
-
-* `selected_file_count` (byte) - number of selected icons
-* `selected_file_list` (array of bytes) - ids of selected icons
-
-### Icon - representing a file (in a window) or volume (on the desktop)
-
-* `file_table` (array of addrs) - maps icon id to icon record address
-
-Icon record: 27-byte structure optimized for rendering the file/volume icon.
+### IconEntry
 
 ```
 .byte icon      icon index
@@ -320,3 +294,28 @@ Icon record: 27-byte structure optimized for rendering the file/volume icon.
 .byte len       (name length + 2)
 .res  17  name  (name, with a space before and after)
 ```
+
+<!-- ============================================================ -->
+
+## DeskTop Data Structures
+
+DeskTop's state - selection, windows, icons - is only partially
+accessible via APIs. Operations such as determining the path to
+selected file(s) requires accessing internal data structures directly.
+
+### Window - representing an open directory
+
+* `path_index` (byte) - id of active window in `path_table`
+* `path_table` (array of addrs) - maps window id to window record address
+
+Window record: 65-byte pathname buffer; it is a length-prefixed
+absolute path (e.g. `/VOL/GAMES`)
+
+### Selection
+
+* `selected_file_count` (byte) - number of selected icons
+* `selected_file_list` (array of bytes) - ids of selected icons
+
+### Icon - representing a file (in a window) or volume (on the desktop)
+
+* `file_table` (array of addrs) - maps icon id to icon entry address
