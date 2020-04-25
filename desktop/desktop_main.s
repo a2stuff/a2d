@@ -14821,7 +14821,7 @@ done:   jmp     reset_grafport3a
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintBits, aux::alert_bitmap_params
+        MGTK_RELAY_CALL MGTK::PaintBits, aux::Alert::alert_bitmap_params
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_inner_rect

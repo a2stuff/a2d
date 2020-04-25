@@ -3600,8 +3600,19 @@ str_on_system_disk:
         PASCAL_STRING "on the system disk ?"
 
 ;;; ============================================================
+;;; Show Alert Dialog
+;;; Call show_alert_dialog with prompt number A, options in X
+;;; Options:
+;;;    0 = use defaults for alert number; otherwise, look at top 2 bits
+;;;  %0....... e.g. $01 = OK
+;;;  %10...... e.g. $80 = Try Again, Cancel
+;;;  %11...... e.g. $C0 = OK, Cancel
+;;; Return value:
+;;;   0 = Try Again
+;;;   1 = Cancel
+;;;   2 = OK
 
-show_alert_indirection:
+.proc Alert
         jmp     show_alert_dialog
 
 alert_bitmap:
@@ -3631,17 +3642,17 @@ alert_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
 
 .params alert_bitmap_params
-        DEFINE_POINT 20, 8      ; viewloc
-        .addr   alert_bitmap    ; mapbits
-        .byte   7               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT 0, 0, 36, 23 ; maprect
+viewloc:        DEFINE_POINT 20, 8
+mapbits:        .addr   alert_bitmap
+mapwidth:       .byte   7
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, 36, 23
 .endparams
 
-kAlertRectLeft = 65
-kAlertRectTop = 87
-kAlertRectWidth = 420
-kAlertRectHeight = 55
+kAlertRectWidth         = 420
+kAlertRectHeight        = 55
+kAlertRectLeft          = (kScreenWidth - kAlertRectWidth)/2
+kAlertRectTop           = (kScreenHeight - kAlertRectHeight)/2
 
 alert_rect:
         DEFINE_RECT_SZ kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
@@ -3657,22 +3668,6 @@ mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
 .endparams
-
-
-;;; ============================================================
-;;; Show Alert Dialog
-;;; Call show_alert_dialog with prompt number A, options in X
-;;; Options:
-;;;    0 = use defaults for alert number; otherwise, look at top 2 bits
-;;;  %0....... e.g. $01 = OK
-;;;  %10...... e.g. $80 = Try Again, Cancel
-;;;  %11...... e.g. $C0 = OK, Cancel
-;;; Return value:
-;;;   0 = Try Again
-;;;   1 = Cancel
-;;;   2 = OK
-
-.proc show_alert_dialog_impl
 
 ok_label:
         PASCAL_STRING {"OK            ",kGlyphReturn}
@@ -3692,15 +3687,18 @@ cancel_rect:
 cancel_pos:
         DEFINE_POINT 305,47
 
-pos_prompt: DEFINE_POINT 75,29, pos_prompt
+pos_prompt:     DEFINE_POINT 75,29
 
-alert_action:   .byte   0
+alert_options:  .byte   0
 prompt_addr:    .addr   0
 
 try_again_label:
         PASCAL_STRING "Try Again     A"
 cancel_label:
         PASCAL_STRING "Cancel     Esc"
+
+;;; ============================================================
+;;; Messages
 
 err_00:  PASCAL_STRING "System Error"
 err_27:  PASCAL_STRING "I/O error"
@@ -3752,7 +3750,7 @@ prompt_table:
         ASSERT_ADDRESS_TABLE_SIZE prompt_table, kNumAlerts
 
         ;; alert index to action (0 = Cancel, $80 = Try Again)
-alert_action_table:
+alert_options_table:
         .byte   kAlertOptionsOK, kAlertOptionsOK
         .byte   kAlertOptionsOK, kAlertOptionsTryAgainCancel
         .byte   kAlertOptionsOK, kAlertOptionsTryAgainCancel
@@ -3763,7 +3761,7 @@ alert_action_table:
         .byte   kAlertOptionsOK, kAlertOptionsOK
         .byte   kAlertOptionsOK, kAlertOptionsTryAgainCancel
         .byte   kAlertOptionsTryAgainCancel, kAlertOptionsOK
-        ASSERT_TABLE_SIZE alert_action_table, kNumAlerts
+        ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
 
         ;; Actual entry point
 start:  pha                     ; error code
@@ -3864,20 +3862,20 @@ start:  pha                     ; error code
         beq     :+
         txa
         and     #$FE            ; ignore low bit, e.g. treat $01 as $00
-        sta     alert_action
+        sta     alert_options
         jmp     draw_buttons
 
 :       tya
         lsr     a
         tay
-        lda     alert_action_table,y
-        sta     alert_action
+        lda     alert_options_table,y
+        sta     alert_options
 
         ;; Draw appropriate buttons
 draw_buttons:
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        bit     alert_action    ; high bit clear = Cancel
+        bit     alert_options    ; high bit clear = Cancel
         bpl     ok_button
 
         ;; Cancel button
@@ -3885,7 +3883,7 @@ draw_buttons:
         MGTK_CALL MGTK::MoveTo, cancel_pos
         addr_call draw_pascal_string, cancel_label
 
-        bit     alert_action
+        bit     alert_options
         bvs     ok_button
 
         ;; Try Again button
@@ -3923,7 +3921,7 @@ event_loop:
         ;; Key Down
         lda     event_key
         and     #CHAR_MASK
-        bit     alert_action    ; has Cancel?
+        bit     alert_options   ; has Cancel?
         bpl     check_ok        ; nope
         cmp     #CHAR_ESCAPE    ; yes, maybe Escape?
         bne     :+
@@ -3933,7 +3931,7 @@ event_loop:
         lda     #kAlertResultCancel
         jmp     finish
 
-:       bit     alert_action    ; has Try Again?
+:       bit     alert_options   ; has Try Again?
         bvs     check_ok        ; nope
         cmp     #'a'            ; yes, maybe A/a ?
         bne     :+
@@ -3963,9 +3961,9 @@ check_ok:
 
 handle_button_down:
         jsr     event_coords_to_local
-
         MGTK_CALL MGTK::MoveTo, event_coords
-        bit     alert_action
+
+        bit     alert_options
         bpl     check_ok_rect
 
         MGTK_CALL MGTK::InRect, cancel_rect ; Cancel?
@@ -3977,7 +3975,7 @@ handle_button_down:
         lda     #kAlertResultCancel
         jmp     finish
 
-:       bit     alert_action
+:       bit     alert_options
         bvs     check_ok_rect
 
         MGTK_CALL MGTK::InRect, try_again_rect ; Try Again?
@@ -4067,7 +4065,6 @@ flag:   .byte   0
         sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
         rts
 .endproc
-
 
 
 ;;; ============================================================
@@ -4245,16 +4242,12 @@ col:    lda     xbyte
 
 ;;; Dialog bound coordinates
 
-save_y1:.byte   0
-save_x1_byte:
-        .byte   0
-save_y2:.byte   0
-save_x2_byte:
-        .byte   0
-save_x1_bit:
-        .byte   0
-save_x2_bit:
-        .byte   0
+save_y1:        .byte   0
+save_x1_byte:   .byte   0
+save_y2:        .byte   0
+save_x2_byte:   .byte   0
+save_x1_bit:    .byte   0
+save_x2_bit:    .byte   0
 
 ;;; Coordinates when looping save/restore
 row_tmp:
@@ -4262,7 +4255,7 @@ row_tmp:
 xbyte:  .byte   0
 
 .endproc
-        show_alert_dialog := show_alert_dialog_impl::start
+        show_alert_dialog := Alert::start
 
 ;;; ============================================================
 ;;; Draw pascal string; address in (X,A)

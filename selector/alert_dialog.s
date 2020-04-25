@@ -42,20 +42,24 @@ reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 36, 23
 .endparams
 
-rect1:
-        DEFINE_RECT 65,87,485,142
+kAlertRectWidth         = 420
+kAlertRectHeight        = 55
+kAlertRectLeft          = (kScreenWidth - kAlertRectWidth)/2
+kAlertRectTop           = (kScreenHeight - kAlertRectHeight)/2
 
-rect_frame1:
-        DEFINE_RECT 4, 2, 416, 53
-rect_frame2:
-        DEFINE_RECT 5, 3, 415, 52
+alert_rect:
+        DEFINE_RECT_SZ kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
+alert_inner_frame_rect1:
+        DEFINE_RECT_INSET 4, 2, kAlertRectWidth, kAlertRectHeight
+alert_inner_frame_rect2:
+        DEFINE_RECT_INSET 5, 3, kAlertRectWidth, kAlertRectHeight
 
-.params mapinfo
-        DEFINE_POINT 65, 87, viewloc
-        .addr   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   $00
-        DEFINE_RECT 0, 0, 420, 55, maprect
+.params portmap
+viewloc:        DEFINE_POINT kAlertRectLeft, kAlertRectTop, viewloc
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
 .endparams
 
 str_cancel_btn:
@@ -65,9 +69,11 @@ str_ok_btn:
 str_try_again_btn:
         PASCAL_STRING "Try Again  A"
 
-rect_ok_try_again_btn:
-        DEFINE_RECT 300, 37, 400, 48
-pos_ok_try_again_btn:
+ok_rect:
+try_again_rect:
+        DEFINE_RECT_SZ 300, 37, kButtonWidth, kButtonHeight
+ok_pos:
+try_again_pos:
         DEFINE_POINT 305, 47
 
 rect_cancel_btn:
@@ -76,17 +82,17 @@ pos_cancel_btn:
         DEFINE_POINT 25,47
 
         DEFINE_POINT 190,16
-pt2:    DEFINE_POINT 75,29
 
+pos_prompt:     DEFINE_POINT 75,29
 
+        ;; Unused???
         PASCAL_STRING "System Error number XX"
 
-LD142:  .byte   0
-LD143:  .byte   0
-LD144:  .byte   0
+alert_options:  .byte   0
+prompt_addr:    .addr   0
 
 ;;; ============================================================
-;;; Alert Dialog
+;;; Messages
 
 str_selector_unable_to_run:
         PASCAL_STRING "The Selector is unable to run the program."
@@ -132,7 +138,7 @@ error_message_table:
         .addr   str_basic_system_not_found
         ASSERT_ADDRESS_TABLE_SIZE error_message_table, kNumErrorMessages
 
-alert_message_flag_table:
+alert_options_table:
         .byte   $00
         .byte   $00
         .byte   $00
@@ -141,7 +147,7 @@ alert_message_flag_table:
         .byte   $00
         .byte   $80
         .byte   $00
-        ASSERT_TABLE_SIZE alert_message_flag_table, kNumErrorMessages
+        ASSERT_TABLE_SIZE alert_options_table, kNumErrorMessages
 
 .proc ShowAlertImpl
         pha
@@ -152,29 +158,36 @@ alert_message_flag_table:
 :       jsr     app::set_pointer_cursor
         MGTK_CALL MGTK::InitPort, app::grafport2
         MGTK_CALL MGTK::SetPort, app::grafport2
-        ldax    mapinfo::viewloc::xcoord
-        jsr     LD725
-        sty     LD764
-        sta     LD767
-        lda     mapinfo::viewloc::xcoord
+
+        ;; Compute save bounds
+        ldax    portmap::viewloc::xcoord ; left
+        jsr     calc_x_save_bounds
+        sty     save_x1_byte
+        sta     save_x1_bit
+
+        lda     portmap::viewloc::xcoord ; right
         clc
-        adc     mapinfo::maprect::x2
+        adc     portmap::maprect::x2
         pha
-        lda     mapinfo::viewloc::xcoord+1
-        adc     mapinfo::maprect::x2+1
+        lda     portmap::viewloc::xcoord+1
+        adc     portmap::maprect::x2+1
         tax
         pla
-        jsr     LD725
-        sty     LD766
-        sta     LD768
-        lda     mapinfo::viewloc::ycoord
-        sta     LD763
+        jsr     calc_x_save_bounds
+        sty     save_x2_byte
+        sta     save_x2_bit
+
+        lda     portmap::viewloc::ycoord ; top
+        sta     save_y1
         clc
-        adc     mapinfo::maprect::y2
-        sta     LD765
+        adc     portmap::maprect::y2 ; bottom
+        sta     save_y2
+
         MGTK_CALL MGTK::HideCursor
         jsr     dialog_background_save
         MGTK_CALL MGTK::ShowCursor
+
+        ;; Set up GrafPort
         ldx     #.sizeof(MGTK::Point)-1
         lda     #0
 :       sta     app::grafport2+MGTK::GrafPort::viewloc,x
@@ -184,18 +197,24 @@ alert_message_flag_table:
         copy16  #550, app::grafport2 + MGTK::GrafPort::maprect + MGTK::Rect::x2
         copy16  #185, app::grafport2 + MGTK::GrafPort::maprect + MGTK::Rect::y2
         MGTK_CALL MGTK::SetPort, app::grafport2
+
+        ;; Draw alert box and bitmap
         MGTK_CALL MGTK::SetPenMode, app::pencopy
-        MGTK_CALL MGTK::PaintRect, rect1
+        MGTK_CALL MGTK::PaintRect, alert_rect
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::FrameRect, rect1
-        MGTK_CALL MGTK::SetPortBits, mapinfo
-        MGTK_CALL MGTK::FrameRect, rect_frame1
-        MGTK_CALL MGTK::FrameRect, rect_frame2
+        MGTK_CALL MGTK::FrameRect, alert_rect
+        MGTK_CALL MGTK::SetPortBits, portmap
+        MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect1
+        MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect2
         MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintBits, alert_bitmap_params
         MGTK_CALL MGTK::ShowCursor
-        pla
+
+        ;; --------------------------------------------------
+        ;; Process Options
+
+        pla                     ; alert number
         ldy     #$00
 LD307:  cmp     error_message_index_table,y
         beq     LD314
@@ -207,36 +226,47 @@ LD314:  tya
         asl     a
         tay
         lda     error_message_table,y
-        sta     LD143
+        sta     prompt_addr
         lda     error_message_table+1,y
-        sta     LD144
+        sta     prompt_addr+1
         tya
         lsr     a
         tay
-        lda     alert_message_flag_table,y
-        sta     LD142
+        lda     alert_options_table,y
+        sta     alert_options
+
+        ;; Draw appropriate buttons
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        bit     LD142
-        bpl     LD365
+        bit     alert_options
+        bpl     ok_button
+
+        ;; Cancel button
         MGTK_CALL MGTK::FrameRect, rect_cancel_btn
         MGTK_CALL MGTK::MoveTo, pos_cancel_btn
         addr_call app::DrawString, str_cancel_btn
-        bit     LD142
-        bvs     LD365
-        MGTK_CALL MGTK::FrameRect, rect_ok_try_again_btn
-        MGTK_CALL MGTK::MoveTo, pos_ok_try_again_btn
-        addr_call app::DrawString, str_try_again_btn
-        jmp     LD378
 
-LD365:  MGTK_CALL MGTK::FrameRect, rect_ok_try_again_btn
-        MGTK_CALL MGTK::MoveTo, pos_ok_try_again_btn
+        bit     alert_options
+        bvs     ok_button
+
+        ;; Try Again button
+        MGTK_CALL MGTK::FrameRect, try_again_rect
+        MGTK_CALL MGTK::MoveTo, try_again_pos
+        addr_call app::DrawString, str_try_again_btn
+        jmp     draw_prompt
+
+        ;; OK button
+ok_button:
+        MGTK_CALL MGTK::FrameRect, ok_rect
+        MGTK_CALL MGTK::MoveTo, ok_pos
         addr_call app::DrawString, str_ok_btn
 
-LD378:  MGTK_CALL MGTK::MoveTo, pt2
-        lda     LD143
-        ldx     LD144
-        jsr     app::DrawString
+        ;; Prompt string
+draw_prompt:
+        MGTK_CALL MGTK::MoveTo, pos_prompt
+        addr_call_indirect app::DrawString, prompt_addr
 
+        ;; --------------------------------------------------
+        ;; Event Loop
 
 event_loop:
         MGTK_CALL MGTK::GetEvent, app::event_params
@@ -248,71 +278,77 @@ event_loop:
 :       cmp     #MGTK::EventKind::key_down
         bne     event_loop
 
-        ;; Key Press
-
+        ;; --------------------------------------------------
+        ;; Key Down
         lda     app::event_key
         and     #CHAR_MASK
-        bit     LD142           ; Escape = Cancel?
-        bpl     LD3DF
+        bit     alert_options   ; Escape = Cancel?
+        bpl     check_ok
         cmp     #CHAR_ESCAPE
-        bne     LD3BA
+        bne     :+
+
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, rect_cancel_btn
-        lda     #$01
-        jmp     LD434
+        lda     #kAlertResultCancel
+        jmp     finish
 
-LD3BA:  bit     LD142           ; A = Try Again?
-        bvs     LD3DF
+:       bit     alert_options   ; A = Try Again?
+        bvs     check_ok
         cmp     #'a'
-        bne     LD3D4
-LD3C3:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
-        lda     #$00
-        jmp     LD434
+        bne     :+
+was_a:  MGTK_CALL MGTK::SetPenMode, app::penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_rect
+        lda     #kAlertResultTryAgain
+        jmp     finish
 
-LD3D4:  cmp     #'A'
-        beq     LD3C3
-        cmp     #CHAR_RETURN
-        beq     LD3C3
+:       cmp     #'A'
+        beq     was_a
+        cmp     #CHAR_RETURN    ; also allow Return as default
+        beq     was_a
         jmp     event_loop
 
-LD3DF:  cmp     #CHAR_RETURN    ; Return = OK?
-        bne     LD3F4
+check_ok:
+        cmp     #CHAR_RETURN    ; Return = OK?
+        bne     :+
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
-        lda     #$00
-        jmp     LD434
+        MGTK_CALL MGTK::PaintRect, ok_rect
+        lda     #kAlertResultOK
+        jmp     finish
 
-LD3F4:  jmp     event_loop
+:       jmp     event_loop
 
-        ;; Button Press
+        ;; --------------------------------------------------
+        ;; Buttons
 
 handle_button:
         jsr     map_alert_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
 
-        bit     LD142           ; Cancel?
-        bpl     LD424
+        bit     alert_options   ; Cancel?
+        bpl     check_ok_rect
+
         MGTK_CALL MGTK::InRect, rect_cancel_btn
         cmp     #MGTK::inrect_inside
-        bne     LD412
+        bne     :+
         jmp     cancel_btn_event_loop
 
-LD412:  bit     LD142           ; Try Again?
-        bvs     LD424
-        MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
+:       bit     alert_options   ; Try Again?
+        bvs     check_ok_rect
+        MGTK_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
-        bne     LD431
+        bne     no_button
         jmp     try_again_btn_event_loop
 
-LD424:  MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
+check_ok_rect:
+        MGTK_CALL MGTK::InRect, ok_rect
         cmp     #MGTK::inrect_inside ; OK?
-        bne     LD431
+        bne     no_button
         jmp     ok_button_event_loop
 
-LD431:  jmp     event_loop
+no_button:
+        jmp     event_loop
 
-LD434:  pha
+finish: pha
         MGTK_CALL MGTK::HideCursor
         jsr     dialog_background_restore
         MGTK_CALL MGTK::ShowCursor
@@ -324,7 +360,7 @@ LD434:  pha
 
 .proc try_again_btn_event_loop
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
+        MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     #$00
         sta     LD4AC
 LD457:  MGTK_CALL MGTK::GetEvent, app::event_params
@@ -333,7 +369,7 @@ LD457:  MGTK_CALL MGTK::GetEvent, app::event_params
         beq     LD49F
         jsr     map_alert_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
-        MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
+        MGTK_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
         beq     LD47F
         lda     LD4AC
@@ -345,7 +381,7 @@ LD47F:  lda     LD4AC
         jmp     LD457
 
 LD487:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
+        MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     LD4AC
         clc
         adc     #$80
@@ -357,7 +393,7 @@ LD49F:  lda     LD4AC
         jmp     event_loop
 
 LD4A7:  lda     #$00
-        jmp     LD434
+        jmp     finish
 
 LD4AC:  .byte   0
 .endproc
@@ -400,7 +436,7 @@ LD506:  lda     LD513
         jmp     event_loop
 
 LD50E:  lda     #$01
-        jmp     LD434
+        jmp     finish
 
 LD513:  .byte   0
 .endproc
@@ -412,14 +448,14 @@ LD513:  .byte   0
         lda     #$00
         sta     LD57A
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
+        MGTK_CALL MGTK::PaintRect, ok_rect
 LD525:  MGTK_CALL MGTK::GetEvent, app::event_params
         lda     app::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LD56D
         jsr     map_alert_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
-        MGTK_CALL MGTK::InRect, rect_ok_try_again_btn
+        MGTK_CALL MGTK::InRect, ok_rect
         cmp     #MGTK::inrect_inside
         beq     LD54D
         lda     LD57A
@@ -431,7 +467,7 @@ LD54D:  lda     LD57A
         jmp     LD525
 
 LD555:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_try_again_btn
+        MGTK_CALL MGTK::PaintRect, ok_rect
         lda     LD57A
         clc
         adc     #$80
@@ -443,58 +479,62 @@ LD56D:  lda     LD57A
         jmp     event_loop
 
 LD575:  lda     #$00
-        jmp     LD434
+        jmp     finish
 
 LD57A:  .byte   0
 .endproc
 
 ;;; ============================================================
 
-
 .proc map_alert_coords
-        sub16   app::event_xcoord, mapinfo::viewloc::xcoord, app::event_xcoord
-        sub16   app::event_ycoord, mapinfo::viewloc::ycoord, app::event_ycoord
+        sub16   app::event_xcoord, portmap::viewloc::xcoord, app::event_xcoord
+        sub16   app::event_ycoord, portmap::viewloc::ycoord, app::event_ycoord
         rts
 .endproc
 
 ;;; ============================================================
+;;; Save/Restore Dialog Background
+;;;
+;;; This reuses the "save area" ($800-$1AFF) used by MGTK for
+;;; quickly restoring menu backgrounds.
+
+;;; TODO: Simplify these routines like DeskTop - no need
+;;; for precise bit masking on the edges.
 
 .scope dialog_background
 
-        save_buffer := $800
+        ptr := $06
 
 .proc save
-        copy16  #save_buffer, LD5D1
-        lda     LD763
+        copy16  #SAVE_AREA_BUFFER, addr
+        lda     save_y1
         jsr     LD6AA
-        lda     LD765
+        lda     save_y2
         sec
-        sbc     LD763
+        sbc     save_y1
         tax
         inx
-LD5BB:  lda     LD764
+LD5BB:  lda     save_x1_byte
         sta     LD5F6
 LD5C1:  lda     LD5F6
         lsr     a
         tay
-        sta     LOWSCR
+        sta     PAGE2OFF        ; main $2000-$3FFF
         bcs     LD5CE
-        sta     HISCR
-LD5CE:  lda     ($06),y
-LD5D1           := * + 1
-LD5D2           := * + 2
+        sta     PAGE2ON         ; aux $2000-$3FFF
+LD5CE:  lda     (ptr),y
+        addr := *+1
         sta     dummy1234
-        inc16   LD5D1
+        inc16   addr
         lda     LD5F6
-        cmp     LD766
+        cmp     save_x2_byte
         bcs     LD5E8
         inc     LD5F6
         bne     LD5C1
 LD5E8:  jsr     LD6EC
         dex
         bne     LD5BB
-        lda     LD5D1
-        ldx     LD5D2
+        ldax    addr
         rts
 
         .byte   0
@@ -504,9 +544,9 @@ LD5F6:  .byte   0
 ;;; ============================================================
 
 .proc restore
-        copy16  #save_buffer, LD656
-        ldx     LD767
-        ldy     LD768
+        copy16  #SAVE_AREA_BUFFER, addr
+        ldx     save_x1_bit
+        ldy     save_x2_bit
         lda     #$FF
         cpx     #$00
         beq     LD612
@@ -527,53 +567,53 @@ LD620:  sec
 LD625:  sta     LD6A8
         eor     #$FF
         sta     LD6A9
-        lda     LD763
+        lda     save_y1
         jsr     LD6AA
-        lda     LD765
+        lda     save_y2
         sec
-        sbc     LD763
+        sbc     save_y1
         tax
         inx
-        lda     LD764
+        lda     save_x1_byte
         sta     LD6A5
-LD642:  lda     LD764
+LD642:  lda     save_x1_byte
         sta     LD6A5
 LD648:  lda     LD6A5
         lsr     a
         tay
-        sta     LOWSCR
+        sta     PAGE2OFF        ; main $2000-$3FFF
         bcs     LD655
-        sta     HISCR
+        sta     PAGE2ON         ; aux $2000-$3FFF
 LD655:
-LD656           := * + 1
-        lda     save_buffer
+        addr := *+1
+        lda     SAVE_AREA_BUFFER
         pha
         lda     LD6A5
-        cmp     LD764
+        cmp     save_x1_byte
         beq     LD677
-        cmp     LD766
+        cmp     save_x2_byte
         bne     LD685
-        lda     ($06),y
+        lda     (ptr),y
         and     LD6A9
-        sta     ($06),y
+        sta     (ptr),y
         pla
         and     LD6A8
-        ora     ($06),y
+        ora     (ptr),y
         pha
         jmp     LD685
 
-LD677:  lda     ($06),y
+LD677:  lda     (ptr),y
         and     LD6A7
-        sta     ($06),y
+        sta     (ptr),y
         pla
         and     LD6A6
-        ora     ($06),y
+        ora     (ptr),y
         pha
 LD685:  pla
-        sta     ($06),y
-        inc16   LD656
+        sta     (ptr),y
+        inc16   addr
         lda     LD6A5
-        cmp     LD766
+        cmp     save_x2_byte
         bcs     LD69D
         inc     LD6A5
         bne     LD648
@@ -617,7 +657,7 @@ LD6C6:  lda     LD748
         sta     LD6EB
         pla
         ror     a
-        sta     $06
+        sta     ptr
         lda     LD74A
         asl     a
         asl     a
@@ -666,7 +706,8 @@ LD723:  sec
 
 
 
-LD725:  ldy     #$00
+calc_x_save_bounds:
+        ldy     #$00
         cpx     #$02
         bne     LD730
         ldy     #$49
@@ -690,6 +731,8 @@ LD747:  rts
 LD748:  .byte   0
 LD749:  .byte   0
 LD74A:  .byte   0
+
+        ;; Unused???
         .byte   $FF
         .byte   0
         .byte   0
@@ -716,13 +759,16 @@ LD74A:  .byte   0
         .byte   0
 
 
-LD763:  .byte   0
-LD764:  .byte   0
-LD765:  .byte   0
-LD766:  .byte   0
-LD767:  .byte   0
-LD768:  .byte   0
-LD769:  .byte   0
+;;; Dialog bound coordinates
+
+save_y1:        .byte   0
+save_x1_byte:   .byte   0
+save_y2:        .byte   0
+save_x2_byte:   .byte   0
+save_x1_bit:    .byte   0
+save_x2_bit:    .byte   0
+
+LD769:          .byte   0
 
 .endproc
 

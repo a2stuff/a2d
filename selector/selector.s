@@ -13,6 +13,7 @@ dummy1234       := $1234
 INVOKER_PREFIX  := $0220
 INVOKER_FILENAME:= $0280
 INVOKER         := $0290
+SAVE_AREA_BUFFER:= $0800
 LOADER          := $2000
 MGTK            := $4000
 FONT            := $8800
@@ -30,6 +31,10 @@ file_not_found          = $46
 insert_system_disk      = $FE
 basic_system_not_found  = $FF
 .endenum
+
+kAlertResultTryAgain    = 0
+kAlertResultCancel      = 1
+kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 
 ;;; SELECTOR file structure
 

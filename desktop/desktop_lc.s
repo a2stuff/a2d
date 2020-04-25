@@ -249,7 +249,7 @@ op:     lda     dummy1234
 .proc ShowAlertOption
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     aux::show_alert_indirection
+        jsr     aux::Alert
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
