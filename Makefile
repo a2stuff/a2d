@@ -2,7 +2,7 @@ targets := desktop desktop.system desk.acc preview selector
 
 .PHONY: all $(targets) mount install installsel package
 
-all: $(targets) mount
+all: $(targets)
 
 # Build all targets
 $(targets):
