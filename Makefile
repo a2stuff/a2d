@@ -11,9 +11,9 @@ $(targets):
 	  && (tput setaf 2 && echo "make $@ good" && tput sgr0) \
           || (tput blink && tput setaf 1 && echo "MAKE $@ BAD" && tput sgr0 && false)
 
-# If mount/ exists, populate as a mountable directory for Virtual ][
+# Optional target: populate mount/ as a mountable directory for Virtual ][
 mount:
-	@if [ -d mount ]; then res/mount.sh; fi
+	res/mount.sh
 
 # Optional target: run install script. Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
 install:

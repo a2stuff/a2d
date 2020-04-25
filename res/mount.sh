@@ -5,57 +5,48 @@
 set -e
 source "res/util.sh"
 
-mkdir -p mount/desk.acc || (cecho red "permission denied"; exit 1)
+mkdir -p mount/DESK.ACC || (cecho red "permission denied"; exit 1)
 
-# Mount file xxx.built as $F1 file
-function mount_f1 {
-    srcdir="$2"
-    dstdir="$3"
-    uppercase=$(echo "$1" | tr /a-z/ /A-Z/)
-    src="$srcdir/out/$1.built"
-    dst="$dstdir/$uppercase.\$F1"
-    cp "$src" "$dst" \
+DA_AUX="40 06"
+
+# Mount file
+function mount_file {
+    src="$1"
+    dst="$2"
+    cp "$src" "mount/$dst" \
         && (cecho green "mounted $dst" ) \
         || (cecho red "failed to mount $dst" ; return 1)
 }
 
-# Mount file xxx.da as $F1 file, with DA auxtype
-function mount_da {
-    srcdir="$2"
-    dstdir="$3"
-    uppercase=$(echo "$1" | tr /a-z/ /A-Z/)
-    src="$srcdir/out/$1.da"
-    dst="$dstdir/$uppercase.\$F1"
-    cp "$src" "$dst" \
-	&& xattr -wx prodos.AuxType '40 06' "$dst" \
+# Mount file with auxtype
+function mount_aux {
+    src="$1"
+    dst="$2"
+    aux="$3"
+    cp "$src" "mount/$dst" \
+	&& xattr -wx prodos.AuxType "$aux" "mount/$dst" \
         && (cecho green "mounted $dst" ) \
         || (cecho red "failed to mount $dst" ; return 1)
 }
 
-# Mount file xxx.SYS as SYS file
-function mount_sys {
-    srcdir="$2"
-    dstdir="$3"
-    uppercase=$(echo "$1" | tr /a-z/ /A-Z/)
-    src="$srcdir/out/$1.SYS"
-    dst="$dstdir/$uppercase.SYS"
-    cp "$src" "$dst" \
-        && (cecho green "mounted $dst" ) \
-        || (cecho red "failed to mount $dst" ; return 1)
-}
 
 echo "Copying files to mount/"
 mkdir -p mount
 
-mount_f1 "desktop2" "desktop" "mount"
-mount_sys "desktop.system" "desktop.system" "mount"
+mount_file "desktop.system/out/desktop.system.SYS" "DESKTOP.SYSTEM.SYS"
+mount_file "desktop/out/desktop.built" "DESKTOP2.\$F1"
 
-mkdir -p mount/desk.acc
+mkdir -p mount/OPTIONAL
+mount_file "selector/out/selector.built" "OPTIONAL/SELECTOR.\$F1"
+
+mkdir -p mount/DESK.ACC
 for file in $(cat desk.acc/TARGETS); do
-    mount_da "$file" "desk.acc" "mount/desk.acc"
+    uc=$(echo "$file" | tr /a-z/ /A-Z/)
+    mount_aux "desk.acc/out/${file}.da" "DESK.ACC/$uc.\$F1" "$DA_AUX"
 done
 
-mkdir -p mount/preview
+mkdir -p mount/PREVIEW
 for file in $(cat preview/TARGETS); do
-    mount_da "$file" "preview" "mount/preview"
+    uc=$(echo "$file" | tr /a-z/ /A-Z/)
+    mount_aux "preview/out/${file}.da" "PREVIEW/$uc.\$F1" "$DA_AUX"
 done
