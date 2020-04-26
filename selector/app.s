@@ -643,7 +643,7 @@ quick_boot_slot:
         beq     found_desktop
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     not_desktop
+        bne     not_desktop     ; Cancel
         beq     :-
 found_desktop:
         jmp     run_desktop
@@ -822,11 +822,11 @@ L943F:  jsr     load_selector_list
 
 L9443:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     L9450
+        bne     :+           ; Cancel
         jsr     set_watch_cursor
         jmp     L93FF
 
-L9450:  rts
+:       rts
 .endproc
 
 ;;; ============================================================
@@ -893,7 +893,7 @@ L94D9:  MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     L94ED
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     L94B5
+        bne     L94B5           ; Cancel
         beq     L94D9
 L94ED:  jmp     run_desktop
 
@@ -1311,7 +1311,7 @@ start:  MLI_CALL OPEN, open_selector_params
         rts
 
 error:  lda     #AlertID::insert_system_disk
-        jsr     ShowAlert
+        jsr     ShowAlert       ; Cancel
         beq     start
         rts
 .endproc
@@ -1930,7 +1930,7 @@ L9C87:  lda     ($06),y
         cmp     #ERR_VOL_NOT_FOUND
         bne     fail
         txa
-        bne     fail
+        bne     fail            ; Cancel
         jsr     set_watch_cursor
         jmp     L9C78
 
@@ -1972,7 +1972,7 @@ check_path:
         bne     :-
         lda     #AlertID::insert_source_disk
         jsr     ShowAlert
-        bne     clear_selected_entry
+        bne     clear_selected_entry ; Cancel
         jmp     try
 
 :       dey

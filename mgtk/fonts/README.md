@@ -10,7 +10,7 @@ The `res/dump_font.pl` tool can be used to preview a font, displaying
 an ASCII rendition of the pixels on the console.
 
 If these are transferred to an Apple disk and changed to file type $07
-(FON) then the `SHOW.FONT.FILE` preview accessory can show them in
+(FNT) then the `SHOW.FONT.FILE` preview accessory can show them in
 DeskTop.
 
 
