@@ -111,8 +111,8 @@ RemoveAll       = $06   ; { .byte window_id }
 CloseWindow     = $07   ; { .byte window_id }
 GetHighlighted  = $08   ; { .res 127 }
 FindIcon        = $09   ; { .word mousex, .word mousey, .byte result }
-DragHighlighted = $0A   ; { .byte param }
-                        ; Input: specific icon being dragged
+DragHighlighted = $0A   ; { .byte param, .word mousex, .word mousey }
+                        ; Input: specific icon being dragged, mouse coords
                         ; Output: 0 = on desktop (no-op)
                         ;  hi bit clear: low bits are target icon
                         ;  hi bit set:   low bits are target window

@@ -1052,10 +1052,11 @@ L97F6:  .byte   0
         tya
         sta     ($06),y
 
-        ldy     #4
+        ;; Copy coords (at params+1) to
+        ldy     #.sizeof(MGTK::Point)
 :       lda     ($06),y
-        sta     L9C8D,y
-        sta     L9C92-1,y       ; ???
+        sta     coords1-1,y
+        sta     coords2-1,y
         dey
         cpy     #0
         bne     :-
@@ -1081,11 +1082,15 @@ deltay: .word   0
         ;; IconTK::HighlightIcon params
 highlight_icon_id:  .byte   $00
 
-L9831:  .byte   $00
-L9832:  .byte   $00
+window_id:      .byte   0
+window_id2:     .byte   0
 L9833:  .byte   $00
-L9834:  .byte   $00
-L9835:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+        ;; IconTK::IconInRect params
+.params iconinrect_params
+icon:  .byte    0
+rect:  .tag     MGTK::Rect
+.endparams
 
 L983D:  lda     #0
         sta     highlight_icon_id
@@ -1102,8 +1107,8 @@ ignore_drag:
         jmp     just_select
 
         ;; Compute mouse delta
-L9857:  sub16   findwindow_params2::mousex, L9C8E, deltax
-        sub16   findwindow_params2::mousey, L9C90, deltay
+L9857:  sub16   findwindow_params2::mousex, coords1x, deltax
+        sub16   findwindow_params2::mousey, coords1y, deltay
 
         kDragDelta = 5
 
@@ -1151,7 +1156,7 @@ is_drag:
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #kIconEntryWinIdMask
-        sta     L9832
+        sta     window_id2
 
         ;; Prepare grafports
         MGTK_CALL MGTK::InitPort, icon_grafport
@@ -1160,8 +1165,7 @@ is_drag:
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        ;; TODO: This is needed, but why?
-        COPY_STRUCT MGTK::Rect, drag_outline_grafport::cliprect, L9835
+        COPY_STRUCT MGTK::Rect, drag_outline_grafport::cliprect, iconinrect_params::rect
 
         ldx     highlight_count
         stx     L9C74
@@ -1174,8 +1178,8 @@ L98F2:  lda     highlight_count,x
         bne     L9909
         ldx     #$80
         stx     L9833
-L9909:  sta     L9834
-        ITK_DIRECT_CALL IconTK::IconInRect, L9834
+L9909:  sta     iconinrect_params::icon
+        ITK_DIRECT_CALL IconTK::IconInRect, iconinrect_params::icon
         beq     L9954
         jsr     calc_icon_poly
         lda     L9C74
@@ -1217,69 +1221,69 @@ L9954:  dec     L9C74
         ldx     L9C74
         jmp     L98F2
 
-L995F:  COPY_BYTES 8, drag_outline_buffer+2, L9C76
+L995F:  COPY_BYTES 8, drag_outline_buffer+2, rect1
 
         copy16  #drag_outline_buffer, $08
 L9972:  ldy     #2
 
 L9974:  lda     ($08),y
-        cmp     L9C76
+        cmp     rect1_x1
         iny
         lda     ($08),y
-        sbc     L9C76+1
+        sbc     rect1_x1+1
         bcs     L9990
         lda     ($08),y
-        sta     L9C76+1
+        sta     rect1_x1+1
         dey
         lda     ($08),y
-        sta     L9C76
+        sta     rect1_x1
         iny
         jmp     L99AA
 
 L9990:  dey
         lda     ($08),y
-        cmp     L9C7A
+        cmp     rect1_x2
         iny
         lda     ($08),y
-        sbc     L9C7A+1
+        sbc     rect1_x2+1
         bcc     L99AA
 
         lda     ($08),y
-        sta     L9C7A+1
+        sta     rect1_x2+1
         dey
         lda     ($08),y
-        sta     L9C7A
+        sta     rect1_x2
         iny
 
 L99AA:  iny
         lda     ($08),y
-        cmp     L9C78
+        cmp     rect1_y1
         iny
         lda     ($08),y
-        sbc     L9C78+1
+        sbc     rect1_y1+1
         bcs     L99C7
 
         lda     ($08),y
-        sta     L9C78+1
+        sta     rect1_y1+1
         dey
         lda     ($08),y
-        sta     L9C78
+        sta     rect1_y1
         iny
         jmp     L99E1
 
 L99C7:  dey
         lda     ($08),y
-        cmp     L9C7C
+        cmp     rect1_y2
         iny
         lda     ($08),y
-        sbc     L9C7C+1
+        sbc     rect1_y2+1
         bcc     L99E1
 
         lda     ($08),y
-        sta     L9C7C+1
+        sta     rect1_y2+1
         dey
         lda     ($08),y
-        sta     L9C7C
+        sta     rect1_y2
         iny
 
 L99E1:  iny
@@ -1300,18 +1304,18 @@ L9A0E:  MGTK_CALL MGTK::PeekEvent, peekevent_params
 
 L9A1E:  ldx     #3
 L9A20:  lda     findwindow_params2,x
-        cmp     L9C92,x
+        cmp     coords2,x
         bne     L9A31
         dex
         bpl     L9A20
         jsr     L9E14
         jmp     L9A0E
 
-L9A31:  COPY_BYTES 4, findwindow_params2, L9C92
+L9A31:  COPY_BYTES 4, findwindow_params2, coords2
 
         lda     highlight_icon_id
         beq     L9A84
-        lda     L9831
+        lda     window_id
         sta     findwindow_params2::window_id
         ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params2
         lda     findwindow_params2::which_area
@@ -1323,21 +1327,21 @@ L9A31:  COPY_BYTES 4, findwindow_params2, L9C92
         jsr     xdraw_outline
         lda     #0
         sta     highlight_icon_id
-L9A84:  sub16   findwindow_params2::mousex, L9C8E, L9C96
-        sub16   findwindow_params2::mousey, L9C90, L9C98
+L9A84:  sub16   findwindow_params2::mousex, coords1x, rect3_x1
+        sub16   findwindow_params2::mousey, coords1y, rect3_y1
         jsr     L9C9E
         ldx     #0
-L9AAF:  add16   L9C7A,x, L9C96,x, L9C7A,x
-        add16   L9C76,x, L9C96,x, L9C76,x
+L9AAF:  add16   rect1_x2,x, rect3_x1,x, rect1_x2,x
+        add16   rect1_x1,x, rect3_x1,x, rect1_x1,x
         inx
         inx
         cpx     #4
         bne     L9AAF
         lda     #0
         sta     L9C75
-        lda     L9C76+1
+        lda     rect1_x1+1
         bmi     L9AF7
-        cmp16   L9C7A, #kScreenWidth
+        cmp16   rect1_x2, #kScreenWidth
         bcs     L9AFE
         jsr     L9DFA
         jmp     L9B0E
@@ -1351,11 +1355,11 @@ L9B03:  jsr     L9DB8
         lda     L9C75
         ora     #$80
         sta     L9C75
-L9B0E:  lda     L9C78+1
+L9B0E:  lda     rect1_y1+1
         bmi     L9B31
-        cmp16   L9C78, #13
+        cmp16   rect1_y1, #kMenuBarHeight
         bcc     L9B31
-        cmp16   L9C7C, #kScreenHeight
+        cmp16   rect1_y2, #kScreenHeight
         bcs     L9B38
         jsr     L9E07
         jmp     L9B48
@@ -1377,9 +1381,9 @@ L9B48:  bit     L9C75
 L9B52:  jsr     xdraw_outline
         copy16  #drag_outline_buffer, $08
 L9B60:  ldy     #2
-L9B62:  add16in ($08),y, L9C96, ($08),y
+L9B62:  add16in ($08),y, rect3_x1, ($08),y
         iny
-        add16in ($08),y, L9C98, ($08),y
+        add16in ($08),y, rect3_y1, ($08),y
         iny
         cpy     #kIconPolySize
         bne     L9B62
@@ -1406,7 +1410,7 @@ L9BA5:  jsr     xdraw_outline
 
 :       MGTK_CALL MGTK::FindWindow, findwindow_params2
         lda     findwindow_params2::window_id
-        cmp     L9832
+        cmp     window_id2
         beq     L9BE1
         bit     L9833
         bmi     L9BDC
@@ -1418,7 +1422,7 @@ L9BD4:  ora     #$80
         sta     highlight_icon_id
         jmp     L9C63
 
-L9BDC:  lda     L9832
+L9BDC:  lda     window_id2
         beq     L9BD1
 L9BE1:  jsr     push_pointers
         ldx     highlight_count
@@ -1488,105 +1492,113 @@ just_select:                    ; ???
 
 L9C74:  .byte   $00
 L9C75:  .byte   $00
-L9C76:  .word   0
-L9C78:  .word   0
-L9C7A:  .word   0
-L9C7C:  .word   0
+
+rect1:
+rect1_x1:       .word   0
+rect1_y1:       .word   0
+rect1_x2:       .word   0
+rect1_y2:       .word   0
+
 L9C7E:  .word   0
-L9C80:  .word   13
-const_screen_width:  .word   kScreenWidth
-const_screen_height:  .word   kScreenHeight
-L9C86:  .word   0
-L9C88:  .word   0
-L9C8A:  .word   0
-L9C8C:  .byte   $00
+L9C80:  .word   kMenuBarHeight
+const_screen_width:     .word   kScreenWidth
+const_screen_height:    .word   kScreenHeight
 
-L9C8D:  .byte   0
-L9C8E:  .word   0
-L9C90:  .word   0
+rect2:
+rect2_x1:       .word   0
+rect2_y1:       .word   0
+rect2_x2:       .word   0
+rect2_y2:       .word   0
 
-L9C92:  .res    4
-L9C96:  .word   0
-L9C98:  .word   0
-        .byte   $00,$00,$00,$00
+coords1:
+coords1x:       .word   0
+coords1y:       .word   0
 
-L9C9E:  COPY_STRUCT MGTK::Rect, L9C76, L9C86
+coords2:        .tag MGTK::Point
+
+rect3:
+rect3_x1:       .word   0
+rect3_y1:       .word   0
+rect3_x2:       .word   0       ; Unused???
+rect3_y2:       .word   0       ; Unused???
+
+L9C9E:  COPY_STRUCT MGTK::Rect, rect1, rect2
         rts
 
-L9CAA:  lda     L9C76
+L9CAA:  lda     rect1_x1
         cmp     L9C7E
         bne     L9CBD
-        lda     L9C76+1
+        lda     rect1_x1+1
         cmp     L9C7E+1
         bne     L9CBD
         return  #0
 
-L9CBD:  sub16   #0, L9C86, L9C96
+L9CBD:  sub16   #0, rect2_x1, rect3_x1
         jmp     L9CF5
 
-L9CD1:  lda     L9C7A
+L9CD1:  lda     rect1_x2
         cmp     const_screen_width
         bne     L9CE4
-        lda     L9C7A+1
+        lda     rect1_x2+1
         cmp     const_screen_width+1
         bne     L9CE4
         return  #0
 
-L9CE4:  sub16   #kScreenWidth, L9C8A, L9C96
-L9CF5:  add16   L9C86, L9C96, L9C76
-        add16   L9C8A, L9C96, L9C7A
-        add16   L9C8E, L9C96, L9C8E
+L9CE4:  sub16   #kScreenWidth, rect2_x2, rect3_x1
+L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
+        add16   rect2_x2, rect3_x1, rect1_x2
+        add16   coords1x, rect3_x1, coords1x
         return  #$FF
 
-L9D31:  lda     L9C78
+L9D31:  lda     rect1_y1
         cmp     L9C80
         bne     L9D44
-        lda     L9C78+1
+        lda     rect1_y1+1
         cmp     L9C80+1
         bne     L9D44
         return  #0
 
-L9D44:  sub16   #13, L9C88, L9C98
+L9D44:  sub16   #kMenuBarHeight, rect2_y1, rect3_y1
         jmp     L9D7C
 
-L9D58:  lda     L9C7C
+L9D58:  lda     rect1_y2
         cmp     const_screen_height
         bne     L9D6B
-        lda     L9C7C+1
+        lda     rect1_y2+1
         cmp     const_screen_height+1
         bne     L9D6B
         return  #0
 
-L9D6B:  sub16   #kScreenHeight-1, L9C8C, L9C98
-L9D7C:  add16   L9C88, L9C98, L9C78
-        add16   L9C8C, L9C98, L9C7C
-        add16   L9C90, L9C98, L9C90
+L9D6B:  sub16   #kScreenHeight-1, rect2_y2, rect3_y1
+L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
+        add16   rect2_y2, rect3_y1, rect1_y2
+        add16   coords1y, rect3_y1, coords1y
         return  #$FF
 
-L9DB8:  copy16  L9C86, L9C76
-        copy16  L9C8A, L9C7A
+L9DB8:  copy16  rect2_x1, rect1_x1
+        copy16  rect2_x2, rect1_x2
         lda     #0
-        sta     L9C96
-        sta     L9C96+1
+        sta     rect3_x1
+        sta     rect3_x1+1
         rts
 
-L9DD9:  copy16  L9C88, L9C78
-        copy16  L9C8C, L9C7C
+L9DD9:  copy16  rect2_y1, rect1_y1
+        copy16  rect2_y2, rect1_y2
         lda     #0
-        sta     L9C98
-        sta     L9C98+1
+        sta     rect3_y1
+        sta     rect3_y1+1
         rts
 
 L9DFA:  lda     findwindow_params2::mousex+1
-        sta     L9C8E+1
+        sta     coords1x+1
         lda     findwindow_params2::mousex
-        sta     L9C8E
+        sta     coords1x
         rts
 
 L9E07:  lda     findwindow_params2::mousey+1
-        sta     L9C90+1
+        sta     coords1y+1
         lda     findwindow_params2::mousey
-        sta     L9C90
+        sta     coords1y
         rts
 
 L9E14:  bit     L9833
@@ -1618,7 +1630,7 @@ L9E3D:  cmp     highlight_list,x
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #kIconEntryWinIdMask
-        sta     L9831
+        sta     window_id
         lda     ($06),y
         and     #kIconEntryTypeMask
         bne     L9E97
