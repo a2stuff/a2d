@@ -194,7 +194,7 @@ kDAWindowId    = 60
 kDAWidth        = 380
 kDAHeight       = 140
 kDALeft         = (kScreenWidth - kDAWidth)/2
-kDATop          = (kScreenHeight - kDAHeight)/2
+kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 .params winfo
 window_id:      .byte   kDAWindowId

@@ -57,7 +57,7 @@ kDAWindowId     = 61
 kDAWidth        = 416
 kDAHeight       = 122
 kDALeft         = (kScreenWidth - kDAWidth)/2
-kDATop          = (kScreenHeight - 10 - kDAHeight)/2 + 10
+kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 str_title:
         PASCAL_STRING "Control Panel"

@@ -3367,26 +3367,26 @@ special_menu:
 ;;; ============================================================
 
         ;; Rects
-        kAlertDialogWidth = 400
-        kAlertDialogHeight = 107
+        kPromptDialogWidth = 400
+        kPromptDialogHeight = 107
 
-confirm_dialog_outer_rect:  DEFINE_RECT_INSET 4,2,kAlertDialogWidth,kAlertDialogHeight
-confirm_dialog_inner_rect:  DEFINE_RECT_INSET 5,3,kAlertDialogWidth,kAlertDialogHeight
-cancel_button_rect:  DEFINE_RECT_SZ 40,kAlertDialogHeight-19,kButtonWidth,kButtonHeight
+confirm_dialog_outer_rect:  DEFINE_RECT_INSET 4,2,kPromptDialogWidth,kPromptDialogHeight
+confirm_dialog_inner_rect:  DEFINE_RECT_INSET 5,3,kPromptDialogWidth,kPromptDialogHeight
+cancel_button_rect:  DEFINE_RECT_SZ 40,kPromptDialogHeight-19,kButtonWidth,kButtonHeight
 LAE18:  DEFINE_RECT_SZ 193,30,kButtonWidth,kButtonHeight
-ok_button_rect:  DEFINE_RECT_SZ 260,kAlertDialogHeight-19,kButtonWidth,kButtonHeight
-yes_button_rect:  DEFINE_RECT_SZ 200,kAlertDialogHeight-19,40,kButtonHeight
-no_button_rect:  DEFINE_RECT_SZ 260,kAlertDialogHeight-19,40,kButtonHeight
-all_button_rect:  DEFINE_RECT_SZ 320,kAlertDialogHeight-19,40,kButtonHeight
+ok_button_rect:  DEFINE_RECT_SZ 260,kPromptDialogHeight-19,kButtonWidth,kButtonHeight
+yes_button_rect:  DEFINE_RECT_SZ 200,kPromptDialogHeight-19,40,kButtonHeight
+no_button_rect:  DEFINE_RECT_SZ 260,kPromptDialogHeight-19,40,kButtonHeight
+all_button_rect:  DEFINE_RECT_SZ 320,kPromptDialogHeight-19,40,kButtonHeight
 
 str_ok_label:
         PASCAL_STRING {"OK            ",kGlyphReturn}
 
-ok_label_pos:  DEFINE_POINT 265,kAlertDialogHeight-9
-cancel_label_pos:  DEFINE_POINT 45,kAlertDialogHeight-9
-yes_label_pos:  DEFINE_POINT 205,kAlertDialogHeight-9
-no_label_pos:  DEFINE_POINT 265,kAlertDialogHeight-9
-all_label_pos:  DEFINE_POINT 325,kAlertDialogHeight-9
+ok_label_pos:  DEFINE_POINT 265,kPromptDialogHeight-9
+cancel_label_pos:  DEFINE_POINT 45,kPromptDialogHeight-9
+yes_label_pos:  DEFINE_POINT 205,kPromptDialogHeight-9
+no_label_pos:  DEFINE_POINT 265,kPromptDialogHeight-9
+all_label_pos:  DEFINE_POINT 325,kPromptDialogHeight-9
 
         .byte   $1C,$00,$70,$00
         .byte   $1C,$00,$87,$00
@@ -3406,12 +3406,14 @@ kDialogLabelRow5        = kDialogLabelBaseY + kDialogLabelHeight * 5
 kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
 
 ;;; ============================================================
+;;; Prompt dialog resources
 
-clear_dialog_labels_rect:  DEFINE_RECT 39,25,360,kAlertDialogHeight-20
+clear_dialog_labels_rect:  DEFINE_RECT 39,25,360,kPromptDialogHeight-20
+
 prompt_rect:  DEFINE_RECT 40,kDialogLabelRow5+1,360,kDialogLabelRow6
 current_target_file_pos:  DEFINE_POINT 75,kDialogLabelRow2
 current_dest_file_pos:  DEFINE_POINT 75,kDialogLabelRow3
-current_target_file_rect:  DEFINE_RECT 75,(kDialogLabelRow1)+1,394,kDialogLabelRow2
+current_target_file_rect:  DEFINE_RECT 75,kDialogLabelRow1+1,394,kDialogLabelRow2
 current_dest_file_rect:  DEFINE_RECT 75,kDialogLabelRow2+1,394,kDialogLabelRow3
 
 str_cancel_label:
@@ -3423,6 +3425,7 @@ str_no_label:
 str_all_label:
         PASCAL_STRING " All"
 
+        ;; Unused
 LAEB6:  PASCAL_STRING "Source filename:"
 LAEC7:  PASCAL_STRING "Destination filename:"
 
@@ -3590,25 +3593,29 @@ str_download:
 str_ramcard_full:
         PASCAL_STRING "The RAMCard is full. The copy was not completed."
 
-str_1_space:
+str_blank:
         PASCAL_STRING " "
 
 str_warning:
         PASCAL_STRING "Warning !"
+
 str_insert_system_disk:
         PASCAL_STRING "Please insert the system disk."
+
 str_selector_list_full:
         PASCAL_STRING "The Selector list is full. You must delete an entry"
-str_before_new_entries:
+str_selector_list_full2:
         PASCAL_STRING "before you can add new entries."
+
 str_window_must_be_closed:
         PASCAL_STRING "A window must be closed before opening this new catalog."
 
 str_too_many_windows:
         PASCAL_STRING "There are too many windows open on the desktop !"
+
 str_save_selector_list:
         PASCAL_STRING "Do you want to save the new Selector list"
-str_on_system_disk:
+str_save_selector_list2:
         PASCAL_STRING "on the system disk ?"
 
 ;;; ============================================================

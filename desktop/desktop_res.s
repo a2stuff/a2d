@@ -291,13 +291,16 @@ path_buf0:  .res    65, 0
 path_buf1:  .res    65, 0
 path_buf2:  .res    65, 0
 
-kAlertDialogWindowID = $0F
+;;; ============================================================
+;;; Dialog used for prompts (yes/no/all) and operation progress
 
-.params winfo_alert_dialog
-        kWidth = 400
-        kHeight = 107
+kPromptDialogWindowID = $0F
 
-window_id:      .byte   kAlertDialogWindowID
+.params winfo_prompt_dialog
+        kWidth = aux::kPromptDialogWidth
+        kHeight = aux::kPromptDialogHeight
+
+window_id:      .byte   kPromptDialogWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -329,13 +332,17 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
+;;; ============================================================
 ;;; Dialog used for Selector > Add/Edit an Entry...
 
 kFilePickerDlgWindowID  = $12
 kFilePickerDlgWidth     = 500
 kFilePickerDlgHeight    = 153
 
-.params winfo_entrydlg
+.params winfo_file_dialog
+        kWidth = kFilePickerDlgWidth
+        kHeight = kFilePickerDlgHeight
+
 window_id:      .byte   kFilePickerDlgWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -352,7 +359,7 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT 25, 20
+viewloc:        DEFINE_POINT (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
@@ -372,7 +379,7 @@ nextwinfo:      .addr   0
 
 kEntryListCtlWindowID = $15
 
-.params winfo_entrydlg_file_picker
+.params winfo_file_dialog_listbox
 window_id:      .byte   kEntryListCtlWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -408,8 +415,8 @@ nextwinfo:      .addr   0
 ;;; "About Apple II Desktop" Dialog
 
 .params winfo_about_dialog
-        kWidth = 400
-        kHeight = 120
+        kWidth = aux::kAboutDialogWidth
+        kHeight = aux::kAboutDialogHeight
 
 window_id:      .byte   $18
 options:        .byte   MGTK::Option::dialog_box

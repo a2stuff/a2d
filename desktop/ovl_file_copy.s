@@ -40,7 +40,7 @@ L7029:  lda     jt_source_filename+1,x
         sta     path_buf2+1
         rts
 
-L7052:  lda     winfo_entrydlg
+L7052:  lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
         addr_call file_dialog::L5E0A, copy_a_file_label
         addr_call file_dialog::L5E57, source_filename_label
@@ -164,8 +164,8 @@ L7192:  lda     #ERR_INVALID_PATHNAME
 
 L7198:  addr_call file_dialog::L647C, path_buf1
         bne     L7192
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
         copy    #0, file_dialog::L50A8
         copy    #0, LD8EC
         jsr     file_dialog::set_cursor_pointer
@@ -179,8 +179,8 @@ L7198:  addr_call file_dialog::L647C, path_buf1
 
 ;;; ============================================================
 
-L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
+L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
         lda     #0
         sta     LD8EC
         jsr     file_dialog::set_cursor_pointer

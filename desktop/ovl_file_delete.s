@@ -39,7 +39,7 @@ L7029:  lda     jt_filename+1,x
         sta     path_buf2+1     ; ???
         rts
 
-L704D:  lda     winfo_entrydlg
+L704D:  lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
         addr_call file_dialog::L5E0A, delete_a_file_label
         addr_call file_dialog::L5E57, file_to_delete_label
@@ -73,8 +73,8 @@ L70B1:  addr_call file_dialog::L647C, path_buf0
         jsr     JUMP_TABLE_ALERT_0
         rts
 
-L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
+L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
         lda     #0
         sta     LD8EC
         jsr     file_dialog::set_cursor_pointer
@@ -86,8 +86,8 @@ L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
 
         .byte   0
 
-L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
+L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
         lda     #0
         sta     LD8EC
         jsr     file_dialog::set_cursor_pointer

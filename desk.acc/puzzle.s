@@ -588,8 +588,8 @@ setport_params:
 
         kDefaultLeft    = 220
         kDefaultTop     = 80
-        kDefaultWidth   = $79
-        kDefaultHeight  = $44
+        kDefaultWidth   = 121
+        kDefaultHeight  = 68
 
 .params winfo
 window_id:      .byte   kDAWindowId

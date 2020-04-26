@@ -86,7 +86,7 @@ L70B0:  lda     jt_pathname+1,x
         sta     file_dialog::L5104
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
         lda     which_run_list
         jsr     L7467
@@ -102,7 +102,7 @@ L70B0:  lda     jt_pathname+1,x
 ;;; ============================================================
 
 .proc L7101
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
         lda     path_buf0
         beq     L7116
@@ -251,8 +251,8 @@ L72E8:  lda     #kErrNameTooLong
 
 L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
         sta     LD8EC
         jsr     file_dialog::set_cursor_pointer
         copy16  #file_dialog::noop, file_dialog::handle_key::key_meta_digit+1
@@ -268,8 +268,8 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
 .proc L732F
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
         lda     #$00
         sta     LD8EC
         jsr     file_dialog::set_cursor_pointer
@@ -465,7 +465,7 @@ L7493:  addr_call draw_inset_rect, rect_never_radiobtn
 
 ;;; ============================================================
 
-L74F4:  lda     winfo_entrydlg
+L74F4:  lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
         lda     event_modifiers
         bne     L7500

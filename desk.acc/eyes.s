@@ -55,7 +55,7 @@ kDAWindowId    = 60
 kDAWidth        = kScreenWidth / 3
 kDAHeight       = kScreenHeight / 3
 kDALeft         = (kScreenWidth - kDAWidth)/2
-kDATop          = 50
+kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 str_title:
         PASCAL_STRING "Eyes"

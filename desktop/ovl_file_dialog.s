@@ -111,13 +111,13 @@ L5105:  .byte   0               ; ??? something about the picker
         bne     :+
         jmp     event_loop
 :       lda     findwindow_window_id
-        cmp     winfo_entrydlg
+        cmp     winfo_file_dialog
         beq     L5151
         jmp     event_loop
 
-L5151:  lda     winfo_entrydlg
+L5151:  lda     winfo_file_dialog
         jsr     set_port_for_window
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -155,13 +155,13 @@ L51AE:  .byte   0
 :       rts
 
 L51C7:  lda     findwindow_window_id
-        cmp     winfo_entrydlg
+        cmp     winfo_file_dialog
         beq     :+
         jmp     handle_list_button_down
 
-:       lda     winfo_entrydlg
+:       lda     winfo_file_dialog
         jsr     set_port_for_window
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -186,7 +186,7 @@ L520D:  tax
         bmi     L5216
 L5213:  jmp     set_up_ports
 
-L5216:  lda     winfo_entrydlg
+L5216:  lda     winfo_file_dialog
         jsr     set_port_for_window
         yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, common_open_button_rect
         bmi     L5213
@@ -280,17 +280,17 @@ L531B:  jsr     noop
         beq     L5341
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     rts1
-        lda     winfo_entrydlg_file_picker::vscroll
+        lda     winfo_file_dialog_listbox::vscroll
         and     #MGTK::Ctl::vertical_scroll_bar ; vertical scroll enabled?
         beq     rts1
         jmp     handle_vscroll_click
 
 rts1:   rts
 
-L5341:  lda     winfo_entrydlg_file_picker
+L5341:  lda     winfo_file_dialog_listbox
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_windowy, winfo_entrydlg_file_picker::cliprect+2, screentowindow_windowy
+        add16   screentowindow_windowy, winfo_file_dialog_listbox::cliprect+2, screentowindow_windowy
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
@@ -311,7 +311,7 @@ open:   ldx     selected_index
         bmi     folder
 
         ;; File - select it.
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
@@ -322,7 +322,7 @@ open:   ldx     selected_index
         ;; Folder - open it.
 folder: and     #$7F
         pha
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
@@ -435,7 +435,7 @@ different:
         kPageDelta = 9
 
 .proc handle_page_up
-        lda     winfo_entrydlg_file_picker::vthumbpos
+        lda     winfo_file_dialog_listbox::vthumbpos
         sec
         sbc     #kPageDelta
         bpl     :+
@@ -451,7 +451,7 @@ different:
 .endproc
 
 .proc handle_page_down
-        lda     winfo_entrydlg_file_picker::vthumbpos
+        lda     winfo_file_dialog_listbox::vthumbpos
         clc
         adc     #kPageDelta
         cmp     num_file_names
@@ -469,7 +469,7 @@ different:
 .endproc
 
 .proc handle_line_up
-        lda     winfo_entrydlg_file_picker::vthumbpos
+        lda     winfo_file_dialog_listbox::vthumbpos
         bne     :+
         rts
 
@@ -487,8 +487,8 @@ different:
 .endproc
 
 .proc handle_line_down
-        lda     winfo_entrydlg_file_picker::vthumbpos
-        cmp     winfo_entrydlg_file_picker::vthumbmax
+        lda     winfo_file_dialog_listbox::vthumbpos
+        cmp     winfo_file_dialog_listbox::vthumbmax
         bne     :+
         rts
 
@@ -521,7 +521,7 @@ different:
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_window_id
-        cmp     winfo_entrydlg_file_picker
+        cmp     winfo_file_dialog_listbox
         beq     :+
         pla
         pla
@@ -783,7 +783,7 @@ L59F7:  lda     event_key
 
 L5A27:  cmp     #CHAR_TAB
         bne     L5A52
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
@@ -799,7 +799,7 @@ L5A52:  cmp     #CHAR_CTRL_O    ; Open
         lda     file_list_index,x
         bmi     :+
         jmp     L5AC8
-:       lda     winfo_entrydlg
+:       lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
@@ -809,7 +809,7 @@ L5A52:  cmp     #CHAR_CTRL_O    ; Open
 
 L5A8B:  cmp     #CHAR_CTRL_C    ; Close
         bne     :+
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
@@ -832,7 +832,7 @@ L5AC8:  jsr     L56E3
         rts
 
 key_return:
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
@@ -843,7 +843,7 @@ key_return:
         rts
 
 key_escape:
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
@@ -1030,9 +1030,9 @@ L5C27:  ldx     num_file_names
 ;;; ============================================================
 
 .proc create_common_dialog
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg_file_picker
-        lda     winfo_entrydlg
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_file_dialog
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_file_dialog_listbox
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, common_dialog_frame_rect
@@ -1371,9 +1371,9 @@ L606C:  .byte   0
 ;;; ============================================================
 
 .proc draw_list_entries
-        lda     winfo_entrydlg_file_picker
+        lda     winfo_file_dialog_listbox
         jsr     set_port_for_window
-        MGTK_RELAY_CALL MGTK::PaintRect, winfo_entrydlg_file_picker::cliprect
+        MGTK_RELAY_CALL MGTK::PaintRect, winfo_file_dialog_listbox::cliprect
         lda     #$10
         sta     picker_entry_pos
         lda     #$08
@@ -1423,7 +1423,7 @@ L60FF:  lda     L6128
         cmp     selected_index
         bne     L6110
         jsr     L6274
-        lda     winfo_entrydlg_file_picker
+        lda     winfo_file_dialog_listbox
         jsr     set_port_for_window
 L6110:  inc     L6128
         add16   picker_entry_pos+2, #8, picker_entry_pos+2
@@ -1452,7 +1452,7 @@ L6161:  lda     #$00
         rts
 
 L6181:  lda     num_file_names
-        sta     winfo_entrydlg_file_picker::vthumbmax
+        sta     winfo_file_dialog_listbox::vthumbmax
         .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
@@ -1472,7 +1472,7 @@ L61B0:  .byte   0
 ;;; ============================================================
 
 .proc L61B1
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D9C8
         copy16  #path_buf, $06
@@ -1536,15 +1536,15 @@ L624A:  ldx     #$00
         rol     L6273
         asl     a
         rol     L6273
-        sta     winfo_entrydlg_file_picker::cliprect+2
+        sta     winfo_file_dialog_listbox::cliprect+2
         ldx     L6273
-        stx     winfo_entrydlg_file_picker::cliprect+3
+        stx     winfo_file_dialog_listbox::cliprect+3
         clc
         adc     #70
-        sta     winfo_entrydlg_file_picker::cliprect+6
+        sta     winfo_file_dialog_listbox::cliprect+6
         lda     L6273
         adc     #0
-        sta     winfo_entrydlg_file_picker::cliprect+7
+        sta     winfo_file_dialog_listbox::cliprect+7
         rts
 
 L6273:  .byte   0
@@ -1570,7 +1570,7 @@ L6273:  .byte   0
         lda     L62C7
         adc     #0
         sta     rect_D90F+7
-        lda     winfo_entrydlg_file_picker
+        lda     winfo_file_dialog_listbox
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D90F
@@ -1888,7 +1888,7 @@ L658B:  cmp     #$09
 .proc blink_f1_ip
         ptr := $06
 
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         jsr     calc_path_buf0_input1_endpos
         stax    $06
@@ -1917,7 +1917,7 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
 .proc blink_f2_ip
         ptr := $06
 
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         jsr     calc_path_buf1_input2_endpos
         stax    $06
@@ -1944,7 +1944,7 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
 ;;; ============================================================
 
 .proc redraw_f1
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, common_input1_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -1961,7 +1961,7 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
 ;;; ============================================================
 
 .proc redraw_f2
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, common_input2_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -1978,10 +1978,10 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
 ;;; ============================================================
 
 .proc handle_f1_click
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, common_input1_rect
@@ -2111,10 +2111,10 @@ L684D:  .word   0
 ;;; ============================================================
 
 .proc handle_f2_click
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, common_input2_rect
@@ -2261,7 +2261,7 @@ L69D5:  lda     L6A17
         inc     path_buf0
         stax    $06
         copy16  common_input1_textpos+2, $08
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, str_1_char
@@ -2283,7 +2283,7 @@ L6A1E:  dec     path_buf0
         jsr     calc_path_buf0_input1_endpos
         stax    $06
         copy16  common_input1_textpos+2, $08
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, path_buf2
@@ -2315,7 +2315,7 @@ L6A6B:  ldx     path_buf0
         jsr     calc_path_buf0_input1_endpos
         stax    $06
         copy16  common_input1_textpos+2, $08
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, path_buf2
@@ -2347,7 +2347,7 @@ L6ACA:  lda     path_buf2+1,x
         cpx     path_buf2
         bne     L6ACA
 L6AD6:  dec     path_buf2
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, common_input1_textpos
         addr_call draw_string, path_buf0
@@ -2436,7 +2436,7 @@ L6B81:  lda     L6BC3
         inc     path_buf1
         stax    $06
         copy16  common_input2_textpos+2, $08
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, str_1_char
@@ -2458,7 +2458,7 @@ L6BCA:  dec     path_buf1
         jsr     calc_path_buf1_input2_endpos
         stax    $06
         copy16  common_input2_textpos+2, $08
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, path_buf2
@@ -2490,7 +2490,7 @@ L6C17:  ldx     path_buf1
         jsr     calc_path_buf1_input2_endpos
         stax    $06
         copy16  common_input2_textpos+2, $08
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, path_buf2
@@ -2522,7 +2522,7 @@ L6C76:  lda     path_buf2+1,x
         cpx     path_buf2
         bne     L6C76
 L6C82:  dec     path_buf2
-        lda     winfo_entrydlg
+        lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, common_input2_textpos
         addr_call draw_string, path_buf1
