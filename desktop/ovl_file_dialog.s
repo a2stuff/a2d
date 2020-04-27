@@ -2611,6 +2611,8 @@ L6CFD:  inx
 
 ;;; Dynamically altered table of handlers for focused
 ;;; input field (e.g. source/destination filename, etc)
+
+kJumpTableSize = $2A
 jump_table:
 jt_handle_ok:                   jmp     0
 jt_handle_cancel:               jmp     0
@@ -2626,6 +2628,7 @@ jt_handle_right_key:            jmp     0
 jt_handle_meta_left_key:        jmp     0
 jt_handle_meta_right_key:       jmp     0
 jt_handle_click:                jmp     0
+        .assert * - jump_table = kJumpTableSize, error, "Table size mismatch"
 
 ;;; ============================================================
 

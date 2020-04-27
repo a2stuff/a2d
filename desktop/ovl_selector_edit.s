@@ -145,7 +145,8 @@ L711D:  addr_call file_dialog::L5E6F, enter_the_full_pathname_label2
         ;; Unused
         .byte   0
 
-jt_pathname:  .byte   $29
+jt_pathname:
+        .byte file_dialog::kJumpTableSize-1
         jump_table_entry handle_ok_filename
         jump_table_entry handle_cancel_filename
         jump_table_entry file_dialog::blink_f1_ip
@@ -160,8 +161,10 @@ jt_pathname:  .byte   $29
         jump_table_entry file_dialog::handle_f1_meta_left_key
         jump_table_entry file_dialog::handle_f1_meta_right_key
         jump_table_entry file_dialog::handle_f1_click
+        .assert * - jt_pathname = file_dialog::kJumpTableSize+1, error, "Table size error"
 
-jt_entry_name:  .byte   $29
+jt_entry_name:
+        .byte file_dialog::kJumpTableSize-1
         jump_table_entry handle_ok_name
         jump_table_entry handle_cancel_name
         jump_table_entry file_dialog::blink_f2_ip
@@ -176,6 +179,7 @@ jt_entry_name:  .byte   $29
         jump_table_entry file_dialog::handle_f2_meta_left_key
         jump_table_entry file_dialog::handle_f2_meta_right_key
         jump_table_entry file_dialog::handle_f2_click
+        .assert * - jt_entry_name = file_dialog::kJumpTableSize+1, error, "Table size error"
 
 ;;; ============================================================
 

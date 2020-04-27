@@ -60,7 +60,7 @@
 .endproc
 
 jt_source_filename:
-        .byte   $29             ; length of following data block
+        .byte file_dialog::kJumpTableSize-1
         jump_table_entry handle_ok_source
         jump_table_entry handle_cancel
         jump_table_entry file_dialog::blink_f1_ip
@@ -75,9 +75,10 @@ jt_source_filename:
         jump_table_entry file_dialog::handle_f1_meta_left_key
         jump_table_entry file_dialog::handle_f1_meta_right_key
         jump_table_entry file_dialog::handle_f1_click
+        .assert * - jt_source_filename = file_dialog::kJumpTableSize+1, error, "Table size error"
 
-jt_destination_entries:
-        .byte   $29        ; length of following data block
+jt_destination_filename:
+        .byte file_dialog::kJumpTableSize-1
         jump_table_entry handle_ok_destination
         jump_table_entry handle_cancel_destination
         jump_table_entry file_dialog::blink_f2_ip
@@ -92,6 +93,7 @@ jt_destination_entries:
         jump_table_entry file_dialog::handle_f2_meta_left_key
         jump_table_entry file_dialog::handle_f2_meta_right_key
         jump_table_entry file_dialog::handle_f2_click
+        .assert * - jt_destination_filename = file_dialog::kJumpTableSize+1, error, "Table size error"
 
 ;;; ============================================================
 
@@ -103,11 +105,11 @@ jt_destination_entries:
         jsr     file_dialog::jt_redraw_input
 
         ;; install destination handlers
-        ldx     jt_destination_entries
-:       lda     jt_destination_entries+1,x
+        ldx     jt_destination_filename
+:       lda     jt_destination_filename+1,x
         sta     file_dialog::jump_table,x
         dex
-        lda     jt_destination_entries+1,x
+        lda     jt_destination_filename+1,x
         sta     file_dialog::jump_table,x
         dex
         dex

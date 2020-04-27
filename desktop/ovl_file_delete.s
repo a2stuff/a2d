@@ -56,7 +56,7 @@
 .endproc
 
 jt_filename:
-        .byte $29               ; length of the following data block
+        .byte file_dialog::kJumpTableSize-1
         jump_table_entry handle_ok
         jump_table_entry handle_cancel
         jump_table_entry file_dialog::blink_f1_ip
@@ -71,6 +71,7 @@ jt_filename:
         jump_table_entry file_dialog::handle_f1_meta_left_key
         jump_table_entry file_dialog::handle_f1_meta_right_key
         jump_table_entry file_dialog::handle_f1_click
+        .assert * - jt_filename = file_dialog::kJumpTableSize+1, error, "Table size error"
 
 
 .proc handle_ok
