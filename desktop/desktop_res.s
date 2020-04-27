@@ -629,12 +629,16 @@ prompt_ip_counter:
 prompt_ip_flag:
         .byte   0
 
+;;; Flag that controls the behavior of the file dialog picker.
 LD8EC:  .byte   0
+
 format_erase_overlay_flag:
         .byte   0
 
 str_insertion_point:
         PASCAL_STRING {kGlyphInsertionPoint}
+
+;;; Flags that control the behavior of the file picker dialog.
 
 LD8F0:  .byte   0
 LD8F1:  .byte   0

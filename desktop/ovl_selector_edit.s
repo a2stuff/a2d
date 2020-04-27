@@ -7,7 +7,7 @@
 .proc selector_overlay
         .org $7000
 
-.proc L7000
+.proc init
         stx     which_run_list
         sty     copy_when
         jsr     file_dialog::create_common_dialog
@@ -47,8 +47,8 @@ L7056:  jsr     file_dialog::L5F5B
         addr_call file_dialog::L6516, L709D
         sta     selected_index
         jsr     file_dialog::L6586
-L706A:  jsr     file_dialog::L6163
-        jsr     file_dialog::L61B1
+L706A:  jsr     file_dialog::update_scrollbar2
+        jsr     file_dialog::update_disk_name
         jsr     file_dialog::draw_list_entries
         lda     path_buf0
         bne     L707B
@@ -69,7 +69,6 @@ L709D:  .res 16, 0
 
 ;;; ============================================================
 
-
 .proc L70AD
         ldx     jt_pathname
 L70B0:  lda     jt_pathname+1,x
@@ -89,13 +88,13 @@ L70B0:  lda     jt_pathname+1,x
         lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
         lda     which_run_list
-        jsr     L7467
+        jsr     toggle_run_list_button
         lda     copy_when
-        jsr     L747B
+        jsr     toggle_copy_when_button
         lda     #$80
         sta     file_dialog::L5103
-        copy16  #L73AB, file_dialog::L531B+1
-        copy16  #L74F4, file_dialog::handle_key::key_meta_digit+1
+        copy16  #handle_click, file_dialog::click_handler_hook+1
+        copy16  #handle_key, file_dialog::handle_key::key_meta_digit+1
         rts
 .endproc
 
@@ -143,15 +142,16 @@ L711D:  addr_call file_dialog::L5E6F, enter_the_full_pathname_label2
 
 ;;; ============================================================
 
-        .byte   $00
+        ;; Unused
+        .byte   0
 
 jt_pathname:  .byte   $29
-        jump_table_entry L725D
-        jump_table_entry L732F
+        jump_table_entry handle_ok_filename
+        jump_table_entry handle_cancel_filename
         jump_table_entry file_dialog::blink_f1_ip
         jump_table_entry file_dialog::redraw_f1
         jump_table_entry file_dialog::strip_f1_path_segment
-        jump_table_entry file_dialog::jt_handle_f1_tbd05
+        jump_table_entry file_dialog::handle_f1_selection_change
         jump_table_entry file_dialog::prep_path_buf0
         jump_table_entry file_dialog::handle_f1_other_key
         jump_table_entry file_dialog::handle_f1_delete_key
@@ -162,12 +162,12 @@ jt_pathname:  .byte   $29
         jump_table_entry file_dialog::handle_f1_click
 
 jt_entry_name:  .byte   $29
-        jump_table_entry L72CD
-        jump_table_entry L736C
+        jump_table_entry handle_ok_name
+        jump_table_entry handle_cancel_name
         jump_table_entry file_dialog::blink_f2_ip
         jump_table_entry file_dialog::redraw_f2
         jump_table_entry file_dialog::strip_f2_path_segment
-        jump_table_entry file_dialog::jt_handle_f2_tbd05
+        jump_table_entry file_dialog::handle_f2_selection_change
         jump_table_entry file_dialog::prep_path_buf1
         jump_table_entry file_dialog::handle_f2_other_key
         jump_table_entry file_dialog::handle_f2_delete_key
@@ -179,7 +179,7 @@ jt_entry_name:  .byte   $29
 
 ;;; ============================================================
 
-.proc L725D
+.proc handle_ok_filename
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     file_dialog::jt_redraw_input
@@ -206,19 +206,20 @@ L726D:  lda     jt_entry_name+1,x
         ldx     path_buf0
         beq     L72BF
 L72A0:  lda     path_buf0,x
-        cmp     #$2F
+        cmp     #'/'
         beq     L72AD
         dex
         bne     L72A0
         jmp     L72BF
 
-L72AD:  ldy     #$00
-L72AF:  iny
+L72AD:  ldy     #0
+:       iny
         inx
         lda     path_buf0,x
         sta     path_buf1,y
         cpx     path_buf0
-        bne     L72AF
+        bne     :-
+
         sty     path_buf1
 L72BF:  copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
@@ -232,12 +233,12 @@ L72BF:  copy    #1, path_buf2
 ;;;          X = which run list (1=run list, 2=other run list)
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
-.proc L72CD
+.proc handle_ok_name
         addr_call file_dialog::L647C, path_buf0
         bne     L72E2
         lda     path_buf1
         beq     L72E7
-        cmp     #$0F
+        cmp     #$0F            ; Max selector name length
         bcs     L72E8
         jmp     L72EE
 
@@ -256,21 +257,22 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         sta     LD8EC
         jsr     file_dialog::set_cursor_pointer
         copy16  #file_dialog::noop, file_dialog::handle_key::key_meta_digit+1
+
         ldx     file_dialog::stash_stack
         txs
         ldx     which_run_list
         ldy     copy_when
-        return  #$00
+        return  #0
 .endproc
 
 ;;; ============================================================
 
-.proc L732F
+.proc handle_cancel_filename
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
-        lda     #$00
+        lda     #0
         sta     LD8EC
         jsr     file_dialog::set_cursor_pointer
         copy16  #file_dialog::noop, file_dialog::handle_key::key_meta_digit+1
@@ -281,7 +283,7 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
 
 ;;; ============================================================
 
-.proc L736C
+.proc handle_cancel_name
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     file_dialog::jt_redraw_input
@@ -314,7 +316,7 @@ copy_when:
 
 ;;; ============================================================
 
-.proc L73AB
+.proc handle_click
         MGTK_RELAY_CALL MGTK::InRect, rect_run_list_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
@@ -342,10 +344,10 @@ copy_when:
         lda     which_run_list
         cmp     #1
         beq     :+
-        jsr     L7467
+        jsr     toggle_run_list_button
         lda     #1
         sta     which_run_list
-        jsr     L7467
+        jsr     toggle_run_list_button
 :       return  #$FF
 .endproc
 
@@ -353,10 +355,10 @@ copy_when:
         lda     which_run_list
         cmp     #2
         beq     :+
-        jsr     L7467
+        jsr     toggle_run_list_button
         lda     #2
         sta     which_run_list
-        jsr     L7467
+        jsr     toggle_run_list_button
 :       return  #$FF
 .endproc
 
@@ -364,10 +366,10 @@ copy_when:
         lda     copy_when
         cmp     #1
         beq     :+
-        jsr     L747B
+        jsr     toggle_copy_when_button
         lda     #1
         sta     copy_when
-        jsr     L747B
+        jsr     toggle_copy_when_button
 :       return  #$FF
 .endproc
 
@@ -375,10 +377,10 @@ copy_when:
         lda     copy_when
         cmp     #2
         beq     :+
-        jsr     L747B
+        jsr     toggle_copy_when_button
         lda     #2
         sta     copy_when
-        jsr     L747B
+        jsr     toggle_copy_when_button
 :       return  #$FF
 .endproc
 
@@ -386,35 +388,39 @@ copy_when:
         lda     copy_when
         cmp     #3
         beq     :+
-        jsr     L747B
+        jsr     toggle_copy_when_button
         lda     #3
         sta     copy_when
-        jsr     L747B
+        jsr     toggle_copy_when_button
 :       return  #$FF
 .endproc
 
 ;;; ============================================================
 
-L7467:  cmp     #1
-        bne     L7473
+.proc toggle_run_list_button
+        cmp     #1
+        bne     :+
         addr_call draw_inset_rect, rect_run_list_radiobtn
         rts
 
-L7473:  addr_call draw_inset_rect, rect_other_run_list_radiobtn
+:       addr_call draw_inset_rect, rect_other_run_list_radiobtn
         rts
+.endproc
 
-L747B:  cmp     #1
-        bne     L7487
+.proc toggle_copy_when_button
+        cmp     #1
+        bne     :+
         addr_call draw_inset_rect, rect_at_first_boot_radiobtn
         rts
 
-L7487:  cmp     #2
-        bne     L7493
+:       cmp     #2
+        bne     :+
         addr_call draw_inset_rect, rect_at_first_use_radiobtn
         rts
 
-L7493:  addr_call draw_inset_rect, rect_never_radiobtn
+:       addr_call draw_inset_rect, rect_never_radiobtn
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Draw rect inset by 2px. Pointer to Rect in A,X.
@@ -465,35 +471,37 @@ L7493:  addr_call draw_inset_rect, rect_never_radiobtn
 
 ;;; ============================================================
 
-L74F4:  lda     winfo_file_dialog
+.proc handle_key
+        lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
         lda     event_modifiers
-        bne     L7500
+        bne     :+
         rts
 
-L7500:  lda     event_key
+:       lda     event_key
         and     #CHAR_MASK
         cmp     #'1'
-        bne     L750C
+        bne     :+
         jmp     click_run_list_ctrl
 
-L750C:  cmp     #'2'
-        bne     L7513
+:       cmp     #'2'
+        bne     :+
         jmp     click_other_run_list_ctrl
 
-L7513:  cmp     #'3'
-        bne     L751A
+:       cmp     #'3'
+        bne     :+
         jmp     click_at_first_boot_ctrl
 
-L751A:  cmp     #'4'
-        bne     L7521
+:       cmp     #'4'
+        bne     :+
         jmp     click_at_first_use_ctrl
 
-L7521:  cmp     #'5'
-        bne     L7528
+:       cmp     #'5'
+        bne     :+
         jmp     click_never_ctrl
 
-L7528:  rts
+:       rts
+.endproc
 
 ;;; ============================================================
 

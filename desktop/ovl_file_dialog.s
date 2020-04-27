@@ -250,7 +250,7 @@ L5216:  lda     winfo_file_dialog
 .proc check_other_click
         bit     L5103
         bpl     :+
-        jsr     L531B
+        jsr     click_handler_hook
         bmi     set_up_ports
 :       jsr     jt_handle_click
         rts
@@ -266,8 +266,10 @@ L5216:  lda     winfo_file_dialog
 .endproc
 
 ;;; ============================================================
+;;; This vector gets patched by overlays that add controls.
 
-L531B:  jsr     noop
+click_handler_hook:
+        jsr     noop
         rts
 
 ;;; ============================================================
@@ -351,10 +353,10 @@ folder: and     #$7F
         lda     ptr
         jsr     L5F0D
         jsr     L5F5B
-        jsr     L6161
+        jsr     update_scrollbar
         lda     #0
         jsr     scroll_clip_rect
-        jsr     L61B1
+        jsr     update_disk_name
         jsr     draw_list_entries
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
@@ -384,7 +386,7 @@ different:
         jsr     jt_redraw_input
 :       lda     selected_index
         jsr     L6274
-        jsr     jt_05
+        jsr     jt_list_selection_change
 
         jsr     main::detect_double_click
         bmi     :+
@@ -611,10 +613,10 @@ L5618:  lda     #$00
         lda     $08
         jsr     L5F0D
         jsr     L5F5B
-        jsr     L6161
+        jsr     update_scrollbar
         lda     #$00
         jsr     scroll_clip_rect
-        jsr     L61B1
+        jsr     update_disk_name
         jsr     draw_list_entries
         rts
 
@@ -628,10 +630,10 @@ L565C:  lda     #$FF
         jsr     inc_device_num
         jsr     device_on_line
         jsr     L5F5B
-        jsr     L6161
+        jsr     update_scrollbar
         lda     #$00
         jsr     scroll_clip_rect
-        jsr     L61B1
+        jsr     update_disk_name
         jsr     draw_list_entries
         jsr     jt_prep_path
         jsr     jt_redraw_input
@@ -661,10 +663,10 @@ L56A2:  jsr     L5F49
         lda     #$FF
         sta     selected_index
         jsr     L5F5B
-        jsr     L6161
+        jsr     update_scrollbar
         lda     #$00
         jsr     scroll_clip_rect
-        jsr     L61B1
+        jsr     update_disk_name
         jsr     draw_list_entries
         pla
         sta     selected_index
@@ -856,8 +858,14 @@ key_delete:
         jsr     jt_handle_delete_key
         rts
 
+
+;;; ============================================================
+;;; This vector gets patched by overlays that add controls.
+
 key_meta_digit:
         jmp     noop
+
+;;; ============================================================
 
 .proc key_down
         lda     num_file_names
@@ -1010,10 +1018,10 @@ L5C27:  ldx     num_file_names
 
 .proc update_list_selection
         sta     selected_index
-        jsr     jt_05
+        jsr     jt_list_selection_change
         lda     selected_index
         jsr     L6586
-        jsr     L6163
+        jsr     update_scrollbar2
         jsr     draw_list_entries
 
         copy    #1, path_buf2
@@ -1192,7 +1200,6 @@ found:  addr_call main::adjust_volname_case, on_line_buffer
 
 ;;; ============================================================
 
-
 L5ECB:  lda     #$00
         sta     L5F0C
 L5ED0:  yax_call MLI_RELAY, OPEN, open_params
@@ -1217,6 +1224,9 @@ L5EE9:  lda     open_params::ref_num
 L5F0B:  rts
 
 L5F0C:  .byte   0
+
+;;; ============================================================
+
 L5F0D:  jsr     copy_string_to_lcbuf
         stax    $06
         ldx     path_buf
@@ -1248,18 +1258,21 @@ L5F31:  lda     ($06),y
 
 ;;; ============================================================
 
-L5F49:  ldx     path_buf
+.proc L5F49
+        ldx     path_buf
         cpx     #$00
-        beq     L5F5A
+        beq     :+
         dec     path_buf
         lda     path_buf,x
         cmp     #'/'
         bne     L5F49
-L5F5A:  rts
+:       rts
+.endproc
 
 ;;; ============================================================
 
-L5F5B:  jsr     L5ECB
+.proc L5F5B
+        jsr     L5ECB
         lda     #$00
         sta     L6067
         sta     L6068
@@ -1270,10 +1283,11 @@ L5F5B:  jsr     L5ECB
         lda     $1425
         and     #$7F
         sta     num_file_names
-        bne     L5F87
+        bne     :+
         jmp     L6012
 
-L5F87:  copy16  #$142B, $06
+:       copy16  #$142B, $06
+
 L5F8F:  addr_call_indirect main::adjust_fileentry_case, $06
 
         ldy     #$00
@@ -1367,6 +1381,7 @@ L6069:  .byte   0
 L606A:  .byte   0
 L606B:  .byte   0
 L606C:  .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -1437,9 +1452,10 @@ L6128:  .byte   0
 
 ;;; ============================================================
 
-L6161:  lda     #$00
+update_scrollbar:
+        lda     #$00
 
-.proc L6163
+.proc update_scrollbar2
         sta     L61B0
         lda     num_file_names
         cmp     #$0A
@@ -1471,7 +1487,7 @@ L61B0:  .byte   0
 
 ;;; ============================================================
 
-.proc L61B1
+.proc update_disk_name
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D9C8
@@ -2601,7 +2617,7 @@ jt_handle_cancel:               jmp     0
 jt_blink_ip:                    jmp     0
 jt_redraw_input:                jmp     0
 jt_strip_path_segment:          jmp     0
-jt_05:  jmp     0
+jt_list_selection_change:       jmp     0
 jt_prep_path:                   jmp     0
 jt_handle_other_key:            jmp     0
 jt_handle_delete_key:           jmp     0
@@ -2719,11 +2735,11 @@ jt_handle_click:                jmp     0
 
 ;;; ============================================================
 
-jt_handle_f1_tbd05:
+handle_f1_selection_change:
         lda     #$00
         beq     L6DD6
 
-jt_handle_f2_tbd05:
+handle_f2_selection_change:
         lda     #$80
 
 .proc L6DD6
