@@ -1992,7 +1992,7 @@ win_path_ptr:  .word   0
         DEFINE_CREATE_PARAMS create_params, path_buffer, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
 path_buffer:
-        .res    65, 0              ; buffer is used elsewhere too
+        .res    ::kPathBufferSize, 0              ; buffer is used elsewhere too
 
 start:  copy    active_window_id, new_folder_dialog_params::phase
         yax_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
@@ -6051,7 +6051,7 @@ L70C4:  .byte   $00
         sta     window_id
         jsr     push_pointers
 
-        COPY_BYTES 65, open_dir_path_buf, path_buffer
+        COPY_BYTES kPathBufferSize, open_dir_path_buf, path_buffer
 
         jsr     do_open
         lda     open_params::ref_num
@@ -14148,8 +14148,8 @@ LAEE1:  lda     path_buf0
         clc
         adc     path_buf1
         clc
-        adc     #$01
-        cmp     #65             ; max path length+1
+        adc     #1
+        cmp     #::kPathBufferSize
         bcs     LAED6
         inc     path_buf0
         ldx     path_buf0

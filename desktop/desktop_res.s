@@ -275,11 +275,11 @@ buf_filename2:  .res    16, 0
 buf_win_path:   .res    43, 0
 
 temp_string_buf:
-        .res    65, 0
+        .res    kPathBufferSize, 0
 
         ;; used when splitting string for text field
 split_buf:
-        .res    65, 0
+        .res    kPathBufferSize, 0
 
 ;;; In common dialog (copy/edit file, add/edit selector entry):
 ;;; * path_buf0 has the contents of the top input field
@@ -287,9 +287,9 @@ split_buf:
 ;;; * path_buf2 has the contents of the focused field after insertion point
 ;;;   (May have leading caret glyph $06)
 
-path_buf0:  .res    65, 0
-path_buf1:  .res    65, 0
-path_buf2:  .res    65, 0
+path_buf0:  .res    kPathBufferSize, 0
+path_buf1:  .res    kPathBufferSize, 0
+path_buf2:  .res    kPathBufferSize, 0
 
 ;;; ============================================================
 ;;; Dialog used for prompts (yes/no/all) and operation progress
@@ -972,31 +972,34 @@ cached_window_icon_count:.byte   0
 cached_window_icon_list:   .res    127, 0
 
 
-selected_window_index: ; index of selected window (used to get prefix)
+;;; Index of window with selection (0=desktop)
+selected_window_index:
         ASSERT_ADDRESS path_index, "Entry point"
         .byte   0
 
-selected_icon_count:            ; number of selected icons
+;;; Number of selected icons
+selected_icon_count:
         ASSERT_ADDRESS selected_file_count, "Entry point"
         .byte   0
 
-selected_icon_list:            ; index of selected icon (global, not w/in window)
+;;; Indexes of selected icons (global, not w/in window, up to 127)
+selected_icon_list:
         ASSERT_ADDRESS selected_file_list, "Entry point"
         .res    127, 0
 
 kMaxNumWindows = 8
 
-        ;; Buffer for desktop windows
+;;; Table of desktop window winfo addresses
 win_table:
         .addr   0,winfo1,winfo2,winfo3,winfo4,winfo5,winfo6,winfo7,winfo8
         ASSERT_ADDRESS_TABLE_SIZE win_table, kMaxNumWindows + 1
 
-        ;; Window to Path mapping table
+;;; Table of desktop window path addresses
 window_path_addr_table:
         ASSERT_ADDRESS path_table, "Entry point"
         .addr   $0000
         .repeat 8,i
-        .addr   window_path_table+i*65
+        .addr   window_path_table+i*kPathBufferSize
         .endrepeat
         ASSERT_ADDRESS_TABLE_SIZE window_path_addr_table, kMaxNumWindows + 1
 
@@ -1008,9 +1011,9 @@ str_file_type:
 ;;; ============================================================
 
 path_buf4:
-        .res    65, 0
+        .res    kPathBufferSize, 0
 path_buf3:
-        .res    65, 0
+        .res    kPathBufferSize, 0
 filename_buf:
         .res    16, 0
 
@@ -1060,7 +1063,7 @@ device_to_icon_map:
 
 ;;; Path buffer for open_directory logic
 open_dir_path_buf:
-        .res    65, 0
+        .res    kPathBufferSize, 0
 
 ;;; Window to file record mapping list. Each entry is a window
 ;;; id. Position in the list is the same as position in the
@@ -1390,11 +1393,11 @@ buflabel:       .res    18, 0
 ;;; ============================================================
 
 ;;; Window paths
-;;; 8 entries; each entry is 65 bytes long
+;;; 8 entries; each entry is kPathBufferSize bytes long
 ;;; * length-prefixed path string (no trailing /)
 ;;; Windows 1...8 (since 0 is desktop)
 window_path_table:
-        .res    (kMaxNumWindows*65), 0
+        .res    (kMaxNumWindows*kPathBufferSize), 0
 
 ;;; Window used/free (in kilobytes)
 ;;; Two tables, 8 entries each

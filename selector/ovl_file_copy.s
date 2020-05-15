@@ -88,10 +88,11 @@ LA0F2:  rts
 
         .byte   0
 
-pathname_dst:  .res    65, 0
+pathname_dst:
+        .res    ::kPathBufferSize, 0
+pathname1:
+        .res    ::kPathBufferSize, 0
 
-
-pathname1:  .res    65, 0
 LA176:  .res    64, 0
 LA1B6:  .res    64, 0
 LA1F6:  .res    16, 0

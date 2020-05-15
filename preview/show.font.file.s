@@ -39,7 +39,7 @@
 
 ;;; ============================================================
 
-pathbuf:        .res    65, 0
+pathbuf:        .res    kPathBufferSize, 0
 
 font_buffer     := $D00
 io_buf          := WINDOW_ICON_TABLES

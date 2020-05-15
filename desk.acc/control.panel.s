@@ -1656,7 +1656,7 @@ filename:
         PASCAL_STRING "DeskTop.config"
 
 filename_buffer:
-        .res 65
+        .res kPathBufferSize
 
 write_buffer:
         .res .sizeof(DeskTopSettings)

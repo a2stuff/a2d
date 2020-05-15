@@ -172,7 +172,7 @@ kReadLength      = $0100
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
         DEFINE_CLOSE_PARAMS close_params
 
-pathbuf:        .res    65, 0
+pathbuf:        .res    kPathBufferSize, 0
 
 L0945:  .byte   $00
 L0946:  .byte   $00

@@ -160,7 +160,7 @@ on_line_buffer:
         .res    3               ; for SET_FILE_INFO ???
 
 path_buf:
-        .res    65, 0
+        .res    kPathBufferSize, 0
 
 ;;; ============================================================
 ;;; Main DA logic

@@ -924,7 +924,7 @@ start:  MLI_CALL OPEN, open_params
 
         .byte   0
 
-path0:  .res    65, 0
+path0:  .res    ::kPathBufferSize, 0
 
 
 ;;; ============================================================
@@ -1117,8 +1117,8 @@ L3186:  rts
 
         .byte   0
 
-path1:  .res    65, 0
-path2:  .res    65, 0
+path1:  .res    ::kPathBufferSize, 0
+path2:  .res    ::kPathBufferSize, 0
 
 L320A:  .res    64, 0
 L324A:  .res    64, 0

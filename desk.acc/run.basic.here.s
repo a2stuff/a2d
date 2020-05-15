@@ -26,8 +26,8 @@
 
 ;;; ============================================================
 
-bs_path:        .res    65, 0
-prefix_path:    .res    65, 0
+bs_path:        .res    kPathBufferSize, 0
+prefix_path:    .res    kPathBufferSize, 0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, bs_path
         DEFINE_OPEN_PARAMS open_params, bs_path, $C00
