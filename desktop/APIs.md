@@ -73,11 +73,9 @@ Load (A,X) from Aux memory into A.
 
 Eject selected drive icon.
 
-#### `JUMP_TABLE_REDRAW_ALL` ($4015) *
+#### `JUMP_TABLE_REDRAW_WINDOWS` ($4015) *
 
 Redraws all DeskTop windows.
-
-Required after a drag or resize in a DA. Follow with `IconTK::RedrawIcons` call.
 
 #### `JUMP_TABLE_ITK_RELAY` ($4018)
 
@@ -161,6 +159,11 @@ Set DHR color or monochrome mode, respectively. DHR monochrome mode is supported
 
 Used when exiting DeskTop; exit DHR mode, restores DHR mode to color, restores detached devices and reformats /RAM if needed, and banks in ROM and main ZP.
 
+#### `JUMP_TABLE_REDRAW_ALL` ($404B) *
+
+Redraws all DeskTop windows and volume icons. Required after a drag or resize in a DA.
+
+
 <!-- ============================================================ -->
 
 ## Icon ToolKit
@@ -170,6 +173,8 @@ This is part of DeskTop (unlike MGTK), but is written to be (mostly) isolated fr
 * An internal table of icon number &rarr; IconEntry is maintained.
 * An internal list of highlighted (selected) icons is maintained.
 * Window-centric calls assume a GrafPort for the window is already the current GrafPort.
+
+Definitions are in `desktop/icontk.inc`.
 
 Call from AUX (RAMRDON/RAMWRTON). Call style:
 ```

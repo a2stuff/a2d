@@ -305,7 +305,7 @@ done:   jmp     input_loop
 common: lda     dragwindow_params::moved
         bpl     :+
 
-        ;; Draw DeskTop's windows
+        ;; Draw DeskTop's windows and icons
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_REDRAW_ALL
@@ -317,9 +317,6 @@ common: lda     dragwindow_params::moved
         sta     has_last_coords
         sta     has_drawn_outline
         jsr     draw_window
-
-        ;; Draw DeskTop icons
-        ITK_CALL IconTK::RedrawIcons
 
 :       jmp     input_loop
 

@@ -21,9 +21,8 @@ DAs are documented here.
 * Flush event queue (`FlushEvents`)
 * Run an event Loop (`GetEvent`, and subsequent processing, per MGTK)
   * Normal event processing per MGTK
-  * In addition, following a window drag/resize, DeskTop calls must be made:
-     * `JUMP_TABLE_REDRAW_ALL` - redraw all windows
-     * `IconTK::RedrawIcons` - redraw desktop (volume) icons
+  * In addition, following a window drag/resize, a DeskTop call must be made:
+     * `JUMP_TABLE_REDRAW_ALL` - redraw all windows and desktop (volume) icons.
   * ...
 * Destroy window (`CloseWindow`)
 * Switch control back to Main (`RAMRDOFF`/`RAMWRTOFF`)

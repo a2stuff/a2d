@@ -25,7 +25,7 @@ JT_DATE_STRING:         jmp     compose_date_string
 JT_SELECT_WINDOW:       jmp     select_and_refresh_window
 JT_AUXLOAD:             jmp     AuxLoad
 JT_EJECT:               jmp     cmd_eject
-JT_REDRAW_ALL:          jmp     redraw_windows          ; *
+JT_REDRAW_WINDOWS:      jmp     redraw_windows          ; *
 JT_ITK_RELAY:           jmp     ITK_RELAY
 JT_LOAD_OVL:            jmp     load_dynamic_routine
 JT_CLEAR_SELECTION:     jmp     clear_selection         ; *
@@ -43,9 +43,9 @@ JT_RESTORE_OVL:         jmp     restore_dynamic_routine
 JT_COLOR_MODE:          jmp     set_color_mode          ; *
 JT_MONO_MODE:           jmp     set_mono_mode           ; *
 JT_RESTORE_SYS:         jmp     restore_system          ; *
-
+JT_REDRAW_ALL:          jmp     redraw_windows_and_desktop ; *
         .assert JUMP_TABLE_MAIN_LOOP = JT_MAIN_LOOP, error, "Jump table mismatch"
-        .assert JUMP_TABLE_RESTORE_SYS = JT_RESTORE_SYS, error, "Jump table mismatch"
+        .assert JUMP_TABLE_REDRAW_ALL = JT_REDRAW_ALL, error, "Jump table mismatch"
 
         ;; Main Loop
 .proc enter_main_loop
@@ -10627,7 +10627,7 @@ done:   stx     buf
 .endproc
 
 .proc redraw_desktop_and_windows
-        jsr     JT_REDRAW_ALL
+        jsr     redraw_windows
         yax_call JT_ITK_RELAY, IconTK::RedrawIcons, 0
         rts
 .endproc

@@ -37,7 +37,7 @@ JUMP_TABLE_DATE_STRING  := $4009 ; Compose date string into internal buffer
 JUMP_TABLE_SELECT_WINDOW:= $400C ; Select and refresh given window
 JUMP_TABLE_AUXLOAD      := $400F ; Auxload
 JUMP_TABLE_EJECT        := $4012 ; Eject command
-JUMP_TABLE_REDRAW_ALL   := $4015 ; Redraw all windows (e.g. after a drag) *
+JUMP_TABLE_REDRAW_WINDOWS := $4015 ; Redraw all desktop windows (e.g. after a drag) *
 JUMP_TABLE_ITK_RELAY    := $4018 ; Icon ToolKit relay call (main>aux)
 JUMP_TABLE_LOAD_OVL     := $401B ; Load overlay routine
 JUMP_TABLE_CLEAR_SEL    := $401E ; Clear DeskTop selection *
@@ -55,6 +55,7 @@ JUMP_TABLE_RESTORE_OVL  := $403F ; Restore from overlay routine
 JUMP_TABLE_COLOR_MODE   := $4042 ; Set DHR color mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_MONO_MODE    := $4045 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in ROM and ZP. *
+JUMP_TABLE_REDRAW_ALL   := $404B ; Redraw desktop windows and icons (e.g. after a drag) *
 
 ;;; ============================================================
 ;;; Overlay routines, for JUMP_TABLE_LOAD_OVL
@@ -92,62 +93,6 @@ kErrInsertDstDisk       = $FD
 kErrBasicSysNotFound    = $FE
 
 ;;; ============================================================
-;;; Icon ToolKit Calls (from aux memory)
-
-.scope IconTK
-
-;;; * = Used by Desk Accessories
-
-MLI := $8E00
-        ;; MLI-style call (jsr IconTK::MLI ; .byte call ; .addr params)
-        ;; Call from Aux (RAMRDON/RAMWRTON)
-
-AddIcon         = $01   ; param is address of IconEntry
-HighlightIcon   = $02   ; { .byte icon }
-RedrawIcon      = $03   ; { .byte icon }
-RemoveIcon      = $04   ; { .byte icon }
-HighlightAll    = $05   ; { .byte window_id }
-RemoveAll       = $06   ; { .byte window_id }
-CloseWindow     = $07   ; { .byte window_id }
-GetHighlighted  = $08   ; { .res 127 }
-FindIcon        = $09   ; { .word mousex, .word mousey, .byte result }
-DragHighlighted = $0A   ; { .byte param, .word mousex, .word mousey }
-                        ; Input: specific icon being dragged, mouse coords
-                        ; Output: 0 = on desktop (no-op)
-                        ;  hi bit clear: low bits are target icon
-                        ;  hi bit set:   low bits are target window
-UnhighlightIcon = $0B   ; { .byte icon }
-RedrawIcons     = $0C   ; Repaints desktop icons *
-IconInRect      = $0D   ; { .byte icon, rect bounds }
-EraseIcon       = $0E   ; { .byte icon }
-
-;;; `icon` is the icon number, i.e. first field in icon entry
-;;; `icon_index` is the index in the icon table
-
-.endscope ; IconTK
-
-;;; Call a IconTK entry point:
-;;;     ITK_CALL n                      - params is $0000
-;;;     ITK_CALL n, params_addr
-;;;     ITK_CALL m, params_addr, label  - params_addr is labeled for modifying
-
-.macro ITK_CALL    op, addr, label
-        jsr     IconTK::MLI
-        .byte   op
-
-    .if .paramcount > 2
-label   := *
-    .endif
-
-    .if .paramcount > 1
-        .addr   addr
-    .else
-        .addr   0
-    .endif
-.endmacro
-
-
-;;; ============================================================
 ;;; Internals - Windows (paths) and Icons (files)
 
 ;;; NOTE: Some of these are used by Desk Accessories
@@ -165,50 +110,6 @@ selected_file_list := $DF22     ; indexes of selected file (global, not w/in win
 file_table := $DD9F     ; file address table
 
 last_menu_click_params := $E23D
-
-;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
-;;;      .byte icon      icon index
-;;;      .byte state     $80 = highlighted, 0 = otherwise
-;;;      .byte type/window_id
-;;;                      (bits 0-3 window_id)
-;;;                      (bits 4,5,6)
-;;;                             000 = directory
-;;;                             001 = system
-;;;                             010 = binary (maybe runnable)
-;;;                             011 = basic
-;;;                             100 = (unused)
-;;;                             101 = data (text/generic/...)
-;;;                             110 = (unused)
-;;;                             111 = trash
-;;;                      (bit 7 = open flag)
-;;;      .word iconx     (pixels)
-;;;      .word icony     (pixels)
-;;;      .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
-;;;      .byte len       (name length + 2)
-;;;      .res  17  name  (name, with a space before and after)
-
-.struct IconEntry
-        id              .byte   ; 0
-        state           .byte   ; 1
-        win_type        .byte   ; 2
-        iconx           .word   ; 3
-        icony           .word   ; 5
-        iconbits        .addr   ; 7
-        len             .byte   ; 9
-        name            .res 17 ; 10 (15 chars plus leading/trailing spaces)
-.endstruct
-
-kMaxIconCount   = 127
-
-kIconEntryOpenMask    = %10000000
-kIconEntryTypeMask    = %01110000
-kIconEntryWinIdMask   = %00001111
-kIconEntryTypeDir     = %00000000
-kIconEntryTypeSystem  = %00010000
-kIconEntryTypeBinary  = %00100000
-kIconEntryTypeBasic   = %00110000
-kIconEntryTypeGeneric = %01010000
-kIconEntryTypeTrash   = %01110000
 
 ;;; ============================================================
 ;;; Internals - Default Font

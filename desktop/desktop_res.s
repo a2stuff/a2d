@@ -839,8 +839,8 @@ str_colon:
         PASCAL_STRING ":"
 str_zero:
         PASCAL_STRING "0"
-str_am: PASCAL_STRING " AM"
-str_pm: PASCAL_STRING " PM"
+str_am: PASCAL_STRING " AM  "
+str_pm: PASCAL_STRING " PM  "
 
 dow_strings:
         .byte   "Sun ", "Mon ", "Tue ", "Wed ", "Thu ", "Fri ", "Sat "

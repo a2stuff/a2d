@@ -846,7 +846,7 @@ done:   rts
         lda     dragwindow_params::moved
         bpl     :+
 
-        ;; Draw DeskTop's windows
+        ;; Draw DeskTop's windows and icons.
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_REDRAW_ALL
@@ -855,9 +855,6 @@ done:   rts
 
         ;; Draw DA's window
         jsr     draw_window
-
-        ;; Draw DeskTop icons
-        ITK_CALL IconTK::RedrawIcons
 
 :       jmp     input_loop
 

@@ -7,6 +7,7 @@
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
+        .include "../desktop/icontk.inc"
 
 ;;; ============================================================
 
@@ -839,7 +840,6 @@ end:    rts
 .endproc
 
 .proc finish_resize             ; only called from dead code
-        ITK_CALL IconTK::RedrawIcons
         MGTK_CALL MGTK::SetPort, winfo::port
         lda     winfo::hscroll
         ror     a               ; check if low bit (track enabled) is set

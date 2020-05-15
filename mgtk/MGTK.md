@@ -1026,9 +1026,8 @@ _DA specific: Use the following steps instead:_
 
 * `DragWindow` to initiate drag modal loop
 * If not `moved` - done
-* Call `JUMP_TABLE_REDRAW_ALL` so DeskTop can redraw its windows
+* Call `JUMP_TABLE_REDRAW_ALL` so DeskTop can redraw its windows an desktop (volume) icons
 * [Redraw](#redraw-window) window content
-* Call `IconTK::REDRAW_ICONS` so DeskTop can redraw the desktop (volume) icons
 
 
 #### Handle Window Close
@@ -1066,8 +1065,6 @@ _DA specific:_
 
 In addition to the above steps:
 * Call `JUMP_TABLE_REDRAW_ALL` _before_ redrawing the DA window.
-* Call `IconTK::REDRAW_ICONS` _after_ redrawing the DA window.
-
 
 #### Handle Update Events
 

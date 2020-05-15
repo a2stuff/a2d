@@ -7,6 +7,7 @@
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
+        .include "../desktop/icontk.inc"
 
 ;;; ============================================================
 ;;; Memory map
@@ -289,24 +290,21 @@ abort:  rts
         copy16  file_table,x, src
 
         ;; Exit if a directory.
-        ldy     #2              ; 2nd byte of entry
+        ldy     #IconEntry::win_type ; 2nd byte of entry
         lda     (src),y
-        and     #$70            ; check that one of bits 4,5,6 is set ???
-        ;; some vague patterns, but unclear
-        ;; basic = $32,$33, text = $52, sys = $11,$14,??, bin = $23,$24,$33
-        ;; dir = $01 (so not shown)
-        bne     :+
-        rts                     ; abort ???
+        and     #kIconEntryTypeMask ; is a directory?
+        bne     :+                  ; nope, can use this one
+        rts                         ; yes, fail
 
         ;; Append filename to path.
-:       ldy     #9
+:       ldy     #IconEntry::len
         lda     (src),y         ; grab length
         tax                     ; name has spaces before/after
         dex                     ; so subtract 2 to get actual length
         dex
         clc
         lda     src
-        adc     #11             ; 9 = length, 10 = space, 11 = name
+        adc     #IconEntry::name + 1 ; skip leading space
         sta     src
         bcc     :+
         inc     src+1

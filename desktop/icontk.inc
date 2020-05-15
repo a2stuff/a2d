@@ -1,0 +1,108 @@
+;;; ============================================================
+;;; Icon ToolKit - Public Definitions
+;;; ============================================================
+;;; Used by:
+;;;  * DeskTop itself
+;;;  * Desk Accessories & Preview Accessories
+;;; ============================================================
+
+;;; Icon ToolKit Calls (from aux memory)
+
+.scope IconTK
+
+;;; * = Used by Desk Accessories
+
+MLI := $8E00
+        ;; MLI-style call (jsr IconTK::MLI ; .byte call ; .addr params)
+        ;; Call from Aux (RAMRDON/RAMWRTON)
+
+AddIcon         = $01   ; param is address of IconEntry
+HighlightIcon   = $02   ; { .byte icon }
+RedrawIcon      = $03   ; { .byte icon }
+RemoveIcon      = $04   ; { .byte icon }
+HighlightAll    = $05   ; { .byte window_id }
+RemoveAll       = $06   ; { .byte window_id }
+CloseWindow     = $07   ; { .byte window_id }
+GetHighlighted  = $08   ; { .res 127 }
+FindIcon        = $09   ; { .word mousex, .word mousey, .byte result }
+DragHighlighted = $0A   ; { .byte param, .word mousex, .word mousey }
+                        ; Input: specific icon being dragged, mouse coords
+                        ; Output: 0 = on desktop (no-op)
+                        ;  hi bit clear: low bits are target icon
+                        ;  hi bit set:   low bits are target window
+UnhighlightIcon = $0B   ; { .byte icon }
+RedrawIcons     = $0C   ; Repaints desktop icons *
+IconInRect      = $0D   ; { .byte icon, rect bounds }
+EraseIcon       = $0E   ; { .byte icon }
+
+;;; `icon` is the icon number, i.e. first field in icon entry
+;;; `icon_index` is the index in the icon table
+
+.endscope ; IconTK
+
+;;; Call a IconTK entry point:
+;;;     ITK_CALL n                      - params is $0000
+;;;     ITK_CALL n, params_addr
+;;;     ITK_CALL m, params_addr, label  - params_addr is labeled for modifying
+
+.macro ITK_CALL    op, addr, label
+        jsr     IconTK::MLI
+        .byte   op
+
+    .if .paramcount > 2
+label   := *
+    .endif
+
+    .if .paramcount > 1
+        .addr   addr
+    .else
+        .addr   0
+    .endif
+.endmacro
+
+
+;;; ============================================================
+
+;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
+;;;      .byte icon      icon index
+;;;      .byte state     $80 = highlighted, 0 = otherwise
+;;;      .byte type/window_id
+;;;                      (bits 0-3 window_id)
+;;;                      (bits 4,5,6)
+;;;                             000 = directory
+;;;                             001 = system
+;;;                             010 = binary (maybe runnable)
+;;;                             011 = basic
+;;;                             100 = (unused)
+;;;                             101 = data (text/generic/...)
+;;;                             110 = (unused)
+;;;                             111 = trash
+;;;                      (bit 7 = open flag)
+;;;      .word iconx     (pixels)
+;;;      .word icony     (pixels)
+;;;      .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
+;;;      .byte len       (name length + 2)
+;;;      .res  17  name  (name, with a space before and after)
+
+.struct IconEntry
+        id              .byte   ; 0
+        state           .byte   ; 1
+        win_type        .byte   ; 2
+        iconx           .word   ; 3
+        icony           .word   ; 5
+        iconbits        .addr   ; 7
+        len             .byte   ; 9
+        name            .res 17 ; 10 (15 chars plus leading/trailing spaces)
+.endstruct
+
+kMaxIconCount   = 127
+
+kIconEntryOpenMask    = %10000000
+kIconEntryTypeMask    = %01110000
+kIconEntryWinIdMask   = %00001111
+kIconEntryTypeDir     = %00000000
+kIconEntryTypeSystem  = %00010000
+kIconEntryTypeBinary  = %00100000
+kIconEntryTypeBasic   = %00110000
+kIconEntryTypeGeneric = %01010000
+kIconEntryTypeTrash   = %01110000

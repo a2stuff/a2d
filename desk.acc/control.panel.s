@@ -677,7 +677,7 @@ ipblink_ip_bitmap:
 common: bit     dragwindow_params::moved
         bpl     :+
 
-        ;; Draw DeskTop's windows
+        ;; Draw DeskTop's windows and icons.
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_REDRAW_ALL
@@ -686,9 +686,6 @@ common: bit     dragwindow_params::moved
 
         ;; Draw DA's window
         jsr     draw_window
-
-        ;; Draw DeskTop icons
-        ITK_CALL IconTK::RedrawIcons
 
 :       jmp     input_loop
 
@@ -973,7 +970,7 @@ next:   dex
         MGTK_CALL MGTK::OpenWindow, winfo_fullscreen
         MGTK_CALL MGTK::CloseWindow, winfo_fullscreen
 
-        ;; Draw DeskTop's windows
+        ;; Draw DeskTop's windows and icons.
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_REDRAW_ALL
@@ -982,9 +979,6 @@ next:   dex
 
         ;; Draw DA's window
         jsr     draw_window
-
-        ;; Draw DeskTop icons
-        ITK_CALL IconTK::RedrawIcons
 
         jmp input_loop
 .endproc

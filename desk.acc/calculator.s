@@ -79,15 +79,12 @@ save_stack:  .byte   0
 
 .proc redraw_screen_and_window
 
-        ;; Redraw DeskTop's windows.
+        ;; Redraw DeskTop's windows and icons.
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_REDRAW_ALL
         sta     RAMRDON
         sta     RAMWRTON
-
-        ;; Redraw DeskTop's icons.
-        ITK_CALL IconTK::RedrawIcons
 
         ;;  Redraw window after event_kind_drag
         jsr     draw_content

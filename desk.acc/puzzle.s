@@ -84,17 +84,8 @@ stash_stack:  .byte   0
         COPY_BYTES sizeof_routine+1, routine, dest
         jsr     dest
 
-        ;; now check the window pos
         lda     #kDAWindowId
-        jsr     check_window_pos
-
-        bit     window_pos_flag
-        bmi     skip
-
-        ITK_CALL IconTK::RedrawIcons
-
-skip:   lda     #0
-        sta     window_pos_flag
+        jsr     redraw_window
         rts
 
 .proc routine
@@ -109,19 +100,14 @@ skip:   lda     #0
 .endproc
 
 ;;; ============================================================
-;;; ???
-
-window_pos_flag:
-        .byte   0               ; ???
+;;; Redraw the DA window
 
         ;; called with window_id in A
-check_window_pos:
+redraw_window:
         sta     getwinport_params_window_id
         lda     winfo_viewloc_ycoord ; is top on screen?
         cmp     #kScreenHeight-1
         bcc     :+              ; yes
-        lda     #$80            ; no, so ... ???
-        sta     window_pos_flag
         rts
 
 :       MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -662,7 +648,7 @@ loop:   tya
         bpl     loop
 
         lda     #kDAWindowId
-        jsr     check_window_pos
+        jsr     redraw_window
         MGTK_CALL MGTK::FlushEvents
 
         ;; Scramble?
