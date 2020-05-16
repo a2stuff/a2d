@@ -1013,13 +1013,13 @@ LDBD6:  pla
         jmp     LDBC0
 
 .proc MGTK_RELAY2
-        sty     LDBF2
-        stax    LDBF3
+        sty     call
+        stax    params
         sta     RAMRDON
         sta     RAMWRTON
         jsr     MGTK::MLI
-LDBF2:  .byte   0
-LDBF3:  .addr   0
+call:   .byte   0
+params: .addr   0
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts

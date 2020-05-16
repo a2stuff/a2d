@@ -829,8 +829,8 @@ L46AE:  jsr     disable_eject_menu_item
         sta     ALTZPOFF
         sta     ROMIN2
         jsr     MLI
-call:   .byte   $00
-params: .addr   dummy0000
+call:   .byte   0
+params: .addr   0
         sta     ALTZPON
         tax
         lda     LCBANK1
@@ -10626,8 +10626,8 @@ done:   stx     buf
 ;;; ============================================================
 
 .proc prep_grafport3
-        yax_call JT_MGTK_RELAY, MGTK::InitPort, grafport3
-        yax_call JT_MGTK_RELAY, MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 .endproc
 
@@ -11297,7 +11297,7 @@ finish: lda     #RenameDialogState::close
         ldx     index
         lda     selected_icon_list,x
         sta     icon_param2
-        yax_call JT_ITK_RELAY, IconTK::EraseIcon, icon_param2 ; in case name is shorter
+        ITK_RELAY_CALL IconTK::EraseIcon, icon_param2 ; in case name is shorter
         copy16  new_name_addr, new_name_ptr
         ldx     index
         lda     selected_icon_list,x
@@ -12970,8 +12970,8 @@ loop:   iny
         lda     selected_window_index
         beq     :+
         sta     getwinport_params2::window_id
-        yax_call JT_MGTK_RELAY, MGTK::GetWinPort, getwinport_params2
-        yax_call JT_MGTK_RELAY, MGTK::SetPort, grafport2
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+        MGTK_RELAY_CALL MGTK::SetPort, grafport2
 :       ldx     stack_stash     ; restore stack, in case recusion was aborted
         txs
         return  #$FF
@@ -13037,7 +13037,7 @@ src_len:
 ;;; ============================================================
 
 .proc check_escape_key_down
-        yax_call JT_MGTK_RELAY, MGTK::GetEvent, event_params
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::key_down
         bne     nope
