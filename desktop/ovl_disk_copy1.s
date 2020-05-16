@@ -61,16 +61,16 @@ start:  lda     #$80
         bpl     :-
 
         ;; Open self (DESKTOP2)
-        yax_call MLI_RELAY, OPEN, open_params
+        MLI_RELAY_CALL OPEN, open_params
 
         ;; Slurp in yet another overlay...
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     set_mark_params::ref_num
 
-        yax_call MLI_RELAY, SET_MARK, set_mark_params
-        yax_call MLI_RELAY, READ, read_params
-        yax_call MLI_RELAY, CLOSE, close_params
+        MLI_RELAY_CALL SET_MARK, set_mark_params
+        MLI_RELAY_CALL READ, read_params
+        MLI_RELAY_CALL CLOSE, close_params
 
         ;; And invoke it.
         sta     ALTZPOFF

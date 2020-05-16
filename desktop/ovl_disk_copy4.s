@@ -1425,16 +1425,16 @@ bell:   sta     ALTZPOFF
         lda     LCBANK1
         rts
 
-L1291:  yax_call MLI_RELAY, ON_LINE, on_line_params2
+L1291:  MLI_RELAY_CALL ON_LINE, on_line_params2
         rts
 
-L129B:  yax_call MLI_RELAY, ON_LINE, on_line_params
+L129B:  MLI_RELAY_CALL ON_LINE, on_line_params
         rts
 
-L12A5:  yax_call MLI_RELAY, WRITE_BLOCK, block_params
+L12A5:  MLI_RELAY_CALL WRITE_BLOCK, block_params
         rts
 
-L12AF:  yax_call MLI_RELAY, READ_BLOCK, block_params
+L12AF:  MLI_RELAY_CALL READ_BLOCK, block_params
         rts
 
 ;;; ============================================================

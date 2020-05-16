@@ -1253,7 +1253,7 @@ L9C26:  addr_call copy_desktop_orig_prefix, filename_buffer
         bne     :-
         sty     filename_buffer
 
-L9C4D:  yax_call MLI_RELAY, OPEN, open_params
+L9C4D:  MLI_RELAY_CALL OPEN, open_params
         beq     L9C60
         lda     #$00
         jsr     L9C09
@@ -1263,7 +1263,7 @@ L9C5F:  rts
 L9C60:  lda     open_params::ref_num
         sta     write_params::ref_num
         sta     flush_close_params::ref_num
-L9C69:  yax_call MLI_RELAY, WRITE, write_params
+L9C69:  MLI_RELAY_CALL WRITE, write_params
         beq     L9C81
         pha
         jsr     JUMP_TABLE_REDRAW_WINDOWS
@@ -1272,8 +1272,8 @@ L9C69:  yax_call MLI_RELAY, WRITE, write_params
         beq     L9C69
         jmp     L9C5F
 
-L9C81:  yax_call MLI_RELAY, FLUSH, flush_close_params
-        yax_call MLI_RELAY, CLOSE, flush_close_params
+L9C81:  MLI_RELAY_CALL FLUSH, flush_close_params
+        MLI_RELAY_CALL CLOSE, flush_close_params
         rts
 
         DEFINE_OPEN_PARAMS open_params2, filename, io_buf
@@ -1285,7 +1285,7 @@ filename:
         DEFINE_WRITE_PARAMS write_params2, selector_list, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS close_params2
 
-L9CBA:  yax_call MLI_RELAY, OPEN, open_params2
+L9CBA:  MLI_RELAY_CALL OPEN, open_params2
         beq     L9CCF
         lda     #$00
         jsr     L9C09
@@ -1294,12 +1294,12 @@ L9CBA:  yax_call MLI_RELAY, OPEN, open_params2
 
 L9CCF:  lda     open_params2::ref_num
         sta     read_params2::ref_num
-        yax_call MLI_RELAY, READ, read_params2
+        MLI_RELAY_CALL READ, read_params2
         bne     L9CE9
-        yax_call MLI_RELAY, CLOSE, close_params2
+        MLI_RELAY_CALL CLOSE, close_params2
 L9CE9:  rts
 
-L9CEA:  yax_call MLI_RELAY, OPEN, open_params2
+L9CEA:  MLI_RELAY_CALL OPEN, open_params2
         beq     L9CFF
         lda     #0
         jsr     L9C09
@@ -1308,13 +1308,13 @@ L9CEA:  yax_call MLI_RELAY, OPEN, open_params2
 
 L9CFF:  lda     open_params2::ref_num
         sta     write_params2::ref_num
-L9D05:  yax_call MLI_RELAY, WRITE, write_params2
+L9D05:  MLI_RELAY_CALL WRITE, write_params2
         beq     L9D18
         jsr     JUMP_TABLE_ALERT_0
         beq     L9D05
         jmp     L9D21
 
-L9D18:  yax_call MLI_RELAY, CLOSE, close_params2
+L9D18:  MLI_RELAY_CALL CLOSE, close_params2
 L9D21:  rts
 
 L9D22:  jsr     L9CBA
@@ -1497,7 +1497,7 @@ params: .addr   0
 
 L9E61:  jsr     L9E74
         stax    get_file_info_params::pathname
-        yax_call MLI_RELAY, GET_FILE_INFO, get_file_info_params
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         rts
 
 L9E74:  sta     L9EBF

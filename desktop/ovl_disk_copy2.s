@@ -42,21 +42,21 @@ L183F:  sta     BITMAP+1,x
         dex
         bpl     L183F
 
-        yax_call MLI_RELAY, OPEN, open_params
+        MLI_RELAY_CALL OPEN, open_params
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     set_mark_params::ref_num
 
-        yax_call MLI_RELAY, SET_MARK, set_mark_params
+        MLI_RELAY_CALL SET_MARK, set_mark_params
         copy16  buf1, read_params::data_buffer
         copy16  len1, read_params::request_count
-        yax_call MLI_RELAY, READ, read_params
+        MLI_RELAY_CALL READ, read_params
         jsr     copy_to_lc
 
         copy16  buf2, read_params::data_buffer
         copy16  len2, read_params::request_count
-        yax_call MLI_RELAY, READ, read_params
-        yax_call MLI_RELAY, CLOSE, close_params
+        MLI_RELAY_CALL READ, read_params
+        MLI_RELAY_CALL CLOSE, close_params
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1

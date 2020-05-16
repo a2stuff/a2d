@@ -1170,7 +1170,7 @@ L5E6F:  jsr     copy_string_to_lcbuf
         lda     DEVLST,x
         and     #$F0
         sta     on_line_params::unit_num
-        yax_call MLI_RELAY, ON_LINE, on_line_params
+        MLI_RELAY_CALL ON_LINE, on_line_params
         lda     on_line_buffer
         and     #NAME_LENGTH_MASK
         sta     on_line_buffer
@@ -1202,7 +1202,7 @@ found:  addr_call main::adjust_volname_case, on_line_buffer
 
 L5ECB:  lda     #$00
         sta     L5F0C
-L5ED0:  yax_call MLI_RELAY, OPEN, open_params
+L5ED0:  MLI_RELAY_CALL OPEN, open_params
         beq     L5EE9
         jsr     device_on_line
         lda     #$FF
@@ -1213,7 +1213,7 @@ L5ED0:  yax_call MLI_RELAY, OPEN, open_params
 L5EE9:  lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        yax_call MLI_RELAY, READ, read_params
+        MLI_RELAY_CALL READ, read_params
         beq     L5F0B
         jsr     device_on_line
         lda     #$FF
@@ -1348,7 +1348,7 @@ L6007:  inc     L6069
         lda     L6068
         cmp     num_file_names
         bne     L6035
-L6012:  yax_call MLI_RELAY, CLOSE, close_params
+L6012:  MLI_RELAY_CALL CLOSE, close_params
         bit     L50A8
         bpl     L6026
         lda     L50A9
@@ -1369,7 +1369,7 @@ L6035:  lda     L6069
         add16_8 $06, L606A, $06
         jmp     L5F8F
 
-L604E:  yax_call MLI_RELAY, READ, read_params
+L604E:  MLI_RELAY_CALL READ, read_params
         copy16  #$1404, $06
         lda     #$00
         sta     L6069

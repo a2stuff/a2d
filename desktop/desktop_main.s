@@ -839,10 +839,6 @@ params: .addr   0
         rts
 .endproc
 
-.macro MLI_RELAY_CALL call, addr
-        yax_call main::MLI_RELAY, call, addr
-.endmacro
-
 ;;; ============================================================
 ;;; Launch file (File > Open, Selector menu, or double-click)
 

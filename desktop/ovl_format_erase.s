@@ -1256,7 +1256,7 @@ L1398:  stx     L14E3
         lda     #0
         sta     write_block_params::block_num
         sta     write_block_params::block_num+1
-        yax_call MLI_RELAY, WRITE_BLOCK, write_block_params
+        MLI_RELAY_CALL WRITE_BLOCK, write_block_params
         beq     :+
         jmp     fail2
 
@@ -1374,7 +1374,7 @@ fail2:  sec
 ;;; ============================================================
 
 .proc write_block_and_zero
-        yax_call MLI_RELAY, WRITE_BLOCK, write_block_params
+        MLI_RELAY_CALL WRITE_BLOCK, write_block_params
         bne     fail
         jsr     zero_buffers
         inc     write_block_params::block_num
@@ -1436,7 +1436,7 @@ L192E:  sta     read_block_params::unit_num
         lda     #0
         sta     read_block_params::block_num
         sta     read_block_params::block_num+1
-        yax_call MLI_RELAY, READ_BLOCK, read_block_params
+        MLI_RELAY_CALL READ_BLOCK, read_block_params
         bne     L1959
         lda     read_buffer + 1
         cmp     #$E0
@@ -1503,7 +1503,7 @@ L19C1:  and     #$80
         rts
 
 L19C8:  copy16  #$0002, read_block_params::block_num
-        yax_call MLI_RELAY, READ_BLOCK, read_block_params
+        MLI_RELAY_CALL READ_BLOCK, read_block_params
         beq     L19F7
         copy    #4, ovl_path_buf
         copy    #' ', ovl_path_buf+1
@@ -1538,7 +1538,7 @@ L1A22:  sta     ovl_path_buf,x
 
 .proc L1A2D
         sta     on_line_params::unit_num
-        yax_call MLI_RELAY, ON_LINE, on_line_params
+        MLI_RELAY_CALL ON_LINE, on_line_params
         bne     L1A6D
         lda     read_buffer
         and     #$0F            ; mask off name length

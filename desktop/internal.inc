@@ -82,6 +82,15 @@ ITK_RELAY       := $D040
     .endif
 .endmacro
 
+;;; Scopes define their own MLI_RELAY procs.
+
+.macro MLI_RELAY_CALL call, addr
+    .if .paramcount > 1
+        yax_call        MLI_RELAY, (call), (addr)
+    .else
+        yax_call        MLI_RELAY, (call), 0
+    .endif
+.endmacro
 
 ;;; ============================================================
 ;;; Internals - miscellaneous structures
