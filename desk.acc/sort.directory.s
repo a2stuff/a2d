@@ -187,7 +187,7 @@ has_window:
         ;; Copy window path to buffer
         asl     a               ; window index * 2
         tay
-        copy16  path_table,y, $06
+        copy16  DeskTopInternals::path_table,y, $06
         ldy     #0
         sty     $10             ; ???
         lda     ($06),y
@@ -487,9 +487,9 @@ loop:   lda     (ptr1),y
         bne     :+
         jmp     rtcs
 
-:       lda     selected_file_count
+:       lda     DeskTopInternals::selected_file_count
         beq     :+
-        lda     path_index
+        lda     DeskTopInternals::path_index
         beq     :+
         jmp     compare_selection_orders
 
@@ -582,15 +582,15 @@ type:   .byte   0
         filename  := $06
         filename2 := $08
 
-        ldx     selected_file_count
+        ldx     DeskTopInternals::selected_file_count
 loop:   dex
         bmi     done1
 
         ;; Look up next icon, compare length.
-        lda     selected_file_list,x
+        lda     DeskTopInternals::selected_file_list,x
         asl     a
         tay
-        add16   file_table,y, #IconEntry::len, entry_ptr
+        add16   DeskTopInternals::file_table,y, #IconEntry::len, entry_ptr
         ldy     #0
         lda     (entry_ptr),y
         sec
@@ -627,15 +627,15 @@ next:   iny                     ; skip leading space
 
 done1:  stx     match           ; match, or $FF if none
 
-        ldx     selected_file_count
+        ldx     DeskTopInternals::selected_file_count
 loop2:  dex
         bmi     done2
 
         ;; Look up next icon, compare length.
-        lda     selected_file_list,x
+        lda     DeskTopInternals::selected_file_list,x
         asl     a
         tay
-        add16   file_table,y, #IconEntry::len, entry_ptr
+        add16   DeskTopInternals::file_table,y, #IconEntry::len, entry_ptr
         ldy     #0
         lda     (entry_ptr),y   ; len
         sec

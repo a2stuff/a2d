@@ -959,7 +959,7 @@ icon_count:
 
         ;; Pointers into icon_entries buffer
 icon_entry_address_table:
-        ASSERT_ADDRESS file_table, "Entry point"
+        ASSERT_ADDRESS DeskTopInternals::file_table, "Entry point"
         .res    256, 0
 
 ;;; Copy from aux memory of icon list for active window (0=desktop)
@@ -974,17 +974,17 @@ cached_window_icon_list:   .res    127, 0
 
 ;;; Index of window with selection (0=desktop)
 selected_window_index:
-        ASSERT_ADDRESS path_index, "Entry point"
+        ASSERT_ADDRESS DeskTopInternals::path_index, "Entry point"
         .byte   0
 
 ;;; Number of selected icons
 selected_icon_count:
-        ASSERT_ADDRESS selected_file_count, "Entry point"
+        ASSERT_ADDRESS DeskTopInternals::selected_file_count, "Entry point"
         .byte   0
 
 ;;; Indexes of selected icons (global, not w/in window, up to 127)
 selected_icon_list:
-        ASSERT_ADDRESS selected_file_list, "Entry point"
+        ASSERT_ADDRESS DeskTopInternals::selected_file_list, "Entry point"
         .res    127, 0
 
 kMaxNumWindows = 8
@@ -996,7 +996,7 @@ win_table:
 
 ;;; Table of desktop window path addresses
 window_path_addr_table:
-        ASSERT_ADDRESS path_table, "Entry point"
+        ASSERT_ADDRESS DeskTopInternals::path_table, "Entry point"
         .addr   $0000
         .repeat 8,i
         .addr   window_path_table+i*kPathBufferSize
@@ -1111,7 +1111,7 @@ tmp_rect:
 saved_stack:
         .byte   0
 
-        ASSERT_ADDRESS last_menu_click_params, "Entry point"
+        ASSERT_ADDRESS DeskTopInternals::last_menu_click_params, "Entry point"
 .params menu_click_params       ; used for MGTK::MenuKey as well
 menu_id:.byte   0
 item_num:.byte  0

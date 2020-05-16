@@ -61,9 +61,9 @@ entry:
         ;; Check that an icon is selected
         lda     #0
         sta     pathbuf
-        lda     selected_file_count
+        lda     DeskTopInternals::selected_file_count
         beq     abort           ; some file properties?
-        lda     path_index      ; prefix index in table
+        lda     DeskTopInternals::path_index      ; prefix index in table
         bne     :+
 abort:  rts
 
@@ -73,7 +73,7 @@ abort:  rts
 
         asl     a               ; (since address table is 2 bytes wide)
         tax
-        copy16  path_table,x, src
+        copy16  DeskTopInternals::path_table,x, src
         ldy     #0
         lda     (src),y
         tax
@@ -89,10 +89,10 @@ abort:  rts
         inc16   dst
 
         ;; Get file entry.
-        lda     selected_file_list      ; file index in table
+        lda     DeskTopInternals::selected_file_list      ; file index in table
         asl     a               ; (since table is 2 bytes wide)
         tax
-        copy16  file_table,x, src
+        copy16  DeskTopInternals::file_table,x, src
 
         ;; Exit if a directory.
         ldy     #2              ; 2nd byte of entry

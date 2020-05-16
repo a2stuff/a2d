@@ -158,7 +158,7 @@ str_basic_system:
 
         asl     a               ; window index * 2
         tay
-        copy16  path_table,y, ptr
+        copy16  DeskTopInternals::path_table,y, ptr
 
         ldy     #0
         lda     (ptr),y

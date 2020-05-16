@@ -100,7 +100,7 @@ kErrBasicSysNotFound    = $FE
 ;;; These are DeskTop internals, but it appears there is no
 ;;; API for getting the selected file.
 
-
+.scope DeskTopInternals
 path_index              := $DF20 ; index of window with selection (0=desktop)
 selected_file_count     := $DF21 ; number of selected icons
 selected_file_list      := $DF22 ; indexes of selected icons (global, not w/in window, up to 127)
@@ -110,6 +110,7 @@ path_table              := $DFB3 ; table of window path addresses
 ;;; Each window path is 65 bytes long, length-prefixed path string (no trailing /)
 
 last_menu_click_params := $E23D
+.endscope
 
 ;;; ============================================================
 ;;; Internals - Default Font
