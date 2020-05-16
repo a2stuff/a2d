@@ -10217,7 +10217,7 @@ do_run2:
         jsr     done_dialog_phase1
 
 .proc finish_operation
-        jsr     redraw_desktop_and_windows
+        jsr     redraw_windows_and_desktop
         return  #0
 .endproc
 
@@ -10631,27 +10631,16 @@ done:   stx     buf
         rts
 .endproc
 
-.proc redraw_desktop_and_windows
-        jsr     redraw_windows
-        yax_call JT_ITK_RELAY, IconTK::RedrawIcons, 0
-        rts
-.endproc
+;;; ============================================================
+;;; Points $08 to path of window with selection ($0000 if desktop)
 
 .proc get_window_path_ptr
         ptr := $08
 
-        copy16  #nullptr, ptr   ; ptr to empty string???
         lda     selected_window_index
-        beq     done
-
-        asl     a
-        tax
-        copy16  window_path_addr_table,x, ptr
-        lda     #0
-done:   rts
-
-nullptr:
-        .addr   0
+        jsr     get_window_path
+        stax    ptr
+        rts
 .endproc
 
 ;;; ============================================================
@@ -15878,7 +15867,6 @@ str_preview_txt:
 ;;; Input: A = window_id
 ;;; Output: A,X = path address
 
-;;; TODO: Dedupe with get_window_path_ptr ???
 .proc get_window_path
         asl     a
         tay
