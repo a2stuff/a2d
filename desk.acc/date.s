@@ -32,7 +32,7 @@ stash_stack:  .byte   $00
 filename:
         PASCAL_STRING "DESKTOP.SYSTEM"
 
-        DEFINE_OPEN_PARAMS open_params, filename, $900
+        DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
         DEFINE_SET_MARK_PARAMS set_mark_params, 3
         DEFINE_WRITE_PARAMS write_params, write_buffer, sizeof_write_buffer
         DEFINE_CLOSE_PARAMS close_params
@@ -142,19 +142,19 @@ start_da:
 
         first_hit_rect := *
 ok_button_rect:
-        .word   $6A,$2E,$B5,$39
+        DEFINE_RECT 106,46,181,57
 cancel_button_rect:
-        .word   $10,$2E,$5A,$39
+        DEFINE_RECT 16,46,90,57
 up_arrow_rect:
-        .word   $AA,$0A,$B4,$14
+        DEFINE_RECT 170,10,180,20
 down_arrow_rect:
-        .word   $AA,$1E,$B4,$28
+        DEFINE_RECT 170,30,180,40
 day_rect:
-        .word   $25,$14,$3B,$1E
+        DEFINE_RECT 37,20,59,30
 month_rect:
-        .word   $51,$14,$6F,$1E
+        DEFINE_RECT 81,20,111,30
 year_rect:
-        .word   $7F,$14,$95,$1E
+        DEFINE_RECT 127,20,149,30
 
 .params settextbg_params
 backcolor:   .byte   0          ; black
@@ -185,17 +185,17 @@ spaces_string:
         DEFINE_STRING "    "
 
 day_pos:
-        .word   43, 30
+        DEFINE_POINT 43, 30
 day_string:
         DEFINE_STRING "  "
 
 month_pos:
-        .word   87, 30
+        DEFINE_POINT 87, 30
 month_string:
         DEFINE_STRING "   "
 
 year_pos:
-        .word   133, 30
+        DEFINE_POINT 133, 30
 year_string:
         DEFINE_STRING "  "
 

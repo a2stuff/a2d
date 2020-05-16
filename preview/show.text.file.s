@@ -10,6 +10,45 @@
         .include "../desktop/icontk.inc"
 
 ;;; ============================================================
+;;; Memory map
+;;;
+;;;              Main           Aux
+;;;          :           : :           :
+;;;          |           | |           |
+;;;          | DHR       | | DHR       |
+;;;  $2000   +-----------+ +-----------+
+;;;          | IO Buffer | |Win Tables |
+;;;  $1C00   +-----------+ |           |
+;;;  $1B00   |           | +-----------+
+;;;          |           | |           |
+;;;          | (unused)  | | (unused)  |
+;;;          |           | |           |
+;;;  $1400   +-----------+ +-----------+
+;;;          | buf2      | | buf2 copy | These buffers hold 2 pages of the
+;;;  $1300   +-----------+ +-----------+ text file, and are loaded/swapped
+;;;          | buf1      | | buf2 copy | as the file is scrolled.
+;;;  $1200   +-----------+ +-----------+
+;;;          | Font Bkup | |           |
+;;;  $1100   +-----------+ |           |
+;;;          | (unused)  | |           |
+;;;  $1000   +-----------+ |           |
+;;;          | IO Buffer | |           |
+;;;   $C00   +-----------+ |           |
+;;;          |           | |           |
+;;;          |           | |           |
+;;;          | DA        | | DA (Copy) |
+;;;   $800   +-----------+ +-----------+
+;;;          :           : :           :
+;;;
+
+;;; DeskTop's font is modified to be fixed-width when the mode is toggled;
+;;; the original widths are stored in this buffer, and restored on exit
+;;; if needed.
+font_width_backup       := $1100
+
+
+
+;;; ============================================================
 
         .org $800
 
@@ -174,13 +213,11 @@ params_start:
 
 ;;; ProDOS MLI param blocks
 
-io_buf          := $0C00
-
 ;;; Two pages of data are read, but separately.
 default_buffer  := $1200
 kReadLength      = $0100
 
-        DEFINE_OPEN_PARAMS open_params, pathbuf, io_buf
+        DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
         DEFINE_READ_PARAMS read_params, default_buffer, kReadLength
         DEFINE_GET_EOF_PARAMS get_eof_params
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
@@ -432,8 +469,6 @@ end:    rts
 .endproc
 
 .endproc
-
-        font_width_backup := $1100
 
 .proc open_file_and_init_window
         lda     #0

@@ -147,11 +147,10 @@ on_line_buffer:
 
         .byte   0
 
-        io_buf := $1C00
         buffer := dir_data_buffer
         kBufferLen = kDirDataBufferLen
 
-        DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
+        DEFINE_OPEN_PARAMS open_params, path_buf, DA_IO_BUFFER
         DEFINE_READ_PARAMS read_params, buffer, kBufferLen
         DEFINE_WRITE_PARAMS write_params, buffer, kBufferLen
         DEFINE_CLOSE_PARAMS close_params

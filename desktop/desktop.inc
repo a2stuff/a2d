@@ -38,7 +38,7 @@ SETTINGS        := $FF80
 ;;; * = Used by Desk Accessories
 
 JUMP_TABLE_MAIN_LOOP    := $4000 ; Enter DeskTop main loop
-JUMP_TABLE_MGTK_RELAY   := $4003 ; MGTK relay call (main>aux)
+JUMP_TABLE_MGTK_RELAY   := $4003 ; MGTK call (Y=call, X,A=params addr) *
 JUMP_TABLE_SIZE_STRING  := $4006 ; Compose "nnn Blocks" string into internal buffer
 JUMP_TABLE_DATE_STRING  := $4009 ; Compose date string into internal buffer
 JUMP_TABLE_SELECT_WINDOW:= $400C ; Select and refresh given window

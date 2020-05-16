@@ -42,13 +42,12 @@
 pathbuf:        .res    kPathBufferSize, 0
 
 font_buffer     := $D00
-io_buf          := WINDOW_ICON_TABLES
 kReadLength      = WINDOW_ICON_TABLES-font_buffer
 
 ;;; Maximum font size is $E00 = 3584 bytes
 ;;; (largest known is Athens, 3203 bytes)
 
-        DEFINE_OPEN_PARAMS open_params, pathbuf, io_buf
+        DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
         DEFINE_READ_PARAMS read_params, font_buffer, kReadLength
         DEFINE_CLOSE_PARAMS close_params
 

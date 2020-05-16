@@ -17,6 +17,23 @@
         .include "../desktop/desktop.inc"
 
 ;;; ============================================================
+;;; Memory map
+;;;
+;;;              Main           Aux
+;;;          :           : :           :
+;;;          |           | |           |
+;;;          | DHR       | | DHR       |
+;;;  $2000   +-----------+ +-----------+
+;;;          | IO Buffer | |Win Tables |
+;;;  $1C00   +-----------+ |           |
+;;;  $1B00   |           | +-----------+
+;;;          |           | |           |
+;;;          |           | |           |
+;;;          |           | | (unused)  |
+;;;          | DA        | |           |
+;;;   $800   +-----------+ +-----------+
+;;;          :           : :           :
+;;;
 
         .org $800
 
@@ -30,7 +47,7 @@ bs_path:        .res    kPathBufferSize, 0
 prefix_path:    .res    kPathBufferSize, 0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, bs_path
-        DEFINE_OPEN_PARAMS open_params, bs_path, $C00
+        DEFINE_OPEN_PARAMS open_params, bs_path, DA_IO_BUFFER
         DEFINE_READ_PARAMS read_params, $2000, $BF00-$2000
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, prefix_path

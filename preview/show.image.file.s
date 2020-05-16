@@ -26,7 +26,7 @@
 ;;;  $1580   +-----------+ +-----------+
 ;;;          |           | |           |
 ;;;          |           | |           |
-;;;          |           | |           |
+;;;          |           | |           | DA is copied to AUX for MGTK param blocks
 ;;;          | DA        | | DA (Copy) |
 ;;;   $800   +-----------+ +-----------+
 ;;;          :           : :           :
@@ -44,6 +44,14 @@
         .assert (minipix_src_buf + kMinipixSrcSize) < DA_IO_BUFFER, error, "Not enough room for Minipix load buffer"
         .assert (minipix_dst_buf + kMinipixDstSize) < WINDOW_ICON_TABLES, error, "Not enough room for Minipix convert buffer"
 
+.macro MGTK_RELAY_CALL call, params
+    .if .paramcount > 1
+        yax_call        JUMP_TABLE_MGTK_RELAY, (call), (params)
+    .else
+        yax_call        JUMP_TABLE_MGTK_RELAY, (call), 0
+    .endif
+.endmacro
+
 ;;; ============================================================
 
         .org $800
@@ -58,26 +66,15 @@ save_stack:
         tsx
         stx     save_stack
 
-        ;; Copy DA to AUX
+        ;; Copy DA to AUX (for resources)
         copy16  #da_start, STARTLO
         copy16  #da_start, DESTINATIONLO
         copy16  #da_end, ENDLO
         sec                     ; main>aux
         jsr     AUXMOVE
 
-        ;; Transfer control to aux
-        sta     RAMWRTON
-        sta     RAMRDON
-
-        ;; Copy "call_main_template" routine to zero page
-        COPY_BYTES sizeof_routine+1, routine, call_main_trampoline
-
         ;; run the DA
         jsr     init
-
-        ;; tear down/exit
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
 
         ldx     save_stack
         txs
@@ -85,111 +82,44 @@ save_stack:
         rts
 .endproc
 
-call_main_trampoline   := $20 ; installed on ZP, turns off auxmem and calls...
-call_main_addr         := call_main_trampoline+7 ; address patched in here
-
-.proc routine
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     $1000  ; overwritten (in zp version)
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-        sizeof_routine = .sizeof(routine) ; can't .sizeof(proc) before declaration
-
-.macro TRAMP_CALL addr
-        copy16  #addr, call_main_addr
-        jsr     call_main_trampoline
-.endmacro
-
-.macro TRAMP_CALL_WITH_A addr
-        pha
-        copy16  #addr, call_main_addr
-        pla
-        jsr     call_main_trampoline
-.endmacro
-
 ;;; ============================================================
 ;;; ProDOS MLI calls
 
 .proc open_file
-        jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL OPEN, open_params
         sta     ALTZPON
-        jsr     copy_params_main_to_aux
         rts
 .endproc
 
 .proc get_file_eof
-        jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL GET_EOF, get_eof_params
         sta     ALTZPON
-        jsr     copy_params_main_to_aux
         rts
 .endproc
 
 .proc read_file
-        jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL READ, read_params
         sta     ALTZPON
-        jsr     copy_params_main_to_aux
         rts
 .endproc
 
 .proc read_minipix_file
-        jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL READ, read_minipix_params
         sta     ALTZPON
-        jsr     copy_params_main_to_aux
         rts
 .endproc
 
 .proc close_file
-        jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL CLOSE, close_params
         sta     ALTZPON
-        jsr     copy_params_main_to_aux
         rts
 .endproc
 
-;;; ============================================================
-
-;;; Copies param blocks from Aux to Main
-.proc copy_params_aux_to_main
-        ldy     #(params_end - params_start + 1)
-        sta     RAMWRTOFF
-loop:   lda     params_start - 1,y
-        sta     params_start - 1,y
-        dey
-        bne     loop
-        sta     RAMRDOFF
-        rts
-.endproc
-
-;;; Copies param blocks from Main to Aux
-.proc copy_params_main_to_aux
-        pha
-        php
-        sta     RAMWRTON
-        ldy     #(params_end - params_start + 1)
-loop:   lda     params_start - 1,y
-        sta     params_start - 1,y
-        dey
-        bne     loop
-        sta     RAMRDON
-        plp
-        pla
-        rts
-.endproc
-
-params_start:
-;;; This block gets copied between main/aux
 
 ;;; ProDOS MLI param blocks
 
@@ -203,17 +133,9 @@ params_start:
 
 pathbuf:        .res    kPathBufferSize, 0
 
-
-params_end:
-;;; ----------------------------------------
+;;; ============================================================
 
         kDAWindowId = 100
-
-.params line_pos
-left:   .word   0
-base:   .word   0
-.endparams
-
 
 event_params:   .tag MGTK::Event
 
@@ -257,6 +179,19 @@ textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
+;;; ============================================================
+
+.proc copy_event_aux_to_main
+        copy16  #event_params, STARTLO
+        copy16  #event_params + .sizeof(MGTK::Event) - 1, ENDLO
+        copy16  #event_params, DESTINATIONLO
+        clc                     ; aux > main
+        jmp     AUXMOVE
+.endproc
+
+;;; ============================================================
+
+
 .proc init
         copy    #0, mode
         copy    #0, pathbuf
@@ -264,10 +199,10 @@ nextwinfo:      .addr   0
         ;; Get filename by checking DeskTop selected window/icon
 
         ;; Check that an icon is selected
-        TRAMP_CALL JUMP_TABLE_GET_SEL_COUNT
+        jsr     JUMP_TABLE_GET_SEL_COUNT
         beq     abort
 
-        TRAMP_CALL JUMP_TABLE_GET_SEL_WIN
+        jsr     JUMP_TABLE_GET_SEL_WIN
         bne     :+
 
 abort:  rts
@@ -276,7 +211,7 @@ abort:  rts
 :       src := $06
         dst := $08
 
-        TRAMP_CALL_WITH_A JUMP_TABLE_GET_WIN_PATH
+        jsr     JUMP_TABLE_GET_WIN_PATH
         stax    src
 
         ldy     #0
@@ -295,7 +230,7 @@ abort:  rts
 
         ;; Get file entry.
         lda     #0              ; first icon in selection
-        TRAMP_CALL_WITH_A JUMP_TABLE_GET_SEL_ICON
+        jsr     JUMP_TABLE_GET_SEL_ICON
         stax    src
 
         ;; Exit if a directory.
@@ -348,15 +283,15 @@ end:    rts
         sta     read_minipix_params::ref_num
         sta     close_params::ref_num
 
-        MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::OpenWindow, winfo
-        MGTK_CALL MGTK::SetPort, winfo::port
+        MGTK_RELAY_CALL MGTK::HideCursor
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo
+        MGTK_RELAY_CALL MGTK::SetPort, winfo::port
         jsr     set_color_mode
         jsr     show_file
-        MGTK_CALL MGTK::ShowCursor
+        MGTK_RELAY_CALL MGTK::ShowCursor
 
-        MGTK_CALL MGTK::FlushEvents
-        MGTK_CALL MGTK::ObscureCursor
+        MGTK_RELAY_CALL MGTK::FlushEvents
+        MGTK_RELAY_CALL MGTK::ObscureCursor
 
         ;; fall through
 .endproc
@@ -365,7 +300,9 @@ end:    rts
 ;;; Main Input Loop
 
 .proc input_loop
-        MGTK_CALL MGTK::GetEvent, event_params
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        jsr     copy_event_aux_to_main
+
         lda     event_params + MGTK::Event::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
         beq     exit
@@ -386,20 +323,16 @@ on_key:
 
 exit:
         jsr     set_bw_mode
-        MGTK_CALL MGTK::HideCursor
+        MGTK_RELAY_CALL MGTK::HideCursor
 
         ;; Restore menu
-        MGTK_CALL MGTK::DrawMenu
-        sta     RAMWRTOFF
-        sta     RAMRDOFF
+        MGTK_RELAY_CALL MGTK::DrawMenu
         jsr     JUMP_TABLE_HILITE_MENU
-        sta     RAMWRTON
-        sta     RAMRDON
 
         ;; Force desktop redraw
-        MGTK_CALL MGTK::CloseWindow, winfo
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo
 
-        MGTK_CALL MGTK::ShowCursor
+        MGTK_RELAY_CALL MGTK::ShowCursor
         rts                     ; exits input loop
 .endproc
 
@@ -455,8 +388,7 @@ exit:
 
         ;; Copy MAIN to AUX
 
-        sta     CLR80COL        ; read main, write aux
-        sta     RAMRDOFF
+        sta     CLR80COL        ; write aux
         sta     RAMWRTON
 
         copy16  #hires, ptr
@@ -470,8 +402,7 @@ exit:
         dex
         bne     :-
 
-        sta     RAMWRTON        ; read aux, write aux
-        sta     RAMRDON
+        sta     RAMWRTOFF       ; write main
         sta     SET80COL
 
         ;; MAIN memory half
@@ -494,7 +425,7 @@ exit:
         jsr     convert_minipix_to_bitmap
 
         ;; Draw
-        MGTK_CALL MGTK::PaintBits, paintbits_params
+        MGTK_RELAY_CALL MGTK::PaintBits, paintbits_params
 
         rts
 
@@ -584,7 +515,7 @@ done:   sta     PAGE2OFF
 ;;; ============================================================
 ;;; Minipix images
 
-;;; Assert: Running from Aux
+;;; Assert: Running from Main
 ;;; Source is in Main, destination is in Aux
 
 .proc convert_minipix_to_bitmap
@@ -633,15 +564,9 @@ dorow:  ldx     #8
         dec     row
         bne     dorow
 
-        ;; Resume running from Aux
-        sta     RAMRDON
-        sta     RAMWRTON
         rts
 
 .proc getbit
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-
         lda     (src),y
         rol
         sta     (src),y
@@ -681,7 +606,10 @@ done:   rts
 :       lda     #7
         sta     dstbit
 
-done:   rts
+done:
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        rts
 .endproc
 
 .endproc
@@ -702,7 +630,7 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
         bne     done
         copy    #$80, mode
 
-        TRAMP_CALL JUMP_TABLE_COLOR_MODE
+        jsr     JUMP_TABLE_COLOR_MODE
 
 done:   rts
 .endproc
@@ -712,7 +640,7 @@ done:   rts
         beq     done
         copy    #0, mode
 
-        TRAMP_CALL JUMP_TABLE_MONO_MODE
+        jsr     JUMP_TABLE_MONO_MODE
 
 done:   rts
 .endproc
