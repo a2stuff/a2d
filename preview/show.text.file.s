@@ -60,6 +60,20 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
 .endproc
         sizeof_call_main_template = .sizeof(call_main_template)
 
+.macro TRAMP_CALL addr
+        copy16  #addr, call_main_addr
+        jsr     call_main_trampoline
+.endmacro
+
+.macro TRAMP_CALL_WITH_A addr
+        pha
+        copy16  #addr, call_main_addr
+        pla
+        jsr     call_main_trampoline
+.endmacro
+
+;;; ============================================================
+
 .proc call_init
         ;; run the DA
         jsr     init
@@ -328,24 +342,26 @@ maprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
         lda     LCBANK1
         lda     LCBANK1
 
+        copy    #0, pathbuf
+
         ;; Get filename by checking DeskTop selected window/icon
 
         ;; Check that an icon is selected
-        lda     #0
-        sta     pathbuf
-        lda     DeskTopInternals::selected_file_count
-        beq     abort           ; some file properties?
-        lda     DeskTopInternals::path_index      ; prefix index in table
+        TRAMP_CALL JUMP_TABLE_GET_SEL_COUNT
+        beq     abort
+
+        TRAMP_CALL JUMP_TABLE_GET_SEL_WIN
         bne     :+
+
 abort:  rts
 
         ;; Copy path (prefix) into pathbuf.
 :       src := $06
         dst := $08
 
-        asl     a               ; (since address table is 2 bytes wide)
-        tax
-        copy16  DeskTopInternals::path_table,x, src
+        TRAMP_CALL_WITH_A JUMP_TABLE_GET_WIN_PATH
+        stax    src
+
         ldy     #0
         lda     (src),y
         tax
@@ -361,10 +377,9 @@ abort:  rts
         inc16   dst
 
         ;; Get file entry.
-        lda     DeskTopInternals::selected_file_list      ; file index in table
-        asl     a               ; (since table is 2 bytes wide)
-        tax
-        copy16  DeskTopInternals::file_table,x, src
+        lda     #0
+        TRAMP_CALL_WITH_A JUMP_TABLE_GET_SEL_ICON
+        stax    src
 
         ;; Exit if a directory.
         ldy     #2              ; 2nd byte of entry
@@ -1234,8 +1249,7 @@ loop:   clc
 .endproc
 
 .proc redraw_screen
-        copy16  #JUMP_TABLE_REDRAW_ALL, call_main_addr
-        jsr     call_main_trampoline
+        TRAMP_CALL JUMP_TABLE_REDRAW_ALL
         rts
 .endproc
 

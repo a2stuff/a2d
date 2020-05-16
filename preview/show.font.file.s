@@ -59,11 +59,12 @@ entry:
 
 .proc get_filename
         ;; Check that an icon is selected
-        lda     #0
-        sta     pathbuf
-        lda     DeskTopInternals::selected_file_count
-        beq     abort           ; some file properties?
-        lda     DeskTopInternals::path_index      ; prefix index in table
+        copy    #0, pathbuf
+
+        jsr     JUMP_TABLE_GET_SEL_COUNT
+        beq     abort
+
+        jsr     JUMP_TABLE_GET_SEL_WIN
         bne     :+
 abort:  rts
 
@@ -71,9 +72,9 @@ abort:  rts
 :       src := $06
         dst := $08
 
-        asl     a               ; (since address table is 2 bytes wide)
-        tax
-        copy16  DeskTopInternals::path_table,x, src
+        jsr     JUMP_TABLE_GET_WIN_PATH
+        stax    src
+
         ldy     #0
         lda     (src),y
         tax
@@ -89,10 +90,9 @@ abort:  rts
         inc16   dst
 
         ;; Get file entry.
-        lda     DeskTopInternals::selected_file_list      ; file index in table
-        asl     a               ; (since table is 2 bytes wide)
-        tax
-        copy16  DeskTopInternals::file_table,x, src
+        lda     #0              ; first icon in selection
+        jsr     JUMP_TABLE_GET_SEL_ICON
+        stax    src
 
         ;; Exit if a directory.
         ldy     #2              ; 2nd byte of entry

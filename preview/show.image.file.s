@@ -98,6 +98,18 @@ call_main_addr         := call_main_trampoline+7 ; address patched in here
 .endproc
         sizeof_routine = .sizeof(routine) ; can't .sizeof(proc) before declaration
 
+.macro TRAMP_CALL addr
+        copy16  #addr, call_main_addr
+        jsr     call_main_trampoline
+.endmacro
+
+.macro TRAMP_CALL_WITH_A addr
+        pha
+        copy16  #addr, call_main_addr
+        pla
+        jsr     call_main_trampoline
+.endmacro
+
 ;;; ============================================================
 ;;; ProDOS MLI calls
 
@@ -181,7 +193,7 @@ params_start:
 
 ;;; ProDOS MLI param blocks
 
-        DEFINE_OPEN_PARAMS open_params, pathbuff, DA_IO_BUFFER
+        DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
         DEFINE_GET_EOF_PARAMS get_eof_params
 
         DEFINE_READ_PARAMS read_params, hires, kHiresSize
@@ -189,10 +201,7 @@ params_start:
 
         DEFINE_CLOSE_PARAMS close_params
 
-.params pathbuff                 ; 1st byte is length, rest is full path
-length: .byte   $00
-data:   .res    64, 0
-.endparams
+pathbuf:        .res    kPathBufferSize, 0
 
 
 params_end:
@@ -248,46 +257,46 @@ textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-
 .proc init
         copy    #0, mode
+        copy    #0, pathbuf
 
         ;; Get filename by checking DeskTop selected window/icon
 
         ;; Check that an icon is selected
-        copy    #0, pathbuff::length
-        lda     DeskTopInternals::selected_file_count
-        beq     abort           ; some file properties?
-        lda     DeskTopInternals::path_index      ; prefix index in table
+        TRAMP_CALL JUMP_TABLE_GET_SEL_COUNT
+        beq     abort
+
+        TRAMP_CALL JUMP_TABLE_GET_SEL_WIN
         bne     :+
+
 abort:  rts
 
-        ;; Copy path (prefix) into pathbuff buffer.
+        ;; Copy path (prefix) into pathbuf buffer.
 :       src := $06
         dst := $08
 
-        asl     a               ; (since address table is 2 bytes wide)
-        tax
-        copy16  DeskTopInternals::path_table,x, src
+        TRAMP_CALL_WITH_A JUMP_TABLE_GET_WIN_PATH
+        stax    src
+
         ldy     #0
         lda     (src),y
         tax
         inc16   src
-        copy16  #(pathbuff::data), dst
-        jsr     copy_pathbuff   ; copy x bytes (src) to (dst)
+        copy16  #pathbuf+1, dst
+        jsr     copy_pathbuf    ; copy x bytes (src) to (dst)
 
         ;; Append separator.
         lda     #'/'
         ldy     #0
         sta     (dst),y
-        inc     pathbuff::length
+        inc     pathbuf
         inc16   dst
 
         ;; Get file entry.
-        lda     DeskTopInternals::selected_file_list      ; file index in table
-        asl     a               ; (since table is 2 bytes wide)
-        tax
-        copy16  DeskTopInternals::file_table,x, src
+        lda     #0              ; first icon in selection
+        TRAMP_CALL_WITH_A JUMP_TABLE_GET_SEL_ICON
+        stax    src
 
         ;; Exit if a directory.
         ldy     #IconEntry::win_type ; 2nd byte of entry
@@ -308,16 +317,16 @@ abort:  rts
         sta     src
         bcc     :+
         inc     src+1
-:       jsr     copy_pathbuff   ; copy x bytes (src) to (dst)
+:       jsr     copy_pathbuf    ; copy x bytes (src) to (dst)
 
         jmp     open_file_and_init_window
 
-.proc copy_pathbuff             ; copy x bytes from src to dst
+.proc copy_pathbuf              ; copy x bytes from src to dst
         ldy     #0              ; incrementing path length and dst
 loop:   lda     (src),y
         sta     (dst),y
         iny
-        inc     pathbuff::length
+        inc     pathbuf
         dex
         bne     loop
         tya
@@ -383,7 +392,7 @@ exit:
         MGTK_CALL MGTK::DrawMenu
         sta     RAMWRTOFF
         sta     RAMRDOFF
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, DeskTopInternals::last_menu_click_params
+        jsr     JUMP_TABLE_HILITE_MENU
         sta     RAMWRTON
         sta     RAMRDON
 
@@ -693,8 +702,7 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
         bne     done
         copy    #$80, mode
 
-        copy16  #JUMP_TABLE_COLOR_MODE, call_main_addr
-        jsr     call_main_trampoline
+        TRAMP_CALL JUMP_TABLE_COLOR_MODE
 
 done:   rts
 .endproc
@@ -704,8 +712,7 @@ done:   rts
         beq     done
         copy    #0, mode
 
-        copy16  #JUMP_TABLE_MONO_MODE, call_main_addr
-        jsr     call_main_trampoline
+        TRAMP_CALL JUMP_TABLE_MONO_MODE
 
 done:   rts
 .endproc

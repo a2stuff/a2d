@@ -156,9 +156,8 @@ str_basic_system:
         cmp     #9              ; windows are 1-8
         bcs     fail
 
-        asl     a               ; window index * 2
-        tay
-        copy16  DeskTopInternals::path_table,y, ptr
+        jsr     JUMP_TABLE_GET_WIN_PATH
+        stax    ptr
 
         ldy     #0
         lda     (ptr),y

@@ -22,9 +22,9 @@
 ;;; ============================================================
 
         yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HideCursor, 0
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, DeskTopInternals::last_menu_click_params
+        jsr     JUMP_TABLE_HILITE_MENU
         jsr     dump_screen
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, DeskTopInternals::last_menu_click_params
+        jsr     JUMP_TABLE_HILITE_MENU
         yax_call JUMP_TABLE_MGTK_RELAY, MGTK::ShowCursor, 0
         rts
 

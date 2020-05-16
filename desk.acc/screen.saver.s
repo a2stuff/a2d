@@ -170,7 +170,7 @@ exit:
         MGTK_CALL MGTK::DrawMenu
         sta     RAMWRTOFF
         sta     RAMRDOFF
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, DeskTopInternals::last_menu_click_params
+        jsr     JUMP_TABLE_HILITE_MENU
         sta     RAMWRTON
         sta     RAMRDON
 

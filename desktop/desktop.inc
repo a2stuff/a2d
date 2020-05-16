@@ -23,7 +23,14 @@ kDAMaxSize      = DA_IO_BUFFER - DA_LOAD_ADDRESS
 ;;; Memory in Aux - $80 bytes for desktop and 8 windows. First byte is a
 ;;; count, up to 127 icon entries. $1F80-$1FFF is a map of used/free icon
 ;;; numbers.
-WINDOW_ICON_TABLES := $1B00
+WINDOW_ICON_TABLES      := $1B00
+
+;;; Used by DAs for window definitions
+DEFAULT_FONT    := $8800
+
+;;; DeskTopSettings structure loaded from disk on startup.
+SETTINGS        := $FF80
+
 
 ;;; ============================================================
 ;;; Direct Calls (from main memory)
@@ -56,6 +63,11 @@ JUMP_TABLE_COLOR_MODE   := $4042 ; Set DHR color mode (IIgs, AppleColor, Le Chat
 JUMP_TABLE_MONO_MODE    := $4045 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in ROM and ZP. *
 JUMP_TABLE_REDRAW_ALL   := $404B ; Redraw desktop windows and icons (e.g. after a drag) *
+JUMP_TABLE_GET_SEL_COUNT:= $404E ; Get number of selected icons (out: A=count) *
+JUMP_TABLE_GET_SEL_ICON := $4051 ; Get selected IconEntry address (in: A=index, out: A,X=addr) *
+JUMP_TABLE_GET_SEL_WIN  := $4054 ; Get window containing selection (out: A=window_id, 0 if none) *
+JUMP_TABLE_GET_WIN_PATH := $4057 ; Get path to window (in: A=window_id; out: A,X=path address) *
+JUMP_TABLE_HILITE_MENU  := $405A ; Toggle hilite on last clicked menu *
 
 ;;; ============================================================
 ;;; Overlay routines, for JUMP_TABLE_LOAD_OVL
@@ -91,34 +103,3 @@ kErrNameTooLong         = $FB
 kErrInsertSrcDisk       = $FC
 kErrInsertDstDisk       = $FD
 kErrBasicSysNotFound    = $FE
-
-;;; ============================================================
-;;; Internals - Windows (paths) and Icons (files)
-
-;;; NOTE: Some of these are used by Desk Accessories
-
-;;; These are DeskTop internals, but it appears there is no
-;;; API for getting the selected file.
-
-.scope DeskTopInternals
-path_index              := $DF20 ; index of window with selection (0=desktop)
-selected_file_count     := $DF21 ; number of selected icons
-selected_file_list      := $DF22 ; indexes of selected icons (global, not w/in window, up to 127)
-file_table              := $DD9F ; IconEntry address table
-
-path_table              := $DFB3 ; table of window path addresses
-;;; Each window path is 65 bytes long, length-prefixed path string (no trailing /)
-
-last_menu_click_params := $E23D
-.endscope
-
-;;; ============================================================
-;;; Internals - Default Font
-
-;;; Used by DAs for window definitions
-DEFAULT_FONT := $8800
-
-;;; ============================================================
-;;; Internals - Settings (modified by Control Panel)
-
-SETTINGS        := $FF80

@@ -8,9 +8,6 @@ Desk Accessories:
 * Icon ToolKit - internal API, MLI-style interface providing icon services
 * DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
 
-In addition, some DeskTop data structures must be accessed directly in
-Desk Accessories.
-
 <!-- ============================================================ -->
 
 ## MouseGraphics ToolKit
@@ -162,6 +159,38 @@ Used when exiting DeskTop; exit DHR mode, restores DHR mode to color, restores d
 #### `JUMP_TABLE_REDRAW_ALL` ($404B) *
 
 Redraws all DeskTop windows and volume icons. Required after a drag or resize in a DA.
+
+#### `JUMP_TABLE_GET_SEL_COUNT` ($404E) *
+
+Get number of selected icons.
+
+Output: A = count.
+
+#### `JUMP_TABLE_GET_SEL_ICON` ($4051) *
+
+Get selected IconEntry address.
+
+Input: A = index within selection.
+Output: A,X = address of IconEntry.
+
+#### `JUMP_TABLE_GET_SEL_WIN` ($4054) *
+
+Get window containing selection (if any).
+
+Output: A = window_id, or 0 for desktop.
+
+#### `JUMP_TABLE_GET_WIN_PATH` ($4057) *
+
+Get path to window.
+
+Input: A = window_id.
+Output: A,X = address of path (length-prefixed).
+
+#### `JUMP_TABLE_HILITE_MENU` ($405A) *
+
+Toggle hilite on last clicked menu. This should be used by a desk accessory that repaints the entire screen including the menu bar, since when the desk accessory exits the menu used to invoke it (Apple or File) will toggle.
+
+
 
 
 <!-- ============================================================ -->

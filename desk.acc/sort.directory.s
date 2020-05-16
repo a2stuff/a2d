@@ -185,9 +185,9 @@ has_window:
 
 .scope
         ;; Copy window path to buffer
-        asl     a               ; window index * 2
-        tay
-        copy16  DeskTopInternals::path_table,y, $06
+        jsr     JUMP_TABLE_GET_WIN_PATH
+        stax    $06
+
         ldy     #0
         sty     $10             ; ???
         lda     ($06),y
@@ -487,9 +487,9 @@ loop:   lda     (ptr1),y
         bne     :+
         jmp     rtcs
 
-:       lda     DeskTopInternals::selected_file_count
+:       jsr     JUMP_TABLE_GET_SEL_COUNT
         beq     :+
-        lda     DeskTopInternals::path_index
+        jsr     JUMP_TABLE_GET_SEL_WIN
         beq     :+
         jmp     compare_selection_orders
 
@@ -582,15 +582,19 @@ type:   .byte   0
         filename  := $06
         filename2 := $08
 
-        ldx     DeskTopInternals::selected_file_count
+        jsr     JUMP_TABLE_GET_SEL_COUNT
+        tax
 loop:   dex
         bmi     done1
 
         ;; Look up next icon, compare length.
-        lda     DeskTopInternals::selected_file_list,x
-        asl     a
-        tay
-        add16   DeskTopInternals::file_table,y, #IconEntry::len, entry_ptr
+        txa
+        pha
+        jsr     JUMP_TABLE_GET_SEL_ICON
+        stax    entry_ptr
+        pla
+        tax
+        add16   entry_ptr, #IconEntry::len, entry_ptr
         ldy     #0
         lda     (entry_ptr),y
         sec
@@ -627,15 +631,19 @@ next:   iny                     ; skip leading space
 
 done1:  stx     match           ; match, or $FF if none
 
-        ldx     DeskTopInternals::selected_file_count
+        jsr     JUMP_TABLE_GET_SEL_COUNT
+        tax
 loop2:  dex
         bmi     done2
 
         ;; Look up next icon, compare length.
-        lda     DeskTopInternals::selected_file_list,x
-        asl     a
-        tay
-        add16   DeskTopInternals::file_table,y, #IconEntry::len, entry_ptr
+        txa
+        pha
+        jsr     JUMP_TABLE_GET_SEL_ICON
+        stax    entry_ptr
+        pla
+        tax
+        add16   entry_ptr, #IconEntry::len, entry_ptr
         ldy     #0
         lda     (entry_ptr),y   ; len
         sec

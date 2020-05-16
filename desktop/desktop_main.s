@@ -44,6 +44,11 @@ JT_COLOR_MODE:          jmp     set_color_mode          ; *
 JT_MONO_MODE:           jmp     set_mono_mode           ; *
 JT_RESTORE_SYS:         jmp     restore_system          ; *
 JT_REDRAW_ALL:          jmp     redraw_windows_and_desktop ; *
+JT_GET_SEL_COUNT:       jmp     get_selection_count     ; *
+JT_GET_SEL_ICON:        jmp     get_selected_icon       ; *
+JT_GET_SEL_WIN:         jmp     get_selection_window    ; *
+JT_GET_WIN_PATH:        jmp     get_window_path         ; *
+JT_HILITE_MENU:         jmp     toggle_menu_hilite      ; *
         .assert JUMP_TABLE_MAIN_LOOP = JT_MAIN_LOOP, error, "Jump table mismatch"
         .assert JUMP_TABLE_REDRAW_ALL = JT_REDRAW_ALL, error, "Jump table mismatch"
 
@@ -15836,6 +15841,58 @@ str_preview_fnt:
 
 str_preview_txt:
         PASCAL_STRING "Preview/show.text.file"
+
+;;; ============================================================
+
+;;; ============================================================
+;;; Output: A = number of selected icons
+
+.proc get_selection_count
+        lda     selected_icon_count
+        rts
+.endproc
+
+;;; ============================================================
+;;; Input: A = index in selection
+;;; Output: A,X = IconEntry address
+
+.proc get_selected_icon
+        tax
+        lda     selected_icon_list,x
+        asl     a
+        tay
+        lda     icon_entry_address_table,y
+        ldx     icon_entry_address_table+1,y
+        rts
+.endproc
+
+;;; ============================================================
+;;; Output: A = window with selection, 0 if desktop
+
+.proc get_selection_window
+        lda     selected_window_index
+        rts
+.endproc
+
+;;; ============================================================
+;;; Input: A = window_id
+;;; Output: A,X = path address
+
+;;; TODO: Dedupe with get_window_path_ptr ???
+.proc get_window_path
+        asl     a
+        tay
+        lda     window_path_addr_table,y
+        ldx     window_path_addr_table+1,y
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc toggle_menu_hilite
+        MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
+        rts
+.endproc
 
 ;;; ============================================================
 
