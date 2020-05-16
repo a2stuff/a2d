@@ -150,8 +150,6 @@ PAGE2OFF        := $C054
 PAGE2ON         := $C055
 HIRESON         := $C056
 HIRESOFF        := $C057
-DHIRESON        := $C05E
-DHIRESOFF       := $C05F
 
 AN3_OFF         := $C05E
 AN3_ON          := $C05F
