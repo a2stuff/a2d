@@ -49,16 +49,22 @@ around.
 
 The `res/stats.pl` tool provides is a quick and dirty analysis of the
 progress in turning raw da65 output into something we can confidently
-modify. Here's a snapshot of the output for some files:
+modify. Here's a snapshot of the output for some files that could use
+attention:
 
 ```
-Stats:
-desktop_main.s unscoped:  246  scoped: 1109  raw:   60  unrefed:   29
-desktop_res.s  unscoped:   64  scoped:    0  raw:    4  unrefed:   64
-desktop_aux.s  unscoped:   83  scoped:  301  raw:    2  unrefed:   32
-loader.s       unscoped:    1  scoped:    0  raw:   20  unrefed:    0
-mgtk.s         unscoped:    0  scoped:   10  raw:   13  unrefed:    0
-invoker.s      unscoped:    0  scoped:    0  raw:    2  unrefed:    0
+desktop.system/desktop.system.s  unscoped:   21  scoped:   15  raw:    3  unrefed:    0
+desktop/desktop_aux.s            unscoped:    3  scoped:   97  raw:    0  unrefed:    3
+desktop/desktop_main.s           unscoped:    2  scoped:  303  raw:   31  unrefed:    1
+desktop/ovl_disk_copy3.s         unscoped:  170  scoped:   74  raw:   15  unrefed:    8
+desktop/ovl_disk_copy4.s         unscoped:  162  scoped:   17  raw:    7  unrefed:    0
+desktop/ovl_file_dialog.s        unscoped:   29  scoped:  209  raw:    8  unrefed:    3
+desktop/ovl_format_erase.s       unscoped:  194  scoped:   11  raw:    3  unrefed:    2
+desktop/ovl_selector_edit.s      unscoped:    0  scoped:   20  raw:    0  unrefed:    0
+desktop/ovl_selector_pick.s      unscoped:  190  scoped:    0  raw:    1  unrefed:    0
+selector/app.s                   unscoped:    5  scoped:   75  raw:    0  unrefed:    0
+selector/ovl_file_copy.s         unscoped:  125  scoped:   20  raw:    0  unrefed:    0
+selector/ovl_file_dialog.s       unscoped:   12  scoped:  200  raw:    0  unrefed:    0
 ```
 
 * **unscoped** counts the number of auto-generated labels like `L1234`
