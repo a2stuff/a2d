@@ -22,16 +22,18 @@
 
 ;;; ============================================================
 
-        .org $800
+        .org DA_LOAD_ADDRESS
 
-entry:
+        dummy0000 := $0000
+
+da_start:
 
 ;;; Copy the DA to AUX for easy bank switching
 .scope
         lda     ROMIN2
-        copy16  #$0800, STARTLO
+        copy16  #da_start, STARTLO
         copy16  #da_end, ENDLO
-        copy16  #$0800, DESTINATIONLO
+        copy16  #da_start, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
         lda     LCBANK1
@@ -602,6 +604,8 @@ model_pix_table:
 ;;;
 ;;; Format is: model (enum), then byte pairs [$FFxx, expected], then $00
 
+MODEL_ID_PAGE := $FB00
+
 model_lookup_table:
         .byte   model::ii
         .byte   $B3, $38, 0
@@ -653,7 +657,7 @@ m_loop: ldy     model_lookup_table,x ; model number
         inx
 
         ;; For each byte/expected pair in table...
-b_loop: lda     model_lookup_table,x ; offset from $FB00
+b_loop: lda     model_lookup_table,x ; offset from MODEL_ID_PAGE
         beq     match           ; success!
         sta     @lsb
         inx
@@ -661,7 +665,7 @@ b_loop: lda     model_lookup_table,x ; offset from $FB00
         lda     model_lookup_table,x
         inx
         @lsb := *+1
-        cmp     $FB00           ; self-modified
+        cmp     MODEL_ID_PAGE   ; self-modified
 
         beq     b_loop          ; match, keep looking
 
@@ -907,7 +911,7 @@ egg:    .byte   0
 
         copy16  model_pix_ptr, bits_addr
         MGTK_CALL MGTK::SetPenMode, penmode
-        MGTK_CALL MGTK::PaintBits, $0000, bits_addr
+        MGTK_CALL MGTK::PaintBits, dummy0000, bits_addr
 
         MGTK_CALL MGTK::MoveTo, model_pos
         ldax    model_str_ptr

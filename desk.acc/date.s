@@ -17,7 +17,9 @@
 
 ;;; ============================================================
 
-        .org $800
+        .org DA_LOAD_ADDRESS
+
+        dummy1000 := $1000
 
 ;;; ============================================================
 
@@ -413,7 +415,7 @@ hit:    cmp     #MGTK::Area::content
         asl     a
         tay
         copy16  hit_target_jump_table,y, jump+1
-jump:   jmp     $1000           ; self modified
+jump:   jmp     dummy1000       ; self modified
 
 hit_target_jump_table:
         .addr   on_ok, on_cancel, on_up, on_down
@@ -513,7 +515,7 @@ go:     lda     selected_field
         tay
         copy16in (ptr),y, gosub+1
 
-gosub:  jsr     $1000           ; self modified
+gosub:  jsr     dummy1000       ; self modified
         MGTK_CALL MGTK::SetTextBG, settextbg_params
         jmp     draw_selected_field
 .endproc
@@ -686,7 +688,7 @@ skip:   jmp     dest
 
 loop:   txa
         pha
-        MGTK_CALL MGTK::InRect, $1000, test_addr
+        MGTK_CALL MGTK::InRect, dummy1000, test_addr
         bne     done
 
         ;; If there is a system clock, only the first button is active

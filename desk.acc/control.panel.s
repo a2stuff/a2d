@@ -20,16 +20,16 @@
 
 ;;; ============================================================
 
-        .org $800
+        .org DA_LOAD_ADDRESS
 
-entry:
+da_start:
 
 ;;; Copy the DA to AUX for easy bank switching
 .scope
         lda     ROMIN2
-        copy16  #$0800, STARTLO
+        copy16  #da_start, STARTLO
         copy16  #da_end, ENDLO
-        copy16  #$0800, DESTINATIONLO
+        copy16  #da_start, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
         lda     LCBANK1

@@ -35,7 +35,11 @@
 ;;;          :           : :           :
 ;;;
 
-        .org $800
+        .org DA_LOAD_ADDRESS
+
+        PRODOS_SYS_START := $2000
+
+        dummy1234 := $1234
 
 ;;; ============================================================
 
@@ -48,7 +52,7 @@ prefix_path:    .res    kPathBufferSize, 0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, bs_path
         DEFINE_OPEN_PARAMS open_params, bs_path, DA_IO_BUFFER
-        DEFINE_READ_PARAMS read_params, $2000, $BF00-$2000
+        DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI-PRODOS_SYS_START
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, prefix_path
         DEFINE_QUIT_PARAMS quit_params
@@ -94,7 +98,7 @@ start:
         bcs     quit
 
         ;; Launch
-        jmp     $2000
+        jmp     PRODOS_SYS_START
 
         ;; Late errors - QUIT, which should relaunch DeskTop
 quit:   MLI_CALL QUIT, quit_params
@@ -212,7 +216,7 @@ fail:   return  #1
         ldx     DESKTOP_ORIG_PREFIX
 :       lda     DESKTOP_ORIG_PREFIX,x
         @destptr := *+1
-        sta     $1234,x
+        sta     dummy1234,x
         dex
         bpl     :-
 

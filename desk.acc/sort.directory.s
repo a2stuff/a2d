@@ -43,7 +43,7 @@
 
 ;;; ============================================================
 
-        .org $800
+        .org DA_LOAD_ADDRESS
 
 dir_data_buffer     := $0E00
         .assert (<dir_data_buffer) = 0, error, "Must be page aligned"
@@ -252,6 +252,8 @@ found_unit_num:
 
 .proc read_sort_write
 
+        ptr := $06
+
         ;; --------------------------------------------------
         ;; Read the directory (up to 14 blocks)
 .scope read
@@ -305,12 +307,11 @@ loop:
 :       jsr     set_ptr_to_next_entry
         bcs     jmp_exit
         ldy     #0
-        lda     ($06),y
-        and     #STORAGE_TYPE_MASK
+        lda     (ptr),y
+        and     #STORAGE_TYPE_MASK ; skip deleted entries
         beq     :-
-
         ldy     #SubdirectoryHeader::file_count
-        copy16in ($06),y, block_num_table
+        copy16in (ptr),y, block_num_table
 .endscope
 
         ;; --------------------------------------------------
@@ -325,54 +326,64 @@ loop:
         copy    unit_num, block_params::unit_num
         copy    #0, block_index
 
-:       lda     block_index
+        ;; Write the blocks listed in the table out.
+loop1:  lda     block_index
         asl     a
         tay
         copy16  block_num_table,y, block_params::block_num
-        ora     block_params::block_num
-        beq     L0A3E
-        tya
+        ora     block_params::block_num ; done?
+        beq     update_dir_blocks
+
+        tya                     ; Find address of block data
         clc
         adc     #>dir_data_buffer
         sta     block_params::data_buffer+1
-        lda     #$00
-        sta     block_params::data_buffer
-        jsr     write_block
+        copy    #0, block_params::data_buffer
+        jsr     write_block     ; Write it out
         bne     jmp_exit
         inc     block_index
-        bne     :-
+        bne     loop1
 
 jmp_exit:
         jmp     exit
 
         block_buf := DA_IO_BUFFER
 
-L0A3E:  copy16  #block_buf, block_params::data_buffer
+        ;; For subdirectories, update parent_pointer/parent_entry_number
+        ;; See ProDOS 8 Technical Reference Manual B.2.3 - Subdirectory Headers
+update_dir_blocks:
+        copy16  #block_buf, block_params::data_buffer
         jsr     set_ptr_to_first_entry
-L0A4B:  jsr     set_ptr_to_next_entry
-        bcs     L0A8E
+loop2:  jsr     set_ptr_to_next_entry
+        bcs     fail
         ldy     #0
-        lda     ($06),y
-        and     #STORAGE_TYPE_MASK
-        beq     L0A4B
-        cmp     #(ST_LINKED_DIRECTORY << 4)
-        bne     L0A4B
-        ldy     #$11
-        copy16in ($06),y, block_params::block_num
-        jsr     read_block
-        bne     L0A8F
-        lda     $07
-        sec
-        sbc     #$0E
-        and     #$FE
-        tay
-        copy16  block_num_table,y, block_buf + $27
-        copy    entry_num, block_buf + $29
-        jsr     write_block
-        jmp     L0A4B
+        lda     (ptr),y
+        and     #STORAGE_TYPE_MASK ; skip deleted entries
+        beq     loop2
+        cmp     #(ST_LINKED_DIRECTORY << 4) ; skip non-directories
+        bne     loop2
 
-L0A8E:  pla                     ; WTF ???
-L0A8F:  jmp     exit
+        ;; Grab key block, using pointer in directory.
+        ldy     #FileEntry::key_pointer
+        copy16in (ptr),y, block_params::block_num
+        jsr     read_block
+        bne     done
+
+        ;; Calculate entry's block index from address
+        lda     ptr+1
+        sec
+        sbc     #>dir_data_buffer
+        and     #%11111110      ; /2 to get index, *2 to get table ptr
+        tay
+
+        ;; Update pointers and rewrite key block.
+        copy16  block_num_table,y, block_buf + SubdirectoryHeader::parent_pointer
+        copy    entry_num, block_buf + SubdirectoryHeader::parent_entry_number
+        jsr     write_block
+        jmp     loop2
+
+fail:   pla                     ; BUG: no matching push (only works due to stack restore) ???
+done:   jmp     exit
 
 .endscope
         jmp_exit := write::jmp_exit
@@ -399,7 +410,8 @@ block_index:
 block_num_table:
         .res 26, 0
 
-entry_num:  .byte   0
+entry_num:
+        .byte   0
 
 ;;; ============================================================
 ;;; Compare path from ON_LINE vs. path from window, since we
@@ -485,7 +497,7 @@ flag:   .byte   0
         inc     ptr+1
         lda     #1
         sta     entry_num
-        lda     #$04            ; skip over block header ???
+        lda     #4              ; skip over block header
         sta     ptr
         lda     ptr+1
         cmp     end_block_page
