@@ -1,9 +1,11 @@
 # Apple II DeskTop
 
-Project page: https://github.com/inexorabletash/a2d/
+Home page: https://a2desktop.com
+
+Project page: https://github.com/a2stuff/a2d/
 
 Numbers like (#123) refer to items in the issue tracker.
-https://github.com/inexorabletash/a2d/issues
+https://github.com/a2stuff/a2d/issues
 
 ## 1.2 - alpha
 
@@ -56,7 +58,7 @@ https://github.com/inexorabletash/a2d/issues
 * Screen Saver
   * Homage to the classic After Dark "Flying Toasters" by Jack Eastman. More to come. (#27)
 * Melt
-  * Another class screen saver effect: the screen melts down like dripping wax. (#27)
+  * Another classic screen saver effect: the screen melts down like dripping wax. (#27)
 
 Note that several of the new Desk Accessories will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
@@ -113,10 +115,12 @@ menu.
 ### Known Issues
 
 * Special > Disk Copy app is not substantially modified, and may suffer bugs fixed in DeskTop (e.g. SmartPort behavior)
+* Other issues can be found at: https://github.com/a2stuff/a2d/issues
+
 
 # 1.1
 
-Final release by Apple Computer. November 26, 1986.
+Final release by VersionSoft/Apple Computer. November 26, 1986.
 
 See Jay Edwards' [MouseDesk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
 for more version information.
