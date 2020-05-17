@@ -19,12 +19,38 @@
         .include "../desktop/icontk.inc"
 
 ;;; ============================================================
+;;; Memory map
+;;;
+;;;              Main           Aux
+;;;          :           : :           :
+;;;          |           | |           |
+;;;          | DHR       | | DHR       |
+;;;  $2000   +-----------+ +-----------+
+;;;          | IO Buffer | |Win Tables |
+;;;  $1C00   +-----------+ |           |
+;;;  $1B00   |           | +-----------+
+;;;          |           | |           |
+;;;          |           | |           |
+;;;          |           | |           |
+;;;          | Dir Buff  | |           |
+;;;   $E00   +-----------+ |           |
+;;;          |           | |           |
+;;;          |           | | (unused)  |
+;;;          | DA        | |           |
+;;;   $800   +-----------+ +-----------+
+;;;          :           : :           :
+;;;
+
+;;; ============================================================
 
         .org $800
 
 dir_data_buffer     := $0E00
-kDirDataBufferLen  = $0E00
+        .assert (<dir_data_buffer) = 0, error, "Must be page aligned"
 
+kDirDataBufferLen   = DA_IO_BUFFER - dir_data_buffer
+
+;;; ID of window for directory to sort
 window_id := $0A
 
 ;;; ============================================================
@@ -223,33 +249,42 @@ next:   dec     dev_num
 exit1:  jmp     exit
 
 found_unit_num:
-        lda     on_line_params::unit_num
-        sta     unit_num
+
+.proc read_sort_write
+
+        ;; --------------------------------------------------
+        ;; Read the directory (up to 14 blocks)
+.scope read
+
+        copy    on_line_params::unit_num, unit_num
+
         jsr     open
         bne     exit1
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
 
-        ;; Read a chunk of the directory
         jsr     read
         jsr     close
         bne     exit1
-        ldx     #$02
+        ldx     #2
 
+        ;; Process "blocks"
+loop:
         buf_ptr1_hi := *+2
-:       lda     buffer + 2
+        lda     buffer + 2
 
-        sta     L0A95,x
+        sta     block_num_table,x
 
         buf_ptr2_hi := *+2
         lda     buffer + 3
 
-        sta     L0A95+1,x
+        sta     block_num_table+1,x
 
-        ora     L0A95,x
+        ora     block_num_table,x
         beq     :+
 
+        ;; Move to next "block"
         inc     buf_ptr1_hi
         inc     buf_ptr1_hi
         inc     buf_ptr2_hi
@@ -257,13 +292,14 @@ found_unit_num:
 
         inx
         inx
-        cpx     #$0E
-        bne     :-
+        cpx     #>kDirDataBufferLen
+        bne     loop
 
+        ;; Prepare for sorting
 :       txa
         clc
-        adc     #$0E
-        sta     L0A93
+        adc     #>dir_data_buffer
+        sta     end_block_page
         jsr     set_ptr_to_first_entry
 
 :       jsr     set_ptr_to_next_entry
@@ -274,32 +310,36 @@ found_unit_num:
         beq     :-
 
         ldy     #SubdirectoryHeader::file_count
-        copy16in ($06),y, L0A95
+        copy16in ($06),y, block_num_table
+.endscope
 
+        ;; --------------------------------------------------
         ;; Sort the directory entries
+
         jsr     bubble_sort
 
+        ;; --------------------------------------------------
         ;; Write the directory back out
-        lda     unit_num
-        sta     block_params::unit_num
-        lda     #0
-        sta     L0A94
 
-:       lda     L0A94
+.scope write
+        copy    unit_num, block_params::unit_num
+        copy    #0, block_index
+
+:       lda     block_index
         asl     a
         tay
-        copy16  L0A95,y, block_params::block_num
+        copy16  block_num_table,y, block_params::block_num
         ora     block_params::block_num
         beq     L0A3E
         tya
         clc
-        adc     #$0E
+        adc     #>dir_data_buffer
         sta     block_params::data_buffer+1
         lda     #$00
         sta     block_params::data_buffer
         jsr     write_block
         bne     jmp_exit
-        inc     L0A94
+        inc     block_index
         bne     :-
 
 jmp_exit:
@@ -326,7 +366,7 @@ L0A4B:  jsr     set_ptr_to_next_entry
         sbc     #$0E
         and     #$FE
         tay
-        copy16  L0A95,y, block_buf + $27
+        copy16  block_num_table,y, block_buf + $27
         copy    entry_num, block_buf + $29
         jsr     write_block
         jmp     L0A4B
@@ -334,13 +374,30 @@ L0A4B:  jsr     set_ptr_to_next_entry
 L0A8E:  pla                     ; WTF ???
 L0A8F:  jmp     exit
 
+.endscope
+        jmp_exit := write::jmp_exit
+
+.endproc
+
+;;; ============================================================
+
+;;; Device number (needed for writing blocks)
 dev_num:
         .byte   0
 
-L0A93:  .byte   0
-L0A94:  .byte   0
+;;; Page (address hi byte) after last block.
+end_block_page:
+        .byte   0
 
-L0A95:  .res 26, 0
+;;; Block index when writing directory blocks back out.
+block_index:
+        .byte   0
+
+;;; Table of directory block numbers (words); the directory is read using
+;;; file I/O but must be written out using block I/O. The necessary block
+;;; numbers are to write are extracted and stored here.
+block_num_table:
+        .res 26, 0
 
 entry_num:  .byte   0
 
@@ -431,7 +488,7 @@ flag:   .byte   0
         lda     #$04            ; skip over block header ???
         sta     ptr
         lda     ptr+1
-        cmp     L0A93
+        cmp     end_block_page
         bcs     rtcs
 
 rtcc:   clc
@@ -846,3 +903,5 @@ len2:   .byte   0
 len1:   .byte   0
 
 .endproc
+
+        .assert * <= dir_data_buffer, error, "DA too long"
