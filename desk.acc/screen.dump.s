@@ -218,7 +218,7 @@ y_coord:.byte   0              ; iterates y_row to y_row+7
 mask:   .byte   0              ; mask for pixel being processed
 accum:  .byte   0              ; accumulates pixels for output
 count:  .byte   0              ; 8...1 while a row is output
-col_num:.byte   0               ; 0...79
+col_num:.byte   0              ; 0...79
 
         .byte   0, 0
 

@@ -390,6 +390,9 @@ str_laser128:
 
 str_prodos_version:
         PASCAL_STRING "ProDOS 0.0.0"
+        kVersionStrMajor = 8
+        kVersionStrMinor = 10
+        kVersionStrPatch = 12
 
 str_slot_n:
         PASCAL_STRING "Slot 0:   "
@@ -731,35 +734,28 @@ match:  tya
 v_1x:   and     #$0F
         clc
         adc     #'0'
-        sta     str_prodos_version + 10
-        lda     #'1'
-        sta     str_prodos_version + 8
-        lda     #10
-        sta     str_prodos_version ; length
+        sta     str_prodos_version + kVersionStrMinor
+        copy    #'1', str_prodos_version + kVersionStrMajor
+        copy    #10, str_prodos_version ; length
         bne     done
 
         ;; $20...$23 are 2.0.x (roughly)
 v_20x:  and     #$0F
         clc
         adc     #'0'
-        sta     str_prodos_version + 12
-        lda     #'0'
-        sta     str_prodos_version + 10
-        lda     #'2'
-        sta     str_prodos_version + 8
-        lda     #12
-        sta     str_prodos_version ; length
+        sta     str_prodos_version + kVersionStrPatch
+        copy    #'0', str_prodos_version + kVersionStrMinor
+        copy    #'2', str_prodos_version + kVersionStrMajor
+        copy    #12, str_prodos_version ; length
         bne     done
 
         ;; $24...??? are 2.x (so far?)
 v_2x:   and     #$0F
         clc
         adc     #'0'
-        sta     str_prodos_version + 10
-        lda     #'2'
-        sta     str_prodos_version + 8
-        lda     #10
-        sta     str_prodos_version ; length
+        sta     str_prodos_version + kVersionStrMinor
+        copy    #'2', str_prodos_version + kVersionStrMajor
+        copy    #10, str_prodos_version ; length
         bne     done
 
 done:   rts

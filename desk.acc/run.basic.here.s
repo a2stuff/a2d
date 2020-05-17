@@ -170,7 +170,7 @@ str_basic_system:
         yax_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, ptr
         lda     ptr             ; any window open?
         beq     fail
-        cmp     #9              ; windows are 1-8
+        cmp     #kMaxDeskTopWindows+1
         bcs     fail
 
         jsr     JUMP_TABLE_GET_WIN_PATH

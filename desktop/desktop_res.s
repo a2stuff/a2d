@@ -983,7 +983,7 @@ selected_icon_count:
 selected_icon_list:
         .res    127, 0
 
-kMaxNumWindows = 8
+kMaxNumWindows = kMaxDeskTopWindows
 
 ;;; Table of desktop window winfo addresses
 win_table:

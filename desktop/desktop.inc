@@ -31,6 +31,11 @@ DEFAULT_FONT    := $8800
 ;;; DeskTopSettings structure loaded from disk on startup.
 SETTINGS        := $FF80
 
+;;; ============================================================
+;;; Constants
+
+kMaxDeskTopWindows      = 8
+
 
 ;;; ============================================================
 ;;; Direct Calls (from main memory)

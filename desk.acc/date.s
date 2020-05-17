@@ -142,19 +142,19 @@ start_da:
 
         first_hit_rect := *
 ok_button_rect:
-        DEFINE_RECT 106,46,181,57
+        DEFINE_RECT_SZ 106,46,75,11
 cancel_button_rect:
-        DEFINE_RECT 16,46,90,57
+        DEFINE_RECT_SZ 16,46,74,11
 up_arrow_rect:
-        DEFINE_RECT 170,10,180,20
+        DEFINE_RECT_SZ 170,10,10,10
 down_arrow_rect:
-        DEFINE_RECT 170,30,180,40
+        DEFINE_RECT_SZ 170,30,10,10
 day_rect:
-        DEFINE_RECT 37,20,59,30
+        DEFINE_RECT_SZ 37,20,22,10
 month_rect:
-        DEFINE_RECT 81,20,111,30
+        DEFINE_RECT_SZ 81,20,30,10
 year_rect:
-        DEFINE_RECT 127,20,149,30
+        DEFINE_RECT_SZ 127,20,22,10
 
 .params settextbg_params
 backcolor:   .byte   0          ; black
@@ -721,10 +721,10 @@ done:   pla
 ;;; Params for the display
 
 border_rect:
-        .word   $04,$02,$C0,$3D
+        DEFINE_RECT 4,2,192,61
 
 date_rect:
-        .word   $20,$0F,$9A,$23
+        DEFINE_RECT_SZ 32,15,122,20
 
 label_ok:
         DEFINE_STRING {"OK         ",kGlyphReturn} ;
@@ -736,14 +736,14 @@ label_downarrow:
         DEFINE_STRING kGlyphDdownArrow
 
 label_cancel_pos:
-        .word   $15,$38
+        DEFINE_POINT 21,56
 label_ok_pos:
-        .word   $6E,$38
+        DEFINE_POINT 110,56
 
 label_uparrow_pos:
-        .word   $AC,$13
+        DEFINE_POINT 172,19
 label_downarrow_pos:
-        .word   $AC,$27
+        DEFINE_POINT 172,39
 
 .params setpensize_params
 penwidth: .byte   1

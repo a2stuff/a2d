@@ -17,7 +17,7 @@
 ;;; ============================================================
 ;;; Data buffers and param blocks
 
-date:   .word   0               ; written into file
+date:   .word   0               ; written into file by Date DA
 
 L2005:
         .res    832, 0

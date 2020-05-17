@@ -25,6 +25,8 @@
 dir_data_buffer     := $0E00
 kDirDataBufferLen  = $0E00
 
+window_id := $0A
+
 ;;; ============================================================
 
         cli
@@ -45,7 +47,7 @@ start:  tsx
 .proc exit
         ldx     save_stack
         txs
-        lda     a:$0A
+        lda     window_id
         bne     :+
         rts
 
@@ -53,7 +55,7 @@ start:  tsx
         pha
         lda     #<(JUMP_TABLE_SELECT_WINDOW-1)
         pha
-        lda     a:$0A
+        lda     window_id
         rts
 .endproc
 
@@ -169,13 +171,11 @@ path_buf:
         lda     LCBANK1
         lda     LCBANK1
 
-        ptr := $0A
-
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, ptr
-        lda     ptr             ; any window open?
+        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, window_id
+        lda     window_id       ; any window open?
         beq     bail            ; nope, bail
 
-        cmp     #9              ; DeskTop windows are 1-8
+        cmp     #kMaxDeskTopWindows+1
         bcc     has_window
 bail:   jmp     exit
 .endproc
@@ -275,7 +275,11 @@ found_unit_num:
 
         ldy     #SubdirectoryHeader::file_count
         copy16in ($06),y, L0A95
+
+        ;; Sort the directory entries
         jsr     bubble_sort
+
+        ;; Write the directory back out
         lda     unit_num
         sta     block_params::unit_num
         lda     #0
@@ -301,7 +305,9 @@ found_unit_num:
 jmp_exit:
         jmp     exit
 
-L0A3E:  copy16  #$1C00, block_params::data_buffer
+        block_buf := DA_IO_BUFFER
+
+L0A3E:  copy16  #block_buf, block_params::data_buffer
         jsr     set_ptr_to_first_entry
 L0A4B:  jsr     set_ptr_to_next_entry
         bcs     L0A8E
@@ -320,8 +326,8 @@ L0A4B:  jsr     set_ptr_to_next_entry
         sbc     #$0E
         and     #$FE
         tay
-        copy16  L0A95,y, $1C27
-        copy    entry_num, $1C29
+        copy16  L0A95,y, block_buf + $27
+        copy    entry_num, block_buf + $29
         jsr     write_block
         jmp     L0A4B
 

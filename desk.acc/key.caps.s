@@ -345,6 +345,7 @@ kr7C:   KEY_RECT kLeft1 + 12 * kKeyWidth, kRow1 ; |
 kr7D:   KEY_RECT kLeft1 + 11 * kKeyWidth, kRow1 ; }
 kr7E:   KEY_RECT kLeft4 +  0 * kKeyWidth, kRow4 ; ~
 kr7F:   KEY_RECT kKeyboardRight - kKeyWidth *  6/4, kRow0, kKeyboardRight ; (delete)
+        ASSERT_RECORD_TABLE_SIZE key_locations, $80, .sizeof(MGTK::Rect)
 
         ;; shift/plain
         kModeS = $80           ; shifted (symbols)/unshifted (letters) - don't draw
@@ -487,6 +488,7 @@ key_mode:
         .byte   kModeS         ; }
         .byte   kModeS         ; ~
         .byte   kModeP         ; DEL (FIX)
+        ASSERT_TABLE_SIZE key_mode, $80
 
 rect_ctl: KEY_RECT   kKeyboardLeft, kRow2, kLeft2
 rect_shl: KEY_RECT   kKeyboardLeft, kRow3, kLeft3
