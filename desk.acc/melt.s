@@ -18,8 +18,6 @@
         .org DA_LOAD_ADDRESS
 
 
-        dummy1234 := $1234
-
 da_start:
         jmp     start
 

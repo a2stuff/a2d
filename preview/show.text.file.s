@@ -52,9 +52,6 @@ font_width_backup       := $1100
 
         .org $800
 
-        dummy1000 := $1000
-
-
 start:  jmp     copy2aux
 
 save_stack:.byte   0

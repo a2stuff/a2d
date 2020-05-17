@@ -7,9 +7,6 @@
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
 
-dummy0000       := $0000
-dummy1234       := $1234
-
 INVOKER_PREFIX  := $0220
 INVOKER_FILENAME:= $0280
 INVOKER         := $0290

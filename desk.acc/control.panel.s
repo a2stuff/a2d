@@ -1733,10 +1733,6 @@ done:   rts
 
 ;;; ============================================================
 
-        dummy_address := $1234
-
-
-
 ;;; Assert: ALTZPOFF
 .proc get_copied_to_ramcard_flag
         lda     LCBANK2
@@ -1758,7 +1754,7 @@ done:   rts
         ldx     RAMCARD_PREFIX
 :       lda     RAMCARD_PREFIX,x
         @addr := *+1
-        sta     dummy_address,x
+        sta     dummy1234,x
         dex
         bpl     :-
 
@@ -1776,7 +1772,7 @@ done:   rts
         ldx     DESKTOP_ORIG_PREFIX
 :       lda     DESKTOP_ORIG_PREFIX,x
         @addr := *+1
-        sta     dummy_address,x
+        sta     dummy1234,x
         dex
         bpl     :-
 

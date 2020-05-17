@@ -2,11 +2,6 @@
 ;;; DeskTop Internals
 ;;; ============================================================
 
-        dummy0000 := $0000         ; overwritten by self-modified code
-        dummy1234 := $1234         ; overwritten by self-modified code
-
-;;; ============================================================
-
 kDAFileType     = $F1
 kDAFileAuxType  = $640           ; High bit set = don't show in Apple menu
 

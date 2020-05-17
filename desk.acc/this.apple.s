@@ -24,8 +24,6 @@
 
         .org DA_LOAD_ADDRESS
 
-        dummy0000 := $0000
-
 da_start:
 
 ;;; Copy the DA to AUX for easy bank switching
