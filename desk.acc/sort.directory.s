@@ -193,10 +193,6 @@ path_buf:
 ;;; Main DA logic
 
 .proc start2
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-
         yax_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, window_id
         lda     window_id       ; any window open?
         beq     bail            ; nope, bail

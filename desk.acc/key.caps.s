@@ -21,26 +21,20 @@ da_start:
 
 ;;; Copy the DA to AUX for easy bank switching
 .scope
-        lda     ROMIN2
         copy16  #da_start, STARTLO
         copy16  #da_end, ENDLO
         copy16  #da_start, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
-        lda     LCBANK1
-        lda     LCBANK1
 .endscope
 
 .scope
-        ;; run the DA
+        ;; Run the DA from Aux
         sta     RAMRDON
         sta     RAMWRTON
         jsr     init
 
-        ;; tear down/exit
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        ;; Tear down/exit, back to Main
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -558,10 +552,6 @@ tmp_rect:
 ;;; ============================================================
 
 .proc init
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-
         jsr     check_extended_layout
         bcc     continue
 

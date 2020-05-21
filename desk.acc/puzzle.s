@@ -32,8 +32,6 @@ stash_stack:  .byte   0
         start := enter_da
         end := last
 
-        sta     ALTZPOFF
-        lda     ROMIN2
         copy16  #start, STARTLO
         copy16  #end, ENDLO
         copy16  #start, DESTINATIONLO
@@ -54,18 +52,12 @@ stash_stack:  .byte   0
 ;;; Set up / tear down
 
 .proc exit_da
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
         ldx     stash_stack
         txs
         rts
 .endproc
 
 .proc enter_da
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
         lda     #0
         sta     $08
         jmp     create_window

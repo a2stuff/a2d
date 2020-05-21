@@ -50,17 +50,12 @@ write_buffer:
 
         tsx
         stx     stash_stack
-        sta     ALTZPOFF
-        lda     ROMIN2
 
         lda     MACHID
         and     #%00000001      ; bit 0 = clock card
         sta     clock_flag
 
-        lda     DATELO
-        sta     datelo
-        lda     DATEHI
-        sta     datehi
+        copy16  DATELO, datelo
 
         copy16  #start, STARTLO
         copy16  #end, ENDLO
@@ -82,11 +77,9 @@ write_buffer:
 ;;; Write date into DESKTOP.SYSTEM file and exit the DA
 
 .proc save_date_and_exit
-        sta     ALTZPON
-        sta     write_buffer
-        stx     write_buffer+1
-        lda     LCBANK1
-        lda     LCBANK1
+        ;; ASSERT: Running from Main
+
+        stax    write_buffer
         lda     write_buffer    ; Dialog committed?
         beq     skip
 
@@ -94,9 +87,7 @@ write_buffer:
         ldx     clock_flag
         bne     skip
 
-        ldy     #OPEN           ; open the file
-        ldax    #open_params
-        jsr     JUMP_TABLE_MLI
+        yax_call JUMP_TABLE_MLI, OPEN, open_params ; open the file
         bne     skip
 
         lda     open_params::ref_num
@@ -104,18 +95,12 @@ write_buffer:
         sta     write_params::ref_num
         sta     close_params::ref_num
 
-        ldy     #SET_MARK       ; seek
-        ldax    #set_mark_params
-        jsr     JUMP_TABLE_MLI
+        yax_call JUMP_TABLE_MLI, SET_MARK, set_mark_params ; seek
         bne     close
 
-        ldy     #WRITE          ; write the date
-        ldax    #write_params
-        jsr     JUMP_TABLE_MLI
+        yax_call JUMP_TABLE_MLI, WRITE, write_params ; write the date
 
-close:  ldy     #CLOSE          ; close the file
-        ldax    #close_params
-        jsr     JUMP_TABLE_MLI
+close:  yax_call JUMP_TABLE_MLI, CLOSE, close_params ; close the file
 
 skip:   ldx     stash_stack     ; exit the DA
         txs
@@ -125,9 +110,6 @@ skip:   ldx     stash_stack     ; exit the DA
 ;;; ============================================================
 
 start_da:
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
         jmp     init_window
 
 ;;; ============================================================

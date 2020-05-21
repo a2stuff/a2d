@@ -83,44 +83,6 @@ save_stack:
 .endproc
 
 ;;; ============================================================
-;;; ProDOS MLI calls
-
-.proc open_file
-        sta     ALTZPOFF
-        MLI_CALL OPEN, open_params
-        sta     ALTZPON
-        rts
-.endproc
-
-.proc get_file_eof
-        sta     ALTZPOFF
-        MLI_CALL GET_EOF, get_eof_params
-        sta     ALTZPON
-        rts
-.endproc
-
-.proc read_file
-        sta     ALTZPOFF
-        MLI_CALL READ, read_params
-        sta     ALTZPON
-        rts
-.endproc
-
-.proc read_minipix_file
-        sta     ALTZPOFF
-        MLI_CALL READ, read_minipix_params
-        sta     ALTZPON
-        rts
-.endproc
-
-.proc close_file
-        sta     ALTZPOFF
-        MLI_CALL CLOSE, close_params
-        sta     ALTZPON
-        rts
-.endproc
-
-
 ;;; ProDOS MLI param blocks
 
         DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
@@ -276,7 +238,7 @@ end:    rts
 .endproc
 
 .proc open_file_and_init_window
-        jsr     open_file
+        yax_call JUMP_TABLE_MLI, OPEN, open_params
         lda     open_params::ref_num
         sta     get_eof_params::ref_num
         sta     read_params::ref_num
@@ -337,7 +299,7 @@ exit:
 .endproc
 
 .proc show_file
-        jsr     get_file_eof
+        yax_call JUMP_TABLE_MLI, GET_EOF, get_eof_params
 
         ;; If bigger than $2000, assume DHR
 
@@ -366,8 +328,8 @@ exit:
 
 .proc show_hr_file
         sta     PAGE2OFF
-        jsr     read_file
-        jsr     close_file
+        yax_call JUMP_TABLE_MLI, READ, read_params
+        yax_call JUMP_TABLE_MLI, CLOSE, close_params
 
         jsr     hr_to_dhr
         rts
@@ -378,7 +340,7 @@ exit:
 
         ;; AUX memory half
         sta     PAGE2OFF
-        jsr     read_file
+        yax_call JUMP_TABLE_MLI, READ, read_params
 
         ;; NOTE: Why not just load into Aux directly by setting
         ;; PAGE2ON? This works unless loading from a RamWorks-based
@@ -407,8 +369,8 @@ exit:
 
         ;; MAIN memory half
         sta     PAGE2OFF
-        jsr     read_file
-        jsr     close_file
+        yax_call JUMP_TABLE_MLI, READ, read_params
+        yax_call JUMP_TABLE_MLI, CLOSE, close_params
 
         rts
 .endproc
@@ -418,8 +380,8 @@ exit:
         jsr     set_bw_mode
 
         ;; Load file at minipix_src_buf (MAIN $1800)
-        jsr     read_minipix_file
-        jsr     close_file
+        yax_call JUMP_TABLE_MLI, READ, read_minipix_params
+        yax_call JUMP_TABLE_MLI, CLOSE, close_params
 
         ;; Convert (main to aux)
         jsr     convert_minipix_to_bitmap

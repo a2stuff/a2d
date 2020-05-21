@@ -155,27 +155,21 @@ end:    rts
         ;; --------------------------------------------------
         ;; Load the file
 
-        sta     ALTZPOFF
-        MLI_CALL OPEN, open_params ; TODO: Check for error
+        yax_call JUMP_TABLE_MLI, OPEN, open_params ; TODO: Check for error
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        MLI_CALL READ, read_params ; TODO: Check for error
-        MLI_CALL CLOSE, close_params
-        sta     ALTZPON
-
+        yax_call JUMP_TABLE_MLI, READ, read_params ; TODO: Check for error
+        yax_call JUMP_TABLE_MLI, CLOSE, close_params
 
         ;; --------------------------------------------------
         ;; Copy the DA code and loaded data to AUX
 
-        lda     ROMIN2
         copy16  #DA_LOAD_ADDRESS, STARTLO
         copy16  #WINDOW_ICON_TABLES-1, ENDLO
         copy16  #DA_LOAD_ADDRESS, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
-        lda     LCBANK1
-        lda     LCBANK1
 
         ;; --------------------------------------------------
         ;; Run the DA from Aux, back to Main when done

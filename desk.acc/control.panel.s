@@ -26,14 +26,11 @@ da_start:
 
 ;;; Copy the DA to AUX for easy bank switching
 .scope
-        lda     ROMIN2
         copy16  #da_start, STARTLO
         copy16  #da_end, ENDLO
         copy16  #da_start, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
-        lda     LCBANK1
-        lda     LCBANK1
 .endscope
 
 .scope
@@ -1672,9 +1669,6 @@ write_buffer:
         ;; Copy from LCBANK to somewhere ProDOS can read.
         COPY_STRUCT DeskTopSettings, SETTINGS, write_buffer
 
-        sta     ALTZPOFF        ; Main ZP, ROM in, like ProDOS MLI wants.
-        lda     ROMIN2
-
         ;; Write to desktop current prefix
         copy16  #filename, open_params::pathname
         jsr     do_write
@@ -1688,10 +1682,7 @@ write_buffer:
         jsr     append_filename
         jsr     do_write
 
-done:   sta     ALTZPON         ; Aux ZP, LCBANK1 in, like DeskTop wants.
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
+done:   rts
 
 .proc append_filename
         ;; Append filename to buffer
@@ -1716,15 +1707,15 @@ done:   sta     ALTZPON         ; Aux ZP, LCBANK1 in, like DeskTop wants.
         ;; Create if necessary
         copy16  DATELO, create_params::create_date
         copy16  TIMELO, create_params::create_time
-        MLI_CALL CREATE, create_params
+        yax_call JUMP_TABLE_MLI, CREATE, create_params
 
-        MLI_CALL OPEN, open_params
+        yax_call JUMP_TABLE_MLI, OPEN, open_params
         bcs     done
         lda     open_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-        MLI_CALL WRITE, write_params
-close:  MLI_CALL CLOSE, close_params
+        yax_call JUMP_TABLE_MLI, WRITE, write_params
+close:  yax_call JUMP_TABLE_MLI, CLOSE, close_params
 done:   rts
 .endproc
 
@@ -1733,21 +1724,22 @@ done:   rts
 
 ;;; ============================================================
 
-;;; Assert: ALTZPOFF
 .proc get_copied_to_ramcard_flag
+        sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
         lda     COPIED_TO_RAMCARD_FLAG
         tax
+        sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         txa
         rts
 .endproc
 
-;;; Assert: ALTZPOFF
 .proc copy_ramcard_prefix
         stax    @addr
+        sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
@@ -1758,14 +1750,15 @@ done:   rts
         dex
         bpl     :-
 
+        sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts
 .endproc
 
-;;; Assert: ALTZPOFF
 .proc copy_desktop_orig_prefix
         stax    @addr
+        sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
@@ -1776,6 +1769,7 @@ done:   rts
         dex
         bpl     :-
 
+        sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts

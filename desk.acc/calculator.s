@@ -33,7 +33,6 @@ save_stack:  .byte   0
         stx     save_stack
 
         ;; Copy the DA to AUX memory.
-        lda     ROMIN2
         copy16  #start, STARTLO
         copy16  #da_end, ENDLO
         copy16  #start, DESTINATIONLO
@@ -46,11 +45,6 @@ save_stack:  .byte   0
 ;;; ============================================================
 
 .proc init_da
-        ;; TODO: Should be unnecessary:
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-
         ;; Run DA from Aux
         sta     RAMRDON
         sta     RAMWRTON
@@ -64,11 +58,6 @@ save_stack:  .byte   0
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
-        ;; TODO: Should be unnecessary:
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-
         ldx     save_stack
         txs
         rts
@@ -79,7 +68,7 @@ save_stack:  .byte   0
 
 .proc redraw_screen_and_window
 
-        ;; Redraw DeskTop's windows and icons.
+        ;; Redraw DeskTop's windows and icons
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_REDRAW_ALL

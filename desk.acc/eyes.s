@@ -22,14 +22,11 @@ da_start:
 
 ;;; Copy the DA to AUX for easy bank switching
 .scope
-        lda     ROMIN2
         copy16  #da_start, STARTLO
         copy16  #da_end, ENDLO
         copy16  #da_start, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
-        lda     LCBANK1
-        lda     LCBANK1
 .endscope
 
 .scope
@@ -37,11 +34,6 @@ da_start:
         sta     RAMRDON
         sta     RAMWRTON
         jsr     init
-
-        ;; TODO: Should be unnecessary:
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
 
         ;; Back to main for exit
         sta     RAMRDOFF
@@ -192,10 +184,6 @@ grow_box_bitmap:
 ;;; ============================================================
 
 .proc init
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-
         lda     #0
         sta     SHIFT_SIGN_EXT  ; Must zero before using FP ops
 

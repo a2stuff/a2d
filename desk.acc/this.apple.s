@@ -28,26 +28,20 @@ da_start:
 
 ;;; Copy the DA to AUX for easy bank switching
 .scope
-        lda     ROMIN2
         copy16  #da_start, STARTLO
         copy16  #da_end, ENDLO
         copy16  #da_start, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
-        lda     LCBANK1
-        lda     LCBANK1
 .endscope
 
 .scope
-        ;; run the DA
+        ;; run the DA (from Main)
         sta     RAMRDON
         sta     RAMWRTON
         jsr     init
 
-        ;; tear down/exit
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        ;; tear down/exit (back to Aux)
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -722,10 +716,8 @@ match:  tya
 .proc identify_prodos_version
         ;; Read ProDOS version field from global page in main
         sta     RAMRDOFF
-        sta     RAMWRTOFF
         lda     KVERSION
         sta     RAMRDON
-        sta     RAMWRTON
 
         cmp     #$24
         bcs     v_2x
@@ -766,10 +758,6 @@ done:   rts
 ;;; ============================================================
 
 .proc init
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-
         jsr     identify_model
         jsr     identify_prodos_version
         jsr     identify_memory
