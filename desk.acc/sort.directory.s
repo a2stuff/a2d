@@ -55,11 +55,11 @@ window_id := $0A
 
 ;;; ============================================================
 
-        cli
         jmp     start
 
-        ;; unit_num for active window, for block operations
-unit_num:  .byte   0
+;;; unit_num for active window, for block operations
+unit_num:
+        .byte   0
 
 save_stack:
         .byte   0
@@ -116,46 +116,6 @@ start:  tsx
         rts
 .endproc
 
-.proc on_line
-        sta     ALTZPOFF
-        MLI_CALL ON_LINE, on_line_params
-        sta     ALTZPON
-        rts
-.endproc
-        .byte   0
-
-;;; unused ???
-.proc write
-        sta     ALTZPOFF
-        MLI_CALL WRITE, write_params
-        sta     ALTZPON
-        rts
-.endproc
-
-;;; unused ???
-.proc set_mark
-        sta     ALTZPOFF
-        MLI_CALL SET_MARK, set_mark_params
-        sta     ALTZPON
-        rts
-.endproc
-
-;;; unused ???
-.proc get_file_info
-        sta     ALTZPOFF
-        MLI_CALL GET_FILE_INFO, file_info_params
-        sta     ALTZPON
-        rts
-.endproc
-
-;;; unused ???
-.proc set_file_info
-        sta     ALTZPOFF
-        MLI_CALL SET_FILE_INFO, file_info_params
-        sta     ALTZPON
-        rts
-.endproc
-
 .proc close
         sta     ALTZPOFF
         MLI_CALL CLOSE, close_params
@@ -166,14 +126,8 @@ start:  tsx
 ;;; ============================================================
 ;;; ProDOS call parameter blocks
 
-        DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
-on_line_buffer:
-        .res    16, 0
-
         DEFINE_SET_MARK_PARAMS set_mark_params, $2B
         DEFINE_READ_BLOCK_PARAMS block_params, 0, 0
-
-        .byte   0
 
         buffer := dir_data_buffer
         kBufferLen = kDirDataBufferLen
@@ -184,7 +138,6 @@ on_line_buffer:
         DEFINE_CLOSE_PARAMS close_params
 
         DEFINE_GET_FILE_INFO_PARAMS file_info_params, path_buf
-        .res    3               ; for SET_FILE_INFO ???
 
 path_buf:
         .res    kPathBufferSize, 0
@@ -192,59 +145,32 @@ path_buf:
 ;;; ============================================================
 ;;; Main DA logic
 
-.proc start2
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, window_id
-        lda     window_id       ; any window open?
-        beq     bail            ; nope, bail
-
-        cmp     #kMaxDeskTopWindows+1
-        bcc     has_window
-bail:   jmp     exit
-.endproc
-
-has_window:
-
-.scope
-        ;; Copy window path to buffer
-        jsr     JUMP_TABLE_GET_WIN_PATH
-        stax    $06
-
-        ldy     #0
-        sty     $10             ; ???
-        lda     ($06),y
-        sta     len
-        sta     path_buf
-loop:   iny
-        lda     ($06),y
-        and     #CHAR_MASK
-        cmp     #'a'            ; lower case?
-        bcc     :+
-        and     #CASE_MASK      ; restore to upper-case
-:       sta     path_buf,y
-        len := *+1
-        cpy     #0
-        bne     loop
-.endscope
-
-.scope
-        ;; Enumerate devices to find unit_num matching path.
-        ldy     DEVCNT
-        sty     dev_num
-loop:   ldy     dev_num
-        lda     DEVLST,y
-        and     #$F0            ; mask off drive/slot
-        sta     on_line_params::unit_num
-        jsr     on_line
-        bne     next
-        jsr     compare_paths_for_unit_num
-        beq     found_unit_num
-next:   dec     dev_num
-        bpl     loop
-.endscope
-
 exit1:  jmp     exit
 
-found_unit_num:
+.proc start2
+        ;; Grab top window
+        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, window_id
+        lda     window_id       ; any window open?
+        beq     exit1           ; nope, bail
+
+        cmp     #kMaxDeskTopWindows+1 ; is it DeskTop window?
+        bcs     exit1                 ; nope, bail
+
+        ;; Copy window path to buffer
+        ptr := $06
+
+        jsr     JUMP_TABLE_GET_WIN_PATH
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     path_buf,y
+        dey
+        bpl     :-
+
+        ;; Fall through...
+.endproc
 
 .proc read_sort_write
 
@@ -254,13 +180,14 @@ found_unit_num:
         ;; Read the directory (up to 14 blocks)
 .scope read
 
-        copy    on_line_params::unit_num, unit_num
-
         jsr     open
         bne     exit1
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
+
+        ;; Save last accessed device's unit_num for block operations.
+        copy    DEVNUM, unit_num
 
         jsr     read
         jsr     close
@@ -402,47 +329,12 @@ block_index:
 
 ;;; Table of directory block numbers (words); the directory is read using
 ;;; file I/O but must be written out using block I/O. The necessary block
-;;; numbers are to write are extracted and stored here.
+;;; numbers to write are extracted and stored here.
 block_num_table:
         .res 26, 0
 
 entry_num:
         .byte   0
-
-;;; ============================================================
-;;; Compare path from ON_LINE vs. path from window, since we
-;;; need unit_num for block operations.
-
-.proc compare_paths_for_unit_num
-        lda     on_line_buffer
-        and     #$0F
-        sta     on_line_buffer
-
-        ldy     #0
-loop:   iny
-        lda     on_line_buffer,y
-        and     #CHAR_MASK
-        cmp     #'a'
-        bcc     :+
-        and     #CASE_MASK            ; make upper-case
-:       cmp     path_buf+1,y
-        bne     fail
-        cpy     on_line_buffer
-        bne     loop
-
-        lda     on_line_buffer
-        clc
-        adc     #$01
-        cmp     path_buf
-        beq     success
-        lda     path_buf+2,y
-        cmp     #'/'
-        bne     fail
-success:
-        return  #$00
-
-fail:   return  #$FF
-.endproc
 
 ;;; ============================================================
 ;;; Bubble sort entries
