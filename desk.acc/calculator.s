@@ -1102,7 +1102,7 @@ do_op:  pla
         jsr     CALL_ROUND
         jsr     CALL_FOUT            ; output as null-terminated string to FBUFFR
 
-        ldy     #0              ; count the eize
+        ldy     #0              ; count the size
 sloop:  lda     FBUFFR,y
         beq     :+
         iny

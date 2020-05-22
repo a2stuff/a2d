@@ -108,7 +108,7 @@ xcoord: .word
 ```
 
 * **Do** use [cheap local labels](https://cc65.github.io/doc/ca65.html#ss6.5)
-    to higlight repeated patterns. For example, retries:
+    to highlight repeated patterns. For example, retries:
 
 ```asm
 @retry: MLI_CALL GET_FILE_INFO, params

@@ -304,7 +304,7 @@ L0BBB:  lda     L0C1F
         lda     selected_device_index
         bmi     L0BD9
         lda     selected_device_index
-        jsr     hilight_volume_label
+        jsr     highlight_volume_label
         lda     #$FF
         sta     selected_device_index
 L0BD9:  return  #$FF
@@ -322,10 +322,10 @@ L0C03:  rts
 L0C04:  sta     L0C1E
         lda     selected_device_index
         bmi     L0C0F
-        jsr     hilight_volume_label
+        jsr     highlight_volume_label
 L0C0F:  lda     L0C1E
         sta     selected_device_index
-        jsr     hilight_volume_label
+        jsr     highlight_volume_label
         jsr     main::detect_double_click
         beq     L0BE6
         rts
@@ -339,7 +339,7 @@ L0C1F:  .byte   0
 
         kLabelWidth = 120
 
-.proc hilight_volume_label
+.proc highlight_volume_label
         ldy     #39
         sty     select_volume_rect::x1
         ldy     #0
@@ -380,7 +380,7 @@ L0CA9:  .byte   0
 .proc L0CAA
         lda     selected_device_index
         bmi     :+
-        jsr     hilight_volume_label
+        jsr     highlight_volume_label
         copy    #$FF, selected_device_index
 :       rts
 .endproc
@@ -401,7 +401,7 @@ L0CC1:  clc
         jsr     L0CAA
         pla
 L0CCE:  sta     selected_device_index
-        jsr     hilight_volume_label
+        jsr     highlight_volume_label
 L0CD4:  return  #$FF
 .endproc
 
@@ -425,7 +425,7 @@ L0CE6:  sec
         jsr     L0CAA
         pla
 L0CF0:  sta     selected_device_index
-        jsr     hilight_volume_label
+        jsr     highlight_volume_label
 L0CF6:  return  #$FF
 .endproc
 
@@ -443,7 +443,7 @@ L0D06:  pha
         jsr     L0CAA
         pla
         sta     selected_device_index
-        jsr     hilight_volume_label
+        jsr     highlight_volume_label
         return  #$FF
 .endproc
 
@@ -463,7 +463,7 @@ L0D23:  pha
         jsr     L0CAA
         pla
         sta     selected_device_index
-        jsr     hilight_volume_label
+        jsr     highlight_volume_label
         return  #$FF
 .endproc
 

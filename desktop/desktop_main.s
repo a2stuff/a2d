@@ -445,7 +445,7 @@ handle_keydown:
         jsr     upcase_char
         cmp     #'H'            ; OA-H (Highlight Icon)
         bne     :+
-        jmp     cmd_higlight
+        jmp     cmd_highlight
 :       bit     flag
         bpl     menu_accelerators
         cmp     #'G'            ; OA-G (Resize)
@@ -2821,7 +2821,7 @@ selected_vol_icon_list:
 ;;; ============================================================
 ;;; Handle keyboard-based icon selection ("highlighting")
 
-.proc cmd_higlight
+.proc cmd_highlight
         jmp     L544D
 
 L5444:  .byte   0
@@ -4436,7 +4436,7 @@ cont:   sta     cached_window_icon_count
         jsr     StoreWindowIconTable
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
 
-        ;; Unhilight dir (vol/folder) icon, if present
+        ;; Unhighlight dir (vol/folder) icon, if present
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
@@ -12968,7 +12968,7 @@ loop:   iny
         sta     getwinport_params2::window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
-:       ldx     stack_stash     ; restore stack, in case recusion was aborted
+:       ldx     stack_stash     ; restore stack, in case recursion was aborted
         txs
         return  #$FF
 .endproc

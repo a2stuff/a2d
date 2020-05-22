@@ -232,7 +232,7 @@ rts2:   rts
 
 ;;; ============================================================
 ;;; Drawing calls show/hide cursor before/after
-;;; A recursion count is kept to allow rentrancy.
+;;; A recursion count is kept to allow re-entrancy.
 
 hide_cursor_count:
         .byte   0
@@ -6865,7 +6865,7 @@ set_found_window:
 get_from_ax:
         stax    window
 
-        ldy     #11             ; copy first 12 bytes of window defintion to
+        ldy     #11             ; copy first 12 bytes of window definition to
 :       lda     (window),y         ; to $AB
         sta     current_winfo,y
         dey

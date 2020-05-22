@@ -23,7 +23,7 @@ prefix_length:
         .byte   0
 
 ;;; High bit set if an interpreter is being invoked, and
-;;; the start protcol must be followed.
+;;; the start protocol must be followed.
 interpreter_flag:
         .byte   0
 
