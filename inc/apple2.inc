@@ -35,6 +35,7 @@ BELL1           := $FBDD        ; Generate tone.
 VTAB            := $FC22        ; Vertical tab. Uses value at CV.
 VTABZ           := $FC24        ; Vertical tab (alternate entry). Uses A.
 HOME            := $FC58        ; Home cursor and clear to end of page.
+CROUT           := $FD8E        ; Issue a carriage return.
 PRBYTE          := $FDDA        ; Print a hexadecimal byte.
 COUT            := $FDED        ; Output a character.
 IDROUTINE       := $FE1F        ; RTS ($60) on pre-IIgs, clears carry on IIgs
