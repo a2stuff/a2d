@@ -9301,7 +9301,7 @@ start:  sta     on_line_params::unit_num
 
         ;; Prefix the path with '/'
         lda     buffer
-        and     #%00001111      ; mask off name length
+        and     #NAME_LENGTH_MASK
         clc
         adc     #1              ; account for '/'
         sta     path

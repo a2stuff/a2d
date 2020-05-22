@@ -573,7 +573,7 @@ LD740:  lda     #$00
         sta     disk_copy_overlay4_on_line_params2_unit_num
         jsr     disk_copy_overlay4_L1291
         beq     LD77E
-        cmp     #$52
+        cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
         jsr     disk_copy_overlay4_L0D5F
         jsr     LE674
@@ -590,7 +590,7 @@ LD77E:  lda     $1300
         and     #$0F
         bne     LD798
         lda     $1301
-        cmp     #$52
+        cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
         jsr     disk_copy_overlay4_L0D5F
         jsr     LE674
@@ -623,7 +623,7 @@ LD7CC:  ldx     dest_drive_index
         sta     disk_copy_overlay4_on_line_params2_unit_num
         jsr     disk_copy_overlay4_L1291
         beq     LD7E1
-        cmp     #$52
+        cmp     #ERR_NOT_PRODOS_VOLUME
         beq     LD7F2
         jmp     LD852
 
@@ -631,7 +631,7 @@ LD7E1:  lda     $1300
         and     #$0F
         bne     LD7F2
         lda     $1301
-        cmp     #$52
+        cmp     #ERR_NOT_PRODOS_VOLUME
         beq     LD7F2
         jmp     LD852
 
@@ -3055,13 +3055,13 @@ LF185:  sty     LD41D
         sta     disk_copy_overlay4_on_line_params_unit_num
         jsr     disk_copy_overlay4_L129B
         beq     done
-        cmp     #$52
+        cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
         lda     disk_copy_overlay4_on_line_buffer
         and     #$0F
         bne     done
         lda     disk_copy_overlay4_on_line_buffer+1
-        cmp     #$52
+        cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind

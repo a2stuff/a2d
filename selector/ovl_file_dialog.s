@@ -1906,7 +1906,7 @@ LB03E:  .byte   0
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
         lda     buf_on_line
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         sta     buf_on_line
         bne     LB075
         jsr     LB082

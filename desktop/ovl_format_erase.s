@@ -1541,7 +1541,7 @@ L1A22:  sta     ovl_path_buf,x
         MLI_RELAY_CALL ON_LINE, on_line_params
         bne     L1A6D
         lda     read_buffer
-        and     #$0F            ; mask off name length
+        and     #NAME_LENGTH_MASK
         beq     L1A6D
         sta     read_buffer
         tax
