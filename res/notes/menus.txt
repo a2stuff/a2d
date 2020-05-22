@@ -1,0 +1,29 @@
+Same
+ IIgs                   DeskTop                 Shortcut
+ ---------------------- ----------------------- ------------
+ File > New Folder      File > New Folder       OA-N
+ File > Open            File > Open             OA-O
+ File > Close           File > Close            OA-W
+ File > Close All       File > Close All
+ Special > Icon Info    File > Get Info         OA-I
+ Edit > Select All      File > Select All       OA-A
+ Special > Shut Down... File > Quit             OA-Q
+
+ View > by Icon         View > as Icons
+ View > by Name         View > by Name
+ View > by Date         View > by Date
+ View > by Size         View > by Size
+ View > by Kind         View > by Kind
+
+ Disk > Eject           Special > Eject Disk    OA-E
+ Disk > Erase...        Special > Erase a Disk...
+ Disk > Initialize...   Special > Format a Disk...
+
+IIgs but not DeskTop
+ File > Duplicate...   OA-D
+ File > Put Away       OA-Y
+ Edit > Undo           OA-Z
+ Edit > Cut            OA-X
+ Edit > Copy           OA-C
+ Edit > Paste          OA-V
+ Special > Empty Trash OA-T
