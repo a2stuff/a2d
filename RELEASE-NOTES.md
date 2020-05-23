@@ -73,9 +73,15 @@ previewed without leaving DeskTop; select the file icon then select
 File > Open, or double-click the file icon.
 
 * Text files must be type TXT ($04).
-* Graphics files must be type FOT ($08), or BIN ($06) with an aux type
-    of $2000 or $4000 and 17 or 33 blocks (hi-res/double hi-res) or $5800
-    and 3 blocks (Minipix a.k.a. Print Shop).
+* Graphics files must be type FOT ($08), or BIN ($06) with specific aux type:
+  * BIN ($08) files:
+    * Aux type $2000 or $4000 and 17 blocks are hi-res images.
+    * Aux type $2000 or $4000 and 33 blocks are double hi-res images.
+    * Aux type $5800 and 3 blocks are Minipix (Print Shop) images.
+  * FOT ($08) files:
+    * Aux type $4000 or $4001 are packed hi-res/double-hires images. (#107)
+    * 17 block files are hi-res images.
+    * 33 block files are double-hires images.
 * Font files must be MGTK fonts with type FNT ($07).
 
 To preview files of other types, you can copy the preview handlers

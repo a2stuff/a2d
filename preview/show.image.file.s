@@ -86,6 +86,7 @@ save_stack:
 ;;; ProDOS MLI param blocks
 
         DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, pathbuf
         DEFINE_GET_EOF_PARAMS get_eof_params
 
         DEFINE_READ_PARAMS read_params, hires, kHiresSize
@@ -246,8 +247,7 @@ end:    rts
         sta     close_params::ref_num
 
         MGTK_RELAY_CALL MGTK::HideCursor
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo
-        MGTK_RELAY_CALL MGTK::SetPort, winfo::port
+        jsr     clear_screen
         jsr     set_color_mode
         jsr     show_file
         MGTK_RELAY_CALL MGTK::ShowCursor
@@ -285,20 +285,40 @@ on_key:
 
 exit:
         jsr     set_bw_mode
-        MGTK_RELAY_CALL MGTK::HideCursor
+
+        ;; Force desktop redraw
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo
 
         ;; Restore menu
         MGTK_RELAY_CALL MGTK::DrawMenu
         jsr     JUMP_TABLE_HILITE_MENU
 
-        ;; Force desktop redraw
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo
-
-        MGTK_RELAY_CALL MGTK::ShowCursor
         rts                     ; exits input loop
 .endproc
 
 .proc show_file
+        ;; Check file type
+        yax_call JUMP_TABLE_MLI, GET_FILE_INFO, get_file_info_params
+        lda     get_file_info_params::file_type
+        cmp     #FT_GRAPHICS
+        bne     get_eof
+
+        ;; FOT files - auxtype $4000 / $4001 are packed hires/double-hires
+        lda     get_file_info_params::aux_type+1
+        cmp     #$40
+        bne     get_eof
+
+        lda     get_file_info_params::aux_type
+        cmp     #$00
+        bne     :+
+        jmp     show_packed_hr_file
+:       cmp     #$01
+        bne     get_eof
+        jmp     show_packed_dhr_file
+
+        ;; Otherwise, rely on size heuristics to determine the type
+get_eof:
         yax_call JUMP_TABLE_MLI, GET_EOF, get_eof_params
 
         ;; If bigger than $2000, assume DHR
@@ -348,9 +368,19 @@ exit:
         ;; slower in the non-RamWorks case.
         ;; TODO: Load directly into Aux if RamWorks is not present.
 
-        ;; Copy MAIN to AUX
+        jsr     copy_hires_to_aux
 
-        sta     CLR80COL        ; write aux
+        ;; MAIN memory half
+        yax_call JUMP_TABLE_MLI, READ, read_params
+        yax_call JUMP_TABLE_MLI, CLOSE, close_params
+
+        rts
+.endproc
+
+.proc copy_hires_to_aux
+        ptr := $06
+
+        sta     CLR80COL
         sta     RAMWRTON
 
         copy16  #hires, ptr
@@ -364,14 +394,8 @@ exit:
         dex
         bne     :-
 
-        sta     RAMWRTOFF       ; write main
         sta     SET80COL
-
-        ;; MAIN memory half
-        sta     PAGE2OFF
-        yax_call JUMP_TABLE_MLI, READ, read_params
-        yax_call JUMP_TABLE_MLI, CLOSE, close_params
-
+        sta     RAMWRTOFF
         rts
 .endproc
 
@@ -387,6 +411,7 @@ exit:
         jsr     convert_minipix_to_bitmap
 
         ;; Draw
+        MGTK_RELAY_CALL MGTK::SetPort, winfo::port
         MGTK_RELAY_CALL MGTK::PaintBits, paintbits_params
 
         rts
@@ -469,9 +494,7 @@ next:
         cmp     #kRows
         bne     rloop
 
-        ;; TODO: Restore PAGE2 state?
-done:   sta     PAGE2OFF
-        rts
+done:   rts
 .endproc
 
 ;;; ============================================================
@@ -605,6 +628,221 @@ done:   rts
         jsr     JUMP_TABLE_MONO_MODE
 
 done:   rts
+.endproc
+
+;;; ============================================================
+
+.proc unpack_read
+        DEFINE_READ_PARAMS read_buf_params, read_buf, 0
+
+        ptr := $06
+
+hr_file:
+        lda     #0
+        beq     start           ; Always
+
+dhr_file:
+        lda     #$C0            ; S = is dhr?, V = is aux page?
+        ;; Fall through
+
+
+start:  sta     dhr_flag
+        copy16  #hires, ptr
+
+        sta     PAGE2OFF
+
+        copy    open_params::ref_num, read_buf_params::ref_num
+
+        ;; Read next op/count byte
+loop:   copy    #1, read_buf_params::request_count
+        yax_call JUMP_TABLE_MLI, READ, read_buf_params
+        bcc     body
+
+        ;; EOF (or other error) - finish up
+        yax_call JUMP_TABLE_MLI, CLOSE, close_params
+        bit     dhr_flag        ; if hires, need to convert
+        bmi     :+
+        jsr     hr_to_dhr
+:       rts
+
+        ;; Process op/count
+body:   lda     read_buf
+        and     #%00111111      ; count is low 6 bits + 1
+        sta     count
+        inc     count
+
+        lda     read_buf
+        and     #%11000000      ; operation is top 2 bits
+        bne     not_00
+
+        ;; --------------------------------------------------
+        ;; %00...... = 1 to 64 bytes follow - all different
+
+        copy    count, read_buf_params::request_count
+        yax_call JUMP_TABLE_MLI, READ, read_buf_params
+        ldy     #0
+
+        ldx     #0
+:       lda     read_buf,x
+        jsr     write
+        inx
+        cpx     count
+        bne     :-
+
+        jmp     loop
+
+        ;; --------------------------------------------------
+
+not_00: cmp     #%01000000
+        bne     not_01
+
+        ;; --------------------------------------------------
+        ;; %01...... = 3, 5, 6, or 7 repeats of next byte
+
+        copy    #1, read_buf_params::request_count
+        yax_call JUMP_TABLE_MLI, READ, read_buf_params
+        ldy     #0
+        lda     read_buf
+
+:       jsr     write
+        dec     count
+        bne     :-
+
+        jmp     loop
+
+        ;; --------------------------------------------------
+
+not_01: cmp     #%10000000
+        bne     not_10
+
+        ;; --------------------------------------------------
+        ;; %10...... = 1 to 64 repeats of next 4 bytes
+
+        copy    #4, read_buf_params::request_count
+        yax_call JUMP_TABLE_MLI, READ, read_buf_params
+        ldy     #0
+
+:       lda     read_buf+0
+        jsr     write
+        lda     read_buf+1
+        jsr     write
+        lda     read_buf+2
+        jsr     write
+        lda     read_buf+3
+        jsr     write
+        dec     count
+        bne     :-
+
+        jmp     loop
+
+        ;; --------------------------------------------------
+
+not_10:
+        ;; --------------------------------------------------
+        ;; %11...... = 1 to 64 repeats of next byte taken as 4 bytes
+
+        copy    #1, read_buf_params::request_count
+        yax_call JUMP_TABLE_MLI, READ, read_buf_params
+        ldy     #0
+        lda     read_buf
+
+:       jsr     write
+        jsr     write
+        jsr     write
+        jsr     write
+        dec     count
+        bne     :-
+
+        jmp     loop
+
+        ;; --------------------------------------------------
+
+.proc write
+        ;; ASSERT: Y=0
+        sta     (ptr),y
+        inc     ptr
+        beq     :+
+        rts
+
+:       pha
+
+        inc     ptr+1
+        lda     ptr+1
+        cmp     #$40            ; did we hit page 2?
+        bne     exit
+        lda     #$20            ; yes, back to page 1
+        sta     ptr+1
+
+        bit     dhr_flag        ; if DHR aux half, need to copy page to aux
+        bvc     exit            ; nope
+        copy    #$80, dhr_flag
+
+        ;; Save ptr, X, Y
+        lda     ptr
+        pha
+        lda     ptr+1
+        pha
+        txa
+        pha
+        tya
+        pha
+
+        jsr     copy_hires_to_aux
+
+        ;; Restore ptr, X, Y
+        pla
+        tay
+        pla
+        tax
+        pla
+        sta     ptr+1
+        pla
+        sta     ptr
+
+exit:   pla
+        rts
+.endproc
+
+        ;; --------------------------------------------------
+
+dhr_flag:
+        .byte   0
+
+count:  .byte   0
+
+read_buf:
+        .res    64
+
+.endproc
+show_packed_hr_file     := unpack_read::hr_file
+show_packed_dhr_file    := unpack_read::dhr_file
+
+;;; ============================================================
+;;; Clear screen to black
+
+.proc clear_screen
+        ptr := $6
+        kHiresSize = $2000
+
+        sta     PAGE2ON         ; Clear aux
+        jsr     clear
+        sta     PAGE2OFF        ; Clear main
+        jsr     clear
+        rts
+
+clear:  copy16  #hires, ptr
+        lda     #0              ; clear to black
+        ldx     #>kHiresSize    ; number of pages
+        ldy     #0              ; pointer within page
+:       sta     (ptr),y
+        iny
+        bne     :-
+        inc     ptr+1
+        dex
+        bne     :-
+        rts
+
+done:
 .endproc
 
 ;;; ============================================================
