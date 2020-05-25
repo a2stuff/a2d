@@ -3380,6 +3380,8 @@ L5916:  lda     cached_window_icon_list,x
         txa
         pha
 
+        jsr     reset_grafport3
+
         lda     cached_window_icon_list,x
         sta     icon_param
         copy    #0, cached_window_icon_list,x
