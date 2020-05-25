@@ -59,6 +59,8 @@ https://github.com/a2stuff/a2d/issues
   * Homage to the classic After Dark "Flying Toasters" by Jack Eastman. More to come. (#27)
 * Melt
   * Another classic screen saver effect: the screen melts down like dripping wax. (#27)
+* NormFast
+  * Enable/disable built-in and some popular add-on system accelerators. (#26)
 
 Note that several of the new Desk Accessories will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
