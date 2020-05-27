@@ -62,26 +62,21 @@ reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
 .endparams
 
-str_cancel_btn:
+cancel_button_string:
         PASCAL_STRING "Cancel    Esc"
-str_ok_btn:
+ok_button_string:
         PASCAL_STRING {"OK            ", kGlyphReturn}
-str_try_again_btn:
+try_again_button_string:
         PASCAL_STRING "Try Again  A"
 
-ok_rect:
-try_again_rect:
-        DEFINE_RECT_SZ 300, 37, kButtonWidth, kButtonHeight
-ok_pos:
-try_again_pos:
-        DEFINE_POINT 305, 47
+        DEFINE_BUTTON_COORDS2 ok, 300, 37
+        DEFINE_BUTTON_COORDS2 cancel, 20, 37
 
-rect_cancel_btn:
-        DEFINE_RECT_SZ 20, 37, kButtonWidth, kButtonHeight
-pos_cancel_btn:
-        DEFINE_POINT 25,47
+try_again_button_rect   := ok_button_rect
+try_again_pos           := ok_button_pos
 
-        DEFINE_POINT 190,16
+
+        DEFINE_POINT 190,16     ; Unused ???
 
 pos_prompt:     DEFINE_POINT 75,29
 
@@ -241,24 +236,24 @@ LD314:  tya
         bpl     ok_button
 
         ;; Cancel button
-        MGTK_CALL MGTK::FrameRect, rect_cancel_btn
-        MGTK_CALL MGTK::MoveTo, pos_cancel_btn
-        addr_call app::DrawString, str_cancel_btn
+        MGTK_CALL MGTK::FrameRect, cancel_button_rect
+        MGTK_CALL MGTK::MoveTo, cancel_button_pos
+        addr_call app::DrawString, cancel_button_string
 
         bit     alert_options
         bvs     ok_button
 
         ;; Try Again button
-        MGTK_CALL MGTK::FrameRect, try_again_rect
+        MGTK_CALL MGTK::FrameRect, try_again_button_rect
         MGTK_CALL MGTK::MoveTo, try_again_pos
-        addr_call app::DrawString, str_try_again_btn
+        addr_call app::DrawString, try_again_button_string
         jmp     draw_prompt
 
         ;; OK button
 ok_button:
-        MGTK_CALL MGTK::FrameRect, ok_rect
-        MGTK_CALL MGTK::MoveTo, ok_pos
-        addr_call app::DrawString, str_ok_btn
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
+        MGTK_CALL MGTK::MoveTo, ok_button_pos
+        addr_call app::DrawString, ok_button_string
 
         ;; Prompt string
 draw_prompt:
@@ -288,7 +283,7 @@ event_loop:
         bne     :+
 
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
         lda     #kAlertResultCancel
         jmp     finish
 
@@ -297,7 +292,7 @@ event_loop:
         cmp     #'a'
         bne     :+
 was_a:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
+        MGTK_CALL MGTK::PaintRect, try_again_button_rect
         lda     #kAlertResultTryAgain
         jmp     finish
 
@@ -311,7 +306,7 @@ check_ok:
         cmp     #CHAR_RETURN    ; Return = OK?
         bne     :+
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, ok_rect
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     #kAlertResultOK
         jmp     finish
 
@@ -325,22 +320,22 @@ handle_button:
         MGTK_CALL MGTK::MoveTo, app::event_coords
 
         bit     alert_options   ; Cancel?
-        bpl     check_ok_rect
+        bpl     check_ok_button_rect
 
-        MGTK_CALL MGTK::InRect, rect_cancel_btn
+        MGTK_CALL MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
         bne     :+
         jmp     cancel_btn_event_loop
 
 :       bit     alert_options   ; Try Again?
-        bvs     check_ok_rect
-        MGTK_CALL MGTK::InRect, try_again_rect
+        bvs     check_ok_button_rect
+        MGTK_CALL MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
         jmp     try_again_btn_event_loop
 
-check_ok_rect:
-        MGTK_CALL MGTK::InRect, ok_rect
+check_ok_button_rect:
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside ; OK?
         bne     no_button
         jmp     ok_button_event_loop
@@ -360,7 +355,7 @@ finish: pha
 
 .proc try_again_btn_event_loop
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
+        MGTK_CALL MGTK::PaintRect, try_again_button_rect
         lda     #$00
         sta     LD4AC
 LD457:  MGTK_CALL MGTK::GetEvent, app::event_params
@@ -369,7 +364,7 @@ LD457:  MGTK_CALL MGTK::GetEvent, app::event_params
         beq     LD49F
         jsr     map_alert_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
-        MGTK_CALL MGTK::InRect, try_again_rect
+        MGTK_CALL MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
         beq     LD47F
         lda     LD4AC
@@ -381,7 +376,7 @@ LD47F:  lda     LD4AC
         jmp     LD457
 
 LD487:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
+        MGTK_CALL MGTK::PaintRect, try_again_button_rect
         lda     LD4AC
         clc
         adc     #$80
@@ -403,7 +398,7 @@ LD4AC:  .byte   0
 
 .proc cancel_btn_event_loop
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
         lda     #$00
         sta     LD513
 LD4BE:  MGTK_CALL MGTK::GetEvent, app::event_params
@@ -412,7 +407,7 @@ LD4BE:  MGTK_CALL MGTK::GetEvent, app::event_params
         beq     LD506
         jsr     map_alert_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
-        MGTK_CALL MGTK::InRect, rect_cancel_btn
+        MGTK_CALL MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
         beq     LD4E6
         lda     LD513
@@ -424,7 +419,7 @@ LD4E6:  lda     LD513
         jmp     LD4BE
 
 LD4EE:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
         lda     LD513
         clc
         adc     #$80
@@ -448,14 +443,14 @@ LD513:  .byte   0
         lda     #$00
         sta     LD57A
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, ok_rect
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
 LD525:  MGTK_CALL MGTK::GetEvent, app::event_params
         lda     app::event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LD56D
         jsr     map_alert_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
-        MGTK_CALL MGTK::InRect, ok_rect
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     LD54D
         lda     LD57A
@@ -467,7 +462,7 @@ LD54D:  lda     LD57A
         jmp     LD525
 
 LD555:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, ok_rect
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     LD57A
         clc
         adc     #$80

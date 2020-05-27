@@ -3372,8 +3372,9 @@ special_menu:
 
 confirm_dialog_outer_rect:  DEFINE_RECT_INSET 4,2,kPromptDialogWidth,kPromptDialogHeight
 confirm_dialog_inner_rect:  DEFINE_RECT_INSET 5,3,kPromptDialogWidth,kPromptDialogHeight
+
 cancel_button_rect:  DEFINE_RECT_SZ 40,kPromptDialogHeight-19,kButtonWidth,kButtonHeight
-LAE18:  DEFINE_RECT_SZ 193,30,kButtonWidth,kButtonHeight
+        DEFINE_RECT_SZ 193,30,kButtonWidth,kButtonHeight ; Unused ???
 ok_button_rect:  DEFINE_RECT_SZ 260,kPromptDialogHeight-19,kButtonWidth,kButtonHeight
 yes_button_rect:  DEFINE_RECT_SZ 200,kPromptDialogHeight-19,40,kButtonHeight
 no_button_rect:  DEFINE_RECT_SZ 260,kPromptDialogHeight-19,40,kButtonHeight
@@ -3388,8 +3389,8 @@ yes_label_pos:  DEFINE_POINT 205,kPromptDialogHeight-9
 no_label_pos:  DEFINE_POINT 265,kPromptDialogHeight-9
 all_label_pos:  DEFINE_POINT 325,kPromptDialogHeight-9
 
-        .byte   $1C,$00,$70,$00
-        .byte   $1C,$00,$87,$00
+        .byte   $1C,$00,$70,$00 ; Unused ???
+        .byte   $1C,$00,$87,$00 ; Unused ???
 
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
