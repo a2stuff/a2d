@@ -48,12 +48,12 @@
 .proc draw_controls
         lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
-        addr_call file_dialog::L5E0A, copy_a_file_label
-        addr_call file_dialog::L5E57, source_filename_label
-        addr_call file_dialog::L5E6F, destination_filename_label
+        addr_call file_dialog::L5E0A, file_dialog_res::copy_a_file_label
+        addr_call file_dialog::L5E57, file_dialog_res::source_filename_label
+        addr_call file_dialog::L5E6F, file_dialog_res::destination_filename_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, common_input1_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, common_input2_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_input1_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_input2_rect
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts

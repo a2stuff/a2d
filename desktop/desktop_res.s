@@ -736,6 +736,8 @@ rect_scratch:
 
 ;;; ============================================================
 
+.scope file_dialog_res
+
 common_dialog_frame_rect:
         DEFINE_RECT_INSET 4,2,kFilePickerDlgWidth,kFilePickerDlgHeight
 
@@ -828,6 +830,8 @@ delete_a_file_label:
 
 file_to_delete_label:
         PASCAL_STRING "File to delete:"
+
+.endscope
 
 ;;; ============================================================
 ;;; Resources for clock on menu bar
