@@ -10757,10 +10757,9 @@ index:  .byte   0               ; index in selected icon list
         slot_addr := $0A
 
         and     #%11110000      ; mask off drive/slot
-        clc
-        ror                     ; 0DSSS000
-        ror                     ; 00DSSS00
-        ror                     ; 000DSSS0
+        lsr                     ; 0DSSS000
+        lsr                     ; 00DSSS00
+        lsr                     ; 000DSSS0
         tax                     ; = slot * 2 + (drive == 2 ? 0x10 + 0x00)
 
         lda     DEVADR,x

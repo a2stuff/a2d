@@ -893,7 +893,7 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, pos1
-        addr_call app::DrawString, app::str_ok_btn
+        addr_call app::DrawString, app::ok_button_label
         jsr     set_pointer_cursor
         jmp     restore_stack_and_return
 
@@ -911,7 +911,7 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, pos1
-        addr_call app::DrawString, app::str_ok_btn
+        addr_call app::DrawString, app::ok_button_label
         jsr     set_pointer_cursor
         jmp     restore_stack_and_return
 .endproc

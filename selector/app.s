@@ -285,21 +285,8 @@ viewloc:.word   25, 40
 rect_frame:
         DEFINE_RECT_INSET 4, 2, winfo::kWidth, winfo::kHeight
 
-rect_ok_btn:
-        DEFINE_RECT_SZ 340, 94, kButtonWidth, kButtonHeight
-
-rect_desktop_btn:
-        DEFINE_RECT_SZ 60, 94, kButtonWidth, kButtonHeight
-
-pos_ok_label:
-        DEFINE_POINT 344, 104
-str_ok_btn:
-        PASCAL_STRING {" OK           ",kGlyphReturn}
-
-pos_desktop_label:
-        DEFINE_POINT 64, 104
-str_desktop_btn:
-        PASCAL_STRING " DeskTop       Q "
+        DEFINE_BUTTON ok,     {" OK           ",kGlyphReturn}, 340, 94
+        DEFINE_BUTTON desktop, " DeskTop       Q ", 60, 94
 
 setpensize_params:
         .byte   2, 1
@@ -863,13 +850,13 @@ click:  lda     findwindow_window_id
 
         ;; OK button?
 
-        MGTK_CALL MGTK::InRect, rect_ok_btn
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     L94A1
         jmp     not_ok
 
 L94A1:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     ok_btn_event_loop
         bmi     L94B5
         jsr     try_invoke_selected_entry
@@ -880,13 +867,13 @@ L94B5:  rts
 not_ok:
         bit     desktop_available_flag
         bmi     L94F0
-        MGTK_CALL MGTK::InRect, rect_desktop_btn
+        MGTK_CALL MGTK::InRect, desktop_button_rect
         cmp     #MGTK::inrect_inside
         beq     L94C8
         jmp     L94F0
 
 L94C8:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_desktop_btn
+        MGTK_CALL MGTK::PaintRect, desktop_button_rect
         jsr     desktop_btn_event_loop
         bmi     L94B5
 L94D9:  MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
@@ -1040,8 +1027,8 @@ control_char:
         lda     winfo::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     try_invoke_selected_entry
         rts
 not_return:
@@ -1432,11 +1419,11 @@ get_port_and_draw_window:
         MGTK_CALL MGTK::SetPenSize, setpensize_params
 
         MGTK_CALL MGTK::FrameRect, rect_frame
-        MGTK_CALL MGTK::FrameRect, rect_ok_btn
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
 
         bit     desktop_available_flag
         bmi     :+
-        MGTK_CALL MGTK::FrameRect, rect_desktop_btn
+        MGTK_CALL MGTK::FrameRect, desktop_button_rect
 :
         addr_call draw_title_string, str_selector_title
         jsr     draw_ok_label
@@ -1454,14 +1441,14 @@ get_port_and_draw_window:
 ;;; ============================================================
 
 .proc draw_ok_label
-        MGTK_CALL MGTK::MoveTo, pos_ok_label
-        addr_call DrawString, str_ok_btn
+        MGTK_CALL MGTK::MoveTo, ok_button_pos
+        addr_call DrawString, ok_button_label
         rts
 .endproc
 
 .proc draw_desktop_label
-        MGTK_CALL MGTK::MoveTo, pos_desktop_label
-        addr_call DrawString, str_desktop_btn
+        MGTK_CALL MGTK::MoveTo, desktop_button_pos
+        addr_call DrawString, desktop_button_label
         rts
 .endproc
 
@@ -2156,7 +2143,7 @@ L9E25:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect_ok_btn
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     L9E56
         lda     L9E8D
@@ -2168,7 +2155,7 @@ L9E56:  lda     L9E8D
         jmp     L9E25
 
 L9E5E:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     L9E8D
         clc
         adc     #$80
@@ -2180,7 +2167,7 @@ L9E76:  lda     L9E8D
         return  #$FF
 
 L9E7E:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         return  #$00
 
 L9E8D:  .byte   0
@@ -2199,7 +2186,7 @@ L9E93:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect_desktop_btn
+        MGTK_CALL MGTK::InRect, desktop_button_rect
         cmp     #MGTK::inrect_inside
         beq     L9EC4
         lda     L9EFB
@@ -2211,7 +2198,7 @@ L9EC4:  lda     L9EFB
         jmp     L9E93
 
 L9ECC:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_desktop_btn
+        MGTK_CALL MGTK::PaintRect, desktop_button_rect
         lda     L9EFB
         clc
         adc     #$80
@@ -2223,7 +2210,7 @@ L9EE4:  lda     L9EFB
         return  #$FF
 
 L9EEC:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_desktop_btn
+        MGTK_CALL MGTK::PaintRect, desktop_button_rect
         return  #$01
 
 L9EFB:  .byte   0

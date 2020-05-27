@@ -76,15 +76,6 @@ kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeigh
 
 kButtonInsetX   = 25
 
-.macro DEFINE_BUTTON ident, label, xpos, ypos
-        .ident(.sprintf("%s_button_rect", .string(ident))) := *
-        DEFINE_RECT_SZ (xpos), (ypos), kButtonWidth, kButtonHeight
-        .ident(.sprintf("%s_button_pos", .string(ident))) := *
-        DEFINE_POINT ((xpos) + 4), ((ypos) + 10)
-        .ident(.sprintf("%s_button_label", .string(ident))) := *
-        DEFINE_STRING {label}
-.endmacro
-
         DEFINE_BUTTON norm, {"Normal         N"}, kButtonInsetX, 28
         DEFINE_BUTTON fast, {"Fast           F"}, kDAWidth - kButtonWidth - kButtonInsetX, 28
         DEFINE_BUTTON ok,   {"OK            ",kGlyphReturn}, kDAWidth - kButtonWidth - kButtonInsetX, 52
@@ -92,7 +83,7 @@ kButtonInsetX   = 25
 title_pos:
         DEFINE_POINT (kDAWidth - 70)/ 2, 18
 title_label:
-        DEFINE_STRING "System Speed"
+        PASCAL_STRING "System Speed"
 
 ;;; ============================================================
 
@@ -203,19 +194,19 @@ grafport:       .tag MGTK::GrafPort
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
         MGTK_CALL MGTK::MoveTo, title_pos
-        MGTK_CALL MGTK::DrawText, title_label
+        addr_call DrawString, title_label
 
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
-        MGTK_CALL MGTK::DrawText, ok_button_label
+        addr_call DrawString, ok_button_label
 
         MGTK_CALL MGTK::FrameRect, norm_button_rect
         MGTK_CALL MGTK::MoveTo, norm_button_pos
-        MGTK_CALL MGTK::DrawText, norm_button_label
+        addr_call DrawString, norm_button_label
 
         MGTK_CALL MGTK::FrameRect, fast_button_rect
         MGTK_CALL MGTK::MoveTo, fast_button_pos
-        MGTK_CALL MGTK::DrawText, fast_button_label
+        addr_call DrawString, fast_button_label
 
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
@@ -478,6 +469,22 @@ window_id:
         .byte   0
 .endproc
 
+;;; ============================================================
+;;; Draw Pascal String
+;;; Input: A,X = string address
+
+.proc DrawString
+        ptr := $06
+        params := $06
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     $08
+        inc16   ptr
+        MGTK_CALL MGTK::DrawText, params
+        rts
+.endproc
 
 ;;; ============================================================
 

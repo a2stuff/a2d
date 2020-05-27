@@ -139,3 +139,15 @@ kGlyphSolidApple        = $1E
 ;;;   Check       $1D
 ;;;   Control     $01
 ;;;   Inactive    $7F
+
+;;; ============================================================
+;;; Macros (specific to this project)
+
+.macro DEFINE_BUTTON ident, label, xpos, ypos
+        .ident(.sprintf("%s_button_rect", .string(ident))) := *
+        DEFINE_RECT_SZ (xpos), (ypos), kButtonWidth, kButtonHeight
+        .ident(.sprintf("%s_button_pos", .string(ident))) := *
+        DEFINE_POINT ((xpos) + 4), ((ypos) + 10)
+        .ident(.sprintf("%s_button_label", .string(ident))) := *
+        PASCAL_STRING {label}
+.endmacro

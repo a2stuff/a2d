@@ -304,40 +304,15 @@ rect_frame:
 
 rect0:  DEFINE_RECT 27, 16, 174, 26
 
-rect_cancel_btn:        DEFINE_RECT_SZ 193, 58, kButtonWidth, kButtonHeight
-rect_ok_btn:            DEFINE_RECT_SZ 193, 89, kButtonWidth, kButtonHeight
-rect_open_btn:          DEFINE_RECT_SZ 193, 44, kButtonWidth, kButtonHeight
-rect_close_btn:         DEFINE_RECT_SZ 193, 73, kButtonWidth, kButtonHeight
-rect_change_drive_btn:  DEFINE_RECT_SZ 193, 30, kButtonWidth, kButtonHeight
+        DEFINE_BUTTON change_drive, "Change Drive",                 193, 30
+        DEFINE_BUTTON open,         "Open",                         193, 44
+        DEFINE_BUTTON close,        "Close",                        193, 58
+        DEFINE_BUTTON cancel,       "Cancel   Esc",                 193, 73
+        DEFINE_BUTTON ok,          {"OK            ",kGlyphReturn}, 193, 89
 
 ;;; Dividing line
 pt1:    DEFINE_POINT 323, 30
 pt2:    DEFINE_POINT 323, 100
-
-pos_ok_btn:
-        DEFINE_POINT 198,99
-str_ok_btn:
-        PASCAL_STRING {"OK            ",kGlyphReturn}
-
-pos_close_btn:
-        DEFINE_POINT 198,68
-str_close_btn:
-        PASCAL_STRING "Close"
-
-pos_open_btn:
-        DEFINE_POINT 198, 54
-str_open_btn:
-        PASCAL_STRING "Open"
-
-pos_cancel_btn:
-        DEFINE_POINT 198, 83
-str_cancel_btn:
-        PASCAL_STRING "Cancel   Esc"
-
-pos_change_drive_btn:
-        DEFINE_POINT 198, 40
-str_change_drive_btn:
-        PASCAL_STRING "Change Drive"
 
 pos_disk:
         DEFINE_POINT 28, 25
@@ -572,7 +547,7 @@ LA52F:  lda     winfo_dialog::window_id
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
 
         ;; Open ?
-        MGTK_CALL MGTK::InRect, rect_open_btn
+        MGTK_CALL MGTK::InRect, open_button_rect
         cmp     #MGTK::inrect_inside
         beq     LA554
         jmp     not_open
@@ -591,7 +566,7 @@ LA567:  jmp     finish
 LA56A:  lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_open_btn
+        MGTK_CALL MGTK::PaintRect, open_button_rect
         jsr     event_loop_open_btn
         bmi     LA567
         jsr     LA8ED
@@ -599,7 +574,7 @@ LA56A:  lda     winfo_dialog::window_id
 
 not_open:
         ;; Change Drive ?
-        MGTK_CALL MGTK::InRect, rect_change_drive_btn
+        MGTK_CALL MGTK::InRect, change_drive_button_rect
         cmp     #MGTK::inrect_inside
         beq     LA594
         jmp     not_change_drive
@@ -607,37 +582,37 @@ not_open:
 LA594:  bit     LA47F
         bmi     LA5AD
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_change_drive_btn
+        MGTK_CALL MGTK::PaintRect, change_drive_button_rect
         jsr     event_loop_change_drive_btn
         bmi     LA5AD
         jsr     change_drive
 LA5AD:  jmp     finish
 
 not_change_drive:
-        ;; Cancel ?
-        MGTK_CALL MGTK::InRect, rect_cancel_btn
+        ;; Close ?
+        MGTK_CALL MGTK::InRect, close_button_rect
         cmp     #MGTK::inrect_inside
         beq     LA5BD
-        jmp     not_cancel
+        jmp     not_close
 
 LA5BD:  bit     LA47F
         bmi     LA5D6
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
-        jsr     event_loop_cancel_btn
+        MGTK_CALL MGTK::PaintRect, close_button_rect
+        jsr     event_loop_close_btn
         bmi     LA5D6
         jsr     LA965
 LA5D6:  jmp     finish
 
-not_cancel:
+not_close:
         ;; OK ?
-        MGTK_CALL MGTK::InRect, rect_ok_btn
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     LA5E6
         jmp     not_ok
 
 LA5E6:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     event_loop_ok_btn
         bmi     LA5FD
         jsr     input_ip_to_end
@@ -645,20 +620,20 @@ LA5E6:  MGTK_CALL MGTK::SetPenMode, penXOR
 LA5FD:  jmp     finish
 
 not_ok:
-        ;; Close ?
-        MGTK_CALL MGTK::InRect, rect_close_btn
+        ;; Cancel ?
+        MGTK_CALL MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
         beq     LA60D
-        jmp     not_close
+        jmp     not_cancel
 
 LA60D:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_close_btn
-        jsr     event_loop_close_btn
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
+        jsr     event_loop_cancel_btn
         bmi     LA621
         jsr     LA387
 LA621:  jmp     finish
 
-not_close:
+not_cancel:
         ;; Input ?
         bit     LA47D
         bpl     LA62E
@@ -719,8 +694,8 @@ open:   ldx     selected_index
         lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     handle_ok
         jmp     rts1
 
@@ -730,8 +705,8 @@ folder: and     #$7F
         lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_open_btn
-        MGTK_CALL MGTK::PaintRect, rect_open_btn
+        MGTK_CALL MGTK::PaintRect, open_button_rect
+        MGTK_CALL MGTK::PaintRect, open_button_rect
         lda     #0
         sta     hi
 
@@ -1138,7 +1113,7 @@ LA9FC:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect_ok_btn
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         lda     LAA64
@@ -1150,7 +1125,7 @@ LA9FC:  MGTK_CALL MGTK::GetEvent, event_params
         jmp     LA9FC
 
 toggle: MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     LAA64
         clc
         adc     #$80
@@ -1162,7 +1137,7 @@ LAA4D:  lda     LAA64
         return  #$FF
 
 LAA55:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         return  #$00
 
 LAA64:  .byte   0
@@ -1170,7 +1145,7 @@ LAA64:  .byte   0
 
 ;;; ============================================================
 
-.proc event_loop_close_btn
+.proc event_loop_cancel_btn
         lda     #$00
         sta     LAAD2
 LAA6A:  MGTK_CALL MGTK::GetEvent, event_params
@@ -1181,7 +1156,7 @@ LAA6A:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect_close_btn
+        MGTK_CALL MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
         beq     LAA9B
         lda     LAAD2
@@ -1193,7 +1168,7 @@ LAA9B:  lda     LAAD2
         jmp     LAA6A
 
 LAAA3:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_close_btn
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
         lda     LAAD2
         clc
         adc     #$80
@@ -1205,7 +1180,7 @@ LAABB:  lda     LAAD2
         return  #$FF
 
 LAAC3:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_close_btn
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
         return  #$01
 
 LAAD2:  .byte   0
@@ -1224,7 +1199,7 @@ LAAD8:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect_open_btn
+        MGTK_CALL MGTK::InRect, open_button_rect
         cmp     #MGTK::inrect_inside
         beq     LAB09
         lda     LAB40
@@ -1236,7 +1211,7 @@ LAB09:  lda     LAB40
         jmp     LAAD8
 
 LAB11:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_open_btn
+        MGTK_CALL MGTK::PaintRect, open_button_rect
         lda     LAB40
         clc
         adc     #$80
@@ -1248,7 +1223,7 @@ LAB29:  lda     LAB40
         return  #$FF
 
 LAB31:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_open_btn
+        MGTK_CALL MGTK::PaintRect, open_button_rect
         return  #$00
 
 LAB40:  .byte   0
@@ -1267,7 +1242,7 @@ LAB46:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect_change_drive_btn
+        MGTK_CALL MGTK::InRect, change_drive_button_rect
         cmp     #MGTK::inrect_inside
         beq     LAB77
         lda     LABAE
@@ -1279,7 +1254,7 @@ LAB77:  lda     LABAE
         jmp     LAB46
 
 LAB7F:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_change_drive_btn
+        MGTK_CALL MGTK::PaintRect, change_drive_button_rect
         lda     LABAE
         clc
         adc     #$80
@@ -1291,7 +1266,7 @@ LAB97:  lda     LABAE
         return  #$FF
 
 LAB9F:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_change_drive_btn
+        MGTK_CALL MGTK::PaintRect, change_drive_button_rect
         return  #$01
 
 LABAE:  .byte   0
@@ -1299,7 +1274,7 @@ LABAE:  .byte   0
 
 ;;; ============================================================
 
-.proc event_loop_cancel_btn
+.proc event_loop_close_btn
         lda     #$00
         sta     LAC1C
 LABB4:  MGTK_CALL MGTK::GetEvent, event_params
@@ -1310,7 +1285,7 @@ LABB4:  MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect_cancel_btn
+        MGTK_CALL MGTK::InRect, close_button_rect
         cmp     #MGTK::inrect_inside
         beq     LABE5
         lda     LAC1C
@@ -1322,7 +1297,7 @@ LABE5:  lda     LAC1C
         jmp     LABB4
 
 LABED:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
+        MGTK_CALL MGTK::PaintRect, close_button_rect
         lda     LAC1C
         clc
         adc     #$80
@@ -1334,7 +1309,7 @@ LAC05:  lda     LAC1C
         return  #$FF
 
 LAC0D:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
+        MGTK_CALL MGTK::PaintRect, close_button_rect
         return  #$00
 
 LAC1C:  .byte   0
@@ -1412,8 +1387,8 @@ LAC6E:  cmp     #CHAR_RETURN
         lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_change_drive_btn
-        MGTK_CALL MGTK::PaintRect, rect_change_drive_btn
+        MGTK_CALL MGTK::PaintRect, change_drive_button_rect
+        MGTK_CALL MGTK::PaintRect, change_drive_button_rect
         jsr     change_drive
 LACAA:  jmp     exit
 
@@ -1430,8 +1405,8 @@ not_tab:
 LACBF:  lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_open_btn
-        MGTK_CALL MGTK::PaintRect, rect_open_btn
+        MGTK_CALL MGTK::PaintRect, open_button_rect
+        MGTK_CALL MGTK::PaintRect, open_button_rect
         jsr     LA8ED
         jmp     exit
 
@@ -1441,8 +1416,8 @@ not_ctrl_o:
         lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
-        MGTK_CALL MGTK::PaintRect, rect_cancel_btn
+        MGTK_CALL MGTK::PaintRect, close_button_rect
+        MGTK_CALL MGTK::PaintRect, close_button_rect
         jsr     LA965
         jmp     exit
 
@@ -1476,8 +1451,8 @@ exit:   jsr     LA9C9
 LAD20:  lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
-        MGTK_CALL MGTK::PaintRect, rect_ok_btn
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     input_ip_to_end
         jsr     handle_ok
         jsr     LA9C9
@@ -1489,8 +1464,8 @@ LAD20:  lda     winfo_dialog::window_id
         lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_close_btn
-        MGTK_CALL MGTK::PaintRect, rect_close_btn
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
         jsr     LA387
         jsr     LA9C9
         rts
@@ -1799,11 +1774,11 @@ delta:  .byte   0
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect_frame
-        MGTK_CALL MGTK::FrameRect, rect_ok_btn
-        MGTK_CALL MGTK::FrameRect, rect_open_btn
-        MGTK_CALL MGTK::FrameRect, rect_cancel_btn
-        MGTK_CALL MGTK::FrameRect, rect_close_btn
-        MGTK_CALL MGTK::FrameRect, rect_change_drive_btn
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
+        MGTK_CALL MGTK::FrameRect, open_button_rect
+        MGTK_CALL MGTK::FrameRect, close_button_rect
+        MGTK_CALL MGTK::FrameRect, cancel_button_rect
+        MGTK_CALL MGTK::FrameRect, change_drive_button_rect
         jsr     draw_ok_label
         jsr     draw_open_label
         jsr     draw_close_label
@@ -1816,28 +1791,28 @@ delta:  .byte   0
 .endproc
 
 draw_ok_label:
-        MGTK_CALL MGTK::MoveTo, pos_ok_btn
-        addr_call draw_string, str_ok_btn
+        MGTK_CALL MGTK::MoveTo, ok_button_pos
+        addr_call draw_string, ok_button_label
         rts
 
 draw_open_label:
-        MGTK_CALL MGTK::MoveTo, pos_open_btn
-        addr_call draw_string, str_open_btn
+        MGTK_CALL MGTK::MoveTo, open_button_pos
+        addr_call draw_string, open_button_label
         rts
 
 draw_close_label:
-        MGTK_CALL MGTK::MoveTo, pos_close_btn
-        addr_call draw_string, str_close_btn
+        MGTK_CALL MGTK::MoveTo, close_button_pos
+        addr_call draw_string, close_button_label
         rts
 
 draw_cancel_btn:
-        MGTK_CALL MGTK::MoveTo, pos_cancel_btn
-        addr_call draw_string, str_cancel_btn
+        MGTK_CALL MGTK::MoveTo, cancel_button_pos
+        addr_call draw_string, cancel_button_label
         rts
 
 draw_change_drive_btn:
-        MGTK_CALL MGTK::MoveTo, pos_change_drive_btn
-        addr_call draw_string, str_change_drive_btn
+        MGTK_CALL MGTK::MoveTo, change_drive_button_pos
+        addr_call draw_string, change_drive_button_label
         rts
 
 ;;; ============================================================
