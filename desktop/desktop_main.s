@@ -877,19 +877,19 @@ begin:
         rts
 
         ;; Check file type.
-:       copy    get_file_info_params::file_type, fto_type
-        copy16  get_file_info_params::aux_type, fto_auxtype
-        copy16  get_file_info_params::blocks_used, fto_blocks
-        jsr     check_file_type_overrides
+:       copy    get_file_info_params::file_type, icontype_filetype
+        copy16  get_file_info_params::aux_type, icontype_auxtype
+        copy16  get_file_info_params::blocks_used, icontype_blocks
+        jsr     get_icon_type
 
-        cmp     #FT_BASIC
+        cmp     #IconType::basic
         bne     :+
         jsr     check_basic_system ; Only launch if BASIC.SYSTEM is found
         beq     launch
         lda     #kErrBasicSysNotFound
         jmp     ShowAlert
 
-:       cmp     #FT_BINARY
+:       cmp     #IconType::binary
         bne     :+
         lda     BUTN0           ; Only launch if a button is down
         ora     BUTN1
@@ -897,25 +897,25 @@ begin:
         jsr     set_pointer_cursor
         rts
 
-:       cmp     #FT_SYSTEM
+:       cmp     #IconType::system
         beq     launch
 
-        cmp     #kAppFileType
+        cmp     #IconType::application
         beq     launch
 
-        cmp     #FT_GRAPHICS
+        cmp     #IconType::graphics
         bne     :+
         addr_jump invoke_desk_acc, str_preview_fot
 
-:       cmp     #FT_TEXT
+:       cmp     #IconType::text
         bne     :+
         addr_jump invoke_desk_acc, str_preview_txt
 
-:       cmp     #FT_FONT
+:       cmp     #IconType::font
         bne     :+
         addr_jump invoke_desk_acc, str_preview_fnt
 
-:       cmp     #kDAFileType
+:       cmp     #IconType::desk_accessory
         bne     :+
         addr_jump invoke_desk_acc, path
 
@@ -6715,7 +6715,7 @@ has_parent:
 
 window_id:      .byte   0
 iconbits:       .addr   0
-icon_type:      .byte   0
+iconentry_type: .byte   0
 icon_height:    .word   0
 L7625:  .byte   0               ; ???
 
@@ -6911,16 +6911,16 @@ thumbmax:
         lda     (file_entry),y
 
         ;; Handle several classes of overrides
-        sta     fto_type
+        sta     icontype_filetype
         ldy     #FileRecord::aux_type
-        copy16in (file_entry),y, fto_auxtype
+        copy16in (file_entry),y, icontype_auxtype
         ldy     #FileRecord::blocks
-        copy16in (file_entry),y, fto_blocks
-        jsr     check_file_type_overrides
+        copy16in (file_entry),y, icontype_blocks
+        jsr     get_icon_type
 
         ;; Distinguish *.SYSTEM files as apps (use $01) from other
         ;; type=SYS files (use $FF).
-        cmp     #FT_SYSTEM
+        cmp     #IconType::system
         bne     got_type
 
         ldy     #FileRecord::name
@@ -6937,14 +6937,14 @@ cloop:  lda     (file_entry),y
         bne     cloop
 
 is_app:
-        lda     #kAppFileType   ; overloaded meaning in icon tables
+        lda     #IconType::application
         bne     got_type        ; always
 
 str_sys_suffix:
         PASCAL_STRING ".SYSTEM"
 
 not_app:
-        lda     #$FF
+        lda     #IconType::system
         ;; fall through
 
 got_type:
@@ -6955,7 +6955,7 @@ got_type:
         lda     LCBANK1
         tya
 
-        jsr     find_icon_details_for_file_type
+        jsr     find_icon_details_for_icon_type
         ldy     #IconEntry::len
         ldx     #0
 L77F0:  lda     name_tmp,x
@@ -7008,7 +7008,7 @@ L7862:  lda     row_coords::xcoord
         inc     row_coords::xcoord+1
 
 L7870:  lda     cached_window_id
-        ora     icon_type
+        ora     iconentry_type
         ldy     #IconEntry::win_type
         sta     (icon_entry),y
         ldy     #IconEntry::iconbits
@@ -7022,37 +7022,23 @@ L7870:  lda     cached_window_id
 .endproc
 
 ;;; ============================================================
-;;; Special case: $01 is used for App-like SYS files.
 
-.proc find_icon_details_for_file_type
+.proc find_icon_details_for_icon_type
         ptr := $6
 
-        sta     file_type
+        sta     icon_type
         jsr     push_pointers
 
-        ;; Find index of file type
-        copy16  #type_table, ptr
-        ldy     #kNumFileTypes-1
-:       lda     (ptr),y
-        cmp     file_type
-        beq     found
-        dey
-        bpl     :-
-        ldy     #0              ; default is first entry (FT_TYPELESS)
+        ;; For populating IconEntry::win_type
+        ldy     icon_type
+        lda     icontype_iconentrytype_table, y
+        sta     iconentry_type
 
-found:
-        ;; Look up icon type
-        copy16  #icon_type_table, ptr
-        lda     (ptr),y
-        sta     icon_type
-
+        ;; For populating IconEntry::iconbits
         tya
         asl     a
         tay
-
-        ;; Look up icon definition
-        copy16  #type_icons_table, ptr
-        copy16in (ptr),y, iconbits
+        copy16  type_icons_table,y, iconbits
 
         ;; Icon height will be needed too
         copy16  iconbits, ptr
@@ -7062,7 +7048,7 @@ found:
         jsr     pop_pointers
         rts
 
-file_type:
+icon_type:
         .byte   0
 .endproc
 
@@ -7072,32 +7058,32 @@ file_type:
 
 
 ;;; ============================================================
-;;; Check file type for possible overrides
+;;; Map file type (etc) to icon type
 
-;;; Input: fto_type, fto_auxtype, fto_blocks populated
-;;; Output: A is filetype to use (for icons, open/preview, etc)
+;;; Input: icontype_type, icontype_auxtype, icontype_blocks populated
+;;; Output: A is IconType to use (for icons, open/preview, etc)
 
-.proc check_file_type_overrides
+.proc get_icon_type
         ptr := $06
 
         jsr     push_pointers
-        copy16  #fto_table, ptr
+        copy16  #icontype_table, ptr
 
 loop:   ldy     #0              ; type_mask, or $00 if done
         lda     (ptr),y
         bne     :+
         jsr     pop_pointers
-        lda     fto_type
+        lda     #IconType::generic
         rts
 
         ;; Check type (with mask)
-:       and     fto_type        ; A = type & type_mask
-        iny                     ; ASSERT: Y = FTORecord::type
+:       and     icontype_filetype    ; A = type & type_mask
+        iny                     ; ASSERT: Y = ICTRecord::type
         cmp     (ptr),y         ; type check
         bne     next
 
         ;; Flags
-        iny                     ; ASSERT: Y = FTORecord::flags
+        iny                     ; ASSERT: Y = ICTRecord::flags
         lda     (ptr),y
         sta     flags
 
@@ -7105,37 +7091,40 @@ loop:   ldy     #0              ; type_mask, or $00 if done
         bit     flags
         bpl     blocks          ; bit 7 = compare aux
         iny                     ; ASSERT: Y = FTORecord::aux
-        lda     fto_auxtype
+        lda     icontype_auxtype
         cmp     (ptr),y
         bne     next
         iny
-        lda     fto_auxtype+1
+        lda     icontype_auxtype+1
         cmp     (ptr),y
         bne     next
 
         ;; Does Block Count matter, and if so does it match?
 blocks: bit     flags
         bvc     match           ; bit 6 = compare blocks
-        ldy     #FTORecord::blocks
-        lda     fto_blocks
+        ldy     #ICTRecord::blocks
+        lda     icontype_blocks
         cmp     (ptr),y
         bne     next
         iny
-        lda     fto_blocks+1
+        lda     icontype_blocks+1
         cmp     (ptr),y
         bne     next
 
         ;; Have a match
-match:  ldy     #FTORecord::newtype
+match:  ldy     #ICTRecord::icontype
         lda     (ptr),y
-        sta     fto_type
+        sta     tmp
+        jsr     pop_pointers
+        lda     tmp
+        rts
 
         ;; Next entry
-next:   add16   ptr, #.sizeof(FTORecord), ptr
+next:   add16   ptr, #.sizeof(ICTRecord), ptr
         jmp     loop
 
 flags:  .byte   0
-
+tmp:    .byte   0
 .endproc
 
 
@@ -8996,7 +8985,7 @@ addr:   .addr   0
 .endproc
 
 ;;; ============================================================
-;;; Pops two words from stack to $6/$8
+;;; Pops two words from stack to $6/$8; trashes A,X
 
 .proc pop_pointers
         ptr := $6

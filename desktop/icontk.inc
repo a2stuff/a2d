@@ -100,6 +100,8 @@ kMaxIconCount   = 127
 kIconEntryOpenMask    = %10000000
 kIconEntryTypeMask    = %01110000
 kIconEntryWinIdMask   = %00001111
+
+;;; Only kIconEntryTypeDir and kIconEntryTypeTrash define unique behavior.
 kIconEntryTypeDir     = %00000000
 kIconEntryTypeSystem  = %00010000
 kIconEntryTypeBinary  = %00100000

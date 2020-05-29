@@ -5,9 +5,25 @@
 kDAFileType     = $F1
 kDAFileAuxType  = $640           ; High bit set = don't show in Apple menu
 
-;;; Internally, FT_SYS files with ".SYSTEM" are represented as this type.
-;;; (FT_BAD files are remapped to FT_TYPELESS)
-kAppFileType    = $01
+.enum IconType
+        generic
+        text
+        binary
+        graphics
+        font
+        relocatable
+        command
+        folder
+        iigs
+        appleworks_db
+        appleworks_wp
+        appleworks_sp
+        desk_accessory
+        basic
+        system
+        application
+        COUNT                   ; last
+.endenum
 
 kMaxDeskAccCount        = 12
 

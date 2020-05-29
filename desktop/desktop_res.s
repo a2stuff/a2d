@@ -1048,8 +1048,6 @@ entry_count_stack_index:
 entries_read_this_block:
         .byte   0
 
-        PAD_TO $E196            ; why ???
-
 ;;; ============================================================
 
 ;;; Backup copy of DEVLST made before detaching ramdisk
@@ -1072,18 +1070,9 @@ window_id_to_filerecord_list_count:
 window_id_to_filerecord_list_entries:
         .res    kMaxNumWindows, 0 ; 8 entries + length
 
-        .res    6               ; Unused ???
-
-LE200:  .word   0               ; Unused ???
-
 ;;; Mapping from position in above table to FileRecord entry
 window_filerecord_table:
         .res    kMaxNumWindows*2
-
-        .res    8, 0            ; Unused ???
-        .byte   $00,$00,$00,$00,$7F,$64,$00,$1C
-        .byte   $00,$1E,$00,$32,$00,$1E,$00,$40
-        .byte   $00
 
         ;; IconTK::HighlightIcon params
 icon_param2:
@@ -1337,8 +1326,6 @@ file_record_ptr:
 file_record_count:              ; TODO: Written but not read???
         .byte   0
 
-        .byte   0,0,0
-
 ;;; ============================================================
 
 .macro WINFO_DEFN id, label, buflabel
@@ -1402,8 +1389,6 @@ window_path_table:
 ;;; Windows 1...8 (since 0 is desktop)
 window_k_used_table:  .res    kMaxNumWindows*2, 0
 window_k_free_table:  .res    kMaxNumWindows*2, 0
-
-        .res    8, 0            ; ???
 
 ;;; ============================================================
 ;;; Resources for window header (Items/k in disk/available)
@@ -1480,8 +1465,6 @@ window_to_dir_icon_table:
 num_open_windows:
         .byte   0
 
-LEC2F:  .res    20, 0          ; unreferenced???
-
 ;;; --------------------------------------------------
 ;;; FileRecord for list view
 
@@ -1506,64 +1489,71 @@ menu_kbd_flag:
 
 ;;; --------------------------------------------------
 
-;;; Params for check_file_type_overrides
-fto_type:       .byte   0
-fto_auxtype:    .word   0
-fto_blocks:     .word   0
+;;; Params for icontype_lookup
+icontype_filetype:   .byte   0
+icontype_auxtype:    .word   0
+icontype_blocks:     .word   0
 
-;;; Data-driven remapping of file types - used for icons, open/preview, etc.
+;;; Mapping from file info to icon type
 ;;;
 ;;; The incoming type is compared (using a mask) against a type, and
-;;; optionally auxtype and block count. If matched, a replacement type
-;;; is used. All entries are processed, even if a match was found. This
-;;; allows inverted matches.
+;;; optionally auxtype and block count. First match wins.
 
-.struct FTORecord               ; Offset
-        mask    .byte           ; 0     incoming type masked before comparison
-        type    .byte           ; 1     type for the record (must match)
-        flags   .byte           ; 2     bit 7 = compare aux; 6 = compare blocks
-        aux     .word           ; 3     optional aux type
-        blocks  .word           ; 5     optional block count
-        newtype .byte           ; 7     replacement type
+.struct ICTRecord      ; Offset
+        mask     .byte ; 0     incoming type masked before comparison
+        filetype .byte ; 1     file type for the record (must match)
+        flags    .byte ; 2     bit 7 = compare aux; 6 = compare blocks
+        aux      .word ; 3     optional aux type
+        blocks   .word ; 5     optional block count
+        icontype .byte ; 7     IconType
 .endstruct
-.macro DEFINE_FTORECORD mask, type, flags, aux, blocks, newtype
+.macro DEFINE_ICTRECORD mask, filetype, flags, aux, blocks, icontype
         .byte   mask
-        .byte   type
+        .byte   filetype
         .byte   flags
         .word   aux
         .word   blocks
-        .byte   newtype
+        .byte   icontype
 .endmacro
-        FTO_FLAGS_NONE   = %00000000
-        FTO_FLAGS_AUX    = %10000000
-        FTO_FLAGS_BLOCKS = %01000000
+        ICT_FLAGS_NONE   = %00000000
+        ICT_FLAGS_AUX    = %10000000
+        ICT_FLAGS_BLOCKS = %01000000
 
-fto_table:
-        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_NONE, 0, 0, FT_TYPELESS ; Reserve BAD for tmp
+icontype_table:
+        ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minpix)
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 17, IconType::graphics ; HR image as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 33, IconType::graphics ; DHR image as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 33, IconType::graphics ; DHR image as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $5800, 3,  IconType::graphics ; Minipix as FOT
 
-        ;; Desk Accessories/Applets
-        DEFINE_FTORECORD $FF, kDAFileType, FTO_FLAGS_NONE, 0, 0, FT_BAD ; Remap $F1 by default...
-        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_AUX, kDAFileAuxType, 0, kDAFileType ; Restore $F1/$0640 as DA
-        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_AUX, kDAFileAuxType|$8000, 0, kDAFileType ; Restore $F1/$8640 as DA
-        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_NONE, 0, 0, FT_TYPELESS ; Reserve BAD for tmp
+        ;; Simple Mappings
+        DEFINE_ICTRECORD $FF, FT_TEXT,      ICT_FLAGS_NONE, 0, 0, IconType::text          ; $04
+        DEFINE_ICTRECORD $FF, FT_BINARY,    ICT_FLAGS_NONE, 0, 0, IconType::binary        ; $06
+        DEFINE_ICTRECORD $FF, FT_FONT,      ICT_FLAGS_NONE, 0, 0, IconType::font          ; $07
+        DEFINE_ICTRECORD $FF, FT_GRAPHICS,  ICT_FLAGS_NONE, 0, 0, IconType::graphics      ; $08
 
-        ;; Graphics Files
-        DEFINE_FTORECORD $FF, FT_BINARY, FTO_FLAGS_AUX|FTO_FLAGS_BLOCKS, $2000, 17, FT_GRAPHICS ; HR image as FOT
-        DEFINE_FTORECORD $FF, FT_BINARY, FTO_FLAGS_AUX|FTO_FLAGS_BLOCKS, $4000, 17, FT_GRAPHICS ; HR image as FOT
-        DEFINE_FTORECORD $FF, FT_BINARY, FTO_FLAGS_AUX|FTO_FLAGS_BLOCKS, $2000, 33, FT_GRAPHICS ; DHR image as FOT
-        DEFINE_FTORECORD $FF, FT_BINARY, FTO_FLAGS_AUX|FTO_FLAGS_BLOCKS, $4000, 33, FT_GRAPHICS ; DHR image as FOT
-        DEFINE_FTORECORD $FF, FT_BINARY, FTO_FLAGS_AUX|FTO_FLAGS_BLOCKS, $5800, 3,  FT_GRAPHICS ; Minipix as FOT
+        DEFINE_ICTRECORD $FF, FT_DIRECTORY, ICT_FLAGS_NONE, 0, 0, IconType::folder        ; $0F
+        DEFINE_ICTRECORD $FF, FT_ADB,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_db ; $19
+        DEFINE_ICTRECORD $FF, FT_AWP,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_wp ; $1A
+        DEFINE_ICTRECORD $FF, FT_ASP,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_sp ; $1B
 
-        ;; Applications
-        DEFINE_FTORECORD $FF, FT_S16, FTO_FLAGS_NONE, 0, 0, kAppFileType ; IIgs System => "App"
+        DEFINE_ICTRECORD $FF, FT_CMD,       ICT_FLAGS_NONE, 0, 0, IconType::command       ; $F0
+        DEFINE_ICTRECORD $FF, FT_BASIC,     ICT_FLAGS_NONE, 0, 0, IconType::basic         ; $FC
+        DEFINE_ICTRECORD $FF, FT_REL,       ICT_FLAGS_NONE, 0, 0, IconType::relocatable   ; $FE
+        DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
 
         ;; IIgs-Specific Files (ranges)
-        DEFINE_FTORECORD $F0, $50, FTO_FLAGS_NONE, 0, 0, FT_SRC ; IIgs General  => SRC
-        DEFINE_FTORECORD $F0, $A0, FTO_FLAGS_NONE, 0, 0, FT_SRC ; IIgs BASIC    => SRC
-        DEFINE_FTORECORD $F0, $B0, FTO_FLAGS_NONE, 0, 0, FT_SRC ; IIgs System   => SRC
-        DEFINE_FTORECORD $F0, $C0, FTO_FLAGS_NONE, 0, 0, FT_SRC ; IIgs Graphics => SRC
+        DEFINE_ICTRECORD $F0, $50,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs General  $5x
+        DEFINE_ICTRECORD $F0, $A0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs BASIC    $Ax
+        DEFINE_ICTRECORD $FF, FT_S16, ICT_FLAGS_NONE, 0, 0, IconType::application ; IIgs System   $B3
+        DEFINE_ICTRECORD $F0, $B0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs System   $Bx
+        DEFINE_ICTRECORD $F0, $C0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs Graphics $Cx
 
-        .byte   0               ; sentinel at end of table
+        ;; Desk Accessories/Applets $F1/$0640 and $F1/$8640
+        DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType, 0, IconType::desk_accessory
+        DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType|$8000, 0, IconType::desk_accessory
+
 
 ;;; --------------------------------------------------
 
@@ -1591,11 +1581,11 @@ icon_entries:
 
         .org $FB00
 
-        kNumFileTypes = 15
+;;; Map ProDOS file type to string (for listings/Get Info).
+;;; If not found, $XX is used (like CATALOG).
 
+        kNumFileTypes = 12
 type_table:
-        .byte   FT_TYPELESS   ; typeless
-        .byte   FT_SRC        ; src
         .byte   FT_REL        ; rel
         .byte   FT_CMD        ; command
         .byte   FT_TEXT       ; text
@@ -1607,13 +1597,10 @@ type_table:
         .byte   FT_ADB        ; appleworks db
         .byte   FT_AWP        ; appleworks wp
         .byte   FT_ASP        ; appleworks sp
-        .byte   kDAFileType   ; desk accessory
         .byte   FT_BAD        ; bad block
         ASSERT_TABLE_SIZE type_table, kNumFileTypes
 
 type_names_table:
-        .byte   " ???" ; typeless
-        .byte   " SRC" ; src
         .byte   " REL" ; rel
         .byte   " CMD" ; rel
         .byte   " TXT" ; text
@@ -1625,56 +1612,48 @@ type_names_table:
         .byte   " ADB" ; appleworks db
         .byte   " AWP" ; appleworks wp
         .byte   " ASP" ; appleworks sp
-        .byte   " $F1" ; desk accessory
         .byte   " BAD" ; bad block
         ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 4
 
-;;; The icon-related tables (below) use a distinguishing icon
-;;; for "apps" (SYS files with ".SYSTEM" name suffix, and IIgs
-;;; S16 application files). This is done by looking up using
-;;; the type $01 (and type $01 is looked up as $00).
-;;;
-;;; Similarly, IIgs-specific types ($5x, $Ax-$Cx) are all
-;;; mapped to $B0 (SRC).
+;;; Map IconType to other icon/details
 
-        .assert FT_BAD = kAppFileType, error, "Mismatched file type remapping"
-
-
-icon_type_table:
-        .byte   kIconEntryTypeGeneric ; typeless
-        .byte   kIconEntryTypeGeneric ; src
-        .byte   kIconEntryTypeGeneric ; rel
-        .byte   kIconEntryTypeGeneric ; cmd
+icontype_iconentrytype_table:
+        .byte   kIconEntryTypeGeneric ; generic
         .byte   kIconEntryTypeGeneric ; text
         .byte   kIconEntryTypeBinary  ; binary
-        .byte   kIconEntryTypeDir     ; directory
-        .byte   kIconEntryTypeSystem  ; system
-        .byte   kIconEntryTypeBasic   ; basic
         .byte   kIconEntryTypeGeneric ; graphics
+        .byte   kIconEntryTypeGeneric ; font
+        .byte   kIconEntryTypeGeneric ; relocatable
+        .byte   kIconEntryTypeGeneric ; command
+        .byte   kIconEntryTypeDir     ; folder
+        .byte   kIconEntryTypeGeneric ; iigs
         .byte   kIconEntryTypeGeneric ; appleworks db
         .byte   kIconEntryTypeGeneric ; appleworks wp
         .byte   kIconEntryTypeGeneric ; appleworks sp
         .byte   kIconEntryTypeGeneric ; desk accessory
-        .byte   kIconEntryTypeSystem  ; system (see below)
-        ASSERT_TABLE_SIZE icon_type_table, kNumFileTypes
+        .byte   kIconEntryTypeBasic   ; basic
+        .byte   kIconEntryTypeSystem  ; system
+        .byte   kIconEntryTypeSystem  ; application
+        ASSERT_TABLE_SIZE icontype_iconentrytype_table, IconType::COUNT
 
 type_icons_table:               ; map into definitions below
-        .addr   gen ; typeless
-        .addr   src ; src
-        .addr   rel ; rel
-        .addr   cmd ; cmd
+        .addr   gen ; generic
         .addr   txt ; text
         .addr   bin ; binary
-        .addr   dir ; directory
-        .addr   sys ; system
-        .addr   bas ; basic
         .addr   fot ; graphics
+        .addr   fnt ; font
+        .addr   rel ; relocatable
+        .addr   cmd ; command
+        .addr   dir ; folder
+        .addr   src ; iigs
         .addr   adb ; appleworks db
         .addr   awp ; appleworks wp
         .addr   asp ; appleworks sp
         .addr   a2d ; desk accessory
-        .addr   app ; system (see below)
-        ASSERT_ADDRESS_TABLE_SIZE type_icons_table, kNumFileTypes
+        .addr   bas ; basic
+        .addr   sys ; system
+        .addr   app ; application
+        ASSERT_ADDRESS_TABLE_SIZE type_icons_table, IconType::COUNT
 
 gen:    DEFICON generic_icon, 4, 27, 15, generic_mask
 src:    DEFICON aux::iigs_file_icon, 4, 27, 15, generic_mask
@@ -1690,6 +1669,7 @@ adb:    DEFICON aux::adb_icon, 4, 27, 15, generic_mask
 awp:    DEFICON aux::awp_icon, 4, 27, 15, generic_mask
 asp:    DEFICON aux::asp_icon, 4, 27, 15, generic_mask
 a2d:    DEFICON aux::a2d_file_icon, 4, 27, 15, generic_mask
+fnt:    DEFICON aux::font_icon, 4, 27, 15, generic_mask
 app:    DEFICON app_icon, 5, 34, 16, app_mask
 
 ;;; Generic
