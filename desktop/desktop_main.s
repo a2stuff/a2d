@@ -3372,6 +3372,7 @@ max:   .byte   0
         jsr     LoadDesktopIconTable
         jsr     cmd_close_all
         jsr     clear_selection
+        jsr     reset_grafport3
         ldx     cached_window_icon_count
         dex
 L5916:  lda     cached_window_icon_list,x
@@ -3379,9 +3380,6 @@ L5916:  lda     cached_window_icon_list,x
         beq     L5942
         txa
         pha
-
-        jsr     reset_grafport3
-
         lda     cached_window_icon_list,x
         sta     icon_param
         copy    #0, cached_window_icon_list,x
@@ -9967,7 +9965,7 @@ open:   MLI_RELAY_CALL OPEN, open_params
         bne     :+
         rts
 
-:       MLI_RELAY_CALL GET_TIME, 0
+:       MLI_RELAY_CALL GET_TIME
 
         ;; Assumes call from main loop, where grafport3 is initialized.
         MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
