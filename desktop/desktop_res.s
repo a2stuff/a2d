@@ -738,65 +738,31 @@ rect_scratch:
 
 .scope file_dialog_res
 
-common_dialog_frame_rect:
+dialog_frame_rect:
         DEFINE_RECT_INSET 4,2,kFilePickerDlgWidth,kFilePickerDlgHeight
 
 rect_D9C8:
         DEFINE_RECT 27,16,174,26
 
-common_close_button_rect:
-        DEFINE_RECT_SZ 193,58,kButtonWidth,kButtonHeight
+        DEFINE_BUTTON close, "Close", 193,58
+        DEFINE_BUTTON ok, {"OK            ",kGlyphReturn}, 193,89
+        DEFINE_BUTTON open, "Open", 193,44
+        DEFINE_BUTTON cancel, "Cancel        Esc", 193,73
+        DEFINE_BUTTON change_drive, "Change Drive", 193,30
 
-common_ok_button_rect:
-        DEFINE_RECT_SZ 193,89,kButtonWidth,kButtonHeight
-
-common_open_button_rect:
-        DEFINE_RECT_SZ 193,44,kButtonWidth,kButtonHeight
-
-common_cancel_button_rect:
-        DEFINE_RECT_SZ 193,73,kButtonWidth,kButtonHeight
-
-common_change_drive_button_rect:
-        DEFINE_RECT_SZ 193,30,kButtonWidth,kButtonHeight
-
-common_dialog_sep_start:
+dialog_sep_start:
         DEFINE_POINT 323,30
-common_dialog_sep_end:
+dialog_sep_end:
         DEFINE_POINT 323,100
 
         .byte   $81,$D3,$00
 
-ok_button_pos:
-        .word   198,99
-ok_button_label:
-        PASCAL_STRING {"OK            ",kGlyphReturn}
-
-close_button_pos:
-        .word   198,68
-close_button_label:
-        PASCAL_STRING "Close"
-
-open_button_pos:
-        .word   198,54
-open_button_label:
-        PASCAL_STRING "Open"
-
-cancel_button_pos:
-        .word   198,83
-cancel_button_label:
-        PASCAL_STRING "Cancel        Esc"
-
-change_drive_button_pos:
-        .word   198,40
-change_drive_button_label:
-        PASCAL_STRING "Change Drive"
-
 disk_label_pos:
         DEFINE_POINT   28,25
 
-common_input1_label_pos:
+input1_label_pos:
         DEFINE_POINT   28,112
-common_input2_label_pos:
+input2_label_pos:
         DEFINE_POINT   28,135
 
 textbg1:
@@ -819,11 +785,11 @@ destination_filename_label:
 kCommonInputWidth = 435
 kCommonInputHeight = 11
 
-common_input1_rect:   DEFINE_RECT_SZ 28, 113, kCommonInputWidth, kCommonInputHeight
-common_input1_textpos:      DEFINE_POINT 30,123
+input1_rect:   DEFINE_RECT_SZ 28, 113, kCommonInputWidth, kCommonInputHeight
+input1_textpos:      DEFINE_POINT 30,123
 
-common_input2_rect:   DEFINE_RECT_SZ 28, 136, kCommonInputWidth, kCommonInputHeight
-common_input2_textpos:      DEFINE_POINT 30,146
+input2_rect:   DEFINE_RECT_SZ 28, 136, kCommonInputWidth, kCommonInputHeight
+input2_textpos:      DEFINE_POINT 30,146
 
 delete_a_file_label:
         PASCAL_STRING "Delete a File ..."

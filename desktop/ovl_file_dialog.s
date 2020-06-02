@@ -123,11 +123,11 @@ L5151:  lda     winfo_file_dialog
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         bit     L51AE
         bmi     L5183
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_input1_rect
+        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         bne     L5196
         beq     L5190
-L5183:  MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_input2_rect
+L5183:  MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     L5196
 L5190:  jsr     set_cursor_insertion
@@ -169,7 +169,7 @@ L51C7:  lda     findwindow_window_id
         ;; --------------------------------------------------
         ;; In open button?
 .proc check_open_button
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_open_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::open_button_rect
         cmp     #MGTK::inrect_inside
         beq     clicked
         jmp     check_change_drive_button
@@ -188,7 +188,7 @@ L5213:  jmp     set_up_ports
 
 L5216:  lda     winfo_file_dialog
         jsr     set_port_for_window
-        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::common_open_button_rect
+        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         bmi     L5213
         jsr     L5607
         jmp     set_up_ports
@@ -196,26 +196,26 @@ L5216:  lda     winfo_file_dialog
 
         ;; --------------------------------------------------
 .proc check_change_drive_button
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_change_drive_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_close_button
 :       bit     L5105
         bmi     :+
-        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::common_change_drive_button_rect
+        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
         bmi     :+
         jsr     L565C
 :       jmp     set_up_ports
 .endproc
 
 .proc check_close_button
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_close_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::close_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_ok_button
 :       bit     L5105
         bmi     :+
-        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::common_close_button_rect
+        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         bmi     :+
         jsr     L567F
 :       jmp     set_up_ports
@@ -223,11 +223,11 @@ L5216:  lda     winfo_file_dialog
 
         ;; --------------------------------------------------
 .proc check_ok_button
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_ok_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_cancel_button
-:       yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::common_ok_button_rect
+:       yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
         jsr     jt_handle_meta_right_key
         jsr     jt_handle_ok
@@ -236,11 +236,11 @@ L5216:  lda     winfo_file_dialog
 
         ;; --------------------------------------------------
 .proc check_cancel_button
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_cancel_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_other_click
-:       yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::common_cancel_button_rect
+:       yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
         jsr     jt_handle_cancel
 :       jmp     set_up_ports
@@ -316,8 +316,8 @@ open:   ldx     selected_index
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         jsr     jt_handle_ok
         jmp     rts1
 
@@ -327,8 +327,8 @@ folder: and     #$7F
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_open_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_open_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
         lda     #0
         sta     hi
 
@@ -788,8 +788,8 @@ L5A27:  cmp     #CHAR_TAB
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_change_drive_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_change_drive_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
         jsr     L565C
 L5A4F:  jmp     L5AC8
 
@@ -804,8 +804,8 @@ L5A52:  cmp     #CHAR_CTRL_O    ; Open
 :       lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_open_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_open_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
         jsr     L5607
         jmp     L5AC8
 
@@ -814,8 +814,8 @@ L5A8B:  cmp     #CHAR_CTRL_C    ; Close
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_close_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_close_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
         jsr     L567F
         jmp     L5AC8
 
@@ -837,8 +837,8 @@ key_return:
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         jsr     jt_handle_meta_right_key
         jsr     jt_handle_ok
         jsr     L56E3
@@ -848,8 +848,8 @@ key_escape:
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_cancel_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
         jsr     jt_handle_cancel
         jsr     L56E3
         rts
@@ -1043,19 +1043,19 @@ L5C27:  ldx     num_file_names
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_dialog_frame_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_ok_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_open_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_close_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_cancel_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_change_drive_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::ok_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::open_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::change_drive_button_rect
         jsr     draw_ok_button_label
         jsr     draw_open_button_label
         jsr     draw_close_button_label
         jsr     draw_cancel_button_label
         jsr     draw_change_drive_button_label
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::common_dialog_sep_start
-        MGTK_RELAY_CALL MGTK::LineTo, file_dialog_res::common_dialog_sep_end
+        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
+        MGTK_RELAY_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
@@ -1149,7 +1149,7 @@ L5E56:  .byte   0
 
 L5E57:  jsr     copy_string_to_lcbuf
         stax    $06
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::common_input1_label_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
         ldax    $06
         jsr     draw_string
         rts
@@ -1158,7 +1158,7 @@ L5E57:  jsr     copy_string_to_lcbuf
 
 L5E6F:  jsr     copy_string_to_lcbuf
         stax    $06
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::common_input2_label_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input2_label_pos
         ldax    $06
         jsr     draw_string
         rts
@@ -1908,7 +1908,7 @@ L658B:  cmp     #$09
         jsr     set_port_for_window
         jsr     calc_path_buf0_input1_endpos
         stax    $06
-        copy16  file_dialog_res::common_input1_textpos+2, $08
+        copy16  file_dialog_res::input1_textpos+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, ptr
         bit     prompt_ip_flag
         bpl     bg2
@@ -1937,7 +1937,7 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         jsr     set_port_for_window
         jsr     calc_path_buf1_input2_endpos
         stax    $06
-        copy16  file_dialog_res::common_input2_textpos+2, $08
+        copy16  file_dialog_res::input2_textpos+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, ptr
         bit     prompt_ip_flag
         bpl     bg2
@@ -1962,10 +1962,10 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
 .proc redraw_f1
         lda     winfo_file_dialog
         jsr     set_port_for_window
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_input1_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_input1_rect
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::common_input1_textpos
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
         lda     path_buf0
         beq     :+
         addr_call draw_string, path_buf0
@@ -1979,10 +1979,10 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
 .proc redraw_f2
         lda     winfo_file_dialog
         jsr     set_port_for_window
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::common_input2_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::input2_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_input2_rect
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::common_input2_textpos
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
+        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
         lda     path_buf1
         beq     :+
         addr_call draw_string, path_buf1
@@ -2000,12 +2000,12 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_input1_rect
+        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         beq     L6719
         bit     L5104
         bpl     L6718
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_input2_rect
+        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     L6718
         jmp     jt_handle_ok
@@ -2076,7 +2076,7 @@ L67C4:  copy16  #path_buf0, $06
         lda     path_buf0
         sta     $08
 L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, file_dialog_res::common_input1_textpos, $09
+        add16   $09, file_dialog_res::input1_textpos, $09
         cmp16   $09, screentowindow_windowx
         bcc     L6800
         dec     $08
@@ -2133,12 +2133,12 @@ L684D:  .word   0
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_input2_rect
+        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         beq     L6890
         bit     L5104
         bpl     L688F
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::common_input1_rect
+        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         bne     L688F
         jmp     jt_handle_cancel
@@ -2209,7 +2209,7 @@ L693B:  copy16  #path_buf1, $06
         lda     path_buf1
         sta     $08
 L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, file_dialog_res::common_input2_textpos, $09
+        add16   $09, file_dialog_res::input2_textpos, $09
         cmp16   $09, screentowindow_windowx
         bcc     L6977
         dec     $08
@@ -2276,7 +2276,7 @@ L69D5:  lda     L6A17
         jsr     calc_path_buf0_input1_endpos
         inc     path_buf0
         stax    $06
-        copy16  file_dialog_res::common_input1_textpos+2, $08
+        copy16  file_dialog_res::input1_textpos+2, $08
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2298,7 +2298,7 @@ L6A17:  .byte   0
 L6A1E:  dec     path_buf0
         jsr     calc_path_buf0_input1_endpos
         stax    $06
-        copy16  file_dialog_res::common_input1_textpos+2, $08
+        copy16  file_dialog_res::input1_textpos+2, $08
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2330,7 +2330,7 @@ L6A6B:  ldx     path_buf0
         inc     path_buf2
         jsr     calc_path_buf0_input1_endpos
         stax    $06
-        copy16  file_dialog_res::common_input1_textpos+2, $08
+        copy16  file_dialog_res::input1_textpos+2, $08
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2365,7 +2365,7 @@ L6ACA:  lda     path_buf2+1,x
 L6AD6:  dec     path_buf2
         lda     winfo_file_dialog
         jsr     set_port_for_window
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::common_input1_textpos
+        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
         addr_call draw_string, path_buf0
         addr_call draw_string, path_buf2
         addr_call draw_string, str_2_spaces
@@ -2451,7 +2451,7 @@ L6B81:  lda     L6BC3
         jsr     calc_path_buf1_input2_endpos
         inc     path_buf1
         stax    $06
-        copy16  file_dialog_res::common_input2_textpos+2, $08
+        copy16  file_dialog_res::input2_textpos+2, $08
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2473,7 +2473,7 @@ L6BC3:  .byte   0
 L6BCA:  dec     path_buf1
         jsr     calc_path_buf1_input2_endpos
         stax    $06
-        copy16  file_dialog_res::common_input2_textpos+2, $08
+        copy16  file_dialog_res::input2_textpos+2, $08
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2505,7 +2505,7 @@ L6C17:  ldx     path_buf1
         inc     path_buf2
         jsr     calc_path_buf1_input2_endpos
         stax    $06
-        copy16  file_dialog_res::common_input2_textpos+2, $08
+        copy16  file_dialog_res::input2_textpos+2, $08
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2540,7 +2540,7 @@ L6C76:  lda     path_buf2+1,x
 L6C82:  dec     path_buf2
         lda     winfo_file_dialog
         jsr     set_port_for_window
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::common_input2_textpos
+        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
         addr_call draw_string, path_buf1
         addr_call draw_string, path_buf2
         addr_call draw_string, str_2_spaces
@@ -2820,10 +2820,10 @@ flag:   .byte   0
 
 :       lda     str_width
         clc
-        adc     file_dialog_res::common_input1_textpos
+        adc     file_dialog_res::input1_textpos
         tay
         lda     str_width+1
-        adc     file_dialog_res::common_input1_textpos+1
+        adc     file_dialog_res::input1_textpos+1
         tax
         tya
         rts
@@ -2849,10 +2849,10 @@ flag:   .byte   0
 
 :       lda     str_width
         clc
-        adc     file_dialog_res::common_input2_textpos
+        adc     file_dialog_res::input2_textpos
         tay
         lda     str_width+1
-        adc     file_dialog_res::common_input2_textpos+1
+        adc     file_dialog_res::input2_textpos+1
         tax
         tya
         rts

@@ -69,8 +69,8 @@ ok_button_string:
 try_again_button_string:
         PASCAL_STRING "Try Again  A"
 
-        DEFINE_BUTTON_COORDS2 ok, 300, 37
-        DEFINE_BUTTON_COORDS2 cancel, 20, 37
+        DEFINE_BUTTON_COORDS ok, 300, 37
+        DEFINE_BUTTON_COORDS cancel, 20, 37
 
 try_again_button_rect   := ok_button_rect
 try_again_pos           := ok_button_pos

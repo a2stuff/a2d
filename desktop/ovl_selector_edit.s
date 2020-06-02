@@ -111,8 +111,8 @@ L70B0:  lda     jt_pathname+1,x
 L7116:  addr_call file_dialog::L5E0A, add_an_entry_label
 L711D:  addr_call file_dialog::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_input1_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_input2_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         addr_call file_dialog::L5E57, enter_the_full_pathname_label1
         addr_call file_dialog::L5E6F, enter_the_name_to_appear_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_add_a_new_entry_to_label

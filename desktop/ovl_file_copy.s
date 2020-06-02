@@ -52,8 +52,8 @@
         addr_call file_dialog::L5E57, file_dialog_res::source_filename_label
         addr_call file_dialog::L5E6F, file_dialog_res::destination_filename_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_input1_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::common_input2_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts

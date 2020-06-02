@@ -147,18 +147,10 @@ kGlyphSolidApple        = $1E
         .ident(.sprintf("%s_button_rect", .string(ident))) := *
         DEFINE_RECT_SZ (xpos), (ypos), kButtonWidth, kButtonHeight
         .ident(.sprintf("%s_button_pos", .string(ident))) := *
-        DEFINE_POINT ((xpos) + 4), ((ypos) + 10)
+        DEFINE_POINT ((xpos) + 5), ((ypos) + 10)
 .endmacro
 .macro DEFINE_BUTTON ident, label, xpos, ypos
         DEFINE_BUTTON_COORDS ident, xpos, ypos
         .ident(.sprintf("%s_button_label", .string(ident))) := *
         PASCAL_STRING {label}
-.endmacro
-
-;;; TODO: Eliminate this 1px difference (this is the preferred one)
-.macro DEFINE_BUTTON_COORDS2 ident, xpos, ypos
-        .ident(.sprintf("%s_button_rect", .string(ident))) := *
-        DEFINE_RECT_SZ (xpos), (ypos), kButtonWidth, kButtonHeight
-        .ident(.sprintf("%s_button_pos", .string(ident))) := *
-        DEFINE_POINT ((xpos) + 5), ((ypos) + 10)
 .endmacro
