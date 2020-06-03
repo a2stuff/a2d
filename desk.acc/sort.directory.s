@@ -449,10 +449,12 @@ loop:   lda     (ptr1),y
         bne     :+
         jmp     rtcs
 
+        ;; Are we sorting by selection order?
 :       jsr     JUMP_TABLE_GET_SEL_COUNT
-        beq     :+
+        beq     :+              ; No selection, so nope.
         jsr     JUMP_TABLE_GET_SEL_WIN
-        beq     :+
+        cmp     window_id       ; Is selection in the active window?
+        bne     :+              ; Nope (desktop or inactive window)
         jmp     compare_selection_orders
 
 :       ldax    ptr2
