@@ -325,8 +325,7 @@ Erases the specified icon by number. No error checking is done.
 .word iconx     (pixels)
 .word icony     (pixels)
 .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
-.byte len       (name length + 2)
-.res  17  name  (name, with a space before and after)
+.res  16        (length-prefixed name)
 ```
 
 <!-- ============================================================ -->

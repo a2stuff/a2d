@@ -298,7 +298,8 @@ settextbg_params    := textwidth_params::result + 1  ; re-used
 textptr:        .addr   text_buffer
 textlen:        .byte   0
 .endparams
-
+        ;; text_buffer contains only the characters; the length
+        ;; is in drawtext_params::textlen
 text_buffer:
         .res    19, 0
 
@@ -1858,13 +1859,10 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         copy16in ($08),y, mask_paintbits_params::mapbits
         jsr     pop_pointers
 
-        ldy     #9
-:       lda     ($06),y
-        sta     rect_opendir::y2,y
-        iny
-        cpy     #$1D
-        bne     :-
+        ;; Copy and pad name
+        jsr     prepare_name
 
+        ;; Pad with trailing spaces until minimum size is reached
 :       lda     drawtext_params::textlen
         sta     textwidth_params::textlen
         MGTK_CALL MGTK::TextWidth, textwidth_params
@@ -2071,14 +2069,8 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         sta     poly::v4::ycoord+1
         sta     poly::v5::ycoord+1
 
-        ;; Compute text width
-        ldy     #.sizeof(IconEntry)+1
-        ldx     #19             ; len byte + 15 chars + 2 spaces
-:       lda     (entry_ptr),y
-        sta     text_buffer-1,x
-        dey
-        dex
-        bpl     :-
+        ;; Copy and pad name
+        jsr     prepare_name
 
         ;; Pad with spaces until it's at least as wide as the icon
 :       lda     drawtext_params::textlen
@@ -2134,6 +2126,35 @@ got_width:
 icon_width:  .byte   0
 text_width:  .byte   0
 
+.endproc
+
+;;; Copy name from IconEntry (ptr $06) to text_buffer,
+;;; with leading/trailing spaces.
+
+.proc prepare_name
+        .assert text_buffer - 1 = drawtext_params::textlen, error, "location mismatch"
+
+        dest := drawtext_params::textlen
+        ptr := $06
+
+        ldy     #.sizeof(IconEntry)
+        ldx     #.sizeof(IconEntry) - IconEntry::name
+:       lda     (ptr),y
+        sta     dest + 1,x
+        dey
+        dex
+        bpl     :-
+
+        ldy     dest + 1
+        iny
+        iny
+        sty     dest
+
+        lda     #' '
+        sta     dest + 1
+        sta     dest,y
+
+        rts
 .endproc
 
 ;;; ============================================================

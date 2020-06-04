@@ -251,7 +251,7 @@ loop:   sta     WINDOW_ICON_TABLES + $400,x         ; window 8, icon use map
 
 ;;; ============================================================
 
-trash_name:  PASCAL_STRING " Trash "
+trash_name:  PASCAL_STRING "Trash"
 
 .proc create_trash_icon
         ptr := $6

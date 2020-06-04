@@ -1537,9 +1537,12 @@ checkerboard_pattern:
 
         PAD_TO $ED00
 
-;;; (there's enough room here for 127 files at 27 bytes each)
+;;; (there's enough room here for 127 files at 25 bytes each)
 icon_entries:
         .assert ($FB00 - *) >= 127 * .sizeof(IconEntry), error, "Not enough room for icons"
+
+;;; There's plenty of room after that (~409 bytes) if additional
+;;; buffer space is needed.
 
 ;;; ============================================================
 ;;; Segment loaded into AUX $FB00-$FFFF

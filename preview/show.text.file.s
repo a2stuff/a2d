@@ -422,25 +422,22 @@ abort:  rts
         bne     :+
         rts                     ; 000 = directory
 
-        ;; Set window title to point at filename (9th byte of entry)
-        ;; (title includes the spaces before/after from the icon)
+        ;; Set window title to point at filename
 :       clc
         lda     src
-        adc     #IconEntry::len
+        adc     #IconEntry::name
         sta     winfo::title
         lda     src+1
         adc     #0
         sta     winfo::title+1
 
         ;; Append filename to path.
-        ldy     #IconEntry::len
+        ldy     #IconEntry::name
         lda     (src),y         ; grab length
-        tax                     ; name has spaces before/after
-        dex                     ; so subtract 2 to get actual length
-        dex
+        tax
         clc
         lda     src
-        adc     #11             ; 9 = length, 10 = space, 11 = name
+        adc     #IconEntry::name+1
         sta     src
         bcc     :+
         inc     src+1

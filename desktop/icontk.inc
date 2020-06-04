@@ -81,8 +81,8 @@ label   := *
 ;;;      .word iconx     (pixels)
 ;;;      .word icony     (pixels)
 ;;;      .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
-;;;      .byte len       (name length + 2)
-;;;      .res  17  name  (name, with a space before and after)
+;;;      .byte len       (name length)
+;;;      .res  15  name  (name)
 
 .struct IconEntry
         id              .byte   ; 0
@@ -91,8 +91,7 @@ label   := *
         iconx           .word   ; 3
         icony           .word   ; 5
         iconbits        .addr   ; 7
-        len             .byte   ; 9
-        name            .res 17 ; 10 (15 chars plus leading/trailing spaces)
+        name            .res 16 ; 9 (length + 15 chars)
 .endstruct
 
 kMaxIconCount   = 127

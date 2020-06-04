@@ -558,7 +558,7 @@ loop:   dex
         stax    entry_ptr
         pla
         tax
-        add16   entry_ptr, #IconEntry::len, entry_ptr
+        add16   entry_ptr, #IconEntry::name, entry_ptr
         ldy     #0
         lda     (entry_ptr),y
         sec
@@ -607,7 +607,7 @@ loop2:  dex
         stax    entry_ptr
         pla
         tax
-        add16   entry_ptr, #IconEntry::len, entry_ptr
+        add16   entry_ptr, #IconEntry::name, entry_ptr
         ldy     #0
         lda     (entry_ptr),y   ; len
         sec

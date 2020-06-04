@@ -204,14 +204,12 @@ abort:  rts
         rts                         ; yes, fail
 
         ;; Append filename to path.
-:       ldy     #IconEntry::len
+:       ldy     #IconEntry::name
         lda     (src),y         ; grab length
-        tax                     ; name has spaces before/after
-        dex                     ; so subtract 2 to get actual length
-        dex
+        tax
         clc
         lda     src
-        adc     #IconEntry::name + 1 ; skip leading space
+        adc     #IconEntry::name+1
         sta     src
         bcc     :+
         inc     src+1

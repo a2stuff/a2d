@@ -1891,31 +1891,23 @@ maybe_open_file:
         dey
         bpl     :-
 
-        ;; Copy file path (without leading/trailing spaces) to buf_filename2
+        ;; Copy file path to buf_filename2
         icon_ptr := $06
 
         lda     selected_icon_list
         jsr     icon_entry_lookup
         stax    icon_ptr
-        ldy     #IconEntry::len
+        ldy     #IconEntry::name
         lda     (icon_ptr),y
         tax
         clc
-        adc     #IconEntry::len
+        adc     #IconEntry::name
         tay
-        dex
-        dey
 :       lda     (icon_ptr),y
-        sta     buf_filename2-1,x
+        sta     buf_filename2,x
         dey
         dex
-        bne     :-
-        ldy     #IconEntry::len
-        lda     (icon_ptr),y
-        tax
-        dex                     ; -2 for leading/trailing spaces
-        dex
-        stx     buf_filename2
+        bpl     :-
 
         jmp     launch_file
 
@@ -2071,17 +2063,15 @@ loop:   ldx     icon
         stax    ptr_icon
 
         ;; Lengths match?
-        ldy     #IconEntry::len
+        ldy     #IconEntry::name
         lda     (ptr_icon),y
-        sec
-        sbc     #2              ; discount leading/trailing space
         ldy     #0
         cmp     (ptr_name),y
         bne     next
 
         ;; Compare characters (case insensitive)
         tay
-        add16   ptr_icon, #IconEntry::name, ptr_icon ; skip leading space
+        add16   ptr_icon, #IconEntry::name, ptr_icon
 cloop:  lda     (ptr_icon),y
         jsr     upcase_char
         sta     char
@@ -4031,44 +4021,41 @@ handle_double_click:
 done:   rts
 
         ;; File (executable or data)
-file:   sta     L5E77
+file:   sta     icon_entry_type
         lda     active_window_id
         jsr     window_path_lookup
         stax    $06
-        ldy     #$00
+
+        ldy     #0
         lda     ($06),y
         tay
-L5E3A:  lda     ($06),y
+:       lda     ($06),y
         sta     buf_win_path,y
         dey
-        bpl     L5E3A
+        bpl     :-
+
         lda     icon_num
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #$09
+
+        ldy     #IconEntry::name
         lda     ($06),y
         tax
         clc
-        adc     #$09
+        adc     #IconEntry::name
         tay
-        dex
-        dey
-L5E57:  lda     ($06),y
-        sta     buf_filename2-1,x
+:       lda     ($06),y
+        sta     buf_filename2,x
         dey
         dex
-        bne     L5E57
-        ldy     #$09
-        lda     ($06),y
-        tax
-        dex
-        dex
-        stx     buf_filename2
-        lda     L5E77
-        cmp     #$20
-        bcc     L5E74
-        lda     L5E77
-L5E74:  jmp     launch_file     ; when double-clicked
+        bpl     :-
+
+        lda     icon_entry_type ; WTF - dead code ???
+        cmp     #kIconEntryTypeBinary
+        bcc     :+
+        lda     icon_entry_type
+
+:       jmp     launch_file     ; when double-clicked
 
 .proc update_active_window
         lda     active_window_id
@@ -4077,7 +4064,8 @@ L5E74:  jmp     launch_file     ; when double-clicked
         jmp     select_and_refresh_window
 .endproc
 
-L5E77:  .byte   0
+icon_entry_type:
+        .byte   0
 
 .endproc
         handle_file_icon_click := handle_file_icon_click_impl::start
@@ -5447,21 +5435,18 @@ calc_name_ptr:
 :
         ;; Start building string
         ldx     #0
-        copy    #' ', buf_filename2+1,x ; leading space
 
 :       iny
         inx
         lda     open_dir_path_buf,y
-        sta     buf_filename2+1,x
+        sta     buf_filename2,x
         cpy     open_dir_path_buf
         bne     :-
 
-        inx
-        copy    #' ', buf_filename2+1,x ; trailing space
         stx     buf_filename2
 
         ;; Adjust ptr as if it's pointing at an IconEntry
-        copy16  #buf_filename2 - IconEntry::len, ptr
+        copy16  #buf_filename2 - IconEntry::name, ptr
         rts
 .endproc
 
@@ -6475,7 +6460,7 @@ size:   .word   0               ; size of a window's list
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
         pha
-        add16   icon_ptr, #IconEntry::len, name_ptr
+        add16   icon_ptr, #IconEntry::name, name_ptr
         pla
         and     #kIconEntryWinIdMask
         bne     has_parent      ; A = window_id
@@ -6483,17 +6468,20 @@ size:   .word   0               ; size of a window's list
         ;; --------------------------------------------------
         ;; Desktop (volume) icon - no parent path
 
-        ;; Copy name, including leading/trailing spaces
+        ;; Copy name
         ldy     #0
         lda     (name_ptr),y
         tay                     ; Y = length
 :       lda     (name_ptr),y
-        sta     open_dir_path_buf,y
+        sta     open_dir_path_buf+1,y ; Leave room for leading '/'
         dey
-        bpl     :-
+        bne     :-
 
-        copy    #'/', open_dir_path_buf+1 ; Replace leading space with '/'
-        dec     open_dir_path_buf       ; Remove trailing space
+        ;; Add leading '/' and adjust length
+        copy    #'/', open_dir_path_buf+1
+        lda     (name_ptr),y
+        sta     open_dir_path_buf
+        inc     open_dir_path_buf
 
         jsr     pop_pointers
         rts
@@ -6511,7 +6499,7 @@ has_parent:
         lda     (parent_path_ptr),y
         clc
         adc     (name_ptr),y
-        cmp     #67             ; Max path length is 64; title has leading/trailing spaces
+        cmp     #kPathBufferSize
         bcc     :+
 
         lda     #ERR_INVALID_PATHNAME
@@ -6543,11 +6531,8 @@ has_parent:
         clc
         adc     open_dir_path_buf
         sta     open_dir_path_buf
-        dec     open_dir_path_buf           ; discount leading/trailing spaces
-        dec     open_dir_path_buf
-        iny
 
-:       iny                     ; skip leading space immediately
+:       iny
         inx
         lda     (name_ptr),y
         sta     open_dir_path_buf,x
@@ -6567,7 +6552,7 @@ has_parent:
 .proc prepare_new_window
         icon_ptr := $06
 
-        ;; Copy icon name to window title (including leading/trailing spaces)
+        ;; Copy icon name to window title
 .scope
         name_ptr := icon_ptr
         title_ptr := $08
@@ -6578,7 +6563,7 @@ has_parent:
         asl     a
         tax
         copy16  window_title_addr_table,x, title_ptr
-        add16   icon_ptr, #IconEntry::len, name_ptr
+        add16   icon_ptr, #IconEntry::name, name_ptr
 
         ldy     #0
         lda     (name_ptr),y
@@ -6884,25 +6869,18 @@ thumbmax:
         lda     LCBANK2
         lda     LCBANK2
 
-        ;; Copy the name (offset by 2 for count and leading space)
+        ;; Copy the name
         ldy     #FileRecord::name
         lda     (file_entry),y
         sta     name_tmp
         iny
         ldx     #0
 :       lda     (file_entry),y
-        sta     name_tmp+2,x
+        sta     name_tmp+1,x
         inx
         iny
         cpx     name_tmp
         bne     :-
-
-        inc     name_tmp        ; length += 2 for leading/trailing spaces
-        inc     name_tmp
-        lda     #' '            ; leading space
-        sta     name_tmp+1
-        ldx     name_tmp
-        sta     name_tmp,x      ; trailing space
 
         ;; Check file type
         ldy     #FileRecord::file_type
@@ -6954,7 +6932,7 @@ got_type:
         tya
 
         jsr     find_icon_details_for_icon_type
-        ldy     #IconEntry::len
+        ldy     #IconEntry::name
         ldx     #0
 L77F0:  lda     name_tmp,x
         sta     (icon_entry),y
@@ -9361,16 +9339,14 @@ create_icon:
         jsr     icon_entry_lookup
         stax    icon_ptr
 
-        ;; Copy name, with leading/trailing space
+        ;; Copy name
         lda     cvi_data_buffer
         and     #NAME_LENGTH_MASK
         sta     cvi_data_buffer
 
         addr_call adjust_volname_case, cvi_data_buffer
 
-        ldy     #IconEntry::name
-        copy    #' ', (icon_ptr),y ; leading space
-        iny
+        ldy     #IconEntry::name+1
 
         ldx     #0
 :       lda     cvi_data_buffer+1,x
@@ -9380,12 +9356,8 @@ create_icon:
         cpx     cvi_data_buffer
         bne     :-
 
-        copy    #' ', (icon_ptr),y ; trailing space
-
-        inx                     ; for leading/trailing space
-        inx
         txa
-        ldy     #IconEntry::len
+        ldy     #IconEntry::name
         sta     (icon_ptr),y
 
         ;; ----------------------------------------
@@ -10340,38 +10312,28 @@ check_icon_drop_type:
         ;;
 drop_on_volume_icon:
         lda     drag_drop_params::result
+        jsr     icon_entry_name_lookup
 
         ;; Prefix name with '/'
-        jsr     icon_entry_name_lookup
-        ldy     #1
-        lda     #'/'
-        sta     ($06),y
+        copy    #'/', path_buf3+1
 
         ;; Copy to path_buf3
-        dey
+        ldy     #0
         lda     ($06),y
         sta     @compare
-        sta     path_buf3,y
 :       iny
         lda     ($06),y
-        sta     path_buf3,y
+        sta     path_buf3+1,y
         @compare := *+1
         cpy     #0              ; self-modified
         bne     :-
+        iny
+        sty     path_buf3
 
-        ;; Restore ' ' to name prefix
-        ldy     #1
-        lda     #' '
-        sta     ($06),y
-
-L9076:  ldy     #$FF
-:       iny
-        copy    path_buf3,y, path_buf4,y
-        cpy     path_buf3
-        bne     :-
-        lda     path_buf4
-        beq     begin_operation
-        dec     path_buf4
+L9076:  ldy     path_buf3
+:       copy    path_buf3,y, path_buf4,y
+        dey
+        bpl     :-
         ;; fall through
 
 ;;; --------------------------------------------------
@@ -10438,11 +10400,7 @@ loop:   jsr     get_window_path_ptr
         beq     next_icon
         jsr     icon_entry_name_lookup
         jsr     join_paths
-        ;; Shrink name to remove trailing ' '
-        lda     path_buf3
-        beq     :+
-        dec     path_buf3
-:
+
         lda     L97E4
         beq     L913D
         bit     operation_flags
@@ -10558,7 +10516,7 @@ all_flag:
 .proc icon_entry_name_lookup
         asl     a
         tay
-        add16   icon_entry_address_table,y, #IconEntry::len, $06
+        add16   icon_entry_address_table,y, #IconEntry::name, $06
         rts
 .endproc
 
@@ -10595,7 +10553,6 @@ do_str2:
         lda     (str2),y
         beq     done
         sta     @len
-        iny
 :       iny
         inx
         lda     (str2),y
@@ -10853,13 +10810,10 @@ loop:   ldx     get_info_dialog_params::index
         jsr     icon_entry_name_lookup
         jsr     join_paths
 
-        ldy     #0              ; Copy name to path_buf
-:       lda     path_buf3,y
-        sta     path_buf,y
-        iny
-        cpy     path_buf
-        bne     :-
-        dec     path_buf
+        ldy     path_buf3       ; Copy name to path_buf
+:       copy    path_buf3,y, path_buf,y
+        dey
+        bpl     :-
         jmp     common
 
         ;; Volume icon
@@ -10870,15 +10824,17 @@ vol_icon:
         bne     :+
         jmp     next
 :       jsr     icon_entry_name_lookup
+
         ldy     #0
+        lda     (ptr),y
+        tay
+        sta     path_buf
+        inc     path_buf        ; for leading '/'
 :       lda     (ptr),y
-        sta     path_buf,y
-        iny
-        cpy     path_buf
+        sta     path_buf+1,y    ; leave room for leading '/'
+        dey
         bne     :-
-        dec     path_buf
-        lda     #'/'
-        sta     path_buf+1
+        copy    #'/', path_buf+1
 
         ;; Try to get file info
 common: MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params5
@@ -10937,8 +10893,21 @@ common2:
         ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
+
+        ;; Prepend space, like the other fields
+        ;; TODO: Update all the other strings?
+        ldy     #0
+        lda     (ptr),y
+        sta     text_buffer2
+        inc     text_buffer2    ; for leading space
+        tay
+:       copy    (ptr),y, text_buffer2+1,y
+        dey
+        bne     :-
+        copy    #' ', text_buffer2+1
+
         copy    #GetInfoDialogState::name, get_info_dialog_params::state
-        copy16  ptr, get_info_dialog_params::addr
+        copy16  #text_buffer2, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
 
         ;; --------------------------------------------------
@@ -11153,13 +11122,10 @@ loop:   lda     index
         jsr     icon_entry_name_lookup
         jsr     join_paths
 
-        ldy     #0              ; copy into src_path_buf
-:       lda     path_buf3,y
-        sta     src_path_buf,y
-        iny
-        cpy     src_path_buf
-        bne     :-
-        dec     src_path_buf
+        ldy     path_buf3       ; copy into src_path_buf
+:       copy    path_buf3,y, src_path_buf,y
+        dey
+        bpl     :-
 
         jmp     common          ; proceed with rename
 
@@ -11170,16 +11136,16 @@ is_vol: ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
 
-
         ldy     #0              ; copy into src_path_buf
-:       lda     (icon_name_ptr),y ; this copies leading space...
-        sta     src_path_buf,y
-        iny
-        cpy     src_path_buf
+        lda     (icon_name_ptr),y
+        tay
+        sta     src_path_buf
+        inc     src_path_buf    ; for leading '/'
+:       lda     (icon_name_ptr),y
+        sta     src_path_buf+1,y ; leave room for leading '/'
+        dey
         bne     :-
-        dec     src_path_buf    ; remove trailing space
-        lda     #'/'            ; overwrite leading space with '/'
-        sta     src_path_buf+1
+        copy    #'/', src_path_buf+1
 
 common:
         ldx     index
@@ -11188,18 +11154,13 @@ common:
 
         ptr := $06
 
-        ldy     #0              ; copy name again (without spaces)
+        ldy     #0              ; copy name again
         lda     (ptr),y         ; to old_name_buf
         tay
-        dey
-        sec
-        sbc     #2              ; remove two spaces
-        sta     old_name_buf
 :       lda     (ptr),y
-        sta     old_name_buf-1,y       ; offset by leading space
+        sta     old_name_buf,y
         dey
-        cpy     #1
-        bne     :-
+        bpl     :-
 
         ;; Open the dialog
         lda     #RenameDialogState::open
@@ -11287,26 +11248,14 @@ finish: lda     #RenameDialogState::close
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
 
-        ;; Copy new string in (preserving leading/adding trailing space)
+        ;; Copy new string in
         ldy     #0
         lda     (new_name_ptr),y
-        clc
-        adc     #2              ; for spaces
-        sta     (icon_name_ptr),y
-        lda     (new_name_ptr),y
         tay
-        inc16   icon_name_ptr   ; advance past leading space
 :       lda     (new_name_ptr),y
         sta     (icon_name_ptr),y
         dey
-        bne     :-
-
-        dec16   icon_name_ptr
-
-        lda     (icon_name_ptr),y ; apply trailing space
-        tay
-        lda     #' '
-        sta     (icon_name_ptr),y
+        bpl     :-
 
         ;; Totally done - advance to next selected icon
         inc     index
