@@ -106,28 +106,6 @@ ITK_RELAY       := $D040
 ;;; ============================================================
 ;;; Internals - miscellaneous structures
 
-.struct IconDefinition
-        ;; First part is MGTK::MapInfo without leading viewloc
-        mapbits         .addr   ; address of bitmap bits
-        mapwidth        .byte   ; stride of bitmap bits
-        reserved        .byte   ; 0
-        maprect         .res 8  ; x1,y1 must be 0,0
-
-        ;; Next part is address of mask bits; must be same
-        ;; dimensions as rect of icon.
-        maskbits        .addr
-.endstruct
-
-.macro  DEFICON mapbits, mapwidth, dx, dy, maskbits
-        ;; First part is MGTK::MapInfo without leading viewloc
-        .addr   mapbits
-        .byte   mapwidth
-        .byte   0             ; reserved
-        .word   0, 0, dx, dy  ; maprect
-        ;; Next part is link to mask
-        .addr   maskbits
-.endmacro
-
 .struct FileRecord
         name                    .res 16
         file_type               .byte ; 16 $10

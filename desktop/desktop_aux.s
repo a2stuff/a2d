@@ -1803,10 +1803,8 @@ open_flag:  ; non-zero if open volume/dir
 more_drawing_needed_flag:
         .byte   0
 
-L9F94:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+label_pos:
+        DEFINE_POINT 0,0
 
 .proc paint_icon
 
@@ -1859,37 +1857,24 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         copy16in ($08),y, mask_paintbits_params::mapbits
         jsr     pop_pointers
 
-        ;; Copy and pad name
+        ;; Copy, pad, and measure name
         jsr     prepare_name
 
-        ;; Pad with trailing spaces until minimum size is reached
-:       lda     drawtext_params::textlen
-        sta     textwidth_params::textlen
-        MGTK_CALL MGTK::TextWidth, textwidth_params
-        lda     textwidth_params::result
-        cmp     icon_paintbits_params::maprect::x2
-        bcs     :+
-        inc     drawtext_params::textlen
-        ldx     drawtext_params::textlen
-        lda     #' '
-        sta     text_buffer-1,x
-        jmp     :-
+        ;; Center horizontally
+        ;;  text_left = icon_left + icon_width/2 - text_width/2
+        ;;            = (icon_left*2 + icon_width - text_width) / 2 - to keep everything positive
+        copy16  icon_paintbits_params::viewloc::xcoord, moveto_params2::xcoord
+        asl16   moveto_params2::xcoord
+        add16   moveto_params2::xcoord, icon_paintbits_params::maprect::x2, moveto_params2::xcoord
+        sub16   moveto_params2::xcoord, textwidth_params::result, moveto_params2::xcoord
+        lsr16   moveto_params2::xcoord
 
-:       lsr     a
-        sta     moveto_params2::xcoord+1
-        lda     icon_paintbits_params::maprect::x2
-        lsr     a
-        sta     moveto_params2::xcoord
-        lda     moveto_params2::xcoord+1
-        sec
-        sbc     moveto_params2::xcoord
-        sta     moveto_params2::xcoord
-        sub16_8 icon_paintbits_params::viewloc::xcoord, moveto_params2::xcoord, moveto_params2::xcoord
+        ;; Align vertically
         add16_8 icon_paintbits_params::viewloc::ycoord, icon_paintbits_params::maprect::y2, moveto_params2::ycoord
         add16   moveto_params2::ycoord, #1, moveto_params2::ycoord
         add16_8 moveto_params2::ycoord, font_height, moveto_params2::ycoord
 
-        COPY_STRUCT MGTK::Point, moveto_params2, L9F94
+        COPY_STRUCT MGTK::Point, moveto_params2, label_pos
 
         bit     icon_flags      ; volume icon (on desktop) ?
         bvc     do_paint        ; nope
@@ -1941,7 +1926,7 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         ;; --------------------------------------------------
 
         ;; Label
-        COPY_STRUCT MGTK::Point, L9F94, moveto_params2
+        COPY_STRUCT MGTK::Point, label_pos, moveto_params2
         MGTK_CALL MGTK::MoveTo, moveto_params2
         bit     icon_flags      ; highlighted?
         bmi     :+
@@ -1999,7 +1984,6 @@ loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params:
 ;;;         |                      |
 ;;;      v5 +----------------------+ v4
 ;;;
-;;; (Label is always at least as wide as the icon)
 
 kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
@@ -2028,7 +2012,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         copy16in (entry_ptr),y, bitmap_ptr
 
         ;; Right edge of icon (v1, v2)
-        ldy     #8              ; bitmap x2
+        ldy     #IconDefinition::maprect + MGTK::Rect::x2
         lda     (bitmap_ptr),y
         clc
         adc     poly::v0::xcoord
@@ -2041,7 +2025,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         sta     poly::v2::xcoord+1
 
         ;; Bottom edge of icon (v2, v7)
-        ldy     #10             ; bitmap y2
+        ldy     #IconDefinition::maprect + MGTK::Rect::y2
         add16in (bitmap_ptr),y, poly::v0::ycoord, poly::v2::ycoord
 
         lda     poly::v2::ycoord ; 2px down
@@ -2069,67 +2053,39 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         sta     poly::v4::ycoord+1
         sta     poly::v5::ycoord+1
 
-        ;; Copy and pad name
+        ;; Copy, pad, and measure name
         jsr     prepare_name
 
-        ;; Pad with spaces until it's at least as wide as the icon
-:       lda     drawtext_params::textlen
-        sta     textwidth_params::textlen
-        MGTK_CALL MGTK::TextWidth, textwidth_params
-        ldy     #8              ; bitmap x2 offset
-        lda     textwidth_params::result
-        cmp     (bitmap_ptr),y
-        bcs     got_width
-        inc     drawtext_params::textlen
-        ldx     drawtext_params::textlen
-        lda     #' '
-        sta     text_buffer-1,x
-        jmp     :-
+        ;; Center horizontally
 
-got_width:
-        lsr     a               ; width / 2
-        sta     text_width
-        lda     ($08),y         ; still has bitmap x2 offset
-        lsr     a               ; / 2
-        sta     icon_width
+        ldy     #IconDefinition::maprect + MGTK::Rect::x2
+        copy16in (bitmap_ptr),y, icon_width
 
         ;; Left edge of label (v5, v6)
-        lda     text_width
-        sec
-        sbc     icon_width
-        sta     icon_width
-        lda     poly::v0::xcoord
-        sec
-        sbc     icon_width
-        sta     poly::v6::xcoord
-        sta     poly::v5::xcoord
-        lda     poly::v0::xcoord+1
-        sbc     #0
-        sta     poly::v6::xcoord+1
-        sta     poly::v5::xcoord+1
+        ;;  text_left = icon_left + icon_width/2 - text_width/2
+        ;;            = (icon_left*2 + icon_width - text_width) / 2 - to keep everything positive
+        ;; NOTE: Left is computed before right to match rendering code
+        copy16  poly::v0::xcoord, poly::v5::xcoord
+        asl16   poly::v5::xcoord
+        add16   poly::v5::xcoord, icon_width, poly::v5::xcoord
+        sub16   poly::v5::xcoord, textwidth_params::result, poly::v5::xcoord
+        lsr16   poly::v5::xcoord
+        copy16  poly::v5::xcoord, poly::v6::xcoord
 
         ;; Right edge of label (v3, v4)
-        inc     textwidth_params::result
-        inc     textwidth_params::result
-        lda     poly::v5::xcoord
-        clc
-        adc     textwidth_params::result
-        sta     poly::v3::xcoord
-        sta     poly::v4::xcoord
-        lda     poly::v5::xcoord+1
-        adc     #0
-        sta     poly::v3::xcoord+1
-        sta     poly::v4::xcoord+1
+        add16   poly::v5::xcoord, textwidth_params::result, poly::v3::xcoord
+        copy16  poly::v3::xcoord, poly::v4::xcoord
+
         jsr     pop_pointers
         rts
 
-icon_width:  .byte   0
-text_width:  .byte   0
+icon_width:  .word   0
+text_width:  .word   0
 
 .endproc
 
 ;;; Copy name from IconEntry (ptr $06) to text_buffer,
-;;; with leading/trailing spaces.
+;;; with leading/trailing spaces, and measure it.
 
 .proc prepare_name
         .assert text_buffer - 1 = drawtext_params::textlen, error, "location mismatch"
@@ -2153,6 +2109,9 @@ text_width:  .byte   0
         lda     #' '
         sta     dest + 1
         sta     dest,y
+
+        copy    drawtext_params::textlen, textwidth_params::textlen
+        MGTK_CALL MGTK::TextWidth, textwidth_params
 
         rts
 .endproc
@@ -2660,22 +2619,34 @@ cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
         sta     portbits::viewloc::ycoord+1
 
         ;; Set up bounds_l
-        lda     poly::v5::xcoord
-        sta     bounds_l
+        copy16  poly::v0::xcoord, bounds_l
+        cmp16   bounds_l, poly::v5::xcoord
+        bcc     :+
+        copy16  poly::v5::xcoord, bounds_l
+:       lda     bounds_l
         sta     portbits::cliprect::x1
         sta     portbits::viewloc::xcoord
-        lda     poly::v5::xcoord+1
-        sta     bounds_l+1
+        lda     bounds_l+1
         sta     portbits::cliprect::x1+1
         sta     portbits::viewloc::xcoord+1
 
-        ;; Set up bounds_r/b
-        ldx     #3
-:       lda     poly::v4,x
-        sta     bounds_r,x      ; right and bottom
-        sta     portbits::cliprect::x2,x
-        dex
-        bpl     :-
+        ;; Set up bounds_b
+        lda     poly::v4::ycoord
+        sta     bounds_b
+        sta     portbits::cliprect::y2
+        lda     poly::v4::ycoord+1
+        sta     bounds_b+1
+        sta     portbits::cliprect::y2+1
+
+        ;; Set up bounds_r
+        copy16  poly::v1::xcoord, bounds_r
+        cmp16   bounds_r, poly::v3::xcoord
+        bcs     :+
+        copy16  poly::v3::xcoord, bounds_r
+:       lda     bounds_r
+        sta     portbits::cliprect::x2
+        lda     bounds_r+1
+        sta     portbits::cliprect::x2+1
 
         ;; if (bounds_r > kScreenWidth - 1) bounds_r = kScreenWidth - 1
         cmp16   bounds_r, #kScreenWidth - 1

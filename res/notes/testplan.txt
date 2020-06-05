@@ -1,0 +1,33 @@
+
+# Release Qualification Test Cases
+
+> Status: Work In Progress
+
+* Open a volume with double-click
+* Open a directory with double-click
+* Open a text file with double-click
+
+* Open a volume with File > Open
+* Open a directory with File > Open
+* Open a text file with File > Open
+
+* Create a new folder (File > New Folder) - verify that it is selected / scrolled into view
+
+* Move a file by dragging - same volume - target is window
+* Move a file by dragging - same volume - target is volume icon
+* Move a file by dragging - same volume - target is folder icon
+
+* Copy a file by dragging - different volume - target is window
+* Copy a file by dragging - different volume - target is volume icon
+* Copy a file by dragging - different volume - target is folder icon
+
+* Open a volume, open a folder, close the just volume window; re-open the volume, re-open the folder, ensure the previous window is activated
+
+
+* File > Rename a file
+* File > Rename a volume
+
+* File > Get Info a file
+* File > Get Info a volume
+
+* Position a volume icon in the middle of the DeskTop. Incrementally move a window so that it obscures all 8 positions around it (top, top right, right, etc). Ensure the icon repaints fully, and no part of the window is overdrawn.

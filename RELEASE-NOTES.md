@@ -22,6 +22,7 @@ https://github.com/a2stuff/a2d/issues
 * Desktop icon shown for AppleTalk file shares. (#88)
 * Improvements to several existing icon bitmaps. (#74)
 * Icons for volumes positioned more predictably and sensibly. (#94)
+* Short icon names are centered. (#208)
 * AppleWorks filenames are shown with correct case. (#179)
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. (#64)
 * Tip about skipping copy to RAMCard is shown during startup. (#140)
