@@ -18,7 +18,7 @@ dst_path_buf   := $1FC0
         ;; Entries marked with * are used by DAs
         ;; "Exported" by desktop.inc
 
-JT_MAIN_LOOP:           jmp     enter_main_loop
+JT_MAIN_LOOP:           jmp     main_loop
 JT_MGTK_RELAY:          jmp     MGTK_RELAY
 JT_SIZE_STRING:         jmp     compose_blocks_string
 JT_DATE_STRING:         jmp     compose_date_string
@@ -53,42 +53,7 @@ JT_HILITE_MENU:         jmp     toggle_menu_hilite      ; *
         .assert JUMP_TABLE_REDRAW_ALL = JT_REDRAW_ALL, error, "Jump table mismatch"
 
         ;; Main Loop
-.proc enter_main_loop
-        cli
-
-        ;; Add icons (presumably desktop ones?)
-        ldx     #0
-iloop:  cpx     cached_window_icon_count
-        beq     skip
-        txa
-        pha
-        lda     cached_window_icon_list,x
-        jsr     icon_entry_lookup
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
-        pla
-        tax
-        inx
-        jmp     iloop
-
-skip:   copy    #0, cached_window_id
-        jsr     StoreWindowIconTable
-
-        ;; Clear various flags
-        lda     #0
-        sta     LD2A9           ; Unused ???
-        sta     double_click_flag
-        sta     loop_counter
-        sta     file_menu_items_enabled_flag
-
-        ;; Pending error message?
-        lda     pending_alert
-        beq     main_loop
-        tay
-        jsr     ShowAlert
-
-        ;; Main loop
-main_loop:
+.proc main_loop
         jsr     reset_grafport3
 
         inc     loop_counter
@@ -194,8 +159,7 @@ done_redraw:
         rts
 
 .endproc
-        main_loop := enter_main_loop::main_loop
-        redraw_windows := enter_main_loop::redraw_windows
+        redraw_windows := main_loop::redraw_windows
 
 ;;; ============================================================
 
@@ -1405,6 +1369,38 @@ slash_index:
         make_ramcard_prefixed_path := cmd_selector_item_impl::make_ramcard_prefixed_path
 
 ;;; ============================================================
+;;; Append filename to directory path in path_buffer
+;;; Inputs: A,X = ptr to path suffix to append
+;;; Outputs: path_buffer has '/' and suffix appended
+
+.proc append_to_path_buffer
+
+        stax    @filename1
+        stax    @filename2
+
+        ;; Append '/' separator
+        ldy     path_buffer
+        iny
+        lda     #'/'
+        sta     path_buffer,y
+
+        ;; Append filename
+        ldx     #0
+:       inx
+        iny
+        @filename1 := *+1
+        lda     dummy1234,x
+        sta     path_buffer,y
+        @filename2 := *+1
+        cpx     dummy1234
+        bne     :-
+        sty     path_buffer
+
+        rts
+
+.endproc
+
+;;; ============================================================
 ;;; Get "copied to RAM card" flag from Main LC Bank 2.
 
 .proc get_copied_to_ramcard_flag
@@ -2126,7 +2122,7 @@ name_ptr:
         .addr   0
 .endproc
         cmd_new_folder := cmd_new_folder_impl::start
-        path_buffer := cmd_new_folder_impl::path_buffer ; ???
+        path_buffer := cmd_new_folder_impl::path_buffer
 
 ;;; ============================================================
 ;;; Grab the coordinates (MGTK::Point) of an icon.
@@ -2316,6 +2312,7 @@ eject_flag:
         DEFINE_OPEN_PARAMS open_params, str_quit_code, quit_code_io
         DEFINE_READ_PARAMS read_params, quit_code_addr, quit_code_size
         DEFINE_CLOSE_PARAMS close_params
+        DEFINE_QUIT_PARAMS quit_params
 
 str_quit_code:  PASCAL_STRING "Quit.tmp"
 
@@ -2326,21 +2323,21 @@ reset_handler:
         lda     LCBANK1
 
 start:
-        MLI_RELAY_CALL OPEN, open_params
+        ;; Restore system state: devices, /RAM, ROM/ZP banks.
+        jsr     restore_system
+
+        ;; Load and run/reinstall previous QUIT handler.
+        MLI_CALL OPEN, open_params
         bne     fail
         lda open_params::ref_num
         sta read_params::ref_num
         sta close_params::ref_num
-        MLI_RELAY_CALL READ, read_params
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL READ, read_params
+        MLI_CALL CLOSE, close_params
+        jmp     quit_code_addr
 
-        ;; Restore system state: devices, /RAM, ROM/ZP banks.
-        jsr     restore_system
-
-quit:   jmp     quit_code_addr
-
-fail:   jsr     ShowAlert
-        rts
+fail:   MLI_CALL QUIT, quit_params
+        brk
 
 .endproc
         cmd_quit := cmd_quit_impl::start
@@ -2351,6 +2348,7 @@ fail:   jsr     ShowAlert
 ;;; Returns with ALTZPOFF and ROM banked in.
 
 .proc restore_system
+        jsr     save_windows
         jsr     restore_device_list
 
         ;; Switch back to main ZP, preserving return address.
@@ -5461,6 +5459,8 @@ num:    .byte   0
 ;;; Input: |open_dir_path_buf| should have full path.
 ;;;   If a case match for existing window path, it will be activated.
 ;;; Note: stack will be restored via saved_stack on failure
+;;;
+;;; Set |suppress_error_on_open_flag| to avoid alert.
 
 .proc open_window_for_path
         copy    #$FF, icon_params2
@@ -6274,20 +6274,28 @@ L72A8:  .word   0
 .proc do_open
         MLI_RELAY_CALL OPEN, open_params
         beq     done
+
+        bit     suppress_error_on_open_flag
+        bmi     :+
         jsr     ShowAlert
-        bit     icon_params2
-        bmi     :+              ; was opening a path
+
+:       bit     icon_params2    ; Were we opening a path?
+        bmi     :+              ; Yes, no icons to twiddle.
 
         jsr     mark_icons_not_opened_2
         lda     selected_window_index
         bne     :+
-        lda     icon_params2
-        sta     drive_to_refresh ; icon number
+        sta     drive_to_refresh
         jsr     cmd_check_single_drive_by_icon_number
+
 :       ldx     saved_stack
         txs
+
 done:   rts
 .endproc
+
+suppress_error_on_open_flag:
+        .byte   0
 
 ;;; --------------------------------------------------
 
@@ -10529,6 +10537,9 @@ all_flag:
 .endproc
 
 ;;; ============================================================
+;;; Concatenate paths.
+;;; Inputs: Base path in $08, second path in $06
+;;; Output: path_buf3
 
 .proc join_paths
         str1 := $8
@@ -13148,6 +13159,163 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
 coords: DEFINE_POINT 0,0
 
 .endproc
+
+;;; ============================================================
+;;; Save/Restore window state at shutdown/launch
+
+.proc save_restore_windows
+        desktop_file_io_buf := $1000
+        desktop_file_data_buf := $1400
+        kFileSize = 2 + 8 * .sizeof(DeskTopFileItem) + 1
+
+        DEFINE_CREATE_PARAMS create_params, str_desktop_file, ACCESS_DEFAULT, $F1
+        DEFINE_OPEN_PARAMS open_params, str_desktop_file, desktop_file_io_buf
+        DEFINE_READ_PARAMS read_params, desktop_file_data_buf, kFileSize
+        DEFINE_READ_PARAMS write_params, desktop_file_data_buf, kFileSize
+        DEFINE_CLOSE_PARAMS close_params
+str_desktop_file:
+        PASCAL_STRING "DeskTop.file"
+
+.proc save
+        data_ptr := $06
+        winfo_ptr := $08
+
+        ;; Write version bytes
+        copy    #kDeskTopVersionMajor, desktop_file_data_buf
+        copy    #kDeskTopVersionMinor, desktop_file_data_buf+1
+        copy16  #desktop_file_data_buf+2, data_ptr
+
+        ;; Get first window pointer
+        MGTK_RELAY_CALL MGTK::FrontWindow, window_id
+        lda     window_id
+        beq     finish
+        jsr     window_lookup
+        stax    winfo_ptr
+        copy    #0, depth
+
+        ;; Is there a lower window?
+recurse_down:
+        next_ptr := $0A
+
+        ldy     #MGTK::Winfo::nextwinfo
+        copy16in (winfo_ptr),y, next_ptr
+        ora     next_ptr
+        beq     recurse_up      ; Nope - just finish.
+
+        ;; Yes, recurse
+        inc     depth
+        lda     winfo_ptr
+        pha
+        lda     winfo_ptr+1
+        pha
+
+        copy16  next_ptr, winfo_ptr
+        jmp     recurse_down
+
+recurse_up:
+        jsr     write_window_info
+        lda     depth           ; Last window?
+        beq     finish          ; Yes - we're done!
+
+        dec     depth           ; No, pop the stack and write the next
+        pla
+        sta     winfo_ptr+1
+        pla
+        sta     winfo_ptr
+        jmp     recurse_up
+
+finish: ldy     #0              ; Write sentinel
+        tay
+        sta     (data_ptr),y
+
+        ;; Write out file, to current prefix.
+        jsr     write_out_file
+
+        ;; If DeskTop was copied to RAMCard, also write to original prefix.
+        jsr     get_copied_to_ramcard_flag
+        bpl     exit
+        addr_call copy_desktop_orig_prefix, path_buffer
+        addr_call append_to_path_buffer, str_desktop_file
+        lda     #<path_buffer
+        sta     create_params::pathname
+        sta     open_params::pathname
+        lda     #>path_buffer
+        sta     create_params::pathname+1
+        sta     open_params::pathname+1
+        jsr     write_out_file
+
+exit:   rts
+
+.proc write_window_info
+        path_ptr := $0A
+
+        ;; Find name
+        ldy     #MGTK::Winfo::window_id
+        lda     (winfo_ptr),y
+        jsr     get_window_path
+        stax    path_ptr
+
+        ;; Copy name in
+        ldy     #::kPathBufferSize-1
+:       lda     (path_ptr),y
+        sta     (data_ptr),y
+        dey
+        bpl     :-
+
+        ;; Assemble rect - left/top first
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     (winfo_ptr),y
+        sta     bounds,x
+        dey
+        dex
+        bpl     :-
+        ;; width/height next
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect  + MGTK::Rect::x2 + .sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     (winfo_ptr),y
+        sta     bounds + MGTK::Rect::x2,x
+        dey
+        dex
+        bpl     :-
+
+        add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
+        rts
+
+bounds: .tag    MGTK::Rect
+
+.endproc                        ; write_window_info
+
+window_id := findwindow_window_id
+
+depth:  .byte   0
+
+.endproc                        ; save
+
+.proc open
+        MLI_RELAY_CALL OPEN, open_params
+        rts
+.endproc
+
+.proc close
+        MLI_RELAY_CALL CLOSE, close_params
+        rts
+.endproc
+
+.proc write_out_file
+        MLI_RELAY_CALL CREATE, create_params
+        jsr     open
+        bcs     :+
+        lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+        MLI_RELAY_CALL WRITE, write_params
+        jsr     close
+:       rts
+.endproc
+
+.endproc
+save_windows := save_restore_windows::save
 
 ;;; ============================================================
 

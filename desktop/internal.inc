@@ -118,3 +118,8 @@ ITK_RELAY       := ITKRelayImpl
         header_pointer          .word ; 28 $1C
         aux_type                .word ; 30 $1E
 .endstruct
+
+.struct DeskTopFileItem
+        window_path     .res ::kPathBufferSize
+        rect            .tag MGTK::Rect
+.endstruct

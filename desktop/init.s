@@ -1019,7 +1019,115 @@ append: lda     DEVLST,y        ; add it to the list
         jsr     main::update_window_menu_items
         jsr     main::disable_eject_menu_item
         jsr     main::disable_file_menu_items
-        jmp     main::enter_main_loop
+
+        ;; Add icons (presumably desktop ones?)
+        ldx     #0
+iloop:  cpx     cached_window_icon_count
+        beq     :+
+        txa
+        pha
+        lda     cached_window_icon_list,x
+        jsr     main::icon_entry_lookup
+        ldy     #IconTK::AddIcon
+        jsr     ITK_RELAY   ; icon entry addr in A,X
+        pla
+        tax
+        inx
+        jmp     iloop
+:
+        ;; Desktop icons are cached now
+        copy    #0, cached_window_id
+        jsr     StoreWindowIconTable
+
+        ;; Clear various flags
+        lda     #0
+        sta     LD2A9           ; Unused ???
+        sta     double_click_flag
+        sta     main::main_loop::loop_counter
+        sta     file_menu_items_enabled_flag
+
+        ;; Restore state from previous session
+        jsr     restore_windows
+
+        ;; Display any pending error messages
+        lda     main::pending_alert
+        beq     :+
+        tay
+        jsr     ShowAlert
+:
+
+        ;; And start pumping events
+        jmp     main::main_loop
+.endproc
+
+;;; ============================================================
+
+.proc restore_windows
+        data_ptr := $06
+
+        jsr     main::save_restore_windows::open
+        bcs     exit
+        lda     main::save_restore_windows::open_params::ref_num
+        sta     main::save_restore_windows::read_params::ref_num
+        sta     main::save_restore_windows::close_params::ref_num
+        MLI_RELAY_CALL READ, main::save_restore_windows::read_params
+        jsr     main::save_restore_windows::close
+
+        ;; Validate version bytes
+        lda     main::save_restore_windows::desktop_file_data_buf
+        cmp     #kDeskTopVersionMajor
+        bne     exit
+        lda     main::save_restore_windows::desktop_file_data_buf+1
+        cmp     #kDeskTopVersionMinor
+        bne     exit
+        copy16  #main::save_restore_windows::desktop_file_data_buf+2, data_ptr
+
+loop:   ldy     #0
+        lda     (data_ptr),y
+        beq     exit
+
+        ;; Copy path to open_dir_path_buf
+        tay
+:       lda     (data_ptr),y
+        sta     open_dir_path_buf,y
+        dey
+        bpl     :-
+
+        ;; TODO: Use bounds rect
+
+        jsr     main::push_pointers
+
+        ;; On failure, stack will be restored then rts,
+        ;; so ensure that continues the loop.
+        tsx                     ; The stack we believe
+        stx     our_stack
+        lda     #>(cont-1)      ; Resume address
+        pha
+        lda     #<(cont-1)
+        pha
+        tsx                     ; Stack for restore on error.
+        stx     saved_stack
+
+        copy    #$80, main::open_directory::suppress_error_on_open_flag
+        jsr     main::open_window_for_path
+
+        ;; Restore our stack regardless of how we got here.
+cont:   ldx     our_stack
+        txs
+
+        jsr     main::pop_pointers
+        copy    #0, main::open_directory::suppress_error_on_open_flag
+
+        add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
+        jmp     loop
+
+done:   pla
+        pla
+
+exit:   rts
+
+our_stack:
+        .byte   0
 .endproc
 
 ;;; ============================================================

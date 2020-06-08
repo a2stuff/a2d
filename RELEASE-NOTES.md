@@ -13,6 +13,7 @@ https://github.com/a2stuff/a2d/issues
 
 * Current day/time shown on right side of menu bar, if system has a clock. (#7, #142)
 * Up to 13 volumes are shown on the desktop (was 10). (#20)
+* Windows restored when DeskTop is relaunched. (#210)
 * Drag "unlimited" number of icons (was 20). (#18)
 * Dragging files to same volume moves instead of copies; use Open-Apple to force copy. (#8)
 * Menu bar menus are now drop-down in addition to pull-down. (#104)
