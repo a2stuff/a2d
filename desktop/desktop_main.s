@@ -76,10 +76,10 @@ skip:   copy    #0, cached_window_id
 
         ;; Clear various flags
         lda     #0
-        sta     LD2A9
+        sta     LD2A9           ; Unused ???
         sta     double_click_flag
         sta     loop_counter
-        sta     LE26F
+        sta     file_menu_items_enabled_flag
 
         ;; Pending error message?
         lda     pending_alert
@@ -103,9 +103,9 @@ main_loop:
         ;; Poll drives for updates
         jsr     check_disk_inserted_ejected
         beq     :+
-        jsr     L40E0           ; conditionally ???
+        jsr     check_drive           ; conditionally ???
 
-:       jsr     L464E
+:       jsr     update_menu_item_states
 
         ;; Get an event
         jsr     get_event
@@ -129,9 +129,9 @@ click:  jsr     handle_click
 :       cmp     #MGTK::EventKind::update
         bne     :+
         jsr     reset_grafport3
-        copy    active_window_id, L40F0
-        copy    #$80, L40F1
-        jsr     L410D
+        copy    active_window_id, saved_active_window_id
+        copy    #$80, redraw_icons_flag
+        jsr     handle_update
 
 :       jmp     main_loop
 
@@ -140,44 +140,58 @@ loop_counter:
 
 ;;; --------------------------------------------------
 
-L40E0:  tsx
+.proc check_drive
+        tsx
         stx     saved_stack
         sta     menu_click_params::item_num
         jsr     cmd_check_single_drive_by_menu
         copy    #0, menu_click_params::item_num
         rts
+.endproc
 
-L40F0:  .byte   $00
-L40F1:  .byte   $00
+saved_active_window_id:
+        .byte   0
+
+redraw_icons_flag:
+        .byte   0
+
+;;; --------------------------------------------------
+
 redraw_windows:
         jsr     reset_grafport3
-        copy    active_window_id, L40F0
-        copy    #$00, L40F1
-L4100:  jsr     peek_event
+        copy    active_window_id, saved_active_window_id
+        copy    #0, redraw_icons_flag
+
+redraw_loop:
+        jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::update
-        bne     L412B
+        bne     finish
         jsr     get_event
-L410D:  jsr     L4113
-        jmp     L4100
 
-L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
-        bne     L4151           ; did not really need updating
+handle_update:
+        jsr     update
+        jmp     redraw_loop
+
+update: MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
+        bne     done_redraw     ; did not really need updating
         jsr     update_window
         MGTK_RELAY_CALL MGTK::EndUpdate
         rts
 
-L412B:  jsr     LoadDesktopIconTable
-        lda     L40F0
+finish: jsr     LoadDesktopIconTable
+        lda     saved_active_window_id
         sta     active_window_id
-        beq     L4143
+        beq     :+
         bit     running_da_flag
-        bmi     L4143
+        bmi     :+
         jsr     redraw_selected_icons
-L4143:  bit     L40F1
-        bpl     L4151
+:       bit     redraw_icons_flag
+        bpl     done_redraw
         ITK_RELAY_CALL IconTK::RedrawIcons
-L4151:  rts
+
+done_redraw:
+        rts
 
 .endproc
         main_loop := enter_main_loop::main_loop
@@ -774,54 +788,75 @@ status_unit_num := status_params::unit_num
 
 ;;; ============================================================
 
-.proc L464E
+.proc update_menu_item_states
+        ;; Selector List
         lda     num_selector_list_items
         beq     :+
+
         bit     LD344
-        bmi     L4666
+        bmi     check_selection
         jsr     enable_selector_menu_items
-        jmp     L4666
+        jmp     check_selection
 
 :       bit     LD344
-        bmi     L4666
+        bmi     check_selection
         jsr     disable_selector_menu_items
-L4666:  lda     selected_icon_count
-        beq     L46A8
-        lda     selected_window_index
-        bne     L4691
+
+check_selection:
+        lda     selected_icon_count
+        beq     no_selection
+
+        ;; --------------------------------------------------
+        ;; Selected Icons
+        lda     selected_window_index ; In a window?
+        bne     files_selected
+
+        ;; Volumes selected (not files)
         lda     selected_icon_count
         cmp     #2
-        bcs     L4697
+        bcs     multiple_volumes
+
         lda     selected_icon_list
         cmp     trash_icon_num
-        bne     L468B
+        bne     enable_eject
         jsr     disable_eject_menu_item
         jsr     disable_file_menu_items
-        copy    #0, LE26F
+        copy    #0, file_menu_items_enabled_flag
         rts
 
-L468B:  jsr     enable_eject_menu_item
-        jmp     L469A
+enable_eject:
+        jsr     enable_eject_menu_item
+        jmp     finish1
 
-L4691:  jsr     disable_eject_menu_item
-        jmp     L469A
+        ;; Files selected (not volumes)
+files_selected:
+        jsr     disable_eject_menu_item
+        jmp     finish1
 
-L4697:  jsr     enable_eject_menu_item
-L469A:  bit     LE26F
-        bmi     L46A7
+multiple_volumes:
+        jsr     enable_eject_menu_item
+
+finish1:
+        bit     file_menu_items_enabled_flag
+        bmi     :+
         jsr     enable_file_menu_items
-        copy    #$80, LE26F
-L46A7:  rts
+        copy    #$80, file_menu_items_enabled_flag
+:       rts
 
-L46A8:  bit     LE26F
-        bmi     L46AE
+        ;; --------------------------------------------------
+        ;; No Selection
+no_selection:
+        bit     file_menu_items_enabled_flag
+        bmi     :+
         rts
 
-L46AE:  jsr     disable_eject_menu_item
+:       jsr     disable_eject_menu_item
         jsr     disable_file_menu_items
-        copy    #$00, LE26F
+        copy    #0, file_menu_items_enabled_flag
         rts
 .endproc
+
+;;; ============================================================
 
 .proc MLI_RELAY
         sty     call
