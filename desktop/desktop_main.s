@@ -6305,6 +6305,9 @@ L72A8:  .word   0
         MLI_RELAY_CALL OPEN, open_params
         beq     done
         jsr     ShowAlert
+        bit     icon_params2
+        bmi     :+              ; was opening a path
+
         jsr     mark_icons_not_opened_2
         lda     selected_window_index
         bne     :+
