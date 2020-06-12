@@ -74,8 +74,8 @@ INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 ;;; ============================================================
 ;;; Relays from Main to Aux (params must be in ZP or LC)
 
-MGTK_RELAY      := $D000
-ITK_RELAY       := $D040
+MGTK_RELAY      := MGTKRelayImpl
+ITK_RELAY       := ITKRelayImpl
 
 .macro MGTK_RELAY_CALL call, addr
     .if .paramcount > 1

@@ -16,7 +16,6 @@
 ;;; MGTK call from main>aux, call in Y, params at (X,A)
 
 .proc MGTKRelayImpl
-        ASSERT_ADDRESS ::MGTK_RELAY, "Entry point"
         sty     addr-1
         stax    addr
         sta     RAMRDON
@@ -35,11 +34,9 @@
         sta     RAMRDON
         sta     RAMWRTON
         MGTK_CALL MGTK::MoveTo, 0, addr
-        MGTK_RELAY_CALL MGTK::DrawText, text_buffer2
-        tay
+        MGTK_CALL MGTK::DrawText, text_buffer2
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        tya
         rts
 .endproc
 
@@ -47,7 +44,6 @@
 ;;; IconTK call from main>aux, call in Y params at (X,A)
 
 .proc ITKRelayImpl
-        ASSERT_ADDRESS ::ITK_RELAY, "Entry point"
         sty     addr-1
         stax    addr
         sta     RAMRDON
@@ -229,10 +225,8 @@ loop:   lda     (src),y
         stx     op+2
         sta     op+1
         sta     RAMRDON
-        sta     RAMWRTON
 op:     lda     dummy1234
         sta     RAMRDOFF
-        sta     RAMWRTOFF
         rts
 .endproc
 

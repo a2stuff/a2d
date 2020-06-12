@@ -14820,7 +14820,8 @@ done:   jmp     reset_grafport3a
 :       and     #$7F            ; strip "center?" flag
         pha
         add16   ptr, #1, textptr
-        jsr     load_aux_from_ptr
+        ldax    ptr
+        jsr     AuxLoad
         sta     textlen
         MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
         lsr16   result
@@ -14923,7 +14924,7 @@ erase_ok_button:
         textlen := $8
 
         stax    textptr
-        jsr     load_aux_from_ptr
+        jsr     AuxLoad
         beq     done
         sta     textlen
         inc16   textptr
@@ -14940,8 +14941,7 @@ done:   rts
         str_width := $9
 
         stax    str             ; input is length-prefixed string
-
-        jsr     load_aux_from_ptr
+        jsr     AuxLoad
         sta     str_len
         inc16   str_data        ; point past length byte
         MGTK_RELAY_CALL MGTK::TextWidth, str
@@ -15657,46 +15657,6 @@ done:   rts
 .proc clear_path_buf1
         copy    #0, path_buf1   ; length
         rts
-.endproc
-
-;;; ============================================================
-
-.proc load_aux_from_ptr
-        target          := $20
-
-        ;; Backup copy of $20
-        COPY_BYTES sizeof_proc+1, target, saved_proc_buf
-
-        ;; Overwrite with proc
-        ldx     #sizeof_proc
-:       lda     proc,x
-        sta     target,x
-        dex
-        bpl     :-
-
-        ;; Call proc
-        jsr     target
-        pha
-
-        ;; Restore copy
-        COPY_BYTES sizeof_proc+1, saved_proc_buf, target
-
-        pla
-        rts
-
-.proc proc
-        sta     RAMRDON
-        sta     RAMWRTON
-        ldy     #0
-        lda     ($06),y
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
-.endproc
-        sizeof_proc = .sizeof(proc)
-
-saved_proc_buf:
-        .res    20, 0
 .endproc
 
 ;;; ============================================================
