@@ -155,11 +155,6 @@ HIRESOFF        := $C057
 AN3_OFF         := $C05E
 AN3_ON          := $C05F
 
-;;; Game controller
-BUTN2           := $C063
-PADDL0          := $C064
-
-PTRIG           := $C070
 RAMWORKS_BANK   := $C071        ; RAMWorks bank selection ???
 
 ROMIN2          := $C082
