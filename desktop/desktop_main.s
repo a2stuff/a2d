@@ -1121,22 +1121,6 @@ filerecords_free_start:
         L48E4 := *+1
         jmp     dummy1234           ; self-modified
 
-get_event:
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        rts
-
-peek_event:
-        MGTK_RELAY_CALL MGTK::PeekEvent, event_params
-        rts
-
-set_penmode_xor:
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        rts
-
-set_penmode_copy:
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        rts
-
 ;;; ============================================================
 
 .proc cmd_noop
@@ -13509,15 +13493,15 @@ LA7DD:  ldx     has_input_field_flag
         jsr     LBB0B
 LA7E5:  return  #$FF
 
-do_yes: jsr     set_penmode_xor2
+do_yes: jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::yes_button_rect
         return  #PromptResult::yes
 
-do_no:  jsr     set_penmode_xor2
+do_no:  jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::no_button_rect
         return  #PromptResult::no
 
-do_all: jsr     set_penmode_xor2
+do_all: jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::all_button_rect
         return  #PromptResult::all
 
@@ -13559,14 +13543,14 @@ done:   return  #$FF
 
 LA851:  lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        jsr     set_penmode_xor2
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         return  #0
 
 LA86F:  lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        jsr     set_penmode_xor2
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
         return  #1
@@ -13593,7 +13577,7 @@ jump_relay:
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_about_dialog
         lda     winfo_about_dialog::window_id
         jsr     set_port_from_window_id
-        jsr     set_penmode_xor2
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_inner_rect
         addr_call draw_dialog_title, aux::str_about1
@@ -13718,8 +13702,7 @@ do2:    ldy     #1
         rts
 
         ;; CopyDialogLifecycle::close
-do5:    jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+do5:    jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         rts
 
@@ -13733,7 +13716,7 @@ LAA7F:  jsr     prompt_input_loop
         bmi     LAA7F
         pha
         jsr     erase_yes_no_all_cancel_buttons
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect
         pla
         rts
@@ -13748,7 +13731,7 @@ do4:    jsr     Bell
         bmi     :-
         pha
         jsr     erase_ok_cancel_buttons
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect
         pla
         rts
@@ -13818,8 +13801,7 @@ do2:    ldy     #1
         addr_call draw_text1, str_file_count
         rts
 
-do3:    jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+do3:    jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         rts
 
@@ -13832,7 +13814,7 @@ do4:    jsr     Bell
         bmi     :-
         pha
         jsr     erase_ok_button
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect
         pla
         rts
@@ -13897,8 +13879,7 @@ do1:    ldy     #1
         yax_call draw_dialog_label, 2, str_file_count
         rts
 
-do3:    jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+do3:    jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         rts
 
@@ -13907,7 +13888,7 @@ do2:    lda     winfo_prompt_dialog
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
         bmi     :-
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         jsr     erase_ok_button
         return  #0
@@ -13998,7 +13979,7 @@ do2:    lda     winfo_prompt_dialog
 LADC4:  jsr     prompt_input_loop
         bmi     LADC4
         bne     LADF4
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         jsr     erase_ok_cancel_buttons
         yax_call draw_dialog_label, 2, aux::str_file_colon
@@ -14007,8 +13988,7 @@ LADC4:  jsr     prompt_input_loop
 LADF4:  rts
 
         ;; DeleteDialogLifecycle::close
-do5:    jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+do5:    jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         rts
 
@@ -14021,7 +14001,7 @@ LAE17:  jsr     prompt_input_loop
         bmi     LAE17
         pha
         jsr     erase_yes_no_all_cancel_buttons
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy ; white
+        jsr     set_penmode_copy ; white
         MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect ; erase prompt
         pla
         rts
@@ -14049,7 +14029,7 @@ LAE49:  copy    #$80, has_input_field_flag
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, aux::str_new_folder_title
-        jsr     set_penmode_xor2
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         rts
 
@@ -14109,8 +14089,7 @@ LAEFF:  inx
         ldx     #>path_buf0
         return  #0
 
-LAF16:  jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+LAF16:  jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         return  #1
 .endproc
@@ -14203,8 +14182,7 @@ LAFF8:  ldy     row
         bmi     :-
 
         pha
-        jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+        jsr     close_prompt_dialog
         jsr     set_cursor_pointer_with_flag
         pla
         rts
@@ -14295,7 +14273,7 @@ do2:    lda     winfo_prompt_dialog
 LB0FA:  jsr     prompt_input_loop
         bmi     LB0FA
         bne     LB139
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
@@ -14305,8 +14283,7 @@ LB0FA:  jsr     prompt_input_loop
 LB139:  rts
 
         ;; LockDialogLifecycle::close
-do4:    jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+do4:    jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         rts
 .endproc
@@ -14382,7 +14359,7 @@ do2:    lda     winfo_prompt_dialog
 LB218:  jsr     prompt_input_loop
         bmi     LB218
         bne     LB257
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
@@ -14392,8 +14369,7 @@ LB218:  jsr     prompt_input_loop
 LB257:  rts
 
         ;; LockDialogLifecycle::close
-do4:    jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+do4:    jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         rts
 .endproc
@@ -14425,7 +14401,7 @@ open_win:
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, aux::str_rename_title
-        jsr     set_penmode_xor2
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         yax_call draw_dialog_label, 2, aux::str_rename_old
         copy    #85, dialog_label_pos
@@ -14463,8 +14439,7 @@ run_loop:
         return  #0
 
 close_win:
-        jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+        jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         return  #1
 .endproc
@@ -14543,8 +14518,7 @@ draw_string:
         bmi     :-
 
         pha
-        jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+        jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         pla
         rts
@@ -14632,10 +14606,6 @@ cursor_ip_flag:                 ; high bit set if IP, clear if pointer
         MGTK_RELAY_CALL MGTK::ShowCursor
         rts
 .endproc
-
-set_penmode_xor2:
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        rts
 
 ;;; ============================================================
 ;;; Double Click Detection
@@ -14762,7 +14732,7 @@ done:   jmp     reset_grafport3
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        jsr     set_penmode_xor2
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_inner_rect
         rts
@@ -14774,9 +14744,9 @@ done:   jmp     reset_grafport3
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        jsr     set_fill_white
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintBits, aux::Alert::alert_bitmap_params
-        jsr     set_penmode_xor2
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_inner_rect
         rts
@@ -14857,7 +14827,7 @@ draw_all_label:
         rts
 
 draw_yes_no_all_cancel_buttons:
-        jsr     set_penmode_xor2
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::yes_button_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::no_button_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::all_button_rect
@@ -14870,7 +14840,7 @@ draw_yes_no_all_cancel_buttons:
         rts
 
 erase_yes_no_all_cancel_buttons:
-        jsr     set_fill_white
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::yes_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::no_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::all_button_rect
@@ -14878,7 +14848,7 @@ erase_yes_no_all_cancel_buttons:
         rts
 
 draw_ok_cancel_buttons:
-        jsr     set_penmode_xor2
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
         jsr     draw_ok_label
@@ -14887,20 +14857,20 @@ draw_ok_cancel_buttons:
         rts
 
 erase_ok_cancel_buttons:
-        jsr     set_fill_white
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
         rts
 
 draw_ok_button:
-        jsr     set_penmode_xor2
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
         jsr     draw_ok_label
         copy    #$80, LD8E7
         rts
 
 erase_ok_button:
-        jsr     set_fill_white
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         rts
 
@@ -15172,9 +15142,9 @@ draw:   copy16  #str_insertion_point+1, textptr
 .proc draw_filename_prompt
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        jsr     set_fill_white
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, name_input_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
@@ -15705,22 +15675,46 @@ done:   rts
 ;;; ============================================================
 
 clear_target_file_rect:
-        jsr     set_fill_white
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::current_target_file_rect
         rts
 
 clear_dest_file_rect:
-        jsr     set_fill_white
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::current_dest_file_rect
         rts
 
-set_fill_white:
+;;; ============================================================
+
+get_event:
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        rts
+
+peek_event:
+        MGTK_RELAY_CALL MGTK::PeekEvent, event_params
+        rts
+
+set_penmode_xor:
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        rts
+
+set_penmode_copy:
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
+
+;;; ============================================================
 
 .proc reset_grafport3
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc close_prompt_dialog
+        jsr     reset_grafport3
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         rts
 .endproc
 
