@@ -1226,7 +1226,7 @@ L49A6:  lda     menu_click_params::item_num
         jsr     a_times_16
         addax   #run_list_entries, $06
 
-        ldy     #$0F            ; flag byte following name
+        ldy     #kSelectorEntryFlagsOffset ; flag byte following name
         lda     ($06),y
         asl     a
         bmi     not_downloaded  ; bit 6
@@ -10228,7 +10228,7 @@ do_delete_file:
         jsr     prep_callbacks_for_delete
         jsr     delete_process_selected_file
         jsr     done_dialog_phase1
-        jmp     finish_operation
+       jmp     finish_operation
 
 do_run:
         copy    #$80, run_flag
@@ -10238,7 +10238,7 @@ do_run:
         jsr     prep_callbacks_for_size_or_count
         jsr     do_download_dialog_phase
         jsr     size_or_count_process_selected_file
-        jsr     L99BC
+        jsr     prep_callbacks_for_download
         jmp     do_run2
 
 ;;; --------------------------------------------------
@@ -11584,12 +11584,12 @@ count:  .addr   0
 
 .proc do_copy_dialog_phase
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
-        copy16  #copy_dialog_phase0_callback1, dialog_phase0_callback
-        copy16  #copy_dialog_phase1_callback1, dialog_phase1_callback
+        copy16  #copy_dialog_phase0_callback, dialog_phase0_callback
+        copy16  #copy_dialog_phase1_callback, dialog_phase1_callback
         jmp     run_copy_dialog_proc
 .endproc
 
-.proc copy_dialog_phase0_callback1
+.proc copy_dialog_phase0_callback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::populate, copy_dialog_params::phase
         jmp     run_copy_dialog_proc
@@ -11607,27 +11607,30 @@ count:  .addr   0
         rts
 .endproc
 
-.proc copy_dialog_phase1_callback1
+.proc copy_dialog_phase1_callback
         copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
         jmp     run_copy_dialog_proc
 .endproc
 
+;;; ============================================================
+;;; "Download" - shares heavily with Copy
+
 .proc do_download_dialog_phase
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
-        copy16  #copy_dialog_phase0_callback2, dialog_phase0_callback
-        copy16  #copy_dialog_phase1_callback2, dialog_phase1_callback
+        copy16  #download_dialog_phase0_callback, dialog_phase0_callback
+        copy16  #download_dialog_phase1_callback, dialog_phase1_callback
         yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
-.proc copy_dialog_phase0_callback2
+.proc download_dialog_phase0_callback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::populate, copy_dialog_params::phase
         yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
-.proc L99BC
+.proc prep_callbacks_for_download
         copy    #$80, all_flag
 
         ldy     #kOpJTAddrsSize-1
@@ -11636,25 +11639,24 @@ count:  .addr   0
         bpl     :-
 
         copy    #0, LA425
-        copy16  #copy_dialog_phase3_callback, dialog_phase3_callback
+        copy16  #download_dialog_phase3_callback, dialog_phase3_callback
         rts
 .endproc
 
-.proc copy_dialog_phase1_callback2
+.proc download_dialog_phase1_callback
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
         yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
-.proc copy_dialog_phase3_callback
+.proc download_dialog_phase3_callback
         copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
         yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         cmp     #PromptResult::yes
-        bne     cancel
+        bne     :+
         rts
+:       jmp     close_files_cancel_dialog
 .endproc
-
-cancel: jmp     close_files_cancel_dialog
 
 ;;; ============================================================
 ;;; Handle copying of a selected file.
@@ -15115,22 +15117,16 @@ apply_bits:
 ;;; byte corresponds to the second character, etc., through the second bit
 ;;; of the most significant byte, which corresponds to the fifteenth
 ;;; character of the filename."
-
+;;;
+;;; Same logic as GS/OS, just a different field and byte-swapped.
 appleworks:
         ldy     #FileEntry::aux_type
-        copy16in (ptr),y, version_bytes
-
-        ldy     #1
-@bloop: asl     version_bytes+1 ; NOTE: Shift out low byte first
-        rol     version_bytes
-        bcc     :+
         lda     (ptr),y
-        ora     #AS_BYTE(~CASE_MASK)
-        sta     (ptr),y
-:       iny
-        cpy     #16
-        bcc     @bloop
-        rts
+        sta     version_bytes+1
+        iny
+        lda     (ptr),y
+        sta     version_bytes
+        jmp     apply_bits
 
 ;;; --------------------------------------------------
 
