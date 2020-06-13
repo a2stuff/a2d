@@ -1164,8 +1164,10 @@ filerecords_free_start:
         jsr     make_ramcard_prefixed_path
         jsr     strip_path_segments
         jsr     get_copied_to_ramcard_flag
-        bpl     L497A
+        bpl     run_from_ramcard
 
+        ;; Need to copy to RAMCard
+        jsr     redraw_windows_and_desktop ; copying window is smaller
         jsr     jt_run
         bmi     done
         jsr     L4968
@@ -1180,7 +1182,9 @@ done:   jsr     set_cursor_pointer
         jmp     launch_buf_win_path
 .endproc
 
-L497A:  jsr     make_ramcard_prefixed_path
+        ;; Was already copied to RAMCard, so update path then run.
+run_from_ramcard:
+        jsr     make_ramcard_prefixed_path
         COPY_STRING $800, buf_win_path
         jsr     launch_buf_win_path
         jmp     done
