@@ -144,7 +144,7 @@ L09B8:  jsr     main::prompt_input_loop
 
 L09C2:  pha
         jsr     main::set_cursor_pointer
-        jsr     main::reset_grafport3a
+        jsr     main::reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         ldx     L09D8
         pla
@@ -248,7 +248,7 @@ L0B2A:  jsr     main::prompt_input_loop
         beq     L0AD1
 L0B31:  pha
         jsr     main::set_cursor_pointer
-        jsr     main::reset_grafport3a
+        jsr     main::reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         ldx     L0B47
         pla

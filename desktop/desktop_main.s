@@ -654,12 +654,6 @@ continue:
         rts
 .endproc
 
-.proc reset_grafport3
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
-        rts
-.endproc
-
 ;;; ============================================================
 
 .proc redraw_windows_and_desktop
@@ -10291,7 +10285,7 @@ L8FE1:  lda     #$80            ; lock
 L8FEB:  tsx
         stx     stack_stash
         copy    #0, delete_skip_decrement_flag
-        jsr     prep_grafport3
+        jsr     reset_grafport3
         lda     operation_flags
         beq     :+              ; copy/delete
         jmp     begin_operation
@@ -10604,14 +10598,6 @@ done:   stx     buf
 .endproc
 
 ;;; ============================================================
-
-.proc prep_grafport3
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Points $08 to path of window with selection ($0000 if desktop)
 
 .proc get_window_path_ptr
@@ -10830,7 +10816,7 @@ mapped_slot:                    ; from unit_number, not driver
         rts
 
 :       copy    #0, get_info_dialog_params::index
-        jsr     prep_grafport3
+        jsr     reset_grafport3
 loop:   ldx     get_info_dialog_params::index
         cpx     selected_icon_count
         bne     :+
@@ -13315,7 +13301,7 @@ dialog_param_addr:
         jsr     set_cursor_insertion_point_with_flag
         jmp     done
 out:    jsr     set_cursor_pointer_with_flag
-done:   jsr     reset_grafport3a
+done:   jsr     reset_grafport3
         jmp     prompt_input_loop
 .endproc
 
@@ -13647,7 +13633,7 @@ jump_relay:
         jmp     close
 
 close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
-        jsr     reset_grafport3a
+        jsr     reset_grafport3
         jsr     set_cursor_pointer_with_flag
         rts
 .endproc
@@ -13742,7 +13728,7 @@ do2:    ldy     #1
         rts
 
         ;; CopyDialogLifecycle::close
-do5:    jsr     reset_grafport3a
+do5:    jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     set_cursor_pointer
         rts
@@ -13842,7 +13828,7 @@ do2:    ldy     #1
         addr_call draw_text1, str_file_count
         rts
 
-do3:    jsr     reset_grafport3a
+do3:    jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     set_cursor_pointer
         rts
@@ -13921,7 +13907,7 @@ do1:    ldy     #1
         yax_call draw_dialog_label, 2, str_file_count
         rts
 
-do3:    jsr     reset_grafport3a
+do3:    jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     set_cursor_pointer
         rts
@@ -14031,7 +14017,7 @@ LADC4:  jsr     prompt_input_loop
 LADF4:  rts
 
         ;; DeleteDialogLifecycle::close
-do5:    jsr     reset_grafport3a
+do5:    jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     set_cursor_pointer
         rts
@@ -14133,7 +14119,7 @@ LAEFF:  inx
         ldx     #>path_buf0
         return  #0
 
-LAF16:  jsr     reset_grafport3a
+LAF16:  jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     set_cursor_pointer
         return  #1
@@ -14194,7 +14180,7 @@ draw_final_labels:
         yax_call draw_dialog_label, 4, aux::str_info_create
         yax_call draw_dialog_label, 5, aux::str_info_mod
         yax_call draw_dialog_label, 6, aux::str_info_type
-        jmp     reset_grafport3a
+        jmp     reset_grafport3
 
         ;; Draw a specific value
 populate_value:
@@ -14227,7 +14213,7 @@ LAFF8:  ldy     row
         bmi     :-
 
         pha
-        jsr     reset_grafport3a
+        jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     set_cursor_pointer_with_flag
         pla
@@ -14329,7 +14315,7 @@ LB0FA:  jsr     prompt_input_loop
 LB139:  rts
 
         ;; LockDialogLifecycle::close
-do4:    jsr     reset_grafport3a
+do4:    jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     set_cursor_pointer
         rts
@@ -14416,7 +14402,7 @@ LB218:  jsr     prompt_input_loop
 LB257:  rts
 
         ;; LockDialogLifecycle::close
-do4:    jsr     reset_grafport3a
+do4:    jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     set_cursor_pointer
         rts
@@ -14487,7 +14473,7 @@ run_loop:
         return  #0
 
 close_win:
-        jsr     reset_grafport3a
+        jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     set_cursor_pointer
         return  #1
@@ -14567,7 +14553,7 @@ draw_string:
         bmi     :-
 
         pha
-        jsr     reset_grafport3a
+        jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     set_cursor_pointer
         pla
@@ -14767,7 +14753,7 @@ no_ok:  bit     LD8E7
         bmi     done
         MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
         jsr     draw_cancel_label
-done:   jmp     reset_grafport3a
+done:   jmp     reset_grafport3
 .endproc
 
 ;;; ============================================================
@@ -15741,11 +15727,11 @@ set_fill_white:
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
-reset_grafport3a:
-
+.proc reset_grafport3
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
+.endproc
 
 ;;; ============================================================
 
