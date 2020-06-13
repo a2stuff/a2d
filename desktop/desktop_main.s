@@ -4228,12 +4228,12 @@ L5F50:  lda     pt1,x
         dex
         bpl     L5F50
         jsr     set_penmode_xor
-        MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
+        jsr     frame_tmp_rect
 L5F6B:  jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
         beq     L5FC5
-        MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
+        jsr     frame_tmp_rect
         ldx     #$00
 L5F80:  cpx     cached_window_icon_count
         bne     L5F88
@@ -4281,7 +4281,7 @@ L600E:  lda     L60CB
         bcs     L601F
         jmp     L5F6B
 
-L601F:  MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
+L601F:  jsr     frame_tmp_rect
 
         COPY_STRUCT MGTK::Point, event_coords, L60CF
 
@@ -4309,7 +4309,7 @@ L609A:  copy16  event_ycoord, tmp_rect::y1
 
 L60AE:  copy16  event_ycoord, tmp_rect::y2
         copy    #0, L60D4
-L60BF:  MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
+L60BF:  jsr     frame_tmp_rect
         jmp     L5F6B
 
 L60CB:  .byte   0
@@ -4855,12 +4855,12 @@ disable_menu_items:
 
         copy    #MGTK::disableitem_disable, disableitem_params::disable
         copy    #kMenuIdFile, disableitem_params::menu_id
-        copy    #aux::kMenuItemIdNewFolder, disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #aux::kMenuItemIdClose, disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #aux::kMenuItemIdCloseAll, disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
+        lda     #aux::kMenuItemIdNewFolder
+        jsr     disable_menu_item
+        lda     #aux::kMenuItemIdClose
+        jsr     disable_menu_item
+        lda     #aux::kMenuItemIdCloseAll
+        jsr     disable_menu_item
 
         copy    #0, menu_dispatch_flag
         rts
@@ -4902,8 +4902,13 @@ check_view_menu_items:
         lda     #aux::kMenuItemIdGetSize
         jsr     disable_menu_item
         rts
+.endproc
 
-disable_menu_item:
+;;; ============================================================
+;;; Calls DisableItem menu_item in A (to enable or disable).
+;;; Set disableitem_params' disable flag and menu_id before calling.
+
+.proc disable_menu_item
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
@@ -4917,25 +4922,20 @@ disable_menu_item:
         ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdOpen
-        jsr     enable_menu_item
+        jsr     disable_menu_item
         lda     #aux::kMenuItemIdGetInfo
-        jsr     enable_menu_item
+        jsr     disable_menu_item
         lda     #aux::kMenuItemIdRenameIcon
-        jsr     enable_menu_item
+        jsr     disable_menu_item
 
         ;; Special
         copy    #kMenuIdSpecial, disableitem_params::menu_id
         lda     #aux::kMenuItemIdLock
-        jsr     enable_menu_item
+        jsr     disable_menu_item
         lda     #aux::kMenuItemIdUnlock
-        jsr     enable_menu_item
+        jsr     disable_menu_item
         lda     #aux::kMenuItemIdGetSize
-        jsr     enable_menu_item
-        rts
-
-enable_menu_item:
-        sta     disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
+        jsr     disable_menu_item
         rts
 .endproc
 
@@ -4950,12 +4950,12 @@ disable:
         copy    #MGTK::disableitem_disable, disableitem_params::disable
 
 :       copy    #kMenuIdSpecial, disableitem_params::menu_id
-        copy    #aux::kMenuItemIdEject, disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
+        lda     #aux::kMenuItemIdEject
+        jsr     disable_menu_item
 
         copy    #kMenuIdSpecial, disableitem_params::menu_id
-        copy    #aux::kMenuItemIdCheckDrive, disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
+        lda     #aux::kMenuItemIdCheckDrive
+        jsr     disable_menu_item
 
         rts
 
@@ -4975,17 +4975,12 @@ enable:
 
 :       copy    #kMenuIdSelector, disableitem_params::menu_id
         lda     #kMenuItemIdSelectorEdit
-        jsr     configure_menu_item
+        jsr     disable_menu_item
         lda     #kMenuItemIdSelectorDelete
-        jsr     configure_menu_item
+        jsr     disable_menu_item
         lda     #kMenuItemIdSelectorRun
-        jsr     configure_menu_item
+        jsr     disable_menu_item
         copy    #$80, LD344
-        rts
-
-configure_menu_item:
-        sta     disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
 .endproc
 enable_selector_menu_items := toggle_selector_menu_items::enable
@@ -5114,12 +5109,12 @@ L68B8:  lda     event_coords,x
 
 L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
-        MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
+        jsr     frame_tmp_rect
 L68E4:  jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
         beq     L6932
-        MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
+        jsr     frame_tmp_rect
         ldx     #0
 L68F9:  cpx     cached_window_icon_count
         bne     :+
@@ -5163,7 +5158,7 @@ L6978:  lda     L6A35
         bcs     L6989
         jmp     L68E4
 
-L6989:  MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
+L6989:  jsr     frame_tmp_rect
 
         COPY_STRUCT MGTK::Point, event_coords, L6A39
 
@@ -5191,7 +5186,7 @@ L6A04:  copy16  event_ycoord, tmp_rect::y1
 
 L6A18:  copy16  event_ycoord, tmp_rect::y2
         copy    #0, L6A3E
-L6A29:  MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
+L6A29:  jsr     frame_tmp_rect
         jmp     L68E4
 
 L6A35:  .byte   0
@@ -5817,12 +5812,12 @@ flag:   .byte   0
 
         copy    #MGTK::disableitem_enable, disableitem_params::disable
         copy    #kMenuIdFile, disableitem_params::menu_id
-        copy    #aux::kMenuItemIdNewFolder, disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #aux::kMenuItemIdClose, disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        copy    #aux::kMenuItemIdCloseAll, disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
+        lda     #aux::kMenuItemIdNewFolder
+        jsr     disable_menu_item
+        lda     #aux::kMenuItemIdClose
+        jsr     disable_menu_item
+        lda     #aux::kMenuItemIdCloseAll
+        jsr     disable_menu_item
 
         copy    #$80, menu_dispatch_flag
         rts
@@ -9746,7 +9741,7 @@ loop:   lda     step            ; draw the Nth
         dey
         bpl     :-
 
-        jsr     draw_anim_window_rect
+        jsr     frame_tmp_rect
 
         ;; If N in 2..13, erase N-2 (i.e. 0..11, 2 behind)
 erase:  lda     step
@@ -9770,7 +9765,7 @@ erase:  lda     step
         dey
         bpl     :-
 
-        jsr     draw_anim_window_rect
+        jsr     frame_tmp_rect
 
 next:   inc     step
         lda     step
@@ -9817,7 +9812,7 @@ loop:   lda     step
         dey
         bpl     :-
 
-        jsr     draw_anim_window_rect
+        jsr     frame_tmp_rect
 
         ;; If N in -2..9, erase N+2 (0..11, i.e. 2 behind)
 erase:  lda     step
@@ -9842,7 +9837,7 @@ erase:  lda     step
         dey
         bpl     :-
 
-        jsr     draw_anim_window_rect
+        jsr     frame_tmp_rect
 
 next:   dec     step
         lda     step
@@ -9855,7 +9850,7 @@ step:   .byte   0
 
 ;;; ============================================================
 
-.proc draw_anim_window_rect
+.proc frame_tmp_rect
         MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
         rts
 .endproc
