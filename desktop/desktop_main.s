@@ -629,7 +629,7 @@ continue:
         jsr     draw_window_entries
         jsr     LoadDesktopIconTable
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
-        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
+        jsr     check_item
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
@@ -637,7 +637,7 @@ continue:
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
         copy    #MGTK::checkitem_check, checkitem_params::check
-        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
+        jsr     check_item
         rts
 .endproc
 
@@ -2592,16 +2592,13 @@ view:   .byte   0
 
 .proc update_view_menu_check
         ;; Uncheck last checked
-        lda     #MGTK::checkitem_uncheck
-        sta     checkitem_params::check
-        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
+        copy    #MGTK::checkitem_uncheck, checkitem_params::check
+        jsr     check_item
 
         ;; Check the new one
-        lda     menu_click_params::item_num           ; index of View menu item to check
-        sta     checkitem_params::menu_item
-        lda     #MGTK::checkitem_check
-        sta     checkitem_params::check
-        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
+        copy    menu_click_params::item_num, checkitem_params::menu_item
+        copy    #MGTK::checkitem_check, checkitem_params::check
+        jsr     check_item
         rts
 .endproc
 
@@ -4477,9 +4474,8 @@ no_icon:
 
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         jsr     LoadDesktopIconTable
-        lda     #MGTK::checkitem_uncheck
-        sta     checkitem_params::check
-        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
+        copy    #MGTK::checkitem_uncheck, checkitem_params::check
+        jsr     check_item
         jsr     update_window_menu_items
         jmp     redraw_windows_and_desktop
 .endproc
@@ -4856,9 +4852,8 @@ check_view_menu_items:
         tax
         inx
         stx     checkitem_params::menu_item
-        lda     #MGTK::checkitem_check
-        sta     checkitem_params::check
-        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
+        copy    #MGTK::checkitem_check, checkitem_params::check
+        jsr     check_item
         rts
 .endproc
 
@@ -5345,10 +5340,11 @@ no_win:
         jsr     enable_various_file_menu_items
         jmp     update_view
 
-:       copy    #0, checkitem_params::check
+:       copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     check_item
 
 update_view:
+        .assert MGTK::checkitem_check = aux::kMenuItemIdViewByIcon, error, "const mismatch"
         lda     #aux::kMenuItemIdViewByIcon
         sta     checkitem_params::menu_item
         sta     checkitem_params::check
