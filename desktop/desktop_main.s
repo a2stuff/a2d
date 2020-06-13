@@ -37,8 +37,8 @@ JT_FILE_TYPE_STRING:    jmp     compose_file_type_string
 JT_SHOW_ALERT0:         jmp     ShowAlert
 JT_SHOW_ALERT:          jmp     ShowAlertOption
 JT_LAUNCH_FILE:         jmp     launch_file
-JT_CUR_POINTER:         jmp     set_pointer_cursor      ; *
-JT_CUR_WATCH:           jmp     set_watch_cursor
+JT_CUR_POINTER:         jmp     set_cursor_pointer      ; *
+JT_CUR_WATCH:           jmp     set_cursor_watch
 JT_RESTORE_OVL:         jmp     restore_dynamic_routine
 JT_COLOR_MODE:          jmp     set_color_mode          ; *
 JT_MONO_MODE:           jmp     set_mono_mode           ; *
@@ -251,8 +251,8 @@ L41CB:  ldx     cached_window_id
         jmp     assign_window_portbits
 
 by_icon:
-        copy    cached_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+        lda     cached_window_id
+        jsr     set_port_from_window_id
 
         jsr     cached_icons_screen_to_window
 
@@ -272,8 +272,8 @@ L41FE:  lda     L4241
 
 L4227:  copy    #0, draw_window_header_flag
 
-        copy    cached_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+        lda     cached_window_id
+        jsr     set_port_from_window_id
 
         jsr     cached_icons_window_to_screen
         lda     active_window_id
@@ -643,6 +643,11 @@ continue:
 
 ;;; ============================================================
 
+.proc set_port_from_window_id
+        sta     getwinport_params2::window_id
+        jmp     get_set_port2
+.endproc
+
 .proc get_set_port2
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
@@ -879,7 +884,7 @@ params: .addr   0
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
 
 begin:
-        jsr     set_watch_cursor
+        jsr     set_cursor_watch
 
         ;; Compose window path plus icon path
         ldx     #$FF
@@ -923,7 +928,7 @@ begin:
         lda     BUTN0           ; Only launch if a button is down
         ora     BUTN1
         bmi     launch
-        jsr     set_pointer_cursor
+        jsr     set_cursor_pointer
         rts
 
 :       cmp     #IconType::system
@@ -1054,6 +1059,21 @@ path_length:
 done:   rts
 .endproc
 
+
+;;; ============================================================
+
+str_preview_fot:
+        PASCAL_STRING "Preview/show.image.file"
+
+str_preview_fnt:
+        PASCAL_STRING "Preview/show.font.file"
+
+str_preview_txt:
+        PASCAL_STRING "Preview/show.text.file"
+
+;;; ============================================================
+
+
 ;;; ============================================================
 ;;; Aux $D000-$DFFF holds FileRecord entries. These are stored
 ;;; with a one byte length prefix, then sequential FileRecords.
@@ -1072,28 +1092,6 @@ filerecords_free_end:
 ;;; This tracks the start of free space.
 filerecords_free_start:
         .word   $D000
-
-;;; ============================================================
-
-set_watch_cursor:
-        jsr     hide_cursor
-        MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
-        jsr     show_cursor
-        rts
-
-set_pointer_cursor:
-        jsr     hide_cursor
-        MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
-        jsr     show_cursor
-        rts
-
-hide_cursor:
-        MGTK_RELAY_CALL MGTK::HideCursor
-        rts
-
-show_cursor:
-        MGTK_RELAY_CALL MGTK::ShowCursor
-        rts
 
 ;;; ============================================================
 
@@ -1142,7 +1140,7 @@ set_penmode_copy:
 ;;; ============================================================
 
 .proc cmd_selector_action
-        jsr     set_watch_cursor
+        jsr     set_cursor_watch
         lda     #kDynamicRoutineSelector1
         jsr     load_dynamic_routine
         bmi     done
@@ -1156,12 +1154,12 @@ set_penmode_copy:
         jsr     load_dynamic_routine
         bmi     done
 
-:       jsr     set_pointer_cursor
+:       jsr     set_cursor_pointer
         ;; Invoke routine
         lda     menu_click_params::item_num
         jsr     selector_picker_exec
         sta     result
-        jsr     set_watch_cursor
+        jsr     set_cursor_watch
         ;; Restore from overlays
         lda     #kDynamicRoutineRestore9000
         jsr     restore_dynamic_routine
@@ -1182,7 +1180,7 @@ set_penmode_copy:
         bmi     done
         jsr     L4968
 
-done:   jsr     set_pointer_cursor
+done:   jsr     set_cursor_pointer
         jsr     redraw_windows_and_desktop
         rts
 
@@ -1545,7 +1543,7 @@ str_desk_acc:
         PASCAL_STRING kDeskAccPrefixStr, kPrefixLength + 15
 
 start:  jsr     reset_grafport3
-        jsr     set_watch_cursor
+        jsr     set_cursor_watch
 
         ;; Find DA name
         lda     menu_click_params::item_num           ; menu item index (1-based)
@@ -1605,7 +1603,7 @@ nope:   dex
         copy    #$80, running_da_flag
 
         ;; Invoke it
-        jsr     set_pointer_cursor
+        jsr     set_cursor_pointer
         jsr     reset_grafport3
         jsr     DA_LOAD_ADDRESS
         lda     #0
@@ -1614,7 +1612,7 @@ nope:   dex
         ;; Restore state
         jsr     reset_grafport3
         jsr     redraw_windows_and_desktop
-done:   jsr     set_pointer_cursor
+done:   jsr     set_cursor_pointer
         rts
 
 open:   MLI_RELAY_CALL OPEN, open_params
@@ -1646,21 +1644,21 @@ running_da_flag:
 ;;; ============================================================
 
 .proc cmd_copy_file
-        jsr     set_watch_cursor
+        jsr     set_cursor_watch
         lda     #kDynamicRoutineFileDialog
         jsr     load_dynamic_routine
         bmi     L4CD6
         lda     #kDynamicRoutineFileCopy
         jsr     load_dynamic_routine
         bmi     L4CD6
-        jsr     set_pointer_cursor
+        jsr     set_cursor_pointer
         lda     #$00
         jsr     file_dialog_exec
         pha
-        jsr     set_watch_cursor
+        jsr     set_cursor_watch
         lda     #kDynamicRoutineRestore5000
         jsr     restore_dynamic_routine
-        jsr     set_pointer_cursor
+        jsr     set_cursor_pointer
         pla
         bpl     :+
         jmp     L4CD6
@@ -1673,7 +1671,7 @@ running_da_flag:
         jsr     jt_copy_file
 
 L4CD6:  pha
-        jsr     set_pointer_cursor
+        jsr     set_cursor_pointer
         pla
         bpl     :+
         jmp     redraw_windows_and_desktop
@@ -1758,7 +1756,7 @@ L4CD6:  pha
 ;;; ============================================================
 
 .proc cmd_delete_file
-        jsr     set_watch_cursor
+        jsr     set_cursor_watch
         lda     #kDynamicRoutineFileDialog
         jsr     load_dynamic_routine
         bmi     L4D9D
@@ -1767,14 +1765,14 @@ L4CD6:  pha
         jsr     load_dynamic_routine
         bmi     L4D9D
 
-        jsr     set_pointer_cursor
+        jsr     set_cursor_pointer
         lda     #$01
         jsr     file_dialog_exec
         pha
-        jsr     set_watch_cursor
+        jsr     set_cursor_watch
         lda     #kDynamicRoutineRestore5000
         jsr     restore_dynamic_routine
-        jsr     set_pointer_cursor
+        jsr     set_cursor_pointer
         pla
         bpl     :+
         jmp     L4D9D
@@ -1792,7 +1790,7 @@ L4CD6:  pha
         jsr     jt_delete_file
 
 L4D9D:  pha
-        jsr     set_pointer_cursor
+        jsr     set_cursor_pointer
         pla
         bpl     :+
         jmp     redraw_windows_and_desktop
@@ -2456,8 +2454,8 @@ entry:
         lda     active_window_id
         jsr     create_file_icon_ep2
 
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+        lda     active_window_id
+        jsr     set_port_from_window_id
 
         jsr     cached_icons_screen_to_window
         copy    #0, L51EF
@@ -3838,8 +3836,8 @@ done_client_click:
         bmi     :+              ; list view, no icons
         jsr     cached_icons_window_to_screen
 
-:       copy    active_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+:       lda     active_window_id
+        jsr     set_port_from_window_id
 
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         jsr     reset_grafport3
@@ -3988,8 +3986,8 @@ desktop:
 :       cpx     #$FF
         beq     L5DF7
 
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+        lda     active_window_id
+        jsr     set_port_from_window_id
 
         jsr     cached_icons_screen_to_window
         jsr     offset_grafport2_and_set
@@ -4006,8 +4004,8 @@ desktop:
         dex
         bpl     :-
 
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+        lda     active_window_id
+        jsr     set_port_from_window_id
 
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
@@ -4112,17 +4110,18 @@ icon_entry_type:
         sta     selected_icon_list,x
         inc     selected_icon_count
         copy    active_window_id, selected_window_index
-        copy    active_window_id, getwinport_params2::window_id
 
-        jsr     get_set_port2
+        lda     active_window_id
+        jsr     set_port_from_window_id
 
         copy    icon_num, icon_param
         jsr     icon_screen_to_window
 
         jsr     offset_grafport2_and_set
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+
+        lda     active_window_id
+        jsr     set_port_from_window_id
 
         lda     icon_num
         jsr     icon_window_to_screen
@@ -4144,8 +4143,8 @@ icon_num:
         sta     findwindow_window_id
         jsr     handle_inactive_window_click ; bring to front
 
-:       copy    active_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+:       lda     active_window_id
+        jsr     set_port_from_window_id
 
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
@@ -5391,8 +5390,8 @@ update_view:
         ldy     #MGTK::OpenWindow
         jsr     MGTK_RELAY
 
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+        lda     active_window_id
+        jsr     set_port_from_window_id
 
         jsr     draw_window_header
 
@@ -5517,8 +5516,8 @@ num:    .byte   0
 list_view:
         jsr     push_pointers
 
-        copy    cached_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+        lda     cached_window_id
+        jsr     set_port_from_window_id
 
         bit     draw_window_header_flag
         bmi     :+
@@ -5595,8 +5594,8 @@ rows_done:
         ;; --------------------------------------------------
         ;; Icon view
 icon_view:
-        copy    cached_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+        lda     cached_window_id
+        jsr     set_port_from_window_id
 
         bit     draw_window_header_flag
         bmi     :+
@@ -5615,8 +5614,10 @@ loop:   cpx     cached_window_icon_count ; done?
 
         pla                     ; finish up...
         jsr     reset_grafport3
-        copy    cached_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+
+        lda     cached_window_id
+        jsr     set_port_from_window_id
+
         jsr     cached_icons_window_to_screen
         rts
 
@@ -5647,9 +5648,9 @@ L6D31:  copy    #0, L6DB0
         beq     L6D4D
         jsr     zero_grafport5_coords
         copy    #0, tmp_rect
-        beq     L6D56
-L6D4D:  sta     getwinport_params2::window_id
-        jsr     get_set_port2
+        beq     L6D56           ; always
+
+L6D4D:  jsr     set_port_from_window_id
         jsr     offset_grafport2_and_set
 L6D56:  lda     L6DB0
         cmp     selected_icon_count
@@ -5703,8 +5704,8 @@ L6DB0:  .byte   0
         jsr     cached_icons_window_to_screen
 
 config_port:
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_set_port2
+        lda     active_window_id
+        jsr     set_port_from_window_id
 
         ;; check horizontal bounds
         cmp16   iconbb_rect+MGTK::Rect::x1, grafport2::cliprect::x1
@@ -12928,9 +12929,7 @@ loop:   iny
 :       MLI_RELAY_CALL CLOSE, close_params
         lda     selected_window_index
         beq     :+
-        sta     getwinport_params2::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
-        MGTK_RELAY_CALL MGTK::SetPort, grafport2
+        jsr     set_port_from_window_id
 :       ldx     stack_stash     ; restore stack, in case recursion was aborted
         txs
         return  #$FF
@@ -14612,23 +14611,33 @@ cursor_ip_flag:                 ; high bit set if IP, clear if pointer
 
         .assert * >= $A000, error, "Routine used by overlays in overlay zone"
 
+
+;;; ============================================================
+
 .proc set_cursor_watch
-        MGTK_RELAY_CALL MGTK::HideCursor
+        jsr     hide_cursor
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
-        MGTK_RELAY_CALL MGTK::ShowCursor
-        rts
+        jmp     show_cursor
 .endproc
 
 .proc set_cursor_pointer
-        MGTK_RELAY_CALL MGTK::HideCursor
+        jsr     hide_cursor
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
-        MGTK_RELAY_CALL MGTK::ShowCursor
-        rts
+        jmp     show_cursor
 .endproc
 
 .proc set_cursor_insertion_point
-        MGTK_RELAY_CALL MGTK::HideCursor
+        jsr     hide_cursor
         MGTK_RELAY_CALL MGTK::SetCursor, insertion_point_cursor
+        jmp     show_cursor
+.endproc
+
+.proc hide_cursor
+        MGTK_RELAY_CALL MGTK::HideCursor
+        rts
+.endproc
+
+.proc show_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         rts
 .endproc
@@ -15122,15 +15131,6 @@ version_bytes:
         adjust_fileentry_case := adjust_case_impl::file_entry
         adjust_volname_case := adjust_case_impl::vol_name
 
-
-;;; ============================================================
-
-.proc set_port_from_window_id
-        sta     getwinport_params2::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
-        MGTK_RELAY_CALL MGTK::SetPort, grafport2
-        rts
-.endproc
 
 ;;; ============================================================
 
@@ -15732,19 +15732,6 @@ set_fill_white:
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 .endproc
-
-;;; ============================================================
-
-str_preview_fot:
-        PASCAL_STRING "Preview/show.image.file"
-
-str_preview_fnt:
-        PASCAL_STRING "Preview/show.font.file"
-
-str_preview_txt:
-        PASCAL_STRING "Preview/show.text.file"
-
-;;; ============================================================
 
 ;;; ============================================================
 ;;; Output: A = number of selected icons
