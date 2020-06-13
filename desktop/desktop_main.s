@@ -643,9 +643,15 @@ continue:
 
 ;;; ============================================================
 
+.proc offset_and_set_port_from_window_id
+        sta     getwinport_params2::window_id
+        jsr     get_port2
+        jmp     offset_grafport2_and_set
+.endproc
+
 .proc set_port_from_window_id
         sta     getwinport_params2::window_id
-        jmp     get_set_port2
+        ;; fall through
 .endproc
 
 .proc get_set_port2
@@ -2420,9 +2426,8 @@ entry:
         dex
         sta     win_view_by_table,x
         jsr     update_view_menu_check
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_port2
-        jsr     offset_grafport2_and_set
+        lda     active_window_id
+        jsr     offset_and_set_port_from_window_id
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         lda     active_window_id
@@ -2525,9 +2530,8 @@ L51EF:  .byte   0
         jsr     LoadActiveWindowIconTable
         jsr     sort_records
         jsr     StoreWindowIconTable
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_port2
-        jsr     offset_grafport2_and_set
+        lda     active_window_id
+        jsr     offset_and_set_port_from_window_id
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         lda     active_window_id
@@ -3041,7 +3045,7 @@ L55F0:  ldx     L544A
         and     #kIconEntryWinIdMask
         sta     getwinport_params2::window_id
         beq     L5614
-        jsr     L56F9
+        jsr     offset_and_set_port_from_window_id
         lda     icon_param
         jsr     icon_screen_to_window
 L5614:  ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
@@ -3060,7 +3064,7 @@ L562C:  lda     icon_param
         and     #kIconEntryWinIdMask
         sta     getwinport_params2::window_id
         beq     L564A
-        jsr     L56F9
+        jsr     offset_and_set_port_from_window_id
         lda     icon_param
         jsr     icon_screen_to_window
 L564A:  ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
@@ -3099,7 +3103,7 @@ L568B:  copy    cached_window_icon_list,x, selected_icon_list,x
         copy    active_window_id, selected_window_index
         copy    selected_window_index, LE22C
         beq     L56AB
-        jsr     L56F9
+        jsr     offset_and_set_port_from_window_id
 L56AB:  lda     selected_icon_count
         sta     L56F8
         dec     L56F8
@@ -3126,13 +3130,6 @@ L56F0:  jmp     LoadDesktopIconTable
 L56F8:  .byte   0
 .endproc
 
-;;; ============================================================
-
-.proc L56F9
-        sta     getwinport_params2::window_id
-        jsr     get_port2
-        jmp     offset_grafport2_and_set
-.endproc
 
 ;;; ============================================================
 ;;; Initiate keyboard-based resizing
@@ -4221,9 +4218,8 @@ L5F20:  lda     event_coords,x
 L5F3E:  rts
 
 L5F3F:  jsr     clear_selection
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_port2
-        jsr     offset_grafport2_and_set
+        lda     active_window_id
+        jsr     offset_and_set_port_from_window_id
         ldx     #$03
 L5F50:  lda     pt1,x
         sta     tmp_rect::x1,x
