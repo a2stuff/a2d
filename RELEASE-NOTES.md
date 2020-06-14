@@ -57,8 +57,8 @@ https://github.com/a2stuff/a2d/issues
   * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1. (#46)
 * Eyes
   * Eyes that follow the mouse. (#53)
-* Screen Saver
-  * Homage to the classic After Dark "Flying Toasters" by Jack Eastman. More to come. (#27)
+* Flying Toasters
+  * Homage to the classic After Dark screen saver by Jack Eastman. (#27)
 * Melt
   * Another classic screen saver effect: the screen melts down like dripping wax. (#27)
 * NormFast

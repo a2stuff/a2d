@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; SCREEN.SAVER - Desk Accessory
+;;; FLYING.TOASTERS - Desk Accessory
 ;;;
 ;;; Clears the screen and animates a pleasing distraction.
 ;;; ============================================================
