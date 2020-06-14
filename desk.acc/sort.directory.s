@@ -560,11 +560,8 @@ loop:   dex
         tax
         add16   entry_ptr, #IconEntry::name, entry_ptr
         ldy     #0
-        lda     (entry_ptr),y
-        sec
-        sbc     #2              ; remove leading/trailing space
+        lda     (entry_ptr),y   ; len
         sta     cmp_len
-        inc16   entry_ptr       ; points at start of name
 
         lda     (filename),y
         and     #NAME_LENGTH_MASK
@@ -574,20 +571,17 @@ loop:   dex
 
         ;; Bytewise compare names.
         sta     cpy_len
-next:   iny                     ; skip leading space
+next:   iny
+
         lda     (entry_ptr),y
-        and     #CHAR_MASK
-        cmp     #'a'
-        bcc     :+
-        and     #CASE_MASK      ; make upper-case
-:       sta     cmp_char
+        jsr     to_uppercase
+        sta     cmp_char
+
         lda     (filename),y
-        and     #CHAR_MASK
-        cmp     #'a'
-        bcc     :+
-        and     #CASE_MASK      ; make upper-case
+        jsr     to_uppercase
+
         cmp_char := *+1
-:       cmp     #0
+        cmp     #0
         bne     loop            ; no match - try next icon
         cpy_len := *+1
         cpy     #0
@@ -610,10 +604,7 @@ loop2:  dex
         add16   entry_ptr, #IconEntry::name, entry_ptr
         ldy     #0
         lda     (entry_ptr),y   ; len
-        sec
-        sbc     #2              ; remove leading/trailing space
         sta     cmp_len2
-        inc16   entry_ptr       ; points at start of name
 
         lda     (filename2),y
         and     #NAME_LENGTH_MASK
@@ -624,19 +615,16 @@ loop2:  dex
         ;; Bytewise compare names.
         sta     cpy_len2
 next2:  iny
+
         lda     (entry_ptr),y
-        and     #CHAR_MASK
-        cmp     #'a'
-        bcc     :+
-        and     #CASE_MASK      ; make upper-case
-:       sta     cmp_char2
+        jsr     to_uppercase
+        sta     cmp_char2
+
         lda     (filename2),y
-        and     #CHAR_MASK
-        cmp     #'a'
-        bcc     :+
-        and     #CASE_MASK      ; make upper-case
+        jsr     to_uppercase
+
         cmp_char2 := *+1
-:       cmp     #0
+        cmp     #0
         bne     loop2           ; no match - try next icon
         cpy_len2 := *+1
         cpy     #0
@@ -805,5 +793,18 @@ len2:   .byte   0
 len1:   .byte   0
 
 .endproc
+
+;;; ============================================================
+;;; Convert filename character to uppercase
+
+.proc to_uppercase
+        and     #CHAR_MASK
+        cmp     #'a'            ; Assumes valid filename character
+        bcc     :+
+        and     #CASE_MASK      ; Make upper-case
+:       rts
+.endproc
+
+;;; ============================================================
 
         .assert * <= dir_data_buffer, error, "DA too long"
