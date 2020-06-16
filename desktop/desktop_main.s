@@ -1552,23 +1552,16 @@ start:  jsr     reset_grafport3
         tax
 
         ;; Append name to path
-:       lda     ($06),y
-        sta     str_desk_acc,x
+loop:   lda     ($06),y
+        cmp     #' '            ; Convert spaces back to periods
+        bne     :+
+        lda     #'.'
+:       sta     str_desk_acc,x
         dex
         dey
-        bne     :-
+        bne     loop
         pla
         sta     str_desk_acc    ; update length
-
-        ;; Convert spaces to periods
-        ldx     str_desk_acc
-:       lda     str_desk_acc,x
-        cmp     #' '
-        bne     nope
-        lda     #'.'
-        sta     str_desk_acc,x
-nope:   dex
-        bne     :-
 
         ldax    #str_desk_acc
         ;; fall through
