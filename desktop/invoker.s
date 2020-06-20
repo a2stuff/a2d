@@ -33,8 +33,8 @@ interpreter_flag:
         DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
 
 kBSOffset       = 5             ; Offset of 'C' in BASIC.SYSTEM
-str_basix_system:
-        PASCAL_STRING "BASIx.SYSTEM" ; May be modified by DeskTop
+str_basic_system:
+        PASCAL_STRING "BASIC.SYSTEM"
 
         ;; $EE = extended call signature for IIgs/GS/OS variation.
         DEFINE_QUIT_PARAMS quit_params, $EE, INVOKER_FILENAME
@@ -113,8 +113,7 @@ not_binary:
         cmp     #FT_BASIC       ; BASIC?
         bne     not_basic
 
-        copy    #'C', str_basix_system + kBSOffset ; "BASI?" -> "BASIC"
-        copy16  #str_basix_system, open_params::pathname
+        copy16  #str_basic_system, open_params::pathname
 
         ;; Try opening interpreter with current prefix.
 check_for_interpreter:
@@ -149,8 +148,8 @@ not_basic:
 
 ;;; Use BASIS.SYSTEM as fallback if present.
 ;;; (If not found, ProDOS QUIT will be invoked.)
-        copy    #'S', str_basix_system + kBSOffset ; "BASI?" -> "BASIS"
-        copy16  #str_basix_system, open_params::pathname
+        copy    #'S', str_basic_system + kBSOffset ; "BASIC" -> "BASIS"
+        copy16  #str_basic_system, open_params::pathname
         jmp     check_for_interpreter
 
 ;;; TODO: ProDOS 2.4's Bitsy Bye invokes BASIS.SYSTEM with:
@@ -211,11 +210,7 @@ update_bitmap:
 
 exit:   rts
 
-
 .endproc ; invoker
-
-        invoker_str_basix_system := invoker::str_basix_system
-        invoker_kBSOffset := invoker::kBSOffset
 
         ;; Pad to $160 bytes
         PAD_TO $3F0

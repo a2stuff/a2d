@@ -54,7 +54,7 @@ JT_HILITE_MENU:         jmp     toggle_menu_hilite      ; *
 
         ;; Main Loop
 .proc main_loop
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
 
         inc     loop_counter
         inc     loop_counter
@@ -93,7 +93,7 @@ click:  jsr     handle_click
         ;; Is it an update event?
 :       cmp     #MGTK::EventKind::update
         bne     :+
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         copy    active_window_id, saved_active_window_id
         copy    #$80, redraw_icons_flag
         jsr     handle_update
@@ -123,7 +123,7 @@ redraw_icons_flag:
 ;;; --------------------------------------------------
 
 redraw_windows:
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         copy    active_window_id, saved_active_window_id
         copy    #0, redraw_icons_flag
 
@@ -186,24 +186,24 @@ L415B:  sta     active_window_id
         jsr     window_lookup
         stax    $06
         ldy     #22
-        sub16in ($06),y, grafport2::viewloc::ycoord, L4242
+        sub16in ($06),y, window_grafport::viewloc::ycoord, L4242
         cmp16   L4242, #15
         bpl     L41CB
-        jsr     offset_grafport2
+        jsr     offset_window_grafport
 
         ldx     #11
         ldy     #31
-        copy    grafport2,x, ($06),y
+        copy    window_grafport,x, ($06),y
         dey
         dex
-        copy    grafport2,x, ($06),y
+        copy    window_grafport,x, ($06),y
 
         ldx     #3
         ldy     #23
-        copy    grafport2,x, ($06),y
+        copy    window_grafport,x, ($06),y
         dey
         dex
-        copy    grafport2,x, ($06),y
+        copy    window_grafport,x, ($06),y
 
 L41CB:  ldx     cached_window_id
         dex
@@ -220,7 +220,7 @@ by_icon:
 
         jsr     cached_icons_screen_to_window
 
-        COPY_BLOCK grafport2::cliprect, tmp_rect
+        COPY_BLOCK window_grafport::cliprect, tmp_rect
 
         copy    #0, L4241
 L41FE:  lda     L4241
@@ -242,7 +242,7 @@ L4227:  copy    #0, draw_window_header_flag
         jsr     cached_icons_window_to_screen
         lda     active_window_id
         jsr     assign_window_portbits
-        jmp     reset_grafport3
+        jmp     reset_main_grafport
 
 L4241:  .byte   0
 L4242:  .word   0
@@ -266,9 +266,9 @@ bail:   rts
         jsr     get_port2
         cmp     #MGTK::Error::window_obscured
         beq     done
-        jsr     offset_grafport2_and_set
+        jsr     offset_window_grafport_and_set
 
-        COPY_BLOCK grafport2::cliprect, tmp_rect
+        COPY_BLOCK window_grafport::cliprect, tmp_rect
 
         ;; Redraw selected icons in window
 window: lda     num
@@ -285,7 +285,7 @@ window: lda     num
         inc     num
         jmp     window
 
-done:   jmp     reset_grafport3
+done:   jmp     reset_main_grafport
 
         ;; Redraw selected icons on desktop
 desktop:
@@ -578,9 +578,9 @@ start:  jsr     clear_selection
         lda     (ptr),y
         and     #kIconEntryWinIdMask
         sta     winid
-        jsr     zero_grafport5_coords
+        jsr     prepare_highlight_grafport
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         copy    winid, selected_window_index
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
@@ -610,7 +610,7 @@ continue:
 .proc offset_and_set_port_from_window_id
         sta     getwinport_params2::window_id
         jsr     get_port2
-        jmp     offset_grafport2_and_set
+        jmp     offset_window_grafport_and_set
 .endproc
 
 .proc set_port_from_window_id
@@ -620,7 +620,7 @@ continue:
 
 .proc get_set_port2
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
-        MGTK_RELAY_CALL MGTK::SetPort, grafport2
+        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
 
@@ -953,10 +953,6 @@ launch: ITK_RELAY_CALL IconTK::RemoveAll, 0 ; volume icons
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, path
 
-;;; From Invoker, to save space
-str_basix_system := invoker_str_basix_system
-kBSOffset = invoker_kBSOffset
-
 basic:  lda     #'C'            ; "BASI?" -> "BASIC"
         bne     start           ; always
 
@@ -1031,6 +1027,10 @@ done:   rts
 
 
 ;;; ============================================================
+
+kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
+str_basix_system:
+        PASCAL_STRING "BASIx.SYSTEM"
 
 str_preview_fot:
         PASCAL_STRING "Preview/show.image.file"
@@ -1532,7 +1532,7 @@ prefix_length:
 str_desk_acc:
         PASCAL_STRING kDeskAccPrefixStr, kPrefixLength + 15
 
-start:  jsr     reset_grafport3
+start:  jsr     reset_main_grafport
         jsr     set_cursor_watch
 
         ;; Find DA name
@@ -1587,13 +1587,13 @@ loop:   lda     ($06),y
 
         ;; Invoke it
         jsr     set_cursor_pointer
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         jsr     DA_LOAD_ADDRESS
         lda     #0
         sta     running_da_flag
 
         ;; Restore state
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         jsr     redraw_windows_and_desktop
 done:   jsr     set_cursor_pointer
         rts
@@ -2166,7 +2166,7 @@ kIconBBoxOffsetRight   = 50          ; includes width of icon + label
         lda     icon_num
         jsr     icon_window_to_screen
 
-        jsr     apply_active_winfo_to_grafport2
+        jsr     apply_active_winfo_to_window_grafport
 
         copy    #0, dirty
 
@@ -2174,18 +2174,18 @@ kIconBBoxOffsetRight   = 50          ; includes width of icon + label
         ;; X adjustment
 
         ;; Is left of icon beyond window? If so, adjust by delta (negative)
-        sub16   cur_icon_pos::xcoord, grafport2::cliprect::x1, delta
+        sub16   cur_icon_pos::xcoord, window_grafport::cliprect::x1, delta
         bmi     adjustx
 
         ;; Is right of icon beyond window? If so, adjust by delta (positive)
         add16_8 cur_icon_pos::xcoord, #kIconBBoxOffsetRight, cur_icon_pos::xcoord
-        sub16   cur_icon_pos::xcoord, grafport2::cliprect::x2, delta
+        sub16   cur_icon_pos::xcoord, window_grafport::cliprect::x2, delta
         bmi     donex
 
 adjustx:
         inc     dirty
-        add16   grafport2::cliprect::x1, delta, grafport2::cliprect::x1
-        add16   grafport2::cliprect::x2, delta, grafport2::cliprect::x2
+        add16   window_grafport::cliprect::x1, delta, window_grafport::cliprect::x1
+        add16   window_grafport::cliprect::x2, delta, window_grafport::cliprect::x2
 
 donex:
 
@@ -2196,18 +2196,18 @@ donex:
         kIconLabelHeight = 8
 
         ;; Is top of icon beyond window? If so, adjust by delta (negative)
-        sub16   cur_icon_pos::ycoord, grafport2::cliprect::y1, delta
+        sub16   cur_icon_pos::ycoord, window_grafport::cliprect::y1, delta
         bmi     adjusty
 
         ;; Is bottom of icon beyond window? If so, adjust by delta (positive)
         add16_8 cur_icon_pos::ycoord, #kIconBBoxOffsetBottom, cur_icon_pos::ycoord
-        sub16   cur_icon_pos::ycoord, grafport2::cliprect::y2, delta
+        sub16   cur_icon_pos::ycoord, window_grafport::cliprect::y2, delta
         bmi     doney
 
 adjusty:
         inc dirty
-        add16   grafport2::cliprect::y1, delta, grafport2::cliprect::y1
-        add16   grafport2::cliprect::y2, delta, grafport2::cliprect::y2
+        add16   window_grafport::cliprect::y1, delta, window_grafport::cliprect::y1
+        add16   window_grafport::cliprect::y2, delta, window_grafport::cliprect::y2
 
 doney:
         lda     dirty
@@ -2408,7 +2408,7 @@ entry:
         lda     active_window_id
         jsr     offset_and_set_port_from_window_id
         jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
+        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
         lda     active_window_id
         jsr     compute_window_dimensions
         stax    L51EB
@@ -2454,7 +2454,7 @@ L518D:  lda     L51EF
         inc     L51EF
         jmp     L518D
 
-L51A7:  jsr     reset_grafport3
+L51A7:  jsr     reset_main_grafport
         jsr     cached_icons_window_to_screen
         jsr     StoreWindowIconTable
         jsr     update_scrollbars
@@ -2467,7 +2467,7 @@ L51C0:  ldx     L51EF
         lda     selected_icon_count,x
         sta     icon_param
         jsr     icon_screen_to_window
-        jsr     offset_grafport2_and_set
+        jsr     offset_window_grafport_and_set
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         lda     icon_param
         jsr     icon_window_to_screen
@@ -2512,7 +2512,7 @@ L51EF:  .byte   0
         lda     active_window_id
         jsr     offset_and_set_port_from_window_id
         jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
+        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
         lda     active_window_id
         jsr     compute_window_dimensions
         stax    L5263
@@ -2540,7 +2540,7 @@ L5246:  lda     L5263,x
         bpl     L5246
 
         copy    #$80, draw_window_header_flag
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         jsr     draw_window_entries
         jsr     update_scrollbars
         copy    #0, draw_window_header_flag
@@ -3029,7 +3029,7 @@ L5614:  ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         beq     L562B
         lda     icon_param
         jsr     icon_window_to_screen
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
 L562B:  rts
 
 L562C:  lda     icon_param
@@ -3048,7 +3048,7 @@ L564A:  ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
         beq     L5661
         lda     icon_param
         jsr     icon_window_to_screen
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
 L5661:  rts
 .endproc
 
@@ -3100,7 +3100,7 @@ L56E3:  dec     L56F8
         bpl     L56B4
         lda     selected_window_index
         beq     L56F0
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
 L56F0:  jmp     LoadDesktopIconTable
 
 L56F8:  .byte   0
@@ -3362,7 +3362,7 @@ max:   .byte   0
         jsr     LoadDesktopIconTable
         jsr     cmd_close_all
         jsr     clear_selection
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         ldx     cached_window_icon_count
         dex
 L5916:  lda     cached_window_icon_list,x
@@ -3572,7 +3572,7 @@ not_in_map:
         dec     icon_count
         lda     icon_param
         jsr     FreeIcon
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
 
 :       lda     cached_window_icon_count
@@ -3803,7 +3803,7 @@ done_client_click:
 .proc update_scroll_thumb
         copy    updatethumb_stash, updatethumb_thumbpos
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
-        jsr     apply_active_winfo_to_grafport2
+        jsr     apply_active_winfo_to_window_grafport
         jsr     compute_new_scroll_max
         bit     active_window_view_by
         bmi     :+              ; list view, no icons
@@ -3812,8 +3812,8 @@ done_client_click:
 :       lda     active_window_id
         jsr     set_port_from_window_id
 
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
-        jsr     reset_grafport3
+        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
+        jsr     reset_main_grafport
         jmp     draw_window_entries
 .endproc
 
@@ -3963,7 +3963,7 @@ desktop:
         jsr     set_port_from_window_id
 
         jsr     cached_icons_screen_to_window
-        jsr     offset_grafport2_and_set
+        jsr     offset_window_grafport_and_set
 
         ldx     selected_icon_count
         dex
@@ -3982,7 +3982,7 @@ desktop:
 
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
 
 ;;; Used as additional entry point
 swap_in_desktop_icon_table:
@@ -4090,7 +4090,7 @@ icon_entry_type:
         copy    icon_num, icon_param
         jsr     icon_screen_to_window
 
-        jsr     offset_grafport2_and_set
+        jsr     offset_window_grafport_and_set
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
 
         lda     active_window_id
@@ -4098,7 +4098,7 @@ icon_entry_type:
 
         lda     icon_num
         jsr     icon_window_to_screen
-        jmp     reset_grafport3
+        jmp     reset_main_grafport
 
 icon_num:
         .byte   0
@@ -4120,7 +4120,7 @@ icon_num:
         jsr     set_port_from_window_id
 
         jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
+        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
 
         lda     active_window_id
         pha
@@ -4213,7 +4213,7 @@ L5F6B:  jsr     peek_event
         ldx     #$00
 L5F80:  cpx     cached_window_icon_count
         bne     L5F88
-        jmp     reset_grafport3
+        jmp     reset_main_grafport
 
 L5F88:  txa
         pha
@@ -4378,7 +4378,7 @@ deltay: .word   0
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
         jsr     LoadDesktopIconTable
-        jmp     reset_grafport3
+        jmp     reset_main_grafport
 .endproc
 
 ;;; ============================================================
@@ -4444,9 +4444,9 @@ cont:   sta     cached_window_icon_count
         sta     (icon_ptr),y
         and     #kIconEntryWinIdMask
         sta     selected_window_index
-        jsr     zero_grafport5_coords
+        jsr     prepare_highlight_grafport
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
 
@@ -4557,7 +4557,7 @@ L638B:  .byte   0
         jsr     calc_height_minus_header
         sta     useful_height
 
-        sub16_8 grafport2::cliprect::y1, useful_height, delta
+        sub16_8 window_grafport::cliprect::y1, useful_height, delta
         cmp16   delta, iconbb_rect+MGTK::Rect::y1
         bmi     clamp
         ldax    delta
@@ -4565,8 +4565,8 @@ L638B:  .byte   0
 
 clamp:  ldax    iconbb_rect+MGTK::Rect::y1
 
-adjust: stax    grafport2::cliprect::y1
-        add16_8 grafport2::cliprect::y1, height, grafport2::cliprect::y2
+adjust: stax    window_grafport::cliprect::y1
+        add16_8 window_grafport::cliprect::y1, height, window_grafport::cliprect::y2
         jmp     finish_scroll_adjust_and_redraw
 
 useful_height:
@@ -4584,7 +4584,7 @@ delta:  .word   0
         jsr     calc_height_minus_header
         sta     useful_height
 
-        add16_8 grafport2::cliprect::y2, useful_height, delta
+        add16_8 window_grafport::cliprect::y2, useful_height, delta
         cmp16   delta, iconbb_rect+MGTK::Rect::y2
         bpl     clamp
         ldax    delta
@@ -4592,8 +4592,8 @@ delta:  .word   0
 
 clamp:  ldax    iconbb_rect+MGTK::Rect::y2
 
-adjust: stax    grafport2::cliprect::y2
-        sub16_8 grafport2::cliprect::y2, height, grafport2::cliprect::y1
+adjust: stax    window_grafport::cliprect::y2
+        sub16_8 window_grafport::cliprect::y2, height, window_grafport::cliprect::y1
         jmp     finish_scroll_adjust_and_redraw
 
 useful_height:
@@ -4622,7 +4622,7 @@ delta:  .word   0
         jsr     compute_active_window_dimensions
         stax    width
 
-        sub16   grafport2::cliprect::x1, width, delta
+        sub16   window_grafport::cliprect::x1, width, delta
         cmp16   delta, iconbb_rect+MGTK::Rect::x1
         bmi     clamp
 
@@ -4631,8 +4631,8 @@ delta:  .word   0
 
 clamp:  ldax    iconbb_rect+MGTK::Rect::x1
 
-adjust: stax    grafport2::cliprect::x1
-        add16   grafport2::cliprect::x1, width, grafport2::cliprect::x2
+adjust: stax    window_grafport::cliprect::x1
+        add16   window_grafport::cliprect::x1, width, window_grafport::cliprect::x2
         jmp     finish_scroll_adjust_and_redraw
 
 width:  .word   0               ; of window's port
@@ -4645,7 +4645,7 @@ delta:  .word   0
         jsr     compute_active_window_dimensions
         stax    width
 
-        add16   grafport2::cliprect::x2, width, delta
+        add16   window_grafport::cliprect::x2, width, delta
         cmp16   delta, iconbb_rect+MGTK::Rect::x2
         bpl     clamp
         ldax    delta
@@ -4653,8 +4653,8 @@ delta:  .word   0
 
 clamp:  ldax    iconbb_rect+MGTK::Rect::x2
 
-adjust: stax    grafport2::cliprect::x2
-        sub16   grafport2::cliprect::x2, width, grafport2::cliprect::x1
+adjust: stax    window_grafport::cliprect::x2
+        sub16   window_grafport::cliprect::x2, width, window_grafport::cliprect::x1
         jmp     finish_scroll_adjust_and_redraw
 
 width:  .word   0               ; of window's port
@@ -4670,7 +4670,7 @@ delta:  .word   0
         bit     active_window_view_by
         bmi     :+              ; list view, not icons
         jsr     cached_icons_screen_to_window
-:       jsr     apply_active_winfo_to_grafport2
+:       jsr     apply_active_winfo_to_window_grafport
         jsr     compute_icons_bbox
         lda     active_window_id
         jmp     compute_window_dimensions
@@ -4678,7 +4678,7 @@ delta:  .word   0
 
 ;;; ============================================================
 
-.proc apply_active_winfo_to_grafport2
+.proc apply_active_winfo_to_window_grafport
         ptr := $06
 
         lda     active_window_id
@@ -4686,7 +4686,7 @@ delta:  .word   0
         addax   #MGTK::Winfo::port, ptr
         ldy     #.sizeof(MGTK::GrafPort) + 1
 :       lda     (ptr),y
-        sta     grafport2,y
+        sta     window_grafport,y
         dey
         bpl     :-
         rts
@@ -4700,7 +4700,7 @@ delta:  .word   0
         stax    ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
-:       lda     grafport2::cliprect,x
+:       lda     window_grafport::cliprect,x
         sta     (ptr),y
         dey
         dex
@@ -4722,8 +4722,8 @@ delta:  .word   0
         jsr     cached_icons_window_to_screen
 :
 
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
-        jsr     reset_grafport3
+        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
+        jsr     reset_main_grafport
         jmp     draw_window_entries
 .endproc
 
@@ -4746,12 +4746,12 @@ delta:  .word   0
         sub16   size, win_width, size
         lsr16   size            ; / 2
         ldx     size
-        sub16   grafport2::cliprect::x1, iconbb_rect+MGTK::Rect::x1, size
+        sub16   window_grafport::cliprect::x1, iconbb_rect+MGTK::Rect::x1, size
         bpl     pos
         lda     #0
         beq     calc            ; always
 
-pos:    cmp16   grafport2::cliprect::x2, iconbb_rect+MGTK::Rect::x2
+pos:    cmp16   window_grafport::cliprect::x2, iconbb_rect+MGTK::Rect::x2
         bmi     neg
         tya
         jmp     L65EE
@@ -4791,12 +4791,12 @@ size:   .word   0
         lsr16   size            ; / 4
         lsr16   size
         ldx     size
-        sub16   grafport2::cliprect::y1, iconbb_rect+MGTK::Rect::y1, size
+        sub16   window_grafport::cliprect::y1, iconbb_rect+MGTK::Rect::y1, size
         bpl     pos
         lda     #0
         beq     calc            ; always
 
-pos:    cmp16   grafport2::cliprect::y2, iconbb_rect+MGTK::Rect::y2
+pos:    cmp16   window_grafport::cliprect::y2, iconbb_rect+MGTK::Rect::y2
         bmi     neg
         tya
         jmp     L668D
@@ -5063,7 +5063,7 @@ L6893:  txa
 ;;; ============================================================
 
 .proc L68AA
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         bit     BUTN0
         bpl     L68B3
         rts
@@ -5381,7 +5381,7 @@ done:   copy    cached_window_id, active_window_id
         jsr     cached_icons_window_to_screen
         jsr     StoreWindowIconTable
         jsr     LoadDesktopIconTable
-        jmp     reset_grafport3
+        jmp     reset_main_grafport
 
 ;;; Common code to update the dir (vol/folder) icon.
 .proc update_icon
@@ -5405,7 +5405,7 @@ done:   copy    cached_window_id, active_window_id
         cmp     active_window_id ; prep to redraw windowed (file) icon
         bne     done             ; but only if active window
         jsr     get_set_port2
-        jsr     offset_grafport2_and_set
+        jsr     offset_window_grafport_and_set
         lda     icon_params2
         jsr     icon_screen_to_window
 :       ITK_RELAY_CALL IconTK::RedrawIcon, icon_params2
@@ -5414,7 +5414,7 @@ done:   copy    cached_window_id, active_window_id
         beq     done            ; skip if on desktop
         lda     icon_params2    ; restore from drawing
         jsr     icon_window_to_screen
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
 
 done:   rts
 
@@ -5495,7 +5495,7 @@ list_view:
         jsr     get_port2
         bit     draw_window_header_flag
         bmi     :+
-        jsr     offset_grafport2_and_set
+        jsr     offset_window_grafport_and_set
 :
 
         ;; Find FileRecord list
@@ -5552,7 +5552,7 @@ rloop:  lda     rows_done
         inc     rows_done
         jmp     rloop
 
-done:   jsr     reset_grafport3
+done:   jsr     reset_main_grafport
         jsr     pop_pointers
         rts
 
@@ -5569,9 +5569,9 @@ icon_view:
         bmi     :+
         jsr     draw_window_header
 :       jsr     cached_icons_screen_to_window
-        jsr     offset_grafport2_and_set
+        jsr     offset_window_grafport_and_set
 
-        COPY_BLOCK grafport2::cliprect, tmp_rect
+        COPY_BLOCK window_grafport::cliprect, tmp_rect
 
         ldx     #0
         txa
@@ -5581,7 +5581,7 @@ loop:   cpx     cached_window_icon_count ; done?
         bne     draw                     ; nope...
 
         pla                     ; finish up...
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
 
         lda     cached_window_id
         jsr     set_port_from_window_id
@@ -5606,23 +5606,25 @@ draw:   txa
 
 .proc clear_selection
         lda     selected_icon_count
-        bne     L6D31
+        bne     :+
         rts
 
-L6D31:  copy    #0, L6DB0
-        copy    selected_window_index, tmp_rect ; ???
-        beq     L6D7D
+:       copy    #0, index
+        lda     selected_window_index
+        beq     volumes
         cmp     active_window_id
-        beq     L6D4D
-        jsr     zero_grafport5_coords
-        copy    #0, tmp_rect
-        beq     L6D56           ; always
+        beq     use_win_port
+        jsr     prepare_highlight_grafport
+        jmp     files
 
-L6D4D:  jsr     set_port_from_window_id
-        jsr     offset_grafport2_and_set
-L6D56:  lda     L6DB0
+        ;; Windowed (file icons)
+use_win_port:
+        jsr     set_port_from_window_id
+        jsr     offset_window_grafport_and_set
+
+files:  lda     index
         cmp     selected_icon_count
-        beq     L6D9B
+        beq     finish
         tax
         lda     selected_icon_list,x
         sta     icon_param
@@ -5630,20 +5632,23 @@ L6D56:  lda     L6DB0
         ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
         lda     icon_param
         jsr     icon_window_to_screen
-        inc     L6DB0
-        jmp     L6D56
+        inc     index
+        jmp     files
 
-L6D7D:  lda     L6DB0
+        ;; Desktop (volume icons)
+volumes:
+        lda     index
         cmp     selected_icon_count
-        beq     L6D9B
+        beq     finish
         tax
         lda     selected_icon_list,x
         sta     icon_param
         ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
-        inc     L6DB0
-        jmp     L6D7D
+        inc     index
+        jmp     volumes
 
-L6D9B:  lda     #0
+        ;; Clear selection list
+finish: lda     #0
         ldx     selected_icon_count
         dex
 :       sta     selected_icon_list,x
@@ -5651,9 +5656,9 @@ L6D9B:  lda     #0
         bpl     :-
         sta     selected_icon_count
         sta     selected_window_index
-        jmp     reset_grafport3
+        jmp     reset_main_grafport
 
-L6DB0:  .byte   0
+index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -5676,9 +5681,9 @@ config_port:
         jsr     set_port_from_window_id
 
         ;; check horizontal bounds
-        cmp16   iconbb_rect+MGTK::Rect::x1, grafport2::cliprect::x1
+        cmp16   iconbb_rect+MGTK::Rect::x1, window_grafport::cliprect::x1
         bmi     activate_hscroll
-        cmp16   grafport2::cliprect::x2, iconbb_rect+MGTK::Rect::x2
+        cmp16   window_grafport::cliprect::x2, iconbb_rect+MGTK::Rect::x2
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
@@ -5697,9 +5702,9 @@ activate_hscroll:
 
 check_vscroll:
         ;; check vertical bounds
-        cmp16   iconbb_rect+MGTK::Rect::y1, grafport2::cliprect::y1
+        cmp16   iconbb_rect+MGTK::Rect::y1, window_grafport::cliprect::y1
         bmi     activate_vscroll
-        cmp16   grafport2::cliprect::y2, iconbb_rect+MGTK::Rect::y2
+        cmp16   window_grafport::cliprect::y2, iconbb_rect+MGTK::Rect::y2
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar
@@ -5761,7 +5766,7 @@ index:  .byte   0
 
 ;;; ============================================================
 
-.proc offset_grafport2_impl
+.proc offset_window_grafport_impl
 
 flag_clear:
         lda     #$80
@@ -5769,17 +5774,17 @@ flag_clear:
 flag_set:
         lda     #0
 :       sta     flag
-        add16   grafport2::viewloc::ycoord, #15, grafport2::viewloc::ycoord
-        add16   grafport2::cliprect::y1, #15, grafport2::cliprect::y1
+        add16   window_grafport::viewloc::ycoord, #15, window_grafport::viewloc::ycoord
+        add16   window_grafport::cliprect::y1, #15, window_grafport::cliprect::y1
         bit     flag
         bmi     done
-        MGTK_RELAY_CALL MGTK::SetPort, grafport2
+        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
 done:   rts
 
 flag:   .byte   0
 .endproc
-        offset_grafport2 := offset_grafport2_impl::flag_clear
-        offset_grafport2_and_set := offset_grafport2_impl::flag_set
+        offset_window_grafport := offset_window_grafport_impl::flag_clear
+        offset_window_grafport_and_set := offset_window_grafport_impl::flag_set
 
 ;;; ============================================================
 
@@ -7121,30 +7126,30 @@ tmp:    .byte   0
         ;; Compute header coords
 
         ;; x coords
-        lda     grafport2::cliprect::x1
+        lda     window_grafport::cliprect::x1
         sta     header_line_left::xcoord
         clc
         adc     #5
         sta     items_label_pos::xcoord
-        lda     grafport2::cliprect::x1+1
+        lda     window_grafport::cliprect::x1+1
         sta     header_line_left::xcoord+1
         adc     #0
         sta     items_label_pos::xcoord+1
 
         ;; y coords
-        lda     grafport2::cliprect::y1
+        lda     window_grafport::cliprect::y1
         clc
         adc     #12
         sta     header_line_left::ycoord
         sta     header_line_right::ycoord
-        lda     grafport2::cliprect::y1+1
+        lda     window_grafport::cliprect::y1+1
         adc     #0
         sta     header_line_left::ycoord+1
         sta     header_line_right::ycoord+1
 
         ;; Draw top line
         MGTK_RELAY_CALL MGTK::MoveTo, header_line_left
-        copy16  grafport2::cliprect::x2, header_line_right::xcoord
+        copy16  window_grafport::cliprect::x2, header_line_right::xcoord
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::LineTo, header_line_right
 
@@ -7164,7 +7169,7 @@ tmp:    .byte   0
         MGTK_RELAY_CALL MGTK::LineTo, header_line_right
 
         ;; Baseline for header text
-        add16 grafport2::cliprect::y1, #10, items_label_pos::ycoord
+        add16 window_grafport::cliprect::y1, #10, items_label_pos::ycoord
 
         ;; Draw "XXX Items"
         lda     cached_window_icon_count
@@ -7220,7 +7225,7 @@ tmp:    .byte   0
 
 .proc calc_header_coords
         ;; Width of window
-        sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, xcoord
+        sub16   window_grafport::cliprect::x2, window_grafport::cliprect::x1, xcoord
 
         ;; Is there room to spread things out?
         sub16   xcoord, width_items_label, xcoord
@@ -7248,8 +7253,8 @@ skipcenter:
         copy16  width_left_labels, pos_k_available::xcoord
 
 finish:
-        add16   pos_k_in_disk::xcoord, grafport2::cliprect::x1, pos_k_in_disk::xcoord
-        add16   pos_k_available::xcoord, grafport2::cliprect::x1, pos_k_available::xcoord
+        add16   pos_k_in_disk::xcoord, window_grafport::cliprect::x1, pos_k_in_disk::xcoord
+        add16   pos_k_available::xcoord, window_grafport::cliprect::x1, pos_k_available::xcoord
 
         ;; Update y coords
         lda     items_label_pos::ycoord
@@ -8257,7 +8262,7 @@ start:
         inc     pos_col_date::ycoord+1
 :
         ;; Below bottom?
-        cmp16   pos_col_name::ycoord, grafport2::cliprect::y2
+        cmp16   pos_col_name::ycoord, window_grafport::cliprect::y2
         bmi     check_top
         lda     pos_col_name::ycoord
         clc
@@ -8275,7 +8280,7 @@ check_top:
         sta     pos_col_name::ycoord
         bcc     :+
         inc     pos_col_name::ycoord+1
-:       cmp16   pos_col_name::ycoord, grafport2::cliprect::y1
+:       cmp16   pos_col_name::ycoord, window_grafport::cliprect::y1
         bpl     in_range
         rts
 
@@ -8610,8 +8615,8 @@ ytmp:   .word   0
         jsr     cached_icons_screen_to_window
 :
         ;; View bounds
-        sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, clip_w
-        sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, clip_h
+        sub16   window_grafport::cliprect::x2, window_grafport::cliprect::x1, clip_w
+        sub16   window_grafport::cliprect::y2, window_grafport::cliprect::y1, clip_h
 
         lda     updatethumb_which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
@@ -8665,10 +8670,10 @@ L850E:  sta     dir
         ldx     dir
         clc
         adc     iconbb_rect::x1,x
-        sta     grafport2::cliprect::x1,x
+        sta     window_grafport::cliprect::x1,x
         lda     L85F2
         adc     iconbb_rect::x1+1,x
-        sta     grafport2::cliprect::x1+1,x
+        sta     window_grafport::cliprect::x1+1,x
 
         lda     active_window_id
         jsr     compute_window_dimensions
@@ -8676,9 +8681,9 @@ L850E:  sta     dir
         sty     new_h
         lda     dir
         beq     :+
-        add16_8 grafport2::cliprect::y1, new_h, grafport2::cliprect::y2
+        add16_8 window_grafport::cliprect::y1, new_h, window_grafport::cliprect::y2
         jmp     update_port
-:       add16 grafport2::cliprect::x1, new_w, grafport2::cliprect::x2
+:       add16 window_grafport::cliprect::x1, new_w, window_grafport::cliprect::x2
 
         ;; Update window's port
 update_port:
@@ -8688,7 +8693,7 @@ update_port:
 
         ldy     #.sizeof(MGTK::GrafPort)-1
         ldx     #.sizeof(MGTK::Rect)-1
-:       lda     grafport2::cliprect::x1,x
+:       lda     window_grafport::cliprect::x1,x
         sta     (ptr),y
         dey
         dex
@@ -9164,17 +9169,19 @@ pos_win:        .word   0, 0
 .endproc
 
 ;;; ============================================================
+;;; Zero out and then select highlight_grafport. Used for setting
+;;; and clearing selections (since icons are in screen space).
 
-.proc zero_grafport5_coords
+.proc prepare_highlight_grafport
         lda     #0
         tax
-:       sta     grafport5::cliprect::x1,x
-        sta     grafport5::viewloc::xcoord,x
-        sta     grafport5::cliprect::x2,x
+:       sta     highlight_grafport::cliprect::x1,x
+        sta     highlight_grafport::viewloc::xcoord,x
+        sta     highlight_grafport::cliprect::x2,x
         inx
         cpx     #4
         bne     :-
-        MGTK_RELAY_CALL MGTK::SetPort, grafport5
+        MGTK_RELAY_CALL MGTK::SetPort, highlight_grafport
         rts
 .endproc
 
@@ -9545,7 +9552,7 @@ open:   ldy     #$00
 
         ldx     #.sizeof(MGTK::GrafPort)-1
 :       lda     (ptr),y
-        sta     grafport2,x
+        sta     window_grafport,x
         dey
         dex
         bpl     :-
@@ -9583,14 +9590,14 @@ open:   ldy     #$00
 
         ldy     #11 * .sizeof(MGTK::Rect) + 3
         ldx     #3
-:       lda     grafport2,x
+:       lda     window_grafport,x
         sta     rect_table,y
         dey
         dex
         bpl     :-
 
-        sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L8D54
-        sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, L8D56
+        sub16   window_grafport::cliprect::x2, window_grafport::cliprect::x1, L8D54
+        sub16   window_grafport::cliprect::y2, window_grafport::cliprect::y1, L8D56
         add16   $0858, L8D54, $085C
         add16   $085A, L8D56, $085E
         lda     #$00
@@ -9701,7 +9708,7 @@ kMaxAnimationStep = 11
 
         lda     #0
         sta     step
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
 
@@ -9773,7 +9780,7 @@ step:   .byte   0
 
         lda     #kMaxAnimationStep
         sta     step
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
 
@@ -9948,7 +9955,7 @@ open:   MLI_RELAY_CALL OPEN, open_params
 
 :       MLI_RELAY_CALL GET_TIME
 
-        ;; Assumes call from main loop, where grafport3 is initialized.
+        ;; Assumes call from main loop, where main_grafport is initialized.
         MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
         MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
 
@@ -10262,7 +10269,7 @@ L8FE1:  lda     #$80            ; lock
 L8FEB:  tsx
         stx     stack_stash
         copy    #0, delete_skip_decrement_flag
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         lda     operation_flags
         beq     :+              ; copy/delete
         jmp     begin_operation
@@ -10796,7 +10803,7 @@ mapped_slot:                    ; from unit_number, not driver
         rts
 
 :       copy    #0, get_info_dialog_params::index
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
 loop:   ldx     get_info_dialog_params::index
         cpx     selected_icon_count
         bne     :+
@@ -13371,7 +13378,7 @@ dialog_param_addr:
         sta     has_input_field_flag
         sta     LD8F5
         sta     format_erase_overlay_flag
-        sta     cursor_ip_flag
+        sta     cursor_ibeam_flag
 
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
@@ -13433,10 +13440,10 @@ dialog_param_addr:
         MGTK_RELAY_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         bne     out
-        jsr     set_cursor_insertion_point_with_flag
+        jsr     set_cursor_ibeam_with_flag
         jmp     done
 out:    jsr     set_cursor_pointer_with_flag
-done:   jsr     reset_grafport3
+done:   jsr     reset_main_grafport
         jmp     prompt_input_loop
 .endproc
 
@@ -13768,7 +13775,7 @@ jump_relay:
         jmp     close
 
 close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         jsr     set_cursor_pointer_with_flag
         rts
 .endproc
@@ -14310,7 +14317,7 @@ draw_final_labels:
         yax_call draw_dialog_label, 4, aux::str_info_create
         yax_call draw_dialog_label, 5, aux::str_info_mod
         yax_call draw_dialog_label, 6, aux::str_info_type
-        jmp     reset_grafport3
+        jmp     reset_main_grafport
 
         ;; Draw a specific value
 populate_value:
@@ -14711,22 +14718,22 @@ warning_message_table:
 ;;; ============================================================
 
 .proc set_cursor_pointer_with_flag
-        bit     cursor_ip_flag
+        bit     cursor_ibeam_flag
         bpl     :+
         jsr     set_cursor_pointer
-        copy    #0, cursor_ip_flag
+        copy    #0, cursor_ibeam_flag
 :       rts
 .endproc
 
-.proc set_cursor_insertion_point_with_flag
-        bit     cursor_ip_flag
+.proc set_cursor_ibeam_with_flag
+        bit     cursor_ibeam_flag
         bmi     :+
-        jsr     set_cursor_insertion_point
-        copy    #$80, cursor_ip_flag
+        jsr     set_cursor_ibeam
+        copy    #$80, cursor_ibeam_flag
 :       rts
 .endproc
 
-cursor_ip_flag:                 ; high bit set if IP, clear if pointer
+cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
         .byte   0
 
 ;;; ============================================================
@@ -14752,9 +14759,9 @@ cursor_ip_flag:                 ; high bit set if IP, clear if pointer
         jmp     show_cursor
 .endproc
 
-.proc set_cursor_insertion_point
+.proc set_cursor_ibeam
         jsr     hide_cursor
-        MGTK_RELAY_CALL MGTK::SetCursor, insertion_point_cursor
+        MGTK_RELAY_CALL MGTK::SetCursor, ibeam_cursor
         jmp     show_cursor
 .endproc
 
@@ -14884,7 +14891,7 @@ no_ok:  bit     LD8E7
         bmi     done
         MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
         jsr     draw_cancel_label
-done:   jmp     reset_grafport3
+done:   jmp     reset_main_grafport
 .endproc
 
 ;;; ============================================================
@@ -15865,16 +15872,16 @@ set_penmode_copy:
 
 ;;; ============================================================
 
-.proc reset_grafport3
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+.proc reset_main_grafport
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc close_prompt_dialog
-        jsr     reset_grafport3
+        jsr     reset_main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         rts
 .endproc

@@ -127,7 +127,7 @@ pointer_cursor:
         .byte   PX(%0000111),PX(%1000000)
         .byte   1,1
 
-insertion_point_cursor:
+ibeam_cursor:
         .byte   PX(%0000000),PX(%0000000)
         .byte   PX(%0110001),PX(%1000000)
         .byte   PX(%0001010),PX(%0000000)
@@ -961,7 +961,7 @@ LA83F:  clc
         bit     ip_cursor_flag
         bmi     :+
         MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::SetCursor, insertion_point_cursor
+        MGTK_CALL MGTK::SetCursor, ibeam_cursor
         MGTK_CALL MGTK::ShowCursor
         copy    #$80, ip_cursor_flag
 :       rts

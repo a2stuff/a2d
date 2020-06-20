@@ -135,8 +135,8 @@ L711D:  addr_call file_dialog::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::FrameRect, rect_at_first_boot_radiobtn
         MGTK_RELAY_CALL MGTK::FrameRect, rect_at_first_use_radiobtn
         MGTK_RELAY_CALL MGTK::FrameRect, rect_never_radiobtn
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
@@ -254,8 +254,8 @@ L72E8:  lda     #kErrNameTooLong
         jsr     JUMP_TABLE_ALERT_0
         rts
 
-L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+L72EE:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
         sta     LD8EC
@@ -272,8 +272,8 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
 ;;; ============================================================
 
 .proc handle_cancel_filename
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
         lda     #0

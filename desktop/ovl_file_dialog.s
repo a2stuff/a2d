@@ -51,7 +51,7 @@ routine_table:  .addr   $7000, $7000, $7000
         sta     LD8F0
         sta     LD8F1
         sta     LD8F2
-        sta     cursor_ip_flag
+        sta     cursor_ibeam_flag
         sta     L5104
         sta     L5103
         sta     L5105
@@ -130,12 +130,12 @@ L5151:  lda     winfo_file_dialog
 L5183:  MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     L5196
-L5190:  jsr     set_cursor_insertion
+L5190:  jsr     set_cursor_ibeam
         jmp     L5199
 
 L5196:  jsr     set_cursor_pointer
-L5199:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+L5199:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         jmp     event_loop
 .endproc
 
@@ -260,8 +260,8 @@ L5216:  lda     winfo_file_dialog
 ;;; ============================================================
 
 .proc set_up_ports
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport2
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
 
@@ -358,8 +358,8 @@ folder: and     #$7F
         jsr     scroll_clip_rect
         jsr     update_disk_name
         jsr     draw_list_entries
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport2
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
         rts
 
 hi:     .byte   0
@@ -555,30 +555,30 @@ different:
 ;;; ============================================================
 
 .proc set_cursor_pointer
-        bit     cursor_ip_flag
+        bit     cursor_ibeam_flag
         bpl     done
         MGTK_RELAY_CALL MGTK::HideCursor
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         lda     #$00
-        sta     cursor_ip_flag
+        sta     cursor_ibeam_flag
 done:   rts
 .endproc
 
 ;;; ============================================================
 
-.proc set_cursor_insertion
-        bit     cursor_ip_flag
+.proc set_cursor_ibeam
+        bit     cursor_ibeam_flag
         bmi     done
         MGTK_RELAY_CALL MGTK::HideCursor
-        MGTK_RELAY_CALL MGTK::SetCursor, insertion_point_cursor
+        MGTK_RELAY_CALL MGTK::SetCursor, ibeam_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         lda     #$80
-        sta     cursor_ip_flag
+        sta     cursor_ibeam_flag
 done:   rts
 .endproc
 
-cursor_ip_flag:                 ; high bit set when cursor is IP
+cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         .byte   0
 
 ;;; ============================================================
@@ -686,8 +686,8 @@ L56E1:  rts
 
 L56E2:  .byte   0
 
-L56E3:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+L56E3:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 
 ;;; ============================================================
@@ -1056,8 +1056,8 @@ L5C27:  ldx     num_file_names
         jsr     draw_change_drive_button_label
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
         MGTK_RELAY_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
@@ -1399,8 +1399,8 @@ L606C:  .byte   0
 L608E:  lda     L6128
         cmp     num_file_names
         bne     L60A9
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 
 L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
@@ -1517,8 +1517,8 @@ L61E6:  inx
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         addr_call draw_string, file_dialog_res::disk_label
         addr_call draw_string, $0220
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 
 L6226:  .byte   0
@@ -1590,8 +1590,8 @@ L6273:  .byte   0
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D90F
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 
 L62C7:  .byte   0
@@ -1602,7 +1602,7 @@ L62C7:  .byte   0
 .proc set_port_for_window
         sta     getwinport_params2::window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
-        MGTK_RELAY_CALL MGTK::SetPort, grafport2
+        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
 

@@ -394,14 +394,14 @@ L933F:  pha
         lda     #$07
         jsr     JUMP_TABLE_RESTORE_OVL
         jsr     JUMP_TABLE_REDRAW_WINDOWS
-L934F:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+L934F:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
         pla
         jmp     L900F
 
-L936E:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+L936E:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
         rts
 

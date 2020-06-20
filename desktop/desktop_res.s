@@ -92,10 +92,12 @@ findicon_window_id := findicon_params + 5
 
 .params getwinport_params2
 window_id:     .byte   0
-a_grafport:     .addr   grafport2
+a_grafport:     .addr   window_grafport
 .endparams
 
-.params grafport2
+;;; GrafPort used specifically for operations that draw into windows.
+
+.params window_grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .byte   0
@@ -111,7 +113,10 @@ textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endparams
 
-.params grafport3
+;;; GrafPort used for nearly all operations. Usually re-initialized
+;;; before use.
+
+.params main_grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .byte   0
@@ -126,12 +131,16 @@ penmode:        .byte   0
 textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endparams
-        grafport3_viewloc_xcoord := grafport3::viewloc::xcoord
-        grafport3_cliprect_x1 := grafport3::cliprect::x1
-        grafport3_cliprect_x2 := grafport3::cliprect::x2
-        grafport3_cliprect_y2 := grafport3::cliprect::y2
+        main_grafport_viewloc_xcoord := main_grafport::viewloc::xcoord
+        main_grafport_cliprect_x1 := main_grafport::cliprect::x1
+        main_grafport_cliprect_x2 := main_grafport::cliprect::x2
+        main_grafport_cliprect_y2 := main_grafport::cliprect::y2
 
-.params grafport5
+
+;;; GrafPort used specifically when setting/clearing icon highlights,
+;;; since icons are in screen space coordinates.
+
+.params highlight_grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
@@ -212,7 +221,7 @@ pointer_cursor:
         .byte   1,1
 
 ;;; Insertion Point
-insertion_point_cursor:
+ibeam_cursor:
         .byte   PX(%0000000),PX(%0000000)
         .byte   PX(%0110001),PX(%1000000)
         .byte   PX(%0001010),PX(%0000000)

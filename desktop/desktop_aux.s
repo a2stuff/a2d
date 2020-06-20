@@ -3809,14 +3809,14 @@ start:  pha                     ; error code
         ;; Set up GrafPort
         ldx     #.sizeof(MGTK::Point)-1
         lda     #0
-:       sta     grafport3_viewloc_xcoord,x
-        sta     grafport3_cliprect_x1,x
+:       sta     main_grafport_viewloc_xcoord,x
+        sta     main_grafport_cliprect_x1,x
         dex
         bpl     :-
 
-        copy16  #550, grafport3_cliprect_x2
-        copy16  #185, grafport3_cliprect_y2
-        MGTK_CALL MGTK::SetPort, grafport3
+        copy16  #550, main_grafport_cliprect_x2
+        copy16  #185, main_grafport_cliprect_y2
+        MGTK_CALL MGTK::SetPort, main_grafport
 
         ;; Compute save bounds
         ldax    portmap::viewloc::xcoord ; left

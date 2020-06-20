@@ -50,8 +50,8 @@
         addr_call file_dialog::L5E57, file_dialog_res::file_to_delete_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
