@@ -64,6 +64,7 @@ JT_HILITE_MENU:         jmp     toggle_menu_hilite      ; *
         copy    #0, loop_counter
 
         jsr     show_clock
+        jsr     force_iigs_mono ; in case it was reset by control panel
 
         ;; Poll drives for updates
         jsr     check_disk_inserted_ejected
@@ -10126,6 +10127,18 @@ done:   rts
         lda     LCBANK1
         lda     LCBANK1
         rts
+.endproc
+
+;;; On IIgs, force monochrome mode. No-op otherwise.
+.proc force_iigs_mono
+        jsr     test_iigs
+        bcs     :+
+
+        lda     NEWVIDEO
+        ora     #(1<<5)         ; B&W
+        sta     NEWVIDEO
+
+:       rts
 .endproc
 
 ;;; ============================================================
