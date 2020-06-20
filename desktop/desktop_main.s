@@ -6668,13 +6668,15 @@ has_parent:
         lda     cached_window_id
         jsr     open_directory
 
-        lda     icon_params2
+        lda     icon_params2    ; set to $FF if opening via path
+        bmi     volume
+
         jsr     icon_entry_lookup
         stax    icon_ptr
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
-        beq     :+
+        beq     volume
 
         ;; Windowed (folder) icon
         tax
@@ -6686,7 +6688,7 @@ has_parent:
         copy16  window_k_free_table,x, vol_kb_free
 
         ;; Desktop (volume) icon
-:       ldx     cached_window_id
+volume: ldx     cached_window_id
         dex
         txa
         asl     a
