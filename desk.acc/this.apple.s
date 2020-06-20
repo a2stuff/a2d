@@ -403,7 +403,8 @@ memory:.word    0
 
 str_diskii:     PASCAL_STRING "Disk II"
 str_block:      PASCAL_STRING "Generic Block Device"
-str_smartport:  PASCAL_STRING "SmartPort Device"
+str_smartport:  PASCAL_STRING "SmartPort Device:                    "
+kStrSmartportOffset = 19
 str_ssc:        PASCAL_STRING "Super Serial Card"
 str_80col:      PASCAL_STRING "80 Column Card"
 str_mouse:      PASCAL_STRING "Mouse Card"
@@ -423,6 +424,7 @@ str_network:    PASCAL_STRING "Network Card"
 str_mockingboard: PASCAL_STRING "Mockingboard"
 str_unknown:    PASCAL_STRING "(unknown)"
 str_empty:      PASCAL_STRING "(empty)"
+str_none:       PASCAL_STRING "(none)"
 
 ;;; ============================================================
 
@@ -1023,6 +1025,7 @@ penmode:.byte   MGTK::notpencopy
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
 ;;; and identify specific device type via STATUS call
 :
+        jsr     populate_smartport_name
         return16 #str_smartport
 notpro:
 ;;; ---------------------------------------------
@@ -1396,6 +1399,90 @@ p658xx: lda     ROMIN2
         return16 #str_65816     ; Only IIgs supports 65816
 p65802: return16 #str_65802     ; Other boards support 65802
 .endproc
+
+;;; ============================================================
+;;; Look up SmartPort device name. This uses the first device
+;;; (unit number 1) as the name.
+;;; Inputs: $06 points at $Cn00
+;;; Output: str_smartport populated with device name
+;;; TODO: Process multiple units in the daisy chain.
+
+.proc populate_smartport_name_impl
+
+.params status_params
+param_count:    .byte   3
+unit_num:       .byte   1
+list_ptr:       .addr   dib_buffer
+status_code:    .byte   3       ; Return Device Information Block (DIB)
+.endparams
+
+.params dib_buffer
+Device_Statbyte1:       .byte   0
+Device_Size_Lo:         .byte   0
+Device_Size_Med:        .byte   0
+Device_Size_Hi:         .byte   0
+ID_String_Length:       .byte   0
+Device_Name:            .res    16
+Device_Type_Code:       .byte   0
+Device_Subtype_Code:    .byte   0
+Version:                .word   0
+.endparams
+
+
+        slot_ptr := $06
+
+start:
+        ;; Blank out end of name with spaces
+        ldx     str_smartport
+        lda     #' '
+:       sta     str_smartport,x
+        dex
+        cpx     #kStrSmartportOffset - 1
+        bne     :-
+
+        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
+        ldy     #$FF
+        lda     (slot_ptr),y
+        clc
+        adc     #3
+        sta     sp_addr
+        lda     slot_ptr+1
+        sta     sp_addr+1
+
+        ;; Make the call
+        sp_addr := * + 1
+        jsr     dummy1234
+        .byte   $00             ; $00 = STATUS
+        .addr   status_params
+        bcs     error
+
+        ;; Append device name
+        ldy     #0
+        ldx     #kStrSmartportOffset
+:       lda     dib_buffer::Device_Name,y
+        sta     str_smartport,x
+        iny
+        inx
+        cpy     dib_buffer::ID_String_Length
+        bne     :-
+
+exit:   rts
+
+        ;; Populate with "(none)"
+error:  ldy     #0
+        ldx     #kStrSmartportOffset
+:       lda     str_none+1,y
+        sta     str_smartport,x
+        iny
+        inx
+        cpy     str_none
+        bne     :-
+
+        rts
+
+.endproc
+populate_smartport_name := populate_smartport_name_impl::start
+
 
 ;;; ============================================================
 
