@@ -403,8 +403,8 @@ memory:.word    0
 
 str_diskii:     PASCAL_STRING "Disk II"
 str_block:      PASCAL_STRING "Generic Block Device"
-str_smartport:  PASCAL_STRING "SmartPort Device:                    "
 kStrSmartportOffset = 19
+str_smartport:  PASCAL_STRING "SmartPort Device:                                                                          " ; enough room for 4x16 names plus ", " between
 str_ssc:        PASCAL_STRING "Super Serial Card"
 str_80col:      PASCAL_STRING "80 Column Card"
 str_mouse:      PASCAL_STRING "Mouse Card"
@@ -1401,11 +1401,10 @@ p65802: return16 #str_65802     ; Other boards support 65802
 .endproc
 
 ;;; ============================================================
-;;; Look up SmartPort device name. This uses the first device
+;;; Look up SmartPort device names.
 ;;; (unit number 1) as the name.
 ;;; Inputs: $06 points at $Cn00
-;;; Output: str_smartport populated with device name
-;;; TODO: Process multiple units in the daisy chain.
+;;; Output: str_smartport populated with device names, or "(none)"
 
 .proc populate_smartport_name_impl
 
@@ -1449,16 +1448,35 @@ start:
         lda     slot_ptr+1
         sta     sp_addr+1
 
+        ;; Start with unit #1
+        copy    #1, status_params::unit_num
+        copy    #$80, empty_flag
+        copy    #kStrSmartportOffset, offset
+
+loop:
         ;; Make the call
         sp_addr := * + 1
         jsr     dummy1234
         .byte   $00             ; $00 = STATUS
         .addr   status_params
-        bcs     error
+        bcs     next
+
+        ;; Append separator, unless it's the first
+        ldx     offset
+        bit     empty_flag
+        bmi     append
+        lda     #','
+        sta     str_smartport,x
+        inx
+        lda     #' '
+        sta     str_smartport,x
+        inx
 
         ;; Append device name
+append:
+        copy    #0, empty_flag  ; saw a unit!
+
         ldy     #0
-        ldx     #kStrSmartportOffset
 :       lda     dib_buffer::Device_Name,y
         sta     str_smartport,x
         iny
@@ -1466,11 +1484,21 @@ start:
         cpy     dib_buffer::ID_String_Length
         bne     :-
 
-exit:   rts
+        stx     offset
 
-        ;; Populate with "(none)"
-error:  ldy     #0
-        ldx     #kStrSmartportOffset
+next:   lda     status_params::unit_num
+        cmp     #4
+        beq     finish
+        inc     status_params::unit_num
+        jmp     loop
+
+finish:
+        ;; If no units, populate with "(none)"
+        bit     empty_flag
+        bpl     exit
+
+        ldy     #0
+        ldx     offset
 :       lda     str_none+1,y
         sta     str_smartport,x
         iny
@@ -1478,7 +1506,11 @@ error:  ldy     #0
         cpy     str_none
         bne     :-
 
-        rts
+exit:   rts
+
+offset: .byte   0
+empty_flag:
+        .byte   0
 
 .endproc
 populate_smartport_name := populate_smartport_name_impl::start
