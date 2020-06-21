@@ -10317,6 +10317,7 @@ compute_target_prefix:
         copy16  window_path_addr_table,x, $08
         copy16  #empty_string, $06
         jsr     join_paths
+        dec     path_buf3       ; remove trailing '/'
         jmp     L9076
 
         ;; Drop is on an icon.
