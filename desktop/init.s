@@ -550,11 +550,20 @@ process_block:
 :       inc     entry_num
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
-        cmp     #kDAFileType
+
+        cmp     #FT_DIRECTORY   ; Directory?
+        beq     is_da
+
+        cmp     #kDAFileType    ; DA? (match type/auxtype)
         bne     next_entry
-        ldy     #FileEntry::aux_type+1 ; high bit set = skip
+        ldy     #FileEntry::aux_type
         lda     (dir_ptr),y
-        bmi     next_entry
+        cmp     #<kDAFileAuxType
+        bne     next_entry
+        iny
+        lda     (dir_ptr),y
+        cmp     #>kDAFileAuxType
+        bne     next_entry
 
         ;; Compute slot in DA name table
 is_da:  inc     desk_acc_num

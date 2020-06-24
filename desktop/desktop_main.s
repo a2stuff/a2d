@@ -847,16 +847,12 @@ params: .addr   0
 ;;; ============================================================
 ;;; Launch file (File > Open, Selector menu, or double-click)
 
-.proc launch_file
+.proc launch_file_impl
         path := $220
-
-        jmp     begin
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
 
-begin:
-        jsr     set_cursor_watch
-
+compose_path:
         ;; Compose window path plus icon path
         ldx     #$FF
 :       inx
@@ -874,6 +870,9 @@ begin:
         cpy     buf_filename2
         bne     :-
         stx     path
+
+with_path:
+        jsr     set_cursor_watch
 
         ;; Get the file info to determine type.
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
@@ -901,6 +900,10 @@ begin:
         bmi     launch
         jsr     set_cursor_pointer
         rts
+
+:       cmp     #IconType::folder
+        bne     :+
+        jmp     open_folder
 
 :       cmp     #IconType::system
         beq     launch
@@ -1010,7 +1013,27 @@ path_length:
 
 ;;; --------------------------------------------------
 
+.proc open_folder
+        ;; Copy path
+        ldx     path
+:       copy    path,x, open_dir_path_buf,x
+        dex
+        bpl     :-
+
+        tsx
+        stx     saved_stack
+
+        jsr     open_window_for_path
+
+        jsr     set_cursor_pointer
+        rts
 .endproc
+
+;;; --------------------------------------------------
+
+.endproc
+launch_file             := launch_file_impl::compose_path ; use |buf_win_path| + |buf_filename2|
+launch_file_with_path   := launch_file_impl::with_path ; use |path|
 
 ;;; ============================================================
 
@@ -1523,15 +1546,18 @@ prefix_length:
 
 .proc cmd_deskacc_impl
         ptr := $6
+        path := $220
 
-        .define kDeskAccPrefixStr "Desk.acc/"
-        kPrefixLength = .strlen(kDeskAccPrefixStr)
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, path
 
 str_desk_acc:
-        PASCAL_STRING kDeskAccPrefixStr, kPrefixLength + 15
+        PASCAL_STRING "Desk.acc/"
 
 start:  jsr     reset_main_grafport
         jsr     set_cursor_watch
+
+        ;; Get current prefix
+        MLI_RELAY_CALL GET_PREFIX, get_prefix_params
 
         ;; Find DA name
         lda     menu_click_params::item_num           ; menu item index (1-based)
@@ -1540,29 +1566,34 @@ start:  jsr     reset_main_grafport
         jsr     a_times_16
         addax   #desk_acc_names, ptr
 
-        ;; Compute total length
+        ;; Append DA directory name
+        ldx     path
         ldy     #0
-        lda     (ptr),y
-        tay
-        clc
-        adc     #kPrefixLength
-        pha
-        tax
+:       inx
+        iny
+        lda     str_desk_acc,y
+        sta     path,x
+        cpy     str_desk_acc
+        bne     :-
 
         ;; Append name to path
-loop:   lda     ($06),y
+        ldy     #0
+        lda     ($06),y
+        sta     len
+loop:   inx
+        iny
+        lda     ($06),y
         cmp     #' '            ; Convert spaces back to periods
         bne     :+
         lda     #'.'
-:       sta     str_desk_acc,x
-        dex
-        dey
+:       sta     path,x
+        len := *+1
+        cpy     #0              ; self-modified
         bne     loop
-        pla
-        sta     str_desk_acc    ; update length
+        stx     path
 
-        ldax    #str_desk_acc
-        ;; fall through
+        ;; Allow arbitrary types in menu (e.g. folders)
+        jmp     launch_file_with_path
 .endproc
         cmd_deskacc := cmd_deskacc_impl::start
 
@@ -5449,7 +5480,7 @@ num:    .byte   0
 ;;; Open a folder/volume icon
 ;;; Input: |open_dir_path_buf| should have full path.
 ;;;   If a case match for existing window path, it will be activated.
-;;; Note: stack will be restored via saved_stack on failure
+;;; Note: stack will be restored via |saved_stack| on failure
 ;;;
 ;;; Set |suppress_error_on_open_flag| to avoid alert.
 
