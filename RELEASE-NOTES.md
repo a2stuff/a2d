@@ -42,6 +42,7 @@ https://github.com/a2stuff/a2d/issues
 * Desk accessory files can be executed directly. (#101)
 * Desk accessory files with high bit in aux-type set are hidden in Apple menu. (#102)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
+* Apple menu can contain directories, which launch windows. (#209)
 
 ### Additional Desk Accessories
 
@@ -64,7 +65,7 @@ https://github.com/a2stuff/a2d/issues
 * NormFast
   * Enable/disable built-in and some popular add-on system accelerators. (#26)
 
-Note that several of the new Desk Accessories will not work with older versions
+Note the Desk Accessories in version 1.2 will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
 
 The former "Show Text File" DA is now part of automatic preview

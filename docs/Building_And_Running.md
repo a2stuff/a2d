@@ -65,7 +65,7 @@ Optionally, to have Selector installed, run: `make installsel`
 
 If you use [Virtual \]\[](http://www.virtualii.com/) as your emulator, you can skip creating a disk image.
 
-After building, run: `make mount` 
+After building, run: `make mount`
 
 This will copy the built files into the `mount/` directory  with appropriate file types/auxtypes set. Run Virtual ]\[ and use the **Media** > **Mount Folder as ProDOS Disk...** menu item, then select the `mount/` folder. A new ProDOS volume called `/MOUNT` will be available, containing DeskTop.
 
@@ -88,8 +88,11 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
        DESKTOP2           $F1   $0000
        DESK.ACC/          DIR
          CALCULATOR       $F1   $0640
-         CONTROL.PANEL    $F1   $0640
-         DATE             $F1   $0640
+         EYES             $F1   $0640
+         CONTROL.PANELS/  $F1   $0640
+           DATE           $F1   $0640
+           NORMFAST       $F1   $0640
+           ...
          ...
        PREVIEW/           DIR
          SHOW.FONT.FILE   $F1   $0640
