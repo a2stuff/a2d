@@ -5,48 +5,45 @@
 set -e
 source "res/util.sh"
 
-mkdir -p mount/DESK.ACC || (cecho red "permission denied"; exit 1)
+MOUNT_DIR="mount"
 
-DA_AUX="40 06"
+mkdir -p $MOUNT_DIR/test || (cecho red "permission denied"; exit 1)
+rmdir $MOUNT_DIR/test
 
-# Mount file
-function mount_file {
+# Add file to mount directory
+# Usage: add_file SRC DST TYPEAUXTYPE
+function add_file {
     src="$1"
-    dst="$2"
-    cp "$src" "mount/$dst" \
-        && (cecho green "mounted $dst" ) \
+    type="${3:0:2}"
+    auxh="${3:2:2}"
+    auxl="${3:4:2}"
+    dst="$2.\$$type"
+    cp "$src" "$MOUNT_DIR/$dst" \
+	&& xattr -wx prodos.AuxType "$auxl $auxh" "$MOUNT_DIR/$dst" \
+        && (cecho green "- $dst" ) \
         || (cecho red "failed to mount $dst" ; return 1)
 }
 
-# Mount file with auxtype
-function mount_aux {
-    src="$1"
-    dst="$2"
-    aux="$3"
-    cp "$src" "mount/$dst" \
-	&& xattr -wx prodos.AuxType "$aux" "mount/$dst" \
-        && (cecho green "mounted $dst" ) \
-        || (cecho red "failed to mount $dst" ; return 1)
-}
+cecho yellow "Copying files to $MOUNT_DIR/"
 
+perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
+add_file "res/package/READ.ME" "READ.ME" 040000
 
-echo "Copying files to mount/"
-mkdir -p mount
+add_file "desktop.system/out/desktop.system.SYS" "DESKTOP.SYSTEM" FF0000
+add_file "desktop/out/desktop.built" "DESKTOP2" F10000
 
-mount_file "desktop.system/out/desktop.system.SYS" "DESKTOP.SYSTEM.SYS"
-mount_file "desktop/out/desktop.built" "DESKTOP2.\$F1"
+mkdir -p $MOUNT_DIR/OPTIONAL
+add_file "selector/out/selector.built" "OPTIONAL/SELECTOR" F10000
 
-mkdir -p mount/OPTIONAL
-mount_file "selector/out/selector.built" "OPTIONAL/SELECTOR.\$F1"
-
-mkdir -p mount/DESK.ACC
-for file in $(cat desk.acc/TARGETS); do
-    uc=$(echo "$file" | tr /a-z/ /A-Z/)
-    mount_aux "desk.acc/out/${file}.da" "DESK.ACC/$uc.\$F1" "$DA_AUX"
+for path in $(cat desk.acc/TARGETS | res/targets.pl dirs); do
+    uc=$(echo "$path" | tr /a-z/ /A-Z/)
+    mkdir -p "$MOUNT_DIR/$uc"
 done
-
-mkdir -p mount/PREVIEW
-for file in $(cat preview/TARGETS); do
-    uc=$(echo "$file" | tr /a-z/ /A-Z/)
-    mount_aux "preview/out/${file}.da" "PREVIEW/$uc.\$F1" "$DA_AUX"
+for line in $(cat desk.acc/TARGETS | res/targets.pl); do
+    IFS=',' read -ra array <<< "$line"
+    file="${array[0]}"
+    path="${array[1]}"
+    uc_file=$(echo "$file" | tr /a-z/ /A-Z/)
+    uc_path=$(echo "$path" | tr /a-z/ /A-Z/)
+    add_file "desk.acc/out/${file}.da" "${uc_path}/${uc_file}" F10640
 done

@@ -8,30 +8,29 @@
 #   INSTALL_IMG=/path/to/hd.2mg INSTALL_PATH=/hd/a2.desktop res/install.sh
 
 set -e
+source "res/util.sh"
 
 if [ -z "$INSTALL_IMG" ]; then
-    tput setaf 1 && echo "Variable \$INSTALL_IMG not set, aborting." && tput sgr0
+    cecho red "Variable \$INSTALL_IMG not set, aborting."
     exit 1
 fi
 if [ -z "$INSTALL_PATH" ]; then
-    tput setaf 1 && echo "Variable \$INSTALL_PATH not set, aborting." && tput sgr0
+    cecho red "Variable \$INSTALL_PATH not set, aborting."
     exit 1
 fi
 if ! command -v "cadius" >/dev/null; then
-    tput setaf 1 && echo "Cadius not installed." && tput sgr0
+    cecho red "Cadius not installed."
     exit 1
 fi
 
-tput setaf 3 && echo "Installing into image: $INSTALL_IMG at path: $INSTALL_PATH" && tput sgr0
-
-DA_DIRS="desk.acc preview"
+cecho yellow "Installing into image: $INSTALL_IMG at path: $INSTALL_PATH"
 
 PACKDIR="out/install"
 
 mkdir -p $PACKDIR
 
 # Add the files into the disk images.
-
+# Usage: add_file IMGFILE SRCFILE DSTFOLDER DSTFILE TYPESUFFIX
 add_file () {
     img_file="$1"
     src_file="$2"
@@ -40,7 +39,7 @@ add_file () {
     suffix="$5"
     tmp_file="$PACKDIR/$dst_file#$suffix"
 
-    tput setaf 2 && echo "- $folder/$dst_file" && tput sgr0
+    cecho green "- $folder/$dst_file"
 
     cp "$src_file" "$tmp_file"
     cadius DELETEFILE "$img_file" "$folder/$dst_file" > /dev/null
@@ -67,14 +66,14 @@ else
     add_file "$INSTALL_IMG" "selector/out/selector.built" "$INSTALL_PATH/optional" "Selector" F10000
 fi
 
-for da_dir in $DA_DIRS; do
-    folder="$INSTALL_PATH/$da_dir"
-    cadius CREATEFOLDER "$INSTALL_IMG" "$folder" --quiet --no-case-bits > /dev/null
-    for file in $(cat $da_dir/TARGETS); do
-        add_file "$INSTALL_IMG" "$da_dir/out/$file.da" "$folder" $file F10640
-    done
+for path in $(cat desk.acc/TARGETS | res/targets.pl dirs); do
+    cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/$path" --quiet --no-case-bits > /dev/null
 done
-
-
+for line in $(cat desk.acc/TARGETS | res/targets.pl); do
+    IFS=',' read -ra array <<< "$line"
+    file="${array[0]}"
+    path="${array[1]}"
+    add_file "$INSTALL_IMG" "desk.acc/out/$file.da" "$INSTALL_PATH/$path" $file F10640
+done
 
 rmdir "$PACKDIR"

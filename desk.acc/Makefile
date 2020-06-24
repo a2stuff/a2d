@@ -2,7 +2,7 @@ HEADERS = $(wildcard ../*.inc) $(wildcard ../*/*.inc) $(wildcard *.inc)
 
 include ../res/Makefile.common
 
-DAS = $(shell cat TARGETS)
+DAS = $(shell cat TARGETS | ../res/targets.pl targets)
 
 TARGETS = $(patsubst %,$(OUTDIR)/%.da,$(DAS))
 

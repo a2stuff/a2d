@@ -1,13 +1,16 @@
-calculator
-date
-puzzle
-sort.directory
-this.apple
-eyes
-screen.dump
-run.basic.here
-key.caps
-flying.toasters
-control.panel
-melt
-normfast
+calculator                      desk.acc
+date                            desk.acc/control.panels
+puzzle                          desk.acc
+sort.directory                  desk.acc
+this.apple                      desk.acc
+eyes                            desk.acc
+screen.dump                     desk.acc
+run.basic.here                  desk.acc
+key.caps                        desk.acc
+flying.toasters                 desk.acc/screen.savers
+control.panel                   desk.acc/control.panels
+melt                            desk.acc/screen.savers
+normfast                        desk.acc/control.panels
+show.text.file                  preview
+show.image.file                 preview
+show.font.file                  preview

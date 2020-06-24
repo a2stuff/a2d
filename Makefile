@@ -1,4 +1,4 @@
-targets := desktop desktop.system desk.acc preview selector
+targets := desktop desktop.system desk.acc selector
 
 .PHONY: all $(targets) mount install installsel package
 
@@ -26,6 +26,10 @@ installsel:
 # Optional target: run package script. Requires Cadius.
 package:
 	res/package.sh
+
+# Optional target: make ShrinkIt archive. Requires NuLib2.
+shk:
+	res/shk.sh
 
 # Clean all temporary/target files
 clean:

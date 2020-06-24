@@ -4,17 +4,17 @@
 # https://github.com/mach-kernel/cadius
 
 set -e
-
-tput setaf 2 && echo "Building disk images" && tput sgr0
+source "res/util.sh"
 
 if ! command -v "cadius" >/dev/null; then
-    tput setaf 1 && echo "Cadius not installed." && tput sgr0
+    cecho red "Cadius not installed."
     exit 1
 fi
 
-DA_DIRS="desk.acc preview"
+cecho yellow "Building disk images"
 
-PACKDIR="out/package"
+tempdir=$(mktemp -d -t SHK)
+test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
 # One 800k image (complete), and two 140k images (two parts).
 
@@ -25,8 +25,6 @@ IMGFILE_PART2="out/A2DeskTop.2.po"
 VOLNAME_COMPLETE="A2.DeskTop"
 VOLNAME_PART1="A2.DeskTop.1"
 VOLNAME_PART2="A2.DeskTop.2"
-
-mkdir -p $PACKDIR
 
 # Create disk images.
 
@@ -40,14 +38,14 @@ cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet --no-case-bits >
 cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-case-bits > /dev/null
 
 # Add the files into the disk images.
-
+# Usage: add_file IMGFILE SRCFILE DSTFOLDER DSTFILE TYPESUFFIX
 add_file () {
     img_file="$1"
     src_file="$2"
     folder="$3"
     dst_file="$4"
     suffix="$5"
-    tmp_file="$PACKDIR/$dst_file#$suffix"
+    tmp_file="$tempdir/$dst_file#$suffix"
 
     cp "$src_file" "$tmp_file"
     cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits > /dev/null
@@ -72,18 +70,19 @@ add_file $IMGFILE_PART1 "desktop/out/desktop.built" "/$VOLNAME_PART1" "DeskTop2"
 cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/Optional" --quiet --no-case-bits > /dev/null
 cadius CREATEFOLDER $IMGFILE_PART2 "/$VOLNAME_PART2/Optional" --quiet --no-case-bits > /dev/null
 
-add_file $IMGFILE_COMPLETE "selector/out/selector.built" "/$VOLNAME_COMPLETE/Optional" "Selector" F10000 > /dev/null
-add_file $IMGFILE_PART2 "selector/out/selector.built" "/$VOLNAME_PART2/Optional" "Selector" F10000 > /dev/null
+add_file $IMGFILE_COMPLETE "selector/out/selector.built" "/$VOLNAME_COMPLETE/Optional" "Selector" F10000
+add_file $IMGFILE_PART2 "selector/out/selector.built" "/$VOLNAME_PART2/Optional" "Selector" F10000
 
-for da_dir in $DA_DIRS; do
-    folder1="/$VOLNAME_COMPLETE/$da_dir"
-    folder2="/$VOLNAME_PART2/$da_dir"
-    cadius CREATEFOLDER $IMGFILE_COMPLETE $folder1 --quiet --no-case-bits > /dev/null
-    cadius CREATEFOLDER $IMGFILE_PART2 $folder2 --quiet --no-case-bits > /dev/null
-    for file in $(cat $da_dir/TARGETS); do
-        add_file "$IMGFILE_COMPLETE" "$da_dir/out/$file.da" $folder1 $file F10640
-        add_file "$IMGFILE_PART2" "$da_dir/out/$file.da" $folder2 $file F10640
-    done
+for path in $(cat desk.acc/TARGETS | res/targets.pl dirs); do
+    cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/$path" --quiet --no-case-bits > /dev/null
+    cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_PART2/$path" --quiet --no-case-bits > /dev/null
+done
+for line in $(cat desk.acc/TARGETS | res/targets.pl); do
+    IFS=',' read -ra array <<< "$line"
+    file="${array[0]}"
+    path="${array[1]}"
+    add_file "$IMGFILE_COMPLETE" "desk.acc/out/$file.da" "/$VOLNAME_COMPLETE/$path" $file F10640
+    add_file "$IMGFILE_PART2" "desk.acc/out/$file.da" "/$VOLNAME_PART2/$path" $file F10640
 done
 
 # Add BASIC.SYSTEM, if present in res/package
@@ -94,13 +93,13 @@ fi
 
 # Verify and clean up
 
-tput setaf 2 && echo "Catalog of 800k disk:" && tput sgr0
+cecho green "Catalog of 800k disk:"
 cadius CATALOG $IMGFILE_COMPLETE --quiet
 
-tput setaf 2 && echo "Catalog of 140k disk 1:" && tput sgr0
+cecho green "Catalog of 140k disk 1:"
 cadius CATALOG $IMGFILE_PART1 --quiet
 
-tput setaf 2 && echo "Catalog of 140k disk 2:" && tput sgr0
+cecho green "Catalog of 140k disk 2:"
 cadius CATALOG $IMGFILE_PART2 --quiet
 
-rmdir "$PACKDIR"
+rmdir "$tempdir"
