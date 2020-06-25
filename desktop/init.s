@@ -1039,26 +1039,11 @@ loop:   ldy     #0
 
         jsr     main::push_pointers
 
-        ;; On failure, stack will be restored then rts,
-        ;; so ensure that continues the loop.
-        tsx                     ; The stack we believe
-        stx     our_stack
-        lda     #>(cont-1)      ; Resume address
-        pha
-        lda     #<(cont-1)
-        pha
-        tsx                     ; Stack for restore on error.
-        stx     saved_stack
-
         copy    #$80, main::open_directory::suppress_error_on_open_flag
-        jsr     main::open_window_for_path
-
-        ;; Restore our stack regardless of how we got here.
-cont:   ldx     our_stack
-        txs
+        jsr     maybe_open_window
+        copy    #0, main::open_directory::suppress_error_on_open_flag
 
         jsr     main::pop_pointers
-        copy    #0, main::open_directory::suppress_error_on_open_flag
 
         add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
         jmp     loop
@@ -1068,8 +1053,15 @@ done:   pla
 
 exit:   rts
 
-our_stack:
-        .byte   0
+.proc maybe_open_window
+        ;; Save stack for restore on error. If the call
+        ;; fails, the routine will restore the stack then
+        ;; rts, returning to our caller.
+        tsx
+        stx     saved_stack
+        jmp     main::open_window_for_path
+.endproc
+
 .endproc
 
 ;;; ============================================================
