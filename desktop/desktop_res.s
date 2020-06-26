@@ -814,12 +814,8 @@ file_to_delete_label:
 pos_clock:
         DEFINE_POINT 475, 10
 
-str_colon:
-        PASCAL_STRING ":"
-str_zero:
-        PASCAL_STRING "0"
-str_am: PASCAL_STRING " AM  "
-str_pm: PASCAL_STRING " PM  "
+str_time:
+        PASCAL_STRING "00:00 XM"
 
 dow_strings:
         .byte   "Sun ", "Mon ", "Tue ", "Wed ", "Thu ", "Fri ", "Sat "
@@ -1889,6 +1885,9 @@ app_mask:
 
         ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::ip_blink_speed
         .byte   kDefaultIPBlinkSpeed ; 120, 60 or 30; lower is faster
+
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::clock_24hours
+        .byte   0
 
         ;; Reserved for future use...
 

@@ -10028,39 +10028,121 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ;; --------------------------------------------------
         ;; Time
 
-        lda     TIMEHI          ; Hours
+        ldax    TIMELO
+        jsr     make_time_string
+
+        addr_call draw_text1, str_time
+        addr_jump draw_text1, str_2_spaces ; in case it got shorter
+
+.endproc
+
+;;; ============================================================
+
+;;; Populate str_time with time. Uses clock_24hours flag in settings.
+;;; Inputs: A,X = TIMELO,TIMEHI
+;;; Outputs: str_time is populated
+.proc make_time_string
+
+        stax    timelo
+
+        ldy     #0              ; Index into time string
+
+        ;; Hours
+        lda     timehi
         and     #%00011111
         pha                     ; Save hours
-        bne     :+              ; 0 -> 12
-        clc
-        adc     #12
-:       cmp     #13             ; make 12-hour
+
+        ;; 24->12 hour clock?
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bmi     skip
+
+        cmp     #12
         bcc     :+
         sec
-        sbc     #12
-:       ldx     #0
-        jsr     int_to_string
-        addr_call draw_text1, str_from_int
+        sbc     #12             ; 12...23 -> 0...11
+:       cmp     #0
+        bne     :+
+        lda     #12             ; 0 -> 12
+:
 
-        addr_call draw_text1, str_colon
-
-        lda     TIMELO
-        and     #%00111111
+skip:   jsr     split
         pha
-        cmp     #10
-        bcs     :+
-        addr_call draw_text1, str_zero
-:       pla
-        ldx     #0
-        jsr     int_to_string
-        addr_call draw_text1, str_from_int
+        txa                     ; tens (if > 0)
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bmi     :+
+        cmp     #0              ; if 12-hour clock && 0, skip
+        beq     ones
+:       ora     #'0'
+        iny
+        sta     str_time,y
+ones:   pla                     ; ones
+        ora     #'0'
+        iny
+        sta     str_time,y
+
+        ;; Separator
+        lda     #':'
+        iny
+        sta     str_time,y
+
+        ;; Minutes
+        lda     timelo
+        and     #%00111111
+        jsr     split
+        pha
+        txa                     ; tens
+        ora     #'0'
+        iny
+        sta     str_time,y
+        pla                     ; ones
+        ora     #'0'
+        iny
+        sta     str_time,y
+
+        ;; Space
+        lda     #' '
+        iny
+        sta     str_time,y
 
         pla                     ; Restore hours
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bmi     done
+
         cmp     #12
         bcs     :+
-        addr_jump draw_text1, str_am
-:       addr_jump draw_text1, str_pm
+        lda     #'A'
+        bne     store             ; always
+:       lda     #'P'
+store:  iny
+        sta     str_time,y
+        lda     #'M'
+        iny
+        sta     str_time,y
+
+done:   sty     str_time
+        rts
+
+timelo: .byte   0
+timehi: .byte   0
+
+;;; Input: A = number
+;;; Output: X = tens, A = ones
+.proc split
+        ldx     #0
+
+loop:   cmp     #10
+        bcc     done
+        sec
+        sbc     #10
+        inx
+        bne     loop            ; always
+
+done:   rts
 .endproc
+
+.endproc
+
+;;; ============================================================
 
 ;;; Day of the Week calculation (valid 1900-03-01 to 2155-12-31)
 ;;; c/o http://6502.org/source/misc/dow.htm

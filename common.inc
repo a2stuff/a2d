@@ -65,8 +65,9 @@ kDefaultIPBlinkSpeed    = 60
         pattern         .res 8
         dblclick_speed  .word
         ip_blink_speed  .byte
+        clock_24hours   .byte
 
-        reserved        .res 115
+        reserved        .res 114
 .endstruct
         .assert .sizeof(DeskTopSettings) = $80, error, .sprintf("Expected $80, was $%0X", .sizeof(DeskTopSettings))
 
