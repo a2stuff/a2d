@@ -101,6 +101,8 @@ frame_p1:       DEFINE_POINT 0, 58
 frame_p2:       DEFINE_POINT kDAWidth, 58
 frame_p3:       DEFINE_POINT 190, 0
 frame_p4:       DEFINE_POINT 190, kDAHeight
+frame_p5:       DEFINE_POINT 190, 102
+frame_p6:       DEFINE_POINT kDAWidth, 102
 
 frame_rect:     DEFINE_RECT AS_WORD(-1), AS_WORD(-1), kDAWidth - 4 + 2, kDAHeight - 2 + 2
 
@@ -512,7 +514,7 @@ joystick_bitmap:
 ;;; IP Blink Speed Resources
 
 kIPBlinkDisplayX = 214
-kIPBlinkDisplayY = 75
+kIPBlinkDisplayY = 65
 
         ;; Selected index (1-3, or 0 for 'no match')
 ipblink_selection:
@@ -591,6 +593,33 @@ ipblink_ip_bitmap:
         .byte   PX(%1100000)
         .byte   PX(%1100000)
         .byte   PX(%1100000)
+
+
+;;; ============================================================
+;;; 12/24 Hour Resources
+
+kHourDisplayX = 210
+kHourDisplayY = 109
+
+str_clock:
+        DEFINE_STRING "Clock"
+pos_clock:
+        DEFINE_POINT kHourDisplayX+kRadioButtonWidth, kHourDisplayY+8
+
+rect_12hour:
+        DEFINE_RECT_SZ kHourDisplayX+60, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
+str_12hour:
+        DEFINE_STRING "12hr"
+pos_12hour:
+        DEFINE_POINT kHourDisplayX+60+kRadioButtonWidth+6, kHourDisplayY+8
+
+rect_24hour:
+        DEFINE_RECT_SZ kHourDisplayX+120, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
+str_24hour:
+        DEFINE_STRING "24hr"
+pos_24hour:
+        DEFINE_POINT kHourDisplayX+120+kRadioButtonWidth+6, kHourDisplayY+8
+
 
 ;;; ============================================================
 
@@ -761,6 +790,20 @@ common: bit     dragwindow_params::moved
         IF_EQ
         lda     #3
         jmp     handle_ipblink_click
+        END_IF
+
+        MGTK_CALL MGTK::InRect, rect_12hour
+        cmp     #MGTK::inrect_inside
+        IF_EQ
+        lda     #$00
+        jmp     handle_hour_click
+        END_IF
+
+        MGTK_CALL MGTK::InRect, rect_24hour
+        cmp     #MGTK::inrect_inside
+        IF_EQ
+        lda     #$80
+        jmp     handle_hour_click
         END_IF
 
         jmp     input_loop
@@ -1095,6 +1138,20 @@ loop:   copy    arg1,y, arg2,y
         jsr     draw_ipblink_buttons
 
         ;; ==============================
+        ;; 12/24 Hour Clock
+
+        MGTK_CALL MGTK::MoveTo, pos_clock
+        MGTK_CALL MGTK::DrawText, str_clock
+
+        MGTK_CALL MGTK::MoveTo, pos_12hour
+        MGTK_CALL MGTK::DrawText, str_12hour
+
+        MGTK_CALL MGTK::MoveTo, pos_24hour
+        MGTK_CALL MGTK::DrawText, str_24hour
+
+        jsr     draw_hour_buttons
+
+        ;; ==============================
         ;; Frame
 
         MGTK_CALL MGTK::SetPenSize, frame_pensize
@@ -1102,6 +1159,8 @@ loop:   copy    arg1,y, arg2,y
         MGTK_CALL MGTK::LineTo, frame_p2
         MGTK_CALL MGTK::MoveTo, frame_p3
         MGTK_CALL MGTK::LineTo, frame_p4
+        MGTK_CALL MGTK::MoveTo, frame_p5
+        MGTK_CALL MGTK::LineTo, frame_p6
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, winfo::penwidth
 
@@ -1150,6 +1209,23 @@ done:   MGTK_CALL MGTK::ShowCursor
 
         rts
 .endproc
+
+.proc draw_hour_buttons
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+
+        ldax    #rect_12hour
+        ldy     SETTINGS + DeskTopSettings::clock_24hours
+        cpy     #0
+        jsr     draw_radio_button
+
+        ldax    #rect_24hour
+        ldy     SETTINGS + DeskTopSettings::clock_24hours
+        cpy     #$80
+        jsr     draw_radio_button
+
+        rts
+.endproc
+
 
 ;;; A,X = pos ptr, Z = checked
 .proc draw_radio_button
@@ -1644,6 +1720,14 @@ done:   stx     ipblink_selection
 
 done:   rts
 
+.endproc
+
+;;; ============================================================
+
+.proc handle_hour_click
+        sta     SETTINGS + DeskTopSettings::clock_24hours
+        jsr     draw_hour_buttons
+        jmp     input_loop
 .endproc
 
 ;;; ============================================================

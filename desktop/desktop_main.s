@@ -10041,7 +10041,7 @@ open:   MLI_RELAY_CALL OPEN, open_params
         jsr     make_time_string
 
         addr_call draw_text1, str_time
-        addr_jump draw_text1, str_2_spaces ; in case it got shorter
+        addr_jump draw_text1, str_4_spaces ; in case it got shorter
 
 .endproc
 

@@ -817,6 +817,9 @@ pos_clock:
 str_time:
         PASCAL_STRING "00:00 XM"
 
+str_4_spaces:
+        PASCAL_STRING "    "
+
 dow_strings:
         .byte   "Sun ", "Mon ", "Tue ", "Wed ", "Thu ", "Fri ", "Sat "
         ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
