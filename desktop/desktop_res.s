@@ -1287,10 +1287,11 @@ pos_col_type: DEFINE_POINT 112, 0, pos_col_type
 pos_col_size: DEFINE_POINT 140, 0, pos_col_size
 pos_col_date: DEFINE_POINT 231, 0, pos_col_date
 
+kTextBuffer2Len = 49
 .params text_buffer2
         .addr   data
 length: .byte   0
-data:   .res    49, 0
+data:   .res    ::kTextBuffer2Len, 0
 .endparams
 
 file_record_ptr:

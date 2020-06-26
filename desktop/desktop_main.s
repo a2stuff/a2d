@@ -8264,7 +8264,7 @@ start:
         lda     LCBANK1
 
         ;; Clear out string
-        ldx     #49
+        ldx     #kTextBuffer2Len
         lda     #' '
 :       sta     text_buffer2::data-1,x
         dex
@@ -8418,7 +8418,7 @@ value:  .word   0
 ;;; ============================================================
 
 .proc compose_date_string
-        ldx     #21
+        ldx     #kTextBuffer2Len
         lda     #' '
 :       sta     text_buffer2::data-1,x
         dex
@@ -11035,16 +11035,16 @@ common2:
         ;; TODO: Update all the other strings?
         ldy     #0
         lda     (ptr),y
-        sta     text_buffer2
-        inc     text_buffer2    ; for leading space
+        sta     text_buffer2::length
+        inc     text_buffer2::length ; for leading space
         tay
-:       copy    (ptr),y, text_buffer2+1,y
+:       copy    (ptr),y, text_buffer2::data,y
         dey
         bne     :-
-        copy    #' ', text_buffer2+1
+        copy    #' ', text_buffer2::data
 
         copy    #GetInfoDialogState::name, get_info_dialog_params::state
-        copy16  #text_buffer2, get_info_dialog_params::addr
+        copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
 
         ;; --------------------------------------------------
