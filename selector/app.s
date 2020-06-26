@@ -473,38 +473,42 @@ done_keys:
         jsr     disconnect_ramdisk
 
         ;; --------------------------------------------------
-        ;; Find slots with devices
+        ;; Find slots with devices using ProDOS Device ID Bytes
+.scope
+        slot_ptr := $06         ; pointed at $Cn00
 
-        ldx     #1
-sloop:  cpx     #3
-        beq     L91DE
-        cpx     #2
-        beq     L91DE
-        ldy     DEVCNT
-:       lda     DEVLST,y
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        sta     L91E5
-        cpx     L91E5
-        beq     add_slot_table_entry
-        dey
-        bpl     :-
+        lda     #0
+        sta     slot_ptr
+        ldx     #7              ; slot
 
-L91DE:  cpx     #$07
-        beq     L91F2
-        inx
-        bne     sloop
+loop:   txa
+        ora     #$C0            ; hi byte of $Cn00
+        sta     slot_ptr+1
 
-L91E5:  .byte   0
+        ldy     #$01        ; $Cn01 == $20 ?
+        lda     (slot_ptr),y
+        cmp     #$20
+        bne     next
 
-add_slot_table_entry:
+        ldy     #$03        ; $Cn03 == $00 ?
+        lda     (slot_ptr),y
+        cmp     #$00
+        bne     next
+
+        ldy     #$05        ; $Cn05 == $03 ?
+        lda     (slot_ptr),y
+        cmp     #$03
+        bne     next
+
+        ;; Match! Add to slot_table
         inc     slot_table
         ldy     slot_table
+        txa
         sta     slot_table,y
-        jmp     L91DE
+
+next:   dex
+        bne     loop
+.endscope
 
         ;; --------------------------------------------------
         ;; Set up Startup menu
