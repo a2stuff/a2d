@@ -8440,8 +8440,13 @@ append_date_strings:
         jsr     append_month_string
         addr_call concatenate_date_part, str_space
         jsr     append_day_string
-        addr_call concatenate_date_part, str_space
-        jmp     append_year_string
+        addr_call concatenate_date_part, str_comma
+        jsr     append_year_string
+
+        addr_call concatenate_date_part, str_at
+        ldax    datetime_for_conversion + DateTime::timelo
+        jsr     make_time_string
+        addr_jump concatenate_date_part, str_time
 
 .proc append_day_string
         lda     day
@@ -8497,6 +8502,10 @@ str_dec:PASCAL_STRING "December"
 
 str_space:
         PASCAL_STRING " "
+str_comma:
+        PASCAL_STRING ", "
+str_at:
+        PASCAL_STRING " at "
 
 .proc concatenate_date_part
         stax    $06
