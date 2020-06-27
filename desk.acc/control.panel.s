@@ -1256,11 +1256,18 @@ checked:
 
 
 bitpos:    DEFINE_POINT    0, 0, bitpos
+rotated_pattern:
+        .res    8
 
 .proc draw_bits
+
+        ;; Prepare pattern so it aligns with screen, for NTSC color patterns.
+        jsr     rotate_pattern
         MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::SetPattern, pattern
+        MGTK_CALL MGTK::SetPattern, rotated_pattern
         MGTK_CALL MGTK::PaintRect, preview_rect
+
+        ;; TODO: Perf compare this vs. filling rects
 
         MGTK_CALL MGTK::SetPattern, winfo::pattern
         MGTK_CALL MGTK::SetPenSize, size
@@ -1312,6 +1319,42 @@ mode:   .byte   0
 size:   .byte kFatBitWidth, kFatBitHeight
 
 .endproc
+
+
+;;; Shift the pattern so that when interpreted as NTSC color it displays
+;;; the same as it would when applied to the desktop.
+.proc rotate_pattern
+        kWindowBorderOffset = 3
+
+        ldx     #7
+:       copy    pattern,x, rotated_pattern,x
+        dex
+        bpl     :-
+
+        add16   winfo::viewloc, preview_rect, offset
+        lda     offset
+        clc
+        adc     #kWindowBorderOffset
+        and     #$07            ; pattern is 8 bits wide
+        tay
+
+loop:
+        ldx     #7              ; 8 rows
+
+:       lda     rotated_pattern,x
+        cmp     #$80
+        rol     rotated_pattern,x
+        dex
+        bpl     :-
+
+        dey
+        bpl     loop
+
+        rts
+
+offset: .word   0
+.endproc
+
 
 ;;; ============================================================
 
