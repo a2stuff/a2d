@@ -10,7 +10,7 @@ key.caps                        desk.acc
 flying.toasters                 desk.acc/screen.savers
 control.panel                   desk.acc/control.panels
 melt                            desk.acc/screen.savers
-normfast                        desk.acc/control.panels
+system.speed                    desk.acc/control.panels
 show.text.file                  preview
 show.image.file                 preview
 show.font.file                  preview

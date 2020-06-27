@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; NORMFAST - Desk Accessory
+;;; SYSTEM.SPEED - Desk Accessory
 ;;;
 ;;; Allows toggling the machine's accelerator (if present)
 ;;; between normal and fast speed.

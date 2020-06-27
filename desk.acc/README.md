@@ -14,7 +14,7 @@ New desk accessories:
   * Gives details about the computer, expanded memory, and what's in each slot.
 * [Control Panel](control.panel.s)
   * Modify DeskTop settings: desktop pattern, double-click speed, insertion point blink speed. Also shows joystick calibration.
-* [NormFast](normfast.s)
+* [System Speed](system.speed.s)
   * Enable/disable system accelerator.
 * [Eyes](eyes.s)
   * Eyes that follow the mouse.
@@ -40,13 +40,13 @@ the `PREVIEW` subdirectory relative to `DESKTOP2` (next to `DESK.ACC`).
 These DAs will be invoked automatically for certain file types when
 File > Open is run or the files are double-clicked.
 
-* [show.text.file](show.text.file.s)
+* [Show Text File](show.text.file.s)
    * Handles text files (TXT $04)
-* [show.image.file](show.image.file.s)
+* [Show Image File](show.image.file.s)
    * Handles image files (FOT $08 and some BIN $06)
    * Supports Hires and Double Hires images, including compressed images
    * Supports MiniPix/PrintShop clip-art
-* [show.font.file](show.font.file.s)
+* [Show Font File](show.font.file.s)
    * Handles MGTK font files (FNT $07)
 
 The files can optionally be copied into the `DESK.ACC` directory to

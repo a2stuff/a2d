@@ -91,7 +91,7 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
          EYES             $F1   $0640
          CONTROL.PANELS/  $F1   $0640
            DATE           $F1   $0640
-           NORMFAST       $F1   $0640
+           SYSTEM.SPEED   $F1   $0640
            ...
          ...
        PREVIEW/           DIR

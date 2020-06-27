@@ -63,7 +63,7 @@ https://github.com/a2stuff/a2d/issues
   * Homage to the classic After Dark screen saver by Jack Eastman. (#27)
 * Melt
   * Another classic screen saver effect: the screen melts down like dripping wax. (#27)
-* NormFast
+* System Speed
   * Enable/disable built-in and some popular add-on system accelerators. (#26)
 
 Note the Desk Accessories in version 1.2 will not work with older versions
