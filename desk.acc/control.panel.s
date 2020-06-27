@@ -881,6 +881,7 @@ loop:   ldx     mx
         jmp     @store
 :       and     mask2,x         ; clear bit
 @store: sta     pattern,y
+        ;; TODO: Only redraw preview and single bit.
         jsr     update_bits
 
         ;; Repeat until mouse-up
@@ -1255,9 +1256,10 @@ checked:
 .endproc
 
 
-bitpos:    DEFINE_POINT    0, 0, bitpos
 rotated_pattern:
         .res    8
+bitrect:
+        DEFINE_RECT     0, 0, 0, 0, bitrect
 
 .proc draw_bits
 
@@ -1267,16 +1269,18 @@ rotated_pattern:
         MGTK_CALL MGTK::SetPattern, rotated_pattern
         MGTK_CALL MGTK::PaintRect, preview_rect
 
-        ;; TODO: Perf compare this vs. filling rects
+        ;; Perf: Filling rects is slightly faster than using large pens,
+        ;; but 64 draw calls is still slow, ~1s to update fully at 1MHz
 
         MGTK_CALL MGTK::SetPattern, winfo::pattern
-        MGTK_CALL MGTK::SetPenSize, size
 
         copy    #0, ypos
-        copy16  fatbits_rect::y1, bitpos::ycoord
+        copy16  fatbits_rect::y1, bitrect::y1
+        add16   bitrect::y1, #kFatBitHeight-1, bitrect::y2
 
 yloop:  copy    #0, xpos
-        copy16  fatbits_rect::x1, bitpos::xcoord
+        copy16  fatbits_rect::x1, bitrect::x1
+        add16   bitrect::x1, #kFatBitWidth-1, bitrect::x2
         ldy     ypos
         copy    pattern,y, row
 
@@ -1288,15 +1292,15 @@ zero:   lda     #MGTK::notpencopy
 store:  sta     mode
 
         MGTK_CALL MGTK::SetPenMode, mode
-        MGTK_CALL MGTK::MoveTo, bitpos
-        MGTK_CALL MGTK::LineTo, bitpos
+        MGTK_CALL MGTK::PaintRect, bitrect
 
         ;; next x
         inc     xpos
         lda     xpos
         cmp     #8
         IF_NE
-        add16   bitpos::xcoord, #kFatBitWidth, bitpos::xcoord
+        add16   bitrect::x1, #kFatBitWidth, bitrect::x1
+        add16   bitrect::x2, #kFatBitWidth, bitrect::x2
         jmp     xloop
         END_IF
 
@@ -1305,7 +1309,8 @@ store:  sta     mode
         lda     ypos
         cmp     #8
         IF_NE
-        add16   bitpos::ycoord, #kFatBitHeight, bitpos::ycoord
+        add16   bitrect::y1, #kFatBitHeight, bitrect::y1
+        add16   bitrect::y2, #kFatBitHeight, bitrect::y2
         jmp     yloop
         END_IF
 
@@ -1316,7 +1321,6 @@ ypos:   .byte   0
 row:    .byte   0
 
 mode:   .byte   0
-size:   .byte kFatBitWidth, kFatBitHeight
 
 .endproc
 
