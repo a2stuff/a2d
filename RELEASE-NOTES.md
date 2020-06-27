@@ -11,7 +11,7 @@ https://github.com/a2stuff/a2d/issues
 
 ### DeskTop Enhancements
 
-* Current day/time shown on right side of menu bar, if system has a clock. (#7, #142)
+* Current day/time shown on right side of menu bar, if system has a clock. (#7, #142, #220)
 * Up to 13 volumes are shown on the desktop (was 10). (#20)
 * Windows restored when DeskTop is relaunched. (#210)
 * Drag "unlimited" number of icons (was 20). (#18)
@@ -35,6 +35,7 @@ https://github.com/a2stuff/a2d/issues
 * File > New Folder scrolls new folder icon into view. (#16)
 * Unknown file types are launched with BASIS.SYSTEM, if present. (#40)
 * Use standard ProDOS alert tone.
+* File modification time-of-day is shown in file lists and File > Get Info. (#221)
 
 ### Desk Accessory Enhancements
 
@@ -49,7 +50,7 @@ https://github.com/a2stuff/a2d/issues
 * This Apple
   * Gives details about the computer, expanded memory, and what's in each slot. (#29)
 * Control Panel
-  * Allows editing the desktop pattern (#31), double-click speed (#2), insertion point blink speed. Also shows joystick calibration. (#72)
+  * Allows editing the desktop pattern (#31), double-click speed (#2), insertion point blink speed, and clock 12/24hr setting (#220). Also shows joystick calibration. (#72)
 * Run Basic Here
   * Launch BASIC.SYSTEM with PREFIX set to the current window's pathname. (#42)
 * Key Caps
