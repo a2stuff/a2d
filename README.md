@@ -1,6 +1,6 @@
 # Apple II DeskTop
 
-[![Build Status](https://travis-ci.org/a2stuff/a2d.svg?branch=master)](https://travis-ci.org/a2stuff/a2d)
+[![Build Status](https://travis-ci.org/a2stuff/a2d.svg?branch=main)](https://travis-ci.org/a2stuff/a2d)
 
 Work-in-Progress disassembly and enhancements for Apple II Desktop (a.k.a. MouseDesk)
 

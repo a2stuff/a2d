@@ -14,7 +14,7 @@ These are pretty easy to write. See the bug tracker (links below) for examples, 
 
 ### Disassembly
 
-Pure disassembly changes take place in the `disasm` branch, which builds identically to the original. The `master` branch is based on `disasm`. (NOTE: Some disassembly has been done in `master` and should be 'upstreamed', time permitting.)
+Pure disassembly changes take place in the `disasm` branch, which builds identically to the original. The `main` branch is based on `disasm`. (NOTE: Some disassembly has been done in `main` and should be 'upstreamed', time permitting.)
 
 Disassembly efforts include:
 
