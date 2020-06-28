@@ -847,6 +847,7 @@ common: bit     dragwindow_params::moved
         dey
         bpl     :-
 
+        jsr     draw_preview
         jsr     update_bits
         jmp     input_loop
 .endproc
@@ -880,9 +881,16 @@ loop:   ldx     mx
         ora     mask1,x         ; set bit
         jmp     @store
 :       and     mask2,x         ; clear bit
-@store: sta     pattern,y
-        ;; TODO: Only redraw preview and single bit.
-        jsr     update_bits
+@store: cmp     pattern,y       ; did it change?
+        beq     event
+        sta     pattern,y
+
+        ldx     mx
+        ldy     my
+        lda     flag
+        jsr     draw_bit
+
+        jsr     draw_preview
 
         ;; Repeat until mouse-up
 event:  MGTK_CALL MGTK::GetEvent, event_params
@@ -1063,6 +1071,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::SetPenMode, penBIC
         MGTK_CALL MGTK::FrameRect, preview_line
 
+        jsr     draw_preview
         jsr     draw_bits
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -1255,19 +1264,63 @@ checked:
         rts
 .endproc
 
+;;; ============================================================
 
-rotated_pattern:
-        .res    8
-bitrect:
-        DEFINE_RECT     0, 0, 0, 0, bitrect
+;;; Assert: called from a routine that ensures window is onscreen
+.proc draw_preview
 
-.proc draw_bits
+        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::SetPort, grafport
 
-        ;; Prepare pattern so it aligns with screen, for NTSC color patterns.
-        jsr     rotate_pattern
+        ;; Shift the pattern so that when interpreted as NTSC color it
+        ;; displays the same as it would when applied to the desktop.
+        kWindowBorderOffset = 3
+
+        ldx     #7
+:       copy    pattern,x, rotated_pattern,x
+        dex
+        bpl     :-
+
+        add16   winfo::viewloc, preview_rect, offset
+        lda     offset
+        clc
+        adc     #kWindowBorderOffset
+        and     #$07            ; pattern is 8 bits wide
+        tay
+
+loop:
+        ldx     #7              ; 8 rows
+
+:       lda     rotated_pattern,x
+        cmp     #$80
+        rol     rotated_pattern,x
+        dex
+        bpl     :-
+
+        dey
+        bpl     loop
+
+        ;; Draw it
+
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPattern, rotated_pattern
         MGTK_CALL MGTK::PaintRect, preview_rect
+
+        rts
+
+offset: .word   0
+
+rotated_pattern:
+        .res    8
+.endproc
+
+;;; ============================================================
+
+bitrect:
+        DEFINE_RECT     0, 0, 0, 0, bitrect
+
+;;; Assert: called from a routine that ensures window is onscreen
+.proc draw_bits
 
         ;; Perf: Filling rects is slightly faster than using large pens,
         ;; but 64 draw calls is still slow, ~1s to update fully at 1MHz
@@ -1325,38 +1378,48 @@ mode:   .byte   0
 .endproc
 
 
-;;; Shift the pattern so that when interpreted as NTSC color it displays
-;;; the same as it would when applied to the desktop.
-.proc rotate_pattern
-        kWindowBorderOffset = 3
+;;; Input: A = set/clear X = x coord, Y = y coord
+;;; Assert: called from a routine that ensures window is onscreen
+.proc draw_bit
+        sta     mode
 
-        ldx     #7
-:       copy    pattern,x, rotated_pattern,x
+        stx     bitrect::x1
+        sty     bitrect::y1
+        lda     #0
+        sta     bitrect::x1+1
+        sta     bitrect::y1+1
+
+        ldx     #kFatBitWidthShift
+:       asl16   bitrect::x1
         dex
-        bpl     :-
+        bne     :-
 
-        add16   winfo::viewloc, preview_rect, offset
-        lda     offset
-        clc
-        adc     #kWindowBorderOffset
-        and     #$07            ; pattern is 8 bits wide
-        tay
-
-loop:
-        ldx     #7              ; 8 rows
-
-:       lda     rotated_pattern,x
-        cmp     #$80
-        rol     rotated_pattern,x
+        ldx     #kFatBitHeightShift
+:       asl16   bitrect::y1
         dex
-        bpl     :-
+        bne     :-
 
-        dey
-        bpl     loop
+        add16   bitrect::x1, fatbits_rect::x1, bitrect::x1
+        add16   bitrect::x1, #kFatBitWidth-1, bitrect::x2
+        add16   bitrect::y1, fatbits_rect::y1, bitrect::y1
+        add16   bitrect::y1, #kFatBitHeight-1, bitrect::y2
+
+        lda     #MGTK::pencopy
+        bit     mode
+        bmi     :+
+        lda     #MGTK::notpencopy
+:       sta     mode
+
+        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::SetPort, grafport
+
+        MGTK_CALL MGTK::SetPattern, winfo::pattern
+        MGTK_CALL MGTK::SetPenMode, mode
+        MGTK_CALL MGTK::PaintRect, bitrect
 
         rts
 
-offset: .word   0
+mode:   .byte   0
 .endproc
 
 
@@ -1630,7 +1693,6 @@ changed:
         rts
         END_IF
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
