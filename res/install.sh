@@ -42,12 +42,12 @@ add_file () {
     cecho green "- $folder/$dst_file"
 
     cp "$src_file" "$tmp_file"
-    cadius DELETEFILE "$img_file" "$folder/$dst_file" > /dev/null
-    cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits > /dev/null
+    suppress cadius DELETEFILE "$img_file" "$folder/$dst_file"
+    suppress cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits
     rm "$tmp_file"
 }
 
-cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet --no-case-bits > /dev/null
+suppress cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet --no-case-bits
 
 perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
 add_file "$INSTALL_IMG" "res/package/READ.ME" "$INSTALL_PATH" "Read.Me" 040000
@@ -57,17 +57,17 @@ add_file "$INSTALL_IMG" "desktop/out/desktop.built" "$INSTALL_PATH" "DeskTop2" F
 
 
 if [ "$1" = "selector" ]; then
-    cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/optional/selector" > /dev/null
-    cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/optional" > /dev/null
+    suppress cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/optional/selector"
+    suppress cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/optional"
     add_file "$INSTALL_IMG" "selector/out/selector.built" "$INSTALL_PATH" "Selector" F10000
 else
-    cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/selector" > /dev/null
-    cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/optional" --quiet --no-case-bits > /dev/null
+    suppress cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/selector"
+    suppress cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/optional" --quiet --no-case-bits
     add_file "$INSTALL_IMG" "selector/out/selector.built" "$INSTALL_PATH/optional" "Selector" F10000
 fi
 
 for path in $(cat desk.acc/TARGETS | res/targets.pl dirs); do
-    cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/$path" --quiet --no-case-bits > /dev/null
+    suppress cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/$path" --quiet --no-case-bits
 done
 for line in $(cat desk.acc/TARGETS | res/targets.pl); do
     IFS=',' read -ra array <<< "$line"

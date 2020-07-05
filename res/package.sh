@@ -18,7 +18,7 @@ test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
 # One 800k image (complete), and two 140k images (two parts).
 
-mkdir out
+mkdir -p out
 IMGFILE_COMPLETE="out/A2DeskTop.po"
 IMGFILE_PART1="out/A2DeskTop.1.po"
 IMGFILE_PART2="out/A2DeskTop.2.po"
@@ -33,10 +33,9 @@ rm -f $IMGFILE_COMPLETE
 rm -f $IMGFILE_PART1
 rm -f $IMGFILE_PART2
 
-cadius CREATEVOLUME $IMGFILE_COMPLETE $VOLNAME_COMPLETE 800KB --quiet --no-case-bits > /dev/null
-
-cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet --no-case-bits > /dev/null
-cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-case-bits > /dev/null
+suppress cadius CREATEVOLUME $IMGFILE_COMPLETE $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
+suppress cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet --no-case-bits
+suppress cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-case-bits
 
 # Add the files into the disk images.
 # Usage: add_file IMGFILE SRCFILE DSTFOLDER DSTFILE TYPESUFFIX
@@ -49,7 +48,7 @@ add_file () {
     tmp_file="$tempdir/$dst_file#$suffix"
 
     cp "$src_file" "$tmp_file"
-    cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits > /dev/null
+    suppress cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits
     rm "$tmp_file"
 }
 
@@ -68,15 +67,15 @@ add_file $IMGFILE_PART1 "desktop.system/out/desktop.system.SYS" "/$VOLNAME_PART1
 add_file $IMGFILE_COMPLETE "desktop/out/desktop.built" "/$VOLNAME_COMPLETE" "DeskTop2" F10000
 add_file $IMGFILE_PART1 "desktop/out/desktop.built" "/$VOLNAME_PART1" "DeskTop2" F10000
 
-cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/Optional" --quiet --no-case-bits > /dev/null
-cadius CREATEFOLDER $IMGFILE_PART2 "/$VOLNAME_PART2/Optional" --quiet --no-case-bits > /dev/null
+suppress cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/Optional" --quiet --no-case-bits
+suppress cadius CREATEFOLDER $IMGFILE_PART2 "/$VOLNAME_PART2/Optional" --quiet --no-case-bits
 
 add_file $IMGFILE_COMPLETE "selector/out/selector.built" "/$VOLNAME_COMPLETE/Optional" "Selector" F10000
 add_file $IMGFILE_PART2 "selector/out/selector.built" "/$VOLNAME_PART2/Optional" "Selector" F10000
 
 for path in $(cat desk.acc/TARGETS | res/targets.pl dirs); do
-    cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/$path" --quiet --no-case-bits > /dev/null
-    cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_PART2/$path" --quiet --no-case-bits > /dev/null
+    suppress cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/$path" --quiet --no-case-bits
+    suppress cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_PART2/$path" --quiet --no-case-bits
 done
 for line in $(cat desk.acc/TARGETS | res/targets.pl); do
     IFS=',' read -ra array <<< "$line"
