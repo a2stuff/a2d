@@ -443,6 +443,8 @@ handle_keydown:
         jmp     cmd_delete_selection
 :       cmp     #'`'            ; OA-` (Cycle Windows)
         beq     cycle
+        cmp     #'~'            ; Shift+OA-` (Cycle Windows)
+        beq     cycle
         cmp     #CHAR_TAB       ; OA-Tab (Cycle Windows)
         bne     menu_accelerators
 cycle:  jmp     cmd_cycle_windows
@@ -3157,24 +3159,44 @@ L56F8:  .byte   0
 
 ;;; ============================================================
 ;;; Cycle Through Windows
+;;; Input: A = Key used; '~' is reversed
+
 
 .proc cmd_cycle_windows
+        tay
+
         ;; Need at least two windows to cycle.
         lda     num_open_windows
         cmp     #2
         bcc     done
         ldx     active_window_id
 
+        cpy     #'~'
+        beq     reverse
+
+        ;; --------------------------------------------------
         ;; Search upwards through window-icon map to find next.
         ;; ID is 1-based, table is 0-based, so don't need to start
         ;; with an increment
-loop:   cpx     #kMaxNumWindows
+@loop:  cpx     #kMaxNumWindows
         bne     :+
         ldx     #0
 :       lda     window_to_dir_icon_table,x
         bne     found           ; 0 = window free
         inx
-        bne     loop            ; always
+        bne     @loop           ; always
+
+        ;; --------------------------------------------------
+        ;; Search downwards through window-icon map to find next.
+        ;; ID is 1-based, table is 0-based, start with decrements.
+reverse:
+        dex
+@loop:  dex
+        bpl     :+
+        ldx     #kMaxNumWindows-1
+:       lda     window_to_dir_icon_table,x
+        beq     @loop           ; 0 = window free
+        ;;  fall through...
 
 found:  inx
         stx     findwindow_window_id

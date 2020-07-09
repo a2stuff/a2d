@@ -28,7 +28,7 @@ https://github.com/a2stuff/a2d/issues
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. (#64)
 * Tip about skipping copy to RAMCard is shown during startup. (#140)
 * Holding Apple while double-clicking or using File>Open closes parent folder. (#9)
-* Apple-` or Apple-Tab keypress cycles through open windows. (#143)
+* Apple-` or Apple-Tab cycles through open windows, Apple-~ in reverse. (#143, #230)
 * Apple-Delete deletes selected files. (#150)
 * File > Get Info command shows Aux Type for files. (#148)
 * ProDOS 2.5 extended dates (through 2923) are supported. (#169)
