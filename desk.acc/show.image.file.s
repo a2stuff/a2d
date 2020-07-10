@@ -305,14 +305,14 @@ exit:
         ;; FOT files - auxtype $4000 / $4001 are packed hires/double-hires
         lda     get_file_info_params::aux_type+1
         cmp     #$40
-        bne     get_eof
+        bne     show_fot_file
 
         lda     get_file_info_params::aux_type
         cmp     #$00
         bne     :+
         jmp     show_packed_hr_file
 :       cmp     #$01
-        bne     get_eof
+        bne     show_fot_file
         jmp     show_packed_dhr_file
 
         ;; Otherwise, rely on size heuristics to determine the type
@@ -343,6 +343,55 @@ get_eof:
 
 :       jmp     show_minipix_file
 .endproc
+
+.proc show_fot_file
+        ;; Per File Type $08 (8) Note:
+
+        ;; ...you can determine the mode of the file by examining byte
+        ;; +120 (+$78). The value of this byte, which ranges from zero
+        ;; to seven, is interpreted as follows:
+        ;;
+        ;; Mode                         Page 1    Page 2
+        ;; 280 x 192 Black & White        0         4
+        ;; 280 x 192 Limited Color        1         5
+        ;; 560 x 192 Black & White        2         6
+        ;; 140 x 192 Full Color           3         7
+
+SIGNATURE       := hires + 120
+kSigColor       = %00000001
+kSigDHR         = %00000010
+
+        ;; At least one page...
+        sta     PAGE2OFF
+        yax_call JUMP_TABLE_MLI, READ, read_params
+
+        lda     SIGNATURE
+        sta     signature
+
+        ;; HR or DHR?
+        and     #kSigDHR
+        bne     dhr
+
+        ;; If HR, convert to DHR.
+        jsr     hr_to_dhr
+        jmp     finish
+
+        ;; If DHR, copy Main>Aux and load Main page.
+dhr:    jsr     copy_hires_to_aux
+        yax_call JUMP_TABLE_MLI, READ, read_params
+
+finish: yax_call JUMP_TABLE_MLI, CLOSE, close_params
+
+        lda     signature
+        and     #kSigColor
+        bne     :+
+        jsr     set_bw_mode
+:       rts
+
+signature:
+        .byte   0
+.endproc
+
 
 .proc show_hr_file
         sta     PAGE2OFF
