@@ -14756,12 +14756,12 @@ run_loop:
         bmi     :-              ; continue?
 
         bne     close_win       ; canceled!
+
+        jsr     input_field_ip_end ; collapse name
+
         lda     path_buf1
         beq     :-              ; name is empty, retry
 
-        ;; BUG: Considers IP at start of input box to be empty.
-
-        jsr     input_field_ip_end ; collapse name
         ldy     #<path_buf1
         ldx     #>path_buf1
         return  #0
