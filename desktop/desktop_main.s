@@ -14720,10 +14720,8 @@ do4:    jsr     close_prompt_dialog
         jmp     close_win
 
 open_win:
-        jsr     clear_path_buf1
         jsr     copy_dialog_param_addr_to_ptr
         copy    #$80, has_input_field_flag
-        jsr     clear_path_buf2
         lda     #$00
         jsr     open_prompt_window
         lda     winfo_prompt_dialog
@@ -14736,15 +14734,22 @@ open_win:
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #1              ; rename_dialog_params::addr offset
         copy16in ($06),y, $08
+
+        ;; Populate filename field and input (before IP)
         ldy     #0
         lda     ($08),y
         tay
-LB2CA:  copy    ($08),y, buf_filename,y
+:       lda     ($08),y
+        sta     buf_filename,y
+        sta     path_buf1,y
         dey
-        bpl     LB2CA
+        bpl     :-
+
+        ;; Clear input (after IP)
+        jsr     clear_path_buf2
+
         yax_call draw_dialog_label, 2, buf_filename
         yax_call draw_dialog_label, 4, aux::str_rename_new
-        copy    #0, path_buf1
         jsr     draw_filename_prompt
         rts
 

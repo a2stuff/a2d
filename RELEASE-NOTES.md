@@ -36,6 +36,7 @@ https://github.com/a2stuff/a2d/issues
 * Unknown file types are launched with BASIS.SYSTEM, if present. (#40)
 * Use standard ProDOS alert tone.
 * File modification time-of-day is shown in file lists and File > Get Info. (#221)
+* File > Rename dialog pre-filled with previous name. (#156)
 
 ### Desk Accessory Enhancements
 
