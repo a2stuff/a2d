@@ -833,6 +833,9 @@ month_offset_table:             ; for Day-of-Week calculations
         .byte   1,5,6,3,1,5,3,0,4,2,6,4
         ASSERT_TABLE_SIZE month_offset_table, 12
 
+parsed_date:
+        .tag ParsedDateTime
+
 ;;; ============================================================
 
 ;;; 5.25" Floppy Disk

@@ -123,3 +123,11 @@ ITK_RELAY       := ITKRelayImpl
         window_path     .res ::kPathBufferSize
         rect            .tag MGTK::Rect
 .endstruct
+
+.struct ParsedDateTime
+        year    .word
+        month   .byte
+        day     .byte
+        hour    .byte
+        minute  .byte
+.endstruct

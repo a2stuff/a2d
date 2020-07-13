@@ -8158,11 +8158,11 @@ date_b: .tag    DateTime
 
         copy16  #parsed_a, ptr
         ldax    #date_a
-        jsr     parse_date
+        jsr     parse_datetime
 
         copy16  #parsed_b, ptr
         ldax    #date_b
-        jsr     parse_date
+        jsr     parse_datetime
 
         lda     year_a+1
         cmp     year_b+1
@@ -8178,14 +8178,20 @@ date_b: .tag    DateTime
 done:   rts
 
 parsed_a:
-year_a: .word   0
-month_a:.byte   0
-day_a:  .byte   0
+        .tag ParsedDateTime
+year_a  := parsed_a + ParsedDateTime::year
+month_a := parsed_a + ParsedDateTime::month
+day_a   := parsed_a + ParsedDateTime::day
+hour_a  := parsed_a + ParsedDateTime::hour
+min_a   := parsed_a + ParsedDateTime::minute
 
 parsed_b:
-year_b: .word   0
-month_b:.byte   0
-day_b:  .byte   0
+        .tag ParsedDateTime
+year_b  := parsed_b + ParsedDateTime::year
+month_b := parsed_b + ParsedDateTime::month
+day_b   := parsed_b + ParsedDateTime::day
+hour_b  := parsed_b + ParsedDateTime::hour
+min_b   := parsed_b + ParsedDateTime::minute
 
 .endproc
 
@@ -8460,7 +8466,7 @@ value:  .word   0
 append_date_strings:
         copy16  #parsed_date, $0A
         ldax    #datetime_for_conversion
-        jsr     parse_date
+        jsr     parse_datetime
 
         jsr     append_month_string
         addr_call concatenate_date_part, str_space
@@ -8469,7 +8475,7 @@ append_date_strings:
         jsr     append_year_string
 
         addr_call concatenate_date_part, str_at
-        ldax    datetime_for_conversion + DateTime::timelo
+        ldax    #parsed_date
         jsr     make_time_string
         addr_jump concatenate_date_part, str_time
 
@@ -8498,10 +8504,11 @@ append_date_strings:
         addr_jump concatenate_date_part, str_from_int
 .endproc
 
-parsed_date:
-year:   .word   0
-month:  .byte   0
-day:    .byte   0
+year    := parsed_date + ParsedDateTime::year
+month   := parsed_date + ParsedDateTime::month
+day     := parsed_date + ParsedDateTime::day
+hour    := parsed_date + ParsedDateTime::hour
+min     := parsed_date + ParsedDateTime::minute
 
 month_table:
         .addr   str_no_date
@@ -8558,113 +8565,6 @@ tmp:    .byte   0
 concat_len:
         .byte   0
 .endproc
-
-.endproc
-
-;;; ============================================================
-;;; Parse date
-;;; Input: A,X = addr of datetime to parse
-;;; $0A points at {year:.word, month:.byte, day:.byte} to be filled
-
-.proc parse_date
-        parsed_ptr := $0A
-        datetime_ptr := $0C
-
-.struct ParsedDate
-        year    .word
-        month   .byte
-        day     .byte
-.endstruct
-
-        stax    datetime_ptr
-
-        ;; DateTime:
-        ;;       byte 1            byte 0
-        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
-        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
-        ;; |    Year     |  Month  |   Day   |
-        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
-        ;;
-        ;;       byte 3            byte 2
-        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
-        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
-        ;; |YearX|  Hour   | |0 0|  Minute   |
-        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
-
-        ;; Null date? Leave as all zeros.
-        ldy     #DateTime::datelo
-        lda     (datetime_ptr),y
-        iny                      ; DateTime::datehi
-        ora     (datetime_ptr),y         ; null date?
-        bne     year
-        ldy     #.sizeof(ParsedDate)-1
-:       sta     (parsed_ptr),y
-        dey
-        bpl     :-
-        rts
-
-        ;; --------------------------------------------------
-        ;; Year
-        ;; (top 7 bits of datehi, top 3 bits of timehi)
-year:   lda     #0
-        sta     ytmp+1
-        ldy     #DateTime::datehi
-        lda     (datetime_ptr),y ; First, calculate year-1900
-        lsr     a
-        php                     ; Save Carry bit
-        sta     ytmp
-
-        ;; ProDOS 2.5 extended date?
-        ldy     #DateTime::timehi
-        lda     (datetime_ptr),y
-        and     #%11100000
-        beq     tn28
-        asl     a               ; top 2 bits go into hi byte of year
-        rol     ytmp+1
-        asl     a
-        rol     ytmp+1
-        ora     ytmp            ; third bit goes into top bit of lo byte
-        sta     ytmp
-        jmp     do1900
-
-        ;; 0-39 is 2000-2039
-        ;; Per Technical Note: ProDOS #28: ProDOS Dates -- 2000 and Beyond
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.28.html
-tn28:   lda     ytmp            ; ytmp is still just one byte
-        cmp     #40
-        bcs     :+
-        adc     #100
-        sta     ytmp
-:
-
-do1900: ldy     #ParsedDate::year
-        add16in ytmp, #1900, (parsed_ptr),y
-
-        ;; --------------------------------------------------
-        ;; Month
-        ;; (mix low bit from datehi with top 3 bits from datelo)
-month:  plp                     ; Restore Carry bit
-        ldy     #DateTime::datelo
-        lda     (datetime_ptr),y
-        ror     a
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ldy     #ParsedDate::month
-        sta     (parsed_ptr),y
-
-        ;; --------------------------------------------------
-        ;; Day
-        ;; (low 5 bits of datelo)
-day:    ldy     #DateTime::datelo
-        lda     (datetime_ptr),y
-        and     #%00011111
-        ldy     #ParsedDate::day
-        sta     (parsed_ptr),y
-        rts
-
-ytmp:   .word   0
 
 .endproc
 
@@ -10027,27 +9927,15 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ;; --------------------------------------------------
         ;; Day of Week
 
-        ;; TODO: Handle ProDOS 2.5 dates
-        ;; https://prodos8.com/releases/prodos-25/
+        copy16  #parsed_date, $0A
+        ldax    #DATELO
+        jsr     parse_datetime
 
-        lda     DATEHI          ; Year-1900 (bits 15-9)
-        lsr     a
-        php                     ; Save Carry bit
-        cmp     #40             ; 0-39 is 2000-2039
-        bcs     :+              ; Per Technical Note: ProDOS #28: ProDOS Dates -- 2000 and Beyond
-        adc     #100
-:       tay
-        plp                     ; Restore Carry bit
-        lda     DATELO          ; Month (bits 8-5)
-        ror
-        lsr
-        lsr
-        lsr
-        lsr
-        tax
-        lda     DATELO          ; Day (bits 0-4)
-        and     #%00011111
-
+        ;; TODO: Make DOW calc work on ParsedDateTime
+        sub16   parsed_date + ParsedDateTime::year, #1900, parsed_date + ParsedDateTime::year
+        ldy     parsed_date + ParsedDateTime::year
+        ldx     parsed_date + ParsedDateTime::month
+        lda     parsed_date + ParsedDateTime::day
         jsr     day_of_week
         asl                     ; * 4
         asl
@@ -10062,29 +9950,33 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ;; --------------------------------------------------
         ;; Time
 
-        ldax    TIMELO
+        ldax    #parsed_date
         jsr     make_time_string
 
         addr_call draw_text1, str_time
         addr_jump draw_text1, str_4_spaces ; in case it got shorter
-
 .endproc
 
 ;;; ============================================================
 
 ;;; Populate str_time with time. Uses clock_24hours flag in settings.
-;;; Inputs: A,X = TIMELO,TIMEHI
+;;; Inputs: A,X = ParsedDateTime
 ;;; Outputs: str_time is populated
 .proc make_time_string
+        parsed_ptr := $06
 
-        stax    timelo
+        stax    parsed_ptr
+        ldy     #ParsedDateTime::hour
+        lda     (parsed_ptr),y
+        sta     hour
+        ldy     #ParsedDateTime::minute
+        lda     (parsed_ptr),y
+        sta     min
 
         ldy     #0              ; Index into time string
 
         ;; Hours
-        lda     timehi
-        and     #%00011111
-        pha                     ; Save hours
+        lda     hour
 
         ;; 24->12 hour clock?
         bit     SETTINGS + DeskTopSettings::clock_24hours
@@ -10120,8 +10012,7 @@ ones:   pla                     ; ones
         sta     str_time,y
 
         ;; Minutes
-        lda     timelo
-        and     #%00111111
+        lda     min
         jsr     split
         pha
         txa                     ; tens
@@ -10138,10 +10029,10 @@ ones:   pla                     ; ones
         iny
         sta     str_time,y
 
-        pla                     ; Restore hours
         bit     SETTINGS + DeskTopSettings::clock_24hours
         bmi     done
 
+        lda     hour
         cmp     #12
         bcs     :+
         lda     #'A'
@@ -10156,8 +10047,8 @@ store:  iny
 done:   sty     str_time
         rts
 
-timelo: .byte   0
-timehi: .byte   0
+hour:   .byte   0
+min:    .byte   0
 
 ;;; Input: A = number
 ;;; Output: X = tens, A = ones
@@ -16101,6 +15992,200 @@ set_penmode_copy:
 .endproc
 
 ;;; ============================================================
+
+;;; ============================================================
+;;; Parse date/time
+;;; Input: A,X = addr of datetime to parse
+;;; $0A points at ParsedDateTime to be filled
+
+.proc parse_datetime
+        parsed_ptr := $0A
+        datetime_ptr := $0C
+
+        stax    datetime_ptr
+
+        ;; Null date? Leave as all zeros.
+        ldy     #0
+        lda     (datetime_ptr),y
+        iny
+        ora     (datetime_ptr),y ; null date?
+        bne     not_null
+
+        ldy     #.sizeof(ParsedDateTime)-1
+:       sta     (parsed_ptr),y
+        dey
+        bpl     :-
+        rts
+
+not_null:
+        ;; Is it a ProDOS 2.5 extended date/time? (see below)
+        ldy     #3
+        lda     (datetime_ptr),y
+        and     #%11100000      ; Top 3 bits would be 0...
+        bne     prodos_2_5      ; unless ProDOS 2.5a4+
+
+        ;; --------------------------------------------------
+        ;; ProDOS 8 DateTime:
+        ;;       byte 1            byte 0
+        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;; |    Year     |  Month  |   Day   |
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;;
+        ;;       byte 3            byte 2
+        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;; |0 0 0|  Hour   | |0 0|  Minute   |
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;;
+
+        ;; ----------------------------------------
+        ;; Year
+        ;; (top 7 bits of datehi, top 3 bits of timehi)
+year:   lda     #0
+        sta     ytmp+1
+
+        ldy     #DateTime::datehi
+        lda     (datetime_ptr),y ; First, calculate year-1900
+        lsr     a
+        php                     ; Save Carry bit
+        sta     ytmp
+
+        ;; 0-39 is 2000-2039
+        ;; Per Technical Note: ProDOS #28: ProDOS Dates -- 2000 and Beyond
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.28.html
+tn28:   lda     ytmp            ; ytmp is still just one byte
+        cmp     #40
+        bcs     :+
+        adc     #100
+        sta     ytmp
+:
+
+do1900: ldy     #ParsedDateTime::year
+        add16in ytmp, #1900, (parsed_ptr),y
+
+        ;; ----------------------------------------
+        ;; Month
+        ;; (mix low bit from datehi with top 3 bits from datelo)
+        plp                     ; Restore Carry bit
+        ldy     #DateTime::datelo
+        lda     (datetime_ptr),y
+        ror     a
+        lsr     a
+        lsr     a
+        lsr     a
+        lsr     a
+        ldy     #ParsedDateTime::month
+        sta     (parsed_ptr),y
+
+        ;; ----------------------------------------
+        ;; Day
+        ;; (low 5 bits of datelo)
+        ldy     #DateTime::datelo
+        lda     (datetime_ptr),y
+        and     #%00011111
+        ldy     #ParsedDateTime::day
+        sta     (parsed_ptr),y
+
+        ;; ----------------------------------------
+        ;; Hour
+        ldy     #DateTime::timehi
+        lda     (datetime_ptr),y
+        and     #%00011111
+        ldy     #ParsedDateTime::hour
+        sta     (parsed_ptr),y
+
+        ;; ----------------------------------------
+        ;; Minute
+        ldy     #DateTime::timelo
+        lda     (datetime_ptr),y
+        and     #%00111111
+        ldy     #ParsedDateTime::minute
+        sta     (parsed_ptr),y
+
+        rts
+
+        ;; --------------------------------------------------
+        ;; ProDOS 8 2.5.0a4+ Extended DateTime:
+        ;; https://prodos8.com/releases/prodos-25/
+        ;;
+        ;;       byte 1            byte 0
+        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;; | Day     | Hour      | Minute    |
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;;
+        ;;       byte 3            byte 2
+        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;; | Month | Year                    |
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+prodos_2_5:
+        ;; ----------------------------------------
+        ;; day: 1-31
+        ldy     #1
+        lda     (datetime_ptr),y
+        lsr
+        lsr
+        lsr
+        ldy     #ParsedDateTime::day
+        sta     (parsed_ptr),y
+
+        ;; ----------------------------------------
+        ;; month: 2-13
+        ldy     #3
+        lda     (datetime_ptr),y
+        lsr
+        lsr
+        lsr
+        lsr
+        sec
+        sbc     #1              ; make it 1-12
+        ldy     #ParsedDateTime::month
+        sta     (parsed_ptr),y
+
+        ;; ----------------------------------------
+        ;; year: 0-4095
+        ldy     #2
+        lda     (datetime_ptr),y
+        ldy     #ParsedDateTime::year
+        sta     (parsed_ptr),y
+
+        ldy     #3
+        lda     (datetime_ptr),y
+        and     #%00001111
+        ldy     #ParsedDateTime::year+1
+        sta     (parsed_ptr),y
+
+        ;; ----------------------------------------
+        ;; hour: 0-23
+        ldy     #0
+        copy16in (datetime_ptr),y, ytmp
+        ldx     #6
+:       lsr16   ytmp
+        dex
+        bne     :-
+        lda     ytmp
+        and     #%00011111      ; should be unnecessary
+        ldy     #ParsedDateTime::hour
+        sta     (parsed_ptr),y
+
+        ;; ----------------------------------------
+        ;; minute: 0-59
+        ldy     #0
+        lda     (datetime_ptr),y
+        and     #%00111111
+        ldy     #ParsedDateTime::minute
+        sta     (parsed_ptr),y
+
+        rts
+
+ytmp:   .word   0
+
+.endproc
+
+;;; ============================================================
+
 
         PAD_TO $BF00
 
