@@ -17,6 +17,13 @@
 * Move a file by dragging - same volume - target is volume icon
 * Move a file by dragging - same volume - target is folder icon
 
+* Copy a file by dragging - same volume - target is window, using Open-Apple modifier
+* Copy a file by dragging - same volume - target is window, using Closed-Apple modifier
+* Copy a file by dragging - same volume - target is volume icon, using Open-Apple modifier
+* Copy a file by dragging - same volume - target is volume icon, using Closed-Apple modifier
+* Copy a file by dragging - same volume - target is folder icon, using Open-Apple modifier
+* Copy a file by dragging - same volume - target is folder icon, using Closed-Apple modifier
+
 * Copy a file by dragging - different volume - target is window
 * Copy a file by dragging - different volume - target is volume icon
 * Copy a file by dragging - different volume - target is folder icon

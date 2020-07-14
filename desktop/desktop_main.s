@@ -12980,7 +12980,8 @@ loop:   iny
         src_ptr := $08
         dst_buf := path_buf4
 
-        bit     BUTN0           ; Open-Apple overrides, forces copy
+        lda     BUTN0           ; Open/Closed-Apple overrides, forces copy
+        ora     BUTN1
         bmi     no_match
 
         ldy     #0
