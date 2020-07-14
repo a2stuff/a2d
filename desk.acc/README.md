@@ -24,7 +24,7 @@ New desk accessories:
   * Shows an on-screen keyboard map, and indicates which key is pressed.
 * [Run Basic Here](run.basic.here.s)
   * Launches BASIC.SYSTEM with PREFIX set to current window's directory.
-* [Flying Toasters](flying.toaster.s)
+* [Flying Toasters](flying.toasters.s)
   * Visual distractions.
 * [Melt](melt.s)
   * Visual distractions.
