@@ -1844,7 +1844,7 @@ L4D9D:  pha
 .endproc
 
 ;;; ============================================================
-;;; Helper for "Open" actions - if Apple-key is down, record
+;;; Helper for "Open" actions - if Apple key is down, record
 ;;; the parent window to close.
 
 .proc set_window_to_close_after_open
