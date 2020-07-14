@@ -15,7 +15,7 @@ https://github.com/a2stuff/a2d/issues
 * Up to 13 volumes are shown on the desktop (was 10). (#20)
 * Windows restored when DeskTop is relaunched. (#210)
 * Drag "unlimited" number of icons (was 20). (#18)
-* Dragging files to same volume moves instead of copies; use Open-Apple to force copy. (#8)
+* Dragging files to same volume moves instead of copies; hold Open-Apple while dragging to force copy. (#8)
 * Menu bar menus are now drop-down in addition to pull-down. (#104)
 * Add Special > Check Drive command to refresh a single drive. (#97)
 * Reorganized/renamed several menu items. (#13)
@@ -27,13 +27,13 @@ https://github.com/a2stuff/a2d/issues
 * AppleWorks filenames are shown with correct case. (#179)
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. (#64)
 * Tip about skipping copy to RAMCard is shown during startup. (#140)
-* Holding Apple while double-clicking or using File>Open closes parent folder. (#9)
-* Apple-` or Apple-Tab cycles through open windows, Apple-~ in reverse. (#143, #230)
+* Holding Open-Apple while double-clicking or using File>Open closes parent folder. (#9)
+* Apple-` or Apple-Tab cycles through open windows; Apple-~ cycles in reverse. (#143, #230)
 * Apple-Delete deletes selected files. (#150)
 * File > Get Info command shows Aux Type for files. (#148)
-* ProDOS 2.5 extended dates (through 2923) are supported. (#169)
-* File > New Folder scrolls new folder icon into view. (#16)
-* Unknown file types are launched with BASIS.SYSTEM, if present. (#40)
+* ProDOS 2.5 extended dates (through year 4095) are supported. (#169)
+* File > New Folder scrolls the new folder icon into view. (#16)
+* If present, BASIS.SYSTEM is used to launch unknown file types. (#40)
 * Use standard ProDOS alert tone.
 * File modification time-of-day is shown in file lists and File > Get Info. (#221)
 * File > Rename dialog pre-filled with previous name. (#156)
@@ -69,13 +69,13 @@ https://github.com/a2stuff/a2d/issues
 * Find Files
   * Search a directory and descendants for filenames. Use ? and * as wildcards. (#21)
 
-Note the Desk Accessories in version 1.2 will not work with older versions
+Note that the Desk Accessories from version 1.2 will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
 
 The former "Show Text File" DA is now part of automatic preview
 functionality (see below).
 
-### Automatic Preview
+### File Preview
 
 Text, Graphics and Font files with the correct file types can be
 previewed without leaving DeskTop; select the file icon then select
@@ -83,7 +83,7 @@ File > Open, or double-click the file icon.
 
 * Text files must be type TXT ($04).
 * Graphics files must be type FOT ($08), or BIN ($06) with specific aux type:
-  * BIN ($08) files:
+  * BIN ($06) files:
     * Aux type $2000 or $4000 and 17 blocks are hi-res images.
     * Aux type $2000 or $4000 and 33 blocks are double hi-res images.
     * Aux type $5800 and 3 blocks are Minipix (Print Shop) images.
@@ -91,20 +91,20 @@ File > Open, or double-click the file icon.
     * Aux type $4000 or $4001 are packed hi-res/double-hires images. (#107)
     * 17 block files are hi-res images.
     * 33 block files are double-hires images.
-* Font files must be MGTK fonts with type FNT ($07).
+* Font files must be type FNT ($07) and must be MGTK font resources.
 
-To preview files of other types, you can copy the preview handlers
-named `SHOW.TEXT.FILE`, `SHOW.IMAGE.FILE`, etc. from the `PREVIEW`
-folder to the `DESK.ACC` folder, and restart DeskTop. To use them,
-select the file, then select the appropriate command from the Apple
-menu.
+To preview files of other types, (e.g. view a BIN file as text) you
+can copy the appropriate preview handler, e.g. `SHOW.TEXT.FILE` from
+the `PREVIEW` folder to the `DESK.ACC` folder, and restart DeskTop. To
+use them, select the file, then select the appropriate command from
+the Apple menu.
 
 ### Notable Fixes
 
-* Dates 00-39 are treated as 2000-2039; dates 100-127 are treated as 2000-2027. (#15)
+* Date years 00-39 are treated as 2000-2039; years 100-127 are treated as 2000-2027. (#15)
 * Fix resource exhaustion when opening/closing many windows. (#19)
 * File > Quit returns to ProDOS 8 selector, and /RAM is reattached. (#3)
-* SELECTOR.LIST created if missing. (#92)
+* SELECTOR.LIST file created if missing. (#92)
 * Prevent crash after renaming volume. (#99)
 * Prevent crash with more than two volumes on a SmartPort interface. (#45)
 * Startup menu will include Slot 2. (#106)
@@ -123,6 +123,7 @@ menu.
   * IIc Plus: don't spin slot 5 drives constantly. (Use Special > Check Drive) (#25)
   * Laser 128: avoid hangs checking SmartPort status. (Use Special > Check Drive) (#138)
   * IIgs: color DHR is re-enabled on exit. (#43)
+  * IIgs: mono DHR is re-enabled when returning from system control panel. (#193)
   * Macintosh LC IIe Option Card: don't crash on startup. (#93)
   * Macintosh LC IIe Option Card: correct problems with interrupts affecting AppleTalk. (#129)
   * KEGS-based IIgs emulators no longer crash on startup. (#85)
