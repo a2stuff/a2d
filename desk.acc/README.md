@@ -5,8 +5,8 @@ Disassembly of the original desk accessories:
 * [Calculator](calculator.s) - complete!
 * [Date](date.s) - complete!
 * [Puzzle](puzzle.s) - complete!
-* [Sort Directory](sort.directory.s) - complete!
 * [Show Text File](show.text.file.s) - complete!
+* [Sort Directory](sort.directory.s) - complete!
 
 New desk accessories:
 
