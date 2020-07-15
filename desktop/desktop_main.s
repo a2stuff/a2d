@@ -4069,7 +4069,7 @@ handle_double_click:
         bmi     done
         jsr     swap_in_desktop_icon_table
 
-        ;; If Solid-Apple key is down, close previous window.
+        ;; If Apple key is down, close previous window.
         jsr     close_window_after_open
 
 done:   rts
