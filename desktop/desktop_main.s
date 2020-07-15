@@ -415,37 +415,37 @@ flag:   .byte   $00
         ;; Handle accelerator keys
 handle_keydown:
         lda     event_modifiers
-        bne     :+              ; either OA or SA ?
+        bne     :+              ; either Open-Apple or Solid-Apple ?
         jmp     menu_accelerators           ; nope
-:       cmp     #3              ; both OA + SA ?
+:       cmp     #3              ; both Open-Apple + Solid-Apple ?
         bne     :+              ; nope
         rts
 
         ;; Non-menu keys
 :       lda     event_key
         jsr     upcase_char
-        cmp     #'H'            ; OA-H (Highlight Icon)
+        cmp     #'H'            ; Apple-H (Highlight Icon)
         bne     :+
         jmp     cmd_highlight
 :       bit     flag
         bpl     menu_accelerators
-        cmp     #'G'            ; OA-G (Resize)
+        cmp     #'G'            ; Apple-G (Resize)
         bne     :+
         jmp     cmd_resize
-:       cmp     #'M'            ; OA-M (Move)
+:       cmp     #'M'            ; Apple-M (Move)
         bne     :+
         jmp     cmd_move
-:       cmp     #'X'            ; OA-X (Scroll)
+:       cmp     #'X'            ; Apple-X (Scroll)
         bne     :+
         jmp     cmd_scroll
-:       cmp     #CHAR_DELETE    ; OA-Delete (Delete)
+:       cmp     #CHAR_DELETE    ; Apple-Delete (Delete)
         bne     :+
         jmp     cmd_delete_selection
-:       cmp     #'`'            ; OA-` (Cycle Windows)
+:       cmp     #'`'            ; Apple-` (Cycle Windows)
         beq     cycle
-        cmp     #'~'            ; Shift+OA-` (Cycle Windows)
+        cmp     #'~'            ; Shift-Apple-` (Cycle Windows)
         beq     cycle
-        cmp     #CHAR_TAB       ; OA-Tab (Cycle Windows)
+        cmp     #CHAR_TAB       ; Apple-Tab (Cycle Windows)
         bne     menu_accelerators
 cycle:  jmp     cmd_cycle_windows
 
