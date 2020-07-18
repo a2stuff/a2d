@@ -38,3 +38,7 @@
 * File > Get Info a volume
 
 * Position a volume icon in the middle of the DeskTop. Incrementally move a window so that it obscures all 8 positions around it (top, top right, right, etc). Ensure the icon repaints fully, and no part of the window is overdrawn.
+
+* Launch DeskTop, Quit, run BASIC.SYSTEM. Ensure /RAM exists.
+* Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.
+* Launch Selector, invoke DeskTop, Quit, run BASIC.SYSTEM. Ensure /RAM exists.

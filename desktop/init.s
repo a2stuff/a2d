@@ -169,12 +169,15 @@ end:
         ;; Look for /RAM
         ldx     DEVCNT
 :       lda     DEVLST,x
-        cmp     #RAM_DISK_UNITNUM
+        and     #%11110000      ; DSSSnnnn
+        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
         beq     found_ram
         dex
         bpl     :-
         bmi     end
+
 found_ram:
+        lda     DEVLST,x
         jsr     remove_device
         ;; fall through
 
@@ -720,9 +723,10 @@ process_volume:
         cmp     #ERR_DEVICE_NOT_CONNECTED
         bne     :+
 
+        ;; TODO: Figure out if this block makes any sense.
         ldy     device_index    ; BUG? Is there a missing pla instruction in this path?
         lda     DEVLST,y
-        and     #$0F
+        and     #$0F            ; BUG: Do not trust low nibble of unit_num
         beq     select_template
         ldx     device_index
         jsr     remove_device
@@ -903,17 +907,29 @@ slot_string_table:
 ;;; due to known-buggy firmware.
 
 .proc initialize_disks_in_devices_tables
-        ldx     #0
-        ldy     DEVCNT
-loop:   lda     DEVLST,y
-        and     #$0F
-        cmp     #DT_REMOVABLE
-        beq     append          ; yes
-next:   dey
+        slot_ptr := $0A
+
+        copy    #0, count
+        copy    DEVCNT, index
+
+loop:   ldy     index
+        lda     DEVLST,y
+        jsr     main::device_driver_address
+        bne     next            ; if RAM-based driver (not $CnXX), skip
+        copy    #0, slot_ptr    ; make $Cn00
+        ldy     #$FF            ; Firmware ID byte
+        lda     (slot_ptr),y    ; $CnFF: $00=Disk II, $FF=13-sector, else=block
+        beq     next
+        dey
+        lda     (slot_ptr),y    ; $CnFE: Status Byte
+        bmi     append          ; bit 7 - Medium is removable
+
+next:   dec     index
         bpl     loop
 
-        stx     main::removable_device_table
-        stx     main::disk_in_device_table
+        lda     count
+        sta     main::removable_device_table
+        sta     main::disk_in_device_table
         jsr     main::check_disks_in_devices
 
         ;; Make copy of table
@@ -925,7 +941,10 @@ next:   dey
 
 done:   jmp     final_setup
 
-append: lda     DEVLST,y        ; add it to the list
+        ;; Maybe add device to the removable device table
+append: ldy     index
+        lda     DEVLST,y
+
         ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
         ;; the motor to spin. https://github.com/a2stuff/a2d/issues/25
         bit     is_iic_plus_flag
@@ -944,9 +963,13 @@ append: lda     DEVLST,y        ; add it to the list
 
 :       lda     DEVLST,y
 
-        inx
+        inc     count
+        ldx     count
         sta     main::removable_device_table,x
         bne     next            ; always
+
+index:  .byte   0
+count:  .byte   0
 .endproc
 
 ;;; ============================================================

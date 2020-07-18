@@ -9168,22 +9168,31 @@ device_type_to_icon_address_table:
         .addr fileshare_icon
         .addr profile_icon ; unknown
 
+;;; Roughly follows:
+;;; Technical Note: ProDOS #21: Identifying ProDOS Devices
+;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+
 .proc get_device_type
         slot_addr := $0A
         sta     unit_number
 
-        cmp     #kRamDrvSystemUnitNum ; Glen E. Bredon's RAM.DRV.SYSTEM
-        beq     ram
-
-        ;; Look at "ID Nibble" (mostly bogus)
-        and     #%00001111      ; look at low nibble
-        bne     :+              ; 0 = Disk II
-        rts
-
         ;; Look up driver address
-:       lda     unit_number
         jsr     device_driver_address
-        bne     unk             ; RAM-based driver: just use default
+        beq     firmware        ; is $CnXX
+
+        ;; Not $CnXX so RAM-based driver
+        lda     unit_number
+        and     #%01110000      ; Mask off slot 0SSS0000
+        lsr                     ; Shift to be $0n
+        lsr
+        lsr
+        lsr
+        cmp     #3              ; Slot 3?
+        beq     ram             ; ProDOS only supports RAM disks in Slot 3
+        ora     #$C0            ; make $Cn...
+        sta     slot_addr+1     ; and fall through to use $Cn00 to probe
+
+firmware:
         lda     #$00
         sta     slot_addr       ; point at $Cn00 for firmware lookups
 
@@ -9203,7 +9212,7 @@ device_type_to_icon_address_table:
         beq     :+
 ram:    return  #kDeviceTypeRAMDisk
 
-:       lda     unit_number     ; low nibble is high nibble of $CnFE
+:       lda     unit_number
 
         ;; Old heuristic. Invalid on UDC, etc.
         ;;         and     #%00001111
@@ -13161,12 +13170,11 @@ do_on_line:
 ;;; assumes hires screen (main and aux) are safe to destroy.
 
 .proc maybe_reformat_ram
-        kRAMUnitNumber = (1<<7 | 3<<4 | DT_RAM)
-
         ;; Search DEVLST to see if S3D2 RAM was restored
         ldx     DEVCNT
 :       lda     DEVLST,x
-        cmp     #kRAMUnitNumber
+        and     #%11110000      ; DSSSnnnn
+        cmp     #$B0            ; Slot 2, Drive 2 = /RAM
         beq     format
         dex
         bpl     :-
@@ -13176,8 +13184,9 @@ do_on_line:
         ;; when detached.
 
         ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
-format: copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
-        copy    #kRAMUnitNumber, DRIVER_UNIT_NUMBER
+format: lda     DEVLST,x
+        sta     DRIVER_UNIT_NUMBER
+        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         copy16  #$2000, DRIVER_BUFFER
         lda     LCBANK1
         lda     LCBANK1

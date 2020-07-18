@@ -1382,20 +1382,23 @@ LDF72:  .byte   0
         ;; Find Slot 3 Drive 2 RAM disk
         ldx     DEVCNT
 :       lda     DEVLST,x
-        cmp     #RAM_DISK_UNITNUM
+        and     #%11110000      ; DSSSnnnn
+        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
         beq     remove
         dex
         bpl     :-
         rts
 
         ;; Remove it, shuffle everything else down.
-remove:
-        lda     DEVLST+1,x
+remove: lda     DEVLST,x
+        sta     saved_ram_unitnum
+
+shift:  lda     DEVLST+1,x
         sta     DEVLST,x
         cpx     DEVCNT
         beq     :+
         inx
-        jmp     remove
+        jmp     shift
 
 :       dec     DEVCNT
         rts
@@ -1406,10 +1409,13 @@ remove:
 .proc restore_ram_disk
         inc     DEVCNT
         ldx     DEVCNT
-        lda     #RAM_DISK_UNITNUM
+        lda     saved_ram_unitnum
         sta     DEVLST,x
         rts
 .endproc
+
+saved_ram_unitnum:
+        .byte   0
 
 ;;; ============================================================
 
@@ -3085,35 +3091,6 @@ LF1D7:  rts
 .endproc
 
 show_alert_dialog := alert_dialog::show_alert_dialog
-
-;;; ============================================================
-
-;;; Padding ???
-
-.scope
-        tya
-        lsr     a
-        bcs     :+
-        bit     $C055
-:       tay
-        lda     ($28),y
-        pha
-        cmp     #$E0
-        bcc     :+
-        sbc     #$20
-:       and     #$3F
-        sta     ($28),y
-        lda     $C000
-        bmi     :+
-        jmp     $51ED
-
-:       pla
-        sta     ($28),y
-        bit     $C054
-        lda     $C000
-        .byte   $2C
-        .byte   $10
-.endscope
 
 ;;; ============================================================
 

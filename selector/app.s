@@ -959,6 +959,9 @@ noop:   rts
 ;;; ============================================================
 
 .proc run_desktop
+        ;; DeskTop will immediately disconnect RAMDisk, but it is
+        ;; restored differently.
+        jsr     reconnect_ramdisk
         MLI_CALL OPEN, open_desktop2_params
         lda     open_desktop2_params::ref_num
         sta     read_desktop2_params::ref_num
@@ -1385,31 +1388,42 @@ watch_cursor:
 .proc disconnect_ramdisk
         ldx     DEVCNT
 :       lda     DEVLST,x
-        cmp     #RAM_DISK_UNITNUM
-        beq     loop
+        and     #%11110000      ; DSSSnnnn
+        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
+        beq     remove
         dex
         bpl     :-
         rts
 
-loop:   lda     DEVLST+1,x
+remove: lda     DEVLST,x
+        sta     saved_ram_unitnum
+
+        ;; Shift other devices down
+shift:  lda     DEVLST+1,x
         sta     DEVLST,x
         cpx     DEVCNT
-        beq     L9904
+        beq     done
         inx
-        jmp     loop
+        jmp     shift
 
-L9904:  dec     DEVCNT
+done:   dec     DEVCNT
         rts
 .endproc
 
 ;;; Restore /RAM
 .proc reconnect_ramdisk
-        inc     DEVCNT
+        lda     saved_ram_unitnum
+        beq     done
+
         ldx     DEVCNT
-        lda     #RAM_DISK_UNITNUM
         sta     DEVLST,x
-        rts
+        inc     DEVCNT
+
+done:   rts
 .endproc
+
+saved_ram_unitnum:
+        .byte   0
 
 ;;; ============================================================
 

@@ -67,30 +67,6 @@ QUIT            = $65
 READ_BLOCK      = $80
 WRITE_BLOCK     = $81
 
-;;; ============================================================
-;;; Device Types (low nibble of unit number in DEVLST)
-;;; ============================================================
-
-;;; As used by DeskTop; these are not actually correct...
-
-DT_DISKII       = $0
-DT_PROFILE      = $4
-DT_REMOVABLE    = $B
-DT_RAM          = $F
-
-;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
-;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
-;;; Other than the above types, there is not an "ID nibble". The
-;;; nibble is a copy of $CnFE's high nibble, with this meaning:
-;;;   bit 3   = removable
-;;;   bit 2   = interruptable
-;;;   bit 1-0 = number of volumes (0-1)
-;;; "You should ignore the low nibble in the unit number..."
-
-;;; BUG: /RAM could be $B3,$B7,$BB or $BF
-;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
-;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
-RAM_DISK_UNITNUM = (1<<7 | 3<<4 | DT_RAM) ; unit_num for /RAM is Slot 3, Drive 2
 
 ;;; ============================================================
 ;;; File Types
