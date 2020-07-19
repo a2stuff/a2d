@@ -912,8 +912,9 @@ desktop_icon_coords_table:
 ;;; ============================================================
 
 device_name_table:
-        .addr   dev0s, dev1s, dev2s, dev3s, dev4s, dev5s, dev6s
-        .addr   dev7s, dev8s, dev9s, dev10s, dev11s, dev12s, dev13s
+        .repeat kMaxVolumes+1, i
+        .addr   .ident(.sprintf("dev%ds", i))
+        .endrepeat
         ASSERT_ADDRESS_TABLE_SIZE device_name_table, kMaxVolumes + 1
 
 selector_menu_addr:
@@ -1029,11 +1030,11 @@ entries_read_this_block:
 
 ;;; Backup copy of DEVLST made before detaching ramdisk
 devlst_backup:
-        .res    14, 0
+        .res    kMaxVolumes+1, 0 ; TODO: Why +1?
 
         ;; index is device number (in DEVLST), value is icon number
 device_to_icon_map:
-        .res    16, 0
+        .res    kMaxVolumes+1, 0 ; TODO: Why +1?
 
 ;;; Path buffer for open_directory logic
 open_dir_path_buf:
@@ -1122,20 +1123,10 @@ str_all:PASCAL_STRING "All"
 ;;; ============================================================
 
 ;;; Device Names (populated at startup using templates below)
-dev0:    DEFINE_STRING "Slot    drive       ", dev0s
-dev1:    DEFINE_STRING "Slot    drive       ", dev1s
-dev2:    DEFINE_STRING "Slot    drive       ", dev2s
-dev3:    DEFINE_STRING "Slot    drive       ", dev3s
-dev4:    DEFINE_STRING "Slot    drive       ", dev4s
-dev5:    DEFINE_STRING "Slot    drive       ", dev5s
-dev6:    DEFINE_STRING "Slot    drive       ", dev6s
-dev7:    DEFINE_STRING "Slot    drive       ", dev7s
-dev8:    DEFINE_STRING "Slot    drive       ", dev8s
-dev9:    DEFINE_STRING "Slot    drive       ", dev9s
-dev10:   DEFINE_STRING "Slot    drive       ", dev10s
-dev11:   DEFINE_STRING "Slot    drive       ", dev11s
-dev12:   DEFINE_STRING "Slot    drive       ", dev12s
-dev13:   DEFINE_STRING "Slot    drive       ", dev13s
+        .repeat kMaxVolumes+1, i
+.ident(.sprintf("dev%d", i)):
+        DEFINE_STRING "Slot    drive       ", .ident(.sprintf("dev%ds", i))
+        .endrepeat
 
 startup_menu_item_1:    PASCAL_STRING "Slot 0"
 startup_menu_item_2:    PASCAL_STRING "Slot 0"

@@ -3522,7 +3522,7 @@ start:  sta     check_drive_flags
 
         ;; Map icon number to index in DEVLST
         lda     drive_to_refresh
-        ldy     #15
+        ldy     #kMaxVolumes
 :       cmp     device_to_icon_map,y
         beq     :+
         dey
@@ -10943,7 +10943,8 @@ vol_icon2:
         lda     selected_icon_list,x
 
         ;; Map icon to unit number
-        ldy     #15
+        ldy     #kMaxVolumes
+
 :       cmp     device_to_icon_map,y
         beq     :+
         dey
