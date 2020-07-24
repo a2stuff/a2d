@@ -1436,16 +1436,18 @@ pattern:
         .byte   %10101010
 
 pattern_index:  .byte   0
-kPatternCount = 15 + 14         ; 15 B&W patterns, 14 solid color patterns
+kPatternCount = 15 + 14 + 1 ; 15 B&W patterns, 14 solid color patterns + 1
 patterns:
         .addr pattern_checkerboard, pattern_dark, pattern_vdark, pattern_black
         .addr pattern_olives, pattern_scales, pattern_stripes
         .addr pattern_light, pattern_vlight, pattern_xlight, pattern_white
         .addr pattern_cane, pattern_brick, pattern_curvy, pattern_abrick
+        .addr pattern_rainbow
         .addr pattern_c1, pattern_c2, pattern_c3, pattern_c4
         .addr pattern_c5, pattern_c6, pattern_c7, pattern_c8
         .addr pattern_c9, pattern_cA, pattern_cB, pattern_cC
         .addr pattern_cD, pattern_cE
+        ASSERT_ADDRESS_TABLE_SIZE patterns, kPatternCount
 
 pattern_checkerboard:
         .byte   %01010101
@@ -1596,6 +1598,17 @@ pattern_abrick:
         .byte   %01111111
         .byte   %10111111
         .byte   %11011111
+
+pattern_rainbow:
+        .byte   $88     ; red
+        .byte   $99     ; magenta
+        .byte   $33     ; light blue
+        .byte   $00     ; black
+        .byte   $00     ; black
+        .byte   $22     ; green
+        .byte   $EE     ; yellow
+        .byte   $CC     ; orange
+
 
         ;; Solid colors (note that nibbles are flipped)
 pattern_c1:      .res 8, $88     ; 1 = red
