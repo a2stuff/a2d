@@ -7,7 +7,7 @@ Project page: https://github.com/a2stuff/a2d/
 Numbers like (#123) refer to items in the issue tracker.
 https://github.com/a2stuff/a2d/issues
 
-## 1.2 - alpha
+# 1.2 - alpha
 
 ### DeskTop Enhancements
 
@@ -30,7 +30,7 @@ https://github.com/a2stuff/a2d/issues
 * Holding Apple while double-clicking or using File > Open closes parent folder. (#9)
 * Apple-` or Apple-Tab cycles through open windows; Apple-~ cycles in reverse. (#143, #230)
 * Apple-Delete deletes selected files. (#150)
-* File > Get Info command shows Aux Type for files. (#148)
+* File > Get Info command shows aux type for files. (#148)
 * ProDOS 2.5 extended dates (through year 4095) are supported. (#169)
 * File > New Folder scrolls the new folder icon into view. (#16)
 * If present, BASIS.SYSTEM is used to launch unknown file types. (#40)
@@ -40,9 +40,9 @@ https://github.com/a2stuff/a2d/issues
 
 ### Desk Accessory Enhancements
 
-* Up to 12 Desk Accessories are shown in the menu (was 8). (#90)
+* Up to 12 desk accessories are shown in the menu (was 8). (#90)
 * Desk accessory files can be executed directly. (#101)
-* Desk accessory files with high bit in aux-type set are hidden in Apple menu. (#102)
+* Desk accessory files with high bit in aux type set are hidden in Apple menu. (#102)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Apple menu can contain directories, which launch windows. (#209)
 
@@ -69,15 +69,15 @@ https://github.com/a2stuff/a2d/issues
 * Find Files
   * Search a directory and descendants for filenames. Use ? and * as wildcards. (#21)
 
-Note that the Desk Accessories from version 1.2 will not work with older versions
+Note that the desk accessories from version 1.2 will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
 
-The former "Show Text File" DA is now part of the file preview
+The former Show Text File DA is now part of the file preview
 functionality (see below).
 
 ### File Preview
 
-Text, Graphics and Font files with the correct file types can be
+Text, graphics and font files with the correct file types can be
 previewed without leaving DeskTop; select the file icon then select
 File > Open, or double-click the file icon.
 
@@ -88,14 +88,14 @@ File > Open, or double-click the file icon.
     * Aux type $2000 or $4000 and 33 blocks are double hi-res images.
     * Aux type $5800 and 3 blocks are Minipix (Print Shop) images.
   * FOT ($08) files:
-    * Aux type $4000 or $4001 are packed hi-res/double-hires images. (#107)
+    * Aux type $4000 or $4001 are packed hi-res/double hi-res images. (#107)
     * 17 block files are hi-res images.
-    * 33 block files are double-hires images.
-* Font files must be type FNT ($07) and must be MGTK font resources.
+    * 33 block files are double hi-res images.
+* Font files must be type FNT ($07) and must be MGTK font resources. (This file type is officially reserved for Apple /// SOS font files, but unlikely to be confused.)
 
 To preview files of other types (e.g. view a BIN file as text) you
-can copy the appropriate preview handler, e.g. `SHOW.TEXT.FILE` from
-the `PREVIEW` folder to the `DESK.ACC` folder, and restart DeskTop. To
+can copy the appropriate preview handler, e.g. SHOW.TEXT.FILE from
+the PREVIEW folder to the DESK.ACC folder, and restart DeskTop. To
 use them, select the file, then select the appropriate command from
 the Apple menu.
 
@@ -115,12 +115,12 @@ the Apple menu.
 * Empty directories can be copied/moved. (#121)
 * Ctrl+Reset quits cleanly back to ProDOS (except buggy emulators). (#141)
 * Prevent crash with more than 8 removable devices.
-* Desk Accessories:
+* Desk accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. (#30, #39)
   * Calculator: don't mis-paint when moved offscreen and other fixes. (#33, #34)
   * Sort Directory: don't need to click before sorting. (#17)
-* Hardware/Emulator Specific:
-  * IIc Plus: don't spin slot 5 drives constantly. (Use Special > Check Drive) (#25)
+* Hardware/emulator specific:
+  * IIc Plus: don't spin Slot 5 drives constantly. (Use Special > Check Drive) (#25)
   * Laser 128: avoid hangs checking SmartPort status. (Use Special > Check Drive) (#138)
   * IIgs: color DHR is re-enabled on exit. (#43)
   * IIgs: mono DHR is re-enabled when returning from system control panel. (#193)
@@ -130,13 +130,13 @@ the Apple menu.
 
 ### Known Issues
 
-* Special > Disk Copy app is not substantially modified, and may suffer bugs fixed in DeskTop (e.g. SmartPort behavior)
-* Other issues can be found at: https://github.com/a2stuff/a2d/issues
+* Special > Disk Copy app is not substantially modified, and may suffer bugs fixed in DeskTop (e.g. SmartPort behavior).
+* Other issues can be found at https://github.com/a2stuff/a2d/issues.
 
 
 # 1.1
 
-Final release by VersionSoft/Apple Computer. November 26, 1986.
+Final release by VersionSoft/Apple Computer dated November 26, 1986.
 
-See Jay Edwards' [MouseDesk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
+See Jay Edwards' [MouseDesk/DeskTop history](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
 for more version information.
