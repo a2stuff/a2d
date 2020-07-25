@@ -3,6 +3,41 @@
 
 > Status: Work In Progress
 
+* File > Quit - verify that there is no crash under ProDOS 8
+
+* Preview a text file; verify that up/down arrow keys scroll
+* Preview a text file; verify that Apple plus up/down arrow keys scroll by page
+* Preview a text file; verify that Escape key exits
+* Preview an image file; verify that Escape key exits
+* Preview an image file on IIgs or with RGB card; verify that space bar toggles color/mono
+
+* Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons
+* Run on system with realtime clock; verify that time shows in top-right of menu
+
+* Hold Apple and double-click folder; verify that parent window closes.
+* Select folder, hold Apple, select File > Open; verify that parent window closes.
+* Open folder with new files. Use File > Get Info; verify dates after 1999 show correctly.
+* Open folder with new files. Use View > By Date; verify dates after 1999 show correctly.
+
+* Open a window for a volume; open a window for a folder; close volume window; close folder window. Repeat 10 times to verify that the volume table doesn't have leaks.
+
+* Open a folder containing directory. Open a folder by double-clicking. Apple > Sort Directory. Verify that files are sorted by type/name.
+
+* Run DeskTop on a IIc+ from a 3.5" floppy on internal drive. Verify that the disk doesn't spin constantly.
+
+* Run DeskTop on a system without a system clock. Run Apple > Control Panels > Date. Set date. Reboot system, and re-run DeskTop.Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
+
+* Run Apple > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
+
+* Run Apple > Calculator. Drag Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen.
+
+* On a system with a system clock, invoke Apple > Control Panels > Date. Verify that the date is read-only.
+
+* Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, FloppyEmu); verify that all show up.
+
+* Verify that GS/OS filename cases show correctly. (e.g. ProDOS 2.5 disk)
+
+
 * Open a volume with double-click
 * Open a directory with double-click
 * Open a text file with double-click
