@@ -7,7 +7,7 @@ Project Page: https://github.com/a2stuff/a2d/
 Numbers like (#123) refer to items in the issue tracker.
 https://github.com/a2stuff/a2d/issues
 
-# 1.2 - Alpha
+# 1.2 Pre-Alpha
 
 ### DeskTop Enhancements
 
