@@ -57,7 +57,7 @@ https://github.com/a2stuff/a2d/issues
 * Key Caps
   * Shows an on-screen keyboard map and indicates which key is pressed.
 * Screen Dump
-  * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1. (#46)
+  * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in slot 1. (#46)
 * Eyes
   * Eyes that follow the mouse. (#53)
 * Flying Toasters
@@ -94,8 +94,8 @@ File > Open, or double-click the file icon.
 * Font files must be type FNT ($07) and must be MGTK font resources. (This file type is officially reserved for Apple /// SOS font files, but unlikely to be confused.)
 
 To preview files of other types (e.g. view a BIN file as text) you
-can copy the appropriate preview handler, e.g. SHOW.TEXT.FILE from
-the PREVIEW folder to the DESK.ACC folder, and restart DeskTop. To
+can copy the appropriate preview handler, e.g. `SHOW.TEXT.FILE` from
+the `PREVIEW` folder to the `DESK.ACC` folder, and restart DeskTop. To
 use them, select the file, then select the appropriate command from
 the Apple menu.
 
@@ -107,7 +107,7 @@ the Apple menu.
 * SELECTOR.LIST file created if missing. (#92)
 * Prevent crash after renaming volume. (#99)
 * Prevent crash with more than two volumes on a SmartPort interface. (#45)
-* Startup menu will include Slot 2. (#106)
+* Startup menu will include slot 2. (#106)
 * Correct odd behavior for file type $08. (#103)
 * New Folder/Rename file dialog no longer truncated after IP. (#118)
 * Correct rendering issues with desktop volume icons. (#117, #152)
@@ -120,7 +120,7 @@ the Apple menu.
   * Calculator: Don't mis-paint when moved offscreen and other fixes. (#33, #34)
   * Sort Directory: Don't need to click before sorting. (#17)
 * Hardware/Emulator Specific:
-  * IIc Plus: Don't spin Slot 5 drives constantly. (Use Special > Check Drive) (#25)
+  * IIc Plus: Don't spin slot 5 drives constantly. (Use Special > Check Drive) (#25)
   * Laser 128: Avoid hangs checking SmartPort status. (Use Special > Check Drive) (#138)
   * IIgs: Color DHR is re-enabled on exit. (#43)
   * IIgs: Mono DHR is re-enabled when returning from system control panel. (#193)
