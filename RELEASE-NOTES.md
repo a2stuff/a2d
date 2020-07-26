@@ -93,8 +93,8 @@ File > Open, or double-click the file icon.
     * 33 block files are double hi-res images.
 * Font files must be type FNT ($07) and must be MGTK font resources. (This file type is officially reserved for Apple /// SOS font files, but unlikely to be confused.)
 
-To preview files of other types (e.g. view a BIN file as text) you
-can copy the appropriate preview handler, e.g. `SHOW.TEXT.FILE` from
+To preview files of other types (e.g. view a BIN file as text), you
+can copy the appropriate preview handler (e.g. `SHOW.TEXT.FILE`) from
 the `PREVIEW` folder to the `DESK.ACC` folder, and restart DeskTop. To
 use them, select the file, then select the appropriate command from
 the Apple menu.
