@@ -77,7 +77,7 @@ functionality (see below).
 
 ### File Preview
 
-Text, graphics and font files with the correct file types can be
+Text, graphics, and font files with the correct file types can be
 previewed without leaving DeskTop; select the file icon then select
 File > Open, or double-click the file icon.
 
