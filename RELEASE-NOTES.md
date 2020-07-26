@@ -1,13 +1,13 @@
 # Apple II DeskTop
 
-Home page: https://a2desktop.com
+Home Page: https://a2desktop.com
 
-Project page: https://github.com/a2stuff/a2d/
+Project Page: https://github.com/a2stuff/a2d/
 
 Numbers like (#123) refer to items in the issue tracker.
 https://github.com/a2stuff/a2d/issues
 
-# 1.2 - alpha
+# 1.2 - Alpha
 
 ### DeskTop Enhancements
 
@@ -19,7 +19,7 @@ https://github.com/a2stuff/a2d/issues
 * Menu bar menus are now drop-down in addition to pull-down. (#104)
 * Add Special > Check Drive command to refresh a single drive. (#97)
 * Reorganized/renamed several menu items. (#13)
-* New file type icons: graphics, fonts, AppleWorks, relocatable, command, IIgs-specific, and DAs. (#105, #116)
+* New file type icons: graphics, IIgs-specific, AppleWorks, relocatable, command, fonts, and DAs. (#105, #116)
 * Desktop icon shown for AppleTalk file shares. (#88)
 * Improvements to several existing icon bitmaps. (#74)
 * Icons for volumes positioned more predictably and sensibly. (#94)
@@ -83,11 +83,11 @@ File > Open, or double-click the file icon.
 
 * Text files must be type TXT ($04).
 * Graphics files must be type FOT ($08), or BIN ($06) with specific aux type:
-  * BIN ($06) files:
+  * BIN ($06) Files:
     * Aux type $2000 or $4000 and 17 blocks are hi-res images.
     * Aux type $2000 or $4000 and 33 blocks are double hi-res images.
     * Aux type $5800 and 3 blocks are Minipix (Print Shop) images.
-  * FOT ($08) files:
+  * FOT ($08) Files:
     * Aux type $4000 or $4001 are packed hi-res/double hi-res images. (#107)
     * 17 block files are hi-res images.
     * 33 block files are double hi-res images.
@@ -115,18 +115,18 @@ the Apple menu.
 * Empty directories can be copied/moved. (#121)
 * Ctrl+Reset quits cleanly back to ProDOS (except buggy emulators). (#141)
 * Prevent crash with more than 8 removable devices.
-* Desk accessories:
+* Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. (#30, #39)
-  * Calculator: don't mis-paint when moved offscreen and other fixes. (#33, #34)
-  * Sort Directory: don't need to click before sorting. (#17)
-* Hardware/emulator specific:
-  * IIc Plus: don't spin Slot 5 drives constantly. (Use Special > Check Drive) (#25)
-  * Laser 128: avoid hangs checking SmartPort status. (Use Special > Check Drive) (#138)
-  * IIgs: color DHR is re-enabled on exit. (#43)
-  * IIgs: mono DHR is re-enabled when returning from system control panel. (#193)
-  * Macintosh LC IIe Option Card: don't crash on startup. (#93)
-  * Macintosh LC IIe Option Card: correct problems with interrupts affecting AppleTalk. (#129)
-  * KEGS-based IIgs emulators no longer crash on startup. (#85)
+  * Calculator: Don't mis-paint when moved offscreen and other fixes. (#33, #34)
+  * Sort Directory: Don't need to click before sorting. (#17)
+* Hardware/Emulator Specific:
+  * IIc Plus: Don't spin Slot 5 drives constantly. (Use Special > Check Drive) (#25)
+  * Laser 128: Avoid hangs checking SmartPort status. (Use Special > Check Drive) (#138)
+  * IIgs: Color DHR is re-enabled on exit. (#43)
+  * IIgs: Mono DHR is re-enabled when returning from system control panel. (#193)
+  * Macintosh LC PDS IIe Option Card: Don't crash on startup. (#93)
+  * Macintosh LC PDS IIe Option Card: Correct problems with interrupts affecting AppleTalk. (#129)
+  * KEGS-based IIgs Emulators: Don't crash on startup. (#85)
 
 ### Known Issues
 
@@ -138,5 +138,5 @@ the Apple menu.
 
 Final release by VersionSoft/Apple Computer dated November 26, 1986.
 
-See Jay Edwards' [MouseDesk/DeskTop history](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
+See Jay Edwards' [MouseDesk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
 for more version information.
