@@ -91,7 +91,7 @@ File > Open, or double-click the file icon.
     * Aux type $4000 or $4001 are packed hi-res/double hi-res images. (#107)
     * 17 block files are hi-res images.
     * 33 block files are double hi-res images.
-* Font files must be type FNT ($07), and must be MGTK font resources. (This file type is officially reserved for Apple /// SOS font files, but unlikely to be confused.)
+* Font files must be type FNT ($07) and must be MGTK font resources. (This file type is officially reserved for Apple /// SOS font files, but unlikely to be confused.)
 
 To preview files of other types (e.g. view a BIN file as text), you
 can copy the appropriate preview handler (e.g. `SHOW.TEXT.FILE`) from
