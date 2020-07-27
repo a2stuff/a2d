@@ -96,8 +96,8 @@ File > Open, or double-click the file icon.
 To preview files of other types (e.g. view a BIN file as text), you
 can copy the appropriate preview handler (e.g. `SHOW.TEXT.FILE`) from
 the `PREVIEW` folder to the `DESK.ACC` folder, and restart DeskTop. To
-use them, select the file and then select the appropriate command from
-the Apple menu.
+use them, select the file icon and then select the appropriate command
+from the Apple menu.
 
 ### Notable Fixes
 
