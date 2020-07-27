@@ -78,7 +78,7 @@ functionality (see below).
 ### File Preview
 
 Text, graphics, and font files with the correct file types can be
-previewed without leaving DeskTop; select the file icon then select
+previewed without leaving DeskTop; select the file icon and then select
 File > Open, or double-click the file icon.
 
 * Text files must be type TXT ($04).
@@ -96,7 +96,7 @@ File > Open, or double-click the file icon.
 To preview files of other types (e.g. view a BIN file as text), you
 can copy the appropriate preview handler (e.g. `SHOW.TEXT.FILE`) from
 the `PREVIEW` folder to the `DESK.ACC` folder, and restart DeskTop. To
-use them, select the file, then select the appropriate command from
+use them, select the file and then select the appropriate command from
 the Apple menu.
 
 ### Notable Fixes
