@@ -19,7 +19,7 @@ https://github.com/a2stuff/a2d/issues
 * Menu bar menus are now drop-down in addition to pull-down. (#104)
 * Add Special > Check Drive command to refresh a single drive. (#97)
 * Reorganized/renamed several menu items. (#13)
-* New file type icons: graphics, IIgs-specific, AppleWorks, relocatable, command, fonts, and DAs. (#105, #116)
+* Additional file type icons for graphics, IIgs-specific, AppleWorks, relocatable, command, fonts, and DAs. (#105, #116)
 * Desktop icon shown for AppleTalk file shares. (#88)
 * Improvements to several existing icon bitmaps. (#74)
 * Icons for volumes positioned more predictably and sensibly. (#94)
@@ -63,7 +63,7 @@ https://github.com/a2stuff/a2d/issues
 * Flying Toasters
   * Homage to the classic After Dark screen saver by Jack Eastman. (#27)
 * Melt
-  * Another classic screen saver effect: the screen melts down like dripping wax. (#27)
+  * Another classic screen saver effect. The screen melts down like dripping wax. (#27)
 * System Speed
   * Enable/disable built-in and some popular add-on system accelerators. (#26)
 * Find Files
