@@ -23,7 +23,7 @@ my @widths = ();
 my @offsets = ();
 
 my $signature = getbyte();
-die "BAD! Expected signature 0x20, saw $signature\n" unless $signature = 0x20;
+die "BAD! Expected signature 0x20, saw $signature\n" unless $signature == 0x20;
 
 my $max = getbyte();
 my $height = getbyte();
@@ -49,9 +49,9 @@ for (my $i = 0; $i < $max-32+1; ++$i) {
 }
 
 for (my $i = 0; $i < $max-32+1; ++$i) {
-    printf("== char: %d / '%c' ==\n", $i, $i+32);
     my $o = $offsets[$i];
     my $width = $widths[$i];
+    printf("== char: %d / '%c' / w=%d ==\n", $i, $i+32, $width);
     if ($o != $offset) {
         die "BAD! char $i offset $offset expected $o\n";
     }
