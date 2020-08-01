@@ -255,8 +255,10 @@ font_icon:
 
 ;;; ============================================================
 
+kPolySize = 8
+
 .params poly
-num_vertices:   .byte   8
+num_vertices:   .byte   kPolySize
 lastpoly:       .byte   0       ; 0 = last poly
 vertices:
 v0:     DEFINE_POINT 0, 0, v0
@@ -2500,7 +2502,7 @@ loop1:  sub16   poly::vertices+0,x, vl_offset::xcoord, poly::vertices+0,x
         inx
         inx
         inx
-        cpx     #32
+        cpx     #kPolySize * .sizeof(MGTK::Point)
         bne     loop1
         ldx     #0
 
@@ -2510,7 +2512,7 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
         inx
         inx
         inx
-        cpx     #32
+        cpx     #kPolySize * .sizeof(MGTK::Point)
         bne     loop2
         rts
 .endproc
@@ -3024,7 +3026,7 @@ vert:   cmp16   win_t, cr_t
 
 .proc shift_port_down
         ;; For window's items/used/free space bar
-        kOffset = 15
+        kOffset = kWindowHeaderHeight + 1
 
         add16   icon_grafport::viewloc::ycoord, #kOffset, icon_grafport::viewloc::ycoord
         add16   icon_grafport::cliprect::y1, #kOffset, icon_grafport::cliprect::y1
@@ -3683,8 +3685,8 @@ maprect:        DEFINE_RECT 0, 0, 36, 23
 
 kAlertRectWidth         = 420
 kAlertRectHeight        = 55
-kAlertRectLeft          = (kScreenWidth - kAlertRectWidth)/2
-kAlertRectTop           = (kScreenHeight - kAlertRectHeight)/2
+kAlertRectLeft          = (::kScreenWidth - kAlertRectWidth)/2
+kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
 
 alert_rect:
         DEFINE_RECT_SZ kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
@@ -3814,6 +3816,7 @@ start:  pha                     ; error code
         dex
         bpl     :-
 
+        ;; TODO: Figure out these constants.
         copy16  #550, main_grafport_cliprect_x2
         copy16  #185, main_grafport_cliprect_y2
         MGTK_CALL MGTK::SetPort, main_grafport
@@ -4249,20 +4252,21 @@ col:    lda     xbyte
 
 .proc calc_x_save_bounds
         ldy     #0
-        cpx     #2
+        cpx     #2              ; X >= 512 ?
         bne     :+
-        ldy     #73
+        ldy     #$200 / 7
         clc
         adc     #1
 
-:       cpx     #1
+:       cpx     #1              ; 512 > X >= 256 ?
         bne     :+
-        ldy     #36
+        ldy     #$100 / 7
         clc
         adc     #4
         bcc     :+
         iny
         sbc     #7
+
 :       cmp     #7
         bcc     :+
         sbc     #7
@@ -4420,7 +4424,7 @@ num2:   .byte   0
         sta     divisor+1
         sta     remainder
         sta     remainder+1
-        ldx     #16
+        ldx     #16             ; bits
 
 loop:   asl     dividend
         rol     dividend+1

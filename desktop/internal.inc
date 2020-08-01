@@ -34,6 +34,9 @@ kTrashIconNum   = 1
 ;;; except S3,D2 is assumed to be /RAM which is disconnected.
 kMaxVolumes     = 13
 
+;;; Height of items/used/free header in DeskTop windows.
+kWindowHeaderHeight     = 14
+
 
 ;;; ============================================================
 ;;; Memory Areas

@@ -746,6 +746,10 @@ __pushorg_depth__ .set 0
 ;;; Assertions
 ;;; ============================================================
 
+.macro ASSERT_EQUALS actual, expected
+    .assert (actual) = (expected), error, .sprintf("expected %d actual %d", (actual), (expected))
+.endmacro
+
 .macro ASSERT_ADDRESS addr, opt_message
     .if .paramcount = 2
         .assert * = (addr), error, .sprintf("%s mismatch, expected $%X actual $%X", opt_message, (addr), *)

@@ -185,28 +185,31 @@ L415B:  sta     active_window_id
         lda     active_window_id
         jsr     copy_window_portbits
         jsr     OverwriteWindowPort
+
+        winfo_ptr := $06
+
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #22
-        sub16in ($06),y, window_grafport::viewloc::ycoord, L4242
-        cmp16   L4242, #15
+        stax    winfo_ptr
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        sub16in (winfo_ptr),y, window_grafport::viewloc::ycoord, yoff
+        cmp16   yoff, #kWindowHeaderHeight+1
         bpl     L41CB
         jsr     offset_window_grafport
 
-        ldx     #11
-        ldy     #31
-        copy    window_grafport,x, ($06),y
+        ldx     #MGTK::GrafPort::maprect + MGTK::Point::ycoord + 1
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Point::ycoord + 1
+        copy    window_grafport,x, (winfo_ptr),y
         dey
         dex
-        copy    window_grafport,x, ($06),y
+        copy    window_grafport,x, (winfo_ptr),y
 
-        ldx     #3
-        ldy     #23
-        copy    window_grafport,x, ($06),y
+        ldx     #MGTK::GrafPort::viewloc + MGTK::Point::ycoord + 1
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord + 1
+        copy    window_grafport,x, (winfo_ptr),y
         dey
         dex
-        copy    window_grafport,x, ($06),y
+        copy    window_grafport,x, (winfo_ptr),y
 
 L41CB:  ldx     cached_window_id
         dex
@@ -225,8 +228,8 @@ by_icon:
 
         COPY_BLOCK window_grafport::cliprect, tmp_rect
 
-        copy    #0, L4241
-L41FE:  lda     L4241
+        copy    #0, index
+L41FE:  lda     index
         cmp     cached_window_icon_count
         beq     L4227
         tax
@@ -234,7 +237,7 @@ L41FE:  lda     L4241
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     :+
         ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-:       inc     L4241
+:       inc     index
         jmp     L41FE
 
 L4227:  copy    #0, draw_window_header_flag
@@ -247,8 +250,8 @@ L4227:  copy    #0, draw_window_header_flag
         jsr     assign_window_portbits
         jmp     reset_main_grafport
 
-L4241:  .byte   0
-L4242:  .word   0
+index:  .byte   0
+yoff:   .word   0
 .endproc
 
 ;;; ============================================================
@@ -4661,12 +4664,9 @@ delta:  .word   0
 ;;; Output: A = Window height without items/used/free header
 
 .proc calc_height_minus_header
-
-        kWindowHeaderHeight = 14 ; TODO: move somewhere common
-
         tya
         sec
-        sbc     #14
+        sbc     #kWindowHeaderHeight
         rts
 .endproc
 
@@ -5822,14 +5822,16 @@ index:  .byte   0
 
 .proc offset_window_grafport_impl
 
+        kOffset = kWindowHeaderHeight + 1
+
 flag_clear:
         lda     #$80
         beq     :+
 flag_set:
         lda     #0
 :       sta     flag
-        add16   window_grafport::viewloc::ycoord, #15, window_grafport::viewloc::ycoord
-        add16   window_grafport::cliprect::y1, #15, window_grafport::cliprect::y1
+        add16   window_grafport::viewloc::ycoord, #kOffset, window_grafport::viewloc::ycoord
+        add16   window_grafport::cliprect::y1, #kOffset, window_grafport::cliprect::y1
         bit     flag
         bmi     done
         MGTK_RELAY_CALL MGTK::SetPort, window_grafport
@@ -6766,6 +6768,12 @@ volume: ldx     cached_window_id
         kIconSpacingX  = 80
         kIconSpacingY  = 32
 
+        kMinWindowWidth = 170
+        kMaxWindowWidth = 450
+
+        kMinWindowHeight = 50
+        kMaxWindowHeight = 108
+
 window_id:      .byte   0
 iconbits:       .addr   0
 iconentry_type: .byte   0
@@ -6870,34 +6878,34 @@ L76BB:  bit     flag
         lda     iconbb_rect+MGTK::Rect::y2+1
         sbc     #0
         sta     iconbb_rect+MGTK::Rect::y2+1
-        cmp16   iconbb_rect+MGTK::Rect::x2, #170
+        cmp16   iconbb_rect+MGTK::Rect::x2, #kMinWindowWidth
         bmi     L7705
-        cmp16   iconbb_rect+MGTK::Rect::x2, #450
+        cmp16   iconbb_rect+MGTK::Rect::x2, #kMaxWindowWidth
         bpl     L770C
         ldax    iconbb_rect+MGTK::Rect::x2
         jmp     L7710
 
-L7705:  ldax    #170
+L7705:  ldax    #kMinWindowWidth
         jmp     L7710
 
-L770C:  ldax    #450
+L770C:  ldax    #kMaxWindowWidth
 L7710:  ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
         sta     (winfo_ptr),y
         txa
         iny
         sta     (winfo_ptr),y
 
-        cmp16   iconbb_rect+MGTK::Rect::y2, #50
+        cmp16   iconbb_rect+MGTK::Rect::y2, #kMinWindowHeight
         bmi     L7739
-        cmp16   iconbb_rect+MGTK::Rect::y2, #108
+        cmp16   iconbb_rect+MGTK::Rect::y2, #kMaxWindowHeight
         bpl     L7740
         ldax    iconbb_rect+MGTK::Rect::y2
         jmp     L7744
 
-L7739:  ldax    #50
+L7739:  ldax    #kMinWindowHeight
         jmp     L7744
 
-L7740:  ldax    #108
+L7740:  ldax    #kMaxWindowHeight
 L7744:  ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::y2
         sta     (winfo_ptr),y
         txa
@@ -7195,7 +7203,7 @@ tmp:    .byte   0
         ;; y coords
         lda     window_grafport::cliprect::y1
         clc
-        adc     #12
+        adc     #kWindowHeaderHeight - 2
         sta     header_line_left::ycoord
         sta     header_line_right::ycoord
         lda     window_grafport::cliprect::y1+1
@@ -7225,7 +7233,7 @@ tmp:    .byte   0
         MGTK_RELAY_CALL MGTK::LineTo, header_line_right
 
         ;; Baseline for header text
-        add16 window_grafport::cliprect::y1, #10, items_label_pos::ycoord
+        add16 window_grafport::cliprect::y1, #kWindowHeaderHeight-4, items_label_pos::ycoord
 
         ;; Draw "XXX Items"
         lda     cached_window_icon_count
@@ -7298,7 +7306,7 @@ tmp:    .byte   0
         lda     xcoord
         cmp     #24             ; threshold
         bcc     nosub
-:       sub16   pos_k_available::xcoord, #12, pos_k_available::xcoord
+:       sub16   pos_k_available::xcoord, #kWindowHeaderHeight-2, pos_k_available::xcoord
 nosub:  lsr16   xcoord          ; divide by 2 to center
         add16   width_items_label_padded, xcoord, pos_k_in_disk::xcoord
         jmp     finish
@@ -7819,8 +7827,9 @@ inext:  inc     record_num
         ora     #$80
         sta     (ptr),y
 
-        lda     #'Z'
-        ldx     #15
+        kMaxFilenameLength = 15
+        lda     #'Z'            ; Make name 'ZZZZZZZZZZZZZZZ' (last possible)
+        ldx     #kMaxFilenameLength
 :       sta     $0808,x
         dex
         bpl     :-
@@ -8013,12 +8022,16 @@ next:   inc     index
         lda     LCBANK1
         lda     LCBANK1
 
-        copy16  #84, pos_col_name::xcoord
-        copy16  #203, pos_col_type::xcoord
+        kNameCol = 84
+        kTypeCol = 203
+        kDateCol = 231
+
+        copy16  #kNameCol, pos_col_name::xcoord
+        copy16  #kTypeCol, pos_col_type::xcoord
         lda     #0
         sta     pos_col_size::xcoord
         sta     pos_col_size::xcoord+1
-        copy16  #231, pos_col_date::xcoord
+        copy16  #kDateCol, pos_col_date::xcoord
 
         lda     LCBANK2
         lda     LCBANK2
@@ -8365,7 +8378,7 @@ in_range:
         name := list_view_filerecord + FileRecord::name
 
         lda     name
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         sta     text_buffer2::length
         tax
 loop:   lda     name,x
@@ -8384,8 +8397,7 @@ loop:   lda     name,x
         lda     file_type
         jsr     compose_file_type_string
 
-        ;; BUG: should be 4 not 5???
-        COPY_BYTES 5, str_file_type, text_buffer2::data-1
+        COPY_BYTES 5, str_file_type, text_buffer2::length ; 4 characters + length
 
         rts
 .endproc
@@ -9222,10 +9234,13 @@ ram:    return  #kDeviceTypeRAMDisk
         ;;         and     #%00001000      ; bit 3 = is removable?
 
         ;; So instead, just assume <=1600 blocks is a 3.5" floppy
+
+        kMax35FloppyBlocks = 1600
+
         jsr     get_block_count
         bcs     hd
         stax    blocks
-        cmp16   blocks, #1601
+        cmp16   blocks, #kMax35FloppyBlocks+1
         bcs     hd
         return  #kDeviceTypeRemovable
 
@@ -11767,11 +11782,11 @@ store:  sta     is_dir_flag
         jsr     dec_file_count_and_run_copy_dialog_proc
 
         ;; Copy access, file_type, aux_type, storage_type
-        ldy     #7
+        ldy     #src_file_info_params::storage_type - src_file_info_params
 :       lda     src_file_info_params,y
         sta     create_params2,y
         dey
-        cpy     #2
+        cpy     #src_file_info_params::access - src_file_info_params - 1
         bne     :-
 
         copy    #ACCESS_DEFAULT, create_params2::access
@@ -11781,13 +11796,13 @@ store:  sta     is_dir_flag
         bcs     done
 
         ;; Copy create_time/create_date
-        ldy     #17
-        ldx     #11
+        ldy     #src_file_info_params::create_time - src_file_info_params + 1
+        ldx     #create_params2::create_time - create_params2 + 1
 :       lda     src_file_info_params,y
         sta     create_params2,x
         dex
         dey
-        cpy     #13
+        cpy     #src_file_info_params::create_date - src_file_info_params - 1
         bne     :-
 
         ;; If a volume, need to create a subdir instead
@@ -14056,6 +14071,8 @@ do4:    jsr     Bell
 .proc get_size_dialog_proc
         ptr := $6
 
+        kValueLeft = 165
+
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     (ptr),y
@@ -14092,7 +14109,7 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        copy    #165, dialog_label_pos
+        copy    #kValueLeft, dialog_label_pos
         yax_call draw_dialog_label, 1, str_file_count
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #3
@@ -14105,7 +14122,7 @@ do1:    ldy     #1
         ldy     #0
         copy16in (ptr),y, file_count
         jsr     compose_file_count_string
-        copy    #165, dialog_label_pos
+        copy    #kValueLeft, dialog_label_pos
         yax_call draw_dialog_label, 2, str_file_count
         rts
 
@@ -14330,6 +14347,8 @@ LAF16:  jsr     close_prompt_dialog
 .proc get_info_dialog_proc
         ptr := $6
 
+        kValueLeft = 165
+
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     (ptr),y
@@ -14390,7 +14409,7 @@ populate_value:
         copy    (ptr),y, row
         tay
         jsr     draw_colon
-        copy    #165, dialog_label_pos
+        copy    #kValueLeft, dialog_label_pos
         jsr     copy_dialog_param_addr_to_ptr
 
         ;; Draw the string at addr
@@ -14427,7 +14446,9 @@ row:    .byte   0
 ;;; Draw ":" after dialog label
 
 .proc draw_colon
-        copy    #160, dialog_label_pos
+        kColonLeft = 160
+
+        copy    #kColonLeft, dialog_label_pos
         addr_call draw_dialog_label, aux::str_colon
         rts
 .endproc
@@ -15018,7 +15039,7 @@ done:   jmp     reset_main_grafport
         sta     textlen
         MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
         lsr16   result
-        sub16   #200, result, dialog_label_pos
+        sub16   #aux::kPromptDialogWidth/2, result, dialog_label_pos
         pla
 
         ;; y = base + aux::kDialogLabelHeight * line
