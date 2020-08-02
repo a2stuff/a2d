@@ -2473,7 +2473,7 @@ entry:
         bpl     :-
 
         lda     active_window_id
-        jsr     create_file_icon_ep2
+        jsr     create_icons_and_preserve_window_size
 
         lda     active_window_id
         jsr     set_port_from_window_id
@@ -6223,7 +6223,6 @@ L7223:  iny
 
         ;; See FileRecord struct for record structure
 
-        ;; TODO: Determine if this case adjustment is necessary
         txa
         pha
         tya
@@ -6761,15 +6760,16 @@ volume: ldx     cached_window_id
         copy16  vol_kb_used, window_k_used_table,x
         copy16  vol_kb_free, window_k_free_table,x
         lda     cached_window_id
-        jsr     create_file_icon_ep1
+        jsr     create_icons_and_set_window_size
         rts
 
 .endproc
 
 ;;; ============================================================
 ;;; File Icon Entry Construction
+;;; Inputs: A = window_id
 
-.proc create_file_icon
+.proc create_icons_for_window
 
         kIconSpacingX  = 80
         kIconSpacingY  = 32
@@ -6784,7 +6784,8 @@ window_id:      .byte   0
 iconbits:       .addr   0
 iconentry_type: .byte   0
 icon_height:    .word   0
-L7625:  .byte   0               ; ???
+
+index:  .byte   0
 
         kMaxIconHeight = 17
 
@@ -6803,22 +6804,25 @@ icons_this_row:
 icon_coords:
         DEFINE_POINT 0, 0, icon_coords
 
-flag:   .byte   0               ; ???
+preserve_window_size_flag:
+        .byte   0
 
-.proc ep1                       ; entry point #1 ???
+.proc impl
+ep_set_window_size:
         pha
         lda     #0
-        beq     L7647
+        beq     common
 
-ep2:    pha                     ; entry point #2 ???
+ep_preserve_window_size:
+        pha
         ldx     cached_window_id
         dex
         lda     window_to_dir_icon_table,x
-        ;; TODO: Guaranteed to exist?
-        sta     icon_params2
+        sta     icon_params2    ; Guaranteed to exist, since window just created
         lda     #$80
+        ;; Fall through
 
-L7647:  sta     flag
+common: sta     preserve_window_size_flag
         pla
         sta     window_id
         jsr     push_pointers
@@ -6827,7 +6831,7 @@ L7647:  sta     flag
 
         lda     #0
         sta     icons_this_row
-        sta     L7625
+        sta     index
 
         ldx     #3
 :       sta     icon_coords,x
@@ -6841,41 +6845,51 @@ L7647:  sta     flag
         beq     :+
         dex
         bpl     :-
-        rts
+        rts                     ; BUG: Needs pop_pointers?
+
+        ;; Pointer to file records
+        records_ptr := $06
 
 :       txa
         asl     a
         tax
-        copy16  window_filerecord_table,x, $06
+        copy16  window_filerecord_table,x, records_ptr
+        lda     LCBANK2         ; get file count (resides in LC2)
         lda     LCBANK2
-        lda     LCBANK2
-        ldy     #0
-        lda     ($06),y
-        sta     L7764
+        ldy     #0              ; first byte in list is the list size
+        lda     (records_ptr),y
+        sta     num_files
         lda     LCBANK1
         lda     LCBANK1
-        inc16   $06
+        inc16   records_ptr
         lda     cached_window_id
         sta     active_window_id
-L76AA:  lda     L7625
-        cmp     L7764
-        beq     L76BB
-        jsr     alloc_and_populate_file_icon
-        inc     L7625
-        jmp     L76AA
 
-L76BB:  bit     flag
+        ;; Loop over files, creating icon for each
+:       lda     index
+        cmp     num_files
+        beq     :+
+        jsr     alloc_and_populate_file_icon
+        inc     index
+        jmp     :-
+
+:       bit     preserve_window_size_flag
         bpl     :+
         jsr     pop_pointers
         rts
 
+        ;; --------------------------------------------------
+        ;; Compute the window initial size, based on icons bounding box
+
 :       jsr     compute_icons_bbox
-        lda     window_id
-        jsr     window_lookup
 
         winfo_ptr := $06
 
+        lda     window_id
+        jsr     window_lookup
         stax    winfo_ptr
+
+        ;; bbox_height -= window_y (???)
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 2 ; ycoord
         lda     iconbb_rect+MGTK::Rect::y2
         sec
@@ -6884,51 +6898,72 @@ L76BB:  bit     flag
         lda     iconbb_rect+MGTK::Rect::y2+1
         sbc     #0
         sta     iconbb_rect+MGTK::Rect::y2+1
+
+        ;; Check if width is < min or > max
         cmp16   iconbb_rect+MGTK::Rect::x2, #kMinWindowWidth
-        bmi     L7705
+        bmi     use_minw
         cmp16   iconbb_rect+MGTK::Rect::x2, #kMaxWindowWidth
-        bpl     L770C
+        bpl     use_maxw
         ldax    iconbb_rect+MGTK::Rect::x2
-        jmp     L7710
+        jmp     assign_width
 
-L7705:  ldax    #kMinWindowWidth
-        jmp     L7710
+use_minw:
+        ldax    #kMinWindowWidth
+        jmp     assign_width
 
-L770C:  ldax    #kMaxWindowWidth
-L7710:  ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
+use_maxw:
+        ldax    #kMaxWindowWidth
+
+assign_width:
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
         sta     (winfo_ptr),y
         txa
         iny
         sta     (winfo_ptr),y
+
+        ;; Check if height is < min or > max
 
         cmp16   iconbb_rect+MGTK::Rect::y2, #kMinWindowHeight
-        bmi     L7739
+        bmi     use_minh
         cmp16   iconbb_rect+MGTK::Rect::y2, #kMaxWindowHeight
-        bpl     L7740
+        bpl     use_maxh
         ldax    iconbb_rect+MGTK::Rect::y2
-        jmp     L7744
+        jmp     assign_height
 
-L7739:  ldax    #kMinWindowHeight
-        jmp     L7744
+use_minh:
+        ldax    #kMinWindowHeight
+        jmp     assign_height
 
-L7740:  ldax    #kMaxWindowHeight
-L7744:  ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::y2
+use_maxh:
+        ldax    #kMaxWindowHeight
+
+assign_height:
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::y2
         sta     (winfo_ptr),y
         txa
         iny
         sta     (winfo_ptr),y
+
+        ;; Update scrollbars
         lda     thumbmax
         ldy     #MGTK::Winfo::hthumbmax
         sta     (winfo_ptr),y
         ldy     #MGTK::Winfo::vthumbmax
         sta     (winfo_ptr),y
+
+        ;; Animate the window being opened
         lda     icon_params2
         ldx     window_id
         jsr     animate_window_open
+
+        ;; Finished
         jsr     pop_pointers
         rts
 
-L7764:  .byte   $00,$00,$00
+num_files:
+        .byte   0
+
+        .byte   $00,$00         ; Unused ???
 
 thumbmax:
         .byte   20
@@ -7113,8 +7148,8 @@ icon_type:
 .endproc
 
 .endproc
-        create_file_icon_ep2 := create_file_icon::ep1::ep2
-        create_file_icon_ep1 := create_file_icon::ep1
+        create_icons_and_preserve_window_size := create_icons_for_window::impl::ep_preserve_window_size
+        create_icons_and_set_window_size := create_icons_for_window::impl::ep_set_window_size
 
 
 ;;; ============================================================
