@@ -5583,7 +5583,10 @@ list_view:
         inc16   file_record_ptr ; now points at first entry in list
 
         ;; First row
-        lda     #16
+
+        kFirstRowBaseline = 16
+
+        lda     #kFirstRowBaseline
         sta     pos_col_name::ycoord
         sta     pos_col_type::ycoord
         sta     pos_col_size::ycoord
@@ -6667,10 +6670,13 @@ has_parent:
         lda     cached_window_id
         jsr     window_lookup
         stax    winfo_ptr
-        ldy     #MGTK::Winfo::port
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc
 
         ;; xcoord = (window_id-1) * 16 + 5
         ;; ycoord = (window_id-1) * 8 + 27
+
+        kWindowXOffset = 5
+        kWindowYOffset = 27
 
         lda     cached_window_id
         sec
@@ -6681,7 +6687,7 @@ has_parent:
         asl     a
 
         pha
-        adc     #5
+        adc     #kWindowXOffset
         sta     (winfo_ptr),y   ; viewloc::xcoord
         iny
         lda     #0
@@ -6691,7 +6697,7 @@ has_parent:
 
         lsr     a               ; / 2
         clc
-        adc     #27
+        adc     #kWindowYOffset
         sta     (winfo_ptr),y   ; viewloc::ycoord
         iny
         lda     #0
@@ -7047,7 +7053,7 @@ L7826:  copy16  row_coords::ycoord, icon_coords::ycoord
         bne     L7862
 
         ;; Next row (and initial column) if necessary
-        add16   row_coords::ycoord, #32, row_coords::ycoord
+        add16   row_coords::ycoord, #kIconSpacingY, row_coords::ycoord
         copy16  initial_coords::xcoord, row_coords::xcoord
         lda     #0
         sta     icons_this_row
@@ -7454,6 +7460,8 @@ zero_min:
         bpl     :-
         rts
 
+        kListViewWidth = 360
+
         ;; min.x = 360
         ;; min.y = (A + 2) * 8
 list_view_non_empty:
@@ -7470,7 +7478,7 @@ list_view_non_empty:
         sta     iconbb_rect::y2
         lda     hi
         sta     iconbb_rect::y2+1
-        copy16  #360, iconbb_rect::x2
+        copy16  #kListViewWidth, iconbb_rect::x2
 
         ;; Now zero out min (and done
         jmp     zero_min
@@ -9577,7 +9585,7 @@ open:   ldy     #$00
         sta     rect_table+3
         sta     rect_table+7
 
-        ldy     #11 * .sizeof(MGTK::Rect) + 3
+        ldy     #kMaxAnimationStep * .sizeof(MGTK::Rect) + 3
         ldx     #3
 :       lda     window_grafport,x
         sta     rect_table,y
@@ -13819,6 +13827,9 @@ jump_relay:
 ;;; "About" dialog
 
 .proc about_dialog_proc
+
+        kVersionLeft = winfo_about_dialog::kWidth - 90 - (7 * .strlen(kDeskTopVersionSuffix))
+
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_about_dialog
         lda     winfo_about_dialog::window_id
         jsr     set_port_from_window_id
@@ -13833,7 +13844,7 @@ jump_relay:
         yax_call draw_dialog_label, 6 | DDL_CENTER, aux::str_about6
         yax_call draw_dialog_label, 7, aux::str_about7
         yax_call draw_dialog_label, 9, aux::str_about8
-        copy16  #310 - (7 * .strlen(kDeskTopVersionSuffix)), dialog_label_pos
+        copy16  #kVersionLeft, dialog_label_pos
         yax_call draw_dialog_label, 9, aux::str_about9
         copy16  #kDialogLabelDefaultX, dialog_label_pos
 
@@ -14258,6 +14269,9 @@ LAE17:  jsr     prompt_input_loop
 ;;; "New Folder" dialog
 
 .proc new_folder_dialog_proc
+
+        kParentPathLeft = 55
+
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     ($06),y
@@ -14296,7 +14310,7 @@ LAE90:  lda     ($08),y
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         yax_call draw_dialog_label, 2, aux::str_in_colon
-        copy    #55, dialog_label_pos
+        copy    #kParentPathLeft, dialog_label_pos
         yax_call draw_dialog_label, 2, path_buf0
         copy    #kDialogLabelDefaultX, dialog_label_pos
         yax_call draw_dialog_label, 4, aux::str_enter_folder_name
@@ -14307,7 +14321,7 @@ LAEC6:  jsr     prompt_input_loop
         jsr     merge_path_buf1_path_buf2
         lda     path_buf1
         beq     LAEC6
-        cmp     #16             ; max filename length
+        cmp     #16             ; max filename length + 1
         bcc     LAEE1
 LAED6:  lda     #kErrNameTooLong
         jsr     JT_SHOW_ALERT0
@@ -14631,6 +14645,8 @@ do4:    jsr     close_prompt_dialog
 .proc rename_dialog_proc
         params_ptr := $06
 
+        kOldNameLeft = 85
+
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     (params_ptr),y
@@ -14653,7 +14669,7 @@ open_win:
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         yax_call draw_dialog_label, 2, aux::str_rename_old
-        copy    #85, dialog_label_pos
+        copy    #kOldNameLeft, dialog_label_pos
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #1              ; rename_dialog_params::addr offset
         copy16in ($06),y, $08
@@ -15309,7 +15325,7 @@ apply_bits:
         ora     #AS_BYTE(~CASE_MASK)
         sta     (ptr),y
 :       iny
-        cpy     #16
+        cpy     #16             ; bits
         bcc     @bloop
         rts
 
