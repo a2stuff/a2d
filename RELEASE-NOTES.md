@@ -114,14 +114,14 @@ from the Apple menu.
 * Prevent crash with more than 8 removable devices.
 * Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
-  * Calculator: Don't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
+  * Calculator: Doesn't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
   * Sort Directory: Don't need to click before sorting. ([#17](https://github.com/a2stuff/a2d/issues/17))
 * Hardware/Emulator Specific:
-  * IIc Plus: Don't spin slot 5 drives constantly. (Use **Special > Check Drive**) ([#25](https://github.com/a2stuff/a2d/issues/25))
+  * IIc Plus: Doesn't spin slot 5 drives constantly. (Use **Special > Check Drive**) ([#25](https://github.com/a2stuff/a2d/issues/25))
   * Laser 128: Avoid hangs checking SmartPort status. (Use **Special > Check Drive**) ([#138](https://github.com/a2stuff/a2d/issues/138))
   * IIgs: Color DHR is re-enabled on exit. ([#43](https://github.com/a2stuff/a2d/issues/43))
   * IIgs: Mono DHR is re-enabled when returning from system control panel. ([#193](https://github.com/a2stuff/a2d/issues/193))
-  * Macintosh LC PDS IIe Option Card: Don't crash on startup. ([#93](https://github.com/a2stuff/a2d/issues/93))
+  * Macintosh LC PDS IIe Option Card: Doesn't crash on startup. ([#93](https://github.com/a2stuff/a2d/issues/93))
   * Macintosh LC PDS IIe Option Card: Correct problems with interrupts affecting AppleTalk. ([#129](https://github.com/a2stuff/a2d/issues/129))
   * KEGS-based IIgs Emulators: Don't crash on startup. ([#85](https://github.com/a2stuff/a2d/issues/85))
 
