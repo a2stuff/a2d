@@ -25,7 +25,7 @@
 
 * Run DeskTop on a IIc+ from a 3.5" floppy on internal drive. Verify that the disk doesn't spin constantly.
 
-* Run DeskTop on a system without a system clock. Run Apple > Control Panels > Date. Set date. Reboot system, and re-run DeskTop.Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
+* Run DeskTop on a system without a system clock. Run Apple > Control Panels > Date. Set date. Reboot system, and re-run DeskTop. Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
 
 * Run Apple > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
 
