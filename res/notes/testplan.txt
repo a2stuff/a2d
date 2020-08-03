@@ -6,7 +6,8 @@
 * File > Quit - verify that there is no crash under ProDOS 8
 
 * Preview a text file; verify that up/down arrow keys scroll
-* Preview a text file; verify that Apple plus up/down arrow keys scroll by page
+* Preview a text file; verify that Open-Apple plus up/down arrow keys scroll by page
+* Preview a text file; verify that Solid-Apple plus up/down arrow keys scroll by page
 * Preview a text file; verify that Escape key exits
 * Preview an image file; verify that Escape key exits
 * Preview an image file on IIgs or with RGB card; verify that space bar toggles color/mono
@@ -15,7 +16,8 @@
 * Run on system with realtime clock; verify that time shows in top-right of menu
 
 * Hold Apple and double-click folder; verify that parent window closes.
-* Select folder, hold Apple, select File > Open; verify that parent window closes.
+* Select folder, hold Open-Apple, select File > Open; verify that parent window closes.
+* Select folder, hold Solid-Apple, select File > Open; verify that parent window closes.
 * Open folder with new files. Use File > Get Info; verify dates after 1999 show correctly.
 * Open folder with new files. Use View > By Date; verify dates after 1999 show correctly.
 
