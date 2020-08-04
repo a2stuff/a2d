@@ -122,7 +122,7 @@ from the Apple menu.
   * IIgs: Mono DHR is re-enabled when returning from system control panel. ([#193](https://github.com/a2stuff/a2d/issues/193))
   * Macintosh LC PDS IIe Option Card: Doesn't crash on startup. ([#93](https://github.com/a2stuff/a2d/issues/93))
   * Macintosh LC PDS IIe Option Card: Correct problems with interrupts affecting AppleTalk. ([#129](https://github.com/a2stuff/a2d/issues/129))
-  * KEGS-based IIgs Emulators: Don't crash on startup. ([#85](https://github.com/a2stuff/a2d/issues/85))
+  * KEGS-based IIgs Emulators: Doesn't crash on startup. ([#85](https://github.com/a2stuff/a2d/issues/85))
 
 ### Known Issues
 
