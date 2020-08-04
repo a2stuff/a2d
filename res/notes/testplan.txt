@@ -15,7 +15,8 @@
 * Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons
 * Run on system with realtime clock; verify that time shows in top-right of menu
 
-* Hold Apple and double-click folder; verify that parent window closes.
+* Hold Open-Apple and double-click folder; verify that parent window closes.
+* Hold Solid-Apple and double-click folder; verify that parent window closes.
 * Select folder, hold Open-Apple, select File > Open; verify that parent window closes.
 * Select folder, hold Solid-Apple, select File > Open; verify that parent window closes.
 * Open folder with new files. Use File > Get Info; verify dates after 1999 show correctly.
