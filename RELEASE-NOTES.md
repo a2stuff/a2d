@@ -69,8 +69,7 @@ Project Page: https://github.com/a2stuff/a2d/
 Note that the desk accessories from version 1.2 will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
 
-The former Show Text File DA is now part of the file preview
-functionality (see below).
+The Show Text File DA is now part of the file preview functionality (see below).
 
 ### File Preview
 
