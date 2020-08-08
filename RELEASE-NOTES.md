@@ -25,7 +25,7 @@ Project Page: https://github.com/a2stuff/a2d/
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. ([#64](https://github.com/a2stuff/a2d/issues/64))
 * Tip about skipping copy to RAMCard is shown during startup. ([#140](https://github.com/a2stuff/a2d/issues/140))
 * Holding **Apple** while double-clicking or using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
-* **Apple-\`** or **Apple-Tab** cycles through open windows; **Apple-~** cycles in reverse. ([#143](https://github.com/a2stuff/a2d/issues/143), [#230](https://github.com/a2stuff/a2d/issues/230))
+* **Apple-\`** or **Apple-Tab** cycles through open windows; **Shift-Apple-\`** cycles in reverse. ([#143](https://github.com/a2stuff/a2d/issues/143), [#230](https://github.com/a2stuff/a2d/issues/230))
 * **Apple-Delete** deletes selected files. ([#150](https://github.com/a2stuff/a2d/issues/150))
 * **File > Get Info** command shows aux type for files. ([#148](https://github.com/a2stuff/a2d/issues/148))
 * ProDOS 2.5 extended dates (through year 4095) are supported. ([#169](https://github.com/a2stuff/a2d/issues/169))
@@ -69,8 +69,7 @@ Project Page: https://github.com/a2stuff/a2d/
 Note that the desk accessories from version 1.2 will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
 
-The former Show Text File DA is now part of the file preview
-functionality (see below).
+The Show Text File DA is now part of the file preview functionality (see below).
 
 ### File Preview
 
@@ -114,14 +113,14 @@ from the Apple menu.
 * Prevent crash with more than 8 removable devices.
 * Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
-  * Calculator: Don't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
+  * Calculator: Doesn't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
   * Sort Directory: Don't need to click before sorting. ([#17](https://github.com/a2stuff/a2d/issues/17))
 * Hardware/Emulator Specific:
-  * IIc Plus: Don't spin slot 5 drives constantly. (Use **Special > Check Drive**) ([#25](https://github.com/a2stuff/a2d/issues/25))
+  * IIc Plus: Doesn't spin slot 5 drives constantly. (Use **Special > Check Drive**) ([#25](https://github.com/a2stuff/a2d/issues/25))
   * Laser 128: Avoid hangs checking SmartPort status. (Use **Special > Check Drive**) ([#138](https://github.com/a2stuff/a2d/issues/138))
   * IIgs: Color DHR is re-enabled on exit. ([#43](https://github.com/a2stuff/a2d/issues/43))
   * IIgs: Mono DHR is re-enabled when returning from system control panel. ([#193](https://github.com/a2stuff/a2d/issues/193))
-  * Macintosh LC PDS IIe Option Card: Don't crash on startup. ([#93](https://github.com/a2stuff/a2d/issues/93))
+  * Macintosh LC PDS IIe Option Card: Doesn't crash on startup. ([#93](https://github.com/a2stuff/a2d/issues/93))
   * Macintosh LC PDS IIe Option Card: Correct problems with interrupts affecting AppleTalk. ([#129](https://github.com/a2stuff/a2d/issues/129))
   * KEGS-based IIgs Emulators: Don't crash on startup. ([#85](https://github.com/a2stuff/a2d/issues/85))
 
