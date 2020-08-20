@@ -10,7 +10,7 @@ Work-in-Progress disassembly and enhancements for Apple II Desktop (a.k.a. Mouse
 
 This application started its life as **MouseDesk** by Version Soft. It
 is a mouse-driven Mac-like "Finder" GUI application for 8-bit Apples
-and clones with 128k of memory, utilizing double-hires monochrome graphics
+and clones with 128k of memory, utilizing double hi-res monochrome graphics
 (560x192), an optional mouse, and the ProDOS operating system.
 
 Apple Computer acquired the software and released it - rebranded as
