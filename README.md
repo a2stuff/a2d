@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/a2stuff/a2d.svg?branch=main)](https://travis-ci.org/a2stuff/a2d)
 
-Work-in-Progress disassembly and enhancements for Apple II Desktop (a.k.a. MouseDesk)
+Work-in-Progress disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk)
 
 💾 Disk images can be found on the [Releases](https://github.com/a2stuff/a2d/releases) page 💾
 
@@ -15,15 +15,15 @@ and clones with 128k of memory, utilizing double hi-res monochrome graphics
 
 Apple Computer acquired the software and released it - rebranded as
 **Apple II DeskTop** - as the initial
-[system software for the Apple IIgs](](http://www.whatisthe2gs.apple2.org.za/system-applications))
+[system software for the Apple IIgs](http://www.whatisthe2gs.apple2.org.za/system-applications)
 before 16-bit GS/OS replaced it. The rebranded version still functions
 on 8-bit Apples, including the Apple IIe, Apple IIc, Apple IIc Plus,
 Apple IIe Option Card for Macintosh, and the Laser 128 family.
 
-* [History of MouseDesk/Apple II DeskTop versions, by Jay Edwards](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
+* [History of MouseDesk/Apple II DeskTop Versions](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info), by Jay Edwards
 * Overviews: [GUI Gallery](http://toastytech.com/guis/a2desk.html) &mdash; [GUIdebook](https://guidebookgallery.org/guis/apple2/mousedesk)
 * Manual: [Apple IIgs System Disk User’s Guide (1986)](https://mirrors.apple2.org.za/ftp.apple.asimov.net/documentation/misc/Apple%20IIgs%20System%20Disk%20Users%20Guide%20%281986%29.pdf) - Chapter 2 “The DeskTop”
-* [Disk Images](https://mirrors.apple2.org.za/ftp.apple.asimov.net/images/masters/other_os/gui/) for MouseDesk and Apple II DeskTop
+* [Disk Images for MouseDesk and Apple II DeskTop](https://mirrors.apple2.org.za/ftp.apple.asimov.net/images/masters/other_os/gui/)
 
 Other GUI environments exist for the 8-bit Apples, including
 [GEOS](http://toastytech.com/guis/a2geos.html) (which includes productivity applications) and
@@ -40,7 +40,7 @@ adding functionality.
 
 See the [Release Notes](RELEASE-NOTES.md) for a list of enhancements and fixes so far.
 
-[![Alt text](https://img.youtube.com/vi/zbElPj5zaBs/0.jpg)](https://www.youtube.com/watch?v=zbElPj5zaBs)
+[![Alt Text](https://img.youtube.com/vi/zbElPj5zaBs/0.jpg)](https://www.youtube.com/watch?v=zbElPj5zaBs)
 <br>
 _KansasFest 2018 presentation by @mgcaret_
 
