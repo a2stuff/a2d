@@ -132,7 +132,7 @@ from the Apple menu.
 
 ## 1.1
 
-Final release by Version Soft/Apple Computer, Inc. dated November 26, 1986.
+Final release by Version Soft/Apple Computer dated November 26, 1986.
 
-See Jay Edwards' [MouseDesk/Apple II DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
+See Jay Edwards' [MouseDesk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
 for more version information.
