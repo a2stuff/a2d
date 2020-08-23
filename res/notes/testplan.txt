@@ -40,7 +40,6 @@
 
 * Verify that GS/OS filename cases show correctly. (e.g. ProDOS 2.5 disk)
 
-
 * Open a volume with double-click
 * Open a directory with double-click
 * Open a text file with double-click
@@ -67,7 +66,6 @@
 * Copy a file by dragging - different volume - target is folder icon
 
 * Open a volume, open a folder, close the just volume window; re-open the volume, re-open the folder, ensure the previous window is activated
-
 
 * File > Rename a file
 * File > Rename a volume
