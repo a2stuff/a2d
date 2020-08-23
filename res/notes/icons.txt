@@ -36,7 +36,7 @@ Font
  #                        #
  ##########################
 
-DOS 3.3 (could also just use 5.25 Floppy)
+DOS 3.3 (could also just use 5.25 floppy)
 
              ##
            ##  ##
@@ -122,7 +122,7 @@ Audio
    ######################
 
 
-Archive (SHK, etc)
+Archive (SHK, etc.)
 
        ##############
        #           # ##
@@ -234,7 +234,7 @@ Archive (SHK, etc)
  #                ##
  #################
 
-Applesoft VAR files
+Applesoft VAR Files
 
  ####################
  #                #  ##
