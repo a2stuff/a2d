@@ -1,7 +1,7 @@
 
 # Release Qualification Test Cases
 
-> Status: Work-in-progress
+> Status: Work in Progress
 
 * File > Quit - verify that there is no crash under ProDOS 8
 
