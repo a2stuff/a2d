@@ -3,7 +3,7 @@ Same
  ---------------------- ----------------------- ------------
  File > New Folder      File > New Folder...    OA-N
  File > Open            File > Open             OA-O
- File > Close           File > Close            OA-W
+ File > Close           File > Close Window     OA-W
  File > Close All       File > Close All
  Edit > Select All      File > Select All       OA-A
  Special > Icon Info... File > Get Info         OA-I
