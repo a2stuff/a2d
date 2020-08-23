@@ -24,6 +24,7 @@ Apple IIe Option Card for Macintosh, and the Laser 128 family.
 * Overviews: [GUI Gallery](http://toastytech.com/guis/a2desk.html) &mdash; [GUIdebook](https://guidebookgallery.org/guis/apple2/mousedesk)
 * Manual: [Apple IIgs System Disk User’s Guide (1986)](https://mirrors.apple2.org.za/ftp.apple.asimov.net/documentation/misc/Apple%20IIgs%20System%20Disk%20Users%20Guide%20%281986%29.pdf) - Chapter 2 “The DeskTop”
 * [Disk Images](https://mirrors.apple2.org.za/ftp.apple.asimov.net/images/masters/other_os/gui/) for MouseDesk and Apple II DeskTop
+
 Other GUI environments exist for the 8-bit Apples, including
 [GEOS](http://toastytech.com/guis/a2geos.html) (which includes productivity applications) and
 [Quark Catalyst](http://toastytech.com/guis/qcat.html).
