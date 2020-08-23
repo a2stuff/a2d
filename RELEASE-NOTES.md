@@ -109,7 +109,7 @@ from the Apple menu.
 * Correct rendering issues with desktop volume icons. ([#117](https://github.com/a2stuff/a2d/issues/117), [#152](https://github.com/a2stuff/a2d/issues/152))
 * Prevent occasional rectangle drawn on desktop after window close. ([#120](https://github.com/a2stuff/a2d/issues/120))
 * Empty directories can be copied/moved. ([#121](https://github.com/a2stuff/a2d/issues/121))
-* Ctrl+Reset quits cleanly back to ProDOS (except buggy emulators). ([#141](https://github.com/a2stuff/a2d/issues/141))
+* **Control-Reset** quits cleanly back to ProDOS (except buggy emulators). ([#141](https://github.com/a2stuff/a2d/issues/141))
 * Prevent crash with more than 8 removable devices.
 * Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
