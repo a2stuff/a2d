@@ -75,7 +75,7 @@ The Show Text File DA is now part of the file preview functionality (see below).
 
 Text, graphics, and font files with the correct file types can be
 previewed without leaving DeskTop; select the file icon and then select
-File > Open, or double-click the file icon.
+**File > Open**, or double-click the file icon.
 
 * Text files must be type TXT ($04).
 * Graphics files must be type FOT ($08), or BIN ($06) with specific aux type:
