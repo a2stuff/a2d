@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/a2stuff/a2d.svg?branch=main)](https://travis-ci.org/a2stuff/a2d)
 
-Work-in-Progress disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk)
+Work-in-progress disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk)
 
 💾 Disk images can be found on the [Releases](https://github.com/a2stuff/a2d/releases) page 💾
 
