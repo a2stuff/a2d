@@ -2,38 +2,38 @@
 
 > Status: Work in Progress
 
-* Open a volume with double-click
-* Open a directory with double-click
-* Open a text file with double-click
+* Open a volume with double-click.
+* Open a directory with double-click.
+* Open a text file with double-click.
 
-* Open a volume with File > Open
-* Open a directory with File > Open
-* Open a text file with File > Open
+* Open a volume with File > Open.
+* Open a directory with File > Open.
+* Open a text file with File > Open.
 
-* Create a new folder (File > New Folder) - verify that it is selected / scrolled into view
+* Create a new folder (File > New Folder) - verify that it is selected / scrolled into view.
 
-* Move a file by dragging - same volume - target is window
-* Move a file by dragging - same volume - target is volume icon
-* Move a file by dragging - same volume - target is folder icon
+* Move a file by dragging - same volume - target is window.
+* Move a file by dragging - same volume - target is volume icon.
+* Move a file by dragging - same volume - target is folder icon.
 
-* Copy a file by dragging - same volume - target is window, using Open-Apple modifier
-* Copy a file by dragging - same volume - target is window, using Solid-Apple modifier
-* Copy a file by dragging - same volume - target is volume icon, using Open-Apple modifier
-* Copy a file by dragging - same volume - target is volume icon, using Solid-Apple modifier
-* Copy a file by dragging - same volume - target is folder icon, using Open-Apple modifier
-* Copy a file by dragging - same volume - target is folder icon, using Solid-Apple modifier
+* Copy a file by dragging - same volume - target is window, using Open-Apple modifier.
+* Copy a file by dragging - same volume - target is window, using Solid-Apple modifier.
+* Copy a file by dragging - same volume - target is volume icon, using Open-Apple modifier.
+* Copy a file by dragging - same volume - target is volume icon, using Solid-Apple modifier.
+* Copy a file by dragging - same volume - target is folder icon, using Open-Apple modifier.
+* Copy a file by dragging - same volume - target is folder icon, using Solid-Apple modifier.
 
-* Copy a file by dragging - different volume - target is window
-* Copy a file by dragging - different volume - target is volume icon
-* Copy a file by dragging - different volume - target is folder icon
+* Copy a file by dragging - different volume - target is window.
+* Copy a file by dragging - different volume - target is volume icon.
+* Copy a file by dragging - different volume - target is folder icon.
 
-* Open a volume, open a folder, close the just volume window; re-open the volume, re-open the folder, ensure the previous window is activated
+* Open a volume, open a folder, close the just volume window; re-open the volume, re-open the folder, ensure the previous window is activated.
 
-* File > Rename a file
-* File > Rename a volume
+* File > Rename a file.
+* File > Rename a volume.
 
-* File > Get Info a file
-* File > Get Info a volume
+* File > Get Info a file.
+* File > Get Info a volume.
 
 * Position a volume icon in the middle of the DeskTop. Incrementally move a window so that it obscures all 8 positions around it (top, top right, right, etc). Ensure the icon repaints fully, and no part of the window is overdrawn.
 
@@ -41,17 +41,17 @@
 * Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.
 * Launch Selector, invoke DeskTop, File > Quit, run BASIC.SYSTEM. Ensure /RAM exists.
 
-* File > Quit - verify that there is no crash under ProDOS 8
+* File > Quit - verify that there is no crash under ProDOS 8.
 
-* Preview a text file; verify that up/down arrow keys scroll
-* Preview a text file; verify that Open-Apple plus up/down arrow keys scroll by page
-* Preview a text file; verify that Solid-Apple plus up/down arrow keys scroll by page
-* Preview a text file; verify that Escape key exits
-* Preview an image file; verify that Escape key exits
-* Preview an image file on IIgs or with RGB card; verify that space bar toggles color/mono
+* Preview a text file; verify that up/down arrow keys scroll.
+* Preview a text file; verify that Open-Apple plus up/down arrow keys scroll by page.
+* Preview a text file; verify that Solid-Apple plus up/down arrow keys scroll by page.
+* Preview a text file; verify that Escape key exits.
+* Preview an image file; verify that Escape key exits.
+* Preview an image file on IIgs or with RGB card; verify that space bar toggles color/mono.
 
-* Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons
-* Run on system with realtime clock; verify that time shows in top-right of menu
+* Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons.
+* Run on system with realtime clock; verify that time shows in top-right of menu.
 
 * Hold Open-Apple and double-click folder; verify that parent window closes.
 * Hold Solid-Apple and double-click folder; verify that parent window closes.
