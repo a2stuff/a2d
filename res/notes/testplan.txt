@@ -76,4 +76,4 @@
 
 * Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, FloppyEmu); verify that all show up.
 
-* Verify that GS/OS filename cases show correctly. (e.g. ProDOS 2.5 disk)
+* Verify that GS/OS filename cases show correctly (e.g. ProDOS 2.5 disk).
