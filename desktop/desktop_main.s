@@ -1927,7 +1927,7 @@ maybe_open_file:
         win_path_ptr := $06
 
         lda     active_window_id
-        jsr     window_path_lookup
+        jsr     get_window_path
         stax    win_path_ptr
 
         ldy     #0
@@ -2039,7 +2039,7 @@ start:  copy    active_window_id, new_folder_dialog_params::phase
 
 L4FC6:  lda     active_window_id
         beq     L4FD4
-        jsr     window_path_lookup
+        jsr     get_window_path
         stax    new_folder_dialog_params::win_path_ptr
 L4FD4:  copy    #$80, new_folder_dialog_params::phase
         yax_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
@@ -2807,7 +2807,7 @@ not_done:
         bne     next_icon       ; not found
         inx                     ; 0-based index to 1-based window_id
         txa
-        jsr     window_path_lookup
+        jsr     get_window_path
         stax    $06
         ldy     #0
         lda     ($06),y
@@ -4080,7 +4080,7 @@ done:   rts
         ;; File (executable or data)
 file:   sta     icon_entry_type
         lda     active_window_id
-        jsr     window_path_lookup
+        jsr     get_window_path
         stax    $06
 
         ldy     #0
@@ -4190,7 +4190,7 @@ icon_num:
         bmi     :+              ; list view, not icons
         jsr     close_active_window
 :       lda     active_window_id
-        jsr     window_path_lookup
+        jsr     get_window_path
 
         ptr := $06
 
@@ -5871,7 +5871,7 @@ flag:   .byte   0
 .proc update_used_free_for_vol_windows
         ptr := $6
 
-        jsr     window_path_lookup
+        jsr     get_window_path
         sta     ptr
         sta     pathptr
         stx     ptr+1
@@ -6018,7 +6018,7 @@ check_window:
         beq     loop
 
         lda     window_num
-        jsr     window_path_lookup
+        jsr     get_window_path
         stax    ptr
         ldy     #0
         lda     (ptr),y
@@ -6564,7 +6564,7 @@ has_parent:
 
         parent_path_ptr := $08
 
-        jsr     window_path_lookup
+        jsr     get_window_path
         stax    parent_path_ptr
 
         ldy     #0
@@ -6653,7 +6653,7 @@ has_parent:
 
         ;; Copy previously composed path into window path
         lda     cached_window_id
-        jsr     window_path_lookup
+        jsr     get_window_path
         stax    path_ptr
         ldy     open_dir_path_buf
 :       lda     open_dir_path_buf,y
@@ -8806,9 +8806,11 @@ tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Look up window address. Index in A, address in A,X.
+;;; Look up window address
+;;; Input: A = window_id
+;;; Output: A,X = path address
 
-.proc window_path_lookup
+.proc get_window_path
         asl     a
         tax
         lda     window_path_addr_table,x
@@ -16052,18 +16054,6 @@ set_penmode_copy:
 
 .proc get_selection_window
         lda     selected_window_index
-        rts
-.endproc
-
-;;; ============================================================
-;;; Input: A = window_id
-;;; Output: A,X = path address
-
-.proc get_window_path
-        asl     a
-        tay
-        lda     window_path_addr_table,y
-        ldx     window_path_addr_table+1,y
         rts
 .endproc
 
