@@ -147,7 +147,7 @@ str_copyright3:
         PASCAL_STRING "All Rights reserved "
 
 str_run_a_program:
-        PASCAL_STRING "Run a Program ..."
+        PASCAL_STRING "Run a Program..."
 
 
         kStrSlotXOffset = 6

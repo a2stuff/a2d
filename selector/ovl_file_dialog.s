@@ -338,7 +338,7 @@ rect_input_text:                ; Text bounds
         .word   30, 146
 
 str_run_a_program:
-        PASCAL_STRING "Run a Program ..."
+        PASCAL_STRING "Run a Program..."
 str_file_to_run:
         PASCAL_STRING "File to run:"
 

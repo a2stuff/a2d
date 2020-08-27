@@ -560,13 +560,13 @@ entry_picker_cancel_pos:
         .word   130,7,220,19
 
 add_an_entry_label:
-        PASCAL_STRING "Add an Entry ..."
+        PASCAL_STRING "Add an Entry..."
 edit_an_entry_label:
-        PASCAL_STRING "Edit an Entry ..."
+        PASCAL_STRING "Edit an Entry..."
 delete_an_entry_label:
-        PASCAL_STRING "Delete an Entry ..."
+        PASCAL_STRING "Delete an Entry..."
 run_an_entry_label:
-        PASCAL_STRING "Run an Entry ..."
+        PASCAL_STRING "Run an Entry..."
 
 LD760:  PASCAL_STRING "Run list"
 
@@ -783,7 +783,7 @@ disk_label:
         PASCAL_STRING " Disk: "
 
 copy_a_file_label:
-        PASCAL_STRING "Copy a File ..."
+        PASCAL_STRING "Copy a File..."
 
 source_filename_label:
         PASCAL_STRING "Source filename:"
@@ -801,7 +801,7 @@ input2_rect:   DEFINE_RECT_SZ 28, 136, kCommonInputWidth, kCommonInputHeight
 input2_textpos:      DEFINE_POINT 30,146
 
 delete_a_file_label:
-        PASCAL_STRING "Delete a File ..."
+        PASCAL_STRING "Delete a File..."
 
 file_to_delete_label:
         PASCAL_STRING "File to delete:"
@@ -1208,13 +1208,13 @@ selector_menu:
         kMenuItemIdSelectorRun       = 4
 
 label_add:
-        PASCAL_STRING "Add an Entry ..."
+        PASCAL_STRING "Add an Entry..."
 label_edit:
-        PASCAL_STRING "Edit an Entry ..."
+        PASCAL_STRING "Edit an Entry..."
 label_del:
-        PASCAL_STRING "Delete an Entry ..."
+        PASCAL_STRING "Delete an Entry..."
 label_run:
-        PASCAL_STRING "Run an Entry ..."
+        PASCAL_STRING "Run an Entry..."
 
         ;; Apple Menu
 apple_menu:
@@ -1228,7 +1228,7 @@ apple_menu:
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
 
 label_about:
-        PASCAL_STRING "About Apple II DeskTop ..."
+        PASCAL_STRING "About Apple II DeskTop..."
 
 desk_acc_names:
         .res    kMaxDeskAccCount * 16, 0

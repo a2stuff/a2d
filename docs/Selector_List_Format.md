@@ -16,12 +16,12 @@ Header is two bytes.
 
    Number of entries (0-8) in the "run list". The are the entries
    shown in DeskTop's Selector menu, and the first 8 entries shown in
-   DeskTop's "Run an Entry ..." dialog and Selector's dialog.
+   DeskTop's "Run an Entry..." dialog and Selector's dialog.
 
 +001: NumOtherRunListEntries (byte)
 
    Number of entries (0-16) in the "other run list". These entries are
-   only shown in DeskTop's "Run an Entry ..." dialog and Selector's
+   only shown in DeskTop's "Run an Entry..." dialog and Selector's
    dialog.
 
 
