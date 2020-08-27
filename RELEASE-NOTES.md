@@ -27,6 +27,8 @@ Project Page: https://github.com/a2stuff/a2d/
 * Holding **Apple** while double-clicking or using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
 * **Apple-\`** or **Apple-Tab** cycles through open windows; **Shift-Apple-\`** cycles in reverse. ([#143](https://github.com/a2stuff/a2d/issues/143), [#230](https://github.com/a2stuff/a2d/issues/230))
 * **Apple-Delete** deletes selected files. ([#150](https://github.com/a2stuff/a2d/issues/150))
+* **Apple-Down** opens/previews selection. ([#254](https://github.com/a2stuff/a2d/issues/254))
+* **Apple-Up** opens parent window. ([#254](https://github.com/a2stuff/a2d/issues/254))
 * **File > Get Info** command shows aux type for files. ([#148](https://github.com/a2stuff/a2d/issues/148))
 * ProDOS 2.5 extended dates (through year 4095) are supported. ([#169](https://github.com/a2stuff/a2d/issues/169))
 * **File > New Folder** scrolls the new folder icon into view. ([#16](https://github.com/a2stuff/a2d/issues/16))

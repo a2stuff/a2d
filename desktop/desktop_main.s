@@ -433,6 +433,9 @@ handle_keydown:
 :       cmp     #CHAR_DOWN      ; Apple-Down (Open)
         bne     :+
         jmp     cmd_open_ignore_modifiers
+:       cmp     #CHAR_UP        ; Apple-Up (Open Parent)
+        bne     :+
+        jmp     cmd_open_parent
 :       bit     flag
         bpl     menu_accelerators
         cmp     #'G'            ; Apple-G (Resize)
@@ -1989,6 +1992,46 @@ last_active_window_id:
         jsr     handle_inactive_window_click
         pla
         jsr     close_window
+
+done:   rts
+.endproc
+
+;;; ============================================================
+
+.proc cmd_open_parent
+        path_ptr := $06
+
+        lda     active_window_id
+        beq     done
+        jsr     get_window_path
+        stax    path_ptr
+
+        ;; Copy path
+        ldy     #0
+        lda     (path_ptr),y
+        tay
+:       lda     (path_ptr),y
+        sta     open_dir_path_buf,y
+        dey
+        bpl     :-
+
+        ;; Find last '/'
+        ldx     open_dir_path_buf
+:       lda     open_dir_path_buf,x
+        cmp     #'/'
+        beq     :+
+        dex
+        bne     :-              ; always (unless path was bogus)
+
+        ;; Truncate
+:       dex                     ; Remove '/'
+        beq     done            ; Nothing left
+        stx     open_dir_path_buf
+
+        ;; Try to open
+        tsx
+        stx     saved_stack
+        jsr     open_window_for_path
 
 done:   rts
 .endproc
