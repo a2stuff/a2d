@@ -430,6 +430,9 @@ handle_keydown:
         cmp     #'H'            ; Apple-H (Highlight Icon)
         bne     :+
         jmp     cmd_highlight
+:       cmp     #CHAR_DOWN      ; Apple-Down (Open)
+        bne     :+
+        jmp     cmd_open_ignore_modifiers
 :       bit     flag
         bpl     menu_accelerators
         cmp     #'G'            ; Apple-G (Resize)
@@ -1870,7 +1873,7 @@ store:  sta     window_id_to_close
         ;; Source window to close?
         jsr     set_window_to_close_after_open
 
-        ldx     #0
+ep2:    ldx     #0
         stx     dir_count
 
 L4DEC:  cpx     selected_icon_count
@@ -1965,6 +1968,12 @@ dir_count:
 
 last_active_window_id:
         .byte   0
+.endproc
+
+;;; Like cmd_open, but will not close the parent window afterwards.
+.proc cmd_open_ignore_modifiers
+        copy    #0, window_id_to_close
+        jmp     cmd_open::ep2
 .endproc
 
 ;;; ============================================================
