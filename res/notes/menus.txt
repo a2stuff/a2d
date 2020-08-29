@@ -20,6 +20,7 @@ Same
  Disk > Erase...        Special > Erase a Disk...
 
 IIgs but not DeskTop
+ Apple > Help          OA-?
  File > Duplicate...   OA-D
  File > Put Away       OA-Y
  Edit > Undo           OA-Z
