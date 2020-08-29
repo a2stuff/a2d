@@ -67,6 +67,8 @@ Project Page: https://github.com/a2stuff/a2d/
   * Enable/disable built-in and some popular add-on system accelerators. ([#26](https://github.com/a2stuff/a2d/issues/26))
 * **Find Files**
   * Search a directory and descendants for filenames. Use ? and * as wildcards. ([#21](https://github.com/a2stuff/a2d/issues/21))
+* **Invert**
+  * Invert the screen until the next click/key. ([#261](https://github.com/a2stuff/a2d/issues/261))
 
 Note that the desk accessories from version 1.2 will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
