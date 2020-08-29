@@ -134,5 +134,5 @@ from the Apple menu.
 
 Final release by Version Soft/Apple Computer dated November 26, 1986.
 
-See Jay Edwards' [MouseDesk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
+See Jay Edwards' [MouseDesk/Apple II DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
 for more version information.
