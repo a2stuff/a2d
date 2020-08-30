@@ -1,6 +1,8 @@
 Same
+
  IIgs Finder                      DeskTop                           Shortcut
  -------------------------------- --------------------------------- --------
+ 
  Apple > About This Apple IIgs... Apple > About Apple II DeskTop... 
  
  File > New Folder                File > New Folder...              OA-N
@@ -22,6 +24,7 @@ Same
  Disk > Erase...                  Special > Erase a Disk...
 
 IIgs Finder but not DeskTop
+
  Apple > Help           OA-?
  File > Duplicate...    OA-D
  File > Put Away        OA-Y
