@@ -2,11 +2,14 @@ Same
  IIgs Finder                      DeskTop                           Shortcut
  -------------------------------- --------------------------------- --------
  Apple > About This Apple IIgs... Apple > About Apple II DeskTop... 
+ 
  File > New Folder                File > New Folder...              OA-N
  File > Open                      File > Open                       OA-O
  File > Close                     File > Close Window               OA-W
  File > Close All                 File > Close All
+ 
  Edit > Select All                File > Select All                 OA-A
+ 
  Special > Icon Info...           File > Get Info                   OA-I
  Special > Shut Down              File > Quit                       OA-Q
 
@@ -22,11 +25,15 @@ Same
 
 IIgs Finder but not DeskTop
  Apple > Help           OA-?
+ 
  File > Duplicate...    OA-D
  File > Put Away        OA-Y
+ 
  Edit > Undo            OA-Z
  Edit > Cut             OA-X
  Edit > Copy            OA-C
  Edit > Paste           OA-V
+ 
  Special > Empty Trash  OA-T
+ 
  Extras > Make Alias... OA-M
