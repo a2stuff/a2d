@@ -2,9 +2,9 @@
 
 Home Page: https://a2desktop.com
 
-Project Page: https://github.com/a2stuff/a2d/
+Project Page: https://github.com/a2stuff/a2d
 
-# 1.2 Pre-Alpha
+## 1.2 Pre-Alpha
 
 ### DeskTop Enhancements
 
@@ -79,7 +79,7 @@ The Show Text File DA is now part of the file preview functionality (see below).
 
 Text, graphics, and font files with the correct file types can be
 previewed without leaving DeskTop; select the file icon and then select
-File > Open, or double-click the file icon.
+**File > Open**, or double-click the file icon.
 
 * Text files must be type TXT ($04).
 * Graphics files must be type FOT ($08), or BIN ($06) with specific aux type:
@@ -113,7 +113,7 @@ from the Apple menu.
 * Correct rendering issues with desktop volume icons. ([#117](https://github.com/a2stuff/a2d/issues/117), [#152](https://github.com/a2stuff/a2d/issues/152))
 * Prevent occasional rectangle drawn on desktop after window close. ([#120](https://github.com/a2stuff/a2d/issues/120))
 * Empty directories can be copied/moved. ([#121](https://github.com/a2stuff/a2d/issues/121))
-* Ctrl+Reset quits cleanly back to ProDOS (except buggy emulators). ([#141](https://github.com/a2stuff/a2d/issues/141))
+* **Control-Reset** quits cleanly back to ProDOS (except buggy emulators). ([#141](https://github.com/a2stuff/a2d/issues/141))
 * Prevent crash with more than 8 removable devices.
 * Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
@@ -134,9 +134,9 @@ from the Apple menu.
 * Other issues can be found at https://github.com/a2stuff/a2d/issues.
 
 
-# 1.1
+## 1.1
 
-Final release by VersionSoft/Apple Computer dated November 26, 1986.
+Final release by Version Soft/Apple Computer dated November 26, 1986.
 
 See Jay Edwards' [MouseDesk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
 for more version information.
