@@ -13,6 +13,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Windows restored when DeskTop is relaunched. ([#210](https://github.com/a2stuff/a2d/issues/210))
 * Drag "unlimited" number of icons (was 20). ([#18](https://github.com/a2stuff/a2d/issues/18))
 * Dragging files to same volume moves instead of copies; hold **Apple** while dragging to force copy. ([#8](https://github.com/a2stuff/a2d/issues/8))
+* When dragging files to a different volume, hold **Apple** while dragging to force move. ([#256](https://github.com/a2stuff/a2d/issues/256))
 * Menu bar menus are now drop-down in addition to pull-down. ([#104](https://github.com/a2stuff/a2d/issues/104))
 * Add **Special > Check Drive** command to refresh a single drive. ([#97](https://github.com/a2stuff/a2d/issues/97))
 * Reorganized/renamed several menu items. ([#13](https://github.com/a2stuff/a2d/issues/13))

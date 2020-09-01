@@ -13096,15 +13096,16 @@ loop:   iny
 
 ;;; ============================================================
 ;;; Move or Copy? Compare src/dst paths, same vol = move.
+;;; Button down inverts the default action.
 ;;; Output: A=high bit set if move, clear if copy
 
 .proc check_move_or_copy
         src_ptr := $08
         dst_buf := path_buf4
 
-        lda     BUTN0           ; Apple overrides, forces copy
+        lda     BUTN0           ; Apple inverts the default
         ora     BUTN1
-        bmi     no_match
+        sta     flag
 
         ldy     #0
         lda     (src_ptr),y
@@ -13144,12 +13145,17 @@ check_slash:
         ;; fall through
 
 no_match:
-        return  #0
+        lda     flag
+        rts
 
-match:  return  #$80
+match:  lda     flag
+        eor     #$80
+        rts
 
 src_len:
         .byte   0
+
+flag:   .byte   0
 .endproc
 
 ;;; ============================================================
