@@ -1281,7 +1281,7 @@ win_view_by_table:
 
 pos_col_name: DEFINE_POINT 0, 0, pos_col_name
 pos_col_type: DEFINE_POINT 112, 0, pos_col_type
-pos_col_size: DEFINE_POINT 140, 0, pos_col_size
+pos_col_size: DEFINE_POINT 150, 0, pos_col_size
 pos_col_date: DEFINE_POINT 231, 0, pos_col_date
 
 kTextBuffer2Len = 49

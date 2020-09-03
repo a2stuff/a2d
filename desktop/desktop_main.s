@@ -20,7 +20,7 @@ dst_path_buf   := $1FC0
 
 JT_MAIN_LOOP:           jmp     main_loop
 JT_MGTK_RELAY:          jmp     MGTK_RELAY              ; *
-JT_SIZE_STRING:         jmp     compose_blocks_string
+JT_SIZE_STRING:         jmp     compose_size_string
 JT_DATE_STRING:         jmp     compose_date_string
 JT_SELECT_WINDOW:       jmp     select_and_refresh_window
 JT_AUXLOAD:             jmp     AuxLoad
@@ -8505,10 +8505,14 @@ loop:   lda     name,x
 .endproc
 
 ;;; ============================================================
-;;; Populate text_buffer2 with " 12345 Blocks"
+;;; Populate text_buffer2 with " 12345 KB"
 
-.proc compose_blocks_string
-        stax    value
+.proc compose_size_string
+        stax    value           ; size in 512-byte blocks
+        lsr16   value           ; divide by 2 to get KB
+        bcc     :+
+        inc16   value           ; rounding up
+:       ldax    value
         jsr     int_to_string
 
         ;; Leading space
@@ -8534,20 +8538,10 @@ loop:   lda     name,x
         cpy     suffix
         bne     :-
 
-        ;; If singular, drop trailing 's'
-        ;; Block or Blocks?
-        lda     value+1
-        cmp     #>1
-        bne     :+
-        lda     value
-        cmp     #<1
-        bne     :+
-        dex
-:       stx     text_buffer2::length
+        stx     text_buffer2::length
+        rts
 
-done:   rts
-
-suffix: PASCAL_STRING " Blocks"
+suffix: PASCAL_STRING " KB"
 
 value:  .word   0
 
@@ -11122,60 +11116,57 @@ show_protected:
         ;; Size/Blocks
         copy    #GetInfoDialogState::size, get_info_dialog_params::state
 
-        ;; Compose " 12345 Blocks" or " 12345 / 67890 Blocks" string
+        ;; Compose " 12345 KB" or " 12345 / 67890 KB" string
         buf := $220
         copy    #0, buf
 
         lda     selected_window_index ; volume?
-        bne     do_suffix                 ; nope
+        beq     volume                ; yes
 
+        ;; A file, so just show the size
+        ldax    get_file_info_params5::blocks_used
+        jmp     append_size
+
+        ;; A volume.
+volume:
         ;; ProDOS TRM 4.4.5:
         ;; "When file information about a volume directory is requested, the
         ;; total number of blocks on the volume is returned in the aux_type
         ;; field and the total blocks for all files is returned in blocks_used.
 
-        lda     get_file_info_params5::aux_type
-        sec
-        sbc     get_file_info_params5::blocks_used
-        pha
-        lda     get_file_info_params5::aux_type+1
-        sbc     get_file_info_params5::blocks_used+1
-        tax
-        pla
+        ldax    get_file_info_params5::blocks_used
         jsr     JT_SIZE_STRING
 
-        ;; text_buffer2 now has " 12345 Blocks" (free space)
+        ;; text_buffer2 now has " 12345 KB" (used space)
 
-        ;; Copy number and leading/trailing space into buf
+        ;; Copy into buf
         ldx     buf
         ldy     #0
 :       inx
         lda     text_buffer2::data,y
-        cmp     #'B'            ; stop at 'B' in "Blocks"
-        beq     slash
         sta     buf,x
         iny
         cpy     text_buffer2::length
         bne     :-
 
+        ;; Truncate units
+:       lda     buf,x
+        cmp     #' '
+        beq     slash
+        dex
+        bpl     :-              ; always
+
         ;; Append '/' to buf
-slash:  lda     #'/'
+slash:  inx
+        lda     #'/'
         sta     buf,x
         stx     buf
 
-do_suffix:
-        lda     selected_window_index ; volume?
-        bne     :+                    ; nope
-
         ;; Load up the total volume size...
         ldax    get_file_info_params5::aux_type
-        jmp     compute_suffix
 
-        ;; Load up the file size
-:       ldax    get_file_info_params5::blocks_used
-
-        ;; Compute " 12345 Blocks" (either result or suffix)
-compute_suffix:
+        ;; Compute " 12345 KB" (either volume size or file size)
+append_size:
         jsr     JT_SIZE_STRING
 
         ;; Append latest to buffer
@@ -14499,9 +14490,9 @@ prepare_window:
 draw_size_label:
         bit     is_volume_flag
         bpl     :+
-        yax_call draw_dialog_label, 3, aux::str_info_blocks
+        yax_call draw_dialog_label, 3, aux::str_info_vol_size
         jmp     draw_final_labels
-:       yax_call draw_dialog_label, 3, aux::str_info_size
+:       yax_call draw_dialog_label, 3, aux::str_info_file_size
 
 draw_final_labels:
         yax_call draw_dialog_label, 4, aux::str_info_create

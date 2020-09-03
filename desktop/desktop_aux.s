@@ -3540,7 +3540,7 @@ str_info_name:
         PASCAL_STRING "Name"
 str_info_locked:
         PASCAL_STRING "Locked"
-str_info_size:
+str_info_file_size:
         PASCAL_STRING "Size"
 str_info_create:
         PASCAL_STRING "Creation date"
@@ -3550,8 +3550,8 @@ str_info_type:
         PASCAL_STRING "Type"
 str_info_protected:
         PASCAL_STRING "Write protected"
-str_info_blocks:
-        PASCAL_STRING "Blocks free/size"
+str_info_vol_size:
+        PASCAL_STRING "Size used/total"
 
 str_colon:
         PASCAL_STRING ": "
