@@ -1,8 +1,8 @@
 ---
 name: Selector feature request
-about: Suggest an idea for this project
-title: ''
-labels: feature request, Selector
+about: Request an enhancement for the Selector app
+title: Title (ten words or less)
+labels: Selector, feature request
 assignees: ''
 
 ---

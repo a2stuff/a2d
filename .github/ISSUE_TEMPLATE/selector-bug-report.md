@@ -1,8 +1,8 @@
 ---
 name: Selector bug report
-about: Create a report to help us improve
-title: ''
-labels: bug, Selector
+about: Report a problem with the Selector app
+title: Title (ten words or less)
+labels: Selector, bug
 assignees: ''
 
 ---
@@ -24,10 +24,12 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+**System Details (please complete the following information):**
+ - System [e.g. Apple IIe Enhanced, Apple IIc, Apple IIgs]
+ - Emulator? [e.g. real hardware, or emulator name]
+ - ProDOS version
+ - DeskTop version (from About > Apple II DeskTop...)
+ - Other [e.g. mouse, memory expansions, disk types, etc]
 
 **Smartphone (please complete the following information):**
  - Device: [e.g. iPhone6]

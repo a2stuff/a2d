@@ -1,8 +1,8 @@
 ---
 name: Desk Accessory bug report
-about: Create a report to help us improve
-title: ''
-labels: bug, Desk Accessories
+about: Report a problem with an existing Desk Accessory
+title: Title (ten words or less)
+labels: Desk Accessories, bug
 assignees: ''
 
 ---

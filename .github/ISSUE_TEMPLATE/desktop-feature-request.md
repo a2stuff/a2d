@@ -1,7 +1,7 @@
 ---
 name: DeskTop feature request
-about: Suggest an idea for this project (ten words or less)
-title: ''
+about: Request an enhancement to the DeskTop app
+title: Title (ten words or less)
 labels: DeskTop, feature request
 assignees: ''
 

@@ -1,8 +1,8 @@
 ---
 name: Desk Accessory feature request
-about: Suggest an idea for this project
-title: ''
-labels: feature request, Desk Accessories
+about: Request an enhancement to an existing Desk Accessory
+title: Title (ten words or less)
+labels: Desk Accessories, feature request
 assignees: ''
 
 ---

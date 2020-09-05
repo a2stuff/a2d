@@ -1,8 +1,8 @@
 ---
 name: DeskTop bug report
-about: For bugs specific to the DeskTop app
-title: ''
-labels: bug, DeskTop
+about: Report a problem specific to the DeskTop app
+title: Title (ten words or less)
+labels: DeskTop, bug
 assignees: ''
 
 ---
@@ -25,7 +25,9 @@ If applicable, add screenshots to help explain your problem.
 
 **System Details (please complete the following information):**
  - System [e.g. Apple IIe Enhanced, Apple IIc, Apple IIgs]
- - Emulator [e.g. real hardware, or emulator name]
+ - Emulator? [e.g. real hardware, or emulator name]
+ - ProDOS version
+ - DeskTop version (from About > Apple II DeskTop...)
  - Other [e.g. mouse, memory expansions, disk types, etc]
 
 **Additional context**
