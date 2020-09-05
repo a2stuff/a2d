@@ -395,7 +395,7 @@ str_memory_prefix:
         PASCAL_STRING "Memory: "
 
 str_memory_suffix:
-        PASCAL_STRING "K"
+        PASCAL_STRING "KB"
 
 memory:.word    0
 
@@ -1299,19 +1299,14 @@ exit:   rts
 .endproc
 
 ;;; ============================================================
+;;; Input: 16-bit unsigned integer in A,X
+;;; Output: str_from_int populated, with separator if needed
 
 str_from_int:
-        PASCAL_STRING "000000"
+        PASCAL_STRING "000,000"
 
 .proc int_to_string
         stax    value
-
-        ;; Fill buffer with spaces
-        ldx     #6
-        lda     #' '
-:       sta     str_from_int,x
-        dex
-        bne     :-
 
         lda     #0
         sta     nonzero_flag
@@ -1324,42 +1319,45 @@ loop:   lda     #0
 
         ;; Keep subtracting/incrementing until zero is hit
 sloop:  cmp16   value, powers,x
-        bpl     subtract
+        bcc     break
+        inc     digit
+        sub16   value, powers,x, value
+        jmp     sloop
 
-        lda     digit
+break:  lda     digit
         bne     not_pad
         bit     nonzero_flag
-        bmi     not_pad
+        bpl     next
 
-        ;; Pad with space
-        lda     #' '
-        bne     :+
         ;; Convert to ASCII
 not_pad:
-        clc
-        adc     #'0'            ; why not ORA $30 ???
+        ora     #'0'
         pha
-        lda     #$80
-        sta     nonzero_flag
+        copy    #$80, nonzero_flag
         pla
 
-        ;; Place the character, move to next
-:       sta     str_from_int+2,y
+        ;; Place the character
         iny
-        inx
+        sta     str_from_int,y
+
+        ;; Add thousands separator, if needed
+        cpx     #2
+        bne     next
+        iny
+        lda     #','
+        sta     str_from_int,y
+
+next:   inx
         inx
         cpx     #8              ; up to 4 digits (*2) via subtraction
         beq     done
         jmp     loop
 
-subtract:
-        inc     digit
-        sub16   value, powers,x, value
-        jmp     sloop
-
 done:   lda     value           ; handle last digit
         ora     #'0'
-        sta     str_from_int+2,y
+        iny
+        sta     str_from_int,y
+        sty     str_from_int
         rts
 
 powers: .word   10000, 1000, 100, 10

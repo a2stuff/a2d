@@ -7276,7 +7276,7 @@ tmp:    .byte   0
 
 
 ;;; ============================================================
-;;; Draw header (items/k in disk/k available/lines)
+;;; Draw header (items/KB in disk/KB available/lines)
 
 .proc draw_window_header
 
@@ -7344,7 +7344,7 @@ tmp:    .byte   0
         bcs     :+
         inc     str_items       ; restore trailing s
 
-        ;; Draw "XXXK in disk"
+        ;; Draw "XXXKB in disk"
 :       jsr     calc_header_coords
         ldx     active_window_id
         dex                     ; index 0 is window 1
@@ -7361,7 +7361,7 @@ tmp:    .byte   0
         jsr     draw_int_string
         addr_call draw_pascal_string, str_k_in_disk
 
-        ;; Draw "XXXK available"
+        ;; Draw "XXXKB available"
         ldx     active_window_id
         dex                     ; index 0 is window 1
         txa
@@ -7392,7 +7392,7 @@ tmp:    .byte   0
         bpl     :+
         jmp     skipcenter
 
-        ;; Yes - center "k in disk"
+        ;; Yes - center "KB in disk"
 :       add16   width_left_labels, xcoord, pos_k_available::xcoord
         lda     xcoord+1
         beq     :+
@@ -7432,14 +7432,17 @@ xcoord:
 .endproc ; draw_window_header
 
 ;;; ============================================================
-;;; Input: 16-bit unsigned number in A,X
+;;; Entry points:
+;;;   int_to_string - no thousands separators
+;;;   int_to_string_with_separators - thousands separator
+;;; Input: 16-bit unsigned integer in A,X
 ;;; Output: length-prefixed string in str_from_int
 
 .proc int_to_string_impl
 
 ;;; Entry point: with thousands separators
 sep:    sec
-        jmp     common
+        bcs     common
 
 ;;; Entry point: without thousands separators
 nosep:  clc

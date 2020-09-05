@@ -1361,7 +1361,7 @@ window_k_used_table:  .res    kMaxNumWindows*2, 0
 window_k_free_table:  .res    kMaxNumWindows*2, 0
 
 ;;; ============================================================
-;;; Resources for window header (Items/k in disk/available)
+;;; Resources for window header (Items/KB in disk/KB available)
 
 str_items:
         PASCAL_STRING " Items"
@@ -1373,13 +1373,13 @@ header_line_left: DEFINE_POINT 0, 0, header_line_left
 header_line_right:    DEFINE_POINT 0, 0, header_line_right
 
 str_k_in_disk:
-        PASCAL_STRING "K in disk"
+        PASCAL_STRING "KB in disk"
 
 str_k_available:
-        PASCAL_STRING "K available"
+        PASCAL_STRING "KB available"
 
 str_from_int:                   ; populated by int_to_string
-        PASCAL_STRING "      "
+        PASCAL_STRING "000,000" ; 6 digits plus thousands separator
 
 ;;; Computed during startup
 width_items_label_padded:
