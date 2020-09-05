@@ -7331,7 +7331,7 @@ tmp:    .byte   0
         ;; Draw "XXX Items"
         lda     cached_window_icon_count
         ldx     #0
-        jsr     int_to_string
+        jsr     int_to_string_with_separators
         lda     cached_window_icon_count
         cmp     #2              ; plural?
         bcs     :+
@@ -7356,7 +7356,7 @@ tmp:    .byte   0
         lda     window_k_used_table+1,x
         tax
         tya
-        jsr     int_to_string
+        jsr     int_to_string_with_separators
         MGTK_RELAY_CALL MGTK::MoveTo, pos_k_in_disk
         jsr     draw_int_string
         addr_call draw_pascal_string, str_k_in_disk
@@ -7372,7 +7372,7 @@ tmp:    .byte   0
         lda     window_k_free_table+1,x
         tax
         tya
-        jsr     int_to_string
+        jsr     int_to_string_with_separators
         MGTK_RELAY_CALL MGTK::MoveTo, pos_k_available
         jsr     draw_int_string
         addr_call draw_pascal_string, str_k_available
@@ -7435,8 +7435,19 @@ xcoord:
 ;;; Input: 16-bit unsigned number in A,X
 ;;; Output: length-prefixed string in str_from_int
 
-.proc int_to_string
-        stax    value
+.proc int_to_string_impl
+
+;;; Entry point: with thousands separators
+sep:    sec
+        jmp     common
+
+;;; Entry point: without thousands separators
+nosep:  clc
+        ;; fall through...
+
+common: stax    value
+        ror                     ; move carry to high bit
+        sta     separator_flag
 
         lda     #0
         sta     nonzero_flag
@@ -7466,8 +7477,17 @@ not_pad:
         copy    #$80, nonzero_flag
         pla
 
-        ;; Place the character, move to next
+        ;; Place the character
         iny
+        sta     str_from_int,y
+
+        ;; Add thousands separator, if needed
+        bit     separator_flag
+        bpl     next
+        cpx     #2
+        bne     next
+        iny
+        lda     #','
         sta     str_from_int,y
 
 next:   inx
@@ -7488,8 +7508,12 @@ value:  .word   0            ; remaining value as subtraction proceeds
 digit:  .byte   0            ; current digit being accumulated
 nonzero_flag:                ; high bit set once a non-zero digit seen
         .byte   0
-
+separator_flag:
+        .byte   0
 .endproc ; int_to_string
+
+int_to_string   := int_to_string_impl::nosep
+int_to_string_with_separators   := int_to_string_impl::sep
 
 ;;; ============================================================
 ;;; Compute bounding box for icons within cached window
@@ -8513,7 +8537,7 @@ loop:   lda     name,x
         bcc     :+
         inc16   value           ; rounding up
 :       ldax    value
-        jsr     int_to_string
+        jsr     int_to_string_with_separators
 
         ;; Leading space
         ldx     #1
@@ -15982,7 +16006,7 @@ done:   rts
 
 .proc compose_file_count_string
         ldax    file_count
-        jsr     int_to_string
+        jsr     int_to_string_with_separators
 
         ldy     #1
         copy    #' ', str_file_count,y
