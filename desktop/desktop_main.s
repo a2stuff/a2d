@@ -4492,12 +4492,21 @@ deltay: .word   0
 
 ;;; ============================================================
 
-handle_close_click:
+.proc handle_close_click
         lda     active_window_id
         MGTK_RELAY_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
-        bne     close_window
+        bne     :+
         rts
+
+        ;; If modifier is down, close all windows
+:       lda     BUTN0
+        ora     BUTN1
+        bpl     :+
+        jmp     cmd_close_all
+:
+        ;; fall through...
+.endproc
 
 .proc close_window
         icon_ptr := $06

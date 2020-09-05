@@ -26,6 +26,7 @@ Project Page: https://github.com/a2stuff/a2d
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. ([#64](https://github.com/a2stuff/a2d/issues/64))
 * Tip about skipping copy to RAMCard is shown during startup. ([#140](https://github.com/a2stuff/a2d/issues/140))
 * Holding **Apple** while double-clicking or using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
+* Holding **Apple** while clicking a window's close box closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266))
 * **Apple-\`** or **Apple-Tab** cycles through open windows; **Shift-Apple-\`** cycles in reverse. ([#143](https://github.com/a2stuff/a2d/issues/143), [#230](https://github.com/a2stuff/a2d/issues/230))
 * **Apple-Delete** deletes selected files. ([#150](https://github.com/a2stuff/a2d/issues/150))
 * **Apple-Down** opens/previews selection. ([#254](https://github.com/a2stuff/a2d/issues/254))

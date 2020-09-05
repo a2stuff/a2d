@@ -77,3 +77,7 @@
 * Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, FloppyEmu); verify that all show up.
 
 * Verify that GS/OS filename cases show correctly (e.g. ProDOS 2.5 disk).
+
+* Open two windows. Click the close box on the active window. Verify that only the active window closes.
+* Open two windows. Hold Open-Apple and click the close box on the active window. Verify that all windows close.
+* Open two windows. Hold Solid-Apple and click the close box on the active window. Verify that all windows close.
