@@ -149,6 +149,14 @@ reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 47, 29
 .endparams
 
+.params ace500_bitmap
+viewloc:        DEFINE_POINT 60, 4
+mapbits:        .addr   ace500_bits
+mapwidth:       .byte   7
+reserved:       .res    1
+maprect:        DEFINE_RECT 0, 0, 47, 29
+.endparams
+
 ii_bits:
         .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -339,6 +347,39 @@ laser128_bits:
         .byte   PX(%0011000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110)
         .byte   PX(%0001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111100)
 
+ace500_bits:
+        .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000)
+        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1000111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%1100110),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%1100000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1001100),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1001100),PX(%1100000)
+        .byte   PX(%0000001),PX(%1000111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1100000)
+        .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
+        .byte   PX(%0110000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011)
+        .byte   PX(%0110010),PX(%1010101),PX(%0101010),PX(%1010101),PX(%0101010),PX(%1010101),PX(%0100011)
+        .byte   PX(%0110001),PX(%0101010),PX(%1010101),PX(%0101010),PX(%1010101),PX(%0101010),PX(%1010011)
+        .byte   PX(%0110000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011)
+        .byte   PX(%0110000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
+        .byte   PX(%0011000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110)
+        .byte   PX(%0011000),PX(%0110011),PX(%0011001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0000110)
+        .byte   PX(%0011001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0011000),PX(%0001100),PX(%1100110)
+        .byte   PX(%0011000),PX(%0110011),PX(%0011001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0000110)
+        .byte   PX(%0011001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0011000),PX(%0001100),PX(%1100110)
+        .byte   PX(%0011000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110)
+        .byte   PX(%0011111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111110)
+
+
 ;;; ============================================================
 
 str_ii:
@@ -379,6 +420,9 @@ str_iigs:
 
 str_laser128:
         PASCAL_STRING "Laser 128"
+
+str_ace500:
+        PASCAL_STRING "Franklin ACE 500"
 
 ;;; ============================================================
 
@@ -525,13 +569,14 @@ textfont:       .addr   0
 ;;; Apple IIe                   $06     [$AD]     $EA                       [$00]
 ;;; Apple IIe (enhanced)        $06     [$AD]     $E0                       [$00]
 ;;; Apple IIe Option Card       $06     [$AD]     $E0      $02      $00
-;;; Apple IIc                   $06               $00                        $FF
-;;; Apple IIc (3.5 ROM)         $06               $00                        $00
-;;; Apple IIc (Org. Mem. Exp.)  $06               $00                        $03
-;;; Apple IIc (Rev. Mem. Exp.)  $06               $00                        $04
-;;; Apple IIc Plus              $06               $00                        $05
+;;; Apple IIc                   $06     [$4C]     $00                        $FF
+;;; Apple IIc (3.5 ROM)         $06     [$4C]     $00                        $00
+;;; Apple IIc (Org. Mem. Exp.)  $06     [$4C]     $00                        $03
+;;; Apple IIc (Rev. Mem. Exp.)  $06     [$4C]     $00                        $04
+;;; Apple IIc Plus              $06     [$4C]     $00                        $05
 ;;; Apple IIgs                  $06     [$4C]     $E0  (and SEC, JSR $FE1F, CC=IIgs)
 ;;; Laser 128                   $06      $AC     [$E0]
+;;; Franklin ACE 500            $06      $AD      $00                       [$00]
 ;;;
 ;;; (Values in [] are for reference, not needed for compatibility check)
 ;;;
@@ -558,6 +603,7 @@ textfont:       .addr   0
         iie_card                ; Apple IIe Option Card
         iii                     ; Apple /// (emulation)
         laser128                ; Laser 128
+        ace500                  ; Franklin ACE 500
         LAST
 .endenum
 
@@ -575,6 +621,7 @@ model_str_table:
         .addr   str_iie_card     ; Apple IIe Option Card
         .addr   str_iii          ; Apple /// (emulation)
         .addr   str_laser128     ; Laser 128
+        .addr   str_ace500       ; Franklin ACE 500
 
 model_pix_table:
         .addr   ii_bitmap       ; Apple ][
@@ -590,13 +637,14 @@ model_pix_table:
         .addr   iie_card_bitmap ; Apple IIe Option Card
         .addr   iii_bitmap      ; Apple /// (emulation)
         .addr   laser128_bitmap ; Laser 128
+        .addr   ace500_bitmap   ; Franklin ACE 500
 
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.07.html
 ;;; Note that IIgs resolves as IIe (enh.) and is identified by ROM call.
 ;;;
-;;; Format is: model (enum), then byte pairs [$FFxx, expected], then $00
+;;; Format is: model (enum), then byte pairs [$FBxx, expected], then $00
 
 MODEL_ID_PAGE := $FB00
 
@@ -612,6 +660,9 @@ model_lookup_table:
 
         .byte   model::laser128
         .byte   $B3, $06, $1E, $AC, 0
+
+        .byte   model::ace500
+        .byte   $B3, $06, $1E, $AD, $C0, $00, 0
 
         .byte   model::iie_original
         .byte   $B3, $06, $C0, $EA, 0
