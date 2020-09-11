@@ -1115,31 +1115,39 @@ iloop:  cpx     cached_window_icon_count
 
         ;; Validate version bytes
         lda     main::save_restore_windows::desktop_file_data_buf
-        cmp     #kDeskTopVersionMajor
+        cmp     #kDeskTopFileVersion
         bne     exit
-        lda     main::save_restore_windows::desktop_file_data_buf+1
-        cmp     #kDeskTopVersionMinor
-        bne     exit
-        copy16  #main::save_restore_windows::desktop_file_data_buf+2, data_ptr
+        copy16  #main::save_restore_windows::desktop_file_data_buf+1, data_ptr
 
 loop:   ldy     #0
         lda     (data_ptr),y
         beq     exit
 
-        ;; Copy path to open_dir_path_buf
+        ;; Copy path to `open_dir_path_buf`
         tay
 :       lda     (data_ptr),y
         sta     open_dir_path_buf,y
         dey
         bpl     :-
 
-        ;; TODO: Use bounds rect
+        ;; Copy bounds to `tmp_rect`
+        ldy     #DeskTopFileItem::rect+.sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     (data_ptr),y
+        sta     tmp_rect,x
+        dey
+        dex
+        bpl     :-
 
         jsr     main::push_pointers
 
-        copy    #$80, main::open_directory::suppress_error_on_open_flag
+        lda     #$80
+        sta     main::copy_new_window_bounds_flag
+        sta     main::open_directory::suppress_error_on_open_flag
         jsr     maybe_open_window
-        copy    #0, main::open_directory::suppress_error_on_open_flag
+        lda     #0
+        sta     main::copy_new_window_bounds_flag
+        sta     main::open_directory::suppress_error_on_open_flag
 
         jsr     main::pop_pointers
 

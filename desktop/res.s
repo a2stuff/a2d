@@ -974,7 +974,11 @@ redraw_icon_param:
 icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
-        ;; (follows icon_param for IconTK::IconInRect call)
+        ;; * follows icon_param for IconTK::IconInRect call
+        ;; * used for saving/restoring window bounds to/from file
+        ;; * used for icon clipping
+        ;; * used for window frame zoom animation
+        ASSERT_ADDRESS icon_param+1
         DEFINE_RECT tmp_rect, 0, 0, 0, 0
 
 tmp_mapinfo:

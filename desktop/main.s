@@ -7038,15 +7038,28 @@ has_parent:
         lda     #0
         sta     (winfo_ptr),y
 
-        ;; Map rect
+        ;; Map rect (initially empty, size assigned in `create_icons_for_window`)
         lda     #0
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 3
-        ldx     #3
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
 :       sta     (winfo_ptr),y
         dey
         dex
         bpl     :-
 
+        ;; Assign saved left/top?
+        bit     copy_new_window_bounds_flag
+    IF_MINUS
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     tmp_rect,x
+        sta     (winfo_ptr),y
+        dey
+        dex
+        bpl     :-
+    END_IF
+
+        ;; --------------------------------------------------
         ;; Scrollbars
         ldy     #MGTK::Winfo::hscroll
         lda     (winfo_ptr),y
@@ -7098,8 +7111,10 @@ volume: ldx     cached_window_id
         lda     cached_window_id
         jsr     create_icons_and_set_window_size
         rts
-
 .endproc
+
+copy_new_window_bounds_flag:
+        .byte   0
 
 ;;; ============================================================
 ;;; File Icon Entry Construction
@@ -7236,6 +7251,11 @@ use_maxw:
         ldax    #kMaxWindowWidth
 
 assign_width:
+        bit     copy_new_window_bounds_flag
+    IF_MINUS
+        ldax    tmp_rect::x2
+    END_IF
+
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
         sta     (winfo_ptr),y
         txa
@@ -7259,6 +7279,11 @@ use_maxh:
         ldax    #kMaxWindowHeight
 
 assign_height:
+        bit     copy_new_window_bounds_flag
+    IF_MINUS
+        ldax    tmp_rect::y2
+    END_IF
+
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::y2
         sta     (winfo_ptr),y
         txa
@@ -16154,9 +16179,8 @@ str_desktop_file:
         winfo_ptr := $08
 
         ;; Write version bytes
-        copy    #kDeskTopVersionMajor, desktop_file_data_buf
-        copy    #kDeskTopVersionMinor, desktop_file_data_buf+1
-        copy16  #desktop_file_data_buf+2, data_ptr
+        copy    #kDeskTopFileVersion, desktop_file_data_buf
+        copy16  #desktop_file_data_buf+1, data_ptr
 
         ;; Get first window pointer
         MGTK_RELAY_CALL MGTK::FrontWindow, window_id
@@ -16221,6 +16245,7 @@ exit:   rts
 
 .proc write_window_info
         path_ptr := $0A
+        bounds := tmp_rect
 
         ;; Find name
         ldy     #MGTK::Winfo::window_id
@@ -16252,10 +16277,18 @@ exit:   rts
         dex
         bpl     :-
 
+        ;; Copy bounds in
+        ldy     #DeskTopFileItem::rect+.sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     bounds,x
+        sta     (data_ptr),y
+        dey
+        dex
+        bpl     :-
+
+        ;; Offset to next entry
         add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
         rts
-
-bounds: .tag    MGTK::Rect
 
 .endproc                        ; write_window_info
 

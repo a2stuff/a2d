@@ -209,6 +209,8 @@ ITK_RELAY       := ITKRelayImpl
         aux_type                .word ; 30 $1E
 .endstruct
 
+kDeskTopFileVersion  = $80  ; Increment when format changes
+
 .struct DeskTopFileItem
         window_path     .res ::kPathBufferSize
         rect            .tag MGTK::Rect
