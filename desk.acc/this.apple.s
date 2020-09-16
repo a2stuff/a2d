@@ -439,7 +439,7 @@ str_memory_prefix:
         PASCAL_STRING "Memory: "
 
 str_memory_suffix:
-        PASCAL_STRING "KB"
+        PASCAL_STRING " KB"
 
 memory:.word    0
 
@@ -472,7 +472,7 @@ str_none:       PASCAL_STRING "(none)"
 
 ;;; ============================================================
 
-str_cpu_prefix: PASCAL_STRING "  CPU: "
+str_cpu_prefix: PASCAL_STRING "    CPU: "
 str_6502:       PASCAL_STRING "6502"
 str_65C02:      PASCAL_STRING "65C02"
 str_65802:      PASCAL_STRING "65802"

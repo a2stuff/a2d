@@ -1373,10 +1373,10 @@ header_line_left: DEFINE_POINT 0, 0, header_line_left
 header_line_right:    DEFINE_POINT 0, 0, header_line_right
 
 str_k_in_disk:
-        PASCAL_STRING "KB in disk"
+        PASCAL_STRING " KB in disk"
 
 str_k_available:
-        PASCAL_STRING "KB available"
+        PASCAL_STRING " KB available"
 
 str_from_int:                   ; populated by int_to_string
         PASCAL_STRING "000,000" ; 6 digits plus thousands separator
