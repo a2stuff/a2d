@@ -472,11 +472,11 @@ done:   rts
         addr_call main::measure_text1, str_items
         addax   dx, width_items_label
 
-        ;; Width of "123,456KB in disk"
+        ;; Width of "123,456 KB in disk"
         addr_call main::measure_text1, str_k_in_disk
         addax   dx, width_k_in_disk_label
 
-        ;; Width of "123,456KB available"
+        ;; Width of "123,456 KB available"
         addr_call main::measure_text1, str_k_available
         addax   dx, width_k_available_label
 
