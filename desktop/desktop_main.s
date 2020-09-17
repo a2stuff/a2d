@@ -8541,7 +8541,7 @@ loop:   lda     name,x
 .endproc
 
 ;;; ============================================================
-;;; Populate text_buffer2 with " 12345 KB"
+;;; Populate text_buffer2 with " 12,345 KB"
 
 .proc compose_size_string
         stax    value           ; size in 512-byte blocks
@@ -11152,7 +11152,7 @@ show_protected:
         ;; Size/Blocks
         copy    #GetInfoDialogState::size, get_info_dialog_params::state
 
-        ;; Compose " 12345 KB" or " 12345 / 67890 KB" string
+        ;; Compose " 12,345 KB" or " 12,345 / 67,890 KB" string
         buf := $220
         copy    #0, buf
 
@@ -11173,7 +11173,7 @@ volume:
         ldax    get_file_info_params5::blocks_used
         jsr     JT_SIZE_STRING
 
-        ;; text_buffer2 now has " 12345 KB" (used space)
+        ;; text_buffer2 now has " 12,345 KB" (used space)
 
         ;; Copy into buf
         ldx     buf
@@ -11201,7 +11201,7 @@ slash:  inx
         ;; Load up the total volume size...
         ldax    get_file_info_params5::aux_type
 
-        ;; Compute " 12345 KB" (either volume size or file size)
+        ;; Compute " 12,345 KB" (either volume size or file size)
 append_size:
         jsr     JT_SIZE_STRING
 
