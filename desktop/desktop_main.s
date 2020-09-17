@@ -7353,7 +7353,7 @@ tmp:    .byte   0
         bcs     :+
         inc     str_items       ; restore trailing s
 
-        ;; Draw "XXXKB in disk"
+        ;; Draw "XXX KB in disk"
 :       jsr     calc_header_coords
         ldx     active_window_id
         dex                     ; index 0 is window 1
@@ -7370,7 +7370,7 @@ tmp:    .byte   0
         jsr     draw_int_string
         addr_call draw_pascal_string, str_k_in_disk
 
-        ;; Draw "XXXKB available"
+        ;; Draw "XXX KB available"
         ldx     active_window_id
         dex                     ; index 0 is window 1
         txa
