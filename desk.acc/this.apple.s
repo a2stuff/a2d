@@ -1220,6 +1220,9 @@ fail:   clc
         bne     :+
         inc     memory+1
 :       inc16   memory          ; Main 64k memory
+
+        jsr     check_iigs_memory
+
         asl16   memory          ; * 64
         asl16   memory
         asl16   memory
@@ -1330,6 +1333,29 @@ next:   inx                     ; next bank
         sta     RAMWRTON
         plp                     ; restore interrupt state
         rts
+.endproc
+
+;;; ============================================================
+
+.proc check_iigs_memory
+        lda     ROMIN2          ; Check ROM - is this a IIgs?
+        sec
+        jsr     IDROUTINE
+        lda     LCBANK1
+        lda     LCBANK1
+        bcs     done
+
+        ;; Per Antoine Vignau, $E1/1624 (word) has # of banks
+
+        .pushcpu
+        .setcpu "65816"
+        lda     $E11624
+        sta     memory
+        lda     $E11624+1
+        sta     memory+1
+        .popcpu
+
+done:   rts
 .endproc
 
 ;;; ============================================================
