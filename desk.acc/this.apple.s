@@ -36,12 +36,12 @@ da_start:
 .endscope
 
 .scope
-        ;; run the DA (from Main)
+        ;; run the DA (from Aux)
         sta     RAMRDON
         sta     RAMWRTON
         jsr     init
 
-        ;; tear down/exit (back to Aux)
+        ;; tear down/exit (back to Main)
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -1072,9 +1072,6 @@ penmode:.byte   MGTK::notpencopy
         beq     :+
         return16 #str_block
 
-;;; TODO: Follow Technical Note: SmartPort #4: SmartPort Device Types
-;;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
-;;; and identify specific device type via STATUS call
 :
         jsr     populate_smartport_name
         return16 #str_smartport
@@ -1481,6 +1478,9 @@ p65802: return16 #str_65802     ; Other boards support 65802
 ;;; Inputs: $06 points at $Cn00
 ;;; Output: str_smartport populated with device names, or "(none)"
 
+;;; Follows Technical Note: SmartPort #4: SmartPort Device Types
+;;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
+
 .proc populate_smartport_name_impl
 
 .params status_params
@@ -1535,6 +1535,8 @@ loop:
         .byte   $00             ; $00 = STATUS
         .addr   status_params
         bcs     next
+
+        ;; TODO: Case-adjust
 
         ;; Append separator, unless it's the first
         ldx     offset
