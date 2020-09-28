@@ -38,7 +38,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Use standard ProDOS alert tone.
 * File modification time-of-day is shown in file lists and **File > Get Info**. ([#221](https://github.com/a2stuff/a2d/issues/221))
 * **File > Rename** dialog pre-filled with previous name. ([#156](https://github.com/a2stuff/a2d/issues/156))
-* **File > Get Info** and list views show file and volume sizes in KB rather than Blocks.
+* **File > Get Info** and list views show file and volume sizes in K rather than Blocks.
 * **File > Get Info** shows used/total for volumes, rather than free/total.
 
 ### Desk Accessory Enhancements
