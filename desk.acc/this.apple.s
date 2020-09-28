@@ -1342,13 +1342,16 @@ next:   inx                     ; next bank
         lda     LCBANK1
         bcs     done
 
-        ;; Per Antoine Vignau, $E1/1624 (word) has # of banks
-
         .pushcpu
         .setcpu "65816"
-        lda     $E11624
+
+        ;; From the IIgs Memory Manager tool set source
+        ;; c/o Antoine Vignau and Dagen Brock
+        NumBanks := $E11624
+
+        lda     NumBanks
         sta     memory
-        lda     $E11624+1
+        lda     NumBanks+1
         sta     memory+1
         .popcpu
 
