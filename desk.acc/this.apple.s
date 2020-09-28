@@ -439,7 +439,7 @@ str_memory_prefix:
         PASCAL_STRING "Memory: "
 
 str_memory_suffix:
-        PASCAL_STRING " KB"
+        PASCAL_STRING "K"
 
 memory:.word    0
 

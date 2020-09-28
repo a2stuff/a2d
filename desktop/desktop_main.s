@@ -7285,7 +7285,7 @@ tmp:    .byte   0
 
 
 ;;; ============================================================
-;;; Draw header (items/KB in disk/KB available/lines)
+;;; Draw header (items/K in disk/K available/lines)
 
 .proc draw_window_header
 
@@ -7353,7 +7353,7 @@ tmp:    .byte   0
         bcs     :+
         inc     str_items       ; restore trailing s
 
-        ;; Draw "XXXKB in disk"
+        ;; Draw "XXXK in disk"
 :       jsr     calc_header_coords
         ldx     active_window_id
         dex                     ; index 0 is window 1
@@ -7370,7 +7370,7 @@ tmp:    .byte   0
         jsr     draw_int_string
         addr_call draw_pascal_string, str_k_in_disk
 
-        ;; Draw "XXXKB available"
+        ;; Draw "XXXK available"
         ldx     active_window_id
         dex                     ; index 0 is window 1
         txa
@@ -7401,7 +7401,7 @@ tmp:    .byte   0
         bpl     :+
         jmp     skipcenter
 
-        ;; Yes - center "KB in disk"
+        ;; Yes - center "K in disk"
 :       add16   width_left_labels, xcoord, pos_k_available::xcoord
         lda     xcoord+1
         beq     :+
@@ -8541,7 +8541,7 @@ loop:   lda     name,x
 .endproc
 
 ;;; ============================================================
-;;; Populate text_buffer2 with " 12345 KB"
+;;; Populate text_buffer2 with " 12345K"
 
 .proc compose_size_string
         stax    value           ; size in 512-byte blocks
@@ -8577,7 +8577,7 @@ loop:   lda     name,x
         stx     text_buffer2::length
         rts
 
-suffix: PASCAL_STRING " KB"
+suffix: PASCAL_STRING "K"
 
 value:  .word   0
 
@@ -11152,7 +11152,7 @@ show_protected:
         ;; Size/Blocks
         copy    #GetInfoDialogState::size, get_info_dialog_params::state
 
-        ;; Compose " 12345 KB" or " 12345 / 67890 KB" string
+        ;; Compose " 12345K" or " 12345K / 67890K" string
         buf := $220
         copy    #0, buf
 
@@ -11173,7 +11173,7 @@ volume:
         ldax    get_file_info_params5::blocks_used
         jsr     JT_SIZE_STRING
 
-        ;; text_buffer2 now has " 12345 KB" (used space)
+        ;; text_buffer2 now has " 12345K" (used space)
 
         ;; Copy into buf
         ldx     buf
@@ -11185,15 +11185,11 @@ volume:
         cpy     text_buffer2::length
         bne     :-
 
-        ;; Truncate units
-:       lda     buf,x
-        cmp     #' '
-        beq     slash
-        dex
-        bpl     :-              ; always
-
-        ;; Append '/' to buf
-slash:  inx
+        ;; Append ' /' to buf
+        inx
+        lda     #' '
+        sta     buf,x
+        inx
         lda     #'/'
         sta     buf,x
         stx     buf
@@ -11201,7 +11197,7 @@ slash:  inx
         ;; Load up the total volume size...
         ldax    get_file_info_params5::aux_type
 
-        ;; Compute " 12345 KB" (either volume size or file size)
+        ;; Compute " 12345K" (either volume size or file size)
 append_size:
         jsr     JT_SIZE_STRING
 
