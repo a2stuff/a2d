@@ -2908,44 +2908,59 @@ selected_vol_icon_list:
 ;;; Handle keyboard-based icon selection ("highlighting")
 
 .proc cmd_highlight
-        jmp     L544D
+        jmp     start
 
-L5444:  .byte   0
-L5445:  .byte   0
-L5446:  .byte   0
-L5447:  .byte   0
-L5448:  .byte   0
-L5449:  .byte   0
-L544A:  .byte   0
-        .byte   0
+;;; First byte is icon count. Rest is a list of selectable icons.
+buffer := $1800
+
+;;; "Current" icon coords, for comparison, during bubble sort.
+icon_pos:
+iconx:  .word   0
+icony:  .word   0
+
+;;; Icon to swap during bubble sort.
+bubbled_icon:   .byte   0
+bubbled_index:  .byte   0
+
+selected_index:
         .byte   0
 
-L544D:
-        copy    #0, $1800
+        .byte   0               ; unused ???
+        .byte   0               ; unused ???
+
+start:
+        copy    #0, buffer
         lda     active_window_id
-        bne     L545A
-        jmp     L54C5
+        bne     :+
+        jmp     volumes
 
-L545A:  tax
+:       tax
         dex
         lda     win_view_by_table,x
-        bpl     L5464           ; by icon
-        jmp     L54C5
+        bpl     :+              ; by icon
+        jmp     volumes
 
-        ;; View by icon
-L5464:  jsr     LoadActiveWindowIconTable
+        ;; --------------------------------------------------
+        ;; Icons in active window
+
+:       jsr     LoadActiveWindowIconTable
         lda     active_window_id
         jsr     window_lookup
         stax    $06
+
+        ;; Copy window's rect
         ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect
-L5479:  lda     ($06),y
+:       lda     ($06),y
         sta     tmp_rect-(MGTK::Winfo::port+MGTK::GrafPort::maprect),y
         iny
         cpy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+8
-        bne     L5479
-        ldx     #$00
-L5485:  cpx     cached_window_icon_count
-        beq     L54BD
+        bne     :-
+
+        ;; Iterate through window's icons
+        ldx     #0
+win_loop:
+        cpx     cached_window_icon_count
+        beq     switch_to_volume_icons
         txa
         pha
         lda     cached_window_icon_list,x
@@ -2956,139 +2971,177 @@ L5485:  cpx     cached_window_icon_count
         lda     icon_param
         jsr     icon_window_to_screen
         pla
-        beq     L54B7
+        beq     :+
+
+        ;; Icon is visible in the window, add it to the list.
         pla
         pha
         tax
         lda     cached_window_icon_list,x
-        ldx     $1800
-        sta     $1801,x
-        inc     $1800
-L54B7:  pla
+        ldx     buffer
+        sta     buffer+1,x
+        inc     buffer
+
+:       pla
         tax
         inx
-        jmp     L5485
+        jmp     win_loop
 
-        ;; No window icons
-L54BD:  jsr     LoadDesktopIconTable
-L54C5:  ldx     $1800
-        ldy     #$00
-L54CA:  lda     cached_window_icon_list,y
-        sta     $1801,x
+        ;; --------------------------------------------------
+        ;; Desktop (volume) icons
+switch_to_volume_icons:
+        jsr     LoadDesktopIconTable
+
+volumes:
+        ldx     buffer
+        ldy     #0
+vol_loop:
+        lda     cached_window_icon_list,y
+        sta     buffer+1,x
         iny
         inx
         cpy     cached_window_icon_count
-        bne     L54CA
-        lda     $1800
+        bne     vol_loop
+        lda     buffer
         clc
         adc     cached_window_icon_count
-        sta     $1800
-        copy    #0, L544A
-        ldax    #$03FF
-L54EA:  sta     L5444,x
+        sta     buffer
+
+;;; List of icons in |buffer| is complete. Now bubble sort by position.
+;;; Sort is primarily by icon Y, secondarily by icon X.
+
+        copy    #0, selected_index
+
+        lda     #$FF
+        ldx     #.sizeof(MGTK::Point)-1
+:       sta     icon_pos,x
         dex
-        bpl     L54EA
-L54F0:  ldx     L544A
-L54F3:  lda     $1801,x
+        bpl     :-
+
+sort_loop:
+        ldx     selected_index
+check:  lda     buffer+1,x
         asl     a
         tay
         copy16  icon_entry_address_table,y, $06
-        ldy     #$06
+        ldy     #IconEntry::icony+1
         lda     ($06),y
-        cmp     L5447
-        beq     L5510
-        bcc     L5532
-        jmp     L5547
+        cmp     icony+1
+        beq     :+
+        bcc     is_lt
+        jmp     is_gt
 
-L5510:  dey
+:       dey                     ; y=IconEntry::icony
         lda     ($06),y
-        cmp     L5446
-        beq     L551D
-        bcc     L5532
-        jmp     L5547
+        cmp     icony
+        beq     :+
+        bcc     is_lt
+        jmp     is_gt
 
-L551D:  dey
+:       dey                     ; y=IconEntry::iconx+1
         lda     ($06),y
-        cmp     L5445
-        beq     L552A
-        bcc     L5532
-        jmp     L5547
+        cmp     iconx+1
+        beq     :+
+        bcc     is_lt
+        jmp     is_gt
 
-L552A:  dey
+:       dey                     ; y=IconEntry::iconx
         lda     ($06),y
-        cmp     L5444
-        bcs     L5547
-L5532:  lda     $1801,x
-        stx     L5449
-        sta     L5448
-        ldy     #$03
-L553D:  lda     ($06),y
-        sta     L5444-3,y
+        cmp     iconx
+        bcs     is_gt
+
+is_lt:  lda     buffer+1,x
+        stx     bubbled_index
+        sta     bubbled_icon
+
+        ;; Update current pos
+        ldy     #IconEntry::iconx
+:       lda     ($06),y
+        sta     iconx-IconEntry::iconx,y
         iny
-        cpy     #$07
-        bne     L553D
-L5547:  inx
-        cpx     $1800
-        bne     L54F3
-        ldx     L544A
-        lda     $1801,x
-        tay
-        lda     L5448
-        sta     $1801,x
-        ldx     L5449
-        tya
-        sta     $1801,x
-        ldax    #$03FF
-L5565:  sta     L5444,x
-        dex
-        bpl     L5565
-        inc     L544A
-        ldx     L544A
-        cpx     $1800
-        beq     L5579
-        jmp     L54F0
+        cpy     #IconEntry::iconx+4
+        bne     :-
 
-L5579:  copy    #0, L544A
+is_gt:  inx
+        cpx     buffer
+        bne     check
+
+        ;; Place icon in correct place within list
+        ldx     selected_index
+        lda     buffer+1,x
+        tay
+        lda     bubbled_icon
+        sta     buffer+1,x
+        ldx     bubbled_index
+        tya
+        sta     buffer+1,x
+
+        ;; Reset current pos
+        lda     #$FF
+        ldx     #.sizeof(MGTK::Point)-1
+:       sta     iconx,x
+        dex
+        bpl     :-
+
+        inc     selected_index
+        ldx     selected_index
+        cpx     buffer          ; fully sorted?
+        beq     :+
+        jmp     sort_loop
+
+;;; Icon list in |buffer| is prepared. Now enter the event loop to
+;;; handle keyboard selection.
+
+:       copy    #0, selected_index
         jsr     clear_selection
-L5581:  jsr     L55F0
-L5584:  jsr     get_event
+
+highlight_selected:
+        jsr     highlight_icon
+
+event_loop:
+        jsr     get_event
         lda     event_kind
         cmp     #MGTK::EventKind::key_down
-        beq     L5595
+        beq     :+
         cmp     #MGTK::EventKind::button_down
-        bne     L5584
-        jmp     L55D1
+        bne     event_loop
+        jmp     exit_mode
 
-L5595:  lda     event_params+MGTK::Event::key
+:       lda     event_params+MGTK::Event::key
         and     #CHAR_MASK
+
         cmp     #CHAR_RETURN
-        beq     L55D1
+        beq     exit_mode
         cmp     #CHAR_ESCAPE
-        beq     L55D1
+        beq     exit_mode
         cmp     #CHAR_LEFT
-        beq     L55BE
+        beq     select_prev
         cmp     #CHAR_RIGHT
-        bne     L5584
-        ldx     L544A
+        bne     event_loop
+
+select_next:
+        ldx     selected_index
         inx
-        cpx     $1800
-        bne     L55B5
-        ldx     #$00
-L55B5:  stx     L544A
-        jsr     L562C
-        jmp     L5581
+        cpx     buffer
+        bne     :+
+        ldx     #0
+:       stx     selected_index
+        jsr     unhighlight_icon
+        jmp     highlight_selected
 
-L55BE:  ldx     L544A
+select_prev:
+        ldx     selected_index
         dex
-        bpl     L55C8
-        ldx     $1800
+        bpl     :+
+        ldx     buffer
         dex
-L55C8:  stx     L544A
-        jsr     L562C
-        jmp     L5581
+:       stx     selected_index
+        jsr     unhighlight_icon
+        jmp     highlight_selected
 
-L55D1:  ldx     L544A
-        lda     $1801,x
+.proc exit_mode
+        ldx     selected_index
+        lda     buffer+1,x
         sta     selected_icon_list
         jsr     icon_entry_lookup
         stax    $06
@@ -3099,9 +3152,13 @@ L55D1:  ldx     L544A
         lda     #1
         sta     selected_icon_count
         rts
+.endproc
 
-L55F0:  ldx     L544A
-        lda     $1801,x
+;;; Highlight the icon in the list at |selected_index|
+.proc highlight_icon
+        ldx     selected_index
+        lda     buffer+1,x
+
         sta     icon_param
         jsr     icon_entry_lookup
         stax    $06
@@ -3109,36 +3166,52 @@ L55F0:  ldx     L544A
         lda     ($06),y
         and     #kIconEntryWinIdMask
         sta     getwinport_params2::window_id
-        beq     L5614
+        beq     :+              ; desktop (volume) icon
+
+        ;; windowed icon - adjust port, icon coords
         jsr     offset_and_set_port_from_window_id
         lda     icon_param
         jsr     icon_screen_to_window
-L5614:  ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+
+:       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         lda     getwinport_params2::window_id
-        beq     L562B
+        beq     :+              ; desktop (volume) icon
+
+        ;; windowed icon - restore port, icon coords
         lda     icon_param
         jsr     icon_window_to_screen
         jsr     reset_main_grafport
-L562B:  rts
+:       rts
+.endproc
 
-L562C:  lda     icon_param
+;;; Unhighlight the icon in |icon_param|
+.proc unhighlight_icon
+        lda     icon_param
         jsr     icon_entry_lookup
         stax    $06
+
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #kIconEntryWinIdMask
         sta     getwinport_params2::window_id
-        beq     L564A
+        beq     :+              ; desktop (volume) icon
+
+        ;; windowed icon - adjust port, icon coords
         jsr     offset_and_set_port_from_window_id
         lda     icon_param
         jsr     icon_screen_to_window
-L564A:  ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
+
+:       ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
         lda     getwinport_params2::window_id
-        beq     L5661
+        beq     :+              ; desktop (volume) icon
+
+        ;; windowed icon - restore port, icon coords
         lda     icon_param
         jsr     icon_window_to_screen
         jsr     reset_main_grafport
-L5661:  rts
+:       rts
+.endproc
+
 .endproc
 
 ;;; ============================================================
