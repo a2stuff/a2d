@@ -48,6 +48,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Desk accessory files with high bit in aux type set are hidden in Apple menu. ([#102](https://github.com/a2stuff/a2d/issues/102))
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. ([#4](https://github.com/a2stuff/a2d/issues/4))
 * Apple menu can contain directories, which launch windows. ([#209](https://github.com/a2stuff/a2d/issues/209))
+* Progress bar shown on splash screen during launch.
 
 ### Additional Desk Accessories
 

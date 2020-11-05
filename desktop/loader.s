@@ -46,6 +46,7 @@ reinstall_flag:                 ; set once prefix saved and reinstalled
         .byte   "Mouse Desk"
         .byte   0
 
+kSplashVtab = 12
 splash_string:
         PASCAL_STRING "Loading Apple II DeskTop"
 
@@ -81,7 +82,7 @@ start:  lda     ROMIN2
         sta     $0101           ; ???
         sta     RAMWRTOFF
 
-        lda     #12             ; VTAB 12
+        lda     #kSplashVtab
         sta     CV
         jsr     VTAB
 
@@ -242,20 +243,26 @@ filename:
 ;;; $0800 main       - DeskTop initialization code; later overwritten by DAs
 ;;; $0290 main       - Routine to invoke other programs
 
+kNumSegments = 6
+
 segment_addr_table:
         .word   $3F00,$4000,$4000,$4000,$0800,$0290
+        ASSERT_ADDRESS_TABLE_SIZE segment_addr_table, kNumSegments
 
 segment_dest_table:
         .addr   $4000,$D000,$FB00,$4000,$0800,$0290
+        ASSERT_ADDRESS_TABLE_SIZE segment_dest_table, kNumSegments
 
 segment_size_table:
         .word   $8000,$1D00,$0500,$7F00,$0800,$0160
+        ASSERT_ADDRESS_TABLE_SIZE segment_size_table, kNumSegments
 
 segment_type_table:             ; 0 = main, 1 = aux, 2 = banked (aux)
         .byte   1,2,2,0,0,0
+        ASSERT_TABLE_SIZE segment_type_table, kNumSegments
 
 num_segments:
-        .byte   6
+        .byte   kNumSegments
 
 start:
         ;; Configure system bitmap - everything is available
@@ -278,7 +285,10 @@ start:
 :       lda     #0
         sta     segment_num
 
-loop:   lda     segment_num
+        jsr     init_progress
+
+loop:   jsr     tick_progress
+        lda     segment_num
         cmp     num_segments
         bne     continue
 
@@ -450,18 +460,31 @@ finish: jmp     DESKTOP_INIT
 
 .endproc
 
-        PAD_TO $2200
+kProgressTickWidth = 7
+kProgressVtab = 14
+
+.proc init_progress
+        lda     #kProgressVtab
+        sta     CV
+        jsr     VTAB
+
+        lda     #(80 - (kProgressTickWidth * (kNumSegments+1)))/2
+        sta     CH
+        rts
+.endproc
+
+.proc tick_progress
+        lda     #' '
+        ldx     #kProgressTickWidth
+:       jsr     COUT
+        dex
+        bne     :-
+        rts
+.endproc
+
+        PAD_TO $2380
 .endproc ; install_segments
 
 ;;; ============================================================
 
-;;; Unused space - previously the screen dump code lived here, now
-;;; moved to a Desk Accessory.
-
-.proc unused
-        .res $180
-.endproc
-
-;;; ============================================================
-
-        .assert .sizeof(install_as_quit) + .sizeof(quit_routine) + .sizeof(install_segments) + .sizeof(unused) = $580, error, "Size mismatch"
+        .assert .sizeof(install_as_quit) + .sizeof(quit_routine) + .sizeof(install_segments) = $580, error, "Size mismatch"
