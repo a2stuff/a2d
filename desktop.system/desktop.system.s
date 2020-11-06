@@ -739,6 +739,13 @@ L29B1:  ldy     #0
         jmp     fail_copy
 
 :       lda     get_file_info_params::file_type
+
+        ;; This routine doesn't handle copying nested directories.
+        ;; https://github.com/a2stuff/a2d/issues/282
+        ;; TODO: Fix that!
+        cmp     #FT_DIRECTORY
+        beq     :+              ; Skip
+
         sta     file_type
         jsr     create_file_for_copy
         cmp     #ERR_DUPLICATE_FILENAME
