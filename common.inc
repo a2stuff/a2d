@@ -40,10 +40,14 @@ kDoubleClickDeltaY      = 4
 
 ;;; See docs/Selector_List_Format.md for file format.
 
+kSelectorListNumEntries         = 24
+kSelectorListNameLength         = 16
+kSelectorListPathLength         = 64
+
 kSelectorListNumRunListOffset   = 0
 kSelectorListNumOtherListOffset = 1
 kSelectorListEntriesOffset      = 2
-kSelectorListPathsOffset        = 2 + 24 * 16
+kSelectorListPathsOffset        = kSelectorListEntriesOffset + kSelectorListNumEntries * kSelectorListNameLength
 
 kSelectorEntryFlagsOffset       = $F
 kSelectorEntryCopyOnBoot        = $00
@@ -84,10 +88,13 @@ kRamDrvSystemUnitNum = $3E
 ;;; These are stored in the custom ProDOS QUIT routine area in Main
 ;;; LCBANK2.
 
-;;; 16 bytes $D395-$D3A4 - set to $FF when entry is copied to RAM disk.
+;;; 24 bytes - flags for each entry, set to $FF when copied to RAM disk.
 ENTRY_COPIED_FLAGS      := $D395
 
+;;; 65 bytes - original prefix DeskTop was loaded with (e.g. "/HD/A2D")
 DESKTOP_ORIG_PREFIX     := $D3AD
+
+;;; 17 bytes - prefix for RAMCard (e.g. "/RAM")
 RAMCARD_PREFIX          := $D3EE
 
 ;;; $00 = no ramcard found

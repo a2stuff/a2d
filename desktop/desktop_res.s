@@ -929,7 +929,7 @@ run_list_entries:
 
         ;; Paths
 run_list_paths:
-        .res    kMaxRunListEntries * 64, 0
+        .res    kMaxRunListEntries * kSelectorListPathLength, 0
 
 ;;; ============================================================
 ;;; Window & Icon State
