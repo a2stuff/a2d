@@ -83,8 +83,7 @@ start:  lda     ROMIN2
         sta     RAMWRTOFF
 
         lda     #kSplashVtab
-        sta     CV
-        jsr     VTAB
+        jsr     VTABZ
 
         lda     #80             ; HTAB (80-width)/2
         sec                     ; to center
@@ -169,8 +168,7 @@ prompt_for_system_disk:
         jsr     SLOT3ENTRY      ; 80 column mode
         jsr     HOME
         lda     #12             ; VTAB 12
-        sta     CV
-        jsr     VTAB
+        jsr     VTABZ
 
         lda     #80             ; HTAB (80 - width)/2
         sec                     ; to center the string
@@ -285,9 +283,7 @@ start:
 :       lda     #0
         sta     segment_num
 
-        jsr     init_progress
-
-loop:   jsr     tick_progress
+loop:   jsr     update_progress
         lda     segment_num
         cmp     num_segments
         bne     continue
@@ -460,26 +456,32 @@ finish: jmp     DESKTOP_INIT
 
 .endproc
 
-kProgressTickWidth = 7
-kProgressVtab = 14
+.proc update_progress
 
-.proc init_progress
+        kProgressVtab = 14
+        kProgressStops = kNumSegments + 1
+        kProgressTick = 40 / kProgressStops
+        kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
+
         lda     #kProgressVtab
-        sta     CV
-        jsr     VTAB
-
-        lda     #(80 - (kProgressTickWidth * (kNumSegments+1)))/2
+        jsr     VTABZ
+        lda     #kProgressHtab
         sta     CH
-        rts
-.endproc
 
-.proc tick_progress
+        lda     count
+        clc
+        adc     #kProgressTick
+        sta     count
+
+        tax
         lda     #' '
-        ldx     #kProgressTickWidth
 :       jsr     COUT
         dex
         bne     :-
+
         rts
+
+count:  .byte   0
 .endproc
 
         PAD_TO $2380

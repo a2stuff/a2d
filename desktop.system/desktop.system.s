@@ -377,6 +377,8 @@ str_slash_desktop:
         copy    #0, filenum
 
 file_loop:
+        jsr     update_progress
+
         lda     filenum
         asl     a
         tax
@@ -393,7 +395,9 @@ file_loop:
         lda     filenum
         cmp     #kNumFilenames
         bne     file_loop
-        jmp     fail2
+
+        jsr     update_progress
+        ;; fall through
 .endproc
 
 fail2:  lda     copied_flag
@@ -465,6 +469,36 @@ fail2:  lda     copied_flag
 .proc did_not_copy
         copy    #0, flag
         jmp     fail2
+.endproc
+
+;;; ============================================================
+
+.proc update_progress
+
+        kProgressVtab = 14
+        kProgressStops = kNumFilenames + 1
+        kProgressTick = 40 / kProgressStops
+        kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
+
+        lda     #kProgressVtab
+        jsr     VTABZ
+        lda     #kProgressHtab
+        sta     CH
+
+        lda     count
+        clc
+        adc     #kProgressTick
+        sta     count
+
+        tax
+        lda     #' '
+:       jsr     COUT
+        dex
+        bne     :-
+
+        rts
+
+count:  .byte   0
 .endproc
 
 ;;; ============================================================
