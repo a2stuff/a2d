@@ -24,16 +24,18 @@
 ;;;          |             |
 ;;;          | Code        |
 ;;;   $2000  +-------------+
-;;;          |.............|
 ;;;          |.(unused)....|
+;;;   $1E00  +-------------+
+;;;          |             |
+;;;          | Sel List    |    * holds selector list
 ;;;   $1600  +-------------+
 ;;;          |             |
-;;;          | Dst IO Buf  |
+;;;          | Dst IO Buf  |    * writing copied files, DESKTOP.SYSTEM
 ;;;   $1200  +-------------+
-;;;          |             |
+;;;          |             |    * reading copied files, SELECTOR.LIST
 ;;;          | Src I/O Buf |
 ;;;    $E00  +-------------+
-;;;          | Dir Rd Buf  |
+;;;          | Dir Rd Buf  |    * holds "block" read from directory
 ;;;    $C00  +-------------+
 ;;;          |             |
 ;;;          | Dir I/O Buf |
@@ -46,6 +48,7 @@ kDirBufSize     = BLOCK_SIZE
 
 src_io_buffer   := $E00         ; 1024 bytes for I/O
 dst_io_buffer   := $1200        ; 1024 bytes for I/O
+selector_buffer := $1600        ; Room for kSelectorListBufSize
 
 copy_buffer     := $4000
 kCopyBufferSize = MLI - copy_buffer
@@ -986,8 +989,6 @@ prodos_loader_blocks:
 
 ;;; See docs/Selector_List_Format.md for file format
 
-        selector_buffer := $4400
-
 .proc process_selector_list
         ptr := $6
 
@@ -1035,7 +1036,7 @@ entry_loop:
         jsr     compute_path_addr
 
         jsr     prepare_entry_paths
-        jsr     L3489
+        jsr     copy_using_entry_paths
 
         lda     LCBANK2         ; Mark copied
         lda     LCBANK2
@@ -1071,7 +1072,7 @@ entry_loop2:
         jsr     compute_path_addr
 
         jsr     prepare_entry_paths
-        jsr     L3489
+        jsr     copy_using_entry_paths
 
         lda     LCBANK2
         lda     LCBANK2
@@ -1329,7 +1330,7 @@ noop:   rts
 
 ;;; ============================================================
 
-.proc L3489
+.proc copy_using_entry_paths
         jsr     prepare_paths_from_entry_paths
 
         ;; Set up destination dir path, e.g. "/RAM/APPLEWORKS"
@@ -1807,9 +1808,7 @@ fail:   pla
 ;;; ============================================================
 
 .proc read_selector_list_impl
-        open_io_buffer := $4000
-
-        DEFINE_OPEN_PARAMS open_params, str_selector_list, open_io_buffer
+        DEFINE_OPEN_PARAMS open_params, str_selector_list, src_io_buffer
 str_selector_list:
         PASCAL_STRING "Selector.List"
         DEFINE_READ_PARAMS read_params, selector_buffer, kSelectorListBufSize
@@ -1864,15 +1863,14 @@ bits:   .byte   $00
 ;;; Invoke Selector or DeskTop, once Part 2 is complete
 
 .proc invoke_selector_or_desktop_impl
-        sys_start := $2000
-        sys_size := $400
+        app_bootstrap_start := $2000
+        kAppBootstrapSize = $400
 
-        open_dt2_io_buffer := $5000
-        open_sel_io_buffer := $5400
+        .assert * >= app_bootstrap_start + kAppBootstrapSize, error, "overlapping addresses"
 
-        DEFINE_OPEN_PARAMS open_desktop2_params, str_desktop2, open_dt2_io_buffer
-        DEFINE_OPEN_PARAMS open_selector_params, str_selector, open_sel_io_buffer
-        DEFINE_READ_PARAMS read_params, sys_start, sys_size
+        DEFINE_OPEN_PARAMS open_desktop2_params, str_desktop2, src_io_buffer
+        DEFINE_OPEN_PARAMS open_selector_params, str_selector, src_io_buffer
+        DEFINE_READ_PARAMS read_params, app_bootstrap_start, kAppBootstrapSize
         DEFINE_CLOSE_PARAMS close_everything_params
 
 str_selector:
@@ -1900,7 +1898,7 @@ selector:
 read:   sta     read_params::ref_num
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_everything_params
-        jmp     sys_start
+        jmp     app_bootstrap_start
 .endproc
         invoke_selector_or_desktop := invoke_selector_or_desktop_impl::start
 
