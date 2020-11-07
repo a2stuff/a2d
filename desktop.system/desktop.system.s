@@ -68,924 +68,16 @@ kCopyBufferSize = MLI - copy_buffer
 
 
 ;;; ============================================================
-;;;
-;;; Part 1: Copy DeskTop Files to RAMCard
-;;;
-;;; ============================================================
+;;; First few bytes of file get updated by this and other
+;;; executables, so this header format should not change.
 
-.proc copy_desktop_to_ramcard
+        jmp     copy_desktop_to_ramcard
 
-        jmp     start
-
-;;; ============================================================
-;;; Data buffers and param blocks
-
-date:   .word   0               ; written into file by Date DA
-
-orig_prefix:
+header_date:   .word   0               ; written into file by Date DA
+header_orig_prefix:
         .res    64, 0           ; written into file with original path
 
         kWriteBackSize = * - $2000
-
-        .res    768, 0          ; Unused or reserved ???
-
-        ;; Used in check_desktop2_on_device
-        path_buf := $D00
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params2, path_buf
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buf
-
-unit_num:
-        .byte   0
-
-        DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
-
-copied_flag:
-        .byte   0
-
-on_line_buffer: .res 17, 0
-
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, buffer
-        DEFINE_SET_PREFIX_PARAMS set_prefix_params, path0
-
-
-        DEFINE_CLOSE_PARAMS close_srcfile_params
-        DEFINE_CLOSE_PARAMS close_dstfile_params
-
-        DEFINE_OPEN_PARAMS open_srcfile_params, buffer, src_io_buffer
-        DEFINE_OPEN_PARAMS open_dstfile_params, path0, dst_io_buffer
-        DEFINE_READ_PARAMS read_srcfile_params, copy_buffer, kCopyBufferSize
-        DEFINE_WRITE_PARAMS write_dstfile_params, copy_buffer, kCopyBufferSize
-
-        DEFINE_CREATE_PARAMS create_params, path0, ACCESS_DEFAULT, 0, 0
-
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, buffer
-
-kNumFilenames = 10
-
-        ;; Files/Directories to copy
-str_f1: PASCAL_STRING "DESKTOP.SYSTEM"
-str_f2: PASCAL_STRING "DESKTOP2"
-str_f3: PASCAL_STRING "DESK.ACC"
-str_f4: PASCAL_STRING "PREVIEW"
-str_f5: PASCAL_STRING "SELECTOR.LIST"
-str_f6: PASCAL_STRING "SELECTOR"
-str_f7: PASCAL_STRING "PRODOS"
-str_f8: PASCAL_STRING "Quit.tmp"
-str_f9: PASCAL_STRING "DeskTop.config"
-str_f10:PASCAL_STRING "DeskTop.file"
-
-filename_table:
-        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8,str_f9,str_f10
-        ASSERT_ADDRESS_TABLE_SIZE filename_table, kNumFilenames
-
-str_copying_to_ramcard:
-        PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
-
-str_tip_skip_copying:
-        PASCAL_STRING {"Tip: To skip copying to RAMCard, hold down ",15,27,65,24,14," when launching."}
-
-;;; Signature of block storage devices ($Cn0x)
-kNumSigBytes = 4
-sig_bytes:
-        .byte   $20,$00,$03,$00
-        ASSERT_TABLE_SIZE sig_bytes, kNumSigBytes
-sig_offsets:
-        .byte   $01,$03,$05,$07
-        ASSERT_TABLE_SIZE sig_offsets, kNumSigBytes
-
-active_device:
-        .byte   0
-
-        ;; Selector signature (65816 opcodes used)
-selector_signature:
-        .byte   $AD,$8B,$C0,$18,$FB,$5C,$04,$D0,$E0
-
-;;; ============================================================
-
-start:  sta     MIXCLR
-        sta     HIRES
-        sta     TXTCLR
-        sta     CLR80VID
-        sta     AN3_OFF
-        sta     AN3_ON
-        sta     AN3_OFF
-        sta     AN3_ON
-        sta     SET80VID
-        sta     DHIRESON
-        sta     TXTSET
-
-        lda     DATELO          ; Any date set?
-        ora     DATEHI
-        bne     :+
-        copy16  date, DATELO    ; Copy timestamp embedded in this file
-:       lda     MACHID
-        and     #$30            ; bits 4,5 set = 128k
-        cmp     #$30
-        beq     have128k
-
-        ;;  If not 128k machine, just quit back to ProDOS
-        MLI_CALL QUIT, quit_params
-        DEFINE_QUIT_PARAMS quit_params
-
-have128k:
-        ;; Turn on 80-column mode
-        jsr     SLOT3ENTRY
-        jsr     HOME
-
-        ;; Save original Quit routine and small loader
-        ;; TODO: Assumes prefix is retained. Compose correct path.
-
-        jsr     preserve_quit_code
-
-resume:
-        ;; IIgs: Reset shadowing
-        sec
-        jsr     IDROUTINE
-        bcs     :+
-        copy    #0, SHADOW
-:
-
-        lda     DEVNUM          ; Most recent device
-        sta     active_device
-        lda     LCBANK2
-        lda     LCBANK2
-
-        ;; Check quit routine
-        ldx     #$08
-:       lda     SELECTOR,x         ; Quit routine?
-        cmp     selector_signature,x
-        bne     nomatch
-        dex
-        bpl     :-
-        lda     #0
-        beq     match
-
-nomatch:
-        lda     #$80
-
-match:  sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
-
-        lda     ROMIN2
-
-        ;; Clear flag - ramcard not found or unknown state.
-        ldx     #0
-        jsr     set_copied_to_ramcard_flag
-
-        ;; Skip RAMCard install if button is down
-        lda     BUTN0
-        ora     BUTN1
-        bpl     scan_slots
-        jmp     did_not_copy
-
-        ;; Start at $C100
-        slot_ptr = $8
-
-scan_slots:
-        lda     #0
-        sta     slot_ptr
-        lda     #$C1
-        sta     slot_ptr+1
-
-        ;; Check slot for signature bytes
-check_slot:
-        ldx     #0
-:       lda     sig_offsets,x   ; Check $CnXX
-        tay
-        lda     (slot_ptr),y
-        cmp     sig_bytes,x
-        bne     next_slot
-        inx
-        cpx     #kNumSigBytes
-        bcc     :-
-
-        ldy     #$FB
-        lda     (slot_ptr),y         ; Also check $CnFB for low bit (=RAMDisk)
-        and     #$01
-        beq     next_slot
-        bne     found_slot
-
-next_slot:
-        inc     slot_ptr+1
-        lda     slot_ptr+1
-        cmp     #$C8            ; stop at $C800
-        bcc     check_slot
-
-        ;; Did not find signature in any slot - look for
-        ;; RAM.DRV.SYSTEM signature in DEVLST.
-        ldy     DEVCNT
-:       lda     DEVLST,y
-        cmp     #kRamDrvSystemUnitNum
-        beq     :+
-        dey
-        bpl     :-
-        jmp     did_not_copy
-
-:       lda     #$03
-        bne     :+              ; always
-
-        ;; RAM device was found!
-found_slot:
-        lda     slot_ptr+1
-        and     #$0F            ; slot # in A
-:       sta     slot
-
-        ;; Synthesize unit_num, verify it's a device
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        sta     on_line_params::unit_num
-        sta     unit_num
-        MLI_CALL ON_LINE, on_line_params
-        beq     :+
-        jmp     did_not_copy
-
-:       lda     unit_num
-        cmp     #$30            ; make sure it's not slot 3 (aux)
-        beq     :+
-        sta     write_block_params_unit_num ; Init device as ProDOS
-        sta     write_block2_params_unit_num
-        MLI_CALL WRITE_BLOCK, write_block_params
-        bne     :+
-        MLI_CALL WRITE_BLOCK, write_block2_params
-:       lda     on_line_buffer
-        and     #$0F
-        tay
-
-        iny
-        sty     path0
-        lda     #'/'
-        sta     on_line_buffer
-        sta     path0+1
-:       lda     on_line_buffer,y
-        sta     path0+1,y
-        dey
-        bne     :-
-
-        ;; Record that candidate device is found.
-        ldx     #$C0
-        jsr     set_copied_to_ramcard_flag
-
-        ;; Already installed?
-        addr_call set_ramcard_prefix, path0
-        jsr     check_desktop2_on_device
-        bcs     start_copy      ; No, start copy.
-
-        ;; Already copied - record that it was installed and grab path.
-        ldx     #$80
-        jsr     set_copied_to_ramcard_flag
-        jsr     copy_orig_prefix_to_desktop_orig_prefix
-        jmp     did_not_copy
-
-str_slash_desktop:
-        PASCAL_STRING "/DeskTop"
-
-        ;; Overwrite first bytes of get_file_info_params
-.params dir_file_info
-        .byte   $A              ; param_count
-        .addr   0               ; pathname
-        .byte   ACCESS_DEFAULT  ; access
-        .byte   FT_DIRECTORY    ; filetype
-        .word   0               ; aux_type
-        .byte   ST_LINKED_DIRECTORY ; storage_type
-.endparams
-
-.proc start_copy
-        ptr := $06
-
-        jsr     show_copying_screen
-        MLI_CALL GET_PREFIX, get_prefix_params
-        beq     :+
-        jmp     fail_copy
-:       dec     buffer
-
-        ;; Record that the copy was performed.
-        ldx     #$80
-        jsr     set_copied_to_ramcard_flag
-
-        ldy     buffer
-:       lda     buffer,y
-        sta     orig_prefix,y
-        dey
-        bpl     :-
-
-        ldy     path0
-        ldx     #0
-:       iny
-        inx
-        lda     str_slash_desktop,x
-        sta     path0,y
-        cpx     str_slash_desktop
-        bne     :-
-        sty     path0
-
-        ;; copy file_type, aux_type, storage_type
-        ldx     #7
-:       lda     dir_file_info,x
-        sta     get_file_info_params,x
-        dex
-        cpx     #3
-        bne     :-
-
-        jsr     create_file_for_copy
-        copy    path0, copied_flag
-        copy    #0, filenum
-
-file_loop:
-        jsr     update_progress
-
-        lda     filenum
-        asl     a
-        tax
-        copy16  filename_table,x, ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     filename_buf,y
-        dey
-        bpl     :-
-        jsr     copy_file
-        inc     filenum
-        lda     filenum
-        cmp     #kNumFilenames
-        bne     file_loop
-
-        jsr     update_progress
-        ;; fall through
-.endproc
-
-.proc finish_dt_copy
-        lda     copied_flag
-        beq     :+
-        sta     path0
-        MLI_CALL SET_PREFIX, set_prefix_params
-:       jsr     update_self_file
-        jsr     copy_orig_prefix_to_desktop_orig_prefix
-
-        lda     #0
-        sta     RAMWORKS_BANK   ; Just in case?
-        ldy     #BITMAP_SIZE-1
-:       sta     BITMAP,y
-        dey
-        bpl     :-
-
-        ;; Done! Move on to Part 2.
-        jmp     copy_selector_entries_to_ramcard
-.endproc
-
-;;; ============================================================
-
-.proc set_copied_to_ramcard_flag
-        lda     LCBANK2
-        lda     LCBANK2
-        stx     COPIED_TO_RAMCARD_FLAG
-        lda     ROMIN2
-        rts
-.endproc
-
-.proc set_ramcard_prefix
-        ptr := $6
-        target := RAMCARD_PREFIX
-
-        stax    ptr
-        lda     LCBANK2
-        lda     LCBANK2
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     target,y
-        dey
-        bpl     :-
-        lda     ROMIN2
-        rts
-.endproc
-
-.proc set_desktop_orig_prefix
-        ptr := $6
-        target := DESKTOP_ORIG_PREFIX
-
-        stax    ptr
-        lda     LCBANK2
-        lda     LCBANK2
-
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     target,y
-        dey
-        bpl     :-
-
-        lda     ROMIN2
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc did_not_copy
-        ;; TODO: Reset stack?
-
-        jmp     finish_dt_copy
-.endproc
-
-;;; ============================================================
-
-.proc update_progress
-
-        kProgressVtab = 14
-        kProgressStops = kNumFilenames + 1
-        kProgressTick = 40 / kProgressStops
-        kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
-
-        lda     #kProgressVtab
-        jsr     VTABZ
-        lda     #kProgressHtab
-        sta     CH
-
-        lda     count
-        clc
-        adc     #kProgressTick
-        sta     count
-
-        tax
-        lda     #' '
-:       jsr     COUT
-        dex
-        bne     :-
-
-        rts
-
-count:  .byte   0
-.endproc
-
-;;; ============================================================
-
-        ;; Generic buffer?
-buffer: .res 300, 0             ; TODO: This should be kPathBufferSize
-
-filename_buf:
-        .res 16, 0
-
-;;; ============================================================
-
-.proc append_filename_to_buffer
-        lda     filename_buf
-        bne     :+
-        rts
-
-:       ldx     #0
-        ldy     buffer
-        lda     #'/'
-        sta     buffer+1,y
-        iny
-loop:   cpx     filename_buf
-        bcs     done
-        lda     filename_buf+1,x
-        sta     buffer+1,y
-        inx
-        iny
-        jmp     loop
-
-done:   sty     buffer
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc remove_filename_from_buffer
-        ldx     buffer
-        bne     :+
-        rts
-
-:       lda     buffer,x
-        cmp     #'/'
-        beq     done
-        dex
-        bne     :-
-        stx     buffer
-        rts
-
-done:   dex
-        stx     buffer
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc append_filename_to_path0
-        lda     filename_buf
-        bne     :+
-        rts
-
-:       ldx     #0
-        ldy     path0
-        lda     #'/'
-        sta     path0+1,y
-        iny
-loop:   cpx     filename_buf
-        bcs     done
-        lda     filename_buf+1,x
-        sta     path0+1,y
-        inx
-        iny
-        jmp     loop
-
-done:   sty     path0
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc remove_filename_from_path0
-        ldx     path0
-        bne     :+
-        rts
-
-:       lda     path0,x
-        cmp     #'/'
-        beq     done
-        dex
-        bne     :-
-        stx     path0
-        rts
-
-done:   dex
-        stx     path0
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc show_copying_screen
-        ;; Center string
-        lda     #80
-        sec
-        sbc     str_copying_to_ramcard
-        lsr     a               ; / 2 to center
-        sta     CH
-        lda     #12
-        jsr     VTABZ
-        ldy     #0
-:       iny
-        lda     str_copying_to_ramcard,y
-        ora     #$80
-        jsr     COUT
-        cpy     str_copying_to_ramcard
-        bne     :-
-
-        ;; Center string
-        lda     #80
-        sec
-        sbc     str_tip_skip_copying
-        clc
-        adc     #4              ; 4 control characters (for MouseText)
-        lsr     a               ; / 2 to center
-        sta     CH
-        lda     #23
-        jsr     VTABZ
-        ldy     #0
-:       iny
-        lda     str_tip_skip_copying,y
-        ora     #$80
-        jsr     COUT
-        cpy     str_tip_skip_copying
-        bne     :-
-
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc fail_copy
-        ;; TODO: Reset stack?
-
-        copy    #0, copied_flag
-        jmp     did_not_copy
-.endproc
-
-;;; ============================================================
-
-.proc copy_file
-        jsr     append_filename_to_path0
-        jsr     append_filename_to_buffer
-        MLI_CALL GET_FILE_INFO, get_file_info_params
-        beq     :+
-        cmp     #ERR_FILE_NOT_FOUND
-        beq     cleanup
-        jmp     did_not_copy
-
-:       lda     get_file_info_params::file_type
-        cmp     #FT_DIRECTORY
-        bne     :+
-        jsr     copy_directory
-        jmp     done
-
-:       jsr     create_file_for_copy
-        cmp     #ERR_DUPLICATE_FILENAME
-        bne     :+
-        lda     filenum
-        bne     cleanup
-        pla
-        pla
-        jmp     finish_dt_copy
-
-:       jsr     copy_normal_file
-
-cleanup:
-        jsr     remove_filename_from_buffer
-        jsr     remove_filename_from_path0
-done:   rts
-.endproc
-
-;;; ============================================================
-
-.proc copy_directory_impl
-        ptr := $6
-
-        DEFINE_OPEN_PARAMS open_params, buffer, dir_io_buffer
-        DEFINE_READ_PARAMS read_params, dir_buffer, kDirBufSize
-        DEFINE_CLOSE_PARAMS close_params
-
-start:  jsr     create_file_for_copy
-        cmp     #ERR_DUPLICATE_FILENAME
-        beq     bail
-        MLI_CALL OPEN, open_params
-        beq     :+
-        jsr     fail_copy
-bail:   rts
-
-:       lda     open_params::ref_num
-        sta     read_params::ref_num
-        sta     close_params::ref_num
-        MLI_CALL READ, read_params
-        beq     :+
-        jsr     fail_copy
-        rts
-
-:       lda     #0
-        sta     L2A10
-        lda     #<(dir_buffer + .sizeof(SubdirectoryHeader))
-        sta     ptr
-        lda     #>(dir_buffer + .sizeof(SubdirectoryHeader))
-        sta     ptr+1
-L2997:  lda     dir_buffer + SubdirectoryHeader::file_count
-        cmp     L2A10
-        bne     L29B1
-L299F:  MLI_CALL CLOSE, close_params
-        beq     :+
-        jmp     fail_copy
-
-:       jsr     remove_filename_from_buffer
-        jsr     remove_filename_from_path0
-        rts
-
-L29B1:  ldy     #0
-        lda     (ptr),y
-        bne     :+
-        jmp     L29F6
-
-:       and     #$0F
-
-        tay
-:       lda     (ptr),y
-        sta     filename_buf,y
-        dey
-        bne     :-
-        lda     (ptr),y
-        and     #$0F
-        sta     filename_buf,y
-        jsr     append_filename_to_path0
-        jsr     append_filename_to_buffer
-        MLI_CALL GET_FILE_INFO, get_file_info_params
-        beq     :+
-        jmp     fail_copy
-
-:       lda     get_file_info_params::file_type
-
-        ;; This routine doesn't handle copying nested directories.
-        ;; https://github.com/a2stuff/a2d/issues/282
-        ;; TODO: Fix that!
-        cmp     #FT_DIRECTORY
-        beq     :+              ; Skip
-
-        jsr     create_file_for_copy
-        cmp     #ERR_DUPLICATE_FILENAME
-        beq     :+
-        jsr     copy_normal_file
-:       jsr     remove_filename_from_buffer
-        jsr     remove_filename_from_path0
-        inc     L2A10
-L29F6:  add16_8 ptr, dir_buffer + SubdirectoryHeader::entry_length, ptr
-        lda     ptr+1
-        cmp     #>(dir_buffer + kDirBufSize)
-        bcs     :+
-        jmp     L2997
-
-:       jmp     L299F
-
-L2A10:  .byte   0
-.endproc
-        copy_directory := copy_directory_impl::start
-
-;;; ============================================================
-;;; Copy a normal (non-directory) file. File info *not* copied.
-;;; Inputs: |open_srcfile_params| populated
-;;;         |open_dstfile_params| populated; file already created
-;;; Errors: fail_copy is called; if it returns, operations retried
-
-.proc copy_normal_file
-        ;; Open source
-:       MLI_CALL OPEN, open_srcfile_params
-        beq     :+
-        jsr     fail_copy
-        jmp     :-
-
-        ;; Open destination
-:       MLI_CALL OPEN, open_dstfile_params
-        beq     :+
-        jsr     fail_copy
-        jmp     :-
-
-:       lda     open_srcfile_params::ref_num
-        sta     read_srcfile_params::ref_num
-        sta     close_srcfile_params::ref_num
-        lda     open_dstfile_params::ref_num
-        sta     write_dstfile_params::ref_num
-        sta     close_dstfile_params::ref_num
-
-        ;; Read a chunk
-loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
-read:   MLI_CALL READ, read_srcfile_params
-        beq     :+
-        cmp     #ERR_END_OF_FILE
-        beq     done
-        jsr     fail_copy
-        jmp     read
-
-        ;; Write the chunk
-:       copy16  read_srcfile_params::trans_count, write_dstfile_params::request_count
-        ora     read_srcfile_params::trans_count
-        beq     done
-write:  MLI_CALL WRITE, write_dstfile_params
-        beq     :+
-        jsr     fail_copy
-        jmp     write
-
-        ;; More to copy?
-:       lda     write_dstfile_params::trans_count
-        cmp     #<kCopyBufferSize
-        bne     done
-        lda     write_dstfile_params::trans_count+1
-        cmp     #>kCopyBufferSize
-        beq     loop
-
-        ;; Close source and destination
-done:   MLI_CALL CLOSE, close_srcfile_params
-        MLI_CALL CLOSE, close_dstfile_params
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc create_file_for_copy
-        ;; Copy file_type, aux_type, storage_type
-        ldx     #7
-:       lda     get_file_info_params,x
-        sta     create_params,x
-        dex
-        cpx     #3
-        bne     :-
-        MLI_CALL CREATE, create_params
-        beq     :+
-        cmp     #ERR_DUPLICATE_FILENAME
-        beq     :+
-        jsr     fail_copy
-:       rts
-.endproc
-
-;;; ============================================================
-
-.proc check_desktop2_on_device
-        slot_ptr = $8
-
-        lda     active_device
-        cmp     #kRamDrvSystemUnitNum
-        bne     :+
-        jmp     next
-
-        ;; Check slot for signature bytes
-:       and     #$70            ; Compute $Cn00
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #$C0
-        sta     slot_ptr+1
-        lda     #0
-        sta     slot_ptr
-        ldx     #0              ; Compare signature bytes
-bloop:  lda     sig_offsets,x
-        tay
-        lda     (slot_ptr),y
-        cmp     sig_bytes,x
-        bne     error
-        inx
-        cpx     #4              ; Number of signature bytes
-        bcc     bloop
-        ldy     #$FB            ; Also check $CnFB
-        lda     (slot_ptr),y
-        and     #$01
-        bne     next
-error:  sec
-        rts
-
-next:   MLI_CALL GET_PREFIX, get_prefix_params2
-        bne     error
-
-        ;; Append "DeskTop2" to path
-        ldx     path_buf
-        ldy     #0
-loop:   inx
-        iny
-        lda     str_desktop2,y
-        sta     path_buf,x
-        cpy     str_desktop2
-        bne     loop
-        stx     path_buf
-
-        ;; ... and get info
-        MLI_CALL GET_FILE_INFO, get_file_info_params4
-        beq     error
-        clc                     ; ok
-        rts
-
-str_desktop2:
-        PASCAL_STRING "DeskTop2"
-.endproc
-
-;;; ============================================================
-;;; Update the live (RAM or disk) copy of this file with the
-;;; original prefix.
-
-.proc update_self_file_impl
-        dt1_addr := $2000
-
-        DEFINE_OPEN_PARAMS open_params, str_desktop1_path, dst_io_buffer
-str_desktop1_path:
-        PASCAL_STRING "DeskTop/DESKTOP.SYSTEM"
-        DEFINE_WRITE_PARAMS write_params, dt1_addr, kWriteBackSize
-        DEFINE_CLOSE_PARAMS close_params
-
-start:  MLI_CALL OPEN, open_params
-        bne     :+
-        lda     open_params::ref_num
-        sta     write_params::ref_num
-        sta     close_params::ref_num
-        MLI_CALL WRITE, write_params
-        bne     :+
-        MLI_CALL CLOSE, close_params
-:       rts
-.endproc
-        update_self_file := update_self_file_impl::start
-
-;;; ============================================================
-
-.proc copy_orig_prefix_to_desktop_orig_prefix
-        addr_call set_desktop_orig_prefix, orig_prefix
-        rts
-.endproc
-
-        .byte   0
-
-path0:  .res    ::kPathBufferSize, 0
-
-;;; ============================================================
-
-filenum:
-        .byte   0               ; index of file being copied
-
-slot:   .byte   0
-
-        DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
-        write_block_params_unit_num := write_block_params::unit_num
-        DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + BLOCK_SIZE, 1
-        write_block2_params_unit_num := write_block2_params::unit_num
-
-        PAD_TO $2D00
-
-;;; ============================================================
-
-prodos_loader_blocks:
-        ASSERT_ADDRESS $2D00
-        .incbin "../inc/pdload.dat"
-
-.endproc ; copy_desktop_to_ramcard
-
-;;; ============================================================
-        ASSERT_ADDRESS $3100
-
 
 ;;; ============================================================
 ;;;
@@ -1631,6 +723,911 @@ done:   dex
 .endproc
 
 .endproc
+
+;;; ============================================================
+;;;
+;;; Part 1: Copy DeskTop Files to RAMCard
+;;;
+;;; ============================================================
+
+.proc copy_desktop_to_ramcard_impl
+
+;;; ============================================================
+;;; Data buffers and param blocks
+
+        ;; Used in check_desktop2_on_device
+        path_buf := $D00
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params2, path_buf
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buf
+
+unit_num:
+        .byte   0
+
+        DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
+
+copied_flag:
+        .byte   0
+
+on_line_buffer: .res 17, 0
+
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, buffer
+        DEFINE_SET_PREFIX_PARAMS set_prefix_params, path0
+
+
+        DEFINE_CLOSE_PARAMS close_srcfile_params
+        DEFINE_CLOSE_PARAMS close_dstfile_params
+
+        DEFINE_OPEN_PARAMS open_srcfile_params, buffer, src_io_buffer
+        DEFINE_OPEN_PARAMS open_dstfile_params, path0, dst_io_buffer
+        DEFINE_READ_PARAMS read_srcfile_params, copy_buffer, kCopyBufferSize
+        DEFINE_WRITE_PARAMS write_dstfile_params, copy_buffer, kCopyBufferSize
+
+        DEFINE_CREATE_PARAMS create_params, path0, ACCESS_DEFAULT, 0, 0
+
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, buffer
+
+kNumFilenames = 10
+
+        ;; Files/Directories to copy
+str_f1: PASCAL_STRING "DESKTOP.SYSTEM"
+str_f2: PASCAL_STRING "DESKTOP2"
+str_f3: PASCAL_STRING "DESK.ACC"
+str_f4: PASCAL_STRING "PREVIEW"
+str_f5: PASCAL_STRING "SELECTOR.LIST"
+str_f6: PASCAL_STRING "SELECTOR"
+str_f7: PASCAL_STRING "PRODOS"
+str_f8: PASCAL_STRING "Quit.tmp"
+str_f9: PASCAL_STRING "DeskTop.config"
+str_f10:PASCAL_STRING "DeskTop.file"
+
+filename_table:
+        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8,str_f9,str_f10
+        ASSERT_ADDRESS_TABLE_SIZE filename_table, kNumFilenames
+
+str_copying_to_ramcard:
+        PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
+
+str_tip_skip_copying:
+        PASCAL_STRING {"Tip: To skip copying to RAMCard, hold down ",15,27,65,24,14," when launching."}
+
+;;; Signature of block storage devices ($Cn0x)
+kNumSigBytes = 4
+sig_bytes:
+        .byte   $20,$00,$03,$00
+        ASSERT_TABLE_SIZE sig_bytes, kNumSigBytes
+sig_offsets:
+        .byte   $01,$03,$05,$07
+        ASSERT_TABLE_SIZE sig_offsets, kNumSigBytes
+
+active_device:
+        .byte   0
+
+        ;; Selector signature (65816 opcodes used)
+selector_signature:
+        .byte   $AD,$8B,$C0,$18,$FB,$5C,$04,$D0,$E0
+
+;;; ============================================================
+
+start:  sta     MIXCLR
+        sta     HIRES
+        sta     TXTCLR
+        sta     CLR80VID
+        sta     AN3_OFF
+        sta     AN3_ON
+        sta     AN3_OFF
+        sta     AN3_ON
+        sta     SET80VID
+        sta     DHIRESON
+        sta     TXTSET
+
+        lda     DATELO          ; Any date set?
+        ora     DATEHI
+        bne     :+
+        copy16  header_date, DATELO ; Copy timestamp embedded in this file
+:       lda     MACHID
+        and     #$30            ; bits 4,5 set = 128k
+        cmp     #$30
+        beq     have128k
+
+        ;;  If not 128k machine, just quit back to ProDOS
+        MLI_CALL QUIT, quit_params
+        DEFINE_QUIT_PARAMS quit_params
+
+have128k:
+        ;; Turn on 80-column mode
+        jsr     SLOT3ENTRY
+        jsr     HOME
+
+        ;; Save original Quit routine and small loader
+        ;; TODO: Assumes prefix is retained. Compose correct path.
+
+        jsr     preserve_quit_code
+
+resume:
+        ;; IIgs: Reset shadowing
+        sec
+        jsr     IDROUTINE
+        bcs     :+
+        copy    #0, SHADOW
+:
+
+        lda     DEVNUM          ; Most recent device
+        sta     active_device
+        lda     LCBANK2
+        lda     LCBANK2
+
+        ;; Check quit routine
+        ldx     #$08
+:       lda     SELECTOR,x         ; Quit routine?
+        cmp     selector_signature,x
+        bne     nomatch
+        dex
+        bpl     :-
+        lda     #0
+        beq     match
+
+nomatch:
+        lda     #$80
+
+match:  sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
+
+        lda     ROMIN2
+
+        ;; Clear flag - ramcard not found or unknown state.
+        ldx     #0
+        jsr     set_copied_to_ramcard_flag
+
+        ;; Skip RAMCard install if button is down
+        lda     BUTN0
+        ora     BUTN1
+        bpl     scan_slots
+        jmp     did_not_copy
+
+        ;; Start at $C100
+        slot_ptr = $8
+
+scan_slots:
+        lda     #0
+        sta     slot_ptr
+        lda     #$C1
+        sta     slot_ptr+1
+
+        ;; Check slot for signature bytes
+check_slot:
+        ldx     #0
+:       lda     sig_offsets,x   ; Check $CnXX
+        tay
+        lda     (slot_ptr),y
+        cmp     sig_bytes,x
+        bne     next_slot
+        inx
+        cpx     #kNumSigBytes
+        bcc     :-
+
+        ldy     #$FB
+        lda     (slot_ptr),y         ; Also check $CnFB for low bit (=RAMDisk)
+        and     #$01
+        beq     next_slot
+        bne     found_slot
+
+next_slot:
+        inc     slot_ptr+1
+        lda     slot_ptr+1
+        cmp     #$C8            ; stop at $C800
+        bcc     check_slot
+
+        ;; Did not find signature in any slot - look for
+        ;; RAM.DRV.SYSTEM signature in DEVLST.
+        ldy     DEVCNT
+:       lda     DEVLST,y
+        cmp     #kRamDrvSystemUnitNum
+        beq     :+
+        dey
+        bpl     :-
+        jmp     did_not_copy
+
+:       lda     #$03
+        bne     :+              ; always
+
+        ;; RAM device was found!
+found_slot:
+        lda     slot_ptr+1
+        and     #$0F            ; slot # in A
+:       sta     slot
+
+        ;; Synthesize unit_num, verify it's a device
+        asl     a
+        asl     a
+        asl     a
+        asl     a
+        sta     on_line_params::unit_num
+        sta     unit_num
+        MLI_CALL ON_LINE, on_line_params
+        beq     :+
+        jmp     did_not_copy
+
+:       lda     unit_num
+        cmp     #$30            ; make sure it's not slot 3 (aux)
+        beq     :+
+        sta     write_block_params_unit_num ; Init device as ProDOS
+        sta     write_block2_params_unit_num
+        MLI_CALL WRITE_BLOCK, write_block_params
+        bne     :+
+        MLI_CALL WRITE_BLOCK, write_block2_params
+:       lda     on_line_buffer
+        and     #$0F
+        tay
+
+        iny
+        sty     path0
+        lda     #'/'
+        sta     on_line_buffer
+        sta     path0+1
+:       lda     on_line_buffer,y
+        sta     path0+1,y
+        dey
+        bne     :-
+
+        ;; Record that candidate device is found.
+        ldx     #$C0
+        jsr     set_copied_to_ramcard_flag
+
+        ;; Already installed?
+        addr_call set_ramcard_prefix, path0
+        jsr     check_desktop2_on_device
+        bcs     start_copy      ; No, start copy.
+
+        ;; Already copied - record that it was installed and grab path.
+        ldx     #$80
+        jsr     set_copied_to_ramcard_flag
+        jsr     copy_orig_prefix_to_desktop_orig_prefix
+        jmp     did_not_copy
+
+str_slash_desktop:
+        PASCAL_STRING "/DeskTop"
+
+        ;; Overwrite first bytes of get_file_info_params
+.params dir_file_info
+        .byte   $A              ; param_count
+        .addr   0               ; pathname
+        .byte   ACCESS_DEFAULT  ; access
+        .byte   FT_DIRECTORY    ; filetype
+        .word   0               ; aux_type
+        .byte   ST_LINKED_DIRECTORY ; storage_type
+.endparams
+
+.proc start_copy
+        ptr := $06
+
+        jsr     show_copying_screen
+        MLI_CALL GET_PREFIX, get_prefix_params
+        beq     :+
+        jmp     fail_copy
+:       dec     buffer
+
+        ;; Record that the copy was performed.
+        ldx     #$80
+        jsr     set_copied_to_ramcard_flag
+
+        ldy     buffer
+:       lda     buffer,y
+        sta     header_orig_prefix,y
+        dey
+        bpl     :-
+
+        ldy     path0
+        ldx     #0
+:       iny
+        inx
+        lda     str_slash_desktop,x
+        sta     path0,y
+        cpx     str_slash_desktop
+        bne     :-
+        sty     path0
+
+        ;; copy file_type, aux_type, storage_type
+        ldx     #7
+:       lda     dir_file_info,x
+        sta     get_file_info_params,x
+        dex
+        cpx     #3
+        bne     :-
+
+        jsr     create_file_for_copy
+        copy    path0, copied_flag
+        copy    #0, filenum
+
+file_loop:
+        jsr     update_progress
+
+        lda     filenum
+        asl     a
+        tax
+        copy16  filename_table,x, ptr
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     filename_buf,y
+        dey
+        bpl     :-
+        jsr     copy_file
+        inc     filenum
+        lda     filenum
+        cmp     #kNumFilenames
+        bne     file_loop
+
+        jsr     update_progress
+        ;; fall through
+.endproc
+
+.proc finish_dt_copy
+        lda     copied_flag
+        beq     :+
+        sta     path0
+        MLI_CALL SET_PREFIX, set_prefix_params
+:       jsr     update_self_file
+        jsr     copy_orig_prefix_to_desktop_orig_prefix
+
+        lda     #0
+        sta     RAMWORKS_BANK   ; Just in case?
+        ldy     #BITMAP_SIZE-1
+:       sta     BITMAP,y
+        dey
+        bpl     :-
+
+        ;; Done! Move on to Part 2.
+        jmp     copy_selector_entries_to_ramcard
+.endproc
+
+;;; ============================================================
+
+.proc set_copied_to_ramcard_flag
+        lda     LCBANK2
+        lda     LCBANK2
+        stx     COPIED_TO_RAMCARD_FLAG
+        lda     ROMIN2
+        rts
+.endproc
+
+.proc set_ramcard_prefix
+        ptr := $6
+        target := RAMCARD_PREFIX
+
+        stax    ptr
+        lda     LCBANK2
+        lda     LCBANK2
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     target,y
+        dey
+        bpl     :-
+        lda     ROMIN2
+        rts
+.endproc
+
+.proc set_desktop_orig_prefix
+        ptr := $6
+        target := DESKTOP_ORIG_PREFIX
+
+        stax    ptr
+        lda     LCBANK2
+        lda     LCBANK2
+
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     target,y
+        dey
+        bpl     :-
+
+        lda     ROMIN2
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc did_not_copy
+        ;; TODO: Reset stack?
+
+        jmp     finish_dt_copy
+.endproc
+
+;;; ============================================================
+
+.proc update_progress
+
+        kProgressVtab = 14
+        kProgressStops = kNumFilenames + 1
+        kProgressTick = 40 / kProgressStops
+        kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
+
+        lda     #kProgressVtab
+        jsr     VTABZ
+        lda     #kProgressHtab
+        sta     CH
+
+        lda     count
+        clc
+        adc     #kProgressTick
+        sta     count
+
+        tax
+        lda     #' '
+:       jsr     COUT
+        dex
+        bne     :-
+
+        rts
+
+count:  .byte   0
+.endproc
+
+;;; ============================================================
+
+        ;; Generic buffer?
+buffer: .res 300, 0             ; TODO: This should be kPathBufferSize
+
+filename_buf:
+        .res 16, 0
+
+;;; ============================================================
+
+.proc append_filename_to_buffer
+        lda     filename_buf
+        bne     :+
+        rts
+
+:       ldx     #0
+        ldy     buffer
+        lda     #'/'
+        sta     buffer+1,y
+        iny
+loop:   cpx     filename_buf
+        bcs     done
+        lda     filename_buf+1,x
+        sta     buffer+1,y
+        inx
+        iny
+        jmp     loop
+
+done:   sty     buffer
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc remove_filename_from_buffer
+        ldx     buffer
+        bne     :+
+        rts
+
+:       lda     buffer,x
+        cmp     #'/'
+        beq     done
+        dex
+        bne     :-
+        stx     buffer
+        rts
+
+done:   dex
+        stx     buffer
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc append_filename_to_path0
+        lda     filename_buf
+        bne     :+
+        rts
+
+:       ldx     #0
+        ldy     path0
+        lda     #'/'
+        sta     path0+1,y
+        iny
+loop:   cpx     filename_buf
+        bcs     done
+        lda     filename_buf+1,x
+        sta     path0+1,y
+        inx
+        iny
+        jmp     loop
+
+done:   sty     path0
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc remove_filename_from_path0
+        ldx     path0
+        bne     :+
+        rts
+
+:       lda     path0,x
+        cmp     #'/'
+        beq     done
+        dex
+        bne     :-
+        stx     path0
+        rts
+
+done:   dex
+        stx     path0
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc show_copying_screen
+        ;; Center string
+        lda     #80
+        sec
+        sbc     str_copying_to_ramcard
+        lsr     a               ; / 2 to center
+        sta     CH
+        lda     #12
+        jsr     VTABZ
+        ldy     #0
+:       iny
+        lda     str_copying_to_ramcard,y
+        ora     #$80
+        jsr     COUT
+        cpy     str_copying_to_ramcard
+        bne     :-
+
+        ;; Center string
+        lda     #80
+        sec
+        sbc     str_tip_skip_copying
+        clc
+        adc     #4              ; 4 control characters (for MouseText)
+        lsr     a               ; / 2 to center
+        sta     CH
+        lda     #23
+        jsr     VTABZ
+        ldy     #0
+:       iny
+        lda     str_tip_skip_copying,y
+        ora     #$80
+        jsr     COUT
+        cpy     str_tip_skip_copying
+        bne     :-
+
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc fail_copy
+        ;; TODO: Reset stack?
+
+        copy    #0, copied_flag
+        jmp     did_not_copy
+.endproc
+
+;;; ============================================================
+
+.proc copy_file
+        jsr     append_filename_to_path0
+        jsr     append_filename_to_buffer
+        MLI_CALL GET_FILE_INFO, get_file_info_params
+        beq     :+
+        cmp     #ERR_FILE_NOT_FOUND
+        beq     cleanup
+        jmp     did_not_copy
+
+:       lda     get_file_info_params::file_type
+        cmp     #FT_DIRECTORY
+        bne     :+
+        jsr     copy_directory
+        jmp     done
+
+:       jsr     create_file_for_copy
+        cmp     #ERR_DUPLICATE_FILENAME
+        bne     :+
+        lda     filenum
+        bne     cleanup
+        pla
+        pla
+        jmp     finish_dt_copy
+
+:       jsr     copy_normal_file
+
+cleanup:
+        jsr     remove_filename_from_buffer
+        jsr     remove_filename_from_path0
+done:   rts
+.endproc
+
+;;; ============================================================
+
+.proc copy_directory_impl
+        ptr := $6
+
+        DEFINE_OPEN_PARAMS open_params, buffer, dir_io_buffer
+        DEFINE_READ_PARAMS read_params, dir_buffer, kDirBufSize
+        DEFINE_CLOSE_PARAMS close_params
+
+start:  jsr     create_file_for_copy
+        cmp     #ERR_DUPLICATE_FILENAME
+        beq     bail
+        MLI_CALL OPEN, open_params
+        beq     :+
+        jsr     fail_copy
+bail:   rts
+
+:       lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL READ, read_params
+        beq     :+
+        jsr     fail_copy
+        rts
+
+:       lda     #0
+        sta     L2A10
+        lda     #<(dir_buffer + .sizeof(SubdirectoryHeader))
+        sta     ptr
+        lda     #>(dir_buffer + .sizeof(SubdirectoryHeader))
+        sta     ptr+1
+L2997:  lda     dir_buffer + SubdirectoryHeader::file_count
+        cmp     L2A10
+        bne     L29B1
+L299F:  MLI_CALL CLOSE, close_params
+        beq     :+
+        jmp     fail_copy
+
+:       jsr     remove_filename_from_buffer
+        jsr     remove_filename_from_path0
+        rts
+
+L29B1:  ldy     #0
+        lda     (ptr),y
+        bne     :+
+        jmp     L29F6
+
+:       and     #$0F
+
+        tay
+:       lda     (ptr),y
+        sta     filename_buf,y
+        dey
+        bne     :-
+        lda     (ptr),y
+        and     #$0F
+        sta     filename_buf,y
+        jsr     append_filename_to_path0
+        jsr     append_filename_to_buffer
+        MLI_CALL GET_FILE_INFO, get_file_info_params
+        beq     :+
+        jmp     fail_copy
+
+:       lda     get_file_info_params::file_type
+
+        ;; This routine doesn't handle copying nested directories.
+        ;; https://github.com/a2stuff/a2d/issues/282
+        ;; TODO: Fix that!
+        cmp     #FT_DIRECTORY
+        beq     :+              ; Skip
+
+        jsr     create_file_for_copy
+        cmp     #ERR_DUPLICATE_FILENAME
+        beq     :+
+        jsr     copy_normal_file
+:       jsr     remove_filename_from_buffer
+        jsr     remove_filename_from_path0
+        inc     L2A10
+L29F6:  add16_8 ptr, dir_buffer + SubdirectoryHeader::entry_length, ptr
+        lda     ptr+1
+        cmp     #>(dir_buffer + kDirBufSize)
+        bcs     :+
+        jmp     L2997
+
+:       jmp     L299F
+
+L2A10:  .byte   0
+.endproc
+        copy_directory := copy_directory_impl::start
+
+;;; ============================================================
+;;; Copy a normal (non-directory) file. File info *not* copied.
+;;; Inputs: |open_srcfile_params| populated
+;;;         |open_dstfile_params| populated; file already created
+;;; Errors: fail_copy is called; if it returns, operations retried
+
+.proc copy_normal_file
+        ;; Open source
+:       MLI_CALL OPEN, open_srcfile_params
+        beq     :+
+        jsr     fail_copy
+        jmp     :-
+
+        ;; Open destination
+:       MLI_CALL OPEN, open_dstfile_params
+        beq     :+
+        jsr     fail_copy
+        jmp     :-
+
+:       lda     open_srcfile_params::ref_num
+        sta     read_srcfile_params::ref_num
+        sta     close_srcfile_params::ref_num
+        lda     open_dstfile_params::ref_num
+        sta     write_dstfile_params::ref_num
+        sta     close_dstfile_params::ref_num
+
+        ;; Read a chunk
+loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
+read:   MLI_CALL READ, read_srcfile_params
+        beq     :+
+        cmp     #ERR_END_OF_FILE
+        beq     done
+        jsr     fail_copy
+        jmp     read
+
+        ;; Write the chunk
+:       copy16  read_srcfile_params::trans_count, write_dstfile_params::request_count
+        ora     read_srcfile_params::trans_count
+        beq     done
+write:  MLI_CALL WRITE, write_dstfile_params
+        beq     :+
+        jsr     fail_copy
+        jmp     write
+
+        ;; More to copy?
+:       lda     write_dstfile_params::trans_count
+        cmp     #<kCopyBufferSize
+        bne     done
+        lda     write_dstfile_params::trans_count+1
+        cmp     #>kCopyBufferSize
+        beq     loop
+
+        ;; Close source and destination
+done:   MLI_CALL CLOSE, close_srcfile_params
+        MLI_CALL CLOSE, close_dstfile_params
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc create_file_for_copy
+        ;; Copy file_type, aux_type, storage_type
+        ldx     #7
+:       lda     get_file_info_params,x
+        sta     create_params,x
+        dex
+        cpx     #3
+        bne     :-
+        MLI_CALL CREATE, create_params
+        beq     :+
+        cmp     #ERR_DUPLICATE_FILENAME
+        beq     :+
+        jsr     fail_copy
+:       rts
+.endproc
+
+;;; ============================================================
+
+.proc check_desktop2_on_device
+        slot_ptr = $8
+
+        lda     active_device
+        cmp     #kRamDrvSystemUnitNum
+        bne     :+
+        jmp     next
+
+        ;; Check slot for signature bytes
+:       and     #$70            ; Compute $Cn00
+        lsr     a
+        lsr     a
+        lsr     a
+        lsr     a
+        ora     #$C0
+        sta     slot_ptr+1
+        lda     #0
+        sta     slot_ptr
+        ldx     #0              ; Compare signature bytes
+bloop:  lda     sig_offsets,x
+        tay
+        lda     (slot_ptr),y
+        cmp     sig_bytes,x
+        bne     error
+        inx
+        cpx     #4              ; Number of signature bytes
+        bcc     bloop
+        ldy     #$FB            ; Also check $CnFB
+        lda     (slot_ptr),y
+        and     #$01
+        bne     next
+error:  sec
+        rts
+
+next:   MLI_CALL GET_PREFIX, get_prefix_params2
+        bne     error
+
+        ;; Append "DeskTop2" to path
+        ldx     path_buf
+        ldy     #0
+loop:   inx
+        iny
+        lda     str_desktop2,y
+        sta     path_buf,x
+        cpy     str_desktop2
+        bne     loop
+        stx     path_buf
+
+        ;; ... and get info
+        MLI_CALL GET_FILE_INFO, get_file_info_params4
+        beq     error
+        clc                     ; ok
+        rts
+
+str_desktop2:
+        PASCAL_STRING "DeskTop2"
+.endproc
+
+;;; ============================================================
+;;; Update the live (RAM or disk) copy of this file with the
+;;; original prefix.
+
+.proc update_self_file_impl
+        dt1_addr := $2000
+
+        DEFINE_OPEN_PARAMS open_params, str_desktop1_path, dst_io_buffer
+str_desktop1_path:
+        PASCAL_STRING "DeskTop/DESKTOP.SYSTEM"
+        DEFINE_WRITE_PARAMS write_params, dt1_addr, kWriteBackSize
+        DEFINE_CLOSE_PARAMS close_params
+
+start:  MLI_CALL OPEN, open_params
+        bne     :+
+        lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL WRITE, write_params
+        bne     :+
+        MLI_CALL CLOSE, close_params
+:       rts
+.endproc
+        update_self_file := update_self_file_impl::start
+
+;;; ============================================================
+
+.proc copy_orig_prefix_to_desktop_orig_prefix
+        addr_call set_desktop_orig_prefix, header_orig_prefix
+        rts
+.endproc
+
+        .byte   0
+
+path0:  .res    ::kPathBufferSize, 0
+
+;;; ============================================================
+
+filenum:
+        .byte   0               ; index of file being copied
+
+slot:   .byte   0
+
+        DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
+        write_block_params_unit_num := write_block_params::unit_num
+        DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + BLOCK_SIZE, 1
+        write_block2_params_unit_num := write_block2_params::unit_num
+
+;;; ============================================================
+
+prodos_loader_blocks:
+        .incbin "../inc/pdload.dat"
+
+.endproc ; copy_desktop_to_ramcard_impl
+
+copy_desktop_to_ramcard := copy_desktop_to_ramcard_impl::start
+
 
 ;;; ============================================================
 ;;;
