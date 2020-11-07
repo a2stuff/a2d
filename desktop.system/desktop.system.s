@@ -1,13 +1,56 @@
         .setcpu "6502"
 
-        .org $2000
-
         .include "apple2.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
 
         .include "../common.inc"
+
+;;; ============================================================
+;;; Memory map
+;;;
+;;;              Main
+;;;          :             :
+;;;          | ProDOS      |
+;;;   $BF00  +-------------+
+;;;          |             |
+;;;          :             :
+;;;          |             |
+;;;          | R/W Buffer  |
+;;;   $4000  +-------------+
+;;;          |             |
+;;;          |             |
+;;;          |             |
+;;;          | Code        |
+;;;   $2000  +-------------+
+;;;          |.............|
+;;;          |.(unused)....|
+;;;   $1600  +-------------+
+;;;          |             |
+;;;          | Dst IO Buf  |
+;;;   $1200  +-------------+
+;;;          |             |
+;;;          | Src I/O Buf |
+;;;    $E00  +-------------+
+;;;          | Dir Rd Buf  |
+;;;    $C00  +-------------+
+;;;          |             |
+;;;          | Dir I/O Buf |
+;;;    $800  +-------------+
+;;;          :             :
+
+dir_io_buffer   := $800         ; 1024 bytes for I/O
+dir_buffer      := $C00         ; 512 bytes (BLOCK_SIZE)
+kDirBufSize     = BLOCK_SIZE
+
+src_io_buffer   := $E00         ; 1024 bytes for I/O
+dst_io_buffer   := $1200        ; 1024 bytes for I/O
+
+rw_buf          := $4000
+kRWBufLen       = MLI - rw_buf
+
+        .org $2000
 
 ;;; ============================================================
 
@@ -40,24 +83,12 @@ orig_prefix:
 
         kWriteBackSize = * - $2000
 
-        .res    768, 0          ; ???
+        .res    768, 0          ; Unused or reserved ???
 
-        .byte   $02,$00
-        .addr   L2363
-
+        ;; Used in check_desktop2_on_device
         path_buf := $D00
-
-.params get_prefix_params2
-param_count:    .byte   2       ; GET_PREFIX, but param_count is 2 ??? Bug???
-data_buffer:    .addr   path_buf
-.endparams
-
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params2, path_buf
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buf
-
-        .byte   $00,$01
-        .addr   L2362
-L2362:  .byte   0
-L2363:  .res    15, 0
 
 unit_num:
         .byte   0
@@ -66,64 +97,27 @@ unit_num:
 
 copied_flag:
         .byte   0
-L2379:  .byte   0
 
 on_line_buffer: .res 17, 0
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, buffer
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, path0
 
-        .byte   $0A
-        .addr   L2379
-        .byte   $00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00
-
-        .byte   $07
-        .addr   path0
-        .byte   $C3,$0F
-        .byte   $00,$00,$0D,$00,$00,$00,$00,$04
-        .byte   $00,$00,$03,$00,$01,$00,$00,$01
-        .byte   $00,$03
-        .addr   buffer
-        .byte   $00,$08,$00,$04
-        .byte   $00
-        .addr   L23C9
-        .byte   $04,$00,$00,$00
-L23C9:  .byte   $00
-        .byte   $00,$00,$00,$01,$00,$04,$00
-        .addr   filename_buf
-        .byte   $27,$00,$00,$00,$04,$00
-        .addr   L23DF
-        .byte   $05,$00,$00,$00
-L23DF:  .byte   $00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00
 
         DEFINE_CLOSE_PARAMS close_srcfile_params
         DEFINE_CLOSE_PARAMS close_dstfile_params
 
-        .byte   $01
-        .addr   buffer
+        copy_buffer := rw_buf
+        kCopyBufferSize = kRWBufLen
 
-        copy_buffer := $4000
-        kCopyBufferSize = MLI - copy_buffer
-
-        open_srcfile_io_buffer := $0D00
-        open_dstfile_io_buffer := $1100
-        DEFINE_OPEN_PARAMS open_srcfile_params, buffer, open_srcfile_io_buffer
-        DEFINE_OPEN_PARAMS open_dstfile_params, path0, open_dstfile_io_buffer
+        DEFINE_OPEN_PARAMS open_srcfile_params, buffer, src_io_buffer
+        DEFINE_OPEN_PARAMS open_dstfile_params, path0, dst_io_buffer
         DEFINE_READ_PARAMS read_srcfile_params, copy_buffer, kCopyBufferSize
         DEFINE_WRITE_PARAMS write_dstfile_params, copy_buffer, kCopyBufferSize
 
         DEFINE_CREATE_PARAMS create_params, path0, ACCESS_DEFAULT, 0, 0
-        .byte   $07
-        .addr   path0
-        .byte   $00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, buffer
-        .byte   0
 
 kNumFilenames = 10
 
@@ -149,11 +143,14 @@ str_copying_to_ramcard:
 str_tip_skip_copying:
         PASCAL_STRING {"Tip: To skip copying to RAMCard, hold down ",15,27,65,24,14," when launching."}
 
-        ;; Signature of block storage devices ($Cn0x)
+;;; Signature of block storage devices ($Cn0x)
+kNumSigBytes = 4
 sig_bytes:
         .byte   $20,$00,$03,$00
+        ASSERT_TABLE_SIZE sig_bytes, kNumSigBytes
 sig_offsets:
         .byte   $01,$03,$05,$07
+        ASSERT_TABLE_SIZE sig_offsets, kNumSigBytes
 
 active_device:
         .byte   0
@@ -227,7 +224,7 @@ resume:
 nomatch:
         lda     #$80
 
-match:  sta     $D3AC           ; ???
+match:  sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
 
         lda     ROMIN2
 
@@ -246,7 +243,6 @@ match:  sta     $D3AC           ; ???
 
 scan_slots:
         lda     #0
-        sta     flag
         sta     slot_ptr
         lda     #$C1
         sta     slot_ptr+1
@@ -260,11 +256,11 @@ check_slot:
         cmp     sig_bytes,x
         bne     next_slot
         inx
-        cpx     #4              ; number of signature bytes
+        cpx     #kNumSigBytes
         bcc     :-
 
         ldy     #$FB
-        lda     (slot_ptr),y         ; Also check $CnFB for low bit
+        lda     (slot_ptr),y         ; Also check $CnFB for low bit (=RAMDisk)
         and     #$01
         beq     next_slot
         bne     found_slot
@@ -308,7 +304,7 @@ found_slot:
 :       lda     unit_num
         cmp     #$30            ; make sure it's not slot 3 (aux)
         beq     :+
-        sta     write_block_params_unit_num
+        sta     write_block_params_unit_num ; Init device as ProDOS
         sta     write_block2_params_unit_num
         MLI_CALL WRITE_BLOCK, write_block_params
         bne     :+
@@ -490,7 +486,6 @@ file_loop:
 ;;; ============================================================
 
 .proc did_not_copy
-        copy    #0, flag
         jmp     finish_dt_copy
 .endproc
 
@@ -526,18 +521,11 @@ count:  .byte   0
 
 ;;; ============================================================
 
-        .byte   0, $D, 0, 0, 0
-
         ;; Generic buffer?
-buffer: .res 300, 0
+buffer: .res 300, 0             ; TODO: This should be kPathBufferSize
 
 filename_buf:
         .res 16, 0
-
-file_type:                      ; written but not read ???
-        .byte   0
-
-        .res 31, 0              ; unused ???
 
 ;;; ============================================================
 
@@ -677,23 +665,6 @@ done:   dex
 .endproc
 
 ;;; ============================================================
-;;; Unreferenced ???
-
-.proc copy_input_to_buffer
-        ldy     #0
-loop:   lda     IN,y
-        cmp     #$80|CHAR_RETURN
-        beq     done
-        and     #CHAR_MASK
-        sta     buffer+1,y
-        iny
-        jmp     loop
-
-done:   sty     buffer
-        rts
-.endproc
-
-;;; ============================================================
 
 .proc copy_file
         jsr     append_filename_to_path0
@@ -705,7 +676,6 @@ done:   sty     buffer
         jmp     did_not_copy
 
 :       lda     get_file_info_params::file_type
-        sta     file_type
         cmp     #FT_DIRECTORY
         bne     :+
         jsr     copy_directory
@@ -733,11 +703,7 @@ done:   rts
 .proc copy_directory_impl
         ptr := $6
 
-        open_io_buffer := $A000
-        dir_buffer := $A400
-        kDirBufSize = BLOCK_SIZE
-
-        DEFINE_OPEN_PARAMS open_params, buffer, open_io_buffer
+        DEFINE_OPEN_PARAMS open_params, buffer, dir_io_buffer
         DEFINE_READ_PARAMS read_params, dir_buffer, kDirBufSize
         DEFINE_CLOSE_PARAMS close_params
 
@@ -803,7 +769,6 @@ L29B1:  ldy     #0
         cmp     #FT_DIRECTORY
         beq     :+              ; Skip
 
-        sta     file_type
         jsr     create_file_for_copy
         cmp     #ERR_DUPLICATE_FILENAME
         beq     :+
@@ -960,10 +925,9 @@ str_desktop2:
 ;;; original prefix.
 
 .proc update_self_file_impl
-        open_io_buffer := $1000
         dt1_addr := $2000
 
-        DEFINE_OPEN_PARAMS open_params, str_desktop1_path, open_io_buffer
+        DEFINE_OPEN_PARAMS open_params, str_desktop1_path, dst_io_buffer
 str_desktop1_path:
         PASCAL_STRING "DeskTop/DESKTOP.SYSTEM"
         DEFINE_WRITE_PARAMS write_params, dt1_addr, kWriteBackSize
@@ -996,8 +960,6 @@ path0:  .res    ::kPathBufferSize, 0
 
 filenum:
         .byte   0               ; index of file being copied
-
-flag:   .byte   0               ; written but not read ???
 
 slot:   .byte   0
 
@@ -1036,9 +998,11 @@ prodos_loader_blocks:
 .proc process_selector_list
         ptr := $6
 
+        ;; Clear screen
         jsr     SLOT3ENTRY
         jsr     HOME
 
+        ;; Is there a RAMCard?
         lda     LCBANK2
         lda     LCBANK2
         lda     COPIED_TO_RAMCARD_FLAG
@@ -1048,6 +1012,7 @@ prodos_loader_blocks:
         bne     :+
         jmp     invoke_selector_or_desktop ; no RAMCard - skip!
 
+        ;; Clear "Copied to RAMCard" flags
 :       lda     LCBANK2
         lda     LCBANK2
         ldx     #kSelectorListNumEntries-1
@@ -1079,7 +1044,7 @@ entry_loop:
         jsr     prepare_entry_paths
         jsr     L3489
 
-        lda     LCBANK2
+        lda     LCBANK2         ; Mark copied
         lda     LCBANK2
         ldx     entry_num
         lda     #$FF
@@ -1136,7 +1101,7 @@ entry_num:
 
 ;;; ============================================================
 
-        open_path2_io_buffer := $0800
+        open_path2_io_buffer := dir_io_buffer
         DEFINE_OPEN_PARAMS open_path2_params, path2, open_path2_io_buffer
 
         ;; Used for reading directory structure
@@ -1150,43 +1115,22 @@ buf_5_bytes:  .res    5, 0
         DEFINE_CLOSE_PARAMS close_srcfile_params
         DEFINE_CLOSE_PARAMS close_dstfile_params
 
-        .byte   1
-        .addr   path2
+        filecopy_buffer := rw_buf
+        kFileCopyBufferSize = kRWBufLen
 
-        filecopy_buffer := $1100
-        kFileCopyBufferSize = $0B00
-
-        open_srcfile_io_buffer := $0D00
-        open_dstfile_io_buffer := $1C00
-        DEFINE_OPEN_PARAMS open_srcfile_params, path2, open_srcfile_io_buffer
-        DEFINE_OPEN_PARAMS open_dstfile_params, path1, open_dstfile_io_buffer
+        DEFINE_OPEN_PARAMS open_srcfile_params, path2, src_io_buffer
+        DEFINE_OPEN_PARAMS open_dstfile_params, path1, dst_io_buffer
         DEFINE_READ_PARAMS read_srcfile_params, filecopy_buffer, kFileCopyBufferSize
         DEFINE_WRITE_PARAMS write_dstfile_params, filecopy_buffer, kFileCopyBufferSize
         DEFINE_CREATE_PARAMS create_dir_params, path1, ACCESS_DEFAULT
         DEFINE_CREATE_PARAMS create_params, path1, 0
 
-        .byte   0, 0
-
         DEFINE_GET_FILE_INFO_PARAMS get_path2_info_params, path2
-
-        .byte   0
-
         DEFINE_GET_FILE_INFO_PARAMS get_path1_info_params, path1
 
-        .byte   $00,$02,$00,$00,$00
-
-file_info:
+file_entry:
 filename:
         .res    48, 0           ; big enough for FileEntry
-
-        ;; ???
-        .addr   copy_entry
-        .addr   remove_filename_from_path1_alt
-        .addr   noop2
-
-noop2:  rts
-
-        .byte   0
 
 path1:  .res    ::kPathBufferSize, 0
 path2:  .res    ::kPathBufferSize, 0
@@ -1346,11 +1290,10 @@ done:   return  #0
 loop:   jsr     read_file_entry
         bne     next
 
-        lda     file_info + FileEntry::storage_type_name_length
+        lda     file_entry + FileEntry::storage_type_name_length
         beq     loop            ; deleted
 
-        lda     file_info + FileEntry::storage_type_name_length
-        sta     unused2         ; written but not read ???
+        lda     file_entry + FileEntry::storage_type_name_length
         and     #$0F            ; mask off name_length
         sta     filename
 
@@ -1361,7 +1304,7 @@ loop:   jsr     read_file_entry
 
         lda     copy_err_flag   ; don't recurse if the copy failed
         bne     loop
-        lda     file_info + FileEntry::file_type
+        lda     file_entry + FileEntry::file_type
         cmp     #FT_DIRECTORY
         bne     loop            ; and don't recurse unless it's a directory
 
@@ -1394,33 +1337,9 @@ remove_filename_from_path1_alt2:
 
 noop:   rts
 
-unused2:  .byte   0             ; Unused ???
-
 ;;; ============================================================
-;;; Unreferenced ???
-
-.proc copy_input_to_path2
-        ldy     #0
-loop:   lda     IN,y
-        cmp     #$80|CHAR_RETURN
-        beq     done
-        and     #CHAR_MASK
-        sta     path2+1,y
-        iny
-        jmp     loop
-
-done:   sty     path2
-        rts
-.endproc
-
-;;; ============================================================
-
-        .res    3, 0
 
 .proc L3489
-        lda     #$FF
-        sta     unused1           ; Unused???
-
         jsr     prepare_paths_from_entry_paths
 
         ;; Set up destination dir path, e.g. "/RAM/APPLEWORKS"
@@ -1500,22 +1419,15 @@ is_dir: lda     #$FF
         jmp     handle_error_code
 
 :       lda     is_dir_flag
-        beq     do_file
+        beq     :+
         jmp     copy_directory
-
-        .byte   0               ; Unused ???
-        rts                     ; Unreached ???
-
-do_file: jmp     copy_file
+:       jmp     copy_file
 
 is_dir_flag:
         .byte   0
 .endproc
 
 ;;; ============================================================
-
-unused1:        .byte   0       ; Written, but never read??? TODO: Remove
-unused3:        .byte   0       ; Written, but never read??? TODO: Remove
 
 remove_filename_from_path1_alt:
         jmp     remove_filename_from_path1
@@ -1524,13 +1436,13 @@ remove_filename_from_path1_alt:
 ;;; Copy an entry in a directory. For files, the content is copied.
 ;;; For directories, the target is created but the caller is responsible
 ;;; for copying the child entries.
-;;; Inputs: |file_info| populated with FileEntry
+;;; Inputs: |file_entry| populated with FileEntry
 ;;;         |path2| has source directory path
 ;;;         |path1| has destination directory path
 ;;; Errors: handle_error_code is invoked
 
 .proc copy_entry
-        lda     file_info + FileEntry::file_type
+        lda     file_entry + FileEntry::file_type
         cmp     #FT_DIRECTORY
         bne     do_file
 
@@ -1630,7 +1542,6 @@ got_dst_size:
         bne     :-
         tya
         sta     path1
-        sta     unused          ; Written but not read ???
 
         ;; Get volume info
         MLI_CALL GET_FILE_INFO, get_path1_info_params
@@ -1656,7 +1567,6 @@ have_space:
 
 vol_free:       .word   0
 path1_length:   .byte   0       ; save full length of path
-unused:         .byte   0       ; Remove ???
 dst_size:       .word   0
 .endproc
 
@@ -1736,10 +1646,6 @@ finish: MLI_CALL CLOSE, close_dstfile_params
         jmp     handle_error_code
 :       rts
 .endproc
-
-;;; ============================================================
-
-        .res    4, 0            ; Unused ???
 
 ;;; ============================================================
 
@@ -1831,20 +1737,14 @@ done:   dex
 
 ;;; ============================================================
 ;;; Copy entry_path1/2 to path1/2
-;;; TODO: |unused3| is not read; remove???
 
 .proc prepare_paths_from_entry_paths
-        ldy     #0
-        sta     unused3
-        dey
+        ldy     #$FF
 
-        ;; Copy entry_path2 to path2, save offset of last '/'
+        ;; Copy entry_path2 to path2
 loop:   iny
         lda     entry_path2,y
-        cmp     #'/'
-        bne     :+
-        sty     unused3
-:       sta     path2,y
+        sta     path2,y
         cpy     entry_path2
         bne     loop
 
@@ -1913,10 +1813,6 @@ fail:   pla
         tya
         rts
 .endproc
-
-;;; ============================================================
-
-        .byte   0,0             ; Unused ???
 
 ;;; ============================================================
 
@@ -2282,10 +2178,10 @@ END_PROC_AT
 .proc preserve_quit_code_impl
         quit_code_io := $800
         quit_code_addr := $1000
-        quit_code_size := $400
+        kQuitCodeSize = $400
         DEFINE_CREATE_PARAMS create_params, str_quit_code, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, str_quit_code, quit_code_io
-        DEFINE_WRITE_PARAMS write_params, quit_code_addr, quit_code_size
+        DEFINE_WRITE_PARAMS write_params, quit_code_addr, kQuitCodeSize
         DEFINE_CLOSE_PARAMS close_params
 
 start:  lda     LCBANK2
