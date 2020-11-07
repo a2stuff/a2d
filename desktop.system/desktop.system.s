@@ -744,26 +744,15 @@ unit_num:
         .byte   0
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
-
-copied_flag:
-        .byte   0
-
 on_line_buffer: .res 17, 0
+
+copied_flag:                    ; set to path0's length, or reset
+        .byte   0
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, buffer
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, path0
 
-
-        DEFINE_CLOSE_PARAMS close_srcfile_params
-        DEFINE_CLOSE_PARAMS close_dstfile_params
-
-        DEFINE_OPEN_PARAMS open_srcfile_params, buffer, src_io_buffer
-        DEFINE_OPEN_PARAMS open_dstfile_params, path0, dst_io_buffer
-        DEFINE_READ_PARAMS read_srcfile_params, copy_buffer, kCopyBufferSize
-        DEFINE_WRITE_PARAMS write_dstfile_params, copy_buffer, kCopyBufferSize
-
         DEFINE_CREATE_PARAMS create_params, path0, ACCESS_DEFAULT, 0, 0
-
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, buffer
 
 kNumFilenames = 10
@@ -805,6 +794,24 @@ active_device:
         ;; Selector signature (65816 opcodes used)
 selector_signature:
         .byte   $AD,$8B,$C0,$18,$FB,$5C,$04,$D0,$E0
+
+;;; Save stack to restore on error during copy.
+saved_stack:
+        .byte   0
+
+path0:  .res    ::kPathBufferSize, 0
+buffer: .res    ::kPathBufferSize, 0
+
+filename_buf:
+        .res 16, 0
+
+filenum:
+        .byte   0               ; index of file being copied
+
+slot:   .byte   0
+
+        DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
+        DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + BLOCK_SIZE, 1
 
 ;;; ============================================================
 
@@ -949,8 +956,8 @@ found_slot:
 :       lda     unit_num
         cmp     #$30            ; make sure it's not slot 3 (aux)
         beq     :+
-        sta     write_block_params_unit_num ; Init device as ProDOS
-        sta     write_block2_params_unit_num
+        sta     write_block_params::unit_num ; Init device as ProDOS
+        sta     write_block2_params::unit_num
         MLI_CALL WRITE_BLOCK, write_block_params
         bne     :+
         MLI_CALL WRITE_BLOCK, write_block2_params
@@ -1002,7 +1009,7 @@ str_slash_desktop:
         jsr     show_copying_screen
         MLI_CALL GET_PREFIX, get_prefix_params
         beq     :+
-        jmp     fail_copy
+        jmp     did_not_copy
 :       dec     buffer
 
         ;; Record that the copy was performed.
@@ -1015,6 +1022,13 @@ str_slash_desktop:
         dey
         bpl     :-
 
+        ;; --------------------------------------------------
+
+        tsx                     ; In case of error
+        stx     saved_stack
+
+        ;; --------------------------------------------------
+        ;; Create desktop directory, e.g. "/RAM/DESKTOP"
         ldy     path0
         ldx     #0
 :       iny
@@ -1034,7 +1048,12 @@ str_slash_desktop:
         bne     :-
 
         jsr     create_file_for_copy
-        copy    path0, copied_flag
+
+        copy    path0, copied_flag ; reset on error
+
+        ;; --------------------------------------------------
+        ;; Loop over listed files to copy
+
         copy    #0, filenum
 
 file_loop:
@@ -1078,6 +1097,13 @@ file_loop:
 
         ;; Done! Move on to Part 2.
         jmp     copy_selector_entries_to_ramcard
+.endproc
+
+;;; ============================================================
+
+.proc did_not_copy
+        copy    #0, copied_flag
+        jmp     finish_dt_copy
 .endproc
 
 ;;; ============================================================
@@ -1130,14 +1156,6 @@ file_loop:
 
 ;;; ============================================================
 
-.proc did_not_copy
-        ;; TODO: Reset stack?
-
-        jmp     finish_dt_copy
-.endproc
-
-;;; ============================================================
-
 .proc update_progress
 
         kProgressVtab = 14
@@ -1165,14 +1183,6 @@ file_loop:
 
 count:  .byte   0
 .endproc
-
-;;; ============================================================
-
-        ;; Generic buffer?
-buffer: .res 300, 0             ; TODO: This should be kPathBufferSize
-
-filename_buf:
-        .res 16, 0
 
 ;;; ============================================================
 
@@ -1303,15 +1313,17 @@ done:   dex
 .endproc
 
 ;;; ============================================================
+;;; Callback from copy failure; restores stack and proceeds.
 
 .proc fail_copy
-        ;; TODO: Reset stack?
+        ldx     saved_stack
+        txs
 
-        copy    #0, copied_flag
         jmp     did_not_copy
 .endproc
 
 ;;; ============================================================
+;;; Copy |filename| from |buffer| to |path0|
 
 .proc copy_file
         jsr     append_filename_to_path0
@@ -1321,179 +1333,40 @@ done:   dex
         cmp     #ERR_FILE_NOT_FOUND
         beq     cleanup
         jmp     did_not_copy
+:
 
-:       lda     get_file_info_params::file_type
-        cmp     #FT_DIRECTORY
-        bne     :+
-        jsr     copy_directory
-        jmp     done
+        ;; Set up source path
+        ldy     buffer
+:       lda     buffer,y
+        sta     generic_copy::path2,y
+        dey
+        bpl     :-
 
-:       jsr     create_file_for_copy
-        cmp     #ERR_DUPLICATE_FILENAME
-        bne     :+
-        lda     filenum
-        bne     cleanup
-        pla
-        pla
-        jmp     finish_dt_copy
+        ;; Set up destination path
+        ldy     path0
+:       lda     path0,y
+        sta     generic_copy::path1,y
+        dey
+        bpl     :-
 
-:       jsr     copy_normal_file
+        copy16  #fail_copy, generic_copy::hook_handle_error_code
+        copy16  #fail_copy, generic_copy::hook_handle_no_space
+        copy16  #fail_copy, generic_copy::hook_insert_source
+        copy16  #noop, generic_copy::hook_show_file
+
+        jsr     generic_copy::do_copy
 
 cleanup:
         jsr     remove_filename_from_buffer
         jsr     remove_filename_from_path0
+
+noop:
 done:   rts
 .endproc
 
 ;;; ============================================================
 
-.proc copy_directory_impl
-        ptr := $6
-
-        DEFINE_OPEN_PARAMS open_params, buffer, dir_io_buffer
-        DEFINE_READ_PARAMS read_params, dir_buffer, kDirBufSize
-        DEFINE_CLOSE_PARAMS close_params
-
-start:  jsr     create_file_for_copy
-        cmp     #ERR_DUPLICATE_FILENAME
-        beq     bail
-        MLI_CALL OPEN, open_params
-        beq     :+
-        jsr     fail_copy
-bail:   rts
-
-:       lda     open_params::ref_num
-        sta     read_params::ref_num
-        sta     close_params::ref_num
-        MLI_CALL READ, read_params
-        beq     :+
-        jsr     fail_copy
-        rts
-
-:       lda     #0
-        sta     L2A10
-        lda     #<(dir_buffer + .sizeof(SubdirectoryHeader))
-        sta     ptr
-        lda     #>(dir_buffer + .sizeof(SubdirectoryHeader))
-        sta     ptr+1
-L2997:  lda     dir_buffer + SubdirectoryHeader::file_count
-        cmp     L2A10
-        bne     L29B1
-L299F:  MLI_CALL CLOSE, close_params
-        beq     :+
-        jmp     fail_copy
-
-:       jsr     remove_filename_from_buffer
-        jsr     remove_filename_from_path0
-        rts
-
-L29B1:  ldy     #0
-        lda     (ptr),y
-        bne     :+
-        jmp     L29F6
-
-:       and     #$0F
-
-        tay
-:       lda     (ptr),y
-        sta     filename_buf,y
-        dey
-        bne     :-
-        lda     (ptr),y
-        and     #$0F
-        sta     filename_buf,y
-        jsr     append_filename_to_path0
-        jsr     append_filename_to_buffer
-        MLI_CALL GET_FILE_INFO, get_file_info_params
-        beq     :+
-        jmp     fail_copy
-
-:       lda     get_file_info_params::file_type
-
-        ;; This routine doesn't handle copying nested directories.
-        ;; https://github.com/a2stuff/a2d/issues/282
-        ;; TODO: Fix that!
-        cmp     #FT_DIRECTORY
-        beq     :+              ; Skip
-
-        jsr     create_file_for_copy
-        cmp     #ERR_DUPLICATE_FILENAME
-        beq     :+
-        jsr     copy_normal_file
-:       jsr     remove_filename_from_buffer
-        jsr     remove_filename_from_path0
-        inc     L2A10
-L29F6:  add16_8 ptr, dir_buffer + SubdirectoryHeader::entry_length, ptr
-        lda     ptr+1
-        cmp     #>(dir_buffer + kDirBufSize)
-        bcs     :+
-        jmp     L2997
-
-:       jmp     L299F
-
-L2A10:  .byte   0
-.endproc
-        copy_directory := copy_directory_impl::start
-
-;;; ============================================================
-;;; Copy a normal (non-directory) file. File info *not* copied.
-;;; Inputs: |open_srcfile_params| populated
-;;;         |open_dstfile_params| populated; file already created
-;;; Errors: fail_copy is called; if it returns, operations retried
-
-.proc copy_normal_file
-        ;; Open source
-:       MLI_CALL OPEN, open_srcfile_params
-        beq     :+
-        jsr     fail_copy
-        jmp     :-
-
-        ;; Open destination
-:       MLI_CALL OPEN, open_dstfile_params
-        beq     :+
-        jsr     fail_copy
-        jmp     :-
-
-:       lda     open_srcfile_params::ref_num
-        sta     read_srcfile_params::ref_num
-        sta     close_srcfile_params::ref_num
-        lda     open_dstfile_params::ref_num
-        sta     write_dstfile_params::ref_num
-        sta     close_dstfile_params::ref_num
-
-        ;; Read a chunk
-loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
-read:   MLI_CALL READ, read_srcfile_params
-        beq     :+
-        cmp     #ERR_END_OF_FILE
-        beq     done
-        jsr     fail_copy
-        jmp     read
-
-        ;; Write the chunk
-:       copy16  read_srcfile_params::trans_count, write_dstfile_params::request_count
-        ora     read_srcfile_params::trans_count
-        beq     done
-write:  MLI_CALL WRITE, write_dstfile_params
-        beq     :+
-        jsr     fail_copy
-        jmp     write
-
-        ;; More to copy?
-:       lda     write_dstfile_params::trans_count
-        cmp     #<kCopyBufferSize
-        bne     done
-        lda     write_dstfile_params::trans_count+1
-        cmp     #>kCopyBufferSize
-        beq     loop
-
-        ;; Close source and destination
-done:   MLI_CALL CLOSE, close_srcfile_params
-        MLI_CALL CLOSE, close_dstfile_params
-        rts
-.endproc
-
-;;; ============================================================
+;;; TODO: This is only used in one place with redundant logic; simplify.
 
 .proc create_file_for_copy
         ;; Copy file_type, aux_type, storage_type
@@ -1603,21 +1476,7 @@ start:  MLI_CALL OPEN, open_params
         rts
 .endproc
 
-        .byte   0
 
-path0:  .res    ::kPathBufferSize, 0
-
-;;; ============================================================
-
-filenum:
-        .byte   0               ; index of file being copied
-
-slot:   .byte   0
-
-        DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
-        write_block_params_unit_num := write_block_params::unit_num
-        DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + BLOCK_SIZE, 1
-        write_block2_params_unit_num := write_block2_params::unit_num
 
 ;;; ============================================================
 
