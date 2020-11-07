@@ -17,7 +17,7 @@
 ;;;          |             |
 ;;;          :             :
 ;;;          |             |
-;;;          | R/W Buffer  |
+;;;          | Copy Buffer |
 ;;;   $4000  +-------------+
 ;;;          |             |
 ;;;          |             |
@@ -47,8 +47,8 @@ kDirBufSize     = BLOCK_SIZE
 src_io_buffer   := $E00         ; 1024 bytes for I/O
 dst_io_buffer   := $1200        ; 1024 bytes for I/O
 
-rw_buf          := $4000
-kRWBufLen       = MLI - rw_buf
+copy_buffer     := $4000
+kCopyBufferSize = MLI - copy_buffer
 
         .org $2000
 
@@ -106,9 +106,6 @@ on_line_buffer: .res 17, 0
 
         DEFINE_CLOSE_PARAMS close_srcfile_params
         DEFINE_CLOSE_PARAMS close_dstfile_params
-
-        copy_buffer := rw_buf
-        kCopyBufferSize = kRWBufLen
 
         DEFINE_OPEN_PARAMS open_srcfile_params, buffer, src_io_buffer
         DEFINE_OPEN_PARAMS open_dstfile_params, path0, dst_io_buffer
@@ -195,8 +192,6 @@ have128k:
         ;; TODO: Assumes prefix is retained. Compose correct path.
 
         jsr     preserve_quit_code
-
-        ;; (Original code from here on)
 
 resume:
         ;; IIgs: Reset shadowing
@@ -625,8 +620,7 @@ done:   dex
         lsr     a               ; / 2 to center
         sta     CH
         lda     #12
-        sta     CV
-        jsr     VTAB
+        jsr     VTABZ
         ldy     #0
 :       iny
         lda     str_copying_to_ramcard,y
@@ -644,8 +638,7 @@ done:   dex
         lsr     a               ; / 2 to center
         sta     CH
         lda     #23
-        sta     CV
-        jsr     VTAB
+        jsr     VTABZ
         ldy     #0
 :       iny
         lda     str_tip_skip_copying,y
@@ -1115,13 +1108,10 @@ buf_5_bytes:  .res    5, 0
         DEFINE_CLOSE_PARAMS close_srcfile_params
         DEFINE_CLOSE_PARAMS close_dstfile_params
 
-        filecopy_buffer := rw_buf
-        kFileCopyBufferSize = kRWBufLen
-
         DEFINE_OPEN_PARAMS open_srcfile_params, path2, src_io_buffer
         DEFINE_OPEN_PARAMS open_dstfile_params, path1, dst_io_buffer
-        DEFINE_READ_PARAMS read_srcfile_params, filecopy_buffer, kFileCopyBufferSize
-        DEFINE_WRITE_PARAMS write_dstfile_params, filecopy_buffer, kFileCopyBufferSize
+        DEFINE_READ_PARAMS read_srcfile_params, copy_buffer, kCopyBufferSize
+        DEFINE_WRITE_PARAMS write_dstfile_params, copy_buffer, kCopyBufferSize
         DEFINE_CREATE_PARAMS create_dir_params, path1, ACCESS_DEFAULT
         DEFINE_CREATE_PARAMS create_params, path1, 0
 
@@ -1590,7 +1580,7 @@ dst_size:       .word   0
         sta     write_dstfile_params::ref_num
         sta     close_dstfile_params::ref_num
 
-loop:   copy16  #kFileCopyBufferSize, read_srcfile_params::request_count
+loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
         MLI_CALL READ, read_srcfile_params
         beq     :+
         cmp     #ERR_END_OF_FILE
@@ -1605,10 +1595,10 @@ loop:   copy16  #kFileCopyBufferSize, read_srcfile_params::request_count
         jmp     handle_error_code
 
 :       lda     write_dstfile_params::trans_count
-        cmp     #<kFileCopyBufferSize
+        cmp     #<kCopyBufferSize
         bne     finish
         lda     write_dstfile_params::trans_count+1
-        cmp     #>kFileCopyBufferSize
+        cmp     #>kCopyBufferSize
         beq     loop
 
 finish: MLI_CALL CLOSE, close_dstfile_params
@@ -1985,7 +1975,7 @@ read:   sta     read_params::ref_num
 ;;; ============================================================
 
 str_copying:
-        PASCAL_STRING "Copying:"
+        PASCAL_STRING "Copying to RAMCard: "
 
 str_insert:
         PASCAL_STRING "Insert the source disk and press <Return> to continue or <ESC> to cancel"
