@@ -484,6 +484,8 @@ file_loop:
 ;;; ============================================================
 
 .proc did_not_copy
+        ;; TODO: Reset stack?
+
         jmp     finish_dt_copy
 .endproc
 
@@ -656,6 +658,8 @@ done:   dex
 ;;; ============================================================
 
 .proc fail_copy
+        ;; TODO: Reset stack?
+
         copy    #0, copied_flag
         jmp     did_not_copy
 .endproc
@@ -785,6 +789,10 @@ L2A10:  .byte   0
         copy_directory := copy_directory_impl::start
 
 ;;; ============================================================
+;;; Copy a normal (non-directory) file. File info *not* copied.
+;;; Inputs: |open_srcfile_params| populated
+;;;         |open_dstfile_params| populated; file already created
+;;; Errors: fail_copy is called; if it returns, operations retried
 
 .proc copy_normal_file
         ;; Open source
@@ -961,7 +969,7 @@ slot:   .byte   0
 
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
         write_block_params_unit_num := write_block_params::unit_num
-        DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + 512, 1
+        DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + BLOCK_SIZE, 1
         write_block2_params_unit_num := write_block2_params::unit_num
 
         PAD_TO $2D00
@@ -1251,16 +1259,15 @@ done:   return  #0
 
 .proc ascend_directory
         jsr     do_close_file
-        jsr     noop
         jsr     remove_filename_from_path2
         jsr     pop_index_from_stack
         jsr     open_src_dir
-        jsr     L340C
-        jsr     remove_filename_from_path1_alt2
+        jsr     advance_to_target_entry
+        jsr     remove_filename_from_path1
         rts
 .endproc
 
-.proc L340C
+.proc advance_to_target_entry
 :       lda     entry_index_in_dir
         cmp     target_index
         beq     :+
@@ -1291,7 +1298,7 @@ loop:   jsr     read_file_entry
         lda     #0
         sta     copy_err_flag
 
-        jsr     copy_entry_alt
+        jsr     copy_entry
 
         lda     copy_err_flag   ; don't recurse if the copy failed
         bne     loop
@@ -1319,14 +1326,6 @@ done:   jsr     do_close_file
         ;; Set on error during copying of a single file
 copy_err_flag:
         .byte   0
-
-copy_entry_alt:
-        jmp     copy_entry
-
-remove_filename_from_path1_alt2:
-        jmp     remove_filename_from_path1_alt
-
-noop:   rts
 
 ;;; ============================================================
 
@@ -1412,16 +1411,11 @@ is_dir: lda     #$FF
 :       lda     is_dir_flag
         beq     :+
         jmp     copy_directory
-:       jmp     copy_file
+:       jmp     copy_normal_file
 
 is_dir_flag:
         .byte   0
 .endproc
-
-;;; ============================================================
-
-remove_filename_from_path1_alt:
-        jmp     remove_filename_from_path1
 
 ;;; ============================================================
 ;;; Copy an entry in a directory. For files, the content is copied.
@@ -1478,7 +1472,7 @@ do_file:
         jsr     append_filename_to_path2
 
         ;; Do the copy
-        jsr     copy_file
+        jsr     copy_normal_file
         jsr     remove_filename_from_path2
         jsr     remove_filename_from_path1
 
@@ -1563,13 +1557,18 @@ dst_size:       .word   0
 
 
 ;;; ============================================================
-;;; Copy a normal (non-directory) file;
+;;; Copy a normal (non-directory) file. File info is copied too.
+;;; Inputs: |open_srcfile_params| populated
+;;;         |open_dstfile_params| populated; file already created
+;;; Errors: handle_error_code is invoked
 
-.proc copy_file
+.proc copy_normal_file
+        ;; Open source
         MLI_CALL OPEN, open_srcfile_params
         beq     :+
         jsr     handle_error_code
 
+        ;; Open destination
 :       MLI_CALL OPEN, open_dstfile_params
         beq     :+
         jmp     handle_error_code
@@ -1581,31 +1580,44 @@ dst_size:       .word   0
         sta     write_dstfile_params::ref_num
         sta     close_dstfile_params::ref_num
 
+        ;; Read a chunk
 loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
         MLI_CALL READ, read_srcfile_params
         beq     :+
         cmp     #ERR_END_OF_FILE
-        beq     finish
+        beq     close
         jmp     handle_error_code
 
+        ;; Write the chunk
 :       copy16  read_srcfile_params::trans_count, write_dstfile_params::request_count
         ora     read_srcfile_params::trans_count
-        beq     finish
+        beq     close
         MLI_CALL WRITE, write_dstfile_params
         beq     :+
         jmp     handle_error_code
 
+        ;; More to copy?
 :       lda     write_dstfile_params::trans_count
         cmp     #<kCopyBufferSize
-        bne     finish
+        bne     close
         lda     write_dstfile_params::trans_count+1
         cmp     #>kCopyBufferSize
         beq     loop
 
-finish: MLI_CALL CLOSE, close_dstfile_params
+        ;; Close source and destination
+close:  MLI_CALL CLOSE, close_dstfile_params
         MLI_CALL CLOSE, close_srcfile_params
-        jsr     get_file_info_and_copy
-        jsr     do_set_file_info
+
+        ;; Copy file info
+        MLI_CALL GET_FILE_INFO, get_path2_info_params
+        beq     :+
+        jmp     handle_error_code
+:       COPY_BYTES $B, get_path2_info_params::access, get_path1_info_params::access
+
+        copy    #7, get_path1_info_params ; SET_FILE_INFO param_count
+        MLI_CALL SET_FILE_INFO, get_path1_info_params
+        copy    #10, get_path1_info_params ; GET_FILE_INFO param_count
+
         rts
 .endproc
 
@@ -1749,27 +1761,6 @@ loop2:  lda     entry_path1,y
         rts
 .endproc
 
-;;; ============================================================
-
-.proc do_set_file_info
-        lda     #7              ; SET_FILE_INFO param_count
-        sta     get_path1_info_params
-        MLI_CALL SET_FILE_INFO, get_path1_info_params
-        lda     #10             ; GET_FILE_INFO param_count
-        sta     get_path1_info_params
-        rts
-.endproc
-
-.proc get_file_info_and_copy
-        MLI_CALL GET_FILE_INFO, get_path2_info_params
-        bne     fail
-        COPY_BYTES $B, get_path2_info_params::access, get_path1_info_params::access
-        rts
-
-fail:   pla
-        pla
-        rts
-.endproc
 
 ;;; ============================================================
 ;;; Compute first offset into selector file - A*16 + 2
@@ -2038,6 +2029,8 @@ str_not_completed:
 ;;; and invoke app.
 
 .proc handle_error_code
+        ;; TODO: Reset stack?
+
         cmp     #ERR_OVERRUN_ERROR
         bne     :+
         jsr     show_no_space_prompt
