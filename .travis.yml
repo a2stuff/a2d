@@ -15,7 +15,7 @@ before_deploy:
   make -C /tmp/cadius &&
   make -C /tmp/cadius install
 - cd $TRAVIS_BUILD_DIR/ &&
-  res/package.sh
+  bin/package.sh
 
 deploy:
   provider: releases

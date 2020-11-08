@@ -8,7 +8,7 @@ syntax details.
 
 * Spaces, not tabs
 * "Tab" stops for alignment are 8 characters (Emacs asm-mode default)
-* `res/asmfmt.pl` can be used for formatting
+* `bin/asmfmt.pl` can be used for formatting
 * No trailing whitespace
 
 

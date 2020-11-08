@@ -4,7 +4,7 @@
 # https://github.com/mach-kernel/cadius
 
 set -e
-source "res/util.sh"
+source "bin/util.sh"
 
 if ! command -v "cadius" >/dev/null; then
     cecho red "Cadius not installed."
@@ -73,11 +73,11 @@ suppress cadius CREATEFOLDER $IMGFILE_PART2 "/$VOLNAME_PART2/Optional" --quiet -
 add_file $IMGFILE_COMPLETE "selector/out/selector.built" "/$VOLNAME_COMPLETE/Optional" "Selector" F10000
 add_file $IMGFILE_PART2 "selector/out/selector.built" "/$VOLNAME_PART2/Optional" "Selector" F10000
 
-for path in $(cat desk.acc/TARGETS | res/targets.pl dirs); do
+for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do
     suppress cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/$path" --quiet --no-case-bits
     suppress cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_PART2/$path" --quiet --no-case-bits
 done
-for line in $(cat desk.acc/TARGETS | res/targets.pl); do
+for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
     IFS=',' read -ra array <<< "$line"
     file="${array[0]}"
     path="${array[1]}"

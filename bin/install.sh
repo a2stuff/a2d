@@ -5,10 +5,10 @@
 #
 # Usage:
 #
-#   INSTALL_IMG=/path/to/hd.2mg INSTALL_PATH=/hd/a2.desktop res/install.sh
+#   INSTALL_IMG=/path/to/hd.2mg INSTALL_PATH=/hd/a2.desktop bin/install.sh
 
 set -e
-source "res/util.sh"
+source "bin/util.sh"
 
 if [ -z "$INSTALL_IMG" ]; then
     cecho red "Variable \$INSTALL_IMG not set, aborting."
@@ -66,10 +66,10 @@ else
     add_file "$INSTALL_IMG" "selector/out/selector.built" "$INSTALL_PATH/optional" "Selector" F10000
 fi
 
-for path in $(cat desk.acc/TARGETS | res/targets.pl dirs); do
+for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do
     suppress cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/$path" --quiet --no-case-bits
 done
-for line in $(cat desk.acc/TARGETS | res/targets.pl); do
+for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
     IFS=',' read -ra array <<< "$line"
     file="${array[0]}"
     path="${array[1]}"

@@ -47,7 +47,7 @@ But DeskTop itself is a big, monolithic application with multiple overlays,
 so we need to understand nearly all of it before we can start moving code
 around.
 
-The `res/stats.pl` tool provides is a quick and dirty analysis of the
+The `bin/stats.pl` tool provides is a quick and dirty analysis of the
 progress in turning raw da65 output into something we can confidently
 modify. Here's a snapshot of the output for some files that could use
 attention:

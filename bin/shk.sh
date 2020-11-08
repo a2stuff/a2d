@@ -6,7 +6,7 @@
 # https://nulib.com
 
 set -e
-source "res/util.sh"
+source "bin/util.sh"
 
 NULIB2=$(command -v nulib2 || echo '')
 NULIB2="${PNULIB2:-$HOME/dev/nulib2/nulib2/nulib2}"
@@ -38,11 +38,11 @@ add_file "desktop/out/desktop.built" "DESKTOP2" F10000
 mkdir -p $tempdir/OPTIONAL
 add_file "selector/out/selector.built" "OPTIONAL/SELECTOR" F10000
 
-for path in $(cat desk.acc/TARGETS | res/targets.pl dirs); do
+for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do
     uc=$(echo "$path" | tr /a-z/ /A-Z/)
     mkdir -p "$tempdir/$uc"
 done
-for line in $(cat desk.acc/TARGETS | res/targets.pl); do
+for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
     IFS=',' read -ra array <<< "$line"
     file="${array[0]}"
     path="${array[1]}"

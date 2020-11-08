@@ -3,7 +3,7 @@
 # Run this from the top level directory
 
 set -e
-source "res/util.sh"
+source "bin/util.sh"
 
 MOUNT_DIR="mount"
 
@@ -35,11 +35,11 @@ add_file "desktop/out/desktop.built" "DESKTOP2" F10000
 mkdir -p $MOUNT_DIR/OPTIONAL
 add_file "selector/out/selector.built" "OPTIONAL/SELECTOR" F10000
 
-for path in $(cat desk.acc/TARGETS | res/targets.pl dirs); do
+for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do
     uc=$(echo "$path" | tr /a-z/ /A-Z/)
     mkdir -p "$MOUNT_DIR/$uc"
 done
-for line in $(cat desk.acc/TARGETS | res/targets.pl); do
+for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
     IFS=',' read -ra array <<< "$line"
     file="${array[0]}"
     path="${array[1]}"

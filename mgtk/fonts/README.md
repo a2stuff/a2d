@@ -2,11 +2,11 @@
 
 This is a collection of fonts that work with MGTK.
 
-The `res/convert_font.pl` tool can be used to convert a 768-byte HiRes
+The `bin/convert_font.pl` tool can be used to convert a 768-byte HiRes
 Character Generator (HRCG) font to MTGK format. Several are included
 below.
 
-The `res/dump_font.pl` tool can be used to preview a font, displaying
+The `bin/dump_font.pl` tool can be used to preview a font, displaying
 an ASCII rendition of the pixels on the console.
 
 If these are transferred to an Apple disk and changed to file type $07
