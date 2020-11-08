@@ -746,14 +746,14 @@ unit_num:
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 on_line_buffer: .res 17, 0
 
-copied_flag:                    ; set to path0's length, or reset
+copied_flag:                    ; set to dst_path's length, or reset
         .byte   0
 
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, buffer
-        DEFINE_SET_PREFIX_PARAMS set_prefix_params, path0
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, src_path
+        DEFINE_SET_PREFIX_PARAMS set_prefix_params, dst_path
 
-        DEFINE_CREATE_PARAMS create_params, path0, ACCESS_DEFAULT, 0, 0
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, buffer
+        DEFINE_CREATE_PARAMS create_dt_dir_params, dst_path, ACCESS_DEFAULT, FT_DIRECTORY, 0, ST_LINKED_DIRECTORY
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, src_path
 
 kNumFilenames = 10
 
@@ -773,9 +773,11 @@ filename_table:
         .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8,str_f9,str_f10
         ASSERT_ADDRESS_TABLE_SIZE filename_table, kNumFilenames
 
+        kVtabCopyingMsg = 12
 str_copying_to_ramcard:
         PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
 
+        kVtabCopyingTip = 23
 str_tip_skip_copying:
         PASCAL_STRING {"Tip: To skip copying to RAMCard, hold down ",15,27,65,24,14," when launching."}
 
@@ -799,23 +801,29 @@ selector_signature:
 saved_stack:
         .byte   0
 
-path0:  .res    ::kPathBufferSize, 0
-buffer: .res    ::kPathBufferSize, 0
+;;; Holds the destination path, e.g. "/RAM/DESKTOP"
+dst_path:  .res    ::kPathBufferSize, 0
 
+;;; Holds the source path, e.g. "/HD/A2D"
+src_path: .res    ::kPathBufferSize, 0
+
+;;; Current file being copied
 filename_buf:
         .res 16, 0
 
 filenum:
         .byte   0               ; index of file being copied
 
-slot:   .byte   0
-
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
         DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + BLOCK_SIZE, 1
 
+str_slash_desktop:
+        PASCAL_STRING "/DeskTop"
+
 ;;; ============================================================
 
-start:  sta     MIXCLR
+.proc start
+        sta     MIXCLR
         sta     HIRES
         sta     TXTCLR
         sta     CLR80VID
@@ -940,10 +948,9 @@ next_slot:
 found_slot:
         lda     slot_ptr+1
         and     #$0F            ; slot # in A
-:       sta     slot
 
         ;; Synthesize unit_num, verify it's a device
-        asl     a
+:       asl     a
         asl     a
         asl     a
         asl     a
@@ -966,12 +973,12 @@ found_slot:
         tay
 
         iny
-        sty     path0
+        sty     dst_path
         lda     #'/'
         sta     on_line_buffer
-        sta     path0+1
+        sta     dst_path+1
 :       lda     on_line_buffer,y
-        sta     path0+1,y
+        sta     dst_path+1,y
         dey
         bne     :-
 
@@ -980,7 +987,7 @@ found_slot:
         jsr     set_copied_to_ramcard_flag
 
         ;; Already installed?
-        addr_call set_ramcard_prefix, path0
+        addr_call set_ramcard_prefix, dst_path
         jsr     check_desktop2_on_device
         bcs     start_copy      ; No, start copy.
 
@@ -989,19 +996,7 @@ found_slot:
         jsr     set_copied_to_ramcard_flag
         jsr     copy_orig_prefix_to_desktop_orig_prefix
         jmp     did_not_copy
-
-str_slash_desktop:
-        PASCAL_STRING "/DeskTop"
-
-        ;; Overwrite first bytes of get_file_info_params
-.params dir_file_info
-        .byte   $A              ; param_count
-        .addr   0               ; pathname
-        .byte   ACCESS_DEFAULT  ; access
-        .byte   FT_DIRECTORY    ; filetype
-        .word   0               ; aux_type
-        .byte   ST_LINKED_DIRECTORY ; storage_type
-.endparams
+.endproc
 
 .proc start_copy
         ptr := $06
@@ -1010,50 +1005,44 @@ str_slash_desktop:
         MLI_CALL GET_PREFIX, get_prefix_params
         beq     :+
         jmp     did_not_copy
-:       dec     buffer
+:       dec     src_path
 
         ;; Record that the copy was performed.
         ldx     #$80
         jsr     set_copied_to_ramcard_flag
 
-        ldy     buffer
-:       lda     buffer,y
+        ldy     src_path
+:       lda     src_path,y
         sta     header_orig_prefix,y
         dey
         bpl     :-
 
         ;; --------------------------------------------------
-
-        tsx                     ; In case of error
-        stx     saved_stack
-
-        ;; --------------------------------------------------
         ;; Create desktop directory, e.g. "/RAM/DESKTOP"
-        ldy     path0
+        ldy     dst_path
         ldx     #0
 :       iny
         inx
         lda     str_slash_desktop,x
-        sta     path0,y
+        sta     dst_path,y
         cpx     str_slash_desktop
         bne     :-
-        sty     path0
+        sty     dst_path
 
-        ;; copy file_type, aux_type, storage_type
-        ldx     #7
-:       lda     dir_file_info,x
-        sta     get_file_info_params,x
-        dex
-        cpx     #3
-        bne     :-
-
-        jsr     create_file_for_copy
-
-        copy    path0, copied_flag ; reset on error
+        MLI_CALL CREATE, create_dt_dir_params
+        beq     :+
+        cmp     #ERR_DUPLICATE_FILENAME
+        beq     :+
+        jsr     did_not_copy
+:
 
         ;; --------------------------------------------------
         ;; Loop over listed files to copy
 
+        tsx                     ; In case of error
+        stx     saved_stack
+
+        copy    dst_path, copied_flag ; reset on error
         copy    #0, filenum
 
 file_loop:
@@ -1083,7 +1072,7 @@ file_loop:
 .proc finish_dt_copy
         lda     copied_flag
         beq     :+
-        sta     path0
+        sta     dst_path
         MLI_CALL SET_PREFIX, set_prefix_params
 :       jsr     update_self_file
         jsr     copy_orig_prefix_to_desktop_orig_prefix
@@ -1186,89 +1175,89 @@ count:  .byte   0
 
 ;;; ============================================================
 
-.proc append_filename_to_buffer
+.proc append_filename_to_src_path
         lda     filename_buf
         bne     :+
         rts
 
 :       ldx     #0
-        ldy     buffer
+        ldy     src_path
         lda     #'/'
-        sta     buffer+1,y
+        sta     src_path+1,y
         iny
 loop:   cpx     filename_buf
         bcs     done
         lda     filename_buf+1,x
-        sta     buffer+1,y
+        sta     src_path+1,y
         inx
         iny
         jmp     loop
 
-done:   sty     buffer
+done:   sty     src_path
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc remove_filename_from_buffer
-        ldx     buffer
+.proc remove_filename_from_src_path
+        ldx     src_path
         bne     :+
         rts
 
-:       lda     buffer,x
+:       lda     src_path,x
         cmp     #'/'
         beq     done
         dex
         bne     :-
-        stx     buffer
+        stx     src_path
         rts
 
 done:   dex
-        stx     buffer
+        stx     src_path
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc append_filename_to_path0
+.proc append_filename_to_dst_path
         lda     filename_buf
         bne     :+
         rts
 
 :       ldx     #0
-        ldy     path0
+        ldy     dst_path
         lda     #'/'
-        sta     path0+1,y
+        sta     dst_path+1,y
         iny
 loop:   cpx     filename_buf
         bcs     done
         lda     filename_buf+1,x
-        sta     path0+1,y
+        sta     dst_path+1,y
         inx
         iny
         jmp     loop
 
-done:   sty     path0
+done:   sty     dst_path
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc remove_filename_from_path0
-        ldx     path0
+.proc remove_filename_from_dst_path
+        ldx     dst_path
         bne     :+
         rts
 
-:       lda     path0,x
+:       lda     dst_path,x
         cmp     #'/'
         beq     done
         dex
         bne     :-
-        stx     path0
+        stx     dst_path
         rts
 
 done:   dex
-        stx     path0
+        stx     dst_path
         rts
 .endproc
 
@@ -1281,7 +1270,7 @@ done:   dex
         sbc     str_copying_to_ramcard
         lsr     a               ; / 2 to center
         sta     CH
-        lda     #12
+        lda     #kVtabCopyingMsg
         jsr     VTABZ
         ldy     #0
 :       iny
@@ -1299,7 +1288,7 @@ done:   dex
         adc     #4              ; 4 control characters (for MouseText)
         lsr     a               ; / 2 to center
         sta     CH
-        lda     #23
+        lda     #kVtabCopyingTip
         jsr     VTABZ
         ldy     #0
 :       iny
@@ -1323,11 +1312,11 @@ done:   dex
 .endproc
 
 ;;; ============================================================
-;;; Copy |filename| from |buffer| to |path0|
+;;; Copy |filename| from |src_path| to |dst_path|
 
 .proc copy_file
-        jsr     append_filename_to_path0
-        jsr     append_filename_to_buffer
+        jsr     append_filename_to_dst_path
+        jsr     append_filename_to_src_path
         MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
         cmp     #ERR_FILE_NOT_FOUND
@@ -1336,15 +1325,15 @@ done:   dex
 :
 
         ;; Set up source path
-        ldy     buffer
-:       lda     buffer,y
+        ldy     src_path
+:       lda     src_path,y
         sta     generic_copy::path2,y
         dey
         bpl     :-
 
         ;; Set up destination path
-        ldy     path0
-:       lda     path0,y
+        ldy     dst_path
+:       lda     dst_path,y
         sta     generic_copy::path1,y
         dey
         bpl     :-
@@ -1357,31 +1346,11 @@ done:   dex
         jsr     generic_copy::do_copy
 
 cleanup:
-        jsr     remove_filename_from_buffer
-        jsr     remove_filename_from_path0
+        jsr     remove_filename_from_src_path
+        jsr     remove_filename_from_dst_path
 
 noop:
 done:   rts
-.endproc
-
-;;; ============================================================
-
-;;; TODO: This is only used in one place with redundant logic; simplify.
-
-.proc create_file_for_copy
-        ;; Copy file_type, aux_type, storage_type
-        ldx     #7
-:       lda     get_file_info_params,x
-        sta     create_params,x
-        dex
-        cpx     #3
-        bne     :-
-        MLI_CALL CREATE, create_params
-        beq     :+
-        cmp     #ERR_DUPLICATE_FILENAME
-        beq     :+
-        jsr     fail_copy
-:       rts
 .endproc
 
 ;;; ============================================================
