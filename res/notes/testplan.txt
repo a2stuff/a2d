@@ -84,3 +84,5 @@
 
 * Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that subdirectories under DESK.ACC are copied to /RAM/DESKTOP/DESK.ACC.
 * Run DeskTop on a system with Slinky Ramdisk. Verify that subdirectories under DESK.ACC are copied to /RAM5/DESKTOP/DESK.ACC (or appropriate volume path).
+
+* Start DeskTop with a hard disk and a 5.25" floppy mounted. Remove the floppy, and double-click the floppy icon, and dismiss the "The volume cannot be found." dialog. Verify that the floppy icon disappears, and that no additional icons are added.

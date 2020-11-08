@@ -6475,7 +6475,9 @@ L72A8:  .word   0
         jsr     mark_icons_not_opened_2
         lda     selected_window_index
         bne     :+
-        sta     drive_to_refresh
+
+        lda     icon_params2
+        sta     drive_to_refresh ; icon_number
         jsr     cmd_check_single_drive_by_icon_number
 
 :       ldx     saved_stack
