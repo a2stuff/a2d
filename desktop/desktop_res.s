@@ -1887,6 +1887,9 @@ app_mask:
         ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::clock_24hours
         .byte   0
 
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::rgb_color
+        .byte   0
+
         ;; Reserved for future use...
 
         PAD_TO ::SETTINGS + .sizeof(DeskTopSettings)

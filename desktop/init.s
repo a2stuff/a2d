@@ -190,7 +190,7 @@ end:
 .scope
         MGTK_RELAY_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
-        jsr     main::set_mono_mode
+        jsr     main::set_rgb_mode
         MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor

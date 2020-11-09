@@ -200,6 +200,9 @@ Input: A,X = FileEntry structure.
 
 Changes mouse cursor to I-beam.
 
+#### `JUMP_TABLE_MONO_MODE` ($4063) *
+
+Set DHR color or monochrome mode, based on control panel setting.
 
 <!-- ============================================================ -->
 

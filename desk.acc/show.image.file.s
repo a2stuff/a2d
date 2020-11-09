@@ -282,7 +282,7 @@ on_key:
 :       jmp     input_loop
 
 exit:
-        jsr     set_bw_mode
+        jsr     JUMP_TABLE_RGB_MODE
 
         ;; Force desktop redraw
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo

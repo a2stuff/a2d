@@ -51,8 +51,9 @@ JT_GET_WIN_PATH:        jmp     get_window_path         ; *
 JT_HILITE_MENU:         jmp     toggle_menu_hilite      ; *
 JT_ADJUST_FILEENTRY:    jmp     adjust_fileentry_case   ; *
 JT_CUR_IBEAM:           jmp     set_cursor_ibeam        ; *
+JT_RGB_MODE:            jmp     set_rgb_mode            ; *
         .assert JUMP_TABLE_MAIN_LOOP = JT_MAIN_LOOP, error, "Jump table mismatch"
-        .assert JUMP_TABLE_CUR_IBEAM = JT_CUR_IBEAM, error, "Jump table mismatch"
+        .assert JUMP_TABLE_RGB_MODE = JT_RGB_MODE, error, "Jump table mismatch"
 
         ;; Main Loop
 .proc main_loop
@@ -66,7 +67,7 @@ JT_CUR_IBEAM:           jmp     set_cursor_ibeam        ; *
         copy    #0, loop_counter
 
         jsr     show_clock
-        jsr     force_iigs_mono ; in case it was reset by control panel
+        jsr     reset_iigs_rgb ; in case it was reset by control panel
 
         ;; Poll drives for updates
         jsr     check_disk_inserted_ejected
@@ -10326,6 +10327,12 @@ mod7:   adc     #7              ; Returns (A+3) modulo 7
 
 ;;; ============================================================
 
+.proc set_rgb_mode
+        bit     SETTINGS + DeskTopSettings::rgb_color
+        bmi     set_color_mode
+        bpl     set_mono_mode
+.endproc
+
 .proc set_color_mode
         ;; AppleColor Card - Mode 2 (Color 140x192)
         sta     SET80VID
@@ -10393,16 +10400,24 @@ done:   rts
         rts
 .endproc
 
-;;; On IIgs, force monochrome mode. No-op otherwise.
-.proc force_iigs_mono
+;;; On IIgs, force preferred RGB mode. No-op otherwise.
+.proc reset_iigs_rgb
         jsr     test_iigs
-        bcs     :+
+        bcs     done
 
-        lda     NEWVIDEO
+        bit     SETTINGS + DeskTopSettings::rgb_color
+        bmi     color
+
+mono:   lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
         sta     NEWVIDEO
+        rts
 
-:       rts
+color:  lda     NEWVIDEO
+        and     #<~(1<<5)        ; Color
+        sta     NEWVIDEO
+
+done:   rts
 .endproc
 
 ;;; ============================================================
@@ -13439,163 +13454,6 @@ coords: DEFINE_POINT 0,0
 .endproc
 
 ;;; ============================================================
-;;; Save/Restore window state at shutdown/launch
-
-.proc save_restore_windows
-        desktop_file_io_buf := $1000
-        desktop_file_data_buf := $1400
-        kFileSize = 2 + 8 * .sizeof(DeskTopFileItem) + 1
-
-        DEFINE_CREATE_PARAMS create_params, str_desktop_file, ACCESS_DEFAULT, $F1
-        DEFINE_OPEN_PARAMS open_params, str_desktop_file, desktop_file_io_buf
-        DEFINE_READ_PARAMS read_params, desktop_file_data_buf, kFileSize
-        DEFINE_READ_PARAMS write_params, desktop_file_data_buf, kFileSize
-        DEFINE_CLOSE_PARAMS close_params
-str_desktop_file:
-        PASCAL_STRING "DeskTop.file"
-
-.proc save
-        data_ptr := $06
-        winfo_ptr := $08
-
-        ;; Write version bytes
-        copy    #kDeskTopVersionMajor, desktop_file_data_buf
-        copy    #kDeskTopVersionMinor, desktop_file_data_buf+1
-        copy16  #desktop_file_data_buf+2, data_ptr
-
-        ;; Get first window pointer
-        MGTK_RELAY_CALL MGTK::FrontWindow, window_id
-        lda     window_id
-        beq     finish
-        jsr     window_lookup
-        stax    winfo_ptr
-        copy    #0, depth
-
-        ;; Is there a lower window?
-recurse_down:
-        next_ptr := $0A
-
-        ldy     #MGTK::Winfo::nextwinfo
-        copy16in (winfo_ptr),y, next_ptr
-        ora     next_ptr
-        beq     recurse_up      ; Nope - just finish.
-
-        ;; Yes, recurse
-        inc     depth
-        lda     winfo_ptr
-        pha
-        lda     winfo_ptr+1
-        pha
-
-        copy16  next_ptr, winfo_ptr
-        jmp     recurse_down
-
-recurse_up:
-        jsr     write_window_info
-        lda     depth           ; Last window?
-        beq     finish          ; Yes - we're done!
-
-        dec     depth           ; No, pop the stack and write the next
-        pla
-        sta     winfo_ptr+1
-        pla
-        sta     winfo_ptr
-        jmp     recurse_up
-
-finish: ldy     #0              ; Write sentinel
-        tay
-        sta     (data_ptr),y
-
-        ;; Write out file, to current prefix.
-        jsr     write_out_file
-
-        ;; If DeskTop was copied to RAMCard, also write to original prefix.
-        jsr     get_copied_to_ramcard_flag
-        bpl     exit
-        addr_call copy_desktop_orig_prefix, path_buffer
-        addr_call append_to_path_buffer, str_desktop_file
-        lda     #<path_buffer
-        sta     create_params::pathname
-        sta     open_params::pathname
-        lda     #>path_buffer
-        sta     create_params::pathname+1
-        sta     open_params::pathname+1
-        jsr     write_out_file
-
-exit:   rts
-
-.proc write_window_info
-        path_ptr := $0A
-
-        ;; Find name
-        ldy     #MGTK::Winfo::window_id
-        lda     (winfo_ptr),y
-        jsr     get_window_path
-        stax    path_ptr
-
-        ;; Copy name in
-        ldy     #::kPathBufferSize-1
-:       lda     (path_ptr),y
-        sta     (data_ptr),y
-        dey
-        bpl     :-
-
-        ;; Assemble rect - left/top first
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     (winfo_ptr),y
-        sta     bounds,x
-        dey
-        dex
-        bpl     :-
-        ;; width/height next
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect  + MGTK::Rect::x2 + .sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     (winfo_ptr),y
-        sta     bounds + MGTK::Rect::x2,x
-        dey
-        dex
-        bpl     :-
-
-        add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
-        rts
-
-bounds: .tag    MGTK::Rect
-
-.endproc                        ; write_window_info
-
-window_id := findwindow_window_id
-
-depth:  .byte   0
-
-.endproc                        ; save
-
-.proc open
-        MLI_RELAY_CALL OPEN, open_params
-        rts
-.endproc
-
-.proc close
-        MLI_RELAY_CALL CLOSE, close_params
-        rts
-.endproc
-
-.proc write_out_file
-        MLI_RELAY_CALL CREATE, create_params
-        jsr     open
-        bcs     :+
-        lda     open_params::ref_num
-        sta     write_params::ref_num
-        sta     close_params::ref_num
-        MLI_RELAY_CALL WRITE, write_params
-        jsr     close
-:       rts
-.endproc
-
-.endproc
-save_windows := save_restore_windows::save
-
-;;; ============================================================
 
         PAD_TO $A500
 
@@ -16412,6 +16270,163 @@ prodos_2_5:
 ytmp:   .word   0
 
 .endproc
+
+;;; ============================================================
+;;; Save/Restore window state at shutdown/launch
+
+.proc save_restore_windows
+        desktop_file_io_buf := $1000
+        desktop_file_data_buf := $1400
+        kFileSize = 2 + 8 * .sizeof(DeskTopFileItem) + 1
+
+        DEFINE_CREATE_PARAMS create_params, str_desktop_file, ACCESS_DEFAULT, $F1
+        DEFINE_OPEN_PARAMS open_params, str_desktop_file, desktop_file_io_buf
+        DEFINE_READ_PARAMS read_params, desktop_file_data_buf, kFileSize
+        DEFINE_READ_PARAMS write_params, desktop_file_data_buf, kFileSize
+        DEFINE_CLOSE_PARAMS close_params
+str_desktop_file:
+        PASCAL_STRING "DeskTop.file"
+
+.proc save
+        data_ptr := $06
+        winfo_ptr := $08
+
+        ;; Write version bytes
+        copy    #kDeskTopVersionMajor, desktop_file_data_buf
+        copy    #kDeskTopVersionMinor, desktop_file_data_buf+1
+        copy16  #desktop_file_data_buf+2, data_ptr
+
+        ;; Get first window pointer
+        MGTK_RELAY_CALL MGTK::FrontWindow, window_id
+        lda     window_id
+        beq     finish
+        jsr     window_lookup
+        stax    winfo_ptr
+        copy    #0, depth
+
+        ;; Is there a lower window?
+recurse_down:
+        next_ptr := $0A
+
+        ldy     #MGTK::Winfo::nextwinfo
+        copy16in (winfo_ptr),y, next_ptr
+        ora     next_ptr
+        beq     recurse_up      ; Nope - just finish.
+
+        ;; Yes, recurse
+        inc     depth
+        lda     winfo_ptr
+        pha
+        lda     winfo_ptr+1
+        pha
+
+        copy16  next_ptr, winfo_ptr
+        jmp     recurse_down
+
+recurse_up:
+        jsr     write_window_info
+        lda     depth           ; Last window?
+        beq     finish          ; Yes - we're done!
+
+        dec     depth           ; No, pop the stack and write the next
+        pla
+        sta     winfo_ptr+1
+        pla
+        sta     winfo_ptr
+        jmp     recurse_up
+
+finish: ldy     #0              ; Write sentinel
+        tay
+        sta     (data_ptr),y
+
+        ;; Write out file, to current prefix.
+        jsr     write_out_file
+
+        ;; If DeskTop was copied to RAMCard, also write to original prefix.
+        jsr     get_copied_to_ramcard_flag
+        bpl     exit
+        addr_call copy_desktop_orig_prefix, path_buffer
+        addr_call append_to_path_buffer, str_desktop_file
+        lda     #<path_buffer
+        sta     create_params::pathname
+        sta     open_params::pathname
+        lda     #>path_buffer
+        sta     create_params::pathname+1
+        sta     open_params::pathname+1
+        jsr     write_out_file
+
+exit:   rts
+
+.proc write_window_info
+        path_ptr := $0A
+
+        ;; Find name
+        ldy     #MGTK::Winfo::window_id
+        lda     (winfo_ptr),y
+        jsr     get_window_path
+        stax    path_ptr
+
+        ;; Copy name in
+        ldy     #::kPathBufferSize-1
+:       lda     (path_ptr),y
+        sta     (data_ptr),y
+        dey
+        bpl     :-
+
+        ;; Assemble rect - left/top first
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     (winfo_ptr),y
+        sta     bounds,x
+        dey
+        dex
+        bpl     :-
+        ;; width/height next
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect  + MGTK::Rect::x2 + .sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     (winfo_ptr),y
+        sta     bounds + MGTK::Rect::x2,x
+        dey
+        dex
+        bpl     :-
+
+        add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
+        rts
+
+bounds: .tag    MGTK::Rect
+
+.endproc                        ; write_window_info
+
+window_id := findwindow_window_id
+
+depth:  .byte   0
+
+.endproc                        ; save
+
+.proc open
+        MLI_RELAY_CALL OPEN, open_params
+        rts
+.endproc
+
+.proc close
+        MLI_RELAY_CALL CLOSE, close_params
+        rts
+.endproc
+
+.proc write_out_file
+        MLI_RELAY_CALL CREATE, create_params
+        jsr     open
+        bcs     :+
+        lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+        MLI_RELAY_CALL WRITE, write_params
+        jsr     close
+:       rts
+.endproc
+
+.endproc
+save_windows := save_restore_windows::save
 
 ;;; ============================================================
 

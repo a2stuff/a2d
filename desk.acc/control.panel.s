@@ -53,7 +53,7 @@ da_start:
 
 kDAWindowId     = 61
 kDAWidth        = 416
-kDAHeight       = 122
+kDAHeight       = 132
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
@@ -98,12 +98,14 @@ penwidth:       .byte   4
 penheight:      .byte   2
 .endparams
 
-frame_p1:       DEFINE_POINT 0, 58
-frame_p2:       DEFINE_POINT kDAWidth, 58
-frame_p3:       DEFINE_POINT 190, 0
-frame_p4:       DEFINE_POINT 190, kDAHeight
-frame_p5:       DEFINE_POINT 190, 102
-frame_p6:       DEFINE_POINT kDAWidth, 102
+frame_l1a:       DEFINE_POINT 0, 68
+frame_l1b:       DEFINE_POINT 190, 68
+frame_l2a:       DEFINE_POINT 190, 58
+frame_l2b:       DEFINE_POINT kDAWidth, 58
+frame_l3a:       DEFINE_POINT 190, 0
+frame_l3b:       DEFINE_POINT 190, kDAHeight
+frame_l4a:       DEFINE_POINT 190, 102
+frame_l4b:       DEFINE_POINT kDAWidth, 102
 
 frame_rect:     DEFINE_RECT AS_WORD(-1), AS_WORD(-1), kDAWidth - 4 + 2, kDAHeight - 2 + 2
 
@@ -213,15 +215,15 @@ textfont:       .addr   0
 kRadioButtonWidth       = 15
 kRadioButtonHeight      = 7
 
-.params checked_params
+.params checked_rb_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
-mapbits:        .addr   checked_bitmap
+mapbits:        .addr   checked_rb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
-checked_bitmap:
+checked_rb_bitmap:
         .byte   PX(%0000111),PX(%1111100),PX(%0000000)
         .byte   PX(%0011100),PX(%0000111),PX(%0000000)
         .byte   PX(%1110001),PX(%1110001),PX(%1100000)
@@ -231,15 +233,15 @@ checked_bitmap:
         .byte   PX(%0011100),PX(%0000111),PX(%0000000)
         .byte   PX(%0000111),PX(%1111100),PX(%0000000)
 
-.params unchecked_params
+.params unchecked_rb_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
-mapbits:        .addr   unchecked_bitmap
+mapbits:        .addr   unchecked_rb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
 cliprect:       DEFINE_RECT 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
-unchecked_bitmap:
+unchecked_rb_bitmap:
         .byte   PX(%0000111),PX(%1111100),PX(%0000000)
         .byte   PX(%0011100),PX(%0000111),PX(%0000000)
         .byte   PX(%1110000),PX(%0000001),PX(%1100000)
@@ -248,6 +250,47 @@ unchecked_bitmap:
         .byte   PX(%1110000),PX(%0000001),PX(%1100000)
         .byte   PX(%0011100),PX(%0000111),PX(%0000000)
         .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+
+kCheckboxWidth       = 17
+kCheckboxHeight      = 8
+
+.params checked_cb_params
+viewloc:        DEFINE_POINT 0, 0, viewloc
+mapbits:        .addr   checked_cb_bitmap
+mapwidth:       .byte   3
+reserved:       .byte   0
+cliprect:       DEFINE_RECT 0, 0, kCheckboxWidth, kCheckboxHeight
+.endparams
+
+checked_cb_bitmap:
+        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
+        .byte   PX(%1111000),PX(%0000000),PX(%1111000)
+        .byte   PX(%1100110),PX(%0000011),PX(%0011000)
+        .byte   PX(%1100001),PX(%1001100),PX(%0011000)
+        .byte   PX(%1100000),PX(%0110000),PX(%0011000)
+        .byte   PX(%1100001),PX(%1001100),PX(%0011000)
+        .byte   PX(%1100110),PX(%0000011),PX(%0011000)
+        .byte   PX(%1111000),PX(%0000000),PX(%1111000)
+        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
+
+.params unchecked_cb_params
+viewloc:        DEFINE_POINT 0, 0, viewloc
+mapbits:        .addr   unchecked_cb_bitmap
+mapwidth:       .byte   3
+reserved:       .byte   0
+cliprect:       DEFINE_RECT 0, 0, kCheckboxWidth, kCheckboxHeight
+.endparams
+
+unchecked_cb_bitmap:
+        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
 
 ;;; ============================================================
 ;;; Desktop Pattern Editor Resources
@@ -329,6 +372,15 @@ rarr_bitmap:
         .byte   PX(%1111110)
         .byte   PX(%1111000)
         .byte   PX(%1100000)
+
+
+str_rgb_color:
+        DEFINE_STRING "RGB Color"
+rgb_color_label_pos:
+        DEFINE_POINT kPatternEditX + 68, kPatternEditY + 59
+
+rect_rgb:
+        DEFINE_RECT_SZ kPatternEditX + 46, kPatternEditY + 50, kCheckboxWidth, kCheckboxHeight
 
 ;;; ============================================================
 ;;; Double-Click Speed Resources
@@ -440,7 +492,7 @@ darr_bitmap:
 ;;; Joystick Calibration Resources
 
 kJoystickCalibrationX = 12
-kJoystickCalibrationY = 68
+kJoystickCalibrationY = 78
 
 str_calibrate_joystick:
         DEFINE_STRING "Calibrate Joystick"
@@ -600,7 +652,7 @@ ipblink_ip_bitmap:
 ;;; 12/24 Hour Resources
 
 kHourDisplayX = 210
-kHourDisplayY = 109
+kHourDisplayY = 114
 
 str_clock:
         DEFINE_STRING "Clock"
@@ -749,6 +801,12 @@ common: bit     dragwindow_params::moved
         cmp     #MGTK::inrect_inside
         IF_EQ
         jmp     handle_pattern_click
+        END_IF
+
+        MGTK_CALL MGTK::InRect, rect_rgb
+        cmp     #MGTK::inrect_inside
+        IF_EQ
+        jmp     handle_rgb_click
         END_IF
 
         MGTK_CALL MGTK::InRect, dblclick_button_rect1
@@ -1076,6 +1134,11 @@ notpencopy:     .byte   MGTK::notpencopy
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
+        MGTK_CALL MGTK::MoveTo, rgb_color_label_pos
+        MGTK_CALL MGTK::DrawText, str_rgb_color
+
+        jsr     draw_rgb_checkbox
+
         ;; ==============================
         ;; Double-Click Speed
 
@@ -1166,12 +1229,14 @@ loop:   copy    arg1,y, arg2,y
         ;; Frame
 
         MGTK_CALL MGTK::SetPenSize, frame_pensize
-        MGTK_CALL MGTK::MoveTo, frame_p1
-        MGTK_CALL MGTK::LineTo, frame_p2
-        MGTK_CALL MGTK::MoveTo, frame_p3
-        MGTK_CALL MGTK::LineTo, frame_p4
-        MGTK_CALL MGTK::MoveTo, frame_p5
-        MGTK_CALL MGTK::LineTo, frame_p6
+        MGTK_CALL MGTK::MoveTo, frame_l1a
+        MGTK_CALL MGTK::LineTo, frame_l1b
+        MGTK_CALL MGTK::MoveTo, frame_l2a
+        MGTK_CALL MGTK::LineTo, frame_l2b
+        MGTK_CALL MGTK::MoveTo, frame_l3a
+        MGTK_CALL MGTK::LineTo, frame_l3b
+        MGTK_CALL MGTK::MoveTo, frame_l4a
+        MGTK_CALL MGTK::LineTo, frame_l4b
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, winfo::penwidth
 
@@ -1237,6 +1302,17 @@ done:   MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
+.proc draw_rgb_checkbox
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+
+        ldax    #rect_rgb
+        ldy     SETTINGS + DeskTopSettings::rgb_color
+        cpy     #$80
+        jsr     draw_checkbox
+
+        rts
+.endproc
+
 
 ;;; A,X = pos ptr, Z = checked
 .proc draw_radio_button
@@ -1248,19 +1324,45 @@ done:   MGTK_CALL MGTK::ShowCursor
 unchecked:
         ldy     #3
 :       lda     (ptr),y
-        sta     unchecked_params::viewloc,y
+        sta     unchecked_rb_params::viewloc,y
         dey
         bpl     :-
-        MGTK_CALL MGTK::PaintBits, unchecked_params
+        MGTK_CALL MGTK::PaintBits, unchecked_rb_params
         rts
 
 checked:
         ldy     #3
 :       lda     (ptr),y
-        sta     checked_params::viewloc,y
+        sta     checked_rb_params::viewloc,y
         dey
         bpl     :-
-        MGTK_CALL MGTK::PaintBits, checked_params
+        MGTK_CALL MGTK::PaintBits, checked_rb_params
+        rts
+.endproc
+
+;;; A,X = pos ptr, Z = checked
+.proc draw_checkbox
+        ptr := $06
+
+        stax    ptr
+        beq     checked
+
+unchecked:
+        ldy     #3
+:       lda     (ptr),y
+        sta     unchecked_cb_params::viewloc,y
+        dey
+        bpl     :-
+        MGTK_CALL MGTK::PaintBits, unchecked_cb_params
+        rts
+
+checked:
+        ldy     #3
+:       lda     (ptr),y
+        sta     checked_cb_params::viewloc,y
+        dey
+        bpl     :-
+        MGTK_CALL MGTK::PaintBits, checked_cb_params
         rts
 .endproc
 
@@ -1847,9 +1949,31 @@ done:   rts
 
 ;;; ============================================================
 
+.proc handle_rgb_click
+        lda     SETTINGS + DeskTopSettings::rgb_color
+        eor     #$80
+        sta     SETTINGS + DeskTopSettings::rgb_color
+
+        MGTK_CALL MGTK::HideCursor
+        jsr     draw_rgb_checkbox
+        MGTK_CALL MGTK::ShowCursor
+
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_RGB_MODE
+        sta     RAMRDON
+        sta     RAMWRTON
+
+        jmp     input_loop
+.endproc
+
+;;; ============================================================
+
 .proc handle_hour_click
         sta     SETTINGS + DeskTopSettings::clock_24hours
+        MGTK_CALL MGTK::HideCursor
         jsr     draw_hour_buttons
+        MGTK_CALL MGTK::ShowCursor
         jmp     input_loop
 .endproc
 
