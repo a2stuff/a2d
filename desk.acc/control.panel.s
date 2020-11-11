@@ -1262,6 +1262,8 @@ done:   MGTK_CALL MGTK::ShowCursor
         ldy     dblclick_selection
         cpy     #3
         jsr     draw_radio_button
+
+        rts
 .endproc
 
 
