@@ -276,6 +276,11 @@ watch_cursor:
         .byte   PX(%0000000),PX(%0000000)
         .byte   5, 5
 
+.params scalemouse_params
+x_exponent:     .byte   1       ; MGTK default is x 2:1 and y 1:1
+y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
+.endparams
+
 num_selector_list_items:
         .byte   0
 
@@ -1888,6 +1893,9 @@ app_mask:
         .byte   0
 
         ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::rgb_color
+        .byte   0
+
+        ASSERT_ADDRESS ::SETTINGS + DeskTopSettings::mouse_tracking
         .byte   0
 
         ;; Reserved for future use...

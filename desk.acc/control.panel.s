@@ -3,7 +3,7 @@
 ;;;
 ;;; A control panel offering system settings:
 ;;;   * DeskTop pattern
-;;;   * Joystick calibration
+;;;   * Mouse tracking speed
 ;;;   * Double-click speed
 ;;;   * Insertion point blink rate
 ;;;   * Time 12- or 24-hour display
@@ -489,79 +489,72 @@ darr_bitmap:
         .byte   PX(%0000000),PX(%0100000),PX(%0000000)
 
 ;;; ============================================================
-;;; Joystick Calibration Resources
+;;; Mouse Tracking Resources
 
-kJoystickCalibrationX = 12
-kJoystickCalibrationY = 78
+kMouseTrackingX = 25
+kMouseTrackingY = 78
 
-str_calibrate_joystick:
-        DEFINE_STRING "Calibrate Joystick"
-joystick_label_pos:
-        DEFINE_POINT kJoystickCalibrationX + 30, kJoystickCalibrationY + 48
+str_mouse_tracking:
+        DEFINE_STRING "Mouse Tracking"
+tracking_label_pos:
+        DEFINE_POINT kMouseTrackingX + 30, kMouseTrackingY + 45
 
-kJoystickDisplayX = kJoystickCalibrationX + 80
-kJoystickDisplayY = kJoystickCalibrationY + 20 - 6
-kJoystickDisplayW = 64
-kJoystickDisplayH = 32
+tracking_button_rect1:
+        DEFINE_RECT_SZ kMouseTrackingX + 84, kMouseTrackingY + 8, kRadioButtonWidth, kRadioButtonHeight
+tracking_button_rect2:
+        DEFINE_RECT_SZ kMouseTrackingX + 84, kMouseTrackingY + 21, kRadioButtonWidth, kRadioButtonHeight
 
-joy_disp_frame_rect:
-        DEFINE_RECT_SZ kJoystickDisplayX - 32    , kJoystickDisplayY - 16    , kJoystickDisplayW + 7 + 1, kJoystickDisplayH + 4 + 1
-joy_disp_rect:
-        DEFINE_RECT_SZ kJoystickDisplayX - 32 + 1, kJoystickDisplayY - 16 + 1, kJoystickDisplayW + 7 - 1, kJoystickDisplayH + 4 - 1
+tracking_slow_pos:
+        DEFINE_POINT kMouseTrackingX + 105, kMouseTrackingY +  8 + 8
+tracking_fast_pos:
+        DEFINE_POINT kMouseTrackingX + 105, kMouseTrackingY + 21 + 8
 
-joy_btn0:       DEFINE_POINT kJoystickDisplayX + 58 + 4, kJoystickDisplayY - 8, joy_btn0
-joy_btn1:       DEFINE_POINT kJoystickDisplayX + 58 + 4, kJoystickDisplayY + 5, joy_btn1
-
-joy_btn0_lpos: DEFINE_POINT kJoystickDisplayX + 48 + 4, kJoystickDisplayY - 8 + 8
-joy_btn1_lpos: DEFINE_POINT kJoystickDisplayX + 48 + 4, kJoystickDisplayY + 5 + 8
-
-joy_btn0_label:   DEFINE_STRING "0"
-joy_btn1_label:   DEFINE_STRING "1"
-
-.params joy_marker
-viewloc:        DEFINE_POINT 0, 0, viewloc
-mapbits:        .addr   joy_marker_bitmap
-mapwidth:       .byte   2
+.params mouse_tracking_params
+viewloc:        DEFINE_POINT kMouseTrackingX + 5, kMouseTrackingY
+mapbits:        .addr   mouse_tracking_bitmap
+mapwidth:       .byte   9
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 7, 4
+cliprect:       DEFINE_RECT 0, 0, 62, 31
 .endparams
 
-joy_marker_bitmap:
-        .byte   PX(%0011110),PX(%0000000)
-        .byte   PX(%0111111),PX(%0000000)
-        .byte   PX(%1111111),PX(%1000000)
-        .byte   PX(%0111111),PX(%0000000)
-        .byte   PX(%0011110),PX(%0000000)
+mouse_tracking_bitmap:
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0110011),PX(%0011001),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1100000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1100000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1110000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0011111),PX(%1111111),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1111111),PX(%1100000),PX(%0000000),PX(%1111111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0011000)
+        .byte   PX(%0000000),PX(%0000011),PX(%0011001),PX(%1001100),PX(%0010011),PX(%1111111),PX(%1111111),PX(%1111001),PX(%0000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0100011),PX(%0000000),PX(%0000000),PX(%0011000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0000110),PX(%0110011),PX(%1001100),PX(%0100011),PX(%0101010),PX(%1010101),PX(%0111000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0100011),PX(%0000000),PX(%0000000),PX(%0011000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0001100),PX(%1100111),PX(%1001100),PX(%0100011),PX(%0000000),PX(%0000000),PX(%0011000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0100011),PX(%1111111),PX(%1111111),PX(%1111000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0011001),PX(%1001111),PX(%1001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0110011),PX(%0011111),PX(%1001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000000),PX(%1100110),PX(%0111111),PX(%1001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000001),PX(%1001100),PX(%1111111),PX(%1001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000110),PX(%0110011),PX(%1111111),PX(%1001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0011001),PX(%1001111),PX(%1111111),PX(%1001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%1100110),PX(%0111111),PX(%1111111),PX(%1001100),PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0011111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0011000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1100000)
 
-
-.params joystick_params
-viewloc:        DEFINE_POINT kJoystickCalibrationX+1, kJoystickCalibrationY + 6
-mapbits:        .addr   joystick_bitmap
-mapwidth:       .byte   6
-reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 35, 18
+.params scalemouse_params
+x_exponent:     .byte   0
+y_exponent:     .byte   0
 .endparams
-
-joystick_bitmap:
-        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1100000),PX(%0000000)
-        .byte   PX(%0001100),PX(%1111111),PX(%1111111),PX(%0000111),PX(%1110000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001111),PX(%1100000),PX(%0000000)
-        .byte   PX(%0000011),PX(%0011111),PX(%1111100),PX(%0011111),PX(%1000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0111111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000001),PX(%1001111),PX(%1110000),PX(%1111110),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0000001),PX(%1111100),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%1100111),PX(%1000001),PX(%1110000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0000011),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0011000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0011000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
-        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000)
 
 ;;; ============================================================
 ;;; IP Blink Speed Resources
@@ -696,8 +689,6 @@ pos_24hour:
         cmp     #MGTK::EventKind::key_down
         beq     handle_key
 
-        jsr     do_joystick
-
         jsr     do_ipblink
 
         jmp     input_loop
@@ -778,6 +769,8 @@ common: bit     dragwindow_params::moved
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
+        ;; ----------------------------------------
+
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, fatbits_rect
         cmp     #MGTK::inrect_inside
@@ -809,6 +802,8 @@ common: bit     dragwindow_params::moved
         jmp     handle_rgb_click
         END_IF
 
+        ;; ----------------------------------------
+
         MGTK_CALL MGTK::InRect, dblclick_button_rect1
         cmp     #MGTK::inrect_inside
         IF_EQ
@@ -830,6 +825,24 @@ common: bit     dragwindow_params::moved
         jmp     handle_dblclick_click
         END_IF
 
+        ;; ----------------------------------------
+
+        MGTK_CALL MGTK::InRect, tracking_button_rect1
+        cmp     #MGTK::inrect_inside
+        IF_EQ
+        lda     #0
+        jmp     handle_tracking_click
+        END_IF
+
+        MGTK_CALL MGTK::InRect, tracking_button_rect2
+        cmp     #MGTK::inrect_inside
+        IF_EQ
+        lda     #1
+        jmp     handle_tracking_click
+        END_IF
+
+        ;; ----------------------------------------
+
         MGTK_CALL MGTK::InRect, ipblink_btn1_rect
         cmp     #MGTK::inrect_inside
         IF_EQ
@@ -850,6 +863,8 @@ common: bit     dragwindow_params::moved
         lda     #3
         jmp     handle_ipblink_click
         END_IF
+
+        ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, rect_12hour
         cmp     #MGTK::inrect_inside
@@ -1058,6 +1073,52 @@ next:   dex
 
 ;;; ============================================================
 
+.proc handle_tracking_click
+        ;; --------------------------------------------------
+        ;; Update Settings
+
+        sta     SETTINGS + DeskTopSettings::mouse_tracking
+        ;; --------------------------------------------------
+        ;; Update MGTK
+
+        copy    #1, scalemouse_params::x_exponent
+        copy    #0, scalemouse_params::y_exponent
+
+        ;; Doubled if option selected
+        lda     SETTINGS + DeskTopSettings::mouse_tracking
+        IF_NOT_ZERO
+        inc     scalemouse_params::x_exponent
+        inc     scalemouse_params::y_exponent
+        END_IF
+
+        ;; Also doubled if a IIc
+        ldx     ROMIN
+        lda     ZIDBYTE
+        ldx     LCBANK1
+        ldx     LCBANK1
+        cmp     #0              ; ZIDBYTE=0 for IIc / IIc+
+        IF_ZERO
+        inc     scalemouse_params::x_exponent
+        inc     scalemouse_params::y_exponent
+        END_IF
+
+        ;; TODO: This warps the cursor position; can this be fixed?
+        MGTK_CALL MGTK::ScaleMouse, scalemouse_params
+
+        ;; --------------------------------------------------
+        ;; Update the UI
+
+        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::HideCursor
+        jsr     draw_tracking_buttons
+        MGTK_CALL MGTK::ShowCursor
+
+        jmp     input_loop
+.endproc
+
+;;; ============================================================
+
 
 .proc init_pattern
         ptr := $06
@@ -1173,24 +1234,21 @@ loop:   copy    arg1,y, arg2,y
 
         MGTK_CALL MGTK::PaintBits, dblclick_params
 
-        MGTK_CALL MGTK::SetPenSize, winfo::penwidth
-
         ;; ==============================
-        ;; Joystick Calibration
+        ;; Mouse Tracking Speed
 
-        MGTK_CALL MGTK::MoveTo, joystick_label_pos
-        MGTK_CALL MGTK::DrawText, str_calibrate_joystick
+        MGTK_CALL MGTK::MoveTo, tracking_label_pos
+        MGTK_CALL MGTK::DrawText, str_mouse_tracking
 
-        MGTK_CALL MGTK::PaintBits, joystick_params
+        MGTK_CALL MGTK::MoveTo, tracking_slow_pos
+        MGTK_CALL MGTK::DrawText, str_ipblink_slow
 
-        MGTK_CALL MGTK::FrameRect, joy_disp_frame_rect
+        MGTK_CALL MGTK::MoveTo, tracking_fast_pos
+        MGTK_CALL MGTK::DrawText, str_ipblink_fast
 
-        MGTK_CALL MGTK::MoveTo, joy_btn0_lpos
-        MGTK_CALL MGTK::DrawText, joy_btn0_label
-        MGTK_CALL MGTK::MoveTo, joy_btn1_lpos
-        MGTK_CALL MGTK::DrawText, joy_btn1_label
+        jsr     draw_tracking_buttons
 
-        copy    #0, last_joy_valid_flag
+        MGTK_CALL MGTK::PaintBits, mouse_tracking_params
 
         ;; ==============================
         ;; IP Blinking
@@ -1261,6 +1319,23 @@ done:   MGTK_CALL MGTK::ShowCursor
         ldax    #dblclick_button_rect3
         ldy     dblclick_selection
         cpy     #3
+        jsr     draw_radio_button
+
+        rts
+.endproc
+
+
+.proc draw_tracking_buttons
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+
+        ldax    #tracking_button_rect1
+        ldy     SETTINGS + DeskTopSettings::mouse_tracking
+        cpy     #0
+        jsr     draw_radio_button
+
+        ldax    #tracking_button_rect2
+        ldy     SETTINGS + DeskTopSettings::mouse_tracking
+        cpy     #1
         jsr     draw_radio_button
 
         rts
@@ -1729,166 +1804,6 @@ pattern_cB:      .res 8, $DD     ; B = pink
 pattern_cC:      .res 8, $33     ; C = light blue
 pattern_cD:      .res 8, $BB     ; D = lavender
 pattern_cE:      .res 8, $77     ; E = aqua
-
-;;; ============================================================
-
-        ;; TODO: Read and visualize all 4 paddles.
-        kNumPaddles = 2
-
-.struct InputState
-        pdl0    .byte
-        pdl1    .byte
-        pdl2    .byte
-        pdl3    .byte
-
-        butn0   .byte
-        butn1   .byte
-        butn2   .byte
-.endstruct
-
-.proc do_joystick
-
-        jsr     read_paddles
-
-        ;; TODO: Visualize all 4 paddles.
-
-        ldx     #kNumPaddles-1
-:       lda     pdl0,x
-        lsr                     ; clamp range to 0...63
-        lsr
-        sta     curr+InputState::pdl0,x
-        dex
-        bpl     :-
-
-        lsr     curr+InputState::pdl1 ; clamp Y to 0...31 (due to pixel aspect ratio)
-
-        lda     BUTN0
-        and     #$80            ; only care about msb
-        sta     curr+InputState::butn0
-
-        lda     BUTN1
-        and     #$80            ; only care about msb
-        sta     curr+InputState::butn1
-
-        lda     BUTN2
-        and     #$80            ; only care about msb
-        sta     curr+InputState::butn2
-
-        ;; Changed? (or first time through)
-        lda     last_joy_valid_flag
-        beq     changed
-
-        ldx     #.sizeof(InputState)-1
-:       lda     curr,x
-        cmp     last,x
-        bne     changed
-        dex
-        bpl     :-
-
-        rts
-
-changed:
-        COPY_STRUCT InputState, curr, last
-        copy    #$80, last_joy_valid_flag
-
-        joy_x := joy_marker::viewloc::xcoord
-        copy    curr+InputState::pdl0, joy_x
-        copy    #0, joy_x+1
-        sub16   joy_x, #31, joy_x
-        add16   joy_x, #kJoystickDisplayX, joy_x
-
-        joy_y := joy_marker::viewloc::ycoord
-        copy    curr+InputState::pdl1, joy_y
-        copy    #0, joy_y+1
-        sub16   joy_y, #15, joy_y
-        add16   joy_y, #kJoystickDisplayY, joy_y
-
-        ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, winport_params
-        cmp     #MGTK::Error::window_obscured
-        IF_EQ
-        rts
-        END_IF
-
-        MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::HideCursor
-
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, joy_disp_rect
-
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-
-        MGTK_CALL MGTK::PaintBits, joy_marker
-
-        ldax    #joy_btn0
-        ldy     curr+InputState::butn0
-        cpy     #$80
-        jsr     draw_radio_button
-
-        ldax    #joy_btn1
-        ldy     curr+InputState::butn1
-        cpy     #$80
-        jsr     draw_radio_button
-
-        MGTK_CALL MGTK::ShowCursor
-done:   rts
-
-curr:   .tag InputState
-last:   .tag InputState
-
-pencopy:        .byte   MGTK::pencopy
-notpencopy:     .byte   MGTK::notpencopy
-
-.endproc
-
-last_joy_valid_flag:
-        .byte   0
-
-;;; ============================================================
-
-pdl0:   .byte   0
-pdl1:   .byte   0
-pdl2:   .byte   0
-pdl3:   .byte   0
-
-.proc read_paddles
-        ldx     #kNumPaddles - 1
-:       jsr     pread
-        tya
-        sta     pdl0,x
-        dex
-        bpl     :-
-
-        rts
-
-.proc pread
-        ;; Let any previous timer reset (but don't wait forever)
-        ldy     #0
-:       dey
-        nop                     ; Empirically, 4 NOPs are needed here.
-        nop                     ; https://github.com/a2stuff/a2d/issues/173
-        nop
-        nop
-        beq     :+
-        lda     PADDL0,x
-        bmi     :-
-
-        ;; Read paddle
-        ;; Per Technical Note: Apple IIe #6: The Apple II Paddle Circuits
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.06.html
-:       lda     PTRIG           ; Trigger paddles
-        ldy     #0              ; Init counter
-        nop                     ; ... and wait for first count
-        nop
-:       lda     PADDL0,X        ; 11 microsecond loop
-        bpl     done
-        iny
-        bne     :-
-        dey                     ; handle overflow
-done:   rts
-.endproc
-
-.endproc
 
 ;;; ============================================================
 ;;; IP Blink

@@ -69,10 +69,11 @@ kDefaultIPBlinkSpeed    = 60
         pattern         .res 8
         dblclick_speed  .word
         ip_blink_speed  .byte
-        clock_24hours   .byte
-        rgb_color       .byte
+        clock_24hours   .byte   ; $00 = 12 hour, $80 = 24 hour
+        rgb_color       .byte   ; $00 = B&W, $80 = Color
+        mouse_tracking  .byte   ; 0 = normal, 1 = 2x speed
 
-        reserved        .res 113
+        reserved        .res 112
 .endstruct
         .assert .sizeof(DeskTopSettings) = $80, error, .sprintf("Expected $80, was $%0X", .sizeof(DeskTopSettings))
 

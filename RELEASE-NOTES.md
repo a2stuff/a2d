@@ -52,10 +52,15 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Additional Desk Accessories
 
+* **Control Panels**
+  * **Control Panel**
+    * Allows editing the desktop pattern ([#31](https://github.com/a2stuff/a2d/issues/31)), double-click speed ([#2](https://github.com/a2stuff/a2d/issues/2)), mouse tracking speed ([#273](https://github.com/a2stuff/a2d/issues/273)), insertion point blink speed, and clock 12/24hr setting ([#220](https://github.com/a2stuff/a2d/issues/220)).
+  * **Joystick**
+    * A joystick/paddle calibration tool. ([#72](https://github.com/a2stuff/a2d/issues/72))
+  * **System Speed**
+    * Enable/disable built-in and some popular add-on system accelerators. ([#26](https://github.com/a2stuff/a2d/issues/26))
 * **This Apple**
   * Gives details about the computer, expanded memory, and what's in each slot. ([#29](https://github.com/a2stuff/a2d/issues/29))
-* **Control Panel**
-  * Allows editing the desktop pattern ([#31](https://github.com/a2stuff/a2d/issues/31)), double-click speed ([#2](https://github.com/a2stuff/a2d/issues/2)), insertion point blink speed, and clock 12/24hr setting ([#220](https://github.com/a2stuff/a2d/issues/220)). Also shows joystick calibration. ([#72](https://github.com/a2stuff/a2d/issues/72))
 * **Run Basic Here**
   * Launch **BASIC.SYSTEM** with `PREFIX` set to the current window's pathname. ([#42](https://github.com/a2stuff/a2d/issues/42))
 * **Key Caps**
@@ -64,16 +69,15 @@ Project Page: https://github.com/a2stuff/a2d
   * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in slot 1. ([#46](https://github.com/a2stuff/a2d/issues/46))
 * **Eyes**
   * Eyes that follow the mouse. ([#53](https://github.com/a2stuff/a2d/issues/53))
-* **Flying Toasters**
-  * Homage to the classic After Dark screen saver by Jack Eastman. ([#27](https://github.com/a2stuff/a2d/issues/27))
-* **Melt**
-  * Another classic screen saver effect: the screen melts down like dripping wax. ([#27](https://github.com/a2stuff/a2d/issues/27))
-* **System Speed**
-  * Enable/disable built-in and some popular add-on system accelerators. ([#26](https://github.com/a2stuff/a2d/issues/26))
 * **Find Files**
   * Search a directory and descendants for filenames. Use ? and * as wildcards. ([#21](https://github.com/a2stuff/a2d/issues/21))
-* **Invert**
-  * Invert the screen until the next click/key. ([#261](https://github.com/a2stuff/a2d/issues/261))
+* **Screen Savers**
+  * **Flying Toasters**
+    * Homage to the classic After Dark screen saver by Jack Eastman. ([#27](https://github.com/a2stuff/a2d/issues/27))
+  * **Melt**
+    * Another classic screen saver effect: the screen melts down like dripping wax. ([#27](https://github.com/a2stuff/a2d/issues/27))
+  * **Invert**
+    * Invert the screen until the next click/key. ([#261](https://github.com/a2stuff/a2d/issues/261))
 
 Note that the desk accessories from version 1.2 will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.

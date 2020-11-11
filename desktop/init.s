@@ -130,12 +130,6 @@ is_iic: lda     id_idbyte2            ; ROM version
         copy    #$80, is_iic_plus_flag
 :       lda     #$FA
         ldxy    #kDefaultDblClickSpeed*4
-        jmp     end
-
-id_idlaser:     .byte   0
-id_version:     .byte   0
-id_idbyte:      .byte   0
-id_idbyte2:     .byte   0
 
 end:
         sta     machine_type
@@ -146,6 +140,7 @@ end:
         bne     :+
         stxy    SETTINGS + DeskTopSettings::dblclick_speed
 :
+        ;; Fall through
 .endscope
 
 ;;; ============================================================
@@ -177,7 +172,6 @@ end:
         bmi     end
 
 found_ram:
-        lda     DEVLST,x
         jsr     remove_device
         ;; fall through
 
@@ -192,8 +186,29 @@ end:
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
         jsr     main::set_rgb_mode
         MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
+
+        ;; --------------------------------------------------
+        ;; Cursor tracking
+
+        ;; Doubled if option selected
+        lda     SETTINGS + DeskTopSettings::mouse_tracking
+        IF_NOT_ZERO
+        inc     scalemouse_params::x_exponent
+        inc     scalemouse_params::y_exponent
+        END_IF
+        ;; Also doubled if a IIc
+        lda     id_idbyte       ; ZIDBYTE=0 for IIc / IIc+
+        IF_ZERO
+        inc     scalemouse_params::x_exponent
+        inc     scalemouse_params::y_exponent
+        END_IF
+        MGTK_RELAY_CALL MGTK::ScaleMouse, scalemouse_params
+
+        ;; --------------------------------------------------
+
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
+
         ;; fall through
 .endscope
 
@@ -541,7 +556,6 @@ open_dir:
         copy16  #read_dir_buffer + .sizeof(SubdirectoryHeader), dir_ptr
 
 process_block:
-        ;; TODO: Adjust case
         addr_call_indirect main::adjust_fileentry_case, dir_ptr
 
         ldy     #FileEntry::storage_type_name_length
@@ -655,8 +669,6 @@ close_dir:
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, str_desk_acc
         get_file_info_type := get_file_info_params::file_type
-
-        .byte   0
 
         DEFINE_CLOSE_PARAMS close_params
         close_ref_num := close_params::ref_num
@@ -787,9 +799,8 @@ process_volume:
         pha
 
         rol     a               ; set carry to drive - 1
-        lda     #0              ; 0 + 1 + carry...
-        adc     #1              ; now 1 or 2
-        ora     #'0'            ; convert to '1' or '2'
+        lda     #0              ; 0 + carry + '1'
+        adc     #'1'            ; convert to '1' or '2'
 
         ldx     device_type
         ldy     device_template_drive_offset_table,x
@@ -985,7 +996,7 @@ count:  .byte   0
         jsr     main::disable_eject_menu_item
         jsr     main::disable_file_menu_items
 
-        ;; Add icons (presumably desktop ones?)
+        ;; Add desktop icons
         ldx     #0
 iloop:  cpx     cached_window_icon_count
         beq     :+
@@ -1071,9 +1082,6 @@ loop:   ldy     #0
         add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
         jmp     loop
 
-done:   pla
-        pla
-
 exit:   rts
 
 .proc maybe_open_window
@@ -1088,6 +1096,12 @@ exit:   rts
 .endproc
 
 ;;; ============================================================
+
+;;; ID bytes, copied from ROM
+id_idlaser:     .byte   0
+id_version:     .byte   0
+id_idbyte:      .byte   0
+id_idbyte2:     .byte   0
 
 ;;; High bits set if specific machine type detected.
 is_iigs_flag:
