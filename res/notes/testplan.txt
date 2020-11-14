@@ -91,3 +91,6 @@
 * On an RGB system (IIgs, etc), go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Preview an image, and verify that the image shows in color and the DeskTop returns to monochrome after exiting.
 * On an IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Enter the IIgs control panel (Control+Shift+OpenApple+Esc), and exit. Verify that DeskTop remains in color.
 * On an IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Enter the IIgs control panel (Control+Shift+OpenApple+Esc), and exit. Verify that DeskTop resets to monochrome.
+
+* Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.
+* Run System Speed DA. Click Fast then click OK. Verify DeskTop does not lock up.

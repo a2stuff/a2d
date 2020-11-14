@@ -373,7 +373,7 @@ hit:    lda     winfo::window_id
         lda     LCBANK1
         lda     LCBANK1
 
-        jmp     input_loop
+        rts
 .endproc
 
 ;;; ============================================================
