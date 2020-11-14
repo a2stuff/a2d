@@ -447,8 +447,8 @@ memory:.word    0
 
 str_diskii:     PASCAL_STRING "Disk II"
 str_block:      PASCAL_STRING "Generic Block Device"
-kStrSmartportOffset = 19
-str_smartport:  PASCAL_STRING "SmartPort Device:                                                                          " ; enough room for 4x16 names plus ", " between
+kStrSmartportOffset = 12
+str_smartport:  PASCAL_STRING "SmartPort:                                                                          " ; enough room for 4x16 names plus ", " between
 str_ssc:        PASCAL_STRING "Super Serial Card"
 str_80col:      PASCAL_STRING "80 Column Card"
 str_mouse:      PASCAL_STRING "Mouse Card"
@@ -1539,7 +1539,30 @@ loop:
         .addr   status_params
         bcs     next
 
-        ;; TODO: Case-adjust
+        ;; Case-adjust
+.scope
+        ldy     dib_buffer::ID_String_Length
+        beq     done
+        dey
+        beq     done
+
+        ;; Look at prior and current character; if both are alpha,
+        ;; lowercase current.
+loop:   lda     dib_buffer::Device_Name-1,y ; Test previous character
+        jsr     is_alpha
+        bne     next
+        lda     dib_buffer::Device_Name,y ; Adjust this one if also alpha
+        jsr     is_alpha
+        bne     next
+        lda     dib_buffer::Device_Name,y
+        ora     #AS_BYTE(~CASE_MASK)
+        sta     dib_buffer::Device_Name,y
+
+next:   dey
+        cpy     #0
+        bne     loop
+done:
+.endscope
 
         ;; Append separator, unless it's the first
         ldx     offset
@@ -1595,6 +1618,26 @@ empty_flag:
 .endproc
 populate_smartport_name := populate_smartport_name_impl::start
 
+;;; ============================================================
+;;; Inputs: Character in A
+;;; Outputs: Z=0 if alpha, 1 otherwise
+;;; A is trashed
+
+.proc is_alpha
+        cmp     #'@'            ; in upper/lower "plane" ?
+        bcc     nope
+        and     #CASE_MASK      ; force upper-case
+        cmp     #'A'
+        bcc     nope
+        cmp     #'Z'+1
+        bcs     nope
+
+        lda     #0
+        rts
+
+nope:   lda     #$FF
+        rts
+.endproc
 
 ;;; ============================================================
 
