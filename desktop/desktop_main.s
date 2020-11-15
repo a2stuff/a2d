@@ -9369,7 +9369,7 @@ pos_win:        .word   0, 0
 ;;; Input: A = unit_number
 ;;; Output: A =
 ;;;  0 = Disk II
-;;;  1 = SmartPort, RAM Disk
+;;;  1 = RAM Disk (including SmartPort RAM Disk)
 ;;;  2 = SmartPort, Fixed (e.g. ProFile)
 ;;;  3 = SmartPort, Removable (e.g. UniDisk 3.5)
 ;;;  4 = AppleTalk file share

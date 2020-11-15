@@ -8,13 +8,56 @@
 ;;; Segment loaded into MAIN $800-$FFF
 ;;; ============================================================
 
+;;;            Main                  Aux
+;;;       :.............:       :.............:
+;;;       |.............|       |.............|
+;;;       |.............|       |.............|
+;;;       |.Graphics....|       |.Graphics....|
+;;; $2000 +-------------+       +-------------+
+;;;       |             |       | Win/Icn Map | <- initialized
+;;; $1B00 |             |       +-------------+
+;;;       |             |       |             |
+;;; $1800 +-------------+       |             |
+;;;       | Data Buffer |       |             |
+;;; $1400 +-------------+       |             |
+;;;       | I/O Buffer  |       |             |
+;;; $1000 +-------------+       |             |
+;;;       |             |       |             |
+;;;       | Code        |       |             |
+;;; $0800 +-------------+       +-------------+
+;;;       |.............|       |.............|
+;;;       :.............:       :.............:
+
+
+;;; NOTE: if DeskTop2 file is extended in length, there is room for
+;;; this segment to grow by moving buffers up by a few pages.
+
 ;;; Init sequence - machine identification, etc
+;;;
+;;; * Hook reset vector
+;;; * Clear hires screen
+;;; * Detect machine type
+;;; * Preserve DEVLST, remove /RAM
+;;; * Initialize MGTK, with saved settings
+;;; * Initialize icon entry map in LC and window/icon maps in Aux
+;;; * Load selector list, populate Selector menu
+;;; * Enumerate desk accessories, populate Apple menu
+;;; * Compute label widths
+;;; * Create desktop icons, populate device name table
+;;; * Populate startup menu
+;;; * Identify removable disks, for later polling
+;;; * Configure MGTK
+;;; * Restore saved windows
 
 .proc init
 
         .org ::DESKTOP_INIT
 
         MLI_RELAY := main::MLI_RELAY
+
+        io_buf := $1000
+        data_buf := $1400
+        kDataBufferSize = $400
 
 start:
 
@@ -315,9 +358,10 @@ trash_name:  PASCAL_STRING "Trash"
         ptr1 := $6
         ptr2 := $8
 
-        selector_list_io_buf := $1000
-        selector_list_data_buf := $1400
+        selector_list_io_buf := io_buf
+        selector_list_data_buf := data_buf
         kSelectorListShortSize = $400
+        .assert kSelectorListShortSize <= kDataBufferSize, error, "Buffer size error"
 
         MGTK_RELAY_CALL MGTK::CheckEvents
 
@@ -512,7 +556,7 @@ end:
 .scope
         MGTK_RELAY_CALL MGTK::CheckEvents
 
-        read_dir_buffer := $1400
+        read_dir_buffer := data_buf
 
         ;; Does the directory exist?
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
@@ -661,9 +705,10 @@ close_dir:
         MLI_RELAY_CALL CLOSE, close_params
         jmp     end
 
-        DEFINE_OPEN_PARAMS open_params, str_desk_acc, $1000
+        DEFINE_OPEN_PARAMS open_params, str_desk_acc, io_buf
         open_ref_num := open_params::ref_num
 
+        .assert BLOCK_SIZE <= kDataBufferSize, error, "Buffer size error"
         DEFINE_READ_PARAMS read_params, read_dir_buffer, BLOCK_SIZE
         read_ref_num := read_params::ref_num
 

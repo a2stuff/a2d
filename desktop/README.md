@@ -15,7 +15,7 @@ The file is broken down into multiple segments:
 | DeskTop       | B$008580    | Aux LC1 | A$D000-$ECFF | L$1D00 | `desktop_lc.s`,`desktop_res.s` |
 | DeskTop       | B$00A280    | Aux LC1 | A$FB00-$FFFF | L$0500 | `desktop_res.s`                |
 | DeskTop       | B$00A780    | Main    | A$4000-$BEFF | L$7F00 | `desktop_main.s`               |
-| Initializer   | B$012680    | Main    | A$0800-$0FFF | L$0800 | `desktop_main.s`               |
+| Initializer   | B$012680    | Main    | A$0800-$0FFF | L$0800 | `init.s`                       |
 | Invoker       | B$012E80    | Main    | A$0290-$03EF | L$0160 | `invoker.s`                    |
 | Disk Copy 1/4 | B$012FE0    | Main    | A$0800-$09FF | L$0200 | `ovl_disk_copy1.s`             |
 | Disk Copy 2/4 | B$0131E0    | Main    | A$1800-$19FF | L$0200 | `ovl_disk_copy2.s`             |
