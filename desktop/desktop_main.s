@@ -419,9 +419,23 @@ flag:   .byte   $00
         ;; Handle accelerator keys
 handle_keydown:
         lda     event_modifiers
-        bne     :+              ; either Open-Apple or Solid-Apple ?
-        jmp     menu_accelerators           ; nope
-:       cmp     #3              ; both Open-Apple + Solid-Apple ?
+        bne     modifiers       ; either Open-Apple or Solid-Apple ?
+
+        ;; --------------------------------------------------
+        ;; No modifiers
+
+        lda     event_key
+        cmp     #CHAR_RETURN
+        bne     :+
+        jmp     cmd_rename_icon
+
+:       jmp     menu_accelerators
+
+        ;; --------------------------------------------------
+        ;; Modifiers
+
+modifiers:
+        cmp     #3              ; both Open-Apple + Solid-Apple ?
         bne     :+              ; nope
         rts
 
@@ -459,6 +473,8 @@ handle_keydown:
         bne     menu_accelerators
 cycle:  jmp     cmd_cycle_windows
 
+        ;; Not one of our shortcuts - check for menu keys
+        ;; (shortcuts or entering keyboard menu mode)
 menu_accelerators:
         copy    event_key, menu_click_params::which_key
         lda     event_modifiers
@@ -2813,7 +2829,11 @@ done:   jmp     redraw_windows_and_desktop
 ;;; ============================================================
 
 .proc cmd_rename_icon
-        jsr     jt_rename_icon
+        lda     selected_icon_count
+        bne     :+
+        rts
+
+:       jsr     jt_rename_icon
         pha
         jsr     redraw_windows_and_desktop
         pla
