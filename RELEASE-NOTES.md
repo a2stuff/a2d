@@ -32,6 +32,7 @@ Project Page: https://github.com/a2stuff/a2d
 * **Apple-Down** opens/previews selection. ([#254](https://github.com/a2stuff/a2d/issues/254))
 * **Apple-Up** opens parent window. ([#254](https://github.com/a2stuff/a2d/issues/254))
 * **Return** is a shortcut for **File > Rename...** ([#273](https://github.com/a2stuff/a2d/issues/273))
+* Arrow keys change selected icon. ([#274](https://github.com/a2stuff/a2d/issues/274))
 * **File > Get Info** command shows aux type for files. ([#148](https://github.com/a2stuff/a2d/issues/148))
 * ProDOS 2.5 extended dates (through year 4095) are supported. ([#169](https://github.com/a2stuff/a2d/issues/169))
 * **File > New Folder** scrolls the new folder icon into view. ([#16](https://github.com/a2stuff/a2d/issues/16))

@@ -428,6 +428,19 @@ handle_keydown:
         cmp     #CHAR_RETURN
         bne     :+
         jmp     cmd_rename_icon
+:       cmp     #CHAR_LEFT
+        bne     :+
+        jmp     cmd_highlight
+:       cmp     #CHAR_UP
+        bne     :+
+        jmp     cmd_highlight
+:       cmp     #CHAR_RIGHT
+        bne     :+
+        jmp     cmd_highlight
+:       cmp     #CHAR_DOWN
+        bne     :+
+        jmp     cmd_highlight
+
 
 :       jmp     menu_accelerators
 
@@ -442,10 +455,7 @@ modifiers:
         ;; Non-menu keys
 :       lda     event_key
         jsr     upcase_char
-        cmp     #'H'            ; Apple-H (Highlight Icon)
-        bne     :+
-        jmp     cmd_highlight
-:       cmp     #CHAR_DOWN      ; Apple-Down (Open)
+        cmp     #CHAR_DOWN      ; Apple-Down (Open)
         bne     :+
         jmp     cmd_open_ignore_modifiers
 :       cmp     #CHAR_UP        ; Apple-Up (Open Parent)
@@ -2934,20 +2944,8 @@ selected_vol_icon_list:
 ;;; First byte is icon count. Rest is a list of selectable icons.
 buffer := $1800
 
-;;; "Current" icon coords, for comparison, during bubble sort.
-icon_pos:
-iconx:  .word   0
-icony:  .word   0
-
-;;; Icon to swap during bubble sort.
-bubbled_icon:   .byte   0
-bubbled_index:  .byte   0
-
 selected_index:
         .byte   0
-
-        .byte   0               ; unused ???
-        .byte   0               ; unused ???
 
 start:
         copy    #0, buffer
@@ -2977,11 +2975,16 @@ start:
         cpy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+8
         bne     :-
 
+        add16_8   tmp_rect::y1, #kWindowHeaderHeight+1, tmp_rect::y1
+
         ;; Iterate through window's icons
         ldx     #0
 win_loop:
         cpx     cached_window_icon_count
         beq     switch_to_volume_icons
+
+        ;; Check if visible.
+        ;; TODO: Make "scroll into view" work and remove this filter.
         txa
         pha
         lda     cached_window_icon_list,x
@@ -3028,117 +3031,40 @@ vol_loop:
         adc     cached_window_icon_count
         sta     buffer
 
-;;; List of icons in |buffer| is complete. Now bubble sort by position.
-;;; Sort is primarily by icon Y, secondarily by icon X.
+;;; Figure out current selected index, based on selection.
 
+        lda     selected_icon_count
+        beq     pick_first
+
+        ;; Try to find actual selection in our list
+        lda     selected_icon_list ; Only consider first, otherwise N^2
+        ldx     buffer             ; count
+        dex                        ; index
+:       cmp     buffer+1,x
+        beq     pick_next_prev
+        dex
+        bpl     :-
+
+
+        ;; No selection; pick the first icon identified.
+pick_first:
         copy    #0, selected_index
-
-        lda     #$FF
-        ldx     #.sizeof(MGTK::Point)-1
-:       sta     icon_pos,x
-        dex
-        bpl     :-
-
-sort_loop:
-        ldx     selected_index
-check:  lda     buffer+1,x
-        asl     a
-        tay
-        copy16  icon_entry_address_table,y, $06
-        ldy     #IconEntry::icony+1
-        lda     ($06),y
-        cmp     icony+1
-        beq     :+
-        bcc     is_lt
-        jmp     is_gt
-
-:       dey                     ; y=IconEntry::icony
-        lda     ($06),y
-        cmp     icony
-        beq     :+
-        bcc     is_lt
-        jmp     is_gt
-
-:       dey                     ; y=IconEntry::iconx+1
-        lda     ($06),y
-        cmp     iconx+1
-        beq     :+
-        bcc     is_lt
-        jmp     is_gt
-
-:       dey                     ; y=IconEntry::iconx
-        lda     ($06),y
-        cmp     iconx
-        bcs     is_gt
-
-is_lt:  lda     buffer+1,x
-        stx     bubbled_index
-        sta     bubbled_icon
-
-        ;; Update current pos
-        ldy     #IconEntry::iconx
-:       lda     ($06),y
-        sta     iconx-IconEntry::iconx,y
-        iny
-        cpy     #IconEntry::iconx+4
-        bne     :-
-
-is_gt:  inx
-        cpx     buffer
-        bne     check
-
-        ;; Place icon in correct place within list
-        ldx     selected_index
-        lda     buffer+1,x
-        tay
-        lda     bubbled_icon
-        sta     buffer+1,x
-        ldx     bubbled_index
-        tya
-        sta     buffer+1,x
-
-        ;; Reset current pos
-        lda     #$FF
-        ldx     #.sizeof(MGTK::Point)-1
-:       sta     iconx,x
-        dex
-        bpl     :-
-
-        inc     selected_index
-        ldx     selected_index
-        cpx     buffer          ; fully sorted?
-        beq     :+
-        jmp     sort_loop
-
-;;; Icon list in |buffer| is prepared. Now enter the event loop to
-;;; handle keyboard selection.
-
-:       copy    #0, selected_index
         jsr     clear_selection
-
-highlight_selected:
         jsr     highlight_icon
-
-event_loop:
-        jsr     get_event
-        lda     event_kind
-        cmp     #MGTK::EventKind::key_down
-        beq     :+
-        cmp     #MGTK::EventKind::button_down
-        bne     event_loop
         jmp     exit_mode
 
-:       lda     event_params+MGTK::Event::key
-        and     #CHAR_MASK
+        ;; There was a selection; clear it, and pick prev/next
+        ;; based on keypress.
+pick_next_prev:
+        stx     selected_index
+        jsr     clear_selection
 
-        cmp     #CHAR_RETURN
-        beq     exit_mode
-        cmp     #CHAR_ESCAPE
-        beq     exit_mode
+        lda     event_key
         cmp     #CHAR_LEFT
         beq     select_prev
-        cmp     #CHAR_RIGHT
-        bne     event_loop
+        cmp     #CHAR_UP
+        beq     select_prev
+        ;; fall through
 
 select_next:
         ldx     selected_index
@@ -3147,8 +3073,8 @@ select_next:
         bne     :+
         ldx     #0
 :       stx     selected_index
-        jsr     unhighlight_icon
-        jmp     highlight_selected
+        jsr     highlight_icon
+        jmp     exit_mode
 
 select_prev:
         ldx     selected_index
@@ -3157,8 +3083,8 @@ select_prev:
         ldx     buffer
         dex
 :       stx     selected_index
-        jsr     unhighlight_icon
-        jmp     highlight_selected
+        jsr     highlight_icon
+        ;; fall through
 
 .proc exit_mode
         ldx     selected_index
@@ -3195,34 +3121,6 @@ select_prev:
         jsr     icon_screen_to_window
 
 :       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        lda     getwinport_params2::window_id
-        beq     :+              ; desktop (volume) icon
-
-        ;; windowed icon - restore port, icon coords
-        lda     icon_param
-        jsr     icon_window_to_screen
-        jsr     reset_main_grafport
-:       rts
-.endproc
-
-;;; Unhighlight the icon in |icon_param|
-.proc unhighlight_icon
-        lda     icon_param
-        jsr     icon_entry_lookup
-        stax    $06
-
-        ldy     #IconEntry::win_type
-        lda     ($06),y
-        and     #kIconEntryWinIdMask
-        sta     getwinport_params2::window_id
-        beq     :+              ; desktop (volume) icon
-
-        ;; windowed icon - adjust port, icon coords
-        jsr     offset_and_set_port_from_window_id
-        lda     icon_param
-        jsr     icon_screen_to_window
-
-:       ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
         lda     getwinport_params2::window_id
         beq     :+              ; desktop (volume) icon
 
