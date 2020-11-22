@@ -2282,6 +2282,7 @@ kIconBBoxOffsetRight   = 50          ; includes width of icon + label
         lda     icon_num
         jsr     icon_window_to_screen
 
+        jsr     prepare_highlight_grafport
         jsr     apply_active_winfo_to_window_grafport
 
         copy    #0, dirty
@@ -2299,6 +2300,10 @@ kIconBBoxOffsetRight   = 50          ; includes width of icon + label
         bmi     donex
 
 adjustx:
+        lda     delta
+        ora     delta+1
+        beq     donex
+
         inc     dirty
         add16   window_grafport::cliprect::x1, delta, window_grafport::cliprect::x1
         add16   window_grafport::cliprect::x2, delta, window_grafport::cliprect::x2
@@ -2311,6 +2316,8 @@ donex:
         kMaxIconHeight = 17
         kIconLabelHeight = 8
 
+        ;; TODO: Accomodate top of icon into calculations.
+
         ;; Is top of icon beyond window? If so, adjust by delta (negative)
         sub16   cur_icon_pos::ycoord, window_grafport::cliprect::y1, delta
         bmi     adjusty
@@ -2321,6 +2328,10 @@ donex:
         bmi     doney
 
 adjusty:
+        lda     delta
+        ora     delta+1
+        beq     doney
+
         inc dirty
         add16   window_grafport::cliprect::y1, delta, window_grafport::cliprect::y1
         add16   window_grafport::cliprect::y2, delta, window_grafport::cliprect::y2
@@ -2963,58 +2974,22 @@ start:
         ;; Icons in active window
 
 :       jsr     LoadActiveWindowIconTable
-        lda     active_window_id
-        jsr     window_lookup
-        stax    $06
 
-        ;; Copy window's rect
-        ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect
-:       lda     ($06),y
-        sta     tmp_rect-(MGTK::Winfo::port+MGTK::GrafPort::maprect),y
-        iny
-        cpy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+8
-        bne     :-
-
-        add16_8   tmp_rect::y1, #kWindowHeaderHeight+1, tmp_rect::y1
-
-        ;; Iterate through window's icons
-        ldx     #0
+        ldx     #0              ; index in buffer and icon list
 win_loop:
         cpx     cached_window_icon_count
-        beq     switch_to_volume_icons
-
-        ;; Check if visible.
-        ;; TODO: Make "scroll into view" work and remove this filter.
-        txa
-        pha
-        lda     cached_window_icon_list,x
-        sta     icon_param
-        jsr     icon_screen_to_window
-        ITK_RELAY_CALL IconTK::IconInRect, icon_param
-        pha
-        lda     icon_param
-        jsr     icon_window_to_screen
-        pla
         beq     :+
 
-        ;; Icon is visible in the window, add it to the list.
-        pla
-        pha
-        tax
         lda     cached_window_icon_list,x
-        ldx     buffer
         sta     buffer+1,x
         inc     buffer
-
-:       pla
-        tax
         inx
         jmp     win_loop
 
+:       jsr     LoadDesktopIconTable
+
         ;; --------------------------------------------------
         ;; Desktop (volume) icons
-switch_to_volume_icons:
-        jsr     LoadDesktopIconTable
 
 volumes:
         ldx     buffer
@@ -3050,8 +3025,7 @@ vol_loop:
 pick_first:
         copy    #0, selected_index
         jsr     clear_selection
-        jsr     highlight_icon
-        jmp     exit_mode
+        jmp     highlight_icon
 
         ;; There was a selection; clear it, and pick prev/next
         ;; based on keypress.
@@ -3073,8 +3047,7 @@ select_next:
         bne     :+
         ldx     #0
 :       stx     selected_index
-        jsr     highlight_icon
-        jmp     exit_mode
+        jmp     highlight_icon
 
 select_prev:
         ldx     selected_index
@@ -3083,34 +3056,20 @@ select_prev:
         ldx     buffer
         dex
 :       stx     selected_index
-        jsr     highlight_icon
         ;; fall through
 
-.proc exit_mode
-        ldx     selected_index
-        lda     buffer+1,x
-        sta     selected_icon_list
-        jsr     icon_entry_lookup
-        stax    $06
-        ldy     #IconEntry::win_type
-        lda     ($06),y
-        and     #kIconEntryWinIdMask
-        sta     selected_window_index
-        lda     #1
-        sta     selected_icon_count
-        rts
-.endproc
-
 ;;; Highlight the icon in the list at |selected_index|
-.proc highlight_icon
+highlight_icon:
         ldx     selected_index
         lda     buffer+1,x
-
         sta     icon_param
+
+        icon_ptr := $06
+
         jsr     icon_entry_lookup
-        stax    $06
+        stax    icon_ptr
         ldy     #IconEntry::win_type
-        lda     ($06),y
+        lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
         sta     getwinport_params2::window_id
         beq     :+              ; desktop (volume) icon
@@ -3128,9 +3087,37 @@ select_prev:
         lda     icon_param
         jsr     icon_window_to_screen
         jsr     reset_main_grafport
-:       rts
-.endproc
+:
 
+;;; Finish up - set selection, scroll icon into view
+        ldx     selected_index
+        lda     buffer+1,x
+
+        ;; Set selection
+        sta     selected_icon_list
+
+        ;; Set window containing selection (0=desktop)
+        jsr     icon_entry_lookup
+        stax    icon_ptr
+        ldy     #IconEntry::win_type
+        lda     (icon_ptr),y
+        and     #kIconEntryWinIdMask
+        sta     selected_window_index
+
+        ;; Always one icon selected
+        lda     #1
+        sta     selected_icon_count
+
+        ;; If windowed, ensure it is visible
+        lda     selected_window_index
+        beq     :+
+        jsr     LoadActiveWindowIconTable
+        lda     selected_icon_list
+        jsr     scroll_icon_into_view
+        jsr     LoadDesktopIconTable
+:
+
+        rts
 .endproc
 
 ;;; ============================================================
