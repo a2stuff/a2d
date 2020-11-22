@@ -2291,7 +2291,8 @@ kIconBBoxOffsetRight   = 50          ; includes width of icon + label
         ;; X adjustment
 
         ;; Is left of icon beyond window? If so, adjust by delta (negative)
-        sub16   cur_icon_pos::xcoord, window_grafport::cliprect::x1, delta
+        sub16_8 cur_icon_pos::xcoord, #kIconBBoxOffsetLeft, tmp
+        sub16   tmp, window_grafport::cliprect::x1, delta
         bmi     adjustx
 
         ;; Is right of icon beyond window? If so, adjust by delta (positive)
@@ -2316,10 +2317,11 @@ donex:
         kMaxIconHeight = 17
         kIconLabelHeight = 8
 
-        ;; TODO: Accomodate top of icon into calculations.
+        ;; TODO: Accomodate kWindowHeaderHeight?
 
         ;; Is top of icon beyond window? If so, adjust by delta (negative)
-        sub16   cur_icon_pos::ycoord, window_grafport::cliprect::y1, delta
+        sub16_8 cur_icon_pos::ycoord, #kIconBBoxOffsetTop, tmp
+        sub16   tmp, window_grafport::cliprect::y1, delta
         bmi     adjusty
 
         ;; Is bottom of icon beyond window? If so, adjust by delta (positive)
@@ -2332,7 +2334,7 @@ adjusty:
         ora     delta+1
         beq     doney
 
-        inc dirty
+        inc     dirty
         add16   window_grafport::cliprect::y1, delta, window_grafport::cliprect::y1
         add16   window_grafport::cliprect::y2, delta, window_grafport::cliprect::y2
 
@@ -2350,7 +2352,9 @@ icon_num:
 
 dirty:  .byte   0
 
-delta: .word   0
+delta:  .word   0
+
+tmp:    .word   0
 .endproc
 
 ;;; ============================================================
