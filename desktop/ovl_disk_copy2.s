@@ -15,17 +15,17 @@
 filename:   PASCAL_STRING "DeskTop2"
 
         DEFINE_READ_PARAMS read_params, 0, 0
-        DEFINE_SET_MARK_PARAMS set_mark_params, $133E0
+        DEFINE_SET_MARK_PARAMS set_mark_params, kOverlayDiskCopy3Offset
         DEFINE_CLOSE_PARAMS close_params
 
         .byte   $00,$00
 
 buf1:   .addr   $4000
-dest1:  .addr   $D000
-len1:   .word   $2200
+dest1:  .addr   kOverlayDiskCopy3Address
+len1:   .word   kOverlayDiskCopy3Length
 
-buf2:   .addr   $800
-len2:   .word   $B00
+buf2:   .addr   kOverlayDiskCopy4Address
+len2:   .word   kOverlayDiskCopy4Length
 
 ;;; ============================================================
 

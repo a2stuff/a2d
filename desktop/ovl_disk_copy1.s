@@ -9,8 +9,6 @@
 
         jmp     start
 
-        load_target := $1800
-
 ;;; ============================================================
 ;;; Menu - relocated up ot $D400
 
@@ -32,8 +30,8 @@ item_label:
 ;;; ============================================================
 
         DEFINE_OPEN_PARAMS open_params, str_desktop2, $1C00
-        DEFINE_SET_MARK_PARAMS set_mark_params, $131E0
-        DEFINE_READ_PARAMS read_params, load_target, $200
+        DEFINE_SET_MARK_PARAMS set_mark_params, kOverlayDiskCopy2Offset
+        DEFINE_READ_PARAMS read_params, kOverlayDiskCopy2Address, kOverlayDiskCopy2Length
         DEFINE_CLOSE_PARAMS close_params
 
 str_desktop2:
@@ -75,7 +73,7 @@ start:  lda     #$80
         ;; And invoke it.
         sta     ALTZPOFF
         lda     ROMIN2
-        jmp     load_target
+        jmp     kOverlayDiskCopy2Address
 
 ;;; ============================================================
 

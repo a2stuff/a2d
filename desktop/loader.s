@@ -238,21 +238,24 @@ filename:
 ;;; $D000 aux/banked - DeskTop code callable from main, and resources
 ;;; $FB00 aux/banked - more DeskTop resources (icons, strings, etc)
 ;;; $4000 main       - more DeskTop code
-;;; $0800 main       - DeskTop initialization code; later overwritten by DAs
+;;; $0800 main       - DeskTop initialization code; later overwritten by DAs, etc
 ;;; $0290 main       - Routine to invoke other programs
 
 kNumSegments = 6
 
-segment_addr_table:
-        .word   $3F00,$4000,$4000,$4000,$0800,$0290
+segment_addr_table:             ; Temporary load addresses
+        .word   $3F00,$4000,$4000 ; loaded here and then moved into Aux / LC banks
+        .word   kSegmentDeskTopMainAddress,kSegmentInitializerAddress,kSegmentInvokerAddress ; "moved" in place
         ASSERT_ADDRESS_TABLE_SIZE segment_addr_table, kNumSegments
 
-segment_dest_table:
-        .addr   $4000,$D000,$FB00,$4000,$0800,$0290
+segment_dest_table:             ; Runtime addresses (moved here)
+        .addr   kSegmentDeskTopAuxAddress,kSegmentDeskTopLC1AAddress,kSegmentDeskTopLC1BAddress
+        .addr   kSegmentDeskTopMainAddress,kSegmentInitializerAddress,kSegmentInvokerAddress
         ASSERT_ADDRESS_TABLE_SIZE segment_dest_table, kNumSegments
 
 segment_size_table:
-        .word   $8000,$1D00,$0500,$7F00,$0800,$0160
+        .word   kSegmentDeskTopAuxLength,kSegmentDeskTopLC1ALength,kSegmentDeskTopLC1BLength
+        .word   kSegmentDeskTopMainLength,kSegmentInitializerLength,kSegmentInvokerLength
         ASSERT_ADDRESS_TABLE_SIZE segment_size_table, kNumSegments
 
 segment_type_table:             ; 0 = main, 1 = aux, 2 = banked (aux)

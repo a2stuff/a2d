@@ -9974,16 +9974,27 @@ step:   .byte   0
 kNumOverlays = 9
 
 pos_table:
-        .dword  $00012FE0,$000160E0,$000174E0,$000184E0,$0001A4E0
-        .dword  $0001ACE0,$0001B4E0,$0000B780,$0000F780
+        .dword  kOverlayDiskCopy1Offset, kOverlayFormatEraseOffset
+        .dword  kOverlaySelector1Offset, kOverlayFileDialogOffset
+        .dword  kOverlayFileCopyOffset, kOverlayFileDeleteOffset
+        .dword  kOverlaySelector2Offset, kOverlayDeskTopRestore1Offset
+        .dword  kOverlayDeskTopRestore2Offset
         ASSERT_RECORD_TABLE_SIZE pos_table, kNumOverlays, 4
 
 len_table:
-        .word   $0200,$1400,$1000,$2000,$0800,$0800,$0800,$2800,$1000
+        .word   kOverlayDiskCopy1Length, kOverlayFormatEraseLength
+        .word   kOverlaySelector1Length, kOverlayFileDialogLength
+        .word   kOverlayFileCopyLength, kOverlayFileDeleteLength
+        .word   kOverlaySelector2Length, kOverlayDeskTopRestore1Length
+        .word   kOverlayDeskTopRestore2Length
         ASSERT_RECORD_TABLE_SIZE len_table, kNumOverlays, 2
 
 addr_table:
-        .addr   $0800,$0800,$9000,$5000,$7000,$7000,$7000,$5000,$9000
+        .word   kOverlayDiskCopy1Address, kOverlayFormatEraseAddress
+        .word   kOverlaySelector1Address, kOverlayFileDialogAddress
+        .word   kOverlayFileCopyAddress, kOverlayFileDeleteAddress
+        .word   kOverlaySelector2Address, kOverlayDeskTopRestore1Address
+        .word   kOverlayDeskTopRestore2Address
         ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
 
         DEFINE_OPEN_PARAMS open_params, str_desktop2, $1C00

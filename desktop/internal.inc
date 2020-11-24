@@ -134,3 +134,45 @@ ITK_RELAY       := ITKRelayImpl
         hour    .byte
         minute  .byte
 .endstruct
+
+;;; ============================================================
+;;; Segments & Overlays
+
+_segoffset .set 0
+.macro DEFSEG name, addr, len
+        .ident(.sprintf("k%sAddress", .string(name))) = addr
+        .ident(.sprintf("k%sLength", .string(name))) = len
+        .ident(.sprintf("k%sOffset", .string(name))) = _segoffset
+        _segoffset .set _segoffset + len
+.endmacro
+
+;;; Segments
+        DEFSEG SegmentLoader,      $2000, $0580
+        DEFSEG SegmentDeskTopAux,  $4000, $8000
+        DEFSEG SegmentDeskTopLC1A, $D000, $1D00
+        DEFSEG SegmentDeskTopLC1B, $FB00, $0500
+        DEFSEG SegmentDeskTopMain, $4000, $7F00
+        DEFSEG SegmentInitializer, $0800, $0800
+        DEFSEG SegmentInvoker,     $0290, $0160
+
+;;; Dynamically loaded overlays
+        DEFSEG OverlayDiskCopy1,   $0800, $0200
+        DEFSEG OverlayDiskCopy2,   $1800, $0200
+        DEFSEG OverlayDiskCopy3,   $D000, $2200
+        DEFSEG OverlayDiskCopy4,   $0800, $0B00
+        DEFSEG OverlayFormatErase, $0800, $1400
+        DEFSEG OverlaySelector1,   $9000, $1000
+        DEFSEG OverlayFileDialog,  $5000, $2000
+        DEFSEG OverlayFileCopy,    $7000, $0800
+        DEFSEG OverlayFileDelete,  $7000, $0800
+        DEFSEG OverlaySelector2,   $7000, $0800
+
+;;; Restore DeskTop after overlays
+
+kOverlayDeskTopRestore1Length = $2800
+kOverlayDeskTopRestore1Address = $5000
+kOverlayDeskTopRestore1Offset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestore1Address - kSegmentDeskTopMainAddress)
+
+kOverlayDeskTopRestore2Length = $1000
+kOverlayDeskTopRestore2Address = $9000
+kOverlayDeskTopRestore2Offset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestore2Address - kSegmentDeskTopMainAddress)
