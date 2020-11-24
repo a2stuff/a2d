@@ -488,7 +488,7 @@ end:
         sta     arg3+1
 .endmacro
 
-;;; Add A,Z to arg1 (immediate or absolute), store to arg2
+;;; Add A,X to arg1 (immediate or absolute), store to arg2
 ;;;    addax #$1111, $3333       ; immediate, absolute
 ;;;    addax $1111, $3333        ; absolute, absolute
 .macro addax arg1, arg2
