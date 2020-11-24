@@ -448,8 +448,7 @@ OpenDone:
         ;; If we've hit max number of entries, terminate operation.
         lda     num_entries
         cmp     #kMaxFilePaths
-        bne     exit
-        jmp     terminate
+        jeq     terminate
 
 exit:   rts
 .endproc
@@ -1031,15 +1030,12 @@ top_row:        .byte   0
         bne     exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        bne     :+
-        jmp     handle_down
-:       cmp     #MGTK::EventKind::key_down
-        bne     :+
-        jmp     handle_key
-:       cmp     #MGTK::EventKind::no_event
-        bne     :+
-        jmp     handle_no_event
-:       jmp     input_loop
+        jeq     handle_down
+        cmp     #MGTK::EventKind::key_down
+        jeq     handle_key
+        cmp     #MGTK::EventKind::no_event
+        jeq     handle_no_event
+        jmp     input_loop
 .endproc
 
 .proc exit
@@ -1084,12 +1080,10 @@ done:   rts
         ;; Button down
         lda     event_params::key
         cmp     #CHAR_LEFT
-        bne     :+
-        jmp     do_meta_left
-:       cmp     #CHAR_RIGHT
-        bne     :+
-        jmp     do_meta_right
-:       jmp     ignore_char
+        jeq     do_meta_left
+        cmp     #CHAR_RIGHT
+        jeq     do_meta_right
+        jmp     ignore_char
 
 not_meta:
         lda     event_params::key
@@ -1104,14 +1098,13 @@ not_meta:
         jmp     do_search
 
 :       cmp     #CHAR_LEFT
-        bne     :+
-        jmp     do_left
-:       cmp     #CHAR_RIGHT
-        bne     :+
-        jmp     do_right
-:       cmp     #CHAR_DELETE
-        bne     :+
-        jmp     do_delete
+        jeq     do_left
+
+        cmp     #CHAR_RIGHT
+        jeq     do_right
+
+        cmp     #CHAR_DELETE
+        jeq     do_delete
 
         ;; Valid characters are . 0-9 A-Z a-z ? *
 :       cmp     #'*'            ; Wildcard
@@ -1427,9 +1420,9 @@ results:
         bne     try_down
         lda     top_row
         cmp     #0
-        bne     :+
-        jmp     done
-:       dec     top_row
+        jeq     done
+
+        dec     top_row
         bpl     update
 
         ;; scroll down by one line
@@ -1438,9 +1431,9 @@ try_down:
         bne     try_pgup
         lda     top_row
         cmp     max_top
-        bcc     :+
-        jmp     done
-:       inc     top_row
+        jcs     done
+
+        inc     top_row
         bpl     update
 
         ;; scroll up by one page
@@ -1470,9 +1463,9 @@ try_pgdn:
 
 try_thumb:
         cmp     #MGTK::Part::thumb
-        beq     :+
-        jmp     done
-:       copy16  event_params::xcoord, trackthumb_params::mousex
+        jne     done
+
+        copy16  event_params::xcoord, trackthumb_params::mousex
         copy16  event_params::ycoord, trackthumb_params::mousey
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved

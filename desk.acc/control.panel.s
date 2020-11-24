@@ -1149,7 +1149,7 @@ next:   dex
         ;; Draw DA's window
         jsr     draw_window
 
-        jmp input_loop
+        jmp     input_loop
 .endproc
 
 ;;; ============================================================

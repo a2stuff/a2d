@@ -219,10 +219,9 @@ grafport:       .tag MGTK::GrafPort
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
-        bne     :+
-        jmp     on_click
+        jeq     on_click
 
-:       cmp     #MGTK::EventKind::key_down
+        cmp     #MGTK::EventKind::key_down
         bne     input_loop
 .endproc
 
@@ -312,30 +311,25 @@ hit:    lda     winfo::window_id
 
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     on_click_ok
+        jeq     on_click_ok
 
-:       MGTK_CALL MGTK::InRect, norm_button_rect
+        MGTK_CALL MGTK::InRect, norm_button_rect
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     on_click_norm
+        jeq     on_click_norm
 
-
-:       MGTK_CALL MGTK::InRect, fast_button_rect
+        MGTK_CALL MGTK::InRect, fast_button_rect
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     on_click_fast
+        jeq     on_click_fast
 
-:       jmp     input_loop
+        jmp     input_loop
 .endproc
 
 ;;; ============================================================
 
 .proc on_click_ok
         yax_call button_event_loop, kDAWindowId, ok_button_rect
-        bne     :+
-        jmp     close_window
-:       jmp     input_loop
+        jeq     close_window
+        jmp     input_loop
 .endproc
 
 ;;; ============================================================
