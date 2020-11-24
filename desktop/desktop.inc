@@ -7,10 +7,6 @@
 ;;;  * Desk Accessories & Preview Accessories
 ;;; ============================================================
 
-;;; DeskTop init routine, after all segments are loaded.
-
-DESKTOP_INIT    := $0800
-
 ;;; Desk Accessories are loaded in Main ($800-$1BFF) using
 ;;; an I/O buffer (Main $1C00-1FFF). DAs often copy themselves
 ;;; into Aux but can only use $800-$1AFF due to icon tables.

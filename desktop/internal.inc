@@ -50,6 +50,11 @@ kWindowHeaderHeight     = 14
 SAVE_AREA_BUFFER := $800        ; through $1AFF
 kSaveAreaSize   = $1300
 
+;;; Most common I/O buffer, used during initializer, loading DAs,
+;;; and many other operations.
+
+IO_BUFFER := $1C00
+
 ;;; ============================================================
 ;;; Menu Constants
 
@@ -137,6 +142,11 @@ ITK_RELAY       := ITKRelayImpl
 
 ;;; ============================================================
 ;;; Segments & Overlays
+;;;
+;;; DeskTop is broken into various segments plus dynamically
+;;; loaded overlays, all stored in one file. This section
+;;; defines the file offsets, load addresses and lengths of each
+;;; segment and offset
 
 _segoffset .set 0
 .macro DEFSEG name, addr, len
@@ -152,7 +162,7 @@ _segoffset .set 0
         DEFSEG SegmentDeskTopLC1A, $D000, $1D00
         DEFSEG SegmentDeskTopLC1B, $FB00, $0500
         DEFSEG SegmentDeskTopMain, $4000, $7F00
-        DEFSEG SegmentInitializer, $0800, $0800
+        DEFSEG SegmentInitializer, $0800, $0A00
         DEFSEG SegmentInvoker,     $0290, $0160
 
 ;;; Dynamically loaded overlays
@@ -167,7 +177,7 @@ _segoffset .set 0
         DEFSEG OverlayFileDelete,  $7000, $0800
         DEFSEG OverlaySelector2,   $7000, $0800
 
-;;; Restore DeskTop after overlays
+;;; These pseudo-overlays restore DeskTop after overlays are used
 
 kOverlayDeskTopRestore1Length = $2800
 kOverlayDeskTopRestore1Address = $5000

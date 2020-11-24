@@ -1604,7 +1604,9 @@ start:  jsr     reset_main_grafport
         lda     menu_click_params::item_num           ; menu item index (1-based)
         sec
         sbc     #3              ; About and separator before first item
-        jsr     a_times_16
+        tay
+        ldax    #kDAMenuItemSize
+        jsr     Multiply_16_8_16
         addax   #desk_acc_names, ptr
 
         ;; Append DA directory name
@@ -1622,9 +1624,10 @@ start:  jsr     reset_main_grafport
         lda     ($06),y
         sta     len
 loop:   inx
-        iny
+skip:   iny
         lda     ($06),y
         cmp     #' '            ; Convert spaces back to periods
+        bcc     skip            ; Ignore control characters
         bne     :+
         lda     #'.'
 :       sta     path,x
@@ -9283,6 +9286,8 @@ pos_win:        .word   0, 0
 ;;;  3 = SmartPort, Removable (e.g. UniDisk 3.5)
 ;;;  4 = AppleTalk file share
 ;;;  5 = unknown / RAM-based driver
+;;;
+;;; NOTE: Called from Initializer (init) which resides in $800-$1200+)
 
 device_type_to_icon_address_table:
         .addr floppy140_icon
@@ -9298,6 +9303,10 @@ device_type_to_icon_address_table:
 
 .proc get_device_type
         slot_addr := $0A
+
+        ;; Avoid Initializer memory ($800-$1200)
+        block_buffer := $1E00
+
         sta     unit_number
 
         ;; Look up driver address
@@ -9365,7 +9374,7 @@ unk:    MLI_RELAY_CALL READ_BLOCK, block_params
 
 hd:     return  #kDeviceTypeProFile
 
-        DEFINE_READ_BLOCK_PARAMS block_params, $800, 2
+        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
         unit_number := block_params::unit_num
 
 blocks: .word   0
@@ -9410,6 +9419,8 @@ buffer: .res    16, 0            ; length overwritten with '/'
 ;;; Create Volume Icon
 ;;; Input: A = unit number, X = icon num, Y = index in DEVLST
 ;;; Output: 0 on success, ProDOS error code on failure
+;;;
+;;; NOTE: Called from Initializer (init) which resides in $800-$1200
 
         cvi_data_buffer := $800
 
@@ -9997,7 +10008,7 @@ addr_table:
         .word   kOverlayDeskTopRestore2Address
         ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
 
-        DEFINE_OPEN_PARAMS open_params, str_desktop2, $1C00
+        DEFINE_OPEN_PARAMS open_params, str_desktop2, IO_BUFFER
 
 str_desktop2:
         PASCAL_STRING "DeskTop2"
@@ -15172,15 +15183,17 @@ hi:  .byte   0
 
 ;;; adjust_fileeentry_case:
 ;;; Input: A,X points at FileEntry structure.
-;;;
+;;; NOTE: Called from Initializer (init) which resides in $800-$1200
+
 ;;; adjust_volname_case:
 ;;; Input: A,X points at ON_LINE result (e.g. 'MY.DISK', length + 15 chars)
+;;; NOTE: Called from Initializer (init) which resides in $800-$1200
 
 .proc adjust_case_impl
 
         volpath := $810
         volbuf  := $820
-        DEFINE_OPEN_PARAMS volname_open_params, volpath, $1000
+        DEFINE_OPEN_PARAMS volname_open_params, volpath, IO_BUFFER
         DEFINE_READ_PARAMS volname_read_params, volbuf, .sizeof(VolumeDirectoryHeader)
         DEFINE_CLOSE_PARAMS volname_close_params
 
@@ -16195,8 +16208,8 @@ ytmp:   .word   0
 ;;; Save/Restore window state at shutdown/launch
 
 .proc save_restore_windows
-        desktop_file_io_buf := $1000
-        desktop_file_data_buf := $1400
+        desktop_file_io_buf := IO_BUFFER
+        desktop_file_data_buf := $1800
         kFileSize = 2 + 8 * .sizeof(DeskTopFileItem) + 1
 
         DEFINE_CREATE_PARAMS create_params, str_desktop_file, ACCESS_DEFAULT, $F1

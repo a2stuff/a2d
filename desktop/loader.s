@@ -455,7 +455,7 @@ start:
         ;; Finish up
 close:  MLI_CALL CLOSE, close_params
 
-finish: jmp     DESKTOP_INIT
+finish: jmp     kSegmentInitializerAddress
 
 .endproc
 

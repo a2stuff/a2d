@@ -14,14 +14,16 @@
 ;;;       |.............|       |.............|
 ;;;       |.Graphics....|       |.Graphics....|
 ;;; $2000 +-------------+       +-------------+
-;;;       |             |       | Win/Icn Map | <- initialized
+;;;       | I/O Buffer  |       | Win/Icn Map | <- initialized
+;;; $1C00 +-------------+       |             |
 ;;; $1B00 |             |       +-------------+
 ;;;       |             |       |             |
-;;; $1800 +-------------+       |             |
+;;;       |             |       |             |
+;;;       |             |       |             |
+;;;       |             |       |             |
+;;; $1600 +-------------+       |             |
 ;;;       | Data Buffer |       |             |
-;;; $1400 +-------------+       |             |
-;;;       | I/O Buffer  |       |             |
-;;; $1000 +-------------+       |             |
+;;; $1200 +-------------+       |             |
 ;;;       |             |       |             |
 ;;;       | Code        |       |             |
 ;;; $0800 +-------------+       +-------------+
@@ -51,12 +53,11 @@
 
 .proc init
 
-        .org ::DESKTOP_INIT
+        .org ::kSegmentInitializerAddress
 
         MLI_RELAY := main::MLI_RELAY
 
-        io_buf := $1000
-        data_buf := $1400
+        data_buf := $1200
         kDataBufferSize = $400
 
 start:
@@ -358,7 +359,7 @@ trash_name:  PASCAL_STRING "Trash"
         ptr1 := $6
         ptr2 := $8
 
-        selector_list_io_buf := io_buf
+        selector_list_io_buf := IO_BUFFER
         selector_list_data_buf := data_buf
         kSelectorListShortSize = $400
         .assert kSelectorListShortSize <= kDataBufferSize, error, "Buffer size error"
@@ -616,61 +617,67 @@ process_block:
         beq     is_da
 
         cmp     #kDAFileType    ; DA? (match type/auxtype)
-        bne     next_entry
+        jne     next_entry
         ldy     #FileEntry::aux_type
         lda     (dir_ptr),y
         cmp     #<kDAFileAuxType
-        bne     next_entry
+        jne     next_entry
         iny
         lda     (dir_ptr),y
         cmp     #>kDAFileAuxType
-        bne     next_entry
+        jne     next_entry
 
+is_da:
         ;; Compute slot in DA name table
-is_da:  inc     desk_acc_num
-        copy16  #desk_acc_names, da_ptr
-        lda     #0
-        sta     ptr_calc_hi
-        lda     apple_menu      ; num menu items
-        sec
-        sbc     #2              ; ignore "About..." and separator
-        asl     a
-        rol     ptr_calc_hi
-        asl     a
-        rol     ptr_calc_hi
-        asl     a
-        rol     ptr_calc_hi
-        asl     a
-        rol     ptr_calc_hi
-        clc
-        adc     da_ptr
-        sta     da_ptr
-        lda     ptr_calc_hi
-        adc     da_ptr+1
-        sta     da_ptr+1
+        ldy     desk_acc_num
+        ldax    #kDAMenuItemSize
+        jsr     Multiply_16_8_16
+        addax   #desk_acc_names, da_ptr
 
         ;; Copy name
         ldy     #FileEntry::storage_type_name_length
         lda     (dir_ptr),y
         and     #NAME_LENGTH_MASK
-        sta     (da_ptr),y
+        sta     name_buf
         tay
 :       lda     (dir_ptr),y
-        sta     (da_ptr),y
+        sta     name_buf,y
         dey
         bne     :-
 
-        ;; Convert periods to spaces
-        lda     (da_ptr),y
+        ;; If a directory, prepend name with folder glyphs
+        ldy     #FileEntry::file_type
+        lda     (dir_ptr),y
+        cmp     #FT_DIRECTORY   ; Directory?
+    IF_EQ
+        ldy     name_buf
+:       lda     name_buf,y
+        sta     name_buf+3,y
+        dey
+        bne     :-
+
+        copy    #kGlyphFolderLeft, name_buf+1
+        copy    #kGlyphFolderRight, name_buf+2
+        copy    #kGlyphSpacer, name_buf+3
+        inc     name_buf
+        inc     name_buf
+        inc     name_buf
+    END_IF
+
+        ;; Convert periods to spaces, copy into menu
+        ldy     #0
+        lda     name_buf,y
+        sta     (da_ptr),y
         tay
-loop:   lda     (da_ptr),y
+loop:   lda     name_buf,y
         cmp     #'.'
         bne     :+
         lda     #' '
-        sta     (da_ptr),y
-:       dey
-
+:       sta     (da_ptr),y
+        dey
         bne     loop
+
+        inc     desk_acc_num
         inc     apple_menu      ; number of menu items
 
 next_entry:
@@ -705,7 +712,7 @@ close_dir:
         MLI_RELAY_CALL CLOSE, close_params
         jmp     end
 
-        DEFINE_OPEN_PARAMS open_params, str_desk_acc, io_buf
+        DEFINE_OPEN_PARAMS open_params, str_desk_acc, IO_BUFFER
         open_ref_num := open_params::ref_num
 
         .assert BLOCK_SIZE <= kDataBufferSize, error, "Buffer size error"
@@ -727,7 +734,8 @@ desk_acc_num:   .byte   0
 entry_length:   .byte   0
 entries_per_block:      .byte   0
 entry_in_block: .byte   0
-ptr_calc_hi:    .byte   0
+
+name_buf:       .res    ::kDAMenuItemSize, 0
 
 end:
 .endscope
@@ -1158,6 +1166,6 @@ is_laser128_flag:
 
 ;;; ============================================================
 
-        PAD_TO $1000
+        PAD_TO ::kSegmentInitializerAddress + ::kSegmentInitializerLength
 
 .endproc ; init

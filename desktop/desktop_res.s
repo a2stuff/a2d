@@ -1221,13 +1221,15 @@ label_del:
 label_run:
         PASCAL_STRING "Run an Entry..."
 
+kDAMenuItemSize = 19            ; length (1) + filename (15) + folder glyphs prefix (3)
+
         ;; Apple Menu
 apple_menu:
         DEFINE_MENU 1
 @items: DEFINE_MENU_ITEM label_about
         DEFINE_MENU_SEPARATOR
         .repeat kMaxDeskAccCount, i
-        DEFINE_MENU_ITEM desk_acc_names + i * 16
+        DEFINE_MENU_ITEM desk_acc_names + i * kDAMenuItemSize
         .endrepeat
         .assert 2 + kMaxDeskAccCount = kMenuSizeApple, error, "Menu size mismatch"
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
@@ -1236,7 +1238,7 @@ label_about:
         PASCAL_STRING "About Apple II DeskTop..."
 
 desk_acc_names:
-        .res    kMaxDeskAccCount * 16, 0
+        .res    kMaxDeskAccCount * kDAMenuItemSize, 0
 
 splash_menu:
         DEFINE_MENU_BAR 1
