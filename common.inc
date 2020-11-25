@@ -4,8 +4,8 @@
 
 kDeskTopVersionMajor = 1
 kDeskTopVersionMinor = 2
-.define kDeskTopVersionSuffix "-alpha21"
-.define kDeskTopReleaseDate "November 14, 2020"
+.define kDeskTopVersionSuffix "-alpha22"
+.define kDeskTopReleaseDate "November 25, 2020"
 
 ;;; ============================================================
 
