@@ -4,7 +4,9 @@
 
 Work-in-progress disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk)
 
-💾 Disk images can be found on the [Releases](https://github.com/a2stuff/a2d/releases) page 💾
+💾 Disk images are on the [Releases](https://github.com/a2stuff/a2d/releases) page
+
+📖 Documentation is at https://a2desktop.com/docs
 
 ## Background
 
@@ -48,8 +50,8 @@ Additional help is welcome! See the guide for [Contributing](CONTRIBUTING.md).
 
 ## Tools
 
-The [cc65](http://cc65.github.io/cc65/) tool chain will be used; source files will
-target the ca65 macro assembler. Cross-development on modern systems will be assumed.
+The [cc65](http://cc65.github.io/cc65/) tool chain is used; source files
+target the ca65 macro assembler. Cross-development on modern systems is assumed.
 (Sorry, Merlin purists! We still love you.)
 
 See [Building And Running](docs/Building_And_Running.md) instructions.
