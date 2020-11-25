@@ -1107,7 +1107,7 @@ not_meta:
         jeq     do_delete
 
         ;; Valid characters are . 0-9 A-Z a-z ? *
-:       cmp     #'*'            ; Wildcard
+        cmp     #'*'            ; Wildcard
         beq     do_char
         cmp     #'?'            ; Wildcard
         beq     do_char
