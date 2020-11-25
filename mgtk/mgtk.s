@@ -5399,9 +5399,12 @@ bottom: .word   0
 .endparams
         fill_rect_params4_top := fill_rect_params4::top
 
+kMaxMenuItems   = 15
+kMenuItemHeight = 12
+
 menu_item_y_table:
-        .repeat 15, i
-        .byte   12 + 12 * i
+        .repeat kMaxMenuItems, i
+        .byte   kMenuItemHeight + kMenuItemHeight * i
         .endrepeat
 menu_item_y_table_end:
 
@@ -6385,6 +6388,8 @@ saveloop:
 loop:   jsr     get_menu_item
         bit     curmenuitem::options
         bvc     :+
+
+        jsr     draw_filler
         jmp     next
 
 :       lda     curmenuitem::options
@@ -6491,7 +6496,7 @@ next:   ldx     menu_item_index
         MGTK_CALL MGTK::SetPattern, light_speckle_pattern
 
         lda     #MGTK::penOR
-        jsr     set_fill_mode
+ep2:    jsr     set_fill_mode
 
         MGTK_CALL MGTK::PaintRect, fill_rect_params3
         MGTK_CALL MGTK::SetPattern, standard_port::penpattern
@@ -6499,6 +6504,23 @@ next:   ldx     menu_item_index
         lda     #MGTK::penXOR
         jsr     set_fill_mode
         rts
+.endproc
+
+.proc draw_filler
+        ldx     menu_item_index
+        lda     menu_item_y_table,x
+        clc
+        adc     #kMenuItemHeight/2
+        sta     fill_rect_params3_top
+        sta     fill_rect_params3_bottom
+
+        add16lc curmenuinfo::x_min, #1, fill_rect_params3_left
+        sub16lc curmenuinfo::x_max, #1, fill_rect_params3_right
+
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
+
+        lda     #MGTK::pencopy
+        beq     dim_menuitem::ep2 ; always
 .endproc
 
 draw_menu_draw_or_hide := draw_menu::draw_or_hide
@@ -10336,4 +10358,4 @@ mouse_operand:               ; e.g. if mouse is in slot 4, this is $40
 .endproc  ; mgtk
 
         ;; Room for future expansion
-        PAD_TO $8580
+        PAD_TO $8600

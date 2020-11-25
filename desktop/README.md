@@ -109,8 +109,8 @@ When running, memory use includes:
      as windows are opened and closed.
  * $2000-$3FFF is the hires graphics page.
  * $4000-$BFFF (`desktop_aux.s`) includes these:
- * $4000-$8580 is the [MouseGraphics ToolKit](../mgtk/MGTK.md)
- * $8580-$8DFF - Resources, including icons and font
+ * $4000-$85FF is the [MouseGraphics ToolKit](../mgtk/MGTK.md)
+ * $8600-$8DFF - Resources, including icons and font
  * $8E00-$A6xx - [Icon ToolKit](APIs.md)
  * $A6xx-$ADFF - Resources, including menu definitions
  * $AE00-$BFFF - Alert dialog resources/code
@@ -217,7 +217,7 @@ $8E00 |             |       | ITK Entry   |
       |             |       |             |
 $8800 |             |       | Font        |
       |             |       |             |
-$8580 |             |       +-------------+
+$8600 |             |       +-------------+
       |             |       | MGTK        |
       |             |       |             |
       |             |       |             |
