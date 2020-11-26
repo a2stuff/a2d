@@ -200,12 +200,21 @@ start:  lda     ptr
   * Macros that `.define` pseudo-constants should use `kTitleCase`
   * Other macros should be named with `SHOUTY_CASE`
 
-The following macros should be used to improve code readability:
+The following macros should be used to improve code readability by eliminating repetition:
 
-* `add16`/`sub16`/`cmp16`/`lsr16`/`asl16`/`inc16`/`dec16` for 16-bit operations
-* `ldax`/`ldxy`/`stax`/`stxy` for 16-bit load/stores
-* `addr_call`/`addr_jump` for calls (or tail calls) with 16-bit address argument
-* `yax_call`/`yax_jump` for calls (or tail calls) with 16-bit address argument and 8-bit parameter
+* pseudo-ops:
+  * `add16`/`sub16`/`cmp16`/`lsr16`/`asl16`/`inc16`/`dec16` for 16-bit operations
+  * `ldax`/`ldxy`/`stax`/`stxy` for 16-bit load/stores
+  * `addr_call`/`addr_jump` for calls (or tail calls) with 16-bit address argument
+  * `yax_call`/`yax_jump` for calls (or tail calls) with 16-bit address argument and 8-bit parameter
+  * `return`/`return16` for returning A or A,X from a proc
+  * `jcc`/`jeq`/etc for long branches
+* structural:
+  * `PAD_TO` to introduce padding to a known address
+  * `COPY_xx` for fixed size copy loops
+  * `IF_xx`/`ELSE`/`END_IF` for conditional sections, to avoid throw-away labels
+* definitions:
+  * `PASCAL_STRING` for length-prefixed strings
 
 ## Param Blocks
 
@@ -226,6 +235,14 @@ result:         .word   0
 
 (`.params` is an alias for `.proc`)
 
+* Parameter blocks placed at a fixed location in memory use the `PARAM_BLOCK` macro:
+
+```asm
+PARAM_BLOCK zp_params, $80
+flag1:  .byte   0
+flag2:  .byte   0
+END_PARAM_BLOCK
+```
 
 ## Namespaces
 
@@ -256,6 +273,17 @@ well in the future.
         cpy     #00
         bne     :-
 ```
+
+## Assertions
+
+* Try to assert any compile-time assumptions you can:
+    * Structure sizes
+    * Equality between constants (e.g. when relying on a const for an always-branch)
+    * Memory placement of blocks or members
+* Use ca65 `.assert` directive as needed, and these macros:
+    * `ASSERT_EQUALS` - equality comparison
+    * `ASSERT_ADDRESS` - current address
+    * `ASSERT_TABLE_SIZE` (bytes), `ASSERT_ADDRESS_TABLE_SIZE` (words), `ASSERT_RECORD_TABLE_SIZE`
 
 
 ## Work-Arounds
