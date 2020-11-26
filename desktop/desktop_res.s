@@ -916,12 +916,6 @@ desktop_icon_coords_table:
 
 ;;; ============================================================
 
-device_name_table:
-        .repeat kMaxVolumes+1, i
-        .addr   .ident(.sprintf("dev%ds", i))
-        .endrepeat
-        ASSERT_ADDRESS_TABLE_SIZE device_name_table, kMaxVolumes + 1
-
 selector_menu_addr:
         .addr   selector_menu
 
@@ -1127,9 +1121,14 @@ str_all:PASCAL_STRING "All"
 
 ;;; ============================================================
 
-;;; Device Names (populated at startup using templates below)
+;;; Device Names (populated at startup using templates in init.s)
+device_name_table:
         .repeat kMaxVolumes+1, i
-.ident(.sprintf("dev%d", i)):
+        .addr   .ident(.sprintf("dev%ds", i))
+        .endrepeat
+        ASSERT_ADDRESS_TABLE_SIZE device_name_table, kMaxVolumes + 1
+
+        .repeat kMaxVolumes+1, i
         DEFINE_STRING "Slot    drive       ", .ident(.sprintf("dev%ds", i))
         .endrepeat
 
@@ -1140,57 +1139,6 @@ startup_menu_item_4:    PASCAL_STRING "Slot 0"
 startup_menu_item_5:    PASCAL_STRING "Slot 0"
 startup_menu_item_6:    PASCAL_STRING "Slot 0"
 startup_menu_item_7:    PASCAL_STRING "Slot 0"
-
-kNumDeviceTypes = 6
-
-        kDeviceTypeDiskII      = 0
-        kDeviceTypeRAMDisk     = 1
-        kDeviceTypeProFile     = 2
-        kDeviceTypeRemovable   = 3
-        kDeviceTypeFileShare   = 4
-        kDeviceTypeUnknown     = 5
-
-;;; Templates used for device names
-device_template_table:
-        .addr   str_disk_ii_sd
-        .addr   str_ramcard_slot_x
-        .addr   str_profile_slot_x
-        .addr   str_unidisk_xy
-        .addr   str_fileshare_x
-        .addr   str_slot_drive
-        ASSERT_ADDRESS_TABLE_SIZE device_template_table, kNumDeviceTypes
-
-device_template_slot_offset_table:
-        .byte   15, 15, 15, 15, 14, 6
-        ASSERT_TABLE_SIZE device_template_slot_offset_table, kNumDeviceTypes
-
-device_template_drive_offset_table:
-        .byte   19, 19, 19, 19, 18, 15 ; 0 = no drive # for this type
-        ASSERT_TABLE_SIZE device_template_drive_offset_table, kNumDeviceTypes
-
-;;; Disk II
-str_disk_ii_sd:
-        PASCAL_STRING "Disk II  Slot x, Dy "
-
-;;; RAM disks
-str_ramcard_slot_x:
-        PASCAL_STRING "RAMCard  Slot x, Dy "
-
-;;; Fixed drives that aren't RAM disks
-str_profile_slot_x:
-        PASCAL_STRING "ProFile  Slot x, Dy "
-
-;;; Removable drives
-str_unidisk_xy:
-        PASCAL_STRING "UniDisk 3.5  Sx, Dy "
-
-;;; File Share
-str_fileshare_x:
-        PASCAL_STRING "AppleShare  Sx, Dy  "
-
-;;; Unknown devices
-str_slot_drive:
-        PASCAL_STRING "Slot x, Drive y     "
 
 ;;; ============================================================
 

@@ -73,6 +73,18 @@ kMenuSizeStartup  = 7
 kMenuSizeSelector = 13
 
 ;;; ============================================================
+;;; Device types
+
+kNumDeviceTypes = 6
+
+kDeviceTypeDiskII       = 0
+kDeviceTypeRAMDisk      = 1
+kDeviceTypeSmartport    = 2     ; implicitly non-removable
+kDeviceTypeRemovable    = 3     ; special case of SmartPort
+kDeviceTypeFileShare    = 4
+kDeviceTypeUnknown      = 5
+
+;;; ============================================================
 ;;; Invoker routine locations
 
 INVOKER_PREFIX          := $220 ; Prefix to set

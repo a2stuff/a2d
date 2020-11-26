@@ -9372,7 +9372,7 @@ unk:    MLI_RELAY_CALL READ_BLOCK, block_params
         bne     hd
         return  #kDeviceTypeFileShare
 
-hd:     return  #kDeviceTypeProFile
+hd:     return  #kDeviceTypeSmartport
 
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
         unit_number := block_params::unit_num

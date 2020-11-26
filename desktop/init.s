@@ -1166,6 +1166,52 @@ is_laser128_flag:
 
 ;;; ============================================================
 
+;;; Templates used for device names
+;;; Matches kDevice* constant ordering.
+
+device_template_table:
+        .addr   str_disk_ii_sd
+        .addr   str_ramcard_slot_x
+        .addr   str_profile_slot_x
+        .addr   str_unidisk_xy
+        .addr   str_fileshare_x
+        .addr   str_slot_drive
+        ASSERT_ADDRESS_TABLE_SIZE device_template_table, ::kNumDeviceTypes
+
+device_template_slot_offset_table:
+        .byte   15, 15, 15, 15, 14, 6
+        ASSERT_TABLE_SIZE device_template_slot_offset_table, ::kNumDeviceTypes
+
+device_template_drive_offset_table:
+        .byte   19, 19, 19, 19, 18, 15 ; 0 = no drive # for this type
+        ASSERT_TABLE_SIZE device_template_drive_offset_table, ::kNumDeviceTypes
+
+;;; Disk II
+str_disk_ii_sd:
+        PASCAL_STRING "Disk II  Slot x, Dy "
+
+;;; RAM disks
+str_ramcard_slot_x:
+        PASCAL_STRING "RAMCard  Slot x, Dy "
+
+;;; Fixed drives that aren't RAM disks
+str_profile_slot_x:
+        PASCAL_STRING "ProFile  Slot x, Dy "
+
+;;; Removable drives
+str_unidisk_xy:
+        PASCAL_STRING "UniDisk 3.5  Sx, Dy "
+
+;;; File Share
+str_fileshare_x:
+        PASCAL_STRING "AppleShare  Sx, Dy  "
+
+;;; Unknown devices
+str_slot_drive:
+        PASCAL_STRING "Slot x, Drive y     "
+
+;;; ============================================================
+
         PAD_TO ::kSegmentInitializerAddress + ::kSegmentInitializerLength
 
 .endproc ; init
