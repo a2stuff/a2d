@@ -614,10 +614,11 @@ process_block:
         lda     (dir_ptr),y
 
         cmp     #FT_DIRECTORY   ; Directory?
-        beq     is_da
+        beq     include
 
-        cmp     #kDAFileType    ; DA? (match type/auxtype)
-        jne     next_entry
+        cmp     #kDAFileType    ; DA? (must match type/auxtype)
+        jne     include         ; Allow arbitrary types (may not actually launch though)
+
         ldy     #FileEntry::aux_type
         lda     (dir_ptr),y
         cmp     #<kDAFileAuxType
@@ -627,7 +628,7 @@ process_block:
         cmp     #>kDAFileAuxType
         jne     next_entry
 
-is_da:
+include:
         ;; Compute slot in DA name table
         ldy     desk_acc_num
         ldax    #kDAMenuItemSize

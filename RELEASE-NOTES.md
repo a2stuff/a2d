@@ -43,6 +43,7 @@ Project Page: https://github.com/a2stuff/a2d
 * **File > Get Info** and list views show file and volume sizes in KB rather than Blocks.
 * **File > Get Info** shows used/total for volumes, rather than free/total.
 * Menu filler items appear with a visible separator. ([#135](https://github.com/a2stuff/a2d/issues/135))
+* Progress bar shown on splash screen during launch.
 
 ### Desk Accessory Enhancements
 
@@ -51,7 +52,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Desk accessory files with high bit in aux type set are hidden in Apple menu. ([#102](https://github.com/a2stuff/a2d/issues/102))
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. ([#4](https://github.com/a2stuff/a2d/issues/4))
 * Apple menu can contain directories, which launch windows. ([#209](https://github.com/a2stuff/a2d/issues/209))
-* Progress bar shown on splash screen during launch.
+* Other executable files (SYS, BAS, BIN) can be launched from the Apple menu. ([#293](https://github.com/a2stuff/a2d/issues/293))
 
 ### Additional Desk Accessories
 

@@ -972,14 +972,26 @@ with_path:
         lda     #kErrFileNotOpenable
         jmp     ShowAlert
 
-launch: ldx     buf_win_path
-:       copy    buf_win_path,x, INVOKER_PREFIX,x
-        dex
-        bpl     :-
-        ldx     buf_filename2
-:       copy    buf_filename2,x, INVOKER_FILENAME,x
-        dex
-        bpl     :-
+launch:
+        ;; Copy/split path into prefix and filename
+        COPY_STRING path, INVOKER_PREFIX
+
+        addr_call find_last_path_segment, INVOKER_PREFIX ; point Y at last '/'
+        tya
+        pha
+        ldx     #1
+        iny                     ; +1 for length byte
+        iny                     ; +1 to skip past '/'
+:       copy    INVOKER_PREFIX,y, INVOKER_FILENAME,x
+        cpy     INVOKER_PREFIX
+        beq     :+
+        iny
+        inx
+        bne     :-              ; always
+:       stx     INVOKER_FILENAME
+        pla
+        sta     INVOKER_PREFIX
+
         copy16  #INVOKER, reset_and_invoke_target
         jmp     reset_and_invoke
 
@@ -990,6 +1002,7 @@ launch: ldx     buf_win_path
 ;;; Output: zero if found, non-zero if not found
 
 .proc check_basix_system_impl
+        launch_path := $220
         path := $1800
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, path
@@ -1002,9 +1015,9 @@ basis:  lda     #'S'            ; "BASI?" -> "BASIS"
 
 start:  sta     str_basix_system + kBSOffset
 
-        ldx     buf_win_path
+        ldx     launch_path
         stx     path_length
-:       copy    buf_win_path,x, path,x
+:       copy    launch_path,x, path,x
         dex
         bpl     :-
 
@@ -1788,8 +1801,8 @@ L4CD6:  pha
 
         ;; Copy filename part to buf
         ldx     #1
-        iny
-        iny
+        iny                     ; +1 for length byte
+        iny                     ; +1 to skip past '/'
 :       lda     path_buf4,y
         sta     filename_buf,x
         cpy     path_buf4
@@ -5982,7 +5995,7 @@ done:   rts
 
 ;;; ============================================================
 ;;; Find position of last segment of path at (A,X), return in Y.
-;;; For "/a/b", Y points at "/a"; if volume path, unchanged.
+;;; For "/a/b", Y points at "/b"; if volume path, unchanged.
 
 .proc find_last_path_segment
         ptr := $A
