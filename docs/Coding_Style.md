@@ -172,6 +172,22 @@ start:  lda     ptr
         some_routine := some_routine_impl::start
 ```
 
+* Delimit procedures with comments and document inputs, outputs, errors, and other assumptions.
+
+```asm
+;;; ============================================================
+;;; Twiddles a thing.
+;;; Inputs: A,X = address of the thing
+;;; Output: Z=1 on success, 0 on failure
+;;; Error: On fatal error, |error_hook| is invoked.
+;;; Assert: Aux LCBANK1 is active
+;;; NOTE: Trashes $6/7
+
+.proc TwiddleTheThing
+   ...
+.endproc
+```
+
 ## Macros
 
 * Macro use is **encouraged**.
@@ -184,6 +200,12 @@ start:  lda     ptr
   * Macros that `.define` pseudo-constants should use `kTitleCase`
   * Other macros should be named with `SHOUTY_CASE`
 
+The following macros should be used to improve code readability:
+
+* `add16`/`sub16`/`cmp16`/`lsr16`/`asl16`/`inc16`/`dec16` for 16-bit operations
+* `ldax`/`ldxy`/`stax`/`stxy` for 16-bit load/stores
+* `addr_call`/`addr_jump` for calls (or tail calls) with 16-bit address argument
+* `yax_call`/`yax_jump` for calls (or tail calls) with 16-bit address argument and 8-bit parameter
 
 ## Param Blocks
 
