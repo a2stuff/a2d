@@ -818,6 +818,8 @@ process_volume:
         jsr     main::get_device_type
         sta     device_type
 
+        ;; TODO: For SmartPort devices, get actual device name.
+
         ;; Copy template to device name
         asl                     ; * 2
         tax
@@ -843,8 +845,7 @@ process_volume:
         lsr     a
         ora     #'0'
 
-        ldx     device_type
-        ldy     device_template_slot_offset_table,x
+        ldy     #kDeviceTemplateSlotOffset
         sta     (devname_ptr),y
 
         ;; Insert Drive #
@@ -855,11 +856,8 @@ process_volume:
         lda     #0              ; 0 + carry + '1'
         adc     #'1'            ; convert to '1' or '2'
 
-        ldx     device_type
-        ldy     device_template_drive_offset_table,x
-        beq     :+              ; 0 = no drive # for this type
+        ldy     #kDeviceTemplateDriveOffset
         sta     (devname_ptr),y
-:
 .endproc
 
 done_drive_num:
@@ -1170,45 +1168,40 @@ is_laser128_flag:
 ;;; Matches kDevice* constant ordering.
 
 device_template_table:
-        .addr   str_disk_ii_sd
-        .addr   str_ramcard_slot_x
-        .addr   str_profile_slot_x
-        .addr   str_unidisk_xy
-        .addr   str_fileshare_x
-        .addr   str_slot_drive
+        .addr   str_sd_disk_ii
+        .addr   str_sd_ramcard
+        .addr   str_sd_profile
+        .addr   str_sd_unidisk
+        .addr   str_sd_fileshare
+        .addr   str_sd_unknown
         ASSERT_ADDRESS_TABLE_SIZE device_template_table, ::kNumDeviceTypes
 
-device_template_slot_offset_table:
-        .byte   15, 15, 15, 15, 14, 6
-        ASSERT_TABLE_SIZE device_template_slot_offset_table, ::kNumDeviceTypes
-
-device_template_drive_offset_table:
-        .byte   19, 19, 19, 19, 18, 15 ; 0 = no drive # for this type
-        ASSERT_TABLE_SIZE device_template_drive_offset_table, ::kNumDeviceTypes
+kDeviceTemplateSlotOffset = 2
+kDeviceTemplateDriveOffset = 5
 
 ;;; Disk II
-str_disk_ii_sd:
-        PASCAL_STRING "Disk II  Slot x, Dy "
+str_sd_disk_ii:
+        PASCAL_STRING "Sx,Dy: Disk II"
 
 ;;; RAM disks
-str_ramcard_slot_x:
-        PASCAL_STRING "RAMCard  Slot x, Dy "
+str_sd_ramcard:
+        PASCAL_STRING "Sx,Dy: RAMCard"
 
 ;;; Fixed drives that aren't RAM disks
-str_profile_slot_x:
-        PASCAL_STRING "ProFile  Slot x, Dy "
+str_sd_profile:
+        PASCAL_STRING "Sx,Dy: ProFile"
 
 ;;; Removable drives
-str_unidisk_xy:
-        PASCAL_STRING "UniDisk 3.5  Sx, Dy "
+str_sd_unidisk:
+        PASCAL_STRING "Sx,Dy: UniDisk 3.5"
 
 ;;; File Share
-str_fileshare_x:
-        PASCAL_STRING "AppleShare  Sx, Dy  "
+str_sd_fileshare:
+        PASCAL_STRING "Sx,Dy: AppleShare"
 
 ;;; Unknown devices
-str_slot_drive:
-        PASCAL_STRING "Slot x, Drive y     "
+str_sd_unknown:
+        PASCAL_STRING "Sx,Dy: Unknown"
 
 ;;; ============================================================
 
