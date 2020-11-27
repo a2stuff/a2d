@@ -888,7 +888,7 @@ params: .addr   0
 ;;; Launch file (File > Open, Selector menu, or double-click)
 
 .proc launch_file_impl
-        path := $220
+        path := INVOKER_PREFIX
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
 
@@ -974,8 +974,6 @@ with_path:
 
 launch:
         ;; Copy/split path into prefix and filename
-        COPY_STRING path, INVOKER_PREFIX
-
         addr_call find_last_path_segment, INVOKER_PREFIX ; point Y at last '/'
         tya
         pha
@@ -1002,7 +1000,7 @@ launch:
 ;;; Output: zero if found, non-zero if not found
 
 .proc check_basix_system_impl
-        launch_path := $220
+        launch_path := INVOKER_PREFIX
         path := $1800
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, path
