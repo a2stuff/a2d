@@ -893,23 +893,7 @@ params: .addr   0
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
 
 compose_path:
-        ;; Compose window path plus icon path
-        ldx     #$FF
-:       inx
-        copy    buf_win_path,x, path,x
-        cpx     buf_win_path
-        bne     :-
-
-        inx
-        copy    #'/', path,x
-
-        ldy     #0
-:       iny
-        inx
-        copy    buf_filename2,y, path,x
-        cpy     buf_filename2
-        bne     :-
-        stx     path
+        jsr     compose_win_file_paths
 
 with_path:
         jsr     set_cursor_watch
@@ -964,10 +948,27 @@ with_path:
         addr_jump invoke_desk_acc, str_preview_fnt
 
 :       cmp     #IconType::desk_accessory
-        bne     :+
-        addr_jump invoke_desk_acc, path
+    IF_EQ
+        COPY_STRING path, path_buffer ; Use this to launch the DA
 
-:       jsr     check_basis_system ; Is fallback BASIS.SYSTEM present?
+        ;; As a convenience for DAs, set path to first selected file.
+        lda     selected_window_index
+        beq     no_file_sel
+        lda     selected_icon_count
+        beq     no_file_sel
+
+        jsr     copy_win_icon_paths
+        jsr     compose_win_file_paths
+        jmp     :+
+
+no_file_sel:
+        copy    #0, path        ; Signal no file selection
+
+:       addr_jump invoke_desk_acc, path_buffer
+    END_IF
+
+
+        jsr     check_basis_system ; Is fallback BASIS.SYSTEM present?
         beq     launch
         lda     #kErrFileNotOpenable
         jmp     ShowAlert
@@ -1082,9 +1083,31 @@ path_length:
 
 ;;; --------------------------------------------------
 
+.proc compose_win_file_paths
+        ;; Compose window path plus icon path
+        ldx     #$FF
+:       inx
+        copy    buf_win_path,x, path,x
+        cpx     buf_win_path
+        bne     :-
+
+        inx
+        copy    #'/', path,x
+
+        ldy     #0
+:       iny
+        inx
+        copy    buf_filename2,y, path,x
+        cpy     buf_filename2
+        bne     :-
+        stx     path
+
+        rts
+.endproc
+
 .endproc
 launch_file             := launch_file_impl::compose_path ; use |buf_win_path| + |buf_filename2|
-launch_file_with_path   := launch_file_impl::with_path ; use |path|
+launch_file_with_path   := launch_file_impl::with_path ; use |INVOKER_PREFIX|
 
 ;;; ============================================================
 
@@ -1597,7 +1620,7 @@ prefix_length:
 
 .proc cmd_deskacc_impl
         ptr := $6
-        path := $220
+        path := INVOKER_PREFIX
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, path
 
@@ -1970,6 +1993,29 @@ maybe_open_file:
 
         pla
 
+        jsr     copy_win_icon_paths
+        jmp     launch_file
+
+        ;; Count of opened volumes/folders; if non-zero,
+        ;; selection must be cleared before finishing.
+dir_count:
+        .byte   0
+
+last_active_window_id:
+        .byte   0
+.endproc
+
+;;; Like cmd_open, but will not close the parent window afterwards.
+.proc cmd_open_ignore_modifiers
+        copy    #0, window_id_to_close
+        jmp     cmd_open::ep2
+.endproc
+
+;;; ============================================================
+;;; Copy selected window and first icon paths to
+;;; |buf_win_path| and |buf_filename2| respectively.
+
+.proc copy_win_icon_paths
         ;; Copy window path to buf_win_path
         win_path_ptr := $06
 
@@ -2003,22 +2049,9 @@ maybe_open_file:
         dex
         bpl     :-
 
-        jmp     launch_file
-
-        ;; Count of opened volumes/folders; if non-zero,
-        ;; selection must be cleared before finishing.
-dir_count:
-        .byte   0
-
-last_active_window_id:
-        .byte   0
+        rts
 .endproc
 
-;;; Like cmd_open, but will not close the parent window afterwards.
-.proc cmd_open_ignore_modifiers
-        copy    #0, window_id_to_close
-        jmp     cmd_open::ep2
-.endproc
 
 ;;; ============================================================
 ;;; Close parent window after open, if needed. Done by activating then closing.

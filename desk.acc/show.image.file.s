@@ -157,86 +157,14 @@ nextwinfo:      .addr   0
 
 .proc init
         copy    #0, mode
-        copy    #0, pathbuf
 
-        ;; Get filename by checking DeskTop selected window/icon
+        INVOKE_PATH := $220
+        lda     INVOKE_PATH
+    IF_EQ
+        rts
+    END_IF
+        COPY_STRING     INVOKE_PATH, pathbuf
 
-        ;; Check that an icon is selected
-        jsr     JUMP_TABLE_GET_SEL_COUNT
-        beq     abort
-
-        jsr     JUMP_TABLE_GET_SEL_WIN
-        bne     :+
-
-abort:  rts
-
-        ;; Copy path (prefix) into pathbuf buffer.
-:       src := $06
-        dst := $08
-
-        jsr     JUMP_TABLE_GET_WIN_PATH
-        stax    src
-
-        ldy     #0
-        lda     (src),y
-        tax
-        inc16   src
-        copy16  #pathbuf+1, dst
-        jsr     copy_pathbuf    ; copy x bytes (src) to (dst)
-
-        ;; Append separator.
-        lda     #'/'
-        ldy     #0
-        sta     (dst),y
-        inc     pathbuf
-        inc16   dst
-
-        ;; Get file entry.
-        lda     #0              ; first icon in selection
-        jsr     JUMP_TABLE_GET_SEL_ICON
-        stax    src
-
-        ;; Exit if a directory.
-        ldy     #IconEntry::win_type ; 2nd byte of entry
-        lda     (src),y
-        and     #kIconEntryTypeMask ; is a directory?
-        bne     :+                  ; nope, can use this one
-        rts                         ; yes, fail
-
-        ;; Append filename to path.
-:       ldy     #IconEntry::name
-        lda     (src),y         ; grab length
-        tax
-        clc
-        lda     src
-        adc     #IconEntry::name+1
-        sta     src
-        bcc     :+
-        inc     src+1
-:       jsr     copy_pathbuf    ; copy x bytes (src) to (dst)
-
-        jmp     open_file_and_init_window
-
-.proc copy_pathbuf              ; copy x bytes from src to dst
-        ldy     #0              ; incrementing path length and dst
-loop:   lda     (src),y
-        sta     (dst),y
-        iny
-        inc     pathbuf
-        dex
-        bne     loop
-        tya
-        clc
-        adc     dst
-        sta     dst
-        bcc     end
-        inc     dst+1
-end:    rts
-.endproc
-
-.endproc
-
-.proc open_file_and_init_window
         yax_call JUMP_TABLE_MLI, OPEN, open_params
         lda     open_params::ref_num
         sta     get_eof_params::ref_num

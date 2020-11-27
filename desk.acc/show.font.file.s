@@ -54,92 +54,31 @@ kReadLength      = WINDOW_ICON_TABLES-font_buffer
 ;;; ============================================================
 ;;; Get filename by checking DeskTop selected window/icon
 
-entry:
+.proc entry
+        INVOKE_PATH := $220
+        lda     INVOKE_PATH
+    IF_EQ
+        rts
+    END_IF
+        COPY_STRING INVOKE_PATH, pathbuf
 
-.proc get_filename
-        ;; Check that an icon is selected
-        copy    #0, pathbuf
-
-        jsr     JUMP_TABLE_GET_SEL_COUNT
-        beq     abort
-
-        jsr     JUMP_TABLE_GET_SEL_WIN
-        bne     :+
-abort:  rts
-
-        ;; Copy path (prefix) into pathbuf.
-:       src := $06
-        dst := $08
-
-        jsr     JUMP_TABLE_GET_WIN_PATH
-        stax    src
-
-        ldy     #0
-        lda     (src),y
-        tax
-        inc16   src
-        copy16  #pathbuf+1, dst
-        jsr     copy_pathbuf   ; copy x bytes (src) to (dst)
-
-        ;; Append separator.
-        lda     #'/'
-        ldy     #0
-        sta     (dst),y
-        inc     pathbuf
-        inc16   dst
-
-        ;; Get file entry.
-        lda     #0              ; first icon in selection
-        jsr     JUMP_TABLE_GET_SEL_ICON
-        stax    src
-
-        ;; Exit if a directory.
-        ldy     #2              ; 2nd byte of entry
-        lda     (src),y
-        and     #kIconEntryTypeMask
-        bne     :+
-        rts                     ; 000 = directory
-
-        ;; Set window title to point at filename
-:       clc
-        lda     src
-        adc     #IconEntry::name
-        sta     winfo_title
-        lda     src+1
-        adc     #0
-        sta     winfo_title+1
-
-        ;; Append filename to path.
-        ldy     #IconEntry::name
-        lda     (src),y         ; grab length
-        tax
-        clc
-        lda     src
-        adc     #IconEntry::name+1
-        sta     src
-        bcc     :+
-        inc     src+1
-:       jsr     copy_pathbuf    ; copy x bytes (src) to (dst)
+        ;; Set window title to filename
+        ldy     pathbuf
+:       lda     pathbuf,y       ; find last '/'
+        cmp     #'/'
+        beq     :+
+        dey
+        bne     :-
+:       ldx     #1
+:       lda     pathbuf+1,y     ; copy filename
+        sta     titlebuf,x
+        inx
+        iny
+        cpy     pathbuf
+        bne     :-
+        stx     titlebuf
 
         jmp     load_file_and_run_da
-
-.proc copy_pathbuf              ; copy x bytes from src to dst
-        ldy     #0              ; incrementing path length and dst
-loop:   lda     (src),y
-        sta     (dst),y
-        iny
-        inc     pathbuf
-        dex
-        bne     loop
-        tya
-        clc
-        adc     dst
-        sta     dst
-        bcc     end
-        inc     dst+1
-end:    rts
-.endproc
-
 .endproc
 
 ;;; ============================================================
@@ -190,7 +129,7 @@ kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeigh
 .params winfo
 window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::go_away_box
-title:          .addr   0       ; overwritten to point at filename
+title:          .addr   titlebuf
 hscroll:        .byte   MGTK::Scroll::option_none
 vscroll:        .byte   MGTK::Scroll::option_none
 hthumbmax:      .byte   32
@@ -219,7 +158,10 @@ textback:       .byte   $7F
 textfont:       .addr   font_buffer
 nextwinfo:      .addr   0
 .endparams
-        winfo_title := winfo::title
+
+titlebuf:
+        .res    16, 0
+
 
 ;;; ============================================================
 

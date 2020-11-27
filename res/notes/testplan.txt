@@ -94,3 +94,23 @@
 
 * Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.
 * Run System Speed DA. Click Fast then click OK. Verify DeskTop does not lock up.
+
+* Put `SHOW.IMAGE.FILE` in `DESK.ACC`, start DeskTop.
+    * Select no icon, select DA from Apple menu. Verify nothing happens.
+    * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select image file icon, select DA from Apple menu. Verify image is shown.
+* Put `SHOW.TEXT.FILE` in `DESK.ACC`, start DeskTop.
+    * Select no icon, select DA from Apple menu. Verify nothing happens.
+    * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select text file icon, select DA from Apple menu. Verify text is shown.
+* Put `SHOW.FONT.FILE` in `DESK.ACC`, start DeskTop.
+    * Select no icon, select DA from Apple menu. Verify nothing happens.
+    * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select font file icon, select DA from Apple menu. Verify font is shown.
+
+* Put image file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify image is shown.
+* Put text file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify text is shown.
+* Put font file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify font is shown.
+
+* Put BASIC program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
+* Put System program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
