@@ -114,3 +114,7 @@
 
 * Put BASIC program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
 * Put System program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
+
+* Open a folder with no items. Verify window header says "0 Items"
+* Open a folder with only one item. Verify window header says "1 Item"
+* Open a folder with two or more items. Verify window header says "2 Items"

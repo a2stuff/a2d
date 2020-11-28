@@ -7374,15 +7374,15 @@ tmp:    .byte   0
         ldx     #0
         jsr     int_to_string_with_separators
         lda     cached_window_icon_count
-        cmp     #2              ; plural?
-        bcs     :+
+        cmp     #1              ; plural?
+        bne     :+
         dec     str_items       ; remove trailing s
 :       MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
         jsr     draw_int_string
         addr_call draw_pascal_string, str_items
         lda     cached_window_icon_count
-        cmp     #2
-        bcs     :+
+        cmp     #1
+        bne     :+
         inc     str_items       ; restore trailing s
 
         ;; Draw "XXXK in disk"
