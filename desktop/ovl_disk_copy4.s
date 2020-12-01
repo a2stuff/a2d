@@ -12,6 +12,9 @@
         jmp     exit
 .endmacro
 
+;;; ============================================================
+;;; Disk II - Format
+;;; Inputs: A = unit_number
 
 L0800:  php
         sei
@@ -51,12 +54,12 @@ L0823:  asl     a
         lsr     current_track
         rts
 
-L083A:  tax
-        and     #$70
+L083A:  tax                     ; A=DSSSxxxx
+        and     #$70            ; Slot
         sta     L0C23
         txa
         ldx     L0C23
-        rol     a
+        rol     a               ; Drive
         lda     #$00
         rol     a
         bne     :+
@@ -673,69 +676,69 @@ params: .addr   0
 
 ;;; ============================================================
 
-L0CAF:  ldx     disk_copy_overlay3::dest_drive_index
+.proc format_device
+        ldx     disk_copy_overlay3::dest_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     unit_number
         and     #$0F
-        beq     L0CCC
-        lda     disk_copy_overlay3::drive_unitnum_table,x
-        jsr     unit_number_to_driver_address
-        ldy     #$FF            ; offset to low byte of driver address
-        lda     ($06),y
-        beq     L0CCC
-        cmp     #$FF
-        bne     L0CD3
-L0CCC:  lda     unit_number
-        jsr     L0800
-        rts
+        beq     disk_ii
 
-L0CD3:  lda     unit_number
+        ;; Get driver address
+        lda     unit_number
         jsr     unit_number_to_driver_address
 
-        ldy     #$FF            ; offset to low byte of driver address
-        lda     ($06),y
-        sta     $06
         lda     #DRIVER_COMMAND_FORMAT
         sta     DRIVER_COMMAND
         lda     unit_number
         sta     DRIVER_UNIT_NUMBER
         jmp     ($06)
 
+        ;; Use Disk II-specific code
+disk_ii:
+        lda     unit_number
+        jsr     L0800
         rts
 
 unit_number:
         .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Eject Disk via SmartPort
 
 .proc eject_disk
-        sta     L0D24
-        jsr     unit_number_to_driver_address           ; Point $06 at $Cn00
+        ptr := $6
+
+        sta     unit_num
+        jsr     unit_number_to_driver_address
+        bne     done            ; not firmware; can't tell if SmartPort or not
+
+        lda     #$00            ; Point at $Cn00
+        sta     ptr
 
         ldy     #$07            ; Check firmware bytes
-        lda     ($06),y       ; $Cn07 = $00 ??
+        lda     (ptr),y         ; $Cn07 = $00 ??
         bne     done
 
         ldy     #$FB
-        lda     ($06),y       ; $CnFB = $7F ??
+        lda     (ptr),y         ; $CnFB = $7F ??
         and     #$7F
         bne     done
 
         ldy     #$FF
-        lda     ($06),y
+        lda     (ptr),y
         clc
-        adc     #3        ; Locate dispatch routine (offset $CnFF + 3)
-        sta     $06
+        adc     #3              ; Locate dispatch routine (offset $CnFF + 3)
+        sta     ptr
 
-        lda     L0D24
-        jsr     L0D51
+        lda     unit_num
+        jsr     unit_num_to_sp_unit_number
         sta     control_params_unit_number
 
         ;; Do SmartPort call
         jsr     smartport_call
         .byte   $04             ; SmartPort: CONTROL
-        .addr   $0D1D
+        .addr   control_params
 
 done:   rts
 
@@ -751,7 +754,8 @@ control_code:   .byte   $04     ; Control Code: Eject disk
 control_params_unit_number := control_params::unit_number
 
 L0D22:  .byte   0, 0
-L0D24:  .byte   0
+unit_num:
+        .byte   0
         .byte   0
 
 .endproc
@@ -760,49 +764,45 @@ L0D24:  .byte   0
 ;;; Get driver address for unit number
 ;;; Input: unit_number in A
 ;;; Output: $6/$7 points at driver address
+;;;         Z=1 if a firmware address ($CnXX)
 
 .proc unit_number_to_driver_address
-        sta     unit_number
-        ldx     #$11            ; $BF11 is DEVADR+1 for S0D1
-        lda     unit_number
-        and     #$80            ; high bit set?
-        beq     :+
-        ldx     #$21            ; $BF21 is DEVADR+1 for S0D2
-:       stx     @load_addr
-        lda     unit_number
-        and     #$70            ; mask off slot
-        lsr     a
-        lsr     a
-        lsr     a
-        clc
-        adc     @load_addr
-        sta     @load_addr
+        addr := $06
 
-        @load_addr := *+1
-        lda     MLI             ; self-modified
-        sta     $06+1
-        lda     #$00
-        sta     $06
+        and     #%11110000      ; mask off drive/slot
+        lsr                     ; 0DSSS000
+        lsr                     ; 00DSSS00
+        lsr                     ; 000DSSS0
+        tax                     ; = slot * 2 + (drive == 2 ? 0x10 + 0x00)
+
+        lda     DEVADR,x
+        sta     addr
+        lda     DEVADR+1,x
+        sta     addr+1
+
+        and     #$F0            ; is it $Cn ?
+        cmp     #$C0            ; leave Z flag set if so
         rts
-
-unit_number:
-        .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Map unit number to smartport device number (1-4)
+;;; TODO: The logic looks sketchy, assumes specific remapping.
 
-L0D51:  pha
-        rol     a
+.proc unit_num_to_sp_unit_number
+        pha                     ; DSSS0000
+        rol     a               ; C=D
         pla
-        php
-        and     #$20
+        php                     ; DSSS0000
+        and     #$20            ; 00100000 - "is an odd slot" ???
         lsr     a
         lsr     a
         lsr     a
-        lsr     a
-        plp
-        adc     #$01
+        lsr     a               ; 00000010
+        plp                     ; C=D
+        adc     #$01            ;
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -850,9 +850,9 @@ L0DB5:  lda     #$14
         lda     disk_copy_overlay3::source_drive_index
         asl     a
         tax
-        lda     disk_copy_overlay3::LD407,x
+        lda     disk_copy_overlay3::block_count_table,x
         sta     L0EB0
-        lda     disk_copy_overlay3::LD407+1,x
+        lda     disk_copy_overlay3::block_count_table+1,x
         sta     L0EB1
         lsr16   L0EB0
         lsr16   L0EB0
@@ -1474,13 +1474,37 @@ L12B9:  .byte   0
         .byte   $FF
 
 ;;; ============================================================
+;;; Inputs: A = device num (DSSS0000), X,Y = driver address
+;;; Outputs: X,Y = blocks
+
+.proc get_device_blocks_using_driver
+        sta     ALTZPOFF
+
+        sta     DRIVER_UNIT_NUMBER
+        stxy    @driver
+
+        lda     #$00
+        sta     DRIVER_COMMAND  ; $00 = STATUS
+        sta     DRIVER_BUFFER
+        sta     DRIVER_BUFFER+1
+        sta     DRIVER_BLOCK_NUMBER
+        sta     DRIVER_BLOCK_NUMBER+1
+
+        @driver := *+1
+        jsr     dummy0000
+
+        sta     ALTZPON
+        rts
+.endproc
+
+;;; ============================================================
 
         PAD_TO $1300
 
 .endproc
 
-disk_copy_overlay4_L0CAF        := disk_copy_overlay4::L0CAF
-disk_copy_overlay4_L0D51        := disk_copy_overlay4::L0D51
+disk_copy_overlay4_format_device        := disk_copy_overlay4::format_device
+disk_copy_overlay4_unit_num_to_sp_unit_number        := disk_copy_overlay4::unit_num_to_sp_unit_number
 disk_copy_overlay4_L0D5F        := disk_copy_overlay4::L0D5F
 disk_copy_overlay4_L0DB5        := disk_copy_overlay4::L0DB5
 disk_copy_overlay4_L0EB2        := disk_copy_overlay4::L0EB2
@@ -1501,3 +1525,4 @@ disk_copy_overlay4_on_line_params2_unit_num     := disk_copy_overlay4::on_line_p
 disk_copy_overlay4_on_line_params_unit_num      := disk_copy_overlay4::on_line_params::unit_num
 disk_copy_overlay4_quit := disk_copy_overlay4::quit
 disk_copy_overlay4_unit_number_to_driver_address        := disk_copy_overlay4::unit_number_to_driver_address
+disk_copy_overlay4_get_device_blocks_using_driver := disk_copy_overlay4::get_device_blocks_using_driver

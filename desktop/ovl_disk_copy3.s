@@ -333,7 +333,7 @@ LD376:  .byte   0
 LD377:  .res    128, 0
 drive_unitnum_table:  .res    8, 0
 LD3FF:  .res    8, 0
-LD407:  .res    16, 0
+block_count_table:  .res    16, 0
 
 source_drive_index:  .byte   0
 dest_drive_index:  .byte   0
@@ -513,11 +513,12 @@ LD61C:  lda     #$00
         sta     LD429
         lda     #$FF
         sta     LD44C
-        jsr     LE16C
+        jsr     enumerate_devices
+
         lda     LD5E0
-        bne     LD66E
-        jsr     LE3A3
-LD66E:  jsr     LE28D
+        bne     :+
+        jsr     get_all_block_counts
+:       jsr     draw_device_list_entries
         inc     LD5E0
 LD674:  jsr     LD986
         bmi     LD674
@@ -604,7 +605,7 @@ LD798:  lda     $1300
         jsr     LE674
         jsr     LE559
 LD7AD:  lda     source_drive_index
-        jsr     LE3B8
+        jsr     get_block_count
         jsr     LE5E1
         jsr     LE63F
         ldx     dest_drive_index
@@ -635,22 +636,28 @@ LD7E1:  lda     $1300
         beq     LD7F2
         jmp     LD852
 
-LD7F2:  ldx     dest_drive_index
+LD7F2:
+        ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$0F
-        beq     LD817
+        and     #$0F            ; low nibble of unit_num
+        beq     LD817           ; Disk II
+
         lda     drive_unitnum_table,x
         jsr     disk_copy_overlay4_unit_number_to_driver_address
-        ldy     #$FF
+        bne     :+              ; if not firmware, skip these checks
+
+        lda     #$00            ; point at $Cn00
+        sta     $06
+        ldy     #$FF            ; $CnFF
         lda     ($06),y
+        beq     LD817           ; = $00 means 16-sector Disk II
+        cmp     #$FF            ; = $FF means 13-sector Disk II
         beq     LD817
-        cmp     #$FF
-        beq     LD817
-        ldy     #$FE
+        ldy     #$FE            ; $CnFE
         lda     ($06),y
-        and     #$08
+        and     #$08            ; bit 3 = The device supports formatting.
         bne     LD817
-        jmp     LD8A9
+:       jmp     LD8A9
 
 LD817:  lda     $1300
         and     #$0F
@@ -681,27 +688,31 @@ LD84A:  lda     quick_copy_flag
 
 LD852:  ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$0F
-        beq     LD87C
+        and     #$0F            ; low nibble of unit_num
+        beq     LD87C           ; Disk II
         lda     drive_unitnum_table,x
         jsr     disk_copy_overlay4_unit_number_to_driver_address
-        ldy     #$FE
+        bne     :+              ; if not not firmware, skip these checks
+
+        lda     #$00            ; point at $Cn00
+        sta     $06
+        ldy     #$FE            ; $CnFE
         lda     ($06),y
-        and     #$08
+        and     #$08            ; bit 3 = The device supports formatting.
         bne     LD87C
-        ldy     #$FF
+        ldy     #$FF            ; low byte of driver address
         lda     ($06),y
-        beq     LD87C
-        cmp     #$FF
+        beq     LD87C           ; $00 = 16-sector Disk II
+        cmp     #$FF            ; $FF = 13-sector Disk II
         beq     LD87C
 
-        lda     #3              ; Destination format failed
+:       lda     #3              ; Destination format failed
         jsr     show_alert_dialog
         jmp     LD61C
 
 LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         addr_call draw_text, str_formatting
-        jsr     disk_copy_overlay4_L0CAF
+        jsr     disk_copy_overlay4_format_device
         bcc     LD8A9
         cmp     #ERR_WRITE_PROTECTED
         beq     LD89F
@@ -1240,7 +1251,7 @@ LDE31:  lda     num_drives
 LDE4D:  cmp     #$A5
         bne     LDE2E
         lda     $1C02
-        cmp     #$27
+        cmp     #ERR_IO_ERROR
         bne     LDE2E
         lda     disk_copy_overlay4_block_params_unit_num
         and     #$70
@@ -1565,10 +1576,6 @@ check_alpha:
 
 ;;; ============================================================
 
-        .byte   0
-
-;;; ============================================================
-
 .proc set_win_port
         sta     getwinport_params::window_id
         MGTK_RELAY_CALL2 MGTK::GetWinPort, getwinport_params
@@ -1593,21 +1600,24 @@ check_alpha:
 
 ;;; ============================================================
 
-LE16C:  lda     #$00
+.proc enumerate_devices
+        lda     #$00
         sta     LD44E
         sta     disk_copy_overlay4_on_line_params2_unit_num
         jsr     disk_copy_overlay4_L1291
         beq     LE17A
-        .byte   0
+
+        brk
+
 LE17A:  lda     #$00
-        sta     LE263
+        sta     device_index
         sta     num_drives
 LE182:  lda     #$13
         sta     $07
         lda     #$00
         sta     $06
         sta     LE264
-        lda     LE263
+        lda     device_index
         asl     a
         rol     LE264
         asl     a
@@ -1622,33 +1632,37 @@ LE182:  lda     #$13
         lda     LE264
         adc     $07
         sta     $07
-        ldy     #$00
+
+        ;; Check first byte of record
+        ldy     #0
         lda     ($06),y
-        and     #$0F
+        and     #$0F            ; name_len
         bne     LE20D
-        lda     ($06),y
-        beq     LE1CC
-        iny
-        lda     ($06),y
-        cmp     #$28
+
+        lda     ($06),y         ; 0?
+        beq     LE1CC           ; done!
+
+        iny                     ; name_len=0 signifies an error
+        lda     ($06),y         ; error code in second byte
+        cmp     #ERR_DEVICE_NOT_CONNECTED
         bne     LE1CD
         dey
         lda     ($06),y
-        jsr     LE265
-        lda     #$28
-        bcc     LE1CD
-        jmp     LE255
+        jsr     find_devlst_index
+        lda     #ERR_DEVICE_NOT_CONNECTED
+        bcc     LE1CD           ; ???
+        jmp     next_device
 
 LE1CC:  rts
 
 LE1CD:  pha
         ldy     #$00
         lda     ($06),y
-        jsr     LE285
+        jsr     find_unit_num
         ldx     num_drives
         sta     drive_unitnum_table,x
         pla
-        cmp     #$52
+        cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LE1EA
         lda     drive_unitnum_table,x
         and     #$F0
@@ -1670,19 +1684,20 @@ LE1F4:  lda     str_unknown,x
         lda     str_unknown,x
         sta     LD377,y
 LE207:  inc     num_drives
-        jmp     LE255
+        jmp     next_device
 
+        ;; Valid ProDOS volume
 LE20D:  ldx     num_drives
         ldy     #$00
         lda     ($06),y
-        and     #$70
+        and     #$70            ; slot 3?
         cmp     #$30
         bne     LE21D
-        jmp     LE255
+        jmp     next_device     ; if so, skip
 
 LE21D:  ldy     #$00
         lda     ($06),y
-        jsr     LE285
+        jsr     find_unit_num
         ldx     num_drives
         sta     drive_unitnum_table,x
         lda     num_drives
@@ -1707,62 +1722,96 @@ LE23E:  inx
 LE24D:  lda     ($06),y
         sta     LD377,x
         inc     num_drives
-LE255:  inc     LE263
-        lda     LE263
-        cmp     #$08
+
+
+next_device:
+        inc     device_index
+        lda     device_index
+        cmp     #$08            ; max number of devices shown???
         beq     LE262
         jmp     LE182
 
 LE262:  rts
 
-LE263:  .byte   0
+device_index:
+        .byte   0
 LE264:  .byte   0
-LE265:  and     #$F0
+
+;;; --------------------------------------------------
+;;; Inputs: A=driver/slot (DSSSxxxx)
+;;; Outputs: C=0, X=DEVLST index is found and low bits of unit_num != 0
+;;;          C=1 otherwise
+
+.proc find_devlst_index
+        and     #$F0
         sta     LE28C
         ldx     DEVCNT
-LE26D:  lda     DEVLST,x
+loop:   lda     DEVLST,x
         and     #$F0
         cmp     LE28C
-        beq     LE27C
+        beq     match
         dex
-        bpl     LE26D
-LE27A:  sec
+        bpl     loop
+err:    sec
         rts
 
-LE27C:  lda     DEVLST,x
+        ;; Drive/slot matches. Check low nibble.
+match:  lda     DEVLST,x
         and     #$0F
-        bne     LE27A
+        bne     err
         clc
         rts
+.endproc
 
-LE285:  jsr     LE265
+;;; --------------------------------------------------
+;;; Inputs: A=driver/slot (DSSSxxxx)
+;;; Outputs: unit_num
+
+.proc find_unit_num
+        jsr     find_devlst_index
         lda     DEVLST,x
         rts
+.endproc
 
 LE28C:  .byte   0
-LE28D:  lda     winfo_drive_select
+
+.endproc
+
+;;; ============================================================
+
+.proc draw_device_list_entries
+        lda     winfo_drive_select
         jsr     set_win_port
-        lda     #$00
-        sta     LE2B0
-LE298:  lda     LE2B0
+
+        lda     #0
+        sta     index
+
+loop:   lda     index
         jsr     LE39A
-        lda     LE2B0
-        jsr     LE31B
-        inc     LE2B0
-        lda     LE2B0
+
+        lda     index
+        jsr     draw_device_list_entry
+        inc     index
+
+        lda     index
         cmp     num_drives
-        bne     LE298
+        bne     loop
+
         rts
 
-LE2B0:  .byte   0
+index:  .byte   0
+.endproc
+
+;;; ============================================================
+
 LE2B1:  lda     winfo_drive_select
         jsr     set_win_port
         lda     current_drive_selection
         asl     a
         tax
-        lda     LD407,x
+        lda     block_count_table,x
         sta     LE318
-        lda     LD407+1,x
+        lda     block_count_table+1,x
         sta     LE318+1
         lda     num_drives
         sta     LD376
@@ -1772,10 +1821,10 @@ LE2B1:  lda     winfo_drive_select
 LE2D6:  lda     LE317
         asl     a
         tax
-        lda     LD407,x
+        lda     block_count_table,x
         cmp     LE318
         bne     LE303
-        lda     LD407+1,x
+        lda     block_count_table+1,x
         cmp     LE318+1
         bne     LE303
         lda     LE317
@@ -1784,7 +1833,7 @@ LE2D6:  lda     LE317
         lda     num_drives
         jsr     LE39A
         lda     LE317
-        jsr     LE31B
+        jsr     draw_device_list_entry
         inc     num_drives
 LE303:  inc     LE317
         lda     LE317
@@ -1799,11 +1848,17 @@ LE311:  lda     #$FF
 LE317:  .byte   0
 LE318:  .addr   0
         .byte   0
-LE31B:  sta     LE399
+
+;;; ============================================================
+
+.proc draw_device_list_entry
+        sta     device_index
+
+        ;; Slot
         lda     #8
         sta     point_D36D::xcoord
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
-        ldx     LE399
+        ldx     device_index
         lda     drive_unitnum_table,x
         and     #$70
         lsr     a
@@ -1814,10 +1869,12 @@ LE31B:  sta     LE399
         adc     #'0'
         sta     str_s + 1
         addr_call draw_text, str_s
+
+        ;; Drive
         lda     #40
         sta     point_D36D::xcoord
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
-        ldx     LE399
+        ldx     device_index
         lda     drive_unitnum_table,x
         and     #$80
         asl     a
@@ -1826,10 +1883,12 @@ LE31B:  sta     LE399
         adc     #'1'
         sta     str_d + 1
         addr_call draw_text, str_d
+
+        ;; Name
         lda     #65
         sta     point_D36D::xcoord
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
-        lda     LE399
+        lda     device_index
         asl     a
         asl     a
         asl     a
@@ -1848,51 +1907,82 @@ LE31B:  sta     LE399
         jsr     draw_text
         rts
 
-LE399:  .byte   0
-LE39A:  asl     a
+device_index:
+        .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc LE39A
+        asl     a
         asl     a
         asl     a
         adc     #8
         sta     point_D36D::ycoord
         rts
+.endproc
 
-LE3A3:  lda     #$00
-        sta     LE3B7
-LE3A8:  jsr     LE3B8
-        inc     LE3B7
-        lda     LE3B7
+;;; ============================================================
+;;; Populate block_count_table across all devices
+
+.proc get_all_block_counts
+        lda     #0
+        sta     index
+
+:       jsr     get_block_count
+        inc     index
+        lda     index
         cmp     num_drives
-        bne     LE3A8
+        bne     :-
         rts
 
-LE3B7:  .byte   0
-LE3B8:  pha
-        tax
-        lda     drive_unitnum_table,x
-        and     #$0F
-        beq     LE3CC
-        lda     drive_unitnum_table,x
-        and     #$F0
-        jsr     disk_copy_overlay4_unit_number_to_driver_address
-        jmp     LE3DA
+index:  .byte   0
+.endproc
 
-LE3CC:  pla
+;;; ============================================================
+;;; Inputs: A = device index
+;;; Outputs: block_count_table (word) set to block count
+
+.proc get_block_count
+
+        ;; TODO: Figure out why we can't just always use the device driver!
+
+        pha
+        tax                     ; X is device index
+        lda     drive_unitnum_table,x
+        and     #$0F            ; is Disk II ?
+        beq     disk_ii
+
+        lda     drive_unitnum_table,x
+        jsr     disk_copy_overlay4_unit_number_to_driver_address
+        jmp     other_device
+
+        ;; Disk II - always 280 blocks
+disk_ii:
+        pla
         asl     a
         tax
-        lda     #$18
-        sta     LD407,x
-        lda     #$01
-        sta     LD407+1,x
+        lda     #<280
+        sta     block_count_table,x
+        lda     #>280
+        sta     block_count_table+1,x
         rts
 
-LE3DA:  ldy     #$07
-        lda     ($06),y
-        bne     LE3E3
-        jmp     LE44A
+        ;; Other devices...
+other_device:
+        bne     use_driver      ; if not firmware, can't do these tests
 
-LE3E3:  lda     #$00
+        lda     #$00
+        sta     $06
+        ldy     #$07            ; $Cn07 = $00 if SmartPort
+        lda     ($06),y
+        bne     :+
+        jmp     smartport
+
+        ;; Not smartport
+:       lda     #$00
         sta     LE448
-        ldy     #$FC
+        ldy     #$FC            ; $CnFC/$CnFD = Total number of blocks on device
         lda     ($06),y
         sta     LE449
         beq     LE3F6
@@ -1905,81 +1995,94 @@ LE3F6:  ldy     #$FD
         bit     LE448
         bpl     LE415
 LE402:  stx     LE448
+
         pla
         asl     a
         tax
         lda     LE448
-        sta     LD407,x
+        sta     block_count_table,x
         lda     LE449
-        sta     LD407+1,x
+        sta     block_count_table+1,x
         rts
 
 LE415:  ldy     #$FF            ; offset to low byte of driver address
         lda     ($06),y
         sta     $06
 
-        lda     #$00
-        sta     DRIVER_COMMAND
-        sta     DRIVER_BUFFER
-        sta     DRIVER_BUFFER+1
-        sta     DRIVER_BLOCK_NUMBER
-        sta     DRIVER_BLOCK_NUMBER+1
-
+use_driver:
         pla
         pha
         tax
         lda     drive_unitnum_table,x
         and     #$F0
-        sta     DRIVER_UNIT_NUMBER
+        ldxy    $06
 
-        jsr     LE445
-        stx     LE448
+        jsr     disk_copy_overlay4_get_device_blocks_using_driver
+
+        stx     LE448           ; blocks available low
         pla
         asl     a
         tax
         lda     LE448
-        sta     LD407,x
-        tya
-        sta     LD407+1,x
+        sta     block_count_table,x
+        tya                     ; blocks available high
+        sta     block_count_table+1,x
         rts
-
-LE445:  jmp     ($06)
 
 LE448:  .byte   0
 LE449:  .byte   0
-LE44A:  ldy     #$FF
+
+        ;; Compute SmartPort entry point
+smartport:
+        ldy     #$FF            ; $CnFF...
         lda     ($06),y
         clc
-        adc     #$03
+        adc     #$03            ; + 3 is low byte of firmware entry point
         sta     $06
         pla
         pha
         tax
         lda     drive_unitnum_table,x
         and     #$F0
-        jsr     disk_copy_overlay4_L0D51
-        sta     LE47D
+        jsr     disk_copy_overlay4_unit_num_to_sp_unit_number
+        sta     status_unit_num
+
         jsr     indirect_jump
-        .byte   0
-        .byte   $7C
-        cpx     $68
+        .byte   $00             ; $00 = STATUS
+        .word   status_params
+
+        pla
         asl     a
         tax
         lda     LE482
-        sta     LD407,x
+        sta     block_count_table,x
         lda     LE483
-        sta     LD407+1,x
+        sta     block_count_table+1,x
         rts
 
 indirect_jump:
         jmp     ($06)
 
+.endproc
+
+;;; ============================================================
+
         ;; TODO: Identify data
         .byte   0
         .byte   0
-        .byte   $03
-LE47D:  .byte   1, $81
-        .byte   $E4, 0
+
+.params status_params
+param_count:
+        .byte   3
+unit_num:
+        .byte   1
+        .addr   status_buffer
+        .byte   0
+.endparams
+status_unit_num := status_params::unit_num
+
+
+status_buffer:
         .byte   0
 LE482:  .byte   0
 LE483:  .byte   0
@@ -2014,9 +2117,9 @@ LE4BF:  lda     winfo_dialog::window_id
         lda     source_drive_index
         asl     a
         tay
-        lda     LD407+1,y
+        lda     block_count_table+1,y
         tax
-        lda     LD407,y
+        lda     block_count_table,y
         jsr     number_to_string
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_source
         addr_call draw_text, str_blocks_to_transfer
