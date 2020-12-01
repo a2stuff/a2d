@@ -1183,7 +1183,7 @@ apple_menu:
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
 
 label_about:
-        PASCAL_STRING "About Apple II DeskTop..."
+        PASCAL_STRING "About Apple II DeskTop"
 
 desk_acc_names:
         .res    kMaxDeskAccCount * kDAMenuItemSize, 0

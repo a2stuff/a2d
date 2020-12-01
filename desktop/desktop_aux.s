@@ -3283,9 +3283,9 @@ label_erase_disk:
 label_disk_copy:
         PASCAL_STRING "Disk Copy..."
 label_lock:
-        PASCAL_STRING "Lock"
+        PASCAL_STRING "Lock..."
 label_unlock:
-        PASCAL_STRING "Unlock"
+        PASCAL_STRING "Unlock..."
 label_get_info:
         PASCAL_STRING "Get Info"
 label_get_size:
@@ -3527,7 +3527,7 @@ str_enter_folder_name:
 
         ;; "Rename Icon" dialog strings
 str_rename_title:
-        PASCAL_STRING "Rename an Icon..."
+        PASCAL_STRING "Rename..."
 str_rename_old:
         PASCAL_STRING "Rename: "
 str_rename_new:
@@ -3535,7 +3535,7 @@ str_rename_new:
 
         ;; "Get Info" dialog strings
 str_info_title:
-        PASCAL_STRING "Get Info..."
+        PASCAL_STRING "Get Info"
 str_info_name:
         PASCAL_STRING "Name"
 str_info_locked:
@@ -3594,7 +3594,7 @@ str_lock_remaining:
 
         ;; "Get Size" dialog strings
 str_size_title:
-        PASCAL_STRING "Get Size..."
+        PASCAL_STRING "Get Size"
 str_size_number:
         PASCAL_STRING "Number of files"
 str_size_blocks:
