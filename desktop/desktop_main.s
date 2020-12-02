@@ -8573,14 +8573,13 @@ loop:   lda     name,x
 .endproc
 
 ;;; ============================================================
-;;; Populate text_buffer2 with " 12345K"
+;;; Populate text_buffer2 with " 12,345K"
 
 .proc compose_size_string
         stax    value           ; size in 512-byte blocks
-        lsr16   value           ; divide by 2 to get KB
-        bcc     :+
-        inc16   value           ; rounding up
-:       ldax    value
+        inc16   value           ; divide by 2 to get KB
+        lsr16   value           ; rounding up
+        ldax    value
         jsr     int_to_string_with_separators
 
         ;; Leading space
@@ -8599,17 +8598,15 @@ loop:   lda     name,x
 
         ;; Append suffix
         ldy     #0
-:       lda     suffix+1, y
+:       lda     str_kb_suffix+1, y
         sta     text_buffer2::data,x
         iny
         inx
-        cpy     suffix
+        cpy     str_kb_suffix
         bne     :-
 
         stx     text_buffer2::length
         rts
-
-suffix: PASCAL_STRING "K"
 
 value:  .word   0
 
@@ -14159,9 +14156,15 @@ do1:    ldy     #1
         stx     ptr
         ldy     #0
         copy16in (ptr),y, file_count
+
+        inc16   file_count      ; Convert blocks to K - divide
+        lsr16   file_count      ; by two, rounding up
+
         jsr     compose_file_count_string
         copy    #kValueLeft, dialog_label_pos
+        dec     str_file_count  ; remove trailing space
         yax_call draw_dialog_label, 2, str_file_count
+        addr_call draw_text1, str_kb_suffix
         rts
 
 do3:    jsr     close_prompt_dialog

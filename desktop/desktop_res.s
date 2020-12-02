@@ -674,7 +674,10 @@ str_2_spaces:
 str_files:
         PASCAL_STRING "Files"
 str_file_count:                 ; populated with number of files
-        PASCAL_STRING "       "
+        PASCAL_STRING " ##,### "
+
+str_kb_suffix:
+        PASCAL_STRING "K"
 
         ;; This location also used as path buffer by ovl_format_erase
 ovl_path_buf:

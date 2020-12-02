@@ -3598,7 +3598,7 @@ str_size_title:
 str_size_number:
         PASCAL_STRING "Number of files"
 str_size_blocks:
-        PASCAL_STRING "Blocks used on disk"
+        PASCAL_STRING "Space used on disk"
 
         .word   110,35,110,43
 
