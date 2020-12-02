@@ -2014,7 +2014,6 @@ use_driver:
         pha
         tax
         lda     drive_unitnum_table,x
-        and     #$F0
         ldxy    $06
 
         jsr     disk_copy_overlay4_get_device_blocks_using_driver

@@ -690,6 +690,7 @@ params: .addr   0
         lda     #DRIVER_COMMAND_FORMAT
         sta     DRIVER_COMMAND
         lda     unit_number
+        and     #$F0
         sta     DRIVER_UNIT_NUMBER
         jmp     ($06)
 
@@ -1474,12 +1475,13 @@ L12B9:  .byte   0
         .byte   $FF
 
 ;;; ============================================================
-;;; Inputs: A = device num (DSSS0000), X,Y = driver address
+;;; Inputs: A = device num (DSSSxxxx), X,Y = driver address
 ;;; Outputs: X,Y = blocks
 
 .proc get_device_blocks_using_driver
         sta     ALTZPOFF
 
+        and     #$F0
         sta     DRIVER_UNIT_NUMBER
         stxy    @driver
 

@@ -1131,6 +1131,7 @@ L12AD:  ldy     #$FF            ; offset to low byte of driver address
         lda     #DRIVER_COMMAND_FORMAT
         sta     DRIVER_COMMAND
         lda     L12C0
+        and     #$F0
         sta     DRIVER_UNIT_NUMBER
         jmp     ($06)
 

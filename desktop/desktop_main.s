@@ -13392,6 +13392,7 @@ do_on_line:
 
         ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
 format: lda     DEVLST,x
+        and     #$F0
         sta     DRIVER_UNIT_NUMBER
         copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         copy16  #$2000, DRIVER_BUFFER
