@@ -425,10 +425,7 @@ handle_keydown:
         ;; No modifiers
 
         lda     event_key
-        cmp     #CHAR_RETURN
-        bne     :+
-        jmp     cmd_rename_icon
-:       cmp     #CHAR_LEFT
+        cmp     #CHAR_LEFT
         bne     :+
         jmp     cmd_highlight
 :       cmp     #CHAR_UP

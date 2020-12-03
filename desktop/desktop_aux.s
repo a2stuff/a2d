@@ -3312,7 +3312,7 @@ file_menu:
         DEFINE_MENU_ITEM label_select_all, 'A', 'a'
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_get_info, 'I', 'i'
-        DEFINE_MENU_ITEM label_rename_icon
+        DEFINE_MENU_ITEM_NOMOD label_rename_icon, CHAR_RETURN
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_copy_file
         DEFINE_MENU_ITEM label_delete_file

@@ -796,6 +796,7 @@ end:
         .res    5, 0            ; 5 reserved bytes
 .endmacro
 
+;;; For menu items with open-apple modifier shortcuts, or no shortcuts
 .macro DEFINE_MENU_ITEM saddr, shortcut1, shortcut2
         .if .paramcount > 1
 
@@ -814,6 +815,15 @@ end:
         .addr   saddr           ; item_str_pointer
 
         .endif
+.endmacro
+
+;;; For menu items with control keys (e.g. CHAR_RETURN), requiring no modifiers
+.macro DEFINE_MENU_ITEM_NOMOD saddr, shortcut1
+        .byte   0               ; option byte
+        .byte   0               ; mark_char
+        .byte   shortcut1       ; char1
+        .byte   0               ; char2
+        .addr   saddr           ; item_str_pointer
 .endmacro
 
 .macro DEFINE_MENU_SEPARATOR
