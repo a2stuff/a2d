@@ -818,11 +818,11 @@ end:
 .endmacro
 
 ;;; For menu items with control keys (e.g. CHAR_RETURN), requiring no modifiers
-.macro DEFINE_MENU_ITEM_NOMOD saddr, shortcut1
+.macro DEFINE_MENU_ITEM_NOMOD saddr, shortcut1, shortcut2
         .byte   0               ; option byte
         .byte   0               ; mark_char
         .byte   shortcut1       ; char1
-        .byte   0               ; char2
+        .byte   shortcut2       ; char2
         .addr   saddr           ; item_str_pointer
 .endmacro
 

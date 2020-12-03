@@ -6431,8 +6431,8 @@ no_mark:
         lda     curmenuitem::shortcut1
         beq     no_shortcut
 
-        ;; Special case: for return, use glyph at that code point
-        cmp     #CHAR_RETURN
+        ;; Special case: if both the same, use glyph at that code point
+        cmp     curmenuitem::shortcut2
         bne     :+
         dec     shortcut_text   ; just use single character
         sta     shortcut_text+1
