@@ -142,6 +142,7 @@ kGlyphDdownArrow        = $0A
 kGlyphReturn            = $0D
 kGlyphOpenApple         = $1F
 kGlyphSolidApple        = $1E
+kGlyphCheckmark         = $1D
 
 ;;; Menu (by default) uses:
 ;;;   Solid Mod   $1E

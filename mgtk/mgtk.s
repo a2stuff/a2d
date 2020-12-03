@@ -6420,6 +6420,10 @@ no_mark:
         jsr     draw_text
 
         jsr     get_menu_and_menu_item
+
+        lda     #2              ; default is modifier + character
+        sta     shortcut_text
+
         lda     curmenuitem::options
         and     #MGTK::MenuOpt::open_apple | MGTK::MenuOpt::solid_apple
         bne     oa_sa
@@ -6427,9 +6431,20 @@ no_mark:
         lda     curmenuitem::shortcut1
         beq     no_shortcut
 
+        ;; Special case: for return, use glyph at that code point
+        cmp     #CHAR_RETURN
+        bne     :+
+        dec     shortcut_text   ; just use single character
+        sta     shortcut_text+1
+        bne     offset          ; always
+:
+
+        pha
         lda     controlkey_glyph
         sta     shortcut_text+1
-        jmp     no_shortcut
+        pla
+        ora     #$40            ; control -> uppercase
+        bne     sst             ; always
 
 oa_sa:  cmp     #MGTK::MenuOpt::open_apple
         bne     :+
@@ -6442,9 +6457,9 @@ oa_sa:  cmp     #MGTK::MenuOpt::open_apple
 
 shortcut:
         lda     curmenuitem::shortcut1
-        sta     shortcut_text+2
+sst:    sta     shortcut_text+2
 
-        lda     offset_shortcut
+offset: lda     offset_shortcut
         jsr     moveto_fromright
 
         ldax    shortcut_text_addr

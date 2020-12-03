@@ -228,6 +228,7 @@ end:
 .scope
         MGTK_RELAY_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
+        MGTK_RELAY_CALL MGTK::InitMenu, initmenu_params
         jsr     main::set_rgb_mode
         MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
 

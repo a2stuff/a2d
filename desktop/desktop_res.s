@@ -170,6 +170,13 @@ savearea:       .addr   SAVE_AREA_BUFFER
 savesize:       .word   kSaveAreaSize
 .endparams
 
+.params initmenu_params
+solid_char:     .byte   kGlyphSolidApple
+open_char:      .byte   kGlyphOpenApple
+check_char:     .byte   kGlyphCheckmark
+control_char:   .byte   '^'
+.endparams
+
 zp_use_flag0:
         .byte   0
 
