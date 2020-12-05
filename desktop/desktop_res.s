@@ -180,11 +180,9 @@ control_char:   .byte   '^'
 zp_use_flag0:
         .byte   0
 
-.params trackgoaway_params        ; next 3 bytes???
+.params trackgoaway_params
 goaway:.byte   0
 .endparams
-
-LD2A9:  .byte   0               ; Unused ???
 
 double_click_flag:
         .byte   0               ; high bit clear if double-clicked, set otherwise
@@ -513,15 +511,9 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        ;; Unused rect/pos?
-        .word   40,37,360,47
-        .word   45,46
-
 name_input_rect:  DEFINE_RECT 40,61+6,360,71+6, name_input_rect
 name_input_textpos: DEFINE_POINT 45,70+6, name_input_textpos
 pos_dialog_title: DEFINE_POINT 0, 18, pos_dialog_title
-
-point7: DEFINE_POINT 40,18, point7 ; Unused ???
 
 dialog_label_base_pos:
         DEFINE_POINT 40,35-5, dialog_label_base_pos
@@ -1258,8 +1250,6 @@ data:   .res    ::kTextBuffer2Len, 0
 
 file_record_ptr:
         .addr   0
-file_record_count:              ; TODO: Written but not read???
-        .byte   0
 
 ;;; ============================================================
 

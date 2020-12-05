@@ -5653,21 +5653,7 @@ list_view:
 :       txa
         asl     a
         tax
-        lda     window_filerecord_table,x
-        sta     file_record_ptr ; points at head of list (entry count)
-        sta     ptr
-        lda     window_filerecord_table+1,x
-        sta     file_record_ptr+1
-        sta     ptr+1
-        lda     LCBANK2
-        lda     LCBANK2
-        ldy     #0
-        lda     (ptr),y         ; entry count
-        tay
-        lda     LCBANK1
-        lda     LCBANK1
-        tya
-        sta     file_record_count
+        copy16  window_filerecord_table,x, file_record_ptr ; points at head of list (entry count)
         inc16   file_record_ptr ; now points at first entry in list
 
         ;; First row
@@ -7053,8 +7039,6 @@ assign_height:
 num_files:
         .byte   0
 
-        .byte   $00,$00         ; Unused ???
-
 thumbmax:
         .byte   20
 
@@ -8424,7 +8408,6 @@ done:   lda     LCBANK1
 
 addr_lo:
         .byte   0
-        .byte   0               ; Unused
 
 row_height:
         .byte   8
@@ -11830,7 +11813,6 @@ count:  .addr   0
         bpl     :-
 
         lda     #0
-        sta     LA425
         sta     all_flag
         rts
 .endproc
@@ -11866,7 +11848,6 @@ count:  .addr   0
         dey
         bpl     :-
 
-        copy    #0, LA425
         copy16  #download_dialog_phase3_callback, dialog_phase3_callback
         rts
 .endproc
@@ -12489,7 +12470,6 @@ count:  .word   0
         bpl     :-
 
         lda     #0
-        sta     LA425
         sta     all_flag
         rts
 .endproc
@@ -12750,8 +12730,6 @@ files_remaining_count:
 .endproc
 
 .proc prep_callbacks_for_lock
-        copy    #0, LA425
-
         ldy     #kOpJTAddrsSize-1
 :       copy    callbacks_for_lock,y, op_jt_addrs,y
         dey
@@ -12937,8 +12915,6 @@ callbacks_for_size_or_count:
         .addr   do_nothing
 
 .proc prep_callbacks_for_size_or_count
-        copy    #0, LA425
-
         ldy     #kOpJTAddrsSize-1
 :       copy    callbacks_for_size_or_count,y, op_jt_addrs,y
         dey
@@ -13269,8 +13245,6 @@ done:   rts
         yax_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
         rts
 .endproc
-
-LA425:  .byte   0               ; ??? only written to (with 0)
 
 ;;; ============================================================
 

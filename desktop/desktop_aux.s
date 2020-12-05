@@ -1085,16 +1085,7 @@ L97F6:  .byte   0
         bne     :-
 
         jsr     push_pointers
-        lda     icon_id
-        jsr     L9EB4
-        stax    $06
-        ldy     #IconEntry::win_type
-        lda     ($06),y
-        and     #kIconEntryWinIdMask
-        sta     win_id
         jmp     L983D           ; skip over data
-
-win_id: .byte   $00             ; written but not read
 
 icon_id:
         .byte   $00
@@ -3388,7 +3379,6 @@ confirm_dialog_outer_rect:  DEFINE_RECT_INSET 4,2,kPromptDialogWidth,kPromptDial
 confirm_dialog_inner_rect:  DEFINE_RECT_INSET 5,3,kPromptDialogWidth,kPromptDialogHeight
 
 cancel_button_rect:  DEFINE_RECT_SZ 40,kPromptDialogHeight-19,kButtonWidth,kButtonHeight
-        DEFINE_RECT_SZ 193,30,kButtonWidth,kButtonHeight ; Unused ???
 ok_button_rect:  DEFINE_RECT_SZ 260,kPromptDialogHeight-19,kButtonWidth,kButtonHeight
 yes_button_rect:  DEFINE_RECT_SZ 200,kPromptDialogHeight-19,40,kButtonHeight
 no_button_rect:  DEFINE_RECT_SZ 260,kPromptDialogHeight-19,40,kButtonHeight
@@ -3402,9 +3392,6 @@ cancel_label_pos:  DEFINE_POINT 45,kPromptDialogHeight-9
 yes_label_pos:  DEFINE_POINT 205,kPromptDialogHeight-9
 no_label_pos:  DEFINE_POINT 265,kPromptDialogHeight-9
 all_label_pos:  DEFINE_POINT 325,kPromptDialogHeight-9
-
-        .byte   $1C,$00,$70,$00 ; Unused ???
-        .byte   $1C,$00,$87,$00 ; Unused ???
 
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
@@ -3439,11 +3426,6 @@ str_no_label:
         PASCAL_STRING " No"
 str_all_label:
         PASCAL_STRING " All"
-
-        ;; Unused
-LAEB6:  PASCAL_STRING "Source filename:"
-LAEC7:  PASCAL_STRING "Destination filename:"
-
 
 ;;; ============================================================
 ;;; "About" dialog resources

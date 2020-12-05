@@ -1070,7 +1070,6 @@ iloop:  cpx     cached_window_icon_count
 
         ;; Clear various flags
         lda     #0
-        sta     LD2A9           ; Unused ???
         sta     double_click_flag
         sta     main::main_loop::loop_counter
         sta     file_menu_items_enabled_flag
