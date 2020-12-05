@@ -141,9 +141,6 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
         jsr     init
 
         ;; tear down/exit
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
         sta     RAMRDOFF
         sta     RAMWRTOFF
         ldx     save_stack
@@ -401,10 +398,6 @@ maprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
 .endparams
 
 .proc init
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-
         lda     #0
         sta     fixed_mode_flag
 
