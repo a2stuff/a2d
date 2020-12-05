@@ -202,7 +202,7 @@ exit_with_a:
         ldy     #$FF
 rts2:   rts
 
-        ;; TODO: Macro for exit_with_a
+        ;; Macro for exit_with_a
 
 .macro EXIT_CALL arg
         lda     #arg
@@ -4939,8 +4939,6 @@ bottom: .word   kScreenHeight-1
 .endparams
         fill_rect_top := fill_rect_params::top
 
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-
 desktop_pattern:
 checkerboard_pattern:
         .byte   %01010101
@@ -4951,7 +4949,6 @@ checkerboard_pattern:
         .byte   %10101010
         .byte   %01010101
         .byte   %10101010
-        .byte   $00
 
 ;;; ============================================================
 ;;; AttachDriver

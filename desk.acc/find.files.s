@@ -1739,13 +1739,8 @@ done:   rts
         add16   STARTLO, #64, ENDLO
         copy16  #entry_buf, DESTINATIONLO
 
-        lda     ROMIN2          ; TODO: Is this needed for AUXMOVE ?
-
         sec                     ; main>aux
         jsr     AUXMOVE
-
-        lda     LCBANK1         ; TODO: Is this needed for AUXMOVE ?
-        lda     LCBANK1
 
         rts
 .endproc

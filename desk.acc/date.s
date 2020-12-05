@@ -142,13 +142,9 @@ year_rect:
 backcolor:   .byte   0          ; black
 .endparams
 
-        .res    7, $00          ; ???
-        .byte   $FF
-
 .params white_pattern
         .res    8, $FF
 .endparams
-        .byte   $FF             ; ??
 
 selected_field:                 ; 1 = day, 2 = month, 3 = year, 0 = none (init)
         .byte   0
@@ -214,12 +210,10 @@ windowy:.word   0
 .params closewindow_params
 window_id:     .byte   kDAWindowId
 .endparams
-        .byte $00,$01           ; ???
 
 .params penmode_params
-penmode:   .byte   $02             ; this should be normal, but we do inverts ???
+penmode:   .byte   MGTK::penXOR
 .endparams
-        .byte   $06             ; ???
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -248,7 +242,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
 penwidth:       .byte   4
 penheight:      .byte   2
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0

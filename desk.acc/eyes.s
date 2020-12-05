@@ -528,7 +528,7 @@ ppy:    .word   0
         FAC_MUL         dy
         FAC_ADD         tmpf
 
-        jsr             SQR     ; ??? Crashes here after window drag
+        jsr             SQR
 
         ;; if d > pry:
         ;;   f = pry / d

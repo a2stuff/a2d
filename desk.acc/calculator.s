@@ -327,15 +327,12 @@ bottom: .word   96
 
 background_pattern:
         .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
-        .byte   $00
 
 black_pattern:
         .res    8, $00
-        .byte   $00
 
 white_pattern:
         .res    8, $FF
-        .byte   $00
 
 .params settextbg_params
 backcolor:  .byte   $7F
@@ -390,10 +387,9 @@ spaces_string:
 error_string:
         DEFINE_STRING "Error "
 
-        ;; used when clearing display; params to a $18 call
 .params textwidth_params
 textptr:        .addr   text_buffer1
-textlen:        .byte   15      ; ???
+textlen:        .byte   15
 result:         .word   0
 .endparams
 
