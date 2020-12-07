@@ -337,7 +337,7 @@ L0C1F:  .byte   0
 ;;; Hilight volume label
 ;;; Input: A = volume index
 
-        kLabelWidth = 120
+        kLabelWidth = 110
 
 .proc highlight_volume_label
         ldy     #39
@@ -486,12 +486,12 @@ loop:   lda     vol
 :       cmp     #8              ; third column?
         bcc     :+
         ldax    #kDialogLabelDefaultX + kLabelWidth*2
-        bne     setpos          ; always
+        jmp     setpos
 
 :       cmp     #4              ; second column?
         bcc     skip
         ldax    #kDialogLabelDefaultX + kLabelWidth
-        bne     setpos          ; always
+        ;; fall through
 
 setpos: stax    dialog_label_pos::xcoord
 skip:
