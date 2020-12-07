@@ -14,10 +14,10 @@ io_buf := $0800
 selector_list   := $0C00
 
 exec:
-        sta     L938E
+        sta     selector_action
         ldx     #$FF
         stx     L938F
-        cmp     #$01
+        cmp     #SelectorAction::add
         beq     L903C
         jmp     L9105
 
@@ -133,6 +133,7 @@ L90FF:  lda     #$02
 which_run_list:  .byte   0
 copy_when:  .byte   0
 
+;;; ============================================================
 
 L9105:  lda     #$00
         sta     L938B
@@ -141,29 +142,35 @@ L9105:  lda     #$00
         jsr     L9390
         jsr     L9D22
         bpl     L911D
-        jmp     L936E
+        jmp     close_and_return
 
 L911D:  jsr     L99B3
-L9120:  jsr     L9646
-        bmi     L9120
-        beq     L912A
+
+dialog_loop:
+        jsr     event_loop           ; Run the dialog?
+        bmi     dialog_loop
+        beq     :+
         jmp     L933F
 
-L912A:  lda     selected_index
-        bmi     L9120
-        lda     L938E
-        cmp     #$02
-        bne     L9139
+:       lda     selected_index
+        bmi     dialog_loop
+        lda     selector_action
+        cmp     #SelectorAction::edit
+        bne     :+
         jmp     L9174
 
-L9139:  cmp     #$03
-        bne     L913F
-        beq     L9146
-L913F:  cmp     #$04
-        bne     L9120
+:       cmp     #SelectorAction::delete
+        bne     :+
+        beq     do_delete       ; always
+
+:       cmp     #SelectorAction::run
+        bne     dialog_loop
         jmp     L9282
 
-L9146:  lda     selected_index
+;;; ============================================================
+
+do_delete:
+        lda     selected_index
         jsr     maybe_toggle_entry_hilite
         jsr     main::set_cursor_watch
         lda     selected_index
@@ -178,11 +185,11 @@ L915D:  jsr     main::set_cursor_pointer
         jsr     L9D28
         jsr     L99B3
         inc     L938F
-        jmp     L9120
+        jmp     dialog_loop
 
 L9174:  lda     selected_index
         jsr     maybe_toggle_entry_hilite
-        jsr     L936E
+        jsr     close_and_return
         lda     selected_index
         jsr     get_file_entry_addr
         stax    $06
@@ -248,7 +255,7 @@ L91EA:  dey                     ; map 0/1/2 to $00/$80/$C0
 L91F2:  sta     copy_when
         jsr     L9CBA
         bpl     L91FD
-        jmp     L936E
+        jmp     close_and_return
 
 L91FD:  lda     selected_index
         cmp     #$09
@@ -264,7 +271,7 @@ L91FD:  lda     selected_index
 L9215:  lda     selected_index
         jsr     L9A97
         beq     L9220
-        jmp     L936E
+        jmp     close_and_return
 
 L9220:  ldx     L938B
         inc     L938B
@@ -286,7 +293,7 @@ L923C:  lda     which_run_list
 L924D:  lda     selected_index
         jsr     L9A97
         beq     L9258
-        jmp     L936E
+        jmp     close_and_return
 
 L9258:  ldx     L938C
         inc     L938C
@@ -301,7 +308,7 @@ L926D:  ldy     copy_when
         jsr     L9A0A
         jsr     L9CEA
         beq     L927B
-        jmp     L936E
+        jmp     close_and_return
 
 L927B:  jsr     main::set_cursor_pointer
         jmp     L900F
@@ -385,25 +392,31 @@ L931B:  iny
         jsr     JUMP_TABLE_LAUNCH_FILE
         jsr     main::set_cursor_pointer
         copy    #$FF, selected_index
-        jmp     L936E
+        jmp     close_and_return
 
 L933F:  pha
-        lda     L938E
-        cmp     #$02
-        bne     L934F
+        lda     selector_action
+        cmp     #SelectorAction::edit
+        bne     :+
         lda     #$07
         jsr     JUMP_TABLE_RESTORE_OVL
         jsr     JUMP_TABLE_REDRAW_WINDOWS
-L934F:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+:       MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
         pla
         jmp     L900F
 
-L936E:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+;;; ============================================================
+
+.proc close_and_return
+        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
         rts
+.endproc
+
+;;; ============================================================
 
 L938A:  .byte   0
 L938B:  .byte   0
@@ -412,9 +425,11 @@ L938C:  .byte   0
 selected_index:
         .byte   0
 
-L938E:  .byte   0
+selector_action:
+        .byte   0
 L938F:  .byte   0
 
+;;; ============================================================
 
 L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     winfo_entry_picker
@@ -432,8 +447,8 @@ L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_cancel_rect
         jsr     L94A9
         jsr     L94BA
-        lda     L938E
-        cmp     #$02
+        lda     selector_action
+        cmp     #SelectorAction::edit
         bne     L9417
         addr_call L94F0, edit_an_entry_label
         rts
@@ -507,6 +522,8 @@ L947F:  clc
 
 L94A8:  .byte   0
 
+;;; ============================================================
+
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_ok_pos
         addr_call main::draw_text1, aux::str_ok_label
         rts
@@ -553,31 +570,32 @@ L9539:  .byte   0
 
 ;;; ============================================================
 
-L9646:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+event_loop:
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
-        bne     L9659
-        jmp     L9660
+        bne     :+
+        jmp     handle_button
+:       cmp     #MGTK::EventKind::key_down
+        bne     event_loop
+        jmp     handle_key
 
-L9659:  cmp     #MGTK::EventKind::key_down
-        bne     L9646
-        jmp     L9822
-
-L9660:  MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+handle_button:
+        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
-        bne     L9671
+        bne     :+
         return  #$FF
 
-L9671:  cmp     #MGTK::Area::content
-        beq     L9678
+:       cmp     #MGTK::Area::content
+        beq     :+
         return  #$FF
 
-L9678:  lda     findwindow_window_id
+:       lda     findwindow_window_id
         cmp     winfo_entry_picker
-        beq     L9683
+        beq     :+
         return  #$FF
 
-L9683:  lda     winfo_entry_picker
+:       lda     winfo_entry_picker
         jsr     main::set_port_from_window_id
         lda     winfo_entry_picker
         sta     screentowindow_window_id
@@ -585,27 +603,28 @@ L9683:  lda     winfo_entry_picker
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
         cmp     #MGTK::inrect_inside
-        bne     L96C8
+        bne     not_ok
         yax_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_ok_rect
-        bmi     L96C7
+        bmi     :+
         lda     #$00
-L96C7:  rts
+:       rts
 
-L96C8:  MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
+not_ok: MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
         cmp     #MGTK::inrect_inside
-        bne     L96EF
+        bne     not_cancel
         yax_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_cancel_rect
-        bmi     L96EE
+        bmi     :+
         lda     #$01
-L96EE:  rts
+:       rts
 
-L96EF:  sub16   screentowindow_windowx, #10, screentowindow_windowx
+not_cancel:
+        sub16   screentowindow_windowx, #10, screentowindow_windowx
         sub16   screentowindow_windowy, #25, screentowindow_windowy
-        bpl     L9716
+        bpl     :+
         return  #$FF
 
         ;; Determine column
-L9716:  cmp16   screentowindow_windowx, #110
+:       cmp16   screentowindow_windowx, #110
         bmi     L9736
         cmp16   screentowindow_windowx, #220
         bmi     L9732
@@ -715,7 +734,8 @@ L97D4:  ldx     #0
         rts
 
         ;; key down handler
-L9822:  lda     event_modifiers
+handle_key:
+        lda     event_modifiers
         cmp     #MGTK::event_modifier_solid_apple
         bne     :+
         return  #$FF

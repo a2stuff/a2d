@@ -72,6 +72,14 @@ kMenuSizeSpecial  = 11
 kMenuSizeStartup  = 7
 kMenuSizeSelector = 13
 
+;;; These must correspond to indexes in the Selector menu.
+.enum SelectorAction
+        add     = 1
+        edit    = 2
+        delete  = 3
+        run     = 4
+.endenum
+
 ;;; ============================================================
 ;;; Device types
 

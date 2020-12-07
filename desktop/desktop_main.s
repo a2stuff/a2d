@@ -1190,9 +1190,10 @@ filerecords_free_start:
         lda     #kDynamicRoutineSelector1
         jsr     load_dynamic_routine
         bmi     done
+
         lda     menu_click_params::item_num
-        cmp     #3              ; 1 = Add, 2 = Edit (need more overlays)
-        bcs     :+              ; 3 = Delete, 4 = Run (can skip)
+        cmp     #SelectorAction::delete
+        bcs     :+              ; delete or run (no need for more overlays)
         lda     #kDynamicRoutineSelector2
         jsr     load_dynamic_routine
         bmi     done
@@ -1211,7 +1212,7 @@ filerecords_free_start:
         jsr     restore_dynamic_routine
 
         lda     menu_click_params::item_num
-        cmp     #4              ; 4 = Run ?
+        cmp     #SelectorAction::run
         bne     done
 
         ;; "Run" command
