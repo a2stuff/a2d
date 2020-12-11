@@ -6502,13 +6502,13 @@ next:   ldx     menu_item_index
         lda     menu_item_y_table+1,x
         sta     fill_rect_params3_bottom
 
-        add16lc curmenuinfo::x_min, #5, fill_rect_params3_left
-        sub16lc curmenuinfo::x_max, #5, fill_rect_params3_right
-
         MGTK_CALL MGTK::SetPattern, light_speckle_pattern
 
         lda     #MGTK::penOR
 ep2:    jsr     set_fill_mode
+
+        add16   curmenuinfo::x_min, #1, fill_rect_params3_left
+        sub16   curmenuinfo::x_max, #1, fill_rect_params3_right
 
         MGTK_CALL MGTK::PaintRect, fill_rect_params3
         MGTK_CALL MGTK::SetPattern, standard_port::penpattern
@@ -6525,9 +6525,6 @@ ep2:    jsr     set_fill_mode
         adc     #kMenuItemHeight/2
         sta     fill_rect_params3_top
         sta     fill_rect_params3_bottom
-
-        add16lc curmenuinfo::x_min, #1, fill_rect_params3_left
-        sub16lc curmenuinfo::x_max, #1, fill_rect_params3_right
 
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
 
@@ -8111,8 +8108,8 @@ maxheight: .word  0
 
 grow:   lda     #0
         sta     grew_flag
-loop:   add16lc current_winport::maprect::x2,x, drag_delta,x, current_winport::maprect::x2,x
-        sub16lc current_winport::maprect::x2,x, current_winport::maprect::x1,x, win_width
+loop:   add16   current_winport::maprect::x2,x, drag_delta,x, current_winport::maprect::x2,x
+        sub16   current_winport::maprect::x2,x, current_winport::maprect::x1,x, win_width
 
         sec
         lda     win_width
@@ -8121,7 +8118,7 @@ loop:   add16lc current_winport::maprect::x2,x, drag_delta,x, current_winport::m
         sbc     content::minwidth+1,x
         bpl     :+
 
-        add16lc content::minwidth,x, current_winport::maprect::x1,x, current_winport::maprect::x2,x
+        add16   content::minwidth,x, current_winport::maprect::x1,x, current_winport::maprect::x2,x
         jsr     set_grew_flag
         jmp     next
 
@@ -8132,7 +8129,7 @@ loop:   add16lc current_winport::maprect::x2,x, drag_delta,x, current_winport::m
         sbc     win_width+1
         bpl     next
 
-        add16lc content::maxwidth,x, current_winport::maprect::x1,x, current_winport::maprect::x2,x
+        add16   content::maxwidth,x, current_winport::maprect::x1,x, current_winport::maprect::x2,x
         jsr     set_grew_flag
 
 next:   inx
@@ -9548,7 +9545,7 @@ position_menu_item:
         ldx     sel_menu_index
         jsr     get_menu
 
-        add16lc curmenu::x_min, #5, kbd_mouse_x
+        add16   curmenu::x_min, #5, kbd_mouse_x
 
         ldy     sel_menu_item_index
         lda     menu_item_y_table,y
@@ -10173,7 +10170,7 @@ grts:   rts
         php
         sei
         ldx     #0
-:       sub16lc winrect::x2,x, #4, kbd_mouse_x,x
+:       sub16   winrect::x2,x, #4, kbd_mouse_x,x
         inx
         inx
         cpx     #4

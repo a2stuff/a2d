@@ -310,76 +310,6 @@ end:
     .endif
 .endmacro
 
-;;; Core for add16/sub16, with leading carry kOperation
-.macro _addsub16lc op, opc, arg1, arg2, arg3, arg4, arg5, arg6
-        opc
-    .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}
-        ;; xxx16 $1111,x, $2222,x, $3333,x
-        lda     arg1,arg2
-        op      arg3,arg4
-        sta     arg5,arg6
-        lda     arg1+1,arg2
-        op      arg3+1,arg4
-        sta     arg5+1,arg6
-    .elseif _is_register {arg2} && _is_register {arg4}
-        ;; xxx16 $1111,x, $2222,x, $3333
-        lda     arg1,arg2
-        op      arg3,arg4
-        sta     arg5
-        lda     arg1+1,arg2
-        op      arg3+1,arg4
-        sta     arg5+1
-    .elseif _is_register {arg2} && _is_register {arg5}
-        ;; xxx16 $1111,x, $2222, $3333,x
-        ;; xxx16 $1111,x, #$2222, $3333,x
-        lda     arg1,arg2
-        _op_lo  op, {arg3}
-        sta     arg4,arg5
-        lda     arg1+1,arg2
-        _op_hi  op, {arg3}
-        sta     arg4+1,arg5
-    .elseif _is_register {arg2}
-        ;; xxx16 $1111,x, $2222, $3333
-        ;; xxx16 $1111,x, #$2222, $3333
-        lda     arg1,arg2
-        _op_lo  op, {arg3}
-        sta     arg4
-        lda     arg1+1,arg2
-        _op_hi  op, {arg3}
-        sta     arg4+1
-    .elseif _is_register {arg3}
-        ;; xxx16 $1111, $2222,x $3333
-        ;; xxx16 #$1111, $2222,x $3333
-        _op_lo  lda, {arg1}
-        op      arg2,arg3
-        sta     arg4
-        _op_hi  lda, {arg1}
-        op      arg2+1,arg3
-        sta     arg4+1
-    .elseif _is_register {arg4}
-        ;; xxx16 $1111, $2222, $3333,x
-        ;; xxx16 #$1111, $2222, $3333,x
-        ;; xxx16 $1111, #$2222, $3333,x
-        ;; xxx16 #$1111, #$2222, $3333,x
-        _op_lo  lda, {arg1}
-        _op_lo  op, {arg2}
-        sta     arg3,arg4
-        _op_hi  lda, {arg1}
-        _op_hi  op, {arg2}
-        sta     arg3+1,arg4
-    .else
-        ;; xxx16 $1111, $2222, $3333
-        ;; xxx16 #$1111, $2222, $3333
-        ;; xxx16 $1111, #$2222, $3333
-        ;; xxx16 #$1111, #$2222, $3333
-        _op_lo lda, {arg1}
-        _op_lo op, {arg2}
-        sta     arg3
-        _op_hi lda, {arg1}
-        _op_hi op, {arg2}
-        sta     arg3+1
-    .endif
-.endmacro
 
 ;;; Core for add16in/sub16in
 .macro _addsub16in op, opc, arg1, arg2, arg3, arg4, arg5, arg6
@@ -465,10 +395,6 @@ end:
 .macro add16 arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16 adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
-;;; (as above, but clc precedes first lda)
-.macro add16lc arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub16lc adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
-.endmacro
 ;;; (as above, but indirect indexed, y register is incremented)
 .macro add16in arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16in adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
@@ -512,10 +438,6 @@ end:
 ;;;    sub16 $1111,x, $2222,x $3333,x   ; indexed, indexed, indexed
 .macro sub16 arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16 sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
-.endmacro
-;;; (as above, but sec precedes first lda)
-.macro sub16lc arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub16lc sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
 ;;; (as above, but indirect indexed, y register incremented)
 .macro sub16in arg1, arg2, arg3, arg4, arg5, arg6
