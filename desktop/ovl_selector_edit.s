@@ -44,7 +44,7 @@ L7046:  iny
 L7056:  jsr     file_dialog::L5F5B
         lda     #$00
         bcs     L706A
-        addr_call file_dialog::L6516, L709D
+        param_call file_dialog::L6516, L709D
         sta     selected_index
         jsr     file_dialog::L6586
 L706A:  jsr     file_dialog::update_scrollbar2
@@ -105,30 +105,30 @@ L70B0:  lda     jt_pathname+1,x
         jsr     file_dialog::set_port_for_window
         lda     path_buf0
         beq     L7116
-        addr_call file_dialog::L5E0A, edit_an_entry_label
+        param_call file_dialog::L5E0A, edit_an_entry_label
         jmp     L711D
 
-L7116:  addr_call file_dialog::L5E0A, add_an_entry_label
-L711D:  addr_call file_dialog::L5E6F, enter_the_full_pathname_label2
+L7116:  param_call file_dialog::L5E0A, add_an_entry_label
+L711D:  param_call file_dialog::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
-        addr_call file_dialog::L5E57, enter_the_full_pathname_label1
-        addr_call file_dialog::L5E6F, enter_the_name_to_appear_label
+        param_call file_dialog::L5E57, enter_the_full_pathname_label1
+        param_call file_dialog::L5E6F, enter_the_name_to_appear_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_add_a_new_entry_to_label
-        addr_call file_dialog::draw_string, add_a_new_entry_to_label
+        param_call file_dialog::draw_string, add_a_new_entry_to_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_run_list_label
-        addr_call file_dialog::draw_string, run_list_label
+        param_call file_dialog::draw_string, run_list_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_other_run_list_label
-        addr_call file_dialog::draw_string, other_run_list_label
+        param_call file_dialog::draw_string, other_run_list_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_down_load_label
-        addr_call file_dialog::draw_string, down_load_label
+        param_call file_dialog::draw_string, down_load_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_at_first_boot_label
-        addr_call file_dialog::draw_string, at_first_boot_label
+        param_call file_dialog::draw_string, at_first_boot_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_at_first_use_label
-        addr_call file_dialog::draw_string, at_first_use_label
+        param_call file_dialog::draw_string, at_first_use_label
         MGTK_RELAY_CALL MGTK::MoveTo, pos_never_label
-        addr_call file_dialog::draw_string, never_label
+        param_call file_dialog::draw_string, never_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, rect_run_list_radiobtn
         MGTK_RELAY_CALL MGTK::FrameRect, rect_other_run_list_radiobtn
@@ -238,7 +238,7 @@ L72BF:  copy    #1, path_buf2
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
 .proc handle_ok_name
-        addr_call file_dialog::L647C, path_buf0
+        param_call file_dialog::L647C, path_buf0
         bne     L72E2
         lda     path_buf1
         beq     L72E7
@@ -404,25 +404,25 @@ copy_when:
 .proc toggle_run_list_button
         cmp     #1
         bne     :+
-        addr_call draw_inset_rect, rect_run_list_radiobtn
+        param_call draw_inset_rect, rect_run_list_radiobtn
         rts
 
-:       addr_call draw_inset_rect, rect_other_run_list_radiobtn
+:       param_call draw_inset_rect, rect_other_run_list_radiobtn
         rts
 .endproc
 
 .proc toggle_copy_when_button
         cmp     #1
         bne     :+
-        addr_call draw_inset_rect, rect_at_first_boot_radiobtn
+        param_call draw_inset_rect, rect_at_first_boot_radiobtn
         rts
 
 :       cmp     #2
         bne     :+
-        addr_call draw_inset_rect, rect_at_first_use_radiobtn
+        param_call draw_inset_rect, rect_at_first_use_radiobtn
         rts
 
-:       addr_call draw_inset_rect, rect_never_radiobtn
+:       param_call draw_inset_rect, rect_never_radiobtn
         rts
 .endproc
 

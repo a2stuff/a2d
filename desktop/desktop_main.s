@@ -934,15 +934,15 @@ with_path:
 
         cmp     #IconType::graphics
         bne     :+
-        addr_jump invoke_desk_acc, str_preview_fot
+        param_jump invoke_desk_acc, str_preview_fot
 
 :       cmp     #IconType::text
         bne     :+
-        addr_jump invoke_desk_acc, str_preview_txt
+        param_jump invoke_desk_acc, str_preview_txt
 
 :       cmp     #IconType::font
         bne     :+
-        addr_jump invoke_desk_acc, str_preview_fnt
+        param_jump invoke_desk_acc, str_preview_fnt
 
 :       cmp     #IconType::desk_accessory
     IF_EQ
@@ -961,7 +961,7 @@ with_path:
 no_file_sel:
         copy    #0, path        ; Signal no file selection
 
-:       addr_jump invoke_desk_acc, path_buffer
+:       param_jump invoke_desk_acc, path_buffer
     END_IF
 
 
@@ -972,7 +972,7 @@ no_file_sel:
 
 launch:
         ;; Copy/split path into prefix and filename
-        addr_call find_last_path_segment, INVOKER_PREFIX ; point Y at last '/'
+        param_call find_last_path_segment, INVOKER_PREFIX ; point Y at last '/'
         tya
         pha
         ldx     #1
@@ -1168,7 +1168,7 @@ filerecords_free_start:
 
 .proc warning_dialog_proc_num
         sta     warning_dialog_num
-        yax_call invoke_dialog_proc, kIndexWarningDialog, warning_dialog_num
+        param_call invoke_dialog_proc, kIndexWarningDialog, warning_dialog_num
         rts
 .endproc
 
@@ -1418,7 +1418,7 @@ slash_index:
         dey
         bpl     :-
 
-        addr_call copy_ramcard_prefix, $840
+        param_call copy_ramcard_prefix, $840
 
         ;; Find last '/' in path...
         ldy     $800
@@ -1556,7 +1556,7 @@ slash_index:
         sta     entry_num
 
         ;; Initialize buffer
-        addr_call copy_ramcard_prefix, path_buffer
+        param_call copy_ramcard_prefix, path_buffer
 
         ;; Find entry path
         lda     entry_num
@@ -1610,7 +1610,7 @@ prefix_length:
 ;;; ============================================================
 
 .proc cmd_about
-        yax_call invoke_dialog_proc, kIndexAboutDialog, $0000
+        param_call invoke_dialog_proc, kIndexAboutDialog, $0000
         jmp     redraw_windows_and_desktop
 .endproc
 
@@ -1764,7 +1764,7 @@ L4CD6:  pha
         bpl     :+
         jmp     redraw_windows_and_desktop
 
-:       addr_call find_window_for_path, path_buf4
+:       param_call find_window_for_path, path_buf4
         beq     :+
         pha
         jsr     update_used_free_for_vol_windows
@@ -1784,7 +1784,7 @@ L4CD6:  pha
         iny
 :       dey
         sty     path_buf4
-        addr_call find_windows_for_prefix, path_buf4
+        param_call find_windows_for_prefix, path_buf4
 
         ldax    #path_buf4
         ldy     path_buf4
@@ -1816,7 +1816,7 @@ L4CD6:  pha
         dey
         bpl     :-
 
-        addr_call find_last_path_segment, path_buf4
+        param_call find_last_path_segment, path_buf4
 
         ;; Copy filename part to buf
         ldx     #1
@@ -1883,10 +1883,10 @@ L4D9D:  pha
         bpl     :+
         jmp     redraw_windows_and_desktop
 
-:       addr_call find_last_path_segment, path_buf3
+:       param_call find_last_path_segment, path_buf3
         sty     path_buf3
 
-        addr_call find_window_for_path, path_buf3
+        param_call find_window_for_path, path_buf3
         beq     :+
         pha
         jsr     update_used_free_for_vol_windows
@@ -1906,7 +1906,7 @@ L4D9D:  pha
         iny
 :       dey
         sty     path_buf3
-        addr_call find_windows_for_prefix, path_buf3
+        param_call find_windows_for_prefix, path_buf3
 
         ldax    #path_buf3
         ldy     path_buf3
@@ -2159,14 +2159,14 @@ path_buffer:
         .res    ::kPathBufferSize, 0              ; buffer is used elsewhere too
 
 start:  copy    active_window_id, new_folder_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
+        param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
 
 L4FC6:  lda     active_window_id
         beq     L4FD4
         jsr     get_window_path
         stax    new_folder_dialog_params::win_path_ptr
 L4FD4:  copy    #$80, new_folder_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
+        param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
         beq     :+
         jmp     done            ; Cancelled
 :       stx     ptr+1
@@ -2197,10 +2197,10 @@ L4FD4:  copy    #$80, new_folder_dialog_params::phase
 
 success:
         copy    #$40, new_folder_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
-        addr_call find_last_path_segment, path_buffer
+        param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
+        param_call find_last_path_segment, path_buffer
         sty     path_buffer
-        addr_call find_window_for_path, path_buffer
+        param_call find_window_for_path, path_buffer
         beq     done
         jsr     select_and_refresh_window
 
@@ -5424,7 +5424,7 @@ no_linked_win:
 
         ;; Alternate entry point: opening via path.
 check_path:
-        addr_call find_window_for_path, open_dir_path_buf
+        param_call find_window_for_path, open_dir_path_buf
         beq     no_win
 
         ;; Found a match - associate the window.
@@ -5965,7 +5965,7 @@ loop:   iny                     ; start at 2nd character
 
 found:  dey
 finish: sty     pathlen
-        addr_call_indirect find_windows_for_prefix, ptr ; ???
+        param_call_indirect find_windows_for_prefix, ptr ; ???
         ldax    pathptr
         ldy     pathlen
         jmp     update_vol_used_free_for_found_windows
@@ -6302,7 +6302,7 @@ L7223:  iny
         pha
         tya
         pha
-        addr_call_indirect adjust_fileentry_case, entry_ptr
+        param_call_indirect adjust_fileentry_case, entry_ptr
         pla
         tay
         pla
@@ -7361,7 +7361,7 @@ tmp:    .byte   0
         dec     str_items       ; remove trailing s
 :       MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
         jsr     draw_int_string
-        addr_call draw_pascal_string, str_items
+        param_call draw_pascal_string, str_items
         lda     cached_window_icon_count
         cmp     #1
         bne     :+
@@ -7382,7 +7382,7 @@ tmp:    .byte   0
         jsr     int_to_string_with_separators
         MGTK_RELAY_CALL MGTK::MoveTo, pos_k_in_disk
         jsr     draw_int_string
-        addr_call draw_pascal_string, str_k_in_disk
+        param_call draw_pascal_string, str_k_in_disk
 
         ;; Draw "XXXK available"
         ldx     active_window_id
@@ -7398,7 +7398,7 @@ tmp:    .byte   0
         jsr     int_to_string_with_separators
         MGTK_RELAY_CALL MGTK::MoveTo, pos_k_available
         jsr     draw_int_string
-        addr_call draw_pascal_string, str_k_available
+        param_call draw_pascal_string, str_k_available
         rts
 
 ;;; --------------------------------------------------
@@ -7448,7 +7448,7 @@ finish:
 .endproc ; calc_header_coords
 
 draw_int_string:
-        addr_jump draw_pascal_string, str_from_int
+        param_jump draw_pascal_string, str_from_int
 
 xcoord:
         .word   0
@@ -8506,13 +8506,13 @@ check_top:
         ;; Draw it!
 in_range:
         jsr     prepare_col_name
-        addr_call SetPosDrawText, pos_col_name
+        param_call SetPosDrawText, pos_col_name
         jsr     prepare_col_type
-        addr_call SetPosDrawText, pos_col_type
+        param_call SetPosDrawText, pos_col_type
         jsr     prepare_col_size
-        addr_call SetPosDrawText, pos_col_size
+        param_call SetPosDrawText, pos_col_size
         jsr     compose_date_string
-        addr_jump SetPosDrawText, pos_col_date
+        param_jump SetPosDrawText, pos_col_date
 .endproc
         draw_list_view_row := draw_list_view_row_impl::start
 
@@ -8616,22 +8616,22 @@ append_date_strings:
         jsr     parse_datetime
 
         jsr     append_month_string
-        addr_call concatenate_date_part, str_space
+        param_call concatenate_date_part, str_space
         jsr     append_day_string
-        addr_call concatenate_date_part, str_comma
+        param_call concatenate_date_part, str_comma
         jsr     append_year_string
 
-        addr_call concatenate_date_part, str_at
+        param_call concatenate_date_part, str_at
         ldax    #parsed_date
         jsr     make_time_string
-        addr_jump concatenate_date_part, str_time
+        param_jump concatenate_date_part, str_time
 
 .proc append_day_string
         lda     day
         ldx     #0
         jsr     int_to_string
 
-        addr_jump concatenate_date_part, str_from_int
+        param_jump concatenate_date_part, str_from_int
 .endproc
 
 .proc append_month_string
@@ -8648,7 +8648,7 @@ append_date_strings:
 .proc append_year_string
         ldax    year
         jsr     int_to_string
-        addr_jump concatenate_date_part, str_from_int
+        param_jump concatenate_date_part, str_from_int
 .endproc
 
 year    := parsed_date + ParsedDateTime::year
@@ -9494,7 +9494,7 @@ create_icon:
         and     #NAME_LENGTH_MASK
         sta     cvi_data_buffer
 
-        addr_call adjust_volname_case, cvi_data_buffer
+        param_call adjust_volname_case, cvi_data_buffer
 
         ldy     #IconEntry::name+1
 
@@ -10133,8 +10133,8 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ldax    #parsed_date
         jsr     make_time_string
 
-        addr_call draw_text1, str_time
-        addr_jump draw_text1, str_4_spaces ; in case it got shorter
+        param_call draw_text1, str_time
+        param_jump draw_text1, str_4_spaces ; in case it got shorter
 .endproc
 
 ;;; ============================================================
@@ -11318,7 +11318,7 @@ str_vol:
         PASCAL_STRING " Volume"
 
 .proc run_get_info_dialog_proc
-        yax_call invoke_dialog_proc, kIndexGetInfoDialog, get_info_dialog_params
+        param_call invoke_dialog_proc, kIndexGetInfoDialog, get_info_dialog_params
         rts
 .endproc
 .endproc
@@ -11513,7 +11513,7 @@ finish: lda     #RenameDialogState::close
 
 run_dialog_proc:
         sta     rename_dialog_params
-        yax_call invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
+        param_call invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
         rts
 
 str_empty:
@@ -11723,7 +11723,7 @@ done:   rts
 loop:   jsr     read_file_entry
         bne     end_dir
 
-        addr_call adjust_fileentry_case, file_entry_buf
+        param_call adjust_fileentry_case, file_entry_buf
 
         lda     file_entry_buf + FileEntry::storage_type_name_length
         beq     loop
@@ -11830,14 +11830,14 @@ count:  .addr   0
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #download_dialog_phase0_callback, dialog_phase0_callback
         copy16  #download_dialog_phase1_callback, dialog_phase1_callback
-        yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
+        param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
 .proc download_dialog_phase0_callback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::populate, copy_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
+        param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
@@ -11855,13 +11855,13 @@ count:  .addr   0
 
 .proc download_dialog_phase1_callback
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
+        param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
 .proc download_dialog_phase3_callback
         copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
+        param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         cmp     #PromptResult::yes
         bne     :+
         rts
@@ -12116,7 +12116,7 @@ done:   rts
 ;;; ============================================================
 
 .proc run_copy_dialog_proc
-        yax_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
+        param_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
         rts
 .endproc
 
@@ -12387,7 +12387,7 @@ create: MLI_RELAY_CALL CREATE, create_params3
         bit     all_flag
         bmi     yes
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
+        param_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
         pha
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         pla
@@ -12605,7 +12605,7 @@ loop:   MLI_RELAY_CALL DESTROY, destroy_params
         bit     all_flag
         bmi     unlock
         copy    #DeleteDialogLifecycle::locked, delete_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
+        param_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
         pha
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         pla
@@ -12647,7 +12647,7 @@ done:   rts
 .endproc
 
 .proc run_delete_dialog_proc
-        yax_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
+        param_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
         rts
 .endproc
 
@@ -12750,11 +12750,11 @@ files_remaining_count:
 .endproc
 
 lock_dialog_lifecycle:
-        yax_call invoke_dialog_proc, kIndexLockDialog, lock_unlock_dialog_params
+        param_call invoke_dialog_proc, kIndexLockDialog, lock_unlock_dialog_params
         rts
 
 unlock_dialog_lifecycle:
-        yax_call invoke_dialog_proc, kIndexUnlockDialog, lock_unlock_dialog_params
+        param_call invoke_dialog_proc, kIndexUnlockDialog, lock_unlock_dialog_params
         rts
 
 ;;; ============================================================
@@ -12879,13 +12879,13 @@ do_get_size_dialog_phase:
         copy    #0, get_size_dialog_params::phase
         copy16  #get_size_dialog_phase2_callback, dialog_phase2_callback
         copy16  #get_size_dialog_phase0_callback, dialog_phase0_callback
-        yax_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
+        param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
         copy16  #get_size_dialog_phase1_callback, dialog_phase1_callback
         rts
 
 .proc get_size_dialog_phase0_callback
         copy    #1, get_size_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
+        param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
         ;; fall through
 .endproc
 get_size_rts1:
@@ -12893,14 +12893,14 @@ get_size_rts1:
 
 .proc get_size_dialog_phase2_callback
         copy    #2, get_size_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
+        param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
         beq     get_size_rts1
         jmp     close_files_cancel_dialog
 .endproc
 
 .proc get_size_dialog_phase1_callback
         copy    #3, get_size_dialog_params::phase
-        yax_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
+        param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
 .endproc
 get_size_rts2:
         rts
@@ -13237,13 +13237,13 @@ done:   rts
 
 .proc dec_file_count_and_run_delete_dialog_proc
         sub16   op_file_count, #1, delete_dialog_params::count
-        yax_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
+        param_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
         rts
 .endproc
 
 .proc dec_file_count_and_run_copy_dialog_proc
         sub16   op_file_count, #1, copy_dialog_params::count
-        yax_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
+        param_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
         rts
 .endproc
 
@@ -13560,7 +13560,7 @@ content:
         jmp     maybe_check_button_cancel
 
 check_button_ok:
-        yax_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::ok_button_rect
+        param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::ok_button_rect
         bmi     :+
         lda     #PromptResult::ok
 :       rts
@@ -13569,7 +13569,7 @@ check_button_yes:
         MGTK_RELAY_CALL MGTK::InRect, aux::yes_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_no
-        yax_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::yes_button_rect
+        param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::yes_button_rect
         bmi     :+
         lda     #PromptResult::yes
 :       rts
@@ -13578,7 +13578,7 @@ check_button_no:
         MGTK_RELAY_CALL MGTK::InRect, aux::no_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_all
-        yax_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::no_button_rect
+        param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::no_button_rect
         bmi     :+
         lda     #PromptResult::no
 :       rts
@@ -13587,7 +13587,7 @@ check_button_all:
         MGTK_RELAY_CALL MGTK::InRect, aux::all_button_rect
         cmp     #MGTK::inrect_inside
         bne     maybe_check_button_cancel
-        yax_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::all_button_rect
+        param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::all_button_rect
         bmi     :+
         lda     #PromptResult::all
 :       rts
@@ -13602,7 +13602,7 @@ check_button_cancel:
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     LA6ED
-:       yax_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::cancel_button_rect
+:       param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::cancel_button_rect
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
@@ -13832,16 +13832,16 @@ jump_relay:
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_inner_rect
-        addr_call draw_dialog_title, aux::str_about1
-        yax_call draw_dialog_label, 1 | DDL_CENTER, aux::str_about2
-        yax_call draw_dialog_label, 2 | DDL_CENTER, aux::str_about3
-        yax_call draw_dialog_label, 3 | DDL_CENTER, aux::str_about4
-        yax_call draw_dialog_label, 5, aux::str_about5
-        yax_call draw_dialog_label, 6 | DDL_CENTER, aux::str_about6
-        yax_call draw_dialog_label, 7, aux::str_about7
-        yax_call draw_dialog_label, 9, aux::str_about8
+        param_call draw_dialog_title, aux::str_about1
+        param_call draw_dialog_label, 1 | DDL_CENTER, aux::str_about2
+        param_call draw_dialog_label, 2 | DDL_CENTER, aux::str_about3
+        param_call draw_dialog_label, 3 | DDL_CENTER, aux::str_about4
+        param_call draw_dialog_label, 5, aux::str_about5
+        param_call draw_dialog_label, 6 | DDL_CENTER, aux::str_about6
+        param_call draw_dialog_label, 7, aux::str_about7
+        param_call draw_dialog_label, 9, aux::str_about8
         copy16  #kVersionLeft, dialog_label_pos
-        yax_call draw_dialog_label, 9, aux::str_about9
+        param_call draw_dialog_label, 9, aux::str_about9
         copy16  #kDialogLabelDefaultX, dialog_label_pos
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -13893,17 +13893,17 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
 
-        yax_call draw_dialog_label, 2, aux::str_copy_from
-        yax_call draw_dialog_label, 3, aux::str_copy_to
+        param_call draw_dialog_label, 2, aux::str_copy_from
+        param_call draw_dialog_label, 3, aux::str_copy_to
         bit     move_flag
         bmi     :+
-        addr_call draw_dialog_title, aux::str_copy_title
-        yax_call draw_dialog_label, 1, aux::str_copy_copying
-        yax_call draw_dialog_label, 4, aux::str_copy_remaining
+        param_call draw_dialog_title, aux::str_copy_title
+        param_call draw_dialog_label, 1, aux::str_copy_copying
+        param_call draw_dialog_label, 4, aux::str_copy_remaining
         rts
-:       addr_call draw_dialog_title, aux::str_move_title
-        yax_call draw_dialog_label, 1, aux::str_move_moving
-        yax_call draw_dialog_label, 4, aux::str_move_remaining
+:       param_call draw_dialog_title, aux::str_move_title
+        param_call draw_dialog_label, 1, aux::str_move_moving
+        param_call draw_dialog_label, 4, aux::str_move_remaining
         rts
 
         ;; CopyDialogLifecycle::populate
@@ -13914,8 +13914,8 @@ do1:    ldy     #1
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
-        addr_call draw_text1, str_file_count
-        addr_call draw_text1, str_files
+        param_call draw_text1, str_file_count
+        param_call draw_text1, str_files
         rts
 
         ;; CopyDialogLifecycle::exists
@@ -13937,7 +13937,7 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        addr_call draw_text1, path_buf0
+        param_call draw_text1, path_buf0
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$05
         lda     (ptr),y
@@ -13948,9 +13948,9 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_dest_file_pos
-        addr_call draw_text1, path_buf1
-        yax_call MGTK_RELAY, MGTK::MoveTo, aux::copy_file_count_pos2
-        addr_call draw_text1, str_file_count
+        param_call draw_text1, path_buf1
+        param_call MGTK_RELAY, MGTK::MoveTo, aux::copy_file_count_pos2
+        param_call draw_text1, str_file_count
         rts
 
         ;; CopyDialogLifecycle::close
@@ -13962,7 +13962,7 @@ do5:    jsr     close_prompt_dialog
 do3:    jsr     Bell
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        yax_call draw_dialog_label, 6, aux::str_exists_prompt
+        param_call draw_dialog_label, 6, aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
 LAA7F:  jsr     prompt_input_loop
         bmi     LAA7F
@@ -13977,7 +13977,7 @@ LAA7F:  jsr     prompt_input_loop
 do4:    jsr     Bell
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        yax_call draw_dialog_label, 6, aux::str_large_prompt
+        param_call draw_dialog_label, 6, aux::str_large_prompt
         jsr     draw_ok_cancel_buttons
 :       jsr     prompt_input_loop
         bmi     :-
@@ -14013,11 +14013,11 @@ do4:    jsr     Bell
 
 else:   copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        addr_call draw_dialog_title, aux::str_download
-        yax_call draw_dialog_label, 1, aux::str_copy_copying
-        yax_call draw_dialog_label, 2, aux::str_copy_from
-        yax_call draw_dialog_label, 3, aux::str_copy_to
-        yax_call draw_dialog_label, 4, aux::str_copy_remaining
+        param_call draw_dialog_title, aux::str_download
+        param_call draw_dialog_label, 1, aux::str_copy_copying
+        param_call draw_dialog_label, 2, aux::str_copy_from
+        param_call draw_dialog_label, 3, aux::str_copy_to
+        param_call draw_dialog_label, 4, aux::str_copy_remaining
         rts
 
 do1:    ldy     #1
@@ -14027,8 +14027,8 @@ do1:    ldy     #1
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
-        addr_call draw_text1, str_file_count
-        addr_call draw_text1, str_files
+        param_call draw_text1, str_file_count
+        param_call draw_text1, str_files
         rts
 
 do2:    ldy     #1
@@ -14048,9 +14048,9 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        addr_call draw_text1, path_buf0
+        param_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
-        addr_call draw_text1, str_file_count
+        param_call draw_text1, str_file_count
         rts
 
 do3:    jsr     close_prompt_dialog
@@ -14060,7 +14060,7 @@ do3:    jsr     close_prompt_dialog
 do4:    jsr     Bell
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        yax_call draw_dialog_label, 6, aux::str_ramcard_full
+        param_call draw_dialog_label, 6, aux::str_ramcard_full
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
         bmi     :-
@@ -14094,11 +14094,11 @@ do4:    jsr     Bell
         jmp     do3
 
 else:   jsr     open_dialog_window
-        addr_call draw_dialog_title, aux::str_size_title
-        yax_call draw_dialog_label, 1, aux::str_size_number
+        param_call draw_dialog_title, aux::str_size_title
+        param_call draw_dialog_label, 1, aux::str_size_number
         ldy     #1
         jsr     draw_colon
-        yax_call draw_dialog_label, 2, aux::str_size_blocks
+        param_call draw_dialog_label, 2, aux::str_size_blocks
         ldy     #2
         jsr     draw_colon
         rts
@@ -14117,7 +14117,7 @@ do1:    ldy     #1
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         copy    #kValueLeft, dialog_label_pos
-        yax_call draw_dialog_label, 1, str_file_count
+        param_call draw_dialog_label, 1, str_file_count
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #3
         lda     (ptr),y
@@ -14135,8 +14135,8 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         copy    #kValueLeft, dialog_label_pos
         dec     str_file_count  ; remove trailing space
-        yax_call draw_dialog_label, 2, str_file_count
-        addr_call draw_text1, str_kb_suffix
+        param_call draw_dialog_label, 2, str_file_count
+        param_call draw_text1, str_kb_suffix
         rts
 
 do3:    jsr     close_prompt_dialog
@@ -14182,14 +14182,14 @@ do2:    lda     winfo_prompt_dialog
 :       sta     LAD1F
         copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        addr_call draw_dialog_title, aux::str_delete_title
+        param_call draw_dialog_title, aux::str_delete_title
         lda     LAD1F
         beq     LAD20
-        yax_call draw_dialog_label, 4, aux::str_ok_empty
+        param_call draw_dialog_label, 4, aux::str_ok_empty
         rts
 
 LAD1F:  .byte   0
-LAD20:  yax_call draw_dialog_label, 4, aux::str_delete_ok
+LAD20:  param_call draw_dialog_label, 4, aux::str_delete_ok
         rts
 
         ;; DeleteDialogLifecycle::populate
@@ -14205,8 +14205,8 @@ do1:    ldy     #1
         jmp     LAD5D
 
 LAD54:  MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_file_count_pos2
-LAD5D:  addr_call draw_text1, str_file_count
-        addr_call draw_text1, str_files
+LAD5D:  param_call draw_text1, str_file_count
+        param_call draw_text1, str_files
         rts
 
         ;; DeleteDialogLifecycle::show
@@ -14227,9 +14227,9 @@ do3:    ldy     #1
         stx     $06
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        addr_call draw_text1, path_buf0
+        param_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
-        addr_call draw_text1, str_file_count
+        param_call draw_text1, str_file_count
         rts
 
         ;; DeleteDialogLifecycle::confirm
@@ -14242,8 +14242,8 @@ LADC4:  jsr     prompt_input_loop
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         jsr     erase_ok_cancel_buttons
-        yax_call draw_dialog_label, 2, aux::str_file_colon
-        yax_call draw_dialog_label, 4, aux::str_delete_remaining
+        param_call draw_dialog_label, 2, aux::str_file_colon
+        param_call draw_dialog_label, 4, aux::str_delete_remaining
         lda     #$00
 LADF4:  rts
 
@@ -14255,7 +14255,7 @@ do5:    jsr     close_prompt_dialog
         ;; DeleteDialogLifecycle::locked
 do4:    lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        yax_call draw_dialog_label, 6, aux::str_delete_locked_file
+        param_call draw_dialog_label, 6, aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
 LAE17:  jsr     prompt_input_loop
         bmi     LAE17
@@ -14291,7 +14291,7 @@ LAE49:  copy    #$80, has_input_field_flag
         jsr     open_prompt_window
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        addr_call draw_dialog_title, aux::str_new_folder_title
+        param_call draw_dialog_title, aux::str_new_folder_title
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         rts
@@ -14311,11 +14311,11 @@ LAE90:  lda     ($08),y
         bpl     LAE90
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        yax_call draw_dialog_label, 2, aux::str_in_colon
+        param_call draw_dialog_label, 2, aux::str_in_colon
         copy    #kParentPathLeft, dialog_label_pos
-        yax_call draw_dialog_label, 2, path_buf0
+        param_call draw_dialog_label, 2, path_buf0
         copy    #kDialogLabelDefaultX, dialog_label_pos
-        yax_call draw_dialog_label, 4, aux::str_enter_folder_name
+        param_call draw_dialog_label, 4, aux::str_enter_folder_name
         jsr     draw_filename_prompt
 LAEC6:  jsr     prompt_input_loop
         bmi     LAEC6
@@ -14383,7 +14383,7 @@ prepare_window:
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
 
-        addr_call draw_dialog_title, aux::str_info_title
+        param_call draw_dialog_title, aux::str_info_title
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     (ptr),y
@@ -14393,27 +14393,27 @@ prepare_window:
         sta     is_volume_flag
 
         ;; Draw labels
-        yax_call draw_dialog_label, 1, aux::str_info_name
+        param_call draw_dialog_label, 1, aux::str_info_name
 
         ;; Locked (file) or Protected (volume)
         bit     is_volume_flag
         bmi     :+
-        yax_call draw_dialog_label, 2, aux::str_info_locked
+        param_call draw_dialog_label, 2, aux::str_info_locked
         jmp     draw_size_label
-:       yax_call draw_dialog_label, 2, aux::str_info_protected
+:       param_call draw_dialog_label, 2, aux::str_info_protected
 
         ;; Blocks (file) or Size (volume)
 draw_size_label:
         bit     is_volume_flag
         bpl     :+
-        yax_call draw_dialog_label, 3, aux::str_info_vol_size
+        param_call draw_dialog_label, 3, aux::str_info_vol_size
         jmp     draw_final_labels
-:       yax_call draw_dialog_label, 3, aux::str_info_file_size
+:       param_call draw_dialog_label, 3, aux::str_info_file_size
 
 draw_final_labels:
-        yax_call draw_dialog_label, 4, aux::str_info_create
-        yax_call draw_dialog_label, 5, aux::str_info_mod
-        yax_call draw_dialog_label, 6, aux::str_info_type
+        param_call draw_dialog_label, 4, aux::str_info_create
+        param_call draw_dialog_label, 5, aux::str_info_mod
+        param_call draw_dialog_label, 6, aux::str_info_type
         jmp     reset_main_grafport
 
         ;; Draw a specific value
@@ -14465,7 +14465,7 @@ row:    .byte   0
         kColonLeft = 160
 
         copy    #kColonLeft, dialog_label_pos
-        addr_call draw_dialog_label, aux::str_colon
+        param_call draw_dialog_label, aux::str_colon
         rts
 .endproc
 
@@ -14493,8 +14493,8 @@ row:    .byte   0
         ;; LockDialogLifecycle::open
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        addr_call draw_dialog_title, aux::str_lock_title
-        yax_call draw_dialog_label, 4, aux::str_lock_ok
+        param_call draw_dialog_title, aux::str_lock_title
+        param_call draw_dialog_label, 4, aux::str_lock_ok
         rts
 
         ;; LockDialogLifecycle::populate
@@ -14505,9 +14505,9 @@ do1:    ldy     #1
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos2
-        addr_call draw_text1, str_file_count
+        param_call draw_text1, str_file_count
         MGTK_RELAY_CALL MGTK::MoveTo, aux::files_pos2
-        addr_call draw_text1, str_files
+        param_call draw_text1, str_files
         rts
 
         ;; LockDialogLifecycle::operation
@@ -14528,9 +14528,9 @@ do3:    ldy     #1
         stx     $06
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        addr_call draw_text1, path_buf0
+        param_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
-        addr_call draw_text1, str_file_count
+        param_call draw_text1, str_file_count
         rts
 
         ;; LockDialogLifecycle::loop
@@ -14544,8 +14544,8 @@ LB0FA:  jsr     prompt_input_loop
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
-        yax_call draw_dialog_label, 2, aux::str_file_colon
-        yax_call draw_dialog_label, 4, aux::str_lock_remaining
+        param_call draw_dialog_label, 2, aux::str_file_colon
+        param_call draw_dialog_label, 4, aux::str_lock_remaining
         lda     #$00
 LB139:  rts
 
@@ -14579,8 +14579,8 @@ do4:    jsr     close_prompt_dialog
         ;; LockDialogLifecycle::open
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        addr_call draw_dialog_title, aux::str_unlock_title
-        yax_call draw_dialog_label, 4, aux::str_unlock_ok
+        param_call draw_dialog_title, aux::str_unlock_title
+        param_call draw_dialog_label, 4, aux::str_unlock_ok
         rts
 
         ;; LockDialogLifecycle::populate
@@ -14591,9 +14591,9 @@ do1:    ldy     #1
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos2
-        addr_call draw_text1, str_file_count
+        param_call draw_text1, str_file_count
         MGTK_RELAY_CALL MGTK::MoveTo, aux::files_pos
-        addr_call draw_text1, str_files
+        param_call draw_text1, str_files
         rts
 
         ;; LockDialogLifecycle::operation
@@ -14614,9 +14614,9 @@ do3:    ldy     #1
         stx     $06
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        addr_call draw_text1, path_buf0
+        param_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
-        addr_call draw_text1, str_file_count
+        param_call draw_text1, str_file_count
         rts
 
         ;; LockDialogLifecycle::loop
@@ -14630,8 +14630,8 @@ LB218:  jsr     prompt_input_loop
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
-        yax_call draw_dialog_label, 2, aux::str_file_colon
-        yax_call draw_dialog_label, 4, aux::str_unlock_remaining
+        param_call draw_dialog_label, 2, aux::str_file_colon
+        param_call draw_dialog_label, 4, aux::str_unlock_remaining
         lda     #$00
 LB257:  rts
 
@@ -14667,10 +14667,10 @@ open_win:
         jsr     open_prompt_window
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        addr_call draw_dialog_title, aux::str_rename_title
+        param_call draw_dialog_title, aux::str_rename_title
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        yax_call draw_dialog_label, 2, aux::str_rename_old
+        param_call draw_dialog_label, 2, aux::str_rename_old
         copy    #kOldNameLeft, dialog_label_pos
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #1              ; rename_dialog_params::addr offset
@@ -14689,8 +14689,8 @@ open_win:
         ;; Clear input (after IP)
         jsr     clear_path_buf2
 
-        yax_call draw_dialog_label, 2, buf_filename
-        yax_call draw_dialog_label, 4, aux::str_rename_new
+        param_call draw_dialog_label, 2, buf_filename
+        param_call draw_dialog_label, 4, aux::str_rename_new
         jsr     draw_filename_prompt
         rts
 
@@ -14740,7 +14740,7 @@ kWarningMsgSaveSelectorList     = 6
         jsr     open_alert_window
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        addr_call draw_dialog_title, aux::str_warning
+        param_call draw_dialog_title, aux::str_warning
         MGTK_RELAY_CALL MGTK::ShowCursor
         jsr     copy_dialog_param_addr_to_ptr
 
@@ -15067,7 +15067,7 @@ skip:   ldx     #0
         stax    dialog_label_pos::ycoord
         add16   dialog_label_pos::ycoord, dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
-        addr_call_indirect draw_text1, ptr
+        param_call_indirect draw_text1, ptr
         ldx     dialog_label_pos
         copy    #kDialogLabelDefaultX,dialog_label_pos::xcoord ; restore original x coord
         rts
@@ -15077,27 +15077,27 @@ skip:   ldx     #0
 
 draw_ok_label:
         MGTK_RELAY_CALL MGTK::MoveTo, aux::ok_label_pos
-        addr_call draw_text1, aux::str_ok_label
+        param_call draw_text1, aux::str_ok_label
         rts
 
 draw_cancel_label:
         MGTK_RELAY_CALL MGTK::MoveTo, aux::cancel_label_pos
-        addr_call draw_text1, aux::str_cancel_label
+        param_call draw_text1, aux::str_cancel_label
         rts
 
 draw_yes_label:
         MGTK_RELAY_CALL MGTK::MoveTo, aux::yes_label_pos
-        addr_call draw_text1, aux::str_yes_label
+        param_call draw_text1, aux::str_yes_label
         rts
 
 draw_no_label:
         MGTK_RELAY_CALL MGTK::MoveTo, aux::no_label_pos
-        addr_call draw_text1, aux::str_no_label
+        param_call draw_text1, aux::str_no_label
         rts
 
 draw_all_label:
         MGTK_RELAY_CALL MGTK::MoveTo, aux::all_label_pos
-        addr_call draw_text1, aux::str_all_label
+        param_call draw_text1, aux::str_all_label
         rts
 
 draw_yes_no_all_cancel_buttons:
@@ -15424,9 +15424,9 @@ draw:   copy16  #str_insertion_point+1, textptr
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
-        addr_call draw_text1, path_buf1
-        addr_call draw_text1, path_buf2
-        addr_call draw_text1, str_2_spaces
+        param_call draw_text1, path_buf1
+        param_call draw_text1, path_buf2
+        param_call draw_text1, str_2_spaces
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
 done:   rts
@@ -15614,8 +15614,8 @@ buf1_width:
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
-        addr_call draw_text1, str_1_char
-        addr_call draw_text1, path_buf2
+        param_call draw_text1, str_1_char
+        param_call draw_text1, path_buf2
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         rts
@@ -15640,8 +15640,8 @@ param:  .byte   0
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
-        addr_call draw_text1, path_buf2
-        addr_call draw_text1, str_2_spaces
+        param_call draw_text1, path_buf2
+        param_call draw_text1, str_2_spaces
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         rts
@@ -15684,8 +15684,8 @@ finish: ldx     path_buf1
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
-        addr_call draw_text1, path_buf2
-        addr_call draw_text1, str_2_spaces
+        param_call draw_text1, path_buf2
+        param_call draw_text1, str_2_spaces
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         rts
@@ -15724,9 +15724,9 @@ finish: dec     path_buf2
 
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
-        addr_call draw_text1, path_buf1
-        addr_call draw_text1, path_buf2
-        addr_call draw_text1, str_2_spaces
+        param_call draw_text1, path_buf1
+        param_call draw_text1, path_buf2
+        param_call draw_text1, str_2_spaces
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         rts
@@ -16298,8 +16298,8 @@ finish: ldy     #0              ; Write sentinel
         ;; If DeskTop was copied to RAMCard, also write to original prefix.
         jsr     get_copied_to_ramcard_flag
         bpl     exit
-        addr_call copy_desktop_orig_prefix, path_buffer
-        addr_call append_to_path_buffer, str_desktop_file
+        param_call copy_desktop_orig_prefix, path_buffer
+        param_call append_to_path_buffer, str_desktop_file
         lda     #<path_buffer
         sta     create_params::pathname
         sta     open_params::pathname

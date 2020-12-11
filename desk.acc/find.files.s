@@ -65,7 +65,7 @@ entry:
         ptr := $06
 
         ;; Get top DeskTop window (if any) and find its path
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, ptr
+        param_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, ptr
         lda     ptr             ; any window open?
         beq     exit
         cmp     #kMaxDeskTopWindows+1
@@ -1039,7 +1039,7 @@ top_row:        .byte   0
 .endproc
 
 .proc exit
-        addr_call jt_relay, JUMP_TABLE_CUR_POINTER
+        param_call jt_relay, JUMP_TABLE_CUR_POINTER
 
         MGTK_CALL MGTK::CloseWindow, winfo_results
         MGTK_CALL MGTK::CloseWindow, winfo
@@ -1089,12 +1089,12 @@ not_meta:
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         bne     :+
-        addr_call flash_button, cancel_button_rect
+        param_call flash_button, cancel_button_rect
         jmp     exit
 
 :       cmp     #CHAR_RETURN
         bne     :+
-        addr_call flash_button, search_button_rect
+        param_call flash_button, search_button_rect
         jmp     do_search
 
 :       cmp     #CHAR_LEFT
@@ -1322,7 +1322,7 @@ right:
 done_concat:
         stx     buf_search
 
-        addr_call jt_relay, JUMP_TABLE_CUR_WATCH
+        param_call jt_relay, JUMP_TABLE_CUR_WATCH
 
         ;; Do the search
         jsr     RecursiveCatalog::Start
@@ -1352,9 +1352,9 @@ done_concat:
 
         bit     cursor_ip_flag
     IF_PLUS
-        addr_call jt_relay, JUMP_TABLE_CUR_POINTER
+        param_call jt_relay, JUMP_TABLE_CUR_POINTER
     ELSE
-        addr_call jt_relay, JUMP_TABLE_CUR_IBEAM
+        param_call jt_relay, JUMP_TABLE_CUR_IBEAM
     END_IF
 
 finish: jmp     input_loop
@@ -1377,12 +1377,12 @@ finish: jmp     input_loop
         bne     done
 
         ;; Click in DA content area
-        addr_call button_press, search_button_rect
+        param_call button_press, search_button_rect
         beq     :+
         bmi     done
         jmp     do_search
 
-:       addr_call button_press, cancel_button_rect
+:       param_call button_press, cancel_button_rect
         beq     :+
         bmi     done
         jmp     exit
@@ -1609,14 +1609,14 @@ outside:
         bit     cursor_ip_flag
         bpl     done
         copy    #0, cursor_ip_flag
-        addr_call jt_relay, JUMP_TABLE_CUR_POINTER
+        param_call jt_relay, JUMP_TABLE_CUR_POINTER
         jmp     done
 
 inside:
         bit     cursor_ip_flag
         bmi     done
         copy    #$80, cursor_ip_flag
-        addr_call jt_relay, JUMP_TABLE_CUR_IBEAM
+        param_call jt_relay, JUMP_TABLE_CUR_IBEAM
 
 done:   jmp     input_loop
 .endproc
@@ -1635,16 +1635,16 @@ done:   jmp     input_loop
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
         MGTK_CALL MGTK::MoveTo, find_label_textpos
-        addr_call draw_string, find_label
+        param_call draw_string, find_label
         MGTK_CALL MGTK::FrameRect, input_rect
 
         MGTK_CALL MGTK::FrameRect, search_button_rect
         MGTK_CALL MGTK::MoveTo, search_button_textpos
-        addr_call draw_string, search_button_label
+        param_call draw_string, search_button_label
 
         MGTK_CALL MGTK::FrameRect, cancel_button_rect
         MGTK_CALL MGTK::MoveTo, cancel_button_textpos
-        addr_call draw_string, cancel_button_label
+        param_call draw_string, cancel_button_label
 
         MGTK_CALL MGTK::ShowCursor
 done:   rts
@@ -1658,9 +1658,9 @@ done:   rts
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::MoveTo, input_textpos
         MGTK_CALL MGTK::HideCursor
-        addr_call draw_string, buf_left
-        addr_call draw_string, buf_right
-        addr_call draw_string, suffix
+        param_call draw_string, buf_left
+        param_call draw_string, buf_right
+        param_call draw_string, suffix
         MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
@@ -1691,7 +1691,7 @@ loop:   add16_8   pos_ycoord, line_height, pos_ycoord
         lda     line
         jsr     get_entry
 
-        addr_call draw_string, entry_buf
+        param_call draw_string, entry_buf
         inc     line
         lda     line
         cmp     num_entries

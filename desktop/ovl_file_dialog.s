@@ -188,7 +188,7 @@ L5213:  jmp     set_up_ports
 
 L5216:  lda     winfo_file_dialog
         jsr     set_port_for_window
-        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::open_button_rect
+        param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         bmi     L5213
         jsr     L5607
         jmp     set_up_ports
@@ -202,7 +202,7 @@ L5216:  lda     winfo_file_dialog
         jmp     check_close_button
 :       bit     L5105
         bmi     :+
-        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
+        param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
         bmi     :+
         jsr     L565C
 :       jmp     set_up_ports
@@ -215,7 +215,7 @@ L5216:  lda     winfo_file_dialog
         jmp     check_ok_button
 :       bit     L5105
         bmi     :+
-        yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::close_button_rect
+        param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         bmi     :+
         jsr     L567F
 :       jmp     set_up_ports
@@ -227,7 +227,7 @@ L5216:  lda     winfo_file_dialog
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_cancel_button
-:       yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
+:       param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
         jsr     jt_handle_meta_right_key
         jsr     jt_handle_ok
@@ -240,7 +240,7 @@ L5216:  lda     winfo_file_dialog
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_other_click
-:       yax_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
+:       param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
         jsr     jt_handle_cancel
 :       jmp     set_up_ports
@@ -1063,27 +1063,27 @@ L5C27:  ldx     num_file_names
 
 draw_ok_button_label:
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::ok_button_pos
-        addr_call draw_string, file_dialog_res::ok_button_label
+        param_call draw_string, file_dialog_res::ok_button_label
         rts
 
 draw_open_button_label:
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
-        addr_call draw_string, file_dialog_res::open_button_label
+        param_call draw_string, file_dialog_res::open_button_label
         rts
 
 draw_close_button_label:
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
-        addr_call draw_string, file_dialog_res::close_button_label
+        param_call draw_string, file_dialog_res::close_button_label
         rts
 
 draw_cancel_button_label:
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::cancel_button_pos
-        addr_call draw_string, file_dialog_res::cancel_button_label
+        param_call draw_string, file_dialog_res::cancel_button_label
         rts
 
 draw_change_drive_button_label:
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
-        addr_call draw_string, file_dialog_res::change_drive_button_label
+        param_call draw_string, file_dialog_res::change_drive_button_label
         rts
 
 ;;; ============================================================
@@ -1178,10 +1178,10 @@ L5E6F:  jsr     copy_string_to_lcbuf
         jsr     inc_device_num
         jmp     :-
 
-found:  addr_call main::adjust_volname_case, on_line_buffer
+found:  param_call main::adjust_volname_case, on_line_buffer
         lda     #0
         sta     path_buf
-        addr_call L5F0D, on_line_buffer
+        param_call L5F0D, on_line_buffer
         rts
 .endproc
 
@@ -1288,7 +1288,7 @@ L5F31:  lda     ($06),y
 
 :       copy16  #$142B, $06
 
-L5F8F:  addr_call_indirect main::adjust_fileentry_case, $06
+L5F8F:  param_call_indirect main::adjust_fileentry_case, $06
 
         ldy     #$00
         lda     ($06),y
@@ -1431,7 +1431,7 @@ L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
         lda     #$01
         sta     picker_entry_pos
         MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
-        addr_call draw_string, str_folder
+        param_call draw_string, str_folder
         lda     #$10
         sta     picker_entry_pos
 L60FF:  lda     L6128
@@ -1515,8 +1515,8 @@ L61E6:  inx
         bne     L61E6
         stx     $0220
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
-        addr_call draw_string, file_dialog_res::disk_label
-        addr_call draw_string, $0220
+        param_call draw_string, file_dialog_res::disk_label
+        param_call draw_string, $0220
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
@@ -1968,9 +1968,9 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
         lda     path_buf0
         beq     :+
-        addr_call draw_string, path_buf0
-:       addr_call draw_string, path_buf2
-        addr_call draw_string, str_2_spaces
+        param_call draw_string, path_buf0
+:       param_call draw_string, path_buf2
+        param_call draw_string, str_2_spaces
         rts
 .endproc
 
@@ -1985,9 +1985,9 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
         lda     path_buf1
         beq     :+
-        addr_call draw_string, path_buf1
-:       addr_call draw_string, path_buf2
-        addr_call draw_string, str_2_spaces
+        param_call draw_string, path_buf1
+:       param_call draw_string, path_buf2
+        param_call draw_string, str_2_spaces
         rts
 .endproc
 
@@ -2280,8 +2280,8 @@ L69D5:  lda     L6A17
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call draw_string, str_1_char
-        addr_call draw_string, path_buf2
+        param_call draw_string, str_1_char
+        param_call draw_string, path_buf2
         jsr     L6EA3
         rts
 
@@ -2302,8 +2302,8 @@ L6A1E:  dec     path_buf0
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call draw_string, path_buf2
-        addr_call draw_string, str_2_spaces
+        param_call draw_string, path_buf2
+        param_call draw_string, str_2_spaces
         jsr     L6EA3
         rts
 .endproc
@@ -2334,8 +2334,8 @@ L6A6B:  ldx     path_buf0
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call draw_string, path_buf2
-        addr_call draw_string, str_2_spaces
+        param_call draw_string, path_buf2
+        param_call draw_string, str_2_spaces
         jsr     L6EA3
         rts
 .endproc
@@ -2366,9 +2366,9 @@ L6AD6:  dec     path_buf2
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
-        addr_call draw_string, path_buf0
-        addr_call draw_string, path_buf2
-        addr_call draw_string, str_2_spaces
+        param_call draw_string, path_buf0
+        param_call draw_string, path_buf2
+        param_call draw_string, str_2_spaces
         jsr     L6EA3
         rts
 .endproc
@@ -2455,8 +2455,8 @@ L6B81:  lda     L6BC3
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call draw_string, str_1_char
-        addr_call draw_string, path_buf2
+        param_call draw_string, str_1_char
+        param_call draw_string, path_buf2
         jsr     L6E9F
         rts
 
@@ -2477,8 +2477,8 @@ L6BCA:  dec     path_buf1
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call draw_string, path_buf2
-        addr_call draw_string, str_2_spaces
+        param_call draw_string, path_buf2
+        param_call draw_string, str_2_spaces
         jsr     L6E9F
         rts
 .endproc
@@ -2509,8 +2509,8 @@ L6C17:  ldx     path_buf1
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call draw_string, path_buf2
-        addr_call draw_string, str_2_spaces
+        param_call draw_string, path_buf2
+        param_call draw_string, str_2_spaces
         jsr     L6E9F
         rts
 .endproc
@@ -2541,9 +2541,9 @@ L6C82:  dec     path_buf2
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
-        addr_call draw_string, path_buf1
-        addr_call draw_string, path_buf2
-        addr_call draw_string, str_2_spaces
+        param_call draw_string, path_buf1
+        param_call draw_string, path_buf2
+        param_call draw_string, str_2_spaces
         jsr     L6E9F
         rts
 .endproc

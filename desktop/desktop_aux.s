@@ -3898,7 +3898,7 @@ draw_buttons:
         ;; Cancel button
         MGTK_CALL MGTK::FrameRect, cancel_rect
         MGTK_CALL MGTK::MoveTo, cancel_pos
-        addr_call draw_pascal_string, cancel_label
+        param_call draw_pascal_string, cancel_label
 
         bit     alert_options
         bvs     ok_button
@@ -3906,7 +3906,7 @@ draw_buttons:
         ;; Try Again button
         MGTK_CALL MGTK::FrameRect, try_again_rect
         MGTK_CALL MGTK::MoveTo, try_again_pos
-        addr_call draw_pascal_string, try_again_label
+        param_call draw_pascal_string, try_again_label
 
         jmp     draw_prompt
 
@@ -3914,12 +3914,12 @@ draw_buttons:
 ok_button:
         MGTK_CALL MGTK::FrameRect, ok_rect
         MGTK_CALL MGTK::MoveTo, ok_pos
-        addr_call draw_pascal_string, ok_label
+        param_call draw_pascal_string, ok_label
 
         ;; Prompt string
 draw_prompt:
         MGTK_CALL MGTK::MoveTo, pos_prompt
-        addr_call_indirect draw_pascal_string, prompt_addr
+        param_call_indirect draw_pascal_string, prompt_addr
 
         ;; --------------------------------------------------
         ;; Event Loop

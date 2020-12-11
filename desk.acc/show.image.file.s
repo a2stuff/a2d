@@ -46,9 +46,9 @@
 
 .macro MGTK_RELAY_CALL call, params
     .if .paramcount > 1
-        yax_call        JUMP_TABLE_MGTK_RELAY, (call), (params)
+        param_call        JUMP_TABLE_MGTK_RELAY, (call), (params)
     .else
-        yax_call        JUMP_TABLE_MGTK_RELAY, (call), 0
+        param_call        JUMP_TABLE_MGTK_RELAY, (call), 0
     .endif
 .endmacro
 
@@ -165,7 +165,7 @@ nextwinfo:      .addr   0
     END_IF
         COPY_STRING     INVOKE_PATH, pathbuf
 
-        yax_call JUMP_TABLE_MLI, OPEN, open_params
+        param_call JUMP_TABLE_MLI, OPEN, open_params
         lda     open_params::ref_num
         sta     get_eof_params::ref_num
         sta     read_params::ref_num
@@ -225,7 +225,7 @@ exit:
 
 .proc show_file
         ;; Check file type
-        yax_call JUMP_TABLE_MLI, GET_FILE_INFO, get_file_info_params
+        param_call JUMP_TABLE_MLI, GET_FILE_INFO, get_file_info_params
         lda     get_file_info_params::file_type
         cmp     #FT_GRAPHICS
         bne     get_eof
@@ -245,7 +245,7 @@ exit:
 
         ;; Otherwise, rely on size heuristics to determine the type
 get_eof:
-        yax_call JUMP_TABLE_MLI, GET_EOF, get_eof_params
+        param_call JUMP_TABLE_MLI, GET_EOF, get_eof_params
 
         ;; If bigger than $2000, assume DHR
 
@@ -291,7 +291,7 @@ kSigDHR         = %00000010
 
         ;; At least one page...
         sta     PAGE2OFF
-        yax_call JUMP_TABLE_MLI, READ, read_params
+        param_call JUMP_TABLE_MLI, READ, read_params
 
         lda     SIGNATURE
         sta     signature
@@ -306,9 +306,9 @@ kSigDHR         = %00000010
 
         ;; If DHR, copy Main>Aux and load Main page.
 dhr:    jsr     copy_hires_to_aux
-        yax_call JUMP_TABLE_MLI, READ, read_params
+        param_call JUMP_TABLE_MLI, READ, read_params
 
-finish: yax_call JUMP_TABLE_MLI, CLOSE, close_params
+finish: param_call JUMP_TABLE_MLI, CLOSE, close_params
 
         lda     signature
         and     #kSigColor
@@ -323,8 +323,8 @@ signature:
 
 .proc show_hr_file
         sta     PAGE2OFF
-        yax_call JUMP_TABLE_MLI, READ, read_params
-        yax_call JUMP_TABLE_MLI, CLOSE, close_params
+        param_call JUMP_TABLE_MLI, READ, read_params
+        param_call JUMP_TABLE_MLI, CLOSE, close_params
 
         jsr     hr_to_dhr
         rts
@@ -335,7 +335,7 @@ signature:
 
         ;; AUX memory half
         sta     PAGE2OFF
-        yax_call JUMP_TABLE_MLI, READ, read_params
+        param_call JUMP_TABLE_MLI, READ, read_params
 
         ;; NOTE: Why not just load into Aux directly by setting
         ;; PAGE2ON? This works unless loading from a RamWorks-based
@@ -346,8 +346,8 @@ signature:
         jsr     copy_hires_to_aux
 
         ;; MAIN memory half
-        yax_call JUMP_TABLE_MLI, READ, read_params
-        yax_call JUMP_TABLE_MLI, CLOSE, close_params
+        param_call JUMP_TABLE_MLI, READ, read_params
+        param_call JUMP_TABLE_MLI, CLOSE, close_params
 
         rts
 .endproc
@@ -379,8 +379,8 @@ signature:
         jsr     set_bw_mode
 
         ;; Load file at minipix_src_buf (MAIN $1800)
-        yax_call JUMP_TABLE_MLI, READ, read_minipix_params
-        yax_call JUMP_TABLE_MLI, CLOSE, close_params
+        param_call JUMP_TABLE_MLI, READ, read_minipix_params
+        param_call JUMP_TABLE_MLI, CLOSE, close_params
 
         ;; Convert (main to aux)
         jsr     convert_minipix_to_bitmap
@@ -630,11 +630,11 @@ start:  sta     dhr_flag
 
         ;; Read next op/count byte
 loop:   copy    #1, read_buf_params::request_count
-        yax_call JUMP_TABLE_MLI, READ, read_buf_params
+        param_call JUMP_TABLE_MLI, READ, read_buf_params
         bcc     body
 
         ;; EOF (or other error) - finish up
-        yax_call JUMP_TABLE_MLI, CLOSE, close_params
+        param_call JUMP_TABLE_MLI, CLOSE, close_params
         bit     dhr_flag        ; if hires, need to convert
         bmi     :+
         jsr     hr_to_dhr
@@ -654,7 +654,7 @@ body:   lda     read_buf
         ;; %00...... = 1 to 64 bytes follow - all different
 
         copy    count, read_buf_params::request_count
-        yax_call JUMP_TABLE_MLI, READ, read_buf_params
+        param_call JUMP_TABLE_MLI, READ, read_buf_params
         ldy     #0
 
         ldx     #0
@@ -675,7 +675,7 @@ not_00: cmp     #%01000000
         ;; %01...... = 3, 5, 6, or 7 repeats of next byte
 
         copy    #1, read_buf_params::request_count
-        yax_call JUMP_TABLE_MLI, READ, read_buf_params
+        param_call JUMP_TABLE_MLI, READ, read_buf_params
         ldy     #0
         lda     read_buf
 
@@ -694,7 +694,7 @@ not_01: cmp     #%10000000
         ;; %10...... = 1 to 64 repeats of next 4 bytes
 
         copy    #4, read_buf_params::request_count
-        yax_call JUMP_TABLE_MLI, READ, read_buf_params
+        param_call JUMP_TABLE_MLI, READ, read_buf_params
         ldy     #0
 
 :       lda     read_buf+0
@@ -717,7 +717,7 @@ not_10:
         ;; %11...... = 1 to 64 repeats of next byte taken as 4 bytes
 
         copy    #1, read_buf_params::request_count
-        yax_call JUMP_TABLE_MLI, READ, read_buf_params
+        param_call JUMP_TABLE_MLI, READ, read_buf_params
         ldy     #0
         lda     read_buf
 

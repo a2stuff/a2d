@@ -94,40 +94,49 @@ end:
 .endmacro
 
 ;;; ============================================================
-;;; Calls with one parameter (address in A,X)
+;;; Calls with one parameter (address in A,X) or two (Y, plus A,X)
+;;; Usage: param_call target, ax_arg
+;;;        param_call target, y_arg, ax_arg
 
-.macro addr_call target, addr
-        lda     #<addr
-        ldx     #>addr
+.macro param_call target, param1, param2
+.if     .paramcount = 2
+        lda     #<param1
+        ldx     #>param1
+.elseif .paramcount = 3
+        ldy     #param1
+        lda     #<param2
+        ldx     #>param2
+.else
+        .error "incorrect macro usage"
+.endif
         jsr     target
 .endmacro
 
-.macro addr_call_indirect target, addr
-        lda     addr
-        ldx     addr+1
+.macro param_call_indirect target, param1, param2
+.if     .paramcount = 2
+        lda     param1
+        ldx     param1+1
+.elseif .paramcount = 3
+        ldy     #param1
+        lda     param2
+        ldx     param2+1
+.else
+        .error "incorrect macro usage"
+.endif
         jsr     target
 .endmacro
 
-.macro addr_jump target, addr
-        lda     #<addr
-        ldx     #>addr
-        jmp     target
-.endmacro
-
-;;; ============================================================
-;;; Calls with two parameters (call # in y, address in A,X)
-
-.macro yax_call target, yparam, addr
-        ldy     #yparam
-        lda     #<addr
-        ldx     #>addr
-        jsr     target
-.endmacro
-
-.macro yax_jump target, yparam, addr
-        ldy     #yparam
-        lda     #<addr
-        ldx     #>addr
+.macro param_jump target, param1, param2
+.if     .paramcount = 2
+        lda     #<param1
+        ldx     #>param1
+.elseif .paramcount = 3
+        ldy     #param1
+        lda     #<param2
+        ldx     #>param2
+.else
+        .error "incorrect macro usage"
+.endif
         jmp     target
 .endmacro
 

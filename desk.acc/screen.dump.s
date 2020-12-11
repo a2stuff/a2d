@@ -21,11 +21,11 @@
 
 ;;; ============================================================
 
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HideCursor, 0
+        param_call JUMP_TABLE_MGTK_RELAY, MGTK::HideCursor, 0
         jsr     JUMP_TABLE_HILITE_MENU
         jsr     dump_screen
         jsr     JUMP_TABLE_HILITE_MENU
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::ShowCursor, 0
+        param_call JUMP_TABLE_MGTK_RELAY, MGTK::ShowCursor, 0
         rts
 
 ;;; ============================================================

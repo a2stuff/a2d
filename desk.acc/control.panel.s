@@ -1955,15 +1955,15 @@ done:   rts
         ;; Create if necessary
         copy16  DATELO, create_params::create_date
         copy16  TIMELO, create_params::create_time
-        yax_call JUMP_TABLE_MLI, CREATE, create_params
+        param_call JUMP_TABLE_MLI, CREATE, create_params
 
-        yax_call JUMP_TABLE_MLI, OPEN, open_params
+        param_call JUMP_TABLE_MLI, OPEN, open_params
         bcs     done
         lda     open_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-        yax_call JUMP_TABLE_MLI, WRITE, write_params
-close:  yax_call JUMP_TABLE_MLI, CLOSE, close_params
+        param_call JUMP_TABLE_MLI, WRITE, write_params
+close:  param_call JUMP_TABLE_MLI, CLOSE, close_params
 done:   rts
 .endproc
 

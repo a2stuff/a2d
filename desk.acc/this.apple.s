@@ -957,16 +957,16 @@ egg:    .byte   0
         jsr     draw_pascal_string
 
         MGTK_CALL MGTK::MoveTo, pdver_pos
-        addr_call draw_pascal_string, str_prodos_version
+        param_call draw_pascal_string, str_prodos_version
 
         MGTK_CALL MGTK::MoveTo, line1
         MGTK_CALL MGTK::LineTo, line2
 
         MGTK_CALL MGTK::MoveTo, mem_pos
-        addr_call draw_pascal_string, str_memory_prefix
-        addr_call draw_pascal_string, str_from_int
-        addr_call draw_pascal_string, str_memory_suffix
-        addr_call draw_pascal_string, str_cpu_prefix
+        param_call draw_pascal_string, str_memory_prefix
+        param_call draw_pascal_string, str_from_int
+        param_call draw_pascal_string, str_memory_suffix
+        param_call draw_pascal_string, str_cpu_prefix
         jsr     cpuid
         jsr     draw_pascal_string
 
@@ -984,7 +984,7 @@ loop:   lda     slot
         clc
         adc     #'0'
         sta     str_slot_n + 6
-        addr_call draw_pascal_string, str_slot_n
+        param_call draw_pascal_string, str_slot_n
 
         ;; Check ProDOS slot bit mask
         sta     RAMRDOFF

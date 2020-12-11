@@ -374,8 +374,8 @@ start:  jsr     open_window
 .proc draw_window
         lda     winfo_dialog::window_id
         jsr     get_window_port
-        addr_call draw_title_centered, str_run_a_program
-        addr_call draw_input_label, str_file_to_run
+        param_call draw_title_centered, str_run_a_program
+        param_call draw_input_label, str_file_to_run
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect_input
         MGTK_CALL MGTK::InitPort, grafport2
@@ -386,7 +386,7 @@ start:  jsr     open_window
 ;;; ============================================================
 
 .proc handle_ok
-        addr_call LB5F1, buf_input_left
+        param_call LB5F1, buf_input_left
         beq     :+
         rts
 
@@ -1792,27 +1792,27 @@ delta:  .byte   0
 
 draw_ok_label:
         MGTK_CALL MGTK::MoveTo, ok_button_pos
-        addr_call draw_string, ok_button_label
+        param_call draw_string, ok_button_label
         rts
 
 draw_open_label:
         MGTK_CALL MGTK::MoveTo, open_button_pos
-        addr_call draw_string, open_button_label
+        param_call draw_string, open_button_label
         rts
 
 draw_close_label:
         MGTK_CALL MGTK::MoveTo, close_button_pos
-        addr_call draw_string, close_button_label
+        param_call draw_string, close_button_label
         rts
 
 draw_cancel_btn:
         MGTK_CALL MGTK::MoveTo, cancel_button_pos
-        addr_call draw_string, cancel_button_label
+        param_call draw_string, cancel_button_label
         rts
 
 draw_change_drive_btn:
         MGTK_CALL MGTK::MoveTo, change_drive_button_pos
-        addr_call draw_string, change_drive_button_label
+        param_call draw_string, change_drive_button_label
         rts
 
 ;;; ============================================================
@@ -1889,7 +1889,7 @@ LB03E:  .byte   0
 
 LB075:  lda     #$00
         sta     LA3C7
-        addr_call LB0D6, buf_on_line
+        param_call LB0D6, buf_on_line
         rts
 .endproc
 
@@ -2142,7 +2142,7 @@ LB257:  MGTK_CALL MGTK::MoveTo, pos
         lda     #$01
         sta     pos
         MGTK_CALL MGTK::MoveTo, pos
-        addr_call draw_string, str_folder
+        param_call draw_string, str_folder
         lda     #$10
         sta     pos
 LB2A7:  lda     LB2D0
@@ -2260,10 +2260,10 @@ LB388:  inx
         cpy     LB3B6
         bne     LB388
         stx     INVOKER_PREFIX
-        addr_call adjust_path_case, INVOKER_PREFIX
+        param_call adjust_path_case, INVOKER_PREFIX
         MGTK_CALL MGTK::MoveTo, pos_disk
-        addr_call draw_string, str_disk
-        addr_call draw_string, INVOKER_PREFIX
+        param_call draw_string, str_disk
+        param_call draw_string, INVOKER_PREFIX
         jsr     LA9C9
         rts
 
@@ -2699,9 +2699,9 @@ LB749:  copy16  #str_ip+1, params
         MGTK_CALL MGTK::MoveTo, rect_input_text
         lda     buf_input_left
         beq     LB78A
-        addr_call draw_string, buf_input_left
-LB78A:  addr_call draw_string, buf_input_right
-        addr_call draw_string, str_two_spaces
+        param_call draw_string, buf_input_left
+LB78A:  param_call draw_string, buf_input_right
+        param_call draw_string, str_two_spaces
         rts
 .endproc
 
@@ -2858,8 +2858,8 @@ continue:
         lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::MoveTo, $06
-        addr_call draw_string, str_1_char
-        addr_call draw_string, buf_input_right
+        param_call draw_string, str_1_char
+        param_call draw_string, buf_input_right
         jsr     LBB5B
         rts
 .endproc
@@ -2878,8 +2878,8 @@ continue:
         lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::MoveTo, $06
-        addr_call draw_string, buf_input_right
-        addr_call draw_string, str_two_spaces
+        param_call draw_string, buf_input_right
+        param_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
 .endproc
@@ -2910,8 +2910,8 @@ LB98B:  ldx     buf_input_left
         lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::MoveTo, $06
-        addr_call draw_string, buf_input_right
-        addr_call draw_string, str_two_spaces
+        param_call draw_string, buf_input_right
+        param_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
 .endproc
@@ -2942,9 +2942,9 @@ LB9F3:  dec     buf_input_right
         lda     winfo_dialog::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::MoveTo, rect_input_text
-        addr_call draw_string, buf_input_left
-        addr_call draw_string, buf_input_right
-        addr_call draw_string, str_two_spaces
+        param_call draw_string, buf_input_left
+        param_call draw_string, buf_input_right
+        param_call draw_string, str_two_spaces
         jsr     LBB5B
         rts
 .endproc
@@ -3101,7 +3101,7 @@ tmp:    .byte   0
         sta     buf_input_left,x
         dex
         bpl     :-
-        addr_call adjust_path_case, buf_input_left
+        param_call adjust_path_case, buf_input_left
         rts
 .endproc
 
@@ -3113,7 +3113,7 @@ tmp:    .byte   0
         sta     buf_input_left,x
         dex
         bpl     :-
-        addr_call adjust_path_case, buf_input_left
+        param_call adjust_path_case, buf_input_left
         rts
 .endproc
 
@@ -3182,8 +3182,8 @@ width:  .word   0
         tax
         tya
         jsr     LB0D6
-LBBA0:  addr_call adjust_path_case, LA0C8
-        addr_call adjust_path_case, LA3C7
+LBBA0:  param_call adjust_path_case, LA0C8
+        param_call adjust_path_case, LA3C7
         lda     LA0C8
         cmp     LA3C7
         bne     LBBCB

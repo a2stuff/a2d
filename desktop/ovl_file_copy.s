@@ -48,9 +48,9 @@
 .proc draw_controls
         lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
-        addr_call file_dialog::L5E0A, file_dialog_res::copy_a_file_label
-        addr_call file_dialog::L5E57, file_dialog_res::source_filename_label
-        addr_call file_dialog::L5E6F, file_dialog_res::destination_filename_label
+        param_call file_dialog::L5E0A, file_dialog_res::copy_a_file_label
+        param_call file_dialog::L5E57, file_dialog_res::source_filename_label
+        param_call file_dialog::L5E6F, file_dialog_res::destination_filename_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
@@ -178,13 +178,13 @@ done:   jsr     file_dialog::jt_redraw_input
 ;;; ============================================================
 
 .proc handle_ok_destination
-        addr_call file_dialog::L647C, path_buf0
+        param_call file_dialog::L647C, path_buf0
         beq     :+
 err:    lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_ALERT_0
         rts
 
-:       addr_call file_dialog::L647C, path_buf1
+:       param_call file_dialog::L647C, path_buf1
         bne     err
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog

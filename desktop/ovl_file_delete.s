@@ -46,8 +46,8 @@
 .proc draw_controls
         lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
-        addr_call file_dialog::L5E0A, file_dialog_res::delete_a_file_label
-        addr_call file_dialog::L5E57, file_dialog_res::file_to_delete_label
+        param_call file_dialog::L5E0A, file_dialog_res::delete_a_file_label
+        param_call file_dialog::L5E57, file_dialog_res::file_to_delete_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport
@@ -75,7 +75,7 @@ jt_filename:
 
 
 .proc handle_ok
-        addr_call file_dialog::L647C, path_buf0
+        param_call file_dialog::L647C, path_buf0
         beq     :+
         lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_ALERT_0

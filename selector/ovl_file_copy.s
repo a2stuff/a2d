@@ -827,7 +827,7 @@ str_spaces:
         MGTK_CALL MGTK::FrameRect, rect_frame1
         MGTK_CALL MGTK::FrameRect, rect_frame2
         MGTK_CALL MGTK::MoveTo, pos_download
-        addr_call app::DrawString, str_download
+        param_call app::DrawString, str_download
         rts
 .endproc
 
@@ -847,14 +847,14 @@ LAA4C:  jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_count
-        addr_call app::AdjustPathCase, pathname1
+        param_call app::AdjustPathCase, pathname1
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call app::DrawString, str_copying
-        addr_call app::DrawString, pathname1
+        param_call app::DrawString, str_copying
+        param_call app::DrawString, pathname1
         MGTK_CALL MGTK::MoveTo, pt2
-        addr_call app::DrawString, str_files_remaining
-        addr_call app::DrawString, str_count
-        addr_call app::DrawString, str_spaces
+        param_call app::DrawString, str_files_remaining
+        param_call app::DrawString, str_count
+        param_call app::DrawString, str_spaces
         rts
 .endproc
         draw_window_content_ep2 := draw_window_content::ep2
@@ -864,9 +864,9 @@ LAA4C:  jsr     populate_count
         jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call app::DrawString, str_files_to_copy
-        addr_call app::DrawString, str_count
-        addr_call app::DrawString, str_spaces
+        param_call app::DrawString, str_files_to_copy
+        param_call app::DrawString, str_count
+        param_call app::DrawString, str_spaces
         rts
 .endproc
 
@@ -887,13 +887,13 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call app::DrawString, str_not_enough_room
+        param_call app::DrawString, str_not_enough_room
         MGTK_CALL MGTK::MoveTo, pt2
-        addr_call app::DrawString, str_click_ok
+        param_call app::DrawString, str_click_ok
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, pos1
-        addr_call app::DrawString, app::ok_button_label
+        param_call app::DrawString, app::ok_button_label
         jsr     set_pointer_cursor
         jmp     restore_stack_and_return
 
@@ -905,13 +905,13 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
         MGTK_CALL MGTK::MoveTo, pos_copying
-        addr_call app::DrawString, str_error_download
+        param_call app::DrawString, str_error_download
         MGTK_CALL MGTK::MoveTo, pt2
-        addr_call app::DrawString, str_copy_incomplete
+        param_call app::DrawString, str_copy_incomplete
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::FrameRect, rect1
         MGTK_CALL MGTK::MoveTo, pos1
-        addr_call app::DrawString, app::ok_button_label
+        param_call app::DrawString, app::ok_button_label
         jsr     set_pointer_cursor
         jmp     restore_stack_and_return
 .endproc

@@ -113,11 +113,11 @@ quit:   MLI_CALL QUIT, quit_params
 
         ;; Use original location, since BASIC.SYSTEM was unlikely
         ;; to be copied.
-        addr_call copy_desktop_orig_prefix, bs_path
+        param_call copy_desktop_orig_prefix, bs_path
         jmp     got_prefix
 
 get_current_prefix:
-        yax_call JUMP_TABLE_MLI, GET_PREFIX, get_prefix_params
+        param_call JUMP_TABLE_MLI, GET_PREFIX, get_prefix_params
         bne     no_bs
 
 got_prefix:
@@ -134,7 +134,7 @@ loop:   ldx     path_length
         bne     :-
         stx     bs_path
 
-        yax_call JUMP_TABLE_MLI, GET_FILE_INFO, get_file_info_params
+        param_call JUMP_TABLE_MLI, GET_FILE_INFO, get_file_info_params
         bne     not_found
         rts
 
@@ -169,7 +169,7 @@ str_basic_system:
 .proc get_win_path
         ptr := $06
 
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, ptr
+        param_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, ptr
         lda     ptr             ; any window open?
         beq     fail
         cmp     #kMaxDeskTopWindows+1

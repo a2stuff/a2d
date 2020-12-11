@@ -25,8 +25,8 @@ L080C:  copy    #$00, has_input_field_flag
         jsr     main::open_prompt_window
         lda     winfo_prompt_dialog
         jsr     main::set_port_from_window_id
-        addr_call main::draw_dialog_title, aux::str_format_disk
-        yax_call main::draw_dialog_label, 1, aux::str_select_format
+        param_call main::draw_dialog_title, aux::str_format_disk
+        param_call main::draw_dialog_label, 1, aux::str_select_format
         jsr     draw_volume_labels
         copy    #$FF, selected_device_index
 L0832:  copy16  #L0B48, main::jump_relay+1
@@ -54,7 +54,7 @@ L085F:  bit     selected_device_index
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
         jsr     main::clear_path_buf2
-        yax_call main::draw_dialog_label, 3, aux::str_new_volume
+        param_call main::draw_dialog_label, 3, aux::str_new_volume
 L08A7:  jsr     main::prompt_input_loop
         bmi     L08A7
         beq     L08B7
@@ -78,10 +78,10 @@ L08B7:  lda     path_buf1
         sta     L09D7
         lda     #$00
         sta     has_input_field_flag
-        yax_call main::draw_dialog_label, 3, aux::str_confirm_format
+        param_call main::draw_dialog_label, 3, aux::str_confirm_format
         lda     L09D7
         jsr     L1A2D
-        addr_call main::draw_text1, ovl_path_buf
+        param_call main::draw_text1, ovl_path_buf
 L0902:  jsr     main::prompt_input_loop
         bmi     L0902
         beq     L090C
@@ -91,7 +91,7 @@ L090C:  lda     winfo_prompt_dialog
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        yax_call main::draw_dialog_label, 1, aux::str_formatting
+        param_call main::draw_dialog_label, 1, aux::str_formatting
         lda     L09D7
         jsr     L12C1
         and     #$FF
@@ -104,8 +104,8 @@ L0942:  lda     winfo_prompt_dialog
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        yax_call main::draw_dialog_label, 1, aux::str_erasing
-        addr_call upcase_string, path_buf1
+        param_call main::draw_dialog_label, 1, aux::str_erasing
+        param_call upcase_string, path_buf1
         ldxy    #path_buf1
         lda     L09D7
         jsr     L1307
@@ -123,7 +123,7 @@ L0980:  cmp     #ERR_WRITE_PROTECTED
         jmp     L090C
 
 L098C:  jsr     Bell
-        yax_call main::draw_dialog_label, 6, aux::str_erasing_error
+        param_call main::draw_dialog_label, 6, aux::str_erasing_error
         jmp     L09B8
 
 L099B:  pha
@@ -136,7 +136,7 @@ L099B:  pha
         jmp     L090C
 
 L09AC:  jsr     Bell
-        yax_call main::draw_dialog_label, 6, aux::str_formatting_error
+        param_call main::draw_dialog_label, 6, aux::str_formatting_error
 L09B8:  jsr     main::prompt_input_loop
         bmi     L09B8
         bne     L09C2
@@ -161,8 +161,8 @@ L09D9:  lda     #$00
         jsr     main::open_prompt_window
         lda     winfo_prompt_dialog
         jsr     main::set_port_from_window_id
-        addr_call main::draw_dialog_title, aux::str_erase_disk
-        yax_call main::draw_dialog_label, 1, aux::str_select_erase
+        param_call main::draw_dialog_title, aux::str_erase_disk
+        param_call main::draw_dialog_label, 1, aux::str_select_erase
         jsr     draw_volume_labels
         copy    #$FF, selected_device_index
         copy16  #L0B48, main::jump_relay+1
@@ -185,7 +185,7 @@ L0A18:  bit     selected_device_index
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
         jsr     main::clear_path_buf2
-        yax_call main::draw_dialog_label, 3, aux::str_new_volume
+        param_call main::draw_dialog_label, 3, aux::str_new_volume
 L0A6A:  jsr     main::prompt_input_loop
         bmi     L0A6A
         beq     L0A7A
@@ -208,11 +208,11 @@ L0A7A:  lda     path_buf1
         lda     DEVLST,x
         sta     L0B47
         sta     L0B46
-        yax_call main::draw_dialog_label, 3, aux::str_confirm_erase
+        param_call main::draw_dialog_label, 3, aux::str_confirm_erase
         lda     L0B46
         and     #$F0
         jsr     L1A2D
-        addr_call main::draw_text1, ovl_path_buf
+        param_call main::draw_text1, ovl_path_buf
 L0AC7:  jsr     main::prompt_input_loop
         bmi     L0AC7
         beq     L0AD1
@@ -222,8 +222,8 @@ L0AD1:  lda     winfo_prompt_dialog
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        yax_call main::draw_dialog_label, 1, aux::str_erasing
-        addr_call upcase_string, path_buf1
+        param_call main::draw_dialog_label, 1, aux::str_erasing
+        param_call upcase_string, path_buf1
         jsr     main::set_cursor_watch
         ldxy    #path_buf1
         lda     L0B46
@@ -242,7 +242,7 @@ L0B12:  cmp     #ERR_WRITE_PROTECTED
         jmp     L0AD1
 
 L0B1E:  jsr     Bell
-        yax_call main::draw_dialog_label, 6, aux::str_erasing_error
+        param_call main::draw_dialog_label, 6, aux::str_erasing_error
 L0B2A:  jsr     main::prompt_input_loop
         bmi     L0B2A
         beq     L0AD1
@@ -1464,7 +1464,7 @@ L1974:  lda     the_disk_in_slot_label,x
         bpl     L1974
         rts
 
-L197E:  addr_call L19C8, ovl_path_buf
+L197E:  param_call L19C8, ovl_path_buf
         rts
 
 L1986:  cmp     #$A5

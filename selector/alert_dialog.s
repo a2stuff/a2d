@@ -238,7 +238,7 @@ LD314:  tya
         ;; Cancel button
         MGTK_CALL MGTK::FrameRect, cancel_button_rect
         MGTK_CALL MGTK::MoveTo, cancel_button_pos
-        addr_call app::DrawString, cancel_button_string
+        param_call app::DrawString, cancel_button_string
 
         bit     alert_options
         bvs     ok_button
@@ -246,19 +246,19 @@ LD314:  tya
         ;; Try Again button
         MGTK_CALL MGTK::FrameRect, try_again_button_rect
         MGTK_CALL MGTK::MoveTo, try_again_pos
-        addr_call app::DrawString, try_again_button_string
+        param_call app::DrawString, try_again_button_string
         jmp     draw_prompt
 
         ;; OK button
 ok_button:
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
-        addr_call app::DrawString, ok_button_string
+        param_call app::DrawString, ok_button_string
 
         ;; Prompt string
 draw_prompt:
         MGTK_CALL MGTK::MoveTo, pos_prompt
-        addr_call_indirect app::DrawString, prompt_addr
+        param_call_indirect app::DrawString, prompt_addr
 
         ;; --------------------------------------------------
         ;; Event Loop

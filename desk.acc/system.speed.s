@@ -194,19 +194,19 @@ grafport:       .tag MGTK::GrafPort
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
         MGTK_CALL MGTK::MoveTo, title_pos
-        addr_call DrawString, title_label
+        param_call DrawString, title_label
 
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
-        addr_call DrawString, ok_button_label
+        param_call DrawString, ok_button_label
 
         MGTK_CALL MGTK::FrameRect, norm_button_rect
         MGTK_CALL MGTK::MoveTo, norm_button_pos
-        addr_call DrawString, norm_button_label
+        param_call DrawString, norm_button_label
 
         MGTK_CALL MGTK::FrameRect, fast_button_rect
         MGTK_CALL MGTK::MoveTo, fast_button_pos
-        addr_call DrawString, fast_button_label
+        param_call DrawString, fast_button_label
 
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
@@ -327,7 +327,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc on_click_ok
-        yax_call button_event_loop, kDAWindowId, ok_button_rect
+        param_call button_event_loop, kDAWindowId, ok_button_rect
         jeq     close_window
         jmp     input_loop
 .endproc
@@ -335,7 +335,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc on_click_norm
-        yax_call button_event_loop, kDAWindowId, norm_button_rect
+        param_call button_event_loop, kDAWindowId, norm_button_rect
         bne     :+
         jsr     do_norm
 :       jmp     input_loop
@@ -344,7 +344,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc on_click_fast
-        yax_call button_event_loop, kDAWindowId, fast_button_rect
+        param_call button_event_loop, kDAWindowId, fast_button_rect
         bne     :+
         jsr     do_fast
 :       jmp     input_loop

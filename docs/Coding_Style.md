@@ -205,8 +205,7 @@ The following macros should be used to improve code readability by eliminating r
 * pseudo-ops:
   * `add16`/`sub16`/`cmp16`/`lsr16`/`asl16`/`inc16`/`dec16` for 16-bit operations
   * `ldax`/`ldxy`/`stax`/`stxy` for 16-bit load/stores
-  * `addr_call`/`addr_jump` for calls (or tail calls) with 16-bit address argument
-  * `yax_call`/`yax_jump` for calls (or tail calls) with 16-bit address argument and 8-bit parameter
+  * `param_call`/`param_jump` for (tail) calls with an optional 8-bit param in Y and a required 16-bit address argument in A,X
   * `return`/`return16` for returning A or A,X from a proc
   * `jcc`/`jeq`/etc for long branches
 * structural:

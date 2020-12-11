@@ -987,7 +987,7 @@ found_slot:
         jsr     set_copied_to_ramcard_flag
 
         ;; Already installed?
-        addr_call set_ramcard_prefix, dst_path
+        param_call set_ramcard_prefix, dst_path
         jsr     check_desktop2_on_device
         bcs     start_copy      ; No, start copy.
 
@@ -1441,7 +1441,7 @@ start:  MLI_CALL OPEN, open_params
 ;;; ============================================================
 
 .proc copy_orig_prefix_to_desktop_orig_prefix
-        addr_call set_desktop_orig_prefix, header_orig_prefix
+        param_call set_desktop_orig_prefix, header_orig_prefix
         rts
 .endproc
 
@@ -1819,8 +1819,8 @@ str_not_completed:
         jsr     VTABZ
         lda     #0
         sta     CH
-        addr_call cout_string, str_copying
-        addr_call cout_string_newline, generic_copy::path2
+        param_call cout_string, str_copying
+        param_call cout_string_newline, generic_copy::path2
         rts
 .endproc
 
@@ -1832,7 +1832,7 @@ str_not_completed:
         jsr     VTABZ
         lda     #0
         sta     CH
-        addr_call cout_string, str_insert
+        param_call cout_string, str_insert
         jsr     wait_enter_escape
         cmp     #CHAR_ESCAPE
         bne     :+
@@ -1852,7 +1852,7 @@ str_not_completed:
         jsr     VTABZ
         lda     #0
         sta     CH
-        addr_call cout_string, str_not_enough
+        param_call cout_string, str_not_enough
         jsr     wait_enter_escape
         jsr     HOME
         jmp     invoke_selector_or_desktop
@@ -1878,12 +1878,12 @@ str_not_completed:
 
         ;; Show generic error
 :       pha
-        addr_call cout_string, str_error
+        param_call cout_string, str_error
         pla
         jsr     PRBYTE
-        addr_call cout_string, str_occured
-        addr_call cout_string_newline, generic_copy::path2
-        addr_call cout_string, str_not_completed
+        param_call cout_string, str_occured
+        param_call cout_string_newline, generic_copy::path2
+        param_call cout_string, str_not_completed
 
         ;; Wait for keyboard
         sta     KBDSTRB

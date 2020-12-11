@@ -526,19 +526,19 @@ done:   rts
 
 .proc calc_header_item_widths
         ;; Enough space for "123,456"
-        addr_call main::measure_text1, str_from_int
+        param_call main::measure_text1, str_from_int
         stax    dx
 
         ;; Width of "123,456 Items"
-        addr_call main::measure_text1, str_items
+        param_call main::measure_text1, str_items
         addax   dx, width_items_label
 
         ;; Width of "123,456K in disk"
-        addr_call main::measure_text1, str_k_in_disk
+        param_call main::measure_text1, str_k_in_disk
         addax   dx, width_k_in_disk_label
 
         ;; Width of "123,456K available"
-        addr_call main::measure_text1, str_k_available
+        param_call main::measure_text1, str_k_available
         addax   dx, width_k_available_label
 
         add16   width_k_in_disk_label, width_k_available_label, width_right_labels
@@ -602,7 +602,7 @@ open_dir:
         copy16  #read_dir_buffer + .sizeof(SubdirectoryHeader), dir_ptr
 
 process_block:
-        addr_call_indirect main::adjust_fileentry_case, dir_ptr
+        param_call_indirect main::adjust_fileentry_case, dir_ptr
 
         ldy     #FileEntry::storage_type_name_length
         lda     (dir_ptr),y

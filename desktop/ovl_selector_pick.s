@@ -450,15 +450,15 @@ L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     selector_action
         cmp     #SelectorAction::edit
         bne     L9417
-        addr_call L94F0, edit_an_entry_label
+        param_call L94F0, edit_an_entry_label
         rts
 
 L9417:  cmp     #$03
         bne     L9423
-        addr_call L94F0, delete_an_entry_label
+        param_call L94F0, delete_an_entry_label
         rts
 
-L9423:  addr_call L94F0, run_an_entry_label
+L9423:  param_call L94F0, run_an_entry_label
         rts
 
 L942B:  stx     $07
@@ -525,11 +525,11 @@ L94A8:  .byte   0
 ;;; ============================================================
 
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_ok_pos
-        addr_call main::draw_text1, aux::str_ok_label
+        param_call main::draw_text1, aux::str_ok_label
         rts
 
 L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_cancel_pos
-        addr_call main::draw_text1, aux::str_cancel_label
+        param_call main::draw_text1, aux::str_cancel_label
         rts
 
 L94CB:  stax    $06
@@ -604,7 +604,7 @@ handle_button:
         MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
         cmp     #MGTK::inrect_inside
         bne     not_ok
-        yax_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_ok_rect
+        param_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_ok_rect
         bmi     :+
         lda     #$00
 :       rts
@@ -612,7 +612,7 @@ handle_button:
 not_ok: MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
         cmp     #MGTK::inrect_inside
         bne     not_cancel
-        yax_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_cancel_rect
+        param_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_cancel_rect
         bmi     :+
         lda     #$01
 :       rts
@@ -697,7 +697,7 @@ L97A0:  pha
         beq     L97B6
         cmp     #1
         bne     L97B2
-        addr_jump L97B6, $0069
+        param_jump L97B6, $0069
 
 L97B2:  ldax    #210
 L97B6:  clc
@@ -1248,7 +1248,7 @@ L9BD4:  .byte   0
 ;;; ============================================================
 
 L9C09:  sta     warning_dialog_num
-        yax_call main::invoke_dialog_proc, $0C, warning_dialog_num
+        param_call main::invoke_dialog_proc, $0C, warning_dialog_num
         rts
 
 filename_buffer := $1C00
@@ -1257,7 +1257,7 @@ filename_buffer := $1C00
         DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS flush_close_params
 
-L9C26:  addr_call copy_desktop_orig_prefix, filename_buffer
+L9C26:  param_call copy_desktop_orig_prefix, filename_buffer
         inc     filename_buffer ; Append '/' separator
         ldx     filename_buffer
         lda     #'/'
@@ -1521,7 +1521,7 @@ L9E61:  jsr     L9E74
         rts
 
 L9E74:  sta     L9EBF
-        addr_call copy_ramcard_prefix, L9EC1
+        param_call copy_ramcard_prefix, L9EC1
         lda     L9EBF
         jsr     get_file_path_addr
         stax    $06

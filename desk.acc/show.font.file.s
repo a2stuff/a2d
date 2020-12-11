@@ -91,12 +91,12 @@ kReadLength      = WINDOW_ICON_TABLES-font_buffer
         ;; --------------------------------------------------
         ;; Load the file
 
-        yax_call JUMP_TABLE_MLI, OPEN, open_params ; TODO: Check for error
+        param_call JUMP_TABLE_MLI, OPEN, open_params ; TODO: Check for error
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        yax_call JUMP_TABLE_MLI, READ, read_params ; TODO: Check for error
-        yax_call JUMP_TABLE_MLI, CLOSE, close_params
+        param_call JUMP_TABLE_MLI, READ, read_params ; TODO: Check for error
+        param_call JUMP_TABLE_MLI, CLOSE, close_params
 
         ;; --------------------------------------------------
         ;; Copy the DA code and loaded data to AUX

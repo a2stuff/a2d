@@ -107,17 +107,17 @@ ITK_RELAY       := ITKRelayImpl
 
 .macro MGTK_RELAY_CALL call, addr
     .if .paramcount > 1
-        yax_call        MGTK_RELAY, (call), (addr)
+        param_call        MGTK_RELAY, (call), (addr)
     .else
-        yax_call        MGTK_RELAY, (call), 0
+        param_call        MGTK_RELAY, (call), 0
     .endif
 .endmacro
 
 .macro ITK_RELAY_CALL call, addr
     .if .paramcount > 1
-        yax_call        ITK_RELAY, (call), (addr)
+        param_call        ITK_RELAY, (call), (addr)
     .else
-        yax_call        ITK_RELAY, (call), 0
+        param_call        ITK_RELAY, (call), 0
     .endif
 .endmacro
 
@@ -125,9 +125,9 @@ ITK_RELAY       := ITKRelayImpl
 
 .macro MLI_RELAY_CALL call, addr
     .if .paramcount > 1
-        yax_call        MLI_RELAY, (call), (addr)
+        param_call        MLI_RELAY, (call), (addr)
     .else
-        yax_call        MLI_RELAY, (call), 0
+        param_call        MLI_RELAY, (call), 0
     .endif
 .endmacro
 

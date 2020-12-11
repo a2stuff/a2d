@@ -136,26 +136,19 @@ $text =~ s/
      \s+ lda \s+ \#\$([0-9A-F]{2}) \n
      \s+ ldx \s+ \#\$([0-9A-F]{2}) \n
      \s+ jsr \s+ ((?:L|\$)[0-9A-F]{2,4}) \b
-     /yax_call $4, \$$1, \$$3$2/gx;
-
-$text =~ s/
-     \b  lda \s+ \#\$([0-9A-F]{2}) \n
-     \s+ ldx \s+ \#\$([0-9A-F]{2}) \n
-     \s+ ldy \s+ \#\$([0-9A-F]{2}) \n
-     \s+ jsr \s+ ((?:L|\$)[0-9A-F]{2,4}) \b
-     /axy_call $4, \$$3, \$$2$1/gx;
+     /param_call $4, \$$1, \$$3$2/gx;
 
 $text =~ s/
      \b  lda \s+ \#\$([0-9A-F]{2}) \n
      \s+ ldx \s+ \#\$([0-9A-F]{2}) \n
      \s+ jsr \s+ ((?:L|\$)[0-9A-F]{2,4}) \b
-     /addr_call $3, \$$2$1/gx;
+     /param_call $3, \$$2$1/gx;
 
 $text =~ s/
      \b  lda \s+ \#\$([0-9A-F]{2}) \n
      \s+ ldx \s+ \#\$([0-9A-F]{2}) \n
      \s+ jmp \s+ ((?:L|\$)[0-9A-F]{2,4}) \b
-     /addr_jump $3, \$$2$1/gx;
+     /param_jump $3, \$$2$1/gx;
 
 $text =~ s/
      \b  lda \s+ \#\$([0-9A-F]{2}) \n

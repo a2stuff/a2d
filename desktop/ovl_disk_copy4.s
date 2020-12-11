@@ -829,8 +829,8 @@ L0D8A:  lda     #$81
         sta     disk_copy_overlay3::LD44D
         rts
 
-L0D90:  addr_call disk_copy_overlay3::LDE9F, $1300
-        addr_call disk_copy_overlay3::adjust_case, $1300
+L0D90:  param_call disk_copy_overlay3::LDE9F, $1300
+        param_call disk_copy_overlay3::adjust_case, $1300
         lda     #$C0
         sta     disk_copy_overlay3::LD44D
         rts

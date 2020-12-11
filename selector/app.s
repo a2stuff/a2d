@@ -1443,7 +1443,7 @@ get_port_and_draw_window:
         bmi     :+
         MGTK_CALL MGTK::FrameRect, desktop_button_rect
 :
-        addr_call draw_title_string, str_selector_title
+        param_call draw_title_string, str_selector_title
         jsr     draw_ok_label
         bit     desktop_available_flag
         bmi     :+
@@ -1460,13 +1460,13 @@ get_port_and_draw_window:
 
 .proc draw_ok_label
         MGTK_CALL MGTK::MoveTo, ok_button_pos
-        addr_call DrawString, ok_button_label
+        param_call DrawString, ok_button_label
         rts
 .endproc
 
 .proc draw_desktop_label
         MGTK_CALL MGTK::MoveTo, desktop_button_pos
-        addr_call DrawString, desktop_button_label
+        param_call DrawString, desktop_button_label
         rts
 .endproc
 
@@ -1718,7 +1718,7 @@ L9AE5:  lda     winfo::window_id
         pla
         jsr     L9A62
         MGTK_CALL MGTK::MoveTo, pt6
-        addr_call DrawString, L9113
+        param_call DrawString, L9113
         rts
 .endproc
 
@@ -1994,8 +1994,8 @@ check_path:
         stx     INVOKER_FILENAME
         pla
         sta     INVOKER_PREFIX
-        addr_call upcase_string, INVOKER_PREFIX
-        addr_call upcase_string, INVOKER_FILENAME
+        param_call upcase_string, INVOKER_PREFIX
+        param_call upcase_string, INVOKER_FILENAME
 
         ;; --------------------------------------------------
         ;; Invoke
@@ -2266,7 +2266,7 @@ L9EFB:  .byte   0
         buf := $800
 
         sta     tmp
-        addr_call copy_ramcard_prefix, buf
+        param_call copy_ramcard_prefix, buf
         lda     tmp
         jsr     get_selector_list_path_addr
 
