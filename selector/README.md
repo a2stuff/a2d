@@ -63,7 +63,7 @@ to run.
 Recursive copy implementation. Loaded to $A000.
 
 Used when invoking a program via the selector with the option
-"Down load to RAMCard" / "On first use" specified.
+"Copy to RAMCard" / "On first use" specified.
 
 
 ## Memory Map

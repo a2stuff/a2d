@@ -448,7 +448,7 @@ memory:.word    0
 str_diskii:     PASCAL_STRING "Disk II"
 str_block:      PASCAL_STRING "Generic Block Device"
 kStrSmartportOffset = 12
-str_smartport:  PASCAL_STRING "SmartPort:                                                                          " ; enough room for 4x16 names plus ", " between
+str_smartport:  PASCAL_STRING .sprintf("SmartPort: %73s", "") ; 4x16 names plus ", " separators
 str_ssc:        PASCAL_STRING "Super Serial Card"
 str_80col:      PASCAL_STRING "80 Column Card"
 str_mouse:      PASCAL_STRING "Mouse Card"

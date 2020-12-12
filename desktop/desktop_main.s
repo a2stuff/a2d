@@ -8994,10 +8994,6 @@ file_type:
         lda     auxtype
         jsr     do_byte
 
-        ;; Append suffix
-        lda     #')'
-        sta     text_buffer2::data,y
-        iny
         sty     text_buffer2::length
         rts
 
@@ -9019,7 +9015,7 @@ do_byte:
         iny
         rts
 
-prefix: PASCAL_STRING "   (AuxType: $"
+prefix: PASCAL_STRING "     AuxType: $"
 
 auxtype:
         .word 0

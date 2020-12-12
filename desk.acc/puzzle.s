@@ -499,8 +499,6 @@ piece16:
         .byte %11011101
 .endparams
 
-        .byte   $00             ; ???
-
 .params pattern_black
         .byte %00000000
         .byte %00000000
@@ -511,11 +509,6 @@ piece16:
         .byte %00000000
         .byte %00000000
 .endparams
-
-        ;; ???
-        .byte   $00
-        .res    8, $FF
-        .byte   $00
 
 ;; line across top of puzzle (bitmaps include bottom edges)
 .params moveto_params
@@ -545,13 +538,6 @@ draw_inc:  .byte   $00
 .params closewindow_params
 window_id:     .byte   kDAWindowId
 .endparams
-
-        .byte   $73,$00,$F7,$FF
-        .addr   str
-        .byte   $01
-        .byte   $00,$00,$00,$00,$00,$06,$00,$05
-        .byte   $00
-str:    .byte   $41,$35,$47,$37,$36,$49   ; "A#G%#I" ?
 
         ;; SET_STATE params (filled in by QUERY_STATE)
 setport_params:
@@ -603,27 +589,7 @@ nextwinfo:      .addr   0
 .endparams
         winfo_viewloc_ycoord := winfo::viewloc::ycoord
 
-        ;; This is grafport cruft only below
-.params port_cruft                 ; Unknown usage
-viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
-pattern:        .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   0
-textback:       .byte   $7F
-textfont:       .addr   DEFAULT_FONT
-.endparams
-
-        .byte   0,0             ; ???
-
 name:   PASCAL_STRING "Puzzle"
-
 
 ;;; ============================================================
 ;;; Create the window
@@ -738,7 +704,6 @@ check_title:
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        ldx     #$23            ; ???
         jsr     redraw_screen
         rts
 
@@ -944,8 +909,6 @@ loop:   txa
 
 after_click:
         jmp     find_hole
-
-        rts                     ; ???
 .endproc
 
 ;;; ============================================================

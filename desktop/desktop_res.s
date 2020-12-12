@@ -828,7 +828,13 @@ str_4_spaces:
         PASCAL_STRING "    "
 
 dow_strings:
-        .byte   "Sun ", "Mon ", "Tue ", "Wed ", "Thu ", "Fri ", "Sat "
+        STRING  "Sun "
+        STRING  "Mon "
+        STRING  "Tue "
+        STRING  "Wed "
+        STRING  "Thu "
+        STRING  "Fri "
+        STRING  "Sat "
         ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
 
 .params dow_str_params

@@ -598,8 +598,19 @@ loop:   lda     month_name_table,x
 .endproc
 
 month_name_table:
-        .byte   "Jan","Feb","Mar","Apr","May","Jun"
-        .byte   "Jul","Aug","Sep","Oct","Nov","Dec"
+        STRING  "Jan"
+        STRING  "Feb"
+        STRING  "Mar"
+        STRING  "Apr"
+        STRING  "May"
+        STRING  "Jun"
+        STRING  "Jul"
+        STRING  "Aug"
+        STRING  "Sep"
+        STRING  "Oct"
+        STRING  "Nov"
+        STRING  "Dec"
+        ASSERT_RECORD_TABLE_SIZE month_name_table, 12, 3
 
 .proc prepare_year_string
         lda     year

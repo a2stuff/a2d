@@ -3582,8 +3582,6 @@ str_size_number:
 str_size_blocks:
         PASCAL_STRING "Space used on disk"
 
-        .word   110,35,110,43
-
 str_download:
         PASCAL_STRING "Copy to RAMCard..."
 

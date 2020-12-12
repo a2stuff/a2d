@@ -772,12 +772,12 @@ rect_frame2:
         DEFINE_RECT_INSET 5, 3, winfo::kWidth, winfo::kHeight
 
 pos_download:
-        DEFINE_POINT 100, 16
+        DEFINE_POINT 116, 16
 str_download:
-        PASCAL_STRING "Down load in the RAMCard"
+        PASCAL_STRING "Copying to RAMCard..."
 
 pos_copying:    DEFINE_POINT 20, 32
-pt2:    DEFINE_POINT 20, 40
+pt2:    DEFINE_POINT 20, 45
 
 str_copying:
         PASCAL_STRING "Copying:"
