@@ -1182,27 +1182,27 @@ kDeviceTemplateDriveOffset = 5
 
 ;;; Disk II
 str_sd_disk_ii:
-        PASCAL_STRING "Sx,Dy: Disk II"
+        PASCAL_STRING "S#,D#: Disk II"
 
 ;;; RAM disks
 str_sd_ramcard:
-        PASCAL_STRING "Sx,Dy: RAMCard"
+        PASCAL_STRING "S#,D#: RAMCard"
 
 ;;; Fixed drives that aren't RAM disks
 str_sd_profile:
-        PASCAL_STRING "Sx,Dy: ProFile"
+        PASCAL_STRING "S#,D#: ProFile"
 
 ;;; Removable drives
 str_sd_unidisk:
-        PASCAL_STRING "Sx,Dy: UniDisk 3.5"
+        PASCAL_STRING "S#,D#: UniDisk 3.5"
 
 ;;; File Share
 str_sd_fileshare:
-        PASCAL_STRING "Sx,Dy: AppleShare"
+        PASCAL_STRING "S#,D#: AppleShare"
 
 ;;; Unknown devices
 str_sd_unknown:
-        PASCAL_STRING "Sx,Dy: Unknown"
+        PASCAL_STRING "S#,D#: Unknown"
 
 ;;; ============================================================
 

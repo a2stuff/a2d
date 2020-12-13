@@ -3221,7 +3221,7 @@ trash_mask:
 ;;; Menus
 
 label_apple:
-        PASCAL_STRING kGlyphSolidApple
+        PASCAL_STRING kGlyphSolidApple ; do not localize
 label_file:
         PASCAL_STRING "File"
 label_view:

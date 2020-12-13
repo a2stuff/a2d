@@ -427,13 +427,13 @@ str_ace500:
 ;;; ============================================================
 
 str_prodos_version:
-        PASCAL_STRING "ProDOS 0.0.0"
+        PASCAL_STRING "ProDOS #.#.#" ; do not localize
         kVersionStrMajor = 8
         kVersionStrMinor = 10
         kVersionStrPatch = 12
 
 str_slot_n:
-        PASCAL_STRING "Slot 0:   "
+        PASCAL_STRING "Slot #:   "
 
 str_memory_prefix:
         PASCAL_STRING "Memory: "

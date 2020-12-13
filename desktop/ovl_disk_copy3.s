@@ -400,7 +400,7 @@ str_drive:
         PASCAL_STRING "  Drive "
 
 str_dos33_s_d:
-        PASCAL_STRING "DOS 3.3 S , D  "
+        PASCAL_STRING "DOS 3.3 S#, D# "
 
 str_dos33_disk_copy:
         PASCAL_STRING "DOS 3.3 disk copy"
@@ -2493,9 +2493,9 @@ str_confirm_erase1:
 str_confirm_erase1_buf:  .res    18, 0
 
 str_confirm_erase2:
-        PASCAL_STRING "Do you want to  erase  the disk in slot   drive   ?"
+        PASCAL_STRING "Do you want to  erase  the disk in slot # drive # ?"
 str_confirm_erase3:
-        PASCAL_STRING "Do you want to erase the disk in slot   drive   ?"
+        PASCAL_STRING "Do you want to erase the disk in slot # drive # ?"
 str_copy_success:
         PASCAL_STRING "The copy was successful."
 str_copy_fail:

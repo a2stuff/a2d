@@ -616,14 +616,14 @@ num_volumes:
         .byte   0
 
 the_dos_33_disk_label:
-        PASCAL_STRING "the DOS 3.3 disk in slot   drive   ?"
+        PASCAL_STRING "the DOS 3.3 disk in slot # drive # ?"
 the_dos_33_disk_slot_char_offset:
         .byte   26
 the_dos_33_disk_drive_char_offset:
         .byte   34
 
 the_disk_in_slot_label:
-        PASCAL_STRING "the disk in slot   drive   ?"
+        PASCAL_STRING "the disk in slot # drive # ?"
 the_disk_in_slot_slot_char_offset:
         .byte   18
 the_disk_in_slot_drive_char_offset:
@@ -1141,13 +1141,13 @@ device_name_table:
         .res    20, 0
         .endrepeat
 
-startup_menu_item_1:    PASCAL_STRING "Slot 0"
-startup_menu_item_2:    PASCAL_STRING "Slot 0"
-startup_menu_item_3:    PASCAL_STRING "Slot 0"
-startup_menu_item_4:    PASCAL_STRING "Slot 0"
-startup_menu_item_5:    PASCAL_STRING "Slot 0"
-startup_menu_item_6:    PASCAL_STRING "Slot 0"
-startup_menu_item_7:    PASCAL_STRING "Slot 0"
+startup_menu_item_1:    PASCAL_STRING "Slot #"
+startup_menu_item_2:    PASCAL_STRING "Slot #"
+startup_menu_item_3:    PASCAL_STRING "Slot #"
+startup_menu_item_4:    PASCAL_STRING "Slot #"
+startup_menu_item_5:    PASCAL_STRING "Slot #"
+startup_menu_item_6:    PASCAL_STRING "Slot #"
+startup_menu_item_7:    PASCAL_STRING "Slot #"
 
 ;;; ============================================================
 

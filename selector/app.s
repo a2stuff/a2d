@@ -152,19 +152,19 @@ str_run_a_program:
 
         kStrSlotXOffset = 6
 str_slot_x1:
-        PASCAL_STRING "Slot x"
+        PASCAL_STRING "Slot #"
 str_slot_x2:
-        PASCAL_STRING "Slot x"
+        PASCAL_STRING "Slot #"
 str_slot_x3:
-        PASCAL_STRING "Slot x"
+        PASCAL_STRING "Slot #"
 str_slot_x4:
-        PASCAL_STRING "Slot x"
+        PASCAL_STRING "Slot #"
 str_slot_x5:
-        PASCAL_STRING "Slot x"
+        PASCAL_STRING "Slot #"
 str_slot_x6:
-        PASCAL_STRING "Slot x"
+        PASCAL_STRING "Slot #"
 str_slot_x7:
-        PASCAL_STRING "Slot x"
+        PASCAL_STRING "Slot #"
 
 
 ;;; Slot numbers
