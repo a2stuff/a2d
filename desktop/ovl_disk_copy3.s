@@ -107,9 +107,9 @@ label_desktop:
 label_blank:
         PASCAL_STRING " "       ; do not localize
 label_copyright1:
-        PASCAL_STRING "Copyright Apple Computer Inc., 1986 "
+        PASCAL_STRING "Copyright Apple Computer Inc., 1986"
 label_copyright2:
-        PASCAL_STRING "Copyright Version Soft, 1985 - 1986 "
+        PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
 label_rights:
         PASCAL_STRING "All Rights reserved"
 
@@ -117,10 +117,10 @@ label_quit:
         PASCAL_STRING "Quit"
 
 label_quick_copy:
-        PASCAL_STRING "Quick Copy "
+        PASCAL_STRING "Quick Copy"
 
 label_disk_copy:
-        PASCAL_STRING "Disk Copy "
+        PASCAL_STRING "Disk Copy"
 
 ;;; ============================================================
 

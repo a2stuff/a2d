@@ -140,11 +140,11 @@ str_a2desktop:
 str_blank:
         PASCAL_STRING " "       ; do not localize
 str_copyright1:
-        PASCAL_STRING "Copyright Apple Computer Inc., 1986 "
+        PASCAL_STRING "Copyright Apple Computer Inc., 1986"
 str_copyright2:
         PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
 str_copyright3:
-        PASCAL_STRING "All Rights reserved "
+        PASCAL_STRING "All Rights reserved"
 
 str_run_a_program:
         PASCAL_STRING "Run a Program..."
