@@ -757,25 +757,6 @@ ycoord: .word   top
     .endif
 .endmacro
 
-;;; String definition w/ inline data, for use with DrawText
-;;;    DEFINE_STRING "abc"
-;;;    DEFINE_STRING {"Ring a bell",$07,"!!!"} ; control characters
-;;; Optional second param gives label to internal Pascal string
-
-.macro DEFINE_STRING str, opt_label
-        .local  data
-        .local  end
-
-        .addr   data            ; textptr
-    .if .paramcount > 1
-opt_label:
-    .endif
-        .byte   end - data      ; textlen
-
-data:   .byte   str
-end:
-.endmacro
-
 ;;; Menus (common cases; other options are possible)
 
 .macro DEFINE_MENU_BAR count

@@ -308,7 +308,7 @@ fatbits_rect:                   ; For hit testing
         DEFINE_RECT_SZ kPatternEditX+1, kPatternEditY+1,  8 * kFatBitWidth - 1, 8 * kFatBitHeight - 1, fatbits_rect
 
 str_desktop_pattern:
-        DEFINE_STRING "Desktop Pattern"
+        PASCAL_STRING "Desktop Pattern"
 pattern_label_pos:
         DEFINE_POINT kPatternEditX + 35, kPatternEditY + 47
 
@@ -375,7 +375,7 @@ rarr_bitmap:
 
 
 str_rgb_color:
-        DEFINE_STRING "RGB Color"
+        PASCAL_STRING "RGB Color"
 rgb_color_label_pos:
         DEFINE_POINT kPatternEditX + 68, kPatternEditY + 59
 
@@ -400,7 +400,7 @@ dblclick_speed_table:
         .word   kDefaultDblClickSpeed * 16
 
 str_dblclick_speed:
-        DEFINE_STRING "Double-Click Speed"
+        PASCAL_STRING "Double-Click Speed"
 
 dblclick_label_pos:
         DEFINE_POINT kDblClickX + 45, kDblClickY + 47
@@ -495,7 +495,7 @@ kMouseTrackingX = 25
 kMouseTrackingY = 78
 
 str_mouse_tracking:
-        DEFINE_STRING "Mouse Tracking"
+        PASCAL_STRING "Mouse Tracking"
 tracking_label_pos:
         DEFINE_POINT kMouseTrackingX + 30, kMouseTrackingY + 45
 
@@ -567,13 +567,13 @@ ipblink_selection:
         .byte   0
 
 str_ipblink_label1:
-        DEFINE_STRING "Rate of Insertion"
+        PASCAL_STRING "Rate of Insertion"
 str_ipblink_label2:
-        DEFINE_STRING "Point Blinking"
+        PASCAL_STRING "Point Blinking"
 str_ipblink_slow:
-        DEFINE_STRING "Slow"
+        PASCAL_STRING "Slow"
 str_ipblink_fast:
-        DEFINE_STRING "Fast"
+        PASCAL_STRING "Fast"
 
 ipblink_label1_pos:
         DEFINE_POINT kIPBlinkDisplayX, kIPBlinkDisplayY + 11
@@ -648,21 +648,21 @@ kHourDisplayX = 210
 kHourDisplayY = 114
 
 str_clock:
-        DEFINE_STRING "Clock"
+        PASCAL_STRING "Clock"
 pos_clock:
         DEFINE_POINT kHourDisplayX+kRadioButtonWidth, kHourDisplayY+8
 
 rect_12hour:
         DEFINE_RECT_SZ kHourDisplayX+60, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
 str_12hour:
-        DEFINE_STRING "12hr"
+        PASCAL_STRING "12hr"
 pos_12hour:
         DEFINE_POINT kHourDisplayX+60+kRadioButtonWidth+6, kHourDisplayY+8
 
 rect_24hour:
         DEFINE_RECT_SZ kHourDisplayX+120, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
 str_24hour:
-        DEFINE_STRING "24hr"
+        PASCAL_STRING "24hr"
 pos_24hour:
         DEFINE_POINT kHourDisplayX+120+kRadioButtonWidth+6, kHourDisplayY+8
 
@@ -1177,7 +1177,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Desktop Pattern
 
         MGTK_CALL MGTK::MoveTo, pattern_label_pos
-        MGTK_CALL MGTK::DrawText, str_desktop_pattern
+        param_call DrawString, str_desktop_pattern
 
         MGTK_CALL MGTK::SetPenMode, penBIC
         MGTK_CALL MGTK::FrameRect, fatbits_frame
@@ -1196,7 +1196,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
         MGTK_CALL MGTK::MoveTo, rgb_color_label_pos
-        MGTK_CALL MGTK::DrawText, str_rgb_color
+        param_call DrawString, str_rgb_color
 
         jsr     draw_rgb_checkbox
 
@@ -1204,7 +1204,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Double-Click Speed
 
         MGTK_CALL MGTK::MoveTo, dblclick_label_pos
-        MGTK_CALL MGTK::DrawText, str_dblclick_speed
+        param_call DrawString, str_dblclick_speed
 
 
 .macro copy32 arg1, arg2
@@ -1238,13 +1238,13 @@ loop:   copy    arg1,y, arg2,y
         ;; Mouse Tracking Speed
 
         MGTK_CALL MGTK::MoveTo, tracking_label_pos
-        MGTK_CALL MGTK::DrawText, str_mouse_tracking
+        param_call DrawString, str_mouse_tracking
 
         MGTK_CALL MGTK::MoveTo, tracking_slow_pos
-        MGTK_CALL MGTK::DrawText, str_ipblink_slow
+        param_call DrawString, str_ipblink_slow
 
         MGTK_CALL MGTK::MoveTo, tracking_fast_pos
-        MGTK_CALL MGTK::DrawText, str_ipblink_fast
+        param_call DrawString, str_ipblink_fast
 
         jsr     draw_tracking_buttons
 
@@ -1254,18 +1254,18 @@ loop:   copy    arg1,y, arg2,y
         ;; IP Blinking
 
         MGTK_CALL MGTK::MoveTo, ipblink_label1_pos
-        MGTK_CALL MGTK::DrawText, str_ipblink_label1
+        param_call DrawString, str_ipblink_label1
 
         MGTK_CALL MGTK::MoveTo, ipblink_label2_pos
-        MGTK_CALL MGTK::DrawText, str_ipblink_label2
+        param_call DrawString, str_ipblink_label2
 
         MGTK_CALL MGTK::PaintBits, ipblink_bitmap_params
 
         MGTK_CALL MGTK::MoveTo, ipblink_slow_pos
-        MGTK_CALL MGTK::DrawText, str_ipblink_slow
+        param_call DrawString, str_ipblink_slow
 
         MGTK_CALL MGTK::MoveTo, ipblink_fast_pos
-        MGTK_CALL MGTK::DrawText, str_ipblink_fast
+        param_call DrawString, str_ipblink_fast
 
         jsr     draw_ipblink_buttons
 
@@ -1273,13 +1273,13 @@ loop:   copy    arg1,y, arg2,y
         ;; 12/24 Hour Clock
 
         MGTK_CALL MGTK::MoveTo, pos_clock
-        MGTK_CALL MGTK::DrawText, str_clock
+        param_call DrawString, str_clock
 
         MGTK_CALL MGTK::MoveTo, pos_12hour
-        MGTK_CALL MGTK::DrawText, str_12hour
+        param_call DrawString, str_12hour
 
         MGTK_CALL MGTK::MoveTo, pos_24hour
-        MGTK_CALL MGTK::DrawText, str_24hour
+        param_call DrawString, str_24hour
 
         jsr     draw_hour_buttons
 
@@ -2022,6 +2022,24 @@ done:   rts
         lda     LCBANK1
         rts
 .endproc
+
+;;; ============================================================
+
+.proc DrawString
+        params := $6
+        textptr := $6
+        textlen := $8
+
+        stax    textptr
+        ldy     #0
+        lda     (textptr),y
+        beq     done
+        sta     textlen
+        inc16   textptr
+        MGTK_CALL MGTK::DrawText, params
+done:   rts
+.endproc
+
 
 ;;; ============================================================
 

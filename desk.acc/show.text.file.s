@@ -1288,8 +1288,8 @@ ignore: clc                     ; Click ignored
         rts
 .endproc
 
-fixed_str:      DEFINE_STRING "Fixed        "
-prop_str:       DEFINE_STRING "Proportional"
+fixed_str:      PASCAL_STRING "Fixed        "
+prop_str:       PASCAL_STRING "Proportional"
         kLabelWidth = 50
 
 .params mode_mapinfo                  ; bounding port for mode label
@@ -1333,13 +1333,32 @@ base:   .word   10              ; vertical text offset (to baseline)
         MGTK_CALL MGTK::MoveTo, mode_pos
         lda     fixed_mode_flag
         beq     else            ; is proportional?
-        MGTK_CALL MGTK::DrawText, fixed_str
+        param_call DrawString, fixed_str
         jmp     endif
-else:   MGTK_CALL MGTK::DrawText, prop_str
+else:   param_call DrawString, prop_str
 
 endif:  COPY_STRUCT MGTK::MapInfo, default_port, winfo::port
         MGTK_CALL MGTK::SetPortBits, winfo::port
         rts
 .endproc
+
+;;; ============================================================
+
+.proc DrawString
+        params := $6
+        textptr := $6
+        textlen := $8
+
+        stax    textptr
+        ldy     #0
+        lda     (textptr),y
+        beq     done
+        sta     textlen
+        inc16   textptr
+        MGTK_CALL MGTK::DrawText, params
+done:   rts
+.endproc
+
+;;; ============================================================
 
         .assert * <= default_buffer, error, "DA overlaps with read buffer"

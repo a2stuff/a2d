@@ -217,9 +217,9 @@ joy_btn0_lpos: DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + kRadioButton
 joy_btn1_lpos: DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 30 + 8
 joy_btn2_lpos: DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 50 + 8
 
-joy_btn0_label:   DEFINE_STRING "0"
-joy_btn1_label:   DEFINE_STRING "1"
-joy_btn2_label:   DEFINE_STRING "2"
+joy_btn0_label:   PASCAL_STRING "0"
+joy_btn1_label:   PASCAL_STRING "1"
+joy_btn2_label:   PASCAL_STRING "2"
 
 .params joy_marker
 viewloc:        DEFINE_POINT 0, 0, viewloc
@@ -394,11 +394,11 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::FrameRect, joy_disp_frame_rect
 
         MGTK_CALL MGTK::MoveTo, joy_btn0_lpos
-        MGTK_CALL MGTK::DrawText, joy_btn0_label
+        param_call DrawString, joy_btn0_label
         MGTK_CALL MGTK::MoveTo, joy_btn1_lpos
-        MGTK_CALL MGTK::DrawText, joy_btn1_label
+        param_call DrawString, joy_btn1_label
         MGTK_CALL MGTK::MoveTo, joy_btn2_lpos
-        MGTK_CALL MGTK::DrawText, joy_btn2_label
+        param_call DrawString, joy_btn2_label
 
         copy    #0, last_joy_valid_flag
 
@@ -596,6 +596,23 @@ pdl3:   .byte   0
 done:   rts
 .endproc
 
+.endproc
+
+;;; ============================================================
+
+.proc DrawString
+        params := $6
+        textptr := $6
+        textlen := $8
+
+        stax    textptr
+        ldy     #0
+        lda     (textptr),y
+        beq     done
+        sta     textlen
+        inc16   textptr
+        MGTK_CALL MGTK::DrawText, params
+done:   rts
 .endproc
 
 ;;; ============================================================

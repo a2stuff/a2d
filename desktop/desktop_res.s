@@ -1137,7 +1137,8 @@ device_name_table:
         ASSERT_ADDRESS_TABLE_SIZE device_name_table, kMaxVolumes + 1
 
         .repeat kMaxVolumes+1, i
-        DEFINE_STRING "Slot    drive       ", .ident(.sprintf("dev%ds", i))
+        .ident(.sprintf("dev%ds", i)) := *
+        .res    20, 0
         .endrepeat
 
 startup_menu_item_1:    PASCAL_STRING "Slot 0"

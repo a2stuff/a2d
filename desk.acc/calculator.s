@@ -383,9 +383,9 @@ text_buffer2:
         .res    kTextBufferSize+2, 0
 
 spaces_string:
-        DEFINE_STRING "          "
+        PASCAL_STRING "          "
 error_string:
-        DEFINE_STRING "Error "
+        PASCAL_STRING "Error "
 
 .params textwidth_params
 textptr:        .addr   text_buffer1
@@ -1249,7 +1249,7 @@ end:    rts
         sbc     textwidth_params::result
         sta     text_pos_params3::left
         MGTK_CALL MGTK::MoveTo, text_pos_params2 ; clear with spaces
-        MGTK_CALL MGTK::DrawText, spaces_string
+        param_call DrawString, spaces_string
         MGTK_CALL MGTK::MoveTo, text_pos_params3 ; set up for display
         rts
 .endproc
@@ -1351,7 +1351,7 @@ draw_title_bar:
         beq     :+
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::MoveTo, error_pos
-        MGTK_CALL MGTK::DrawText, error_string
+        param_call DrawString, error_string
 
 :       jsr     reset_buffer1_and_state
         lda     #'='
@@ -1417,5 +1417,24 @@ CALL_FOUT:
 
 CALL_ROUND:
         CALL_FP ROUND
+
+;;; ============================================================
+
+.proc DrawString
+        params := $6
+        textptr := $6
+        textlen := $8
+
+        stax    textptr
+        ldy     #0
+        lda     (textptr),y
+        beq     done
+        sta     textlen
+        inc16   textptr
+        MGTK_CALL MGTK::DrawText, params
+done:   rts
+.endproc
+
+;;; ============================================================
 
 da_end := *

@@ -160,22 +160,22 @@ month:  .byte   2               ; The date this was written?
 year:   .byte   85
 
 spaces_string:
-        DEFINE_STRING "    "
+        PASCAL_STRING "    "
 
 day_pos:
         DEFINE_POINT 43, 30
 day_string:
-        DEFINE_STRING "  "
+        PASCAL_STRING "  "
 
 month_pos:
         DEFINE_POINT 87, 30
 month_string:
-        DEFINE_STRING "   "
+        PASCAL_STRING "   "
 
 year_pos:
         DEFINE_POINT 133, 30
 year_string:
-        DEFINE_STRING "  "
+        PASCAL_STRING "  "
 
 .params event_params
 kind:  .byte   0
@@ -568,8 +568,8 @@ decrement_year:
 .proc prepare_day_string
         lda     day
         jsr     number_to_ascii
-        sta     day_string+3    ; first char
-        stx     day_string+4    ; second char
+        sta     day_string+1    ; first char
+        stx     day_string+2    ; second char
         rts
 .endproc
 
@@ -582,7 +582,7 @@ decrement_year:
         dex
 
         ptr := $07
-        str := month_string + 3
+        str := month_string + 1
         kLength = 3
 
         copy16  #str, ptr
@@ -615,8 +615,8 @@ month_name_table:
 .proc prepare_year_string
         lda     year
         jsr     number_to_ascii
-        sta     year_string+3
-        stx     year_string+4
+        sta     year_string+1
+        stx     year_string+2
         rts
 .endproc
 
@@ -714,13 +714,13 @@ date_rect:
         DEFINE_RECT_SZ 32,15,122,20
 
 label_ok:
-        DEFINE_STRING {"OK         ",kGlyphReturn} ;
+        PASCAL_STRING {"OK         ",kGlyphReturn}
 label_cancel:
-        DEFINE_STRING "Cancel  ESC"
+        PASCAL_STRING "Cancel  ESC"
 label_uparrow:
-        DEFINE_STRING kGlyphUpArrow
+        PASCAL_STRING kGlyphUpArrow
 label_downarrow:
-        DEFINE_STRING kGlyphDdownArrow
+        PASCAL_STRING kGlyphDdownArrow
 
 label_cancel_pos:
         DEFINE_POINT 21,56
@@ -748,7 +748,7 @@ penheight: .byte   1
 
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, label_ok_pos
-        MGTK_CALL MGTK::DrawText, label_ok
+        param_call DrawString, label_ok
 
         ;; If there is a system clock, only draw the OK button.
         ldx     clock_flag
@@ -756,14 +756,14 @@ penheight: .byte   1
 
         MGTK_CALL MGTK::FrameRect, cancel_button_rect
         MGTK_CALL MGTK::MoveTo, label_cancel_pos
-        MGTK_CALL MGTK::DrawText, label_cancel
+        param_call DrawString, label_cancel
 
         MGTK_CALL MGTK::MoveTo, label_uparrow_pos
-        MGTK_CALL MGTK::DrawText, label_uparrow
+        param_call DrawString, label_uparrow
         MGTK_CALL MGTK::FrameRect, up_arrow_rect
 
         MGTK_CALL MGTK::MoveTo, label_downarrow_pos
-        MGTK_CALL MGTK::DrawText, label_downarrow
+        param_call DrawString, label_downarrow
         MGTK_CALL MGTK::FrameRect, down_arrow_rect
 
 :       jsr     prepare_day_string
@@ -796,21 +796,21 @@ penheight: .byte   1
 
 .proc draw_day
         MGTK_CALL MGTK::MoveTo, day_pos
-        MGTK_CALL MGTK::DrawText, day_string
+        param_call DrawString, day_string
         rts
 .endproc
 
 .proc draw_month
         MGTK_CALL MGTK::MoveTo, month_pos
-        MGTK_CALL MGTK::DrawText, spaces_string ; variable width, so clear first
+        param_call DrawString, spaces_string ; variable width, so clear first
         MGTK_CALL MGTK::MoveTo, month_pos
-        MGTK_CALL MGTK::DrawText, month_string
+        param_call DrawString, month_string
         rts
 .endproc
 
 .proc draw_year
         MGTK_CALL MGTK::MoveTo, year_pos
-        MGTK_CALL MGTK::DrawText, year_string
+        param_call DrawString, year_string
         rts
 .endproc
 
@@ -917,6 +917,23 @@ loop:   cmp     #10
         rts
 .endproc
 
-        rts                     ; ???
+;;; ============================================================
+
+.proc DrawString
+        params := $6
+        textptr := $6
+        textlen := $8
+
+        stax    textptr
+        ldy     #0
+        lda     (textptr),y
+        beq     done
+        sta     textlen
+        inc16   textptr
+        MGTK_CALL MGTK::DrawText, params
+done:   rts
+.endproc
+
+;;; ============================================================
 
 last := *
