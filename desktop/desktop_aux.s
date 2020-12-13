@@ -3443,8 +3443,8 @@ str_about4:  PASCAL_STRING "All Rights Reserved"
 str_about5:  PASCAL_STRING "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 str_about6:  PASCAL_STRING "Richard Danais and Luc Barthelet"
 str_about7:  PASCAL_STRING "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
-str_about8:  PASCAL_STRING kDeskTopReleaseDate
-str_about9:  PASCAL_STRING .sprintf("Version %d.%d%s",::kDeskTopVersionMajor,::kDeskTopVersionMinor,kDeskTopVersionSuffix)
+str_about8:  PASCAL_STRING kDeskTopReleaseDate ; do not localize
+str_about9:  PASCAL_STRING .sprintf("Version %d.%d%s",::kDeskTopVersionMajor,::kDeskTopVersionMinor,kDeskTopVersionSuffix) ; do not localize
 
         ;; "Copy File" dialog strings
 str_copy_title:
@@ -3589,7 +3589,7 @@ str_ramcard_full:
         PASCAL_STRING "The RAMCard is full. The copy was not completed."
 
 str_blank:
-        PASCAL_STRING " "
+        PASCAL_STRING " "       ; do not localize
 
 str_warning:
         PASCAL_STRING "Warning !"

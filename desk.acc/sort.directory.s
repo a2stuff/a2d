@@ -746,7 +746,7 @@ fail:   sec
         rts
 
 str_system:
-        PASCAL_STRING ".SYSTEM"
+        PASCAL_STRING ".SYSTEM" ; do not localize
 .endproc
 
 ;;; ============================================================

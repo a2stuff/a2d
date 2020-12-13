@@ -88,7 +88,7 @@ menu_file:
         ASSERT_RECORD_TABLE_SIZE @items, 1, .sizeof(MGTK::MenuItem)
 
 label_apple:
-        PASCAL_STRING kGlyphSolidApple
+        PASCAL_STRING kGlyphSolidApple ; do not localize
 
 menu_facilities:
         DEFINE_MENU 2
@@ -105,7 +105,7 @@ label_desktop:
         PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d",::kDeskTopVersionMajor,::kDeskTopVersionMinor)
 
 label_blank:
-        PASCAL_STRING " "
+        PASCAL_STRING " "       ; do not localize
 label_copyright1:
         PASCAL_STRING "Copyright Apple Computer Inc., 1986 "
 label_copyright2:
@@ -338,8 +338,8 @@ block_count_table:  .res    16, 0
 source_drive_index:  .byte   0
 dest_drive_index:  .byte   0
 
-str_d:  PASCAL_STRING 0
-str_s:  PASCAL_STRING 0
+str_d:  PASCAL_STRING 0         ; do not localize
+str_s:  PASCAL_STRING 0         ; do not localize
 LD41D:  .byte   0
 LD41E:  .byte   0
 LD41F:  .byte   0
@@ -363,8 +363,8 @@ LD44E:  .byte   0
 quick_copy_flag:  .byte   0
         .byte   1, 0
 
-str_2_spaces:   PASCAL_STRING "  "
-str_number:     PASCAL_STRING "       " ; filled in by string_to_number
+str_2_spaces:   PASCAL_STRING "  "      ; do not localize
+str_number:     PASCAL_STRING "       " ; filled in by string_to_number - do not localize
 
 ;;; Label positions
 point_blocks_read:     DEFINE_POINT 300, 125

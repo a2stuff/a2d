@@ -161,7 +161,7 @@ path_length:
         .byte   0
 
 str_basic_system:
-        PASCAL_STRING "BASIC.SYSTEM"
+        PASCAL_STRING "BASIC.SYSTEM" ; do not localize
 .endproc
 
 ;;; ============================================================

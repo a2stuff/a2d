@@ -1380,7 +1380,7 @@ exit:   rts
 ;;; Output: str_from_int populated, with separator if needed
 
 str_from_int:
-        PASCAL_STRING "000,000"
+        PASCAL_STRING "000,000" ; do not localize
 
 .proc int_to_string
         stax    value

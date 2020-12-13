@@ -323,14 +323,14 @@ char_label:  .byte   0
 
 ;;; ============================================================
 
-line1:  PASCAL_STRING "\x00 \x01 \x02 \x03 \x04 \x05 \x06 \x07 \x08 \x09 \x0A \x0B \x0C \x0D \x0E \x0F"
-line2:  PASCAL_STRING "\x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 \x1A \x1B \x1C \x1D \x1E \x1F"
-line3:  PASCAL_STRING "  ! \x22 # $ % & ' ( ) * + , - . /"
-line4:  PASCAL_STRING "0 1 2 3 4 5 6 7 8 9 : ; < = > ?"
-line5:  PASCAL_STRING "@ A B C D E F G H I J K L M N O"
-line6:  PASCAL_STRING "P Q R S T U V W X Y Z [ \x5C ] ^ _"
-line7:  PASCAL_STRING "` a b c d e f g h i j k l m n o"
-line8:  PASCAL_STRING "p q r s t u v w x y z { | } ~ \x7F"
+line1:  PASCAL_STRING "\x00 \x01 \x02 \x03 \x04 \x05 \x06 \x07 \x08 \x09 \x0A \x0B \x0C \x0D \x0E \x0F" ; do not localize
+line2:  PASCAL_STRING "\x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 \x1A \x1B \x1C \x1D \x1E \x1F" ; do not localize
+line3:  PASCAL_STRING "  ! \x22 # $ % & ' ( ) * + , - . /" ; do not localize
+line4:  PASCAL_STRING "0 1 2 3 4 5 6 7 8 9 : ; < = > ?" ; do not localize
+line5:  PASCAL_STRING "@ A B C D E F G H I J K L M N O" ; do not localize
+line6:  PASCAL_STRING "P Q R S T U V W X Y Z [ \x5C ] ^ _" ; do not localize
+line7:  PASCAL_STRING "` a b c d e f g h i j k l m n o" ; do not localize
+line8:  PASCAL_STRING "p q r s t u v w x y z { | } ~ \x7F" ; do not localize
 
         kLineCount = 8
 line_addrs:

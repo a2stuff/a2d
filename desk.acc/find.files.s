@@ -994,7 +994,7 @@ buf_left:       .res    17, 0   ; input text before IP
 buf_right:      .res    17, 0   ; input text at/after IP
 buf_search:     .res    17, 0   ; search term
 
-suffix: PASCAL_STRING "  "
+suffix: PASCAL_STRING "  "      ; do not localize
 
 ip_blink_counter:       .byte   0
 ip_blink_flag:          .byte   0

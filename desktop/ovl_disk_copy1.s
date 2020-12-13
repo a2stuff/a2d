@@ -22,9 +22,9 @@ menu:   DEFINE_MENU 1
         DEFINE_MENU_ITEM menu_target + (item_label - menu_bar)
 
 menu_label:
-        PASCAL_STRING .sprintf("       Disk copy version %d.%d   ",::kDeskTopVersionMajor,::kDeskTopVersionMinor)
+        PASCAL_STRING .sprintf("       Disk copy version %d.%d   ",::kDeskTopVersionMajor,::kDeskTopVersionMinor) ; do not localize
 item_label:
-        PASCAL_STRING "Rien"    ; French for "nothing"
+        PASCAL_STRING "Rien"    ; French for "nothing" - do not localize
 .endparams
 
 ;;; ============================================================
@@ -35,7 +35,7 @@ item_label:
         DEFINE_CLOSE_PARAMS close_params
 
 str_desktop2:
-        PASCAL_STRING "DeskTop2"
+        PASCAL_STRING "DeskTop2" ; do not localize
 
 ;;; ============================================================
 

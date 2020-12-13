@@ -30,7 +30,7 @@ stash_stack:  .byte   $00
 ;;; MLI Call Param Blocks
 
 filename:
-        PASCAL_STRING "DESKTOP.SYSTEM"
+        PASCAL_STRING "DESKTOP.SYSTEM" ; do not localize
 
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
         DEFINE_SET_MARK_PARAMS set_mark_params, 3
@@ -160,22 +160,22 @@ month:  .byte   2               ; The date this was written?
 year:   .byte   85
 
 spaces_string:
-        PASCAL_STRING "    "
+        PASCAL_STRING "    "    ; do not localize
 
 day_pos:
         DEFINE_POINT 43, 30
 day_string:
-        PASCAL_STRING "  "
+        PASCAL_STRING "  "      ; do not localize
 
 month_pos:
         DEFINE_POINT 87, 30
 month_string:
-        PASCAL_STRING "   "
+        PASCAL_STRING "   "     ; do not localize
 
 year_pos:
         DEFINE_POINT 133, 30
 year_string:
-        PASCAL_STRING "  "
+        PASCAL_STRING "  "      ; do not localize
 
 .params event_params
 kind:  .byte   0
@@ -718,9 +718,9 @@ label_ok:
 label_cancel:
         PASCAL_STRING "Cancel  ESC"
 label_uparrow:
-        PASCAL_STRING kGlyphUpArrow
+        PASCAL_STRING kGlyphUpArrow ; do not localize
 label_downarrow:
-        PASCAL_STRING kGlyphDdownArrow
+        PASCAL_STRING kGlyphDdownArrow ; do not localize
 
 label_cancel_pos:
         DEFINE_POINT 21,56

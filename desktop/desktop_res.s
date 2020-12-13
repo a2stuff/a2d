@@ -649,7 +649,7 @@ format_erase_overlay_flag:
         .byte   0
 
 str_insertion_point:
-        PASCAL_STRING {kGlyphInsertionPoint}
+        PASCAL_STRING {kGlyphInsertionPoint} ; do not localize
 
 ;;; Flags that control the behavior of the file picker dialog.
 
@@ -663,17 +663,17 @@ LD8F5:  .byte   0
         ;; Used to draw/clear insertion point; overwritten with char
         ;; to right of insertion point as needed.
 str_1_char:
-        PASCAL_STRING {0}
+        PASCAL_STRING {0}       ; do not localize
 
         ;; Used as suffix for text being edited to account for insertion
         ;; point adding extra width.
 str_2_spaces:
-        PASCAL_STRING "  "
+        PASCAL_STRING "  "      ; do not localize
 
 str_files:
         PASCAL_STRING "Files"
 str_file_count:                 ; populated with number of files
-        PASCAL_STRING " ##,### "
+        PASCAL_STRING " ##,### " ; do not localize
 
 str_kb_suffix:
         PASCAL_STRING "K"
@@ -696,7 +696,7 @@ picker_entry_pos:
         .byte   $00,$00
 
 str_folder:
-        PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight}
+        PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight} ; do not localize
 
 selected_index:                 ; $FF if none
         .byte   0
@@ -822,10 +822,10 @@ pos_clock:
         DEFINE_POINT 475, 10
 
 str_time:
-        PASCAL_STRING "00:00 XM"
+        PASCAL_STRING "00:00 XM" ; do not localize
 
 str_4_spaces:
-        PASCAL_STRING "    "
+        PASCAL_STRING "    "    ; do not localize
 
 dow_strings:
         STRING  "Sun "
@@ -990,7 +990,7 @@ window_path_addr_table:
 ;;; ============================================================
 
 str_file_type:
-        PASCAL_STRING " $00"
+        PASCAL_STRING " $00"    ; do not localize
 
 ;;; ============================================================
 
@@ -1213,9 +1213,9 @@ splash_menu_label:
         PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d%s", kDeskTopVersionMajor, kDeskTopVersionMinor, kDeskTopVersionSuffix)
 
 blank_dd_label:
-        PASCAL_STRING " "
+        PASCAL_STRING " "       ; do not localize
 dummy_dd_item:
-        PASCAL_STRING "Rien"    ; French for "nothing"
+        PASCAL_STRING "Rien"    ; French for "nothing" - do not localize
 
         ;; IconTK::UNHIGHLIGHT_ICON params
 icon_params2:
@@ -1341,7 +1341,7 @@ str_k_available:
         PASCAL_STRING "K available"
 
 str_from_int:                   ; populated by int_to_string
-        PASCAL_STRING "000,000" ; 6 digits plus thousands separator
+        PASCAL_STRING "000,000" ; 6 digits plus thousands separator - do not localize
 
 ;;; Computed during startup
 width_items_label_padded:

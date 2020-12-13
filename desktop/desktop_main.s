@@ -1122,16 +1122,16 @@ done:   rts
 
 kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
 str_basix_system:
-        PASCAL_STRING "BASIx.SYSTEM"
+        PASCAL_STRING "BASIx.SYSTEM" ; do not localize
 
 str_preview_fot:
-        PASCAL_STRING "Preview/show.image.file"
+        PASCAL_STRING "Preview/show.image.file" ; do not localize
 
 str_preview_fnt:
-        PASCAL_STRING "Preview/show.font.file"
+        PASCAL_STRING "Preview/show.font.file" ; do not localize
 
 str_preview_txt:
-        PASCAL_STRING "Preview/show.text.file"
+        PASCAL_STRING "Preview/show.text.file" ; do not localize
 
 ;;; ============================================================
 
@@ -1623,7 +1623,7 @@ prefix_length:
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, path
 
 str_desk_acc:
-        PASCAL_STRING "Desk.Acc/"
+        PASCAL_STRING "Desk.Acc/" ; do not localize
 
 start:  jsr     reset_main_grafport
         jsr     set_cursor_watch
@@ -2483,7 +2483,7 @@ eject_flag:
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_QUIT_PARAMS quit_params
 
-str_quit_code:  PASCAL_STRING "Quit.tmp"
+str_quit_code:  PASCAL_STRING "Quit.tmp" ; do not localize
 
 reset_handler:
         ;; Restore DeskTop Main expected state...
@@ -7111,7 +7111,7 @@ is_app:
         bne     got_type        ; always
 
 str_sys_suffix:
-        PASCAL_STRING ".SYSTEM"
+        PASCAL_STRING ".SYSTEM" ; do not localize
 
 not_app:
         lda     #IconType::system
@@ -8680,7 +8680,7 @@ str_nov:PASCAL_STRING "November"
 str_dec:PASCAL_STRING "December"
 
 str_space:
-        PASCAL_STRING " "
+        PASCAL_STRING " "       ; do not localize
 str_comma:
         PASCAL_STRING ", "
 str_at:
@@ -10029,7 +10029,7 @@ addr_table:
         DEFINE_OPEN_PARAMS open_params, str_desktop2, IO_BUFFER
 
 str_desktop2:
-        PASCAL_STRING "DeskTop2"
+        PASCAL_STRING "DeskTop2" ; do not localize
 
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
 
@@ -11513,7 +11513,7 @@ run_dialog_proc:
         rts
 
 str_empty:
-        PASCAL_STRING ""
+        PASCAL_STRING ""        ; do not localize
 
 index:  .byte   0               ; selected icon index
 
@@ -16234,7 +16234,7 @@ ytmp:   .word   0
         DEFINE_READ_PARAMS write_params, desktop_file_data_buf, kFileSize
         DEFINE_CLOSE_PARAMS close_params
 str_desktop_file:
-        PASCAL_STRING "DeskTop.file"
+        PASCAL_STRING "DeskTop.file" ; do not localize
 
 .proc save
         data_ptr := $06

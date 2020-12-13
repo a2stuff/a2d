@@ -268,7 +268,7 @@ LA20D:
         .byte   $00
 
 str_ip:
-        PASCAL_STRING {kGlyphInsertionPoint}
+        PASCAL_STRING {kGlyphInsertionPoint} ; do not localize
 
 LA211:
         .byte   $00
@@ -277,10 +277,10 @@ LA211:
         .byte   $00
 
 str_1_char:
-        PASCAL_STRING 0
+        PASCAL_STRING 0         ; do not localize
 
 str_two_spaces:
-        PASCAL_STRING "  "
+        PASCAL_STRING "  "      ; do not localize
 
 pt3:    DEFINE_POINT 0, 13, pt3
 
@@ -292,7 +292,7 @@ pos:    DEFINE_POINT 2, 0, pos
         .byte   0
 
 str_folder:
-        PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight}
+        PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight} ; do not localize
 
 selected_index:                 ; $FF if none
         .byte   0

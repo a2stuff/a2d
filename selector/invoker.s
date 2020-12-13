@@ -30,7 +30,7 @@ prefix_length:
         .byte   0,0,0           ; Unused
 
 str_basic_system:
-        PASCAL_STRING "BASIC.SYSTEM"
+        PASCAL_STRING "BASIC.SYSTEM" ; do not localize
 
         ;; $EE = extended call signature for IIgs/GS/OS variation.
         DEFINE_QUIT_PARAMS quit_params, $EE, INVOKER_FILENAME

@@ -815,7 +815,7 @@ str_files_to_copy:
 str_files_remaining:
         PASCAL_STRING "Files remaining to be copied: "
 str_spaces:
-        PASCAL_STRING "    "
+        PASCAL_STRING "    "    ; do not localize
 
 ;;; ============================================================
 
@@ -1082,7 +1082,7 @@ nonzero_flag:
 .endproc
 
 str_count:
-        PASCAL_STRING "       "
+        PASCAL_STRING "       " ; do not localize
 
 ;;; ============================================================
 

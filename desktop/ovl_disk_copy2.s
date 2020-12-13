@@ -12,7 +12,7 @@
 ;;; ============================================================
 
         DEFINE_OPEN_PARAMS open_params, filename, $1C00
-filename:   PASCAL_STRING "DeskTop2"
+filename:   PASCAL_STRING "DeskTop2" ; do not localize
 
         DEFINE_READ_PARAMS read_params, 0, 0
         DEFINE_SET_MARK_PARAMS set_mark_params, kOverlayDiskCopy3Offset
