@@ -386,9 +386,6 @@ point_escape_stop_copy:     DEFINE_POINT 300, 145
 point_error_writing:     DEFINE_POINT 40, 100
 point_error_reading:     DEFINE_POINT 40, 90
 
-slot_char:      .byte   10
-drive_char:     .byte   14
-
 str_blocks_read:
         PASCAL_STRING "Blocks Read: "
 str_blocks_written:
@@ -406,6 +403,8 @@ str_drive:
 
 str_dos33_s_d:
         PASCAL_STRING "DOS 3.3 S#, D# "
+        kStrDOS33SlotOffset = 10
+        kStrDOS33DriveOffset = 14
 
 str_dos33_disk_copy:
         PASCAL_STRING "DOS 3.3 disk copy"
@@ -1266,15 +1265,13 @@ LDE4D:  cmp     #$A5
         lsr     a
         clc
         adc     #'0'
-        ldx     slot_char
-        sta     str_dos33_s_d,x
+        sta     str_dos33_s_d + kStrDOS33SlotOffset
         lda     disk_copy_overlay4_block_params_unit_num
         and     #$80
         asl     a
         rol     a
-        adc     #$31
-        ldx     drive_char
-        sta     str_dos33_s_d,x
+        adc     #'1'
+        sta     str_dos33_s_d + kStrDOS33DriveOffset
         lda     num_drives
         asl     a
         asl     a
@@ -2485,6 +2482,7 @@ str_insert_dest:
 str_confirm_erase0:
         PASCAL_STRING "Do you want to erase "
 str_confirm_erase0_buf:  .res    18, 0
+kLenConfirmErase0 = 23 ; ??? Should be 21?
 
 str_dest_format_fail:
         PASCAL_STRING "The destination disk cannot be formated !"
@@ -2496,11 +2494,18 @@ str_dest_protected:
 str_confirm_erase1:
         PASCAL_STRING "Do you want to erase "
 str_confirm_erase1_buf:  .res    18, 0
+kLenConfirmErase1 = 21
 
 str_confirm_erase2:
         PASCAL_STRING "Do you want to  erase  the disk in slot # drive # ?"
+        kStrConfirmErase2SlotOffset = 41
+        kStrConfirmErase2DriveOffset = 49
+
 str_confirm_erase3:
         PASCAL_STRING "Do you want to erase the disk in slot # drive # ?"
+        kStrConfirmErase3SlotOffset = 39
+        kStrConfirmErase3DriveOffset = 47
+
 str_copy_success:
         PASCAL_STRING "The copy was successful."
 str_copy_fail:
@@ -2514,15 +2519,6 @@ char_space:
         .byte   ' '
 char_question_mark:
         .byte   '?'
-
-slot_char_str_confirm_erase2:   .byte   41
-drive_char_str_confirm_erase2:  .byte   49
-
-slot_char_str_confirm_erase3:   .byte   39
-drive_char_str_confirm_erase3:  .byte   47
-
-len_confirm_erase0:  .byte   23
-len_confirm_erase1:  .byte   21
 
 message_index_table:
         .byte   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
@@ -3064,7 +3060,7 @@ state:
         bne     :-
         pla
         clc
-        adc     len_confirm_erase0
+        adc     #kLenConfirmErase0
         sta     str_confirm_erase0
         tay
         inc     str_confirm_erase0
@@ -3094,7 +3090,7 @@ state:
         bne     :-
         pla
         clc
-        adc     len_confirm_erase1
+        adc     #kLenConfirmErase1
         sta     str_confirm_erase1
         tay
         inc     str_confirm_erase1
@@ -3119,15 +3115,13 @@ state:
         lsr     a
         clc
         adc     #'0'
-        ldy     slot_char_str_confirm_erase2
-        sta     str_confirm_erase2,y
+        sta     str_confirm_erase2  + kStrConfirmErase2SlotOffset
         txa
         and     #$80            ; Mask off drive
         asl     a               ; Shift to low bit
         rol     a
         adc     #'1'            ; Drive 1 or 2
-        ldy     drive_char_str_confirm_erase2
-        sta     str_confirm_erase2,y
+        sta     str_confirm_erase2 + kStrConfirmErase2DriveOffset
         rts
 .endproc
 
@@ -3142,15 +3136,13 @@ state:
         lsr     a
         clc
         adc     #'0'
-        ldy     slot_char_str_confirm_erase3
-        sta     str_confirm_erase3,y
+        sta     str_confirm_erase3 + kStrConfirmErase3SlotOffset
         txa
         and     #$80            ; Mask off drive
         asl     a               ; Shift to low bit
         rol     a
         adc     #'1'            ; Drive 1 or 2
-        ldy     drive_char_str_confirm_erase3
-        sta     str_confirm_erase3,y
+        sta     str_confirm_erase3 + kStrConfirmErase3DriveOffset
         rts
 .endproc
 

@@ -150,7 +150,6 @@ str_run_a_program:
         PASCAL_STRING "Run a Program..."
 
 
-        kStrSlotXOffset = 6
 str_slot_x1:
         PASCAL_STRING "Slot #"
 str_slot_x2:
@@ -165,6 +164,7 @@ str_slot_x6:
         PASCAL_STRING "Slot #"
 str_slot_x7:
         PASCAL_STRING "Slot #"
+        kStrSlotXOffset = 6
 
 
 ;;; Slot numbers

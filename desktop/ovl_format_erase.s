@@ -1451,12 +1451,10 @@ L194E:  lda     read_buffer + 2
         beq     L197E
 L1959:  lda     read_block_params::unit_num
         jsr     L19B7
-        ldx     the_disk_in_slot_slot_char_offset
-        sta     the_disk_in_slot_label,x
+        sta     the_disk_in_slot_label + kTheDiskInSlotSlotCharOffset
         lda     read_block_params::unit_num
         jsr     L19C1
-        ldx     the_disk_in_slot_drive_char_offset
-        sta     the_disk_in_slot_label,x
+        sta     the_disk_in_slot_label + kTheDiskInSlotDriveCharOffset
         ldx     the_disk_in_slot_label
 L1974:  lda     the_disk_in_slot_label,x
         sta     ovl_path_buf,x
@@ -1474,12 +1472,10 @@ L1986:  cmp     #$A5
         bne     L1959
         lda     read_block_params::unit_num
         jsr     L19B7
-        ldx     the_dos_33_disk_slot_char_offset
-        sta     the_dos_33_disk_label,x
+        sta     the_dos_33_disk_label + kTheDos33DiskSlotCharOffset
         lda     read_block_params::unit_num
         jsr     L19C1
-        ldx     the_dos_33_disk_drive_char_offset
-        sta     the_dos_33_disk_label,x
+        sta     the_dos_33_disk_label + kTheDos33DiskDriveCharOffset
         ldx     the_dos_33_disk_label
 L19AC:  lda     the_dos_33_disk_label,x
         sta     ovl_path_buf,x

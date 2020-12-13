@@ -417,6 +417,7 @@ str_iic_plus:
 
 str_iigs:
         PASCAL_STRING "Apple IIgs (ROM #)"
+        kStrIIgsROMOffset = 17
 
 str_laser128:
         PASCAL_STRING "Laser 128"
@@ -434,6 +435,7 @@ str_prodos_version:
 
 str_slot_n:
         PASCAL_STRING "Slot #:   "
+        kStrSlotNOffset = 6
 
 str_memory_prefix:
         PASCAL_STRING "Memory: "
@@ -733,9 +735,7 @@ match:  tya
         ;; Is IIgs; Y holds ROM revision
         tya
         ora     #'0'            ; convert to ASCII digit
-        ldx     str_iigs        ; string length
-        dex
-        sta     str_iigs,x      ; second-to-last character
+        sta     str_iigs + kStrIIgsROMOffset
         lda     #model::iigs
 
         ;; A has model
@@ -983,7 +983,7 @@ loop:   lda     slot
         lda     slot
         clc
         adc     #'0'
-        sta     str_slot_n + 6
+        sta     str_slot_n + kStrSlotNOffset
         param_call draw_pascal_string, str_slot_n
 
         ;; Check ProDOS slot bit mask

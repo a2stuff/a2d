@@ -933,7 +933,7 @@ loop:   lda     slot
         tax
         copy16  slot_string_table,x, table_ptr
 
-        ldy     startup_menu_item_1 ; replace last char
+        ldy     #kStartupMenuItemSlotOffset
         lda     slot
         ora     #'0'
         sta     (table_ptr),y
