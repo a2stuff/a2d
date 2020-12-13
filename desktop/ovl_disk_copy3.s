@@ -330,10 +330,15 @@ num_drives:
 
 LD376:  .byte   0
 
-LD377:  .res    128, 0
-drive_unitnum_table:  .res    8, 0
-LD3FF:  .res    8, 0
-block_count_table:  .res    16, 0
+kMaxNumDrives = 8
+
+drive_name_table:
+        .res    kMaxNumDrives * 16, 0
+drive_unitnum_table:
+        .res    kMaxNumDrives, 0
+LD3FF:  .res    kMaxNumDrives, 0
+block_count_table:
+        .res    kMaxNumDrives * 2, 0
 
 source_drive_index:  .byte   0
 dest_drive_index:  .byte   0
@@ -1237,9 +1242,9 @@ LDE31:  lda     num_drives
         asl     a
         asl     a
         clc
-        adc     #<LD377
+        adc     #<drive_name_table
         tay
-        lda     #>LD377
+        lda     #>drive_name_table
         adc     #0
         tax
         tya
@@ -1278,13 +1283,13 @@ LDE4D:  cmp     #$A5
         tay
         ldx     #$00
 LDE83:  lda     str_dos33_s_d,x
-        sta     LD377,y
+        sta     drive_name_table,y
         iny
         inx
         cpx     str_dos33_s_d
         bne     LDE83
         lda     str_dos33_s_d,x
-        sta     LD377,y
+        sta     drive_name_table,y
         lda     #$43
         sta     $0300
         return  #$00
@@ -1676,13 +1681,13 @@ LE1EA:  lda     num_drives
         tay
         ldx     #$00
 LE1F4:  lda     str_unknown,x
-        sta     LD377,y
+        sta     drive_name_table,y
         iny
         inx
         cpx     str_unknown
         bne     LE1F4
         lda     str_unknown,x
-        sta     LD377,y
+        sta     drive_name_table,y
 LE207:  inc     num_drives
         jmp     next_device
 
@@ -1709,18 +1714,18 @@ LE21D:  ldy     #$00
         ldy     #$00
         lda     ($06),y
         and     #$0F
-        sta     LD377,x
+        sta     drive_name_table,x
         sta     LE264
 LE23E:  inx
         iny
         cpy     LE264
         beq     LE24D
         lda     ($06),y
-        sta     LD377,x
+        sta     drive_name_table,x
         jmp     LE23E
 
 LE24D:  lda     ($06),y
-        sta     LD377,x
+        sta     drive_name_table,x
         inc     num_drives
 
 
@@ -1894,9 +1899,9 @@ LE318:  .addr   0
         asl     a
         asl     a
         clc
-        adc     #<LD377
+        adc     #<drive_name_table
         sta     $06
-        lda     #>LD377
+        lda     #>drive_name_table
         adc     #$00
         sta     $07
         lda     $06
