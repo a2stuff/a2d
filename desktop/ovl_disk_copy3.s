@@ -330,9 +330,6 @@ num_drives:
 
 LD376:  .byte   0
 
-        ;; BUG: This padding is needed or the list is garbage
-        PAD_TO $D377
-
 LD377:  .res    128, 0
 drive_unitnum_table:  .res    8, 0
 LD3FF:  .res    8, 0
@@ -1897,9 +1894,9 @@ LE318:  .addr   0
         asl     a
         asl     a
         clc
-        adc     #$77
+        adc     #<LD377
         sta     $06
-        lda     #$D3
+        lda     #>LD377
         adc     #$00
         sta     $07
         lda     $06
