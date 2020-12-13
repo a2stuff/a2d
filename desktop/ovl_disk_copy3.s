@@ -330,6 +330,9 @@ num_drives:
 
 LD376:  .byte   0
 
+        ;; BUG: This padding is needed or the list is garbage
+        PAD_TO $D377
+
 LD377:  .res    128, 0
 drive_unitnum_table:  .res    8, 0
 LD3FF:  .res    8, 0
