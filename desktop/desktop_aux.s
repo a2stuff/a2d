@@ -3223,66 +3223,66 @@ trash_mask:
 label_apple:
         PASCAL_STRING kGlyphSolidApple ; do not localize
 label_file:
-        PASCAL_STRING "File"
+        PASCAL_STRING "File"    ; menu bar item
 label_view:
-        PASCAL_STRING "View"
+        PASCAL_STRING "View"    ; menu bar item
 label_special:
-        PASCAL_STRING "Special"
+        PASCAL_STRING "Special" ; menu bar item
 label_startup:
-        PASCAL_STRING "Startup"
+        PASCAL_STRING "Startup" ; menu bar item
 label_selector:
-        PASCAL_STRING "Selector"
+        PASCAL_STRING "Selector" ; menu bar item
 
 label_new_folder:
-        PASCAL_STRING "New Folder..."
+        PASCAL_STRING "New Folder..." ; menu item
 label_open:
-        PASCAL_STRING "Open"
+        PASCAL_STRING "Open" ; menu item
 label_close:
-        PASCAL_STRING "Close Window"
+        PASCAL_STRING "Close Window" ; menu item
 label_close_all:
-        PASCAL_STRING "Close All"
+        PASCAL_STRING "Close All" ; menu item
 label_select_all:
-        PASCAL_STRING "Select All"
+        PASCAL_STRING "Select All" ; menu item
 label_copy_file:
-        PASCAL_STRING "Copy a File..."
+        PASCAL_STRING "Copy a File..." ; menu item
 label_delete_file:
-        PASCAL_STRING "Delete a File..."
+        PASCAL_STRING "Delete a File..." ; menu item
 label_eject:
-        PASCAL_STRING "Eject Disk"
+        PASCAL_STRING "Eject Disk" ; menu item
 label_quit:
-        PASCAL_STRING "Quit"
+        PASCAL_STRING "Quit" ; menu item
 
 label_by_icon:
-        PASCAL_STRING "as Icons"
+        PASCAL_STRING "as Icons" ; menu item
 label_by_name:
-        PASCAL_STRING "by Name"
+        PASCAL_STRING "by Name" ; menu item
 label_by_date:
-        PASCAL_STRING "by Date"
+        PASCAL_STRING "by Date" ; menu item
 label_by_size:
-        PASCAL_STRING "by Size"
+        PASCAL_STRING "by Size" ; menu item
 label_by_type:
-        PASCAL_STRING "by Type"
+        PASCAL_STRING "by Type" ; menu item
 
 label_check_all_drives:
-        PASCAL_STRING "Check All Drives"
+        PASCAL_STRING "Check All Drives" ; menu item
 label_check_drive:
-        PASCAL_STRING "Check Drive"
+        PASCAL_STRING "Check Drive" ; menu item
 label_format_disk:
-        PASCAL_STRING "Format a Disk..."
+        PASCAL_STRING "Format a Disk..." ; menu item
 label_erase_disk:
-        PASCAL_STRING "Erase a Disk..."
+        PASCAL_STRING "Erase a Disk..." ; menu item
 label_disk_copy:
-        PASCAL_STRING "Disk Copy..."
+        PASCAL_STRING "Disk Copy..." ; menu item
 label_lock:
-        PASCAL_STRING "Lock..."
+        PASCAL_STRING "Lock..." ; menu item
 label_unlock:
-        PASCAL_STRING "Unlock..."
+        PASCAL_STRING "Unlock..." ; menu item
 label_get_info:
-        PASCAL_STRING "Get Info"
+        PASCAL_STRING "Get Info" ; menu item
 label_get_size:
-        PASCAL_STRING "Get Size"
+        PASCAL_STRING "Get Size" ; menu item
 label_rename_icon:
-        PASCAL_STRING "Rename..."
+        PASCAL_STRING "Rename..." ; menu item
 
 desktop_menu:
         DEFINE_MENU_BAR 6
@@ -3448,7 +3448,7 @@ str_about9:  PASCAL_STRING .sprintf("Version %d.%d%s",::kDeskTopVersionMajor,::k
 
         ;; "Copy File" dialog strings
 str_copy_title:
-        PASCAL_STRING "Copy..."
+        PASCAL_STRING "Copy..." ; dialog title
 str_copy_copying:
         PASCAL_STRING "Now Copying "
 str_copy_from:
@@ -3460,7 +3460,7 @@ str_copy_remaining:
 
         ;; "Move File" dialog strings
 str_move_title:
-        PASCAL_STRING "Move..."
+        PASCAL_STRING "Move..." ; dialog title
 str_move_moving:
         PASCAL_STRING "Now Moving "
 str_move_remaining:
@@ -3478,7 +3478,7 @@ copy_file_count_pos2:
 
         ;; "Delete" dialog strings
 str_delete_title:
-        PASCAL_STRING "Delete..."
+        PASCAL_STRING "Delete..." ; dialog title
 str_delete_ok:
         PASCAL_STRING "Click OK to delete:"
 str_ok_empty:
@@ -3501,7 +3501,7 @@ delete_file_count_pos2:
 
         ;; "New Folder" dialog strings
 str_new_folder_title:
-        PASCAL_STRING "New Folder..."
+        PASCAL_STRING "New Folder..." ; dialog title
 str_in_colon:
         PASCAL_STRING "in:"
 str_enter_folder_name:
@@ -3509,7 +3509,7 @@ str_enter_folder_name:
 
         ;; "Rename Icon" dialog strings
 str_rename_title:
-        PASCAL_STRING "Rename..."
+        PASCAL_STRING "Rename..." ; dialog title
 str_rename_old:
         PASCAL_STRING "Rename: "
 str_rename_new:
@@ -3517,7 +3517,7 @@ str_rename_new:
 
         ;; "Get Info" dialog strings
 str_info_title:
-        PASCAL_STRING "Get Info"
+        PASCAL_STRING "Get Info" ; dialog title
 str_info_name:
         PASCAL_STRING "Name"
 str_info_locked:
@@ -3545,22 +3545,33 @@ files_pos2:  DEFINE_POINT 185,kDialogLabelRow4
 unlock_remaining_count_pos:  DEFINE_POINT 205,kDialogLabelRow4
 lock_remaining_count_pos: DEFINE_POINT 195,kDialogLabelRow4
 
-str_format_disk:  PASCAL_STRING "Format a Disk..."
-str_select_format:  PASCAL_STRING "Select the location where the disk is to be formatted"
-str_new_volume:  PASCAL_STRING "Enter the name of the new volume:"
-str_confirm_format:  PASCAL_STRING "Do you want to format "
-str_formatting:  PASCAL_STRING "Formatting the disk...."
-str_formatting_error:  PASCAL_STRING "Formatting error. Check drive, then click OK to try again."
+str_format_disk:
+        PASCAL_STRING "Format a Disk..." ; dialog title
+str_select_format:
+        PASCAL_STRING "Select the location where the disk is to be formatted"
+str_new_volume:
+        PASCAL_STRING "Enter the name of the new volume:"
+str_confirm_format:
+        PASCAL_STRING "Do you want to format "
+str_formatting:
+        PASCAL_STRING "Formatting the disk...."
+str_formatting_error:
+        PASCAL_STRING "Formatting error. Check drive, then click OK to try again."
 
-str_erase_disk:  PASCAL_STRING "Erase a Disk..."
-str_select_erase:  PASCAL_STRING "Select the location where the disk is to be erased"
-str_confirm_erase:  PASCAL_STRING "Do you want to erase "
-str_erasing:  PASCAL_STRING "Erasing the disk...."
-str_erasing_error:  PASCAL_STRING "Erasing error. Check drive, then click OK to try again."
+str_erase_disk:
+        PASCAL_STRING "Erase a Disk..." ; dialog title
+str_select_erase:
+        PASCAL_STRING "Select the location where the disk is to be erased"
+str_confirm_erase:
+        PASCAL_STRING "Do you want to erase "
+str_erasing:
+        PASCAL_STRING "Erasing the disk...."
+str_erasing_error:
+        PASCAL_STRING "Erasing error. Check drive, then click OK to try again."
 
         ;; "Unlock File" dialog strings
 str_unlock_title:
-        PASCAL_STRING "Unlock..."
+        PASCAL_STRING "Unlock..." ; dialog title
 str_unlock_ok:
         PASCAL_STRING "Click OK to unlock "
 str_unlock_remaining:
@@ -3568,7 +3579,7 @@ str_unlock_remaining:
 
         ;; "Lock File" dialog strings
 str_lock_title:
-        PASCAL_STRING "Lock..."
+        PASCAL_STRING "Lock..." ; dialog title
 str_lock_ok:
         PASCAL_STRING "Click OK to lock "
 str_lock_remaining:
@@ -3576,14 +3587,14 @@ str_lock_remaining:
 
         ;; "Get Size" dialog strings
 str_size_title:
-        PASCAL_STRING "Get Size"
+        PASCAL_STRING "Get Size" ; dialog title
 str_size_number:
         PASCAL_STRING "Number of files"
 str_size_blocks:
         PASCAL_STRING "Space used on disk"
 
 str_download:
-        PASCAL_STRING "Copy to RAMCard..."
+        PASCAL_STRING "Copy to RAMCard..." ; dialog title
 
 str_ramcard_full:
         PASCAL_STRING "The RAMCard is full. The copy was not completed."

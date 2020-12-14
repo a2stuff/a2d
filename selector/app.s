@@ -130,9 +130,9 @@ str_apple:
         PASCAL_STRING kGlyphSolidApple ; do not localize
 
 str_file:
-        PASCAL_STRING "File"
+        PASCAL_STRING "File"    ; menu bar item
 str_startup:
-        PASCAL_STRING "Startup"
+        PASCAL_STRING "Startup" ; menu bar item
 
 str_a2desktop:
         PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d", ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; do not localize
@@ -140,30 +140,30 @@ str_a2desktop:
 str_blank:
         PASCAL_STRING " "       ; do not localize
 str_copyright1:
-        PASCAL_STRING "Copyright Apple Computer Inc., 1986"
+        PASCAL_STRING "Copyright Apple Computer Inc., 1986" ; menu item
 str_copyright2:
-        PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
+        PASCAL_STRING "Copyright Version Soft, 1985 - 1986" ; menu item
 str_copyright3:
-        PASCAL_STRING "All Rights reserved"
+        PASCAL_STRING "All Rights reserved" ; menu item
 
 str_run_a_program:
-        PASCAL_STRING "Run a Program..."
+        PASCAL_STRING "Run a Program..." ; menu item
 
 
 str_slot_x1:
-        PASCAL_STRING "Slot #"
+        PASCAL_STRING "Slot #"  ; menu item
 str_slot_x2:
-        PASCAL_STRING "Slot #"
+        PASCAL_STRING "Slot #"  ; menu item
 str_slot_x3:
-        PASCAL_STRING "Slot #"
+        PASCAL_STRING "Slot #"  ; menu item
 str_slot_x4:
-        PASCAL_STRING "Slot #"
+        PASCAL_STRING "Slot #"  ; menu item
 str_slot_x5:
-        PASCAL_STRING "Slot #"
+        PASCAL_STRING "Slot #"  ; menu item
 str_slot_x6:
-        PASCAL_STRING "Slot #"
+        PASCAL_STRING "Slot #"  ; menu item
 str_slot_x7:
-        PASCAL_STRING "Slot #"
+        PASCAL_STRING "Slot #"  ; menu item
         kStrSlotXOffset = 6
 
 

@@ -97,30 +97,30 @@ menu_facilities:
         ASSERT_RECORD_TABLE_SIZE @items, 2, .sizeof(MGTK::MenuItem)
 
 label_file:
-        PASCAL_STRING "File"
+        PASCAL_STRING "File"    ; menu bar item
 label_facilities:
-        PASCAL_STRING "Facilities"
+        PASCAL_STRING "Facilities" ; menu bar item
 
 label_desktop:
-        PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d",::kDeskTopVersionMajor,::kDeskTopVersionMinor)
+        PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d",::kDeskTopVersionMajor,::kDeskTopVersionMinor) ; menu item
 
 label_blank:
         PASCAL_STRING " "       ; do not localize
 label_copyright1:
-        PASCAL_STRING "Copyright Apple Computer Inc., 1986"
+        PASCAL_STRING "Copyright Apple Computer Inc., 1986" ; menu item
 label_copyright2:
-        PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
+        PASCAL_STRING "Copyright Version Soft, 1985 - 1986" ; menu item
 label_rights:
-        PASCAL_STRING "All Rights reserved"
+        PASCAL_STRING "All Rights reserved" ; menu item
 
 label_quit:
-        PASCAL_STRING "Quit"
+        PASCAL_STRING "Quit"    ; menu item
 
 label_quick_copy:
-        PASCAL_STRING "Quick Copy"
+        PASCAL_STRING "Quick Copy" ; menu item
 
 label_disk_copy:
-        PASCAL_STRING "Disk Copy"
+        PASCAL_STRING "Disk Copy" ; menu item
 
 ;;; ============================================================
 

@@ -560,19 +560,14 @@ entry_picker_ok_pos:
 entry_picker_cancel_pos:
         DEFINE_POINT 45,winfo_entry_picker::kHeight-8
 
-        ;; ???
-        .word   130,7,220,19
-
 add_an_entry_label:
-        PASCAL_STRING "Add an Entry..."
+        PASCAL_STRING "Add an Entry..." ; dialog title
 edit_an_entry_label:
-        PASCAL_STRING "Edit an Entry..."
+        PASCAL_STRING "Edit an Entry..." ; dialog title
 delete_an_entry_label:
-        PASCAL_STRING "Delete an Entry..."
+        PASCAL_STRING "Delete an Entry..." ; dialog title
 run_an_entry_label:
-        PASCAL_STRING "Run an Entry..."
-
-LD760:  PASCAL_STRING "Run list"
+        PASCAL_STRING "Run an Entry..." ; dialog title
 
 enter_the_full_pathname_label1:
         PASCAL_STRING "Enter the full pathname of the run list file:"
@@ -665,7 +660,7 @@ str_file_count:                 ; populated with number of files
         PASCAL_STRING " ##,### " ; do not localize
 
 str_kb_suffix:
-        PASCAL_STRING "K"
+        PASCAL_STRING "K"       ; suffix for kilobytes
 
         ;; This location also used as path buffer by ovl_format_erase
 ovl_path_buf:
@@ -761,7 +756,7 @@ textbg2:
         .byte   $7F
 
 copy_a_file_label:
-        PASCAL_STRING "Copy a File..."
+        PASCAL_STRING "Copy a File..." ; dialog title
 
 source_filename_label:
         PASCAL_STRING "Source filename:"
@@ -779,7 +774,7 @@ input2_rect:   DEFINE_RECT_SZ 28, 136, kCommonInputWidth, kCommonInputHeight
 input2_textpos:      DEFINE_POINT 30,146
 
 delete_a_file_label:
-        PASCAL_STRING "Delete a File..."
+        PASCAL_STRING "Delete a File..." ; dialog title
 
 file_to_delete_label:
         PASCAL_STRING "File to delete:"
@@ -1096,8 +1091,6 @@ startup_menu:
         DEFINE_MENU_ITEM startup_menu_item_7
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeStartup, .sizeof(MGTK::MenuItem)
 
-str_all:PASCAL_STRING "All"
-
 ;;; ============================================================
 
 ;;; Device Names (populated at startup using templates in init.s)
@@ -1113,13 +1106,13 @@ device_name_table:
         .endrepeat
 
         ;; These strings are padded to be 8 bytes long to ease indexing
-startup_menu_item_1:    PASCAL_STRING "Slot #", 7
-startup_menu_item_2:    PASCAL_STRING "Slot #", 7
-startup_menu_item_3:    PASCAL_STRING "Slot #", 7
-startup_menu_item_4:    PASCAL_STRING "Slot #", 7
-startup_menu_item_5:    PASCAL_STRING "Slot #", 7
-startup_menu_item_6:    PASCAL_STRING "Slot #", 7
-startup_menu_item_7:    PASCAL_STRING "Slot #", 7
+startup_menu_item_1:    PASCAL_STRING "Slot #", 7 ; menu item
+startup_menu_item_2:    PASCAL_STRING "Slot #", 7 ; menu item
+startup_menu_item_3:    PASCAL_STRING "Slot #", 7 ; menu item
+startup_menu_item_4:    PASCAL_STRING "Slot #", 7 ; menu item
+startup_menu_item_5:    PASCAL_STRING "Slot #", 7 ; menu item
+startup_menu_item_6:    PASCAL_STRING "Slot #", 7 ; menu item
+startup_menu_item_7:    PASCAL_STRING "Slot #", 7 ; menu item
         ASSERT_RECORD_TABLE_SIZE startup_menu_item_1, 7, 8
         kStartupMenuItemSlotOffset = 6
 
@@ -1144,13 +1137,13 @@ selector_menu:
         kMenuItemIdSelectorRun       = 4
 
 label_add:
-        PASCAL_STRING "Add an Entry..."
+        PASCAL_STRING "Add an Entry..." ; menu item
 label_edit:
-        PASCAL_STRING "Edit an Entry..."
+        PASCAL_STRING "Edit an Entry..." ; menu item
 label_del:
-        PASCAL_STRING "Delete an Entry..."
+        PASCAL_STRING "Delete an Entry..." ; menu item
 label_run:
-        PASCAL_STRING "Run an Entry..."
+        PASCAL_STRING "Run an Entry..." ; menu item
 
 kDAMenuItemSize = 19            ; length (1) + filename (15) + folder glyphs prefix (3)
 
@@ -1166,7 +1159,7 @@ apple_menu:
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
 
 label_about:
-        PASCAL_STRING "About Apple II DeskTop"
+        PASCAL_STRING "About Apple II DeskTop" ; menu item
 
 desk_acc_names:
         .res    kMaxDeskAccCount * kDAMenuItemSize, 0
@@ -1309,10 +1302,10 @@ header_line_left: DEFINE_POINT 0, 0, header_line_left
 header_line_right:    DEFINE_POINT 0, 0, header_line_right
 
 str_k_in_disk:
-        PASCAL_STRING "K in disk"
+        PASCAL_STRING "K in disk" ; suffix for disk space used
 
 str_k_available:
-        PASCAL_STRING "K available"
+        PASCAL_STRING "K available" ; suffix for disk space available
 
 str_from_int:                   ; populated by int_to_string
         PASCAL_STRING "000,000" ; 6 digits plus thousands separator - do not localize
