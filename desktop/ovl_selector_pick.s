@@ -525,11 +525,11 @@ L94A8:  .byte   0
 ;;; ============================================================
 
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_ok_pos
-        param_call main::draw_text1, aux::str_ok_label
+        param_call main::DrawString, aux::str_ok_label
         rts
 
 L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_cancel_pos
-        param_call main::draw_text1, aux::str_cancel_label
+        param_call main::DrawString, aux::str_cancel_label
         rts
 
 L94CB:  stax    $06

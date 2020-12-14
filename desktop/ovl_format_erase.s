@@ -81,7 +81,7 @@ L08B7:  lda     path_buf1
         param_call main::draw_dialog_label, 3, aux::str_confirm_format
         lda     L09D7
         jsr     L1A2D
-        param_call main::draw_text1, ovl_path_buf
+        param_call main::DrawString, ovl_path_buf
 L0902:  jsr     main::prompt_input_loop
         bmi     L0902
         beq     L090C
@@ -212,7 +212,7 @@ L0A7A:  lda     path_buf1
         lda     L0B46
         and     #$F0
         jsr     L1A2D
-        param_call main::draw_text1, ovl_path_buf
+        param_call main::DrawString, ovl_path_buf
 L0AC7:  jsr     main::prompt_input_loop
         bmi     L0AC7
         beq     L0AD1

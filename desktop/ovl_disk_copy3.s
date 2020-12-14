@@ -545,7 +545,7 @@ LD687:  lda     current_drive_selection
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D255
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_source
-        param_call draw_text, str_select_destination
+        param_call DrawString, str_select_destination
         jsr     LE559
         jsr     LE2B1
 LD6E6:  jsr     LD986
@@ -715,7 +715,7 @@ LD852:  ldx     dest_drive_index
         jmp     LD61C
 
 LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
-        param_call draw_text, str_formatting
+        param_call DrawString, str_formatting
         jsr     disk_copy_overlay4_format_device
         bcc     LD8A9
         cmp     #ERR_WRITE_PROTECTED
@@ -1464,11 +1464,11 @@ draw_buttons:
         jsr     draw_ok_label
         jsr     draw_read_drive_label
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_slot_drive_name
-        param_call draw_text, str_slot_drive_name
+        param_call DrawString, str_slot_drive_name
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_source
-        param_call draw_text, str_select_source
+        param_call DrawString, str_select_source
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_quit
-        param_call draw_text, str_select_quit
+        param_call DrawString, str_select_quit
 
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport
@@ -1476,19 +1476,19 @@ draw_buttons:
 
 draw_ok_label:
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_ok_label
-        param_call draw_text, str_ok_label
+        param_call DrawString, str_ok_label
         rts
 
 draw_read_drive_label:
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_read_drive
-        param_call draw_text, str_read_drive
+        param_call DrawString, str_read_drive
         rts
 
 .endproc
 
 ;;; ============================================================
 
-.proc draw_text
+.proc DrawString
         ptr := $0A
 
         stax    ptr
@@ -1870,7 +1870,7 @@ LE318:  .addr   0
         clc
         adc     #'0'
         sta     str_s + 1
-        param_call draw_text, str_s
+        param_call DrawString, str_s
 
         ;; Drive
         lda     #40
@@ -1884,7 +1884,7 @@ LE318:  .addr   0
         clc
         adc     #'1'
         sta     str_d + 1
-        param_call draw_text, str_d
+        param_call DrawString, str_d
 
         ;; Name
         lda     #65
@@ -1906,7 +1906,7 @@ LE318:  .addr   0
         jsr     adjust_case
         lda     $06
         ldx     $07
-        jsr     draw_text
+        jsr     DrawString
         rts
 
 device_index:
@@ -2104,13 +2104,13 @@ LE483:  .byte   0
 LE491:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_writing
-        param_call draw_text, str_writing
+        param_call DrawString, str_writing
         rts
 
 LE4A8:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_reading
-        param_call draw_text, str_reading
+        param_call DrawString, str_reading
         rts
 
 LE4BF:  lda     winfo_dialog::window_id
@@ -2123,20 +2123,20 @@ LE4BF:  lda     winfo_dialog::window_id
         lda     block_count_table,y
         jsr     number_to_string
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_source
-        param_call draw_text, str_blocks_to_transfer
-        param_call draw_text, str_number
+        param_call DrawString, str_blocks_to_transfer
+        param_call DrawString, str_number
         rts
 
 LE4EC:  jsr     LE522
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_blocks_read
-        param_call draw_text, str_blocks_read
-        param_call draw_text, str_number
+        param_call DrawString, str_blocks_read
+        param_call DrawString, str_number
         rts
 
 LE507:  jsr     LE522
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_blocks_written
-        param_call draw_text, str_blocks_written
-        param_call draw_text, str_number
+        param_call DrawString, str_blocks_written
+        param_call DrawString, str_number
         rts
 
 LE522:  lda     winfo_dialog::window_id
@@ -2167,7 +2167,7 @@ LE558:  .byte   0
 LE559:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_source2
-        param_call draw_text, str_source
+        param_call DrawString, str_source
         ldx     source_drive_index
         lda     drive_unitnum_table,x
         and     #$70
@@ -2188,10 +2188,10 @@ LE559:  lda     winfo_dialog::window_id
         adc     #'1'
         sta     str_d + 1
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_slot_drive
-        param_call draw_text, str_slot
-        param_call draw_text, str_s
-        param_call draw_text, str_drive
-        param_call draw_text, str_d
+        param_call DrawString, str_slot
+        param_call DrawString, str_s
+        param_call DrawString, str_drive
+        param_call DrawString, str_d
         bit     LD44D
         bpl     LE5C6
         bvc     LE5C5
@@ -2200,19 +2200,19 @@ LE559:  lda     winfo_dialog::window_id
         beq     LE5C6
 LE5C5:  rts
 
-LE5C6:  param_call draw_text, str_2_spaces
+LE5C6:  param_call DrawString, str_2_spaces
         ldx     $1300
 LE5D0:  lda     $1300,x
         sta     LD43A,x
         dex
         bpl     LE5D0
-        param_call draw_text, LD43A
+        param_call DrawString, LD43A
         rts
 
 LE5E1:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_destination
-        param_call draw_text, str_destination
+        param_call DrawString, str_destination
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         and     #$70
@@ -2232,10 +2232,10 @@ LE5E1:  lda     winfo_dialog::window_id
         adc     #'1'
         sta     str_d + 1
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_slot_drive2
-        param_call draw_text, str_slot
-        param_call draw_text, str_s
-        param_call draw_text, str_drive
-        param_call draw_text, str_d
+        param_call DrawString, str_slot
+        param_call DrawString, str_s
+        param_call DrawString, str_drive
+        param_call DrawString, str_d
         rts
 
 LE63F:  lda     winfo_dialog::window_id
@@ -2243,17 +2243,17 @@ LE63F:  lda     winfo_dialog::window_id
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_disk_copy
         bit     LD44D
         bmi     LE65B
-        param_call draw_text, str_prodos_disk_copy
+        param_call DrawString, str_prodos_disk_copy
         rts
 
 LE65B:  bvs     LE665
-        param_call draw_text, str_dos33_disk_copy
+        param_call DrawString, str_dos33_disk_copy
         rts
 
 LE665:  lda     LD44D
         and     #$0F
         bne     LE673
-        param_call draw_text, str_pascal_disk_copy
+        param_call DrawString, str_pascal_disk_copy
 LE673:  rts
 
 LE674:  lda     LD44D
@@ -2268,7 +2268,7 @@ LE693:  rts
 LE694:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_escape_stop_copy
-        param_call draw_text, str_escape_stop_copy
+        param_call DrawString, str_escape_stop_copy
         rts
 
 LE6AB:  lda     winfo_dialog::window_id
@@ -2284,7 +2284,7 @@ LE6BB:  dec     LE6FB
         beq     LE6DE
 LE6D5:  MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_black
 LE6DE:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_escape_stop_copy
-        param_call draw_text, str_escape_stop_copy
+        param_call DrawString, str_escape_stop_copy
         jmp     LE6BB
 
 LE6F1:  MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
@@ -2315,13 +2315,13 @@ LE71A:  jsr     disk_copy_overlay4_bell
         lda     LE765
         bne     LE74B
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_reading
-        param_call draw_text, str_error_reading
-        param_call draw_text, str_number
+        param_call DrawString, str_error_reading
+        param_call DrawString, str_number
         return  #$00
 
 LE74B:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_writing
-        param_call draw_text, str_error_writing
-        param_call draw_text, str_number
+        param_call DrawString, str_error_writing
+        param_call DrawString, str_number
         return  #$00
 
 LE765:  .byte   0
@@ -2655,7 +2655,7 @@ LEC8C:  jsr     set_pen_xor
         bpl     draw_ok_btn
         MGTK_RELAY_CALL2 MGTK::FrameRect, cancel_rect
         MGTK_RELAY_CALL2 MGTK::MoveTo, cancel_pos
-        param_call draw_text, str_cancel_btn
+        param_call DrawString, str_cancel_btn
         bit     message_flags
         bvs     draw_ok_btn
         lda     message_flags
@@ -2664,26 +2664,26 @@ LEC8C:  jsr     set_pen_xor
 
         MGTK_RELAY_CALL2 MGTK::FrameRect, yes_rect
         MGTK_RELAY_CALL2 MGTK::MoveTo, yes_pos
-        param_call draw_text, str_yes_btn
+        param_call DrawString, str_yes_btn
 
         MGTK_RELAY_CALL2 MGTK::FrameRect, no_rect
         MGTK_RELAY_CALL2 MGTK::MoveTo, no_pos
-        param_call draw_text, str_no_btn
+        param_call DrawString, str_no_btn
         jmp     LED23
 
 draw_try_again_btn:
         MGTK_RELAY_CALL2 MGTK::FrameRect, ok_try_again_rect
         MGTK_RELAY_CALL2 MGTK::MoveTo, ok_try_again_pos
-        param_call draw_text, str_try_again_btn
+        param_call DrawString, str_try_again_btn
         jmp     LED23
 
 draw_ok_btn:
         MGTK_RELAY_CALL2 MGTK::FrameRect, ok_try_again_rect
         MGTK_RELAY_CALL2 MGTK::MoveTo, ok_try_again_pos
-        param_call draw_text, str_ok_btn
+        param_call DrawString, str_ok_btn
 
 LED23:  MGTK_RELAY_CALL2 MGTK::MoveTo, LE93D
-        param_call_indirect draw_text, LE942
+        param_call_indirect DrawString, LE942
         ;; fall through
 
 ;;; ============================================================

@@ -10130,8 +10130,8 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ldax    #parsed_date
         jsr     make_time_string
 
-        param_call draw_text1, str_time
-        param_jump draw_text1, str_4_spaces ; in case it got shorter
+        param_call DrawString, str_time
+        param_jump DrawString, str_4_spaces ; in case it got shorter
 .endproc
 
 ;;; ============================================================
@@ -13911,8 +13911,8 @@ do1:    ldy     #1
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
-        param_call draw_text1, str_file_count
-        param_call draw_text1, str_files
+        param_call DrawString, str_file_count
+        param_call DrawString, str_files
         rts
 
         ;; CopyDialogLifecycle::exists
@@ -13934,7 +13934,7 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call draw_text1, path_buf0
+        param_call DrawString, path_buf0
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$05
         lda     (ptr),y
@@ -13945,9 +13945,9 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_dest_file_pos
-        param_call draw_text1, path_buf1
+        param_call DrawString, path_buf1
         param_call MGTK_RELAY, MGTK::MoveTo, aux::copy_file_count_pos2
-        param_call draw_text1, str_file_count
+        param_call DrawString, str_file_count
         rts
 
         ;; CopyDialogLifecycle::close
@@ -14024,8 +14024,8 @@ do1:    ldy     #1
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
-        param_call draw_text1, str_file_count
-        param_call draw_text1, str_files
+        param_call DrawString, str_file_count
+        param_call DrawString, str_files
         rts
 
 do2:    ldy     #1
@@ -14045,9 +14045,9 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call draw_text1, path_buf0
+        param_call DrawString, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
-        param_call draw_text1, str_file_count
+        param_call DrawString, str_file_count
         rts
 
 do3:    jsr     close_prompt_dialog
@@ -14133,7 +14133,7 @@ do1:    ldy     #1
         copy    #kValueLeft, dialog_label_pos
         dec     str_file_count  ; remove trailing space
         param_call draw_dialog_label, 2, str_file_count
-        param_call draw_text1, str_kb_suffix
+        param_call DrawString, str_kb_suffix
         rts
 
 do3:    jsr     close_prompt_dialog
@@ -14202,8 +14202,8 @@ do1:    ldy     #1
         jmp     LAD5D
 
 LAD54:  MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_file_count_pos2
-LAD5D:  param_call draw_text1, str_file_count
-        param_call draw_text1, str_files
+LAD5D:  param_call DrawString, str_file_count
+        param_call DrawString, str_files
         rts
 
         ;; DeleteDialogLifecycle::show
@@ -14224,9 +14224,9 @@ do3:    ldy     #1
         stx     $06
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call draw_text1, path_buf0
+        param_call DrawString, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
-        param_call draw_text1, str_file_count
+        param_call DrawString, str_file_count
         rts
 
         ;; DeleteDialogLifecycle::confirm
@@ -14502,9 +14502,9 @@ do1:    ldy     #1
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos2
-        param_call draw_text1, str_file_count
+        param_call DrawString, str_file_count
         MGTK_RELAY_CALL MGTK::MoveTo, aux::files_pos2
-        param_call draw_text1, str_files
+        param_call DrawString, str_files
         rts
 
         ;; LockDialogLifecycle::operation
@@ -14525,9 +14525,9 @@ do3:    ldy     #1
         stx     $06
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call draw_text1, path_buf0
+        param_call DrawString, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
-        param_call draw_text1, str_file_count
+        param_call DrawString, str_file_count
         rts
 
         ;; LockDialogLifecycle::loop
@@ -14588,9 +14588,9 @@ do1:    ldy     #1
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos2
-        param_call draw_text1, str_file_count
+        param_call DrawString, str_file_count
         MGTK_RELAY_CALL MGTK::MoveTo, aux::files_pos
-        param_call draw_text1, str_files
+        param_call DrawString, str_files
         rts
 
         ;; LockDialogLifecycle::operation
@@ -14611,9 +14611,9 @@ do3:    ldy     #1
         stx     $06
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call draw_text1, path_buf0
+        param_call DrawString, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
-        param_call draw_text1, str_file_count
+        param_call DrawString, str_file_count
         rts
 
         ;; LockDialogLifecycle::loop
@@ -15064,7 +15064,7 @@ skip:   ldx     #0
         stax    dialog_label_pos::ycoord
         add16   dialog_label_pos::ycoord, dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
-        param_call_indirect draw_text1, ptr
+        param_call_indirect DrawString, ptr
         ldx     dialog_label_pos
         copy    #kDialogLabelDefaultX,dialog_label_pos::xcoord ; restore original x coord
         rts
@@ -15074,27 +15074,27 @@ skip:   ldx     #0
 
 draw_ok_label:
         MGTK_RELAY_CALL MGTK::MoveTo, aux::ok_label_pos
-        param_call draw_text1, aux::str_ok_label
+        param_call DrawString, aux::str_ok_label
         rts
 
 draw_cancel_label:
         MGTK_RELAY_CALL MGTK::MoveTo, aux::cancel_label_pos
-        param_call draw_text1, aux::str_cancel_label
+        param_call DrawString, aux::str_cancel_label
         rts
 
 draw_yes_label:
         MGTK_RELAY_CALL MGTK::MoveTo, aux::yes_label_pos
-        param_call draw_text1, aux::str_yes_label
+        param_call DrawString, aux::str_yes_label
         rts
 
 draw_no_label:
         MGTK_RELAY_CALL MGTK::MoveTo, aux::no_label_pos
-        param_call draw_text1, aux::str_no_label
+        param_call DrawString, aux::str_no_label
         rts
 
 draw_all_label:
         MGTK_RELAY_CALL MGTK::MoveTo, aux::all_label_pos
-        param_call draw_text1, aux::str_all_label
+        param_call DrawString, aux::str_all_label
         rts
 
 draw_yes_no_all_cancel_buttons:
@@ -15147,7 +15147,7 @@ erase_ok_button:
 
 ;;; ============================================================
 
-.proc draw_text1
+.proc DrawString
         params := $6
         textptr := $6
         textlen := $8
@@ -15421,9 +15421,9 @@ draw:   copy16  #str_insertion_point+1, textptr
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
-        param_call draw_text1, path_buf1
-        param_call draw_text1, path_buf2
-        param_call draw_text1, str_2_spaces
+        param_call DrawString, path_buf1
+        param_call DrawString, path_buf2
+        param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
 done:   rts
@@ -15611,8 +15611,8 @@ buf1_width:
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
-        param_call draw_text1, str_1_char
-        param_call draw_text1, path_buf2
+        param_call DrawString, str_1_char
+        param_call DrawString, path_buf2
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         rts
@@ -15637,8 +15637,8 @@ param:  .byte   0
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
-        param_call draw_text1, path_buf2
-        param_call draw_text1, str_2_spaces
+        param_call DrawString, path_buf2
+        param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         rts
@@ -15681,8 +15681,8 @@ finish: ldx     path_buf1
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
-        param_call draw_text1, path_buf2
-        param_call draw_text1, str_2_spaces
+        param_call DrawString, path_buf2
+        param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         rts
@@ -15721,9 +15721,9 @@ finish: dec     path_buf2
 
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
-        param_call draw_text1, path_buf1
-        param_call draw_text1, path_buf2
-        param_call draw_text1, str_2_spaces
+        param_call DrawString, path_buf1
+        param_call DrawString, path_buf2
+        param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         rts
