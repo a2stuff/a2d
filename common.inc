@@ -165,3 +165,10 @@ kGlyphCheckmark         = $1D
         .ident(.sprintf("%s_button_label", .string(ident))) := *
         PASCAL_STRING {label}
 .endmacro
+
+.macro DEFINE_LABEL ident, label, xpos, ypos
+        .ident(.sprintf("%s_label_pos", .string(ident))) := *
+        DEFINE_POINT (xpos), (ypos)
+        .ident(.sprintf("%s_label_str", .string(ident))) := *
+        PASCAL_STRING {label}
+.endmacro

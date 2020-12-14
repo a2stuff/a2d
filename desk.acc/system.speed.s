@@ -80,10 +80,7 @@ kButtonInsetX   = 25
         DEFINE_BUTTON fast, {"Fast           F"}, kDAWidth - kButtonWidth - kButtonInsetX, 28
         DEFINE_BUTTON ok,   {"OK            ",kGlyphReturn}, kDAWidth - kButtonWidth - kButtonInsetX, 52
 
-title_pos:
-        DEFINE_POINT (kDAWidth - 70)/ 2, 18
-title_label:
-        PASCAL_STRING "System Speed"
+        DEFINE_LABEL title, "System Speed", (kDAWidth - 70)/ 2, 18
 
 ;;; ============================================================
 
@@ -193,8 +190,8 @@ grafport:       .tag MGTK::GrafPort
         MGTK_CALL MGTK::FrameRect, frame_rect1
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
-        MGTK_CALL MGTK::MoveTo, title_pos
-        param_call DrawString, title_label
+        MGTK_CALL MGTK::MoveTo, title_label_pos
+        param_call DrawString, title_label_str
 
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos

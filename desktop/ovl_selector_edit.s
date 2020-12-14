@@ -115,20 +115,22 @@ L711D:  param_call file_dialog::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         param_call file_dialog::L5E57, enter_the_full_pathname_label1
         param_call file_dialog::L5E6F, enter_the_name_to_appear_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_add_a_new_entry_to_label
-        param_call file_dialog::draw_string, add_a_new_entry_to_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_run_list_label
-        param_call file_dialog::draw_string, run_list_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_other_run_list_label
-        param_call file_dialog::draw_string, other_run_list_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_down_load_label
-        param_call file_dialog::draw_string, down_load_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_at_first_boot_label
-        param_call file_dialog::draw_string, at_first_boot_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_at_first_use_label
-        param_call file_dialog::draw_string, at_first_use_label
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_never_label
-        param_call file_dialog::draw_string, never_label
+
+        MGTK_RELAY_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
+        param_call file_dialog::draw_string, add_a_new_entry_to_label_str
+        MGTK_RELAY_CALL MGTK::MoveTo, run_list_label_pos
+        param_call file_dialog::draw_string, run_list_label_str
+        MGTK_RELAY_CALL MGTK::MoveTo, other_run_list_label_pos
+        param_call file_dialog::draw_string, other_run_list_label_str
+        MGTK_RELAY_CALL MGTK::MoveTo, down_load_label_pos
+        param_call file_dialog::draw_string, down_load_label_str
+        MGTK_RELAY_CALL MGTK::MoveTo, at_first_boot_label_pos
+        param_call file_dialog::draw_string, at_first_boot_label_str
+        MGTK_RELAY_CALL MGTK::MoveTo, at_first_use_label_pos
+        param_call file_dialog::draw_string, at_first_use_label_str
+        MGTK_RELAY_CALL MGTK::MoveTo, never_label_pos
+        param_call file_dialog::draw_string, never_label_str
+
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, rect_run_list_radiobtn
         MGTK_RELAY_CALL MGTK::FrameRect, rect_other_run_list_radiobtn

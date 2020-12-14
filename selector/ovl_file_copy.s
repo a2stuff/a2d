@@ -771,10 +771,7 @@ rect_frame1:
 rect_frame2:
         DEFINE_RECT_INSET 5, 3, winfo::kWidth, winfo::kHeight
 
-pos_download:
-        DEFINE_POINT 116, 16
-str_download:
-        PASCAL_STRING "Copying to RAMCard..."
+        DEFINE_LABEL download, "Copying to RAMCard...", 116, 16
 
 pos_copying:    DEFINE_POINT 20, 32
 pt2:    DEFINE_POINT 20, 45
@@ -826,8 +823,8 @@ str_spaces:
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::FrameRect, rect_frame1
         MGTK_CALL MGTK::FrameRect, rect_frame2
-        MGTK_CALL MGTK::MoveTo, pos_download
-        param_call app::DrawString, str_download
+        MGTK_CALL MGTK::MoveTo, download_label_pos
+        param_call app::DrawString, download_label_str
         rts
 .endproc
 

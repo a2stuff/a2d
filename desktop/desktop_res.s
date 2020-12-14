@@ -579,20 +579,13 @@ enter_the_full_pathname_label1:
 enter_the_name_to_appear_label:
         PASCAL_STRING "Enter the name (14 characters max)  you wish to appear in the run list"
 
-add_a_new_entry_to_label:
-        PASCAL_STRING "Add a new entry to the:"
-run_list_label:
-        PASCAL_STRING {kGlyphOpenApple,"1 Run list"}
-other_run_list_label:
-        PASCAL_STRING {kGlyphOpenApple,"2 Other Run list"}
-down_load_label:
-        PASCAL_STRING "Copy to RAMCard:"
-at_first_boot_label:
-        PASCAL_STRING {kGlyphOpenApple,"3 at first boot"}
-at_first_use_label:
-        PASCAL_STRING {kGlyphOpenApple,"4 at first use"}
-never_label:
-        PASCAL_STRING {kGlyphOpenApple,"5 never"}
+        DEFINE_LABEL add_a_new_entry_to, "Add a new entry to the:",            343, 39
+        DEFINE_LABEL run_list,           {kGlyphOpenApple,"1 Run list"},       363, 48
+        DEFINE_LABEL other_run_list,     {kGlyphOpenApple,"2 Other Run list"}, 363, 57
+        DEFINE_LABEL down_load,          "Copy to RAMCard:",                   343, 73
+        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,"3 at first boot"},  363, 82
+        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,"4 at first use"},   363, 91
+        DEFINE_LABEL never,              {kGlyphOpenApple,"5 never"},          363,100
 
 enter_the_full_pathname_label2:
         PASCAL_STRING "Enter the full pathname of the run list file:"
@@ -700,20 +693,6 @@ selected_index:                 ; $FF if none
 
 LD921:  .byte   0
 
-pos_add_a_new_entry_to_label:
-        DEFINE_POINT 343,39
-pos_run_list_label:
-        DEFINE_POINT 363,48
-pos_other_run_list_label:
-        DEFINE_POINT 363,57
-pos_down_load_label:
-        DEFINE_POINT 343,73
-pos_at_first_boot_label:
-        DEFINE_POINT 363,82
-pos_at_first_use_label:
-        DEFINE_POINT 363,91
-pos_never_label:
-        DEFINE_POINT 363,100
 
 kRadioButtonWidth = 10
 kRadioButtonHeight = 6
@@ -769,8 +748,7 @@ dialog_sep_end:
 
         .byte   $81,$D3,$00
 
-disk_label_pos:
-        DEFINE_POINT   28,25
+        DEFINE_LABEL disk, " Disk: ", 28,25
 
 input1_label_pos:
         DEFINE_POINT   28,112
@@ -781,9 +759,6 @@ textbg1:
         .byte   $00
 textbg2:
         .byte   $7F
-
-disk_label:
-        PASCAL_STRING " Disk: "
 
 copy_a_file_label:
         PASCAL_STRING "Copy a File..."

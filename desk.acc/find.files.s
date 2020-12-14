@@ -963,8 +963,8 @@ ctlmax:         .byte   0
 frame_rect1:    DEFINE_RECT_INSET 4, 2, kDAWidth, kDAHeight
 frame_rect2:    DEFINE_RECT_INSET 5, 3, kDAWidth, kDAHeight
 
-find_label_textpos: DEFINE_POINT 20, 20
-find_label:         PASCAL_STRING "Find:"
+        DEFINE_LABEL find, "Find:", 20, 20
+
 input_rect:         DEFINE_RECT 55, 10, kDAWidth-250, 21
 input_textpos:      DEFINE_POINT 60, 20
 
@@ -977,14 +977,8 @@ input_textpos:      DEFINE_POINT 60, 20
         DEFINE_RECT 0, 0, 358, 100
 .endparams
 
-
-search_button_rect:    DEFINE_RECT_SZ kDAWidth-235, 10, kButtonWidth, kButtonHeight
-search_button_textpos: DEFINE_POINT kDAWidth-235+5, 20
-search_button_label:   PASCAL_STRING {"Search         ",kGlyphReturn}
-
-cancel_button_rect:    DEFINE_RECT_SZ kDAWidth-120, 10, kButtonWidth, kButtonHeight
-cancel_button_textpos: DEFINE_POINT kDAWidth-120+5, 20
-cancel_button_label:   PASCAL_STRING "Cancel        Esc"
+        DEFINE_BUTTON search, {"Search         ",kGlyphReturn}, kDAWidth-235, 10
+        DEFINE_BUTTON cancel,  "Cancel        Esc",             kDAWidth-120, 10
 
 penxor: .byte   MGTK::penXOR
 
@@ -1634,16 +1628,16 @@ done:   jmp     input_loop
         MGTK_CALL MGTK::FrameRect, frame_rect1
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
-        MGTK_CALL MGTK::MoveTo, find_label_textpos
-        param_call draw_string, find_label
+        MGTK_CALL MGTK::MoveTo, find_label_pos
+        param_call draw_string, find_label_str
         MGTK_CALL MGTK::FrameRect, input_rect
 
         MGTK_CALL MGTK::FrameRect, search_button_rect
-        MGTK_CALL MGTK::MoveTo, search_button_textpos
+        MGTK_CALL MGTK::MoveTo, search_button_pos
         param_call draw_string, search_button_label
 
         MGTK_CALL MGTK::FrameRect, cancel_button_rect
-        MGTK_CALL MGTK::MoveTo, cancel_button_textpos
+        MGTK_CALL MGTK::MoveTo, cancel_button_pos
         param_call draw_string, cancel_button_label
 
         MGTK_CALL MGTK::ShowCursor

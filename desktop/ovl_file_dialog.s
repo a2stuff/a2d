@@ -1515,7 +1515,7 @@ L61E6:  inx
         bne     L61E6
         stx     $0220
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
-        param_call draw_string, file_dialog_res::disk_label
+        param_call draw_string, file_dialog_res::disk_label_str
         param_call draw_string, $0220
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
