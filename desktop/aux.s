@@ -3378,20 +3378,11 @@ special_menu:
 confirm_dialog_outer_rect:  DEFINE_RECT_INSET 4,2,kPromptDialogWidth,kPromptDialogHeight
 confirm_dialog_inner_rect:  DEFINE_RECT_INSET 5,3,kPromptDialogWidth,kPromptDialogHeight
 
-cancel_button_rect:  DEFINE_RECT_SZ 40,kPromptDialogHeight-19,kButtonWidth,kButtonHeight
-ok_button_rect:  DEFINE_RECT_SZ 260,kPromptDialogHeight-19,kButtonWidth,kButtonHeight
-yes_button_rect:  DEFINE_RECT_SZ 200,kPromptDialogHeight-19,40,kButtonHeight
-no_button_rect:  DEFINE_RECT_SZ 260,kPromptDialogHeight-19,40,kButtonHeight
-all_button_rect:  DEFINE_RECT_SZ 320,kPromptDialogHeight-19,40,kButtonHeight
-
-str_ok_label:
-        PASCAL_STRING "OK            \x0D" ; button label
-
-ok_label_pos:  DEFINE_POINT 265,kPromptDialogHeight-9
-cancel_label_pos:  DEFINE_POINT 45,kPromptDialogHeight-9
-yes_label_pos:  DEFINE_POINT 205,kPromptDialogHeight-9
-no_label_pos:  DEFINE_POINT 265,kPromptDialogHeight-9
-all_label_pos:  DEFINE_POINT 325,kPromptDialogHeight-9
+        DEFINE_BUTTON ok,     "OK            \x0D", 260, kPromptDialogHeight-19
+        DEFINE_BUTTON cancel, "Cancel        Esc",   40, kPromptDialogHeight-19
+        DEFINE_BUTTON yes,    " Yes",               200, kPromptDialogHeight-19
+        DEFINE_BUTTON no,     " No",                260, kPromptDialogHeight-19
+        DEFINE_BUTTON all,    " All",               320, kPromptDialogHeight-19
 
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
@@ -3417,15 +3408,6 @@ current_target_file_pos:  DEFINE_POINT 75,kDialogLabelRow2
 current_dest_file_pos:  DEFINE_POINT 75,kDialogLabelRow3
 current_target_file_rect:  DEFINE_RECT 75,kDialogLabelRow1+1,394,kDialogLabelRow2
 current_dest_file_rect:  DEFINE_RECT 75,kDialogLabelRow2+1,394,kDialogLabelRow3
-
-str_cancel_label:
-        PASCAL_STRING "Cancel        Esc" ; button label
-str_yes_label:
-        PASCAL_STRING " Yes"    ; button label
-str_no_label:
-        PASCAL_STRING " No"     ; button label
-str_all_label:
-        PASCAL_STRING " All"    ; button label
 
 ;;; ============================================================
 ;;; "About" dialog resources
@@ -3694,33 +3676,19 @@ reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
 .endparams
 
-ok_label:
-        PASCAL_STRING "OK            \x0D" ; button label
+        DEFINE_BUTTON ok,     "OK            \x0D",  20, 37
+        DEFINE_BUTTON cancel, "Cancel     Esc",     300, 37
 
-kAlertButtonWidth = 100
-kAlertButtonHeight = 11
-
-ok_rect:
-try_again_rect:
-        DEFINE_RECT_SZ 20,37,kAlertButtonWidth,kAlertButtonHeight
-ok_pos:
-try_again_pos:
-        DEFINE_POINT 25,47
-
-cancel_rect:
-        DEFINE_RECT_SZ 300,37,kAlertButtonWidth,kAlertButtonHeight
-cancel_pos:
-        DEFINE_POINT 305,47
+try_again_button_rect = ok_button_rect
+try_again_button_pos = ok_button_pos
+try_again_button_label:
+        PASCAL_STRING "Try Again     A" ; button label
 
 pos_prompt:     DEFINE_POINT 75,29
 
 alert_options:  .byte   0
 prompt_addr:    .addr   0
 
-try_again_label:
-        PASCAL_STRING "Try Again     A" ; button label
-cancel_label:
-        PASCAL_STRING "Cancel     Esc" ; button label
 
 ;;; ============================================================
 ;;; Messages
@@ -3905,25 +3873,25 @@ draw_buttons:
         bpl     ok_button
 
         ;; Cancel button
-        MGTK_CALL MGTK::FrameRect, cancel_rect
-        MGTK_CALL MGTK::MoveTo, cancel_pos
-        param_call draw_pascal_string, cancel_label
+        MGTK_CALL MGTK::FrameRect, cancel_button_rect
+        MGTK_CALL MGTK::MoveTo, cancel_button_pos
+        param_call draw_pascal_string, cancel_button_label
 
         bit     alert_options
         bvs     ok_button
 
         ;; Try Again button
-        MGTK_CALL MGTK::FrameRect, try_again_rect
-        MGTK_CALL MGTK::MoveTo, try_again_pos
-        param_call draw_pascal_string, try_again_label
+        MGTK_CALL MGTK::FrameRect, try_again_button_rect
+        MGTK_CALL MGTK::MoveTo, try_again_button_pos
+        param_call draw_pascal_string, try_again_button_label
 
         jmp     draw_prompt
 
         ;; OK button
 ok_button:
-        MGTK_CALL MGTK::FrameRect, ok_rect
-        MGTK_CALL MGTK::MoveTo, ok_pos
-        param_call draw_pascal_string, ok_label
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
+        MGTK_CALL MGTK::MoveTo, ok_button_pos
+        param_call draw_pascal_string, ok_button_label
 
         ;; Prompt string
 draw_prompt:
@@ -3953,7 +3921,7 @@ event_loop:
         bne     :+
 
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_rect
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
         lda     #kAlertResultCancel
         jmp     finish
 
@@ -3962,7 +3930,7 @@ event_loop:
         cmp     #'a'            ; yes, maybe A/a ?
         bne     :+
 was_a:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_rect
+        MGTK_CALL MGTK::PaintRect, try_again_button_rect
         lda     #kAlertResultTryAgain
         jmp     finish
 
@@ -3976,7 +3944,7 @@ check_ok:
         cmp     #CHAR_RETURN
         bne     :+
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_rect
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     #kAlertResultOK
         jmp     finish
 
@@ -3992,10 +3960,10 @@ handle_button_down:
         bit     alert_options
         bpl     check_ok_rect
 
-        MGTK_CALL MGTK::InRect, cancel_rect ; Cancel?
+        MGTK_CALL MGTK::InRect, cancel_button_rect ; Cancel?
         cmp     #MGTK::inrect_inside
         bne     :+
-        ldax    #cancel_rect
+        ldax    #cancel_button_rect
         jsr     alert_button_event_loop
         bne     no_button
         lda     #kAlertResultCancel
@@ -4004,20 +3972,20 @@ handle_button_down:
 :       bit     alert_options
         bvs     check_ok_rect
 
-        MGTK_CALL MGTK::InRect, try_again_rect ; Try Again?
+        MGTK_CALL MGTK::InRect, try_again_button_rect ; Try Again?
         cmp     #MGTK::inrect_inside
         bne     no_button
-        ldax    #try_again_rect
+        ldax    #try_again_button_rect
         jsr     alert_button_event_loop
         bne     no_button
         lda     #kAlertResultTryAgain
         jmp     finish
 
 check_ok_rect:
-        MGTK_CALL MGTK::InRect, ok_rect ; OK?
+        MGTK_CALL MGTK::InRect, ok_button_rect ; OK?
         cmp     #MGTK::inrect_inside
         bne     no_button
-        ldax    #ok_rect
+        ldax    #ok_button_rect
         jsr     alert_button_event_loop
         bne     no_button
         lda     #kAlertResultOK

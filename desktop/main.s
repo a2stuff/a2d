@@ -11181,10 +11181,10 @@ is_file:
         beq     not_protected
 
 is_protected:
-        copy16  #aux::str_yes_label, get_info_dialog_params::addr
+        copy16  #aux::yes_button_label, get_info_dialog_params::addr
         bne     show_protected           ; always
 not_protected:
-        copy16  #aux::str_no_label, get_info_dialog_params::addr
+        copy16  #aux::no_button_label, get_info_dialog_params::addr
 show_protected:
         jsr     run_get_info_dialog_proc
 
@@ -15073,28 +15073,28 @@ skip:   ldx     #0
 ;;; ============================================================
 
 draw_ok_label:
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::ok_label_pos
-        param_call DrawString, aux::str_ok_label
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::ok_button_pos
+        param_call DrawString, aux::ok_button_label
         rts
 
 draw_cancel_label:
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::cancel_label_pos
-        param_call DrawString, aux::str_cancel_label
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::cancel_button_pos
+        param_call DrawString, aux::cancel_button_label
         rts
 
 draw_yes_label:
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::yes_label_pos
-        param_call DrawString, aux::str_yes_label
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::yes_button_pos
+        param_call DrawString, aux::yes_button_label
         rts
 
 draw_no_label:
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::no_label_pos
-        param_call DrawString, aux::str_no_label
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::no_button_pos
+        param_call DrawString, aux::no_button_label
         rts
 
 draw_all_label:
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::all_label_pos
-        param_call DrawString, aux::str_all_label
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::all_button_pos
+        param_call DrawString, aux::all_button_label
         rts
 
 draw_yes_no_all_cancel_buttons:
