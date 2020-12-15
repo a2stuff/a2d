@@ -18,10 +18,10 @@
 
         .include "loader.s"
 
-        .include "desktop_aux.s"
-        .include "desktop_lc.s"
-        .include "desktop_res.s"
-        .include "desktop_main.s"
+        .include "aux.s"
+        .include "lc.s"
+        .include "res.s"
+        .include "main.s"
 
         .include "init.s"
 

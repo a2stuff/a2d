@@ -15,7 +15,7 @@ clean:
 	rm -f $(OUTDIR)/*.list
 	rm -f $(TARGETS)
 
-$(OUTDIR)/desktop.o: desktop.s $(HEADERS) loader.s desktop_*.s init.s ovl*.s invoker.s ../mgtk/mgtk.s
+$(OUTDIR)/desktop.o: desktop.s $(HEADERS) loader.s aux.s lc.s res.s main.s init.s ovl*.s invoker.s ../mgtk/mgtk.s
 	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Built segments
