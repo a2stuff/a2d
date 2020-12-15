@@ -730,11 +730,11 @@ dialog_frame_rect:
 rect_D9C8:
         DEFINE_RECT 27,16,174,26
 
-        DEFINE_BUTTON close, "Close", 193,58
-        DEFINE_BUTTON ok, {"OK            ",kGlyphReturn}, 193,89
-        DEFINE_BUTTON open, "Open", 193,44
-        DEFINE_BUTTON cancel, "Cancel        Esc", 193,73
-        DEFINE_BUTTON change_drive, "Change Drive", 193,30
+        DEFINE_BUTTON close,        "Close",              193,58
+        DEFINE_BUTTON ok,           "OK            \x0D", 193,89
+        DEFINE_BUTTON open,         "Open",               193,44
+        DEFINE_BUTTON cancel,       "Cancel        Esc",  193,73
+        DEFINE_BUTTON change_drive, "Change Drive",       193,30
 
 dialog_sep_start:
         DEFINE_POINT 323,30

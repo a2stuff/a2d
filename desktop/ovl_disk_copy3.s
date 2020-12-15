@@ -264,7 +264,7 @@ rect_read_drive:      DEFINE_RECT_SZ 210, 90, kButtonWidth, kButtonHeight
 point_ok_label:     DEFINE_POINT 355, 100
 
 str_ok_label:
-        PASCAL_STRING {"OK            ",kGlyphReturn} ; button label
+        PASCAL_STRING "OK            \x0D" ; button label
 
 ;;; Label positions
 point_read_drive:     DEFINE_POINT 215, 100
@@ -2442,7 +2442,7 @@ maprect:        DEFINE_RECT 0, 0, 559, 191
 .endparams
 
 str_ok_btn:
-        PASCAL_STRING {"OK            ",kGlyphReturn} ; button label
+        PASCAL_STRING "OK            \x0D" ; button label
 
 str_cancel_btn:
         PASCAL_STRING "Cancel     Esc" ; button label

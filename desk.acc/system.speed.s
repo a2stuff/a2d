@@ -14,6 +14,7 @@
 ;;; ============================================================
 
         .setcpu "6502"
+        .feature string_escapes
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -76,9 +77,9 @@ kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeigh
 
 kButtonInsetX   = 25
 
-        DEFINE_BUTTON norm, {"Normal         N"}, kButtonInsetX, 28
-        DEFINE_BUTTON fast, {"Fast           F"}, kDAWidth - kButtonWidth - kButtonInsetX, 28
-        DEFINE_BUTTON ok,   {"OK            ",kGlyphReturn}, kDAWidth - kButtonWidth - kButtonInsetX, 52
+        DEFINE_BUTTON norm, "Normal         N",   kButtonInsetX, 28
+        DEFINE_BUTTON fast, "Fast           F",   kDAWidth - kButtonWidth - kButtonInsetX, 28
+        DEFINE_BUTTON ok,   "OK            \x0D", kDAWidth - kButtonWidth - kButtonInsetX, 52
 
         DEFINE_LABEL title, "System Speed", (kDAWidth - 70)/ 2, 18
 

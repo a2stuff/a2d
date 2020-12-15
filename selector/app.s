@@ -285,8 +285,8 @@ viewloc:.word   25, 40
 rect_frame:
         DEFINE_RECT_INSET 4, 2, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok,     {" OK          ",kGlyphReturn}, 340, 94
-        DEFINE_BUTTON desktop, " DeskTop      Q", 60, 94
+        DEFINE_BUTTON ok,      " OK          \x0D", 340, 94
+        DEFINE_BUTTON desktop, " DeskTop      Q",    60, 94
 
 setpensize_params:
         .byte   2, 1

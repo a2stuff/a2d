@@ -8,6 +8,7 @@
 ;;; ============================================================
 
         .setcpu "6502"
+        .feature string_escapes
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -974,8 +975,8 @@ input_textpos:      DEFINE_POINT 60, 20
         DEFINE_RECT 0, 0, 358, 100
 .endparams
 
-        DEFINE_BUTTON search, {"Search         ",kGlyphReturn}, kDAWidth-235, 10
-        DEFINE_BUTTON cancel,  "Cancel        Esc",             kDAWidth-120, 10
+        DEFINE_BUTTON search, "Search         \x0D", kDAWidth-235, 10
+        DEFINE_BUTTON cancel, "Cancel        Esc",   kDAWidth-120, 10
 
 penxor: .byte   MGTK::penXOR
 

@@ -6,6 +6,7 @@
 ;;; ============================================================
 
         .setcpu "6502"
+        .feature string_escapes
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -714,7 +715,7 @@ date_rect:
         DEFINE_RECT_SZ 32,15,122,20
 
 label_ok:
-        PASCAL_STRING {"OK         ",kGlyphReturn} ; button label
+        PASCAL_STRING "OK         \x0D" ; button label
 label_cancel:
         PASCAL_STRING "Cancel  ESC" ; button label
 label_uparrow:

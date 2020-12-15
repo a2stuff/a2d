@@ -3385,7 +3385,7 @@ no_button_rect:  DEFINE_RECT_SZ 260,kPromptDialogHeight-19,40,kButtonHeight
 all_button_rect:  DEFINE_RECT_SZ 320,kPromptDialogHeight-19,40,kButtonHeight
 
 str_ok_label:
-        PASCAL_STRING {"OK            ",kGlyphReturn} ; button label
+        PASCAL_STRING "OK            \x0D" ; button label
 
 ok_label_pos:  DEFINE_POINT 265,kPromptDialogHeight-9
 cancel_label_pos:  DEFINE_POINT 45,kPromptDialogHeight-9
@@ -3695,7 +3695,7 @@ maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
 .endparams
 
 ok_label:
-        PASCAL_STRING {"OK            ",kGlyphReturn} ; button label
+        PASCAL_STRING "OK            \x0D" ; button label
 
 kAlertButtonWidth = 100
 kAlertButtonHeight = 11
