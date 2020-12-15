@@ -11,10 +11,10 @@ The file is broken down into multiple segments:
 | Purpose       | Bank    | Address | Sources                        |
 |---------------|---------|---------|--------------------------------|
 | Loader        | Main    | A$2000  | `loader.s`                     |
-| MGTK/DeskTop  | Aux     | A$4000  | `mgtk.s`, `desktop_aux.s`      |
-| DeskTop       | Aux LC1 | A$D000  | `desktop_lc.s`,`desktop_res.s` |
-| DeskTop       | Aux LC1 | A$FB00  | `desktop_res.s`                |
-| DeskTop       | Main    | A$4000  | `desktop_main.s`               |
+| MGTK/DeskTop  | Aux     | A$4000  | `mgtk.s`, `aux.s`              |
+| DeskTop       | Aux LC1 | A$D000  | `lc.s`,`res.s`                 |
+| DeskTop       | Aux LC1 | A$FB00  | `res.s`                        |
+| DeskTop       | Main    | A$4000  | `main.s`                       |
 | Initializer   | Main    | A$0800  | `init.s`                       |
 | Invoker       | Main    | A$0290  | `invoker.s`                    |
 | Disk Copy 1/4 | Main    | A$0800  | `ovl_disk_copy1.s`             |
@@ -76,10 +76,10 @@ run.
 ### "DeskTop" Application
 
 The main application includes:
-* `desktop_main.s`
-* `desktop_aux.s`
-* `desktop_lc.s`
-* `desktop_res.s`
+* `main.s`
+* `aux.s`
+* `lc.s`
+* `res.s`
 
 DeskTop code is in the lower 48k of both Main and Aux banks, and the
 Aux language card areas. The main application logic is in Main, with
@@ -92,7 +92,7 @@ When running, memory use includes:
  * $800-$1BFF is used as scratch space for a variety of routines.
  * $1C00-$1FFF is used as a 1k ProDOS I/O buffer.
  * $2000-$3FFF is the hires graphics page.
- * $4000-$BEFF (`desktop_main.s`) is the main app logic.
+ * $4000-$BEFF (`main.s`) is the main app logic.
 
 ($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
 
@@ -108,7 +108,7 @@ When running, memory use includes:
  * $1F80-$1FFF is a map of used/free icon numbers, as they are reassigned
      as windows are opened and closed.
  * $2000-$3FFF is the hires graphics page.
- * $4000-$BFFF (`desktop_aux.s`) includes these:
+ * $4000-$BFFF (`aux.s`) includes these:
  * $4000-$85FF is the [MouseGraphics ToolKit](../mgtk/MGTK.md)
  * $8600-$8DFF - Resources, including icons and font
  * $8E00-$A6xx - [Icon ToolKit](APIs.md)
@@ -119,14 +119,14 @@ When running, memory use includes:
 main code) are relays, buffers and resources:
 
 * Aux LC
- * $D000-$D1FF - main-to-aux relay calls (`desktop_lc.s`)
+ * $D000-$D1FF - main-to-aux relay calls (`lc.s`)
  * $D200-$ECFF - resources (menus, strings, window)
  * $ED00-$FAFF - buffer for IconEntries
  * $FB00-$FFFF - more resources (file types, icons)
 
-`desktop_res.s` defines these common resources. It is built as part of
+`res.s` defines these common resources. It is built as part of
 `desktop.s`. Many additional resources needed for MGTK operations
-exist in `desktop_aux.s` as well.
+exist in `aux.s` as well.
 
 The Aux memory language card bank 2 ($D000-$DFFF) holds `FileRecord`
 entries, 32-byte structures which hold metadata for files in open
