@@ -572,7 +572,7 @@ run_an_entry_label:
 enter_the_full_pathname_label1:
         PASCAL_STRING "Enter the full pathname of the run list file:"
 enter_the_name_to_appear_label:
-        PASCAL_STRING "Enter the name (14 characters max)  you wish to appear in the run list"
+        PASCAL_STRING "Enter the name (14 characters max) you wish to appear in the run list"
 
         DEFINE_LABEL add_a_new_entry_to, "Add a new entry to the:",            343, 39
         DEFINE_LABEL run_list,           {kGlyphOpenApple,"1 Run list"},       363, 48

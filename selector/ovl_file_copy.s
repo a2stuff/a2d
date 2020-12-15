@@ -808,9 +808,9 @@ str_error_download:
 str_copy_incomplete:
         PASCAL_STRING "The copy wasn't completed, click OK to continue."
 str_files_to_copy:
-        PASCAL_STRING "Files to be copied in the RAMCard: "
+        PASCAL_STRING "Files to copy in the RAMCard: "
 str_files_remaining:
-        PASCAL_STRING "Files remaining to be copied: "
+        PASCAL_STRING "Files remaining to copy: "
 str_spaces:
         PASCAL_STRING "    "    ; do not localize
 

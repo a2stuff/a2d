@@ -3454,7 +3454,7 @@ str_copy_copying:
 str_copy_from:
         PASCAL_STRING "from:"
 str_copy_to:
-        PASCAL_STRING "to :"
+        PASCAL_STRING "to:"
 str_copy_remaining:
         PASCAL_STRING "Files remaining to copy: "
 
@@ -3486,7 +3486,7 @@ str_ok_empty:
 str_file_colon:
         PASCAL_STRING "File:"
 str_delete_remaining:
-        PASCAL_STRING "Files remaining to be deleted:"
+        PASCAL_STRING "Files remaining to delete:"
 str_delete_locked_file:
         PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
 
@@ -3548,7 +3548,7 @@ lock_remaining_count_pos: DEFINE_POINT 195,kDialogLabelRow4
 str_format_disk:
         PASCAL_STRING "Format a Disk..." ; dialog title
 str_select_format:
-        PASCAL_STRING "Select the location where the disk is to be formatted"
+        PASCAL_STRING "Select the location of the disk to format"
 str_new_volume:
         PASCAL_STRING "Enter the name of the new volume:"
 str_confirm_format:
@@ -3561,7 +3561,7 @@ str_formatting_error:
 str_erase_disk:
         PASCAL_STRING "Erase a Disk..." ; dialog title
 str_select_erase:
-        PASCAL_STRING "Select the location where the disk is to be erased"
+        PASCAL_STRING "Select the location of the disk to erase"
 str_confirm_erase:
         PASCAL_STRING "Do you want to erase "
 str_erasing:
@@ -3575,7 +3575,7 @@ str_unlock_title:
 str_unlock_ok:
         PASCAL_STRING "Click OK to unlock "
 str_unlock_remaining:
-        PASCAL_STRING "Files remaining to be unlocked: "
+        PASCAL_STRING "Files remaining to unlock: "
 
         ;; "Lock File" dialog strings
 str_lock_title:
@@ -3583,7 +3583,7 @@ str_lock_title:
 str_lock_ok:
         PASCAL_STRING "Click OK to lock "
 str_lock_remaining:
-        PASCAL_STRING "Files remaining to be locked: "
+        PASCAL_STRING "Files remaining to lock: "
 
         ;; "Get Size" dialog strings
 str_size_title:
