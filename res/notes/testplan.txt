@@ -118,3 +118,8 @@
 * Open a folder with no items. Verify window header says "0 Items"
 * Open a folder with only one item. Verify window header says "1 Item"
 * Open a folder with two or more items. Verify window header says "2 Items"
+
+* Launch Selector. Type Open-Apple and R. Ensure "Run a Program..." dialog appears
+* Launch Selector. Type Solid-Apple and R. Ensure "Run a Program..." dialog appears
+* Launch Selector. Type Open-Apple and 6. Ensure machine boots from Slot 6
+* Launch Selector. Type Solid-Apple and 6. Ensure machine boots from Slot 6
