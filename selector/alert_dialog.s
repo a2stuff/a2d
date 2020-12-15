@@ -62,18 +62,13 @@ reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
 .endparams
 
-cancel_button_string:
-        PASCAL_STRING "Cancel    Esc" ; button label
-ok_button_string:
-        PASCAL_STRING "OK            \x0D" ; button label
-try_again_button_string:
+        DEFINE_BUTTON cancel, "Cancel    Esc",       20, 37
+        DEFINE_BUTTON ok,     "OK            \x0D", 300, 37
+
+try_again_button_label:
         PASCAL_STRING "Try Again  A" ; button label
-
-        DEFINE_BUTTON_COORDS ok, 300, 37
-        DEFINE_BUTTON_COORDS cancel, 20, 37
-
 try_again_button_rect   := ok_button_rect
-try_again_pos           := ok_button_pos
+try_again_button_pos    := ok_button_pos
 
 
         DEFINE_POINT 190,16     ; Unused ???
@@ -238,22 +233,22 @@ LD314:  tya
         ;; Cancel button
         MGTK_CALL MGTK::FrameRect, cancel_button_rect
         MGTK_CALL MGTK::MoveTo, cancel_button_pos
-        param_call app::DrawString, cancel_button_string
+        param_call app::DrawString, cancel_button_label
 
         bit     alert_options
         bvs     ok_button
 
         ;; Try Again button
         MGTK_CALL MGTK::FrameRect, try_again_button_rect
-        MGTK_CALL MGTK::MoveTo, try_again_pos
-        param_call app::DrawString, try_again_button_string
+        MGTK_CALL MGTK::MoveTo, try_again_button_pos
+        param_call app::DrawString, try_again_button_label
         jmp     draw_prompt
 
         ;; OK button
 ok_button:
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call app::DrawString, ok_button_string
+        param_call app::DrawString, ok_button_label
 
         ;; Prompt string
 draw_prompt:
