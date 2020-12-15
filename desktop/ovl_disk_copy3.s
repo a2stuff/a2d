@@ -259,41 +259,48 @@ rect_outer_frame:      DEFINE_RECT_INSET 4, 2, kDialogWidth, kDialogHeight
 rect_inner_frame:      DEFINE_RECT_INSET 5, 3, kDialogWidth, kDialogHeight
 rect_D211:      DEFINE_RECT 6, 20, 494, 102
 rect_D219:      DEFINE_RECT 6, 103, 494, 145
-rect_ok_button:      DEFINE_RECT_SZ 350, 90, kButtonWidth, kButtonHeight
-rect_read_drive:      DEFINE_RECT_SZ 210, 90, kButtonWidth, kButtonHeight
-point_ok_label:     DEFINE_POINT 355, 100
 
+rect_ok_button:      DEFINE_RECT_SZ 350, 90, kButtonWidth, kButtonHeight
+point_ok_label:     DEFINE_POINT 355, 100
 str_ok_label:
         PASCAL_STRING "OK            \x0D" ; button label
 
 ;;; Label positions
-point_read_drive:     DEFINE_POINT 215, 100
 point_title:     DEFINE_POINT 0, 15
-point_slot_drive_name:     DEFINE_POINT 20, 28
-point_select_source:     DEFINE_POINT 270, 46
-rect_D255:      DEFINE_RECT 270, 38, 420, 46
-point_formatting:     DEFINE_POINT 210, 68
-point_writing:     DEFINE_POINT 210, 68
-point_reading:     DEFINE_POINT 210, 68
-
-str_read_drive:
-        PASCAL_STRING "Read Drive   D" ; button label
 str_disk_copy_padded:
         PASCAL_STRING "     Disk Copy    " ; dialog title
 str_quick_copy_padded:
         PASCAL_STRING "Quick Copy      " ; dialog title
+
+rect_D255:      DEFINE_RECT 270, 38, 420, 46
+
+rect_read_drive:      DEFINE_RECT_SZ 210, 90, kButtonWidth, kButtonHeight
+point_read_drive:     DEFINE_POINT 215, 100
+str_read_drive:
+        PASCAL_STRING "Read Drive   D" ; button label
+
+point_slot_drive_name:     DEFINE_POINT 20, 28
 str_slot_drive_name:
         PASCAL_STRING "Slot, Drive, Name" ; dialog label
+
+point_select_source:     DEFINE_POINT 270, 46
 str_select_source:
         PASCAL_STRING "Select source disk" ; dialog label
 str_select_destination:
         PASCAL_STRING "Select destination disk" ; dialog label
+
+point_formatting:     DEFINE_POINT 210, 68
 str_formatting:
         PASCAL_STRING "Formatting the disk ...."
+
+point_writing:     DEFINE_POINT 210, 68
 str_writing:
         PASCAL_STRING "Writing ....   "
+
+point_reading:     DEFINE_POINT 210, 68
 str_reading:
         PASCAL_STRING "Reading ....    "
+
 str_unknown:
         PASCAL_STRING "Unknown"
 str_select_quit:
@@ -2441,32 +2448,15 @@ reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 559, 191
 .endparams
 
-str_ok_btn:
-        PASCAL_STRING "OK            \x0D" ; button label
-
-str_cancel_btn:
-        PASCAL_STRING "Cancel     Esc" ; button label
-
-str_try_again_btn:
+        DEFINE_BUTTON ok,     "OK            \x0D", 300, 37
+        DEFINE_BUTTON cancel, "Cancel     Esc",      20, 37
+try_again_button_label:
         PASCAL_STRING "Try Again     A" ; button label
+try_again_button_rect = ok_button_rect
+try_again_button_pos  = ok_button_pos
 
-str_yes_btn:
-        PASCAL_STRING "Yes"     ; button label
-
-str_no_btn:
-        PASCAL_STRING "No"      ; button label
-
-yes_rect:  DEFINE_RECT_SZ 250, 37, 50, kButtonHeight
-yes_pos:  DEFINE_POINT 255, 47
-
-no_rect:  DEFINE_RECT_SZ 350, 37, 50, kButtonHeight
-no_pos:  DEFINE_POINT 355, 47
-
-ok_try_again_rect:  DEFINE_RECT_SZ 300, 37, kButtonWidth, kButtonHeight
-ok_try_again_pos:  DEFINE_POINT 305, 47
-
-cancel_rect:  DEFINE_RECT_SZ 20, 37, kButtonWidth, kButtonHeight
-cancel_pos:  DEFINE_POINT 25, 47
+        DEFINE_BUTTON yes, "Yes", 250, 37, 50, kButtonHeight
+        DEFINE_BUTTON no,  "No",  350, 37, 50, kButtonHeight
 
 LE93D:  DEFINE_POINT 100, 24
 
@@ -2653,34 +2643,34 @@ LEC6C:  tya
 LEC8C:  jsr     set_pen_xor
         bit     message_flags
         bpl     draw_ok_btn
-        MGTK_RELAY_CALL2 MGTK::FrameRect, cancel_rect
-        MGTK_RELAY_CALL2 MGTK::MoveTo, cancel_pos
-        param_call DrawString, str_cancel_btn
+        MGTK_RELAY_CALL2 MGTK::FrameRect, cancel_button_rect
+        MGTK_RELAY_CALL2 MGTK::MoveTo, cancel_button_pos
+        param_call DrawString, cancel_button_label
         bit     message_flags
         bvs     draw_ok_btn
         lda     message_flags
         and     #$0F
         beq     draw_try_again_btn
 
-        MGTK_RELAY_CALL2 MGTK::FrameRect, yes_rect
-        MGTK_RELAY_CALL2 MGTK::MoveTo, yes_pos
-        param_call DrawString, str_yes_btn
+        MGTK_RELAY_CALL2 MGTK::FrameRect, yes_button_rect
+        MGTK_RELAY_CALL2 MGTK::MoveTo, yes_button_pos
+        param_call DrawString, yes_button_label
 
-        MGTK_RELAY_CALL2 MGTK::FrameRect, no_rect
-        MGTK_RELAY_CALL2 MGTK::MoveTo, no_pos
-        param_call DrawString, str_no_btn
+        MGTK_RELAY_CALL2 MGTK::FrameRect, no_button_rect
+        MGTK_RELAY_CALL2 MGTK::MoveTo, no_button_pos
+        param_call DrawString, no_button_label
         jmp     LED23
 
 draw_try_again_btn:
-        MGTK_RELAY_CALL2 MGTK::FrameRect, ok_try_again_rect
-        MGTK_RELAY_CALL2 MGTK::MoveTo, ok_try_again_pos
-        param_call DrawString, str_try_again_btn
+        MGTK_RELAY_CALL2 MGTK::FrameRect, try_again_button_rect
+        MGTK_RELAY_CALL2 MGTK::MoveTo, try_again_button_pos
+        param_call DrawString, try_again_button_label
         jmp     LED23
 
 draw_ok_btn:
-        MGTK_RELAY_CALL2 MGTK::FrameRect, ok_try_again_rect
-        MGTK_RELAY_CALL2 MGTK::MoveTo, ok_try_again_pos
-        param_call DrawString, str_ok_btn
+        MGTK_RELAY_CALL2 MGTK::FrameRect, ok_button_rect
+        MGTK_RELAY_CALL2 MGTK::MoveTo, ok_button_pos
+        param_call DrawString, ok_button_label
 
 LED23:  MGTK_RELAY_CALL2 MGTK::MoveTo, LE93D
         param_call_indirect DrawString, LE942
@@ -2714,7 +2704,7 @@ LED58:  cmp     #MGTK::EventKind::key_down
 :       cmp     #CHAR_ESCAPE
         bne     :+
         jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_button_rect
 LED79:  lda     #1
         jmp     clear_and_return_value
 
@@ -2736,12 +2726,12 @@ LED79:  lda     #1
         jmp     input_loop
 
 do_no:  jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, no_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, no_button_rect
         lda     #3
         jmp     clear_and_return_value
 
 do_yes: jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_button_rect
         lda     #2
         jmp     clear_and_return_value
 
@@ -2749,7 +2739,7 @@ LEDC1:  pla
         cmp     #'a'
         bne     LEDD7
 LEDC6:  jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, try_again_button_rect
         lda     #0
         jmp     clear_and_return_value
 
@@ -2762,7 +2752,7 @@ LEDD7:  cmp     #'A'
 LEDE2:  cmp     #CHAR_RETURN
         bne     LEDF7
         jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
 LEDF2:  lda     #0
         jmp     clear_and_return_value
 
@@ -2773,7 +2763,7 @@ handle_button_down:
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
         bit     message_flags
         bpl     LEE57
-        MGTK_RELAY_CALL2 MGTK::InRect, cancel_rect
+        MGTK_RELAY_CALL2 MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
         bne     LEE1B
         jmp     handle_cancel_button_down
@@ -2783,22 +2773,22 @@ LEE1B:  bit     message_flags
         lda     message_flags
         and     #$0F
         beq     LEE47
-        MGTK_RELAY_CALL2 MGTK::InRect, no_rect
+        MGTK_RELAY_CALL2 MGTK::InRect, no_button_rect
         cmp     #MGTK::inrect_inside
         bne     LEE37
         jmp     handle_no_button_down
 
-LEE37:  MGTK_RELAY_CALL2 MGTK::InRect, yes_rect
+LEE37:  MGTK_RELAY_CALL2 MGTK::InRect, yes_button_rect
         cmp     #MGTK::inrect_inside
         bne     LEE67
         jmp     handle_yes_button_down
 
-LEE47:  MGTK_RELAY_CALL2 MGTK::InRect, ok_try_again_rect
+LEE47:  MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     LEE67
         jmp     handle_ok_try_again_button_down1
 
-LEE57:  MGTK_RELAY_CALL2 MGTK::InRect, ok_try_again_rect
+LEE57:  MGTK_RELAY_CALL2 MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
         bne     LEE67
         jmp     handle_ok_try_again_button_down2
@@ -2819,7 +2809,7 @@ clear_and_return_value:
 
 .proc handle_ok_try_again_button_down1
         jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
         lda     #$00
         sta     state
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -2828,7 +2818,7 @@ loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         beq     LEEEA
         jsr     map_event_coords
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, ok_try_again_rect
+        MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     LEECA
         lda     state
@@ -2840,7 +2830,7 @@ LEECA:  lda     state
         jmp     loop
 
 LEED2:  jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
         lda     state
         clc
         adc     #$80
@@ -2862,7 +2852,7 @@ state:
 
 .proc handle_cancel_button_down
         jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_button_rect
         lda     #$00
         sta     state
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -2871,7 +2861,7 @@ loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         beq     LEF5A
         jsr     map_event_coords
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, cancel_rect
+        MGTK_RELAY_CALL2 MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
         beq     LEF3A
         lda     state
@@ -2883,7 +2873,7 @@ LEF3A:  lda     state
         jmp     loop
 
 LEF42:  jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_button_rect
         lda     state
         clc
         adc     #$80
@@ -2907,14 +2897,14 @@ state:
         lda     #$00
         sta     state
         jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, try_again_button_rect
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LEFCA
         jsr     map_event_coords
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, ok_try_again_rect
+        MGTK_RELAY_CALL2 MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
         beq     LEFAA
         lda     state
@@ -2926,7 +2916,7 @@ LEFAA:  lda     state
         jmp     loop
 
 LEFB2:  jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, try_again_button_rect
         lda     state
         clc
         adc     #$80
@@ -2950,14 +2940,14 @@ state:
         lda     #$00
         sta     state
         jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, no_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, no_button_rect
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LF03A
         jsr     map_event_coords
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, no_rect
+        MGTK_RELAY_CALL2 MGTK::InRect, no_button_rect
         cmp     #MGTK::inrect_inside
         beq     LF01A
         lda     state
@@ -2969,7 +2959,7 @@ LF01A:  lda     state
         jmp     loop
 
 LF022:  jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, no_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, no_button_rect
         lda     state
         clc
         adc     #$80
@@ -2993,14 +2983,14 @@ state:
         lda     #$00
         sta     state
         jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_button_rect
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LF0AA
         jsr     map_event_coords
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, yes_rect
+        MGTK_RELAY_CALL2 MGTK::InRect, yes_button_rect
         cmp     #MGTK::inrect_inside
         beq     LF08A
         lda     state
@@ -3012,7 +3002,7 @@ LF08A:  lda     state
         jmp     loop
 
 LF092:  jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_button_rect
         lda     state
         clc
         adc     #$80
