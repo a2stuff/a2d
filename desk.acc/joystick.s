@@ -50,7 +50,7 @@ kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 str_title:
-        PASCAL_STRING "Joystick Calibration"
+        PASCAL_STRING "Joystick Calibration" ; window title
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -217,9 +217,9 @@ joy_btn0_lpos: DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + kRadioButton
 joy_btn1_lpos: DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 30 + 8
 joy_btn2_lpos: DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 50 + 8
 
-joy_btn0_label:   PASCAL_STRING "0"
-joy_btn1_label:   PASCAL_STRING "1"
-joy_btn2_label:   PASCAL_STRING "2"
+joy_btn0_label:   PASCAL_STRING "0" ; dialog label
+joy_btn1_label:   PASCAL_STRING "1" ; dialog label
+joy_btn2_label:   PASCAL_STRING "2" ; dialog label
 
 .params joy_marker
 viewloc:        DEFINE_POINT 0, 0, viewloc

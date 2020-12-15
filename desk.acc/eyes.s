@@ -50,7 +50,7 @@ kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 str_title:
-        PASCAL_STRING "Eyes"
+        PASCAL_STRING "Eyes"    ; window title
 
 .params winfo
 window_id:      .byte   kDAWindowId

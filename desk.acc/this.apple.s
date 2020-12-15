@@ -89,7 +89,7 @@ nextwinfo:      .addr   0
 .endparams
 
 str_title:
-        PASCAL_STRING "About this Apple II"
+        PASCAL_STRING "About this Apple II" ; dialog title
 
 ;;; ============================================================
 
@@ -434,14 +434,14 @@ str_prodos_version:
         kVersionStrPatch = 12
 
 str_slot_n:
-        PASCAL_STRING "Slot #:   "
+        PASCAL_STRING "Slot #:   " ; dialog label
         kStrSlotNOffset = 6
 
 str_memory_prefix:
-        PASCAL_STRING "Memory: "
+        PASCAL_STRING "Memory: " ; dialog label
 
 str_memory_suffix:
-        PASCAL_STRING "K"
+        PASCAL_STRING "K"       ; memory size suffix for kilobytes
 
 memory:.word    0
 

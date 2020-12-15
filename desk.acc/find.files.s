@@ -810,13 +810,10 @@ kResultsTop             = kDATop + 30
 
 kResultsRows    = 11                ; line height is 10
 
-str_title:
-        PASCAL_STRING "Find Files"
-
 .params winfo
 window_id:      .byte   kDAWindowID
 options:        .byte   MGTK::Option::dialog_box
-title:          .addr   str_title
+title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
 vscroll:        .byte   MGTK::Scroll::option_none
 hthumbmax:      .byte   0

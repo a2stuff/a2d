@@ -85,7 +85,7 @@ nextwinfo:      .addr   0
 .endparams
 
 str_title:
-        PASCAL_STRING "Key Caps"
+        PASCAL_STRING "Key Caps" ; window title
 
 background_pattern:
         .byte   %11011101

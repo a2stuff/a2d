@@ -1,4 +1,5 @@
         .setcpu "6502"
+        .feature string_escapes
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -779,7 +780,7 @@ str_copying_to_ramcard:
 
         kVtabCopyingTip = 23
 str_tip_skip_copying:
-        PASCAL_STRING {"Tip: To skip copying to RAMCard, hold down ",15,27,65,24,14," when launching."}
+        PASCAL_STRING "Tip: To skip copying to RAMCard, hold down \x0F\x1B\x41\x18\x0E when launching."
 
 ;;; Signature of block storage devices ($Cn0x)
 kNumSigBytes = 4

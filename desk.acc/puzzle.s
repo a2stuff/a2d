@@ -589,7 +589,7 @@ nextwinfo:      .addr   0
 .endparams
         winfo_viewloc_ycoord := winfo::viewloc::ycoord
 
-name:   PASCAL_STRING "Puzzle"
+name:   PASCAL_STRING "Puzzle"  ; window title
 
 ;;; ============================================================
 ;;; Create the window
