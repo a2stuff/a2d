@@ -2,6 +2,7 @@
 ;;; Definitions that apply to DeskTop and Selector
 ;;; ============================================================
 
+.define kDeskTopProductName "Apple II DeskTop"
 kDeskTopVersionMajor = 1
 kDeskTopVersionMinor = 2
 .define kDeskTopVersionSuffix "-alpha22"

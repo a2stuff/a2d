@@ -775,7 +775,7 @@ filename_table:
 
         kVtabCopyingMsg = 12
 str_copying_to_ramcard:
-        PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
+        PASCAL_STRING .sprintf("Copying %s into RAMCard", kDeskTopProductName)
 
         kVtabCopyingTip = 23
 str_tip_skip_copying:

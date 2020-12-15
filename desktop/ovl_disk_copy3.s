@@ -102,7 +102,7 @@ label_facilities:
         PASCAL_STRING "Facilities" ; menu bar item
 
 label_desktop:
-        PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d",::kDeskTopVersionMajor,::kDeskTopVersionMinor) ; menu item
+        PASCAL_STRING .sprintf("%s Version %d.%d", kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; menu item
 
 label_blank:
         PASCAL_STRING " "       ; do not localize
@@ -264,7 +264,7 @@ rect_read_drive:      DEFINE_RECT_SZ 210, 90, kButtonWidth, kButtonHeight
 point_ok_label:     DEFINE_POINT 355, 100
 
 str_ok_label:
-        PASCAL_STRING {"OK            ",kGlyphReturn}
+        PASCAL_STRING {"OK            ",kGlyphReturn} ; button label
 
 ;;; Label positions
 point_read_drive:     DEFINE_POINT 215, 100
@@ -277,17 +277,17 @@ point_writing:     DEFINE_POINT 210, 68
 point_reading:     DEFINE_POINT 210, 68
 
 str_read_drive:
-        PASCAL_STRING "Read Drive   D"
+        PASCAL_STRING "Read Drive   D" ; button label
 str_disk_copy_padded:
-        PASCAL_STRING "     Disk Copy    "
+        PASCAL_STRING "     Disk Copy    " ; dialog title
 str_quick_copy_padded:
-        PASCAL_STRING "Quick Copy      "
+        PASCAL_STRING "Quick Copy      " ; dialog title
 str_slot_drive_name:
-        PASCAL_STRING "Slot, Drive, Name"
+        PASCAL_STRING "Slot, Drive, Name" ; dialog label
 str_select_source:
-        PASCAL_STRING "Select source disk"
+        PASCAL_STRING "Select source disk" ; dialog label
 str_select_destination:
-        PASCAL_STRING "Select destination disk"
+        PASCAL_STRING "Select destination disk" ; dialog label
 str_formatting:
         PASCAL_STRING "Formatting the disk ...."
 str_writing:
@@ -297,7 +297,7 @@ str_reading:
 str_unknown:
         PASCAL_STRING "Unknown"
 str_select_quit:
-        PASCAL_STRING {"Select Quit from the file menu (",kGlyphOpenApple,"Q) to go back to the DeskTop"}
+        PASCAL_STRING {"Select Quit from the file menu (",kGlyphOpenApple,"Q) to go back to the DeskTop"} ; dialog label
 
 bg_black:
         .byte   0
@@ -2442,19 +2442,19 @@ maprect:        DEFINE_RECT 0, 0, 559, 191
 .endparams
 
 str_ok_btn:
-        PASCAL_STRING {"OK            ",kGlyphReturn}
+        PASCAL_STRING {"OK            ",kGlyphReturn} ; button label
 
 str_cancel_btn:
-        PASCAL_STRING "Cancel     Esc"
+        PASCAL_STRING "Cancel     Esc" ; button label
 
 str_try_again_btn:
-        PASCAL_STRING "Try Again     A"
+        PASCAL_STRING "Try Again     A" ; button label
 
 str_yes_btn:
-        PASCAL_STRING "Yes"
+        PASCAL_STRING "Yes"     ; button label
 
 str_no_btn:
-        PASCAL_STRING "No"
+        PASCAL_STRING "No"      ; button label
 
 yes_rect:  DEFINE_RECT_SZ 250, 37, 50, kButtonHeight
 yes_pos:  DEFINE_POINT 255, 47

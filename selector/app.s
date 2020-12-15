@@ -135,7 +135,7 @@ str_startup:
         PASCAL_STRING "Startup" ; menu bar item
 
 str_a2desktop:
-        PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d", ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; do not localize
+        PASCAL_STRING .sprintf("%s Version %d.%d", kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; do not localize
 
 str_blank:
         PASCAL_STRING " "       ; do not localize
@@ -295,7 +295,7 @@ pos_title_string:
         .word   0, $F
 
 str_selector_title:
-        PASCAL_STRING "Selector"
+        PASCAL_STRING "Selector" ; dialog title
 
 pt0:    DEFINE_POINT 5, 22, pt0
 

@@ -714,9 +714,9 @@ date_rect:
         DEFINE_RECT_SZ 32,15,122,20
 
 label_ok:
-        PASCAL_STRING {"OK         ",kGlyphReturn}
+        PASCAL_STRING {"OK         ",kGlyphReturn} ; button label
 label_cancel:
-        PASCAL_STRING "Cancel  ESC"
+        PASCAL_STRING "Cancel  ESC" ; button label
 label_uparrow:
         PASCAL_STRING kGlyphUpArrow ; do not localize
 label_downarrow:

@@ -48,7 +48,7 @@ reinstall_flag:                 ; set once prefix saved and reinstalled
 
 kSplashVtab = 12
 splash_string:
-        PASCAL_STRING "Loading Apple II DeskTop"
+        PASCAL_STRING .sprintf("Loading %s", kDeskTopProductName)
 
 filename:
         PASCAL_STRING "DeskTop2" ; do not localize

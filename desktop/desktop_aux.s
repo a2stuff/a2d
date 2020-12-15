@@ -3385,7 +3385,7 @@ no_button_rect:  DEFINE_RECT_SZ 260,kPromptDialogHeight-19,40,kButtonHeight
 all_button_rect:  DEFINE_RECT_SZ 320,kPromptDialogHeight-19,40,kButtonHeight
 
 str_ok_label:
-        PASCAL_STRING {"OK            ",kGlyphReturn}
+        PASCAL_STRING {"OK            ",kGlyphReturn} ; button label
 
 ok_label_pos:  DEFINE_POINT 265,kPromptDialogHeight-9
 cancel_label_pos:  DEFINE_POINT 45,kPromptDialogHeight-9
@@ -3419,13 +3419,13 @@ current_target_file_rect:  DEFINE_RECT 75,kDialogLabelRow1+1,394,kDialogLabelRow
 current_dest_file_rect:  DEFINE_RECT 75,kDialogLabelRow2+1,394,kDialogLabelRow3
 
 str_cancel_label:
-        PASCAL_STRING "Cancel        Esc"
+        PASCAL_STRING "Cancel        Esc" ; button label
 str_yes_label:
-        PASCAL_STRING " Yes"
+        PASCAL_STRING " Yes"    ; button label
 str_no_label:
-        PASCAL_STRING " No"
+        PASCAL_STRING " No"     ; button label
 str_all_label:
-        PASCAL_STRING " All"
+        PASCAL_STRING " All"    ; button label
 
 ;;; ============================================================
 ;;; "About" dialog resources
@@ -3436,7 +3436,7 @@ kAboutDialogHeight      = 120
 about_dialog_outer_rect:  DEFINE_RECT_INSET 4, 2, kAboutDialogWidth, kAboutDialogHeight
 about_dialog_inner_rect:  DEFINE_RECT_INSET 5, 3, kAboutDialogWidth, kAboutDialogHeight
 
-str_about1:  PASCAL_STRING "Apple II DeskTop"
+str_about1:  PASCAL_STRING kDeskTopProductName ; do not localize
 str_about2:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"
 str_about3:  PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
 str_about4:  PASCAL_STRING "All Rights Reserved"
@@ -3695,7 +3695,7 @@ maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
 .endparams
 
 ok_label:
-        PASCAL_STRING {"OK            ",kGlyphReturn}
+        PASCAL_STRING {"OK            ",kGlyphReturn} ; button label
 
 kAlertButtonWidth = 100
 kAlertButtonHeight = 11
@@ -3718,9 +3718,9 @@ alert_options:  .byte   0
 prompt_addr:    .addr   0
 
 try_again_label:
-        PASCAL_STRING "Try Again     A"
+        PASCAL_STRING "Try Again     A" ; button label
 cancel_label:
-        PASCAL_STRING "Cancel     Esc"
+        PASCAL_STRING "Cancel     Esc" ; button label
 
 ;;; ============================================================
 ;;; Messages

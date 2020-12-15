@@ -431,7 +431,7 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-;;; "About Apple II Desktop" Dialog
+;;; "About Apple II DeskTop" Dialog
 
 .params winfo_about_dialog
         kWidth = aux::kAboutDialogWidth
@@ -1159,7 +1159,7 @@ apple_menu:
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
 
 label_about:
-        PASCAL_STRING "About Apple II DeskTop" ; menu item
+        PASCAL_STRING .sprintf("About %s", kDeskTopProductName) ; menu item
 
 desk_acc_names:
         .res    kMaxDeskAccCount * kDAMenuItemSize, 0
@@ -1177,7 +1177,7 @@ dummy_dd_menu:
         DEFINE_MENU_ITEM dummy_dd_item
 
 splash_menu_label:
-        PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d%s", kDeskTopVersionMajor, kDeskTopVersionMinor, kDeskTopVersionSuffix)
+        PASCAL_STRING .sprintf("%s Version %d.%d%s", kDeskTopProductName, kDeskTopVersionMajor, kDeskTopVersionMinor, kDeskTopVersionSuffix)
 
 blank_dd_label:
         PASCAL_STRING " "       ; do not localize

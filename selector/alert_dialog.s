@@ -63,11 +63,11 @@ maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
 .endparams
 
 cancel_button_string:
-        PASCAL_STRING "Cancel    Esc"
+        PASCAL_STRING "Cancel    Esc" ; button label
 ok_button_string:
-        PASCAL_STRING {"OK            ", kGlyphReturn}
+        PASCAL_STRING {"OK            ", kGlyphReturn} ; button label
 try_again_button_string:
-        PASCAL_STRING "Try Again  A"
+        PASCAL_STRING "Try Again  A" ; button label
 
         DEFINE_BUTTON_COORDS ok, 300, 37
         DEFINE_BUTTON_COORDS cancel, 20, 37
