@@ -260,10 +260,7 @@ rect_inner_frame:      DEFINE_RECT_INSET 5, 3, kDialogWidth, kDialogHeight
 rect_D211:      DEFINE_RECT 6, 20, 494, 102
 rect_D219:      DEFINE_RECT 6, 103, 494, 145
 
-rect_ok_button:      DEFINE_RECT_SZ 350, 90, kButtonWidth, kButtonHeight
-point_ok_label:     DEFINE_POINT 355, 100
-str_ok_label:
-        PASCAL_STRING "OK            \x0D" ; button label
+        DEFINE_BUTTON ok, "OK            \x0D", 350, 90
 
 ;;; Label positions
 point_title:     DEFINE_POINT 0, 15
@@ -274,10 +271,7 @@ str_quick_copy_padded:
 
 rect_D255:      DEFINE_RECT 270, 38, 420, 46
 
-rect_read_drive:      DEFINE_RECT_SZ 210, 90, kButtonWidth, kButtonHeight
-point_read_drive:     DEFINE_POINT 215, 100
-str_read_drive:
-        PASCAL_STRING "Read Drive   D" ; button label
+        DEFINE_BUTTON read_drive, "Read Drive   D", 210, 90
 
 point_slot_drive_name:     DEFINE_POINT 20, 28
 str_slot_drive_name:
@@ -972,21 +966,21 @@ handle_dialog_button_down:
         MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
 
 check_ok_button:
-        MGTK_RELAY_CALL2 MGTK::InRect, rect_ok_button
+        MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         jmp     check_read_drive_button
 :       MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
         jsr     handle_ok_button_down
         rts
 
 check_read_drive_button:
-        MGTK_RELAY_CALL2 MGTK::InRect, rect_read_drive
+        MGTK_RELAY_CALL2 MGTK::InRect, read_drive_button_rect
         cmp     #MGTK::inrect_inside
         bne     :+
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_read_drive
+        MGTK_RELAY_CALL2 MGTK::PaintRect, read_drive_button_rect
         jsr     handle_read_drive_button_down
         rts
 
@@ -1015,8 +1009,8 @@ LDB98:  cmp     current_drive_selection
         bit     LD368
         bpl     LDBC0
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
         return  #$00
 
 LDBC0:  lda     #$FF
@@ -1056,8 +1050,8 @@ LDBFC:  lda     event_key
 LDC09:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_read_drive
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_read_drive
+        MGTK_RELAY_CALL2 MGTK::PaintRect, read_drive_button_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, read_drive_button_rect
         return  #$01
 
 LDC2D:  cmp     #CHAR_RETURN
@@ -1065,8 +1059,8 @@ LDC2D:  cmp     #CHAR_RETURN
         lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
         return  #$00
 
 LDC55:  bit     LD44C
@@ -1124,7 +1118,7 @@ loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL2 MGTK::InRect, rect_read_drive
+        MGTK_RELAY_CALL2 MGTK::InRect, read_drive_button_rect
         cmp     #MGTK::inrect_inside
         beq     LDCEE
         lda     state
@@ -1136,7 +1130,7 @@ LDCEE:  lda     state
         jmp     loop
 
 LDCF6:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_read_drive
+        MGTK_RELAY_CALL2 MGTK::PaintRect, read_drive_button_rect
         lda     state
         clc
         adc     #$80
@@ -1150,7 +1144,7 @@ LDD14:  lda     state
 LDD1C:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_read_drive
+        MGTK_RELAY_CALL2 MGTK::PaintRect, read_drive_button_rect
         return  #$01
 
 state:  .byte   0
@@ -1169,7 +1163,7 @@ loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL2 MGTK::InRect, rect_ok_button
+        MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     LDD7A
         lda     state
@@ -1181,7 +1175,7 @@ LDD7A:  lda     state
         jmp     loop
 
 LDD82:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
         lda     state
         clc
         adc     #$80
@@ -1195,7 +1189,7 @@ LDDA0:  lda     state
 LDDA8:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
         return  #$00
 
 state:  .byte   0
@@ -1466,8 +1460,8 @@ saved_ram_unitnum:
 
 draw_buttons:
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_ok_button
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_read_drive
+        MGTK_RELAY_CALL2 MGTK::FrameRect, ok_button_rect
+        MGTK_RELAY_CALL2 MGTK::FrameRect, read_drive_button_rect
         jsr     draw_ok_label
         jsr     draw_read_drive_label
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_slot_drive_name
@@ -1482,13 +1476,13 @@ draw_buttons:
         rts
 
 draw_ok_label:
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_ok_label
-        param_call DrawString, str_ok_label
+        MGTK_RELAY_CALL2 MGTK::MoveTo, ok_button_pos
+        param_call DrawString, ok_button_label
         rts
 
 draw_read_drive_label:
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_read_drive
-        param_call DrawString, str_read_drive
+        MGTK_RELAY_CALL2 MGTK::MoveTo, read_drive_button_pos
+        param_call DrawString, read_drive_button_label
         rts
 
 .endproc
