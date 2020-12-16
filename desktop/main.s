@@ -8164,24 +8164,6 @@ next:   inc     index
         lda     #0
         sta     record_num
         jmp     loop
-
-        lda     LCBANK1
-        lda     LCBANK1
-
-        kNameCol = 84
-        kTypeCol = 203
-        kDateCol = 231
-
-        copy16  #kNameCol, pos_col_name::xcoord
-        copy16  #kTypeCol, pos_col_type::xcoord
-        lda     #0
-        sta     pos_col_size::xcoord
-        sta     pos_col_size::xcoord+1
-        copy16  #kDateCol, pos_col_date::xcoord
-
-        lda     LCBANK2
-        lda     LCBANK2
-        jmp     finish_view_change
 .endscope
 
         ;; --------------------------------------------------
