@@ -671,7 +671,7 @@ LD817:  lda     $1300
         lda     drive_unitnum_table,x
         and     #$F0
         tax
-        lda     #$07
+        lda     #7              ; Confirm Erase (with extra spaces???)
         jmp     LD83C
 
 LD82C:  sta     $1300
@@ -2477,11 +2477,15 @@ str_confirm_erase1:
 str_confirm_erase1_buf:  .res    18, 0
 kLenConfirmErase1 = 21
 
+;;; This string is seen when copying a ProDOS disk to DOS 3.3 or Pascal disk.
+;;; Unclear why a message with extra spaces used ???
 str_confirm_erase2:
         PASCAL_STRING "Do you want to  erase  the disk in slot # drive # ?"
         kStrConfirmErase2SlotOffset = 41
         kStrConfirmErase2DriveOffset = 49
 
+;;; Unknown which path leads to this; there don't seem to be any calls
+;;; to show the dialog with this string ???
 str_confirm_erase3:
         PASCAL_STRING "Do you want to erase the disk in slot # drive # ?"
         kStrConfirmErase3SlotOffset = 39
@@ -2578,7 +2582,8 @@ show_alert_dialog:
         jsr     LF185
         beq     LEC5E
         lda     #$0B
-        bne     LEC5E
+        bne     LEC5E           ; always
+
 LEC1F:  cmp     #$01
         bne     LEC34
         cpx     #$00
@@ -2586,28 +2591,34 @@ LEC1F:  cmp     #$01
         jsr     LF185
         beq     LEC30
         lda     #$0C
-        bne     LEC5E
+        bne     LEC5E           ; always
+
 LEC30:  lda     #$01
-        bne     LEC5E
+        bne     LEC5E           ; always
+
 LEC34:  cmp     #$02
         bne     LEC3F
         jsr     append_to_confirm_erase0
         lda     #$02
-        bne     LEC5E
+        bne     LEC5E           ; always
+
 LEC3F:  cmp     #$06
         bne     :+
         jsr     append_to_confirm_erase1
         lda     #$06
-        bne     LEC5E
+        bne     LEC5E           ; always
+
 :       cmp     #$07
         bne     LEC55
         jsr     set_confirm_erase2_slot_drive
         lda     #$07
-        bne     LEC5E
+        bne     LEC5E           ; always
+
 LEC55:  cmp     #$08
         bne     LEC5E
         jsr     set_confirm_erase3_slot_drive
         lda     #$08
+
 LEC5E:  ldy     #$00
 LEC60:  cmp     message_index_table,y
         beq     LEC6C
