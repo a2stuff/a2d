@@ -1421,11 +1421,12 @@ shift:  lda     DEVLST+1,x
 ;;; ============================================================
 
 .proc restore_ram_disk
+        lda     saved_ram_unitnum
+        beq     :+
         inc     DEVCNT
         ldx     DEVCNT
-        lda     saved_ram_unitnum
         sta     DEVLST,x
-        rts
+:       rts
 .endproc
 
 saved_ram_unitnum:

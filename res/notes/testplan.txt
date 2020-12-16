@@ -125,3 +125,5 @@
 * Launch Selector. Type Solid-Apple and 6. Ensure machine boots from Slot 6
 
 * Launch DeskTop. Special > Format a Disk.... Ensure left/right arrows move selection correctly.
+
+* Launch DeskTop. Special > Disk Copy.... File > Quit. Special > Disk Copy.... Ensure drive list is correct.
