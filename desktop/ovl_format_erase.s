@@ -388,11 +388,11 @@ L0CA9:  .byte   0
 ;;; ============================================================
 
         ;; Called from main
-.proc prompt_handle_key_left
+.proc prompt_handle_key_right
         lda     selected_device_index
         bpl     L0CC1
         lda     #0
-        beq     L0CCE
+        beq     L0CCE           ; always
 L0CC1:  clc
         adc     #4
         cmp     num_volumes
@@ -408,7 +408,7 @@ L0CD4:  return  #$FF
 ;;; ============================================================
 
         ;; Called from main
-.proc prompt_handle_key_right
+.proc prompt_handle_key_left
         lda     selected_device_index
         bpl     L0CE6
         lda     num_volumes

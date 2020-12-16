@@ -123,3 +123,5 @@
 * Launch Selector. Type Solid-Apple and R. Ensure "Run a Program..." dialog appears
 * Launch Selector. Type Open-Apple and 6. Ensure machine boots from Slot 6
 * Launch Selector. Type Solid-Apple and 6. Ensure machine boots from Slot 6
+
+* Launch DeskTop. Special > Format a Disk.... Ensure left/right arrows move selection correctly.
