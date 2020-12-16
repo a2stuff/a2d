@@ -1361,7 +1361,7 @@ draw_title_bar:
         jmp     input_loop
 .endproc
 
-PROC_AT chrget_routine, $B1  ; CHRGET ("Constant expression expected" error if label used)
+PROC_AT chrget_routine, ::CHRGET
         dummy_addr := $EA60
 
 loop:   inc16   TXTPTR
