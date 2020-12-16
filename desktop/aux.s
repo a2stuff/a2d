@@ -3676,13 +3676,9 @@ reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
 .endparams
 
-        DEFINE_BUTTON ok,     "OK            \x0D",  20, 37
-        DEFINE_BUTTON cancel, "Cancel     Esc",     300, 37
-
-try_again_button_rect = ok_button_rect
-try_again_button_pos = ok_button_pos
-try_again_button_label:
-        PASCAL_STRING "Try Again     A" ; button label
+        DEFINE_BUTTON ok,        "OK            \x0D",  20, 37
+        DEFINE_BUTTON try_again, "Try Again     A",     20, 37
+        DEFINE_BUTTON cancel,    "Cancel     Esc",     300, 37
 
 pos_prompt:     DEFINE_POINT 75,29
 

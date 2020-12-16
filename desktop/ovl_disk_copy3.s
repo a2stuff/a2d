@@ -2442,12 +2442,9 @@ reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 559, 191
 .endparams
 
-        DEFINE_BUTTON ok,     "OK            \x0D", 300, 37
-        DEFINE_BUTTON cancel, "Cancel     Esc",      20, 37
-try_again_button_label:
-        PASCAL_STRING "Try Again     A" ; button label
-try_again_button_rect = ok_button_rect
-try_again_button_pos  = ok_button_pos
+        DEFINE_BUTTON ok,        "OK            \x0D", 300, 37
+        DEFINE_BUTTON try_again, "Try Again     A",    300, 37
+        DEFINE_BUTTON cancel,    "Cancel     Esc",      20, 37
 
         DEFINE_BUTTON yes, "Yes", 250, 37, 50, kButtonHeight
         DEFINE_BUTTON no,  "No",  350, 37, 50, kButtonHeight
