@@ -1029,8 +1029,6 @@ window_filerecord_table:
 icon_param2:
         .byte   0
 
-LE22C:  .byte   0
-
         ;; IconTK::HighlightIcon params
 icon_param3:
         .byte   0

@@ -15,45 +15,49 @@
         jsr     L70AD
         jsr     file_dialog::device_on_line
         lda     path_buf0
-        beq     L7056
+        beq     finish
         ldy     path_buf0
-L7021:  lda     path_buf0,y
+:       lda     path_buf0,y
         sta     file_dialog::path_buf,y
         dey
-        bpl     L7021
+        bpl     :-
+
         jsr     file_dialog::L5F49
         ldy     path_buf0
-L7030:  lda     path_buf0,y
+:       lda     path_buf0,y
         cmp     #'/'
-        beq     L7044
+        beq     found_slash
         dey
         cpy     #$01
-        bne     L7030
+        bne     :-
+
         lda     #$00
         sta     path_buf0
-        jmp     L7056
+        jmp     finish
 
-L7044:  ldx     #$00
-L7046:  iny
+found_slash:
+        ldx     #$00
+:       iny
         inx
         lda     path_buf0,y
-        sta     L709D,x
+        sta     buffer,x
         cpy     path_buf0
-        bne     L7046
-        stx     L709D
-L7056:  jsr     file_dialog::L5F5B
+        bne     :-
+        stx     buffer
+
+finish: jsr     file_dialog::L5F5B
         lda     #$00
-        bcs     L706A
-        param_call file_dialog::L6516, L709D
+        bcs     :+
+        param_call file_dialog::L6516, buffer
         sta     selected_index
         jsr     file_dialog::L6586
-L706A:  jsr     file_dialog::update_scrollbar2
+:       jsr     file_dialog::update_scrollbar2
         jsr     file_dialog::update_disk_name
         jsr     file_dialog::draw_list_entries
         lda     path_buf0
-        bne     L707B
+        bne     :+
         jsr     file_dialog::jt_prep_path
-L707B:  copy    #1, path_buf2
+:       copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     file_dialog::jt_redraw_input
         jsr     file_dialog::redraw_f2
@@ -63,7 +67,7 @@ L707B:  copy    #1, path_buf2
         sta     LD8EC
         jmp     file_dialog::event_loop
 
-L709D:  .res 16, 0
+buffer: .res 16, 0
 
 .endproc
 
@@ -71,14 +75,15 @@ L709D:  .res 16, 0
 
 .proc L70AD
         ldx     jt_pathname
-L70B0:  lda     jt_pathname+1,x
+:       lda     jt_pathname+1,x
         sta     file_dialog::jump_table,x
         dex
         lda     jt_pathname+1,x
         sta     file_dialog::jump_table,x
         dex
         dex
-        bpl     L70B0
+        bpl     :-
+
         lda     #$00
         sta     file_dialog::L51AE
         lda     #$80
@@ -104,12 +109,12 @@ L70B0:  lda     jt_pathname+1,x
         lda     winfo_file_dialog
         jsr     file_dialog::set_port_for_window
         lda     path_buf0
-        beq     L7116
+        beq     add
         param_call file_dialog::L5E0A, edit_an_entry_label
-        jmp     L711D
+        jmp     common
 
-L7116:  param_call file_dialog::L5E0A, add_an_entry_label
-L711D:  param_call file_dialog::L5E6F, enter_the_full_pathname_label2
+add:    param_call file_dialog::L5E0A, add_an_entry_label
+common: param_call file_dialog::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
@@ -189,15 +194,17 @@ jt_entry_name:
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     file_dialog::jt_redraw_input
+
         ldx     jt_entry_name
-L726D:  lda     jt_entry_name+1,x
+:       lda     jt_entry_name+1,x
         sta     file_dialog::jump_table,x
         dex
         lda     jt_entry_name+1,x
         sta     file_dialog::jump_table,x
         dex
         dex
-        bpl     L726D
+        bpl     :-
+
         lda     #$80
         sta     file_dialog::L51AE
         sta     file_dialog::L5105
@@ -206,19 +213,20 @@ L726D:  lda     jt_entry_name+1,x
         lda     #$00
         sta     LD8F0
         lda     path_buf1
-        bne     L72BF
+        bne     finish
         lda     #$00
         sta     path_buf1
         ldx     path_buf0
-        beq     L72BF
-L72A0:  lda     path_buf0,x
+        beq     finish
+:       lda     path_buf0,x
         cmp     #'/'
-        beq     L72AD
+        beq     found_slash
         dex
-        bne     L72A0
-        jmp     L72BF
+        bne     :-
+        jmp     finish
 
-L72AD:  ldy     #0
+found_slash:
+        ldy     #0
 :       iny
         inx
         lda     path_buf0,x
@@ -227,7 +235,7 @@ L72AD:  ldy     #0
         bne     :-
 
         sty     path_buf1
-L72BF:  copy    #1, path_buf2
+finish: copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
         jsr     file_dialog::jt_redraw_input
         rts
@@ -241,22 +249,24 @@ L72BF:  copy    #1, path_buf2
 
 .proc handle_ok_name
         param_call file_dialog::L647C, path_buf0
-        bne     L72E2
+        bne     invalid
         lda     path_buf1
-        beq     L72E7
+        beq     fail
         cmp     #$0F            ; Max selector name length
-        bcs     L72E8
-        jmp     L72EE
+        bcs     too_long
+        jmp     ok
 
-L72E2:  lda     #ERR_INVALID_PATHNAME
+invalid:
+        lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_ALERT_0
-L72E7:  rts
+fail:   rts
 
-L72E8:  lda     #kErrNameTooLong
+too_long:
+        lda     #kErrNameTooLong
         jsr     JUMP_TABLE_ALERT_0
         rts
 
-L72EE:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
@@ -293,15 +303,17 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     file_dialog::jt_redraw_input
+
         ldx     jt_pathname
-L737C:  lda     jt_pathname+1,x
+:       lda     jt_pathname+1,x
         sta     file_dialog::jump_table,x
         dex
         lda     jt_pathname+1,x
         sta     file_dialog::jump_table,x
         dex
         dex
-        bpl     L737C
+        bpl     :-
+
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
         jsr     file_dialog::jt_redraw_input

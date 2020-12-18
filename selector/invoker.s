@@ -14,9 +14,6 @@ start:
 
 ;;; ============================================================
 
-        PRODOS_SYS_START := $2000 ; for SYS files
-        PRODOS_INTERPRETER_BUF := $2006
-
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
 
 prefix_length:

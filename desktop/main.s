@@ -3185,42 +3185,44 @@ L566A:  ldx     active_window_id
 L5676:  jsr     LoadActiveWindowIconTable
         lda     cached_window_icon_count
         bne     L5687
-        jmp     L56F0
+        jmp     finish
 
 L5687:  ldx     cached_window_icon_count
         dex
-L568B:  copy    cached_window_icon_list,x, selected_icon_list,x
+:       copy    cached_window_icon_list,x, selected_icon_list,x
         dex
-        bpl     L568B
+        bpl     :-
+
         copy    cached_window_icon_count, selected_icon_count
         copy    active_window_id, selected_window_index
-        copy    selected_window_index, LE22C
-        beq     L56AB
+        lda     selected_window_index
+        beq     :+
         jsr     offset_and_set_port_from_window_id
-L56AB:  lda     selected_icon_count
-        sta     L56F8
-        dec     L56F8
-L56B4:  ldx     L56F8
+:       lda     selected_icon_count
+        sta     index
+        dec     index
+loop:   ldx     index
         copy    selected_icon_list,x, icon_param2
         jsr     icon_entry_lookup
         stax    $06
-        lda     LE22C
-        beq     L56CF
+        lda     selected_window_index
+        beq     :+
         lda     icon_param2
         jsr     icon_screen_to_window
-L56CF:  ITK_RELAY_CALL IconTK::HighlightIcon, icon_param2
-        lda     LE22C
-        beq     L56E3
+:       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param2
+        lda     selected_window_index
+        beq     :+
         lda     icon_param2
         jsr     icon_window_to_screen
-L56E3:  dec     L56F8
-        bpl     L56B4
-        lda     selected_window_index
-        beq     L56F0
-        jsr     reset_main_grafport
-L56F0:  jmp     LoadDesktopIconTable
+:       dec     index
+        bpl     loop
 
-L56F8:  .byte   0
+        lda     selected_window_index
+        beq     finish
+        jsr     reset_main_grafport
+finish: jmp     LoadDesktopIconTable
+
+index:  .byte   0
 .endproc
 
 

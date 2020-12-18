@@ -54,7 +54,7 @@ selector_buffer := $1600        ; Room for kSelectorListBufSize
 copy_buffer     := $4000
 kCopyBufferSize = MLI - copy_buffer
 
-        .org $2000
+        .org PRODOS_SYS_START
 
 ;;; ============================================================
 
@@ -78,7 +78,7 @@ header_date:   .word   0               ; written into file by Date DA
 header_orig_prefix:
         .res    64, 0           ; written into file with original path
 
-        kWriteBackSize = * - $2000
+        kWriteBackSize = * - PRODOS_SYS_START
 
 ;;; ============================================================
 ;;;
@@ -2012,15 +2012,18 @@ read:   sta     read_params::ref_num
 ;;; to Language Card Bank 2 $D100-$D3FF, to restore saved quit
 ;;; (selector/dispatch) handler, then does ProDOS QUIT.
 
+quit_code_addr := $1000
+quit_code_save := $1100
+
 str_quit_code:  PASCAL_STRING "Quit.tmp" ; do not localize
-PROC_AT quit_restore_proc, $1000
+PROC_AT quit_restore_proc, ::quit_code_addr
 
         lda     LCBANK2
         lda     LCBANK2
         ldx     #0
 :
         .repeat 3, i
-        lda     $1100 + ($100 * i), x
+        lda     quit_code_save + ($100 * i), x
         sta     SELECTOR + ($100 * i), x
         .endrepeat
         dex
@@ -2031,13 +2034,12 @@ PROC_AT quit_restore_proc, $1000
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params
 
-        PAD_TO $1100
+        PAD_TO ::quit_code_save
 END_PROC_AT
         .assert .sizeof(quit_restore_proc) = $100, error, "Proc length mismatch"
 
 .proc preserve_quit_code_impl
         quit_code_io := $800
-        quit_code_addr := $1000
         kQuitCodeSize = $400
         DEFINE_CREATE_PARAMS create_params, str_quit_code, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, str_quit_code, quit_code_io
@@ -2049,10 +2051,10 @@ start:  lda     LCBANK2
         ldx     #0
 :
         lda     quit_restore_proc, x
-        sta     $1000, x
+        sta     quit_code_addr, x
         .repeat 3, i
         lda     SELECTOR + ($100 * i), x
-        sta     $1100 + ($100 * i), x
+        sta     quit_code_save + ($100 * i), x
         .endrepeat
         dex
         bne     :-
