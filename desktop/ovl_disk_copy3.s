@@ -298,7 +298,7 @@ str_reading:
 str_unknown:
         PASCAL_STRING "Unknown"
 str_select_quit:
-        PASCAL_STRING {"Select Quit from the file menu (",kGlyphOpenApple,"Q) to go back to the DeskTop"} ; dialog label
+        PASCAL_STRING .sprintf("Select Quit from the file menu (%cQ) to go back to the DeskTop", ::kGlyphOpenApple) ; dialog label
 
 bg_black:
         .byte   0
