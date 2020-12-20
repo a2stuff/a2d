@@ -3380,9 +3380,9 @@ confirm_dialog_inner_rect:  DEFINE_RECT_INSET 5,3,kPromptDialogWidth,kPromptDial
 
         DEFINE_BUTTON ok,     "OK            \x0D", 260, kPromptDialogHeight-19
         DEFINE_BUTTON cancel, "Cancel        Esc",   40, kPromptDialogHeight-19
-        DEFINE_BUTTON yes,    " Yes",               200, kPromptDialogHeight-19
-        DEFINE_BUTTON no,     " No",                260, kPromptDialogHeight-19
-        DEFINE_BUTTON all,    " All",               320, kPromptDialogHeight-19
+        DEFINE_BUTTON yes,    " Yes",               200, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON no,     " No",                260, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON all,    " All",               320, kPromptDialogHeight-19,40,kButtonHeight
 
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
