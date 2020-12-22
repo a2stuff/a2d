@@ -19,9 +19,9 @@ test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 # One 800k image (complete), and two 140k images (two parts).
 
 mkdir -p out
-IMGFILE_COMPLETE="out/A2DeskTop.po"
-IMGFILE_PART1="out/A2DeskTop.1.po"
-IMGFILE_PART2="out/A2DeskTop.2.po"
+IMGFILE_COMPLETE="out/A2DeskTop_800k.2mg"
+IMGFILE_PART1="out/A2DeskTop_140k_disk1.po"
+IMGFILE_PART2="out/A2DeskTop_140k_disk2.po"
 
 VOLNAME_COMPLETE="A2.DeskTop"
 VOLNAME_PART1="A2.DeskTop.1"

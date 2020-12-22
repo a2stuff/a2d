@@ -36,7 +36,7 @@ make -C cadius && make -C cadius install
 
 Then run: `make package`
 
-This will generate: `out/A2.DeskTop.po` (an 800k image containing the full application) and `A2DeskTop.1.po` and `A2DeskTop.2.po` (the files split into two 143k images).
+This will generate: `A2DeskTop_800k.2mg` (an 800k image containing the full application) and `A2DeskTop_140k_disk1.po` and `A2DeskTop_140k_disk2.po` (the files split into two 140k images).
 
 Mount these disk images in your emulator, or transfer them to real floppies with [ADTPro](http://adtpro.com/), then follow the install instructions below.
 
