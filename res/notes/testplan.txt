@@ -127,3 +127,5 @@
 * Launch DeskTop. Special > Format a Disk.... Ensure left/right arrows move selection correctly.
 
 * Launch DeskTop. Special > Disk Copy.... File > Quit. Special > Disk Copy.... Ensure drive list is correct.
+
+* Launch Desktop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are corrrectly enabled.

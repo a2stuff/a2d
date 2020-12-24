@@ -1047,7 +1047,7 @@ count:  .byte   0
         sta     active_window_id
         jsr     main::update_window_menu_items
         jsr     main::disable_eject_menu_item
-        jsr     main::disable_file_menu_items
+        jsr     main::disable_menu_items_requiring_selection
 
         ;; Add desktop icons
         ldx     #0

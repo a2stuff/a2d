@@ -1059,13 +1059,13 @@ key_mods:       .byte   0
         .byte   $00,$04,$00,$00,$00
 
 .params checkitem_params
-menu_id:        .byte   4
+menu_id:        .byte   kMenuIdView
 menu_item:      .byte   0
 check:          .byte   0
 .endparams
 
 .params disablemenu_params
-menu_id:        .byte   4
+menu_id:        .byte   kMenuIdView
 disable:        .byte   0
 .endparams
 

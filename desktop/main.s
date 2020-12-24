@@ -827,7 +827,7 @@ check_selection:
         cmp     trash_icon_num
         bne     enable_eject
         jsr     disable_eject_menu_item
-        jsr     disable_file_menu_items
+        jsr     disable_menu_items_requiring_selection
         copy    #0, file_menu_items_enabled_flag
         rts
 
@@ -846,7 +846,7 @@ multiple_volumes:
 finish1:
         bit     file_menu_items_enabled_flag
         bmi     :+
-        jsr     enable_file_menu_items
+        jsr     enable_menu_items_requiring_selection
         copy    #$80, file_menu_items_enabled_flag
 :       rts
 
@@ -858,7 +858,7 @@ no_selection:
         rts
 
 :       jsr     disable_eject_menu_item
-        jsr     disable_file_menu_items
+        jsr     disable_menu_items_requiring_selection
         copy    #0, file_menu_items_enabled_flag
         rts
 .endproc
@@ -4964,29 +4964,15 @@ size:   .word   0
 .endproc
 
 ;;; ============================================================
+;;; If a window is open, ensure the right view item is checked,.
+;;; Otherwise, ensure the necessary menu items are disabled.
+;;; (Called on window close)
 
 .proc update_window_menu_items
         ldx     active_window_id
-        beq     disable_menu_items
-        jmp     check_view_menu_items
+        beq     disable_menu_items_requiring_window
 
-disable_menu_items:
-        copy    #MGTK::disablemenu_disable, disablemenu_params::disable
-        MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
-
-        copy    #MGTK::disableitem_disable, disableitem_params::disable
-        copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdNewFolder
-        jsr     disable_menu_item
-        lda     #aux::kMenuItemIdClose
-        jsr     disable_menu_item
-        lda     #aux::kMenuItemIdCloseAll
-        jsr     disable_menu_item
-
-        copy    #0, menu_dispatch_flag
-        rts
-
-check_view_menu_items:
+        ;; Check appropriate view menu item
         dex
         lda     win_view_by_table,x
         and     #$0F            ; mask off menu item number
@@ -4999,13 +4985,47 @@ check_view_menu_items:
 .endproc
 
 ;;; ============================================================
-;;; Disable menu items for operating on a selected file
 
-.proc disable_file_menu_items
+.proc toggle_menu_items_requiring_window
+enable:
+        copy    #MGTK::disablemenu_enable, disablemenu_params::disable
+        copy    #MGTK::disableitem_enable, disableitem_params::disable
+        copy    #$80, menu_dispatch_flag
+        jmp     :+
+
+disable:
+        copy    #MGTK::disablemenu_disable, disablemenu_params::disable
+        copy    #MGTK::disableitem_disable, disableitem_params::disable
+        copy    #0, menu_dispatch_flag
+
+:       MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params ; View menu
+
+        copy    #kMenuIdFile, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdNewFolder
+        jsr     disable_menu_item
+        lda     #aux::kMenuItemIdClose
+        jsr     disable_menu_item
+        lda     #aux::kMenuItemIdCloseAll
+        jsr     disable_menu_item
+
+        rts
+.endproc
+enable_menu_items_requiring_window := toggle_menu_items_requiring_window::enable
+disable_menu_items_requiring_window := toggle_menu_items_requiring_window::disable
+
+
+;;; ============================================================
+;;; Disable menu items for operating on a selection
+
+.proc toggle_menu_items_requiring_selection
+enable:
+        copy    #MGTK::disableitem_enable, disableitem_params::disable
+        jmp     :+
+disable:
         copy    #MGTK::disableitem_disable, disableitem_params::disable
 
         ;; File
-        copy    #kMenuIdFile, disableitem_params::menu_id
+:       copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdOpen
         jsr     disable_menu_item
         lda     #aux::kMenuItemIdGetInfo
@@ -5023,6 +5043,8 @@ check_view_menu_items:
         jsr     disable_menu_item
         rts
 .endproc
+enable_menu_items_requiring_selection := toggle_menu_items_requiring_selection::enable
+disable_menu_items_requiring_selection := toggle_menu_items_requiring_selection::disable
 
 ;;; ============================================================
 ;;; Calls DisableItem menu_item in A (to enable or disable).
@@ -5031,31 +5053,6 @@ check_view_menu_items:
 .proc disable_menu_item
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc enable_file_menu_items
-        copy    #MGTK::disableitem_enable, disableitem_params::disable
-
-        ;; File
-        copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdOpen
-        jsr     disable_menu_item
-        lda     #aux::kMenuItemIdGetInfo
-        jsr     disable_menu_item
-        lda     #aux::kMenuItemIdRenameIcon
-        jsr     disable_menu_item
-
-        ;; Special
-        copy    #kMenuIdSpecial, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdLock
-        jsr     disable_menu_item
-        lda     #aux::kMenuItemIdUnlock
-        jsr     disable_menu_item
-        lda     #aux::kMenuItemIdGetSize
-        jsr     disable_menu_item
         rts
 .endproc
 
@@ -5478,7 +5475,7 @@ no_win:
         lda     num_open_windows ; Was there already a window open?
         cmp     #2
         bcs     :+              ; yes, no need to enable file menu
-        jsr     enable_various_file_menu_items
+        jsr     enable_menu_items_requiring_window
         jmp     update_view
 
 :       copy    #MGTK::checkitem_uncheck, checkitem_params::check
@@ -5922,25 +5919,6 @@ flag:   .byte   0
 .endproc
         offset_window_grafport := offset_window_grafport_impl::flag_clear
         offset_window_grafport_and_set := offset_window_grafport_impl::flag_set
-
-;;; ============================================================
-
-.proc enable_various_file_menu_items
-        copy    #MGTK::disablemenu_enable, disablemenu_params::disable
-        MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
-
-        copy    #MGTK::disableitem_enable, disableitem_params::disable
-        copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdNewFolder
-        jsr     disable_menu_item
-        lda     #aux::kMenuItemIdClose
-        jsr     disable_menu_item
-        lda     #aux::kMenuItemIdCloseAll
-        jsr     disable_menu_item
-
-        copy    #$80, menu_dispatch_flag
-        rts
-.endproc
 
 ;;; ============================================================
 ;;; Refresh vol used/free for windows of same volume as win in A.
@@ -6409,6 +6387,8 @@ L72A8:  .word   0
         MLI_RELAY_CALL OPEN, open_params
         beq     done
 
+        ;; On error, clean up state
+
         bit     suppress_error_on_open_flag
         bmi     :+
         jsr     ShowAlert
@@ -6423,6 +6403,11 @@ L72A8:  .word   0
         lda     icon_params2
         sta     drive_to_refresh ; icon_number
         jsr     cmd_check_single_drive_by_icon_number
+
+:       dec     num_open_windows
+        lda     num_open_windows
+        bne     :+
+        jsr     disable_menu_items_requiring_window
 
 :       ldx     saved_stack
         txs
