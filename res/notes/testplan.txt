@@ -131,3 +131,13 @@
 * Launch Desktop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are corrrectly enabled.
 
 * Launch Desktop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Verify that 8 windows can be opened, and no render glitches occur.
+
+* Launch Desktop. Click on a volume icon. Hold Open-Apple and click a different volume icon. Verify that selection is extended.
+* Launch Desktop. Click on a volume icon. Hold Solid-Apple and click a different volume icon. Verify that selection is extended.
+* Launch Desktop. Select two volume icons. Hold Open-Apple and click on the desktop, not on an icon. Verify that selection is not cleared.
+* Launch Desktop. Select two volume icons. Hold Solid-Apple and click on the desktop, not on an icon. Verify that selection is not cleared.
+
+* Launch Desktop. Open a volume containing files. Click on a file icon. Hold Open-Apple and click a different file icon. Verify that selection is extended.
+* Launch Desktop. Open a volume containing files. Click on a file icon. Hold Solid-Apple and click a different file icon. Verify that selection is extended.
+* Launch Desktop. Open a volume containing files. Select two file icons. Hold Open-Apple and click on the window, not on an icon. Verify that selection is not cleared.
+* Launch Desktop. Open a volume containing files. Select two file icons. Hold Solid-Apple and click on the window, not on an icon. Verify that selection is not cleared.

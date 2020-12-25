@@ -4025,8 +4025,9 @@ L5CF0:  bit     double_click_flag
 
 L5CF8:  jmp     start_icon_drag
 
-        ;; Open-Apple: Extend selection (if in same window)
-L5CFB:  bit     BUTN0
+        ;; Open-Apple/Solid-Apple: Extend selection (if in same window)
+L5CFB:  lda     BUTN0
+        ora     BUTN1
         bpl     replace
         lda     selected_window_index
         cmp     active_window_id ; same window?
@@ -4328,7 +4329,8 @@ L5F20:  lda     event_coords,x
         lda     event_kind
         cmp     #MGTK::EventKind::drag
         beq     L5F3F
-        bit     BUTN0
+        lda     BUTN0           ; if using modifier, be nice and don't clear
+        ora     BUTN1           ; selection if mis-clicking
         bmi     L5F3E
         jsr     clear_selection
 L5F3E:  rts
@@ -5122,7 +5124,8 @@ L67EE:  bit     double_click_flag
         bmi     L6834
         jmp     L6880
 
-L67F6:  bit     BUTN0
+L67F6:  lda     BUTN0
+        ora     BUTN1
         bpl     replace_selection
 
         ;; Add clicked icon to selection
@@ -5207,7 +5210,8 @@ L6893:  txa
 
 .proc L68AA
         jsr     reset_main_grafport
-        bit     BUTN0
+        lda     BUTN0           ; if using modifier, be nice and don't clear
+        ora     BUTN1           ; selection if mis-clicking
         bpl     L68B3
         rts
 
