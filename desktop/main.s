@@ -6389,10 +6389,12 @@ L72A8:  .word   0
 
         ;; On error, clean up state
 
+        ;; Show error, unless this is during window restore.
         bit     suppress_error_on_open_flag
         bmi     :+
         jsr     ShowAlert
 
+        ;; If opening an icon, need to reset icon state.
 :       bit     icon_params2    ; Were we opening a path?
         bmi     :+              ; Yes, no icons to twiddle.
 
@@ -6404,11 +6406,21 @@ L72A8:  .word   0
         sta     drive_to_refresh ; icon_number
         jsr     cmd_check_single_drive_by_icon_number
 
+        ;; A window was allocated but unused, so restore the count
+        ;; and menu item state.
 :       dec     num_open_windows
         lda     num_open_windows
         bne     :+
         jsr     disable_menu_items_requiring_window
 
+        ;; A table entry was possibly allocated - free it.
+:       ldy     cached_window_id
+        dey
+        bmi     :+
+        sta     window_to_dir_icon_table,y
+        sta     cached_window_id
+
+        ;; And return via saved stack.
 :       ldx     saved_stack
         txs
 
