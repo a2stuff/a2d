@@ -141,3 +141,7 @@
 * Launch Desktop. Open a volume containing files. Click on a file icon. Hold Solid-Apple and click a different file icon. Verify that selection is extended.
 * Launch Desktop. Open a volume containing files. Select two file icons. Hold Open-Apple and click on the window, not on an icon. Verify that selection is not cleared.
 * Launch Desktop. Open a volume containing files. Select two file icons. Hold Solid-Apple and click on the window, not on an icon. Verify that selection is not cleared.
+
+* Launch DeskTop. Special > Disk Copy.... Press Escape key. Verify that menu keyboard mode starts.
+* Launch DeskTop. Special > Disk Copy.... Press Open-Apple Q. Verify that DeskTop launches.
+* Launch DeskTop. Special > Disk Copy.... Press Solid-Apple Q. Verify that DeskTop launches.

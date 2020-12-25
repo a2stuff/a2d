@@ -486,7 +486,7 @@ menu_accelerators:
         copy    event_key, menu_click_params::which_key
         lda     event_modifiers
         beq     :+
-        lda     #1
+        lda     #1              ; treat Solid-Apple same as Open-Apple
 :       sta     menu_click_params::key_mods
         copy    #$80, menu_kbd_flag ; note that source is keyboard
         MGTK_RELAY_CALL MGTK::MenuKey, menu_click_params

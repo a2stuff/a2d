@@ -163,7 +163,7 @@ findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
 
         .byte   0
         .byte   0
-LD12F:  .byte   0
+        .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -860,17 +860,17 @@ menu_offset_table:
 LD9D5:  lda     event_modifiers
         bne     :+
         lda     event_key
-        and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     :+
-        jmp     LDBFC
+        jmp     dialog_shortcuts
+
         ;; Keyboard-based menu selection
-:       lda     #1
-        sta     LD12F
-        lda     event_key
+:       lda     event_key
         sta     menukey_params::which_key
         lda     event_modifiers
-        sta     menukey_params::key_mods
+        beq     :+
+        lda     #1              ; treat Solid-Apple same as Open-Apple
+:       sta     menukey_params::key_mods
         MGTK_RELAY_CALL2 MGTK::MenuKey, menukey_params
 handle_menu_selection:
         ldx     menuselect_params::menu_id
@@ -1041,8 +1041,8 @@ params: .addr   0
         rts
 .endproc
 
-LDBFC:  lda     event_key
-        and     #CHAR_MASK
+dialog_shortcuts:
+        lda     event_key
         cmp     #'D'
         beq     LDC09
         cmp     #'d'
@@ -2699,7 +2699,6 @@ LED45:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
 LED58:  cmp     #MGTK::EventKind::key_down
         bne     input_loop
         lda     event_key
-        and     #CHAR_MASK
         bit     message_flags
         bmi     :+
         jmp     LEDE2
