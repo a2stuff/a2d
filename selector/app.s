@@ -1417,9 +1417,9 @@ done:   dec     DEVCNT
         lda     saved_ram_unitnum
         beq     done
 
+        inc     DEVCNT
         ldx     DEVCNT
         sta     DEVLST,x
-        inc     DEVCNT
 
 done:   rts
 .endproc
