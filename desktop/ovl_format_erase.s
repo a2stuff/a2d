@@ -9,6 +9,8 @@
 
         block_buffer := $1A00
 
+        ovl_string_buf := path_buf0
+
 exec:
 
 L0800:  pha
@@ -81,7 +83,7 @@ L08B7:  lda     path_buf1
         param_call main::draw_dialog_label, 3, aux::str_confirm_format
         lda     L09D7
         jsr     L1A2D
-        param_call main::DrawString, ovl_path_buf
+        param_call main::DrawString, ovl_string_buf
 L0902:  jsr     main::prompt_input_loop
         bmi     L0902
         beq     L090C
@@ -212,7 +214,7 @@ L0A7A:  lda     path_buf1
         lda     L0B46
         and     #$F0
         jsr     L1A2D
-        param_call main::DrawString, ovl_path_buf
+        param_call main::DrawString, ovl_string_buf
 L0AC7:  jsr     main::prompt_input_loop
         bmi     L0AC7
         beq     L0AD1
@@ -1457,12 +1459,12 @@ L1959:  lda     read_block_params::unit_num
         sta     the_disk_in_slot_label + kTheDiskInSlotDriveCharOffset
         ldx     the_disk_in_slot_label
 L1974:  lda     the_disk_in_slot_label,x
-        sta     ovl_path_buf,x
+        sta     ovl_string_buf,x
         dex
         bpl     L1974
         rts
 
-L197E:  param_call L19C8, ovl_path_buf
+L197E:  param_call L19C8, ovl_string_buf
         rts
 
 L1986:  cmp     #$A5
@@ -1478,7 +1480,7 @@ L1986:  cmp     #$A5
         sta     the_dos_33_disk_label + kTheDos33DiskDriveCharOffset
         ldx     the_dos_33_disk_label
 L19AC:  lda     the_dos_33_disk_label,x
-        sta     ovl_path_buf,x
+        sta     ovl_string_buf,x
         dex
         bpl     L19AC
         rts
@@ -1502,11 +1504,11 @@ L19C1:  and     #$80
 L19C8:  copy16  #$0002, read_block_params::block_num
         MLI_RELAY_CALL READ_BLOCK, read_block_params
         beq     L19F7
-        copy    #4, ovl_path_buf
-        copy    #' ', ovl_path_buf+1
-        copy    #':', ovl_path_buf+2
-        copy    #' ', ovl_path_buf+3 ; Overwritten ???
-        copy    #'?', ovl_path_buf+3
+        copy    #4, ovl_string_buf
+        copy    #' ', ovl_string_buf+1
+        copy    #':', ovl_string_buf+2
+        copy    #' ', ovl_string_buf+3 ; Overwritten ???
+        copy    #'?', ovl_string_buf+3
         rts
 
         ;; This straddles $1A00 which is the block buffer ($1A00-$1BFF) ???
@@ -1514,21 +1516,21 @@ L19C8:  copy16  #$0002, read_block_params::block_num
 L19F7:  lda     read_buffer + 6
         tax
 L19FB:  lda     read_buffer + 6,x
-        sta     ovl_path_buf,x
+        sta     ovl_string_buf,x
         dex
         bpl     L19FB
-        inc     ovl_path_buf
-        ldx     ovl_path_buf
+        inc     ovl_string_buf
+        ldx     ovl_string_buf
         lda     #':'
-        sta     ovl_path_buf,x
-        inc     ovl_path_buf
-        ldx     ovl_path_buf
+        sta     ovl_string_buf,x
+        inc     ovl_string_buf
+        ldx     ovl_string_buf
         lda     #' '
-        sta     ovl_path_buf,x
-        inc     ovl_path_buf
-        ldx     ovl_path_buf
+        sta     ovl_string_buf,x
+        inc     ovl_string_buf
+        ldx     ovl_string_buf
         lda     #'?'
-L1A22:  sta     ovl_path_buf,x
+L1A22:  sta     ovl_string_buf,x
         rts
 
 ;;; ============================================================
@@ -1543,18 +1545,18 @@ L1A22:  sta     ovl_path_buf,x
         sta     read_buffer
         tax
 :       lda     read_buffer,x
-        sta     ovl_path_buf,x
+        sta     ovl_string_buf,x
         dex
         bpl     :-
 
-        inc     ovl_path_buf
-        ldx     ovl_path_buf
+        inc     ovl_string_buf
+        ldx     ovl_string_buf
         lda     #' '
-        sta     ovl_path_buf,x
-        inc     ovl_path_buf
-        ldx     ovl_path_buf
+        sta     ovl_string_buf,x
+        inc     ovl_string_buf
+        ldx     ovl_string_buf
         lda     #$3F
-        sta     ovl_path_buf,x
+        sta     ovl_string_buf,x
         rts
 
 L1A6D:  lda     on_line_params::unit_num

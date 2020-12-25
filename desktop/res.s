@@ -662,9 +662,6 @@ str_file_count:                 ; populated with number of files
 str_kb_suffix:
         PASCAL_STRING "K"       ; suffix for kilobytes
 
-        ;; This location also used as path buffer by ovl_format_erase
-ovl_path_buf:
-
 file_count:
         .word   0
 

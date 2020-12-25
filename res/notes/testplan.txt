@@ -145,3 +145,5 @@
 * Launch DeskTop. Special > Disk Copy.... Press Escape key. Verify that menu keyboard mode starts.
 * Launch DeskTop. Special > Disk Copy.... Press Open-Apple Q. Verify that DeskTop launches.
 * Launch DeskTop. Special > Disk Copy.... Press Solid-Apple Q. Verify that DeskTop launches.
+
+* Launch DeskTop. Special > Format a Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy a File.... Verify that the file list is populated.
