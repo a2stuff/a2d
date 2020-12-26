@@ -58,20 +58,26 @@ L2049:  lda     open_params::ref_num
         sta     read_params2::ref_num
         sta     read_params3::ref_num
 
+        kNumSegments = 3
+
         ;; Read various segments into final or temp locations
         MLI_CALL SET_MARK, set_mark_params
         beq     :+
         brk
-:       MLI_CALL READ, read_params1
+:       jsr     update_progress
+        MLI_CALL READ, read_params1
         beq     :+
         brk
-:       MLI_CALL READ, read_params2
+:       jsr     update_progress
+        MLI_CALL READ, read_params2
         beq     :+
         brk
-:       MLI_CALL READ, read_params3
+:       jsr     update_progress
+        MLI_CALL READ, read_params3
         beq     :+
         brk
-:
+:       jsr     update_progress
+
         ;; Copy Resources segment to Aux LC1
         sta     ALTZPON
         lda     LCBANK1
@@ -115,6 +121,35 @@ L2049:  lda     open_params::ref_num
         ;; --------------------------------------------------
         ;; Invoke the Selector application
         jmp     START
+
+
+.proc update_progress
+
+        kProgressVtab = 14
+        kProgressStops = kNumSegments + 1
+        kProgressTick = 40 / kProgressStops
+        kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
+
+        lda     #kProgressVtab
+        jsr     VTABZ
+        lda     #kProgressHtab
+        sta     CH
+
+        lda     count
+        clc
+        adc     #kProgressTick
+        sta     count
+
+        tax
+        lda     #' '
+:       jsr     COUT
+        dex
+        bne     :-
+
+        rts
+
+count:  .byte   0
+.endproc
 
 .endscope
 
