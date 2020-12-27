@@ -3450,8 +3450,10 @@ str_move_remaining:
 
 str_exists_prompt:
         PASCAL_STRING "That file already exists. Do you want to write over it ?"
-str_large_prompt:
+str_large_copy_prompt:
         PASCAL_STRING "This file is too large to copy, click OK to continue."
+str_large_move_prompt:
+        PASCAL_STRING "This file is too large to move, click OK to continue."
 
 copy_file_count_pos:
         DEFINE_POINT 110, kDialogLabelRow1

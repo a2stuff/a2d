@@ -13959,7 +13959,12 @@ LAA7F:  jsr     prompt_input_loop
 do4:    jsr     Bell
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        param_call draw_dialog_label, 6, aux::str_large_prompt
+        bit     move_flag
+    IF_MINUS
+        param_call      draw_dialog_label, 6, aux::str_large_move_prompt
+    ELSE
+        param_call      draw_dialog_label, 6, aux::str_large_copy_prompt
+    END_IF
         jsr     draw_ok_cancel_buttons
 :       jsr     prompt_input_loop
         bmi     :-

@@ -147,3 +147,6 @@
 * Launch DeskTop. Special > Disk Copy.... Press Solid-Apple Q. Verify that DeskTop launches.
 
 * Launch DeskTop. Special > Format a Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy a File.... Verify that the file list is populated.
+
+* Launch DeskTop. Try to move a file (drag on same volume) where there is not enough space to make a temporary copy. Verify that the error message says that the file is too large to move.
+* Launch DeskTop. Try to copy a file (drag to different volume) where there is not enough space to make the copy. Verify that the error message says that the file is too large to copy.
