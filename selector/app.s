@@ -1002,25 +1002,26 @@ noop:   rts
         rts
 
 :       cmp     #'9'
-        bcc     L9611
+        bcc     :+
         rts
 
-L9611:  sec
+:       sec
         sbc     #'1'
-        sta     L97BC
+        sta     tentative_selection
         cmp     num_run_list_entries
-        bcc     L961D
+        bcc     :+
         rts
 
-L961D:  lda     selected_entry
-        bmi     L962E
-        cmp     L97BC
-        bne     L9628
+:       lda     selected_entry
+        bmi     no_cur_sel
+        cmp     tentative_selection
+        bne     :+
         rts
 
-L9628:  lda     selected_entry
+:       lda     selected_entry
         jsr     maybe_toggle_entry_hilite
-L962E:  lda     L97BC
+no_cur_sel:
+        lda     tentative_selection
         sta     selected_entry
         jsr     maybe_toggle_entry_hilite
         rts
@@ -1048,30 +1049,39 @@ not_return:
         cmp     #CHAR_RIGHT
         beq     :+
         jmp     not_right
-
-:       lda     num_run_list_entries
+:
+.scope
+        ;; Any entries?
+        lda     num_run_list_entries
         bne     :+
         lda     num_other_run_list_entries
         bne     :+
         rts
 
+        ;; Any selection?
 :       lda     selected_entry
-        bpl     :+
+        bpl     :+              ; yes
+
+        ;; No, just pick first entry.
+        ;; BUG: Assumes there is an entry in the primary run list.
         lda     #0
         sta     selected_entry
         jsr     maybe_toggle_entry_hilite
         rts
 
+        ;; Change selection
 :       lda     selected_entry
-        cmp     #8
-        bcc     L9682
-        jmp     L969A
+        cmp     #8              ; in primary or other run list?
+        bcc     primary
+        jmp     other
 
-L9682:  cmp     num_other_run_list_entries
-        bcc     L9688
-        rts
+        ;; In run list (<8) - anything to the right?
+primary:
+        cmp     num_other_run_list_entries
+        bcc     :+
+        rts                     ; no - do nothing
 
-L9688:  clc
+:       clc                     ; pick item directly to the right
         adc     #8
         pha
         lda     selected_entry
@@ -1081,12 +1091,13 @@ L9688:  clc
         jsr     maybe_toggle_entry_hilite
         rts
 
-L969A:  cmp     num_other_run_list_entries
-        bcc     L96A0
-        rts
+        ;; In other run list (>8) - anything to the right?
+other:  cmp     num_other_run_list_entries
+        bcc     :+
+        rts                     ; no - do nothing
 
-L96A0:  lda     selected_entry
-        clc
+:       lda     selected_entry
+        clc                     ; pick item directly to the right
         adc     #8
         pha
         lda     selected_entry
@@ -1095,6 +1106,8 @@ L96A0:  lda     selected_entry
         sta     selected_entry
         jsr     maybe_toggle_entry_hilite
         rts
+.endscope
+
 not_right:
 
         ;; --------------------------------------------------
@@ -1103,15 +1116,18 @@ not_right:
         cmp     #CHAR_LEFT
         beq     :+
         jmp     not_left
-
-:       lda     selected_entry
+:
+.scope
+        ;; Any selection?
+        lda     selected_entry
         bpl     :+
-        rts
+        rts                     ; no, do nothing
 
-:       cmp     #8
+:       cmp     #8              ; in primary or other run list?
         bcs     :+
-        rts
+        rts                     ; primary; do nothing
 
+        ;; In other run list - anything to the left?
 :       lda     selected_entry
         sec
         sbc     #8
@@ -1129,6 +1145,7 @@ not_right:
         sta     selected_entry
         jsr     maybe_toggle_entry_hilite
         rts
+.endscope
 
 not_left:
 
@@ -1138,58 +1155,71 @@ not_left:
         cmp     #CHAR_UP
         beq     :+
         jmp     not_up
-
-:       lda     selected_entry
+:
+.scope
+        ;; Any selection?
+        lda     selected_entry
         bpl     :+
         rts
 
-:       lda     selected_entry
+:       lda     selected_entry  ; clear current selection
         jsr     maybe_toggle_entry_hilite
-        jsr     L9728
+
+        jsr     populate_buf
+
         lda     selected_entry
-        cmp     #8
-        bcc     L970E
-        sec
-        sbc     #8
+        cmp     #8              ; in run list?
+        bcc     :+
+
+        sec                     ; in other run list
+        sbc     #8              ; so compute offset into buf
         clc
         adc     num_run_list_entries
-L970E:  sec
-        sbc     #1
-        bpl     L971D
-        lda     num_run_list_entries
-        clc
+
+:       sec                     ; A now has offset into buf
+        sbc     #1              ; previous entry
+        bpl     :+
+
+        lda     num_run_list_entries ; underflow, so wrap
+        clc                          ; compute new offset into buf
         adc     num_other_run_list_entries
         sec
         sbc     #1
-L971D:  tax
+
+:       tax
         lda     buf,x
         sta     selected_entry
         jsr     maybe_toggle_entry_hilite
         rts
+.endscope
 
-L9728:
+
+;;; Populate buf list with indexes of entries in both run lists.
+;;; E.g. if 5 entries in run list and 3 entries in other run list,
+;;; buf would end up with: 0 1 2 3 4 0 1 2
+.proc populate_buf
         ldx     #0
-L972A:  cpx     num_run_list_entries
-        beq     L9737
+:       cpx     num_run_list_entries
+        beq     :+
         txa
         sta     buf,x
         inx
-        jmp     L972A
+        jmp     :-
 
-L9737:  ldy     #0
-L9739:  cpy     num_other_run_list_entries
-        bne     L973F
+:       ldy     #0
+loop:   cpy     num_other_run_list_entries
+        bne     :+
         rts
 
-L973F:  tya
+:       tya
         clc
         adc     #8
         sta     buf,x
         inx
         iny
-        jmp     L9739
+        jmp     loop
+.endproc
 
-;;; ???
 buf:    .res    32, 0
 
 not_up:
@@ -1200,44 +1230,58 @@ not_up:
         cmp     #CHAR_DOWN
         beq     :+
         rts
-
-:       lda     num_run_list_entries
+:
+.scope
+        ;; Any entries?
+        lda     num_run_list_entries
         bne     :+
         lda     num_other_run_list_entries
         bne     :+
         rts
 
+        ;; Any selection?
 :       lda     selected_entry
         bpl     :+
-        lda     #$00
+
+        ;; No selection, pick first entry.
+        ;; BUG: Assumes there is an entry in the primary run list.
+        lda     #0
         sta     selected_entry
         jsr     maybe_toggle_entry_hilite
         rts
 
-:       lda     selected_entry
+:       lda     selected_entry  ; clear current selection
         jsr     maybe_toggle_entry_hilite
-        jsr     L9728
-        lda     num_run_list_entries
+
+        jsr     populate_buf
+
+        total_entries := tentative_selection ; alias
+
+        lda     num_run_list_entries ; compute total number of entries
         clc
         adc     num_other_run_list_entries
-        sta     L97BC
-        ldx     #$00
+        sta     total_entries
+
+        ldx     #0              ; find index in buf of current
 :       lda     buf,x
         cmp     selected_entry
-        beq     L97AA
+        beq     :+
         inx
         jmp     :-
 
-L97AA:  inx
-        cpx     L97BC
-        bne     L97B2
-        ldx     #$00
-L97B2:  lda     buf,x
+:       inx                     ; select next
+        cpx     total_entries
+        bne     :+
+        ldx     #0              ; wrap to first if needed
+:       lda     buf,x
         sta     selected_entry
         jsr     maybe_toggle_entry_hilite
         rts
+.endscope
 
-L97BC:  .byte   0
+tentative_selection:
+        .byte   0
+
 .endproc
 
 ;;; ============================================================
