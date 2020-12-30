@@ -86,15 +86,15 @@ L9088:  sta     copy_when
         bpl     L9093
         jmp     L9016
 
-L9093:  copy16  selector_list, L938B
+L9093:  copy16  selector_list, num_run_list_entries
         lda     which_run_list
         cmp     #$01
         bne     L90D3
-        lda     L938B
+        lda     num_run_list_entries
         cmp     #$08
         beq     L90F4
         ldy     copy_when
-        lda     L938B
+        lda     num_run_list_entries
         jsr     L9A0A
         inc     selector_list + kSelectorListNumRunListOffset
         copy16  selector_menu_addr, @addr
@@ -106,11 +106,11 @@ L9093:  copy16  selector_list, L938B
 
 L90D0:  jmp     L900F
 
-L90D3:  lda     L938C
+L90D3:  lda     num_other_run_list_entries
         cmp     #$10
         beq     L90FF
         ldy     copy_when
-        lda     L938C
+        lda     num_other_run_list_entries
         clc
         adc     #$08
         jsr     L9A61
@@ -136,8 +136,8 @@ copy_when:  .byte   0
 ;;; ============================================================
 
 L9105:  lda     #$00
-        sta     L938B
-        sta     L938C
+        sta     num_run_list_entries
+        sta     num_other_run_list_entries
         copy    #$FF, selected_index
         jsr     L9390
         jsr     L9D22
@@ -263,7 +263,7 @@ L91FD:  lda     selected_index
         lda     which_run_list
         cmp     #$02
         beq     L926A
-        lda     L938B
+        lda     num_run_list_entries
         cmp     #$08
         bne     L9215
         jmp     L90F4
@@ -273,8 +273,8 @@ L9215:  lda     selected_index
         beq     L9220
         jmp     close_and_return
 
-L9220:  ldx     L938B
-        inc     L938B
+L9220:  ldx     num_run_list_entries
+        inc     num_run_list_entries
         inc     selector_list + kSelectorListNumRunListOffset
         copy16  selector_menu_addr, @addr
         @addr := *+1
@@ -285,7 +285,7 @@ L9220:  ldx     L938B
 L923C:  lda     which_run_list
         cmp     #$01
         beq     L926A
-        lda     L938C
+        lda     num_other_run_list_entries
         cmp     #$10
         bne     L924D
         jmp     L9105
@@ -295,10 +295,10 @@ L924D:  lda     selected_index
         beq     L9258
         jmp     close_and_return
 
-L9258:  ldx     L938C
-        inc     L938C
+L9258:  ldx     num_other_run_list_entries
+        inc     num_other_run_list_entries
         inc     selector_list + kSelectorListNumOtherListOffset
-        lda     L938C
+        lda     num_other_run_list_entries
         clc
         adc     #$07
         jmp     L926D
@@ -419,8 +419,10 @@ L933F:  pha
 ;;; ============================================================
 
 L938A:  .byte   0
-L938B:  .byte   0
-L938C:  .byte   0
+num_run_list_entries:
+        .byte   0
+num_other_run_list_entries:
+        .byte   0
 
 selected_index:
         .byte   0
@@ -654,7 +656,7 @@ L9738:  pha
         sta     new_selection
         cmp     #8
         bcs     L9782
-        cmp     L938B
+        cmp     num_run_list_entries
         bcs     L9790
 
 L976A:  cmp     selected_index           ; same as previous selection?
@@ -669,7 +671,7 @@ L976A:  cmp     selected_index           ; same as previous selection?
 
 L9782:  sec
         sbc     #8
-        cmp     L938C
+        cmp     num_other_run_list_entries
         bcs     L9790
         clc
         adc     #8
@@ -733,8 +735,10 @@ L97D4:  ldx     #0
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
-        ;; key down handler
-handle_key:
+;;; ============================================================
+;;; Key down handler
+
+.proc handle_key
         lda     event_modifiers
         cmp     #MGTK::event_modifier_solid_apple
         bne     :+
@@ -744,219 +748,260 @@ handle_key:
 
         cmp     #CHAR_LEFT
         bne     :+
-        jmp     L98F8
+        jmp     handle_key_left
 
 :       cmp     #CHAR_RIGHT
         bne     :+
-        jmp     L98AC
+        jmp     handle_key_right
 
 :       cmp     #CHAR_RETURN
         bne     :+
-        jmp     L985E
+        jmp     handle_key_return
 
 :       cmp     #CHAR_ESCAPE
         bne     :+
-        jmp     L9885
+        jmp     handle_key_escape
 
 :       cmp     #CHAR_DOWN
         bne     :+
-        jmp     L9978
+        jmp     handle_key_down
 
 :       cmp     #CHAR_UP
         bne     :+
-        jmp     L993F
+        jmp     handle_key_up
 
 :       return  #$FF
+.endproc
 
-L985E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+;;; ============================================================
+
+.proc handle_key_return
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
         return  #0
+.endproc
 
-L9885:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+;;; ============================================================
+
+.proc handle_key_escape
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
         return  #1
+.endproc
 
-L98AC:  lda     L938B
-        ora     L938C
-        beq     L98F5
+;;; ============================================================
+
+.proc handle_key_right
+        lda     num_run_list_entries
+        ora     num_other_run_list_entries
+        beq     done
+
         lda     selected_index
-        bpl     L98CE
-        ldx     #$00
-        lda     L99DD
-        bpl     L98EE
-        ldx     #$08
-        lda     L99E5
-        bpl     L98EE
-        ldx     #$10
-        lda     L99ED
-        bpl     L98EE
-L98CE:  lda     selected_index
+        bpl     move           ; have a selection
+
+        ;; No selection; find a valid one in top row
+        ldx     #0
+        lda     entries_flag_table
+        bpl     set
+
+        ldx     #8
+        lda     entries_flag_table+8
+        bpl     set
+
+        ldx     #16
+        lda     entries_flag_table+16
+        bpl     set
+
+        ;; Change selection
+move:   lda     selected_index  ; unselect current
         jsr     maybe_toggle_entry_hilite
+
         lda     selected_index
-L98D7:  clc
-        adc     #$08
-        cmp     #$18
-        bcc     L98E4
+loop:   clc
+        adc     #8
+        cmp     #kSelectorListNumEntries
+        bcc     :+
         sec
-        sbc     #$20
-        jmp     L98D7
+        sbc     #kSelectorListNumEntries+8
+        jmp     loop
 
-L98E4:  tax
-        lda     L99DD,x
-        bpl     L98EE
+:       tax
+        lda     entries_flag_table,x
+        bpl     set
         txa
-        jmp     L98D7
+        jmp     loop
 
-L98EE:  txa
+set:    txa
         sta     selected_index
         jsr     maybe_toggle_entry_hilite
-L98F5:  return  #$FF
 
-L98F8:  lda     L938B
-        ora     L938C
-        beq     L993C
+done:   return  #$FF
+.endproc
+
+;;; ============================================================
+
+.proc handle_key_left
+        lda     num_run_list_entries
+        ora     num_other_run_list_entries
+        beq     done
+
         lda     selected_index
-        bpl     L9917
-        ldx     #$10
-        lda     L99ED
-        bpl     L9935
-        ldx     #$08
-        lda     L99E5
-        bpl     L9935
-        lda     #$00
-        beq     L9936
-L9917:  lda     selected_index
+        bpl     move            ; have a selection
+
+        ;; No selection; find a valid one in top row
+        ldx     #16
+        lda     entries_flag_table+16
+        bpl     set
+
+        ldx     #8
+        lda     entries_flag_table+8
+        bpl     set
+
+        lda     #0              ; always
+        beq     set2
+
+        ;; Change selection
+move:   lda     selected_index  ; unselect current
         jsr     maybe_toggle_entry_hilite
+
         lda     selected_index
-L9920:  sec
-        sbc     #$08
-        bpl     L992B
+loop:   sec
+        sbc     #8
+        bpl     :+
         clc
-        adc     #$20
-        jmp     L9920
+        adc     #kSelectorListNumEntries+8
+        jmp     loop
 
-L992B:  tax
-        lda     L99DD,x
-        bpl     L9935
+:       tax
+        lda     entries_flag_table,x
+        bpl     set
         txa
-        jmp     L9920
+        jmp     loop
 
-L9935:  txa
-L9936:  sta     selected_index
+set:    txa
+set2:   sta     selected_index
         jsr     maybe_toggle_entry_hilite
-L993C:  return  #$FF
 
-L993F:  lda     L938B
-        ora     L938C
-        beq     L9975
+done:   return  #$FF
+.endproc
+
+;;; ============================================================
+
+.proc handle_key_up
+        lda     num_run_list_entries
+        ora     num_other_run_list_entries
+        beq     done
+
         lda     selected_index
-        bpl     L9956
-        ldx     #$17
-L994E:  lda     L99DD,x
-        bpl     L996F
+        bpl     move            ; have a selection
+
+        ;; No selection; find last valid one
+        ldx     #kSelectorListNumEntries - 1
+:       lda     entries_flag_table,x
+        bpl     set
         dex
-        bpl     L994E
-L9956:  lda     selected_index
+        bpl     :-
+
+        ;; Change selection
+move:   lda     selected_index  ; unselect current
         jsr     maybe_toggle_entry_hilite
+
         ldx     selected_index
-L995F:  dex
-        bmi     L996A
-        lda     L99DD,x
-        bpl     L996F
-        jmp     L995F
+loop:   dex                     ; to previous
+        bmi     wrap
+        lda     entries_flag_table,x
+        bpl     set
+        jmp     loop
 
-L996A:  ldx     #$18
-        jmp     L995F
+wrap:   ldx     #kSelectorListNumEntries
+        jmp     loop
 
-L996F:  sta     selected_index
+set:    sta     selected_index
         jsr     maybe_toggle_entry_hilite
-L9975:  return  #$FF
 
-L9978:  lda     L938B
-        ora     L938C
-        beq     L99B0
+done:   return  #$FF
+.endproc
+
+;;; ============================================================
+
+.proc handle_key_down
+        lda     num_run_list_entries
+        ora     num_other_run_list_entries
+        beq     done
+
         lda     selected_index
-        bpl     L998F
-        ldx     #$00
-L9987:  lda     L99DD,x
-        bpl     L99AA
+        bpl     move           ; have a selection
+
+        ;; No selection; find first valid one
+        ldx     #0
+:       lda     entries_flag_table,x
+        bpl     set
         inx
-        bne     L9987
-L998F:  lda     selected_index
+        bne     :-
+
+        ;; Change selection
+move:   lda     selected_index  ; unselect current
         jsr     maybe_toggle_entry_hilite
+
         ldx     selected_index
-L9998:  inx
-        cpx     #$18
-        bcs     L99A5
-        lda     L99DD,x
-        bpl     L99AA
-        jmp     L9998
+loop:   inx                     ; to next
+        cpx     #kSelectorListNumEntries
+        bcs     wrap
+        lda     entries_flag_table,x
+        bpl     set             ; valid!
+        jmp     loop
 
-L99A5:  ldx     #$FF
-        jmp     L9998
+wrap:   ldx     #AS_BYTE(-1)
+        jmp     loop
 
-L99AA:  sta     selected_index
+        ;; Set the selection
+set:    sta     selected_index
         jsr     maybe_toggle_entry_hilite
-L99B0:  return  #$FF
+
+done:   return  #$FF
+.endproc
+
+;;; ============================================================
 
 L99B3:  ldx     #$17
         lda     #$FF
-L99B7:  sta     L99DD,x
+L99B7:  sta     entries_flag_table,x
         dex
         bpl     L99B7
         ldx     #$00
-L99BF:  cpx     L938B
+L99BF:  cpx     num_run_list_entries
         beq     L99CB
         txa
-        sta     L99DD,x
+        sta     entries_flag_table,x
         inx
         bne     L99BF
 L99CB:  ldx     #$00
-L99CD:  cpx     L938C
+L99CD:  cpx     num_other_run_list_entries
         beq     L99DC
         txa
         clc
         adc     #$08
-        sta     L99E5,x
+        sta     entries_flag_table+8,x
         inx
         bne     L99CD
 L99DC:  rts
 
-L99DD:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-L99E5:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-L99ED:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+;;; Table for 24 entries; $00 if in use, $FF if empty
+entries_flag_table:
+        .res    ::kSelectorListNumEntries, 0
+
 L99F5:  MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_all_items_rect
         rts
 
-        rts
+        rts                     ; ???
 
-        rts
+        rts                     ; ???
 
 ;;; Input: A = index, Y = copy_when (1=boot, 2=use, 3=never)
 
@@ -1033,17 +1078,17 @@ L9A97:  sta     L9BD4
 
 L9AA1:  tax
         inx
-        cpx     L938B
+        cpx     num_run_list_entries
         bne     L9AC0
 L9AA8:  dec     selector_list + kSelectorListNumRunListOffset
-        dec     L938B
+        dec     num_run_list_entries
         copy16  selector_menu_addr, @addr
         @addr := *+1
         dec     dummy1234
         jmp     L9CEA
 
 L9AC0:  lda     L9BD4
-        cmp     L938B
+        cmp     num_run_list_entries
         beq     L9AA8
         jsr     get_file_entry_addr
         stax    $06
@@ -1119,19 +1164,19 @@ L9B52:  lda     ($08),y
 
 L9B5F:  sec
         sbc     #$07
-        cmp     L938C
+        cmp     num_other_run_list_entries
         bne     L9B70
         dec     selector_list + kSelectorListNumOtherListOffset
-        dec     L938C
+        dec     num_other_run_list_entries
         jmp     L9CEA
 
 L9B70:  lda     L9BD4
         sec
         sbc     #$08
-        cmp     L938C
+        cmp     num_other_run_list_entries
         bne     L9B84
         dec     selector_list + kSelectorListNumOtherListOffset
-        dec     L938C
+        dec     num_other_run_list_entries
         jmp     L9CEA
 
 L9B84:  lda     L9BD4
@@ -1342,12 +1387,12 @@ L9D22:  jsr     L9CBA
         rts
 
 L9D28:  lda     selector_list + kSelectorListNumRunListOffset
-        sta     L938B
+        sta     num_run_list_entries
         beq     L9D55
         lda     #$00
         sta     L9D8C
 L9D35:  lda     L9D8C
-        cmp     L938B
+        cmp     num_run_list_entries
         beq     L9D55
         jsr     times16
         clc
@@ -1363,12 +1408,12 @@ L9D35:  lda     L9D8C
         jmp     L9D35
 
 L9D55:  lda     selector_list + kSelectorListNumOtherListOffset
-        sta     L938C
+        sta     num_other_run_list_entries
         beq     L9D89
         lda     #$00
         sta     L9D8C
 L9D62:  lda     L9D8C
-        cmp     L938C
+        cmp     num_other_run_list_entries
         beq     L9D89
         clc
         adc     #$08
