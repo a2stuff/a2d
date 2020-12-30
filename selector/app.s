@@ -356,7 +356,7 @@ desktop_available_flag:
 
 
 ;;; Index of selected entry, or $FF if none
-selected_entry:
+selected_index:
         .byte   0
 
         .byte   0
@@ -395,7 +395,7 @@ L9129:  .byte   0
 entry:
 .proc app_init
         cli
-        copy    #$FF, selected_entry
+        copy    #$FF, selected_index
         jsr     load_selector_list
         copy    #1, L9129
         lda     num_other_run_list_entries
@@ -443,7 +443,7 @@ check_key:
         bmi     done_keys
         cmp     num_run_list_entries
         bcs     done_keys
-        sta     selected_entry
+        sta     selected_index
         jsr     get_selector_list_entry_addr
 
         entry_ptr := $06
@@ -455,11 +455,11 @@ check_key:
         beq     :+
         jsr     get_copied_to_ramcard_flag
         beq     done_keys
-        jsr     get_selected_entry_file_info
+        jsr     get_selected_index_file_info
         beq     :+
         jmp     done_keys
 
-:       lda     selected_entry
+:       lda     selected_index
         jsr     invoke_entry
 
         ;; --------------------------------------------------
@@ -596,8 +596,9 @@ set_startup_menu_items:
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     get_port_and_draw_window
-        copy    #$FF, selected_entry
+        copy    #$FF, selected_index
         jsr     load_selector_list
+        jsr     populate_entries_flag_table
         jsr     draw_entries
         jmp     event_loop
 
@@ -790,11 +791,11 @@ L93EB:  tsx
 ;;; ============================================================
 
 .proc cmd_run_a_program
-        lda     selected_entry
+        lda     selected_index
         bmi     L93FF
         jsr     maybe_toggle_entry_hilite
         lda     #$FF
-        sta     selected_entry
+        sta     selected_index
 L93FF:  jsr     set_watch_cursor
         MLI_CALL OPEN, open_selector_params
         bne     L9443
@@ -865,7 +866,7 @@ L94A1:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     ok_btn_event_loop
         bmi     L94B5
-        jsr     try_invoke_selected_entry
+        jsr     try_invoke_selected_index
 L94B5:  rts
 
         ;; DeskTop button?
@@ -896,9 +897,9 @@ L94F0:  sub16   entry_click_x, pt5::xcoord, entry_click_x
         sub16   entry_click_y, pt0::ycoord, entry_click_y
         lda     entry_click_y+1
         bpl     :+
-        lda     selected_entry
+        lda     selected_index
         jsr     maybe_toggle_entry_hilite
-        copy    #$FF, selected_entry
+        copy    #$FF, selected_index
         rts
 
 :       lsr16   entry_click_y   ; /= 8
@@ -907,9 +908,9 @@ L94F0:  sub16   entry_click_x, pt5::xcoord, entry_click_x
         lda     entry_click_y
         cmp     #8
         bcc     L954C
-        lda     selected_entry
+        lda     selected_index
         jsr     maybe_toggle_entry_hilite
-        copy    #$FF, selected_entry
+        copy    #$FF, selected_index
         rts
 
 L954C:  sta     L959D
@@ -930,18 +931,18 @@ L954C:  sta     L959D
 
 L9571:  cmp     num_run_list_entries
         bcc     finish
-        lda     selected_entry
+        lda     selected_index
         jsr     maybe_toggle_entry_hilite
-        copy    #$FF, selected_entry
+        copy    #$FF, selected_index
         rts
 
 L9582:  sec
         sbc     #8
         cmp     num_other_run_list_entries
         bcc     finish
-        lda     selected_entry
+        lda     selected_index
         jsr     maybe_toggle_entry_hilite
-        copy    #$FF, selected_entry
+        copy    #$FF, selected_index
         rts
 
 finish: lda     L959E
@@ -1012,17 +1013,17 @@ noop:   rts
         bcc     :+
         rts
 
-:       lda     selected_entry
+:       lda     selected_index
         bmi     no_cur_sel
         cmp     tentative_selection
         bne     :+
         rts
 
-:       lda     selected_entry
+:       lda     selected_index
         jsr     maybe_toggle_entry_hilite
 no_cur_sel:
         lda     tentative_selection
-        sta     selected_entry
+        sta     selected_index
         jsr     maybe_toggle_entry_hilite
         rts
 
@@ -1039,255 +1040,243 @@ control_char:
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         MGTK_CALL MGTK::PaintRect, ok_button_rect
-        jsr     try_invoke_selected_entry
+        jsr     try_invoke_selected_index
         rts
 not_return:
 
         ;; --------------------------------------------------
-        ;; Right Arrow ?
-
-        cmp     #CHAR_RIGHT
-        beq     :+
-        jmp     not_right
-:
-.scope
-        ;; Any entries?
-        lda     num_run_list_entries
-        bne     :+
-        lda     num_other_run_list_entries
-        bne     :+
-        rts
-
-        ;; Any selection?
-:       lda     selected_entry
-        bpl     :+              ; yes
-
-        ;; No, just pick first entry.
-        ;; BUG: Assumes there is an entry in the primary run list.
-        lda     #0
-        sta     selected_entry
-        jsr     maybe_toggle_entry_hilite
-        rts
-
-        ;; Change selection
-:       lda     selected_entry
-        cmp     #8              ; in primary or other run list?
-        bcc     primary
-        jmp     other
-
-        ;; In run list (<8) - anything to the right?
-primary:
-        cmp     num_other_run_list_entries
-        bcc     :+
-        rts                     ; no - do nothing
-
-:       clc                     ; pick item directly to the right
-        adc     #8
-        pha
-        lda     selected_entry
-        jsr     maybe_toggle_entry_hilite
-        pla
-        sta     selected_entry
-        jsr     maybe_toggle_entry_hilite
-        rts
-
-        ;; In other run list (>8) - anything to the right?
-other:  cmp     num_other_run_list_entries
-        bcc     :+
-        rts                     ; no - do nothing
-
-:       lda     selected_entry
-        clc                     ; pick item directly to the right
-        adc     #8
-        pha
-        lda     selected_entry
-        jsr     maybe_toggle_entry_hilite
-        pla
-        sta     selected_entry
-        jsr     maybe_toggle_entry_hilite
-        rts
-.endscope
-
-not_right:
-
-        ;; --------------------------------------------------
-        ;; Left Arrow ?
+        ;; Arrow keys?
 
         cmp     #CHAR_LEFT
-        beq     :+
-        jmp     not_left
-:
-.scope
-        ;; Any selection?
-        lda     selected_entry
-        bpl     :+
-        rts                     ; no, do nothing
-
-:       cmp     #8              ; in primary or other run list?
-        bcs     :+
-        rts                     ; primary; do nothing
-
-        ;; In other run list - anything to the left?
-:       lda     selected_entry
-        sec
-        sbc     #8
-        cmp     #8
-        bcs     :+
-        cmp     num_run_list_entries
-        bcc     :+
-        rts
-
-:       lda     selected_entry
-        jsr     maybe_toggle_entry_hilite
-        lda     selected_entry
-        sec
-        sbc     #8
-        sta     selected_entry
-        jsr     maybe_toggle_entry_hilite
-        rts
-.endscope
-
-not_left:
-
-        ;; --------------------------------------------------
-        ;; Up Arrow ?
-
-        cmp     #CHAR_UP
-        beq     :+
-        jmp     not_up
-:
-.scope
-        ;; Any selection?
-        lda     selected_entry
-        bpl     :+
-        rts
-
-:       lda     selected_entry  ; clear current selection
-        jsr     maybe_toggle_entry_hilite
-
-        jsr     populate_buf
-
-        lda     selected_entry
-        cmp     #8              ; in run list?
-        bcc     :+
-
-        sec                     ; in other run list
-        sbc     #8              ; so compute offset into buf
-        clc
-        adc     num_run_list_entries
-
-:       sec                     ; A now has offset into buf
-        sbc     #1              ; previous entry
-        bpl     :+
-
-        lda     num_run_list_entries ; underflow, so wrap
-        clc                          ; compute new offset into buf
-        adc     num_other_run_list_entries
-        sec
-        sbc     #1
-
-:       tax
-        lda     buf,x
-        sta     selected_entry
-        jsr     maybe_toggle_entry_hilite
-        rts
-.endscope
-
-
-;;; Populate buf list with indexes of entries in both run lists.
-;;; E.g. if 5 entries in run list and 3 entries in other run list,
-;;; buf would end up with: 0 1 2 3 4 0 1 2
-.proc populate_buf
-        ldx     #0
-:       cpx     num_run_list_entries
-        beq     :+
-        txa
-        sta     buf,x
-        inx
-        jmp     :-
-
-:       ldy     #0
-loop:   cpy     num_other_run_list_entries
         bne     :+
-        rts
+        jmp     handle_key_left
 
-:       tya
-        clc
-        adc     #8
-        sta     buf,x
-        inx
-        iny
-        jmp     loop
-.endproc
-
-buf:    .res    32, 0
-
-not_up:
-
-        ;; --------------------------------------------------
-        ;; Down Arrow ?
-
-        cmp     #CHAR_DOWN
-        beq     :+
-        rts
-:
-.scope
-        ;; Any entries?
-        lda     num_run_list_entries
+:       cmp     #CHAR_RIGHT
         bne     :+
-        lda     num_other_run_list_entries
+        jmp     handle_key_right
+
+:       cmp     #CHAR_DOWN
         bne     :+
-        rts
+        jmp     handle_key_down
 
-        ;; Any selection?
-:       lda     selected_entry
-        bpl     :+
-
-        ;; No selection, pick first entry.
-        ;; BUG: Assumes there is an entry in the primary run list.
-        lda     #0
-        sta     selected_entry
-        jsr     maybe_toggle_entry_hilite
-        rts
-
-:       lda     selected_entry  ; clear current selection
-        jsr     maybe_toggle_entry_hilite
-
-        jsr     populate_buf
-
-        total_entries := tentative_selection ; alias
-
-        lda     num_run_list_entries ; compute total number of entries
-        clc
-        adc     num_other_run_list_entries
-        sta     total_entries
-
-        ldx     #0              ; find index in buf of current
-:       lda     buf,x
-        cmp     selected_entry
-        beq     :+
-        inx
-        jmp     :-
-
-:       inx                     ; select next
-        cpx     total_entries
+:       cmp     #CHAR_UP
         bne     :+
-        ldx     #0              ; wrap to first if needed
-:       lda     buf,x
-        sta     selected_entry
-        jsr     maybe_toggle_entry_hilite
-        rts
-.endscope
+        jmp     handle_key_up
+
+:       rts
+
+;;; ============================================================
+
 
 tentative_selection:
         .byte   0
+
+
+;;; ============================================================
+
+.proc handle_key_right
+        lda     num_run_list_entries
+        ora     num_other_run_list_entries
+        beq     done
+
+        lda     selected_index
+        bpl     move           ; have a selection
+
+        ;; No selection; find a valid one in top row
+        ldx     #0
+        lda     entries_flag_table
+        bpl     set
+
+        ldx     #8
+        lda     entries_flag_table+8
+        bpl     set
+
+        ldx     #16
+        lda     entries_flag_table+16
+        bpl     set
+
+        ;; Change selection
+move:   lda     selected_index  ; unselect current
+        jsr     maybe_toggle_entry_hilite
+
+        lda     selected_index
+loop:   clc
+        adc     #8
+        cmp     #kSelectorListNumEntries
+        bcc     :+
+        clc
+        adc     #1
+        and     #7
+
+:       tax
+        lda     entries_flag_table,x
+        bpl     set
+        txa
+        jmp     loop
+
+set:    txa
+        sta     selected_index
+        jsr     maybe_toggle_entry_hilite
+
+done:   return  #$FF
+.endproc
+
+;;; ============================================================
+
+.proc handle_key_left
+        lda     num_run_list_entries
+        ora     num_other_run_list_entries
+        beq     done
+
+        lda     selected_index
+        bpl     move            ; have a selection
+
+        ;; No selection - re-use logic to find last item
+        jmp     handle_key_up
+
+        ;; Change selection
+move:   lda     selected_index  ; unselect current
+        jsr     maybe_toggle_entry_hilite
+
+        lda     selected_index
+loop:   sec
+        sbc     #8
+        bpl     :+
+        sec
+        sbc     #1
+        and     #7
+        ora     #16
+
+:       tax
+        lda     entries_flag_table,x
+        bpl     set
+        txa
+        jmp     loop
+
+set:    txa
+        sta     selected_index
+        jsr     maybe_toggle_entry_hilite
+
+done:   return  #$FF
+.endproc
+
+;;; ============================================================
+
+.proc handle_key_up
+        lda     num_run_list_entries
+        ora     num_other_run_list_entries
+        beq     done
+
+        lda     selected_index
+        bpl     move            ; have a selection
+
+        ;; No selection; find last valid one
+        ldx     #kSelectorListNumEntries - 1
+:       lda     entries_flag_table,x
+        bpl     set
+        dex
+        bpl     :-
+
+        ;; Change selection
+move:   lda     selected_index  ; unselect current
+        jsr     maybe_toggle_entry_hilite
+
+        ldx     selected_index
+loop:   dex                     ; to previous
+        bmi     wrap
+        lda     entries_flag_table,x
+        bpl     set
+        jmp     loop
+
+wrap:   ldx     #kSelectorListNumEntries
+        jmp     loop
+
+set:    sta     selected_index
+        jsr     maybe_toggle_entry_hilite
+
+done:   return  #$FF
+.endproc
+
+;;; ============================================================
+
+.proc handle_key_down
+        lda     num_run_list_entries
+        ora     num_other_run_list_entries
+        beq     done
+
+        lda     selected_index
+        bpl     move           ; have a selection
+
+        ;; No selection; find first valid one
+        ldx     #0
+:       lda     entries_flag_table,x
+        bpl     set
+        inx
+        bne     :-
+
+        ;; Change selection
+move:   lda     selected_index  ; unselect current
+        jsr     maybe_toggle_entry_hilite
+
+        ldx     selected_index
+loop:   inx                     ; to next
+        cpx     #kSelectorListNumEntries
+        bcs     wrap
+        lda     entries_flag_table,x
+        bpl     set             ; valid!
+        jmp     loop
+
+wrap:   ldx     #AS_BYTE(-1)
+        jmp     loop
+
+        ;; Set the selection
+set:    sta     selected_index
+        jsr     maybe_toggle_entry_hilite
+
+done:   return  #$FF
+.endproc
+
+;;; ============================================================
 
 .endproc
 
 ;;; ============================================================
 
-.proc try_invoke_selected_entry
-        lda     selected_entry
+.proc populate_entries_flag_table
+        ldx     #kSelectorListNumEntries - 1
+        lda     #$FF
+:       sta     entries_flag_table,x
+        dex
+        bpl     :-
+
+        ldx     #0
+:       cpx     num_run_list_entries
+        beq     :+
+        txa
+        sta     entries_flag_table,x
+        inx
+        bne     :-
+
+:       ldx     #0
+:       cpx     num_other_run_list_entries
+        beq     :+
+        txa
+        clc
+        adc     #8
+        sta     entries_flag_table+8,x
+        inx
+        bne     :-
+:       rts
+.endproc
+
+;;; Table for 24 entries; index (0...23) if in use, $FF if empty
+entries_flag_table:
+        .res    ::kSelectorListNumEntries, 0
+
+;;; ============================================================
+
+.proc try_invoke_selected_index
+        lda     selected_index
         bmi     :+
         jsr     invoke_entry
 :       rts
@@ -1772,13 +1761,13 @@ L9AE5:  lda     winfo::window_id
 ;;; Input: A = clicked entry
 
 .proc handle_entry_click
-        cmp     selected_entry  ; same as previous selection?
+        cmp     selected_index  ; same as previous selection?
         beq     :+
         pha
-        lda     selected_entry
+        lda     selected_index
         jsr     maybe_toggle_entry_hilite ; un-highlight old entry
         pla
-        sta     selected_entry
+        sta     selected_index
         jsr     maybe_toggle_entry_hilite ; highlight new entry
 :
 
@@ -1906,7 +1895,7 @@ col:    .byte   0
         lda     L9129
         bne     :+
         jsr     set_watch_cursor
-        lda     selected_entry
+        lda     selected_index
         bmi     :+
         jsr     maybe_toggle_entry_hilite
 :       jmp     try
@@ -1923,7 +1912,7 @@ L9C2A:  jsr     get_copied_to_ramcard_flag
         bne     L9C32
         jmp     L9C78
 
-L9C32:  lda     selected_entry
+L9C32:  lda     selected_index
         jsr     get_selector_list_entry_addr
         stax    $06
         ldy     #kSelectorEntryFlagsOffset
@@ -1935,29 +1924,29 @@ L9C32:  lda     selected_entry
         ;; Copy on boot
         lda     L9129
         bne     L9C6F
-        jsr     get_selected_entry_file_info
+        jsr     get_selected_index_file_info
         beq     L9C6F
         jsr     load_overlay2
-        lda     selected_entry
+        lda     selected_index
         jsr     file_copier_exec
         pha
         jsr     check_and_handle_updates
         pla
         beq     L9C6F
         jsr     set_pointer_cursor
-        jmp     clear_selected_entry
+        jmp     clear_selected_index
 
 L9C65:  lda     L9129
         bne     L9C6F
-        jsr     get_selected_entry_file_info
+        jsr     get_selected_index_file_info
         bne     L9C78
-L9C6F:  lda     selected_entry
+L9C6F:  lda     selected_index
         jsr     compose_dst_path
         jmp     L9C7E
 
         ;; --------------------------------------------------
 
-L9C78:  lda     selected_entry
+L9C78:  lda     selected_index
         jsr     get_selector_list_path_addr
 L9C7E:  stax    $06
         ldy     #$00
@@ -1985,7 +1974,7 @@ L9C87:  lda     ($06),y
         jsr     set_watch_cursor
         jmp     L9C78
 
-fail:   jmp     clear_selected_entry
+fail:   jmp     clear_selected_index
 
         ;; --------------------------------------------------
         ;; Check file type
@@ -2009,7 +1998,7 @@ not_basic:
         ;; Don't know how to invoke
         lda     #AlertID::selector_unable_to_run
         jsr     ShowAlert
-        jmp     clear_selected_entry
+        jmp     clear_selected_index
 
         ;; --------------------------------------------------
         ;; Check Path
@@ -2023,7 +2012,7 @@ check_path:
         bne     :-
         lda     #AlertID::insert_source_disk
         jsr     ShowAlert
-        bne     clear_selected_entry ; Cancel
+        bne     clear_selected_index ; Cancel
         jmp     try
 
 :       dey
@@ -2075,11 +2064,11 @@ check_path:
 
         DEFINE_QUIT_PARAMS quit_params
 
-.proc clear_selected_entry
+.proc clear_selected_index
         lda     L9129
         bne     :+
         lda     #$FF
-        sta     selected_entry
+        sta     selected_index
 :       rts
 .endproc
 
@@ -2132,7 +2121,7 @@ L9DB0:  lda     path_buf,x
         bne     L9DB0
 L9DBA:  lda     #AlertID::basic_system_not_found
         jsr     ShowAlert
-        jsr     clear_selected_entry
+        jsr     clear_selected_index
         jsr     set_pointer_cursor
         pla
         pla
@@ -2177,10 +2166,10 @@ str_basic_system:
 
 ;;; ============================================================
 
-.proc get_selected_entry_file_info
+.proc get_selected_index_file_info
         ptr := $06
 
-        lda     selected_entry
+        lda     selected_index
         jsr     compose_dst_path
         stax    ptr
         ldy     #0

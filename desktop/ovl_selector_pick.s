@@ -144,7 +144,7 @@ L9105:  lda     #$00
         bpl     L911D
         jmp     close_and_return
 
-L911D:  jsr     L99B3
+L911D:  jsr     populate_entries_flag_table
 
 dialog_loop:
         jsr     event_loop           ; Run the dialog?
@@ -183,7 +183,7 @@ L915D:  jsr     main::set_cursor_pointer
         copy    #$FF, selected_index
         jsr     L99F5
         jsr     L9D28
-        jsr     L99B3
+        jsr     populate_entries_flag_table
         inc     L938F
         jmp     dialog_loop
 
@@ -825,9 +825,9 @@ loop:   clc
         adc     #8
         cmp     #kSelectorListNumEntries
         bcc     :+
-        sec
-        sbc     #kSelectorListNumEntries+8
-        jmp     loop
+        clc
+        adc     #1
+        and     #7
 
 :       tax
         lda     entries_flag_table,x
@@ -852,17 +852,8 @@ done:   return  #$FF
         lda     selected_index
         bpl     move            ; have a selection
 
-        ;; No selection; find a valid one in top row
-        ldx     #16
-        lda     entries_flag_table+16
-        bpl     set
-
-        ldx     #8
-        lda     entries_flag_table+8
-        bpl     set
-
-        lda     #0              ; always
-        beq     set2
+        ;; No selection - re-use logic to find last item
+        jmp     handle_key_up
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
@@ -872,9 +863,10 @@ move:   lda     selected_index  ; unselect current
 loop:   sec
         sbc     #8
         bpl     :+
-        clc
-        adc     #kSelectorListNumEntries+8
-        jmp     loop
+        sec
+        sbc     #1
+        and     #7
+        ora     #16
 
 :       tax
         lda     entries_flag_table,x
@@ -883,7 +875,7 @@ loop:   sec
         jmp     loop
 
 set:    txa
-set2:   sta     selected_index
+        sta     selected_index
         jsr     maybe_toggle_entry_hilite
 
 done:   return  #$FF
@@ -967,31 +959,34 @@ done:   return  #$FF
 
 ;;; ============================================================
 
-L99B3:  ldx     #$17
+.proc populate_entries_flag_table
+        ldx     #kSelectorListNumEntries - 1
         lda     #$FF
-L99B7:  sta     entries_flag_table,x
+:       sta     entries_flag_table,x
         dex
-        bpl     L99B7
-        ldx     #$00
-L99BF:  cpx     num_run_list_entries
-        beq     L99CB
+        bpl     :-
+
+        ldx     #0
+:       cpx     num_run_list_entries
+        beq     :+
         txa
         sta     entries_flag_table,x
         inx
-        bne     L99BF
-L99CB:  ldx     #$00
-L99CD:  cpx     num_other_run_list_entries
-        beq     L99DC
+        bne     :-
+
+:       ldx     #0
+:       cpx     num_other_run_list_entries
+        beq     :+
         txa
         clc
-        adc     #$08
+        adc     #8
         sta     entries_flag_table+8,x
         inx
-        bne     L99CD
-L99DC:  rts
+        bne     :-
+:       rts
+.endproc
 
-
-;;; Table for 24 entries; $00 if in use, $FF if empty
+;;; Table for 24 entries; index (0...23) if in use, $FF if empty
 entries_flag_table:
         .res    ::kSelectorListNumEntries, 0
 
