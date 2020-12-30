@@ -379,7 +379,7 @@ L0CA9:  .byte   0
 
 ;;; ============================================================
 
-.proc L0CAA
+.proc maybe_highlight_selected_index
         lda     selected_device_index
         bmi     :+
         jsr     highlight_volume_label
@@ -392,19 +392,20 @@ L0CA9:  .byte   0
         ;; Called from main
 .proc prompt_handle_key_right
         lda     selected_device_index
-        bpl     L0CC1
-        lda     #0
-        beq     L0CCE           ; always
-L0CC1:  clc
+        bpl     :+              ; has selection
+        lda     #0              ; no selection - select first
+        beq     set             ; always
+
+:       clc
         adc     #4
         cmp     num_volumes
-        bcs     L0CD4
+        bcs     done
         pha
-        jsr     L0CAA
+        jsr     maybe_highlight_selected_index
         pla
-L0CCE:  sta     selected_device_index
+set:    sta     selected_device_index
         jsr     highlight_volume_label
-L0CD4:  return  #$FF
+done:   return  #$FF
 .endproc
 
 ;;; ============================================================
@@ -412,37 +413,38 @@ L0CD4:  return  #$FF
         ;; Called from main
 .proc prompt_handle_key_left
         lda     selected_device_index
-        bpl     L0CE6
-        lda     num_volumes
-        lsr     a
+        bpl     :+              ; has selection
+        lda     num_volumes     ; no selection...
+        lsr     a               ; pick first in top row
         lsr     a
         asl     a
         asl     a
-        jmp     L0CF0
+        jmp     set
 
-L0CE6:  sec
+:       sec
         sbc     #4
-        bmi     L0CF6
+        bmi     done
         pha
-        jsr     L0CAA
+        jsr     maybe_highlight_selected_index
         pla
-L0CF0:  sta     selected_device_index
+
+set:    sta     selected_device_index
         jsr     highlight_volume_label
-L0CF6:  return  #$FF
+done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
         ;; Called from main
 .proc prompt_handle_key_down
-        lda     selected_device_index
+        lda     selected_device_index ; $FF if none, would inc to #0
         clc
         adc     #1
         cmp     num_volumes
-        bcc     L0D06
-        lda     #0
-L0D06:  pha
-        jsr     L0CAA
+        bcc     :+
+        lda     #0              ; wrap to first
+:       pha
+        jsr     maybe_highlight_selected_index
         pla
         sta     selected_device_index
         jsr     highlight_volume_label
@@ -454,15 +456,17 @@ L0D06:  pha
         ;; Called from main
 .proc prompt_handle_key_up
         lda     selected_device_index
-        bmi     L0D1E
+        bmi     wrap            ; if no selection, wrap
         sec
-        sbc     #$01
-        bpl     L0D23
-L0D1E:  ldx     num_volumes
+        sbc     #1              ; to to previous
+        bpl     :+              ; unless wrapping needed
+
+wrap:   ldx     num_volumes     ; go to last (num - 1)
         dex
         txa
-L0D23:  pha
-        jsr     L0CAA
+
+:       pha
+        jsr     maybe_highlight_selected_index
         pla
         sta     selected_device_index
         jsr     highlight_volume_label
