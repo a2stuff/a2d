@@ -462,21 +462,8 @@ window_id:
 .endproc
 
 ;;; ============================================================
-;;; Draw Pascal String
-;;; Input: A,X = string address
 
-.proc DrawString
-        ptr := $06
-        params := $06
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     $08
-        inc16   ptr
-        MGTK_CALL MGTK::DrawText, params
-        rts
-.endproc
+        .include "../lib/drawstring.s"
 
 ;;; ============================================================
 

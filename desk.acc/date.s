@@ -920,20 +920,7 @@ loop:   cmp     #10
 
 ;;; ============================================================
 
-.proc DrawString
-        params := $6
-        textptr := $6
-        textlen := $8
-
-        stax    textptr
-        ldy     #0
-        lda     (textptr),y
-        beq     done
-        sta     textlen
-        inc16   textptr
-        MGTK_CALL MGTK::DrawText, params
-done:   rts
-.endproc
+        .include "../lib/drawstring.s"
 
 ;;; ============================================================
 

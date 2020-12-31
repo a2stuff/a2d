@@ -14868,6 +14868,7 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
         rts
 .endproc
 
+
 ;;; ============================================================
 ;;; Double Click Detection
 ;;; Returns with A=0 if double click, A=$FF otherwise.

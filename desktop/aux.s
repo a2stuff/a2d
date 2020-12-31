@@ -3622,7 +3622,7 @@ str_save_selector_list2:
 ;;;   2 = OK
 
 .proc Alert
-        jmp     show_alert_dialog
+        jmp     start
 
 alert_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -3873,7 +3873,7 @@ draw_buttons:
         ;; Cancel button
         MGTK_CALL MGTK::FrameRect, cancel_button_rect
         MGTK_CALL MGTK::MoveTo, cancel_button_pos
-        param_call draw_pascal_string, cancel_button_label
+        param_call DrawString, cancel_button_label
 
         bit     alert_options
         bvs     ok_button
@@ -3881,7 +3881,7 @@ draw_buttons:
         ;; Try Again button
         MGTK_CALL MGTK::FrameRect, try_again_button_rect
         MGTK_CALL MGTK::MoveTo, try_again_button_pos
-        param_call draw_pascal_string, try_again_button_label
+        param_call DrawString, try_again_button_label
 
         jmp     draw_prompt
 
@@ -3889,12 +3889,12 @@ draw_buttons:
 ok_button:
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call draw_pascal_string, ok_button_label
+        param_call DrawString, ok_button_label
 
         ;; Prompt string
 draw_prompt:
         MGTK_CALL MGTK::MoveTo, pos_prompt
-        param_call_indirect draw_pascal_string, prompt_addr
+        param_call_indirect DrawString, prompt_addr
 
         ;; --------------------------------------------------
         ;; Event Loop
@@ -4058,194 +4058,10 @@ flag:   .byte   0
         rts
 .endproc
 
-
-;;; ============================================================
-;;; Save/Restore Dialog Background
-;;;
-;;; This reuses the "save area" ($800-$1AFF) used by MGTK for
-;;; quickly restoring menu backgrounds.
-
-.proc dialog_background
-
-        ptr := $06
-
-.proc save
-        copy16  #SAVE_AREA_BUFFER, addr
-        lda     save_y1
-        jsr     set_ptr_for_row
-        lda     save_y2
-        sec
-        sbc     save_y1
-        tax
-        inx
-
-        ;; Loop over rows
-loop:   lda     save_x1_byte
-        sta     xbyte
-
-        ;; Loop over columns (bytes)
-col:    lda     xbyte
-        lsr     a
-        tay
-        sta     PAGE2OFF        ; main $2000-$3FFF
-        bcs     :+
-        sta     PAGE2ON         ; aux $2000-$3FFF
-:       lda     (ptr),y
-        addr := *+1
-        sta     dummy1234
-        inc16   addr
-        lda     xbyte
-        cmp     save_x2_byte
-        bcs     :+
-        inc     xbyte
-        bne     col
-
-        ;; next row
-:       jsr     next_ptr_for_row
-        dex
-        bne     loop
-
-        ldax    addr
-        rts
-.endproc
-
-;;; Restore
-
-.proc restore
-        copy16  #SAVE_AREA_BUFFER, addr
-        lda     save_y1
-        jsr     set_ptr_for_row
-        lda     save_y2
-        sec
-        sbc     save_y1
-        tax
-        inx
-
-        ;; Loop over rows
-loop:   lda     save_x1_byte
-        sta     xbyte
-
-        ;; Loop over columns (bytes)
-col:    lda     xbyte
-        lsr     a
-        tay
-        sta     PAGE2OFF        ; main $2000-$3FFF
-        bcs     :+
-        sta     PAGE2ON         ; aux $2000-$3FFF
-
-        addr := *+1
-:       lda     dummy1234       ; self-modified
-        sta     (ptr),y
-        inc16   addr
-        lda     xbyte
-        cmp     save_x2_byte
-        bcs     :+
-        inc     xbyte
-        bne     col             ; always
-
-:       jsr     next_ptr_for_row
-        dex
-        bne     loop
-        rts
-.endproc
-
-;;; Address calculations for dialog background display buffer.
-
-;;; ============================================================
-;;; Input: A=row (0...191)
-;;; Output: $06 set to base address of row
-
-.proc set_ptr_for_row
-        sta     row_tmp
-        jmp     compute_hbasl
-.endproc
-
-;;; ============================================================
-;;; Increment ptr ($06) to next row
-;;; Output: $06 set to base address of row
-
-.proc next_ptr_for_row
-        inc     row_tmp
-        lda     row_tmp
-        jmp     compute_hbasl
-.endproc
-
-;;; ============================================================
-;;; Input: A = row
-;;; Output: $06 points at first byte of row
-.proc compute_hbasl
-        hbasl := $06
-
-        pha
-        and     #$C7
-        eor     #$08
-        sta     hbasl+1
-        and     #$F0
-        lsr     a
-        lsr     a
-        lsr     a
-        sta     hbasl
-        pla
-        and     #$38
-        asl     a
-        asl     a
-        eor     hbasl
-        asl     a
-        rol     hbasl+1
-        asl     a
-        rol     hbasl+1
-        eor     hbasl
-        sta     hbasl
-        rts
-.endproc
-
-
-.endproc ; dialog_background
+        .include "../lib/savedialogbackground.s"
         save_dialog_background := dialog_background::save
         restore_dialog_background := dialog_background::restore
 
-;;; ============================================================
-;;; Map X coord (A=lo, X=hi) to byte/bit (Y=byte, A=bit)
-
-.proc calc_x_save_bounds
-        ldy     #0
-        cpx     #2              ; X >= 512 ?
-        bne     :+
-        ldy     #$200 / 7
-        clc
-        adc     #1
-
-:       cpx     #1              ; 512 > X >= 256 ?
-        bne     :+
-        ldy     #$100 / 7
-        clc
-        adc     #4
-        bcc     :+
-        iny
-        sbc     #7
-
-:       cmp     #7
-        bcc     :+
-        sbc     #7
-        iny
-        bne     :-
-
-:       rts
-.endproc
-
-;;; Dialog bound coordinates
-
-save_y1:        .byte   0
-save_x1_byte:   .byte   0
-save_y2:        .byte   0
-save_x2_byte:   .byte   0
-save_x1_bit:    .byte   0
-save_x2_bit:    .byte   0
-
-;;; Coordinates when looping save/restore
-row_tmp:
-        .byte   0
-xbyte:  .byte   0
 
 .endproc
         show_alert_dialog := Alert::start
@@ -4253,201 +4069,10 @@ xbyte:  .byte   0
 ;;; ============================================================
 ;;; Draw pascal string; address in (X,A)
 
-.proc draw_pascal_string
-        PARAM_BLOCK drawtext_params, $06
-data:   .addr   0
-length: .byte   0
-        END_PARAM_BLOCK
-
-        stax    drawtext_params::data
-        ldy     #0
-        lda     (drawtext_params::data),y         ; Check length
-        beq     end
-        sta     drawtext_params::length
-        inc16   drawtext_params::data ; skip past length
-        MGTK_CALL MGTK::DrawText, drawtext_params
-end:    rts
-.endproc
-
-;;; ============================================================
-;;; Event loop during button press - initial invert and
-;;; inverting as mouse is dragged in/out.
-;;; Input: A,X = rect address, Y = window_id
-;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
-
-.proc button_event_loop
-        sty     window_id
-        stax    rect_addr1
-        stax    rect_addr2
-
-        ;; Initial state
-        copy    #0, down_flag
-
-        ;; Do initial inversion
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        jsr     invert
-
-        ;; Event loop
-loop:   MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     exit
-        lda     window_id
-        sta     screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, dummy0000, rect_addr1
-
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     down_flag       ; outside but was inside?
-        beq     toggle
-        jmp     loop
-
-inside: lda     down_flag       ; already depressed?
-        bne     toggle
-        jmp     loop
-
-toggle: jsr     invert
-        lda     down_flag
-        eor     #$80
-        sta     down_flag
-        jmp     loop
-
-exit:   lda     down_flag       ; was depressed?
-        bne     :+
-        jsr     invert
-:       lda     down_flag
-        rts
-
-        ;; --------------------------------------------------
-
-invert: MGTK_CALL MGTK::PaintRect, dummy0000, rect_addr2
-        rts
-
-        ;; --------------------------------------------------
-
-down_flag:
-        .byte   0
-
-window_id:
-        .byte   0
-.endproc
-
-;;; ============================================================
-;;; Input: numbers in A,X, Y (all unsigned)
-;;; Output: number in A,X (unsigned)
-
-.proc Multiply_16_8_16
-        stax    num1
-        sty     num2
-
-        ;; Accumulate directly into A,X
-        lda     #0
-        tax
-        beq     test
-
-add:    clc
-        adc     num1
-        tay
-
-        txa
-        adc     num1+1
-        tax
-        tya
-
-loop:   asl     num1
-        rol     num1+1
-test:   lsr     num2
-        bcs     add
-        bne     loop
-
-        rts
-
-num1:   .word   0
-num2:   .byte   0
-.endproc
-
-;;; ============================================================
-;;; Input: dividend in A,X, divisor in Y (all unsigned)
-;;; Output: quotient in A,X (unsigned)
-
-.proc Divide_16_8_16
-        result := dividend
-
-        stax    dividend
-        sty     divisor
-        lda     #0
-        sta     divisor+1
-        sta     remainder
-        sta     remainder+1
-        ldx     #16             ; bits
-
-loop:   asl     dividend
-        rol     dividend+1
-        rol     remainder
-        rol     remainder+1
-        lda     remainder
-        sec
-        sbc     divisor
-        tay
-        lda     remainder+1
-        sbc     divisor+1
-        bcc     skip
-        sta     remainder+1
-        sty     remainder
-        inc     result
-
-skip:   dex
-        bne     loop
-        ldax    dividend
-        rts
-
-dividend:
-        .word   0
-divisor:
-        .word   0
-remainder:
-        .word   0
-.endproc
-
-;;; ============================================================
-;;; Bell
-;;;
-;;; From ProDOS 8 Technical Reference Manual 5.4:
-;;; "The standard Apple II "Air-raid" bell has been replaced with a
-;;; gentler tone. Use it to give users some aural feedback that
-;;; they are using a ProDOS program."
-
-.proc Bell
-
-;;; Generate a nice little tone
-;;; Exits with Z-flag set (BEQ) for branching
-;;; Destroys the contents of the accumulator
-        lda     #32             ;duration of tone
-        sta     length
-bell1:  lda     #2              ;short delay...click
-        jsr     wait
-        sta     SPKR
-        lda     #32             ;long delay...click
-        jsr     wait
-        sta     SPKR
-        dec     length
-        bne     bell1           ;repeat length times
-        rts
-
-;;; This is the wait routine from the Monitor ROM.
-wait:   sec
-wait2:  pha
-wait3:  sbc     #1
-        bne     wait3
-        pla
-        sbc     #1
-        bne     wait2
-        rts
-
-length: .byte   1               ;duration of tone
-.endproc
+        .include "../lib/drawstring.s"
+        .include "../lib/buttonloop.s"
+        .include "../lib/muldiv.s"
+        .include "../lib/bell.s"
 
 ;;; ============================================================
 
