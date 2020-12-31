@@ -304,8 +304,11 @@ pt2:    DEFINE_POINT   495, 20
 pt3:    DEFINE_POINT   5, 90
 pt4:    DEFINE_POINT   495, 90
 
-pt5:    DEFINE_POINT 10, 30, pt5
-pt6:    DEFINE_POINT 0, 0, pt6
+;;; Position of entries box
+pos_entry_base:    DEFINE_POINT 10, 30, pos_entry_base
+
+;;; Point used when rendering entries
+pos_entry_str:    DEFINE_POINT 0, 0, pos_entry_str
 
 rect_entry_base:
         DEFINE_RECT 5, 21, 132, 29, rect_entry_base
@@ -359,28 +362,10 @@ desktop_available_flag:
 selected_index:
         .byte   0
 
-        .byte   0
+        .byte   0               ; ???
 
-L9113:  .byte   0
-L9114:  .byte   0
-L9115:  .byte   0
-L9116:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+entry_string_buf:
+        .res    20
 
 num_run_list_entries:
         .byte   0
@@ -837,13 +822,10 @@ L9443:  lda     #AlertID::insert_system_disk
         jmp     handle_menu
 
 :       cmp     #MGTK::Area::content
-        bne     :+
-        jmp     click
-        rts                     ; TODO: Unreached
+        beq     :+
+        rts
 
-:       rts
-
-click:  lda     findwindow_window_id
+:       lda     findwindow_window_id
         cmp     winfo::window_id
         beq     :+
         rts
@@ -859,41 +841,41 @@ click:  lda     findwindow_window_id
 
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
-        beq     L94A1
-        jmp     not_ok
+        bne     check_desktop_btn
 
-L94A1:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        jsr     ok_btn_event_loop
-        bmi     L94B5
+        ldy     winfo::window_id
+        ldax    #ok_button_rect
+        jsr     button_event_loop
+        bmi     done
         jsr     try_invoke_selected_index
-L94B5:  rts
+done:   rts
 
         ;; DeskTop button?
 
-not_ok:
+check_desktop_btn:
         bit     desktop_available_flag
-        bmi     L94F0
+        bmi     check_entries
         MGTK_CALL MGTK::InRect, desktop_button_rect
         cmp     #MGTK::inrect_inside
-        beq     L94C8
-        jmp     L94F0
+        bne     check_entries
 
-L94C8:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, desktop_button_rect
-        jsr     desktop_btn_event_loop
-        bmi     L94B5
-L94D9:  MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
-        beq     L94ED
+        ldy     winfo::window_id
+        ldax    #desktop_button_rect
+        jsr     button_event_loop
+        bmi     done
+
+:       MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+        beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     L94B5           ; Cancel
-        beq     L94D9
-L94ED:  jmp     run_desktop
+        bne     done
+        beq     :-
+:       jmp     run_desktop
 
         ;; Entry selection?
 
-L94F0:  sub16   entry_click_x, pt5::xcoord, entry_click_x
+check_entries:
+        sub16   entry_click_x, pos_entry_base::xcoord, entry_click_x
         sub16   entry_click_y, pt0::ycoord, entry_click_y
         lda     entry_click_y+1
         bpl     :+
@@ -1669,7 +1651,7 @@ hi:    .byte   0
 
 ;;; ============================================================
 
-.proc L9A62
+.proc set_entry_text_pos
         pha
         lsr     a
         lsr     a
@@ -1682,11 +1664,11 @@ hi:    .byte   0
         tay
         lda     tmp
         clc
-        adc     pt5::xcoord
-        sta     pt6::xcoord
+        adc     pos_entry_base::xcoord
+        sta     pos_entry_str::xcoord
         tya
-        adc     pt5::xcoord+1
-        sta     pt6::xcoord+1
+        adc     pos_entry_base::xcoord+1
+        sta     pos_entry_str::xcoord+1
         pla
         asl     a
         asl     a
@@ -1699,11 +1681,11 @@ hi:    .byte   0
         asl     a
         asl     a
         clc
-        adc     pt5::ycoord
-        sta     pt6::ycoord
+        adc     pos_entry_base::ycoord
+        sta     pos_entry_str::ycoord
         lda     #$00
-        adc     pt5::ycoord+1
-        sta     pt6::ycoord+1
+        adc     pos_entry_base::ycoord+1
+        sta     pos_entry_str::ycoord+1
         rts
 
 tmp:    .byte   0
@@ -1718,42 +1700,52 @@ tmp:    .byte   0
         pha
         jsr     get_selector_list_entry_addr
         stax    ptr
-        ldy     #$00
-        lda     (ptr),y
+        ldy     #0
+        lda     (ptr),y         ; length
+
+        ;; Copy string into buffer
         tay
-L9AAF:  lda     (ptr),y
-        sta     L9116,y
+:       lda     (ptr),y
+        sta     entry_string_buf+3,y
         dey
-        bne     L9AAF
-        ldy     #$00
+        bne     :-
+
+        ;; Increase length by 3
+        ldy     #0
         lda     (ptr),y
         clc
-        adc     #$03
-        sta     L9113
+        adc     #3
+        sta     entry_string_buf
+
         pla
         pha
-        cmp     #$08
-        bcc     L9AD5
-        lda     #$20
-        sta     L9114
-        sta     L9115
-        sta     L9116
-        jmp     L9AE5
+        cmp     #8              ; first 8?
+        bcc     prefix
 
-L9AD5:  pla
+        ;; Prefix with spaces
+        lda     #' '
+        sta     entry_string_buf+1
+        sta     entry_string_buf+2
+        sta     entry_string_buf+3
+        jmp     common
+
+        ;; Prefix with number
+prefix: pla
         pha
         clc
-        adc     #$31
-        sta     L9114
-        lda     #$20
-        sta     L9115
-        sta     L9116
-L9AE5:  lda     winfo::window_id
+        adc     #'1'
+        sta     entry_string_buf+1
+        lda     #' '
+        sta     entry_string_buf+2
+        sta     entry_string_buf+3
+
+        ;; Draw the string
+common: lda     winfo::window_id
         jsr     get_window_port
         pla
-        jsr     L9A62
-        MGTK_CALL MGTK::MoveTo, pt6
-        param_call DrawString, L9113
+        jsr     set_entry_text_pos
+        MGTK_CALL MGTK::MoveTo, pos_entry_str
+        param_call DrawString, entry_string_buf
         rts
 .endproc
 
@@ -2184,89 +2176,68 @@ str_basic_system:
 .endproc
 
 ;;; ============================================================
+;;; Event loop during button press - initial invert and
+;;; inverting as mouse is dragged in/out.
+;;; Input: A,X = rect address, Y = window_id
+;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
 
-.proc ok_btn_event_loop
-        lda     #$00
-        sta     L9E8D
-L9E25:  MGTK_CALL MGTK::GetEvent, event_params
+.proc button_event_loop
+        sty     window_id
+        stax    rect_addr1
+        stax    rect_addr2
+
+        ;; Initial state
+        copy    #0, down_flag
+
+        ;; Do initial inversion
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        jsr     invert
+
+        ;; Event loop
+loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #$02
-        beq     L9E76
-        lda     winfo::window_id
+        cmp     #MGTK::EventKind::button_up
+        beq     exit
+        lda     window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, ok_button_rect
+        MGTK_CALL MGTK::InRect, dummy0000, rect_addr1
+
         cmp     #MGTK::inrect_inside
-        beq     L9E56
-        lda     L9E8D
-        beq     L9E5E
-        jmp     L9E25
+        beq     inside
+        lda     down_flag       ; outside but was inside?
+        beq     toggle
+        jmp     loop
 
-L9E56:  lda     L9E8D
-        bne     L9E5E
-        jmp     L9E25
+inside: lda     down_flag       ; already depressed?
+        bne     toggle
+        jmp     loop
 
-L9E5E:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        lda     L9E8D
-        clc
-        adc     #$80
-        sta     L9E8D
-        jmp     L9E25
+toggle: jsr     invert
+        lda     down_flag
+        eor     #$80
+        sta     down_flag
+        jmp     loop
 
-L9E76:  lda     L9E8D
-        beq     L9E7E
-        return  #$FF
+exit:   lda     down_flag       ; was depressed?
+        bne     :+
+        jsr     invert
+:       lda     down_flag
+        rts
 
-L9E7E:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        return  #$00
+        ;; --------------------------------------------------
 
-L9E8D:  .byte   0
-.endproc
+invert: MGTK_CALL MGTK::PaintRect, dummy0000, rect_addr2
+        rts
 
-;;; ============================================================
+        ;; --------------------------------------------------
 
-.proc desktop_btn_event_loop
-        lda     #$00
-        sta     L9EFB
-L9E93:  MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #$02
-        beq     L9EE4
-        lda     winfo::window_id
-        sta     screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, desktop_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     L9EC4
-        lda     L9EFB
-        beq     L9ECC
-        jmp     L9E93
+down_flag:
+        .byte   0
 
-L9EC4:  lda     L9EFB
-        bne     L9ECC
-        jmp     L9E93
-
-L9ECC:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, desktop_button_rect
-        lda     L9EFB
-        clc
-        adc     #$80
-        sta     L9EFB
-        jmp     L9E93
-
-L9EE4:  lda     L9EFB
-        beq     L9EEC
-        return  #$FF
-
-L9EEC:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, desktop_button_rect
-        return  #$01
-
-L9EFB:  .byte   0
+window_id:
+        .byte   0
 .endproc
 
 ;;; ============================================================
