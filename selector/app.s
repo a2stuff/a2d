@@ -11,6 +11,9 @@
 ;;; See docs/Selector_List_Format.md for file format
 selector_list   := $B300
 
+kEntryPickerItemWidth = 127
+kEntryPickerItemHeight = 9
+
 ;;; ============================================================
 ;;; MGTK library
 
@@ -245,7 +248,7 @@ savesize:       .word   $800
 
 .params winfo
         kWidth = 500
-        kHeight = 110
+        kHeight = 118
 window_id:
         .byte   $01
         .byte   $01
@@ -263,7 +266,7 @@ window_id:
         .word   500
         .word   140
 
-viewloc:.word   25, 40
+viewloc:.word   25, 36
         .word   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   $00
@@ -285,8 +288,8 @@ viewloc:.word   25, 40
 rect_frame:
         DEFINE_RECT_INSET 4, 2, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok,      " OK          \x0D", 340, 94
-        DEFINE_BUTTON desktop, " DeskTop      Q",    60, 94
+        DEFINE_BUTTON ok,      " OK          \x0D", 340, 102
+        DEFINE_BUTTON desktop, " DeskTop      Q",    60, 102
 
 setpensize_params:
         .byte   2, 1
@@ -299,19 +302,19 @@ str_selector_title:
 
 pt0:    DEFINE_POINT 5, 22, pt0
 
-pt1:    DEFINE_POINT   5, 20
-pt2:    DEFINE_POINT   495, 20
-pt3:    DEFINE_POINT   5, 90
-pt4:    DEFINE_POINT   495, 90
+line1_pt1:    DEFINE_POINT   5, 20
+line1_pt2:    DEFINE_POINT   winfo::kWidth - 5, 20
+line2_pt1:    DEFINE_POINT   5, winfo::kHeight - 20
+line2_pt2:    DEFINE_POINT   winfo::kWidth - 5, winfo::kHeight - 20
 
 ;;; Position of entries box
-pos_entry_base:    DEFINE_POINT 10, 30, pos_entry_base
+pos_entry_base:    DEFINE_POINT 16, 30, pos_entry_base
 
 ;;; Point used when rendering entries
 pos_entry_str:    DEFINE_POINT 0, 0, pos_entry_str
 
 rect_entry_base:
-        DEFINE_RECT 5, 21, 132, 29, rect_entry_base
+        DEFINE_RECT_SZ 16, 22, kEntryPickerItemWidth, kEntryPickerItemHeight - 1, rect_entry_base
 
 rect_entry:
         DEFINE_RECT 0, 0, 0, 0, rect_entry
@@ -884,11 +887,10 @@ check_entries:
         copy    #$FF, selected_index
         rts
 
-:       lsr16   entry_click_y   ; /= 8
-        lsr16   entry_click_y
-        lsr16   entry_click_y
-        lda     entry_click_y
-        cmp     #8
+:       ldax    entry_click_y
+        ldy     #kEntryPickerItemHeight
+        jsr     Divide_16_8_16
+        cmp     #8              ; only care about low byte in A
         bcc     L954C
         lda     selected_index
         jsr     maybe_toggle_entry_hilite
@@ -1466,10 +1468,10 @@ get_port_and_draw_window:
         bmi     :+
         jsr     draw_desktop_label
 :
-        MGTK_CALL MGTK::MoveTo, pt1
-        MGTK_CALL MGTK::LineTo, pt2
-        MGTK_CALL MGTK::MoveTo, pt3
-        MGTK_CALL MGTK::LineTo, pt4
+        MGTK_CALL MGTK::MoveTo, line1_pt1
+        MGTK_CALL MGTK::LineTo, line1_pt2
+        MGTK_CALL MGTK::MoveTo, line2_pt1
+        MGTK_CALL MGTK::LineTo, line2_pt2
         rts
 .endproc
 
@@ -1652,11 +1654,14 @@ hi:    .byte   0
 ;;; ============================================================
 
 .proc set_entry_text_pos
-        pha
+
+        pha                     ; stack has index
         lsr     a
         lsr     a
         lsr     a
-        pha
+        pha                     ; ... and index / 8 (= column)
+
+        ;; X coordinate
         ldx     #0
         stx     tmp
         lsr     a
@@ -1669,23 +1674,22 @@ hi:    .byte   0
         tya
         adc     pos_entry_base::xcoord+1
         sta     pos_entry_str::xcoord+1
-        pla
+
+        ;; Y coordinate
+        pla                     ; A = column
+
         asl     a
         asl     a
         asl     a
         sta     tmp
-        pla
+        pla                     ; A = index
         sec
-        sbc     tmp
-        asl     a
-        asl     a
-        asl     a
-        clc
-        adc     pos_entry_base::ycoord
-        sta     pos_entry_str::ycoord
-        lda     #$00
-        adc     pos_entry_base::ycoord+1
-        sta     pos_entry_str::ycoord+1
+        sbc     tmp             ; A = row
+
+        ldx     #0
+        ldy     #kEntryPickerItemHeight
+        jsr     Multiply_16_8_16
+        addax   pos_entry_base::ycoord, pos_entry_str::ycoord
         rts
 
 tmp:    .byte   0
@@ -1776,8 +1780,6 @@ common: lda     winfo::window_id
 ;;; Toggle the highlight on an entry in the list
 ;;; Input: A = entry number
 
-;;; NOTE: Assumes font height is 8px
-
 .proc maybe_toggle_entry_hilite
         bpl     :+
         rts
@@ -1825,30 +1827,19 @@ common: lda     winfo::window_id
 
         ;; Y coords
         lda     row
-        asl     a
-        asl     a
-        asl     a
-        pha
-        clc
-        adc     rect_entry_base::y1
-        sta     rect_entry::y1
-        lda     #0
-        adc     rect_entry_base::y1+1
-        sta     rect_entry::y1+1
-        pla
-        clc
-        adc     rect_entry_base::y2
-        sta     rect_entry::y2
-        lda     #0
-        adc     rect_entry_base::y2+1
-        sta     rect_entry::y2+1
+        ldx     #0
+        ldy     #kEntryPickerItemHeight
+        jsr     Multiply_16_8_16
+        stax    tmp
+        addax   rect_entry_base::y1, rect_entry::y1
+        add16   tmp, rect_entry_base::y2, rect_entry::y2
 
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_entry
 
         rts
 
-tmp:    .byte   0
+tmp:    .word   0
 row:    .byte   0
 col:    .byte   0
 .endproc
@@ -2462,6 +2453,86 @@ coords:
 xcoord: .word   0
 ycoord: .word   0
 delta:  .byte   0
+.endproc
+
+;;; ============================================================
+
+
+;;; ============================================================
+;;; Input: numbers in A,X, Y (all unsigned)
+;;; Output: number in A,X (unsigned)
+
+.proc Multiply_16_8_16
+        stax    num1
+        sty     num2
+
+        ;; Accumulate directly into A,X
+        lda     #0
+        tax
+        beq     test
+
+add:    clc
+        adc     num1
+        tay
+
+        txa
+        adc     num1+1
+        tax
+        tya
+
+loop:   asl     num1
+        rol     num1+1
+test:   lsr     num2
+        bcs     add
+        bne     loop
+
+        rts
+
+num1:   .word   0
+num2:   .byte   0
+.endproc
+
+;;; ============================================================
+;;; Input: dividend in A,X, divisor in Y (all unsigned)
+;;; Output: quotient in A,X (unsigned)
+
+.proc Divide_16_8_16
+        result := dividend
+
+        stax    dividend
+        sty     divisor
+        lda     #0
+        sta     divisor+1
+        sta     remainder
+        sta     remainder+1
+        ldx     #16             ; bits
+
+loop:   asl     dividend
+        rol     dividend+1
+        rol     remainder
+        rol     remainder+1
+        lda     remainder
+        sec
+        sbc     divisor
+        tay
+        lda     remainder+1
+        sbc     divisor+1
+        bcc     skip
+        sta     remainder+1
+        sty     remainder
+        inc     result
+
+skip:   dex
+        bne     loop
+        ldax    dividend
+        rts
+
+dividend:
+        .word   0
+divisor:
+        .word   0
+remainder:
+        .word   0
 .endproc
 
 ;;; ============================================================
