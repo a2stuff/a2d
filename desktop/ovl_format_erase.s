@@ -393,14 +393,23 @@ L0CA9:  .byte   0
 .proc prompt_handle_key_right
         lda     selected_device_index
         bpl     :+              ; has selection
+
         lda     #0              ; no selection - select first
         beq     set             ; always
 
-:       clc
+        ;; Change selection
+:       clc                     ; to the right is +4
         adc     #4
+        cmp     num_volumes     ; unless we went too far?
+        bcc     :+
+        clc                     ; if we went too far, wrap to next row (+1)
+        adc     #1
+        and     #3              ; and clamp to first column
         cmp     num_volumes
-        bcs     done
-        pha
+        bcc     :+
+        lda     #0              ; wrap to 0 if needed
+
+:       pha
         jsr     maybe_highlight_selected_index
         pla
 set:    sta     selected_device_index
@@ -413,17 +422,33 @@ done:   return  #$FF
         ;; Called from main
 .proc prompt_handle_key_left
         lda     selected_device_index
-        bpl     :+              ; has selection
-        lda     num_volumes     ; no selection...
-        lsr     a               ; pick first in top row
-        lsr     a
-        asl     a
-        asl     a
-        jmp     set
+        bpl     loop            ; has selection
 
-:       sec
+        ;; No selection - pick bottom-right one...
+        lda     num_volumes
+        cmp     #11             ; last in 3rd column?
+        bcc     :+
+        lda     #11
+        bne     set             ; always
+:       cmp     #7              ; last in 2nd column?
+        bcc     :+
+        lda     #7
+        bne     set             ; always
+:       tax
+        dex
+        txa
+        bpl     set             ; always
+
+        ;; Change selection
+loop:   sec
         sbc     #4
-        bmi     done
+        bpl     :+
+        clc
+        adc     #15             ; (4 * num columns) - 1
+
+:       cmp     num_volumes
+        bcs     loop
+
         pha
         jsr     maybe_highlight_selected_index
         pla
