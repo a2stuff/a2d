@@ -1490,10 +1490,6 @@ get_port_and_draw_window:
 .endproc
 
 ;;; ============================================================
-
-        .include "../lib/drawstring.s"
-
-;;; ============================================================
 ;;; Draw Title String (centered at top of port)
 ;;; Input: A,X = string address
 
@@ -2283,6 +2279,7 @@ done:   rts
 ;;; ============================================================
 
         .include "../lib/doubleclick.s"
+        .include "../lib/drawstring.s"
         .include "../lib/muldiv.s"
 
 .endscope
