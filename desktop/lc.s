@@ -49,10 +49,8 @@
         sta     RAMRDON
         sta     RAMWRTON
         ITK_CALL 0, 0, addr
-        tay
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        tya
         rts
 .endproc
 
@@ -169,7 +167,6 @@ done:   sta     RAMRDOFF
         rts
 
 flag:   .byte   0
-        rts                     ; ???
 .endproc
         StoreWindowIconTable := XferWindowIconTable::from
         LoadWindowIconTable := XferWindowIconTable::to
@@ -222,8 +219,7 @@ loop:   lda     (src),y
 ;;; From MAIN, load AUX (A,X) into A
 
 .proc AuxLoad
-        stx     op+2
-        sta     op+1
+        stax    op+1
         sta     RAMRDON
 op:     lda     dummy1234
         sta     RAMRDOFF
