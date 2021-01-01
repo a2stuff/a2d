@@ -1270,15 +1270,13 @@ fail:   clc
         sta     RAMWRTOFF
 
         ;; Assumes ALTZPON on entry/exit
-        RWBANK  := $C073
-
         ldy     #0              ; populated bank count
 
         ;; Iterate downwards (in case unpopulated banks wrap to earlier ones),
         ;; saving bytes and marking each bank.
 .scope
         ldx     #255            ; bank we are checking
-:       stx     RWBANK
+:       stx     RAMWORKS_BANK
         copy    sigb0, buf0,x   ; preserve bytes
         copy    sigb1, buf1,x
         txa                     ; bank num as first signature
@@ -1293,7 +1291,7 @@ fail:   clc
         ;; Iterate upwards, tallying valid banks.
 .scope
         ldx     #0              ; bank we are checking
-loop:   stx     RWBANK          ; select bank
+loop:   stx     RAMWORKS_BANK   ; select bank
         txa
         cmp     sigb0           ; verify first signature
         bne     next
@@ -1308,7 +1306,7 @@ next:   inx                     ; next bank
         ;; Iterate upwards, restoring valid banks.
 .scope
         ldx     #0              ; bank we are checking
-loop:   stx     RWBANK          ; select bank
+loop:   stx     RAMWORKS_BANK   ; select bank
         txa
         cmp     sigb0           ; verify first signature
         bne     next
@@ -1323,7 +1321,7 @@ next:   inx                     ; next bank
 
         ;; Switch back to RW bank 0 (normal aux memory)
         lda     #0
-        sta     RWBANK
+        sta     RAMWORKS_BANK
 
         ;; Back to executing from aux memory
         sta     RAMRDON

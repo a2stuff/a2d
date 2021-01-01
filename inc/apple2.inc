@@ -155,7 +155,7 @@ HIRESOFF        := $C057
 AN3_OFF         := $C05E
 AN3_ON          := $C05F
 
-RAMWORKS_BANK   := $C071        ; RAMWorks bank selection ???
+RAMWORKS_BANK   := $C073
 
 ROMIN2          := $C082
 
