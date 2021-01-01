@@ -98,14 +98,14 @@ a_grafport:     .addr   window_grafport
 ;;; GrafPort used specifically for operations that draw into windows.
 
 .params window_grafport
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -117,14 +117,14 @@ fontptr:        .addr   0
 ;;; before use.
 
 .params main_grafport
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -141,14 +141,14 @@ fontptr:        .addr   0
 ;;; since icons are in screen space coordinates.
 
 .params highlight_grafport
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 10, 10, cliprect
+        DEFINE_RECT cliprect, 0, 0, 10, 10
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -335,14 +335,14 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
+        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, kWidth, kHeight
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -378,14 +378,14 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
+        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, kFilePickerDlgWidth, kFilePickerDlgHeight
+        DEFINE_RECT cliprect, 0, 0, kFilePickerDlgWidth, kFilePickerDlgHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -415,14 +415,14 @@ mincontlength:  .word   70
 maxcontwidth:   .word   100
 maxcontlength:  .word   70
 port:
-viewloc:        DEFINE_POINT 53, 50
+        DEFINE_POINT viewloc, 53, 50
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, 125, 70
+        DEFINE_RECT cliprect, 0, 0, 125, 70
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -453,15 +453,15 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
+        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
 
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, kWidth, kHeight
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -495,14 +495,14 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
+        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, kWidth, kHeight
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -511,54 +511,42 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-name_input_rect:  DEFINE_RECT 40,61+6,360,71+6, name_input_rect
-name_input_textpos: DEFINE_POINT 45,70+6, name_input_textpos
-pos_dialog_title: DEFINE_POINT 0, 18, pos_dialog_title
+        DEFINE_RECT name_input_rect, 40,61+6,360,71+6
+        DEFINE_POINT name_input_textpos, 45,70+6
+        DEFINE_POINT pos_dialog_title, 0, 18
 
-dialog_label_base_pos:
-        DEFINE_POINT 40,35-5, dialog_label_base_pos
+        DEFINE_POINT dialog_label_base_pos, 40,35-5
 
         kDialogLabelDefaultX = 40
-dialog_label_pos:
-        DEFINE_POINT kDialogLabelDefaultX,0, dialog_label_pos
+        DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX,0
 
 .params name_input_mapinfo
-        DEFINE_POINT 80, 35+7
+        DEFINE_POINT viewloc, 80, 35+7
         .addr   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   0
-        DEFINE_RECT 0, 0, 358, 100
+        DEFINE_RECT maprect, 0, 0, 358, 100
 .endparams
 
         kEntryPickerItemHeight = 9 ; default font height
 
-entry_picker_outer_rect:
-        DEFINE_RECT_INSET 4,2,winfo_entry_picker::kWidth,winfo_entry_picker::kHeight
-entry_picker_inner_rect:
-        DEFINE_RECT_INSET 5,3,winfo_entry_picker::kWidth,winfo_entry_picker::kHeight
+        DEFINE_RECT_INSET entry_picker_outer_rect, 4,2,winfo_entry_picker::kWidth,winfo_entry_picker::kHeight
+        DEFINE_RECT_INSET entry_picker_inner_rect, 5,3,winfo_entry_picker::kWidth,winfo_entry_picker::kHeight
 
         ;; Line endpoints
-entry_picker_line1_start:
-        DEFINE_POINT 6,22
-entry_picker_line1_end:
-        DEFINE_POINT 344,22
+        DEFINE_POINT entry_picker_line1_start, 6,22
+        DEFINE_POINT entry_picker_line1_end, 344,22
 
         ;; Line endpoints
-entry_picker_line2_start:
-        DEFINE_POINT 6,winfo_entry_picker::kHeight-21
-entry_picker_line2_end:
-        DEFINE_POINT 344,winfo_entry_picker::kHeight-21
+        DEFINE_POINT entry_picker_line2_start, 6,winfo_entry_picker::kHeight-21
+        DEFINE_POINT entry_picker_line2_end, 344,winfo_entry_picker::kHeight-21
 
-entry_picker_ok_rect:
-        DEFINE_RECT_SZ 210,winfo_entry_picker::kHeight-18,kButtonWidth,kButtonHeight
+        DEFINE_RECT_SZ entry_picker_ok_rect, 210,winfo_entry_picker::kHeight-18,kButtonWidth,kButtonHeight
 
-entry_picker_cancel_rect:
-        DEFINE_RECT_SZ 40,winfo_entry_picker::kHeight-18,kButtonWidth,kButtonHeight
+        DEFINE_RECT_SZ entry_picker_cancel_rect, 40,winfo_entry_picker::kHeight-18,kButtonWidth,kButtonHeight
 
-entry_picker_ok_pos:
-        DEFINE_POINT 215,winfo_entry_picker::kHeight-8
-entry_picker_cancel_pos:
-        DEFINE_POINT 45,winfo_entry_picker::kHeight-8
+        DEFINE_POINT entry_picker_ok_pos, 215,winfo_entry_picker::kHeight-8
+        DEFINE_POINT entry_picker_cancel_pos, 45,winfo_entry_picker::kHeight-8
 
 add_an_entry_label:
         PASCAL_STRING "Add an Entry..." ; dialog title
@@ -585,19 +573,16 @@ enter_the_name_to_appear_label:
 enter_the_full_pathname_label2:
         PASCAL_STRING "Enter the full pathname of the run list file:"
 
-entry_picker_item_rect:
-        DEFINE_RECT 0,0,0,0,entry_picker_item_rect
+        DEFINE_RECT entry_picker_item_rect, 0,0,0,0
 
-entry_picker_all_items_rect:
-        DEFINE_RECT 6,23,344,winfo_entry_picker::kHeight-23
+        DEFINE_RECT entry_picker_all_items_rect, 6,23,344,winfo_entry_picker::kHeight-23
 
 ;;; In Format/Erase Disk picker dialog, this is the selected index (0-based),
 ;;; or $FF if no drive is selected
 selected_device_index:
         .byte   0
 
-select_volume_rect:
-        DEFINE_RECT 0,0,0,0,select_volume_rect
+        DEFINE_RECT select_volume_rect, 0,0,0,0
 
 ;;; Used in Format/Erase dialogs
 num_volumes:
@@ -665,14 +650,11 @@ str_kb_suffix:
 file_count:
         .word   0
 
-pos_D90B:
-        DEFINE_POINT 0,13
+        DEFINE_POINT pos_D90B, 0,13
 
-rect_D90F:
-        DEFINE_RECT 0,0,125,0
+        DEFINE_RECT rect_D90F, 0,0,125,0
 
-picker_entry_pos:
-        DEFINE_POINT 2,0
+        DEFINE_POINT picker_entry_pos, 2,0
 
         .byte   $00,$00
 
@@ -689,43 +671,30 @@ LD921:  .byte   0
 kRadioButtonWidth = 10
 kRadioButtonHeight = 6
 
-rect_run_list_radiobtn:
-        DEFINE_RECT_SZ 346,41,kRadioButtonWidth,kRadioButtonHeight
-rect_other_run_list_radiobtn:
-        DEFINE_RECT_SZ 346,50,kRadioButtonWidth,kRadioButtonHeight
-rect_at_first_boot_radiobtn:
-        DEFINE_RECT_SZ 346,75,kRadioButtonWidth,kRadioButtonHeight
-rect_at_first_use_radiobtn:
-        DEFINE_RECT_SZ 346,84,kRadioButtonWidth,kRadioButtonHeight
-rect_never_radiobtn:
-        DEFINE_RECT_SZ 346,93,kRadioButtonWidth,kRadioButtonHeight
+        DEFINE_RECT_SZ rect_run_list_radiobtn, 346,41,kRadioButtonWidth,kRadioButtonHeight
+        DEFINE_RECT_SZ rect_other_run_list_radiobtn, 346,50,kRadioButtonWidth,kRadioButtonHeight
+        DEFINE_RECT_SZ rect_at_first_boot_radiobtn, 346,75,kRadioButtonWidth,kRadioButtonHeight
+        DEFINE_RECT_SZ rect_at_first_use_radiobtn, 346,84,kRadioButtonWidth,kRadioButtonHeight
+        DEFINE_RECT_SZ rect_never_radiobtn, 346,93,kRadioButtonWidth,kRadioButtonHeight
 
 kRadioControlWidth = 134
 kRadioControlHeight = 8
 
-rect_run_list_ctrl:
-        DEFINE_RECT_SZ 346,40,kRadioControlWidth,kRadioControlHeight
-rect_other_run_list_ctrl:
-        DEFINE_RECT_SZ 346,49,kRadioControlWidth,kRadioControlHeight
-rect_at_first_boot_ctrl:
-        DEFINE_RECT_SZ 346,74,kRadioControlWidth,kRadioControlHeight
-rect_at_first_use_ctrl:
-        DEFINE_RECT_SZ 346,83,kRadioControlWidth,kRadioControlHeight
-rect_never_ctrl:
-        DEFINE_RECT_SZ 346,92,kRadioControlWidth,kRadioControlHeight
+        DEFINE_RECT_SZ rect_run_list_ctrl, 346,40,kRadioControlWidth,kRadioControlHeight
+        DEFINE_RECT_SZ rect_other_run_list_ctrl, 346,49,kRadioControlWidth,kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_boot_ctrl, 346,74,kRadioControlWidth,kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_use_ctrl, 346,83,kRadioControlWidth,kRadioControlHeight
+        DEFINE_RECT_SZ rect_never_ctrl, 346,92,kRadioControlWidth,kRadioControlHeight
 
-rect_scratch:
-        DEFINE_RECT 0,0,0,0, rect_scratch
+        DEFINE_RECT rect_scratch, 0,0,0,0
 
 ;;; ============================================================
 
 .scope file_dialog_res
 
-dialog_frame_rect:
-        DEFINE_RECT_INSET 4,2,kFilePickerDlgWidth,kFilePickerDlgHeight
+        DEFINE_RECT_INSET dialog_frame_rect, 4,2,kFilePickerDlgWidth,kFilePickerDlgHeight
 
-rect_D9C8:
-        DEFINE_RECT 27,16,174,26
+        DEFINE_RECT rect_D9C8, 27,16,174,26
 
         DEFINE_BUTTON change_drive, "Change Drive",       193, 30
         DEFINE_BUTTON open,         "Open",               193, 44
@@ -733,19 +702,15 @@ rect_D9C8:
         DEFINE_BUTTON cancel,       "Cancel        Esc",  193, 73
         DEFINE_BUTTON ok,           "OK            \x0D", 193, 89
 
-dialog_sep_start:
-        DEFINE_POINT 323,30
-dialog_sep_end:
-        DEFINE_POINT 323,100
+        DEFINE_POINT dialog_sep_start, 323,30
+        DEFINE_POINT dialog_sep_end, 323,100
 
-        .byte   $81,$D3,$00
+        .byte   $81,$D3,$00     ; ???
 
         DEFINE_LABEL disk, " Disk: ", 28,25
 
-input1_label_pos:
-        DEFINE_POINT   28,112
-input2_label_pos:
-        DEFINE_POINT   28,135
+        DEFINE_POINT input1_label_pos, 28,112
+        DEFINE_POINT input2_label_pos, 28,135
 
 textbg1:
         .byte   $00
@@ -764,11 +729,11 @@ destination_filename_label:
 kCommonInputWidth = 435
 kCommonInputHeight = 11
 
-input1_rect:   DEFINE_RECT_SZ 28, 113, kCommonInputWidth, kCommonInputHeight
-input1_textpos:      DEFINE_POINT 30,123
+        DEFINE_RECT_SZ input1_rect, 28, 113, kCommonInputWidth, kCommonInputHeight
+        DEFINE_POINT input1_textpos, 30,123
 
-input2_rect:   DEFINE_RECT_SZ 28, 136, kCommonInputWidth, kCommonInputHeight
-input2_textpos:      DEFINE_POINT 30,146
+        DEFINE_RECT_SZ input2_rect, 28, 136, kCommonInputWidth, kCommonInputHeight
+        DEFINE_POINT input2_textpos, 30,146
 
 delete_a_file_label:
         PASCAL_STRING "Delete a File..." ; dialog title
@@ -781,8 +746,7 @@ file_to_delete_label:
 ;;; ============================================================
 ;;; Resources for clock on menu bar
 
-pos_clock:
-        DEFINE_POINT 475, 10
+        DEFINE_POINT pos_clock, 475, 10
 
 str_time:
         PASCAL_STRING "00:00 XM" ; do not localize
@@ -864,19 +828,19 @@ trash_icon:
         kVolIconCol6 = 40
 
 desktop_icon_coords_table:
-        DEFINE_POINT kVolIconCol1,15 + kVolIconDeltaY*0 ; 1
-        DEFINE_POINT kVolIconCol1,15 + kVolIconDeltaY*1 ; 2
-        DEFINE_POINT kVolIconCol1,15 + kVolIconDeltaY*2 ; 3
-        DEFINE_POINT kVolIconCol1,15 + kVolIconDeltaY*3 ; 4
-        DEFINE_POINT kVolIconCol1,15 + kVolIconDeltaY*4 ; 5
-        DEFINE_POINT kVolIconCol2,kTrashIconY+2         ; 6
-        DEFINE_POINT kVolIconCol3,kTrashIconY+2         ; 7
-        DEFINE_POINT kVolIconCol4,kTrashIconY+2         ; 8
-        DEFINE_POINT kVolIconCol5,kTrashIconY+2         ; 9
-        DEFINE_POINT kVolIconCol6,kTrashIconY+2         ; 10
-        DEFINE_POINT kVolIconCol2,15 + kVolIconDeltaY*4 ; 11
-        DEFINE_POINT kVolIconCol3,15 + kVolIconDeltaY*4 ; 12
-        DEFINE_POINT kVolIconCol4,15 + kVolIconDeltaY*4 ; 13
+        .word    kVolIconCol1,15 + kVolIconDeltaY*0 ; 1
+        .word    kVolIconCol1,15 + kVolIconDeltaY*1 ; 2
+        .word    kVolIconCol1,15 + kVolIconDeltaY*2 ; 3
+        .word    kVolIconCol1,15 + kVolIconDeltaY*3 ; 4
+        .word    kVolIconCol1,15 + kVolIconDeltaY*4 ; 5
+        .word    kVolIconCol2,kTrashIconY+2         ; 6
+        .word    kVolIconCol3,kTrashIconY+2         ; 7
+        .word    kVolIconCol4,kTrashIconY+2         ; 8
+        .word    kVolIconCol5,kTrashIconY+2         ; 9
+        .word    kVolIconCol6,kTrashIconY+2         ; 10
+        .word    kVolIconCol2,15 + kVolIconDeltaY*4 ; 11
+        .word    kVolIconCol3,15 + kVolIconDeltaY*4 ; 12
+        .word    kVolIconCol4,15 + kVolIconDeltaY*4 ; 13
         ;; Maximum of 13 devices:
         ;; 7 slots * 2 drives = 14 (size of DEVLST)
         ;; ... but RAM in Slot 3 Drive 2 is disconnected.
@@ -1039,8 +1003,7 @@ icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
         ;; (follows icon_param for IconTK::IconInRect call)
-tmp_rect:
-        DEFINE_RECT 0,0,0,0, tmp_rect
+        DEFINE_RECT tmp_rect, 0,0,0,0
 
 saved_stack:
         .byte   0
@@ -1052,6 +1015,7 @@ which_key:      .byte   0
 key_mods:       .byte   0
 .endparams
 
+        ;; ???
         .byte   $00,$00,$00,$00
         .byte   $00,$04,$00,$00,$00
 
@@ -1205,10 +1169,10 @@ window_title_addr_table:
 win_view_by_table:
         .res    kMaxNumWindows, 0
 
-pos_col_name: DEFINE_POINT 0, 0, pos_col_name
-pos_col_type: DEFINE_POINT 128, 0, pos_col_type
-pos_col_size: DEFINE_POINT 166, 0, pos_col_size
-pos_col_date: DEFINE_POINT 231, 0, pos_col_date
+        DEFINE_POINT pos_col_name, 0, 0
+        DEFINE_POINT pos_col_type, 128, 0
+        DEFINE_POINT pos_col_size, 166, 0
+        DEFINE_POINT pos_col_date, 231, 0
 
 kTextBuffer2Len = 49
 .params text_buffer2
@@ -1240,14 +1204,14 @@ mincontlength:  .word   50
 maxcontwidth:   .word   545
 maxcontlength:  .word   175
 port:
-viewloc:        DEFINE_POINT 20, 27
+        DEFINE_POINT viewloc, 20, 27
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, 440, 120
+        DEFINE_RECT cliprect, 0, 0, 440, 120
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -1290,11 +1254,10 @@ window_k_free_table:  .res    kMaxNumWindows*2, 0
 str_items:
         PASCAL_STRING " Items"
 
-items_label_pos:
-        DEFINE_POINT 8, 10, items_label_pos
+        DEFINE_POINT items_label_pos, 8, 10
 
-header_line_left: DEFINE_POINT 0, 0, header_line_left
-header_line_right:    DEFINE_POINT 0, 0, header_line_right
+        DEFINE_POINT header_line_left, 0, 0
+        DEFINE_POINT header_line_right, 0, 0
 
 str_k_in_disk:
         PASCAL_STRING "K in disk" ; suffix for disk space used
@@ -1312,8 +1275,8 @@ width_left_labels:
         .word   0
 
 ;;; Computed when painted
-pos_k_in_disk:  DEFINE_POINT 0, 0, pos_k_in_disk
-pos_k_available:        DEFINE_POINT 0, 0, pos_k_available
+        DEFINE_POINT pos_k_in_disk, 0, 0
+        DEFINE_POINT pos_k_available, 0, 0
 
 ;;; Computed during startup
 width_items_label:      .word   0
@@ -1328,7 +1291,7 @@ trash_icon_num:  .byte   0
 .params drag_drop_params
 icon:
 result:  .byte   0
-coords: DEFINE_POINT 0, 0
+        DEFINE_POINT coords, 0, 0
 .endparams
 
 ;;; ============================================================

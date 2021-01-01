@@ -2283,8 +2283,7 @@ name_ptr:
 ;;; Inputs: A = icon number
 ;;; Outputs: cur_icon_pos is filled, $06 points at icon entry
 
-cur_icon_pos:
-        DEFINE_POINT 0,0,cur_icon_pos
+        DEFINE_POINT cur_icon_pos, 0,0
 
 .proc cache_icon_pos
         entry_ptr := $06
@@ -4312,8 +4311,8 @@ window_id:
 
 .proc L5F13_impl
 
-pt1:    DEFINE_POINT 0, 0
-pt2:    DEFINE_POINT 0, 0
+        DEFINE_POINT pt1, 0, 0
+        DEFINE_POINT pt2, 0, 0
 
 start:  copy16  #notpenXOR, $06
         jsr     L60D5
@@ -6870,11 +6869,11 @@ index:  .byte   0
 
         kMaxIconHeight = 17
 
-initial_coords:                 ; first icon in window
-        DEFINE_POINT  52,16 + kMaxIconHeight, initial_coords
+        ;; first icon in window
+        DEFINE_POINT initial_coords, 52,16 + kMaxIconHeight
 
-row_coords:                     ; first icon in current row
-        DEFINE_POINT 0, 0, row_coords
+        ;; first icon in current row
+        DEFINE_POINT row_coords, 0, 0
 
 icons_per_row:
         .byte   5
@@ -6882,8 +6881,7 @@ icons_per_row:
 icons_this_row:
         .byte   0
 
-icon_coords:
-        DEFINE_POINT 0, 0, icon_coords
+        DEFINE_POINT icon_coords, 0, 0
 
 preserve_window_size_flag:
         .byte   0
@@ -7548,8 +7546,7 @@ int_to_string_with_separators   := int_to_string_impl::sep
 ;;; ============================================================
 ;;; Compute bounding box for icons within cached window
 
-iconbb_rect:
-        DEFINE_RECT 0,0,0,0,iconbb_rect
+        DEFINE_RECT iconbb_rect, 0,0,0,0
 
 .proc compute_icons_bbox_impl
 
@@ -7805,7 +7802,7 @@ hi:     .byte   0
 
         rts
 
-rect:   DEFINE_RECT 0,0,0,0
+        DEFINE_RECT rect, 0,0,0,0
 
 .endproc
 
@@ -13376,7 +13373,7 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
         sec
         rts
 
-coords: DEFINE_POINT 0,0
+        DEFINE_POINT coords, 0,0
 
 .endproc
 

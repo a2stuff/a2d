@@ -77,14 +77,14 @@ mincontlength:  .word   kDAHeight
 maxcontwidth:   .word   kDAWidth
 maxcontlength:  .word   kDAHeight
 port:
-viewloc:        DEFINE_POINT kDALeft, kDATop
+        DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight, maprect
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:          DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -98,16 +98,16 @@ penwidth:       .byte   4
 penheight:      .byte   2
 .endparams
 
-frame_l1a:       DEFINE_POINT 0, 68
-frame_l1b:       DEFINE_POINT 190, 68
-frame_l2a:       DEFINE_POINT 190, 58
-frame_l2b:       DEFINE_POINT kDAWidth, 58
-frame_l3a:       DEFINE_POINT 190, 0
-frame_l3b:       DEFINE_POINT 190, kDAHeight
-frame_l4a:       DEFINE_POINT 190, 102
-frame_l4b:       DEFINE_POINT kDAWidth, 102
+        DEFINE_POINT frame_l1a, 0, 68
+        DEFINE_POINT frame_l1b, 190, 68
+        DEFINE_POINT frame_l2a, 190, 58
+        DEFINE_POINT frame_l2b, kDAWidth, 58
+        DEFINE_POINT frame_l3a, 190, 0
+        DEFINE_POINT frame_l3b, 190, kDAHeight
+        DEFINE_POINT frame_l4a, 190, 102
+        DEFINE_POINT frame_l4b, kDAWidth, 102
 
-frame_rect:     DEFINE_RECT AS_WORD(-1), AS_WORD(-1), kDAWidth - 4 + 2, kDAHeight - 2 + 2
+        DEFINE_RECT frame_rect, AS_WORD(-1), AS_WORD(-1), kDAWidth - 4 + 2, kDAHeight - 2 + 2
 
 
 .params winfo_fullscreen
@@ -127,14 +127,14 @@ mincontlength:  .word   kScreenHeight
 maxcontwidth:   .word   kScreenWidth
 maxcontlength:  .word   kScreenHeight
 port:
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-maprect:        DEFINE_RECT 0, 0, kScreenWidth, kScreenHeight
+        DEFINE_RECT maprect, 0, 0, kScreenWidth, kScreenHeight
 pattern:        .res    8, 0
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -186,21 +186,21 @@ port:           .addr   grafport
 
 .params screentowindow_params
 window_id:      .byte   kDAWindowId
-screen: DEFINE_POINT 0, 0, screen
-window: DEFINE_POINT 0, 0, window
+        DEFINE_POINT screen, 0, 0
+        DEFINE_POINT window, 0, 0
 .endparams
         mx := screentowindow_params::window::xcoord
         my := screentowindow_params::window::ycoord
 
 .params grafport
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .word   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 pattern:        .res    8, 0
 colormasks:     .byte   0, 0
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -216,11 +216,11 @@ kRadioButtonWidth       = 15
 kRadioButtonHeight      = 7
 
 .params checked_rb_params
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   checked_rb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 checked_rb_bitmap:
@@ -234,11 +234,11 @@ checked_rb_bitmap:
         .byte   PX(%0000111),PX(%1111100),PX(%0000000)
 
 .params unchecked_rb_params
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   unchecked_rb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 unchecked_rb_bitmap:
@@ -255,11 +255,11 @@ kCheckboxWidth       = 17
 kCheckboxHeight      = 8
 
 .params checked_cb_params
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   checked_cb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, kCheckboxWidth, kCheckboxHeight
+        DEFINE_RECT cliprect, 0, 0, kCheckboxWidth, kCheckboxHeight
 .endparams
 
 checked_cb_bitmap:
@@ -274,11 +274,11 @@ checked_cb_bitmap:
         .byte   PX(%1111111),PX(%1111111),PX(%1111000)
 
 .params unchecked_cb_params
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   unchecked_cb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, kCheckboxWidth, kCheckboxHeight
+        DEFINE_RECT cliprect, 0, 0, kCheckboxWidth, kCheckboxHeight
 .endparams
 
 unchecked_cb_bitmap:
@@ -302,10 +302,9 @@ kFatBitWidth            = 8
 kFatBitWidthShift       = 3
 kFatBitHeight           = 4
 kFatBitHeightShift      = 2
-fatbits_frame:
-        DEFINE_RECT_SZ kPatternEditX, kPatternEditY,  8 * kFatBitWidth + 1, 8 * kFatBitHeight + 1, fatbits_frame
-fatbits_rect:                   ; For hit testing
-        DEFINE_RECT_SZ kPatternEditX+1, kPatternEditY+1,  8 * kFatBitWidth - 1, 8 * kFatBitHeight - 1, fatbits_rect
+        DEFINE_RECT_SZ fatbits_frame, kPatternEditX, kPatternEditY,  8 * kFatBitWidth + 1, 8 * kFatBitHeight + 1
+        ;; For hit testing
+        DEFINE_RECT_SZ fatbits_rect, kPatternEditX+1, kPatternEditY+1,  8 * kFatBitWidth - 1, 8 * kFatBitHeight - 1
 
         DEFINE_LABEL pattern, "Desktop Pattern", kPatternEditX + 35, kPatternEditY + 47
 
@@ -315,14 +314,9 @@ kPreviewRight   = kPreviewLeft + 81
 kPreviewBottom  = kPreviewTop + 33
 kPreviewSpacing = kPreviewTop + 6
 
-preview_rect:
-        DEFINE_RECT kPreviewLeft+1, kPreviewSpacing + 1, kPreviewRight - 1, kPreviewBottom - 1
-
-preview_line:
-        DEFINE_RECT kPreviewLeft, kPreviewSpacing, kPreviewRight, kPreviewSpacing
-
-preview_frame:
-        DEFINE_RECT kPreviewLeft, kPreviewTop, kPreviewRight, kPreviewBottom
+        DEFINE_RECT preview_rect, kPreviewLeft+1, kPreviewSpacing + 1, kPreviewRight - 1, kPreviewBottom - 1
+        DEFINE_RECT preview_line, kPreviewLeft, kPreviewSpacing, kPreviewRight, kPreviewSpacing
+        DEFINE_RECT preview_frame, kPreviewLeft, kPreviewTop, kPreviewRight, kPreviewBottom
 
 kArrowWidth     = 6
 kArrowHeight    = 5
@@ -339,23 +333,23 @@ kLeftArrowRight         = kLeftArrowLeft + kArrowWidth - 1
 kLeftArrowBottom        = kLeftArrowTop + kArrowHeight - 1
 
 .params larr_params
-viewloc:        DEFINE_POINT kLeftArrowLeft, kLeftArrowTop
+        DEFINE_POINT viewloc, kLeftArrowLeft, kLeftArrowTop
 mapbits:        .addr   larr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, kArrowWidth-1, kArrowHeight-1
+        DEFINE_RECT cliprect, 0, 0, kArrowWidth-1, kArrowHeight-1
 .endparams
 
 .params rarr_params
-viewloc:        DEFINE_POINT kRightArrowLeft, kRightArrowTop
+        DEFINE_POINT viewloc, kRightArrowLeft, kRightArrowTop
 mapbits:        .addr   rarr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, kArrowWidth-1, kArrowHeight-1
+        DEFINE_RECT cliprect, 0, 0, kArrowWidth-1, kArrowHeight-1
 .endparams
 
-larr_rect:      DEFINE_RECT kLeftArrowLeft-2, kLeftArrowTop, kLeftArrowRight+2, kLeftArrowBottom
-rarr_rect:      DEFINE_RECT kRightArrowLeft-2, kRightArrowTop, kRightArrowRight+2, kRightArrowBottom
+        DEFINE_RECT larr_rect, kLeftArrowLeft-2, kLeftArrowTop, kLeftArrowRight+2, kLeftArrowBottom
+        DEFINE_RECT rarr_rect, kRightArrowLeft-2, kRightArrowTop, kRightArrowRight+2, kRightArrowBottom
 
 larr_bitmap:
         .byte   PX(%0000110)
@@ -372,8 +366,7 @@ rarr_bitmap:
 
         DEFINE_LABEL rgb_color, "RGB Color", kPatternEditX + 68, kPatternEditY + 59
 
-rect_rgb:
-        DEFINE_RECT_SZ kPatternEditX + 46, kPatternEditY + 50, kCheckboxWidth, kCheckboxHeight
+        DEFINE_RECT_SZ rect_rgb, kPatternEditX + 46, kPatternEditY + 50, kCheckboxWidth, kCheckboxHeight
 
 ;;; ============================================================
 ;;; Double-Click Speed Resources
@@ -395,32 +388,23 @@ dblclick_speed_table:
         DEFINE_LABEL dblclick_speed, "Double-Click Speed", kDblClickX + 45, kDblClickY + 47
 
 .params dblclick_params
-viewloc:        DEFINE_POINT kDblClickX, kDblClickY
+        DEFINE_POINT viewloc, kDblClickX, kDblClickY
 mapbits:        .addr   dblclick_bitmap
 mapwidth:       .byte   8
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 53, 33
+        DEFINE_RECT cliprect, 0, 0, 53, 33
 .endparams
 
-dblclick_arrow_pos1:
-        DEFINE_POINT kDblClickX + 65, kDblClickY + 7
-dblclick_arrow_pos2:
-        DEFINE_POINT kDblClickX + 65, kDblClickY + 22
-dblclick_arrow_pos3:
-        DEFINE_POINT kDblClickX + 110, kDblClickY + 10
-dblclick_arrow_pos4:
-        DEFINE_POINT kDblClickX + 110, kDblClickY + 22
-dblclick_arrow_pos5:
-        DEFINE_POINT kDblClickX + 155, kDblClickY + 13
-dblclick_arrow_pos6:
-        DEFINE_POINT kDblClickX + 155, kDblClickY + 23
+        DEFINE_POINT dblclick_arrow_pos1, kDblClickX + 65, kDblClickY + 7
+        DEFINE_POINT dblclick_arrow_pos2, kDblClickX + 65, kDblClickY + 22
+        DEFINE_POINT dblclick_arrow_pos3, kDblClickX + 110, kDblClickY + 10
+        DEFINE_POINT dblclick_arrow_pos4, kDblClickX + 110, kDblClickY + 22
+        DEFINE_POINT dblclick_arrow_pos5, kDblClickX + 155, kDblClickY + 13
+        DEFINE_POINT dblclick_arrow_pos6, kDblClickX + 155, kDblClickY + 23
 
-dblclick_button_rect1:
-        DEFINE_RECT_SZ kDblClickX + 175, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
-dblclick_button_rect2:
-        DEFINE_RECT_SZ kDblClickX + 130, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
-dblclick_button_rect3:
-        DEFINE_RECT_SZ kDblClickX +  85, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ dblclick_button_rect1, kDblClickX + 175, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ dblclick_button_rect2, kDblClickX + 130, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ dblclick_button_rect3, kDblClickX +  85, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
 
 dblclick_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -460,11 +444,11 @@ dblclick_bitmap:
 
 
 .params darrow_params
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   darr_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 16, 7
+        DEFINE_RECT cliprect, 0, 0, 16, 7
 .endparams
 
 darr_bitmap:
@@ -485,20 +469,18 @@ kMouseTrackingY = 78
 
         DEFINE_LABEL mouse_tracking, "Mouse Tracking", kMouseTrackingX + 30, kMouseTrackingY + 45
 
-tracking_button_rect1:
-        DEFINE_RECT_SZ kMouseTrackingX + 84, kMouseTrackingY + 8, kRadioButtonWidth, kRadioButtonHeight
-tracking_button_rect2:
-        DEFINE_RECT_SZ kMouseTrackingX + 84, kMouseTrackingY + 21, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ tracking_button_rect1, kMouseTrackingX + 84, kMouseTrackingY + 8, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ tracking_button_rect2, kMouseTrackingX + 84, kMouseTrackingY + 21, kRadioButtonWidth, kRadioButtonHeight
 
         DEFINE_LABEL tracking_slow, "Slow", kMouseTrackingX + 105, kMouseTrackingY +  8 + 8
         DEFINE_LABEL tracking_fast, "Fast", kMouseTrackingX + 105, kMouseTrackingY + 21 + 8
 
 .params mouse_tracking_params
-viewloc:        DEFINE_POINT kMouseTrackingX + 5, kMouseTrackingY
+        DEFINE_POINT viewloc, kMouseTrackingX + 5, kMouseTrackingY
 mapbits:        .addr   mouse_tracking_bitmap
 mapwidth:       .byte   9
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 62, 31
+        DEFINE_RECT cliprect, 0, 0, 62, 31
 .endparams
 
 mouse_tracking_bitmap:
@@ -555,22 +537,16 @@ ipblink_selection:
         DEFINE_LABEL ipblink_slow, "Slow", kIPBlinkDisplayX + 110 - 4 + 2, kIPBlinkDisplayY + 16 + 5 + 12 + 1
         DEFINE_LABEL ipblink_fast, "Fast", kIPBlinkDisplayX + 140 + 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
 
-ipblink_btn1_rect:
-        DEFINE_RECT_SZ kIPBlinkDisplayX + 110 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-ipblink_btn2_rect:
-        DEFINE_RECT_SZ kIPBlinkDisplayX + 130 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-ipblink_btn3_rect:
-        DEFINE_RECT_SZ kIPBlinkDisplayX + 150 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-
-
-
+        DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 110 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ ipblink_btn2_rect, kIPBlinkDisplayX + 130 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ ipblink_btn3_rect, kIPBlinkDisplayX + 150 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
 
 .params ipblink_bitmap_params
-viewloc:        DEFINE_POINT kIPBlinkDisplayX + 120 - 1, kIPBlinkDisplayY
+        DEFINE_POINT viewloc, kIPBlinkDisplayX + 120 - 1, kIPBlinkDisplayY
 mapbits:        .addr   ipblink_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 37, 12
+        DEFINE_RECT cliprect, 0, 0, 37, 12
 .endparams
 
 ipblink_bitmap:
@@ -589,11 +565,11 @@ ipblink_bitmap:
         .byte   PX(%0000110),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000),PX(%0110000)
 
 .params ipblink_bitmap_ip_params
-viewloc:        DEFINE_POINT kIPBlinkDisplayX + 120 - 1 + 20, kIPBlinkDisplayY
+        DEFINE_POINT viewloc, kIPBlinkDisplayX + 120 - 1 + 20, kIPBlinkDisplayY
 mapbits:        .addr   ipblink_ip_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 1, 12
+        DEFINE_RECT cliprect, 0, 0, 1, 12
 .endparams
 
 ipblink_ip_bitmap:
@@ -620,12 +596,10 @@ kHourDisplayY = 114
 
         DEFINE_LABEL clock, "Clock", kHourDisplayX+kRadioButtonWidth, kHourDisplayY+8
 
-rect_12hour:
-        DEFINE_RECT_SZ kHourDisplayX+60, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_12hour, kHourDisplayX+60, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_LABEL clock_12hour, "12hr", kHourDisplayX+60+kRadioButtonWidth+6, kHourDisplayY+8
 
-rect_24hour:
-        DEFINE_RECT_SZ kHourDisplayX+120, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_24hour, kHourDisplayX+120, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_LABEL clock_24hour, "24hr", kHourDisplayX+120+kRadioButtonWidth+6, kHourDisplayY+8
 
 ;;; ============================================================
@@ -1456,8 +1430,7 @@ rotated_pattern:
 
 ;;; ============================================================
 
-bitrect:
-        DEFINE_RECT     0, 0, 0, 0, bitrect
+        DEFINE_RECT bitrect, 0, 0, 0, 0
 
 ;;; Assert: called from a routine that ensures window is onscreen
 .proc draw_bits

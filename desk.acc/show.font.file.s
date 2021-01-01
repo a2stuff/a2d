@@ -143,14 +143,14 @@ mincontlength:  .word   kDAHeight
 maxcontwidth:   .word   kDAWidth
 maxcontlength:  .word   kDAHeight
 port:
-viewloc:        DEFINE_POINT kDALeft, kDATop
+        DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:          DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   2
 penheight:      .byte   1
 penmode:        .byte   0
@@ -202,14 +202,14 @@ port:           .addr   grafport
 .endparams
 
 .params grafport
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .word   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 pattern:        .res    8, 0
 colormasks:     .byte   0, 0
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -336,7 +336,7 @@ line8:  PASCAL_STRING "p q r s t u v w x y z { | } ~ \x7F" ; do not localize
 line_addrs:
         .addr line1, line2, line3, line4, line5, line6, line7, line8
 
-pos:    DEFINE_POINT 0,0, pos
+        DEFINE_POINT pos, 0,0
 
         kInitialY = 5
         kLineHeight = 15

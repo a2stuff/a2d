@@ -69,14 +69,14 @@ mincontlength:  .word   kScreenHeight / 5
 maxcontwidth:   .word   kScreenWidth
 maxcontlength:  .word   kScreenHeight
 port:
-viewloc:        DEFINE_POINT kDALeft, kDATop
+        DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight, maprect
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:          DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -135,21 +135,21 @@ flag:   .byte   MGTK::zp_overwrite
 
 .params screentowindow_params
 window_id:      .byte   kDAWindowId
-        DEFINE_POINT 0, 0, screen
-        DEFINE_POINT 0, 0, window
+        DEFINE_POINT screen, 0, 0
+        DEFINE_POINT window, 0, 0
 .endparams
         mx := screentowindow_params::window::xcoord
         my := screentowindow_params::window::ycoord
 
 .params grafport
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .word   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 pattern:        .res    8, 0
 colormasks:     .byte   0, 0
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -161,11 +161,11 @@ kGrowBoxWidth = 17
 kGrowBoxHeight = 7
 
 .params grow_box_params
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   grow_box_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 2, 2, 19, 9
+        DEFINE_RECT cliprect, 2, 2, 19, 9
 .endparams
 
 grow_box_bitmap:
@@ -365,8 +365,8 @@ has_drawn_outline:
         .byte   0
 
 ;;; Saved coords
-pos_l:        DEFINE_POINT 0, 0, pos_l
-pos_r:        DEFINE_POINT 0, 0, pos_r
+        DEFINE_POINT pos_l, 0, 0
+        DEFINE_POINT pos_r, 0, 0
 
 ;;; ============================================================
 
@@ -663,7 +663,7 @@ ryf:    DEFINE_FLOAT
 cxf:    DEFINE_FLOAT
 cyf:    DEFINE_FLOAT
 
-drawpos:        DEFINE_POINT 0, 0, drawpos
+        DEFINE_POINT drawpos, 0, 0
         ptx := drawpos::xcoord
         pty := drawpos::ycoord
 .endproc

@@ -689,72 +689,48 @@ event_size                      = 5        ; any kind of event
 
 ;;; ------------------------------------
 
-;;; Rect definition. Option fifth param gives scope.
-;;;    DEFINE_RECT 0,0,20,30
-;;;    DEFINE_RECT 0,0,20,30,rect ; rect::x1, rect::y1, rect::x2, rect::y2
-.macro DEFINE_RECT left, top, right, bottom, opt_scope
-    .if .paramcount > 4
-.scope opt_scope
+;;; Rect definition.
+;;;    DEFINE_RECT ident,0,0,20,30
+.macro DEFINE_RECT ident, left, top, right, bottom
+        ident := *
+.scope ident
 x1:     .word   left
 y1:     .word   top
 x2:     .word   right
 y2:     .word   bottom
 .endscope
-    .else
-        .word   left
-        .word   top
-        .word   right
-        .word   bottom
-    .endif
 .endmacro
 
 ;;; Define a rect by size (right = left + width, bottom = top + height)
-.macro DEFINE_RECT_SZ left, top, width, height, opt_scope
-    .if .paramcount > 4
-.scope opt_scope
+.macro DEFINE_RECT_SZ ident, left, top, width, height
+        ident := *
+.scope ident
 x1:     .word   left
 y1:     .word   top
 x2:     .word   (left + width)
 y2:     .word   (top + height)
 .endscope
-    .else
-        .word   left
-        .word   top
-        .word   (left + width)
-        .word   (top + height)
-    .endif
 .endmacro
 
 ;;; Define an inset rect rect by size
-.macro DEFINE_RECT_INSET left, top, width, height
-    .if .paramcount > 4
-.scope opt_scope
+.macro DEFINE_RECT_INSET ident, left, top, width, height
+        ident := *
+.scope ident
 x1:     .word   left
 y1:     .word   top
 x2:     .word   (width - left)
 y2:     .word   (height - top)
 .endscope
-    .else
-        .word   left
-        .word   top
-        .word   (width - left)
-        .word   (height - top)
-    .endif
 .endmacro
 
-;;; Point definition. Option third param gives scope.
-;;;    DEFINE_POINT 10,20
-;;;    DEFINE_POINT 10,20,pt ; pt::xcoord, pt::ycoord
-.macro DEFINE_POINT left, top, opt_scope
-    .if .paramcount > 2
-.scope opt_scope
+;;; Point definition.
+;;;    DEFINE_POINT ident,10,20
+.macro DEFINE_POINT ident, left, top
+        ident := *
+.scope ident
 xcoord: .word   left
 ycoord: .word   top
 .endscope
-    .else
-        .word   left
-        .word   top
-    .endif
 .endmacro
 
 ;;; Menus (common cases; other options are possible)

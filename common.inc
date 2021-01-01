@@ -156,14 +156,12 @@ kGlyphCheckmark         = $1D
 ;;; Macros (specific to this project)
 
 .macro DEFINE_BUTTON_COORDS ident, xpos, ypos, width, height
-        .ident(.sprintf("%s_button_rect", .string(ident))) := *
 .if .paramcount > 3
-        DEFINE_RECT_SZ (xpos), (ypos), width, height
+        DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), width, height
 .else
-        DEFINE_RECT_SZ (xpos), (ypos), kButtonWidth, kButtonHeight
+        DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), kButtonWidth, kButtonHeight
 .endif
-        .ident(.sprintf("%s_button_pos", .string(ident))) := *
-        DEFINE_POINT ((xpos) + 5), ((ypos) + 10)
+        DEFINE_POINT .ident(.sprintf("%s_button_pos", .string(ident))), ((xpos) + 5), ((ypos) + 10)
 .endmacro
 .macro DEFINE_BUTTON ident, label, xpos, ypos, width, height
 .if .paramcount > 4
@@ -176,8 +174,8 @@ kGlyphCheckmark         = $1D
 .endmacro
 
 .macro DEFINE_LABEL ident, label, xpos, ypos
-        .ident(.sprintf("%s_label_pos", .string(ident))) := *
-        DEFINE_POINT (xpos), (ypos)
+
+        DEFINE_POINT .ident(.sprintf("%s_label_pos", .string(ident))), (xpos), (ypos)
         .ident(.sprintf("%s_label_str", .string(ident))) := *
         PASCAL_STRING {label}
 .endmacro

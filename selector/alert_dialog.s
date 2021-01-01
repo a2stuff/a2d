@@ -35,11 +35,11 @@ alert_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
 
 .params alert_bitmap_params
-viewloc:        DEFINE_POINT 20, 8
+        DEFINE_POINT viewloc, 20, 8
 mapbits:        .addr   alert_bitmap
 mapwidth:       .byte   7
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 36, 23
+        DEFINE_RECT maprect, 0, 0, 36, 23
 .endparams
 
 kAlertRectWidth         = 420
@@ -47,26 +47,23 @@ kAlertRectHeight        = 55
 kAlertRectLeft          = (kScreenWidth - kAlertRectWidth)/2
 kAlertRectTop           = (kScreenHeight - kAlertRectHeight)/2
 
-alert_rect:
-        DEFINE_RECT_SZ kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
-alert_inner_frame_rect1:
-        DEFINE_RECT_INSET 4, 2, kAlertRectWidth, kAlertRectHeight
-alert_inner_frame_rect2:
-        DEFINE_RECT_INSET 5, 3, kAlertRectWidth, kAlertRectHeight
+        DEFINE_RECT_SZ alert_rect, kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
+        DEFINE_RECT_INSET alert_inner_frame_rect1, 4, 2, kAlertRectWidth, kAlertRectHeight
+        DEFINE_RECT_INSET alert_inner_frame_rect2, 5, 3, kAlertRectWidth, kAlertRectHeight
 
 .params portmap
-viewloc:        DEFINE_POINT kAlertRectLeft, kAlertRectTop, viewloc
+        DEFINE_POINT viewloc, kAlertRectLeft, kAlertRectTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
+        DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
         DEFINE_BUTTON ok,        "OK            \x0D", 300, 37
         DEFINE_BUTTON try_again, "Try Again  A",       300, 37
         DEFINE_BUTTON cancel,    "Cancel    Esc",       20, 37
 
-pos_prompt:     DEFINE_POINT 75,29
+        DEFINE_POINT pos_prompt, 75,29
 
 alert_options:  .byte   0
 prompt_addr:    .addr   0

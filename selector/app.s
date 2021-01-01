@@ -285,8 +285,7 @@ viewloc:.word   25, 36
         .byte   0
 .endparams
 
-rect_frame:
-        DEFINE_RECT_INSET 4, 2, winfo::kWidth, winfo::kHeight
+        DEFINE_RECT_INSET rect_frame, 4, 2, winfo::kWidth, winfo::kHeight
 
         DEFINE_BUTTON ok,      " OK          \x0D", 340, 102
         DEFINE_BUTTON desktop, " DeskTop      Q",    60, 102
@@ -300,24 +299,22 @@ pos_title_string:
 str_selector_title:
         PASCAL_STRING "Selector" ; dialog title
 
-pt0:    DEFINE_POINT 5, 22, pt0
+        DEFINE_POINT pt0, 5, 22
 
-line1_pt1:    DEFINE_POINT   5, 20
-line1_pt2:    DEFINE_POINT   winfo::kWidth - 5, 20
-line2_pt1:    DEFINE_POINT   5, winfo::kHeight - 20
-line2_pt2:    DEFINE_POINT   winfo::kWidth - 5, winfo::kHeight - 20
+        DEFINE_POINT line1_pt1, 5, 20
+        DEFINE_POINT line1_pt2, winfo::kWidth - 5, 20
+        DEFINE_POINT line2_pt1, 5, winfo::kHeight - 20
+        DEFINE_POINT line2_pt2, winfo::kWidth - 5, winfo::kHeight - 20
 
 ;;; Position of entries box
-pos_entry_base:    DEFINE_POINT 16, 30, pos_entry_base
+        DEFINE_POINT pos_entry_base, 16, 30
 
 ;;; Point used when rendering entries
-pos_entry_str:    DEFINE_POINT 0, 0, pos_entry_str
+        DEFINE_POINT pos_entry_str, 0, 0
 
-rect_entry_base:
-        DEFINE_RECT_SZ 16, 22, kEntryPickerItemWidth, kEntryPickerItemHeight - 1, rect_entry_base
+        DEFINE_RECT_SZ rect_entry_base, 16, 22, kEntryPickerItemWidth, kEntryPickerItemHeight - 1
 
-rect_entry:
-        DEFINE_RECT 0, 0, 0, 0, rect_entry
+        DEFINE_RECT rect_entry, 0, 0, 0, 0
 
         .byte   0
         .byte   $7F

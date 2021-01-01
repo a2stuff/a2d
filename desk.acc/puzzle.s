@@ -207,7 +207,7 @@ top:            .word   0
 mapbits:        .addr   0
 mapwidth:       .byte   4
         .byte   0               ; reserved
-        DEFINE_RECT 0, 0, 27, 15
+        DEFINE_RECT maprect, 0, 0, 27, 15
 .endparams
 
 piece1:
@@ -485,7 +485,7 @@ piece16:
 
 
 .params paintrect_params
-        DEFINE_RECT 1, 0, kDefaultWidth, kDefaultHeight
+        DEFINE_RECT rect, 1, 0, kDefaultWidth, kDefaultHeight
 .endparams
 
 .params pattern_speckles
@@ -572,14 +572,14 @@ mincontlength:  .word   kDefaultHeight
 maxcontwidth:   .word   kDefaultWidth
 maxcontlength:  .word   kDefaultHeight
 port:
-viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop, viewloc
+        DEFINE_POINT viewloc, kDefaultLeft, kDefaultTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
+        DEFINE_RECT cliprect, 0, 0, kDefaultWidth, kDefaultHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0

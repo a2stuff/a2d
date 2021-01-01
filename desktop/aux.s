@@ -261,33 +261,33 @@ kPolySize = 8
 num_vertices:   .byte   kPolySize
 lastpoly:       .byte   0       ; 0 = last poly
 vertices:
-v0:     DEFINE_POINT 0, 0, v0
-v1:     DEFINE_POINT 0, 0, v1
-v2:     DEFINE_POINT 0, 0, v2
-v3:     DEFINE_POINT 0, 0, v3
-v4:     DEFINE_POINT 0, 0, v4
-v5:     DEFINE_POINT 0, 0, v5
-v6:     DEFINE_POINT 0, 0, v6
-v7:     DEFINE_POINT 0, 0, v7
+        DEFINE_POINT v0, 0, 0
+        DEFINE_POINT v1, 0, 0
+        DEFINE_POINT v2, 0, 0
+        DEFINE_POINT v3, 0, 0
+        DEFINE_POINT v4, 0, 0
+        DEFINE_POINT v5, 0, 0
+        DEFINE_POINT v6, 0, 0
+        DEFINE_POINT v7, 0, 0
 .endparams
 
 .params icon_paintbits_params
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0,0,0,0,maprect
+        DEFINE_RECT maprect, 0,0,0,0
 .endparams
 
 .params mask_paintbits_params
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0,0,0,0,maprect
+        DEFINE_RECT maprect, 0,0,0,0
 .endparams
 
-rect_opendir:      DEFINE_RECT 0,0,0,0, rect_opendir
+        DEFINE_RECT rect_opendir, 0,0,0,0
 
 .params textwidth_params
 textptr:        .addr   text_buffer
@@ -370,14 +370,14 @@ window_id:      .byte   0
 .endparams
 
 .params grafport
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, kScreenWidth-1, kScreenHeight-1
+        DEFINE_RECT cliprect, 0, 0, kScreenWidth-1, kScreenHeight-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   $96     ; ???
@@ -387,14 +387,14 @@ fontptr:        .addr   DEFAULT_FONT
 
 ;;; Grafport used to draw icon outlines during drag
 .params drag_outline_grafport
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
-penloc: DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -408,14 +408,14 @@ a_grafport:     .addr   icon_grafport
 .endparams
 
 .params icon_grafport
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
-penloc: DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -1722,7 +1722,7 @@ icon:   .byte   0
         jmp     start
 
 icon:   .byte   0
-rect:   DEFINE_RECT 0,0,0,0,rect
+        DEFINE_RECT rect, 0,0,0,0
 
 start:  ldy     #0
         lda     ($06),y
@@ -1796,8 +1796,7 @@ open_flag:  ; non-zero if open volume/dir
 more_drawing_needed_flag:
         .byte   0
 
-label_pos:
-        DEFINE_POINT 0,0
+        DEFINE_POINT label_pos, 0,0
 
 .proc paint_icon
 
@@ -2451,10 +2450,11 @@ next:   pla
 
 offset_flags:  .byte   0        ; bit 7 = offset poly, bit 6 = undo offset, otherwise do offset
 
-vl_offset:  DEFINE_POINT 0,0,vl_offset
-mr_offset:  DEFINE_POINT 0,0,mr_offset
+        DEFINE_POINT vl_offset, 0,0
+        DEFINE_POINT mr_offset, 0,0
 
-entry_poly:  copy    #$80, offset_flags
+entry_poly:
+        copy    #$80, offset_flags
         bmi     LA4E2           ; always
 
 entry_do:  pha
@@ -2591,11 +2591,11 @@ bounds_r:  .word   0
 bounds_b:  .word   0
 
 .params portbits
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 .endparams
 
 .proc set_port_for_vol_icon
@@ -2683,12 +2683,12 @@ dialogbox_flag:
 ;;; pt1 +----+ pt2
 ;;;     |    |
 ;;; pt4 +----+ pt3
-pt1:    DEFINE_POINT 0,0,pt1
-pt2:    DEFINE_POINT 0,0,pt2
-pt3:    DEFINE_POINT 0,0,pt3
-pt4:    DEFINE_POINT 0,0,pt4
+        DEFINE_POINT pt1, 0,0
+        DEFINE_POINT pt2, 0,0
+        DEFINE_POINT pt3, 0,0
+        DEFINE_POINT pt4, 0,0
 
-bounds:     DEFINE_RECT 0,0,0,0, bounds
+        DEFINE_RECT bounds, 0,0,0,0
 
 stash_r: .word   0
 
@@ -3375,8 +3375,8 @@ special_menu:
         kPromptDialogWidth = 400
         kPromptDialogHeight = 107
 
-confirm_dialog_outer_rect:  DEFINE_RECT_INSET 4,2,kPromptDialogWidth,kPromptDialogHeight
-confirm_dialog_inner_rect:  DEFINE_RECT_INSET 5,3,kPromptDialogWidth,kPromptDialogHeight
+        DEFINE_RECT_INSET confirm_dialog_outer_rect, 4,2,kPromptDialogWidth,kPromptDialogHeight
+        DEFINE_RECT_INSET confirm_dialog_inner_rect, 5,3,kPromptDialogWidth,kPromptDialogHeight
 
         DEFINE_BUTTON ok,     "OK            \x0D", 260, kPromptDialogHeight-19
         DEFINE_BUTTON cancel, "Cancel        Esc",   40, kPromptDialogHeight-19
@@ -3401,13 +3401,13 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
 ;;; ============================================================
 ;;; Prompt dialog resources
 
-clear_dialog_labels_rect:  DEFINE_RECT 39,25,360,kPromptDialogHeight-20
+        DEFINE_RECT clear_dialog_labels_rect, 39,25,360,kPromptDialogHeight-20
 
-prompt_rect:  DEFINE_RECT 40,kDialogLabelRow5+1,360,kDialogLabelRow6
-current_target_file_pos:  DEFINE_POINT 75,kDialogLabelRow2
-current_dest_file_pos:  DEFINE_POINT 75,kDialogLabelRow3
-current_target_file_rect:  DEFINE_RECT 75,kDialogLabelRow1+1,394,kDialogLabelRow2
-current_dest_file_rect:  DEFINE_RECT 75,kDialogLabelRow2+1,394,kDialogLabelRow3
+        DEFINE_RECT prompt_rect, 40,kDialogLabelRow5+1,360,kDialogLabelRow6
+        DEFINE_POINT current_target_file_pos, 75,kDialogLabelRow2
+        DEFINE_POINT current_dest_file_pos, 75,kDialogLabelRow3
+        DEFINE_RECT current_target_file_rect, 75,kDialogLabelRow1+1,394,kDialogLabelRow2
+        DEFINE_RECT current_dest_file_rect, 75,kDialogLabelRow2+1,394,kDialogLabelRow3
 
 ;;; ============================================================
 ;;; "About" dialog resources
@@ -3415,8 +3415,8 @@ current_dest_file_rect:  DEFINE_RECT 75,kDialogLabelRow2+1,394,kDialogLabelRow3
 kAboutDialogWidth       = 400
 kAboutDialogHeight      = 120
 
-about_dialog_outer_rect:  DEFINE_RECT_INSET 4, 2, kAboutDialogWidth, kAboutDialogHeight
-about_dialog_inner_rect:  DEFINE_RECT_INSET 5, 3, kAboutDialogWidth, kAboutDialogHeight
+        DEFINE_RECT_INSET about_dialog_outer_rect, 4, 2, kAboutDialogWidth, kAboutDialogHeight
+        DEFINE_RECT_INSET about_dialog_inner_rect, 5, 3, kAboutDialogWidth, kAboutDialogHeight
 
 str_about1:  PASCAL_STRING kDeskTopProductName ; do not localize
 str_about2:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"
@@ -3455,10 +3455,8 @@ str_large_copy_prompt:
 str_large_move_prompt:
         PASCAL_STRING "This file is too large to move, click OK to continue."
 
-copy_file_count_pos:
-        DEFINE_POINT 110, kDialogLabelRow1
-copy_file_count_pos2:
-        DEFINE_POINT 170, kDialogLabelRow4
+        DEFINE_POINT copy_file_count_pos, 110, kDialogLabelRow1
+        DEFINE_POINT copy_file_count_pos2, 170, kDialogLabelRow4
 
         ;; "Delete" dialog strings
 str_delete_title:
@@ -3474,14 +3472,11 @@ str_delete_remaining:
 str_delete_locked_file:
         PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
 
-delete_file_count_pos:
-        DEFINE_POINT 145, kDialogLabelRow4
+        DEFINE_POINT delete_file_count_pos, 145, kDialogLabelRow4
 
-delete_remaining_count_pos:
-        DEFINE_POINT 204, kDialogLabelRow4
+        DEFINE_POINT delete_remaining_count_pos, 204, kDialogLabelRow4
 
-delete_file_count_pos2:
-        DEFINE_POINT 300, kDialogLabelRow4
+        DEFINE_POINT delete_file_count_pos2, 300, kDialogLabelRow4
 
         ;; "New Folder" dialog strings
 str_new_folder_title:
@@ -3522,12 +3517,12 @@ str_info_vol_size:
 str_colon:
         PASCAL_STRING ": "
 
-unlock_remaining_count_pos2:  DEFINE_POINT 160,kDialogLabelRow4
-lock_remaining_count_pos2:  DEFINE_POINT 145,kDialogLabelRow4
-files_pos:  DEFINE_POINT 200,kDialogLabelRow4
-files_pos2:  DEFINE_POINT 185,kDialogLabelRow4
-unlock_remaining_count_pos:  DEFINE_POINT 205,kDialogLabelRow4
-lock_remaining_count_pos: DEFINE_POINT 195,kDialogLabelRow4
+        DEFINE_POINT unlock_remaining_count_pos2, 160,kDialogLabelRow4
+        DEFINE_POINT lock_remaining_count_pos2, 145,kDialogLabelRow4
+        DEFINE_POINT files_pos, 200,kDialogLabelRow4
+        DEFINE_POINT files_pos2, 185,kDialogLabelRow4
+        DEFINE_POINT unlock_remaining_count_pos, 205,kDialogLabelRow4
+        DEFINE_POINT lock_remaining_count_pos, 195,kDialogLabelRow4
 
 str_format_disk:
         PASCAL_STRING "Format a Disk..." ; dialog title
@@ -3651,11 +3646,11 @@ alert_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
 
 .params alert_bitmap_params
-viewloc:        DEFINE_POINT 20, 8
+        DEFINE_POINT viewloc, 20, 8
 mapbits:        .addr   alert_bitmap
 mapwidth:       .byte   7
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 36, 23
+        DEFINE_RECT maprect, 0, 0, 36, 23
 .endparams
 
 kAlertRectWidth         = 420
@@ -3663,26 +3658,23 @@ kAlertRectHeight        = 55
 kAlertRectLeft          = (::kScreenWidth - kAlertRectWidth)/2
 kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
 
-alert_rect:
-        DEFINE_RECT_SZ kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
-alert_inner_frame_rect1:
-        DEFINE_RECT_INSET 4, 2, kAlertRectWidth, kAlertRectHeight
-alert_inner_frame_rect2:
-        DEFINE_RECT_INSET 5, 3, kAlertRectWidth, kAlertRectHeight
+        DEFINE_RECT_SZ alert_rect, kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
+        DEFINE_RECT_INSET alert_inner_frame_rect1, 4, 2, kAlertRectWidth, kAlertRectHeight
+        DEFINE_RECT_INSET alert_inner_frame_rect2, 5, 3, kAlertRectWidth, kAlertRectHeight
 
 .params portmap
-viewloc:        DEFINE_POINT kAlertRectLeft, kAlertRectTop, viewloc
+        DEFINE_POINT viewloc, kAlertRectLeft, kAlertRectTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, kAlertRectWidth, kAlertRectHeight, maprect
+        DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
         DEFINE_BUTTON ok,        "OK            \x0D",  20, 37
         DEFINE_BUTTON try_again, "Try Again     A",     20, 37
         DEFINE_BUTTON cancel,    "Cancel     Esc",     300, 37
 
-pos_prompt:     DEFINE_POINT 75,29
+        DEFINE_POINT pos_prompt, 75,29
 
 alert_options:  .byte   0
 prompt_addr:    .addr   0

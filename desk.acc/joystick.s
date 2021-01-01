@@ -69,14 +69,14 @@ mincontlength:  .word   kDAHeight
 maxcontwidth:   .word   kDAWidth
 maxcontlength:  .word   kDAHeight
 port:
-viewloc:        DEFINE_POINT kDALeft, kDATop
+        DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight, maprect
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:          DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -128,21 +128,21 @@ port:           .addr   grafport
 
 .params screentowindow_params
 window_id:      .byte   kDAWindowId
-screen: DEFINE_POINT 0, 0, screen
-window: DEFINE_POINT 0, 0, window
+        DEFINE_POINT screen, 0, 0
+        DEFINE_POINT window, 0, 0
 .endparams
         mx := screentowindow_params::window::xcoord
         my := screentowindow_params::window::ycoord
 
 .params grafport
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .word   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 pattern:        .res    8, 0
 colormasks:     .byte   0, 0
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -158,11 +158,11 @@ kRadioButtonWidth       = 15
 kRadioButtonHeight      = 7
 
 .params checked_rb_params
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   checked_rb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 checked_rb_bitmap:
@@ -176,11 +176,11 @@ checked_rb_bitmap:
         .byte   PX(%0000111),PX(%1111100),PX(%0000000)
 
 .params unchecked_rb_params
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   unchecked_rb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 unchecked_rb_bitmap:
@@ -204,29 +204,27 @@ kJoystickDisplayY = kJoystickCalibrationY - 2
 kJoystickDisplayW = 128
 kJoystickDisplayH = 64
 
-joy_disp_frame_rect:
-        DEFINE_RECT_SZ kJoystickDisplayX    , kJoystickDisplayY    , kJoystickDisplayW + 7 + 1, kJoystickDisplayH + 4 + 1
-joy_disp_rect:
-        DEFINE_RECT_SZ kJoystickDisplayX + 1, kJoystickDisplayY + 1, kJoystickDisplayW + 7 - 1, kJoystickDisplayH + 4 - 1
+        DEFINE_RECT_SZ joy_disp_frame_rect, kJoystickDisplayX    , kJoystickDisplayY    , kJoystickDisplayW + 7 + 1, kJoystickDisplayH + 4 + 1
+        DEFINE_RECT_SZ joy_disp_rect, kJoystickDisplayX + 1, kJoystickDisplayY + 1, kJoystickDisplayW + 7 - 1, kJoystickDisplayH + 4 - 1
 
-joy_btn0:       DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 10, joy_btn0
-joy_btn1:       DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30, joy_btn1
-joy_btn2:       DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 50, joy_btn2
+        DEFINE_POINT joy_btn0, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 10
+        DEFINE_POINT joy_btn1, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30
+        DEFINE_POINT joy_btn2, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 50
 
-joy_btn0_lpos: DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 10 + 8
-joy_btn1_lpos: DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 30 + 8
-joy_btn2_lpos: DEFINE_POINT kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 50 + 8
+        DEFINE_POINT joy_btn0_lpos, kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 10 + 8
+        DEFINE_POINT joy_btn1_lpos, kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 30 + 8
+        DEFINE_POINT joy_btn2_lpos, kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 50 + 8
 
 joy_btn0_label:   PASCAL_STRING "0" ; dialog label
 joy_btn1_label:   PASCAL_STRING "1" ; dialog label
 joy_btn2_label:   PASCAL_STRING "2" ; dialog label
 
 .params joy_marker
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   joy_marker_bitmap
 mapwidth:       .byte   2
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 7, 4
+        DEFINE_RECT cliprect, 0, 0, 7, 4
 .endparams
 
 joy_marker_bitmap:
@@ -238,11 +236,11 @@ joy_marker_bitmap:
 
 
 .params joystick_params
-viewloc:        DEFINE_POINT kJoystickCalibrationX+1, kJoystickCalibrationY + 6
+        DEFINE_POINT viewloc, kJoystickCalibrationX+1, kJoystickCalibrationY + 6
 mapbits:        .addr   joystick_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 35, 18
+        DEFINE_RECT cliprect, 0, 0, 35, 18
 .endparams
 
 joystick_bitmap:

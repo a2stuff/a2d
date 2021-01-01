@@ -124,20 +124,13 @@ start_da:
         kDownRectIndex = 4
 
         first_hit_rect := *
-ok_button_rect:
-        DEFINE_RECT_SZ 106,46,75,11
-cancel_button_rect:
-        DEFINE_RECT_SZ 16,46,74,11
-up_arrow_rect:
-        DEFINE_RECT_SZ 170,10,10,10
-down_arrow_rect:
-        DEFINE_RECT_SZ 170,30,10,10
-day_rect:
-        DEFINE_RECT_SZ 37,20,22,10
-month_rect:
-        DEFINE_RECT_SZ 81,20,30,10
-year_rect:
-        DEFINE_RECT_SZ 127,20,22,10
+        DEFINE_RECT_SZ ok_button_rect, 106,46,75,11
+        DEFINE_RECT_SZ cancel_button_rect, 16,46,74,11
+        DEFINE_RECT_SZ up_arrow_rect, 170,10,10,10
+        DEFINE_RECT_SZ down_arrow_rect, 170,30,10,10
+        DEFINE_RECT_SZ day_rect, 37,20,22,10
+        DEFINE_RECT_SZ month_rect, 81,20,30,10
+        DEFINE_RECT_SZ year_rect, 127,20,22,10
 
 .params settextbg_params
 backcolor:   .byte   0          ; black
@@ -163,18 +156,15 @@ year:   .byte   85
 spaces_string:
         PASCAL_STRING "    "    ; do not localize
 
-day_pos:
-        DEFINE_POINT 43, 30
+        DEFINE_POINT day_pos, 43, 30
 day_string:
         PASCAL_STRING "  "      ; do not localize
 
-month_pos:
-        DEFINE_POINT 87, 30
+        DEFINE_POINT month_pos, 87, 30
 month_string:
         PASCAL_STRING "   "     ; do not localize
 
-year_pos:
-        DEFINE_POINT 133, 30
+        DEFINE_POINT year_pos, 133, 30
 year_string:
         PASCAL_STRING "  "      ; do not localize
 
@@ -233,14 +223,14 @@ mincontlength:  .word   100
 maxcontwidth:   .word   500
 maxcontlength:  .word   500
 port:
-viewloc:        DEFINE_POINT 180, 50
+        DEFINE_POINT viewloc, 180, 50
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, 199, 64
+        DEFINE_RECT cliprect, 0, 0, 199, 64
 pattern:        .res    8,$00
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   4
 penheight:      .byte   2
 penmode:        .byte   MGTK::pencopy
@@ -708,11 +698,9 @@ done:   pla
 ;;; ============================================================
 ;;; Params for the display
 
-border_rect:
-        DEFINE_RECT 4,2,192,61
+        DEFINE_RECT border_rect, 4,2,192,61
 
-date_rect:
-        DEFINE_RECT_SZ 32,15,122,20
+        DEFINE_RECT_SZ date_rect, 32,15,122,20
 
 label_ok:
         PASCAL_STRING "OK         \x0D" ; button label
@@ -723,15 +711,11 @@ label_uparrow:
 label_downarrow:
         PASCAL_STRING kGlyphDdownArrow ; do not localize
 
-label_cancel_pos:
-        DEFINE_POINT 21,56
-label_ok_pos:
-        DEFINE_POINT 110,56
+        DEFINE_POINT label_cancel_pos, 21,56
+        DEFINE_POINT label_ok_pos, 110,56
 
-label_uparrow_pos:
-        DEFINE_POINT 172,19
-label_downarrow_pos:
-        DEFINE_POINT 172,39
+        DEFINE_POINT label_uparrow_pos, 172,19
+        DEFINE_POINT label_downarrow_pos, 172,39
 
 .params setpensize_params
 penwidth: .byte   1

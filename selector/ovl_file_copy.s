@@ -763,32 +763,29 @@ window_id:
         .addr   0
 .endproc
 
-rect1:  DEFINE_RECT_SZ 20, 49, kButtonWidth, kButtonHeight
-pos1:   DEFINE_POINT 24, 59
+        DEFINE_RECT_SZ rect1, 20, 49, kButtonWidth, kButtonHeight
+        DEFINE_POINT pos1, 24, 59
 
-rect_frame1:
-        DEFINE_RECT_INSET 4, 2, winfo::kWidth, winfo::kHeight
-rect_frame2:
-        DEFINE_RECT_INSET 5, 3, winfo::kWidth, winfo::kHeight
+        DEFINE_RECT_INSET rect_frame1, 4, 2, winfo::kWidth, winfo::kHeight
+        DEFINE_RECT_INSET rect_frame2, 5, 3, winfo::kWidth, winfo::kHeight
 
         DEFINE_LABEL download, "Copying to RAMCard...", 116, 16
 
-pos_copying:    DEFINE_POINT 20, 32
-pt2:    DEFINE_POINT 20, 45
+        DEFINE_POINT pos_copying, 20, 32
+        DEFINE_POINT pt2, 20, 45
 
 str_copying:
         PASCAL_STRING "Copying:"
 
-rect_clear_count:  DEFINE_RECT 18, 24, 344, 32
-
-rect_clear_details:  DEFINE_RECT 6, 24, 344, 66
+        DEFINE_RECT rect_clear_count, 18, 24, 344, 32
+        DEFINE_RECT rect_clear_details, 6, 24, 344, 66
 
 .params setportbits_params
-viewloc:        DEFINE_POINT 100, 50
+        DEFINE_POINT viewloc, 100, 50
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 346, 66
+        DEFINE_RECT maprect, 0, 0, 346, 66
 pattern:        .res    8, $FF
 masks:          .byte   $FF, $00
 penloc:         .word   0, 0

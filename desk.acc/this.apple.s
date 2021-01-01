@@ -72,14 +72,14 @@ mincontlength:  .word   kDAHeight
 maxcontwidth:   .word   kDAWidth
 maxcontlength:  .word   kDAHeight
 port:
-viewloc:        DEFINE_POINT kDALeft, kDATop
+        DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:          DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -94,67 +94,67 @@ str_title:
 ;;; ============================================================
 
 .params ii_bitmap
-viewloc:        DEFINE_POINT 59, 8
+        DEFINE_POINT viewloc, 59, 8
 mapbits:        .addr   ii_bits
 mapwidth:       .byte   8
 reserved:       .res    1
-maprect:        DEFINE_RECT 0, 0, 50, 18
+        DEFINE_RECT maprect, 0, 0, 50, 18
 .endparams
 
 .params iie_bitmap
-viewloc:        DEFINE_POINT 59, 5
+        DEFINE_POINT viewloc, 59, 5
 mapbits:        .addr   iie_bits
 mapwidth:       .byte   8
 reserved:       .res    1
-maprect:        DEFINE_RECT 0, 0, 50, 25
+        DEFINE_RECT maprect, 0, 0, 50, 25
 .endparams
 
 .params iic_bitmap
-viewloc:        DEFINE_POINT 62, 4
+        DEFINE_POINT viewloc, 62, 4
 mapbits:        .addr   iic_bits
 mapwidth:       .byte   7
 reserved:       .res    1
-maprect:        DEFINE_RECT 0, 0, 45, 27
+        DEFINE_RECT maprect, 0, 0, 45, 27
 .endparams
 
 .params iigs_bitmap
-viewloc:        DEFINE_POINT 65, 5
+        DEFINE_POINT viewloc, 65, 5
 mapbits:        .addr   iigs_bits
 mapwidth:       .byte   6
 reserved:       .res    1
-maprect:        DEFINE_RECT 0, 0, 38, 25
+        DEFINE_RECT maprect, 0, 0, 38, 25
 .endparams
 
 .params iii_bitmap
-viewloc:        DEFINE_POINT 57, 5
+        DEFINE_POINT viewloc, 57, 5
 mapbits:        .addr   iii_bits
 mapwidth:       .byte   8
 reserved:       .res    1
-maprect:        DEFINE_RECT 0, 0, 54, 24
+        DEFINE_RECT maprect, 0, 0, 54, 24
 .endparams
 
 .params iie_card_bitmap
-viewloc:        DEFINE_POINT 56, 9
+        DEFINE_POINT viewloc, 56, 9
 mapbits:        .addr   iie_card_bits
 mapwidth:       .byte   8
 reserved:       .res    1
-maprect:        DEFINE_RECT 0, 0, 55, 21
+        DEFINE_RECT maprect, 0, 0, 55, 21
 .endparams
 
 .params laser128_bitmap
-viewloc:        DEFINE_POINT 60, 4
+        DEFINE_POINT viewloc, 60, 4
 mapbits:        .addr   laser128_bits
 mapwidth:       .byte   7
 reserved:       .res    1
-maprect:        DEFINE_RECT 0, 0, 47, 29
+        DEFINE_RECT maprect, 0, 0, 47, 29
 .endparams
 
 .params ace500_bitmap
-viewloc:        DEFINE_POINT 60, 4
+        DEFINE_POINT viewloc, 60, 4
 mapbits:        .addr   ace500_bits
 mapwidth:       .byte   7
 reserved:       .res    1
-maprect:        DEFINE_RECT 0, 0, 47, 29
+        DEFINE_RECT maprect, 0, 0, 47, 29
 .endparams
 
 ii_bits:
@@ -485,25 +485,25 @@ str_65816:      PASCAL_STRING "65816"
 model_str_ptr:        .addr   0
 model_pix_ptr:        .addr   0
 
-line1:  DEFINE_POINT 0, 37
-line2:  DEFINE_POINT kDAWidth, 37
+        DEFINE_POINT line1, 0, 37
+        DEFINE_POINT line2, kDAWidth, 37
 
-pos_slot1:      DEFINE_POINT    45, 50
-pos_slot2:      DEFINE_POINT    45, 61
-pos_slot3:      DEFINE_POINT    45, 72
-pos_slot4:      DEFINE_POINT    45, 83
-pos_slot5:      DEFINE_POINT    45, 94
-pos_slot6:      DEFINE_POINT    45, 105
-pos_slot7:      DEFINE_POINT    45, 116
+        DEFINE_POINT pos_slot1, 45, 50
+        DEFINE_POINT pos_slot2, 45, 61
+        DEFINE_POINT pos_slot3, 45, 72
+        DEFINE_POINT pos_slot4, 45, 83
+        DEFINE_POINT pos_slot5, 45, 94
+        DEFINE_POINT pos_slot6, 45, 105
+        DEFINE_POINT pos_slot7, 45, 116
 
 slot_pos_table:
         .addr 0, pos_slot1, pos_slot2, pos_slot3, pos_slot4, pos_slot5, pos_slot6, pos_slot7
 
 ;;; ============================================================
 
-model_pos:      DEFINE_POINT 150, 12
-pdver_pos:      DEFINE_POINT 150, 23
-mem_pos:        DEFINE_POINT 150, 34
+        DEFINE_POINT model_pos, 150, 12
+        DEFINE_POINT pdver_pos, 150, 23
+        DEFINE_POINT mem_pos, 150, 34
 
 .params event_params
 kind:  .byte   0
@@ -542,14 +542,14 @@ port:           .addr   grafport
 .endparams
 
 .params grafport
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .word   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 pattern:        .res    8, 0
 colormasks:     .byte   0, 0
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0

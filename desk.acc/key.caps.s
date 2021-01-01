@@ -68,14 +68,14 @@ mincontlength:  .word   kDAHeight
 maxcontwidth:   .word   kDAWidth
 maxcontlength:  .word   kDAHeight
 port:
-viewloc:        DEFINE_POINT kDALeft, kDATop
+        DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:          DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   2
 penheight:      .byte   1
 penmode:        .byte   0
@@ -97,8 +97,7 @@ background_pattern:
         .byte   %11011101
         .byte   %01110111
 
-background_rect:
-        DEFINE_RECT 0, 0, kDAWidth, kDAHeight
+        DEFINE_RECT background_rect, 0, 0, kDAWidth, kDAHeight
 
 penxor:
         .byte   MGTK::penXOR
@@ -146,14 +145,14 @@ port:           .addr   grafport
 .endparams
 
 .params grafport
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .word   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 pattern:        .res    8, 0
 colormasks:     .byte   0, 0
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -186,159 +185,158 @@ char_label:  .byte   0
         kRow3 = kKeyboardTop + 3 * kKeyHeight
         kRow4 = kKeyboardTop + 4 * kKeyHeight
 
-keys_bg_rect:
-        DEFINE_RECT kKeyboardLeft, kKeyboardTop, kKeyboardRight, kKeyboardTop + kKeyHeight * 5
+        DEFINE_RECT keys_bg_rect, kKeyboardLeft, kKeyboardTop, kKeyboardRight, kKeyboardTop + kKeyHeight * 5
 
-.macro KEY_RECT left, top, right, bottom
-    .if .paramcount = 0
-        DEFINE_RECT 0,0,0,0
-    .elseif .paramcount = 2
-        DEFINE_RECT left, top, left + kKeyWidth, top + kKeyHeight
+.macro KEY_RECT ident, left, top, right, bottom
+    .if .paramcount = 1
+        DEFINE_RECT ident, 0,0,0,0
     .elseif .paramcount = 3
-        DEFINE_RECT left, top, right, top + kKeyHeight
+        DEFINE_RECT ident, left, top, left + kKeyWidth, top + kKeyHeight
+    .elseif .paramcount = 4
+        DEFINE_RECT ident, left, top, right, top + kKeyHeight
     .else
-        DEFINE_RECT left, top, right, bottom
+        DEFINE_RECT ident, left, top, right, bottom
     .endif
 .endmacro
 
 key_locations:
 
-kr00:   KEY_RECT kLeft0 +  1 * kKeyWidth, kRow0 ; Ctrl-@
-kr01:   KEY_RECT kLeft2 +  0 * kKeyWidth, kRow2 ; Ctrl-A
-kr02:   KEY_RECT kLeft3 +  4 * kKeyWidth, kRow3 ; Ctrl-B
-kr03:   KEY_RECT kLeft3 +  2 * kKeyWidth, kRow3 ; Ctrl-C
-kr04:   KEY_RECT kLeft2 +  2 * kKeyWidth, kRow2 ; Ctrl-D
-kr05:   KEY_RECT kLeft1 +  2 * kKeyWidth, kRow1 ; Ctrl-E
-kr06:   KEY_RECT kLeft2 +  3 * kKeyWidth, kRow2 ; Ctrl-F
-kr07:   KEY_RECT kLeft2 +  4 * kKeyWidth, kRow2 ; Ctrl-G
-kr08:   KEY_RECT kKeyboardRight - kKeyWidth * 4, kRow4, kKeyboardRight - kKeyWidth * 3 ; Ctrl-H (left arrow)
-kr09:   KEY_RECT kKeyboardLeft, kRow1, kLeft1         ; Ctrl-I (tab)
-kr0A:   KEY_RECT kKeyboardRight - kKeyWidth * 2, kRow4, kKeyboardRight - kKeyWidth * 1 ; Ctrl-J (down arrow)
-kr0B:   KEY_RECT kKeyboardRight - kKeyWidth * 1, kRow4, kKeyboardRight - kKeyWidth * 0 ; Ctrl-K (up arrow)
-kr0C:   KEY_RECT kLeft2 +  8 * kKeyWidth, kRow2 ; Ctrl-L
-kr0D:   KEY_RECT kKeyboardRight - kKeyWidth *  7/4 - 1, kRow2, kKeyboardRight ; Ctrl-M (return)
-kr0E:   KEY_RECT kLeft3 +  5 * kKeyWidth, kRow3 ; Ctrl-N
-kr0F:   KEY_RECT kLeft1 +  8 * kKeyWidth, kRow1 ; Ctrl-O
+        KEY_RECT kr00, kLeft0 +  1 * kKeyWidth, kRow0 ; Ctrl-@
+        KEY_RECT kr01, kLeft2 +  0 * kKeyWidth, kRow2 ; Ctrl-A
+        KEY_RECT kr02, kLeft3 +  4 * kKeyWidth, kRow3 ; Ctrl-B
+        KEY_RECT kr03, kLeft3 +  2 * kKeyWidth, kRow3 ; Ctrl-C
+        KEY_RECT kr04, kLeft2 +  2 * kKeyWidth, kRow2 ; Ctrl-D
+        KEY_RECT kr05, kLeft1 +  2 * kKeyWidth, kRow1 ; Ctrl-E
+        KEY_RECT kr06, kLeft2 +  3 * kKeyWidth, kRow2 ; Ctrl-F
+        KEY_RECT kr07, kLeft2 +  4 * kKeyWidth, kRow2 ; Ctrl-G
+        KEY_RECT kr08, kKeyboardRight - kKeyWidth * 4, kRow4, kKeyboardRight - kKeyWidth * 3 ; Ctrl-H (left arrow)
+        KEY_RECT kr09, kKeyboardLeft, kRow1, kLeft1         ; Ctrl-I (tab)
+        KEY_RECT kr0A, kKeyboardRight - kKeyWidth * 2, kRow4, kKeyboardRight - kKeyWidth * 1 ; Ctrl-J (down arrow)
+        KEY_RECT kr0B, kKeyboardRight - kKeyWidth * 1, kRow4, kKeyboardRight - kKeyWidth * 0 ; Ctrl-K (up arrow)
+        KEY_RECT kr0C, kLeft2 +  8 * kKeyWidth, kRow2 ; Ctrl-L
+        KEY_RECT kr0D, kKeyboardRight - kKeyWidth *  7/4 - 1, kRow2, kKeyboardRight ; Ctrl-M (return)
+        KEY_RECT kr0E, kLeft3 +  5 * kKeyWidth, kRow3 ; Ctrl-N
+        KEY_RECT kr0F, kLeft1 +  8 * kKeyWidth, kRow1 ; Ctrl-O
 
-kr10:   KEY_RECT kLeft1 +  9 * kKeyWidth, kRow1 ; Ctrl-P
-kr11:   KEY_RECT kLeft1 +  0 * kKeyWidth, kRow1 ; Ctrl-Q
-kr12:   KEY_RECT kLeft1 +  3 * kKeyWidth, kRow1 ; Ctrl-R
-kr13:   KEY_RECT kLeft2 +  1 * kKeyWidth, kRow2 ; Ctrl-S
-kr14:   KEY_RECT kLeft1 +  4 * kKeyWidth, kRow1 ; Ctrl-T
-kr15:   KEY_RECT kKeyboardRight - kKeyWidth * 3, kRow4, kKeyboardRight - kKeyWidth * 2 ; Ctrl-U (right arrow)
-kr16:   KEY_RECT kLeft3 +  3 * kKeyWidth, kRow3 ; Ctrl-V
-kr17:   KEY_RECT kLeft1 +  1 * kKeyWidth, kRow1 ; Ctrl-W
-kr18:   KEY_RECT kLeft3 +  1 * kKeyWidth, kRow3 ; Ctrl-X
-kr19:   KEY_RECT kLeft1 +  5 * kKeyWidth, kRow1 ; Ctrl-Y
-kr1A:   KEY_RECT kLeft3 +  0 * kKeyWidth, kRow3 ; Ctrl-Z
-kr1B:   KEY_RECT kKeyboardLeft, kRow0, kLeft0         ; Ctrl-[ (escape)
-kr1C:   KEY_RECT kLeft1 + 12 * kKeyWidth, kRow1 ; Ctrl-\
-kr1D:   KEY_RECT kLeft1 + 11 * kKeyWidth, kRow1 ; Ctrl-]
-kr1E:   KEY_RECT kLeft0 +  5 * kKeyWidth, kRow0 ; Ctrl-^
-kr1F:   KEY_RECT kLeft0 + 10 * kKeyWidth, kRow0 ; Ctrl-_
+        KEY_RECT kr10, kLeft1 +  9 * kKeyWidth, kRow1 ; Ctrl-P
+        KEY_RECT kr11, kLeft1 +  0 * kKeyWidth, kRow1 ; Ctrl-Q
+        KEY_RECT kr12, kLeft1 +  3 * kKeyWidth, kRow1 ; Ctrl-R
+        KEY_RECT kr13, kLeft2 +  1 * kKeyWidth, kRow2 ; Ctrl-S
+        KEY_RECT kr14, kLeft1 +  4 * kKeyWidth, kRow1 ; Ctrl-T
+        KEY_RECT kr15, kKeyboardRight - kKeyWidth * 3, kRow4, kKeyboardRight - kKeyWidth * 2 ; Ctrl-U (right arrow)
+        KEY_RECT kr16, kLeft3 +  3 * kKeyWidth, kRow3 ; Ctrl-V
+        KEY_RECT kr17, kLeft1 +  1 * kKeyWidth, kRow1 ; Ctrl-W
+        KEY_RECT kr18, kLeft3 +  1 * kKeyWidth, kRow3 ; Ctrl-X
+        KEY_RECT kr19, kLeft1 +  5 * kKeyWidth, kRow1 ; Ctrl-Y
+        KEY_RECT kr1A, kLeft3 +  0 * kKeyWidth, kRow3 ; Ctrl-Z
+        KEY_RECT kr1B, kKeyboardLeft, kRow0, kLeft0         ; Ctrl-[ (escape)
+        KEY_RECT kr1C, kLeft1 + 12 * kKeyWidth, kRow1 ; Ctrl-\
+        KEY_RECT kr1D, kLeft1 + 11 * kKeyWidth, kRow1 ; Ctrl-]
+        KEY_RECT kr1E, kLeft0 +  5 * kKeyWidth, kRow0 ; Ctrl-^
+        KEY_RECT kr1F, kLeft0 + 10 * kKeyWidth, kRow0 ; Ctrl-_
 
-kr20:   KEY_RECT kKeyboardLeft + kKeyWidth * 4, kRow4, kKeyboardRight - kKeyWidth * 5 ; (space)
-kr21:   KEY_RECT kLeft0 +  0 * kKeyWidth, kRow0 ; !
-kr22:   KEY_RECT kLeft2 + 10 * kKeyWidth, kRow2 ; "
-kr23:   KEY_RECT kLeft0 +  2 * kKeyWidth, kRow0 ; #
-kr24:   KEY_RECT kLeft0 +  3 * kKeyWidth, kRow0 ; $
-kr25:   KEY_RECT kLeft0 +  4 * kKeyWidth, kRow0 ; %
-kr26:   KEY_RECT kLeft0 +  6 * kKeyWidth, kRow0 ; &
-kr27:   KEY_RECT kLeft2 + 10 * kKeyWidth, kRow2 ; '
-kr28:   KEY_RECT kLeft0 +  8 * kKeyWidth, kRow0 ; (
-kr29:   KEY_RECT kLeft0 +  9 * kKeyWidth, kRow0 ; )
-kr2A:   KEY_RECT kLeft0 +  7 * kKeyWidth, kRow0 ; *
-kr2B:   KEY_RECT kLeft0 + 11 * kKeyWidth, kRow0 ; +
-kr2C:   KEY_RECT kLeft3 +  7 * kKeyWidth, kRow3 ; ,
-kr2D:   KEY_RECT kLeft0 + 10 * kKeyWidth, kRow0 ; -
-kr2E:   KEY_RECT kLeft3 +  8 * kKeyWidth, kRow3 ; .
-kr2F:   KEY_RECT kLeft3 +  9 * kKeyWidth, kRow3 ; /
+        KEY_RECT kr20, kKeyboardLeft + kKeyWidth * 4, kRow4, kKeyboardRight - kKeyWidth * 5 ; (space)
+        KEY_RECT kr21, kLeft0 +  0 * kKeyWidth, kRow0 ; !
+        KEY_RECT kr22, kLeft2 + 10 * kKeyWidth, kRow2 ; "
+        KEY_RECT kr23, kLeft0 +  2 * kKeyWidth, kRow0 ; #
+        KEY_RECT kr24, kLeft0 +  3 * kKeyWidth, kRow0 ; $
+        KEY_RECT kr25, kLeft0 +  4 * kKeyWidth, kRow0 ; %
+        KEY_RECT kr26, kLeft0 +  6 * kKeyWidth, kRow0 ; &
+        KEY_RECT kr27, kLeft2 + 10 * kKeyWidth, kRow2 ; '
+        KEY_RECT kr28, kLeft0 +  8 * kKeyWidth, kRow0 ; (
+        KEY_RECT kr29, kLeft0 +  9 * kKeyWidth, kRow0 ; )
+        KEY_RECT kr2A, kLeft0 +  7 * kKeyWidth, kRow0 ; *
+        KEY_RECT kr2B, kLeft0 + 11 * kKeyWidth, kRow0 ; +
+        KEY_RECT kr2C, kLeft3 +  7 * kKeyWidth, kRow3 ; ,
+        KEY_RECT kr2D, kLeft0 + 10 * kKeyWidth, kRow0 ; -
+        KEY_RECT kr2E, kLeft3 +  8 * kKeyWidth, kRow3 ; .
+        KEY_RECT kr2F, kLeft3 +  9 * kKeyWidth, kRow3 ; /
 
-kr30:   KEY_RECT kLeft0 +  9 * kKeyWidth, kRow0 ; 0
-kr31:   KEY_RECT kLeft0 +  0 * kKeyWidth, kRow0 ; 1
-kr32:   KEY_RECT kLeft0 +  1 * kKeyWidth, kRow0 ; 2
-kr33:   KEY_RECT kLeft0 +  2 * kKeyWidth, kRow0 ; 3
-kr34:   KEY_RECT kLeft0 +  3 * kKeyWidth, kRow0 ; 4
-kr35:   KEY_RECT kLeft0 +  4 * kKeyWidth, kRow0 ; 5
-kr36:   KEY_RECT kLeft0 +  5 * kKeyWidth, kRow0 ; 6
-kr37:   KEY_RECT kLeft0 +  6 * kKeyWidth, kRow0 ; 7
-kr38:   KEY_RECT kLeft0 +  7 * kKeyWidth, kRow0 ; 8
-kr39:   KEY_RECT kLeft0 +  8 * kKeyWidth, kRow0 ; 9
-kr3A:   KEY_RECT kLeft2 +  9 * kKeyWidth, kRow2 ; :
-kr3B:   KEY_RECT kLeft2 +  9 * kKeyWidth, kRow2 ; ;
-kr3C:   KEY_RECT kLeft3 +  7 * kKeyWidth, kRow3 ; <
-kr3D:   KEY_RECT kLeft0 + 11 * kKeyWidth, kRow0 ; =
-kr3E:   KEY_RECT kLeft3 +  8 * kKeyWidth, kRow3 ; >
-kr3F:   KEY_RECT kLeft3 +  9 * kKeyWidth, kRow3 ; ?
+        KEY_RECT kr30, kLeft0 +  9 * kKeyWidth, kRow0 ; 0
+        KEY_RECT kr31, kLeft0 +  0 * kKeyWidth, kRow0 ; 1
+        KEY_RECT kr32, kLeft0 +  1 * kKeyWidth, kRow0 ; 2
+        KEY_RECT kr33, kLeft0 +  2 * kKeyWidth, kRow0 ; 3
+        KEY_RECT kr34, kLeft0 +  3 * kKeyWidth, kRow0 ; 4
+        KEY_RECT kr35, kLeft0 +  4 * kKeyWidth, kRow0 ; 5
+        KEY_RECT kr36, kLeft0 +  5 * kKeyWidth, kRow0 ; 6
+        KEY_RECT kr37, kLeft0 +  6 * kKeyWidth, kRow0 ; 7
+        KEY_RECT kr38, kLeft0 +  7 * kKeyWidth, kRow0 ; 8
+        KEY_RECT kr39, kLeft0 +  8 * kKeyWidth, kRow0 ; 9
+        KEY_RECT kr3A, kLeft2 +  9 * kKeyWidth, kRow2 ; :
+        KEY_RECT kr3B, kLeft2 +  9 * kKeyWidth, kRow2 ; ;
+        KEY_RECT kr3C, kLeft3 +  7 * kKeyWidth, kRow3 ; <
+        KEY_RECT kr3D, kLeft0 + 11 * kKeyWidth, kRow0 ; =
+        KEY_RECT kr3E, kLeft3 +  8 * kKeyWidth, kRow3 ; >
+        KEY_RECT kr3F, kLeft3 +  9 * kKeyWidth, kRow3 ; ?
 
-kr40:   KEY_RECT kLeft0 +  1 * kKeyWidth, kRow0 ; @
-kr41:   KEY_RECT kLeft2 +  0 * kKeyWidth, kRow2 ; A
-kr42:   KEY_RECT kLeft3 +  4 * kKeyWidth, kRow3 ; B
-kr43:   KEY_RECT kLeft3 +  2 * kKeyWidth, kRow3 ; C
-kr44:   KEY_RECT kLeft2 +  2 * kKeyWidth, kRow2 ; D
-kr45:   KEY_RECT kLeft1 +  2 * kKeyWidth, kRow1 ; E
-kr46:   KEY_RECT kLeft2 +  3 * kKeyWidth, kRow2 ; F
-kr47:   KEY_RECT kLeft2 +  4 * kKeyWidth, kRow2 ; G
-kr48:   KEY_RECT kLeft2 +  5 * kKeyWidth, kRow2 ; H
-kr49:   KEY_RECT kLeft1 +  7 * kKeyWidth, kRow1 ; I
-kr4A:   KEY_RECT kLeft2 +  6 * kKeyWidth, kRow2 ; J
-kr4B:   KEY_RECT kLeft2 +  7 * kKeyWidth, kRow2 ; K
-kr4C:   KEY_RECT kLeft2 +  8 * kKeyWidth, kRow2 ; L
-kr4D:   KEY_RECT kLeft3 +  6 * kKeyWidth, kRow3 ; M
-kr4E:   KEY_RECT kLeft3 +  5 * kKeyWidth, kRow3 ; N
-kr4F:   KEY_RECT kLeft1 +  8 * kKeyWidth, kRow1 ; O
+        KEY_RECT kr40, kLeft0 +  1 * kKeyWidth, kRow0 ; @
+        KEY_RECT kr41, kLeft2 +  0 * kKeyWidth, kRow2 ; A
+        KEY_RECT kr42, kLeft3 +  4 * kKeyWidth, kRow3 ; B
+        KEY_RECT kr43, kLeft3 +  2 * kKeyWidth, kRow3 ; C
+        KEY_RECT kr44, kLeft2 +  2 * kKeyWidth, kRow2 ; D
+        KEY_RECT kr45, kLeft1 +  2 * kKeyWidth, kRow1 ; E
+        KEY_RECT kr46, kLeft2 +  3 * kKeyWidth, kRow2 ; F
+        KEY_RECT kr47, kLeft2 +  4 * kKeyWidth, kRow2 ; G
+        KEY_RECT kr48, kLeft2 +  5 * kKeyWidth, kRow2 ; H
+        KEY_RECT kr49, kLeft1 +  7 * kKeyWidth, kRow1 ; I
+        KEY_RECT kr4A, kLeft2 +  6 * kKeyWidth, kRow2 ; J
+        KEY_RECT kr4B, kLeft2 +  7 * kKeyWidth, kRow2 ; K
+        KEY_RECT kr4C, kLeft2 +  8 * kKeyWidth, kRow2 ; L
+        KEY_RECT kr4D, kLeft3 +  6 * kKeyWidth, kRow3 ; M
+        KEY_RECT kr4E, kLeft3 +  5 * kKeyWidth, kRow3 ; N
+        KEY_RECT kr4F, kLeft1 +  8 * kKeyWidth, kRow1 ; O
 
-kr50:   KEY_RECT kLeft1 +  9 * kKeyWidth, kRow1 ; P
-kr51:   KEY_RECT kLeft1 +  0 * kKeyWidth, kRow1 ; Q
-kr52:   KEY_RECT kLeft1 +  3 * kKeyWidth, kRow1 ; R
-kr53:   KEY_RECT kLeft2 +  1 * kKeyWidth, kRow2 ; S
-kr54:   KEY_RECT kLeft1 +  4 * kKeyWidth, kRow1 ; T
-kr55:   KEY_RECT kLeft1 +  6 * kKeyWidth, kRow1 ; U
-kr56:   KEY_RECT kLeft3 +  3 * kKeyWidth, kRow3 ; V
-kr57:   KEY_RECT kLeft1 +  1 * kKeyWidth, kRow1 ; W
-kr58:   KEY_RECT kLeft3 +  1 * kKeyWidth, kRow3 ; X
-kr59:   KEY_RECT kLeft1 +  5 * kKeyWidth, kRow1 ; Y
-kr5A:   KEY_RECT kLeft3 +  0 * kKeyWidth, kRow3 ; Z
-kr5B:   KEY_RECT kLeft1 + 10 * kKeyWidth, kRow1 ; [
-kr5C:   KEY_RECT kLeft1 + 12 * kKeyWidth, kRow1 ; \
-kr5D:   KEY_RECT kLeft1 + 11 * kKeyWidth, kRow1 ; ]
-kr5E:   KEY_RECT kLeft0 +  5 * kKeyWidth, kRow0 ; ^
-kr5F:   KEY_RECT kLeft0 + 10 * kKeyWidth, kRow0 ; _
+        KEY_RECT kr50, kLeft1 +  9 * kKeyWidth, kRow1 ; P
+        KEY_RECT kr51, kLeft1 +  0 * kKeyWidth, kRow1 ; Q
+        KEY_RECT kr52, kLeft1 +  3 * kKeyWidth, kRow1 ; R
+        KEY_RECT kr53, kLeft2 +  1 * kKeyWidth, kRow2 ; S
+        KEY_RECT kr54, kLeft1 +  4 * kKeyWidth, kRow1 ; T
+        KEY_RECT kr55, kLeft1 +  6 * kKeyWidth, kRow1 ; U
+        KEY_RECT kr56, kLeft3 +  3 * kKeyWidth, kRow3 ; V
+        KEY_RECT kr57, kLeft1 +  1 * kKeyWidth, kRow1 ; W
+        KEY_RECT kr58, kLeft3 +  1 * kKeyWidth, kRow3 ; X
+        KEY_RECT kr59, kLeft1 +  5 * kKeyWidth, kRow1 ; Y
+        KEY_RECT kr5A, kLeft3 +  0 * kKeyWidth, kRow3 ; Z
+        KEY_RECT kr5B, kLeft1 + 10 * kKeyWidth, kRow1 ; [
+        KEY_RECT kr5C, kLeft1 + 12 * kKeyWidth, kRow1 ; \
+        KEY_RECT kr5D, kLeft1 + 11 * kKeyWidth, kRow1 ; ]
+        KEY_RECT kr5E, kLeft0 +  5 * kKeyWidth, kRow0 ; ^
+        KEY_RECT kr5F, kLeft0 + 10 * kKeyWidth, kRow0 ; _
 
 
-kr60:   KEY_RECT kLeft4 +  0 * kKeyWidth, kRow4 ; `
-kr61:   KEY_RECT kLeft2 +  0 * kKeyWidth, kRow2 ; a
-kr62:   KEY_RECT kLeft3 +  4 * kKeyWidth, kRow3 ; b
-kr63:   KEY_RECT kLeft3 +  2 * kKeyWidth, kRow3 ; c
-kr64:   KEY_RECT kLeft2 +  2 * kKeyWidth, kRow2 ; d
-kr65:   KEY_RECT kLeft1 +  2 * kKeyWidth, kRow1 ; e
-kr66:   KEY_RECT kLeft2 +  3 * kKeyWidth, kRow2 ; f
-kr67:   KEY_RECT kLeft2 +  4 * kKeyWidth, kRow2 ; g
-kr68:   KEY_RECT kLeft2 +  5 * kKeyWidth, kRow2 ; h
-kr69:   KEY_RECT kLeft1 +  7 * kKeyWidth, kRow1 ; i
-kr6A:   KEY_RECT kLeft2 +  6 * kKeyWidth, kRow2 ; j
-kr6B:   KEY_RECT kLeft2 +  7 * kKeyWidth, kRow2 ; k
-kr6C:   KEY_RECT kLeft2 +  8 * kKeyWidth, kRow2 ; l
-kr6D:   KEY_RECT kLeft3 +  6 * kKeyWidth, kRow3 ; m
-kr6E:   KEY_RECT kLeft3 +  5 * kKeyWidth, kRow3 ; n
-kr6F:   KEY_RECT kLeft1 +  8 * kKeyWidth, kRow1 ; o
+        KEY_RECT kr60, kLeft4 +  0 * kKeyWidth, kRow4 ; `
+        KEY_RECT kr61, kLeft2 +  0 * kKeyWidth, kRow2 ; a
+        KEY_RECT kr62, kLeft3 +  4 * kKeyWidth, kRow3 ; b
+        KEY_RECT kr63, kLeft3 +  2 * kKeyWidth, kRow3 ; c
+        KEY_RECT kr64, kLeft2 +  2 * kKeyWidth, kRow2 ; d
+        KEY_RECT kr65, kLeft1 +  2 * kKeyWidth, kRow1 ; e
+        KEY_RECT kr66, kLeft2 +  3 * kKeyWidth, kRow2 ; f
+        KEY_RECT kr67, kLeft2 +  4 * kKeyWidth, kRow2 ; g
+        KEY_RECT kr68, kLeft2 +  5 * kKeyWidth, kRow2 ; h
+        KEY_RECT kr69, kLeft1 +  7 * kKeyWidth, kRow1 ; i
+        KEY_RECT kr6A, kLeft2 +  6 * kKeyWidth, kRow2 ; j
+        KEY_RECT kr6B, kLeft2 +  7 * kKeyWidth, kRow2 ; k
+        KEY_RECT kr6C, kLeft2 +  8 * kKeyWidth, kRow2 ; l
+        KEY_RECT kr6D, kLeft3 +  6 * kKeyWidth, kRow3 ; m
+        KEY_RECT kr6E, kLeft3 +  5 * kKeyWidth, kRow3 ; n
+        KEY_RECT kr6F, kLeft1 +  8 * kKeyWidth, kRow1 ; o
 
-kr70:   KEY_RECT kLeft1 +  9 * kKeyWidth, kRow1 ; p
-kr71:   KEY_RECT kLeft1 +  0 * kKeyWidth, kRow1 ; q
-kr72:   KEY_RECT kLeft1 +  3 * kKeyWidth, kRow1 ; r
-kr73:   KEY_RECT kLeft2 +  1 * kKeyWidth, kRow2 ; s
-kr74:   KEY_RECT kLeft1 +  4 * kKeyWidth, kRow1 ; t
-kr75:   KEY_RECT kLeft1 +  6 * kKeyWidth, kRow1 ; u
-kr76:   KEY_RECT kLeft3 +  3 * kKeyWidth, kRow3 ; v
-kr77:   KEY_RECT kLeft1 +  1 * kKeyWidth, kRow1 ; w
-kr78:   KEY_RECT kLeft3 +  1 * kKeyWidth, kRow3 ; x
-kr79:   KEY_RECT kLeft1 +  5 * kKeyWidth, kRow1 ; y
-kr7A:   KEY_RECT kLeft3 +  0 * kKeyWidth, kRow3 ; z
-kr7B:   KEY_RECT kLeft1 + 10 * kKeyWidth, kRow1 ; {
-kr7C:   KEY_RECT kLeft1 + 12 * kKeyWidth, kRow1 ; |
-kr7D:   KEY_RECT kLeft1 + 11 * kKeyWidth, kRow1 ; }
-kr7E:   KEY_RECT kLeft4 +  0 * kKeyWidth, kRow4 ; ~
-kr7F:   KEY_RECT kKeyboardRight - kKeyWidth *  6/4, kRow0, kKeyboardRight ; (delete)
+        KEY_RECT kr70, kLeft1 +  9 * kKeyWidth, kRow1 ; p
+        KEY_RECT kr71, kLeft1 +  0 * kKeyWidth, kRow1 ; q
+        KEY_RECT kr72, kLeft1 +  3 * kKeyWidth, kRow1 ; r
+        KEY_RECT kr73, kLeft2 +  1 * kKeyWidth, kRow2 ; s
+        KEY_RECT kr74, kLeft1 +  4 * kKeyWidth, kRow1 ; t
+        KEY_RECT kr75, kLeft1 +  6 * kKeyWidth, kRow1 ; u
+        KEY_RECT kr76, kLeft3 +  3 * kKeyWidth, kRow3 ; v
+        KEY_RECT kr77, kLeft1 +  1 * kKeyWidth, kRow1 ; w
+        KEY_RECT kr78, kLeft3 +  1 * kKeyWidth, kRow3 ; x
+        KEY_RECT kr79, kLeft1 +  5 * kKeyWidth, kRow1 ; y
+        KEY_RECT kr7A, kLeft3 +  0 * kKeyWidth, kRow3 ; z
+        KEY_RECT kr7B, kLeft1 + 10 * kKeyWidth, kRow1 ; {
+        KEY_RECT kr7C, kLeft1 + 12 * kKeyWidth, kRow1 ; |
+        KEY_RECT kr7D, kLeft1 + 11 * kKeyWidth, kRow1 ; }
+        KEY_RECT kr7E, kLeft4 +  0 * kKeyWidth, kRow4 ; ~
+        KEY_RECT kr7F, kKeyboardRight - kKeyWidth *  6/4, kRow0, kKeyboardRight ; (delete)
         ASSERT_RECORD_TABLE_SIZE key_locations, $80, .sizeof(MGTK::Rect)
 
         ;; shift/plain
@@ -484,31 +482,31 @@ key_mode:
         .byte   kModeP         ; DEL (FIX)
         ASSERT_TABLE_SIZE key_mode, $80
 
-rect_ctl: KEY_RECT   kKeyboardLeft, kRow2, kLeft2
-rect_shl: KEY_RECT   kKeyboardLeft, kRow3, kLeft3
-rect_cap: KEY_RECT   kKeyboardLeft, kRow4, kLeft4
-rect_gap: KEY_RECT   kKeyboardLeft + kKeyWidth * 2, kRow4
-rect_oap: KEY_RECT   kKeyboardLeft + kKeyWidth * 3, kRow4
-rect_sap: KEY_RECT   kKeyboardRight - kKeyWidth * 5, kRow4, kKeyboardRight - kKeyWidth * 4
-rect_shr: KEY_RECT   kKeyboardRight - kKeyWidth *  9/4 - 1, kRow3, kKeyboardRight
+        KEY_RECT rect_ctl, kKeyboardLeft, kRow2, kLeft2
+        KEY_RECT rect_shl, kKeyboardLeft, kRow3, kLeft3
+        KEY_RECT rect_cap, kKeyboardLeft, kRow4, kLeft4
+        KEY_RECT rect_gap, kKeyboardLeft + kKeyWidth * 2, kRow4
+        KEY_RECT rect_oap, kKeyboardLeft + kKeyWidth * 3, kRow4
+        KEY_RECT rect_sap, kKeyboardRight - kKeyWidth * 5, kRow4, kKeyboardRight - kKeyWidth * 4
+        KEY_RECT rect_shr, kKeyboardRight - kKeyWidth *  9/4 - 1, kRow3, kKeyboardRight
 
-label_relpos:   DEFINE_POINT 8, 12
+        DEFINE_POINT label_relpos, 8, 12
 
-empty_rect:       DEFINE_RECT 0, 0, 0, 0
+        DEFINE_RECT empty_rect, 0, 0, 0, 0
 
 ;;; New keyboard locations on IIgs/IIc+
 ;;;
 
-rect_new_oap:                   ; Open Apple
-        KEY_RECT kKeyboardLeft + kKeyWidth * 2, kRow4, kKeyboardLeft + kKeyWidth * 4
-rect_new_sap:                   ; Solid Apple
-        KEY_RECT kLeft4 +  0 * kKeyWidth, kRow4
-rect_new_apos:                  ; Apostrophe/Tilde
-        KEY_RECT kKeyboardLeft + kKeyWidth * 4, kRow4
-rect_new_bshl:                  ; Backslash/Vertical Bar
-        KEY_RECT kKeyboardRight - kKeyWidth * 5, kRow4, kKeyboardRight - kKeyWidth * 4
-rect_new_spc:                   ; Space
-        KEY_RECT kKeyboardLeft + kKeyWidth * 5, kRow4, kKeyboardRight - kKeyWidth * 5
+        ;; Open Apple
+        KEY_RECT rect_new_oap, kKeyboardLeft + kKeyWidth * 2, kRow4, kKeyboardLeft + kKeyWidth * 4
+        ;; Solid Apple
+        KEY_RECT rect_new_sap, kLeft4 +  0 * kKeyWidth, kRow4
+        ;; Apostrophe/Tilde
+        KEY_RECT rect_new_apos, kKeyboardLeft + kKeyWidth * 4, kRow4
+        ;; Backslash/Vertical Bar
+        KEY_RECT rect_new_bshl, kKeyboardRight - kKeyWidth * 5, kRow4, kKeyboardRight - kKeyWidth * 4
+        ;; Space
+        KEY_RECT rect_new_spc, kKeyboardLeft + kKeyWidth * 5, kRow4, kKeyboardRight - kKeyWidth * 5
 
 ;;; Non-rectangular Return key handled by a Polygon:
 ;;;
@@ -521,24 +519,24 @@ rect_new_spc:                   ; Space
 poly_new_ret:
         .byte   7               ; vertex count
         .byte   0               ; no more polys
-        DEFINE_POINT kLeft1 + 12 * kKeyWidth, kRow1
-        DEFINE_POINT kKeyboardRight, kRow1
-        DEFINE_POINT kKeyboardRight, kRow3
-        DEFINE_POINT kKeyboardRight - kKeyWidth *  7/4 - 1, kRow3
-        DEFINE_POINT kKeyboardRight - kKeyWidth *  7/4 - 1, kRow2
-        DEFINE_POINT kLeft1 + 12 * kKeyWidth, kRow2
-        DEFINE_POINT kLeft1 + 12 * kKeyWidth, kRow1
+        .word    kLeft1 + 12 * kKeyWidth, kRow1
+        .word    kKeyboardRight, kRow1
+        .word    kKeyboardRight, kRow3
+        .word    kKeyboardRight - kKeyWidth *  7/4 - 1, kRow3
+        .word    kKeyboardRight - kKeyWidth *  7/4 - 1, kRow2
+        .word    kLeft1 + 12 * kKeyWidth, kRow2
+        .word    kLeft1 + 12 * kKeyWidth, kRow1
 
 poly_new_ret_inner:
         .byte   7               ; vertex count
         .byte   0               ; no more polys
-        DEFINE_POINT kLeft1 + 12 * kKeyWidth + 4, kRow1 + 2
-        DEFINE_POINT kKeyboardRight - 3, kRow1 + 2
-        DEFINE_POINT kKeyboardRight - 3, kRow3 - 1
-        DEFINE_POINT kKeyboardRight - kKeyWidth *  7/4 - 1 + 4, kRow3 - 1
-        DEFINE_POINT kKeyboardRight - kKeyWidth *  7/4 - 1 + 4, kRow2 + 2
-        DEFINE_POINT kLeft1 + 12 * kKeyWidth + 4, kRow2 + 2
-        DEFINE_POINT kLeft1 + 12 * kKeyWidth + 4, kRow1 + 2
+        .word    kLeft1 + 12 * kKeyWidth + 4, kRow1 + 2
+        .word    kKeyboardRight - 3, kRow1 + 2
+        .word    kKeyboardRight - 3, kRow3 - 1
+        .word    kKeyboardRight - kKeyWidth *  7/4 - 1 + 4, kRow3 - 1
+        .word    kKeyboardRight - kKeyWidth *  7/4 - 1 + 4, kRow2 + 2
+        .word    kLeft1 + 12 * kKeyWidth + 4, kRow2 + 2
+        .word    kLeft1 + 12 * kKeyWidth + 4, kRow1 + 2
 
 extended_layout_flag:           ; high bit set if IIgs/IIc+
         .byte   0
@@ -546,8 +544,7 @@ extended_layout_flag:           ; high bit set if IIgs/IIc+
 tmp_poly:
         .res    2 + 7 * .sizeof(MGTK::Point), 0
 
-tmp_rect:
-        DEFINE_RECT 0,0,0,0, tmp_rect
+        DEFINE_RECT tmp_rect, 0,0,0,0
 
 ;;; ============================================================
 

@@ -124,16 +124,16 @@ maxcontwidth:   .word   kScreenWidth
 maxcontlength:  .word   kScreenHeight
 
 .params port
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, kScreenWidth, kScreenHeight
+        DEFINE_RECT maprect, 0, 0, kScreenWidth, kScreenHeight
 .endparams
 
 pattern:        .res    8, 0
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::notpencopy
@@ -395,11 +395,11 @@ signature:
         kMinipixHeight = 52
 
 .params paintbits_params
-viewloc:        DEFINE_POINT (kScreenWidth - kMinipixWidth)/2, (kScreenHeight - kMinipixHeight)/2
+        DEFINE_POINT viewloc, (kScreenWidth - kMinipixWidth)/2, (kScreenHeight - kMinipixHeight)/2
 mapbits:        .addr   minipix_dst_buf
 mapwidth:       .byte   26
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0,0,kMinipixWidth-1,kMinipixHeight-1
+        DEFINE_RECT maprect, 0,0,kMinipixWidth-1,kMinipixHeight-1
 .endparams
 
 .endproc

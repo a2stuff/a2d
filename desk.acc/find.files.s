@@ -828,13 +828,13 @@ mincontlength:  .word   kDAHeight
 maxcontwidth:   .word   kDAWidth
 maxcontlength:  .word   kDAHeight
 port:
-viewloc:        DEFINE_POINT kDALeft, kDATop
+        DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, kDAWidth, kDAHeight, maprect
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -860,13 +860,13 @@ mincontlength:  .word   kResultsHeight
 maxcontwidth:   .word   kResultsWidth
 maxcontlength:  .word   kResultsHeight
 port:
-viewloc:        DEFINE_POINT kResultsLeft, kResultsTop
+        DEFINE_POINT viewloc, kResultsLeft, kResultsTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, kResultsWidth, kResultsHeight, maprect
+        DEFINE_RECT maprect, 0, 0, kResultsWidth, kResultsHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -925,20 +925,20 @@ port:           .addr   grafport
 
 .params screentowindow_params
 window_id:      .byte   kDAWindowID
-screen: DEFINE_POINT 0, 0, screen
-window: DEFINE_POINT 0, 0, window
+        DEFINE_POINT screen, 0, 0
+        DEFINE_POINT window, 0, 0
 .endparams
         mx := screentowindow_params::window::xcoord
         my := screentowindow_params::window::ycoord
 
 .params grafport
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .word   0
 mapwidth:       .word   0
-maprect:       DEFINE_RECT 0, 0, 0, 0
+        DEFINE_RECT maprect, 0, 0, 0, 0
 pattern:        .res    8, 0
 colormasks:     .byte   0, 0
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -958,21 +958,21 @@ ctlmax:         .byte   0
 
 ;;; ============================================================
 
-frame_rect1:    DEFINE_RECT_INSET 4, 2, kDAWidth, kDAHeight
-frame_rect2:    DEFINE_RECT_INSET 5, 3, kDAWidth, kDAHeight
+        DEFINE_RECT_INSET frame_rect1, 4, 2, kDAWidth, kDAHeight
+        DEFINE_RECT_INSET frame_rect2, 5, 3, kDAWidth, kDAHeight
 
         DEFINE_LABEL find, "Find:", 20, 20
 
-input_rect:         DEFINE_RECT 55, 10, kDAWidth-250, 21
-input_textpos:      DEFINE_POINT 60, 20
+        DEFINE_RECT input_rect, 55, 10, kDAWidth-250, 21
+        DEFINE_POINT input_textpos, 60, 20
 
         ;; figure out coords here
 .params input_mapinfo
-        DEFINE_POINT 75, 35
+        DEFINE_POINT viewloc, 75, 35
         .addr   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   0
-        DEFINE_RECT 0, 0, 358, 100
+        DEFINE_RECT maprect, 0, 0, 358, 100
 .endparams
 
         DEFINE_BUTTON search, "Search         \x0D", kDAWidth-235, 10
@@ -1696,7 +1696,7 @@ line_height:
         .byte   0
 
 line:   .byte   0
-pos:    DEFINE_POINT 5, 0, pos
+        DEFINE_POINT pos, 5, 0
         pos_ycoord := pos::ycoord
 
 .endproc

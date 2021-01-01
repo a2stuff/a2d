@@ -206,14 +206,14 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT 25, 20
+        DEFINE_POINT viewloc, 25, 20
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, kDialogWidth, kDialogHeight
+        DEFINE_RECT cliprect, 0, 0, kDialogWidth, kDialogHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -239,14 +239,14 @@ mincontlength:  .word   50
 maxcontwidth:   .word   150
 maxcontlength:  .word   150
 port:
-viewloc:        DEFINE_POINT 45, 50
+        DEFINE_POINT viewloc, 45, 50
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, 150, 70
+        DEFINE_RECT cliprect, 0, 0, 150, 70
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -255,43 +255,43 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-rect_outer_frame:      DEFINE_RECT_INSET 4, 2, kDialogWidth, kDialogHeight
-rect_inner_frame:      DEFINE_RECT_INSET 5, 3, kDialogWidth, kDialogHeight
-rect_D211:      DEFINE_RECT 6, 20, 494, 102
-rect_D219:      DEFINE_RECT 6, 103, 494, 145
+        DEFINE_RECT_INSET rect_outer_frame, 4, 2, kDialogWidth, kDialogHeight
+        DEFINE_RECT_INSET rect_inner_frame, 5, 3, kDialogWidth, kDialogHeight
+        DEFINE_RECT rect_D211, 6, 20, 494, 102
+        DEFINE_RECT rect_D219, 6, 103, 494, 145
 
         DEFINE_BUTTON ok, "OK            \x0D", 350, 90
 
 ;;; Label positions
-point_title:     DEFINE_POINT 0, 15
+        DEFINE_POINT point_title, 0, 15
 str_disk_copy_padded:
         PASCAL_STRING "     Disk Copy    " ; dialog title
 str_quick_copy_padded:
         PASCAL_STRING "Quick Copy      " ; dialog title
 
-rect_D255:      DEFINE_RECT 270, 38, 420, 46
+        DEFINE_RECT rect_D255, 270, 38, 420, 46
 
         DEFINE_BUTTON read_drive, "Read Drive   D", 210, 90
 
-point_slot_drive_name:     DEFINE_POINT 20, 28
+        DEFINE_POINT point_slot_drive_name, 20, 28
 str_slot_drive_name:
         PASCAL_STRING "Slot, Drive, Name" ; dialog label
 
-point_select_source:     DEFINE_POINT 270, 46
+        DEFINE_POINT point_select_source, 270, 46
 str_select_source:
         PASCAL_STRING "Select source disk" ; dialog label
 str_select_destination:
         PASCAL_STRING "Select destination disk" ; dialog label
 
-point_formatting:     DEFINE_POINT 210, 68
+        DEFINE_POINT point_formatting, 210, 68
 str_formatting:
         PASCAL_STRING "Formatting the disk ...."
 
-point_writing:     DEFINE_POINT 210, 68
+        DEFINE_POINT point_writing, 210, 68
 str_writing:
         PASCAL_STRING "Writing ....   "
 
-point_reading:     DEFINE_POINT 210, 68
+        DEFINE_POINT point_reading, 210, 68
 str_reading:
         PASCAL_STRING "Reading ....    "
 
@@ -305,7 +305,7 @@ bg_black:
 bg_white:
         .byte   $7F
 
-rect_D35B: DEFINE_RECT 0, 0, 150, 0, rect_D35B
+        DEFINE_RECT rect_D35B, 0, 0, 150, 0
 
 
 current_drive_selection:        ; $FF if no selection
@@ -320,7 +320,7 @@ LD368:  .byte   0
         .byte   0
         .byte   0
 
-point_D36D:  DEFINE_POINT 0, 0, point_D36D
+        DEFINE_POINT point_D36D, 0, 0
         .byte   0
         .byte   0
         .byte   $47
@@ -357,8 +357,8 @@ LD426:  .byte   0
 LD427:  .word   0
 LD429:  .byte   0
 
-rect_D42A:      DEFINE_RECT 18, 20, 490, 88
-rect_D432:      DEFINE_RECT 19, 29, 195, 101
+        DEFINE_RECT rect_D42A, 18, 20, 490, 88
+        DEFINE_RECT rect_D432, 19, 29, 195, 101
 
 LD43A:  .res 18, 0
 LD44C:  .byte   0
@@ -373,19 +373,19 @@ str_2_spaces:   PASCAL_STRING "  "      ; do not localize
 str_number:     PASCAL_STRING "       " ; filled in by string_to_number - do not localize
 
 ;;; Label positions
-point_blocks_read:     DEFINE_POINT 300, 125
-point_blocks_written:     DEFINE_POINT 300, 135
-point_source:     DEFINE_POINT 300, 115
-point_source2:     DEFINE_POINT 40, 125
-point_slot_drive:     DEFINE_POINT 110, 125
-point_destination:     DEFINE_POINT 40, 135
-point_slot_drive2:     DEFINE_POINT 110, 135
-point_disk_copy:     DEFINE_POINT 40, 115
-point_select_quit:     DEFINE_POINT 20, 145
-rect_D483:      DEFINE_RECT 20, 136, 400, 145
-point_escape_stop_copy:     DEFINE_POINT 300, 145
-point_error_writing:     DEFINE_POINT 40, 100
-point_error_reading:     DEFINE_POINT 40, 90
+        DEFINE_POINT point_blocks_read, 300, 125
+        DEFINE_POINT point_blocks_written, 300, 135
+        DEFINE_POINT point_source, 300, 115
+        DEFINE_POINT point_source2, 40, 125
+        DEFINE_POINT point_slot_drive, 110, 125
+        DEFINE_POINT point_destination, 40, 135
+        DEFINE_POINT point_slot_drive2, 110, 135
+        DEFINE_POINT point_disk_copy, 40, 115
+        DEFINE_POINT point_select_quit, 20, 145
+        DEFINE_RECT rect_D483, 20, 136, 400, 145
+        DEFINE_POINT point_escape_stop_copy, 300, 145
+        DEFINE_POINT point_error_writing, 40, 100
+        DEFINE_POINT point_error_reading, 40, 90
 
 str_blocks_read:
         PASCAL_STRING "Blocks Read: "
@@ -2416,31 +2416,31 @@ alert_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
 
 .params alert_bitmap_mapinfo
-viewloc:        DEFINE_POINT 20, 8
+        DEFINE_POINT viewloc, 20, 8
 mapbits:        .addr   alert_bitmap
 mapwidth:       .byte   7
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 36, 23
+        DEFINE_RECT maprect, 0, 0, 36, 23
 .endparams
 
-rect_E89F:      DEFINE_RECT 65, 45, 485, 100
-rect_E8A7:      DEFINE_RECT_INSET 4, 2, 420, 55
-rect_E8AF:      DEFINE_RECT_INSET 5, 3, 420, 55
+        DEFINE_RECT rect_E89F, 65, 45, 485, 100
+        DEFINE_RECT_INSET rect_E8A7, 4, 2, 420, 55
+        DEFINE_RECT_INSET rect_E8AF, 5, 3, 420, 55
 
 .params portbits1
-viewloc:        DEFINE_POINT 65, 45, viewloc
+        DEFINE_POINT viewloc, 65, 45
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 420, 55
+        DEFINE_RECT maprect, 0, 0, 420, 55
 .endparams
 
 .params portbits2
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 559, 191
+        DEFINE_RECT maprect, 0, 0, 559, 191
 .endparams
 
         DEFINE_BUTTON ok,        "OK            \x0D", 300, 37
@@ -2450,7 +2450,7 @@ maprect:        DEFINE_RECT 0, 0, 559, 191
         DEFINE_BUTTON yes, "Yes", 250, 37, 50, kButtonHeight
         DEFINE_BUTTON no,  "No",  350, 37, 50, kButtonHeight
 
-LE93D:  DEFINE_POINT 100, 24
+        DEFINE_POINT LE93D, 100, 24
 
 message_flags:
         .byte   0

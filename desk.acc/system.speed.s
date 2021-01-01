@@ -149,14 +149,14 @@ mincontlength:  .word   100
 maxcontwidth:   .word   500
 maxcontlength:  .word   500
 port:
-viewloc:        DEFINE_POINT kDALeft, kDATop
+        DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, kDAWidth, kDAHeight
+        DEFINE_RECT cliprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8,$FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -165,10 +165,8 @@ textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-frame_rect1:
-        DEFINE_RECT_INSET 4,2,kDAWidth,kDAHeight
-frame_rect2:
-        DEFINE_RECT_INSET 5,3,kDAWidth,kDAHeight
+        DEFINE_RECT_INSET frame_rect1, 4,2,kDAWidth,kDAHeight
+        DEFINE_RECT_INSET frame_rect2, 5,3,kDAWidth,kDAHeight
 
 
 .params getwinport_params

@@ -282,11 +282,11 @@ str_1_char:
 str_two_spaces:
         PASCAL_STRING "  "      ; do not localize
 
-pt3:    DEFINE_POINT 0, 13, pt3
+        DEFINE_POINT pt3, 0, 13
 
-rect:   DEFINE_RECT 0, 0, 125, 0, rect
+        DEFINE_RECT rect, 0, 0, 125, 0
 
-pos:    DEFINE_POINT 2, 0, pos
+        DEFINE_POINT pos, 2, 0
 
         .byte   0
         .byte   0
@@ -299,10 +299,9 @@ selected_index:                 ; $FF if none
 
         .byte   $00
 
-rect_frame:
-        DEFINE_RECT_INSET 4, 2, winfo_dialog::kWidth, winfo_dialog::kHeight
+        DEFINE_RECT_INSET rect_frame, 4, 2, winfo_dialog::kWidth, winfo_dialog::kHeight
 
-rect0:  DEFINE_RECT 27, 16, 174, 26
+        DEFINE_RECT rect0, 27, 16, 174, 26
 
         DEFINE_BUTTON change_drive, "Change Drive",       193, 30
         DEFINE_BUTTON open,         "Open",               193, 44
@@ -311,15 +310,13 @@ rect0:  DEFINE_RECT 27, 16, 174, 26
         DEFINE_BUTTON ok,           "OK            \x0D", 193, 89
 
 ;;; Dividing line
-pt1:    DEFINE_POINT 323, 30
-pt2:    DEFINE_POINT 323, 100
+        DEFINE_POINT pt1, 323, 30
+        DEFINE_POINT pt2, 323, 100
 
-pos_disk:
-        DEFINE_POINT 28, 25
-pos_input_label:
-        DEFINE_POINT 28, 112
-pos_input2_label:               ; Unused
-        DEFINE_POINT 28, 135
+        DEFINE_POINT pos_disk, 28, 25
+        DEFINE_POINT pos_input_label, 28, 112
+
+        DEFINE_POINT pos_input2_label, 28, 135 ; Unused
 
 textbg1:
         .byte   0
@@ -328,11 +325,11 @@ textbg2:
 str_disk:
         PASCAL_STRING " Disk: "
 
-rect_input:                     ; Frame
-        DEFINE_RECT 28, 113, 428, 124
+        ;; Frame
+        DEFINE_RECT rect_input, 28, 113, 428, 124
 
-rect_input_text:                ; Text bounds
-        DEFINE_RECT 30, 123, 28, 136, rect_input_text
+        ;; Text bounds
+        DEFINE_RECT rect_input_text, 30, 123, 28, 136
 
         .word   428, 147
         .word   30, 146
@@ -3132,7 +3129,7 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
         sec
         rts
 
-coords: DEFINE_POINT 0,0
+        DEFINE_POINT coords, 0,0
 .endproc
 
 ;;; ============================================================

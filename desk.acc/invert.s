@@ -57,7 +57,7 @@ save_stack:.byte   0
 event_params:   .tag MGTK::Event
 grafport:       .tag MGTK::GrafPort
 penxor:         .byte   MGTK::penXOR
-rect:           DEFINE_RECT 0, 0, kScreenWidth-1, kScreenHeight-1
+        DEFINE_RECT rect, 0, 0, kScreenWidth-1, kScreenHeight-1
 
 
 ;;; ============================================================

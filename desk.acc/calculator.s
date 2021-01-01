@@ -170,11 +170,11 @@ flag:   .byte   MGTK::zp_overwrite
 
 .macro CALC_BUTTON identifier, labelchar, left, top
 .params identifier
-viewloc:        DEFINE_POINT left - kBorderLeftTop, top - kBorderLeftTop
+        DEFINE_POINT viewloc, left - kBorderLeftTop, top - kBorderLeftTop
 mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
+        DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:          .byte   labelchar
 pos:            .word   left + 6, top+kCalcButtonHeight
 port:           .word   left, top, left+kCalcButtonWidth, top+kCalcButtonHeight
@@ -202,33 +202,33 @@ port:           .word   left, top, left+kCalcButtonWidth, top+kCalcButtonHeight
 
 
 .params btn_0
-viewloc:        DEFINE_POINT kCol1Left - kBorderLeftTop, kRow5Top - kBorderLeftTop
+        DEFINE_POINT viewloc, kCol1Left - kBorderLeftTop, kRow5Top - kBorderLeftTop
 mapbits:        .addr   wide_button_bitmap
 mapwidth:       .byte   8       ; kBitmapStride (bytes)
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 49, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight ; 0 is extra wide
+        DEFINE_RECT maprect, 0, 0, 49, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight ; 0 is extra wide
 label:          .byte   '0'
 pos:            .word   kCol1Left + 6, kRow5Bot
 port:           .word   kCol1Left,kRow5Top,kCol2Right,kRow5Bot
 .endparams
 
 .params btn_dec
-viewloc:        DEFINE_POINT kCol3Left - kBorderLeftTop, kRow5Top - kBorderLeftTop
+        DEFINE_POINT viewloc, kCol3Left - kBorderLeftTop, kRow5Top - kBorderLeftTop
 mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
+        DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
 label:          .byte   '.'
 pos:            .word   kCol3Left + 6 + 2, kRow5Bot ; + 2 to center the label
 port:           .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
 .endparams
 
 .params btn_add
-viewloc:        DEFINE_POINT kCol4Left - kBorderLeftTop, kRow4Top - kBorderLeftTop
+        DEFINE_POINT viewloc, kCol4Left - kBorderLeftTop, kRow4Top - kBorderLeftTop
 mapbits:        .addr   tall_button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, 27 ; + is extra tall
+        DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, 27 ; + is extra tall
 label:          .byte   '+'
 pos:            .word   kCol4Left + 6, kRow5Bot
 port:           .word   kCol4Left,kRow4Top,kCol4Right,kRow5Bot
@@ -417,11 +417,11 @@ base:   .word   16
 farg:   .byte   $00,$00,$00,$00,$00,$00
 
 .params title_bar_bitmap      ; Params for MGTK::PaintBits
-viewloc:        DEFINE_POINT 115, AS_WORD -9, viewloc
+        DEFINE_POINT viewloc, 115, AS_WORD -9
 mapbits:        .addr   pixels
 mapwidth:       .byte   1
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 6, 5
+        DEFINE_RECT maprect, 0, 0, 6, 5
         ;;  (not part of struct, but not referenced outside)
 pixels: .byte   PX(%1000001)
         .byte   PX(%1010110)
@@ -432,14 +432,14 @@ pixels: .byte   PX(%1000001)
 .endparams
 
 .params grafport
-viewloc:        DEFINE_POINT 0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .word   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-cliprect:       DEFINE_RECT 0, 0, 0, 0
+        DEFINE_RECT cliprect, 0, 0, 0, 0
 pattern:        .res    8, 0
 colormasks:     .byte   0, 0
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
@@ -499,10 +499,10 @@ top:            .word   kDefaultTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-cliprect:       DEFINE_RECT 0, 0, kWindowWidth, kWindowHeight
+        DEFINE_RECT cliprect, 0, 0, kWindowWidth, kWindowHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0

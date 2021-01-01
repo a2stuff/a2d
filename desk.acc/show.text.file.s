@@ -371,14 +371,14 @@ mincontlength:  .word   51
 maxcontwidth:   .word   kDefaultWidth
 maxcontlength:  .word   kDefaultHeight
 port:
-viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop, viewloc
+        DEFINE_POINT viewloc, kDefaultLeft, kDefaultTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-maprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight, maprect
+        DEFINE_RECT maprect, 0, 0, kDefaultWidth, kDefaultHeight
 pattern:        .res    8, $00
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:         DEFINE_POINT 0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
@@ -390,11 +390,11 @@ nextwinfo:      .addr   0
 
         ;; gets copied over winfo::port after mode is drawn
 .params default_port
-viewloc:        DEFINE_POINT kDefaultLeft, kDefaultTop
+        DEFINE_POINT viewloc, kDefaultLeft, kDefaultTop
 mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, kDefaultWidth, kDefaultHeight
+        DEFINE_RECT maprect, 0, 0, kDefaultWidth, kDefaultHeight
 .endparams
 
 .proc init
@@ -1293,11 +1293,11 @@ prop_str:       PASCAL_STRING "Proportional"
         kLabelWidth = 50
 
 .params mode_mapinfo                  ; bounding port for mode label
-viewloc:        DEFINE_POINT 0, 0, viewloc
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, 80, 10, maprect
+        DEFINE_RECT maprect, 0, 0, 80, 10
 .endparams
 mode_mapinfo_viewloc_xcoord := mode_mapinfo::viewloc::xcoord
 
