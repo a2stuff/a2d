@@ -954,21 +954,21 @@ egg:    .byte   0
 
         MGTK_CALL MGTK::MoveTo, model_pos
         ldax    model_str_ptr
-        jsr     draw_pascal_string
+        jsr     DrawString
 
         MGTK_CALL MGTK::MoveTo, pdver_pos
-        param_call draw_pascal_string, str_prodos_version
+        param_call DrawString, str_prodos_version
 
         MGTK_CALL MGTK::MoveTo, line1
         MGTK_CALL MGTK::LineTo, line2
 
         MGTK_CALL MGTK::MoveTo, mem_pos
-        param_call draw_pascal_string, str_memory_prefix
-        param_call draw_pascal_string, str_from_int
-        param_call draw_pascal_string, str_memory_suffix
-        param_call draw_pascal_string, str_cpu_prefix
+        param_call DrawString, str_memory_prefix
+        param_call DrawString, str_from_int
+        param_call DrawString, str_memory_suffix
+        param_call DrawString, str_cpu_prefix
         jsr     cpuid
-        jsr     draw_pascal_string
+        jsr     DrawString
 
         lda     #7
         sta     slot
@@ -984,7 +984,7 @@ loop:   lda     slot
         clc
         adc     #'0'
         sta     str_slot_n + kStrSlotNOffset
-        param_call draw_pascal_string, str_slot_n
+        param_call DrawString, str_slot_n
 
         ;; Check ProDOS slot bit mask
         sta     RAMRDOFF
@@ -994,12 +994,12 @@ loop:   lda     slot
         bne     check
 
         ldax    #str_empty
-        jsr     draw_pascal_string
+        jsr     DrawString
         jmp     next
 
 check:  lda     slot
         jsr     probe_slot
-        jsr     draw_pascal_string
+        jsr     DrawString
 
 next:   lsr     mask
         dec     slot
@@ -1357,23 +1357,6 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-
-.proc draw_pascal_string
-        params := $6
-        textptr := $6
-        textlen := $8
-
-        stax    textptr
-        ldy     #0
-        lda     (textptr),y
-        beq     exit
-        sta     textlen
-        inc16   textptr
-        MGTK_CALL MGTK::DrawText, params
-exit:   rts
-.endproc
-
-;;; ============================================================
 ;;; Input: 16-bit unsigned integer in A,X
 ;;; Output: str_from_int populated, with separator if needed
 
@@ -1650,6 +1633,11 @@ nope:   lda     #$FF
 .endproc
 
 ;;; ============================================================
+
+        .include  "../lib/drawstring.s"
+
+;;; ============================================================
+
 
 da_end  := *
 .assert * < $1B00, error, "DA too big"
