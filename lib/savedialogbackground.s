@@ -4,11 +4,11 @@
 ;;; This reuses the "save area" ($800-$1AFF) used by MGTK for
 ;;; quickly restoring menu backgrounds.
 
-.proc dialog_background
+.scope dialog_background
 
         ptr := $06
 
-.proc save
+.proc Save
         copy16  #SAVE_AREA_BUFFER, addr
         lda     save_y1
         jsr     set_ptr_for_row
@@ -50,7 +50,7 @@ col:    lda     xbyte
 
 ;;; Restore
 
-.proc restore
+.proc Restore
         copy16  #SAVE_AREA_BUFFER, addr
         lda     save_y1
         jsr     set_ptr_for_row
@@ -143,12 +143,12 @@ row_tmp:
         .byte   0
 xbyte:  .byte   0
 
-.endproc ; dialog_background
+.endscope ; dialog_background
 
 ;;; ============================================================
 ;;; Map X coord (A=lo, X=hi) to byte/bit (Y=byte, A=bit)
 
-.proc calc_x_save_bounds
+.proc CalcXSaveBounds
         ldy     #0
         cpx     #2              ; X >= 512 ?
         bne     :+

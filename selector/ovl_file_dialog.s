@@ -679,7 +679,7 @@ LA662:  lda     winfo_list::window_id
         ;; --------------------------------------------------
         ;; Click on the previous entry
 
-same:   jsr     app::detect_double_click
+same:   jsr     app::DetectDoubleClick
         beq     open
         rts
 
@@ -763,7 +763,7 @@ different:
         jsr     LB404
         jsr     LBAD0
 
-        jsr     app::detect_double_click
+        jsr     app::DetectDoubleClick
         bmi     :+
         jmp     open
 

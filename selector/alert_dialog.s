@@ -138,7 +138,7 @@ alert_options_table:
 
         ;; Compute save bounds
         ldax    portmap::viewloc::xcoord ; left
-        jsr     calc_x_save_bounds
+        jsr     CalcXSaveBounds
         sty     save_x1_byte
         sta     save_x1_bit
 
@@ -150,7 +150,7 @@ alert_options_table:
         adc     portmap::maprect::x2+1
         tax
         pla
-        jsr     calc_x_save_bounds
+        jsr     CalcXSaveBounds
         sty     save_x2_byte
         sta     save_x2_bit
 
@@ -470,8 +470,8 @@ LD57A:  .byte   0
 .endproc
 
         .include "../lib/savedialogbackground.s"
-        dialog_background_save := dialog_background::save
-        dialog_background_restore := dialog_background::restore
+        dialog_background_save := dialog_background::Save
+        dialog_background_restore := dialog_background::Restore
 
 .endproc
 

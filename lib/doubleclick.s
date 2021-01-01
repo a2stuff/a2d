@@ -2,7 +2,7 @@
 ;;; Double Click Detection
 ;;; Returns with A=0 if double click, A=$FF otherwise.
 
-.proc detect_double_click
+.proc DetectDoubleClick
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
 :       copy    event_coords,x, coords,x

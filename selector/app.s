@@ -845,7 +845,7 @@ L9443:  lda     #AlertID::insert_system_disk
 
         ldy     winfo::window_id
         ldax    #ok_button_rect
-        jsr     button_event_loop
+        jsr     ButtonEventLoop
         bmi     done
         jsr     try_invoke_selected_index
 done:   rts
@@ -861,7 +861,7 @@ check_desktop_btn:
 
         ldy     winfo::window_id
         ldax    #desktop_button_rect
-        jsr     button_event_loop
+        jsr     ButtonEventLoop
         bmi     done
 
 :       MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
@@ -1747,7 +1747,7 @@ common: lda     winfo::window_id
         jsr     maybe_toggle_entry_hilite ; highlight new entry
 :
 
-        jsr     detect_double_click
+        jsr     DetectDoubleClick
         bne     :+
 
         jmp     invoke_entry

@@ -3772,7 +3772,7 @@ start:  pha                     ; error code
 
         ;; Compute save bounds
         ldax    portmap::viewloc::xcoord ; left
-        jsr     calc_x_save_bounds
+        jsr     CalcXSaveBounds
         sty     save_x1_byte
         sta     save_x1_bit
 
@@ -3784,7 +3784,7 @@ start:  pha                     ; error code
         adc     portmap::maprect::x2+1
         tax
         pla
-        jsr     calc_x_save_bounds
+        jsr     CalcXSaveBounds
         sty     save_x2_byte
         sta     save_x2_bit
 
@@ -4051,8 +4051,8 @@ flag:   .byte   0
 .endproc
 
         .include "../lib/savedialogbackground.s"
-        save_dialog_background := dialog_background::save
-        restore_dialog_background := dialog_background::restore
+        save_dialog_background := dialog_background::Save
+        restore_dialog_background := dialog_background::Restore
 
 
 .endproc

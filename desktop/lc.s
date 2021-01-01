@@ -281,7 +281,7 @@ op:     lda     dummy1234
 .proc ButtonEventLoopRelay
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     aux::button_event_loop
+        jsr     aux::ButtonEventLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts

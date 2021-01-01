@@ -4,7 +4,7 @@
 ;;; Input: A,X = rect address, Y = window_id
 ;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
 
-.proc button_event_loop
+.proc ButtonEventLoop
         sty     window_id
         stax    rect_addr1
         stax    rect_addr2
