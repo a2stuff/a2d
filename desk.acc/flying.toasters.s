@@ -119,11 +119,11 @@ nextwinfo:      .addr   0
 .endparams
 
 .params paintbits_params
-        DEFINE_POINT viewloc, 0,0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   0
 mapwidth:       .byte   10
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0,0,kToasterWidth-1,kToasterHeight-1
+        DEFINE_RECT maprect, 0, 0, kToasterWidth-1, kToasterHeight-1
 .endparams
 
 notpencopy:     .byte   MGTK::notpencopy

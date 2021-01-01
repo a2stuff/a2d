@@ -189,7 +189,7 @@ char_label:  .byte   0
 
 .macro KEY_RECT ident, left, top, right, bottom
     .if .paramcount = 1
-        DEFINE_RECT ident, 0,0,0,0
+        DEFINE_RECT ident, 0, 0, 0, 0
     .elseif .paramcount = 3
         DEFINE_RECT ident, left, top, left + kKeyWidth, top + kKeyHeight
     .elseif .paramcount = 4
@@ -544,7 +544,7 @@ extended_layout_flag:           ; high bit set if IIgs/IIc+
 tmp_poly:
         .res    2 + 7 * .sizeof(MGTK::Point), 0
 
-        DEFINE_RECT tmp_rect, 0,0,0,0
+        DEFINE_RECT tmp_rect, 0, 0, 0, 0
 
 ;;; ============================================================
 

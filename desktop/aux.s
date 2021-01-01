@@ -276,7 +276,7 @@ vertices:
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0,0,0,0
+        DEFINE_RECT maprect, 0, 0, 0, 0
 .endparams
 
 .params mask_paintbits_params
@@ -284,10 +284,10 @@ reserved:       .byte   0
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0,0,0,0
+        DEFINE_RECT maprect, 0, 0, 0, 0
 .endparams
 
-        DEFINE_RECT rect_opendir, 0,0,0,0
+        DEFINE_RECT rect_opendir, 0, 0, 0, 0
 
 .params textwidth_params
 textptr:        .addr   text_buffer
@@ -1722,7 +1722,7 @@ icon:   .byte   0
         jmp     start
 
 icon:   .byte   0
-        DEFINE_RECT rect, 0,0,0,0
+        DEFINE_RECT rect, 0, 0, 0, 0
 
 start:  ldy     #0
         lda     ($06),y
@@ -1796,7 +1796,7 @@ open_flag:  ; non-zero if open volume/dir
 more_drawing_needed_flag:
         .byte   0
 
-        DEFINE_POINT label_pos, 0,0
+        DEFINE_POINT label_pos, 0, 0
 
 .proc paint_icon
 
@@ -2450,8 +2450,8 @@ next:   pla
 
 offset_flags:  .byte   0        ; bit 7 = offset poly, bit 6 = undo offset, otherwise do offset
 
-        DEFINE_POINT vl_offset, 0,0
-        DEFINE_POINT mr_offset, 0,0
+        DEFINE_POINT vl_offset, 0, 0
+        DEFINE_POINT mr_offset, 0, 0
 
 entry_poly:
         copy    #$80, offset_flags
@@ -2683,12 +2683,12 @@ dialogbox_flag:
 ;;; pt1 +----+ pt2
 ;;;     |    |
 ;;; pt4 +----+ pt3
-        DEFINE_POINT pt1, 0,0
-        DEFINE_POINT pt2, 0,0
-        DEFINE_POINT pt3, 0,0
-        DEFINE_POINT pt4, 0,0
+        DEFINE_POINT pt1, 0, 0
+        DEFINE_POINT pt2, 0, 0
+        DEFINE_POINT pt3, 0, 0
+        DEFINE_POINT pt4, 0, 0
 
-        DEFINE_RECT bounds, 0,0,0,0
+        DEFINE_RECT bounds, 0, 0, 0, 0
 
 stash_r: .word   0
 
@@ -3375,8 +3375,8 @@ special_menu:
         kPromptDialogWidth = 400
         kPromptDialogHeight = 107
 
-        DEFINE_RECT_INSET confirm_dialog_outer_rect, 4,2,kPromptDialogWidth,kPromptDialogHeight
-        DEFINE_RECT_INSET confirm_dialog_inner_rect, 5,3,kPromptDialogWidth,kPromptDialogHeight
+        DEFINE_RECT_INSET confirm_dialog_outer_rect, 4, 2, kPromptDialogWidth, kPromptDialogHeight
+        DEFINE_RECT_INSET confirm_dialog_inner_rect, 5, 3, kPromptDialogWidth, kPromptDialogHeight
 
         DEFINE_BUTTON ok,     "OK            \x0D", 260, kPromptDialogHeight-19
         DEFINE_BUTTON cancel, "Cancel        Esc",   40, kPromptDialogHeight-19
@@ -3401,13 +3401,13 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
 ;;; ============================================================
 ;;; Prompt dialog resources
 
-        DEFINE_RECT clear_dialog_labels_rect, 39,25,360,kPromptDialogHeight-20
+        DEFINE_RECT clear_dialog_labels_rect, 39, 25, 360, kPromptDialogHeight-20
 
-        DEFINE_RECT prompt_rect, 40,kDialogLabelRow5+1,360,kDialogLabelRow6
-        DEFINE_POINT current_target_file_pos, 75,kDialogLabelRow2
-        DEFINE_POINT current_dest_file_pos, 75,kDialogLabelRow3
-        DEFINE_RECT current_target_file_rect, 75,kDialogLabelRow1+1,394,kDialogLabelRow2
-        DEFINE_RECT current_dest_file_rect, 75,kDialogLabelRow2+1,394,kDialogLabelRow3
+        DEFINE_RECT prompt_rect, 40, kDialogLabelRow5+1, 360, kDialogLabelRow6
+        DEFINE_POINT current_target_file_pos, 75, kDialogLabelRow2
+        DEFINE_POINT current_dest_file_pos, 75, kDialogLabelRow3
+        DEFINE_RECT current_target_file_rect, 75, kDialogLabelRow1+1, 394, kDialogLabelRow2
+        DEFINE_RECT current_dest_file_rect, 75, kDialogLabelRow2+1, 394, kDialogLabelRow3
 
 ;;; ============================================================
 ;;; "About" dialog resources
@@ -3517,12 +3517,12 @@ str_info_vol_size:
 str_colon:
         PASCAL_STRING ": "
 
-        DEFINE_POINT unlock_remaining_count_pos2, 160,kDialogLabelRow4
-        DEFINE_POINT lock_remaining_count_pos2, 145,kDialogLabelRow4
-        DEFINE_POINT files_pos, 200,kDialogLabelRow4
-        DEFINE_POINT files_pos2, 185,kDialogLabelRow4
-        DEFINE_POINT unlock_remaining_count_pos, 205,kDialogLabelRow4
-        DEFINE_POINT lock_remaining_count_pos, 195,kDialogLabelRow4
+        DEFINE_POINT unlock_remaining_count_pos2, 160, kDialogLabelRow4
+        DEFINE_POINT lock_remaining_count_pos2, 145, kDialogLabelRow4
+        DEFINE_POINT files_pos, 200, kDialogLabelRow4
+        DEFINE_POINT files_pos2, 185, kDialogLabelRow4
+        DEFINE_POINT unlock_remaining_count_pos, 205, kDialogLabelRow4
+        DEFINE_POINT lock_remaining_count_pos, 195, kDialogLabelRow4
 
 str_format_disk:
         PASCAL_STRING "Format a Disk..." ; dialog title
@@ -3674,7 +3674,7 @@ reserved:       .byte   0
         DEFINE_BUTTON try_again, "Try Again     A",     20, 37
         DEFINE_BUTTON cancel,    "Cancel     Esc",     300, 37
 
-        DEFINE_POINT pos_prompt, 75,29
+        DEFINE_POINT pos_prompt, 75, 29
 
 alert_options:  .byte   0
 prompt_addr:    .addr   0

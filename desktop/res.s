@@ -511,14 +511,14 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT name_input_rect, 40,61+6,360,71+6
-        DEFINE_POINT name_input_textpos, 45,70+6
+        DEFINE_RECT name_input_rect, 40, 61+6, 360, 71+6
+        DEFINE_POINT name_input_textpos, 45, 70+6
         DEFINE_POINT pos_dialog_title, 0, 18
 
-        DEFINE_POINT dialog_label_base_pos, 40,35-5
+        DEFINE_POINT dialog_label_base_pos, 40, 35-5
 
         kDialogLabelDefaultX = 40
-        DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX,0
+        DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
 
 .params name_input_mapinfo
         DEFINE_POINT viewloc, 80, 35+7
@@ -530,23 +530,23 @@ nextwinfo:      .addr   0
 
         kEntryPickerItemHeight = 9 ; default font height
 
-        DEFINE_RECT_INSET entry_picker_outer_rect, 4,2,winfo_entry_picker::kWidth,winfo_entry_picker::kHeight
-        DEFINE_RECT_INSET entry_picker_inner_rect, 5,3,winfo_entry_picker::kWidth,winfo_entry_picker::kHeight
+        DEFINE_RECT_INSET entry_picker_outer_rect, 4, 2, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
+        DEFINE_RECT_INSET entry_picker_inner_rect, 5, 3, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
 
         ;; Line endpoints
-        DEFINE_POINT entry_picker_line1_start, 6,22
-        DEFINE_POINT entry_picker_line1_end, 344,22
+        DEFINE_POINT entry_picker_line1_start, 6, 22
+        DEFINE_POINT entry_picker_line1_end, 344, 22
 
         ;; Line endpoints
-        DEFINE_POINT entry_picker_line2_start, 6,winfo_entry_picker::kHeight-21
-        DEFINE_POINT entry_picker_line2_end, 344,winfo_entry_picker::kHeight-21
+        DEFINE_POINT entry_picker_line2_start, 6, winfo_entry_picker::kHeight-21
+        DEFINE_POINT entry_picker_line2_end, 344, winfo_entry_picker::kHeight-21
 
-        DEFINE_RECT_SZ entry_picker_ok_rect, 210,winfo_entry_picker::kHeight-18,kButtonWidth,kButtonHeight
+        DEFINE_RECT_SZ entry_picker_ok_rect, 210, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
 
-        DEFINE_RECT_SZ entry_picker_cancel_rect, 40,winfo_entry_picker::kHeight-18,kButtonWidth,kButtonHeight
+        DEFINE_RECT_SZ entry_picker_cancel_rect, 40, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
 
-        DEFINE_POINT entry_picker_ok_pos, 215,winfo_entry_picker::kHeight-8
-        DEFINE_POINT entry_picker_cancel_pos, 45,winfo_entry_picker::kHeight-8
+        DEFINE_POINT entry_picker_ok_pos, 215, winfo_entry_picker::kHeight-8
+        DEFINE_POINT entry_picker_cancel_pos, 45, winfo_entry_picker::kHeight-8
 
 add_an_entry_label:
         PASCAL_STRING "Add an Entry..." ; dialog title
@@ -573,16 +573,16 @@ enter_the_name_to_appear_label:
 enter_the_full_pathname_label2:
         PASCAL_STRING "Enter the full pathname of the run list file:"
 
-        DEFINE_RECT entry_picker_item_rect, 0,0,0,0
+        DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
-        DEFINE_RECT entry_picker_all_items_rect, 6,23,344,winfo_entry_picker::kHeight-23
+        DEFINE_RECT entry_picker_all_items_rect, 6, 23, 344, winfo_entry_picker::kHeight-23
 
 ;;; In Format/Erase Disk picker dialog, this is the selected index (0-based),
 ;;; or $FF if no drive is selected
 selected_device_index:
         .byte   0
 
-        DEFINE_RECT select_volume_rect, 0,0,0,0
+        DEFINE_RECT select_volume_rect, 0, 0, 0, 0
 
 ;;; Used in Format/Erase dialogs
 num_volumes:
@@ -650,11 +650,11 @@ str_kb_suffix:
 file_count:
         .word   0
 
-        DEFINE_POINT pos_D90B, 0,13
+        DEFINE_POINT pos_D90B, 0, 13
 
-        DEFINE_RECT rect_D90F, 0,0,125,0
+        DEFINE_RECT rect_D90F, 0, 0, 125, 0
 
-        DEFINE_POINT picker_entry_pos, 2,0
+        DEFINE_POINT picker_entry_pos, 2, 0
 
         .byte   $00,$00
 
@@ -671,30 +671,30 @@ LD921:  .byte   0
 kRadioButtonWidth = 10
 kRadioButtonHeight = 6
 
-        DEFINE_RECT_SZ rect_run_list_radiobtn, 346,41,kRadioButtonWidth,kRadioButtonHeight
-        DEFINE_RECT_SZ rect_other_run_list_radiobtn, 346,50,kRadioButtonWidth,kRadioButtonHeight
-        DEFINE_RECT_SZ rect_at_first_boot_radiobtn, 346,75,kRadioButtonWidth,kRadioButtonHeight
-        DEFINE_RECT_SZ rect_at_first_use_radiobtn, 346,84,kRadioButtonWidth,kRadioButtonHeight
-        DEFINE_RECT_SZ rect_never_radiobtn, 346,93,kRadioButtonWidth,kRadioButtonHeight
+        DEFINE_RECT_SZ rect_run_list_radiobtn, 346, 41, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_other_run_list_radiobtn, 346, 50, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_at_first_boot_radiobtn, 346, 75, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_at_first_use_radiobtn, 346, 84, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_never_radiobtn, 346, 93, kRadioButtonWidth, kRadioButtonHeight
 
 kRadioControlWidth = 134
 kRadioControlHeight = 8
 
-        DEFINE_RECT_SZ rect_run_list_ctrl, 346,40,kRadioControlWidth,kRadioControlHeight
-        DEFINE_RECT_SZ rect_other_run_list_ctrl, 346,49,kRadioControlWidth,kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_boot_ctrl, 346,74,kRadioControlWidth,kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_use_ctrl, 346,83,kRadioControlWidth,kRadioControlHeight
-        DEFINE_RECT_SZ rect_never_ctrl, 346,92,kRadioControlWidth,kRadioControlHeight
+        DEFINE_RECT_SZ rect_run_list_ctrl, 346, 40, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_other_run_list_ctrl, 346, 49, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_boot_ctrl, 346, 74, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_use_ctrl, 346, 83, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_never_ctrl, 346, 92, kRadioControlWidth, kRadioControlHeight
 
-        DEFINE_RECT rect_scratch, 0,0,0,0
+        DEFINE_RECT rect_scratch, 0, 0, 0, 0
 
 ;;; ============================================================
 
 .scope file_dialog_res
 
-        DEFINE_RECT_INSET dialog_frame_rect, 4,2,kFilePickerDlgWidth,kFilePickerDlgHeight
+        DEFINE_RECT_INSET dialog_frame_rect, 4, 2, kFilePickerDlgWidth, kFilePickerDlgHeight
 
-        DEFINE_RECT rect_D9C8, 27,16,174,26
+        DEFINE_RECT rect_D9C8, 27, 16, 174, 26
 
         DEFINE_BUTTON change_drive, "Change Drive",       193, 30
         DEFINE_BUTTON open,         "Open",               193, 44
@@ -702,15 +702,15 @@ kRadioControlHeight = 8
         DEFINE_BUTTON cancel,       "Cancel        Esc",  193, 73
         DEFINE_BUTTON ok,           "OK            \x0D", 193, 89
 
-        DEFINE_POINT dialog_sep_start, 323,30
-        DEFINE_POINT dialog_sep_end, 323,100
+        DEFINE_POINT dialog_sep_start, 323, 30
+        DEFINE_POINT dialog_sep_end, 323, 100
 
         .byte   $81,$D3,$00     ; ???
 
         DEFINE_LABEL disk, " Disk: ", 28,25
 
-        DEFINE_POINT input1_label_pos, 28,112
-        DEFINE_POINT input2_label_pos, 28,135
+        DEFINE_POINT input1_label_pos, 28, 112
+        DEFINE_POINT input2_label_pos, 28, 135
 
 textbg1:
         .byte   $00
@@ -730,10 +730,10 @@ kCommonInputWidth = 435
 kCommonInputHeight = 11
 
         DEFINE_RECT_SZ input1_rect, 28, 113, kCommonInputWidth, kCommonInputHeight
-        DEFINE_POINT input1_textpos, 30,123
+        DEFINE_POINT input1_textpos, 30, 123
 
         DEFINE_RECT_SZ input2_rect, 28, 136, kCommonInputWidth, kCommonInputHeight
-        DEFINE_POINT input2_textpos, 30,146
+        DEFINE_POINT input2_textpos, 30, 146
 
 delete_a_file_label:
         PASCAL_STRING "Delete a File..." ; dialog title
@@ -1003,7 +1003,7 @@ icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
         ;; (follows icon_param for IconTK::IconInRect call)
-        DEFINE_RECT tmp_rect, 0,0,0,0
+        DEFINE_RECT tmp_rect, 0, 0, 0, 0
 
 saved_stack:
         .byte   0

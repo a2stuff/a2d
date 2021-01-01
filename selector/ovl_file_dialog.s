@@ -3129,7 +3129,7 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
         sec
         rts
 
-        DEFINE_POINT coords, 0,0
+        DEFINE_POINT coords, 0, 0
 .endproc
 
 ;;; ============================================================

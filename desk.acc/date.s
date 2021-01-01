@@ -124,13 +124,13 @@ start_da:
         kDownRectIndex = 4
 
         first_hit_rect := *
-        DEFINE_RECT_SZ ok_button_rect, 106,46,75,11
-        DEFINE_RECT_SZ cancel_button_rect, 16,46,74,11
-        DEFINE_RECT_SZ up_arrow_rect, 170,10,10,10
-        DEFINE_RECT_SZ down_arrow_rect, 170,30,10,10
-        DEFINE_RECT_SZ day_rect, 37,20,22,10
-        DEFINE_RECT_SZ month_rect, 81,20,30,10
-        DEFINE_RECT_SZ year_rect, 127,20,22,10
+        DEFINE_RECT_SZ ok_button_rect, 106, 46, 75, 11
+        DEFINE_RECT_SZ cancel_button_rect, 16, 46, 74, 11
+        DEFINE_RECT_SZ up_arrow_rect, 170, 10, 10, 10
+        DEFINE_RECT_SZ down_arrow_rect, 170, 30, 10, 10
+        DEFINE_RECT_SZ day_rect, 37, 20, 22, 10
+        DEFINE_RECT_SZ month_rect, 81, 20, 30, 10
+        DEFINE_RECT_SZ year_rect, 127, 20, 22, 10
 
 .params settextbg_params
 backcolor:   .byte   0          ; black
@@ -698,9 +698,9 @@ done:   pla
 ;;; ============================================================
 ;;; Params for the display
 
-        DEFINE_RECT border_rect, 4,2,192,61
+        DEFINE_RECT border_rect, 4, 2, 192, 61
 
-        DEFINE_RECT_SZ date_rect, 32,15,122,20
+        DEFINE_RECT_SZ date_rect, 32, 15, 122, 20
 
 label_ok:
         PASCAL_STRING "OK         \x0D" ; button label
@@ -711,11 +711,11 @@ label_uparrow:
 label_downarrow:
         PASCAL_STRING kGlyphDdownArrow ; do not localize
 
-        DEFINE_POINT label_cancel_pos, 21,56
-        DEFINE_POINT label_ok_pos, 110,56
+        DEFINE_POINT label_cancel_pos, 21, 56
+        DEFINE_POINT label_ok_pos, 110, 56
 
-        DEFINE_POINT label_uparrow_pos, 172,19
-        DEFINE_POINT label_downarrow_pos, 172,39
+        DEFINE_POINT label_uparrow_pos, 172, 19
+        DEFINE_POINT label_downarrow_pos, 172, 39
 
 .params setpensize_params
 penwidth: .byte   1

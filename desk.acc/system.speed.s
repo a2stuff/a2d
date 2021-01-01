@@ -165,8 +165,8 @@ textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT_INSET frame_rect1, 4,2,kDAWidth,kDAHeight
-        DEFINE_RECT_INSET frame_rect2, 5,3,kDAWidth,kDAHeight
+        DEFINE_RECT_INSET frame_rect1, 4, 2, kDAWidth, kDAHeight
+        DEFINE_RECT_INSET frame_rect2, 5, 3, kDAWidth, kDAHeight
 
 
 .params getwinport_params

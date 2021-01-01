@@ -63,7 +63,7 @@ reserved:       .byte   0
         DEFINE_BUTTON try_again, "Try Again  A",       300, 37
         DEFINE_BUTTON cancel,    "Cancel    Esc",       20, 37
 
-        DEFINE_POINT pos_prompt, 75,29
+        DEFINE_POINT pos_prompt, 75, 29
 
 alert_options:  .byte   0
 prompt_addr:    .addr   0
