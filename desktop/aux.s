@@ -4059,8 +4059,8 @@ flag:   .byte   0
         show_alert_dialog := Alert::start
 
 ;;; ============================================================
-;;; Draw pascal string; address in (X,A)
 
+        .include "../lib/doubleclick.s"
         .include "../lib/drawstring.s"
         .include "../lib/buttonloop.s"
         .include "../lib/muldiv.s"

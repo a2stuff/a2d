@@ -300,5 +300,17 @@ op:     lda     dummy1234
 .endproc
 
 ;;; ============================================================
+;;; Detect double click
+
+.proc DetectDoubleClick
+        sta     RAMRDON
+        sta     RAMWRTON
+        jsr     aux::DetectDoubleClick
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        rts
+.endproc
+
+;;; ============================================================
 
         PAD_TO $D200
