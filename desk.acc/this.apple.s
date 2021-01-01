@@ -1539,6 +1539,18 @@ loop:
         .addr   status_params
         bcs     next
 
+        ;; Trim trailing whitespace (seen in CFFA)
+.scope
+        ldy     dib_buffer::ID_String_Length
+        beq     done
+:       lda     dib_buffer::Device_Name-1,y
+        cmp     #' '
+        bne     done
+        dey
+        bne     :-
+done:   sty     dib_buffer::ID_String_Length
+.endscope
+
         ;; Case-adjust
 .scope
         ldy     dib_buffer::ID_String_Length
