@@ -2661,29 +2661,49 @@ L51EF:  .byte   0
 .proc view_by_nonicon_common
         sta     view
 
+        ;; Valid?
         ldx     active_window_id
         bne     :+
         rts
 :
+        ;; Is this a change?
         dex
         lda     win_view_by_table,x
         cmp     view
         bne     :+
         rts
 :
+        ;; Destroy existing icons
         cmp     #$00
         bne     :+
-        jsr     close_active_window
-:       jsr     update_view_menu_check
-
+        jsr     destroy_icons_in_active_window
+:
+        ;; Update view menu/table
+        jsr     update_view_menu_check
         lda     view
         ldx     active_window_id
         dex
         sta     win_view_by_table,x
 
-        jsr     LoadActiveWindowIconTable
+        ;; Clear selection if in the window
+        lda     selected_window_index
+        cmp     active_window_id
+        bne     sort
+        lda     #0
+        ldx     selected_icon_count
+        dex
+:       sta     selected_icon_list,x
+        dex
+        bpl     :-
+        sta     selected_icon_count
+        sta     selected_window_index
+
+        ;; Sort the records
+sort:   jsr     LoadActiveWindowIconTable
         jsr     sort_records
         jsr     StoreWindowIconTable
+
+        ;; Draw the records
         lda     active_window_id
         jsr     offset_and_set_port_from_window_id
         jsr     set_penmode_copy
@@ -2774,7 +2794,7 @@ view:   .byte   0
 
 ;;; ============================================================
 
-.proc close_active_window
+.proc destroy_icons_in_active_window
         ITK_RELAY_CALL IconTK::CloseWindow, active_window_id
         jsr     LoadActiveWindowIconTable
         lda     icon_count
@@ -4271,7 +4291,7 @@ icon_num:
         dex
         lda     win_view_by_table,x
         bmi     :+              ; list view, not icons
-        jsr     close_active_window
+        jsr     destroy_icons_in_active_window
 :       lda     active_window_id
         jsr     get_window_path
 
