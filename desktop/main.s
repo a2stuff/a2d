@@ -4003,6 +4003,14 @@ ctl:    .byte   0
 ;;; ============================================================
 
 .proc handle_content_click
+        ;; Ignore clicks in the header area
+        copy    active_window_id, screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        lda     screentowindow_windowy
+        cmp     #kWindowHeaderHeight + 1
+        bcs     :+
+        rts
+:
         ;; Subsequent action was not triggered by a menu, so hilite is not
         ;; necessary. https://github.com/a2stuff/a2d/issues/139
         copy    #$FF, menu_click_params::menu_id
