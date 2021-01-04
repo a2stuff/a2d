@@ -55,6 +55,7 @@ add_file () {
 # Add ProDOS, if present in res/package
 if [ -e "res/package/PRODOS" ]; then
     add_file $IMGFILE_COMPLETE "res/package/PRODOS" "/$VOLNAME_COMPLETE" "ProDOS" FF0000
+    add_file $IMGFILE_PART1 "res/package/PRODOS" "/$VOLNAME_PART1" "ProDOS" FF0000
 fi
 
 perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
@@ -88,6 +89,7 @@ done
 # Add BASIC.SYSTEM, if present in res/package
 if [ -e "res/package/BASIC.SYSTEM" ]; then
     add_file "$IMGFILE_COMPLETE" "res/package/BASIC.SYSTEM" "/$VOLNAME_COMPLETE" "BASIC.system" FF2000
+    add_file "$IMGFILE_PART2" "res/package/BASIC.SYSTEM" "/$VOLNAME_PART2" "BASIC.system" FF2000
 fi
 
 
