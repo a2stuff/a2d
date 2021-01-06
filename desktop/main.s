@@ -2305,10 +2305,10 @@ name_ptr:
 ;;; ============================================================
 ;;; Input: Icon number in A. Must be in active window.
 
-kIconBBoxOffsetTop     = 15
-kIconBBoxOffsetLeft    = 50
+kIconBBoxOffsetTop     = kWindowHeaderHeight + 4
+kIconBBoxOffsetLeft    = 45
 kIconBBoxOffsetBottom  = 32          ; includes height of icon + label
-kIconBBoxOffsetRight   = 50          ; includes width of icon + label
+kIconBBoxOffsetRight   = 65          ; includes width of icon + label
 
 .proc scroll_icon_into_view
         icon_ptr := $06
@@ -6886,7 +6886,7 @@ volume: ldx     cached_window_id
         kMaxWindowWidth = 450
 
         kMinWindowHeight = 50
-        kMaxWindowHeight = 108
+        kMaxWindowHeight = 112
 
 window_id:      .byte   0
 iconbits:       .addr   0
@@ -6898,7 +6898,7 @@ index:  .byte   0
         kMaxIconHeight = 17
 
         ;; first icon in window
-        DEFINE_POINT initial_coords, 52, 16 + kMaxIconHeight
+        DEFINE_POINT initial_coords, kIconBBoxOffsetLeft, kMaxIconHeight + kIconBBoxOffsetTop
 
         ;; first icon in current row
         DEFINE_POINT row_coords, 0, 0
