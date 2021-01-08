@@ -586,6 +586,15 @@ end:
         rol     arg1+1
 .endmacro
 
+;;; "Arithmetic Shift Right" i.e. signed division by 2
+;;;    asr16 $1111      ; absolute
+.macro asr16 arg1
+        lda     arg1+1
+        rol
+        ror     arg1+1
+        ror     arg1
+.endmacro
+
 ;;; Increment 16-bit value
 .macro inc16    arg
         .local skip

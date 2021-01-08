@@ -155,3 +155,5 @@
 * Launch DeskTop. Open a volume window. Select volume icons on the desktop. Switch window's view to by Name. Verify that the volume icons are still selected, and that File > Get Info is still enabled (and shows the volume info). Switch window's view back to as Icons. Verify that the desktop volume icons are still selected.
 
 * Launch DeskTop. Open a volume window. Select an icon. Click in the header area (items/use/etc). Verify that selection is not cleared.
+
+* Launch DeskTop. Open a window with only one icon. Drag icon so name is to left of window bounds. Ensure icon name renders.

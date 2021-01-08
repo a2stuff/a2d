@@ -1854,12 +1854,12 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
 
         ;; Center horizontally
         ;;  text_left = icon_left + icon_width/2 - text_width/2
-        ;;            = (icon_left*2 + icon_width - text_width) / 2 - to keep everything positive
-        copy16  icon_paintbits_params::viewloc::xcoord, moveto_params2::xcoord
-        asl16   moveto_params2::xcoord
-        add16   moveto_params2::xcoord, icon_paintbits_params::maprect::x2, moveto_params2::xcoord
-        sub16   moveto_params2::xcoord, textwidth_params::result, moveto_params2::xcoord
-        lsr16   moveto_params2::xcoord
+        ;;            = (icon_left*2 + icon_width - text_width) / 2
+        copy16  icon_paintbits_params::viewloc::xcoord, moveto_params2::xcoord ; = icon_left
+        asl16   moveto_params2::xcoord ; *= 2
+        add16   moveto_params2::xcoord, icon_paintbits_params::maprect::x2, moveto_params2::xcoord ; += icon_width
+        sub16   moveto_params2::xcoord, textwidth_params::result, moveto_params2::xcoord ; -= text_width
+        asr16   moveto_params2::xcoord ; /= 2 - signed!
 
         ;; Align vertically
         add16_8 icon_paintbits_params::viewloc::ycoord, icon_paintbits_params::maprect::y2, moveto_params2::ycoord
@@ -1882,6 +1882,7 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         bne     :-
         MGTK_CALL MGTK::SetPortBits, grafport ; default maprect
         rts
+
 .endproc
 
 .proc do_paint
