@@ -2056,13 +2056,13 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
         ;; Left edge of label (v5, v6)
         ;;  text_left = icon_left + icon_width/2 - text_width/2
-        ;;            = (icon_left*2 + icon_width - text_width) / 2 - to keep everything positive
+        ;;            = (icon_left*2 + icon_width - text_width) / 2
         ;; NOTE: Left is computed before right to match rendering code
         copy16  poly::v0::xcoord, poly::v5::xcoord
         asl16   poly::v5::xcoord
         add16   poly::v5::xcoord, icon_width, poly::v5::xcoord
         sub16   poly::v5::xcoord, textwidth_params::result, poly::v5::xcoord
-        lsr16   poly::v5::xcoord
+        asr16   poly::v5::xcoord ; signed
         copy16  poly::v5::xcoord, poly::v6::xcoord
 
         ;; Right edge of label (v3, v4)
@@ -2829,20 +2829,22 @@ do_pt:  lda     pt_num
         MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
         copy16  window_ptr, ptr
 
-        ;; Left/Top
-        ldx     #.sizeof(MGTK::Point)-1
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
+        ;; Width/Height
+        ldx     #.sizeof(MGTK::Rect)-1
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
 :       lda     (ptr),y
         sta     win_l,x
         dey
         dex
         bpl     :-
+        sub16   win_r, win_l, win_r ; make win_r = width
+        sub16   win_b, win_t, win_b ; make win_b = height
 
-        ;; Width/Height
+        ;; Left/Top
         ldx     #.sizeof(MGTK::Point)-1
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2 + .sizeof(MGTK::Point)-1
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
 :       lda     (ptr),y
-        sta     win_r,x
+        sta     win_l,x
         dey
         dex
         bpl     :-
