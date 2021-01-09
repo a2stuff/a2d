@@ -7695,36 +7695,11 @@ more:   tax
         ;; Compare X coords
 
 compare_x:
-        bit     iconbb_rect::x1+1         ; negative?
-        bmi     minx_neg
-
-        bit     cur_icon_pos::xcoord+1
+        scmp16  cur_icon_pos::xcoord, iconbb_rect::x1
         bmi     adjust_min_x
-
-        ;; X: cur and min are positive
-        cmp16   cur_icon_pos::xcoord, iconbb_rect::x1
-        bmi     adjust_min_x
-        cmp16   cur_icon_pos::xcoord, iconbb_rect::x2
+        scmp16  cur_icon_pos::xcoord, iconbb_rect::x2
         bpl     adjust_max_x
         jmp     compare_y
-
-minx_neg:
-        bit     cur_icon_pos::xcoord+1
-        bmi     bothx_neg
-
-        ;; X: cur positive, min negative
-        bit     iconbb_rect::x2+1
-        bmi     compare_y
-        cmp16   cur_icon_pos::xcoord, iconbb_rect::x2
-        bmi     compare_y
-        jmp     adjust_max_x
-
-        ;; X: cur and min are negative
-bothx_neg:
-        cmp16   cur_icon_pos::xcoord, iconbb_rect::x1
-        bmi     adjust_min_x
-        cmp16   cur_icon_pos::xcoord, iconbb_rect::x2
-        bmi     compare_y
 
 adjust_max_x:
         copy16  cur_icon_pos::xcoord, iconbb_rect::x2
@@ -7737,35 +7712,11 @@ adjust_min_x:
         ;; Compare Y coords
 
 compare_y:
-        bit     iconbb_rect::y1+1
-        bmi     miny_neg
-        bit     cur_icon_pos::ycoord+1
+        scmp16  cur_icon_pos::ycoord, iconbb_rect::y1
         bmi     adjust_min_y
-
-        ;; Y: cur and min are positive
-        cmp16   cur_icon_pos::ycoord, iconbb_rect::y1
-        bmi     adjust_min_y
-        cmp16   cur_icon_pos::ycoord, iconbb_rect::y2
+        scmp16  cur_icon_pos::ycoord, iconbb_rect::y2
         bpl     adjust_max_y
         jmp     next
-
-miny_neg:
-        bit     cur_icon_pos::ycoord+1
-        bmi     bothy_neg
-
-        ;; Y: cur positive, min negative
-        bit     iconbb_rect::y2+1
-        bmi     next
-        cmp16   cur_icon_pos::ycoord, iconbb_rect::y2
-        bmi     next
-        jmp     adjust_max_y
-
-        ;; Y: cur and min are negative
-bothy_neg:
-        cmp16   cur_icon_pos::ycoord, iconbb_rect::y1
-        bmi     adjust_min_y
-        cmp16   cur_icon_pos::ycoord, iconbb_rect::y2
-        bmi     next
 
 adjust_max_y:
         copy16  cur_icon_pos::ycoord, iconbb_rect::y2

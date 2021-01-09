@@ -573,6 +573,40 @@ end:
     .endif
 .endmacro
 
+;;; Signed compare 16-bit values - test N (BPL/BMI) for result
+;;; (http://6502.org/tutorials/compare_beyond.html#6)
+;;;    scmp16 #$1111, #$2222    ; immediate, immediate (silly, but supported)
+;;;    scmp16 #$1111, $2222     ; immediate, absolute
+;;;    scmp16 $1111, #$2222     ; absolute, immediate
+;;;    scmp16 $1111, $2222      ; absolute, absolute
+;;;    scmp16 $1111,x, $2222    ; indirect, absolute
+;;;    scmp16 $1111, $2222,x    ; absolute, indirect
+.macro scmp16 arg1, arg2, arg3
+    .if _is_register {arg2}
+        ;; indexed variant (arg2 is x or y)
+        lda     arg1,arg2
+        cmp     arg3
+        lda     arg1+1,arg2
+        sbc     arg3+1
+    .elseif _is_register {arg3}
+        ;; indexed variant (arg3 is x or y)
+        lda     arg1
+        cmp     arg2,arg3
+        lda     arg1+1
+        sbc     arg2+1,arg3
+    .else
+        _op_lo  lda, {arg1}
+        _op_lo  cmp, {arg2}
+        _op_hi  lda, {arg1}
+        _op_hi  sbc, {arg2}
+    .endif
+
+    .local skip
+        bvc     skip
+        eor     #$80
+skip:
+.endmacro
+
 ;;; Shift 16-bit values
 ;;;    lsr16 $1111      ; absolute
 .macro lsr16 arg1
