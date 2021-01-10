@@ -195,9 +195,18 @@ L415B:  sta     active_window_id
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         sub16in (winfo_ptr),y, window_grafport::viewloc::ycoord, yoff
         cmp16   yoff, #kWindowHeaderHeight+1
-        bpl     L41CB
+        bpl     skip_adjust_port
+
+        ;; Adjust grafport to account for header
         jsr     offset_window_grafport
 
+        ;; MGTK doesn't like offscreen grafports.
+        ;; https://github.com/a2stuff/a2d/issues/369
+        ldx     #MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        cmp16   window_grafport,x, #kScreenHeight
+        bpl     done
+
+        ;; Apply the computed grafport to the Winfo
         ldx     #MGTK::GrafPort::maprect + MGTK::Point::ycoord + 1
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Point::ycoord + 1
         copy    window_grafport,x, (winfo_ptr),y
@@ -212,48 +221,52 @@ L415B:  sta     active_window_id
         dex
         copy    window_grafport,x, (winfo_ptr),y
 
-        ;; MGTK doesn't like offscreen grafports.
-        ;; https://github.com/a2stuff/a2d/issues/369
-        cmp16   window_grafport,x, #kScreenHeight
-        bpl     done
+skip_adjust_port:
 
-L41CB:  ldx     cached_window_id
+        ;; View type?
+        ldx     cached_window_id
         dex
         lda     win_view_by_table,x
         bpl     by_icon
-        jsr     draw_window_entries
-        copy    #0, draw_window_header_flag
-        lda     active_window_id
-        jmp     assign_window_portbits
 
+        ;; --------------------------------------------------
+        ;; List view
+        jsr     draw_window_entries
+        jmp     done
+
+        ;; --------------------------------------------------
+        ;; Icon view
 by_icon:
+        ;; Map icons to window space
         lda     cached_window_id
         jsr     set_port_from_window_id
-
         jsr     cached_icons_screen_to_window
 
+        ;; Set up test rect for quick exclusion
         COPY_BLOCK window_grafport::cliprect, tmp_rect
 
+        ;; Loop over all icons
         copy    #0, index
-L41FE:  lda     index
+loop:   lda     index
         cmp     cached_window_icon_count
-        beq     L4227
+        beq     done_icons
         tax
         copy    cached_window_icon_list,x, icon_param
-        ITK_RELAY_CALL IconTK::IconInRect, icon_param
+        ITK_RELAY_CALL IconTK::IconInRect, icon_param ; visible?
         beq     :+
         ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
 :       inc     index
-        jmp     L41FE
-
-L4227:  copy    #0, draw_window_header_flag
-
+        jmp     loop
+done_icons:
+        ;; Map icons back to screen space
         lda     cached_window_id
         jsr     set_port_from_window_id
-
         jsr     cached_icons_window_to_screen
 
-done:   lda     active_window_id
+        ;; --------------------------------------------------
+        ;; Finish up
+done:   copy    #0, draw_window_header_flag
+        lda     active_window_id
         jsr     assign_window_portbits
         jmp     reset_main_grafport
 
