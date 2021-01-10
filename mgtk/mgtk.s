@@ -371,6 +371,7 @@ jump_table:
         .addr   GetDeskPatImpl      ; $4F GetDeskPat
         .addr   SetDeskPatImpl      ; $50 SetDeskPat
         .addr   DrawMenuImpl        ; $51 DrawMenu
+        .addr   GetWinFrameRectImpl ; $52 GetWinFrameRect
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -491,6 +492,7 @@ param_lengths:
         PARAM_DEFN  0, $00, 0                ; $4F GetDeskPat
         PARAM_DEFN  0, $00, 0                ; $50 SetDeskPat
         PARAM_DEFN  0, $00, 0                ; $51 DrawMenu
+        PARAM_DEFN  5, $82, 0                ; $52 GetWinFrameRect
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -3913,10 +3915,10 @@ loop:   lda     version,y
         rts
 
 .params version
-major:  .byte   1               ; 1.0.0
-minor:  .byte   0
+major:  .byte   1               ; 1.1.0
+minor:  .byte   1
 patch:  .byte   0
-status: .byte   'F'             ; Final???
+status: .byte   'A'             ; A = Alpha, B = Beta, F = Final
 release:.byte   1               ; ???
         .byte   0               ; ???
 .endparams
@@ -10357,6 +10359,30 @@ mouse_operand:               ; e.g. if mouse is in slot 4, this is $40
         ldy     #.sizeof(MGTK::Pattern)-1
 :       lda     (params_addr),y
         sta     desktop_pattern,y
+        dey
+        bpl     :-
+        rts
+.endproc
+
+;;; ============================================================
+;;; GetWinFrameRect
+
+;;; 5 bytes of params, copied to $82
+
+.proc GetWinFrameRectImpl
+        PARAM_BLOCK params, $82
+window_id: .byte   0
+rect:      .res    .sizeof(MGTK::Rect)
+        END_PARAM_BLOCK
+
+        jsr     window_by_id_or_exit
+        jsr     get_winframerect
+
+        ;; Copy Rect from winrect to params_addr + 1
+        kOffset = params::rect - params
+        ldy     #kOffset + .sizeof(MGTK::Rect)
+:       lda     winrect - kOffset,y
+        sta     (params_addr),y
         dey
         bpl     :-
         rts

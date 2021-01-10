@@ -941,6 +941,16 @@ be done by manual calls to `HiliteMenu`
 
 No parameters.
 
+#### GetWinFrameRect ($52)
+Get the rectangle framing a window. This is in screen coordinates,
+and is the same rectangle that would be drawn for grow or move
+operations.
+
+Parameters:
+```
+.byte       window_id
+Rect        rect            (out)
+```
 
 # Creating Applications and DeskTop Desk Accessories
 

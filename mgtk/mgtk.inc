@@ -508,6 +508,9 @@ SetDeskPat      = $50
 DrawMenu        = $51           ; Redraw menu bar
 ;;; (no parameters)
 
+GetWinFrameRect = $52           ; Get outer frame rect of window
+;;; .byte window_id
+;;; Rect        rect            (out)
 
 ;;; ============================================================
 ;;; Graphics Primitives Constants

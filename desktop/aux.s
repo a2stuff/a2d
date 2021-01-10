@@ -2689,7 +2689,10 @@ dialogbox_flag:
         DEFINE_POINT pt3, 0, 0
         DEFINE_POINT pt4, 0, 0
 
-        DEFINE_RECT bounds, 0, 0, 0, 0
+.params getwinframerect_params
+window_id:      .byte   0
+        DEFINE_RECT rect, 0, 0, 0, 0
+.endparams
 
 stash_r: .word   0
 
@@ -2809,115 +2812,24 @@ do_pt:  lda     pt_num
 
         inc     pt_num
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
+        lda     findwindow_params::window_id
         beq     next_pt
 
         ;; --------------------------------------------------
         ;; Compute window edges (including non-content area)
 
-        ;; Uses Winfo's port's viewloc as window location, Winfo's port's
-        ;; cliprect as size. GetWinPort result is invalid if obscured.
+        win_l := getwinframerect_params::rect::x1
+        win_t := getwinframerect_params::rect::y1
+        win_r := getwinframerect_params::rect::x2
+        win_b := getwinframerect_params::rect::y2
 
-        ;; Window edges
-        win_l := bounds::x1
-        win_t := bounds::y1
-        win_r := bounds::x2
-        win_b := bounds::y2
+        copy    findwindow_params::window_id, getwinframerect_params::window_id
+        MGTK_CALL MGTK::GetWinFrameRect, getwinframerect_params
 
-        jsr     push_pointers
-
-        MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
-        copy16  window_ptr, ptr
-
-        ;; Width/Height
-        ldx     #.sizeof(MGTK::Rect)-1
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
-:       lda     (ptr),y
-        sta     win_l,x
-        dey
-        dex
-        bpl     :-
-        sub16   win_r, win_l, win_r ; make win_r = width
-        sub16   win_b, win_t, win_b ; make win_b = height
-
-        ;; Left/Top
-        ldx     #.sizeof(MGTK::Point)-1
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
-:       lda     (ptr),y
-        sta     win_l,x
-        dey
-        dex
-        bpl     :-
-
-        ;; Make absolute
-        add16   win_r, win_l, win_r
-        add16   win_b, win_t, win_b
-
-        ;; Check window properties
-        ldy     #MGTK::Winfo::options
-        lda     (ptr),y         ; options
-        and     #MGTK::Option::dialog_box
-        bne     :+              ; yes
-        sta     dialogbox_flag
-        beq     @continue
-:       copy    #$80, dialogbox_flag
-@continue:
-
-        ldy     #MGTK::Winfo::hscroll
-        lda     (ptr),y         ; hscroll
-        and     #MGTK::Scroll::option_present
-        sta     scrollbar_flags
-        iny
-        lda     (ptr),y         ; vscroll
-        and     #MGTK::Scroll::option_present
-        lsr     a
-        ora     scrollbar_flags
-        sta     scrollbar_flags
-
-        ;; TODO: I *think* win_l/t/r/b are supposed to be 1px beyond
-        ;; window's bounds, but aren't consistently so. ???
-
-        ;; 1px implicit left borders, and move 1px beyond bounds ???
-        sub16   win_l, #2, win_l
-
-        ;; 1px implicit bottom border
-        add16   win_b, #1, win_b
-        ;; TODO: 1px implicit right border?
-
-        kTitleBarHeight = 14    ; Should be 12? (But no visual bugs)
-        kScrollBarWidth = 20
-        kScrollBarHeight = 10
-
-        ;; NOTE: algorithm does not account for 1px implicit border applied to dialogs and windows
-
-        ;; --------------------------------------------------
-        ;; Adjust window rect to account for title bar
-
-        ;; Is dialog? (i.e. no title bar)
-        bit     dialogbox_flag
-        bmi     :+
-        sub16   win_t, #kTitleBarHeight, win_t
-:
-
-        ;; --------------------------------------------------
-        ;; Adjust window rect to account for scroll bars
-
-        ;; Horizontal scrollbar?
-        bit     scrollbar_flags
-        bpl     :+
-        add16   win_r, #kScrollBarWidth, win_r
-:
-
-        ;; Vertical scrollbar?
-        bit     scrollbar_flags
-        bvc     :+
-        add16   win_b, #kScrollBarHeight, win_b
-:
-
-        ;; --------------------------------------------------
-
-        jsr     pop_pointers
-
+        ;; TODO: Determine why these are necessary:
+        dec16   win_l
+        dec16   win_t
+        dec16   win_r
 
         ;; ==================================================
         ;; At this point, win_r/t/l/b are the window edges,
