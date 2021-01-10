@@ -552,18 +552,20 @@ end:
 ;;;    cmp16 $1111, $2222      ; absolute, absolute
 ;;;    cmp16 $1111,x, $2222    ; indirect, absolute
 ;;;    cmp16 $1111, $2222,x    ; absolute, indirect
+;;;    cmp16 $1111,x, #$2222   ; indirect, immediate
+;;;    cmp16 #$1111, $2222,x   ; immediate, indirect
 .macro cmp16 arg1, arg2, arg3
     .if _is_register {arg2}
         ;; indexed variant (arg2 is x or y)
         lda     arg1,arg2
-        cmp     arg3
+        _op_lo  cmp, {arg3}
         lda     arg1+1,arg2
-        sbc     arg3+1
+        _op_hi  sbc, {arg3}
     .elseif _is_register {arg3}
         ;; indexed variant (arg3 is x or y)
-        lda     arg1
+        _op_lo  lda, {arg1}
         cmp     arg2,arg3
-        lda     arg1+1
+        _op_hi  lda, {arg1}
         sbc     arg2+1,arg3
     .else
         _op_lo  lda, {arg1}
@@ -585,14 +587,14 @@ end:
     .if _is_register {arg2}
         ;; indexed variant (arg2 is x or y)
         lda     arg1,arg2
-        cmp     arg3
+        _op_lo  cmp, {arg3}
         lda     arg1+1,arg2
-        sbc     arg3+1
+        _op_hi  sbc, {arg3}
     .elseif _is_register {arg3}
         ;; indexed variant (arg3 is x or y)
-        lda     arg1
+        _op_lo  lda, {arg1}
         cmp     arg2,arg3
-        lda     arg1+1
+        _op_hi  lda, {arg1}
         sbc     arg2+1,arg3
     .else
         _op_lo  lda, {arg1}

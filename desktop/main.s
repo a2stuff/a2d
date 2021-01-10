@@ -212,6 +212,11 @@ L415B:  sta     active_window_id
         dex
         copy    window_grafport,x, (winfo_ptr),y
 
+        ;; MGTK doesn't like offscreen grafports.
+        ;; https://github.com/a2stuff/a2d/issues/369
+        cmp16   window_grafport,x, #kScreenHeight
+        bpl     done
+
 L41CB:  ldx     cached_window_id
         dex
         lda     win_view_by_table,x
@@ -247,7 +252,8 @@ L4227:  copy    #0, draw_window_header_flag
         jsr     set_port_from_window_id
 
         jsr     cached_icons_window_to_screen
-        lda     active_window_id
+
+done:   lda     active_window_id
         jsr     assign_window_portbits
         jmp     reset_main_grafport
 
