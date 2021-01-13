@@ -4673,14 +4673,21 @@ no_icon:
 .endproc
 
 ;;; ============================================================
-;;; Input:
-;;;   Y = thumbmax
-;;;   X = iconbb size - window size (scaled to fit in one byte)
-;;;   A = cliprect edge - iconbb edge (i.e. old pos???)
-;;; Output:
-;;;   A = new thumbpos
-
-;;; Seems to be a generic scaling function ???
+;;; Scaling function for scroll calculations
+;;;
+;;; Used for both computing new thumb position given range/offset/max,
+;;; and new offset given range/position/max.
+;;;
+;;; Inputs:
+;;;   A = numerator 1 ---- e.g. scroll position (window edge - content edge)
+;;;   X = denominator 1 -- e.g. scroll range (content size - window size)
+;;;   Y = denominator 2 -- e.g. thumbmax
+;;; Outputs:
+;;;   A = numerator 2 ---- e.g. new thumbpos
+;;;    where:
+;;;      A(in):X = A(out):Y
+;;;    or:
+;;;      R = A * Y / X
 
 .proc calculate_thumb_pos
         cmp     #1
@@ -4691,58 +4698,69 @@ no_icon:
         ;; TODO: This looks like a division routine ???
         ;; n / d => A / 256 ???
 
-start:  sta     L638B
-        stx     L6385+1
-        sty     L6389+1
-        cmp     L6385+1
+start:  sta     aa
+        stx     xx+1
+        sty     yy+1
+        cmp     xx+1            ; A >= X ?
         bcc     :+
-        tya
+        tya                     ; return Y
         rts
 
 :       lda     #0
-        sta     L6385
-        sta     L6389
-        lsr16   L6385
-        lsr16   L6389
+        sta     xx
+        sta     yy
+        lsr16   xx              ; xx /= 2
+        lsr16   yy              ; yy /= 2
 
         lda     #0
-        sta     L6383
-        sta     L6387
-        sta     L6383+1
-        sta     L6387+1
+        sta     mm
+        sta     nn
+        sta     mm+1
+        sta     nn+1
 
-loop:   lda     L6383+1
-        cmp     L638B
-        beq     finish
+        ;; while mm != aa
+        ;;   if (mm > aa)
+        ;;     sub
+        ;;   else
+        ;;     add
+loop:   lda     mm+1
+        cmp     aa
+        beq     finish          ; if mm == aa, done
         bcc     :+              ; less?
         jsr     do_sub
         jmp     loop
 :       jsr     do_add
         jmp     loop
 
-finish: lda     L6387+1
+        ;; return nn (minimum 1)
+finish: lda     nn+1
         cmp     #1              ; why not bne ???
         bcs     :+
         lda     #1
 :       rts
 
-do_sub: sub16   L6383, L6385, L6383
-        sub16   L6387, L6389, L6387
-        lsr16   L6385
-        lsr16   L6389
+        ;; mm -= xx; nn -= yy; xx /= 2; yy /= 2
+do_sub: sub16   mm, xx, mm
+        sub16   nn, yy, nn
+        lsr16   xx
+        lsr16   yy
         rts
 
-do_add: add16   L6383, L6385, L6383
-        add16   L6387, L6389, L6387
-        lsr16   L6385
-        lsr16   L6389
+        ;; mm += xx; nn += yy; xx /= 2; yy /= 2
+do_add: add16   mm, xx, mm
+        add16   nn, yy, nn
+        lsr16   xx
+        lsr16   yy
         rts
 
-L6383:  .word   0
-L6385:  .word   0
-L6387:  .word   0
-L6389:  .word   0
-L638B:  .byte   0
+        ;; 8.8 fixed point numbers
+mm:     .word   0
+xx:     .word   0               ; X.0
+nn:     .word   0
+yy:     .word   0               ; Y.0
+
+        ;; except aa, which is just positive
+aa:     .byte   0               ; A
 
 .endproc
 
@@ -4926,35 +4944,47 @@ delta:  .word   0
 .proc update_hthumb
         winfo_ptr := $06
 
+        ;; Compute window size
         lda     active_window_id
         jsr     compute_window_dimensions
         stax    win_width
+
+        ;; Look up thumbmax
         lda     active_window_id
         jsr     window_lookup
         stax    winfo_ptr
         ldy     #MGTK::Winfo::hthumbmax
         lda     (winfo_ptr),y
-        tay
+        tay                     ; Y = thumbmax
 
+        ;; Compute size delta (content vs. window)
         sub16   iconbb_rect+MGTK::Rect::x2, iconbb_rect+MGTK::Rect::x1, size
         sub16   size, win_width, size
         lsr16   size            ; / 2
-        ldx     size
+        ldx     size            ; X = (content size - window size)/2
+
+        ;; Compute offset
         sub16   window_grafport::cliprect::x1, iconbb_rect+MGTK::Rect::x1, size
-        bpl     pos
-        lda     #0
+        bpl     :+
+        lda     #0              ; content near edge within window; clamp
         beq     calc            ; always
 
-pos:    cmp16   window_grafport::cliprect::x2, iconbb_rect+MGTK::Rect::x2
-        bmi     neg
-        tya
-        jmp     L65EE
+:       cmp16   window_grafport::cliprect::x2, iconbb_rect+MGTK::Rect::x2
+        bmi     :+              ; content far edge within window? no
+        tya                     ; yes; skip calculation
+        jmp     skip
 
-neg:    lsr16   size            ; / 2
-        lda     size
+:       lsr16   size            ; / 2
+        lda     size            ; A = (window left - content left) / 2
+
+        ;; A:X = R:Y
+        ;; A = scroll position / 2
+        ;; X = scroll range / 2
+        ;; Y = thumbmax
+        ;; R = thumbpos
 calc:   jsr     calculate_thumb_pos
 
-L65EE:  sta     updatethumb_thumbpos
+skip:   sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::horizontal_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
@@ -4970,37 +5000,49 @@ size:   .word   0
 .proc update_vthumb
         winfo_ptr := $06
 
+        ;; Compute window size
         lda     active_window_id
         jsr     compute_window_dimensions
         sty     win_height
+
+        ;; Look up thumbmax
         lda     active_window_id
         jsr     window_lookup
         stax    winfo_ptr
         ldy     #MGTK::Winfo::vthumbmax
         lda     (winfo_ptr),y
-        tay
+        tay                     ; Y = thumbmax
 
+        ;; Compute size delta (content vs. window)
         sub16   iconbb_rect+MGTK::Rect::y2, iconbb_rect+MGTK::Rect::y1, size
         sub16_8 size, win_height, size
         lsr16   size            ; / 4
         lsr16   size
-        ldx     size
+        ldx     size            ; X = (content size - window size)/4
+
+        ;; Compute offset
         sub16   window_grafport::cliprect::y1, iconbb_rect+MGTK::Rect::y1, size
-        bpl     pos
-        lda     #0
+        bpl     :+
+        lda     #0              ; content near edge within window; clamp
         beq     calc            ; always
 
-pos:    cmp16   window_grafport::cliprect::y2, iconbb_rect+MGTK::Rect::y2
-        bmi     neg
-        tya
-        jmp     L668D
+:       cmp16   window_grafport::cliprect::y2, iconbb_rect+MGTK::Rect::y2
+        bmi     neg             ; content far edge within window? no
+        tya                     ; yes; skip calculation
+        jmp     skip
 
 neg:    lsr16   size            ; / 4
         lsr16   size
-        lda     size
+        lda     size            ; A = (window top - content top) / 4
+
+        ;; A:X = R:Y
+        ;; A = scroll position / 4
+        ;; X = scroll range / 4
+        ;; Y = thumbmax
+        ;; R = thumbpos
 calc:   jsr     calculate_thumb_pos
 
-L668D:  sta     updatethumb_thumbpos
+skip:   sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
@@ -8707,67 +8749,87 @@ concat_len:
         bmi     :+
         jsr     cached_icons_screen_to_window
 :
-        ;; View bounds
-        sub16   window_grafport::cliprect::x2, window_grafport::cliprect::x1, clip_w
-        sub16   window_grafport::cliprect::y2, window_grafport::cliprect::y1, clip_h
+        ;; Compute window size
+        sub16   window_grafport::cliprect::x2, window_grafport::cliprect::x1, win_width
+        sub16   window_grafport::cliprect::y2, window_grafport::cliprect::y1, win_height
+
+        ;; Set `dir` to be an offset to either 0 (if horiz) or 2 (if vert)
+        ;; Used for both an offset to Point::xcoord or Point::ycoord
+        ;; and an offset to Winfo::hthumbmax or Winfo::vthumbmax
+        .assert MGTK::Point::xcoord - MGTK::Point::ycoord = MGTK::Winfo::hthumbmax - MGTK::Winfo::vthumbmax, error, "Offsets should match"
 
         lda     updatethumb_which_ctl
-        cmp     #MGTK::Ctl::vertical_scroll_bar
-        bne     L850C
-        asl     a
-        bne     L850E           ; always
-L850C:  lda     #$00
-L850E:  sta     dir
+        cmp     #MGTK::Ctl::vertical_scroll_bar ; vertical?
+        bne     horiz
+        asl     a               ; == Point::ycoord
+        bne     :+              ; always
+horiz:  lda     #0              ; == Point::xcoord
+:       sta     dir
 
         ptr := $06
 
+        ;; Look up thumbmax
         lda     active_window_id
         jsr     window_lookup
         stax    ptr
         lda     #MGTK::Winfo::hthumbmax
         clc
-        adc     dir             ; MGTK::Winfo::vthumbmax if dir is set
+        adc     dir
         tay
         lda     (ptr),y
-        pha
+        pha                     ; thumbmax
+
+        ;; Compute size delta (content vs. window)
         jsr     compute_icons_bbox
 
         ldx     dir
-        sub16   iconbb_rect::x2,x, iconbb_rect::x1,x, L85F2
-
-        ldx     dir
-        sub16   L85F2, clip,x, L85F2
+        sub16   iconbb_rect::x2,x, iconbb_rect::x1,x, tmp ; tmp = bb size
+        ldx     dir             ; TODO: redundant, remove???
+        sub16   tmp, win,x, tmp ; tmp -= window size
 
         bpl     :+
-        lda     clip,x          ; if negative, use original bounds
-        sta     L85F2
-        lda     clip+1,x
-        sta     L85F2+1
+        lda     win,x          ; if content < window, use window
+        sta     tmp
+        lda     win+1,x
+        sta     tmp+1
 :
 
-        lsr16   L85F2           ; / 4
-        lsr16   L85F2
-        lda     L85F2           ; which should bring it into single byte range
-        tay
-        pla
-        tax
-        lda     updatethumb_thumbpos
-        jsr     calculate_thumb_pos
-        ldx     #$00
-        stx     L85F2
-        asl     a
-        rol     L85F2
-        asl     a
-        rol     L85F2
+        ;; Scale delta down to fit in single byte
+        lsr16   tmp     ; / 4
+        lsr16   tmp     ; which should bring it into single byte range
 
+        lda     tmp             ; scroll range / 4
+        tay                     ; TODO: Just LDY ???
+        pla                     ; thumbmax
+        tax
+        lda     updatethumb_thumbpos ; thumbpos
+
+        ;; A:X = R:Y
+        ;; A = thumbpos
+        ;; X = thumbmax
+        ;; Y = scroll range / 4
+        ;; R = scroll position / 4
+        jsr     calculate_thumb_pos
+
+        ;; Scale offset up again
+        ldx     #$00
+        stx     tmp
+        asl     a               ; * 4
+        rol     tmp
+        asl     a
+        rol     tmp
+
+        ;; win near = bbox near + offset
         ldx     dir
         clc
         adc     iconbb_rect::x1,x
         sta     window_grafport::cliprect::x1,x
-        lda     L85F2
+        lda     tmp
         adc     iconbb_rect::x1+1,x
         sta     window_grafport::cliprect::x1+1,x
 
+        ;; and update win far
+        ;; TODO: Can't we just use win_width/height for this???
         lda     active_window_id
         jsr     compute_window_dimensions
         stax    new_w
@@ -8796,13 +8858,13 @@ update_port:
         rts
 
 dir:    .byte   0               ; 0 if horizontal, 2 if vertical (word offset)
-L85F2:  .word   0
+tmp:    .word   0
 new_w:  .word   0
 new_h:  .word   0
 
-clip:
-clip_w: .word   0
-clip_h: .word   0
+win:
+win_width:      .word   0
+win_height:     .word   0
 .endproc
 
 
