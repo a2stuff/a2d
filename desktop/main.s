@@ -3982,12 +3982,21 @@ done_client_click:
         copy    updatethumb_stash, updatethumb_thumbpos
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     apply_active_winfo_to_window_grafport
-        jsr     compute_new_scroll_max
+
+        bit     active_window_view_by
+        bmi     :+              ; list view, no icons
+        jsr     cached_icons_screen_to_window
+:
+
+        jsr     update_cliprect_after_scroll
+        jsr     update_scrollbars_leave_thumbs
+
         bit     active_window_view_by
         bmi     :+              ; list view, no icons
         jsr     cached_icons_window_to_screen
+:
 
-:       lda     active_window_id
+        lda     active_window_id
         jsr     set_port_from_window_id
 
         MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
@@ -4960,6 +4969,7 @@ delta:  .word   0
         ;; Compute size delta (content vs. window)
         sub16   iconbb_rect+MGTK::Rect::x2, iconbb_rect+MGTK::Rect::x1, size
         sub16   size, win_width, size
+        ;; BUG: Bogus if negative.
         lsr16   size            ; / 2
         ldx     size            ; X = (content size - window size)/2
 
@@ -5016,6 +5026,7 @@ size:   .word   0
         ;; Compute size delta (content vs. window)
         sub16   iconbb_rect+MGTK::Rect::y2, iconbb_rect+MGTK::Rect::y1, size
         sub16_8 size, win_height, size
+        ;; BUG: Bogus if negative.
         lsr16   size            ; / 4
         lsr16   size
         ldx     size            ; X = (content size - window size)/4
@@ -5886,8 +5897,20 @@ index:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Check contents against window size, and activate/deactivate
+;;; horizontal and vertical scrollbars as needed. The
+;;; update_scrollbars entry point will update the thumbs; the
+;;; update_scrollbars_leave_thumbs entry point will not.
 
-.proc update_scrollbars
+.proc update_scrollbars_impl
+update_thumbs:
+        lda     #$80
+        bne     impl            ; always
+leave_thumbs:
+        lda     #$00
+
+impl:   sta     update_thumbs_flag
+
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
@@ -5922,7 +5945,11 @@ activate_hscroll:
         copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_which_ctl
         copy    #MGTK::activatectl_activate, activatectl_activate
         jsr     activate_ctl
+
+        bit     update_thumbs_flag
+        bpl     :+
         jsr     update_hthumb
+:
 
 check_vscroll:
         ;; check vertical bounds
@@ -5943,12 +5970,21 @@ activate_vscroll:
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
         copy    #MGTK::activatectl_activate, activatectl_activate
         jsr     activate_ctl
+
+        bit     update_thumbs_flag
+        bpl     :+
         jmp     update_vthumb
+:
 
 activate_ctl:
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         rts
+
+update_thumbs_flag:
+        .byte   0
 .endproc
+        update_scrollbars := update_scrollbars_impl::update_thumbs
+        update_scrollbars_leave_thumbs := update_scrollbars_impl::leave_thumbs
 
 ;;; ============================================================
 
@@ -8739,16 +8775,17 @@ concat_len:
 .endproc
 
 ;;; ============================================================
-;;; After a scroll, compute the new scroll maximum and update
-;;; window clipping region
+;;; After a scroll, update window clipping region
+;;;
+;;; Inputs are thumbpos, thumbmax, icon bbox, window cliprect.
+;;; Output is an updated cliprect.
+;;;
+;;; Must be called with icons mapped to window space.
+;;; Must be called with window_grafport reflecting active window.
 
-.proc compute_new_scroll_max
-        jsr     push_pointers
+.proc update_cliprect_after_scroll
+        copy    #0, sense_flag
 
-        bit     active_window_view_by
-        bmi     :+
-        jsr     cached_icons_screen_to_window
-:
         ;; Compute window size
         sub16   window_grafport::cliprect::x2, window_grafport::cliprect::x1, win_width
         sub16   window_grafport::cliprect::y2, window_grafport::cliprect::y1, win_height
@@ -8783,22 +8820,26 @@ horiz:  lda     #0              ; == Point::xcoord
         jsr     compute_icons_bbox
 
         ldx     dir
-        sub16   iconbb_rect::x2,x, iconbb_rect::x1,x, tmp ; tmp = bb size
-        ldx     dir             ; TODO: redundant, remove???
-        sub16   tmp, win,x, tmp ; tmp -= window size
+        sub16   iconbb_rect::x2,x, iconbb_rect::x1,x, delta ; delta = bb size
+        sub16   delta, win_size,x, delta ; delta -= window size
 
-        bpl     :+
-        lda     win,x          ; if content < window, use window
-        sta     tmp
-        lda     win+1,x
-        sta     tmp+1
-:
+        ;; If content is smaller than window, edge cases.
+        ;; NOTE: Icons are in window space!
+    IF_NEG
+        ;; If content to left of window, delta is distance to left edge
+        sub16   window_grafport::cliprect::x1,x, iconbb_rect::x1,x, delta
+      IF_NEG
+        ;; Else, to the right, delta is distance to right edge
+        copy    #$80, sense_flag
+        sub16   iconbb_rect::x2,x, window_grafport::cliprect::x2,x, delta
+      END_IF
+    END_IF
 
         ;; Scale delta down to fit in single byte
-        lsr16   tmp     ; / 4
-        lsr16   tmp     ; which should bring it into single byte range
+        lsr16   delta     ; / 4
+        lsr16   delta     ; which should bring it into single byte range
 
-        lda     tmp             ; scroll range / 4
+        lda     delta           ; scroll range / 4
         tay                     ; TODO: Just LDY ???
         pla                     ; thumbmax
         tax
@@ -8811,34 +8852,24 @@ horiz:  lda     #0              ; == Point::xcoord
         ;; R = scroll position / 4
         jsr     calculate_thumb_pos
 
-        ;; Scale offset up again
-        ldx     #$00
-        stx     tmp
-        asl     a               ; * 4
-        rol     tmp
-        asl     a
-        rol     tmp
+        ;; Scale new delta up again
+        sta     delta
+        copy    #0, delta+1
+        asl16   delta           ; * 4
+        asl16   delta
 
-        ;; win near = bbox near + offset
+        ;; Apply to the window port
         ldx     dir
-        clc
-        adc     iconbb_rect::x1,x
-        sta     window_grafport::cliprect::x1,x
-        lda     tmp
-        adc     iconbb_rect::x1+1,x
-        sta     window_grafport::cliprect::x1+1,x
-
-        ;; and update win far
-        ;; TODO: Can't we just use win_width/height for this???
-        lda     active_window_id
-        jsr     compute_window_dimensions
-        stax    new_w
-        sty     new_h
-        lda     dir
-        beq     :+
-        add16_8 window_grafport::cliprect::y1, new_h, window_grafport::cliprect::y2
-        jmp     update_port
-:       add16 window_grafport::cliprect::x1, new_w, window_grafport::cliprect::x2
+        bit     sense_flag
+    IF_POS
+        ;; win min = content min + delta
+        add16   delta, iconbb_rect::x1,x, window_grafport::cliprect::x1,x
+    ELSE
+        ;; win near += delta, which derives from:
+        ;; new win min = content min + content size - orig delta + new delta - window size
+        add16   window_grafport::cliprect::x1,x, delta, window_grafport::cliprect::x1,x
+    END_IF
+        add16   window_grafport::cliprect::x1,x, win_size,x, window_grafport::cliprect::x2,x
 
         ;; Update window's port
 update_port:
@@ -8854,17 +8885,16 @@ update_port:
         dex
         bpl     :-
 
-        jsr     pop_pointers
         rts
 
 dir:    .byte   0               ; 0 if horizontal, 2 if vertical (word offset)
-tmp:    .word   0
-new_w:  .word   0
-new_h:  .word   0
+delta:  .word   0               ; offset between content and cliprect
 
-win:
+win_size:
 win_width:      .word   0
 win_height:     .word   0
+
+sense_flag:     .byte   0
 .endproc
 
 

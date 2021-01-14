@@ -281,6 +281,16 @@ end:
         lda     arg1+1,arg2
         _op_hi  op, {arg3}
         sta     arg4+1,arg5
+    .elseif _is_register {arg3} && _is_register {arg5}
+        ;; xxx16 $1111, $2222,x, $3333,x
+        ;; xxx16 #$1111, $2222,x, $3333,x
+        _op_lo  lda, {arg1}
+        opc
+        op      arg2,arg3
+        sta     arg4,arg5
+        _op_hi  lda, {arg1}
+        op      arg2+1,arg3
+        sta     arg4+1,arg5
     .elseif _is_register {arg2}
         ;; xxx16 $1111,x, $2222, $3333
         ;; xxx16 $1111,x, #$2222, $3333
@@ -409,6 +419,7 @@ end:
 ;;;    add16 $1111, $2222,x, $3333      ; absolute, indexed, absolute
 ;;;    add16 $1111, $2222, $3333,x      ; absolute, absolute, indexed
 ;;;    add16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
+;;;    add16 $1111, $2222,x, $3333,x    ; absolute, indexed, indexed
 ;;;    add16 $1111,x, $2222,x, $3333,x  ; indexed, indexed, indexed
 .macro add16 arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16 adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
@@ -453,6 +464,7 @@ end:
 ;;;    sub16 $1111, $2222, $3333,x      ; absolute, absolute, indexed
 ;;;    sub16 $1111,x, $2222,x, $3333    ; indexed, indexed, absolute
 ;;;    sub16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
+;;;    sub16 $1111, $2222,x, $3333,x    ; absolute, indexed, indexed
 ;;;    sub16 $1111,x, $2222,x $3333,x   ; indexed, indexed, indexed
 .macro sub16 arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16 sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
@@ -550,12 +562,19 @@ end:
 ;;;    cmp16 #$1111, $2222     ; immediate, absolute
 ;;;    cmp16 $1111, #$2222     ; absolute, immediate
 ;;;    cmp16 $1111, $2222      ; absolute, absolute
-;;;    cmp16 $1111,x, $2222    ; indirect, absolute
-;;;    cmp16 $1111, $2222,x    ; absolute, indirect
-;;;    cmp16 $1111,x, #$2222   ; indirect, immediate
-;;;    cmp16 #$1111, $2222,x   ; immediate, indirect
-.macro cmp16 arg1, arg2, arg3
-    .if _is_register {arg2}
+;;;    cmp16 $1111,x, $2222    ; indexed, absolute
+;;;    cmp16 $1111, $2222,x    ; absolute, indexed
+;;;    cmp16 $1111,x, #$2222   ; indexed, immediate
+;;;    cmp16 #$1111, $2222,x   ; immediate, indexed
+;;;    cmp16 $1111,x, $2222,x  ; indexed, indexed
+.macro cmp16 arg1, arg2, arg3, arg4
+    .if _is_register {arg2} && _is_register {arg4}
+        ;; indexed variant (arg2+arg4 is x or y)
+        lda     arg1,arg2
+        cmp     arg3,arg4
+        lda     arg1+1,arg2
+        sbc     arg3+1,arg4
+    .elseif _is_register {arg2}
         ;; indexed variant (arg2 is x or y)
         lda     arg1,arg2
         _op_lo  cmp, {arg3}
@@ -581,28 +600,11 @@ end:
 ;;;    scmp16 #$1111, $2222     ; immediate, absolute
 ;;;    scmp16 $1111, #$2222     ; absolute, immediate
 ;;;    scmp16 $1111, $2222      ; absolute, absolute
-;;;    scmp16 $1111,x, $2222    ; indirect, absolute
-;;;    scmp16 $1111, $2222,x    ; absolute, indirect
-.macro scmp16 arg1, arg2, arg3
-    .if _is_register {arg2}
-        ;; indexed variant (arg2 is x or y)
-        lda     arg1,arg2
-        _op_lo  cmp, {arg3}
-        lda     arg1+1,arg2
-        _op_hi  sbc, {arg3}
-    .elseif _is_register {arg3}
-        ;; indexed variant (arg3 is x or y)
-        _op_lo  lda, {arg1}
-        cmp     arg2,arg3
-        _op_hi  lda, {arg1}
-        sbc     arg2+1,arg3
-    .else
-        _op_lo  lda, {arg1}
-        _op_lo  cmp, {arg2}
-        _op_hi  lda, {arg1}
-        _op_hi  sbc, {arg2}
-    .endif
-
+;;;    scmp16 $1111,x, $2222    ; indexed, absolute
+;;;    scmp16 $1111, $2222,x    ; absolute, indexed
+;;;    scmp16 $1111,x, $2222,x  ; indexed, indexed
+.macro scmp16 arg1, arg2, arg3, arg4
+        cmp16 arg1,arg2,arg3,arg4
     .local skip
         bvc     skip
         eor     #$80
@@ -833,7 +835,7 @@ __pushorg_depth__ .set 0
 ;;;     IF_NE           aliases: IF_NOT_ZERO
 ;;;     IF_CC           aliases: IF_LT
 ;;;     IF_CS           aliases: IF_GE
-;;;     IF_PLUS
+;;;     IF_PLUS         aliases: IF_POS
 ;;;     IF_MINUS        aliases: IF_NEG
 
 __depth__ .set 0
@@ -878,6 +880,7 @@ __depth__ .set 0
         .define IF_NOT_ZERO IF_NE
         .define IF_GE IF_CS
         .define IF_LT IF_CC
+        .define IF_POS IF_PLUS
         .define IF_NEG IF_MINUS
 
 ;;; --------------------------------------------------

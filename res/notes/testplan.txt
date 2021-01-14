@@ -164,3 +164,5 @@
 * Launch DeskTop. Open a volume window with icons. Drag window so only header is visible. Verify that DeskTop doesn't render garbage or lock up.
 
 * Launch DeskTop. Open two volume windows with icons. Drag top window down so only header is visible. Click on other window to activate it. Verify that the window header does not disappear.
+
+* Launch DeskTop. Open a window with a single icon. Move the icon so it overlaps the left edge of the window. Verify scrollbar appears. Hold scroll arrow. Verify icon scrolls into view, and eventually the scrollbar deactivates. Repeat with right edge.
