@@ -2324,11 +2324,6 @@ name_ptr:
 ;;; ============================================================
 ;;; Input: Icon number in A. Must be in active window.
 
-kIconBBoxOffsetTop     = kWindowHeaderHeight + 4
-kIconBBoxOffsetLeft    = 45
-kIconBBoxOffsetBottom  = 32          ; includes height of icon + label
-kIconBBoxOffsetRight   = 65          ; includes width of icon + label
-
 .proc scroll_icon_into_view
         icon_ptr := $06
 
@@ -2376,9 +2371,6 @@ donex:
 
         ;; --------------------------------------------------
         ;; Y adjustment
-
-        kMaxIconHeight = 17
-        kIconLabelHeight = 8
 
         ;; TODO: Accomodate kWindowHeaderHeight?
 
@@ -5762,8 +5754,6 @@ list_view:
 
         ;; First row
 
-        kFirstRowBaseline = 16
-
         lda     #kFirstRowBaseline
         sta     pos_col_name::ycoord
         sta     pos_col_type::ycoord
@@ -6876,11 +6866,8 @@ has_parent:
         stax    winfo_ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc
 
-        ;; xcoord = (window_id-1) * 16 + 5
-        ;; ycoord = (window_id-1) * 8 + 27
-
-        kWindowXOffset = 5
-        kWindowYOffset = 27
+        ;; xcoord = (window_id-1) * 16 + kWindowXOffset
+        ;; ycoord = (window_id-1) * 8 + kWindowYOffset
 
         lda     cached_window_id
         sec
@@ -6976,23 +6963,12 @@ volume: ldx     cached_window_id
 
 .proc create_icons_for_window
 
-        kIconSpacingX  = 80
-        kIconSpacingY  = 32
-
-        kMinWindowWidth = 170
-        kMaxWindowWidth = 450
-
-        kMinWindowHeight = 50
-        kMaxWindowHeight = 112
-
 window_id:      .byte   0
 iconbits:       .addr   0
 iconentry_type: .byte   0
 icon_height:    .word   0
 
 index:  .byte   0
-
-        kMaxIconHeight = 17
 
         ;; first icon in window
         DEFINE_POINT initial_coords, kIconBBoxOffsetLeft, kMaxIconHeight + kIconBBoxOffsetTop
@@ -7001,7 +6977,7 @@ index:  .byte   0
         DEFINE_POINT row_coords, 0, 0
 
 icons_per_row:
-        .byte   5
+        .byte   kIconsPerRow
 
 icons_this_row:
         .byte   0
@@ -7723,9 +7699,7 @@ zero_min:
         bpl     :-
         rts
 
-        kListViewWidth = 360
-
-        ;; min.x = 360
+        ;; min.x = kListViewWidth
         ;; min.y = (A + 2) * 8
 list_view_non_empty:
         clc

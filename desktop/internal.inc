@@ -34,9 +34,49 @@ kTrashIconNum   = 1
 ;;; except S3,D2 is assumed to be /RAM which is disconnected.
 kMaxVolumes     = 13
 
-;;; Height of items/used/free header in DeskTop windows.
+;;; ============================================================
+;;; Window/Icon Metrics
+
+;;; Offsets for created windows
+kWindowXOffset = 5
+kWindowYOffset = 27
+
+;;; Min/Max window dimensions
+kMinWindowWidth = 170
+kMaxWindowWidth = 430
+
+kMinWindowHeight = 50
+kMaxWindowHeight = 115
+
+;;; Height of items/used/free header
 kWindowHeaderHeight     = 14
 
+;;; --------------------------------------------------
+;;; List views
+
+kFirstRowBaseline       = 16
+kListViewWidth          = 360
+
+;;; --------------------------------------------------
+;;; Icon views
+
+kMaxIconHeight          = 17
+kIconWidth              = 28
+kIconLabelHeight        = 8
+
+kIconsPerRow    = 5
+kIconSpacingX   = 80
+kIconSpacingY   = 32
+
+;;; Bounding box padding, which defines icon placing, window sizing and
+;;; scrollbars. This does not take into account the icon's actual height
+;;; or width (i.e. label size). The header is included to simplify
+;;; calculations.
+
+kIconBBoxOffsetTop      = kWindowHeaderHeight + 4
+kIconBBoxOffsetLeft     = 45
+kIconBBoxOffsetBottom   = kMaxIconHeight + kIconLabelHeight + 2
+kIconBBoxOffsetRight    = 65    ; includes width of icon + label
 
 ;;; ============================================================
 ;;; Memory Areas
