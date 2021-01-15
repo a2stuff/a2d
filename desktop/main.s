@@ -1156,12 +1156,11 @@ str_preview_txt:
 
 
 ;;; ============================================================
-;;; Aux $D000-$DFFF holds FileRecord entries. These are stored
+;;; Aux $D000-$DFFF b2 holds FileRecord entries. These are stored
 ;;; with a one byte length prefix, then sequential FileRecords.
 ;;; Not counting the prefix, this gives room for 128 entries.
 ;;; Only 127 icons are supported and volumes don't get entries,
-;;; so this is enough, but free space is not properly compacted
-;;; so it can run out. https://github.com/a2stuff/a2d/issues/19
+;;; so this is enough.
 
 ;;; `window_id_to_filerecord_list_*` maps win id to list num
 ;;; `window_filerecord_table` maps from list num to address
