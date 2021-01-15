@@ -167,3 +167,6 @@
 
 * Launch DeskTop. Open a window with a single icon. Move the icon so it overlaps the left edge of the window. Verify scrollbar appears. Hold scroll arrow. Verify icon scrolls into view, and eventually the scrollbar deactivates. Repeat with right edge.
 * Launch DeskTop. Open a window with 11-15 icons. Verify scrollbars are not active.
+
+* Launch DeskTop. Open a folder using Apple menu (e.g. Control Panels) or Selector. Verify that the used/free numbers are non-zero.
+* Launch DeskTop. Open a subdirectory folder. Quit and relaunch DeskTop. Verify that the used/free numbers in the restored window are non-zero.

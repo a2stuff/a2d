@@ -5696,7 +5696,15 @@ num:    .byte   0
 
 .proc open_window_for_path
         copy    #$FF, icon_params2
-        jmp     open_folder_or_volume_icon::check_path
+        jsr     open_folder_or_volume_icon::check_path
+
+        ;; If the above succeeded, update its used/free.
+        ;; TODO: Only do so if data is not populated.
+        lda     active_window_id
+        jsr     update_used_free_for_vol_windows
+        lda     active_window_id
+        jsr     set_port_from_window_id
+        jmp     draw_window_header
 .endproc
 
 ;;; ============================================================
@@ -7431,7 +7439,7 @@ tmp:    .byte   0
         ;; Draw top line
         MGTK_RELAY_CALL MGTK::MoveTo, header_line_left
         copy16  window_grafport::cliprect::x2, header_line_right::xcoord
-        jsr     set_penmode_xor
+        jsr     set_penmode_notcopy
         MGTK_RELAY_CALL MGTK::LineTo, header_line_right
 
         ;; Offset down by 2px
@@ -15934,6 +15942,10 @@ set_penmode_xor:
 
 set_penmode_copy:
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        rts
+
+set_penmode_notcopy:
+        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
         rts
 
 ;;; ============================================================
