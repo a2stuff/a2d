@@ -77,6 +77,9 @@ kIconBBoxOffsetTop      = kWindowHeaderHeight + 4
 kIconBBoxOffsetLeft     = 45
 kIconBBoxOffsetBottom   = kMaxIconHeight + kIconLabelHeight + 2
 kIconBBoxOffsetRight    = 65    ; includes width of icon + label
+;;; NOTE: kIconBBoxOffsetRight should probably be se to
+;;; kIconBBoxOffsetLeft + kIconWidth but aesthetically that looks bad.
+
 
 ;;; ============================================================
 ;;; Memory Areas

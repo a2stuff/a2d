@@ -697,8 +697,10 @@ event_size                      = 5        ; any kind of event
 .macro DEFINE_RECT ident, left, top, right, bottom
         ident := *
 .scope ident
+min:
 x1:     .word   left
 y1:     .word   top
+max:
 x2:     .word   right
 y2:     .word   bottom
 .endscope

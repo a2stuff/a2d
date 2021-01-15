@@ -1951,12 +1951,12 @@ done:   rts
 
 .proc calc_rect_opendir
         ldx     #0
-loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params::maprect::x1,x, rect_opendir::x1,x
-        add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params::maprect::x2,x, rect_opendir::x2,x
+:       add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::min,x, rect_opendir::min,x
+        add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::max,x, rect_opendir::max,x
         inx
         inx
-        cpx     #4
-        bne     loop
+        cpx     #.sizeof(MGTK::Point)
+        bne     :-
         rts
 .endproc
 
