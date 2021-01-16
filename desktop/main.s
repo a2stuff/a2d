@@ -4623,7 +4623,7 @@ cont:   sta     cached_window_icon_count
         jsr     StoreWindowIconTable
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
 
-        ;; Highlight dir (vol/folder) icon, if present
+        ;; Select & highlight dir (vol/folder) icon, if present
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
@@ -4635,7 +4635,7 @@ cont:   sta     cached_window_icon_count
         ldy     #IconEntry::state
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
-        beq     no_icon         ; ???
+        beq     no_icon         ; Volume icon
 
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
@@ -4671,6 +4671,9 @@ no_icon:
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     check_item
         jsr     update_window_menu_items
+
+        ;; BUG: This doesn't ensure the window containing selection redraws
+        ;; fully. https://github.com/a2stuff/a2d/issues/364
         jmp     redraw_windows_and_desktop
 .endproc
 
@@ -5846,12 +5849,17 @@ draw:   txa
 :       copy    #0, index
         lda     selected_window_id
         beq     volumes
-        cmp     active_window_id
+
+        ;; --------------------------------------------------
+        ;; Windowed (file icons)
+        cmp     active_window_id ; in the active window?
         beq     use_win_port
-        jsr     prepare_highlight_grafport
+
+        ;; Selection is in a non-active window
+        jsr     prepare_highlight_grafport ; ends up being a null port???
         jmp     files
 
-        ;; Windowed (file icons)
+        ;; Selection is in the active window
 use_win_port:
         jsr     set_port_from_window_id
         jsr     offset_window_grafport_and_set
@@ -5869,6 +5877,7 @@ files:  lda     index
         inc     index
         jmp     files
 
+        ;; --------------------------------------------------
         ;; Desktop (volume icons)
 volumes:
         lda     index
@@ -5881,6 +5890,7 @@ volumes:
         inc     index
         jmp     volumes
 
+        ;; --------------------------------------------------
         ;; Clear selection list
 finish: lda     #0
         ldx     selected_icon_count
