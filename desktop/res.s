@@ -888,7 +888,7 @@ cached_window_icon_list:   .res    127, 0
 
 
 ;;; Index of window with selection (0=desktop)
-selected_window_index:
+selected_window_id:
         .byte   0
 
 ;;; Number of selected icons

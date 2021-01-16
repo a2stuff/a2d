@@ -283,7 +283,7 @@ bail:   rts
 
 :       copy    #0, num
 
-        lda     selected_window_index
+        lda     selected_window_id
         beq     desktop
         cmp     active_window_id
         bne     bail
@@ -638,7 +638,7 @@ start:  jsr     clear_selection
         jsr     prepare_highlight_grafport
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         jsr     reset_main_grafport
-        copy    winid, selected_window_index
+        copy    winid, selected_window_id
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
 
@@ -834,7 +834,7 @@ check_selection:
 
         ;; --------------------------------------------------
         ;; Selected Icons
-        lda     selected_window_index ; In a window?
+        lda     selected_window_id ; In a window?
         bne     files_selected
 
         ;; Volumes selected (not files)
@@ -968,7 +968,7 @@ with_path:
         COPY_STRING path, path_buffer ; Use this to launch the DA
 
         ;; As a convenience for DAs, set path to first selected file.
-        lda     selected_window_index
+        lda     selected_window_id
         beq     no_file_sel
         lda     selected_icon_count
         beq     no_file_sel
@@ -1943,7 +1943,7 @@ L4D9D:  pha
 
         lda     #0
         beq     store           ; always
-:       lda     selected_window_index
+:       lda     selected_window_id
 store:  sta     window_id_to_close
         rts
 .endproc
@@ -2425,7 +2425,7 @@ check:  lda     #0
 common: sta     eject_flag
 
         ;; Ensure that volumes are selected
-        lda     selected_window_index
+        lda     selected_window_id
         beq     :+
 done:   rts
 
@@ -2643,7 +2643,7 @@ L51A7:  jsr     reset_main_grafport
         jsr     cached_icons_window_to_screen
         jsr     StoreWindowIconTable
         jsr     update_scrollbars
-        lda     selected_window_index
+        lda     selected_window_id
         beq     finish
         lda     selected_icon_count
         beq     finish
@@ -2696,7 +2696,7 @@ L51EF:  .byte   0
         sta     win_view_by_table,x
 
         ;; Clear selection if in the window
-        lda     selected_window_index
+        lda     selected_window_id
         cmp     active_window_id
         bne     sort
         lda     #0
@@ -2706,7 +2706,7 @@ L51EF:  .byte   0
         dex
         bpl     :-
         sta     selected_icon_count
-        sta     selected_window_index
+        sta     selected_window_id
 
         ;; Sort the records
 sort:   jsr     LoadActiveWindowIconTable
@@ -2939,7 +2939,7 @@ done:   jmp     redraw_windows_and_desktop
         beq     :+
         rts
 
-:       lda     selected_window_index
+:       lda     selected_window_id
         bne     common
 
         ;; Volume icon on desktop
@@ -2967,7 +2967,7 @@ next_icon:
         cmp     selected_icon_count
         bne     not_done
 
-        lda     selected_window_index
+        lda     selected_window_id
         bne     :+
         jmp     finish_with_vols
 :       jmp     select_and_refresh_window
@@ -3180,14 +3180,14 @@ highlight_icon:
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
-        sta     selected_window_index
+        sta     selected_window_id
 
         ;; Always one icon selected
         lda     #1
         sta     selected_icon_count
 
         ;; If windowed, ensure it is visible
-        lda     selected_window_index
+        lda     selected_window_id
         beq     :+
         jsr     LoadActiveWindowIconTable
         lda     selected_icon_list
@@ -3223,8 +3223,8 @@ L5687:  ldx     cached_window_icon_count
         bpl     :-
 
         copy    cached_window_icon_count, selected_icon_count
-        copy    active_window_id, selected_window_index
-        lda     selected_window_index
+        copy    active_window_id, selected_window_id
+        lda     selected_window_id
         beq     :+
         jsr     offset_and_set_port_from_window_id
 :       lda     selected_icon_count
@@ -3234,19 +3234,19 @@ loop:   ldx     index
         copy    selected_icon_list,x, icon_param2
         jsr     icon_entry_lookup
         stax    $06
-        lda     selected_window_index
+        lda     selected_window_id
         beq     :+
         lda     icon_param2
         jsr     icon_screen_to_window
 :       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param2
-        lda     selected_window_index
+        lda     selected_window_id
         beq     :+
         lda     icon_param2
         jsr     icon_window_to_screen
 :       dec     index
         bpl     loop
 
-        lda     selected_window_index
+        lda     selected_window_id
         beq     finish
         jsr     reset_main_grafport
 finish: jmp     LoadDesktopIconTable
@@ -4075,7 +4075,7 @@ L5CF8:  jmp     start_icon_drag
 L5CFB:  lda     BUTN0
         ora     BUTN1
         bpl     replace
-        lda     selected_window_index
+        lda     selected_window_id
         cmp     active_window_id ; same window?
         beq     :+               ; if so, retain selection
 replace:
@@ -4269,7 +4269,7 @@ icon_entry_type:
         ldx     selected_icon_count
         sta     selected_icon_list,x
         inc     selected_icon_count
-        copy    active_window_id, selected_window_index
+        copy    active_window_id, selected_window_id
 
         lda     active_window_id
         jsr     set_port_from_window_id
@@ -4416,7 +4416,7 @@ L5F88:  txa
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
-        copy    active_window_id, selected_window_index
+        copy    active_window_id, selected_window_id
 L5FB9:  lda     icon_param
         jsr     icon_window_to_screen
         pla
@@ -4642,7 +4642,7 @@ cont:   sta     cached_window_icon_count
         and     #AS_BYTE(~kIconEntryOpenMask) ; clear open_flag
         sta     (icon_ptr),y
         and     #kIconEntryWinIdMask
-        sta     selected_window_index
+        sta     selected_window_id
         jsr     prepare_highlight_grafport
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         jsr     reset_main_grafport
@@ -5221,7 +5221,7 @@ L67F6:  lda     BUTN0
         bpl     replace_selection
 
         ;; Add clicked icon to selection
-        lda     selected_window_index
+        lda     selected_window_id
         bne     replace_selection
         ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
         ldx     selected_icon_count
@@ -5239,7 +5239,7 @@ set_selection:
         ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
         copy    #1, selected_icon_count
         copy    findicon_which_icon, selected_icon_list
-        copy    #0, selected_window_index
+        copy    #0, selected_window_id
 
 
 L6834:  bit     double_click_flag
@@ -5332,7 +5332,7 @@ L68E4:  jsr     peek_event
 L68F9:  cpx     cached_window_icon_count
         bne     :+
         lda     #0
-        sta     selected_window_index
+        sta     selected_window_id
         rts
 
 :       txa
@@ -5844,7 +5844,7 @@ draw:   txa
         rts
 
 :       copy    #0, index
-        lda     selected_window_index
+        lda     selected_window_id
         beq     volumes
         cmp     active_window_id
         beq     use_win_port
@@ -5889,7 +5889,7 @@ finish: lda     #0
         dex
         bpl     :-
         sta     selected_icon_count
-        sta     selected_window_index
+        sta     selected_window_id
         jmp     reset_main_grafport
 
 index:  .byte   0
@@ -6526,7 +6526,7 @@ L72A8:  .word   0
         bmi     :+              ; Yes, no icons to twiddle.
 
         jsr     mark_icons_not_opened_2
-        lda     selected_window_index
+        lda     selected_window_id
         bne     :+
 
         lda     icon_params2
@@ -10572,7 +10572,7 @@ L8FEB:  tsx
         bpl     compute_target_prefix ; copy
 
         ;; Delete - is it a volume?
-        lda     selected_window_index
+        lda     selected_window_id
         beq     :+
         jmp     begin_operation
 
@@ -10884,7 +10884,7 @@ done:   stx     buf
 .proc get_window_path_ptr
         ptr := $08
 
-        lda     selected_window_index
+        lda     selected_window_id
         jsr     get_window_path
         stax    ptr
         rts
@@ -11103,7 +11103,7 @@ loop:   ldx     get_info_dialog_params::index
         bne     :+
         jmp     done
 
-:       lda     selected_window_index
+:       lda     selected_window_id
         beq     vol_icon
 
         ;; File icon
@@ -11147,7 +11147,7 @@ common: MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params5
         jsr     show_error_alert
         beq     common
 :
-        lda     selected_window_index
+        lda     selected_window_id
         beq     vol_icon2
 
         ;; File icon
@@ -11219,7 +11219,7 @@ common2:
         ;; --------------------------------------------------
         ;; Locked/Protected
         copy    #GetInfoDialogState::locked, get_info_dialog_params::state
-        lda     selected_window_index
+        lda     selected_window_id
         bne     is_file
 
         bit     write_protected_flag ; Volume
@@ -11248,7 +11248,7 @@ show_protected:
         buf := $220
         copy    #0, buf
 
-        lda     selected_window_index ; volume?
+        lda     selected_window_id ; volume?
         beq     volume                ; yes
 
         ;; A file, so just show the size
@@ -11335,7 +11335,7 @@ append_size:
         ;; --------------------------------------------------
         ;; Type
         copy    #GetInfoDialogState::type, get_info_dialog_params::state
-        lda     selected_window_index
+        lda     selected_window_id
         bne     :+
 
         ;; Volume
@@ -11409,7 +11409,7 @@ loop:   lda     index
         jmp     loop
 :
         ;; File or Volume?
-        lda     selected_window_index
+        lda     selected_window_id
         beq     is_vol          ; no window, selection is volumes
 
         ;; File - compose full path
@@ -11483,7 +11483,7 @@ L962F:  sty     new_name_ptr
         stx     new_name_addr+1
 
         ;; File or Volume?
-        lda     selected_window_index
+        lda     selected_window_id
         beq     is_vol2
         asl     a
         tax
@@ -11941,7 +11941,7 @@ for_run:
         bvs     L9A50
         lda     is_run_flag
         bne     :+
-        lda     selected_window_index ; dragging from window?
+        lda     selected_window_id ; dragging from window?
         bne     :+
         jmp     copy_dir
 
@@ -13194,7 +13194,7 @@ loop:   iny
         DEFINE_CLOSE_PARAMS close_params
 
 :       MLI_RELAY_CALL CLOSE, close_params
-        lda     selected_window_index
+        lda     selected_window_id
         beq     :+
         jsr     set_port_from_window_id
 :       ldx     stack_stash     ; restore stack, in case recursion was aborted
@@ -15990,7 +15990,7 @@ set_penmode_notcopy:
 ;;; Output: A = window with selection, 0 if desktop
 
 .proc get_selection_window
-        lda     selected_window_index
+        lda     selected_window_id
         rts
 .endproc
 
