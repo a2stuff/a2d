@@ -21,7 +21,7 @@ DAs are documented here.
 * Run an event Loop (`GetEvent`, and subsequent processing, per MGTK)
   * Normal event processing per MGTK
   * In addition, following a window drag/resize, a DeskTop call must be made:
-     * `JUMP_TABLE_REDRAW_ALL` - redraw all windows and desktop (volume) icons.
+     * `JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS` - redraw all windows and desktop (volume) icons.
   * ...
 * Destroy window (`CloseWindow`)
 * Switch control back to Main (`RAMRDOFF`/`RAMWRTOFF`)

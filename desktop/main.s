@@ -25,7 +25,7 @@ JT_DATE_STRING:         jmp     compose_date_string
 JT_SELECT_WINDOW:       jmp     select_and_refresh_window
 JT_AUXLOAD:             jmp     AuxLoad
 JT_EJECT:               jmp     cmd_eject
-JT_REDRAW_WINDOWS:      jmp     redraw_windows          ; *
+JT_CLEAR_UPDATES:       jmp     clear_updates
 JT_ITK_RELAY:           jmp     ITK_RELAY
 JT_LOAD_OVL:            jmp     load_dynamic_routine
 JT_CLEAR_SELECTION:     jmp     clear_selection
@@ -43,7 +43,7 @@ JT_RESTORE_OVL:         jmp     restore_dynamic_routine
 JT_COLOR_MODE:          jmp     set_color_mode          ; *
 JT_MONO_MODE:           jmp     set_mono_mode           ; *
 JT_RESTORE_SYS:         jmp     restore_system          ; *
-JT_REDRAW_ALL:          jmp     redraw_windows_and_desktop ; *
+JTCLEAR_UPDATES_REDRAW_ICONS:   jmp     clear_updates_and_redraw_desktop_icons ; *
 JT_GET_SEL_COUNT:       jmp     get_selection_count     ; *
 JT_GET_SEL_ICON:        jmp     get_selected_icon       ; *
 JT_GET_SEL_WIN:         jmp     get_selection_window    ; *
@@ -126,7 +126,7 @@ redraw_icons_flag:
 
 ;;; --------------------------------------------------
 
-redraw_windows:
+clear_updates:
         jsr     reset_main_grafport
         copy    active_window_id, saved_active_window_id
         copy    #0, redraw_icons_flag
@@ -163,7 +163,7 @@ done_redraw:
         rts
 
 .endproc
-        redraw_windows := main_loop::redraw_windows
+        clear_updates := main_loop::clear_updates
 
 ;;; ============================================================
 
@@ -688,8 +688,8 @@ continue:
 
 ;;; ============================================================
 
-.proc redraw_windows_and_desktop
-        jsr     redraw_windows
+.proc clear_updates_and_redraw_desktop_icons
+        jsr     clear_updates
         ITK_RELAY_CALL IconTK::RedrawIcons
         rts
 .endproc
@@ -1242,13 +1242,13 @@ filerecords_free_start:
         bpl     run_from_ramcard
 
         ;; Need to copy to RAMCard
-        jsr     redraw_windows_and_desktop ; copying window is smaller
+        jsr     clear_updates_and_redraw_desktop_icons ; copying window is smaller
         jsr     jt_run
         bmi     done
         jsr     L4968
 
 done:   jsr     set_cursor_pointer
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
         rts
 
 .proc L4968
@@ -1303,7 +1303,7 @@ L49A6:  lda     menu_click_params::item_num
         jsr     L4A47
         jsr     jt_run
         bpl     L49ED
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
 L49E0:  jsr     get_copied_to_ramcard_flag
         beq     not_downloaded
@@ -1629,7 +1629,7 @@ prefix_length:
 
 .proc cmd_about
         param_call invoke_dialog_proc, kIndexAboutDialog, $0000
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 .endproc
 
 ;;; ============================================================
@@ -1717,7 +1717,7 @@ skip:   iny
 
         ;; Restore state
         jsr     reset_main_grafport
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
 done:   jsr     set_cursor_pointer
         rts
 
@@ -1772,7 +1772,7 @@ running_da_flag:
         ;; --------------------------------------------------
 
 :       jsr     copy_paths_and_split_name
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
 
         jsr     jt_copy_file
 
@@ -1780,7 +1780,7 @@ L4CD6:  pha
         jsr     set_cursor_pointer
         pla
         bpl     :+
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
 :       param_call find_window_for_path, path_buf4
         beq     :+
@@ -1807,7 +1807,7 @@ L4CD6:  pha
         ldax    #path_buf4
         ldy     path_buf4
         jsr     update_vol_used_free_for_found_windows
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 .endproc
 
 ;;; ============================================================
@@ -1891,7 +1891,7 @@ L4CD6:  pha
         dey
         bpl     :-
 
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
 
         jsr     jt_delete_file
 
@@ -1899,7 +1899,7 @@ L4D9D:  pha
         jsr     set_cursor_pointer
         pla
         bpl     :+
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
 :       param_call find_last_path_segment, path_buf3
         sty     path_buf3
@@ -1929,7 +1929,7 @@ L4D9D:  pha
         ldax    #path_buf3
         ldy     path_buf3
         jsr     update_vol_used_free_for_found_windows
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 .endproc
 
 ;;; ============================================================
@@ -2231,7 +2231,7 @@ success:
 
         jsr     select_new_folder_icon
 
-done:   jmp     redraw_windows_and_desktop
+done:   jmp     clear_updates_and_redraw_desktop_icons
 
 .proc select_new_folder_icon
         ptr_icon := $6
@@ -2468,7 +2468,7 @@ loop2:  ldx     count
         bpl     loop2
 
         ;; And finish up nicely
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
 count:  .byte   0
 
@@ -2866,9 +2866,9 @@ drive_to_refresh:
         jsr     format_erase_overlay_exec
         bne     :+
         stx     drive_to_refresh ; unit number
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
         jsr     cmd_check_single_drive_by_unit_number
-:       jmp     redraw_windows_and_desktop
+:       jmp     clear_updates_and_redraw_desktop_icons
 
 fail:   rts
 .endproc
@@ -2885,37 +2885,37 @@ fail:   rts
         bne     done
 
         stx     drive_to_refresh ; unit number
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
         jsr     cmd_check_single_drive_by_unit_number
-done:   jmp     redraw_windows_and_desktop
+done:   jmp     clear_updates_and_redraw_desktop_icons
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_get_info
         jsr     jt_get_info
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_get_size
         jsr     jt_get_size
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_unlock
         jsr     jt_unlock
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_lock
         jsr     jt_lock
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 .endproc
 
 ;;; ============================================================
@@ -2934,7 +2934,7 @@ done:   jmp     redraw_windows_and_desktop
 
 :       jsr     jt_rename_icon
         pha
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
         pla
         beq     :+
         rts
@@ -3011,7 +3011,7 @@ finish_with_vols:
 next_vol:
         dex
         bpl     :-
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
 counter:
         .byte   0
@@ -3724,7 +3724,7 @@ close_loop:
 
 not_in_map:
 
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
         jsr     clear_selection
         jsr     LoadDesktopIconTable
 
@@ -3783,7 +3783,7 @@ add_icon:
         jsr     ITK_RELAY   ; icon entry addr in A,X
 
 :       jsr     StoreWindowIconTable
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
 previous_icon_count:
         .byte    0
@@ -4104,7 +4104,7 @@ process_drop:
         cmp     #$FF
         bne     :+
         jsr     swap_in_desktop_icon_table
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
         ;; Was a move?
 :       bit     move_flag
@@ -4119,14 +4119,14 @@ process_drop:
         bne     :+
         ;; Update used/free for same-vol windows
         jsr     update_active_window
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
         ;; Dropped on icon?
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Update used/free for same-vol windows
         jsr     update_vol_free_used_for_icon
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
         ;; Dropped on window!
 :       and     #$7F            ; mask off window number
@@ -4134,7 +4134,7 @@ process_drop:
         jsr     update_used_free_for_vol_windows
         pla
         jsr     select_and_refresh_window
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
         ;; --------------------------------------------------
 
@@ -4295,7 +4295,7 @@ icon_num:
 
 .proc select_and_refresh_window
         sta     window_id
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
         jsr     clear_selection
         lda     window_id
         cmp     active_window_id
@@ -4562,7 +4562,7 @@ deltay: .word   0
 .proc handle_resize_click
         copy    active_window_id, event_params
         MGTK_RELAY_CALL MGTK::GrowWindow, event_params
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
         jsr     LoadActiveWindowIconTable
         jsr     cached_icons_screen_to_window
         jsr     update_scrollbars
@@ -4674,7 +4674,7 @@ no_icon:
 
         ;; BUG: This doesn't ensure the window containing selection redraws
         ;; fully. https://github.com/a2stuff/a2d/issues/364
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 .endproc
 
 ;;; ============================================================
@@ -5257,12 +5257,12 @@ L6834:  bit     double_click_flag
         jsr     jt_drop
         cmp     #$FF
         bne     L6858
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
 L6858:  lda     drag_drop_params::result
         cmp     trash_icon_num
         bne     L6863
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
 L6863:  lda     drag_drop_params::result
         bpl     L6872
@@ -5273,12 +5273,12 @@ L6863:  lda     drag_drop_params::result
         jmp     select_and_refresh_window
 
 L6872:  jsr     update_vol_free_used_for_icon
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
 L6878:  txa
         cmp     #2
         bne     L688F
-        jmp     redraw_windows_and_desktop
+        jmp     clear_updates_and_redraw_desktop_icons
 
         ;; Double-click on volume icon
 L6880:  lda     findicon_which_icon
@@ -5508,7 +5508,7 @@ select: MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         lda     cached_window_id
         sta     active_window_id
         jsr     draw_window_entries
-        jsr     redraw_windows
+        jsr     clear_updates
         jmp     LoadDesktopIconTable
 
         ;; --------------------------------------------------
@@ -6328,7 +6328,7 @@ L710A:  lsr16   L72A8
 L7147:  lda     num_open_windows
         jsr     mark_icons_not_opened_1
         dec     num_open_windows
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
         jsr     do_close
         lda     active_window_id
         beq     L715F
@@ -10493,7 +10493,7 @@ do_run2:
         jsr     done_dialog_phase1
 
 .proc finish_operation
-        jsr     redraw_windows_and_desktop
+        jsr     clear_updates_and_redraw_desktop_icons
         return  #0
 .endproc
 

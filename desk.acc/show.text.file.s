@@ -1211,7 +1211,7 @@ loop:   clc
 .endproc
 
 .proc redraw_screen
-        TRAMP_CALL JUMP_TABLE_REDRAW_ALL
+        TRAMP_CALL JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         rts
 .endproc
 

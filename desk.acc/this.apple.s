@@ -888,7 +888,7 @@ done:   rts
         ;; Draw DeskTop's windows and icons.
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     JUMP_TABLE_REDRAW_ALL
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         sta     RAMRDON
         sta     RAMWRTON
 

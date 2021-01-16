@@ -45,7 +45,7 @@ JUMP_TABLE_DATE_STRING  := $4009 ; Compose date string into internal buffer
 JUMP_TABLE_SELECT_WINDOW:= $400C ; Select and refresh given window
 JUMP_TABLE_AUXLOAD      := $400F ; Auxload
 JUMP_TABLE_EJECT        := $4012 ; Eject command
-JUMP_TABLE_REDRAW_WINDOWS := $4015 ; Redraw all desktop windows (e.g. after a drag) *
+JUMP_TABLE_CLEAR_UPDATES := $4015 ; Clear update events (e.g. after a drag) *
 JUMP_TABLE_ITK_RELAY    := $4018 ; Icon ToolKit relay call (main>aux)
 JUMP_TABLE_LOAD_OVL     := $401B ; Load overlay routine
 JUMP_TABLE_CLEAR_SEL    := $401E ; Clear DeskTop selection *
@@ -63,7 +63,7 @@ JUMP_TABLE_RESTORE_OVL  := $403F ; Restore from overlay routine
 JUMP_TABLE_COLOR_MODE   := $4042 ; Set DHR color mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_MONO_MODE    := $4045 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in ROM and ZP. *
-JUMP_TABLE_REDRAW_ALL   := $404B ; Redraw desktop windows and icons (e.g. after a drag) *
+JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS   := $404B ; Redraw desktop windows and icons (e.g. after a drag) *
 JUMP_TABLE_GET_SEL_COUNT:= $404E ; Get number of selected icons (out: A=count) *
 JUMP_TABLE_GET_SEL_ICON := $4051 ; Get selected IconEntry address (in: A=index, out: A,X=addr) *
 JUMP_TABLE_GET_SEL_WIN  := $4054 ; Get window containing selection (out: A=window_id, 0 if none) *

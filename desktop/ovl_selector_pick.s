@@ -36,7 +36,7 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
         jsr     get_copied_to_ramcard_flag
         cmp     #$80
         bne     L9015
-        jsr     JUMP_TABLE_REDRAW_WINDOWS
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         lda     #$06
         jsr     L9C09
         bne     L9015
@@ -64,7 +64,7 @@ L9052:  lda     #$00
         pha
         lda     #$07
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_REDRAW_WINDOWS
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         pla
         tay
         pla
@@ -233,7 +233,7 @@ L91BC:  clc
         pha
         lda     #$07
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_REDRAW_WINDOWS
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         pla
         tay
         pla
@@ -400,7 +400,7 @@ L933F:  pha
         bne     :+
         lda     #$07
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_REDRAW_WINDOWS
+        jsr     JUMP_TABLE_CLEAR_UPDATES
 :       MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
@@ -1326,7 +1326,7 @@ L9C60:  lda     open_params::ref_num
 L9C69:  MLI_RELAY_CALL WRITE, write_params
         beq     L9C81
         pha
-        jsr     JUMP_TABLE_REDRAW_WINDOWS
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         pla
         jsr     JUMP_TABLE_ALERT_0
         beq     L9C69

@@ -70,9 +70,9 @@ Load (A,X) from Aux memory into A.
 
 Eject selected drive icon.
 
-#### `JUMP_TABLE_REDRAW_WINDOWS` ($4015) *
+#### `JUMP_TABLE_CLEAR_UPDATES` ($4015) *
 
-Redraws all DeskTop windows.
+Clear update events - i.e. redraw windows as needed after move/resize/close.
 
 #### `JUMP_TABLE_ITK_RELAY` ($4018)
 
@@ -156,9 +156,9 @@ Set DHR color or monochrome mode, respectively. DHR monochrome mode is supported
 
 Used when exiting DeskTop; exit DHR mode, restores DHR mode to color, restores detached devices and reformats /RAM if needed, and banks in ROM and main ZP.
 
-#### `JUMP_TABLE_REDRAW_ALL` ($404B) *
+#### `JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS` ($404B) *
 
-Redraws all DeskTop windows and volume icons. Required after a drag or resize in a DA.
+Clears update events (redraw windows after move/resize/close) and redraws volume icons. Required after a drag or resize in a DA.
 
 #### `JUMP_TABLE_GET_SEL_COUNT` ($404E) *
 

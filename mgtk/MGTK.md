@@ -1035,15 +1035,14 @@ _DA specific: Menus are not supported in DAs._
 
 * `SelectWindow` to make topmost if necessary
 * `DragWindow` to initiate drag modal loop
-* [Handle update events](#handle-update-events)
-* [Redraw](#redraw-window) window content if not moved and was made topmost
-
-_DA specific: Use the following steps instead:_
-
-* `DragWindow` to initiate drag modal loop
 * If not `moved` - done
-* Call `JUMP_TABLE_REDRAW_ALL` so DeskTop can redraw its windows an desktop (volume) icons
-* [Redraw](#redraw-window) window content
+* [Handle update events](#handle-update-events)
+* [Redraw](#redraw-window) window content if not moved and was made topmost.
+
+_DA specific:_
+
+* Call `JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS` to allow DeskTop to handle update events. This will not redraw the DA window, however.
+* [Redraw](#redraw-window) DA window content
 
 
 #### Handle Window Close
@@ -1073,14 +1072,15 @@ _DA specific: Use the following steps instead:_
 #### Handle Window Resize
 
 * `GrowWindow` to initiate modal resize loop
-* If canceled - done
+* If not `itgrew` - done
 * `UpdateThumb` if needed to adjust scroll bars
+* [Handle update events](#handle-update-events)
 * [Redraw](#redraw-window) window content
 
 _DA specific:_
 
-In addition to the above steps:
-* Call `JUMP_TABLE_REDRAW_ALL` _before_ redrawing the DA window.
+* Call `JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS` to allow DeskTop to handle update events. This will not redraw the DA window, however.
+* [Redraw](#redraw-window) DA window content
 
 #### Handle Update Events
 
@@ -1095,4 +1095,6 @@ In addition to the above steps:
       * [Redraw](#redraw-window) `window_id`'s content
       * `EndUpdate`
 
-_DA specific: Update events are not used._
+_DA specific:_
+
+* Following a window move, resize or close (except on DA exit), call `JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS` to allow DeskTop to handle update events. This will not redraw the DA window, however.
