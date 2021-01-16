@@ -44,6 +44,12 @@ ca65 syntax is used for primitives: `.byte`, `.word` (interpreted as 16-bit sign
 .word       x2
 .word       y2
 ```
+or equivalently:
+```
+Point       topleft
+Point       bottomright
+```
+
 
 ### Pattern
 A simple repeating 8x8 pattern is defined by 8 bytes. All bits of each byte are used.

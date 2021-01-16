@@ -4387,9 +4387,9 @@ L5F3F:  jsr     clear_selection
 
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     pt1,x
-        sta     tmp_rect::min,x
+        sta     tmp_rect::topleft,x
         lda     pt2,x
-        sta     tmp_rect::max,x
+        sta     tmp_rect::bottomright,x
         dex
         bpl     :-
 
@@ -4623,7 +4623,7 @@ cont:   sta     cached_window_icon_count
         jsr     StoreWindowIconTable
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
 
-        ;; Unhighlight dir (vol/folder) icon, if present
+        ;; Highlight dir (vol/folder) icon, if present
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
@@ -5310,8 +5310,8 @@ L6893:  txa
 L68B3:  jsr     clear_selection
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     event_coords,x
-        sta     tmp_rect::min,x
-        sta     tmp_rect::max,x
+        sta     tmp_rect::topleft,x
+        sta     tmp_rect::bottomright,x
         dex
         bpl     :-
         jsr     peek_event
@@ -7665,7 +7665,7 @@ start:
         ;; max.x = max.y = 0
         ldx     #.sizeof(MGTK::Point)-1
         lda     #0
-:       sta     iconbb_rect::max,x
+:       sta     iconbb_rect::bottomright,x
         dex
         bpl     :-
 
@@ -7700,7 +7700,7 @@ start:
 zero_min:
         lda     #0
         ldx     #.sizeof(MGTK::Point)-1
-:       sta     iconbb_rect::min,x
+:       sta     iconbb_rect::topleft,x
         dex
         bpl     :-
         rts
@@ -7762,8 +7762,8 @@ more:   tax
 
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     cur_icon_pos,x
-        sta     iconbb_rect::min,x
-        sta     iconbb_rect::max,x
+        sta     iconbb_rect::topleft,x
+        sta     iconbb_rect::bottomright,x
         dex
         bpl     :-
         jmp     next
@@ -8800,18 +8800,18 @@ horiz:  lda     #0              ; == Point::xcoord
         jsr     compute_icons_bbox
 
         ldx     dir
-        sub16   iconbb_rect::max,x, iconbb_rect::min,x, delta ; delta = bb size
+        sub16   iconbb_rect::bottomright,x, iconbb_rect::topleft,x, delta ; delta = bb size
         sub16   delta, win_size,x, delta ; delta -= window size
 
         ;; If content is smaller than window, edge cases.
         ;; NOTE: Icons are in window space!
     IF_NEG
         ;; If content to left of window, delta is distance to left edge
-        sub16   window_grafport::cliprect::min,x, iconbb_rect::min,x, delta
+        sub16   window_grafport::cliprect::topleft,x, iconbb_rect::topleft,x, delta
       IF_NEG
         ;; Else, to the right, delta is distance to right edge
         copy    #$80, sense_flag
-        sub16   iconbb_rect::max,x, window_grafport::cliprect::max,x, delta
+        sub16   iconbb_rect::bottomright,x, window_grafport::cliprect::bottomright,x, delta
       END_IF
     END_IF
 
@@ -8843,13 +8843,13 @@ horiz:  lda     #0              ; == Point::xcoord
         bit     sense_flag
     IF_POS
         ;; win min = content min + delta
-        add16   delta, iconbb_rect::min,x, window_grafport::cliprect::min,x
+        add16   delta, iconbb_rect::topleft,x, window_grafport::cliprect::topleft,x
     ELSE
         ;; win near += delta, which derives from:
         ;; new win min = content min + content size - orig delta + new delta - window size
-        add16   window_grafport::cliprect::min,x, delta, window_grafport::cliprect::min,x
+        add16   window_grafport::cliprect::topleft,x, delta, window_grafport::cliprect::topleft,x
     END_IF
-        add16   window_grafport::cliprect::min,x, win_size,x, window_grafport::cliprect::max,x
+        add16   window_grafport::cliprect::topleft,x, win_size,x, window_grafport::cliprect::bottomright,x
 
         ;; Update window's port
 update_port:
@@ -9338,9 +9338,9 @@ pos_win:        .word   0, 0
 .proc prepare_highlight_grafport
         lda     #0
         tax
-:       sta     highlight_grafport::cliprect::min,x
+:       sta     highlight_grafport::cliprect::topleft,x
         sta     highlight_grafport::viewloc::xcoord,x
-        sta     highlight_grafport::cliprect::max,x
+        sta     highlight_grafport::cliprect::bottomright,x
         inx
         cpx     #.sizeof(MGTK::Point)
         bne     :-
@@ -16305,10 +16305,10 @@ exit:   rts
         dex
         bpl     :-
         ;; width/height next
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect  + MGTK::Rect::x2 + .sizeof(MGTK::Point)-1
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::bottomright + .sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     (winfo_ptr),y
-        sta     bounds + MGTK::Rect::x2,x
+        sta     bounds + MGTK::Rect::bottomright,x
         dey
         dex
         bpl     :-

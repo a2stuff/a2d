@@ -18,18 +18,29 @@ MLI     := $4000
 .endstruct
 
 .struct Rect
+        .union
+        topleft .tag Point
+        .struct
         x1      .word
         y1      .word
+        .endstruct
+        .endunion
+
+        .union
+        bottomright .tag Point
+        .struct
         x2      .word
         y2      .word
+        .endstruct
+        .endunion
 .endstruct
 
 .struct Pattern
-        kRow0    .byte
-        kRow1    .byte
-        kRow2    .byte
-        kRow3    .byte
-        kRow4    .byte
+        row0    .byte
+        row1    .byte
+        row2    .byte
+        row3    .byte
+        row4    .byte
         row5    .byte
         row6    .byte
         row7    .byte
@@ -697,10 +708,10 @@ event_size                      = 5        ; any kind of event
 .macro DEFINE_RECT ident, left, top, right, bottom
         ident := *
 .scope ident
-min:
+topleft:
 x1:     .word   left
 y1:     .word   top
-max:
+bottomright:
 x2:     .word   right
 y2:     .word   bottom
 .endscope
