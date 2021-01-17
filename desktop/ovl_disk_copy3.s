@@ -265,9 +265,9 @@ nextwinfo:      .addr   0
 ;;; Label positions
         DEFINE_POINT point_title, 0, 15
 str_disk_copy_padded:
-        PASCAL_STRING "     Disk Copy    " ; dialog title
+        PASCAL_STRING "    Disk Copy    " ; dialog title (padded to overwrite when swapping)
 str_quick_copy_padded:
-        PASCAL_STRING "Quick Copy      " ; dialog title
+        PASCAL_STRING "    Quick Copy    " ; dialog title (padded to overwrite when swapping)
 
         DEFINE_RECT rect_D255, 270, 38, 420, 46
 
@@ -1505,35 +1505,23 @@ draw_read_drive_label:
 ;;; ============================================================
 
 .proc draw_title_text
-        text_params := $06
-        text_addr := text_params + 0
-        text_length := text_params + 2
-        text_width := text_params + 3
+        text_params     := $6
+        text_addr       := text_params + 0
+        text_length     := text_params + 2
+        text_width      := text_params + 3
 
-        stax    text_addr
-        ldy     #$00
+        stax    text_addr       ; input is length-prefixed string
+        ldy     #0
         lda     (text_addr),y
         sta     text_length
-        inc16   text_addr
+        inc16   text_addr       ; point past length
         MGTK_RELAY_CALL2 MGTK::TextWidth, text_params
-        lsr16   text_width
-        lda     #>500
-        sta     width_hi
-        lda     #<500
-        lsr     width_hi
-        ror     a
-        sec
-        sbc     text_width
-        sta     point_title
-        lda     width_hi
-        sbc     text_width+1
-        sta     point_title+1
+
+        sub16   #kDialogWidth, text_width, point_title::xcoord
+        lsr16   point_title::xcoord ; /= 2
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_title
         MGTK_RELAY_CALL2 MGTK::DrawText, text_params
         rts
-
-width_hi:
-        .byte   0
 .endproc
 
 ;;; ============================================================

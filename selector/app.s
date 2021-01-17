@@ -293,8 +293,7 @@ viewloc:.word   25, 36
 setpensize_params:
         .byte   2, 1
 
-pos_title_string:
-        .word   0, $F
+        DEFINE_POINT pos_title_string, 0, 15
 
 str_selector_title:
         PASCAL_STRING "Selector" ; dialog title
@@ -1491,34 +1490,23 @@ get_port_and_draw_window:
 ;;; Input: A,X = string address
 
 .proc draw_title_string
-        ptr := $06
-        params := $06
+        text_params     := $6
+        text_addr       := text_params + 0
+        text_length     := text_params + 2
+        text_width      := text_params + 3
 
-        stax    ptr
-        ldy     #$00
-        lda     (ptr),y
-        sta     $08
-        inc16   ptr
-        MGTK_CALL MGTK::TextWidth, params
+        stax    text_addr       ; input is length-prefixed string
+        ldy     #0
+        lda     (text_addr),y
+        sta     text_length
+        inc16   text_addr       ; point past length
+        MGTK_CALL MGTK::TextWidth, text_params
 
-        lsr16   $09
-        lda     #1
-        sta     tmp
-        lda     #244
-        lsr     tmp
-        ror     a
-        sec
-        sbc     $09
-        sta     pos_title_string
-        lda     tmp
-        sbc     $0A
-        sta     pos_title_string+1
-
+        sub16   #winfo::kWidth, text_width, pos_title_string::xcoord
+        lsr16   pos_title_string::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, pos_title_string
-        MGTK_CALL MGTK::DrawText, params
+        MGTK_CALL MGTK::DrawText, text_params
         rts
-
-tmp:    .byte   0
 .endproc
 
 ;;; ============================================================

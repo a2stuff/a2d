@@ -15160,33 +15160,22 @@ done:   rts
 ;;; ============================================================
 
 .proc draw_dialog_title
-        str       := $6
-        str_data  := $6
-        str_len   := $8
-        str_width := $9
+        text_params     := $6
+        text_addr       := text_params + 0
+        text_length     := text_params + 2
+        text_width      := text_params + 3
 
-        stax    str             ; input is length-prefixed string
+        stax    text_addr       ; input is length-prefixed string
         jsr     AuxLoad
-        sta     str_len
-        inc16   str_data        ; point past length byte
-        MGTK_RELAY_CALL MGTK::TextWidth, str
-        lsr16   str_width       ; divide by two
-        lda     #>400           ; center within 400px
-        sta     hi
-        lda     #<400
-        lsr     hi              ; divide by two
-        ror     a
-        sec
-        sbc     str_width
-        sta     pos_dialog_title::xcoord
-        lda     hi
-        sbc     str_width+1
-        sta     pos_dialog_title::xcoord+1
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_dialog_title
-        MGTK_RELAY_CALL MGTK::DrawText, str
-        rts
+        sta     text_length
+        inc16   text_addr        ; point past length byte
+        MGTK_RELAY_CALL MGTK::TextWidth, text_params
 
-hi:  .byte   0
+        sub16   #aux::kPromptDialogWidth, text_width, pos_dialog_title::xcoord
+        lsr16   pos_dialog_title::xcoord ; /= 2
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_dialog_title
+        MGTK_RELAY_CALL MGTK::DrawText, text_params
+        rts
 .endproc
 
 ;;; ============================================================
