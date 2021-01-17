@@ -134,8 +134,12 @@
 
 * Launch Desktop. Click on a volume icon. Hold Open-Apple and click a different volume icon. Verify that selection is extended.
 * Launch Desktop. Click on a volume icon. Hold Solid-Apple and click a different volume icon. Verify that selection is extended.
+* Platinum IIe: Launch Desktop. Click on a volume icon. Hold Shift and click a different volume icon. Verify that selection is extended.
+* IIgs: Launch Desktop. Click on a volume icon. Hold Shift and click a different volume icon. Verify that selection is extended.
 * Launch Desktop. Select two volume icons. Hold Open-Apple and click on the desktop, not on an icon. Verify that selection is not cleared.
 * Launch Desktop. Select two volume icons. Hold Solid-Apple and click on the desktop, not on an icon. Verify that selection is not cleared.
+* IIgs: Launch Desktop. Select two volume icons. Hold Shift and click on the desktop, not on an icon. Verify that selection is not cleared.
+* Platinum IIe: Launch Desktop. Select two volume icons. Hold Shift and click on the desktop, not on an icon. Verify that selection is not cleared.
 
 * Launch Desktop. Open a volume containing files. Click on a file icon. Hold Open-Apple and click a different file icon. Verify that selection is extended.
 * Launch Desktop. Open a volume containing files. Click on a file icon. Hold Solid-Apple and click a different file icon. Verify that selection is extended.

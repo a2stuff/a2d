@@ -106,6 +106,13 @@ done:
 .endscope
 
 ;;; ============================================================
+;;; Snapshot state of PB2 (shift key mod)
+
+.scope pb2_state
+        copy    BUTN2, main::pb2_initial_state
+.endscope
+
+;;; ============================================================
 ;;; Detect Machine Type
 
 ;;; NOTE: Starts with ROM paged in, exits with LCBANK1 paged in.

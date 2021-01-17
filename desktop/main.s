@@ -935,8 +935,7 @@ with_path:
 
 :       cmp     #IconType::binary
         bne     :+
-        lda     BUTN0           ; Only launch if a button is down
-        ora     BUTN1
+        jsr     ModifierDown    ; Only launch if a button is down
         bmi     launch
         jsr     set_cursor_pointer
         rts
@@ -1937,8 +1936,7 @@ L4D9D:  pha
 ;;; the parent window to close.
 
 .proc set_window_to_close_after_open
-        lda     BUTN0           ; Modifier down?
-        ora     BUTN1
+        jsr     ModifierDown
         bmi     :+              ; Yep
 
         lda     #0
@@ -4071,9 +4069,8 @@ L5CF0:  bit     double_click_flag
 
 L5CF8:  jmp     start_icon_drag
 
-        ;; Open-Apple/Solid-Apple: Extend selection (if in same window)
-L5CFB:  lda     BUTN0
-        ora     BUTN1
+        ;; Extend selection (if in same window)?
+L5CFB:  jsr     ModifierOrShiftDown
         bpl     replace
         lda     selected_window_id
         cmp     active_window_id ; same window?
@@ -4375,9 +4372,8 @@ L5F20:  lda     event_coords,x
         lda     event_kind
         cmp     #MGTK::EventKind::drag
         beq     L5F3F
-        lda     BUTN0           ; if using modifier, be nice and don't clear
-        ora     BUTN1           ; selection if mis-clicking
-        bmi     L5F3E
+        jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
+        bmi     L5F3E               ; selection if mis-clicking
         jsr     clear_selection
 L5F3E:  rts
 
@@ -4581,8 +4577,7 @@ deltay: .word   0
         rts
 
         ;; If modifier is down, close all windows
-:       lda     BUTN0
-        ora     BUTN1
+:       jsr     ModifierDown
         bpl     :+
         jmp     cmd_close_all
 :
@@ -5236,8 +5231,7 @@ L67EE:  bit     double_click_flag
         bmi     L6834
         jmp     L6880
 
-L67F6:  lda     BUTN0
-        ora     BUTN1
+L67F6:  jsr     ModifierOrShiftDown
         bpl     replace_selection
 
         ;; Add clicked icon to selection
@@ -5322,9 +5316,8 @@ L6893:  txa
 
 .proc L68AA
         jsr     reset_main_grafport
-        lda     BUTN0           ; if using modifier, be nice and don't clear
-        ora     BUTN1           ; selection if mis-clicking
-        bpl     L68B3
+        jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
+        bpl     L68B3               ; selection if mis-clicking
         rts
 
 L68B3:  jsr     clear_selection
@@ -13238,8 +13231,7 @@ loop:   iny
         src_ptr := $08
         dst_buf := path_buf4
 
-        lda     BUTN0           ; Apple inverts the default
-        ora     BUTN1
+        jsr     ModifierDown    ; Apple inverts the default
         sta     flag
 
         ldy     #0
@@ -16366,6 +16358,45 @@ depth:  .byte   0
 
 .endproc
 save_windows := save_restore_windows::save
+
+;;; ============================================================
+
+;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
+;;; Output: A=high bit/N flag set if either is down.
+
+.proc ModifierDown
+        lda     BUTN0
+        ora     BUTN1
+        rts
+.endproc
+
+;;; Test if either modifier (Open-Apple or Solid-Apple) or shift is down,
+;;; (if shift key can be detected).
+;;; Output: A=high bit/N flag set if either is down.
+.proc ModifierOrShiftDown
+        jsr     test_iigs
+        bcc     iigs
+
+        lda     pb2_initial_state ; if shift key mod installed, %1xxxxxxx
+        eor     BUTN2             ; ... and if shift is down, %0xxxxxxx
+        ora     BUTN0
+        ora     BUTN1
+        rts
+
+iigs:   lda     KEYMODREG
+        and     #%11000001
+        bne     :+
+        rts
+
+:       lda     #$80
+        rts
+.endproc
+
+;;; Shift key mod sets PB2 if shift is *not* down. Since we can't detect
+;;; the mod, snapshot on init (and assume shift is not down) and XOR.
+pb2_initial_state:
+        .byte   0
+
 
 ;;; ============================================================
 

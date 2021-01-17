@@ -137,6 +137,16 @@ RDALTZP         := $C016        ; Bit 7 = 1 if slot zp enabled
 RD80STORE       := $C018        ; Bit 7 = 1 if 80-column store
 RDPAGE2         := $C01C
 
+KEYMODREG       := $C025        ; IIgs - keyboard modifiers
+        ;; bit 7= Open Apple key active
+        ;; bit 6= Closed Apple key active
+        ;; bit 5= Updated modifier latch without keypress
+        ;; bit 4= Keypad key active
+        ;; bit 3= Repeat active
+        ;; bit 2= Caps lock active
+        ;; bit 1= Control key active
+        ;; bit 0= Shift key active
+
 NEWVIDEO        := $C029        ; IIgs - new video modes
         ;; Bit 7 = 1 = Enable Super-Hi-Res
         ;; Bit 6 = 1 = Linearize SHR
