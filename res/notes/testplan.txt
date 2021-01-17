@@ -170,3 +170,5 @@
 
 * Launch DeskTop. Open a folder using Apple menu (e.g. Control Panels) or Selector. Verify that the used/free numbers are non-zero.
 * Launch DeskTop. Open a subdirectory folder. Quit and relaunch DeskTop. Verify that the used/free numbers in the restored window are non-zero.
+
+* Launch DeskTop. Open a folder containing subfolders. Select all the icons in the folder. Double-click one of the subfolders. Verify that the selection is retained in the parent window. Position the child window over top of the parent so it overlaps some of the icons. Close the child window. Verify that the parent window correctly shows only the previously opened folder as highlighted.
