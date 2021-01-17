@@ -74,8 +74,14 @@ L08B7:  lda     path_buf1
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        ldx     selected_device_index
+
+        ;; Reverse order, so boot volume is first
+        lda     DEVCNT
+        sec
+        sbc     selected_device_index
+        tax
         lda     DEVLST,x
+
         sta     L09D8
         sta     L09D7
         lda     #$00
@@ -206,8 +212,14 @@ L0A7A:  lda     path_buf1
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         copy    #$00, has_input_field_flag
-        ldx     selected_device_index
+
+        ;; Reverse order, so boot volume is first
+        lda     DEVCNT
+        sec
+        sbc     selected_device_index
+        tax
         lda     DEVLST,x
+
         sta     L0B47
         sta     L0B46
         param_call main::draw_dialog_label, 3, aux::str_confirm_erase
@@ -527,9 +539,13 @@ loop:   lda     vol
 setpos: stax    dialog_label_pos::xcoord
 skip:
 
-        lda     vol
+        ;; Reverse order, so boot volume is first
+        lda     DEVCNT
+        sec
+        sbc     vol
         asl     a
         tay
+
         lda     device_name_table+1,y
         tax
         lda     device_name_table,y ; now A,X has pointer

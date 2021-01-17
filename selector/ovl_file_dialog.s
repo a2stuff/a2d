@@ -1771,8 +1771,13 @@ LB03E:  .byte   0
 ;;; ============================================================
 
 .proc LB051
-        ldx     device_index
+        ;; Reverse order, so boot volume is first
+        lda     DEVCNT
+        sec
+        sbc     device_index
+        tax
         lda     DEVLST,x
+
         and     #$F0
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params

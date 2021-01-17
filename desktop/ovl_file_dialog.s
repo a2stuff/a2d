@@ -1166,8 +1166,14 @@ L5E6F:  jsr     copy_string_to_lcbuf
 ;;; ============================================================
 
 .proc device_on_line
-:       ldx     device_num
+:
+        ;; Reverse order, so boot volume is first
+        lda     DEVCNT
+        sec
+        sbc     device_num
+        tax
         lda     DEVLST,x
+
         and     #$F0
         sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
