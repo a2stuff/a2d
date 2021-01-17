@@ -4594,6 +4594,8 @@ deltay: .word   0
 
         jsr     LoadActiveWindowIconTable
 
+        copy    selected_window_id, old_selected_window_id
+
         jsr     clear_selection
 
         ldx     active_window_id
@@ -4672,9 +4674,24 @@ no_icon:
         jsr     check_item
         jsr     update_window_menu_items
 
-        ;; BUG: This doesn't ensure the window containing selection redraws
-        ;; fully. https://github.com/a2stuff/a2d/issues/364
-        jmp     clear_updates_and_redraw_desktop_icons
+        jsr     clear_updates_and_redraw_desktop_icons
+
+        ;; If selection was cleared out of the new top-most window, force
+        ;; a full redraw. https://github.com/a2stuff/a2d/issues/364
+        lda     active_window_id
+        beq     :+
+        cmp     old_selected_window_id
+        bne     :+
+
+        jsr     LoadActiveWindowIconTable
+        jsr     set_port_from_window_id
+        jsr     draw_window_entries
+        jsr     LoadDesktopIconTable
+
+:       rts
+
+old_selected_window_id:
+        .byte   0
 .endproc
 
 ;;; ============================================================
