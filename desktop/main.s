@@ -4055,22 +4055,30 @@ icon_num:  .byte   0
 
 start:  sta     icon_num
         ldx     selected_icon_count
-        beq     L5CFB
+        beq     maybe_extend
         dex
         lda     icon_num
-L5CE6:  cmp     selected_icon_list,x
-        beq     L5CF0
+:       cmp     selected_icon_list,x
+        beq     was_selected
         dex
-        bpl     L5CE6
-        bmi     L5CFB
-L5CF0:  bit     double_click_flag
-        bmi     L5CF8
-        jmp     handle_double_click
+        bpl     :-
+        bmi     maybe_extend    ; always
 
-L5CF8:  jmp     start_icon_drag
+        ;; Icon was already selected
+was_selected:
+        jsr     ModifierOrShiftDown
+        bpl     :+
+        lda     icon_num
+        jmp     deselect_file_icon ; deselect, nothing further
+
+:       bit     double_click_flag
+        bmi     :+
+        jmp     handle_double_click
+:       jmp     start_icon_drag
 
         ;; Extend selection (if in same window)?
-L5CFB:  jsr     ModifierOrShiftDown
+maybe_extend:
+        jsr     ModifierOrShiftDown
         bpl     replace
         lda     selected_window_id
         cmp     active_window_id ; same window?
@@ -4286,6 +4294,59 @@ icon_entry_type:
 
 icon_num:
         .byte   0
+.endproc
+
+;;; ============================================================
+;;; Remove specified icon from selection list, and redraw.
+;;; Input: A = icon number
+;;; Assert: Must be in selection list and active window.
+
+.proc deselect_file_icon
+        sta     icon_num
+
+        jsr     remove_from_selection_list
+
+        lda     active_window_id
+        jsr     set_port_from_window_id
+
+        copy    icon_num, icon_param
+        jsr     icon_screen_to_window
+
+        jsr     offset_window_grafport_and_set
+        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
+
+        lda     active_window_id
+        jsr     set_port_from_window_id
+
+        lda     icon_num
+        jsr     icon_window_to_screen
+        jmp     reset_main_grafport
+
+icon_num:
+        .byte   0
+.endproc
+
+;;; ============================================================
+;;; Remove specified icon from selected_icon_list
+;;; Inputs: A = icon_num
+;;; Assert: icon is present in the list.
+
+.proc remove_from_selection_list
+        ;; Find index in list
+        ldx     selected_icon_count
+:       dex
+        cmp     selected_icon_list,x
+        bne     :-
+
+        ;; Move everything down
+:       lda     selected_icon_list+1,x
+        sta     selected_icon_list,x
+        inx
+        cpx     selected_icon_count
+        bne     :-
+
+        dec     selected_icon_count
+        rts
 .endproc
 
 ;;; ============================================================
@@ -5216,22 +5277,30 @@ disable_selector_menu_items := toggle_selector_menu_items::disable
 
 .proc handle_volume_icon_click
         lda     selected_icon_count
-        bne     L67DF
+        bne     :+
         jmp     set_selection
 
-L67DF:  tax
+:       tax
         dex
         lda     findicon_which_icon
-L67E4:  cmp     selected_icon_list,x
-        beq     L67EE
+:       cmp     selected_icon_list,x
+        beq     was_selected
         dex
-        bpl     L67E4
-        bmi     L67F6
-L67EE:  bit     double_click_flag
-        bmi     L6834
-        jmp     L6880
+        bpl     :-
+        bmi     maybe_extend    ; always
 
-L67F6:  jsr     ModifierOrShiftDown
+        ;; Icon was already selected
+was_selected:
+        jsr     ModifierOrShiftDown
+        bpl     :+
+        jmp     deselect_vol_icon ; deselect, nothing further
+
+:       bit     double_click_flag
+        bmi     check_double_click
+        jmp     was_double_click
+
+maybe_extend:
+        jsr     ModifierOrShiftDown
         bpl     replace_selection
 
         ;; Add clicked icon to selection
@@ -5242,7 +5311,7 @@ L67F6:  jsr     ModifierOrShiftDown
         lda     findicon_which_icon
         sta     selected_icon_list,x
         inc     selected_icon_count
-        jmp     L6834
+        jmp     check_double_click
 
         ;; Replace selection with clicked icon
 replace_selection:
@@ -5256,8 +5325,9 @@ set_selection:
         copy    #0, selected_window_id
 
 
-L6834:  bit     double_click_flag
-        bpl     L6880
+check_double_click:
+        bit     double_click_flag
+        bpl     was_double_click
 
         ;; Drag of volume icon
         copy    findicon_which_icon, drag_drop_params::icon
@@ -5267,23 +5337,23 @@ L6834:  bit     double_click_flag
         beq     L6878
         jsr     jt_drop
         cmp     #$FF
-        bne     L6858
+        bne     :+
         jmp     clear_updates_and_redraw_desktop_icons
 
-L6858:  lda     drag_drop_params::result
+:       lda     drag_drop_params::result
         cmp     trash_icon_num
-        bne     L6863
+        bne     :+
         jmp     clear_updates_and_redraw_desktop_icons
 
-L6863:  lda     drag_drop_params::result
-        bpl     L6872
+:       lda     drag_drop_params::result
+        bpl     :+
         and     #$7F
         pha
         jsr     update_used_free_for_vol_windows
         pla
         jmp     select_and_refresh_window
 
-L6872:  jsr     update_vol_free_used_for_icon
+:       jsr     update_vol_free_used_for_icon
         jmp     clear_updates_and_redraw_desktop_icons
 
 L6878:  txa
@@ -5292,13 +5362,15 @@ L6878:  txa
         jmp     clear_updates_and_redraw_desktop_icons
 
         ;; Double-click on volume icon
-L6880:  lda     findicon_which_icon
+was_double_click:
+        lda     findicon_which_icon
         cmp     trash_icon_num
         beq     L688E
         jsr     open_folder_or_volume_icon
         jsr     StoreWindowIconTable
 L688E:  rts
 
+        ;; ???
 L688F:  ldx     selected_icon_count
         dex
 L6893:  txa
@@ -5310,6 +5382,11 @@ L6893:  txa
         dex
         bpl     L6893
         rts
+
+deselect_vol_icon:
+        ITK_RELAY_CALL IconTK::UnhighlightIcon, findicon_which_icon
+        lda     findicon_which_icon
+        jmp     remove_from_selection_list
 .endproc
 
 ;;; ============================================================

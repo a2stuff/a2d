@@ -181,3 +181,12 @@
 * Launch DeskTop. Special > Erase a Disk. Verify that the device order shown matches the order of volumes shown on the DeskTop (boot device first, etc). Erase a disk. Verify the correct device was erased.
 * Launch DeskTop. Select > Add an Entry. Verify that the device order (via Change Drive or pressing Tab) shown matches the order of volumes shown on the DeskTop (boot device first, etc).
 * Launch Selector. File > Run a Program. Verify that the device order (via Change Drive or pressing Tab) shown matches the order of volumes shown on the DeskTop (boot device first, etc).
+
+* Launch DeskTop. Select one or more volume icons. Hold Open-Apple and click a volume icon. Verify that it is deselected.
+* Launch DeskTop. Select one or more volume icons. Hold Solid-Apple and click a volume icon. Verify that it is deselected.
+* Platinum IIe: Launch DeskTop. Select one or more volume icons. Hold Shift and click a volume icon. Verify that it is deselected.
+* IIgs: Launch DeskTop. Select one or more volume icons. Hold Shift and click a volume icon. Verify that it is deselected.
+* Launch DeskTop. Open a window. Select one or more file icons. Hold Open-Apple and click a volume icon. Verify that it is deselected.
+* Launch DeskTop. Open a window. Select one or more file icons. Hold Solid-Apple and click a volume icon. Verify that it is deselected.
+* Platinum IIe: Launch DeskTop. Open a window. Select one or more file icons. Hold Shift and click a volume icon. Verify that it is deselected.
+* IIgs: Launch DeskTop. Open a window. Select one or more file icons. Hold Shift and click a volume icon. Verify that it is deselected.
