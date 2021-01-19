@@ -305,9 +305,13 @@ init_window:
 
         ;; If there is a system clock, only the first button is active
 :       ldx     clock_flag
+        beq     :+
+        cmp     #CHAR_ESCAPE    ; allow Escape to close as well
         bne     input_loop
+        jmp     on_ok
 
-        cmp     #CHAR_ESCAPE
+        ;; All controls are active
+:       cmp     #CHAR_ESCAPE
         bne     :+
         jmp     on_cancel
 :       cmp     #CHAR_LEFT

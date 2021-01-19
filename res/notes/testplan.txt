@@ -192,3 +192,5 @@
 * IIgs: Launch DeskTop. Open a window. Select one or more file icons. Hold Shift and click a file icon. Verify that it is deselected.
 
 * Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
+
+* Configure a system with a realtime clock. Launch DeskTop. Run the Date desk accessory. Press Escape key. Verify the desk accessory exits. Repeat with the Return key.
