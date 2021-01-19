@@ -273,7 +273,7 @@ GetCursorAddr   = $28           ; Get cursor definition
 ;;; Event Manager Calls
 
 .struct Event
-        kind    .byte           ; event_kind_*
+        kind    .byte           ; EventKind::*
     .union
       .struct                   ; event_kind_down
         key     .byte           ; ASCII code; high bit clear
@@ -435,7 +435,7 @@ EndUpdate       = $3F
 FindWindow      = $40
 ;;; .word       mousex          screen coordinates
 ;;; .word       mousey
-;;; .byte       which_area      (out) area_*
+;;; .byte       which_area      (out) Area::*
 ;;; .byte       window_id       (out) of window
 
 FrontWindow     = $41           ; Get id of top window
@@ -479,26 +479,26 @@ WindowToScreen  = $47           ; Map content coords to screen coords
 FindControl     = $48
 ;;; .word       mousex
 ;;; .word       mousey
-;;; .byte       which_ctl       ctl_*
-;;; .byte       which_part      part_*
+;;; .byte       which_ctl       Ctl::*
+;;; .byte       which_part      Part::*
 
 SetCtlMax       = $49
-;;; .byte       which_ctl       ctl_*_scroll_bar
+;;; .byte       which_ctl       Ctl::*_scroll_bar
 ;;; .byte       ctlmax          maximum value
 
 TrackThumb      = $4A
-;;; .byte       which_ctl       ctl_*_scroll_bar
+;;; .byte       which_ctl       Ctl::*_scroll_bar
 ;;; .word       mousex
 ;;; .word       mousey
 ;;; .byte       thumbpos        (out) 0...255
 ;;; .byte       thumbmoved      (out) 0 = no change, 1 = moved
 
 UpdateThumb     = $4B
-;;; .byte       which_ctl       ctl_*_scroll_bar
+;;; .byte       which_ctl       Ctl::*_scroll_bar
 ;;; .byte       thumbpos        new position 0...250
 
 ActivateCtl     = $4C           ; Activate/deactivate scroll bar
-;;; .byte       which_ctl       ctl_*_scroll_bar
+;;; .byte       which_ctl       Ctl::*_scroll_bar
 ;;; .byte       activate        0=deactivate, 1=activate
 
 ;;; --------------------------------------------------

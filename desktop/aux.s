@@ -362,7 +362,7 @@ highlight_list:                 ; selected icons
 kind:   .byte   0               ; spills into next block
 .endparams
 
-.params findwindow_params2
+.params findwindow_params
 mousex: .word   0
 mousey: .word   0
 which_area:     .byte   0
@@ -1085,7 +1085,7 @@ L97F6:  .byte   0
         bne     :-
 
         jsr     push_pointers
-        jmp     L983D           ; skip over data
+        jmp     start           ; skip over data
 
 icon_id:
         .byte   $00
@@ -1098,7 +1098,7 @@ highlight_icon_id:  .byte   $00
 
 window_id:      .byte   0
 window_id2:     .byte   0
-L9833:  .byte   $00
+flag:           .byte   0       ; ???
 
         ;; IconTK::IconInRect params
 .params iconinrect_params
@@ -1106,23 +1106,25 @@ icon:  .byte    0
 rect:  .tag     MGTK::Rect
 .endparams
 
-L983D:  lda     #0
+start:  lda     #0
         sta     highlight_icon_id
-        sta     L9833
+        sta     flag
 
-peek_loop:
-        MGTK_CALL MGTK::PeekEvent, peekevent_params
+;;; Determine if it's a drag or just a click
+.proc drag_detect
+
+peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
         cmp     #MGTK::EventKind::drag
-        beq     L9857
+        beq     drag
 
 ignore_drag:
         lda     #2              ; return value
         jmp     just_select
 
         ;; Compute mouse delta
-L9857:  sub16   findwindow_params2::mousex, coords1x, deltax
-        sub16   findwindow_params2::mousey, coords1y, deltay
+drag:   sub16   findwindow_params::mousex, coords1x, deltax
+        sub16   findwindow_params::mousey, coords1y, deltay
 
         kDragDelta = 5
 
@@ -1144,18 +1146,19 @@ check_deltay:
         lda     deltay
         cmp     #AS_BYTE(-kDragDelta)
         bcc     is_drag
-        jmp     peek_loop
+        jmp     peek
 y_lo:   lda     deltay
         cmp     #kDragDelta
         bcs     is_drag
-        jmp     peek_loop
+        jmp     peek
+.endproc
 
         ;; Meets the threshold - it is a drag, not just a click.
 is_drag:
         lda     highlight_count
         cmp     #kMaxDraggableItems + 1
         bcc     :+
-        jmp     ignore_drag     ; too many
+        jmp     drag_detect::ignore_drag ; too many
 
         ;; Was there a selection?
 :       copy16  #drag_outline_buffer, $08
@@ -1165,7 +1168,7 @@ is_drag:
         jmp     just_select
 
 :       lda     highlight_list
-        jsr     L9EB4
+        jsr     get_icon_ptr
         stax    $06
         ldy     #IconEntry::win_type
         lda     ($06),y
@@ -1183,16 +1186,17 @@ is_drag:
 
         ldx     highlight_count
         stx     L9C74
+
 L98F2:  lda     highlight_count,x
-        jsr     L9EB4
+        jsr     get_icon_ptr
         stax    $06
         ldy     #0
         lda     ($06),y
         cmp     #1
-        bne     L9909
+        bne     :+
         ldx     #$80
-        stx     L9833
-L9909:  sta     iconinrect_params::icon
+        stx     flag
+:       sta     iconinrect_params::icon
         ITK_DIRECT_CALL IconTK::IconInRect, iconinrect_params::icon
         beq     L9954
         jsr     calc_icon_poly
@@ -1205,21 +1209,22 @@ L9909:  sta     iconinrect_params::icon
         sec
         sbc     #kIconPolySize
         sta     $08
-        bcs     L992D
+        bcs     :+
         dec     $08+1
 
-L992D:  ldy     #IconEntry::state
+:       ldy     #IconEntry::state
         lda     #$80            ; Highlighted
         sta     ($08),y
         jsr     pop_pointers
+
 L9936:  ldx     #kIconPolySize-1
         ldy     #kIconPolySize-1
 
-L993A:  lda     poly,x
+:       lda     poly,x
         sta     ($08),y
         dey
         dex
-        bpl     L993A
+        bpl     :-
 
         lda     #8
         ldy     #0
@@ -1231,13 +1236,14 @@ L993A:  lda     poly,x
         bcc     L9954
         inc     $08+1
 L9954:  dec     L9C74
-        beq     L995F
+        beq     :+
         ldx     L9C74
         jmp     L98F2
 
-L995F:  COPY_BYTES 8, drag_outline_buffer+2, rect1
+:       COPY_BYTES 8, drag_outline_buffer+2, rect1
 
         copy16  #drag_outline_buffer, $08
+
 L9972:  ldy     #2
 
 L9974:  lda     ($08),y
@@ -1310,54 +1316,61 @@ L99E1:  iny
         jmp     L9972
 
 L99FC:  jsr     xdraw_outline
-L9A0E:  MGTK_CALL MGTK::PeekEvent, peekevent_params
+
+peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
         cmp     #MGTK::EventKind::drag
         beq     L9A1E
         jmp     L9BA5
 
 L9A1E:  ldx     #3
-L9A20:  lda     findwindow_params2,x
+L9A20:  lda     findwindow_params,x
         cmp     coords2,x
         bne     L9A31
         dex
         bpl     L9A20
-        jsr     L9E14
-        jmp     L9A0E
+        jsr     find_target_and_highlight
+        jmp     peek
 
-L9A31:  COPY_BYTES 4, findwindow_params2, coords2
+L9A31:  COPY_BYTES 4, findwindow_params, coords2
 
+        ;; Still over the highlighted icon?
         lda     highlight_icon_id
-        beq     L9A84
+        beq     :+
         lda     window_id
-        sta     findwindow_params2::window_id
-        ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params2
-        lda     findwindow_params2::which_area
-        cmp     highlight_icon_id
-        beq     L9A84
+        sta     findwindow_params::window_id
+        ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params
+        lda     findwindow_params::which_area ; Icon ID
+        cmp     highlight_icon_id             ; already over it?
+        beq     :+
+
+        ;; No longer over the highlighted icon - unhighlight it
         jsr     xdraw_outline
         MGTK_CALL MGTK::SetPort, icon_grafport
         ITK_DIRECT_CALL IconTK::UnhighlightIcon, highlight_icon_id
         jsr     xdraw_outline
         lda     #0
         sta     highlight_icon_id
-L9A84:  sub16   findwindow_params2::mousex, coords1x, rect3_x1
-        sub16   findwindow_params2::mousey, coords1y, rect3_y1
-        jsr     L9C9E
+
+:       sub16   findwindow_params::mousex, coords1x, rect3_x1
+        sub16   findwindow_params::mousey, coords1y, rect3_y1
+        jsr     set_rect2_to_rect1
+
         ldx     #0
-L9AAF:  add16   rect1_x2,x, rect3_x1,x, rect1_x2,x
+:       add16   rect1_x2,x, rect3_x1,x, rect1_x2,x
         add16   rect1_x1,x, rect3_x1,x, rect1_x1,x
         inx
         inx
         cpx     #4
-        bne     L9AAF
+        bne     :-
+
         lda     #0
         sta     L9C75
         lda     rect1_x1+1
         bmi     L9AF7
         cmp16   rect1_x2, #kScreenWidth
         bcs     L9AFE
-        jsr     L9DFA
+        jsr     set_coords1x_to_mousex
         jmp     L9B0E
 
 L9AF7:  jsr     L9CAA
@@ -1365,7 +1378,7 @@ L9AF7:  jsr     L9CAA
         bpl     L9B03
 L9AFE:  jsr     L9CD1
         bmi     L9B0E
-L9B03:  jsr     L9DB8
+L9B03:  jsr     set_rect1_to_rect2_and_zero_rect3_x
         lda     L9C75
         ora     #$80
         sta     L9C75
@@ -1375,7 +1388,7 @@ L9B0E:  lda     rect1_y1+1
         bcc     L9B31
         cmp16   rect1_y2, #kScreenHeight
         bcs     L9B38
-        jsr     L9E07
+        jsr     set_coords1y_to_mousey
         jmp     L9B48
 
 L9B31:  jsr     L9D31
@@ -1383,14 +1396,14 @@ L9B31:  jsr     L9D31
         bpl     L9B3D
 L9B38:  jsr     L9D58
         bmi     L9B48
-L9B3D:  jsr     L9DD9
+L9B3D:  jsr     set_rect1_to_rect2_and_zero_rect3_y
         lda     L9C75
         ora     #$40
         sta     L9C75
 L9B48:  bit     L9C75
         bpl     L9B52
         bvc     L9B52
-        jmp     L9A0E
+        jmp     peek
 
 L9B52:  jsr     xdraw_outline
         copy16  #drag_outline_buffer, $08
@@ -1413,7 +1426,7 @@ L9B62:  add16in ($08),y, rect3_x1, ($08),y
 L9B99:  jmp     L9B60
 
 L9B9C:  jsr     xdraw_outline
-        jmp     L9A0E
+        jmp     peek
 
 L9BA5:  jsr     xdraw_outline
         lda     highlight_icon_id
@@ -1422,15 +1435,15 @@ L9BA5:  jsr     xdraw_outline
         ITK_DIRECT_CALL IconTK::UnhighlightIcon, highlight_icon_id
         jmp     L9C63
 
-:       MGTK_CALL MGTK::FindWindow, findwindow_params2
-        lda     findwindow_params2::window_id
+:       MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::window_id
         cmp     window_id2
         beq     L9BE1
-        bit     L9833
+        bit     flag
         bmi     L9BDC
-        lda     findwindow_params2::window_id
+        lda     findwindow_params::window_id
         bne     L9BD4
-L9BD1:  jmp     ignore_drag
+L9BD1:  jmp     drag_detect::ignore_drag
 
 L9BD4:  ora     #$80
         sta     highlight_icon_id
@@ -1536,27 +1549,33 @@ rect3_y1:       .word   0
 rect3_x2:       .word   0       ; Unused???
 rect3_y2:       .word   0       ; Unused???
 
-L9C9E:  COPY_STRUCT MGTK::Rect, rect1, rect2
+.proc set_rect2_to_rect1
+        COPY_STRUCT MGTK::Rect, rect1, rect2
         rts
+.endproc
 
-L9CAA:  lda     rect1_x1
+.proc L9CAA
+        lda     rect1_x1
         cmp     L9C7E
-        bne     L9CBD
+        bne     :+
         lda     rect1_x1+1
         cmp     L9C7E+1
-        bne     L9CBD
+        bne     :+
         return  #0
 
-L9CBD:  sub16   #0, rect2_x1, rect3_x1
+:       sub16   #0, rect2_x1, rect3_x1
         jmp     L9CF5
+.endproc
 
-L9CD1:  lda     rect1_x2
+.proc L9CD1
+        lda     rect1_x2
         cmp     const_screen_width
         bne     L9CE4
         lda     rect1_x2+1
         cmp     const_screen_width+1
         bne     L9CE4
         return  #0
+.endproc
 
 L9CE4:  sub16   #kScreenWidth, rect2_x2, rect3_x1
 L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
@@ -1564,24 +1583,28 @@ L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
         add16   coords1x, rect3_x1, coords1x
         return  #$FF
 
-L9D31:  lda     rect1_y1
+.proc L9D31
+        lda     rect1_y1
         cmp     L9C80
-        bne     L9D44
+        bne     :+
         lda     rect1_y1+1
         cmp     L9C80+1
-        bne     L9D44
+        bne     :+
         return  #0
 
-L9D44:  sub16   #kMenuBarHeight, rect2_y1, rect3_y1
+:       sub16   #kMenuBarHeight, rect2_y1, rect3_y1
         jmp     L9D7C
+.endproc
 
-L9D58:  lda     rect1_y2
+.proc L9D58
+        lda     rect1_y2
         cmp     const_screen_height
         bne     L9D6B
         lda     rect1_y2+1
         cmp     const_screen_height+1
         bne     L9D6B
         return  #0
+.endproc
 
 L9D6B:  sub16   #kScreenHeight-1, rect2_y2, rect3_y1
 L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
@@ -1589,81 +1612,111 @@ L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
         add16   coords1y, rect3_y1, coords1y
         return  #$FF
 
-L9DB8:  copy16  rect2_x1, rect1_x1
+.proc set_rect1_to_rect2_and_zero_rect3_x
+        copy16  rect2_x1, rect1_x1
         copy16  rect2_x2, rect1_x2
         lda     #0
         sta     rect3_x1
         sta     rect3_x1+1
         rts
+.endproc
 
-L9DD9:  copy16  rect2_y1, rect1_y1
+.proc set_rect1_to_rect2_and_zero_rect3_y
+        copy16  rect2_y1, rect1_y1
         copy16  rect2_y2, rect1_y2
         lda     #0
         sta     rect3_y1
         sta     rect3_y1+1
         rts
+.endproc
 
-L9DFA:  lda     findwindow_params2::mousex+1
+.proc set_coords1x_to_mousex
+        lda     findwindow_params::mousex+1
         sta     coords1x+1
-        lda     findwindow_params2::mousex
+        lda     findwindow_params::mousex
         sta     coords1x
         rts
+.endproc
 
-L9E07:  lda     findwindow_params2::mousey+1
+.proc set_coords1y_to_mousey
+        lda     findwindow_params::mousey+1
         sta     coords1y+1
-        lda     findwindow_params2::mousey
+        lda     findwindow_params::mousey
         sta     coords1y
         rts
+.endproc
 
-L9E14:  bit     L9833
-        bpl     L9E1A
+.proc find_target_and_highlight
+        bit     flag
+        bpl     :+
         rts
 
-L9E1A:  jsr     push_pointers
-        MGTK_CALL MGTK::FindWindow, findwindow_params2
-        lda     findwindow_params2::which_area
-        bne     L9E2B
-        sta     findwindow_params2::window_id
-L9E2B:  ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params2
-        lda     findwindow_params2::which_area ; Icon ID
-        bne     L9E39
-        jmp     L9E97
+:       jsr     push_pointers
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
 
-L9E39:  ldx     highlight_count
+        ;; TODO: If in a window:
+        ;; * Call FindControl, ignore unless not_a_control
+        ;; * Ignore if y coord < window's header height
+
+        bne     :+                           ; 0 is desktop...
+        sta     findwindow_params::window_id ; record it
+:       ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params
+        lda     findwindow_params::which_area ; Icon ID
+        bne     :+
+        jmp     done
+
+        ;; Is the icon in the highlight list?
+:       ldx     highlight_count
         dex
-L9E3D:  cmp     highlight_list,x
-        beq     L9E97
+:       cmp     highlight_list,x
+        beq     done
         dex
-        bpl     L9E3D
-        sta     L9EB3
+        bpl     :-
+
+        ;; Over an icon
+        ptr := $06
+        sta     icon_num
         cmp     #kTrashIconNum
         beq     :+
         asl     a
         tax
-        copy16  icon_ptrs,x, $06
+        copy16  icon_ptrs,x, ptr
+
+        ;; Which window?
         ldy     #IconEntry::win_type
-        lda     ($06),y
+        lda     (ptr),y
         and     #kIconEntryWinIdMask
         sta     window_id
-        lda     ($06),y
+
+        ;; Is it a drop target?
+        lda     (ptr),y
         and     #kIconEntryTypeMask
-        bne     L9E97
-        lda     L9EB3
+        bne     done
+
+        ;; Highlight it!
+        lda     icon_num
 :       sta     highlight_icon_id
         jsr     xdraw_outline
         MGTK_CALL MGTK::SetPort, icon_grafport
         ITK_DIRECT_CALL IconTK::HighlightIcon, highlight_icon_id
         jsr     xdraw_outline
-L9E97:  jsr     pop_pointers
+
+done:   jsr     pop_pointers
         rts
 
-L9EB3:  .byte   0
-L9EB4:  asl     a
+icon_num:
+        .byte   0
+.endproc
+
+.proc get_icon_ptr
+        asl     a
         tay
         lda     icon_ptrs+1,y
         tax
         lda     icon_ptrs,y
         rts
+.endproc
 
 .proc xdraw_outline
         MGTK_CALL MGTK::SetPort, drag_outline_grafport
