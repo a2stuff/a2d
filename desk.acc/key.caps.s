@@ -602,6 +602,8 @@ continue:
         lda     event_params::key
         cmp     #'Q'
         beq     exit
+        cmp     #'q'
+        beq     exit
 
 start:  lda     KBD
         and     #CHAR_MASK

@@ -190,3 +190,5 @@
 * Launch DeskTop. Open a window. Select one or more file icons. Hold Solid-Apple and click a file icon. Verify that it is deselected.
 * Platinum IIe: Launch DeskTop. Open a window. Select one or more file icons. Hold Shift and click a file icon. Verify that it is deselected.
 * IIgs: Launch DeskTop. Open a window. Select one or more file icons. Hold Shift and click a file icon. Verify that it is deselected.
+
+* Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
