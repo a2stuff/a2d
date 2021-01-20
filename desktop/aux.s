@@ -362,11 +362,21 @@ highlight_list:                 ; selected icons
 kind:   .byte   0               ; spills into next block
 .endparams
 
+;;; findwindow_params::window_id is used as first part of
+;;; GetWinPtr params structure including window_ptr.
 .params findwindow_params
 mousex: .word   0
 mousey: .word   0
 which_area:     .byte   0
 window_id:      .byte   0
+.endparams
+window_ptr:  .word   0          ; do not move this; see above
+
+.params findcontrol_params
+mousex: .word   0
+mousey: .word   0
+which_ctl:      .byte   0
+which_part:     .byte   0
 .endparams
 
 .params grafport
@@ -1654,14 +1664,36 @@ L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
 :       jsr     push_pointers
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
+        beq     desktop
 
-        ;; TODO: If in a window:
-        ;; * Call FindControl, ignore unless not_a_control
-        ;; * Ignore if y coord < window's header height
+        ;; --------------------------------------------------
+        ;; In a window - ensure it's in the content area
+        cmp     #MGTK::Area::content
+        beq     :+
+        jmp     done            ; menubar, titlebar, etc
+:       COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        beq     :+              ; 0 = MGTK::Ctl::not_a_control
+        jmp     done            ; scrollbar, etc.
 
-        bne     :+                           ; 0 is desktop...
-        sta     findwindow_params::window_id ; record it
-:       ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params
+        ;; Ignore if y coord < window's header height
+:       MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
+        win_ptr := $06
+        copy16  window_ptr, win_ptr
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        add16in (win_ptr),y, #kWindowHeaderHeight + 1, headery
+        cmp16   findwindow_params::mousey, headery
+        bmi     done
+        bpl     find_icon       ; always
+
+        ;; --------------------------------------------------
+        ;; On desktop - A=0, note that as window_id
+desktop:
+        sta     findwindow_params::window_id
+
+find_icon:
+        ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params
         lda     findwindow_params::which_area ; Icon ID
         bne     :+
         jmp     done
@@ -1707,6 +1739,9 @@ done:   jsr     pop_pointers
 
 icon_num:
         .byte   0
+
+headery:
+        .word   0
 .endproc
 
 .proc get_icon_ptr
@@ -2716,15 +2751,12 @@ done:   MGTK_CALL MGTK::SetPortBits, portbits
 
         jmp     start
 
-;;; findwindow_params::window_id is used as first part of
-;;; GetWinPtr params structure including window_ptr.
 .params findwindow_params
 mousex: .word   0
 mousey: .word   0
 which_area:     .byte   0
 window_id:      .byte   0
 .endparams
-window_ptr:  .word   0          ; do not move this; see above
 
 pt_num: .byte   0
 

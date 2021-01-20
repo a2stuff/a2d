@@ -194,3 +194,5 @@
 * Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
 
 * Configure a system with a realtime clock. Launch DeskTop. Run the Date desk accessory. Press Escape key. Verify the desk accessory exits. Repeat with the Return key.
+
+* Launch DeskTop. Open a window containing folders and files. Scroll window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the obscured part of the folder. Ensure the folder doesn't highlight.
