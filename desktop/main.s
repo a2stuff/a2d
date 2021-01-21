@@ -8054,8 +8054,8 @@ break:  lda     LCBANK1         ; Done copying records
         lda     LCBANK2
         lda     LCBANK2
 
-        ;; Set up highest value ("ZZZZZZZZZZZZZZZ")
-        lda     #'Z'
+        ;; Set up highest value
+        lda     #$7F            ; beyond last possible name char
         ldx     #kNameSize
 :       sta     name+1,x
         dex
@@ -8127,7 +8127,7 @@ inext:  inc     record_num
         sta     (ptr),y
 
         kMaxFilenameLength = 15
-        lda     #'Z'            ; Make name 'ZZZZZZZZZZZZZZZ' (last possible)
+        lda     #$7F            ; beyond last possible name char
         ldx     #kMaxFilenameLength
 :       sta     $0808,x
         dex

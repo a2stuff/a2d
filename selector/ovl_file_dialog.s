@@ -1788,6 +1788,7 @@ LB03E:  .byte   0
         jsr     LB082
         jmp     LB051
 
+        ;; TODO: Adjust volume case of buf_on_line here
 LB075:  lda     #$00
         sta     LA3C7
         param_call LB0D6, buf_on_line
@@ -1895,6 +1896,8 @@ LB117:  rts
         jmp     LB1CF
 
 LB144:  copy16  #dir_read_buf+$2B, $06
+
+        ;; TODO: Adjust file entry case ($06) here
 LB14C:  ldy     #$00
         lda     ($06),y
         and     #$0F
@@ -2255,8 +2258,8 @@ tmp:    .byte   0
 ;;; ============================================================
 
 .proc LB453
-        lda     #$5A
-        ldx     #$0F
+        lda     #$7F            ; beyond last possible name char
+        ldx     #15
 :       sta     LB537,x
         dex
         bpl     :-
@@ -2311,7 +2314,7 @@ LB4C0:  lda     LB535
         lda     ($06),y
         ora     #$80
         sta     ($06),y
-        lda     #'Z'
+        lda     #$7F            ; beyond last possible name char
         ldx     #$0F
 :       sta     LB537,x
         dex

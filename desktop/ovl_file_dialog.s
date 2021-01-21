@@ -1613,9 +1613,10 @@ L62C7:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Sorting
 
 .proc L62DE
-        lda     #'Z'
+        lda     #$7F            ; beyond last possible name char
         ldx     #15
 :       sta     L63C2,x
         dex
@@ -1640,7 +1641,7 @@ L62FB:  lda     L63BE
 L630E:  lda     ($06),y
         cmp     L63C1,y
         beq     L631A
-        bcs     L633D
+        bcs     L633D           ; ???
         jmp     L6322
 
 L631A:  iny
@@ -1673,7 +1674,7 @@ L634B:  lda     L63C0
         ora     #$80
         sta     ($06),y
 
-        lda     #'Z'
+        lda     #$7F            ; beyond last possible name char
         ldx     #15
 :       sta     L63C2,x
         dex
