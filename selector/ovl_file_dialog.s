@@ -496,10 +496,10 @@ LA47F:  .byte   0
         jmp     event_loop
 :       lda     findwindow_window_id
         cmp     winfo_dialog::window_id
-        beq     LA4D4
+        beq     l1
         jmp     event_loop
 
-LA4D4:  lda     winfo_dialog::window_id
+l1:     lda     winfo_dialog::window_id
         jsr     set_port_for_window
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
@@ -507,12 +507,12 @@ LA4D4:  lda     winfo_dialog::window_id
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, rect_input
         cmp     #MGTK::inrect_inside
-        bne     LA4FC
+        bne     l2
         jsr     set_cursor_ibeam
-        jmp     LA4FF
+        jmp     l3
 
-LA4FC:  jsr     unset_ip_cursor
-LA4FF:  MGTK_CALL MGTK::InitPort, grafport2
+l2:     jsr     unset_ip_cursor
+l3:     MGTK_CALL MGTK::InitPort, grafport2
         MGTK_CALL MGTK::SetPort, grafport2
         jmp     event_loop
 
@@ -991,24 +991,24 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         bpl     :+
         jsr     prep_path
 :       lda     #$00
-        sta     LA941
+        sta     l1
         lda     #$00
         sta     $08
         lda     #$18
         sta     $09
         pla
         asl     a
-        rol     LA941
+        rol     l1
         asl     a
-        rol     LA941
+        rol     l1
         asl     a
-        rol     LA941
+        rol     l1
         asl     a
-        rol     LA941
+        rol     l1
         clc
         adc     $08
         sta     $08
-        lda     LA941
+        lda     l1
         adc     $09
         sta     $09
         ldx     $09
@@ -1022,8 +1022,9 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     draw_list_entries
         rts
 
-LA941:  .byte   0
+l1:     .byte   0
 .endproc
+
 ;;; ============================================================
 
 .proc change_drive
@@ -1046,24 +1047,24 @@ LA941:  .byte   0
 
 .proc LA965
         lda     #$00
-        sta     LA9C8
+        sta     l7
         ldx     path_buf
-        bne     LA972
-        jmp     LA9C7
+        bne     l1
+        jmp     l6
 
-LA972:  lda     path_buf,x
+l1:     lda     path_buf,x
         and     #CHAR_MASK
         cmp     #'/'
-        beq     LA981
+        beq     l2
         dex
-        bpl     LA972
-        jmp     LA9C7
+        bpl     l1
+        jmp     l6
 
-LA981:  cpx     #$01
-        bne     LA988
-        jmp     LA9C7
+l2:     cpx     #$01
+        bne     l3
+        jmp     l6
 
-LA988:  jsr     LB106
+l3:     jsr     LB106
         lda     selected_index
         pha
         lda     #$FF
@@ -1076,21 +1077,21 @@ LA988:  jsr     LB106
         jsr     draw_list_entries
         pla
         sta     selected_index
-        bit     LA9C8
-        bmi     LA9BC
+        bit     l7
+        bmi     l4
         jsr     strip_path_segment_left_and_redraw
         lda     selected_index
-        bmi     LA9C2
+        bmi     l5
         jsr     strip_path_segment_left_and_redraw
-        jmp     LA9C2
+        jmp     l5
 
-LA9BC:  jsr     prep_path
+l4:     jsr     prep_path
         jsr     redraw_input
-LA9C2:  lda     #$FF
+l5:     lda     #$FF
         sta     selected_index
-LA9C7:  rts
+l6:     rts
 
-LA9C8:  .byte   0
+l7:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1113,11 +1114,11 @@ LA9C8:  .byte   0
 
 .proc event_loop_ok_btn
         lda     #$00
-        sta     LAA64
-LA9FC:  MGTK_CALL MGTK::GetEvent, event_params
+        sta     l4
+l1:     MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LAA4D
+        beq     l2
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -1125,203 +1126,203 @@ LA9FC:  MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     :+
-        lda     LAA64
+        lda     l4
         beq     toggle
-        jmp     LA9FC
+        jmp     l1
 
-:       lda     LAA64
+:       lda     l4
         bne     toggle
-        jmp     LA9FC
+        jmp     l1
 
 toggle: MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
-        lda     LAA64
+        lda     l4
         clc
         adc     #$80
-        sta     LAA64
-        jmp     LA9FC
+        sta     l4
+        jmp     l1
 
-LAA4D:  lda     LAA64
-        beq     LAA55
+l2:     lda     l4
+        beq     l3
         return  #$FF
 
-LAA55:  MGTK_CALL MGTK::SetPenMode, penXOR
+l3:     MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         return  #$00
 
-LAA64:  .byte   0
+l4:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc event_loop_cancel_btn
         lda     #$00
-        sta     LAAD2
-LAA6A:  MGTK_CALL MGTK::GetEvent, event_params
+        sta     l6
+l1:     MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LAABB
+        beq     l4
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LAA9B
-        lda     LAAD2
-        beq     LAAA3
-        jmp     LAA6A
+        beq     l2
+        lda     l6
+        beq     l3
+        jmp     l1
 
-LAA9B:  lda     LAAD2
-        bne     LAAA3
-        jmp     LAA6A
+l2:     lda     l6
+        bne     l3
+        jmp     l1
 
-LAAA3:  MGTK_CALL MGTK::SetPenMode, penXOR
+l3:     MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, cancel_button_rect
-        lda     LAAD2
+        lda     l6
         clc
         adc     #$80
-        sta     LAAD2
-        jmp     LAA6A
+        sta     l6
+        jmp     l1
 
-LAABB:  lda     LAAD2
-        beq     LAAC3
+l4:     lda     l6
+        beq     l5
         return  #$FF
 
-LAAC3:  MGTK_CALL MGTK::SetPenMode, penXOR
+l5:     MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, cancel_button_rect
         return  #$01
 
-LAAD2:  .byte   0
+l6:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc event_loop_open_btn
         lda     #$00
-        sta     LAB40
-LAAD8:  MGTK_CALL MGTK::GetEvent, event_params
+        sta     l6
+l1:     MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LAB29
+        beq     l4
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, open_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LAB09
-        lda     LAB40
-        beq     LAB11
-        jmp     LAAD8
+        beq     l2
+        lda     l6
+        beq     l3
+        jmp     l1
 
-LAB09:  lda     LAB40
-        bne     LAB11
-        jmp     LAAD8
+l2:     lda     l6
+        bne     l3
+        jmp     l1
 
-LAB11:  MGTK_CALL MGTK::SetPenMode, penXOR
+l3:     MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, open_button_rect
-        lda     LAB40
+        lda     l6
         clc
         adc     #$80
-        sta     LAB40
-        jmp     LAAD8
+        sta     l6
+        jmp     l1
 
-LAB29:  lda     LAB40
-        beq     LAB31
+l4:     lda     l6
+        beq     l5
         return  #$FF
 
-LAB31:  MGTK_CALL MGTK::SetPenMode, penXOR
+l5:     MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, open_button_rect
         return  #$00
 
-LAB40:  .byte   0
+l6:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc event_loop_change_drive_btn
         lda     #$00
-        sta     LABAE
-LAB46:  MGTK_CALL MGTK::GetEvent, event_params
+        sta     l6
+l1:     MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LAB97
+        beq     l4
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, change_drive_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LAB77
-        lda     LABAE
-        beq     LAB7F
-        jmp     LAB46
+        beq     l2
+        lda     l6
+        beq     l3
+        jmp     l1
 
-LAB77:  lda     LABAE
-        bne     LAB7F
-        jmp     LAB46
+l2:     lda     l6
+        bne     l3
+        jmp     l1
 
-LAB7F:  MGTK_CALL MGTK::SetPenMode, penXOR
+l3:     MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, change_drive_button_rect
-        lda     LABAE
+        lda     l6
         clc
         adc     #$80
-        sta     LABAE
-        jmp     LAB46
+        sta     l6
+        jmp     l1
 
-LAB97:  lda     LABAE
-        beq     LAB9F
+l4:     lda     l6
+        beq     l5
         return  #$FF
 
-LAB9F:  MGTK_CALL MGTK::SetPenMode, penXOR
+l5:     MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, change_drive_button_rect
         return  #$01
 
-LABAE:  .byte   0
+l6:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc event_loop_close_btn
         lda     #$00
-        sta     LAC1C
-LABB4:  MGTK_CALL MGTK::GetEvent, event_params
+        sta     l6
+l1:     MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LAC05
+        beq     l4
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, close_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LABE5
-        lda     LAC1C
-        beq     LABED
-        jmp     LABB4
+        beq     l2
+        lda     l6
+        beq     l3
+        jmp     l1
 
-LABE5:  lda     LAC1C
-        bne     LABED
-        jmp     LABB4
+l2:     lda     l6
+        bne     l3
+        jmp     l1
 
-LABED:  MGTK_CALL MGTK::SetPenMode, penXOR
+l3:     MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, close_button_rect
-        lda     LAC1C
+        lda     l6
         clc
         adc     #$80
-        sta     LAC1C
-        jmp     LABB4
+        sta     l6
+        jmp     l1
 
-LAC05:  lda     LAC1C
-        beq     LAC0D
+l4:     lda     l6
+        beq     l5
         return  #$FF
 
-LAC0D:  MGTK_CALL MGTK::SetPenMode, penXOR
+l5:     MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, close_button_rect
         return  #$00
 
-LAC1C:  .byte   0
+l6:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1461,7 +1462,8 @@ exit:   jsr     LA9C9
 
 ;;; ============================================================
 
-LAD20:  lda     winfo_dialog::window_id
+.proc LAD20
+        lda     winfo_dialog::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
@@ -1470,6 +1472,7 @@ LAD20:  lda     winfo_dialog::window_id
         jsr     handle_ok
         jsr     LA9C9
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -1500,22 +1503,22 @@ key_meta_digit:
 
 .proc key_down
         lda     num_file_names
-        beq     LAD79
+        beq     l1
         lda     selected_index
-        bmi     LAD89
+        bmi     l3
         tax
         inx
         cpx     num_file_names
-        bcc     LAD7A
-LAD79:  rts
+        bcc     l2
+l1:     rts
 
-LAD7A:  jsr     LB404
+l2:     jsr     LB404
         jsr     strip_path_segment_left_and_redraw
         inc     selected_index
         lda     selected_index
         jmp     update_list_selection
 
-LAD89:  lda     #0
+l3:     lda     #0
         jmp     update_list_selection
 .endproc
 
@@ -1523,19 +1526,19 @@ LAD89:  lda     #0
 
 .proc key_up
         lda     num_file_names
-        beq     LAD9A
+        beq     l1
         lda     selected_index
-        bmi     LADAA
-        bne     LAD9B
-LAD9A:  rts
+        bmi     l3
+        bne     l2
+l1:     rts
 
-LAD9B:  jsr     LB404
+l2:     jsr     LB404
         jsr     strip_path_segment_left_and_redraw
         dec     selected_index
         lda     selected_index
         jmp     update_list_selection
 
-LADAA:  ldx     num_file_names
+l3:     ldx     num_file_names
         dex
         txa
         jmp     update_list_selection
@@ -1625,15 +1628,15 @@ LAE37:  .byte   0
 
 .proc scroll_list_top
         lda     num_file_names
-        beq     LAE44
+        beq     l1
         lda     selected_index
-        bmi     LAE4B
+        bmi     l2
         bne     :+
-LAE44:  rts
+l1:     rts
 
 :       jsr     LB404
         jsr     strip_path_segment_left_and_redraw
-LAE4B:  lda     #$00
+l2:     lda     #$00
         jmp     update_list_selection
 .endproc
 
@@ -1643,7 +1646,7 @@ LAE4B:  lda     #$00
         lda     num_file_names
         beq     done
         ldx     selected_index
-        bmi     LAE69
+        bmi     l1
         inx
         cpx     num_file_names
         bne     :+
@@ -1653,7 +1656,7 @@ done:   rts
         txa
         jsr     LB404
         jsr     strip_path_segment_left_and_redraw
-LAE69:  ldx     num_file_names
+l1:     ldx     num_file_names
         dex
         txa
         jmp     update_list_selection
@@ -1760,21 +1763,21 @@ draw_change_drive_button_label:
         MGTK_CALL MGTK::TextWidth, params
         lsr16   $09
         lda     #>winfo_dialog::kWidth
-        sta     LB03E
+        sta     l1
         lda     #<winfo_dialog::kWidth
-        lsr     LB03E
+        lsr     l1
         ror     a
         sec
         sbc     $09
         sta     pt3::xcoord
-        lda     LB03E
+        lda     l1
         sbc     $0A
         sta     pt3::xcoord+1
         MGTK_CALL MGTK::MoveTo, pt3
         MGTK_CALL MGTK::DrawText, params
         rts
 
-LB03E:  .byte   0
+l1:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1834,7 +1837,7 @@ found:  param_call AdjustVolumeNameCase, buf_on_line
         lda     #$00
         sta     LB0D5
         MLI_CALL OPEN, open_params
-        beq     LB0B5
+        beq     l1
         jsr     device_on_line
         lda     #$FF
         sta     selected_index
@@ -1842,17 +1845,17 @@ found:  param_call AdjustVolumeNameCase, buf_on_line
         sta     LB0D5
         jmp     LB095
 
-LB0B5:  lda     open_params::ref_num
+l1:     lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         MLI_CALL READ, read_params
-        beq     LB0D4
+        beq     l2
         jsr     device_on_line
         lda     #$FF
         sta     selected_index
         jmp     LB095
 
-LB0D4:  rts
+l2:     rts
 .endproc
 
 LB0D5:  .byte   0
@@ -1873,12 +1876,12 @@ LB0D5:  .byte   0
 
         pha
         tax
-LB0F0:  lda     ($06),y
+l1:     lda     ($06),y
         sta     path_buf,x
         dey
         dex
         cpx     path_buf
-        bne     LB0F0
+        bne     l1
         pla
         sta     path_buf
         lda     #$FF
@@ -1904,65 +1907,65 @@ LB0F0:  lda     ($06),y
 .proc LB118
         jsr     LB095
         lda     #0
-        sta     LB224
-        sta     LB225
+        sta     l10
+        sta     l11
         sta     LA448
         lda     #1
-        sta     LB226
-        copy16  dir_read_buf+$23, LB227
+        sta     l12
+        copy16  dir_read_buf+$23, l13
         lda     dir_read_buf+$25
         and     #$7F
         sta     num_file_names
         bne     :+
-        jmp     LB1CF
+        jmp     l6
 
 :       copy16  #dir_read_buf+$2B, $06
 
-LB14C:  param_call_indirect AdjustFileEntryCase, $06
+l1:     param_call_indirect AdjustFileEntryCase, $06
 
         ldy     #0
         lda     ($06),y
         and     #NAME_LENGTH_MASK
-        bne     LB157
-        jmp     LB1C4
+        bne     l2
+        jmp     l5
 
-LB157:  ldx     LB224
+l2:     ldx     l10
         txa
         sta     file_list_index,x
         ldy     #0
         lda     ($06),y
         and     #STORAGE_TYPE_MASK
         cmp     #ST_LINKED_DIRECTORY << 4
-        beq     LB173
+        beq     l3
         bit     LA447
-        bpl     LB17E
-        inc     LB225
-        jmp     LB1C4
+        bpl     l4
+        inc     l11
+        jmp     l5
 
-LB173:  lda     file_list_index,x
+l3:     lda     file_list_index,x
         ora     #$80
         sta     file_list_index,x
         inc     LA448
-LB17E:  ldy     #$00
+l4:     ldy     #$00
         lda     ($06),y
         and     #$0F
         sta     ($06),y
         copy16  #file_names, $08
         lda     #$00
-        sta     LB229
-        lda     LB224
+        sta     l15
+        lda     l10
         asl     a
-        rol     LB229
+        rol     l15
         asl     a
-        rol     LB229
+        rol     l15
         asl     a
-        rol     LB229
+        rol     l15
         asl     a
-        rol     LB229
+        rol     l15
         clc
         adc     $08
         sta     $08
-        lda     LB229
+        lda     l15
         adc     $09
         sta     $09
         ldy     #$00
@@ -1972,13 +1975,13 @@ LB17E:  ldy     #$00
         sta     ($08),y
         dey
         bpl     :-
-        inc     LB224
-        inc     LB225
-LB1C4:  inc     LB226
-        lda     LB225
+        inc     l10
+        inc     l11
+l5:     inc     l12
+        lda     l11
         cmp     num_file_names
-        bne     LB1F2
-LB1CF:  MLI_CALL CLOSE, close_params
+        bne     l8
+l6:     MLI_CALL CLOSE, close_params
         bit     LA447
         bpl     :+
         lda     LA448
@@ -1986,37 +1989,37 @@ LB1CF:  MLI_CALL CLOSE, close_params
 :       jsr     sort_file_names
         jsr     LB65E
         lda     LB0D5
-        bpl     LB1F0
+        bpl     l7
         sec
         rts
 
-LB1F0:  clc
+l7:     clc
         rts
 
-LB1F2:  lda     LB226
-        cmp     LB228
-        beq     LB20B
+l8:     lda     l12
+        cmp     l14
+        beq     l9
         lda     $06
         clc
-        adc     LB227
+        adc     l13
         sta     $06
         lda     $07
         adc     #$00
         sta     $07
-        jmp     LB14C
+        jmp     l1
 
-LB20B:  MLI_CALL READ, read_params
+l9:     MLI_CALL READ, read_params
         copy16  #dir_read_buf+$04, $06
         lda     #$00
-        sta     LB226
-        jmp     LB14C
+        sta     l12
+        jmp     l1
 
-LB224:  .byte   0
-LB225:  .byte   0
-LB226:  .byte   0
-LB227:  .byte   0
-LB228:  .byte   0
-LB229:  .byte   0
+l10:    .byte   0
+l11:    .byte   0
+l12:    .byte   0
+l13:    .byte   0
+l14:    .byte   0
+l15:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2033,57 +2036,57 @@ LB229:  .byte   0
         sta     pos::ycoord
         lda     #0
         sta     pos::ycoord+1
-        sta     LB2D0
+        sta     l4
 
-loop:   lda     LB2D0
+loop:   lda     l4
         cmp     num_file_names
         bne     :+
         jsr     LA9C9
         rts
 
 :       MGTK_CALL MGTK::MoveTo, pos
-        ldx     LB2D0
+        ldx     l4
         lda     file_list_index,x
         and     #$7F
         ldx     #$00
-        stx     LB2CF
+        stx     l3
         asl     a
-        rol     LB2CF
+        rol     l3
         asl     a
-        rol     LB2CF
+        rol     l3
         asl     a
-        rol     LB2CF
+        rol     l3
         asl     a
-        rol     LB2CF
+        rol     l3
         clc
         adc     #$00
         tay
-        lda     LB2CF
+        lda     l3
         adc     #$18
         tax
         tya
         jsr     draw_string
-        ldx     LB2D0
+        ldx     l4
         lda     file_list_index,x
-        bpl     LB2A7
+        bpl     l1
         lda     #$01
         sta     pos
         MGTK_CALL MGTK::MoveTo, pos
         param_call draw_string, str_folder
         lda     #$10
         sta     pos
-LB2A7:  lda     LB2D0
+l1:     lda     l4
         cmp     selected_index
-        bne     LB2B8
+        bne     l2
         jsr     LB404
         lda     winfo_list::window_id
         jsr     set_port_for_window
-LB2B8:  inc     LB2D0
+l2:     inc     l4
         add16   pos::ycoord, #8, pos::ycoord
         jmp     loop
 
-LB2CF:  .byte   0
-LB2D0:  .byte   0
+l3:     .byte   0
+l4:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2092,7 +2095,7 @@ update_scrollbar:
         lda     #$00
 
 .proc update_scrollbar2
-        sta     LB34F
+        sta     l1
         lda     num_file_names
         cmp     #$0A
         bcs     :+
@@ -2108,7 +2111,7 @@ update_scrollbar:
         sta     activatectl_which_ctl
         sta     activatectl_activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-        lda     LB34F
+        lda     l1
         sta     updatethumb_thumbpos
         jsr     scroll_clip_rect
         lda     #MGTK::Ctl::vertical_scroll_bar
@@ -2116,7 +2119,7 @@ update_scrollbar:
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
-LB34F:  .byte   0
+l1:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2129,25 +2132,25 @@ LB34F:  .byte   0
         copy16  #path_buf, $06
         ldy     #$00
         lda     ($06),y
-        sta     LB3B6
+        sta     l5
         iny
-LB372:  iny
+l1:     iny
         lda     ($06),y
         cmp     #'/'
-        beq     LB380
-        cpy     LB3B6
-        bne     LB372
-        beq     LB384
-LB380:  dey
-        sty     LB3B6
-LB384:  ldy     #$00
+        beq     l2
+        cpy     l5
+        bne     l1
+        beq     l3
+l2:     dey
+        sty     l5
+l3:     ldy     #$00
         ldx     #$00
-LB388:  inx
+l4:     inx
         iny
         lda     ($06),y
         sta     INVOKER_PREFIX,x
-        cpy     LB3B6
-        bne     LB388
+        cpy     l5
+        bne     l4
         stx     INVOKER_PREFIX
         MGTK_CALL MGTK::MoveTo, pos_disk
         param_call draw_string, str_disk
@@ -2155,7 +2158,7 @@ LB388:  inx
         jsr     LA9C9
         rts
 
-LB3B6:  .byte   0
+l5:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2165,20 +2168,20 @@ LB3B6:  .byte   0
         clc
         adc     #kPageDelta
         cmp     num_file_names
-        beq     LB3C4
-        bcs     LB3CA
-LB3C4:  lda     tmp
-        jmp     LB3DA
+        beq     l1
+        bcs     l2
+l1:     lda     tmp
+        jmp     l4
 
-LB3CA:  lda     num_file_names
+l2:     lda     num_file_names
         cmp     #$0A
-        bcs     LB3D7
+        bcs     l3
         lda     tmp
-        jmp     LB3DA
+        jmp     l4
 
-LB3D7:  sec
+l3:     sec
         sbc     #kPageDelta
-LB3DA:  ldx     #$00
+l4:     ldx     #$00
         stx     tmp
         asl     a
         rol     tmp
@@ -2245,55 +2248,55 @@ tmp:    .byte   0
 .proc sort_file_names
         lda     #$7F            ; beyond last possible name char
         ldx     #15
-:       sta     LB537,x
+:       sta     l19,x
         dex
         bpl     :-
         lda     #$00
-        sta     LB534
-        sta     LB533
-LB465:  lda     LB534
+        sta     l16
+        sta     l15
+l1:     lda     l16
         cmp     num_file_names
-        bne     LB470
-        jmp     LB4EC
+        bne     l2
+        jmp     l9
 
-LB470:  lda     LB533
+l2:     lda     l15
         jsr     LB5C6
         ldy     #$00
         lda     ($06),y
-        bmi     LB4B2
+        bmi     l7
         and     #$0F
-        sta     LB536
+        sta     l18
         ldy     #$01
-LB483:  lda     ($06),y
-        cmp     LB536,y
-        beq     LB48F
-        bcs     LB4B2
-        jmp     LB497
+l3:     lda     ($06),y
+        cmp     l18,y
+        beq     l4
+        bcs     l7
+        jmp     l5
 
-LB48F:  iny
+l4:     iny
         cpy     #$10
-        bne     LB483
-        jmp     LB4B2
+        bne     l3
+        jmp     l7
 
-LB497:  lda     LB533
-        sta     LB535
+l5:     lda     l15
+        sta     l17
         ldx     #$0F
         lda     #$20
-:       sta     LB537,x
+:       sta     l19,x
         dex
         bpl     :-
-        ldy     LB536
-LB4AA:  lda     ($06),y
-        sta     LB536,y
+        ldy     l18
+l6:     lda     ($06),y
+        sta     l18,y
         dey
-        bne     LB4AA
-LB4B2:  inc     LB533
-        lda     LB533
+        bne     l6
+l7:     inc     l15
+        lda     l15
         cmp     num_file_names
-        beq     LB4C0
-        jmp     LB470
+        beq     l8
+        jmp     l2
 
-LB4C0:  lda     LB535
+l8:     lda     l17
         jsr     LB5C6
         ldy     #$00
         lda     ($06),y
@@ -2301,57 +2304,57 @@ LB4C0:  lda     LB535
         sta     ($06),y
         lda     #$7F            ; beyond last possible name char
         ldx     #$0F
-:       sta     LB537,x
+:       sta     l19,x
         dex
         bpl     :-
-        ldx     LB534
-        lda     LB535
-        sta     LB547,x
+        ldx     l16
+        lda     l17
+        sta     l20,x
         lda     #$00
-        sta     LB533
-        inc     LB534
-        jmp     LB465
+        sta     l15
+        inc     l16
+        jmp     l1
 
-LB4EC:  ldx     num_file_names
+l9:     ldx     num_file_names
         dex
-        stx     LB534
-LB4F3:  lda     LB534
-        bpl     LB522
+        stx     l16
+l10:    lda     l16
+        bpl     l14
         ldx     num_file_names
-        beq     LB521
+        beq     l13
         dex
-LB4FE:  lda     LB547,x
+l11:    lda     l20,x
         tay
         lda     file_list_index,y
-        bpl     LB50F
-        lda     LB547,x
+        bpl     l12
+        lda     l20,x
         ora     #$80
-        sta     LB547,x
-LB50F:  dex
-        bpl     LB4FE
+        sta     l20,x
+l12:    dex
+        bpl     l11
         ldx     num_file_names
-        beq     LB521
+        beq     l13
         dex
-:       lda     LB547,x
+:       lda     l20,x
         sta     file_list_index,x
         dex
         bpl     :-
-LB521:  rts
+l13:    rts
 
-LB522:  jsr     LB5C6
+l14:    jsr     LB5C6
         ldy     #$00
         lda     ($06),y
         and     #$7F
         sta     ($06),y
-        dec     LB534
-        jmp     LB4F3
+        dec     l16
+        jmp     l10
 
-LB533:  .byte   0
-LB534:  .byte   0
-LB535:  .byte   0
-LB536:  .byte   0
-LB537:  .res    16, 0
-LB547:  .res    127, 0
+l15:    .byte   0
+l16:    .byte   0
+l17:    .byte   0
+l18:    .byte   0
+l19:    .res    16, 0
+l20:    .res    127, 0
 
 ;;; --------------------------------------------------
 
@@ -2361,24 +2364,24 @@ LB547:  .res    127, 0
         ldx     #$18
         stx     $07
         ldx     #$00
-        stx     LB5F0
+        stx     l21
         asl     a
-        rol     LB5F0
+        rol     l21
         asl     a
-        rol     LB5F0
+        rol     l21
         asl     a
-        rol     LB5F0
+        rol     l21
         asl     a
-        rol     LB5F0
+        rol     l21
         clc
         adc     $06
         sta     $06
-        lda     LB5F0
+        lda     l21
         adc     $07
         sta     $07
         rts
 
-LB5F0:  .byte   0
+l21:    .byte   0
 .endproc
 .endproc
 
@@ -2389,87 +2392,87 @@ LB5F0:  .byte   0
         ldy     #$01
         lda     ($06),y
         cmp     #'/'
-        bne     LB65A
+        bne     l6
         dey
         lda     ($06),y
         cmp     #$02
-        bcc     LB65A
+        bcc     l6
         tay
         lda     ($06),y
         cmp     #'/'
-        beq     LB65A
+        beq     l6
         ldx     #$00
-        stx     LB65D
-LB610:  lda     ($06),y
+        stx     l7
+l1:     lda     ($06),y
         cmp     #'/'
-        beq     LB620
+        beq     l2
         inx
         cpx     #$10
-        beq     LB65A
+        beq     l6
         dey
-        bne     LB610
-        beq     LB628
-LB620:  inc     LB65D
+        bne     l1
+        beq     l3
+l2:     inc     l7
         ldx     #$00
         dey
-        bne     LB610
-LB628:  lda     LB65D
+        bne     l1
+l3:     lda     l7
         cmp     #$02
-        bcc     LB65A
+        bcc     l6
         ldy     #$00
         lda     ($06),y
         tay
-LB634:  lda     ($06),y
+l4:     lda     ($06),y
         and     #$7F
         cmp     #'.'
-        beq     LB654
+        beq     l5
         cmp     #'/'
-        bcc     LB65A
+        bcc     l6
         cmp     #'9'+1
-        bcc     LB654
+        bcc     l5
         cmp     #'A'
-        bcc     LB65A
+        bcc     l6
         cmp     #'Z'+1
-        bcc     LB654
+        bcc     l5
         cmp     #'a'
-        bcc     LB65A
+        bcc     l6
         cmp     #'z'+1
-        bcs     LB65A
-LB654:  dey
-        bne     LB634
+        bcs     l6
+l5:     dey
+        bne     l4
         return  #$00
 
-LB65A:  return  #$FF
+l6:     return  #$FF
 
-LB65D:  .byte   0
+l7:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc LB65E
         lda     num_file_names
-        bne     LB664
-LB663:  rts
+        bne     l2
+l1:     rts
 
-LB664:  lda     #$00
-        sta     LB691
+l2:     lda     #$00
+        sta     l4
         lda     #$00
         sta     $06
         lda     #$18
         sta     $07
-LB671:  lda     LB691
+l3:     lda     l4
         cmp     num_file_names
-        beq     LB663
-        inc     LB691
+        beq     l1
+        inc     l4
         lda     $06
         clc
         adc     #$10
         sta     $06
-        bcc     LB671
+        bcc     l3
         inc     $07
-        jmp     LB671
+        jmp     l3
 
-LB691:  .byte   0
+l4:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2483,48 +2486,48 @@ LB691:  .byte   0
         lda     ($06),y
         tay
 :       lda     ($06),y
-        sta     LB6F2,y
+        sta     l8,y
         dey
         bpl     :-
         lda     #$00
-        sta     LB6F1
+        sta     l7
         copy16  #file_names, $06
-LB6B0:  lda     LB6F1
+l1:     lda     l7
         cmp     num_file_names
-        beq     LB6E0
+        beq     l4
         ldy     #$00
         lda     ($06),y
-        cmp     LB6F2
-        bne     LB6CF
+        cmp     l8
+        bne     l3
         tay
-LB6C2:  lda     ($06),y
-        cmp     LB6F2,y
-        bne     LB6CF
+l2:     lda     ($06),y
+        cmp     l8,y
+        bne     l3
         dey
-        bne     LB6C2
-        jmp     LB6E3
+        bne     l2
+        jmp     l5
 
-LB6CF:  inc     LB6F1
+l3:     inc     l7
         lda     $06
         clc
         adc     #$10
         sta     $06
-        bcc     LB6B0
+        bcc     l1
         inc     $07
-        jmp     LB6B0
+        jmp     l1
 
-LB6E0:  return  #$FF
+l4:     return  #$FF
 
-LB6E3:  ldx     num_file_names
-        lda     LB6F1
-LB6E9:  dex
+l5:     ldx     num_file_names
+        lda     l7
+l6:     dex
         cmp     file_list_index,x
-        bne     LB6E9
+        bne     l6
         txa
         rts
 
-LB6F1:  .byte   0
-LB6F2:  .res    16, 0
+l7:     .byte   0
+l8:     .res    16, 0
 .endproc
 
 ;;; ============================================================
@@ -2610,11 +2613,11 @@ bg2:    MGTK_CALL MGTK::SetTextBG, textbg2
 :       jsr     calc_input_endpos
         stax    $06
         cmp16   screentowindow_windowx, $06
-        bcs     LB7D2
-        jmp     LB864
+        bcs     l1
+        jmp     l8
 
-LB7D2:  jsr     calc_input_endpos
-        stax    LB8EA
+l1:     jsr     calc_input_endpos
+        stax    l16
         ldx     buf_input_right
         inx
         lda     #$20
@@ -2624,86 +2627,86 @@ LB7D2:  jsr     calc_input_endpos
         lda     buf_input_right
         sta     $08
 @loop:  MGTK_CALL MGTK::TextWidth, $06
-        add16   $09, LB8EA, $09
+        add16   $09, l16, $09
         cmp16   $09, screentowindow_windowx
-        bcc     LB823
+        bcc     l2
         dec     $08
         lda     $08
         cmp     #$01
         bne     @loop
         dec     buf_input_right
-        jmp     LB8E3
+        jmp     l15
 
-LB823:  lda     $08
+l2:     lda     $08
         cmp     buf_input_right
-        bcc     LB830
+        bcc     l3
         dec     buf_input_right
         jmp     input_ip_to_end
 
-LB830:  ldx     #$02
+l3:     ldx     #$02
         ldy     buf_input_left
         iny
-LB836:  lda     buf_input_right,x
+l4:     lda     buf_input_right,x
         sta     buf_input_left,y
         cpx     $08
-        beq     LB845
+        beq     l5
         iny
         inx
-        jmp     LB836
+        jmp     l4
 
-LB845:  sty     buf_input_left
+l5:     sty     buf_input_left
         ldy     #$02
         ldx     $08
         inx
-LB84D:  lda     buf_input_right,x
+l6:     lda     buf_input_right,x
         sta     buf_input_right,y
         cpx     buf_input_right
-        beq     LB85D
+        beq     l7
         iny
         inx
-        jmp     LB84D
+        jmp     l6
 
-LB85D:  dey
+l7:     dey
         sty     buf_input_right
-        jmp     LB8E3
+        jmp     l15
 
-LB864:  copy16  #buf_input_left, $06
+l8:     copy16  #buf_input_left, $06
         lda     buf_input_left
         sta     $08
-LB871:  MGTK_CALL MGTK::TextWidth, $06
+l9:     MGTK_CALL MGTK::TextWidth, $06
         add16   $09, rect_input_text::x1, $09
         cmp16   $09, screentowindow_windowx
-        bcc     LB89D
+        bcc     l10
         dec     $08
         lda     $08
         cmp     #$01
-        bcs     LB871
+        bcs     l9
         jmp     input_ip_to_start
 
-LB89D:  inc     $08
+l10:    inc     $08
         ldy     #$00
         ldx     $08
-LB8A3:  cpx     buf_input_left
-        beq     LB8B3
+l11:    cpx     buf_input_left
+        beq     l12
         inx
         iny
         lda     buf_input_left,x
         sta     LA0C8+1,y
-        jmp     LB8A3
+        jmp     l11
 
-LB8B3:  iny
+l12:    iny
         sty     LA0C8
         ldx     #$01
         ldy     LA0C8
-LB8BC:  cpx     buf_input_right
-        beq     LB8CC
+l13:    cpx     buf_input_right
+        beq     l14
         inx
         iny
         lda     buf_input_right,x
         sta     LA0C8,y
-        jmp     LB8BC
+        jmp     l13
 
-LB8CC:  sty     LA0C8
+l14:    sty     LA0C8
         lda     str_ip+1
         sta     LA0C8+1
 :       lda     LA0C8,y
@@ -2712,11 +2715,11 @@ LB8CC:  sty     LA0C8
         bpl     :-
         lda     $08
         sta     buf_input_left
-LB8E3:  jsr     redraw_input
+l15:    jsr     redraw_input
         jsr     LBB5B
         rts
 
-LB8EA:  .word   0
+l16:    .word   0
 .endproc
 
 ;;; ============================================================
@@ -3043,63 +3046,63 @@ width:  .word   0
         bpl     :-
 
         lda     selected_index
-        sta     LBBE2
-        bmi     LBBA0
+        sta     l7
+        bmi     l1
         ldx     #<file_names
         stx     $06
         ldx     #>file_names
         stx     $07
         ldx     #0
-        stx     LBBE1
+        stx     l6
         tax
         lda     file_list_index,x
         and     #$7F
         asl     a
-        rol     LBBE1
+        rol     l6
         asl     a
-        rol     LBBE1
+        rol     l6
         asl     a
-        rol     LBBE1
+        rol     l6
         asl     a
-        rol     LBBE1
+        rol     l6
         clc
         adc     $06
         tay
-        lda     LBBE1
+        lda     l6
         adc     $07
         tax
         tya
         jsr     LB0D6
 
-LBBA0:  lda     LA0C8
+l1:     lda     LA0C8
         cmp     path_buf
-        bne     LBBCB
+        bne     l3
         tax
-LBBB7:  lda     LA0C8,x
+l2:     lda     LA0C8,x
         cmp     path_buf,x
-        bne     LBBCB
+        bne     l3
         dex
-        bne     LBBB7
+        bne     l2
         lda     #0
         sta     LA211
-        jsr     LBBD4
+        jsr     l4
         rts
 
-LBBCB:  lda     #$FF
+l3:     lda     #$FF
         sta     LA211
-        jsr     LBBD4
+        jsr     l4
         rts
 
-LBBD4:  lda     LBBE2
+l4:     lda     l7
         sta     selected_index
-        bpl     LBBDD
+        bpl     l5
         rts
 
-LBBDD:  jsr     LB106
+l5:     jsr     LB106
         rts
 
-LBBE1:  .byte   0
-LBBE2:  .byte   0
+l6:     .byte   0
+l7:     .byte   0
 .endproc
 
 ;;; ============================================================

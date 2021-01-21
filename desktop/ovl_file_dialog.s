@@ -120,29 +120,29 @@ L5105:  .byte   0               ; ??? something about the picker
         jmp     event_loop
 :       lda     findwindow_window_id
         cmp     winfo_file_dialog
-        beq     L5151
+        beq     l1
         jmp     event_loop
 
-L5151:  lda     winfo_file_dialog
+l1:     lda     winfo_file_dialog
         jsr     set_port_for_window
         lda     winfo_file_dialog
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         bit     L51AE
-        bmi     L5183
+        bmi     l2
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
-        bne     L5196
-        beq     L5190
-L5183:  MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
+        bne     l4
+        beq     l3
+l2:     MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
-        bne     L5196
-L5190:  jsr     set_cursor_ibeam
-        jmp     L5199
+        bne     l4
+l3:     jsr     set_cursor_ibeam
+        jmp     l5
 
-L5196:  jsr     set_cursor_pointer
-L5199:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
+l4:     jsr     set_cursor_pointer
+l5:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         jmp     event_loop
 .endproc
@@ -605,24 +605,24 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         and     #$7F
         pha
         bit     LD8F0
-        bpl     L5618
+        bpl     l1
         jsr     jt_prep_path
-L5618:  lda     #$00
-        sta     L565B
+l1:     lda     #$00
+        sta     l2
         copy16  #file_names, $08
         pla
         asl     a
-        rol     L565B
+        rol     l2
         asl     a
-        rol     L565B
+        rol     l2
         asl     a
-        rol     L565B
+        rol     l2
         asl     a
-        rol     L565B
+        rol     l2
         clc
         adc     $08
         sta     $08
-        lda     L565B
+        lda     l2
         adc     $09
         sta     $09
         ldx     $09
@@ -636,7 +636,7 @@ L5618:  lda     #$00
         jsr     draw_list_entries
         rts
 
-L565B:  .byte   0
+l2:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -661,24 +661,24 @@ L565B:  .byte   0
 
 .proc L567F
         lda     #$00
-        sta     L56E2
+        sta     l7
         ldx     path_buf
-        bne     L568C
-        jmp     L56E1
+        bne     l1
+        jmp     l6
 
-L568C:  lda     path_buf,x
+l1:     lda     path_buf,x
         and     #CHAR_MASK
         cmp     #'/'
-        beq     L569B
+        beq     l2
         dex
-        bpl     L568C
-        jmp     L56E1
+        bpl     l1
+        jmp     l6
 
-L569B:  cpx     #$01
-        bne     L56A2
-        jmp     L56E1
+l2:     cpx     #$01
+        bne     l3
+        jmp     l6
 
-L56A2:  jsr     L5F49
+l3:     jsr     L5F49
         lda     selected_index
         pha
         lda     #$FF
@@ -691,21 +691,21 @@ L56A2:  jsr     L5F49
         jsr     draw_list_entries
         pla
         sta     selected_index
-        bit     L56E2
-        bmi     L56D6
+        bit     l7
+        bmi     l4
         jsr     jt_strip_path_segment
         lda     selected_index
-        bmi     L56DC
+        bmi     l5
         jsr     jt_strip_path_segment
-        jmp     L56DC
+        jmp     l5
 
-L56D6:  jsr     jt_prep_path
+l4:     jsr     jt_prep_path
         jsr     jt_redraw_input
-L56DC:  lda     #$FF
+l5:     lda     #$FF
         sta     selected_index
-L56E1:  rts
+l6:     rts
 
-L56E2:  .byte   0
+l7:     .byte   0
 
 .endproc
 
@@ -905,22 +905,22 @@ key_meta_digit:
 
 .proc key_down
         lda     num_file_names
-        beq     L5B37
+        beq     l1
         lda     selected_index
-        bmi     L5B47
+        bmi     l3
         tax
         inx
         cpx     num_file_names
-        bcc     L5B38
-L5B37:  rts
+        bcc     l2
+l1:     rts
 
-L5B38:  jsr     L6274
+l2:     jsr     L6274
         jsr     jt_strip_path_segment
         inc     selected_index
         lda     selected_index
         jmp     update_list_selection
 
-L5B47:  lda     #0
+l3:     lda     #0
         jmp     update_list_selection
 .endproc
 
@@ -928,19 +928,19 @@ L5B47:  lda     #0
 
 .proc key_up
         lda     num_file_names
-        beq     L5B58
+        beq     l1
         lda     selected_index
-        bmi     L5B68
-        bne     L5B59
-L5B58:  rts
+        bmi     l3
+        bne     l2
+l1:     rts
 
-L5B59:  jsr     L6274
+l2:     jsr     L6274
         jsr     jt_strip_path_segment
         dec     selected_index
         lda     selected_index
         jmp     update_list_selection
 
-L5B68:  ldx     num_file_names
+l3:     ldx     num_file_names
         dex
         txa
         jmp     update_list_selection
@@ -1029,15 +1029,15 @@ L5BF5:  .byte   0
 
 .proc scroll_list_top
         lda     num_file_names
-        beq     L5C02
+        beq     l1
         lda     selected_index
-        bmi     L5C09
-        bne     L5C03
-L5C02:  rts
+        bmi     l3
+        bne     l2
+l1:     rts
 
-L5C03:  jsr     L6274
+l2:     jsr     L6274
         jsr     jt_strip_path_segment
-L5C09:  lda     #$00
+l3:     lda     #$00
         jmp     update_list_selection
 .endproc
 
@@ -1047,7 +1047,7 @@ L5C09:  lda     #$00
         lda     num_file_names
         beq     done
         ldx     selected_index
-        bmi     L5C27
+        bmi     l1
         inx
         cpx     num_file_names
         bne     :+
@@ -1057,7 +1057,7 @@ done:   rts
         txa
         jsr     L6274
         jsr     jt_strip_path_segment
-L5C27:  ldx     num_file_names
+l1:     ldx     num_file_names
         dex
         txa
         jmp     update_list_selection
@@ -1182,21 +1182,21 @@ draw_change_drive_button_label:
         MGTK_RELAY_CALL MGTK::TextWidth, params
         lsr16   $09
         lda     #>kFilePickerDlgWidth
-        sta     L5E56
+        sta     l1
         lda     #<kFilePickerDlgWidth
-        lsr     L5E56
+        lsr     l1
         ror     a
         sec
         sbc     $09
         sta     pos_D90B
-        lda     L5E56
+        lda     l1
         sbc     $0A
         sta     pos_D90B+1
         MGTK_RELAY_CALL MGTK::MoveTo, pos_D90B
         MGTK_RELAY_CALL MGTK::DrawText, $06
         rts
 
-L5E56:  .byte   0
+l1:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1266,26 +1266,26 @@ found:  param_call main::AdjustVolumeNameCase, on_line_buffer
 .proc L5ECB
         lda     #$00
         sta     L5F0C
-L5ED0:  MLI_RELAY_CALL OPEN, open_params
-        beq     L5EE9
+l1:     MLI_RELAY_CALL OPEN, open_params
+        beq     l2
         jsr     device_on_line
         lda     #$FF
         sta     selected_index
         sta     L5F0C
-        jmp     L5ED0
+        jmp     l1
 
-L5EE9:  lda     open_params::ref_num
+l2:     lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         MLI_RELAY_CALL READ, read_params
-        beq     L5F0B
+        beq     l3
         jsr     device_on_line
         lda     #$FF
         sta     selected_index
         sta     L5F0C
-        jmp     L5ED0
+        jmp     l1
 
-L5F0B:  rts
+l3:     rts
 .endproc
 
 L5F0C:  .byte   0
@@ -1307,17 +1307,17 @@ L5F0C:  .byte   0
         adc     path_buf
 
         cmp     #'A'            ; ???
-        bcc     L5F2F
+        bcc     l1
         return  #$FF
 
-L5F2F:  pha
+l1:     pha
         tax
-L5F31:  lda     ($06),y
+l2:     lda     ($06),y
         sta     path_buf,x
         dey
         dex
         cpx     path_buf
-        bne     L5F31
+        bne     l2
         pla
         sta     path_buf
         lda     #$FF
@@ -1343,113 +1343,113 @@ L5F31:  lda     ($06),y
 .proc L5F5B
         jsr     L5ECB
         lda     #0
-        sta     L6067
-        sta     L6068
+        sta     l12
+        sta     l13
         sta     L50A9
         lda     #1
-        sta     L6069
-        copy16  dir_read_buf+$23, L606A
+        sta     l14
+        copy16  dir_read_buf+$23, l15
         lda     dir_read_buf+$25
         and     #$7F
         sta     num_file_names
         bne     :+
-        jmp     L6012
+        jmp     l7
 
 :       copy16  #$142B, $06
 
-L5F8F:  param_call_indirect main::AdjustFileEntryCase, $06
+l1:     param_call_indirect main::AdjustFileEntryCase, $06
 
         ldy     #0
         lda     ($06),y
         and     #NAME_LENGTH_MASK
-        bne     L5F9A
-        jmp     L6007
+        bne     l2
+        jmp     l6
 
-L5F9A:  ldx     L6067
+l2:     ldx     l12
         txa
         sta     file_list_index,x
         ldy     #0
         lda     ($06),y
         and     #STORAGE_TYPE_MASK
         cmp     #ST_LINKED_DIRECTORY << 4
-        beq     L5FB6
+        beq     l3
         bit     L50A8
-        bpl     L5FC1
-        inc     L6068
-        jmp     L6007
+        bpl     l4
+        inc     l13
+        jmp     l6
 
-L5FB6:  lda     file_list_index,x
+l3:     lda     file_list_index,x
         ora     #$80
         sta     file_list_index,x
         inc     L50A9
-L5FC1:  ldy     #$00
+l4:     ldy     #$00
         lda     ($06),y
         and     #$0F
         sta     ($06),y
         copy16  #file_names, $08
         lda     #$00
-        sta     L606C
-        lda     L6067
+        sta     l17
+        lda     l12
         asl     a
-        rol     L606C
+        rol     l17
         asl     a
-        rol     L606C
+        rol     l17
         asl     a
-        rol     L606C
+        rol     l17
         asl     a
-        rol     L606C
+        rol     l17
         clc
         adc     $08
         sta     $08
-        lda     L606C
+        lda     l17
         adc     $09
         sta     $09
         ldy     #$00
         lda     ($06),y
         tay
-L5FFA:  lda     ($06),y
+l5:     lda     ($06),y
         sta     ($08),y
         dey
-        bpl     L5FFA
-        inc     L6067
-        inc     L6068
-L6007:  inc     L6069
-        lda     L6068
+        bpl     l5
+        inc     l12
+        inc     l13
+l6:     inc     l14
+        lda     l13
         cmp     num_file_names
-        bne     L6035
-L6012:  MLI_RELAY_CALL CLOSE, close_params
+        bne     l10
+l7:     MLI_RELAY_CALL CLOSE, close_params
         bit     L50A8
-        bpl     L6026
+        bpl     l8
         lda     L50A9
         sta     num_file_names
-L6026:  jsr     sort_file_names
+l8:     jsr     sort_file_names
         jsr     L64E2
         lda     L5F0C
-        bpl     L6033
+        bpl     l9
         sec
         rts
 
-L6033:  clc
+l9:     clc
         rts
 
-L6035:  lda     L6069
-        cmp     L606B
-        beq     L604E
-        add16_8 $06, L606A, $06
-        jmp     L5F8F
+l10:    lda     l14
+        cmp     l16
+        beq     l11
+        add16_8 $06, l15, $06
+        jmp     l1
 
-L604E:  MLI_RELAY_CALL READ, read_params
+l11:    MLI_RELAY_CALL READ, read_params
         copy16  #$1404, $06
         lda     #$00
-        sta     L6069
-        jmp     L5F8F
+        sta     l14
+        jmp     l1
 
-L6067:  .byte   0
-L6068:  .byte   0
-L6069:  .byte   0
-L606A:  .byte   0
-L606B:  .byte   0
-L606C:  .byte   0
+l12:    .byte   0
+l13:    .byte   0
+l14:    .byte   0
+l15:    .byte   0
+l16:    .byte   0
+l17:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1464,9 +1464,9 @@ L606C:  .byte   0
         sta     picker_entry_pos+2
         lda     #0
         sta     picker_entry_pos+3
-        sta     L6128
+        sta     l4
 
-loop:   lda     L6128
+loop:   lda     l4
         cmp     num_file_names
         bne     :+
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport
@@ -1474,48 +1474,48 @@ loop:   lda     L6128
         rts
 
 :       MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
-        ldx     L6128
+        ldx     l4
         lda     file_list_index,x
         and     #$7F
         ldx     #$00
-        stx     L6127
+        stx     l3
         asl     a
-        rol     L6127
+        rol     l3
         asl     a
-        rol     L6127
+        rol     l3
         asl     a
-        rol     L6127
+        rol     l3
         asl     a
-        rol     L6127
+        rol     l3
         clc
         adc     #$00
         tay
-        lda     L6127
+        lda     l3
         adc     #$18
         tax
         tya
         jsr     draw_string
-        ldx     L6128
+        ldx     l4
         lda     file_list_index,x
-        bpl     L60FF
+        bpl     l1
         lda     #$01
         sta     picker_entry_pos
         MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
         param_call draw_string, str_folder
         lda     #$10
         sta     picker_entry_pos
-L60FF:  lda     L6128
+l1:     lda     l4
         cmp     selected_index
-        bne     L6110
+        bne     l2
         jsr     L6274
         lda     winfo_file_dialog_listbox
         jsr     set_port_for_window
-L6110:  inc     L6128
+l2:     inc     l4
         add16   picker_entry_pos+2, #8, picker_entry_pos+2
         jmp     loop
 
-L6127:  .byte   0
-L6128:  .byte   0
+l3:     .byte   0
+l4:     .byte   0
 .endproc
 
         PAD_TO $6161            ; Maintain previous addresses
@@ -1526,10 +1526,10 @@ update_scrollbar:
         lda     #$00
 
 .proc update_scrollbar2
-        sta     L61B0
+        sta     l2
         lda     num_file_names
         cmp     #$0A
-        bcs     L6181
+        bcs     l1
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         lda     #MGTK::activatectl_deactivate
@@ -1537,14 +1537,14 @@ update_scrollbar:
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         rts
 
-L6181:  lda     num_file_names
+l1:     lda     num_file_names
         sta     winfo_file_dialog_listbox::vthumbmax
         .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         sta     activatectl_activate
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
-        lda     L61B0
+        lda     l2
         sta     updatethumb_thumbpos
         jsr     scroll_clip_rect
         lda     #MGTK::Ctl::vertical_scroll_bar
@@ -1552,7 +1552,7 @@ L6181:  lda     num_file_names
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
-L61B0:  .byte   0
+l2:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1564,25 +1564,25 @@ L61B0:  .byte   0
         copy16  #path_buf, $06
         ldy     #$00
         lda     ($06),y
-        sta     L6226
+        sta     l5
         iny
-L61D0:  iny
+l1:     iny
         lda     ($06),y
         cmp     #'/'
-        beq     L61DE
-        cpy     L6226
-        bne     L61D0
-        beq     L61E2
-L61DE:  dey
-        sty     L6226
-L61E2:  ldy     #$00
+        beq     l2
+        cpy     l5
+        bne     l1
+        beq     l3
+l2:     dey
+        sty     l5
+l3:     ldy     #$00
         ldx     #$00
-L61E6:  inx
+l4:     inx
         iny
         lda     ($06),y
         sta     $0220,x
-        cpy     L6226
-        bne     L61E6
+        cpy     l5
+        bne     l4
         stx     $0220
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         param_call draw_string, file_dialog_res::disk_label_str
@@ -1591,69 +1591,69 @@ L61E6:  inx
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 
-L6226:  .byte   0
+l5:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc scroll_clip_rect
-        sta     L6273
+        sta     l5
         clc
         adc     #kPageDelta
         cmp     num_file_names
-        beq     L6234
-        bcs     L623A
-L6234:  lda     L6273
-        jmp     L624A
+        beq     l1
+        bcs     l2
+l1:     lda     l5
+        jmp     l4
 
-L623A:  lda     num_file_names
+l2:     lda     num_file_names
         cmp     #$0A
-        bcs     L6247
-        lda     L6273
-        jmp     L624A
+        bcs     l3
+        lda     l5
+        jmp     l4
 
-L6247:  sec
+l3:     sec
         sbc     #kPageDelta
-L624A:  ldx     #$00
-        stx     L6273
+l4:     ldx     #$00
+        stx     l5
         asl     a
-        rol     L6273
+        rol     l5
         asl     a
-        rol     L6273
+        rol     l5
         asl     a
-        rol     L6273
+        rol     l5
         sta     winfo_file_dialog_listbox::cliprect+2
-        ldx     L6273
+        ldx     l5
         stx     winfo_file_dialog_listbox::cliprect+3
         clc
         adc     #70
         sta     winfo_file_dialog_listbox::cliprect+6
-        lda     L6273
+        lda     l5
         adc     #0
         sta     winfo_file_dialog_listbox::cliprect+7
         rts
 
-L6273:  .byte   0
+l5:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc L6274
         ldx     #0
-        stx     L62C7
+        stx     l1
         asl     a
-        rol     L62C7
+        rol     l1
         asl     a
-        rol     L62C7
+        rol     l1
         asl     a
-        rol     L62C7
+        rol     l1
         sta     rect_D90F+2
-        ldx     L62C7
+        ldx     l1
         stx     rect_D90F+3
         clc
         adc     #7
         sta     rect_D90F+6
-        lda     L62C7
+        lda     l1
         adc     #0
         sta     rect_D90F+7
         lda     winfo_file_dialog_listbox
@@ -1664,7 +1664,7 @@ L6273:  .byte   0
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 
-L62C7:  .byte   0
+l1:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1682,56 +1682,56 @@ L62C7:  .byte   0
 .proc sort_file_names
         lda     #$7F            ; beyond last possible name char
         ldx     #15
-:       sta     L63C2,x
+:       sta     l21,x
         dex
         bpl     :-
 
         lda     #$00
-        sta     L63BF
-        sta     L63BE
-L62F0:  lda     L63BF
+        sta     l18
+        sta     l17
+l1:     lda     l18
         cmp     num_file_names
-        bne     L62FB
-        jmp     L6377
+        bne     l2
+        jmp     l10
 
-L62FB:  lda     L63BE
+l2:     lda     l17
         jsr     L6451
         ldy     #$00
         lda     ($06),y
-        bmi     L633D
+        bmi     l8
         and     #$0F
-        sta     L63C1
+        sta     l20
         ldy     #$01
-L630E:  lda     ($06),y
-        cmp     L63C1,y
-        beq     L631A
-        bcs     L633D           ; ???
-        jmp     L6322
+l3:     lda     ($06),y
+        cmp     l20,y
+        beq     l4
+        bcs     l8           ; ???
+        jmp     l5
 
-L631A:  iny
+l4:     iny
         cpy     #$10
-        bne     L630E
-        jmp     L633D
+        bne     l3
+        jmp     l8
 
-L6322:  lda     L63BE
-        sta     L63C0
+l5:     lda     l17
+        sta     l19
         ldx     #$0F
         lda     #' '
-L632C:  sta     L63C2,x
+l6:     sta     l21,x
         dex
-        bpl     L632C
-        ldy     L63C1
-L6335:  lda     ($06),y
-        sta     L63C1,y
+        bpl     l6
+        ldy     l20
+l7:     lda     ($06),y
+        sta     l20,y
         dey
-        bne     L6335
-L633D:  inc     L63BE
-        lda     L63BE
+        bne     l7
+l8:     inc     l17
+        lda     l17
         cmp     num_file_names
-        beq     L634B
-        jmp     L62FB
+        beq     l9
+        jmp     l2
 
-L634B:  lda     L63C0
+l9:     lda     l19
         jsr     L6451
         ldy     #$00
         lda     ($06),y
@@ -1740,58 +1740,58 @@ L634B:  lda     L63C0
 
         lda     #$7F            ; beyond last possible name char
         ldx     #15
-:       sta     L63C2,x
+:       sta     l21,x
         dex
         bpl     :-
 
-        ldx     L63BF
-        lda     L63C0
-        sta     L63D2,x
+        ldx     l18
+        lda     l19
+        sta     l22,x
         lda     #$00
-        sta     L63BE
-        inc     L63BF
-        jmp     L62F0
+        sta     l17
+        inc     l18
+        jmp     l1
 
-L6377:  ldx     num_file_names
+l10:    ldx     num_file_names
         dex
-        stx     L63BF
-L637E:  lda     L63BF
-        bpl     L63AD
+        stx     l18
+l11:    lda     l18
+        bpl     l16
         ldx     num_file_names
-        beq     L63AC
+        beq     l15
         dex
-L6389:  lda     L63D2,x
+l12:    lda     l22,x
         tay
         lda     file_list_index,y
-        bpl     L639A
-        lda     L63D2,x
+        bpl     l13
+        lda     l22,x
         ora     #$80
-        sta     L63D2,x
-L639A:  dex
-        bpl     L6389
+        sta     l22,x
+l13:    dex
+        bpl     l12
         ldx     num_file_names
-        beq     L63AC
+        beq     l15
         dex
-L63A3:  lda     L63D2,x
+l14:    lda     l22,x
         sta     file_list_index,x
         dex
-        bpl     L63A3
-L63AC:  rts
+        bpl     l14
+l15:    rts
 
-L63AD:  jsr     L6451
+l16:    jsr     L6451
         ldy     #$00
         lda     ($06),y
         and     #$7F
         sta     ($06),y
-        dec     L63BF
-        jmp     L637E
+        dec     l18
+        jmp     l11
 
-L63BE:  .byte   0
-L63BF:  .byte   0
-L63C0:  .byte   0
-L63C1:  .byte   0
-L63C2:  .res 16, 0
-L63D2:  .res 127, 0
+l17:    .byte   0
+l18:    .byte   0
+l19:    .byte   0
+l20:    .byte   0
+l21:    .res 16, 0
+l22:    .res 127, 0
 
 ;;; --------------------------------------------------
 
@@ -1801,24 +1801,24 @@ L63D2:  .res 127, 0
         ldx     #$18
         stx     $07
         ldx     #$00
-        stx     L647B
+        stx     l1
         asl     a
-        rol     L647B
+        rol     l1
         asl     a
-        rol     L647B
+        rol     l1
         asl     a
-        rol     L647B
+        rol     l1
         asl     a
-        rol     L647B
+        rol     l1
         clc
         adc     $06
         sta     $06
-        lda     L647B
+        lda     l1
         adc     $07
         sta     $07
         rts
 
-L647B:  .byte   0
+l1:     .byte   0
 .endproc
 .endproc
 
@@ -1829,81 +1829,81 @@ L647B:  .byte   0
         ldy     #$01
         lda     ($06),y
         cmp     #'/'
-        bne     L64DE
+        bne     l6
         dey
         lda     ($06),y
         cmp     #$02
-        bcc     L64DE
+        bcc     l6
         tay
         lda     ($06),y
         cmp     #'/'
-        beq     L64DE
+        beq     l6
         ldx     #$00
-        stx     L64E1
-L649B:  lda     ($06),y
+        stx     l7
+l1:     lda     ($06),y
         cmp     #'/'
-        beq     L64AB
+        beq     l2
         inx
         cpx     #$10
-        beq     L64DE
+        beq     l6
         dey
-        bne     L649B
-        beq     L64B3
-L64AB:  inc     L64E1
+        bne     l1
+        beq     l3
+l2:     inc     l7
         ldx     #$00
         dey
-        bne     L649B
-L64B3:  ldy     #$00
+        bne     l1
+l3:     ldy     #$00
         lda     ($06),y
         tay
-L64B8:  lda     ($06),y
+l4:     lda     ($06),y
         and     #CHAR_MASK
         cmp     #'.'
-        beq     L64D8
+        beq     l5
         cmp     #'/'
-        bcc     L64DE
+        bcc     l6
         cmp     #'9'+1
-        bcc     L64D8
+        bcc     l5
         cmp     #'A'
-        bcc     L64DE
+        bcc     l6
         cmp     #'Z'+1
-        bcc     L64D8
+        bcc     l5
         cmp     #'a'
-        bcc     L64DE
+        bcc     l6
         cmp     #'z'+1
-        bcs     L64DE
-L64D8:  dey
-        bne     L64B8
+        bcs     l6
+l5:     dey
+        bne     l4
         return  #$00
 
-L64DE:  return  #$FF
+l6:     return  #$FF
 
-L64E1:  .byte   0
+l7:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc L64E2
         lda     num_file_names
-        bne     L64E8
-L64E7:  rts
+        bne     l2
+l1:     rts
 
-L64E8:  lda     #$00
-        sta     L6515
+l2:     lda     #$00
+        sta     l4
         copy16  #file_names, $06
-L64F5:  lda     L6515
+l3:     lda     l4
         cmp     num_file_names
-        beq     L64E7
-        inc     L6515
+        beq     l1
+        inc     l4
         lda     $06
         clc
         adc     #$10
         sta     $06
-        bcc     L64F5
+        bcc     l3
         inc     $07
-        jmp     L64F5
+        jmp     l3
 
-L6515:  .byte   0
+l4:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1916,50 +1916,50 @@ L6515:  .byte   0
         ldy     #$00
         lda     ($06),y
         tay
-L651F:  lda     ($06),y
-        sta     L6576,y
+l1:     lda     ($06),y
+        sta     l9,y
         dey
-        bpl     L651F
+        bpl     l1
         lda     #$00
-        sta     L6575
+        sta     l8
         copy16  #file_names, $06
-L6534:  lda     L6575
+l2:     lda     l8
         cmp     num_file_names
-        beq     L6564
+        beq     l5
         ldy     #$00
         lda     ($06),y
-        cmp     L6576
-        bne     L6553
+        cmp     l9
+        bne     l4
         tay
-L6546:  lda     ($06),y
-        cmp     L6576,y
-        bne     L6553
+l3:     lda     ($06),y
+        cmp     l9,y
+        bne     l4
         dey
-        bne     L6546
-        jmp     L6567
+        bne     l3
+        jmp     l6
 
-L6553:  inc     L6575
+l4:     inc     l8
         lda     $06
         clc
         adc     #$10
         sta     $06
-        bcc     L6534
+        bcc     l2
         inc     $07
-        jmp     L6534
+        jmp     l2
 
-L6564:  return  #$FF
+l5:     return  #$FF
 
-L6567:  ldx     num_file_names
-L656D:  dex
+l6:     ldx     num_file_names
+l7:     dex
         lda     file_list_index,x
         and     #$7F
-        cmp     L6575
-        bne     L656D
+        cmp     l8
+        bne     l7
         txa
         rts
 
-L6575:  .byte   0
-L6576:  .res 16, 0
+l8:     .byte   0
+l9:     .res 16, 0
 .endproc
 
 ;;; ============================================================
@@ -2083,24 +2083,24 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
-        beq     L6719
+        beq     l2
         bit     L5104
-        bpl     L6718
+        bpl     l1
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
-        bne     L6718
+        bne     l1
         jmp     jt_handle_ok
 
-L6718:  rts
+l1:     rts
 
-L6719:  jsr     calc_path_buf0_input1_endpos
+l2:     jsr     calc_path_buf0_input1_endpos
         stax    $06
         cmp16   screentowindow_windowx, $06
-        bcs     L672F
-        jmp     L67C4
+        bcs     l3
+        jmp     l11
 
-L672F:  jsr     calc_path_buf0_input1_endpos
-        stax    L684D
+l3:     jsr     calc_path_buf0_input1_endpos
+        stax    l20
         ldx     path_buf2
         inx
         lda     #' '
@@ -2109,100 +2109,100 @@ L672F:  jsr     calc_path_buf0_input1_endpos
         copy16  #path_buf2, $06
         lda     path_buf2
         sta     $08
-L6751:  MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, L684D, $09
+l4:     MGTK_RELAY_CALL MGTK::TextWidth, $06
+        add16   $09, l20, $09
         cmp16   $09, screentowindow_windowx
-        bcc     L6783
+        bcc     l5
         dec     $08
         lda     $08
         cmp     #$01
-        bne     L6751
+        bne     l4
         dec     path_buf2
-        jmp     L6846
+        jmp     l19
 
-L6783:  lda     $08
+l5:     lda     $08
         cmp     path_buf2
-        bcc     L6790
+        bcc     l6
         dec     path_buf2
         jmp     handle_f1_meta_right_key
 
-L6790:  ldx     #$02
+l6:     ldx     #$02
         ldy     path_buf0
         iny
-L6796:  lda     path_buf2,x
+l7:     lda     path_buf2,x
         sta     path_buf0,y
         cpx     $08
-        beq     L67A5
+        beq     l8
         iny
         inx
-        jmp     L6796
+        jmp     l7
 
-L67A5:  sty     path_buf0
+l8:     sty     path_buf0
         ldy     #$02
         ldx     $08
         inx
-L67AD:  lda     path_buf2,x
+l9:     lda     path_buf2,x
         sta     path_buf2,y
         cpx     path_buf2
-        beq     L67BD
+        beq     l10
         iny
         inx
-        jmp     L67AD
+        jmp     l9
 
-L67BD:  dey
+l10:    dey
         sty     path_buf2
-        jmp     L6846
+        jmp     l19
 
-L67C4:  copy16  #path_buf0, $06
+l11:    copy16  #path_buf0, $06
         lda     path_buf0
         sta     $08
-L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $06
+l12:    MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, file_dialog_res::input1_textpos, $09
         cmp16   $09, screentowindow_windowx
-        bcc     L6800
+        bcc     l13
         dec     $08
         lda     $08
         cmp     #$01
-        bcs     L67D1
+        bcs     l12
         jmp     handle_f1_meta_left_key
 
-L6800:  inc     $08
+l13:    inc     $08
         ldy     #$00
         ldx     $08
-L6806:  cpx     path_buf0
-        beq     L6816
+l14:    cpx     path_buf0
+        beq     l15
         inx
         iny
         lda     path_buf0,x
         sta     split_buf+1,y
-        jmp     L6806
+        jmp     l14
 
-L6816:  iny
+l15:    iny
         sty     split_buf
         ldx     #$01
         ldy     split_buf
-L681F:  cpx     path_buf2
-        beq     L682F
+l16:    cpx     path_buf2
+        beq     l17
         inx
         iny
         lda     path_buf2,x
         sta     split_buf,y
-        jmp     L681F
+        jmp     l16
 
-L682F:  sty     split_buf
+l17:    sty     split_buf
         lda     str_insertion_point+1
         sta     split_buf+1
-L6838:  lda     split_buf,y
+l18:    lda     split_buf,y
         sta     path_buf2,y
         dey
-        bpl     L6838
+        bpl     l18
         lda     $08
         sta     path_buf0
-L6846:  jsr     jt_redraw_input
+l19:    jsr     jt_redraw_input
         jsr     L6EA3
         rts
 
-L684D:  .word   0
+l20:    .word   0
 .endproc
 
 ;;; ============================================================
@@ -2216,24 +2216,24 @@ L684D:  .word   0
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
-        beq     L6890
+        beq     l2
         bit     L5104
-        bpl     L688F
+        bpl     l1
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
-        bne     L688F
+        bne     l1
         jmp     jt_handle_cancel
 
-L688F:  rts
+l1:     rts
 
-L6890:  jsr     calc_path_buf1_input2_endpos
+l2:     jsr     calc_path_buf1_input2_endpos
         stax    $06
         cmp16   screentowindow_windowx, $06
-        bcs     L68A6
-        jmp     L693B
+        bcs     l3
+        jmp     l11
 
-L68A6:  jsr     calc_path_buf1_input2_endpos
-        stax    L69C4
+l3:     jsr     calc_path_buf1_input2_endpos
+        stax    l20
         ldx     path_buf2
         inx
         lda     #' '
@@ -2242,100 +2242,100 @@ L68A6:  jsr     calc_path_buf1_input2_endpos
         copy16  #path_buf2, $06
         lda     path_buf2
         sta     $08
-L68C8:  MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, L69C4, $09
+l4:     MGTK_RELAY_CALL MGTK::TextWidth, $06
+        add16   $09, l20, $09
         cmp16   $09, screentowindow_windowx
-        bcc     L68FA
+        bcc     l5
         dec     $08
         lda     $08
         cmp     #$01
-        bne     L68C8
+        bne     l4
         dec     path_buf2
-        jmp     L69BD
+        jmp     l19
 
-L68FA:  lda     $08
+l5:     lda     $08
         cmp     path_buf2
-        bcc     L6907
+        bcc     l6
         dec     path_buf2
         jmp     handle_f2_meta_right_key
 
-L6907:  ldx     #$02
+l6:     ldx     #$02
         ldy     path_buf1
         iny
-L690D:  lda     path_buf2,x
+l7:     lda     path_buf2,x
         sta     path_buf1,y
         cpx     $08
-        beq     L691C
+        beq     l8
         iny
         inx
-        jmp     L690D
+        jmp     l7
 
-L691C:  sty     path_buf1
+l8:     sty     path_buf1
         ldy     #$02
         ldx     $08
         inx
-L6924:  lda     path_buf2,x
+l9:     lda     path_buf2,x
         sta     path_buf2,y
         cpx     path_buf2
-        beq     L6934
+        beq     l10
         iny
         inx
-        jmp     L6924
+        jmp     l9
 
-L6934:  dey
+l10:    dey
         sty     path_buf2
-        jmp     L69BD
+        jmp     l19
 
-L693B:  copy16  #path_buf1, $06
+l11:    copy16  #path_buf1, $06
         lda     path_buf1
         sta     $08
-L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $06
+l12:    MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, file_dialog_res::input2_textpos, $09
         cmp16   $09, screentowindow_windowx
-        bcc     L6977
+        bcc     l13
         dec     $08
         lda     $08
         cmp     #$01
-        bcs     L6948
+        bcs     l12
         jmp     handle_f2_meta_left_key
 
-L6977:  inc     $08
+l13:    inc     $08
         ldy     #$00
         ldx     $08
-L697D:  cpx     path_buf1
-        beq     L698D
+l14:    cpx     path_buf1
+        beq     l15
         inx
         iny
         lda     path_buf1,x
         sta     split_buf+1,y
-        jmp     L697D
+        jmp     l14
 
-L698D:  iny
+l15:    iny
         sty     split_buf
         ldx     #$01
         ldy     split_buf
-L6996:  cpx     path_buf2
-        beq     L69A6
+l16:    cpx     path_buf2
+        beq     l17
         inx
         iny
         lda     path_buf2,x
         sta     split_buf,y
-        jmp     L6996
+        jmp     l16
 
-L69A6:  sty     split_buf
+l17:    sty     split_buf
         lda     str_insertion_point+1
         sta     split_buf+1
-L69AF:  lda     split_buf,y
+l18:    lda     split_buf,y
         sta     path_buf2,y
         dey
-        bpl     L69AF
+        bpl     l18
         lda     $08
         sta     path_buf1
-L69BD:  jsr     jt_redraw_input
+l19:    jsr     jt_redraw_input
         jsr     L6E9F
         rts
 
-L69C4:  .word   0
+l20:    .word   0
 .endproc
 
 ;;; ============================================================
@@ -2521,15 +2521,15 @@ skip:   sty     path_buf0
 ;;; ============================================================
 
 .proc handle_f2_other_key
-        sta     L6BC3
+        sta     l1
         lda     path_buf1
         clc
         adc     path_buf2
         cmp     #$3F
-        bcc     L6B81
+        bcc     :+
         rts
 
-L6B81:  lda     L6BC3
+:       lda     l1
         ldx     path_buf1
         inx
         sta     path_buf1,x
@@ -2546,17 +2546,17 @@ L6B81:  lda     L6BC3
         jsr     L6E9F
         rts
 
-L6BC3:  .byte   0
+l1:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc handle_f2_delete_key
         lda     path_buf1
-        bne     L6BCA
+        bne     :+
         rts
 
-L6BCA:  dec     path_buf1
+:       dec     path_buf1
         jsr     calc_path_buf1_input2_endpos
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
@@ -2573,18 +2573,18 @@ L6BCA:  dec     path_buf1
 
 .proc handle_f2_left_key
         lda     path_buf1
-        bne     L6C05
+        bne     l1
         rts
 
-L6C05:  ldx     path_buf2
+l1:     ldx     path_buf2
         cpx     #$01
-        beq     L6C17
-L6C0C:  lda     path_buf2,x
+        beq     l3
+l2:     lda     path_buf2,x
         sta     path_buf2+1,x
         dex
         cpx     #$01
-        bne     L6C0C
-L6C17:  ldx     path_buf1
+        bne     l2
+l3:     ldx     path_buf1
         lda     path_buf1,x
         sta     path_buf2+2
         dec     path_buf1
@@ -2606,24 +2606,24 @@ L6C17:  ldx     path_buf1
 .proc handle_f2_right_key
         lda     path_buf2
         cmp     #$02
-        bcs     L6C60
+        bcs     l1
         rts
 
-L6C60:  ldx     path_buf1
+l1:     ldx     path_buf1
         inx
         lda     path_buf2+2
         sta     path_buf1,x
         inc     path_buf1
         ldx     path_buf2
         cpx     #$03
-        bcc     L6C82
+        bcc     l3
         ldx     #$02
-L6C76:  lda     path_buf2+1,x
+l2:     lda     path_buf2+1,x
         sta     path_buf2,x
         inx
         cpx     path_buf2
-        bne     L6C76
-L6C82:  dec     path_buf2
+        bne     l2
+l3:     dec     path_buf2
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
@@ -2638,25 +2638,25 @@ L6C82:  dec     path_buf2
 
 .proc handle_f2_meta_left_key
         lda     path_buf1
-        bne     L6CB3
+        bne     l1
         rts
 
-L6CB3:  ldy     path_buf1
+l1:     ldy     path_buf1
         lda     path_buf2
         cmp     #$02
-        bcc     L6CCC
+        bcc     l3
         ldx     #$01
-L6CBF:  iny
+l2:     iny
         inx
         lda     path_buf2,x
         sta     path_buf1,y
         cpx     path_buf2
-        bne     L6CBF
-L6CCC:  sty     path_buf1
-L6CCF:  lda     path_buf1,y
+        bne     l2
+l3:     sty     path_buf1
+l4:     lda     path_buf1,y
         sta     path_buf2+1,y
         dey
-        bne     L6CCF
+        bne     l4
         ldx     path_buf1
         inx
         stx     path_buf2
@@ -2673,18 +2673,18 @@ L6CCF:  lda     path_buf1,y
 
 .proc handle_f2_meta_right_key
         lda     path_buf2
-        cmp     #$02
-        bcs     L6CF8
+        cmp     #2
+        bcs     l1
         rts
 
-L6CF8:  ldx     #$01
+l1:     ldx     #1
         ldy     path_buf1
-L6CFD:  inx
+l2:     inx
         iny
         lda     path_buf2,x
         sta     path_buf1,y
         cpx     path_buf2
-        bne     L6CFD
+        bne     l2
         sty     path_buf1
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
