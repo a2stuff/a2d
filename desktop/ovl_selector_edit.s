@@ -50,7 +50,7 @@ finish: jsr     file_dialog::L5F5B
         bcs     :+
         param_call file_dialog::L6516, buffer
         sta     selected_index
-        jsr     file_dialog::L6586
+        jsr     file_dialog::selection_second_col
 :       jsr     file_dialog::update_scrollbar2
         jsr     file_dialog::update_disk_name
         jsr     file_dialog::draw_list_entries
@@ -110,16 +110,16 @@ buffer: .res 16, 0
         jsr     file_dialog::set_port_for_window
         lda     path_buf0
         beq     add
-        param_call file_dialog::L5E0A, edit_an_entry_label
+        param_call file_dialog::draw_title_centered, edit_an_entry_label
         jmp     common
 
-add:    param_call file_dialog::L5E0A, add_an_entry_label
-common: param_call file_dialog::L5E6F, enter_the_full_pathname_label2
+add:    param_call file_dialog::draw_title_centered, add_an_entry_label
+common: param_call file_dialog::draw_input2_label, enter_the_full_pathname_label2 ; ???
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
-        param_call file_dialog::L5E57, enter_the_full_pathname_label1
-        param_call file_dialog::L5E6F, enter_the_name_to_appear_label
+        param_call file_dialog::draw_input1_label, enter_the_full_pathname_label1
+        param_call file_dialog::draw_input2_label, enter_the_name_to_appear_label
 
         MGTK_RELAY_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
         param_call file_dialog::draw_string, add_a_new_entry_to_label_str

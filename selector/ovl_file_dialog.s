@@ -8,9 +8,16 @@
 
 .scope file_dialog
 
-num_files_in_dir := $177F
-buf_filenames    := $1800
-file_table    := $1780
+;;; Map from index in file_names to list entry; high bit is
+;;; set for directories.
+file_list_index := $1780
+
+num_file_names  := $177F
+
+;;; Sequence of 16-byte records, filenames in current directory.
+file_names      := $1800
+
+;;; ============================================================
 
 ep_init:
         jmp     init
@@ -343,11 +350,11 @@ str_file_to_run:
 
 start:  jsr     open_window
         jsr     draw_window
-        jsr     LB051
+        jsr     device_on_line
         jsr     LB118
-        jsr     LB309
-        jsr     LB350
-        jsr     draw_filenames
+        jsr     update_scrollbar
+        jsr     update_disk_name
+        jsr     draw_list_entries
         jsr     init_input
         jsr     prep_path
         jsr     redraw_input
@@ -370,7 +377,7 @@ start:  jsr     open_window
 
 .proc draw_window
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         param_call draw_title_centered, str_run_a_program
         param_call draw_input_label, str_file_to_run
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -420,13 +427,13 @@ start:  jsr     open_window
         dir_read_buf := $1400
         kDirReadSize = $200
 
-        DEFINE_OPEN_PARAMS open_params, LA3C7, io_buf
+        DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
         DEFINE_READ_PARAMS read_params, dir_read_buf, kDirReadSize
         DEFINE_CLOSE_PARAMS close_params
 
 buf_on_line:  .res    16, 0
 device_index:  .byte   0        ; current drive, index in DEVLST
-LA3C7:  .res    128, 0
+path_buf:  .res    128, 0
 LA447:  .byte   0
 LA448:  .byte   0
 
@@ -437,13 +444,13 @@ saved_stack:
 
 init:   tsx
         stx     saved_stack
-        jsr     set_pointer_cursor
+        jsr     set_cursor_pointer
         lda     #$00
         sta     device_index
         sta     LA447
         sta     prompt_ip_flag
         sta     LA211
-        sta     ip_cursor_flag
+        sta     cursor_ibeam_flag
         sta     LA47D
         sta     LA47F
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
@@ -493,7 +500,7 @@ LA47F:  .byte   0
         jmp     event_loop
 
 LA4D4:  lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -501,7 +508,7 @@ LA4D4:  lda     winfo_dialog::window_id
         MGTK_CALL MGTK::InRect, rect_input
         cmp     #MGTK::inrect_inside
         bne     LA4FC
-        jsr     set_ip_cursor
+        jsr     set_cursor_ibeam
         jmp     LA4FF
 
 LA4FC:  jsr     unset_ip_cursor
@@ -534,10 +541,10 @@ LA50E:  .byte   0
         lda     findwindow_window_id
         cmp     winfo_dialog::window_id
         beq     LA52F
-        jmp     handle_list_click
+        jmp     handle_list_button_down
 
 LA52F:  lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -553,21 +560,21 @@ LA554:  bit     LA47F
         bmi     LA55E
         lda     selected_index
         bpl     LA561
-LA55E:  jmp     finish
+LA55E:  jmp     set_up_ports
 
 LA561:  tax
-        lda     file_table,x
+        lda     file_list_index,x
         bmi     LA56A
-LA567:  jmp     finish
+LA567:  jmp     set_up_ports
 
 LA56A:  lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, open_button_rect
         jsr     event_loop_open_btn
         bmi     LA567
         jsr     LA8ED
-        jmp     finish
+        jmp     set_up_ports
 
 not_open:
         ;; Change Drive ?
@@ -583,7 +590,7 @@ LA594:  bit     LA47F
         jsr     event_loop_change_drive_btn
         bmi     LA5AD
         jsr     change_drive
-LA5AD:  jmp     finish
+LA5AD:  jmp     set_up_ports
 
 not_change_drive:
         ;; Close ?
@@ -599,7 +606,7 @@ LA5BD:  bit     LA47F
         jsr     event_loop_close_btn
         bmi     LA5D6
         jsr     LA965
-LA5D6:  jmp     finish
+LA5D6:  jmp     set_up_ports
 
 not_close:
         ;; OK ?
@@ -614,7 +621,7 @@ LA5E6:  MGTK_CALL MGTK::SetPenMode, penXOR
         bmi     LA5FD
         jsr     input_ip_to_end
         jsr     handle_ok
-LA5FD:  jmp     finish
+LA5FD:  jmp     set_up_ports
 
 not_ok:
         ;; Cancel ?
@@ -628,28 +635,31 @@ LA60D:  MGTK_CALL MGTK::SetPenMode, penXOR
         jsr     event_loop_cancel_btn
         bmi     LA621
         jsr     LA387
-LA621:  jmp     finish
+LA621:  jmp     set_up_ports
 
 not_cancel:
         ;; Input ?
         bit     LA47D
         bpl     LA62E
-        jsr     LA63F
-        bmi     finish
+        jsr     click_handler_hook
+        bmi     set_up_ports
 LA62E:  jsr     check_input_click_and_move_ip
         rts
 
-finish: MGTK_CALL MGTK::InitPort, grafport2
+.proc set_up_ports
+        MGTK_CALL MGTK::InitPort, grafport2
         MGTK_CALL MGTK::SetPort, grafport
         rts
+.endproc
 
-LA63F:  jsr     noop
+click_handler_hook:
+        jsr     noop
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_list_click
+.proc handle_list_button_down
         bit     LA47F
         bmi     rts1
         MGTK_CALL MGTK::FindControl, findcontrol_params
@@ -660,7 +670,7 @@ LA63F:  jsr     noop
         lda     winfo_list::vscroll
         and     #MGTK::Ctl::vertical_scroll_bar
         beq     rts1
-        jmp     handle_scrollbar_click
+        jmp     handle_vscroll_click
 
 rts1:   rts
 
@@ -684,12 +694,12 @@ same:   jsr     app::DetectDoubleClick
         rts
 
 open:   ldx     selected_index
-        lda     file_table,x
+        lda     file_list_index,x
         bmi     folder
 
         ;; File - select it.
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         MGTK_CALL MGTK::PaintRect, ok_button_rect
@@ -700,7 +710,7 @@ open:   ldx     selected_index
 folder: and     #$7F
         pha
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, open_button_rect
         MGTK_CALL MGTK::PaintRect, open_button_rect
@@ -708,7 +718,7 @@ folder: and     #$7F
         sta     hi
 
         ptr := $08
-        copy16  #buf_filenames, ptr
+        copy16  #file_names, ptr
         pla
         asl     a
         rol     hi
@@ -728,11 +738,11 @@ folder: and     #$7F
         lda     ptr
         jsr     LB0D6
         jsr     LB118
-        jsr     LB309
+        jsr     update_scrollbar
         lda     #0
-        jsr     LB3B7
-        jsr     LB350
-        jsr     draw_filenames
+        jsr     scroll_clip_rect
+        jsr     update_disk_name
+        jsr     draw_list_entries
         MGTK_CALL MGTK::InitPort, grafport2
         MGTK_CALL MGTK::SetPort, grafport
         rts
@@ -744,7 +754,7 @@ hi:     .byte   0
 
 different:
         lda     screentowindow_windowy
-        cmp     num_files_in_dir
+        cmp     num_file_names
         bcc     :+
         rts
 
@@ -761,7 +771,7 @@ different:
         jsr     redraw_input
 :       lda     selected_index
         jsr     LB404
-        jsr     LBAD0
+        jsr     list_selection_change
 
         jsr     app::DetectDoubleClick
         bmi     :+
@@ -772,23 +782,23 @@ different:
 
 ;;; ============================================================
 
-.proc handle_scrollbar_click
+.proc handle_vscroll_click
         lda     findcontrol_which_part
         cmp     #MGTK::Part::up_arrow
         bne     :+
-        jmp     handle_up_arrow_click
+        jmp     handle_line_up
 
 :       cmp     #MGTK::Part::down_arrow
         bne     :+
-        jmp     handle_down_arrow_click
+        jmp     handle_line_down
 
 :       cmp     #MGTK::Part::page_up
         bne     :+
-        jmp     handle_page_up_click
+        jmp     handle_page_up
 
 :       cmp     #MGTK::Part::page_down
         bne     :+
-        jmp     handle_page_down_click
+        jmp     handle_page_down
 
         ;; Track thumb
 :       lda     #MGTK::Ctl::vertical_scroll_bar
@@ -804,93 +814,96 @@ different:
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_stash
-        jsr     LB3B7
-        jsr     draw_filenames
+        jsr     scroll_clip_rect
+        jsr     draw_list_entries
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_page_up_click
+        kLineDelta = 1
+        kPageDelta = 9
+
+.proc handle_page_up
         lda     winfo_list::vthumbpos
         sec
-        sbc     #$09
+        sbc     #kPageDelta
         bpl     :+
-        lda     #$00
+        lda     #0
 :       sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
-        jsr     LB3B7
-        jsr     draw_filenames
+        jsr     scroll_clip_rect
+        jsr     draw_list_entries
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_page_down_click
+.proc handle_page_down
         lda     winfo_list::vthumbpos
         clc
         adc     #$09
-        cmp     num_files_in_dir
-        beq     LA7F8
-        bcc     LA7F8
-        lda     num_files_in_dir
-LA7F8:  sta     updatethumb_thumbpos
+        cmp     num_file_names
+        beq     :+
+        bcc     :+
+        lda     num_file_names
+:       sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
-        jsr     LB3B7
-        jsr     draw_filenames
+        jsr     scroll_clip_rect
+        jsr     draw_list_entries
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_up_arrow_click
+.proc handle_line_up
         lda     winfo_list::vthumbpos
-        bne     LA816
+        bne     :+
         rts
 
-LA816:  sec
-        sbc     #$01
+:       sec
+        sbc     #kLineDelta
         sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
-        jsr     LB3B7
-        jsr     draw_filenames
-        jsr     LA85F
-        jmp     handle_up_arrow_click
+        jsr     scroll_clip_rect
+        jsr     draw_list_entries
+        jsr     check_arrow_repeat
+        jmp     handle_line_up
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down_arrow_click
+.proc handle_line_down
         lda     winfo_list::vthumbpos
         cmp     winfo_list::vthumbmax
-        bne     LA83F
+        bne     :+
         rts
 
-LA83F:  clc
-        adc     #$01
+:       clc
+        adc     #kLineDelta
         sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
-        jsr     LB3B7
-        jsr     draw_filenames
-        jsr     LA85F
-        jmp     handle_down_arrow_click
+        jsr     scroll_clip_rect
+        jsr     draw_list_entries
+        jsr     check_arrow_repeat
+        jmp     handle_line_down
 .endproc
 
 ;;; ============================================================
 
-.proc LA85F
+.proc check_arrow_repeat
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -926,8 +939,8 @@ LA83F:  clc
         rts
 
 :       lda     findcontrol_which_part
-        cmp     #MGTK::Part::page_up
-        bcc     :+
+        cmp     #MGTK::Part::page_up ; up_arrow or down_arrow ?
+        bcc     :+                   ; Yes, continue
         pla
         pla
 :       rts
@@ -936,16 +949,16 @@ LA83F:  clc
 ;;; ============================================================
 
 .proc unset_ip_cursor
-        bit     ip_cursor_flag
+        bit     cursor_ibeam_flag
         bpl     :+
-        jsr     set_pointer_cursor
-        copy    #0, ip_cursor_flag
+        jsr     set_cursor_pointer
+        copy    #0, cursor_ibeam_flag
 :       rts
 .endproc
 
 ;;; ============================================================
 
-.proc set_pointer_cursor
+.proc set_cursor_pointer
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, pointer_cursor
         MGTK_CALL MGTK::ShowCursor
@@ -954,25 +967,24 @@ LA83F:  clc
 
 ;;; ============================================================
 
-.proc set_ip_cursor
-        bit     ip_cursor_flag
+.proc set_cursor_ibeam
+        bit     cursor_ibeam_flag
         bmi     :+
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, ibeam_cursor
         MGTK_CALL MGTK::ShowCursor
-        copy    #$80, ip_cursor_flag
+        copy    #$80, cursor_ibeam_flag
 :       rts
 .endproc
 
-ip_cursor_flag:
+cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         .byte   0
 
 ;;; ============================================================
 
-
 .proc LA8ED
         ldx     selected_index
-        lda     file_table,x
+        lda     file_list_index,x
         and     #$7F
         pha
         bit     LA211
@@ -1003,11 +1015,11 @@ ip_cursor_flag:
         lda     $08
         jsr     LB0D6
         jsr     LB118
-        jsr     LB309
+        jsr     update_scrollbar
         lda     #$00
-        jsr     LB3B7
-        jsr     LB350
-        jsr     draw_filenames
+        jsr     scroll_clip_rect
+        jsr     update_disk_name
+        jsr     draw_list_entries
         rts
 
 LA941:  .byte   0
@@ -1017,14 +1029,14 @@ LA941:  .byte   0
 .proc change_drive
         lda     #$FF
         sta     selected_index
-        jsr     LB082
-        jsr     LB051
+        jsr     inc_device_num
+        jsr     device_on_line
         jsr     LB118
-        jsr     LB309
+        jsr     update_scrollbar
         lda     #$00
-        jsr     LB3B7
-        jsr     LB350
-        jsr     draw_filenames
+        jsr     scroll_clip_rect
+        jsr     update_disk_name
+        jsr     draw_list_entries
         jsr     prep_path
         jsr     redraw_input
         rts
@@ -1035,11 +1047,11 @@ LA941:  .byte   0
 .proc LA965
         lda     #$00
         sta     LA9C8
-        ldx     LA3C7
+        ldx     path_buf
         bne     LA972
         jmp     LA9C7
 
-LA972:  lda     LA3C7,x
+LA972:  lda     path_buf,x
         and     #CHAR_MASK
         cmp     #'/'
         beq     LA981
@@ -1057,11 +1069,11 @@ LA988:  jsr     LB106
         lda     #$FF
         sta     selected_index
         jsr     LB118
-        jsr     LB309
+        jsr     update_scrollbar
         lda     #$00
-        jsr     LB3B7
-        jsr     LB350
-        jsr     draw_filenames
+        jsr     scroll_clip_rect
+        jsr     update_disk_name
+        jsr     draw_list_entries
         pla
         sta     selected_index
         bit     LA9C8
@@ -1313,67 +1325,71 @@ LAC1C:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Key handler
 
 .proc handle_key
         lda     event_modifiers
         beq     no_modifiers
 
-        ;; --------------------------------------------------
-        ;; Open and/or Solid Apple is down
-
+        ;; With modifiers
         lda     event_key
         and     #CHAR_MASK
+
         cmp     #CHAR_LEFT
         bne     :+
-        jmp     input_ip_to_start
+        jmp     input_ip_to_start ; start of line
+
 :       cmp     #CHAR_RIGHT
         bne     :+
-        jmp     input_ip_to_end
+        jmp     input_ip_to_end ; end of line
+
 :       bit     LA47F
         bmi     not_arrow
         cmp     #CHAR_DOWN
         bne     :+
-        jmp     select_pagedown
+        jmp     scroll_list_bottom ; end of list
+
 :       cmp     #CHAR_UP
         bne     not_arrow
-        jmp     select_pageup
+        jmp     scroll_list_top ; start of list
 
 not_arrow:
         cmp     #'0'
         bcc     :+
         cmp     #'9'+1
         bcs     :+
-        jmp     handle_meta_key_digit
+        jmp     key_meta_digit
 
 :       bit     LA47F
         bmi     LACAA
         jmp     check_alpha
 
         ;; --------------------------------------------------
-        ;; No modifier (Open/Solid Apple)
+        ;; No modifiers
 
 no_modifiers:
         lda     event_key
         and     #CHAR_MASK
+
         cmp     #CHAR_LEFT
-        bne     LAC67
+        bne     :+
         jmp     input_ip_left
 
-LAC67:  cmp     #CHAR_RIGHT
-        bne     LAC6E
+:       cmp     #CHAR_RIGHT
+        bne     :+
         jmp     input_ip_right
 
-LAC6E:  cmp     #CHAR_RETURN
+:       cmp     #CHAR_RETURN
         bne     :+
-        jmp     handle_key_return
+        jmp     key_return
 
 :       cmp     #CHAR_ESCAPE
         bne     :+
-        jmp     handle_key_escape
+        jmp     key_escape
 
 :       cmp     #CHAR_DELETE
         bne     :+
-        jmp     handle_key_delete
+        jmp     key_delete
 
 :       bit     LA47F
         bpl     :+
@@ -1382,7 +1398,7 @@ LAC6E:  cmp     #CHAR_RETURN
 :       cmp     #CHAR_TAB
         bne     not_tab
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, change_drive_button_rect
         MGTK_CALL MGTK::PaintRect, change_drive_button_rect
@@ -1390,17 +1406,17 @@ LAC6E:  cmp     #CHAR_RETURN
 LACAA:  jmp     exit
 
 not_tab:
-        cmp     #CHAR_CTRL_O
+        cmp     #CHAR_CTRL_O    ; Open
         bne     not_ctrl_o
         lda     selected_index
         bmi     exit
         tax
-        lda     file_table,x
-        bmi     LACBF
+        lda     file_list_index,x
+        bmi     :+
         jmp     exit
 
-LACBF:  lda     winfo_dialog::window_id
-        jsr     get_window_port
+:       lda     winfo_dialog::window_id
+        jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, open_button_rect
         MGTK_CALL MGTK::PaintRect, open_button_rect
@@ -1408,10 +1424,10 @@ LACBF:  lda     winfo_dialog::window_id
         jmp     exit
 
 not_ctrl_o:
-        cmp     #CHAR_CTRL_C
+        cmp     #CHAR_CTRL_C    ; Close
         bne     :+
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, close_button_rect
         MGTK_CALL MGTK::PaintRect, close_button_rect
@@ -1420,11 +1436,11 @@ not_ctrl_o:
 
 :       cmp     #CHAR_DOWN
         bne     :+
-        jmp     select_down
+        jmp     key_down
 
 :       cmp     #CHAR_UP
         bne     finish
-        jmp     select_up
+        jmp     key_up
 
 finish: jsr     input_insert_char
         rts
@@ -1435,7 +1451,7 @@ exit:   jsr     LA9C9
 
 ;;; ============================================================
 
-.proc handle_key_return
+.proc key_return
         lda     selected_index
         bpl     LAD20
         bit     LA211
@@ -1446,7 +1462,7 @@ exit:   jsr     LA9C9
 ;;; ============================================================
 
 LAD20:  lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         MGTK_CALL MGTK::PaintRect, ok_button_rect
@@ -1457,9 +1473,9 @@ LAD20:  lda     winfo_dialog::window_id
 
 ;;; ============================================================
 
-.proc handle_key_escape
+.proc key_escape
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, cancel_button_rect
         MGTK_CALL MGTK::PaintRect, cancel_button_rect
@@ -1470,26 +1486,26 @@ LAD20:  lda     winfo_dialog::window_id
 
 ;;; ============================================================
 
-.proc handle_key_delete
+.proc key_delete
         jsr     input_delete_char
         rts
 .endproc
 
 ;;; ============================================================
 
-handle_meta_key_digit:
+key_meta_digit:
         jmp     noop
 
 ;;; ============================================================
 
-.proc select_down
-        lda     num_files_in_dir
+.proc key_down
+        lda     num_file_names
         beq     LAD79
         lda     selected_index
         bmi     LAD89
         tax
         inx
-        cpx     num_files_in_dir
+        cpx     num_file_names
         bcc     LAD7A
 LAD79:  rts
 
@@ -1497,16 +1513,16 @@ LAD7A:  jsr     LB404
         jsr     strip_path_segment_left_and_redraw
         inc     selected_index
         lda     selected_index
-        jmp     after_file_selection_changed
+        jmp     update_list_selection
 
-LAD89:  lda     #$00
-        jmp     after_file_selection_changed
+LAD89:  lda     #0
+        jmp     update_list_selection
 .endproc
 
 ;;; ============================================================
 
-.proc select_up
-        lda     num_files_in_dir
+.proc key_up
+        lda     num_file_names
         beq     LAD9A
         lda     selected_index
         bmi     LADAA
@@ -1517,12 +1533,12 @@ LAD9B:  jsr     LB404
         jsr     strip_path_segment_left_and_redraw
         dec     selected_index
         lda     selected_index
-        jmp     after_file_selection_changed
+        jmp     update_list_selection
 
-LADAA:  ldx     num_files_in_dir
+LADAA:  ldx     num_file_names
         dex
         txa
-        jmp     after_file_selection_changed
+        jmp     update_list_selection
 .endproc
 
 ;;; ============================================================
@@ -1539,6 +1555,7 @@ rts1:   rts
         cmp     #'z'+1
         bcs     rts1
         and     #(CASE_MASK & $7F)
+
 alpha:  jsr     LADDF
         bmi     rts1
         cmp     selected_index
@@ -1549,7 +1566,7 @@ alpha:  jsr     LADDF
         jsr     LB404
         jsr     strip_path_segment_left_and_redraw
 LADDB:  pla
-        jmp     after_file_selection_changed
+        jmp     update_list_selection
 
 
 .proc LADDF
@@ -1557,7 +1574,7 @@ LADDB:  pla
         lda     #$00
         sta     LAE35
 LADE7:  lda     LAE35
-        cmp     num_files_in_dir
+        cmp     num_file_names
         beq     LAE06
         jsr     LAE0D
         ldy     #$01
@@ -1577,7 +1594,7 @@ LAE09:  return  LAE35
 
 .proc LAE0D
         tax
-        lda     file_table,x
+        lda     file_list_index,x
         and     #$7F
         ldx     #$00
         stx     LAE36
@@ -1590,10 +1607,10 @@ LAE09:  return  LAE35
         asl     a
         rol     LAE36
         clc
-        adc     #<buf_filenames
+        adc     #<file_names
         sta     $06
         lda     LAE36
-        adc     #>buf_filenames
+        adc     #>file_names
         sta     $07
         rts
 .endproc
@@ -1606,8 +1623,8 @@ LAE37:  .byte   0
 
 ;;; ============================================================
 
-.proc select_pageup
-        lda     num_files_in_dir
+.proc scroll_list_top
+        lda     num_file_names
         beq     LAE44
         lda     selected_index
         bmi     LAE4B
@@ -1617,18 +1634,18 @@ LAE44:  rts
 :       jsr     LB404
         jsr     strip_path_segment_left_and_redraw
 LAE4B:  lda     #$00
-        jmp     after_file_selection_changed
+        jmp     update_list_selection
 .endproc
 
 ;;; ============================================================
 
-.proc select_pagedown
-        lda     num_files_in_dir
+.proc scroll_list_bottom
+        lda     num_file_names
         beq     done
         ldx     selected_index
         bmi     LAE69
         inx
-        cpx     num_files_in_dir
+        cpx     num_file_names
         bne     :+
 done:   rts
 
@@ -1636,23 +1653,26 @@ done:   rts
         txa
         jsr     LB404
         jsr     strip_path_segment_left_and_redraw
-LAE69:  ldx     num_files_in_dir
+LAE69:  ldx     num_file_names
         dex
         txa
-        jmp     after_file_selection_changed
+        jmp     update_list_selection
 .endproc
 
 ;;; ============================================================
 
-.proc after_file_selection_changed
+.proc update_list_selection
         sta     selected_index
-        jsr     LBAD0
+        jsr     list_selection_change
+
         lda     selected_index
         jsr     selection_second_col
-        jsr     LB30B
-        jsr     draw_filenames
+        jsr     update_scrollbar2
+        jsr     draw_list_entries
+
         copy    #1, buf_input_right
         copy    #' ', buf_input_right+1
+
         jsr     redraw_input
         rts
 .endproc
@@ -1667,7 +1687,7 @@ noop:   rts
         MGTK_CALL MGTK::OpenWindow, winfo_dialog
         MGTK_CALL MGTK::OpenWindow, winfo_list
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect_frame
         MGTK_CALL MGTK::FrameRect, ok_button_rect
@@ -1675,38 +1695,38 @@ noop:   rts
         MGTK_CALL MGTK::FrameRect, close_button_rect
         MGTK_CALL MGTK::FrameRect, cancel_button_rect
         MGTK_CALL MGTK::FrameRect, change_drive_button_rect
-        jsr     draw_ok_label
-        jsr     draw_open_label
-        jsr     draw_close_label
-        jsr     draw_cancel_btn
-        jsr     draw_change_drive_btn
+        jsr     draw_ok_button_label
+        jsr     draw_open_button_label
+        jsr     draw_close_button_label
+        jsr     draw_cancel_button_label
+        jsr     draw_change_drive_button_label
         MGTK_CALL MGTK::MoveTo, pt1
         MGTK_CALL MGTK::LineTo, pt2
         jsr     LA9C9
         rts
 .endproc
 
-draw_ok_label:
+draw_ok_button_label:
         MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call draw_string, ok_button_label
         rts
 
-draw_open_label:
+draw_open_button_label:
         MGTK_CALL MGTK::MoveTo, open_button_pos
         param_call draw_string, open_button_label
         rts
 
-draw_close_label:
+draw_close_button_label:
         MGTK_CALL MGTK::MoveTo, close_button_pos
         param_call draw_string, close_button_label
         rts
 
-draw_cancel_btn:
+draw_cancel_button_label:
         MGTK_CALL MGTK::MoveTo, cancel_button_pos
         param_call draw_string, cancel_button_label
         rts
 
-draw_change_drive_btn:
+draw_change_drive_button_label:
         MGTK_CALL MGTK::MoveTo, change_drive_button_pos
         param_call draw_string, change_drive_button_label
         rts
@@ -1739,9 +1759,9 @@ draw_change_drive_btn:
         inc16   params
         MGTK_CALL MGTK::TextWidth, params
         lsr16   $09
-        lda     #$01
+        lda     #>winfo_dialog::kWidth
         sta     LB03E
-        lda     #$F4
+        lda     #<winfo_dialog::kWidth
         lsr     LB03E
         ror     a
         sec
@@ -1770,9 +1790,9 @@ LB03E:  .byte   0
 
 ;;; ============================================================
 
-.proc LB051
+.proc device_on_line
         ;; Reverse order, so boot volume is first
-        lda     DEVCNT
+retry:  lda     DEVCNT
         sec
         sbc     device_index
         tax
@@ -1784,28 +1804,28 @@ LB03E:  .byte   0
         lda     buf_on_line
         and     #NAME_LENGTH_MASK
         sta     buf_on_line
-        bne     LB075
-        jsr     LB082
-        jmp     LB051
+        bne     found
+        jsr     inc_device_num
+        jmp     retry
 
-LB075:  param_call AdjustVolumeNameCase, buf_on_line
-        lda     #$00
-        sta     LA3C7
+found:  param_call AdjustVolumeNameCase, buf_on_line
+        lda     #0
+        sta     path_buf
         param_call LB0D6, buf_on_line
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc LB082
+.proc inc_device_num
         inc     device_index
         lda     device_index
         cmp     DEVCNT
-        beq     LB094
-        bcc     LB094
-        lda     #$00
+        beq     :+
+        bcc     :+
+        lda     #0
         sta     device_index
-LB094:  rts
+:       rts
 .endproc
 
 ;;; ============================================================
@@ -1815,7 +1835,7 @@ LB094:  rts
         sta     LB0D5
         MLI_CALL OPEN, open_params
         beq     LB0B5
-        jsr     LB051
+        jsr     device_on_line
         lda     #$FF
         sta     selected_index
         lda     #$FF
@@ -1827,7 +1847,7 @@ LB0B5:  lda     open_params::ref_num
         sta     close_params::ref_num
         MLI_CALL READ, read_params
         beq     LB0D4
-        jsr     LB051
+        jsr     device_on_line
         lda     #$FF
         sta     selected_index
         jmp     LB095
@@ -1841,25 +1861,26 @@ LB0D5:  .byte   0
 
 .proc LB0D6
         stax    $06
-        ldx     LA3C7
+        ldx     path_buf
         lda     #'/'
-        sta     LA3C7+1,x
-        inc     LA3C7
-        ldy     #$00
+        sta     path_buf+1,x
+        inc     path_buf
+        ldy     #0
         lda     ($06),y
         tay
         clc
-        adc     LA3C7
+        adc     path_buf
+
         pha
         tax
 LB0F0:  lda     ($06),y
-        sta     LA3C7,x
+        sta     path_buf,x
         dey
         dex
-        cpx     LA3C7
+        cpx     path_buf
         bne     LB0F0
         pla
-        sta     LA3C7
+        sta     path_buf
         lda     #$FF
         sta     selected_index
         rts
@@ -1868,30 +1889,30 @@ LB0F0:  lda     ($06),y
 ;;; ============================================================
 
 .proc LB106
-        ldx     LA3C7
-        cpx     #$00
-        beq     LB117
-        dec     LA3C7
-        lda     LA3C7,x
+:       ldx     path_buf
+        cpx     #0
+        beq     :+
+        dec     path_buf
+        lda     path_buf,x
         cmp     #'/'
-        bne     LB106
-LB117:  rts
+        bne     :-
+:       rts
 .endproc
 
 ;;; ============================================================
 
 .proc LB118
         jsr     LB095
-        lda     #$00
+        lda     #0
         sta     LB224
         sta     LB225
         sta     LA448
-        lda     #$01
+        lda     #1
         sta     LB226
         copy16  dir_read_buf+$23, LB227
         lda     dir_read_buf+$25
         and     #$7F
-        sta     num_files_in_dir
+        sta     num_file_names
         bne     :+
         jmp     LB1CF
 
@@ -1899,7 +1920,7 @@ LB117:  rts
 
 LB14C:  param_call_indirect AdjustFileEntryCase, $06
 
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         and     #NAME_LENGTH_MASK
         bne     LB157
@@ -1907,8 +1928,8 @@ LB14C:  param_call_indirect AdjustFileEntryCase, $06
 
 LB157:  ldx     LB224
         txa
-        sta     file_table,x
-        ldy     #$00
+        sta     file_list_index,x
+        ldy     #0
         lda     ($06),y
         and     #STORAGE_TYPE_MASK
         cmp     #ST_LINKED_DIRECTORY << 4
@@ -1918,15 +1939,15 @@ LB157:  ldx     LB224
         inc     LB225
         jmp     LB1C4
 
-LB173:  lda     file_table,x
+LB173:  lda     file_list_index,x
         ora     #$80
-        sta     file_table,x
+        sta     file_list_index,x
         inc     LA448
 LB17E:  ldy     #$00
         lda     ($06),y
         and     #$0F
         sta     ($06),y
-        copy16  #buf_filenames, $08
+        copy16  #file_names, $08
         lda     #$00
         sta     LB229
         lda     LB224
@@ -1955,14 +1976,14 @@ LB17E:  ldy     #$00
         inc     LB225
 LB1C4:  inc     LB226
         lda     LB225
-        cmp     num_files_in_dir
+        cmp     num_file_names
         bne     LB1F2
 LB1CF:  MLI_CALL CLOSE, close_params
         bit     LA447
         bpl     :+
         lda     LA448
-        sta     num_files_in_dir
-:       jsr     LB453
+        sta     num_file_names
+:       jsr     sort_file_names
         jsr     LB65E
         lda     LB0D5
         bpl     LB1F0
@@ -2000,10 +2021,11 @@ LB229:  .byte   0
 
 ;;; ============================================================
 
-.proc draw_filenames
+.proc draw_list_entries
         jsr     LA9C9
+
         lda     winfo_list::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::PaintRect, winfo_list::maprect
         lda     #16
         sta     pos::xcoord
@@ -2014,14 +2036,14 @@ LB229:  .byte   0
         sta     LB2D0
 
 loop:   lda     LB2D0
-        cmp     num_files_in_dir
-        bne     LB257
+        cmp     num_file_names
+        bne     :+
         jsr     LA9C9
         rts
 
-LB257:  MGTK_CALL MGTK::MoveTo, pos
+:       MGTK_CALL MGTK::MoveTo, pos
         ldx     LB2D0
-        lda     file_table,x
+        lda     file_list_index,x
         and     #$7F
         ldx     #$00
         stx     LB2CF
@@ -2042,7 +2064,7 @@ LB257:  MGTK_CALL MGTK::MoveTo, pos
         tya
         jsr     draw_string
         ldx     LB2D0
-        lda     file_table,x
+        lda     file_list_index,x
         bpl     LB2A7
         lda     #$01
         sta     pos
@@ -2055,7 +2077,7 @@ LB2A7:  lda     LB2D0
         bne     LB2B8
         jsr     LB404
         lda     winfo_list::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
 LB2B8:  inc     LB2D0
         add16   pos::ycoord, #8, pos::ycoord
         jmp     loop
@@ -2066,11 +2088,12 @@ LB2D0:  .byte   0
 
 ;;; ============================================================
 
-LB309:  lda     #$00
+update_scrollbar:
+        lda     #$00
 
-.proc LB30B
+.proc update_scrollbar2
         sta     LB34F
-        lda     num_files_in_dir
+        lda     num_file_names
         cmp     #$0A
         bcs     :+
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
@@ -2078,15 +2101,16 @@ LB309:  lda     #$00
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
 
-:       lda     num_files_in_dir
+:       lda     num_file_names
         sta     winfo_list::vthumbmax
-        lda     #MGTK::Ctl::vertical_scroll_bar ; also activate
+        .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         sta     activatectl_activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         lda     LB34F
         sta     updatethumb_thumbpos
-        jsr     LB3B7
+        jsr     scroll_clip_rect
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -2097,12 +2121,12 @@ LB34F:  .byte   0
 
 ;;; ============================================================
 
-.proc LB350
+.proc update_disk_name
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::PaintRect, rect0
         MGTK_CALL MGTK::SetPenMode, penXOR
-        copy16  #LA3C7, $06
+        copy16  #path_buf, $06
         ldy     #$00
         lda     ($06),y
         sta     LB3B6
@@ -2136,24 +2160,24 @@ LB3B6:  .byte   0
 
 ;;; ============================================================
 
-.proc LB3B7
+.proc scroll_clip_rect
         sta     tmp
         clc
-        adc     #9
-        cmp     num_files_in_dir
+        adc     #kPageDelta
+        cmp     num_file_names
         beq     LB3C4
         bcs     LB3CA
 LB3C4:  lda     tmp
         jmp     LB3DA
 
-LB3CA:  lda     num_files_in_dir
+LB3CA:  lda     num_file_names
         cmp     #$0A
         bcs     LB3D7
         lda     tmp
         jmp     LB3DA
 
 LB3D7:  sec
-        sbc     #9
+        sbc     #kPageDelta
 LB3DA:  ldx     #$00
         stx     tmp
         asl     a
@@ -2197,7 +2221,7 @@ tmp:    .byte   0
         adc     #$00
         sta     rect::y2+1
         lda     winfo_list::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect
         jsr     LA9C9
@@ -2208,7 +2232,7 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-.proc get_window_port
+.proc set_port_for_window
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
@@ -2216,8 +2240,9 @@ tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Sorting
 
-.proc LB453
+.proc sort_file_names
         lda     #$7F            ; beyond last possible name char
         ldx     #15
 :       sta     LB537,x
@@ -2227,7 +2252,7 @@ tmp:    .byte   0
         sta     LB534
         sta     LB533
 LB465:  lda     LB534
-        cmp     num_files_in_dir
+        cmp     num_file_names
         bne     LB470
         jmp     LB4EC
 
@@ -2264,7 +2289,7 @@ LB4AA:  lda     ($06),y
         bne     LB4AA
 LB4B2:  inc     LB533
         lda     LB533
-        cmp     num_files_in_dir
+        cmp     num_file_names
         beq     LB4C0
         jmp     LB470
 
@@ -2287,28 +2312,28 @@ LB4C0:  lda     LB535
         inc     LB534
         jmp     LB465
 
-LB4EC:  ldx     num_files_in_dir
+LB4EC:  ldx     num_file_names
         dex
         stx     LB534
 LB4F3:  lda     LB534
         bpl     LB522
-        ldx     num_files_in_dir
+        ldx     num_file_names
         beq     LB521
         dex
 LB4FE:  lda     LB547,x
         tay
-        lda     file_table,y
+        lda     file_list_index,y
         bpl     LB50F
         lda     LB547,x
         ora     #$80
         sta     LB547,x
 LB50F:  dex
         bpl     LB4FE
-        ldx     num_files_in_dir
+        ldx     num_file_names
         beq     LB521
         dex
 :       lda     LB547,x
-        sta     file_table,x
+        sta     file_list_index,x
         dex
         bpl     :-
 LB521:  rts
@@ -2327,9 +2352,8 @@ LB535:  .byte   0
 LB536:  .byte   0
 LB537:  .res    16, 0
 LB547:  .res    127, 0
-.endproc
 
-;;; ============================================================
+;;; --------------------------------------------------
 
 .proc LB5C6
         ldx     #$00
@@ -2355,6 +2379,7 @@ LB547:  .res    127, 0
         rts
 
 LB5F0:  .byte   0
+.endproc
 .endproc
 
 ;;; ============================================================
@@ -2422,7 +2447,7 @@ LB65D:  .byte   0
 ;;; ============================================================
 
 .proc LB65E
-        lda     num_files_in_dir
+        lda     num_file_names
         bne     LB664
 LB663:  rts
 
@@ -2433,7 +2458,7 @@ LB664:  lda     #$00
         lda     #$18
         sta     $07
 LB671:  lda     LB691
-        cmp     num_files_in_dir
+        cmp     num_file_names
         beq     LB663
         inc     LB691
         lda     $06
@@ -2448,6 +2473,9 @@ LB691:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Find index to filename in file_list_index.
+;;; Input: $06 = ptr to filename
+;;; Output: A = index, or $FF if not found
 
 .proc LB629                     ; Unreferenced ???
         stax    $06
@@ -2460,12 +2488,9 @@ LB691:  .byte   0
         bpl     :-
         lda     #$00
         sta     LB6F1
-        lda     #$00
-        sta     $06
-        lda     #$18
-        sta     $07
+        copy16  #file_names, $06
 LB6B0:  lda     LB6F1
-        cmp     num_files_in_dir
+        cmp     num_file_names
         beq     LB6E0
         ldy     #$00
         lda     ($06),y
@@ -2490,10 +2515,10 @@ LB6CF:  inc     LB6F1
 
 LB6E0:  return  #$FF
 
-LB6E3:  ldx     num_files_in_dir
+LB6E3:  ldx     num_file_names
         lda     LB6F1
 LB6E9:  dex
-        cmp     file_table,x
+        cmp     file_list_index,x
         bne     LB6E9
         txa
         rts
@@ -2524,24 +2549,25 @@ has_sel:
         pt := $06
 
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         jsr     calc_input_endpos
         stax    pt
         copy16  rect_input_text::y1, pt+2
         MGTK_CALL MGTK::MoveTo, pt
         bit     prompt_ip_flag
-        bpl     LB73E
+        bpl     bg2
+
         MGTK_CALL MGTK::SetTextBG, textbg1
         lda     #$00
         sta     prompt_ip_flag
-        beq     LB749
-LB73E:  MGTK_CALL MGTK::SetTextBG, textbg2
+        beq     :+
+bg2:    MGTK_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
         sta     prompt_ip_flag
 
         params := $06
 
-LB749:  copy16  #str_ip+1, params
+:       copy16  #str_ip+1, params
         lda     str_ip
         sta     params+2
         MGTK_CALL MGTK::DrawText, params
@@ -2553,15 +2579,15 @@ LB749:  copy16  #str_ip+1, params
 
 .proc redraw_input
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::PaintRect, rect_input
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect_input
         MGTK_CALL MGTK::MoveTo, rect_input_text
         lda     buf_input_left
-        beq     LB78A
+        beq     :+
         param_call draw_string, buf_input_left
-LB78A:  param_call draw_string, buf_input_right
+:       param_call draw_string, buf_input_right
         param_call draw_string, str_two_spaces
         rts
 .endproc
@@ -2574,7 +2600,7 @@ LB78A:  param_call draw_string, buf_input_right
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, rect_input
         cmp     #MGTK::inrect_inside
@@ -2700,7 +2726,7 @@ LB8EA:  .word   0
         lda     buf_input_left
         clc
         adc     buf_input_right
-        cmp     #$41
+        cmp     #$41            ; ???
         bcc     continue
         rts
 
@@ -2717,7 +2743,7 @@ continue:
         stax    $06
         copy16  rect_input_text::y1, $08
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, $06
         param_call draw_string, str_1_char
         param_call draw_string, buf_input_right
@@ -2737,7 +2763,7 @@ continue:
         stax    $06
         copy16  rect_input_text::y1, $08
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, $06
         param_call draw_string, buf_input_right
         param_call draw_string, str_two_spaces
@@ -2749,18 +2775,19 @@ continue:
 
 .proc input_ip_left
         lda     buf_input_left
-        bne     LB979
+        bne     :+
         rts
 
-LB979:  ldx     buf_input_right
-        cpx     #$01
-        beq     LB98B
-LB980:  lda     buf_input_right,x
+:       ldx     buf_input_right
+        cpx     #1
+        beq     skip
+:       lda     buf_input_right,x
         sta     buf_input_right+1,x
         dex
-        cpx     #$01
-        bne     LB980
-LB98B:  ldx     buf_input_left
+        cpx     #1
+        bne     :-
+
+skip:   ldx     buf_input_left
         lda     buf_input_left,x
         sta     buf_input_right+2
         dec     buf_input_left
@@ -2769,7 +2796,7 @@ LB98B:  ldx     buf_input_left
         stax    $06
         copy16  rect_input_text::y1, $08
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, $06
         param_call draw_string, buf_input_right
         param_call draw_string, str_two_spaces
@@ -2781,27 +2808,29 @@ LB98B:  ldx     buf_input_left
 
 .proc input_ip_right
         lda     buf_input_right
-        cmp     #$02
-        bcs     LB9D1
+        cmp     #2
+        bcs     :+
         rts
 
-LB9D1:  ldx     buf_input_left
+:       ldx     buf_input_left
         inx
         lda     buf_input_right+2
         sta     buf_input_left,x
         inc     buf_input_left
         ldx     buf_input_right
-        cpx     #$03
-        bcc     LB9F3
-        ldx     #$02
-LB9E7:  lda     buf_input_right+1,x
+        cpx     #3
+        bcc     finish
+
+        ldx     #2
+:       lda     buf_input_right+1,x
         sta     buf_input_right,x
         inx
         cpx     buf_input_right
-        bne     LB9E7
-LB9F3:  dec     buf_input_right
+        bne     :-
+
+finish: dec     buf_input_right
         lda     winfo_dialog::window_id
-        jsr     get_window_port
+        jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, rect_input_text
         param_call draw_string, buf_input_left
         param_call draw_string, buf_input_right
@@ -2814,25 +2843,28 @@ LB9F3:  dec     buf_input_right
 
 .proc input_ip_to_start
         lda     buf_input_left
-        bne     LBA21
+        bne     :+
         rts
 
-LBA21:  ldy     buf_input_left
+:       ldy     buf_input_left
         lda     buf_input_right
-        cmp     #$02
-        bcc     LBA3A
-        ldx     #$01
-LBA2D:  iny
+        cmp     #2
+        bcc     skip
+
+        ldx     #1
+:       iny
         inx
         lda     buf_input_right,x
         sta     buf_input_left,y
         cpx     buf_input_right
-        bne     LBA2D
-LBA3A:  sty     buf_input_left
-LBA3D:  lda     buf_input_left,y
+        bne     :-
+
+skip:   sty     buf_input_left
+
+:       lda     buf_input_left,y
         sta     buf_input_right+1,y
         dey
-        bne     LBA3D
+        bne     :-
         ldx     buf_input_left
         inx
         stx     buf_input_right
@@ -2871,24 +2903,30 @@ LBA3D:  lda     buf_input_left,y
 ;;; Input: A,X = string address
 
 .proc append_segment_to_input
-        stax    $06
+        ptr := $06
+
+        stax    ptr
+
         ldx     buf_input_left
         lda     #'/'
         sta     buf_input_left+1,x
         inc     buf_input_left
-        ldy     #$00
-        lda     ($06),y
+
+        ldy     #0
+        lda     (ptr),y
         tay
         clc
         adc     buf_input_left
         pha
         tax
-:       lda     ($06),y
+
+:       lda     (ptr),y
         sta     buf_input_left,x
         dey
         dex
         cpx     buf_input_left
         bne     :-
+
         pla
         sta     buf_input_left
         rts
@@ -2898,13 +2936,13 @@ LBA3D:  lda     buf_input_left,y
 ;;; Trim end of left segment to rightmost '/'
 
 .proc strip_path_segment_left
-@loop:  ldx     buf_input_left
+:       ldx     buf_input_left
         cpx     #0
         beq     done
         dec     buf_input_left
         lda     buf_input_left,x
         cmp     #'/'
-        bne     @loop
+        bne     :-
 done:   rts
 .endproc
 
@@ -2918,12 +2956,12 @@ done:   rts
 
 ;;; ============================================================
 
-.proc LBAD0
+.proc list_selection_change
         ptr := $06
 
-        copy16  #buf_filenames, ptr
+        copy16  #file_names, ptr
         ldx     selected_index
-        lda     file_table,x
+        lda     file_list_index,x
         and     #$7F
 
         ldx     #0
@@ -2955,22 +2993,14 @@ tmp:    .byte   0
 ;;; ============================================================
 
 .proc LBB09                     ; Unreferenced ???
-        ldx     LA3C7
-:       lda     LA3C7,x
-        sta     buf_input_left,x
-        dex
-        bpl     :-
+        COPY_STRING path_buf, buf_input_left
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc prep_path
-        ldx     LA3C7
-:       lda     LA3C7,x
-        sta     buf_input_left,x
-        dex
-        bpl     :-
+        COPY_STRING path_buf, buf_input_left
         rts
 .endproc
 
@@ -3011,17 +3041,18 @@ width:  .word   0
         sta     LA0C8,x
         dex
         bpl     :-
+
         lda     selected_index
         sta     LBBE2
         bmi     LBBA0
-        ldx     #$00
+        ldx     #<file_names
         stx     $06
-        ldx     #$18
+        ldx     #>file_names
         stx     $07
-        ldx     #$00
+        ldx     #0
         stx     LBBE1
         tax
-        lda     file_table,x
+        lda     file_list_index,x
         and     #$7F
         asl     a
         rol     LBBE1
@@ -3039,16 +3070,17 @@ width:  .word   0
         tax
         tya
         jsr     LB0D6
+
 LBBA0:  lda     LA0C8
-        cmp     LA3C7
+        cmp     path_buf
         bne     LBBCB
         tax
 LBBB7:  lda     LA0C8,x
-        cmp     LA3C7,x
+        cmp     path_buf,x
         bne     LBBCB
         dex
         bne     LBBB7
-        lda     #$00
+        lda     #0
         sta     LA211
         jsr     LBBD4
         rts
