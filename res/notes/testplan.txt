@@ -197,5 +197,6 @@
 
 * Launch DeskTop. Open a window containing folders and files. Scroll window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the obscured part of the folder. Ensure the folder doesn't highlight.
 
-* Launch DeskTop. File > Copy a File... Browse to a directory containing one or more files starting with lowercase letters (GS/OS). Verify the files appear with correct names.
-* Launch Selector. File > Run a File... Browse to a directory containing one or more files starting with lowercase letters (GS/OS). Verify the files appear with correct names.
+* Launch DeskTop. File > Copy a File... Browse to a directory containing one or more files starting with lowercase letters (AppleWorks or GS/OS). Verify the files appear with correct names.
+* Launch Selector. File > Run a File... Browse to a directory containing one or more files starting with lowercase letters (AppleWorks or GS/OS). Verify the files appear with correct names.
+* Launch Selector. File > Run a File... Browse to a directory containing one or more files with starting with mixed case (AppleWorks or GS/OS). Verify the filenames appear with correct case.

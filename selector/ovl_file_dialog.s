@@ -1788,8 +1788,8 @@ LB03E:  .byte   0
         jsr     LB082
         jmp     LB051
 
-        ;; TODO: Adjust volume case of buf_on_line here
-LB075:  lda     #$00
+LB075:  param_call AdjustVolumeNameCase, buf_on_line
+        lda     #$00
         sta     LA3C7
         param_call LB0D6, buf_on_line
         rts
@@ -1892,15 +1892,16 @@ LB117:  rts
         lda     dir_read_buf+$25
         and     #$7F
         sta     num_files_in_dir
-        bne     LB144
+        bne     :+
         jmp     LB1CF
 
-LB144:  copy16  #dir_read_buf+$2B, $06
+:       copy16  #dir_read_buf+$2B, $06
 
-        ;; TODO: Adjust file entry case ($06) here
-LB14C:  ldy     #$00
+LB14C:  param_call_indirect AdjustFileEntryCase, $06
+
+        ldy     #$00
         lda     ($06),y
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         bne     LB157
         jmp     LB1C4
 
@@ -1909,8 +1910,8 @@ LB157:  ldx     LB224
         sta     file_table,x
         ldy     #$00
         lda     ($06),y
-        and     #$F0
-        cmp     #$D0
+        and     #STORAGE_TYPE_MASK
+        cmp     #ST_LINKED_DIRECTORY << 4
         beq     LB173
         bit     LA447
         bpl     LB17E
@@ -2064,46 +2065,6 @@ LB2D0:  .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Input: A,X = Address of string
-
-.proc adjust_path_case
-        stx     $0B
-        sta     $0A
-        ldy     #$00
-        lda     ($0A),y
-        tay
-        bne     LB2DD
-        rts
-
-LB2DD:  dey
-        beq     LB2E2
-        bpl     LB2E3
-LB2E2:  rts
-
-LB2E3:  lda     ($0A),y
-        and     #$7F
-        cmp     #'/'
-        beq     LB2EF
-        cmp     #$2E
-        bne     LB2F3
-LB2EF:  dey
-        jmp     LB2DD
-
-LB2F3:  iny
-        lda     ($0A),y
-        and     #$7F
-        cmp     #'A'
-        bcc     LB305
-        cmp     #'Z'+1
-        bcs     LB305
-        clc
-        adc     #$20            ; to lower case
-        sta     ($0A),y
-LB305:  dey
-        jmp     LB2DD
-.endproc
-
-;;; ============================================================
 
 LB309:  lda     #$00
 
@@ -2164,7 +2125,6 @@ LB388:  inx
         cpy     LB3B6
         bne     LB388
         stx     INVOKER_PREFIX
-        param_call adjust_path_case, INVOKER_PREFIX
         MGTK_CALL MGTK::MoveTo, pos_disk
         param_call draw_string, str_disk
         param_call draw_string, INVOKER_PREFIX
@@ -2475,9 +2435,6 @@ LB664:  lda     #$00
 LB671:  lda     LB691
         cmp     num_files_in_dir
         beq     LB663
-        lda     $06
-        ldx     $07
-        jsr     adjust_path_case
         inc     LB691
         lda     $06
         clc
@@ -2995,8 +2952,6 @@ done:   rts
 tmp:    .byte   0
 .endproc
 
-        .byte   0               ; Unused ???
-
 ;;; ============================================================
 
 .proc LBB09                     ; Unreferenced ???
@@ -3005,7 +2960,6 @@ tmp:    .byte   0
         sta     buf_input_left,x
         dex
         bpl     :-
-        param_call adjust_path_case, buf_input_left
         rts
 .endproc
 
@@ -3017,7 +2971,6 @@ tmp:    .byte   0
         sta     buf_input_left,x
         dex
         bpl     :-
-        param_call adjust_path_case, buf_input_left
         rts
 .endproc
 
@@ -3086,9 +3039,7 @@ width:  .word   0
         tax
         tya
         jsr     LB0D6
-LBBA0:  param_call adjust_path_case, LA0C8
-        param_call adjust_path_case, LA3C7
-        lda     LA0C8
+LBBA0:  lda     LA0C8
         cmp     LA3C7
         bne     LBBCB
         tax
@@ -3139,6 +3090,13 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
 
         DEFINE_POINT coords, 0, 0
 .endproc
+
+;;; ============================================================
+
+        IO_BUFFER := $1C00
+        .define LIB_MLI_CALL MLI_CALL
+        .include "../lib/adjustfilecase.s"
+        .undefine LIB_MLI_CALL
 
 ;;; ============================================================
 

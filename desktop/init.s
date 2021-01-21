@@ -609,7 +609,7 @@ open_dir:
         copy16  #read_dir_buffer + .sizeof(SubdirectoryHeader), dir_ptr
 
 process_block:
-        param_call_indirect main::adjust_fileentry_case, dir_ptr
+        param_call_indirect main::AdjustFileEntryCase, dir_ptr
 
         ldy     #FileEntry::storage_type_name_length
         lda     (dir_ptr),y

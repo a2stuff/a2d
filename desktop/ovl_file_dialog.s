@@ -1184,7 +1184,7 @@ L5E6F:  jsr     copy_string_to_lcbuf
         jsr     inc_device_num
         jmp     :-
 
-found:  param_call main::adjust_volname_case, on_line_buffer
+found:  param_call main::AdjustVolumeNameCase, on_line_buffer
         lda     #0
         sta     path_buf
         param_call L5F0D, on_line_buffer
@@ -1285,8 +1285,8 @@ L5F31:  lda     ($06),y
         sta     L50A9
         lda     #$01
         sta     L6069
-        copy16  $1423, L606A
-        lda     $1425
+        copy16  $1400+$23, L606A
+        lda     $1400+$25
         and     #$7F
         sta     num_file_names
         bne     :+
@@ -1294,7 +1294,7 @@ L5F31:  lda     ($06),y
 
 :       copy16  #$142B, $06
 
-L5F8F:  param_call_indirect main::adjust_fileentry_case, $06
+L5F8F:  param_call_indirect main::AdjustFileEntryCase, $06
 
         ldy     #$00
         lda     ($06),y
