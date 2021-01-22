@@ -1329,8 +1329,12 @@ LDEE6:  lda     #$3A
         sta     ($06),y
         rts
 
+;;; ============================================================
+
 .proc number_to_string
-        stax    number
+        stax    value
+
+        ;; Clear field
         ldx     #7
         lda     #' '
 :       sta     str_number,x
@@ -1338,55 +1342,62 @@ LDEE6:  lda     #$3A
         bne     :-
 
         lda     #0
-        sta     LDF72
+        sta     nonzero_flag
+        ldy     #0              ; y = position in string
+        ldx     #0              ; x = which power index is subtracted (*2)
 
-        ldy     #0
-        ldx     #0
-LDF04:  lda     #0
-        sta     LDF71
-LDF09:  cmp16   number, tens_table,x
+        ;; For each power of ten
+loop:   lda     #0
+        sta     digit
 
-        bpl     LDF45
-        lda     LDF71
-        bne     LDF25
-        bit     LDF72
-        bmi     LDF25
-        lda     #$20
-        bne     LDF38
-LDF25:  cmp     #$0A
-        bcc     LDF2F
+        ;; Keep subtracting/incrementing until zero is hit
+sloop:  cmp16   value, powers,x
+        bpl     incr
+
+        lda     digit
+        bne     not_pad
+        bit     nonzero_flag
+        bmi     not_pad
+        lda     #' '            ; pad with leading spaces if no digits seen
+        bne     place           ; always
+
+not_pad:
+        cmp     #$0A            ; This looks like hex conversion???
+        bcc     LDF2F           ; (if digit > 9, then treat $A as 'A' etc)
         clc
         adc     #$37
         jmp     LDF31
 
+        ;; Convert to ASCII
 LDF2F:  adc     #'0'
 LDF31:  pha
-        lda     #$80
-        sta     LDF72
+        copy    #$80, nonzero_flag
         pla
-LDF38:  sta     str_number+2,y
+
+        ;; Place the character
+place:  sta     str_number+2,y
         iny
+
         inx
         inx
-        cpx     #$08
-        beq     LDF5E
-        jmp     LDF04
+        cpx     #8              ; up to 4 digits (*2) via subtraction
+        beq     done
+        jmp     loop
 
-LDF45:  inc     LDF71
-        sub16   number, tens_table,x, number
-        jmp     LDF09
+incr:   inc     digit
+        sub16   value, powers,x, value
+        jmp     sloop
 
-LDF5E:  lda     number
+done:   lda     value
         ora     #'0'
         sta     str_number+2,y
         rts
 
-tens_table:
-        .word   10000, 1000, 100, 10
-
-number: .word   0
-LDF71:  .byte   0
-LDF72:  .byte   0
+powers: .word   10000, 1000, 100, 10
+value: .word   0           ; remaining value as subtraction proceeds
+digit: .byte   0           ; current digit being accumulated
+nonzero_flag:
+        .byte   0
 .endproc
 
 
