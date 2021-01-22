@@ -156,13 +156,18 @@ L51AE:  .byte   0
         lda     findwindow_which_area
         bne     :+
         rts
+
 :       cmp     #MGTK::Area::content
         bne     :+
-        jmp     L51C7
-        rts                     ; Unreached ???
-:       rts
+        jmp     handle_content_click
 
-L51C7:  lda     findwindow_window_id
+        rts                     ; Unreached ???
+
+:       rts
+.endproc
+
+.proc handle_content_click
+        lda     findwindow_window_id
         cmp     winfo_file_dialog
         beq     :+
         jmp     handle_list_button_down
@@ -1012,10 +1017,10 @@ L5BC7:  return  L5BF3
         asl     a
         rol     L5BF4
         clc
-        adc     #$00
+        adc     #<file_names
         sta     $06
         lda     L5BF4
-        adc     #$18
+        adc     #>file_names
         sta     $07
         rts
 .endproc
@@ -1488,10 +1493,10 @@ loop:   lda     l4
         asl     a
         rol     l3
         clc
-        adc     #$00
+        adc     #<file_names
         tay
         lda     l3
-        adc     #$18
+        adc     #>file_names
         tax
         tya
         jsr     draw_string
@@ -1796,10 +1801,12 @@ l22:    .res 127, 0
 ;;; --------------------------------------------------
 
 .proc L6451
-        ldx     #$00
-        stx     $06
-        ldx     #$18
-        stx     $07
+        ptr := $06
+
+        ldx     #<file_names
+        stx     ptr
+        ldx     #>file_names
+        stx     ptr+1
         ldx     #$00
         stx     l1
         asl     a
@@ -1811,11 +1818,11 @@ l22:    .res 127, 0
         asl     a
         rol     l1
         clc
-        adc     $06
-        sta     $06
+        adc     ptr
+        sta     ptr
         lda     l1
-        adc     $07
-        sta     $07
+        adc     ptr+1
+        sta     ptr+1
         rts
 
 l1:     .byte   0
@@ -1825,22 +1832,24 @@ l1:     .byte   0
 ;;; ============================================================
 
 .proc L647C
-        stax    $06
+        ptr := $06
+
+        stax    ptr
         ldy     #$01
-        lda     ($06),y
+        lda     (ptr),y
         cmp     #'/'
         bne     l6
         dey
-        lda     ($06),y
+        lda     (ptr),y
         cmp     #$02
         bcc     l6
         tay
-        lda     ($06),y
+        lda     (ptr),y
         cmp     #'/'
         beq     l6
         ldx     #$00
         stx     l7
-l1:     lda     ($06),y
+l1:     lda     (ptr),y
         cmp     #'/'
         beq     l2
         inx
@@ -1854,9 +1863,9 @@ l2:     inc     l7
         dey
         bne     l1
 l3:     ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         tay
-l4:     lda     ($06),y
+l4:     lda     (ptr),y
         and     #CHAR_MASK
         cmp     #'.'
         beq     l5
@@ -1884,23 +1893,25 @@ l7:     .byte   0
 ;;; ============================================================
 
 .proc L64E2
+        ptr := $06
+
         lda     num_file_names
         bne     l2
 l1:     rts
 
 l2:     lda     #$00
         sta     l4
-        copy16  #file_names, $06
+        copy16  #file_names, ptr
 l3:     lda     l4
         cmp     num_file_names
         beq     l1
         inc     l4
-        lda     $06
+        lda     ptr
         clc
         adc     #$10
-        sta     $06
+        sta     ptr
         bcc     l3
-        inc     $07
+        inc     ptr+1
         jmp     l3
 
 l4:     .byte   0
@@ -1916,10 +1927,10 @@ l4:     .byte   0
         ldy     #$00
         lda     ($06),y
         tay
-l1:     lda     ($06),y
+:       lda     ($06),y
         sta     l9,y
         dey
-        bpl     l1
+        bpl     :-
         lda     #$00
         sta     l8
         copy16  #file_names, $06

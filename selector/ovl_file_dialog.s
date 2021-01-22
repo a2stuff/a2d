@@ -532,7 +532,7 @@ LA50E:  .byte   0
         bne     :+
         jmp     handle_content_click
 
-        rts
+        rts                     ; Unreached ???
 
 :       rts
 .endproc
@@ -540,10 +540,10 @@ LA50E:  .byte   0
 .proc handle_content_click
         lda     findwindow_window_id
         cmp     winfo_dialog::window_id
-        beq     LA52F
+        beq     :+
         jmp     handle_list_button_down
 
-LA52F:  lda     winfo_dialog::window_id
+:       lda     winfo_dialog::window_id
         jsr     set_port_for_window
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
@@ -992,10 +992,10 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     prep_path
 :       lda     #$00
         sta     l1
-        lda     #$00
+        lda     #<file_names
         sta     $08
-        lda     #$18
-        sta     $09
+        lda     #>file_names
+        sta     $08+1
         pla
         asl     a
         rol     l1
@@ -2059,10 +2059,10 @@ loop:   lda     l4
         asl     a
         rol     l3
         clc
-        adc     #$00
+        adc     #<file_names
         tay
         lda     l3
-        adc     #$18
+        adc     #>file_names
         tax
         tya
         jsr     draw_string
@@ -2359,10 +2359,12 @@ l20:    .res    127, 0
 ;;; --------------------------------------------------
 
 .proc LB5C6
-        ldx     #$00
-        stx     $06
-        ldx     #$18
-        stx     $07
+        ptr := $06
+
+        ldx     #<file_names
+        stx     ptr
+        ldx     #>file_names
+        stx     ptr+1
         ldx     #$00
         stx     l21
         asl     a
@@ -2374,11 +2376,11 @@ l20:    .res    127, 0
         asl     a
         rol     l21
         clc
-        adc     $06
-        sta     $06
+        adc     ptr
+        sta     ptr
         lda     l21
-        adc     $07
-        sta     $07
+        adc     ptr+1
+        sta     ptr+1
         rts
 
 l21:    .byte   0
@@ -2388,22 +2390,24 @@ l21:    .byte   0
 ;;; ============================================================
 
 .proc LB5F1
-        stax    $06
+        ptr := $06
+
+        stax    ptr
         ldy     #$01
-        lda     ($06),y
+        lda     (ptr),y
         cmp     #'/'
         bne     l6
         dey
-        lda     ($06),y
+        lda     (ptr),y
         cmp     #$02
         bcc     l6
         tay
-        lda     ($06),y
+        lda     (ptr),y
         cmp     #'/'
         beq     l6
         ldx     #$00
         stx     l7
-l1:     lda     ($06),y
+l1:     lda     (ptr),y
         cmp     #'/'
         beq     l2
         inx
@@ -2420,9 +2424,9 @@ l3:     lda     l7
         cmp     #$02
         bcc     l6
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         tay
-l4:     lda     ($06),y
+l4:     lda     (ptr),y
         and     #$7F
         cmp     #'.'
         beq     l5
@@ -2450,26 +2454,25 @@ l7:     .byte   0
 ;;; ============================================================
 
 .proc LB65E
+        ptr := $06
+
         lda     num_file_names
         bne     l2
 l1:     rts
 
 l2:     lda     #$00
         sta     l4
-        lda     #$00
-        sta     $06
-        lda     #$18
-        sta     $07
+        copy16  #file_names, ptr
 l3:     lda     l4
         cmp     num_file_names
         beq     l1
         inc     l4
-        lda     $06
+        lda     ptr
         clc
         adc     #$10
-        sta     $06
+        sta     ptr
         bcc     l3
-        inc     $07
+        inc     ptr+1
         jmp     l3
 
 l4:     .byte   0
@@ -2561,12 +2564,11 @@ has_sel:
         bpl     bg2
 
         MGTK_CALL MGTK::SetTextBG, textbg1
-        lda     #$00
-        sta     prompt_ip_flag
+        copy    #$00, prompt_ip_flag
         beq     :+
+
 bg2:    MGTK_CALL MGTK::SetTextBG, textbg2
-        lda     #$FF
-        sta     prompt_ip_flag
+        copy    #$FF, prompt_ip_flag
 
         params := $06
 
