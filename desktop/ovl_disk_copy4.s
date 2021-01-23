@@ -813,7 +813,7 @@ L0D5F:  ldx     disk_copy_overlay3::source_drive_index
         lda     #$00
         sta     block_params::block_num
         sta     block_params::block_num+1
-        jsr     L12AF
+        jsr     read_block
         bne     L0D8A
         lda     $1C00+1
         cmp     #$E0
@@ -846,108 +846,106 @@ L0DA4:  cmp     #$A5
 
 ;;; ============================================================
 
-L0DB5:  lda     #$14
+.proc L0DB5
+        lda     #$14
         jsr     L1133
         lda     disk_copy_overlay3::source_drive_index
         asl     a
         tax
-        lda     disk_copy_overlay3::block_count_table,x
-        sta     L0EB0
-        lda     disk_copy_overlay3::block_count_table+1,x
-        sta     L0EB1
-        lsr16   L0EB0
-        lsr16   L0EB0
-        lsr16   L0EB0
-        copy16  L0EB0, disk_copy_overlay3::LD427
+        copy16  disk_copy_overlay3::block_count_table,x, blocks_div_8
+        lsr16   blocks_div_8    ; /= 8
+        lsr16   blocks_div_8
+        lsr16   blocks_div_8
+        copy16  blocks_div_8, disk_copy_overlay3::LD427
         bit     disk_copy_overlay3::LD44D
-        bmi     L0DF6
+        bmi     :+
         lda     disk_copy_overlay3::quick_copy_flag
-        bne     L0DF6
+        bne     :+
         jmp     L0E4D
 
-L0DF6:  lda     #$FF
-        clc
-        adc     disk_copy_overlay3::LD427
-        sta     $06
-        lda     #$13
-        adc     disk_copy_overlay3::LD427+1
-        sta     $07
+        ;; Quick Copy ???
+:
+.scope
+        ptr := $06
+
+        add16   #$13FF, disk_copy_overlay3::LD427, ptr
         ldy     #$00
-L0E07:  lda     #$00
-        sta     ($06),y
-        dec     $06
-        lda     $06
+l1:     lda     #$00
+        sta     (ptr),y
+        dec     ptr
+        lda     ptr
         cmp     #$FF
-        bne     L0E15
-        dec     $07
-L0E15:  lda     $07
+        bne     l2
+        dec     ptr+1
+l2:     lda     ptr+1
         cmp     #$14
-        bne     L0E07
-        lda     $06
+        bne     l1
+        lda     ptr
         cmp     #$00
-        bne     L0E07
+        bne     l1
         lda     #$00
-        sta     ($06),y
+        sta     (ptr),y
         lda     disk_copy_overlay3::LD427+1
         cmp     #$02
-        bcs     L0E2D
+        bcs     l3
         rts
 
-L0E2D:  lda     #$14
-        sta     $06
+l3:     lda     #$14
+        sta     ptr
         lda     disk_copy_overlay3::LD427+1
         pha
-L0E35:  inc     $06
-        inc     $06
+l4:     inc     ptr
+        inc     ptr
         pla
         sec
         sbc     #$02
         pha
-        bmi     L0E46
-        jsr     L0E47
-        jmp     L0E35
+        bmi     l5
+        jsr     l6
+        jmp     l4
 
-L0E46:  pla
-L0E47:  lda     $06
+l5:     pla
+l6:     lda     ptr
         jsr     L1133
         rts
+.endscope
 
-L0E4D:  copy16  #6, block_params::block_num
+        ;; Disk Copy ???
+.proc L0E4D
+        copy16  #6, block_params::block_num
         ldx     disk_copy_overlay3::source_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
         copy16  #$1400, block_params::data_buffer
-        jsr     L12AF
-        beq     L0E70
-        .byte   0
-L0E70:  lda     L0EB0
-        sec
-        sbc     #$00
-        sta     L0EB0
-        lda     L0EB1
-        sbc     #$02
-        sta     L0EB1
-        lda     L0EB1
-        bpl     L0E87
+        jsr     read_block
+        beq     loop
+        brk                     ; rude!
+
+loop:   sub16   blocks_div_8, #$200, blocks_div_8
+        lda     blocks_div_8+1
+        bpl     :+
         rts
 
-L0E87:  lda     L0EB0
-        bne     L0E8D
+:       lda     blocks_div_8
+        bne     :+
         rts
 
-L0E8D:  add16   block_params::data_buffer, #$0200, block_params::data_buffer
+:       add16   block_params::data_buffer, #$200, block_params::data_buffer
 
         inc     block_params::block_num
         lda     block_params::data_buffer+1
         jsr     L1133
-        jsr     L12AF
-        beq     L0EAD
-        .byte   0
-L0EAD:  jmp     L0E70
+        jsr     read_block
+        beq     :+
+        brk                     ; rude!
 
-L0EB0:  .byte   0
-L0EB1:  .byte   0
+:       jmp     loop
+.endproc
 
+        ;; Number of blocks to copy, divided by 8
+blocks_div_8:
+        .word   0
+.endproc
 
 ;;; ============================================================
 
@@ -1235,7 +1233,8 @@ L10F3:
 
 ;;; ============================================================
 
-L10FB:  lda     #$14
+.proc L10FB
+        lda     #$14
         sta     $06
         lda     #$00
         sta     L111E
@@ -1252,36 +1251,44 @@ L1104:  lda     $06
         rts
 
 L111E:  .byte   0
-L111F:  jsr     L1149
+.endproc
+
+
+.proc L111F
+        jsr     L1149
         tay
         sec
-        cpx     #$00
-        beq     L112C
-L1128:  asl     a
+        cpx     #0
+        beq     l2
+l1:     asl     a
         dex
-        bne     L1128
-L112C:  ora     L12B9,y
+        bne     l1
+l2:     ora     L12B9,y
         sta     L12B9,y
         rts
+.endproc
 
-L1133:  jsr     L1149
+.proc L1133
+        jsr     L1149
         tay
         sec
-        cpx     #$00
-        beq     L1140
-L113C:  asl     a
+        cpx     #0
+        beq     l2
+l1:     asl     a
         dex
-        bne     L113C
-L1140:  eor     #$FF
+        bne     l1
+l2:     eor     #$FF
         and     L12B9,y
         sta     L12B9,y
         rts
+.endproc
 
-L1149:  pha
+.proc L1149
+        pha
         and     #$0F
         lsr     a
         tax
-        lda     L1158,x
+        lda     table,x
         tax
         pla
         lsr     a
@@ -1290,20 +1297,20 @@ L1149:  pha
         lsr     a
         rts
 
-L1158:  .byte   $07
-        asl     $05
-        .byte   $04
-        .byte   $03
-        .byte   $02
-        ora     ($00,x)
-L1160:  stax    block_params::data_buffer
-L1166:  jsr     L12AF
-        beq     L1174
-        ldx     #$00
-        jsr     disk_copy_overlay3::LE6FD
-        bmi     L1174
-        bne     L1166
-L1174:  rts
+table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
+.endproc
+
+
+.proc L1160
+        stax    block_params::data_buffer
+l1:     jsr     read_block
+        beq     l2
+        ldx     #0              ; reading
+        jsr     disk_copy_overlay3::show_block_error
+        bmi     l2
+        bne     l1
+l2:     rts
+.endproc
 
 L1175:  sta     $06
         sta     $08
@@ -1311,10 +1318,10 @@ L1175:  sta     $06
         stx     $09
         inc     $09
         copy16  #$1C00, block_params::data_buffer
-L1189:  jsr     L12AF
+L1189:  jsr     read_block
         beq     L119A
-        ldx     #$00
-        jsr     disk_copy_overlay3::LE6FD
+        ldx     #0              ; reading
+        jsr     disk_copy_overlay3::show_block_error
         beq     L119A
         bpl     L1189
         return  #$80
@@ -1335,10 +1342,10 @@ L11AD:  sta     $06
         stx     $09
         inc     $09
         copy16  #$1C00, block_params::data_buffer
-L11C1:  jsr     L12AF
+L11C1:  jsr     read_block
         beq     L11D8
-        ldx     #$00
-        jsr     disk_copy_overlay3::LE6FD
+        ldx     #0              ; reading
+        jsr     disk_copy_overlay3::show_block_error
         beq     L11D8
         bpl     L11C1
         lda     LCBANK1
@@ -1360,10 +1367,10 @@ L11E1:  lda     $1C00,y
         return  #$00
 
 L11F7:  stax    block_params::data_buffer
-L11FD:  jsr     L12A5
+L11FD:  jsr     write_block
         beq     L120B
-        ldx     #$80
-        jsr     disk_copy_overlay3::LE6FD
+        ldx     #$80            ; writing
+        jsr     disk_copy_overlay3::show_block_error
         beq     L120B
         bpl     L11FD
 L120B:  rts
@@ -1382,10 +1389,10 @@ L1223:  lda     ($06),y
         sta     $1D00,y
         iny
         bne     L1223
-L1230:  jsr     L12A5
+L1230:  jsr     write_block
         beq     L123E
-        ldx     #$80
-        jsr     disk_copy_overlay3::LE6FD
+        ldx     #$80            ; writing
+        jsr     disk_copy_overlay3::show_block_error
         beq     L123E
         bpl     L1230
 L123E:  rts
@@ -1408,35 +1415,45 @@ L125C:  lda     ($06),y
         bne     L125C
         lda     LCBANK1
         lda     LCBANK1
-L126F:  jsr     L12A5
+L126F:  jsr     write_block
         beq     L127D
-        ldx     #$80
-        jsr     disk_copy_overlay3::LE6FD
+        ldx     #$80            ; writing
+        jsr     disk_copy_overlay3::show_block_error
         beq     L127D
         bpl     L126F
 L127D:  rts
 
 ;;; ============================================================
 
-bell:   sta     ALTZPOFF
+.proc bell
+        sta     ALTZPOFF
         sta     ROMIN2
         jsr     BELL1
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts
+.endproc
 
-L1291:  MLI_RELAY_CALL ON_LINE, on_line_params2
+.proc call_on_line2
+        MLI_RELAY_CALL ON_LINE, on_line_params2
         rts
+.endproc
 
-L129B:  MLI_RELAY_CALL ON_LINE, on_line_params
+.proc call_on_line
+        MLI_RELAY_CALL ON_LINE, on_line_params
         rts
+.endproc
 
-L12A5:  MLI_RELAY_CALL WRITE_BLOCK, block_params
+.proc write_block
+        MLI_RELAY_CALL WRITE_BLOCK, block_params
         rts
+.endproc
 
-L12AF:  MLI_RELAY_CALL READ_BLOCK, block_params
+.proc read_block
+        MLI_RELAY_CALL READ_BLOCK, block_params
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -1513,10 +1530,10 @@ disk_copy_overlay4_L0EB2        := disk_copy_overlay4::L0EB2
 disk_copy_overlay4_L0ED7        := disk_copy_overlay4::L0ED7
 disk_copy_overlay4_L10FB        := disk_copy_overlay4::L10FB
 disk_copy_overlay4_bell         := disk_copy_overlay4::bell
-disk_copy_overlay4_L1291        := disk_copy_overlay4::L1291
-disk_copy_overlay4_L129B        := disk_copy_overlay4::L129B
-disk_copy_overlay4_L12A5        := disk_copy_overlay4::L12A5
-disk_copy_overlay4_L12AF        := disk_copy_overlay4::L12AF
+disk_copy_overlay4_call_on_line2        := disk_copy_overlay4::call_on_line2
+disk_copy_overlay4_call_on_line         := disk_copy_overlay4::call_on_line
+disk_copy_overlay4_write_block          := disk_copy_overlay4::write_block
+disk_copy_overlay4_read_block           := disk_copy_overlay4::read_block
 disk_copy_overlay4_block_params_block_num       := disk_copy_overlay4::block_params::block_num
 disk_copy_overlay4_block_params_data_buffer     := disk_copy_overlay4::block_params::data_buffer
 disk_copy_overlay4_block_params_unit_num        := disk_copy_overlay4::block_params::unit_num

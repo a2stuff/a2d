@@ -577,7 +577,7 @@ LD740:  lda     #$00
         ldx     source_drive_index
         lda     drive_unitnum_table,x
         sta     disk_copy_overlay4_on_line_params2_unit_num
-        jsr     disk_copy_overlay4_L1291
+        jsr     disk_copy_overlay4_call_on_line2
         beq     LD77E
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
@@ -627,7 +627,7 @@ LD7AD:  lda     source_drive_index
 LD7CC:  ldx     dest_drive_index
         lda     drive_unitnum_table,x
         sta     disk_copy_overlay4_on_line_params2_unit_num
-        jsr     disk_copy_overlay4_L1291
+        jsr     disk_copy_overlay4_call_on_line2
         beq     LD7E1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     LD7F2
@@ -1220,7 +1220,7 @@ LDDFC:  sta     disk_copy_overlay4_block_params_unit_num
         sta     disk_copy_overlay4_block_params_block_num
         sta     disk_copy_overlay4_block_params_block_num+1
         copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
-        jsr     disk_copy_overlay4_L12AF
+        jsr     disk_copy_overlay4_read_block
         beq     LDE19
         return  #$FF
 
@@ -1295,7 +1295,7 @@ LDE83:  lda     str_dos33_s_d,x
         .byte   0
 LDE9F:  stax    $06
         copy16  #$0002, disk_copy_overlay4_block_params_block_num
-        jsr     disk_copy_overlay4_L12AF
+        jsr     disk_copy_overlay4_read_block
         beq     LDEBE
         ldy     #$00
         lda     #$01
@@ -1539,7 +1539,7 @@ check_alpha:
         lda     #$00
         sta     LD44E
         sta     disk_copy_overlay4_on_line_params2_unit_num
-        jsr     disk_copy_overlay4_L1291
+        jsr     disk_copy_overlay4_call_on_line2
         beq     LE17A
 
         brk
@@ -2227,49 +2227,60 @@ LE6F1:  MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
 
 LE6FB:  .byte   0
 LE6FC:  .byte   0
-LE6FD:  stx     LE765
+
+;;; ============================================================
+;;; Inputs: A = error code, X = writing flag
+;;; Outputs: A=0 for ok, 1 for retry, $80 for cancel
+.proc show_block_error
+        stx     err_writing_flag
 
         cmp     #ERR_WRITE_PROTECTED
-        bne     LE71A
+        bne     l2
         jsr     disk_copy_overlay4_bell
         lda     #5              ; Destination protected
         jsr     show_alert_dialog
-        bne     LE714
+        bne     :+
         jsr     LE491
-        return  #$01
+        return  #1
 
-LE714:  jsr     disk_copy_overlay4_L10FB
+:       jsr     disk_copy_overlay4_L10FB
         return  #$80
 
-LE71A:  jsr     disk_copy_overlay4_bell
+l2:     jsr     disk_copy_overlay4_bell
         lda     winfo_dialog::window_id
         jsr     set_win_port
         lda     disk_copy_overlay4_block_params_block_num
         ldx     disk_copy_overlay4_block_params_block_num+1
         jsr     IntToStringWithSeparators
-        lda     LE765
-        bne     LE74B
+        lda     err_writing_flag
+        bne     :+
+
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_reading
         param_call DrawString, str_error_reading
         param_call DrawString, str_from_int
-        return  #$00
+        return  #0
 
-LE74B:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_writing
+:       MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_writing
         param_call DrawString, str_error_writing
         param_call DrawString, str_from_int
-        return  #$00
+        return  #0
 
-LE765:  .byte   0
+err_writing_flag:
+        .byte   0
+.endproc
+
+;;; ============================================================
+
 LE766:  sta     $06
         sta     $08
         stx     $07
         stx     $09
         inc     $09
         copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
-LE77A:  jsr     disk_copy_overlay4_L12AF
+LE77A:  jsr     disk_copy_overlay4_read_block
         beq     LE789
-        ldx     #$00
-        jsr     LE6FD
+        ldx     #0              ; reading
+        jsr     show_block_error
         beq     LE789
         bpl     LE77A
         rts
@@ -2310,10 +2321,10 @@ LE7C5:  lda     ($06),y
         bne     LE7C5
         sta     RAMRDOFF
         sta     RAMWRTOFF
-LE7D8:  jsr     disk_copy_overlay4_L12A5
+LE7D8:  jsr     disk_copy_overlay4_write_block
         beq     LE7E6
-        ldx     #$80
-        jsr     LE6FD
+        ldx     #$80            ; writing
+        jsr     show_block_error
         beq     LE7E6
         bpl     LE7D8
 LE7E6:  rts
@@ -3083,7 +3094,7 @@ LF185:  sty     LD41D
 .proc LF192
         lda     LD41D
         sta     disk_copy_overlay4_on_line_params_unit_num
-        jsr     disk_copy_overlay4_L129B
+        jsr     disk_copy_overlay4_call_on_line
         beq     done
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
