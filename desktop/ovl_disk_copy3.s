@@ -354,7 +354,10 @@ LD421:  .word   0
 LD423:  .byte   0
 LD424:  .word   0
 LD426:  .byte   0
-LD427:  .word   0
+
+blocks_div_8:                   ; calculated when reading volume bitmap
+        .word   0
+
 LD429:  .byte   0
 
         DEFINE_RECT rect_D42A, 18, 20, 490, 88
@@ -366,7 +369,10 @@ LD44D:  .byte   0
 LD44E:  .byte   0
         .byte   0
         .byte   0
-quick_copy_flag:  .byte   0
+
+disk_copy_flag:                 ; mode: 0 = Disk Copy, 1 = Quick Copy
+        .byte   0
+
         .byte   1, 0
 
 str_2_spaces:   PASCAL_STRING "  "      ; do not localize
@@ -496,7 +502,7 @@ init:   jsr     remove_ram_disk
         copy    #1, disablemenu_params::disable
         MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
         lda     #$00
-        sta     quick_copy_flag
+        sta     disk_copy_flag
         sta     LD5E0
         jsr     open_dialog
 LD61C:  lda     #$00
@@ -687,7 +693,7 @@ LD83C:  jsr     show_alert_dialog
         beq     LD84A
 LD847:  jmp     LD61C
 
-LD84A:  lda     quick_copy_flag
+LD84A:  lda     disk_copy_flag
         bne     LD852
         jmp     LD8A9
 
@@ -751,7 +757,7 @@ LD8A9:  lda     winfo_dialog::window_id
         beq     LD8DF
         jmp     LD61C
 
-LD8DF:  jsr     disk_copy_overlay4_L0DB5
+LD8DF:  jsr     disk_copy_overlay4_read_volume_bitmap
         lda     #$00
         sta     LD421
         sta     LD421+1
@@ -901,23 +907,23 @@ do_jump:
         jmp     dummy1234
 
 cmd_quick_copy:
-        lda     quick_copy_flag
+        lda     disk_copy_flag
         bne     LDA42
         rts
 
 LDA42:  copy    #0, checkitem_params::check
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
-        copy    quick_copy_flag, checkitem_params::menu_item
+        copy    disk_copy_flag, checkitem_params::menu_item
         copy    #1, checkitem_params::check
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
-        copy    #0, quick_copy_flag
+        copy    #0, disk_copy_flag
         lda     winfo_dialog::window_id
         jsr     set_win_port
         param_call draw_title_text, str_quick_copy_padded
         rts
 
 cmd_disk_copy:
-        lda     quick_copy_flag
+        lda     disk_copy_flag
         beq     LDA7D
         rts
 
@@ -926,7 +932,7 @@ LDA7D:  copy    #0, checkitem_params::check
         copy    #2, checkitem_params::menu_item
         copy    #1, checkitem_params::check
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
-        copy    #1, quick_copy_flag
+        copy    #1, disk_copy_flag
         lda     winfo_dialog::window_id
         jsr     set_win_port
         param_call draw_title_text, str_disk_copy_padded
@@ -1396,7 +1402,7 @@ saved_ram_unitnum:
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D219
-        lda     quick_copy_flag
+        lda     disk_copy_flag
         bne     :+
         param_call draw_title_text, str_quick_copy_padded
         jmp     draw_buttons

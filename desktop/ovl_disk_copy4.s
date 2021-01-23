@@ -16,7 +16,8 @@
 ;;; Disk II - Format
 ;;; Inputs: A = unit_number
 
-L0800:  php
+.proc L0800
+        php
         sei
         jsr     L083A
         plp
@@ -617,6 +618,7 @@ seltrack_slot:
 
 L0C38:  .byte   0
 L0C39:  .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -625,6 +627,7 @@ L0C39:  .byte   0
         DEFINE_ON_LINE_PARAMS on_line_params2,, $1300
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
+
 on_line_buffer:
         .res    16, 0
 
@@ -845,10 +848,14 @@ L0DA4:  cmp     #$A5
         rts
 
 ;;; ============================================================
+;;; Reads the volume bitmap (blocks 6 through ...)
 
-.proc L0DB5
+.proc read_volume_bitmap
+
+        buffer := $1400
+
         lda     #$14
-        jsr     L1133
+        jsr     clear_bit_in_bitmap
         lda     disk_copy_overlay3::source_drive_index
         asl     a
         tax
@@ -856,43 +863,50 @@ L0DA4:  cmp     #$A5
         lsr16   blocks_div_8    ; /= 8
         lsr16   blocks_div_8
         lsr16   blocks_div_8
-        copy16  blocks_div_8, disk_copy_overlay3::LD427
+        copy16  blocks_div_8, disk_copy_overlay3::blocks_div_8
         bit     disk_copy_overlay3::LD44D
         bmi     :+
-        lda     disk_copy_overlay3::quick_copy_flag
+        lda     disk_copy_overlay3::disk_copy_flag
         bne     :+
         jmp     L0E4D
-
-        ;; Quick Copy ???
 :
+
+        ;; --------------------------------------------------
+        ;; Disk Copy
 .scope
         ptr := $06
 
-        add16   #$13FF, disk_copy_overlay3::LD427, ptr
-        ldy     #$00
-l1:     lda     #$00
+
+        add16   #buffer - 1, disk_copy_overlay3::blocks_div_8, ptr
+
+        ;; Zero out buffer
+        ldy     #0
+loop1:  lda     #0
         sta     (ptr),y
-        dec     ptr
+
+        dec     ptr             ; dec16 ptr
         lda     ptr
         cmp     #$FF
-        bne     l2
+        bne     :+
         dec     ptr+1
-l2:     lda     ptr+1
-        cmp     #$14
-        bne     l1
+:
+        lda     ptr+1
+        cmp     #>buffer
+        bne     loop1
         lda     ptr
-        cmp     #$00
-        bne     l1
+        cmp     #<buffer
+        bne     loop1
+
         lda     #$00
         sta     (ptr),y
-        lda     disk_copy_overlay3::LD427+1
+        lda     disk_copy_overlay3::blocks_div_8+1
         cmp     #$02
         bcs     l3
         rts
 
-l3:     lda     #$14
+l3:     lda     #>buffer
         sta     ptr
-        lda     disk_copy_overlay3::LD427+1
+        lda     disk_copy_overlay3::blocks_div_8+1
         pha
 l4:     inc     ptr
         inc     ptr
@@ -905,18 +919,20 @@ l4:     inc     ptr
         jmp     l4
 
 l5:     pla
+
 l6:     lda     ptr
-        jsr     L1133
+        jsr     clear_bit_in_bitmap
         rts
 .endscope
 
-        ;; Disk Copy ???
+        ;; --------------------------------------------------
+        ;; Quick Copy
 .proc L0E4D
         copy16  #6, block_params::block_num
         ldx     disk_copy_overlay3::source_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
-        copy16  #$1400, block_params::data_buffer
+        copy16  #buffer, block_params::data_buffer
         jsr     read_block
         beq     loop
         brk                     ; rude!
@@ -934,7 +950,7 @@ loop:   sub16   blocks_div_8, #$200, blocks_div_8
 
         inc     block_params::block_num
         lda     block_params::data_buffer+1
-        jsr     L1133
+        jsr     clear_bit_in_bitmap
         jsr     read_block
         beq     :+
         brk                     ; rude!
@@ -1108,10 +1124,10 @@ L100B:  lda     #$07
         sta     disk_copy_overlay3::LD423
         inc16   disk_copy_overlay3::LD421
         lda     disk_copy_overlay3::LD421+1
-        cmp     disk_copy_overlay3::LD427+1
+        cmp     disk_copy_overlay3::blocks_div_8+1
         bne     L1009
         lda     disk_copy_overlay3::LD421
-        cmp     disk_copy_overlay3::LD427
+        cmp     disk_copy_overlay3::blocks_div_8
         bne     L1009
         sec
         rts
@@ -1193,7 +1209,7 @@ L10A1:  lda     #$07
         rts
 
 L10B2:  ldx     disk_copy_overlay3::LD41F
-        lda     L12B9,x
+        lda     bitmap,x
         ldx     disk_copy_overlay3::LD420
         cpx     #$00
         beq     L10C3
@@ -1237,53 +1253,64 @@ L10F3:
         lda     #$14
         sta     $06
         lda     #$00
-        sta     L111E
-L1104:  lda     $06
-        jsr     L111F
+        sta     tmp
+loop:   lda     $06
+        jsr     set_bit_in_bitmap
         inc     $06
         inc     $06
-        inc     L111E
-        inc     L111E
-        lda     L111E
-        cmp     disk_copy_overlay3::LD427+1
-        beq     L1104
-        bcc     L1104
+        inc     tmp
+        inc     tmp
+        lda     tmp
+        cmp     disk_copy_overlay3::blocks_div_8+1
+        beq     loop
+        bcc     loop
         rts
 
-L111E:  .byte   0
-.endproc
+tmp:    .byte   0
 
-
-.proc L111F
-        jsr     L1149
+.proc set_bit_in_bitmap
+        jsr     get_bitmap_offset_shift
         tay
         sec
         cpx     #0
         beq     l2
-l1:     asl     a
+
+:       asl     a
         dex
-        bne     l1
-l2:     ora     L12B9,y
-        sta     L12B9,y
+        bne     :-
+
+l2:     ora     bitmap,y
+        sta     bitmap,y
         rts
 .endproc
+.endproc
 
-.proc L1133
-        jsr     L1149
+;;; ============================================================
+
+.proc clear_bit_in_bitmap
+        jsr     get_bitmap_offset_shift
         tay
         sec
         cpx     #0
         beq     l2
-l1:     asl     a
+
+:       asl     a
         dex
-        bne     l1
+        bne     :-
+
 l2:     eor     #$FF
-        and     L12B9,y
-        sta     L12B9,y
+        and     bitmap,y
+        sta     bitmap,y
         rts
 .endproc
 
-.proc L1149
+;;; ============================================================
+;;; Sets X to the 7 - (low nibble of A / 2) - bit shift
+;;; Sets A to the high nibble of A - bitmap offset
+;;; e.g. $76 ==> A = $07
+;;;              X = $04
+
+.proc get_bitmap_offset_shift
         pha
         and     #$0F
         lsr     a
@@ -1300,6 +1327,7 @@ l2:     eor     #$FF
 table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 .endproc
 
+;;; ============================================================
 
 .proc L1160
         stax    block_params::data_buffer
@@ -1457,7 +1485,7 @@ L127D:  rts
 
 ;;; ============================================================
 
-L12B9:  .byte   0
+bitmap: .byte   0
         .byte   $3C
         .byte   0
         .byte   0
@@ -1525,7 +1553,7 @@ L12B9:  .byte   0
 disk_copy_overlay4_format_device        := disk_copy_overlay4::format_device
 disk_copy_overlay4_unit_num_to_sp_unit_number        := disk_copy_overlay4::unit_num_to_sp_unit_number
 disk_copy_overlay4_L0D5F        := disk_copy_overlay4::L0D5F
-disk_copy_overlay4_L0DB5        := disk_copy_overlay4::L0DB5
+disk_copy_overlay4_read_volume_bitmap   := disk_copy_overlay4::read_volume_bitmap
 disk_copy_overlay4_L0EB2        := disk_copy_overlay4::L0EB2
 disk_copy_overlay4_L0ED7        := disk_copy_overlay4::L0ED7
 disk_copy_overlay4_L10FB        := disk_copy_overlay4::L10FB
