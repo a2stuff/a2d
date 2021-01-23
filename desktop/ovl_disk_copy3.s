@@ -370,7 +370,7 @@ quick_copy_flag:  .byte   0
         .byte   1, 0
 
 str_2_spaces:   PASCAL_STRING "  "      ; do not localize
-str_number:     PASCAL_STRING "       " ; filled in by string_to_number - do not localize
+str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString - do not localize
 
 ;;; Label positions
         DEFINE_POINT point_blocks_read, 300, 125
@@ -1331,75 +1331,7 @@ LDEE6:  lda     #$3A
 
 ;;; ============================================================
 
-.proc number_to_string
-        stax    value
-
-        ;; Clear field
-        ldx     #7
-        lda     #' '
-:       sta     str_number,x
-        dex
-        bne     :-
-
-        lda     #0
-        sta     nonzero_flag
-        ldy     #0              ; y = position in string
-        ldx     #0              ; x = which power index is subtracted (*2)
-
-        ;; For each power of ten
-loop:   lda     #0
-        sta     digit
-
-        ;; Keep subtracting/incrementing until zero is hit
-sloop:  cmp16   value, powers,x
-        bpl     incr
-
-        lda     digit
-        bne     not_pad
-        bit     nonzero_flag
-        bmi     not_pad
-        lda     #' '            ; pad with leading spaces if no digits seen
-        bne     place           ; always
-
-not_pad:
-        cmp     #$0A            ; This looks like hex conversion???
-        bcc     LDF2F           ; (if digit > 9, then treat $A as 'A' etc)
-        clc
-        adc     #$37
-        jmp     LDF31
-
-        ;; Convert to ASCII
-LDF2F:  adc     #'0'
-LDF31:  pha
-        copy    #$80, nonzero_flag
-        pla
-
-        ;; Place the character
-place:  sta     str_number+2,y
-        iny
-
-        inx
-        inx
-        cpx     #8              ; up to 4 digits (*2) via subtraction
-        beq     done
-        jmp     loop
-
-incr:   inc     digit
-        sub16   value, powers,x, value
-        jmp     sloop
-
-done:   lda     value
-        ora     #'0'
-        sta     str_number+2,y
-        rts
-
-powers: .word   10000, 1000, 100, 10
-value: .word   0           ; remaining value as subtraction proceeds
-digit: .byte   0           ; current digit being accumulated
-nonzero_flag:
-        .byte   0
-.endproc
-
+        .include "../lib/inttostring.s"
 
 ;;; ============================================================
 
@@ -2122,22 +2054,24 @@ LE4BF:  lda     winfo_dialog::window_id
         lda     block_count_table+1,y
         tax
         lda     block_count_table,y
-        jsr     number_to_string
+        jsr     IntToStringWithSeparators
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_source
         param_call DrawString, str_blocks_to_transfer
-        param_call DrawString, str_number
+        param_call DrawString, str_from_int
         rts
 
 LE4EC:  jsr     LE522
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_blocks_read
         param_call DrawString, str_blocks_read
-        param_call DrawString, str_number
+        param_call DrawString, str_from_int
+        param_call DrawString, str_2_spaces
         rts
 
 LE507:  jsr     LE522
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_blocks_written
         param_call DrawString, str_blocks_written
-        param_call DrawString, str_number
+        param_call DrawString, str_from_int
+        param_call DrawString, str_2_spaces
         rts
 
 LE522:  lda     winfo_dialog::window_id
@@ -2159,7 +2093,7 @@ LE522:  lda     winfo_dialog::window_id
         adc     #$00
         tax
         tya
-        jsr     number_to_string
+        jsr     IntToStringWithSeparators
         rts
 
 LE550:  .byte   7,6,5,4,3,2,1,0
@@ -2312,17 +2246,17 @@ LE71A:  jsr     disk_copy_overlay4_bell
         jsr     set_win_port
         lda     disk_copy_overlay4_block_params_block_num
         ldx     disk_copy_overlay4_block_params_block_num+1
-        jsr     number_to_string
+        jsr     IntToStringWithSeparators
         lda     LE765
         bne     LE74B
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_reading
         param_call DrawString, str_error_reading
-        param_call DrawString, str_number
+        param_call DrawString, str_from_int
         return  #$00
 
 LE74B:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_writing
         param_call DrawString, str_error_writing
-        param_call DrawString, str_number
+        param_call DrawString, str_from_int
         return  #$00
 
 LE765:  .byte   0

@@ -1265,7 +1265,7 @@ str_k_in_disk:
 str_k_available:
         PASCAL_STRING "K available" ; suffix for disk space available
 
-str_from_int:                   ; populated by int_to_string
+str_from_int:                   ; populated by IntToString
         PASCAL_STRING "000,000" ; 6 digits plus thousands separator - do not localize
 
 ;;; Computed during startup

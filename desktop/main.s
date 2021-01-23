@@ -7560,7 +7560,7 @@ tmp:    .byte   0
         ;; Draw "XXX Items"
         lda     cached_window_icon_count
         ldx     #0
-        jsr     int_to_string_with_separators
+        jsr     IntToStringWithSeparators
         lda     cached_window_icon_count
         cmp     #1              ; plural?
         bne     :+
@@ -7585,7 +7585,7 @@ tmp:    .byte   0
         lda     window_k_used_table+1,x
         tax
         tya
-        jsr     int_to_string_with_separators
+        jsr     IntToStringWithSeparators
         MGTK_RELAY_CALL MGTK::MoveTo, pos_k_in_disk
         jsr     draw_int_string
         param_call draw_pascal_string, str_k_in_disk
@@ -7601,7 +7601,7 @@ tmp:    .byte   0
         lda     window_k_free_table+1,x
         tax
         tya
-        jsr     int_to_string_with_separators
+        jsr     IntToStringWithSeparators
         MGTK_RELAY_CALL MGTK::MoveTo, pos_k_available
         jsr     draw_int_string
         param_call draw_pascal_string, str_k_available
@@ -7661,91 +7661,8 @@ xcoord:
 .endproc ; draw_window_header
 
 ;;; ============================================================
-;;; Entry points:
-;;;   int_to_string - no thousands separators
-;;;   int_to_string_with_separators - thousands separator
-;;; Input: 16-bit unsigned integer in A,X
-;;; Output: length-prefixed string in str_from_int
 
-.proc int_to_string_impl
-
-;;; Entry point: with thousands separators
-sep:    sec
-        bcs     common
-
-;;; Entry point: without thousands separators
-nosep:  clc
-        ;; fall through...
-
-common: stax    value
-        ror                     ; move carry to high bit
-        sta     separator_flag
-
-        lda     #0
-        sta     nonzero_flag
-        ldy     #0              ; y = position in string
-        ldx     #0              ; x = which power index is subtracted (*2)
-
-        ;; For each power of ten
-loop:   lda     #0
-        sta     digit
-
-        ;; Keep subtracting/incrementing until zero is hit
-sloop:  cmp16   value, powers,x
-        bcc     break
-        inc     digit
-        sub16   value, powers,x, value
-        jmp     sloop
-
-break:  lda     digit
-        bne     not_pad
-        bit     nonzero_flag
-        bpl     next
-
-        ;; Convert to ASCII
-not_pad:
-        ora     #'0'
-        pha
-        copy    #$80, nonzero_flag
-        pla
-
-        ;; Place the character
-        iny
-        sta     str_from_int,y
-
-        ;; Add thousands separator, if needed
-        bit     separator_flag
-        bpl     next
-        cpx     #2
-        bne     next
-        iny
-        lda     #','
-        sta     str_from_int,y
-
-next:   inx
-        inx
-        cpx     #8              ; up to 4 digits (*2) via subtraction
-        beq     done
-        jmp     loop
-
-done:   lda     value           ; handle last digit
-        ora     #'0'
-        iny
-        sta     str_from_int,y
-        sty     str_from_int
-        rts
-
-powers: .word   10000, 1000, 100, 10
-value:  .word   0            ; remaining value as subtraction proceeds
-digit:  .byte   0            ; current digit being accumulated
-nonzero_flag:                ; high bit set once a non-zero digit seen
-        .byte   0
-separator_flag:
-        .byte   0
-.endproc ; int_to_string
-
-int_to_string   := int_to_string_impl::nosep
-int_to_string_with_separators   := int_to_string_impl::sep
+        .include "../lib/inttostring.s"
 
 ;;; ============================================================
 ;;; Compute bounding box for icons within cached window
@@ -8697,7 +8614,7 @@ loop:   lda     name,x
         inc16   value           ; divide by 2 to get KB
         lsr16   value           ; rounding up
         ldax    value
-        jsr     int_to_string_with_separators
+        jsr     IntToStringWithSeparators
 
         ;; Leading space
         ldx     #1
@@ -8765,7 +8682,7 @@ append_date_strings:
 .proc append_day_string
         lda     day
         ldx     #0
-        jsr     int_to_string
+        jsr     IntToString
 
         param_jump concatenate_date_part, str_from_int
 .endproc
@@ -8783,7 +8700,7 @@ append_date_strings:
 
 .proc append_year_string
         ldax    year
-        jsr     int_to_string
+        jsr     IntToString
         param_jump concatenate_date_part, str_from_int
 .endproc
 
@@ -15784,7 +15701,7 @@ done:   rts
 
 .proc compose_file_count_string
         ldax    file_count
-        jsr     int_to_string_with_separators
+        jsr     IntToStringWithSeparators
 
         ldy     #1
         copy    #' ', str_file_count,y
