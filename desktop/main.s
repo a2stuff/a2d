@@ -8611,8 +8611,12 @@ loop:   lda     name,x
 
 .proc compose_size_string
         stax    value           ; size in 512-byte blocks
-        inc16   value           ; divide by 2 to get KB
-        lsr16   value           ; rounding up
+
+        lsr16   value       ; Convert blocks to K, rounding up
+        bcc     :+          ; NOTE: divide then maybe inc, rather than
+        inc16   value       ; always inc then divide, to handle $FFFF
+:
+
         ldax    value
         jsr     IntToStringWithSeparators
 
@@ -14170,7 +14174,9 @@ else:   jsr     open_dialog_window
         jsr     draw_colon
         rts
 
-do1:    ldy     #1
+do1:
+        ;; File Count
+        ldy     #1
         lda     (ptr),y
         sta     file_count
         tax
@@ -14186,6 +14192,8 @@ do1:    ldy     #1
         copy    #kValueLeft, dialog_label_pos
         param_call draw_dialog_label, 1, str_file_count
         jsr     copy_dialog_param_addr_to_ptr
+
+        ;; Size
         ldy     #3
         lda     (ptr),y
         tax
@@ -14196,8 +14204,10 @@ do1:    ldy     #1
         ldy     #0
         copy16in (ptr),y, file_count
 
-        inc16   file_count      ; Convert blocks to K - divide
-        lsr16   file_count      ; by two, rounding up
+        lsr16   file_count      ; Convert blocks to K, rounding up
+        bcc     :+              ; NOTE: divide then maybe inc, rather than
+        inc16   file_count      ; always inc then divide, to handle $FFFF
+:
 
         jsr     compose_file_count_string
         copy    #kValueLeft, dialog_label_pos
