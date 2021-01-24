@@ -7,16 +7,17 @@
 .proc disk_copy_overlay4
         .org $800
 
+;;; ============================================================
+;;; Disk II - Format
+;;; Inputs: A = unit_number
+
+.proc DiskIIFormat
+
 .macro exit_with_result arg
         lda     #arg
         jmp     exit
 .endmacro
 
-;;; ============================================================
-;;; Disk II - Format
-;;; Inputs: A = unit_number
-
-.proc L0800
         php
         sei
         jsr     L083A
@@ -618,7 +619,7 @@ seltrack_slot:
 
 L0C38:  .byte   0
 L0C39:  .byte   0
-.endproc
+.endproc ; DiskIIFormat
 
 ;;; ============================================================
 
@@ -702,7 +703,7 @@ params: .addr   0
         ;; Use Disk II-specific code
 disk_ii:
         lda     unit_number
-        jsr     L0800
+        jsr     DiskIIFormat
         rts
 
 unit_number:
@@ -939,6 +940,10 @@ l6:     lda     ptr
         beq     loop
         brk                     ; rude!
 
+        ;; Each volume bitmap block holds $200*8 bits, so keep reading
+        ;; blocks until we've accounted for all blocks on the volume.
+        ;; BUG: This blows past $1C00 on large volumes. Issue #386
+        ;; (A 32MB volume requires $2000 bytes for the bitmap!)
 loop:   sub16   block_count_div8, #$200, block_count_div8
         lda     block_count_div8+1
         bpl     :+
@@ -1254,7 +1259,7 @@ ok:     clc
 .endproc
 
 ;;; ============================================================
-;;; Output: A,X = ???; Y=bit is set in bitmap
+;;; Output: A,X=address to store block; Y=bit is set in bitmap
 
 .proc L10B2
         ;; Read from bitmap
@@ -1277,8 +1282,13 @@ set:    ldy     #$FF
         ;; Now compute address to store in memory
         lda     disk_copy_overlay3::block_num_div8
         cmp     #$10
-        bcs     L10E3
-L10D4:  asl     a               ; 0-15
+        bcs     :+
+
+        ;; $00-$0F end up based at $0000
+        ;; $10-$1F end up based at $0000 as well
+        ;; $20.... end up based at $D000
+
+calc:   asl     a               ; *= 16
         asl     a
         asl     a
         asl     a
@@ -1286,17 +1296,18 @@ L10D4:  asl     a               ; 0-15
         clc
         adc     table,x
         tax
-        return  #$00
+        lda     #$00
+        rts
 
-L10E3:  cmp     #$20            ;
-        bcs     L10ED
+:       cmp     #$20            ; 16-31
+        bcs     :+
         sec
         sbc     #$10
-        jmp     L10D4
+        jmp     calc
 
-L10ED:  sec
+:       sec
         sbc     #$13
-        jmp     L10D4
+        jmp     calc
 
 table:  .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
 .endproc
