@@ -2276,64 +2276,88 @@ err_writing_flag:
 .endproc
 
 ;;; ============================================================
+;;; Read block (potentially retrying) and stash it in aux mem
+;;; Inputs: A,X=aux mem address to store it
+;;; Outputs: A=0 on success, nonzero otherwise
 
-LE766:  sta     $06
-        sta     $08
-        stx     $07
-        stx     $09
-        inc     $09
+.proc read_block_to_auxmem
+        ptr1 := $06
+        ptr2 := $08             ; one page up
+
+        sta     ptr1
+        sta     ptr2
+        stx     ptr1+1
+        stx     ptr2+1
+        inc     ptr2+1
+
+        ;; Read block
         copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
-LE77A:  jsr     disk_copy_overlay4_read_block
-        beq     LE789
+retry:  jsr     disk_copy_overlay4_read_block
+        beq     memcopy
         ldx     #0              ; reading
         jsr     show_block_error
-        beq     LE789
-        bpl     LE77A
+        beq     memcopy
+        bpl     retry
         rts
 
-LE789:  sta     RAMRDOFF
+        ;; Copy block from main to aux
+memcopy:
+        sta     RAMRDOFF
         sta     RAMWRTON
         ldy     #$FF
         iny
-LE792:  lda     $1C00,y
-        sta     ($06),y
+:       lda     $1C00,y
+        sta     (ptr1),y
         lda     $1D00,y
-        sta     ($08),y
+        sta     (ptr2),y
         iny
-        bne     LE792
+        bne     :-
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        lda     #$00
-        rts
 
-LE7A8:  sta     $06
-        sta     $08
-        stx     $07
-        stx     $09
-        inc     $09
+        lda     #0
+        rts
+.endproc
+
+;;; ============================================================
+;;; Write block (potentially retrying) previously stashed in aux
+;;; Inputs: A,X=aux mem address of block
+;;; Outputs: A=0 on success, nonzero otherwise
+
+.proc write_block_from_auxmem
+        ptr1 := $06
+        ptr2 := $08             ; one page up
+
+        sta     ptr1
+        sta     ptr2
+        stx     ptr1+1
+        stx     ptr2+1
+        inc     ptr2+1
+
+        ;; Copy block aux to main
         copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
-        .byte   $8D
-        .byte   $03
-        cpy     #$8D
-        .byte   $04
-        cpy     #$A0
-        .byte   $FF
+        sta     RAMRDON
+        sta     RAMWRTOFF
+        ldy     #$FF
         iny
-LE7C5:  lda     ($06),y
+:       lda     (ptr1),y
         sta     $1C00,y
-        lda     ($08),y
+        lda     (ptr2),y
         sta     $1D00,y
         iny
-        bne     LE7C5
+        bne     :-
         sta     RAMRDOFF
         sta     RAMWRTOFF
-LE7D8:  jsr     disk_copy_overlay4_write_block
-        beq     LE7E6
+
+        ;; Write block
+retry:  jsr     disk_copy_overlay4_write_block
+        beq     done
         ldx     #$80            ; writing
         jsr     show_block_error
-        beq     LE7E6
-        bpl     LE7D8
-LE7E6:  rts
+        beq     done
+        bpl     retry
+done:   rts
+.endproc
 
 ;;; ============================================================
 

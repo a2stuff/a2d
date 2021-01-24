@@ -986,25 +986,28 @@ L0ED6:  .byte   0
 
 ;;; ============================================================
 
-L0ED7:  bit     KBDSTRB
-        sta     L0FE6
+.proc L0ED7
+        bit     KBDSTRB         ; clear strobe
+
+        sta     write_flag
         and     #$FF
-        bpl     L0EFF
+        bpl     :+
         copy16  disk_copy_overlay3::LD424, disk_copy_overlay3::LD421
         lda     disk_copy_overlay3::LD426
         sta     disk_copy_overlay3::LD423
         ldx     disk_copy_overlay3::dest_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
-        jmp     L0F1A
+        jmp     common
 
-L0EFF:  copy16  disk_copy_overlay3::LD421, disk_copy_overlay3::LD424
+:       copy16  disk_copy_overlay3::LD421, disk_copy_overlay3::LD424
         lda     disk_copy_overlay3::LD423
         sta     disk_copy_overlay3::LD426
         ldx     disk_copy_overlay3::source_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
-L0F1A:  lda     #$07
+
+common: lda     #$07
         sta     disk_copy_overlay3::LD420
         lda     #$00
         sta     disk_copy_overlay3::LD41F
@@ -1012,11 +1015,12 @@ L0F1A:  lda     #$07
         sta     L0FE5
 L0F2A:  lda     KBD
         cmp     #(CHAR_ESCAPE | $80)
-        bne     L0F37
-        jsr     disk_copy_overlay3::LE6AB
-        jmp     L0F6F
+        bne     :+
 
-L0F37:  bit     L0FE4
+        jsr     disk_copy_overlay3::LE6AB
+        jmp     error
+
+:       bit     L0FE4
         bmi     L0F6C
         bit     L0FE5
         bmi     L0F69
@@ -1038,9 +1042,9 @@ L0F62:  ldy     #$80
         bne     L0F72
 L0F69:  return  #$80
 
-L0F6C:  return  #$00
+L0F6C:  return  #0
 
-L0F6F:  return  #$01
+error:  return  #1
 
 L0F72:  stax    block_params::block_num
         ldx     L0FE8
@@ -1048,57 +1052,65 @@ L0F72:  stax    block_params::block_num
         ldy     disk_copy_overlay3::LD41F
         cpy     #$10
         bcs     L0F9A
-        bit     L0FE6
-        bmi     L0F92
+        bit     write_flag
+        bmi     :+
         jsr     L1160
-        bmi     L0F6F
+        bmi     error
         jmp     L0F2A
 
-L0F92:  jsr     L11F7
-        bmi     L0F6F
+:       jsr     L11F7
+        bmi     error
         jmp     L0F2A
 
 L0F9A:  cpy     #$1D
         bcc     L0FB7
         cpy     #$20
         bcs     L0FCC
-        bit     L0FE6
-        bmi     L0FAF
+        bit     write_flag
+        bmi     :+
         jsr     L1175
-        bmi     L0F6F
+        bmi     error
         jmp     L0F2A
 
-L0FAF:  jsr     L120C
-        bmi     L0F6F
+:       jsr     L120C
+        bmi     error
         jmp     L0F2A
 
-L0FB7:  bit     L0FE6
-        bmi     L0FC4
-        jsr     disk_copy_overlay3::LE766
-        bmi     L0F6F
+L0FB7:  bit     write_flag
+        bmi     :+
+        jsr     disk_copy_overlay3::read_block_to_auxmem
+        bmi     error
         jmp     L0F2A
 
-L0FC4:  jsr     disk_copy_overlay3::LE7A8
-        bmi     L0F6F
+:       jsr     disk_copy_overlay3::write_block_from_auxmem
+        bmi     error
         jmp     L0F2A
 
-L0FCC:  bit     L0FE6
-        bmi     L0FD9
+L0FCC:  bit     write_flag
+        bmi     :+
         jsr     L11AD
-        bmi     L0F6F
+        bmi     error
         jmp     L0F2A
 
-L0FD9:  jsr     L123F
+:       jsr     L123F
         bmi     L0FE1
         jmp     L0F2A
 
-L0FE1:  jmp     L0F6F
+L0FE1:  jmp     error
 
 L0FE4:  .byte   0
 L0FE5:  .byte   0
-L0FE6:  .byte   0
+
+write_flag:                     ; high bit set if writing
+        .byte   0
+
 L0FE7:  .byte   0
 L0FE8:  .byte   0
+
+.endproc
+
+;;; ============================================================
+
 L0FE9:  jsr     L102A
         cpy     #$00
         bne     L0FF6
@@ -1172,14 +1184,10 @@ L1051:  lda     disk_copy_overlay3::LD421+1
         rts
 
 L1076:  .byte   0
-L1077:  .byte   $07
-        asl     $05
-        .byte   $04
-        .byte   $03
-        .byte   $02
-        ora     ($00,x)
+L1077:  .byte   7, 6, 5, 4, 3, 2, 1, 0
+
 L107F:  jsr     L10B2
-        cpy     #$00
+        cpy     #0
         beq     L108C
         pha
         jsr     L1095
