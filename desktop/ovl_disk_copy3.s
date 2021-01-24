@@ -3127,7 +3127,7 @@ state:
 
 LF185:  sty     LD41D
         tya
-        jsr     disk_copy_overlay4_L0EB2
+        jsr     disk_copy_overlay4_is_drive_removable
         beq     :+
         sta     LD41E
 :       rts

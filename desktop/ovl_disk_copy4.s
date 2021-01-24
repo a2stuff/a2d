@@ -8,8 +8,6 @@
         .org $800
 
 ;;; ============================================================
-;;; Disk II - Format
-;;; Inputs: A = unit_number
 
         .include "../lib/formatdiskii.s"
 
@@ -247,7 +245,7 @@ L0DA4:  cmp     #$A5
 
 .proc read_volume_bitmap
 
-        buffer := $1400
+        volume_bitmap_buffer := $1400
 
         lda     #$14
         jsr     clear_bit_in_bitmap
@@ -272,9 +270,9 @@ L0DA4:  cmp     #$A5
         ptr := $06
 
 
-        add16   #buffer - 1, disk_copy_overlay3::block_count_div8, ptr
+        add16   #volume_bitmap_buffer - 1, disk_copy_overlay3::block_count_div8, ptr
 
-        ;; Zero out buffer
+        ;; Zero out volume_bitmap_buffer
         ldy     #0
 loop1:  lda     #0
         sta     (ptr),y
@@ -286,24 +284,26 @@ loop1:  lda     #0
         dec     ptr+1
 :
         lda     ptr+1
-        cmp     #>buffer
+        cmp     #>volume_bitmap_buffer
         bne     loop1
         lda     ptr
-        cmp     #<buffer
+        cmp     #<volume_bitmap_buffer
         bne     loop1
 
-        lda     #$00
-        sta     (ptr),y
+        lda     #$00            ; special case for last byte
+        sta     (ptr),y         ; (this algorithm could be improved)
+
+        ;; Bail early if < 4096 blocks ???
         lda     disk_copy_overlay3::block_count_div8+1
         cmp     #$02
-        bcs     l3
+        bcs     :+
         rts
 
-l3:     lda     #>buffer
+:       lda     #>volume_bitmap_buffer
         sta     ptr
         lda     disk_copy_overlay3::block_count_div8+1
         pha
-l4:     inc     ptr
+loop:   inc     ptr
         inc     ptr
         pla
         sec
@@ -311,7 +311,7 @@ l4:     inc     ptr
         pha
         bmi     l5
         jsr     l6
-        jmp     l4
+        jmp     loop
 
 l5:     pla
 
@@ -327,7 +327,7 @@ l6:     lda     ptr
         ldx     disk_copy_overlay3::source_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
-        copy16  #buffer, block_params::data_buffer
+        copy16  #volume_bitmap_buffer, block_params::data_buffer
         jsr     read_block
         beq     loop
         brk                     ; rude!
@@ -363,25 +363,43 @@ block_count_div8:
 .endproc
 
 ;;; ============================================================
+;;; Check if device is removable.
+;;; NOTE: Test is flawed, relies on deprecated detection method.
+;;; Inputs: A=%DSSSnnnn (drive/slot part of unit number)
+;;; Outputs: A=0 if "removable", $80 otherwise
 
-L0EB2:  and     #$F0
-        sta     L0ED6
-        ldx     DEVCNT
-L0EBA:  lda     DEVLST,x
+.proc is_drive_removable
+        ;; Search in DEVLST for the matching drive/slot combo.
         and     #$F0
-        cmp     L0ED6
-        beq     L0ECA
+        sta     unit_num
+        ldx     DEVCNT
+:       lda     DEVLST,x
+        and     #$F0
+        cmp     unit_num
+        beq     found
         dex
-        bpl     L0EBA
-L0EC7:  return  #$00
+        bpl     :-
+success:
+        return  #$00
 
-L0ECA:  lda     DEVLST,x
+        ;; Look in the low nibble for device type. (See note)
+found:  lda     DEVLST,x
         and     #$0F
+
+;;; This assumes the low nibble of the unit number is an "id nibble" which
+;;; is wrong. When MouseDesk was written, $xB signaled a "removable" device
+;;; like the UniDisk 3.5, but this is not valid.
+;;;
+;;; Technical Note: ProDOS #21: Identifying ProDOS Devices
+;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+
         cmp     #$0B
-        bne     L0EC7
+        bne     success
         return  #$80
 
-L0ED6:  .byte   0
+unit_num:
+        .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -466,6 +484,8 @@ error:  return  #1
 
         ;; --------------------------------------------------
         ;; read/write block directly to/from main mem buffer
+        ;; $4000-$BEFF
+
         bit     write_flag      ; 0-15
         bmi     :+
         jsr     read_block_direct
@@ -487,6 +507,8 @@ need_move:
 
         ;; --------------------------------------------------
         ;; read/write block to/from main, with a move
+        ;; $F200-$FFFF
+
         bit     write_flag      ; 29-31
         bmi     :+
         jsr     read_block_to_main
@@ -499,6 +521,8 @@ need_move:
 
         ;; --------------------------------------------------
         ;; read/write block to/from aux
+        ;; $0C00-$1FFF
+        ;; $9000-$BFFF
 use_auxmem:
         bit     write_flag      ; 16-28
         bmi     :+
@@ -512,6 +536,7 @@ use_auxmem:
 
         ;; --------------------------------------------------
         ;; read/write block to/from aux lcbank2
+        ;; $D000-$DFFF
 use_lcbank2:
         bit     write_flag      ; 32+
         bmi     :+
@@ -620,17 +645,18 @@ L1077:  .byte   7, 6, 5, 4, 3, 2, 1, 0
         cpy     #0
         beq     :+
         pha
-        jsr     l2
+        jsr     next
         pla
         rts
 
-:       jsr     l2
+:       jsr     next
         bcc     L107F
         lda     #$00
         tax
         rts
 
-.proc l2
+;;; Advance to next
+.proc next
         dec     disk_copy_overlay3::block_num_shift
         lda     disk_copy_overlay3::block_num_shift
         cmp     #$FF
@@ -638,7 +664,7 @@ L1077:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 ok:     clc
         rts
 
-:       lda     #$07
+:       lda     #7
         sta     disk_copy_overlay3::block_num_shift
         inc     disk_copy_overlay3::block_num_div8
         lda     disk_copy_overlay3::block_num_div8
@@ -730,13 +756,13 @@ tmp:    .byte   0
         tay
         sec
         cpx     #0
-        beq     l2
+        beq     skip
 
 :       asl     a
         dex
         bne     :-
 
-l2:     ora     bitmap,y
+skip:   ora     bitmap,y
         sta     bitmap,y
         rts
 .endproc
@@ -749,21 +775,21 @@ l2:     ora     bitmap,y
         tay
         sec
         cpx     #0
-        beq     l2
+        beq     skip
 
 :       asl     a
         dex
         bne     :-
 
-l2:     eor     #$FF
+skip:   eor     #$FF
         and     bitmap,y
         sta     bitmap,y
         rts
 .endproc
 
 ;;; ============================================================
-;;; Sets X to the 7 - (low nibble of A / 2) - bit shift
-;;; Sets A to the high nibble of A - bitmap offset
+;;; Sets X to 7 - (low nibble of A / 2) -- bit shift
+;;; Sets A to the high nibble of A -- bitmap offset
 ;;; e.g. $76 ==> A = $07
 ;;;              X = $04
 
@@ -1068,7 +1094,7 @@ disk_copy_overlay4_format_device        := disk_copy_overlay4::format_device
 disk_copy_overlay4_unit_num_to_sp_unit_number        := disk_copy_overlay4::unit_num_to_sp_unit_number
 disk_copy_overlay4_L0D5F        := disk_copy_overlay4::L0D5F
 disk_copy_overlay4_read_volume_bitmap   := disk_copy_overlay4::read_volume_bitmap
-disk_copy_overlay4_L0EB2        := disk_copy_overlay4::L0EB2
+disk_copy_overlay4_is_drive_removable        := disk_copy_overlay4::is_drive_removable
 disk_copy_overlay4_L0ED7        := disk_copy_overlay4::L0ED7
 disk_copy_overlay4_L10FB        := disk_copy_overlay4::L10FB
 disk_copy_overlay4_bell         := disk_copy_overlay4::bell
