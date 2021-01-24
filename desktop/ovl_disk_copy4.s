@@ -622,6 +622,8 @@ L0C39:  .byte   0
 
 ;;; ============================================================
 
+        default_block_buffer := $1C00
+
         DEFINE_QUIT_PARAMS quit_params
 
         DEFINE_ON_LINE_PARAMS on_line_params2,, $1300
@@ -631,7 +633,7 @@ L0C39:  .byte   0
 on_line_buffer:
         .res    16, 0
 
-        DEFINE_READ_BLOCK_PARAMS block_params, $1C00, 0
+        DEFINE_READ_BLOCK_PARAMS block_params, default_block_buffer, 0
 
 ;;; ============================================================
 
@@ -859,11 +861,11 @@ L0DA4:  cmp     #$A5
         lda     disk_copy_overlay3::source_drive_index
         asl     a
         tax
-        copy16  disk_copy_overlay3::block_count_table,x, blocks_div_8
-        lsr16   blocks_div_8    ; /= 8
-        lsr16   blocks_div_8
-        lsr16   blocks_div_8
-        copy16  blocks_div_8, disk_copy_overlay3::blocks_div_8
+        copy16  disk_copy_overlay3::block_count_table,x, block_count_div8
+        lsr16   block_count_div8    ; /= 8
+        lsr16   block_count_div8
+        lsr16   block_count_div8
+        copy16  block_count_div8, disk_copy_overlay3::block_count_div8
         bit     disk_copy_overlay3::LD44D
         bmi     :+
         lda     disk_copy_overlay3::disk_copy_flag
@@ -877,7 +879,7 @@ L0DA4:  cmp     #$A5
         ptr := $06
 
 
-        add16   #buffer - 1, disk_copy_overlay3::blocks_div_8, ptr
+        add16   #buffer - 1, disk_copy_overlay3::block_count_div8, ptr
 
         ;; Zero out buffer
         ldy     #0
@@ -899,14 +901,14 @@ loop1:  lda     #0
 
         lda     #$00
         sta     (ptr),y
-        lda     disk_copy_overlay3::blocks_div_8+1
+        lda     disk_copy_overlay3::block_count_div8+1
         cmp     #$02
         bcs     l3
         rts
 
 l3:     lda     #>buffer
         sta     ptr
-        lda     disk_copy_overlay3::blocks_div_8+1
+        lda     disk_copy_overlay3::block_count_div8+1
         pha
 l4:     inc     ptr
         inc     ptr
@@ -937,12 +939,12 @@ l6:     lda     ptr
         beq     loop
         brk                     ; rude!
 
-loop:   sub16   blocks_div_8, #$200, blocks_div_8
-        lda     blocks_div_8+1
+loop:   sub16   block_count_div8, #$200, block_count_div8
+        lda     block_count_div8+1
         bpl     :+
         rts
 
-:       lda     blocks_div_8
+:       lda     block_count_div8
         bne     :+
         rts
 
@@ -959,7 +961,7 @@ loop:   sub16   blocks_div_8, #$200, blocks_div_8
 .endproc
 
         ;; Number of blocks to copy, divided by 8
-blocks_div_8:
+block_count_div8:
         .word   0
 .endproc
 
@@ -1008,30 +1010,34 @@ L0ED6:  .byte   0
         sta     block_params::unit_num
 
 common: lda     #$07
-        sta     disk_copy_overlay3::LD420
-        lda     #$00
-        sta     disk_copy_overlay3::LD41F
+        sta     disk_copy_overlay3::block_num_shift
+        lda     #0
+        sta     disk_copy_overlay3::block_num_div8
         sta     L0FE4
         sta     L0FE5
-L0F2A:  lda     KBD
+
+loop:
+        ;; Check for keypress
+        lda     KBD
         cmp     #(CHAR_ESCAPE | $80)
         bne     :+
-
-        jsr     disk_copy_overlay3::LE6AB
+        jsr     disk_copy_overlay3::flash_escape_message
         jmp     error
+:
 
-:       bit     L0FE4
-        bmi     L0F6C
+        bit     L0FE4
+        bmi     success
         bit     L0FE5
         bmi     L0F69
+
         jsr     L107F
         bcc     L0F51
-        bne     L0F4C
+        bne     :+
         cpx     #$00
-        beq     L0F6C
-L0F4C:  ldy     #$80
+        beq     success
+:       ldy     #$80
         sty     L0FE4
-L0F51:  stax    L0FE7
+L0F51:  stax    mem_block_addr
         jsr     L0FE9
         bcc     L0F72
         bne     L0F62
@@ -1040,63 +1046,88 @@ L0F51:  stax    L0FE7
 L0F62:  ldy     #$80
         sty     L0FE5
         bne     L0F72
+
 L0F69:  return  #$80
 
-L0F6C:  return  #0
+success:
+        return  #0
 
 error:  return  #1
 
-L0F72:  stax    block_params::block_num
-        ldx     L0FE8
-        lda     L0FE7
-        ldy     disk_copy_overlay3::LD41F
+.proc L0F72
+        stax    block_params::block_num
+
+        ;; A,X = address in memory
+        ldx     mem_block_addr+1
+        lda     mem_block_addr
+
+        ;; Y = block number / 8
+        ldy     disk_copy_overlay3::block_num_div8
+
         cpy     #$10
-        bcs     L0F9A
-        bit     write_flag
+        bcs     need_move
+
+        ;; --------------------------------------------------
+        ;; read/write block directly to/from main mem buffer
+        bit     write_flag      ; 0-15
         bmi     :+
-        jsr     L1160
+        jsr     read_block_direct
         bmi     error
-        jmp     L0F2A
+        jmp     loop
 
-:       jsr     L11F7
+:       jsr     write_block_direct
         bmi     error
-        jmp     L0F2A
+        jmp     loop
 
-L0F9A:  cpy     #$1D
-        bcc     L0FB7
+        ;; --------------------------------------------------
+
+need_move:
+        cpy     #$1D
+        bcc     use_auxmem
+
         cpy     #$20
-        bcs     L0FCC
-        bit     write_flag
+        bcs     use_lcbank2
+
+        ;; --------------------------------------------------
+        ;; read/write block to/from main, with a move
+        bit     write_flag      ; 29-31
         bmi     :+
-        jsr     L1175
+        jsr     read_block_to_main
         bmi     error
-        jmp     L0F2A
+        jmp     loop
 
-:       jsr     L120C
+:       jsr     write_block_from_main
         bmi     error
-        jmp     L0F2A
+        jmp     loop
 
-L0FB7:  bit     write_flag
+        ;; --------------------------------------------------
+        ;; read/write block to/from aux
+use_auxmem:
+        bit     write_flag      ; 16-28
         bmi     :+
         jsr     disk_copy_overlay3::read_block_to_auxmem
         bmi     error
-        jmp     L0F2A
+        jmp     loop
 
 :       jsr     disk_copy_overlay3::write_block_from_auxmem
         bmi     error
-        jmp     L0F2A
+        jmp     loop
 
-L0FCC:  bit     write_flag
+        ;; --------------------------------------------------
+        ;; read/write block to/from aux lcbank2
+use_lcbank2:
+        bit     write_flag      ; 32+
         bmi     :+
-        jsr     L11AD
+        jsr     read_block_to_lcbank2
         bmi     error
-        jmp     L0F2A
+        jmp     loop
 
-:       jsr     L123F
-        bmi     L0FE1
-        jmp     L0F2A
+:       jsr     write_block_from_lcbank2
+        bmi     l4
+        jmp     loop
 
-L0FE1:  jmp     error
+l4:     jmp     error
+.endproc
 
 L0FE4:  .byte   0
 L0FE5:  .byte   0
@@ -1104,9 +1135,8 @@ L0FE5:  .byte   0
 write_flag:                     ; high bit set if writing
         .byte   0
 
-L0FE7:  .byte   0
-L0FE8:  .byte   0
-
+mem_block_addr:
+        .word   0
 .endproc
 
 ;;; ============================================================
@@ -1136,10 +1166,10 @@ L100B:  lda     #$07
         sta     disk_copy_overlay3::LD423
         inc16   disk_copy_overlay3::LD421
         lda     disk_copy_overlay3::LD421+1
-        cmp     disk_copy_overlay3::blocks_div_8+1
+        cmp     disk_copy_overlay3::block_count_div8+1
         bne     L1009
         lda     disk_copy_overlay3::LD421
-        cmp     disk_copy_overlay3::blocks_div_8
+        cmp     disk_copy_overlay3::block_count_div8
         bne     L1009
         sec
         rts
@@ -1186,63 +1216,79 @@ L1051:  lda     disk_copy_overlay3::LD421+1
 L1076:  .byte   0
 L1077:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 
-L107F:  jsr     L10B2
+;;; ============================================================
+
+.proc L107F
+        jsr     L10B2
         cpy     #0
-        beq     L108C
+        beq     :+
         pha
-        jsr     L1095
+        jsr     l2
         pla
         rts
 
-L108C:  jsr     L1095
+:       jsr     l2
         bcc     L107F
         lda     #$00
         tax
         rts
 
-L1095:  dec     disk_copy_overlay3::LD420
-        lda     disk_copy_overlay3::LD420
+.proc l2
+        dec     disk_copy_overlay3::block_num_shift
+        lda     disk_copy_overlay3::block_num_shift
         cmp     #$FF
-        beq     L10A1
-L109F:  clc
+        beq     :+
+ok:     clc
         rts
 
-L10A1:  lda     #$07
-        sta     disk_copy_overlay3::LD420
-        inc     disk_copy_overlay3::LD41F
-        lda     disk_copy_overlay3::LD41F
+:       lda     #$07
+        sta     disk_copy_overlay3::block_num_shift
+        inc     disk_copy_overlay3::block_num_div8
+        lda     disk_copy_overlay3::block_num_div8
         cmp     #$21
-        bcc     L109F
+        bcc     ok
+
         sec
         rts
+.endproc
+.endproc
 
-L10B2:  ldx     disk_copy_overlay3::LD41F
+;;; ============================================================
+;;; Output: A,X = ???; Y=bit is set in bitmap
+
+.proc L10B2
+        ;; Read from bitmap
+        ldx     disk_copy_overlay3::block_num_div8
         lda     bitmap,x
-        ldx     disk_copy_overlay3::LD420
-        cpx     #$00
-        beq     L10C3
-L10BF:  lsr     a
+        ldx     disk_copy_overlay3::block_num_shift
+        cpx     #0
+        beq     skip
+:       lsr     a
         dex
-        bne     L10BF
-L10C3:  and     #$01
-        bne     L10CB
+        bne     :-
+skip:   and     #$01
+
+        bne     set
         ldy     #$00
-        beq     L10CD
-L10CB:  ldy     #$FF
-L10CD:  lda     disk_copy_overlay3::LD41F
+        beq     :+              ; always
+set:    ldy     #$FF
+:
+
+        ;; Now compute address to store in memory
+        lda     disk_copy_overlay3::block_num_div8
         cmp     #$10
         bcs     L10E3
-L10D4:  asl     a
+L10D4:  asl     a               ; 0-15
         asl     a
         asl     a
         asl     a
-        ldx     disk_copy_overlay3::LD420
+        ldx     disk_copy_overlay3::block_num_shift
         clc
-        adc     L10F3,x
+        adc     table,x
         tax
         return  #$00
 
-L10E3:  cmp     #$20
+L10E3:  cmp     #$20            ;
         bcs     L10ED
         sec
         sbc     #$10
@@ -1252,8 +1298,8 @@ L10ED:  sec
         sbc     #$13
         jmp     L10D4
 
-L10F3:
-        .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
+table:  .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
+.endproc
 
 ;;; ============================================================
 
@@ -1269,7 +1315,7 @@ loop:   lda     $06
         inc     tmp
         inc     tmp
         lda     tmp
-        cmp     disk_copy_overlay3::blocks_div_8+1
+        cmp     disk_copy_overlay3::block_count_div8+1
         beq     loop
         bcc     loop
         rts
@@ -1336,128 +1382,185 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 .endproc
 
 ;;; ============================================================
+;;; Read block (w/ retries) directly to main memory (no move)
+;;; Inputs: A,X=mem address to store it
+;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc L1160
+.proc read_block_direct
         stax    block_params::data_buffer
-l1:     jsr     read_block
-        beq     l2
+retry:  jsr     read_block
+        beq     done
         ldx     #0              ; reading
         jsr     disk_copy_overlay3::show_block_error
-        bmi     l2
-        bne     l1
-l2:     rts
+        bmi     done
+        bne     retry
+done:   rts
 .endproc
 
-L1175:  sta     $06
-        sta     $08
-        stx     $07
-        stx     $09
-        inc     $09
-        copy16  #$1C00, block_params::data_buffer
-L1189:  jsr     read_block
-        beq     L119A
+;;; ============================================================
+;;; Read block (w/ retries) and store it to main memory
+;;; Inputs: A,X=mem address to store it
+;;; Outputs: A=0 on success, nonzero otherwise
+
+.proc read_block_to_main
+        ptr1 := $06
+        ptr2 := $08             ; one page up
+
+        sta     ptr1
+        sta     ptr2
+        stx     ptr1+1
+        stx     ptr2+1
+        inc     ptr2+1
+
+        copy16  #default_block_buffer, block_params::data_buffer
+retry:  jsr     read_block
+        beq     move
         ldx     #0              ; reading
         jsr     disk_copy_overlay3::show_block_error
-        beq     L119A
-        bpl     L1189
+        beq     move
+        bpl     retry
         return  #$80
 
-L119A:  ldy     #$FF
+move:   ldy     #$FF
         iny
-L119D:  lda     $1C00,y
-        sta     ($06),y
-        lda     $1D00,y
-        sta     ($08),y
+loop:   lda     default_block_buffer,y
+        sta     (ptr1),y
+        lda     default_block_buffer+$100,y
+        sta     (ptr2),y
         iny
-        bne     L119D
-        return  #$00
+        bne     loop
 
-L11AD:  sta     $06
-        sta     $08
-        stx     $07
-        stx     $09
-        inc     $09
-        copy16  #$1C00, block_params::data_buffer
-L11C1:  jsr     read_block
-        beq     L11D8
+        return  #0
+.endproc
+
+;;; ============================================================
+;;; Read block (w/ retries) and store it to aux LCBANK2 memory
+;;; Inputs: A,X=mem address to store it
+;;; Outputs: A=0 on success, nonzero otherwise
+
+.proc read_block_to_lcbank2
+        ptr1 := $06
+        ptr2 := $08             ; one page up
+
+        sta     ptr1
+        sta     ptr2
+        stx     ptr1+1
+        stx     ptr2+1
+        inc     ptr2+1
+
+        copy16  #default_block_buffer, block_params::data_buffer
+retry:  jsr     read_block
+        beq     move
         ldx     #0              ; reading
         jsr     disk_copy_overlay3::show_block_error
-        beq     L11D8
-        bpl     L11C1
+        beq     move
+        bpl     retry
         lda     LCBANK1
         lda     LCBANK1
         return  #$80
 
-L11D8:  lda     LCBANK2
+move:   lda     LCBANK2
         lda     LCBANK2
         ldy     #$FF
         iny
-L11E1:  lda     $1C00,y
-        sta     ($06),y
-        lda     $1D00,y
-        sta     ($08),y
+loop:   lda     default_block_buffer,y
+        sta     (ptr1),y
+        lda     default_block_buffer+$100,y
+        sta     (ptr2),y
         iny
-        bne     L11E1
+        bne     loop
         lda     LCBANK1
         lda     LCBANK1
         return  #$00
+.endproc
 
-L11F7:  stax    block_params::data_buffer
-L11FD:  jsr     write_block
-        beq     L120B
+;;; ============================================================
+;;; Write block (w/ retries) directly from main memory (no move)
+;;; Inputs: A,X=address to read from
+;;; Outputs: A=0 on success, nonzero otherwise
+
+.proc write_block_direct
+        stax    block_params::data_buffer
+retry:  jsr     write_block
+        beq     done
         ldx     #$80            ; writing
         jsr     disk_copy_overlay3::show_block_error
-        beq     L120B
-        bpl     L11FD
-L120B:  rts
+        beq     done
+        bpl     retry
+done:   rts
+.endproc
 
-L120C:  sta     $06
-        sta     $08
-        stx     $07
-        stx     $09
-        inc     $09
-        copy16  #$1C00, block_params::data_buffer
+;;; ============================================================
+;;; Write block (w/ retries) from main memory
+;;; Inputs: A,X=address to read from
+;;; Outputs: A=0 on success, nonzero otherwise
+
+.proc write_block_from_main
+        ptr1 := $06
+        ptr2 := $08             ; one page up
+
+        sta     ptr1
+        sta     ptr2
+        stx     ptr1+1
+        stx     ptr2+1
+        inc     ptr2+1
+
+        copy16  #default_block_buffer, block_params::data_buffer
         ldy     #$FF
         iny
-L1223:  lda     ($06),y
-        sta     $1C00,y
-        lda     ($08),y
-        sta     $1D00,y
+L1223:  lda     (ptr1),y
+        sta     default_block_buffer,y
+        lda     (ptr2),y
+        sta     default_block_buffer+$100,y
         iny
         bne     L1223
-L1230:  jsr     write_block
-        beq     L123E
+retry:  jsr     write_block
+        beq     done
         ldx     #$80            ; writing
         jsr     disk_copy_overlay3::show_block_error
-        beq     L123E
-        bpl     L1230
-L123E:  rts
+        beq     done
+        bpl     retry
+done:   rts
+.endproc
 
-L123F:  bit     LCBANK2
+;;; ============================================================
+;;; Write block (w/ retries) from aux LCBANK2 memory
+;;; Inputs: A,X=address to read from
+;;; Outputs: A=0 on success, nonzero otherwise
+
+.proc write_block_from_lcbank2
         bit     LCBANK2
-        sta     $06
-        sta     $08
-        stx     $07
-        stx     $09
-        inc     $09
-        copy16  #$1C00, block_params::data_buffer
+        bit     LCBANK2
+
+        ptr1 := $06
+        ptr2 := $08             ; one page up
+
+        sta     ptr1
+        sta     ptr2
+        stx     ptr1+1
+        stx     ptr2+1
+        inc     ptr2+1
+
+        copy16  #default_block_buffer, block_params::data_buffer
         ldy     #$FF
         iny
-L125C:  lda     ($06),y
-        sta     $1C00,y
-        lda     ($08),y
-        sta     $1D00,y
+loop:   lda     (ptr1),y
+        sta     default_block_buffer,y
+        lda     (ptr2),y
+        sta     default_block_buffer+$100,y
         iny
-        bne     L125C
+        bne     loop
+
         lda     LCBANK1
         lda     LCBANK1
-L126F:  jsr     write_block
-        beq     L127D
+retry:  jsr     write_block
+        beq     done
         ldx     #$80            ; writing
         jsr     disk_copy_overlay3::show_block_error
-        beq     L127D
-        bpl     L126F
-L127D:  rts
+        beq     done
+        bpl     retry
+done:   rts
+.endproc
 
 ;;; ============================================================
 

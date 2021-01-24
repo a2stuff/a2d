@@ -348,14 +348,18 @@ str_d:  PASCAL_STRING 0         ; do not localize
 str_s:  PASCAL_STRING 0         ; do not localize
 LD41D:  .byte   0
 LD41E:  .byte   0
-LD41F:  .byte   0
-LD420:  .byte   0
+
+block_num_div8:                 ; block number, divided by 8
+        .byte   0
+block_num_shift:                ; 8-(block number mod 8), for bitmap lookups
+        .byte   0
+
 LD421:  .word   0
 LD423:  .byte   0
 LD424:  .word   0
 LD426:  .byte   0
 
-blocks_div_8:                   ; calculated when reading volume bitmap
+block_count_div8:              ; calculated when reading volume bitmap
         .word   0
 
 LD429:  .byte   0
@@ -2212,27 +2216,35 @@ LE694:  lda     winfo_dialog::window_id
         param_call DrawString, str_escape_stop_copy
         rts
 
-LE6AB:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        copy16  #$800A, LE6FB
-LE6BB:  dec     LE6FB
-        beq     LE6F1
-        lda     LE6FC
-        eor     #$80
-        sta     LE6FC
-        beq     LE6D5
-        MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
-        beq     LE6DE
-LE6D5:  MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_black
-LE6DE:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_escape_stop_copy
-        param_call DrawString, str_escape_stop_copy
-        jmp     LE6BB
+;;; ============================================================
+;;; Flash the message when escape is pressed
 
-LE6F1:  MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
+.proc flash_escape_message
+        lda     winfo_dialog::window_id
+        jsr     set_win_port
+        copy    #10, count
+        copy    #$80, flag
+
+loop:   dec     count
+        beq     finish
+
+        lda     flag
+        eor     #$80
+        sta     flag
+        beq     :+
+        MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
+        beq     move
+:       MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_black
+move:   MGTK_RELAY_CALL2 MGTK::MoveTo, point_escape_stop_copy
+        param_call DrawString, str_escape_stop_copy
+        jmp     loop
+
+finish: MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
         rts
 
-LE6FB:  .byte   0
-LE6FC:  .byte   0
+count:  .byte   0
+flag:   .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Inputs: A = error code, X = writing flag
@@ -2276,8 +2288,8 @@ err_writing_flag:
 .endproc
 
 ;;; ============================================================
-;;; Read block (potentially retrying) and stash it in aux mem
-;;; Inputs: A,X=aux mem address to store it
+;;; Read block (w/ retries) and store it to aux memory
+;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
 .proc read_block_to_auxmem
@@ -2293,16 +2305,15 @@ err_writing_flag:
         ;; Read block
         copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
 retry:  jsr     disk_copy_overlay4_read_block
-        beq     memcopy
+        beq     move
         ldx     #0              ; reading
         jsr     show_block_error
-        beq     memcopy
+        beq     move
         bpl     retry
         rts
 
         ;; Copy block from main to aux
-memcopy:
-        sta     RAMRDOFF
+move:   sta     RAMRDOFF
         sta     RAMWRTON
         ldy     #$FF
         iny
@@ -2320,8 +2331,8 @@ memcopy:
 .endproc
 
 ;;; ============================================================
-;;; Write block (potentially retrying) previously stashed in aux
-;;; Inputs: A,X=aux mem address of block
+;;; Write block (w/ retries) from aux memory
+;;; Inputs: A,X=address to read from
 ;;; Outputs: A=0 on success, nonzero otherwise
 
 .proc write_block_from_auxmem
