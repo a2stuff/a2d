@@ -349,13 +349,18 @@ str_s:  PASCAL_STRING 0         ; do not localize
 LD41D:  .byte   0
 LD41E:  .byte   0
 
-block_num_div8:                 ; block number, divided by 8
+;;; Memory index of block
+block_index_div8:               ; block index, divided by 8
         .byte   0
-block_num_shift:                ; 8-(block number mod 8), for bitmap lookups
+block_index_shift:              ; 7-(block index mod 8), for bitmap lookups
         .byte   0
 
-LD421:  .word   0
-LD423:  .byte   0
+;;; Actual block number, for volume bitmap lookups
+block_num_div8:                 ; block number, divided by 8
+        .word   0
+block_num_shift:                ; 7-(block number mod 8), for bitmap lookups
+        .byte   0
+
 LD424:  .word   0
 LD426:  .byte   0
 
@@ -602,10 +607,10 @@ LD763:  lda     winfo_dialog::window_id
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D42A
         jmp     LD734
 
-LD77E:  lda     $1300
+LD77E:  lda     disk_copy_overlay4_on_line_buffer2
         and     #$0F
         bne     LD798
-        lda     $1301
+        lda     disk_copy_overlay4_on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
         jsr     disk_copy_overlay4_L0D5F
@@ -613,10 +618,10 @@ LD77E:  lda     $1300
         jsr     LE559
         jmp     LD7AD
 
-LD798:  lda     $1300
+LD798:  lda     disk_copy_overlay4_on_line_buffer2
         and     #$0F
-        sta     $1300
-        param_call adjust_case, $1300
+        sta     disk_copy_overlay4_on_line_buffer2
+        param_call adjust_case, disk_copy_overlay4_on_line_buffer2
         jsr     LE674
         jsr     LE559
 LD7AD:  lda     source_drive_index
@@ -643,10 +648,10 @@ LD7CC:  ldx     dest_drive_index
         beq     LD7F2
         jmp     LD852
 
-LD7E1:  lda     $1300
+LD7E1:  lda     disk_copy_overlay4_on_line_buffer2
         and     #$0F
         bne     LD7F2
-        lda     $1301
+        lda     disk_copy_overlay4_on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     LD7F2
         jmp     LD852
@@ -674,7 +679,7 @@ LD7F2:
         bne     LD817
 :       jmp     LD8A9
 
-LD817:  lda     $1300
+LD817:  lda     disk_copy_overlay4_on_line_buffer2
         and     #$0F
         bne     LD82C
         ldx     dest_drive_index
@@ -684,8 +689,8 @@ LD817:  lda     $1300
         lda     #7              ; Confirm Erase (with extra spaces???)
         jmp     LD83C
 
-LD82C:  sta     $1300
-        param_call adjust_case, $1300
+LD82C:  sta     disk_copy_overlay4_on_line_buffer2
+        param_call adjust_case, disk_copy_overlay4_on_line_buffer2
         ldx     #$00
         ldy     #$13
 
@@ -763,10 +768,10 @@ LD8A9:  lda     winfo_dialog::window_id
 
 LD8DF:  jsr     disk_copy_overlay4_read_volume_bitmap
         lda     #$00
-        sta     LD421
-        sta     LD421+1
+        sta     block_num_div8
+        sta     block_num_div8+1
         lda     #$07
-        sta     LD423
+        sta     block_num_shift
         jsr     LE4BF
         jsr     LE4EC
         jsr     LE507
@@ -814,7 +819,7 @@ LD928:  jsr     LE491
         jmp     LD61C
 
 LD955:  jsr     LE507
-        jsr     disk_copy_overlay4_L10FB
+        jsr     disk_copy_overlay4_free_all_vol_bitmap_pages_in_mem_bitmap
         ldx     source_drive_index
         lda     drive_unitnum_table,x
         jsr     disk_copy_overlay4_eject_disk
@@ -827,7 +832,7 @@ LD955:  jsr     LE507
         jsr     show_alert_dialog
         jmp     LD61C
 
-LD97A:  jsr     disk_copy_overlay4_L10FB
+LD97A:  jsr     disk_copy_overlay4_free_all_vol_bitmap_pages_in_mem_bitmap
         lda     #10             ; Copy failed
         jsr     show_alert_dialog
         jmp     LD61C
@@ -2086,16 +2091,16 @@ LE507:  jsr     LE522
 
 LE522:  lda     winfo_dialog::window_id
         jsr     set_win_port
-        lda     LD421+1
+        lda     block_num_div8+1
         sta     LE558
-        lda     LD421
+        lda     block_num_div8
         asl     a
         rol     LE558
         asl     a
         rol     LE558
         asl     a
         rol     LE558
-        ldx     LD423
+        ldx     block_num_shift
         clc
         adc     LE550,x
         tay
@@ -2146,8 +2151,8 @@ LE559:  lda     winfo_dialog::window_id
 LE5C5:  rts
 
 LE5C6:  param_call DrawString, str_2_spaces
-        ldx     $1300
-LE5D0:  lda     $1300,x
+        ldx     disk_copy_overlay4_on_line_buffer2
+LE5D0:  lda     disk_copy_overlay4_on_line_buffer2,x
         sta     LD43A,x
         dex
         bpl     LE5D0
@@ -2261,7 +2266,7 @@ flag:   .byte   0
         jsr     LE491
         return  #1
 
-:       jsr     disk_copy_overlay4_L10FB
+:       jsr     disk_copy_overlay4_free_all_vol_bitmap_pages_in_mem_bitmap
         return  #$80
 
 l2:     jsr     disk_copy_overlay4_bell

@@ -17,7 +17,8 @@
 
         DEFINE_QUIT_PARAMS quit_params
 
-        DEFINE_ON_LINE_PARAMS on_line_params2,, $1300
+on_line_buffer2 := $1300
+        DEFINE_ON_LINE_PARAMS on_line_params2,, on_line_buffer2
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 
@@ -25,6 +26,11 @@ on_line_buffer:
         .res    16, 0
 
         DEFINE_READ_BLOCK_PARAMS block_params, default_block_buffer, 0
+
+;;; BUG: This blows past $1C00 on large volumes. Issue #386
+;;; (A 32MB volume requires $2000 bytes for the bitmap!)
+;;; It should be safe to move this to $4000
+volume_bitmap   := $1400
 
 ;;; ============================================================
 
@@ -225,8 +231,8 @@ L0D8A:  lda     #$81
         sta     disk_copy_overlay3::LD44D
         rts
 
-L0D90:  param_call disk_copy_overlay3::LDE9F, $1300
-        param_call disk_copy_overlay3::adjust_case, $1300
+L0D90:  param_call disk_copy_overlay3::LDE9F, on_line_buffer2
+        param_call disk_copy_overlay3::adjust_case, on_line_buffer2
         lda     #$C0
         sta     disk_copy_overlay3::LD44D
         rts
@@ -245,10 +251,9 @@ L0DA4:  cmp     #$A5
 
 .proc read_volume_bitmap
 
-        volume_bitmap_buffer := $1400
+        lda     #>volume_bitmap
+        jsr     mark_used_in_memory_bitmap
 
-        lda     #$14
-        jsr     clear_bit_in_bitmap
         lda     disk_copy_overlay3::source_drive_index
         asl     a
         tax
@@ -265,14 +270,15 @@ L0DA4:  cmp     #$A5
 :
 
         ;; --------------------------------------------------
-        ;; Disk Copy
+        ;; Disk Copy - initialize a fake volume bitmap so that
+        ;; all pages are copied.
 .scope
         ptr := $06
 
 
-        add16   #volume_bitmap_buffer - 1, disk_copy_overlay3::block_count_div8, ptr
+        add16   #volume_bitmap - 1, disk_copy_overlay3::block_count_div8, ptr
 
-        ;; Zero out volume_bitmap_buffer
+        ;; Zero out the volume bitmap
         ldy     #0
 loop1:  lda     #0
         sta     (ptr),y
@@ -284,10 +290,10 @@ loop1:  lda     #0
         dec     ptr+1
 :
         lda     ptr+1
-        cmp     #>volume_bitmap_buffer
+        cmp     #>volume_bitmap
         bne     loop1
         lda     ptr
-        cmp     #<volume_bitmap_buffer
+        cmp     #<volume_bitmap
         bne     loop1
 
         lda     #$00            ; special case for last byte
@@ -299,7 +305,8 @@ loop1:  lda     #0
         bcs     :+
         rts
 
-:       lda     #>volume_bitmap_buffer
+        ;; Now mark block-pages used in memory bitmap
+:       lda     #>volume_bitmap
         sta     ptr
         lda     disk_copy_overlay3::block_count_div8+1
         pha
@@ -316,26 +323,25 @@ loop:   inc     ptr
 l5:     pla
 
 l6:     lda     ptr
-        jsr     clear_bit_in_bitmap
+        jsr     mark_used_in_memory_bitmap
         rts
 .endscope
 
         ;; --------------------------------------------------
-        ;; Quick Copy
+        ;; Quick Copy - load volume bitmap from disk
+        ;; so only used blocks are copied
 .proc L0E4D
         copy16  #6, block_params::block_num
         ldx     disk_copy_overlay3::source_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
-        copy16  #volume_bitmap_buffer, block_params::data_buffer
+        copy16  #volume_bitmap, block_params::data_buffer
         jsr     read_block
         beq     loop
         brk                     ; rude!
 
         ;; Each volume bitmap block holds $200*8 bits, so keep reading
         ;; blocks until we've accounted for all blocks on the volume.
-        ;; BUG: This blows past $1C00 on large volumes. Issue #386
-        ;; (A 32MB volume requires $2000 bytes for the bitmap!)
 loop:   sub16   block_count_div8, #$200, block_count_div8
         lda     block_count_div8+1
         bpl     :+
@@ -349,7 +355,7 @@ loop:   sub16   block_count_div8, #$200, block_count_div8
 
         inc     block_params::block_num
         lda     block_params::data_buffer+1
-        jsr     clear_bit_in_bitmap
+        jsr     mark_used_in_memory_bitmap
         jsr     read_block
         beq     :+
         brk                     ; rude!
@@ -409,25 +415,25 @@ unit_num:
         sta     write_flag
         and     #$FF
         bpl     :+
-        copy16  disk_copy_overlay3::LD424, disk_copy_overlay3::LD421
+        copy16  disk_copy_overlay3::LD424, disk_copy_overlay3::block_num_div8
         lda     disk_copy_overlay3::LD426
-        sta     disk_copy_overlay3::LD423
+        sta     disk_copy_overlay3::block_num_shift
         ldx     disk_copy_overlay3::dest_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
         jmp     common
 
-:       copy16  disk_copy_overlay3::LD421, disk_copy_overlay3::LD424
-        lda     disk_copy_overlay3::LD423
+:       copy16  disk_copy_overlay3::block_num_div8, disk_copy_overlay3::LD424
+        lda     disk_copy_overlay3::block_num_shift
         sta     disk_copy_overlay3::LD426
         ldx     disk_copy_overlay3::source_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
 
 common: lda     #$07
-        sta     disk_copy_overlay3::block_num_shift
+        sta     disk_copy_overlay3::block_index_shift
         lda     #0
-        sta     disk_copy_overlay3::block_num_div8
+        sta     disk_copy_overlay3::block_index_div8
         sta     L0FE4
         sta     L0FE5
 
@@ -453,7 +459,7 @@ loop:
 :       ldy     #$80
         sty     L0FE4
 L0F51:  stax    mem_block_addr
-        jsr     L0FE9
+        jsr     advance_to_next_block
         bcc     L0F72
         bne     L0F62
         cpx     #$00
@@ -477,7 +483,7 @@ error:  return  #1
         lda     mem_block_addr
 
         ;; Y = block number / 8
-        ldy     disk_copy_overlay3::block_num_div8
+        ldy     disk_copy_overlay3::block_index_div8
 
         cpy     #$10
         bcs     need_move
@@ -562,81 +568,115 @@ mem_block_addr:
 .endproc
 
 ;;; ============================================================
+;;; Advance `block_num_div8` and `block_num_shift` to next used
+;;; block per volume bitmap.
+;;; Inputs: `block_num_div8` and `block_num_shift`
+;;; Output: C=0 and A,X=block number if one exists
+;;;         C=1 and A,X=$0000 if last block reached
 
-L0FE9:  jsr     L102A
-        cpy     #$00
-        bne     L0FF6
+.proc advance_to_next_block
+repeat: jsr     lookup_in_volume_bitmap ; A,X=block number, Y=free?
+        cpy     #0
+        bne     free
         pha
-        jsr     L0FFF
+        jsr     next
         pla
         rts
 
-L0FF6:  jsr     L0FFF
-        bcc     L0FE9
-        lda     #$00
+free:   jsr     next
+        bcc     repeat          ; repeat unless last block
+        lda     #0
         tax
         rts
 
-L0FFF:  dec     disk_copy_overlay3::LD423
-        lda     disk_copy_overlay3::LD423
+.proc next
+        dec     disk_copy_overlay3::block_num_shift
+        lda     disk_copy_overlay3::block_num_shift
         cmp     #$FF
-        beq     L100B
-L1009:  clc
+        beq     :+
+
+not_last:
+        clc
         rts
 
-L100B:  lda     #$07
-        sta     disk_copy_overlay3::LD423
-        inc16   disk_copy_overlay3::LD421
-        lda     disk_copy_overlay3::LD421+1
+:       lda     #$07
+        sta     disk_copy_overlay3::block_num_shift
+        inc16   disk_copy_overlay3::block_num_div8
+        lda     disk_copy_overlay3::block_num_div8+1
         cmp     disk_copy_overlay3::block_count_div8+1
-        bne     L1009
-        lda     disk_copy_overlay3::LD421
+        bne     not_last
+        lda     disk_copy_overlay3::block_num_div8
         cmp     disk_copy_overlay3::block_count_div8
-        bne     L1009
+        bne     not_last
+
         sec
         rts
+.endproc
+.endproc
 
-L102A:  lda     #$00
+;;; ============================================================
+;;; Look up block in volume bitmap
+;;; Input: Uses `block_num_div8` and `block_num_shift`
+;;; Output: A,X = block number, Y = $FF if set in vol bitmap, $0 otherwise
+
+.proc lookup_in_volume_bitmap
+        ptr := $06
+
+        ;; Find byte in volume bitmap
+        lda     #<volume_bitmap
         clc
-        adc     disk_copy_overlay3::LD421
-        sta     $06
-        lda     #$14
-        adc     disk_copy_overlay3::LD421+1
-        sta     $07
-        ldy     #$00
-        lda     ($06),y
-        ldx     disk_copy_overlay3::LD423
+        adc     disk_copy_overlay3::block_num_div8
+        sta     ptr
+        lda     #>volume_bitmap
+        adc     disk_copy_overlay3::block_num_div8+1
+        sta     ptr+1
+
+        ;; Find bit in volume bitmap
+        ldy     #0
+        lda     (ptr),y
+        ldx     disk_copy_overlay3::block_num_shift
         cpx     #$00
-        beq     L1048
-L1044:  lsr     a
+        beq     mask
+:       lsr     a
         dex
-        bne     L1044
-L1048:  and     #$01
-        bne     L104F
-        tay
-        beq     L1051
-L104F:  ldy     #$FF
-L1051:  lda     disk_copy_overlay3::LD421+1
-        sta     L1076
-        lda     disk_copy_overlay3::LD421
+        bne     :-
+mask:   and     #$01
+
+        ;; Set Y to 0 (if clear) or $FF (if set)
+        bne     set
+        tay                     ; Y=A=0
+        beq     :+              ; always
+set:    ldy     #$FF
+:
+
+        ;; Now compute block number
+        ;; Why do this? Isn't this stashed anywhere else???
+        lda     disk_copy_overlay3::block_num_div8+1
+        sta     tmp
+        lda     disk_copy_overlay3::block_num_div8
+        asl     a               ; * 8
+        rol     tmp
         asl     a
-        rol     L1076
+        rol     tmp
         asl     a
-        rol     L1076
-        asl     a
-        rol     L1076
-        ldx     disk_copy_overlay3::LD423
+        rol     tmp
+
+        ldx     disk_copy_overlay3::block_num_shift
         clc
-        adc     L1077,x
+        adc     table,x
+
         pha
-        lda     L1076
+        lda     tmp
         adc     #$00
         tax
         pla
+
+        ;; A,X = block number
         rts
 
-L1076:  .byte   0
-L1077:  .byte   7, 6, 5, 4, 3, 2, 1, 0
+tmp:    .byte   0
+table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
+.endproc
 
 ;;; ============================================================
 
@@ -657,17 +697,17 @@ L1077:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 
 ;;; Advance to next
 .proc next
-        dec     disk_copy_overlay3::block_num_shift
-        lda     disk_copy_overlay3::block_num_shift
+        dec     disk_copy_overlay3::block_index_shift
+        lda     disk_copy_overlay3::block_index_shift
         cmp     #$FF
         beq     :+
 ok:     clc
         rts
 
 :       lda     #7
-        sta     disk_copy_overlay3::block_num_shift
-        inc     disk_copy_overlay3::block_num_div8
-        lda     disk_copy_overlay3::block_num_div8
+        sta     disk_copy_overlay3::block_index_shift
+        inc     disk_copy_overlay3::block_index_div8
+        lda     disk_copy_overlay3::block_index_div8
         cmp     #$21
         bcc     ok
 
@@ -681,9 +721,9 @@ ok:     clc
 
 .proc L10B2
         ;; Read from bitmap
-        ldx     disk_copy_overlay3::block_num_div8
-        lda     bitmap,x
-        ldx     disk_copy_overlay3::block_num_shift
+        ldx     disk_copy_overlay3::block_index_div8
+        lda     memory_bitmap,x
+        ldx     disk_copy_overlay3::block_index_shift
         cpx     #0
         beq     skip
 :       lsr     a
@@ -698,7 +738,7 @@ set:    ldy     #$FF
 :
 
         ;; Now compute address to store in memory
-        lda     disk_copy_overlay3::block_num_div8
+        lda     disk_copy_overlay3::block_index_div8
         cmp     #$10
         bcs     :+
 
@@ -710,7 +750,7 @@ calc:   asl     a               ; *= 16
         asl     a
         asl     a
         asl     a
-        ldx     disk_copy_overlay3::block_num_shift
+        ldx     disk_copy_overlay3::block_index_shift
         clc
         adc     table,x
         tax
@@ -732,26 +772,28 @@ table:  .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
 
 ;;; ============================================================
 
-.proc L10FB
-        lda     #$14
-        sta     $06
-        lda     #$00
-        sta     tmp
-loop:   lda     $06
-        jsr     set_bit_in_bitmap
-        inc     $06
-        inc     $06
-        inc     tmp
-        inc     tmp
-        lda     tmp
+.proc free_all_vol_bitmap_pages_in_mem_bitmap
+        page_num := $06         ; not a pointer, for once!
+
+        lda     #>volume_bitmap
+        sta     page_num
+        lda     #0
+        sta     count
+loop:   lda     page_num
+        jsr     mark_free_in_memory_bitmap
+        inc     page_num
+        inc     page_num
+        inc     count
+        inc     count
+        lda     count
         cmp     disk_copy_overlay3::block_count_div8+1
         beq     loop
         bcc     loop
         rts
 
-tmp:    .byte   0
+count:  .byte   0
 
-.proc set_bit_in_bitmap
+.proc mark_free_in_memory_bitmap
         jsr     get_bitmap_offset_shift
         tay
         sec
@@ -762,15 +804,15 @@ tmp:    .byte   0
         dex
         bne     :-
 
-skip:   ora     bitmap,y
-        sta     bitmap,y
+skip:   ora     memory_bitmap,y
+        sta     memory_bitmap,y
         rts
 .endproc
 .endproc
 
 ;;; ============================================================
 
-.proc clear_bit_in_bitmap
+.proc mark_used_in_memory_bitmap
         jsr     get_bitmap_offset_shift
         tay
         sec
@@ -782,8 +824,8 @@ skip:   ora     bitmap,y
         bne     :-
 
 skip:   eor     #$FF
-        and     bitmap,y
-        sta     bitmap,y
+        and     memory_bitmap,y
+        sta     memory_bitmap,y
         rts
 .endproc
 
@@ -1025,39 +1067,50 @@ done:   rts
 
 ;;; ============================================================
 
-bitmap: .byte   0
-        .byte   $3C
-        .byte   0
-        .byte   0
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FE
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $0F
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $7F
-        .byte   $FF
+;;; Memory Availability Bitmap
+;;;
+;;; Each bit represents a double-page, enough for one
+;;; 512-byte disk block.
+
+memory_bitmap:
+        ;; Main memory
+        .byte   %00000000       ; $00-$0F - ZP/Stack/Text, then Disk Copy code...
+        .byte   %00111100       ; $10-$1F - but $14-1B free ($1C = i/o buf)
+        .byte   %00000000       ; $20-$2F - DHR graphics page
+        .byte   %00000000       ; $30-$3F - DHR graphics page
+        .byte   %11111111       ; $40-$4F - free
+        .byte   %11111111       ; $50-$5F - free
+        .byte   %11111111       ; $60-$6F - free
+        .byte   %11111111       ; $70-$7F - free
+        .byte   %11111111       ; $80-$8F - free
+        .byte   %11111111       ; $90-$9F - free
+        .byte   %11111111       ; $A0-$AF - free
+        .byte   %11111110       ; $B0-$BF - free except $BE/F pages (ProDOS GP)
+        .byte   %00000000       ; $C0-$CF - I/O
+        .byte   %00000000       ; $D0-$DF - ProDOS
+        .byte   %00000000       ; $E0-$EF - ProDOS
+        .byte   %00000000       ; $F0-$FF - ProDOS
+
+        ;; Aux memory
+        .byte   %00001111       ; $00-$0F - free after ZP/Stack/Text
+        .byte   %11111111       ; $10-$1F - free
+        .byte   %00000000       ; $20-$2F - DHR graphics page
+        .byte   %00000000       ; $30-$3F - DHR graphics page
+        .byte   %00000000       ; $40-$4F - MGTK code
+        .byte   %00000000       ; $50-$5F - MGTK code
+        .byte   %00000000       ; $60-$6F - MGTK code
+        .byte   %00000000       ; $70-$7F - MGTK code
+        .byte   %00000000       ; $80-$8F - MGTK, font
+        .byte   %11111111       ; $90-$9F - free
+        .byte   %11111111       ; $A0-$AF - free
+        .byte   %11111111       ; $B0-$BF - free
+        .byte   %00000000       ; $C0-$CF - I/O
+        .byte   %00000000       ; $D0-$DF - Disk Copy code
+        .byte   %00000000       ; $E0-$EF - Disk Copy code
+        .byte   %01111111       ; $F0-$FF - free $F2 and up
+
+        ;; Aux memory - LCBANK2
+        .byte   %11111111       ; $D0-$DF - free
 
 ;;; ============================================================
 ;;; Inputs: A = device num (DSSSxxxx), X,Y = driver address
@@ -1096,7 +1149,7 @@ disk_copy_overlay4_L0D5F        := disk_copy_overlay4::L0D5F
 disk_copy_overlay4_read_volume_bitmap   := disk_copy_overlay4::read_volume_bitmap
 disk_copy_overlay4_is_drive_removable        := disk_copy_overlay4::is_drive_removable
 disk_copy_overlay4_L0ED7        := disk_copy_overlay4::L0ED7
-disk_copy_overlay4_L10FB        := disk_copy_overlay4::L10FB
+disk_copy_overlay4_free_all_vol_bitmap_pages_in_mem_bitmap        := disk_copy_overlay4::free_all_vol_bitmap_pages_in_mem_bitmap
 disk_copy_overlay4_bell         := disk_copy_overlay4::bell
 disk_copy_overlay4_call_on_line2        := disk_copy_overlay4::call_on_line2
 disk_copy_overlay4_call_on_line         := disk_copy_overlay4::call_on_line
@@ -1113,3 +1166,4 @@ disk_copy_overlay4_on_line_params_unit_num      := disk_copy_overlay4::on_line_p
 disk_copy_overlay4_quit := disk_copy_overlay4::quit
 disk_copy_overlay4_unit_number_to_driver_address        := disk_copy_overlay4::unit_number_to_driver_address
 disk_copy_overlay4_get_device_blocks_using_driver := disk_copy_overlay4::get_device_blocks_using_driver
+disk_copy_overlay4_on_line_buffer2 := disk_copy_overlay4::on_line_buffer2

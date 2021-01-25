@@ -1,8 +1,6 @@
 
 # Disk Copy diassembly notes
 
-
-
 This is large - 111k. It includes a loader and the DeskTop app with
 both main memory and aux memory segments, filling everything from
 $4000 to $FFFF (except for I/O space and ProDOS), and still having
@@ -89,7 +87,7 @@ $1C00 +-------------+       |             |
       | Volume      |       |             |
       | Bitmap      |       |             |
 $1400 +-------------+       |             |
-      | ???         |       |             |
+      | Scratch     |       |             |
 $1300 +-------------+       |             |
       |             |       |             |
       |             |       | Copy Buffer |
