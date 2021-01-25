@@ -27,10 +27,9 @@ on_line_buffer:
 
         DEFINE_READ_BLOCK_PARAMS block_params, default_block_buffer, 0
 
-;;; BUG: This blows past $1C00 on large volumes. Issue #386
-;;; (A 32MB volume requires $2000 bytes for the bitmap!)
-;;; It should be safe to move this to $4000
-volume_bitmap   := $1400
+;;; This must allow $2000 bytes of contiguous space in the
+;;; default memory bitmap.
+volume_bitmap   := $4000
 
 ;;; ============================================================
 
