@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc disk_copy_overlay4
+.proc dcmain
         .org $800
 
 ;;; ============================================================
@@ -59,7 +59,7 @@ params: .addr   0
 ;;; Quit back to ProDOS (which will launch DeskTop)
 
 .proc quit
-        jsr     disk_copy_overlay3::restore_ram_disk
+        jsr     dcauxlc::restore_ram_disk
         sta     ALTZPOFF
         lda     ROMIN2
         sta     DHIRESOFF
@@ -78,8 +78,8 @@ params: .addr   0
 ;;; ============================================================
 
 .proc format_device
-        ldx     disk_copy_overlay3::dest_drive_index
-        lda     disk_copy_overlay3::drive_unitnum_table,x
+        ldx     dcauxlc::dest_drive_index
+        lda     dcauxlc::drive_unitnum_table,x
         sta     unit_number
         and     #$0F
         beq     disk_ii
@@ -215,8 +215,8 @@ unit_num:
 ;;;            $C0 = Pascal
 ;;;            $80 = DOS 3.3
 .proc identify_nonprodos_disk_type
-        ldx     disk_copy_overlay3::source_drive_index
-        lda     disk_copy_overlay3::drive_unitnum_table,x
+        ldx     dcauxlc::source_drive_index
+        lda     dcauxlc::drive_unitnum_table,x
         sta     block_params::unit_num
         lda     #$00
         sta     block_params::block_num
@@ -236,13 +236,13 @@ unit_num:
         beq     l2
 
 fail:   lda     #$81
-        sta     disk_copy_overlay3::LD44D
+        sta     dcauxlc::LD44D
         rts
 
-l2:     param_call disk_copy_overlay3::LDE9F, on_line_buffer2
-        param_call disk_copy_overlay3::adjust_case, on_line_buffer2
+l2:     param_call dcauxlc::LDE9F, on_line_buffer2
+        param_call dcauxlc::adjust_case, on_line_buffer2
         lda     #$C0
-        sta     disk_copy_overlay3::LD44D
+        sta     dcauxlc::LD44D
         rts
 
 l3:     cmp     #$A5
@@ -251,7 +251,7 @@ l3:     cmp     #$A5
         cmp     #$27
         bne     fail
         lda     #$80
-        sta     disk_copy_overlay3::LD44D
+        sta     dcauxlc::LD44D
         rts
 .endproc
 
@@ -263,17 +263,17 @@ l3:     cmp     #$A5
         lda     #>volume_bitmap
         jsr     mark_used_in_memory_bitmap
 
-        lda     disk_copy_overlay3::source_drive_index
+        lda     dcauxlc::source_drive_index
         asl     a
         tax
-        copy16  disk_copy_overlay3::block_count_table,x, block_count_div8
+        copy16  dcauxlc::block_count_table,x, block_count_div8
         lsr16   block_count_div8    ; /= 8
         lsr16   block_count_div8
         lsr16   block_count_div8
-        copy16  block_count_div8, disk_copy_overlay3::block_count_div8
-        bit     disk_copy_overlay3::LD44D
+        copy16  block_count_div8, dcauxlc::block_count_div8
+        bit     dcauxlc::LD44D
         bmi     :+
-        lda     disk_copy_overlay3::disk_copy_flag
+        lda     dcauxlc::disk_copy_flag
         bne     :+
         jmp     quick_copy
 :
@@ -285,7 +285,7 @@ l3:     cmp     #$A5
         ptr := $06
 
 
-        add16   #volume_bitmap - 1, disk_copy_overlay3::block_count_div8, ptr
+        add16   #volume_bitmap - 1, dcauxlc::block_count_div8, ptr
 
         ;; Zero out the volume bitmap
         ldy     #0
@@ -309,7 +309,7 @@ loop1:  lda     #0
         sta     (ptr),y         ; (this algorithm could be improved)
 
         ;; Bail early if < 4096 blocks ???
-        lda     disk_copy_overlay3::block_count_div8+1
+        lda     dcauxlc::block_count_div8+1
         cmp     #$02
         bcs     :+
         rts
@@ -317,7 +317,7 @@ loop1:  lda     #0
         ;; Now mark block-pages used in memory bitmap
 :       lda     #>volume_bitmap
         sta     ptr
-        lda     disk_copy_overlay3::block_count_div8+1
+        lda     dcauxlc::block_count_div8+1
         pha
 loop:   inc     ptr
         inc     ptr
@@ -341,8 +341,8 @@ l6:     lda     ptr
         ;; so only used blocks are copied
 .proc quick_copy
         copy16  #6, block_params::block_num
-        ldx     disk_copy_overlay3::source_drive_index
-        lda     disk_copy_overlay3::drive_unitnum_table,x
+        ldx     dcauxlc::source_drive_index
+        lda     dcauxlc::drive_unitnum_table,x
         sta     block_params::unit_num
         copy16  #volume_bitmap, block_params::data_buffer
         jsr     read_block
@@ -424,23 +424,23 @@ unit_num:
         sta     write_flag
         and     #$FF
         bpl     :+
-        copy16  disk_copy_overlay3::start_block_div8, disk_copy_overlay3::block_num_div8
-        copy    disk_copy_overlay3::start_block_shift, disk_copy_overlay3::block_num_shift
-        ldx     disk_copy_overlay3::dest_drive_index
-        lda     disk_copy_overlay3::drive_unitnum_table,x
+        copy16  dcauxlc::start_block_div8, dcauxlc::block_num_div8
+        copy    dcauxlc::start_block_shift, dcauxlc::block_num_shift
+        ldx     dcauxlc::dest_drive_index
+        lda     dcauxlc::drive_unitnum_table,x
         sta     block_params::unit_num
         jmp     common
 
-:       copy16  disk_copy_overlay3::block_num_div8, disk_copy_overlay3::start_block_div8
-        copy    disk_copy_overlay3::block_num_shift, disk_copy_overlay3::start_block_shift
-        ldx     disk_copy_overlay3::source_drive_index
-        lda     disk_copy_overlay3::drive_unitnum_table,x
+:       copy16  dcauxlc::block_num_div8, dcauxlc::start_block_div8
+        copy    dcauxlc::block_num_shift, dcauxlc::start_block_shift
+        ldx     dcauxlc::source_drive_index
+        lda     dcauxlc::drive_unitnum_table,x
         sta     block_params::unit_num
 
 common: lda     #7
-        sta     disk_copy_overlay3::block_index_shift
+        sta     dcauxlc::block_index_shift
         lda     #0
-        sta     disk_copy_overlay3::block_index_div8
+        sta     dcauxlc::block_index_div8
         sta     L0FE4
         sta     L0FE5
 
@@ -449,7 +449,7 @@ loop:
         lda     KBD
         cmp     #(CHAR_ESCAPE | $80)
         bne     :+
-        jsr     disk_copy_overlay3::flash_escape_message
+        jsr     dcauxlc::flash_escape_message
         jmp     error
 :
 
@@ -490,7 +490,7 @@ error:  return  #1
         lda     mem_block_addr
 
         ;; Y = block number / 8
-        ldy     disk_copy_overlay3::block_index_div8
+        ldy     dcauxlc::block_index_div8
 
         cpy     #$10
         bcs     need_move
@@ -538,11 +538,11 @@ need_move:
 use_auxmem:
         bit     write_flag      ; 16-28
         bmi     :+
-        jsr     disk_copy_overlay3::read_block_to_auxmem
+        jsr     dcauxlc::read_block_to_auxmem
         bmi     error
         jmp     loop
 
-:       jsr     disk_copy_overlay3::write_block_from_auxmem
+:       jsr     dcauxlc::write_block_from_auxmem
         bmi     error
         jmp     loop
 
@@ -596,8 +596,8 @@ free:   jsr     next
         rts
 
 .proc next
-        dec     disk_copy_overlay3::block_num_shift
-        lda     disk_copy_overlay3::block_num_shift
+        dec     dcauxlc::block_num_shift
+        lda     dcauxlc::block_num_shift
         cmp     #$FF
         beq     :+
 
@@ -606,13 +606,13 @@ not_last:
         rts
 
 :       lda     #$07
-        sta     disk_copy_overlay3::block_num_shift
-        inc16   disk_copy_overlay3::block_num_div8
-        lda     disk_copy_overlay3::block_num_div8+1
-        cmp     disk_copy_overlay3::block_count_div8+1
+        sta     dcauxlc::block_num_shift
+        inc16   dcauxlc::block_num_div8
+        lda     dcauxlc::block_num_div8+1
+        cmp     dcauxlc::block_count_div8+1
         bne     not_last
-        lda     disk_copy_overlay3::block_num_div8
-        cmp     disk_copy_overlay3::block_count_div8
+        lda     dcauxlc::block_num_div8
+        cmp     dcauxlc::block_count_div8
         bne     not_last
 
         sec
@@ -631,16 +631,16 @@ not_last:
         ;; Find byte in volume bitmap
         lda     #<volume_bitmap
         clc
-        adc     disk_copy_overlay3::block_num_div8
+        adc     dcauxlc::block_num_div8
         sta     ptr
         lda     #>volume_bitmap
-        adc     disk_copy_overlay3::block_num_div8+1
+        adc     dcauxlc::block_num_div8+1
         sta     ptr+1
 
         ;; Find bit in volume bitmap
         ldy     #0
         lda     (ptr),y
-        ldx     disk_copy_overlay3::block_num_shift
+        ldx     dcauxlc::block_num_shift
         cpx     #$00
         beq     mask
 :       lsr     a
@@ -657,9 +657,9 @@ set:    ldy     #$FF
 
         ;; Now compute block number
         ;; Why do this? Isn't this stashed anywhere else???
-        lda     disk_copy_overlay3::block_num_div8+1
+        lda     dcauxlc::block_num_div8+1
         sta     tmp
-        lda     disk_copy_overlay3::block_num_div8
+        lda     dcauxlc::block_num_div8
         asl     a               ; * 8
         rol     tmp
         asl     a
@@ -667,7 +667,7 @@ set:    ldy     #$FF
         asl     a
         rol     tmp
 
-        ldx     disk_copy_overlay3::block_num_shift
+        ldx     dcauxlc::block_num_shift
         clc
         adc     table,x
 
@@ -703,17 +703,17 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 
 ;;; Advance to next
 .proc next
-        dec     disk_copy_overlay3::block_index_shift
-        lda     disk_copy_overlay3::block_index_shift
+        dec     dcauxlc::block_index_shift
+        lda     dcauxlc::block_index_shift
         cmp     #$FF
         beq     :+
 ok:     clc
         rts
 
 :       lda     #7
-        sta     disk_copy_overlay3::block_index_shift
-        inc     disk_copy_overlay3::block_index_div8
-        lda     disk_copy_overlay3::block_index_div8
+        sta     dcauxlc::block_index_shift
+        inc     dcauxlc::block_index_div8
+        lda     dcauxlc::block_index_div8
         cmp     #$21
         bcc     ok
 
@@ -730,9 +730,9 @@ ok:     clc
 
 .proc compute_memory_page_signature
         ;; Read from bitmap
-        ldx     disk_copy_overlay3::block_index_div8
+        ldx     dcauxlc::block_index_div8
         lda     memory_bitmap,x
-        ldx     disk_copy_overlay3::block_index_shift
+        ldx     dcauxlc::block_index_shift
         cpx     #0
         beq     mask
 :       lsr     a
@@ -747,7 +747,7 @@ set:    ldy     #$FF
 :
 
         ;; Now compute address to store in memory
-        lda     disk_copy_overlay3::block_index_div8
+        lda     dcauxlc::block_index_div8
         cmp     #$10
         bcs     :+
 
@@ -759,7 +759,7 @@ calc:   asl     a               ; *= 16
         asl     a
         asl     a
         asl     a
-        ldx     disk_copy_overlay3::block_index_shift
+        ldx     dcauxlc::block_index_shift
         clc
         adc     table,x
         tax
@@ -795,7 +795,7 @@ loop:   lda     page_num
         inc     count
         inc     count
         lda     count
-        cmp     disk_copy_overlay3::block_count_div8+1
+        cmp     dcauxlc::block_count_div8+1
         beq     loop
         bcc     loop
         rts
@@ -871,7 +871,7 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 retry:  jsr     read_block
         beq     done
         ldx     #0              ; reading
-        jsr     disk_copy_overlay3::show_block_error
+        jsr     dcauxlc::show_block_error
         bmi     done
         bne     retry
 done:   rts
@@ -896,7 +896,7 @@ done:   rts
 retry:  jsr     read_block
         beq     move
         ldx     #0              ; reading
-        jsr     disk_copy_overlay3::show_block_error
+        jsr     dcauxlc::show_block_error
         beq     move
         bpl     retry
         return  #$80
@@ -932,7 +932,7 @@ loop:   lda     default_block_buffer,y
 retry:  jsr     read_block
         beq     move
         ldx     #0              ; reading
-        jsr     disk_copy_overlay3::show_block_error
+        jsr     dcauxlc::show_block_error
         beq     move
         bpl     retry
         lda     LCBANK1
@@ -964,7 +964,7 @@ loop:   lda     default_block_buffer,y
 retry:  jsr     write_block
         beq     done
         ldx     #$80            ; writing
-        jsr     disk_copy_overlay3::show_block_error
+        jsr     dcauxlc::show_block_error
         beq     done
         bpl     retry
 done:   rts
@@ -998,7 +998,7 @@ loop:   lda     (ptr1),y
 retry:  jsr     write_block
         beq     done
         ldx     #$80            ; writing
-        jsr     disk_copy_overlay3::show_block_error
+        jsr     dcauxlc::show_block_error
         beq     done
         bpl     retry
 done:   rts
@@ -1037,7 +1037,7 @@ loop:   lda     (ptr1),y
 retry:  jsr     write_block
         beq     done
         ldx     #$80            ; writing
-        jsr     disk_copy_overlay3::show_block_error
+        jsr     dcauxlc::show_block_error
         beq     done
         bpl     retry
 done:   rts
@@ -1153,27 +1153,27 @@ memory_bitmap:
 
 .endproc
 
-disk_copy_overlay4_format_device        := disk_copy_overlay4::format_device
-disk_copy_overlay4_unit_num_to_sp_unit_number        := disk_copy_overlay4::unit_num_to_sp_unit_number
-disk_copy_overlay4_identify_nonprodos_disk_type        := disk_copy_overlay4::identify_nonprodos_disk_type
-disk_copy_overlay4_read_volume_bitmap   := disk_copy_overlay4::read_volume_bitmap
-disk_copy_overlay4_is_drive_removable        := disk_copy_overlay4::is_drive_removable
-disk_copy_overlay4_copy_blocks        := disk_copy_overlay4::copy_blocks
-disk_copy_overlay4_free_all_vol_bitmap_pages_in_mem_bitmap        := disk_copy_overlay4::free_all_vol_bitmap_pages_in_mem_bitmap
-disk_copy_overlay4_bell         := disk_copy_overlay4::bell
-disk_copy_overlay4_call_on_line2        := disk_copy_overlay4::call_on_line2
-disk_copy_overlay4_call_on_line         := disk_copy_overlay4::call_on_line
-disk_copy_overlay4_write_block          := disk_copy_overlay4::write_block
-disk_copy_overlay4_read_block           := disk_copy_overlay4::read_block
-disk_copy_overlay4_block_params_block_num       := disk_copy_overlay4::block_params::block_num
-disk_copy_overlay4_block_params_data_buffer     := disk_copy_overlay4::block_params::data_buffer
-disk_copy_overlay4_block_params_unit_num        := disk_copy_overlay4::block_params::unit_num
-disk_copy_overlay4_eject_disk   := disk_copy_overlay4::eject_disk
-disk_copy_overlay4_noop := disk_copy_overlay4::noop
-disk_copy_overlay4_on_line_buffer       := disk_copy_overlay4::on_line_buffer
-disk_copy_overlay4_on_line_params2_unit_num     := disk_copy_overlay4::on_line_params2::unit_num
-disk_copy_overlay4_on_line_params_unit_num      := disk_copy_overlay4::on_line_params::unit_num
-disk_copy_overlay4_quit := disk_copy_overlay4::quit
-disk_copy_overlay4_unit_number_to_driver_address        := disk_copy_overlay4::unit_number_to_driver_address
-disk_copy_overlay4_get_device_blocks_using_driver := disk_copy_overlay4::get_device_blocks_using_driver
-disk_copy_overlay4_on_line_buffer2 := disk_copy_overlay4::on_line_buffer2
+dcmain__format_device   := dcmain::format_device
+dcmain__unit_num_to_sp_unit_number      := dcmain::unit_num_to_sp_unit_number
+dcmain__identify_nonprodos_disk_type    := dcmain::identify_nonprodos_disk_type
+dcmain__read_volume_bitmap              := dcmain::read_volume_bitmap
+dcmain__is_drive_removable              := dcmain::is_drive_removable
+dcmain__copy_blocks                     := dcmain::copy_blocks
+dcmain__free_all_vol_bitmap_pages_in_mem_bitmap := dcmain::free_all_vol_bitmap_pages_in_mem_bitmap
+dcmain__bell                            := dcmain::bell
+dcmain__call_on_line2                   := dcmain::call_on_line2
+dcmain__call_on_line                    := dcmain::call_on_line
+dcmain__write_block                     := dcmain::write_block
+dcmain__read_block                      := dcmain::read_block
+dcmain__block_params_block_num          := dcmain::block_params::block_num
+dcmain__block_params_data_buffer        := dcmain::block_params::data_buffer
+dcmain__block_params_unit_num           := dcmain::block_params::unit_num
+dcmain__eject_disk                      := dcmain::eject_disk
+dcmain__noop                            := dcmain::noop
+dcmain__on_line_buffer                  := dcmain::on_line_buffer
+dcmain__on_line_params2_unit_num        := dcmain::on_line_params2::unit_num
+dcmain__on_line_params_unit_num         := dcmain::on_line_params::unit_num
+dcmain__quit                            := dcmain::quit
+dcmain__unit_number_to_driver_address   := dcmain::unit_number_to_driver_address
+dcmain__get_device_blocks_using_driver  := dcmain::get_device_blocks_using_driver
+dcmain__on_line_buffer2                 := dcmain::on_line_buffer2

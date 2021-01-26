@@ -61,7 +61,7 @@ L183F:  sta     BITMAP+1,x
         lda     LCBANK1
         lda     LCBANK1
 
-        jmp     disk_copy_overlay3_start
+        jmp     dcauxlc__start
 
 ;;; ============================================================
 ;;; Copy first chunk to the Language Card

@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc disk_copy_overlay3
+.proc dcauxlc
         .org $D000
 
 .macro MGTK_RELAY_CALL2 call, params
@@ -595,12 +595,12 @@ LD740:  lda     #$00
         sta     LD44D
         ldx     source_drive_index
         lda     drive_unitnum_table,x
-        sta     disk_copy_overlay4_on_line_params2_unit_num
-        jsr     disk_copy_overlay4_call_on_line2
+        sta     dcmain__on_line_params2_unit_num
+        jsr     dcmain__call_on_line2
         beq     LD77E
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
-        jsr     disk_copy_overlay4_identify_nonprodos_disk_type
+        jsr     dcmain__identify_nonprodos_disk_type
         jsr     LE674
         jsr     LE559
         jmp     LD7AD
@@ -611,21 +611,21 @@ LD763:  lda     winfo_dialog::window_id
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D42A
         jmp     LD734
 
-LD77E:  lda     disk_copy_overlay4_on_line_buffer2
+LD77E:  lda     dcmain__on_line_buffer2
         and     #$0F
         bne     LD798
-        lda     disk_copy_overlay4_on_line_buffer2+1
+        lda     dcmain__on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
-        jsr     disk_copy_overlay4_identify_nonprodos_disk_type
+        jsr     dcmain__identify_nonprodos_disk_type
         jsr     LE674
         jsr     LE559
         jmp     LD7AD
 
-LD798:  lda     disk_copy_overlay4_on_line_buffer2
+LD798:  lda     dcmain__on_line_buffer2
         and     #$0F
-        sta     disk_copy_overlay4_on_line_buffer2
-        param_call adjust_case, disk_copy_overlay4_on_line_buffer2
+        sta     dcmain__on_line_buffer2
+        param_call adjust_case, dcmain__on_line_buffer2
         jsr     LE674
         jsr     LE559
 LD7AD:  lda     source_drive_index
@@ -645,17 +645,17 @@ LD7AD:  lda     source_drive_index
 
 LD7CC:  ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        sta     disk_copy_overlay4_on_line_params2_unit_num
-        jsr     disk_copy_overlay4_call_on_line2
+        sta     dcmain__on_line_params2_unit_num
+        jsr     dcmain__call_on_line2
         beq     LD7E1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     LD7F2
         jmp     LD852
 
-LD7E1:  lda     disk_copy_overlay4_on_line_buffer2
+LD7E1:  lda     dcmain__on_line_buffer2
         and     #$0F
         bne     LD7F2
-        lda     disk_copy_overlay4_on_line_buffer2+1
+        lda     dcmain__on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     LD7F2
         jmp     LD852
@@ -667,7 +667,7 @@ LD7F2:
         beq     LD817           ; Disk II
 
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4_unit_number_to_driver_address
+        jsr     dcmain__unit_number_to_driver_address
         bne     :+              ; if not firmware, skip these checks
 
         lda     #$00            ; point at $Cn00
@@ -683,7 +683,7 @@ LD7F2:
         bne     LD817
 :       jmp     LD8A9
 
-LD817:  lda     disk_copy_overlay4_on_line_buffer2
+LD817:  lda     dcmain__on_line_buffer2
         and     #$0F
         bne     LD82C
         ldx     dest_drive_index
@@ -693,8 +693,8 @@ LD817:  lda     disk_copy_overlay4_on_line_buffer2
         lda     #7              ; Confirm Erase (with extra spaces???)
         jmp     LD83C
 
-LD82C:  sta     disk_copy_overlay4_on_line_buffer2
-        param_call adjust_case, disk_copy_overlay4_on_line_buffer2
+LD82C:  sta     dcmain__on_line_buffer2
+        param_call adjust_case, dcmain__on_line_buffer2
         ldx     #$00
         ldy     #$13
 
@@ -715,7 +715,7 @@ LD852:  ldx     dest_drive_index
         and     #$0F            ; low nibble of unit_num
         beq     LD87C           ; Disk II
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4_unit_number_to_driver_address
+        jsr     dcmain__unit_number_to_driver_address
         bne     :+              ; if not not firmware, skip these checks
 
         lda     #$00            ; point at $Cn00
@@ -736,7 +736,7 @@ LD852:  ldx     dest_drive_index
 
 LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         param_call DrawString, str_formatting
-        jsr     disk_copy_overlay4_format_device
+        jsr     dcmain__format_device
         bcc     LD8A9
         cmp     #ERR_WRITE_PROTECTED
         beq     LD89F
@@ -761,7 +761,7 @@ LD8A9:  lda     winfo_dialog::window_id
         tax
         lda     drive_unitnum_table,x
         pha
-        jsr     disk_copy_overlay4_eject_disk
+        jsr     dcmain__eject_disk
         pla
         tay
         ldx     #$80
@@ -770,7 +770,7 @@ LD8A9:  lda     winfo_dialog::window_id
         beq     LD8DF
         jmp     LD61C
 
-LD8DF:  jsr     disk_copy_overlay4_read_volume_bitmap
+LD8DF:  jsr     dcmain__read_volume_bitmap
         lda     #$00
         sta     block_num_div8
         sta     block_num_div8+1
@@ -782,7 +782,7 @@ LD8DF:  jsr     disk_copy_overlay4_read_volume_bitmap
         jsr     LE694
 LD8FB:  jsr     LE4A8
         lda     #$00
-        jsr     disk_copy_overlay4_copy_blocks
+        jsr     dcmain__copy_blocks
         cmp     #$01
         beq     LD97A
         jsr     LE4EC
@@ -792,7 +792,7 @@ LD8FB:  jsr     LE4A8
         tax
         lda     drive_unitnum_table,x
         pha
-        jsr     disk_copy_overlay4_eject_disk
+        jsr     dcmain__eject_disk
         pla
         tay
         ldx     #$80
@@ -803,7 +803,7 @@ LD8FB:  jsr     LE4A8
 
 LD928:  jsr     LE491
         lda     #$80
-        jsr     disk_copy_overlay4_copy_blocks
+        jsr     dcmain__copy_blocks
         bmi     LD955
         bne     LD97A
         jsr     LE507
@@ -813,7 +813,7 @@ LD928:  jsr     LE491
         tax
         lda     drive_unitnum_table,x
         pha
-        jsr     disk_copy_overlay4_eject_disk
+        jsr     dcmain__eject_disk
         pla
         tay
         ldx     #$80
@@ -823,20 +823,20 @@ LD928:  jsr     LE491
         jmp     LD61C
 
 LD955:  jsr     LE507
-        jsr     disk_copy_overlay4_free_all_vol_bitmap_pages_in_mem_bitmap
+        jsr     dcmain__free_all_vol_bitmap_pages_in_mem_bitmap
         ldx     source_drive_index
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4_eject_disk
+        jsr     dcmain__eject_disk
         ldx     dest_drive_index
         cpx     source_drive_index
         beq     :+
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4_eject_disk
+        jsr     dcmain__eject_disk
 :       lda     #9              ; Copy success
         jsr     show_alert_dialog
         jmp     LD61C
 
-LD97A:  jsr     disk_copy_overlay4_free_all_vol_bitmap_pages_in_mem_bitmap
+LD97A:  jsr     dcmain__free_all_vol_bitmap_pages_in_mem_bitmap
         lda     #10             ; Copy failed
         jsr     show_alert_dialog
         jmp     LD61C
@@ -862,13 +862,13 @@ LD9BA:  cmp     #MGTK::EventKind::key_down
 
 menu_command_table:
         ;; Apple menu
-        .addr   disk_copy_overlay4_noop
-        .addr   disk_copy_overlay4_noop
-        .addr   disk_copy_overlay4_noop
-        .addr   disk_copy_overlay4_noop
-        .addr   disk_copy_overlay4_noop
+        .addr   dcmain__noop
+        .addr   dcmain__noop
+        .addr   dcmain__noop
+        .addr   dcmain__noop
+        .addr   dcmain__noop
         ;; File menu
-        .addr   disk_copy_overlay4_quit
+        .addr   dcmain__quit
         ;; Facilities menu
         .addr   cmd_quick_copy
         .addr   cmd_disk_copy
@@ -1234,12 +1234,12 @@ state:  .byte   0
 
 ;;; ============================================================
 
-LDDFC:  sta     disk_copy_overlay4_block_params_unit_num
+LDDFC:  sta     dcmain__block_params_unit_num
         lda     #$00
-        sta     disk_copy_overlay4_block_params_block_num
-        sta     disk_copy_overlay4_block_params_block_num+1
-        copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
-        jsr     disk_copy_overlay4_read_block
+        sta     dcmain__block_params_block_num
+        sta     dcmain__block_params_block_num+1
+        copy16  #$1C00, dcmain__block_params_data_buffer
+        jsr     dcmain__read_block
         beq     LDE19
         return  #$FF
 
@@ -1277,7 +1277,7 @@ LDE4D:  cmp     #$A5
         lda     $1C02
         cmp     #ERR_IO_ERROR
         bne     LDE2E
-        lda     disk_copy_overlay4_block_params_unit_num
+        lda     dcmain__block_params_unit_num
         and     #$70
         lsr     a
         lsr     a
@@ -1286,7 +1286,7 @@ LDE4D:  cmp     #$A5
         clc
         adc     #'0'
         sta     str_dos33_s_d + kStrDOS33SlotOffset
-        lda     disk_copy_overlay4_block_params_unit_num
+        lda     dcmain__block_params_unit_num
         and     #$80
         asl     a
         rol     a
@@ -1317,8 +1317,8 @@ LDE83:  lda     str_dos33_s_d,x
         ptr := $06
 
         stax    ptr
-        copy16  #$0002, disk_copy_overlay4_block_params_block_num
-        jsr     disk_copy_overlay4_read_block
+        copy16  #$0002, dcmain__block_params_block_num
+        jsr     dcmain__read_block
         beq     l1
         ldy     #$00
         lda     #$01
@@ -1562,8 +1562,8 @@ check_alpha:
 .proc enumerate_devices
         lda     #$00
         sta     LD44E
-        sta     disk_copy_overlay4_on_line_params2_unit_num
-        jsr     disk_copy_overlay4_call_on_line2
+        sta     dcmain__on_line_params2_unit_num
+        jsr     dcmain__call_on_line2
         beq     LE17A
 
         brk                     ; rude!
@@ -1913,7 +1913,7 @@ index:  .byte   0
         beq     disk_ii
 
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4_unit_number_to_driver_address
+        jsr     dcmain__unit_number_to_driver_address
         jmp     other_device
 
         ;; Disk II - always 280 blocks
@@ -1975,7 +1975,7 @@ use_driver:
         lda     drive_unitnum_table,x
         ldxy    $06
 
-        jsr     disk_copy_overlay4_get_device_blocks_using_driver
+        jsr     dcmain__get_device_blocks_using_driver
 
         stx     LE448           ; blocks available low
         pla
@@ -2002,7 +2002,7 @@ smartport:
         tax
         lda     drive_unitnum_table,x
         and     #$F0
-        jsr     disk_copy_overlay4_unit_num_to_sp_unit_number
+        jsr     dcmain__unit_num_to_sp_unit_number
         sta     status_unit_num
 
         jsr     indirect_jump
@@ -2160,8 +2160,8 @@ LE559:  lda     winfo_dialog::window_id
 LE5C5:  rts
 
 LE5C6:  param_call DrawString, str_2_spaces
-        ldx     disk_copy_overlay4_on_line_buffer2
-LE5D0:  lda     disk_copy_overlay4_on_line_buffer2,x
+        ldx     dcmain__on_line_buffer2
+LE5D0:  lda     dcmain__on_line_buffer2,x
         sta     LD43A,x
         dex
         bpl     LE5D0
@@ -2268,21 +2268,21 @@ flag:   .byte   0
 
         cmp     #ERR_WRITE_PROTECTED
         bne     l2
-        jsr     disk_copy_overlay4_bell
+        jsr     dcmain__bell
         lda     #5              ; Destination protected
         jsr     show_alert_dialog
         bne     :+
         jsr     LE491
         return  #1
 
-:       jsr     disk_copy_overlay4_free_all_vol_bitmap_pages_in_mem_bitmap
+:       jsr     dcmain__free_all_vol_bitmap_pages_in_mem_bitmap
         return  #$80
 
-l2:     jsr     disk_copy_overlay4_bell
+l2:     jsr     dcmain__bell
         lda     winfo_dialog::window_id
         jsr     set_win_port
-        lda     disk_copy_overlay4_block_params_block_num
-        ldx     disk_copy_overlay4_block_params_block_num+1
+        lda     dcmain__block_params_block_num
+        ldx     dcmain__block_params_block_num+1
         jsr     IntToStringWithSeparators
         lda     err_writing_flag
         bne     :+
@@ -2317,8 +2317,8 @@ err_writing_flag:
         inc     ptr2+1
 
         ;; Read block
-        copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
-retry:  jsr     disk_copy_overlay4_read_block
+        copy16  #$1C00, dcmain__block_params_data_buffer
+retry:  jsr     dcmain__read_block
         beq     move
         ldx     #0              ; reading
         jsr     show_block_error
@@ -2360,7 +2360,7 @@ move:   sta     RAMRDOFF
         inc     ptr2+1
 
         ;; Copy block aux to main
-        copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
+        copy16  #$1C00, dcmain__block_params_data_buffer
         sta     RAMRDON
         sta     RAMWRTOFF
         ldy     #$FF
@@ -2375,7 +2375,7 @@ move:   sta     RAMRDOFF
         sta     RAMWRTOFF
 
         ;; Write block
-retry:  jsr     disk_copy_overlay4_write_block
+retry:  jsr     dcmain__write_block
         beq     done
         ldx     #$80            ; writing
         jsr     show_block_error
@@ -3142,7 +3142,7 @@ state:
 .proc LF185
         sty     LD41D
         tya
-        jsr     disk_copy_overlay4_is_drive_removable
+        jsr     dcmain__is_drive_removable
         beq     :+
         sta     LD41E
 :       rts
@@ -3150,15 +3150,15 @@ state:
 
 .proc LF192
         lda     LD41D
-        sta     disk_copy_overlay4_on_line_params_unit_num
-        jsr     disk_copy_overlay4_call_on_line
+        sta     dcmain__on_line_params_unit_num
+        jsr     dcmain__call_on_line
         beq     done
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
-        lda     disk_copy_overlay4_on_line_buffer
+        lda     dcmain__on_line_buffer
         and     #$0F
         bne     done
-        lda     disk_copy_overlay4_on_line_buffer+1
+        lda     dcmain__on_line_buffer+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -3178,7 +3178,7 @@ done:   return  #$00
         bcc     done
         cmp     #$06
         bcs     done
-        jsr     disk_copy_overlay4_bell
+        jsr     dcmain__bell
 done:   rts
 .endproc
 
@@ -3191,4 +3191,4 @@ show_alert_dialog := alert_dialog::show_alert_dialog
         PAD_TO $F200
 
 .endproc
-        disk_copy_overlay3_start := disk_copy_overlay3::start
+       dcauxlc__start := dcauxlc::start
