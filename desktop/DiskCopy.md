@@ -30,7 +30,7 @@ effectively become a new application.
 The first part (`ovl_disk_copy1.s`, $800-$9FF) loads into main memory
 like the other DeskTop overlays, but in turn it loads a second short
 ($200-byte) overlay (`ovl_disk_copy2.s`, $1800-$19FF). This then loads
-a replacement for the resources in the aux language card area
+app code and a replacement for the resources in the aux language card area
 (`ovl_disk_copy3.s`, Aux LC $D000-$F1FF) and another block of code in
 main memory (`ovl_disk_copy4.s`, Main $0800-$12FF). When exiting, the
 DeskTop is restarted from the beginning.
@@ -41,8 +41,8 @@ DeskTop is restarted from the beginning.
 ```
        Main                  Aux                    ROM
 $FFFF +-------------+       +-------------+       +-------------+
-      |.ProDOS......|       | Copy Buffer |       |.Monitor.....|
-$F800 |.............|       | #4          |       +-------------+
+      |.ProDOS......|       |#############|       |.Monitor.....|
+$F800 |.............|       |#############|       +-------------+
 $F200 |.............|       +-------------+       |.Applesoft...|
       |.............|Bank2  | App Logic   |Bank2  |.............|
 $E000 |......+-----------+  | &    +-----------+  |.............|
@@ -51,27 +51,27 @@ $D000 +------+-----------+  +------+-----------+  +-------------+
                                                   |.I/O.........|
                                                   |.............|
 $C000 +-------------+       +-------------+       +-------------+
-      |.ProDOS.GP...|       |             |
-$BF00 +-------------+       |             |
+      |.ProDOS.GP...|       |#############|
+$BF00 +-------------+       |#############|
+      |#############|       |#############|
+      |#############|       |#############|
+      |#############|       |#############|
+      |#############|       |#############|
+      |#############|       |#############|
+      |#############|       |#############|
+      |#############|       |#############|
+$9000 |#############|       +-------------+
+      |#############|       |             |
+      |#############|       | Font        |      # = Copy Buffer
+$8800 |#############|       +-------------+
+      |#############|       |             |
+      |#############|       |             |
+      |#############|       |             |
+      |#############|       |             |
+      |# # # # # # #        |             |
+      | # # # # # # |       |             |
       |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       | Copy Buffer |
-      |             |       | #3          |
-$9000 |             |       +-------------+
-      |             |       |             |
-      |             |       | Font        |
-$8800 |             |       +-------------+
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      | Copy Buffer |       |             |
-      | #1          |       | MGTK        |
+      |Volume Bitmap|       | MGTK        |
 $4000 +-------------+       +-------------+
       |.Graphics....|       |.Graphics....|
       |.............|       |.............|
@@ -82,16 +82,16 @@ $4000 +-------------+       +-------------+
       |.............|       |.............|
       |.............|       |.............|
 $2000 +-------------+       +-------------+
-      | I/O Buffer  |       |             |
-$1C00 +-------------+       |             |
-      | Volume      |       |             |
-      | Bitmap      |       |             |
-$1400 +-------------+       |             |
-      | Scratch     |       |             |
-$1300 +-------------+       |             |
-      |             |       |             |
-      |             |       | Copy Buffer |
-      | I/O Code    |       | #2          |
+      | I/O Buffer  |       |#############|
+$1C00 +-------------+       |#############|
+      |#############|       |#############|
+      |#############|       |#############|
+$1400 +-------------+       |#############|
+      | Scratch     |       |#############|
+$1300 +-------------+       |#############|
+      |             |       |#############|
+      |             |       |#############|
+      | I/O Code    |       |#############|
 $0800 +-------------+       +-------------+
       | Drawing     |       | Drawing     |
       | Temp Buffer |       | Temp Buffer |
@@ -105,3 +105,13 @@ $0100 +-------------+       +-------------+
       | Zero Page   |       | Zero Page   |
 $0000 +-------------+       +-------------+
 ```
+
+All free memory is used for buffer space during copies. A detailed
+memory bitmap is maintained with available/reserved page-pairs marked
+for main, aux, and aux-lcbank2 addresses. See `memory_bitmap` in
+`ovl_disk_copy4.s`.
+
+In Quick Copy mode, the volume's bitmap is loaded at $4000 upwards
+(and then marked as used in the memory bitmap) and used to track which
+blocks to copy. In Disk Copy mode, a synthetic bitmap is used instead
+(to copy all blocks).

@@ -349,7 +349,7 @@ str_s:  PASCAL_STRING 0         ; do not localize
 LD41D:  .byte   0
 LD41E:  .byte   0
 
-;;; Memory index of block
+;;; Memory index of block, for memory bitmap lookups
 block_index_div8:               ; block index, divided by 8
         .byte   0
 block_index_shift:              ; 7-(block index mod 8), for bitmap lookups
@@ -361,8 +361,12 @@ block_num_div8:                 ; block number, divided by 8
 block_num_shift:                ; 7-(block number mod 8), for bitmap lookups
         .byte   0
 
-LD424:  .word   0
-LD426:  .byte   0
+;;; Remember the block_num_div8/shift for the start of a copy_blocks read,
+;;; for the writing pass.
+start_block_div8:
+        .word   0
+start_block_shift:
+        .byte   0
 
 block_count_div8:              ; calculated when reading volume bitmap
         .word   0
@@ -596,7 +600,7 @@ LD740:  lda     #$00
         beq     LD77E
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
-        jsr     disk_copy_overlay4_L0D5F
+        jsr     disk_copy_overlay4_identify_nonprodos_disk_type
         jsr     LE674
         jsr     LE559
         jmp     LD7AD
@@ -613,7 +617,7 @@ LD77E:  lda     disk_copy_overlay4_on_line_buffer2
         lda     disk_copy_overlay4_on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
-        jsr     disk_copy_overlay4_L0D5F
+        jsr     disk_copy_overlay4_identify_nonprodos_disk_type
         jsr     LE674
         jsr     LE559
         jmp     LD7AD
@@ -778,7 +782,7 @@ LD8DF:  jsr     disk_copy_overlay4_read_volume_bitmap
         jsr     LE694
 LD8FB:  jsr     LE4A8
         lda     #$00
-        jsr     disk_copy_overlay4_L0ED7
+        jsr     disk_copy_overlay4_copy_blocks
         cmp     #$01
         beq     LD97A
         jsr     LE4EC
@@ -799,7 +803,7 @@ LD8FB:  jsr     LE4A8
 
 LD928:  jsr     LE491
         lda     #$80
-        jsr     disk_copy_overlay4_L0ED7
+        jsr     disk_copy_overlay4_copy_blocks
         bmi     LD955
         bne     LD97A
         jsr     LE507
@@ -1308,41 +1312,46 @@ LDE83:  lda     str_dos33_s_d,x
         return  #$00
 
         .byte   0
-LDE9F:  stax    $06
+
+.proc LDE9F
+        ptr := $06
+
+        stax    ptr
         copy16  #$0002, disk_copy_overlay4_block_params_block_num
         jsr     disk_copy_overlay4_read_block
-        beq     LDEBE
+        beq     l1
         ldy     #$00
         lda     #$01
-        sta     ($06),y
+        sta     (ptr),y
         iny
         lda     #$20
-        sta     ($06),y
+        sta     (ptr),y
         rts
 
-LDEBE:  ldy     #$00
+l1:     ldy     #$00
         ldx     #$00
-LDEC2:  lda     $1C06,x
-        sta     ($06),y
+l2:     lda     $1C06,x
+        sta     (ptr),y
         inx
         iny
         cpx     $1C06
-        bne     LDEC2
+        bne     l2
         lda     $1C06,x
-        sta     ($06),y
+        sta     (ptr),y
         lda     $1C06
         cmp     #$0F
-        bcs     LDEE6
+        bcs     l3
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         clc
         adc     #$01
-        sta     ($06),y
-        lda     ($06),y
+        sta     (ptr),y
+        lda     (ptr),y
         tay
-LDEE6:  lda     #$3A
-        sta     ($06),y
+l3:     lda     #$3A
+        sta     (ptr),y
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -1557,7 +1566,7 @@ check_alpha:
         jsr     disk_copy_overlay4_call_on_line2
         beq     LE17A
 
-        brk
+        brk                     ; rude!
 
 LE17A:  lda     #$00
         sta     device_index
@@ -1737,7 +1746,7 @@ LE28C:  .byte   0
         sta     index
 
 loop:   lda     index
-        jsr     LE39A
+        jsr     set_ycoord
 
         lda     index
         jsr     draw_device_list_entry
@@ -1781,7 +1790,7 @@ LE2D6:  lda     LE317
         ldx     num_drives
         sta     LD3FF,x
         lda     num_drives
-        jsr     LE39A
+        jsr     set_ycoord
         lda     LE317
         jsr     draw_device_list_entry
         inc     num_drives
@@ -1863,8 +1872,8 @@ device_index:
 
 ;;; ============================================================
 
-.proc LE39A
-        asl     a
+.proc set_ycoord
+        asl     a               ; * 8
         asl     a
         asl     a
         adc     #8
@@ -2293,7 +2302,7 @@ err_writing_flag:
 .endproc
 
 ;;; ============================================================
-;;; Read block (w/ retries) and store it to aux memory
+;;; Read block (w/ retries) to aux memory
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
@@ -2563,7 +2572,7 @@ show_alert_dialog:
         lda     #$00
         sta     LD41E
         lda     LEB81
-        jsr     LF1CC
+        jsr     maybe_bell
         ldy     LEB83
         ldx     LEB81+1
         lda     LEB81
@@ -3130,12 +3139,14 @@ state:
 
 ;;; ============================================================
 
-LF185:  sty     LD41D
+.proc LF185
+        sty     LD41D
         tya
         jsr     disk_copy_overlay4_is_drive_removable
         beq     :+
         sta     LD41E
 :       rts
+.endproc
 
 .proc LF192
         lda     LD41D
@@ -3162,12 +3173,14 @@ LF185:  sty     LD41D
 done:   return  #$00
 .endproc
 
-LF1CC:  cmp     #$03
-        bcc     LF1D7
+.proc maybe_bell
+        cmp     #$03
+        bcc     done
         cmp     #$06
-        bcs     LF1D7
+        bcs     done
         jsr     disk_copy_overlay4_bell
-LF1D7:  rts
+done:   rts
+.endproc
 
 .endproc
 

@@ -207,43 +207,53 @@ unit_num:
 .endproc
 
 ;;; ============================================================
-
-L0D5F:  ldx     disk_copy_overlay3::source_drive_index
+;;; Identify the disk type by reading the first block.
+;;; NOTE: Not used for ProDOS disks.
+;;; Inputs: `source_drive_index` must be set
+;;; Outputs: sets `LD44D` to:
+;;;            $81 = unknown/failure
+;;;            $C0 = Pascal
+;;;            $80 = DOS 3.3
+.proc identify_nonprodos_disk_type
+        ldx     disk_copy_overlay3::source_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
         lda     #$00
         sta     block_params::block_num
         sta     block_params::block_num+1
         jsr     read_block
-        bne     L0D8A
-        lda     $1C00+1
-        cmp     #$E0
-        beq     L0D7F
-        jmp     L0DA4
+        bne     fail
 
-L0D7F:  lda     $1C02
+        lda     default_block_buffer+1
+        cmp     #$E0
+        beq     :+
+        jmp     l3
+
+:       lda     default_block_buffer+2
         cmp     #$70
-        beq     L0D90
+        beq     l2
         cmp     #$60
-        beq     L0D90
-L0D8A:  lda     #$81
+        beq     l2
+
+fail:   lda     #$81
         sta     disk_copy_overlay3::LD44D
         rts
 
-L0D90:  param_call disk_copy_overlay3::LDE9F, on_line_buffer2
+l2:     param_call disk_copy_overlay3::LDE9F, on_line_buffer2
         param_call disk_copy_overlay3::adjust_case, on_line_buffer2
         lda     #$C0
         sta     disk_copy_overlay3::LD44D
         rts
 
-L0DA4:  cmp     #$A5
-        bne     L0D8A
-        lda     $1C02
+l3:     cmp     #$A5
+        bne     fail
+        lda     default_block_buffer+2
         cmp     #$27
-        bne     L0D8A
+        bne     fail
         lda     #$80
         sta     disk_copy_overlay3::LD44D
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Reads the volume bitmap (blocks 6 through ...)
@@ -265,7 +275,7 @@ L0DA4:  cmp     #$A5
         bmi     :+
         lda     disk_copy_overlay3::disk_copy_flag
         bne     :+
-        jmp     L0E4D
+        jmp     quick_copy
 :
 
         ;; --------------------------------------------------
@@ -329,7 +339,7 @@ l6:     lda     ptr
         ;; --------------------------------------------------
         ;; Quick Copy - load volume bitmap from disk
         ;; so only used blocks are copied
-.proc L0E4D
+.proc quick_copy
         copy16  #6, block_params::block_num
         ldx     disk_copy_overlay3::source_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
@@ -408,28 +418,26 @@ unit_num:
 
 ;;; ============================================================
 
-.proc L0ED7
+.proc copy_blocks
         bit     KBDSTRB         ; clear strobe
 
         sta     write_flag
         and     #$FF
         bpl     :+
-        copy16  disk_copy_overlay3::LD424, disk_copy_overlay3::block_num_div8
-        lda     disk_copy_overlay3::LD426
-        sta     disk_copy_overlay3::block_num_shift
+        copy16  disk_copy_overlay3::start_block_div8, disk_copy_overlay3::block_num_div8
+        copy    disk_copy_overlay3::start_block_shift, disk_copy_overlay3::block_num_shift
         ldx     disk_copy_overlay3::dest_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
         jmp     common
 
-:       copy16  disk_copy_overlay3::block_num_div8, disk_copy_overlay3::LD424
-        lda     disk_copy_overlay3::block_num_shift
-        sta     disk_copy_overlay3::LD426
+:       copy16  disk_copy_overlay3::block_num_div8, disk_copy_overlay3::start_block_div8
+        copy    disk_copy_overlay3::block_num_shift, disk_copy_overlay3::start_block_shift
         ldx     disk_copy_overlay3::source_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
 
-common: lda     #$07
+common: lda     #7
         sta     disk_copy_overlay3::block_index_shift
         lda     #0
         sta     disk_copy_overlay3::block_index_div8
@@ -450,7 +458,7 @@ loop:
         bit     L0FE5
         bmi     L0F69
 
-        jsr     L107F
+        jsr     advance_to_next_block_index
         bcc     L0F51
         bne     :+
         cpx     #$00
@@ -459,13 +467,13 @@ loop:
         sty     L0FE4
 L0F51:  stax    mem_block_addr
         jsr     advance_to_next_block
-        bcc     L0F72
+        bcc     read_or_write_block
         bne     L0F62
         cpx     #$00
         beq     L0F69
 L0F62:  ldy     #$80
         sty     L0FE5
-        bne     L0F72
+        bne     read_or_write_block
 
 L0F69:  return  #$80
 
@@ -474,7 +482,7 @@ success:
 
 error:  return  #1
 
-.proc L0F72
+.proc read_or_write_block
         stax    block_params::block_num
 
         ;; A,X = address in memory
@@ -489,15 +497,15 @@ error:  return  #1
 
         ;; --------------------------------------------------
         ;; read/write block directly to/from main mem buffer
-        ;; $4000-$BEFF
+        ;; $00-$0F = 0/$0000 - 0/$FFFF
 
-        bit     write_flag      ; 0-15
+        bit     write_flag
         bmi     :+
-        jsr     read_block_direct
+        jsr     read_block_to_main
         bmi     error
         jmp     loop
 
-:       jsr     write_block_direct
+:       jsr     write_block_from_main
         bmi     error
         jmp     loop
 
@@ -511,23 +519,22 @@ need_move:
         bcs     use_lcbank2
 
         ;; --------------------------------------------------
-        ;; read/write block to/from main, with a move
-        ;; $F200-$FFFF
+        ;; read/write block to/from aux lcbank1
+        ;; $1D-$1F = 1/$D000 - 1/$FFFF
 
-        bit     write_flag      ; 29-31
+        bit     write_flag
         bmi     :+
-        jsr     read_block_to_main
+        jsr     read_block_to_lcbank1
         bmi     error
         jmp     loop
 
-:       jsr     write_block_from_main
+:       jsr     write_block_from_lcbank1
         bmi     error
         jmp     loop
 
         ;; --------------------------------------------------
         ;; read/write block to/from aux
-        ;; $0C00-$1FFF
-        ;; $9000-$BFFF
+        ;; $10-$1C = 1/$0000 - 1/$CFFF
 use_auxmem:
         bit     write_flag      ; 16-28
         bmi     :+
@@ -541,9 +548,9 @@ use_auxmem:
 
         ;; --------------------------------------------------
         ;; read/write block to/from aux lcbank2
-        ;; $D000-$DFFF
+        ;; $20+ = 1b/$D000 - 1b/$DFFF
 use_lcbank2:
-        bit     write_flag      ; 32+
+        bit     write_flag
         bmi     :+
         jsr     read_block_to_lcbank2
         bmi     error
@@ -679,8 +686,8 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 
 ;;; ============================================================
 
-.proc L107F
-        jsr     L10B2
+.proc advance_to_next_block_index
+        jsr     compute_memory_page_signature
         cpy     #0
         beq     :+
         pha
@@ -689,7 +696,7 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
         rts
 
 :       jsr     next
-        bcc     L107F
+        bcc     advance_to_next_block_index
         lda     #$00
         tax
         rts
@@ -716,19 +723,22 @@ ok:     clc
 .endproc
 
 ;;; ============================================================
+;;; Compute memory page signature; low nibble is high nibble of
+;;; page, high nibble is "bank" (0=main, 1=aux, 2=aux lcbank2)
+;;; Input: `block_index_div8` and `block_index_shift`
 ;;; Output: A,X=address to store block; Y=bit is set in bitmap
 
-.proc L10B2
+.proc compute_memory_page_signature
         ;; Read from bitmap
         ldx     disk_copy_overlay3::block_index_div8
         lda     memory_bitmap,x
         ldx     disk_copy_overlay3::block_index_shift
         cpx     #0
-        beq     skip
+        beq     mask
 :       lsr     a
         dex
         bne     :-
-skip:   and     #$01
+mask:   and     #$01
 
         bne     set
         ldy     #$00
@@ -741,9 +751,9 @@ set:    ldy     #$FF
         cmp     #$10
         bcs     :+
 
-        ;; $00-$0F end up based at $0000
-        ;; $10-$1F end up based at $0000 as well
-        ;; $20.... end up based at $D000
+        ;; $00-$0F is main pages $00...$FE
+        ;; $10-$1F is aux  pages $00...$FE
+        ;; $20.... is aux lcbank2 $D000...
 
 calc:   asl     a               ; *= 16
         asl     a
@@ -797,13 +807,13 @@ count:  .byte   0
         tay
         sec
         cpx     #0
-        beq     skip
+        beq     mask
 
 :       asl     a
         dex
         bne     :-
 
-skip:   ora     memory_bitmap,y
+mask:   ora     memory_bitmap,y
         sta     memory_bitmap,y
         rts
 .endproc
@@ -816,13 +826,13 @@ skip:   ora     memory_bitmap,y
         tay
         sec
         cpx     #0
-        beq     skip
+        beq     mask
 
 :       asl     a
         dex
         bne     :-
 
-skip:   eor     #$FF
+mask:   eor     #$FF
         and     memory_bitmap,y
         sta     memory_bitmap,y
         rts
@@ -852,11 +862,11 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 .endproc
 
 ;;; ============================================================
-;;; Read block (w/ retries) directly to main memory (no move)
+;;; Read block (w/ retries) to main memory
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc read_block_direct
+.proc read_block_to_main
         stax    block_params::data_buffer
 retry:  jsr     read_block
         beq     done
@@ -868,11 +878,11 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Read block (w/ retries) and store it to main memory
+;;; Read block (w/ retries) to aux LCBANK1 memory
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc read_block_to_main
+.proc read_block_to_lcbank1
         ptr1 := $06
         ptr2 := $08             ; one page up
 
@@ -904,7 +914,7 @@ loop:   lda     default_block_buffer,y
 .endproc
 
 ;;; ============================================================
-;;; Read block (w/ retries) and store it to aux LCBANK2 memory
+;;; Read block (w/ retries) to aux LCBANK2 memory
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
@@ -945,11 +955,11 @@ loop:   lda     default_block_buffer,y
 .endproc
 
 ;;; ============================================================
-;;; Write block (w/ retries) directly from main memory (no move)
+;;; Write block (w/ retries) from main memory
 ;;; Inputs: A,X=address to read from
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc write_block_direct
+.proc write_block_from_main
         stax    block_params::data_buffer
 retry:  jsr     write_block
         beq     done
@@ -961,11 +971,11 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Write block (w/ retries) from main memory
+;;; Write block (w/ retries) from aux LCBANK1 memory
 ;;; Inputs: A,X=address to read from
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc write_block_from_main
+.proc write_block_from_lcbank1
         ptr1 := $06
         ptr2 := $08             ; one page up
 
@@ -978,12 +988,13 @@ done:   rts
         copy16  #default_block_buffer, block_params::data_buffer
         ldy     #$FF
         iny
-L1223:  lda     (ptr1),y
+loop:   lda     (ptr1),y
         sta     default_block_buffer,y
         lda     (ptr2),y
         sta     default_block_buffer+$100,y
         iny
-        bne     L1223
+        bne     loop
+
 retry:  jsr     write_block
         beq     done
         ldx     #$80            ; writing
@@ -1068,8 +1079,8 @@ done:   rts
 
 ;;; Memory Availability Bitmap
 ;;;
-;;; Each bit represents a double-page, enough for one
-;;; 512-byte disk block.
+;;; Each bit represents a double-page, enough for one 512-byte
+;;; disk block. 1 = available, 0 = reserved.
 
 memory_bitmap:
         ;; Main memory
@@ -1144,10 +1155,10 @@ memory_bitmap:
 
 disk_copy_overlay4_format_device        := disk_copy_overlay4::format_device
 disk_copy_overlay4_unit_num_to_sp_unit_number        := disk_copy_overlay4::unit_num_to_sp_unit_number
-disk_copy_overlay4_L0D5F        := disk_copy_overlay4::L0D5F
+disk_copy_overlay4_identify_nonprodos_disk_type        := disk_copy_overlay4::identify_nonprodos_disk_type
 disk_copy_overlay4_read_volume_bitmap   := disk_copy_overlay4::read_volume_bitmap
 disk_copy_overlay4_is_drive_removable        := disk_copy_overlay4::is_drive_removable
-disk_copy_overlay4_L0ED7        := disk_copy_overlay4::L0ED7
+disk_copy_overlay4_copy_blocks        := disk_copy_overlay4::copy_blocks
 disk_copy_overlay4_free_all_vol_bitmap_pages_in_mem_bitmap        := disk_copy_overlay4::free_all_vol_bitmap_pages_in_mem_bitmap
 disk_copy_overlay4_bell         := disk_copy_overlay4::bell
 disk_copy_overlay4_call_on_line2        := disk_copy_overlay4::call_on_line2
