@@ -21,7 +21,7 @@ Disassembly efforts include:
 1. DeskTop itself
    * The core bits of DeskTop (mostly done)
    * The various overlays (mostly done)
-   * The DiskCopy overlay is basically a stand-alone app (barely started)
+   * The DiskCopy overlay is basically a stand-alone app
 1. Selector (mostly done)
 1. DeskTop.system launcher (lots of dead code?)
 
@@ -53,18 +53,18 @@ modify. Here's a snapshot of the output for some files that could use
 attention:
 
 ```
-desktop/aux.s                   unscoped:    0  scoped:   96  raw:    0  unrefed:    0
-desktop/main.s                  unscoped:    1  scoped:  221  raw:   19  unrefed:    1
-desktop/ovl_disk_copy3.s        unscoped:  124  scoped:   93  raw:   11  unrefed:    8
-desktop/ovl_disk_copy4.s        unscoped:  158  scoped:   16  raw:    6  unrefed:    0
-desktop/ovl_file_dialog.s       unscoped:   29  scoped:  209  raw:    8  unrefed:    3
-desktop/ovl_format_erase.s      unscoped:  194  scoped:   11  raw:    3  unrefed:    2
-desktop/ovl_selector_pick.s     unscoped:  170  scoped:    0  raw:    1  unrefed:    0
-desktop/res.s                   unscoped:   12  scoped:    0  raw:    4  unrefed:   12
-selector/alert_dialog.s         unscoped:    0  scoped:   54  raw:    0  unrefed:    0
-selector/app.s                  unscoped:    5  scoped:   72  raw:    0  unrefed:    1
+desktop/aux.s                   unscoped:    0  scoped:   67  raw:    0  unrefed:    0
+desktop/main.s                  unscoped:    1  scoped:  186  raw:   19  unrefed:    1
+desktop/disk_copy3.s            unscoped:   91  scoped:   79  raw:    8  unrefed:    0
+desktop/disk_copy4.s            unscoped:    0  scoped:    6  raw:    0  unrefed:    0
+desktop/ovl_file_dialog.s       unscoped:   11  scoped:   26  raw:    4  unrefed:    1
+desktop/ovl_format_erase.s      unscoped:   92  scoped:    2  raw:    3  unrefed:    2
+desktop/ovl_selector_pick.s     unscoped:  130  scoped:    0  raw:    1  unrefed:    0
+desktop/res.s                   unscoped:   11  scoped:    0  raw:    5  unrefed:   11
+selector/alert_dialog.s         unscoped:    0  scoped:   20  raw:    0  unrefed:    0
+selector/app.s                  unscoped:    1  scoped:   33  raw:    0  unrefed:    1
 selector/ovl_file_copy.s        unscoped:  125  scoped:   20  raw:    0  unrefed:    0
-selector/ovl_file_dialog.s      unscoped:   12  scoped:  200  raw:    0  unrefed:    0
+selector/ovl_file_dialog.s      unscoped:    9  scoped:   24  raw:    0  unrefed:    0
 ```
 
 * **unscoped** counts the number of auto-generated labels like `L1234`
