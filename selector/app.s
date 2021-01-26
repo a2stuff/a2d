@@ -497,7 +497,7 @@ next:   dex
         ;; --------------------------------------------------
         ;; Set up Startup menu
 
-L91F2:  lda     quick_boot_slot
+        lda     quick_boot_slot
         beq     set_startup_menu_items
         ldy     slot_table
 L91FA:  cmp     slot_table,y

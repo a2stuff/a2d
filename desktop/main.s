@@ -14511,7 +14511,7 @@ populate_value:
         tax
         dey
         lda     (ptr),y
-LAFF8:  ldy     row
+        ldy     row
         jsr     draw_dialog_label
 
         ;; If not 6 (the last one), run modal loop
