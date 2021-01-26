@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc disk_copy_overlay
+.proc part1
         .org $800
 
         jmp     start
@@ -99,4 +99,4 @@ self:   bne     self            ; hang on error?
 
         PAD_TO $A00
 
-.endproc ; disk_copy_overlay
+.endproc ; part1

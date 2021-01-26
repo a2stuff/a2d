@@ -31,10 +31,12 @@
 ;;; ============================================================
 ;;; Disk Copy Overlays
 
-        .include "ovl_disk_copy1.s"
-        .include "ovl_disk_copy2.s"
-        .include "ovl_disk_copy3.s"
-        .include "ovl_disk_copy4.s"
+.scope disk_copy
+        .include "disk_copy1.s"
+        .include "disk_copy2.s"
+        .include "disk_copy3.s"
+        .include "disk_copy4.s"
+.endscope
 
 ;;; ============================================================
 ;;; Other Overlays

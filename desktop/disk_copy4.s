@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc dcmain
+.proc main
         .org $800
 
 ;;; ============================================================
@@ -59,7 +59,7 @@ params: .addr   0
 ;;; Quit back to ProDOS (which will launch DeskTop)
 
 .proc quit
-        jsr     dcauxlc::restore_ram_disk
+        jsr     auxlc::restore_ram_disk
         sta     ALTZPOFF
         lda     ROMIN2
         sta     DHIRESOFF
@@ -78,8 +78,8 @@ params: .addr   0
 ;;; ============================================================
 
 .proc format_device
-        ldx     dcauxlc::dest_drive_index
-        lda     dcauxlc::drive_unitnum_table,x
+        ldx     auxlc::dest_drive_index
+        lda     auxlc::drive_unitnum_table,x
         sta     unit_number
         and     #$0F
         beq     disk_ii
@@ -215,8 +215,8 @@ unit_num:
 ;;;            $C0 = Pascal
 ;;;            $80 = DOS 3.3
 .proc identify_nonprodos_disk_type
-        ldx     dcauxlc::source_drive_index
-        lda     dcauxlc::drive_unitnum_table,x
+        ldx     auxlc::source_drive_index
+        lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
         lda     #$00
         sta     block_params::block_num
@@ -236,13 +236,13 @@ unit_num:
         beq     l2
 
 fail:   lda     #$81
-        sta     dcauxlc::LD44D
+        sta     auxlc::LD44D
         rts
 
-l2:     param_call dcauxlc::LDE9F, on_line_buffer2
-        param_call dcauxlc::adjust_case, on_line_buffer2
+l2:     param_call auxlc::LDE9F, on_line_buffer2
+        param_call auxlc::adjust_case, on_line_buffer2
         lda     #$C0
-        sta     dcauxlc::LD44D
+        sta     auxlc::LD44D
         rts
 
 l3:     cmp     #$A5
@@ -251,7 +251,7 @@ l3:     cmp     #$A5
         cmp     #$27
         bne     fail
         lda     #$80
-        sta     dcauxlc::LD44D
+        sta     auxlc::LD44D
         rts
 .endproc
 
@@ -263,17 +263,17 @@ l3:     cmp     #$A5
         lda     #>volume_bitmap
         jsr     mark_used_in_memory_bitmap
 
-        lda     dcauxlc::source_drive_index
+        lda     auxlc::source_drive_index
         asl     a
         tax
-        copy16  dcauxlc::block_count_table,x, block_count_div8
+        copy16  auxlc::block_count_table,x, block_count_div8
         lsr16   block_count_div8    ; /= 8
         lsr16   block_count_div8
         lsr16   block_count_div8
-        copy16  block_count_div8, dcauxlc::block_count_div8
-        bit     dcauxlc::LD44D
+        copy16  block_count_div8, auxlc::block_count_div8
+        bit     auxlc::LD44D
         bmi     :+
-        lda     dcauxlc::disk_copy_flag
+        lda     auxlc::disk_copy_flag
         bne     :+
         jmp     quick_copy
 :
@@ -285,7 +285,7 @@ l3:     cmp     #$A5
         ptr := $06
 
 
-        add16   #volume_bitmap - 1, dcauxlc::block_count_div8, ptr
+        add16   #volume_bitmap - 1, auxlc::block_count_div8, ptr
 
         ;; Zero out the volume bitmap
         ldy     #0
@@ -309,7 +309,7 @@ loop1:  lda     #0
         sta     (ptr),y         ; (this algorithm could be improved)
 
         ;; Bail early if < 4096 blocks ???
-        lda     dcauxlc::block_count_div8+1
+        lda     auxlc::block_count_div8+1
         cmp     #$02
         bcs     :+
         rts
@@ -317,7 +317,7 @@ loop1:  lda     #0
         ;; Now mark block-pages used in memory bitmap
 :       lda     #>volume_bitmap
         sta     ptr
-        lda     dcauxlc::block_count_div8+1
+        lda     auxlc::block_count_div8+1
         pha
 loop:   inc     ptr
         inc     ptr
@@ -341,8 +341,8 @@ l6:     lda     ptr
         ;; so only used blocks are copied
 .proc quick_copy
         copy16  #6, block_params::block_num
-        ldx     dcauxlc::source_drive_index
-        lda     dcauxlc::drive_unitnum_table,x
+        ldx     auxlc::source_drive_index
+        lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
         copy16  #volume_bitmap, block_params::data_buffer
         jsr     read_block
@@ -424,23 +424,23 @@ unit_num:
         sta     write_flag
         and     #$FF
         bpl     :+
-        copy16  dcauxlc::start_block_div8, dcauxlc::block_num_div8
-        copy    dcauxlc::start_block_shift, dcauxlc::block_num_shift
-        ldx     dcauxlc::dest_drive_index
-        lda     dcauxlc::drive_unitnum_table,x
+        copy16  auxlc::start_block_div8, auxlc::block_num_div8
+        copy    auxlc::start_block_shift, auxlc::block_num_shift
+        ldx     auxlc::dest_drive_index
+        lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
         jmp     common
 
-:       copy16  dcauxlc::block_num_div8, dcauxlc::start_block_div8
-        copy    dcauxlc::block_num_shift, dcauxlc::start_block_shift
-        ldx     dcauxlc::source_drive_index
-        lda     dcauxlc::drive_unitnum_table,x
+:       copy16  auxlc::block_num_div8, auxlc::start_block_div8
+        copy    auxlc::block_num_shift, auxlc::start_block_shift
+        ldx     auxlc::source_drive_index
+        lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
 
 common: lda     #7
-        sta     dcauxlc::block_index_shift
+        sta     auxlc::block_index_shift
         lda     #0
-        sta     dcauxlc::block_index_div8
+        sta     auxlc::block_index_div8
         sta     L0FE4
         sta     L0FE5
 
@@ -449,7 +449,7 @@ loop:
         lda     KBD
         cmp     #(CHAR_ESCAPE | $80)
         bne     :+
-        jsr     dcauxlc::flash_escape_message
+        jsr     auxlc::flash_escape_message
         jmp     error
 :
 
@@ -490,7 +490,7 @@ error:  return  #1
         lda     mem_block_addr
 
         ;; Y = block number / 8
-        ldy     dcauxlc::block_index_div8
+        ldy     auxlc::block_index_div8
 
         cpy     #$10
         bcs     need_move
@@ -538,11 +538,11 @@ need_move:
 use_auxmem:
         bit     write_flag      ; 16-28
         bmi     :+
-        jsr     dcauxlc::read_block_to_auxmem
+        jsr     auxlc::read_block_to_auxmem
         bmi     error
         jmp     loop
 
-:       jsr     dcauxlc::write_block_from_auxmem
+:       jsr     auxlc::write_block_from_auxmem
         bmi     error
         jmp     loop
 
@@ -596,8 +596,8 @@ free:   jsr     next
         rts
 
 .proc next
-        dec     dcauxlc::block_num_shift
-        lda     dcauxlc::block_num_shift
+        dec     auxlc::block_num_shift
+        lda     auxlc::block_num_shift
         cmp     #$FF
         beq     :+
 
@@ -606,13 +606,13 @@ not_last:
         rts
 
 :       lda     #$07
-        sta     dcauxlc::block_num_shift
-        inc16   dcauxlc::block_num_div8
-        lda     dcauxlc::block_num_div8+1
-        cmp     dcauxlc::block_count_div8+1
+        sta     auxlc::block_num_shift
+        inc16   auxlc::block_num_div8
+        lda     auxlc::block_num_div8+1
+        cmp     auxlc::block_count_div8+1
         bne     not_last
-        lda     dcauxlc::block_num_div8
-        cmp     dcauxlc::block_count_div8
+        lda     auxlc::block_num_div8
+        cmp     auxlc::block_count_div8
         bne     not_last
 
         sec
@@ -631,16 +631,16 @@ not_last:
         ;; Find byte in volume bitmap
         lda     #<volume_bitmap
         clc
-        adc     dcauxlc::block_num_div8
+        adc     auxlc::block_num_div8
         sta     ptr
         lda     #>volume_bitmap
-        adc     dcauxlc::block_num_div8+1
+        adc     auxlc::block_num_div8+1
         sta     ptr+1
 
         ;; Find bit in volume bitmap
         ldy     #0
         lda     (ptr),y
-        ldx     dcauxlc::block_num_shift
+        ldx     auxlc::block_num_shift
         cpx     #$00
         beq     mask
 :       lsr     a
@@ -657,9 +657,9 @@ set:    ldy     #$FF
 
         ;; Now compute block number
         ;; Why do this? Isn't this stashed anywhere else???
-        lda     dcauxlc::block_num_div8+1
+        lda     auxlc::block_num_div8+1
         sta     tmp
-        lda     dcauxlc::block_num_div8
+        lda     auxlc::block_num_div8
         asl     a               ; * 8
         rol     tmp
         asl     a
@@ -667,7 +667,7 @@ set:    ldy     #$FF
         asl     a
         rol     tmp
 
-        ldx     dcauxlc::block_num_shift
+        ldx     auxlc::block_num_shift
         clc
         adc     table,x
 
@@ -703,17 +703,17 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 
 ;;; Advance to next
 .proc next
-        dec     dcauxlc::block_index_shift
-        lda     dcauxlc::block_index_shift
+        dec     auxlc::block_index_shift
+        lda     auxlc::block_index_shift
         cmp     #$FF
         beq     :+
 ok:     clc
         rts
 
 :       lda     #7
-        sta     dcauxlc::block_index_shift
-        inc     dcauxlc::block_index_div8
-        lda     dcauxlc::block_index_div8
+        sta     auxlc::block_index_shift
+        inc     auxlc::block_index_div8
+        lda     auxlc::block_index_div8
         cmp     #$21
         bcc     ok
 
@@ -730,9 +730,9 @@ ok:     clc
 
 .proc compute_memory_page_signature
         ;; Read from bitmap
-        ldx     dcauxlc::block_index_div8
+        ldx     auxlc::block_index_div8
         lda     memory_bitmap,x
-        ldx     dcauxlc::block_index_shift
+        ldx     auxlc::block_index_shift
         cpx     #0
         beq     mask
 :       lsr     a
@@ -747,7 +747,7 @@ set:    ldy     #$FF
 :
 
         ;; Now compute address to store in memory
-        lda     dcauxlc::block_index_div8
+        lda     auxlc::block_index_div8
         cmp     #$10
         bcs     :+
 
@@ -759,7 +759,7 @@ calc:   asl     a               ; *= 16
         asl     a
         asl     a
         asl     a
-        ldx     dcauxlc::block_index_shift
+        ldx     auxlc::block_index_shift
         clc
         adc     table,x
         tax
@@ -781,7 +781,7 @@ table:  .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
 
 ;;; ============================================================
 
-.proc free_all_vol_bitmap_pages_in_mem_bitmap
+.proc free_vol_bitmap_pages
         page_num := $06         ; not a pointer, for once!
 
         lda     #>volume_bitmap
@@ -795,7 +795,7 @@ loop:   lda     page_num
         inc     count
         inc     count
         lda     count
-        cmp     dcauxlc::block_count_div8+1
+        cmp     auxlc::block_count_div8+1
         beq     loop
         bcc     loop
         rts
@@ -871,7 +871,7 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 retry:  jsr     read_block
         beq     done
         ldx     #0              ; reading
-        jsr     dcauxlc::show_block_error
+        jsr     auxlc::show_block_error
         bmi     done
         bne     retry
 done:   rts
@@ -896,7 +896,7 @@ done:   rts
 retry:  jsr     read_block
         beq     move
         ldx     #0              ; reading
-        jsr     dcauxlc::show_block_error
+        jsr     auxlc::show_block_error
         beq     move
         bpl     retry
         return  #$80
@@ -932,7 +932,7 @@ loop:   lda     default_block_buffer,y
 retry:  jsr     read_block
         beq     move
         ldx     #0              ; reading
-        jsr     dcauxlc::show_block_error
+        jsr     auxlc::show_block_error
         beq     move
         bpl     retry
         lda     LCBANK1
@@ -964,7 +964,7 @@ loop:   lda     default_block_buffer,y
 retry:  jsr     write_block
         beq     done
         ldx     #$80            ; writing
-        jsr     dcauxlc::show_block_error
+        jsr     auxlc::show_block_error
         beq     done
         bpl     retry
 done:   rts
@@ -998,7 +998,7 @@ loop:   lda     (ptr1),y
 retry:  jsr     write_block
         beq     done
         ldx     #$80            ; writing
-        jsr     dcauxlc::show_block_error
+        jsr     auxlc::show_block_error
         beq     done
         bpl     retry
 done:   rts
@@ -1037,7 +1037,7 @@ loop:   lda     (ptr1),y
 retry:  jsr     write_block
         beq     done
         ldx     #$80            ; writing
-        jsr     dcauxlc::show_block_error
+        jsr     auxlc::show_block_error
         beq     done
         bpl     retry
 done:   rts
@@ -1153,27 +1153,27 @@ memory_bitmap:
 
 .endproc
 
-dcmain__format_device   := dcmain::format_device
-dcmain__unit_num_to_sp_unit_number      := dcmain::unit_num_to_sp_unit_number
-dcmain__identify_nonprodos_disk_type    := dcmain::identify_nonprodos_disk_type
-dcmain__read_volume_bitmap              := dcmain::read_volume_bitmap
-dcmain__is_drive_removable              := dcmain::is_drive_removable
-dcmain__copy_blocks                     := dcmain::copy_blocks
-dcmain__free_all_vol_bitmap_pages_in_mem_bitmap := dcmain::free_all_vol_bitmap_pages_in_mem_bitmap
-dcmain__bell                            := dcmain::bell
-dcmain__call_on_line2                   := dcmain::call_on_line2
-dcmain__call_on_line                    := dcmain::call_on_line
-dcmain__write_block                     := dcmain::write_block
-dcmain__read_block                      := dcmain::read_block
-dcmain__block_params_block_num          := dcmain::block_params::block_num
-dcmain__block_params_data_buffer        := dcmain::block_params::data_buffer
-dcmain__block_params_unit_num           := dcmain::block_params::unit_num
-dcmain__eject_disk                      := dcmain::eject_disk
-dcmain__noop                            := dcmain::noop
-dcmain__on_line_buffer                  := dcmain::on_line_buffer
-dcmain__on_line_params2_unit_num        := dcmain::on_line_params2::unit_num
-dcmain__on_line_params_unit_num         := dcmain::on_line_params::unit_num
-dcmain__quit                            := dcmain::quit
-dcmain__unit_number_to_driver_address   := dcmain::unit_number_to_driver_address
-dcmain__get_device_blocks_using_driver  := dcmain::get_device_blocks_using_driver
-dcmain__on_line_buffer2                 := dcmain::on_line_buffer2
+main__format_device   := main::format_device
+main__unit_num_to_sp_unit_number      := main::unit_num_to_sp_unit_number
+main__identify_nonprodos_disk_type    := main::identify_nonprodos_disk_type
+main__read_volume_bitmap              := main::read_volume_bitmap
+main__is_drive_removable              := main::is_drive_removable
+main__copy_blocks                     := main::copy_blocks
+main__free_vol_bitmap_pages           := main::free_vol_bitmap_pages
+main__bell                            := main::bell
+main__call_on_line2                   := main::call_on_line2
+main__call_on_line                    := main::call_on_line
+main__write_block                     := main::write_block
+main__read_block                      := main::read_block
+main__block_params_block_num          := main::block_params::block_num
+main__block_params_data_buffer        := main::block_params::data_buffer
+main__block_params_unit_num           := main::block_params::unit_num
+main__eject_disk                      := main::eject_disk
+main__noop                            := main::noop
+main__on_line_buffer                  := main::on_line_buffer
+main__on_line_params2_unit_num        := main::on_line_params2::unit_num
+main__on_line_params_unit_num         := main::on_line_params::unit_num
+main__quit                            := main::quit
+main__unit_number_to_driver_address   := main::unit_number_to_driver_address
+main__get_device_blocks_using_driver  := main::get_device_blocks_using_driver
+main__on_line_buffer2                 := main::on_line_buffer2

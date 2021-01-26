@@ -8,13 +8,13 @@ more code segments swapped in dynamically.
 
 The file is broken down into multiple segments:
 
-| Purpose       | Bank    | Address | Sources                        |
-|---------------|---------|---------|--------------------------------|
-| MGTK          | Aux     | A$4000  | `mgtk.s`                       |
-| Disk Copy 1/4 | Main    | A$0800  | `ovl_disk_copy1.s`             |
-| Disk Copy 2/4 | Main    | A$1800  | `ovl_disk_copy2.s`             |
-| Disk Copy 3/4 | Aux LC1 | A$D000  | `ovl_disk_copy3.s`             |
-| Disk Copy 4/4 | Main    | A$0800  | `ovl_disk_copy4.s`             |
+| Purpose       | Bank    | Address | Sources          |
+|---------------|---------|---------|------------------|
+| MGTK          | Aux     | A$4000  | `mgtk.s`         |
+| Disk Copy 1/4 | Main    | A$0800  | `disk_copy1.s`   |
+| Disk Copy 2/4 | Main    | A$1800  | `disk_copy2.s`   |
+| Disk Copy 3/4 | Aux LC1 | A$D000  | `disk_copy3.s`   |
+| Disk Copy 4/4 | Main    | A$0800  | `disk_copy4.s`   |
 
 Lengths/offsets are defined in `internal.inc`.
 
@@ -27,12 +27,12 @@ segments.
 The Disk Copy command in DeskTop loads several overlays, which
 effectively become a new application.
 
-The first part (`ovl_disk_copy1.s`, $800-$9FF) loads into main memory
+The first part (`disk_copy1.s`, $800-$9FF) loads into main memory
 like the other DeskTop overlays, but in turn it loads a second short
-($200-byte) overlay (`ovl_disk_copy2.s`, $1800-$19FF). This then loads
+($200-byte) overlay (`disk_copy2.s`, $1800-$19FF). This then loads
 app code and a replacement for the resources in the aux language card area
-(`ovl_disk_copy3.s`, Aux LC $D000-$F1FF) and another block of code in
-main memory (`ovl_disk_copy4.s`, Main $0800-$12FF). When exiting, the
+(`disk_copy3.s`, Aux LC $D000-$F1FF) and another block of code in
+main memory (`disk_copy4.s`, Main $0800-$12FF). When exiting, the
 DeskTop is restarted from the beginning.
 
 
@@ -109,7 +109,7 @@ $0000 +-------------+       +-------------+
 All free memory is used for buffer space during copies. A detailed
 memory bitmap is maintained with available/reserved page-pairs marked
 for main, aux, and aux-lcbank2 addresses. See `memory_bitmap` in
-`ovl_disk_copy4.s`.
+`disk_copy4.s`.
 
 In Quick Copy mode, the volume's bitmap is loaded at $4000 upwards
 (and then marked as used in the memory bitmap) and used to track which

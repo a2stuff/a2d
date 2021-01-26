@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc disk_copy_overlay2
+.proc part2
         .org $1800
 
         jmp     start
@@ -61,7 +61,7 @@ L183F:  sta     BITMAP+1,x
         lda     LCBANK1
         lda     LCBANK1
 
-        jmp     dcauxlc__start
+        jmp     auxlc__start
 
 ;;; ============================================================
 ;;; Copy first chunk to the Language Card
@@ -133,4 +133,4 @@ self:   bne     self            ; hang if fails
 
         PAD_TO $1A00
 
-.endproc ; disk_copy_overlay2
+.endproc ; part2
