@@ -4,10 +4,11 @@ Home Page: https://a2desktop.com
 
 Project Page: https://github.com/a2stuff/a2d
 
-## 1.2 Pre-Alpha
+## 1.2 Alpha
 
 ### DeskTop Enhancements
 
+* Progress bar shown while loading, and when copying to RAM disk.
 * Current day/time shown on right side of menu bar, if system has a clock. ([#7](https://github.com/a2stuff/a2d/issues/7), [#142](https://github.com/a2stuff/a2d/issues/142), [#220](https://github.com/a2stuff/a2d/issues/220))
 * Up to 13 volumes are shown on the desktop (was 10). ([#20](https://github.com/a2stuff/a2d/issues/20))
 * Windows restored when DeskTop is relaunched. ([#210](https://github.com/a2stuff/a2d/issues/210))
@@ -25,6 +26,7 @@ Project Page: https://github.com/a2stuff/a2d
 * AppleWorks filenames are shown with correct case. ([#179](https://github.com/a2stuff/a2d/issues/179))
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. ([#64](https://github.com/a2stuff/a2d/issues/64))
 * Tip about skipping copy to RAMCard is shown during startup. ([#140](https://github.com/a2stuff/a2d/issues/140))
+* Holding **Apple** while clicking a file deselects. ([#359](https://github.com/a2stuff/a2d/issues/359))
 * Holding **Apple** while double-clicking or using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
 * Holding **Apple** while clicking a window's close box closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266))
 * **Apple-\`** or **Apple-Tab** cycles through open windows; **Shift-Apple-\`** cycles in reverse. ([#143](https://github.com/a2stuff/a2d/issues/143), [#230](https://github.com/a2stuff/a2d/issues/230))
@@ -128,6 +130,7 @@ from the Apple menu.
 * Empty directories can be copied/moved. ([#121](https://github.com/a2stuff/a2d/issues/121))
 * **Control-Reset** quits cleanly back to ProDOS (except buggy emulators). ([#141](https://github.com/a2stuff/a2d/issues/141))
 * Prevent crash with more than 8 removable devices.
+* Disk Copy works with disks over 8MB. ([#386](https://github.com/a2stuff/a2d/issues/386))
 * Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
   * Calculator: Doesn't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
@@ -143,13 +146,15 @@ from the Apple menu.
 
 ### Known Issues
 
-* **Special > Disk Copy** app is not substantially modified, and may suffer bugs fixed in DeskTop (e.g. SmartPort behavior).
 * Other issues can be found at https://github.com/a2stuff/a2d/issues.
-
 
 ## 1.1
 
 Final release by Version Soft/Apple Computer dated November 26, 1986.
 
-See Jay Edwards' [MouseDesk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
-for more version information.
+See also: 
+
+* Jay Edwards' [MouseDesk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
+* https://www.a2desktop.com/history
+* https://www.a2desktop.com/releases
+
