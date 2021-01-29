@@ -1415,7 +1415,9 @@ status_code:    .byte   3       ; Return Device Information Block (DIB)
 .endparams
 
 .params dib_buffer
+Number_Devices:                 ; if unit_num == 0 && status_code == 0
 Device_Statbyte1:       .byte   0
+Interrupt_Status:               ; if unit_num == 0 && status_code == 0
 Device_Size_Lo:         .byte   0
 Device_Size_Med:        .byte   0
 Device_Size_Hi:         .byte   0
@@ -1430,13 +1432,8 @@ Version:                .word   0
         slot_ptr := $06
 
 start:
-        ;; Blank out end of name with spaces
-        ldx     str_smartport
-        lda     #' '
-:       sta     str_smartport,x
-        dex
-        cpx     #kStrSmartportOffset - 1
-        bne     :-
+        copy    #$80, empty_flag
+        copy    #kStrSmartportOffset, str_smartport
 
         ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
         ldy     #$FF
@@ -1447,17 +1444,21 @@ start:
         lda     slot_ptr+1
         sta     sp_addr+1
 
-        ;; Start with unit #1
-        copy    #1, status_params::unit_num
-        copy    #$80, empty_flag
-        copy    #kStrSmartportOffset, offset
+        ;; Query number of devices
+        copy    #0, status_params::unit_num ; SmartPort status itself
+        copy    #0, status_params::status_code
+        jsr     smartport_call
+        copy    dib_buffer::Number_Devices, num_devices
+        bne     :+
+        jmp     finish          ; no devices!
 
-loop:
+        ;; Start with unit #1
+:       copy    #1, status_params::unit_num
+        copy    #3, status_params::status_code ; Return Device Information Block (DIB)
+
+device_loop:
         ;; Make the call
-        sp_addr := * + 1
-        jsr     dummy1234
-        .byte   $00             ; $00 = STATUS
-        .addr   status_params
+        jsr     smartport_call
         bcs     next
 
         ;; Trim trailing whitespace (seen in CFFA)
@@ -1497,21 +1498,36 @@ next:   dey
 done:
 .endscope
 
+        ldx     str_smartport
+
         ;; Append separator, unless it's the first
-        ldx     offset
+.scope
         bit     empty_flag
-        bmi     append
+        bmi     :+
         lda     #','
         sta     str_smartport,x
         inx
         lda     #' '
         sta     str_smartport,x
         inx
+:
+.endscope
 
         ;; Append device name
-append:
+.scope
         copy    #0, empty_flag  ; saw a unit!
 
+        lda    dib_buffer::ID_String_Length
+    IF_ZERO
+        ;; Seen in wDrive
+        ldy     #0
+:       lda     str_unknown+1,y
+        sta     str_smartport,x
+        iny
+        inx
+        cpy     str_unknown
+        bne     :-
+    ELSE
         ldy     #0
 :       lda     dib_buffer::Device_Name,y
         sta     str_smartport,x
@@ -1519,34 +1535,48 @@ append:
         inx
         cpy     dib_buffer::ID_String_Length
         bne     :-
+    END_IF
+.endscope
 
-        stx     offset
+        stx     str_smartport
 
 next:   lda     status_params::unit_num
-        cmp     #4
+        cmp     num_devices
         beq     finish
         inc     status_params::unit_num
-        jmp     loop
+        jmp     device_loop
 
 finish:
         ;; If no units, populate with "(none)"
         bit     empty_flag
         bpl     exit
 
+        ldx     str_smartport
         ldy     #0
-        ldx     offset
 :       lda     str_none+1,y
         sta     str_smartport,x
         iny
         inx
         cpy     str_none
         bne     :-
+        dex
+        stx     str_smartport
 
 exit:   rts
 
-offset: .byte   0
 empty_flag:
         .byte   0
+num_devices:
+        .byte   0
+
+.proc smartport_call
+        sp_addr := * + 1
+        jsr     dummy1234
+        .byte   $00             ; $00 = STATUS
+        .addr   status_params
+        rts
+.endproc
+        sp_addr = smartport_call::sp_addr
 
 .endproc
 populate_smartport_name := populate_smartport_name_impl::start
