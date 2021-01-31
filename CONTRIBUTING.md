@@ -14,16 +14,18 @@ These are pretty easy to write. See the bug tracker (links below) for examples, 
 
 ### Disassembly
 
-Pure disassembly changes take place in the `disasm` branch, which builds identically to the original. The `main` branch is based on `disasm`. (NOTE: Some disassembly has been done in `main` and should be 'upstreamed', time permitting.)
+Pure disassembly changes take place in the `disasm` branch, which builds identically to the original. The `main` branch is based on `disasm`. (NOTE: As time has gone on, much of the disassembly has been done in `main` and should be 'upstreamed', time permitting.)
 
 Disassembly efforts include:
 
 1. DeskTop itself
-   * The core bits of DeskTop (mostly done)
-   * The various overlays (mostly done)
-   * The DiskCopy overlay is basically a stand-alone app
-1. Selector (mostly done)
-1. DeskTop.system launcher (lots of dead code?)
+   * The core bits of DeskTop
+   * The various overlays
+   * The DiskCopy overlay (basically a stand-alone app)
+1. Selector
+1. DeskTop.system launcher
+
+The bulk of the disassembly is complete, with only some procedures that have not been fully analyzed and commented.
 
 ### Bug Fixes & Enhancements
 
@@ -37,6 +39,8 @@ Disassembly efforts include:
 * [Feature requests for Desk Accessories](https://github.com/a2stuff/a2d/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+label%3A%22Desk+Accessories%22)
 * [Feature requests for Control Panel](https://github.com/a2stuff/a2d/issues?q=is%3Aissue+is%3Aopen+label%3A%22Control+Panel+DA%22)
 
+Issues marked [Good First Bug](https://github.com/a2stuff/a2d/issues?q=is%3Aissue+is%3Aopen+label%3A%22Good+First+Bug%22) might be good starter projects to learn about the code. New Desk Accessories in particular should be easy to start with.
+
 
 ## DeskTop Disassembly Burn-Down
 
@@ -45,7 +49,7 @@ make sure we're not breaking things. That can be done in some cases by
 relying on API boundaries, such as between MGTK and the DeskTop application.
 But DeskTop itself is a big, monolithic application with multiple overlays,
 so we need to understand nearly all of it before we can start moving code
-around.
+around. (Fortunately, that's mostly behind us now.)
 
 The `bin/stats.pl` tool provides is a quick and dirty analysis of the
 progress in turning raw da65 output into something we can confidently
