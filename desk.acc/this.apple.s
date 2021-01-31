@@ -468,6 +468,7 @@ str_audio:      PASCAL_STRING "Audio Card"
 str_storage:    PASCAL_STRING "Mass Storage"
 str_network:    PASCAL_STRING "Network Card"
 str_mockingboard: PASCAL_STRING "Mockingboard"
+str_z80:        PASCAL_STRING "Z-80 SoftCard"
 str_unknown:    PASCAL_STRING "(unknown)"
 str_empty:      PASCAL_STRING "(empty)"
 str_none:       PASCAL_STRING "(none)"
@@ -1103,6 +1104,15 @@ notpro:
     IF_SIGNATURE_THEN_RETURN $20, str_mouse
 
 notpas:
+
+;;; z80 SoftCard
+        COMPARE_FWB 5, 96
+        bne     :+
+        COMPARE_FWB 7, 96
+        bne     :+
+        return16 #str_z80
+:
+
 ;;; ---------------------------------------------
 ;;; Based on ProDOS BASIC Programming Examples
 
