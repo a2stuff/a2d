@@ -818,14 +818,23 @@ check:  sec
 
         ;; Is IIc+?
 :       lda     ZIDBYTE         ; $00 = IIc
-        bne     done
+        bne     :+
         lda     ZIDBYTE2        ; $05 = IIc Plus
         cmp     #$05
-        bne     done
+        bne     :+
         sec                     ; Yes, is a IIc+
         rts
 
-done:   clc                     ; No - standard layout
+        ;; Last chance... is it a Platinum IIe, maybe?
+:       lda     ZIDBYTE         ; $E0 = Enhanced IIe (or IIgs)
+        cmp     #$E0
+        bne     :+
+        lda     BUTN2           ; Shift key mod, which is pre-installed
+        bpl     :+              ; on Platinum IIe. Assume shift is not
+        sec                     ; down.
+        rts
+
+:       clc                     ; No - standard layout
         rts
 .endproc
 
