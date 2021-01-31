@@ -1178,11 +1178,7 @@ is_drag:
         jmp     just_select
 
 :       lda     highlight_list
-        jsr     get_icon_ptr
-        stax    $06
-        ldy     #IconEntry::win_type
-        lda     ($06),y
-        and     #kIconEntryWinIdMask
+        jsr     get_icon_win
         sta     window_id2
 
         ;; Prepare grafports
@@ -1200,9 +1196,9 @@ is_drag:
 L98F2:  lda     highlight_count,x
         jsr     get_icon_ptr
         stax    $06
-        ldy     #0
+        ldy     #IconEntry::id
         lda     ($06),y
-        cmp     #1
+        cmp     #kTrashIconNum
         bne     :+
         ldx     #$80
         stx     flag
@@ -1356,8 +1352,7 @@ L9A31:  COPY_BYTES 4, findwindow_params, coords2
 
         ;; No longer over the highlighted icon - unhighlight it
         jsr     xdraw_outline
-        MGTK_CALL MGTK::SetPort, icon_grafport
-        ITK_DIRECT_CALL IconTK::UnhighlightIcon, highlight_icon_id
+        jsr     unhighlight_icon
         jsr     xdraw_outline
         lda     #0
         sta     highlight_icon_id
@@ -1441,8 +1436,7 @@ L9B9C:  jsr     xdraw_outline
 L9BA5:  jsr     xdraw_outline
         lda     highlight_icon_id
         beq     :+
-        MGTK_CALL MGTK::SetPort, icon_grafport
-        ITK_DIRECT_CALL IconTK::UnhighlightIcon, highlight_icon_id
+        jsr     unhighlight_icon
         jmp     L9C63
 
 :       MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -1730,8 +1724,7 @@ find_icon:
         lda     icon_num
 :       sta     highlight_icon_id
         jsr     xdraw_outline
-        MGTK_CALL MGTK::SetPort, icon_grafport
-        ITK_DIRECT_CALL IconTK::HighlightIcon, highlight_icon_id
+        jsr     highlight_icon
         jsr     xdraw_outline
 
 done:   jsr     pop_pointers
@@ -1744,6 +1737,8 @@ headery:
         .word   0
 .endproc
 
+;;; Input: A = icon number
+;;; Output: A,X = address of IconEntry
 .proc get_icon_ptr
         asl     a
         tay
@@ -1753,10 +1748,64 @@ headery:
         rts
 .endproc
 
+;;; Input: A = icon number
+;;; Output: A = window id (0=desktop)
+;;; Trashes $06
+.proc get_icon_win
+        ptr := $06
+
+        jsr     get_icon_ptr
+        stax    ptr
+        ldy     #IconEntry::win_type
+        lda     (ptr),y
+        and     #kIconEntryWinIdMask
+        rts
+.endproc
+
 .proc xdraw_outline
         MGTK_CALL MGTK::SetPort, drag_outline_grafport
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         rts
+.endproc
+
+.proc highlight_icon
+        jsr set_port_for_highlight_icon
+        ITK_DIRECT_CALL IconTK::HighlightIcon, highlight_icon_id
+        MGTK_CALL MGTK::InitPort, icon_grafport
+        rts
+.endproc
+
+.proc unhighlight_icon
+        jsr set_port_for_highlight_icon
+        ITK_DIRECT_CALL IconTK::UnhighlightIcon, highlight_icon_id
+        MGTK_CALL MGTK::InitPort, icon_grafport
+        rts
+.endproc
+
+;;; Set cliprect to `highlight_icon_id`'s window's content area, in screen
+;;; space, using `icon_grafport`.
+.proc set_port_for_highlight_icon
+        ptr := $06
+
+        lda     highlight_icon_id
+        jsr     get_icon_win
+        sta     getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params ; into icon_grafport
+
+        sub16   icon_grafport::cliprect::x2, icon_grafport::cliprect::x1, width
+        sub16   icon_grafport::cliprect::y2, icon_grafport::cliprect::y1, height
+
+        COPY_STRUCT MGTK::Point, icon_grafport::viewloc, icon_grafport::cliprect
+
+        add16   icon_grafport::cliprect::x1, width, icon_grafport::cliprect::x2
+        add16   icon_grafport::cliprect::y1, height, icon_grafport::cliprect::y2
+
+        ;; Account for window header, and set port to icon_grafport
+        jmp     shift_port_down
+
+width:  .word   0
+height: .word   0
+
 .endproc
 
 
