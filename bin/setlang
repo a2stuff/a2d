@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Run this from the top level directory
+
+set -e
+
+test $# -eq 1 || (echo "Usage: setlang LANG"; exit 1)
+
+perl -pni -e "s/define LANG .*/define LANG \"$1\"/" config.inc
+echo Set LANG to \"$1\"

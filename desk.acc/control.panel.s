@@ -9,7 +9,8 @@
 ;;;   * Time 12- or 24-hour display
 ;;; ============================================================
 
-        .setcpu "6502"
+        .include "../config.inc"
+        RESOURCE_FILE "control.panel.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -58,7 +59,7 @@ kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 str_title:
-        PASCAL_STRING "Control Panel" ; window title
+        PASCAL_STRING res_string_window_title ; window title
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -306,7 +307,7 @@ kFatBitHeightShift      = 2
         ;; For hit testing
         DEFINE_RECT_SZ fatbits_rect, kPatternEditX+1, kPatternEditY+1,  8 * kFatBitWidth - 1, 8 * kFatBitHeight - 1
 
-        DEFINE_LABEL pattern, "Desktop Pattern", kPatternEditX + 35, kPatternEditY + 47
+        DEFINE_LABEL pattern, res_string_label_pattern, kPatternEditX + 35, kPatternEditY + 47
 
 kPreviewLeft    = kPatternEditX + 79
 kPreviewTop     = kPatternEditY
@@ -364,7 +365,7 @@ rarr_bitmap:
         .byte   PX(%1111000)
         .byte   PX(%1100000)
 
-        DEFINE_LABEL rgb_color, "RGB Color", kPatternEditX + 68, kPatternEditY + 59
+        DEFINE_LABEL rgb_color, res_string_label_rgb_color, kPatternEditX + 68, kPatternEditY + 59
 
         DEFINE_RECT_SZ rect_rgb, kPatternEditX + 46, kPatternEditY + 50, kCheckboxWidth, kCheckboxHeight
 
@@ -385,7 +386,7 @@ dblclick_speed_table:
         .word   kDefaultDblClickSpeed * 4
         .word   kDefaultDblClickSpeed * 16
 
-        DEFINE_LABEL dblclick_speed, "Double-Click Speed", kDblClickX + 45, kDblClickY + 47
+        DEFINE_LABEL dblclick_speed, res_string_label_dblclick_speed, kDblClickX + 45, kDblClickY + 47
 
 .params dblclick_params
         DEFINE_POINT viewloc, kDblClickX, kDblClickY
@@ -467,13 +468,13 @@ darr_bitmap:
 kMouseTrackingX = 25
 kMouseTrackingY = 78
 
-        DEFINE_LABEL mouse_tracking, "Mouse Tracking", kMouseTrackingX + 30, kMouseTrackingY + 45
+        DEFINE_LABEL mouse_tracking, res_string_label_mouse_tracking, kMouseTrackingX + 30, kMouseTrackingY + 45
 
         DEFINE_RECT_SZ tracking_button_rect1, kMouseTrackingX + 84, kMouseTrackingY + 8, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ tracking_button_rect2, kMouseTrackingX + 84, kMouseTrackingY + 21, kRadioButtonWidth, kRadioButtonHeight
 
-        DEFINE_LABEL tracking_slow, "Slow", kMouseTrackingX + 105, kMouseTrackingY +  8 + 8
-        DEFINE_LABEL tracking_fast, "Fast", kMouseTrackingX + 105, kMouseTrackingY + 21 + 8
+        DEFINE_LABEL tracking_slow, res_string_label_tracking_slow, kMouseTrackingX + 105, kMouseTrackingY +  8 + 8
+        DEFINE_LABEL tracking_fast, res_string_label_tracking_fast, kMouseTrackingX + 105, kMouseTrackingY + 21 + 8
 
 .params mouse_tracking_params
         DEFINE_POINT viewloc, kMouseTrackingX + 5, kMouseTrackingY
@@ -532,10 +533,10 @@ kIPBlinkDisplayY = 65
 ipblink_selection:
         .byte   0
 
-        DEFINE_LABEL ipblink1, "Rate of Insertion", kIPBlinkDisplayX, kIPBlinkDisplayY + 11
-        DEFINE_LABEL ipblink2, "Point Blinking", kIPBlinkDisplayX, kIPBlinkDisplayY + 10 + 11
-        DEFINE_LABEL ipblink_slow, "Slow", kIPBlinkDisplayX + 110 - 4 + 2, kIPBlinkDisplayY + 16 + 5 + 12 + 1
-        DEFINE_LABEL ipblink_fast, "Fast", kIPBlinkDisplayX + 140 + 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
+        DEFINE_LABEL ipblink1, res_string_label_ipblink1, kIPBlinkDisplayX, kIPBlinkDisplayY + 11
+        DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX, kIPBlinkDisplayY + 10 + 11
+        DEFINE_LABEL ipblink_slow, res_string_label_ipblink_slow, kIPBlinkDisplayX + 110 - 4 + 2, kIPBlinkDisplayY + 16 + 5 + 12 + 1
+        DEFINE_LABEL ipblink_fast, res_string_label_ipblink_fast, kIPBlinkDisplayX + 140 + 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
 
         DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 110 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ ipblink_btn2_rect, kIPBlinkDisplayX + 130 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
@@ -594,13 +595,13 @@ ipblink_ip_bitmap:
 kHourDisplayX = 210
 kHourDisplayY = 114
 
-        DEFINE_LABEL clock, "Clock", kHourDisplayX+kRadioButtonWidth, kHourDisplayY+8
+        DEFINE_LABEL clock, res_string_label_clock, kHourDisplayX+kRadioButtonWidth, kHourDisplayY+8
 
         DEFINE_RECT_SZ rect_12hour, kHourDisplayX+60, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_LABEL clock_12hour, "12hr", kHourDisplayX+60+kRadioButtonWidth+6, kHourDisplayY+8
+        DEFINE_LABEL clock_12hour, res_string_label_clock_12hour, kHourDisplayX+60+kRadioButtonWidth+6, kHourDisplayY+8
 
         DEFINE_RECT_SZ rect_24hour, kHourDisplayX+120, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_LABEL clock_24hour, "24hr", kHourDisplayX+120+kRadioButtonWidth+6, kHourDisplayY+8
+        DEFINE_LABEL clock_24hour, res_string_label_clock_24hour, kHourDisplayX+120+kRadioButtonWidth+6, kHourDisplayY+8
 
 ;;; ============================================================
 

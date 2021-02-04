@@ -4,6 +4,8 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+        RESOURCE_FILE "loader.res"
+
 ;;; ============================================================
 ;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)
 ;;; and invoke QUIT. Note that only $200 bytes are copied.
@@ -48,7 +50,7 @@ reinstall_flag:                 ; set once prefix saved and reinstalled
 
 kSplashVtab = 12
 splash_string:
-        PASCAL_STRING .sprintf("Loading %s", kDeskTopProductName)
+        PASCAL_STRING .sprintf(res_string_splash_string, kDeskTopProductName)
 
 filename:
         PASCAL_STRING "DeskTop2" ; do not localize
@@ -193,7 +195,7 @@ wait:   sta     KBDSTRB
         jmp     start
 
 disk_prompt:
-        PASCAL_STRING "Insert the system disk and Press Return."
+        PASCAL_STRING res_string_prompt_insert_system_disk
 
 irq_saved:
         .addr   0

@@ -4,7 +4,8 @@
 ;;; A classic 15-square sliding puzzle.
 ;;; ============================================================
 
-        .setcpu "6502"
+        .include "../config.inc"
+        RESOURCE_FILE "puzzle.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -589,7 +590,7 @@ nextwinfo:      .addr   0
 .endparams
         winfo_viewloc_ycoord := winfo::viewloc::ycoord
 
-name:   PASCAL_STRING "Puzzle"  ; window title
+name:   PASCAL_STRING res_string_window_title  ; window title
 
 ;;; ============================================================
 ;;; Create the window

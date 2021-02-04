@@ -4,7 +4,8 @@
 ;;; A basic four-function calculator.
 ;;; ============================================================
 
-        .setcpu "6502"
+        .include "../config.inc"
+        RESOURCE_FILE "calculator.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -385,7 +386,7 @@ text_buffer2:
 spaces_string:
         PASCAL_STRING "          " ; do not localize
 error_string:
-        PASCAL_STRING "Error "
+        PASCAL_STRING res_string_error_string
 
 .params textwidth_params
 textptr:        .addr   text_buffer1
@@ -513,7 +514,7 @@ nextwinfo:      .addr   0
 openwindow_params_top := winfo::top
 
 window_title:
-        PASCAL_STRING "Calc"
+        PASCAL_STRING res_string_window_title
 
 ;;; ==================================================
 ;;; DA Init

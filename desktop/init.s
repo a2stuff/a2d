@@ -4,6 +4,8 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+        RESOURCE_FILE "init.res"
+
 ;;; ============================================================
 ;;; Segment loaded into MAIN $800-$FFF
 ;;; ============================================================
@@ -321,7 +323,7 @@ loop:   sta     WINDOW_ICON_TABLES + $400,x         ; window 8, icon use map
 
 ;;; ============================================================
 
-trash_name:  PASCAL_STRING "Trash"
+trash_name:  PASCAL_STRING res_string_trash_icon_name
 
 .proc create_trash_icon
         ptr := $6
@@ -1184,32 +1186,32 @@ device_template_table:
         .addr   str_sd_unknown
         ASSERT_ADDRESS_TABLE_SIZE device_template_table, ::kNumDeviceTypes
 
-kDeviceTemplateSlotOffset = 2
-kDeviceTemplateDriveOffset = 5
+kDeviceTemplateSlotOffset = res_const_volume_type_sd_pattern_slot_offset
+kDeviceTemplateDriveOffset = res_const_volume_type_sd_pattern_drive_offset
 
 ;;; Disk II
 str_sd_disk_ii:
-        PASCAL_STRING "S#,D#: Disk II"
+        PASCAL_STRING res_string_volume_type_sd_disk_ii_pattern
 
 ;;; RAM disks
 str_sd_ramcard:
-        PASCAL_STRING "S#,D#: RAMCard"
+        PASCAL_STRING res_string_volume_type_sd_ramcard_pattern
 
 ;;; Fixed drives that aren't RAM disks
 str_sd_profile:
-        PASCAL_STRING "S#,D#: ProFile"
+        PASCAL_STRING res_string_volume_type_sd_profile_pattern
 
 ;;; Removable drives
 str_sd_unidisk:
-        PASCAL_STRING "S#,D#: UniDisk 3.5"
+        PASCAL_STRING res_string_volume_type_sd_unidisk_pattern
 
 ;;; File Share
 str_sd_fileshare:
-        PASCAL_STRING "S#,D#: AppleShare"
+        PASCAL_STRING res_string_volume_type_sd_fileshare_pattern
 
 ;;; Unknown devices
 str_sd_unknown:
-        PASCAL_STRING "S#,D#: Unknown"
+        PASCAL_STRING res_string_volume_type_sd_unknown_pattern
 
 ;;; ============================================================
 

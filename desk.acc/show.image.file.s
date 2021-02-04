@@ -1,4 +1,4 @@
-        .setcpu "6502"
+        .include "../config.inc"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"

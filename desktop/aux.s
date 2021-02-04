@@ -4,6 +4,8 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+        RESOURCE_FILE "aux.res"
+
 ;;; ============================================================
 ;;; Segment loaded into AUX $4000-$BFFF
 ;;; ============================================================
@@ -3272,66 +3274,66 @@ trash_mask:
 label_apple:
         PASCAL_STRING kGlyphSolidApple ; do not localize
 label_file:
-        PASCAL_STRING "File"    ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_file    ; menu bar item
 label_view:
-        PASCAL_STRING "View"    ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_view    ; menu bar item
 label_special:
-        PASCAL_STRING "Special" ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_special ; menu bar item
 label_startup:
-        PASCAL_STRING "Startup" ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_startup ; menu bar item
 label_selector:
-        PASCAL_STRING "Selector" ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_selector ; menu bar item
 
 label_new_folder:
-        PASCAL_STRING "New Folder..." ; menu item
+        PASCAL_STRING res_string_menu_item_new_folder ; menu item
 label_open:
-        PASCAL_STRING "Open" ; menu item
+        PASCAL_STRING res_string_menu_item_open ; menu item
 label_close:
-        PASCAL_STRING "Close Window" ; menu item
+        PASCAL_STRING res_string_menu_item_close ; menu item
 label_close_all:
-        PASCAL_STRING "Close All" ; menu item
+        PASCAL_STRING res_string_menu_item_close_all ; menu item
 label_select_all:
-        PASCAL_STRING "Select All" ; menu item
+        PASCAL_STRING res_string_menu_item_select_all ; menu item
 label_copy_file:
-        PASCAL_STRING "Copy a File..." ; menu item
+        PASCAL_STRING res_string_menu_item_copy_file ; menu item
 label_delete_file:
-        PASCAL_STRING "Delete a File..." ; menu item
+        PASCAL_STRING res_string_menu_item_delete_file ; menu item
 label_eject:
-        PASCAL_STRING "Eject Disk" ; menu item
+        PASCAL_STRING res_string_menu_item_eject ; menu item
 label_quit:
-        PASCAL_STRING "Quit" ; menu item
+        PASCAL_STRING res_string_menu_item_quit ; menu item
 
 label_by_icon:
-        PASCAL_STRING "as Icons" ; menu item
+        PASCAL_STRING res_string_menu_item_by_icon ; menu item
 label_by_name:
-        PASCAL_STRING "by Name" ; menu item
+        PASCAL_STRING res_string_menu_item_by_name ; menu item
 label_by_date:
-        PASCAL_STRING "by Date" ; menu item
+        PASCAL_STRING res_string_menu_item_by_date ; menu item
 label_by_size:
-        PASCAL_STRING "by Size" ; menu item
+        PASCAL_STRING res_string_menu_item_by_size ; menu item
 label_by_type:
-        PASCAL_STRING "by Type" ; menu item
+        PASCAL_STRING res_string_menu_item_by_type ; menu item
 
 label_check_all_drives:
-        PASCAL_STRING "Check All Drives" ; menu item
+        PASCAL_STRING res_string_menu_item_check_all_drives ; menu item
 label_check_drive:
-        PASCAL_STRING "Check Drive" ; menu item
+        PASCAL_STRING res_string_menu_item_check_drive ; menu item
 label_format_disk:
-        PASCAL_STRING "Format a Disk..." ; menu item
+        PASCAL_STRING res_string_menu_item_format_disk ; menu item
 label_erase_disk:
-        PASCAL_STRING "Erase a Disk..." ; menu item
+        PASCAL_STRING res_string_menu_item_erase_disk ; menu item
 label_disk_copy:
-        PASCAL_STRING "Disk Copy..." ; menu item
+        PASCAL_STRING res_string_menu_item_disk_copy ; menu item
 label_lock:
-        PASCAL_STRING "Lock..." ; menu item
+        PASCAL_STRING res_string_menu_item_lock ; menu item
 label_unlock:
-        PASCAL_STRING "Unlock..." ; menu item
+        PASCAL_STRING res_string_menu_item_unlock ; menu item
 label_get_info:
-        PASCAL_STRING "Get Info" ; menu item
+        PASCAL_STRING res_string_menu_item_get_info ; menu item
 label_get_size:
-        PASCAL_STRING "Get Size" ; menu item
+        PASCAL_STRING res_string_menu_item_get_size ; menu item
 label_rename_icon:
-        PASCAL_STRING "Rename..." ; menu item
+        PASCAL_STRING res_string_menu_item_rename_icon ; menu item
 
 desktop_menu:
         DEFINE_MENU_BAR 6
@@ -3427,11 +3429,11 @@ special_menu:
         DEFINE_RECT_INSET confirm_dialog_outer_rect, 4, 2, kPromptDialogWidth, kPromptDialogHeight
         DEFINE_RECT_INSET confirm_dialog_inner_rect, 5, 3, kPromptDialogWidth, kPromptDialogHeight
 
-        DEFINE_BUTTON ok,     "OK            \x0D", 260, kPromptDialogHeight-19
-        DEFINE_BUTTON cancel, "Cancel        Esc",   40, kPromptDialogHeight-19
-        DEFINE_BUTTON yes,    " Yes",               200, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON no,     " No",                260, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON all,    " All",               320, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON ok,     res_string_button_ok, 260, kPromptDialogHeight-19
+        DEFINE_BUTTON cancel, res_string_button_cancel,   40, kPromptDialogHeight-19
+        DEFINE_BUTTON yes,    res_string_button_yes,               200, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON no,     res_string_button_no,                260, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON all,    res_string_button_all,               320, kPromptDialogHeight-19,40,kButtonHeight
 
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
@@ -3468,58 +3470,58 @@ kAboutDialogHeight      = 120
         DEFINE_RECT_INSET about_dialog_inner_rect, 5, 3, kAboutDialogWidth, kAboutDialogHeight
 
 str_about1:  PASCAL_STRING kDeskTopProductName ; do not localize
-str_about2:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"
-str_about3:  PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
-str_about4:  PASCAL_STRING "All Rights Reserved"
-str_about5:  PASCAL_STRING "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
-str_about6:  PASCAL_STRING "Richard Danais and Luc Barthelet"
-str_about7:  PASCAL_STRING "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
+str_about2:  PASCAL_STRING res_string_about_text_line2
+str_about3:  PASCAL_STRING res_string_about_text_line3
+str_about4:  PASCAL_STRING res_string_about_text_line4
+str_about5:  PASCAL_STRING res_string_about_text_line5
+str_about6:  PASCAL_STRING res_string_about_text_line6
+str_about7:  PASCAL_STRING res_string_about_text_line7
 str_about8:  PASCAL_STRING kDeskTopReleaseDate ; do not localize
 str_about9:  PASCAL_STRING .sprintf("Version %d.%d%s",::kDeskTopVersionMajor,::kDeskTopVersionMinor,kDeskTopVersionSuffix) ; do not localize
 
         ;; "Copy File" dialog strings
 str_copy_title:
-        PASCAL_STRING "Copy..." ; dialog title
+        PASCAL_STRING res_string_copy_dialog_title ; dialog title
 str_copy_copying:
-        PASCAL_STRING "Now Copying "
+        PASCAL_STRING res_string_copy_label_statsus
 str_copy_from:
-        PASCAL_STRING "from:"
+        PASCAL_STRING res_string_copy_label_from
 str_copy_to:
-        PASCAL_STRING "to:"
+        PASCAL_STRING res_string_copy_label_to
 str_copy_remaining:
-        PASCAL_STRING "Files remaining to copy: "
+        PASCAL_STRING res_string_copy_status_files_remaining
 
         ;; "Move File" dialog strings
 str_move_title:
-        PASCAL_STRING "Move..." ; dialog title
+        PASCAL_STRING res_string_move_dialog_title ; dialog title
 str_move_moving:
-        PASCAL_STRING "Now Moving "
+        PASCAL_STRING res_string_move_label_status
 str_move_remaining:
-        PASCAL_STRING "Files remaining to move: "
+        PASCAL_STRING res_string_move_status_files_remaining
 
 str_exists_prompt:
-        PASCAL_STRING "That file already exists. Do you want to write over it ?"
+        PASCAL_STRING res_string_prompt_overwrite
 str_large_copy_prompt:
-        PASCAL_STRING "This file is too large to copy, click OK to continue."
+        PASCAL_STRING res_string_errmsg_too_large_to_copy
 str_large_move_prompt:
-        PASCAL_STRING "This file is too large to move, click OK to continue."
+        PASCAL_STRING res_string_errmsg_too_large_to_move
 
         DEFINE_POINT copy_file_count_pos, 110, kDialogLabelRow1
         DEFINE_POINT copy_file_count_pos2, 170, kDialogLabelRow4
 
         ;; "Delete" dialog strings
 str_delete_title:
-        PASCAL_STRING "Delete..." ; dialog title
+        PASCAL_STRING res_string_delete_dialog_title ; dialog title
 str_delete_ok:
-        PASCAL_STRING "Click OK to delete:"
+        PASCAL_STRING res_string_prompt_delete_ok
 str_ok_empty:
-        PASCAL_STRING "Clicking OK will immediately empty the trash of:"
+        PASCAL_STRING res_string_prompt_ok_empty_trash
 str_file_colon:
-        PASCAL_STRING "File:"
+        PASCAL_STRING res_string_label_file
 str_delete_remaining:
-        PASCAL_STRING "Files remaining to delete:"
+        PASCAL_STRING res_string_delete_remaining
 str_delete_locked_file:
-        PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
+        PASCAL_STRING res_string_delete_prompt_locked_file
 
         DEFINE_POINT delete_file_count_pos, 145, kDialogLabelRow4
 
@@ -3529,42 +3531,42 @@ str_delete_locked_file:
 
         ;; "New Folder" dialog strings
 str_new_folder_title:
-        PASCAL_STRING "New Folder..." ; dialog title
+        PASCAL_STRING res_string_new_folder_dialog_title ; dialog title
 str_in_colon:
-        PASCAL_STRING "in:"
+        PASCAL_STRING res_string_new_folder_label_in
 str_enter_folder_name:
-        PASCAL_STRING "Enter the folder name:"
+        PASCAL_STRING res_string_new_folder_label_name
 
         ;; "Rename Icon" dialog strings
 str_rename_title:
-        PASCAL_STRING "Rename..." ; dialog title
+        PASCAL_STRING res_string_rename_dialog_title ; dialog title
 str_rename_old:
-        PASCAL_STRING "Rename: "
+        PASCAL_STRING res_string_rename_label_old
 str_rename_new:
-        PASCAL_STRING "New name:"
+        PASCAL_STRING res_string_rename_label_new
 
         ;; "Get Info" dialog strings
 str_info_title:
-        PASCAL_STRING "Get Info" ; dialog title
+        PASCAL_STRING res_string_get_info_dialog_title ; dialog title
 str_info_name:
-        PASCAL_STRING "Name"
+        PASCAL_STRING res_string_get_info_label_name
 str_info_locked:
-        PASCAL_STRING "Locked"
+        PASCAL_STRING res_string_get_info_label_locked
 str_info_file_size:
-        PASCAL_STRING "Size"
+        PASCAL_STRING res_string_get_info_label_file_size
 str_info_create:
-        PASCAL_STRING "Creation date"
+        PASCAL_STRING res_string_get_info_label_create
 str_info_mod:
-        PASCAL_STRING "Last modification"
+        PASCAL_STRING res_string_get_info_label_mod
 str_info_type:
-        PASCAL_STRING "Type"
+        PASCAL_STRING res_string_get_info_label_type
 str_info_protected:
-        PASCAL_STRING "Write protected"
+        PASCAL_STRING res_string_get_info_label_protected
 str_info_vol_size:
-        PASCAL_STRING "Size used/total"
+        PASCAL_STRING res_string_get_info_label_vol_size
 
 str_colon:
-        PASCAL_STRING ": "
+        PASCAL_STRING res_string_get_info_colon_prefix
 
         DEFINE_POINT unlock_remaining_count_pos2, 160, kDialogLabelRow4
         DEFINE_POINT lock_remaining_count_pos2, 145, kDialogLabelRow4
@@ -3574,83 +3576,83 @@ str_colon:
         DEFINE_POINT lock_remaining_count_pos, 195, kDialogLabelRow4
 
 str_format_disk:
-        PASCAL_STRING "Format a Disk..." ; dialog title
+        PASCAL_STRING res_string_format_disk_dialog_title ; dialog title
 str_select_format:
-        PASCAL_STRING "Select the location of the disk to format"
+        PASCAL_STRING res_string_format_disk_label_select
 str_new_volume:
-        PASCAL_STRING "Enter the name of the new volume:"
+        PASCAL_STRING res_string_format_disk_label_enter_name
 str_confirm_format:
-        PASCAL_STRING "Do you want to format "
+        PASCAL_STRING res_string_format_disk_prompt_format
 str_formatting:
-        PASCAL_STRING "Formatting the disk...."
+        PASCAL_STRING res_string_format_disk_status_formatting
 str_formatting_error:
-        PASCAL_STRING "Formatting error. Check drive, then click OK to try again."
+        PASCAL_STRING res_string_format_disk_error
 
 str_erase_disk:
-        PASCAL_STRING "Erase a Disk..." ; dialog title
+        PASCAL_STRING res_string_erase_disk_dialog_title ; dialog title
 str_select_erase:
-        PASCAL_STRING "Select the location of the disk to erase"
+        PASCAL_STRING res_string_erase_disk_label_select
 str_confirm_erase:
-        PASCAL_STRING "Do you want to erase "
+        PASCAL_STRING res_string_erase_disk_prompt_erase
 str_erasing:
-        PASCAL_STRING "Erasing the disk...."
+        PASCAL_STRING res_string_erase_disk_status_erasing
 str_erasing_error:
-        PASCAL_STRING "Erasing error. Check drive, then click OK to try again."
+        PASCAL_STRING res_string_erase_disk_error
 
         ;; "Unlock File" dialog strings
 str_unlock_title:
-        PASCAL_STRING "Unlock..." ; dialog title
+        PASCAL_STRING res_string_unlock_dialog_title ; dialog title
 str_unlock_ok:
-        PASCAL_STRING "Click OK to unlock "
+        PASCAL_STRING res_string_unlock_prompt
 str_unlock_remaining:
-        PASCAL_STRING "Files remaining to unlock: "
+        PASCAL_STRING res_string_unlock_status_remaining
 
         ;; "Lock File" dialog strings
 str_lock_title:
-        PASCAL_STRING "Lock..." ; dialog title
+        PASCAL_STRING res_string_lock_dialog_title ; dialog title
 str_lock_ok:
-        PASCAL_STRING "Click OK to lock "
+        PASCAL_STRING res_string_lock_prompt
 str_lock_remaining:
-        PASCAL_STRING "Files remaining to lock: "
+        PASCAL_STRING res_string_lock_status_remaining
 
         ;; "Get Size" dialog strings
 str_size_title:
-        PASCAL_STRING "Get Size" ; dialog title
+        PASCAL_STRING res_string_get_size_dialog_title ; dialog title
 str_size_number:
-        PASCAL_STRING "Number of files"
+        PASCAL_STRING res_string_get_size_label_count
 str_size_blocks:
-        PASCAL_STRING "Space used on disk"
+        PASCAL_STRING res_string_get_size_label_space
 
 str_download:
-        PASCAL_STRING "Copy to RAMCard..." ; dialog title
+        PASCAL_STRING res_string_download_dialog_title ; dialog title
 
 str_ramcard_full:
-        PASCAL_STRING "The RAMCard is full. The copy was not completed."
+        PASCAL_STRING res_string_download_error_ramcard_full
 
 str_blank:
         PASCAL_STRING " "       ; do not localize
 
 str_warning:
-        PASCAL_STRING "Warning !"
+        PASCAL_STRING res_string_warning_dialog_title
 
 str_insert_system_disk:
-        PASCAL_STRING "Please insert the system disk."
+        PASCAL_STRING res_string_warning_insert_system_disk
 
 str_selector_list_full:
-        PASCAL_STRING "The Selector list is full. You must delete an entry"
+        PASCAL_STRING res_string_warning_selector_list_full_line1
 str_selector_list_full2:
-        PASCAL_STRING "before you can add new entries."
+        PASCAL_STRING res_string_warning_selector_list_full_line2
 
 str_window_must_be_closed:
-        PASCAL_STRING "A window must be closed before opening this new catalog."
+        PASCAL_STRING res_string_warning_window_must_be_closed
 
 str_too_many_windows:
-        PASCAL_STRING "There are too many windows open on the desktop !"
+        PASCAL_STRING res_string_warning_too_many_windows
 
 str_save_selector_list:
-        PASCAL_STRING "Do you want to save the new Selector list"
+        PASCAL_STRING res_string_warning_save_selector_list_line1
 str_save_selector_list2:
-        PASCAL_STRING "on the system disk ?"
+        PASCAL_STRING res_string_warning_save_selector_list_line2
 
 ;;; ============================================================
 ;;; Show Alert Dialog
@@ -3719,9 +3721,9 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
-        DEFINE_BUTTON ok,        "OK            \x0D",  20, 37
-        DEFINE_BUTTON try_again, "Try Again     A",     20, 37
-        DEFINE_BUTTON cancel,    "Cancel     Esc",     300, 37
+        DEFINE_BUTTON ok,        res_string_alert_button_ok,  20, 37
+        DEFINE_BUTTON try_again, res_string_alert_button_try_again,     20, 37
+        DEFINE_BUTTON cancel,    res_string_alert_button_cancel,     300, 37
 
         DEFINE_POINT pos_prompt, 75, 29
 
@@ -3732,27 +3734,27 @@ prompt_addr:    .addr   0
 ;;; ============================================================
 ;;; Messages
 
-err_00:  PASCAL_STRING "System Error"
-err_27:  PASCAL_STRING "I/O error"
-err_28:  PASCAL_STRING "No device connected"
-err_2B:  PASCAL_STRING "The disk is write protected."
-err_40:  PASCAL_STRING "The syntax of the pathname is invalid."
-err_44:  PASCAL_STRING "Part of the pathname doesn't exist."
-err_45:  PASCAL_STRING "The volume cannot be found."
-err_46:  PASCAL_STRING "The file cannot be found."
-err_47:  PASCAL_STRING "That name already exists. Please use another name."
-err_48:  PASCAL_STRING "The disk is full."
-err_49:  PASCAL_STRING "The volume directory cannot hold more than 51 files."
-err_4E:  PASCAL_STRING "The file is locked."
-err_52:  PASCAL_STRING "This is not a ProDOS disk."
-err_57:  PASCAL_STRING "There is another volume with that name on the desktop."
+err_00:  PASCAL_STRING res_string_errmsg_00
+err_27:  PASCAL_STRING res_string_errmsg_27
+err_28:  PASCAL_STRING res_string_errmsg_28
+err_2B:  PASCAL_STRING res_string_errmsg_2B
+err_40:  PASCAL_STRING res_string_errmsg_40
+err_44:  PASCAL_STRING res_string_errmsg_44
+err_45:  PASCAL_STRING res_string_errmsg_45
+err_46:  PASCAL_STRING res_string_errmsg_46
+err_47:  PASCAL_STRING res_string_errmsg_47
+err_48:  PASCAL_STRING res_string_errmsg_48
+err_49:  PASCAL_STRING res_string_errmsg_49
+err_4E:  PASCAL_STRING res_string_errmsg_4E
+err_52:  PASCAL_STRING res_string_errmsg_52
+err_57:  PASCAL_STRING res_string_errmsg_57
         ;; Below are internal (not ProDOS MLI) error codes.
-err_F9:  PASCAL_STRING "There are 2 volumes with the same name."
-err_FA:  PASCAL_STRING "This file cannot be opened."
-err_FB:  PASCAL_STRING "That name is too long."
-err_FC:  PASCAL_STRING "Please insert source disk"
-err_FD:  PASCAL_STRING "Please insert destination disk"
-err_FE:  PASCAL_STRING "BASIC.SYSTEM not found"
+err_F9:  PASCAL_STRING res_string_errmsg_F9
+err_FA:  PASCAL_STRING res_string_errmsg_FA
+err_FB:  PASCAL_STRING res_string_errmsg_FB
+err_FC:  PASCAL_STRING res_string_errmsg_FC
+err_FD:  PASCAL_STRING res_string_errmsg_FD
+err_FE:  PASCAL_STRING res_string_errmsg_FE
 
         ;; number of alert messages
         kNumAlerts = 20

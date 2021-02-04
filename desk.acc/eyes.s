@@ -4,7 +4,8 @@
 ;;; Shows a resizable window with eyes that follow the mouse.
 ;;; ============================================================
 
-        .setcpu "6502"
+        .include "../config.inc"
+        RESOURCE_FILE "eyes.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -50,7 +51,7 @@ kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 str_title:
-        PASCAL_STRING "Eyes"    ; window title
+        PASCAL_STRING res_string_window_title    ; window title
 
 .params winfo
 window_id:      .byte   kDAWindowId

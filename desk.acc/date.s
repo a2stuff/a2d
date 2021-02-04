@@ -5,8 +5,8 @@
 ;;; is no clock driver installed.
 ;;; ============================================================
 
-        .setcpu "6502"
-        .feature string_escapes
+        .include "../config.inc"
+        RESOURCE_FILE "date.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -593,18 +593,18 @@ loop:   lda     month_name_table,x
 .endproc
 
 month_name_table:
-        STRING  "Jan"
-        STRING  "Feb"
-        STRING  "Mar"
-        STRING  "Apr"
-        STRING  "May"
-        STRING  "Jun"
-        STRING  "Jul"
-        STRING  "Aug"
-        STRING  "Sep"
-        STRING  "Oct"
-        STRING  "Nov"
-        STRING  "Dec"
+        STRING  res_string_month_abbrev_1
+        STRING  res_string_month_abbrev_2
+        STRING  res_string_month_abbrev_3
+        STRING  res_string_month_abbrev_4
+        STRING  res_string_month_abbrev_5
+        STRING  res_string_month_abbrev_6
+        STRING  res_string_month_abbrev_7
+        STRING  res_string_month_abbrev_8
+        STRING  res_string_month_abbrev_9
+        STRING  res_string_month_abbrev_10
+        STRING  res_string_month_abbrev_11
+        STRING  res_string_month_abbrev_12
         ASSERT_RECORD_TABLE_SIZE month_name_table, 12, 3
 
 .proc prepare_year_string
@@ -707,9 +707,9 @@ done:   pla
         DEFINE_RECT_SZ date_rect, 32, 15, 122, 20
 
 label_ok:
-        PASCAL_STRING "OK         \x0D" ; button label
+        PASCAL_STRING res_string_label_ok ; button label
 label_cancel:
-        PASCAL_STRING "Cancel  ESC" ; button label
+        PASCAL_STRING res_string_label_cancel ; button label
 label_uparrow:
         PASCAL_STRING kGlyphUpArrow ; do not localize
 label_downarrow:

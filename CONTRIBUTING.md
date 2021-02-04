@@ -41,6 +41,19 @@ The bulk of the disassembly is complete, with only some procedures that have not
 
 Issues marked [Good First Bug](https://github.com/a2stuff/a2d/issues?q=is%3Aissue+is%3Aopen+label%3A%22Good+First+Bug%22) might be good starter projects to learn about the code. New Desk Accessories in particular should be easy to start with.
 
+### Localization
+
+MouseDesk originally shipped in French, English, German, Italian. The
+project has been structured to allow localization into additional
+languages. The work involved for most contributions is just to add an
+additional column to a spreadsheet which translations for each string,
+plus updating a few constants (e.g. offsets into strings).
+
+[DeskTop Localization Spreadsheet](https://docs.google.com/spreadsheets/d/1NIZQM4ua6ruLJk_P7MfTKN9S5LNwHwYJM_UhvY-ep3A/edit?usp=sharing)
+
+If you want to contribute a localization, please contact a project
+maintainer.
+
 
 ## DeskTop Disassembly Burn-Down
 

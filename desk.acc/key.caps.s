@@ -4,7 +4,8 @@
 ;;; Displays a map of the keyboard, showing what key is pressed.
 ;;; ============================================================
 
-        .setcpu "6502"
+        .include "../config.inc"
+        RESOURCE_FILE "key.caps.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -85,7 +86,7 @@ nextwinfo:      .addr   0
 .endparams
 
 str_title:
-        PASCAL_STRING "Key Caps" ; window title
+        PASCAL_STRING res_string_window_title ; window title
 
 background_pattern:
         .byte   %11011101

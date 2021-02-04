@@ -4,6 +4,8 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
+        RESOURCE_FILE "quit_handler.res"
+
         .org $1000
 
 ;;; This gets invoked via ProDOS QUIT, which relocated it to
@@ -25,10 +27,10 @@ flag:   .byte   0
         .byte   0
 
 str_loading:
-        PASCAL_STRING "Loading Selector"
+        PASCAL_STRING res_string_status_loading
 
-str_selector:
-        PASCAL_STRING "Selector"
+filename:
+        PASCAL_STRING "Selector" ; do not localize
 
         ;; ProDOS MLI call param blocks
 
@@ -39,7 +41,7 @@ str_selector:
         DEFINE_READ_PARAMS read_params, load_target, kLoadSize
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buf
-        DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
+        DEFINE_OPEN_PARAMS open_params, filename, io_buf
 
 start:
         ;; Show and clear 80-column text screen
@@ -190,7 +192,7 @@ loop:   sta     KBDSTRB
         jmp     start
 
 prompt:
-        PASCAL_STRING "Insert the system disk and press <Return>."
+        PASCAL_STRING res_string_prompt_insert_system_disk
 
 irq_vector_stash:
         .word   0

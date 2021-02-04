@@ -4,6 +4,8 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
+        RESOURCE_FILE "app.res"
+
         .org $4000
 
 .scope app
@@ -133,9 +135,9 @@ str_apple:
         PASCAL_STRING kGlyphSolidApple ; do not localize
 
 str_file:
-        PASCAL_STRING "File"    ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_file    ; menu bar item
 str_startup:
-        PASCAL_STRING "Startup" ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_startup ; menu bar item
 
 str_a2desktop:
         PASCAL_STRING .sprintf("%s Version %d.%d", kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; do not localize
@@ -143,31 +145,31 @@ str_a2desktop:
 str_blank:
         PASCAL_STRING " "       ; do not localize
 str_copyright1:
-        PASCAL_STRING "Copyright Apple Computer Inc., 1986" ; menu item
+        PASCAL_STRING res_string_menu_item_copyright1 ; menu item
 str_copyright2:
-        PASCAL_STRING "Copyright Version Soft, 1985 - 1986" ; menu item
+        PASCAL_STRING res_string_menu_item_copyright2 ; menu item
 str_copyright3:
-        PASCAL_STRING "All Rights reserved" ; menu item
+        PASCAL_STRING res_string_menu_item_copyright3 ; menu item
 
 str_run_a_program:
-        PASCAL_STRING "Run a Program..." ; menu item
+        PASCAL_STRING res_string_menu_item_run_a_program ; menu item
 
 
 str_slot_x1:
-        PASCAL_STRING "Slot #"  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
 str_slot_x2:
-        PASCAL_STRING "Slot #"  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
 str_slot_x3:
-        PASCAL_STRING "Slot #"  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
 str_slot_x4:
-        PASCAL_STRING "Slot #"  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
 str_slot_x5:
-        PASCAL_STRING "Slot #"  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
 str_slot_x6:
-        PASCAL_STRING "Slot #"  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
 str_slot_x7:
-        PASCAL_STRING "Slot #"  ; menu item
-        kStrSlotXOffset = 6
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+        kStrSlotXOffset = res_const_menu_item_slot_pattern_offset
 
 
 ;;; Slot numbers
@@ -287,8 +289,8 @@ viewloc:.word   25, 36
 
         DEFINE_RECT_INSET rect_frame, 4, 2, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok,      " OK          \x0D", 340, 102
-        DEFINE_BUTTON desktop, " DeskTop      Q",    60, 102
+        DEFINE_BUTTON ok,      res_string_button_ok, 340, 102
+        DEFINE_BUTTON desktop, res_string_button_desktop,    60, 102
 
 setpensize_params:
         .byte   2, 1
@@ -296,7 +298,7 @@ setpensize_params:
         DEFINE_POINT pos_title_string, 0, 15
 
 str_selector_title:
-        PASCAL_STRING "Selector" ; dialog title
+        PASCAL_STRING res_string_selector_dialog_title ; dialog title
 
         DEFINE_POINT pt0, 5, 22
 

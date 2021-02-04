@@ -4,6 +4,8 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
+        RESOURCE_FILE "ovl_file_copy.res"
+
         .org $A000
 
 .scope file_copier
@@ -769,13 +771,13 @@ window_id:
         DEFINE_RECT_INSET rect_frame1, 4, 2, winfo::kWidth, winfo::kHeight
         DEFINE_RECT_INSET rect_frame2, 5, 3, winfo::kWidth, winfo::kHeight
 
-        DEFINE_LABEL download, "Copying to RAMCard...", 116, 16
+        DEFINE_LABEL download, res_string_label_download, 116, 16
 
         DEFINE_POINT pos_copying, 20, 32
         DEFINE_POINT pt2, 20, 45
 
 str_copying:
-        PASCAL_STRING "Copying:"
+        PASCAL_STRING res_string_label_copying
 
         DEFINE_RECT rect_clear_count, 18, 24, 344, 32
         DEFINE_RECT rect_clear_details, 6, 24, 344, 66
@@ -797,17 +799,17 @@ next:           .addr   0
 .endparams
 
 str_not_enough_room:
-        PASCAL_STRING "Not enough room in the RAMCard to copy the application."
+        PASCAL_STRING res_string_errmsg_not_enough_room
 str_click_ok:
-        PASCAL_STRING "Click OK to continue."
+        PASCAL_STRING res_string_prompt_click_ok
 str_error_download:
-        PASCAL_STRING "An error occured during the download."
+        PASCAL_STRING res_string_errmsg_error_download
 str_copy_incomplete:
-        PASCAL_STRING "The copy wasn't completed, click OK to continue."
+        PASCAL_STRING res_string_errmsg_copy_incomplete
 str_files_to_copy:
-        PASCAL_STRING "Files to copy in the RAMCard: "
+        PASCAL_STRING res_string_label_files_to_copy
 str_files_remaining:
-        PASCAL_STRING "Files remaining to copy: "
+        PASCAL_STRING res_string_label_files_remaining
 str_spaces:
         PASCAL_STRING "    "    ; do not localize
 

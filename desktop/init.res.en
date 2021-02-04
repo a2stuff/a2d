@@ -1,0 +1,9 @@
+.define res_string_trash_icon_name "Trash"
+.define res_string_volume_type_sd_disk_ii_pattern "S#,D#: Disk II"
+.define res_string_volume_type_sd_ramcard_pattern "S#,D#: RAMCard"
+.define res_string_volume_type_sd_profile_pattern "S#,D#: ProFile"
+.define res_string_volume_type_sd_unidisk_pattern "S#,D#: UniDisk 3.5"
+.define res_string_volume_type_sd_fileshare_pattern "S#,D#: AppleShare"
+.define res_string_volume_type_sd_unknown_pattern "S#,D#: Unknown"
+.define res_const_volume_type_sd_pattern_slot_offset 2
+.define res_const_volume_type_sd_pattern_drive_offset 5

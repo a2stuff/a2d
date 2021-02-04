@@ -4,7 +4,7 @@
 ;;; Clears the screen and animates a pleasing distraction.
 ;;; ============================================================
 
-        .setcpu "6502"
+        .include "../config.inc"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"

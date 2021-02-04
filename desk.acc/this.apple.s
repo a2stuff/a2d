@@ -10,7 +10,8 @@
 ;;;    * Contents of each expansion slot
 ;;; ============================================================
 
-        .setcpu "6502"
+        .include "../config.inc"
+        RESOURCE_FILE "this.apple.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -89,7 +90,7 @@ nextwinfo:      .addr   0
 .endparams
 
 str_title:
-        PASCAL_STRING "About this Apple II" ; dialog title
+        PASCAL_STRING res_string_window_title ; dialog title
 
 ;;; ============================================================
 
@@ -383,47 +384,47 @@ ace500_bits:
 ;;; ============================================================
 
 str_ii:
-        PASCAL_STRING "Apple ]["
+        PASCAL_STRING res_string_model_ii
 
 str_iiplus:
-        PASCAL_STRING "Apple ][+"
+        PASCAL_STRING res_string_model_iiplus
 
 str_iii:
-        PASCAL_STRING "Apple /// (emulation)"
+        PASCAL_STRING res_string_model_iii
 
 str_iie_original:
-        PASCAL_STRING "Apple //e (original)"
+        PASCAL_STRING res_string_model_iie_original
 
 str_iie_enhanced:
-        PASCAL_STRING "Apple IIe (enhanced)"
+        PASCAL_STRING res_string_model_iie_enhanced
 
 str_iie_card:
-        PASCAL_STRING "Apple IIe Card"
+        PASCAL_STRING res_string_model_iie_card
 
 str_iic_original:
-        PASCAL_STRING "Apple IIc"
+        PASCAL_STRING res_string_model_iic_original
 
 str_iic_rom0:
-        PASCAL_STRING "Apple IIc (ROM 0)"
+        PASCAL_STRING res_string_model_iic_rom0
 
 str_iic_rom3:
-        PASCAL_STRING "Apple IIc (ROM 3)"
+        PASCAL_STRING res_string_model_iic_rom3
 
 str_iic_rom4:
-        PASCAL_STRING "Apple IIc (ROM 4)"
+        PASCAL_STRING res_string_model_iic_rom4
 
 str_iic_plus:
-        PASCAL_STRING "Apple IIc Plus"
+        PASCAL_STRING res_string_model_iic_plus
 
 str_iigs:
-        PASCAL_STRING "Apple IIgs (ROM #)"
-        kStrIIgsROMOffset = 17
+        PASCAL_STRING res_string_model_iigs_pattern
+        kStrIIgsROMOffset = res_const_model_iigs_pattern_offset
 
 str_laser128:
-        PASCAL_STRING "Laser 128"
+        PASCAL_STRING res_string_model_laser128
 
 str_ace500:
-        PASCAL_STRING "Franklin ACE 500"
+        PASCAL_STRING res_string_model_ace500
 
 ;;; ============================================================
 
@@ -434,52 +435,52 @@ str_prodos_version:
         kVersionStrPatch = 12
 
 str_slot_n:
-        PASCAL_STRING "Slot #:   " ; dialog label
-        kStrSlotNOffset = 6
+        PASCAL_STRING res_string_slot_n_pattern ; dialog label
+        kStrSlotNOffset = res_const_slot_n_pattern_offset
 
 str_memory_prefix:
-        PASCAL_STRING "Memory: " ; dialog label
+        PASCAL_STRING res_string_memory_prefix ; dialog label
 
 str_memory_suffix:
-        PASCAL_STRING "K"       ; memory size suffix for kilobytes
+        PASCAL_STRING res_string_memory_suffix       ; memory size suffix for kilobytes
 
 memory:.word    0
 
 ;;; ============================================================
 
-str_diskii:     PASCAL_STRING "Disk II"
-str_block:      PASCAL_STRING "Generic Block Device"
+str_diskii:     PASCAL_STRING res_string_card_type_diskii
+str_block:      PASCAL_STRING res_string_card_type_block
 kStrSmartportOffset = 12
-str_smartport:  PASCAL_STRING .sprintf("SmartPort: %142s", "") ; 8x16 names plus ", " separators
-str_ssc:        PASCAL_STRING "Super Serial Card"
-str_80col:      PASCAL_STRING "80 Column Card"
-str_mouse:      PASCAL_STRING "Mouse Card"
-str_silentype:  PASCAL_STRING "Silentype"
-str_clock:      PASCAL_STRING "Clock"
-str_comm:       PASCAL_STRING "Communications Card"
-str_serial:     PASCAL_STRING "Serial Card"
-str_parallel:   PASCAL_STRING "Parallel Card"
-str_used:       PASCAL_STRING "Used"
-str_printer:    PASCAL_STRING "Printer"
-str_joystick:   PASCAL_STRING "Joystick"
-str_io:         PASCAL_STRING "I/O Card"
-str_modem:      PASCAL_STRING "Modem"
-str_audio:      PASCAL_STRING "Audio Card"
-str_storage:    PASCAL_STRING "Mass Storage"
-str_network:    PASCAL_STRING "Network Card"
-str_mockingboard: PASCAL_STRING "Mockingboard"
-str_z80:        PASCAL_STRING "Z-80 SoftCard"
-str_unknown:    PASCAL_STRING "(unknown)"
-str_empty:      PASCAL_STRING "(empty)"
-str_none:       PASCAL_STRING "(none)"
+str_smartport:  PASCAL_STRING .sprintf(res_string_card_type_smartport, "") ; 8x16 names plus ", " separators
+str_ssc:        PASCAL_STRING res_string_card_type_ssc
+str_80col:      PASCAL_STRING res_string_card_type_80col
+str_mouse:      PASCAL_STRING res_string_card_type_mouse
+str_silentype:  PASCAL_STRING res_string_card_type_silentype
+str_clock:      PASCAL_STRING res_string_card_type_clock
+str_comm:       PASCAL_STRING res_string_card_type_comm
+str_serial:     PASCAL_STRING res_string_card_type_serial
+str_parallel:   PASCAL_STRING res_string_card_type_parallel
+str_used:       PASCAL_STRING res_string_card_type_used
+str_printer:    PASCAL_STRING res_string_card_type_printer
+str_joystick:   PASCAL_STRING res_string_card_type_joystick
+str_io:         PASCAL_STRING res_string_card_type_io
+str_modem:      PASCAL_STRING res_string_card_type_modem
+str_audio:      PASCAL_STRING res_string_card_type_audio
+str_storage:    PASCAL_STRING res_string_card_type_storage
+str_network:    PASCAL_STRING res_string_card_type_network
+str_mockingboard: PASCAL_STRING res_string_card_type_mockingboard
+str_z80:        PASCAL_STRING res_string_card_type_z80
+str_unknown:    PASCAL_STRING res_string_unknown
+str_empty:      PASCAL_STRING res_string_empty
+str_none:       PASCAL_STRING res_string_none
 
 ;;; ============================================================
 
-str_cpu_prefix: PASCAL_STRING "    CPU: "
-str_6502:       PASCAL_STRING "6502"
-str_65C02:      PASCAL_STRING "65C02"
-str_65802:      PASCAL_STRING "65802"
-str_65816:      PASCAL_STRING "65816"
+str_cpu_prefix: PASCAL_STRING res_string_cpu_prefix
+str_6502:       PASCAL_STRING res_string_cpu_type_6502
+str_65C02:      PASCAL_STRING res_string_cpu_type_65C02
+str_65802:      PASCAL_STRING res_string_cpu_type_65802
+str_65816:      PASCAL_STRING res_string_cpu_type_65816
 
 ;;; ============================================================
 

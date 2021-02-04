@@ -4,6 +4,8 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+        RESOURCE_FILE "res.res"
+
 ;;; ============================================================
 ;;; Segment loaded into AUX $D200-$ECFF
 ;;; ============================================================
@@ -549,29 +551,29 @@ nextwinfo:      .addr   0
         DEFINE_POINT entry_picker_cancel_pos, 45, winfo_entry_picker::kHeight-8
 
 add_an_entry_label:
-        PASCAL_STRING "Add an Entry..." ; dialog title
+        PASCAL_STRING res_string_add_an_entry_dialog_title ; dialog title
 edit_an_entry_label:
-        PASCAL_STRING "Edit an Entry..." ; dialog title
+        PASCAL_STRING res_string_edit_an_entry_dialog_title ; dialog title
 delete_an_entry_label:
-        PASCAL_STRING "Delete an Entry..." ; dialog title
+        PASCAL_STRING res_string_delete_an_entry_dialog_title ; dialog title
 run_an_entry_label:
-        PASCAL_STRING "Run an Entry..." ; dialog title
+        PASCAL_STRING res_string_run_an_entry_dialog_title ; dialog title
 
 enter_the_full_pathname_label1:
-        PASCAL_STRING "Enter the full pathname of the run list file:"
+        PASCAL_STRING res_string_selector_label_enter_pathname
 enter_the_name_to_appear_label:
-        PASCAL_STRING "Enter the name (14 characters max) you wish to appear in the run list"
+        PASCAL_STRING res_string_selector_label_enter_name
 
-        DEFINE_LABEL add_a_new_entry_to, "Add a new entry to the:",            343, 39
-        DEFINE_LABEL run_list,           {kGlyphOpenApple,"1 Run list"},       363, 48
-        DEFINE_LABEL other_run_list,     {kGlyphOpenApple,"2 Other Run list"}, 363, 57
-        DEFINE_LABEL down_load,          "Copy to RAMCard:",                   343, 73
-        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,"3 at first boot"},  363, 82
-        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,"4 at first use"},   363, 91
-        DEFINE_LABEL never,              {kGlyphOpenApple,"5 never"},          363,100
+        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,            343, 39
+        DEFINE_LABEL run_list,           {kGlyphOpenApple,res_string_selector_label_run_list},       363, 48
+        DEFINE_LABEL other_run_list,     {kGlyphOpenApple,res_string_selector_label_other_run_list}, 363, 57
+        DEFINE_LABEL down_load,          res_string_selector_label_download,                   343, 73
+        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},  363, 82
+        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},   363, 91
+        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},          363,100
 
 enter_the_full_pathname_label2:
-        PASCAL_STRING "Enter the full pathname of the run list file:"
+        PASCAL_STRING res_string_selector_label_enter_pathname_alt
 
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
@@ -589,14 +591,14 @@ num_volumes:
         .byte   0
 
 the_dos_33_disk_label:
-        PASCAL_STRING "the DOS 3.3 disk in slot # drive # ?"
-        kTheDos33DiskSlotCharOffset = 26
-        kTheDos33DiskDriveCharOffset = 34
+        PASCAL_STRING res_string_the_dos_33_disk_suffix_pattern
+        kTheDos33DiskSlotCharOffset = res_const_the_dos_33_disk_suffix_pattern_slot_offset
+        kTheDos33DiskDriveCharOffset = res_const_the_dos_33_disk_suffix_pattern_drive_offset
 
 the_disk_in_slot_label:
-        PASCAL_STRING "the disk in slot # drive # ?"
-        kTheDiskInSlotSlotCharOffset = 18
-        kTheDiskInSlotDriveCharOffset = 26
+        PASCAL_STRING res_string_the_disk_in_slot_suffix_pattern
+        kTheDiskInSlotSlotCharOffset = res_const_the_disk_in_slot_suffix_pattern_slot_offset
+        kTheDiskInSlotDriveCharOffset = res_const_the_disk_in_slot_suffix_pattern_drive_offset
 
 buf_filename:
         .res    16, 0
@@ -640,12 +642,12 @@ str_2_spaces:
         PASCAL_STRING "  "      ; do not localize
 
 str_files:
-        PASCAL_STRING "Files"
+        PASCAL_STRING res_string_files_suffix
 str_file_count:                 ; populated with number of files
         PASCAL_STRING " ##,### " ; do not localize
 
 str_kb_suffix:
-        PASCAL_STRING "K"       ; suffix for kilobytes
+        PASCAL_STRING res_string_kb_suffix       ; suffix for kilobytes
 
 file_count:
         .word   0
@@ -696,18 +698,18 @@ kRadioControlHeight = 8
 
         DEFINE_RECT rect_D9C8, 27, 16, 174, 26
 
-        DEFINE_BUTTON change_drive, "Change Drive",       193, 30
-        DEFINE_BUTTON open,         "Open",               193, 44
-        DEFINE_BUTTON close,        "Close",              193, 58
-        DEFINE_BUTTON cancel,       "Cancel        Esc",  193, 73
-        DEFINE_BUTTON ok,           "OK            \x0D", 193, 89
+        DEFINE_BUTTON change_drive, res_string_button_change_drive,       193, 30
+        DEFINE_BUTTON open,         res_string_button_open,               193, 44
+        DEFINE_BUTTON close,        res_string_button_close,              193, 58
+        DEFINE_BUTTON cancel,       res_string_fd_button_cancel,  193, 73
+        DEFINE_BUTTON ok,           res_string_fd_button_ok, 193, 89
 
         DEFINE_POINT dialog_sep_start, 323, 30
         DEFINE_POINT dialog_sep_end, 323, 100
 
         .byte   $81,$D3,$00     ; ???
 
-        DEFINE_LABEL disk, " Disk: ", 28,25
+        DEFINE_LABEL disk, res_string_label_disk, 28,25
 
         DEFINE_POINT input1_label_pos, 28, 112
         DEFINE_POINT input2_label_pos, 28, 135
@@ -718,13 +720,13 @@ textbg2:
         .byte   $7F
 
 copy_a_file_label:
-        PASCAL_STRING "Copy a File..." ; dialog title
+        PASCAL_STRING res_string_copy_file_dialog_title ; dialog title
 
 source_filename_label:
-        PASCAL_STRING "Source filename:"
+        PASCAL_STRING res_string_copy_file_label_source_filename
 
 destination_filename_label:
-        PASCAL_STRING "Destination filename:"
+        PASCAL_STRING res_string_copy_file_label_destination_filename
 
 kCommonInputWidth = 435
 kCommonInputHeight = 11
@@ -736,10 +738,10 @@ kCommonInputHeight = 11
         DEFINE_POINT input2_textpos, 30, 146
 
 delete_a_file_label:
-        PASCAL_STRING "Delete a File..." ; dialog title
+        PASCAL_STRING res_string_delete_file_dialog_title ; dialog title
 
 file_to_delete_label:
-        PASCAL_STRING "File to delete:"
+        PASCAL_STRING res_string_delete_file_label_file_to_delete
 
 .endscope
 
@@ -755,13 +757,13 @@ str_4_spaces:
         PASCAL_STRING "    "    ; do not localize
 
 dow_strings:
-        STRING  "Sun "
-        STRING  "Mon "
-        STRING  "Tue "
-        STRING  "Wed "
-        STRING  "Thu "
-        STRING  "Fri "
-        STRING  "Sat "
+        STRING  res_string_weekday_abbrev_1
+        STRING  res_string_weekday_abbrev_2
+        STRING  res_string_weekday_abbrev_3
+        STRING  res_string_weekday_abbrev_4
+        STRING  res_string_weekday_abbrev_5
+        STRING  res_string_weekday_abbrev_6
+        STRING  res_string_weekday_abbrev_7
         ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
 
 .params dow_str_params
@@ -1065,15 +1067,15 @@ device_name_table:
         .endrepeat
 
         ;; These strings are padded to be 8 bytes long to ease indexing
-startup_menu_item_1:    PASCAL_STRING "Slot #", 7 ; menu item
-startup_menu_item_2:    PASCAL_STRING "Slot #", 7 ; menu item
-startup_menu_item_3:    PASCAL_STRING "Slot #", 7 ; menu item
-startup_menu_item_4:    PASCAL_STRING "Slot #", 7 ; menu item
-startup_menu_item_5:    PASCAL_STRING "Slot #", 7 ; menu item
-startup_menu_item_6:    PASCAL_STRING "Slot #", 7 ; menu item
-startup_menu_item_7:    PASCAL_STRING "Slot #", 7 ; menu item
+startup_menu_item_1:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
+startup_menu_item_2:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
+startup_menu_item_3:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
+startup_menu_item_4:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
+startup_menu_item_5:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
+startup_menu_item_6:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
+startup_menu_item_7:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
         ASSERT_RECORD_TABLE_SIZE startup_menu_item_1, 7, 8
-        kStartupMenuItemSlotOffset = 6
+        kStartupMenuItemSlotOffset = res_const_menu_item_slot_pattern_offset
 
 ;;; ============================================================
 
@@ -1096,13 +1098,13 @@ selector_menu:
         kMenuItemIdSelectorRun       = 4
 
 label_add:
-        PASCAL_STRING "Add an Entry..." ; menu item
+        PASCAL_STRING res_string_menu_item_add_entry ; menu item
 label_edit:
-        PASCAL_STRING "Edit an Entry..." ; menu item
+        PASCAL_STRING res_string_menu_item_edit_entry ; menu item
 label_del:
-        PASCAL_STRING "Delete an Entry..." ; menu item
+        PASCAL_STRING res_string_menu_item_delete_entry ; menu item
 label_run:
-        PASCAL_STRING "Run an Entry..." ; menu item
+        PASCAL_STRING res_string_menu_item_run_entry ; menu item
 
 kDAMenuItemSize = 19            ; length (1) + filename (15) + folder glyphs prefix (3)
 
@@ -1118,7 +1120,7 @@ apple_menu:
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
 
 label_about:
-        PASCAL_STRING .sprintf("About %s", kDeskTopProductName) ; menu item
+        PASCAL_STRING .sprintf(res_string_menu_item_about, kDeskTopProductName) ; menu item
 
 desk_acc_names:
         .res    kMaxDeskAccCount * kDAMenuItemSize, 0
@@ -1136,7 +1138,7 @@ dummy_dd_menu:
         DEFINE_MENU_ITEM dummy_dd_item
 
 splash_menu_label:
-        PASCAL_STRING .sprintf("%s Version %d.%d%s", kDeskTopProductName, kDeskTopVersionMajor, kDeskTopVersionMinor, kDeskTopVersionSuffix)
+        PASCAL_STRING .sprintf(res_string_splash_menu_label, kDeskTopProductName, kDeskTopVersionMajor, kDeskTopVersionMinor, kDeskTopVersionSuffix)
 
 blank_dd_label:
         PASCAL_STRING " "       ; do not localize
@@ -1252,7 +1254,7 @@ window_k_free_table:  .res    kMaxNumWindows*2, 0
 ;;; Resources for window header (Items/K in disk/K available)
 
 str_items:
-        PASCAL_STRING " Items"
+        PASCAL_STRING res_string_window_header_items_suffix
 
         DEFINE_POINT items_label_pos, 8, 10
 
@@ -1260,10 +1262,10 @@ str_items:
         DEFINE_POINT header_line_right, 0, 0
 
 str_k_in_disk:
-        PASCAL_STRING "K in disk" ; suffix for disk space used
+        PASCAL_STRING res_string_window_header_k_used_suffix ; suffix for disk space used
 
 str_k_available:
-        PASCAL_STRING "K available" ; suffix for disk space available
+        PASCAL_STRING res_string_window_header_k_available_suffix ; suffix for disk space available
 
 str_from_int:                   ; populated by IntToString
         PASCAL_STRING "000,000" ; 6 digits plus thousands separator - do not localize

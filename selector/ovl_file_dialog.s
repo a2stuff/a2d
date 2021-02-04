@@ -4,6 +4,8 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
+        RESOURCE_FILE "ovl_file_dialog.res"
+
         .org $A000
 
 .scope file_dialog
@@ -310,11 +312,11 @@ selected_index:                 ; $FF if none
 
         DEFINE_RECT rect0, 27, 16, 174, 26
 
-        DEFINE_BUTTON change_drive, "Change Drive",       193, 30
-        DEFINE_BUTTON open,         "Open",               193, 44
-        DEFINE_BUTTON close,        "Close",              193, 58
-        DEFINE_BUTTON cancel,       "Cancel        Esc",  193, 73
-        DEFINE_BUTTON ok,           "OK            \x0D", 193, 89
+        DEFINE_BUTTON change_drive, res_string_button_change_drive,       193, 30
+        DEFINE_BUTTON open,         res_string_button_open,               193, 44
+        DEFINE_BUTTON close,        res_string_button_close,              193, 58
+        DEFINE_BUTTON cancel,       res_string_fd_button_cancel,  193, 73
+        DEFINE_BUTTON ok,           res_string_fd_button_ok, 193, 89
 
 ;;; Dividing line
         DEFINE_POINT pt1, 323, 30
@@ -330,7 +332,7 @@ textbg1:
 textbg2:
         .byte   $7F
 str_disk:
-        PASCAL_STRING " Disk: "
+        PASCAL_STRING res_string_disk
 
         ;; Frame
         DEFINE_RECT rect_input, 28, 113, 428, 124
@@ -342,9 +344,9 @@ str_disk:
         .word   30, 146
 
 str_run_a_program:
-        PASCAL_STRING "Run a Program..." ; dialog title
+        PASCAL_STRING res_string_run_a_program_dialog_title ; dialog title
 str_file_to_run:
-        PASCAL_STRING "File to run:"
+        PASCAL_STRING res_string_label_file_to_run
 
 ;;; ============================================================
 

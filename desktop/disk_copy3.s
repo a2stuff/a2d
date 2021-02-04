@@ -4,6 +4,9 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+        RESOURCE_FILE "disk_copy3.res"
+
+
 .proc auxlc
         .org $D000
 
@@ -97,30 +100,30 @@ menu_facilities:
         ASSERT_RECORD_TABLE_SIZE @items, 2, .sizeof(MGTK::MenuItem)
 
 label_file:
-        PASCAL_STRING "File"    ; menu bar item
+        PASCAL_STRING res_string_dc_menu_bar_item_file    ; menu bar item
 label_facilities:
-        PASCAL_STRING "Facilities" ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_facilities ; menu bar item
 
 label_desktop:
-        PASCAL_STRING .sprintf("%s Version %d.%d", kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; menu item
+        PASCAL_STRING .sprintf(res_string_menu_item_desktop, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; menu item
 
 label_blank:
         PASCAL_STRING " "       ; do not localize
 label_copyright1:
-        PASCAL_STRING "Copyright Apple Computer Inc., 1986" ; menu item
+        PASCAL_STRING res_string_menu_item_copyright1 ; menu item
 label_copyright2:
-        PASCAL_STRING "Copyright Version Soft, 1985 - 1986" ; menu item
+        PASCAL_STRING res_string_menu_item_copyright2 ; menu item
 label_rights:
-        PASCAL_STRING "All Rights reserved" ; menu item
+        PASCAL_STRING res_string_menu_item_rights ; menu item
 
 label_quit:
-        PASCAL_STRING "Quit"    ; menu item
+        PASCAL_STRING res_string_dc_menu_item_quit    ; menu item
 
 label_quick_copy:
-        PASCAL_STRING "Quick Copy" ; menu item
+        PASCAL_STRING res_string_menu_item_quick_copy ; menu item
 
 label_disk_copy:
-        PASCAL_STRING "Disk Copy" ; menu item
+        PASCAL_STRING res_string_dc_menu_item_disk_copy ; menu item
 
 ;;; ============================================================
 
@@ -260,45 +263,45 @@ nextwinfo:      .addr   0
         DEFINE_RECT rect_D211, 6, 20, 494, 102
         DEFINE_RECT rect_D219, 6, 103, 494, 145
 
-        DEFINE_BUTTON ok, "OK            \x0D", 350, 90
+        DEFINE_BUTTON ok, res_string_dc_button_ok, 350, 90
 
 ;;; Label positions
         DEFINE_POINT point_title, 0, 15
 str_disk_copy_padded:
-        PASCAL_STRING "    Disk Copy    " ; dialog title (padded to overwrite when swapping)
+        PASCAL_STRING res_string_disk_copy_padded_dialog_title ; dialog title (padded to overwrite when swapping)
 str_quick_copy_padded:
-        PASCAL_STRING "    Quick Copy    " ; dialog title (padded to overwrite when swapping)
+        PASCAL_STRING res_string_quick_copy_padded_dialog_title ; dialog title (padded to overwrite when swapping)
 
         DEFINE_RECT rect_D255, 270, 38, 420, 46
 
-        DEFINE_BUTTON read_drive, "Read Drive   D", 210, 90
+        DEFINE_BUTTON read_drive, res_string_button_read_drive, 210, 90
 
         DEFINE_POINT point_slot_drive_name, 20, 28
 str_slot_drive_name:
-        PASCAL_STRING "Slot, Drive, Name" ; dialog label
+        PASCAL_STRING res_string_label_slot_drive_name ; dialog label
 
         DEFINE_POINT point_select_source, 270, 46
 str_select_source:
-        PASCAL_STRING "Select source disk" ; dialog label
+        PASCAL_STRING res_string_prompt_select_source ; dialog label
 str_select_destination:
-        PASCAL_STRING "Select destination disk" ; dialog label
+        PASCAL_STRING res_string_prompt_select_destination ; dialog label
 
         DEFINE_POINT point_formatting, 210, 68
 str_formatting:
-        PASCAL_STRING "Formatting the disk ...."
+        PASCAL_STRING res_string_label_status_formatting
 
         DEFINE_POINT point_writing, 210, 68
 str_writing:
-        PASCAL_STRING "Writing ....   "
+        PASCAL_STRING res_string_label_status_writing
 
         DEFINE_POINT point_reading, 210, 68
 str_reading:
-        PASCAL_STRING "Reading ....    "
+        PASCAL_STRING res_string_label_status_reading
 
 str_unknown:
-        PASCAL_STRING "Unknown"
+        PASCAL_STRING res_string_unknown
 str_select_quit:
-        PASCAL_STRING .sprintf("Select Quit from the file menu (%cQ) to go back to the DeskTop", ::kGlyphOpenApple) ; dialog label
+        PASCAL_STRING .sprintf(res_string_label_select_quit, ::kGlyphOpenApple) ; dialog label
 
 bg_black:
         .byte   0
@@ -407,42 +410,42 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString - do not loca
         DEFINE_POINT point_error_reading, 40, 90
 
 str_blocks_read:
-        PASCAL_STRING "Blocks Read: "
+        PASCAL_STRING res_string_label_blocks_read
 str_blocks_written:
-        PASCAL_STRING "Blocks Written: "
+        PASCAL_STRING res_string_label_blocks_written
 str_blocks_to_transfer:
-        PASCAL_STRING "Blocks to transfer: "
+        PASCAL_STRING res_string_label_blocks_to_transfer
 str_source:
-        PASCAL_STRING "Source "
+        PASCAL_STRING res_string_source
 str_destination:
-        PASCAL_STRING "Destination "
+        PASCAL_STRING res_string_destination
 str_slot:
-        PASCAL_STRING "Slot "
+        PASCAL_STRING res_string_slot_prefix
 str_drive:
-        PASCAL_STRING "  Drive "
+        PASCAL_STRING res_string_drive_infix
 
 str_dos33_s_d:
-        PASCAL_STRING "DOS 3.3 S#, D# "
-        kStrDOS33SlotOffset = 10
-        kStrDOS33DriveOffset = 14
+        PASCAL_STRING res_string_dos33_s_d_pattern
+        kStrDOS33SlotOffset = res_const_dos33_s_d_pattern_slot_offset
+        kStrDOS33DriveOffset = res_const_dos33_s_d_pattern_drive_offset
 
 str_dos33_disk_copy:
-        PASCAL_STRING "DOS 3.3 disk copy"
+        PASCAL_STRING res_string_dos33_disk_copy
 
 str_pascal_disk_copy:
-        PASCAL_STRING "Pascal disk copy"
+        PASCAL_STRING res_string_pascal_disk_copy
 
 str_prodos_disk_copy:
-        PASCAL_STRING "ProDOS disk copy"
+        PASCAL_STRING res_string_prodos_disk_copy
 
 str_escape_stop_copy:
-        PASCAL_STRING " ESC stop the copy"
+        PASCAL_STRING res_string_escape_stop_copy
 
 str_error_writing:
-        PASCAL_STRING "Error when writing block "
+        PASCAL_STRING res_string_error_writing
 
 str_error_reading:
-        PASCAL_STRING "Error when reading block "
+        PASCAL_STRING res_string_error_reading
 
 ;;; ============================================================
 
@@ -2442,12 +2445,12 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 559, 191
 .endparams
 
-        DEFINE_BUTTON ok,        "OK            \x0D", 300, 37
-        DEFINE_BUTTON try_again, "Try Again     A",    300, 37
-        DEFINE_BUTTON cancel,    "Cancel     Esc",      20, 37
+        DEFINE_BUTTON ok,        res_string_dcalert_button_ok, 300, 37
+        DEFINE_BUTTON try_again, res_string_dcalert_button_try_again,    300, 37
+        DEFINE_BUTTON cancel,    res_string_dcalert_button_cancel,      20, 37
 
-        DEFINE_BUTTON yes, "Yes", 250, 37, 50, kButtonHeight
-        DEFINE_BUTTON no,  "No",  350, 37, 50, kButtonHeight
+        DEFINE_BUTTON yes, res_string_dcalert_button_yes, 250, 37, 50, kButtonHeight
+        DEFINE_BUTTON no,  res_string_dcalert_button_no,  350, 37, 50, kButtonHeight
 
         DEFINE_POINT LE93D, 100, 24
 
@@ -2456,49 +2459,49 @@ message_flags:
 LE942:  .addr   0
 
 str_insert_source:
-        PASCAL_STRING "Insert source disk and click OK."
+        PASCAL_STRING res_string_prompt_insert_source
 str_insert_dest:
-        PASCAL_STRING "Insert destination disk and click OK."
+        PASCAL_STRING res_string_prompt_insert_destination
 
 str_confirm_erase0:
-        PASCAL_STRING "Do you want to erase "
+        PASCAL_STRING res_string_prompt_erase_prefix
 str_confirm_erase0_buf:  .res    18, 0
 kLenConfirmErase0 = 23 ; ??? Should be 21?
 
 str_dest_format_fail:
-        PASCAL_STRING "The destination disk cannot be formated !"
+        PASCAL_STRING res_string_errmsg_dest_format_fail
 str_format_error:
-        PASCAL_STRING "Error during formating."
+        PASCAL_STRING res_string_errmsg_format_error
 str_dest_protected:
-        PASCAL_STRING "The destination volume is write protected !"
+        PASCAL_STRING res_string_errmsg_dest_protected
 
 str_confirm_erase1:
-        PASCAL_STRING "Do you want to erase "
+        PASCAL_STRING res_string_prompt_erase_prefix_alt
 str_confirm_erase1_buf:  .res    18, 0
 kLenConfirmErase1 = 21
 
 ;;; This string is seen when copying a ProDOS disk to DOS 3.3 or Pascal disk.
 ;;; Unclear why a message with extra spaces used ???
 str_confirm_erase2:
-        PASCAL_STRING "Do you want to  erase  the disk in slot # drive # ?"
-        kStrConfirmErase2SlotOffset = 41
-        kStrConfirmErase2DriveOffset = 49
+        PASCAL_STRING res_string_prompt_erase_slot_drive_pattern
+        kStrConfirmErase2SlotOffset = res_const_prompt_erase_slot_drive_pattern_slot_offset
+        kStrConfirmErase2DriveOffset = res_const_prompt_erase_slot_drive_pattern_drive_offset
 
 ;;; Unknown which path leads to this; there don't seem to be any calls
 ;;; to show the dialog with this string ???
 str_confirm_erase3:
-        PASCAL_STRING "Do you want to erase the disk in slot # drive # ?"
-        kStrConfirmErase3SlotOffset = 39
-        kStrConfirmErase3DriveOffset = 47
+        PASCAL_STRING res_string_prompt_erase_slot_drive_pattern_alt
+        kStrConfirmErase3SlotOffset = res_const_prompt_erase_slot_drive_pattern_alt_slot_offset
+        kStrConfirmErase3DriveOffset = res_const_prompt_erase_slot_drive_pattern_alt_drive_offset
 
 str_copy_success:
-        PASCAL_STRING "The copy was successful."
+        PASCAL_STRING res_string_label_status_copy_success
 str_copy_fail:
-        PASCAL_STRING "The copy was not completed."
+        PASCAL_STRING res_string_label_status_copy_fail
 str_insert_source_or_cancel:
-        PASCAL_STRING "Insert source disk or press Escape to cancel."
+        PASCAL_STRING res_string_prompt_insert_source_or_cancel
 str_insert_dest_or_cancel:
-        PASCAL_STRING "Insert destination disk or press Escape to cancel."
+        PASCAL_STRING res_string_prompt_insert_dest_or_cancel
 
 char_space:
         .byte   ' '

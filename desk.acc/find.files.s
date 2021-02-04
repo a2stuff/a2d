@@ -7,8 +7,8 @@
 ;;; are ? and *.
 ;;; ============================================================
 
-        .setcpu "6502"
-        .feature string_escapes
+        .include "../config.inc"
+        RESOURCE_FILE "find.files.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -961,7 +961,7 @@ ctlmax:         .byte   0
         DEFINE_RECT_INSET frame_rect1, 4, 2, kDAWidth, kDAHeight
         DEFINE_RECT_INSET frame_rect2, 5, 3, kDAWidth, kDAHeight
 
-        DEFINE_LABEL find, "Find:", 20, 20
+        DEFINE_LABEL find, res_string_label_find, 20, 20
 
         DEFINE_RECT input_rect, 55, 10, kDAWidth-250, 21
         DEFINE_POINT input_textpos, 60, 20
@@ -975,8 +975,8 @@ ctlmax:         .byte   0
         DEFINE_RECT maprect, 0, 0, 358, 100
 .endparams
 
-        DEFINE_BUTTON search, "Search         \x0D", kDAWidth-235, 10
-        DEFINE_BUTTON cancel, "Cancel        Esc",   kDAWidth-120, 10
+        DEFINE_BUTTON search, res_string_button_search, kDAWidth-235, 10
+        DEFINE_BUTTON cancel, res_string_button_cancel,   kDAWidth-120, 10
 
 penxor: .byte   MGTK::penXOR
 

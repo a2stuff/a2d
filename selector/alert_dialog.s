@@ -4,6 +4,8 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
+        RESOURCE_FILE "alert_dialog.res"
+
         .org $D000
 
 .scope alert
@@ -59,9 +61,9 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
-        DEFINE_BUTTON ok,        "OK            \x0D", 300, 37
-        DEFINE_BUTTON try_again, "Try Again  A",       300, 37
-        DEFINE_BUTTON cancel,    "Cancel    Esc",       20, 37
+        DEFINE_BUTTON ok,        res_string_alert_button_ok, 300, 37
+        DEFINE_BUTTON try_again, res_string_button_try_again,       300, 37
+        DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
 
         DEFINE_POINT pos_prompt, 75, 29
 
@@ -72,21 +74,21 @@ prompt_addr:    .addr   0
 ;;; Messages
 
 str_selector_unable_to_run:
-        PASCAL_STRING "The Selector is unable to run the program."
+        PASCAL_STRING res_string_alert_selector_unable_to_run
 str_io_error:
-        PASCAL_STRING "I/O Error"
+        PASCAL_STRING res_string_alert_io_error
 str_no_device:
-        PASCAL_STRING "No device connected."
+        PASCAL_STRING res_string_alert_no_device
 str_pathname_does_not_exist:
-        PASCAL_STRING "Part of the pathname doesn't exist."
+        PASCAL_STRING res_string_alert_pathname_does_not_exist
 str_insert_source_disk:
-        PASCAL_STRING "Please insert source disk."
+        PASCAL_STRING res_string_alert_insert_source_disk
 str_file_not_found:
-        PASCAL_STRING "The file cannot be found."
+        PASCAL_STRING res_string_alert_file_not_found
 str_insert_system_disk:
-        PASCAL_STRING "Please insert the system disk"
+        PASCAL_STRING res_string_alert_insert_system_disk
 str_basic_system_not_found:
-        PASCAL_STRING "BASIC.SYSTEM not found"
+        PASCAL_STRING res_string_alert_basic_system_not_found
 
 kNumErrorMessages = 8
 

@@ -1,4 +1,5 @@
-        .setcpu "6502"
+        .include "../config.inc"
+        RESOURCE_FILE "show.text.file.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -1288,8 +1289,8 @@ ignore: clc                     ; Click ignored
         rts
 .endproc
 
-fixed_str:      PASCAL_STRING "Fixed        "
-prop_str:       PASCAL_STRING "Proportional"
+fixed_str:      PASCAL_STRING res_string_button_fixed
+prop_str:       PASCAL_STRING res_string_button_prop
         kLabelWidth = 50
 
 .params mode_mapinfo                  ; bounding port for mode label

@@ -4,6 +4,8 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+        RESOURCE_FILE "main.res"
+
 ;;; ============================================================
 ;;; Segment loaded into MAIN $4000-$BEFF
 ;;; ============================================================
@@ -8721,27 +8723,27 @@ month_table:
         ASSERT_ADDRESS_TABLE_SIZE month_table, 13
 
 str_no_date:
-        PASCAL_STRING "no date"
+        PASCAL_STRING res_string_no_date
 
-str_jan:PASCAL_STRING "January"
-str_feb:PASCAL_STRING "February"
-str_mar:PASCAL_STRING "March"
-str_apr:PASCAL_STRING "April"
-str_may:PASCAL_STRING "May"
-str_jun:PASCAL_STRING "June"
-str_jul:PASCAL_STRING "July"
-str_aug:PASCAL_STRING "August"
-str_sep:PASCAL_STRING "September"
-str_oct:PASCAL_STRING "October"
-str_nov:PASCAL_STRING "November"
-str_dec:PASCAL_STRING "December"
+str_jan:PASCAL_STRING res_string_month_name_1
+str_feb:PASCAL_STRING res_string_month_name_2
+str_mar:PASCAL_STRING res_string_month_name_3
+str_apr:PASCAL_STRING res_string_month_name_4
+str_may:PASCAL_STRING res_string_month_name_5
+str_jun:PASCAL_STRING res_string_month_name_6
+str_jul:PASCAL_STRING res_string_month_name_7
+str_aug:PASCAL_STRING res_string_month_name_8
+str_sep:PASCAL_STRING res_string_month_name_9
+str_oct:PASCAL_STRING res_string_month_name_10
+str_nov:PASCAL_STRING res_string_month_name_11
+str_dec:PASCAL_STRING res_string_month_name_12
 
 str_space:
         PASCAL_STRING " "       ; do not localize
 str_comma:
-        PASCAL_STRING ", "
+        PASCAL_STRING res_string_comma_infix
 str_at:
-        PASCAL_STRING " at "
+        PASCAL_STRING res_string_at_infix
 
 .proc concatenate_date_part
         stax    $06
@@ -9086,7 +9088,7 @@ do_byte:
         iny
         rts
 
-prefix: PASCAL_STRING "     AuxType: $"
+prefix: PASCAL_STRING res_string_auxtype_prefix
 
 auxtype:
         .word 0
@@ -11382,7 +11384,7 @@ write_protected_flag:
         .byte   0
 
 str_vol:
-        PASCAL_STRING " Volume"
+        PASCAL_STRING res_string_volume
 
 .proc run_get_info_dialog_proc
         param_call invoke_dialog_proc, kIndexGetInfoDialog, get_info_dialog_params

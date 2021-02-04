@@ -1,5 +1,5 @@
-        .setcpu "6502"
-        .feature string_escapes
+        .include "../config.inc"
+        RESOURCE_FILE "desktop.system.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -776,11 +776,11 @@ filename_table:
 
         kVtabCopyingMsg = 12
 str_copying_to_ramcard:
-        PASCAL_STRING .sprintf("Copying %s into RAMCard", kDeskTopProductName)
+        PASCAL_STRING .sprintf(res_string_copying_to_ramcard, kDeskTopProductName)
 
         kVtabCopyingTip = 23
 str_tip_skip_copying:
-        PASCAL_STRING "Tip: To skip copying to RAMCard, hold down \x0F\x1B\x41\x18\x0E when launching."
+        PASCAL_STRING res_string_label_tip_skip_copying
 
 ;;; Signature of block storage devices ($Cn0x)
 kNumSigBytes = 4
@@ -1794,22 +1794,22 @@ bits:   .byte   $00
 ;;; ============================================================
 
 str_copying:
-        PASCAL_STRING "Copying to RAMCard: "
+        PASCAL_STRING res_string_label_copying
 
 str_insert:
-        PASCAL_STRING "Insert the source disk and press <Return> to continue or <ESC> to cancel"
+        PASCAL_STRING res_string_prompt_insert_source
 
 str_not_enough:
-        PASCAL_STRING "Not enough room in the RAMCard, press <Return> to continue"
+        PASCAL_STRING res_string_prompt_ramcard_full
 
 str_error:
-        PASCAL_STRING "Error $"
+        PASCAL_STRING res_string_error_prefix
 
 str_occured:
-        PASCAL_STRING " occured when copying "
+        PASCAL_STRING res_string_error_suffix
 
 str_not_completed:
-        PASCAL_STRING "The copy was not completed, press <Return> to continue."
+        PASCAL_STRING res_string_prompt_copy_not_completed
 
 ;;; ============================================================
 

@@ -1,5 +1,4 @@
-        .setcpu "6502"
-        .feature string_escapes
+        .include "../config.inc"
 
         .include "apple2.inc"
         .include "../inc/macros.inc"

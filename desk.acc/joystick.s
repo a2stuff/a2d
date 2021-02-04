@@ -4,7 +4,8 @@
 ;;; A simple joystick calibration tool
 ;;; ============================================================
 
-        .setcpu "6502"
+        .include "../config.inc"
+        RESOURCE_FILE "joystick.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -50,7 +51,7 @@ kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 str_title:
-        PASCAL_STRING "Joystick Calibration" ; window title
+        PASCAL_STRING res_string_window_title ; window title
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -215,9 +216,9 @@ kJoystickDisplayH = 64
         DEFINE_POINT joy_btn1_lpos, kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 30 + 8
         DEFINE_POINT joy_btn2_lpos, kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 50 + 8
 
-joy_btn0_label:   PASCAL_STRING "0" ; dialog label
-joy_btn1_label:   PASCAL_STRING "1" ; dialog label
-joy_btn2_label:   PASCAL_STRING "2" ; dialog label
+joy_btn0_label:   PASCAL_STRING res_string_label_joy_btn0 ; dialog label
+joy_btn1_label:   PASCAL_STRING res_string_label_joy_btn1 ; dialog label
+joy_btn2_label:   PASCAL_STRING res_string_label_joy_btn2 ; dialog label
 
 .params joy_marker
         DEFINE_POINT viewloc, 0, 0

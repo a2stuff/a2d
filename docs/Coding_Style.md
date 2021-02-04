@@ -315,3 +315,39 @@ buf:    .res    16
 .endparams          ; alias for .endproc
         data_ref = data::ref
 ```
+
+## Localization
+
+Localization (translations of the application into other languages) is done by ensuring that all resources that need to be changed exist in files outside the source. For a given file (e.g. `foo.s`) if there are localized resources they are present in the `foo.res.LANG` file where `LANG` is a language code (e.g. `en`, `it`, etc).
+
+`foo.s`:
+```asm
+RESOURCE_FILE "foo.res"
+
+hello:
+    PASCAL_STRING res_string_hello_world
+
+    lda     event_key
+    cmp     #res_char_yes_key
+```
+
+`foo.res.en`:
+```asm
+.define res_string_hello_world "Hello World"
+.define res_char_yes_key 'Y'
+```
+
+Conventions:
+
+* `res_string_` for strings
+* `res_char_` for characters (most commonly keyboard shortcuts)
+* `res_const_` for constant numbers
+
+Additionally:
+
+* `res_string_..._pattern` for strings with placeholders (and use # for replaced characters)
+* `res_const_..._pattern_offset` for the offset of a placeholder in a string
+
+(Tooling will be added to enforce the latter.)
+
+Since often multiple files are assembled together by jumbo files via includes and `.define`s are not scoped, conflicting identifiers are possible.
