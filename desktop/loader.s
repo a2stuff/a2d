@@ -53,7 +53,7 @@ splash_string:
         PASCAL_STRING .sprintf(res_string_splash_string, kDeskTopProductName)
 
 filename:
-        PASCAL_STRING "DeskTop2" ; do not localize
+        PASCAL_STRING kFilenameDeskTop
 
         DEFINE_READ_PARAMS read_params, $1E00, $400 ; so the $200 byte mark ends up at $2000
         DEFINE_CLOSE_PARAMS close_params
@@ -230,7 +230,7 @@ prefix_buffer:
         DEFINE_SET_MARK_PARAMS set_mark_params, $580 ; This many bytes before the good stuff.
 
 filename:
-        PASCAL_STRING "DeskTop2" ; do not localize
+        PASCAL_STRING kFilenameDeskTop
 
 ;;; Consecutive segments are loaded, |size| bytes are loaded at |addr|
 ;;; then relocated to |dest| according to |type|.
@@ -424,7 +424,7 @@ max_page:
         DEFINE_CLOSE_PARAMS close_params
 
 filename:
-        PASCAL_STRING "DeskTop.config" ; do not localize
+        PASCAL_STRING kFilenameDeskTopConfig
 
 start:
         ;; Load the settings file; on failure, just skip

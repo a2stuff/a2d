@@ -30,7 +30,7 @@ str_loading:
         PASCAL_STRING res_string_status_loading
 
 filename:
-        PASCAL_STRING "Selector" ; do not localize
+        PASCAL_STRING kFilenameSelector
 
         ;; ProDOS MLI call param blocks
 

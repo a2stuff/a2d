@@ -9,6 +9,20 @@ kDeskTopVersionMinor = 2
 .define kDeskTopReleaseDate "January 25, 2021"
 
 ;;; ============================================================
+;;; Filenames
+
+.define kFilenameLauncher      "DeskTop.system"
+.define kFilenameDeskTop       "DeskTop2"
+.define kFilenameSelector      "Selector"
+.define kFilenameSelectorList  "Selector.List"
+.define kFilenameDeskTopConfig "DeskTop.config"
+.define kFilenameDeskTopState  "DeskTop.file"
+.define kFilenameDADir         "Desk.Acc"
+.define kFilenamePreviewDir    "Preview"
+.define kFilenameQuitSave      "Quit.tmp"
+.define kFilenameRAMCardDir    "DeskTop"
+
+;;; ============================================================
 
 ;;; Dummy addresses, for self-modifying code
 dummy0000 := $0000

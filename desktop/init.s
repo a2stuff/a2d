@@ -481,7 +481,7 @@ calc_data_str:
         DEFINE_OPEN_PARAMS open_params, str_selector_list, selector_list_io_buf
 
 str_selector_list:
-        PASCAL_STRING "Selector.List" ; do not localize
+        PASCAL_STRING kFilenameSelectorList
 
         DEFINE_READ_PARAMS read_params, selector_list_data_buf, kSelectorListShortSize
         DEFINE_CLOSE_PARAMS close_params
@@ -737,7 +737,7 @@ close_dir:
         close_ref_num := close_params::ref_num
 
 str_desk_acc:
-        PASCAL_STRING "Desk.acc" ; do not localize
+        PASCAL_STRING kFilenameDADir
 
 file_count:     .byte   0
 entry_num:      .byte   0

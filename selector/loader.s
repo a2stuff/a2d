@@ -29,13 +29,13 @@
         DEFINE_CLOSE_PARAMS close_params
 
 str_selector:
-        PASCAL_STRING "Selector" ; do not localize
+        PASCAL_STRING kFilenameSelector
 
         DEFINE_OPEN_PARAMS open_config_params, str_config, io_buf
         DEFINE_READ_PARAMS read_config_params, SETTINGS, .sizeof(DeskTopSettings)
 
 str_config:
-        PASCAL_STRING "DeskTop.config" ; do not localize
+        PASCAL_STRING kFilenameDeskTopConfig
 
 ;;; ============================================================
 

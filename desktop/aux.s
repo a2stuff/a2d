@@ -3272,7 +3272,7 @@ trash_mask:
 ;;; Menus
 
 label_apple:
-        PASCAL_STRING kGlyphSolidApple ; do not localize
+        PASCAL_STRING kGlyphSolidApple
 label_file:
         PASCAL_STRING res_string_menu_bar_item_file    ; menu bar item
 label_view:
@@ -3469,14 +3469,14 @@ kAboutDialogHeight      = 120
         DEFINE_RECT_INSET about_dialog_outer_rect, 4, 2, kAboutDialogWidth, kAboutDialogHeight
         DEFINE_RECT_INSET about_dialog_inner_rect, 5, 3, kAboutDialogWidth, kAboutDialogHeight
 
-str_about1:  PASCAL_STRING kDeskTopProductName ; do not localize
+str_about1:  PASCAL_STRING kDeskTopProductName
 str_about2:  PASCAL_STRING res_string_about_text_line2
 str_about3:  PASCAL_STRING res_string_about_text_line3
 str_about4:  PASCAL_STRING res_string_about_text_line4
 str_about5:  PASCAL_STRING res_string_about_text_line5
 str_about6:  PASCAL_STRING res_string_about_text_line6
 str_about7:  PASCAL_STRING res_string_about_text_line7
-str_about8:  PASCAL_STRING kDeskTopReleaseDate ; do not localize
+str_about8:  PASCAL_STRING kDeskTopReleaseDate
 str_about9:  PASCAL_STRING .sprintf("Version %d.%d%s",::kDeskTopVersionMajor,::kDeskTopVersionMinor,kDeskTopVersionSuffix) ; do not localize
 
         ;; "Copy File" dialog strings

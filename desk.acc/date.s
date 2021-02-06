@@ -31,7 +31,7 @@ stash_stack:  .byte   $00
 ;;; MLI Call Param Blocks
 
 filename:
-        PASCAL_STRING "DESKTOP.SYSTEM" ; do not localize
+        PASCAL_STRING kFilenameLauncher
 
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
         DEFINE_SET_MARK_PARAMS set_mark_params, 3

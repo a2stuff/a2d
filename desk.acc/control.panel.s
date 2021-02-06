@@ -1833,7 +1833,7 @@ done:   rts
 ;;; Save Settings
 
 filename:
-        PASCAL_STRING "DeskTop.config" ; do not localize
+        PASCAL_STRING kFilenameDeskTopConfig
 
 filename_buffer:
         .res kPathBufferSize

@@ -35,7 +35,7 @@ item_label:
         DEFINE_CLOSE_PARAMS close_params
 
 str_desktop2:
-        PASCAL_STRING "DeskTop2" ; do not localize
+        PASCAL_STRING kFilenameDeskTop
 
 ;;; ============================================================
 

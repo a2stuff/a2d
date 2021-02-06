@@ -759,16 +759,16 @@ copied_flag:                    ; set to dst_path's length, or reset
 kNumFilenames = 10
 
         ;; Files/Directories to copy
-str_f1: PASCAL_STRING "DESKTOP.SYSTEM" ; do not localize
-str_f2: PASCAL_STRING "DESKTOP2"       ; do not localize
-str_f3: PASCAL_STRING "DESK.ACC"       ; do not localize
-str_f4: PASCAL_STRING "PREVIEW"        ; do not localize
-str_f5: PASCAL_STRING "SELECTOR.LIST"  ; do not localize
-str_f6: PASCAL_STRING "SELECTOR"       ; do not localize
+str_f1: PASCAL_STRING kFilenameLauncher
+str_f2: PASCAL_STRING kFilenameDeskTop
+str_f3: PASCAL_STRING kFilenameDADir
+str_f4: PASCAL_STRING kFilenamePreviewDir
+str_f5: PASCAL_STRING kFilenameSelectorList
+str_f6: PASCAL_STRING kFilenameSelector
 str_f7: PASCAL_STRING "PRODOS"         ; do not localize
-str_f8: PASCAL_STRING "Quit.tmp"       ; do not localize
-str_f9: PASCAL_STRING "DeskTop.config" ; do not localize
-str_f10:PASCAL_STRING "DeskTop.file"   ; do not localize
+str_f8: PASCAL_STRING kFilenameQuitSave
+str_f9: PASCAL_STRING kFilenameDeskTopConfig
+str_f10:PASCAL_STRING kFilenameDeskTopState
 
 filename_table:
         .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8,str_f9,str_f10
@@ -819,7 +819,7 @@ filenum:
         DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + BLOCK_SIZE, 1
 
 str_slash_desktop:
-        PASCAL_STRING "/DeskTop" ; do not localize
+        PASCAL_STRING .concat("/", kFilenameRAMCardDir) ; do not localize
 
 ;;; ============================================================
 
@@ -1411,7 +1411,7 @@ loop:   inx
         rts
 
 str_desktop2:
-        PASCAL_STRING "DeskTop2" ; do not localize
+        PASCAL_STRING kFilenameDeskTop
 .endproc
 
 ;;; ============================================================
@@ -1423,7 +1423,7 @@ str_desktop2:
 
         DEFINE_OPEN_PARAMS open_params, str_desktop1_path, dst_io_buffer
 str_desktop1_path:
-        PASCAL_STRING "DeskTop/DESKTOP.SYSTEM" ; do not localize
+        PASCAL_STRING .concat(kFilenameRAMCardDir, "/", kFilenameLauncher) ; do not localize
         DEFINE_WRITE_PARAMS write_params, dt1_addr, kWriteBackSize
         DEFINE_CLOSE_PARAMS close_params
 
@@ -1674,7 +1674,7 @@ loop2:  lda     entry_path1,y
 .proc read_selector_list_impl
         DEFINE_OPEN_PARAMS open_params, str_selector_list, src_io_buffer
 str_selector_list:
-        PASCAL_STRING "Selector.List" ; do not localize
+        PASCAL_STRING kFilenameSelectorList
         DEFINE_READ_PARAMS read_params, selector_buffer, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS close_params
 
@@ -1978,9 +1978,9 @@ done:   rts
         DEFINE_CLOSE_PARAMS close_everything_params
 
 str_selector:
-        PASCAL_STRING "Selector" ; do not localize
+        PASCAL_STRING kFilenameSelector
 str_desktop2:
-        PASCAL_STRING "DeskTop2" ; do not localize
+        PASCAL_STRING kFilenameDeskTop
 
 
 start:  MLI_CALL CLOSE, close_everything_params
@@ -2015,7 +2015,7 @@ read:   sta     read_params::ref_num
 quit_code_addr := $1000
 quit_code_save := $1100
 
-str_quit_code:  PASCAL_STRING "Quit.tmp" ; do not localize
+str_quit_code:  PASCAL_STRING kFilenameQuitSave
 PROC_AT quit_restore_proc, ::quit_code_addr
 
         lda     LCBANK2

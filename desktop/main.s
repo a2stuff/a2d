@@ -1145,13 +1145,13 @@ str_basix_system:
         PASCAL_STRING "BASIx.SYSTEM" ; do not localize
 
 str_preview_fot:
-        PASCAL_STRING "Preview/show.image.file" ; do not localize
+        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.image.file") ; do not localize
 
 str_preview_fnt:
-        PASCAL_STRING "Preview/show.font.file" ; do not localize
+        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.font.file") ; do not localize
 
 str_preview_txt:
-        PASCAL_STRING "Preview/show.text.file" ; do not localize
+        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.text.file") ; do not localize
 
 ;;; ============================================================
 
@@ -1642,7 +1642,7 @@ prefix_length:
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, path
 
 str_desk_acc:
-        PASCAL_STRING "Desk.Acc/" ; do not localize
+        PASCAL_STRING .concat(kFilenameDADir, "/") ; do not localize
 
 start:  jsr     reset_main_grafport
         jsr     set_cursor_watch
@@ -2492,7 +2492,8 @@ eject_flag:
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_QUIT_PARAMS quit_params
 
-str_quit_code:  PASCAL_STRING "Quit.tmp" ; do not localize
+str_quit_code:
+        PASCAL_STRING kFilenameQuitSave
 
 reset_handler:
         ;; Restore DeskTop Main expected state...
@@ -10102,7 +10103,7 @@ addr_table:
         DEFINE_OPEN_PARAMS open_params, str_desktop2, IO_BUFFER
 
 str_desktop2:
-        PASCAL_STRING "DeskTop2" ; do not localize
+        PASCAL_STRING kFilenameDeskTop
 
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
 
@@ -16055,7 +16056,7 @@ ytmp:   .word   0
         DEFINE_READ_PARAMS write_params, desktop_file_data_buf, kFileSize
         DEFINE_CLOSE_PARAMS close_params
 str_desktop_file:
-        PASCAL_STRING "DeskTop.file" ; do not localize
+        PASCAL_STRING kFilenameDeskTopState
 
 .proc save
         data_ptr := $06

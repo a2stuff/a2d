@@ -1339,7 +1339,7 @@ L9C81:  MLI_RELAY_CALL FLUSH, flush_close_params
         DEFINE_OPEN_PARAMS open_params2, filename, io_buf
 
 filename:
-        PASCAL_STRING "Selector.List" ; do not localize
+        PASCAL_STRING kFilenameSelectorList
 
         DEFINE_READ_PARAMS read_params2, selector_list, kSelectorListBufSize
         DEFINE_WRITE_PARAMS write_params2, selector_list, kSelectorListBufSize
