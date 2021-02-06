@@ -18,6 +18,8 @@
     .endif
 .endmacro
 
+kShortcutReadDisk = 'D'
+
 ;;; ============================================================
 
         ASSERT_ADDRESS $D000, "Entry point"
@@ -87,7 +89,7 @@ menu_apple:
 
 menu_file:
         DEFINE_MENU 1
-@items: DEFINE_MENU_ITEM label_quit, 'Q', 'q'
+@items: DEFINE_MENU_ITEM label_quit, 'Q'
         ASSERT_RECORD_TABLE_SIZE @items, 1, .sizeof(MGTK::MenuItem)
 
 label_apple:
@@ -1065,9 +1067,9 @@ params: .addr   0
 
 dialog_shortcuts:
         lda     event_key
-        cmp     #'D'
+        cmp     #kShortcutReadDisk
         beq     LDC09
-        cmp     #'d'
+        cmp     #TO_LOWER(kShortcutReadDisk)
         bne     LDC2D
 LDC09:  lda     winfo_dialog::window_id
         jsr     set_win_port
@@ -2715,13 +2717,13 @@ LED79:  lda     #1
         and     #$0F
         beq     LEDC1
         pla
-        cmp     #'N'
+        cmp     #kShortcutNo
         beq     do_no
-        cmp     #'n'
+        cmp     #TO_LOWER(kShortcutNo)
         beq     do_no
-        cmp     #'Y'
+        cmp     #kShortcutYes
         beq     do_yes
-        cmp     #'y'
+        cmp     #TO_LOWER(kShortcutYes)
         beq     do_yes
         jmp     input_loop
 
@@ -2736,14 +2738,14 @@ do_yes: jsr     set_pen_xor
         jmp     clear_and_return_value
 
 LEDC1:  pla
-        cmp     #'a'
+        cmp     #TO_LOWER(kShortcutTryAgain)
         bne     LEDD7
 LEDC6:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, try_again_button_rect
         lda     #0
         jmp     clear_and_return_value
 
-LEDD7:  cmp     #'A'
+LEDD7:  cmp     #kShortcutTryAgain
         beq     LEDC6
         cmp     #CHAR_RETURN
         beq     LEDC6

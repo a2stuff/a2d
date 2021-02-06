@@ -13755,17 +13755,17 @@ LA76B:  cmp     #CHAR_DOWN
 
 LA77A:  bit     LD8E7
         bvc     LA79B
-        cmp     #'Y'
+        cmp     #kShortcutYes
         beq     do_yes
-        cmp     #'y'
+        cmp     #TO_LOWER(kShortcutYes)
         beq     do_yes
-        cmp     #'N'
+        cmp     #kShortcutNo
         beq     do_no
-        cmp     #'n'
+        cmp     #TO_LOWER(kShortcutNo)
         beq     do_no
-        cmp     #'A'
+        cmp     #kShortcutAll
         beq     do_all
-        cmp     #'a'
+        cmp     #TO_LOWER(kShortcutAll)
         beq     do_all
         cmp     #CHAR_RETURN
         beq     do_yes
@@ -16235,7 +16235,6 @@ iigs:   lda     KEYMODREG
 ;;; the mod, snapshot on init (and assume shift is not down) and XOR.
 pb2_initial_state:
         .byte   0
-
 
 ;;; ============================================================
 

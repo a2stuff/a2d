@@ -16,6 +16,8 @@
 
 ;;; ============================================================
 
+kShortcutQuit = 'Q'
+
         .org DA_LOAD_ADDRESS
 
 da_start:
@@ -601,9 +603,9 @@ continue:
         lda     event_params::modifiers
         beq     start
         lda     event_params::key
-        cmp     #'Q'
+        cmp     #kShortcutQuit
         beq     exit
-        cmp     #'q'
+        cmp     #TO_LOWER(kShortcutQuit)
         beq     exit
 
 start:  lda     KBD

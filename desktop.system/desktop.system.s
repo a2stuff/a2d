@@ -54,6 +54,13 @@ selector_buffer := $1600        ; Room for kSelectorListBufSize
 copy_buffer     := $4000
 kCopyBufferSize = MLI - copy_buffer
 
+;;; ============================================================
+
+kShortcutMonitor = 'M'
+
+
+;;; ============================================================
+
         .org PRODOS_SYS_START
 
 ;;; ============================================================
@@ -1893,9 +1900,9 @@ loop:   lda     KBD
         and     #CHAR_MASK
         sta     KBDSTRB
 
-        cmp     #'M'            ; Easter Egg: If 'M', enter monitor
+        cmp     #kShortcutMonitor ; Easter Egg: If 'M', enter monitor
         beq     monitor
-        cmp     #'m'
+        cmp     #TO_LOWER(kShortcutMonitor)
         beq     monitor
 
         cmp     #CHAR_RETURN

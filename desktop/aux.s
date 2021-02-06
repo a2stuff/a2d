@@ -3347,19 +3347,19 @@ desktop_menu:
 
 file_menu:
         DEFINE_MENU kMenuSizeFile
-@items: DEFINE_MENU_ITEM label_new_folder, 'N', 'n'
-        DEFINE_MENU_ITEM label_open, 'O', 'o'
-        DEFINE_MENU_ITEM label_close, 'W', 'w'
+@items: DEFINE_MENU_ITEM label_new_folder, 'N'
+        DEFINE_MENU_ITEM label_open, 'O'
+        DEFINE_MENU_ITEM label_close, 'W'
         DEFINE_MENU_ITEM label_close_all
-        DEFINE_MENU_ITEM label_select_all, 'A', 'a'
+        DEFINE_MENU_ITEM label_select_all, 'A'
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM label_get_info, 'I', 'i'
+        DEFINE_MENU_ITEM label_get_info, 'I'
         DEFINE_MENU_ITEM_NOMOD label_rename_icon, CHAR_RETURN, CHAR_RETURN
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_copy_file
         DEFINE_MENU_ITEM label_delete_file
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM label_quit, 'Q', 'q'
+        DEFINE_MENU_ITEM label_quit, 'Q'
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeFile, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdNewFolder   = 1
@@ -3395,7 +3395,7 @@ special_menu:
         DEFINE_MENU kMenuSizeSpecial
 @items: DEFINE_MENU_ITEM label_check_all_drives
         DEFINE_MENU_ITEM label_check_drive
-        DEFINE_MENU_ITEM label_eject, 'E', 'e'
+        DEFINE_MENU_ITEM label_eject, 'E'
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_format_disk
         DEFINE_MENU_ITEM label_erase_disk
@@ -3968,14 +3968,14 @@ event_loop:
 
 :       bit     alert_options   ; has Try Again?
         bvs     check_ok        ; nope
-        cmp     #'a'            ; yes, maybe A/a ?
+        cmp     #TO_LOWER(kShortcutTryAgain)  ; yes, maybe A/a ?
         bne     :+
 was_a:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, try_again_button_rect
         lda     #kAlertResultTryAgain
         jmp     finish
 
-:       cmp     #'A'
+:       cmp     #kShortcutTryAgain
         beq     was_a
         cmp     #CHAR_RETURN    ; also allow Return as default
         beq     was_a

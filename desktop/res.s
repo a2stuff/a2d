@@ -1084,10 +1084,10 @@ selector_menu:
 @items: DEFINE_MENU_ITEM label_add
         DEFINE_MENU_ITEM label_edit
         DEFINE_MENU_ITEM label_del
-        DEFINE_MENU_ITEM label_run, '0', '0'
+        DEFINE_MENU_ITEM label_run, '0'
         DEFINE_MENU_SEPARATOR
         .repeat kMaxRunListEntries, i
-        DEFINE_MENU_ITEM run_list_entries + i * $10, .string(i+1), .string(i+1)
+        DEFINE_MENU_ITEM run_list_entries + i * $10, ('0'+i+1)
         .endrepeat
         .assert 5 + kMaxRunListEntries = kMenuSizeSelector, error, "Menu size mismatch"
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeSelector, .sizeof(MGTK::MenuItem)

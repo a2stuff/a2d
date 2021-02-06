@@ -53,6 +53,8 @@ end:
 .endmacro
 
 
+.define TO_LOWER(char) (char | %00100000)
+
 ;;; ============================================================
 ;;; Pad with zeros to the given address
 

@@ -10,6 +10,8 @@
 
 .scope alert
 
+kShortcutTryAgain = 'A'
+
 alert_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -273,14 +275,14 @@ event_loop:
 
 :       bit     alert_options   ; A = Try Again?
         bvs     check_ok
-        cmp     #'a'
+        cmp     #TO_LOWER(kShortcutTryAgain)
         bne     :+
 was_a:  MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, try_again_button_rect
         lda     #kAlertResultTryAgain
         jmp     finish
 
-:       cmp     #'A'
+:       cmp     #kShortcutTryAgain
         beq     was_a
         cmp     #CHAR_RETURN    ; also allow Return as default
         beq     was_a

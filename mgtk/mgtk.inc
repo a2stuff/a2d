@@ -770,13 +770,19 @@ ycoord: .word   top
 .endmacro
 
 ;;; For menu items with open-apple modifier shortcuts, or no shortcuts
-.macro DEFINE_MENU_ITEM saddr, shortcut1, shortcut2
+;;; NOTE: If shortcut is A-Z, char2 is to_lower(char1); else char2=char1
+.macro DEFINE_MENU_ITEM saddr, shortcut
         .if .paramcount > 1
 
         .byte   MGTK::MenuOpt::open_apple ; option byte
         .byte   0               ; mark_char
-        .byte   shortcut1       ; char1
-        .byte   shortcut2       ; char2
+        .byte   shortcut        ; char1
+
+        .if 'A' <= shortcut && shortcut <= 'Z'
+        .byte   TO_LOWER(shortcut) ; char2
+        .else
+        .byte   shortcut
+        .endif
         .addr   saddr           ; item_str_pointer
 
         .else

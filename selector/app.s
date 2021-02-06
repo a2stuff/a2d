@@ -16,6 +16,9 @@ selector_list   := $B300
 kEntryPickerItemWidth = 127
 kEntryPickerItemHeight = 9
 
+kShortcutRunDeskTop = 'Q'
+kShortcutRunProgram = 'R'
+
 ;;; ============================================================
 ;;; MGTK library
 
@@ -116,20 +119,20 @@ apple_menu:
 
 file_menu:
         DEFINE_MENU 1
-        DEFINE_MENU_ITEM str_run_a_program, 'R', 'r'
+        DEFINE_MENU_ITEM str_run_a_program, 'R'
 
 startup_menu:
         DEFINE_MENU 1
 
 kMenuItemShortcutOffset = 2
 
-mi_x1:  DEFINE_MENU_ITEM str_slot_x1, '0', '0'
-mi_x2:  DEFINE_MENU_ITEM str_slot_x2, '0', '0'
-mi_x3:  DEFINE_MENU_ITEM str_slot_x3, '0', '0'
-mi_x4:  DEFINE_MENU_ITEM str_slot_x4, '0', '0'
-mi_x5:  DEFINE_MENU_ITEM str_slot_x5, '0', '0'
-mi_x6:  DEFINE_MENU_ITEM str_slot_x6, '0', '0'
-mi_x7:  DEFINE_MENU_ITEM str_slot_x7, '0', '0'
+mi_x1:  DEFINE_MENU_ITEM str_slot_x1, '0'
+mi_x2:  DEFINE_MENU_ITEM str_slot_x2, '0'
+mi_x3:  DEFINE_MENU_ITEM str_slot_x3, '0'
+mi_x4:  DEFINE_MENU_ITEM str_slot_x4, '0'
+mi_x5:  DEFINE_MENU_ITEM str_slot_x5, '0'
+mi_x6:  DEFINE_MENU_ITEM str_slot_x6, '0'
+mi_x7:  DEFINE_MENU_ITEM str_slot_x7, '0'
 
 str_apple:
         PASCAL_STRING kGlyphSolidApple ; do not localize
@@ -419,9 +422,9 @@ check_key_down:
         jmp     done_keys
 
 check_key:
-        cmp     #'Q'            ; If Q is down, try launching DeskTop
+        cmp     #kShortcutRunDeskTop ; If Q is down, try launching DeskTop
         beq     quick_run_desktop
-        cmp     #'q'
+        cmp     #TO_LOWER(kShortcutRunDeskTop)
         beq     quick_run_desktop
 
         sec
@@ -613,9 +616,9 @@ quick_boot_slot:
         bmi     not_desktop
         lda     event_key
         and     #CHAR_MASK
-        cmp     #'Q'
+        cmp     #kShortcutRunDeskTop
         beq     :+
-        cmp     #'q'
+        cmp     #TO_LOWER(kShortcutRunDeskTop)
         bne     not_desktop
 :       MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     found_desktop
@@ -722,9 +725,9 @@ has_modifiers:
         and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     menukey
-        cmp     #'R'
+        cmp     #kShortcutRunProgram
         beq     menukey
-        cmp     #'r'
+        cmp     #TO_LOWER(kShortcutRunProgram)
         beq     menukey
         cmp     #'9'+1
         bcs     other

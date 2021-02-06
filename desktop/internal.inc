@@ -80,6 +80,16 @@ kIconBBoxOffsetRight    = 65    ; includes width of icon + label
 ;;; NOTE: kIconBBoxOffsetRight should probably be se to
 ;;; kIconBBoxOffsetLeft + kIconWidth but aesthetically that looks bad.
 
+;;; ============================================================
+;;; Common Shortcuts
+
+;;; TODO: Ensure these are localizable
+
+kShortcutYes      = 'Y'
+kShortcutNo       = 'N'
+kShortcutTryAgain = 'A'
+kShortcutAll      = 'A'
+
 
 ;;; ============================================================
 ;;; Memory Areas
