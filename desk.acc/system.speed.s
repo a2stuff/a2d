@@ -323,7 +323,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc on_click_ok
-        param_call button_event_loop, kDAWindowId, ok_button_rect
+        param_call ButtonEventLoop, kDAWindowId, ok_button_rect
         jeq     close_window
         jmp     input_loop
 .endproc
@@ -331,7 +331,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc on_click_norm
-        param_call button_event_loop, kDAWindowId, norm_button_rect
+        param_call ButtonEventLoop, kDAWindowId, norm_button_rect
         bne     :+
         jsr     do_norm
 :       jmp     input_loop
@@ -340,7 +340,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc on_click_fast
-        param_call button_event_loop, kDAWindowId, fast_button_rect
+        param_call ButtonEventLoop, kDAWindowId, fast_button_rect
         bne     :+
         jsr     do_fast
 :       jmp     input_loop
@@ -395,72 +395,8 @@ hit:    lda     winfo::window_id
 
 
 ;;; ============================================================
-;;; Event loop during button press - initial invert and
-;;; inverting as mouse is dragged in/out.
-;;; Input: A,X = rect address, Y = window_id
-;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
 
-.proc button_event_loop
-        sty     window_id
-        stax    rect_addr1
-        stax    rect_addr2
-
-        ;; Initial state
-        copy    #0, down_flag
-
-        ;; Do initial inversion
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        jsr     invert
-
-        ;; Event loop
-loop:   MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     exit
-        lda     window_id
-        sta     screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr1
-
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     down_flag       ; outside but was inside?
-        beq     toggle
-        jmp     loop
-
-inside: lda     down_flag       ; already depressed?
-        bne     toggle
-        jmp     loop
-
-toggle: jsr     invert
-        lda     down_flag
-        eor     #$80
-        sta     down_flag
-        jmp     loop
-
-exit:   lda     down_flag       ; was depressed?
-        bne     :+
-        jsr     invert
-:       lda     down_flag
-        rts
-
-        ;; --------------------------------------------------
-
-invert: MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr2
-        rts
-
-        ;; --------------------------------------------------
-
-down_flag:
-        .byte   0
-
-window_id:
-        .byte   0
-.endproc
-
-;;; ============================================================
-
+        .include "../lib/buttonloop.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================
