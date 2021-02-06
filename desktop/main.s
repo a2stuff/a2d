@@ -3814,8 +3814,7 @@ check_drive_flags:
         adc     #kStartupMenuItemSlotOffset
         tax
         lda     startup_menu_item_1,x
-        sec
-        sbc     #'0'            ; convert ASCII digit back to number
+        and     #$0F            ; convert ASCII digit back to number
         clc
         adc     #>$C000         ; compute $Cn00
         sta     reset_and_invoke_target+1

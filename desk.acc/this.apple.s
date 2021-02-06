@@ -781,8 +781,7 @@ match:  tya
 
         ;; $00...$08 are 1.x (roughly)
 v_1x:   and     #$0F
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     str_prodos_version + kVersionStrMinor
         copy    #'1', str_prodos_version + kVersionStrMajor
         copy    #10, str_prodos_version ; length
@@ -790,8 +789,7 @@ v_1x:   and     #$0F
 
         ;; $20...$23 are 2.0.x (roughly)
 v_20x:  and     #$0F
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     str_prodos_version + kVersionStrPatch
         copy    #'0', str_prodos_version + kVersionStrMinor
         copy    #'2', str_prodos_version + kVersionStrMajor
@@ -800,8 +798,7 @@ v_20x:  and     #$0F
 
         ;; $24...??? are 2.x (so far?)
 v_2x:   and     #$0F
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     str_prodos_version + kVersionStrMinor
         copy    #'2', str_prodos_version + kVersionStrMajor
         copy    #10, str_prodos_version ; length
@@ -983,8 +980,7 @@ loop:   lda     slot
         copy16  slot_pos_table,x, slot_pos
         MGTK_CALL MGTK::MoveTo, 0, slot_pos
         lda     slot
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     str_slot_n + kStrSlotNOffset
         param_call DrawString, str_slot_n
 

@@ -1286,8 +1286,7 @@ LDE4D:  cmp     #$A5
         lsr     a
         lsr     a
         lsr     a
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     str_dos33_s_d + kStrDOS33SlotOffset
         lda     main__block_params_unit_num
         and     #$80
@@ -1827,8 +1826,7 @@ LE318:  .addr   0
         lsr     a
         lsr     a
         lsr     a
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     str_s + 1
         param_call DrawString, str_s
 
@@ -2137,8 +2135,7 @@ LE559:  lda     winfo_dialog::window_id
         lsr     a
         lsr     a
         lsr     a
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     str_s + 1
         ldx     source_drive_index
         lda     drive_unitnum_table,x
@@ -2182,8 +2179,7 @@ LE5E1:  lda     winfo_dialog::window_id
         lsr     a
         lsr     a
         lsr     a
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     str_s + 1
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
@@ -3107,8 +3103,7 @@ state:
         lsr     a
         lsr     a
         lsr     a
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     str_confirm_erase2  + kStrConfirmErase2SlotOffset
         txa
         and     #$80            ; Mask off drive
@@ -3128,8 +3123,7 @@ state:
         lsr     a
         lsr     a
         lsr     a
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     str_confirm_erase3 + kStrConfirmErase3SlotOffset
         txa
         and     #$80            ; Mask off drive

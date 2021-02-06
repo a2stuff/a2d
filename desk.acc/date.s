@@ -897,12 +897,10 @@ loop:   cmp     #10
         iny
         jmp     loop
 
-:       clc
-        adc     #'0'
+:       ora     #'0'
         tax
         tya
-        clc
-        adc     #'0'
+        ora     #'0'
         rts
 .endproc
 
