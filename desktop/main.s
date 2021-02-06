@@ -12,6 +12,10 @@
 
 .proc main
 
+kShortcutResize = 'G'
+kShortcutMove   = 'M'
+kShortcutScroll = 'X'
+
 dst_path_buf   := $1FC0
 
         .org $4000
@@ -481,13 +485,13 @@ modifiers:
         jmp     cmd_open_parent
 :       bit     flag
         bpl     menu_accelerators
-        cmp     #'G'            ; Apple-G (Resize)
+        cmp     #kShortcutResize ; Apple-G (Resize)
         bne     :+
         jmp     cmd_resize
-:       cmp     #'M'            ; Apple-M (Move)
+:       cmp     #kShortcutMove  ; Apple-M (Move)
         bne     :+
         jmp     cmd_move
-:       cmp     #'X'            ; Apple-X (Scroll)
+:       cmp     #kShortcutScroll ; Apple-X (Scroll)
         bne     :+
         jmp     cmd_scroll
 :       cmp     #CHAR_DELETE    ; Apple-Delete (Delete)
