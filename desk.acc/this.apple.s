@@ -23,6 +23,10 @@
 
 ;;; ============================================================
 
+kShortcutEasterEgg = 'E'
+
+;;; ============================================================
+
         .org DA_LOAD_ADDRESS
 
 da_start:
@@ -842,9 +846,11 @@ done:   rts
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     exit
-        cmp     #'E'
+        cmp     #kShortcutEasterEgg
+        beq     :+
+        cmp     #TO_LOWER(kShortcutEasterEgg)
         bne     input_loop
-        jmp     handle_egg
+:       jmp     handle_egg
 .endproc
 
 ;;; ============================================================
