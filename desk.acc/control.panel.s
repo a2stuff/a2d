@@ -1929,7 +1929,7 @@ done:   rts
         ldx     RAMCARD_PREFIX
 :       lda     RAMCARD_PREFIX,x
         @addr := *+1
-        sta     dummy1234,x
+        sta     SELF_MODIFIED,x
         dex
         bpl     :-
 
@@ -1948,7 +1948,7 @@ done:   rts
         ldx     DESKTOP_ORIG_PREFIX
 :       lda     DESKTOP_ORIG_PREFIX,x
         @addr := *+1
-        sta     dummy1234,x
+        sta     SELF_MODIFIED,x
         dex
         bpl     :-
 

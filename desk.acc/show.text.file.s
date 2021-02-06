@@ -116,7 +116,7 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
 .proc call_main_template
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     dummy1000       ; overwritten (in zp version)
+        jsr     SELF_MODIFIED   ; overwritten (in zp version)
         sta     RAMRDON
         sta     RAMWRTON
         rts

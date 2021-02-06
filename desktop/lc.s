@@ -221,7 +221,7 @@ loop:   lda     (src),y
 .proc AuxLoad
         stax    op+1
         sta     RAMRDON
-op:     lda     dummy1234
+op:     lda     SELF_MODIFIED
         sta     RAMRDOFF
         rts
 .endproc

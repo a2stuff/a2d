@@ -504,7 +504,7 @@ desktop_jump_table:
         stx     $06
 
 dispatch:
-        jsr     dummy0000
+        jsr     SELF_MODIFIED
 
         tay
         ldx     #3
@@ -4064,7 +4064,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         beq     button_up
         jsr     event_coords_to_local
         MGTK_CALL MGTK::MoveTo, event_coords
-        MGTK_CALL MGTK::InRect, dummy0000, rect_addr1
+        MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr1
         cmp     #MGTK::inrect_inside
         beq     inside
         lda     flag
@@ -4085,7 +4085,7 @@ button_up:
         lda     flag
         rts
 
-invert: MGTK_CALL MGTK::PaintRect, dummy0000, rect_addr2
+invert: MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr2
         rts
 
 

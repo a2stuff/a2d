@@ -920,7 +920,7 @@ do_jump:
         tsx
         stx     stack_stash
         jump_addr := *+1
-        jmp     dummy1234
+        jmp     SELF_MODIFIED
 
 cmd_quick_copy:
         lda     disk_copy_flag

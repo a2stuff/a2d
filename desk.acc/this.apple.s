@@ -952,7 +952,7 @@ egg:    .byte   0
 
         copy16  model_pix_ptr, bits_addr
         MGTK_CALL MGTK::SetPenMode, penmode
-        MGTK_CALL MGTK::PaintBits, dummy0000, bits_addr
+        MGTK_CALL MGTK::PaintBits, SELF_MODIFIED, bits_addr
 
         MGTK_CALL MGTK::MoveTo, model_pos
         ldax    model_str_ptr
@@ -1582,7 +1582,7 @@ num_devices:
 
 .proc smartport_call
         sp_addr := * + 1
-        jsr     dummy1234
+        jsr     SELF_MODIFIED
         .byte   $00             ; $00 = STATUS
         .addr   status_params
         rts

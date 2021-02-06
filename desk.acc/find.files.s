@@ -134,7 +134,7 @@ offset: .addr   0
         sta     RAMWRTOFF
         stax    @addr
         @addr := *+1
-        jsr     dummy1234
+        jsr     SELF_MODIFIED
         sta     RAMRDON
         sta     RAMWRTON
         rts

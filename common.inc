@@ -24,10 +24,9 @@ kDeskTopVersionMinor = 2
 
 ;;; ============================================================
 
-;;; Dummy addresses, for self-modifying code
-dummy0000 := $0000
-dummy1000 := $1000              ; To avoid ZP addressing mode
-dummy1234 := $1234              ; To avoid ZP addressing mode
+;;; For addresses that will be filled in at runtime.
+
+SELF_MODIFIED   = $1234            ; To avoid ZP addressing mode
 
 ;;; ============================================================
 

@@ -771,7 +771,7 @@ L93EB:  tsx
         stx     saved_stack
 
         addr := *+1
-        jmp     dummy1234
+        jmp     SELF_MODIFIED
 .endproc
 
 ;;; ============================================================
@@ -1837,7 +1837,7 @@ col:    .byte   0
         jsr     HOME
 
         @addr := * + 1
-        jmp     dummy0000
+        jmp     SELF_MODIFIED
 .endproc
 
 ;;; ============================================================
@@ -2157,7 +2157,7 @@ str_basic_system:
         ldx     RAMCARD_PREFIX
 :       lda     RAMCARD_PREFIX,x
         @addr := * + 1
-        sta     dummy1234,x
+        sta     SELF_MODIFIED,x
         dex
         bpl     :-
         lda     ROMIN2

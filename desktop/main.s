@@ -538,7 +538,7 @@ call_proc:
         tsx
         stx     saved_stack
         proc_addr := *+1
-        jmp     dummy1234           ; self-modified
+        jmp     SELF_MODIFIED
 .endproc
 
         handle_keydown := handle_keydown_impl::handle_keydown
@@ -1194,7 +1194,7 @@ filerecords_free_start:
         copy16  #main_loop, L48E4
 
         L48E4 := *+1
-        jmp     dummy1234           ; self-modified
+        jmp     SELF_MODIFIED
 
 ;;; ============================================================
 
@@ -1501,10 +1501,10 @@ slash_index:
 :       inx
         iny
         @filename1 := *+1
-        lda     dummy1234,x
+        lda     SELF_MODIFIED,x
         sta     path_buffer,y
         @filename2 := *+1
-        cpx     dummy1234
+        cpx     SELF_MODIFIED
         bne     :-
         sty     path_buffer
 
@@ -1537,7 +1537,7 @@ slash_index:
         ldx     RAMCARD_PREFIX
 :       lda     RAMCARD_PREFIX,x
         @destptr := *+1
-        sta     dummy1234,x
+        sta     SELF_MODIFIED,x
         dex
         bpl     :-
 
@@ -1556,7 +1556,7 @@ slash_index:
         ldx     DESKTOP_ORIG_PREFIX
 :       lda     DESKTOP_ORIG_PREFIX,x
         @destptr := *+1
-        sta     dummy1234,x
+        sta     SELF_MODIFIED,x
         dex
         bpl     :-
 
@@ -3831,7 +3831,7 @@ check_drive_flags:
 
         ;; also used by launcher code
         target := *+1
-        jmp     dummy0000       ; self-modified
+        jmp     SELF_MODIFIED
 .endproc
         reset_and_invoke_target := reset_and_invoke::target
 
@@ -10798,19 +10798,19 @@ empty_string:
 
 done_dialog_phase0:
         dialog_phase0_callback := *+1
-        jmp     dummy0000
+        jmp     SELF_MODIFIED
 
 done_dialog_phase1:
         dialog_phase1_callback := *+1
-        jmp     dummy0000
+        jmp     SELF_MODIFIED
 
 done_dialog_phase2:
         dialog_phase2_callback := *+1
-        jmp     dummy0000
+        jmp     SELF_MODIFIED
 
 done_dialog_phase3:
         dialog_phase3_callback := *+1
-        jmp     dummy0000
+        jmp     SELF_MODIFIED
 
 stack_stash:
         .byte   0
@@ -13536,7 +13536,7 @@ dialog_param_addr:
         jsr     set_cursor_pointer
 
         @jump_addr := *+1
-        jmp     dummy0000       ; self-modified
+        jmp     SELF_MODIFIED
 .endproc
 
 
@@ -13885,7 +13885,7 @@ rts1:
 ;;; ============================================================
 
 jump_relay:
-        jmp     dummy0000
+        jmp     SELF_MODIFIED
 
 
 ;;; ============================================================

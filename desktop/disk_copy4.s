@@ -1141,7 +1141,7 @@ memory_bitmap:
         sta     DRIVER_BLOCK_NUMBER+1
 
         @driver := *+1
-        jsr     dummy0000
+        jsr     SELF_MODIFIED
 
         sta     ALTZPON
         rts

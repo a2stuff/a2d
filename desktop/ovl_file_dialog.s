@@ -75,7 +75,7 @@ routine_table:  .addr   $7000, $7000, $7000
         ldx     stash_x
 
         @jump := *+1
-        jmp     dummy1234
+        jmp     SELF_MODIFIED
 
 stash_x:        .byte   0
 stash_y:        .byte   0

@@ -31,7 +31,7 @@ col:    lda     xbyte
         sta     PAGE2ON         ; aux $2000-$3FFF
 :       lda     (ptr),y
         addr := *+1
-        sta     dummy1234
+        sta     SELF_MODIFIED
         inc16   addr
         lda     xbyte
         cmp     save_x2_byte
@@ -73,7 +73,7 @@ col:    lda     xbyte
         sta     PAGE2ON         ; aux $2000-$3FFF
 
         addr := *+1
-:       lda     dummy1234       ; self-modified
+:       lda     SELF_MODIFIED
         sta     (ptr),y
         inc16   addr
         lda     xbyte

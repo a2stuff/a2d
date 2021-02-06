@@ -212,7 +212,7 @@ fail:   return  #1
         ldx     DESKTOP_ORIG_PREFIX
 :       lda     DESKTOP_ORIG_PREFIX,x
         @destptr := *+1
-        sta     dummy1234,x
+        sta     SELF_MODIFIED,x
         dex
         bpl     :-
 

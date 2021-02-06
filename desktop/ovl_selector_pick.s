@@ -47,7 +47,7 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
 L903C:  ldx     #$01
         copy16  selector_menu_addr, @load
         @load := *+1
-        lda     dummy1234
+        lda     SELF_MODIFIED
         cmp     #$0D
         bcc     L9052
         inx
@@ -99,7 +99,7 @@ L9093:  copy16  selector_list, num_run_list_entries
         inc     selector_list + kSelectorListNumRunListOffset
         copy16  selector_menu_addr, @addr
         @addr := *+1
-        inc     dummy1234
+        inc     SELF_MODIFIED
         jsr     L9CEA
         bpl     L90D0
         jmp     L9016
@@ -278,7 +278,7 @@ L9220:  ldx     num_run_list_entries
         inc     selector_list + kSelectorListNumRunListOffset
         copy16  selector_menu_addr, @addr
         @addr := *+1
-        inc     dummy1234
+        inc     SELF_MODIFIED
         txa
         jmp     L926D
 
@@ -1079,7 +1079,7 @@ L9AA8:  dec     selector_list + kSelectorListNumRunListOffset
         dec     num_run_list_entries
         copy16  selector_menu_addr, @addr
         @addr := *+1
-        dec     dummy1234
+        dec     SELF_MODIFIED
         jmp     L9CEA
 
 L9AC0:  lda     L9BD4
@@ -1522,7 +1522,7 @@ params: .addr   0
         ldx     RAMCARD_PREFIX
 :       lda     RAMCARD_PREFIX,x
         @addr := *+1
-        sta     dummy1234,x
+        sta     SELF_MODIFIED,x
         dex
         bpl     :-
 
@@ -1541,7 +1541,7 @@ params: .addr   0
         ldx     DESKTOP_ORIG_PREFIX
 :       lda     DESKTOP_ORIG_PREFIX,x
         @addr := *+1
-        sta     dummy1234,x
+        sta     SELF_MODIFIED,x
         dex
         bpl     :-
 

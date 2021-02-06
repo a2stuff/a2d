@@ -25,7 +25,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, dummy0000, rect_addr1
+        MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr1
 
         cmp     #MGTK::inrect_inside
         beq     inside
@@ -51,7 +51,7 @@ exit:   lda     down_flag       ; was depressed?
 
         ;; --------------------------------------------------
 
-invert: MGTK_CALL MGTK::PaintRect, dummy0000, rect_addr2
+invert: MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr2
         rts
 
         ;; --------------------------------------------------
