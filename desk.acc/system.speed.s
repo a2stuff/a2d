@@ -26,6 +26,12 @@
 
 ;;; ============================================================
 
+kShortcutNorm = 'N'
+kShortcutFast = 'F'
+
+;;; ============================================================
+
+
         .org DA_LOAD_ADDRESS
 
 start:
@@ -232,10 +238,14 @@ grafport:       .tag MGTK::GrafPort
         cmp     #CHAR_ESCAPE
         beq     on_key_ok
 
-        cmp     #'N'
+        cmp     #kShortcutNorm
+        beq     on_key_norm
+        cmp     #TO_LOWER(kShortcutNorm)
         beq     on_key_norm
 
-        cmp     #'F'
+        cmp     #kShortcutFast
+        beq     on_key_fast
+        cmp     #TO_LOWER(kShortcutFast)
         beq     on_key_fast
 
         jmp     input_loop
