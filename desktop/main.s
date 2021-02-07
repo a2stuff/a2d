@@ -5800,6 +5800,15 @@ num:    .byte   0
         jsr     update_used_free_for_vol_windows
         lda     active_window_id
         jsr     set_port_from_window_id
+
+        ;; Clear the header area before redrawing it.
+        copy16  window_grafport::cliprect::x1, tmp_rect::x1
+        copy16  window_grafport::cliprect::x2, tmp_rect::x2
+        copy16  window_grafport::cliprect::y1, tmp_rect::y1
+        add16   window_grafport::cliprect::y1, #kWindowHeaderHeight, tmp_rect::y2
+        jsr     set_penmode_copy
+        MGTK_RELAY_CALL MGTK::PaintRect, tmp_rect
+
         jmp     draw_window_header
 .endproc
 
