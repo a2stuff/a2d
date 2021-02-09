@@ -2647,7 +2647,9 @@ L518D:  lda     L51EF
 L51A7:  jsr     reset_main_grafport
         jsr     cached_icons_window_to_screen
         jsr     StoreWindowIconTable
+        jsr     cached_icons_screen_to_window
         jsr     update_scrollbars
+        jsr     cached_icons_window_to_screen
         lda     selected_window_id
         beq     finish
         lda     selected_icon_count
@@ -6012,6 +6014,8 @@ index:  .byte   0
 ;;; horizontal and vertical scrollbars as needed. The
 ;;; update_scrollbars entry point will update the thumbs; the
 ;;; update_scrollbars_leave_thumbs entry point will not.
+;;;
+;;; Assert: cached icons mapped to window space (if in icon view)
 
 .proc update_scrollbars_impl
 update_thumbs:
@@ -8793,8 +8797,8 @@ concat_len:
 ;;; Inputs are thumbpos, thumbmax, icon bbox, window cliprect.
 ;;; Output is an updated cliprect.
 ;;;
-;;; Must be called with icons mapped to window space.
-;;; Must be called with window_grafport reflecting active window.
+;;; Assert: cached icons mapped to window space
+;;; Assert: window_grafport reflects active window
 
 .proc update_cliprect_after_scroll
         copy    #0, sense_flag

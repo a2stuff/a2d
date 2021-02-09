@@ -131,6 +131,7 @@ from the Apple menu.
 * **Control-Reset** quits cleanly back to ProDOS (except buggy emulators). ([#141](https://github.com/a2stuff/a2d/issues/141))
 * Prevent crash with more than 8 removable devices.
 * Disk Copy works with disks over 8MB. ([#386](https://github.com/a2stuff/a2d/issues/386))
+* Scrollbars no longer activate unnecessarily ([#366](https://github.com/a2stuff/a2d/issues/366), [#394](https://github.com/a2stuff/a2d/issues/394))
 * Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
   * Calculator: Doesn't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
@@ -152,9 +153,8 @@ from the Apple menu.
 
 Final release by Version Soft/Apple Computer dated November 26, 1986.
 
-See also: 
+See also:
 
 * Jay Edwards' [MouseDesk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
 * https://www.a2desktop.com/history
 * https://www.a2desktop.com/releases
-

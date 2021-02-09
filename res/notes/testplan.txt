@@ -207,3 +207,6 @@
 
 * Launch DeskTop. Special > Disk Copy.... Copy a 32MB disk image using Quick Copy (the default mode). Verify that the screen is not garbled, and that the copy is successful.
 * Launch DeskTop. Special > Disk Copy.... Copy a 32MB disk image using Disk Copy (the other mode). Verify that the screen is not garbled, and that the copy is successful.
+
+* Launch DeskTop. Open a window containing folders and files. Open another window, for an empty volume. Drag an icon from the first to the second. Ensure no scrollbars activate in the target window.
+* Launch DeskTop. Open a window containing folders and files, with no scrollbars active. Open another window. Drag an icon from the first to the second. Ensure no scrollbars activate in the source window.
