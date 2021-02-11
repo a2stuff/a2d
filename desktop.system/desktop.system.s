@@ -56,7 +56,7 @@ kCopyBufferSize = MLI - copy_buffer
 
 ;;; ============================================================
 
-kShortcutMonitor = res_char_shortcut_monitor
+kShortcutMonitor = res_char_monitor_shortcut
 
 
 ;;; ============================================================

@@ -161,7 +161,7 @@ rel_file_icon:
 ;;; ============================================================
 
         ASSERT_ADDRESS ::DEFAULT_FONT
-        .incbin "../mgtk/fonts/A2D.FONT"
+        .incbin .concat("../mgtk/fonts/A2D.FONT.", LANG)
 
         font_height     := DEFAULT_FONT+2
 

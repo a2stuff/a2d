@@ -16,10 +16,10 @@ DeskTop.
 
 Font Name    | Origin           | # Glyphs | Width  | Height
 ------------ | ---------------- | -------- | ------ | ------
-A2D.FONT     | Apple II DeskTop | 128      | Single | 9
-A2D.FONT.FR  | MouseDesk 2.0 fr | 128      | Single | 9
-A2D.FONT.DE  | MouseDesk 1.0 de | 128      | Single | 9
-A2D.FONT.IT  | MouseDesk 1.0 it | 128      | Single | 9
+A2D.FONT.en  | Apple II DeskTop | 128      | Single | 9
+A2D.FONT.fr  | MouseDesk 2.0 fr | 128      | Single | 9
+A2D.FONT.de  | MouseDesk 1.0 de | 128      | Single | 9
+A2D.FONT.it  | MouseDesk 1.0 it | 128      | Single | 9
 MP.FONT      | MousePaint       | 128      | Single | 9
 ATHENS       | MousePaint       | 128      | Double | 12
 NEW.YORK     | MousePaint       | 128      | Double | 11

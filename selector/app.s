@@ -29,7 +29,7 @@ kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut
 
 ;;; Font
         ASSERT_ADDRESS ::FONT, "Font location"
-        .incbin "../mgtk/fonts/A2D.FONT"
+        .incbin .concat("../mgtk/fonts/A2D.FONT.", LANG)
 
         PAD_TO ::SETTINGS
 
