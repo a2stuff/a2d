@@ -18,7 +18,7 @@
     .endif
 .endmacro
 
-kShortcutReadDisk = 'D'
+kShortcutReadDisk = res_char_button_read_drive_shortcut
 
 ;;; ============================================================
 
@@ -89,7 +89,7 @@ menu_apple:
 
 menu_file:
         DEFINE_MENU 1
-@items: DEFINE_MENU_ITEM label_quit, 'Q'
+@items: DEFINE_MENU_ITEM label_quit, res_char_dc_menu_item_quit_shortcut
         ASSERT_RECORD_TABLE_SIZE @items, 1, .sizeof(MGTK::MenuItem)
 
 label_apple:

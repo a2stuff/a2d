@@ -5,12 +5,14 @@
 .define res_string_menu_item_copyright2 "Copyright Version Soft, 1985 - 1986"
 .define res_string_menu_item_rights "All Rights reserved"
 .define res_string_dc_menu_item_quit "Quit"
+.define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "Quick Copy"
 .define res_string_dc_menu_item_disk_copy "Disk Copy"
 .define res_string_dc_button_ok "OK            \x0D"
 .define res_string_disk_copy_padded_dialog_title "    Disk Copy    "
 .define res_string_quick_copy_padded_dialog_title "    Quick Copy    "
 .define res_string_button_read_drive "Read Drive   D"
+.define res_char_button_read_drive_shortcut 'D'
 .define res_string_label_slot_drive_name "Slot, Drive, Name"
 .define res_string_prompt_select_source "Select source disk"
 .define res_string_prompt_select_destination "Select destination disk"

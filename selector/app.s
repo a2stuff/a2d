@@ -16,8 +16,8 @@ selector_list   := $B300
 kEntryPickerItemWidth = 127
 kEntryPickerItemHeight = 9
 
-kShortcutRunDeskTop = 'Q'
-kShortcutRunProgram = 'R'
+kShortcutRunDeskTop = res_char_button_desktop_shortcut
+kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut
 
 ;;; ============================================================
 ;;; MGTK library
@@ -119,7 +119,7 @@ apple_menu:
 
 file_menu:
         DEFINE_MENU 1
-        DEFINE_MENU_ITEM str_run_a_program, 'R'
+        DEFINE_MENU_ITEM str_run_a_program, res_char_menu_item_run_a_program_shortcut
 
 startup_menu:
         DEFINE_MENU 1

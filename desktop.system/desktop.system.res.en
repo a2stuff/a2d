@@ -6,3 +6,4 @@
 .define res_string_error_prefix "Error $"
 .define res_string_error_suffix " occured when copying "
 .define res_string_prompt_copy_not_completed "The copy was not completed, press <Return> to continue."
+.define res_char_monitor_shortcut 'M'

@@ -1,5 +1,6 @@
 .define res_string_alert_button_ok "OK            \x0D"
 .define res_string_button_try_again "Try Again  A"
+.define res_char_button_try_again_shortcut 'A'
 .define res_string_button_cancel "Cancel    Esc"
 .define res_string_alert_selector_unable_to_run "The Selector is unable to run the program."
 .define res_string_alert_io_error "I/O Error"

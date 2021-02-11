@@ -4,8 +4,10 @@
 .define res_string_menu_item_copyright2 "Copyright Version Soft, 1985 - 1986"
 .define res_string_menu_item_copyright3 "All Rights reserved"
 .define res_string_menu_item_run_a_program "Run a Program..."
+.define res_char_menu_item_run_a_program_shortcut 'R'
 .define res_string_menu_item_slot_pattern "Slot #"
 .define res_const_menu_item_slot_pattern_offset 6
 .define res_string_button_ok " OK          \x0D"
 .define res_string_button_desktop " DeskTop      Q"
+.define res_char_button_desktop_shortcut 'Q'
 .define res_string_selector_dialog_title "Selector"

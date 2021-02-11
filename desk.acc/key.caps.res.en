@@ -1,1 +1,2 @@
 .define res_string_window_title "Key Caps"
+.define res_char_quit_shortcut 'Q'

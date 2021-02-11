@@ -16,7 +16,7 @@
 
 ;;; ============================================================
 
-kShortcutQuit = 'Q'
+kShortcutQuit = res_char_quit_shortcut
 
         .org DA_LOAD_ADDRESS
 

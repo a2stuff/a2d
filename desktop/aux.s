@@ -3347,19 +3347,19 @@ desktop_menu:
 
 file_menu:
         DEFINE_MENU kMenuSizeFile
-@items: DEFINE_MENU_ITEM label_new_folder, 'N'
-        DEFINE_MENU_ITEM label_open, 'O'
-        DEFINE_MENU_ITEM label_close, 'W'
+@items: DEFINE_MENU_ITEM label_new_folder, res_char_menu_item_new_folder_shortcut
+        DEFINE_MENU_ITEM label_open, res_char_menu_item_open_shortcut
+        DEFINE_MENU_ITEM label_close, res_char_menu_item_close_shortcut
         DEFINE_MENU_ITEM label_close_all
-        DEFINE_MENU_ITEM label_select_all, 'A'
+        DEFINE_MENU_ITEM label_select_all, res_char_menu_item_select_all_shortcut
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM label_get_info, 'I'
+        DEFINE_MENU_ITEM label_get_info, res_char_menu_item_get_info_shortcut
         DEFINE_MENU_ITEM_NOMOD label_rename_icon, CHAR_RETURN, CHAR_RETURN
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_copy_file
         DEFINE_MENU_ITEM label_delete_file
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM label_quit, 'Q'
+        DEFINE_MENU_ITEM label_quit, res_char_menu_item_quit_shortcut
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeFile, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdNewFolder   = 1
@@ -3395,7 +3395,7 @@ special_menu:
         DEFINE_MENU kMenuSizeSpecial
 @items: DEFINE_MENU_ITEM label_check_all_drives
         DEFINE_MENU_ITEM label_check_drive
-        DEFINE_MENU_ITEM label_eject, 'E'
+        DEFINE_MENU_ITEM label_eject, res_char_menu_item_eject_shortcut
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_format_disk
         DEFINE_MENU_ITEM label_erase_disk

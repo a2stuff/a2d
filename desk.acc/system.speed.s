@@ -26,8 +26,8 @@
 
 ;;; ============================================================
 
-kShortcutNorm = 'N'
-kShortcutFast = 'F'
+kShortcutNorm = res_char_button_norm_shortcut
+kShortcutFast = res_char_button_fast_shortcut
 
 ;;; ============================================================
 

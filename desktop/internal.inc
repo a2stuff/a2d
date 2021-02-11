@@ -2,6 +2,8 @@
 ;;; DeskTop Internals
 ;;; ============================================================
 
+        RESOURCE_FILE "internal.res"
+
 kDAFileType     = $F1
 kDAFileAuxType  = $640           ; High bit set = don't show in Apple menu
 
@@ -83,12 +85,10 @@ kIconBBoxOffsetRight    = 65    ; includes width of icon + label
 ;;; ============================================================
 ;;; Common Shortcuts
 
-;;; TODO: Ensure these are localizable
-
-kShortcutYes      = 'Y'
-kShortcutNo       = 'N'
-kShortcutTryAgain = 'A'
-kShortcutAll      = 'A'
+kShortcutYes      = res_char_button_yes_shortcut
+kShortcutNo       = res_char_button_no_shortcut
+kShortcutTryAgain = res_char_button_try_again_shortcut
+kShortcutAll      = res_char_button_all_shortcut
 
 
 ;;; ============================================================

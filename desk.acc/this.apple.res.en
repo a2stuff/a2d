@@ -47,3 +47,4 @@
 .define res_string_cpu_type_65C02 "65C02"
 .define res_string_cpu_type_65802 "65802"
 .define res_string_cpu_type_65816 "65816"
+.define res_char_easter_egg_shortcut 'E'

@@ -12,9 +12,9 @@
 
 .proc main
 
-kShortcutResize = 'G'
-kShortcutMove   = 'M'
-kShortcutScroll = 'X'
+kShortcutResize = res_char_resize_shortcut
+kShortcutMove   = res_char_move_shortcut
+kShortcutScroll = res_char_scroll_shortcut
 
 dst_path_buf   := $1FC0
 

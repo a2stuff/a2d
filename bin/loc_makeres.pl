@@ -40,6 +40,7 @@ sub encode($$) {
 
 sub hashes($) { my $s = shift; return $s =~ s/^[^#]$//; }
 sub percents($) { my $s = shift; return join('', $s =~ m/%\d*[dsc]/g); }
+sub hexes($) { my $s = shift; return join('', $s =~ m/\\x../g); }
 
 sub check($$$) {
     my ($label, $en, $t) = @_;
@@ -50,6 +51,8 @@ sub check($$$) {
         unless hashes($en) eq hashes($t);
     die "Percents mismatch at $label, line $.: $en / $t\n"
         unless percents($en) eq percents($t);
+    die "Hexes mismatch at $label, line $.: $en / $t\n"
+        unless hexes($en) eq hexes($t);
 
     # Apply same leading/trailing spaces
     $t = trim($t);

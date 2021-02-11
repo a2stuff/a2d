@@ -10,7 +10,7 @@
 
 .scope alert
 
-kShortcutTryAgain = 'A'
+kShortcutTryAgain = res_char_button_try_again_shortcut
 
 alert_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
