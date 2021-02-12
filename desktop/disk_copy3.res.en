@@ -34,7 +34,7 @@
 .define res_string_dos33_disk_copy "DOS 3.3 disk copy"
 .define res_string_pascal_disk_copy "Pascal disk copy"
 .define res_string_prodos_disk_copy "ProDOS disk copy"
-.define res_string_escape_stop_copy " ESC stop the copy"
+.define res_string_escape_stop_copy " Esc stop the copy"
 .define res_string_error_writing "Error when writing block "
 .define res_string_error_reading "Error when reading block "
 .define res_string_dcalert_button_ok "OK            \x0D"
