@@ -204,6 +204,8 @@ on_key:
         lda     event_params + MGTK::Event::key
         cmp     #CHAR_ESCAPE
         beq     exit
+        cmp     #CHAR_RETURN
+        beq     exit
         cmp     #' '
         bne     :+
         jsr     toggle_mode
