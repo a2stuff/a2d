@@ -33,7 +33,7 @@ sub encode($$) {
         die "Unknown lang: $lang\n";
     }
 
-    die "Unencodable in line $.: $s\n" unless $s =~ /^[\x20-\x7e]*$/;
+    die "Unencodable ($lang) in line $.: $s\n" unless $s =~ /^[\x20-\x7e]*$/;
 
     return $s;
 }
@@ -56,7 +56,7 @@ sub check($$$) {
 
     # Apply same leading/trailing spaces
     $t = trim($t);
-    $t = $1 . $t . $2 if $en =~ m/^(\s*).*(\s*)$/;
+    $t = $1 . $t . $2 if $en =~ m/^(\s*).*?(\s*)$/;
 
     return $t;
 }
@@ -66,18 +66,27 @@ sub check($$$) {
 my $header = <STDIN>; # ignore header
 my $last_file = '';
 my %fhs = ();
+my @langs = ('en', 'fr', 'de', 'it');
 while (<STDIN>) {
     my ($file, $label, $comment, $en, $fr, $de, $it) = split(/\t/);
+    my %strings = (en => $en, fr => $fr, de => $de, it => $it);
+
     next unless $file and $label;
 
     if ($file ne $last_file) {
         $last_file = $file;
-        open $fhs{'en'}, '>'.($file =~ s/\.s$/.res.en/r) or die $!;
+        foreach my $lang (@langs) {
+           open $fhs{$lang}, '>'.($file =~ s/\.s$/.res.$lang/r) or die $!;
+        }
     }
 
-    # TODO: Check/encode/output all translations
-    check($label, $en, $it);
-    $it = encode('it', $it);
+    foreach my $lang (@langs) {
+        my $str = $strings{$lang};
 
-    print {$fhs{'en'}} ".define $label ", enquote($label, $en), "\n";
+        if ($lang ne 'en') {
+            $str = check($label, $en, $str);
+            $str = encode($lang, $str);
+        }
+        print {$fhs{$lang}} ".define $label ", enquote($label, $str), "\n";
+    }
 }

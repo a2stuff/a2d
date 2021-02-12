@@ -22,10 +22,6 @@
 
 flag:   .byte   0
 
-        ;; Unreferenced?
-        .byte   "Selector"
-        .byte   0
-
 str_loading:
         PASCAL_STRING res_string_status_loading
 
@@ -60,12 +56,6 @@ start:
         bcs     :+
         copy    #0, SHADOW
 :
-
-        lda     #$80
-        sta     ALTZPON
-        sta     $0100           ; ???
-        sta     $0101           ; ???
-        sta     ALTZPOFF
 
         jsr     SetMonoMode
 

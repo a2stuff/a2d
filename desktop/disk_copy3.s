@@ -2479,18 +2479,10 @@ str_confirm_erase1_buf:  .res    18, 0
 kLenConfirmErase1 = 21
 
 ;;; This string is seen when copying a ProDOS disk to DOS 3.3 or Pascal disk.
-;;; Unclear why a message with extra spaces used ???
 str_confirm_erase2:
         PASCAL_STRING res_string_prompt_erase_slot_drive_pattern
         kStrConfirmErase2SlotOffset = res_const_prompt_erase_slot_drive_pattern_slot_offset
         kStrConfirmErase2DriveOffset = res_const_prompt_erase_slot_drive_pattern_drive_offset
-
-;;; Unknown which path leads to this; there don't seem to be any calls
-;;; to show the dialog with this string ???
-str_confirm_erase3:
-        PASCAL_STRING res_string_prompt_erase_slot_drive_pattern_alt
-        kStrConfirmErase3SlotOffset = res_const_prompt_erase_slot_drive_pattern_alt_slot_offset
-        kStrConfirmErase3DriveOffset = res_const_prompt_erase_slot_drive_pattern_alt_drive_offset
 
 str_copy_success:
         PASCAL_STRING res_string_label_status_copy_success
@@ -2518,7 +2510,6 @@ message_table:
         .addr   str_dest_protected
         .addr   str_confirm_erase1
         .addr   str_confirm_erase2
-        .addr   str_confirm_erase3
         .addr   str_copy_success
         .addr   str_copy_fail
         .addr   str_insert_source_or_cancel
@@ -2615,9 +2606,9 @@ LEC3F:  cmp     #$06
         lda     #$07
         bne     LEC5E           ; always
 
-LEC55:  cmp     #$08
+LEC55:  cmp     #$08            ; TODO: Unused duplicate?
         bne     LEC5E
-        jsr     set_confirm_erase3_slot_drive
+        jsr     set_confirm_erase2_slot_drive
         lda     #$08
 
 LEC5E:  ldy     #$00
@@ -3113,26 +3104,6 @@ state:
         rol     a
         adc     #'1'            ; Drive 1 or 2
         sta     str_confirm_erase2 + kStrConfirmErase2DriveOffset
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc set_confirm_erase3_slot_drive
-        txa
-        and     #$70            ; Mask off slot
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #'0'
-        sta     str_confirm_erase3 + kStrConfirmErase3SlotOffset
-        txa
-        and     #$80            ; Mask off drive
-        asl     a               ; Shift to low bit
-        rol     a
-        adc     #'1'            ; Drive 1 or 2
-        sta     str_confirm_erase3 + kStrConfirmErase3DriveOffset
         rts
 .endproc
 
