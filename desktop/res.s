@@ -603,7 +603,11 @@ the_disk_in_slot_label:
 buf_filename:
         .res    16, 0
 
-LD8E7:  .byte   0
+;;; $00 = ok/cancel
+;;; $80 = ok (only)
+;;; $40 = yes/no/all/cancel
+prompt_button_flags:
+        .byte   0
 has_input_field_flag:
         .byte   0
 

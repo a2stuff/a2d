@@ -13635,7 +13635,7 @@ content:
         copy    winfo_prompt_dialog, event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        bit     LD8E7
+        bit     prompt_button_flags
         bvc     :+
         jmp     check_button_yes
 
@@ -13678,7 +13678,7 @@ check_button_all:
 :       rts
 
 maybe_check_button_cancel:
-        bit     LD8E7
+        bit     prompt_button_flags
         bpl     check_button_cancel
         return  #$FF
 
@@ -13741,22 +13741,23 @@ LA72E:  cmp     #CHAR_RIGHT
 :       jmp     handle_key_right
 
 LA73D:  cmp     #CHAR_RETURN
-        bne     LA749
-        bit     LD8E7
+        bne     :+
+        bit     prompt_button_flags
         bvs     done
-        jmp     LA851
+        jmp     handle_key_ok
 
-LA749:  cmp     #CHAR_ESCAPE
+:       cmp     #CHAR_ESCAPE
         bne     LA755
-        bit     LD8E7
-        bmi     done
-        jmp     LA86F
+        bit     prompt_button_flags
+        bmi     :+
+        jmp     handle_key_cancel
+:       jmp     handle_key_ok
 
 LA755:  cmp     #CHAR_DELETE
-        bne     LA75C
+        bne     :+
         jmp     LA88D
 
-LA75C:  cmp     #CHAR_UP
+:       cmp     #CHAR_UP
         bne     LA76B
         bit     format_erase_overlay_flag
         bmi     :+
@@ -13770,7 +13771,7 @@ LA76B:  cmp     #CHAR_DOWN
         jmp     done
 :       jmp     format_erase_overlay_prompt_handle_key_down
 
-LA77A:  bit     LD8E7
+LA77A:  bit     prompt_button_flags
         bvc     LA79B
         cmp     #kShortcutYes
         beq     do_yes
@@ -13875,19 +13876,23 @@ done:   return  #$FF
 done:   return  #$FF
 .endproc
 
-LA851:  lda     winfo_prompt_dialog
+.proc handle_key_ok
+        lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         return  #0
+.endproc
 
-LA86F:  lda     winfo_prompt_dialog
+.proc handle_key_cancel
+        lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
         return  #1
+.endproc
 
 LA88D:  lda     has_input_field_flag
         beq     LA895
@@ -14393,7 +14398,7 @@ LAE49:  copy    #$80, has_input_field_flag
         rts
 
 LAE70:  copy    #$80, has_input_field_flag
-        copy    #0, LD8E7
+        copy    #0, prompt_button_flags
         jsr     clear_path_buf1
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #1
@@ -14791,7 +14796,8 @@ open_win:
         rts
 
 run_loop:
-        copy16  #$8000, LD8E7
+        copy    #$00, prompt_button_flags
+        copy    #$80, has_input_field_flag
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
 :       jsr     prompt_input_loop
@@ -14992,16 +14998,16 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 ;;; ============================================================
 
 .proc open_prompt_window
-        sta     LD8E7
+        sta     prompt_button_flags
         jsr     open_dialog_window
-        bit     LD8E7
+        bit     prompt_button_flags
         bvc     :+
         jsr     draw_yes_no_all_cancel_buttons
         jmp     no_ok
 
 :       MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
         jsr     draw_ok_label
-no_ok:  bit     LD8E7
+no_ok:  bit     prompt_button_flags
         bmi     done
         MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
         jsr     draw_cancel_label
@@ -15118,7 +15124,7 @@ draw_yes_no_all_cancel_buttons:
         jsr     draw_no_label
         jsr     draw_all_label
         jsr     draw_cancel_label
-        copy    #$40, LD8E7
+        copy    #$40, prompt_button_flags
         rts
 
 erase_yes_no_all_cancel_buttons:
@@ -15135,7 +15141,7 @@ draw_ok_cancel_buttons:
         MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
         jsr     draw_ok_label
         jsr     draw_cancel_label
-        copy    #$00, LD8E7
+        copy    #$00, prompt_button_flags
         rts
 
 erase_ok_cancel_buttons:
@@ -15148,7 +15154,7 @@ draw_ok_button:
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
         jsr     draw_ok_label
-        copy    #$80, LD8E7
+        copy    #$80, prompt_button_flags
         rts
 
 erase_ok_button:
