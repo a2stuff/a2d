@@ -165,19 +165,7 @@ findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
         findwindow_which_area := findwindow_params + 4
         findwindow_window_id := findwindow_params + 5
 
-
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
-LD133:  .byte   0
-
-        .byte   0
-        .byte   0
-        .byte   0
+        .res 10, 0              ; union of all of the above
 
 grafport:  .res .sizeof(MGTK::GrafPort), 0
 
@@ -187,9 +175,6 @@ port:           .addr   grafport_win
 .endparams
 
 grafport_win:  .res    .sizeof(MGTK::GrafPort), 0
-
-        ;; Rest of a winfo???
-        .byte   $06, $EA, 0, 0, 0, 0, $88, 0, $08, 0, $08
 
 kDialogWidth    = 500
 kDialogHeight   = 150
@@ -971,7 +956,7 @@ handle_button_down:
 :       return  #$FF
 
 handle_content_button_down:
-        lda     LD133
+        lda     findwindow_window_id
         cmp     winfo_dialog::window_id
         bne     check_drive_select
         jmp     handle_dialog_button_down
@@ -2464,7 +2449,7 @@ str_insert_dest:
 str_confirm_erase0:
         PASCAL_STRING res_string_prompt_erase_prefix
 str_confirm_erase0_buf:  .res    18, 0
-kLenConfirmErase0 = 23 ; ??? Should be 21?
+kLenConfirmErase0 = .strlen(res_string_prompt_erase_prefix)
 
 str_dest_format_fail:
         PASCAL_STRING res_string_errmsg_dest_format_fail
@@ -2476,7 +2461,7 @@ str_dest_protected:
 str_confirm_erase1:
         PASCAL_STRING res_string_prompt_erase_prefix_alt
 str_confirm_erase1_buf:  .res    18, 0
-kLenConfirmErase1 = 21
+kLenConfirmErase1 = .strlen(res_string_prompt_erase_prefix_alt)
 
 ;;; This string is seen when copying a ProDOS disk to DOS 3.3 or Pascal disk.
 str_confirm_erase2:
