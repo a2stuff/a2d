@@ -22,10 +22,10 @@ deploy:
   prerelease: true
   api_key:
     secure: GKESS8qxyVM+0LHVniDMIKLi3ACVXQnacUvzEb/Qn+1PEw6aJ43mv4CQ8E8WyDXSi6i0FXgf72ky+bqa5u/ziYLAwgbtyu3MibNYl2Ryx8B/jdUCQsUPPlf75uBRgQNPt8gj9oBfRFh5omhZdNRaX3VHCYqi1ZrbAO3e2nunhfwddwcMLjl8wnzaM1jdm46lfdvt++GeihqCycdKVOpc6GZQqwwVtrHt9315JCzPJ9BXALxaQL0QSCpJ5uQwVhTS0Sh/k+VqxZ/nUyJ5sqgOulBRHwE0bgqKPV6zrnqftCr1PNwRXkOJfY3eM7ZbWr/vH8TaKU/21fSOxr3NmK/mHqiDun5Sm4duIRl+fm9QAxH93uyxsqPeAmxxSfNnvq6G0k3zFXPiRVgy1ceSIvYFZyCjKQEg0FF+vup0NzP85k8TpX3G4CO/WTOwVvnXruomMO5XpR3bnF1TIffDkU4DGtSpCO7FXH/Kq/CVQw3k155DhXE3IsHCId3bxlFnP0YHk/MS6Unzmcc4DDQS8pIgQII7woMv3g8gYiRQvp4gHbNvDbVi0kyAlJYbQ9lvOWjoFYs+sfxKG6J7AgO4CJ0c10/GwitvzGw9CUeR2O2sgX3i4DUbQEDCKgOO8rj+DqNH70ZtwJZmGG1TZfv1Og+hdoz9rLaFXGw1iFJ5/OXsLK8=
+  file_glob: true
   file:
-    - $TRAVIS_BUILD_DIR/out/A2DeskTop_800k.2mg
-    - $TRAVIS_BUILD_DIR/out/A2DeskTop_140k_disk1.po
-    - $TRAVIS_BUILD_DIR/out/A2DeskTop_140k_disk2.po
+    - $TRAVIS_BUILD_DIR/out/*.2mg
+    - $TRAVIS_BUILD_DIR/out/*.po
     - $TRAVIS_BUILD_DIR/res/README.txt
   skip_cleanup: true
   on:

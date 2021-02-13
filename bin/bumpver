@@ -2,8 +2,8 @@
 
 # Bump version:
 # * Increment version tag number
-# * Update common.inc release string
-# * Update common.inc release date
+# * Update config.inc release string
+# * Update config.inc release date
 
 # Assumes:
 # * Tag is of the form: v1.2-alpha20
@@ -18,8 +18,8 @@ DATE=`date '+%B %d, %Y'`
 
 echo "Bumping to $NEWTAG..."
 
-perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-alpha$NEWVER\"/" common.inc
-perl -pni -e "s/define kDeskTopReleaseDate .*/define kDeskTopReleaseDate \"$DATE\"/" common.inc
+perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-alpha$NEWVER\"/" config.inc
+perl -pni -e "s/define kDeskTopReleaseDate .*/define kDeskTopReleaseDate \"$DATE\"/" config.inc
 
 git commit -a -m "Bump verson to $NEWTAG"
 git tag $NEWTAG

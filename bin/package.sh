@@ -16,12 +16,17 @@ cecho yellow "Building disk images"
 tempdir=$(mktemp -d -t SHK)
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
+vmajor=$(grep kDeskTopVersionMajor config.inc | sed -e 's/kDeskTopVersionMajor = //')
+vminor=$(grep kDeskTopVersionMinor config.inc | sed -e 's/kDeskTopVersionMinor = //')
+vsuffix=$(grep kDeskTopVersionSuffix config.inc | sed -e 's/.*kDeskTopVersionSuffix //' -e 's/"//g')
+version=$(echo ${vmajor}.${vminor}${vsuffix})
+
 # One 800k image (complete), and two 140k images (two parts).
 
 mkdir -p out
-IMGFILE_COMPLETE="out/A2DeskTop_800k.2mg"
-IMGFILE_PART1="out/A2DeskTop_140k_disk1.po"
-IMGFILE_PART2="out/A2DeskTop_140k_disk2.po"
+IMGFILE_COMPLETE="out/A2DeskTop-${version}_800k.2mg"
+IMGFILE_PART1="out/A2DeskTop-${version}_140k_disk1.po"
+IMGFILE_PART2="out/A2DeskTop-${version}_140k_disk2.po"
 
 VOLNAME_COMPLETE="A2.DeskTop"
 VOLNAME_PART1="A2.DeskTop.1"
