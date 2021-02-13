@@ -36,11 +36,13 @@ sub indexes($$) {
 sub encode($$) {
     my ($lang, $s) = @_;
     if ($lang eq 'fr') {
-        $s =~ tr/à˚ç§éùè¨/@[\\]{|}~/;
+        $s =~ tr/£à˚ç§`éùè¨/#@[\\]`{|}~/;
     } elsif ($lang eq 'de') {
-        $s =~ tr/§ÄÖÜäöüß/@[\\]{|}~/;
+        $s =~ tr/#§ÄÖÜ`äöüß/#@[\\]`{|}~/;
     } elsif ($lang eq 'it') {
         $s =~ tr/£§˚çéùàòèì/#@[\\]`{|}~/;
+    } elsif ($lang eq 'es') {
+        $s =~ tr/£§¡Ñ¿`˚ñç~/#@[\\]`{|}~/;
     } else {
         die "Unknown lang: $lang\n";
     }
@@ -78,10 +80,10 @@ sub check($$$) {
 my $header = <STDIN>; # ignore header
 my $last_file = '';
 my %fhs = ();
-my @langs = ('en', 'fr', 'de', 'it');
+my @langs = ('en', 'fr', 'de', 'it', 'es');
 while (<STDIN>) {
-    my ($file, $label, $comment, $en, $fr, $de, $it) = split(/\t/);
-    my %strings = (en => $en, fr => $fr, de => $de, it => $it);
+    my ($file, $label, $comment, $en, $fr, $de, $it, $es) = split(/\t/);
+    my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es);
 
     next unless $file and $label;
 

@@ -20,11 +20,13 @@ die "$0: dir must be 'to' or 'from'\n" unless $dir eq 'to' ||  $dir eq 'from';
 
 while (<>) {
     if ($lang eq 'fr') {
-        if ($dir eq 'from') { tr/@[\\]{|}~/à˚ç§éùè¨/; } else { tr/à˚ç§éùè¨/@[\\]{|}~/; }
+        if ($dir eq 'from') { tr/#@[\\]`{|}~/£à˚ç§`éùè¨/; } else { tr/£à˚ç§`éùè¨/#@[\\]`{|}~/; }
     } elsif ($lang eq 'de') {
-        if ($dir eq 'from') { tr/@[\\]{|}~/§ÄÖÜäöüß/; } else { tr/§ÄÖÜäöüß/@[\\]{|}~/; }
+        if ($dir eq 'from') { tr/#@[\\]`{|}~/#§ÄÖÜ`äöüß/; } else { tr/#§ÄÖÜ`äöüß/#@[\\]`{|}~/; }
     } elsif ($lang eq 'it') {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/£§˚çéùàòèì/; } else { tr/£§˚çéùàòèì/#@[\\]`{|}~/; }
+    } elseif ($lang eq 'es') {
+        if ($dir eq 'from') { tr/#@[\\]`{|}~/£§¡Ñ¿`˚ñç~/; } else { tr/£§¡Ñ¿`˚ñç~/#@[\\]`{|}~/; }
     }
     else { die "$0: Unknown lang: $lang\n"; }
 
