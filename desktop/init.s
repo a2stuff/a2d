@@ -1186,32 +1186,32 @@ device_template_table:
         .addr   str_sd_unknown
         ASSERT_ADDRESS_TABLE_SIZE device_template_table, ::kNumDeviceTypes
 
-kDeviceTemplateSlotOffset = res_const_volume_type_sd_pattern_slot_offset
-kDeviceTemplateDriveOffset = res_const_volume_type_sd_pattern_drive_offset
+kDeviceTemplateSlotOffset = res_const_sd_prefix_pattern_offset1
+kDeviceTemplateDriveOffset = res_const_sd_prefix_pattern_offset2
 
 ;;; Disk II
 str_sd_disk_ii:
-        PASCAL_STRING res_string_volume_type_sd_disk_ii_pattern
+        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_disk_ii)
 
 ;;; RAM disks
 str_sd_ramcard:
-        PASCAL_STRING res_string_volume_type_sd_ramcard_pattern
+        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_ramcard)
 
 ;;; Fixed drives that aren't RAM disks
 str_sd_profile:
-        PASCAL_STRING res_string_volume_type_sd_profile_pattern
+        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_profile)
 
 ;;; Removable drives
 str_sd_unidisk:
-        PASCAL_STRING res_string_volume_type_sd_unidisk_pattern
+        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_unidisk)
 
 ;;; File Share
 str_sd_fileshare:
-        PASCAL_STRING res_string_volume_type_sd_fileshare_pattern
+        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_fileshare)
 
 ;;; Unknown devices
 str_sd_unknown:
-        PASCAL_STRING res_string_volume_type_sd_unknown_pattern
+        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_unknown)
 
 ;;; ============================================================
 

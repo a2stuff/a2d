@@ -172,7 +172,7 @@ str_slot_x6:
         PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
 str_slot_x7:
         PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
-        kStrSlotXOffset = res_const_menu_item_slot_pattern_offset
+        kStrSlotXOffset = res_const_menu_item_slot_pattern_offset1
 
 
 ;;; Slot numbers

@@ -592,13 +592,13 @@ num_volumes:
 
 the_dos_33_disk_label:
         PASCAL_STRING res_string_the_dos_33_disk_suffix_pattern
-        kTheDos33DiskSlotCharOffset = res_const_the_dos_33_disk_suffix_pattern_slot_offset
-        kTheDos33DiskDriveCharOffset = res_const_the_dos_33_disk_suffix_pattern_drive_offset
+        kTheDos33DiskSlotCharOffset = res_const_the_dos_33_disk_suffix_pattern_offset1
+        kTheDos33DiskDriveCharOffset = res_const_the_dos_33_disk_suffix_pattern_offset2
 
 the_disk_in_slot_label:
         PASCAL_STRING res_string_the_disk_in_slot_suffix_pattern
-        kTheDiskInSlotSlotCharOffset = res_const_the_disk_in_slot_suffix_pattern_slot_offset
-        kTheDiskInSlotDriveCharOffset = res_const_the_disk_in_slot_suffix_pattern_drive_offset
+        kTheDiskInSlotSlotCharOffset = res_const_the_disk_in_slot_suffix_pattern_offset1
+        kTheDiskInSlotDriveCharOffset = res_const_the_disk_in_slot_suffix_pattern_offset2
 
 buf_filename:
         .res    16, 0
@@ -1079,7 +1079,7 @@ startup_menu_item_5:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; men
 startup_menu_item_6:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
 startup_menu_item_7:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
         ASSERT_RECORD_TABLE_SIZE startup_menu_item_1, 7, 8
-        kStartupMenuItemSlotOffset = res_const_menu_item_slot_pattern_offset
+        kStartupMenuItemSlotOffset = res_const_menu_item_slot_pattern_offset1
 
 ;;; ============================================================
 

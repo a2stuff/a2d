@@ -428,8 +428,8 @@ str_drive:
 
 str_dos33_s_d:
         PASCAL_STRING res_string_dos33_s_d_pattern
-        kStrDOS33SlotOffset = res_const_dos33_s_d_pattern_slot_offset
-        kStrDOS33DriveOffset = res_const_dos33_s_d_pattern_drive_offset
+        kStrDOS33SlotOffset = res_const_dos33_s_d_pattern_offset1
+        kStrDOS33DriveOffset = res_const_dos33_s_d_pattern_offset2
 
 str_dos33_disk_copy:
         PASCAL_STRING res_string_dos33_disk_copy
@@ -2481,8 +2481,8 @@ kLenConfirmErase1 = 21
 ;;; This string is seen when copying a ProDOS disk to DOS 3.3 or Pascal disk.
 str_confirm_erase2:
         PASCAL_STRING res_string_prompt_erase_slot_drive_pattern
-        kStrConfirmErase2SlotOffset = res_const_prompt_erase_slot_drive_pattern_slot_offset
-        kStrConfirmErase2DriveOffset = res_const_prompt_erase_slot_drive_pattern_drive_offset
+        kStrConfirmErase2SlotOffset = res_const_prompt_erase_slot_drive_pattern_offset1
+        kStrConfirmErase2DriveOffset = res_const_prompt_erase_slot_drive_pattern_offset2
 
 str_copy_success:
         PASCAL_STRING res_string_label_status_copy_success

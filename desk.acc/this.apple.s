@@ -422,7 +422,7 @@ str_iic_plus:
 
 str_iigs:
         PASCAL_STRING res_string_model_iigs_pattern
-        kStrIIgsROMOffset = res_const_model_iigs_pattern_offset
+        kStrIIgsROMOffset = res_const_model_iigs_pattern_offset1
 
 str_laser128:
         PASCAL_STRING res_string_model_laser128
@@ -440,7 +440,7 @@ str_prodos_version:
 
 str_slot_n:
         PASCAL_STRING res_string_slot_n_pattern ; dialog label
-        kStrSlotNOffset = res_const_slot_n_pattern_offset
+        kStrSlotNOffset = res_const_slot_n_pattern_offset1
 
 str_memory_prefix:
         PASCAL_STRING res_string_memory_prefix ; dialog label

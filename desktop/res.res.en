@@ -13,11 +13,11 @@
 .define res_string_selector_label_never "5 never"
 .define res_string_selector_label_enter_pathname_alt "Enter the full pathname of the run list file:"
 .define res_string_the_dos_33_disk_suffix_pattern "the DOS 3.3 disk in slot # drive # ?"
-.define res_const_the_dos_33_disk_suffix_pattern_slot_offset 26
-.define res_const_the_dos_33_disk_suffix_pattern_drive_offset 34
+.define res_const_the_dos_33_disk_suffix_pattern_offset1 26
+.define res_const_the_dos_33_disk_suffix_pattern_offset2 34
 .define res_string_the_disk_in_slot_suffix_pattern "the disk in slot # drive # ?"
-.define res_const_the_disk_in_slot_suffix_pattern_slot_offset 18
-.define res_const_the_disk_in_slot_suffix_pattern_drive_offset 26
+.define res_const_the_disk_in_slot_suffix_pattern_offset1 18
+.define res_const_the_disk_in_slot_suffix_pattern_offset2 26
 .define res_string_files_suffix "Files"
 .define res_string_kb_suffix "K"
 .define res_string_button_change_drive "Change Drive"
@@ -39,7 +39,7 @@
 .define res_string_weekday_abbrev_6 "Fri "
 .define res_string_weekday_abbrev_7 "Sat "
 .define res_string_menu_item_slot_pattern "Slot #"
-.define res_const_menu_item_slot_pattern_offset 6
+.define res_const_menu_item_slot_pattern_offset1 6
 .define res_string_menu_item_add_entry "Add an Entry..."
 .define res_string_menu_item_edit_entry "Edit an Entry..."
 .define res_string_menu_item_delete_entry "Delete an Entry..."
