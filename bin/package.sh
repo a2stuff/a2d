@@ -16,14 +16,10 @@ cecho yellow "Building disk images"
 tempdir=$(mktemp -d -t SHK)
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
-vmajor=$(grep 'kDeskTopVersionMajor =' config.inc |
-    sed -e 's/kDeskTopVersionMajor = //')
-vminor=$(grep 'kDeskTopVersionMinor =' config.inc |
-    sed -e 's/kDeskTopVersionMinor = //')
-vsuffix=$(grep 'define kDeskTopVersionSuffix' config.inc |
-    sed -e 's/.*define kDeskTopVersionSuffix //' -e 's/"//g')
-lang=$(grep 'define LANG' config.inc |
-    sed -e 's/.*define LANG //' -e 's/"//g')
+vmajor=$(grep 'kDeskTopVersionMajor =' config.inc | sed -e 's/.* = //')
+vminor=$(grep 'kDeskTopVersionMinor =' config.inc | sed -e 's/.* = //')
+vsuffix=$(grep 'define kDeskTopVersionSuffix' config.inc | cut -d'"' -f2)
+lang=$(grep 'define LANG' config.inc | cut -d'"' -f2)
 version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})
 
 # One 800k image (complete), and two 140k images (two parts).

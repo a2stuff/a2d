@@ -1,7 +1,7 @@
 .define res_string_menu_bar_item_file "Archivo"
-.define res_string_menu_bar_item_view "Ver"
+.define res_string_menu_bar_item_view "Listado"
 .define res_string_menu_bar_item_special "Especial"
-.define res_string_menu_bar_item_startup "Comienzo"
+.define res_string_menu_bar_item_startup "Arranque"
 .define res_string_menu_bar_item_selector "Seleccionar"
 .define res_string_menu_item_new_folder "Nuevo Folder..."
 .define res_char_menu_item_new_folder_shortcut 'N'

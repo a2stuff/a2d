@@ -5,6 +5,11 @@
 set -e
 
 test $# -eq 1 || (echo "Usage: setlang LANG"; exit 1)
+lang=$1
+date=$(bin/datestr $lang)
 
-perl -pni -e "s/define LANG .*/define LANG \"$1\"/" config.inc
-echo Set LANG to \"$1\"
+perl -pni -e "s/define LANG .*/define LANG \"$lang\"/" config.inc
+perl -pni -e "s/define kBuildDate .*/define kBuildDate \"$date\"/" config.inc
+
+echo Set LANG to \"$lang\"
+echo Set date to \"$date\"

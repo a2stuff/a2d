@@ -19,7 +19,8 @@ DATE=`date '+%B %d, %Y'`
 echo "Bumping to $NEWTAG..."
 
 perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-alpha$NEWVER\"/" config.inc
-perl -pni -e "s/define kDeskTopReleaseDate .*/define kDeskTopReleaseDate \"$DATE\"/" config.inc
+
+bin/setlang "en"
 
 git commit -a -m "Bump verson to $NEWTAG"
 git tag $NEWTAG

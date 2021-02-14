@@ -3484,7 +3484,7 @@ str_about4:  PASCAL_STRING res_string_about_text_line4
 str_about5:  PASCAL_STRING res_string_about_text_line5
 str_about6:  PASCAL_STRING res_string_about_text_line6
 str_about7:  PASCAL_STRING res_string_about_text_line7
-str_about8:  PASCAL_STRING kDeskTopReleaseDate
+str_about8:  PASCAL_STRING kBuildDate
 str_about9:  PASCAL_STRING .sprintf("Version %d.%d%s",::kDeskTopVersionMajor,::kDeskTopVersionMinor,kDeskTopVersionSuffix) ; do not localize
 
         ;; "Copy File" dialog strings

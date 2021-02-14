@@ -15,11 +15,11 @@
 kDeskTopVersionMajor = 1
 kDeskTopVersionMinor = 2
 .define kDeskTopVersionSuffix "-alpha25"
-.define kDeskTopReleaseDate "January 25, 2021"
+.define kBuildDate "14 Febrero 2021"
 
 ;;; Localization - applies language suffix to filename
 
-        .define LANG "en"
+        .define LANG "es"
 .macro RESOURCE_FILE basename
         .include .concat(basename, ".", LANG)
 .endmacro
