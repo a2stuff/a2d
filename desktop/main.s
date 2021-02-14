@@ -13926,9 +13926,9 @@ jump_relay:
         param_call draw_dialog_label, 1 | DDL_CENTER, aux::str_about2
         param_call draw_dialog_label, 2 | DDL_CENTER, aux::str_about3
         param_call draw_dialog_label, 3 | DDL_CENTER, aux::str_about4
-        param_call draw_dialog_label, 5, aux::str_about5
+        param_call draw_dialog_label, 5 | DDL_CENTER, aux::str_about5
         param_call draw_dialog_label, 6 | DDL_CENTER, aux::str_about6
-        param_call draw_dialog_label, 7, aux::str_about7
+        param_call draw_dialog_label, 7 | DDL_CENTER, aux::str_about7
         param_call draw_dialog_label, 9, aux::str_about8
         copy16  #kVersionLeft, dialog_label_pos
         param_call draw_dialog_label, 9, aux::str_about9

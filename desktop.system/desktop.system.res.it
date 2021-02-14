@@ -1,6 +1,6 @@
 .define res_string_copying_to_ramcard "Copiatura di %s in RAM"
 .define res_string_label_tip_skip_copying "Suggerimento: per evitare il caricamento su RAMCard, tenere premuto \x0F\x1B\x41\x18\x0E durante l'avvio."
-.define res_string_label_copying "Caricamento automatico in corso "
+.define res_string_label_copying "Caricamento automatico in corso: "
 .define res_string_prompt_insert_source "Inserisci il disco sorgente e premi <Return> per continuare, o premi <Esc> per annullare"
 .define res_string_prompt_ramcard_full "Spazio insufficiente per l'autocaricamento.Premi <Return> per continuare"
 .define res_string_error_prefix "Error $"

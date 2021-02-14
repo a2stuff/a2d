@@ -48,7 +48,6 @@
 .define res_string_errmsg_dest_format_fail "Il disco destinazione non pu| essere inizializzato!"
 .define res_string_errmsg_format_error "Errore durante l'inizializzazione."
 .define res_string_errmsg_dest_protected "Il disco destinazione } protetto in scrittura!"
-.define res_string_prompt_erase_prefix_alt "Vuoi cancellare "
 .define res_string_prompt_erase_slot_drive_pattern "Vuoi cancellare il disco in slot # lettore # ?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 34
 .define res_const_prompt_erase_slot_drive_pattern_offset2 44

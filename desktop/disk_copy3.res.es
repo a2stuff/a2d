@@ -39,7 +39,7 @@
 .define res_string_error_reading "Error al leer el bloque "
 .define res_string_dcalert_button_ok "OK            \x0D"
 .define res_string_dcalert_button_try_again "Trate de nuevo     A"
-.define res_string_dcalert_button_cancel "Cancelar     Esc"
+.define res_string_dcalert_button_cancel "Cancelar    Esc"
 .define res_string_dcalert_button_yes "Si"
 .define res_string_dcalert_button_no "No"
 .define res_string_prompt_insert_source "Inserte disco original y presione OK."
@@ -48,7 +48,6 @@
 .define res_string_errmsg_dest_format_fail "[El disco de destino no puede inicializarse!"
 .define res_string_errmsg_format_error "error de inicializacion."
 .define res_string_errmsg_dest_protected "[El volumen de destino esta protegido contra escritura!"
-.define res_string_prompt_erase_prefix_alt "]Quiere borrar "
 .define res_string_prompt_erase_slot_drive_pattern "]Quiere borrar el disco en la ranura # unidad # ?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 38
 .define res_const_prompt_erase_slot_drive_pattern_offset2 47

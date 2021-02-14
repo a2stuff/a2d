@@ -2386,11 +2386,6 @@ str_format_error:
 str_dest_protected:
         PASCAL_STRING res_string_errmsg_dest_protected
 
-str_confirm_erase1:
-        PASCAL_STRING res_string_prompt_erase_prefix_alt
-str_confirm_erase1_buf:  .res    18, 0
-kLenConfirmErase1 = .strlen(res_string_prompt_erase_prefix_alt)
-
 ;;; This string is seen when copying a ProDOS disk to DOS 3.3 or Pascal disk.
 str_confirm_erase2:
         PASCAL_STRING res_string_prompt_erase_slot_drive_pattern
@@ -2421,7 +2416,7 @@ message_table:
         .addr   str_dest_format_fail
         .addr   str_format_error
         .addr   str_dest_protected
-        .addr   str_confirm_erase1
+        .addr   str_confirm_erase0
         .addr   str_confirm_erase2
         .addr   str_copy_success
         .addr   str_copy_fail
@@ -2507,9 +2502,9 @@ LEC34:  cmp     #$02
         lda     #$02
         bne     LEC5E           ; always
 
-LEC3F:  cmp     #$06
+LEC3F:  cmp     #$06            ; duplicate
         bne     :+
-        jsr     append_to_confirm_erase1
+        jsr     append_to_confirm_erase0
         lda     #$06
         bne     LEC5E           ; always
 
@@ -2967,36 +2962,6 @@ state:
         lda     char_question_mark
         iny
         sta     str_confirm_erase0,y
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc append_to_confirm_erase1
-        ptr := $06
-
-        stxy    ptr
-        ldy     #$00
-        lda     (ptr),y
-        pha
-        tay
-:       lda     (ptr),y
-        sta     str_confirm_erase1_buf-1,y
-        dey
-        bne     :-
-        pla
-        clc
-        adc     #kLenConfirmErase1
-        sta     str_confirm_erase1
-        tay
-        inc     str_confirm_erase1
-        inc     str_confirm_erase1
-        lda     char_space
-        iny
-        sta     str_confirm_erase1,y
-        lda     char_question_mark
-        iny
-        sta     str_confirm_erase1,y
         rts
 .endproc
 

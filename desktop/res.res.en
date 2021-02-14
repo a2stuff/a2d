@@ -3,15 +3,14 @@
 .define res_string_delete_an_entry_dialog_title "Delete an Entry..."
 .define res_string_run_an_entry_dialog_title "Run an Entry..."
 .define res_string_selector_label_enter_pathname "Enter the full pathname of the run list file:"
-.define res_string_selector_label_enter_name "Enter the name (14 characters max) you wish to appear in the run list"
-.define res_string_selector_label_add_a_new_entry_to "Add a new entry to the:"
+.define res_string_selector_label_enter_name "Enter the name (14 characters max.):"
+.define res_string_selector_label_add_a_new_entry_to "Add a entry to the:"
 .define res_string_selector_label_run_list "1 Run list"
 .define res_string_selector_label_other_run_list "2 Other Run list"
 .define res_string_selector_label_download "Copy to RAMCard:"
-.define res_string_selector_label_at_first_boot "3 at first boot"
+.define res_string_selector_label_at_first_boot "3 at boot"
 .define res_string_selector_label_at_first_use "4 at first use"
 .define res_string_selector_label_never "5 never"
-.define res_string_selector_label_enter_pathname_alt "Enter the full pathname of the run list file:"
 .define res_string_the_dos_33_disk_suffix_pattern "the DOS 3.3 disk in slot # drive # ?"
 .define res_const_the_dos_33_disk_suffix_pattern_offset1 26
 .define res_const_the_dos_33_disk_suffix_pattern_offset2 34

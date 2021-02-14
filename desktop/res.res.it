@@ -3,15 +3,14 @@
 .define res_string_delete_an_entry_dialog_title "Cancella un elemento..."
 .define res_string_run_an_entry_dialog_title "Avvia un elemento..."
 .define res_string_selector_label_enter_pathname "Inserisci il pathname completo del file per l'elenco di avvio:"
-.define res_string_selector_label_enter_name "Inserisci il nome (14 caratteri max) che comparir{ nell'elenco"
-.define res_string_selector_label_add_a_new_entry_to "Aggiungi un nuovo elemento a:"
+.define res_string_selector_label_enter_name "Inserisci il nome (14 caratteri max.):"
+.define res_string_selector_label_add_a_new_entry_to "Aggiungi un elemento a:"
 .define res_string_selector_label_run_list "1 Lista di avvio"
-.define res_string_selector_label_other_run_list "2 Seconda lista di avvio"
+.define res_string_selector_label_other_run_list "2 Seconda lista"
 .define res_string_selector_label_download "Copia in RAM:"
 .define res_string_selector_label_at_first_boot "3 al boot"
 .define res_string_selector_label_at_first_use "4 al primo utilizzo"
 .define res_string_selector_label_never "5 mai"
-.define res_string_selector_label_enter_pathname_alt "Inserisci il pathname completo del file per l'elenco di avvio:"
 .define res_string_the_dos_33_disk_suffix_pattern "il disco DOS 3.3 nello slot # lettore # ?"
 .define res_const_the_dos_33_disk_suffix_pattern_offset1 29
 .define res_const_the_dos_33_disk_suffix_pattern_offset2 39

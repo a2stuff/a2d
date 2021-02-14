@@ -533,17 +533,17 @@ kIPBlinkDisplayY = 65
 ipblink_selection:
         .byte   0
 
-        DEFINE_LABEL ipblink1, res_string_label_ipblink1, kIPBlinkDisplayX, kIPBlinkDisplayY + 11
-        DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX, kIPBlinkDisplayY + 10 + 11
-        DEFINE_LABEL ipblink_slow, res_string_label_ipblink_slow, kIPBlinkDisplayX + 110 - 4 + 2, kIPBlinkDisplayY + 16 + 5 + 12 + 1
-        DEFINE_LABEL ipblink_fast, res_string_label_ipblink_fast, kIPBlinkDisplayX + 140 + 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
+        DEFINE_LABEL ipblink1, res_string_label_ipblink1, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 11
+        DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 10 + 11
+        DEFINE_LABEL ipblink_slow, res_string_label_ipblink_slow, kIPBlinkDisplayX + 110 - 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
+        DEFINE_LABEL ipblink_fast, res_string_label_ipblink_fast, kIPBlinkDisplayX + 140 + 4 + 6, kIPBlinkDisplayY + 16 + 5 + 12 + 1
 
-        DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 110 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ ipblink_btn2_rect, kIPBlinkDisplayX + 130 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ ipblink_btn3_rect, kIPBlinkDisplayX + 150 + 2, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 110 + 6, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ ipblink_btn2_rect, kIPBlinkDisplayX + 130 + 6, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ ipblink_btn3_rect, kIPBlinkDisplayX + 150 + 6, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
 
 .params ipblink_bitmap_params
-        DEFINE_POINT viewloc, kIPBlinkDisplayX + 120 - 1, kIPBlinkDisplayY
+        DEFINE_POINT viewloc, kIPBlinkDisplayX + 120 + 3, kIPBlinkDisplayY
 mapbits:        .addr   ipblink_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
@@ -566,7 +566,7 @@ ipblink_bitmap:
         .byte   PX(%0000110),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000),PX(%0110000)
 
 .params ipblink_bitmap_ip_params
-        DEFINE_POINT viewloc, kIPBlinkDisplayX + 120 - 1 + 20, kIPBlinkDisplayY
+        DEFINE_POINT viewloc, kIPBlinkDisplayX + 120 + 3 + 20, kIPBlinkDisplayY
 mapbits:        .addr   ipblink_ip_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0

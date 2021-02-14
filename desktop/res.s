@@ -559,7 +559,7 @@ delete_an_entry_label:
 run_an_entry_label:
         PASCAL_STRING res_string_run_an_entry_dialog_title ; dialog title
 
-enter_the_full_pathname_label1:
+enter_the_full_pathname_label:
         PASCAL_STRING res_string_selector_label_enter_pathname
 enter_the_name_to_appear_label:
         PASCAL_STRING res_string_selector_label_enter_name
@@ -571,9 +571,6 @@ enter_the_name_to_appear_label:
         DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},  363, 82
         DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},   363, 91
         DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},          363,100
-
-enter_the_full_pathname_label2:
-        PASCAL_STRING res_string_selector_label_enter_pathname_alt
 
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 

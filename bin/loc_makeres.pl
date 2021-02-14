@@ -71,9 +71,9 @@ sub check($$$) {
     die "Hexes mismatch at $label, line $.: $en / $t\n"
         unless hexes($en) eq hexes($t);
 
-    # Apply same leading/trailing spaces/periods
-    $t =~ s/^[ .]+|[ .]+$//g;
-    $t = $1 . $t . $2 if $en =~ m/^([ .]*).*?([ .]*)$/;
+    # Apply same leading/trailing spaces/punctuation
+    $t =~ s/^[ .:]+|[ .:]+$//g;
+    $t = $1 . $t . $2 if $en =~ m/^([ .:]*).*?([ .:]*)$/;
 
     return $t;
 }

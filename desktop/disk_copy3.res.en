@@ -48,7 +48,6 @@
 .define res_string_errmsg_dest_format_fail "The destination disk cannot be formated !"
 .define res_string_errmsg_format_error "Error during formating."
 .define res_string_errmsg_dest_protected "The destination volume is write protected !"
-.define res_string_prompt_erase_prefix_alt "Do you want to erase "
 .define res_string_prompt_erase_slot_drive_pattern "Do you want to erase the disk in slot # drive # ?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 39
 .define res_const_prompt_erase_slot_drive_pattern_offset2 47
