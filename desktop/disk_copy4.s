@@ -308,14 +308,8 @@ loop1:  lda     #0
         lda     #$00            ; special case for last byte
         sta     (ptr),y         ; (this algorithm could be improved)
 
-        ;; Bail early if < 4096 blocks ???
-        lda     auxlc::block_count_div8+1
-        cmp     #$02
-        bcs     :+
-        rts
-
         ;; Now mark block-pages used in memory bitmap
-:       lda     #>volume_bitmap
+        lda     #>volume_bitmap
         sta     ptr
         lda     auxlc::block_count_div8+1
         pha
@@ -805,7 +799,7 @@ count:  .byte   0
 .proc mark_free_in_memory_bitmap
         jsr     get_bitmap_offset_shift
         tay
-        sec
+        lda     #1
         cpx     #0
         beq     mask
 
@@ -824,7 +818,7 @@ mask:   ora     memory_bitmap,y
 .proc mark_used_in_memory_bitmap
         jsr     get_bitmap_offset_shift
         tay
-        sec
+        lda     #1
         cpx     #0
         beq     mask
 

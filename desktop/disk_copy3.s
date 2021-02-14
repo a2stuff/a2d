@@ -1902,7 +1902,7 @@ index:  .byte   0
 
         lda     drive_unitnum_table,x
         jsr     main__unit_number_to_driver_address
-        jmp     other_device
+        jmp     use_driver
 
         ;; Disk II - always 280 blocks
 disk_ii:
@@ -1915,47 +1915,7 @@ disk_ii:
         sta     block_count_table+1,x
         rts
 
-        ;; Other devices...
-other_device:
-        bne     use_driver      ; if not firmware, can't do these tests
-
-        lda     #$00
-        sta     $06
-        ldy     #$07            ; $Cn07 = $00 if SmartPort
-        lda     ($06),y
-        bne     :+
-        jmp     smartport
-
-        ;; Not smartport
-:       lda     #$00
-        sta     LE448
-        ldy     #$FC            ; $CnFC/$CnFD = Total number of blocks on device
-        lda     ($06),y
-        sta     LE449
-        beq     LE3F6
-        lda     #$80
-        sta     LE448
-LE3F6:  ldy     #$FD
-        lda     ($06),y
-        tax
-        bne     LE402
-        bit     LE448
-        bpl     LE415
-LE402:  stx     LE448
-
-        pla
-        asl     a
-        tax
-        lda     LE448
-        sta     block_count_table,x
-        lda     LE449
-        sta     block_count_table+1,x
-        rts
-
-LE415:  ldy     #$FF            ; offset to low byte of driver address
-        lda     ($06),y
-        sta     $06
-
+        ;; Use device driver
 use_driver:
         pla
         pha
@@ -1965,49 +1925,17 @@ use_driver:
 
         jsr     main__get_device_blocks_using_driver
 
-        stx     LE448           ; blocks available low
+        stx     tmp             ; blocks available low
         pla
         asl     a
         tax
-        lda     LE448
+        lda     tmp
         sta     block_count_table,x
         tya                     ; blocks available high
         sta     block_count_table+1,x
         rts
 
-LE448:  .byte   0
-LE449:  .byte   0
-
-        ;; Compute SmartPort entry point
-smartport:
-        ldy     #$FF            ; $CnFF...
-        lda     ($06),y
-        clc
-        adc     #$03            ; + 3 is low byte of firmware entry point
-        sta     $06
-        pla
-        pha
-        tax
-        lda     drive_unitnum_table,x
-        and     #$F0
-        jsr     main__unit_num_to_sp_unit_number
-        sta     status_unit_num
-
-        jsr     indirect_jump
-        .byte   $00             ; $00 = STATUS
-        .word   status_params
-
-        pla
-        asl     a
-        tax
-        lda     LE482
-        sta     block_count_table,x
-        lda     LE483
-        sta     block_count_table+1,x
-        rts
-
-indirect_jump:
-        jmp     ($06)
+tmp:    .byte   0
 
 .endproc
 
