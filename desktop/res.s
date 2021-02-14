@@ -750,39 +750,6 @@ file_to_delete_label:
 .endscope
 
 ;;; ============================================================
-;;; Resources for clock on menu bar
-
-        DEFINE_POINT pos_clock, 475, 10
-
-str_time:
-        PASCAL_STRING "00:00 XM" ; do not localize
-
-str_4_spaces:
-        PASCAL_STRING "    "    ; do not localize
-
-dow_strings:
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_1)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_2)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_3)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_4)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_5)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_6)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_7)
-        ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
-
-.params dow_str_params
-addr:   .addr   0
-length: .byte   4               ; includes trailing space
-.endparams
-
-month_offset_table:             ; for Day-of-Week calculations
-        .byte   1,5,6,3,1,5,3,0,4,2,6,4
-        ASSERT_TABLE_SIZE month_offset_table, 12
-
-parsed_date:
-        .tag ParsedDateTime
-
-;;; ============================================================
 
 ;;; 5.25" Floppy Disk
 floppy140_icon:
@@ -1067,7 +1034,7 @@ device_name_table:
 
         .repeat kMaxVolumes+1, i
         .ident(.sprintf("dev%ds", i)) := *
-        .res    20, 0
+        .res    28, 0
         .endrepeat
 
         ;; These strings are padded to be 8 bytes long to ease indexing
@@ -1430,7 +1397,40 @@ checkerboard_pattern:
         .byte   %01010101
         .byte   %10101010
 
-;;; --------------------------------------------------
+;;; ============================================================
+;;; Resources for clock on menu bar
+
+        DEFINE_POINT pos_clock, 475, 10
+
+str_time:
+        PASCAL_STRING "00:00 XM" ; do not localize
+
+str_4_spaces:
+        PASCAL_STRING "    "    ; do not localize
+
+dow_strings:
+        STRING  .sprintf("%4s", res_string_weekday_abbrev_1)
+        STRING  .sprintf("%4s", res_string_weekday_abbrev_2)
+        STRING  .sprintf("%4s", res_string_weekday_abbrev_3)
+        STRING  .sprintf("%4s", res_string_weekday_abbrev_4)
+        STRING  .sprintf("%4s", res_string_weekday_abbrev_5)
+        STRING  .sprintf("%4s", res_string_weekday_abbrev_6)
+        STRING  .sprintf("%4s", res_string_weekday_abbrev_7)
+        ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
+
+.params dow_str_params
+addr:   .addr   0
+length: .byte   4               ; includes trailing space
+.endparams
+
+month_offset_table:             ; for Day-of-Week calculations
+        .byte   1,5,6,3,1,5,3,0,4,2,6,4
+        ASSERT_TABLE_SIZE month_offset_table, 12
+
+parsed_date:
+        .tag ParsedDateTime
+
+;;; ============================================================
 
         PAD_TO $ED00
 

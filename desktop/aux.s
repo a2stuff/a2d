@@ -3418,6 +3418,14 @@ special_menu:
         kMenuItemIdUnlock      = 10
         kMenuItemIdGetSize     = 11
 
+;;; ============================================================
+
+        .include "../lib/drawstring.s"
+        .include "../lib/muldiv.s"
+        .include "../lib/bell.s"
+
+;;; ============================================================
+
         PAD_TO $AE00
 
 ;;; ============================================================
@@ -4112,10 +4120,7 @@ flag:   .byte   0
 ;;; ============================================================
 
         .include "../lib/doubleclick.s"
-        .include "../lib/drawstring.s"
         .include "../lib/buttonloop.s"
-        .include "../lib/muldiv.s"
-        .include "../lib/bell.s"
 
 ;;; ============================================================
 

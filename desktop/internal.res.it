@@ -1,0 +1,4 @@
+.define res_char_button_yes_shortcut 'S'
+.define res_char_button_no_shortcut 'N'
+.define res_char_button_try_again_shortcut 'R'
+.define res_char_button_all_shortcut 'T'

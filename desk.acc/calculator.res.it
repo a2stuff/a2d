@@ -1,0 +1,2 @@
+.define res_string_error_string "Errore "
+.define res_string_window_title "Calc"
