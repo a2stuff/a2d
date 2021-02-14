@@ -593,18 +593,18 @@ loop:   lda     month_name_table,x
 .endproc
 
 month_name_table:
-        STRING  res_string_month_abbrev_1
-        STRING  res_string_month_abbrev_2
-        STRING  res_string_month_abbrev_3
-        STRING  res_string_month_abbrev_4
-        STRING  res_string_month_abbrev_5
-        STRING  res_string_month_abbrev_6
-        STRING  res_string_month_abbrev_7
-        STRING  res_string_month_abbrev_8
-        STRING  res_string_month_abbrev_9
-        STRING  res_string_month_abbrev_10
-        STRING  res_string_month_abbrev_11
-        STRING  res_string_month_abbrev_12
+        STRING  .sprintf("%3s", res_string_month_abbrev_1)
+        STRING  .sprintf("%3s", res_string_month_abbrev_2)
+        STRING  .sprintf("%3s", res_string_month_abbrev_3)
+        STRING  .sprintf("%3s", res_string_month_abbrev_4)
+        STRING  .sprintf("%3s", res_string_month_abbrev_5)
+        STRING  .sprintf("%3s", res_string_month_abbrev_6)
+        STRING  .sprintf("%3s", res_string_month_abbrev_7)
+        STRING  .sprintf("%3s", res_string_month_abbrev_8)
+        STRING  .sprintf("%3s", res_string_month_abbrev_9)
+        STRING  .sprintf("%3s", res_string_month_abbrev_10)
+        STRING  .sprintf("%3s", res_string_month_abbrev_11)
+        STRING  .sprintf("%3s", res_string_month_abbrev_12)
         ASSERT_RECORD_TABLE_SIZE month_name_table, 12, 3
 
 .proc prepare_year_string
