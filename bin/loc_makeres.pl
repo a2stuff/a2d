@@ -35,6 +35,7 @@ sub indexes($$) {
 
 sub encode($$) {
     my ($lang, $s) = @_;
+    $s =~ tr/\\/\xFF/; # Protect \ temporarily, for \xNN sequences (etc)
     if ($lang eq 'fr') {
         $s =~ tr/£à˚ç§`éùè¨/#@[\\]`{|}~/;
     } elsif ($lang eq 'de') {
@@ -46,6 +47,8 @@ sub encode($$) {
     } else {
         die "Unknown lang: $lang\n";
     }
+    $s =~ s|\\|\\\\|g; # Escape newly generated \
+    $s =~ tr/\xFF/\\/; # Restore the original \ (see above)
 
     die "Unencodable ($lang) in line $.: $s\n" unless $s =~ /^[\x20-\x7e]*$/;
 
