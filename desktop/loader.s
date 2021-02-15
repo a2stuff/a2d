@@ -45,9 +45,6 @@ self:
 reinstall_flag:                 ; set once prefix saved and reinstalled
         .byte   0
 
-        .byte   "Mouse Desk"
-        .byte   0
-
 kSplashVtab = 12
 splash_string:
         PASCAL_STRING .sprintf(res_string_splash_string, kDeskTopProductName)

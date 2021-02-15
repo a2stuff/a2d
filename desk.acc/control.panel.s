@@ -396,12 +396,15 @@ reserved:       .byte   0
         DEFINE_RECT cliprect, 0, 0, 53, 33
 .endparams
 
+        kNumArrows = 6
+arrows_table:
         DEFINE_POINT dblclick_arrow_pos1, kDblClickX + 65, kDblClickY + 7
         DEFINE_POINT dblclick_arrow_pos2, kDblClickX + 65, kDblClickY + 22
         DEFINE_POINT dblclick_arrow_pos3, kDblClickX + 110, kDblClickY + 10
         DEFINE_POINT dblclick_arrow_pos4, kDblClickX + 110, kDblClickY + 22
         DEFINE_POINT dblclick_arrow_pos5, kDblClickX + 155, kDblClickY + 13
         DEFINE_POINT dblclick_arrow_pos6, kDblClickX + 155, kDblClickY + 23
+        ASSERT_RECORD_TABLE_SIZE arrows_table, kNumArrows, .sizeof(MGTK::Point)
 
         DEFINE_RECT_SZ dblclick_button_rect1, kDblClickX + 175, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ dblclick_button_rect2, kDblClickX + 130, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
@@ -1143,28 +1146,26 @@ notpencopy:     .byte   MGTK::notpencopy
         param_call DrawString, dblclick_speed_label_str
 
 
-.macro copy32 arg1, arg2
-        .scope
-        ldy     #3
-loop:   copy    arg1,y, arg2,y
-        dey
-        bpl     loop
-        .endscope
-.endmacro
+        ;; Arrows
+.scope
+        copy    #0, arrow_num
+        copy16  #arrows_table, addr
 
-        ;; TODO: Loop here
-        copy32 dblclick_arrow_pos1, darrow_params::viewloc
+loop:   ldy     #3
+        addr := *+1
+:       lda     SELF_MODIFIED,y
+        sta     darrow_params::viewloc,y
+        dey
+        bpl     :-
+
         MGTK_CALL MGTK::PaintBits, darrow_params
-        copy32 dblclick_arrow_pos2, darrow_params::viewloc
-        MGTK_CALL MGTK::PaintBits, darrow_params
-        copy32 dblclick_arrow_pos3, darrow_params::viewloc
-        MGTK_CALL MGTK::PaintBits, darrow_params
-        copy32 dblclick_arrow_pos4, darrow_params::viewloc
-        MGTK_CALL MGTK::PaintBits, darrow_params
-        copy32 dblclick_arrow_pos5, darrow_params::viewloc
-        MGTK_CALL MGTK::PaintBits, darrow_params
-        copy32 dblclick_arrow_pos6, darrow_params::viewloc
-        MGTK_CALL MGTK::PaintBits, darrow_params
+        add16_8 addr, #.sizeof(MGTK::Point), addr
+        inc     arrow_num
+        lda     arrow_num
+        cmp     #kNumArrows
+        bne     loop
+.endscope
+
 
         jsr     draw_dblclick_buttons
 
@@ -1236,6 +1237,9 @@ loop:   copy    arg1,y, arg2,y
 
 done:   MGTK_CALL MGTK::ShowCursor
         rts
+
+arrow_num:
+        .byte   0
 
 .endproc
 
@@ -1965,7 +1969,7 @@ done:   rts
 ;;; ============================================================
 
 da_end  := *
-.assert * < WINDOW_ICON_TABLES, error, "DA too big"
+.assert * < WINDOW_ICON_TABLES, error, .sprintf("DA too big (at $%X)", *)
         ;; I/O Buffer starts at MAIN $1C00
         ;; ... but icon tables start at AUX $1B00
 

@@ -11,5 +11,5 @@ date=$(bin/datestr $lang)
 perl -pni -e "s/define LANG .*/define LANG \"$lang\"/" config.inc
 perl -pni -e "s/define kBuildDate .*/define kBuildDate \"$date\"/" config.inc
 
-echo Set LANG to \"$lang\"
-echo Set date to \"$date\"
+echo Set lang to: $lang
+echo Set date to: $(echo "$date" | bin/transcode.pl from $lang)

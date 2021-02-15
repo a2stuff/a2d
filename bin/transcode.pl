@@ -13,8 +13,8 @@ use warnings;
 use utf8;
 binmode(STDOUT, ":utf8");
 
-my $dir = shift || die " Usage: $0 encoding\n";
-my $lang = shift || die "Usage: $0 encoding\n";
+my $dir = shift || die " Usage: $0 dir encoding\n";
+my $lang = shift || die "Usage: $0 dir encoding\n";
 
 die "$0: dir must be 'to' or 'from'\n" unless $dir eq 'to' ||  $dir eq 'from';
 
@@ -25,8 +25,10 @@ while (<>) {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/#§ÄÖÜ`äöüß/; } else { tr/#§ÄÖÜ`äöüß/#@[\\]`{|}~/; }
     } elsif ($lang eq 'it') {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/£§˚çéùàòèì/; } else { tr/£§˚çéùàòèì/#@[\\]`{|}~/; }
-    } elseif ($lang eq 'es') {
+    } elsif ($lang eq 'es') {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/£§¡Ñ¿`˚ñç~/; } else { tr/£§¡Ñ¿`˚ñç~/#@[\\]`{|}~/; }
+    } elsif ($lang eq 'en') {
+        # no-op
     }
     else { die "$0: Unknown lang: $lang\n"; }
 
