@@ -14739,8 +14739,6 @@ do4:    jsr     close_prompt_dialog
 .proc rename_dialog_proc
         params_ptr := $06
 
-        kOldNameLeft = 85
-
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     (params_ptr),y
@@ -14762,8 +14760,6 @@ open_win:
         param_call draw_dialog_title, aux::str_rename_title
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        param_call draw_dialog_label, 2, aux::str_rename_old
-        copy    #kOldNameLeft, dialog_label_pos
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #1              ; rename_dialog_params::addr offset
         copy16in ($06),y, $08
@@ -14781,7 +14777,8 @@ open_win:
         ;; Clear input (after IP)
         jsr     clear_path_buf2
 
-        param_call draw_dialog_label, 2, buf_filename
+        param_call draw_dialog_label, 2, aux::str_rename_old
+        param_call DrawString, buf_filename
         param_call draw_dialog_label, 4, aux::str_rename_new
         jsr     draw_filename_prompt
         rts

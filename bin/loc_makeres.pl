@@ -98,6 +98,9 @@ my $header = <STDIN>; # ignore header
 my $last_file = '';
 my %fhs = ();
 my @langs = ('en', 'fr', 'de', 'it', 'es');
+
+my %dupes = ();
+
 while (<STDIN>) {
     my ($file, $label, $comment, $en, $fr, $de, $it, $es) = split(/\t/);
     my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es);
@@ -109,7 +112,18 @@ while (<STDIN>) {
         foreach my $lang (@langs) {
            open $fhs{$lang}, '>'.($file =~ s/\.s$/.res.$lang/r) or die $!;
         }
+
+        %dupes = ();
     }
+
+    if (0 && $label =~ m/res_string_/) {
+        if (defined $dupes{$en}) {
+            say STDERR "Possible dupe: '$en' - $dupes{$en} / $label";
+        } else {
+            $dupes{$en} = $label;
+        }
+    }
+
 
     foreach my $lang (@langs) {
         my $str = $strings{$lang};
