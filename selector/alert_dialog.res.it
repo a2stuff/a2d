@@ -8,5 +8,5 @@
 .define res_string_alert_pathname_does_not_exist "Parte del pathname non esiste."
 .define res_string_alert_insert_source_disk "Inserisci il disco sorgente."
 .define res_string_alert_file_not_found "File non trovato."
-.define res_string_alert_insert_system_disk "Inserisci il disco Mouse Desk."
+.define res_string_alert_insert_system_disk "Inserisci il disco di sistema."
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM non trovato."
