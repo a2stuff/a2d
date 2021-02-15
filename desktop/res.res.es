@@ -37,7 +37,7 @@
 .define res_string_weekday_abbrev_5 "Jue "
 .define res_string_weekday_abbrev_6 "Vie "
 .define res_string_weekday_abbrev_7 "Sab "
-.define res_string_menu_item_slot_pattern "Ranuar #"
+.define res_string_menu_item_slot_pattern "Ranura #"
 .define res_const_menu_item_slot_pattern_offset1 8
 .define res_string_menu_item_add_entry "A|adir entrada..."
 .define res_string_menu_item_edit_entry "Editar entrada..."
