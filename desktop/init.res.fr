@@ -1,0 +1,10 @@
+.define res_string_trash_icon_name "Corbeille"
+.define res_string_sd_prefix_pattern "P#, D# : "
+.define res_const_sd_prefix_pattern_offset1 2
+.define res_const_sd_prefix_pattern_offset2 6
+.define res_string_volume_type_disk_ii "Disque"
+.define res_string_volume_type_ramcard "Carte RAM"
+.define res_string_volume_type_profile "ProFile"
+.define res_string_volume_type_unidisk "Lecteur UniDisk 3.5"
+.define res_string_volume_type_fileshare "AppleShare"
+.define res_string_volume_type_unknown "Inconnu"

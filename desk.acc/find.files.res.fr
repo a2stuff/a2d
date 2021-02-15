@@ -1,0 +1,3 @@
+.define res_string_label_find "Rechercher :"
+.define res_string_button_search "Rechercher     \x0D"
+.define res_string_button_cancel "Annuler     Esc"

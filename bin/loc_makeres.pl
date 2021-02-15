@@ -58,24 +58,38 @@ sub encode($$) {
 sub hashes($) { my $s = shift; return join('', $s =~ m/#/g); }
 sub percents($) { my $s = shift; return join('', $s =~ m/%\d*[dsc]/g); }
 sub hexes($) { my $s = shift; return join('', $s =~ m/\\x../g); }
+sub punct($) { my $s = shift; $s =~ m/([.:]*)$/; return $1; }
 
-sub check($$$) {
-    my ($label, $en, $t) = @_;
+sub check($$$$) {
+    my ($lang, $label, $en, $t) = @_;
     return $en unless $t;
 
-    # Ensure placeholders are still there
+    # Apply same leading/trailing spaces
+    $t =~ s/^[ ]+|[ ]+$//g;
+    $t = $1 . $t . $2 if $en =~ m/^([ ]*).*?([ ]*)$/;
+
+     # Ensure placeholders are still there
     die "Hashes mismatch at $label, line $.: $en / $t\n"
         unless hashes($en) eq hashes($t);
     die "Percents mismatch at $label, line $.: $en / $t\n"
         unless percents($en) eq percents($t);
     die "Hexes mismatch at $label, line $.: $en / $t\n"
         unless hexes($en) eq hexes($t);
+    die "Punctuation mismatch at $label, line $.: '$en' / '$t'\n"
+        unless punct($en) eq punct($t);
 
-    # Apply same leading/trailing spaces/punctuation
-    $t =~ s/^[ .:]+|[ .:]+$//g;
-    $t = $1 . $t . $2 if $en =~ m/^([ .:]*).*?([ .:]*)$/;
 
-    return $t;
+    # Language specific checks:
+    if ($lang eq 'fr') {
+        die "Expect space before punctuation in $lang, line $.: $t\n"
+            if $t =~ m/\S[!?:]/;
+    } else {
+        die "Expect no space before punctuation in $lang, line $.: $t\n"
+            if $t =~ m/\s[!?:]/;
+    }
+
+
+   return $t;
 }
 
 
@@ -101,7 +115,7 @@ while (<STDIN>) {
         my $str = $strings{$lang};
 
         if ($lang ne 'en') {
-            $str = check($label, $en, $str);
+            $str = check($lang, $label, $en, $str);
             $str = encode($lang, $str);
         }
         print {$fhs{$lang}} ".define $label ", enquote($label, $str), "\n";

@@ -11,10 +11,10 @@
 .define res_string_selector_label_at_first_boot "3 at boot"
 .define res_string_selector_label_at_first_use "4 at first use"
 .define res_string_selector_label_never "5 never"
-.define res_string_the_dos_33_disk_suffix_pattern "the DOS 3.3 disk in slot # drive # ?"
+.define res_string_the_dos_33_disk_suffix_pattern "the DOS 3.3 disk in slot # drive #?"
 .define res_const_the_dos_33_disk_suffix_pattern_offset1 26
 .define res_const_the_dos_33_disk_suffix_pattern_offset2 34
-.define res_string_the_disk_in_slot_suffix_pattern "the disk in slot # drive # ?"
+.define res_string_the_disk_in_slot_suffix_pattern "the disk in slot # drive #?"
 .define res_const_the_disk_in_slot_suffix_pattern_offset1 18
 .define res_const_the_disk_in_slot_suffix_pattern_offset2 26
 .define res_string_files_suffix "Files"

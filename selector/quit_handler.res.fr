@@ -1,0 +1,2 @@
+.define res_string_status_loading "Chargement du s{lecteur"
+.define res_string_prompt_insert_system_disk "Ins{rez le disque syst}me et pressez <Return>."

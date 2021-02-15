@@ -11,7 +11,7 @@
 .define res_string_selector_label_at_first_boot "3 en el arranque"
 .define res_string_selector_label_at_first_use "4 por primera vez"
 .define res_string_selector_label_never "5 nunca"
-.define res_string_the_dos_33_disk_suffix_pattern "el disco DOS 3.3 en la ranura # unidad # ?"
+.define res_string_the_dos_33_disk_suffix_pattern "el disco DOS 3.3 en la ranura # unidad #?"
 .define res_const_the_dos_33_disk_suffix_pattern_offset1 31
 .define res_const_the_dos_33_disk_suffix_pattern_offset2 40
 .define res_string_the_disk_in_slot_suffix_pattern "el disco en la ranura # unidad #?"

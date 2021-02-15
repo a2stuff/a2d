@@ -3,10 +3,10 @@
 .define res_char_button_try_again_shortcut 'A'
 .define res_string_button_cancel "Annulla  Esc"
 .define res_string_alert_selector_unable_to_run "Impossibile eseguire il programma."
-.define res_string_alert_io_error "Errore I/O"
+.define res_string_alert_io_error "Errore I/O."
 .define res_string_alert_no_device "Nessuna unit{ connessa."
 .define res_string_alert_pathname_does_not_exist "Parte del pathname non esiste."
 .define res_string_alert_insert_source_disk "Inserisci il disco sorgente."
 .define res_string_alert_file_not_found "File non trovato."
-.define res_string_alert_insert_system_disk "Inserisci il disco Mouse Desk!"
-.define res_string_alert_basic_system_not_found "BASIC.SYSTEM non trovato"
+.define res_string_alert_insert_system_disk "Inserisci il disco Mouse Desk."
+.define res_string_alert_basic_system_not_found "BASIC.SYSTEM non trovato."
