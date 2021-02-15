@@ -1034,16 +1034,19 @@ device_name_table:
         .res    28, 0
         .endrepeat
 
-        ;; These strings are padded to be 8 bytes long to ease indexing
-startup_menu_item_1:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
-startup_menu_item_2:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
-startup_menu_item_3:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
-startup_menu_item_4:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
-startup_menu_item_5:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
-startup_menu_item_6:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
-startup_menu_item_7:    PASCAL_STRING res_string_menu_item_slot_pattern, 7 ; menu item
-        ASSERT_RECORD_TABLE_SIZE startup_menu_item_1, 7, 8
+;;; Startup menu items (populated by slot scan at startup)
+
+startup_menu_item_1:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
+startup_menu_item_2:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
+startup_menu_item_3:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
+startup_menu_item_4:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
+startup_menu_item_5:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
+startup_menu_item_6:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
+startup_menu_item_7:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
         kStartupMenuItemSlotOffset = res_const_menu_item_slot_pattern_offset1
+
+startup_slot_table:
+        .res    7, 0            ; maps menu item index (0-based) to slot number
 
 ;;; ============================================================
 

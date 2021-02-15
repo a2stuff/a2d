@@ -3812,19 +3812,10 @@ check_drive_flags:
         ;; Determine the slot by looking at the menu item string.
         ldx     menu_click_params::item_num
         dex
-        txa
-        asl     a               ; * 8
-        asl     a
-        asl     a
-        clc
-        adc     #kStartupMenuItemSlotOffset
-        tax
-        lda     startup_menu_item_1,x
-        and     #$0F            ; convert ASCII digit back to number
-        clc
-        adc     #>$C000         ; compute $Cn00
+        lda     startup_slot_table,x
+        ora     #>$C000         ; compute $Cn00
         sta     reset_and_invoke_target+1
-        lda     #<$0000
+        lda     #<$C000
         sta     reset_and_invoke_target
         ;; fall through
 .endproc

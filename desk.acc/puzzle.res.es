@@ -1,1 +1,1 @@
-.define res_string_window_title "Rompecabezas"
+.define res_string_window_title "Puzzle"

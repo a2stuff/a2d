@@ -936,6 +936,9 @@ loop:   lda     slot
         bne     next
 
         ;; It is a ProDOS device - prepare menu item.
+        lda     slot
+        sta     startup_slot_table,x
+
         txa                     ; pointer to nth sNN string
         pha
         asl     a
