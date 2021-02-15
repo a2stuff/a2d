@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# Usage: bin/datestr LANG
+# Example: bin/datestr en
+
+# Run this from the top level directory
+
+set -e
+
+test $# -eq 1 || (echo "Usage: datestr LANG"; exit 1)
+
+lang=$1
+
+yyyy=$(expr `date +%Y`)
+mm=$(expr `date +%m`)
+dd=$(expr `date +%d`)
+
+month=$(grep "res_string_month_name_${mm}" "desktop/main.res.${lang}" | cut -d'"' -f2)
+
+if [ "$lang" = "en" ]; then
+    echo "$month $dd, $yyyy"
+else
+    echo "$dd $month $yyyy"
+fi

@@ -343,8 +343,6 @@ str_disk:
         .word   428, 147
         .word   30, 146
 
-str_run_a_program:
-        PASCAL_STRING res_string_run_a_program_dialog_title ; dialog title
 str_file_to_run:
         PASCAL_STRING res_string_label_file_to_run
 
@@ -380,7 +378,7 @@ start:  jsr     open_window
 .proc draw_window
         lda     winfo_dialog::window_id
         jsr     set_port_for_window
-        param_call draw_title_centered, str_run_a_program
+        param_call draw_title_centered, app::str_run_a_program
         param_call draw_input_label, str_file_to_run
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect_input

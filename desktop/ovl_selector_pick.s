@@ -452,15 +452,15 @@ L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     selector_action
         cmp     #SelectorAction::edit
         bne     L9417
-        param_call L94F0, edit_an_entry_label
+        param_call draw_title_centered, label_edit
         rts
 
 L9417:  cmp     #$03
         bne     L9423
-        param_call L94F0, delete_an_entry_label
+        param_call draw_title_centered, label_del
         rts
 
-L9423:  param_call L94F0, run_an_entry_label
+L9423:  param_call draw_title_centered, label_run
         rts
 
 L942B:  stx     $07
@@ -515,7 +515,7 @@ L947F:  clc
         sta     dialog_label_pos::xcoord+1
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         ldax    $06
-        jsr     L94CB
+        jsr     draw_string
         lda     L94A8
         sta     dialog_label_pos::xcoord
         lda     #0
@@ -534,7 +534,10 @@ L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_cancel_pos
         param_call main::DrawString, aux::cancel_button_label
         rts
 
-L94CB:  stax    $06
+;;; ============================================================
+
+.proc draw_string
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -545,30 +548,31 @@ L94D4:  lda     ($06),y
         copy16  #path_buf2+3, path_buf2
         MGTK_RELAY_CALL MGTK::DrawText, path_buf2
         rts
+.endproc
 
-L94F0:  stax    $06
-        ldy     #$00
-        lda     ($06),y
-        sta     $08
-        inc16   $06
-        MGTK_RELAY_CALL MGTK::TextWidth, $06
-        lsr16    $09
-        lda     #$01
-        sta     L9539
-        lda     #$5E
-        lsr     L9539
-        ror     a
-        sec
-        sbc     $09
-        sta     pos_dialog_title
-        lda     L9539
-        sbc     $0A
-        sta     pos_dialog_title+1
+;;; ============================================================
+
+.proc draw_title_centered
+        text_params     := $6
+        text_addr       := text_params + 0
+        text_length     := text_params + 2
+        text_width      := text_params + 3
+
+        stax    text_addr       ; input is length-prefixed string
+        ldy     #0
+        lda     (text_addr),y
+        sta     text_length
+        inc16   text_addr ; point past length byte
+        MGTK_RELAY_CALL MGTK::TextWidth, text_params
+
+        kWidth = 350
+
+        sub16   #kWidth, text_width, pos_dialog_title::xcoord
+        lsr16   pos_dialog_title::xcoord ; /= 2
         MGTK_RELAY_CALL MGTK::MoveTo, pos_dialog_title
-        MGTK_RELAY_CALL MGTK::DrawText, $06
+        MGTK_RELAY_CALL MGTK::DrawText, text_params
         rts
-
-L9539:  .byte   0
+.endproc
 
 ;;; ============================================================
 

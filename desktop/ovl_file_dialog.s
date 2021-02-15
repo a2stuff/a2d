@@ -1174,34 +1174,22 @@ draw_change_drive_button_label:
 ;;; ============================================================
 
 .proc draw_title_centered
-        ptr := $06
-        params := $06
+        text_params     := $6
+        text_addr       := text_params + 0
+        text_length     := text_params + 2
+        text_width      := text_params + 3
 
-        jsr     copy_string_to_lcbuf
+        stax    text_addr       ; input is length-prefixed string
+        jsr     AuxLoad
+        sta     text_length
+        inc16   text_addr ; point past length byte
+        MGTK_RELAY_CALL MGTK::TextWidth, text_params
 
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     $08
-        inc16   params
-        MGTK_RELAY_CALL MGTK::TextWidth, params
-        lsr16   $09
-        lda     #>kFilePickerDlgWidth
-        sta     l1
-        lda     #<kFilePickerDlgWidth
-        lsr     l1
-        ror     a
-        sec
-        sbc     $09
-        sta     pos_D90B
-        lda     l1
-        sbc     $0A
-        sta     pos_D90B+1
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D90B
-        MGTK_RELAY_CALL MGTK::DrawText, $06
+        sub16   #kFilePickerDlgWidth, text_width, file_dialog_title_pos::xcoord
+        lsr16   file_dialog_title_pos::xcoord ; /= 2
+        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_title_pos
+        MGTK_RELAY_CALL MGTK::DrawText, text_params
         rts
-
-l1:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1464,11 +1452,11 @@ l17:    .byte   0
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, winfo_file_dialog_listbox::cliprect
         lda     #16
-        sta     picker_entry_pos
+        sta     picker_entry_pos::xcoord
         lda     #8
-        sta     picker_entry_pos+2
+        sta     picker_entry_pos::ycoord
         lda     #0
-        sta     picker_entry_pos+3
+        sta     picker_entry_pos::ycoord+1
         sta     l4
 
 loop:   lda     l4
@@ -1516,7 +1504,7 @@ l1:     lda     l4
         lda     winfo_file_dialog_listbox
         jsr     set_port_for_window
 l2:     inc     l4
-        add16   picker_entry_pos+2, #8, picker_entry_pos+2
+        add16   picker_entry_pos::ycoord, #8, picker_entry_pos::ycoord
         jmp     loop
 
 l3:     .byte   0

@@ -3538,24 +3538,18 @@ str_delete_locked_file:
         DEFINE_POINT delete_file_count_pos2, 300, kDialogLabelRow4
 
         ;; "New Folder" dialog strings
-str_new_folder_title:
-        PASCAL_STRING res_string_new_folder_dialog_title ; dialog title
 str_in_colon:
         PASCAL_STRING res_string_new_folder_label_in
 str_enter_folder_name:
         PASCAL_STRING res_string_new_folder_label_name
 
         ;; "Rename Icon" dialog strings
-str_rename_title:
-        PASCAL_STRING res_string_rename_dialog_title ; dialog title
 str_rename_old:
         PASCAL_STRING res_string_rename_label_old
 str_rename_new:
         PASCAL_STRING res_string_rename_label_new
 
         ;; "Get Info" dialog strings
-str_info_title:
-        PASCAL_STRING res_string_get_info_dialog_title ; dialog title
 str_info_name:
         PASCAL_STRING res_string_get_info_label_name
 str_info_locked:
@@ -3583,8 +3577,6 @@ str_colon:
         DEFINE_POINT unlock_remaining_count_pos, 205, kDialogLabelRow4
         DEFINE_POINT lock_remaining_count_pos, 195, kDialogLabelRow4
 
-str_format_disk:
-        PASCAL_STRING res_string_format_disk_dialog_title ; dialog title
 str_select_format:
         PASCAL_STRING res_string_format_disk_label_select
 str_new_volume:
@@ -3596,8 +3588,6 @@ str_formatting:
 str_formatting_error:
         PASCAL_STRING res_string_format_disk_error
 
-str_erase_disk:
-        PASCAL_STRING res_string_erase_disk_dialog_title ; dialog title
 str_select_erase:
         PASCAL_STRING res_string_erase_disk_label_select
 str_confirm_erase:
@@ -3608,24 +3598,18 @@ str_erasing_error:
         PASCAL_STRING res_string_erase_disk_error
 
         ;; "Unlock File" dialog strings
-str_unlock_title:
-        PASCAL_STRING res_string_unlock_dialog_title ; dialog title
 str_unlock_ok:
         PASCAL_STRING res_string_unlock_prompt
 str_unlock_remaining:
         PASCAL_STRING res_string_unlock_status_remaining
 
         ;; "Lock File" dialog strings
-str_lock_title:
-        PASCAL_STRING res_string_lock_dialog_title ; dialog title
 str_lock_ok:
         PASCAL_STRING res_string_lock_prompt
 str_lock_remaining:
         PASCAL_STRING res_string_lock_status_remaining
 
         ;; "Get Size" dialog strings
-str_size_title:
-        PASCAL_STRING res_string_get_size_dialog_title ; dialog title
 str_size_number:
         PASCAL_STRING res_string_get_size_label_count
 str_size_blocks:

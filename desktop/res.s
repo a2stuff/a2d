@@ -550,15 +550,6 @@ nextwinfo:      .addr   0
         DEFINE_POINT entry_picker_ok_pos, 215, winfo_entry_picker::kHeight-8
         DEFINE_POINT entry_picker_cancel_pos, 45, winfo_entry_picker::kHeight-8
 
-add_an_entry_label:
-        PASCAL_STRING res_string_add_an_entry_dialog_title ; dialog title
-edit_an_entry_label:
-        PASCAL_STRING res_string_edit_an_entry_dialog_title ; dialog title
-delete_an_entry_label:
-        PASCAL_STRING res_string_delete_an_entry_dialog_title ; dialog title
-run_an_entry_label:
-        PASCAL_STRING res_string_run_an_entry_dialog_title ; dialog title
-
 enter_the_full_pathname_label:
         PASCAL_STRING res_string_selector_label_enter_pathname
 enter_the_name_to_appear_label:
@@ -653,13 +644,13 @@ str_kb_suffix:
 file_count:
         .word   0
 
-        DEFINE_POINT pos_D90B, 0, 13
+        DEFINE_POINT file_dialog_title_pos, 0, 13
 
         DEFINE_RECT rect_D90F, 0, 0, 125, 0
 
         DEFINE_POINT picker_entry_pos, 2, 0
 
-        .byte   $00,$00
+        .byte   $00,$00         ; Unused ???
 
 str_folder:
         PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight} ; do not localize
@@ -720,9 +711,6 @@ textbg1:
 textbg2:
         .byte   $7F
 
-copy_a_file_label:
-        PASCAL_STRING res_string_copy_file_dialog_title ; dialog title
-
 source_filename_label:
         PASCAL_STRING res_string_copy_file_label_source_filename
 
@@ -737,9 +725,6 @@ kCommonInputHeight = 11
 
         DEFINE_RECT_SZ input2_rect, 28, 136, kCommonInputWidth, kCommonInputHeight
         DEFINE_POINT input2_textpos, 30, 146
-
-delete_a_file_label:
-        PASCAL_STRING res_string_delete_file_dialog_title ; dialog title
 
 file_to_delete_label:
         PASCAL_STRING res_string_delete_file_label_file_to_delete

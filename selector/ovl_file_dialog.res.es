@@ -4,5 +4,4 @@
 .define res_string_fd_button_cancel "Cancelar    Esc"
 .define res_string_fd_button_ok "OK            \x0D"
 .define res_string_disk " Disco: "
-.define res_string_run_a_program_dialog_title "Ejecutar un Programa..."
 .define res_string_label_file_to_run "Archivo a ejecutar:"

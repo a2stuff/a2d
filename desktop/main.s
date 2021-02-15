@@ -14180,7 +14180,7 @@ do4:    jsr     Bell
         jmp     do3
 
 else:   jsr     open_dialog_window
-        param_call draw_dialog_title, aux::str_size_title
+        param_call draw_dialog_title, aux::label_get_size
         param_call draw_dialog_label, 1, aux::str_size_number
         ldy     #1
         jsr     draw_colon
@@ -14383,7 +14383,7 @@ LAE49:  copy    #$80, has_input_field_flag
         jsr     open_prompt_window
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        param_call draw_dialog_title, aux::str_new_folder_title
+        param_call draw_dialog_title, aux::label_new_folder
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         rts
@@ -14475,7 +14475,7 @@ prepare_window:
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
 
-        param_call draw_dialog_title, aux::str_info_title
+        param_call draw_dialog_title, aux::label_get_info
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     (ptr),y
@@ -14585,7 +14585,7 @@ row:    .byte   0
         ;; LockDialogLifecycle::open
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        param_call draw_dialog_title, aux::str_lock_title
+        param_call draw_dialog_title, aux::label_lock
         param_call draw_dialog_label, 4, aux::str_lock_ok
         rts
 
@@ -14671,7 +14671,7 @@ do4:    jsr     close_prompt_dialog
         ;; LockDialogLifecycle::open
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        param_call draw_dialog_title, aux::str_unlock_title
+        param_call draw_dialog_title, aux::label_unlock
         param_call draw_dialog_label, 4, aux::str_unlock_ok
         rts
 
@@ -14757,7 +14757,7 @@ open_win:
         jsr     open_prompt_window
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        param_call draw_dialog_title, aux::str_rename_title
+        param_call draw_dialog_title, aux::label_rename_icon
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     copy_dialog_param_addr_to_ptr

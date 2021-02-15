@@ -27,7 +27,7 @@ L080C:  copy    #$00, has_input_field_flag
         jsr     main::open_prompt_window
         lda     winfo_prompt_dialog
         jsr     main::set_port_from_window_id
-        param_call main::draw_dialog_title, aux::str_format_disk
+        param_call main::draw_dialog_title, aux::label_format_disk
         param_call main::draw_dialog_label, 1, aux::str_select_format
         jsr     draw_volume_labels
         copy    #$FF, selected_device_index
@@ -169,7 +169,7 @@ L09D9:  lda     #$00
         jsr     main::open_prompt_window
         lda     winfo_prompt_dialog
         jsr     main::set_port_from_window_id
-        param_call main::draw_dialog_title, aux::str_erase_disk
+        param_call main::draw_dialog_title, aux::label_erase_disk
         param_call main::draw_dialog_label, 1, aux::str_select_erase
         jsr     draw_volume_labels
         copy    #$FF, selected_device_index

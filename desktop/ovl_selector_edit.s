@@ -110,10 +110,10 @@ buffer: .res 16, 0
         jsr     file_dialog::set_port_for_window
         lda     path_buf0
         beq     add
-        param_call file_dialog::draw_title_centered, edit_an_entry_label
+        param_call file_dialog::draw_title_centered, label_edit
         jmp     common
 
-add:    param_call file_dialog::draw_title_centered, add_an_entry_label
+add:    param_call file_dialog::draw_title_centered, label_add
 common: MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
