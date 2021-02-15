@@ -54,4 +54,4 @@
 .define res_string_label_status_copy_success "La copie est termin{e avec succ}s."
 .define res_string_label_status_copy_fail "La copie a {t{ annul{e."
 .define res_string_prompt_insert_source_or_cancel "Ins{rez le disque source ou pressez Esc pour annuler."
-.define res_string_prompt_insert_dest_or_cancel "Ins{rez le disque destination ou pressez Escape pour annuler."
+.define res_string_prompt_insert_dest_or_cancel "Ins{rez le disque destination ou pressez Esc pour annuler."

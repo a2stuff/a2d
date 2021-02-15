@@ -1,9 +1,9 @@
 .define res_string_copying_to_ramcard "Copying %s into RAMCard"
 .define res_string_label_tip_skip_copying "Tip: To skip copying to RAMCard, hold down \x0F\x1B\x41\x18\x0E when launching."
 .define res_string_label_copying "Copying to RAMCard: "
-.define res_string_prompt_insert_source "Insert the source disk and press <Return> to continue or <Esc> to cancel."
-.define res_string_prompt_ramcard_full "Not enough room in the RAMCard, press <Return> to continue."
+.define res_string_prompt_insert_source "Insert the source disk and press Return to continue or Esc to cancel."
+.define res_string_prompt_ramcard_full "Not enough room in the RAMCard, press Return to continue."
 .define res_string_error_prefix "Error $"
 .define res_string_error_suffix " occured when copying "
-.define res_string_prompt_copy_not_completed "The copy was not completed, press <Return> to continue."
+.define res_string_prompt_copy_not_completed "The copy was not completed, press Return to continue."
 .define res_char_monitor_shortcut 'M'

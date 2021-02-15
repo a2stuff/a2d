@@ -53,5 +53,5 @@
 .define res_const_prompt_erase_slot_drive_pattern_offset2 47
 .define res_string_label_status_copy_success "The copy was successful."
 .define res_string_label_status_copy_fail "The copy was not completed."
-.define res_string_prompt_insert_source_or_cancel "Insert source disk or press Escape to cancel."
-.define res_string_prompt_insert_dest_or_cancel "Insert destination disk or press Escape to cancel."
+.define res_string_prompt_insert_source_or_cancel "Insert source disk or press Esc to cancel."
+.define res_string_prompt_insert_dest_or_cancel "Insert destination disk or press Esc to cancel."
