@@ -58,7 +58,7 @@
 .define res_string_errmsg_too_large_to_move "File troppo grande. Premi OK per continuare."
 .define res_string_delete_dialog_title "Cancella..."
 .define res_string_prompt_delete_ok "Clicca OK per cancellare:"
-.define res_string_prompt_ok_empty_trash "Cilccando OK svuoterai immediatamente il cestino da:"
+.define res_string_prompt_ok_empty_trash "Clicca OK per svuotare il cestino da:"
 .define res_string_label_file "File:"
 .define res_string_delete_remaining "File rimanenti da cancellare:"
 .define res_string_delete_prompt_locked_file "Questo file } bloccato, vuoi cancellarlo comunque?"
