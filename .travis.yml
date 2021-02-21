@@ -6,16 +6,12 @@ install:
 - git clone https://github.com/cc65/cc65 /tmp/cc65 &&
   sudo make -C /tmp/cc65 ca65 ld65 avail &&
   ca65 --version
-
-script:
-- make
-
-before_deploy:
 - git clone https://github.com/mach-kernel/cadius /tmp/cadius &&
   make -C /tmp/cadius &&
   make -C /tmp/cadius install
-- cd $TRAVIS_BUILD_DIR/ &&
-  bin/package.sh
+
+script:
+- make && make package
 
 deploy:
   provider: releases
