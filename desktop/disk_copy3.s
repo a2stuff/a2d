@@ -577,7 +577,9 @@ LD6F9:  lda     current_drive_selection
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D432
-LD734:  param_call show_alert_dialog, $0000 ; Insert Source
+LD734:  ldx     #0
+        lda     #0              ; Insert Source
+        jsr     show_alert_dialog
         beq     LD740
         jmp     LD61C
 
@@ -685,9 +687,9 @@ LD817:  lda     main__on_line_buffer2
 
 LD82C:  sta     main__on_line_buffer2
         param_call adjust_case, main__on_line_buffer2
-        ldx     #$00
-        ldy     #$13
 
+        ldx     #$00
+        ldy     #$13            ; ???
         lda     #2              ; Confirm Erase
 LD83C:  jsr     show_alert_dialog
         cmp     #$01
@@ -2336,9 +2338,9 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 36, 23
 .endparams
 
-        DEFINE_RECT rect_E89F, 65, 45, 485, 100
-        DEFINE_RECT_INSET rect_E8A7, 4, 2, 420, 55
-        DEFINE_RECT_INSET rect_E8AF, 5, 3, 420, 55
+        DEFINE_RECT alert_rect, 65, 45, 485, 100
+        DEFINE_RECT_INSET outer_frame, 4, 2, 420, 55
+        DEFINE_RECT_INSET inner_frame, 5, 3, 420, 55
 
 .params portbits1
         DEFINE_POINT viewloc, 65, 45
@@ -2403,9 +2405,11 @@ str_insert_dest_or_cancel:
 
 char_space:
         .byte   ' '
+
 char_question_mark:
         .byte   '?'
 
+;;; TODO: Remove unused messages
 message_index_table:
         .byte   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
@@ -2416,12 +2420,13 @@ message_table:
         .addr   str_dest_format_fail
         .addr   str_format_error
         .addr   str_dest_protected
-        .addr   str_confirm_erase0
+        .addr   str_confirm_erase0 ; TODO: Unused?
         .addr   str_confirm_erase2
+        .addr   str_confirm_erase2 ; TODO: Unused! Remove duplicate, adjust messages
         .addr   str_copy_success
         .addr   str_copy_fail
-        .addr   str_insert_source_or_cancel
-        .addr   str_insert_dest_or_cancel
+        .addr   str_insert_source_or_cancel ; TODO: How is this used?
+        .addr   str_insert_dest_or_cancel   ; TODO: How is this used?
 
         ;; $C0 (%11xxxxxx) = Cancel + Ok
         ;; $81 (%10xxxxx1) = Cancel + Yes + No
@@ -2450,32 +2455,38 @@ message_flags_table:
         .byte   MessageFlags::Ok
         .byte   MessageFlags::Ok
 
-LEB81:  .addr   0
-LEB83:  .byte   0
+message_num:
+        .byte   0
+xarg:   .byte   0               ; ???
+yarg:   .byte   0               ; ???
 
 show_alert_dialog:
-        stax    LEB81
-        sty     LEB83
+        sta     message_num
+        stx     xarg
+        sty     yarg
+
+        ;; Draw the alert
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_E89F
+        MGTK_RELAY_CALL2 MGTK::PaintRect, alert_rect
         jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_E89F
+        MGTK_RELAY_CALL2 MGTK::FrameRect, alert_rect
         MGTK_RELAY_CALL2 MGTK::SetPortBits, portbits1
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_E8A7
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_E8AF
+        MGTK_RELAY_CALL2 MGTK::FrameRect, outer_frame
+        MGTK_RELAY_CALL2 MGTK::FrameRect, inner_frame
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::HideCursor
         MGTK_RELAY_CALL2 MGTK::PaintBits, alert_bitmap_mapinfo
         MGTK_RELAY_CALL2 MGTK::ShowCursor
-        lda     #$00
-        sta     LD41E
-        lda     LEB81
+
+        copy    #0, LD41E
+
+        lda     message_num
         jsr     maybe_bell
-        ldy     LEB83
-        ldx     LEB81+1
-        lda     LEB81
+        ldy     yarg
+        ldx     xarg
+        lda     message_num
         bne     LEC1F
         cpx     #$00
         beq     LEC5E
@@ -2520,11 +2531,11 @@ LEC55:  cmp     #$08            ; TODO: Unused duplicate?
         lda     #$08
 
 LEC5E:  ldy     #$00
-LEC60:  cmp     message_index_table,y
+:       cmp     message_index_table,y
         beq     LEC6C
         iny
         cpy     #$1E
-        bne     LEC60
+        bne     :-
         ldy     #$00
 LEC6C:  tya
         asl     a
@@ -2702,7 +2713,7 @@ clear_and_return_value:
         pha
         MGTK_RELAY_CALL2 MGTK::SetPortBits, portbits2
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_E89F
+        MGTK_RELAY_CALL2 MGTK::PaintRect, alert_rect
         pla
         rts
 
