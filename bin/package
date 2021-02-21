@@ -11,8 +11,6 @@ if ! command -v "cadius" >/dev/null; then
     exit 1
 fi
 
-cecho yellow "Building disk images"
-
 tempdir=$(mktemp -d -t SHK)
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
@@ -21,6 +19,8 @@ vminor=$(grep 'kDeskTopVersionMinor =' config.inc | sed -e 's/.* = //')
 vsuffix=$(grep 'define kDeskTopVersionSuffix' config.inc | cut -d'"' -f2)
 lang=$(grep 'define LANG' config.inc | cut -d'"' -f2)
 version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})
+
+cecho yellow "Building disk images: $version"
 
 # One 800k image (complete), and two 140k images (two parts).
 
@@ -101,13 +101,16 @@ fi
 
 # Verify and clean up
 
-cecho green "Catalog of 800k disk:"
-cadius CATALOG $IMGFILE_COMPLETE --quiet
+# cecho green "Catalog of 800k disk:"
+# cadius CATALOG $IMGFILE_COMPLETE --quiet
+ls -l $IMGFILE_COMPLETE
 
-cecho green "Catalog of 140k disk 1:"
-cadius CATALOG $IMGFILE_PART1 --quiet
+# cecho green "Catalog of 140k disk 1:"
+# cadius CATALOG $IMGFILE_PART1 --quiet
+ls -l $IMGFILE_PART1
 
-cecho green "Catalog of 140k disk 2:"
-cadius CATALOG $IMGFILE_PART2 --quiet
+# cecho green "Catalog of 140k disk 2:"
+# cadius CATALOG $IMGFILE_PART2 --quiet
+ls -l $IMGFILE_PART2
 
 rmdir "$tempdir"

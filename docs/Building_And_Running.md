@@ -71,7 +71,7 @@ This will copy the built files into the `mount/` directory  with appropriate fil
 
 ### Other
 
-If you need to copy the files some other way (e.g. via [CiderPress](http://a2ciderpress.com/)), it's probably easiest to transfer the files from the disk images created by `bin/package.sh` as they will have the appropriate ProDOS file types and aux types.
+If you need to copy the files some other way (e.g. via [CiderPress](http://a2ciderpress.com/)), it's probably easiest to transfer the files from the disk images created by `bin/package` as they will have the appropriate ProDOS file types and aux types.
 
 
 ## Install Instructions

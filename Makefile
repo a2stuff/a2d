@@ -13,23 +13,23 @@ $(targets):
 
 # Optional target: populate mount/ as a mountable directory for Virtual ][
 mount:
-	bin/mount.sh
+	bin/mount
 
 # Optional target: run install script. Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
 install:
-	bin/install.sh
+	bin/install
 
 # Optional target: run install script. Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
 installsel:
-	bin/install.sh selector
+	bin/install selector
 
 # Optional target: run package script. Requires Cadius.
 package:
-	bin/package.sh
+	bin/package
 
 # Optional target: make ShrinkIt archive. Requires NuLib2.
 shk:
-	bin/shk.sh
+	bin/shk
 
 # Clean all temporary/target files
 clean:

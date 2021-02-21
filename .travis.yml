@@ -11,7 +11,10 @@ install:
   make -C /tmp/cadius install
 
 script:
-- make && make package
+- bin/setlang en && make && make package
+- bin/setlang fr && make && make package
+- bin/setlang it && make && make package
+- bin/setlang es && make && make package
 
 deploy:
   provider: releases

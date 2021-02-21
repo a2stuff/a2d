@@ -5,7 +5,7 @@
 #
 # Usage:
 #
-#   INSTALL_IMG=/path/to/hd.2mg INSTALL_PATH=/hd/a2.desktop bin/install.sh
+#   INSTALL_IMG=/path/to/hd.2mg INSTALL_PATH=/hd/a2.desktop bin/install
 
 set -e
 source "bin/util.sh"
