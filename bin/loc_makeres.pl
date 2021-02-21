@@ -33,6 +33,7 @@ sub indexes($$) {
     return @indexes;
 }
 
+# Encodes into source strings (with escaping)
 sub encode($$) {
     my ($lang, $s) = @_;
     $s =~ tr/\\/\xFF/; # Protect \ temporarily, for \xNN sequences (etc)

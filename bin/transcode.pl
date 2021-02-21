@@ -4,7 +4,7 @@
 
 # args: dir lang
 #   dir: "to" (UTF-8 to Apple) or "from" (Apple to UTF-8)
-#   lang: "fr", "de", "it"
+#   lang: "fr", "de", "it", "es", "da", "sv", "pt"
 #   e.g. transcode.pl to fr < in > out
 #   e.g. transcode.pl from fr < in > out
 
@@ -20,7 +20,7 @@ die "$0: dir must be 'to' or 'from'\n" unless $dir eq 'to' ||  $dir eq 'from';
 
 while (<>) {
     # Based on Apple IIgs Hardware Reference Table C-1 (with " incorrectly showing for ˚)
-    if ($lang eq 'fr') {
+    if      ($lang eq 'fr') {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/£à˚ç§`éùè¨/; } else { tr/£à˚ç§`éùè¨/#@[\\]`{|}~/; }
     } elsif ($lang eq 'de') {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/#§ÄÖÜ`äöüß/; } else { tr/#§ÄÖÜ`äöüß/#@[\\]`{|}~/; }
