@@ -44,6 +44,12 @@ sub encode($$) {
         $s =~ tr/£§˚çéùàòèì/#@[\\]`{|}~/;
     } elsif ($lang eq 'es') {
         $s =~ tr/£§¡Ñ¿`˚ñç~/#@[\\]`{|}~/;
+    } elsif ($lang eq 'da') {
+        $s =~ tr/#@ÆØÅ`æøå~/#@[\\]`{|}~/;
+    } elsif ($lang eq 'sv') {
+        $s =~ tr/#@ÄÖÅ`äöå~/#@[\\]`{|}~/;
+    } elsif ($lang eq 'pt') {
+        $s =~ tr/õêáãâçàéíúôó/#&@[\\]_`{|}~/; # Based on TK3000
     } else {
         die "Unknown lang: $lang\n";
     }
