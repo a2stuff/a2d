@@ -1368,7 +1368,7 @@ icontype_table:
         ;; Desk Accessories/Applets $F1/$0640 and $F1/$8640
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType, 0, IconType::desk_accessory
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType|$8000, 0, IconType::desk_accessory
-
+        .byte   0               ; Sentinel - done!
 
 ;;; --------------------------------------------------
 
