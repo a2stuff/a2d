@@ -3,7 +3,7 @@
 .define res_string_menu_item_desktop "%s Version %d.%d"
 .define res_string_menu_item_copyright1 "Copyright Apple Computer Inc., 1986"
 .define res_string_menu_item_copyright2 "Copyright Version Soft, 1985 - 1986"
-.define res_string_menu_item_rights "All Rights reserved"
+.define res_string_menu_item_rights "All Rights Reserved"
 .define res_string_dc_menu_item_quit "Quit"
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "Quick Copy"
