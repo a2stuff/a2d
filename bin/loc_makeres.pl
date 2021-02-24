@@ -65,7 +65,7 @@ sub encode($$) {
 sub hashes($) { my $s = shift; return join('', $s =~ m/#/g); }
 sub percents($) { my $s = shift; return join('', $s =~ m/%\d*[dsc]/g); }
 sub hexes($) { my $s = shift; return join('', $s =~ m/\\x../g); }
-sub punct($) { my $s = shift; $s =~ m/([.:]*)$/; return $1; }
+sub punct($) { my $s = shift; $s =~ m/([.:?!]*)\s*$/; return $1; }
 
 sub check($$$$) {
     my ($lang, $label, $en, $t) = @_;
@@ -84,7 +84,6 @@ sub check($$$$) {
         unless hexes($en) eq hexes($t);
     die "Punctuation mismatch at $label, line $.: '$en' / '$t'\n"
         unless punct($en) eq punct($t);
-
 
     # Language specific checks:
     if ($lang eq 'fr') {
@@ -138,6 +137,8 @@ while (<STDIN>) {
         if ($lang ne 'en') {
             $str = check($lang, $label, $en, $str);
             $str = encode($lang, $str);
+        } else {
+            check($lang, $label, $en, $en);
         }
         print {$fhs{$lang}} ".define $label ", enquote($label, $str), "\n";
 
