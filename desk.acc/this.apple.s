@@ -452,6 +452,21 @@ memory:.word    0
 
 ;;; ============================================================
 
+        PAD_TO $0FFD
+.proc z80_routine
+        .assert * = $0FFD, error, "Must be at $0FFD / FFFDH"
+        ;; .org $FFFD
+        patch := *+2
+        .byte   $32, $00, $e0   ; ld ($Es00),a   ; s=slot being probed turn off Z80, next PC is $0000
+        .byte   $3e, $01        ; ld a,$01
+        .byte   $32, $08, $00   ; ld (flag),a
+        .byte   $c3, $fd, $ff   ; jp $FFFD
+        flag := *
+        .byte   $00             ; flag: .db $00
+.endproc
+
+;;; ============================================================
+
 str_diskii:     PASCAL_STRING res_string_card_type_diskii
 str_block:      PASCAL_STRING res_string_card_type_block
 kStrSmartportOffset = 12
@@ -1108,14 +1123,6 @@ notpro:
 
 notpas:
 
-;;; z80 SoftCard
-        COMPARE_FWB 5, 96
-        bne     :+
-        COMPARE_FWB 7, 96
-        bne     :+
-        return16 #str_z80
-:
-
 ;;; ---------------------------------------------
 ;;; Based on ProDOS BASIC Programming Examples
 
@@ -1187,9 +1194,35 @@ notpas:
         bcc     :+
         return16 #str_mockingboard
 :
+
+        jsr     detect_z80
+        bcc     :+
+        return16 #str_z80
+:
         return16 #str_unknown
 .endproc
 
+;;; Detect Z80
+;;; Assumes $06 points at $Cn00, returns carry set if found
+
+.proc detect_z80
+        ;; Convert $Cn to $En, update Z80 code
+        lda     $06
+        ora     #$E0
+        sta     z80_routine::patch
+
+        ;; Clear detection flag
+        copy    #0, z80_routine::flag
+
+        ;; Try to invoke Z80
+        ldy     #0
+        sta     ($06),y
+
+        ;; Flag will be set to 1 by routine if Z80 was present.
+        lda     z80_routine::flag
+        ror                     ; move flag into carry
+        rts
+.endproc
 
 ;;; Detect Mockingboard
 ;;; Assumes $06 points at $Cn00, returns carry set if found
