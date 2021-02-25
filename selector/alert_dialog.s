@@ -48,8 +48,8 @@ reserved:       .byte   0
 
 kAlertRectWidth         = 420
 kAlertRectHeight        = 55
-kAlertRectLeft          = (kScreenWidth - kAlertRectWidth)/2
-kAlertRectTop           = (kScreenHeight - kAlertRectHeight)/2
+kAlertRectLeft          = (::kScreenWidth - kAlertRectWidth)/2
+kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
 
         DEFINE_RECT_SZ alert_rect, kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
         DEFINE_RECT_INSET alert_inner_frame_rect1, 4, 2, kAlertRectWidth, kAlertRectHeight
@@ -188,6 +188,7 @@ alert_options_table:
         MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect1
         MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect2
         MGTK_CALL MGTK::SetPenMode, app::pencopy
+
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintBits, alert_bitmap_params
         MGTK_CALL MGTK::ShowCursor
@@ -233,6 +234,7 @@ LD314:  tya
         MGTK_CALL MGTK::FrameRect, try_again_button_rect
         MGTK_CALL MGTK::MoveTo, try_again_button_pos
         param_call app::DrawString, try_again_button_label
+
         jmp     draw_prompt
 
         ;; OK button
@@ -254,7 +256,7 @@ event_loop:
         lda     app::event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jmp     handle_button
+        jmp     handle_button_down
 
 :       cmp     #MGTK::EventKind::key_down
         bne     event_loop
@@ -262,8 +264,8 @@ event_loop:
         ;; --------------------------------------------------
         ;; Key Down
         lda     app::event_key
-        and     #CHAR_MASK
-        bit     alert_options   ; Escape = Cancel?
+        and     #CHAR_MASK      ; TODO: Remove, not needed.
+        bit     alert_options   ; has Cancel?
         bpl     check_ok
         cmp     #CHAR_ESCAPE
         bne     :+
@@ -273,8 +275,8 @@ event_loop:
         lda     #kAlertResultCancel
         jmp     finish
 
-:       bit     alert_options   ; A = Try Again?
-        bvs     check_ok
+:       bit     alert_options   ; has Try Again?
+        bvs     check_ok        ; nope
         cmp     #TO_LOWER(kShortcutTryAgain)
         bne     :+
 was_a:  MGTK_CALL MGTK::SetPenMode, app::penXOR
@@ -301,8 +303,8 @@ check_ok:
         ;; --------------------------------------------------
         ;; Buttons
 
-handle_button:
-        jsr     map_alert_coords
+handle_button_down:
+        jsr     map_event_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
 
         bit     alert_options   ; Cancel?
@@ -315,6 +317,7 @@ handle_button:
 
 :       bit     alert_options   ; Try Again?
         bvs     check_ok_button_rect
+
         MGTK_CALL MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
@@ -329,6 +332,8 @@ check_ok_button_rect:
 no_button:
         jmp     event_loop
 
+;;; ============================================================
+
 finish: pha
         MGTK_CALL MGTK::HideCursor
         jsr     dialog_background_restore
@@ -336,47 +341,50 @@ finish: pha
         pla
         rts
 
+;;; ============================================================
+
         ;; --------------------------------------------------
         ;; Try Again Button Event Loop
 
 .proc try_again_btn_event_loop
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, try_again_button_rect
-        lda     #$00
-        sta     LD4AC
-LD457:  MGTK_CALL MGTK::GetEvent, app::event_params
+        copy    #0, state
+
+loop:   MGTK_CALL MGTK::GetEvent, app::event_params
         lda     app::event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LD49F
-        jsr     map_alert_coords
+        beq     button_up
+        jsr     map_event_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
         MGTK_CALL MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LD47F
-        lda     LD4AC
-        beq     LD487
-        jmp     LD457
+        beq     inside
+        lda     state
+        beq     toggle
+        jmp     loop
 
-LD47F:  lda     LD4AC
-        bne     LD487
-        jmp     LD457
+inside: lda     state
+        bne     toggle
+        jmp     loop
 
-LD487:  MGTK_CALL MGTK::SetPenMode, app::penXOR
+toggle: MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, try_again_button_rect
-        lda     LD4AC
+        lda     state
         clc
         adc     #$80
-        sta     LD4AC
-        jmp     LD457
+        sta     state
+        jmp     loop
 
-LD49F:  lda     LD4AC
-        beq     LD4A7
+button_up:
+        lda     state
+        beq     :+
         jmp     event_loop
 
-LD4A7:  lda     #$00
+:       lda     #$00
         jmp     finish
 
-LD4AC:  .byte   0
+state:  .byte   0
 .endproc
 
         ;; --------------------------------------------------
@@ -385,89 +393,91 @@ LD4AC:  .byte   0
 .proc cancel_btn_event_loop
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, cancel_button_rect
-        lda     #$00
-        sta     LD513
-LD4BE:  MGTK_CALL MGTK::GetEvent, app::event_params
+        copy    #0, state
+
+loop:   MGTK_CALL MGTK::GetEvent, app::event_params
         lda     app::event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LD506
-        jsr     map_alert_coords
+        beq     button_up
+        jsr     map_event_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
         MGTK_CALL MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LD4E6
-        lda     LD513
-        beq     LD4EE
-        jmp     LD4BE
+        beq     inside
+        lda     state
+        beq     toggle
+        jmp     loop
 
-LD4E6:  lda     LD513
-        bne     LD4EE
-        jmp     LD4BE
+inside: lda     state
+        bne     toggle
+        jmp     loop
 
-LD4EE:  MGTK_CALL MGTK::SetPenMode, app::penXOR
+toggle: MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, cancel_button_rect
-        lda     LD513
+        lda     state
         clc
         adc     #$80
-        sta     LD513
-        jmp     LD4BE
+        sta     state
+        jmp     loop
 
-LD506:  lda     LD513
-        beq     LD50E
+button_up:
+        lda     state
+        beq     :+
         jmp     event_loop
 
-LD50E:  lda     #$01
+:       lda     #$01
         jmp     finish
 
-LD513:  .byte   0
+state:  .byte   0
 .endproc
 
         ;; --------------------------------------------------
         ;; OK Button Event Loop
 
 .proc ok_button_event_loop
-        lda     #$00
-        sta     LD57A
+        copy    #0, state
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
-LD525:  MGTK_CALL MGTK::GetEvent, app::event_params
+
+loop:   MGTK_CALL MGTK::GetEvent, app::event_params
         lda     app::event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LD56D
-        jsr     map_alert_coords
+        beq     button_up
+        jsr     map_event_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LD54D
-        lda     LD57A
-        beq     LD555
-        jmp     LD525
+        beq     inside
+        lda     state
+        beq     toggle
+        jmp     loop
 
-LD54D:  lda     LD57A
-        bne     LD555
-        jmp     LD525
+inside: lda     state
+        bne     toggle
+        jmp     loop
 
-LD555:  MGTK_CALL MGTK::SetPenMode, app::penXOR
+toggle: MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
-        lda     LD57A
+        lda     state
         clc
         adc     #$80
-        sta     LD57A
-        jmp     LD525
+        sta     state
+        jmp     loop
 
-LD56D:  lda     LD57A
-        beq     LD575
+button_up:
+        lda     state
+        beq     :+
         jmp     event_loop
 
-LD575:  lda     #$00
+:       lda     #$00
         jmp     finish
 
-LD57A:  .byte   0
+state:  .byte   0
 .endproc
 
 ;;; ============================================================
 
-.proc map_alert_coords
+.proc map_event_coords
         sub16   app::event_xcoord, portmap::viewloc::xcoord, app::event_xcoord
         sub16   app::event_ycoord, portmap::viewloc::ycoord, app::event_ycoord
         rts

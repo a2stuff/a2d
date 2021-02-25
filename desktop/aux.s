@@ -3722,7 +3722,6 @@ reserved:       .byte   0
 alert_options:  .byte   0
 prompt_addr:    .addr   0
 
-
 ;;; ============================================================
 ;;; Messages
 
@@ -3838,7 +3837,7 @@ start:  pha                     ; error code
         sta     save_y2
 
         MGTK_CALL MGTK::HideCursor
-        jsr     save_dialog_background
+        jsr     dialog_background_save
         MGTK_CALL MGTK::ShowCursor
 
         ;; Draw alert box and bitmap
@@ -3947,7 +3946,7 @@ event_loop:
         ;; --------------------------------------------------
         ;; Key Down
         lda     event_key
-        and     #CHAR_MASK
+        and     #CHAR_MASK      ; TODO: Remove, not needed.
         bit     alert_options   ; has Cancel?
         bpl     check_ok        ; nope
         cmp     #CHAR_ESCAPE    ; yes, maybe Escape?
@@ -3987,7 +3986,7 @@ check_ok:
         ;; Buttons
 
 handle_button_down:
-        jsr     event_coords_to_local
+        jsr     map_event_coords
         MGTK_CALL MGTK::MoveTo, event_coords
 
         bit     alert_options
@@ -4002,7 +4001,7 @@ handle_button_down:
         lda     #kAlertResultCancel
         jmp     finish
 
-:       bit     alert_options
+:       bit     alert_options   ; Try Again?
         bvs     check_ok_rect
 
         MGTK_CALL MGTK::InRect, try_again_button_rect ; Try Again?
@@ -4027,14 +4026,16 @@ check_ok_rect:
 no_button:
         jmp     event_loop
 
+;;; ============================================================
+
 finish: pha
         MGTK_CALL MGTK::HideCursor
-        jsr     restore_dialog_background
+        jsr     dialog_background_restore
         MGTK_CALL MGTK::ShowCursor
         pla
         rts
 
-;;; ------------------------------------------------------------
+;;; ============================================================
 ;;; Event loop during button press - initial invert and
 ;;; inverting as mouse is dragged in/out.
 ;;; (The |button_event_loop| proc is not used as these buttons
@@ -4054,7 +4055,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     button_up
-        jsr     event_coords_to_local
+        jsr     map_event_coords
         MGTK_CALL MGTK::MoveTo, event_coords
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr1
         cmp     #MGTK::inrect_inside
@@ -4087,15 +4088,15 @@ flag:   .byte   0
 
         ;; --------------------------------------------------
 
-.proc event_coords_to_local
+.proc map_event_coords
         sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
         sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
         rts
 .endproc
 
         .include "../lib/savedialogbackground.s"
-        save_dialog_background := dialog_background::Save
-        restore_dialog_background := dialog_background::Restore
+        dialog_background_save := dialog_background::Save
+        dialog_background_restore := dialog_background::Restore
 
 
 .endproc
