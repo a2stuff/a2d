@@ -381,7 +381,7 @@ button_up:
         beq     :+
         jmp     event_loop
 
-:       lda     #$00
+:       lda     #kAlertResultTryAgain
         jmp     finish
 
 state:  .byte   0
@@ -425,7 +425,7 @@ button_up:
         beq     :+
         jmp     event_loop
 
-:       lda     #$01
+:       lda     #kAlertResultCancel
         jmp     finish
 
 state:  .byte   0
@@ -469,7 +469,7 @@ button_up:
         beq     :+
         jmp     event_loop
 
-:       lda     #$00
+:       lda     #kAlertResultOK
         jmp     finish
 
 state:  .byte   0

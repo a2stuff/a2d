@@ -2468,6 +2468,12 @@ message_num:
 xarg:   .byte   0               ; ???
 yarg:   .byte   0               ; ???
 
+        kAlertResultTryAgain    = 0
+        kAlertResultOK          = 0
+        kAlertResultCancel      = 1
+        kAlertResultYes         = 2
+        kAlertResultNo          = 3
+
 show_alert_dialog:
         sta     message_num
         stx     xarg
@@ -2639,7 +2645,7 @@ LED45:
         bne     :+
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_button_rect
-LED79:  lda     #1
+LED79:  lda     #kAlertResultCancel
         jmp     finish
 
 :       bit     alert_options   ; has Try Again?
@@ -2661,12 +2667,12 @@ LED79:  lda     #1
 
 do_no:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, no_button_rect
-        lda     #3
+        lda     #kAlertResultNo
         jmp     finish
 
 do_yes: jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, yes_button_rect
-        lda     #2
+        lda     #kAlertResultYes
         jmp     finish
 
 LEDC1:  pla
@@ -2674,7 +2680,7 @@ LEDC1:  pla
         bne     LEDD7
 LEDC6:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, try_again_button_rect
-        lda     #0
+        lda     #kAlertResultTryAgain
         jmp     finish
 
 LEDD7:  cmp     #kShortcutTryAgain
@@ -2688,7 +2694,7 @@ check_ok:
         bne     LEDF7
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
-LEDF2:  lda     #0
+LEDF2:  lda     #kAlertResultOK
         jmp     finish
 
 LEDF7:  jmp     event_loop
@@ -2727,13 +2733,13 @@ LEE37:  MGTK_RELAY_CALL2 MGTK::InRect, yes_button_rect
 LEE47:  MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        jmp     try_again_btn_event_loop
+        jmp     ok_btn_event_loop
 
 check_ok_rect:
         MGTK_RELAY_CALL2 MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        jmp     ok_button_event_loop
+        jmp     try_again_btn_event_loop
 
 no_button:
         jmp     event_loop
@@ -2749,7 +2755,7 @@ finish: pha
 
 ;;; ============================================================
 
-.proc try_again_btn_event_loop
+.proc ok_btn_event_loop
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
         lda     #$00
@@ -2785,7 +2791,7 @@ button_up:
         beq     :+
         jmp     event_loop
 
-:       lda     #0
+:       lda     #kAlertResultOK
         jmp     finish
 
 state:
@@ -2829,7 +2835,7 @@ button_up:
         beq     :+
         jmp     event_loop
 
-:       lda     #1
+:       lda     #kAlertResultCancel
         jmp     finish
 
 state:
@@ -2838,7 +2844,7 @@ state:
 
 ;;; ============================================================
 
-.proc ok_button_event_loop
+.proc try_again_btn_event_loop
         copy    #0, state
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, try_again_button_rect
@@ -2873,7 +2879,7 @@ button_up:
         beq     :+
         jmp     event_loop
 
-:       lda     #0
+:       lda     #kAlertResultTryAgain
         jmp     finish
 
 state:
@@ -2886,24 +2892,25 @@ state:
         copy    #0, state
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, no_button_rect
+
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LF03A
+        beq     button_up
         jsr     map_event_coords
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
         MGTK_RELAY_CALL2 MGTK::InRect, no_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LF01A
+        beq     inside
         lda     state
-        beq     LF022
+        beq     toggle
         jmp     loop
 
-LF01A:  lda     state
-        bne     LF022
+inside: lda     state
+        bne     toggle
         jmp     loop
 
-LF022:  jsr     set_pen_xor
+toggle: jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, no_button_rect
         lda     state
         clc
@@ -2911,11 +2918,12 @@ LF022:  jsr     set_pen_xor
         sta     state
         jmp     loop
 
-LF03A:  lda     state
-        beq     LF042
+button_up:
+        lda     state
+        beq     :+
         jmp     event_loop
 
-LF042:  lda     #3
+:       lda     #kAlertResultNo
         jmp     finish
 
 state:
@@ -2928,24 +2936,25 @@ state:
         copy    #0, state
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, yes_button_rect
+
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        beq     LF0AA
+        beq     button_up
         jsr     map_event_coords
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
         MGTK_RELAY_CALL2 MGTK::InRect, yes_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LF08A
+        beq     inside
         lda     state
-        beq     LF092
+        beq     toggle
         jmp     loop
 
-LF08A:  lda     state
-        bne     LF092
+inside: lda     state
+        bne     toggle
         jmp     loop
 
-LF092:  jsr     set_pen_xor
+toggle: jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, yes_button_rect
         lda     state
         clc
@@ -2953,11 +2962,12 @@ LF092:  jsr     set_pen_xor
         sta     state
         jmp     loop
 
-LF0AA:  lda     state
-        beq     LF0B2
+button_up:
+        lda     state
+        beq     :+
         jmp     event_loop
 
-LF0B2:  lda     #2
+:       lda     #kAlertResultYes
         jmp     finish
 
 state:
