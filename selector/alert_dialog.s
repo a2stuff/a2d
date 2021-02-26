@@ -283,11 +283,12 @@ event_loop:
         lda     app::event_key
         and     #CHAR_MASK      ; TODO: Remove, not needed.
         bit     alert_options   ; has Cancel?
-        bpl     check_ok        ; nope
+        bpl     check_only_ok   ; nope
 
         cmp     #CHAR_ESCAPE
         bne     :+
 
+do_cancel:
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, cancel_button_rect
         lda     #kAlertResultCancel
@@ -306,15 +307,16 @@ do_try_again:
 
 :       cmp     #kShortcutTryAgain
         beq     do_try_again
-
         cmp     #CHAR_RETURN    ; also allow Return as default
         beq     do_try_again
         jmp     event_loop
 
+check_only_ok:
 check_ok:
         cmp     #CHAR_RETURN
         bne     :+
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
+
+do_ok:  MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     #kAlertResultOK
         jmp     finish

@@ -2648,10 +2648,12 @@ LED45:
         lda     event_key
         bit     alert_options   ; has Cancel?
         bmi     :+              ; yes
-        jmp     check_ok
+        jmp     check_only_ok   ; nope
 
 :       cmp     #CHAR_ESCAPE
         bne     :+
+
+do_cancel:
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_button_rect
 finish_cancel:
@@ -2689,22 +2691,26 @@ do_yes: jsr     set_pen_xor
 check_try_again:
         pla
         cmp     #TO_LOWER(kShortcutTryAgain)
-        bne     LEDD7
-LEDC6:  jsr     set_pen_xor
+        bne     :+
+
+do_try_again:
+        jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, try_again_button_rect
         lda     #kAlertResultTryAgain
         jmp     finish
 
-LEDD7:  cmp     #kShortcutTryAgain
-        beq     LEDC6
-        cmp     #CHAR_RETURN
-        beq     LEDC6
+:       cmp     #kShortcutTryAgain
+        beq     do_try_again
+        cmp     #CHAR_RETURN    ; also allow Return as default
+        beq     do_try_again
         jmp     event_loop
 
+check_only_ok:
 check_ok:
         cmp     #CHAR_RETURN
         bne     :+
-        jsr     set_pen_xor
+
+do_ok:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
 finish_ok:
         lda     #kAlertResultOK
