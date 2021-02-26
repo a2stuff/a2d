@@ -5789,6 +5789,7 @@ num:    .byte   0
 
         ;; If the above succeeded, update its used/free.
         ;; TODO: Only do so if data is not populated.
+        jsr     LoadActiveWindowIconTable
         lda     active_window_id
         jsr     update_used_free_for_vol_windows
         lda     active_window_id
