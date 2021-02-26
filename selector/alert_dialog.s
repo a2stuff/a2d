@@ -69,7 +69,15 @@ reserved:       .byte   0
 
         DEFINE_POINT pos_prompt, 75, 29
 
+;;; %0....... = OK
+;;; %10...... = Cancel, Try Again
+;;; %11...... = Cancel, OK
 alert_options:  .byte   0
+
+kAlertOptionsOK                 = %00000000 ; Used internally only, callers would pass $01
+kAlertOptionsTryAgainCancel     = %10000000
+kAlertOptionsOKCancel           = %11000000
+
 prompt_addr:    .addr   0
 
 ;;; ============================================================
@@ -97,7 +105,7 @@ kNumErrorMessages = 8
 num_error_messages:
         .byte   kNumErrorMessages
 
-error_message_index_table:
+alert_table:
         .byte   AlertID::selector_unable_to_run
         .byte   AlertID::io_error
         .byte   AlertID::no_device
@@ -106,9 +114,9 @@ error_message_index_table:
         .byte   AlertID::file_not_found
         .byte   AlertID::insert_system_disk
         .byte   AlertID::basic_system_not_found
-        ASSERT_TABLE_SIZE error_message_index_table, kNumErrorMessages
+        ASSERT_TABLE_SIZE alert_table, kNumErrorMessages
 
-error_message_table:
+message_table:
         .addr   str_selector_unable_to_run
         .addr   str_io_error
         .addr   str_no_device
@@ -117,17 +125,29 @@ error_message_table:
         .addr   str_file_not_found
         .addr   str_insert_system_disk
         .addr   str_basic_system_not_found
-        ASSERT_ADDRESS_TABLE_SIZE error_message_table, kNumErrorMessages
+        ASSERT_ADDRESS_TABLE_SIZE message_table, kNumErrorMessages
+
+        ;; $C0 (%11xxxxxx) = Cancel + Ok
+        ;; $81 (%10xxxxx1) = Cancel + Yes + No
+        ;; $80 (%10xx0000) = Cancel + Try Again
+        ;; $00 (%0xxxxxxx) = Ok
+
+.enum MessageFlags
+        OkCancel = $C0
+        YesNoCancel = $81
+        TryAgainCancel = $80
+        Ok = $00
+.endenum
 
 alert_options_table:
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $80
-        .byte   $00
-        .byte   $80
-        .byte   $00
+        .byte   MessageFlags::Ok
+        .byte   MessageFlags::Ok
+        .byte   MessageFlags::Ok
+        .byte   MessageFlags::Ok
+        .byte   MessageFlags::TryAgainCancel
+        .byte   MessageFlags::Ok
+        .byte   MessageFlags::TryAgainCancel
+        .byte   MessageFlags::Ok
         ASSERT_TABLE_SIZE alert_options_table, kNumErrorMessages
 
 .proc ShowAlertImpl
@@ -198,24 +218,21 @@ alert_options_table:
 
         pla                     ; alert number
         ldy     #$00
-LD307:  cmp     error_message_index_table,y
-        beq     LD314
+:       cmp     alert_table,y
+        beq     :+
         iny
         cpy     num_error_messages
-        bne     LD307
-        ldy     #$00
-LD314:  tya
+        bne     :-
+
+        ldy     #0              ; default
+:       tya
         asl     a
         tay
-        lda     error_message_table,y
-        sta     prompt_addr
-        lda     error_message_table+1,y
-        sta     prompt_addr+1
+        copy16  message_table,y, prompt_addr
         tya
         lsr     a
         tay
-        lda     alert_options_table,y
-        sta     alert_options
+        copy    alert_options_table,y, alert_options
 
         ;; Draw appropriate buttons
         MGTK_CALL MGTK::SetPenMode, app::penXOR
@@ -266,7 +283,8 @@ event_loop:
         lda     app::event_key
         and     #CHAR_MASK      ; TODO: Remove, not needed.
         bit     alert_options   ; has Cancel?
-        bpl     check_ok
+        bpl     check_ok        ; nope
+
         cmp     #CHAR_ESCAPE
         bne     :+
 
@@ -279,19 +297,22 @@ event_loop:
         bvs     check_ok        ; nope
         cmp     #TO_LOWER(kShortcutTryAgain)
         bne     :+
-was_a:  MGTK_CALL MGTK::SetPenMode, app::penXOR
+
+do_try_again:
+        MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, try_again_button_rect
         lda     #kAlertResultTryAgain
         jmp     finish
 
 :       cmp     #kShortcutTryAgain
-        beq     was_a
+        beq     do_try_again
+
         cmp     #CHAR_RETURN    ; also allow Return as default
-        beq     was_a
+        beq     do_try_again
         jmp     event_loop
 
 check_ok:
-        cmp     #CHAR_RETURN    ; Return = OK?
+        cmp     #CHAR_RETURN
         bne     :+
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
@@ -308,7 +329,7 @@ handle_button_down:
         MGTK_CALL MGTK::MoveTo, app::event_coords
 
         bit     alert_options   ; Cancel?
-        bpl     check_ok_button_rect
+        bpl     check_ok_rect
 
         MGTK_CALL MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
@@ -316,14 +337,14 @@ handle_button_down:
         jmp     cancel_btn_event_loop
 
 :       bit     alert_options   ; Try Again?
-        bvs     check_ok_button_rect
+        bvs     check_ok_rect
 
         MGTK_CALL MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
         jmp     try_again_btn_event_loop
 
-check_ok_button_rect:
+check_ok_rect:
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside ; OK?
         bne     no_button

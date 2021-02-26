@@ -2373,6 +2373,10 @@ reserved:       .byte   0
 
         DEFINE_POINT pos_prompt, 100, 24
 
+;;; %0....... = OK
+;;; %10..0000 = Cancel, Try Again
+;;; %10..XXXX = Cancel, Yes, No
+;;; %11...... = Cancel, OK
 alert_options:  .byte   0
 prompt_addr:    .addr   0
 
@@ -2417,9 +2421,13 @@ char_space:
 char_question_mark:
         .byte   '?'
 
+        ;; number of alert messages
+        kNumErrorMessages = 13
+
 ;;; TODO: Remove unused messages
-message_index_table:
+alert_table:
         .byte   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+        ASSERT_TABLE_SIZE alert_table, kNumErrorMessages
 
 message_table:
         .addr   str_insert_source
@@ -2435,6 +2443,7 @@ message_table:
         .addr   str_copy_fail
         .addr   str_insert_source_or_cancel ; TODO: How is this used?
         .addr   str_insert_dest_or_cancel   ; TODO: How is this used?
+        ASSERT_ADDRESS_TABLE_SIZE message_table, kNumErrorMessages
 
         ;; $C0 (%11xxxxxx) = Cancel + Ok
         ;; $81 (%10xxxxx1) = Cancel + Yes + No
@@ -2448,7 +2457,7 @@ message_table:
         Ok = $00
 .endenum
 
-message_flags_table:
+alert_options_table:
         .byte   MessageFlags::OkCancel
         .byte   MessageFlags::OkCancel
         .byte   MessageFlags::YesNoCancel
@@ -2462,6 +2471,7 @@ message_flags_table:
         .byte   MessageFlags::Ok
         .byte   MessageFlags::Ok
         .byte   MessageFlags::Ok
+        ASSERT_TABLE_SIZE alert_options_table, kNumErrorMessages
 
 message_num:
         .byte   0
@@ -2546,25 +2556,25 @@ LEC55:  cmp     #$08            ; TODO: Unused duplicate?
         jsr     set_confirm_erase2_slot_drive
         lda     #$08
 
-LEC5E:  ldy     #$00
-:       cmp     message_index_table,y
-        beq     LEC6C
+LEC5E:
+
+        ldy     #0
+:       cmp     alert_table,y
+        beq     :+
         iny
-        cpy     #$1E
+        cpy     #30             ; TODO: Should be kNumErrorMessages ???
         bne     :-
-        ldy     #$00
-LEC6C:  tya
+
+        ldy     #0              ; default
+:       tya
         asl     a
         tay
-        lda     message_table,y
-        sta     prompt_addr
-        lda     message_table+1,y
-        sta     prompt_addr+1
+        copy16  message_table,y, prompt_addr
         tya
         lsr     a
         tay
-        lda     message_flags_table,y
-        sta     alert_options
+        copy    alert_options_table,y, alert_options
+
         bit     LD41E
         bpl     LEC8C
         jmp     draw_prompt
@@ -2619,10 +2629,9 @@ event_loop:
         bit     LD41E
         bpl     LED45
         jsr     LF192
-        bne     LED42
-        jmp     LEDF2
-
-LED42:  jmp     LED79
+        bne     :+
+        jmp     finish_ok
+:       jmp     finish_cancel
 
 LED45:
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -2645,7 +2654,8 @@ LED45:
         bne     :+
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_button_rect
-LED79:  lda     #kAlertResultCancel
+finish_cancel:
+        lda     #kAlertResultCancel
         jmp     finish
 
 :       bit     alert_options   ; has Try Again?
@@ -2653,7 +2663,8 @@ LED79:  lda     #kAlertResultCancel
         pha
         lda     alert_options
         and     #$0F
-        beq     LEDC1
+        beq     check_try_again
+
         pla
         cmp     #kShortcutNo
         beq     do_no
@@ -2675,7 +2686,8 @@ do_yes: jsr     set_pen_xor
         lda     #kAlertResultYes
         jmp     finish
 
-LEDC1:  pla
+check_try_again:
+        pla
         cmp     #TO_LOWER(kShortcutTryAgain)
         bne     LEDD7
 LEDC6:  jsr     set_pen_xor
@@ -2691,13 +2703,14 @@ LEDD7:  cmp     #kShortcutTryAgain
 
 check_ok:
         cmp     #CHAR_RETURN
-        bne     LEDF7
+        bne     :+
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
-LEDF2:  lda     #kAlertResultOK
+finish_ok:
+        lda     #kAlertResultOK
         jmp     finish
 
-LEDF7:  jmp     event_loop
+:       jmp     event_loop
 
         ;; --------------------------------------------------
         ;; Buttons

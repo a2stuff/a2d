@@ -3719,6 +3719,9 @@ reserved:       .byte   0
 
         DEFINE_POINT pos_prompt, 75, 29
 
+;;; %0....... = OK
+;;; %10...... = Cancel, Try Again
+;;; %11...... = Cancel, OK
 alert_options:  .byte   0
 prompt_addr:    .addr   0
 
@@ -3768,24 +3771,35 @@ alert_table:
         ASSERT_TABLE_SIZE alert_table, kNumAlerts
 
         ;; alert index to string address
-prompt_table:
+message_table:
         .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
         .addr   err_47,err_48,err_49,err_4E,err_52,err_57,err_F9,err_FA
         .addr   err_FB,err_FC,err_FD,err_FE
-        ASSERT_ADDRESS_TABLE_SIZE prompt_table, kNumAlerts
+        ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlerts
 
-        ;; alert index to action (0 = Cancel, $80 = Try Again)
+        ;; $C0 (%11xxxxxx) = Cancel + Ok
+        ;; $81 (%10xxxxx1) = Cancel + Yes + No
+        ;; $80 (%10xx0000) = Cancel + Try Again
+        ;; $00 (%0xxxxxxx) = Ok
+
+.enum MessageFlags
+        OkCancel = $C0
+        YesNoCancel = $81
+        TryAgainCancel = $80
+        Ok = $00
+.endenum
+
 alert_options_table:
-        .byte   kAlertOptionsOK, kAlertOptionsOK
-        .byte   kAlertOptionsOK, kAlertOptionsTryAgainCancel
-        .byte   kAlertOptionsOK, kAlertOptionsTryAgainCancel
-        .byte   kAlertOptionsOK, kAlertOptionsOK
-        .byte   kAlertOptionsOK, kAlertOptionsOK
-        .byte   kAlertOptionsOK, kAlertOptionsOK
-        .byte   kAlertOptionsOK, kAlertOptionsOK
-        .byte   kAlertOptionsOK, kAlertOptionsOK
-        .byte   kAlertOptionsOK, kAlertOptionsTryAgainCancel
-        .byte   kAlertOptionsTryAgainCancel, kAlertOptionsOK
+        .byte   MessageFlags::Ok, MessageFlags::Ok
+        .byte   MessageFlags::Ok, MessageFlags::TryAgainCancel
+        .byte   MessageFlags::Ok, MessageFlags::TryAgainCancel
+        .byte   MessageFlags::Ok, MessageFlags::Ok
+        .byte   MessageFlags::Ok, MessageFlags::Ok
+        .byte   MessageFlags::Ok, MessageFlags::Ok
+        .byte   MessageFlags::Ok, MessageFlags::Ok
+        .byte   MessageFlags::Ok, MessageFlags::Ok
+        .byte   MessageFlags::Ok, MessageFlags::TryAgainCancel
+        .byte   MessageFlags::TryAgainCancel, MessageFlags::Ok
         ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
 
         ;; Actual entry point
@@ -3874,7 +3888,7 @@ start:  pha                     ; error code
 :       tya
         asl     a
         tay
-        copy16  prompt_table,y, prompt_addr
+        copy16  message_table,y, prompt_addr
 
         ;; If options is 0, use table value; otherwise,
         ;; mask off low bit and it's the action (N and V bits)
@@ -3949,7 +3963,8 @@ event_loop:
         and     #CHAR_MASK      ; TODO: Remove, not needed.
         bit     alert_options   ; has Cancel?
         bpl     check_ok        ; nope
-        cmp     #CHAR_ESCAPE    ; yes, maybe Escape?
+
+        cmp     #CHAR_ESCAPE
         bne     :+
 
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -3959,17 +3974,20 @@ event_loop:
 
 :       bit     alert_options   ; has Try Again?
         bvs     check_ok        ; nope
-        cmp     #TO_LOWER(kShortcutTryAgain)  ; yes, maybe A/a ?
+        cmp     #TO_LOWER(kShortcutTryAgain)
         bne     :+
-was_a:  MGTK_CALL MGTK::SetPenMode, penXOR
+
+do_try_again:
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, try_again_button_rect
         lda     #kAlertResultTryAgain
         jmp     finish
 
 :       cmp     #kShortcutTryAgain
-        beq     was_a
+        beq     do_try_again
+
         cmp     #CHAR_RETURN    ; also allow Return as default
-        beq     was_a
+        beq     do_try_again
         jmp     event_loop
 
 check_ok:
@@ -3989,7 +4007,7 @@ handle_button_down:
         jsr     map_event_coords
         MGTK_CALL MGTK::MoveTo, event_coords
 
-        bit     alert_options
+        bit     alert_options   ; Cancel?
         bpl     check_ok_rect
 
         MGTK_CALL MGTK::InRect, cancel_button_rect ; Cancel?
