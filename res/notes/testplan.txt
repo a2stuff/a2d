@@ -210,3 +210,7 @@
 
 * Launch DeskTop. Open a window containing folders and files. Open another window, for an empty volume. Drag an icon from the first to the second. Ensure no scrollbars activate in the target window.
 * Launch DeskTop. Open a window containing folders and files, with no scrollbars active. Open another window. Drag an icon from the first to the second. Ensure no scrollbars activate in the source window.
+
+* Launch DeskTop. Trigger an alert with only OK (e.g. running a Selector entry with disk ejected). Verify that Escape key closes alert.
+* Launch Selector. Trigger an alert with only OK (e.g. running an entry with disk ejected). Verify that Escape key closes alert.
+* Launch DeskTop. Run Special > Disk Copy. Trigger an alert with only OK. Verify that Escape key closes alert.

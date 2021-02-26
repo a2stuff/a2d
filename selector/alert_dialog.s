@@ -312,6 +312,8 @@ do_try_again:
         jmp     event_loop
 
 check_only_ok:
+        cmp     #CHAR_ESCAPE    ; also allow Escape as default
+        beq     do_ok
 check_ok:
         cmp     #CHAR_RETURN
         bne     :+
