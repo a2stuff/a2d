@@ -73,7 +73,7 @@
 .define res_string_get_info_label_mod "Derni}re modification"
 .define res_string_get_info_label_type "Type"
 .define res_string_get_info_label_protected "Disque prot{g{"
-.define res_string_get_info_label_vol_size "Blocs libres/taille"
+.define res_string_get_info_label_vol_size "Taille utilis{e / total"
 .define res_string_get_info_colon_prefix ": "
 .define res_string_format_disk_label_select "S{lectionnez l'unit{ @ formater :"
 .define res_string_format_disk_label_enter_name "Entrez le nom du nouveau volume :"

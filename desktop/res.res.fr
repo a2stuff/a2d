@@ -37,7 +37,7 @@
 .define res_string_menu_item_edit_entry "Modifier..."
 .define res_string_menu_item_delete_entry "Supprimer..."
 .define res_string_menu_item_run_entry "Ex{cuter..."
-.define res_string_menu_item_about "A propos de %s"
+.define res_string_menu_item_about "A propos d'%s"
 .define res_string_splash_menu_label "%s Version %d.%d%s"
 .define res_string_window_header_items_suffix " {l{ments"
 .define res_string_window_header_k_used_suffix "K sur disque"

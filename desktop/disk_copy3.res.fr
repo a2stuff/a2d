@@ -25,7 +25,7 @@
 .define res_string_label_blocks_written "Blocs {crits : "
 .define res_string_label_blocks_to_transfer "Blocs @ transf{rer : "
 .define res_string_source "Source "
-.define res_string_destination "LDestination "
+.define res_string_destination "Destination "
 .define res_string_slot_prefix "Port "
 .define res_string_drive_infix "  Lecteur "
 .define res_string_dos33_s_d_pattern "DOS 3.3 P#, L# "

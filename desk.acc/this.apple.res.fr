@@ -20,7 +20,7 @@
 .define res_string_memory_suffix "K"
 .define res_string_card_type_diskii "Disk II"
 .define res_string_card_type_block "P{riph{rique bloc g{n{rique"
-.define res_string_card_type_smartport "SmartPort : %142s"
+.define res_string_card_type_smartport "SmartPort : "
 .define res_string_card_type_ssc "Carte Super S{rie"
 .define res_string_card_type_80col "Carte 80 colonnes"
 .define res_string_card_type_mouse "Carte souris"

@@ -5,7 +5,7 @@
 .define res_string_label_mouse_tracking "Vitesse de d{filement"
 .define res_string_label_slow "Lent"
 .define res_string_label_fast "Rapide"
-.define res_string_label_ipblink1 "Vitesse d'insertion"
+.define res_string_label_ipblink1 "Point d'insertion"
 .define res_string_label_ipblink2 "Vitesse de clignotement"
 .define res_string_label_clock "Horloge"
 .define res_string_label_clock_12hour "12 heures"

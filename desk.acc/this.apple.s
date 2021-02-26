@@ -469,8 +469,9 @@ memory:.word    0
 
 str_diskii:     PASCAL_STRING res_string_card_type_diskii
 str_block:      PASCAL_STRING res_string_card_type_block
-kStrSmartportOffset = 12
-str_smartport:  PASCAL_STRING .sprintf(res_string_card_type_smartport, "") ; 8x16 names plus ", " separators
+kStrSmartportReserve = .strlen(res_string_card_type_smartport) + (8*16 + 7*2) ; names + ", " seps
+kStrSmartportOffset = .strlen(res_string_card_type_smartport) + 1
+str_smartport:  PASCAL_STRING res_string_card_type_smartport, kStrSmartportReserve
 str_ssc:        PASCAL_STRING res_string_card_type_ssc
 str_80col:      PASCAL_STRING res_string_card_type_80col
 str_mouse:      PASCAL_STRING res_string_card_type_mouse

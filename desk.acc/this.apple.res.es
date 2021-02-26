@@ -20,7 +20,7 @@
 .define res_string_memory_suffix "K"
 .define res_string_card_type_diskii "Disk II"
 .define res_string_card_type_block "Dispositivo Periferico Generico"
-.define res_string_card_type_smartport "SmartPort: %142s"
+.define res_string_card_type_smartport "SmartPort: "
 .define res_string_card_type_ssc "Tarjeta Super Serial"
 .define res_string_card_type_80col "Tarjeta de 80 columnas"
 .define res_string_card_type_mouse "Tarjeta de Raton"
