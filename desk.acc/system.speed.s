@@ -87,6 +87,7 @@ kButtonInsetX   = 25
         DEFINE_BUTTON fast, res_string_button_fast,   kDAWidth - kButtonWidth - kButtonInsetX, 28
         DEFINE_BUTTON ok,   res_string_button_ok, kDAWidth - kButtonWidth - kButtonInsetX, 52
 
+        ;; TODO: Center this programatically
         DEFINE_LABEL title, res_string_dialog_title, (kDAWidth - 70)/ 2, 18
 
 ;;; ============================================================

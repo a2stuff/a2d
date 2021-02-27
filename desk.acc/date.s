@@ -116,6 +116,10 @@ start_da:
 ;;; ============================================================
 ;;; Param blocks
 
+
+        kDialogWidth = 239
+        kDialogHeight = 64
+
         ;; The following 7 rects are iterated over to identify
         ;; a hit target for a click.
 
@@ -124,22 +128,22 @@ start_da:
         kDownRectIndex = 4
 
         first_hit_rect := *
-        DEFINE_RECT_SZ ok_button_rect, 105, 46, 76, 11
-        DEFINE_RECT_SZ cancel_button_rect, 16, 46, 78, 11
-        DEFINE_RECT_SZ up_arrow_rect, 170, 10, 10, 10
-        DEFINE_RECT_SZ down_arrow_rect, 170, 30, 10, 10
-        DEFINE_RECT_SZ day_rect, 37, 20, 22, 10
-        DEFINE_RECT_SZ month_rect, 81, 20, 30, 10
-        DEFINE_RECT_SZ year_rect, 127, 20, 22, 10
+        DEFINE_RECT_SZ ok_button_rect, 105+20, 46, kButtonWidth, kButtonHeight
+        DEFINE_RECT_SZ cancel_button_rect, 16, 46, kButtonWidth, kButtonHeight
+        DEFINE_RECT_SZ up_arrow_rect, 190, 10, 10, 10
+        DEFINE_RECT_SZ down_arrow_rect, 190, 30, 10, 10
+        DEFINE_RECT_SZ day_rect, 57, 20, 22, 10
+        DEFINE_RECT_SZ month_rect, 101, 20, 30, 10
+        DEFINE_RECT_SZ year_rect, 147, 20, 22, 10
         ASSERT_RECORD_TABLE_SIZE first_hit_rect, kNumHitRects, .sizeof(MGTK::Rect)
 
-        DEFINE_POINT label_ok_pos, 109, 56
+        DEFINE_POINT label_ok_pos, 109+20, 56
         DEFINE_POINT label_cancel_pos, 21, 56
-        DEFINE_POINT label_uparrow_pos, 172, 19
-        DEFINE_POINT label_downarrow_pos, 172, 39
-        DEFINE_POINT day_pos, 43, 30
-        DEFINE_POINT month_pos, 87, 30
-        DEFINE_POINT year_pos, 133, 30
+        DEFINE_POINT label_uparrow_pos, 192, 19
+        DEFINE_POINT label_downarrow_pos, 192, 39
+        DEFINE_POINT day_pos, 63, 30
+        DEFINE_POINT month_pos, 107, 30
+        DEFINE_POINT year_pos, 153, 30
 
 
 .params settextbg_params
@@ -230,11 +234,11 @@ mincontlength:  .word   100
 maxcontwidth:   .word   500
 maxcontlength:  .word   500
 port:
-        DEFINE_POINT viewloc, 180, 50
+        DEFINE_POINT viewloc, (kScreenWidth-kDialogWidth)/2, (kScreenHeight-kDialogHeight)/2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, 199, 64
+        DEFINE_RECT cliprect, 0, 0, kDialogWidth, kDialogHeight
 pattern:        .res    8,$00
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -709,9 +713,10 @@ done:   pla
 ;;; ============================================================
 ;;; Params for the display
 
-        DEFINE_RECT border_rect, 4, 2, 192, 61
+        ;; Not DEFINE_RECT_INSET since width > 1
+        DEFINE_RECT border_rect, 4, 2, kDialogWidth-5, kDialogHeight-3
 
-        DEFINE_RECT_SZ date_rect, 32, 15, 122, 20
+        DEFINE_RECT_SZ date_rect, 52, 15, 122, 20
 
 label_ok:
         PASCAL_STRING res_string_label_ok ; button label

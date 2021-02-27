@@ -538,7 +538,7 @@ ipblink_selection:
 
         DEFINE_LABEL ipblink1, res_string_label_ipblink1, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 11
         DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 10 + 11
-        DEFINE_LABEL ipblink_slow, res_string_label_slow, kIPBlinkDisplayX + 110 - 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
+        DEFINE_LABEL ipblink_slow, res_string_label_slow, kIPBlinkDisplayX + 100 - 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
         DEFINE_LABEL ipblink_fast, res_string_label_fast, kIPBlinkDisplayX + 140 + 4 + 6, kIPBlinkDisplayY + 16 + 5 + 12 + 1
 
         DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 110 + 6, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
@@ -598,10 +598,10 @@ ipblink_ip_bitmap:
 kHourDisplayX = 210
 kHourDisplayY = 114
 
-        DEFINE_LABEL clock, res_string_label_clock, kHourDisplayX+kRadioButtonWidth, kHourDisplayY+8
+        DEFINE_LABEL clock, res_string_label_clock, kHourDisplayX+kRadioButtonWidth-15, kHourDisplayY+8
 
-        DEFINE_RECT_SZ rect_12hour, kHourDisplayX+60, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_LABEL clock_12hour, res_string_label_clock_12hour, kHourDisplayX+60+kRadioButtonWidth+6, kHourDisplayY+8
+        DEFINE_RECT_SZ rect_12hour, kHourDisplayX+60-10, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_LABEL clock_12hour, res_string_label_clock_12hour, kHourDisplayX+60+kRadioButtonWidth+6-10, kHourDisplayY+8
 
         DEFINE_RECT_SZ rect_24hour, kHourDisplayX+120, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_LABEL clock_24hour, res_string_label_clock_24hour, kHourDisplayX+120+kRadioButtonWidth+6, kHourDisplayY+8

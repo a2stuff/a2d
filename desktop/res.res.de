@@ -15,7 +15,7 @@
 .define res_const_the_disk_in_slot_suffix_pattern_offset2 33
 .define res_string_files_suffix "Dateien"
 .define res_string_kb_suffix "K"
-.define res_string_button_change_drive "Wechsele Laufwerk"
+.define res_string_button_change_drive "Laufwerk"
 .define res_string_button_open "\\ffnen"
 .define res_string_button_close "Schlie~en"
 .define res_string_fd_button_cancel "Abbrechen   Esc"

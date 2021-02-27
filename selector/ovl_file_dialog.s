@@ -319,8 +319,8 @@ selected_index:                 ; $FF if none
         DEFINE_BUTTON ok,           res_string_fd_button_ok, 193, 89
 
 ;;; Dividing line
-        DEFINE_POINT pt1, 323, 30
-        DEFINE_POINT pt2, 323, 100
+        DEFINE_POINT pt1, 323-8, 30
+        DEFINE_POINT pt2, 323-8, 100
 
         DEFINE_POINT pos_disk, 28, 25
         DEFINE_POINT pos_input_label, 28, 112

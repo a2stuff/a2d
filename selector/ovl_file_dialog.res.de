@@ -1,4 +1,4 @@
-.define res_string_button_change_drive "Wechsele Laufwerk"
+.define res_string_button_change_drive "Laufwerk"
 .define res_string_button_open "\\ffnen"
 .define res_string_button_close "Schlie~en"
 .define res_string_fd_button_cancel "Abbrechen   Esc"
