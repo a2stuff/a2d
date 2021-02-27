@@ -8,7 +8,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### DeskTop Enhancements
 
-* Progress bar shown while loading, and when copying to RAM disk.
+* Progress bar shown while loading, and when copying to RAM disk. ([#330](https://github.com/a2stuff/a2d/issues/330))
 * Current day/time shown on right side of menu bar, if system has a clock. ([#7](https://github.com/a2stuff/a2d/issues/7), [#142](https://github.com/a2stuff/a2d/issues/142), [#220](https://github.com/a2stuff/a2d/issues/220))
 * Up to 13 volumes are shown on the desktop (was 10). ([#20](https://github.com/a2stuff/a2d/issues/20))
 * Windows restored when DeskTop is relaunched. ([#210](https://github.com/a2stuff/a2d/issues/210))
@@ -26,35 +26,34 @@ Project Page: https://github.com/a2stuff/a2d
 * AppleWorks filenames are shown with correct case. ([#179](https://github.com/a2stuff/a2d/issues/179))
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. ([#64](https://github.com/a2stuff/a2d/issues/64))
 * Tip about skipping copy to RAMCard is shown during startup. ([#140](https://github.com/a2stuff/a2d/issues/140))
-* Holding **Apple** while clicking a file deselects. ([#359](https://github.com/a2stuff/a2d/issues/359))
+* Holding **Apple** while clicking a selected file deselects it. ([#359](https://github.com/a2stuff/a2d/issues/359))
 * Holding **Apple** while double-clicking or using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
 * Holding **Apple** while clicking a window's close box closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266))
 * **Apple-\`** or **Apple-Tab** cycles through open windows; **Shift-Apple-\`** cycles in reverse. ([#143](https://github.com/a2stuff/a2d/issues/143), [#230](https://github.com/a2stuff/a2d/issues/230))
 * **Apple-Delete** deletes selected files. ([#150](https://github.com/a2stuff/a2d/issues/150))
 * **Apple-Down** opens/previews selection. ([#254](https://github.com/a2stuff/a2d/issues/254))
 * **Apple-Up** opens parent window. ([#254](https://github.com/a2stuff/a2d/issues/254))
-* **Return** is a shortcut for **File > Rename...** ([#273](https://github.com/a2stuff/a2d/issues/273))
+* **Return** is a shortcut for **File > Rename...** ([#275](https://github.com/a2stuff/a2d/issues/275))
 * Arrow keys change selected icon. ([#274](https://github.com/a2stuff/a2d/issues/274))
 * **File > Get Info** command shows aux type for files. ([#148](https://github.com/a2stuff/a2d/issues/148))
 * ProDOS 2.5 extended dates (through year 4095) are supported. ([#169](https://github.com/a2stuff/a2d/issues/169))
-* **File > New Folder** scrolls the new folder icon into view. ([#16](https://github.com/a2stuff/a2d/issues/16))
+* **File > New Folder...** scrolls the new folder icon into view. ([#16](https://github.com/a2stuff/a2d/issues/16))
 * If present, **BASIS.SYSTEM** is used to launch unknown file types. ([#40](https://github.com/a2stuff/a2d/issues/40))
 * Use standard ProDOS alert tone.
 * File modification time-of-day is shown in file lists and **File > Get Info**. ([#221](https://github.com/a2stuff/a2d/issues/221))
-* **File > Rename** dialog pre-filled with previous name. ([#156](https://github.com/a2stuff/a2d/issues/156))
-* **File > Get Info** and list views show file and volume sizes in KB rather than Blocks.
+* **File > Rename...** dialog pre-filled with previous name. ([#156](https://github.com/a2stuff/a2d/issues/156))
+* **File > Get Info**, list views, etc. show file and volume sizes in kilobytes rather than blocks. ([#308](https://github.com/a2stuff/a2d/issues/308))
 * **File > Get Info** shows used/total for volumes, rather than free/total.
 * Menu filler items appear with a visible separator. ([#135](https://github.com/a2stuff/a2d/issues/135))
-* Progress bar shown on splash screen during launch.
 
 ### Desk Accessory Enhancements
 
 * Up to 12 desk accessories are shown in the menu (was 8). ([#90](https://github.com/a2stuff/a2d/issues/90))
 * Desk accessory files can be executed directly. ([#101](https://github.com/a2stuff/a2d/issues/101))
 * Desk accessory files with high bit in aux type set are hidden in Apple menu. ([#102](https://github.com/a2stuff/a2d/issues/102))
-* Show Text File DA: Keyboard support. Escape quits, arrows scroll. ([#4](https://github.com/a2stuff/a2d/issues/4))
+* Show Text File DA: Keyboard support. **Esc** quits, arrows scroll. ([#4](https://github.com/a2stuff/a2d/issues/4))
 * Apple menu can contain directories, which launch windows. ([#209](https://github.com/a2stuff/a2d/issues/209))
-* Other executable files (SYS, BAS, BIN) can be launched from the Apple menu. ([#293](https://github.com/a2stuff/a2d/issues/293))
+* Other executable files and previewable files can be launched from the Apple menu. ([#293](https://github.com/a2stuff/a2d/issues/293), [#295](https://github.com/a2stuff/a2d/issues/295))
 
 ### Additional Desk Accessories
 
@@ -131,7 +130,7 @@ from the Apple menu.
 * **Control-Reset** quits cleanly back to ProDOS (except buggy emulators). ([#141](https://github.com/a2stuff/a2d/issues/141))
 * Prevent crash with more than 8 removable devices.
 * Disk Copy works with disks over 8MB. ([#386](https://github.com/a2stuff/a2d/issues/386))
-* Scrollbars no longer activate unnecessarily ([#366](https://github.com/a2stuff/a2d/issues/366), [#394](https://github.com/a2stuff/a2d/issues/394))
+* Scrollbars no longer activate unnecessarily ([#347](https://github.com/a2stuff/a2d/issues/347), [#348](https://github.com/a2stuff/a2d/issues/348), [#394](https://github.com/a2stuff/a2d/issues/394))
 * Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
   * Calculator: Doesn't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
