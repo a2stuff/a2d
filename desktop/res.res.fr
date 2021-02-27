@@ -13,7 +13,7 @@
 .define res_string_the_disk_in_slot_suffix_pattern "le disque en port # lecteur # ?"
 .define res_const_the_disk_in_slot_suffix_pattern_offset1 19
 .define res_const_the_disk_in_slot_suffix_pattern_offset2 29
-.define res_string_files_suffix "Fichiers"
+.define res_string_files_suffix "fichiers"
 .define res_string_kb_suffix "K"
 .define res_string_button_change_drive "Lecteur"
 .define res_string_button_open "Ouvrir"

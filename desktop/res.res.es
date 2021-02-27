@@ -13,7 +13,7 @@
 .define res_string_the_disk_in_slot_suffix_pattern "el disco en la ranura # unidad #?"
 .define res_const_the_disk_in_slot_suffix_pattern_offset1 23
 .define res_const_the_disk_in_slot_suffix_pattern_offset2 32
-.define res_string_files_suffix "Archivos"
+.define res_string_files_suffix "archivos"
 .define res_string_kb_suffix "K"
 .define res_string_button_change_drive "Cambiar unidad"
 .define res_string_button_open "Abrir"

@@ -14269,18 +14269,14 @@ do2:    lda     winfo_prompt_dialog
         jmp     do5
 
         ;; DeleteDialogLifecycle::open or trash
-:       sta     LAD1F
+:       sta     delete_flag
         copy    #0, has_input_field_flag
         jsr     open_dialog_window
         param_call draw_dialog_title, aux::str_delete_title
-        lda     LAD1F
-        beq     LAD20
-        param_call draw_dialog_label, 4, aux::str_ok_empty
         rts
 
-LAD1F:  .byte   0
-LAD20:  param_call draw_dialog_label, 4, aux::str_delete_ok
-        rts
+delete_flag:                    ; clear if trash, set if delete
+        .byte   0
 
         ;; DeleteDialogLifecycle::populate
 do1:    ldy     #1
@@ -14289,13 +14285,13 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        lda     LAD1F
-        bne     LAD54
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_file_count_pos
-        jmp     LAD5D
-
-LAD54:  MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_file_count_pos2
-LAD5D:  param_call DrawString, str_file_count
+        lda     delete_flag
+        beq     :+
+        param_call draw_dialog_label, 4, aux::str_ok_empty
+        jmp     show_count
+:       param_call draw_dialog_label, 4, aux::str_delete_ok
+show_count:
+        param_call DrawString, str_file_count
         param_call DrawString, str_files
         rts
 

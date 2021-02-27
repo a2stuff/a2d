@@ -3531,11 +3531,7 @@ str_delete_remaining:
 str_delete_locked_file:
         PASCAL_STRING res_string_delete_prompt_locked_file
 
-        DEFINE_POINT delete_file_count_pos, 145, kDialogLabelRow4
-
         DEFINE_POINT delete_remaining_count_pos, 204, kDialogLabelRow4
-
-        DEFINE_POINT delete_file_count_pos2, 300, kDialogLabelRow4
 
         ;; "New Folder" dialog strings
 str_in_colon:

@@ -13,7 +13,7 @@
 .define res_string_the_disk_in_slot_suffix_pattern "the disk in slot # drive #?"
 .define res_const_the_disk_in_slot_suffix_pattern_offset1 18
 .define res_const_the_disk_in_slot_suffix_pattern_offset2 26
-.define res_string_files_suffix "Files"
+.define res_string_files_suffix "files"
 .define res_string_kb_suffix "K"
 .define res_string_button_change_drive "Change Drive"
 .define res_string_button_open "Open"
