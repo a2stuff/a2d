@@ -15,6 +15,7 @@ script:
 - bin/setlang fr && make && make package
 - bin/setlang it && make && make package
 - bin/setlang es && make && make package
+- bin/setlang de && make && make package
 
 deploy:
   provider: releases
