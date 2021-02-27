@@ -14584,7 +14584,6 @@ row:    .byte   0
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
         param_call draw_dialog_title, aux::label_lock
-        param_call draw_dialog_label, 4, aux::str_lock_ok
         rts
 
         ;; LockDialogLifecycle::populate
@@ -14594,9 +14593,8 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos2
+        param_call draw_dialog_label, 4, aux::str_lock_ok
         param_call DrawString, str_file_count
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::files_pos2
         param_call DrawString, str_files
         rts
 
@@ -14670,7 +14668,6 @@ do4:    jsr     close_prompt_dialog
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
         param_call draw_dialog_title, aux::label_unlock
-        param_call draw_dialog_label, 4, aux::str_unlock_ok
         rts
 
         ;; LockDialogLifecycle::populate
@@ -14680,9 +14677,8 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos2
+        param_call draw_dialog_label, 4, aux::str_unlock_ok
         param_call DrawString, str_file_count
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::files_pos
         param_call DrawString, str_files
         rts
 

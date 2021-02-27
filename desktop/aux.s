@@ -3570,10 +3570,6 @@ str_info_vol_size:
 str_colon:
         PASCAL_STRING res_string_get_info_colon_prefix
 
-        DEFINE_POINT unlock_remaining_count_pos2, 160, kDialogLabelRow4
-        DEFINE_POINT lock_remaining_count_pos2, 145, kDialogLabelRow4
-        DEFINE_POINT files_pos, 200, kDialogLabelRow4
-        DEFINE_POINT files_pos2, 185, kDialogLabelRow4
         DEFINE_POINT unlock_remaining_count_pos, 205, kDialogLabelRow4
         DEFINE_POINT lock_remaining_count_pos, 195, kDialogLabelRow4
 
