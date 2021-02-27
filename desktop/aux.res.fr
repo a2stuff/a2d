@@ -44,7 +44,7 @@
 .define res_string_about_text_line4 "Tous droits r{serv{s"
 .define res_string_about_text_line5 "Auteurs : St{phane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais et Luc Barthelet"
-.define res_string_about_text_line7 "Remerciements @ : Alexis Gerard, Jim Gerber, Pat Pahl"
+.define res_string_about_text_line7 "Remerciements @ : A. Gerard, J. Gerber, P. Pahl, J. Bernard"
 .define res_string_copy_dialog_title "Copie..."
 .define res_string_copy_label_statsus "Copie de "
 .define res_string_copy_label_from "de :"
