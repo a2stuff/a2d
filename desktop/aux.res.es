@@ -104,7 +104,7 @@
 .define res_string_alert_button_try_again "Intentar de nuevo     A"
 .define res_string_alert_button_cancel "Cancelar    Esc"
 .define res_string_errmsg_00 "Error de Sistema"
-.define res_string_errmsg_27 "I/O error."
+.define res_string_errmsg_27 "Error de E/S."
 .define res_string_errmsg_28 "No hay dispositivo conectado."
 .define res_string_errmsg_2B "El disco esta protegido contra escritura."
 .define res_string_errmsg_40 "la sintaxis del la localizacion es invalida."

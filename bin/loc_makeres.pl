@@ -99,7 +99,12 @@ sub check($$$$) {
     die "Bad const resource in $lang, line $.: $t\n"
         if $label =~ /^res_const_/ && $t !~ /^\d+$/;
 
-   return $t;
+    if (0) {
+        warn "String > 2x in $lang, line $.: '$en' / '$t'\n"
+            if length($t) / length($en) > 2;
+    }
+
+    return $t;
 }
 
 

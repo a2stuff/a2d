@@ -963,8 +963,8 @@ ctlmax:         .byte   0
 
         DEFINE_LABEL find, res_string_label_find, 20, 20
 
-        DEFINE_RECT input_rect, 55, 10, kDAWidth-250, 21
-        DEFINE_POINT input_textpos, 60, 20
+        DEFINE_RECT input_rect, 90, 10, kDAWidth-250, 21
+        DEFINE_POINT input_textpos, 95, 20
 
         ;; figure out coords here
 .params input_mapinfo

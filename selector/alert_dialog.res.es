@@ -3,7 +3,7 @@
 .define res_char_button_try_again_shortcut 'A'
 .define res_string_button_cancel "Cancelar    Esc"
 .define res_string_alert_selector_unable_to_run "El selector no puede ejecutar el programa."
-.define res_string_alert_io_error "Error de entrada/salida."
+.define res_string_alert_io_error "Error de E/S."
 .define res_string_alert_no_device "Ningun dispositivo conectado."
 .define res_string_alert_pathname_does_not_exist "Parte de la ruta no existe."
 .define res_string_alert_insert_source_disk "Por favor inserte el disco fuente."

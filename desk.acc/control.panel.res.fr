@@ -8,5 +8,5 @@
 .define res_string_label_ipblink1 "Point d'insertion"
 .define res_string_label_ipblink2 "Vitesse de clignotement"
 .define res_string_label_clock "Horloge"
-.define res_string_label_clock_12hour "12 heures"
-.define res_string_label_clock_24hour "24 heures"
+.define res_string_label_clock_12hour "12 h"
+.define res_string_label_clock_24hour "24 h"
