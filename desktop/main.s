@@ -13702,7 +13702,6 @@ LA6F7:  jsr     LB9B8
 
         ;; Modifier key down.
         lda     event_key
-        and     #CHAR_MASK
         cmp     #CHAR_LEFT
         bne     :+
         jmp     left_with_mod
@@ -13716,7 +13715,6 @@ done:   return  #$FF
         ;; No modifier key down.
 no_mods:
         lda     event_key
-        and     #CHAR_MASK
 
         cmp     #CHAR_LEFT
         bne     LA72E
@@ -13933,7 +13931,6 @@ jump_relay:
         cmp     #MGTK::EventKind::key_down
         bne     :-
         lda     event_key
-        and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     close
         cmp     #CHAR_RETURN

@@ -3960,7 +3960,6 @@ event_loop:
         ;; --------------------------------------------------
         ;; Key Down
         lda     event_key
-        and     #CHAR_MASK      ; TODO: Remove, not needed.
         bit     alert_options   ; has Cancel?
         bpl     check_only_ok   ; nope
 

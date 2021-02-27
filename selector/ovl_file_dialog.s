@@ -1334,7 +1334,6 @@ l6:     .byte   0
 
         ;; With modifiers
         lda     event_key
-        and     #CHAR_MASK
 
         cmp     #CHAR_LEFT
         bne     :+
@@ -1370,7 +1369,6 @@ not_arrow:
 
 no_modifiers:
         lda     event_key
-        and     #CHAR_MASK
 
         cmp     #CHAR_LEFT
         bne     :+

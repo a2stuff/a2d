@@ -281,7 +281,6 @@ event_loop:
         ;; --------------------------------------------------
         ;; Key Down
         lda     app::event_key
-        and     #CHAR_MASK      ; TODO: Remove, not needed.
         bit     alert_options   ; has Cancel?
         bpl     check_only_ok   ; nope
 

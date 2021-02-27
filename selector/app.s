@@ -673,7 +673,6 @@ quick_boot_slot:
         bit     desktop_available_flag
         bmi     not_desktop
         lda     event_key
-        and     #CHAR_MASK
         cmp     #kShortcutRunDeskTop
         beq     :+
         cmp     #TO_LOWER(kShortcutRunDeskTop)
@@ -772,7 +771,6 @@ menu_addr_table:
         lda     event_modifiers
         bne     has_modifiers
         lda     event_key
-        and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     menukey
 
@@ -780,7 +778,6 @@ other:  jmp     handle_nonmenu_key
 
 has_modifiers:
         lda     event_key
-        and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     menukey
         cmp     #kShortcutRunProgram
@@ -1032,7 +1029,6 @@ noop:   rts
         lda     winfo::window_id
         jsr     get_window_port
         lda     event_key
-        and     #CHAR_MASK
         cmp     #$1C            ; Control character?
         bcs     :+
         jmp     control_char

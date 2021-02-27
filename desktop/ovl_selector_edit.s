@@ -496,7 +496,6 @@ copy_when:
         rts
 
 :       lda     event_key
-        and     #CHAR_MASK
         cmp     #'1'
         bne     :+
         jmp     click_run_list_ctrl

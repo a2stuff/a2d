@@ -748,7 +748,6 @@ L97D4:  ldx     #0
         bne     :+
         return  #$FF
 :       lda     event_key
-        and     #CHAR_MASK
 
         cmp     #CHAR_LEFT
         bne     :+

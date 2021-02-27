@@ -753,7 +753,6 @@ params: .addr   0
 
         ;; With modifiers
         lda     event_key
-        and     #CHAR_MASK
 
         cmp     #CHAR_LEFT
         bne     :+
@@ -787,7 +786,6 @@ L59E4:  cmp     #'0'
         ;; No modifiers
 
 L59F7:  lda     event_key
-        and     #CHAR_MASK
 
         cmp     #CHAR_LEFT
         bne     :+
