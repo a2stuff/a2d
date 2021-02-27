@@ -87,8 +87,7 @@ kButtonInsetX   = 25
         DEFINE_BUTTON fast, res_string_button_fast,   kDAWidth - kButtonWidth - kButtonInsetX, 28
         DEFINE_BUTTON ok,   res_string_button_ok, kDAWidth - kButtonWidth - kButtonInsetX, 52
 
-        ;; TODO: Center this programatically
-        DEFINE_LABEL title, res_string_dialog_title, (kDAWidth - 70)/ 2, 18
+        DEFINE_LABEL title, res_string_dialog_title, 0, 18
 
 ;;; ============================================================
 
@@ -196,8 +195,7 @@ grafport:       .tag MGTK::GrafPort
         MGTK_CALL MGTK::FrameRect, frame_rect1
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
-        MGTK_CALL MGTK::MoveTo, title_label_pos
-        param_call DrawString, title_label_str
+        param_call draw_title_string, title_label_str
 
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
@@ -404,6 +402,29 @@ hit:    lda     winfo::window_id
         rts
 .endproc
 
+;;; ============================================================
+;;; Draw Title String (centered at top of port)
+;;; Input: A,X = string address
+
+.proc draw_title_string
+        text_params     := $6
+        text_addr       := text_params + 0
+        text_length     := text_params + 2
+        text_width      := text_params + 3
+
+        stax    text_addr       ; input is length-prefixed string
+        ldy     #0
+        lda     (text_addr),y
+        sta     text_length
+        inc16   text_addr       ; point past length
+        MGTK_CALL MGTK::TextWidth, text_params
+
+        sub16   #kDAWidth, text_width, title_label_pos::xcoord
+        lsr16   title_label_pos::xcoord ; /= 2
+        MGTK_CALL MGTK::MoveTo, title_label_pos
+        MGTK_CALL MGTK::DrawText, text_params
+        rts
+.endproc
 
 ;;; ============================================================
 
