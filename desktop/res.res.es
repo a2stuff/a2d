@@ -1,4 +1,4 @@
-.define res_string_selector_label_enter_pathname "Escriba la ruta completa del archivo de ejecucion:"
+.define res_string_selector_label_enter_pathname "Escriba la ruta completa del archivo:"
 .define res_string_selector_label_enter_name "Escriba el nombre (14 caracteres max.):"
 .define res_string_selector_label_add_a_new_entry_to "A|ada entrada a la:"
 .define res_string_selector_label_run_list "1 Lista de ejecucion"

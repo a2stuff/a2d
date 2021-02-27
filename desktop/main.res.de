@@ -1,0 +1,20 @@
+.define res_char_resize_shortcut 'G'
+.define res_char_move_shortcut 'M'
+.define res_char_scroll_shortcut 'X'
+.define res_string_no_date "Ohne Datum"
+.define res_string_month_name_1 "Januar"
+.define res_string_month_name_2 "Februar"
+.define res_string_month_name_3 "M{rz"
+.define res_string_month_name_4 "April"
+.define res_string_month_name_5 "Mai"
+.define res_string_month_name_6 "Juni"
+.define res_string_month_name_7 "Juli"
+.define res_string_month_name_8 "August"
+.define res_string_month_name_9 "September"
+.define res_string_month_name_10 "Oktober"
+.define res_string_month_name_11 "November"
+.define res_string_month_name_12 "Dezember"
+.define res_string_comma_infix ", "
+.define res_string_at_infix " um "
+.define res_string_auxtype_prefix "     AuxTyp:$"
+.define res_string_volume " Volumen"

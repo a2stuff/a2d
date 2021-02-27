@@ -1,0 +1,9 @@
+.define res_string_copying_to_ramcard "Kopiere %s auf RAMCard"
+.define res_string_label_tip_skip_copying "Tipp: Zum ]berspringen der Kopie auf die RAMCard dr}cke \x0F\x1B\x41\x18\x0E w{hrend des Starts."
+.define res_string_label_copying "Kopie auf RAMCard: "
+.define res_string_prompt_insert_source "Originaldiskette einlegen und Eingabe dr}cken. Mit Esc abbrechen."
+.define res_string_prompt_ramcard_full "Kein Platz mehr, um Autoload zu beenden. Fortsetzung mit Eingabe."
+.define res_string_error_prefix "Fehler $"
+.define res_string_error_suffix " Aufgetreten w{hrend Kopie "
+.define res_string_prompt_copy_not_completed "Das Kopieren wurde nicht beendet, Dr}cke Eingabe zum Fortfahren."
+.define res_char_monitor_shortcut 'M'

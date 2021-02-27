@@ -1,4 +1,4 @@
-.define res_string_selector_label_enter_pathname "Inserisci il pathname completo del file per l'elenco di avvio:"
+.define res_string_selector_label_enter_pathname "Inserisci il pathname completo del file:"
 .define res_string_selector_label_enter_name "Inserisci il nome (14 caratteri max.):"
 .define res_string_selector_label_add_a_new_entry_to "Aggiungi un elemento a:"
 .define res_string_selector_label_run_list "1 Lista di avvio"

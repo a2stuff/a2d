@@ -94,6 +94,10 @@ sub check($$$$) {
             if $t =~ m/\s[!?:]/;
     }
 
+    die "Bad char resource in $lang, line $.: $t\n"
+        if $label =~ /^res_char_/ && length($t) != 1;
+    die "Bad const resource in $lang, line $.: $t\n"
+        if $label =~ /^res_const_/ && $t !~ /^\d+$/;
 
    return $t;
 }
