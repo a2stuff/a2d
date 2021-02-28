@@ -39,7 +39,7 @@
 .define res_string_error_reading "Errore nella lettura del blocco "
 .define res_string_dcalert_button_ok "OK            \x0D"
 .define res_string_dcalert_button_try_again "Riprova    R"
-.define res_string_dcalert_button_cancel "Annulla   Esc"
+.define res_string_dcalert_button_cancel "Annulla      Esc"
 .define res_string_dcalert_button_yes "Si"
 .define res_string_dcalert_button_no "No"
 .define res_string_prompt_insert_source "Inserire il disco sorgente e cliccare OK."

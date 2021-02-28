@@ -39,7 +39,7 @@
 .define res_string_error_reading "Error when reading block "
 .define res_string_dcalert_button_ok "OK            \x0D"
 .define res_string_dcalert_button_try_again "Try Again     A"
-.define res_string_dcalert_button_cancel "Cancel     Esc"
+.define res_string_dcalert_button_cancel "Cancel        Esc"
 .define res_string_dcalert_button_yes "Yes"
 .define res_string_dcalert_button_no "No"
 .define res_string_prompt_insert_source "Insert source disk and click OK."

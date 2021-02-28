@@ -1,7 +1,7 @@
 .define res_string_alert_button_ok "OK            \x0D"
 .define res_string_button_try_again "Riprova"
 .define res_char_button_try_again_shortcut 'A'
-.define res_string_button_cancel "Annulla  Esc"
+.define res_string_button_cancel "Annulla      Esc"
 .define res_string_alert_selector_unable_to_run "Impossibile eseguire il programma."
 .define res_string_alert_io_error "Errore I/O."
 .define res_string_alert_no_device "Nessuna unit{ connessa."

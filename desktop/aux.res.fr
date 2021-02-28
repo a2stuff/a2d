@@ -98,7 +98,7 @@
 .define res_string_warning_selector_list_full_line2 "ajouter une autre."
 .define res_string_warning_window_must_be_closed "Fermez une fenetre avant d'ouvrir ce document."
 .define res_string_warning_too_many_windows "Il y a trop de fenetres ouvertes sur le bureau !"
-.define res_string_warning_save_selector_list_line1 "Voulez-vous sauvegarder la nouvelle liste programme"
+.define res_string_warning_save_selector_list_line1 "Voulez-vous sauvegarder la nouvelle liste"
 .define res_string_warning_save_selector_list_line2 "sur le disque syst}me ?"
 .define res_string_alert_button_ok "OK            \x0D"
 .define res_string_alert_button_try_again "Recommencer  R"
