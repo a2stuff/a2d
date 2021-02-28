@@ -13,6 +13,7 @@
 .define res_string_the_disk_in_slot_suffix_pattern "le disque en port # lecteur # ?"
 .define res_const_the_disk_in_slot_suffix_pattern_offset1 19
 .define res_const_the_disk_in_slot_suffix_pattern_offset2 29
+.define res_string_file_suffix "fichier"
 .define res_string_files_suffix "fichiers"
 .define res_string_kb_suffix "K"
 .define res_string_button_change_drive "Lecteur"
@@ -39,6 +40,7 @@
 .define res_string_menu_item_run_entry "Ex{cuter..."
 .define res_string_menu_item_about "A propos d'%s"
 .define res_string_splash_menu_label "%s Version %d.%d%s"
+.define res_string_window_header_item_suffix " {l{ment"
 .define res_string_window_header_items_suffix " {l{ments"
 .define res_string_window_header_k_used_suffix "K sur disque"
 .define res_string_window_header_k_available_suffix "K disponible"

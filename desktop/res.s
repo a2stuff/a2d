@@ -633,8 +633,11 @@ str_1_char:
 str_2_spaces:
         PASCAL_STRING "  "      ; do not localize
 
-str_files:
+str_file_suffix:
+        PASCAL_STRING res_string_file_suffix
+str_files_suffix:
         PASCAL_STRING res_string_files_suffix
+
 str_file_count:                 ; populated with number of files
         PASCAL_STRING " ##,### " ; do not localize
 
@@ -1209,7 +1212,9 @@ window_k_free_table:  .res    kMaxNumWindows*2, 0
 ;;; ============================================================
 ;;; Resources for window header (Items/K in disk/K available)
 
-str_items:
+str_item_suffix:
+        PASCAL_STRING res_string_window_header_item_suffix
+str_items_suffix:
         PASCAL_STRING res_string_window_header_items_suffix
 
         DEFINE_POINT items_label_pos, 8, 10

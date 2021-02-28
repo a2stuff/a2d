@@ -13,6 +13,7 @@
 .define res_string_the_disk_in_slot_suffix_pattern "el disco en la ranura # unidad #?"
 .define res_const_the_disk_in_slot_suffix_pattern_offset1 23
 .define res_const_the_disk_in_slot_suffix_pattern_offset2 32
+.define res_string_file_suffix "archivo"
 .define res_string_files_suffix "archivos"
 .define res_string_kb_suffix "K"
 .define res_string_button_change_drive "Cambiar unidad"
@@ -39,6 +40,7 @@
 .define res_string_menu_item_run_entry "Ejecutar entrada..."
 .define res_string_menu_item_about "Acerca %s"
 .define res_string_splash_menu_label "%s Version %d.%d%s"
+.define res_string_window_header_item_suffix " Elemento"
 .define res_string_window_header_items_suffix " Elementos"
 .define res_string_window_header_k_used_suffix "K en disco"
 .define res_string_window_header_k_available_suffix "K disponible"

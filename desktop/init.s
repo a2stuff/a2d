@@ -539,7 +539,7 @@ done:   rts
         stax    dx
 
         ;; Width of "123,456 Items"
-        param_call main::measure_text1, str_items
+        param_call main::measure_text1, str_items_suffix
         addax   dx, width_items_label
 
         ;; Width of "123,456K in disk"

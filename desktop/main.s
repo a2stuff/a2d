@@ -7573,19 +7573,14 @@ tmp:    .byte   0
         ldx     #0
         jsr     IntToStringWithSeparators
         lda     cached_window_icon_count
-        cmp     #1              ; plural?
-        bne     :+
-        dec     str_items       ; remove trailing s
-:       MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
+        jsr     adjust_item_suffix
+
+        MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
         jsr     draw_int_string
-        param_call draw_pascal_string, str_items
-        lda     cached_window_icon_count
-        cmp     #1
-        bne     :+
-        inc     str_items       ; restore trailing s
+        param_call_indirect draw_pascal_string, ptr_str_items_suffix
 
         ;; Draw "XXXK in disk"
-:       jsr     calc_header_coords
+        jsr     calc_header_coords
         ldx     active_window_id
         dex                     ; index 0 is window 1
         txa
@@ -7617,6 +7612,20 @@ tmp:    .byte   0
         jsr     draw_int_string
         param_call draw_pascal_string, str_k_available
         rts
+
+.proc  adjust_item_suffix
+        cmp     #1
+        bne     :+
+        copy16  #str_item_suffix, ptr_str_items_suffix
+        rts
+
+:       copy16  #str_items_suffix, ptr_str_items_suffix
+        rts
+.endproc
+
+
+ptr_str_items_suffix:
+        .addr   0
 
 ;;; --------------------------------------------------
 
@@ -13994,7 +14003,7 @@ do1:    ldy     #1
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
-        param_call DrawString, str_files
+        param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
         ;; CopyDialogLifecycle::exists
@@ -14112,7 +14121,7 @@ do1:    ldy     #1
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
-        param_call DrawString, str_files
+        param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
 do2:    ldy     #1
@@ -14292,7 +14301,7 @@ do1:    ldy     #1
 :       param_call draw_dialog_label, 4, aux::str_delete_ok
 show_count:
         param_call DrawString, str_file_count
-        param_call DrawString, str_files
+        param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
         ;; DeleteDialogLifecycle::show
@@ -14591,7 +14600,7 @@ do1:    ldy     #1
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 4, aux::str_lock_ok
         param_call DrawString, str_file_count
-        param_call DrawString, str_files
+        param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
         ;; LockDialogLifecycle::operation
@@ -14675,7 +14684,7 @@ do1:    ldy     #1
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 4, aux::str_unlock_ok
         param_call DrawString, str_file_count
-        param_call DrawString, str_files
+        param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
         ;; LockDialogLifecycle::operation
@@ -15693,22 +15702,25 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Make str_files singular or plural based on file_count
+;;; Adjust ptr_str_files_suffix based on file_count
 
 .proc adjust_str_files_suffix
-        ldx     str_files
         lda     file_count+1         ; > 255?
         bne     :+
         lda     file_count
         cmp     #2              ; > 2?
         bcs     :+
 
-        copy    #' ', str_files,x ; singular
+        copy16  #str_file_suffix, ptr_str_files_suffix ; singular
         rts
 
-:       copy    #'s', str_files,x ; plural
+:       copy16  #str_files_suffix, ptr_str_files_suffix ; plural
         rts
 .endproc
+
+;;; Adjusted to point at file/files (singular/plural)
+ptr_str_files_suffix:
+        .addr   str_files_suffix
 
 ;;; ============================================================
 

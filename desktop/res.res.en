@@ -13,6 +13,7 @@
 .define res_string_the_disk_in_slot_suffix_pattern "the disk in slot # drive #?"
 .define res_const_the_disk_in_slot_suffix_pattern_offset1 18
 .define res_const_the_disk_in_slot_suffix_pattern_offset2 26
+.define res_string_file_suffix "file"
 .define res_string_files_suffix "files"
 .define res_string_kb_suffix "K"
 .define res_string_button_change_drive "Change Drive"
@@ -39,6 +40,7 @@
 .define res_string_menu_item_run_entry "Run an Entry..."
 .define res_string_menu_item_about "About %s"
 .define res_string_splash_menu_label "%s Version %d.%d%s"
+.define res_string_window_header_item_suffix " Item"
 .define res_string_window_header_items_suffix " Items"
 .define res_string_window_header_k_used_suffix "K in disk"
 .define res_string_window_header_k_available_suffix "K available"
