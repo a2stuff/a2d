@@ -62,7 +62,7 @@ finish: jsr     file_dialog::L5F5B
         jsr     file_dialog::jt_redraw_input
         jsr     file_dialog::redraw_f2
         copy    #1, path_buf2
-        copy    #' ', path_buf2+1
+        copy    #kGlyphInsertionPoint, path_buf2+1
         lda     #$FF
         sta     LD8EC
         jmp     file_dialog::event_loop

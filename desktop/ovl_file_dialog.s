@@ -2657,10 +2657,8 @@ l4:     lda     path_buf1,y
         ldx     path_buf1
         inx
         stx     path_buf2
-        lda     #kGlyphInsertionPoint
-        sta     path_buf2+1
-        lda     #$00
-        sta     path_buf1
+        copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #0, path_buf1
         jsr     jt_redraw_input
         jsr     L6E9F
         rts
