@@ -13706,8 +13706,7 @@ LA6F7:  jsr     LB9B8
 
 .proc prompt_key_handler
         lda     event_modifiers
-        cmp     #MGTK::event_modifier_solid_apple
-        bne     no_mods
+        beq     no_mods
 
         ;; Modifier key down.
         lda     event_key
