@@ -154,13 +154,17 @@ exit1:  jmp     exit
         beq     exit1           ; nope, bail
 
         cmp     #kMaxDeskTopWindows+1 ; is it DeskTop window?
-        bcs     exit1                 ; nope, bail
+        bcc     :+
+        lda     #0              ; nope, bail
+        sta     window_id
+        beq     exit1           ; always
 
         ;; Copy window path to buffer
         ptr := $06
 
-        jsr     JUMP_TABLE_GET_WIN_PATH
+:       jsr     JUMP_TABLE_GET_WIN_PATH
         stax    ptr
+
         ldy     #0
         lda     (ptr),y
         tay
