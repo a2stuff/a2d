@@ -11,7 +11,7 @@ source "bin/util.sh"
 NULIB2=$(command -v nulib2 || echo '')
 NULIB2="${PNULIB2:-$HOME/dev/nulib2/nulib2/nulib2}"
 
-tempdir=$(mktemp -d -t SHK)
+tempdir=$(mktemp -d "${TMPDIR:-/tmp}/shk.XXXXXXXXX")
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
 rm -f A2D.SHK

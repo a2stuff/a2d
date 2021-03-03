@@ -11,7 +11,7 @@ if ! command -v "cadius" >/dev/null; then
     exit 1
 fi
 
-tempdir=$(mktemp -d -t SHK)
+tempdir=$(mktemp -d "${TMPDIR:-/tmp}/pkg.XXXXXXXXX")
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
 vmajor=$(grep 'kDeskTopVersionMajor =' config.inc | sed -e 's/.* = //')
