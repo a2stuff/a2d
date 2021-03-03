@@ -449,10 +449,11 @@ input_loop:
         ;; which part of the window?
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     on_close_click
+        bne     :+
+        jmp     on_close_click
 
         ;; title and resize clicks need mouse location
-        ldx     event_params::mousex
+:       ldx     event_params::mousex
         stx     growwindow_params::mousex
         stx     findcontrol_params::mousex
         ldx     event_params::mousex+1
@@ -511,6 +512,11 @@ no_mod:
         cmp     #CHAR_ESCAPE
         bne     :+
         jmp     do_close
+
+:       cmp     #' '
+        bne     :+
+        jsr     toggle_mode
+        jmp     input_loop
 
 :       cmp     #CHAR_DOWN
         bne     :+
@@ -1269,8 +1275,12 @@ end:    rts
         bne     :+
         lda     event_params::mousex
         cmp     mode_mapinfo_viewloc_xcoord
-:       bcc     ignore
+:       bcs     toggle_mode
+        clc                     ; Click ignored
+        rts
+.endproc
 
+.proc toggle_mode
         ;; Toggle the state and redraw
         lda     fixed_mode_flag
         beq     set_flag
@@ -1284,10 +1294,9 @@ redraw: jsr     draw_mode
         jsr     draw_content
         sec                     ; Click consumed
         rts
-
-ignore: clc                     ; Click ignored
-        rts
 .endproc
+
+;;; ============================================================
 
 fixed_str:      PASCAL_STRING res_string_button_fixed
 prop_str:       PASCAL_STRING res_string_button_prop
@@ -1306,6 +1315,8 @@ mode_mapinfo_viewloc_xcoord := mode_mapinfo::viewloc::xcoord
 left:   .word   0               ; horizontal text offset
 base:   .word   10              ; vertical text offset (to baseline)
 .endparams
+
+;;; ============================================================
 
 .proc calc_and_draw_mode
         sec
