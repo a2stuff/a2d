@@ -4,12 +4,11 @@
 
 set -e
 
-test $# -eq 1 || (echo "Usage: setlang LANG"; exit 1)
+test $# -eq 1 || (echo "Usage: $0 LANG"; exit 1)
 lang=$1
-date=$(bin/datestr $lang)
+date=$(bin/setdate $lang)
 
 perl -pni -e "s/define LANG .*/define LANG \"$lang\"/" config.inc
-perl -pni -e "s/define kBuildDate .*/define kBuildDate \"$date\"/" config.inc
 
 echo Set lang to: $lang
-echo Set date to: $(echo "$date" | bin/transcode.pl from $lang)
+bin/setdate $lang

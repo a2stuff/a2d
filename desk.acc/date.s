@@ -163,9 +163,10 @@ clock_flag:
 datelo: .byte   0
 datehi: .byte   0
 
-day:    .byte   26              ; Feb 26, 1985
-month:  .byte   2               ; The date this was written?
-year:   .byte   85
+;;; Originally Feb 26, 1985 (the author date?); now updated by build.
+day:    .byte   2
+month:  .byte   3
+year:   .byte   21
 
 spaces_string:
         PASCAL_STRING "    "    ; do not localize

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# Usage: bin/setdate LANG
+# Example: bin/setdate en
+
+# Run this from the top level directory
+
+set -e
+
+test $# -eq 1 || (echo "Usage: $0 LANG"; exit 1)
+
+lang=$1
+
+yyyy=$(expr `date +%Y`)
+yy=$(expr `date +%y`)
+mm=$(expr `date +%m`)
+dd=$(expr `date +%d`)
+
+month=$(grep "res_string_month_name_${mm}" "desktop/main.res.${lang}" | cut -d'"' -f2)
+
+if [ "$lang" = "en" ]; then
+    date="$month $dd, $yyyy"
+else
+    date="$dd $month $yyyy"
+fi
+
+# Update build date string
+perl -pni -e "s/define kBuildDate .*/define kBuildDate \"$date\"/" config.inc
+
+# Update default date in Date DA
+perl -pni -e 's/^(day:   \s+ \.byte \s+) \d+ /${1}'"$dd"'/x' desk.acc/date.s
+perl -pni -e 's/^(month: \s+ \.byte \s+) \d+ /${1}'"$mm"'/x' desk.acc/date.s
+perl -pni -e 's/^(year:  \s+ \.byte \s+) \d+ /${1}'"$yy"'/x' desk.acc/date.s
+
+echo Set date to: $(echo "$date" | bin/transcode.pl from $lang)
