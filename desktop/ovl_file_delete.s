@@ -78,7 +78,7 @@ jt_filename:
         param_call file_dialog::L647C, path_buf0
         beq     :+
         lda     #ERR_INVALID_PATHNAME
-        jsr     JUMP_TABLE_ALERT_0
+        jsr     JUMP_TABLE_SHOW_ALERT
         rts
 
 :       MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox

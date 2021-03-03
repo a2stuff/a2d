@@ -126,7 +126,7 @@ L0942:  lda     winfo_prompt_dialog
 
 L0980:  cmp     #ERR_WRITE_PROTECTED
         bne     L098C
-        jsr     JUMP_TABLE_ALERT_0
+        jsr     JUMP_TABLE_SHOW_ALERT
         bne     L09C2
         jmp     L090C
 
@@ -139,7 +139,7 @@ L099B:  pha
         pla
         cmp     #ERR_WRITE_PROTECTED
         bne     L09AC
-        jsr     JUMP_TABLE_ALERT_0
+        jsr     JUMP_TABLE_SHOW_ALERT
         bne     L09C2
         jmp     L090C
 
@@ -251,7 +251,7 @@ L0AD1:  lda     winfo_prompt_dialog
 
 L0B12:  cmp     #ERR_WRITE_PROTECTED
         bne     L0B1E
-        jsr     JUMP_TABLE_ALERT_0
+        jsr     JUMP_TABLE_SHOW_ALERT
         bne     L0B31
         jmp     L0AD1
 

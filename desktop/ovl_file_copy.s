@@ -181,7 +181,7 @@ done:   jsr     file_dialog::jt_redraw_input
         param_call file_dialog::L647C, path_buf0
         beq     :+
 err:    lda     #ERR_INVALID_PATHNAME
-        jsr     JUMP_TABLE_ALERT_0
+        jsr     JUMP_TABLE_SHOW_ALERT
         rts
 
 :       param_call file_dialog::L647C, path_buf1

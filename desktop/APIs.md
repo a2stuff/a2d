@@ -115,13 +115,13 @@ Composes file type string.
 Input is ProDOS file type in A.
 Output string is in `str_file_type`.
 
-#### `JUMP_TABLE_ALERT_0` ($4030)
+#### `JUMP_TABLE_SHOW_ALERT` ($4030)
 
 Show alert, with default button options for error number
 
 Error number is in A - either a ProDOS error number, or a DeskTop error as defined in `desktop/desktop.inc`.
 
-#### `JUMP_TABLE_ALERT_X` ($4033)
+#### `JUMP_TABLE_SHOW_ALERT_OPTIONS` ($4033)
 
 Show alert, with custom button options.
 

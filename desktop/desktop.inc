@@ -54,8 +54,8 @@ JUMP_TABLE_COPY_TO_BUF  := $4024 ; Copy to buffer
 JUMP_TABLE_COPY_FROM_BUF:= $4027 ; Copy from buffer
 JUMP_TABLE_NOOP         := $402A ; No-Op command (RTS)
 JUMP_TABLE_FILE_TYPE_STRING := $402D ; Compose file type string into internal buffer
-JUMP_TABLE_ALERT_0      := $4030 ; Show alert (A=err code, default options)
-JUMP_TABLE_ALERT_X      := $4033 ; Show alert X (A=err code, X=options)
+JUMP_TABLE_SHOW_ALERT      := $4030 ; Show alert (A=err code, default options)
+JUMP_TABLE_SHOW_ALERT_OPTIONS      := $4033 ; Show alert X (A=err code, X=options)
 JUMP_TABLE_LAUNCH_FILE  := $4036 ; Launch file
 JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer *
 JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch *
@@ -88,7 +88,7 @@ kDynamicRoutineRestore5000      = 7
 kDynamicRoutineRestore9000      = 8
 
 ;;; ============================================================
-;;; Options/Results from JUMP_TABLE_ALERT_0 / JUMP_TABLE_ALERT_X
+;;; Options/Results from JUMP_TABLE_SHOW_ALERT / JUMP_TABLE_SHOW_ALERT_OPTIONS
 
 kAlertOptionsDefault            = 0
 kAlertOptionsOK                 = 0 ; Used internally only, callers would pass $01

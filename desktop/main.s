@@ -40,8 +40,8 @@ JT_COPY_TO_BUF:         jmp     LoadWindowIconTable
 JT_COPY_FROM_BUF:       jmp     StoreWindowIconTable
 JT_NOOP:                jmp     cmd_noop
 JT_FILE_TYPE_STRING:    jmp     compose_file_type_string
-JT_SHOW_ALERT0:         jmp     ShowAlert
-JT_SHOW_ALERT:          jmp     ShowAlertOption         ; *
+JT_SHOW_ALERT:          jmp     ShowAlert               ; *
+JT_SHOW_ALERT_OPTIONS:  jmp     ShowAlertOption
 JT_LAUNCH_FILE:         jmp     launch_file
 JT_CUR_POINTER:         jmp     set_cursor_pointer      ; *
 JT_CUR_WATCH:           jmp     set_cursor_watch        ; *
@@ -11564,7 +11564,7 @@ common2:
         beq     finish
 
         ;; Failed, maybe retry
-        jsr     JT_SHOW_ALERT0
+        jsr     JT_SHOW_ALERT
         bne     :+
         jmp     retry           ; TODO: Retry isn't offered???
 :       lda     #RenameDialogState::close
@@ -11694,7 +11694,7 @@ L97E4:  .byte   $00
 @retry: MLI_RELAY_CALL OPEN, open_src_dir_params
         beq     :+
         ldx     #kAlertOptionsTryAgainCancel
-        jsr     JT_SHOW_ALERT
+        jsr     JT_SHOW_ALERT_OPTIONS
         beq     @retry
         jmp     close_files_cancel_dialog
 
@@ -11705,7 +11705,7 @@ L97E4:  .byte   $00
 @retry2:MLI_RELAY_CALL READ, read_src_dir_header_params
         beq     :+
         ldx     #kAlertOptionsTryAgainCancel
-        jsr     JT_SHOW_ALERT
+        jsr     JT_SHOW_ALERT_OPTIONS
         beq     @retry2
         jmp     close_files_cancel_dialog
 
@@ -11718,7 +11718,7 @@ L97E4:  .byte   $00
 @retry: MLI_RELAY_CALL CLOSE, close_src_dir_params
         beq     :+
         ldx     #kAlertOptionsTryAgainCancel
-        jsr     JT_SHOW_ALERT
+        jsr     JT_SHOW_ALERT_OPTIONS
         beq     @retry
         jmp     close_files_cancel_dialog
 
@@ -11734,7 +11734,7 @@ L97E4:  .byte   $00
         cmp     #ERR_END_OF_FILE
         beq     eof
         ldx     #kAlertOptionsTryAgainCancel
-        jsr     JT_SHOW_ALERT
+        jsr     JT_SHOW_ALERT_OPTIONS
         beq     @retry
         jmp     close_files_cancel_dialog
 
@@ -13399,7 +13399,7 @@ flag_clear:
         cmp     #ERR_PATH_NOT_FOUND
         beq     not_found
 
-        jsr     JT_SHOW_ALERT0
+        jsr     JT_SHOW_ALERT
         bne     LA4C2           ; cancel???
         rts
 
@@ -13410,7 +13410,7 @@ not_found:
         jmp     show
 
 :       lda     #kErrInsertSrcDisk
-show:   jsr     JT_SHOW_ALERT0
+show:   jsr     JT_SHOW_ALERT
         bne     LA4C2
         jmp     do_on_line
 
@@ -14420,7 +14420,7 @@ LAEC6:  jsr     prompt_input_loop
         cmp     #16             ; max filename length + 1
         bcc     LAEE1
 LAED6:  lda     #kErrNameTooLong
-        jsr     JT_SHOW_ALERT0
+        jsr     JT_SHOW_ALERT
         jsr     draw_filename_prompt
         jmp     LAEC6
 

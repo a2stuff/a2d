@@ -257,12 +257,12 @@ finish: copy    #1, path_buf2
 
 invalid:
         lda     #ERR_INVALID_PATHNAME
-        jsr     JUMP_TABLE_ALERT_0
+        jsr     JUMP_TABLE_SHOW_ALERT
 fail:   rts
 
 too_long:
         lda     #kErrNameTooLong
-        jsr     JUMP_TABLE_ALERT_0
+        jsr     JUMP_TABLE_SHOW_ALERT
         rts
 
 ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport

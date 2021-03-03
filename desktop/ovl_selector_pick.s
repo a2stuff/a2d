@@ -1331,7 +1331,7 @@ L9C69:  MLI_RELAY_CALL WRITE, write_params
         pha
         jsr     JUMP_TABLE_CLEAR_UPDATES
         pla
-        jsr     JUMP_TABLE_ALERT_0
+        jsr     JUMP_TABLE_SHOW_ALERT
         beq     L9C69
         jmp     L9C5F
 
@@ -1373,7 +1373,7 @@ L9CFF:  lda     open_params2::ref_num
         sta     write_params2::ref_num
 L9D05:  MLI_RELAY_CALL WRITE, write_params2
         beq     L9D18
-        jsr     JUMP_TABLE_ALERT_0
+        jsr     JUMP_TABLE_SHOW_ALERT
         beq     L9D05
         jmp     L9D21
 

@@ -56,7 +56,7 @@ prefix_path:    .res    kPathBufferSize, 0
 ;;; ============================================================
 
         ;; Early errors - show alert and return to DeskTop
-fail:   jsr JUMP_TABLE_ALERT_X
+fail:   jsr JUMP_TABLE_SHOW_ALERT
         rts
 
 start:
