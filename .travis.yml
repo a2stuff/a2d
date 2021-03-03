@@ -8,7 +8,7 @@ install:
   ca65 --version
 - git clone https://github.com/mach-kernel/cadius /tmp/cadius &&
   make -C /tmp/cadius &&
-  make -C /tmp/cadius install
+  sudo make -C /tmp/cadius install
 
 script:
 - bin/setlang en && make && make package
