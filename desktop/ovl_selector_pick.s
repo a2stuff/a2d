@@ -142,7 +142,7 @@ L9105:  lda     #$00
         jsr     L9390
         jsr     L9D22
         bpl     L911D
-        jmp     close_and_return
+        jmp     close_window
 
 L911D:  jsr     populate_entries_flag_table
 
@@ -189,7 +189,7 @@ L915D:  jsr     main::set_cursor_pointer
 
 L9174:  lda     selected_index
         jsr     maybe_toggle_entry_hilite
-        jsr     close_and_return
+        jsr     close_window
         lda     selected_index
         jsr     get_file_entry_addr
         stax    $06
@@ -255,7 +255,7 @@ L91EA:  dey                     ; map 0/1/2 to $00/$80/$C0
 L91F2:  sta     copy_when
         jsr     L9CBA
         bpl     L91FD
-        jmp     close_and_return
+        jmp     close_window
 
 L91FD:  lda     selected_index
         cmp     #$09
@@ -271,7 +271,7 @@ L91FD:  lda     selected_index
 L9215:  lda     selected_index
         jsr     L9A97
         beq     L9220
-        jmp     close_and_return
+        jmp     close_window
 
 L9220:  ldx     num_run_list_entries
         inc     num_run_list_entries
@@ -293,7 +293,7 @@ L923C:  lda     which_run_list
 L924D:  lda     selected_index
         jsr     L9A97
         beq     L9258
-        jmp     close_and_return
+        jmp     close_window
 
 L9258:  ldx     num_other_run_list_entries
         inc     num_other_run_list_entries
@@ -308,7 +308,7 @@ L926D:  ldy     copy_when
         jsr     L9A0A
         jsr     L9CEA
         beq     L927B
-        jmp     close_and_return
+        jmp     close_window
 
 L927B:  jsr     main::set_cursor_pointer
         jmp     L900F
@@ -389,10 +389,13 @@ L931B:  iny
         stx     buf_filename2
         lda     L938A
         sta     buf_win_path
+        jsr     close_window
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         jsr     JUMP_TABLE_LAUNCH_FILE
         jsr     main::set_cursor_pointer
         copy    #$FF, selected_index
-        jmp     close_and_return
+        return  #0
+
 
 L933F:  pha
         lda     selector_action
@@ -401,15 +404,13 @@ L933F:  pha
         lda     #$07
         jsr     JUMP_TABLE_RESTORE_OVL
         jsr     JUMP_TABLE_CLEAR_UPDATES
-:       MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
+:       jsr     close_window
         pla
         jmp     L900F
 
 ;;; ============================================================
 
-.proc close_and_return
+.proc close_window
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
