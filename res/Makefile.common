@@ -21,4 +21,3 @@ $(OUTDIR)/%.da: $(OUTDIR)/%.o ../res/asm.cfg
 # System Files .SYS
 $(OUTDIR)/%.SYS: $(OUTDIR)/%.o ../res/asm.cfg
 	ld65 $(LDFLAGS) -o '$@' $<
-	xattr -wx prodos.AuxType '00 20' $@
