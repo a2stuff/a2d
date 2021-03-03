@@ -797,7 +797,7 @@ entries_buffer := *
 
 
 kDAWindowID     = 63
-kDAWidth        = 460
+kDAWidth        = 465
 kDAHeight       = 151
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
@@ -1166,7 +1166,7 @@ ignore_char:
 move:   ldx     buf_left
 :       copy    buf_left,x, buf_right+1,x
         dex
-        bpl     :-
+        bne     :-
 
         ;; adjust lengths
         lda     buf_left
