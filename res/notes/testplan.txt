@@ -214,3 +214,5 @@
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a Selector entry with disk ejected). Verify that Escape key closes alert.
 * Launch Selector. Trigger an alert with only OK (e.g. running an entry with disk ejected). Verify that Escape key closes alert.
 * Launch DeskTop. Run Special > Disk Copy. Trigger an alert with only OK. Verify that Escape key closes alert.
+
+* Set up multiple volumes (e.g. V1, V2, V3). Launch DeskTop. Use Selector > Add an Entry... to add an entry on V3. Run Selector > Edit an Entry... and select the added entry to edit it, which should init the dialog showing V2. Click Change Drive. Verify that the picker now shows V3.

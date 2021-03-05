@@ -65,6 +65,7 @@ finish: jsr     file_dialog::L5F5B
         copy    #kGlyphInsertionPoint, path_buf2+1
         lda     #$FF
         sta     LD8EC
+        jsr     file_dialog::init_device_number
         jmp     file_dialog::event_loop
 
 buffer: .res 16, 0

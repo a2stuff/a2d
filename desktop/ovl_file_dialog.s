@@ -1245,6 +1245,29 @@ found:  param_call main::AdjustVolumeNameCase, on_line_buffer
 .endproc
 
 ;;; ============================================================
+;;; Init `device_number` (index) from the most recently accessed
+;;; device via ProDOS Global Page `DEVNUM`. Used when the dialog
+;;; is initialized with a specific path.
+
+.proc init_device_number
+        lda     DEVNUM
+        and     #$F0
+        sta     last
+
+        ldx     DEVCNT
+        inx
+:       dex
+        lda     DEVLST,x
+        and     #$F0
+        cmp     last
+        bne     :-
+        stx     device_num
+        rts
+
+last:   .byte   0
+.endproc
+
+;;; ============================================================
 
 .proc L5ECB
         lda     #$00
