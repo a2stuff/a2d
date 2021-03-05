@@ -164,7 +164,7 @@ datelo: .byte   0
 datehi: .byte   0
 
 ;;; Originally Feb 26, 1985 (the author date?); now updated by build.
-day:    .byte   2
+day:    .byte   4
 month:  .byte   3
 year:   .byte   21
 
