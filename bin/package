@@ -67,6 +67,7 @@ fi
 perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
 add_file $IMGFILE_COMPLETE "res/package/READ.ME" "/$VOLNAME_COMPLETE" "Read.Me" 040000
 add_file $IMGFILE_PART1 "res/package/READ.ME" "/$VOLNAME_PART1" "Read.Me" 040000
+perl -p -i -e 's/\r/\n/g' "res/package/READ.ME" # Restore Unix line endings
 
 add_file $IMGFILE_COMPLETE "desktop.system/out/desktop.system.SYS" "/$VOLNAME_COMPLETE" "DeskTop.system" FF0000
 add_file $IMGFILE_PART1 "desktop.system/out/desktop.system.SYS" "/$VOLNAME_PART1" "DeskTop.system" FF0000

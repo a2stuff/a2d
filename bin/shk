@@ -31,6 +31,8 @@ cecho yellow "Copying files..."
 
 perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
 add_file "res/package/READ.ME" "READ.ME" 040000
+perl -p -i -e 's/\r/\n/g' "res/package/READ.ME" # Restore Unix line endings
+
 
 add_file "desktop.system/out/desktop.system.SYS" "DESKTOP.SYSTEM" FF0000
 add_file "desktop/out/desktop.built" "DESKTOP2" F10000

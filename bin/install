@@ -51,6 +51,7 @@ suppress cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet --no-case-bi
 
 perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
 add_file "$INSTALL_IMG" "res/package/READ.ME" "$INSTALL_PATH" "Read.Me" 040000
+perl -p -i -e 's/\r/\n/g' "res/package/READ.ME" # Restore Unix line endings
 
 add_file "$INSTALL_IMG" "desktop.system/out/desktop.system.SYS" "$INSTALL_PATH" "DeskTop.system" FF0000
 add_file "$INSTALL_IMG" "desktop/out/desktop.built" "$INSTALL_PATH" "DeskTop2" F10000
