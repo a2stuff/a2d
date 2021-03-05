@@ -51,7 +51,7 @@ routine_table:  .addr   $7000, $7000, $7000
         tsx
         stx     stash_stack
         pha
-        lda     #0
+        lda     DEVCNT
         sta     device_num
         sta     L50A8
         sta     prompt_ip_flag
@@ -649,7 +649,7 @@ l2:     .byte   0
 .proc change_drive
         lda     #$FF
         sta     selected_index
-        jsr     inc_device_num
+        jsr     dec_device_num
         jsr     device_on_line
         jsr     L5F5B
         jsr     update_scrollbar
@@ -1215,11 +1215,7 @@ draw_change_drive_button_label:
 ;;; ============================================================
 
 .proc device_on_line
-        ;; Reverse order, so boot volume is first
-retry:  lda     DEVCNT
-        sec
-        sbc     device_num
-        tax
+retry:  ldx     device_num
         lda     DEVLST,x
 
         and     #$F0
@@ -1229,7 +1225,7 @@ retry:  lda     DEVCNT
         and     #NAME_LENGTH_MASK
         sta     on_line_buffer
         bne     found
-        jsr     inc_device_num
+        jsr     dec_device_num
         jmp     retry
 
 found:  param_call main::AdjustVolumeNameCase, on_line_buffer
@@ -1241,14 +1237,10 @@ found:  param_call main::AdjustVolumeNameCase, on_line_buffer
 
 ;;; ============================================================
 
-.proc inc_device_num
-        inc     device_num
-        lda     device_num
-        cmp     DEVCNT
-        beq     :+
-        bcc     :+
-        lda     #0
-        sta     device_num
+.proc dec_device_num
+        dec     device_num
+        bpl     :+
+        copy    DEVCNT, device_num
 :       rts
 .endproc
 

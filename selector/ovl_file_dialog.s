@@ -432,7 +432,7 @@ start:  jsr     open_window
         DEFINE_CLOSE_PARAMS close_params
 
 buf_on_line:  .res    16, 0
-device_index:  .byte   0        ; current drive, index in DEVLST
+device_num:     .byte   0       ; current drive, index in DEVLST
 path_buf:  .res    128, 0
 LA447:  .byte   0
 LA448:  .byte   0
@@ -445,8 +445,8 @@ saved_stack:
 init:   tsx
         stx     saved_stack
         jsr     set_cursor_pointer
-        lda     #$00
-        sta     device_index
+        lda     DEVCNT
+        sta     device_num
         sta     LA447
         sta     prompt_ip_flag
         sta     LA211
@@ -1030,7 +1030,7 @@ l1:     .byte   0
 .proc change_drive
         lda     #$FF
         sta     selected_index
-        jsr     inc_device_num
+        jsr     dec_device_num
         jsr     device_on_line
         jsr     LB118
         jsr     update_scrollbar
@@ -1792,11 +1792,7 @@ l1:     .byte   0
 ;;; ============================================================
 
 .proc device_on_line
-        ;; Reverse order, so boot volume is first
-retry:  lda     DEVCNT
-        sec
-        sbc     device_index
-        tax
+retry:  ldx     device_num
         lda     DEVLST,x
 
         and     #$F0
@@ -1806,7 +1802,7 @@ retry:  lda     DEVCNT
         and     #NAME_LENGTH_MASK
         sta     buf_on_line
         bne     found
-        jsr     inc_device_num
+        jsr     dec_device_num
         jmp     retry
 
 found:  param_call AdjustVolumeNameCase, buf_on_line
@@ -1818,14 +1814,10 @@ found:  param_call AdjustVolumeNameCase, buf_on_line
 
 ;;; ============================================================
 
-.proc inc_device_num
-        inc     device_index
-        lda     device_index
-        cmp     DEVCNT
-        beq     :+
-        bcc     :+
-        lda     #0
-        sta     device_index
+.proc dec_device_num
+        dec     device_num
+        bpl     :+
+        copy    DEVCNT, device_num
 :       rts
 .endproc
 
