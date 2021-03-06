@@ -27,9 +27,9 @@ fi
 # Update build date string
 perl -pni -e "s/define kBuildDate .*/define kBuildDate \"$date\"/" config.inc
 
-# Update default date in Date DA
-perl -pni -e 's/^(day:   \s+ \.byte \s+) \d+ /${1}'"$dd"'/x' desk.acc/date.s
-perl -pni -e 's/^(month: \s+ \.byte \s+) \d+ /${1}'"$mm"'/x' desk.acc/date.s
-perl -pni -e 's/^(year:  \s+ \.byte \s+) \d+ /${1}'"$yy"'/x' desk.acc/date.s
+# Update default date
+perl -pni -e 's/^(kBuildYY \s+ = \s+) \d+ /${1}'"$yy"'/x' config.inc
+perl -pni -e 's/^(kBuildMM \s+ = \s+) \d+ /${1}'"$mm"'/x' config.inc
+perl -pni -e 's/^(kBuildDD \s+ = \s+) \d+ /${1}'"$dd"'/x' config.inc
 
 echo Set date to: $(echo "$date" | bin/transcode.pl from $lang)
