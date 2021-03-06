@@ -11,10 +11,10 @@ test $# -eq 1 || (echo "Usage: $0 LANG"; exit 1)
 
 lang=$1
 
-yyyy=$(expr `date +%Y`)
-yy=$(expr `date +%y`)
-mm=$(expr `date +%m`)
-dd=$(expr `date +%d`)
+yyyy=$(expr `date +%Y` + 0)
+yy=$(expr `date +%y` + 0)
+mm=$(expr `date +%m` + 0)
+dd=$(expr `date +%d` + 0)
 
 month=$(grep "res_string_month_name_${mm}" "desktop/main.res.${lang}" | cut -d'"' -f2)
 
