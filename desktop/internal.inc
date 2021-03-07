@@ -5,7 +5,7 @@
         RESOURCE_FILE "internal.res"
 
 kDAFileType     = $F1
-kDAFileAuxType  = $640           ; High bit set = don't show in Apple menu
+kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu
 
 .enum IconType
         generic

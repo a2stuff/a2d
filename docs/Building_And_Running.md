@@ -87,15 +87,15 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
        SELECTOR           $F1   $0000     (Optional)
        DESKTOP2           $F1   $0000
        DESK.ACC/          DIR
-         CALCULATOR       $F1   $0640
-         EYES             $F1   $0640
-         CONTROL.PANELS/  $F1   $0640
-           DATE           $F1   $0640
-           SYSTEM.SPEED   $F1   $0640
+         CALCULATOR       $F1   $0641
+         EYES             $F1   $0641
+         CONTROL.PANELS/  $F1   $0641
+           DATE           $F1   $0641
+           SYSTEM.SPEED   $F1   $0641
            ...
          ...
        PREVIEW/           DIR
-         SHOW.FONT.FILE   $F1   $0640
-         SHOW.IMAGE.FILE  $F1   $0640
+         SHOW.FONT.FILE   $F1   $0641
+         SHOW.IMAGE.FILE  $F1   $0641
          ...
 ```

@@ -1370,7 +1370,7 @@ icontype_table:
         DEFINE_ICTRECORD $F0, $B0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs System   $Bx
         DEFINE_ICTRECORD $F0, $C0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs Graphics $Cx
 
-        ;; Desk Accessories/Applets $F1/$0640 and $F1/$8640
+        ;; Desk Accessories/Applets $F1/$0641 and $F1/$8641
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType, 0, IconType::desk_accessory
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType|$8000, 0, IconType::desk_accessory
         .byte   0               ; Sentinel - done!

@@ -74,7 +74,7 @@ for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
     IFS=',' read -ra array <<< "$line"
     file="${array[0]}"
     path="${array[1]}"
-    add_file "$INSTALL_IMG" "desk.acc/out/$file.da" "$INSTALL_PATH/$path" $file F10640
+    add_file "$INSTALL_IMG" "desk.acc/out/$file.da" "$INSTALL_PATH/$path" $file F10641
 done
 
 rmdir "$PACKDIR"

@@ -89,8 +89,8 @@ for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
     IFS=',' read -ra array <<< "$line"
     file="${array[0]}"
     path="${array[1]}"
-    add_file "$IMGFILE_COMPLETE" "desk.acc/out/$file.da" "/$VOLNAME_COMPLETE/$path" $file F10640
-    add_file "$IMGFILE_PART2" "desk.acc/out/$file.da" "/$VOLNAME_PART2/$path" $file F10640
+    add_file "$IMGFILE_COMPLETE" "desk.acc/out/$file.da" "/$VOLNAME_COMPLETE/$path" $file F10641
+    add_file "$IMGFILE_PART2" "desk.acc/out/$file.da" "/$VOLNAME_PART2/$path" $file F10641
 done
 
 # Add BASIC.SYSTEM, if present in res/package
