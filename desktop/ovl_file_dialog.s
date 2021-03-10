@@ -952,19 +952,13 @@ l3:     ldx     num_file_names
 ;;; ============================================================
 
 check_alpha:
-        cmp     #'A'            ; upper alpha?
-        bcs     :+
-done:   rts
-
-:       cmp     #'Z'+1
-        bcc     alpha
-        cmp     #'a'            ; Lower alpha?
+        jsr     upcase_char
+        cmp     #'A'
         bcc     done
-        cmp     #'z'+1
+        cmp     #'Z'+1
         bcs     done
-        and     #(CASE_MASK & $7F) ; convert lowercase to uppercase
 
-alpha:  jsr     L5B9D
+        jsr     L5B9D
         bmi     done
         cmp     selected_index
         beq     done
@@ -976,6 +970,7 @@ alpha:  jsr     L5B9D
 L5B99:  pla
         jmp     update_list_selection
 
+done:   rts
 
 .proc L5B9D
         sta     L5BF5
@@ -1026,6 +1021,17 @@ L5BC7:  return  L5BF3
 L5BF3:  .byte   0
 L5BF4:  .byte   0
 L5BF5:  .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc upcase_char
+        cmp     #'a'
+        bcc     done
+        cmp     #'z'+1
+        bcs     done
+        and     #(CASE_MASK & $7F) ; convert lowercase to uppercase
+done:   rts
 .endproc
 
 ;;; ============================================================
@@ -1711,13 +1717,14 @@ loop2:  lda     inner_index     ; inner loop
 
         ldy     #1
 l3:     lda     ($06),y
+        jsr     upcase_char
         cmp     name_buf,y
         beq     :+
         bcs     next_inner
         jmp     l5
 
 :       iny
-        cpy     #$10
+        cpy     #16
         bne     l3
         jmp     next_inner
 
@@ -1732,6 +1739,7 @@ l5:     lda     inner_index
 
         ldy     name_buf
 :       lda     ($06),y
+        jsr     upcase_char
         sta     name_buf,y
         dey
         bne     :-
