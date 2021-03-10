@@ -1688,7 +1688,7 @@ l1:     .byte   0
 .proc sort_file_names
         lda     #$7F            ; beyond last possible name char
         ldx     #15
-:       sta     name_buf,x
+:       sta     name_buf+1,x
         dex
         bpl     :-
 
@@ -1696,22 +1696,22 @@ l1:     .byte   0
         sta     outer_index
         sta     inner_index
 
-loop:   lda     outer_index             ; outer loop
+loop:   lda     outer_index     ; outer loop
         cmp     num_file_names
         bne     loop2
         jmp     finish
 
-loop2:  lda     inner_index             ; inner loop
+loop2:  lda     inner_index     ; inner loop
         jsr     calc_entry_ptr
         ldy     #0
         lda     ($06),y
         bmi     next_inner
         and     #$0F
-        sta     inner_name_len
+        sta     name_buf        ; length
 
         ldy     #1
 l3:     lda     ($06),y
-        cmp     inner_name_len,y
+        cmp     name_buf,y
         beq     :+
         bcs     next_inner
         jmp     l5
@@ -1726,13 +1726,13 @@ l5:     lda     inner_index
 
         ldx     #15
         lda     #' '            ; before first possible name char
-:       sta     name_buf,x
+:       sta     name_buf+1,x
         dex
         bpl     :-
 
-        ldy     inner_name_len
+        ldy     name_buf
 :       lda     ($06),y
-        sta     inner_name_len,y
+        sta     name_buf,y
         dey
         bne     :-
 
@@ -1752,7 +1752,7 @@ next_inner:
 
         lda     #$7F            ; beyond last possible name char
         ldx     #15
-:       sta     name_buf,x
+:       sta     name_buf+1,x
         dex
         bpl     :-
 
@@ -1806,10 +1806,8 @@ inner_index:
 outer_index:
         .byte   0
 l19:    .byte   0
-inner_name_len:
-        .byte   0
 name_buf:
-        .res 16, 0
+        .res 17, 0
 
 l22:    .res 127, 0
 
