@@ -443,6 +443,7 @@ loop:
         lda     KBD
         cmp     #(CHAR_ESCAPE | $80)
         bne     :+
+        bit     KBDSTRB
         jsr     auxlc::flash_escape_message
         jmp     error
 :

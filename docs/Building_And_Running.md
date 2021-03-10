@@ -89,7 +89,7 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
        DESK.ACC/          DIR
          CALCULATOR       $F1   $0641
          EYES             $F1   $0641
-         CONTROL.PANELS/  $F1   $0641
+         CONTROL.PANELS/  DIR
            DATE           $F1   $0641
            SYSTEM.SPEED   $F1   $0641
            ...
