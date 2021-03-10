@@ -1688,83 +1688,90 @@ l1:     .byte   0
 .proc sort_file_names
         lda     #$7F            ; beyond last possible name char
         ldx     #15
-:       sta     l21,x
+:       sta     name_buf,x
         dex
         bpl     :-
 
-        lda     #$00
-        sta     l18
-        sta     l17
-l1:     lda     l18
-        cmp     num_file_names
-        bne     l2
-        jmp     l10
+        lda     #0
+        sta     outer_index
+        sta     inner_index
 
-l2:     lda     l17
-        jsr     L6451
-        ldy     #$00
+loop:   lda     outer_index             ; outer loop
+        cmp     num_file_names
+        bne     loop2
+        jmp     finish
+
+loop2:  lda     inner_index             ; inner loop
+        jsr     calc_entry_ptr
+        ldy     #0
         lda     ($06),y
-        bmi     l8
+        bmi     next_inner
         and     #$0F
-        sta     l20
-        ldy     #$01
+        sta     inner_name_len
+
+        ldy     #1
 l3:     lda     ($06),y
-        cmp     l20,y
-        beq     l4
-        bcs     l8           ; ???
+        cmp     inner_name_len,y
+        beq     :+
+        bcs     next_inner
         jmp     l5
 
-l4:     iny
+:       iny
         cpy     #$10
         bne     l3
-        jmp     l8
+        jmp     next_inner
 
-l5:     lda     l17
+l5:     lda     inner_index
         sta     l19
-        ldx     #$0F
-        lda     #' '
-l6:     sta     l21,x
-        dex
-        bpl     l6
-        ldy     l20
-l7:     lda     ($06),y
-        sta     l20,y
-        dey
-        bne     l7
-l8:     inc     l17
-        lda     l17
-        cmp     num_file_names
-        beq     l9
-        jmp     l2
 
-l9:     lda     l19
-        jsr     L6451
-        ldy     #$00
+        ldx     #15
+        lda     #' '            ; before first possible name char
+:       sta     name_buf,x
+        dex
+        bpl     :-
+
+        ldy     inner_name_len
+:       lda     ($06),y
+        sta     inner_name_len,y
+        dey
+        bne     :-
+
+next_inner:
+        inc     inner_index
+        lda     inner_index
+        cmp     num_file_names
+        beq     :+
+        jmp     loop2
+
+:       lda     l19
+        jsr     calc_entry_ptr
+        ldy     #0              ; mark as done
         lda     ($06),y
         ora     #$80
         sta     ($06),y
 
         lda     #$7F            ; beyond last possible name char
         ldx     #15
-:       sta     l21,x
+:       sta     name_buf,x
         dex
         bpl     :-
 
-        ldx     l18
+        ldx     outer_index
         lda     l19
         sta     l22,x
-        lda     #$00
-        sta     l17
-        inc     l18
-        jmp     l1
+        lda     #0
+        sta     inner_index
+        inc     outer_index
+        jmp     loop
 
-l10:    ldx     num_file_names
+        ;; Finish up
+finish: ldx     num_file_names
         dex
-        stx     l18
-l11:    lda     l18
+        stx     outer_index
+l11:    lda     outer_index
         bpl     l16
         ldx     num_file_names
-        beq     l15
+        beq     done
         dex
 l12:    lda     l22,x
         tay
@@ -1775,33 +1782,40 @@ l12:    lda     l22,x
         sta     l22,x
 l13:    dex
         bpl     l12
+
         ldx     num_file_names
-        beq     l15
+        beq     done
         dex
-l14:    lda     l22,x
+:       lda     l22,x
         sta     file_list_index,x
         dex
-        bpl     l14
-l15:    rts
+        bpl     :-
 
-l16:    jsr     L6451
-        ldy     #$00
+done:   rts
+
+l16:    jsr     calc_entry_ptr
+        ldy     #0
         lda     ($06),y
         and     #$7F
         sta     ($06),y
-        dec     l18
+        dec     outer_index
         jmp     l11
 
-l17:    .byte   0
-l18:    .byte   0
+inner_index:
+        .byte   0
+outer_index:
+        .byte   0
 l19:    .byte   0
-l20:    .byte   0
-l21:    .res 16, 0
+inner_name_len:
+        .byte   0
+name_buf:
+        .res 16, 0
+
 l22:    .res 127, 0
 
 ;;; --------------------------------------------------
 
-.proc L6451
+.proc calc_entry_ptr
         ptr := $06
 
         ldx     #<file_names
@@ -1809,24 +1823,24 @@ l22:    .res 127, 0
         ldx     #>file_names
         stx     ptr+1
         ldx     #$00
-        stx     l1
+        stx     tmp
         asl     a
-        rol     l1
+        rol     tmp
         asl     a
-        rol     l1
+        rol     tmp
         asl     a
-        rol     l1
+        rol     tmp
         asl     a
-        rol     l1
+        rol     tmp
         clc
         adc     ptr
         sta     ptr
-        lda     l1
+        lda     tmp
         adc     ptr+1
         sta     ptr+1
         rts
 
-l1:     .byte   0
+tmp:     .byte   0
 .endproc
 .endproc
 
