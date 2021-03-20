@@ -182,7 +182,7 @@ L0A0E:  jsr     main::prompt_input_loop
 
 L0A18:  bit     selected_device_index
         bmi     L0A0E
-        copy16  #$A898, main::jump_relay+1
+        copy16  #main::rts1, main::jump_relay+1
         lda     winfo_prompt_dialog
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
