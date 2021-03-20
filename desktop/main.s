@@ -2155,6 +2155,7 @@ done:   rts
 ;;; ============================================================
 
 .proc cmd_disk_copy
+        jsr     save_windows
         lda     #kDynamicRoutineDiskCopy
         jsr     load_dynamic_routine
         bmi     fail
