@@ -464,16 +464,16 @@ L938F:  .byte   0
         jsr     L94BA
         lda     selector_action
         cmp     #SelectorAction::edit
-        bne     L9417
+        bne     :+
         param_call draw_title_centered, label_edit
         rts
 
-L9417:  cmp     #$03
-        bne     L9423
+:       cmp     #SelectorAction::delete
+        bne     :+
         param_call draw_title_centered, label_del
         rts
 
-L9423:  param_call draw_title_centered, label_run
+:       param_call draw_title_centered, label_run
         rts
 .endproc
 
