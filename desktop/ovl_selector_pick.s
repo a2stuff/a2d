@@ -56,13 +56,13 @@ L9052:  lda     #$00
         sta     path_buf1
         ldy     #$03
         lda     #$02
-        jsr     common_overlay_L5000
+        jsr     file_dialog_L5000
         pha
         txa
         pha
         tya
         pha
-        lda     #$07
+        lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
         jsr     JUMP_TABLE_CLEAR_UPDATES
         pla
@@ -234,13 +234,13 @@ l3:     clc
         adc     #$01
         tay
         lda     #$02
-        jsr     common_overlay_L5000
+        jsr     file_dialog_L5000
         pha
         txa
         pha
         tya
         pha
-        lda     #$07
+        lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
         jsr     JUMP_TABLE_CLEAR_UPDATES
         pla
@@ -418,7 +418,7 @@ l10:    iny
         lda     selector_action
         cmp     #SelectorAction::edit
         bne     :+
-        lda     #$07
+        lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
         jsr     JUMP_TABLE_CLEAR_UPDATES
 :       jsr     close_window
