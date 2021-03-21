@@ -147,17 +147,19 @@ L9105:  lda     #$00
 L911D:  jsr     populate_entries_flag_table
 
 dialog_loop:
-        jsr     event_loop           ; Run the dialog?
-        bmi     dialog_loop
-        beq     :+
-        jmp     L933F
+        jsr     event_loop
+        bmi     dialog_loop     ; N set = nothing selected, re-enter loop
 
+        beq     :+              ; Z set = OK selected
+        jmp     do_cancel
+
+        ;; Which action are we?
 :       lda     selected_index
         bmi     dialog_loop
         lda     selector_action
         cmp     #SelectorAction::edit
         bne     :+
-        jmp     L9174
+        jmp     do_edit
 
 :       cmp     #SelectorAction::delete
         bne     :+
@@ -165,7 +167,7 @@ dialog_loop:
 
 :       cmp     #SelectorAction::run
         bne     dialog_loop
-        jmp     L9282
+        jmp     do_run
 
 ;;; ============================================================
 
@@ -175,19 +177,23 @@ do_delete:
         jsr     main::set_cursor_watch
         lda     selected_index
         jsr     L9A97
-        beq     L915D
+        beq     :+
         jsr     main::set_cursor_pointer
-        jmp     L933F
+        jmp     do_cancel
 
-L915D:  jsr     main::set_cursor_pointer
+:       jsr     main::set_cursor_pointer
         copy    #$FF, selected_index
         jsr     L99F5
         jsr     L9D28
         jsr     populate_entries_flag_table
         inc     L938F
+
         jmp     dialog_loop
 
-L9174:  lda     selected_index
+;;; ============================================================
+
+do_edit:
+        lda     selected_index
         jsr     maybe_toggle_entry_hilite
         jsr     close_window
         lda     selected_index
@@ -314,7 +320,11 @@ L927B:  jsr     main::set_cursor_pointer
         jmp     L900F
 
 L9281:  .byte   0
-L9282:  lda     selected_index
+
+;;; ============================================================
+
+do_run:
+        lda     selected_index
         jsr     maybe_toggle_entry_hilite
         jsr     main::set_cursor_watch
         lda     selected_index
@@ -343,7 +353,7 @@ L92C1:  lda     ($06),y
         dey
         bpl     L92C1
         lda     #$FF
-        jmp     L933F
+        jmp     do_cancel
 
 L92CE:  lda     selected_index
         jsr     L9E61
@@ -397,7 +407,8 @@ L931B:  iny
         return  #0
 
 
-L933F:  pha
+do_cancel:
+        pha
         lda     selector_action
         cmp     #SelectorAction::edit
         bne     :+
@@ -576,6 +587,10 @@ L94D4:  lda     ($06),y
 .endproc
 
 ;;; ============================================================
+;;; When returning from event loop:
+;;; N = nothing selected, re-enter loop
+;;; Z = OK selected
+;;; Otherwise: Cancel selected
 
 event_loop:
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -612,23 +627,23 @@ handle_button:
         cmp     #MGTK::inrect_inside
         bne     not_ok
         param_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_ok_rect
-        bmi     :+
-        lda     #$00
+        bmi     :+              ; nothing selected, re-enter loop
+        lda     #$00            ; OK selected
 :       rts
 
 not_ok: MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
         cmp     #MGTK::inrect_inside
         bne     not_cancel
         param_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_cancel_rect
-        bmi     :+
-        lda     #$01
+        bmi     :+              ; nothing selected, re-enter loop
+        lda     #$01            ; Cancel selected
 :       rts
 
 not_cancel:
         sub16   screentowindow_windowx, #10, screentowindow_windowx
         sub16   screentowindow_windowy, #25, screentowindow_windowy
         bpl     :+
-        return  #$FF
+        return  #$FF            ; nothing selected, re-enter loop
 
         ;; Determine column
 :       cmp16   screentowindow_windowx, #110
@@ -650,7 +665,7 @@ L9738:  pha
         cmp     #8
         bcc     :+
         pla
-        return  #$FF
+        return  #$FF            ; nothing selected, re-enter loop
 
 :       pla
         asl     a
@@ -684,7 +699,7 @@ L9782:  sec
 
 L9790:  lda     selected_index
         jsr     maybe_toggle_entry_hilite
-        copy    #$FF, selected_index
+        copy    #$FF, selected_index ; nothing selected, re-enter loop
         rts
 
 new_selection:
