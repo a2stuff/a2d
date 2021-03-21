@@ -763,7 +763,7 @@ copied_flag:                    ; set to dst_path's length, or reset
         DEFINE_CREATE_PARAMS create_dt_dir_params, dst_path, ACCESS_DEFAULT, FT_DIRECTORY, 0, ST_LINKED_DIRECTORY
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, src_path
 
-kNumFilenames = 10
+kNumFilenames = 9
 
         ;; Files/Directories to copy
 str_f1: PASCAL_STRING kFilenameLauncher
@@ -772,19 +772,20 @@ str_f3: PASCAL_STRING kFilenameDADir
 str_f4: PASCAL_STRING kFilenamePreviewDir
 str_f5: PASCAL_STRING kFilenameSelectorList
 str_f6: PASCAL_STRING kFilenameSelector
-str_f7: PASCAL_STRING "PRODOS"         ; do not localize
-str_f8: PASCAL_STRING kFilenameQuitSave
-str_f9: PASCAL_STRING kFilenameDeskTopConfig
-str_f10:PASCAL_STRING kFilenameDeskTopState
+str_f7: PASCAL_STRING kFilenameQuitSave
+str_f8: PASCAL_STRING kFilenameDeskTopConfig
+str_f9: PASCAL_STRING kFilenameDeskTopState
 
 filename_table:
-        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8,str_f9,str_f10
+        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8,str_f9
         ASSERT_ADDRESS_TABLE_SIZE filename_table, kNumFilenames
 
         kVtabCopyingMsg = 12
 str_copying_to_ramcard:
         PASCAL_STRING .sprintf(res_string_copying_to_ramcard, kDeskTopProductName)
 
+        ;; String contains four control characters to toggle MouseText charset
+        kLengthCopyingTip = .strlen(res_string_label_tip_skip_copying) - 4
         kVtabCopyingTip = 23
 str_tip_skip_copying:
         PASCAL_STRING res_string_label_tip_skip_copying
@@ -1086,7 +1087,8 @@ file_loop:
         jsr     copy_orig_prefix_to_desktop_orig_prefix
 
         lda     #0
-        sta     RAMWORKS_BANK   ; Just in case?
+        sta     RAMWORKS_BANK   ; Just in case???
+
         ldy     #BITMAP_SIZE-1
 :       sta     BITMAP,y
         dey
@@ -1289,12 +1291,7 @@ done:   dex
         bne     :-
 
         ;; Center string
-        lda     #80
-        sec
-        sbc     str_tip_skip_copying
-        clc
-        adc     #4              ; 4 control characters (for MouseText)
-        lsr     a               ; / 2 to center
+        lda     #(80 - kLengthCopyingTip) / 2
         sta     CH
         lda     #kVtabCopyingTip
         jsr     VTABZ
