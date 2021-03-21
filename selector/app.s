@@ -500,7 +500,7 @@ check_key:
         lda     (entry_ptr),y
         cmp     #kSelectorEntryCopyNever
         beq     :+
-        jsr     get_copied_to_ramcard_flag
+        jsr     GetCopiedToRAMCardFlag
         beq     done_keys
         jsr     get_selected_index_file_info
         beq     :+
@@ -1862,7 +1862,7 @@ try:    lda     L9129
         bpl     L9C2A
         jmp     L9C78
 
-L9C2A:  jsr     get_copied_to_ramcard_flag
+L9C2A:  jsr     GetCopiedToRAMCardFlag
         bne     L9C32
         jmp     L9C78
 
@@ -2141,7 +2141,10 @@ str_basic_system:
 
 ;;; ============================================================
 
-.proc get_copied_to_ramcard_flag
+;;; NOTE: Can't use "../lib/ramcard.s" since the calling code is
+;;; not running w/ AUXZP and LCBANK1.
+
+.proc GetCopiedToRAMCardFlag
         lda     LCBANK2
         lda     LCBANK2
         lda     COPIED_TO_RAMCARD_FLAG
@@ -2151,7 +2154,7 @@ str_basic_system:
         rts
 .endproc
 
-.proc copy_ramcard_prefix
+.proc CopyRAMCardPrefix
         stax    @addr
         lda     LCBANK2
         lda     LCBANK2
@@ -2171,7 +2174,7 @@ str_basic_system:
         buf := $800
 
         sta     tmp
-        param_call copy_ramcard_prefix, buf
+        param_call CopyRAMCardPrefix, buf
         lda     tmp
         jsr     get_selector_list_path_addr
 

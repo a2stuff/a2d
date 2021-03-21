@@ -1861,11 +1861,11 @@ write_buffer:
         jsr     do_write
 
         ;; Write to the original file location, if necessary
-        jsr     get_copied_to_ramcard_flag
+        jsr     GetCopiedToRAMCardFlag
         beq     done
         ldax    #filename_buffer
         stax    open_params::pathname
-        jsr     copy_desktop_orig_prefix
+        jsr     CopyDeskTopOriginalPrefix
         jsr     append_filename
         jsr     do_write
 
@@ -1911,59 +1911,7 @@ done:   rts
 
 ;;; ============================================================
 
-.proc get_copied_to_ramcard_flag
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-        lda     COPIED_TO_RAMCARD_FLAG
-        tax
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
-        rts
-.endproc
-
-.proc copy_ramcard_prefix
-        stax    @addr
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-
-        ldx     RAMCARD_PREFIX
-:       lda     RAMCARD_PREFIX,x
-        @addr := *+1
-        sta     SELF_MODIFIED,x
-        dex
-        bpl     :-
-
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
-.endproc
-
-.proc copy_desktop_orig_prefix
-        stax    @addr
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-
-        ldx     DESKTOP_ORIG_PREFIX
-:       lda     DESKTOP_ORIG_PREFIX,x
-        @addr := *+1
-        sta     SELF_MODIFIED,x
-        dex
-        bpl     :-
-
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
-.endproc
-
-;;; ============================================================
-
+        .include "../lib/ramcard.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================

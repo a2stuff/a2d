@@ -33,7 +33,7 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
         sta     num_selector_list_items
         lda     #$00
         sta     LD344
-        jsr     get_copied_to_ramcard_flag
+        jsr     GetCopiedToRAMCardFlag
         cmp     #$80
         bne     L9015
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -339,7 +339,7 @@ flags:  .byte   0
         cmp     #kSelectorEntryCopyNever
         beq     l5
         sta     L938A
-        jsr     get_copied_to_ramcard_flag
+        jsr     GetCopiedToRAMCardFlag
         beq     l5
         lda     L938A
         beq     l2
@@ -1437,7 +1437,7 @@ filename_buffer := $1C00
         DEFINE_CLOSE_PARAMS flush_close_params
 
 .proc write_file_to_original_prefix
-        param_call copy_desktop_orig_prefix, filename_buffer
+        param_call CopyDeskTopOriginalPrefix, filename_buffer
         inc     filename_buffer ; Append '/' separator
         ldx     filename_buffer
         lda     #'/'
@@ -1667,56 +1667,7 @@ params: .addr   0
 
 ;;; ============================================================
 
-.proc get_copied_to_ramcard_flag
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-        lda     COPIED_TO_RAMCARD_FLAG
-        tax
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
-        rts
-.endproc
-
-.proc copy_ramcard_prefix
-        stax    @addr
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-
-        ldx     RAMCARD_PREFIX
-:       lda     RAMCARD_PREFIX,x
-        @addr := *+1
-        sta     SELF_MODIFIED,x
-        dex
-        bpl     :-
-
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
-.endproc
-
-.proc copy_desktop_orig_prefix
-        stax    @addr
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-
-        ldx     DESKTOP_ORIG_PREFIX
-:       lda     DESKTOP_ORIG_PREFIX,x
-        @addr := *+1
-        sta     SELF_MODIFIED,x
-        dex
-        bpl     :-
-
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
-.endproc
+        .include "../lib/ramcard.s"
 
 ;;; ============================================================
 ;;; Populate `get_file_info_params` with the info for the entry
@@ -1744,7 +1695,7 @@ params: .addr   0
         ptr := $06
 
         sta     index
-        param_call copy_ramcard_prefix, buf
+        param_call CopyRAMCardPrefix, buf
         lda     index
         jsr     get_file_path_addr
         stax    ptr

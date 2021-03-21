@@ -106,12 +106,12 @@ quit:   MLI_CALL QUIT, quit_params
 
 .proc check_basic_system
         ;; Was DeskTop copied to a RAM Card?
-        jsr     get_copied_to_ramcard_flag
+        jsr     GetCopiedToRAMCardFlag
         bpl     get_current_prefix ; nope
 
         ;; Use original location, since BASIC.SYSTEM was unlikely
         ;; to be copied.
-        param_call copy_desktop_orig_prefix, bs_path
+        param_call CopyDeskTopOriginalPrefix, bs_path
         jmp     got_prefix
 
 get_current_prefix:
@@ -190,7 +190,9 @@ fail:   return  #1
 
 ;;; ============================================================
 
-.proc get_copied_to_ramcard_flag
+;;; TODO: Use "../lib/ramcard.s"
+
+.proc GetCopiedToRAMCardFlag
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
@@ -203,7 +205,7 @@ fail:   return  #1
         rts
 .endproc
 
-.proc copy_desktop_orig_prefix
+.proc CopyDeskTopOriginalPrefix
         stax    @destptr
         sta     ALTZPOFF
         lda     LCBANK2

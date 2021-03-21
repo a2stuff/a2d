@@ -1243,7 +1243,7 @@ filerecords_free_start:
         bpl     done
         jsr     make_ramcard_prefixed_path
         jsr     strip_path_segments
-        jsr     get_copied_to_ramcard_flag
+        jsr     GetCopiedToRAMCardFlag
         bpl     run_from_ramcard
 
         ;; Need to copy to RAMCard
@@ -1298,7 +1298,7 @@ L49A6:  lda     menu_click_params::item_num
         bmi     not_downloaded  ; bit 6
         bcc     L49E0           ; bit 7
 
-        jsr     get_copied_to_ramcard_flag
+        jsr     GetCopiedToRAMCardFlag
         beq     not_downloaded
         lda     entry_num
         jsr     check_downloaded_path
@@ -1310,7 +1310,7 @@ L49A6:  lda     menu_click_params::item_num
         bpl     L49ED
         jmp     clear_updates_and_redraw_desktop_icons
 
-L49E0:  jsr     get_copied_to_ramcard_flag
+L49E0:  jsr     GetCopiedToRAMCardFlag
         beq     not_downloaded
 
         lda     entry_num
@@ -1441,7 +1441,7 @@ slash_index:
         dey
         bpl     :-
 
-        param_call copy_ramcard_prefix, $840
+        param_call CopyRAMCardPrefix, $840
 
         ;; Find last '/' in path...
         ldy     $800
@@ -1517,58 +1517,8 @@ slash_index:
 .endproc
 
 ;;; ============================================================
-;;; Get "copied to RAM card" flag from Main LC Bank 2.
 
-.proc get_copied_to_ramcard_flag
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-        lda     COPIED_TO_RAMCARD_FLAG
-        tax
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
-        rts
-.endproc
-
-.proc copy_ramcard_prefix
-        stax    @destptr
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-
-        ldx     RAMCARD_PREFIX
-:       lda     RAMCARD_PREFIX,x
-        @destptr := *+1
-        sta     SELF_MODIFIED,x
-        dex
-        bpl     :-
-
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
-.endproc
-
-.proc copy_desktop_orig_prefix
-        stax    @destptr
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-
-        ldx     DESKTOP_ORIG_PREFIX
-:       lda     DESKTOP_ORIG_PREFIX,x
-        @destptr := *+1
-        sta     SELF_MODIFIED,x
-        dex
-        bpl     :-
-
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
-.endproc
+        .include "../lib/ramcard.s"
 
 ;;; ============================================================
 ;;; For entry copied ("down loaded") to RAM card, compose path
@@ -1579,7 +1529,7 @@ slash_index:
         sta     entry_num
 
         ;; Initialize buffer
-        param_call copy_ramcard_prefix, path_buffer
+        param_call CopyRAMCardPrefix, path_buffer
 
         ;; Find entry path
         lda     entry_num
@@ -16126,9 +16076,9 @@ finish: ldy     #0              ; Write sentinel
         jsr     write_out_file
 
         ;; If DeskTop was copied to RAMCard, also write to original prefix.
-        jsr     get_copied_to_ramcard_flag
+        jsr     GetCopiedToRAMCardFlag
         bpl     exit
-        param_call copy_desktop_orig_prefix, path_buffer
+        param_call CopyDeskTopOriginalPrefix, path_buffer
         param_call append_to_path_buffer, str_desktop_file
         lda     #<path_buffer
         sta     create_params::pathname
