@@ -174,24 +174,18 @@ dialog_loop:
 
 ;;; ============================================================
 
-do_delete:
+.proc do_delete
         lda     selected_index
         jsr     maybe_toggle_entry_hilite
         jsr     main::set_cursor_watch
         lda     selected_index
         jsr     remove_entry
-        beq     :+
+
+        ;; Z set on success, but action is the same either way:
+        ;; close the dialog.
         jsr     main::set_cursor_pointer
         jmp     do_cancel
-
-:       jsr     main::set_cursor_pointer
-        copy    #$FF, selected_index
-        jsr     draw_items_rect
-        jsr     draw_all_entries
-        jsr     populate_entries_flag_table
-        inc     L938F
-
-        jmp     dialog_loop
+.endproc
 
 ;;; ============================================================
 
