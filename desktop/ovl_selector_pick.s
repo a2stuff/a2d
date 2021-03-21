@@ -38,9 +38,9 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
         bne     L9015
         jsr     JUMP_TABLE_CLEAR_UPDATES
         lda     #$06
-        jsr     L9C09
+        jsr     show_warning_dialog
         bne     L9015
-        jsr     L9C26
+        jsr     write_file_to_original_prefix
         pla
         rts
 
@@ -82,7 +82,7 @@ L9080:  dey
         jmp     L9080
 
 L9088:  sta     copy_when
-        jsr     L9CBA
+        jsr     read_file
         bpl     L9093
         jmp     L9016
 
@@ -100,7 +100,7 @@ L9093:  copy16  selector_list, num_run_list_entries
         copy16  selector_menu_addr, @addr
         @addr := *+1
         inc     SELF_MODIFIED
-        jsr     L9CEA
+        jsr     write_file
         bpl     L90D0
         jmp     L9016
 
@@ -115,14 +115,14 @@ L90D3:  lda     num_other_run_list_entries
         adc     #$08
         jsr     L9A61
         inc     selector_list + kSelectorListNumOtherListOffset
-        jsr     L9CEA
+        jsr     write_file
         bpl     L90F1
         jmp     L9016
 
 L90F1:  jmp     L900F
 
 L90F4:  lda     #$01
-L90F6:  jsr     L9C09
+L90F6:  jsr     show_warning_dialog
         dec     L938F
         jmp     L9016
 
@@ -140,7 +140,7 @@ L9105:  lda     #$00
         sta     num_other_run_list_entries
         copy    #$FF, selected_index
         jsr     L9390
-        jsr     L9D22
+        jsr     read_file_and_draw_entries
         bpl     L911D
         jmp     close_window
 
@@ -183,8 +183,8 @@ do_delete:
 
 :       jsr     main::set_cursor_pointer
         copy    #$FF, selected_index
-        jsr     L99F5
-        jsr     L9D28
+        jsr     draw_items_rect
+        jsr     draw_all_entries
         jsr     populate_entries_flag_table
         inc     L938F
 
@@ -259,7 +259,7 @@ L91EA:  dey                     ; map 0/1/2 to $00/$80/$C0
         jmp     L91EA
 
 L91F2:  sta     copy_when
-        jsr     L9CBA
+        jsr     read_file
         bpl     L91FD
         jmp     close_window
 
@@ -312,7 +312,7 @@ L9258:  ldx     num_other_run_list_entries
 L926A:  lda     selected_index
 L926D:  ldy     copy_when
         jsr     L9A0A
-        jsr     L9CEA
+        jsr     write_file
         beq     L927B
         jmp     close_window
 
@@ -475,7 +475,10 @@ L9417:  cmp     #$03
 L9423:  param_call draw_title_centered, label_run
         rts
 
-L942B:  stx     $07
+;;; ============================================================
+
+.proc draw_entry
+        stx     $07
         sta     $06
         lda     dialog_label_pos::xcoord
         sta     L94A8
@@ -535,6 +538,7 @@ L947F:  clc
         rts
 
 L94A8:  .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -1009,9 +1013,15 @@ done:   return  #$FF
 entries_flag_table:
         .res    ::kSelectorListNumEntries, 0
 
-L99F5:  MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+;;; ============================================================
+
+.proc draw_items_rect
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_all_items_rect
         rts
+.endproc
+
+;;; ============================================================
 
         rts                     ; ???
 
@@ -1085,7 +1095,13 @@ L9A8D:  lda     path_buf0,y
         rts
 
 L9A96:  .byte   0
-L9A97:  sta     L9BD4
+
+;;; ============================================================
+
+;;; Delete entry in A ???
+
+.proc L9A97
+        sta     L9BD4
         cmp     #$08
         bcc     L9AA1
         jmp     L9B5F
@@ -1099,7 +1115,7 @@ L9AA8:  dec     selector_list + kSelectorListNumRunListOffset
         copy16  selector_menu_addr, @addr
         @addr := *+1
         dec     SELF_MODIFIED
-        jmp     L9CEA
+        jmp     write_file
 
 L9AC0:  lda     L9BD4
         cmp     num_run_list_entries
@@ -1182,7 +1198,7 @@ L9B5F:  sec
         bne     L9B70
         dec     selector_list + kSelectorListNumOtherListOffset
         dec     num_other_run_list_entries
-        jmp     L9CEA
+        jmp     write_file
 
 L9B70:  lda     L9BD4
         sec
@@ -1191,7 +1207,7 @@ L9B70:  lda     L9BD4
         bne     L9B84
         dec     selector_list + kSelectorListNumOtherListOffset
         dec     num_other_run_list_entries
-        jmp     L9CEA
+        jmp     write_file
 
 L9B84:  lda     L9BD4
         jsr     get_file_entry_addr
@@ -1232,6 +1248,7 @@ L9BC1:  lda     ($08),y
         jmp     L9B70
 
 L9BD4:  .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Entry name address in the file buffer
@@ -1306,9 +1323,15 @@ L9BD4:  .byte   0
 
 ;;; ============================================================
 
-L9C09:  sta     warning_dialog_num
+.proc show_warning_dialog
+        sta     warning_dialog_num
         param_call main::invoke_dialog_proc, $0C, warning_dialog_num
         rts
+.endproc
+
+;;; ============================================================
+;;; Write out SELECTOR.LIST file, using original prefix.
+;;; Used if DeskTop was copied to RAMCard.
 
 filename_buffer := $1C00
 
@@ -1316,7 +1339,8 @@ filename_buffer := $1C00
         DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS flush_close_params
 
-L9C26:  param_call copy_desktop_orig_prefix, filename_buffer
+.proc write_file_to_original_prefix
+        param_call copy_desktop_orig_prefix, filename_buffer
         inc     filename_buffer ; Append '/' separator
         ldx     filename_buffer
         lda     #'/'
@@ -1332,28 +1356,36 @@ L9C26:  param_call copy_desktop_orig_prefix, filename_buffer
         bne     :-
         sty     filename_buffer
 
-L9C4D:  MLI_RELAY_CALL OPEN, open_params
-        beq     L9C60
-        lda     #$00
-        jsr     L9C09
-        beq     L9C4D
+retry_open:
+        MLI_RELAY_CALL OPEN, open_params
+        beq     write
+        lda     #0
+        jsr     show_warning_dialog
+        beq     retry_open
+
 L9C5F:  rts
 
-L9C60:  lda     open_params::ref_num
+write:  lda     open_params::ref_num
         sta     write_params::ref_num
         sta     flush_close_params::ref_num
-L9C69:  MLI_RELAY_CALL WRITE, write_params
-        beq     L9C81
+
+retry_write:
+        MLI_RELAY_CALL WRITE, write_params
+        beq     close
         pha
         jsr     JUMP_TABLE_CLEAR_UPDATES
         pla
         jsr     JUMP_TABLE_SHOW_ALERT
-        beq     L9C69
+        beq     retry_write
         jmp     L9C5F
 
-L9C81:  MLI_RELAY_CALL FLUSH, flush_close_params
+close:  MLI_RELAY_CALL FLUSH, flush_close_params ; TODO: is FLUSH necessary?
         MLI_RELAY_CALL CLOSE, flush_close_params
         rts
+.endproc
+
+;;; ============================================================
+;;; Read SELECTOR.LIST file (using current prefix)
 
         DEFINE_OPEN_PARAMS open_params2, filename, io_buf
 
@@ -1364,92 +1396,111 @@ filename:
         DEFINE_WRITE_PARAMS write_params2, selector_list, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS close_params2
 
-L9CBA:  MLI_RELAY_CALL OPEN, open_params2
-        beq     L9CCF
+.proc read_file
+retry:  MLI_RELAY_CALL OPEN, open_params2
+        beq     read
         lda     #$00
-        jsr     L9C09
-        beq     L9CBA
+        jsr     show_warning_dialog
+        beq     retry
         return  #$FF
 
-L9CCF:  lda     open_params2::ref_num
+read:   lda     open_params2::ref_num
         sta     read_params2::ref_num
         MLI_RELAY_CALL READ, read_params2
-        bne     L9CE9
+        bne     :+              ; TODO: Close even if read fails?
         MLI_RELAY_CALL CLOSE, close_params2
-L9CE9:  rts
+:       rts
+.endproc
 
-L9CEA:  MLI_RELAY_CALL OPEN, open_params2
-        beq     L9CFF
+;;; ============================================================
+;;; Write SELECTOR.LIST file (using current prefix)
+
+.proc write_file
+        MLI_RELAY_CALL OPEN, open_params2
+        beq     write
         lda     #0
-        jsr     L9C09
-        beq     L9CBA
+        jsr     show_warning_dialog
+        beq     read_file       ; BUG: Should be `write_file`
         return  #$FF
 
-L9CFF:  lda     open_params2::ref_num
+write:  lda     open_params2::ref_num
         sta     write_params2::ref_num
-L9D05:  MLI_RELAY_CALL WRITE, write_params2
-        beq     L9D18
+:       MLI_RELAY_CALL WRITE, write_params2
+        beq     close
         jsr     JUMP_TABLE_SHOW_ALERT
-        beq     L9D05
-        jmp     L9D21
+        beq     :-
+        jmp     done            ; TODO: Close even if no retry?
 
-L9D18:  MLI_RELAY_CALL CLOSE, close_params2
-L9D21:  rts
+close:  MLI_RELAY_CALL CLOSE, close_params2
+done:   rts
+.endproc
 
-L9D22:  jsr     L9CBA
-        bpl     L9D28
+;;; ============================================================
+
+.proc read_file_and_draw_entries
+        jsr     read_file
+        bpl     draw_all_entries
         rts
+.endproc
 
-L9D28:  lda     selector_list + kSelectorListNumRunListOffset
+;;; ============================================================
+
+.proc draw_all_entries
+        lda     selector_list + kSelectorListNumRunListOffset
         sta     num_run_list_entries
-        beq     L9D55
-        lda     #$00
-        sta     L9D8C
-L9D35:  lda     L9D8C
+        beq     other_run_list
+
+        ;; Draw "run list" entries
+        lda     #0
+        sta     index
+loop1:  lda     index
         cmp     num_run_list_entries
-        beq     L9D55
+        beq     other_run_list
         jsr     times16
         clc
         adc     #kSelectorListEntriesOffset
         pha
         txa
-        adc     #$0C
+        adc     #>selector_list
         tax
         pla
-        ldy     L9D8C
-        jsr     L942B
-        inc     L9D8C
-        jmp     L9D35
+        ldy     index
+        jsr     draw_entry
+        inc     index
+        jmp     loop1
 
-L9D55:  lda     selector_list + kSelectorListNumOtherListOffset
+        ;; Draw "other run list" entries
+other_run_list:
+        lda     selector_list + kSelectorListNumOtherListOffset
         sta     num_other_run_list_entries
-        beq     L9D89
-        lda     #$00
-        sta     L9D8C
-L9D62:  lda     L9D8C
+        beq     done
+        lda     #0
+        sta     index
+loop2:  lda     index
         cmp     num_other_run_list_entries
-        beq     L9D89
+        beq     done
         clc
-        adc     #$08
+        adc     #8
         jsr     times16
         clc
         adc     #kSelectorListEntriesOffset
         pha
         txa
-        adc     #$0C
+        adc     #>selector_list
         tax
-        lda     L9D8C
+        lda     index
         clc
-        adc     #$08
+        adc     #8
         tay
         pla
-        jsr     L942B
-        inc     L9D8C
-        jmp     L9D62
+        jsr     draw_entry
+        inc     index
+        jmp     loop2
 
-L9D89:  return  #$00
+done:   return  #0
 
-L9D8C:  .byte   0
+index:  .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Times 16 - for computing entry list offsets
