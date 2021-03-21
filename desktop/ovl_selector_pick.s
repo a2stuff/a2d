@@ -139,7 +139,7 @@ L9105:  lda     #$00
         sta     num_run_list_entries
         sta     num_other_run_list_entries
         copy    #$FF, selected_index
-        jsr     L9390
+        jsr     open_window
         jsr     read_file_and_draw_entries
         bpl     L911D
         jmp     close_window
@@ -445,7 +445,8 @@ L938F:  .byte   0
 
 ;;; ============================================================
 
-L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
+.proc open_window
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     winfo_entry_picker
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -474,6 +475,7 @@ L9417:  cmp     #$03
 
 L9423:  param_call draw_title_centered, label_run
         rts
+.endproc
 
 ;;; ============================================================
 
