@@ -48,6 +48,7 @@ kDoubleClickDeltaY      = 4
 
 ;;; See docs/Selector_List_Format.md for file format.
 
+kSelectorListNumRunListEntries  = 8
 kSelectorListNumEntries         = 24
 kSelectorListNameLength         = 16
 kSelectorListPathLength         = 64
