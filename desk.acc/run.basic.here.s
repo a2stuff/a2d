@@ -190,36 +190,4 @@ fail:   return  #1
 
 ;;; ============================================================
 
-;;; TODO: Use "../lib/ramcard.s"
-
-.proc GetCopiedToRAMCardFlag
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-        lda     COPIED_TO_RAMCARD_FLAG
-        tax
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
-        rts
-.endproc
-
-.proc CopyDeskTopOriginalPrefix
-        stax    @destptr
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-
-        ldx     DESKTOP_ORIG_PREFIX
-:       lda     DESKTOP_ORIG_PREFIX,x
-        @destptr := *+1
-        sta     SELF_MODIFIED,x
-        dex
-        bpl     :-
-
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
-.endproc
+        .include "../lib/ramcard.s"
