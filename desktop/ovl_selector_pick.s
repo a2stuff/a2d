@@ -93,7 +93,7 @@ L9093:  copy16  selector_list, num_run_list_entries
         lda     num_run_list_entries
         cmp     #$08
         beq     L90F4
-        ldy     copy_when
+        ldy     copy_when       ; Flags
         lda     num_run_list_entries
         jsr     L9A0A
         inc     selector_list + kSelectorListNumRunListOffset
@@ -109,11 +109,11 @@ L90D0:  jmp     L900F
 L90D3:  lda     num_other_run_list_entries
         cmp     #$10
         beq     L90FF
-        ldy     copy_when
+        ldy     copy_when       ; Flags
         lda     num_other_run_list_entries
         clc
-        adc     #$08
-        jsr     L9A61
+        adc     #8
+        jsr     assign_entry_data
         inc     selector_list + kSelectorListNumOtherListOffset
         jsr     write_file
         bpl     L90F1
@@ -176,7 +176,7 @@ do_delete:
         jsr     maybe_toggle_entry_hilite
         jsr     main::set_cursor_watch
         lda     selected_index
-        jsr     L9A97
+        jsr     remove_entry
         beq     :+
         jsr     main::set_cursor_pointer
         jmp     do_cancel
@@ -212,7 +212,7 @@ L918C:  lda     ($06),y
         lda     selected_index
         jsr     get_file_path_addr
         stax    $06
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         tay
 L91AA:  lda     ($06),y
@@ -275,7 +275,7 @@ L91FD:  lda     selected_index
         jmp     L90F4
 
 L9215:  lda     selected_index
-        jsr     L9A97
+        jsr     remove_entry
         beq     L9220
         jmp     close_window
 
@@ -297,7 +297,7 @@ L923C:  lda     which_run_list
         jmp     L9105
 
 L924D:  lda     selected_index
-        jsr     L9A97
+        jsr     remove_entry
         beq     L9258
         jmp     close_window
 
@@ -340,12 +340,12 @@ do_run:
         lda     L938A
         beq     L92CE
         lda     selected_index
-        jsr     L9E61
+        jsr     get_entry_ramcard_file_info
         beq     L92D6
         lda     selected_index
         jsr     get_file_path_addr
         stax    $06
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         tay
 L92C1:  lda     ($06),y
@@ -356,12 +356,12 @@ L92C1:  lda     ($06),y
         jmp     do_cancel
 
 L92CE:  lda     selected_index
-        jsr     L9E61
+        jsr     get_entry_ramcard_file_info
         bne     L92F0
 L92D6:  lda     selected_index
-        jsr     L9E74
+        jsr     get_entry_ramcard_path
         stax    $06
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         tay
 L92E5:  lda     ($06),y
@@ -373,7 +373,7 @@ L92E5:  lda     ($06),y
 L92F0:  lda     selected_index
         jsr     get_file_path_addr
         stax    $06
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         tay
 L92FF:  lda     ($06),y
@@ -554,7 +554,7 @@ L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_cancel_pos
 
 .proc draw_string
         stax    $06
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         tay
 L94D4:  lda     ($06),y
@@ -1027,11 +1027,14 @@ entries_flag_table:
 
         rts                     ; ???
 
+;;; ============================================================
+
 ;;; Input: A = index, Y = copy_when (1=boot, 2=use, 3=never)
 
-L9A0A:  cmp     #8
+.proc L9A0A
+        cmp     #8
         bcc     L9A11
-        jmp     L9A61
+        jmp     assign_entry_data
 
 L9A11:  sta     L9A60
         tya
@@ -1067,187 +1070,248 @@ L9A55:  lda     path_buf0,y
         rts
 
 L9A60:  .byte   0
+.endproc
 
 ;;; ============================================================
+;;; Assigns name, flags, and path to an entry.
+;;; Inputs: A=entry index, Y=new flags
+;;;         `path_buf1` is name, `path_buf0` is path
 
-L9A61:  sta     L9A96
-        tya
+.proc assign_entry_data
+        ptr := $06
+
+        sta     index
+        tya                     ; Y = entry flags
         pha
-        lda     L9A96
+
+        ;; Compute entry address
+        lda     index
         jsr     get_file_entry_addr
-        stax    $06
+        stax    ptr
+
+        ;; Assign name
         ldy     path_buf1
-L9A73:  lda     path_buf1,y
-        sta     ($06),y
+:       lda     path_buf1,y
+        sta     (ptr),y
         dey
-        bpl     L9A73
+        bpl     :-
+
+        ;; Assign flags
         ldy     #kSelectorEntryFlagsOffset
         pla
-        sta     ($06),y
-        lda     L9A96
+        sta     (ptr),y
+
+        ;; Assign path
+        lda     index
         jsr     get_file_path_addr
-        stax    $06
+        stax    ptr
         ldy     path_buf0
-L9A8D:  lda     path_buf0,y
-        sta     ($06),y
+:       lda     path_buf0,y
+        sta     (ptr),y
         dey
-        bpl     L9A8D
+        bpl     :-
         rts
 
-L9A96:  .byte   0
+index:  .byte   0
+.endproc
 
 ;;; ============================================================
+;;; Removes the specified entry, shifting later entries down as
+;;; needed. Writes the file when done. Handles both the file
+;;; buffer and resource data (used for menus, etc.
+;;; Inputs: Entry in A
 
-;;; Delete entry in A ???
+.proc remove_entry
+        ptr1 := $06
+        ptr2 := $08
 
-.proc L9A97
-        sta     L9BD4
-        cmp     #$08
-        bcc     L9AA1
-        jmp     L9B5F
 
-L9AA1:  tax
+        sta     index
+        cmp     #8
+        bcc     run_list
+        jmp     other_run_list
+
+        ;; Primary run list
+run_list:
+.scope
+        tax
         inx
         cpx     num_run_list_entries
-        bne     L9AC0
-L9AA8:  dec     selector_list + kSelectorListNumRunListOffset
+        bne     loop
+
+finish:
+        dec     selector_list + kSelectorListNumRunListOffset
         dec     num_run_list_entries
         copy16  selector_menu_addr, @addr
         @addr := *+1
         dec     SELF_MODIFIED
         jmp     write_file
 
-L9AC0:  lda     L9BD4
+loop:   lda     index
         cmp     num_run_list_entries
-        beq     L9AA8
-        jsr     get_file_entry_addr
-        stax    $06
-        lda     $06
-        adc     #$10
-        sta     $08
-        lda     $07
-        adc     #$00
-        sta     $09
-        ldy     #$00
-        lda     ($08),y
-        tay
-L9AE0:  lda     ($08),y
-        sta     ($06),y
-        dey
-        bpl     L9AE0
-        ldy     #kSelectorEntryFlagsOffset
-        lda     ($08),y
-        sta     ($06),y
-        lda     L9BD4
-        jsr     get_resource_entry_addr
-        stax    $06
-        lda     $06
-        adc     #$10
-        sta     $08
-        lda     $07
-        adc     #$00
-        sta     $09
-        ldy     #$00
-        lda     ($08),y
-        tay
-L9B08:  lda     ($08),y
-        sta     ($06),y
-        dey
-        bpl     L9B08
-        ldy     #kSelectorEntryFlagsOffset
-        lda     ($08),y
-        sta     ($06),y
-        lda     L9BD4
-        jsr     get_file_path_addr
-        stax    $06
-        lda     $06
-        adc     #$40
-        sta     $08
-        lda     $07
-        adc     #$00
-        sta     $09
-        ldy     #$00
-        lda     ($08),y
-        tay
-L9B30:  lda     ($08),y
-        sta     ($06),y
-        dey
-        bpl     L9B30
-        lda     L9BD4
-        jsr     get_resource_path_addr
-        stax    $06
-        lda     $06
-        adc     #$40
-        sta     $08
-        lda     $07
-        adc     #$00
-        sta     $09
-        ldy     #$00
-        lda     ($08),y
-        tay
-L9B52:  lda     ($08),y
-        sta     ($06),y
-        dey
-        bpl     L9B52
-        inc     L9BD4
-        jmp     L9AC0
+        beq     finish
 
-L9B5F:  sec
-        sbc     #$07
+        ;; Copy entry (in file buffer) down by one
+        jsr     get_file_entry_addr
+        stax    ptr1
+        lda     ptr1             ; BUG: Missing clc???
+        adc     #<kSelectorListNameLength
+        sta     ptr2
+        lda     ptr1+1
+        adc     #>kSelectorListNameLength
+        sta     ptr2+1
+
+        ldy     #0
+        lda     (ptr2),y
+        tay
+:       lda     (ptr2),y
+        sta     (ptr1),y
+        dey
+        bpl     :-
+
+        ;; And flags
+        ldy     #kSelectorEntryFlagsOffset
+        lda     (ptr2),y
+        sta     (ptr1),y
+
+        ;; Copy entry (in resource data) down by one
+        lda     index
+        jsr     get_resource_entry_addr
+        stax    ptr1
+        lda     ptr1             ; BUG: Missing clc???
+        adc     #<kSelectorListNameLength
+        sta     ptr2
+        lda     ptr1+1
+        adc     #>kSelectorListNameLength
+        sta     ptr2+1
+
+        ldy     #0
+        lda     (ptr2),y
+        tay
+:       lda     (ptr2),y
+        sta     (ptr1),y
+        dey
+        bpl     :-
+
+        ;; And flags
+        ldy     #kSelectorEntryFlagsOffset
+        lda     (ptr2),y
+        sta     (ptr1),y
+
+        ;; Copy path (in file buffer) down by one
+        lda     index
+        jsr     get_file_path_addr
+        stax    ptr1
+        lda     ptr1             ; BUG: Missing clc???
+        adc     #<kSelectorListPathLength
+        sta     ptr2
+        lda     ptr1+1
+        adc     #>kSelectorListPathLength
+        sta     ptr2+1
+
+        ldy     #0
+        lda     (ptr2),y
+        tay
+:       lda     (ptr2),y
+        sta     (ptr1),y
+        dey
+        bpl     :-
+
+        ;; Copy path (in resource data) down by one
+        lda     index
+        jsr     get_resource_path_addr
+        stax    ptr1
+        lda     ptr1             ; BUG: Missing clc???
+        adc     #<kSelectorListPathLength
+        sta     ptr2
+        lda     ptr1+1
+        adc     #>kSelectorListPathLength
+        sta     ptr2+1
+
+        ldy     #0
+        lda     (ptr2),y
+        tay
+:       lda     (ptr2),y
+        sta     (ptr1),y
+        dey
+        bpl     :-
+
+        ;; Next
+        inc     index
+        jmp     loop
+.endscope
+
+        ;; --------------------------------------------------
+
+other_run_list:
+.scope
+        sec
+        sbc     #ptr1+1
         cmp     num_other_run_list_entries
-        bne     L9B70
+        bne     loop
         dec     selector_list + kSelectorListNumOtherListOffset
         dec     num_other_run_list_entries
         jmp     write_file
 
-L9B70:  lda     L9BD4
+loop:   lda     index
         sec
-        sbc     #$08
+        sbc     #ptr2
         cmp     num_other_run_list_entries
         bne     L9B84
         dec     selector_list + kSelectorListNumOtherListOffset
         dec     num_other_run_list_entries
         jmp     write_file
 
-L9B84:  lda     L9BD4
-        jsr     get_file_entry_addr
-        stax    $06
-        lda     $06
-        adc     #$10
-        sta     $08
-        lda     $07
-        adc     #$00
-        sta     $09
-        ldy     #$00
-        lda     ($08),y
-        tay
-L9B9F:  lda     ($08),y
-        sta     ($06),y
-        dey
-        bpl     L9B9F
-        lda     L9BD4
-        jsr     get_file_path_addr
-        stax    $06
-        lda     $06
-        adc     #$40
-        sta     $08
-        lda     $07
-        adc     #$00
-        sta     $09
-        ldy     #$00
-        lda     ($08),y
-        tay
-L9BC1:  lda     ($08),y
-        sta     ($06),y
-        dey
-        bpl     L9BC1
-        ldy     #kSelectorEntryFlagsOffset
-        lda     ($08),y
-        sta     ($06),y
-        inc     L9BD4
-        jmp     L9B70
+L9B84:  lda     index
 
-L9BD4:  .byte   0
+        ;; Copy entry (in file buffer) down by one
+        jsr     get_file_entry_addr
+        stax    ptr1
+        lda     ptr1             ; BUG: Missing clc???
+        adc     #<kSelectorListNameLength
+        sta     ptr2
+        lda     ptr1+1
+        adc     #>kSelectorListNameLength
+        sta     ptr2+1
+
+        ldy     #0
+        lda     (ptr2),y
+        tay
+:       lda     (ptr2),y
+        sta     (ptr1),y
+        dey
+        bpl     :-
+
+        ;; Copy path (in file buffer) down by one
+        lda     index
+        jsr     get_file_path_addr
+        stax    ptr1
+        lda     ptr1             ; BUG: Missing clc???
+        adc     #<kSelectorListPathLength
+        sta     ptr2
+        lda     ptr1+1
+        adc     #>kSelectorListPathLength
+        sta     ptr2+1
+
+        ldy     #0
+        lda     (ptr2),y
+        tay
+:       lda     (ptr2),y
+        sta     (ptr1),y
+        dey
+        bpl     :-
+
+        ;; And flags
+        ldy     #kSelectorEntryFlagsOffset
+        lda     (ptr2),y
+        sta     (ptr1),y
+
+        ;; Next
+        inc     index
+        jmp     loop
+.endscope
+
+index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1622,51 +1686,76 @@ params: .addr   0
 .endproc
 
 ;;; ============================================================
+;;; Populate `get_file_info_params` with the info for the entry
+;;; as copied to RAMCard.
+;;; Input: A=entry number
+;;; Output: `get_file_info_params` populated.
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, 0
 
-L9E61:  jsr     L9E74
+.proc get_entry_ramcard_file_info
+        jsr     get_entry_ramcard_path
         stax    get_file_info_params::pathname
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         rts
+.endproc
 
-L9E74:  sta     L9EBF
-        param_call copy_ramcard_prefix, L9EC1
-        lda     L9EBF
+;;; ============================================================
+;;; Get the path for an entry as it would be on a RAMCard.
+;;; e.g. if the path was "/APPS/MOUSEPAINT/MP.SYSTEM" this would
+;;; return the address of a buffer with "/RAM/MOUSEPAINT/MP.SYSTEM"
+;;; Input: A=entry number
+;;; Output: A,X=path buffer
+
+.proc get_entry_ramcard_path
+        ptr := $06
+
+        sta     index
+        param_call copy_ramcard_prefix, buf
+        lda     index
         jsr     get_file_path_addr
-        stax    $06
-        ldy     #$00
-        lda     ($06),y
-        sta     L9EC0
+        stax    ptr
+
+        ;; Find last / in entry's path
+        ldy     #0
+        lda     (ptr),y
+        sta     len
         tay
-L9E90:  lda     ($06),y
+:       lda     (ptr),y
+        and     #CHAR_MASK      ; TODO: Is this needed?
+        cmp     #'/'
+        beq     :+
+        dey
+        bne     :-
+
+        ;; And find preceeding /
+:       dey
+:       lda     (ptr),y
         and     #CHAR_MASK
         cmp     #'/'
-        beq     L9E9B
+        beq     :+
         dey
-        bne     L9E90
-L9E9B:  dey
-L9E9C:  lda     ($06),y
-        and     #CHAR_MASK
-        cmp     #'/'
-        beq     L9EA7
-        dey
-        bne     L9E9C
-L9EA7:  dey
-        ldx     L9EC1
-L9EAB:  inx
+        bne     :-
+
+        ;; Append everything after this to the buffer
+:       dey
+        ldx     buf
+:       inx
         iny
-        lda     ($06),y
-        sta     L9EC1,x
-        cpy     L9EC0
-        bne     L9EAB
-        stx     L9EC1
-        ldax    #L9EC1
+        lda     (ptr),y
+        sta     buf,x
+        cpy     len
+        bne     :-
+        stx     buf
+
+        ;; Return the buffer's address
+        ldax    #buf
         rts
 
-L9EBF:  .byte   0
-L9EC0:  .byte   0
-L9EC1:  .byte   0
+index:  .byte   0
+len:    .byte   0
+buf:    .res    ::kPathBufferSize
+.endproc
 
 ;;; ============================================================
 
