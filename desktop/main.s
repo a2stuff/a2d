@@ -9342,8 +9342,8 @@ pos_win:        .word   0, 0
 ;;; Output: A =
 ;;;  0 = Disk II
 ;;;  1 = RAM Disk (including SmartPort RAM Disk)
-;;;  2 = SmartPort, Fixed (e.g. ProFile)
-;;;  3 = SmartPort, Removable (e.g. UniDisk 3.5)
+;;;  2 = Fixed (e.g. ProFile)
+;;;  3 = Removable (e.g. UniDisk 3.5)
 ;;;  4 = AppleTalk file share
 ;;;  5 = unknown / RAM-based driver
 ;;;
@@ -9355,7 +9355,7 @@ device_type_to_icon_address_table:
         .addr profile_icon
         .addr floppy800_icon
         .addr fileshare_icon
-        .addr profile_icon ; unknown
+        ASSERT_ADDRESS_TABLE_SIZE device_type_to_icon_address_table, ::kNumDeviceTypes
 
 ;;; Roughly follows:
 ;;; Technical Note: ProDOS #21: Identifying ProDOS Devices
@@ -9385,11 +9385,11 @@ device_type_to_icon_address_table:
         ora     #$C0            ; make $Cn...
         sta     slot_addr+1     ; and fall through to use $Cn00 to probe
 
+        ;; Probe firmware ID bytes
 firmware:
         lda     #$00
         sta     slot_addr       ; point at $Cn00 for firmware lookups
 
-        ;; Probe firmware ID bytes
         ldy     #$FF            ; $CnFF: $00=Disk II, $FF=13-sector, else=block
         lda     (slot_addr),y
         bne     :+
@@ -9397,15 +9397,27 @@ firmware:
 
 :       ldy     #$07            ; SmartPort signature byte ($Cn07)
         lda     (slot_addr),y   ; $00 = SmartPort
-        bne     unk
+        bne     not_sp
 
         ldy     #$FB            ; SmartPort ID Type Byte ($CnFB)
         lda     (slot_addr),y   ; bit 0 = is RAM Card?
         and     #%00000001
-        beq     :+
+        beq     generic
 ram:    return  #kDeviceTypeRAMDisk
 
-:       lda     unit_number
+not_sp:
+        ;; Not SmartPort - try AppleTalk
+        MLI_RELAY_CALL READ_BLOCK, block_params
+        beq     generic
+        cmp     #ERR_NETWORK_ERROR
+        bne     generic
+        return  #kDeviceTypeFileShare
+
+generic:
+        ;; Either SmartPort or Generic Block Device
+        lda     unit_number
+
+        ;; Select either 3.5" Floppy or ProFile icon
 
         ;; Old heuristic. Invalid on UDC, etc.
         ;;         and     #%00001111
@@ -9419,20 +9431,13 @@ ram:    return  #kDeviceTypeRAMDisk
         kMax35FloppyBlocks = 1600
 
         jsr     get_block_count
-        bcs     hd
+        bcs     :+
         stax    blocks
         cmp16   blocks, #kMax35FloppyBlocks+1
-        bcs     hd
+        bcs     :+
         return  #kDeviceTypeRemovable
 
-        ;; Try AppleTalk
-unk:    MLI_RELAY_CALL READ_BLOCK, block_params
-        beq     hd
-        cmp     #ERR_NETWORK_ERROR
-        bne     hd
-        return  #kDeviceTypeFileShare
-
-hd:     return  #kDeviceTypeSmartport
+:       return  #kDeviceTypeFixed
 
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
         unit_number := block_params::unit_num

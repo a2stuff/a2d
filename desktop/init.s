@@ -1186,7 +1186,6 @@ device_template_table:
         .addr   str_sd_profile
         .addr   str_sd_unidisk
         .addr   str_sd_fileshare
-        .addr   str_sd_unknown
         ASSERT_ADDRESS_TABLE_SIZE device_template_table, ::kNumDeviceTypes
 
 kDeviceTemplateSlotOffset = res_const_sd_prefix_pattern_offset1
@@ -1211,10 +1210,6 @@ str_sd_unidisk:
 ;;; File Share
 str_sd_fileshare:
         PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_fileshare)
-
-;;; Unknown devices
-str_sd_unknown:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_unknown)
 
 ;;; ============================================================
 

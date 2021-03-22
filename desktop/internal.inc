@@ -136,14 +136,13 @@ kMenuSizeSelector = 13
 ;;; ============================================================
 ;;; Device types
 
-kNumDeviceTypes = 6
+kNumDeviceTypes = 5
 
 kDeviceTypeDiskII       = 0
 kDeviceTypeRAMDisk      = 1
-kDeviceTypeSmartport    = 2     ; implicitly non-removable
-kDeviceTypeRemovable    = 3     ; special case of SmartPort
+kDeviceTypeFixed        = 2
+kDeviceTypeRemovable    = 3
 kDeviceTypeFileShare    = 4
-kDeviceTypeUnknown      = 5
 
 ;;; ============================================================
 ;;; Invoker routine locations

@@ -7,4 +7,3 @@
 .define res_string_volume_type_profile "ProFile"
 .define res_string_volume_type_unidisk "Lecteur UniDisk 3.5"
 .define res_string_volume_type_fileshare "AppleShare"
-.define res_string_volume_type_unknown "Inconnu"
