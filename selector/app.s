@@ -2240,6 +2240,7 @@ len:    .byte   0
 
 .proc SetColorMode
         ;; AppleColor Card - Mode 2 (Color 140x192)
+        ;; Also: Video-7 and Le Chat Mauve Feline
         sta     SET80VID
         lda     AN3_OFF
         lda     AN3_ON
@@ -2252,9 +2253,10 @@ len:    .byte   0
         jsr     IDROUTINE
         bcc     iigs
 
-        ;; Le Chat Mauve - COL140 mode
+        ;; Le Chat Mauve Eve - COL140 mode
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
+        ;; lda AN3_OFF ; already done above
         sta     HR2_OFF
         sta     HR3_OFF
         bcs     done

@@ -10331,6 +10331,7 @@ mod7:   adc     #7              ; Returns (A+3) modulo 7
 
 .proc set_color_mode
         ;; AppleColor Card - Mode 2 (Color 140x192)
+        ;; Also: Video-7 and Le Chat Mauve Feline
         sta     SET80VID
         lda     AN3_OFF
         lda     AN3_ON
@@ -10342,9 +10343,10 @@ mod7:   adc     #7              ; Returns (A+3) modulo 7
         jsr     test_iigs
         bcc     iigs
 
-        ;; Le Chat Mauve - COL140 mode
+        ;; Le Chat Mauve Eve - COL140 mode
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
+        ;; lda AN3_OFF ; already done above
         sta     HR2_OFF
         sta     HR3_OFF
         bcs     done
@@ -10359,6 +10361,7 @@ done:   rts
 
 .proc set_mono_mode
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
+        ;; Also: Video-7 and Le Chat Mauve Feline
         sta     CLR80VID
         lda     AN3_OFF
         lda     AN3_ON
@@ -10371,9 +10374,10 @@ done:   rts
         jsr     test_iigs
         bcc     iigs
 
-        ;; Le Chat Mauve - BW560 mode
+        ;; Le Chat Mauve Eve - BW560 mode
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
+        ;; lda AN3_OFF ; already done above
         sta     HR2_ON
         sta     HR3_ON
         bcs     done

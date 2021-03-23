@@ -203,6 +203,7 @@ prefix_buf:
 
 .proc SetMonoMode
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
+        ;; Also: Video-7 and Le Chat Mauve Feline
         sta     CLR80VID
         lda     AN3_OFF
         lda     AN3_ON
@@ -216,9 +217,10 @@ prefix_buf:
         jsr     IDROUTINE
         bcc     iigs
 
-        ;; Le Chat Mauve - BW560 mode
+        ;; Le Chat Mauve Eve - BW560 mode
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
+        ;; lda AN3_OFF ; already done above
         sta     HR2_ON
         sta     HR3_ON
         bcs     done
