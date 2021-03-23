@@ -22,7 +22,7 @@ kBuildDD = 6
 
 ;;; Localization - applies language suffix to filename
 
-        .define LANG "en"
+        .define kBuildLang "en"
 .macro RESOURCE_FILE basename
-        .include .concat(basename, ".", LANG)
+        .include .concat(basename, ".", kBuildLang)
 .endmacro

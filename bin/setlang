@@ -8,7 +8,7 @@ test $# -eq 1 || (echo "Usage: $0 LANG"; exit 1)
 lang=$1
 date=$(bin/setdate $lang)
 
-perl -pni -e "s/define LANG .*/define LANG \"$lang\"/" config.inc
+perl -pni -e "s/define kBuildLang .*/define kBuildLang \"$lang\"/" config.inc
 
 echo Set lang to: $lang
 bin/setdate $lang
