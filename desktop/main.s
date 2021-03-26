@@ -777,7 +777,7 @@ check_disk_in_drive:
 
         sp_addr := $0A
         lda     unit_number
-        jsr     find_smartport_dispatch_address
+        jsr     FindSmartportDispatchAddress
         bne     notsp           ; not SmartPort
         stx     status_unit_num
 
@@ -9345,7 +9345,6 @@ pos_win:        .word   0, 0
 ;;;  2 = Fixed (e.g. ProFile)
 ;;;  3 = Removable (e.g. UniDisk 3.5)
 ;;;  4 = AppleTalk file share
-;;;  5 = unknown / RAM-based driver
 ;;;
 ;;; NOTE: Called from Initializer (init) which resides in $800-$1200+)
 
@@ -9356,6 +9355,25 @@ device_type_to_icon_address_table:
         .addr floppy800_icon
         .addr fileshare_icon
         ASSERT_ADDRESS_TABLE_SIZE device_type_to_icon_address_table, ::kNumDeviceTypes
+
+.params status_params
+param_count:    .byte   3
+unit_num:       .byte   1
+list_ptr:       .addr   dib_buffer
+status_code:    .byte   3       ; Return Device Information Block (DIB)
+.endparams
+
+.params dib_buffer
+Device_Statbyte1:       .byte   0
+Device_Size_Lo:         .byte   0
+Device_Size_Med:        .byte   0
+Device_Size_Hi:         .byte   0
+ID_String_Length:       .byte   0
+Device_Name:            .res    16
+Device_Type_Code:       .byte   0
+Device_Subtype_Code:    .byte   0
+Version:                .word   0
+.endparams
 
 ;;; Roughly follows:
 ;;; Technical Note: ProDOS #21: Identifying ProDOS Devices
@@ -9370,7 +9388,7 @@ device_type_to_icon_address_table:
         sta     unit_number
 
         ;; Look up driver address
-        jsr     device_driver_address
+        jsr     DeviceDriverAddress
         beq     firmware        ; is $CnXX
 
         ;; Not $CnXX so RAM-based driver
@@ -9392,17 +9410,29 @@ firmware:
 
         ldy     #$FF            ; $CnFF: $00=Disk II, $FF=13-sector, else=block
         lda     (slot_addr),y
-        bne     :+
-        rts                     ; 0 = Disk II
+        beq     f525            ; $00 = Disk II
 
-:       ldy     #$07            ; SmartPort signature byte ($Cn07)
-        lda     (slot_addr),y   ; $00 = SmartPort
+        ;; Smartport?
+        sp_addr := $0A
+        lda     unit_number
+        jsr     FindSmartportDispatchAddress
         bne     not_sp
+        stx     status_params::unit_num
 
-        ldy     #$FB            ; SmartPort ID Type Byte ($CnFB)
-        lda     (slot_addr),y   ; bit 0 = is RAM Card?
-        and     #%00000001
-        beq     generic
+        ;; Execute SmartPort call
+        jsr     smartport_call
+        .byte   $00             ; $00 = STATUS
+        .addr   status_params
+        bcs     not_sp
+
+        ;; Check device type
+        ;; Technical Note: SmartPort #4: SmartPort Device Types
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
+        lda     dib_buffer::Device_Type_Code
+        bne     generic         ; $00 = Memory Expansion Card (RAM Disk)
+        ;; NOTE: Codes for 3.5" disk ($01) and 5-1/4" disk ($0A) are not trusted
+        ;; since emulators do weird things.
+
 ram:    return  #kDeviceTypeRAMDisk
 
 not_sp:
@@ -9410,13 +9440,10 @@ not_sp:
         MLI_RELAY_CALL READ_BLOCK, block_params
         beq     generic
         cmp     #ERR_NETWORK_ERROR
-        bne     generic
-        return  #kDeviceTypeFileShare
+        beq     share
 
 generic:
-        ;; Either SmartPort or Generic Block Device
-        lda     unit_number
-
+        ;; SmartPort or Generic Block Device
         ;; Select either 3.5" Floppy or ProFile icon
 
         ;; Old heuristic. Invalid on UDC, etc.
@@ -9426,21 +9453,36 @@ generic:
         ;; Better heuristic, but still invalid on UDC, Virtual II, etc.
         ;;         and     #%00001000      ; bit 3 = is removable?
 
-        ;; So instead, just assume <=1600 blocks is a 3.5" floppy
+        ;; So instead, just display:
+        ;;   <=  280 blocks (140k) as a 5.25" floppy
+        ;;   <= 1600 blocks (800k) as a 3.5" floppy
 
+        kMax525FloppyBlocks = 280
         kMax35FloppyBlocks = 1600
 
+        lda     unit_number
         jsr     get_block_count
         bcs     :+
         stax    blocks
+        cmp16   blocks, #kMax525FloppyBlocks+1
+        bcc     f525
         cmp16   blocks, #kMax35FloppyBlocks+1
-        bcs     :+
-        return  #kDeviceTypeRemovable
+        bcc     f35
 
 :       return  #kDeviceTypeFixed
 
+f525:   return  #kDeviceTypeDiskII
+
+f35:    return  #kDeviceTypeRemovable
+
+share:  return  #kDeviceTypeFileShare
+
+
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
         unit_number := block_params::unit_num
+
+smartport_call:
+        jmp     (sp_addr)
 
 blocks: .word   0
 .endproc
@@ -10944,7 +10986,7 @@ found:  lda     DEVLST,y        ;
 
         ;; Compute SmartPort dispatch address
         smartport_addr := $0A
-        jsr     find_smartport_dispatch_address
+        jsr     FindSmartportDispatchAddress
         bne     exit            ; not SP
         stx     control_unit_number
 
@@ -10995,93 +11037,7 @@ index:  .byte   0               ; index in selected icon list
         prepare_vol  = $81      ; +2 if multiple
 .endenum
 
-;;; ============================================================
-;;; Look up device driver address.
-;;; Input: A = unit number
-;;; Output: $0A/$0B ptr to driver; Z set if $CnXX
-
-.proc device_driver_address
-        slot_addr := $0A
-
-        and     #%11110000      ; mask off drive/slot
-        lsr                     ; 0DSSS000
-        lsr                     ; 00DSSS00
-        lsr                     ; 000DSSS0
-        tax                     ; = slot * 2 + (drive == 2 ? 0x10 + 0x00)
-
-        lda     DEVADR,x
-        sta     slot_addr
-        lda     DEVADR+1,x
-        sta     slot_addr+1
-
-        and     #$F0            ; is it $Cn ?
-        cmp     #$C0            ; leave Z flag set if so
-        rts
-.endproc
-
-;;; ============================================================
-;;; Look up SmartPort dispatch address.
-;;; Input: A = unit number
-;;; Output: Z=1 if SP, $0A/$0B dispatch address, X = SP unit num
-;;;         Z=0 if not SP
-
-.proc find_smartport_dispatch_address
-        sp_addr := $0A
-
-        sta     unit_number     ; DSSSnnnn
-
-        ;; Get device driver address
-        jsr     device_driver_address
-        bne     exit            ; RAM-based driver
-
-        ;; Find actual address
-        copy    #0, sp_addr     ; point at $Cn00 for firmware lookups
-
-        ldy     #$07            ; SmartPort signature byte ($Cn07)
-        lda     (sp_addr),y     ; $00 = SmartPort
-        bne     exit
-
-        ldy     #$FB            ; SmartPort ID Type Byte ($CnFB)
-        lda     (sp_addr),y
-        and     #$7F            ; bit 7 = is Extended
-        bne     exit
-
-        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
-        ldy     #$FF
-        lda     (sp_addr),y
-        clc
-        adc     #3
-        sta     sp_addr
-
-        ;; Figure out SmartPort control unit number in X
-        ldx     #1              ; start with unit 1
-        bit     unit_number     ; high bit is D
-        bpl     :+
-        inx                     ; X = 1 or 2 (for Drive 1 or 2)
-
-:       lda     unit_number
-        and     #%01110000      ; 0SSSnnnn
-        lsr
-        lsr
-        lsr
-        lsr
-        sta     mapped_slot     ; 00000SSS
-
-        lda     sp_addr+1       ; $Cn
-        and     #%00001111      ; $0n
-        cmp     mapped_slot     ; equal = not remapped
-        beq     :+
-        inx                     ; now X = 3 or 4
-        inx
-
-:       lda     #0              ; exit with Z set on success
-exit:   rts
-
-unit_number:
-        .byte   0
-mapped_slot:                    ; from unit_number, not driver
-        .byte   0
-.endproc
+        .include "../lib/smartport.s"
 
 ;;; ============================================================
 ;;; Get Info

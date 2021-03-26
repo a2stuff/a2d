@@ -990,7 +990,7 @@ slot_string_table:
 
 loop:   ldy     index
         lda     DEVLST,y
-        jsr     main::device_driver_address
+        jsr     main::DeviceDriverAddress
         bne     next            ; if RAM-based driver (not $CnXX), skip
         copy    #0, slot_ptr    ; make $Cn00
         ldy     #$FF            ; Firmware ID byte

@@ -751,6 +751,28 @@ done:   dex
 unit_num:
         .byte   0
 
+;;; Index into DEVLST while iterating devices.
+devnum: .byte   0
+
+.params status_params
+param_count:    .byte   3
+unit_num:       .byte   1
+list_ptr:       .addr   dib_buffer
+status_code:    .byte   3       ; Return Device Information Block (DIB)
+.endparams
+
+.params dib_buffer
+Device_Statbyte1:       .byte   0
+Device_Size_Lo:         .byte   0
+Device_Size_Med:        .byte   0
+Device_Size_Hi:         .byte   0
+ID_String_Length:       .byte   0
+Device_Name:            .res    16
+Device_Type_Code:       .byte   0
+Device_Subtype_Code:    .byte   0
+Version:                .word   0
+.endparams
+
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 on_line_buffer: .res 17, 0
 
@@ -909,80 +931,64 @@ match:  sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
         ;; Skip RAMCard install if button is down
         lda     BUTN0
         ora     BUTN1
-        bpl     scan_slots
+        bpl     search_devices
         jmp     did_not_copy
 
-        ;; Start at $C100
-        slot_ptr = $8
+        ;; --------------------------------------------------
+        ;; Look for RAM disk
 
-scan_slots:
-        lda     #0
-        sta     slot_ptr
-        lda     #$C1
-        sta     slot_ptr+1
+.proc search_devices
+        copy    DEVCNT, devnum
 
-        ;; Check slot for signature bytes
-check_slot:
-        ldx     #0
-:       lda     sig_offsets,x   ; Check $CnXX
-        tay
-        lda     (slot_ptr),y
-        cmp     sig_bytes,x
-        bne     next_slot
-        inx
-        cpx     #kNumSigBytes
-        bcc     :-
-
-        ldy     #$FB
-        lda     (slot_ptr),y         ; Also check $CnFB for low bit (=RAMDisk)
-        and     #$01
-        beq     next_slot
-        bne     found_slot
-
-next_slot:
-        inc     slot_ptr+1
-        lda     slot_ptr+1
-        cmp     #$C8            ; stop at $C800
-        bcc     check_slot
-
-        ;; Did not find signature in any slot - look for
-        ;; RAM.DRV.SYSTEM signature in DEVLST.
-        ldy     DEVCNT
-:       lda     DEVLST,y
-        cmp     #kRamDrvSystemUnitNum
-        beq     :+
-        dey
-        bpl     :-
-        jmp     did_not_copy
-
-:       lda     #$03
-        bne     :+              ; always
-
-        ;; RAM device was found!
-found_slot:
-        lda     slot_ptr+1
-        and     #$0F            ; slot # in A
-
-        ;; Synthesize unit_num, verify it's a device
-:       asl     a
-        asl     a
-        asl     a
-        asl     a
-        sta     on_line_params::unit_num
+loop:   ldx     devnum
+        lda     DEVLST,x
         sta     unit_num
-        MLI_CALL ON_LINE, on_line_params
-        beq     :+
+
+        ;; Special case for RAM.DRV.SYSTEM.
+        cmp     #kRamDrvSystemUnitNum
+        beq     test_unit_num
+
+        ;; Smartport?
+        sp_addr := $0A
+        jsr     FindSmartportDispatchAddress
+        bne     next_unit
+        stx     status_params::unit_num
+
+        ;; Execute SmartPort call
+        jsr     smartport_call
+        .byte   $00             ; $00 = STATUS
+        .addr   status_params
+        bcs     next_unit
+
+        ;; Online?
+        lda     dib_buffer::Device_Statbyte1
+        and     #$10            ; general status byte, $10 = disk in drive
+        beq     next_unit
+
+        ;; Check device type
+        ;; Technical Note: SmartPort #4: SmartPort Device Types
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
+        lda     dib_buffer::Device_Type_Code
+        bne     next_unit       ; $00 = Memory Expansion Card (RAM Disk)
+        lda     unit_num
+        bne     test_unit_num   ; always
+
+next_unit:
+        dec     devnum
+        bpl     loop
         jmp     did_not_copy
 
-:       lda     unit_num
-        cmp     #$30            ; make sure it's not slot 3 (aux)
-        beq     :+
-        sta     write_block_params::unit_num ; Init device as ProDOS
-        sta     write_block2_params::unit_num
-        MLI_CALL WRITE_BLOCK, write_block_params
-        bne     :+
-        MLI_CALL WRITE_BLOCK, write_block2_params
-:       lda     on_line_buffer
+        ;; Have a prospective device.
+test_unit_num:
+        ;; Verify it's online.
+        lda     unit_num
+        and     #$F0
+        sta     on_line_params::unit_num
+        MLI_CALL ON_LINE, on_line_params
+        bne     next_unit
+
+        ;; Copy the path
+        lda     on_line_buffer
         and     #$0F
         tay
 
@@ -1010,6 +1016,12 @@ found_slot:
         jsr     set_copied_to_ramcard_flag
         jsr     copy_orig_prefix_to_desktop_orig_prefix
         jmp     did_not_copy
+
+smartport_call:
+        jmp     (sp_addr)
+
+
+.endproc
 .endproc
 
 .proc start_copy
@@ -2090,6 +2102,10 @@ done:   rts
 
 .endproc
         preserve_quit_code := preserve_quit_code_impl::start
+
+;;; ============================================================
+
+        .include "../lib/smartport.s"
 
 ;;; ============================================================
 
