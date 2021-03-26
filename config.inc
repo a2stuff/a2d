@@ -24,5 +24,5 @@ kBuildDD = 6
 
         .define kBuildLang "en"
 .macro RESOURCE_FILE basename
-        .include .concat(basename, ".", kBuildLang)
+        .include .concat("res/", basename, ".", kBuildLang)
 .endmacro

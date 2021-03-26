@@ -125,7 +125,10 @@ while (<STDIN>) {
     if ($file ne $last_file) {
         $last_file = $file;
         foreach my $lang (@langs) {
-           open $fhs{$lang}, '>'.($file =~ s/\.s$/.res.$lang/r) or die $!;
+            my $outfile = $file;
+            $outfile =~ s|/|/res/|;
+            $outfile =~ s|\.s$|.res.$lang|;
+            open $fhs{$lang}, '>'.$outfile or die $!;
         }
 
         %dupes = ();
