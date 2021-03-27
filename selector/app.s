@@ -2233,7 +2233,7 @@ len:    .byte   0
         jsr     ShowAlertImpl
         tax
         sta     ALTZPOFF
-        sta     ROMIN2
+        lda     ROMIN2
         rts
 .endproc
 
@@ -2316,6 +2316,16 @@ done:   rts
 
 loop_counter:
         .byte   0
+.endproc
+
+.proc yield_loop_from_lc
+        sta     ALTZPOFF
+        lda     ROMIN2
+        jsr     yield_loop
+        sta     ALTZPON
+        lda     LCBANK1
+        lda     LCBANK1
+        rts
 .endproc
 
 ;;; ============================================================

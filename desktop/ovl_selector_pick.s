@@ -1648,7 +1648,7 @@ hi:     .byte   0
         sty     call
         stax    params
         sta     ALTZPOFF
-        sta     ROMIN2
+        lda     ROMIN2
         jsr     MLI
 call:   .byte   0
 params: .addr   0

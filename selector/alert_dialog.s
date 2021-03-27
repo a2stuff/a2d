@@ -269,6 +269,7 @@ draw_prompt:
         ;; Event Loop
 
 event_loop:
+        jsr     app::yield_loop_from_lc
         MGTK_CALL MGTK::GetEvent, app::event_params
         lda     app::event_kind
         cmp     #MGTK::EventKind::button_down

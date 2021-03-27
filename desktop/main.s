@@ -907,7 +907,7 @@ no_selection:
         sty     call
         stax    params
         sta     ALTZPOFF
-        sta     ROMIN2
+        lda     ROMIN2
         jsr     MLI
 call:   .byte   0
 params: .addr   0
@@ -13385,7 +13385,7 @@ format: lda     DEVLST,x
         lda     LCBANK1
         lda     LCBANK1
         jsr     driver
-        sta     ROMIN2
+        lda     ROMIN2
         rts
 
 RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2

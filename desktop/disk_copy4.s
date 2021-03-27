@@ -1042,7 +1042,7 @@ done:   rts
 
 .proc bell
         sta     ALTZPOFF
-        sta     ROMIN2
+        lda     ROMIN2
         jsr     BELL1
         sta     ALTZPON
         lda     LCBANK1

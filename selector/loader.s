@@ -92,7 +92,7 @@ L2049:  lda     open_params::ref_num
         bne     :-
 
         sta     ALTZPOFF
-        sta     ROMIN2
+        lda     ROMIN2
 
         MLI_CALL CLOSE, close_params
 
