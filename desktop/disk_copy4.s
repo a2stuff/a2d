@@ -1143,6 +1143,26 @@ memory_bitmap:
 .endproc
 
 ;;; ============================================================
+;;; On IIgs, force B&W mode. No-op otherwise.
+;;; NOTE: Does not honor setting for RGB mode.
+;;; Assert: LCBANK1 is banked in
+
+.proc reset_iigs_rgb
+        lda     ROMIN2
+        sec
+        jsr     IDROUTINE
+        lda     LCBANK1
+        lda     LCBANK1
+        bcs     done
+
+        lda     NEWVIDEO
+        ora     #(1<<5)         ; B&W
+        sta     NEWVIDEO
+
+done:   rts
+.endproc
+
+;;; ============================================================
 
         PAD_TO $1300
 
@@ -1172,3 +1192,4 @@ main__quit                            := main::quit
 main__unit_number_to_driver_address   := main::unit_number_to_driver_address
 main__get_device_blocks_using_driver  := main::get_device_blocks_using_driver
 main__on_line_buffer2                 := main::on_line_buffer2
+main__reset_iigs_rgb                  := main::reset_iigs_rgb

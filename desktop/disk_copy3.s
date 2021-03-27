@@ -303,7 +303,9 @@ current_drive_selection:        ; $FF if no selection
         .byte   0
         .byte   0
         .byte   0
+
 LD367:  .byte   0
+
 LD368:  .byte   0
         .byte   0
         .byte   0
@@ -842,7 +844,8 @@ LD998:  bit     LD368
         bne     :+
         lda     #$00
         sta     LD368
-:       MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
+:       jsr     yield_loop
+        MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     LD9BA
@@ -2634,6 +2637,7 @@ event_loop:
 :       jmp     finish_cancel
 
 LED45:
+        jsr     yield_loop
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -3083,6 +3087,7 @@ state:
         lda     main__on_line_buffer+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
+        jsr     yield_loop
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::key_down
@@ -3107,6 +3112,29 @@ done:   rts
 .endproc
 
 show_alert_dialog := alert_dialog::show_alert_dialog
+
+;;; ============================================================
+;;; Called by main and nested event loops to do periodic tasks.
+;;; Returns 0 if the periodic tasks were run.
+
+.proc yield_loop
+        kMaxCounter = $E0       ; arbitrary
+
+        inc     loop_counter
+        inc     loop_counter
+        lda     loop_counter
+        cmp     #kMaxCounter
+        bcc     :+
+        copy    #0, loop_counter
+
+        jsr     main__reset_iigs_rgb ; in case it was reset by control panel
+
+:       lda     loop_counter
+        rts
+
+loop_counter:
+        .byte   0
+.endproc
 
 ;;; ============================================================
 
