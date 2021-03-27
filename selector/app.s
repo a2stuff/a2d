@@ -436,12 +436,20 @@ num_other_run_list_entries:
 
 L9129:  .byte   0
 
+not_iigs_flag:                  ; high bit set unless IIgs
+        .byte   0
+
 ;;; ============================================================
 ;;; App Initialization
 
 entry:
 .proc app_init
         cli
+
+        sec
+        jsr     IDROUTINE       ; clear C if IIgs
+        ror     not_iigs_flag   ; rotate C into high bit
+
         copy    #$FF, selected_index
         jsr     load_selector_list
         copy    #1, L9129
@@ -657,7 +665,7 @@ quick_boot_slot:
 ;;; Event Loop
 
 .proc event_loop
-        jsr     yield_loop
+        ;;         jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -2273,12 +2281,10 @@ done:   rts
 
 ;;; ============================================================
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
-;;; Assert: ROM is banked in
 
 .proc reset_iigs_rgb
-        sec
-        jsr     IDROUTINE
-        bcs     done
+        bit     not_iigs_flag
+        bmi     done
 
         bit     SETTINGS + DeskTopSettings::rgb_color
         bmi     color
@@ -2316,16 +2322,6 @@ done:   rts
 
 loop_counter:
         .byte   0
-.endproc
-
-.proc yield_loop_from_lc
-        sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     yield_loop
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
 .endproc
 
 ;;; ============================================================
