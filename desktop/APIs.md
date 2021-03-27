@@ -200,9 +200,17 @@ Input: A,X = FileEntry structure.
 
 Changes mouse cursor to I-beam.
 
-#### `JUMP_TABLE_MONO_MODE` ($4063) *
+#### `JUMP_TABLE_RGB_MODE` ($4063) *
 
 Set DHR color or monochrome mode, based on control panel setting.
+
+#### `JUMP_TABLE_YIELD_LOOP` ($4066) *
+
+Yield during an event loop for DeskTop to run tasks. This allows the menu bar clock to be updated and similar infrequent operations.
+
+Desk Accessories should call this (from main!) from their event loop unless they need to have total control of the system (e.g. screen savers). A good place to do this is just before a call to `MGTK::GetEvent`. Note that the current grafport may be modified during this call.
+
+Yielding during further nested loops (e.g. button tracking, etc) can be done but is not worth the effort.
 
 <!-- ============================================================ -->
 

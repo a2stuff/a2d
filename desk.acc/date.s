@@ -296,6 +296,7 @@ init_window:
 ;;; Input loop
 
 .proc input_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -305,6 +306,7 @@ init_window:
 
 :       cmp     #MGTK::EventKind::key_down
         bne     input_loop
+        ;; fall through
 .endproc
 
 .proc on_key
@@ -370,6 +372,15 @@ on_key_right:
 update_selection:
         jsr     highlight_selected_field
         jmp     input_loop
+.endproc
+
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 ;;; ============================================================

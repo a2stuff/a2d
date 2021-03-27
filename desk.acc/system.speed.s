@@ -217,6 +217,7 @@ grafport:       .tag MGTK::GrafPort
 ;;; Input loop
 
 .proc input_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -224,6 +225,7 @@ grafport:       .tag MGTK::GrafPort
 
         cmp     #MGTK::EventKind::key_down
         bne     input_loop
+        ;; fall through
 .endproc
 
 .proc on_key
@@ -280,6 +282,17 @@ grafport:       .tag MGTK::GrafPort
 
         jsr     do_fast
         jmp     input_loop
+.endproc
+
+;;; ============================================================
+
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 ;;; ============================================================

@@ -609,6 +609,7 @@ xcoord: .byte   0
 ;;; Otherwise: Cancel selected
 
 .proc event_loop
+        jsr     main::yield_loop
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down

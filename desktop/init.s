@@ -1083,7 +1083,6 @@ iloop:  cpx     cached_window_icon_count
         ;; Clear various flags
         lda     #0
         sta     double_click_flag
-        sta     main::main_loop::loop_counter
         sta     file_menu_items_enabled_flag
 
         ;; Restore state from previous session

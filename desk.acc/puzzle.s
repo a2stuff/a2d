@@ -634,6 +634,7 @@ ploop:  lda     position_table+1,y
         stx     position_table+1
 .endproc
 
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         beq     scramble
@@ -648,6 +649,7 @@ ploop:  lda     position_table+1,y
 ;;; Input loop and processing
 
 .proc input_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -716,6 +718,15 @@ check_key:
         cmp     #CHAR_ESCAPE
         beq     destroy
 :       rts
+.endproc
+
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 ;;; ============================================================

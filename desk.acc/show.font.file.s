@@ -235,6 +235,7 @@ char_label:  .byte   0
 .endproc
 
 .proc input_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         bne     exit
         lda     event_params::kind
@@ -249,6 +250,15 @@ char_label:  .byte   0
 
 
 :       jmp     input_loop
+.endproc
+
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 .proc exit

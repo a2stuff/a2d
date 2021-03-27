@@ -113,7 +113,7 @@ to:
         lda     #$00
 
 :       sta     flag
-        jsr     desktop_main_push_pointers
+        jsr     main__push_pointers
 
         lda     cached_window_id
         asl     a               ; * 2
@@ -163,7 +163,7 @@ copy_from:
 
 done:   sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     desktop_main_pop_pointers
+        jsr     main__pop_pointers
         rts
 
 flag:   .byte   0

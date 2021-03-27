@@ -841,6 +841,7 @@ done:   rts
 .endproc
 
 .proc input_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         bne     exit
         lda     event_params::kind
@@ -941,6 +942,17 @@ done:   rts
 done:   jmp     input_loop
 
 egg:    .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 ;;; ============================================================

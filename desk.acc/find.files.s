@@ -1018,6 +1018,7 @@ top_row:        .byte   0
 
 .proc input_loop
         jsr     blink_ip
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         bne     exit
         lda     event_params::kind
@@ -1028,6 +1029,15 @@ top_row:        .byte   0
         cmp     #MGTK::EventKind::no_event
         jeq     handle_no_event
         jmp     input_loop
+.endproc
+
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 .proc exit

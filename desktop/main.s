@@ -58,22 +58,16 @@ JT_HILITE_MENU:         jmp     toggle_menu_hilite      ; *
 JT_ADJUST_FILEENTRY:    jmp     AdjustFileEntryCase     ; *
 JT_CUR_IBEAM:           jmp     set_cursor_ibeam        ; *
 JT_RGB_MODE:            jmp     set_rgb_mode            ; *
+JT_YIELD_LOOP:          jmp     yield_loop              ; *
         .assert JUMP_TABLE_MAIN_LOOP = JT_MAIN_LOOP, error, "Jump table mismatch"
-        .assert JUMP_TABLE_RGB_MODE = JT_RGB_MODE, error, "Jump table mismatch"
+        .assert JUMP_TABLE_YIELD_LOOP = JT_YIELD_LOOP, error, "Jump table mismatch"
 
         ;; Main Loop
 .proc main_loop
         jsr     reset_main_grafport
 
-        inc     loop_counter
-        inc     loop_counter
-        lda     loop_counter
-        cmp     machine_type    ; for per-machine timing
-        bcc     :+
-        copy    #0, loop_counter
-
-        jsr     show_clock
-        jsr     reset_iigs_rgb ; in case it was reset by control panel
+        jsr     yield_loop
+        bne     :+
 
         ;; Poll drives for updates
         jsr     check_disk_inserted_ejected
@@ -109,9 +103,6 @@ click:  jsr     handle_click
         jsr     handle_update
 
 :       jmp     main_loop
-
-loop_counter:
-        .byte   0
 
 ;;; --------------------------------------------------
 
@@ -170,6 +161,29 @@ done_redraw:
 
 .endproc
         clear_updates := main_loop::clear_updates
+
+;;; ============================================================
+;;; Called by main and nested event loops to do infrequent tasks
+;;; reset IIgs colors, update clock, etc). Uses machine-specific
+;;; frequency. Returns 0 if it's time to do the infrequent
+
+.proc yield_loop
+        inc     loop_counter
+        inc     loop_counter
+        lda     loop_counter
+        cmp     machine_type    ; for per-machine timing
+        bcc     :+
+        copy    #0, loop_counter
+
+        jsr     show_clock
+        jsr     reset_iigs_rgb ; in case it was reset by control panel
+
+:       lda     loop_counter
+        rts
+
+loop_counter:
+        .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -10178,6 +10192,8 @@ open:   MLI_RELAY_CALL OPEN, open_params
 ;;; ============================================================
 
 .proc show_clock
+        jsr     reset_main_grafport
+
         lda     MACHID
         and     #1              ; bit 0 = clock card
         bne     :+
@@ -13487,7 +13503,8 @@ dialog_param_addr:
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
         ;; Dispatch event types - mouse down, key press
-:       MGTK_RELAY_CALL MGTK::GetEvent, event_params
+:       jsr     yield_loop
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
@@ -13848,7 +13865,8 @@ jump_relay:
         param_call draw_dialog_label, 9, aux::str_about9
         copy16  #kDialogLabelDefaultX, dialog_label_pos
 
-:       MGTK_RELAY_CALL MGTK::GetEvent, event_params
+:       jsr     yield_loop
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         beq     close
@@ -16170,5 +16188,6 @@ pb2_initial_state:
         PAD_TO $BF00
 
 .endproc ; main
-        desktop_main_pop_pointers := main::pop_pointers
-        desktop_main_push_pointers := main::push_pointers
+        main__pop_pointers := main::pop_pointers
+        main__push_pointers := main::push_pointers
+        main__yield_loop := main::yield_loop

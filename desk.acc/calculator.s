@@ -581,7 +581,8 @@ loop:   lda     chrget_routine-1,x
 ;;; ============================================================
 ;;; Input Loop
 
-input_loop:
+.proc input_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -593,6 +594,16 @@ input_loop:
         bne     input_loop
         jsr     on_key_press
         jmp     input_loop
+.endproc
+
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; On Click

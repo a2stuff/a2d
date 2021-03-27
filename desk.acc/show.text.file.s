@@ -433,7 +433,8 @@ loop:   lda     DEFAULT_FONT + MGTK::Font::charwidth - 1,x
 ;;; ============================================================
 ;;; Main Input Loop
 
-input_loop:
+.proc input_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params
         cmp     #MGTK::EventKind::key_down    ; key?
@@ -472,7 +473,16 @@ input_loop:
 
 title:  jsr     on_title_bar_click
         jmp     input_loop
+.endproc
 
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Key

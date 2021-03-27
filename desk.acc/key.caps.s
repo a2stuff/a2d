@@ -575,6 +575,7 @@ continue:
 .endproc
 
 .proc input_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         bne     exit
         lda     event_params::kind
@@ -589,6 +590,15 @@ continue:
 
 
 :       jmp     input_loop
+.endproc
+
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 .proc exit

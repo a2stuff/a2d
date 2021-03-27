@@ -99,7 +99,8 @@ L5105:  .byte   0               ; ??? something about the picker
         jsr     jt_blink_ip
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
-:       MGTK_RELAY_CALL MGTK::GetEvent, event_params
+:       jsr     main::yield_loop
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+

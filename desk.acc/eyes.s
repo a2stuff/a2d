@@ -195,6 +195,7 @@ grow_box_bitmap:
 .endproc
 
 .proc input_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         bne     exit
         lda     event_params::kind
@@ -205,6 +206,15 @@ grow_box_bitmap:
         cmp     #MGTK::EventKind::no_event
         beq     handle_no_event
         jmp     input_loop
+.endproc
+
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 .proc exit
@@ -247,8 +257,8 @@ grow_box_bitmap:
 .proc handle_close
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        beq     input_loop
         bne     exit
+        jmp     input_loop
 .endproc
 
 ;;; ============================================================
