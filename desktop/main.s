@@ -163,15 +163,14 @@ done_redraw:
         clear_updates := main_loop::clear_updates
 
 ;;; ============================================================
-;;; Called by main and nested event loops to do infrequent tasks
-;;; reset IIgs colors, update clock, etc). Uses machine-specific
-;;; frequency. Returns 0 if it's time to do the infrequent
+;;; Called by main and nested event loops to do periodic tasks.
+;;; Returns 0 if the periodic tasks were run.
 
 .proc yield_loop
         inc     loop_counter
         inc     loop_counter
         lda     loop_counter
-        cmp     machine_type    ; for per-machine timing
+        cmp     periodic_task_delay    ; for per-machine timing
         bcc     :+
         copy    #0, loop_counter
 

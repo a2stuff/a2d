@@ -657,6 +657,7 @@ quick_boot_slot:
 ;;; Event Loop
 
 .proc event_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -2237,6 +2238,7 @@ len:    .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Assert: ROM is banked in
 
 .proc SetColorMode
         ;; AppleColor Card - Mode 2 (Color 140x192)
@@ -2267,6 +2269,53 @@ iigs:   lda     NEWVIDEO
         sta     NEWVIDEO
 
 done:   rts
+.endproc
+
+;;; ============================================================
+;;; On IIgs, force preferred RGB mode. No-op otherwise.
+;;; Assert: ROM is banked in
+
+.proc reset_iigs_rgb
+        sec
+        jsr     IDROUTINE
+        bcs     done
+
+        bit     SETTINGS + DeskTopSettings::rgb_color
+        bmi     color
+
+mono:   lda     NEWVIDEO
+        ora     #(1<<5)         ; B&W
+        sta     NEWVIDEO
+        rts
+
+color:  lda     NEWVIDEO
+        and     #<~(1<<5)        ; Color
+        sta     NEWVIDEO
+
+done:   rts
+.endproc
+
+;;; ============================================================
+;;; Called by main and nested event loops to do periodic tasks.
+;;; Returns 0 if the periodic tasks were run.
+
+.proc yield_loop
+        kMaxCounter = $E0       ; arbitrary
+
+        inc     loop_counter
+        inc     loop_counter
+        lda     loop_counter
+        cmp     #kMaxCounter
+        bcc     :+
+        copy    #0, loop_counter
+
+        jsr     reset_iigs_rgb ; in case it was reset by control panel
+
+:       lda     loop_counter
+        rts
+
+loop_counter:
+        .byte   0
 .endproc
 
 ;;; ============================================================

@@ -475,7 +475,8 @@ LA47F:  .byte   0
         jsr     blink_ip
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
-:       MGTK_CALL MGTK::GetEvent, event_params
+:       jsr     app::yield_loop
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+

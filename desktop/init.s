@@ -166,13 +166,13 @@ done:
         jmp     end
 
         ;; IIe (or IIe Option Card)
-is_iie: lda     #$96
+is_iie: lda     #kPeriodicTaskDelayIIe
         ldxy    #kDefaultDblClickSpeed*1
         jmp     end
 
         ;; IIgs
 is_iigs:
-        lda     #$FD
+        lda     #kPeriodicTaskDelayIIgs
         ldxy    #kDefaultDblClickSpeed*4
         jmp     end
 
@@ -181,11 +181,11 @@ is_iic: lda     id_idbyte2            ; ROM version
         cmp     #$05               ; IIc Plus = $05
         bne     :+
         copy    #$80, is_iic_plus_flag
-:       lda     #$FA
+:       lda     #kPeriodicTaskDelayIIc
         ldxy    #kDefaultDblClickSpeed*4
 
 end:
-        sta     machine_type
+        sta     periodic_task_delay
 
         ;; Only set if not previously configured
         lda     SETTINGS + DeskTopSettings::dblclick_speed

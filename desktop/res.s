@@ -189,9 +189,17 @@ goaway:.byte   0
 double_click_flag:
         .byte   0               ; high bit clear if double-clicked, set otherwise
 
-        ;; Set to specific machine type
-machine_type:
-        .byte   $00             ; Set to: $96 = IIe, $FA = IIc, $FD = IIgs
+
+;;; Every event loop tick, a counter is incremented (by 3); when it passes
+;;; this value, periodic tasks are run (e.g. drawing the clock, checking
+;;; for new devices, etc).
+periodic_task_delay:
+        .byte   0
+
+;;; This delay is initialized to a machine-specific value. TODO: Why???
+kPeriodicTaskDelayIIe  = $96
+kPeriodicTaskDelayIIc  = $FA
+kPeriodicTaskDelayIIgs = $FD
 
 warning_dialog_num:
         .byte   $00
