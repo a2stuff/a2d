@@ -579,6 +579,21 @@ textback:       .byte   0
 textfont:       .addr   0
 .endparams
 
+;;; ============================================================
+
+.params dib_buffer
+Number_Devices:                 ; if unit_num == 0 && status_code == 0
+Device_Statbyte1:       .byte   0
+Interrupt_Status:               ; if unit_num == 0 && status_code == 0
+Device_Size_Lo:         .byte   0
+Device_Size_Med:        .byte   0
+Device_Size_Hi:         .byte   0
+ID_String_Length:       .byte   0
+Device_Name:            .res    16
+Device_Type_Code:       .byte   0
+Device_Subtype_Code:    .byte   0
+Version:                .word   0
+.endparams
 
 ;;; ============================================================
 ;;; Per Technical Note: Apple II Miscellaneous #7: Apple II Family Identification
@@ -1278,6 +1293,7 @@ fail:   clc
 :       inc16   memory          ; Main 64k memory
 
         jsr     check_iigs_memory
+        jsr     check_slinky_memory
 
         asl16   memory          ; * 64
         asl16   memory
@@ -1416,6 +1432,80 @@ done:   rts
 .endproc
 
 ;;; ============================================================
+
+.proc check_slinky_memory
+        slot_ptr := $06
+
+        copy    #0, slot_ptr
+        lda     #7
+        sta     slot
+
+        ;; Point at $Cn00, look for SmartPort signature bytes
+loop:   lda     slot
+        ora     #$C0
+        sta     slot_ptr+1
+        ldx     #3
+:       ldy     sig_offsets,x
+        lda     (slot_ptr),y
+        cmp     sig_values,x
+        bne     next
+        dex
+        bpl     :-
+
+        ;; Now look for device type
+        ldy     #$FB            ; $CnFB is SmartPort ID Type byte
+        lda     (slot_ptr),y
+        and     #%00000001      ; bit 0 = RAM card
+        beq     next
+
+        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
+        ldy     #$FF
+        lda     (slot_ptr),y
+        clc
+        adc     #3
+        sta     sp_addr
+        lda     slot_ptr+1
+        sta     sp_addr+1
+
+        ;; Make a STATUS call
+        sp_addr := *+1
+        jsr     SELF_MODIFIED
+        .byte   $00             ; STATUS
+        .addr   status_params
+        bcs     next
+
+        ;; Convert blocks (0.5k) to banks (64k)
+        ldx     #7
+:       lsr     dib_buffer::Device_Size_Hi
+        ror     dib_buffer::Device_Size_Med
+        ror     dib_buffer::Device_Size_Lo
+        dex
+        bne     :-
+
+        add16   memory, dib_buffer::Device_Size_Lo, memory
+
+next:   dec     slot
+        bpl     loop
+        rts
+
+sig_offsets:
+        .byte   $01, $03, $05, $07
+sig_values:
+        .byte   $20, $00, $03, $00
+slot:
+        .byte   0
+
+.params status_params
+param_count:    .byte   3
+unit_num:       .byte   1
+list_ptr:       .addr   dib_buffer
+status_code:    .byte   3       ; Return Device Information Block (DIB)
+.endparams
+
+.endproc
+
+
+;;; ============================================================
 ;;; Input: 16-bit unsigned integer in A,X
 ;;; Output: str_from_int populated, with separator if needed
 
@@ -1472,21 +1562,6 @@ unit_num:       .byte   1
 list_ptr:       .addr   dib_buffer
 status_code:    .byte   3       ; Return Device Information Block (DIB)
 .endparams
-
-.params dib_buffer
-Number_Devices:                 ; if unit_num == 0 && status_code == 0
-Device_Statbyte1:       .byte   0
-Interrupt_Status:               ; if unit_num == 0 && status_code == 0
-Device_Size_Lo:         .byte   0
-Device_Size_Med:        .byte   0
-Device_Size_Hi:         .byte   0
-ID_String_Length:       .byte   0
-Device_Name:            .res    16
-Device_Type_Code:       .byte   0
-Device_Subtype_Code:    .byte   0
-Version:                .word   0
-.endparams
-
 
         slot_ptr := $06
 
