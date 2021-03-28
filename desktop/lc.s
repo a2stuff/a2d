@@ -217,6 +217,7 @@ loop:   lda     (src),y
 
 ;;; ============================================================
 ;;; From MAIN, load AUX (A,X) into A
+;;; Assert: Main is banked in
 
 .proc AuxLoad
         stax    op+1
@@ -228,6 +229,7 @@ op:     lda     SELF_MODIFIED
 
 ;;; ============================================================
 ;;; From MAIN, show alert
+;;; Assert: Main is banked in
 
 ;;; ...with prompt #0
 .proc ShowAlert
@@ -248,6 +250,7 @@ op:     lda     SELF_MODIFIED
 ;;; ============================================================
 ;;; Input: numbers in A,X, Y (all unsigned)
 ;;; Output: number in A,X (unsigned)
+;;; Assert: Main is banked in
 
 .proc Multiply_16_8_16
         sta     RAMRDON
@@ -261,6 +264,7 @@ op:     lda     SELF_MODIFIED
 ;;; ============================================================
 ;;; Input: dividend in A,X, divisor in Y (all unsigned)
 ;;; Output: quotient in A,X (unsigned)
+;;; Assert: Main is banked in
 
 .proc Divide_16_8_16
         sta     RAMRDON
@@ -273,6 +277,7 @@ op:     lda     SELF_MODIFIED
 
 ;;; ============================================================
 ;;; ButtonEventLoop
+;;; Assert: Main is banked in
 
 .proc ButtonEventLoopRelay
         sta     RAMRDON
@@ -285,6 +290,7 @@ op:     lda     SELF_MODIFIED
 
 ;;; ============================================================
 ;;; Bell
+;;; Assert: Main is banked in
 
 .proc Bell
         sta     RAMRDON
@@ -297,6 +303,7 @@ op:     lda     SELF_MODIFIED
 
 ;;; ============================================================
 ;;; Detect double click
+;;; Assert: Main is banked in
 
 .proc DetectDoubleClick
         sta     RAMRDON
@@ -304,6 +311,19 @@ op:     lda     SELF_MODIFIED
         jsr     aux::DetectDoubleClick
         sta     RAMRDOFF
         sta     RAMWRTOFF
+        rts
+.endproc
+
+;;; ============================================================
+;;; Yield from a nested event loop, for periodic tasks.
+;;; Assert: Aux is banked in
+
+.proc YieldLoopFromAux
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     main__yield_loop
+        sta     RAMRDON
+        sta     RAMWRTON
         rts
 .endproc
 

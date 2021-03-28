@@ -1428,6 +1428,20 @@ month_offset_table:             ; for Day-of-Week calculations
 parsed_date:
         .tag ParsedDateTime
 
+;;; GrafPort used when drawing the clock
+.params clock_grafport
+viewloc:        .word   0, 0
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+maprect:        .word   0, 0, kScreenWidth-1, kMenuBarHeight-1
+.endparams
+
+;;; Used to save the current GrafPort while drawing the clock.
+.params getport_params
+portptr:        .addr   0
+.endparams
+
 ;;; ============================================================
 
         PAD_TO $ED00

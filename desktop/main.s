@@ -10191,8 +10191,6 @@ open:   MLI_RELAY_CALL OPEN, open_params
 ;;; ============================================================
 
 .proc show_clock
-        jsr     reset_main_grafport
-
         lda     MACHID
         and     #1              ; bit 0 = clock card
         bne     :+
@@ -10200,7 +10198,12 @@ open:   MLI_RELAY_CALL OPEN, open_params
 
 :       MLI_RELAY_CALL GET_TIME
 
-        ;; Assumes call from main loop, where main_grafport is initialized.
+        ;; --------------------------------------------------
+        ;; Save the current GrafPort and use a custom one for drawing
+
+        MGTK_RELAY_CALL MGTK::GetPort, getport_params
+        MGTK_RELAY_CALL MGTK::SetPort, clock_grafport
+
         MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
         MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
 
@@ -10234,7 +10237,14 @@ open:   MLI_RELAY_CALL OPEN, open_params
         jsr     make_time_string
 
         param_call DrawString, str_time
-        param_jump DrawString, str_4_spaces ; in case it got shorter
+        param_call DrawString, str_4_spaces ; in case it got shorter
+
+        ;; --------------------------------------------------
+        ;; Restore the previous GrafPort
+
+        ldax    getport_params::portptr
+        ldy     #MGTK::SetPort
+        jmp     MGTK_RELAY
 .endproc
 
 ;;; ============================================================

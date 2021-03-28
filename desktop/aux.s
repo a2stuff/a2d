@@ -3805,19 +3805,6 @@ start:  pha                     ; error code
         ;; play bell
         jsr     Bell
 
-        ;; Set up GrafPort
-        ldx     #.sizeof(MGTK::Point)-1
-        lda     #0
-:       sta     main_grafport_viewloc_xcoord,x
-        sta     main_grafport_cliprect_x1,x
-        dex
-        bpl     :-
-
-        ;; TODO: Figure out these constants.
-        copy16  #550, main_grafport_cliprect_x2
-        copy16  #185, main_grafport_cliprect_y2
-        MGTK_CALL MGTK::SetPort, main_grafport
-
         ;; Compute save bounds
         ldax    portmap::viewloc::xcoord ; left
         jsr     CalcXSaveBounds
@@ -3846,19 +3833,23 @@ start:  pha                     ; error code
         jsr     dialog_background_save
         MGTK_CALL MGTK::ShowCursor
 
-        ;; Draw alert box and bitmap
+        ;; Set up GrafPort
+        MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, main_grafport
+
+        ;; Draw alert box and bitmap - coordinates are in screen space
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, alert_rect ; alert background
         MGTK_CALL MGTK::SetPenMode, penXOR ; ensures corners are inverted
         MGTK_CALL MGTK::FrameRect, alert_rect ; alert outline
-        MGTK_CALL MGTK::SetPortBits, portmap::viewloc::xcoord
+
+        MGTK_CALL MGTK::SetPortBits, portmap ; viewport for remaining operations
+
+        ;; Draw rest of alert - coordinates are relative to portmap
         MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect1 ; inner 2x border
         MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect2
         MGTK_CALL MGTK::SetPenMode, pencopy
-
-        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintBits, alert_bitmap_params
-        MGTK_CALL MGTK::ShowCursor
 
         ;; --------------------------------------------------
         ;; Process Options
@@ -3940,6 +3931,7 @@ draw_prompt:
         ;; Event Loop
 
 event_loop:
+        jsr     YieldLoopFromAux
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
