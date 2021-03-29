@@ -39,6 +39,7 @@
 .define res_string_card_type_network "Tarjeta de Red"
 .define res_string_card_type_mockingboard "Mockingboard"
 .define res_string_card_type_z80 "Tarjeta Z-80"
+.define res_string_card_type_uthernet2 "Uthernet II"
 .define res_string_unknown "(desconocido)"
 .define res_string_empty "(vacio)"
 .define res_string_none "(nada)"

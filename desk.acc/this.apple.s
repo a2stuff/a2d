@@ -490,6 +490,7 @@ str_storage:    PASCAL_STRING res_string_card_type_storage
 str_network:    PASCAL_STRING res_string_card_type_network
 str_mockingboard: PASCAL_STRING res_string_card_type_mockingboard
 str_z80:        PASCAL_STRING res_string_card_type_z80
+str_uthernet2:  PASCAL_STRING res_string_card_type_uthernet2
 str_unknown:    PASCAL_STRING res_string_unknown
 str_empty:      PASCAL_STRING res_string_empty
 str_none:       PASCAL_STRING res_string_none
@@ -1227,6 +1228,11 @@ notpas:
         bcc     :+
         return16 #str_z80
 :
+
+        jsr     detect_uthernet2
+        bcc     :+
+        return16 #str_uthernet2
+:
         return16 #str_unknown
 .endproc
 
@@ -1249,6 +1255,41 @@ notpas:
         ;; Flag will be set to 1 by routine if Z80 was present.
         lda     z80_routine::flag
         ror                     ; move flag into carry
+        rts
+.endproc
+
+;;; Detect Uthernet II
+;;; Assumes $06 points at $Cn00, returns carry set if found
+
+.proc detect_uthernet2
+        ;; Based on the a2RetroSystems Uthernet II manual
+
+        MR := $C084
+
+        lda     $07             ; $Cn
+        and     #$0F
+        tax                     ; Slot in X
+
+        ;; Send the RESET command
+        lda     #$80
+        sta     MR,x
+        nop
+        nop
+        lda     MR,x            ; Should get zero
+        bne     fail
+
+        ;; Configure operating mode with auto-increment
+        lda     #3              ; Operating mode
+        sta     MR,x
+        lda     MR,x            ; Read back MR
+        cmp     #3
+        bne     fail
+
+        ;; Probe successful
+        sec
+        rts
+
+fail:   clc
         rts
 .endproc
 

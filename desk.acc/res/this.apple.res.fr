@@ -39,6 +39,7 @@
 .define res_string_card_type_network "Carte r{seau"
 .define res_string_card_type_mockingboard "Mockingboard"
 .define res_string_card_type_z80 "Carte Z-80"
+.define res_string_card_type_uthernet2 "Uthernet II"
 .define res_string_unknown "(inconnu)"
 .define res_string_empty "(vide)"
 .define res_string_none "(aucun)"
