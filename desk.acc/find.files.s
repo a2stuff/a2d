@@ -1076,6 +1076,16 @@ done:   rts
         jeq     do_meta_left
         cmp     #CHAR_RIGHT
         jeq     do_meta_right
+        cmp     #CHAR_UP
+    IF_EQ
+        copy    #MGTK::Part::page_up, findcontrol_params::which_part
+        jmp     handle_scroll
+    END_IF
+        cmp     #CHAR_DOWN
+    IF_EQ
+        copy    #MGTK::Part::page_down, findcontrol_params::which_part
+        jmp     handle_scroll
+    END_IF
         jmp     ignore_char
 
 not_meta:
@@ -1098,6 +1108,17 @@ not_meta:
 
         cmp     #CHAR_DELETE
         jeq     do_delete
+
+        cmp     #CHAR_UP
+    IF_EQ
+        copy    #MGTK::Part::up_arrow, findcontrol_params::which_part
+        jmp     handle_scroll
+    END_IF
+        cmp     #CHAR_DOWN
+    IF_EQ
+        copy    #MGTK::Part::down_arrow, findcontrol_params::which_part
+        jmp     handle_scroll
+    END_IF
 
         ;; Valid characters are . 0-9 A-Z a-z ? *
         cmp     #'*'            ; Wildcard
