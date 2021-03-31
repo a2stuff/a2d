@@ -982,9 +982,10 @@ penxor: .byte   MGTK::penXOR
 
 cursor_ip_flag: .byte   0
 
-buf_left:       .res    17, 0   ; input text before IP
-buf_right:      .res    17, 0   ; input text at/after IP
-buf_search:     .res    17, 0   ; search term
+kBufSize = 18                   ; max length = 15, plus IP + length + extra
+buf_left:       .res    kBufSize, 0 ; input text before IP
+buf_right:      .res    kBufSize, 0 ; input text at/after IP
+buf_search:     .res    kBufSize, 0 ; search term
 
 suffix: PASCAL_STRING "  "      ; do not localize
 
@@ -1169,6 +1170,11 @@ ignore_char:
 ;;; ------------------------------------------------------------
 
 .proc do_meta_left
+        jsr     move_ip_to_end
+        jmp     input_loop
+.endproc
+
+.proc move_ip_to_start
         lda     buf_left            ; length of string to left of IP
         beq     done
 
@@ -1200,8 +1206,7 @@ move:   ldx     buf_left
 
         jsr     draw_input_text
 
-done:   jmp     input_loop
-
+done:   rts
 .endproc
 
 ;;; ------------------------------------------------------------
@@ -1237,6 +1242,11 @@ done:   jmp     input_loop
 ;;; ------------------------------------------------------------
 
 .proc do_meta_right
+        jsr     move_ip_to_end
+        jmp     input_loop
+.endproc
+
+.proc move_ip_to_end
         lda     buf_right       ; length of string from IP rightwards
         cmp     #2              ; must be at least one char (plus IP)
         bcc     done
@@ -1264,7 +1274,7 @@ done:   jmp     input_loop
 
         jsr     draw_input_text
 
-done:   jmp     input_loop
+done:   rts
 .endproc
 
 ;;; ------------------------------------------------------------
@@ -1401,7 +1411,8 @@ finish: jmp     input_loop
         bmi     done
         jmp     exit
 
-:
+:       jsr     handle_click_in_textbox
+
 done:   jmp     input_loop
 
         ;; Click in Results content area
@@ -1604,6 +1615,198 @@ invert_rect:
         ;; fall through...
 
 sub:    MGTK_CALL MGTK::PaintRect, 0, fillrect_addr
+        rts
+.endproc
+
+
+;;; ============================================================
+
+.proc handle_click_in_textbox
+
+        PARAM_BLOCK tw_params, $06
+data:   .addr   0
+length: .byte   0
+width:  .word   0
+        END_PARAM_BLOCK
+
+        click_coords := screentowindow_params::window::xcoord
+
+        ;; Mouse coords to window coords; is click inside name field?
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, click_coords
+        MGTK_CALL MGTK::InRect, input_rect
+        cmp     #MGTK::inrect_inside
+        beq     :+
+        rts
+
+        ;; Is click to left or right of insertion point?
+:       jsr     calc_ip_pos
+
+        width := $6
+
+        stax    width
+        cmp16   click_coords, width
+        bcs     to_right
+        jmp     to_left
+
+;;; --------------------------------------------------
+
+        ;; Click is to the right of IP
+
+.proc to_right
+        jsr     calc_ip_pos
+        stax    ip_pos
+
+        ldx     buf_right
+        inx
+        copy    #' ', buf_right,x ; append space at end
+        inc     buf_right
+
+        ;; Iterate to find the position
+        copy16  #buf_right, tw_params::data
+        copy    buf_right, tw_params::length
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, ip_pos, tw_params::width
+        cmp16   tw_params::width, click_coords
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
+        cmp     #1
+        bne     @loop
+
+        dec     buf_right
+        jmp     finish
+
+        ;; Was it to the right of the string?
+:       lda     tw_params::length
+        cmp     buf_right
+        bcc     :+
+        dec     buf_right          ; remove appended space
+        jmp     move_ip_to_end     ; use this shortcut
+
+        ;; Append from `buf_right` into `buf_left`
+:       ldx     #2
+        ldy     buf_left
+        iny
+:       lda     buf_right,x
+        sta     buf_left,y
+        cpx     tw_params::length
+        beq     :+
+        iny
+        inx
+        jmp     :-
+:       sty     buf_left
+
+        ;; Shift contents of `buf_right` down,
+        ;; preserving IP at the start.
+        ldy     #2
+        ldx     tw_params::length
+        inx
+:       lda     buf_right,x
+        sta     buf_right,y
+        cpx     buf_right
+        beq     :+
+        iny
+        inx
+        jmp     :-
+
+:       dey
+        sty     buf_right
+        jmp     finish
+.endproc
+
+;;; --------------------------------------------------
+
+        ;; Click to left of IP
+
+.proc to_left
+        ;; Iterate to find the position
+        copy16  #buf_left, tw_params::data
+        copy    buf_left, tw_params::length
+:       MGTK_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, input_textpos::xcoord, tw_params::width
+        cmp16   tw_params::width, click_coords
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
+        cmp     #1
+        bcs     :-
+        jmp     move_ip_to_start ; use this shortcut
+
+        ;; Found position; copy everything to the right of
+        ;; the new position from `buf_left` to `buf_search`
+:       inc     tw_params::length
+        ldy     #0
+        ldx     tw_params::length
+:       cpx     buf_left
+        beq     :+
+        inx
+        iny
+        lda     buf_left,x
+        sta     buf_search+1,y
+        jmp     :-
+:       iny
+        sty     buf_search
+
+        ;; Append `buf_right` to `buf_search`
+        ldx     #1
+        ldy     buf_search
+:       cpx     buf_right
+        beq     :+
+        inx
+        iny
+        lda     buf_right,x
+        sta     buf_search,y
+        jmp     :-
+:       sty     buf_search
+
+        ;; Copy IP and `buf_search` into `buf_right`
+        lda     #kGlyphInsertionPoint
+        sta     buf_search+1
+:       lda     buf_search,y
+        sta     buf_right,y
+        dey
+        bpl     :-
+
+        ;; Adjust length
+        lda     tw_params::length
+        sta     buf_left
+        ;; fall through
+.endproc
+
+finish:
+        jsr     draw_input_text
+        rts
+
+ip_pos: .word   0
+.endproc
+
+
+;;; ============================================================
+
+.proc calc_ip_pos
+        PARAM_BLOCK params, $06
+data:   .addr   0
+length: .byte   0
+width:  .word   0
+        END_PARAM_BLOCK
+
+        lda     #0
+        sta     params::width
+        sta     params::width+1
+        lda     buf_left
+        beq     :+
+        sta     params::length
+        copy16  #buf_left+1, params::data
+        MGTK_CALL MGTK::TextWidth, params
+:       lda     params::width
+        clc
+        adc     input_rect::x1
+        tay
+        lda     params::width+1
+        adc     input_rect::x1+1
+        tax
+        tya
         rts
 .endproc
 
