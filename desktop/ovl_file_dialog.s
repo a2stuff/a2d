@@ -2018,7 +2018,7 @@ has_sel:
 
         lda     winfo_file_dialog
         jsr     set_port_for_window
-        jsr     calc_path_buf0_input1_endpos
+        jsr     calc_path_buf0_input1_ip_pos
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, pt
@@ -2049,7 +2049,7 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
 
         lda     winfo_file_dialog
         jsr     set_port_for_window
-        jsr     calc_path_buf1_input2_endpos
+        jsr     calc_path_buf1_input2_ip_pos
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, pt
@@ -2114,133 +2114,167 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+
+        ;; Inside input1 ?
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
-        beq     l2
+        beq     :+
+
+        ;; Inside input2 ?
         bit     L5104
-        bpl     l1
+        bpl     done
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
-        bne     l1
+        bne     done
         jmp     jt_handle_ok
 
-l1:     rts
+done:   rts
 
-l2:     jsr     calc_path_buf0_input1_endpos
+        ;; Is click to left or right of insertion point?
+:       jsr     calc_path_buf0_input1_ip_pos
         stax    $06
         cmp16   screentowindow_windowx, $06
-        bcs     l3
-        jmp     l11
+        bcs     to_right
+        jmp     to_left
 
-l3:     jsr     calc_path_buf0_input1_endpos
-        stax    l20
+        PARAM_BLOCK tw_params, $06
+data:   .addr   0
+length: .byte   0
+width:  .word   0
+        END_PARAM_BLOCK
+
+        ;; --------------------------------------------------
+
+.proc to_right
+        jsr     calc_path_buf0_input1_ip_pos
+        stax    ip_pos
         ldx     path_buf2
         inx
-        lda     #' '
+        lda     #' '            ; append space at end
         sta     path_buf2,x
         inc     path_buf2
-        copy16  #path_buf2, $06
-        lda     path_buf2
-        sta     $08
-l4:     MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, l20, $09
-        cmp16   $09, screentowindow_windowx
-        bcc     l5
-        dec     $08
-        lda     $08
-        cmp     #$01
-        bne     l4
-        dec     path_buf2
-        jmp     l19
 
-l5:     lda     $08
+        ;; Iterate to find the position
+        copy16  #path_buf2, tw_params::data
+        copy    path_buf2, tw_params::length
+@loop:  MGTK_RELAY_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, ip_pos, tw_params::width
+        cmp16   tw_params::width, screentowindow_windowx
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
+        cmp     #1
+        bne     @loop
+
+        dec     path_buf2       ; remove appended space
+        jmp     finish
+
+        ;; Was it to the right of the string?
+:       lda     tw_params::length
         cmp     path_buf2
-        bcc     l6
-        dec     path_buf2
-        jmp     handle_f1_meta_right_key
+        bcc     :+
+        dec     path_buf2       ; remove appended space
+        jmp     handle_f1_meta_right_key ; and use this shortcut
 
-l6:     ldx     #$02
+        ;; Append from `path_buf2` into `path_buf0`
+:       ldx     #2
         ldy     path_buf0
         iny
-l7:     lda     path_buf2,x
+:       lda     path_buf2,x
         sta     path_buf0,y
-        cpx     $08
-        beq     l8
+        cpx     tw_params::length
+        beq     :+
         iny
         inx
-        jmp     l7
+        jmp     :-
+:       sty     path_buf0
 
-l8:     sty     path_buf0
-        ldy     #$02
-        ldx     $08
+        ;; Shift contents of `path_buf2` down,
+        ;; preserving IP at the start.
+        ldy     #2
+        ldx     tw_params::length
         inx
-l9:     lda     path_buf2,x
+:       lda     path_buf2,x
         sta     path_buf2,y
         cpx     path_buf2
-        beq     l10
+        beq     :+
         iny
         inx
-        jmp     l9
+        jmp     :-
 
-l10:    dey
+:       dey
         sty     path_buf2
-        jmp     l19
+        jmp     finish
+.endproc
 
-l11:    copy16  #path_buf0, $06
-        lda     path_buf0
-        sta     $08
-l12:    MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, file_dialog_res::input1_textpos, $09
-        cmp16   $09, screentowindow_windowx
-        bcc     l13
-        dec     $08
-        lda     $08
-        cmp     #$01
-        bcs     l12
+        ;; --------------------------------------------------
+
+.proc to_left
+        copy16  #path_buf0, tw_params::data
+        copy    path_buf0, tw_params::length
+@loop:  MGTK_RELAY_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, file_dialog_res::input1_textpos, tw_params::width
+        cmp16   tw_params::width, screentowindow_windowx
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
+        cmp     #1
+        bcs     @loop
         jmp     handle_f1_meta_left_key
 
-l13:    inc     $08
-        ldy     #$00
-        ldx     $08
-l14:    cpx     path_buf0
-        beq     l15
+        ;; Found position; copy everything to the right of
+        ;; the new position from `buf_input_left` to `buf_text`
+:       inc     tw_params::length
+        ldy     #0
+        ldx     tw_params::length
+:       cpx     path_buf0
+        beq     :+
         inx
         iny
         lda     path_buf0,x
         sta     split_buf+1,y
-        jmp     l14
-
-l15:    iny
+        jmp     :-
+:       iny
         sty     split_buf
-        ldx     #$01
+
+        ;; Append `path_buf2` to `split_buf`
+        ldx     #1
         ldy     split_buf
-l16:    cpx     path_buf2
-        beq     l17
+:       cpx     path_buf2
+        beq     :+
         inx
         iny
         lda     path_buf2,x
         sta     split_buf,y
-        jmp     l16
+        jmp     :-
 
-l17:    sty     split_buf
+        ;; Copy IP and `split_buf` into `path_buf2`
+:       sty     split_buf
         lda     str_insertion_point+1
         sta     split_buf+1
-l18:    lda     split_buf,y
+:       lda     split_buf,y
         sta     path_buf2,y
         dey
-        bpl     l18
-        lda     $08
+        bpl     :-
+
+        ;; Adjust length
+        lda     tw_params::length
         sta     path_buf0
-l19:    jsr     jt_redraw_input
+        ;; fall through
+.endproc
+
+finish: jsr     jt_redraw_input
         jsr     L6EA3
         rts
 
-l20:    .word   0
+ip_pos: .word   0
 .endproc
 
 ;;; ============================================================
 
 .proc handle_f2_click
+
+        ;; Was click inside text box?
         lda     winfo_file_dialog
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -2249,7 +2283,7 @@ l20:    .word   0
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
-        beq     l2
+        beq     :+
         bit     L5104
         bpl     l1
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
@@ -2259,116 +2293,145 @@ l20:    .word   0
 
 l1:     rts
 
-l2:     jsr     calc_path_buf1_input2_endpos
+        ;; Is click to left or right of insertion point?
+:       jsr     calc_path_buf1_input2_ip_pos
         stax    $06
         cmp16   screentowindow_windowx, $06
-        bcs     l3
-        jmp     l11
+        bcs     to_right
+        jmp     to_left
 
-l3:     jsr     calc_path_buf1_input2_endpos
-        stax    l20
+        PARAM_BLOCK tw_params, $06
+data:   .addr   0
+length: .byte   0
+width:  .word   0
+        END_PARAM_BLOCK
+
+        ;; --------------------------------------------------
+        ;; Click to right of insertion point
+.proc to_right
+        jsr     calc_path_buf1_input2_ip_pos
+        stax    ip_pos
         ldx     path_buf2
         inx
-        lda     #' '
+        lda     #' '            ; append space at end
         sta     path_buf2,x
         inc     path_buf2
-        copy16  #path_buf2, $06
-        lda     path_buf2
-        sta     $08
-l4:     MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, l20, $09
-        cmp16   $09, screentowindow_windowx
-        bcc     l5
-        dec     $08
-        lda     $08
-        cmp     #$01
-        bne     l4
-        dec     path_buf2
-        jmp     l19
 
-l5:     lda     $08
+        ;; Iterate to find the position
+        copy16  #path_buf2, tw_params::data
+        copy    path_buf2, tw_params::length
+@loop:  MGTK_RELAY_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, ip_pos, tw_params::width
+        cmp16   tw_params::width, screentowindow_windowx
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
+        cmp     #1
+        bne     @loop
+
+        dec     path_buf2       ; remove appended space
+        jmp     finish
+
+        ;; Was it to the right of the string?
+:       lda     tw_params::length
         cmp     path_buf2
-        bcc     l6
-        dec     path_buf2
-        jmp     handle_f2_meta_right_key
+        bcc     :+
+        dec     path_buf2       ; remove appended space
+        jmp     handle_f2_meta_right_key ; and use this shortcut
 
-l6:     ldx     #$02
+        ;; Append from `path_buf2` into `path_buf1`
+:       ldx     #2
         ldy     path_buf1
         iny
-l7:     lda     path_buf2,x
+:       lda     path_buf2,x
         sta     path_buf1,y
         cpx     $08
-        beq     l8
+        beq     :+
         iny
         inx
-        jmp     l7
+        jmp     :-
+:       sty     path_buf1
 
-l8:     sty     path_buf1
-        ldy     #$02
-        ldx     $08
+        ;; Shift contents of `path_buf2` down,
+        ;; preserving IP at the start.
+        ldy     #2
+        ldx     tw_params::length
         inx
-l9:     lda     path_buf2,x
+:       lda     path_buf2,x
         sta     path_buf2,y
         cpx     path_buf2
-        beq     l10
+        beq     :+
         iny
         inx
-        jmp     l9
+        jmp     :-
 
-l10:    dey
+:       dey
         sty     path_buf2
-        jmp     l19
+        jmp     finish
+.endproc
 
-l11:    copy16  #path_buf1, $06
-        lda     path_buf1
-        sta     $08
-l12:    MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, file_dialog_res::input2_textpos, $09
-        cmp16   $09, screentowindow_windowx
-        bcc     l13
-        dec     $08
-        lda     $08
-        cmp     #$01
-        bcs     l12
+        ;; --------------------------------------------------
+        ;; Click to left of insertion point
+
+.proc to_left
+        copy16  #path_buf1, tw_params::data
+        copy    path_buf1, tw_params::length
+@loop:  MGTK_RELAY_CALL MGTK::TextWidth, $06
+        add16   tw_params::width, file_dialog_res::input2_textpos, tw_params::width
+        cmp16   tw_params::width, screentowindow_windowx
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
+        cmp     #1
+        bcs     @loop
         jmp     handle_f2_meta_left_key
 
-l13:    inc     $08
-        ldy     #$00
-        ldx     $08
-l14:    cpx     path_buf1
-        beq     l15
+        ;; Found position; copy everything to the right of
+        ;; the new position from `path_buf1` to `split_buf`
+:       inc     tw_params::length
+        ldy     #0
+        ldx     tw_params::length
+:       cpx     path_buf1
+        beq     :+
         inx
         iny
         lda     path_buf1,x
         sta     split_buf+1,y
-        jmp     l14
-
-l15:    iny
+        jmp     :-
+:       iny
         sty     split_buf
-        ldx     #$01
+
+        ;; Append `path_buf2` to `split_buf`
+        ldx     #1
         ldy     split_buf
-l16:    cpx     path_buf2
-        beq     l17
+:       cpx     path_buf2
+        beq     :+
         inx
         iny
         lda     path_buf2,x
         sta     split_buf,y
-        jmp     l16
+        jmp     :-
+:       sty     split_buf
 
-l17:    sty     split_buf
+        ;; Copy IP and `split_buf` into `path_buf2`
         lda     str_insertion_point+1
         sta     split_buf+1
-l18:    lda     split_buf,y
+:       lda     split_buf,y
         sta     path_buf2,y
         dey
-        bpl     l18
-        lda     $08
+        bpl     :-
+
+        ;; Adjust length
+        lda     tw_params::length
         sta     path_buf1
-l19:    jsr     jt_redraw_input
+        ;; fall through
+.endproc
+
+finish: jsr     jt_redraw_input
         jsr     L6E9F
         rts
 
-l20:    .word   0
+ip_pos: .word   0
 .endproc
 
 ;;; ============================================================
@@ -2388,7 +2451,7 @@ continue:
         inx
         sta     path_buf0,x
         sta     str_1_char+1
-        jsr     calc_path_buf0_input1_endpos
+        jsr     calc_path_buf0_input1_ip_pos
         inc     path_buf0
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
@@ -2411,7 +2474,7 @@ tmp:    .byte   0
         rts
 
 :       dec     path_buf0
-        jsr     calc_path_buf0_input1_endpos
+        jsr     calc_path_buf0_input1_ip_pos
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
         lda     winfo_file_dialog
@@ -2444,7 +2507,7 @@ skip:   ldx     path_buf0
         sta     path_buf2+2
         dec     path_buf0
         inc     path_buf2
-        jsr     calc_path_buf0_input1_endpos
+        jsr     calc_path_buf0_input1_ip_pos
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
         lda     winfo_file_dialog
@@ -2567,7 +2630,7 @@ skip:   sty     path_buf0
         inx
         sta     path_buf1,x
         sta     str_1_char+1
-        jsr     calc_path_buf1_input2_endpos
+        jsr     calc_path_buf1_input2_ip_pos
         inc     path_buf1
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
@@ -2590,7 +2653,7 @@ l1:     .byte   0
         rts
 
 :       dec     path_buf1
-        jsr     calc_path_buf1_input2_endpos
+        jsr     calc_path_buf1_input2_ip_pos
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
         lda     winfo_file_dialog
@@ -2622,7 +2685,7 @@ l3:     ldx     path_buf1
         sta     path_buf2+2
         dec     path_buf1
         inc     path_buf2
-        jsr     calc_path_buf1_input2_endpos
+        jsr     calc_path_buf1_input2_ip_pos
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
         lda     winfo_file_dialog
@@ -2922,7 +2985,7 @@ flag:   .byte   0
 
 ;;; ============================================================
 ;;; Output: A,X = coordinates of input string end
-.proc calc_path_buf0_input1_endpos
+.proc calc_path_buf0_input1_ip_pos
         PARAM_BLOCK params, $06
 data:   .addr   0
 length: .byte   0
@@ -2952,7 +3015,7 @@ width:  .word   0
 
 ;;; ============================================================
 
-.proc calc_path_buf1_input2_endpos
+.proc calc_path_buf1_input2_ip_pos
         PARAM_BLOCK params, $06
 data:   .addr   0
 length: .byte   0

@@ -164,7 +164,7 @@ ibeam_cursor:
         .byte   4, 5
 
 ;;; Text Input Field
-LA0C8:  .res    68, 0
+buf_text:       .res    68, 0
 
 ;;; String being edited:
 buf_input_left:         .res    68, 0 ; left of IP
@@ -2570,7 +2570,7 @@ has_sel:
 
         lda     winfo_dialog::window_id
         jsr     set_port_for_window
-        jsr     calc_input_endpos
+        jsr     calc_ip_pos
         stax    pt
         copy16  rect_input_text::y1, pt+2
         MGTK_CALL MGTK::MoveTo, pt
@@ -2615,6 +2615,7 @@ bg2:    MGTK_CALL MGTK::SetTextBG, textbg2
 
 .proc check_input_click_and_move_ip
 
+        ;; Was click inside text box?
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -2626,116 +2627,146 @@ bg2:    MGTK_CALL MGTK::SetTextBG, textbg2
         beq     :+
         rts
 
-:       jsr     calc_input_endpos
+        ;; Is click to left or right of insertion point?
+:       jsr     calc_ip_pos
         stax    $06
         cmp16   screentowindow_windowx, $06
-        bcs     l1
-        jmp     l8
+        bcs     to_right
+        jmp     to_left
 
-l1:     jsr     calc_input_endpos
-        stax    l16
+        PARAM_BLOCK tw_params, $06
+data:   .addr   0
+length: .byte   0
+width:  .word   0
+        END_PARAM_BLOCK
+
+        ;; --------------------------------------------------
+        ;; Click to right of insertion point
+
+.proc to_right
+        jsr     calc_ip_pos
+        stax    ip_pos
         ldx     buf_input_right
         inx
-        lda     #$20
+        lda     #' '            ; append space at end
         sta     buf_input_right,x
         inc     buf_input_right
-        copy16  #buf_input_right, $06
-        lda     buf_input_right
-        sta     $08
-@loop:  MGTK_CALL MGTK::TextWidth, $06
-        add16   $09, l16, $09
-        cmp16   $09, screentowindow_windowx
-        bcc     l2
-        dec     $08
-        lda     $08
-        cmp     #$01
+
+        ;; Iterate to find the position
+        copy16  #buf_input_right, tw_params::data
+        copy    buf_input_right, tw_params::length
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, ip_pos, tw_params::width
+        cmp16   tw_params::width, screentowindow_windowx
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
+        cmp     #1
         bne     @loop
-        dec     buf_input_right
-        jmp     l15
 
-l2:     lda     $08
+        dec     buf_input_right ; remove appended space
+        jmp     finish
+
+        ;; Was it to the right of the string?
+:       lda     tw_params::length
         cmp     buf_input_right
-        bcc     l3
-        dec     buf_input_right
-        jmp     input_ip_to_end
+        bcc     :+
+        dec     buf_input_right ; remove appended space...
+        jmp     input_ip_to_end ; and use this shortcut
 
-l3:     ldx     #$02
+        ;; Append from `buf_input_right` into `buf_input_left`
+:       ldx     #2
         ldy     buf_input_left
         iny
-l4:     lda     buf_input_right,x
+:       lda     buf_input_right,x
         sta     buf_input_left,y
-        cpx     $08
-        beq     l5
+        cpx     tw_params::length
+        beq     :+
         iny
         inx
-        jmp     l4
+        jmp     :-
+:       sty     buf_input_left
 
-l5:     sty     buf_input_left
-        ldy     #$02
-        ldx     $08
+        ;; Shift contents of `buf_input_right` down,
+        ;; preserving IP at the start.
+        ldy     #2
+        ldx     tw_params::length
         inx
-l6:     lda     buf_input_right,x
+:       lda     buf_input_right,x
         sta     buf_input_right,y
         cpx     buf_input_right
-        beq     l7
+        beq     :+
         iny
         inx
-        jmp     l6
+        jmp     :-
 
-l7:     dey
+:       dey
         sty     buf_input_right
-        jmp     l15
+        jmp     finish
+.endproc
 
-l8:     copy16  #buf_input_left, $06
-        lda     buf_input_left
-        sta     $08
-l9:     MGTK_CALL MGTK::TextWidth, $06
-        add16   $09, rect_input_text::x1, $09
-        cmp16   $09, screentowindow_windowx
-        bcc     l10
-        dec     $08
-        lda     $08
-        cmp     #$01
-        bcs     l9
+        ;; --------------------------------------------------
+        ;; Click to left of insertion point
+
+.proc to_left
+        copy16  #buf_input_left, tw_params::data
+        copy    buf_input_left, tw_params::length
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, rect_input_text::x1, tw_params::width
+        cmp16   tw_params::width, screentowindow_windowx
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
+        cmp     #1
+        bcs     @loop
         jmp     input_ip_to_start
 
-l10:    inc     $08
-        ldy     #$00
-        ldx     $08
-l11:    cpx     buf_input_left
-        beq     l12
+        ;; Found position; copy everything to the right of
+        ;; the new position from `buf_input_left` to `buf_text`
+:       inc     tw_params::length
+        ldy     #0
+        ldx     tw_params::length
+:       cpx     buf_input_left
+        beq     :+
         inx
         iny
         lda     buf_input_left,x
-        sta     LA0C8+1,y
-        jmp     l11
+        sta     buf_text+1,y
+        jmp     :-
+:       iny
+        sty     buf_text
 
-l12:    iny
-        sty     LA0C8
-        ldx     #$01
-        ldy     LA0C8
-l13:    cpx     buf_input_right
-        beq     l14
+        ;; Append `buf_input_right` to `buf_text`
+        ldx     #1
+        ldy     buf_text
+:       cpx     buf_input_right
+        beq     :+
         inx
         iny
         lda     buf_input_right,x
-        sta     LA0C8,y
-        jmp     l13
+        sta     buf_text,y
+        jmp     :-
+:       sty     buf_text
 
-l14:    sty     LA0C8
+        ;; Copy IP and `buf_text` into `buf_input_right`
         lda     str_ip+1
-        sta     LA0C8+1
-:       lda     LA0C8,y
+        sta     buf_text+1
+:       lda     buf_text,y
         sta     buf_input_right,y
         dey
         bpl     :-
-        lda     $08
+
+        ;; Adjust length
+        lda     tw_params::length
         sta     buf_input_left
-l15:    jsr     redraw_input
+        ;; fall through
+.endproc
+
+finish: jsr     redraw_input
         jsr     LBB5B
         rts
 
-l16:    .word   0
+ip_pos: .word   0
 .endproc
 
 ;;; ============================================================
@@ -2757,7 +2788,7 @@ continue:
         inx
         sta     buf_input_left,x
         sta     str_1_char+1
-        jsr     calc_input_endpos
+        jsr     calc_ip_pos
         inc     buf_input_left
         stax    $06
         copy16  rect_input_text::y1, $08
@@ -2778,7 +2809,7 @@ continue:
         rts
 
 :       dec     buf_input_left
-        jsr     calc_input_endpos
+        jsr     calc_ip_pos
         stax    $06
         copy16  rect_input_text::y1, $08
         lda     winfo_dialog::window_id
@@ -2811,7 +2842,7 @@ skip:   ldx     buf_input_left
         sta     buf_input_right+2
         dec     buf_input_left
         inc     buf_input_right
-        jsr     calc_input_endpos
+        jsr     calc_ip_pos
         stax    $06
         copy16  rect_input_text::y1, $08
         lda     winfo_dialog::window_id
@@ -3024,9 +3055,9 @@ tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Output: A,X = coordinates of input string end
+;;; Output: A,X = X coordinate of insertion point
 
-.proc calc_input_endpos
+.proc calc_ip_pos
         PARAM_BLOCK params, $06
 data:   .addr   0
 length: .byte   0
@@ -3057,7 +3088,7 @@ width:  .word   0
 .proc LBB5B
         ldx     buf_input_left
 :       lda     buf_input_left,x
-        sta     LA0C8,x
+        sta     buf_text,x
         dex
         bpl     :-
 
@@ -3090,11 +3121,11 @@ width:  .word   0
         tya
         jsr     LB0D6
 
-l1:     lda     LA0C8
+l1:     lda     buf_text
         cmp     path_buf
         bne     l3
         tax
-l2:     lda     LA0C8,x
+l2:     lda     buf_text,x
         cmp     path_buf,x
         bne     l3
         dex
