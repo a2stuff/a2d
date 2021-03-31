@@ -13640,7 +13640,7 @@ LA6ED:  bit     has_input_field_flag
         lda     #$FF
         jmp     jump_relay
 
-LA6F7:  jsr     LB9B8
+LA6F7:  jsr     handle_click_in_textbox
         return  #$FF
 .endproc
 
@@ -15199,13 +15199,14 @@ done:   rts
 
 ;;; ============================================================
 
-.proc LB9B8
+.proc handle_click_in_textbox
         ptr := $6
 
-        textwidth_params  := $6
-        textptr := $6
-        textlen := $8
-        result  := $9
+        PARAM_BLOCK tw_params, $06
+data:   .addr   0
+length: .byte   0
+width:  .word   0
+        END_PARAM_BLOCK
 
         click_coords := screentowindow_windowx
 
@@ -15225,91 +15226,97 @@ done:   rts
         stax    width
         cmp16   click_coords, width
         bcs     to_right
-        jmp     within_text
+        jmp     to_left
 
 ;;; --------------------------------------------------
 
-        ;; Click is to the right of the text
+        ;; Click is to the right of IP
 
 .proc to_right
         jsr     measure_path_buf1
-        stax    buf1_width
+        stax    ip_pos
+
         ldx     path_buf2
         inx
-        copy    #' ', path_buf2,x
+        copy    #' ', path_buf2,x ; append space at end
         inc     path_buf2
-        copy16  #path_buf2, textptr
-        lda     path_buf2
-        sta     ptr+2
-LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
-        add16   result, buf1_width, result
-        cmp16   result, click_coords
-        bcc     LBA42
-        dec     textlen
-        lda     textlen
+
+        ;; Iterate to find the position
+        copy16  #path_buf2, tw_params::data
+        copy    path_buf2, tw_params::length
+@loop:  MGTK_RELAY_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, ip_pos, tw_params::width
+        cmp16   tw_params::width, click_coords
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
         cmp     #1
-        bne     LBA10
-        dec     path_buf2
-        jmp     draw_text
+        bne     @loop
 
-LBA42:
-        lda     textlen
+        dec     path_buf2
+        jmp     finish
+
+        ;; Was it to the right of the string?
+:       lda     tw_params::length
         cmp     path_buf2
-        bcc     LBA4F
-        dec     path_buf2
-        jmp     input_field_ip_end
+        bcc     :+
+        dec     path_buf2          ; remove appended space
+        jmp     input_field_ip_end ; use this shortcut
 
-LBA4F:  ldx     #2
+        ;; Append from `path_buf2` into `path_buf0`
+:       ldx     #2
         ldy     path_buf1
         iny
-LBA55:  lda     path_buf2,x
+:       lda     path_buf2,x
         sta     path_buf1,y
-        cpx     textlen
-        beq     LBA64
+        cpx     tw_params::length
+        beq     :+
         iny
         inx
-        jmp     LBA55
+        jmp     :-
+:       sty     path_buf1
 
-LBA64:  sty     path_buf1
+        ;; Shift contents of `path_buf2` down,
+        ;; preserving IP at the start.
         ldy     #2
-        ldx     textlen
+        ldx     tw_params::length
         inx
-LBA6C:  lda     path_buf2,x
+:       lda     path_buf2,x
         sta     path_buf2,y
         cpx     path_buf2
-        beq     LBA7C
+        beq     :+
         iny
         inx
-        jmp     LBA6C
+        jmp     :-
 
-LBA7C:  dey
+:       dey
         sty     path_buf2
-        jmp     draw_text
+        jmp     finish
 .endproc
 
 ;;; --------------------------------------------------
 
-        ;; Click within text - loop to find where in the
-        ;; name to split the string.
+        ;; Click to left of IP
 
-.proc within_text
-        copy16  #path_buf1, textptr
-        lda     path_buf1
-        sta     textlen
-:       MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
-        add16 result, name_input_textpos::xcoord, result
-        cmp16   result, click_coords
+.proc to_left
+        ;; Iterate to find the position
+        copy16  #path_buf1, tw_params::data
+        copy    path_buf1, tw_params::length
+:       MGTK_RELAY_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, name_input_textpos::xcoord, tw_params::width
+        cmp16   tw_params::width, click_coords
         bcc     :+
-        dec     textlen
-        lda     textlen
+        dec     tw_params::length
+        lda     tw_params::length
         cmp     #1
         bcs     :-
         jmp     input_field_ip_start
 
-        ;; Copy the text to the right of the click to split_buf
-:       inc     textlen
+        ;; Found position; copy everything to the right of
+        ;; the new position from `path_buf1` to `split_buf`
+:       inc     tw_params::length
         ldy     #0
-        ldx     textlen
+        ldx     tw_params::length
 :       cpx     path_buf1
         beq     :+
         inx
@@ -15317,10 +15324,10 @@ LBA7C:  dey
         lda     path_buf1,x
         sta     split_buf+1,y
         jmp     :-
-:
-        ;; Copy it (again) into path_buf2
-        iny
+:       iny
         sty     split_buf
+
+        ;; Append `path_buf2` to `split_buf`
         ldx     #1
         ldy     split_buf
 :       cpx     path_buf2
@@ -15330,27 +15337,26 @@ LBA7C:  dey
         lda     path_buf2,x
         sta     split_buf,y
         jmp     :-
-:
+:       sty     split_buf
 
-        sty     split_buf
+        ;; Copy IP and `split_buf` into `path_buf2`
         lda     str_insertion_point+1
         sta     split_buf+1
-LBAF7:  lda     split_buf,y
+:       lda     split_buf,y
         sta     path_buf2,y
         dey
-        bpl     LBAF7
-        lda     textlen
+        bpl     :-
+
+        ;; Adjust length
+        lda     tw_params::length
         sta     path_buf1
         ;; fall through
 .endproc
 
-draw_text:
-        jsr     draw_filename_prompt
+finish: jsr     draw_filename_prompt
         rts
 
-buf1_width:
-        .word   0
-
+ip_pos: .word   0
 .endproc
 
 ;;; ============================================================

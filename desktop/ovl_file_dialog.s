@@ -2210,6 +2210,7 @@ width:  .word   0
         ;; --------------------------------------------------
 
 .proc to_left
+        ;; Iterate to find the position
         copy16  #path_buf0, tw_params::data
         copy    path_buf0, tw_params::length
 @loop:  MGTK_RELAY_CALL MGTK::TextWidth, tw_params
@@ -2223,7 +2224,7 @@ width:  .word   0
         jmp     handle_f1_meta_left_key
 
         ;; Found position; copy everything to the right of
-        ;; the new position from `buf_input_left` to `buf_text`
+        ;; the new position from `path_buf0` to `split_buf`
 :       inc     tw_params::length
         ldy     #0
         ldx     tw_params::length
@@ -2247,9 +2248,9 @@ width:  .word   0
         lda     path_buf2,x
         sta     split_buf,y
         jmp     :-
+:       sty     split_buf
 
         ;; Copy IP and `split_buf` into `path_buf2`
-:       sty     split_buf
         lda     str_insertion_point+1
         sta     split_buf+1
 :       lda     split_buf,y
