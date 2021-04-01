@@ -2251,8 +2251,7 @@ width:  .word   0
 :       sty     split_buf
 
         ;; Copy IP and `split_buf` into `path_buf2`
-        lda     str_insertion_point+1
-        sta     split_buf+1
+        copy    #kGlyphInsertionPoint, split_buf+1
 :       lda     split_buf,y
         sta     path_buf2,y
         dey
@@ -2415,8 +2414,7 @@ width:  .word   0
 :       sty     split_buf
 
         ;; Copy IP and `split_buf` into `path_buf2`
-        lda     str_insertion_point+1
-        sta     split_buf+1
+        copy    #kGlyphInsertionPoint, split_buf+1
 :       lda     split_buf,y
         sta     path_buf2,y
         dey

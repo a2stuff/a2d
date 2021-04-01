@@ -2749,8 +2749,7 @@ width:  .word   0
 :       sty     buf_text
 
         ;; Copy IP and `buf_text` into `buf_input_right`
-        lda     str_ip+1
-        sta     buf_text+1
+        copy    #kGlyphInsertionPoint, buf_text+1
 :       lda     buf_text,y
         sta     buf_input_right,y
         dey
