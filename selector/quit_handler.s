@@ -57,8 +57,6 @@ start:
         copy    #0, SHADOW
 :
 
-        jsr     SetMonoMode
-
         ;; --------------------------------------------------
 
         ;; Display the loading string
@@ -172,7 +170,6 @@ disk_prompt:
         cpy     prompt
         bne     :-
 
-
 loop:   sta     KBDSTRB
 :       lda     KBD
         bpl     :-
@@ -197,41 +194,6 @@ irq_vector_stash:
 
 prefix_buf:
         .res 64, 0
-
-
-;;; ============================================================
-
-.proc SetMonoMode
-        ;; AppleColor Card - Mode 1 (Monochrome 560x192)
-        ;; Also: Video-7 and Le Chat Mauve Feline
-        sta     CLR80VID
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
-        lda     AN3_ON
-        sta     SET80VID
-        lda     AN3_OFF
-
-        ;; IIgs?
-        sec
-        jsr     IDROUTINE
-        bcc     iigs
-
-        ;; Le Chat Mauve Eve - BW560 mode
-        ;; (AN3 off, HR1 off, HR2 on, HR3 on)
-        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
-        ;; lda AN3_OFF ; already done above
-        sta     HR2_ON
-        sta     HR3_ON
-        bcs     done
-
-        ;; Apple IIgs - DHR B&W
-iigs:   lda     NEWVIDEO
-        ora     #(1<<5)         ; B&W
-        sta     NEWVIDEO
-
-done:   rts
-.endproc
 
 ;;; ============================================================
 

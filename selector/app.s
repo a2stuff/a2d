@@ -634,6 +634,7 @@ set_startup_menu_items:
         copy    ZIDBYTE, startdesktop_params::subid
 
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
+        jsr     SetRGBMode
         MGTK_CALL MGTK::SetMenu, menu
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
@@ -2248,6 +2249,12 @@ len:    .byte   0
 ;;; ============================================================
 ;;; Assert: ROM is banked in
 
+.proc SetRGBMode
+        bit     SETTINGS + DeskTopSettings::rgb_color
+        bmi     SetColorMode
+        bpl     SetMonoMode
+.endproc
+
 .proc SetColorMode
         ;; AppleColor Card - Mode 2 (Color 140x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
@@ -2274,6 +2281,38 @@ len:    .byte   0
         ;; Apple IIgs - DHR Color
 iigs:   lda     NEWVIDEO
         and     #<~(1<<5)       ; Color
+        sta     NEWVIDEO
+
+done:   rts
+.endproc
+
+.proc SetMonoMode
+        ;; AppleColor Card - Mode 1 (Monochrome 560x192)
+        ;; Also: Video-7 and Le Chat Mauve Feline
+        sta     CLR80VID
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+        lda     AN3_ON
+        sta     SET80VID
+        lda     AN3_OFF
+
+        ;; IIgs?
+        sec
+        jsr     IDROUTINE
+        bcc     iigs
+
+        ;; Le Chat Mauve Eve - BW560 mode
+        ;; (AN3 off, HR1 off, HR2 on, HR3 on)
+        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
+        ;; lda AN3_OFF ; already done above
+        sta     HR2_ON
+        sta     HR3_ON
+        bcs     done
+
+        ;; Apple IIgs - DHR B&W
+iigs:   lda     NEWVIDEO
+        ora     #(1<<5)         ; B&W
         sta     NEWVIDEO
 
 done:   rts

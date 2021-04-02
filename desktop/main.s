@@ -46,8 +46,8 @@ JT_LAUNCH_FILE:         jmp     launch_file
 JT_CUR_POINTER:         jmp     set_cursor_pointer      ; *
 JT_CUR_WATCH:           jmp     set_cursor_watch        ; *
 JT_RESTORE_OVL:         jmp     restore_dynamic_routine
-JT_COLOR_MODE:          jmp     set_color_mode          ; *
-JT_MONO_MODE:           jmp     set_mono_mode           ; *
+JT_COLOR_MODE:          jmp     SetColorMode            ; *
+JT_MONO_MODE:           jmp     SetMonoMode             ; *
 JT_RESTORE_SYS:         jmp     restore_system          ; *
 JTCLEAR_UPDATES_REDRAW_ICONS:   jmp     clear_updates_and_redraw_desktop_icons ; *
 JT_GET_SEL_COUNT:       jmp     get_selection_count     ; *
@@ -57,7 +57,7 @@ JT_GET_WIN_PATH:        jmp     get_window_path         ; *
 JT_HILITE_MENU:         jmp     toggle_menu_hilite      ; *
 JT_ADJUST_FILEENTRY:    jmp     AdjustFileEntryCase     ; *
 JT_CUR_IBEAM:           jmp     set_cursor_ibeam        ; *
-JT_RGB_MODE:            jmp     set_rgb_mode            ; *
+JT_RGB_MODE:            jmp     SetRGBMode              ; *
 JT_YIELD_LOOP:          jmp     yield_loop              ; *
         .assert JUMP_TABLE_MAIN_LOOP = JT_MAIN_LOOP, error, "Jump table mismatch"
         .assert JUMP_TABLE_YIELD_LOOP = JT_YIELD_LOOP, error, "Jump table mismatch"
@@ -2508,7 +2508,7 @@ fail:   MLI_CALL QUIT, quit_params
         pha
 
         ;; Switch back to color DHR mode
-        jsr     set_color_mode
+        jsr     SetColorMode
 
         ;; Exit graphics mode entirely
         lda     ROMIN2
@@ -10390,13 +10390,13 @@ mod7:   adc     #7              ; Returns (A+3) modulo 7
 
 ;;; ============================================================
 
-.proc set_rgb_mode
+.proc SetRGBMode
         bit     SETTINGS + DeskTopSettings::rgb_color
-        bmi     set_color_mode
-        bpl     set_mono_mode
+        bmi     SetColorMode
+        bpl     SetMonoMode
 .endproc
 
-.proc set_color_mode
+.proc SetColorMode
         ;; AppleColor Card - Mode 2 (Color 140x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
         sta     SET80VID
@@ -10426,7 +10426,7 @@ iigs:   lda     NEWVIDEO
 done:   rts
 .endproc
 
-.proc set_mono_mode
+.proc SetMonoMode
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
         sta     CLR80VID
