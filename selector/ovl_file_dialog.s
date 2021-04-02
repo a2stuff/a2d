@@ -276,7 +276,7 @@ LA20D:
         .byte   $00
         .byte   $00
 
-str_ip:
+str_insertion_point:
         PASCAL_STRING {kGlyphInsertionPoint} ; do not localize
 
 LA211:
@@ -2584,12 +2584,14 @@ has_sel:
 bg2:    MGTK_CALL MGTK::SetTextBG, textbg2
         copy    #$FF, prompt_ip_flag
 
-        params := $06
+        PARAM_BLOCK dt_params, $06
+data:   .addr   0
+length: .byte   0
+        END_PARAM_BLOCK
 
-:       copy16  #str_ip+1, params
-        lda     str_ip
-        sta     params+2
-        MGTK_CALL MGTK::DrawText, params
+:       copy16  #str_insertion_point+1, dt_params::data
+        copy    str_insertion_point, dt_params::length
+        MGTK_CALL MGTK::DrawText, dt_params
         jsr     LA9C9
         rts
 .endproc

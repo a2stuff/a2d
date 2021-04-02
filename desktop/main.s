@@ -15165,12 +15165,11 @@ set_flag:
         copy    #$FF, prompt_ip_flag
 
         drawtext_params := $6
-        textptr := $6
-        textlen := $8
+        textptr := drawtext_params + 0
+        textlen := drawtext_params + 2
 
 draw:   copy16  #str_insertion_point+1, textptr
-        lda     str_insertion_point
-        sta     textlen
+        copy    str_insertion_point, textlen
         MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
         MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
         lda     winfo_prompt_dialog
@@ -15535,8 +15534,7 @@ loop2:  lda     path_buf1,x
         bne     loop2
 
         ;; Adjust lengths.
-        lda     str_insertion_point+1
-        sta     path_buf2+1
+        copy    #kGlyphInsertionPoint, path_buf2+1
         inc     path_buf1
         lda     path_buf1
         sta     path_buf2
@@ -15639,7 +15637,7 @@ done:   rts
 
 .proc clear_path_buf2
         copy    #1, path_buf2   ; length
-        copy    str_insertion_point+1, path_buf2+1 ; IP character
+        copy    #kGlyphInsertionPoint, path_buf2+1
         rts
 .endproc
 

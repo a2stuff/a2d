@@ -2032,12 +2032,14 @@ has_sel:
 bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         copy    #$FF, prompt_ip_flag
 
-        params := $06
+        PARAM_BLOCK dt_params, $06
+data:   .addr   0
+length: .byte   0
+        END_PARAM_BLOCK
 
-:       copy16  #str_insertion_point+1, params
-        lda     str_insertion_point
-        sta     $08
-        MGTK_RELAY_CALL MGTK::DrawText, params
+:       copy16  #str_insertion_point+1, dt_params::data
+        copy    str_insertion_point, dt_params::length
+        MGTK_RELAY_CALL MGTK::DrawText, dt_params
         jsr     L56E3
         rts
 .endproc
@@ -2063,9 +2065,13 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
 bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         copy    #$FF, prompt_ip_flag
 
-:       copy16  #str_insertion_point+1, pt
-        lda     str_insertion_point
-        sta     $08
+        PARAM_BLOCK dt_params, $06
+data:   .addr   0
+length: .byte   0
+        END_PARAM_BLOCK
+
+:       copy16  #str_insertion_point+1, dt_params::data
+        copy    str_insertion_point, dt_params::length
         MGTK_RELAY_CALL MGTK::DrawText, pt
         jsr     L56E3
         rts
