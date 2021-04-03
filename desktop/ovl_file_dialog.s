@@ -136,7 +136,7 @@ l1:     lda     winfo_file_dialog
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        bit     L51AE
+        bit     focus_in_input2_flag
         bmi     l2
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
@@ -154,7 +154,8 @@ l5:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         jmp     event_loop
 .endproc
 
-L51AE:  .byte   0
+focus_in_input2_flag:
+        .byte   0
 
 ;;; ============================================================
 

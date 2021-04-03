@@ -38,7 +38,7 @@
 
         lda     #0
         sta     path_buf0
-        sta     file_dialog::L51AE
+        sta     file_dialog::focus_in_input2_flag
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
         rts
@@ -117,7 +117,7 @@ jt_destination_filename:
         ;; set up flags for destination
         lda     #$80
         sta     file_dialog::L50A8
-        sta     file_dialog::L51AE
+        sta     file_dialog::focus_in_input2_flag
         lda     selected_index
         sta     LD921
         lda     #$FF
@@ -236,7 +236,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         copy    #kGlyphInsertionPoint, path_buf2+1
         copy    #0, file_dialog::L50A8
         copy    #$FF, selected_index
-        copy    #0, file_dialog::L51AE
+        copy    #0, file_dialog::focus_in_input2_flag
 
         lda     LD8F0
         sta     LD8F2

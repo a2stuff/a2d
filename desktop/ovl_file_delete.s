@@ -36,7 +36,7 @@
 
         lda     #0
         sta     path_buf0
-        sta     file_dialog::L51AE
+        sta     file_dialog::focus_in_input2_flag
 
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1

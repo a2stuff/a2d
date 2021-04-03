@@ -85,7 +85,7 @@ buffer: .res 16, 0
         dex
         bpl     :-
 
-        copy    #0, file_dialog::L51AE
+        copy    #0, file_dialog::focus_in_input2_flag
         copy    #$80, file_dialog::dual_inputs_flag
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
@@ -205,7 +205,7 @@ jt_entry_name:
         bpl     :-
 
         lda     #$80
-        sta     file_dialog::L51AE
+        sta     file_dialog::focus_in_input2_flag
         sta     file_dialog::L5105
         lda     LD8F0
         sta     LD8F1
@@ -320,7 +320,7 @@ ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         jsr     file_dialog::jt_redraw_input
         lda     #$00
         sta     file_dialog::L5105
-        sta     file_dialog::L51AE
+        sta     file_dialog::focus_in_input2_flag
         lda     LD8F1
         sta     LD8F0
         rts
