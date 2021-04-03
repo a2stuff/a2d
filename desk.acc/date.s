@@ -214,9 +214,8 @@ windowy:.word   0
 window_id:     .byte   kDAWindowId
 .endparams
 
-.params penmode_params
-penmode:   .byte   MGTK::penXOR
-.endparams
+penxor:         .byte   MGTK::penXOR
+notpenxor:      .byte   MGTK::notpenXOR
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -387,7 +386,7 @@ update_selection:
 
 .proc on_click
         MGTK_CALL MGTK::FindWindow, event_params::xcoord
-        MGTK_CALL MGTK::SetPenMode, penmode_params
+        MGTK_CALL MGTK::SetPenMode, penxor
         MGTK_CALL MGTK::SetPattern, white_pattern
         lda     findwindow_params::window_id
         cmp     #kDAWindowId
@@ -753,6 +752,8 @@ penheight: .byte   1
         MGTK_CALL MGTK::SetPenSize, setpensize_params
         MGTK_CALL MGTK::FrameRect, date_rect
 
+        MGTK_CALL MGTK::SetPenMode, notpenxor
+
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, label_ok_pos
         param_call DrawString, label_ok
@@ -786,7 +787,7 @@ penheight: .byte   1
         beq     :+
         rts
 
-:       MGTK_CALL MGTK::SetPenMode, penmode_params
+:       MGTK_CALL MGTK::SetPenMode, penxor
         MGTK_CALL MGTK::SetPattern, white_pattern
         lda     #1
         jmp     highlight_selected_field
