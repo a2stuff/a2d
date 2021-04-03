@@ -1346,6 +1346,7 @@ l3:     lda     #$3A
 ;;; ============================================================
 
         .include "../lib/inttostring.s"
+        .include "../lib/bell.s"
 
 ;;; ============================================================
 
@@ -2183,7 +2184,7 @@ flag:   .byte   0
 
         cmp     #ERR_WRITE_PROTECTED
         bne     l2
-        jsr     main__bell
+        jsr     Bell
         lda     #5              ; Destination protected
         jsr     show_alert_dialog
         bne     :+
@@ -2193,7 +2194,7 @@ flag:   .byte   0
 :       jsr     main__free_vol_bitmap_pages
         return  #$80
 
-l2:     jsr     main__bell
+l2:     jsr     Bell
         lda     winfo_dialog::window_id
         jsr     set_win_port
         lda     main__block_params_block_num
@@ -3101,7 +3102,7 @@ done:   return  #$00
         bcc     done
         cmp     #$06
         bcs     done
-        jsr     main__bell
+        jsr     Bell
 done:   rts
 .endproc
 

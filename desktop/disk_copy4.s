@@ -1040,16 +1040,6 @@ done:   rts
 
 ;;; ============================================================
 
-.proc bell
-        sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     BELL1
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
-.endproc
-
 .proc call_on_line2
         MLI_RELAY_CALL ON_LINE, on_line_params2
         rts
@@ -1175,7 +1165,6 @@ main__read_volume_bitmap              := main::read_volume_bitmap
 main__is_drive_removable              := main::is_drive_removable
 main__copy_blocks                     := main::copy_blocks
 main__free_vol_bitmap_pages           := main::free_vol_bitmap_pages
-main__bell                            := main::bell
 main__call_on_line2                   := main::call_on_line2
 main__call_on_line                    := main::call_on_line
 main__write_block                     := main::write_block

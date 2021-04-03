@@ -2013,9 +2013,9 @@ check_path:
         jsr     INVOKER
 
         ;; If we got here, invoker failed somehow. Relaunch.
-        jsr     BELL1
-        jsr     BELL1
-        jsr     BELL1
+        jsr     Bell
+        jsr     Bell
+        jsr     Bell
         MLI_CALL QUIT, quit_params
         brk
 
@@ -2228,7 +2228,7 @@ len:    .byte   0
 
 .proc ShowAlert
         pha
-        jsr     BELL1
+        jsr     Bell
         pla
         tax
         sta     ALTZPON
@@ -2364,6 +2364,7 @@ loop_counter:
         .include "../lib/doubleclick.s"
         .include "../lib/drawstring.s"
         .include "../lib/muldiv.s"
+        .include "../lib/bell.s"
 
 .endscope
 
