@@ -34,8 +34,7 @@
         dex
         bpl     :-
 
-        lda     #$80
-        sta     file_dialog::L5104
+        copy    #$80, file_dialog::dual_inputs_flag
 
         lda     #0
         sta     path_buf0
@@ -98,10 +97,10 @@ jt_destination_filename:
 ;;; ============================================================
 
 .proc handle_ok_source
-        lda     #1
-        sta     path_buf2
-        lda     #' '
-        sta     path_buf2+1
+        jsr     file_dialog::move_ip_to_end_f1
+
+        copy    #1, path_buf2
+        copy    #' ', path_buf2+1
         jsr     file_dialog::jt_redraw_input
 
         ;; install destination handlers
@@ -217,10 +216,10 @@ err:    lda     #ERR_INVALID_PATHNAME
 ;;; ============================================================
 
 .proc handle_cancel_destination
-        lda     #1
-        sta     path_buf2
-        lda     #' '
-        sta     path_buf2+1
+        jsr     file_dialog::move_ip_to_end_f2
+
+        copy    #1, path_buf2
+        copy    #' ', path_buf2+1
         jsr     file_dialog::jt_redraw_input
 
         ldx     jt_source_filename

@@ -51,8 +51,10 @@ routine_table:  .addr   $7000, $7000, $7000
         tsx
         stx     stash_stack
         pha
-        lda     DEVCNT
-        sta     device_num
+
+        copy    DEVCNT, device_num
+
+        lda     #0
         sta     L50A8
         sta     prompt_ip_flag
         sta     LD8EC
@@ -60,13 +62,13 @@ routine_table:  .addr   $7000, $7000, $7000
         sta     LD8F1
         sta     LD8F2
         sta     cursor_ibeam_flag
-        sta     L5104
-        sta     L5103
+        sta     dual_inputs_flag
+        sta     extra_controls_flag
         sta     L5105
-        lda     SETTINGS + DeskTopSettings::ip_blink_speed
-        sta     prompt_ip_counter
-        lda     #$FF
-        sta     selected_index
+
+        copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
+        copy    #$FF, selected_index
+
         pla
         asl     a
         tax
@@ -84,9 +86,13 @@ stash_y:        .byte   0
 ;;; ============================================================
 ;;; Flags set by invoker to alter behavior
 
-L5103:  .byte   0               ; ??? something before jt_handle_click invoked
-L5104:  .byte   0               ; ??? something about inputs
-L5105:  .byte   0               ; ??? something about the picker
+extra_controls_flag:    ; Set when `click_handler_hook` should be called
+        .byte   0
+
+dual_inputs_flag:       ; Set when there are two text input fields
+        .byte   0
+
+L5105:  .byte   0       ; ??? something about the picker
 
 ;;; ============================================================
 
@@ -262,7 +268,7 @@ L5216:  lda     winfo_file_dialog
 
         ;; --------------------------------------------------
 .proc check_other_click
-        bit     L5103
+        bit     extra_controls_flag
         bpl     :+
         jsr     click_handler_hook
         bmi     set_up_ports
@@ -2018,7 +2024,7 @@ has_sel:
 
         lda     winfo_file_dialog
         jsr     set_port_for_window
-        jsr     calc_path_buf0_input1_ip_pos
+        jsr     calc_input1_ip_pos
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, pt
@@ -2051,7 +2057,7 @@ length: .byte   0
 
         lda     winfo_file_dialog
         jsr     set_port_for_window
-        jsr     calc_path_buf1_input2_ip_pos
+        jsr     calc_input2_ip_pos
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, pt
@@ -2112,6 +2118,7 @@ length: .byte   0
 .endproc
 
 ;;; ============================================================
+;;; A click when f1 has focus (click may be elsewhere)
 
 .proc handle_f1_click
         lda     winfo_file_dialog
@@ -2124,20 +2131,22 @@ length: .byte   0
         ;; Inside input1 ?
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
-        beq     :+
+        beq     ep2
 
         ;; Inside input2 ?
-        bit     L5104
+        bit     dual_inputs_flag
         bpl     done
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     done
-        jmp     jt_handle_ok
+        jsr     jt_handle_ok    ; move focus to input2
+        ;; NOTE: Assumes screentowindow_window* has not been changed.
+        jmp     handle_f2_click__ep2
 
 done:   rts
 
         ;; Is click to left or right of insertion point?
-:       jsr     calc_path_buf0_input1_ip_pos
+ep2:    jsr     calc_input1_ip_pos
         stax    $06
         cmp16   screentowindow_windowx, $06
         bcs     to_right
@@ -2152,7 +2161,7 @@ width:  .word   0
         ;; --------------------------------------------------
 
 .proc to_right
-        jsr     calc_path_buf0_input1_ip_pos
+        jsr     calc_input1_ip_pos
         stax    ip_pos
         ldx     path_buf2
         inx
@@ -2270,13 +2279,14 @@ width:  .word   0
 .endproc
 
 finish: jsr     jt_redraw_input
-        jsr     L6EA3
+        jsr     select_matching_file_in_list__f1
         rts
 
 ip_pos: .word   0
 .endproc
 
 ;;; ============================================================
+;;; A click when f2 has focus (click may be elsewhere)
 
 .proc handle_f2_click
 
@@ -2287,20 +2297,26 @@ ip_pos: .word   0
         lda     winfo_file_dialog
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+
+        ;; Inside input2 ?
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
-        beq     :+
-        bit     L5104
-        bpl     l1
+        beq     ep2
+
+        ;; Inside input1 ?
+        bit     dual_inputs_flag
+        bpl     done
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
-        bne     l1
-        jmp     jt_handle_cancel
+        bne     done
+        jsr     jt_handle_cancel ; Move focus to input1
+        ;; NOTE: Assumes screentowindow_window* has not been changed.
+        jmp     handle_f1_click::ep2
 
-l1:     rts
+done:   rts
 
         ;; Is click to left or right of insertion point?
-:       jsr     calc_path_buf1_input2_ip_pos
+ep2:    jsr     calc_input2_ip_pos
         stax    $06
         cmp16   screentowindow_windowx, $06
         bcs     to_right
@@ -2315,7 +2331,7 @@ width:  .word   0
         ;; --------------------------------------------------
         ;; Click to right of insertion point
 .proc to_right
-        jsr     calc_path_buf1_input2_ip_pos
+        jsr     calc_input2_ip_pos
         stax    ip_pos
         ldx     path_buf2
         inx
@@ -2433,11 +2449,12 @@ width:  .word   0
 .endproc
 
 finish: jsr     jt_redraw_input
-        jsr     L6E9F
+        jsr     select_matching_file_in_list__f2
         rts
 
 ip_pos: .word   0
 .endproc
+handle_f2_click__ep2 := handle_f2_click::ep2
 
 ;;; ============================================================
 
@@ -2456,7 +2473,7 @@ continue:
         inx
         sta     path_buf0,x
         sta     str_1_char+1
-        jsr     calc_path_buf0_input1_ip_pos
+        jsr     calc_input1_ip_pos
         inc     path_buf0
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
@@ -2465,7 +2482,7 @@ continue:
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, str_1_char
         param_call draw_string, path_buf2
-        jsr     L6EA3
+        jsr     select_matching_file_in_list__f1
         rts
 
 tmp:    .byte   0
@@ -2479,7 +2496,7 @@ tmp:    .byte   0
         rts
 
 :       dec     path_buf0
-        jsr     calc_path_buf0_input1_ip_pos
+        jsr     calc_input1_ip_pos
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
         lda     winfo_file_dialog
@@ -2487,7 +2504,7 @@ tmp:    .byte   0
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, path_buf2
         param_call draw_string, str_2_spaces
-        jsr     L6EA3
+        jsr     select_matching_file_in_list__f1
         rts
 .endproc
 
@@ -2512,7 +2529,7 @@ skip:   ldx     path_buf0
         sta     path_buf2+2
         dec     path_buf0
         inc     path_buf2
-        jsr     calc_path_buf0_input1_ip_pos
+        jsr     calc_input1_ip_pos
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
         lda     winfo_file_dialog
@@ -2520,7 +2537,7 @@ skip:   ldx     path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, path_buf2
         param_call draw_string, str_2_spaces
-        jsr     L6EA3
+        jsr     select_matching_file_in_list__f1
         rts
 .endproc
 
@@ -2555,7 +2572,7 @@ finish: dec     path_buf2
         param_call draw_string, path_buf0
         param_call draw_string, path_buf2
         param_call draw_string, str_2_spaces
-        jsr     L6EA3
+        jsr     select_matching_file_in_list__f1
         rts
 .endproc
 
@@ -2591,31 +2608,16 @@ skip:   sty     path_buf0
         copy    #kGlyphInsertionPoint, path_buf2+1
         copy    #0, path_buf0
         jsr     jt_redraw_input
-        jsr     L6EA3
+        jsr     select_matching_file_in_list__f1
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc handle_f1_meta_right_key
-        lda     path_buf2
-        cmp     #2
-        bcs     :+
-        rts
-
-:       ldx     #1
-        ldy     path_buf0
-@loop:  inx
-        iny
-        lda     path_buf2,x
-        sta     path_buf0,y
-        cpx     path_buf2
-        bne     @loop
-        sty     path_buf0
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        jsr     move_ip_to_end_f1
         jsr     jt_redraw_input
-        jsr     L6EA3
+        jsr     select_matching_file_in_list__f1
         rts
 .endproc
 
@@ -2635,7 +2637,7 @@ skip:   sty     path_buf0
         inx
         sta     path_buf1,x
         sta     str_1_char+1
-        jsr     calc_path_buf1_input2_ip_pos
+        jsr     calc_input2_ip_pos
         inc     path_buf1
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
@@ -2644,7 +2646,7 @@ skip:   sty     path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, str_1_char
         param_call draw_string, path_buf2
-        jsr     L6E9F
+        jsr     select_matching_file_in_list__f2
         rts
 
 l1:     .byte   0
@@ -2658,7 +2660,7 @@ l1:     .byte   0
         rts
 
 :       dec     path_buf1
-        jsr     calc_path_buf1_input2_ip_pos
+        jsr     calc_input2_ip_pos
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
         lda     winfo_file_dialog
@@ -2666,7 +2668,7 @@ l1:     .byte   0
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, path_buf2
         param_call draw_string, str_2_spaces
-        jsr     L6E9F
+        jsr     select_matching_file_in_list__f2
         rts
 .endproc
 
@@ -2690,7 +2692,7 @@ l3:     ldx     path_buf1
         sta     path_buf2+2
         dec     path_buf1
         inc     path_buf2
-        jsr     calc_path_buf1_input2_ip_pos
+        jsr     calc_input2_ip_pos
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
         lda     winfo_file_dialog
@@ -2698,7 +2700,7 @@ l3:     ldx     path_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, path_buf2
         param_call draw_string, str_2_spaces
-        jsr     L6E9F
+        jsr     select_matching_file_in_list__f2
         rts
 .endproc
 
@@ -2731,7 +2733,7 @@ l3:     dec     path_buf2
         param_call draw_string, path_buf1
         param_call draw_string, path_buf2
         param_call draw_string, str_2_spaces
-        jsr     L6E9F
+        jsr     select_matching_file_in_list__f2
         rts
 .endproc
 
@@ -2764,31 +2766,16 @@ l4:     lda     path_buf1,y
         copy    #kGlyphInsertionPoint, path_buf2+1
         copy    #0, path_buf1
         jsr     jt_redraw_input
-        jsr     L6E9F
+        jsr     select_matching_file_in_list__f2
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc handle_f2_meta_right_key
-        lda     path_buf2
-        cmp     #2
-        bcs     l1
-        rts
-
-l1:     ldx     #1
-        ldy     path_buf1
-l2:     inx
-        iny
-        lda     path_buf2,x
-        sta     path_buf1,y
-        cpx     path_buf2
-        bne     l2
-        sty     path_buf1
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        jsr     move_ip_to_end_f2
         jsr     jt_redraw_input
-        jsr     L6E9F
+        jsr     select_matching_file_in_list__f2
         rts
 .endproc
 
@@ -2990,7 +2977,8 @@ flag:   .byte   0
 
 ;;; ============================================================
 ;;; Output: A,X = coordinates of input string end
-.proc calc_path_buf0_input1_ip_pos
+
+.proc calc_input1_ip_pos
         PARAM_BLOCK params, $06
 data:   .addr   0
 length: .byte   0
@@ -3020,7 +3008,7 @@ width:  .word   0
 
 ;;; ============================================================
 
-.proc calc_path_buf1_input2_ip_pos
+.proc calc_input2_ip_pos
         PARAM_BLOCK params, $06
 data:   .addr   0
 length: .byte   0
@@ -3050,84 +3038,131 @@ width:  .word   0
 
 ;;; ============================================================
 
-L6E9F:  lda     #$FF
-        bmi     L6EA5
-L6EA3:  lda     #$00
+.proc select_matching_file_in_list
 
+f2:     lda     #$FF
+        bmi     l1
 
-.proc L6EA5
-        bmi     L6EB6
+f1:     lda     #$00
+
+l1:     bmi     l3
         ldx     path_buf0
-L6EAA:  lda     path_buf0,x
+l2:     lda     path_buf0,x
         sta     split_buf,x
         dex
-        bpl     L6EAA
-        jmp     L6EC2
+        bpl     l2
+        jmp     l4
 
-L6EB6:  ldx     path_buf1
+l3:     ldx     path_buf1
 :       lda     path_buf1,x
         sta     split_buf,x
         dex
         bpl     :-
 
-L6EC2:  lda     selected_index
-        sta     L6F3D
-        bmi     L6EFB
+l4:     lda     selected_index
+        sta     d2
+        bmi     l5
         ldx     #<file_names
         stx     $06
         ldx     #>file_names
         stx     $07
         ldx     #0
-        stx     L6F3C
+        stx     d1
         tax
         lda     file_list_index,x
         and     #$7F
         asl     a
-        rol     L6F3C
+        rol     d1
         asl     a
-        rol     L6F3C
+        rol     d1
         asl     a
-        rol     L6F3C
+        rol     d1
         asl     a
-        rol     L6F3C
+        rol     d1
         clc
         adc     $06
         tay
-        lda     L6F3C
+        lda     d1
         adc     $07
         tax
         tya
         jsr     L5F0D
 
-L6EFB:  lda     split_buf
+l5:     lda     split_buf
         cmp     path_buf
-        bne     L6F26
+        bne     l7
         tax
-L6F12:  lda     split_buf,x
+l6:     lda     split_buf,x
         cmp     path_buf,x
-        bne     L6F26
+        bne     l7
         dex
-        bne     L6F12
+        bne     l6
         lda     #0
         sta     LD8F0
-        jsr     L6F2F
+        jsr     l8
         rts
 
-L6F26:  lda     #$FF
+l7:     lda     #$FF
         sta     LD8F0
-        jsr     L6F2F
+        jsr     l8
         rts
 
-L6F2F:  lda     L6F3D
+l8:     lda     d2
         sta     selected_index
-        bpl     L6F38
+        bpl     l9
         rts
 
-L6F38:  jsr     L5F49
+l9:     jsr     L5F49
         rts
 
-L6F3C:  .byte   0
-L6F3D:  .byte   0
+d1:     .byte   0
+d2:     .byte   0
+.endproc
+select_matching_file_in_list__f1 := select_matching_file_in_list::f1
+select_matching_file_in_list__f2 := select_matching_file_in_list::f2
+
+;;; ============================================================
+
+.proc move_ip_to_end_f1
+        lda     path_buf2
+        cmp     #2
+        bcc     done
+
+        ldx     #1
+        ldy     path_buf0
+:       inx
+        iny
+        lda     path_buf2,x
+        sta     path_buf0,y
+        cpx     path_buf2
+        bne     :-
+        sty     path_buf0
+
+        copy    #1, path_buf2
+        copy    #kGlyphInsertionPoint, path_buf2+1
+
+done:   rts
+.endproc
+
+.proc move_ip_to_end_f2
+        lda     path_buf2
+        cmp     #2
+        bcc     done
+
+        ldx     #1
+        ldy     path_buf1
+:       inx
+        iny
+        lda     path_buf2,x
+        sta     path_buf1,y
+        cpx     path_buf2
+        bne     :-
+        sty     path_buf1
+
+        copy    #1, path_buf2
+        copy    #kGlyphInsertionPoint, path_buf2+1
+
+done:   rts
 .endproc
 
 ;;; ============================================================

@@ -445,17 +445,20 @@ saved_stack:
 init:   tsx
         stx     saved_stack
         jsr     set_cursor_pointer
-        lda     DEVCNT
-        sta     device_num
+
+        copy    DEVCNT, device_num
+
+        lda     #0
         sta     LA447
         sta     prompt_ip_flag
         sta     LA211
         sta     cursor_ibeam_flag
         sta     LA47D
         sta     LA47F
+
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
-        lda     #$FF
-        sta     selected_index
+        copy    #$FF, selected_index
+
         jmp     start
 
         .byte   0

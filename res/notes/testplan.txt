@@ -219,3 +219,15 @@
 
 * Launch DeskTop. Open some windows. Special > Disk Copy. Quit back to DeskTop. Verify that the windows are restored.
 * Launch DeskTop. Close all windows. Special > Disk Copy. Quit back to DeskTop. Verify that no windows are restored.
+
+* Launch DeskTop. Selector > Add an Entry.... Enter text in the first field. Move the IP into the middle of the text. Click in the second field. Verify that the first field is not truncated.
+* Launch DeskTop. Selector > Add an Entry.... Enter a name in the first field. Move the IP into the middle of the text. Click OK. Verify that the first field is not truncated.
+* Launch DeskTop. File > Copy a File.... Enter text in the first field. Move the IP into the middle of the text. Click in the second field. Verify that the first field is not truncated.
+* Launch DeskTop. File > Copy a File.... Enter a name in the first field. Move the IP into the middle of the text. Click OK. Verify that the first field is not truncated.
+
+* Launch DeskTop. Selector > Add an Entry.... Enter text in the second field. Move the IP into the middle of the text. Click in the first field. Verify that the second field is not truncated.
+* Launch DeskTop. Selector > Add an Entry.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
+* Launch DeskTop. File > Copy a File.... Enter text in the second field. Move the IP into the middle of the text. Click in the first field. Verify that the second field is not truncated.
+* Launch DeskTop. File > Copy a File.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
+
+* Launch DeskTop. File > Copy a File.... Enter text in the first field. Enter text in the second field. Click in the middle of the text in the first field. Verify that the IP is positioned near the click. Click in the middle of the text in the second field. Verify that the IP is positioned near the click.

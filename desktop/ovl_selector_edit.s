@@ -85,10 +85,8 @@ buffer: .res 16, 0
         dex
         bpl     :-
 
-        lda     #$00
-        sta     file_dialog::L51AE
-        lda     #$80
-        sta     file_dialog::L5104
+        copy    #0, file_dialog::L51AE
+        copy    #$80, file_dialog::dual_inputs_flag
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
         lda     winfo_file_dialog
@@ -97,8 +95,7 @@ buffer: .res 16, 0
         jsr     toggle_run_list_button
         lda     copy_when
         jsr     toggle_copy_when_button
-        lda     #$80
-        sta     file_dialog::L5103
+        copy    #$80, file_dialog::extra_controls_flag
         copy16  #handle_click, file_dialog::click_handler_hook+1
         copy16  #handle_key, file_dialog::handle_key::key_meta_digit+1
         rts
@@ -191,6 +188,8 @@ jt_entry_name:
 ;;; ============================================================
 
 .proc handle_ok_filename
+        jsr     file_dialog::move_ip_to_end_f1
+
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     file_dialog::jt_redraw_input
@@ -300,6 +299,8 @@ ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
 ;;; ============================================================
 
 .proc handle_cancel_name
+        jsr     file_dialog::move_ip_to_end_f2
+
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     file_dialog::jt_redraw_input
