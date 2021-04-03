@@ -17,7 +17,7 @@ test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 vmajor=$(grep 'kDeskTopVersionMajor =' config.inc | sed -e 's/.* = //')
 vminor=$(grep 'kDeskTopVersionMinor =' config.inc | sed -e 's/.* = //')
 vsuffix=$(grep 'define kDeskTopVersionSuffix' config.inc | cut -d'"' -f2)
-lang=$(grep 'define LANG' config.inc | cut -d'"' -f2)
+lang=$(grep 'define kBuildLang' config.inc | cut -d'"' -f2)
 version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})
 
 cecho yellow "Building disk images: $version"
