@@ -35,13 +35,14 @@ kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 
 ;;; SELECTOR file structure
 
+kInvokerOffset          = $600
 kInvokerSegmentSize     = $160
-kAppSegmentSize         = $6000
-kResourcesSegmentSize   = $800
-OVERLAY_ADDR            := $A000
-kOverlay1Offset         = $6F60
-kOverlay1Size           = $1F00
-kOverlay2Offset         = $8E60
+kAppSegmentSize         = $6200
+kAlertSegmentSize       = $800
+OVERLAY_ADDR            := MGTK + kAppSegmentSize
+kOverlay1Offset         = kInvokerOffset + kInvokerSegmentSize + kAppSegmentSize + kAlertSegmentSize
+kOverlay1Size           = $1D00
+kOverlay2Offset         = kOverlay1Offset + kOverlay1Size
 kOverlay2Size           = $D00
 
 ;;; ============================================================

@@ -7,10 +7,10 @@ The file is broken down into multiple segments:
 | Quit Handler | B$000027    | Main    | $1000-$11FF | L$0200 | `quit_handler.s`    |
 | Loader       | B$000400    | Main    | $2000-$21FF | L$0200 | `loader.s`          |
 | Invoker      | B$000600    | Main    | $0290-$03EF | L$0160 | `invoker.s`         |
-| MGTK + App   | B$000760    | Main    | $4000-$9FFF | L$6000 | `mgtk.s`, `app.s`   |
-| Alert Dialog | B$006760    | Aux LC1 | $D000-$D7FF | L$0800 | `alert_dialog.s`    |
-| Overlay 1    | B$006F60    | Main    | $A000-$BEFF | L$1F00 | `ovl_file_dialog.s` |
-| Overlay 2    | B$008E60    | Main    | $A000-$ACFF | L$0D00 | `ovl_file_copy.s`   |
+| MGTK + App   | B$000760    | Main    | $4000-$A1FF | L$6200 | `mgtk.s`, `app.s`   |
+| Alert Dialog | B$006960    | Aux LC1 | $D000-$D7FF | L$0800 | `alert_dialog.s`    |
+| Overlay 1    | B$007160    | Main    | $A200-$BEFF | L$1D00 | `ovl_file_dialog.s` |
+| Overlay 2    | B$008E60    | Main    | $A200-$AEFF | L$0D00 | `ovl_file_copy.s`   |
 
 ## Segments
 
@@ -53,14 +53,14 @@ Shows a modal alert dialog. Loaded to Aux LC1
 
 ### Overlay 1 - `ovl_file_dialog.s`
 
-The File > Run a Program... implementation. Loaded to $A000.
+The File > Run a Program... implementation. Loaded to $A200.
 
 Shows a file picker, and allow selecting an arbitrary program
 to run.
 
 ### Overlay 2 - `ovl_file_copy.s`
 
-Recursive copy implementation. Loaded to $A000.
+Recursive copy implementation. Loaded to $A200.
 
 Used when invoking a program via the selector with the option
 "Copy to RAMCard" / "On first use" specified.
@@ -84,13 +84,13 @@ $C000 +-------------+       +-------------+       +-------------+
       | ProDOS GP   |       |             |
 $BF00 +-------------+       |             |
       | Sel.List    |       |             |
-$B300 +-------------+       |             |
+$B300 + - - - - - - +       |             |
       | Selector    |       |             |
       | Overlays    |       |             |
       |             |       |             |
       |             |       |             |
       |             |       |             |
-$A000 +-------------+       |             |
+$A200 +-------------+       |             |
       | Selector    |       |             |
       | App Code    |       |             |
       |             |       |             |
@@ -100,12 +100,9 @@ $A000 +-------------+       |             |
       |             |       |             |
       |             |       |             |
 $8E00 +-------------+       |             |
+      | Settings    |       |             |
       |             |       |             |
-      | Unused      |       |             |
       |             |       |   Unused    |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
       |             |       |             |
 $8800 | Font        |       |             |
       |             |       |             |

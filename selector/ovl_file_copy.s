@@ -6,7 +6,7 @@
 
         RESOURCE_FILE "ovl_file_copy.res"
 
-        .org $A000
+        .org OVERLAY_ADDR
 
 .scope file_copier
 exec:
@@ -1086,4 +1086,4 @@ str_count:
 
 file_copier_exec   := file_copier::exec
 
-        PAD_TO $AD00
+        PAD_TO OVERLAY_ADDR + kOverlay2Size

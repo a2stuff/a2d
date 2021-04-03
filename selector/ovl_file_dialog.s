@@ -6,7 +6,7 @@
 
         RESOURCE_FILE "ovl_file_dialog.res"
 
-        .org $A000
+        .org OVERLAY_ADDR
 
 .scope file_dialog
 
@@ -3187,4 +3187,5 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
 file_dialog_init   := file_dialog::ep_init
 file_dialog_loop   := file_dialog::ep_loop
 
-        PAD_TO $BF00
+        PAD_TO OVERLAY_ADDR + kOverlay1Size
+        .assert * <= $BF00, error, "Overwrites ProDOS Global Page"

@@ -13,8 +13,8 @@
 
         jmp     start
 
-        resources_load_addr := $3400
-        resources_final_addr := $D000
+        alert_load_addr := $3400
+        alert_final_addr := $D000
 
         ;; ProDOS parameter blocks
 
@@ -23,9 +23,9 @@
         DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
         DEFINE_READ_PARAMS read_params1, INVOKER, kInvokerSegmentSize
         DEFINE_READ_PARAMS read_params2, MGTK, kAppSegmentSize
-        DEFINE_READ_PARAMS read_params3, resources_load_addr, kResourcesSegmentSize
+        DEFINE_READ_PARAMS read_params3, alert_load_addr, kAlertSegmentSize
 
-        DEFINE_SET_MARK_PARAMS set_mark_params, $600
+        DEFINE_SET_MARK_PARAMS set_mark_params, kInvokerOffset
         DEFINE_CLOSE_PARAMS close_params
 
 str_selector:
@@ -78,15 +78,15 @@ L2049:  lda     open_params::ref_num
         brk
 :       jsr     update_progress
 
-        ;; Copy Resources segment to Aux LC1
+        ;; Copy Alert segment to Aux LC1
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
 
         ldx     #0
 :       .repeat 8, i
-        lda     resources_load_addr + ($100 * i),x
-        sta     resources_final_addr + ($100 * i),x
+        lda     alert_load_addr + ($100 * i),x
+        sta     alert_final_addr + ($100 * i),x
         .endrepeat
         inx
         bne     :-

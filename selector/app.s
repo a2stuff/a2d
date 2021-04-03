@@ -2368,4 +2368,4 @@ loop_counter:
 
 .endscope
 
-        PAD_TO $A000
+        PAD_TO OVERLAY_ADDR
