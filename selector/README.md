@@ -1,16 +1,16 @@
 
 The file is broken down into multiple segments:
 
-| Purpose      | File Offset | Bank    | Address      | Length | Source              |
-|--------------|-------------|---------|--------------|--------|---------------------|
-| Bootstrap    | B$000000    | Main    | $A2000-$2026 | L$0027 | `bootstrap.s`       |
-| Quit Handler | B$000027    | Main    | $A1000-$11FF | L$0200 | `quit_handler.s`    |
-| Loader       | B$000400    | Main    | $A2000-$21FF | L$0200 | `loader.s`          |
-| Invoker      | B$000600    | Main    | $A0290-$03EF | L$0160 | `invoker.s`         |
-| MGTK + App   | B$000760    | Main    | $A4000-$9FFF | L$6000 | `mgtk.s`, `app.s`   |
-| Alert Dialog | B$006760    | Aux LC1 | $AD000-$D7FF | L$0800 | `alert_dialog.s`    |
-| Overlay 1    | B$006F60    | Main    | $AA000-$BEFF | L$1F00 | `ovl_file_dialog.s` |
-| Overlay 2    | B$008E60    | Main    | $AA000-$ACFF | L$0D00 | `ovl_file_copy.s`   |
+| Purpose      | File Offset | Bank    | Address     | Length | Source              |
+|--------------|-------------|---------|-------------|--------|---------------------|
+| Bootstrap    | B$000000    | Main    | $2000-$2026 | L$0027 | `bootstrap.s`       |
+| Quit Handler | B$000027    | Main    | $1000-$11FF | L$0200 | `quit_handler.s`    |
+| Loader       | B$000400    | Main    | $2000-$21FF | L$0200 | `loader.s`          |
+| Invoker      | B$000600    | Main    | $0290-$03EF | L$0160 | `invoker.s`         |
+| MGTK + App   | B$000760    | Main    | $4000-$9FFF | L$6000 | `mgtk.s`, `app.s`   |
+| Alert Dialog | B$006760    | Aux LC1 | $D000-$D7FF | L$0800 | `alert_dialog.s`    |
+| Overlay 1    | B$006F60    | Main    | $A000-$BEFF | L$1F00 | `ovl_file_dialog.s` |
+| Overlay 2    | B$008E60    | Main    | $A000-$ACFF | L$0D00 | `ovl_file_copy.s`   |
 
 ## Segments
 

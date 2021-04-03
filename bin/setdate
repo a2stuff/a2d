@@ -16,7 +16,7 @@ yy=$(expr `date +%y` + 0)
 mm=$(expr `date +%m` + 0)
 dd=$(expr `date +%d` + 0)
 
-month=$(grep "res_string_month_name_${mm}" "desktop/main.res.${lang}" | cut -d'"' -f2)
+month=$(grep "res_string_month_name_${mm}" "desktop/res/main.res.${lang}" | cut -d'"' -f2)
 
 if [ "$lang" = "en" ]; then
     date="$month $dd, $yyyy"
