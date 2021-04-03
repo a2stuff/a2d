@@ -585,9 +585,7 @@ different:
 .proc set_cursor_pointer
         bit     cursor_ibeam_flag
         bpl     done
-        MGTK_RELAY_CALL MGTK::HideCursor
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
-        MGTK_RELAY_CALL MGTK::ShowCursor
         lda     #$00
         sta     cursor_ibeam_flag
 done:   rts
@@ -598,9 +596,7 @@ done:   rts
 .proc set_cursor_ibeam
         bit     cursor_ibeam_flag
         bmi     done
-        MGTK_RELAY_CALL MGTK::HideCursor
         MGTK_RELAY_CALL MGTK::SetCursor, ibeam_cursor
-        MGTK_RELAY_CALL MGTK::ShowCursor
         lda     #$80
         sta     cursor_ibeam_flag
 done:   rts

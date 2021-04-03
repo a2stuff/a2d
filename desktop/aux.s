@@ -3798,9 +3798,7 @@ alert_options_table:
 start:  pha                     ; error code
         txa
         pha                     ; options
-        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, pointer_cursor
-        MGTK_CALL MGTK::ShowCursor
 
         ;; play bell
         jsr     Bell

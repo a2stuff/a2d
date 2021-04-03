@@ -963,9 +963,7 @@ different:
 ;;; ============================================================
 
 .proc set_cursor_pointer
-        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, pointer_cursor
-        MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
@@ -974,9 +972,7 @@ different:
 .proc set_cursor_ibeam
         bit     cursor_ibeam_flag
         bmi     :+
-        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, ibeam_cursor
-        MGTK_CALL MGTK::ShowCursor
         copy    #$80, cursor_ibeam_flag
 :       rts
 .endproc

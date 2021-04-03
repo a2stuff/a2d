@@ -1397,16 +1397,12 @@ error:  lda     #AlertID::insert_system_disk
 ;;; ============================================================
 
 .proc set_watch_cursor
-        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, watch_cursor
-        MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
 .proc set_pointer_cursor
-        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetCursor, pointer_cursor
-        MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 

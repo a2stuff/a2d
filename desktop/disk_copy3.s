@@ -1212,18 +1212,14 @@ state:  .byte   0
 ;;; ============================================================
 
 .proc set_cursor_watch
-        MGTK_RELAY_CALL2 MGTK::HideCursor
         MGTK_RELAY_CALL2 MGTK::SetCursor, watch_cursor
-        MGTK_RELAY_CALL2 MGTK::ShowCursor
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc set_cursor_pointer
-        MGTK_RELAY_CALL2 MGTK::HideCursor
         MGTK_RELAY_CALL2 MGTK::SetCursor, pointer_cursor
-        MGTK_RELAY_CALL2 MGTK::ShowCursor
         rts
 .endproc
 

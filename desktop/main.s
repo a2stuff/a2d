@@ -14885,33 +14885,19 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 ;;; ============================================================
 
 .proc set_cursor_watch
-        jsr     hide_cursor
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
-        jmp     show_cursor
+        rts
 .endproc
 
 .proc set_cursor_pointer
-        jsr     hide_cursor
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
-        jmp     show_cursor
+        rts
 .endproc
 
 .proc set_cursor_ibeam
-        jsr     hide_cursor
         MGTK_RELAY_CALL MGTK::SetCursor, ibeam_cursor
-        jmp     show_cursor
-.endproc
-
-.proc hide_cursor
-        MGTK_RELAY_CALL MGTK::HideCursor
         rts
 .endproc
-
-.proc show_cursor
-        MGTK_RELAY_CALL MGTK::ShowCursor
-        rts
-.endproc
-
 
 ;;; ============================================================
 ;;; Double Click Detection
