@@ -83,12 +83,15 @@ L2049:  lda     open_params::ref_num
         lda     LCBANK1
         lda     LCBANK1
 
-        ;; This prevents IIgs Control Panel from corrupting main bank
-        ;; stack when invoked while ALTZPON.
-        ;; See: https://github.com/a2stuff/a2d/issues/443
+        ;; Set stack pointers to arbitrarily low values for use when
+        ;; interrupts occur. DeskTop does not utilize this convention,
+        ;; so the values are set low so that interrupts which do (for
+        ;; example, the IIgs Control Panel) don't trash DeskTop's use
+        ;; of the stacks.
+        ;; See the Apple IIe Technical Reference Manual, pp. 153-154
         lda     #$80
-        sta     $0100
-        sta     $0101
+        sta     $0100           ; Main stack pointer, in Aux ZP
+        sta     $0101           ; Aux stack pointer, in Aux ZP
 
         ldx     #0
 :       .repeat 8, i

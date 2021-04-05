@@ -75,12 +75,17 @@ start:  lda     ROMIN2
         copy    #0, SHADOW
 :
 
-        ;; Maybe some IIgs magic???
+        ;; Set stack pointers to arbitrarily low values for use when
+        ;; interrupts occur. DeskTop does not utilize this convention,
+        ;; so the values are set low so that interrupts which do (for
+        ;; example, the IIgs Control Panel) don't trash DeskTop's
+        ;; stacks.
+        ;; See the Apple IIe Technical Reference Manual, pp. 153-154
         lda     #$40
-        sta     RAMWRTON
-        sta     $0100
-        sta     $0101
-        sta     RAMWRTOFF
+        sta     RAMWRTON        ; BUG: Should be ALTZPON ???
+        sta     $0100           ; Main stack pointer, in Aux ZP
+        sta     $0101           ; Aux stack pointer, in Aux ZP
+        sta     RAMWRTOFF       ; BUG: Should be ALTZPOFF ???
 
         lda     #kSplashVtab
         jsr     VTABZ
@@ -329,12 +334,14 @@ segment_num:  .byte   0
         lda     LCBANK1
         lda     LCBANK1
 
-        ;; This prevents IIgs Control Panel from corrupting main bank
-        ;; stack when invoked while ALTZPON.
-        ;; See: https://github.com/a2stuff/a2d/issues/443
+        ;; Set stack pointers to arbitrarily low values for use when
+        ;; interrupts occur. DeskTop does not utilize this convention,
+        ;; so the values are set low so that interrupts which do (for
+        ;; example, the IIgs Control Panel) don't trash DeskTop's use
+        ;; of the stacks.
         lda     #$80
-        sta     $0100
-        sta     $0101
+        sta     $0100           ; Main stack pointer, in Aux ZP
+        sta     $0101           ; Aux stack pointer, in Aux ZP
 
         lda     #0
         sta     src
