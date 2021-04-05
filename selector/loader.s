@@ -83,6 +83,13 @@ L2049:  lda     open_params::ref_num
         lda     LCBANK1
         lda     LCBANK1
 
+        ;; This prevents IIgs Control Panel from corrupting main bank
+        ;; stack when invoked while ALTZPON.
+        ;; See: https://github.com/a2stuff/a2d/issues/443
+        lda     #$80
+        sta     $0100
+        sta     $0101
+
         ldx     #0
 :       .repeat 8, i
         lda     alert_load_addr + ($100 * i),x

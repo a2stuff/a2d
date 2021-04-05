@@ -29,7 +29,9 @@ len2:   .word   kOverlayDiskCopy4Length
 
 ;;; ============================================================
 
-start:  lda     #$41            ; ???
+start:
+        ;; Maybe some IIgs magic???
+        lda     #$41
         sta     RAMWRTON
         sta     $0100
         sta     $0101

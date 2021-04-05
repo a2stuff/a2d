@@ -75,10 +75,11 @@ start:  lda     ROMIN2
         copy    #0, SHADOW
 :
 
+        ;; Maybe some IIgs magic???
         lda     #$40
         sta     RAMWRTON
-        sta     $0100           ; ???
-        sta     $0101           ; ???
+        sta     $0100
+        sta     $0101
         sta     RAMWRTOFF
 
         lda     #kSplashVtab
@@ -328,7 +329,10 @@ segment_num:  .byte   0
         lda     LCBANK1
         lda     LCBANK1
 
-        lda     #$80            ; ???
+        ;; This prevents IIgs Control Panel from corrupting main bank
+        ;; stack when invoked while ALTZPON.
+        ;; See: https://github.com/a2stuff/a2d/issues/443
+        lda     #$80
         sta     $0100
         sta     $0101
 
