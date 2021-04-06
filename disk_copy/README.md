@@ -1,12 +1,10 @@
 
 # Disk Copy diassembly notes
 
-This is large - 111k. It includes a loader and the DeskTop app with
-both main memory and aux memory segments, filling everything from
-$4000 to $FFFF (except for I/O space and ProDOS), and still having
-more code segments swapped in dynamically.
-
-The file is broken down into multiple segments:
+Disk Copy is built as part of DeskTop (see `../desktop/desktop.s`) and
+relies on DeskTop for loading/invoking MGTK and the initial Disk Copy
+load. Once running, it takes over all memory and functions as a
+separate application.
 
 | Purpose       | Bank    | Address | Sources          |
 |---------------|---------|---------|------------------|
@@ -16,11 +14,7 @@ The file is broken down into multiple segments:
 | Disk Copy 3/4 | Aux LC1 | A$D000  | `disk_copy3.s`   |
 | Disk Copy 4/4 | Main    | A$0800  | `disk_copy4.s`   |
 
-Lengths/offsets are defined in `internal.inc`.
-
-A monolithic source file `desktop.s` is used to assemble the entire
-target. It includes other source files for each of the various
-segments.
+Lengths/offsets are defined in `../desktop/internal.inc`.
 
 ## Structure
 

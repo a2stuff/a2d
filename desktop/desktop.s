@@ -31,10 +31,10 @@
 ;;; Disk Copy Overlays
 
 .scope disk_copy
-        .include "disk_copy1.s"
-        .include "disk_copy2.s"
-        .include "disk_copy3.s"
-        .include "disk_copy4.s"
+        .include "../disk_copy/disk_copy1.s"
+        .include "../disk_copy/disk_copy2.s"
+        .include "../disk_copy/disk_copy3.s"
+        .include "../disk_copy/disk_copy4.s"
 .endscope
 
 ;;; ============================================================

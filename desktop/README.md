@@ -17,10 +17,10 @@ The file is broken down into multiple segments:
 | DeskTop       | Main    | A$4000  | `main.s`                       |
 | Initializer   | Main    | A$0800  | `init.s`                       |
 | Invoker       | Main    | A$0290  | `invoker.s`                    |
-| Disk Copy 1/4 | Main    | A$0800  | `disk_copy1.s`                 |
-| Disk Copy 2/4 | Main    | A$1800  | `disk_copy2.s`                 |
-| Disk Copy 3/4 | Aux LC1 | A$D000  | `disk_copy3.s`                 |
-| Disk Copy 4/4 | Main    | A$0800  | `disk_copy4.s`                 |
+| Disk Copy 1/4 | Main    | A$0800  | `../disk_copy/disk_copy1.s`    |
+| Disk Copy 2/4 | Main    | A$1800  | `../disk_copy/disk_copy2.s`    |
+| Disk Copy 3/4 | Aux LC1 | A$D000  | `../disk_copy/disk_copy3.s`    |
+| Disk Copy 4/4 | Main    | A$0800  | `../disk_copy/disk_copy4.s`    |
 | Format/Erase  | Main    | A$0800  | `ovl_format_erase.s`           |
 | Selector 1/2  | Main    | A$9000  | `ovl_selector_pick.s`          |
 | File Dialog   | Main    | A$5000  | `ovl_file_dialog.s`            |
@@ -148,7 +148,7 @@ Several of the overlays also use a common file selector dialog overlay
 #### Disk Copy Overlay
 
 The Disk Copy command replaces large chunks of memory and is best
-thought of as a separate application.
+thought of as a separate application. The sources live in `../disk_copy/`.
 
 The first part (`disk_copy1.s`, $800-$9FF) loads into main memory the other
 overlays, but in turn it loads a second short ($200-byte) overlay
