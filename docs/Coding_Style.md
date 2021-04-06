@@ -179,7 +179,7 @@ start:  lda     ptr
 ;;; Twiddles a thing.
 ;;; Inputs: A,X = address of the thing
 ;;; Output: Z=1 on success, 0 on failure
-;;; Error: On fatal error, |error_hook| is invoked.
+;;; Error: On fatal error, `error_hook` is invoked.
 ;;; Assert: Aux LCBANK1 is active
 ;;; NOTE: Trashes $6/7
 

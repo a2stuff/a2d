@@ -110,7 +110,7 @@ path2:  .res    ::kPathBufferSize, 0
 hook_handle_error_code:   .addr   0 ; fatal; A = ProDOS error code
 hook_handle_no_space:     .addr   0 ; fatal
 hook_insert_source:       .addr   0 ; if this returns, copy is retried
-hook_show_file:           .addr   0 ; called when |path2| updated
+hook_show_file:           .addr   0 ; called when `path2` updated
 
 ;;; ============================================================
 
@@ -148,8 +148,8 @@ filename:
 
 ;;; ============================================================
 ;;; Perform the file copy.
-;;; Inputs: |path2| is source path
-;;;         |path1| is destination path
+;;; Inputs: `path2` is source path
+;;;         `path1` is destination path
 .proc do_copy
         ;; Check destination dir
         MLI_CALL GET_FILE_INFO, get_path1_info_params
@@ -224,9 +224,9 @@ is_dir_flag:
 ;;; Copy an entry in a directory. For files, the content is copied.
 ;;; For directories, the target is created but the caller is responsible
 ;;; for copying the child entries.
-;;; Inputs: |file_entry| populated with FileEntry
-;;;         |path2| has source directory path
-;;;         |path1| has destination directory path
+;;; Inputs: `file_entry` populated with FileEntry
+;;;         `path2` has source directory path
+;;;         `path1` has destination directory path
 ;;; Errors: handle_error_code is invoked
 
 .proc copy_entry
@@ -288,7 +288,7 @@ cleanup:
 
 ;;; ============================================================
 ;;; Check that there is room to copy a file. Handles overwrites.
-;;; Inputs: |path2| is source; |path1| is target
+;;; Inputs: `path2` is source; `path1` is target
 ;;; Outputs: C=0 if there is sufficient space, C=1 otherwise
 
 .proc check_space_available
@@ -361,8 +361,8 @@ dst_size:       .word   0
 
 ;;; ============================================================
 ;;; Copy a normal (non-directory) file. File info is copied too.
-;;; Inputs: |open_srcfile_params| populated
-;;;         |open_dstfile_params| populated; file already created
+;;; Inputs: `open_srcfile_params` populated
+;;;         `open_dstfile_params` populated; file already created
 ;;; Errors: handle_error_code is invoked
 
 .proc copy_normal_file
@@ -1334,7 +1334,7 @@ done:   dex
 .endproc
 
 ;;; ============================================================
-;;; Copy |filename| from |src_path| to |dst_path|
+;;; Copy `filename` from `src_path` to `dst_path`
 
 .proc copy_file
         jsr     append_filename_to_dst_path

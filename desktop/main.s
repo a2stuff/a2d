@@ -1140,8 +1140,8 @@ path_length:
 .endproc
 
 .endproc
-launch_file             := launch_file_impl::compose_path ; use |buf_win_path| + |buf_filename2|
-launch_file_with_path   := launch_file_impl::with_path ; use |INVOKER_PREFIX|
+launch_file             := launch_file_impl::compose_path ; use `buf_win_path` + `buf_filename2`
+launch_file_with_path   := launch_file_impl::with_path ; use `INVOKER_PREFIX`
 
 ;;; ============================================================
 
@@ -1996,7 +1996,7 @@ last_active_window_id:
 
 ;;; ============================================================
 ;;; Copy selected window and first icon paths to
-;;; |buf_win_path| and |buf_filename2| respectively.
+;;; `buf_win_path` and `buf_filename2` respectively.
 
 .proc copy_win_icon_paths
         ;; Copy window path to buf_win_path
@@ -3107,7 +3107,7 @@ select_prev:
 :       stx     selected_index
         ;; fall through
 
-;;; Highlight the icon in the list at |selected_index|
+;;; Highlight the icon in the list at `selected_index`
 highlight_icon:
         ldx     selected_index
         lda     buffer+1,x
@@ -5743,11 +5743,11 @@ num:    .byte   0
 
 ;;; ============================================================
 ;;; Open a folder/volume icon
-;;; Input: |open_dir_path_buf| should have full path.
+;;; Input: `open_dir_path_buf` should have full path.
 ;;;   If a case match for existing window path, it will be activated.
-;;; Note: stack will be restored via |saved_stack| on failure
+;;; Note: stack will be restored via `saved_stack` on failure
 ;;;
-;;; Set |suppress_error_on_open_flag| to avoid alert.
+;;; Set `suppress_error_on_open_flag` to avoid alert.
 
 .proc open_window_for_path
         copy    #$FF, icon_params2
@@ -11930,7 +11930,7 @@ count:  .addr   0
 
 ;;; ============================================================
 ;;; Handle copying of a selected file.
-;;; Calls into the recursion logic of |process_dir| as necessary.
+;;; Calls into the recursion logic of `process_dir` as necessary.
 
 .proc copy_process_selected_file
         copy    #$80, LE05B
@@ -12116,7 +12116,7 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Called by |process_dir| to process a single file
+;;; Called by `process_dir` to process a single file
 
 .proc copy_process_directory_entry
         jsr     check_escape_key_down
@@ -12542,7 +12542,7 @@ count:  .word   0
 
 ;;; ============================================================
 ;;; Handle deletion of a selected file.
-;;; Calls into the recursion logic of |process_dir| as necessary.
+;;; Calls into the recursion logic of `process_dir` as necessary.
 
 .proc delete_process_selected_file
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
@@ -12633,7 +12633,7 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Called by |process_dir| to process a single file
+;;; Called by `process_dir` to process a single file
 
 .proc delete_process_directory_entry
         ;; Cancel if escape pressed
@@ -12819,7 +12819,7 @@ unlock_dialog_lifecycle:
 
 ;;; ============================================================
 ;;; Handle locking of a selected file.
-;;; Calls into the recursion logic of |process_dir| as necessary.
+;;; Calls into the recursion logic of `process_dir` as necessary.
 
 .proc lock_process_selected_file
         copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
@@ -12874,7 +12874,7 @@ do_lock:
 .endproc
 
 ;;; ============================================================
-;;; Called by |process_dir| to process a single file
+;;; Called by `process_dir` to process a single file
 
 lock_process_directory_entry:
         jsr     append_to_src_path
@@ -12992,7 +12992,7 @@ callbacks_for_size_or_count:
 
 ;;; ============================================================
 ;;; Handle sizing (or just counting) of a selected file.
-;;; Calls into the recursion logic of |process_dir| as necessary.
+;;; Calls into the recursion logic of `process_dir` as necessary.
 
 .proc size_or_count_process_selected_file
         jsr     copy_paths_to_src_and_dst_paths
@@ -13032,7 +13032,7 @@ do_sum_file_size:
 .endproc
 
 ;;; ============================================================
-;;; Called by |process_dir| to process a single file
+;;; Called by `process_dir` to process a single file
 
 size_or_count_process_directory_entry:
         bit     operation_flags

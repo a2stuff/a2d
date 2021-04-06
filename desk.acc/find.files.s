@@ -720,8 +720,8 @@ endloop:
 ;;; By Paul Guertin (pg@sff.net), 30 August 2000
 ;;; http://6502.org/source/strings/patmatch.htm
 
-;;; Input:  A NUL-terminated, <255-length pattern at address |pattern|.
-;;;         A NUL-terminated, <255-length string pointed to by |str|.
+;;; Input:  A NUL-terminated, <255-length pattern at address `pattern`.
+;;;         A NUL-terminated, <255-length string pointed to by `str`.
 ;;;
 ;;; Output: Carry bit = 1 if the string matches the pattern, = 0 if not.
 ;;;
@@ -1510,7 +1510,7 @@ done:   jmp     input_loop
 max_top:        .byte   0
 .endproc
 
-;;; Assumes |top_row| is set.
+;;; Assumes `top_row` is set.
 .proc update_viewport
         ;; Compute height of line (font height + 1)
         copy16  #1, line_height

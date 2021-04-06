@@ -235,8 +235,8 @@ prefix_buffer:
 filename:
         PASCAL_STRING kFilenameDeskTop
 
-;;; Consecutive segments are loaded, |size| bytes are loaded at |addr|
-;;; then relocated to |dest| according to |type|.
+;;; Consecutive segments are loaded, `size` bytes are loaded at `addr`
+;;; then relocated to `dest` according to `type`.
 
 ;;; Segments are:
 ;;; $4000 aux        - MGTK and DeskTop code

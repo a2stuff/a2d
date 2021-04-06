@@ -7859,7 +7859,7 @@ win_port: .addr   0
         ;; this buggy ???
 
         ;; It seems like it's trying to update a fraction
-        ;; of the drawing port (from |pattern| to |font|)
+        ;; of the drawing port (from `pattern` to `font`)
 
 .proc SetWinPortImpl
         ptr := window
