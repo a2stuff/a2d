@@ -783,8 +783,7 @@ process_volume:
         inc     cached_window_icon_count
         inc     icon_count
         lda     DEVLST,y
-        ldx     cached_window_icon_count
-        jsr     main::create_volume_icon ; A = unit number, X = icon index, Y = device number
+        jsr     main::create_volume_icon ; A = unit number, Y = device index
         sta     cvi_result
         MGTK_RELAY_CALL MGTK::CheckEvents
 

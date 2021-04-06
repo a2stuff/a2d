@@ -3514,6 +3514,8 @@ L5916:  lda     cached_window_icon_list,x
         copy    #0, cached_window_icon_list,x
         ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
         lda     icon_param
+        jsr     free_desktop_icon_position
+        lda     icon_param
         jsr     FreeIcon
         dec     cached_window_icon_count
         dec     icon_count
@@ -3532,8 +3534,7 @@ L5942:  dex
         lda     #0
         sta     device_to_icon_map,y
         lda     DEVLST,y
-        ldx     cached_window_icon_count
-        jsr     create_volume_icon ; A = unit num, Y = device num, X = icon index
+        jsr     create_volume_icon ; A = unit num, Y = device index
         cmp     #ERR_DUPLICATE_VOLUME
         bne     :+
         lda     #kErrDuplicateVolName
@@ -3711,6 +3712,8 @@ not_in_map:
         dec     icon_count
         lda     icon_param
         jsr     FreeIcon
+        lda     icon_param
+        jsr     free_desktop_icon_position
         jsr     reset_main_grafport
         ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
 
@@ -3724,8 +3727,7 @@ not_in_map:
         lda     DEVLST,y
         ldx     icon_param      ; preserve icon index if known
         bne     :+
-        ldx     cached_window_icon_count
-:       jsr     create_volume_icon ; A = unit num, Y = device num, X = icon index
+:       jsr     create_volume_icon ; A = unit num, Y = device index
         bit     check_drive_flags
         bmi     add_icon
 
@@ -9537,7 +9539,7 @@ buffer: .res    16, 0            ; length overwritten with '/'
 
 ;;; ============================================================
 ;;; Create Volume Icon
-;;; Input: A = unit number, X = icon num, Y = index in DEVLST
+;;; Input: A = unit number, Y = index in DEVLST
 ;;; Output: 0 on success, ProDOS error code on failure
 ;;;
 ;;; NOTE: Called from Initializer (init) which resides in $800-$1200
@@ -9551,9 +9553,6 @@ buffer: .res    16, 0            ; length overwritten with '/'
         kMaxIconHeight = 15
 
         sta     unit_number
-        dex                     ; icon numbers are 1-based, and Trash is #1,
-        dex                     ; so make this 0-based
-        stx     icon_index
         sty     devlst_index
         and     #$F0
         sta     on_line_params::unit_num
@@ -9630,10 +9629,12 @@ create_icon:
         ldy     #IconEntry::win_type
         lda     #0
         sta     (icon_ptr),y
-        inc     devlst_index
 
         ;; Assign icon coordinates
-        lda     icon_index
+        ldy     devlst_index
+        lda     device_to_icon_map,y
+        jsr     alloc_desktop_icon_position
+        txa
         asl                     ; * 4 = .sizeof(MGTK::Point)
         asl
         tax
@@ -9669,9 +9670,40 @@ create_icon:
 
 unit_number:    .byte   0
 devlst_index:   .byte   0
-icon_index:     .byte   0
 offset:         .word   0
 
+.endproc
+
+;;; ============================================================
+;;; Allocate/Free an icon position on the DeskTop. The position
+;;; is used as an index into `desktop_icon_coords_table` to place
+;;; icons; `desktop_icon_usage_table` tracks used/free slots.
+
+;;; Input: A = icon num
+;;; Output: X = index into `desktop_icon_coords_table` to use
+.proc alloc_desktop_icon_position
+        pha
+
+        ldx     #0
+:       lda     desktop_icon_usage_table,x
+        beq     :+
+        inx
+        bne     :-              ; always
+
+:       pla
+        sta     desktop_icon_usage_table,x
+        rts
+.endproc
+
+;;; Input: A = icon num
+.proc free_desktop_icon_position
+        ldx     #kMaxVolumes-1
+:       dex
+        cmp     desktop_icon_usage_table,x
+        bne     :-
+        lda     #0
+        sta     desktop_icon_usage_table,x
+        rts
 .endproc
 
 ;;; ============================================================

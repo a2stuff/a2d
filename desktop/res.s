@@ -811,6 +811,12 @@ desktop_icon_coords_table:
         ;; 7 slots * 2 drives = 14 (size of DEVLST)
         ;; ... but RAM in Slot 3 Drive 2 is disconnected.
         ASSERT_RECORD_TABLE_SIZE desktop_icon_coords_table, kMaxVolumes, .sizeof(MGTK::Point)
+
+
+;;; Which icon positions are in use. 0=free, icon number otherwise
+desktop_icon_usage_table:
+        .res    kMaxVolumes, 0
+
 ;;; ============================================================
 
         PAD_TO $DB00
