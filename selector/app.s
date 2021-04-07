@@ -666,7 +666,7 @@ quick_boot_slot:
 ;;; Event Loop
 
 .proc event_loop
-        ;;         jsr     yield_loop
+        jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
