@@ -4,6 +4,11 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+;;; Within `disk_copy` scope, settings are an overlay on top of
+;;; the disk_copy3 segment in the aux LC.
+
+SETTINGS := $F180
+
 .proc part2
         .org $1800
 
@@ -11,7 +16,9 @@
 
 ;;; ============================================================
 
-        DEFINE_OPEN_PARAMS open_params, filename, $1C00
+io_buf := $1C00
+
+        DEFINE_OPEN_PARAMS open_params, filename, io_buf
 filename:   PASCAL_STRING kFilenameDeskTop
 
         DEFINE_READ_PARAMS read_params, 0, 0
@@ -49,26 +56,38 @@ L183F:  sta     BITMAP+1,x
         dex
         bpl     L183F
 
-        MLI_RELAY_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
+        bcs     fail
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     set_mark_params::ref_num
 
-        MLI_RELAY_CALL SET_MARK, set_mark_params
+        MLI_CALL SET_MARK, set_mark_params
+        bcs     fail
         copy16  buf1, read_params::data_buffer
         copy16  len1, read_params::request_count
-        MLI_RELAY_CALL READ, read_params
+        MLI_CALL READ, read_params
+        bcs     fail
         jsr     copy_to_lc
 
         copy16  buf2, read_params::data_buffer
         copy16  len2, read_params::request_count
-        MLI_RELAY_CALL READ, read_params
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL READ, read_params
+        bcs     fail
+        MLI_CALL CLOSE, close_params
+        bcs     fail
+
+        jsr     load_settings
+
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
 
         jmp     auxlc__start
+
+;;; This mimics the original behavior - just hang if the load fails.
+;;; TODO: Do something better here, e.g. ProDOS QUIT.
+fail:   jmp     fail
 
 ;;; ============================================================
 ;;; Copy first chunk to the Language Card
@@ -125,15 +144,55 @@ loop:   lda     (src),y
 .endproc
 
 ;;; ============================================================
+;;; Load settings file (if present), and copy into LC,
+;;; overwriting default settings.
 
-.proc MLI_RELAY
-        sty     call
-        stax    params
-        jsr     MLI
-call:   .byte   0
-params: .addr   0
-self:   bne     self            ; hang if fails
-        rts
+.proc load_settings
+
+        jmp     start
+
+        read_buf := buf1
+
+        DEFINE_OPEN_PARAMS open_params, filename, io_buf
+        DEFINE_READ_PARAMS read_params, read_buf, .sizeof(DeskTopSettings)
+        DEFINE_CLOSE_PARAMS close_params
+
+filename:
+        PASCAL_STRING kFilenameDeskTopConfig
+
+start:
+        ;; Load the settings file; on failure, just skip
+        MLI_CALL OPEN, open_params
+        bcs     finish
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL READ, read_params
+        bcs     close
+
+        ;; Check version bytes; ignore on mismatch
+        lda     read_buf + DeskTopSettings::version_major
+        cmp     #kDeskTopVersionMajor
+        bne     close
+        lda     read_buf + DeskTopSettings::version_minor
+        cmp     #kDeskTopVersionMinor
+        bne     close
+
+        ;; Move settings block into place
+        sta     ALTZPON         ; Bank in Aux LC Bank 1
+        lda     LCBANK1
+        lda     LCBANK1
+
+        COPY_STRUCT DeskTopSettings, read_buf, SETTINGS
+
+        sta     ALTZPOFF        ; Bank in Main ZP/LC and ROM
+        lda     ROMIN2
+
+        ;; Finish up
+close:  MLI_CALL CLOSE, close_params
+
+finish: rts
+
 .endproc
 
 ;;; ============================================================

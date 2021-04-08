@@ -1133,8 +1133,7 @@ memory_bitmap:
 .endproc
 
 ;;; ============================================================
-;;; On IIgs, force B&W mode. No-op otherwise.
-;;; NOTE: Does not honor setting for RGB mode.
+;;; On IIgs, force preferred RGB mode. No-op otherwise.
 ;;; Assert: LCBANK1 is banked in
 
 .proc reset_iigs_rgb
@@ -1145,12 +1144,21 @@ memory_bitmap:
         lda     LCBANK1
         bcs     done
 
-        lda     NEWVIDEO
+        bit     SETTINGS + DeskTopSettings::rgb_color
+        bmi     color
+
+mono:   lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
+        sta     NEWVIDEO
+        rts
+
+color:  lda     NEWVIDEO
+        and     #<~(1<<5)       ; Color
         sta     NEWVIDEO
 
 done:   rts
 .endproc
+
 
 ;;; ============================================================
 
