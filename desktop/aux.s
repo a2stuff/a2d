@@ -3460,7 +3460,7 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
 ;;; ============================================================
 ;;; Prompt dialog resources
 
-        DEFINE_RECT clear_dialog_labels_rect, 39, 25, 360, kPromptDialogHeight-20
+        DEFINE_RECT clear_dialog_labels_rect, 39, 25, 380, kPromptDialogHeight-20
 
         DEFINE_RECT prompt_rect, 40, kDialogLabelRow5+1, 360, kDialogLabelRow6
         DEFINE_POINT current_target_file_pos, 75, kDialogLabelRow2
