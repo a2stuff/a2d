@@ -9408,13 +9408,13 @@ Version:                .word   0
 
         ;; Not $CnXX so RAM-based driver
         lda     unit_number
+        cmp     #kRamDrvSystemUnitNum ; Special case
+        beq     ram
         and     #%01110000      ; Mask off slot 0SSS0000
         lsr                     ; Shift to be $0n
         lsr
         lsr
         lsr
-        cmp     #3              ; Slot 3?
-        beq     ram             ; ProDOS only supports RAM disks in Slot 3
         ora     #$C0            ; make $Cn...
         sta     slot_addr+1     ; and fall through to use $Cn00 to probe
 
