@@ -72,12 +72,12 @@ attention:
 ```
 desktop/aux.s                   unscoped:    0  scoped:   67  raw:    0  unrefed:    0
 desktop/main.s                  unscoped:    1  scoped:  186  raw:   19  unrefed:    1
-desktop/disk_copy3.s            unscoped:   91  scoped:   79  raw:    8  unrefed:    0
-desktop/disk_copy4.s            unscoped:    0  scoped:    6  raw:    0  unrefed:    0
 desktop/ovl_file_dialog.s       unscoped:   11  scoped:   26  raw:    4  unrefed:    1
 desktop/ovl_format_erase.s      unscoped:   92  scoped:    2  raw:    3  unrefed:    2
 desktop/ovl_selector_pick.s     unscoped:  130  scoped:    0  raw:    1  unrefed:    0
 desktop/res.s                   unscoped:   11  scoped:    0  raw:    5  unrefed:   11
+disk_copy/auxlc.s               unscoped:   91  scoped:   79  raw:    8  unrefed:    0
+disk_copy/main.s                unscoped:    0  scoped:    6  raw:    0  unrefed:    0
 selector/alert_dialog.s         unscoped:    0  scoped:   20  raw:    0  unrefed:    0
 selector/app.s                  unscoped:    1  scoped:   33  raw:    0  unrefed:    1
 selector/ovl_file_copy.s        unscoped:  125  scoped:   20  raw:    0  unrefed:    0

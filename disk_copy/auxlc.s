@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        RESOURCE_FILE "disk_copy3.res"
+        RESOURCE_FILE "auxlc.res"
 
 
 .proc auxlc

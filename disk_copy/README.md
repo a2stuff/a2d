@@ -9,10 +9,10 @@ separate application.
 | Purpose       | Bank    | Address | Sources          |
 |---------------|---------|---------|------------------|
 | MGTK          | Aux     | A$4000  | `mgtk.s`         |
-| Disk Copy 1/4 | Main    | A$0800  | `disk_copy1.s`   |
-| Disk Copy 2/4 | Main    | A$1800  | `disk_copy2.s`   |
-| Disk Copy 3/4 | Aux LC1 | A$D000  | `disk_copy3.s`   |
-| Disk Copy 4/4 | Main    | A$0800  | `disk_copy4.s`   |
+| Disk Copy 1/4 | Main    | A$0800  | `bootstrap.s`    |
+| Disk Copy 2/4 | Main    | A$1800  | `loader.s`       |
+| Disk Copy 3/4 | Aux LC1 | A$D000  | `auxlc.s`        |
+| Disk Copy 4/4 | Main    | A$0800  | `main.s`         |
 
 Lengths/offsets are defined in `../desktop/internal.inc`.
 
@@ -21,12 +21,12 @@ Lengths/offsets are defined in `../desktop/internal.inc`.
 The Disk Copy command in DeskTop loads several overlays, which
 effectively become a new application.
 
-The first part (`disk_copy1.s`, $800-$9FF) loads into main memory
+The first part (`bootstrap.s`, $800-$9FF) loads into main memory
 like the other DeskTop overlays, but in turn it loads a second short
-($200-byte) overlay (`disk_copy2.s`, $1800-$19FF). This then loads
+($200-byte) overlay (`loader.s`, $1800-$19FF). This then loads
 app code and a replacement for the resources in the aux language card area
-(`disk_copy3.s`, Aux LC $D000-$F1FF) and another block of code in
-main memory (`disk_copy4.s`, Main $0800-$12FF). When exiting, the
+(`auxlc.s`, Aux LC $D000-$F1FF) and another block of code in
+main memory (`main.s`, Main $0800-$12FF). When exiting, the
 DeskTop is restarted from the beginning.
 
 
@@ -103,7 +103,7 @@ $0000 +-------------+       +-------------+
 All free memory is used for buffer space during copies. A detailed
 memory bitmap is maintained with available/reserved page-pairs marked
 for main, aux, and aux-lcbank2 addresses. See `memory_bitmap` in
-`disk_copy4.s`.
+`main.s`.
 
 In Quick Copy mode, the volume's bitmap is loaded at $4000 upwards
 (and then marked as used in the memory bitmap) and used to track which
