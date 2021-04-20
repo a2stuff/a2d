@@ -52,7 +52,7 @@ splash_string:
 filename:
         PASCAL_STRING kFilenameDeskTop
 
-        DEFINE_READ_PARAMS read_params, $1E00, $400 ; so the $200 byte mark ends up at $2000
+        DEFINE_READ_PARAMS read_params, $1E00, kSegmentLoaderLength ; so the $200 byte mark ends up at $2000
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_SET_PREFIX_PARAMS prefix_params, prefix_buffer
         DEFINE_OPEN_PARAMS open_params, filename, $1A00
@@ -435,6 +435,48 @@ filename:
         PASCAL_STRING kFilenameDeskTopConfig
 
 start:
+        ;; Init machine-specific default settings in case load fails
+        ;; (e.g. the file doesn't exist, version mismatch, etc)
+
+        ;; See Apple II Miscellaneous #7: Apple II Family Identification
+
+        ;; IIgs?
+        sec                     ; Follow detection protocol
+        jsr     IDROUTINE       ; RTS on pre-IIgs
+        bcs     :+              ; carry clear = IIgs
+        ldxy    #kDefaultDblClickSpeed*4
+        jmp     update
+:
+
+        ;; IIc Plus?
+        lda     ZIDBYTE         ; $00 = IIc or later
+        bne     :+
+        lda     ZIDBYTE2        ; IIc ROM Version
+        cmp     #5
+        bne     :+
+        ldxy    #kDefaultDblClickSpeed*4
+        jmp     update
+:
+
+        ;; Laser 128?
+        lda     IDBYTELASER128  ; $AC = Laser 128
+        cmp     #$AC
+        bne     :+
+        ldxy    #kDefaultDblClickSpeed*4
+:
+
+        ;; Default:
+        ldxy    #kDefaultDblClickSpeed
+
+update: sta     ALTZPON         ; Bank in Aux LC Bank 1
+        bit     LCBANK1
+        bit     LCBANK1
+
+        stxy    SETTINGS + DeskTopSettings::dblclick_speed
+
+        sta     ALTZPOFF        ; Bank in Main ZP/LC and ROM
+        bit     ROMIN2
+
         ;; Load the settings file; on failure, just skip
         MLI_CALL OPEN, open_params
         bcs     finish

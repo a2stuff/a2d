@@ -281,6 +281,11 @@ savearea:       .addr   $800
 savesize:       .word   $800
 .endparams
 
+.params scalemouse_params
+x_exponent:     .byte   1       ; MGTK default is x 2:1 and y 1:1
+y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
+.endparams
+
 .params winfo
         kWidth = 500
         kHeight = 118
@@ -611,6 +616,22 @@ set_startup_menu_items:
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
 
+        ;; --------------------------------------------------
+        ;; Cursor tracking
+
+        ;; Doubled if option selected
+        lda     SETTINGS + DeskTopSettings::mouse_tracking
+        IF_NOT_ZERO
+        inc     scalemouse_params::x_exponent
+        inc     scalemouse_params::y_exponent
+        END_IF
+        ;; Also doubled if a IIc
+        lda     ZIDBYTE         ; ZIDBYTE=0 for IIc / IIc+
+        IF_ZERO
+        inc     scalemouse_params::x_exponent
+        inc     scalemouse_params::y_exponent
+        END_IF
+        MGTK_CALL MGTK::ScaleMouse, scalemouse_params
         ;; --------------------------------------------------
 
         ;; Is DeskTop available?

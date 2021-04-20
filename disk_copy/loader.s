@@ -5,7 +5,7 @@
 ;;; ============================================================
 
 ;;; Within `disk_copy` scope, settings are an overlay on top of
-;;; the disk_copy3 segment in the aux LC.
+;;; the auxlc segment in the aux LC.
 
 SETTINGS := $F180
 
@@ -161,6 +161,41 @@ filename:
         PASCAL_STRING kFilenameDeskTopConfig
 
 start:
+        ;; Init machine-specific default settings in case load fails
+        ;; (e.g. the file doesn't exist, version mismatch, etc)
+
+        ;; See Apple II Miscellaneous #7: Apple II Family Identification
+
+        ;; IIgs?
+        sec                     ; Follow detection protocol
+        jsr     IDROUTINE       ; RTS on pre-IIgs
+        bcs     :+              ; carry clear = IIgs
+        ldxy    #kDefaultDblClickSpeed*4
+        jmp     update
+:
+
+        ;; IIc Plus?
+        lda     ZIDBYTE         ; $00 = IIc or later
+        bne     :+
+        lda     ZIDBYTE2        ; IIc ROM Version
+        cmp     #5
+        bne     :+
+        ldxy    #kDefaultDblClickSpeed*4
+        jmp     update
+:
+
+        ;; Laser 128?
+        lda     IDBYTELASER128  ; $AC = Laser 128
+        cmp     #$AC
+        bne     :+
+        ldxy    #kDefaultDblClickSpeed*4
+:
+
+        ;; Default:
+        ldxy    #kDefaultDblClickSpeed
+
+update: stxy    SETTINGS + DeskTopSettings::dblclick_speed
+
         ;; Load the settings file; on failure, just skip
         MLI_CALL OPEN, open_params
         bcs     finish

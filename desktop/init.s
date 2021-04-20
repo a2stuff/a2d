@@ -115,7 +115,7 @@ done:
 .endscope
 
 ;;; ============================================================
-;;; Detect Machine Type
+;;; Detect Machine Type - set flags and periodic task delay
 
 ;;; NOTE: Starts with ROM paged in, exits with LCBANK1 paged in.
 
@@ -150,49 +150,40 @@ done:
 :       copy    id_version, startdesktop_params::machine
         copy    id_idbyte, startdesktop_params::subid
 
-        ;; Identify machine type (double-click timer, other flags)
+        ;; Identify machine type (periodic delays and other flags)
         lda     id_idbyte
         beq     is_iic          ; $FBC0 = $00 -> is IIc or IIc+
         bit     is_iigs_flag
         bmi     is_iigs
 
-        ;; IIe (or IIe Option Card, or Laser 128)
+        ;; Laser 128?
         lda     id_idlaser           ; Is it a Laser 128?
         cmp     #$AC
         bne     is_iie
+
         copy    #$80, is_laser128_flag
-        lda     #$FD ; Assume accelerated?
-        ldxy    #kDefaultDblClickSpeed*4
-        jmp     end
+        lda     #kPeriodicTaskDelayIIgs ; Assume accelerated???
+        bne     end                     ; always
 
         ;; IIe (or IIe Option Card)
 is_iie: lda     #kPeriodicTaskDelayIIe
-        ldxy    #kDefaultDblClickSpeed*1
-        jmp     end
+        bne     end             ; always
 
         ;; IIgs
 is_iigs:
         lda     #kPeriodicTaskDelayIIgs
-        ldxy    #kDefaultDblClickSpeed*4
-        jmp     end
+        bne     end             ; always
 
         ;; IIc or IIc+
 is_iic: lda     id_idbyte2            ; ROM version
-        cmp     #$05               ; IIc Plus = $05
+        cmp     #$05                  ; IIc Plus = $05
         bne     :+
         copy    #$80, is_iic_plus_flag
 :       lda     #kPeriodicTaskDelayIIc
-        ldxy    #kDefaultDblClickSpeed*4
 
 end:
         sta     periodic_task_delay
 
-        ;; Only set if not previously configured
-        lda     SETTINGS + DeskTopSettings::dblclick_speed
-        ora     SETTINGS + DeskTopSettings::dblclick_speed+1
-        bne     :+
-        stxy    SETTINGS + DeskTopSettings::dblclick_speed
-:
         ;; Fall through
 .endscope
 

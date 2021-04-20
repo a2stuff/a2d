@@ -107,9 +107,43 @@ L2049:  lda     open_params::ref_num
         MLI_CALL CLOSE, close_params
 
         ;; --------------------------------------------------
-        ;; Try loading settings
-
         ;; Load the settings file; on failure, just skip
+
+        ;; Init machine-specific default settings in case load fails
+        ;; (e.g. the file doesn't exist, version mismatch, etc)
+
+        ;; See Apple II Miscellaneous #7: Apple II Family Identification
+
+        ;; IIgs?
+        sec                     ; Follow detection protocol
+        jsr     IDROUTINE       ; RTS on pre-IIgs
+        bcs     :+              ; carry clear = IIgs
+        ldxy    #kDefaultDblClickSpeed*4
+        jmp     update
+:
+
+        ;; IIc Plus?
+        lda     ZIDBYTE         ; $00 = IIc or later
+        bne     :+
+        lda     ZIDBYTE2        ; IIc ROM Version
+        cmp     #5
+        bne     :+
+        ldxy    #kDefaultDblClickSpeed*4
+        jmp     update
+:
+
+        ;; Laser 128?
+        lda     IDBYTELASER128  ; $AC = Laser 128
+        cmp     #$AC
+        bne     :+
+        ldxy    #kDefaultDblClickSpeed*4
+:
+
+        ;; Default:
+        ldxy    #kDefaultDblClickSpeed
+
+update: stxy    SETTINGS + DeskTopSettings::dblclick_speed
+
         MLI_CALL OPEN, open_config_params
         bcs     :+
         lda     open_config_params::ref_num

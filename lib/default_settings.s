@@ -22,7 +22,7 @@
         .byte   %10101010
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::dblclick_speed
-        .word   kDefaultDblClickSpeedInit ; $12C * 1, * 4, or * 32, 0 if not set
+        .word   kDefaultDblClickSpeedInit ; $12C * 1, * 4, or * 16
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::ip_blink_speed
         .byte   kDefaultIPBlinkSpeed ; 120, 60 or 30; lower is faster
