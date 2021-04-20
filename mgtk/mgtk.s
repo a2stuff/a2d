@@ -4698,7 +4698,7 @@ reset_desktop:
         jsr     set_desktop_port
 
         ;; Fills the desktop background on startup (menu left black)
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
+        MGTK_CALL MGTK::SetPattern, desktop_pattern
         MGTK_CALL MGTK::PaintRect, fill_rect_params
         jmp     restore_params_active_port
 .endproc
@@ -4942,6 +4942,15 @@ bottom: .word   kScreenHeight-1
         fill_rect_top := fill_rect_params::top
 
 desktop_pattern:
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+
 checkerboard_pattern:
         .byte   %01010101
         .byte   %10101010
@@ -8257,7 +8266,7 @@ matched_target:
         lda     #MGTK::pencopy
         jsr     set_fill_mode
 
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
+        MGTK_CALL MGTK::SetPattern, desktop_pattern
         MGTK_CALL MGTK::PaintRect, set_port_maprect
 
         jsr     show_cursor_and_restore
