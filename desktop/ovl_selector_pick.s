@@ -16,14 +16,14 @@ selector_list   := $0C00
 exec:
         sta     selector_action
         ldx     #$FF
-        stx     L938F
+        stx     clean_flag      ; set "clean"
         cmp     #SelectorAction::add
         beq     L903C
         jmp     init
 
 L900F:  pha
-        lda     L938F
-        bpl     L9017
+        lda     clean_flag
+        bpl     L9017           ; dirty, check about saving
 L9015:  pla
 L9016:  rts
 
@@ -71,7 +71,7 @@ L9052:  lda     #$00
         tax
         pla
         bne     L900F
-        inc     L938F
+        inc     clean_flag      ; mark as "dirty"
         stx     which_run_list
         sty     copy_when
         lda     #$00
@@ -123,7 +123,7 @@ L90F1:  jmp     L900F
 
 L90F4:  lda     #kWarningMsgSelectorListFull
 L90F6:  jsr     show_warning_dialog
-        dec     L938F
+        dec     clean_flag      ; reset to "clean"
         jmp     L9016
 
 L90FF:  lda     #$02
@@ -180,10 +180,11 @@ dialog_loop:
         jsr     main::set_cursor_watch
         lda     selected_index
         jsr     remove_entry
+        bne     :+              ; Z set on success
 
-        ;; Z set on success, but action is the same either way:
-        ;; close the dialog.
-        jsr     main::set_cursor_pointer
+        inc     clean_flag      ; mark as "dirty"
+
+:       jsr     main::set_cursor_pointer
         jmp     do_cancel
 .endproc
 
@@ -245,7 +246,7 @@ l3:     clc
         beq     l4
         rts
 
-l4:     inc     L938F
+l4:     inc     clean_flag      ; mark as "dirty"
         stx     which_run_list
         sty     copy_when
         lda     #$00
@@ -444,7 +445,8 @@ selected_index:
 selector_action:
         .byte   0
 
-L938F:  .byte   0               ; ???
+clean_flag:                     ; high bit set if "clean", cleared if "dirty"
+        .byte   0               ; and should save to original prefix
 
 ;;; ============================================================
 
