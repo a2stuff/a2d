@@ -37,7 +37,7 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
         cmp     #$80
         bne     L9015
         jsr     JUMP_TABLE_CLEAR_UPDATES
-        lda     #$06
+        lda     #kWarningMsgSaveSelectorList
         jsr     show_warning_dialog
         bne     L9015
         jsr     write_file_to_original_prefix
@@ -121,7 +121,7 @@ L90D3:  lda     num_other_run_list_entries
 
 L90F1:  jmp     L900F
 
-L90F4:  lda     #$01
+L90F4:  lda     #kWarningMsgSelectorListFull
 L90F6:  jsr     show_warning_dialog
         dec     L938F
         jmp     L9016
@@ -1451,7 +1451,7 @@ filename_buffer := $1C00
 retry_open:
         MLI_RELAY_CALL OPEN, open_params
         beq     write
-        lda     #0
+        lda     #kWarningMsgInsertSystemDisk
         jsr     show_warning_dialog
         beq     retry_open
 
@@ -1491,7 +1491,7 @@ filename:
 .proc read_file
 retry:  MLI_RELAY_CALL OPEN, open_params2
         beq     read
-        lda     #$00
+        lda     #kWarningMsgInsertSystemDisk
         jsr     show_warning_dialog
         beq     retry
         return  #$FF
@@ -1510,7 +1510,7 @@ read:   lda     open_params2::ref_num
 .proc write_file
         MLI_RELAY_CALL OPEN, open_params2
         beq     write
-        lda     #0
+        lda     #kWarningMsgInsertSystemDisk
         jsr     show_warning_dialog
         beq     read_file       ; BUG: Should be `write_file`
         return  #$FF

@@ -14785,16 +14785,6 @@ close_win:
 ;;; "Warning!" dialog
 ;;; $6 ptr to message num
 
-kNumWarningTypes = 7
-
-kWarningMsgInsertSystemDisk     = 0
-kWarningMsgSelectorListFull     = 1
-kWarningMsgSelectorListFull2    = 2
-kWarningMsgWindowMustBeClosed   = 3
-kWarningMsgWindowMustBeClosed2  = 4
-kWarningMsgTooManyWindows       = 5
-kWarningMsgSaveSelectorList     = 6
-
 .proc warning_dialog_proc
         ptr := $6
 
@@ -14863,7 +14853,7 @@ draw_string:
         ;; high bit set if "cancel" should be an option
 warning_cancel_table:
         .byte   $80,$00,$00,$80,$00,$00,$80
-        ASSERT_TABLE_SIZE warning_cancel_table, main::kNumWarningTypes
+        ASSERT_TABLE_SIZE warning_cancel_table, ::kNumWarningTypes
 
         ;; First line / second line of message.
 warning_message_table:
@@ -14874,7 +14864,7 @@ warning_message_table:
         .addr   aux::str_window_must_be_closed, aux::str_blank
         .addr   aux::str_too_many_windows, aux::str_blank
         .addr   aux::str_save_selector_list, aux::str_save_selector_list2
-        ASSERT_RECORD_TABLE_SIZE warning_message_table, main::kNumWarningTypes, 4
+        ASSERT_RECORD_TABLE_SIZE warning_message_table, ::kNumWarningTypes, 4
 .endproc
 
 ;;; ============================================================
