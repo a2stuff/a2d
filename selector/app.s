@@ -1922,7 +1922,7 @@ L9C87:  lda     ($06),y
         cmp     #ERR_VOL_NOT_FOUND
         bne     fail
         txa
-        bne     fail            ; Cancel
+        bne     fail            ; Cancel (Seems wrong, kAlertResultCancel = 1 ?)
         jsr     set_watch_cursor
         jmp     L9C78
 
@@ -2231,6 +2231,7 @@ len:    .byte   0
         tax
         sta     ALTZPOFF
         lda     ROMIN2
+        txa
         rts
 .endproc
 

@@ -332,27 +332,39 @@ handle_button_down:
         jsr     map_event_coords
         MGTK_CALL MGTK::MoveTo, app::event_coords
 
-        bit     alert_options   ; Cancel?
-        bpl     check_ok_rect
+        bit     alert_options   ; Cancel showing?
+        bpl     check_ok_rect   ; nope
 
-        MGTK_CALL MGTK::InRect, cancel_button_rect
+        MGTK_CALL MGTK::InRect, cancel_button_rect ; Cancel?
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     cancel_btn_event_loop
+        ldax    #cancel_button_rect
+        jsr     AlertButtonEventLoop
+        bne     no_button
+        lda     #kAlertResultCancel
+        jmp     finish
 
-:       bit     alert_options   ; Try Again?
-        bvs     check_ok_rect
+:       bit     alert_options   ; Try Again showing?
+        bvs     check_ok_rect   ; nope
 
-        MGTK_CALL MGTK::InRect, try_again_button_rect
+        MGTK_CALL MGTK::InRect, try_again_button_rect ; Try Again?
         cmp     #MGTK::inrect_inside
         bne     no_button
-        jmp     try_again_btn_event_loop
+        ldax    #try_again_button_rect
+        jsr     AlertButtonEventLoop
+        bne     no_button
+        lda     #kAlertResultTryAgain
+        jmp     finish
 
 check_ok_rect:
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside ; OK?
         bne     no_button
-        jmp     ok_button_event_loop
+        ldax    #ok_button_rect
+        jsr     AlertButtonEventLoop
+        bne     no_button
+        lda     #kAlertResultOK
+        jmp     finish
 
 no_button:
         jmp     event_loop
@@ -368,146 +380,17 @@ finish: pha
 
 ;;; ============================================================
 
-        ;; --------------------------------------------------
-        ;; Try Again Button Event Loop
-
-.proc try_again_btn_event_loop
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_button_rect
-        copy    #0, state
-
-loop:   MGTK_CALL MGTK::GetEvent, app::event_params
-        lda     app::event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     button_up
-        jsr     map_event_coords
-        MGTK_CALL MGTK::MoveTo, app::event_coords
-        MGTK_CALL MGTK::InRect, try_again_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     state
-        beq     toggle
-        jmp     loop
-
-inside: lda     state
-        bne     toggle
-        jmp     loop
-
-toggle: MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, try_again_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-button_up:
-        lda     state
-        beq     :+
-        jmp     event_loop
-
-:       lda     #kAlertResultTryAgain
-        jmp     finish
-
-state:  .byte   0
-.endproc
-
-        ;; --------------------------------------------------
-        ;; Cancel Button Event Loop
-
-.proc cancel_btn_event_loop
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_button_rect
-        copy    #0, state
-
-loop:   MGTK_CALL MGTK::GetEvent, app::event_params
-        lda     app::event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     button_up
-        jsr     map_event_coords
-        MGTK_CALL MGTK::MoveTo, app::event_coords
-        MGTK_CALL MGTK::InRect, cancel_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     state
-        beq     toggle
-        jmp     loop
-
-inside: lda     state
-        bne     toggle
-        jmp     loop
-
-toggle: MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-button_up:
-        lda     state
-        beq     :+
-        jmp     event_loop
-
-:       lda     #kAlertResultCancel
-        jmp     finish
-
-state:  .byte   0
-.endproc
-
-        ;; --------------------------------------------------
-        ;; OK Button Event Loop
-
-.proc ok_button_event_loop
-        copy    #0, state
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-
-loop:   MGTK_CALL MGTK::GetEvent, app::event_params
-        lda     app::event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     button_up
-        jsr     map_event_coords
-        MGTK_CALL MGTK::MoveTo, app::event_coords
-        MGTK_CALL MGTK::InRect, ok_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     state
-        beq     toggle
-        jmp     loop
-
-inside: lda     state
-        bne     toggle
-        jmp     loop
-
-toggle: MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-button_up:
-        lda     state
-        beq     :+
-        jmp     event_loop
-
-:       lda     #kAlertResultOK
-        jmp     finish
-
-state:  .byte   0
-.endproc
-
-;;; ============================================================
-
 .proc map_event_coords
         sub16   app::event_xcoord, portmap::viewloc::xcoord, app::event_xcoord
         sub16   app::event_ycoord, portmap::viewloc::ycoord, app::event_ycoord
         rts
 .endproc
 
+        event_params = app::event_params
+        event_kind = app::event_kind
+        event_coords = app::event_coords
+        penXOR = app::penXOR
+        .include "../lib/alertbuttonloop.s"
         .include "../lib/savedialogbackground.s"
         dialog_background_save := dialog_background::Save
         dialog_background_restore := dialog_background::Restore
