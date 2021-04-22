@@ -91,7 +91,6 @@ watch_cursor:
 
         PAD_TO ::SETTINGS
 
-        kDefaultDblClickSpeedInit = kDefaultDblClickSpeed
         .include "../lib/default_settings.s"
 
         PAD_TO ::START

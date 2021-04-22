@@ -17,6 +17,7 @@ SETTINGS := $F180
 ;;; ============================================================
 
 io_buf := $1C00
+load_buf := $4000
 
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
 filename:   PASCAL_STRING kFilenameDeskTop
@@ -27,7 +28,7 @@ filename:   PASCAL_STRING kFilenameDeskTop
 
         .byte   $00,$00
 
-buf1:   .addr   $4000
+buf1:   .addr   load_buf
 dest1:  .addr   kOverlayDiskCopy3Address
 len1:   .word   kOverlayDiskCopy3Length
 
@@ -144,91 +145,9 @@ loop:   lda     (src),y
 .endproc
 
 ;;; ============================================================
-;;; Load settings file (if present), and copy into LC,
-;;; overwriting default settings.
 
-.proc load_settings
-
-        jmp     start
-
-        read_buf := buf1
-
-        DEFINE_OPEN_PARAMS open_params, filename, io_buf
-        DEFINE_READ_PARAMS read_params, read_buf, .sizeof(DeskTopSettings)
-        DEFINE_CLOSE_PARAMS close_params
-
-filename:
-        PASCAL_STRING kFilenameDeskTopConfig
-
-start:
-        ;; Init machine-specific default settings in case load fails
-        ;; (e.g. the file doesn't exist, version mismatch, etc)
-
-        ;; See Apple II Miscellaneous #7: Apple II Family Identification
-
-        ;; IIgs?
-        sec                     ; Follow detection protocol
-        jsr     IDROUTINE       ; RTS on pre-IIgs
-        bcs     :+              ; carry clear = IIgs
-        ldxy    #kDefaultDblClickSpeed*4
-        jmp     update
-:
-
-        ;; IIc Plus?
-        lda     ZIDBYTE         ; $00 = IIc or later
-        bne     :+
-        lda     ZIDBYTE2        ; IIc ROM Version
-        cmp     #5
-        bne     :+
-        ldxy    #kDefaultDblClickSpeed*4
-        jmp     update
-:
-
-        ;; Laser 128?
-        lda     IDBYTELASER128  ; $AC = Laser 128
-        cmp     #$AC
-        bne     :+
-        ldxy    #kDefaultDblClickSpeed*4
-:
-
-        ;; Default:
-        ldxy    #kDefaultDblClickSpeed
-
-update: stxy    SETTINGS + DeskTopSettings::dblclick_speed
-
-        ;; Load the settings file; on failure, just skip
-        MLI_CALL OPEN, open_params
-        bcs     finish
-        lda     open_params::ref_num
-        sta     read_params::ref_num
-        sta     close_params::ref_num
-        MLI_CALL READ, read_params
-        bcs     close
-
-        ;; Check version bytes; ignore on mismatch
-        lda     read_buf + DeskTopSettings::version_major
-        cmp     #kDeskTopVersionMajor
-        bne     close
-        lda     read_buf + DeskTopSettings::version_minor
-        cmp     #kDeskTopVersionMinor
-        bne     close
-
-        ;; Move settings block into place
-        sta     ALTZPON         ; Bank in Aux LC Bank 1
-        lda     LCBANK1
-        lda     LCBANK1
-
-        COPY_STRUCT DeskTopSettings, read_buf, SETTINGS
-
-        sta     ALTZPOFF        ; Bank in Main ZP/LC and ROM
-        lda     ROMIN2
-
-        ;; Finish up
-close:  MLI_CALL CLOSE, close_params
-
-finish: rts
-
-.endproc
+        ;; Already .included: "../lib/load_settings.s"
+        DEFINEPROC_LOAD_SETTINGS io_buf, load_buf
 
 ;;; ============================================================
 

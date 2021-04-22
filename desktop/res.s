@@ -1771,7 +1771,6 @@ app_mask:
 ;;; Settings - modified by Control Panel
 ;;; ============================================================
 
-        kDefaultDblClickSpeedInit = 0
         .include "../lib/default_settings.s"
 
         ASSERT_ADDRESS $10000

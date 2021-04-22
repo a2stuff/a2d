@@ -3137,7 +3137,6 @@ loop_counter:
 
         PAD_TO ::disk_copy::SETTINGS
 
-        kDefaultDblClickSpeedInit = kDefaultDblClickSpeed
         .include "../lib/default_settings.s"
 
 ;;; ============================================================
