@@ -2728,40 +2728,63 @@ handle_button_down:
         jsr     map_event_coords
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
 
-        bit     alert_options   ; Cancel?
-        bpl     check_ok_rect
+        bit     alert_options   ; Anything but OK?
+        bpl     check_ok_rect   ; nope
 
         MGTK_RELAY_CALL2 MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     handle_cancel_button_down
+        ldax    #cancel_button_rect
+        jsr     AlertButtonEventLoop
+        bne     no_button
+        lda     #kAlertResultCancel
+        jmp     finish
 
 :       bit     alert_options
-        bvs     check_ok_rect
+        bvs     check_ok_rect   ; Just Cancel/OK
         lda     alert_options
-        and     #$0F
-        beq     LEE47
+        and     #$0F            ;
+        beq     LEE47           ; Just Cancel/Try Again
 
+        ;; Yes & No
         MGTK_RELAY_CALL2 MGTK::InRect, no_button_rect
         cmp     #MGTK::inrect_inside
-        bne     LEE37
-        jmp     handle_no_button_down
+        bne     :+
+        ldax    #no_button_rect
+        jsr     AlertButtonEventLoop
+        bne     no_button
+        lda     #kAlertResultNo
+        jmp     finish
 
-LEE37:  MGTK_RELAY_CALL2 MGTK::InRect, yes_button_rect
+:       MGTK_RELAY_CALL2 MGTK::InRect, yes_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        jmp     handle_yes_button_down
+        ldax    #yes_button_rect
+        jsr     AlertButtonEventLoop
+        bne     no_button
+        lda     #kAlertResultYes
+        jmp     finish
 
-LEE47:  MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
+        ;; Try Again
+LEE47:  MGTK_RELAY_CALL2 MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        jmp     ok_btn_event_loop
+        ldax    #try_again_button_rect
+        jsr     AlertButtonEventLoop
+        bne     no_button
+        lda     #kAlertResultTryAgain
+        jmp     finish
 
+        ;; OK
 check_ok_rect:
-        MGTK_RELAY_CALL2 MGTK::InRect, try_again_button_rect
+        MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        jmp     try_again_btn_event_loop
+        ldax    #ok_button_rect
+        jsr     AlertButtonEventLoop
+        bne     no_button
+        lda     #kAlertResultOK
+        jmp     finish
 
 no_button:
         jmp     event_loop
@@ -2777,224 +2800,7 @@ finish: pha
 
 ;;; ============================================================
 
-.proc ok_btn_event_loop
-        jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
-        lda     #$00
-        sta     state
-
-loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     button_up
-        jsr     map_event_coords
-        MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     state
-        beq     toggle
-        jmp     loop
-
-inside: lda     state
-        bne     toggle
-        jmp     loop
-
-toggle: jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-button_up:
-        lda     state
-        beq     :+
-        jmp     event_loop
-
-:       lda     #kAlertResultOK
-        jmp     finish
-
-state:
-        .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc handle_cancel_button_down
-        jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_button_rect
-        copy    #0, state
-
-loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     button_up
-        jsr     map_event_coords
-        MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, cancel_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     state
-        beq     toggle
-        jmp     loop
-
-inside: lda     state
-        bne     toggle
-        jmp     loop
-
-toggle: jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-button_up:
-        lda     state
-        beq     :+
-        jmp     event_loop
-
-:       lda     #kAlertResultCancel
-        jmp     finish
-
-state:
-        .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc try_again_btn_event_loop
-        copy    #0, state
-        jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, try_again_button_rect
-
-loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     button_up
-        jsr     map_event_coords
-        MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, try_again_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     state
-        beq     toggle
-        jmp     loop
-
-inside: lda     state
-        bne     toggle
-        jmp     loop
-
-toggle: jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, try_again_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-button_up:
-        lda     state
-        beq     :+
-        jmp     event_loop
-
-:       lda     #kAlertResultTryAgain
-        jmp     finish
-
-state:
-        .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc handle_no_button_down
-        copy    #0, state
-        jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, no_button_rect
-
-loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     button_up
-        jsr     map_event_coords
-        MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, no_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     state
-        beq     toggle
-        jmp     loop
-
-inside: lda     state
-        bne     toggle
-        jmp     loop
-
-toggle: jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, no_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-button_up:
-        lda     state
-        beq     :+
-        jmp     event_loop
-
-:       lda     #kAlertResultNo
-        jmp     finish
-
-state:
-        .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc handle_yes_button_down
-        copy    #0, state
-        jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_button_rect
-
-loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     button_up
-        jsr     map_event_coords
-        MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, yes_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-        lda     state
-        beq     toggle
-        jmp     loop
-
-inside: lda     state
-        bne     toggle
-        jmp     loop
-
-toggle: jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-button_up:
-        lda     state
-        beq     :+
-        jmp     event_loop
-
-:       lda     #kAlertResultYes
-        jmp     finish
-
-state:
-        .byte   0
-.endproc
+        .include "../lib/alertbuttonloop.s"
 
 ;;; ============================================================
 
