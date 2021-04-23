@@ -188,14 +188,11 @@ focus_in_input2_flag:
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
 
         ;; --------------------------------------------------
-        ;; In open button?
 .proc check_open_button
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::open_button_rect
         cmp     #MGTK::inrect_inside
-        beq     clicked
-        jmp     check_change_drive_button
+        bne     check_change_drive_button
 
-clicked:
         bit     L5105
         bmi     L520A
         lda     selected_index
@@ -219,23 +216,25 @@ L5216:  lda     winfo_file_dialog::window_id
 .proc check_change_drive_button
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
         cmp     #MGTK::inrect_inside
-        beq     :+
-        jmp     check_close_button
-:       bit     L5105
+        bne     check_close_button
+        bit     L5105
         bmi     :+
+
         param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
         bmi     :+
         jsr     change_drive
+
 :       jmp     set_up_ports
 .endproc
 
+        ;; --------------------------------------------------
 .proc check_close_button
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::close_button_rect
         cmp     #MGTK::inrect_inside
-        beq     :+
-        jmp     check_ok_button
-:       bit     L5105
+        bne     check_ok_button
+        bit     L5105
         bmi     :+
+
         param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         bmi     :+
         jsr     L567F
@@ -246,9 +245,9 @@ L5216:  lda     winfo_file_dialog::window_id
 .proc check_ok_button
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::ok_button_rect
         cmp     #MGTK::inrect_inside
-        beq     :+
-        jmp     check_cancel_button
-:       param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
+        bne     check_cancel_button
+
+        param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
         jsr     jt_handle_meta_right_key
         jsr     jt_handle_ok
@@ -259,9 +258,9 @@ L5216:  lda     winfo_file_dialog::window_id
 .proc check_cancel_button
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
         cmp     #MGTK::inrect_inside
-        beq     :+
-        jmp     check_other_click
-:       param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
+        bne     check_other_click
+
+        param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
         jsr     jt_handle_cancel
 :       jmp     set_up_ports

@@ -170,11 +170,13 @@ buf_text:       .res    68, 0
 buf_input_left:         .res    68, 0 ; left of IP
 buf_input_right:        .res    68, 0 ; IP and right
 
+kFilePickerDlgWindowID = $3E
+
 .params winfo_file_dialog
         kWidth = 500
         kHeight = 153
 window_id:
-        .byte   $3E
+        .byte   kFilePickerDlgWindowID
         .byte   $01, $00
         .byte   0
         .byte   0
@@ -554,13 +556,13 @@ LA50E:  .byte   0
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
 
-        ;; Open ?
+        ;; --------------------------------------------------
+.proc check_open_button
         MGTK_CALL MGTK::InRect, open_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LA554
-        jmp     not_open
+        bne     check_change_drive_button
 
-LA554:  bit     LA47F
+        bit     LA47F
         bmi     LA55E
         lda     selected_index
         bpl     LA561
@@ -573,82 +575,76 @@ LA567:  jmp     set_up_ports
 
 LA56A:  lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, open_button_rect
-        jsr     event_loop_open_btn
+        param_call app::ButtonEventLoop, kFilePickerDlgWindowID, open_button_rect
         bmi     LA567
         jsr     LA8ED
         jmp     set_up_ports
+.endproc
 
-not_open:
-        ;; Change Drive ?
+        ;; --------------------------------------------------
+.proc check_change_drive_button
         MGTK_CALL MGTK::InRect, change_drive_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LA594
-        jmp     not_change_drive
+        bne     check_close_button
+        bit     LA47F
+        bmi     :+
 
-LA594:  bit     LA47F
-        bmi     LA5AD
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, change_drive_button_rect
-        jsr     event_loop_change_drive_btn
-        bmi     LA5AD
+        param_call app::ButtonEventLoop, kFilePickerDlgWindowID, change_drive_button_rect
+        bmi     :+
         jsr     change_drive
-LA5AD:  jmp     set_up_ports
+:       jmp     set_up_ports
+.endproc
 
-not_change_drive:
-        ;; Close ?
+        ;; --------------------------------------------------
+.proc check_close_button
         MGTK_CALL MGTK::InRect, close_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LA5BD
-        jmp     not_close
+        bne     check_ok_button
+        bit     LA47F
+        bmi     :+
 
-LA5BD:  bit     LA47F
-        bmi     LA5D6
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, close_button_rect
-        jsr     event_loop_close_btn
-        bmi     LA5D6
+        param_call app::ButtonEventLoop, kFilePickerDlgWindowID, close_button_rect
+        bmi     :+
         jsr     LA965
-LA5D6:  jmp     set_up_ports
+:       jmp     set_up_ports
+.endproc
 
-not_close:
-        ;; OK ?
+        ;; --------------------------------------------------
+.proc check_ok_button
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LA5E6
-        jmp     not_ok
+        bne     check_cancel_button
 
-LA5E6:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        jsr     event_loop_ok_btn
-        bmi     LA5FD
+        param_call app::ButtonEventLoop, kFilePickerDlgWindowID, ok_button_rect
+        bmi     :+
         jsr     input_ip_to_end
         jsr     handle_ok
-LA5FD:  jmp     set_up_ports
+:       jmp     set_up_ports
+.endproc
 
-not_ok:
-        ;; Cancel ?
+        ;; --------------------------------------------------
+.proc check_cancel_button
         MGTK_CALL MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LA60D
-        jmp     not_cancel
+        bne     check_other_click
 
-LA60D:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_button_rect
-        jsr     event_loop_cancel_btn
-        bmi     LA621
+        param_call app::ButtonEventLoop, kFilePickerDlgWindowID, cancel_button_rect
+        bmi     :+
         jsr     LA387
-LA621:  jmp     set_up_ports
+:       jmp     set_up_ports
+.endproc
 
-not_cancel:
-        ;; Input ?
+        ;; --------------------------------------------------
+.proc check_other_click
         bit     LA47D
-        bpl     LA62E
+        bpl     :+
         jsr     click_handler_hook
         bmi     set_up_ports
-LA62E:  jsr     check_input_click_and_move_ip
+:       jsr     check_input_click_and_move_ip
         rts
+.endproc
+
+;;; ============================================================
 
 .proc set_up_ports
         MGTK_CALL MGTK::InitPort, grafport2
@@ -1112,223 +1108,6 @@ l7:     .byte   0
         copy16  #185, grafport2+MGTK::GrafPort::maprect+MGTK::Rect::y2
         MGTK_CALL MGTK::SetPort, grafport2
         rts
-.endproc
-
-;;; ============================================================
-
-;;; TODO: Replace with ButtonEventLoop
-
-.proc event_loop_ok_btn
-        lda     #$00
-        sta     l4
-l1:     MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     l2
-        lda     winfo_file_dialog::window_id
-        sta     screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, ok_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     :+
-        lda     l4
-        beq     toggle
-        jmp     l1
-
-:       lda     l4
-        bne     toggle
-        jmp     l1
-
-toggle: MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        lda     l4
-        clc
-        adc     #$80
-        sta     l4
-        jmp     l1
-
-l2:     lda     l4
-        beq     l3
-        return  #$FF
-
-l3:     MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        return  #$00
-
-l4:     .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc event_loop_cancel_btn
-        lda     #$00
-        sta     l6
-l1:     MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     l4
-        lda     winfo_file_dialog::window_id
-        sta     screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, cancel_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     l2
-        lda     l6
-        beq     l3
-        jmp     l1
-
-l2:     lda     l6
-        bne     l3
-        jmp     l1
-
-l3:     MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_button_rect
-        lda     l6
-        clc
-        adc     #$80
-        sta     l6
-        jmp     l1
-
-l4:     lda     l6
-        beq     l5
-        return  #$FF
-
-l5:     MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, cancel_button_rect
-        return  #$01
-
-l6:     .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc event_loop_open_btn
-        lda     #$00
-        sta     l6
-l1:     MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     l4
-        lda     winfo_file_dialog::window_id
-        sta     screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, open_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     l2
-        lda     l6
-        beq     l3
-        jmp     l1
-
-l2:     lda     l6
-        bne     l3
-        jmp     l1
-
-l3:     MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, open_button_rect
-        lda     l6
-        clc
-        adc     #$80
-        sta     l6
-        jmp     l1
-
-l4:     lda     l6
-        beq     l5
-        return  #$FF
-
-l5:     MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, open_button_rect
-        return  #$00
-
-l6:     .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc event_loop_change_drive_btn
-        lda     #$00
-        sta     l6
-l1:     MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     l4
-        lda     winfo_file_dialog::window_id
-        sta     screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, change_drive_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     l2
-        lda     l6
-        beq     l3
-        jmp     l1
-
-l2:     lda     l6
-        bne     l3
-        jmp     l1
-
-l3:     MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, change_drive_button_rect
-        lda     l6
-        clc
-        adc     #$80
-        sta     l6
-        jmp     l1
-
-l4:     lda     l6
-        beq     l5
-        return  #$FF
-
-l5:     MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, change_drive_button_rect
-        return  #$01
-
-l6:     .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc event_loop_close_btn
-        lda     #$00
-        sta     l6
-l1:     MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     l4
-        lda     winfo_file_dialog::window_id
-        sta     screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_CALL MGTK::InRect, close_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     l2
-        lda     l6
-        beq     l3
-        jmp     l1
-
-l2:     lda     l6
-        bne     l3
-        jmp     l1
-
-l3:     MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, close_button_rect
-        lda     l6
-        clc
-        adc     #$80
-        sta     l6
-        jmp     l1
-
-l4:     lda     l6
-        beq     l5
-        return  #$FF
-
-l5:     MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, close_button_rect
-        return  #$00
-
-l6:     .byte   0
 .endproc
 
 ;;; ============================================================
