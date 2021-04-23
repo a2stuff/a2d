@@ -1041,8 +1041,7 @@ loop:   lda     slot
         and     mask
         bne     check
 
-        ldax    #str_empty
-        jsr     DrawString
+        param_call DrawString, str_empty
         jmp     next
 
 check:  lda     slot

@@ -338,8 +338,7 @@ handle_button_down:
         MGTK_CALL MGTK::InRect, cancel_button_rect ; Cancel?
         cmp     #MGTK::inrect_inside
         bne     :+
-        ldax    #cancel_button_rect
-        jsr     AlertButtonEventLoop
+        param_call AlertButtonEventLoop, cancel_button_rect
         bne     no_button
         lda     #kAlertResultCancel
         jmp     finish
@@ -350,8 +349,7 @@ handle_button_down:
         MGTK_CALL MGTK::InRect, try_again_button_rect ; Try Again?
         cmp     #MGTK::inrect_inside
         bne     no_button
-        ldax    #try_again_button_rect
-        jsr     AlertButtonEventLoop
+        param_call AlertButtonEventLoop, try_again_button_rect
         bne     no_button
         lda     #kAlertResultTryAgain
         jmp     finish
@@ -360,8 +358,7 @@ check_ok_rect:
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside ; OK?
         bne     no_button
-        ldax    #ok_button_rect
-        jsr     AlertButtonEventLoop
+        param_call AlertButtonEventLoop, ok_button_rect
         bne     no_button
         lda     #kAlertResultOK
         jmp     finish

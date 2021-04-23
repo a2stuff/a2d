@@ -2734,8 +2734,7 @@ handle_button_down:
         MGTK_RELAY_CALL2 MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
         bne     :+
-        ldax    #cancel_button_rect
-        jsr     AlertButtonEventLoop
+        param_call AlertButtonEventLoop, cancel_button_rect
         bne     no_button
         lda     #kAlertResultCancel
         jmp     finish
@@ -2750,8 +2749,7 @@ handle_button_down:
         MGTK_RELAY_CALL2 MGTK::InRect, no_button_rect
         cmp     #MGTK::inrect_inside
         bne     :+
-        ldax    #no_button_rect
-        jsr     AlertButtonEventLoop
+        param_call AlertButtonEventLoop, no_button_rect
         bne     no_button
         lda     #kAlertResultNo
         jmp     finish
@@ -2759,8 +2757,7 @@ handle_button_down:
 :       MGTK_RELAY_CALL2 MGTK::InRect, yes_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        ldax    #yes_button_rect
-        jsr     AlertButtonEventLoop
+        param_call AlertButtonEventLoop, yes_button_rect
         bne     no_button
         lda     #kAlertResultYes
         jmp     finish
@@ -2769,8 +2766,7 @@ handle_button_down:
 LEE47:  MGTK_RELAY_CALL2 MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        ldax    #try_again_button_rect
-        jsr     AlertButtonEventLoop
+        param_call AlertButtonEventLoop, try_again_button_rect
         bne     no_button
         lda     #kAlertResultTryAgain
         jmp     finish
@@ -2780,8 +2776,7 @@ check_ok_rect:
         MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        ldax    #ok_button_rect
-        jsr     AlertButtonEventLoop
+        param_call AlertButtonEventLoop, ok_button_rect
         bne     no_button
         lda     #kAlertResultOK
         jmp     finish
