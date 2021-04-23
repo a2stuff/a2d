@@ -8,10 +8,10 @@
         .org $7000
 
 .proc init
-        jsr     file_dialog::create_common_dialog
+        jsr     file_dialog::open_window
         jsr     draw_controls
         jsr     file_dialog::device_on_line
-        jsr     file_dialog::L5F5B
+        jsr     file_dialog::read_dir
         jsr     file_dialog::update_scrollbar
         jsr     file_dialog::update_disk_name
         jsr     file_dialog::draw_list_entries
@@ -123,7 +123,7 @@ jt_destination_filename:
         lda     #$FF
         sta     selected_index
         jsr     file_dialog::device_on_line
-        jsr     file_dialog::L5F5B
+        jsr     file_dialog::read_dir
         jsr     file_dialog::update_scrollbar
         jsr     file_dialog::update_disk_name
 
@@ -249,13 +249,13 @@ err:    lda     #ERR_INVALID_PATHNAME
         dex
         bpl     :-
 
-        jsr     file_dialog::L5F49
+        jsr     file_dialog::strip_path_segment
         bit     LD8F0
         bpl     L726D
         jsr     file_dialog::device_on_line
         lda     #0
         jsr     file_dialog::scroll_clip_rect
-        jsr     file_dialog::L5F5B
+        jsr     file_dialog::read_dir
         jsr     file_dialog::update_scrollbar
         jsr     file_dialog::update_disk_name
         jsr     file_dialog::draw_list_entries
@@ -267,10 +267,10 @@ L726D:  lda     file_dialog::path_buf
 L7272:  jsr     file_dialog::device_on_line
         lda     #$00
         jsr     file_dialog::scroll_clip_rect
-        jsr     file_dialog::L5F5B
+        jsr     file_dialog::read_dir
         lda     #$FF
         bne     L7289
-L7281:  jsr     file_dialog::L5F5B
+L7281:  jsr     file_dialog::read_dir
         bcs     L7272
         lda     LD921
 L7289:  sta     selected_index

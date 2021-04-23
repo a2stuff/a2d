@@ -10,7 +10,7 @@
 .proc init
         stx     which_run_list
         sty     copy_when
-        jsr     file_dialog::create_common_dialog
+        jsr     file_dialog::open_window
         jsr     L7101
         jsr     L70AD
         jsr     file_dialog::device_on_line
@@ -22,7 +22,7 @@
         dey
         bpl     :-
 
-        jsr     file_dialog::L5F49
+        jsr     file_dialog::strip_path_segment
         ldy     path_buf0
 :       lda     path_buf0,y
         cmp     #'/'
@@ -45,7 +45,7 @@ found_slash:
         bne     :-
         stx     buffer
 
-finish: jsr     file_dialog::L5F5B
+finish: jsr     file_dialog::read_dir
         lda     #$00
         bcs     :+
         param_call file_dialog::L6516, buffer

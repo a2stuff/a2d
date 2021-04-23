@@ -8,10 +8,10 @@
         .org $7000
 
 .proc init
-        jsr     file_dialog::create_common_dialog
+        jsr     file_dialog::open_window
         jsr     draw_controls
         jsr     file_dialog::device_on_line
-        jsr     file_dialog::L5F5B
+        jsr     file_dialog::read_dir
         jsr     file_dialog::update_scrollbar
         jsr     file_dialog::update_disk_name
         jsr     file_dialog::draw_list_entries

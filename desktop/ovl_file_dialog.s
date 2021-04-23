@@ -19,7 +19,7 @@ file_names      := $1800
 ;;; ============================================================
 
 exec:
-L5000:  jmp     L50B1
+L5000:  jmp     start
 
         io_buf := $1000
         dir_read_buf := $1400
@@ -45,7 +45,7 @@ routine_table:  .addr   $7000, $7000, $7000
 
 ;;; ============================================================
 
-.proc L50B1
+.proc start
         sty     stash_y
         stx     stash_x
         tsx
@@ -126,13 +126,13 @@ L5105:  .byte   0       ; ??? something about the picker
         bne     :+
         jmp     event_loop
 :       lda     findwindow_window_id
-        cmp     winfo_file_dialog
+        cmp     winfo_file_dialog::window_id
         beq     l1
         jmp     event_loop
 
-l1:     lda     winfo_file_dialog
+l1:     lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -176,13 +176,13 @@ focus_in_input2_flag:
 
 .proc handle_content_click
         lda     findwindow_window_id
-        cmp     winfo_file_dialog
+        cmp     winfo_file_dialog::window_id
         beq     :+
         jmp     handle_list_button_down
 
-:       lda     winfo_file_dialog
+:       lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -207,7 +207,7 @@ L520D:  tax
         bmi     L5216
 L5213:  jmp     set_up_ports
 
-L5216:  lda     winfo_file_dialog
+L5216:  lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         bmi     L5213
@@ -310,7 +310,7 @@ click_handler_hook:
 
 rts1:   rts
 
-L5341:  lda     winfo_file_dialog_listbox
+L5341:  lda     winfo_file_dialog_listbox::window_id
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_windowy, winfo_file_dialog_listbox::cliprect+2, screentowindow_windowy
@@ -334,7 +334,7 @@ open:   ldx     selected_index
         bmi     folder
 
         ;; File - select it.
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
@@ -345,7 +345,7 @@ open:   ldx     selected_index
         ;; Folder - open it.
 folder: and     #$7F
         pha
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
@@ -370,10 +370,12 @@ folder: and     #$7F
         lda     hi
         adc     ptr+1
         sta     ptr+1
+
         ldx     ptr+1
         lda     ptr
-        jsr     L5F0D
-        jsr     L5F5B
+        jsr     append_to_path_buf
+
+        jsr     read_dir
         jsr     update_scrollbar
         lda     #0
         jsr     scroll_clip_rect
@@ -552,7 +554,7 @@ different:
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_window_id
-        cmp     winfo_file_dialog_listbox
+        cmp     winfo_file_dialog_listbox::window_id
         beq     :+
         pla
         pla
@@ -585,11 +587,10 @@ different:
 
 .proc set_cursor_pointer
         bit     cursor_ibeam_flag
-        bpl     done
+        bpl     :+
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
-        lda     #$00
-        sta     cursor_ibeam_flag
-done:   rts
+        copy    #0, cursor_ibeam_flag
+:       rts
 .endproc
 
 ;;; ============================================================
@@ -634,10 +635,12 @@ l1:     lda     #$00
         lda     l2
         adc     $09
         sta     $09
+
         ldx     $09
         lda     $08
-        jsr     L5F0D
-        jsr     L5F5B
+        jsr     append_to_path_buf
+
+        jsr     read_dir
         jsr     update_scrollbar
         lda     #$00
         jsr     scroll_clip_rect
@@ -655,7 +658,7 @@ l2:     .byte   0
         sta     selected_index
         jsr     dec_device_num
         jsr     device_on_line
-        jsr     L5F5B
+        jsr     read_dir
         jsr     update_scrollbar
         lda     #$00
         jsr     scroll_clip_rect
@@ -687,12 +690,12 @@ l2:     cpx     #$01
         bne     l3
         jmp     l6
 
-l3:     jsr     L5F49
+l3:     jsr     strip_path_segment
         lda     selected_index
         pha
         lda     #$FF
         sta     selected_index
-        jsr     L5F5B
+        jsr     read_dir
         jsr     update_scrollbar
         lda     #$00
         jsr     scroll_clip_rect
@@ -817,7 +820,7 @@ L59F7:  lda     event_key
 
 :       cmp     #CHAR_TAB
         bne     not_tab
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
@@ -835,7 +838,7 @@ not_tab:
         bmi     :+
         jmp     exit
 
-:       lda     winfo_file_dialog
+:       lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
@@ -846,7 +849,7 @@ not_tab:
 not_ctrl_o:
         cmp     #CHAR_CTRL_C    ; Close
         bne     :+
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
@@ -871,7 +874,7 @@ exit:   jsr     L56E3
 ;;; ============================================================
 
 .proc key_return
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
@@ -885,7 +888,7 @@ exit:   jsr     L56E3
 ;;; ============================================================
 
 .proc key_escape
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
@@ -1100,10 +1103,10 @@ l1:     ldx     num_file_names
 
 ;;; ============================================================
 
-.proc create_common_dialog
+.proc open_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_file_dialog
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_file_dialog_listbox
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
@@ -1169,13 +1172,16 @@ draw_change_drive_button_label:
 ;;; ============================================================
 
 .proc draw_string
+        ptr := $06
+        params := $06
+
         jsr     copy_string_to_lcbuf
-        stax    $06
-        ldy     #$00
-        lda     ($06),y
-        sta     $08
-        inc16   $06
-        MGTK_RELAY_CALL MGTK::DrawText, $06
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     params+2
+        inc16   params
+        MGTK_RELAY_CALL MGTK::DrawText, params
         rts
 .endproc
 
@@ -1241,7 +1247,7 @@ retry:  ldx     device_num
 found:  param_call main::AdjustVolumeNameCase, on_line_buffer
         lda     #0
         sta     path_buf
-        param_call L5F0D, on_line_buffer
+        param_call append_to_path_buf, on_line_buffer
         rts
 .endproc
 
@@ -1279,71 +1285,76 @@ last:   .byte   0
 
 ;;; ============================================================
 
-.proc L5ECB
+.proc open_dir
         lda     #$00
-        sta     L5F0C
-l1:     MLI_RELAY_CALL OPEN, open_params
-        beq     l2
+        sta     open_dir_flag
+retry:  MLI_RELAY_CALL OPEN, open_params
+        beq     :+
         jsr     device_on_line
         lda     #$FF
         sta     selected_index
-        sta     L5F0C
-        jmp     l1
+        sta     open_dir_flag
+        jmp     retry
 
-l2:     lda     open_params::ref_num
+:       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         MLI_RELAY_CALL READ, read_params
-        beq     l3
+        beq     :+
         jsr     device_on_line
         lda     #$FF
         sta     selected_index
-        sta     L5F0C
-        jmp     l1
+        sta     open_dir_flag
+        jmp     retry
 
-l3:     rts
+:       rts
 .endproc
 
-L5F0C:  .byte   0
+open_dir_flag:
+        .byte   0
 
 ;;; ============================================================
 
-.proc L5F0D
+.proc append_to_path_buf
         jsr     copy_string_to_lcbuf
+        ptr := $06
 
-        stax    $06
+        stax    ptr
         ldx     path_buf
         lda     #'/'
         sta     path_buf+1,x
         inc     path_buf
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         tay
         clc
         adc     path_buf
 
-        cmp     #'A'            ; ???
-        bcc     l1
-        return  #$FF
+        ;; Enough room?
+        cmp     #kPathBufferSize
+        bcc     :+
+        return  #$FF            ; failure
+:       pha
 
-l1:     pha
         tax
-l2:     lda     ($06),y
+:       lda     (ptr),y
         sta     path_buf,x
         dey
         dex
         cpx     path_buf
-        bne     l2
+        bne     :-
+
         pla
         sta     path_buf
         lda     #$FF
         sta     selected_index
+
         return  #$00
 .endproc
 
 ;;; ============================================================
 
-.proc L5F49
+.proc strip_path_segment
 :       ldx     path_buf
         cpx     #0
         beq     :+
@@ -1356,27 +1367,28 @@ l2:     lda     ($06),y
 
 ;;; ============================================================
 
-.proc L5F5B
-        jsr     L5ECB
+.proc read_dir
+        jsr     open_dir
         lda     #0
         sta     l12
         sta     l13
         sta     L50A9
         lda     #1
         sta     l14
-        copy16  dir_read_buf+$23, l15
-        lda     dir_read_buf+$25
+        copy16  dir_read_buf+SubdirectoryHeader::entry_length, entry_length
+        lda     dir_read_buf+SubdirectoryHeader::file_count
         and     #$7F
         sta     num_file_names
         bne     :+
-        jmp     l7
+        jmp     close
 
-:       copy16  #$142B, $06
+        ptr := $06
+:       copy16  #dir_read_buf+.sizeof(SubdirectoryHeader), ptr
 
-l1:     param_call_indirect main::AdjustFileEntryCase, $06
+l1:     param_call_indirect main::AdjustFileEntryCase, ptr
 
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         and     #NAME_LENGTH_MASK
         bne     l2
         jmp     l6
@@ -1385,7 +1397,7 @@ l2:     ldx     l12
         txa
         sta     file_list_index,x
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         and     #STORAGE_TYPE_MASK
         cmp     #ST_LINKED_DIRECTORY << 4
         beq     l3
@@ -1399,14 +1411,16 @@ l3:     lda     file_list_index,x
         sta     file_list_index,x
         inc     L50A9
 l4:     ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         and     #$0F
-        sta     ($06),y
-        copy16  #file_names, $08
+        sta     (ptr),y
+
+        dst_ptr := $08
+        copy16  #file_names, dst_ptr
         lda     #$00
         sta     l17
         lda     l12
-        asl     a
+        asl     a               ; *= 16
         rol     l17
         asl     a
         rol     l17
@@ -1415,32 +1429,35 @@ l4:     ldy     #$00
         asl     a
         rol     l17
         clc
-        adc     $08
-        sta     $08
+        adc     dst_ptr
+        sta     dst_ptr
         lda     l17
-        adc     $09
-        sta     $09
-        ldy     #$00
-        lda     ($06),y
+        adc     dst_ptr+1
+        sta     dst_ptr+1
+
+        ldy     #0
+        lda     (ptr),y
         tay
-l5:     lda     ($06),y
-        sta     ($08),y
+:       lda     (ptr),y
+        sta     (dst_ptr),y
         dey
-        bpl     l5
+        bpl     :-
+
         inc     l12
         inc     l13
 l6:     inc     l14
         lda     l13
         cmp     num_file_names
-        bne     l10
-l7:     MLI_RELAY_CALL CLOSE, close_params
+        bne     next
+
+close:  MLI_RELAY_CALL CLOSE, close_params
         bit     L50A8
-        bpl     l8
+        bpl     :+
         lda     L50A9
         sta     num_file_names
-l8:     jsr     sort_file_names
+:       jsr     sort_file_names
         jsr     L64E2
-        lda     L5F0C
+        lda     open_dir_flag
         bpl     l9
         sec
         rts
@@ -1448,14 +1465,14 @@ l8:     jsr     sort_file_names
 l9:     clc
         rts
 
-l10:    lda     l14
+next:   lda     l14
         cmp     l16
-        beq     l11
-        add16_8 $06, l15, $06
+        beq     :+
+        add16_8 ptr, entry_length, ptr
         jmp     l1
 
-l11:    MLI_RELAY_CALL READ, read_params
-        copy16  #$1404, $06
+:       MLI_RELAY_CALL READ, read_params
+        copy16  #dir_read_buf+$04, ptr
         lda     #$00
         sta     l14
         jmp     l1
@@ -1463,7 +1480,8 @@ l11:    MLI_RELAY_CALL READ, read_params
 l12:    .byte   0
 l13:    .byte   0
 l14:    .byte   0
-l15:    .byte   0
+entry_length:
+        .byte   0
 l16:    .byte   0
 l17:    .byte   0
 .endproc
@@ -1471,7 +1489,7 @@ l17:    .byte   0
 ;;; ============================================================
 
 .proc draw_list_entries
-        lda     winfo_file_dialog_listbox
+        lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, winfo_file_dialog_listbox::cliprect
         lda     #16
@@ -1524,7 +1542,7 @@ l1:     lda     l4
         cmp     selected_index
         bne     l2
         jsr     L6274
-        lda     winfo_file_dialog_listbox
+        lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
 l2:     inc     l4
         add16   picker_entry_pos::ycoord, #8, picker_entry_pos::ycoord
@@ -1574,7 +1592,7 @@ l2:     .byte   0
 ;;; ============================================================
 
 .proc update_disk_name
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::rect_D9C8
         copy16  #path_buf, $06
@@ -1656,23 +1674,23 @@ l5:     .byte   0
 
 .proc L6274
         ldx     #0
-        stx     l1
+        stx     tmp
         asl     a
-        rol     l1
+        rol     tmp
         asl     a
-        rol     l1
+        rol     tmp
         asl     a
-        rol     l1
-        sta     rect_D90F+2
-        ldx     l1
-        stx     rect_D90F+3
+        rol     tmp
+        sta     rect_D90F::y1
+        ldx     tmp
+        stx     rect_D90F::y1+1
         clc
         adc     #7
-        sta     rect_D90F+6
-        lda     l1
+        sta     rect_D90F::y2
+        lda     tmp
         adc     #0
-        sta     rect_D90F+7
-        lda     winfo_file_dialog_listbox
+        sta     rect_D90F::y2+1
+        lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D90F
@@ -1680,7 +1698,7 @@ l5:     .byte   0
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
 
-l1:     .byte   0
+tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2019,7 +2037,7 @@ has_sel:
 .proc blink_f1_ip
         pt := $06
 
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         jsr     calc_input1_ip_pos
         stax    $06
@@ -2052,7 +2070,7 @@ length: .byte   0
 .proc blink_f2_ip
         pt := $06
 
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         jsr     calc_input2_ip_pos
         stax    $06
@@ -2083,7 +2101,7 @@ length: .byte   0
 ;;; ============================================================
 
 .proc redraw_f1
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -2100,7 +2118,7 @@ length: .byte   0
 ;;; ============================================================
 
 .proc redraw_f2
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::input2_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -2118,10 +2136,10 @@ length: .byte   0
 ;;; A click when f1 has focus (click may be elsewhere)
 
 .proc handle_f1_click
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
 
@@ -2288,10 +2306,10 @@ ip_pos: .word   0
 .proc handle_f2_click
 
         ;; Was click inside text box?
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
 
@@ -2474,7 +2492,7 @@ continue:
         inc     path_buf0
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, str_1_char
@@ -2496,7 +2514,7 @@ tmp:    .byte   0
         jsr     calc_input1_ip_pos
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, path_buf2
@@ -2529,7 +2547,7 @@ skip:   ldx     path_buf0
         jsr     calc_input1_ip_pos
         stax    $06
         copy16  file_dialog_res::input1_textpos+2, $08
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, path_buf2
@@ -2563,7 +2581,7 @@ skip:   ldx     path_buf0
         bne     :-
 
 finish: dec     path_buf2
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
         param_call draw_string, path_buf0
@@ -2638,7 +2656,7 @@ skip:   sty     path_buf0
         inc     path_buf1
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, str_1_char
@@ -2660,7 +2678,7 @@ l1:     .byte   0
         jsr     calc_input2_ip_pos
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, path_buf2
@@ -2692,7 +2710,7 @@ l3:     ldx     path_buf1
         jsr     calc_input2_ip_pos
         stax    $06
         copy16  file_dialog_res::input2_textpos+2, $08
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call draw_string, path_buf2
@@ -2724,7 +2742,7 @@ l2:     lda     path_buf2+1,x
         cpx     path_buf2
         bne     l2
 l3:     dec     path_buf2
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
         param_call draw_string, path_buf1
@@ -3083,7 +3101,7 @@ l4:     lda     selected_index
         adc     $07
         tax
         tya
-        jsr     L5F0D
+        jsr     append_to_path_buf
 
 l5:     lda     split_buf
         cmp     path_buf
@@ -3109,7 +3127,7 @@ l8:     lda     d2
         bpl     l9
         rts
 
-l9:     jsr     L5F49
+l9:     jsr     strip_path_segment
         rts
 
 d1:     .byte   0
