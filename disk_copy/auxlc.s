@@ -22,6 +22,25 @@ kShortcutReadDisk = res_char_button_read_drive_shortcut
 
 ;;; ============================================================
 
+;;; number of alert messages
+kNumErrorMessages = 13
+
+kAlertMsgInsertSource           = 0
+kAlertMsgInsertDestination      = 1
+kAlertMsgConfirmErase           = 2
+kAlertMsgDestinationFormatFail  = 3
+kAlertMsgFormatError            = 4
+kAlertMsgDestinationProtected   = 5
+kAlertMsgConfirmEraseUNUSED     = 6
+kAlertMsgConfirmEraseSlotDrive  = 7
+kAlertMsgConfirmEraseSlotDriveUNUSED  = 8
+kAlertMsgCopySuccessful         = 9
+kAlertMsgCopyFailure            = 10
+kAlertMsgInsertSourceOrCancel   = 11
+kAlertMsgInsertDestionationOrCancel = 12
+
+;;; ============================================================
+
         ASSERT_ADDRESS $D000, "Entry point"
 
 start:
@@ -580,7 +599,7 @@ LD6F9:  lda     current_drive_selection
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D432
 LD734:  ldx     #0
-        lda     #0              ; Insert Source
+        lda     #kAlertMsgInsertSource
         jsr     show_alert_dialog
         beq     LD740
         jmp     LD61C
@@ -631,7 +650,7 @@ LD7AD:  lda     source_drive_index
         tay
         ldx     #$00
 
-        lda     #1              ; Insert Destination
+        lda     #kAlertMsgInsertDestination
         jsr     show_alert_dialog
 
         beq     LD7CC
@@ -692,7 +711,7 @@ LD82C:  sta     main__on_line_buffer2
 
         ldx     #$00
         ldy     #$13            ; ???
-        lda     #2              ; Confirm Erase
+        lda     #kAlertMsgConfirmErase
 LD83C:  jsr     show_alert_dialog
         cmp     #$01
         beq     LD847
@@ -724,7 +743,7 @@ LD852:  ldx     dest_drive_index
         cmp     #$FF            ; $FF = 13-sector Disk II
         beq     LD87C
 
-:       lda     #3              ; Destination format failed
+:       lda     #kAlertMsgDestinationFormatFail
         jsr     show_alert_dialog
         jmp     LD61C
 
@@ -735,12 +754,12 @@ LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         cmp     #ERR_WRITE_PROTECTED
         beq     LD89F
 
-        lda     #4              ; Format error
+        lda     #kAlertMsgFormatError
         jsr     show_alert_dialog
         beq     LD852
         jmp     LD61C
 
-LD89F:  lda     #5              ; Destination protected
+LD89F:  lda     #kAlertMsgDestinationProtected
         jsr     show_alert_dialog
         beq     LD852
         jmp     LD61C
@@ -759,7 +778,7 @@ LD8A9:  lda     winfo_dialog::window_id
         pla
         tay
         ldx     #$80
-        lda     #0              ; Insert source
+        lda     #kAlertMsgInsertSource
         jsr     show_alert_dialog
         beq     LD8DF
         jmp     LD61C
@@ -790,7 +809,7 @@ LD8FB:  jsr     LE4A8
         pla
         tay
         ldx     #$80
-        lda     #1              ; Insert destination
+        lda     #kAlertMsgInsertDestination
         jsr     show_alert_dialog
         beq     LD928
         jmp     LD61C
@@ -811,7 +830,7 @@ LD928:  jsr     LE491
         pla
         tay
         ldx     #$80
-        lda     #0              ; Insert source
+        lda     #kAlertMsgInsertSource
         jsr     show_alert_dialog
         beq     LD8FB
         jmp     LD61C
@@ -826,12 +845,12 @@ LD955:  jsr     LE507
         beq     :+
         lda     drive_unitnum_table,x
         jsr     main__eject_disk
-:       lda     #9              ; Copy success
+:       lda     #kAlertMsgCopySuccessful
         jsr     show_alert_dialog
         jmp     LD61C
 
 LD97A:  jsr     main__free_vol_bitmap_pages
-        lda     #10             ; Copy failed
+        lda     #kAlertMsgCopyFailure
         jsr     show_alert_dialog
         jmp     LD61C
 
@@ -2185,7 +2204,7 @@ flag:   .byte   0
         cmp     #ERR_WRITE_PROTECTED
         bne     l2
         jsr     Bell
-        lda     #5              ; Destination protected
+        lda     #kAlertMsgDestinationProtected
         jsr     show_alert_dialog
         bne     :+
         jsr     LE491
@@ -2388,10 +2407,10 @@ str_insert_source:
 str_insert_dest:
         PASCAL_STRING res_string_prompt_insert_destination
 
-str_confirm_erase0:
+str_confirm_erase:
         PASCAL_STRING res_string_prompt_erase_prefix
-str_confirm_erase0_buf:  .res    18, 0
-kLenConfirmErase0 = .strlen(res_string_prompt_erase_prefix)
+str_confirm_erase_buf:  .res    18, 0
+kLenConfirmErase = .strlen(res_string_prompt_erase_prefix)
 
 str_dest_format_fail:
         PASCAL_STRING res_string_errmsg_dest_format_fail
@@ -2401,10 +2420,10 @@ str_dest_protected:
         PASCAL_STRING res_string_errmsg_dest_protected
 
 ;;; This string is seen when copying a ProDOS disk to DOS 3.3 or Pascal disk.
-str_confirm_erase2:
+str_confirm_erase_sd:
         PASCAL_STRING res_string_prompt_erase_slot_drive_pattern
-        kStrConfirmErase2SlotOffset = res_const_prompt_erase_slot_drive_pattern_offset1
-        kStrConfirmErase2DriveOffset = res_const_prompt_erase_slot_drive_pattern_offset2
+        kStrConfirmEraseSDSlotOffset = res_const_prompt_erase_slot_drive_pattern_offset1
+        kStrConfirmEraseSDDriveOffset = res_const_prompt_erase_slot_drive_pattern_offset2
 
 str_copy_success:
         PASCAL_STRING res_string_label_status_copy_success
@@ -2421,29 +2440,38 @@ char_space:
 char_question_mark:
         .byte   '?'
 
-        ;; number of alert messages
-        kNumErrorMessages = 13
-
 ;;; TODO: Remove unused messages
 alert_table:
-        .byte   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-        ASSERT_TABLE_SIZE alert_table, kNumErrorMessages
+        .byte   kAlertMsgInsertSource
+        .byte   kAlertMsgInsertDestination
+        .byte   kAlertMsgConfirmErase
+        .byte   kAlertMsgDestinationFormatFail
+        .byte   kAlertMsgFormatError
+        .byte   kAlertMsgDestinationProtected
+        .byte   kAlertMsgConfirmEraseUNUSED
+        .byte   kAlertMsgConfirmEraseSlotDrive
+        .byte   kAlertMsgConfirmEraseSlotDriveUNUSED
+        .byte   kAlertMsgCopySuccessful
+        .byte   kAlertMsgCopyFailure
+        .byte   kAlertMsgInsertSourceOrCancel
+        .byte   kAlertMsgInsertDestionationOrCancel
+        ASSERT_TABLE_SIZE alert_table, auxlc::kNumErrorMessages
 
 message_table:
         .addr   str_insert_source
         .addr   str_insert_dest
-        .addr   str_confirm_erase0
+        .addr   str_confirm_erase
         .addr   str_dest_format_fail
         .addr   str_format_error
         .addr   str_dest_protected
-        .addr   str_confirm_erase0 ; TODO: Unused?
-        .addr   str_confirm_erase2
-        .addr   str_confirm_erase2 ; TODO: Unused! Remove duplicate, adjust messages
+        .addr   str_confirm_erase ; TODO: Unused?
+        .addr   str_confirm_erase_sd
+        .addr   str_confirm_erase_sd ; TODO: Unused! Remove duplicate, adjust messages
         .addr   str_copy_success
         .addr   str_copy_fail
         .addr   str_insert_source_or_cancel ; TODO: How is this used?
         .addr   str_insert_dest_or_cancel   ; TODO: How is this used?
-        ASSERT_ADDRESS_TABLE_SIZE message_table, kNumErrorMessages
+        ASSERT_ADDRESS_TABLE_SIZE message_table, auxlc::kNumErrorMessages
 
         ;; $C0 (%11xxxxxx) = Cancel + Ok
         ;; $81 (%10xxxxx1) = Cancel + Yes + No
@@ -2458,20 +2486,20 @@ message_table:
 .endenum
 
 alert_options_table:
-        .byte   MessageFlags::OkCancel
-        .byte   MessageFlags::OkCancel
-        .byte   MessageFlags::YesNoCancel
-        .byte   MessageFlags::Ok
-        .byte   MessageFlags::TryAgainCancel
-        .byte   MessageFlags::TryAgainCancel
-        .byte   MessageFlags::YesNoCancel
-        .byte   MessageFlags::YesNoCancel
-        .byte   MessageFlags::YesNoCancel
-        .byte   MessageFlags::Ok
-        .byte   MessageFlags::Ok
-        .byte   MessageFlags::Ok
-        .byte   MessageFlags::Ok
-        ASSERT_TABLE_SIZE alert_options_table, kNumErrorMessages
+        .byte   MessageFlags::OkCancel    ; kAlertMsgInsertSource
+        .byte   MessageFlags::OkCancel    ; kAlertMsgInsertDestination
+        .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmErase
+        .byte   MessageFlags::Ok          ; kAlertMsgDestinationFormatFail
+        .byte   MessageFlags::TryAgainCancel ; kAlertMsgFormatError
+        .byte   MessageFlags::TryAgainCancel ; kAlertMsgDestinationProtected
+        .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmEraseUNUSED
+        .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmEraseSlotDrive
+        .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmEraseSlotDriveUNUSED
+        .byte   MessageFlags::Ok          ; kAlertMsgCopySuccessful
+        .byte   MessageFlags::Ok          ; kAlertMsgCopyFailure
+        .byte   MessageFlags::Ok          ; kAlertMsgInsertSourceOrCancel
+        .byte   MessageFlags::Ok          ; kAlertMsgInsertDestionationOrCancel
+        ASSERT_TABLE_SIZE alert_options_table, auxlc::kNumErrorMessages
 
 message_num:
         .byte   0
@@ -2535,25 +2563,25 @@ LEC30:  lda     #$01
 
 LEC34:  cmp     #$02
         bne     LEC3F
-        jsr     append_to_confirm_erase0
+        jsr     append_to_confirm_erase
         lda     #$02
         bne     LEC5E           ; always
 
 LEC3F:  cmp     #$06            ; duplicate
         bne     :+
-        jsr     append_to_confirm_erase0
+        jsr     append_to_confirm_erase
         lda     #$06
         bne     LEC5E           ; always
 
 :       cmp     #$07
         bne     LEC55
-        jsr     set_confirm_erase2_slot_drive
+        jsr     set_confirm_erase_sd_slot_drive
         lda     #$07
         bne     LEC5E           ; always
 
 LEC55:  cmp     #$08            ; TODO: Unused duplicate?
         bne     LEC5E
-        jsr     set_confirm_erase2_slot_drive
+        jsr     set_confirm_erase_sd_slot_drive
         lda     #$08
 
 LEC5E:
@@ -2814,7 +2842,7 @@ finish: pha
 
 ;;; ============================================================
 
-.proc append_to_confirm_erase0
+.proc append_to_confirm_erase
         ptr := $06
         stxy    ptr
         ldy     #$00
@@ -2822,28 +2850,28 @@ finish: pha
         pha
         tay
 :       lda     (ptr),y
-        sta     str_confirm_erase0_buf-1,y
+        sta     str_confirm_erase_buf-1,y
         dey
         bne     :-
         pla
         clc
-        adc     #kLenConfirmErase0
-        sta     str_confirm_erase0
+        adc     #kLenConfirmErase
+        sta     str_confirm_erase
         tay
-        inc     str_confirm_erase0
-        inc     str_confirm_erase0
+        inc     str_confirm_erase
+        inc     str_confirm_erase
         lda     char_space
         iny
-        sta     str_confirm_erase0,y
+        sta     str_confirm_erase,y
         lda     char_question_mark
         iny
-        sta     str_confirm_erase0,y
+        sta     str_confirm_erase,y
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc set_confirm_erase2_slot_drive
+.proc set_confirm_erase_sd_slot_drive
         txa
         and     #$70            ; Mask off slot
         lsr     a
@@ -2851,13 +2879,13 @@ finish: pha
         lsr     a
         lsr     a
         ora     #'0'
-        sta     str_confirm_erase2  + kStrConfirmErase2SlotOffset
+        sta     str_confirm_erase_sd  + kStrConfirmEraseSDSlotOffset
         txa
         and     #$80            ; Mask off drive
         asl     a               ; Shift to low bit
         rol     a
         adc     #'1'            ; Drive 1 or 2
-        sta     str_confirm_erase2 + kStrConfirmErase2DriveOffset
+        sta     str_confirm_erase_sd + kStrConfirmEraseSDDriveOffset
         rts
 .endproc
 
