@@ -23,7 +23,7 @@ kShortcutReadDisk = res_char_button_read_drive_shortcut
 ;;; ============================================================
 
 ;;; number of alert messages
-kNumErrorMessages = 13
+kNumErrorMessages = 11
 
 kAlertMsgInsertSource           = 0
 kAlertMsgInsertDestination      = 1
@@ -31,13 +31,11 @@ kAlertMsgConfirmErase           = 2
 kAlertMsgDestinationFormatFail  = 3
 kAlertMsgFormatError            = 4
 kAlertMsgDestinationProtected   = 5
-kAlertMsgConfirmEraseUNUSED     = 6
-kAlertMsgConfirmEraseSlotDrive  = 7
-kAlertMsgConfirmEraseSlotDriveUNUSED  = 8
-kAlertMsgCopySuccessful         = 9
-kAlertMsgCopyFailure            = 10
-kAlertMsgInsertSourceOrCancel   = 11
-kAlertMsgInsertDestionationOrCancel = 12
+kAlertMsgConfirmEraseSlotDrive  = 6
+kAlertMsgCopySuccessful         = 7
+kAlertMsgCopyFailure            = 8
+kAlertMsgInsertSourceOrCancel   = 9
+kAlertMsgInsertDestionationOrCancel = 10
 
 ;;; ============================================================
 
@@ -2440,7 +2438,6 @@ char_space:
 char_question_mark:
         .byte   '?'
 
-;;; TODO: Remove unused messages
 alert_table:
         .byte   kAlertMsgInsertSource
         .byte   kAlertMsgInsertDestination
@@ -2448,9 +2445,7 @@ alert_table:
         .byte   kAlertMsgDestinationFormatFail
         .byte   kAlertMsgFormatError
         .byte   kAlertMsgDestinationProtected
-        .byte   kAlertMsgConfirmEraseUNUSED
         .byte   kAlertMsgConfirmEraseSlotDrive
-        .byte   kAlertMsgConfirmEraseSlotDriveUNUSED
         .byte   kAlertMsgCopySuccessful
         .byte   kAlertMsgCopyFailure
         .byte   kAlertMsgInsertSourceOrCancel
@@ -2464,9 +2459,7 @@ message_table:
         .addr   str_dest_format_fail
         .addr   str_format_error
         .addr   str_dest_protected
-        .addr   str_confirm_erase ; TODO: Unused?
         .addr   str_confirm_erase_sd
-        .addr   str_confirm_erase_sd ; TODO: Unused! Remove duplicate, adjust messages
         .addr   str_copy_success
         .addr   str_copy_fail
         .addr   str_insert_source_or_cancel ; TODO: How is this used?
@@ -2492,9 +2485,7 @@ alert_options_table:
         .byte   MessageFlags::Ok          ; kAlertMsgDestinationFormatFail
         .byte   MessageFlags::TryAgainCancel ; kAlertMsgFormatError
         .byte   MessageFlags::TryAgainCancel ; kAlertMsgDestinationProtected
-        .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmEraseUNUSED
         .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmEraseSlotDrive
-        .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmEraseSlotDriveUNUSED
         .byte   MessageFlags::Ok          ; kAlertMsgCopySuccessful
         .byte   MessageFlags::Ok          ; kAlertMsgCopyFailure
         .byte   MessageFlags::Ok          ; kAlertMsgInsertSourceOrCancel
