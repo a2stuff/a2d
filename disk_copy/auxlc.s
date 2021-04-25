@@ -37,6 +37,12 @@ kAlertMsgCopyFailure            = 8
 kAlertMsgInsertSourceOrCancel   = 9
 kAlertMsgInsertDestionationOrCancel = 10
 
+kAlertResultTryAgain    = 0
+kAlertResultOK          = 0
+kAlertResultCancel      = 1
+kAlertResultYes         = 2
+kAlertResultNo          = 3
+
 ;;; ============================================================
 
         ASSERT_ADDRESS $D000, "Entry point"
@@ -527,7 +533,9 @@ init:   jsr     remove_ram_disk
         sta     disk_copy_flag
         sta     LD5E0
         jsr     open_dialog
-LD61C:  lda     #$00
+
+init_dialog:
+        lda     #$00
         sta     LD367
         sta     LD368
         sta     LD44C
@@ -557,7 +565,7 @@ LD674:  jsr     LD986
         bmi     LD674
         beq     LD687
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        jmp     LD61C
+        jmp     init_dialog
 
 LD687:  lda     current_drive_selection
         bmi     LD674
@@ -581,7 +589,7 @@ LD6E6:  jsr     LD986
         bmi     LD6E6
         beq     LD6F9
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        jmp     LD61C
+        jmp     init_dialog
 
 LD6F9:  lda     current_drive_selection
         bmi     LD6E6
@@ -599,10 +607,10 @@ LD6F9:  lda     current_drive_selection
 LD734:  ldx     #0
         lda     #kAlertMsgInsertSource
         jsr     show_alert_dialog
-        beq     LD740
-        jmp     LD61C
+        beq     :+              ; OK
+        jmp     init_dialog     ; Cancel
 
-LD740:  lda     #$00
+:       lda     #$00
         sta     LD44D
         ldx     source_drive_index
         lda     drive_unitnum_table,x
@@ -650,11 +658,10 @@ LD7AD:  lda     source_drive_index
 
         lda     #kAlertMsgInsertDestination
         jsr     show_alert_dialog
+        beq     :+              ; OK
+        jmp     init_dialog     ; Cancel
 
-        beq     LD7CC
-        jmp     LD61C
-
-LD7CC:  ldx     dest_drive_index
+:       ldx     dest_drive_index
         lda     drive_unitnum_table,x
         sta     main__on_line_params2_unit_num
         jsr     main__call_on_line2
@@ -711,11 +718,11 @@ LD82C:  sta     main__on_line_buffer2
         ldy     #$13            ; ???
         lda     #kAlertMsgConfirmErase
 LD83C:  jsr     show_alert_dialog
-        cmp     #$01
+        cmp     #kAlertResultCancel
         beq     LD847
-        cmp     #$02
+        cmp     #kAlertResultYes
         beq     LD84A
-LD847:  jmp     LD61C
+LD847:  jmp     init_dialog
 
 LD84A:  lda     disk_copy_flag
         bne     LD852
@@ -743,7 +750,7 @@ LD852:  ldx     dest_drive_index
 
 :       lda     #kAlertMsgDestinationFormatFail
         jsr     show_alert_dialog
-        jmp     LD61C
+        jmp     init_dialog
 
 LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         param_call DrawString, str_formatting
@@ -754,13 +761,13 @@ LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
 
         lda     #kAlertMsgFormatError
         jsr     show_alert_dialog
-        beq     LD852
-        jmp     LD61C
+        beq     LD852           ; Try Again
+        jmp     init_dialog     ; Cancel
 
 LD89F:  lda     #kAlertMsgDestinationProtected
         jsr     show_alert_dialog
-        beq     LD852
-        jmp     LD61C
+        beq     LD852           ; Try Again
+        jmp     init_dialog     ; Cancel
 
 LD8A9:  lda     winfo_dialog::window_id
         jsr     set_win_port
@@ -778,8 +785,8 @@ LD8A9:  lda     winfo_dialog::window_id
         ldx     #$80
         lda     #kAlertMsgInsertSource
         jsr     show_alert_dialog
-        beq     LD8DF
-        jmp     LD61C
+        beq     LD8DF           ; OK
+        jmp     init_dialog     ; Cancel
 
 LD8DF:  jsr     main__read_volume_bitmap
         lda     #$00
@@ -809,8 +816,8 @@ LD8FB:  jsr     LE4A8
         ldx     #$80
         lda     #kAlertMsgInsertDestination
         jsr     show_alert_dialog
-        beq     LD928
-        jmp     LD61C
+        beq     LD928           ; OK
+        jmp     init_dialog     ; Cancel
 
 LD928:  jsr     LE491
         lda     #$80
@@ -830,8 +837,8 @@ LD928:  jsr     LE491
         ldx     #$80
         lda     #kAlertMsgInsertSource
         jsr     show_alert_dialog
-        beq     LD8FB
-        jmp     LD61C
+        beq     LD8FB           ; OK
+        jmp     init_dialog     ; Cancel
 
 LD955:  jsr     LE507
         jsr     main__free_vol_bitmap_pages
@@ -845,12 +852,12 @@ LD955:  jsr     LE507
         jsr     main__eject_disk
 :       lda     #kAlertMsgCopySuccessful
         jsr     show_alert_dialog
-        jmp     LD61C
+        jmp     init_dialog
 
 LD97A:  jsr     main__free_vol_bitmap_pages
         lda     #kAlertMsgCopyFailure
         jsr     show_alert_dialog
-        jmp     LD61C
+        jmp     init_dialog
 
         .byte   0
 LD986:  MGTK_RELAY_CALL2 MGTK::InitPort, grafport
@@ -2204,8 +2211,8 @@ flag:   .byte   0
         jsr     Bell
         lda     #kAlertMsgDestinationProtected
         jsr     show_alert_dialog
-        bne     :+
-        jsr     LE491
+        bne     :+              ; Cancel
+        jsr     LE491           ; Try Again
         return  #1
 
 :       jsr     main__free_vol_bitmap_pages
@@ -2496,12 +2503,6 @@ message_num:
         .byte   0
 xarg:   .byte   0               ; ???
 yarg:   .byte   0               ; ???
-
-        kAlertResultTryAgain    = 0
-        kAlertResultOK          = 0
-        kAlertResultCancel      = 1
-        kAlertResultYes         = 2
-        kAlertResultNo          = 3
 
 show_alert_dialog:
         sta     message_num
