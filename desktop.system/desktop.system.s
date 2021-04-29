@@ -539,7 +539,9 @@ entry_index_in_block:   .byte   0
         MLI_CALL READ, read_fileentry_params
         beq     :+
         jmp     (hook_handle_error_code)
-:       inc     entry_index_in_block
+:       ldax    #filename
+        jsr     AdjustFileEntryCase
+        inc     entry_index_in_block
         lda     entry_index_in_block
         cmp     entries_per_block
         bcc     done
@@ -2106,6 +2108,9 @@ done:   rts
 ;;; ============================================================
 
         .include "../lib/smartport.s"
+        .define LIB_MLI_CALL MLI_CALL
+        .define IO_BUFFER 0     ; unused
+        .include "../lib/adjustfilecase.s"
 
 ;;; ============================================================
 
