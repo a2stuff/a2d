@@ -23,6 +23,9 @@
 
 ;;; ============================================================
 
+;;; Currently there's not enough room for these.
+INCLUDE_UNSUPPORTED_MACHINES = 0
+
 kShortcutEasterEgg = res_char_easter_egg_shortcut
 
 ;;; ============================================================
@@ -98,6 +101,7 @@ str_title:
 
 ;;; ============================================================
 
+.if INCLUDE_UNSUPPORTED_MACHINES
 .params ii_bitmap
         DEFINE_POINT viewloc, 59, 8
 mapbits:        .addr   ii_bits
@@ -105,6 +109,15 @@ mapwidth:       .byte   8
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 50, 18
 .endparams
+
+.params iii_bitmap
+        DEFINE_POINT viewloc, 57, 5
+mapbits:        .addr   iii_bits
+mapwidth:       .byte   8
+reserved:       .res    1
+        DEFINE_RECT maprect, 0, 0, 54, 24
+.endparams
+.endif
 
 .params iie_bitmap
         DEFINE_POINT viewloc, 59, 5
@@ -128,14 +141,6 @@ mapbits:        .addr   iigs_bits
 mapwidth:       .byte   6
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 38, 25
-.endparams
-
-.params iii_bitmap
-        DEFINE_POINT viewloc, 57, 5
-mapbits:        .addr   iii_bits
-mapwidth:       .byte   8
-reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 54, 24
 .endparams
 
 .params iie_card_bitmap
@@ -162,6 +167,15 @@ reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 47, 29
 .endparams
 
+.params ace2000_bitmap
+        DEFINE_POINT viewloc, 60, 7
+mapbits:        .addr   ace2000_bits
+mapwidth:       .byte   7
+reserved:       .res    1
+        DEFINE_RECT maprect, 0, 0, 47, 23
+.endparams
+
+.if INCLUDE_UNSUPPORTED_MACHINES
 ii_bits:
         .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -182,6 +196,34 @@ ii_bits:
         .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
         .byte   PX(%0111000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000111),PX(%0000000)
         .byte   PX(%0001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111100),PX(%0000000)
+
+iii_bits:
+        .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0000001),PX(%1000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1001100),PX(%1100110),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1001100),PX(%1100000),PX(%0000000),PX(%0000001),PX(%1001100),PX(%1100110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1001100),PX(%1100110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000111),PX(%1111111),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1000011),PX(%1111000),PX(%0000000),PX(%0000000),PX(%1111000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
+        .byte   PX(%0000001),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111110),PX(%0000000)
+        .byte   PX(%0000011),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000111),PX(%0000000)
+        .byte   PX(%0001110),PX(%0001100),PX(%1100110),PX(%0110011),PX(%0011000),PX(%0001100),PX(%1100001),PX(%1100000)
+        .byte   PX(%0111000),PX(%0110011),PX(%0011001),PX(%1001100),PX(%1100110),PX(%0000011),PX(%0011000),PX(%0111000)
+        .byte   PX(%1100001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0011001),PX(%1000000),PX(%1100110),PX(%0001100)
+        .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111000)
+.endif
 
 iie_bits:
         .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000000)
@@ -268,33 +310,6 @@ iigs_bits:
         .byte   PX(%0011000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
         .byte   PX(%0011000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
         .byte   PX(%0001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000)
-
-iii_bits:
-        .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0000001),PX(%1000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1001100),PX(%1100110),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1001100),PX(%1100000),PX(%0000000),PX(%0000001),PX(%1001100),PX(%1100110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1001100),PX(%1100110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000111),PX(%1111111),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1000011),PX(%1111000),PX(%0000000),PX(%0000000),PX(%1111000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110),PX(%0000000)
-        .byte   PX(%0000001),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111110),PX(%0000000)
-        .byte   PX(%0000011),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000111),PX(%0000000)
-        .byte   PX(%0001110),PX(%0001100),PX(%1100110),PX(%0110011),PX(%0011000),PX(%0001100),PX(%1100001),PX(%1100000)
-        .byte   PX(%0111000),PX(%0110011),PX(%0011001),PX(%1001100),PX(%1100110),PX(%0000011),PX(%0011000),PX(%0111000)
-        .byte   PX(%1100001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0011001),PX(%1000000),PX(%1100110),PX(%0001100)
-        .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100)
-        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111000)
 
 iie_card_bits:
         .byte   PX(%0001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111000),PX(%0000000)
@@ -384,9 +399,36 @@ ace500_bits:
         .byte   PX(%0011000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000110)
         .byte   PX(%0011111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111110)
 
+ace2000_bits:
+        .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000)
+        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1000111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%1100110),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%1100000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1001100),PX(%1100000)
+        .byte   PX(%0000001),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1001100),PX(%1100000)
+        .byte   PX(%0000001),PX(%1000111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000),PX(%1100000)
+        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1100000)
+        .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
+        .byte   PX(%0110000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011)
+        .byte   PX(%0110011),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1110011)
+        .byte   PX(%0110011),PX(%1111111),PX(%1000000),PX(%0000000),PX(%1100000),PX(%0000000),PX(%0110011)
+        .byte   PX(%0110011),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1110011)
+        .byte   PX(%0110000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
+
 
 ;;; ============================================================
 
+.if INCLUDE_UNSUPPORTED_MACHINES
 str_ii:
         PASCAL_STRING res_string_model_ii
 
@@ -395,6 +437,7 @@ str_iiplus:
 
 str_iii:
         PASCAL_STRING res_string_model_iii
+.endif
 
 str_iie_original:
         PASCAL_STRING res_string_model_iie_original
@@ -429,6 +472,9 @@ str_laser128:
 
 str_ace500:
         PASCAL_STRING res_string_model_ace500
+
+str_ace2000:
+        PASCAL_STRING res_string_model_ace2000
 
 ;;; ============================================================
 
@@ -606,8 +652,8 @@ Version:                .word   0
 ;;; Apple ][                    $38     [$AD]    [$60]                      [$2F]
 ;;; Apple ][+                   $EA      $AD     [$EA]                      [$EA]
 ;;; Apple /// (emulation)       $EA      $8A
-;;; Apple IIe                   $06     [$AD]     $EA                       [$00]
-;;; Apple IIe (enhanced)        $06     [$AD]     $E0                       [$00]
+;;; Apple IIe                   $06     [$AD]     $EA     [$A9]             [$00]
+;;; Apple IIe (enhanced)        $06     [$AD]     $E0     [$A9]             [$00]
 ;;; Apple IIe Option Card       $06     [$AD]     $E0      $02      $00
 ;;; Apple IIc                   $06     [$4C]     $00                        $FF
 ;;; Apple IIc (3.5 ROM)         $06     [$4C]     $00                        $00
@@ -617,6 +663,7 @@ Version:                .word   0
 ;;; Apple IIgs                  $06     [$4C]     $E0  (and SEC, JSR $FE1F, CC=IIgs)
 ;;; Laser 128                   $06      $AC     [$E0]
 ;;; Franklin ACE 500            $06      $AD      $00                       [$00]
+;;; Franklin ACE 2000           $06      $AD      $E0      $4C     [$00]    [$00]
 ;;;
 ;;; (Values in [] are for reference, not needed for compatibility check)
 ;;;
@@ -630,8 +677,11 @@ Version:                .word   0
 
 
 .enum model
+.if ::INCLUDE_UNSUPPORTED_MACHINES
         ii                      ; Apple ][
         iiplus                  ; Apple ][+
+        iii                     ; Apple /// (emulation)
+.endif
         iie_original            ; Apple IIe (original)
         iie_enhanced            ; Apple IIe (enhanced)
         iic_original            ; Apple IIc
@@ -641,15 +691,19 @@ Version:                .word   0
         iic_plus                ; Apple IIc Plus
         iigs                    ; Apple IIgs
         iie_card                ; Apple IIe Option Card
-        iii                     ; Apple /// (emulation)
         laser128                ; Laser 128
         ace500                  ; Franklin ACE 500
+        ace2000                 ; Franklin ACE 2000
         LAST
 .endenum
+kNumModels = model::LAST
 
 model_str_table:
+.if INCLUDE_UNSUPPORTED_MACHINES
         .addr   str_ii           ; Apple ][
         .addr   str_iiplus       ; Apple ][+
+        .addr   str_iii          ; Apple /// (emulation)
+.endif
         .addr   str_iie_original ; Apple IIe (original)
         .addr   str_iie_enhanced ; Apple IIe (enhanced)
         .addr   str_iic_original ; Apple IIc
@@ -659,13 +713,17 @@ model_str_table:
         .addr   str_iic_plus     ; Apple IIc Plus
         .addr   str_iigs         ; Apple IIgs
         .addr   str_iie_card     ; Apple IIe Option Card
-        .addr   str_iii          ; Apple /// (emulation)
         .addr   str_laser128     ; Laser 128
         .addr   str_ace500       ; Franklin ACE 500
+        .addr   str_ace2000      ; Franklin ACE 2000
+        ASSERT_ADDRESS_TABLE_SIZE model_str_table, kNumModels
 
 model_pix_table:
+.if INCLUDE_UNSUPPORTED_MACHINES
         .addr   ii_bitmap       ; Apple ][
         .addr   ii_bitmap       ; Apple ][+
+        .addr   iii_bitmap      ; Apple /// (emulation)
+.endif
         .addr   iie_bitmap      ; Apple IIe (original)
         .addr   iie_bitmap      ; Apple IIe (enhanced)
         .addr   iic_bitmap      ; Apple IIc
@@ -675,9 +733,10 @@ model_pix_table:
         .addr   iic_bitmap      ; Apple IIc Plus
         .addr   iigs_bitmap     ; Apple IIgs
         .addr   iie_card_bitmap ; Apple IIe Option Card
-        .addr   iii_bitmap      ; Apple /// (emulation)
         .addr   laser128_bitmap ; Laser 128
         .addr   ace500_bitmap   ; Franklin ACE 500
+        .addr   ace2000_bitmap  ; Franklin ACE 2000
+        ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
 
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
@@ -689,6 +748,7 @@ model_pix_table:
 MODEL_ID_PAGE := $FB00
 
 model_lookup_table:
+.if INCLUDE_UNSUPPORTED_MACHINES
         .byte   model::ii
         .byte   $B3, $38, 0
 
@@ -697,12 +757,16 @@ model_lookup_table:
 
         .byte   model::iii
         .byte   $B3, $EA, $1E, $8A, 0
+.endif
 
         .byte   model::laser128
         .byte   $B3, $06, $1E, $AC, 0
 
         .byte   model::ace500
         .byte   $B3, $06, $1E, $AD, $C0, $00, 0
+
+        .byte   model::ace2000  ; must check before IIe
+        .byte   $B3, $06, $1E, $AD, $C0, $E0, $DD, $4C, 0
 
         .byte   model::iie_original
         .byte   $B3, $06, $C0, $EA, 0
@@ -948,7 +1012,7 @@ done:   rts
 
         inc     egg
         lda     egg
-        cmp     #model::LAST
+        cmp     #kNumModels
         bne     :+
         lda     #0
         sta     egg
