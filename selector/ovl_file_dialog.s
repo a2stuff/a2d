@@ -2967,8 +2967,10 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
 
 ;;; ============================================================
 
-        IO_BUFFER := $1C00
         .define LIB_MLI_CALL MLI_CALL
+         ADJUSTCASE_VOLPATH := $810
+         ADJUSTCASE_VOLBUF  := $820
+         ADJUSTCASE_IO_BUFFER := $1C00
         .include "../lib/adjustfilecase.s"
         .undefine LIB_MLI_CALL
 

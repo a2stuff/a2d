@@ -15139,6 +15139,9 @@ done:   rts
 ;;; ============================================================
 
         .define LIB_MLI_CALL MLI_RELAY_CALL
+        ADJUSTCASE_VOLPATH := $810
+        ADJUSTCASE_VOLBUF  := $820
+        ADJUSTCASE_IO_BUFFER := IO_BUFFER
         .include "../lib/adjustfilecase.s"
         .undefine LIB_MLI_CALL
 

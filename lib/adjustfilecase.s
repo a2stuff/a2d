@@ -3,19 +3,17 @@
 ;;; Per Technical Note: GS/OS #8: Filenames With More Than CAPS and Numerals
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
 
-;;; adjust_fileeentry_case:
+;;; AdjustFileEntryCase:
 ;;; Input: A,X points at FileEntry structure.
-;;; NOTE: Called from Initializer (init) which resides in $800-$1200
 
-;;; adjust_volname_case:
+;;; AdjustVolumeNameCase:
 ;;; Input: A,X points at ON_LINE result (e.g. 'MY.DISK', length + 15 chars)
-;;; NOTE: Called from Initializer (init) which resides in $800-$1200
 
 .proc AdjustCaseImpl
 
-        volpath := $810
-        volbuf  := $820
-        DEFINE_OPEN_PARAMS volname_open_params, volpath, IO_BUFFER
+        volpath := ADJUSTCASE_VOLPATH
+        volbuf  := ADJUSTCASE_VOLBUF
+        DEFINE_OPEN_PARAMS volname_open_params, volpath, ADJUSTCASE_IO_BUFFER
         DEFINE_READ_PARAMS volname_read_params, volbuf, .sizeof(VolumeDirectoryHeader)
         DEFINE_CLOSE_PARAMS volname_close_params
 

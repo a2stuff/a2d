@@ -989,6 +989,9 @@ test_unit_num:
         MLI_CALL ON_LINE, on_line_params
         bne     next_unit
 
+        ldax    #on_line_buffer
+        jsr     AdjustVolumeNameCase
+
         ;; Copy the path
         lda     on_line_buffer
         and     #$0F
@@ -2109,7 +2112,9 @@ done:   rts
 
         .include "../lib/smartport.s"
         .define LIB_MLI_CALL MLI_CALL
-        .define IO_BUFFER 0     ; unused
+        ADJUSTCASE_VOLPATH := $810
+        ADJUSTCASE_VOLBUF  := $820
+        ADJUSTCASE_IO_BUFFER := src_io_buffer
         .include "../lib/adjustfilecase.s"
 
 ;;; ============================================================
