@@ -10596,7 +10596,7 @@ do_delete_file:
         jsr     prep_callbacks_for_delete
         jsr     delete_process_selected_file
         jsr     done_dialog_phase1
-       jmp     finish_operation
+        jmp     finish_operation
 
 do_run:
         copy    #$80, run_flag
@@ -13018,7 +13018,16 @@ store:  sta     is_dir_flag
         lda     storage_type
         cmp     #ST_VOLUME_DIRECTORY
         bne     do_sum_file_size           ; if a subdirectory
-        rts
+
+        ;; If copying a volume dir to RAMCard, the volume dir
+        ;; will not be counted as a file during enumeration but
+        ;; will be counted during copy, so include it to avoid
+        ;; off-by-one.
+        ;; https://github.com/a2stuff/a2d/issues/462
+        bit     run_flag
+        bpl     :+
+        inc16   op_file_count
+:       rts
 
         ;; Written, not read???
 is_dir_flag:
