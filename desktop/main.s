@@ -2265,25 +2265,48 @@ name_ptr:
         path_buffer := cmd_new_folder_impl::path_buffer
 
 ;;; ============================================================
-;;; Grab the coordinates (MGTK::Point) of an icon.
+;;; Grab the bounds (MGTK::Rect) of an icon. Just the graphic,
+;;; not the label.
 ;;; Inputs: A = icon number
-;;; Outputs: cur_icon_pos is filled, $06 points at icon entry
+;;; Outputs: cur_icon_bounds is filled, $06 points at icon entry
 
-        DEFINE_POINT cur_icon_pos, 0, 0
+        DEFINE_RECT cur_icon_bounds, 0, 0, 0, 0
 
-.proc cache_icon_pos
+.proc cache_icon_bounds
         entry_ptr := $06
+        icondef_ptr := $08
 
         jsr     icon_entry_lookup
         stax    entry_ptr
 
+        ;; Position
         ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     (entry_ptr),y
-        sta     cur_icon_pos::xcoord,x
+        sta     cur_icon_bounds::topleft,x
         dey
         dex
         bpl     :-
+
+        ;; Size
+        ldy     #IconEntry::iconbits
+        lda     (entry_ptr),y
+        sta     icondef_ptr
+        iny
+        lda     (entry_ptr),y
+        sta     icondef_ptr+1
+
+        ldy     #IconDefinition::maprect+MGTK::Rect::bottomright+.sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     (icondef_ptr),y
+        sta     cur_icon_bounds::bottomright,x
+        dey
+        dex
+        bpl     :-
+
+        ;; Turn size into bounds
+        add16   cur_icon_bounds::x1, cur_icon_bounds::x2, cur_icon_bounds::x2
+        add16   cur_icon_bounds::y1, cur_icon_bounds::y2, cur_icon_bounds::y2
 
         rts
 .endproc
@@ -2301,7 +2324,7 @@ name_ptr:
 
         ;; Grab the icon coords
         lda     icon_num
-        jsr     cache_icon_pos
+        jsr     cache_icon_bounds
 
         ;; Restore coordinates
         lda     icon_num
@@ -2316,13 +2339,13 @@ name_ptr:
         ;; X adjustment
 
         ;; Is left of icon beyond window? If so, adjust by delta (negative)
-        sub16_8 cur_icon_pos::xcoord, #kIconBBoxOffsetLeft, tmp
+        sub16_8 cur_icon_bounds::x1, #kIconBBoxOffsetLeft, tmp
         sub16   tmp, window_grafport::cliprect::x1, delta
         bmi     adjustx
 
         ;; Is right of icon beyond window? If so, adjust by delta (positive)
-        add16_8 cur_icon_pos::xcoord, #kIconBBoxOffsetRight, cur_icon_pos::xcoord
-        sub16   cur_icon_pos::xcoord, window_grafport::cliprect::x2, delta
+        add16_8 cur_icon_bounds::x1, #kIconBBoxOffsetRight, cur_icon_bounds::x1
+        sub16   cur_icon_bounds::x1, window_grafport::cliprect::x2, delta
         bmi     donex
 
 adjustx:
@@ -2339,16 +2362,14 @@ donex:
         ;; --------------------------------------------------
         ;; Y adjustment
 
-        ;; TODO: Accomodate kWindowHeaderHeight?
-
         ;; Is top of icon beyond window? If so, adjust by delta (negative)
-        sub16_8 cur_icon_pos::ycoord, #kIconBBoxOffsetTop, tmp
+        sub16_8 cur_icon_bounds::y1, #kIconBBoxOffsetTop, tmp
         sub16   tmp, window_grafport::cliprect::y1, delta
         bmi     adjusty
 
         ;; Is bottom of icon beyond window? If so, adjust by delta (positive)
-        add16_8 cur_icon_pos::ycoord, #kIconBBoxOffsetBottom, cur_icon_pos::ycoord
-        sub16   cur_icon_pos::ycoord, window_grafport::cliprect::y2, delta
+        add16_8 cur_icon_bounds::y2, #kIconBBoxOffsetBottom, cur_icon_bounds::y2
+        sub16   cur_icon_bounds::y2, window_grafport::cliprect::y2, delta
         bmi     doney
 
 adjusty:
@@ -7754,53 +7775,48 @@ finish: lda     iconbb_rect::x2
 
 more:   tax
         lda     cached_window_icon_list,x
-        jsr     cache_icon_pos
+        jsr     cache_icon_bounds
 
         ;; First icon (index 0) - just use its coordinates as min/max
         lda     icon_num
         bne     compare_x
 
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     cur_icon_pos,x
-        sta     iconbb_rect::topleft,x
-        sta     iconbb_rect::bottomright,x
-        dex
-        bpl     :-
+        COPY_STRUCT MGTK::Rect, cur_icon_bounds, iconbb_rect
         jmp     next
 
         ;; --------------------------------------------------
         ;; Compare X coords
 
 compare_x:
-        scmp16  cur_icon_pos::xcoord, iconbb_rect::x1
+        scmp16  cur_icon_bounds::x1, iconbb_rect::x1
         bmi     adjust_min_x
-        scmp16  cur_icon_pos::xcoord, iconbb_rect::x2
+        scmp16  cur_icon_bounds::x1, iconbb_rect::x2
         bpl     adjust_max_x
         jmp     compare_y
 
 adjust_max_x:
-        copy16  cur_icon_pos::xcoord, iconbb_rect::x2
+        copy16  cur_icon_bounds::x1, iconbb_rect::x2
         jmp     compare_y
 
 adjust_min_x:
-        copy16  cur_icon_pos::xcoord, iconbb_rect::x1
+        copy16  cur_icon_bounds::x1, iconbb_rect::x1
 
         ;; --------------------------------------------------
         ;; Compare Y coords
 
 compare_y:
-        scmp16  cur_icon_pos::ycoord, iconbb_rect::y1
+        scmp16  cur_icon_bounds::y1, iconbb_rect::y1
         bmi     adjust_min_y
-        scmp16  cur_icon_pos::ycoord, iconbb_rect::y2
+        scmp16  cur_icon_bounds::y2, iconbb_rect::y2
         bpl     adjust_max_y
         jmp     next
 
 adjust_max_y:
-        copy16  cur_icon_pos::ycoord, iconbb_rect::y2
+        copy16  cur_icon_bounds::y2, iconbb_rect::y2
         jmp     next
 
 adjust_min_y:
-        copy16  cur_icon_pos::ycoord, iconbb_rect::y1
+        copy16  cur_icon_bounds::y1, iconbb_rect::y1
 
 next:   inc     icon_num
         jmp     check_icon

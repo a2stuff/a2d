@@ -64,21 +64,21 @@ kListViewWidth          = 360
 
 kMaxIconHeight          = 17
 kIconWidth              = 28
-kIconLabelHeight        = 8
+kIconLabelHeight        = 9     ; default font height
 
 kIconsPerRow    = 5
 kIconSpacingX   = 80
 kIconSpacingY   = 32
 
 ;;; Bounding box padding, which defines icon placing, window sizing and
-;;; scrollbars. This does not take into account the icon's actual height
-;;; or width (i.e. label size). The header is included to simplify
+;;; scrollbars. This does not take into account the icon's actual width
+;;; (bitmap or label size). The header is included to simplify
 ;;; calculations.
 
 kIconBBoxOffsetTop      = kWindowHeaderHeight + 4
 kIconBBoxOffsetLeft     = 45
-kIconBBoxOffsetBottom   = kMaxIconHeight + kIconLabelHeight + 2
-kIconBBoxOffsetRight    = 65    ; includes width of icon + label
+kIconBBoxOffsetBottom   = kIconLabelHeight + 4
+kIconBBoxOffsetRight    = 37 + kIconWidth ; accomodate icon + label
 ;;; NOTE: kIconBBoxOffsetRight should probably be se to
 ;;; kIconBBoxOffsetLeft + kIconWidth but aesthetically that looks bad.
 
