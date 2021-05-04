@@ -16207,15 +16207,28 @@ save_windows := save_restore_windows::save
 ;;; (if shift key can be detected).
 ;;; Output: A=high bit/N flag set if either is down.
 .proc ModifierOrShiftDown
+        ;; IIgs? Use KEYMODREG instead
         jsr     test_iigs
         bcc     iigs
 
+        ;; If a IIe, maybe use shift key mod
+        ldx     ROMIN2
+        lda     ZIDBYTE
+        ldx     LCBANK1
+        ldx     LCBANK1
+        cmp     #0              ; ZIDBYTE = $00 == IIc/IIc+
+        beq     :+
+
+        ;; It's a IIe, compare shift key state
         lda     pb2_initial_state ; if shift key mod installed, %1xxxxxxx
         eor     BUTN2             ; ... and if shift is down, %0xxxxxxx
-        ora     BUTN0
+
+        ;; Either way, check button states
+:       ora     BUTN0
         ora     BUTN1
         rts
 
+        ;; IIgs - do everything using one I/O location
 iigs:   lda     KEYMODREG
         and     #%11000001
         bne     :+
