@@ -182,6 +182,75 @@ a_grafport:     .addr   grafport
 
 grafport:       .tag MGTK::GrafPort
 
+;;; ============================================================
+;;; Resources for an animation to show speed
+
+kRunPosX        = 10
+kRunPosY        = 50
+kRunDistance    = 110
+
+run_pos:
+        .byte   0
+
+.params frame_params
+        DEFINE_POINT viewloc, kRunPosX, kRunPosY
+mapbits:        .addr   frame1
+mapwidth:       .byte   3
+reserved:       .byte   0
+        DEFINE_RECT cliprect, 0, 0, 20, 10
+.endparams
+
+frame1:
+        .byte   PX(%0000000),PX(%0000011),PX(%0000000)
+        .byte   PX(%0000000),PX(%0001111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0001111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0111111),PX(%0000000)
+        .byte   PX(%0000111),PX(%1001111),PX(%1100000)
+        .byte   PX(%0011110),PX(%0111100),PX(%0011110)
+        .byte   PX(%0000000),PX(%0111100),PX(%0000000)
+        .byte   PX(%0000000),PX(%0111111),PX(%0000000)
+        .byte   PX(%0011111),PX(%1110011),PX(%1100000)
+        .byte   PX(%0000000),PX(%0000011),PX(%1100000)
+        .byte   PX(%0000000),PX(%0000011),PX(%1100000)
+
+frame2:
+        .byte   PX(%0000000),PX(%0000011),PX(%0000000)
+        .byte   PX(%0000000),PX(%0001111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0001111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0001111),PX(%0000000)
+        .byte   PX(%0000000),PX(%0111111),PX(%0000000)
+        .byte   PX(%0000001),PX(%1111111),PX(%1100000)
+        .byte   PX(%0000001),PX(%1111111),PX(%0011110)
+        .byte   PX(%0000000),PX(%0001111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0111111),PX(%1100000)
+        .byte   PX(%0000001),PX(%1111100),PX(%0000000)
+        .byte   PX(%0000000),PX(%0111100),PX(%0000000)
+
+frame3:
+        .byte   PX(%0000000),PX(%0000011),PX(%0000000)
+        .byte   PX(%0000000),PX(%0001111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0001111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0001111),PX(%0000000)
+        .byte   PX(%0000001),PX(%1111111),PX(%0011000)
+        .byte   PX(%0000111),PX(%1001111),PX(%1111000)
+        .byte   PX(%0000000),PX(%0001111),PX(%0000000)
+        .byte   PX(%0000000),PX(%0111111),PX(%1100000)
+        .byte   PX(%0000001),PX(%1110000),PX(%1111000)
+        .byte   PX(%0000111),PX(%1000000),PX(%1111000)
+        .byte   PX(%0000111),PX(%1000000),PX(%0000000)
+
+kNumAnimFrames = 4
+
+anim_table:
+        .addr frame1
+        .addr frame2
+        .addr frame3
+        .addr frame2
+        ASSERT_ADDRESS_TABLE_SIZE anim_table, kNumAnimFrames
+
+frame_counter:
+        .byte   0
+
 
 ;;; ============================================================
 ;;; Initialize window, unpack the date.
@@ -217,6 +286,8 @@ grafport:       .tag MGTK::GrafPort
 ;;; Input loop
 
 .proc input_loop
+        jsr     anim_frame
+
         jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -437,6 +508,40 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::MoveTo, title_label_pos
         MGTK_CALL MGTK::DrawText, text_params
         rts
+.endproc
+
+;;; ============================================================
+
+.proc anim_frame
+        lda     frame_counter
+        lsr                     ; /= 4
+        lsr                     ;
+
+        asl                     ; *= 2 - yes, this could be simplified
+        tax
+        copy16  anim_table,x, frame_params::mapbits
+
+        add16_8   #kRunPosX, run_pos, frame_params::viewloc::xcoord
+
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::PaintBits, frame_params
+
+        inc     frame_counter
+        lda     frame_counter
+        cmp     #kNumAnimFrames * 4
+        bne     :+
+        copy    #0, frame_counter
+
+:       inc     run_pos
+        lda     run_pos
+        cmp     #kRunDistance
+        bne     :+
+        copy    #0, run_pos
+
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintBits, frame_params
+
+:       rts
 .endproc
 
 ;;; ============================================================
