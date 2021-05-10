@@ -12013,10 +12013,14 @@ get_src_info:
         beq     is_dir
         lda     #$00
         beq     store
-is_dir: jsr     decrement_op_file_count
-        lda     #$FF
+is_dir: lda     #$FF
 store:  sta     is_dir_flag
         jsr     dec_file_count_and_run_copy_dialog_proc
+
+        bit     is_dir_flag
+        bpl     :+
+        jsr     decrement_op_file_count
+:
 
         ;; Copy access, file_type, aux_type, storage_type
         ldy     #src_file_info_params::storage_type - src_file_info_params
