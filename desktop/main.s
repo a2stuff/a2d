@@ -5496,24 +5496,62 @@ L6A3E:  .byte   0
         ptr := $6
         path_buf := $220
 
+        ;; Volume icon with an open window?
         jsr     find_window_for_dir_icon
-        beq     L6A80           ; found
+        beq     found_window
 
-        ;; Not in the map. Look for related windows.
-        jsr     icon_entry_name_lookup
+        ;; Not a volume icon with an open window. Is it even a volume?
+        jsr     icon_entry_lookup
+        stax    ptr
+        ldy     #IconEntry::win_type
+        lda     (ptr),y
+        and     #kIconEntryWinIdMask
+        beq     volume
 
-        ldy     #0
+        ;; --------------------------------------------------
+        ;; Icon in a folder (A=window_id)
+        jsr     get_window_path
+        stax    ptr
+        ldy     #0              ; copy to window path to path_buf
         lda     (ptr),y
         tay
-        dey
-L6A5C:  lda     (ptr),y
+:       lda     (ptr),y
         sta     path_buf,y
         dey
-        bpl     L6A5C
-        dec     path_buf
-        lda     #'/'
-        sta     path_buf+1
+        bpl     :-
 
+        ;; Strip to vol name - either end of string or next slash
+        ldx     #1
+:       inx
+        cpx     path_buf
+        beq     :+
+        lda     path_buf,x
+        cmp     #'/'
+        bne     :-
+        dex
+
+:       stx     path_buf
+        jmp     find_windows
+
+        ;; --------------------------------------------------
+        ;; Volume icon; maybe related windows?
+volume:
+        add16_8 ptr, #IconEntry::name, ptr
+
+        ;; Create "/volname"
+        ldy     #0
+        lda     (ptr),y
+        tax
+        tay
+:       lda     (ptr),y
+        sta     path_buf+1,y    ; leave room for leading '/'
+        dey
+        bpl     :-
+        copy    #'/', path_buf+1
+        inx
+        stx     path_buf
+
+find_windows:
         ldax    #path_buf
         ldy     path_buf
         jsr     find_windows_for_prefix
@@ -5521,8 +5559,10 @@ L6A5C:  lda     (ptr),y
         ldy     path_buf
         jmp     update_vol_used_free_for_found_windows
 
-        ;; Found it in the map.
-L6A80:  inx
+        ;; --------------------------------------------------
+        ;; Found an existing window for a vol icon.
+found_window:
+        inx
         txa
         pha
         jsr     update_used_free_for_vol_windows
