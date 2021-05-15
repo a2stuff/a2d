@@ -1,5 +1,5 @@
         .include "../config.inc"
-        RESOURCE_FILE "show.text.file.res"
+        .include .concat("res/", "show.text.file.res", ".", kBuildLang) ; RESOURCE_FILE
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"

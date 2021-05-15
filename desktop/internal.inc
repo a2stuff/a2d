@@ -2,7 +2,7 @@
 ;;; DeskTop Internals
 ;;; ============================================================
 
-        RESOURCE_FILE "internal.res"
+        .include .concat("res/", "internal.res", ".", kBuildLang) ; RESOURCE_FILE
 
 kDAFileType     = $F1
 kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu

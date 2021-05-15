@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        RESOURCE_FILE "init.res"
+        .include .concat("res/", "init.res", ".", kBuildLang) ; RESOURCE_FILE
 
 ;;; ============================================================
 ;;; Segment loaded into MAIN $800-$FFF

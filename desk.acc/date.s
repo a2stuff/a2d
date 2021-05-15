@@ -6,7 +6,7 @@
 ;;; ============================================================
 
         .include "../config.inc"
-        RESOURCE_FILE "date.res"
+        .include .concat("res/", "date.res", ".", kBuildLang) ; RESOURCE_FILE
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"

@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        RESOURCE_FILE "auxlc.res"
+        .include .concat("res/", "auxlc.res", ".", kBuildLang) ; RESOURCE_FILE
 
 
 .proc auxlc

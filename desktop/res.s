@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        RESOURCE_FILE "res.res"
+        .include .concat("res/", "res.res", ".", kBuildLang) ; RESOURCE_FILE
 
 ;;; ============================================================
 ;;; Segment loaded into AUX $D200-$ECFF

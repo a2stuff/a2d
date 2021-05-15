@@ -4,7 +4,7 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        RESOURCE_FILE "ovl_file_dialog.res"
+        .include .concat("res/", "ovl_file_dialog.res", ".", kBuildLang) ; RESOURCE_FILE
 
         .org OVERLAY_ADDR
 
