@@ -2,7 +2,7 @@
 .define res_string_model_ii "Apple ]["
 .define res_string_model_iiplus "Apple ][+"
 .define res_string_model_iii "Apple /// (emulation)"
-.define res_string_model_iie_original "Apple //e (original)"
+.define res_string_model_iie_original "Apple IIe (original)"
 .define res_string_model_iie_enhanced "Apple IIe (enhanced)"
 .define res_string_model_iie_card "Apple IIe Card"
 .define res_string_model_iic_original "Apple IIc"
