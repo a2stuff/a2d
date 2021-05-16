@@ -1110,7 +1110,9 @@ loop:   lda     slot
 
 check:  lda     slot
         jsr     probe_slot
-        jsr     DrawString
+        bcs     :+
+        ldax    #str_unknown
+:       jsr     DrawString
 
 next:   lsr     mask
         dec     slot
@@ -1126,7 +1128,9 @@ penmode:.byte   MGTK::notpencopy
 
 
 ;;; ============================================================
-;;; Firmware Detector: Slot # in A, returns string ptr in A,X
+;;; Firmware Detector:
+;;; Input: Slot # in A
+;;; Output: Carry set and string ptr in A,X if detected, carry clear otherwise
 ;;;
 ;;; Uses a variety of sources:
 ;;; * Technical Note: ProDOS #21: Identifying ProDOS Devices
@@ -1157,6 +1161,13 @@ penmode:.byte   MGTK::notpencopy
         cmp     #value
 .endmacro
 
+.macro RESULT value
+        lda     #<value
+        ldx     #>value
+        sec
+        rts
+.endmacro
+
 ;;; ---------------------------------------------
 ;;; Per Technical Note: Miscellaneous #8: Pascal 1.1 Firmware Protocol ID Bytes
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
@@ -1176,16 +1187,16 @@ penmode:.byte   MGTK::notpencopy
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
         COMPARE_FWB $FF, $00    ; $CnFF == $00 ?
         bne     :+
-        return16 #str_diskii
+        RESULT  str_diskii
 :
 
         COMPARE_FWB $07, $00    ; $Cn07 == $00 ?
         beq     :+
-        return16 #str_block
+        RESULT  str_block
 
 :
         jsr     populate_smartport_name
-        return16 #str_smartport
+        RESULT  str_smartport
 notpro:
 ;;; ---------------------------------------------
 ;;; Apple IIe Technical Reference Manual
@@ -1212,7 +1223,7 @@ notpro:
 .macro IF_SIGNATURE_THEN_RETURN     byte, arg
         cmp     #byte
         bne     :+
-        return16 #arg
+        RESULT  arg
 :
 .endmacro
 
@@ -1233,6 +1244,10 @@ notpro:
     IF_SIGNATURE_THEN_RETURN $80, str_80col
     IF_SIGNATURE_THEN_RETURN $90, str_network
 
+        ;; Pascal Firmware, but unknown type. Return
+        ;; "unknown" otherwise it will be detected as serial below.
+        RESULT  str_unknown
+
 notpas:
 
 ;;; ---------------------------------------------
@@ -1245,7 +1260,7 @@ notpas:
         bne     :+
         COMPARE_FWB $4C, $EA
         bne     :+
-        return16 #str_silentype
+        RESULT  str_silentype
 :
 
 ;;; Clock
@@ -1255,7 +1270,7 @@ notpas:
         bne     :+
         COMPARE_FWB $02, $28
         bne     :+
-        return16 #str_clock
+        RESULT  str_clock
 :
 
 ;;; Communications Card
@@ -1263,7 +1278,7 @@ notpas:
         bne     :+
         COMPARE_FWB $07, $38
         bne     :+
-        return16 #str_comm
+        RESULT  str_comm
 :
 
 ;;; Serial Card
@@ -1271,7 +1286,7 @@ notpas:
         bne     :+
         COMPARE_FWB $07, $18
         bne     :+
-        return16 #str_serial
+        RESULT  str_serial
 :
 
 ;;; Parallel Card
@@ -1279,26 +1294,27 @@ notpas:
         bne     :+
         COMPARE_FWB $07, $48
         bne     :+
-        return16 #str_parallel
+        RESULT  str_parallel
 :
 
 ;;; Devices without firmware
 
         jsr     detect_mockingboard
         bcc     :+
-        return16 #str_mockingboard
+        RESULT  str_mockingboard
 :
 
         jsr     detect_z80
         bcc     :+
-        return16 #str_z80
+        RESULT  str_z80
 :
 
         jsr     detect_uthernet2
         bcc     :+
-        return16 #str_uthernet2
+        RESULT  str_uthernet2
 :
-        return16 #str_unknown
+        clc
+        rts
 .endproc
 
 ;;; Detect Z80
