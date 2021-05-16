@@ -1100,7 +1100,7 @@ loop:   lda     slot
 
         ;; Check ProDOS slot bit mask
         sta     RAMRDOFF
-        lda     SLTBYT
+        lda     SLTBYT          ; TODO: Don't trust this for cards w/o firmware
         sta     RAMRDON
         and     mask
         bne     check
@@ -1188,19 +1188,26 @@ penmode:.byte   MGTK::notpencopy
         return16 #str_smartport
 notpro:
 ;;; ---------------------------------------------
-;;; Per Technical Note: Miscellaneous #8: Pascal 1.1 Firmware Protocol ID Bytes
-;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
+;;; Apple IIe Technical Reference Manual
+;;; Pascal 1.1 firmware protocol
+;;;
+;;; $Cs05       $38 (like the old Apple II Serial Interface card)
+;;; $Cs07       $18 (like the old Apple II Serial Interface card)
+;;; $Cs0B       $01 (the generic signature of new cards)
+;;; $Cs0C       $ci (the device signature)
+;;;              c = device class
+;;;              i = unique identifier
 
         COMPARE_FWB $05, $38    ; $Cn05 == $38 ?
-        bne     notpas
+        jne     notpas
 
         COMPARE_FWB $07, $18    ; $Cn07 == $18 ?
-        bne     notpas
+        jne     notpas
 
         COMPARE_FWB $0B, $01    ; $Cn0B == $01 ?
-        bne     notpas
+        jne     notpas
 
-        GET_FWB  $0C            ; $Cn0C == ....
+        GET_FWB $0C             ; $Cn0C == ....
 
 .macro IF_SIGNATURE_THEN_RETURN     byte, arg
         cmp     #byte
@@ -1209,9 +1216,22 @@ notpro:
 :
 .endmacro
 
+        ;; Specific Apple cards/built-ins
     IF_SIGNATURE_THEN_RETURN $31, str_ssc
     IF_SIGNATURE_THEN_RETURN $88, str_80col
     IF_SIGNATURE_THEN_RETURN $20, str_mouse
+
+        ;; Generic cards
+        and     #$F0            ; just device class nibble
+    IF_SIGNATURE_THEN_RETURN $10, str_printer
+    IF_SIGNATURE_THEN_RETURN $20, str_joystick
+    IF_SIGNATURE_THEN_RETURN $30, str_io
+    IF_SIGNATURE_THEN_RETURN $40, str_modem
+    IF_SIGNATURE_THEN_RETURN $50, str_audio
+    IF_SIGNATURE_THEN_RETURN $60, str_clock
+    IF_SIGNATURE_THEN_RETURN $70, str_storage
+    IF_SIGNATURE_THEN_RETURN $80, str_80col
+    IF_SIGNATURE_THEN_RETURN $90, str_network
 
 notpas:
 
@@ -1219,68 +1239,50 @@ notpas:
 ;;; Based on ProDOS BASIC Programming Examples
 
 ;;; Silentype
-        COMPARE_FWB 23, 201
+        COMPARE_FWB $17, $C9
         bne     :+
-        COMPARE_FWB 55, 207
+        COMPARE_FWB $37, $CF
         bne     :+
-        COMPARE_FWB 76, 234
+        COMPARE_FWB $4C, $EA
         bne     :+
         return16 #str_silentype
 :
 
 ;;; Clock
-        COMPARE_FWB 0, 8
+        COMPARE_FWB $00, $08
         bne     :+
-        COMPARE_FWB 1, 120
+        COMPARE_FWB $01, $78
         bne     :+
-        COMPARE_FWB 2, 40
+        COMPARE_FWB $02, $28
         bne     :+
         return16 #str_clock
 :
 
 ;;; Communications Card
-        COMPARE_FWB 5, 24
+        COMPARE_FWB $05, $18
         bne     :+
-        COMPARE_FWB 7, 56
+        COMPARE_FWB $07, $38
         bne     :+
         return16 #str_comm
 :
 
 ;;; Serial Card
-        COMPARE_FWB 5, 56
+        COMPARE_FWB $05, $38
         bne     :+
-        COMPARE_FWB 7, 24
+        COMPARE_FWB $07, $18
         bne     :+
         return16 #str_serial
 :
 
 ;;; Parallel Card
-        COMPARE_FWB 5, 72
+        COMPARE_FWB $05, $48
         bne     :+
-        COMPARE_FWB 7, 72
+        COMPARE_FWB $07, $48
         bne     :+
         return16 #str_parallel
 :
 
-;;; Generic Devices
-        COMPARE_FWB 11, 1
-        bne     :+
-        GET_FWB  12
-        lsr
-        lsr
-        lsr
-        lsr
-
-        IF_SIGNATURE_THEN_RETURN 0, str_used
-        IF_SIGNATURE_THEN_RETURN 1, str_printer
-        IF_SIGNATURE_THEN_RETURN 2, str_joystick
-        IF_SIGNATURE_THEN_RETURN 3, str_io
-        IF_SIGNATURE_THEN_RETURN 4, str_modem
-        IF_SIGNATURE_THEN_RETURN 5, str_audio
-        IF_SIGNATURE_THEN_RETURN 6, str_clock
-        IF_SIGNATURE_THEN_RETURN 7, str_storage
-        IF_SIGNATURE_THEN_RETURN 8, str_80col
-        IF_SIGNATURE_THEN_RETURN 9, str_network
+;;; Devices without firmware
 
         jsr     detect_mockingboard
         bcc     :+
