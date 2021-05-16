@@ -1322,7 +1322,7 @@ notpas:
 
 .proc detect_z80
         ;; Convert $Cn to $En, update Z80 code
-        lda     $06
+        lda     $07             ; $Cn
         ora     #$E0
         sta     z80_routine::patch
 
