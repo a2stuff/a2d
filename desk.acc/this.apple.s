@@ -1098,23 +1098,39 @@ loop:   lda     slot
         sta     str_slot_n + kStrSlotNOffset
         param_call DrawString, str_slot_n
 
+        ;; Possibilities:
+        ;; * ProDOS thinks there's a card - may be firmware or no firmware
+        ;; * ProDOS thinks there's no card, because it doesn't have firmware
+        ;; * ProDOS thinks there's no card, because it's empty
+
         ;; Check ProDOS slot bit mask
         sta     RAMRDOFF
-        lda     SLTBYT          ; TODO: Don't trust this for cards w/o firmware
+        lda     SLTBYT
         sta     RAMRDON
         and     mask
-        bne     check
+        beq     pro_no
 
-        param_call DrawString, str_empty
-        jmp     next
+        ;; ProDOS thinks there's a card...
+        lda     slot
+        jsr     probe_slot      ; check for matching firmware
+        bcs     draw
+        lda     slot            ; check non-firmware cases in case of
+        jsr     probe_slot_no_firmware ; false-positive (e.g. emulator)
+        bcs     draw
 
-check:  lda     slot
-        jsr     probe_slot
-        bcs     :+
         ldax    #str_unknown
-:       jsr     DrawString
+        bne     draw            ; always
 
-next:   lsr     mask
+pro_no:
+        lda     slot
+        jsr     probe_slot_no_firmware
+        bcs     draw
+
+        ldax    #str_empty
+
+draw:   jsr     DrawString
+
+        lsr     mask
         dec     slot
         bne     loop
 
@@ -1143,8 +1159,7 @@ penmode:.byte   MGTK::notpencopy
         ptr     := $6
 
         ;; Point ptr at $Cn00
-        clc
-        adc     #$C0
+        ora     #$C0
         sta     ptr+1
         lda     #0
         sta     ptr
@@ -1297,7 +1312,24 @@ notpas:
         RESULT  str_parallel
 :
 
-;;; Devices without firmware
+        clc
+        rts
+.endproc
+
+;;; ============================================================
+;;; Check for cards without firmware.
+;;; Input: Slot # in A
+;;; Output: Carry set and string ptr in A,X if detected, carry clear otherwise
+
+.proc probe_slot_no_firmware
+        ptr     := $6
+
+        ;; Point ptr at $Cn00
+        ora     #$C0
+        sta     ptr+1
+        lda     #0
+        sta     ptr
+
 
         jsr     detect_mockingboard
         bcc     :+
