@@ -498,6 +498,33 @@ memory:.word    0
 
 ;;; ============================================================
 
+str_cpu_prefix: PASCAL_STRING res_string_cpu_prefix
+str_6502:       PASCAL_STRING res_string_cpu_type_6502
+str_65C02:      PASCAL_STRING res_string_cpu_type_65C02
+str_65802:      PASCAL_STRING res_string_cpu_type_65802
+str_65816:      PASCAL_STRING res_string_cpu_type_65816
+
+;;; ============================================================
+
+model_str_ptr:        .addr   0
+model_pix_ptr:        .addr   0
+
+        DEFINE_POINT line1, 0, 37
+        DEFINE_POINT line2, kDAWidth, 37
+
+        DEFINE_POINT pos_slot1, 45, 50
+        DEFINE_POINT pos_slot2, 45, 61
+        DEFINE_POINT pos_slot3, 45, 72
+        DEFINE_POINT pos_slot4, 45, 83
+        DEFINE_POINT pos_slot5, 45, 94
+        DEFINE_POINT pos_slot6, 45, 105
+        DEFINE_POINT pos_slot7, 45, 116
+
+slot_pos_table:
+        .addr 0, pos_slot1, pos_slot2, pos_slot3, pos_slot4, pos_slot5, pos_slot6, pos_slot7
+
+;;; ============================================================
+
         PAD_TO $0FFD
 .proc z80_routine
         .assert * = $0FFD, error, "Must be at $0FFD / FFFDH"
@@ -540,33 +567,6 @@ str_uthernet2:  PASCAL_STRING res_string_card_type_uthernet2
 str_unknown:    PASCAL_STRING res_string_unknown
 str_empty:      PASCAL_STRING res_string_empty
 str_none:       PASCAL_STRING res_string_none
-
-;;; ============================================================
-
-str_cpu_prefix: PASCAL_STRING res_string_cpu_prefix
-str_6502:       PASCAL_STRING res_string_cpu_type_6502
-str_65C02:      PASCAL_STRING res_string_cpu_type_65C02
-str_65802:      PASCAL_STRING res_string_cpu_type_65802
-str_65816:      PASCAL_STRING res_string_cpu_type_65816
-
-;;; ============================================================
-
-model_str_ptr:        .addr   0
-model_pix_ptr:        .addr   0
-
-        DEFINE_POINT line1, 0, 37
-        DEFINE_POINT line2, kDAWidth, 37
-
-        DEFINE_POINT pos_slot1, 45, 50
-        DEFINE_POINT pos_slot2, 45, 61
-        DEFINE_POINT pos_slot3, 45, 72
-        DEFINE_POINT pos_slot4, 45, 83
-        DEFINE_POINT pos_slot5, 45, 94
-        DEFINE_POINT pos_slot6, 45, 105
-        DEFINE_POINT pos_slot7, 45, 116
-
-slot_pos_table:
-        .addr 0, pos_slot1, pos_slot2, pos_slot3, pos_slot4, pos_slot5, pos_slot6, pos_slot7
 
 ;;; ============================================================
 
