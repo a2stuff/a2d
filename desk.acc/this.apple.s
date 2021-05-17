@@ -1380,8 +1380,12 @@ notpas:
         MR := $C084
 
         lda     $07             ; $Cn
-        and     #$0F
-        tax                     ; Slot in X
+        and     #$0F            ; $0n
+        asl
+        asl
+        asl
+        asl                     ; $n0
+        tax                     ; Slot in high nibble of X
 
         ;; Send the RESET command
         lda     #$80
