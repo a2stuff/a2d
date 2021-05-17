@@ -1142,6 +1142,18 @@ mask:   .byte   0
 penmode:.byte   MGTK::notpencopy
 .endproc
 
+;;; ============================================================
+;;; Point $06/$07 at $Cn00
+;;; Input: Slot in A
+.proc set_slot_ptr
+        ptr     := $6
+
+        ora     #$C0
+        sta     ptr+1
+        lda     #0
+        sta     ptr
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Firmware Detector:
@@ -1159,10 +1171,7 @@ penmode:.byte   MGTK::notpencopy
         ptr     := $6
 
         ;; Point ptr at $Cn00
-        ora     #$C0
-        sta     ptr+1
-        lda     #0
-        sta     ptr
+        jsr     set_slot_ptr
 
         ;; Get Firmware Byte
 .macro GET_FWB offset
@@ -1325,11 +1334,7 @@ notpas:
         ptr     := $6
 
         ;; Point ptr at $Cn00
-        ora     #$C0
-        sta     ptr+1
-        lda     #0
-        sta     ptr
-
+        jsr     set_slot_ptr
 
         jsr     detect_mockingboard
         bcc     :+
@@ -1594,14 +1599,13 @@ done:   rts
 .proc check_slinky_memory
         slot_ptr := $06
 
-        copy    #0, slot_ptr
         lda     #7
         sta     slot
 
         ;; Point at $Cn00, look for SmartPort signature bytes
 loop:   lda     slot
-        ora     #$C0
-        sta     slot_ptr+1
+        jsr     set_slot_ptr
+
         ldx     #3
 :       ldy     sig_offsets,x
         lda     (slot_ptr),y
