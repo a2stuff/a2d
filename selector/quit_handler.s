@@ -4,7 +4,7 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        .include .concat("res/", "quit_handler.res", ".", kBuildLang) ; RESOURCE_FILE
+        RESOURCE_FILE "quit_handler.res"
 
         .org $1000
 

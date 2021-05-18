@@ -4,7 +4,7 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        .include .concat("res/", "alert_dialog.res", ".", kBuildLang) ; RESOURCE_FILE
+        RESOURCE_FILE "alert_dialog.res"
 
         .org $D000
 

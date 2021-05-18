@@ -5,7 +5,7 @@
 ;;; ============================================================
 
         .include "../config.inc"
-        .include .concat("res/", "puzzle.res", ".", kBuildLang) ; RESOURCE_FILE
+        RESOURCE_FILE "puzzle.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"

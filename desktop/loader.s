@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        .include .concat("res/", "loader.res", ".", kBuildLang) ; RESOURCE_FILE
+        RESOURCE_FILE "loader.res"
 
 ;;; ============================================================
 ;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)

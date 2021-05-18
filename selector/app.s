@@ -4,7 +4,7 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        .include .concat("res/", "app.res", ".", kBuildLang) ; RESOURCE_FILE
+        RESOURCE_FILE "app.res"
 
         .org $4000
 

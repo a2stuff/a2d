@@ -23,9 +23,4 @@ kBuildDD = 16
 ;;; Localization - applies language suffix to filename
 
         .define kBuildLang "en"
-
-;;; Broken by cc65 b9a3c7888822732a0de92741cfe1a3e1b6bb272f
-;;; https://github.com/cc65/cc65/issues/1503
-;;; .macro RESOURCE_FILE basename
-;;;         .include .concat("res/", basename, ".", kBuildLang)
-;;; .endmacro
+        .define RESOURCE_FILE(basename) .include .concat("res/", basename, ".", kBuildLang)

@@ -14,7 +14,7 @@
 ;;; ============================================================
 
         .include "../config.inc"
-        .include .concat("res/", "system.speed.res", ".", kBuildLang) ; RESOURCE_FILE
+        RESOURCE_FILE "system.speed.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"

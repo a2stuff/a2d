@@ -10,7 +10,7 @@
 ;;; ============================================================
 
         .include "../config.inc"
-        .include .concat("res/", "control.panel.res", ".", kBuildLang) ; RESOURCE_FILE
+        RESOURCE_FILE "control.panel.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
