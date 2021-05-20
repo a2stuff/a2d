@@ -784,7 +784,9 @@ process_volume:
         tax
         pla
 
-        pha
+        ;; A = unit number, X = (nothing), Y = device_index
+
+        pha                     ; save unit number on the stack
         lda     cvi_result
         cmp     #ERR_DEVICE_NOT_CONNECTED
         bne     :+
@@ -793,7 +795,7 @@ process_volume:
         ldy     device_index    ; BUG? Is there a missing pla instruction in this path?
         lda     DEVLST,y
         and     #$0F            ; BUG: Do not trust low nibble of unit_num
-        beq     select_template
+        beq     select_template ; "0 = Disk II" originally
         ldx     device_index
         jsr     remove_device
         jmp     next
@@ -805,11 +807,7 @@ process_volume:
 
         ;; This section populates device_name_table -
         ;; it determines which device type string to use, and
-        ;; fills in slot and drive as appropriate.
-        ;;
-        ;; This is for a "Check" menu present in MouseDesk 1.1
-        ;; but which was removed in MouseDesk 2.0, which allowed
-        ;; refreshing individual windows. It is also used in the
+        ;; fills in slot and drive as appropriate. Used in the
         ;; Format/Erase disk dialog.
 
 .proc select_template
@@ -820,6 +818,7 @@ process_volume:
         sta     device_type
 
         ;; TODO: For SmartPort devices, get actual device name.
+        ;; https://github.com/a2stuff/a2d/issues/325
 
         ;; Copy template to device name
         asl                     ; * 2
