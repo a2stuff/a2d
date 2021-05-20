@@ -2940,7 +2940,7 @@ done:   jmp     clear_updates_and_redraw_desktop_icons
         ldx     #0
         ldy     #0
 loop:   lda     selected_icon_list,x
-        cmp     #kTrashIconNum
+        cmp     trash_icon_num
         beq     :+
         sta     selected_vol_icon_list,y
         iny
@@ -10695,7 +10695,7 @@ do_unlock:
 
 .proc do_drop
         lda     drag_drop_params::result
-        cmp     #kTrashIconNum
+        cmp     trash_icon_num
         bne     :+
         lda     #$80
         bne     set           ; always
@@ -10859,7 +10859,7 @@ iterate_selection:
 loop:   jsr     get_window_path_ptr
         ldx     icon_count
         lda     selected_icon_list,x
-        cmp     #kTrashIconNum
+        cmp     trash_icon_num
         beq     next_icon
         jsr     icon_entry_name_lookup
         jsr     join_paths
@@ -11192,7 +11192,7 @@ loop:   ldx     get_info_dialog_params::index
 vol_icon:
         ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
-        cmp     #kTrashIconNum
+        cmp     trash_icon_num
         bne     :+
         jmp     next
 :       jsr     icon_entry_name_lookup
@@ -11470,7 +11470,7 @@ loop:   lda     index
 
 :       ldx     index
         lda     selected_icon_list,x
-        cmp     #kTrashIconNum  ; Skip trash
+        cmp     trash_icon_num  ; Skip trash
         bne     :+
         inc     index
         jmp     loop

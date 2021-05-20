@@ -29,9 +29,6 @@ kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu
 
 kMaxDeskAccCount        = 12
 
-;;; icon #1 is always Trash (BUG: should use trash_icon_num)
-kTrashIconNum   = 1
-
 ;;; Maximum number of volumes displayed/tracked. This is two per slot,
 ;;; except S3,D2 is assumed to be /RAM which is disconnected.
 kMaxVolumes     = 13

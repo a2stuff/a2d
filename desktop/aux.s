@@ -1200,7 +1200,7 @@ L98F2:  lda     highlight_count,x
         stax    $06
         ldy     #IconEntry::id
         lda     ($06),y
-        cmp     #kTrashIconNum
+        cmp     trash_icon_num
         bne     :+
         ldx     #$80
         stx     flag
@@ -1705,7 +1705,7 @@ find_icon:
         ;; Over an icon
         ptr := $06
         sta     icon_num
-        cmp     #kTrashIconNum
+        cmp     trash_icon_num
         beq     :+
         asl     a
         tax
