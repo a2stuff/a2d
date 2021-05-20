@@ -82,10 +82,10 @@ start:  lda     ROMIN2
         ;; stacks.
         ;; See the Apple IIe Technical Reference Manual, pp. 153-154
         lda     #$40
-        sta     RAMWRTON        ; BUG: Should be ALTZPON ???
+        sta     ALTZPON
         sta     $0100           ; Main stack pointer, in Aux ZP
         sta     $0101           ; Aux stack pointer, in Aux ZP
-        sta     RAMWRTOFF       ; BUG: Should be ALTZPOFF ???
+        sta     ALTZPOFF
 
         lda     #kSplashVtab
         jsr     VTABZ
