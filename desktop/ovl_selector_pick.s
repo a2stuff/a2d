@@ -1184,12 +1184,7 @@ loop:   lda     index
         ;; Copy entry (in file buffer) down by one
         jsr     get_file_entry_addr
         stax    ptr1
-        lda     ptr1             ; BUG: Missing clc???
-        adc     #<kSelectorListNameLength
-        sta     ptr2
-        lda     ptr1+1
-        adc     #>kSelectorListNameLength
-        sta     ptr2+1
+        add16   ptr1, #kSelectorListNameLength, ptr2
 
         ldy     #0
         lda     (ptr2),y
@@ -1208,12 +1203,7 @@ loop:   lda     index
         lda     index
         jsr     get_resource_entry_addr
         stax    ptr1
-        lda     ptr1             ; BUG: Missing clc???
-        adc     #<kSelectorListNameLength
-        sta     ptr2
-        lda     ptr1+1
-        adc     #>kSelectorListNameLength
-        sta     ptr2+1
+        add16   ptr1, #kSelectorListNameLength, ptr2
 
         ldy     #0
         lda     (ptr2),y
@@ -1232,12 +1222,7 @@ loop:   lda     index
         lda     index
         jsr     get_file_path_addr
         stax    ptr1
-        lda     ptr1             ; BUG: Missing clc???
-        adc     #<kSelectorListPathLength
-        sta     ptr2
-        lda     ptr1+1
-        adc     #>kSelectorListPathLength
-        sta     ptr2+1
+        add16   ptr1, #kSelectorListPathLength, ptr2
 
         ldy     #0
         lda     (ptr2),y
@@ -1251,12 +1236,7 @@ loop:   lda     index
         lda     index
         jsr     get_resource_path_addr
         stax    ptr1
-        lda     ptr1             ; BUG: Missing clc???
-        adc     #<kSelectorListPathLength
-        sta     ptr2
-        lda     ptr1+1
-        adc     #>kSelectorListPathLength
-        sta     ptr2+1
+        add16   ptr1, #kSelectorListPathLength, ptr2
 
         ldy     #0
         lda     (ptr2),y
@@ -1297,12 +1277,7 @@ L9B84:  lda     index
         ;; Copy entry (in file buffer) down by one
         jsr     get_file_entry_addr
         stax    ptr1
-        lda     ptr1             ; BUG: Missing clc???
-        adc     #<kSelectorListNameLength
-        sta     ptr2
-        lda     ptr1+1
-        adc     #>kSelectorListNameLength
-        sta     ptr2+1
+        add16   ptr1, #kSelectorListNameLength, ptr2
 
         ldy     #0
         lda     (ptr2),y
@@ -1316,12 +1291,7 @@ L9B84:  lda     index
         lda     index
         jsr     get_file_path_addr
         stax    ptr1
-        lda     ptr1             ; BUG: Missing clc???
-        adc     #<kSelectorListPathLength
-        sta     ptr2
-        lda     ptr1+1
-        adc     #>kSelectorListPathLength
-        sta     ptr2+1
+        add16   ptr1, #kSelectorListPathLength, ptr2
 
         ldy     #0
         lda     (ptr2),y
@@ -1514,7 +1484,7 @@ read:   lda     open_params2::ref_num
         beq     write
         lda     #kWarningMsgInsertSystemDisk
         jsr     show_warning_dialog
-        beq     read_file       ; BUG: Should be `write_file`
+        beq     write_file
         return  #$FF
 
 write:  lda     open_params2::ref_num

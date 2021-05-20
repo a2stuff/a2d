@@ -45,10 +45,10 @@ start:
         ;; of the stacks.
         ;; See the Apple IIe Technical Reference Manual, pp. 153-154
         lda     #$41
-        sta     RAMWRTON        ; BUG: Should be ALTZPON ???
+        sta     ALTZPON
         sta     $0100           ; Main stack pointer, in Aux ZP
         sta     $0101           ; Aux stack pointer, in Aux ZP
-        sta     RAMWRTOFF       ; BUG: Should be ALTZPOFF ???
+        sta     ALTZPOFF
 
         ;; Free up system bitmap
         ldx     #BITMAP_SIZE-3
