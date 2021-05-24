@@ -16256,12 +16256,16 @@ save_windows := save_restore_windows::save
         bcc     iigs
 
         ;; If a IIe, maybe use shift key mod
-        ldx     ROMIN2
-        lda     ZIDBYTE
-        ldx     LCBANK1
-        ldx     LCBANK1
-        cmp     #0              ; ZIDBYTE = $00 == IIc/IIc+
+        lda     ROMIN2
+        ldx     ZIDBYTE         ; $00 = IIc/IIc+
+        ldy     IDBYTELASER128  ; $AC = Laser 128
+        lda     LCBANK1
+        lda     LCBANK1
+        lda     #0
+        cpx     #0              ; ZIDBYTE = $00 == IIc/IIc+
         beq     :+
+        cpy     #$AC            ; IDBYTELASER128 = $AC = Laser 128
+        beq     :+              ; On Laser, BUTN2 set when mouse button clicked
 
         ;; It's a IIe, compare shift key state
         lda     pb2_initial_state ; if shift key mod installed, %1xxxxxxx
