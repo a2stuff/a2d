@@ -543,7 +543,7 @@ slot_pos_table:
 str_diskii:     PASCAL_STRING res_string_card_type_diskii
 str_block:      PASCAL_STRING res_string_card_type_block
 kStrSmartportReserve = .strlen(res_string_card_type_smartport) + (8*16 + 7*2) ; names + ", " seps
-kStrSmartportOffset = .strlen(res_string_card_type_smartport) + 1
+kStrSmartportLength = .strlen(res_string_card_type_smartport)
 str_smartport:  PASCAL_STRING res_string_card_type_smartport, kStrSmartportReserve
 str_ssc:        PASCAL_STRING res_string_card_type_ssc
 str_80col:      PASCAL_STRING res_string_card_type_80col
@@ -1729,7 +1729,7 @@ status_code:    .byte   3       ; Return Device Information Block (DIB)
 
 start:
         copy    #$80, empty_flag
-        copy    #kStrSmartportOffset, str_smartport
+        copy    #kStrSmartportLength, str_smartport
 
         ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
         ldy     #$FF
@@ -1801,11 +1801,11 @@ done:
         bit     empty_flag
         bmi     :+
         lda     #','
-        sta     str_smartport,x
         inx
+        sta     str_smartport,x
         lda     #' '
-        sta     str_smartport,x
         inx
+        sta     str_smartport,x
 :
 .endscope
 
@@ -1818,17 +1818,17 @@ done:
         ;; Seen in wDrive
         ldy     #0
 :       lda     str_unknown+1,y
+        inx
         sta     str_smartport,x
         iny
-        inx
         cpy     str_unknown
         bne     :-
     ELSE
         ldy     #0
 :       lda     dib_buffer::Device_Name,y
+        inx
         sta     str_smartport,x
         iny
-        inx
         cpy     dib_buffer::ID_String_Length
         bne     :-
     END_IF
@@ -1850,12 +1850,11 @@ finish:
         ldx     str_smartport
         ldy     #0
 :       lda     str_none+1,y
+        inx
         sta     str_smartport,x
         iny
-        inx
         cpy     str_none
         bne     :-
-        dex
         stx     str_smartport
 
 exit:   rts
