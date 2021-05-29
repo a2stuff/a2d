@@ -6,6 +6,15 @@ Project Page: https://github.com/a2stuff/a2d
 
 ## 1.2 Alpha
 
+### General Enhancements
+
+* Localizations into these languages: ([#327](https://github.com/a2stuff/a2d/issues/327))
+    * English
+    * French
+    * Italian
+    * Spanish
+    * German
+
 ### DeskTop Enhancements
 
 * Progress bar shown while loading, and when copying to RAM disk. ([#330](https://github.com/a2stuff/a2d/issues/330))
