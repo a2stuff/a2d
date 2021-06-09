@@ -315,6 +315,20 @@ op:     lda     SELF_MODIFIED
 .endproc
 
 ;;; ============================================================
+;;; Copy current GrafPort MapInfo into target buffer
+;;; Inputs: A,X = mapinfo address
+;;; Assert: Main is banked in
+
+.proc GetPortBits
+        sta     RAMRDON
+        sta     RAMWRTON
+        jsr     aux::GetPortBits
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        rts
+.endproc
+
+;;; ============================================================
 ;;; Yield from a nested event loop, for periodic tasks.
 ;;; Assert: Aux is banked in
 

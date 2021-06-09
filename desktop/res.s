@@ -345,7 +345,7 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
+        DEFINE_POINT viewloc, aux::kPromptDialogLeft, aux::kPromptDialogTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
@@ -976,6 +976,9 @@ icon_param:  .byte   0
         ;; Used for all sorts of temporary work
         ;; (follows icon_param for IconTK::IconInRect call)
         DEFINE_RECT tmp_rect, 0, 0, 0, 0
+
+tmp_mapinfo:
+        .tag    MGTK::MapInfo
 
 saved_stack:
         .byte   0

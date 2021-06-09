@@ -14068,7 +14068,7 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawString, path_buf0
+        param_call draw_dialog_path, path_buf0
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$05
         lda     (ptr),y
@@ -14079,7 +14079,7 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_dest_file_pos
-        param_call DrawString, path_buf1
+        param_call draw_dialog_path, path_buf1
         param_call MGTK_RELAY, MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
         rts
@@ -14184,7 +14184,7 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawString, path_buf0
+        param_call draw_dialog_path, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
         rts
@@ -14365,7 +14365,7 @@ do3:    ldy     #1
         stx     $06
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawString, path_buf0
+        param_call draw_dialog_path, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
         param_call DrawString, str_file_count
         rts
@@ -14663,8 +14663,10 @@ do3:    ldy     #1
         sta     $06+1
         stx     $06
         jsr     copy_name_to_buf0
+
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawString, path_buf0
+        param_call draw_dialog_path, path_buf0
+
         MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
         param_call DrawString, str_file_count
         rts
@@ -14748,7 +14750,7 @@ do3:    ldy     #1
         stx     $06
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawString, path_buf0
+        param_call draw_dialog_path, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
         param_call DrawString, str_file_count
         rts
@@ -15091,6 +15093,23 @@ skip:   ldx     #0
         ldx     dialog_label_pos
         copy    #kDialogLabelDefaultX,dialog_label_pos::xcoord ; restore original x coord
         rts
+.endproc
+
+;;; ============================================================
+
+;;; Set up clipping to draw a path (long string) in a dialog
+;;; without intruding into the border.
+;;; Inputs: A,X = string address
+.proc draw_dialog_path
+        stax    string
+        param_call GetPortBits, tmp_mapinfo
+        MGTK_RELAY_CALL MGTK::SetPortBits, aux::prompt_dialog_labels_mapinfo
+        ldax    string
+        jsr     DrawString
+        MGTK_RELAY_CALL MGTK::SetPortBits, tmp_mapinfo
+        rts
+
+string: .addr   0
 .endproc
 
 ;;; ============================================================
