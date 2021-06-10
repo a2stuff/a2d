@@ -42,7 +42,7 @@
 .define res_string_about_text_line2 "Copyright Apple Computer Inc., 1986"
 .define res_string_about_text_line3 "Copyright Version Soft, 1985 - 1986"
 .define res_string_about_text_line4 "Alle Rechte vorbehalten"
-.define res_string_about_text_line5 "Authoren: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
+.define res_string_about_text_line5 "Autoren: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais und Luc Barthelet"
 .define res_string_about_text_line7 "Dank an: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
 .define res_string_copy_dialog_title "Kopieren..."
