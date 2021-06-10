@@ -1,6 +1,6 @@
 # Apple II DeskTop
 
-[![Build Status](https://travis-ci.org/a2stuff/a2d.svg?branch=main)](https://travis-ci.org/a2stuff/a2d)
+[![Build Status](https://travis-ci.com/a2stuff/a2d.svg?branch=main)](https://travis-ci.com/a2stuff/a2d)
 
 Disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk), a "Finder"-like GUI application for 8-bit Apples and clones with 128k of memory, utilizing double hi-res monochrome graphics (560x192), an optional mouse, and the ProDOS 8 operating system.
 
@@ -39,7 +39,7 @@ Additional help is welcome! See the guide for [Contributing](CONTRIBUTING.md).
 
 The [cc65](http://cc65.github.io/cc65/) tool chain is used; source files target the ca65 macro assembler. Cross-development on modern systems is assumed. (Sorry, Merlin purists! We still love you.) See the [Coding Style](docs/Coding_Style.md) for more.
 
-See [Building And Running](docs/Building_And_Running.md) instructions. 
+See [Building And Running](docs/Building_And_Running.md) instructions.
 
 ## Code of Conduct
 
