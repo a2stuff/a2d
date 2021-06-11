@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+require v5.10;
+
 # Process TARGETS file:
 #  targets.pl < TARGETS            -- file,path
 #  targets.pl targets < TARGETS    -- file

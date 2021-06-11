@@ -6,6 +6,8 @@
 # stats.pl raw < source.s        -- list $xxxx usage
 # stats.pl unrefed < source.s    -- list Lxxxx symbols with no references
 
+require v5.10;
+
 use strict;
 use warnings;
 
