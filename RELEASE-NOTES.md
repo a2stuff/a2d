@@ -73,6 +73,8 @@ Project Page: https://github.com/a2stuff/a2d
     * A joystick/paddle calibration tool. ([#72](https://github.com/a2stuff/a2d/issues/72))
   * **System Speed**
     * Enable/disable built-in and some popular add-on system accelerators. ([#26](https://github.com/a2stuff/a2d/issues/26))
+  * **Startup**
+    * Toggle startup options. ([#476](https://github.com/a2stuff/a2d/issues/476))
 * **This Apple**
   * Gives details about the computer, expanded memory, and what's in each slot. ([#29](https://github.com/a2stuff/a2d/issues/29))
 * **Run Basic Here**

@@ -1,0 +1,3 @@
+.define res_string_window_title "Options de d{marrage"
+.define res_string_label_ramcard "Copier sur carte RAM (le cas {ch{ant)"
+.define res_string_label_selector "S{lecteur d'ex{cution (le cas {ch{ant)"

@@ -25,6 +25,8 @@
 ;;;          |             |
 ;;;          | Code        |
 ;;;   $2000  +-------------+
+;;;          | Settings    |
+;;;   $1F80  +-------------+
 ;;;          |.(unused)....|
 ;;;   $1E00  +-------------+
 ;;;          |             |
@@ -54,6 +56,8 @@ selector_buffer := $1600        ; Room for kSelectorListBufSize
 copy_buffer     := $4000
 kCopyBufferSize = MLI - copy_buffer
 
+SETTINGS        := $1F80
+
 ;;; ============================================================
 
 kShortcutMonitor = res_char_monitor_shortcut
@@ -79,13 +83,27 @@ kShortcutMonitor = res_char_monitor_shortcut
 ;;; First few bytes of file get updated by this and other
 ;;; executables, so this header format should not change.
 
-        jmp     copy_desktop_to_ramcard
+        jmp     start
 
+        ASSERT_ADDRESS PRODOS_SYS_START + kLauncherDateOffset
 header_date:   .word   0               ; written into file by Date DA
+
 header_orig_prefix:
         .res    64, 0           ; written into file with original path
 
         kWriteBackSize = * - PRODOS_SYS_START
+
+
+;;; ============================================================
+
+start:
+        jsr     load_settings
+        jmp     copy_desktop_to_ramcard
+
+;;; ============================================================
+
+        .include "../lib/load_settings.s"
+        DEFINEPROC_LOAD_SETTINGS src_io_buffer, copy_buffer
 
 ;;; ============================================================
 ;;;
@@ -930,8 +948,13 @@ match:  sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
         ldx     #0
         jsr     set_copied_to_ramcard_flag
 
+        ;; Skip RAMCard install unless flag set
+        bit     SETTINGS + DeskTopSettings::startup_ramcard
+        bmi     :+
+        jmp     did_not_copy
+
         ;; Skip RAMCard install if button is down
-        lda     BUTN0
+:       lda     BUTN0
         ora     BUTN1
         bpl     search_devices
         jmp     did_not_copy
@@ -2010,9 +2033,14 @@ str_desktop2:
 
 
 start:  MLI_CALL CLOSE, close_everything_params
+
+        bit     SETTINGS + DeskTopSettings::startup_selector
+        bpl     :+
+
         MLI_CALL OPEN, open_selector_params
         beq     selector
-        MLI_CALL OPEN, open_desktop2_params
+
+:       MLI_CALL OPEN, open_desktop2_params
         beq     desktop2
 
         brk                     ; just crash

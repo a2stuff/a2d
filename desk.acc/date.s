@@ -34,7 +34,7 @@ filename:
         PASCAL_STRING kFilenameLauncher
 
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_SET_MARK_PARAMS set_mark_params, 3
+        DEFINE_SET_MARK_PARAMS set_mark_params, kLauncherDateOffset
         DEFINE_WRITE_PARAMS write_params, write_buffer, sizeof_write_buffer
         DEFINE_CLOSE_PARAMS close_params
 
