@@ -10,6 +10,7 @@
 #  target.name         target/dir/path
 #  target.name         target/dir/path
 
+use v5.10;
 use strict;
 use warnings;
 

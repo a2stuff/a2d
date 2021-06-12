@@ -3433,6 +3433,8 @@ special_menu:
         ;; Rects
         kPromptDialogWidth = 400
         kPromptDialogHeight = 107
+        kPromptDialogLeft = (kScreenWidth - kPromptDialogWidth) / 2
+        kPromptDialogTop  = (kScreenHeight - kPromptDialogHeight) / 2
 
         DEFINE_RECT_INSET confirm_dialog_outer_rect, 4, 2, kPromptDialogWidth, kPromptDialogHeight
         DEFINE_RECT_INSET confirm_dialog_inner_rect, 5, 3, kPromptDialogWidth, kPromptDialogHeight
@@ -3460,7 +3462,22 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
 ;;; ============================================================
 ;;; Prompt dialog resources
 
-        DEFINE_RECT clear_dialog_labels_rect, 39, 25, 380, kPromptDialogHeight-20
+        kPromptDialogInsetLeft   = 39
+        kPromptDialogInsetTop    = 25
+        kPromptDialogInsetRight  = 20
+        kPromptDialogInsetBottom = 20
+        DEFINE_RECT clear_dialog_labels_rect, kPromptDialogInsetLeft, kPromptDialogInsetTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogHeight-kPromptDialogInsetBottom
+
+        ;; Offset cliprect for drawing labels within dialog
+        ;; Coordinates are unchanged, but clipping rect is set
+        ;; to `clear_dialog_labels_rect` so labels don't overflow.
+.params prompt_dialog_labels_mapinfo
+        DEFINE_POINT viewloc, kPromptDialogLeft+kPromptDialogInsetLeft, kPromptDialogTop+kPromptDialogInsetTop
+        .addr   MGTK::screen_mapbits
+        .byte   MGTK::screen_mapwidth
+        .byte   0
+        DEFINE_RECT maprect, kPromptDialogInsetLeft, kPromptDialogInsetTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogHeight-kPromptDialogInsetBottom
+.endparams
 
         DEFINE_RECT prompt_rect, 40, kDialogLabelRow5+1, 360, kDialogLabelRow6
         DEFINE_POINT current_target_file_pos, 75, kDialogLabelRow2
@@ -4053,6 +4070,27 @@ finish: pha
 
 .endproc
         show_alert_dialog := Alert::start
+
+;;; ============================================================
+;;; Copy current GrafPort MapInfo into target buffer
+;;; Inputs: A,X = mapinfo address
+
+.proc GetPortBits
+        port_ptr := $06
+
+        stax    dest_ptr
+
+        MGTK_CALL MGTK::GetPort, port_ptr
+
+        ldy     #.sizeof(MGTK::MapInfo)
+:       lda     (port_ptr),y
+        dest_ptr := *+1
+        sta     SELF_MODIFIED,y
+        dey
+        bpl     :-
+
+        rts
+.endproc
 
 ;;; ============================================================
 

@@ -203,7 +203,7 @@ L415B:  sta     active_window_id
         jsr     get_port2
         jsr     draw_window_header
         lda     active_window_id
-        jsr     copy_window_portbits
+        jsr     save_window_portbits
         jsr     OverwriteWindowPort
 
         winfo_ptr := $06
@@ -286,7 +286,7 @@ done_icons:
         ;; Finish up
 done:   copy    #0, draw_window_header_flag
         lda     active_window_id
-        jsr     assign_window_portbits
+        jsr     restore_window_portbits
         jmp     reset_main_grafport
 
 index:  .byte   0
@@ -4547,7 +4547,7 @@ L60D5:  jsr     push_pointers
 :       copy    active_window_id, event_params
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         lda     active_window_id
-        jsr     copy_window_portbits
+        jsr     save_window_portbits
         MGTK_RELAY_CALL MGTK::DragWindow, event_params
         lda     active_window_id
         jsr     window_lookup
@@ -4560,9 +4560,9 @@ L60D5:  jsr     push_pointers
         sta     (ptr),y
 
 :       ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
-        sub16in (ptr),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::xcoord, deltax
+        sub16in (ptr),y, saved_portbits+MGTK::GrafPort::viewloc+MGTK::Point::xcoord, deltax
         iny
-        sub16in (ptr),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, deltay
+        sub16in (ptr),y, saved_portbits+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, deltay
 
         ldx     active_window_id
         dex
@@ -9226,10 +9226,10 @@ addr:   .addr   0
 
 ;;; ============================================================
 
-port_copy:
+saved_portbits:
         .res    .sizeof(MGTK::GrafPort)+1, 0
 
-.proc copy_window_portbits
+.proc save_window_portbits
         ptr := $6
 
         tay
@@ -9240,7 +9240,7 @@ port_copy:
         ldx     #0
         ldy     #MGTK::Winfo::port
 :       lda     (ptr),y
-        sta     port_copy,x
+        sta     saved_portbits,x
         iny
         inx
         cpx     #.sizeof(MGTK::GrafPort)
@@ -9249,7 +9249,7 @@ port_copy:
         rts
 .endproc
 
-.proc assign_window_portbits
+.proc restore_window_portbits
         ptr := $6
 
         tay
@@ -9259,7 +9259,7 @@ port_copy:
         stax    ptr
         ldx     #0
         ldy     #MGTK::Winfo::port
-:       lda     port_copy,x
+:       lda     saved_portbits,x
         sta     (ptr),y
         iny
         inx
@@ -14068,7 +14068,7 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawString, path_buf0
+        param_call draw_dialog_path, path_buf0
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$05
         lda     (ptr),y
@@ -14079,7 +14079,7 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_dest_file_pos
-        param_call DrawString, path_buf1
+        param_call draw_dialog_path, path_buf1
         param_call MGTK_RELAY, MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
         rts
@@ -14184,7 +14184,7 @@ do2:    ldy     #1
         stx     ptr
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawString, path_buf0
+        param_call draw_dialog_path, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
         rts
@@ -14365,7 +14365,7 @@ do3:    ldy     #1
         stx     $06
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawString, path_buf0
+        param_call draw_dialog_path, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
         param_call DrawString, str_file_count
         rts
@@ -14663,8 +14663,10 @@ do3:    ldy     #1
         sta     $06+1
         stx     $06
         jsr     copy_name_to_buf0
+
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawString, path_buf0
+        param_call draw_dialog_path, path_buf0
+
         MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
         param_call DrawString, str_file_count
         rts
@@ -14748,7 +14750,7 @@ do3:    ldy     #1
         stx     $06
         jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawString, path_buf0
+        param_call draw_dialog_path, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
         param_call DrawString, str_file_count
         rts
@@ -15091,6 +15093,23 @@ skip:   ldx     #0
         ldx     dialog_label_pos
         copy    #kDialogLabelDefaultX,dialog_label_pos::xcoord ; restore original x coord
         rts
+.endproc
+
+;;; ============================================================
+
+;;; Set up clipping to draw a path (long string) in a dialog
+;;; without intruding into the border.
+;;; Inputs: A,X = string address
+.proc draw_dialog_path
+        stax    string
+        param_call GetPortBits, tmp_mapinfo
+        MGTK_RELAY_CALL MGTK::SetPortBits, aux::prompt_dialog_labels_mapinfo
+        ldax    string
+        jsr     DrawString
+        MGTK_RELAY_CALL MGTK::SetPortBits, tmp_mapinfo
+        rts
+
+string: .addr   0
 .endproc
 
 ;;; ============================================================

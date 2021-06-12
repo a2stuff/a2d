@@ -1,8 +1,8 @@
 targets := desktop desktop.system desk.acc selector
 
-.PHONY: all $(targets) mount install installsel package
+.PHONY: all $(targets) mount install installsel package vercheck
 
-all: $(targets)
+all: vercheck $(targets)
 
 # Build all targets
 $(targets):
@@ -37,3 +37,8 @@ clean:
 	  tput setaf 2 && echo "cleaning $$dir" && tput sgr0; \
 	  $(MAKE) -C $$dir clean; \
 	done
+
+# Ensure minimum cc65 version
+vercheck:
+	@bin/check_ver.pl ca65 v2.19
+	@bin/check_ver.pl ld65 v2.19

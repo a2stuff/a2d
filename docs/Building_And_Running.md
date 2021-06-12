@@ -1,6 +1,6 @@
 ## Build Instructions
 
-Cross-development on a Unix-like system (including macOS 10) is assumed.
+Cross-development on a Unix-like system. Tested on macOS 10.15 and Linux Ubuntu Xenial 16.04.
 
 Fetch, build, and install [cc65](http://cc65.github.io/cc65/):
 
@@ -8,6 +8,8 @@ Fetch, build, and install [cc65](http://cc65.github.io/cc65/):
 git clone https://github.com/cc65/cc65
 make -C cc65 ca65 ld65 avail
 ```
+
+A very recent version of cc65 will be required, as recent compiler features and symbols from `asminc/apple2.inc` are used, and these change fairly often.
 
 Fetch and build Apple II DeskTop:
 
