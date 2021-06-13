@@ -395,7 +395,7 @@ notpencopy:     .byte   MGTK::notpencopy
         rts
 .endproc
 
-;;; A,X = pos ptr, N = checked
+;;; A,X = pos ptr, N = unchecked
 .proc draw_checkbox
         ptr := $06
 
@@ -404,7 +404,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::HideCursor
         plp
-        bmi     checked
+        bpl     checked
 
 unchecked:
         ldy     #3

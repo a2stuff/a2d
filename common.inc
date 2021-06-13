@@ -82,8 +82,8 @@ kDefaultIPBlinkSpeed    = 60
         rgb_color       .byte   ; $00 = B&W, $80 = Color
         mouse_tracking  .byte   ; 0 = normal, 1 = 2x speed
 
-        startup_ramcard .byte   ; $80 = copy to RAMCard on startup
-        startup_selector .byte  ; $80 = start Selector if present
+        startup_ramcard .byte   ; $00 = copy to RAMCard on startup, $80 = skip
+        startup_selector .byte  ; $00 = start Selector if present, $80 = skip
 
         reserved        .res 110
 .endstruct

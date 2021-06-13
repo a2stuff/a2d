@@ -948,9 +948,9 @@ match:  sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
         ldx     #0
         jsr     set_copied_to_ramcard_flag
 
-        ;; Skip RAMCard install unless flag set
+        ;; Skip RAMCard install if flag is set
         bit     SETTINGS + DeskTopSettings::startup_ramcard
-        bmi     :+
+        bpl     :+
         jmp     did_not_copy
 
         ;; Skip RAMCard install if button is down
@@ -2034,8 +2034,9 @@ str_desktop2:
 
 start:  MLI_CALL CLOSE, close_everything_params
 
+        ;; Don't try selector if flag is set
         bit     SETTINGS + DeskTopSettings::startup_selector
-        bpl     :+
+        bmi     :+
 
         MLI_CALL OPEN, open_selector_params
         beq     selector
