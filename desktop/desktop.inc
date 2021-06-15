@@ -7,6 +7,9 @@
 ;;;  * Desk Accessories & Preview Accessories
 ;;; ============================================================
 
+;;; MGTK loaded into AUX; to call from MAIN use JUMP_TABLE_MGTK_RELAY
+MGTK::MLI   := $4000
+
 ;;; Desk Accessories are loaded in Main ($800-$1BFF) using
 ;;; an I/O buffer (Main $1C00-1FFF). DAs often copy themselves
 ;;; into Aux but can only use $800-$1AFF due to icon tables.

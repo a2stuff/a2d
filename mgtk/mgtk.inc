@@ -4,10 +4,6 @@
 
 .scope MGTK
 
-MLI     := $4000
-        ;; MLI-style call (jsr MLI ; .byte call ; .addr params)
-        ;; Call from AUX (RAMRDON/RAMWRTON)
-
 ;;; ============================================================
 ;;; Graphics Primitives
 ;;; ============================================================
@@ -685,6 +681,7 @@ event_size                      = 5        ; any kind of event
 ;;;     MGTK_CALL n                      - params is $0000
 ;;;     MGTK_CALL n, params_addr
 ;;;     MGTK_CALL m, params_addr, label  - params_addr is labeled for modifying
+;;; Callers must define MGTK::MLI as the entry point.
 
 .macro  MGTK_CALL    op, addr, label
         jsr MGTK::MLI
