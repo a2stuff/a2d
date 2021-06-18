@@ -54,7 +54,7 @@ kWindowHeaderHeight     = 14
 ;;; List views
 
 kFirstRowBaseline       = 16
-kListViewWidth          = 360
+kListViewWidth          = 410
 
 ;;; --------------------------------------------------
 ;;; Icon views
