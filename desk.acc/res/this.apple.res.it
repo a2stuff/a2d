@@ -39,7 +39,7 @@
 .define res_string_card_type_storage "Memoria di massa"
 .define res_string_card_type_network "Scheda di rete"
 .define res_string_card_type_mockingboard "Mockingboard"
-.define res_string_card_type_z80 "Z-80 SoftCard"
+.define res_string_card_type_z80 "Scheda Z-80"
 .define res_string_card_type_uthernet2 "Uthernet II"
 .define res_string_unknown "(sconosciuto)"
 .define res_string_empty "(vuoto)"

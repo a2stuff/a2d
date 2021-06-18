@@ -1,4 +1,4 @@
-.define res_string_window_title "About this Apple II"
+.define res_string_window_title "About This Apple II"
 .define res_string_model_ii "Apple ]["
 .define res_string_model_iiplus "Apple ][+"
 .define res_string_model_iii "Apple /// (emulation)"
