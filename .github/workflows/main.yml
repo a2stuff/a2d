@@ -1,6 +1,6 @@
-name: Build (and deploy on new tags)
+name: build
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
@@ -21,13 +21,13 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      
+
       - name: build and install cc65 components
         run: |
           git clone https://github.com/cc65/cc65 /tmp/cc65
           sudo make -C /tmp/cc65 ca65 ld65 avail
           ca65 --version
-          
+
       - name: build and install cadius
         run: |
           git clone https://github.com/mach-kernel/cadius /tmp/cadius
@@ -48,6 +48,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: ncipollo/release-action@v1.8.6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}      
+          token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: "out/*.2mg,out/*.po,res/README.txt"
           prerelease: true

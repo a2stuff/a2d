@@ -1,6 +1,6 @@
 # Apple II DeskTop
 
-[![Build Status](https://travis-ci.com/a2stuff/a2d.svg?branch=main)](https://travis-ci.com/a2stuff/a2d)
+![Build Status](https://github.com/a2stuff/a2d/actions/workflows/main.yml/badge.svg)
 
 Disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk), a "Finder"-like GUI application for 8-bit Apples and clones with 128k of memory, utilizing double hi-res monochrome graphics (560x192), an optional mouse, and the ProDOS 8 operating system.
 
