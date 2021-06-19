@@ -35,6 +35,8 @@ jobs:
           sudo make -C /tmp/cadius install
 
       - name: build a2d
+        env:
+          TERM: xterm-256color
         run: |
           bin/setlang en && make && make package
           bin/setlang fr && make && make package
