@@ -101,7 +101,7 @@
 .define res_string_warning_save_selector_list_line1 "]Quiere guaardar la nueva lista"
 .define res_string_warning_save_selector_list_line2 "en el disco de sistema?"
 .define res_string_alert_button_ok "OK            \x0D"
-.define res_string_alert_button_try_again "Intentar de nuevo     A"
+.define res_string_alert_button_try_again "Reintentar    R"
 .define res_string_alert_button_cancel "Cancelar    Esc"
 .define res_string_errmsg_00 "Error de Sistema"
 .define res_string_errmsg_27 "Error de E/S."

@@ -38,7 +38,7 @@
 .define res_string_error_writing "Error al escribir el bloque "
 .define res_string_error_reading "Error al leer el bloque "
 .define res_string_dcalert_button_ok "OK            \x0D"
-.define res_string_dcalert_button_try_again "Trate de nuevo     A"
+.define res_string_dcalert_button_try_again "Reintentar    R"
 .define res_string_dcalert_button_cancel "Cancelar    Esc"
 .define res_string_dcalert_button_yes "Si"
 .define res_string_dcalert_button_no "No"
