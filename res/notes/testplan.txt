@@ -246,3 +246,5 @@
 * Configure a device multiple drives connected to a Smartport controller on a higher slot, a single drive connected to a Smartport controller in a lower slot. Launch DeskTop, run the This Apple DA. Verify that the name on the lower slot doesn't have an extra character at the end.
 
 * Launch DeskTop. Open a window with files with dates with long month names (e.g. "February 29, 2020"). View > by Name. Resize the window so the lines are cut off on the right. Move the horizontal scrollbar all the way to the right. Verify that the right edges of all lines are visible.
+
+* Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Launch This Apple DA, close it. Verify that the file is still present on Ram5.
