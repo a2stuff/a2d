@@ -170,7 +170,7 @@ reserved:       .res    1
 mapbits:        .addr   ace500_bits
 mapwidth:       .byte   7
 reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 47, 29
+        DEFINE_RECT maprect, 0, 0, 48, 29
 .endparams
 
 .params ace2000_bitmap
@@ -178,7 +178,7 @@ reserved:       .res    1
 mapbits:        .addr   ace2000_bits
 mapwidth:       .byte   7
 reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 47, 23
+        DEFINE_RECT maprect, 0, 0, 48, 23
 .endparams
 
 .if INCLUDE_UNSUPPORTED_MACHINES
