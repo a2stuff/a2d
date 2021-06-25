@@ -3714,6 +3714,14 @@ kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
         DEFINE_RECT_INSET alert_inner_frame_rect1, 4, 2, kAlertRectWidth, kAlertRectHeight
         DEFINE_RECT_INSET alert_inner_frame_rect2, 5, 3, kAlertRectWidth, kAlertRectHeight
 
+.params screen_portbits
+viewloc:        .word   0, 0
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+maprect:        .word   0, 0, kScreenWidth-1, kScreenHeight-1
+.endparams
+
 .params portmap
         DEFINE_POINT viewloc, kAlertRectLeft, kAlertRectTop
 mapbits:        .addr   MGTK::screen_mapbits
@@ -3846,11 +3854,12 @@ start:  pha                     ; error code
 
         MGTK_CALL MGTK::HideCursor
         jsr     dialog_background_save
-        MGTK_CALL MGTK::ShowCursor
 
         ;; Set up GrafPort
         MGTK_CALL MGTK::InitPort, main_grafport
         MGTK_CALL MGTK::SetPort, main_grafport
+
+        MGTK_CALL MGTK::SetPortBits, screen_portbits ; viewport for screen
 
         ;; Draw alert box and bitmap - coordinates are in screen space
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -3865,6 +3874,8 @@ start:  pha                     ; error code
         MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect2
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintBits, alert_bitmap_params
+
+        MGTK_CALL MGTK::ShowCursor
 
         ;; --------------------------------------------------
         ;; Process Options
