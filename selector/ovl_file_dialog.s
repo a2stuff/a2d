@@ -1883,14 +1883,15 @@ update_scrollbar:
         lda     #$00
 
 .proc update_scrollbar2
-        sta     l1
+        sta     index
         lda     num_file_names
-        cmp     #$0A
+        cmp     #kPageDelta + 1
         bcs     :+
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
         copy    #MGTK::activatectl_deactivate, activatectl_activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-        rts
+        lda     #0
+        jmp     scroll_clip_rect
 
 :       lda     num_file_names
         sta     winfo_file_dialog_listbox::vthumbmax
@@ -1899,7 +1900,7 @@ update_scrollbar:
         sta     activatectl_which_ctl
         sta     activatectl_activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-        lda     l1
+        lda     index
         sta     updatethumb_thumbpos
         jsr     scroll_clip_rect
         lda     #MGTK::Ctl::vertical_scroll_bar
@@ -1907,7 +1908,7 @@ update_scrollbar:
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
-l1:     .byte   0
+index:  .byte   0
 .endproc
 
 ;;; ============================================================

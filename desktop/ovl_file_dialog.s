@@ -1559,25 +1559,27 @@ update_scrollbar:
         lda     #$00
 
 .proc update_scrollbar2
-        sta     l2
+        sta     index
         lda     num_file_names
-        cmp     #$0A
-        bcs     l1
+        cmp     #kPageDelta + 1
+        bcs     :+
+
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         lda     #MGTK::activatectl_deactivate
         sta     activatectl_activate
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
-        rts
+        lda     #0
+        jmp     scroll_clip_rect
 
-l1:     lda     num_file_names
+:       lda     num_file_names
         sta     winfo_file_dialog_listbox::vthumbmax
         .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         sta     activatectl_activate
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
-        lda     l2
+        lda     index
         sta     updatethumb_thumbpos
         jsr     scroll_clip_rect
         lda     #MGTK::Ctl::vertical_scroll_bar
@@ -1585,7 +1587,7 @@ l1:     lda     num_file_names
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
-l2:     .byte   0
+index:  .byte   0
 .endproc
 
 ;;; ============================================================

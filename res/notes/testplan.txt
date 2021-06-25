@@ -249,4 +249,5 @@
 
 * Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Launch This Apple DA, close it. Verify that the file is still present on Ram5.
 
-* Launch DeskTop. Double-click on a file that DeskTop can't open (and where no BASYS.SYSTEM is present). Click OK in the "This file cannot be opened." alert. Double-click on the file again. Verify that the alert renders with an opaque background.
+* Launch DeskTop. Double-click on a file that DeskTop can't open (and where no BASIS.SYSTEM is present). Click OK in the "This file cannot be opened." alert. Double-click on the file again. Verify that the alert renders with an opaque background.
+* Launch DeskTop. File > Copy a File... Navigate to a directory with more than 9 files, and at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
