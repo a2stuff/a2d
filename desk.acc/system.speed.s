@@ -523,8 +523,6 @@ hit:    lda     winfo::window_id
 
         add16_8   #kRunPosX, run_pos, frame_params::viewloc::xcoord
 
-        ;; TODO: Only Hide/Show cursor if it's near animation
-        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBits, frame_params
 
@@ -543,8 +541,7 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintBits, frame_params
 
-:       MGTK_CALL MGTK::ShowCursor
-        rts
+:       rts
 .endproc
 
 ;;; ============================================================
