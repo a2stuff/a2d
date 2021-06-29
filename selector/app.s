@@ -1357,12 +1357,20 @@ count:  .byte   0
 ;;; ============================================================
 
 .proc load_selector_list
+        ;; Initialize the counts, in case load fails.
+        lda     #0
+        sta     selector_list + kSelectorListNumRunListOffset
+        sta     selector_list + kSelectorListNumOtherListOffset
+
         MLI_CALL OPEN, open_selector_list_params
+        bne     cache
+
         lda     open_selector_list_params::ref_num
         sta     read_selector_list_params::ref_num
         MLI_CALL READ, read_selector_list_params
         MLI_CALL CLOSE, close_params
-        copy    selector_list + kSelectorListNumRunListOffset, num_run_list_entries
+
+cache:  copy    selector_list + kSelectorListNumRunListOffset, num_run_list_entries
         copy    selector_list + kSelectorListNumOtherListOffset, num_other_run_list_entries
         rts
 .endproc
