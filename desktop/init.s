@@ -618,8 +618,7 @@ process_block:
         beq     include
 
         cmp     #kDAFileType    ; DA? (must match type/auxtype)
-        jne     include         ; Allow arbitrary types (may not actually launch though)
-
+        bne     :+
         ldy     #FileEntry::aux_type
         lda     (dir_ptr),y
         cmp     #<kDAFileAuxType
@@ -627,6 +626,13 @@ process_block:
         iny
         lda     (dir_ptr),y
         cmp     #>kDAFileAuxType
+        jne     next_entry
+
+:       ldx     #kNumAppleMenuTypes-1
+:       cmp     apple_menu_type_table,x
+        beq     include
+        dex
+        bpl     :-
         jne     next_entry
 
 include:
@@ -738,6 +744,12 @@ entries_per_block:      .byte   0
 entry_in_block: .byte   0
 
 name_buf:       .res    ::kDAMenuItemSize, 0
+
+        kNumAppleMenuTypes = 7
+apple_menu_type_table:
+        .byte   FT_SYSTEM, FT_S16, FT_BINARY, FT_BASIC ; Executable
+        .byte   FT_TEXT, FT_GRAPHICS, FT_FONT          ; Previewable
+        ASSERT_TABLE_SIZE apple_menu_type_table, kNumAppleMenuTypes
 
 end:
 .endscope
