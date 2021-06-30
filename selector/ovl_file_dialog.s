@@ -2066,7 +2066,9 @@ l3:     lda     ($06),y
         bcs     next_inner
         jmp     l5
 
-:       iny
+:       cpy     name_buf
+        beq     l5
+        iny
         cpy     #16
         bne     l3
         jmp     next_inner
