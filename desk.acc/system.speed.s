@@ -185,12 +185,26 @@ grafport:       .tag MGTK::GrafPort
 ;;; ============================================================
 ;;; Resources for an animation to show speed
 
-kRunPosX        = 10
-kRunPosY        = 50
-kRunDistance    = 110
+kRunPosX        = 12
+kRunPosY        = 51
+kRunDistance    = 104
+kRunWidth  = 21
+kRunHeight = 11
+
 
 run_pos:
         .byte   0
+
+kCursorWidth  = 8
+kCursorHeight = 12
+
+        ;; Bounding rect for where the animation and cursor could overlap.
+        ;; If the cursor is inside this rect, it is hidden before drawing
+        ;; the bitmap.
+        DEFINE_RECT_SZ anim_cursor_rect, kRunPosX - kCursorWidth + 1, kRunPosY - kCursorHeight + 2, kRunWidth + kRunDistance + kCursorWidth - 1, kRunHeight + kCursorHeight - 2
+cursor_flag:
+        .byte   0
+
 
 .params frame_params
         DEFINE_POINT viewloc, kRunPosX, kRunPosY
@@ -291,6 +305,10 @@ frame_counter:
         jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
+
+        cmp     #MGTK::EventKind::no_event
+        jeq     on_move
+
         cmp     #MGTK::EventKind::button_down
         jeq     on_click
 
@@ -375,6 +393,18 @@ frame_counter:
         rts
 .endproc
 
+
+;;; ============================================================
+
+.proc on_move
+        lda     winfo::window_id
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::InRect, anim_cursor_rect
+        sta     cursor_flag
+        jmp     input_loop
+.endproc
 
 ;;; ============================================================
 
@@ -523,6 +553,12 @@ hit:    lda     winfo::window_id
 
         add16_8   #kRunPosX, run_pos, frame_params::viewloc::xcoord
 
+        bit     cursor_flag
+        bpl     :+
+        MGTK_CALL MGTK::HideCursor
+:
+
+
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBits, frame_params
 
@@ -541,7 +577,14 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintBits, frame_params
 
-:       rts
+:
+
+        bit     cursor_flag
+        bpl     :+
+        MGTK_CALL MGTK::ShowCursor
+:
+
+        rts
 .endproc
 
 ;;; ============================================================

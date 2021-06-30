@@ -720,8 +720,8 @@ y2:     .word   bottom
 .scope ident
 x1:     .word   left
 y1:     .word   top
-x2:     .word   (left + width)
-y2:     .word   (top + height)
+x2:     .word   ((left) + (width))
+y2:     .word   ((top) + (height))
 .endscope
 .endmacro
 
@@ -731,8 +731,8 @@ y2:     .word   (top + height)
 .scope ident
 x1:     .word   left
 y1:     .word   top
-x2:     .word   (width - left)
-y2:     .word   (height - top)
+x2:     .word   ((width) - (left))
+y2:     .word   ((height) - (top))
 .endscope
 .endmacro
 
