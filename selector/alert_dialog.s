@@ -387,7 +387,9 @@ finish: pha
         event_kind = app::event_kind
         event_coords = app::event_coords
         penXOR = app::penXOR
+        .define LIB_MGTK_CALL MGTK_CALL
         .include "../lib/alertbuttonloop.s"
+        .undefine LIB_MGTK_CALL
         .include "../lib/savedialogbackground.s"
         dialog_background_save := dialog_background::Save
         dialog_background_restore := dialog_background::Restore

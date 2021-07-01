@@ -2140,11 +2140,12 @@ done:   rts
 ;;; ============================================================
 
         .include "../lib/smartport.s"
-        .define LIB_MLI_CALL MLI_CALL
         ADJUSTCASE_VOLPATH := $810
         ADJUSTCASE_VOLBUF  := $820
         ADJUSTCASE_IO_BUFFER := src_io_buffer
+        .define LIB_MLI_CALL MLI_CALL
         .include "../lib/adjustfilecase.s"
+        .undefine LIB_MLI_CALL
 
 ;;; ============================================================
 

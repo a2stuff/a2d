@@ -4073,7 +4073,10 @@ finish: pha
         rts
 .endproc
 
+        .define LIB_MGTK_CALL MGTK_CALL
         .include "../lib/alertbuttonloop.s"
+        .undefine LIB_MGTK_CALL
+
         .include "../lib/savedialogbackground.s"
         dialog_background_save := dialog_background::Save
         dialog_background_restore := dialog_background::Restore

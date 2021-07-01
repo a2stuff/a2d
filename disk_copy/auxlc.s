@@ -10,12 +10,19 @@
 .proc auxlc
         .org $D000
 
-.macro MGTK_RELAY_CALL2 call, params
-    .if .paramcount > 1
-        param_call MGTK_RELAY2, call, params
-    .else
-        param_call MGTK_RELAY2, call, 0
-    .endif
+.macro MGTK_RELAY_CALL2 op, addr, label
+        jsr MGTK_RELAY2
+        .byte op
+
+.if .paramcount > 2
+        label := *
+.endif
+
+.if .paramcount > 1
+        .addr addr
+.else
+        .addr 0
+.endif
 .endmacro
 
 kShortcutReadDisk = res_char_button_read_drive_shortcut
@@ -1067,15 +1074,37 @@ LDBD6:  pla
         jmp     LDBC0
 
 .proc MGTK_RELAY2
-        sty     call
-        stax    params
+        params_src := $80
+
+        ;; Adjust return address on stack, compute
+        ;; original params address.
+        pla
+        sta     params_src
+        clc
+        adc     #<3
+        tax
+        pla
+        sta     params_src+1
+        adc     #>3
+        pha
+        txa
+        pha
+
+        ;; Copy the params here
+        ldy     #3              ; ptr is off by 1
+:       lda     (params_src),y
+        sta     params-1,y
+        dey
+        bne     :-
+
+        ;; Bank and call
         sta     RAMRDON
         sta     RAMWRTON
         jsr     MGTK::MLI
-call:   .byte   0
-params: .addr   0
+params: .res    3
         sta     RAMRDOFF
         sta     RAMWRTOFF
+
         rts
 .endproc
 
@@ -2815,7 +2844,9 @@ finish: pha
 
 ;;; ============================================================
 
+        .define LIB_MGTK_CALL MGTK_RELAY_CALL2
         .include "../lib/alertbuttonloop.s"
+        .undefine LIB_MGTK_CALL
 
 ;;; ============================================================
 
