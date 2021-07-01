@@ -877,9 +877,16 @@ addon:
 
         ; trademarked accelerator from Germany
 
+        lda     romid_ec        ; Skip on //c
+        beq     skipuw
+
         sta     uw_fast,y ; value does not matter
+skipuw:
 
         ; FASTChip
+
+        lda     romid_ec        ; Skip on //c
+        beq     skipfc
 
         ldx     #FC_1MHZ
         tya
@@ -895,6 +902,8 @@ fcset:
         stx     fc_speed
         lda     #FC_LOCK
         sta     fc_lock
+skipfc:
+
         plp             ; restore interrupt state
         rts
 
