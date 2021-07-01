@@ -62,7 +62,7 @@
 .define res_string_label_file "Archivo:"
 .define res_string_delete_remaining "Archivos que faltan por borrar:"
 .define res_string_delete_prompt_locked_file "Este archivo esta bloqueado, ]desea borralo de todos modos?"
-.define res_string_new_folder_label_in "en:"
+.define res_string_new_folder_label_in "en: "
 .define res_string_new_folder_label_name "Escriba el nombre de la carpeta:"
 .define res_string_rename_label_old "Renombrar: "
 .define res_string_rename_label_new "Nuevo Nombre:"

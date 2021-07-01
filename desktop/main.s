@@ -14449,10 +14449,8 @@ LAE90:  lda     ($08),y
         bpl     LAE90
         lda     winfo_prompt_dialog
         jsr     set_port_from_window_id
-        param_call draw_dialog_label, 2, aux::str_in_colon
-        copy    #kParentPathLeft, dialog_label_pos
-        param_call draw_dialog_label, 2, path_buf0
-        copy    #kDialogLabelDefaultX, dialog_label_pos
+        param_call draw_dialog_label, 2, aux::str_in
+        param_call draw_dialog_path, path_buf0
         param_call draw_dialog_label, 4, aux::str_enter_folder_name
         jsr     draw_filename_prompt
 LAEC6:  jsr     prompt_input_loop
