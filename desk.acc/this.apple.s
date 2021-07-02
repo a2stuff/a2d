@@ -559,7 +559,6 @@ str_clock:      PASCAL_STRING res_string_card_type_clock
 str_comm:       PASCAL_STRING res_string_card_type_comm
 str_serial:     PASCAL_STRING res_string_card_type_serial
 str_parallel:   PASCAL_STRING res_string_card_type_parallel
-str_used:       PASCAL_STRING res_string_card_type_used
 str_printer:    PASCAL_STRING res_string_card_type_printer
 str_joystick:   PASCAL_STRING res_string_card_type_joystick
 str_io:         PASCAL_STRING res_string_card_type_io
