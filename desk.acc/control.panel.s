@@ -1867,13 +1867,16 @@ write_buffer:
         COPY_STRUCT DeskTopSettings, SETTINGS, write_buffer
 
         ;; Write to desktop current prefix
-        copy16  #filename, open_params::pathname
+        ldax    #filename
+        stax    create_params::pathname
+        stax    open_params::pathname
         jsr     do_write
 
         ;; Write to the original file location, if necessary
         jsr     GetCopiedToRAMCardFlag
         beq     done
         ldax    #filename_buffer
+        stax    create_params::pathname
         stax    open_params::pathname
         jsr     CopyDeskTopOriginalPrefix
         jsr     append_filename
