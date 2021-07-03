@@ -259,3 +259,4 @@
 * Launch DeskTop. Create a sequence of nested folders approaching maximum path length, e.g. /RAM/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF12345. Try to copy a file into the folder. Verify that stray pixels do not appear in the top line of the screen.
 
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Delete the DESKTOP.CONFIG file from the startup disk, if it was present. Go into Control Panels and change a setting. Verify that DESKTOP.CONFIG is written to the startup disk.
+* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Delete the SELECTOR.LIST file from the startup disk, if it was present. Selector > Add an Entry, and create a new entry. When prompted to save to the system disk, select OK. Verify that SELECTOR.LIST is written to the startup disk.

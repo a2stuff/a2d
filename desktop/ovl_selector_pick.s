@@ -1399,6 +1399,7 @@ index:  .byte   0
 
 filename_buffer := $1C00
 
+        DEFINE_CREATE_PARAMS create_params, filename_buffer, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename_buffer, io_buf
         DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS flush_close_params
@@ -1421,6 +1422,7 @@ filename_buffer := $1C00
         sty     filename_buffer
 
 retry_open:
+        MLI_RELAY_CALL CREATE, create_params
         MLI_RELAY_CALL OPEN, open_params
         beq     write
         lda     #kWarningMsgInsertSystemDisk
