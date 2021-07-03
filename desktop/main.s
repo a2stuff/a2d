@@ -16,7 +16,7 @@ kShortcutResize = res_char_resize_shortcut
 kShortcutMove   = res_char_move_shortcut
 kShortcutScroll = res_char_scroll_shortcut
 
-dst_path_buf   := $1FC0
+dst_path_buf   := $1F80
 
         .org $4000
 

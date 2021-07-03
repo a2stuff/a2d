@@ -255,3 +255,5 @@
 * Create a directory, and in the directory create a file named "A.B" then a file named "A". Launch DeskTop. File > Copy a File.... Navigate to the directory. Verify "A" sorts before "A.B". Launch Selector. File > Run a Program. Navigate to the directory. Verify "A" sorts before "A.B".
 
 * Run DeskTop on a IIc. Launch Control Panel > System Speed. Click Normal and Fast. Verify that display does not switch from DHGR to HGR.
+
+* Launch DeskTop. Create a sequence of nested folders approaching maximum path length, e.g. /RAM/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF12345. Try to copy a file into the folder. Verify that stray pixels do not appear in the top line of the screen.
