@@ -117,6 +117,7 @@
 .define res_string_errmsg_4E "Datei ist schreibgesch}tzt."
 .define res_string_errmsg_52 "Keine ProDOS-Diskette."
 .define res_string_errmsg_57 "Volumen schon vorhanden."
+.define res_string_errmsg_F8 "Der Ordner kann nicht in sich selbst bewegt oder kopiert werden."
 .define res_string_errmsg_F9 "Es gibt 2 gleichnamige Volumen."
 .define res_string_errmsg_FA "Diese Datei kann nicht ge|ffnet werden."
 .define res_string_errmsg_FB "Der Name ist zu lang."

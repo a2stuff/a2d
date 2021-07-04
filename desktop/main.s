@@ -11998,6 +11998,7 @@ for_run:
 
 :       sta     is_run_flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
+        jsr     check_recursion
         jsr     copy_paths_to_src_and_dst_paths
         bit     operation_flags
         bvc     @not_run
@@ -13233,6 +13234,42 @@ done:   sty     path
 found:  dex
         stx     path
         rts
+.endproc
+
+;;; ============================================================
+;;; Check if path_buf3 (src) is inside path_buf4 (dst); if so,
+;;; show an error and terminate the operation.
+
+.proc check_recursion
+        src := path_buf3
+        dst := path_buf4
+
+        ldx     src             ; Compare string lengths. If the same, need
+        cpx     dst             ; to compare strings. If `src` > `dst`
+        beq     compare         ; ('/a/b' vs. '/a'), then it's not a problem.
+        bcs     ok
+
+        ;; Assert: `src` is shorter then `dst`
+        inx                     ; See if `dst` is possibly a subfolder
+        lda     dst,x           ; ('/a/b/c' vs. '/a/b') or a sibling
+        cmp     #'/'            ; ('/a/bc' vs. /a/b').
+        bne     ok              ; At worst, a sibling - that's okay.
+
+        ;; Potentially self or a subfolder; compare strings.
+compare:
+        ldx     path_buf3
+:       lda     path_buf3,x
+        cmp     path_buf4,x
+        bne     ok
+        dex
+        bne     :-
+
+        ;; Self or subfolder; show a fatal error.
+        lda     #kErrMoveCopyIntoSelf
+        jsr     show_error_alert
+
+ok:     rts
+
 .endproc
 
 ;;; ============================================================

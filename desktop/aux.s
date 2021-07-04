@@ -3760,6 +3760,7 @@ err_4E:  PASCAL_STRING res_string_errmsg_4E
 err_52:  PASCAL_STRING res_string_errmsg_52
 err_57:  PASCAL_STRING res_string_errmsg_57
         ;; Below are internal (not ProDOS MLI) error codes.
+err_F8:  PASCAL_STRING res_string_errmsg_F8
 err_F9:  PASCAL_STRING res_string_errmsg_F9
 err_FA:  PASCAL_STRING res_string_errmsg_FA
 err_FB:  PASCAL_STRING res_string_errmsg_FB
@@ -3768,7 +3769,7 @@ err_FD:  PASCAL_STRING res_string_errmsg_FD
 err_FE:  PASCAL_STRING res_string_errmsg_FE
 
         ;; number of alert messages
-        kNumAlerts = 20
+        kNumAlerts = 21
 alert_count:
         .byte   kNumAlerts
 
@@ -3783,6 +3784,7 @@ alert_table:
         .byte   ERR_DUPLICATE_VOLUME
 
         ;; Internal error codes:
+        .byte   kErrMoveCopyIntoSelf
         .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
         .byte   kErrInsertSrcDisk, kErrInsertDstDisk, kErrBasicSysNotFound
         ASSERT_TABLE_SIZE alert_table, kNumAlerts
@@ -3790,7 +3792,7 @@ alert_table:
         ;; alert index to string address
 message_table:
         .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
-        .addr   err_47,err_48,err_49,err_4E,err_52,err_57,err_F9,err_FA
+        .addr   err_47,err_48,err_49,err_4E,err_52,err_57,err_F8,err_F9,err_FA
         .addr   err_FB,err_FC,err_FD,err_FE
         ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlerts
 
@@ -3813,7 +3815,7 @@ alert_options_table:
         .byte   MessageFlags::Ok, MessageFlags::Ok
         .byte   MessageFlags::Ok, MessageFlags::Ok
         .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::Ok
+        .byte   MessageFlags::Ok, MessageFlags::Ok, MessageFlags::Ok
         .byte   MessageFlags::Ok, MessageFlags::Ok
         .byte   MessageFlags::Ok, MessageFlags::TryAgainCancel
         .byte   MessageFlags::TryAgainCancel, MessageFlags::Ok

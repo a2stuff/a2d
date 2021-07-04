@@ -117,6 +117,7 @@
 .define res_string_errmsg_4E "Fine del file."
 .define res_string_errmsg_52 "Non } un disco ProDOS."
 .define res_string_errmsg_57 "Volume duplicato."
+.define res_string_errmsg_F8 "La cartella non pu| essere spostata o copiata in se stessa."
 .define res_string_errmsg_F9 "Ci sono 2 volumi con lo stesso nome."
 .define res_string_errmsg_FA "Questo file non pu| essere aperto."
 .define res_string_errmsg_FB "Nome troppo lungo."

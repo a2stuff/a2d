@@ -260,3 +260,7 @@
 
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Delete the DESKTOP.CONFIG file from the startup disk, if it was present. Go into Control Panels and change a setting. Verify that DESKTOP.CONFIG is written to the startup disk.
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Delete the SELECTOR.LIST file from the startup disk, if it was present. Selector > Add an Entry, and create a new entry. When prompted to save to the system disk, select OK. Verify that SELECTOR.LIST is written to the startup disk.
+
+* Load DeskTop. Create a folder e.g. /RAM/F. Try to copy the folder into itself using File > Copy a File. Verify that an error is shown.
+* Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to move it into itself by dragging. Verify that an error is shown.
+* Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to copy it into itself by dragging with an Apple key depressed. Verify that an error is shown.
