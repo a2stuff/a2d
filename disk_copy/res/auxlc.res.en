@@ -11,7 +11,7 @@
 .define res_string_dc_button_ok "OK            \x0D"
 .define res_string_disk_copy_padded_dialog_title "    Disk Copy    "
 .define res_string_quick_copy_padded_dialog_title "    Quick Copy    "
-.define res_string_button_read_drive "Read Drive   D"
+.define res_string_button_read_drive "Read Drives  D"
 .define res_char_button_read_drive_shortcut 'D'
 .define res_string_label_slot_drive_name "Slot, Drive, Name"
 .define res_string_prompt_select_source "Select source disk"
