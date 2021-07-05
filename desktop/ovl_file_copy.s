@@ -274,7 +274,10 @@ L7281:  jsr     file_dialog::read_dir
         bcs     L7272
         lda     LD921
 L7289:  sta     selected_index
-        jsr     file_dialog::update_scrollbar2
+        cmp     #$FF            ; if no selection...
+        bne     :+              ; make scroll index 0
+        lda     #$00
+:       jsr     file_dialog::update_scrollbar2
         jsr     file_dialog::update_disk_name
         jsr     file_dialog::draw_list_entries
 L7295:  rts
