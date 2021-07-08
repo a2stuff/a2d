@@ -50,7 +50,7 @@ finish: jsr     file_dialog::read_dir
         bcs     :+
         param_call file_dialog::L6516, buffer
         sta     selected_index
-        jsr     file_dialog::selection_second_col
+        jsr     file_dialog::calc_top_index
 :       jsr     file_dialog::update_scrollbar2
         jsr     file_dialog::update_disk_name
         jsr     file_dialog::draw_list_entries

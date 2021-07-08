@@ -19,6 +19,14 @@ num_file_names  := $177F
 ;;; Sequence of 16-byte records, filenames in current directory.
 file_names      := $1800
 
+
+kListEntryHeight = 9            ; Default font height
+kListEntryGlyphX = 1
+kListEntryNameX  = 16
+
+kLineDelta = 1
+kPageDelta = 8
+
 ;;; ============================================================
 
 ep_init:
@@ -678,9 +686,11 @@ LA662:  lda     winfo_file_dialog_listbox::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_windowy, winfo_file_dialog_listbox::y1, screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
+        ldax    screentowindow_windowy
+        ldy     #kListEntryHeight
+        jsr     Divide_16_8_16
+        stax    screentowindow_windowy
+
         lda     selected_index
         cmp     screentowindow_windowy
         beq     same
@@ -822,9 +832,6 @@ different:
 .endproc
 
 ;;; ============================================================
-
-        kLineDelta = 1
-        kPageDelta = 9
 
 .proc handle_page_up
         lda     winfo_file_dialog_listbox::vthumbpos
@@ -1458,7 +1465,7 @@ l1:     ldx     num_file_names
         jsr     list_selection_change
 
         lda     selected_index
-        jsr     selection_second_col
+        jsr     calc_top_index
         jsr     update_scrollbar2
         jsr     draw_list_entries
 
@@ -1818,13 +1825,9 @@ l15:    .byte   0
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::PaintRect, winfo_file_dialog_listbox::maprect
-        lda     #16
-        sta     pos::xcoord
-        lda     #8
-        sta     pos::ycoord
-        lda     #0
-        sta     pos::ycoord+1
-        sta     l4
+        copy    #kListEntryNameX, pos::xcoord ; high byte always 0
+        copy16  #kListEntryHeight, pos::ycoord
+        copy    #0, l4
 
 loop:   lda     l4
         cmp     num_file_names
@@ -1856,21 +1859,22 @@ loop:   lda     l4
         jsr     draw_string
         ldx     l4
         lda     file_list_index,x
-        bpl     l1
-        lda     #$01
-        sta     pos
+        bpl     :+
+
+        ;; Folder glyph
+        copy    #kListEntryGlyphX, pos::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         param_call draw_string, str_folder
-        lda     #$10
-        sta     pos
-l1:     lda     l4
+        copy    #kListEntryNameX, pos::xcoord
+
+:       lda     l4
         cmp     selected_index
         bne     l2
         jsr     invert_entry
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
 l2:     inc     l4
-        add16   pos::ycoord, #8, pos::ycoord
+        add16_8 pos::ycoord, #kListEntryHeight, pos::ycoord
         jmp     loop
 
 l3:     .byte   0
@@ -1963,30 +1967,19 @@ l1:     lda     tmp
         jmp     l4
 
 l2:     lda     num_file_names
-        cmp     #$0A
+        cmp     #kPageDelta+1
         bcs     l3
         lda     tmp
         jmp     l4
 
 l3:     sec
         sbc     #kPageDelta
-l4:     ldx     #$00
-        stx     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        sta     winfo_file_dialog_listbox::y1
-        ldx     tmp
-        stx     winfo_file_dialog_listbox::y1+1
-        clc
-        adc     #70
-        sta     winfo_file_dialog_listbox::y2
-        lda     tmp
-        adc     #0
-        sta     winfo_file_dialog_listbox::y2+1
+
+l4:     ldx     #$00            ; A,X = line
+        ldy     #kListEntryHeight
+        jsr     Multiply_16_8_16
+        stax    winfo_file_dialog_listbox::y1
+        add16_8 winfo_file_dialog_listbox::y1, #70, winfo_file_dialog_listbox::y2
         rts
 
 tmp:    .byte   0
@@ -1996,23 +1989,13 @@ tmp:    .byte   0
 ;;; Inputs: A = entry index
 
 .proc invert_entry
-        ldx     #0
-        stx     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        sta     rect::y1
-        ldx     tmp
-        stx     rect::y1+1
-        clc
-        adc     #$07
-        sta     rect::y2
-        lda     tmp
-        adc     #$00
-        sta     rect::y2+1
+        ldx     #0              ; A,X = entry
+        ldy     #kListEntryHeight
+        jsr     Multiply_16_8_16
+        stax    rect::y1
+
+        add16_8 rect::y1, #kListEntryHeight, rect::y2
+
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -2343,18 +2326,18 @@ l8:     .res    16, 0
 .endproc
 
 ;;; ============================================================
-;;; Input: A = Selection (0-15, or $FF)
-;;; Output: 0 if no selection or in first col, else mod 8
+;;; Input: A = Selection, or $FF if none
+;;; Output: top index to show so selection is in view
 
-.proc selection_second_col
+.proc calc_top_index
         bpl     has_sel
 :       return  #0
 
 has_sel:
-        cmp     #9
+        cmp     #kPageDelta
         bcc     :-
         sec
-        sbc     #8
+        sbc     #kPageDelta-1
         rts
 .endproc
 
@@ -2977,6 +2960,8 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
          ADJUSTCASE_IO_BUFFER := $1C00
         .include "../lib/adjustfilecase.s"
         .undefine LIB_MLI_CALL
+
+        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 
