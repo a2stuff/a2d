@@ -266,3 +266,5 @@
 * Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to copy it into itself by dragging with an Apple key depressed. Verify that an error is shown.
 
 * Ensure the default drive has 10 or more files. Load DeskTop. File > Copy a File.... Verify that an active scrollbar appears in the file list. Click OK. Click Cancel. Verify that the scrollbar is scrolled to the top.
+
+* Load DeskTop. Open a volume. Adjust the window size so that horizontal and vertical scrolling is required. Scroll to the bottom-right. Quit DeskTop, reload. Verify that the window size was restored correctly.

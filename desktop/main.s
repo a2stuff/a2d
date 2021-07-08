@@ -16260,19 +16260,23 @@ exit:   rts
         dey
         bpl     :-
 
-        ;; Assemble rect - left/top first
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
+        ;; Assemble rect
+        ;; Compute width/height from port's maprect
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
 :       lda     (winfo_ptr),y
         sta     bounds,x
         dey
         dex
         bpl     :-
-        ;; width/height next
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::bottomright + .sizeof(MGTK::Point)-1
+        sub16   bounds + MGTK::Rect::x2, bounds + MGTK::Rect::x1, bounds + MGTK::Rect::x2
+        sub16   bounds + MGTK::Rect::y2, bounds + MGTK::Rect::y1, bounds + MGTK::Rect::y2
+
+        ;; Now top/left from port's viewloc
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     (winfo_ptr),y
-        sta     bounds + MGTK::Rect::bottomright,x
+        sta     bounds,x
         dey
         dex
         bpl     :-
