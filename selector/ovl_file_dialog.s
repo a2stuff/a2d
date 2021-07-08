@@ -764,7 +764,7 @@ different:
         bmi     :+
         jsr     strip_path_segment_left_and_redraw
         lda     selected_index
-        jsr     LB404
+        jsr     invert_entry
 :       lda     screentowindow_windowy
         sta     selected_index
         bit     LA211
@@ -772,7 +772,7 @@ different:
         jsr     prep_path
         jsr     redraw_input
 :       lda     selected_index
-        jsr     LB404
+        jsr     invert_entry
         jsr     list_selection_change
 
         jsr     app::DetectDoubleClick
@@ -1295,7 +1295,7 @@ key_meta_digit:
         bcc     l2
 l1:     rts
 
-l2:     jsr     LB404
+l2:     jsr     invert_entry
         jsr     strip_path_segment_left_and_redraw
         inc     selected_index
         lda     selected_index
@@ -1315,7 +1315,7 @@ l3:     lda     #0
         bne     l2
 l1:     rts
 
-l2:     jsr     LB404
+l2:     jsr     invert_entry
         jsr     strip_path_segment_left_and_redraw
         dec     selected_index
         lda     selected_index
@@ -1343,7 +1343,7 @@ l3:     ldx     num_file_names
         pha
         lda     selected_index
         bmi     LADDB
-        jsr     LB404
+        jsr     invert_entry
         jsr     strip_path_segment_left_and_redraw
 LADDB:  pla
         jmp     update_list_selection
@@ -1423,7 +1423,7 @@ done:   rts
         bne     :+
 l1:     rts
 
-:       jsr     LB404
+:       jsr     invert_entry
         jsr     strip_path_segment_left_and_redraw
 l2:     lda     #$00
         jmp     update_list_selection
@@ -1443,7 +1443,7 @@ done:   rts
 
 :       dex
         txa
-        jsr     LB404
+        jsr     invert_entry
         jsr     strip_path_segment_left_and_redraw
 l1:     ldx     num_file_names
         dex
@@ -1866,7 +1866,7 @@ loop:   lda     l4
 l1:     lda     l4
         cmp     selected_index
         bne     l2
-        jsr     LB404
+        jsr     invert_entry
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
 l2:     inc     l4
@@ -1993,8 +1993,9 @@ tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Inputs: A = entry index
 
-.proc LB404
+.proc invert_entry
         ldx     #0
         stx     tmp
         asl     a

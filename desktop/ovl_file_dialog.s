@@ -399,7 +399,7 @@ different:
         bmi     :+
         jsr     jt_strip_path_segment
         lda     selected_index
-        jsr     L6274
+        jsr     invert_entry
 :       lda     screentowindow_windowy
         sta     selected_index
         bit     LD8F0
@@ -407,7 +407,7 @@ different:
         jsr     jt_prep_path
         jsr     jt_redraw_input
 :       lda     selected_index
-        jsr     L6274
+        jsr     invert_entry
         jsr     jt_list_selection_change
 
         jsr     main::detect_double_click
@@ -923,7 +923,7 @@ key_meta_digit:
         bcc     l2
 l1:     rts
 
-l2:     jsr     L6274
+l2:     jsr     invert_entry
         jsr     jt_strip_path_segment
         inc     selected_index
         lda     selected_index
@@ -943,7 +943,7 @@ l3:     lda     #0
         bne     l2
 l1:     rts
 
-l2:     jsr     L6274
+l2:     jsr     invert_entry
         jsr     jt_strip_path_segment
         dec     selected_index
         lda     selected_index
@@ -971,7 +971,7 @@ check_alpha:
         pha
         lda     selected_index
         bmi     L5B99
-        jsr     L6274
+        jsr     invert_entry
         jsr     jt_strip_path_segment
 L5B99:  pla
         jmp     update_list_selection
@@ -1050,7 +1050,7 @@ done:   rts
         bne     l2
 l1:     rts
 
-l2:     jsr     L6274
+l2:     jsr     invert_entry
         jsr     jt_strip_path_segment
 l3:     lda     #$00
         jmp     update_list_selection
@@ -1070,7 +1070,7 @@ done:   rts
 
 :       dex
         txa
-        jsr     L6274
+        jsr     invert_entry
         jsr     jt_strip_path_segment
 l1:     ldx     num_file_names
         dex
@@ -1540,7 +1540,7 @@ loop:   lda     l4
 l1:     lda     l4
         cmp     selected_index
         bne     l2
-        jsr     L6274
+        jsr     invert_entry
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
 l2:     inc     l4
@@ -1672,8 +1672,9 @@ l5:     .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Inputs: A = entry index
 
-.proc L6274
+.proc invert_entry
         ldx     #0
         stx     tmp
         asl     a
@@ -1682,19 +1683,19 @@ l5:     .byte   0
         rol     tmp
         asl     a
         rol     tmp
-        sta     rect_D90F::y1
+        sta     rect_file_dialog_selection::y1
         ldx     tmp
-        stx     rect_D90F::y1+1
+        stx     rect_file_dialog_selection::y1+1
         clc
         adc     #7
-        sta     rect_D90F::y2
+        sta     rect_file_dialog_selection::y2
         lda     tmp
         adc     #0
-        sta     rect_D90F::y2+1
+        sta     rect_file_dialog_selection::y2+1
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D90F
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_file_dialog_selection
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts

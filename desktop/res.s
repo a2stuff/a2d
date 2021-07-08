@@ -657,7 +657,7 @@ file_count:
 
         DEFINE_POINT file_dialog_title_pos, 0, 13
 
-        DEFINE_RECT rect_D90F, 0, 0, 125, 0
+        DEFINE_RECT rect_file_dialog_selection, 0, 0, 125, 0
 
         DEFINE_POINT picker_entry_pos, 2, 0
 
