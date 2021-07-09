@@ -10315,9 +10315,9 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ;; Save the current GrafPort and use a custom one for drawing
 
         MGTK_RELAY_CALL MGTK::GetPort, getport_params
+        MGTK_RELAY_CALL MGTK::InitPort, clock_grafport
         MGTK_RELAY_CALL MGTK::SetPort, clock_grafport
 
-        MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
         MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
 
         ;; --------------------------------------------------
