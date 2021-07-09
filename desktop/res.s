@@ -392,7 +392,7 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kFilePickerDlgWidth, kFilePickerDlgHeight
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -409,6 +409,9 @@ nextwinfo:      .addr   0
 kEntryListCtlWindowID = $15
 
 .params winfo_file_dialog_listbox
+        kWidth = 125
+        kHeight = 72
+
 window_id:      .byte   kEntryListCtlWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -421,15 +424,15 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   100
-mincontlength:  .word   70
+mincontlength:  .word   kHeight
 maxcontwidth:   .word   100
-maxcontlength:  .word   70
+maxcontlength:  .word   kHeight
 port:
-        DEFINE_POINT viewloc, 53, 50
+        DEFINE_POINT viewloc, 53, 48
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, 125, 70
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -701,13 +704,13 @@ kRadioControlHeight = 8
 
         DEFINE_RECT rect_D9C8, 27, 16, 174, 26
 
-        DEFINE_BUTTON change_drive, res_string_button_change_drive,       193, 30
-        DEFINE_BUTTON open,         res_string_button_open,               193, 44
-        DEFINE_BUTTON close,        res_string_button_close,              193, 58
-        DEFINE_BUTTON cancel,       res_string_fd_button_cancel,  193, 73
-        DEFINE_BUTTON ok,           res_string_fd_button_ok, 193, 89
+        DEFINE_BUTTON change_drive, res_string_button_change_drive,     193, 28
+        DEFINE_BUTTON open,         res_string_button_open,             193, 42
+        DEFINE_BUTTON close,        res_string_button_close,            193, 56
+        DEFINE_BUTTON cancel,       res_string_fd_button_cancel,        193, 71
+        DEFINE_BUTTON ok,           res_string_fd_button_ok,            193, 87
 
-        DEFINE_POINT dialog_sep_start, 323-8, 30
+        DEFINE_POINT dialog_sep_start, 323-8, 28
         DEFINE_POINT dialog_sep_end, 323-8, 100
 
         .byte   $81,$D3,$00     ; ???

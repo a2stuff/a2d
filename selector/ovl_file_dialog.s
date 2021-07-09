@@ -19,7 +19,6 @@ num_file_names  := $177F
 ;;; Sequence of 16-byte records, filenames in current directory.
 file_names      := $1800
 
-
 kListEntryHeight = 9            ; Default font height
 kListEntryGlyphX = 1
 kListEntryNameX  = 16
@@ -183,93 +182,75 @@ kFilePickerDlgWindowID = $3E
 .params winfo_file_dialog
         kWidth = 500
         kHeight = 153
-window_id:
-        .byte   kFilePickerDlgWindowID
-        .byte   $01, $00
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
 
-        .word   150, 50
-        .word   500, 140
-        .byte   $19,$00,$14
-        .byte   $00
-        .addr   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .word   kWidth, kHeight
-        .res    8, $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
-        .byte   $01,$01
-        .byte   $00
-        .byte   $7F
-        .addr   FONT
-        .addr   0
+window_id:      .byte   kFilePickerDlgWindowID
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontlength:  .word   50
+maxcontwidth:   .word   500
+maxcontlength:  .word   140
+port:
+        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+penpattern:     .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg:         .byte   MGTK::textbg_white
+fontptr:        .addr   FONT
+nextwinfo:      .addr   0
 .endparams
 
 
 .params winfo_file_dialog_listbox
-window_id:
-        .byte   $3F
-        .byte   $01,$00
-        .byte   $00
-        .byte   $00
-vscroll:
-        .byte   $C1,$00
-        .byte   $00
-vthumbmax:
-        .byte   $03
-vthumbpos:
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $64
-        .byte   $00
-        .byte   $46,$00
-        .byte   $64
-        .byte   $00
-        .byte   $46,$00
-        .byte   $35,$00
-        .byte   $32
-        .byte   $00
-        .addr   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   $00
-maprect:
-x1:     .word   0
-y1:     .word   0
-x2:     .word   125
-y2:     .word   70
-pattern:.res    8, $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        kWidth = 125
+        kHeight = 72
 
-        .byte   $01,$01
-        .byte   $00
-        .byte   $7F
-        .addr   FONT
-        .byte   $00
-        .byte   $00
+window_id:      .byte   $3F
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_normal
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   3
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   100
+mincontlength:  .word   kHeight
+maxcontwidth:   .word   100
+maxcontlength:  .word   kHeight
+port:
+        DEFINE_POINT viewloc, 53, 48
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+maprect:
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   $FF, 0
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg:         .byte   $7F
+fontptr:        .addr   FONT
+nextwinfo:      .addr   0
 .endparams
 
 
@@ -322,14 +303,14 @@ selected_index:                 ; $FF if none
 
         DEFINE_RECT rect0, 27, 16, 174, 26
 
-        DEFINE_BUTTON change_drive, res_string_button_change_drive,       193, 30
-        DEFINE_BUTTON open,         res_string_button_open,               193, 44
-        DEFINE_BUTTON close,        res_string_button_close,              193, 58
-        DEFINE_BUTTON cancel,       res_string_fd_button_cancel,  193, 73
-        DEFINE_BUTTON ok,           res_string_fd_button_ok, 193, 89
+        DEFINE_BUTTON change_drive, res_string_button_change_drive,     193, 28
+        DEFINE_BUTTON open,         res_string_button_open,             193, 42
+        DEFINE_BUTTON close,        res_string_button_close,            193, 56
+        DEFINE_BUTTON cancel,       res_string_fd_button_cancel,        193, 71
+        DEFINE_BUTTON ok,           res_string_fd_button_ok,            193, 87
 
 ;;; Dividing line
-        DEFINE_POINT pt1, 323-8, 30
+        DEFINE_POINT pt1, 323-8, 28
         DEFINE_POINT pt2, 323-8, 100
 
         DEFINE_POINT pos_disk, 28, 25
@@ -685,7 +666,7 @@ rts1:   rts
 LA662:  lda     winfo_file_dialog_listbox::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_windowy, winfo_file_dialog_listbox::y1, screentowindow_windowy
+        add16   screentowindow_windowy, winfo_file_dialog_listbox::cliprect::y1, screentowindow_windowy
         ldax    screentowindow_windowy
         ldy     #kListEntryHeight
         jsr     Divide_16_8_16
@@ -1978,8 +1959,8 @@ l3:     sec
 l4:     ldx     #$00            ; A,X = line
         ldy     #kListEntryHeight
         jsr     Multiply_16_8_16
-        stax    winfo_file_dialog_listbox::y1
-        add16_8 winfo_file_dialog_listbox::y1, #70, winfo_file_dialog_listbox::y2
+        stax    winfo_file_dialog_listbox::cliprect::y1
+        add16_8 winfo_file_dialog_listbox::cliprect::y1, #winfo_file_dialog_listbox::kHeight, winfo_file_dialog_listbox::cliprect::y2
         rts
 
 tmp:    .byte   0

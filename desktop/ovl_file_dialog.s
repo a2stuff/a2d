@@ -1658,7 +1658,7 @@ l4:     ldx     #$00            ; A,X = line
         ldy     #kListEntryHeight
         jsr     Multiply_16_8_16
         stax    winfo_file_dialog_listbox::cliprect::y1
-        add16_8 winfo_file_dialog_listbox::cliprect::y1, #70, winfo_file_dialog_listbox::cliprect::y2
+        add16_8 winfo_file_dialog_listbox::cliprect::y1, #winfo_file_dialog_listbox::kHeight, winfo_file_dialog_listbox::cliprect::y2
         rts
 
 l5:     .byte   0
