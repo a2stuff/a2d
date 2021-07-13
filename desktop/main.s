@@ -11682,7 +11682,8 @@ pointers_buf:  .res    4, 0
         DEFINE_READ_PARAMS read_src_dir_skip5_params, skip5_buf, 5 ; ???
 skip5_buf:  .res    5, 0
 
-        kBufSize = $AC0
+        kBufSize = $A80
+        .assert $1500 + kBufSize <= dst_path_buf, error, "Buffer overlap"
 
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
