@@ -10510,6 +10510,10 @@ mod7:   adc     #7              ; Returns (A+3) modulo 7
 .endproc
 
 .proc SetColorMode
+        ;; IIgs?
+        jsr     test_iigs
+        bcc     iigs
+
         ;; AppleColor Card - Mode 2 (Color 140x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
         sta     SET80VID
@@ -10518,10 +10522,6 @@ mod7:   adc     #7              ; Returns (A+3) modulo 7
         lda     AN3_OFF
         lda     AN3_ON
         lda     AN3_OFF
-
-        ;; IIgs?
-        jsr     test_iigs
-        bcc     iigs
 
         ;; Le Chat Mauve Eve - COL140 mode
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
@@ -10540,6 +10540,10 @@ done:   rts
 .endproc
 
 .proc SetMonoMode
+        ;; IIgs?
+        jsr     test_iigs
+        bcc     iigs
+
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
         sta     CLR80VID
@@ -10549,10 +10553,6 @@ done:   rts
         lda     AN3_ON
         sta     SET80VID
         lda     AN3_OFF
-
-        ;; IIgs?
-        jsr     test_iigs
-        bcc     iigs
 
         ;; Le Chat Mauve Eve - BW560 mode
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
