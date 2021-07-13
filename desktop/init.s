@@ -138,7 +138,6 @@ done:
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        sta     SET80COL
 
         ;; Ensure we're on a IIe or later
         lda     id_version

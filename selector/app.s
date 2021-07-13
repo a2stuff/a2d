@@ -556,7 +556,7 @@ L91FA:  cmp     slot_table,y
 L9205:  ora     #$C0
         sta     @addr+1
         @addr := *+1
-        jmp     CLR80COL
+        jmp     $C000           ; High byte is self-modified
 
 set_startup_menu_items:
         lda     slot_table
