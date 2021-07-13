@@ -415,6 +415,9 @@ L9129:  .byte   0
 not_iigs_flag:                  ; high bit set unless IIgs
         .byte   0
 
+lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
+        .byte   0
+
 ;;; ============================================================
 ;;; App Initialization
 
@@ -425,6 +428,11 @@ entry:
         sec
         jsr     IDROUTINE       ; clear C if IIgs
         ror     not_iigs_flag   ; rotate C into high bit
+
+        jsr     DetectLeChatMauveEve
+        bne     :+
+        copy    #$80, lcm_eve_flag
+:
 
         copy    #$FF, selected_index
         jsr     load_selector_list
@@ -2271,9 +2279,11 @@ len:    .byte   0
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         ;; lda AN3_OFF ; already done above
+        bit     lcm_eve_flag
+        bpl     done
         sta     HR2_OFF
         sta     HR3_OFF
-        bcs     done
+        bmi     done            ; always
 
         ;; Apple IIgs - DHR Color
 iigs:   lda     NEWVIDEO
@@ -2303,9 +2313,11 @@ done:   rts
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         ;; lda AN3_OFF ; already done above
+        bit     lcm_eve_flag
+        bpl     done
         sta     HR2_ON
         sta     HR3_ON
-        bcs     done
+        bmi     done            ; always
 
         ;; Apple IIgs - DHR B&W
 iigs:   lda     NEWVIDEO
@@ -2314,6 +2326,7 @@ iigs:   lda     NEWVIDEO
 
 done:   rts
 .endproc
+
 
 ;;; ============================================================
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
@@ -2366,6 +2379,7 @@ loop_counter:
         .include "../lib/drawstring.s"
         .include "../lib/muldiv.s"
         .include "../lib/bell.s"
+        .include "../lib/detect_lcmeve.s"
 
 .endscope
 

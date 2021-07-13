@@ -115,6 +115,16 @@ done:
 .endscope
 
 ;;; ============================================================
+;;; Detect Le Chat Mauve Eve RGB card
+
+.scope lcm
+        jsr     DetectLeChatMauveEve
+        bne     :+
+        copy    #$80, main::lcm_eve_flag
+:
+.endscope
+
+;;; ============================================================
 ;;; Detect Machine Type - set flags and periodic task delay
 
 ;;; NOTE: Starts with ROM paged in, exits with LCBANK1 paged in.
@@ -1219,6 +1229,11 @@ str_sd_fileshare:
         PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_fileshare)
 
 ;;; ============================================================
+
+        .include "../lib/detect_lcmeve.s"
+
+;;; ============================================================
+
 
         PAD_TO ::kSegmentInitializerAddress + ::kSegmentInitializerLength
 

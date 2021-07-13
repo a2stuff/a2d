@@ -10527,9 +10527,11 @@ mod7:   adc     #7              ; Returns (A+3) modulo 7
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         ;; lda AN3_OFF ; already done above
+        bit     lcm_eve_flag
+        bpl     done
         sta     HR2_OFF
         sta     HR3_OFF
-        bcs     done
+        bmi     done            ; always
 
         ;; Apple IIgs - DHR Color
 iigs:   lda     NEWVIDEO
@@ -10558,9 +10560,11 @@ done:   rts
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         ;; lda AN3_OFF ; already done above
+        bit     lcm_eve_flag
+        bpl     done
         sta     HR2_ON
         sta     HR3_ON
-        bcs     done
+        bmi     done            ; always
 
         ;; Apple IIgs - DHR B&W
 iigs:   lda     NEWVIDEO
@@ -16383,6 +16387,8 @@ iigs:   lda     KEYMODREG
 pb2_initial_state:
         .byte   0
 
+lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
+        .byte   0
 ;;; ============================================================
 
 
