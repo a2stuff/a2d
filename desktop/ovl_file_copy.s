@@ -45,7 +45,7 @@
 .endproc
 
 .proc draw_controls
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     file_dialog::set_port_for_window
         param_call file_dialog::draw_title_centered, aux::label_copy_file
         param_call file_dialog::draw_input1_label, file_dialog_res::source_filename_label

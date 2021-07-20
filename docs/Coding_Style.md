@@ -67,7 +67,7 @@ there   := * - 1                ; internal label
 
 kTrue   = $80                   ; constant
 
-.params get_flag_params         ; paramter block
+.params get_flag_params         ; parameter block
 result: .byte   0
 .endparams
 

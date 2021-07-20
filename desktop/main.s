@@ -13741,7 +13741,7 @@ content:
         cmp     winfo_prompt_dialog
         beq     :+
         return  #$FF
-:       lda     winfo_prompt_dialog
+:       lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         copy    winfo_prompt_dialog, event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -13985,7 +13985,7 @@ done:   return  #$FF
 .endproc
 
 .proc handle_key_ok
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
@@ -13994,7 +13994,7 @@ done:   return  #$FF
 .endproc
 
 .proc handle_key_cancel
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
@@ -14109,7 +14109,7 @@ do1:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
@@ -14121,7 +14121,7 @@ do2:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     clear_dest_file_rect
@@ -14158,7 +14158,7 @@ do5:    jsr     close_prompt_dialog
 
         ;; CopyDialogLifecycle::exists
 do3:    jsr     Bell
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 6, aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
@@ -14173,7 +14173,7 @@ LAA7F:  jsr     prompt_input_loop
 
         ;; CopyDialogLifecycle::too_large
 do4:    jsr     Bell
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         bit     move_flag
     IF_MINUS
@@ -14227,7 +14227,7 @@ do1:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
@@ -14238,7 +14238,7 @@ do2:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
@@ -14261,7 +14261,7 @@ do3:    jsr     close_prompt_dialog
         rts
 
 do4:    jsr     Bell
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 6, aux::str_ramcard_full
         jsr     draw_ok_button
@@ -14319,7 +14319,7 @@ do1:
         ldy     #0
         copy16in (ptr),y, file_count
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         copy    #kValueLeft, dialog_label_pos
         param_call draw_dialog_label, 1, str_file_count
@@ -14352,7 +14352,7 @@ do3:    jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         rts
 
-do2:    lda     winfo_prompt_dialog
+do2:    lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
@@ -14402,7 +14402,7 @@ do1:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         lda     delete_flag
         beq     :+
@@ -14419,7 +14419,7 @@ do3:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
@@ -14438,7 +14438,7 @@ do3:    ldy     #1
         rts
 
         ;; DeleteDialogLifecycle::confirm
-do2:    lda     winfo_prompt_dialog
+do2:    lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LADC4:  jsr     prompt_input_loop
@@ -14458,7 +14458,7 @@ do5:    jsr     close_prompt_dialog
         rts
 
         ;; DeleteDialogLifecycle::locked
-do4:    lda     winfo_prompt_dialog
+do4:    lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 6, aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
@@ -14494,7 +14494,7 @@ LAE49:  copy    #$80, has_input_field_flag
         jsr     clear_path_buf2
         lda     #$00
         jsr     open_prompt_window
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_title, aux::label_new_folder
         jsr     set_penmode_xor
@@ -14514,7 +14514,7 @@ LAE90:  lda     ($08),y
         sta     path_buf0,y
         dey
         bpl     LAE90
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 2, aux::str_in
         param_call draw_dialog_path, path_buf0
@@ -14583,7 +14583,7 @@ prepare_window:
         ror     a
         eor     #$80
         jsr     open_prompt_window
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
 
         param_call draw_dialog_title, aux::label_get_info
@@ -14621,7 +14621,7 @@ draw_final_labels:
 
         ;; Draw a specific value
 populate_value:
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
@@ -14704,7 +14704,7 @@ do1:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 4, aux::str_lock_ok
         param_call DrawString, str_file_count
@@ -14716,7 +14716,7 @@ do3:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
@@ -14737,7 +14737,7 @@ do3:    ldy     #1
         rts
 
         ;; LockDialogLifecycle::loop
-do2:    lda     winfo_prompt_dialog
+do2:    lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB0FA:  jsr     prompt_input_loop
@@ -14790,7 +14790,7 @@ do1:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 4, aux::str_unlock_ok
         param_call DrawString, str_file_count
@@ -14802,7 +14802,7 @@ do3:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
@@ -14821,7 +14821,7 @@ do3:    ldy     #1
         rts
 
         ;; LockDialogLifecycle::loop
-do2:    lda     winfo_prompt_dialog
+do2:    lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB218:  jsr     prompt_input_loop
@@ -14864,7 +14864,7 @@ open_win:
         copy    #$80, has_input_field_flag
         lda     #$00
         jsr     open_prompt_window
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_title, aux::label_rename_icon
         jsr     set_penmode_xor
@@ -14895,7 +14895,7 @@ open_win:
 run_loop:
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
 :       jsr     prompt_input_loop
         bmi     :-              ; continue?
@@ -14927,7 +14927,7 @@ close_win:
         ;; Create window
         MGTK_RELAY_CALL MGTK::HideCursor
         jsr     open_alert_window
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_title, aux::str_warning
         MGTK_RELAY_CALL MGTK::ShowCursor
@@ -15091,7 +15091,7 @@ done:   jmp     reset_main_grafport
 
 .proc open_dialog_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
@@ -15103,7 +15103,7 @@ done:   jmp     reset_main_grafport
 
 .proc open_alert_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintBits, aux::Alert::alert_bitmap_params
@@ -15336,7 +15336,7 @@ draw:   copy16  #str_insertion_point+1, textptr
         copy    str_insertion_point, textlen
         MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
         MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -15344,7 +15344,7 @@ draw:   copy16  #str_insertion_point+1, textptr
 ;;; ============================================================
 
 .proc draw_filename_prompt
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, name_input_rect
@@ -15355,7 +15355,7 @@ draw:   copy16  #str_insertion_point+1, textptr
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
 done:   rts
 .endproc
@@ -15549,7 +15549,7 @@ ip_pos: .word   0
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         param_call DrawString, str_1_char
         param_call DrawString, path_buf2
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         rts
 
@@ -15575,7 +15575,7 @@ param:  .byte   0
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -15619,7 +15619,7 @@ finish: ldx     path_buf1
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -15660,7 +15660,7 @@ finish: dec     path_buf2
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         rts
 .endproc

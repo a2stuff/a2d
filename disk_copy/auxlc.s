@@ -580,7 +580,7 @@ LD687:  lda     current_drive_selection
         MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
         lda     current_drive_selection
         sta     source_drive_index
-        lda     winfo_drive_select
+        lda     winfo_drive_select::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, winfo_drive_select::cliprect
@@ -1032,7 +1032,7 @@ check_read_drive_button:
 :       return  #$FF
 
 handle_drive_select_button_down:
-        lda     winfo_drive_select
+        lda     winfo_drive_select::window_id
         sta     screentowindow_window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
@@ -1137,7 +1137,7 @@ LDC55:  bit     LD44C
 .proc check_down
         cmp     #CHAR_DOWN
         bne     check_up
-        lda     winfo_drive_select
+        lda     winfo_drive_select::window_id
         jsr     set_win_port
         lda     current_drive_selection
         bmi     LDC6F
@@ -1155,7 +1155,7 @@ LDC7F:  jsr     highlight_row
 .proc check_up
         cmp     #CHAR_UP
         bne     LDCA9
-        lda     winfo_drive_select
+        lda     winfo_drive_select::window_id
         jsr     set_win_port
         lda     current_drive_selection
         bmi     LDC9C
@@ -1783,7 +1783,7 @@ LE28C:  .byte   0
 ;;; ============================================================
 
 .proc draw_device_list_entries
-        lda     winfo_drive_select
+        lda     winfo_drive_select::window_id
         jsr     set_win_port
 
         lda     #0
@@ -1807,7 +1807,7 @@ index:  .byte   0
 
 ;;; ============================================================
 
-LE2B1:  lda     winfo_drive_select
+LE2B1:  lda     winfo_drive_select::window_id
         jsr     set_win_port
         lda     current_drive_selection
         asl     a
