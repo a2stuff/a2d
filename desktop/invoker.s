@@ -155,7 +155,7 @@ not_basic:
 ;;; * [ ] $280 set to name of root volume
 ;;; * [ ] $380 set to path of launched SYS (i.e. path to BASIS.SYSTEM)
 ;;; Not all should be necessary, but not doing so may lead to future
-;;; compatiblity issues. Those addresses conflict with this code.
+;;; compatibility issues. Those addresses conflict with this code.
 
 ;;; ============================================================
 ;;; Load target at given address

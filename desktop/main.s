@@ -2154,7 +2154,7 @@ L4FC6:  lda     active_window_id
 L4FD4:  copy    #$80, new_folder_dialog_params::phase
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
         beq     :+
-        jmp     done            ; Cancelled
+        jmp     done            ; Canceled
 :       stx     ptr+1
         stx     name_ptr+1
         sty     ptr

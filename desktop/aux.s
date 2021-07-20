@@ -246,7 +246,7 @@ a2d_file_icon:
         PAD_TO $8E00
 
 ;;; ============================================================
-;;; Entry point for "Icon TookKit"
+;;; Entry point for "Icon ToolKit"
 ;;; ============================================================
 
         ASSERT_ADDRESS IconTK::MLI, "IconTK entry point"
@@ -3508,7 +3508,7 @@ str_about9:  PASCAL_STRING .sprintf("Version %d.%d%s",::kDeskTopVersionMajor,::k
 str_copy_title:
         PASCAL_STRING res_string_copy_dialog_title ; dialog title
 str_copy_copying:
-        PASCAL_STRING res_string_copy_label_statsus
+        PASCAL_STRING res_string_copy_label_status
 str_copy_from:
         PASCAL_STRING res_string_copy_label_from
 str_copy_to:

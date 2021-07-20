@@ -441,7 +441,7 @@ SelectWindow    = $42           ; Make window topmost
 ;;; .byte       window_id
 
 TrackGoAway     = $43
-;;; .byte       clicked         (out) 0 = cancelled, 1 = close
+;;; .byte       clicked         (out) 0 = canceled, 1 = close
 
 DragWindow      = $44
 ;;; .byte       window_id

@@ -46,7 +46,7 @@
 .define res_string_about_text_line6 "Richard Danais und Luc Barthelet"
 .define res_string_about_text_line7 "Dank an: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
 .define res_string_copy_dialog_title "Kopieren..."
-.define res_string_copy_label_statsus "Kopiere "
+.define res_string_copy_label_status "Kopiere "
 .define res_string_copy_label_from "von:"
 .define res_string_copy_label_to "nach:"
 .define res_string_copy_status_files_remaining "Zu kopierende Dateien: "

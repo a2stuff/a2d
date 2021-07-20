@@ -1681,7 +1681,7 @@ params: .addr   0
         dey
         bne     :-
 
-        ;; And find preceeding /
+        ;; And find preceding /
 :       dey
 :       lda     (ptr),y
         and     #CHAR_MASK

@@ -8033,7 +8033,7 @@ no_change:
         jsr     frame_winrect
 
         bit     movement_cancel
-        bmi     cancelled
+        bmi     canceled
 
         ldx     #3
 :       lda     drag_delta,x
@@ -8041,7 +8041,7 @@ no_change:
         dex
         bpl     :-
 
-cancelled:
+canceled:
         jsr     show_cursor_and_restore
         lda     #0
 return_moved:
