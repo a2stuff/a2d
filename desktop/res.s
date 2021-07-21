@@ -1423,13 +1423,13 @@ str_4_spaces:
         PASCAL_STRING "    "    ; do not localize
 
 dow_strings:
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_1)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_2)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_3)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_4)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_5)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_6)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_7)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_1)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_2)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_3)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_4)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_5)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_6)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_7)
         ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
 
 .params dow_str_params

@@ -45,14 +45,6 @@ end:
 .endif
 .endmacro
 
-;;; Simple string. Prefer this to .byte since it is easier to
-;;; extract for localization.
-
-.macro  STRING  str
-        .byte   str
-.endmacro
-
-
 .define TO_LOWER(char) (char | %00100000)
 
 ;;; ============================================================
