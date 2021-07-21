@@ -993,11 +993,7 @@ L1986:  cmp     #$A5
         lda     read_block_params::unit_num
         jsr     L19C1
         sta     the_dos_33_disk_label + kTheDos33DiskDriveCharOffset
-        ldx     the_dos_33_disk_label
-L19AC:  lda     the_dos_33_disk_label,x
-        sta     ovl_string_buf,x
-        dex
-        bpl     L19AC
+        COPY_STRING the_dos_33_disk_label, ovl_string_buf
         rts
 
         .byte   0

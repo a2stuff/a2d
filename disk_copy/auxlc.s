@@ -2130,11 +2130,7 @@ LE559:  lda     winfo_dialog::window_id
 LE5C5:  rts
 
 LE5C6:  param_call DrawString, str_2_spaces
-        ldx     main__on_line_buffer2
-LE5D0:  lda     main__on_line_buffer2,x
-        sta     LD43A,x
-        dex
-        bpl     LE5D0
+        COPY_STRING main__on_line_buffer2, LD43A
         param_call DrawString, LD43A
         rts
 

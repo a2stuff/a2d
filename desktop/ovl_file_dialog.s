@@ -3048,18 +3048,10 @@ f2:     lda     #$FF
 f1:     lda     #$00
 
 l1:     bmi     l3
-        ldx     path_buf0
-l2:     lda     path_buf0,x
-        sta     split_buf,x
-        dex
-        bpl     l2
+        COPY_STRING path_buf0, split_buf
         jmp     l4
 
-l3:     ldx     path_buf1
-:       lda     path_buf1,x
-        sta     split_buf,x
-        dex
-        bpl     :-
+l3:     COPY_STRING path_buf1, split_buf
 
 l4:     lda     selected_index
         sta     d2

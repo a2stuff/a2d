@@ -32,7 +32,7 @@
 ;;;          :           : :           :
 ;;;
 
-        .org $800
+        .org DA_LOAD_ADDRESS
 
         jmp     entry
 

@@ -243,11 +243,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         lda     LD8F1
         sta     LD8F0
 
-        ldx     path_buf0
-:       lda     path_buf0,x
-        sta     file_dialog::path_buf,x
-        dex
-        bpl     :-
+        COPY_STRING path_buf0, file_dialog::path_buf
 
         jsr     file_dialog::strip_path_segment
         bit     LD8F0

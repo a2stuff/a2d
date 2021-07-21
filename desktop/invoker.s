@@ -7,7 +7,7 @@
 ;;; Used to invoke other programs (system, binary, BASIC)
 
 .proc invoker
-        .org $290
+        .org ::INVOKER
 
 start:
         jmp     begin

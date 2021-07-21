@@ -11402,11 +11402,7 @@ append_size:
 :       stx     buf
 
         ;; TODO: Compose directly into path_buf4.
-        ldx     buf
-:       lda     buf,x
-        sta     path_buf4,x
-        dex
-        bpl     :-
+        COPY_STRING buf, path_buf4
 
         copy16  #path_buf4, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc

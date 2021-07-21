@@ -2846,11 +2846,7 @@ width   .word
 ;;; ============================================================
 
 .proc LBB5B
-        ldx     buf_input_left
-:       lda     buf_input_left,x
-        sta     buf_text,x
-        dex
-        bpl     :-
+        COPY_STRING buf_input_left, buf_text
 
         lda     selected_index
         sta     l7

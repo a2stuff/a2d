@@ -51,7 +51,7 @@ font_width_backup       := $1100
 
 ;;; ============================================================
 
-        .org $800
+        .org DA_LOAD_ADDRESS
 
 .proc start
         INVOKE_PATH := $220

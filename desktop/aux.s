@@ -1190,7 +1190,7 @@ is_drag:
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        COPY_STRUCT MGTK::Rect, drag_outline_grafport::cliprect, iconinrect_params::rect
+        COPY_BLOCK drag_outline_grafport::cliprect, iconinrect_params::rect
 
         ldx     highlight_count
         stx     L9C74

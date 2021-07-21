@@ -723,14 +723,11 @@ loop:   lda     src,x
 
 .macro PROC_AT name, addr
 .proc name
-        saved_org := *
-        .org addr
-.proc __inner__
+        .pushorg addr
 .endmacro
 
 .macro END_PROC_AT
-.endproc ; __inner__
-        .org saved_org + .sizeof(__inner__)
+        .poporg
 .endproc
 .endmacro
 
