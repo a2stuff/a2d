@@ -15366,9 +15366,9 @@ done:   rts
         ptr := $6
 
         PARAM_BLOCK tw_params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         click_coords := screentowindow_windowx

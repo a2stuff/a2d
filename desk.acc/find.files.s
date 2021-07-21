@@ -1624,9 +1624,9 @@ sub:    MGTK_CALL MGTK::PaintRect, 0, fillrect_addr
 .proc handle_click_in_textbox
 
         PARAM_BLOCK tw_params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         click_coords := screentowindow_params::window::xcoord
@@ -1785,9 +1785,9 @@ ip_pos: .word   0
 
 .proc calc_ip_pos
         PARAM_BLOCK params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         lda     #0
@@ -1931,8 +1931,8 @@ line:   .byte   0
 
 .proc draw_string
         PARAM_BLOCK params, $06
-addr:   .res    2
-length: .res    1
+addr    .addr
+length  .byte
         END_PARAM_BLOCK
 
         stax    params::addr

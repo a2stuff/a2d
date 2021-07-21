@@ -238,10 +238,13 @@ result:         .word   0
 
 ```asm
 PARAM_BLOCK zp_params, $80
-flag1:  .byte   0
-flag2:  .byte   0
+flag1   .byte
+flag2   .byte
 END_PARAM_BLOCK
 ```
+
+This is equivalent to (and is defined using) ca65's `.struct` with
+`.org`, but also defines a label for the block itself.
 
 ## Namespaces
 

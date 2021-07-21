@@ -355,9 +355,9 @@ line_addrs:
         ptr := $06
 
 PARAM_BLOCK params, $06
-data:   .addr   0
-len:    .byte   0
-width:  .word   0
+data    .addr
+len     .byte
+width   .word
 END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetWinPort, winport_params

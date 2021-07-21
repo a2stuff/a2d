@@ -529,7 +529,7 @@ ycoord: .word   0
 
 .proc AddIconImpl
         PARAM_BLOCK params, $06
-ptr_icon:       .addr   0
+ptr_icon        .addr
         END_PARAM_BLOCK
 
         ldy     #0
@@ -568,7 +568,7 @@ sub:    ldx     num_icons       ; ???
 
 .proc HighlightIconImpl
         PARAM_BLOCK params, $06
-ptr_icon:       .addr   0
+ptr_icon        .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
@@ -646,7 +646,7 @@ icon:   .byte   0
 
 .proc RedrawIconImpl
         PARAM_BLOCK params, $06
-ptr_icon:       .addr   0
+ptr_icon        .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
@@ -698,7 +698,7 @@ done:   jsr     paint_icon_unhighlighted
 
 .proc RemoveIconImpl
         PARAM_BLOCK params, $06
-ptr_icon:       .addr   0
+ptr_icon        .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
@@ -782,7 +782,7 @@ done:   return  #0              ; Unhighlighted
 
 .proc EraseIconImpl
         PARAM_BLOCK params, $06
-ptr_icon_idx:   .addr   0
+ptr_icon_idx    .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
@@ -806,7 +806,7 @@ ptr_icon_idx:   .addr   0
 buffer := SAVE_AREA_BUFFER
 
         PARAM_BLOCK params, $06
-ptr_window_id:      .addr    0
+ptr_window_id       .addr
         END_PARAM_BLOCK
 
         ptr := $08
@@ -884,7 +884,7 @@ loop2:  lda     buffer,x
         jmp     start
 
         PARAM_BLOCK params, $06
-ptr_window_id:      .addr    0
+ptr_window_id       .addr
         END_PARAM_BLOCK
 
         icon_ptr := $08
@@ -926,7 +926,7 @@ done:   return  #0
 
 .proc CloseWindowImpl
         PARAM_BLOCK params, $06
-window_id:      .addr   0
+window_id       .addr
         END_PARAM_BLOCK
 
         ptr := $08
@@ -1820,7 +1820,7 @@ height: .word   0
 
 .proc UnhighlightIconImpl
         PARAM_BLOCK params, $06
-ptr_iconent:    .addr   0
+ptr_iconent     .addr
         END_PARAM_BLOCK
 
 start:  lda     has_highlight

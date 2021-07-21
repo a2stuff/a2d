@@ -2344,8 +2344,8 @@ bg2:    MGTK_CALL MGTK::SetTextBG, textbg2
         copy    #$FF, prompt_ip_flag
 
         PARAM_BLOCK dt_params, $06
-data:   .addr   0
-length: .byte   0
+data    .addr
+length  .byte
         END_PARAM_BLOCK
 
 :       copy16  #str_insertion_point+1, dt_params::data
@@ -2396,9 +2396,9 @@ length: .byte   0
         jmp     to_left
 
         PARAM_BLOCK tw_params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         ;; --------------------------------------------------
@@ -2819,9 +2819,9 @@ tmp:    .byte   0
 
 .proc calc_ip_pos
         PARAM_BLOCK params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         lda     #0

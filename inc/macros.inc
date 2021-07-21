@@ -658,39 +658,33 @@ skip:   dec     arg
 ;;; ============================================================
 
 ;;; Helper macros to set up a scoped block of parameters at a pre-determined
-;;; address.
-;;;
-;;; Note: to use this macro, your cfg must have a BSS segment:
-;;;     (BSS: load = BSS, type = bss)
+;;; address. Like .struct/.org, but also defines a label at the target
+;;; address. Nested .struct can be used.
 ;;;
 ;;; Example:
 ;;;    .proc my_function
 ;;;            PARAM_BLOCK params, $82
-;;;    arg1:   .res    1
-;;;    arg2:   .res    2
-;;;    arg3:   .res    2
+;;;    arg1    .byte
+;;;    arg2    .word
+;;;    arg3    .res    7
 ;;;            END_PARAM_BLOCK
 ;;;
 ;;;            lda     params::arg1         ; equiv. to lda $82
 ;;;            lda     params::arg2         ; equiv. to lda $83
 ;;;            lda     params::arg3         ; equiv. to lda $85
+;;;            lda     #params              ; equiv. to lda #$82
+;;;            lda     #.sizeof(params)     ; equiv. to lda #10
 ;;;
 .macro PARAM_BLOCK name, addr
         name := addr
-        .scope  name
-        saved_org := *
-        .pushseg
-        .bss
-        .org    addr
-        start := *
+        .struct name
+        .org addr
 .endmacro
 
 .macro END_PARAM_BLOCK
-        size := * - start
-        .popseg
-        .org saved_org
-        .endscope
+        .endstruct
 .endmacro
+
 
 ;;; ============================================================
 ;;; Structure Helpers

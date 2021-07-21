@@ -2041,8 +2041,8 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         copy    #$FF, prompt_ip_flag
 
         PARAM_BLOCK dt_params, $06
-data:   .addr   0
-length: .byte   0
+data    .addr
+length  .byte
         END_PARAM_BLOCK
 
 :       copy16  #str_insertion_point+1, dt_params::data
@@ -2074,8 +2074,8 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         copy    #$FF, prompt_ip_flag
 
         PARAM_BLOCK dt_params, $06
-data:   .addr   0
-length: .byte   0
+data    .addr
+length  .byte
         END_PARAM_BLOCK
 
 :       copy16  #str_insertion_point+1, dt_params::data
@@ -2155,9 +2155,9 @@ ep2:    jsr     calc_input1_ip_pos
         jmp     to_left
 
         PARAM_BLOCK tw_params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         ;; --------------------------------------------------
@@ -2325,9 +2325,9 @@ ep2:    jsr     calc_input2_ip_pos
         jmp     to_left
 
         PARAM_BLOCK tw_params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         ;; --------------------------------------------------
@@ -2982,9 +2982,9 @@ flag:   .byte   0
 
 .proc calc_input1_ip_pos
         PARAM_BLOCK params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         lda     #0
@@ -3012,9 +3012,9 @@ width:  .word   0
 
 .proc calc_input2_ip_pos
         PARAM_BLOCK params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         lda     #0

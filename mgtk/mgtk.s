@@ -3764,7 +3764,7 @@ saved_port_addr:
 
 .proc SetSwitchesImpl
         PARAM_BLOCK params, $82
-switches:       .byte   0
+switches        .byte
         END_PARAM_BLOCK
 
         lda     DHIRESON        ; enable dhr graphics
@@ -3851,7 +3851,7 @@ rts3:   rts
 
 .proc SetZP1Impl
         PARAM_BLOCK params, $82
-flag:   .byte   0
+flag    .byte
         END_PARAM_BLOCK
 
         lda     params::flag
@@ -3872,7 +3872,7 @@ flag:   .byte   0
 
 .proc SetZP2Impl
         PARAM_BLOCK params, $82
-flag:   .byte   0
+flag    .byte
         END_PARAM_BLOCK
 
         lda     params::flag
@@ -4546,16 +4546,15 @@ save_p_reg:
 
 .proc StartDeskTopImpl
         PARAM_BLOCK params, $82
-machine:        .byte   0
-subid:          .byte   0
-op_sys:         .byte   0
-slot_num:       .byte   0
-use_irq:        .byte   0
-sysfontptr:     .addr   0
-savearea:       .addr   0
-savesize:       .word   0
+machine         .byte
+subid           .byte
+op_sys          .byte
+slot_num        .byte
+use_irq         .byte
+sysfontptr      .addr
+savearea        .addr
+savesize        .word
         END_PARAM_BLOCK
-
 
         php
         pla
@@ -4777,8 +4776,8 @@ is_pascal:
 
 .proc SetUserHookImpl
         PARAM_BLOCK params, $82
-hook_id:        .byte   0
-routine_ptr:    .addr   0
+hook_id         .byte
+routine_ptr     .addr
         END_PARAM_BLOCK
 
         lda     params::hook_id
@@ -4967,8 +4966,8 @@ checkerboard_pattern:
 
 .proc AttachDriverImpl
         PARAM_BLOCK params, $82
-hook:        .addr      0
-mouse_state: .word      0
+hook         .addr
+mouse_state  .word
         END_PARAM_BLOCK
 
         bit     desktop_initialized_flag
@@ -5049,9 +5048,9 @@ GetEventImpl_peek_entry := GetEventImpl::peek_entry
 
 .proc PostEventImpl
         PARAM_BLOCK params, $82
-kind:   .byte    0
-xcoord: .word    0           ; also used for key/modifiers/window id
-ycoord: .word    0
+kind    .byte
+xcoord  .word                  ; also used for key/modifiers/window id
+ycoord  .word
         END_PARAM_BLOCK
 
         php
@@ -5346,7 +5345,7 @@ check_kbd_flag:  .byte   $80
 
 .proc SetKeyEventImpl
         PARAM_BLOCK params, $82
-handle_keys:    .byte   0
+handle_keys     .byte
         END_PARAM_BLOCK
 
         asl     check_kbd_flag
@@ -5457,32 +5456,32 @@ shortcut_text_addr:
 
         PARAM_BLOCK curmenu, $AF
         ;; Public members
-menu_id:    .byte  0
-disabled:   .byte  0
-title:      .addr  0
-menu_items: .addr  0
+menu_id     .byte
+disabled    .byte
+title       .addr
+menu_items  .addr
 
         ;; Reserved area in menu
-x_penloc:  .word   0
-x_min:     .word   0
-x_max:     .word   0
+x_penloc   .word
+x_min      .word
+x_max      .word
         END_PARAM_BLOCK
 
 
         PARAM_BLOCK curmenuinfo, $BB
         ;; Reserved area before first menu item
-x_min:     .word   0
-x_max:     .word   0
+x_min      .word
+x_max      .word
         END_PARAM_BLOCK
 
 
         PARAM_BLOCK curmenuitem, $BF
         ;; Public members
-options:   .byte   0
-mark_char: .byte   0
-shortcut1: .byte   0
-shortcut2: .byte   0
-name:      .addr   0
+options    .byte
+mark_char  .byte
+shortcut1  .byte
+shortcut2  .byte
+name       .addr
         END_PARAM_BLOCK
 
 
@@ -5622,10 +5621,8 @@ set_x:  stax    current_penloc_x
 
 .proc get_and_return_event
         PARAM_BLOCK event, $82
-kind:      .byte   0
-mouse_pos:
-mouse_x:   .word  0
-mouse_y:   .word  0
+kind       .byte
+mouse_pos  .tag MGTK::Point
         END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetEvent, event
@@ -5978,10 +5975,10 @@ loop:   lda     curmenu::x_min,x
 
 .proc MenuKeyImpl
         PARAM_BLOCK params, $C7
-menu_id:   .byte   0
-menu_item: .byte   0
-which_key: .byte   0
-key_mods:  .byte   0
+menu_id    .byte
+menu_item  .byte
+which_key  .byte
+key_mods   .byte
         END_PARAM_BLOCK
 
         lda     params::which_key
@@ -6042,9 +6039,9 @@ rrts:   rts
 
 .proc DisableItemImpl
         PARAM_BLOCK params, $C7
-menu_id:   .byte   0
-menu_item: .byte   0
-disable:   .byte   0
+menu_id    .byte
+menu_item  .byte
+disable    .byte
         END_PARAM_BLOCK
 
 
@@ -6064,9 +6061,9 @@ disable:   .byte   0
 
 .proc CheckItemImpl
         PARAM_BLOCK params, $C7
-menu_id:   .byte   0
-menu_item: .byte   0
-check:     .byte   0
+menu_id    .byte
+menu_item  .byte
+check      .byte
         END_PARAM_BLOCK
 
 
@@ -6092,8 +6089,8 @@ set_options:
 
 .proc DisableMenuImpl
         PARAM_BLOCK params, $C7
-menu_id:   .byte   0
-disable:   .byte   0
+menu_id    .byte
+disable    .byte
         END_PARAM_BLOCK
 
 
@@ -6121,8 +6118,8 @@ was_in_menu_flag:
 
 .proc MenuSelectImpl
         PARAM_BLOCK params, $C7
-menu_id:   .byte   0
-menu_item: .byte   0
+menu_id    .byte
+menu_item  .byte
         END_PARAM_BLOCK
 
 
@@ -6608,10 +6605,10 @@ hmrts:  rts
 
 .proc InitMenuImpl
         PARAM_BLOCK params, $82
-solid_char:     .byte   0
-open_char:      .byte   0
-check_char:     .byte   0
-control_char:   .byte   0
+solid_char      .byte
+open_char       .byte
+check_char      .byte
+control_char    .byte
         END_PARAM_BLOCK
 
         COPY_BYTES 4, params, menu_glyphs
@@ -6653,10 +6650,10 @@ end:    rts
 
 .proc SetMarkImpl
         PARAM_BLOCK params, $C7
-menu_id:   .byte   0
-menu_item: .byte   0
-set_char:  .byte   0
-mark_char: .byte   0
+menu_id    .byte
+menu_item  .byte
+set_char   .byte
+mark_char  .byte
         END_PARAM_BLOCK
 
 
@@ -6835,45 +6832,34 @@ root_window_addr:
 
         ;; First 12 bytes of winfo only
         PARAM_BLOCK current_winfo, $AB
-id:        .byte   0
-options:   .byte   0
-title:     .addr   0
-hscroll:   .byte   0
-vscroll:   .byte   0
-hthumbmax: .byte   0
-hthumbpos: .byte   0
-vthumbmax: .byte   0
-vthumbpos: .byte   0
-status:    .byte   0
-reserved:  .byte   0
+id         .byte
+options    .byte
+title      .addr
+hscroll    .byte
+vscroll    .byte
+hthumbmax  .byte
+hthumbpos  .byte
+vthumbmax  .byte
+vthumbpos  .byte
+status     .byte
+reserved   .byte
         END_PARAM_BLOCK
 
 
         ;; First 16 bytes of win's grafport only
         PARAM_BLOCK current_winport, $B7
-.params viewloc
-xcoord:    .word   0
-ycoord:    .word   0
-.endparams
-
-mapbits:   .addr   0
-mapwidth:  .byte   0
-           .byte   0
-
-.params maprect
-x1:        .word   0
-y1:        .word   0
-x2:        .word   0
-y2:        .word   0
-.endparams
+viewloc    .tag MGTK::Point
+mapbits    .addr
+mapwidth   .byte
+reserved   .byte
+maprect    .tag MGTK::Rect
         END_PARAM_BLOCK
 
-
         PARAM_BLOCK winrect, $C7
-x1:        .word   0
-y1:        .word   0
-x2:        .word   0
-y2:        .word   0
+x1         .word
+y1         .word
+x2         .word
+y2         .word
         END_PARAM_BLOCK
 
 
@@ -6970,12 +6956,12 @@ in_winrect:
         COPY_BLOCK current_winport::viewloc, winrect ; copy viewloc to left/top of winrect
 
         ldx     #2
-:       lda     current_winport::maprect::x2,x ; x2/y2
+:       lda     current_winport::maprect + MGTK::Rect::x2,x ; x2/y2
         sec
-        sbc     current_winport::maprect::x1,x ; x1/y1
+        sbc     current_winport::maprect + MGTK::Rect::x1,x ; x1/y1
         tay
-        lda     current_winport::maprect::x2+1,x
-        sbc     current_winport::maprect::x1+1,x
+        lda     current_winport::maprect + MGTK::Rect::x2+1,x
+        sbc     current_winport::maprect + MGTK::Rect::x1+1,x
         pha
 
         tya
@@ -7503,10 +7489,10 @@ ret:    rts
 
 .proc FindWindowImpl
         PARAM_BLOCK params, $EA
-mousex:     .word   0
-mousey:     .word   0
-which_area: .byte   0
-window_id:  .byte   0
+mousex      .word
+mousey      .word
+which_area  .byte
+window_id   .byte
         END_PARAM_BLOCK
 
         jsr     save_params_and_stack
@@ -7772,8 +7758,8 @@ update_port_addr:
 
 .proc GetWinPortImpl
         PARAM_BLOCK params, $82
-win_id:   .byte   0
-win_port: .addr   0
+win_id    .byte
+win_port  .addr
         END_PARAM_BLOCK
 
 
@@ -7985,10 +7971,10 @@ GrowWindowImpl:
 
 .proc DragWindowImpl
         PARAM_BLOCK params, $82
-window_id: .byte   0
-dragx:     .word   0
-dragy:     .word   0
-moved:     .byte   0
+window_id  .byte
+dragx      .word
+dragy      .word
+moved      .byte
         END_PARAM_BLOCK
 
         lda     #0
@@ -8084,10 +8070,10 @@ dragging:
         win_width := $82
 
         PARAM_BLOCK content, $C7
-minwidth:  .word  0
-minheight: .word  0
-maxwidth:  .word  0
-maxheight: .word  0
+minwidth   .word
+minheight  .word
+maxwidth   .word
+maxheight  .word
         END_PARAM_BLOCK
 
 
@@ -8104,22 +8090,22 @@ maxheight: .word  0
         bit     drag_resize_flag
         bmi     grow
 
-:       add16   current_winport::viewloc::xcoord,x, drag_delta,x, current_winport::viewloc::xcoord,x
+:       add16   current_winport::viewloc + MGTK::Point::xcoord,x, drag_delta,x, current_winport::viewloc + MGTK::Point::xcoord,x
         inx
         inx
         cpx     #4
         bne     :-
 
         lda     #$12
-        cmp     current_winport::viewloc::ycoord
+        cmp     current_winport::viewloc + MGTK::Point::ycoord
         bcc     :+
-        sta     current_winport::viewloc::ycoord
+        sta     current_winport::viewloc + MGTK::Point::ycoord
 :       rts
 
 grow:   lda     #0
         sta     grew_flag
-loop:   add16   current_winport::maprect::x2,x, drag_delta,x, current_winport::maprect::x2,x
-        sub16   current_winport::maprect::x2,x, current_winport::maprect::x1,x, win_width
+loop:   add16   current_winport::maprect + MGTK::Rect::x2,x, drag_delta,x, current_winport::maprect + MGTK::Rect::x2,x
+        sub16   current_winport::maprect + MGTK::Rect::x2,x, current_winport::maprect + MGTK::Rect::x1,x, win_width
 
         sec
         lda     win_width
@@ -8128,7 +8114,7 @@ loop:   add16   current_winport::maprect::x2,x, drag_delta,x, current_winport::m
         sbc     content::minwidth+1,x
         bpl     :+
 
-        add16   content::minwidth,x, current_winport::maprect::x1,x, current_winport::maprect::x2,x
+        add16   content::minwidth,x, current_winport::maprect + MGTK::Rect::x1,x, current_winport::maprect + MGTK::Rect::x2,x
         jsr     set_grew_flag
         jmp     next
 
@@ -8139,7 +8125,7 @@ loop:   add16   current_winport::maprect::x2,x, drag_delta,x, current_winport::m
         sbc     win_width+1
         bpl     next
 
-        add16   content::maxwidth,x, current_winport::maprect::x1,x, current_winport::maprect::x2,x
+        add16   content::maxwidth,x, current_winport::maprect + MGTK::Rect::x1,x, current_winport::maprect + MGTK::Rect::x2,x
         jsr     set_grew_flag
 
 next:   inx
@@ -8332,11 +8318,11 @@ height:         .word   0
 
 .proc WindowToScreenImpl
         PARAM_BLOCK params, $82
-window_id:      .byte   0
-windowx:        .word   0
-windowy:        .word   0
-screenx:        .word   0       ; out
-screeny:        .word   0       ; out
+window_id       .byte
+windowx         .word
+windowy         .word
+screenx         .word           ; out
+screeny         .word           ; out
         END_PARAM_BLOCK
 
         jsr     window_by_id_or_exit
@@ -8356,11 +8342,11 @@ loop:   add16   params::windowx,x, current_winport::viewloc,x, params::windowx,x
 
 .proc ScreenToWindowImpl
         PARAM_BLOCK params, $82
-window_id:      .byte   0
-screenx:        .word   0
-screeny:        .word   0
-windowx:        .word   0       ; out
-windowy:        .word   0       ; out
+window_id       .byte
+screenx         .word
+screeny         .word
+windowx         .word           ; out
+windowy         .word           ; out
         END_PARAM_BLOCK
 
         jsr     window_by_id_or_exit
@@ -8378,7 +8364,7 @@ windowy:        .word   0       ; out
 :       lda     ScreenToWindowImpl::params + (ScreenToWindowImpl::params::screenx - ScreenToWindowImpl::params::windowx),y
         sta     (params_addr),y
         iny
-        cpy     #ScreenToWindowImpl::params::size      ; results are 2 words (x, y) at params_addr+5
+        cpy     #.sizeof(ScreenToWindowImpl::params)      ; results are 2 words (x, y) at params_addr+5
         bne     :-
         rts
 .endproc
@@ -8442,8 +8428,8 @@ windowy:        .word   0       ; out
 
 .proc ActivateCtlImpl
         PARAM_BLOCK params, $8C
-which_ctl: .byte   0
-activate:  .byte   0
+which_ctl  .byte
+activate   .byte
         END_PARAM_BLOCK
 
 
@@ -8816,8 +8802,8 @@ return_result:
 
 .proc SetCtlMaxImpl
         PARAM_BLOCK params, $82
-which_ctl: .byte  0
-ctlmax:    .byte  0
+which_ctl  .byte
+ctlmax     .byte
         END_PARAM_BLOCK
 
         lda     params::which_ctl
@@ -8859,12 +8845,10 @@ got_ctl:
 
 .proc TrackThumbImpl
         PARAM_BLOCK params, $82
-which_ctl:  .byte   0
-mouse_pos:
-mousex:     .word   0
-mousey:     .word   0
-thumbpos:   .byte   0
-thumbmoved: .byte   0
+which_ctl   .byte
+mouse_pos   .tag MGTK::Point
+thumbpos    .byte
+thumbmoved  .byte
         END_PARAM_BLOCK
 
         thumb_dim := $82
@@ -9121,8 +9105,8 @@ is_horiz:
 
 .proc UpdateThumbImpl
         PARAM_BLOCK params, $8C
-which_ctl:  .byte   0
-thumbpos:   .byte   0
+which_ctl   .byte
+thumbpos    .byte
         END_PARAM_BLOCK
 
 
@@ -9180,8 +9164,8 @@ check_win:
 
 .proc SetMenuSelectionImpl
         PARAM_BLOCK params, $82
-menu_index:             .byte   0
-menu_item_index:        .byte   0
+menu_index              .byte
+menu_item_index         .byte
         END_PARAM_BLOCK
 
         lda     params::menu_index
@@ -10202,8 +10186,8 @@ grts:   rts
 
 .proc ScaleMouseImpl
         PARAM_BLOCK params, $82
-x_exponent:     .byte   0
-y_exponent:     .byte   0
+x_exponent      .byte
+y_exponent      .byte
         END_PARAM_BLOCK
 
         lda     params::x_exponent
@@ -10379,8 +10363,8 @@ mouse_operand:               ; e.g. if mouse is in slot 4, this is $40
 
 .proc GetWinFrameRectImpl
         PARAM_BLOCK params, $82
-window_id: .byte   0
-rect:      .res    .sizeof(MGTK::Rect)
+window_id  .byte
+rect       .tag MGTK::Rect
         END_PARAM_BLOCK
 
         jsr     window_by_id_or_exit
