@@ -36,7 +36,7 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
         jsr     GetCopiedToRAMCardFlag
         cmp     #$80
         bne     L9015
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         lda     #kWarningMsgSaveSelectorList
         jsr     show_warning_dialog
         bne     L9015
@@ -64,7 +64,7 @@ L9052:  lda     #$00
         pha
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         pla
         tay
         pla
@@ -237,7 +237,7 @@ l3:     clc
         pha
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         pla
         tay
         pla
@@ -415,7 +415,7 @@ l10:    iny
         bne     :+
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
 :       jsr     close_window
         pla
         jmp     L900F
@@ -1439,7 +1439,7 @@ retry_write:
         MLI_RELAY_CALL WRITE, write_params
         beq     close
         pha
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         pla
         jsr     JUMP_TABLE_SHOW_ALERT
         beq     retry_write
