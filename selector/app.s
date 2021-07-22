@@ -305,7 +305,7 @@ window_id:
         .word   500
         .word   140
 
-viewloc:.word   25, 36
+viewloc:.word   (::kScreenWidth - kWidth)/2, (::kScreenHeight - kHeight)/2
         .word   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   $00

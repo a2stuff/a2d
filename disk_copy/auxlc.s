@@ -208,8 +208,8 @@ grafport_win:  .res    .sizeof(MGTK::GrafPort), 0
 
 kDialogWidth    = 500
 kDialogHeight   = 150
-kDialogLeft     = 25
-kDialogTop      = 20
+kDialogLeft     = (::kScreenWidth - kDialogWidth)/2
+kDialogTop      = (::kScreenHeight - kDialogHeight)/2
 
 .params winfo_dialog
 window_id:      .byte   1
@@ -2403,8 +2403,8 @@ reserved:       .byte   0
 
 kAlertRectWidth         = 420
 kAlertRectHeight        = 55
-kAlertRectLeft          = 65    ; TODO: (::kScreenWidth - kAlertRectWidth)/2
-kAlertRectTop           = 45    ; TODO: (::kScreenHeight - kAlertRectHeight)/2
+kAlertRectLeft          = (::kScreenWidth - kAlertRectWidth)/2
+kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
 
         DEFINE_RECT_SZ alert_rect, kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
         DEFINE_RECT_INSET alert_inner_frame_rect1, 4, 2, kAlertRectWidth, kAlertRectHeight
@@ -2424,17 +2424,17 @@ reserved:       .byte   0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 559, 191
+        DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
 .endparams
 
-        DEFINE_BUTTON ok,        res_string_dcalert_button_ok, 300, 37
-        DEFINE_BUTTON try_again, res_string_dcalert_button_try_again,    300, 37
-        DEFINE_BUTTON cancel,    res_string_dcalert_button_cancel,      20, 37
+        DEFINE_BUTTON ok,        res_string_dcalert_button_ok,          300, 37
+        DEFINE_BUTTON try_again, res_string_dcalert_button_try_again,   300, 37
+        DEFINE_BUTTON cancel,    res_string_dcalert_button_cancel,       20, 37
 
         DEFINE_BUTTON yes, res_string_dcalert_button_yes, 250, 37, 50, kButtonHeight
         DEFINE_BUTTON no,  res_string_dcalert_button_no,  350, 37, 50, kButtonHeight
 
-        DEFINE_POINT pos_prompt, 100, 24
+        DEFINE_POINT pos_prompt, 75, 29
 
 ;;; %0....... = OK
 ;;; %10..0000 = Cancel, Try Again

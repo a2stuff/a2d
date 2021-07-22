@@ -3715,11 +3715,11 @@ kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
         DEFINE_RECT_INSET alert_inner_frame_rect2, 5, 3, kAlertRectWidth, kAlertRectHeight
 
 .params screen_portbits
-viewloc:        .word   0, 0
+        DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        .word   0, 0, kScreenWidth-1, kScreenHeight-1
+        DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
 .endparams
 
 .params portmap
@@ -3730,9 +3730,9 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
-        DEFINE_BUTTON ok,        res_string_alert_button_ok,  20, 37
-        DEFINE_BUTTON try_again, res_string_alert_button_try_again,     20, 37
-        DEFINE_BUTTON cancel,    res_string_alert_button_cancel,     300, 37
+        DEFINE_BUTTON ok,        res_string_alert_button_ok,          300, 37
+        DEFINE_BUTTON try_again, res_string_alert_button_try_again,   300, 37
+        DEFINE_BUTTON cancel,    res_string_alert_button_cancel,       20, 37
 
         DEFINE_POINT pos_prompt, 75, 29
 
