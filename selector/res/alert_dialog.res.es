@@ -1,4 +1,4 @@
-.define res_string_alert_button_ok "OK            \x0D"
+.define res_string_alert_button_ok "OK              \x0D"
 .define res_string_button_try_again "Reintentar    R"
 .define res_char_button_try_again_shortcut 'R'
 .define res_string_button_cancel "Cancelar    Esc"

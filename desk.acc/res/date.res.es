@@ -10,5 +10,5 @@
 .define res_string_month_abbrev_10 "Oct"
 .define res_string_month_abbrev_11 "Nov"
 .define res_string_month_abbrev_12 "Dic"
-.define res_string_label_ok "OK            \x0D"
+.define res_string_label_ok "OK              \x0D"
 .define res_string_label_cancel "Cancelar    Esc"

@@ -2,6 +2,6 @@
 .define res_string_button_open "\\ffnen"
 .define res_string_button_close "Schlie~en"
 .define res_string_fd_button_cancel "Abbrechen   Esc"
-.define res_string_fd_button_ok "OK            \x0D"
+.define res_string_fd_button_ok "OK              \x0D"
 .define res_string_disk " Laufwerk: "
 .define res_string_label_file_to_run "Starte Datei:"

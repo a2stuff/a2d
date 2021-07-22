@@ -34,7 +34,7 @@
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "Obtener Tama|o"
 .define res_string_menu_item_rename_icon "Renombrar..."
-.define res_string_button_ok "OK            \x0D"
+.define res_string_button_ok "OK              \x0D"
 .define res_string_button_cancel "Cancelar    Esc"
 .define res_string_button_yes " Si"
 .define res_string_button_no " No"
@@ -100,7 +100,7 @@
 .define res_string_warning_too_many_windows "[Hay demasiadas ventanas abiertas en el escritorio!"
 .define res_string_warning_save_selector_list_line1 "]Quiere guaardar la nueva lista"
 .define res_string_warning_save_selector_list_line2 "en el disco de sistema?"
-.define res_string_alert_button_ok "OK            \x0D"
+.define res_string_alert_button_ok "OK              \x0D"
 .define res_string_alert_button_try_again "Reintentar    R"
 .define res_string_alert_button_cancel "Cancelar    Esc"
 .define res_string_errmsg_00 "Error de Sistema"

@@ -8,7 +8,7 @@
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "Schnellkopieren"
 .define res_string_dc_menu_item_disk_copy "Kopiere Diskette"
-.define res_string_dc_button_ok "OK            \x0D"
+.define res_string_dc_button_ok "OK              \x0D"
 .define res_string_disk_copy_padded_dialog_title "    Diskettenkopierer    "
 .define res_string_quick_copy_padded_dialog_title "    Schnellkopierier    "
 .define res_string_button_read_drive "Lese Laufwerk D"
@@ -37,7 +37,7 @@
 .define res_string_escape_stop_copy " Esc beendet Kopie"
 .define res_string_error_writing "Schreibfehler Block "
 .define res_string_error_reading "Lesefehler Block "
-.define res_string_dcalert_button_ok "OK            \x0D"
+.define res_string_dcalert_button_ok "OK              \x0D"
 .define res_string_dcalert_button_try_again "Wiederholen  W"
 .define res_string_dcalert_button_cancel "Abbrechen   Esc"
 .define res_string_dcalert_button_yes "Ja"

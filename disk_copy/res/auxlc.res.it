@@ -8,7 +8,7 @@
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "Copia rapida"
 .define res_string_dc_menu_item_disk_copy "Copia volume"
-.define res_string_dc_button_ok "OK            \x0D"
+.define res_string_dc_button_ok "OK              \x0D"
 .define res_string_disk_copy_padded_dialog_title "    Copia volume    "
 .define res_string_quick_copy_padded_dialog_title "    Copia rapida    "
 .define res_string_button_read_drive "Volumi collegati V"
@@ -37,7 +37,7 @@
 .define res_string_escape_stop_copy " Esc ferma la copia"
 .define res_string_error_writing "Errore nella scrittura del blocco "
 .define res_string_error_reading "Errore nella lettura del blocco "
-.define res_string_dcalert_button_ok "OK            \x0D"
+.define res_string_dcalert_button_ok "OK              \x0D"
 .define res_string_dcalert_button_try_again "Riprova    R"
 .define res_string_dcalert_button_cancel "Annulla      Esc"
 .define res_string_dcalert_button_yes "Si"

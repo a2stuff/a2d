@@ -2,5 +2,5 @@
 .define res_char_button_norm_shortcut 'N'
 .define res_string_button_fast "Veloce      V"
 .define res_char_button_fast_shortcut 'V'
-.define res_string_button_ok "OK            \x0D"
+.define res_string_button_ok "OK              \x0D"
 .define res_string_dialog_title "Velocit{ Sistema"

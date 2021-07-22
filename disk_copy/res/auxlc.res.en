@@ -8,10 +8,10 @@
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "Quick Copy"
 .define res_string_dc_menu_item_disk_copy "Disk Copy"
-.define res_string_dc_button_ok "OK            \x0D"
+.define res_string_dc_button_ok "OK              \x0D"
 .define res_string_disk_copy_padded_dialog_title "    Disk Copy    "
 .define res_string_quick_copy_padded_dialog_title "    Quick Copy    "
-.define res_string_button_read_drive "Read Drives  D"
+.define res_string_button_read_drive "Read Drives    D"
 .define res_char_button_read_drive_shortcut 'D'
 .define res_string_label_slot_drive_name "Slot, Drive, Name"
 .define res_string_prompt_select_source "Select source disk"
@@ -37,8 +37,8 @@
 .define res_string_escape_stop_copy " Esc stop the copy"
 .define res_string_error_writing "Error when writing block "
 .define res_string_error_reading "Error when reading block "
-.define res_string_dcalert_button_ok "OK            \x0D"
-.define res_string_dcalert_button_try_again "Try Again     A"
+.define res_string_dcalert_button_ok "OK              \x0D"
+.define res_string_dcalert_button_try_again "Try Again      A"
 .define res_string_dcalert_button_cancel "Cancel        Esc"
 .define res_string_dcalert_button_yes "Yes"
 .define res_string_dcalert_button_no "No"

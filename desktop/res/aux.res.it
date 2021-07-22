@@ -34,7 +34,7 @@
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "Ottieni dimensioni"
 .define res_string_menu_item_rename_icon "Rinomina..."
-.define res_string_button_ok "OK            \x0D"
+.define res_string_button_ok "OK              \x0D"
 .define res_string_button_cancel "Annulla      Esc"
 .define res_string_button_yes " Si"
 .define res_string_button_no " No"
@@ -100,7 +100,7 @@
 .define res_string_warning_too_many_windows "Ci sono troppe finestre aperte sulla scrivania!"
 .define res_string_warning_save_selector_list_line1 "Vuoi salvare la nuova lista"
 .define res_string_warning_save_selector_list_line2 "sul disco di sistema?"
-.define res_string_alert_button_ok "OK            \x0D"
+.define res_string_alert_button_ok "OK              \x0D"
 .define res_string_alert_button_try_again "Riprova  R"
 .define res_string_alert_button_cancel "Annulla      Esc"
 .define res_string_errmsg_00 "Errore di sistema"
