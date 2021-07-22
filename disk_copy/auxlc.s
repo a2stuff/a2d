@@ -208,6 +208,8 @@ grafport_win:  .res    .sizeof(MGTK::GrafPort), 0
 
 kDialogWidth    = 500
 kDialogHeight   = 150
+kDialogLeft     = 25
+kDialogTop      = 20
 
 .params winfo_dialog
 window_id:      .byte   1
@@ -226,7 +228,7 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-        DEFINE_POINT viewloc, 25, 20
+        DEFINE_POINT viewloc, kDialogLeft, kDialogTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
@@ -241,6 +243,13 @@ textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
+
+kListBoxOffsetLeft = 20
+kListBoxOffsetTop = 30
+kListBoxLeft = kDialogLeft + kListBoxOffsetLeft
+kListBoxTop = kDialogTop + kListBoxOffsetTop
+kListBoxWidth = 150
+kListBoxHeight = 70
 
 .params winfo_drive_select
 window_id:      .byte   $02
@@ -259,11 +268,11 @@ mincontlength:  .word   50
 maxcontwidth:   .word   150
 maxcontlength:  .word   150
 port:
-        DEFINE_POINT viewloc, 45, 50
+        DEFINE_POINT viewloc, kListBoxLeft, kListBoxTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, 150, 70
+        DEFINE_RECT cliprect, 0, 0, kListBoxWidth, kListBoxHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -277,8 +286,10 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_INSET rect_outer_frame, 4, 2, kDialogWidth, kDialogHeight
         DEFINE_RECT_INSET rect_inner_frame, 5, 3, kDialogWidth, kDialogHeight
-        DEFINE_RECT rect_D211, 6, 20, 494, 102
-        DEFINE_RECT rect_D219, 6, 103, 494, 145
+
+        ;; For erasing parts of the window
+        DEFINE_RECT_SZ rect_erase_dialog_upper, 6, 20, kDialogWidth-12, 82 ; under title to bottom of list
+        DEFINE_RECT_SZ rect_erase_dialog_lower, 6, 103, kDialogWidth-12, 42 ; bottom of list to bottom of dialog
 
         DEFINE_BUTTON ok, res_string_dc_button_ok, 350, 90
 
@@ -289,7 +300,7 @@ str_disk_copy_padded:
 str_quick_copy_padded:
         PASCAL_STRING res_string_quick_copy_padded_dialog_title ; dialog title (padded to overwrite when swapping)
 
-        DEFINE_RECT rect_D255, 270, 38, 420, 46
+        DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
 
         DEFINE_BUTTON read_drive, res_string_button_read_drive, 210, 90
 
@@ -325,7 +336,7 @@ bg_black:
 bg_white:
         .byte   $7F
 
-        DEFINE_RECT rect_D35B, 0, 0, 150, 0
+        DEFINE_RECT rect_highlight_row, 0, 0, kListBoxWidth, 0
 
 
 current_drive_selection:        ; $FF if no selection
@@ -395,8 +406,11 @@ block_count_div8:              ; calculated when reading volume bitmap
 
 LD429:  .byte   0
 
-        DEFINE_RECT rect_D42A, 18, 20, 490, 88
-        DEFINE_RECT rect_D432, 19, 29, 195, 101
+        DEFINE_RECT rect_D42A, 18, 20, kDialogWidth-10, 88
+
+        ;; Include 1px borders + extra on right for scrollbar
+        ;; TODO: Use GetWinFrameRect to query this.
+        DEFINE_RECT rect_erase_listbox, kListBoxOffsetLeft - 1, kListBoxOffsetTop - 1, kListBoxOffsetLeft + kListBoxWidth + 25, kListBoxOffsetTop + kListBoxHeight + 1
 
 LD43A:  .res 18, 0
 LD44C:  .byte   0
@@ -587,7 +601,7 @@ LD687:  lda     current_drive_selection
         lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D255
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_select_src
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_source
         param_call DrawString, str_select_destination
         jsr     LE559
@@ -608,9 +622,9 @@ LD6F9:  lda     current_drive_selection
         lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_upper
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D432
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_listbox
 LD734:  ldx     #0
         lda     #kAlertMsgInsertSource
         jsr     show_alert_dialog
@@ -779,7 +793,7 @@ LD89F:  lda     #kAlertMsgDestinationProtected
 LD8A9:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_upper
         lda     source_drive_index
         cmp     dest_drive_index
         bne     LD8DF
@@ -1462,8 +1476,8 @@ saved_ram_unitnum:
         lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D219
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_upper
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_lower
         lda     disk_copy_flag
         bne     :+
         param_call draw_title_text, str_quick_copy_padded
@@ -1592,12 +1606,12 @@ check_alpha:
         asl     a               ; * 8
         asl     a
         asl     a
-        sta     rect_D35B::y1
+        sta     rect_highlight_row::y1
         clc
         adc     #7
-        sta     rect_D35B::y2
+        sta     rect_highlight_row::y2
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D35B
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_highlight_row
         rts
 .endproc
 
