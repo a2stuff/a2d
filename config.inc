@@ -14,11 +14,11 @@
 .define kDeskTopProductName "Apple II DeskTop"
 kDeskTopVersionMajor = 1
 kDeskTopVersionMinor = 2
-.define kDeskTopVersionSuffix "-alpha32"
-.define kBuildDate "June 30, 2021"
+.define kDeskTopVersionSuffix "-alpha33"
+.define kBuildDate "July 22, 2021"
 kBuildYY = 21
-kBuildMM = 6
-kBuildDD = 30
+kBuildMM = 7
+kBuildDD = 22
 
 ;;; Localization - applies language suffix to filename
 
