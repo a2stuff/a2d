@@ -13568,28 +13568,6 @@ driver: jmp     (RAMSLOT)
 .endproc
 
 ;;; ============================================================
-;;; Determine if mouse moved (returns w/ carry set if moved)
-;;; Used in dialogs to possibly change cursor
-
-.proc check_mouse_moved
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_coords,x
-        cmp     coords,x
-        bne     diff
-        dex
-        bpl     :-
-        clc
-        rts
-
-diff:   COPY_STRUCT MGTK::Point, event_coords, coords
-        sec
-        rts
-
-        DEFINE_POINT coords, 0, 0
-
-.endproc
-
-;;; ============================================================
 
         PAD_TO $A500
 
@@ -15964,6 +15942,28 @@ set_penmode_notcopy:
 .proc toggle_menu_hilite
         MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
         rts
+.endproc
+
+;;; ============================================================
+;;; Determine if mouse moved (returns w/ carry set if moved)
+;;; Used in dialogs to possibly change cursor
+
+.proc check_mouse_moved
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     event_coords,x
+        cmp     coords,x
+        bne     diff
+        dex
+        bpl     :-
+        clc
+        rts
+
+diff:   COPY_STRUCT MGTK::Point, event_coords, coords
+        sec
+        rts
+
+        DEFINE_POINT coords, 0, 0
+
 .endproc
 
 ;;; ============================================================
