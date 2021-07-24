@@ -730,9 +730,9 @@ done:   pla
         DEFINE_RECT_SZ date_rect, 52, 15, 122, 20
 
 label_ok:
-        PASCAL_STRING res_string_label_ok ; button label
+        PASCAL_STRING res_string_button_ok ; button label
 label_cancel:
-        PASCAL_STRING res_string_label_cancel ; button label
+        PASCAL_STRING res_string_button_cancel ; button label
 label_uparrow:
         PASCAL_STRING kGlyphUpArrow ; do not localize
 label_downarrow:

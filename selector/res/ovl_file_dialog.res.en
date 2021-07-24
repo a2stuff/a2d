@@ -1,7 +1,5 @@
 .define res_string_button_change_drive "Change Drive"
 .define res_string_button_open "Open"
 .define res_string_button_close "Close"
-.define res_string_fd_button_cancel "Cancel        Esc"
-.define res_string_fd_button_ok "OK              \x0D"
 .define res_string_disk " Disk: "
 .define res_string_label_file_to_run "File to run:"

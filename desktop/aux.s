@@ -3441,9 +3441,9 @@ special_menu:
 
         DEFINE_BUTTON ok,     res_string_button_ok, 260, kPromptDialogHeight-19
         DEFINE_BUTTON cancel, res_string_button_cancel,   40, kPromptDialogHeight-19
-        DEFINE_BUTTON yes,    res_string_button_yes,               200, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON no,     res_string_button_no,                260, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON all,    res_string_button_all,               320, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON yes,    res_string_warning_button_yes,               200, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON no,     res_string_warning_button_no,                260, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON all,    res_string_warning_button_all,               320, kPromptDialogHeight-19,40,kButtonHeight
 
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
@@ -3495,9 +3495,9 @@ kAboutDialogHeight      = 120
         DEFINE_RECT_INSET about_dialog_inner_rect, 5, 3, kAboutDialogWidth, kAboutDialogHeight
 
 str_about1:  PASCAL_STRING kDeskTopProductName
-str_about2:  PASCAL_STRING res_string_about_text_line2
-str_about3:  PASCAL_STRING res_string_about_text_line3
-str_about4:  PASCAL_STRING res_string_about_text_line4
+str_about2:  PASCAL_STRING res_string_copyright_line1
+str_about3:  PASCAL_STRING res_string_copyright_line2
+str_about4:  PASCAL_STRING res_string_copyright_line3
 str_about5:  PASCAL_STRING res_string_about_text_line5
 str_about6:  PASCAL_STRING res_string_about_text_line6
 str_about7:  PASCAL_STRING res_string_about_text_line7
@@ -3730,9 +3730,9 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
-        DEFINE_BUTTON ok,        res_string_alert_button_ok,          300, 37
-        DEFINE_BUTTON try_again, res_string_alert_button_try_again,   300, 37
-        DEFINE_BUTTON cancel,    res_string_alert_button_cancel,       20, 37
+        DEFINE_BUTTON ok,        res_string_button_ok,          300, 37
+        DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
+        DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
 
         DEFINE_POINT pos_prompt, 75, 29
 

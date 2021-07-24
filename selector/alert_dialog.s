@@ -63,9 +63,9 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
-        DEFINE_BUTTON ok,        res_string_alert_button_ok,            300, 37
-        DEFINE_BUTTON try_again, res_string_button_try_again,           300, 37
-        DEFINE_BUTTON cancel,    res_string_button_cancel,               20, 37
+        DEFINE_BUTTON ok,        res_string_button_ok,          300, 37
+        DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
+        DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
 
         DEFINE_POINT pos_prompt, 75, 29
 

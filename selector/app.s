@@ -177,11 +177,11 @@ str_a2desktop:
 str_blank:
         PASCAL_STRING " "       ; do not localize
 str_copyright1:
-        PASCAL_STRING res_string_menu_item_copyright1 ; menu item
+        PASCAL_STRING res_string_copyright_line1 ; menu item
 str_copyright2:
-        PASCAL_STRING res_string_menu_item_copyright2 ; menu item
+        PASCAL_STRING res_string_copyright_line2 ; menu item
 str_copyright3:
-        PASCAL_STRING res_string_menu_item_copyright3 ; menu item
+        PASCAL_STRING res_string_copyright_line3 ; menu item
 
 str_run_a_program:
         PASCAL_STRING res_string_menu_item_run_a_program ; menu item

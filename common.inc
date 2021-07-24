@@ -2,6 +2,8 @@
 ;;; Definitions that apply to DeskTop and Selector
 ;;; ============================================================
 
+        .include .concat("common/res/common.res.", kBuildLang)
+
 ;;; ============================================================
 ;;; Filenames
 

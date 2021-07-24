@@ -306,8 +306,8 @@ selected_index:                 ; $FF if none
         DEFINE_BUTTON change_drive, res_string_button_change_drive,     193, 28
         DEFINE_BUTTON open,         res_string_button_open,             193, 42
         DEFINE_BUTTON close,        res_string_button_close,            193, 56
-        DEFINE_BUTTON cancel,       res_string_fd_button_cancel,        193, 71
-        DEFINE_BUTTON ok,           res_string_fd_button_ok,            193, 87
+        DEFINE_BUTTON cancel,       res_string_button_cancel,        193, 71
+        DEFINE_BUTTON ok,           res_string_button_ok,            193, 87
 
 ;;; Dividing line
         DEFINE_POINT pt1, 323-8, 28

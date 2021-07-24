@@ -19,8 +19,6 @@
 .define res_string_button_change_drive "Laufwerk"
 .define res_string_button_open "\\ffnen"
 .define res_string_button_close "Schlie~en"
-.define res_string_fd_button_cancel "Abbrechen   Esc"
-.define res_string_fd_button_ok "OK              \x0D"
 .define res_string_label_disk " Diskette: "
 .define res_string_copy_file_label_source_filename "Quelle Dateiname:"
 .define res_string_copy_file_label_destination_filename "Ziel Dateiname:"

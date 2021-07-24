@@ -114,7 +114,7 @@ menu_apple:
         DEFINE_MENU_ITEM label_blank
         DEFINE_MENU_ITEM label_copyright1
         DEFINE_MENU_ITEM label_copyright2
-        DEFINE_MENU_ITEM label_rights
+        DEFINE_MENU_ITEM label_copyright3
         ASSERT_RECORD_TABLE_SIZE @items, 5, .sizeof(MGTK::MenuItem)
 
 menu_file:
@@ -142,11 +142,11 @@ label_desktop:
 label_blank:
         PASCAL_STRING " "       ; do not localize
 label_copyright1:
-        PASCAL_STRING res_string_menu_item_copyright1 ; menu item
+        PASCAL_STRING res_string_copyright_line1 ; menu item
 label_copyright2:
-        PASCAL_STRING res_string_menu_item_copyright2 ; menu item
-label_rights:
-        PASCAL_STRING res_string_menu_item_rights ; menu item
+        PASCAL_STRING res_string_copyright_line2 ; menu item
+label_copyright3:
+        PASCAL_STRING res_string_copyright_line3 ; menu item
 
 label_quit:
         PASCAL_STRING res_string_dc_menu_item_quit    ; menu item
@@ -291,7 +291,7 @@ nextwinfo:      .addr   0
         DEFINE_RECT_SZ rect_erase_dialog_upper, 6, 20, kDialogWidth-12, 82 ; under title to bottom of list
         DEFINE_RECT_SZ rect_erase_dialog_lower, 6, 103, kDialogWidth-12, 42 ; bottom of list to bottom of dialog
 
-        DEFINE_BUTTON ok, res_string_dc_button_ok, 350, 90
+        DEFINE_BUTTON ok, res_string_button_ok, 350, 90
 
 ;;; Label positions
         DEFINE_POINT point_title, 0, 15
@@ -2427,12 +2427,12 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
 .endparams
 
-        DEFINE_BUTTON ok,        res_string_dcalert_button_ok,          300, 37
-        DEFINE_BUTTON try_again, res_string_dcalert_button_try_again,   300, 37
-        DEFINE_BUTTON cancel,    res_string_dcalert_button_cancel,       20, 37
+        DEFINE_BUTTON ok,        res_string_button_ok,          300, 37
+        DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
+        DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
 
-        DEFINE_BUTTON yes, res_string_dcalert_button_yes, 250, 37, 50, kButtonHeight
-        DEFINE_BUTTON no,  res_string_dcalert_button_no,  350, 37, 50, kButtonHeight
+        DEFINE_BUTTON yes, res_string_button_yes, 250, 37, 50, kButtonHeight
+        DEFINE_BUTTON no,  res_string_button_no,  350, 37, 50, kButtonHeight
 
         DEFINE_POINT pos_prompt, 75, 29
 

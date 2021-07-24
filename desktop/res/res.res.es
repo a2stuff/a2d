@@ -19,8 +19,6 @@
 .define res_string_button_change_drive "Cambiar unidad"
 .define res_string_button_open "Abrir"
 .define res_string_button_close "Cerrar"
-.define res_string_fd_button_cancel "Cancelar    Esc"
-.define res_string_fd_button_ok "OK              \x0D"
 .define res_string_label_disk " Disco: "
 .define res_string_copy_file_label_source_filename "Nombre del archivo original:"
 .define res_string_copy_file_label_destination_filename "Nombre del archivo de destino:"
