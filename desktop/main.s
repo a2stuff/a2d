@@ -13535,42 +13535,6 @@ do_on_line:
         show_error_alert_dst := show_error_alert_impl::flag_set
 
 ;;; ============================================================
-;;; Reformat /RAM (Slot 3, Drive 2) if present
-;;; Assumes ROM is banked in, restores it when complete. Also
-;;; assumes hires screen (main and aux) are safe to destroy.
-
-.proc maybe_reformat_ram
-        ;; Search DEVLST to see if S3D2 RAM was restored
-        ldx     DEVCNT
-:       lda     DEVLST,x
-        and     #%11110000      ; DSSSnnnn
-        cmp     #$B0            ; Slot 2, Drive 2 = /RAM
-        beq     format
-        dex
-        bpl     :-
-        rts
-
-        ;; NOTE: Assumes driver (in DEVADR) was not modified
-        ;; when detached.
-
-        ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
-format: lda     DEVLST,x
-        and     #$F0
-        sta     DRIVER_UNIT_NUMBER
-        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
-        copy16  #$2000, DRIVER_BUFFER
-        lda     LCBANK1
-        lda     LCBANK1
-        jsr     driver
-        lda     ROMIN2
-        rts
-
-RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
-
-driver: jmp     (RAMSLOT)
-.endproc
-
-;;; ============================================================
 
         PAD_TO $A500
 
@@ -16390,8 +16354,44 @@ pb2_initial_state:
 
 lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
         .byte   0
-;;; ============================================================
 
+;;; ============================================================
+;;; Reformat /RAM (Slot 3, Drive 2) if present
+;;; Assumes ROM is banked in, restores it when complete. Also
+;;; assumes hires screen (main and aux) are safe to destroy.
+
+.proc maybe_reformat_ram
+        ;; Search DEVLST to see if S3D2 RAM was restored
+        ldx     DEVCNT
+:       lda     DEVLST,x
+        and     #%11110000      ; DSSSnnnn
+        cmp     #$B0            ; Slot 2, Drive 2 = /RAM
+        beq     format
+        dex
+        bpl     :-
+        rts
+
+        ;; NOTE: Assumes driver (in DEVADR) was not modified
+        ;; when detached.
+
+        ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
+format: lda     DEVLST,x
+        and     #$F0
+        sta     DRIVER_UNIT_NUMBER
+        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
+        copy16  #$2000, DRIVER_BUFFER
+        lda     LCBANK1
+        lda     LCBANK1
+        jsr     driver
+        lda     ROMIN2
+        rts
+
+RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
+
+driver: jmp     (RAMSLOT)
+.endproc
+
+;;; ============================================================
 
         PAD_TO $BF00
 
