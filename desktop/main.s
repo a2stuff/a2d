@@ -549,6 +549,7 @@ menu_dispatch2:
         copy16  dispatch_table,x, proc_addr
         jsr     call_proc
         MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
+        copy    #0, menu_click_params::menu_id ; for `toggle_menu_hilite`
         rts
 
 call_proc:
@@ -15936,8 +15937,10 @@ set_penmode_notcopy:
 ;;; ============================================================
 
 .proc toggle_menu_hilite
+        lda     menu_click_params::menu_id
+        beq     :+
         MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
-        rts
+:       rts
 .endproc
 
 ;;; ============================================================

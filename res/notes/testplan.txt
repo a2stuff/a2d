@@ -270,3 +270,5 @@
 * Load DeskTop. Open a volume. Adjust the window size so that horizontal and vertical scrolling is required. Scroll to the bottom-right. Quit DeskTop, reload. Verify that the window size was restored correctly.
 
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Selector > Add an Entry.... Create an entry, click OK. Verify that when the "Do you want to save the new list on the system disk?" warning appears that the desktop volume icons repaint.
+
+* Launch DeskTop. Apple > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+O. Click to exit. Verify that the File menu is not highlighted.
