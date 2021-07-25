@@ -2232,10 +2232,11 @@ loop:   ldx     icon
         add16   ptr_icon, #IconEntry::name, ptr_icon
 cloop:  lda     (ptr_icon),y
         jsr     upcase_char
-        sta     char
+        sta     @char
         lda     (ptr_name),y
         jsr     upcase_char
-        cmp     char
+        @char := *+1
+        cmp     #0              ; self-modified
         bne     next
         dey
         bne     cloop
@@ -6357,10 +6358,11 @@ check_window:
         ;; Case-insensitive comparison
 :       lda     (ptr),y
         jsr     upcase_char
-        sta     char
+        sta     @char
         lda     path_buffer,y
         jsr     upcase_char
-        cmp     char
+        @char := *+1
+        cmp     #0              ; self-modified
         bne     loop
         dey
         bne     :-
@@ -6379,7 +6381,6 @@ window_num:
         .byte   0
 exact_match_flag:
         .byte   0
-char:   .byte   0
 .endproc
         find_window_for_path := find_windows::exact
         find_windows_for_prefix := find_windows::prefix
@@ -13362,7 +13363,12 @@ loop:   iny
 
         ;; Chars the same?
 loop:   lda     (src_ptr),y
-        cmp     dst_buf,y
+        jsr     upcase_char
+        sta     @char
+        lda     dst_buf,y
+        jsr     upcase_char
+        @char := *+1
+        cmp     #0              ; self-modified
         bne     no_match
 
         ;; Same and a slash?
