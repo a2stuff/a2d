@@ -23,6 +23,8 @@ kListEntryNameX  = 16
 kLineDelta = 1
 kPageDelta = 8
 
+kMaxInputLength = $3F
+
 ;;; ============================================================
 
 exec:
@@ -2465,7 +2467,7 @@ handle_f2_click__ep2 := handle_f2_click::ep2
         lda     path_buf0
         clc
         adc     path_buf2
-        cmp     #$3F            ; ???
+        cmp     #kMaxInputLength
         bcc     continue
         rts
 
@@ -2630,7 +2632,7 @@ skip:   sty     path_buf0
         lda     path_buf1
         clc
         adc     path_buf2
-        cmp     #$3F
+        cmp     #kMaxInputLength
         bcc     :+
         rts
 

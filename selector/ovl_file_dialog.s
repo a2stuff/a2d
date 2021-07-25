@@ -26,6 +26,8 @@ kListEntryNameX  = 16
 kLineDelta = 1
 kPageDelta = 8
 
+kMaxInputLength = $3F
+
 ;;; ============================================================
 
 ep_init:
@@ -325,14 +327,14 @@ textbg2:
 str_disk:
         PASCAL_STRING res_string_disk
 
-        ;; Frame
-        DEFINE_RECT rect_input, 28, 113, 428, 124
+kCommonInputWidth = 435
+kCommonInputHeight = 11
 
-        ;; Text bounds
-        DEFINE_RECT rect_input_text, 30, 123, 28, 136
+        DEFINE_RECT_SZ rect_input, 28, 113, kCommonInputWidth, kCommonInputHeight
+        DEFINE_POINT input_textpos, 30, 123
 
-        .word   428, 147
-        .word   30, 146
+        DEFINE_RECT_SZ unused_input2_rect, 28, 136, kCommonInputWidth, kCommonInputHeight
+        DEFINE_POINT unused_input2_textpos, 30, 146
 
 str_file_to_run:
         PASCAL_STRING res_string_label_file_to_run
@@ -2331,7 +2333,7 @@ has_sel:
         jsr     set_port_for_window
         jsr     calc_ip_pos
         stax    pt
-        copy16  rect_input_text::y1, pt+2
+        copy16  input_textpos::ycoord, pt+2
         MGTK_CALL MGTK::MoveTo, pt
         bit     prompt_ip_flag
         bpl     bg2
@@ -2363,7 +2365,7 @@ length  .byte
         MGTK_CALL MGTK::PaintRect, rect_input
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect_input
-        MGTK_CALL MGTK::MoveTo, rect_input_text
+        MGTK_CALL MGTK::MoveTo, input_textpos
         lda     buf_input_left
         beq     :+
         param_call draw_string, buf_input_left
@@ -2473,7 +2475,7 @@ width   .word
         copy16  #buf_input_left, tw_params::data
         copy    buf_input_left, tw_params::length
 @loop:  MGTK_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, rect_input_text::x1, tw_params::width
+        add16   tw_params::width, input_textpos::xcoord, tw_params::width
         cmp16   tw_params::width, screentowindow_windowx
         bcc     :+
         dec     tw_params::length
@@ -2536,7 +2538,7 @@ ip_pos: .word   0
         lda     buf_input_left
         clc
         adc     buf_input_right
-        cmp     #$41            ; ???
+        cmp     #kMaxInputLength
         bcc     continue
         rts
 
@@ -2551,7 +2553,7 @@ continue:
         jsr     calc_ip_pos
         inc     buf_input_left
         stax    $06
-        copy16  rect_input_text::y1, $08
+        copy16  input_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, $06
@@ -2571,7 +2573,7 @@ continue:
 :       dec     buf_input_left
         jsr     calc_ip_pos
         stax    $06
-        copy16  rect_input_text::y1, $08
+        copy16  input_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, $06
@@ -2604,7 +2606,7 @@ skip:   ldx     buf_input_left
         inc     buf_input_right
         jsr     calc_ip_pos
         stax    $06
-        copy16  rect_input_text::y1, $08
+        copy16  input_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, $06
@@ -2641,7 +2643,7 @@ skip:   ldx     buf_input_left
 finish: dec     buf_input_right
         lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
-        MGTK_CALL MGTK::MoveTo, rect_input_text
+        MGTK_CALL MGTK::MoveTo, input_textpos
         param_call draw_string, buf_input_left
         param_call draw_string, buf_input_right
         param_call draw_string, str_two_spaces
@@ -2834,10 +2836,10 @@ width   .word
         MGTK_CALL MGTK::TextWidth, params
 :       lda     params::width
         clc
-        adc     rect_input_text::x1
+        adc     input_textpos::xcoord
         tay
         lda     params::width+1
-        adc     rect_input_text::x1+1
+        adc     input_textpos::xcoord+1
         tax
         tya
         rts
