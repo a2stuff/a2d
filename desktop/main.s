@@ -7225,15 +7225,11 @@ common: sta     preserve_window_size_flag
         jsr     window_lookup
         stax    winfo_ptr
 
-        ;; bbox_height -= window_y (???)
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 2 ; ycoord
-        lda     iconbb_rect+MGTK::Rect::y2
-        sec
-        sbc     (winfo_ptr),y
-        sta     iconbb_rect+MGTK::Rect::y2
-        lda     iconbb_rect+MGTK::Rect::y2+1
-        sbc     #0
-        sta     iconbb_rect+MGTK::Rect::y2+1
+        ;; convert right/bottom to width/height
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
+        sub16in iconbb_rect+MGTK::Rect::x2, (winfo_ptr),y, iconbb_rect+MGTK::Rect::x2
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        sub16in iconbb_rect+MGTK::Rect::y2, (winfo_ptr),y, iconbb_rect+MGTK::Rect::y2
 
         ;; Check if width is < min or > max
         cmp16   iconbb_rect+MGTK::Rect::x2, #kMinWindowWidth
