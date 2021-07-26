@@ -42,7 +42,7 @@ kMaxDeskTopWindows      = 8
 ;;; * = Used by Desk Accessories
 
 JUMP_TABLE_MAIN_LOOP    := $4000 ; Enter DeskTop main loop
-JUMP_TABLE_MGTK_RELAY   := $4003 ; MGTK call (Y=call, X,A=params addr) *
+JUMP_TABLE_MGTK_RELAY   := $4003 ; MGTK call (follow by call, params addr) *
 JUMP_TABLE_SIZE_STRING  := $4006 ; Compose "nnn Blocks" string into internal buffer
 JUMP_TABLE_DATE_STRING  := $4009 ; Compose date string into internal buffer
 JUMP_TABLE_SELECT_WINDOW:= $400C ; Select and refresh given window
@@ -76,6 +76,25 @@ JUMP_TABLE_ADJUST_FILEENTRY := $405D ; Adjust case in FileEntry structure (in: A
 JUMP_TABLE_CUR_IBEAM    := $4060 ; Changes mouse cursor to I-beam *
 JUMP_TABLE_RGB_MODE     := $4063 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_YIELD_LOOP   := $4066 ; Yield the event loop *
+
+;;; ============================================================
+;;; Call MGTK
+;;;     JUMP_TABLE_MGTK_CALL n - params is $0000
+;;;     JUMP_TABLE_MGTK_CALL n, params_addr
+;;;     JUMP_TABLE_MGTK_CALL m, params_addr, label  - params_addr is labeled for modifying
+
+.macro  JUMP_TABLE_MGTK_CALL    op, addr, label
+        jsr JUMP_TABLE_MGTK_RELAY
+        .byte op
+.if .paramcount > 2
+        label := *
+.endif
+.if .paramcount > 1
+        .addr addr
+.else
+        .addr 0
+.endif
+.endmacro
 
 
 ;;; ============================================================

@@ -16,13 +16,37 @@
 ;;; MGTK call from main>aux, call in Y, params at (X,A)
 
 .proc MGTKRelayImpl
-        sty     addr-1
-        stax    addr
+        params_src := $80
+
+        ;; Adjust return address on stack, compute
+        ;; original params address.
+        pla
+        sta     params_src
+        clc
+        adc     #<3
+        tax
+        pla
+        sta     params_src+1
+        adc     #>3
+        pha
+        txa
+        pha
+
+        ;; Copy the params here
+        ldy     #3      ; ptr is off by 1
+:       lda     (params_src),y
+        sta     params-1,y
+        dey
+        bne     :-
+
+        ;; Bank and call
         sta     RAMRDON
         sta     RAMWRTON
-        MGTK_CALL 0, 0, addr
+        jsr     MGTK::MLI
+params:  .res    3
         sta     RAMRDOFF
         sta     RAMWRTOFF
+
         rts
 .endproc
 

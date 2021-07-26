@@ -66,7 +66,7 @@ entry:
         ptr := $06
 
         ;; Get top DeskTop window (if any) and find its path
-        param_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, ptr
+        JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr
         lda     ptr             ; any window open?
         beq     exit
         cmp     #kMaxDeskTopWindows+1

@@ -149,7 +149,7 @@ exit1:  jmp     exit
 
 .proc start2
         ;; Grab top window
-        param_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, window_id
+        JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, window_id
         lda     window_id       ; any window open?
         beq     exit1           ; nope, bail
 

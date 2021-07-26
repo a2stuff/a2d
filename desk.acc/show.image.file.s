@@ -44,14 +44,6 @@
         .assert (minipix_src_buf + kMinipixSrcSize) < DA_IO_BUFFER, error, "Not enough room for Minipix load buffer"
         .assert (minipix_dst_buf + kMinipixDstSize) < WINDOW_ICON_TABLES, error, "Not enough room for Minipix convert buffer"
 
-.macro MGTK_RELAY_CALL call, params
-    .if .paramcount > 1
-        param_call        JUMP_TABLE_MGTK_RELAY, (call), (params)
-    .else
-        param_call        JUMP_TABLE_MGTK_RELAY, (call), 0
-    .endif
-.endmacro
-
 ;;; ============================================================
 
         .org DA_LOAD_ADDRESS
@@ -172,14 +164,14 @@ nextwinfo:      .addr   0
         sta     read_minipix_params::ref_num
         sta     close_params::ref_num
 
-        MGTK_RELAY_CALL MGTK::HideCursor
+        JUMP_TABLE_MGTK_CALL MGTK::HideCursor
         jsr     clear_screen
         jsr     set_color_mode
         jsr     show_file
-        MGTK_RELAY_CALL MGTK::ShowCursor
+        JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
 
-        MGTK_RELAY_CALL MGTK::FlushEvents
-        MGTK_RELAY_CALL MGTK::ObscureCursor
+        JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
+        JUMP_TABLE_MGTK_CALL MGTK::ObscureCursor
 
         ;; fall through
 .endproc
@@ -188,7 +180,7 @@ nextwinfo:      .addr   0
 ;;; Main Input Loop
 
 .proc input_loop
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
         jsr     copy_event_aux_to_main
 
         lda     event_params + MGTK::Event::kind
@@ -215,11 +207,11 @@ exit:
         jsr     JUMP_TABLE_RGB_MODE
 
         ;; Force desktop redraw
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo
+        JUMP_TABLE_MGTK_CALL MGTK::OpenWindow, winfo
+        JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, winfo
 
         ;; Restore menu
-        MGTK_RELAY_CALL MGTK::DrawMenu
+        JUMP_TABLE_MGTK_CALL MGTK::DrawMenu
         jsr     JUMP_TABLE_HILITE_MENU
 
         rts                     ; exits input loop
@@ -388,8 +380,8 @@ signature:
         jsr     convert_minipix_to_bitmap
 
         ;; Draw
-        MGTK_RELAY_CALL MGTK::SetPort, winfo::port
-        MGTK_RELAY_CALL MGTK::PaintBits, paintbits_params
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, winfo::port
+        JUMP_TABLE_MGTK_CALL MGTK::PaintBits, paintbits_params
 
         rts
 

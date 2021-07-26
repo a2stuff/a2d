@@ -167,7 +167,7 @@ str_basic_system:
 .proc get_win_path
         ptr := $06
 
-        param_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, ptr
+        JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr
         lda     ptr             ; any window open?
         beq     fail
         cmp     #kMaxDeskTopWindows+1

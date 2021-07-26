@@ -40,9 +40,11 @@ Enter DeskTop main loop
 
 #### `JUMP_TABLE_MGTK_RELAY` ($4003)
 
-MouseGraphics ToolKit call (main>aux). Y = call number, A,X = params address.
+MouseGraphics ToolKit call (main>aux). Follow by call (`.byte`) and params (`.addr`).
 
 (Params must reside in aux memory, lower 48k or LC banks.)
+
+Use the `JUMP_TABLE_MGTK_CALL` macro for convenience.
 
 #### `JUMP_TABLE_SIZE_STRING` ($4006)
 

@@ -25,7 +25,7 @@ dst_path_buf   := $1F80
         ;; "Exported" by desktop.inc
 
 JT_MAIN_LOOP:           jmp     main_loop
-JT_MGTK_RELAY:          jmp     MGTK_RELAY              ; *
+JT_MGTK_RELAY:          jmp     MGTKRelayImpl           ; *
 JT_SIZE_STRING:         jmp     compose_size_string
 JT_DATE_STRING:         jmp     compose_date_string
 JT_SELECT_WINDOW:       jmp     select_and_refresh_window
@@ -5710,8 +5710,8 @@ update_view:
         ;; Create the window
         lda     cached_window_id
         jsr     window_lookup   ; A,X points at Winfo
-        ldy     #MGTK::OpenWindow
-        jsr     MGTK_RELAY
+        stax    @addr
+        MGTK_RELAY_CALL MGTK::OpenWindow, 0, @addr
 
         lda     active_window_id
         jsr     set_port_from_window_id
@@ -10353,9 +10353,8 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ;; --------------------------------------------------
         ;; Restore the previous GrafPort
 
-        ldax    getport_params::portptr
-        ldy     #MGTK::SetPort
-        jmp     MGTK_RELAY
+        copy16  getport_params::portptr, @addr
+        MGTK_RELAY_CALL MGTK::SetPort, 0, @addr
 .endproc
 
 ;;; ============================================================
@@ -14088,7 +14087,7 @@ do2:    ldy     #1
         jsr     copy_name_to_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_dest_file_pos
         param_call draw_dialog_path, path_buf1
-        param_call MGTK_RELAY, MGTK::MoveTo, aux::copy_file_count_pos2
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
         rts
 
