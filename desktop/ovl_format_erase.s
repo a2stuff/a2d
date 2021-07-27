@@ -7,6 +7,8 @@
 .proc format_erase_overlay
         .org $800
 
+        MLIRelayImpl := main::MLIRelayImpl
+
         block_buffer := $1A00
 
         ovl_string_buf := path_buf0

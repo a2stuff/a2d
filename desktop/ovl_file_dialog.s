@@ -7,6 +7,8 @@
 .proc file_dialog
         .org $5000
 
+        MLIRelayImpl := main::MLIRelayImpl
+
 ;;; Map from index in files_names to list entry; high bit is
 ;;; set for directories.
 file_list_index := $1780
@@ -733,24 +735,6 @@ l7:     .byte   0
 L56E3:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
-
-;;; ============================================================
-
-.proc MLI_RELAY
-        sty     call
-        stax    params
-        sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     MLI
-call:   .byte   0
-params: .addr   0
-        sta     ALTZPON
-        tax
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
-        rts
-.endproc
 
 ;;; ============================================================
 

@@ -32,10 +32,10 @@ JT_SELECT_WINDOW:       jmp     select_and_refresh_window
 JT_AUXLOAD:             jmp     AuxLoad
 JT_EJECT:               jmp     cmd_eject
 JT_CLEAR_UPDATES:       jmp     clear_updates
-JT_ITK_RELAY:           jmp     ITK_RELAY
+JT_ITK_RELAY:           jmp     ITKRelayImpl
 JT_LOAD_OVL:            jmp     load_dynamic_routine
 JT_CLEAR_SELECTION:     jmp     clear_selection
-JT_MLI_RELAY:           jmp     MLI_RELAY               ; *
+JT_MLI_RELAY:           jmp     MLIRelayImpl            ; *
 JT_COPY_TO_BUF:         jmp     LoadWindowIconTable
 JT_COPY_FROM_BUF:       jmp     StoreWindowIconTable
 JT_NOOP:                jmp     cmd_noop
@@ -899,24 +899,6 @@ no_selection:
 :       jsr     disable_eject_menu_item
         jsr     disable_menu_items_requiring_selection
         copy    #0, file_menu_items_enabled_flag
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc MLI_RELAY
-        sty     call
-        stax    params
-        sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     MLI
-call:   .byte   0
-params: .addr   0
-        sta     ALTZPON
-        tax
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
         rts
 .endproc
 
@@ -2626,8 +2608,8 @@ L518D:  lda     L51EF
         tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
+        stax    @addr
+        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
         inc     L51EF
         jmp     L518D
 
@@ -3580,8 +3562,8 @@ L5986:  txa
         cmp     trash_icon_num
         beq     L5998
         jsr     icon_entry_lookup
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
+        stax    @addr
+        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
 L5998:  pla
         tax
         inx
@@ -3775,8 +3757,8 @@ add_icon:
         dex
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
+        stax    @addr
+        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
 
 :       jsr     StoreWindowIconTable
         jmp     clear_updates_and_redraw_desktop_icons
@@ -5727,8 +5709,8 @@ update_view:
         tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup ; A,X points at IconEntry
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
+        stax    @addr2
+        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr2
         inc     num
         jmp     :-
 
@@ -14979,6 +14961,46 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 
         .assert * >= $A000, error, "Routine used by overlays in overlay zone"
 
+;;; ============================================================
+
+.proc MLIRelayImpl
+        params_src := $80
+
+        ;; Adjust return address on stack, compute
+        ;; original params address.
+        pla
+        sta     params_src
+        clc
+        adc     #<3
+        tax
+        pla
+        sta     params_src+1
+        adc     #>3
+        pha
+        txa
+        pha
+
+        ;; Copy the params here
+        ldy     #3      ; ptr is off by 1
+:       lda     (params_src),y
+        sta     params-1,y
+        dey
+        bne     :-
+
+        ;; Bank and call
+        sta     ALTZPOFF
+        lda     ROMIN2
+
+        jsr     MLI
+params:  .res    3
+
+        sta     ALTZPON
+        tax
+        lda     LCBANK1
+        lda     LCBANK1
+        txa
+        rts
+.endproc
 
 ;;; ============================================================
 

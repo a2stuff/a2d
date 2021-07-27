@@ -57,7 +57,7 @@
 
         .org ::kSegmentInitializerAddress
 
-        MLI_RELAY := main::MLI_RELAY
+        MLIRelayImpl := main::MLIRelayImpl
 
         data_buf := $1200
         kDataBufferSize = $400
@@ -1079,8 +1079,8 @@ iloop:  cpx     cached_window_icon_count
         pha
         lda     cached_window_icon_list,x
         jsr     main::icon_entry_lookup
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
+        stax    @addr
+        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
         pla
         tax
         inx

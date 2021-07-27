@@ -78,7 +78,7 @@ Clear update events - i.e. redraw windows as needed after move/resize/close.
 
 #### `JUMP_TABLE_ITK_RELAY` ($4018)
 
-Icon ToolKit call (main>aux). Y = call number, A,X = params address.
+Icon ToolKit call (main>aux). Follow by call (`.byte`) and params (`.addr`).
 
 (Params must reside in aux memory, lower 48k or LC banks.)
 
@@ -92,11 +92,13 @@ Routines are defined in `desktop/desktop.inc`.
 
 Deselect all DeskTop icons (volumes/files).
 
-#### `JUMP_TABLE_MLI` ($4021)
+#### `JUMP_TABLE_MLI_RELAY` ($4021)
 
-ProDOS MLI call. Y=call number, X,A=params address. *
+ProDOS MLI call. Follow by call (`.byte`) and params (`.addr`). *
 
 (Params must reside in main memory, lower 48k.)
+
+Use the `JUMP_TABLE_MLI_CALL` macro for convenience.
 
 #### `JUMP_TABLE_COPY_TO_BUF` ($4024)
 

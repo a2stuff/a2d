@@ -115,7 +115,7 @@ quit:   MLI_CALL QUIT, quit_params
         jmp     got_prefix
 
 get_current_prefix:
-        param_call JUMP_TABLE_MLI, GET_PREFIX, get_prefix_params
+        JUMP_TABLE_MLI_CALL GET_PREFIX, get_prefix_params
         bne     no_bs
 
 got_prefix:
@@ -132,7 +132,7 @@ loop:   ldx     path_length
         bne     :-
         stx     bs_path
 
-        param_call JUMP_TABLE_MLI, GET_FILE_INFO, get_file_info_params
+        JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
         bne     not_found
         rts
 

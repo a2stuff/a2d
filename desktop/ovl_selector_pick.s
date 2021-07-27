@@ -9,6 +9,8 @@
 .proc selector_overlay2
         .org $9000
 
+        MLIRelayImpl := main::MLIRelayImpl
+
 io_buf := $0800
 
 selector_list   := $0C00

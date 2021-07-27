@@ -164,8 +164,6 @@ INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 ;;; ============================================================
 ;;; Relays from Main to Aux (params must be in ZP or LC)
 
-ITK_RELAY       := ITKRelayImpl
-
 .macro MGTK_RELAY_CALL call, addr, label
         jsr     MGTKRelayImpl
         .byte   call
@@ -179,21 +177,31 @@ ITK_RELAY       := ITKRelayImpl
     .endif
 .endmacro
 
-.macro ITK_RELAY_CALL call, addr
+.macro ITK_RELAY_CALL call, addr, label
+        jsr     ITKRelayImpl
+        .byte   call
+    .if .paramcount > 2
+        label := *
+    .endif
     .if .paramcount > 1
-        param_call        ITK_RELAY, (call), (addr)
+        .addr   addr
     .else
-        param_call        ITK_RELAY, (call), 0
+        .addr   0
     .endif
 .endmacro
 
-;;; Scopes define their own MLI_RELAY procs.
+;;; Scopes define their own MLIRelayImpl procs.
 
 .macro MLI_RELAY_CALL call, addr
+        jsr     MLIRelayImpl
+        .byte   call
+    .if .paramcount > 2
+        label := *
+    .endif
     .if .paramcount > 1
-        param_call        MLI_RELAY, (call), (addr)
+        .addr   addr
     .else
-        param_call        MLI_RELAY, (call), 0
+        .addr   0
     .endif
 .endmacro
 

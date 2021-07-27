@@ -90,12 +90,12 @@ kReadLength      = WINDOW_ICON_TABLES-font_buffer
         ;; --------------------------------------------------
         ;; Load the file
 
-        param_call JUMP_TABLE_MLI, OPEN, open_params ; TODO: Check for error
+        JUMP_TABLE_MLI_CALL OPEN, open_params ; TODO: Check for error
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        param_call JUMP_TABLE_MLI, READ, read_params ; TODO: Check for error
-        param_call JUMP_TABLE_MLI, CLOSE, close_params
+        JUMP_TABLE_MLI_CALL READ, read_params ; TODO: Check for error
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         ;; --------------------------------------------------
         ;; Copy the DA code and loaded data to AUX

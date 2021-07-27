@@ -58,42 +58,23 @@ start:  lda     #$80
         dex
         bpl     :-
 
+        ;; Set up banks for ProDOS usage
+        sta     ALTZPOFF
+        lda     ROMIN2
+
         ;; Open self (DESKTOP2)
-        MLI_RELAY_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
 
         ;; Slurp in yet another overlay...
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     set_mark_params::ref_num
 
-        MLI_RELAY_CALL SET_MARK, set_mark_params
-        MLI_RELAY_CALL READ, read_params
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL SET_MARK, set_mark_params
+        MLI_CALL READ, read_params
+        MLI_CALL CLOSE, close_params
 
-        ;; And invoke it.
-        sta     ALTZPOFF
-        lda     ROMIN2
         jmp     kOverlayDiskCopy2Address
-
-;;; ============================================================
-
-.proc MLI_RELAY
-        sty     call
-        sta     params
-        stx     params+1
-        sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     MLI
-call:   .byte   0
-params: .addr   0
-        tax
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
-self:   bne     self            ; hang on error?
-        rts
-.endproc
 
 ;;; ============================================================
 

@@ -88,7 +88,7 @@ write_buffer:
         ldx     clock_flag
         bne     skip
 
-        param_call JUMP_TABLE_MLI, OPEN, open_params ; open the file
+        JUMP_TABLE_MLI_CALL OPEN, open_params ; open the file
         bne     skip
 
         lda     open_params::ref_num
@@ -96,12 +96,12 @@ write_buffer:
         sta     write_params::ref_num
         sta     close_params::ref_num
 
-        param_call JUMP_TABLE_MLI, SET_MARK, set_mark_params ; seek
+        JUMP_TABLE_MLI_CALL SET_MARK, set_mark_params ; seek
         bne     close
 
-        param_call JUMP_TABLE_MLI, WRITE, write_params ; write the date
+        JUMP_TABLE_MLI_CALL WRITE, write_params ; write the date
 
-close:  param_call JUMP_TABLE_MLI, CLOSE, close_params ; close the file
+close:  JUMP_TABLE_MLI_CALL CLOSE, close_params ; close the file
 
 skip:   ldx     stash_stack     ; exit the DA
         txs
