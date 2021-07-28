@@ -521,18 +521,17 @@ l2:     ldx     #0
         bcs     :+
         lda     #0              ; col 1
         tax
-        beq     l3           ; always
+        beq     l3              ; always
 
 :       cmp     #16
         bcs     :+
-        ldx     #0
-        lda     #115            ; col 2
-        bne     l3           ; always
+        ldax    #kEntryPickerCol2
+        jmp     l3
 
-:       ldax    #220            ; col 3
+:       ldax    #kEntryPickerCol3
 
 l3:     clc
-        adc     #10
+        adc     #10             ; text starts at +10 offset
         sta     dialog_label_pos::xcoord
         txa
         adc     #0
@@ -741,11 +740,14 @@ l1:     pha
         beq     l3
         cmp     #1
         bne     l2
-        param_jump l3, $0069
 
-l2:     ldax    #210
+        ldax    #kEntryPickerCol2
+        jmp     l3
+
+l2:     ldax    #kEntryPickerCol3
+
 l3:     clc
-        adc     #9
+        adc     #8              ; highlight starts at +8 offset
         sta     entry_picker_item_rect::x1
         txa
         adc     #0
@@ -770,7 +772,7 @@ l5:     ldx     #0
         txa
         adc     #0
         sta     entry_picker_item_rect::y1+1
-        add16   entry_picker_item_rect::x1, #106, entry_picker_item_rect::x2
+        add16   entry_picker_item_rect::x1, #kEntryPickerItemWidth-1, entry_picker_item_rect::x2
         add16   entry_picker_item_rect::y1, #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_item_rect

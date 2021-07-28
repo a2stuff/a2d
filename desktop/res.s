@@ -541,6 +541,9 @@ nextwinfo:      .addr   0
         DEFINE_RECT maprect, 0, 0, 358, 100
 .endparams
 
+        kEntryPickerCol2 = 115
+        kEntryPickerCol3 = 220
+        kEntryPickerItemWidth  = 104
         kEntryPickerItemHeight = 9 ; default font height
 
         DEFINE_RECT_INSET entry_picker_outer_rect, 4, 2, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
