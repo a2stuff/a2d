@@ -687,7 +687,12 @@ quick_boot_slot:
         beq     :+
         cmp     #TO_LOWER(kShortcutRunDeskTop)
         bne     not_desktop
-:       MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+:       lda     winfo::window_id
+        jsr     get_window_port
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, desktop_button_rect
+        MGTK_CALL MGTK::PaintRect, desktop_button_rect
+        MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     found_desktop
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
