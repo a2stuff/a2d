@@ -1099,6 +1099,13 @@ entries_flag_table:
         dey
         bpl     :-
 
+        ;; This will change the menu label, so re-initialize the
+        ;; menu so that the new width can be pre-computed. That
+        ;; will un-hilite the Selector menu, so re-hilite it so
+        ;; it un-hilites correctly when finally dismissed.
+        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
+        jsr     main::toggle_menu_hilite
+
         rts
 
 index:  .byte   0
