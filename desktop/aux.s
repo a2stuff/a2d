@@ -3760,6 +3760,7 @@ err_4E:  PASCAL_STRING res_string_errmsg_4E
 err_52:  PASCAL_STRING res_string_errmsg_52
 err_57:  PASCAL_STRING res_string_errmsg_57
         ;; Below are internal (not ProDOS MLI) error codes.
+err_F7:  PASCAL_STRING res_string_errmsg_F7
 err_F8:  PASCAL_STRING res_string_errmsg_F8
 err_F9:  PASCAL_STRING res_string_errmsg_F9
 err_FA:  PASCAL_STRING res_string_errmsg_FA
@@ -3769,7 +3770,7 @@ err_FD:  PASCAL_STRING res_string_errmsg_FD
 err_FE:  PASCAL_STRING res_string_errmsg_FE
 
         ;; number of alert messages
-        kNumAlerts = 21
+        kNumAlerts = 22
 alert_count:
         .byte   kNumAlerts
 
@@ -3784,6 +3785,7 @@ alert_table:
         .byte   ERR_DUPLICATE_VOLUME
 
         ;; Internal error codes:
+        .byte   kErrNoWindowsOpen
         .byte   kErrMoveCopyIntoSelf
         .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
         .byte   kErrInsertSrcDisk, kErrInsertDstDisk, kErrBasicSysNotFound
@@ -3792,7 +3794,8 @@ alert_table:
         ;; alert index to string address
 message_table:
         .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
-        .addr   err_47,err_48,err_49,err_4E,err_52,err_57,err_F8,err_F9,err_FA
+        .addr   err_47,err_48,err_49,err_4E,err_52,err_57
+        .addr   err_F7,err_F8,err_F9,err_FA
         .addr   err_FB,err_FC,err_FD,err_FE
         ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlerts
 
@@ -3809,16 +3812,29 @@ message_table:
 .endenum
 
 alert_options_table:
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::TryAgainCancel
-        .byte   MessageFlags::Ok, MessageFlags::TryAgainCancel
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::TryAgainCancel
-        .byte   MessageFlags::TryAgainCancel, MessageFlags::Ok
+        .byte   MessageFlags::Ok             ; dummy
+        .byte   MessageFlags::Ok             ; ERR_IO_ERROR
+        .byte   MessageFlags::Ok             ; ERR_DEVICE_NOT_CONNECTED
+        .byte   MessageFlags::TryAgainCancel ; ERR_WRITE_PROTECTED
+        .byte   MessageFlags::Ok             ; ERR_INVALID_PATHNAME
+        .byte   MessageFlags::TryAgainCancel ; ERR_PATH_NOT_FOUND
+        .byte   MessageFlags::Ok             ; ERR_VOL_NOT_FOUND
+        .byte   MessageFlags::Ok             ; ERR_FILE_NOT_FOUND
+        .byte   MessageFlags::Ok             ; ERR_DUPLICATE_FILENAME
+        .byte   MessageFlags::Ok             ; ERR_OVERRUN_ERROR
+        .byte   MessageFlags::Ok             ; ERR_VOLUME_DIR_FULL
+        .byte   MessageFlags::Ok             ; ERR_ACCESS_ERROR
+        .byte   MessageFlags::Ok             ; ERR_NOT_PRODOS_VOLUME
+        .byte   MessageFlags::Ok             ; ERR_DUPLICATE_VOLUME
+
+        .byte   MessageFlags::Ok             ; kErrNoWindowsOpen
+        .byte   MessageFlags::Ok             ; kErrMoveCopyIntoSelf
+        .byte   MessageFlags::Ok             ; kErrDuplicateVolName
+        .byte   MessageFlags::Ok             ; kErrFileNotOpenable
+        .byte   MessageFlags::Ok             ; kErrNameTooLong
+        .byte   MessageFlags::TryAgainCancel ; kErrInsertSrcDisk
+        .byte   MessageFlags::TryAgainCancel ; kErrInsertDstDisk
+        .byte   MessageFlags::Ok             ; kErrBasicSysNotFound
         ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
 
         ;; Actual entry point

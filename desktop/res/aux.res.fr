@@ -109,6 +109,7 @@
 .define res_string_errmsg_4E "Fichier verrouill{."
 .define res_string_errmsg_52 "Disque non ProDOS."
 .define res_string_errmsg_57 "Volume d{j@ pr{sent sur le bureau."
+.define res_string_errmsg_F7 "Il n'y a pas de fenetres ouvertes."
 .define res_string_errmsg_F8 "Impossible de placer ou copier l'{l{ment sur lui-meme."
 .define res_string_errmsg_F9 "Il existe 2 volumes avec le meme nom."
 .define res_string_errmsg_FA "Ce fichier ne peut etre ex{cut{."

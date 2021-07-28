@@ -68,9 +68,9 @@ entry:
         ;; Get top DeskTop window (if any) and find its path
         JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr
         lda     ptr             ; any window open?
-        beq     exit
+        beq     no_windows
         cmp     #kMaxDeskTopWindows+1
-        bcs     exit
+        bcs     no_windows
         jsr     JUMP_TABLE_GET_WIN_PATH
         stax    ptr
 
@@ -100,6 +100,10 @@ entry:
         sta     RAMRDOFF
         sta     RAMWRTOFF
 exit:   rts
+
+no_windows:
+        lda     #kErrNoWindowsOpen
+        jmp     JUMP_TABLE_SHOW_ALERT
 .endscope
 
 ;;; ============================================================
