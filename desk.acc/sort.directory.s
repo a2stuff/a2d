@@ -75,6 +75,12 @@ start:  tsx
         txs
         lda     window_id
         bne     :+
+
+        lda     #>(JUMP_TABLE_SHOW_ALERT-1)
+        pha
+        lda     #<(JUMP_TABLE_SHOW_ALERT-1)
+        pha
+        lda     #kErrNoWindowsOpen
         rts
 
 :       lda     #>(JUMP_TABLE_SELECT_WINDOW-1)
