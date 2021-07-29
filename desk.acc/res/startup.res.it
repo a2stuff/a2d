@@ -1,0 +1,3 @@
+.define res_string_window_title "Opzioni di avvio"
+.define res_string_label_ramcard "Copia su scheda di espansione RAM(se presente)"
+.define res_string_label_selector "Selettore di avvio (se presente)"

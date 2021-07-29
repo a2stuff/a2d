@@ -10,12 +10,19 @@
 .proc auxlc
         .org $D000
 
-.macro MGTK_RELAY_CALL2 call, params
-    .if .paramcount > 1
-        param_call MGTK_RELAY2, call, params
-    .else
-        param_call MGTK_RELAY2, call, 0
-    .endif
+.macro MGTK_RELAY_CALL2 op, addr, label
+        jsr MGTK_RELAY2
+        .byte op
+
+.if .paramcount > 2
+        label := *
+.endif
+
+.if .paramcount > 1
+        .addr addr
+.else
+        .addr 0
+.endif
 .endmacro
 
 kShortcutReadDisk = res_char_button_read_drive_shortcut
@@ -107,7 +114,7 @@ menu_apple:
         DEFINE_MENU_ITEM label_blank
         DEFINE_MENU_ITEM label_copyright1
         DEFINE_MENU_ITEM label_copyright2
-        DEFINE_MENU_ITEM label_rights
+        DEFINE_MENU_ITEM label_copyright3
         ASSERT_RECORD_TABLE_SIZE @items, 5, .sizeof(MGTK::MenuItem)
 
 menu_file:
@@ -135,11 +142,11 @@ label_desktop:
 label_blank:
         PASCAL_STRING " "       ; do not localize
 label_copyright1:
-        PASCAL_STRING res_string_menu_item_copyright1 ; menu item
+        PASCAL_STRING res_string_copyright_line1 ; menu item
 label_copyright2:
-        PASCAL_STRING res_string_menu_item_copyright2 ; menu item
-label_rights:
-        PASCAL_STRING res_string_menu_item_rights ; menu item
+        PASCAL_STRING res_string_copyright_line2 ; menu item
+label_copyright3:
+        PASCAL_STRING res_string_copyright_line3 ; menu item
 
 label_quit:
         PASCAL_STRING res_string_dc_menu_item_quit    ; menu item
@@ -201,6 +208,8 @@ grafport_win:  .res    .sizeof(MGTK::GrafPort), 0
 
 kDialogWidth    = 500
 kDialogHeight   = 150
+kDialogLeft     = (::kScreenWidth - kDialogWidth)/2
+kDialogTop      = (::kScreenHeight - kDialogHeight)/2
 
 .params winfo_dialog
 window_id:      .byte   1
@@ -219,7 +228,7 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-        DEFINE_POINT viewloc, 25, 20
+        DEFINE_POINT viewloc, kDialogLeft, kDialogTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
@@ -234,6 +243,13 @@ textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
+
+kListBoxOffsetLeft = 20
+kListBoxOffsetTop = 30
+kListBoxLeft = kDialogLeft + kListBoxOffsetLeft
+kListBoxTop = kDialogTop + kListBoxOffsetTop
+kListBoxWidth = 150
+kListBoxHeight = 70
 
 .params winfo_drive_select
 window_id:      .byte   $02
@@ -252,11 +268,11 @@ mincontlength:  .word   50
 maxcontwidth:   .word   150
 maxcontlength:  .word   150
 port:
-        DEFINE_POINT viewloc, 45, 50
+        DEFINE_POINT viewloc, kListBoxLeft, kListBoxTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, 150, 70
+        DEFINE_RECT cliprect, 0, 0, kListBoxWidth, kListBoxHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -270,10 +286,12 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_INSET rect_outer_frame, 4, 2, kDialogWidth, kDialogHeight
         DEFINE_RECT_INSET rect_inner_frame, 5, 3, kDialogWidth, kDialogHeight
-        DEFINE_RECT rect_D211, 6, 20, 494, 102
-        DEFINE_RECT rect_D219, 6, 103, 494, 145
 
-        DEFINE_BUTTON ok, res_string_dc_button_ok, 350, 90
+        ;; For erasing parts of the window
+        DEFINE_RECT_SZ rect_erase_dialog_upper, 6, 20, kDialogWidth-12, 82 ; under title to bottom of list
+        DEFINE_RECT_SZ rect_erase_dialog_lower, 6, 103, kDialogWidth-12, 42 ; bottom of list to bottom of dialog
+
+        DEFINE_BUTTON ok, res_string_button_ok, 350, 90
 
 ;;; Label positions
         DEFINE_POINT point_title, 0, 15
@@ -282,7 +300,7 @@ str_disk_copy_padded:
 str_quick_copy_padded:
         PASCAL_STRING res_string_quick_copy_padded_dialog_title ; dialog title (padded to overwrite when swapping)
 
-        DEFINE_RECT rect_D255, 270, 38, 420, 46
+        DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
 
         DEFINE_BUTTON read_drive, res_string_button_read_drive, 210, 90
 
@@ -318,7 +336,7 @@ bg_black:
 bg_white:
         .byte   $7F
 
-        DEFINE_RECT rect_D35B, 0, 0, 150, 0
+        DEFINE_RECT rect_highlight_row, 0, 0, kListBoxWidth, 0
 
 
 current_drive_selection:        ; $FF if no selection
@@ -388,8 +406,11 @@ block_count_div8:              ; calculated when reading volume bitmap
 
 LD429:  .byte   0
 
-        DEFINE_RECT rect_D42A, 18, 20, 490, 88
-        DEFINE_RECT rect_D432, 19, 29, 195, 101
+        DEFINE_RECT rect_D42A, 18, 20, kDialogWidth-10, 88
+
+        ;; Include 1px borders + extra on right for scrollbar
+        ;; TODO: Use GetWinFrameRect to query this.
+        DEFINE_RECT rect_erase_listbox, kListBoxOffsetLeft - 1, kListBoxOffsetTop - 1, kListBoxOffsetLeft + kListBoxWidth + 25, kListBoxOffsetTop + kListBoxHeight + 1
 
 LD43A:  .res 18, 0
 LD44C:  .byte   0
@@ -573,14 +594,14 @@ LD687:  lda     current_drive_selection
         MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
         lda     current_drive_selection
         sta     source_drive_index
-        lda     winfo_drive_select
+        lda     winfo_drive_select::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, winfo_drive_select::cliprect
         lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D255
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_select_src
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_source
         param_call DrawString, str_select_destination
         jsr     LE559
@@ -601,9 +622,9 @@ LD6F9:  lda     current_drive_selection
         lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_upper
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D432
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_listbox
 LD734:  ldx     #0
         lda     #kAlertMsgInsertSource
         jsr     show_alert_dialog
@@ -772,7 +793,7 @@ LD89F:  lda     #kAlertMsgDestinationProtected
 LD8A9:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_upper
         lda     source_drive_index
         cmp     dest_drive_index
         bne     LD8DF
@@ -1025,7 +1046,7 @@ check_read_drive_button:
 :       return  #$FF
 
 handle_drive_select_button_down:
-        lda     winfo_drive_select
+        lda     winfo_drive_select::window_id
         sta     screentowindow_window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
@@ -1067,15 +1088,37 @@ LDBD6:  pla
         jmp     LDBC0
 
 .proc MGTK_RELAY2
-        sty     call
-        stax    params
+        params_src := $80
+
+        ;; Adjust return address on stack, compute
+        ;; original params address.
+        pla
+        sta     params_src
+        clc
+        adc     #<3
+        tax
+        pla
+        sta     params_src+1
+        adc     #>3
+        pha
+        txa
+        pha
+
+        ;; Copy the params here
+        ldy     #3              ; ptr is off by 1
+:       lda     (params_src),y
+        sta     params-1,y
+        dey
+        bne     :-
+
+        ;; Bank and call
         sta     RAMRDON
         sta     RAMWRTON
         jsr     MGTK::MLI
-call:   .byte   0
-params: .addr   0
+params: .res    3
         sta     RAMRDOFF
         sta     RAMWRTOFF
+
         rts
 .endproc
 
@@ -1108,7 +1151,7 @@ LDC55:  bit     LD44C
 .proc check_down
         cmp     #CHAR_DOWN
         bne     check_up
-        lda     winfo_drive_select
+        lda     winfo_drive_select::window_id
         jsr     set_win_port
         lda     current_drive_selection
         bmi     LDC6F
@@ -1126,7 +1169,7 @@ LDC7F:  jsr     highlight_row
 .proc check_up
         cmp     #CHAR_UP
         bne     LDCA9
-        lda     winfo_drive_select
+        lda     winfo_drive_select::window_id
         jsr     set_win_port
         lda     current_drive_selection
         bmi     LDC9C
@@ -1433,8 +1476,8 @@ saved_ram_unitnum:
         lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D219
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_upper
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_lower
         lda     disk_copy_flag
         bne     :+
         param_call draw_title_text, str_quick_copy_padded
@@ -1563,12 +1606,12 @@ check_alpha:
         asl     a               ; * 8
         asl     a
         asl     a
-        sta     rect_D35B::y1
+        sta     rect_highlight_row::y1
         clc
         adc     #7
-        sta     rect_D35B::y2
+        sta     rect_highlight_row::y2
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D35B
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_highlight_row
         rts
 .endproc
 
@@ -1754,7 +1797,7 @@ LE28C:  .byte   0
 ;;; ============================================================
 
 .proc draw_device_list_entries
-        lda     winfo_drive_select
+        lda     winfo_drive_select::window_id
         jsr     set_win_port
 
         lda     #0
@@ -1778,7 +1821,7 @@ index:  .byte   0
 
 ;;; ============================================================
 
-LE2B1:  lda     winfo_drive_select
+LE2B1:  lda     winfo_drive_select::window_id
         jsr     set_win_port
         lda     current_drive_selection
         asl     a
@@ -2101,11 +2144,7 @@ LE559:  lda     winfo_dialog::window_id
 LE5C5:  rts
 
 LE5C6:  param_call DrawString, str_2_spaces
-        ldx     main__on_line_buffer2
-LE5D0:  lda     main__on_line_buffer2,x
-        sta     LD43A,x
-        dex
-        bpl     LE5D0
+        COPY_STRING main__on_line_buffer2, LD43A
         param_call DrawString, LD43A
         rts
 
@@ -2364,8 +2403,8 @@ reserved:       .byte   0
 
 kAlertRectWidth         = 420
 kAlertRectHeight        = 55
-kAlertRectLeft          = 65    ; TODO: (::kScreenWidth - kAlertRectWidth)/2
-kAlertRectTop           = 45    ; TODO: (::kScreenHeight - kAlertRectHeight)/2
+kAlertRectLeft          = (::kScreenWidth - kAlertRectWidth)/2
+kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
 
         DEFINE_RECT_SZ alert_rect, kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
         DEFINE_RECT_INSET alert_inner_frame_rect1, 4, 2, kAlertRectWidth, kAlertRectHeight
@@ -2385,17 +2424,17 @@ reserved:       .byte   0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 559, 191
+        DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
 .endparams
 
-        DEFINE_BUTTON ok,        res_string_dcalert_button_ok, 300, 37
-        DEFINE_BUTTON try_again, res_string_dcalert_button_try_again,    300, 37
-        DEFINE_BUTTON cancel,    res_string_dcalert_button_cancel,      20, 37
+        DEFINE_BUTTON ok,        res_string_button_ok,          300, 37
+        DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
+        DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
 
-        DEFINE_BUTTON yes, res_string_dcalert_button_yes, 250, 37, 50, kButtonHeight
-        DEFINE_BUTTON no,  res_string_dcalert_button_no,  350, 37, 50, kButtonHeight
+        DEFINE_BUTTON yes, res_string_button_yes, 250, 37, 50, kButtonHeight
+        DEFINE_BUTTON no,  res_string_button_no,  350, 37, 50, kButtonHeight
 
-        DEFINE_POINT pos_prompt, 100, 24
+        DEFINE_POINT pos_prompt, 75, 29
 
 ;;; %0....... = OK
 ;;; %10..0000 = Cancel, Try Again
@@ -2815,7 +2854,9 @@ finish: pha
 
 ;;; ============================================================
 
+        .define LIB_MGTK_CALL MGTK_RELAY_CALL2
         .include "../lib/alertbuttonloop.s"
+        .undefine LIB_MGTK_CALL
 
 ;;; ============================================================
 

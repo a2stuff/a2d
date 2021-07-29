@@ -75,6 +75,12 @@ start:  tsx
         txs
         lda     window_id
         bne     :+
+
+        lda     #>(JUMP_TABLE_SHOW_ALERT-1)
+        pha
+        lda     #<(JUMP_TABLE_SHOW_ALERT-1)
+        pha
+        lda     #kErrNoWindowsOpen
         rts
 
 :       lda     #>(JUMP_TABLE_SELECT_WINDOW-1)
@@ -149,7 +155,7 @@ exit1:  jmp     exit
 
 .proc start2
         ;; Grab top window
-        param_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, window_id
+        JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, window_id
         lda     window_id       ; any window open?
         beq     exit1           ; nope, bail
 

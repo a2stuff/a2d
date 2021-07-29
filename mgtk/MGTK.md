@@ -816,7 +816,7 @@ Parameters:
 
 Parameters:
 ```
-.byte       clicked         (out) 0 = cancelled, 1 = close
+.byte       clicked         (out) 0 = canceled, 1 = close
 ```
 
 #### DragWindow ($44)

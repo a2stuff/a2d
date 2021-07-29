@@ -7,6 +7,8 @@
 .proc file_dialog
         .org $5000
 
+        MLIRelayImpl := main::MLIRelayImpl
+
 ;;; Map from index in files_names to list entry; high bit is
 ;;; set for directories.
 file_list_index := $1780
@@ -15,6 +17,15 @@ num_file_names  := $177F
 
 ;;; Sequence of 16-byte records, filenames in current directory.
 file_names      := $1800
+
+kListEntryHeight = 9            ; Default font height
+kListEntryGlyphX = 1
+kListEntryNameX  = 16
+
+kLineDelta = 1
+kPageDelta = 8
+
+kMaxInputLength = $3F
 
 ;;; ============================================================
 
@@ -313,9 +324,11 @@ L5341:  lda     winfo_file_dialog_listbox::window_id
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_windowy, winfo_file_dialog_listbox::cliprect+2, screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
+        ldax    screentowindow_windowy
+        ldy     #kListEntryHeight
+        jsr     Divide_16_8_16
+        stax    screentowindow_windowy
+
         lda     selected_index
         cmp     screentowindow_windowy
         beq     same
@@ -399,7 +412,7 @@ different:
         bmi     :+
         jsr     jt_strip_path_segment
         lda     selected_index
-        jsr     L6274
+        jsr     invert_entry
 :       lda     screentowindow_windowy
         sta     selected_index
         bit     LD8F0
@@ -407,7 +420,7 @@ different:
         jsr     jt_prep_path
         jsr     jt_redraw_input
 :       lda     selected_index
-        jsr     L6274
+        jsr     invert_entry
         jsr     jt_list_selection_change
 
         jsr     main::detect_double_click
@@ -456,9 +469,6 @@ different:
 .endproc
 
 ;;; ============================================================
-
-        kLineDelta = 1
-        kPageDelta = 9
 
 .proc handle_page_up
         lda     winfo_file_dialog_listbox::vthumbpos
@@ -728,24 +738,6 @@ L56E3:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
 
 ;;; ============================================================
 
-.proc MLI_RELAY
-        sty     call
-        stax    params
-        sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     MLI
-call:   .byte   0
-params: .addr   0
-        sta     ALTZPON
-        tax
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
-        rts
-.endproc
-
-;;; ============================================================
-
 .proc noop
         rts
 .endproc
@@ -923,7 +915,7 @@ key_meta_digit:
         bcc     l2
 l1:     rts
 
-l2:     jsr     L6274
+l2:     jsr     invert_entry
         jsr     jt_strip_path_segment
         inc     selected_index
         lda     selected_index
@@ -943,7 +935,7 @@ l3:     lda     #0
         bne     l2
 l1:     rts
 
-l2:     jsr     L6274
+l2:     jsr     invert_entry
         jsr     jt_strip_path_segment
         dec     selected_index
         lda     selected_index
@@ -971,7 +963,7 @@ check_alpha:
         pha
         lda     selected_index
         bmi     L5B99
-        jsr     L6274
+        jsr     invert_entry
         jsr     jt_strip_path_segment
 L5B99:  pla
         jmp     update_list_selection
@@ -1050,7 +1042,7 @@ done:   rts
         bne     l2
 l1:     rts
 
-l2:     jsr     L6274
+l2:     jsr     invert_entry
         jsr     jt_strip_path_segment
 l3:     lda     #$00
         jmp     update_list_selection
@@ -1070,7 +1062,7 @@ done:   rts
 
 :       dex
         txa
-        jsr     L6274
+        jsr     invert_entry
         jsr     jt_strip_path_segment
 l1:     ldx     num_file_names
         dex
@@ -1085,7 +1077,7 @@ l1:     ldx     num_file_names
         jsr     jt_list_selection_change
 
         lda     selected_index
-        jsr     selection_second_col
+        jsr     calc_top_index
         jsr     update_scrollbar2
         jsr     draw_list_entries
 
@@ -1491,13 +1483,9 @@ l17:    .byte   0
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, winfo_file_dialog_listbox::cliprect
-        lda     #16
-        sta     picker_entry_pos::xcoord
-        lda     #8
-        sta     picker_entry_pos::ycoord
-        lda     #0
-        sta     picker_entry_pos::ycoord+1
-        sta     l4
+        copy    #kListEntryNameX, picker_entry_pos::xcoord ; high byte always 0
+        copy16  #kListEntryHeight, picker_entry_pos::ycoord
+        copy    #0, l4
 
 loop:   lda     l4
         cmp     num_file_names
@@ -1530,21 +1518,23 @@ loop:   lda     l4
         jsr     draw_string
         ldx     l4
         lda     file_list_index,x
-        bpl     l1
-        lda     #$01
-        sta     picker_entry_pos
+        bpl     :+
+
+        ;; Folder glyph
+        copy    #kListEntryGlyphX, picker_entry_pos::xcoord
         MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
         param_call draw_string, str_folder
-        lda     #$10
-        sta     picker_entry_pos
-l1:     lda     l4
+        copy    #kListEntryNameX, picker_entry_pos::xcoord
+
+:       lda     l4
         cmp     selected_index
         bne     l2
-        jsr     L6274
+        jsr     invert_entry
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
 l2:     inc     l4
-        add16   picker_entry_pos::ycoord, #8, picker_entry_pos::ycoord
+
+        add16_8 picker_entry_pos::ycoord, #kListEntryHeight, picker_entry_pos::ycoord
         jmp     loop
 
 l3:     .byte   0
@@ -1559,25 +1549,27 @@ update_scrollbar:
         lda     #$00
 
 .proc update_scrollbar2
-        sta     l2
+        sta     index
         lda     num_file_names
-        cmp     #$0A
-        bcs     l1
+        cmp     #kPageDelta + 1
+        bcs     :+
+
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         lda     #MGTK::activatectl_deactivate
         sta     activatectl_activate
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
-        rts
+        lda     #0
+        jmp     scroll_clip_rect
 
-l1:     lda     num_file_names
+:       lda     num_file_names
         sta     winfo_file_dialog_listbox::vthumbmax
         .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         sta     activatectl_activate
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
-        lda     l2
+        lda     index
         sta     updatethumb_thumbpos
         jsr     scroll_clip_rect
         lda     #MGTK::Ctl::vertical_scroll_bar
@@ -1585,7 +1577,7 @@ l1:     lda     num_file_names
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
-l2:     .byte   0
+index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1640,59 +1632,39 @@ l1:     lda     l5
         jmp     l4
 
 l2:     lda     num_file_names
-        cmp     #$0A
+        cmp     #kPageDelta+1
         bcs     l3
         lda     l5
         jmp     l4
 
 l3:     sec
         sbc     #kPageDelta
-l4:     ldx     #$00
-        stx     l5
-        asl     a
-        rol     l5
-        asl     a
-        rol     l5
-        asl     a
-        rol     l5
-        sta     winfo_file_dialog_listbox::cliprect+2
-        ldx     l5
-        stx     winfo_file_dialog_listbox::cliprect+3
-        clc
-        adc     #70
-        sta     winfo_file_dialog_listbox::cliprect+6
-        lda     l5
-        adc     #0
-        sta     winfo_file_dialog_listbox::cliprect+7
+
+l4:     ldx     #$00            ; A,X = line
+        ldy     #kListEntryHeight
+        jsr     Multiply_16_8_16
+        stax    winfo_file_dialog_listbox::cliprect::y1
+        add16_8 winfo_file_dialog_listbox::cliprect::y1, #winfo_file_dialog_listbox::kHeight, winfo_file_dialog_listbox::cliprect::y2
         rts
 
 l5:     .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Inputs: A = entry index
 
-.proc L6274
-        ldx     #0
-        stx     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        sta     rect_D90F::y1
-        ldx     tmp
-        stx     rect_D90F::y1+1
-        clc
-        adc     #7
-        sta     rect_D90F::y2
-        lda     tmp
-        adc     #0
-        sta     rect_D90F::y2+1
+.proc invert_entry
+        ldx     #0              ; A,X = entry
+        ldy     #kListEntryHeight
+        jsr     Multiply_16_8_16
+        stax    rect_file_dialog_selection::y1
+
+        add16_8 rect_file_dialog_selection::y1, #kListEntryHeight, rect_file_dialog_selection::y2
+
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D90F
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_file_dialog_selection
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
@@ -1744,7 +1716,9 @@ l3:     lda     ($06),y
         bcs     next_inner
         jmp     l5
 
-:       iny
+:       cpy     name_buf
+        beq     l5
+        iny
         cpy     #16
         bne     l3
         jmp     next_inner
@@ -2016,18 +1990,18 @@ l9:     .res 16, 0
 .endproc
 
 ;;; ============================================================
-;;; Input: A = Selection (0-15, or $FF)
-;;; Output: 0 if no selection or in first col, else mod 8
+;;; Input: A = Selection, or $FF if none
+;;; Output: top index to show so selection is in view
 
-.proc selection_second_col
+.proc calc_top_index
         bpl     has_sel
 :       return  #0
 
 has_sel:
-        cmp     #9
+        cmp     #kPageDelta
         bcc     :-
         sec
-        sbc     #8
+        sbc     #kPageDelta-1
         rts
 .endproc
 
@@ -2053,8 +2027,8 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         copy    #$FF, prompt_ip_flag
 
         PARAM_BLOCK dt_params, $06
-data:   .addr   0
-length: .byte   0
+data    .addr
+length  .byte
         END_PARAM_BLOCK
 
 :       copy16  #str_insertion_point+1, dt_params::data
@@ -2086,8 +2060,8 @@ bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         copy    #$FF, prompt_ip_flag
 
         PARAM_BLOCK dt_params, $06
-data:   .addr   0
-length: .byte   0
+data    .addr
+length  .byte
         END_PARAM_BLOCK
 
 :       copy16  #str_insertion_point+1, dt_params::data
@@ -2167,9 +2141,9 @@ ep2:    jsr     calc_input1_ip_pos
         jmp     to_left
 
         PARAM_BLOCK tw_params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         ;; --------------------------------------------------
@@ -2337,9 +2311,9 @@ ep2:    jsr     calc_input2_ip_pos
         jmp     to_left
 
         PARAM_BLOCK tw_params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         ;; --------------------------------------------------
@@ -2477,7 +2451,7 @@ handle_f2_click__ep2 := handle_f2_click::ep2
         lda     path_buf0
         clc
         adc     path_buf2
-        cmp     #$3F            ; ???
+        cmp     #kMaxInputLength
         bcc     continue
         rts
 
@@ -2642,7 +2616,7 @@ skip:   sty     path_buf0
         lda     path_buf1
         clc
         adc     path_buf2
-        cmp     #$3F
+        cmp     #kMaxInputLength
         bcc     :+
         rts
 
@@ -2994,9 +2968,9 @@ flag:   .byte   0
 
 .proc calc_input1_ip_pos
         PARAM_BLOCK params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         lda     #0
@@ -3024,9 +2998,9 @@ width:  .word   0
 
 .proc calc_input2_ip_pos
         PARAM_BLOCK params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         lda     #0
@@ -3060,18 +3034,10 @@ f2:     lda     #$FF
 f1:     lda     #$00
 
 l1:     bmi     l3
-        ldx     path_buf0
-l2:     lda     path_buf0,x
-        sta     split_buf,x
-        dex
-        bpl     l2
+        COPY_STRING path_buf0, split_buf
         jmp     l4
 
-l3:     ldx     path_buf1
-:       lda     path_buf1,x
-        sta     split_buf,x
-        dex
-        bpl     :-
+l3:     COPY_STRING path_buf1, split_buf
 
 l4:     lda     selected_index
         sta     d2
@@ -3178,6 +3144,10 @@ done:   rts
 
 done:   rts
 .endproc
+
+;;; ============================================================
+
+        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 

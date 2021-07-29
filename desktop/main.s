@@ -16,7 +16,7 @@ kShortcutResize = res_char_resize_shortcut
 kShortcutMove   = res_char_move_shortcut
 kShortcutScroll = res_char_scroll_shortcut
 
-dst_path_buf   := $1FC0
+dst_path_buf   := $1F80
 
         .org $4000
 
@@ -25,17 +25,17 @@ dst_path_buf   := $1FC0
         ;; "Exported" by desktop.inc
 
 JT_MAIN_LOOP:           jmp     main_loop
-JT_MGTK_RELAY:          jmp     MGTK_RELAY              ; *
+JT_MGTK_RELAY:          jmp     MGTKRelayImpl           ; *
 JT_SIZE_STRING:         jmp     compose_size_string
 JT_DATE_STRING:         jmp     compose_date_string
 JT_SELECT_WINDOW:       jmp     select_and_refresh_window
 JT_AUXLOAD:             jmp     AuxLoad
 JT_EJECT:               jmp     cmd_eject
 JT_CLEAR_UPDATES:       jmp     clear_updates
-JT_ITK_RELAY:           jmp     ITK_RELAY
+JT_ITK_RELAY:           jmp     ITKRelayImpl
 JT_LOAD_OVL:            jmp     load_dynamic_routine
 JT_CLEAR_SELECTION:     jmp     clear_selection
-JT_MLI_RELAY:           jmp     MLI_RELAY               ; *
+JT_MLI_RELAY:           jmp     MLIRelayImpl            ; *
 JT_COPY_TO_BUF:         jmp     LoadWindowIconTable
 JT_COPY_FROM_BUF:       jmp     StoreWindowIconTable
 JT_NOOP:                jmp     cmd_noop
@@ -549,6 +549,7 @@ menu_dispatch2:
         copy16  dispatch_table,x, proc_addr
         jsr     call_proc
         MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
+        copy    #0, menu_click_params::menu_id ; for `toggle_menu_hilite`
         rts
 
 call_proc:
@@ -898,24 +899,6 @@ no_selection:
 :       jsr     disable_eject_menu_item
         jsr     disable_menu_items_requiring_selection
         copy    #0, file_menu_items_enabled_flag
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc MLI_RELAY
-        sty     call
-        stax    params
-        sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     MLI
-call:   .byte   0
-params: .addr   0
-        sta     ALTZPON
-        tax
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
         rts
 .endproc
 
@@ -2154,7 +2137,7 @@ L4FC6:  lda     active_window_id
 L4FD4:  copy    #$80, new_folder_dialog_params::phase
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
         beq     :+
-        jmp     done            ; Cancelled
+        jmp     done            ; Canceled
 :       stx     ptr+1
         stx     name_ptr+1
         sty     ptr
@@ -2231,10 +2214,11 @@ loop:   ldx     icon
         add16   ptr_icon, #IconEntry::name, ptr_icon
 cloop:  lda     (ptr_icon),y
         jsr     upcase_char
-        sta     char
+        sta     @char
         lda     (ptr_name),y
         jsr     upcase_char
-        cmp     char
+        @char := *+1
+        cmp     #0              ; self-modified
         bne     next
         dey
         bne     cloop
@@ -2624,8 +2608,8 @@ L518D:  lda     L51EF
         tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
+        stax    @addr
+        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
         inc     L51EF
         jmp     L518D
 
@@ -3578,8 +3562,8 @@ L5986:  txa
         cmp     trash_icon_num
         beq     L5998
         jsr     icon_entry_lookup
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
+        stax    @addr
+        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
 L5998:  pla
         tax
         inx
@@ -3773,8 +3757,8 @@ add_icon:
         dex
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
+        stax    @addr
+        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
 
 :       jsr     StoreWindowIconTable
         jmp     clear_updates_and_redraw_desktop_icons
@@ -5708,8 +5692,8 @@ update_view:
         ;; Create the window
         lda     cached_window_id
         jsr     window_lookup   ; A,X points at Winfo
-        ldy     #MGTK::OpenWindow
-        jsr     MGTK_RELAY
+        stax    @addr
+        MGTK_RELAY_CALL MGTK::OpenWindow, 0, @addr
 
         lda     active_window_id
         jsr     set_port_from_window_id
@@ -5725,8 +5709,8 @@ update_view:
         tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup ; A,X points at IconEntry
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
+        stax    @addr2
+        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr2
         inc     num
         jmp     :-
 
@@ -6356,10 +6340,11 @@ check_window:
         ;; Case-insensitive comparison
 :       lda     (ptr),y
         jsr     upcase_char
-        sta     char
+        sta     @char
         lda     path_buffer,y
         jsr     upcase_char
-        cmp     char
+        @char := *+1
+        cmp     #0              ; self-modified
         bne     loop
         dey
         bne     :-
@@ -6378,7 +6363,6 @@ window_num:
         .byte   0
 exact_match_flag:
         .byte   0
-char:   .byte   0
 .endproc
         find_window_for_path := find_windows::exact
         find_windows_for_prefix := find_windows::prefix
@@ -7038,15 +7022,28 @@ has_parent:
         lda     #0
         sta     (winfo_ptr),y
 
-        ;; Map rect
+        ;; Map rect (initially empty, size assigned in `create_icons_for_window`)
         lda     #0
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 3
-        ldx     #3
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
 :       sta     (winfo_ptr),y
         dey
         dex
         bpl     :-
 
+        ;; Assign saved left/top?
+        bit     copy_new_window_bounds_flag
+    IF_MINUS
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     tmp_rect,x
+        sta     (winfo_ptr),y
+        dey
+        dex
+        bpl     :-
+    END_IF
+
+        ;; --------------------------------------------------
         ;; Scrollbars
         ldy     #MGTK::Winfo::hscroll
         lda     (winfo_ptr),y
@@ -7098,8 +7095,10 @@ volume: ldx     cached_window_id
         lda     cached_window_id
         jsr     create_icons_and_set_window_size
         rts
-
 .endproc
+
+copy_new_window_bounds_flag:
+        .byte   0
 
 ;;; ============================================================
 ;;; File Icon Entry Construction
@@ -7210,15 +7209,11 @@ common: sta     preserve_window_size_flag
         jsr     window_lookup
         stax    winfo_ptr
 
-        ;; bbox_height -= window_y (???)
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 2 ; ycoord
-        lda     iconbb_rect+MGTK::Rect::y2
-        sec
-        sbc     (winfo_ptr),y
-        sta     iconbb_rect+MGTK::Rect::y2
-        lda     iconbb_rect+MGTK::Rect::y2+1
-        sbc     #0
-        sta     iconbb_rect+MGTK::Rect::y2+1
+        ;; convert right/bottom to width/height
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
+        sub16in iconbb_rect+MGTK::Rect::x2, (winfo_ptr),y, iconbb_rect+MGTK::Rect::x2
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        sub16in iconbb_rect+MGTK::Rect::y2, (winfo_ptr),y, iconbb_rect+MGTK::Rect::y2
 
         ;; Check if width is < min or > max
         cmp16   iconbb_rect+MGTK::Rect::x2, #kMinWindowWidth
@@ -7236,6 +7231,11 @@ use_maxw:
         ldax    #kMaxWindowWidth
 
 assign_width:
+        bit     copy_new_window_bounds_flag
+    IF_MINUS
+        ldax    tmp_rect::x2
+    END_IF
+
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
         sta     (winfo_ptr),y
         txa
@@ -7259,6 +7259,11 @@ use_maxh:
         ldax    #kMaxWindowHeight
 
 assign_height:
+        bit     copy_new_window_bounds_flag
+    IF_MINUS
+        ldax    tmp_rect::y2
+    END_IF
+
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::y2
         sta     (winfo_ptr),y
         txa
@@ -10290,9 +10295,9 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ;; Save the current GrafPort and use a custom one for drawing
 
         MGTK_RELAY_CALL MGTK::GetPort, getport_params
+        MGTK_RELAY_CALL MGTK::InitPort, clock_grafport
         MGTK_RELAY_CALL MGTK::SetPort, clock_grafport
 
-        MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
         MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
 
         ;; --------------------------------------------------
@@ -10330,9 +10335,8 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ;; --------------------------------------------------
         ;; Restore the previous GrafPort
 
-        ldax    getport_params::portptr
-        ldy     #MGTK::SetPort
-        jmp     MGTK_RELAY
+        copy16  getport_params::portptr, @addr
+        MGTK_RELAY_CALL MGTK::SetPort, 0, @addr
 .endproc
 
 ;;; ============================================================
@@ -10485,6 +10489,10 @@ mod7:   adc     #7              ; Returns (A+3) modulo 7
 .endproc
 
 .proc SetColorMode
+        ;; IIgs?
+        jsr     test_iigs
+        bcc     iigs
+
         ;; AppleColor Card - Mode 2 (Color 140x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
         sta     SET80VID
@@ -10494,17 +10502,15 @@ mod7:   adc     #7              ; Returns (A+3) modulo 7
         lda     AN3_ON
         lda     AN3_OFF
 
-        ;; IIgs?
-        jsr     test_iigs
-        bcc     iigs
-
         ;; Le Chat Mauve Eve - COL140 mode
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         ;; lda AN3_OFF ; already done above
+        bit     lcm_eve_flag
+        bpl     done
         sta     HR2_OFF
         sta     HR3_OFF
-        bcs     done
+        bmi     done            ; always
 
         ;; Apple IIgs - DHR Color
 iigs:   lda     NEWVIDEO
@@ -10515,6 +10521,10 @@ done:   rts
 .endproc
 
 .proc SetMonoMode
+        ;; IIgs?
+        jsr     test_iigs
+        bcc     iigs
+
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
         sta     CLR80VID
@@ -10525,17 +10535,15 @@ done:   rts
         sta     SET80VID
         lda     AN3_OFF
 
-        ;; IIgs?
-        jsr     test_iigs
-        bcc     iigs
-
         ;; Le Chat Mauve Eve - BW560 mode
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         ;; lda AN3_OFF ; already done above
+        bit     lcm_eve_flag
+        bpl     done
         sta     HR2_ON
         sta     HR3_ON
-        bcs     done
+        bmi     done            ; always
 
         ;; Apple IIgs - DHR B&W
 iigs:   lda     NEWVIDEO
@@ -11373,11 +11381,7 @@ append_size:
 :       stx     buf
 
         ;; TODO: Compose directly into path_buf4.
-        ldx     buf
-:       lda     buf,x
-        sta     path_buf4,x
-        dex
-        bpl     :-
+        COPY_STRING buf, path_buf4
 
         copy16  #path_buf4, get_info_dialog_params::addr
         jsr     run_get_info_dialog_proc
@@ -11657,7 +11661,8 @@ pointers_buf:  .res    4, 0
         DEFINE_READ_PARAMS read_src_dir_skip5_params, skip5_buf, 5 ; ???
 skip5_buf:  .res    5, 0
 
-        kBufSize = $AC0
+        kBufSize = $A80
+        .assert $1500 + kBufSize <= dst_path_buf, error, "Buffer overlap"
 
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
@@ -11998,6 +12003,7 @@ for_run:
 
 :       sta     is_run_flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
+        jsr     check_recursion
         jsr     copy_paths_to_src_and_dst_paths
         bit     operation_flags
         bvc     @not_run
@@ -13236,6 +13242,42 @@ found:  dex
 .endproc
 
 ;;; ============================================================
+;;; Check if path_buf3 (src) is inside path_buf4 (dst); if so,
+;;; show an error and terminate the operation.
+
+.proc check_recursion
+        src := path_buf3
+        dst := path_buf4
+
+        ldx     src             ; Compare string lengths. If the same, need
+        cpx     dst             ; to compare strings. If `src` > `dst`
+        beq     compare         ; ('/a/b' vs. '/a'), then it's not a problem.
+        bcs     ok
+
+        ;; Assert: `src` is shorter then `dst`
+        inx                     ; See if `dst` is possibly a subfolder
+        lda     dst,x           ; ('/a/b/c' vs. '/a/b') or a sibling
+        cmp     #'/'            ; ('/a/bc' vs. /a/b').
+        bne     ok              ; At worst, a sibling - that's okay.
+
+        ;; Potentially self or a subfolder; compare strings.
+compare:
+        ldx     path_buf3
+:       lda     path_buf3,x
+        cmp     path_buf4,x
+        bne     ok
+        dex
+        bne     :-
+
+        ;; Self or subfolder; show a fatal error.
+        lda     #kErrMoveCopyIntoSelf
+        jsr     show_error_alert
+
+ok:     rts
+
+.endproc
+
+;;; ============================================================
 ;;; Copy path_buf3 to src_path_buf, path_buf4 to dst_path_buf
 ;;; and note last '/' in src.
 
@@ -13302,7 +13344,12 @@ loop:   iny
 
         ;; Chars the same?
 loop:   lda     (src_ptr),y
-        cmp     dst_buf,y
+        jsr     upcase_char
+        sta     @char
+        lda     dst_buf,y
+        jsr     upcase_char
+        @char := *+1
+        cmp     #0              ; self-modified
         bne     no_match
 
         ;; Same and a slash?
@@ -13469,64 +13516,6 @@ do_on_line:
         show_error_alert_dst := show_error_alert_impl::flag_set
 
 ;;; ============================================================
-;;; Reformat /RAM (Slot 3, Drive 2) if present
-;;; Assumes ROM is banked in, restores it when complete. Also
-;;; assumes hires screen (main and aux) are safe to destroy.
-
-.proc maybe_reformat_ram
-        ;; Search DEVLST to see if S3D2 RAM was restored
-        ldx     DEVCNT
-:       lda     DEVLST,x
-        and     #%11110000      ; DSSSnnnn
-        cmp     #$B0            ; Slot 2, Drive 2 = /RAM
-        beq     format
-        dex
-        bpl     :-
-        rts
-
-        ;; NOTE: Assumes driver (in DEVADR) was not modified
-        ;; when detached.
-
-        ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
-format: lda     DEVLST,x
-        and     #$F0
-        sta     DRIVER_UNIT_NUMBER
-        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
-        copy16  #$2000, DRIVER_BUFFER
-        lda     LCBANK1
-        lda     LCBANK1
-        jsr     driver
-        lda     ROMIN2
-        rts
-
-RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
-
-driver: jmp     (RAMSLOT)
-.endproc
-
-;;; ============================================================
-;;; Determine if mouse moved (returns w/ carry set if moved)
-;;; Used in dialogs to possibly change cursor
-
-.proc check_mouse_moved
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_coords,x
-        cmp     coords,x
-        bne     diff
-        dex
-        bpl     :-
-        clc
-        rts
-
-diff:   COPY_STRUCT MGTK::Point, event_coords, coords
-        sec
-        rts
-
-        DEFINE_POINT coords, 0, 0
-
-.endproc
-
-;;; ============================================================
 
         PAD_TO $A500
 
@@ -13674,7 +13663,7 @@ content:
         cmp     winfo_prompt_dialog
         beq     :+
         return  #$FF
-:       lda     winfo_prompt_dialog
+:       lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         copy    winfo_prompt_dialog, event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -13918,7 +13907,7 @@ done:   return  #$FF
 .endproc
 
 .proc handle_key_ok
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
@@ -13927,7 +13916,7 @@ done:   return  #$FF
 .endproc
 
 .proc handle_key_cancel
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
@@ -14042,7 +14031,7 @@ do1:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
@@ -14054,7 +14043,7 @@ do2:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     clear_dest_file_rect
@@ -14080,7 +14069,7 @@ do2:    ldy     #1
         jsr     copy_name_to_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_dest_file_pos
         param_call draw_dialog_path, path_buf1
-        param_call MGTK_RELAY, MGTK::MoveTo, aux::copy_file_count_pos2
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
         rts
 
@@ -14091,7 +14080,7 @@ do5:    jsr     close_prompt_dialog
 
         ;; CopyDialogLifecycle::exists
 do3:    jsr     Bell
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 6, aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
@@ -14106,7 +14095,7 @@ LAA7F:  jsr     prompt_input_loop
 
         ;; CopyDialogLifecycle::too_large
 do4:    jsr     Bell
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         bit     move_flag
     IF_MINUS
@@ -14160,7 +14149,7 @@ do1:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
@@ -14171,7 +14160,7 @@ do2:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
@@ -14194,7 +14183,7 @@ do3:    jsr     close_prompt_dialog
         rts
 
 do4:    jsr     Bell
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 6, aux::str_ramcard_full
         jsr     draw_ok_button
@@ -14252,7 +14241,7 @@ do1:
         ldy     #0
         copy16in (ptr),y, file_count
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         copy    #kValueLeft, dialog_label_pos
         param_call draw_dialog_label, 1, str_file_count
@@ -14285,7 +14274,7 @@ do3:    jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         rts
 
-do2:    lda     winfo_prompt_dialog
+do2:    lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
@@ -14335,7 +14324,7 @@ do1:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         lda     delete_flag
         beq     :+
@@ -14352,7 +14341,7 @@ do3:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
@@ -14371,7 +14360,7 @@ do3:    ldy     #1
         rts
 
         ;; DeleteDialogLifecycle::confirm
-do2:    lda     winfo_prompt_dialog
+do2:    lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LADC4:  jsr     prompt_input_loop
@@ -14391,7 +14380,7 @@ do5:    jsr     close_prompt_dialog
         rts
 
         ;; DeleteDialogLifecycle::locked
-do4:    lda     winfo_prompt_dialog
+do4:    lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 6, aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
@@ -14427,7 +14416,7 @@ LAE49:  copy    #$80, has_input_field_flag
         jsr     clear_path_buf2
         lda     #$00
         jsr     open_prompt_window
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_title, aux::label_new_folder
         jsr     set_penmode_xor
@@ -14447,12 +14436,10 @@ LAE90:  lda     ($08),y
         sta     path_buf0,y
         dey
         bpl     LAE90
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
-        param_call draw_dialog_label, 2, aux::str_in_colon
-        copy    #kParentPathLeft, dialog_label_pos
-        param_call draw_dialog_label, 2, path_buf0
-        copy    #kDialogLabelDefaultX, dialog_label_pos
+        param_call draw_dialog_label, 2, aux::str_in
+        param_call draw_dialog_path, path_buf0
         param_call draw_dialog_label, 4, aux::str_enter_folder_name
         jsr     draw_filename_prompt
 LAEC6:  jsr     prompt_input_loop
@@ -14518,7 +14505,7 @@ prepare_window:
         ror     a
         eor     #$80
         jsr     open_prompt_window
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
 
         param_call draw_dialog_title, aux::label_get_info
@@ -14556,7 +14543,7 @@ draw_final_labels:
 
         ;; Draw a specific value
 populate_value:
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
@@ -14639,7 +14626,7 @@ do1:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 4, aux::str_lock_ok
         param_call DrawString, str_file_count
@@ -14651,7 +14638,7 @@ do3:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
@@ -14672,7 +14659,7 @@ do3:    ldy     #1
         rts
 
         ;; LockDialogLifecycle::loop
-do2:    lda     winfo_prompt_dialog
+do2:    lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB0FA:  jsr     prompt_input_loop
@@ -14725,7 +14712,7 @@ do1:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_label, 4, aux::str_unlock_ok
         param_call DrawString, str_file_count
@@ -14737,7 +14724,7 @@ do3:    ldy     #1
         copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
@@ -14756,7 +14743,7 @@ do3:    ldy     #1
         rts
 
         ;; LockDialogLifecycle::loop
-do2:    lda     winfo_prompt_dialog
+do2:    lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB218:  jsr     prompt_input_loop
@@ -14799,7 +14786,7 @@ open_win:
         copy    #$80, has_input_field_flag
         lda     #$00
         jsr     open_prompt_window
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_title, aux::label_rename_icon
         jsr     set_penmode_xor
@@ -14830,7 +14817,7 @@ open_win:
 run_loop:
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
 :       jsr     prompt_input_loop
         bmi     :-              ; continue?
@@ -14862,7 +14849,7 @@ close_win:
         ;; Create window
         MGTK_RELAY_CALL MGTK::HideCursor
         jsr     open_alert_window
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         param_call draw_dialog_title, aux::str_warning
         MGTK_RELAY_CALL MGTK::ShowCursor
@@ -14974,6 +14961,46 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 
         .assert * >= $A000, error, "Routine used by overlays in overlay zone"
 
+;;; ============================================================
+
+.proc MLIRelayImpl
+        params_src := $80
+
+        ;; Adjust return address on stack, compute
+        ;; original params address.
+        pla
+        sta     params_src
+        clc
+        adc     #<3
+        tax
+        pla
+        sta     params_src+1
+        adc     #>3
+        pha
+        txa
+        pha
+
+        ;; Copy the params here
+        ldy     #3      ; ptr is off by 1
+:       lda     (params_src),y
+        sta     params-1,y
+        dey
+        bne     :-
+
+        ;; Bank and call
+        sta     ALTZPOFF
+        lda     ROMIN2
+
+        jsr     MLI
+params:  .res    3
+
+        sta     ALTZPON
+        tax
+        lda     LCBANK1
+        lda     LCBANK1
+        txa
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -15026,7 +15053,7 @@ done:   jmp     reset_main_grafport
 
 .proc open_dialog_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
@@ -15038,7 +15065,7 @@ done:   jmp     reset_main_grafport
 
 .proc open_alert_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintBits, aux::Alert::alert_bitmap_params
@@ -15271,7 +15298,7 @@ draw:   copy16  #str_insertion_point+1, textptr
         copy    str_insertion_point, textlen
         MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
         MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -15279,7 +15306,7 @@ draw:   copy16  #str_insertion_point+1, textptr
 ;;; ============================================================
 
 .proc draw_filename_prompt
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, name_input_rect
@@ -15290,7 +15317,7 @@ draw:   copy16  #str_insertion_point+1, textptr
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
 done:   rts
 .endproc
@@ -15301,9 +15328,9 @@ done:   rts
         ptr := $6
 
         PARAM_BLOCK tw_params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         click_coords := screentowindow_windowx
@@ -15484,7 +15511,7 @@ ip_pos: .word   0
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         param_call DrawString, str_1_char
         param_call DrawString, path_buf2
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         rts
 
@@ -15510,7 +15537,7 @@ param:  .byte   0
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -15554,7 +15581,7 @@ finish: ldx     path_buf1
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -15595,7 +15622,7 @@ finish: dec     path_buf2
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -15901,8 +15928,32 @@ set_penmode_notcopy:
 ;;; ============================================================
 
 .proc toggle_menu_hilite
+        lda     menu_click_params::menu_id
+        beq     :+
         MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
+:       rts
+.endproc
+
+;;; ============================================================
+;;; Determine if mouse moved (returns w/ carry set if moved)
+;;; Used in dialogs to possibly change cursor
+
+.proc check_mouse_moved
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     event_coords,x
+        cmp     coords,x
+        bne     diff
+        dex
+        bpl     :-
+        clc
         rts
+
+diff:   COPY_STRUCT MGTK::Point, event_coords, coords
+        sec
+        rts
+
+        DEFINE_POINT coords, 0, 0
+
 .endproc
 
 ;;; ============================================================
@@ -16119,9 +16170,8 @@ str_desktop_file:
         winfo_ptr := $08
 
         ;; Write version bytes
-        copy    #kDeskTopVersionMajor, desktop_file_data_buf
-        copy    #kDeskTopVersionMinor, desktop_file_data_buf+1
-        copy16  #desktop_file_data_buf+2, data_ptr
+        copy    #kDeskTopFileVersion, desktop_file_data_buf
+        copy16  #desktop_file_data_buf+1, data_ptr
 
         ;; Get first window pointer
         MGTK_RELAY_CALL MGTK::FrontWindow, window_id
@@ -16186,6 +16236,7 @@ exit:   rts
 
 .proc write_window_info
         path_ptr := $0A
+        bounds := tmp_rect
 
         ;; Find name
         ldy     #MGTK::Winfo::window_id
@@ -16200,7 +16251,19 @@ exit:   rts
         dey
         bpl     :-
 
-        ;; Assemble rect - left/top first
+        ;; Assemble rect
+        ;; Compute width/height from port's maprect
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     (winfo_ptr),y
+        sta     bounds,x
+        dey
+        dex
+        bpl     :-
+        sub16   bounds + MGTK::Rect::x2, bounds + MGTK::Rect::x1, bounds + MGTK::Rect::x2
+        sub16   bounds + MGTK::Rect::y2, bounds + MGTK::Rect::y1, bounds + MGTK::Rect::y2
+
+        ;; Now top/left from port's viewloc
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     (winfo_ptr),y
@@ -16208,19 +16271,19 @@ exit:   rts
         dey
         dex
         bpl     :-
-        ;; width/height next
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::bottomright + .sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     (winfo_ptr),y
-        sta     bounds + MGTK::Rect::bottomright,x
+
+        ;; Copy bounds in
+        ldy     #DeskTopFileItem::rect+.sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     bounds,x
+        sta     (data_ptr),y
         dey
         dex
         bpl     :-
 
+        ;; Offset to next entry
         add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
         rts
-
-bounds: .tag    MGTK::Rect
 
 .endproc                        ; write_window_info
 
@@ -16310,8 +16373,46 @@ iigs:   lda     KEYMODREG
 pb2_initial_state:
         .byte   0
 
-;;; ============================================================
+lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
+        .byte   0
 
+;;; ============================================================
+;;; Reformat /RAM (Slot 3, Drive 2) if present
+;;; Assumes ROM is banked in, restores it when complete. Also
+;;; assumes hires screen (main and aux) are safe to destroy.
+
+.proc maybe_reformat_ram
+        ;; Search DEVLST to see if S3D2 RAM was restored
+        ldx     DEVCNT
+:       lda     DEVLST,x
+        and     #%11110000      ; DSSSnnnn
+        cmp     #$B0            ; Slot 2, Drive 2 = /RAM
+        beq     format
+        dex
+        bpl     :-
+        rts
+
+        ;; NOTE: Assumes driver (in DEVADR) was not modified
+        ;; when detached.
+
+        ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
+format: lda     DEVLST,x
+        and     #$F0
+        sta     DRIVER_UNIT_NUMBER
+        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
+        copy16  #$2000, DRIVER_BUFFER
+        lda     LCBANK1
+        lda     LCBANK1
+        jsr     driver
+        lda     ROMIN2
+        rts
+
+RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
+
+driver: jmp     (RAMSLOT)
+.endproc
+
+;;; ============================================================
 
         PAD_TO $BF00
 

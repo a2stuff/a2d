@@ -50,7 +50,7 @@ finish: jsr     file_dialog::read_dir
         bcs     :+
         param_call file_dialog::L6516, buffer
         sta     selected_index
-        jsr     file_dialog::selection_second_col
+        jsr     file_dialog::calc_top_index
 :       jsr     file_dialog::update_scrollbar2
         jsr     file_dialog::update_disk_name
         jsr     file_dialog::draw_list_entries
@@ -89,7 +89,7 @@ buffer: .res 16, 0
         copy    #$80, file_dialog::dual_inputs_flag
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     file_dialog::set_port_for_window
         lda     which_run_list
         jsr     toggle_run_list_button
@@ -104,7 +104,7 @@ buffer: .res 16, 0
 ;;; ============================================================
 
 .proc L7101
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     file_dialog::set_port_for_window
         lda     path_buf0
         beq     add
@@ -491,7 +491,7 @@ copy_when:
 ;;; ============================================================
 
 .proc handle_key
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     file_dialog::set_port_for_window
         lda     event_modifiers
         bne     :+

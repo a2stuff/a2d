@@ -7,6 +7,9 @@
 ;;;  * Desk Accessories & Preview Accessories
 ;;; ============================================================
 
+;;; MGTK loaded into AUX; to call from MAIN use JUMP_TABLE_MGTK_RELAY
+MGTK::MLI   := $4000
+
 ;;; Desk Accessories are loaded in Main ($800-$1BFF) using
 ;;; an I/O buffer (Main $1C00-1FFF). DAs often copy themselves
 ;;; into Aux but can only use $800-$1AFF due to icon tables.
@@ -39,17 +42,17 @@ kMaxDeskTopWindows      = 8
 ;;; * = Used by Desk Accessories
 
 JUMP_TABLE_MAIN_LOOP    := $4000 ; Enter DeskTop main loop
-JUMP_TABLE_MGTK_RELAY   := $4003 ; MGTK call (Y=call, X,A=params addr) *
+JUMP_TABLE_MGTK_RELAY   := $4003 ; MGTK call (MLI-style, params follow) *
 JUMP_TABLE_SIZE_STRING  := $4006 ; Compose "nnn Blocks" string into internal buffer
 JUMP_TABLE_DATE_STRING  := $4009 ; Compose date string into internal buffer
 JUMP_TABLE_SELECT_WINDOW:= $400C ; Select and refresh given window
 JUMP_TABLE_AUXLOAD      := $400F ; Auxload
 JUMP_TABLE_EJECT        := $4012 ; Eject command
 JUMP_TABLE_CLEAR_UPDATES := $4015 ; Clear update events (e.g. after a drag) *
-JUMP_TABLE_ITK_RELAY    := $4018 ; Icon ToolKit relay call (main>aux)
+JUMP_TABLE_ITK_RELAY    := $4018 ; Icon ToolKit (MLI-style, params follow)
 JUMP_TABLE_LOAD_OVL     := $401B ; Load overlay routine
 JUMP_TABLE_CLEAR_SEL    := $401E ; Clear DeskTop selection *
-JUMP_TABLE_MLI          := $4021 ; ProDOS MLI call (Y=call, X,A=params addr) *
+JUMP_TABLE_MLI_RELAY    := $4021 ; ProDOS MLI call (MLI-style, params follow) *
 JUMP_TABLE_COPY_TO_BUF  := $4024 ; Copy to buffer
 JUMP_TABLE_COPY_FROM_BUF:= $4027 ; Copy from buffer
 JUMP_TABLE_NOOP         := $402A ; No-Op command (RTS)
@@ -74,6 +77,43 @@ JUMP_TABLE_CUR_IBEAM    := $4060 ; Changes mouse cursor to I-beam *
 JUMP_TABLE_RGB_MODE     := $4063 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_YIELD_LOOP   := $4066 ; Yield the event loop *
 
+;;; ============================================================
+;;; Call MGTK
+;;;     JUMP_TABLE_MGTK_CALL n - params is $0000
+;;;     JUMP_TABLE_MGTK_CALL n, params_addr
+;;;     JUMP_TABLE_MGTK_CALL m, params_addr, label  - params_addr is labeled for modifying
+
+.macro  JUMP_TABLE_MGTK_CALL    op, addr, label
+        jsr JUMP_TABLE_MGTK_RELAY
+        .byte op
+.if .paramcount > 2
+        label := *
+.endif
+.if .paramcount > 1
+        .addr addr
+.else
+        .addr 0
+.endif
+.endmacro
+
+;;; ============================================================
+;;; Call ProDOS MLI
+;;;     JUMP_TABLE_MLI_CALL n - params is $0000
+;;;     JUMP_TABLE_MLI_CALL n, params_addr
+;;;     JUMP_TABLE_MLI_CALL m, params_addr, label  - params_addr is labeled for modifying
+
+.macro  JUMP_TABLE_MLI_CALL    op, addr, label
+        jsr JUMP_TABLE_MLI_RELAY
+        .byte op
+.if .paramcount > 2
+        label := *
+.endif
+.if .paramcount > 1
+        .addr addr
+.else
+        .addr 0
+.endif
+.endmacro
 
 ;;; ============================================================
 ;;; Overlay routines, for JUMP_TABLE_LOAD_OVL
@@ -103,6 +143,8 @@ kAlertResultOK          = 2
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors
 
+kErrNoWindowsOpen       = $F7
+kErrMoveCopyIntoSelf    = $F8
 kErrDuplicateVolName    = $F9
 kErrFileNotOpenable     = $FA
 kErrNameTooLong         = $FB

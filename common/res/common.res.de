@@ -1,0 +1,11 @@
+.define res_string_button_ok "OK              \x0D"
+.define res_string_button_cancel "Abbrechen   Esc"
+.define res_string_button_try_again "Wiederholen    W"
+.define res_char_button_try_again_shortcut 'W'
+.define res_string_button_yes "Ja"
+.define res_char_button_yes_shortcut 'J'
+.define res_string_button_no "Nein"
+.define res_char_button_no_shortcut 'N'
+.define res_string_copyright_line1 "Copyright Apple Computer Inc., 1986"
+.define res_string_copyright_line2 "Copyright Version Soft, 1985 - 1986"
+.define res_string_copyright_line3 "Alle Rechte vorbehalten"

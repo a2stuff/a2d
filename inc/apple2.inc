@@ -170,13 +170,15 @@ RAMWORKS_BANK   := $C073
 ROMIN2          := $C082
 
 
-HR1_ON          := $C0B3
+;;; Le Chat Mauve Eve registers
 HR1_OFF         := $C0B2
-HR2_ON          := $C0B5
+HR1_ON          := $C0B3
 HR2_OFF         := $C0B4
-HR3_ON          := $C0B7
+HR2_ON          := $C0B5
 HR3_OFF         := $C0B6
-
+HR3_ON          := $C0B7
+TEXT16_OFF      := $C0B8
+TEXT16_ON       := $C0B9
 
 ;;; ============================================================
 ;;; Aux Memory / Extended 80 Column Card

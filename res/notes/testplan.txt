@@ -244,3 +244,33 @@
 * Run on Laser 128. Launch DeskTop. Open a volume. Click on icons one by one. Verify selection changes from icon to icon, and isn't extended as if an Apple key/button or Shift is down.
 
 * Configure a device multiple drives connected to a Smartport controller on a higher slot, a single drive connected to a Smartport controller in a lower slot. Launch DeskTop, run the This Apple DA. Verify that the name on the lower slot doesn't have an extra character at the end.
+
+* Launch DeskTop. Open a window with files with dates with long month names (e.g. "February 29, 2020"). View > by Name. Resize the window so the lines are cut off on the right. Move the horizontal scrollbar all the way to the right. Verify that the right edges of all lines are visible.
+
+* Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Launch This Apple DA, close it. Verify that the file is still present on Ram5.
+
+* Launch DeskTop. Double-click on a file that DeskTop can't open (and where no BASIS.SYSTEM is present). Click OK in the "This file cannot be opened." alert. Double-click on the file again. Verify that the alert renders with an opaque background.
+* Launch DeskTop. File > Copy a File... Navigate to a directory with more than 9 files, and at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
+
+* Create a directory, and in the directory create a file named "A.B" then a file named "A". Launch DeskTop. File > Copy a File.... Navigate to the directory. Verify "A" sorts before "A.B". Launch Selector. File > Run a Program. Navigate to the directory. Verify "A" sorts before "A.B".
+
+* Run DeskTop on a IIc. Launch Control Panel > System Speed. Click Normal and Fast. Verify that display does not switch from DHGR to HGR.
+
+* Launch DeskTop. Create a sequence of nested folders approaching maximum path length, e.g. /RAM/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF12345. Try to copy a file into the folder. Verify that stray pixels do not appear in the top line of the screen.
+
+* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Delete the DESKTOP.CONFIG file from the startup disk, if it was present. Go into Control Panels and change a setting. Verify that DESKTOP.CONFIG is written to the startup disk.
+* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Delete the SELECTOR.LIST file from the startup disk, if it was present. Selector > Add an Entry, and create a new entry. When prompted to save to the system disk, select OK. Verify that SELECTOR.LIST is written to the startup disk.
+
+* Load DeskTop. Create a folder e.g. /RAM/F. Try to copy the folder into itself using File > Copy a File. Verify that an error is shown.
+* Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to move it into itself by dragging. Verify that an error is shown.
+* Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to copy it into itself by dragging with an Apple key depressed. Verify that an error is shown.
+
+* Ensure the default drive has 10 or more files. Load DeskTop. File > Copy a File.... Verify that an active scrollbar appears in the file list. Click OK. Click Cancel. Verify that the scrollbar is scrolled to the top.
+
+* Load DeskTop. Open a volume. Adjust the window size so that horizontal and vertical scrolling is required. Scroll to the bottom-right. Quit DeskTop, reload. Verify that the window size was restored correctly.
+
+* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Selector > Add an Entry.... Create an entry, click OK. Verify that when the "Do you want to save the new list on the system disk?" warning appears that the desktop volume icons repaint.
+
+* Launch DeskTop. Apple > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
+
+* Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. /HD. Launch DeskTop. Open the startup volume. Apple > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.

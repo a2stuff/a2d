@@ -25,6 +25,8 @@
 ;;;          |             |
 ;;;          | Code        |
 ;;;   $2000  +-------------+
+;;;          | Settings    |
+;;;   $1F80  +-------------+
 ;;;          |.(unused)....|
 ;;;   $1E00  +-------------+
 ;;;          |             |
@@ -54,6 +56,8 @@ selector_buffer := $1600        ; Room for kSelectorListBufSize
 copy_buffer     := $4000
 kCopyBufferSize = MLI - copy_buffer
 
+SETTINGS        := $1F80
+
 ;;; ============================================================
 
 kShortcutMonitor = res_char_monitor_shortcut
@@ -79,13 +83,27 @@ kShortcutMonitor = res_char_monitor_shortcut
 ;;; First few bytes of file get updated by this and other
 ;;; executables, so this header format should not change.
 
-        jmp     copy_desktop_to_ramcard
+        jmp     start
 
+        ASSERT_ADDRESS PRODOS_SYS_START + kLauncherDateOffset
 header_date:   .word   0               ; written into file by Date DA
+
 header_orig_prefix:
         .res    64, 0           ; written into file with original path
 
         kWriteBackSize = * - PRODOS_SYS_START
+
+
+;;; ============================================================
+
+start:
+        jsr     load_settings
+        jmp     copy_desktop_to_ramcard
+
+;;; ============================================================
+
+        .include "../lib/load_settings.s"
+        DEFINEPROC_LOAD_SETTINGS src_io_buffer, copy_buffer
 
 ;;; ============================================================
 ;;;
@@ -126,12 +144,21 @@ show_copying_screen:
         DEFINE_OPEN_PARAMS open_path2_params, path2, dir_io_buffer
 
         ;; Used for reading directory structure
-        DEFINE_READ_PARAMS read_4bytes_params, buf_4_bytes, 4 ; For skipping pref/next pointers in directory data
-buf_4_bytes:  .res    4, 0
+        ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
+        kBlockPointersSize = 4
+        .assert .sizeof(SubdirectoryHeader) - .sizeof(FileEntry) = kBlockPointersSize, error, "bad structs"
+        DEFINE_READ_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping pref/next pointers in directory data
+buf_block_pointers:     .res    kBlockPointersSize, 0
+
         DEFINE_CLOSE_PARAMS close_params
-        DEFINE_READ_PARAMS read_fileentry_params, filename, 39 ; For reading entry data
-        DEFINE_READ_PARAMS read_5bytes_params, buf_5_bytes, 5 ; For skipping over "block" boundaries
-buf_5_bytes:  .res    5, 0
+        DEFINE_READ_PARAMS read_fileentry_params, filename, .sizeof(FileEntry)
+
+        ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
+        ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
+        ;; block pointers are the next 4.
+        kMaxPaddingBytes = 5
+        DEFINE_READ_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
+buf_padding_bytes:      .res    kMaxPaddingBytes, 0
         .res    4, 0
         DEFINE_CLOSE_PARAMS close_srcfile_params
         DEFINE_CLOSE_PARAMS close_dstfile_params
@@ -454,9 +481,8 @@ close:  MLI_CALL CLOSE, close_dstfile_params
 .endproc
 
 recursion_depth:        .byte   0 ; How far down the directory structure are we
-
 entries_per_block:      .byte   13 ; TODO: Read this from directory header
-entry_index_in_dir:     .byte   0
+entry_index_in_dir:     .byte   0 ; TODO: Should be a word
 ref_num:                .byte   0
 target_index:           .byte   0
 
@@ -503,17 +529,18 @@ entry_index_in_block:   .byte   0
         beq     :+
         jmp     (hook_handle_error_code)
 
-        ;; Skip over prev/next block pointers
+        ;; Skip over prev/next block pointers in header
 :       lda     open_path2_params::ref_num
         sta     ref_num
-        sta     read_4bytes_params::ref_num
-        MLI_CALL READ, read_4bytes_params
+        sta     read_block_pointers_params::ref_num
+        MLI_CALL READ, read_block_pointers_params
         beq     :+
         jmp     (hook_handle_error_code)
 
         ;; Header size is next/prev blocks + a file entry
         .assert .sizeof(SubdirectoryHeader) = .sizeof(FileEntry) + 4, error, "incorrect struct size"
-:       jsr     read_file_entry
+:       jsr     read_file_entry ; read the rest of the header
+
         rts
 .endproc
 
@@ -529,6 +556,8 @@ entry_index_in_block:   .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Read the next file entry in the directory into `file_entry`
+;;; NOTE: Also used to read the vol/dir header.
 
 .proc read_file_entry
         inc     entry_index_in_dir
@@ -538,6 +567,8 @@ entry_index_in_block:   .byte   0
         sta     read_fileentry_params::ref_num
         MLI_CALL READ, read_fileentry_params
         beq     :+
+        cmp     #ERR_END_OF_FILE
+        beq     eof
         jmp     (hook_handle_error_code)
 :       ldax    #filename
         jsr     AdjustFileEntryCase
@@ -550,15 +581,15 @@ entry_index_in_block:   .byte   0
         lda     #0
         sta     entry_index_in_block
         lda     ref_num
-        sta     read_5bytes_params::ref_num
-        MLI_CALL READ, read_5bytes_params
+        sta     read_padding_bytes_params::ref_num
+        MLI_CALL READ, read_padding_bytes_params
         beq     :+
         jmp     (hook_handle_error_code)
-:       lda     read_5bytes_params::trans_count
-        cmp     read_5bytes_params::request_count
-        rts
+:
 
 done:   return  #0
+
+eof:    return  #$FF
 .endproc
 
 ;;; ============================================================
@@ -930,8 +961,13 @@ match:  sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
         ldx     #0
         jsr     set_copied_to_ramcard_flag
 
+        ;; Skip RAMCard install if flag is set
+        bit     SETTINGS + DeskTopSettings::startup_ramcard
+        bpl     :+
+        jmp     did_not_copy
+
         ;; Skip RAMCard install if button is down
-        lda     BUTN0
+:       lda     BUTN0
         ora     BUTN1
         bpl     search_devices
         jmp     did_not_copy
@@ -2010,9 +2046,15 @@ str_desktop2:
 
 
 start:  MLI_CALL CLOSE, close_everything_params
+
+        ;; Don't try selector if flag is set
+        bit     SETTINGS + DeskTopSettings::startup_selector
+        bmi     :+
+
         MLI_CALL OPEN, open_selector_params
         beq     selector
-        MLI_CALL OPEN, open_desktop2_params
+
+:       MLI_CALL OPEN, open_desktop2_params
         beq     desktop2
 
         brk                     ; just crash
@@ -2111,11 +2153,12 @@ done:   rts
 ;;; ============================================================
 
         .include "../lib/smartport.s"
-        .define LIB_MLI_CALL MLI_CALL
         ADJUSTCASE_VOLPATH := $810
         ADJUSTCASE_VOLBUF  := $820
         ADJUSTCASE_IO_BUFFER := src_io_buffer
+        .define LIB_MLI_CALL MLI_CALL
         .include "../lib/adjustfilecase.s"
+        .undefine LIB_MLI_CALL
 
 ;;; ============================================================
 

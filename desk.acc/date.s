@@ -34,7 +34,7 @@ filename:
         PASCAL_STRING kFilenameLauncher
 
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_SET_MARK_PARAMS set_mark_params, 3
+        DEFINE_SET_MARK_PARAMS set_mark_params, kLauncherDateOffset
         DEFINE_WRITE_PARAMS write_params, write_buffer, sizeof_write_buffer
         DEFINE_CLOSE_PARAMS close_params
 
@@ -88,7 +88,7 @@ write_buffer:
         ldx     clock_flag
         bne     skip
 
-        param_call JUMP_TABLE_MLI, OPEN, open_params ; open the file
+        JUMP_TABLE_MLI_CALL OPEN, open_params ; open the file
         bne     skip
 
         lda     open_params::ref_num
@@ -96,12 +96,12 @@ write_buffer:
         sta     write_params::ref_num
         sta     close_params::ref_num
 
-        param_call JUMP_TABLE_MLI, SET_MARK, set_mark_params ; seek
+        JUMP_TABLE_MLI_CALL SET_MARK, set_mark_params ; seek
         bne     close
 
-        param_call JUMP_TABLE_MLI, WRITE, write_params ; write the date
+        JUMP_TABLE_MLI_CALL WRITE, write_params ; write the date
 
-close:  param_call JUMP_TABLE_MLI, CLOSE, close_params ; close the file
+close:  JUMP_TABLE_MLI_CALL CLOSE, close_params ; close the file
 
 skip:   ldx     stash_stack     ; exit the DA
         txs
@@ -615,18 +615,18 @@ loop:   lda     month_name_table,x
 .endproc
 
 month_name_table:
-        STRING  .sprintf("%3s", res_string_month_abbrev_1)
-        STRING  .sprintf("%3s", res_string_month_abbrev_2)
-        STRING  .sprintf("%3s", res_string_month_abbrev_3)
-        STRING  .sprintf("%3s", res_string_month_abbrev_4)
-        STRING  .sprintf("%3s", res_string_month_abbrev_5)
-        STRING  .sprintf("%3s", res_string_month_abbrev_6)
-        STRING  .sprintf("%3s", res_string_month_abbrev_7)
-        STRING  .sprintf("%3s", res_string_month_abbrev_8)
-        STRING  .sprintf("%3s", res_string_month_abbrev_9)
-        STRING  .sprintf("%3s", res_string_month_abbrev_10)
-        STRING  .sprintf("%3s", res_string_month_abbrev_11)
-        STRING  .sprintf("%3s", res_string_month_abbrev_12)
+        .byte   .sprintf("%3s", res_string_month_abbrev_1)
+        .byte   .sprintf("%3s", res_string_month_abbrev_2)
+        .byte   .sprintf("%3s", res_string_month_abbrev_3)
+        .byte   .sprintf("%3s", res_string_month_abbrev_4)
+        .byte   .sprintf("%3s", res_string_month_abbrev_5)
+        .byte   .sprintf("%3s", res_string_month_abbrev_6)
+        .byte   .sprintf("%3s", res_string_month_abbrev_7)
+        .byte   .sprintf("%3s", res_string_month_abbrev_8)
+        .byte   .sprintf("%3s", res_string_month_abbrev_9)
+        .byte   .sprintf("%3s", res_string_month_abbrev_10)
+        .byte   .sprintf("%3s", res_string_month_abbrev_11)
+        .byte   .sprintf("%3s", res_string_month_abbrev_12)
         ASSERT_RECORD_TABLE_SIZE month_name_table, 12, 3
 
 .proc prepare_year_string
@@ -730,9 +730,9 @@ done:   pla
         DEFINE_RECT_SZ date_rect, 52, 15, 122, 20
 
 label_ok:
-        PASCAL_STRING res_string_label_ok ; button label
+        PASCAL_STRING res_string_button_ok ; button label
 label_cancel:
-        PASCAL_STRING res_string_label_cancel ; button label
+        PASCAL_STRING res_string_button_cancel ; button label
 label_uparrow:
         PASCAL_STRING kGlyphUpArrow ; do not localize
 label_downarrow:

@@ -60,7 +60,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Up to 12 desk accessories are shown in the menu (was 8). ([#90](https://github.com/a2stuff/a2d/issues/90))
 * Desk accessory files can be executed directly. ([#101](https://github.com/a2stuff/a2d/issues/101))
 * Desk accessory files with high bit in aux type set are hidden in Apple menu. ([#102](https://github.com/a2stuff/a2d/issues/102))
-* Show Text File DA: Keyboard support. **Esc** quits, arrows scroll. ([#4](https://github.com/a2stuff/a2d/issues/4))
+* Show Text File DA: Keyboard support. **Esc** quits, arrows scroll, **Space** toggles modes. ([#4](https://github.com/a2stuff/a2d/issues/4), [#403](https://github.com/a2stuff/a2d/issues/403))
 * Apple menu can contain directories, which launch windows. ([#209](https://github.com/a2stuff/a2d/issues/209))
 * Other executable files and previewable files can be launched from the Apple menu. ([#293](https://github.com/a2stuff/a2d/issues/293), [#295](https://github.com/a2stuff/a2d/issues/295))
 
@@ -73,6 +73,8 @@ Project Page: https://github.com/a2stuff/a2d
     * A joystick/paddle calibration tool. ([#72](https://github.com/a2stuff/a2d/issues/72))
   * **System Speed**
     * Enable/disable built-in and some popular add-on system accelerators. ([#26](https://github.com/a2stuff/a2d/issues/26))
+  * **Startup**
+    * Toggle startup options. ([#476](https://github.com/a2stuff/a2d/issues/476))
 * **This Apple**
   * Gives details about the computer, expanded memory, and what's in each slot. ([#29](https://github.com/a2stuff/a2d/issues/29))
 * **Run Basic Here**

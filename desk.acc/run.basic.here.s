@@ -56,15 +56,14 @@ prefix_path:    .res    kPathBufferSize, 0
 ;;; ============================================================
 
         ;; Early errors - show alert and return to DeskTop
-fail:   jsr JUMP_TABLE_SHOW_ALERT
-        rts
+fail:   jmp     JUMP_TABLE_SHOW_ALERT
 
 start:
         ;; Get active window's path
         jsr     get_win_path
         beq     :+
-        lda     #kErrFileNotOpenable
-        bne     fail
+        lda     #kErrNoWindowsOpen
+        bne     fail            ; always
 
         ;; Find BASIC.SYSTEM
 :       jsr     check_basic_system
@@ -115,7 +114,7 @@ quit:   MLI_CALL QUIT, quit_params
         jmp     got_prefix
 
 get_current_prefix:
-        param_call JUMP_TABLE_MLI, GET_PREFIX, get_prefix_params
+        JUMP_TABLE_MLI_CALL GET_PREFIX, get_prefix_params
         bne     no_bs
 
 got_prefix:
@@ -132,7 +131,7 @@ loop:   ldx     path_length
         bne     :-
         stx     bs_path
 
-        param_call JUMP_TABLE_MLI, GET_FILE_INFO, get_file_info_params
+        JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
         bne     not_found
         rts
 
@@ -167,7 +166,7 @@ str_basic_system:
 .proc get_win_path
         ptr := $06
 
-        param_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, ptr
+        JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr
         lda     ptr             ; any window open?
         beq     fail
         cmp     #kMaxDeskTopWindows+1

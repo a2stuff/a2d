@@ -177,11 +177,11 @@ str_a2desktop:
 str_blank:
         PASCAL_STRING " "       ; do not localize
 str_copyright1:
-        PASCAL_STRING res_string_menu_item_copyright1 ; menu item
+        PASCAL_STRING res_string_copyright_line1 ; menu item
 str_copyright2:
-        PASCAL_STRING res_string_menu_item_copyright2 ; menu item
+        PASCAL_STRING res_string_copyright_line2 ; menu item
 str_copyright3:
-        PASCAL_STRING res_string_menu_item_copyright3 ; menu item
+        PASCAL_STRING res_string_copyright_line3 ; menu item
 
 str_run_a_program:
         PASCAL_STRING res_string_menu_item_run_a_program ; menu item
@@ -305,7 +305,7 @@ window_id:
         .word   500
         .word   140
 
-viewloc:.word   25, 36
+viewloc:.word   (::kScreenWidth - kWidth)/2, (::kScreenHeight - kHeight)/2
         .word   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   $00
@@ -415,6 +415,9 @@ L9129:  .byte   0
 not_iigs_flag:                  ; high bit set unless IIgs
         .byte   0
 
+lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
+        .byte   0
+
 ;;; ============================================================
 ;;; App Initialization
 
@@ -425,6 +428,11 @@ entry:
         sec
         jsr     IDROUTINE       ; clear C if IIgs
         ror     not_iigs_flag   ; rotate C into high bit
+
+        jsr     DetectLeChatMauveEve
+        bne     :+
+        copy    #$80, lcm_eve_flag
+:
 
         copy    #$FF, selected_index
         jsr     load_selector_list
@@ -556,7 +564,7 @@ L91FA:  cmp     slot_table,y
 L9205:  ora     #$C0
         sta     @addr+1
         @addr := *+1
-        jmp     CLR80COL
+        jmp     $C000           ; High byte is self-modified
 
 set_startup_menu_items:
         lda     slot_table
@@ -679,7 +687,12 @@ quick_boot_slot:
         beq     :+
         cmp     #TO_LOWER(kShortcutRunDeskTop)
         bne     not_desktop
-:       MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+:       lda     winfo::window_id
+        jsr     get_window_port
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, desktop_button_rect
+        MGTK_CALL MGTK::PaintRect, desktop_button_rect
+        MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     found_desktop
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
@@ -1357,12 +1370,20 @@ count:  .byte   0
 ;;; ============================================================
 
 .proc load_selector_list
+        ;; Initialize the counts, in case load fails.
+        lda     #0
+        sta     selector_list + kSelectorListNumRunListOffset
+        sta     selector_list + kSelectorListNumOtherListOffset
+
         MLI_CALL OPEN, open_selector_list_params
+        bne     cache
+
         lda     open_selector_list_params::ref_num
         sta     read_selector_list_params::ref_num
         MLI_CALL READ, read_selector_list_params
         MLI_CALL CLOSE, close_params
-        copy    selector_list + kSelectorListNumRunListOffset, num_run_list_entries
+
+cache:  copy    selector_list + kSelectorListNumRunListOffset, num_run_list_entries
         copy    selector_list + kSelectorListNumOtherListOffset, num_other_run_list_entries
         rts
 .endproc
@@ -2245,6 +2266,11 @@ len:    .byte   0
 .endproc
 
 .proc SetColorMode
+        ;; IIgs?
+        sec
+        jsr     IDROUTINE
+        bcc     iigs
+
         ;; AppleColor Card - Mode 2 (Color 140x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
         sta     SET80VID
@@ -2254,18 +2280,15 @@ len:    .byte   0
         lda     AN3_ON
         lda     AN3_OFF
 
-        ;; IIgs?
-        sec
-        jsr     IDROUTINE
-        bcc     iigs
-
         ;; Le Chat Mauve Eve - COL140 mode
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         ;; lda AN3_OFF ; already done above
+        bit     lcm_eve_flag
+        bpl     done
         sta     HR2_OFF
         sta     HR3_OFF
-        bcs     done
+        bmi     done            ; always
 
         ;; Apple IIgs - DHR Color
 iigs:   lda     NEWVIDEO
@@ -2276,6 +2299,11 @@ done:   rts
 .endproc
 
 .proc SetMonoMode
+        ;; IIgs?
+        sec
+        jsr     IDROUTINE
+        bcc     iigs
+
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
         sta     CLR80VID
@@ -2286,18 +2314,15 @@ done:   rts
         sta     SET80VID
         lda     AN3_OFF
 
-        ;; IIgs?
-        sec
-        jsr     IDROUTINE
-        bcc     iigs
-
         ;; Le Chat Mauve Eve - BW560 mode
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         ;; lda AN3_OFF ; already done above
+        bit     lcm_eve_flag
+        bpl     done
         sta     HR2_ON
         sta     HR3_ON
-        bcs     done
+        bmi     done            ; always
 
         ;; Apple IIgs - DHR B&W
 iigs:   lda     NEWVIDEO
@@ -2306,6 +2331,7 @@ iigs:   lda     NEWVIDEO
 
 done:   rts
 .endproc
+
 
 ;;; ============================================================
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
@@ -2358,6 +2384,7 @@ loop_counter:
         .include "../lib/drawstring.s"
         .include "../lib/muldiv.s"
         .include "../lib/bell.s"
+        .include "../lib/detect_lcmeve.s"
 
 .endscope
 

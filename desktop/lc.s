@@ -13,45 +13,66 @@
 ;;; Various routines callable from MAIN
 
 ;;; ============================================================
-;;; MGTK call from main>aux, call in Y, params at (X,A)
+;;; Common code for main>aux relays with MLI-style params
+
+.proc ParamsRelayImpl
+        params_src := $80
+
+        ;; Adjust return address on stack, compute
+        ;; original params address.
+        pla
+        sta     params_src
+        clc
+        adc     #<3
+        tax
+        pla
+        sta     params_src+1
+        adc     #>3
+        pha
+        txa
+        pha
+
+        ;; Copy the params here
+        ldy     #3      ; ptr is off by 1
+:       lda     (params_src),y
+        sta     params-1,y
+        dey
+        bne     :-
+
+        ;; Bank and call
+        jsr     BankInAux
+call_addr := * + 1
+        jsr     SELF_MODIFIED
+params:  .res    3
+        jmp     BankInMain
+.endproc
+
+;;; ============================================================
+;;; MGTK call from main>aux, MLI-style params
 
 .proc MGTKRelayImpl
-        sty     addr-1
-        stax    addr
-        sta     RAMRDON
-        sta     RAMWRTON
-        MGTK_CALL 0, 0, addr
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+        copy16  #MGTK::MLI, ParamsRelayImpl::call_addr
+        jmp     ParamsRelayImpl
 .endproc
+
+;;; ============================================================
+;;; IconTK call from main>aux, MLI-style params
+
+.proc ITKRelayImpl
+        copy16  #IconTK::MLI, ParamsRelayImpl::call_addr
+        jmp     ParamsRelayImpl
+.endproc
+
 
 ;;; ============================================================
 ;;; SET_POS with params at (X,A) followed by DRAW_TEXT call
 
 .proc SetPosDrawText
         stax    addr
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
         MGTK_CALL MGTK::MoveTo, 0, addr
         MGTK_CALL MGTK::DrawText, text_buffer2
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
-.endproc
-
-;;; ============================================================
-;;; IconTK call from main>aux, call in Y params at (X,A)
-
-.proc ITKRelayImpl
-        sty     addr-1
-        stax    addr
-        sta     RAMRDON
-        sta     RAMWRTON
-        ITK_CALL 0, 0, addr
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+        jmp     BankInMain
 .endproc
 
 ;;; ============================================================
@@ -63,8 +84,8 @@
 ;;; available, mark it and return index+1.
 
 .proc AllocateIcon
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
+
         ldx     #0
 loop:   lda     free_icon_map,x
         beq     :+
@@ -79,24 +100,22 @@ loop:   lda     free_icon_map,x
         tay
         lda     #1
         sta     free_icon_map,x
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
         tya
-        rts
+
+        jmp     BankInMain
 .endproc
 
 ;;; Mark the specified icon as free
 
 .proc FreeIcon
+        jsr     BankInAux
+
         tay
-        sta     RAMRDON
-        sta     RAMWRTON
         dey
         lda     #0
         sta     free_icon_map,y
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+
+        jmp     BankInMain
 .endproc
 
 ;;; ============================================================
@@ -120,8 +139,7 @@ to:
         tax
         copy16  window_icon_count_table,x, ptr
 
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
         bit     flag
         bpl     set_length
 
@@ -161,8 +179,7 @@ copy_from:
         iny
         jmp     :-
 
-done:   sta     RAMRDOFF
-        sta     RAMWRTOFF
+done:   jsr     BankInMain
         jsr     main__pop_pointers
         rts
 
@@ -189,8 +206,8 @@ flag:   .byte   0
         src := $6
         dst := $8
 
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
+
         MGTK_CALL MGTK::GetPort, src ; grab window state
 
         lda     active_window_id   ; which desktop window?
@@ -210,9 +227,7 @@ loop:   lda     (src),y
         dey
         bpl     loop
 
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+        jmp     BankInMain
 .endproc
 
 ;;; ============================================================
@@ -239,12 +254,9 @@ op:     lda     SELF_MODIFIED
 
 ;;; ... with prompt # in X
 .proc ShowAlertOption
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
         jsr     aux::Alert
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+        jmp     BankInMain
 .endproc
 
 ;;; ============================================================
@@ -253,12 +265,9 @@ op:     lda     SELF_MODIFIED
 ;;; Assert: Main is banked in
 
 .proc Multiply_16_8_16
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
         jsr     aux::Multiply_16_8_16
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+        jmp     BankInMain
 .endproc
 
 ;;; ============================================================
@@ -267,12 +276,9 @@ op:     lda     SELF_MODIFIED
 ;;; Assert: Main is banked in
 
 .proc Divide_16_8_16
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
         jsr     aux::Divide_16_8_16
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+        jmp     BankInMain
 .endproc
 
 ;;; ============================================================
@@ -280,12 +286,9 @@ op:     lda     SELF_MODIFIED
 ;;; Assert: Main is banked in
 
 .proc ButtonEventLoopRelay
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
         jsr     aux::ButtonEventLoop
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+        jmp     BankInMain
 .endproc
 
 ;;; ============================================================
@@ -293,12 +296,9 @@ op:     lda     SELF_MODIFIED
 ;;; Assert: Main is banked in
 
 .proc Bell
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
         jsr     aux::Bell
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+        jmp     BankInMain
 .endproc
 
 ;;; ============================================================
@@ -306,12 +306,9 @@ op:     lda     SELF_MODIFIED
 ;;; Assert: Main is banked in
 
 .proc DetectDoubleClick
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
         jsr     aux::DetectDoubleClick
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+        jmp     BankInMain
 .endproc
 
 ;;; ============================================================
@@ -320,12 +317,9 @@ op:     lda     SELF_MODIFIED
 ;;; Assert: Main is banked in
 
 .proc GetPortBits
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     BankInAux
         jsr     aux::GetPortBits
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
+        jmp     BankInMain
 .endproc
 
 ;;; ============================================================
@@ -333,11 +327,24 @@ op:     lda     SELF_MODIFIED
 ;;; Assert: Aux is banked in
 
 .proc YieldLoopFromAux
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
+        jsr     BankInMain
         jsr     main__yield_loop
+        jmp     BankInAux
+.endproc
+
+;;; ============================================================
+;;; Helpers for banking in Aux/Main $200-$BFFF.
+;;; (These save 3 bytes per call.)
+
+.proc BankInAux
         sta     RAMRDON
         sta     RAMWRTON
+        rts
+.endproc
+
+.proc BankInMain
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
         rts
 .endproc
 

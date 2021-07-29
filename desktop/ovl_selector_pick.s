@@ -9,6 +9,8 @@
 .proc selector_overlay2
         .org $9000
 
+        MLIRelayImpl := main::MLIRelayImpl
+
 io_buf := $0800
 
 selector_list   := $0C00
@@ -36,7 +38,7 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
         jsr     GetCopiedToRAMCardFlag
         cmp     #$80
         bne     L9015
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         lda     #kWarningMsgSaveSelectorList
         jsr     show_warning_dialog
         bne     L9015
@@ -64,7 +66,7 @@ L9052:  lda     #$00
         pha
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         pla
         tay
         pla
@@ -237,7 +239,7 @@ l3:     clc
         pha
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         pla
         tay
         pla
@@ -415,7 +417,7 @@ l10:    iny
         bne     :+
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
 :       jsr     close_window
         pla
         jmp     L900F
@@ -452,7 +454,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 
 .proc open_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
-        lda     winfo_entry_picker
+        lda     winfo_entry_picker::window_id
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_outer_rect
@@ -461,8 +463,6 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line1_end
         MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_line2_start
         MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line2_end
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_ok_rect
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_cancel_rect
         jsr     draw_ok_label
@@ -519,18 +519,17 @@ l2:     ldx     #0
         bcs     :+
         lda     #0              ; col 1
         tax
-        beq     l3           ; always
+        beq     l3              ; always
 
 :       cmp     #16
         bcs     :+
-        ldx     #0
-        lda     #115            ; col 2
-        bne     l3           ; always
+        ldax    #kEntryPickerCol2
+        jmp     l3
 
-:       ldax    #220            ; col 3
+:       ldax    #kEntryPickerCol3
 
 l3:     clc
-        adc     #10
+        adc     #10             ; text starts at +10 offset
         sta     dialog_label_pos::xcoord
         txa
         adc     #0
@@ -636,9 +635,9 @@ handle_button:
         beq     :+
         return  #$FF
 
-:       lda     winfo_entry_picker
+:       lda     winfo_entry_picker::window_id
         jsr     main::set_port_from_window_id
-        lda     winfo_entry_picker
+        lda     winfo_entry_picker::window_id
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -739,11 +738,14 @@ l1:     pha
         beq     l3
         cmp     #1
         bne     l2
-        param_jump l3, $0069
 
-l2:     ldax    #210
+        ldax    #kEntryPickerCol2
+        jmp     l3
+
+l2:     ldax    #kEntryPickerCol3
+
 l3:     clc
-        adc     #9
+        adc     #8              ; highlight starts at +8 offset
         sta     entry_picker_item_rect::x1
         txa
         adc     #0
@@ -768,7 +770,7 @@ l5:     ldx     #0
         txa
         adc     #0
         sta     entry_picker_item_rect::y1+1
-        add16   entry_picker_item_rect::x1, #106, entry_picker_item_rect::x2
+        add16   entry_picker_item_rect::x1, #kEntryPickerItemWidth-1, entry_picker_item_rect::x2
         add16   entry_picker_item_rect::y1, #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_item_rect
@@ -818,7 +820,6 @@ l5:     ldx     #0
 .proc handle_key_return
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
         return  #0
 .endproc
@@ -828,7 +829,6 @@ l5:     ldx     #0
 .proc handle_key_escape
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
         return  #1
 .endproc
@@ -1096,6 +1096,13 @@ entries_flag_table:
         sta     (ptr_res),y
         dey
         bpl     :-
+
+        ;; This will change the menu label, so re-initialize the
+        ;; menu so that the new width can be pre-computed. That
+        ;; will un-hilite the Selector menu, so re-hilite it so
+        ;; it un-hilites correctly when finally dismissed.
+        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
+        jsr     main::toggle_menu_hilite
 
         rts
 
@@ -1399,6 +1406,7 @@ index:  .byte   0
 
 filename_buffer := $1C00
 
+        DEFINE_CREATE_PARAMS create_params, filename_buffer, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename_buffer, io_buf
         DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS flush_close_params
@@ -1421,6 +1429,7 @@ filename_buffer := $1C00
         sty     filename_buffer
 
 retry_open:
+        MLI_RELAY_CALL CREATE, create_params
         MLI_RELAY_CALL OPEN, open_params
         beq     write
         lda     #kWarningMsgInsertSystemDisk
@@ -1437,7 +1446,7 @@ retry_write:
         MLI_RELAY_CALL WRITE, write_params
         beq     close
         pha
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         pla
         jsr     JUMP_TABLE_SHOW_ALERT
         beq     retry_write
@@ -1679,7 +1688,7 @@ params: .addr   0
         dey
         bne     :-
 
-        ;; And find preceeding /
+        ;; And find preceding /
 :       dey
 :       lda     (ptr),y
         and     #CHAR_MASK

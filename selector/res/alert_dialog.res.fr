@@ -1,7 +1,3 @@
-.define res_string_alert_button_ok "OK            \x0D"
-.define res_string_button_try_again "Recommencer  R"
-.define res_char_button_try_again_shortcut 'A'
-.define res_string_button_cancel "Annuler     Esc"
 .define res_string_alert_selector_unable_to_run "ne peut pas lancer ce programme."
 .define res_string_alert_io_error "Erreur d'E/S."
 .define res_string_alert_no_device "Pas d'unit{ connect{e."

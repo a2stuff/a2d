@@ -33,16 +33,39 @@ volume_bitmap   := $4000
 
 ;;; ============================================================
 
-.proc MLI_RELAY
-        sty     call
-        stax    params
+.proc MLIRelayImpl
+        params_src := $80
+
+        ;; Adjust return address on stack, compute
+        ;; original params address.
+        pla
+        sta     params_src
+        clc
+        adc     #<3
+        tax
+        pla
+        sta     params_src+1
+        adc     #>3
+        pha
+        txa
+        pha
+
+        ;; Copy the params here
+        ldy     #3      ; ptr is off by 1
+:       lda     (params_src),y
+        sta     params-1,y
+        dey
+        bne     :-
+
+        ;; Bank and call
         sta     ALTZPOFF
         lda     ROMIN2
+
         jsr     MLI
-call:   .byte   0
-params: .addr   0
-        tax
+params:  .res    3
+
         sta     ALTZPON
+        tax
         lda     LCBANK1
         lda     LCBANK1
         txa

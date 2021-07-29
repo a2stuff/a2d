@@ -7,20 +7,18 @@
 .define res_string_selector_label_at_first_boot "3 en el arranque"
 .define res_string_selector_label_at_first_use "4 por primera vez"
 .define res_string_selector_label_never "5 nunca"
-.define res_string_the_dos_33_disk_suffix_pattern "el disco DOS 3.3 en la ranura # unidad #?"
-.define res_const_the_dos_33_disk_suffix_pattern_offset1 31
-.define res_const_the_dos_33_disk_suffix_pattern_offset2 40
-.define res_string_the_disk_in_slot_suffix_pattern "el disco en la ranura # unidad #?"
-.define res_const_the_disk_in_slot_suffix_pattern_offset1 23
-.define res_const_the_disk_in_slot_suffix_pattern_offset2 32
+.define res_string_the_dos_33_disk_suffix_pattern "]el disco DOS 3.3 en la ranura # unidad #?"
+.define res_const_the_dos_33_disk_suffix_pattern_offset1 32
+.define res_const_the_dos_33_disk_suffix_pattern_offset2 41
+.define res_string_the_disk_in_slot_suffix_pattern "]el disco en la ranura # unidad #?"
+.define res_const_the_disk_in_slot_suffix_pattern_offset1 24
+.define res_const_the_disk_in_slot_suffix_pattern_offset2 33
 .define res_string_file_suffix "archivo"
 .define res_string_files_suffix "archivos"
 .define res_string_kb_suffix "K"
 .define res_string_button_change_drive "Cambiar unidad"
 .define res_string_button_open "Abrir"
 .define res_string_button_close "Cerrar"
-.define res_string_fd_button_cancel "Cancelar    Esc"
-.define res_string_fd_button_ok "OK            \x0D"
 .define res_string_label_disk " Disco: "
 .define res_string_copy_file_label_source_filename "Nombre del archivo original:"
 .define res_string_copy_file_label_destination_filename "Nombre del archivo de destino:"

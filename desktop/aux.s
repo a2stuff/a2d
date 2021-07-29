@@ -246,7 +246,7 @@ a2d_file_icon:
         PAD_TO $8E00
 
 ;;; ============================================================
-;;; Entry point for "Icon TookKit"
+;;; Entry point for "Icon ToolKit"
 ;;; ============================================================
 
         ASSERT_ADDRESS IconTK::MLI, "IconTK entry point"
@@ -529,7 +529,7 @@ ycoord: .word   0
 
 .proc AddIconImpl
         PARAM_BLOCK params, $06
-ptr_icon:       .addr   0
+ptr_icon        .addr
         END_PARAM_BLOCK
 
         ldy     #0
@@ -568,7 +568,7 @@ sub:    ldx     num_icons       ; ???
 
 .proc HighlightIconImpl
         PARAM_BLOCK params, $06
-ptr_icon:       .addr   0
+ptr_icon        .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
@@ -646,7 +646,7 @@ icon:   .byte   0
 
 .proc RedrawIconImpl
         PARAM_BLOCK params, $06
-ptr_icon:       .addr   0
+ptr_icon        .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
@@ -698,7 +698,7 @@ done:   jsr     paint_icon_unhighlighted
 
 .proc RemoveIconImpl
         PARAM_BLOCK params, $06
-ptr_icon:       .addr   0
+ptr_icon        .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
@@ -782,7 +782,7 @@ done:   return  #0              ; Unhighlighted
 
 .proc EraseIconImpl
         PARAM_BLOCK params, $06
-ptr_icon_idx:   .addr   0
+ptr_icon_idx    .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
@@ -806,7 +806,7 @@ ptr_icon_idx:   .addr   0
 buffer := SAVE_AREA_BUFFER
 
         PARAM_BLOCK params, $06
-ptr_window_id:      .addr    0
+ptr_window_id       .addr
         END_PARAM_BLOCK
 
         ptr := $08
@@ -884,7 +884,7 @@ loop2:  lda     buffer,x
         jmp     start
 
         PARAM_BLOCK params, $06
-ptr_window_id:      .addr    0
+ptr_window_id       .addr
         END_PARAM_BLOCK
 
         icon_ptr := $08
@@ -926,7 +926,7 @@ done:   return  #0
 
 .proc CloseWindowImpl
         PARAM_BLOCK params, $06
-window_id:      .addr   0
+window_id       .addr
         END_PARAM_BLOCK
 
         ptr := $08
@@ -1190,7 +1190,7 @@ is_drag:
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        COPY_STRUCT MGTK::Rect, drag_outline_grafport::cliprect, iconinrect_params::rect
+        COPY_BLOCK drag_outline_grafport::cliprect, iconinrect_params::rect
 
         ldx     highlight_count
         stx     L9C74
@@ -1820,7 +1820,7 @@ height: .word   0
 
 .proc UnhighlightIconImpl
         PARAM_BLOCK params, $06
-ptr_iconent:    .addr   0
+ptr_iconent     .addr
         END_PARAM_BLOCK
 
 start:  lda     has_highlight
@@ -3441,9 +3441,9 @@ special_menu:
 
         DEFINE_BUTTON ok,     res_string_button_ok, 260, kPromptDialogHeight-19
         DEFINE_BUTTON cancel, res_string_button_cancel,   40, kPromptDialogHeight-19
-        DEFINE_BUTTON yes,    res_string_button_yes,               200, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON no,     res_string_button_no,                260, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON all,    res_string_button_all,               320, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON yes,    res_string_warning_button_yes,               200, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON no,     res_string_warning_button_no,                260, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON all,    res_string_warning_button_all,               320, kPromptDialogHeight-19,40,kButtonHeight
 
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
@@ -3495,9 +3495,9 @@ kAboutDialogHeight      = 120
         DEFINE_RECT_INSET about_dialog_inner_rect, 5, 3, kAboutDialogWidth, kAboutDialogHeight
 
 str_about1:  PASCAL_STRING kDeskTopProductName
-str_about2:  PASCAL_STRING res_string_about_text_line2
-str_about3:  PASCAL_STRING res_string_about_text_line3
-str_about4:  PASCAL_STRING res_string_about_text_line4
+str_about2:  PASCAL_STRING res_string_copyright_line1
+str_about3:  PASCAL_STRING res_string_copyright_line2
+str_about4:  PASCAL_STRING res_string_copyright_line3
 str_about5:  PASCAL_STRING res_string_about_text_line5
 str_about6:  PASCAL_STRING res_string_about_text_line6
 str_about7:  PASCAL_STRING res_string_about_text_line7
@@ -3508,7 +3508,7 @@ str_about9:  PASCAL_STRING .sprintf("Version %d.%d%s",::kDeskTopVersionMajor,::k
 str_copy_title:
         PASCAL_STRING res_string_copy_dialog_title ; dialog title
 str_copy_copying:
-        PASCAL_STRING res_string_copy_label_statsus
+        PASCAL_STRING res_string_copy_label_status
 str_copy_from:
         PASCAL_STRING res_string_copy_label_from
 str_copy_to:
@@ -3551,7 +3551,7 @@ str_delete_locked_file:
         DEFINE_POINT delete_remaining_count_pos, 204, kDialogLabelRow4
 
         ;; "New Folder" dialog strings
-str_in_colon:
+str_in:
         PASCAL_STRING res_string_new_folder_label_in
 str_enter_folder_name:
         PASCAL_STRING res_string_new_folder_label_name
@@ -3714,6 +3714,14 @@ kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
         DEFINE_RECT_INSET alert_inner_frame_rect1, 4, 2, kAlertRectWidth, kAlertRectHeight
         DEFINE_RECT_INSET alert_inner_frame_rect2, 5, 3, kAlertRectWidth, kAlertRectHeight
 
+.params screen_portbits
+        DEFINE_POINT viewloc, 0, 0
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+        DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
+.endparams
+
 .params portmap
         DEFINE_POINT viewloc, kAlertRectLeft, kAlertRectTop
 mapbits:        .addr   MGTK::screen_mapbits
@@ -3722,9 +3730,9 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
-        DEFINE_BUTTON ok,        res_string_alert_button_ok,  20, 37
-        DEFINE_BUTTON try_again, res_string_alert_button_try_again,     20, 37
-        DEFINE_BUTTON cancel,    res_string_alert_button_cancel,     300, 37
+        DEFINE_BUTTON ok,        res_string_button_ok,          300, 37
+        DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
+        DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
 
         DEFINE_POINT pos_prompt, 75, 29
 
@@ -3752,6 +3760,8 @@ err_4E:  PASCAL_STRING res_string_errmsg_4E
 err_52:  PASCAL_STRING res_string_errmsg_52
 err_57:  PASCAL_STRING res_string_errmsg_57
         ;; Below are internal (not ProDOS MLI) error codes.
+err_F7:  PASCAL_STRING res_string_errmsg_F7
+err_F8:  PASCAL_STRING res_string_errmsg_F8
 err_F9:  PASCAL_STRING res_string_errmsg_F9
 err_FA:  PASCAL_STRING res_string_errmsg_FA
 err_FB:  PASCAL_STRING res_string_errmsg_FB
@@ -3760,7 +3770,7 @@ err_FD:  PASCAL_STRING res_string_errmsg_FD
 err_FE:  PASCAL_STRING res_string_errmsg_FE
 
         ;; number of alert messages
-        kNumAlerts = 20
+        kNumAlerts = 22
 alert_count:
         .byte   kNumAlerts
 
@@ -3775,6 +3785,8 @@ alert_table:
         .byte   ERR_DUPLICATE_VOLUME
 
         ;; Internal error codes:
+        .byte   kErrNoWindowsOpen
+        .byte   kErrMoveCopyIntoSelf
         .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
         .byte   kErrInsertSrcDisk, kErrInsertDstDisk, kErrBasicSysNotFound
         ASSERT_TABLE_SIZE alert_table, kNumAlerts
@@ -3782,7 +3794,8 @@ alert_table:
         ;; alert index to string address
 message_table:
         .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
-        .addr   err_47,err_48,err_49,err_4E,err_52,err_57,err_F9,err_FA
+        .addr   err_47,err_48,err_49,err_4E,err_52,err_57
+        .addr   err_F7,err_F8,err_F9,err_FA
         .addr   err_FB,err_FC,err_FD,err_FE
         ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlerts
 
@@ -3799,16 +3812,29 @@ message_table:
 .endenum
 
 alert_options_table:
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::TryAgainCancel
-        .byte   MessageFlags::Ok, MessageFlags::TryAgainCancel
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::Ok
-        .byte   MessageFlags::Ok, MessageFlags::TryAgainCancel
-        .byte   MessageFlags::TryAgainCancel, MessageFlags::Ok
+        .byte   MessageFlags::Ok             ; dummy
+        .byte   MessageFlags::Ok             ; ERR_IO_ERROR
+        .byte   MessageFlags::Ok             ; ERR_DEVICE_NOT_CONNECTED
+        .byte   MessageFlags::TryAgainCancel ; ERR_WRITE_PROTECTED
+        .byte   MessageFlags::Ok             ; ERR_INVALID_PATHNAME
+        .byte   MessageFlags::TryAgainCancel ; ERR_PATH_NOT_FOUND
+        .byte   MessageFlags::Ok             ; ERR_VOL_NOT_FOUND
+        .byte   MessageFlags::Ok             ; ERR_FILE_NOT_FOUND
+        .byte   MessageFlags::Ok             ; ERR_DUPLICATE_FILENAME
+        .byte   MessageFlags::Ok             ; ERR_OVERRUN_ERROR
+        .byte   MessageFlags::Ok             ; ERR_VOLUME_DIR_FULL
+        .byte   MessageFlags::Ok             ; ERR_ACCESS_ERROR
+        .byte   MessageFlags::Ok             ; ERR_NOT_PRODOS_VOLUME
+        .byte   MessageFlags::Ok             ; ERR_DUPLICATE_VOLUME
+
+        .byte   MessageFlags::Ok             ; kErrNoWindowsOpen
+        .byte   MessageFlags::Ok             ; kErrMoveCopyIntoSelf
+        .byte   MessageFlags::Ok             ; kErrDuplicateVolName
+        .byte   MessageFlags::Ok             ; kErrFileNotOpenable
+        .byte   MessageFlags::Ok             ; kErrNameTooLong
+        .byte   MessageFlags::TryAgainCancel ; kErrInsertSrcDisk
+        .byte   MessageFlags::TryAgainCancel ; kErrInsertDstDisk
+        .byte   MessageFlags::Ok             ; kErrBasicSysNotFound
         ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
 
         ;; Actual entry point
@@ -3846,11 +3872,12 @@ start:  pha                     ; error code
 
         MGTK_CALL MGTK::HideCursor
         jsr     dialog_background_save
-        MGTK_CALL MGTK::ShowCursor
 
         ;; Set up GrafPort
         MGTK_CALL MGTK::InitPort, main_grafport
         MGTK_CALL MGTK::SetPort, main_grafport
+
+        MGTK_CALL MGTK::SetPortBits, screen_portbits ; viewport for screen
 
         ;; Draw alert box and bitmap - coordinates are in screen space
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -3865,6 +3892,8 @@ start:  pha                     ; error code
         MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect2
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintBits, alert_bitmap_params
+
+        MGTK_CALL MGTK::ShowCursor
 
         ;; --------------------------------------------------
         ;; Process Options
@@ -4062,7 +4091,10 @@ finish: pha
         rts
 .endproc
 
+        .define LIB_MGTK_CALL MGTK_CALL
         .include "../lib/alertbuttonloop.s"
+        .undefine LIB_MGTK_CALL
+
         .include "../lib/savedialogbackground.s"
         dialog_background_save := dialog_background::Save
         dialog_background_restore := dialog_background::Restore

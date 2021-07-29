@@ -45,7 +45,7 @@
 .endproc
 
 .proc draw_controls
-        lda     winfo_file_dialog
+        lda     winfo_file_dialog::window_id
         jsr     file_dialog::set_port_for_window
         param_call file_dialog::draw_title_centered, aux::label_copy_file
         param_call file_dialog::draw_input1_label, file_dialog_res::source_filename_label
@@ -243,11 +243,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         lda     LD8F1
         sta     LD8F0
 
-        ldx     path_buf0
-:       lda     path_buf0,x
-        sta     file_dialog::path_buf,x
-        dex
-        bpl     :-
+        COPY_STRING path_buf0, file_dialog::path_buf
 
         jsr     file_dialog::strip_path_segment
         bit     LD8F0
@@ -274,7 +270,10 @@ L7281:  jsr     file_dialog::read_dir
         bcs     L7272
         lda     LD921
 L7289:  sta     selected_index
-        jsr     file_dialog::update_scrollbar2
+        cmp     #$FF            ; if no selection...
+        bne     :+              ; make scroll index 0
+        lda     #$00
+:       jsr     file_dialog::update_scrollbar2
         jsr     file_dialog::update_disk_name
         jsr     file_dialog::draw_list_entries
 L7295:  rts

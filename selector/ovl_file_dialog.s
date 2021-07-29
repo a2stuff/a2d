@@ -19,6 +19,15 @@ num_file_names  := $177F
 ;;; Sequence of 16-byte records, filenames in current directory.
 file_names      := $1800
 
+kListEntryHeight = 9            ; Default font height
+kListEntryGlyphX = 1
+kListEntryNameX  = 16
+
+kLineDelta = 1
+kPageDelta = 8
+
+kMaxInputLength = $3F
+
 ;;; ============================================================
 
 ep_init:
@@ -175,93 +184,75 @@ kFilePickerDlgWindowID = $3E
 .params winfo_file_dialog
         kWidth = 500
         kHeight = 153
-window_id:
-        .byte   kFilePickerDlgWindowID
-        .byte   $01, $00
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
 
-        .word   150, 50
-        .word   500, 140
-        .byte   $19,$00,$14
-        .byte   $00
-        .addr   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .word   kWidth, kHeight
-        .res    8, $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
-        .byte   $01,$01
-        .byte   $00
-        .byte   $7F
-        .addr   FONT
-        .addr   0
+window_id:      .byte   kFilePickerDlgWindowID
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontlength:  .word   50
+maxcontwidth:   .word   500
+maxcontlength:  .word   140
+port:
+        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+penpattern:     .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg:         .byte   MGTK::textbg_white
+fontptr:        .addr   FONT
+nextwinfo:      .addr   0
 .endparams
 
 
 .params winfo_file_dialog_listbox
-window_id:
-        .byte   $3F
-        .byte   $01,$00
-        .byte   $00
-        .byte   $00
-vscroll:
-        .byte   $C1,$00
-        .byte   $00
-vthumbmax:
-        .byte   $03
-vthumbpos:
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $64
-        .byte   $00
-        .byte   $46,$00
-        .byte   $64
-        .byte   $00
-        .byte   $46,$00
-        .byte   $35,$00
-        .byte   $32
-        .byte   $00
-        .addr   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   $00
-maprect:
-x1:     .word   0
-y1:     .word   0
-x2:     .word   125
-y2:     .word   70
-pattern:.res    8, $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        kWidth = 125
+        kHeight = 72
 
-        .byte   $01,$01
-        .byte   $00
-        .byte   $7F
-        .addr   FONT
-        .byte   $00
-        .byte   $00
+window_id:      .byte   $3F
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_normal
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   3
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   100
+mincontlength:  .word   kHeight
+maxcontwidth:   .word   100
+maxcontlength:  .word   kHeight
+port:
+        DEFINE_POINT viewloc, 53, 48
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+maprect:
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   $FF, 0
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg:         .byte   $7F
+fontptr:        .addr   FONT
+nextwinfo:      .addr   0
 .endparams
 
 
@@ -314,14 +305,14 @@ selected_index:                 ; $FF if none
 
         DEFINE_RECT rect0, 27, 16, 174, 26
 
-        DEFINE_BUTTON change_drive, res_string_button_change_drive,       193, 30
-        DEFINE_BUTTON open,         res_string_button_open,               193, 44
-        DEFINE_BUTTON close,        res_string_button_close,              193, 58
-        DEFINE_BUTTON cancel,       res_string_fd_button_cancel,  193, 73
-        DEFINE_BUTTON ok,           res_string_fd_button_ok, 193, 89
+        DEFINE_BUTTON change_drive, res_string_button_change_drive,     193, 28
+        DEFINE_BUTTON open,         res_string_button_open,             193, 42
+        DEFINE_BUTTON close,        res_string_button_close,            193, 56
+        DEFINE_BUTTON cancel,       res_string_button_cancel,        193, 71
+        DEFINE_BUTTON ok,           res_string_button_ok,            193, 87
 
 ;;; Dividing line
-        DEFINE_POINT pt1, 323-8, 30
+        DEFINE_POINT pt1, 323-8, 28
         DEFINE_POINT pt2, 323-8, 100
 
         DEFINE_POINT pos_disk, 28, 25
@@ -336,14 +327,14 @@ textbg2:
 str_disk:
         PASCAL_STRING res_string_disk
 
-        ;; Frame
-        DEFINE_RECT rect_input, 28, 113, 428, 124
+kCommonInputWidth = 435
+kCommonInputHeight = 11
 
-        ;; Text bounds
-        DEFINE_RECT rect_input_text, 30, 123, 28, 136
+        DEFINE_RECT_SZ rect_input, 28, 113, kCommonInputWidth, kCommonInputHeight
+        DEFINE_POINT input_textpos, 30, 123
 
-        .word   428, 147
-        .word   30, 146
+        DEFINE_RECT_SZ unused_input2_rect, 28, 136, kCommonInputWidth, kCommonInputHeight
+        DEFINE_POINT unused_input2_textpos, 30, 146
 
 str_file_to_run:
         PASCAL_STRING res_string_label_file_to_run
@@ -677,10 +668,12 @@ rts1:   rts
 LA662:  lda     winfo_file_dialog_listbox::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_windowy, winfo_file_dialog_listbox::y1, screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
+        add16   screentowindow_windowy, winfo_file_dialog_listbox::cliprect::y1, screentowindow_windowy
+        ldax    screentowindow_windowy
+        ldy     #kListEntryHeight
+        jsr     Divide_16_8_16
+        stax    screentowindow_windowy
+
         lda     selected_index
         cmp     screentowindow_windowy
         beq     same
@@ -764,7 +757,7 @@ different:
         bmi     :+
         jsr     strip_path_segment_left_and_redraw
         lda     selected_index
-        jsr     LB404
+        jsr     invert_entry
 :       lda     screentowindow_windowy
         sta     selected_index
         bit     LA211
@@ -772,7 +765,7 @@ different:
         jsr     prep_path
         jsr     redraw_input
 :       lda     selected_index
-        jsr     LB404
+        jsr     invert_entry
         jsr     list_selection_change
 
         jsr     app::DetectDoubleClick
@@ -822,9 +815,6 @@ different:
 .endproc
 
 ;;; ============================================================
-
-        kLineDelta = 1
-        kPageDelta = 9
 
 .proc handle_page_up
         lda     winfo_file_dialog_listbox::vthumbpos
@@ -1295,7 +1285,7 @@ key_meta_digit:
         bcc     l2
 l1:     rts
 
-l2:     jsr     LB404
+l2:     jsr     invert_entry
         jsr     strip_path_segment_left_and_redraw
         inc     selected_index
         lda     selected_index
@@ -1315,7 +1305,7 @@ l3:     lda     #0
         bne     l2
 l1:     rts
 
-l2:     jsr     LB404
+l2:     jsr     invert_entry
         jsr     strip_path_segment_left_and_redraw
         dec     selected_index
         lda     selected_index
@@ -1343,7 +1333,7 @@ l3:     ldx     num_file_names
         pha
         lda     selected_index
         bmi     LADDB
-        jsr     LB404
+        jsr     invert_entry
         jsr     strip_path_segment_left_and_redraw
 LADDB:  pla
         jmp     update_list_selection
@@ -1423,7 +1413,7 @@ done:   rts
         bne     :+
 l1:     rts
 
-:       jsr     LB404
+:       jsr     invert_entry
         jsr     strip_path_segment_left_and_redraw
 l2:     lda     #$00
         jmp     update_list_selection
@@ -1443,7 +1433,7 @@ done:   rts
 
 :       dex
         txa
-        jsr     LB404
+        jsr     invert_entry
         jsr     strip_path_segment_left_and_redraw
 l1:     ldx     num_file_names
         dex
@@ -1458,7 +1448,7 @@ l1:     ldx     num_file_names
         jsr     list_selection_change
 
         lda     selected_index
-        jsr     selection_second_col
+        jsr     calc_top_index
         jsr     update_scrollbar2
         jsr     draw_list_entries
 
@@ -1818,13 +1808,9 @@ l15:    .byte   0
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::PaintRect, winfo_file_dialog_listbox::maprect
-        lda     #16
-        sta     pos::xcoord
-        lda     #8
-        sta     pos::ycoord
-        lda     #0
-        sta     pos::ycoord+1
-        sta     l4
+        copy    #kListEntryNameX, pos::xcoord ; high byte always 0
+        copy16  #kListEntryHeight, pos::ycoord
+        copy    #0, l4
 
 loop:   lda     l4
         cmp     num_file_names
@@ -1856,21 +1842,22 @@ loop:   lda     l4
         jsr     draw_string
         ldx     l4
         lda     file_list_index,x
-        bpl     l1
-        lda     #$01
-        sta     pos
+        bpl     :+
+
+        ;; Folder glyph
+        copy    #kListEntryGlyphX, pos::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         param_call draw_string, str_folder
-        lda     #$10
-        sta     pos
-l1:     lda     l4
+        copy    #kListEntryNameX, pos::xcoord
+
+:       lda     l4
         cmp     selected_index
         bne     l2
-        jsr     LB404
+        jsr     invert_entry
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
 l2:     inc     l4
-        add16   pos::ycoord, #8, pos::ycoord
+        add16_8 pos::ycoord, #kListEntryHeight, pos::ycoord
         jmp     loop
 
 l3:     .byte   0
@@ -1883,14 +1870,15 @@ update_scrollbar:
         lda     #$00
 
 .proc update_scrollbar2
-        sta     l1
+        sta     index
         lda     num_file_names
-        cmp     #$0A
+        cmp     #kPageDelta + 1
         bcs     :+
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
         copy    #MGTK::activatectl_deactivate, activatectl_activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-        rts
+        lda     #0
+        jmp     scroll_clip_rect
 
 :       lda     num_file_names
         sta     winfo_file_dialog_listbox::vthumbmax
@@ -1899,7 +1887,7 @@ update_scrollbar:
         sta     activatectl_which_ctl
         sta     activatectl_activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-        lda     l1
+        lda     index
         sta     updatethumb_thumbpos
         jsr     scroll_clip_rect
         lda     #MGTK::Ctl::vertical_scroll_bar
@@ -1907,7 +1895,7 @@ update_scrollbar:
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
-l1:     .byte   0
+index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1962,55 +1950,35 @@ l1:     lda     tmp
         jmp     l4
 
 l2:     lda     num_file_names
-        cmp     #$0A
+        cmp     #kPageDelta+1
         bcs     l3
         lda     tmp
         jmp     l4
 
 l3:     sec
         sbc     #kPageDelta
-l4:     ldx     #$00
-        stx     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        sta     winfo_file_dialog_listbox::y1
-        ldx     tmp
-        stx     winfo_file_dialog_listbox::y1+1
-        clc
-        adc     #70
-        sta     winfo_file_dialog_listbox::y2
-        lda     tmp
-        adc     #0
-        sta     winfo_file_dialog_listbox::y2+1
+
+l4:     ldx     #$00            ; A,X = line
+        ldy     #kListEntryHeight
+        jsr     Multiply_16_8_16
+        stax    winfo_file_dialog_listbox::cliprect::y1
+        add16_8 winfo_file_dialog_listbox::cliprect::y1, #winfo_file_dialog_listbox::kHeight, winfo_file_dialog_listbox::cliprect::y2
         rts
 
 tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Inputs: A = entry index
 
-.proc LB404
-        ldx     #0
-        stx     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        sta     rect::y1
-        ldx     tmp
-        stx     rect::y1+1
-        clc
-        adc     #$07
-        sta     rect::y2
-        lda     tmp
-        adc     #$00
-        sta     rect::y2+1
+.proc invert_entry
+        ldx     #0              ; A,X = entry
+        ldy     #kListEntryHeight
+        jsr     Multiply_16_8_16
+        stax    rect::y1
+
+        add16_8 rect::y1, #kListEntryHeight, rect::y2
+
         lda     winfo_file_dialog_listbox::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -2065,7 +2033,9 @@ l3:     lda     ($06),y
         bcs     next_inner
         jmp     l5
 
-:       iny
+:       cpy     name_buf
+        beq     l5
+        iny
         cpy     #16
         bne     l3
         jmp     next_inner
@@ -2339,18 +2309,18 @@ l8:     .res    16, 0
 .endproc
 
 ;;; ============================================================
-;;; Input: A = Selection (0-15, or $FF)
-;;; Output: 0 if no selection or in first col, else mod 8
+;;; Input: A = Selection, or $FF if none
+;;; Output: top index to show so selection is in view
 
-.proc selection_second_col
+.proc calc_top_index
         bpl     has_sel
 :       return  #0
 
 has_sel:
-        cmp     #9
+        cmp     #kPageDelta
         bcc     :-
         sec
-        sbc     #8
+        sbc     #kPageDelta-1
         rts
 .endproc
 
@@ -2363,7 +2333,7 @@ has_sel:
         jsr     set_port_for_window
         jsr     calc_ip_pos
         stax    pt
-        copy16  rect_input_text::y1, pt+2
+        copy16  input_textpos::ycoord, pt+2
         MGTK_CALL MGTK::MoveTo, pt
         bit     prompt_ip_flag
         bpl     bg2
@@ -2376,8 +2346,8 @@ bg2:    MGTK_CALL MGTK::SetTextBG, textbg2
         copy    #$FF, prompt_ip_flag
 
         PARAM_BLOCK dt_params, $06
-data:   .addr   0
-length: .byte   0
+data    .addr
+length  .byte
         END_PARAM_BLOCK
 
 :       copy16  #str_insertion_point+1, dt_params::data
@@ -2395,7 +2365,7 @@ length: .byte   0
         MGTK_CALL MGTK::PaintRect, rect_input
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect_input
-        MGTK_CALL MGTK::MoveTo, rect_input_text
+        MGTK_CALL MGTK::MoveTo, input_textpos
         lda     buf_input_left
         beq     :+
         param_call draw_string, buf_input_left
@@ -2428,9 +2398,9 @@ length: .byte   0
         jmp     to_left
 
         PARAM_BLOCK tw_params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         ;; --------------------------------------------------
@@ -2505,7 +2475,7 @@ width:  .word   0
         copy16  #buf_input_left, tw_params::data
         copy    buf_input_left, tw_params::length
 @loop:  MGTK_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, rect_input_text::x1, tw_params::width
+        add16   tw_params::width, input_textpos::xcoord, tw_params::width
         cmp16   tw_params::width, screentowindow_windowx
         bcc     :+
         dec     tw_params::length
@@ -2568,7 +2538,7 @@ ip_pos: .word   0
         lda     buf_input_left
         clc
         adc     buf_input_right
-        cmp     #$41            ; ???
+        cmp     #kMaxInputLength
         bcc     continue
         rts
 
@@ -2583,7 +2553,7 @@ continue:
         jsr     calc_ip_pos
         inc     buf_input_left
         stax    $06
-        copy16  rect_input_text::y1, $08
+        copy16  input_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, $06
@@ -2603,7 +2573,7 @@ continue:
 :       dec     buf_input_left
         jsr     calc_ip_pos
         stax    $06
-        copy16  rect_input_text::y1, $08
+        copy16  input_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, $06
@@ -2636,7 +2606,7 @@ skip:   ldx     buf_input_left
         inc     buf_input_right
         jsr     calc_ip_pos
         stax    $06
-        copy16  rect_input_text::y1, $08
+        copy16  input_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
         MGTK_CALL MGTK::MoveTo, $06
@@ -2673,7 +2643,7 @@ skip:   ldx     buf_input_left
 finish: dec     buf_input_right
         lda     winfo_file_dialog::window_id
         jsr     set_port_for_window
-        MGTK_CALL MGTK::MoveTo, rect_input_text
+        MGTK_CALL MGTK::MoveTo, input_textpos
         param_call draw_string, buf_input_left
         param_call draw_string, buf_input_right
         param_call draw_string, str_two_spaces
@@ -2851,9 +2821,9 @@ tmp:    .byte   0
 
 .proc calc_ip_pos
         PARAM_BLOCK params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         lda     #0
@@ -2866,10 +2836,10 @@ width:  .word   0
         MGTK_CALL MGTK::TextWidth, params
 :       lda     params::width
         clc
-        adc     rect_input_text::x1
+        adc     input_textpos::xcoord
         tay
         lda     params::width+1
-        adc     rect_input_text::x1+1
+        adc     input_textpos::xcoord+1
         tax
         tya
         rts
@@ -2878,11 +2848,7 @@ width:  .word   0
 ;;; ============================================================
 
 .proc LBB5B
-        ldx     buf_input_left
-:       lda     buf_input_left,x
-        sta     buf_text,x
-        dex
-        bpl     :-
+        COPY_STRING buf_input_left, buf_text
 
         lda     selected_index
         sta     l7
@@ -2973,6 +2939,8 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
          ADJUSTCASE_IO_BUFFER := $1C00
         .include "../lib/adjustfilecase.s"
         .undefine LIB_MLI_CALL
+
+        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 

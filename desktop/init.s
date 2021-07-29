@@ -57,7 +57,7 @@
 
         .org ::kSegmentInitializerAddress
 
-        MLI_RELAY := main::MLI_RELAY
+        MLIRelayImpl := main::MLIRelayImpl
 
         data_buf := $1200
         kDataBufferSize = $400
@@ -115,6 +115,16 @@ done:
 .endscope
 
 ;;; ============================================================
+;;; Detect Le Chat Mauve Eve RGB card
+
+.scope lcm
+        jsr     DetectLeChatMauveEve
+        bne     :+
+        copy    #$80, main::lcm_eve_flag
+:
+.endscope
+
+;;; ============================================================
 ;;; Detect Machine Type - set flags and periodic task delay
 
 ;;; NOTE: Starts with ROM paged in, exits with LCBANK1 paged in.
@@ -138,7 +148,6 @@ done:
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        sta     SET80COL
 
         ;; Ensure we're on a IIe or later
         lda     id_version
@@ -618,8 +627,7 @@ process_block:
         beq     include
 
         cmp     #kDAFileType    ; DA? (must match type/auxtype)
-        jne     include         ; Allow arbitrary types (may not actually launch though)
-
+        bne     :+
         ldy     #FileEntry::aux_type
         lda     (dir_ptr),y
         cmp     #<kDAFileAuxType
@@ -627,6 +635,13 @@ process_block:
         iny
         lda     (dir_ptr),y
         cmp     #>kDAFileAuxType
+        jne     next_entry
+
+:       ldx     #kNumAppleMenuTypes-1
+:       cmp     apple_menu_type_table,x
+        beq     include
+        dex
+        bpl     :-
         jne     next_entry
 
 include:
@@ -738,6 +753,12 @@ entries_per_block:      .byte   0
 entry_in_block: .byte   0
 
 name_buf:       .res    ::kDAMenuItemSize, 0
+
+        kNumAppleMenuTypes = 7
+apple_menu_type_table:
+        .byte   FT_SYSTEM, FT_S16, FT_BINARY, FT_BASIC ; Executable
+        .byte   FT_TEXT, FT_GRAPHICS, FT_FONT          ; Previewable
+        ASSERT_TABLE_SIZE apple_menu_type_table, kNumAppleMenuTypes
 
 end:
 .endscope
@@ -1058,8 +1079,8 @@ iloop:  cpx     cached_window_icon_count
         pha
         lda     cached_window_icon_list,x
         jsr     main::icon_entry_lookup
-        ldy     #IconTK::AddIcon
-        jsr     ITK_RELAY   ; icon entry addr in A,X
+        stax    @addr
+        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
         pla
         tax
         inx
@@ -1103,31 +1124,39 @@ iloop:  cpx     cached_window_icon_count
 
         ;; Validate version bytes
         lda     main::save_restore_windows::desktop_file_data_buf
-        cmp     #kDeskTopVersionMajor
+        cmp     #kDeskTopFileVersion
         bne     exit
-        lda     main::save_restore_windows::desktop_file_data_buf+1
-        cmp     #kDeskTopVersionMinor
-        bne     exit
-        copy16  #main::save_restore_windows::desktop_file_data_buf+2, data_ptr
+        copy16  #main::save_restore_windows::desktop_file_data_buf+1, data_ptr
 
 loop:   ldy     #0
         lda     (data_ptr),y
         beq     exit
 
-        ;; Copy path to open_dir_path_buf
+        ;; Copy path to `open_dir_path_buf`
         tay
 :       lda     (data_ptr),y
         sta     open_dir_path_buf,y
         dey
         bpl     :-
 
-        ;; TODO: Use bounds rect
+        ;; Copy bounds to `tmp_rect`
+        ldy     #DeskTopFileItem::rect+.sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     (data_ptr),y
+        sta     tmp_rect,x
+        dey
+        dex
+        bpl     :-
 
         jsr     main::push_pointers
 
-        copy    #$80, main::open_directory::suppress_error_on_open_flag
+        lda     #$80
+        sta     main::copy_new_window_bounds_flag
+        sta     main::open_directory::suppress_error_on_open_flag
         jsr     maybe_open_window
-        copy    #0, main::open_directory::suppress_error_on_open_flag
+        lda     #0
+        sta     main::copy_new_window_bounds_flag
+        sta     main::open_directory::suppress_error_on_open_flag
 
         jsr     main::pop_pointers
 
@@ -1200,6 +1229,11 @@ str_sd_fileshare:
         PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_fileshare)
 
 ;;; ============================================================
+
+        .include "../lib/detect_lcmeve.s"
+
+;;; ============================================================
+
 
         PAD_TO ::kSegmentInitializerAddress + ::kSegmentInitializerLength
 

@@ -14,6 +14,7 @@ joystick                        desk.acc/control.panels
 melt                            desk.acc/screen.savers
 invert                          desk.acc/screen.savers
 system.speed                    desk.acc/control.panels
+startup                         desk.acc/control.panels
 show.text.file                  preview
 show.image.file                 preview
 show.font.file                  preview

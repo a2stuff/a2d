@@ -21,11 +21,11 @@
 
 ;;; ============================================================
 
-        param_call JUMP_TABLE_MGTK_RELAY, MGTK::HideCursor, 0
+        JUMP_TABLE_MGTK_CALL MGTK::HideCursor, 0
         jsr     JUMP_TABLE_HILITE_MENU
         jsr     dump_screen
         jsr     JUMP_TABLE_HILITE_MENU
-        param_call JUMP_TABLE_MGTK_RELAY, MGTK::ShowCursor, 0
+        JUMP_TABLE_MGTK_CALL MGTK::ShowCursor, 0
         rts
 
 ;;; ============================================================

@@ -44,17 +44,9 @@
         .assert (minipix_src_buf + kMinipixSrcSize) < DA_IO_BUFFER, error, "Not enough room for Minipix load buffer"
         .assert (minipix_dst_buf + kMinipixDstSize) < WINDOW_ICON_TABLES, error, "Not enough room for Minipix convert buffer"
 
-.macro MGTK_RELAY_CALL call, params
-    .if .paramcount > 1
-        param_call        JUMP_TABLE_MGTK_RELAY, (call), (params)
-    .else
-        param_call        JUMP_TABLE_MGTK_RELAY, (call), 0
-    .endif
-.endmacro
-
 ;;; ============================================================
 
-        .org $800
+        .org DA_LOAD_ADDRESS
 
 da_start:
         jmp     start
@@ -165,21 +157,21 @@ nextwinfo:      .addr   0
     END_IF
         COPY_STRING     INVOKE_PATH, pathbuf
 
-        param_call JUMP_TABLE_MLI, OPEN, open_params
+        JUMP_TABLE_MLI_CALL OPEN, open_params
         lda     open_params::ref_num
         sta     get_eof_params::ref_num
         sta     read_params::ref_num
         sta     read_minipix_params::ref_num
         sta     close_params::ref_num
 
-        MGTK_RELAY_CALL MGTK::HideCursor
+        JUMP_TABLE_MGTK_CALL MGTK::HideCursor
         jsr     clear_screen
         jsr     set_color_mode
         jsr     show_file
-        MGTK_RELAY_CALL MGTK::ShowCursor
+        JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
 
-        MGTK_RELAY_CALL MGTK::FlushEvents
-        MGTK_RELAY_CALL MGTK::ObscureCursor
+        JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
+        JUMP_TABLE_MGTK_CALL MGTK::ObscureCursor
 
         ;; fall through
 .endproc
@@ -188,7 +180,7 @@ nextwinfo:      .addr   0
 ;;; Main Input Loop
 
 .proc input_loop
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
         jsr     copy_event_aux_to_main
 
         lda     event_params + MGTK::Event::kind
@@ -215,11 +207,11 @@ exit:
         jsr     JUMP_TABLE_RGB_MODE
 
         ;; Force desktop redraw
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo
+        JUMP_TABLE_MGTK_CALL MGTK::OpenWindow, winfo
+        JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, winfo
 
         ;; Restore menu
-        MGTK_RELAY_CALL MGTK::DrawMenu
+        JUMP_TABLE_MGTK_CALL MGTK::DrawMenu
         jsr     JUMP_TABLE_HILITE_MENU
 
         rts                     ; exits input loop
@@ -227,7 +219,7 @@ exit:
 
 .proc show_file
         ;; Check file type
-        param_call JUMP_TABLE_MLI, GET_FILE_INFO, get_file_info_params
+        JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
         lda     get_file_info_params::file_type
         cmp     #FT_GRAPHICS
         bne     get_eof
@@ -247,7 +239,7 @@ exit:
 
         ;; Otherwise, rely on size heuristics to determine the type
 get_eof:
-        param_call JUMP_TABLE_MLI, GET_EOF, get_eof_params
+        JUMP_TABLE_MLI_CALL GET_EOF, get_eof_params
 
         ;; If bigger than $2000, assume DHR
 
@@ -293,7 +285,7 @@ kSigDHR         = %00000010
 
         ;; At least one page...
         sta     PAGE2OFF
-        param_call JUMP_TABLE_MLI, READ, read_params
+        JUMP_TABLE_MLI_CALL READ, read_params
 
         lda     SIGNATURE
         sta     signature
@@ -308,9 +300,9 @@ kSigDHR         = %00000010
 
         ;; If DHR, copy Main>Aux and load Main page.
 dhr:    jsr     copy_hires_to_aux
-        param_call JUMP_TABLE_MLI, READ, read_params
+        JUMP_TABLE_MLI_CALL READ, read_params
 
-finish: param_call JUMP_TABLE_MLI, CLOSE, close_params
+finish: JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         lda     signature
         and     #kSigColor
@@ -325,8 +317,8 @@ signature:
 
 .proc show_hr_file
         sta     PAGE2OFF
-        param_call JUMP_TABLE_MLI, READ, read_params
-        param_call JUMP_TABLE_MLI, CLOSE, close_params
+        JUMP_TABLE_MLI_CALL READ, read_params
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         jsr     hr_to_dhr
         rts
@@ -337,7 +329,7 @@ signature:
 
         ;; AUX memory half
         sta     PAGE2OFF
-        param_call JUMP_TABLE_MLI, READ, read_params
+        JUMP_TABLE_MLI_CALL READ, read_params
 
         ;; NOTE: Why not just load into Aux directly by setting
         ;; PAGE2ON? This works unless loading from a RamWorks-based
@@ -348,8 +340,8 @@ signature:
         jsr     copy_hires_to_aux
 
         ;; MAIN memory half
-        param_call JUMP_TABLE_MLI, READ, read_params
-        param_call JUMP_TABLE_MLI, CLOSE, close_params
+        JUMP_TABLE_MLI_CALL READ, read_params
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         rts
 .endproc
@@ -381,15 +373,15 @@ signature:
         jsr     set_bw_mode
 
         ;; Load file at minipix_src_buf (MAIN $1800)
-        param_call JUMP_TABLE_MLI, READ, read_minipix_params
-        param_call JUMP_TABLE_MLI, CLOSE, close_params
+        JUMP_TABLE_MLI_CALL READ, read_minipix_params
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         ;; Convert (main to aux)
         jsr     convert_minipix_to_bitmap
 
         ;; Draw
-        MGTK_RELAY_CALL MGTK::SetPort, winfo::port
-        MGTK_RELAY_CALL MGTK::PaintBits, paintbits_params
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, winfo::port
+        JUMP_TABLE_MGTK_CALL MGTK::PaintBits, paintbits_params
 
         rts
 
@@ -632,11 +624,11 @@ start:  sta     dhr_flag
 
         ;; Read next op/count byte
 loop:   copy    #1, read_buf_params::request_count
-        param_call JUMP_TABLE_MLI, READ, read_buf_params
+        JUMP_TABLE_MLI_CALL READ, read_buf_params
         bcc     body
 
         ;; EOF (or other error) - finish up
-        param_call JUMP_TABLE_MLI, CLOSE, close_params
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
         bit     dhr_flag        ; if hires, need to convert
         bmi     :+
         jsr     hr_to_dhr
@@ -656,7 +648,7 @@ body:   lda     read_buf
         ;; %00...... = 1 to 64 bytes follow - all different
 
         copy    count, read_buf_params::request_count
-        param_call JUMP_TABLE_MLI, READ, read_buf_params
+        JUMP_TABLE_MLI_CALL READ, read_buf_params
         ldy     #0
 
         ldx     #0
@@ -677,7 +669,7 @@ not_00: cmp     #%01000000
         ;; %01...... = 3, 5, 6, or 7 repeats of next byte
 
         copy    #1, read_buf_params::request_count
-        param_call JUMP_TABLE_MLI, READ, read_buf_params
+        JUMP_TABLE_MLI_CALL READ, read_buf_params
         ldy     #0
         lda     read_buf
 
@@ -696,7 +688,7 @@ not_01: cmp     #%10000000
         ;; %10...... = 1 to 64 repeats of next 4 bytes
 
         copy    #4, read_buf_params::request_count
-        param_call JUMP_TABLE_MLI, READ, read_buf_params
+        JUMP_TABLE_MLI_CALL READ, read_buf_params
         ldy     #0
 
 :       lda     read_buf+0
@@ -719,7 +711,7 @@ not_10:
         ;; %11...... = 1 to 64 repeats of next byte taken as 4 bytes
 
         copy    #1, read_buf_params::request_count
-        param_call JUMP_TABLE_MLI, READ, read_buf_params
+        JUMP_TABLE_MLI_CALL READ, read_buf_params
         ldy     #0
         lda     read_buf
 

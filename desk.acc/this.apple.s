@@ -33,6 +33,12 @@ kShortcutEasterEgg = res_char_easter_egg_shortcut
         .org DA_LOAD_ADDRESS
 
 da_start:
+;;; Some static checks where we can cache the results.
+.scope
+        jsr     identify_model
+        jsr     identify_prodos_version
+        jsr     identify_memory
+.endscope
 
 ;;; Copy the DA to AUX for easy bank switching
 .scope
@@ -164,7 +170,7 @@ reserved:       .res    1
 mapbits:        .addr   ace500_bits
 mapwidth:       .byte   7
 reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 47, 29
+        DEFINE_RECT maprect, 0, 0, 48, 29
 .endparams
 
 .params ace2000_bitmap
@@ -172,7 +178,7 @@ reserved:       .res    1
 mapbits:        .addr   ace2000_bits
 mapwidth:       .byte   7
 reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 47, 23
+        DEFINE_RECT maprect, 0, 0, 48, 23
 .endparams
 
 .if INCLUDE_UNSUPPORTED_MACHINES
@@ -553,7 +559,6 @@ str_clock:      PASCAL_STRING res_string_card_type_clock
 str_comm:       PASCAL_STRING res_string_card_type_comm
 str_serial:     PASCAL_STRING res_string_card_type_serial
 str_parallel:   PASCAL_STRING res_string_card_type_parallel
-str_used:       PASCAL_STRING res_string_card_type_used
 str_printer:    PASCAL_STRING res_string_card_type_printer
 str_joystick:   PASCAL_STRING res_string_card_type_joystick
 str_io:         PASCAL_STRING res_string_card_type_io
@@ -868,11 +873,11 @@ match:  tya
 ;;; $23         2.0.3
 ;;; $24         2.4.x
 
+;;; Assert: Main is banked in
 .proc identify_prodos_version
+
         ;; Read ProDOS version field from global page in main
-        sta     RAMRDOFF
         lda     KVERSION
-        sta     RAMRDON
 
         cmp     #$24
         bcs     v_2x
@@ -910,10 +915,6 @@ done:   rts
 ;;; ============================================================
 
 .proc init
-        jsr     identify_model
-        jsr     identify_prodos_version
-        jsr     identify_memory
-
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     draw_window
         MGTK_CALL MGTK::FlushEvents
@@ -1446,6 +1447,7 @@ fail:   clc
 ;;; ============================================================
 ;;; Update str_memory with memory count in kilobytes
 
+;;; Assert: Main is banked in (for `check_slinky_memory` call)
 .proc identify_memory
         copy16  #0, memory
         jsr     check_ramworks_memory
@@ -1491,6 +1493,8 @@ fail:   clc
 ;;; If RamWorks is not present, bank switching is a no-op and the
 ;;; same regular 64Kb AUX bank is present throughout the test; this
 ;;; will be handled by an invalid signature check for other banks.
+;;;
+;;; Assert: Main is banked in
 .proc check_ramworks_memory
         sigb0   := $00
         sigb1   := $01
@@ -1500,12 +1504,8 @@ fail:   clc
         buf0    := DA_IO_BUFFER
         buf1    := DA_IO_BUFFER + $100
 
-        ;; Run from clone in main memory
         php
         sei     ; don't let interrupts happen while the memory map is munged
-
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
 
         ;; Assumes ALTZPON on entry/exit
         ldy     #0              ; populated bank count
@@ -1561,9 +1561,6 @@ next:   inx                     ; next bank
         lda     #0
         sta     RAMWORKS_BANK
 
-        ;; Back to executing from aux memory
-        sta     RAMRDON
-        sta     RAMWRTON
         plp                     ; restore interrupt state
         rts
 .endproc
@@ -1595,6 +1592,8 @@ done:   rts
 .endproc
 
 ;;; ============================================================
+
+;;; Assert: Main is banked in (due to SmartPort calls)
 
 .proc check_slinky_memory
         slot_ptr := $06
@@ -1630,6 +1629,8 @@ loop:   lda     slot
         sta     sp_addr+1
 
         ;; Make a STATUS call
+        ;; NOTE: Must be done from Main.
+        ;; https://github.com/a2stuff/a2d/issues/483
         sp_addr := *+1
         jsr     SELF_MODIFIED
         .byte   $00             ; STATUS
@@ -1716,7 +1717,8 @@ p65802: return16 #str_65802     ; Other boards support 65802
 ;;; Follows Technical Note: SmartPort #4: SmartPort Device Types
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
 
-.proc populate_smartport_name_impl
+;;; Assert: Main is banked in (due to SmartPort calls)
+.proc populate_smartport_name_main_impl
 
 .params status_params
 param_count:    .byte   3
@@ -1865,6 +1867,8 @@ num_devices:
         .byte   0
 
 .proc smartport_call
+        ;; NOTE: Must be done from Main.
+        ;; https://github.com/a2stuff/a2d/issues/483
         sp_addr := * + 1
         jsr     SELF_MODIFIED
         .byte   $00             ; $00 = STATUS
@@ -1874,7 +1878,19 @@ num_devices:
         sp_addr = smartport_call::sp_addr
 
 .endproc
-populate_smartport_name := populate_smartport_name_impl::start
+
+;;; Assert: Aux is banked in (relays to Main)
+.proc populate_smartport_name
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+
+        jsr     populate_smartport_name_main_impl::start
+
+        sta     RAMWRTON
+        COPY_STRING str_smartport, str_smartport
+        sta     RAMRDON
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Inputs: Character in A

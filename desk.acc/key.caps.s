@@ -557,14 +557,14 @@ tmp_poly:
 
         ;; Swap in alternate layout
         copy    #$80, extended_layout_flag
-        COPY_STRUCT MGTK::Rect, empty_rect, rect_gap ; Gap is eliminated
-        COPY_STRUCT MGTK::Rect, rect_new_bshl, kr5C ; [\|] replaces Solid Apple
-        COPY_STRUCT MGTK::Rect, rect_new_bshl, kr7C
-        COPY_STRUCT MGTK::Rect, rect_new_apos, kr60 ; [`~] takes away from Space
-        COPY_STRUCT MGTK::Rect, rect_new_apos, kr7E
-        COPY_STRUCT MGTK::Rect, rect_new_spc, kr20 ; Space is smaller
-        COPY_STRUCT MGTK::Rect, rect_new_oap, rect_oap ; Open Apple moves
-        COPY_STRUCT MGTK::Rect, rect_new_sap, rect_sap ; Solid Apple (Option) moves
+        COPY_BLOCK empty_rect, rect_gap ; Gap is eliminated
+        COPY_BLOCK rect_new_bshl, kr5C ; [\|] replaces Solid Apple
+        COPY_BLOCK rect_new_bshl, kr7C
+        COPY_BLOCK rect_new_apos, kr60 ; [`~] takes away from Space
+        COPY_BLOCK rect_new_apos, kr7E
+        COPY_BLOCK rect_new_spc, kr20 ; Space is smaller
+        COPY_BLOCK rect_new_oap, rect_oap ; Open Apple moves
+        COPY_BLOCK rect_new_sap, rect_sap ; Solid Apple (Option) moves
         ;; Return key handled separately
 
 continue:

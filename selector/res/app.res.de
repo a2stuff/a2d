@@ -1,13 +1,9 @@
 .define res_string_menu_bar_item_file "Ablage"
 .define res_string_menu_bar_item_startup "Starte"
-.define res_string_menu_item_copyright1 "Copyright Apple Computer Inc., 1986"
-.define res_string_menu_item_copyright2 "Copyright Version Soft, 1985 - 1986"
-.define res_string_menu_item_copyright3 "Alle Rechte vorbehalten"
 .define res_string_menu_item_run_a_program "Starte Programm..."
 .define res_char_menu_item_run_a_program_shortcut 'R'
 .define res_string_menu_item_slot_pattern "Steckplatz #"
 .define res_const_menu_item_slot_pattern_offset1 12
-.define res_string_button_ok "OK            \x0D"
 .define res_string_button_desktop "Schreibtisch"
 .define res_char_button_desktop_shortcut 'S'
 .define res_string_selector_dialog_title "Selektor"

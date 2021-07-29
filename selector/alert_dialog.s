@@ -63,8 +63,8 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
-        DEFINE_BUTTON ok,        res_string_alert_button_ok, 300, 37
-        DEFINE_BUTTON try_again, res_string_button_try_again,       300, 37
+        DEFINE_BUTTON ok,        res_string_button_ok,          300, 37
+        DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
         DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
 
         DEFINE_POINT pos_prompt, 75, 29
@@ -387,7 +387,9 @@ finish: pha
         event_kind = app::event_kind
         event_coords = app::event_coords
         penXOR = app::penXOR
+        .define LIB_MGTK_CALL MGTK_CALL
         .include "../lib/alertbuttonloop.s"
+        .undefine LIB_MGTK_CALL
         .include "../lib/savedialogbackground.s"
         dialog_background_save := dialog_background::Save
         dialog_background_restore := dialog_background::Restore

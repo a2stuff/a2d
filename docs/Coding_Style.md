@@ -67,7 +67,7 @@ there   := * - 1                ; internal label
 
 kTrue   = $80                   ; constant
 
-.params get_flag_params         ; paramter block
+.params get_flag_params         ; parameter block
 result: .byte   0
 .endparams
 
@@ -238,10 +238,13 @@ result:         .word   0
 
 ```asm
 PARAM_BLOCK zp_params, $80
-flag1:  .byte   0
-flag2:  .byte   0
+flag1   .byte
+flag2   .byte
 END_PARAM_BLOCK
 ```
+
+This is equivalent to (and is defined using) ca65's `.struct` with
+`.org`, but also defines a label for the block itself.
 
 ## Namespaces
 
@@ -318,7 +321,7 @@ buf:    .res    16
 
 ## Localization
 
-Localization (translations of the application into other languages) is done by ensuring that all resources that need to be changed exist in files outside the source. For a given file (e.g. `foo.s`) if there are localized resources they are present in the `foo.res.LANG` file where `LANG` is a language code (e.g. `en`, `it`, etc).
+Localization (translations of the application into other languages) is done by ensuring that all resources that need to be changed exist in files outside the source. For a given file (e.g. `foo.s`) if there are localized resources they are present in the `res/foo.res.LANG` file where `LANG` is a language code (e.g. `en`, `it`, etc).
 
 `foo.s`:
 ```asm
@@ -331,7 +334,7 @@ hello:
     cmp     #res_char_yes_key
 ```
 
-`foo.res.en`:
+`res/foo.res.en`:
 ```asm
 .define res_string_hello_world "Hello World"
 .define res_char_yes_key 'Y'
@@ -346,8 +349,6 @@ Conventions:
 Additionally:
 
 * `res_string_..._pattern` for strings with placeholders (and use # for replaced characters)
-* `res_const_..._pattern_offset` for the offset of a placeholder in a string
-
-(Tooling will be added to enforce the latter.)
+* `res_const_..._pattern_offsetN` are auto-generated for such pattern strings (for each #, 1...N)
 
 Since often multiple files are assembled together by jumbo files via includes and `.define`s are not scoped, conflicting identifiers are possible.

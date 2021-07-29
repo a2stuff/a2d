@@ -1,7 +1,3 @@
-.define res_string_alert_button_ok "OK            \x0D"
-.define res_string_button_try_again "Intentar de nuevo  A"
-.define res_char_button_try_again_shortcut 'A'
-.define res_string_button_cancel "Cancelar    Esc"
 .define res_string_alert_selector_unable_to_run "No puede ejecutar el programa."
 .define res_string_alert_io_error "Error de E/S."
 .define res_string_alert_no_device "Ningun dispositivo conectado."

@@ -43,7 +43,7 @@
 
 ;;; ============================================================
 
-        .org $800
+        .org DA_LOAD_ADDRESS
 
         block_buffer := $1A00
 
@@ -66,11 +66,11 @@ entry:
         ptr := $06
 
         ;; Get top DeskTop window (if any) and find its path
-        param_call JUMP_TABLE_MGTK_RELAY, MGTK::FrontWindow, ptr
+        JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr
         lda     ptr             ; any window open?
-        beq     exit
+        beq     no_windows
         cmp     #kMaxDeskTopWindows+1
-        bcs     exit
+        bcs     no_windows
         jsr     JUMP_TABLE_GET_WIN_PATH
         stax    ptr
 
@@ -100,6 +100,10 @@ entry:
         sta     RAMRDOFF
         sta     RAMWRTOFF
 exit:   rts
+
+no_windows:
+        lda     #kErrNoWindowsOpen
+        jmp     JUMP_TABLE_SHOW_ALERT
 .endscope
 
 ;;; ============================================================
@@ -1624,9 +1628,9 @@ sub:    MGTK_CALL MGTK::PaintRect, 0, fillrect_addr
 .proc handle_click_in_textbox
 
         PARAM_BLOCK tw_params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         click_coords := screentowindow_params::window::xcoord
@@ -1785,9 +1789,9 @@ ip_pos: .word   0
 
 .proc calc_ip_pos
         PARAM_BLOCK params, $06
-data:   .addr   0
-length: .byte   0
-width:  .word   0
+data    .addr
+length  .byte
+width   .word
         END_PARAM_BLOCK
 
         lda     #0
@@ -1931,8 +1935,8 @@ line:   .byte   0
 
 .proc draw_string
         PARAM_BLOCK params, $06
-addr:   .res    2
-length: .res    1
+addr    .addr
+length  .byte
         END_PARAM_BLOCK
 
         stax    params::addr

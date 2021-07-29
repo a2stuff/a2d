@@ -392,7 +392,7 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kFilePickerDlgWidth, kFilePickerDlgHeight
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -409,6 +409,9 @@ nextwinfo:      .addr   0
 kEntryListCtlWindowID = $15
 
 .params winfo_file_dialog_listbox
+        kWidth = 125
+        kHeight = 72
+
 window_id:      .byte   kEntryListCtlWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -421,15 +424,15 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   100
-mincontlength:  .word   70
+mincontlength:  .word   kHeight
 maxcontwidth:   .word   100
-maxcontlength:  .word   70
+maxcontlength:  .word   kHeight
 port:
-        DEFINE_POINT viewloc, 53, 50
+        DEFINE_POINT viewloc, 53, 48
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, 125, 70
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -538,6 +541,9 @@ nextwinfo:      .addr   0
         DEFINE_RECT maprect, 0, 0, 358, 100
 .endparams
 
+        kEntryPickerCol2 = 115
+        kEntryPickerCol3 = 220
+        kEntryPickerItemWidth  = 104
         kEntryPickerItemHeight = 9 ; default font height
 
         DEFINE_RECT_INSET entry_picker_outer_rect, 4, 2, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
@@ -657,7 +663,7 @@ file_count:
 
         DEFINE_POINT file_dialog_title_pos, 0, 13
 
-        DEFINE_RECT rect_D90F, 0, 0, 125, 0
+        DEFINE_RECT rect_file_dialog_selection, 0, 0, 125, 0
 
         DEFINE_POINT picker_entry_pos, 2, 0
 
@@ -701,13 +707,13 @@ kRadioControlHeight = 8
 
         DEFINE_RECT rect_D9C8, 27, 16, 174, 26
 
-        DEFINE_BUTTON change_drive, res_string_button_change_drive,       193, 30
-        DEFINE_BUTTON open,         res_string_button_open,               193, 44
-        DEFINE_BUTTON close,        res_string_button_close,              193, 58
-        DEFINE_BUTTON cancel,       res_string_fd_button_cancel,  193, 73
-        DEFINE_BUTTON ok,           res_string_fd_button_ok, 193, 89
+        DEFINE_BUTTON change_drive, res_string_button_change_drive,  193, 28
+        DEFINE_BUTTON open,         res_string_button_open,          193, 42
+        DEFINE_BUTTON close,        res_string_button_close,         193, 56
+        DEFINE_BUTTON cancel,       res_string_button_cancel,        193, 71
+        DEFINE_BUTTON ok,           res_string_button_ok,            193, 87
 
-        DEFINE_POINT dialog_sep_start, 323-8, 30
+        DEFINE_POINT dialog_sep_start, 323-8, 28
         DEFINE_POINT dialog_sep_end, 323-8, 100
 
         .byte   $81,$D3,$00     ; ???
@@ -974,7 +980,11 @@ redraw_icon_param:
 icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
-        ;; (follows icon_param for IconTK::IconInRect call)
+        ;; * follows icon_param for IconTK::IconInRect call
+        ;; * used for saving/restoring window bounds to/from file
+        ;; * used for icon clipping
+        ;; * used for window frame zoom animation
+        ASSERT_ADDRESS icon_param+1
         DEFINE_RECT tmp_rect, 0, 0, 0, 0
 
 tmp_mapinfo:
@@ -1357,7 +1367,7 @@ icontype_blocks:     .word   0
         ICT_FLAGS_BLOCKS = %01000000
 
 icontype_table:
-        ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minpix)
+        ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 17, IconType::graphics ; HR image as FOT
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 33, IconType::graphics ; DHR image as FOT
@@ -1416,13 +1426,13 @@ str_4_spaces:
         PASCAL_STRING "    "    ; do not localize
 
 dow_strings:
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_1)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_2)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_3)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_4)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_5)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_6)
-        STRING  .sprintf("%4s", res_string_weekday_abbrev_7)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_1)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_2)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_3)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_4)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_5)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_6)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_7)
         ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
 
 .params dow_str_params
@@ -1438,13 +1448,8 @@ parsed_date:
         .tag ParsedDateTime
 
 ;;; GrafPort used when drawing the clock
-.params clock_grafport
-viewloc:        .word   0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-maprect:        .word   0, 0, kScreenWidth-1, kMenuBarHeight-1
-.endparams
+clock_grafport:
+        .tag MGTK::GrafPort
 
 ;;; Used to save the current GrafPort while drawing the clock.
 .params getport_params

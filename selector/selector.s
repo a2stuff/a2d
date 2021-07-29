@@ -13,6 +13,7 @@ INVOKER         := $0290
 SAVE_AREA_BUFFER:= $0800
 LOADER          := $2000
 MGTK            := $4000
+MGTK::MLI       := MGTK
 FONT            := $8800
 START           := $8E00
 

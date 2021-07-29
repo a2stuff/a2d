@@ -1,3 +1,2 @@
 .define res_string_label_find "Find:"
 .define res_string_button_search "Search         \x0D"
-.define res_string_button_cancel "Cancel        Esc"

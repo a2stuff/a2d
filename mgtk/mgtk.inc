@@ -4,10 +4,6 @@
 
 .scope MGTK
 
-MLI     := $4000
-        ;; MLI-style call (jsr MLI ; .byte call ; .addr params)
-        ;; Call from AUX (RAMRDON/RAMWRTON)
-
 ;;; ============================================================
 ;;; Graphics Primitives
 ;;; ============================================================
@@ -445,7 +441,7 @@ SelectWindow    = $42           ; Make window topmost
 ;;; .byte       window_id
 
 TrackGoAway     = $43
-;;; .byte       clicked         (out) 0 = cancelled, 1 = close
+;;; .byte       clicked         (out) 0 = canceled, 1 = close
 
 DragWindow      = $44
 ;;; .byte       window_id
@@ -685,6 +681,7 @@ event_size                      = 5        ; any kind of event
 ;;;     MGTK_CALL n                      - params is $0000
 ;;;     MGTK_CALL n, params_addr
 ;;;     MGTK_CALL m, params_addr, label  - params_addr is labeled for modifying
+;;; Callers must define MGTK::MLI as the entry point.
 
 .macro  MGTK_CALL    op, addr, label
         jsr MGTK::MLI
@@ -723,8 +720,8 @@ y2:     .word   bottom
 .scope ident
 x1:     .word   left
 y1:     .word   top
-x2:     .word   (left + width)
-y2:     .word   (top + height)
+x2:     .word   ((left) + (width))
+y2:     .word   ((top) + (height))
 .endscope
 .endmacro
 
@@ -734,8 +731,8 @@ y2:     .word   (top + height)
 .scope ident
 x1:     .word   left
 y1:     .word   top
-x2:     .word   (width - left)
-y2:     .word   (height - top)
+x2:     .word   ((width) - (left))
+y2:     .word   ((height) - (top))
 .endscope
 .endmacro
 
