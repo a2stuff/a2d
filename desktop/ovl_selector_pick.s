@@ -463,8 +463,6 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line1_end
         MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_line2_start
         MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line2_end
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_ok_rect
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_cancel_rect
         jsr     draw_ok_label
@@ -822,7 +820,6 @@ l5:     ldx     #0
 .proc handle_key_return
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
         return  #0
 .endproc
@@ -832,7 +829,6 @@ l5:     ldx     #0
 .proc handle_key_escape
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
         return  #1
 .endproc
