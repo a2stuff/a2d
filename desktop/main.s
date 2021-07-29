@@ -7680,7 +7680,7 @@ ptr_str_items_suffix:
         lda     xcoord
         cmp     #24             ; threshold
         bcc     nosub
-:       sub16   pos_k_available::xcoord, #kWindowHeaderHeight-2, pos_k_available::xcoord
+:       sub16   pos_k_available::xcoord, #kWindowHeaderHeight-8, pos_k_available::xcoord
 nosub:  lsr16   xcoord          ; divide by 2 to center
         add16   width_items_label_padded, xcoord, pos_k_in_disk::xcoord
         jmp     finish
