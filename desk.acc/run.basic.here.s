@@ -56,7 +56,7 @@ prefix_path:    .res    kPathBufferSize, 0
 ;;; ============================================================
 
         ;; Early errors - show alert and return to DeskTop
-fail:   jmp     JUMP_TABLE_SHOW_ALERT
+fail:   jmp     JUMP_TABLE_SHOW_ALERT ; NOTE: Trashes AUX $800-$1AFF
 
 start:
         ;; Get active window's path

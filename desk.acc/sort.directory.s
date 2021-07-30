@@ -76,19 +76,11 @@ start:  tsx
         lda     window_id
         bne     :+
 
-        lda     #>(JUMP_TABLE_SHOW_ALERT-1)
-        pha
-        lda     #<(JUMP_TABLE_SHOW_ALERT-1)
-        pha
         lda     #kErrNoWindowsOpen
-        rts
+        jmp     JUMP_TABLE_SHOW_ALERT ; NOTE: Trashes AUX $800-$1AFF
 
-:       lda     #>(JUMP_TABLE_SELECT_WINDOW-1)
-        pha
-        lda     #<(JUMP_TABLE_SELECT_WINDOW-1)
-        pha
-        lda     window_id
-        rts
+:       lda     window_id
+        jmp     JUMP_TABLE_SELECT_WINDOW
 .endproc
 
 ;;; ============================================================

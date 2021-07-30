@@ -103,7 +103,7 @@ exit:   rts
 
 no_windows:
         lda     #kErrNoWindowsOpen
-        jmp     JUMP_TABLE_SHOW_ALERT
+        jmp     JUMP_TABLE_SHOW_ALERT ; NOTE: Trashes AUX $800-$1AFF
 .endscope
 
 ;;; ============================================================
