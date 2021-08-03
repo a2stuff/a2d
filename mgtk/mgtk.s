@@ -3291,7 +3291,10 @@ no_left_clip:
         clc
         adc     clipped_left
         bpl     :+
-        inc     width_bytes
+        ;; Fix for https://github.com/a2stuff/a2d/issues/505
+        ;; Left clipping of a glyph needed, so need to inc `width_bytes`.
+        ;; But don't want to double this, so defer the inc until later.
+        ;; $A0 is used as a flag.
         dec     $A0
         adc     #14
 :       sta     left_mod14
@@ -3317,6 +3320,12 @@ no_left_clip:
 :       stx     width_bytes
 
 text_clip_ndbm:
+        ;; If we identified a left clip above, increase `width_bytes` now that
+        ;; we're past the potential doubling.
+        bit     $A0
+        bpl     :+
+        inc     width_bytes
+:
         lda     left_mod14
         sec
         sbc     #7
