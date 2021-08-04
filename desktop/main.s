@@ -2171,8 +2171,17 @@ success:
         sty     path_buffer
         param_call find_window_for_path, path_buffer
         beq     done
-        jsr     select_and_refresh_window
 
+        pha
+        jsr     try_select_and_refresh_window
+        pla
+
+        bit     exception_flag
+        bpl     :+
+        inc     num_open_windows ; was decremented on failure
+        sta     active_window_id ; expected by close_window
+        jmp     close_window
+:
         ;; View by Icon?
         ;; TODO: Scroll list views, as well.
         ldx     active_window_id
@@ -2183,6 +2192,22 @@ success:
         jsr     select_new_folder_icon
 
 done:   jmp     clear_updates_and_redraw_desktop_icons
+
+;;; Calls `select_and_refresh_window`; the `exception_flag` high bit
+;;; is set on failure, clear on exit.
+;;; Inputs: A=window_id
+.proc try_select_and_refresh_window
+        ldx     #$80
+        stx     exception_flag
+        tsx
+        stx     saved_stack
+        jsr     select_and_refresh_window
+        ldx     #0
+        stx     exception_flag
+        rts
+.endproc
+exception_flag:
+        .byte   0
 
 .proc select_new_folder_icon
         ptr_icon := $6
@@ -2818,7 +2843,8 @@ loop:   ldx     index
         inc     index
         bne     loop
 
-done:   rts
+done:   copy    #0, cached_window_icon_count
+        rts
 
 index:  .byte   0
 .endproc

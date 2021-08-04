@@ -277,3 +277,4 @@
 
 * Load DeskTop. Try opening volumes/folders until there are less than 8 windows but more than 126 icons. Verify that the "A window must be closed..." dialog has no Cancel button.
 * Load DeskTop. Verify that 126 icons can be shown.
+* Load DeskTop. Open windows bringing the total icons to 126. File > New Folder. Verify that a warning is shown and the window is closed.
