@@ -1462,7 +1462,7 @@ portptr:        .addr   0
 
 ;;; (there's enough room here for 127 files at 25 bytes each)
 icon_entries:
-        .assert ($FB00 - *) >= 127 * .sizeof(IconEntry), error, "Not enough room for icons"
+        .assert ($FB00 - *) >= kMaxIconCount * .sizeof(IconEntry), error, "Not enough room for icons"
 
 ;;; There's plenty of room after that (~409 bytes) if additional
 ;;; buffer space is needed.

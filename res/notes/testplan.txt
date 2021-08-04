@@ -274,3 +274,6 @@
 * Launch DeskTop. Apple > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
 
 * Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. /HD. Launch DeskTop. Open the startup volume. Apple > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
+
+* Load DeskTop. Try opening volumes/folders until there are less than 8 windows but more than 126 icons. Verify that the "A window must be closed..." dialog has no Cancel button.
+* Load DeskTop. Verify that 126 icons can be shown.

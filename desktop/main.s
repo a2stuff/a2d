@@ -6429,7 +6429,7 @@ L710A:  lsr16   L72A8
         clc
         adc     L70C1
         bcs     L7147
-        cmp     #$7C
+        cmp     #kMaxIconCount
         bcs     L7147
         sub16_8 L72A8, DEVCNT, L72A8
         cmp16   L72A8, L70C1
@@ -6441,8 +6441,8 @@ L7147:  lda     num_open_windows
         jsr     do_close
         lda     active_window_id
         beq     L715F
-        lda     #$03
-        bne     L7161
+        lda     #kWarningMsgWindowMustBeClosed
+        bne     L7161           ; always
 L715F:  lda     #kWarningMsgWindowMustBeClosed2
 L7161:  jsr     warning_dialog_proc_num
         ldx     saved_stack
@@ -14910,17 +14910,30 @@ draw_string:
 
         ;; high bit set if "cancel" should be an option
 warning_cancel_table:
-        .byte   $80,$00,$00,$80,$00,$00,$80
+        .byte   $80        ;; kWarningMsgInsertSystemDisk
+        .byte   $00        ;; kWarningMsgSelectorListFull
+        .byte   $00        ;; kWarningMsgSelectorListFull2
+        .byte   $00        ;; kWarningMsgWindowMustBeClosed
+        .byte   $00        ;; kWarningMsgWindowMustBeClosed2
+        .byte   $00        ;; kWarningMsgTooManyWindows
+        .byte   $80        ;; kWarningMsgSaveSelectorList
         ASSERT_TABLE_SIZE warning_cancel_table, ::kNumWarningTypes
 
         ;; First line / second line of message.
 warning_message_table:
+        ;; kWarningMsgInsertSystemDisk
         .addr   aux::str_insert_system_disk, aux::str_blank
+        ;; kWarningMsgSelectorListFull
         .addr   aux::str_selector_list_full, aux::str_selector_list_full2
+        ;; kWarningMsgSelectorListFull2
         .addr   aux::str_selector_list_full, aux::str_selector_list_full2
+        ;; kWarningMsgWindowMustBeClosed
         .addr   aux::str_window_must_be_closed, aux::str_blank
+        ;; kWarningMsgWindowMustBeClosed2
         .addr   aux::str_window_must_be_closed, aux::str_blank
+        ;; kWarningMsgTooManyWindows
         .addr   aux::str_too_many_windows, aux::str_blank
+        ;; kWarningMsgSaveSelectorList
         .addr   aux::str_save_selector_list, aux::str_save_selector_list2
         ASSERT_RECORD_TABLE_SIZE warning_message_table, ::kNumWarningTypes, 4
 .endproc
