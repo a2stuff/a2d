@@ -851,9 +851,9 @@ run_list_paths:
 icon_count:
         .byte   0
 
-        ;; Pointers into icon_entries buffer
+        ;; Pointers into icon_entries buffer (index 0 not used)
 icon_entry_address_table:
-        .res    256, 0
+        .res    (kMaxIconCount+1)*2, 0
 
 ;;; Copy from aux memory of icon list for active window (0=desktop)
 
@@ -862,7 +862,7 @@ cached_window_id: .byte   0
         ;; number of icons in copied window
 cached_window_icon_count:.byte   0
         ;; list of icons in copied window
-cached_window_icon_list:   .res    127, 0
+cached_window_icon_list:   .res    kMaxIconCount, 0
 
 
 ;;; Index of window with selection (0=desktop)
@@ -873,9 +873,9 @@ selected_window_id:
 selected_icon_count:
         .byte   0
 
-;;; Indexes of selected icons (global, not w/in window, up to 127)
+;;; Indexes of selected icons (global, not w/in window)
 selected_icon_list:
-        .res    127, 0
+        .res    kMaxIconCount, 0
 
 kMaxNumWindows = kMaxDeskTopWindows
 
@@ -1288,20 +1288,23 @@ result:  .byte   0
 
 ;;; Each buffer is a list of icons in each window (0=desktop)
 ;;; window_icon_count_table = start of buffer = icon count
-;;; window_icon_list_table = first entry in buffer (length = 127)
+;;; window_icon_list_table = first entry in buffer (length = `kMaxIconCount`)
+;;; (0 is not a valid icon number)
+
+kWindowIconTableSize = kMaxIconCount + 1
 
 window_icon_count_table:
         .repeat kMaxNumWindows+1,i
-        .addr   WINDOW_ICON_TABLES + $80 * i
+        .addr   WINDOW_ICON_TABLES + kWindowIconTableSize * i
         .endrepeat
 
 window_icon_list_table:
         .repeat kMaxNumWindows+1,i
-        .addr   WINDOW_ICON_TABLES + $80 * i + 1
+        .addr   WINDOW_ICON_TABLES + kWindowIconTableSize * i + 1
         .endrepeat
 
 active_window_id:
-        .byte   $00
+        .byte   0
 
 ;;; $00 = window not in use
 ;;; $FF = window in use, but dir (vol/folder) icon deleted
@@ -1460,9 +1463,9 @@ portptr:        .addr   0
 
         PAD_TO $ED00
 
-;;; (there's enough room here for 127 files at 25 bytes each)
+;;; (there's enough room here for 128 files at 25 bytes each; index 0 not used)
 icon_entries:
-        .assert ($FB00 - *) >= kMaxIconCount * .sizeof(IconEntry), error, "Not enough room for icons"
+        .assert ($FB00 - *) >= (kMaxIconCount+1) * .sizeof(IconEntry), error, "Not enough room for icons"
 
 ;;; There's plenty of room after that (~409 bytes) if additional
 ;;; buffer space is needed.

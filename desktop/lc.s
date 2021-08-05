@@ -90,7 +90,7 @@ params:  .res    3
 loop:   lda     free_icon_map,x
         beq     :+
         inx
-        cpx     #$7F
+        cpx     #kMaxIconCount  ; allow up to the maximum
         bne     loop
         rts
 

@@ -94,6 +94,8 @@ label   := *
         name            .res 16 ; 9 (length + 15 chars)
 .endstruct
 
+;;; Icon numbers 1...127 are supported
+;;; (Tables keyed by icon number must hold `kMaxIconCount` + 1 entries)
 kMaxIconCount   = 127
 
 kIconEntryOpenMask    = %10000000

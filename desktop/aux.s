@@ -341,15 +341,15 @@ dark_pattern:
 ;;; Icon (i.e. file, volume) details
 
 num_icons:  .byte   0
-icon_table: .res    127, 0      ; index into icon_ptrs
-icon_ptrs:  .res    256, 0      ; addresses of icon details
+icon_table: .res    (::kMaxIconCount), 0   ; index into icon_ptrs (index 0 not used)
+icon_ptrs:  .res    (::kMaxIconCount+1)*2, 0 ; addresses of icon details (index 0 not used)
 
 has_highlight:                  ; 1 = has highlight, 0 = no highlight
         .byte   0
 highlight_count:                ; number of highlighted icons
         .byte   0
 highlight_list:                 ; selected icons
-        .res    127, 0
+        .res    ::kMaxIconCount, 0
 
 ;;; Polygon holding the composite outlines of all icons being dragged.
 ;;; Re-use the "save area" ($800-$1AFF) since menus won't show during

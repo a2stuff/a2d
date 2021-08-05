@@ -1166,13 +1166,17 @@ str_preview_txt:
 ;;; `window_id_to_filerecord_list_*` maps win id to list num
 ;;; `window_filerecord_table` maps from list num to address
 
+file_records_buffer := $D000
+kFileRecordsBufferLen = $1000
+        .assert kFileRecordsBufferLen > .sizeof(FileRecord) * kMaxIconCount, error, "Size mismatch"
+
 ;;; This remains constant:
 filerecords_free_end:
-        .word   $E000
+        .word   file_records_buffer + kFileRecordsBufferLen
 
 ;;; This tracks the start of free space.
 filerecords_free_start:
-        .word   $D000
+        .word   file_records_buffer
 
 ;;; ============================================================
 
@@ -6405,7 +6409,9 @@ found_windows_list:
 
         DEFINE_OPEN_PARAMS open_params, path_buffer, $800
 
-        DEFINE_READ_PARAMS read_params, $0C00, $200
+        dir_buffer := $C00
+
+        DEFINE_READ_PARAMS read_params, dir_buffer, $200
         DEFINE_CLOSE_PARAMS close_params
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buffer
@@ -6414,14 +6420,15 @@ found_windows_list:
 vol_kb_free:  .word   0
 vol_kb_used:  .word   0
 
-entry_length:
-        .byte   0
+;;; Copy of data from directory header
+.params dir_header
+entry_length:           .byte   0
+entries_per_block:      .byte   0
+file_count:             .word   0
+.endparams
 
-L70C0:  .byte   $00
-L70C1:  .byte   $00
-L70C2:  .byte   $00
-L70C3:  .byte   $00
-L70C4:  .byte   $00
+index_in_block:         .byte   0
+index_in_dir:           .byte   0
 
 .proc start
         sta     window_id
@@ -6437,47 +6444,60 @@ L70C4:  .byte   $00
         jsr     L72E2
 
         ldx     #0
-:       lda     $0C00+SubdirectoryHeader::entry_length,x
-        sta     entry_length,x
+:       lda     dir_buffer+SubdirectoryHeader::entry_length,x
+        sta     dir_header,x
         inx
-        cpx     #4
+        cpx     #.sizeof(dir_header)
         bne     :-
 
-        sub16   filerecords_free_end, filerecords_free_start, L72A8
-        ldx     #$05
-L710A:  lsr16   L72A8
+        ;; Compute the number of free file records. This is used as a proxy
+        ;; for "number of non-volume icons" below.
+        sub16   filerecords_free_end, filerecords_free_start, free_record_count
+        ldx     #5              ; /= 32 .sizeof(FileRecord)
+:       lsr16   free_record_count
         dex
-        cpx     #$00
-        bne     L710A
-        lda     L70C2
-        bne     L7147
-        lda     icon_count
-        clc
-        adc     L70C1
-        bcs     L7147
-        cmp     #kMaxIconCount
-        bcs     L7147
-        sub16_8 L72A8, DEVCNT, L72A8
-        cmp16   L72A8, L70C1
-        bcs     L7169
-L7147:  lda     num_open_windows
+        cpx     #0
+        bne     :-
+
+        ;; Is there room for the files?
+        lda     dir_header::file_count+1 ; > 255?
+        bne     too_many_files  ; yep, definitely not enough room
+
+        lda     icon_count      ; are there enough icons free
+        clc                     ; to fit all of the files?
+        adc     dir_header::file_count
+        bcs     too_many_files  ; overflow, definitely not enough room
+
+        cmp     #kMaxIconCount   ; allow up to the maximum
+        bcs     too_many_files   ; more than we can handle
+
+        ;; This computes "how many icons would be free if all volumes had an icon",
+        ;; and then checks to see if we have room. This should be equivalent to
+        ;; `kMaxIconCount` - (`icon_count` - # actual vol icons) - (# possible vol icons)
+        sub16_8 free_record_count, DEVCNT, free_record_count ; -= # possible volume icons
+        cmp16   free_record_count, dir_header::file_count ; would the files fit?
+        bcs     enough_room
+
+too_many_files:
+        lda     num_open_windows
         jsr     mark_icons_not_opened_1
         dec     num_open_windows
         jsr     clear_updates_and_redraw_desktop_icons
         jsr     do_close
-        lda     active_window_id
-        beq     L715F
-        lda     #kWarningMsgWindowMustBeClosed
-        bne     L7161           ; always
-L715F:  lda     #kWarningMsgWindowMustBeClosed2
-L7161:  jsr     warning_dialog_proc_num
+        lda     active_window_id ; is a window open?
+        beq     no_win
+        lda     #kWarningMsgWindowMustBeClosed ; suggest closing a window
+        bne     show            ; always
+no_win: lda     #kWarningMsgWindowMustBeClosed2 ; no windows to close
+show:   jsr     warning_dialog_proc_num
         ldx     saved_stack
         txs
         rts
 
+enough_room:
         record_ptr := $06
 
-L7169:  copy16  filerecords_free_start, record_ptr
+        copy16  filerecords_free_start, record_ptr
 
         ;; Append entry to list
         lda     window_id_to_filerecord_list_count ; get pointer offset
@@ -6490,22 +6510,22 @@ L7169:  copy16  filerecords_free_start, record_ptr
         inc     window_id_to_filerecord_list_count
 
         ;; Store entry count
-        lda     L70C1
+        lda     dir_header::file_count
         pha
         lda     LCBANK2
         lda     LCBANK2
-        ldy     #$00
+        ldy     #0
         pla
         sta     (record_ptr),y
         lda     LCBANK1
         lda     LCBANK1
 
-        copy    #$FF, L70C4
-        copy    #$00, L70C3
+        copy    #AS_BYTE(-1), index_in_dir ; immediately incremented
+        copy    #0, index_in_block
 
         entry_ptr := $08
 
-        copy16  #$0C00 + SubdirectoryHeader::storage_type_name_length, entry_ptr
+        copy16  #dir_buffer + SubdirectoryHeader::storage_type_name_length, entry_ptr
 
         ;; Advance past entry count
         inc16   record_ptr
@@ -6514,20 +6534,20 @@ L7169:  copy16  filerecords_free_start, record_ptr
         record := $1F00
 
 do_entry:
-        inc     L70C4
-        lda     L70C4
-        cmp     L70C1
+        inc     index_in_dir
+        lda     index_in_dir
+        cmp     dir_header::file_count
         bne     L71CB
         jmp     L7296
 
-L71CB:  inc     L70C3
-        lda     L70C3
-        cmp     L70C0
+L71CB:  inc     index_in_block
+        lda     index_in_block
+        cmp     dir_header::entries_per_block
         beq     L71E7
-        add16_8 entry_ptr, entry_length, entry_ptr
+        add16_8 entry_ptr, dir_header::entry_length, entry_ptr
         jmp     L71F7
 
-L71E7:  copy    #$00, L70C3
+L71E7:  copy    #$00, index_in_block
         copy16  #$0C04, entry_ptr
         jsr     do_read
 
@@ -6537,13 +6557,13 @@ L71F7:  ldx     #$00
         and     #$0F
         sta     record,x
         bne     L7223
-        inc     L70C3
-        lda     L70C3
-        cmp     L70C0
+        inc     index_in_block
+        lda     index_in_block
+        cmp     dir_header::entries_per_block
         bne     L7212
         jmp     L71E7
 
-L7212:  add16_8 entry_ptr, entry_length, entry_ptr
+L7212:  add16_8 entry_ptr, dir_header::entry_length, entry_ptr
         jmp     L71F7
 
 L7223:  iny
@@ -6650,7 +6670,8 @@ L7296:  copy16  record_ptr, filerecords_free_start
 window_id:
         .byte   0
 
-L72A8:  .word   0
+free_record_count:
+        .word   0
 .endproc
 
 ;;; --------------------------------------------------
