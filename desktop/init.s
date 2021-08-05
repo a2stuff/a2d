@@ -275,7 +275,7 @@ end:
         jsr     main::push_pointers
         copy16  #icon_entries, ptr
         ldx     #1
-loop:   cpx     #kMaxIconCount
+loop:   cpx     #kMaxIconCount+1 ; allow up to the maximum
         bne     :+
         jsr     main::pop_pointers
         jmp     end

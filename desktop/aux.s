@@ -341,7 +341,7 @@ dark_pattern:
 ;;; Icon (i.e. file, volume) details
 
 num_icons:  .byte   0
-icon_table: .res    (::kMaxIconCount), 0   ; index into icon_ptrs (index 0 not used)
+icon_table: .res    (::kMaxIconCount+1), 0   ; index into icon_ptrs (index 0 not used)
 icon_ptrs:  .res    (::kMaxIconCount+1)*2, 0 ; addresses of icon details (index 0 not used)
 
 has_highlight:                  ; 1 = has highlight, 0 = no highlight

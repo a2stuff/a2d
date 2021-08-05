@@ -6468,7 +6468,7 @@ index_in_dir:           .byte   0
         adc     dir_header::file_count
         bcs     too_many_files  ; overflow, definitely not enough room
 
-        cmp     #kMaxIconCount   ; allow up to the maximum
+        cmp     #kMaxIconCount+1 ; allow up to the maximum
         bcs     too_many_files   ; more than we can handle
 
         ;; This computes "how many icons would be free if all volumes had an icon",

@@ -275,6 +275,6 @@
 
 * Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. /HD. Launch DeskTop. Open the startup volume. Apple > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
 
-* Load DeskTop. Try opening volumes/folders until there are less than 8 windows but more than 126 icons. Verify that the "A window must be closed..." dialog has no Cancel button.
-* Load DeskTop. Verify that 126 icons can be shown.
-* Load DeskTop. Open windows bringing the total icons to 126. File > New Folder. Verify that a warning is shown and the window is closed.
+* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Try opening volumes/folders until there are less than 8 windows but more than 127 icons. Verify that the "A window must be closed..." dialog has no Cancel button.
+* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Verify that 127 icons can be shown.
+* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. File > New Folder. Verify that a warning is shown and the window is closed.
