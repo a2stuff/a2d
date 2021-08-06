@@ -46,11 +46,9 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
         pla
         rts
 
-L903C:  ldx     #$01
-        copy16  selector_menu_addr, @load
-        @load := *+1
-        lda     SELF_MODIFIED
-        cmp     #$0D
+L903C:  ldx     #1
+        lda     selector_menu
+        cmp     #kSelectorMenuMinItems + 8
         bcc     L9052
         inx
 L9052:  lda     #$00
@@ -97,11 +95,8 @@ L9093:  copy16  selector_list, num_run_list_entries
         beq     L90F4
         ldy     copy_when       ; Flags
         lda     num_run_list_entries
-        jsr     assign_entry_data
         inc     selector_list + kSelectorListNumRunListOffset
-        copy16  selector_menu_addr, @addr
-        @addr := *+1
-        inc     SELF_MODIFIED
+        jsr     assign_entry_data
         jsr     write_file
         bpl     L90D0
         jmp     L9016
@@ -282,9 +277,6 @@ l8:     lda     selected_index
 l9:     ldx     num_run_list_entries
         inc     num_run_list_entries
         inc     selector_list + kSelectorListNumRunListOffset
-        copy16  selector_menu_addr, @addr
-        @addr := *+1
-        inc     SELF_MODIFIED
         txa
         jmp     l14
 
@@ -1061,48 +1053,33 @@ entries_flag_table:
         pha
 
         ptr_file = $06          ; pointer into file buffer
-        ptr_res = $08           ; pointer into resource data
 
-        ;; Assign name in `path_buf1` to both file and resource
+        ;; Assign name in `path_buf1` to file
         lda     index
         jsr     get_file_entry_addr
         stax    ptr_file
-        lda     index
-        jsr     get_resource_entry_addr
-        stax    ptr_res
         ldy     path_buf1
 :       lda     path_buf1,y
         sta     (ptr_file),y
-        sta     (ptr_res),y
         dey
         bpl     :-
 
-        ;; Assign flags to both file and resource
+        ;; Assign flags to file
         ldy     #kSelectorEntryFlagsOffset
         pla
         sta     (ptr_file),y
-        sta     (ptr_res),y
 
-        ;; Assign path in `path_buf0` to both file and resource
+        ;; Assign path in `path_buf0` to file
         lda     index
         jsr     get_file_path_addr
         stax    ptr_file
-        lda     index
-        jsr     get_resource_path_addr
-        stax    ptr_res
         ldy     path_buf0
 :       lda     path_buf0,y
         sta     (ptr_file),y
-        sta     (ptr_res),y
         dey
         bpl     :-
 
-        ;; This will change the menu label, so re-initialize the
-        ;; menu so that the new width can be pre-computed. That
-        ;; will un-hilite the Selector menu, so re-hilite it so
-        ;; it un-hilites correctly when finally dismissed.
-        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
-        jsr     main::toggle_menu_hilite
+        jsr     update_menu_resources
 
         rts
 
@@ -1155,13 +1132,12 @@ index:  .byte   0
 ;;; ============================================================
 ;;; Removes the specified entry, shifting later entries down as
 ;;; needed. Writes the file when done. Handles both the file
-;;; buffer and resource data (used for menus, etc.
+;;; buffer and resource data (used for menus, etc.)
 ;;; Inputs: Entry in A
 
 .proc remove_entry
         ptr1 := $06
         ptr2 := $08
-
 
         sta     index
         cmp     #8
@@ -1179,9 +1155,7 @@ run_list:
 finish:
         dec     selector_list + kSelectorListNumRunListOffset
         dec     num_run_list_entries
-        copy16  selector_menu_addr, @addr
-        @addr := *+1
-        dec     SELF_MODIFIED
+        jsr     update_menu_resources
         jmp     write_file
 
 loop:   lda     index
@@ -1206,42 +1180,9 @@ loop:   lda     index
         lda     (ptr2),y
         sta     (ptr1),y
 
-        ;; Copy entry (in resource data) down by one
-        lda     index
-        jsr     get_resource_entry_addr
-        stax    ptr1
-        add16   ptr1, #kSelectorListNameLength, ptr2
-
-        ldy     #0
-        lda     (ptr2),y
-        tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
-        dey
-        bpl     :-
-
-        ;; And flags
-        ldy     #kSelectorEntryFlagsOffset
-        lda     (ptr2),y
-        sta     (ptr1),y
-
         ;; Copy path (in file buffer) down by one
         lda     index
         jsr     get_file_path_addr
-        stax    ptr1
-        add16   ptr1, #kSelectorListPathLength, ptr2
-
-        ldy     #0
-        lda     (ptr2),y
-        tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
-        dey
-        bpl     :-
-
-        ;; Copy path (in resource data) down by one
-        lda     index
-        jsr     get_resource_path_addr
         stax    ptr1
         add16   ptr1, #kSelectorListPathLength, ptr2
 
@@ -1320,6 +1261,78 @@ L9B84:  lda     index
 
 index:  .byte   0
 .endproc
+
+;;; ============================================================
+;;; Update menu from the file data, following an add/edit/remove.
+
+.proc update_menu_resources
+
+        ptr_file = $06          ; pointer into file buffer
+        ptr_res = $08           ; pointer into resource data
+
+        lda     selector_list + kSelectorListNumRunListOffset
+        sta     index
+
+loop:   dec     index
+        bmi     finish
+
+        ;; Name
+        lda     index
+        jsr     get_file_entry_addr
+        stax    ptr_file
+        lda     index
+        jsr     get_resource_entry_addr
+        stax    ptr_res
+        jsr     copy_string
+
+        ;; Flags
+        ldy     #kSelectorEntryFlagsOffset
+        lda     (ptr_file),y
+        sta     (ptr_res),y
+
+        ;; Path
+        lda     index
+        jsr     get_file_path_addr
+        stax    ptr_file
+        lda     index
+        jsr     get_resource_path_addr
+        stax    ptr_res
+        jsr     copy_string
+
+        jmp     loop
+
+finish:
+        ;; Menu size
+        lda     selector_list + kSelectorListNumRunListOffset
+        clc
+        adc     #kSelectorMenuMinItems
+        sta     selector_menu
+
+        ;; Re-initialize the menu so that new widths can be pre-computed.
+        ;; That will un-hilite the Selector menu, so re-hilite it so
+        ;; it un-hilites correctly when finally dismissed.
+
+        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
+        jsr     main::toggle_menu_hilite
+
+        rts
+
+;;; Copy the string at `ptr_file` to `ptr_res`.
+.proc copy_string
+        ldy     #0
+        lda     (ptr_file),y
+        tay
+:       lda     (ptr_file),y
+        sta     (ptr_res),y
+        dey
+        bpl     :-
+
+        rts
+.endproc
+
+index:  .byte   0
+.endproc
+
 
 ;;; ============================================================
 ;;; Entry name address in the file buffer

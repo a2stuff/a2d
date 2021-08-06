@@ -829,9 +829,6 @@ desktop_icon_usage_table:
 
 ;;; ============================================================
 
-selector_menu_addr:
-        .addr   selector_menu
-
         ;; Buffer for Run List entries
         kMaxRunListEntries = 8
 
@@ -1065,8 +1062,10 @@ startup_slot_table:
 
 ;;; ============================================================
 
+kSelectorMenuMinItems = 5
+
 selector_menu:
-        DEFINE_MENU 5
+        DEFINE_MENU kSelectorMenuMinItems
 @items: DEFINE_MENU_ITEM label_add
         DEFINE_MENU_ITEM label_edit
         DEFINE_MENU_ITEM label_del
