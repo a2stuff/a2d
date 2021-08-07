@@ -931,13 +931,15 @@ with_path:
         cmp     #IconType::basic
         bne     :+
         jsr     check_basic_system ; Only launch if BASIC.SYSTEM is found
-        beq     launch
+        jeq     launch
         lda     #kErrBasicSysNotFound
         jmp     ShowAlert
 
 :       cmp     #IconType::binary
         bne     :+
-        jsr     ModifierDown    ; Only launch if a button is down
+        lda     menu_click_params::menu_id ; From a menu (File, Selector)
+        bne     launch
+        jsr     ModifierDown    ; Otherwise, only launch if a button is down
         bmi     launch
         jsr     set_cursor_pointer
         rts
@@ -4028,9 +4030,6 @@ ctl:    .byte   0
         bcs     :+
         rts
 :
-        ;; Subsequent action was not triggered by a menu, so hilite is not
-        ;; necessary. https://github.com/a2stuff/a2d/issues/139
-        copy    #$FF, menu_click_params::menu_id
 
         jsr     detect_double_click
         sta     double_click_flag
