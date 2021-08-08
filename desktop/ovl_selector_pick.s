@@ -1420,7 +1420,7 @@ filename_buffer := $1C00
         DEFINE_CREATE_PARAMS create_params, filename_buffer, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename_buffer, io_buf
         DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize
-        DEFINE_CLOSE_PARAMS flush_close_params
+        DEFINE_CLOSE_PARAMS close_params
 
 .proc write_file_to_original_prefix
         param_call CopyDeskTopOriginalPrefix, filename_buffer
@@ -1451,7 +1451,7 @@ exit:   rts
 
 write:  lda     open_params::ref_num
         sta     write_params::ref_num
-        sta     flush_close_params::ref_num
+        sta     close_params::ref_num
 
 retry_write:
         MLI_RELAY_CALL WRITE, write_params
@@ -1463,8 +1463,7 @@ retry_write:
         beq     retry_write
         jmp     exit
 
-close:  MLI_RELAY_CALL FLUSH, flush_close_params ; TODO: is FLUSH necessary?
-        MLI_RELAY_CALL CLOSE, flush_close_params
+close:  MLI_RELAY_CALL CLOSE, close_params
         rts
 .endproc
 
