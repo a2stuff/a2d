@@ -1604,7 +1604,6 @@ start:  jsr     reset_main_grafport
         jsr     set_cursor_watch
 
         ;; Get current prefix
-        ;; TODO: Case adjust this?
         MLI_RELAY_CALL GET_PREFIX, get_prefix_params
 
         ;; Find DA name
@@ -4771,9 +4770,6 @@ old_selected_window_id:
         bcc     :+
         bne     start
 :       return  #0
-
-        ;; TODO: This looks like a division routine ???
-        ;; n / d => A / 256 ???
 
 start:  sta     aa
         stx     xx+1
@@ -8930,8 +8926,7 @@ horiz:  lda     #0              ; == Point::xcoord
         lsr16   delta     ; / 4
         lsr16   delta     ; which should bring it into single byte range
 
-        lda     delta           ; scroll range / 4
-        tay                     ; TODO: Just LDY ???
+        ldy     delta           ; scroll range / 4
         pla                     ; thumbmax
         tax
         lda     updatethumb_thumbpos ; thumbpos
