@@ -1418,7 +1418,14 @@ index:  .byte   0
 filename_buffer := $1C00
 
         DEFINE_CREATE_PARAMS create_params, filename_buffer, ACCESS_DEFAULT, $F1
-        DEFINE_OPEN_PARAMS open_params, filename_buffer, io_buf
+        DEFINE_OPEN_PARAMS open_origpfx_params, filename_buffer, io_buf
+
+        DEFINE_OPEN_PARAMS open_curpfx_params, filename, io_buf
+
+filename:
+        PASCAL_STRING kFilenameSelectorList
+
+        DEFINE_READ_PARAMS read_params, selector_list, kSelectorListBufSize
         DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS close_params
 
@@ -1441,15 +1448,15 @@ filename_buffer := $1C00
 
 retry_open:
         MLI_RELAY_CALL CREATE, create_params
-        MLI_RELAY_CALL OPEN, open_params
+        MLI_RELAY_CALL OPEN, open_origpfx_params
         beq     write
         lda     #kWarningMsgInsertSystemDisk
         jsr     show_warning_dialog
         beq     retry_open
 
-exit:   rts
+        rts
 
-write:  lda     open_params::ref_num
+write:  lda     open_origpfx_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
 
@@ -1461,7 +1468,6 @@ retry_write:
         pla
         jsr     JUMP_TABLE_SHOW_ALERT
         beq     retry_write
-        jmp     exit
 
 close:  MLI_RELAY_CALL CLOSE, close_params
         rts
@@ -1470,52 +1476,47 @@ close:  MLI_RELAY_CALL CLOSE, close_params
 ;;; ============================================================
 ;;; Read SELECTOR.LIST file (using current prefix)
 
-        DEFINE_OPEN_PARAMS open_params2, filename, io_buf
-
-filename:
-        PASCAL_STRING kFilenameSelectorList
-
-        DEFINE_READ_PARAMS read_params2, selector_list, kSelectorListBufSize
-        DEFINE_WRITE_PARAMS write_params2, selector_list, kSelectorListBufSize
-        DEFINE_CLOSE_PARAMS close_params2
-
 .proc read_file
-retry:  MLI_RELAY_CALL OPEN, open_params2
+retry:  MLI_RELAY_CALL OPEN, open_curpfx_params
         beq     read
         lda     #kWarningMsgInsertSystemDisk
         jsr     show_warning_dialog
         beq     retry
         return  #$FF
 
-read:   lda     open_params2::ref_num
-        sta     read_params2::ref_num
-        MLI_RELAY_CALL READ, read_params2
-        bne     :+              ; TODO: Close even if read fails?
-        MLI_RELAY_CALL CLOSE, close_params2
-:       rts
+read:   lda     open_curpfx_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        MLI_RELAY_CALL READ, read_params
+        php
+        pha
+        MLI_RELAY_CALL CLOSE, close_params
+        pla
+        plp
+        rts
 .endproc
 
 ;;; ============================================================
 ;;; Write SELECTOR.LIST file (using current prefix)
 
 .proc write_file
-        MLI_RELAY_CALL OPEN, open_params2
+        MLI_RELAY_CALL OPEN, open_curpfx_params
         beq     write
         lda     #kWarningMsgInsertSystemDisk
         jsr     show_warning_dialog
         beq     write_file
         return  #$FF
 
-write:  lda     open_params2::ref_num
-        sta     write_params2::ref_num
-:       MLI_RELAY_CALL WRITE, write_params2
+write:  lda     open_curpfx_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+:       MLI_RELAY_CALL WRITE, write_params
         beq     close
         jsr     JUMP_TABLE_SHOW_ALERT
         beq     :-
-        jmp     done            ; TODO: Close even if no retry?
 
-close:  MLI_RELAY_CALL CLOSE, close_params2
-done:   rts
+close:  MLI_RELAY_CALL CLOSE, close_params
+        rts
 .endproc
 
 ;;; ============================================================
