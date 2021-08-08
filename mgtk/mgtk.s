@@ -10385,7 +10385,7 @@ rect       .tag MGTK::Rect
 :       lda     winrect - kOffset,y
         sta     (params_addr),y
         dey
-        bpl     :-
+        bne     :-              ; leave window_id alone
         rts
 .endproc
 
