@@ -87,7 +87,8 @@ L183F:  sta     BITMAP+1,x
         jmp     auxlc__start
 
 ;;; This mimics the original behavior - just hang if the load fails.
-;;; TODO: Do something better here, e.g. ProDOS QUIT.
+;;; Note that a ProDOS QUIT will likely fail since the installed
+;;; routine will try to reload DeskTop.
 fail:   jmp     fail
 
 ;;; ============================================================
