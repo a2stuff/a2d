@@ -1959,7 +1959,11 @@ check_type:
         cmp     #FT_BASIC
         bne     not_basic
         jsr     check_basic_system
-        jmp     check_path
+        jeq     check_path
+
+        lda     #AlertID::basic_system_not_found
+        jsr     ShowAlert
+        jmp     clear_selected_index
 
 not_basic:
         cmp     #FT_BINARY
@@ -1968,6 +1972,10 @@ not_basic:
         beq     check_path
         cmp     #FT_S16
         beq     check_path
+
+        jsr     check_basis_system ; Is fallback BASIS.SYSTEM present?
+        beq     check_path
+
         ;; Don't know how to invoke
         lda     #AlertID::selector_unable_to_run
         jsr     ShowAlert
@@ -2050,12 +2058,20 @@ check_path:
         scratch_buf := $1C00
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_bs_params, scratch_buf
 
-.proc check_basic_system
+.proc check_basix_system_impl
+        launch_path := INVOKER_PREFIX
         path_buf := $1C00
 
-        ;; Find last '/'
-start:  ldx     INVOKER_PREFIX
-:       lda     INVOKER_PREFIX,x
+basic:  lda     #'C'            ; "BASI?" -> "BASIC"
+        bne     start           ; always
+
+basis:  lda     #'S'            ; "BASI?" -> "BASIS"
+        ;; fall through
+
+start:  sta     str_basix_system + kBSOffset
+
+        ldx     launch_path
+:       lda     launch_path,x
         cmp     #'/'
         beq     :+
         dex
@@ -2065,7 +2081,7 @@ start:  ldx     INVOKER_PREFIX
 :       dex
         stx     len
         stx     path_buf
-L9D78:  lda     INVOKER_PREFIX,x
+L9D78:  lda     launch_path,x
         sta     path_buf,x
         dex
         bne     L9D78
@@ -2077,9 +2093,9 @@ L9D8C:  ldx     path_buf
         ldy     #$00
 L9D91:  inx
         iny
-        lda     str_basic_system,y
+        lda     str_basix_system,y
         sta     path_buf,x
-        cpy     str_basic_system
+        cpy     str_basix_system
         bne     L9D91
         stx     path_buf
         MLI_CALL GET_FILE_INFO, get_file_info_bs_params
@@ -2092,13 +2108,8 @@ L9DB0:  lda     path_buf,x
         beq     L9DC8
         dex
         bne     L9DB0
-L9DBA:  lda     #AlertID::basic_system_not_found
-        jsr     ShowAlert
-        jsr     clear_selected_index
-        jsr     set_pointer_cursor
-        pla
-        pla
-        rts
+
+L9DBA:  return  #$FF            ; non-zero is failure
 
 L9DC8:  cpx     #$01
         beq     L9DBA
@@ -2109,10 +2120,13 @@ L9DC8:  cpx     #$01
 
 len:    .byte   0
 
-str_basic_system:
-        PASCAL_STRING "Basic.system" ; do not localize
+kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
+str_basix_system:
+        PASCAL_STRING "BASIx.SYSTEM" ; do not localize
 
 .endproc
+        check_basic_system := check_basix_system_impl::basic
+        check_basis_system := check_basix_system_impl::basis
 
 ;;; ============================================================
 ;;; Uppercase a string

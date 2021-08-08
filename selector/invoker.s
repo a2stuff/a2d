@@ -19,13 +19,17 @@ start:
 prefix_length:
         .byte   0
 
+;;; High bit set if an interpreter is being invoked, and
+;;; the start protocol must be followed.
+interpreter_flag:
+        .byte   0
+
         DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
         DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI - PRODOS_SYS_START
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
 
-        .byte   0,0,0           ; Unused
-
+kBSOffset       = 5             ; Offset of 'C' in BASIC.SYSTEM
 str_basic_system:
         PASCAL_STRING "BASIC.SYSTEM" ; do not localize
 
@@ -71,9 +75,12 @@ begin:  lda     ROMIN2
         jmp     exit
 :       lda     get_info_params::file_type
 
+
 ;;; ProDOS 16 System file (S16) - invoke via QUIT call
         cmp     #FT_S16
         bne     not_s16
+
+        jsr     update_bitmap
         jmp     quit_call
 not_s16:
 
@@ -101,7 +108,8 @@ not_binary:
 ;;; BASIC file (BAS) - invoke interpreter as path instead.
 ;;; (If not found, ProDOS QUIT will be invoked.)
         cmp     #FT_BASIC       ; BASIC?
-        bne     load_target
+        bne     not_basic
+
         copy16  #str_basic_system, open_params::pathname
 
         ;; Try opening interpreter with current prefix.
@@ -124,13 +132,30 @@ update_prefix:                  ; Update prefix and try again.
         jmp     check_for_interpreter
 
 found_interpreter:
+        copy    #$80, interpreter_flag
         lda     prefix_length
         sta     INVOKER_PREFIX
         jmp     do_read
 
 not_basic:
 
-;;; TODO: Use BASIS.SYSTEM as fallback if present.
+;;; ProDOS 8 System file (SYS) - load at default $2000
+        cmp     #FT_SYSTEM
+        beq     load_target
+
+;;; Use BASIS.SYSTEM as fallback if present.
+;;; (If not found, ProDOS QUIT will be invoked.)
+        copy    #'S', str_basic_system + kBSOffset ; "BASIC" -> "BASIS"
+        copy16  #str_basic_system, open_params::pathname
+        jmp     check_for_interpreter
+
+;;; TODO: ProDOS 2.4's Bitsy Bye invokes BASIS.SYSTEM with:
+;;; * [x] ProDOS prefix set to directory containing file.
+;;; * [x] Path buffer in BASIS.SYSTEM set to filename.
+;;; * [ ] $280 set to name of root volume
+;;; * [ ] $380 set to path of launched SYS (i.e. path to BASIS.SYSTEM)
+;;; Not all should be necessary, but not doing so may lead to future
+;;; compatibility issues. Those addresses conflict with this code.
 
 ;;; ============================================================
 ;;; Load target at given address
@@ -145,9 +170,11 @@ do_read:
         bne     exit
         MLI_CALL CLOSE, close_params
         bne     exit
+
+        ;; If interpreter, set prefix and copy filename to interpreter buffer.
         lda     get_info_params::file_type
-        cmp     #FT_BASIC
-        bne     update_stack
+        bit     interpreter_flag
+        bpl     update_stack
 
         jsr     set_prefix
         ldy     INVOKER_FILENAME
@@ -162,22 +189,22 @@ update_stack:
         pha
         lda     #<(quit_call-1)
         pha
-        jsr     update_bitmap   ; WTF?
-
-        lda     #%00000001      ; ProDOS global page
-        sta     BITMAP+BITMAP_SIZE-1
-        lda     #%11001111      ; ZP, Stack, Text Page 1
-        sta     BITMAP
+        jsr     update_bitmap
 
         jmp_addr := *+1
         jmp     PRODOS_SYS_START
 
-update_bitmap:
-        rts                     ; no-op?
-
 quit_call:
-        jsr     update_bitmap
         MLI_CALL QUIT, quit_params
+
+        ;; Update system bitmap
+update_bitmap:
+        lda     #%00000001      ; ProDOS global page
+        sta     BITMAP+BITMAP_SIZE-1
+        lda     #%11001111      ; ZP, Stack, Text Page 1
+        sta     BITMAP
+        ;; fall through
+
 exit:   rts
 
 .endproc ; invoker
