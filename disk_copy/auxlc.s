@@ -6,7 +6,6 @@
 
         RESOURCE_FILE "auxlc.res"
 
-
 .proc auxlc
         .org $D000
 
@@ -32,16 +31,16 @@ kShortcutReadDisk = res_char_button_read_drive_shortcut
 ;;; number of alert messages
 kNumAlertMessages = 11
 
-kAlertMsgInsertSource           = 0
-kAlertMsgInsertDestination      = 1
-kAlertMsgConfirmErase           = 2
-kAlertMsgDestinationFormatFail  = 3
-kAlertMsgFormatError            = 4
-kAlertMsgDestinationProtected   = 5
-kAlertMsgConfirmEraseSlotDrive  = 6
-kAlertMsgCopySuccessful         = 7
-kAlertMsgCopyFailure            = 8
-kAlertMsgInsertSourceOrCancel   = 9
+kAlertMsgInsertSource           = 0 ; No bell (see `maybe_bell`)
+kAlertMsgInsertDestination      = 1 ; No bell
+kAlertMsgConfirmErase           = 2 ; No bell, X,Y = pointer to volume name
+kAlertMsgDestinationFormatFail  = 3 ; Bell
+kAlertMsgFormatError            = 4 ; Bell
+kAlertMsgDestinationProtected   = 5 ; Bell
+kAlertMsgConfirmEraseSlotDrive  = 6 ; No bell, X = unit number
+kAlertMsgCopySuccessful         = 7 ; No bell
+kAlertMsgCopyFailure            = 8 ; No bell
+kAlertMsgInsertSourceOrCancel   = 9 ; No bell
 kAlertMsgInsertDestionationOrCancel = 10
 
 kAlertResultTryAgain    = 0
@@ -738,22 +737,21 @@ LD817:  lda     main__on_line_buffer2
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         and     #$F0
-        tax
-        lda     #7              ; Confirm Erase (with extra spaces???)
-        jmp     LD83C
+        tax                     ; slot/drive
+        lda     #kAlertMsgConfirmEraseSlotDrive
+        jmp     show
 
 LD82C:  sta     main__on_line_buffer2
         param_call adjust_case, main__on_line_buffer2
 
-        ldx     #$00
-        ldy     #$13            ; ???
+        ldxy    #main__on_line_buffer2
         lda     #kAlertMsgConfirmErase
-LD83C:  jsr     show_alert_dialog
+show:   jsr     show_alert_dialog
         cmp     #kAlertResultCancel
-        beq     LD847
+        beq     :+              ; Cancel
         cmp     #kAlertResultYes
-        beq     LD84A
-LD847:  jmp     init_dialog
+        beq     LD84A           ; Yes
+:       jmp     init_dialog     ; No
 
 LD84A:  lda     disk_copy_flag
         bne     LD852
@@ -2579,53 +2577,46 @@ show_alert_dialog:
 
         lda     message_num
         jsr     maybe_bell
+
         ldy     yarg
         ldx     xarg
         lda     message_num
-        bne     LEC1F
+    IF_EQ
         cpx     #$00
-        beq     LEC5E
+        beq     find_in_alert_table
         jsr     LF185
-        beq     LEC5E
-        lda     #$0B
-        bne     LEC5E           ; always
+        beq     find_in_alert_table
+        lda     #$0B            ; ???
+        bne     find_in_alert_table ; always
+    END_IF
 
-LEC1F:  cmp     #$01
-        bne     LEC34
+        cmp     #kAlertMsgInsertDestination
+    IF_EQ
         cpx     #$00
-        beq     LEC5E
+        beq     find_in_alert_table
         jsr     LF185
-        beq     LEC30
+        beq     :+
         lda     #$0C
-        bne     LEC5E           ; always
+        bne     find_in_alert_table ; always
+:       lda     #$01
+        bne     find_in_alert_table ; always
+    END_IF
 
-LEC30:  lda     #$01
-        bne     LEC5E           ; always
-
-LEC34:  cmp     #$02
-        bne     LEC3F
+        cmp     #kAlertMsgConfirmErase
+    IF_EQ
         jsr     append_to_confirm_erase
-        lda     #$02
-        bne     LEC5E           ; always
+        lda     #kAlertMsgConfirmErase
+        bne     find_in_alert_table ; always
+    END_IF
 
-LEC3F:  cmp     #$06            ; duplicate
-        bne     :+
-        jsr     append_to_confirm_erase
-        lda     #$06
-        bne     LEC5E           ; always
-
-:       cmp     #$07
-        bne     LEC55
+        cmp     #kAlertMsgConfirmEraseSlotDrive
+    IF_EQ
         jsr     set_confirm_erase_sd_slot_drive
-        lda     #$07
-        bne     LEC5E           ; always
+        lda     #kAlertMsgConfirmEraseSlotDrive
+        bne     find_in_alert_table ; always
+    END_IF
 
-LEC55:  cmp     #$08            ; TODO: Unused duplicate?
-        bne     LEC5E
-        jsr     set_confirm_erase_sd_slot_drive
-        lda     #$08
-
-LEC5E:
+find_in_alert_table:
 
         ldy     #0
 :       cmp     alert_table,y
@@ -2884,6 +2875,7 @@ finish: pha
 .endproc
 
 ;;; ============================================================
+;;; Inputs: X,Y = volume name
 
 .proc append_to_confirm_erase
         ptr := $06
@@ -2913,6 +2905,7 @@ finish: pha
 .endproc
 
 ;;; ============================================================
+;;; Inputs: X = %DSSSxxxx
 
 .proc set_confirm_erase_sd_slot_drive
         txa
@@ -2970,9 +2963,10 @@ done:   return  #$00
 .endproc
 
 .proc maybe_bell
-        cmp     #$03
+        ;; TODO: Use a table of flags instead of this range test
+        cmp     #kAlertMsgDestinationFormatFail
         bcc     done
-        cmp     #$06
+        cmp     #kAlertMsgConfirmEraseSlotDrive
         bcs     done
         jsr     Bell
 done:   rts
