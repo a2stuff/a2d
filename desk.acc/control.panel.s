@@ -1051,8 +1051,12 @@ next:   dex
         inc     scalemouse_params::y_exponent
         END_IF
 
-        ;; TODO: This warps the cursor position; can this be fixed?
         MGTK_CALL MGTK::ScaleMouse, scalemouse_params
+
+        ;; Set the cursor to the same position (c/o click event),
+        ;; to avoid it warping due to the scale change.
+        copy    #MGTK::EventKind::no_event, event_params::kind
+        MGTK_CALL MGTK::PostEvent, event_params
 
         ;; --------------------------------------------------
         ;; Update the UI
