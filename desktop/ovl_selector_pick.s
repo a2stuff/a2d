@@ -586,9 +586,7 @@ xcoord: .byte   0
         inc16   text_addr ; point past length byte
         MGTK_RELAY_CALL MGTK::TextWidth, text_params
 
-        kWidth = 350
-
-        sub16   #kWidth, text_width, pos_dialog_title::xcoord
+        sub16   #winfo_entry_picker::kWidth, text_width, pos_dialog_title::xcoord
         lsr16   pos_dialog_title::xcoord ; /= 2
         MGTK_RELAY_CALL MGTK::MoveTo, pos_dialog_title
         MGTK_RELAY_CALL MGTK::DrawText, text_params

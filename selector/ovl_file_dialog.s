@@ -1529,35 +1529,25 @@ draw_change_drive_button_label:
 .endproc
 
 ;;; ============================================================
-;;; TODO: Use smarter centering logic
 
 .proc draw_title_centered
-        ptr := $06
-        params := $06
+        text_params     := $6
+        text_addr       := text_params + 0
+        text_length     := text_params + 2
+        text_width      := text_params + 3
 
-        stax    ptr
+        stax    text_addr       ; input is length-prefixed string
         ldy     #0
-        lda     (ptr),y
-        sta     $08
-        inc16   params
-        MGTK_CALL MGTK::TextWidth, params
-        lsr16   $09
-        lda     #>winfo_file_dialog::kWidth
-        sta     l1
-        lda     #<winfo_file_dialog::kWidth
-        lsr     l1
-        ror     a
-        sec
-        sbc     $09
-        sta     file_dialog_title_pos::xcoord
-        lda     l1
-        sbc     $0A
-        sta     file_dialog_title_pos::xcoord+1
-        MGTK_CALL MGTK::MoveTo, file_dialog_title_pos
-        MGTK_CALL MGTK::DrawText, params
-        rts
+        lda     (text_addr),y
+        sta     text_length
+        inc16   text_addr ; point past length byte
+        MGTK_CALL MGTK::TextWidth, text_params
 
-l1:     .byte   0
+        sub16   #winfo_file_dialog::kWidth, text_width, file_dialog_title_pos::xcoord
+        lsr16   file_dialog_title_pos::xcoord ; /= 2
+        MGTK_CALL MGTK::MoveTo, file_dialog_title_pos::xcoord
+        MGTK_CALL MGTK::DrawText, text_params
+        rts
 .endproc
 
 ;;; ============================================================
