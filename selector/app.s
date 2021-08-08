@@ -2058,6 +2058,10 @@ check_path:
         scratch_buf := $1C00
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_bs_params, scratch_buf
 
+kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
+str_basix_system:
+        PASCAL_STRING "BASIx.SYSTEM" ; do not localize
+
 .proc check_basix_system_impl
         launch_path := INVOKER_PREFIX
         path_buf := $1C00
@@ -2119,10 +2123,6 @@ L9DC8:  cpx     #$01
         jmp     L9D8C
 
 len:    .byte   0
-
-kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
-str_basix_system:
-        PASCAL_STRING "BASIx.SYSTEM" ; do not localize
 
 .endproc
         check_basic_system := check_basix_system_impl::basic
