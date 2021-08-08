@@ -30,7 +30,7 @@ kShortcutReadDisk = res_char_button_read_drive_shortcut
 ;;; ============================================================
 
 ;;; number of alert messages
-kNumErrorMessages = 11
+kNumAlertMessages = 11
 
 kAlertMsgInsertSource           = 0
 kAlertMsgInsertDestination      = 1
@@ -2506,7 +2506,7 @@ alert_table:
         .byte   kAlertMsgCopyFailure
         .byte   kAlertMsgInsertSourceOrCancel
         .byte   kAlertMsgInsertDestionationOrCancel
-        ASSERT_TABLE_SIZE alert_table, auxlc::kNumErrorMessages
+        ASSERT_TABLE_SIZE alert_table, auxlc::kNumAlertMessages
 
 message_table:
         .addr   str_insert_source
@@ -2520,7 +2520,7 @@ message_table:
         .addr   str_copy_fail
         .addr   str_insert_source_or_cancel ; TODO: How is this used?
         .addr   str_insert_dest_or_cancel   ; TODO: How is this used?
-        ASSERT_ADDRESS_TABLE_SIZE message_table, auxlc::kNumErrorMessages
+        ASSERT_ADDRESS_TABLE_SIZE message_table, auxlc::kNumAlertMessages
 
         ;; $C0 (%11xxxxxx) = Cancel + Ok
         ;; $81 (%10xxxxx1) = Cancel + Yes + No
@@ -2546,7 +2546,7 @@ alert_options_table:
         .byte   MessageFlags::Ok          ; kAlertMsgCopyFailure
         .byte   MessageFlags::Ok          ; kAlertMsgInsertSourceOrCancel
         .byte   MessageFlags::Ok          ; kAlertMsgInsertDestionationOrCancel
-        ASSERT_TABLE_SIZE alert_options_table, auxlc::kNumErrorMessages
+        ASSERT_TABLE_SIZE alert_options_table, auxlc::kNumAlertMessages
 
 message_num:
         .byte   0
@@ -2631,7 +2631,7 @@ LEC5E:
 :       cmp     alert_table,y
         beq     :+
         iny
-        cpy     #30             ; TODO: Should be kNumErrorMessages ???
+        cpy     #kNumAlertMessages
         bne     :-
 
         ldy     #0              ; default

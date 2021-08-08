@@ -100,10 +100,10 @@ str_insert_system_disk:
 str_basic_system_not_found:
         PASCAL_STRING res_string_alert_basic_system_not_found
 
-kNumErrorMessages = 8
+kNumAlertMessages = 8
 
 num_error_messages:
-        .byte   kNumErrorMessages
+        .byte   kNumAlertMessages
 
 alert_table:
         .byte   AlertID::selector_unable_to_run
@@ -114,7 +114,7 @@ alert_table:
         .byte   AlertID::file_not_found
         .byte   AlertID::insert_system_disk
         .byte   AlertID::basic_system_not_found
-        ASSERT_TABLE_SIZE alert_table, kNumErrorMessages
+        ASSERT_TABLE_SIZE alert_table, kNumAlertMessages
 
 message_table:
         .addr   str_selector_unable_to_run
@@ -125,7 +125,7 @@ message_table:
         .addr   str_file_not_found
         .addr   str_insert_system_disk
         .addr   str_basic_system_not_found
-        ASSERT_ADDRESS_TABLE_SIZE message_table, kNumErrorMessages
+        ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlertMessages
 
         ;; $C0 (%11xxxxxx) = Cancel + Ok
         ;; $81 (%10xxxxx1) = Cancel + Yes + No
@@ -148,7 +148,7 @@ alert_options_table:
         .byte   MessageFlags::Ok
         .byte   MessageFlags::TryAgainCancel
         .byte   MessageFlags::Ok
-        ASSERT_TABLE_SIZE alert_options_table, kNumErrorMessages
+        ASSERT_TABLE_SIZE alert_options_table, kNumAlertMessages
 
 .proc ShowAlertImpl
         pha
