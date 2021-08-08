@@ -212,7 +212,8 @@ kDialogLeft     = (::kScreenWidth - kDialogWidth)/2
 kDialogTop      = (::kScreenHeight - kDialogHeight)/2
 
 .params winfo_dialog
-window_id:      .byte   1
+        kWindowId = 1
+window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -252,7 +253,8 @@ kListBoxWidth = 150
 kListBoxHeight = 70
 
 .params winfo_drive_select
-window_id:      .byte   $02
+        kWindowId = 2
+window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -408,9 +410,10 @@ LD429:  .byte   0
 
         DEFINE_RECT rect_D42A, 18, 20, kDialogWidth-10, 88
 
-        ;; Include 1px borders + extra on right for scrollbar
-        ;; TODO: Use GetWinFrameRect to query this.
-        DEFINE_RECT rect_erase_listbox, kListBoxOffsetLeft - 1, kListBoxOffsetTop - 1, kListBoxOffsetLeft + kListBoxWidth + 25, kListBoxOffsetTop + kListBoxHeight + 1
+.params win_frame_rect_params
+id:     .byte   winfo_drive_select::kWindowId
+rect:   .tag    MGTK::Rect
+.endparams
 
 LD43A:  .res 18, 0
 LD44C:  .byte   0
@@ -623,8 +626,15 @@ LD6F9:  lda     current_drive_selection
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_upper
+
+        MGTK_RELAY_CALL2 MGTK::GetWinFrameRect, win_frame_rect_params
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_listbox
+        sub16   win_frame_rect_params::rect+MGTK::Rect::x1, winfo_dialog::viewloc::xcoord, win_frame_rect_params::rect+MGTK::Rect::x1
+        sub16   win_frame_rect_params::rect+MGTK::Rect::y1, winfo_dialog::viewloc::ycoord, win_frame_rect_params::rect+MGTK::Rect::y1
+        sub16   win_frame_rect_params::rect+MGTK::Rect::x2, winfo_dialog::viewloc::xcoord, win_frame_rect_params::rect+MGTK::Rect::x2
+        sub16   win_frame_rect_params::rect+MGTK::Rect::y2, winfo_dialog::viewloc::ycoord, win_frame_rect_params::rect+MGTK::Rect::y2
+        MGTK_RELAY_CALL2 MGTK::PaintRect, win_frame_rect_params::rect
+
 LD734:  ldx     #0
         lda     #kAlertMsgInsertSource
         jsr     show_alert_dialog
