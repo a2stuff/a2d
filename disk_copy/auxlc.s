@@ -31,8 +31,8 @@ kShortcutReadDisk = res_char_button_read_drive_shortcut
 ;;; number of alert messages
 kNumAlertMessages = 11
 
-kAlertMsgInsertSource           = 0 ; No bell (see `maybe_bell`)
-kAlertMsgInsertDestination      = 1 ; No bell
+kAlertMsgInsertSource           = 0 ; No bell, *
+kAlertMsgInsertDestination      = 1 ; No bell, *
 kAlertMsgConfirmErase           = 2 ; No bell, X,Y = pointer to volume name
 kAlertMsgDestinationFormatFail  = 3 ; Bell
 kAlertMsgFormatError            = 4 ; Bell
@@ -40,8 +40,13 @@ kAlertMsgDestinationProtected   = 5 ; Bell
 kAlertMsgConfirmEraseSlotDrive  = 6 ; No bell, X = unit number
 kAlertMsgCopySuccessful         = 7 ; No bell
 kAlertMsgCopyFailure            = 8 ; No bell
-kAlertMsgInsertSourceOrCancel   = 9 ; No bell
-kAlertMsgInsertDestionationOrCancel = 10
+kAlertMsgInsertSourceOrCancel   = 9 ; No bell, *
+kAlertMsgInsertDestionationOrCancel = 10 ; No bell, *
+;;; "Bell" or "No bell" determined by the `maybe_bell` proc.
+;;; * = the 'InsertXOrCancel' variants are selected automatically when
+;;; InsertX is specified if X flag is non-zero, and the unit number in
+;;; Y identifies a removable volume. In that case, the alert will
+;;; automatically be dismissed when a disk is inserted.
 
 kAlertResultTryAgain    = 0
 kAlertResultOK          = 0
@@ -380,8 +385,8 @@ dest_drive_index:  .byte   0
 
 str_d:  PASCAL_STRING 0         ; do not localize
 str_s:  PASCAL_STRING 0         ; do not localize
-LD41D:  .byte   0
-LD41E:  .byte   0
+unit_num:       .byte   0
+ejectable_flag: .byte   0
 
 ;;; Memory index of block, for memory bitmap lookups
 block_index_div8:               ; block index, divided by 8
@@ -805,6 +810,8 @@ LD8A9:  lda     winfo_dialog::window_id
         lda     source_drive_index
         cmp     dest_drive_index
         bne     LD8DF
+
+        ;; Disk swap
         tax
         lda     drive_unitnum_table,x
         pha
@@ -857,6 +864,8 @@ LD928:  jsr     LE491
         lda     source_drive_index
         cmp     dest_drive_index
         bne     LD8FB
+
+        ;; Disk swap
         tax
         lda     drive_unitnum_table,x
         pha
@@ -2516,8 +2525,8 @@ message_table:
         .addr   str_confirm_erase_sd
         .addr   str_copy_success
         .addr   str_copy_fail
-        .addr   str_insert_source_or_cancel ; TODO: How is this used?
-        .addr   str_insert_dest_or_cancel   ; TODO: How is this used?
+        .addr   str_insert_source_or_cancel
+        .addr   str_insert_dest_or_cancel
         ASSERT_ADDRESS_TABLE_SIZE message_table, auxlc::kNumAlertMessages
 
         ;; $C0 (%11xxxxxx) = Cancel + Ok
@@ -2573,7 +2582,7 @@ show_alert_dialog:
         MGTK_RELAY_CALL2 MGTK::PaintBits, alert_bitmap_params
         MGTK_RELAY_CALL2 MGTK::ShowCursor
 
-        copy    #0, LD41E
+        copy    #0, ejectable_flag
 
         lda     message_num
         jsr     maybe_bell
@@ -2581,24 +2590,25 @@ show_alert_dialog:
         ldy     yarg
         ldx     xarg
         lda     message_num
-    IF_EQ
-        cpx     #$00
+    IF_EQ                       ; kAlertMsgInsertSource
+        .assert kAlertMsgInsertSource = 0, error, "enum mismatch"
+        cpx     #0
         beq     find_in_alert_table
-        jsr     LF185
-        beq     find_in_alert_table
-        lda     #$0B            ; ???
+        jsr     is_drive_ejectable
+        beq     find_in_alert_table ; nope, stick with kAlertMsgInsertSource
+        lda     #kAlertMsgInsertSourceOrCancel
         bne     find_in_alert_table ; always
     END_IF
 
         cmp     #kAlertMsgInsertDestination
     IF_EQ
-        cpx     #$00
+        cpx     #0
         beq     find_in_alert_table
-        jsr     LF185
-        beq     :+
-        lda     #$0C
+        jsr     is_drive_ejectable
+        beq     :+              ; nope
+        lda     #kAlertMsgInsertDestionationOrCancel
         bne     find_in_alert_table ; always
-:       lda     #$01
+:       lda     #kAlertMsgInsertDestination
         bne     find_in_alert_table ; always
     END_IF
 
@@ -2635,12 +2645,12 @@ find_in_alert_table:
         tay
         copy    alert_options_table,y, alert_options
 
-        bit     LD41E
-        bpl     LEC8C
+        bit     ejectable_flag
+        bpl     :+
         jmp     draw_prompt
 
         ;; Draw appropriate buttons
-LEC8C:  jsr     set_pen_xor
+:       jsr     set_pen_xor
         bit     alert_options
         bpl     draw_ok_btn
 
@@ -2686,9 +2696,9 @@ draw_prompt:
         ;; Event Loop
 
 event_loop:
-        bit     LD41E
+        bit     ejectable_flag
         bpl     LED45
-        jsr     LF192
+        jsr     wait_for_disk_or_esc
         bne     :+
         jmp     finish_ok
 :       jmp     finish_cancel
@@ -2927,20 +2937,29 @@ finish: pha
 
 ;;; ============================================================
 
-.proc LF185
-        sty     LD41D
+;;; Y = unit number
+.proc is_drive_ejectable
+        sty     unit_num
         tya
         jsr     main__is_drive_removable
         beq     :+
-        sta     LD41E
+        sta     ejectable_flag
 :       rts
 .endproc
 
-.proc LF192
-        lda     LD41D
+;;; ============================================================
+;;; Poll the drive in `unit_num` until a disk is inserted, or
+;;; the Escape key is pressed.
+;;; Output: A = 0 if disk inserted, $80 if Escape pressed
+.proc wait_for_disk_or_esc
+@retry:
+        ;; Poll drive until something is present
+        ;; (either a ProDOS disk or a non-ProDOS disk)
+        lda     unit_num
         sta     main__on_line_params_unit_num
         jsr     main__call_on_line
         beq     done
+
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
         lda     main__on_line_buffer
@@ -2949,18 +2968,22 @@ finish: pha
         lda     main__on_line_buffer+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
+
         jsr     yield_loop
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::key_down
-        bne     LF192
+        bne     @retry
+
         lda     event_key
         cmp     #CHAR_ESCAPE
-        bne     LF192
+        bne     @retry
         return  #$80
 
 done:   return  #$00
 .endproc
+
+;;; ============================================================
 
 .proc maybe_bell
         ;; TODO: Use a table of flags instead of this range test

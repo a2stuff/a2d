@@ -398,7 +398,7 @@ block_count_div8:
 ;;; Check if device is removable.
 ;;; NOTE: Test is flawed, relies on deprecated detection method.
 ;;; Inputs: A=%DSSSnnnn (drive/slot part of unit number)
-;;; Outputs: A=0 if "removable", $80 otherwise
+;;; Outputs: A=$80 if "removable", 0 otherwise
 
 .proc is_drive_removable
         ;; Search in DEVLST for the matching drive/slot combo.
@@ -411,8 +411,7 @@ block_count_div8:
         beq     found
         dex
         bpl     :-
-success:
-        return  #$00
+nope:   return  #$00
 
         ;; Look in the low nibble for device type. (See note)
 found:  lda     DEVLST,x
@@ -426,7 +425,7 @@ found:  lda     DEVLST,x
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
 
         cmp     #$0B
-        bne     success
+        bne     nope
         return  #$80
 
 unit_num:
