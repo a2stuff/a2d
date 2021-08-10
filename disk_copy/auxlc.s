@@ -1682,9 +1682,9 @@ LE182:  lda     #$13
         bne     LE1CD
         dey
         lda     ($06),y
-        jsr     find_devlst_index
+        jsr     find_devlst_index ; carry set on failure
         lda     #ERR_DEVICE_NOT_CONNECTED
-        bcc     LE1CD           ; ???
+        bcc     LE1CD
         jmp     next_device
 
 LE1CC:  rts
@@ -2026,39 +2026,6 @@ tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
-
-        ;; TODO: Identify data
-        .byte   0
-        .byte   0
-
-.params status_params
-param_count:
-        .byte   3
-unit_num:
-        .byte   1
-        .addr   status_buffer
-        .byte   0
-.endparams
-status_unit_num := status_params::unit_num
-
-
-status_buffer:
-        .byte   0
-LE482:  .byte   0
-LE483:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
 
 LE491:  lda     winfo_dialog::window_id
         jsr     set_win_port
@@ -2557,8 +2524,8 @@ alert_options_table:
 
 message_num:
         .byte   0
-xarg:   .byte   0               ; ???
-yarg:   .byte   0               ; ???
+xarg:   .byte   0
+yarg:   .byte   0
 
 show_alert_dialog:
         sta     message_num
