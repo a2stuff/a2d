@@ -24,7 +24,7 @@ HighlightAll    = $05   ; { .byte window_id }
 RemoveAll       = $06   ; { .byte window_id }
 CloseWindow     = $07   ; { .byte window_id }
 GetHighlighted  = $08   ; { .res 127 }
-FindIcon        = $09   ; { .word mousex, .word mousey, .byte result }
+FindIcon        = $09   ; { .word mousex, .word mousey, .byte result, .byte window_id }
 DragHighlighted = $0A   ; { .byte param, .word mousex, .word mousey }
                         ; Input: specific icon being dragged, mouse coords
                         ; Output: 0 = on desktop (no-op)

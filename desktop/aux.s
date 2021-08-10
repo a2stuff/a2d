@@ -1020,61 +1020,80 @@ done:   return  #0
 .proc FindIconImpl
         jmp     start
 
-        coords := $6
+        params     := $06
+        icon_ptr   := $06       ; for `calc_icon_poly` call
+        out_params := $08
+
+.struct FindIconParams
+        coords          .tag MGTK::Point
+        result          .byte
+        window_id       .byte
+.endstruct
 
         ;; Copy coords at $6 to param block
-start:  ldy     #3
-:       lda     (coords),y
+start:  ldy     #.sizeof(MGTK::Point)-1
+:       lda     (params),y
         sta     moveto_params2,y
         dey
         bpl     :-
 
-        ;; Overwrite y with x ???
-        copy16  $06, $08
+        copy16  params, out_params
 
-        ;; ???
-        ldy     #5
-        lda     ($06),y
-        sta     L97F5
+        ldy     #FindIconParams::window_id
+        lda     (params),y
+        sta     window_id
+
         MGTK_CALL MGTK::MoveTo, moveto_params2
+
         ldx     #0
-L97AA:  cpx     num_icons
-        bne     L97B9
-        ldy     #4
+loop:   cpx     num_icons
+        bne     :+
+
+        ;; Nothing found
+        ldy     #FindIconParams::result
         lda     #0
-        sta     ($08),y
-        sta     L97F6
+        sta     (out_params),y
+        sta     unused
         rts
 
-L97B9:  txa
+        ;; Check the icon
+:       txa
         pha
         lda     icon_table,x
         asl     a
         tax
-        copy16  icon_ptrs,x, $06
+        copy16  icon_ptrs,x, icon_ptr
+
+        ;; Matching window?
         ldy     #IconEntry::win_type
-        lda     ($06),y
+        lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
-        cmp     L97F5
-        bne     L97E0
-        jsr     calc_icon_poly
+        cmp     window_id
+        bne     :+
+
+        ;; In poly?
+        jsr     calc_icon_poly  ; requires `icon_ptr` set
         MGTK_CALL MGTK::InPoly, poly
-        bne     inside
-L97E0:  pla
+        bne     inside          ; yes!
+
+        ;; Nope, next
+:       pla
         tax
         inx
-        jmp     L97AA
+        jmp     loop
 
+        ;; Found one!
 inside: pla
         tax
         lda     icon_table,x
-        ldy     #4
-        sta     ($08),y
-        sta     L97F6
+        ldy     #FindIconParams::result
+        sta     (out_params),y
+        sta     unused
         rts
 
-L97F5:  .byte   0
-L97F6:  .byte   0
+window_id:
+        .byte   0
+unused: .byte   0               ; TODO: Remove
 .endproc
 
 ;;; ============================================================
@@ -1345,8 +1364,7 @@ L9A31:  COPY_BYTES 4, findwindow_params, coords2
         ;; Still over the highlighted icon?
         lda     highlight_icon_id
         beq     :+
-        lda     window_id
-        sta     findwindow_params::window_id
+        copy    window_id, findwindow_params::window_id
         ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params
         lda     findwindow_params::which_area ; Icon ID
         cmp     highlight_icon_id             ; already over it?
