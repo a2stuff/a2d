@@ -292,7 +292,7 @@ LA475:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA488
         cmp     #ERR_FILE_NOT_FOUND
         bne     LA48E
-LA488:  jsr     show_err_FD
+LA488:  jsr     show_insert_source_disk_alert
         jmp     LA475           ; retry
 
 LA48E:  jmp     handle_error_code
@@ -538,7 +538,7 @@ LA6E3:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA6F6
         cmp     #ERR_FILE_NOT_FOUND
         bne     LA6FC
-LA6F6:  jsr     show_err_FD
+LA6F6:  jsr     show_insert_source_disk_alert
         jmp     LA6E3           ; retry
 
 LA6FC:  jmp     handle_error_code
@@ -868,8 +868,8 @@ LAA4C:  jsr     populate_count
 
 ;;; ============================================================
 
-.proc show_err_FD
-        lda     #$FD            ; Unknown alert number ???
+.proc show_insert_source_disk_alert
+        lda     #AlertID::insert_source_disk
         jsr     app::ShowAlert
         bne     :+              ; cancel
         jsr     app::set_watch_cursor ; try again
