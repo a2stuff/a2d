@@ -180,8 +180,6 @@ focus_in_input2_flag:
         bne     :+
         jmp     handle_content_click
 
-        rts                     ; Unreached ???
-
 :       rts
 .endproc
 
@@ -1938,7 +1936,7 @@ l4:     .byte   0
 ;;; Input: $06 = ptr to filename
 ;;; Output: A = index, or $FF if not found
 
-.proc L6516
+.proc find_filename_index
         stax    $06
         ldy     #$00
         lda     ($06),y

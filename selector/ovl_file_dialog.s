@@ -393,8 +393,6 @@ start:  jsr     open_window
         ldx     #>buf_input_left
         sta     $07
         return  #$00
-
-        .byte   0               ; Unused ???
 .endproc
 
 ;;; ============================================================
@@ -408,7 +406,6 @@ start:  jsr     open_window
         ldx     saved_stack
         txs
         return  #$FF
-
 .endproc
 
 ;;; ============================================================
@@ -528,8 +525,6 @@ LA50E:  .byte   0
 :       cmp     #MGTK::Area::content
         bne     :+
         jmp     handle_content_click
-
-        rts                     ; Unreached ???
 
 :       rts
 .endproc
@@ -2248,7 +2243,7 @@ l4:     .byte   0
 ;;; Input: $06 = ptr to filename
 ;;; Output: A = index, or $FF if not found
 
-.proc LB629                     ; Unreferenced ???
+.proc find_filename_index       ; Unreferenced - TODO: Remove
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -2794,7 +2789,7 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-.proc LBB09                     ; Unreferenced ???
+.proc LBB09                     ; Unreferenced - TODO: Remove
         COPY_STRING path_buf, buf_input_left
         rts
 .endproc

@@ -48,7 +48,7 @@ found_slash:
 finish: jsr     file_dialog::read_dir
         lda     #$00
         bcs     :+
-        param_call file_dialog::L6516, buffer
+        param_call file_dialog::find_filename_index, buffer
         sta     selected_index
         jsr     file_dialog::calc_top_index
 :       jsr     file_dialog::update_scrollbar2
