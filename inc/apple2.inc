@@ -108,11 +108,13 @@ CON_SQR_HALF    := $E92D        ; SQR(1/2)
 CON_SQR_TWO     := $E932        ; SQR(2)
 CON_NEG_HALF    := $E937        ; -1/2
 CON_LOG_TWO     := $E93C        ; LOG(2)
-CON_TEN         := $E950        ; 10
+CON_TEN         := $EA50        ; 10
+CON_1E8M1       := $ED0A        ; 1E8 - 1
+CON_1E9M1       := $ED0F        ; 1E9 - 1
 CON_BILLION     := $ED14        ; 1E9
 CON_HALF        := $EE64        ; 1/2
-CON_LOG2_E      := $EEDB        ; Log(E) base 2 ????
-CON_HALF_PI     := $F063        ; pi/2
+CON_LOG2_E      := $EEDB        ; Log(E) base 2
+CON_HALF_PI     := $F066        ; pi/2
 CON_TWO_PI      := $F06B        ; pi/*2
 CON_QUARTER     := $F070        ; 1/4
 
