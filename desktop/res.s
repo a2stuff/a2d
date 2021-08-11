@@ -904,7 +904,8 @@ filename_buf:
         .res    16, 0
 
         ;; Set to $80 for Copy, $FF for Run
-LE05B:  .byte   0
+copy_run_flag:
+        .byte   0
 
 delete_skip_decrement_flag:     ; always set to 0 ???
         .byte   0

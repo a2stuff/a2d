@@ -10679,7 +10679,7 @@ do_copy_file:
         jsr     prep_callbacks_for_copy
 
 do_run2:
-        copy    #$FF, LE05B
+        copy    #$FF, copy_run_flag
         copy    #0, delete_skip_decrement_flag
         jsr     copy_file_for_run
         jsr     done_dialog_phase1
@@ -12035,7 +12035,7 @@ count:  .addr   0
 ;;; Calls into the recursion logic of `process_dir` as necessary.
 
 .proc copy_process_selected_file
-        copy    #$80, LE05B
+        copy    #$80, copy_run_flag
         copy    #0, delete_skip_decrement_flag
         beq     :+              ; always
 
@@ -12050,7 +12050,7 @@ for_run:
         bvc     @not_run
         jsr     check_vol_blocks_free           ; dst is a volume path (RAM Card)
 @not_run:
-        bit     LE05B
+        bit     copy_run_flag
         bpl     get_src_info    ; never taken ???
         bvs     L9A50
         lda     is_run_flag
@@ -12104,11 +12104,6 @@ is_dir: lda     #$FF
 store:  sta     is_dir_flag
         jsr     dec_file_count_and_run_copy_dialog_proc
 
-        bit     is_dir_flag
-        bpl     :+
-        jsr     decrement_op_file_count
-:
-
         ;; Copy access, file_type, aux_type, storage_type
         ldy     #src_file_info_params::storage_type - src_file_info_params
 :       lda     src_file_info_params,y
@@ -12118,10 +12113,10 @@ store:  sta     is_dir_flag
         bne     :-
 
         copy    #ACCESS_DEFAULT, create_params2::access
-        lda     LE05B
-        beq     create_ok       ; never taken ???
+        lda     copy_run_flag
+        beq     success         ; never taken ???
         jsr     check_space_and_show_prompt
-        bcs     done
+        bcs     failure
 
         ;; Copy create_time/create_date
         ldy     #src_file_info_params::create_time - src_file_info_params + 1
@@ -12136,51 +12131,53 @@ store:  sta     is_dir_flag
         ;; If a volume, need to create a subdir instead
         lda     create_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        bne     do_create
+        bne     :+
         lda     #ST_LINKED_DIRECTORY
         sta     create_params2::storage_type
+:
 
-do_create:
-        MLI_RELAY_CALL CREATE, create_params2
-        beq     create_ok
+        ;; TODO: Dedupe with `try_create_dst`
+        jsr     decrement_op_file_count
+retry:  MLI_RELAY_CALL CREATE, create_params2
+        beq     success
 
         cmp     #ERR_DUPLICATE_FILENAME
         bne     err
         bit     all_flag
-        bmi     do_it
+        bmi     yes
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
         jsr     run_copy_dialog_proc
         pha
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         pla
         cmp     #PromptResult::yes
-        beq     do_it
+        beq     yes
         cmp     #PromptResult::no
-        beq     done
+        beq     failure
         cmp     #PromptResult::all
         bne     cancel
         copy    #$80, all_flag
-do_it:  jsr     apply_file_info_and_size
-        jmp     create_ok
+yes:    jsr     apply_file_info_and_size
+        jmp     success
 
         ;; PromptResult::cancel
 cancel: jmp     close_files_cancel_dialog
 
 err:    jsr     show_error_alert
-        jmp     do_create       ; retry
+        jmp     retry
 
-create_ok:
+success:
         lda     is_dir_flag
         beq     copy_file
 copy_dir:                       ; also used when dragging a volume icon
         jsr     process_dir
         jmp     maybe_finish_file_move
-
-done:   rts
-
 copy_file:
         jsr     do_file_copy
         jmp     maybe_finish_file_move
+
+failure:
+        rts
 
 is_dir_flag:
         .byte   0
@@ -12243,7 +12240,6 @@ done:   rts
 
 :       jsr     append_to_dst_path
         jsr     dec_file_count_and_run_copy_dialog_proc
-        jsr     decrement_op_file_count
 
         jsr     try_create_dst
         bcs     :+
@@ -12398,7 +12394,6 @@ existing_size:
 ;;; Actual byte-for-byte file copy routine
 
 .proc do_file_copy
-        jsr     decrement_op_file_count
         lda     #0
         sta     src_dst_exclusive_flag
         sta     src_eof_flag
@@ -12547,8 +12542,10 @@ src_eof_flag:
         cpx     #3
         bne     :-
 
-create: MLI_RELAY_CALL CREATE, create_params3
+        jsr     decrement_op_file_count
+retry:  MLI_RELAY_CALL CREATE, create_params3
         beq     success
+
         cmp     #ERR_DUPLICATE_FILENAME
         bne     err
         bit     all_flag
@@ -12571,7 +12568,7 @@ yes:    jsr     apply_file_info_and_size
 cancel: jmp     close_files_cancel_dialog
 
 err:    jsr     show_error_alert_dst
-        jmp     create
+        jmp     retry
 
 success:
         clc
