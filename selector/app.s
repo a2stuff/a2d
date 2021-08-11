@@ -1839,8 +1839,11 @@ col:    .byte   0
 .proc cmd_startup
         ldy     menu_params::menu_item
         lda     slot_table,y
-        ora     #$C0
+        ora     #>$C000         ; compute $Cn00
         sta     @addr+1
+        lda     #<$C000
+        sta     @addr
+
         sta     ALTZPOFF
         lda     ROMIN2
         sta     TXTSET
