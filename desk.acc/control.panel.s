@@ -149,17 +149,36 @@ nextwinfo:      .addr   0
 
 
 .params event_params
-kind:  .byte   0
-;;; event_kind_key_down
-key             := *
-modifiers       := * + 1
-;;; event_kind_update
-window_id       := *
-;;; otherwise
-xcoord          := *
-ycoord          := * + 2
-        .res    4
+kind := * + 0
+        ;; if kind is key_down
+key := * + 1
+modifiers := * + 2
+        ;; if kind is no_event, button_down/up, drag, or apple_key:
+coords := * + 1
+xcoord := * + 1
+ycoord := * + 3
+        ;; if kind is update:
+window_id := * + 1
 .endparams
+
+.params screentowindow_params
+window_id := * + 0
+screen    := * + 1
+screenx   := * + 1
+screeny   := * + 3
+window    := * + 5
+windowx   := * + 5
+windowy   := * + 7
+        .assert screenx = event_params::xcoord, error, "param mismatch"
+        .assert screeny = event_params::ycoord, error, "param mismatch"
+.endparams
+
+mx := screentowindow_params::windowx
+my := screentowindow_params::windowy
+
+;;; Union of above params
+        .res    10, 0
+
 
 .params findwindow_params
 mousex:         .word   0
@@ -184,14 +203,6 @@ window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
 
-
-.params screentowindow_params
-window_id:      .byte   kDAWindowId
-        DEFINE_POINT screen, 0, 0
-        DEFINE_POINT window, 0, 0
-.endparams
-        mx := screentowindow_params::window::xcoord
-        my := screentowindow_params::window::ycoord
 
 .params grafport
         DEFINE_POINT viewloc, 0, 0
@@ -568,13 +579,29 @@ ipblink_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000110),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000),PX(%0110000)
 
+kIPBmpPosX = kIPBlinkDisplayX + 120 + 3 + 20
+kIPBmpPosY = kIPBlinkDisplayY
+kIPBmpWidth  = 2
+kIPBmpHeight = 13
+
 .params ipblink_bitmap_ip_params
-        DEFINE_POINT viewloc, kIPBlinkDisplayX + 120 + 3 + 20, kIPBlinkDisplayY
+        DEFINE_POINT viewloc, kIPBmpPosX, kIPBmpPosY
 mapbits:        .addr   ipblink_ip_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 1, 12
+        DEFINE_RECT cliprect, 0, 0, kIPBmpWidth - 1, kIPBmpHeight - 1
 .endparams
+
+kCursorWidth    = 8
+kCursorHeight   = 12
+kSlop           = 14            ; Two DHR bytes worth of pixels
+        ;; Bounding rect for where the blining IP and cursor could overlap.
+        ;; If the cursor is inside this rect, it is hidden before drawing
+        ;; the bitmap.
+        DEFINE_RECT_SZ anim_cursor_rect, kIPBmpPosX - kCursorWidth - kSlop,  kIPBmpPosY - kCursorHeight, kCursorWidth + kIPBmpWidth + 2*kSlop, kCursorHeight + kIPBmpHeight
+cursor_flag:
+        .byte   0
+
 
 ipblink_ip_bitmap:
         .byte   PX(%1100000)
@@ -620,16 +647,17 @@ kHourDisplayY = 114
 .endproc
 
 .proc input_loop
+        jsr     do_ipblink
         jsr     yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         bne     exit
         lda     event_params::kind
+        cmp     #MGTK::EventKind::no_event
+        beq     handle_move
         cmp     #MGTK::EventKind::button_down
         beq     handle_down
         cmp     #MGTK::EventKind::key_down
         beq     handle_key
-
-        jsr     do_ipblink
 
         jmp     input_loop
 .endproc
@@ -650,6 +678,17 @@ kHourDisplayY = 114
 
 ;;; ============================================================
 
+.proc handle_move
+        copy    winfo::window_id, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::InRect, anim_cursor_rect
+        sta     cursor_flag
+        jmp     input_loop
+.endproc
+
+;;; ============================================================
+
 .proc handle_key
         lda     event_params::key
         cmp     #CHAR_ESCAPE
@@ -666,7 +705,7 @@ kHourDisplayY = 114
         bne     exit
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bne     input_loop
+        jne     input_loop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     handle_close
@@ -714,8 +753,7 @@ common: bit     dragwindow_params::moved
 ;;; ============================================================
 
 .proc handle_click
-        copy16  event_params::xcoord, screentowindow_params::screen::xcoord
-        copy16  event_params::ycoord, screentowindow_params::screen::ycoord
+        copy    winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         ;; ----------------------------------------
@@ -921,8 +959,7 @@ event:  MGTK_CALL MGTK::GetEvent, event_params
         bne     :+
         jmp     input_loop
 
-:       copy16  event_params::xcoord, screentowindow_params::screen::xcoord
-        copy16  event_params::ycoord, screentowindow_params::screen::ycoord
+:       copy    winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -1810,8 +1847,17 @@ done:   stx     ipblink_selection
         cmp     #MGTK::Error::window_obscured
         beq     done
 
+        bit     cursor_flag
+        bpl     :+
+        MGTK_CALL MGTK::HideCursor
+:
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintBits, ipblink_bitmap_ip_params
+
+        bit     cursor_flag
+        bpl     :+
+        MGTK_CALL MGTK::ShowCursor
+:
 
 done:   rts
 
