@@ -3622,12 +3622,12 @@ pending_alert:
         ;; Check Drive command
 by_menu:
         lda     #$00
-        beq     start
+        beq     start           ; always
 
         ;; After format/erase
 by_unit_number:
         lda     #$80
-        bne     start
+        bne     start           ; always
 
         ;; After open/eject/rename
 by_icon_number:
@@ -3770,8 +3770,14 @@ not_in_map:
         ;; Explicit command
         and     #$FF            ; check create_volume_icon results
         beq     add_icon
-        cmp     #ERR_IO_ERROR   ; there was an error
+
+        ;; Expected errors per Technical Note: ProDOS #21
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+        cmp     #ERR_IO_ERROR   ; disk damaged or blank
         beq     add_icon
+        cmp     #ERR_DEVICE_OFFLINE ; no disk in the drive
+        beq     add_icon
+
         pha
         jsr     StoreWindowIconTable
         pla
