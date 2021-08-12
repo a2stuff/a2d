@@ -176,16 +176,17 @@ windowy   := * + 7
 mx := screentowindow_params::windowx
 my := screentowindow_params::windowy
 
+findwindow_params          := * + 1
+findwindow_mousex          := findwindow_params + 0
+findwindow_mousey          := findwindow_params + 2
+findwindow_which_area      := findwindow_params + 4
+findwindow_window_id       := findwindow_params + 5
+        .assert findwindow_mousex = event_params::xcoord, error, "param mismatch"
+        .assert findwindow_mousey = event_params::ycoord, error, "param mismatch"
+
 ;;; Union of above params
         .res    10, 0
 
-
-.params findwindow_params
-mousex:         .word   0
-mousey:         .word   0
-which_area:     .byte   0
-window_id:      .byte   0
-.endparams
 
 .params trackgoaway_params
 clicked:        .byte   0
@@ -699,14 +700,12 @@ kHourDisplayY = 114
 ;;; ============================================================
 
 .proc handle_down
-        copy16  event_params::xcoord, findwindow_params::mousex
-        copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
         bne     exit
-        lda     findwindow_params::window_id
+        lda     findwindow_window_id
         cmp     winfo::window_id
         jne     input_loop
-        lda     findwindow_params::which_area
+        lda     findwindow_which_area
         cmp     #MGTK::Area::close_box
         beq     handle_close
         cmp     #MGTK::Area::dragbar
