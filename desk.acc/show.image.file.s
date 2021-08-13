@@ -206,11 +206,8 @@ on_key:
 exit:
         jsr     JUMP_TABLE_RGB_MODE
 
-        ;; Force desktop redraw
-        JUMP_TABLE_MGTK_CALL MGTK::OpenWindow, winfo
-        JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, winfo
-
-        ;; Restore menu
+        ;; Restore desktop and menu
+        JUMP_TABLE_MGTK_CALL MGTK::RedrawDeskTop
         JUMP_TABLE_MGTK_CALL MGTK::DrawMenu
         jsr     JUMP_TABLE_HILITE_MENU
 

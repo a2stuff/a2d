@@ -519,6 +519,9 @@ GetWinFrameRect = $52           ; Get outer frame rect of window
 ;;; .byte window_id
 ;;; Rect        rect            (out)
 
+RedrawDeskTop   = $53           ; Redraw desktop, menu, and all windows
+;;; (no parameters)
+
 ;;; ============================================================
 ;;; Graphics Primitives Constants
 

@@ -371,6 +371,7 @@ jump_table:
         .addr   SetDeskPatImpl      ; $50 SetDeskPat
         .addr   DrawMenuImpl        ; $51 DrawMenu
         .addr   GetWinFrameRectImpl ; $52 GetWinFrameRect
+        .addr   RedrawDeskTopImpl   ; $53 RedrawDeskTop
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -10387,6 +10388,37 @@ rect       .tag MGTK::Rect
         dey
         bne     :-              ; leave window_id alone
         rts
+.endproc
+
+;;; ============================================================
+;;; RedrawDeskTop
+
+.proc RedrawDeskTopImpl
+        jsr     set_desktop_port
+
+        ldx     #3
+:       lda     set_desktop_port::desktop_port_bits,x
+        sta     left,x
+        lda     fill_rect_params::right,x
+        sta     right,x
+        dex
+        bpl     :-
+
+        jsr     clip_rect
+
+        ldx     #3
+:       lda     left,x
+        sta     set_port_maprect,x
+        sta     set_port_params,x
+        lda     right,x
+        sta     set_port_size,x
+        dex
+        bpl     :-
+
+        ;; Restored by `erase_window`
+        jsr     hide_cursor_save_params
+        lda     #0              ; window to erase (none)
+        jmp     erase_window
 .endproc
 
 ;;; ============================================================

@@ -111,40 +111,6 @@ penheight:      .byte   2
         DEFINE_RECT frame_rect, AS_WORD(-1), AS_WORD(-1), kDAWidth - 4 + 2, kDAHeight - 2 + 2
 
 
-.params winfo_fullscreen
-window_id:      .byte   kDAWindowId+1
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   str_title
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_none
-hthumbmax:      .byte   32
-hthumbpos:      .byte   0
-vthumbmax:      .byte   32
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   kScreenWidth
-mincontlength:  .word   kScreenHeight
-maxcontwidth:   .word   kScreenWidth
-maxcontlength:  .word   kScreenHeight
-port:
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT maprect, 0, 0, kScreenWidth, kScreenHeight
-pattern:        .res    8, 0
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   0
-textback:       .byte   $7F
-textfont:       .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-.endparams
-
-
 ;;; ============================================================
 
 
@@ -1125,8 +1091,7 @@ next:   dex
         MGTK_CALL MGTK::SetDeskPat, pattern
         COPY_STRUCT MGTK::Pattern, pattern, SETTINGS + DeskTopSettings::pattern
 
-        MGTK_CALL MGTK::OpenWindow, winfo_fullscreen
-        MGTK_CALL MGTK::CloseWindow, winfo_fullscreen
+        MGTK_CALL MGTK::RedrawDeskTop
 
         ;; Draw DeskTop's windows and icons.
         sta     RAMRDOFF

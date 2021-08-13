@@ -933,7 +933,7 @@ Parameters:
 
 #### SetDeskPat ($50)
 Set new desktop pattern. Note that this does NOT redraw anything.
-Applications can show/hide a full-screen window to force a redraw.
+Applications can use `RedrawDeskTop` to force a redraw.
 
 Parameters:
 ```
@@ -957,6 +957,12 @@ Parameters:
 .byte       window_id
 Rect        rect            (out)
 ```
+
+#### RedrawDeskTop ($51)
+Redraws the desktop background, and posts update events for all
+windows.
+
+No parameters.
 
 # Creating Applications and DeskTop Desk Accessories
 
