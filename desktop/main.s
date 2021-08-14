@@ -6489,7 +6489,7 @@ too_many_files:
         beq     no_win
         lda     #kWarningMsgWindowMustBeClosed ; suggest closing a window
         bne     show            ; always
-no_win: lda     #kWarningMsgWindowMustBeClosed2 ; no windows to close
+no_win: lda     #kWarningMsgTooManyFiles ; too many files to show
 show:   jsr     warning_dialog_proc_num
         ldx     saved_stack
         txs
@@ -14958,7 +14958,7 @@ warning_cancel_table:
         .byte   $00        ;; kWarningMsgSelectorListFull
         .byte   $00        ;; kWarningMsgSelectorListFull2
         .byte   $00        ;; kWarningMsgWindowMustBeClosed
-        .byte   $00        ;; kWarningMsgWindowMustBeClosed2
+        .byte   $00        ;; kWarningMsgTooManyFiles
         .byte   $00        ;; kWarningMsgTooManyWindows
         .byte   $80        ;; kWarningMsgSaveSelectorList
         ASSERT_TABLE_SIZE warning_cancel_table, ::kNumWarningTypes
@@ -14973,8 +14973,8 @@ warning_message_table:
         .addr   aux::str_selector_list_full, aux::str_selector_list_full2
         ;; kWarningMsgWindowMustBeClosed
         .addr   aux::str_window_must_be_closed, aux::str_blank
-        ;; kWarningMsgWindowMustBeClosed2
-        .addr   aux::str_window_must_be_closed, aux::str_blank
+        ;; kWarningMsgTooManyFiles
+        .addr   aux::str_too_many_files, aux::str_blank
         ;; kWarningMsgTooManyWindows
         .addr   aux::str_too_many_windows, aux::str_blank
         ;; kWarningMsgSaveSelectorList

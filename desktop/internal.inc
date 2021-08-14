@@ -150,7 +150,7 @@ kWarningMsgInsertSystemDisk     = 0
 kWarningMsgSelectorListFull     = 1
 kWarningMsgSelectorListFull2    = 2
 kWarningMsgWindowMustBeClosed   = 3
-kWarningMsgWindowMustBeClosed2  = 4 ; TODO: Should be "Too many files..."
+kWarningMsgTooManyFiles         = 4
 kWarningMsgTooManyWindows       = 5
 kWarningMsgSaveSelectorList     = 6
 

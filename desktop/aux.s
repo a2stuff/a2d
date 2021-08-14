@@ -3662,7 +3662,10 @@ str_selector_list_full:
 str_selector_list_full2:
         PASCAL_STRING res_string_warning_selector_list_full_line2
 
+;;; The same string is used for both of these cases as the second case
+;;; (a single directory with too many items) is very difficult to hit.
 str_window_must_be_closed:
+str_too_many_files:             ; alt: `res_string_warning_too_many_files`
         PASCAL_STRING res_string_warning_window_must_be_closed
 
 str_too_many_windows:
