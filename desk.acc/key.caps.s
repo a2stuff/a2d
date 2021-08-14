@@ -552,8 +552,17 @@ tmp_poly:
 ;;; ============================================================
 
 .proc init
-        jsr     check_extended_layout
-        bcc     continue
+        jsr     check_extended_layout ; returns C=1 if extended
+
+        ;; Invert Carry if modifier is down
+        lda     BUTN0
+        ora     BUTN1
+        bpl     :+
+        rol
+        eor     #$01
+        ror
+
+:       bcc     continue
 
         ;; Swap in alternate layout
         copy    #$80, extended_layout_flag
@@ -800,17 +809,10 @@ char:   .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Returns Carry set if extended (IIgs/IIc+) layout should be used
+;;; Returns Carry set if extended layout should be used.
+;;; This is the layout of the Platinum IIe, IIc+ and IIgs.
 
 .proc check_extended_layout
-
-        ;; Button down? (Hack for testing)
-        lda     BUTN0
-        ora     BUTN1
-        bpl     :+
-        sec
-        rts
-:
 
         ;; Bank in ROM and do check
         lda     ROMIN2
