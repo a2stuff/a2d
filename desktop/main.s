@@ -6452,8 +6452,12 @@ index_in_dir:           .byte   0
         bne     :-
 
         ;; Compute the number of free file records. This is used as a proxy
-        ;; for "number of non-volume icons" below.
+        ;; for "number of non-volume icons" below. Each record is 32 bytes;
+        ;; each directory takes one length byte, so the maximum number of
+        ;; records (128) can never be used, which (uncoincidentally) equals
+        ;; kMaxIconCount.
         sub16   filerecords_free_end, filerecords_free_start, free_record_count
+        dec16   free_record_count ; ensure this is never 128 even when totally empty
         ldx     #5              ; /= 32 .sizeof(FileRecord)
 :       lsr16   free_record_count
         dex
@@ -6473,9 +6477,15 @@ index_in_dir:           .byte   0
         bcs     too_many_files   ; more than we can handle
 
         ;; This computes "how many icons would be free if all volumes had an icon",
-        ;; and then checks to see if we have room. This should be equivalent to
+        ;; and then checks to see if we have room.
+        ;; `free_record_count` - `reserved_desktop_icons`
+        ;; This should be equivalent to:
         ;; `kMaxIconCount` - (`icon_count` - # actual vol icons) - (# possible vol icons)
-        sub16_8 free_record_count, DEVCNT, free_record_count ; -= # possible volume icons
+        ldx     DEVCNT
+        inx                     ; DEVCNT is one less than number of devices
+        inx                     ; And one more for Trash
+        stx     reserved_desktop_icons
+        sub16_8 free_record_count, reserved_desktop_icons, free_record_count ; -= # possible volume icons
         cmp16   free_record_count, dir_header::file_count ; would the files fit?
         bcs     enough_room
 
@@ -6673,6 +6683,9 @@ window_id:
 
 free_record_count:
         .word   0
+
+reserved_desktop_icons:
+        .byte   0
 .endproc
 
 ;;; --------------------------------------------------
