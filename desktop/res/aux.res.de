@@ -92,6 +92,7 @@
 .define res_string_warning_selector_list_full_line1 "Der Liste ist voll. L|sche Eintrag"
 .define res_string_warning_selector_list_full_line2 "bevor ein neuer Eintrag erfolgt."
 .define res_string_warning_window_must_be_closed "Ein Fenster mu~ geschlossen werden um diesen Katalog zu |ffnen."
+.define res_string_warning_too_many_files "Es sind zu viele Dateien vorhanden, um dieses Element zu |ffnen!"
 .define res_string_warning_too_many_windows "Zu viele Fenster auf dem Schreibtisch ge|ffnet!"
 .define res_string_warning_save_selector_list_line1 "M|chten Sie die neue Liste speichern"
 .define res_string_warning_save_selector_list_line2 "auf der Systemdiskette?"
