@@ -1743,6 +1743,7 @@ L4CD6:  pha
         pha
         jsr     update_used_free_for_vol_windows
         pla
+        ;; TODO: Handle failure (e.g. too many icons)
         jmp     select_and_refresh_window
 
         ;; --------------------------------------------------
@@ -4142,6 +4143,7 @@ process_drop:
         pha
         jsr     update_used_free_for_vol_windows
         pla
+        ;; TODO: Handle failure (e.g. too many icons)
         jsr     select_and_refresh_window
         jmp     clear_updates_and_redraw_desktop_icons
 
@@ -5352,6 +5354,7 @@ check_double_click:
         pha
         jsr     update_used_free_for_vol_windows
         pla
+        ;; TODO: Handle failure (e.g. too many icons)
         jmp     select_and_refresh_window
 
 :       jsr     update_vol_free_used_for_icon
@@ -6490,17 +6493,19 @@ index_in_dir:           .byte   0
         bcs     enough_room
 
 too_many_files:
-        lda     num_open_windows
-        jsr     mark_icons_not_opened_1
-        dec     num_open_windows
-        jsr     clear_updates_and_redraw_desktop_icons
         jsr     do_close
+
         lda     active_window_id ; is a window open?
         beq     no_win
         lda     #kWarningMsgWindowMustBeClosed ; suggest closing a window
         bne     show            ; always
 no_win: lda     #kWarningMsgTooManyFiles ; too many files to show
 show:   jsr     warning_dialog_proc_num
+
+        jsr     mark_icons_not_opened_1
+        jsr     clear_updates_and_redraw_desktop_icons
+        dec     num_open_windows
+
         ldx     saved_stack
         txs
         rts
