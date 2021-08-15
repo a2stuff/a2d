@@ -988,6 +988,8 @@ slot_string_table:
 ;;; Enumerate DEVLST and find removable devices; build a list of
 ;;; these, and check to see which have disks in them. The list
 ;;; will be polled periodically to detect changes and refresh.
+;;; List is built in DEVLST order since processing is in
+;;; `check_disks_in_devices` (etc) is done in reverse order.
 ;;;
 ;;; Some hardware (machine/slot) combinations are filtered out
 ;;; due to known-buggy firmware.
@@ -995,8 +997,9 @@ slot_string_table:
 .proc initialize_disks_in_devices_tables
         slot_ptr := $0A
 
-        copy    #0, count
-        copy    DEVCNT, index
+        lda     #0
+        sta     count
+        sta     index
 
 loop:   ldy     index
         lda     DEVLST,y
@@ -1010,8 +1013,10 @@ loop:   ldy     index
         lda     (slot_ptr),y    ; $CnFE: Status Byte
         bmi     append          ; bit 7 - Medium is removable
 
-next:   dec     index
-        bpl     loop
+next:   inc     index
+        lda     DEVCNT          ; continue while index <= DEVCNT
+        cmp     index
+        bcs     loop
 
         lda     count
         sta     main::removable_device_table
