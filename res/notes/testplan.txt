@@ -286,3 +286,6 @@
 * Configure a IIgs system with ejectable disks. Launch DeskTop. Select the ejectable volume. Special > Eject Disk. Verify that an alert is not shown.
 
 * Use an emulator that supports dynamically inserting SmartPort disks, e.g. Virtual ][. Insert disks A, B, C, D in drives starting at the highest slot first, e.g. S7D1, S7D2, S5D1, S5D2. Launch DeskTop. Verify that the disks appear in order A, B, C, D. Eject the disks, and wait for DeskTop to remove the icons. Pause the emulator, and reinsert the disks in the same drives. Unpause the emulator. Verify that the disks appear on the DeskTop in the same order. Eject the disks again, pause, and insert the disks into the drives in reverse order (A in S5D2, etc). Unpause the emulator. Verify that the disks appear in reverse order on the DeskTop.
+
+* Configure a system with two volumes of the same name. Launch DeskTop. Verify that an error is shon, and only one volume appears.
+* Launch DeskTop. Rename a volume to have the same name as another. Verify that an error is shown and the icon is removed.

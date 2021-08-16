@@ -3009,17 +3009,14 @@ L5403:  jsr     close_window
         jmp     next_icon
 
 finish_with_vols:
+:       dec     selected_vol_icon_count
+        bmi     finish
         ldx     selected_vol_icon_count
-        jmp     next_vol
-:       lda     selected_vol_icon_list,x
+        lda     selected_vol_icon_list,x
         sta     drive_to_refresh         ; icon number
         jsr     cmd_check_single_drive_by_icon_number
-        ldx     selected_vol_icon_count
-        dec     selected_vol_icon_count
-next_vol:
-        dex
-        bpl     :-
-        jmp     clear_updates_and_redraw_desktop_icons
+        jmp     :-
+finish: jmp     clear_updates_and_redraw_desktop_icons
 
 counter:
         .byte   0
@@ -3765,6 +3762,10 @@ not_in_map:
         ldx     icon_param      ; preserve icon index if known
         bne     :+
 :       jsr     create_volume_icon ; A = unit num, Y = device index
+
+        cmp     #ERR_DUPLICATE_VOLUME
+        beq     err
+
         bit     check_drive_flags
         bmi     add_icon
 
@@ -3779,7 +3780,7 @@ not_in_map:
         cmp     #ERR_DEVICE_OFFLINE ; no disk in the drive
         beq     add_icon
 
-        pha
+err:    pha
         jsr     StoreWindowIconTable
         pla
         jsr     ShowAlert
@@ -9697,11 +9698,15 @@ error:  pha                     ; save error
 success:
         lda     cvi_data_buffer ; dr/slot/name_len
         and     #NAME_LENGTH_MASK
-        bne     create_icon
+        sta     cvi_data_buffer
+        bne     :+
         lda     cvi_data_buffer+1 ; if name len is zero, second byte is error
         jmp     error
+:
 
-create_icon:
+        jsr     compare_names
+        bne     error
+
         icon_ptr := $6
         icon_defn_ptr := $8
 
@@ -9713,10 +9718,6 @@ create_icon:
         stax    icon_ptr
 
         ;; Copy name
-        lda     cvi_data_buffer
-        and     #NAME_LENGTH_MASK
-        sta     cvi_data_buffer
-
         param_call AdjustVolumeNameCase, cvi_data_buffer
 
         ldy     #IconEntry::name+1
@@ -9797,6 +9798,59 @@ create_icon:
 unit_number:    .byte   0
 devlst_index:   .byte   0
 offset:         .word   0
+
+        ;; TODO: Need to push/pop pointers?
+.proc compare_names
+
+        string := cvi_data_buffer
+        icon_ptr := $06
+
+        jsr     push_pointers
+        ldx     cached_window_icon_count
+        dex
+        stx     index
+
+loop:   ldx     index
+        lda     cached_window_icon_list,x
+        jsr     icon_entry_lookup
+        stax    icon_ptr
+        add16_8 icon_ptr, #IconEntry::name, icon_ptr
+
+        ;; Lengths match?
+        ldy     #0
+        lda     (icon_ptr),y
+        cmp     string
+        bne     next
+
+        tay
+cloop:  lda     (icon_ptr),y
+        jsr     upcase_char
+        sta     @char
+        lda     string,y
+        jsr     upcase_char
+        @char := *+1
+        cmp     #0              ; self-modified
+        bne     next
+        dey
+        bne     cloop
+
+        ;; It matches; report a duplicate.
+        jsr     pop_pointers
+        lda     #ERR_DUPLICATE_VOLUME
+        rts
+
+        ;; Doesn't match, try again
+next:   dec     index
+        bpl     loop
+
+        ;; All done, clean up and report no duplicates.
+        jsr     pop_pointers
+        lda     #0
+        rts
+
+index:  .byte   0
+.endproc
+
 
 .endproc
 
