@@ -128,7 +128,7 @@
 
 * Launch DeskTop. Special > Disk Copy.... File > Quit. Special > Disk Copy.... Ensure drive list is correct.
 
-* Launch Desktop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are corrrectly enabled.
+* Launch Desktop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
 * Launch Desktop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Verify that 8 windows can be opened, and no render glitches occur.
 
@@ -287,5 +287,5 @@
 
 * Use an emulator that supports dynamically inserting SmartPort disks, e.g. Virtual ][. Insert disks A, B, C, D in drives starting at the highest slot first, e.g. S7D1, S7D2, S5D1, S5D2. Launch DeskTop. Verify that the disks appear in order A, B, C, D. Eject the disks, and wait for DeskTop to remove the icons. Pause the emulator, and reinsert the disks in the same drives. Unpause the emulator. Verify that the disks appear on the DeskTop in the same order. Eject the disks again, pause, and insert the disks into the drives in reverse order (A in S5D2, etc). Unpause the emulator. Verify that the disks appear in reverse order on the DeskTop.
 
-* Configure a system with two volumes of the same name. Launch DeskTop. Verify that an error is shon, and only one volume appears.
+* Configure a system with two volumes of the same name. Launch DeskTop. Verify that an error is shown, and only one volume appears.
 * Launch DeskTop. Rename a volume to have the same name as another. Verify that an error is shown and the icon is removed.
