@@ -562,7 +562,7 @@ reserved:       .byte   0
 kCursorWidth    = 8
 kCursorHeight   = 12
 kSlop           = 14            ; Two DHR bytes worth of pixels
-        ;; Bounding rect for where the blining IP and cursor could overlap.
+        ;; Bounding rect for where the blinking IP and cursor could overlap.
         ;; If the cursor is inside this rect, it is hidden before drawing
         ;; the bitmap.
         DEFINE_RECT_SZ anim_cursor_rect, kIPBmpPosX - kCursorWidth - kSlop,  kIPBmpPosY - kCursorHeight, kCursorWidth + kIPBmpWidth + 2*kSlop, kCursorHeight + kIPBmpHeight

@@ -1649,7 +1649,7 @@ skip:   iny
 
 ;;; ============================================================
 ;;; Invoke Desk Accessory
-;;; Input: A,X = address of pathnane buffer
+;;; Input: A,X = address of pathname buffer
 
 .proc invoke_desk_acc
         stax    open_pathname
@@ -9799,7 +9799,10 @@ unit_number:    .byte   0
 devlst_index:   .byte   0
 offset:         .word   0
 
-        ;; TODO: Need to push/pop pointers?
+;;; Compare a volume name against existing volume icons for drives.
+;;; Inputs: String to compare against is in `cvi_data_buffer`
+;;; Output: A=0 if not a duplicate, ERR_DUPLICATE_VOLUME if there is a duplicate.
+;;; Assert: `cached_window_icon_count` is one greater than actual count
 .proc compare_names
 
         string := cvi_data_buffer
@@ -9812,6 +9815,7 @@ offset:         .word   0
 
 loop:   ldx     index
         lda     cached_window_icon_list,x
+        ;; TODO: Skip if "Trash"
         jsr     icon_entry_lookup
         stax    icon_ptr
         add16_8 icon_ptr, #IconEntry::name, icon_ptr

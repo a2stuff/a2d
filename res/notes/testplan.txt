@@ -35,7 +35,7 @@
 * File > Get Info a file.
 * File > Get Info a volume.
 
-* Position a volume icon in the middle of the DeskTop. Incrementally move a window so that it obscures all 8 positions around it (top, top right, right, etc). Ensure the icon repaints fully, and no part of the window is overdrawn.
+* Position a volume icon in the middle of the DeskTop. Incrementally move a window so that it obscures all 8 positions around it (top, top right, right, etc). Ensure the icon repaints fully, and no part of the window is over-drawn.
 
 * Launch DeskTop, File > Quit, run BASIC.SYSTEM. Ensure /RAM exists.
 * Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.
@@ -74,7 +74,7 @@
 
 * On a system with a system clock, invoke Apple > Control Panels > Date. Verify that the date is read-only.
 
-* Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, FloppyEmu); verify that all show up.
+* Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, Floppy Emu); verify that all show up.
 
 * Verify that GS/OS filename cases show correctly (e.g. ProDOS 2.5 disk).
 
@@ -89,8 +89,8 @@
 
 * On an RGB system (IIgs, etc), go to Control Panel, check RGB Color. Verify that the display shows in color. Preview an image, and verify that the image shows in color and the DeskTop remains in color after exiting.
 * On an RGB system (IIgs, etc), go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Preview an image, and verify that the image shows in color and the DeskTop returns to monochrome after exiting.
-* On an IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Enter the IIgs control panel (Control+Shift+OpenApple+Esc), and exit. Verify that DeskTop remains in color.
-* On an IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Enter the IIgs control panel (Control+Shift+OpenApple+Esc), and exit. Verify that DeskTop resets to monochrome.
+* On an IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop remains in color.
+* On an IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop resets to monochrome.
 
 * Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.
 * Run System Speed DA. Click Fast then click OK. Verify DeskTop does not lock up.
@@ -254,7 +254,7 @@
 
 * Create a directory, and in the directory create a file named "A.B" then a file named "A". Launch DeskTop. File > Copy a File.... Navigate to the directory. Verify "A" sorts before "A.B". Launch Selector. File > Run a Program. Navigate to the directory. Verify "A" sorts before "A.B".
 
-* Run DeskTop on a IIc. Launch Control Panel > System Speed. Click Normal and Fast. Verify that display does not switch from DHGR to HGR.
+* Run DeskTop on a IIc. Launch Control Panel > System Speed. Click Normal and Fast. Verify that display does not switch from DHR to HR.
 
 * Launch DeskTop. Create a sequence of nested folders approaching maximum path length, e.g. /RAM/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF12345. Try to copy a file into the folder. Verify that stray pixels do not appear in the top line of the screen.
 
@@ -285,7 +285,7 @@
 * Launch DeskTop. Copy a folder containing multiple files to another volume. Repeat the copy. When prompted to overwrite, alternate clicking Yes and No. Verify that the "Files remaining" count decreases to zero.
 * Configure a IIgs system with ejectable disks. Launch DeskTop. Select the ejectable volume. Special > Eject Disk. Verify that an alert is not shown.
 
-* Use an emulator that supports dynamically inserting SmartPort disks, e.g. Virtual ][. Insert disks A, B, C, D in drives starting at the highest slot first, e.g. S7D1, S7D2, S5D1, S5D2. Launch DeskTop. Verify that the disks appear in order A, B, C, D. Eject the disks, and wait for DeskTop to remove the icons. Pause the emulator, and reinsert the disks in the same drives. Unpause the emulator. Verify that the disks appear on the DeskTop in the same order. Eject the disks again, pause, and insert the disks into the drives in reverse order (A in S5D2, etc). Unpause the emulator. Verify that the disks appear in reverse order on the DeskTop.
+* Use an emulator that supports dynamically inserting SmartPort disks, e.g. Virtual ][. Insert disks A, B, C, D in drives starting at the highest slot first, e.g. S7D1, S7D2, S5D1, S5D2. Launch DeskTop. Verify that the disks appear in order A, B, C, D. Eject the disks, and wait for DeskTop to remove the icons. Pause the emulator, and reinsert the disks in the same drives. Un-pause the emulator. Verify that the disks appear on the DeskTop in the same order. Eject the disks again, pause, and insert the disks into the drives in reverse order (A in S5D2, etc). Un-pause the emulator. Verify that the disks appear in reverse order on the DeskTop.
 
 * Configure a system with two volumes of the same name. Launch DeskTop. Verify that an error is shown, and only one volume appears.
 * Launch DeskTop. Rename a volume to have the same name as another. Verify that an error is shown and the icon is removed.

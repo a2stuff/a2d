@@ -629,7 +629,7 @@ hit:    lda     winfo::window_id
 ;;;
 ;;; WARNING: The memory location to set the accelerator
 ;;; speed may overlap existing locations such as:
-;;;   annuciators or Apple //c specific hardware
+;;;   annunciators or Apple //c specific hardware
 ;;;   paddle trigger
 ;;;
 ;;; Known to work: IIGS, //c+
