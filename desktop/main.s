@@ -9815,7 +9815,8 @@ offset:         .word   0
 
 loop:   ldx     index
         lda     cached_window_icon_list,x
-        ;; TODO: Skip if "Trash"
+        cmp     trash_icon_num
+        beq     next
         jsr     icon_entry_lookup
         stax    icon_ptr
         add16_8 icon_ptr, #IconEntry::name, icon_ptr
