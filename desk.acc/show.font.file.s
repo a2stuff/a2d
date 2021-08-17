@@ -90,12 +90,35 @@ kReadLength      = WINDOW_ICON_TABLES-font_buffer
         ;; --------------------------------------------------
         ;; Load the file
 
-        JUMP_TABLE_MLI_CALL OPEN, open_params ; TODO: Check for error
-        lda     open_params::ref_num
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+        beq     :+
+        rts
+:       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         JUMP_TABLE_MLI_CALL READ, read_params ; TODO: Check for error
         JUMP_TABLE_MLI_CALL CLOSE, close_params
+
+        ;; --------------------------------------------------
+        ;; Try to verify that this is a font file
+
+        lda     font_buffer + MGTK::Font::fonttype ; $00 or $80
+        cmp     #$00            ; regular?
+        beq     :+
+        cmp     #$80            ; double-width?
+        bne     exit
+
+:       lda     font_buffer + MGTK::Font::lastchar ; usually $7F
+        beq     exit
+        bmi     exit
+
+        lda     font_buffer + MGTK::Font::height ; 1-16
+        beq     exit
+        cmp     #16+1
+        bcs     exit
+
+        ;; File size should be 3 + lastchar + (lastchar * height) * (double?2:1)
+        ;; ... but files aren't exactly this size, so don't enforce this. (?!?)
 
         ;; --------------------------------------------------
         ;; Copy the DA code and loaded data to AUX
@@ -114,7 +137,10 @@ kReadLength      = WINDOW_ICON_TABLES-font_buffer
         jsr     init
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        rts
+
+exit:   rts
+
+size:   .word   0
 .endproc
 
 ;;; ============================================================

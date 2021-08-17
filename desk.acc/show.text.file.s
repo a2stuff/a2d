@@ -413,7 +413,10 @@ loop:   lda     DEFAULT_FONT + MGTK::Font::charwidth - 1,x
 
         ;; open file, get length
         jsr     open_file
-        lda     open_params::ref_num
+        beq     :+
+        rts
+
+:       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     set_mark_params::ref_num
         sta     get_eof_params::ref_num

@@ -1984,14 +1984,14 @@ last_active_window_id:
 .endproc
 
 ;;; ============================================================
-;;; Copy selected window and first icon paths to
+;;; Copy selection window and first selected icon paths to
 ;;; `buf_win_path` and `buf_filename2` respectively.
 
 .proc copy_win_icon_paths
         ;; Copy window path to buf_win_path
         win_path_ptr := $06
 
-        lda     active_window_id
+        lda     selected_window_id
         jsr     get_window_path
         stax    win_path_ptr
 

@@ -217,7 +217,10 @@ exit:
 .proc show_file
         ;; Check file type
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
-        lda     get_file_info_params::file_type
+        beq     :+
+fail:   rts
+
+:       lda     get_file_info_params::file_type
         cmp     #FT_GRAPHICS
         bne     get_eof
 
