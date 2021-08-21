@@ -3459,9 +3459,9 @@ special_menu:
 
         DEFINE_BUTTON ok,     res_string_button_ok, 260, kPromptDialogHeight-19
         DEFINE_BUTTON cancel, res_string_button_cancel,   40, kPromptDialogHeight-19
-        DEFINE_BUTTON yes,    res_string_warning_button_yes,               200, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON no,     res_string_warning_button_no,                260, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON all,    res_string_warning_button_all,               320, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON yes,    res_string_prompt_button_yes, 200, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON no,     res_string_prompt_button_no,  260, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON all,    res_string_prompt_button_all, 320, kPromptDialogHeight-19,40,kButtonHeight
 
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
