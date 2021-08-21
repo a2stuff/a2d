@@ -621,7 +621,7 @@ not_menu:
 .endproc
 
 ;;; ============================================================
-;;; Inputs: window_id to activate in findwindow_window_id
+;;; Inputs: window id to activate in `findwindow_window_id`
 
 .proc handle_inactive_window_click
         ptr := $6
@@ -756,7 +756,7 @@ removable_device_table:
         .byte   0               ; num entries
         .res    kMaxRemovableDevices, 0
 
-;;; Updated by check_disks_in_devices
+;;; Updated by `check_disks_in_devices`
 disk_in_device_table:
         .byte   0               ; num entries
         .res    kMaxRemovableDevices, 0
@@ -1014,9 +1014,9 @@ launch:
         jmp     reset_and_invoke
 
 ;;; --------------------------------------------------
-;;; Check buf_win_path and ancestors to see if the desired interpreter
+;;; Check `buf_win_path` and ancestors to see if the desired interpreter
 ;;; (BASIC.SYSTEM or BASIS.SYSTEM) is present.
-;;; Input: buf_win_path set to initial search path
+;;; Input: `buf_win_path` set to initial search path
 ;;; Output: zero if found, non-zero if not found
 
 .proc check_basix_system_impl
@@ -1421,8 +1421,8 @@ slash_index:
 .endproc
 
 ;;; --------------------------------------------------
-;;; Append last two path segments of buf_win_path to
-;;; ramcard_prefix, result left at $840
+;;; Append last two path segments of `buf_win_path` to
+;;; `ramcard_prefix`, result left at $840
 
 .proc make_ramcard_prefixed_path
         ;; Copy window path to $800
@@ -1476,9 +1476,9 @@ slash_index:
         make_ramcard_prefixed_path := cmd_selector_item_impl::make_ramcard_prefixed_path
 
 ;;; ============================================================
-;;; Append filename to directory path in path_buffer
+;;; Append filename to directory path in `path_buffer`
 ;;; Inputs: A,X = ptr to path suffix to append
-;;; Outputs: path_buffer has '/' and suffix appended
+;;; Outputs: `path_buffer` has '/' and suffix appended
 
 .proc append_to_path_buffer
 
@@ -1514,7 +1514,7 @@ slash_index:
 ;;; ============================================================
 ;;; For entry copied ("down loaded") to RAM card, compose path
 ;;; using RAM card prefix plus last two segments of path
-;;; (e.g. "/RAM" + "/" + "MOUSEPAINT/MP.SYSTEM") into path_buffer
+;;; (e.g. "/RAM" + "/" + "MOUSEPAINT/MP.SYSTEM") into `path_buffer`
 
 .proc compose_downloaded_entry_path
         sta     entry_num
@@ -1736,7 +1736,7 @@ L4CD6:  pha
         jmp     select_and_refresh_window
 
         ;; --------------------------------------------------
-        ;; Update used/free for windows for same vol as path_buf4
+        ;; Update used/free for windows for same vol as `path_buf4`
 
 :       ldy     #1
 @loop:  iny
@@ -1757,12 +1757,12 @@ L4CD6:  pha
 .endproc
 
 ;;; ============================================================
-;;; Copy string at ($6) to path_buf3, string at ($8) to path_buf4,
-;;; split filename off path_buf4 and store in filename_buf
+;;; Copy string at ($6) to `path_buf3`, string at ($8) to `path_buf4`,
+;;; split filename off `path_buf4` and store in `filename_buf`
 
 .proc copy_paths_and_split_name
 
-        ;; Copy string at $6 to path_buf3
+        ;; Copy string at $6 to `path_buf3`
         ldy     #0
         lda     ($06),y
         tay
@@ -1771,7 +1771,7 @@ L4CD6:  pha
         dey
         bpl     :-
 
-        ;; Copy string at $8 to path_buf4
+        ;; Copy string at $8 to `path_buf4`
         ldy     #0
         lda     ($08),y
         tay
@@ -1796,7 +1796,7 @@ L4CD6:  pha
 
 :       stx     filename_buf
 
-        ;; And remove from path_buf4
+        ;; And remove from `path_buf4`
         lda     path_buf4
         sec
         sbc     filename_buf
@@ -1858,7 +1858,7 @@ L4D9D:  pha
         jmp     select_and_refresh_window
 
         ;; --------------------------------------------------
-        ;; Update used/free for windows for same vol as path_buf3
+        ;; Update used/free for windows for same vol as `path_buf3`
 
 :       ldy     #1
 @loop:  iny
@@ -2016,7 +2016,7 @@ last_active_window_id:
 
 ;;; ============================================================
 ;;; Close parent window after open, if needed. Done by activating then closing.
-;;; Modifies findwindow_window_id
+;;; Modifies `findwindow_window_id`
 
 .proc close_window_after_open
         lda     window_id_to_close
@@ -2272,7 +2272,7 @@ name_ptr:
 ;;; Grab the bounds (MGTK::Rect) of an icon. Just the graphic,
 ;;; not the label.
 ;;; Inputs: A = icon number
-;;; Outputs: cur_icon_bounds is filled, $06 points at icon entry
+;;; Outputs: `cur_icon_bounds` is filled, $06 points at icon entry
 
         DEFINE_RECT cur_icon_bounds, 0, 0, 0, 0
 
@@ -3759,7 +3759,7 @@ not_in_map:
         bmi     add_icon
 
         ;; Explicit command
-        and     #$FF            ; check create_volume_icon results
+        and     #$FF            ; check `create_volume_icon` results
         beq     add_icon
 
         ;; Expected errors per Technical Note: ProDOS #21
@@ -4320,7 +4320,7 @@ icon_num:
 .endproc
 
 ;;; ============================================================
-;;; Remove specified icon from selected_icon_list
+;;; Remove specified icon from `selected_icon_list`
 ;;; Inputs: A = icon_num
 ;;; Assert: icon is present in the list.
 
@@ -5519,7 +5519,7 @@ d8:     .byte   0
         ;; Icon in a folder (A=window_id)
         jsr     get_window_path
         stax    ptr
-        ldy     #0              ; copy to window path to path_buf
+        ldy     #0              ; copy to window path to `path_buf`
         lda     (ptr),y
         tay
 :       lda     (ptr),y
@@ -5580,7 +5580,7 @@ found_window:
 ;;; ============================================================
 ;;; Open a folder/volume icon
 ;;; Input: A = icon
-;;; Note: stack will be restored via saved_stack on failure
+;;; Note: stack will be restored via `saved_stack` on failure
 
 .proc open_folder_or_volume_icon
         ptr := $06
@@ -6038,8 +6038,8 @@ index:  .byte   0
 ;;; ============================================================
 ;;; Check contents against window size, and activate/deactivate
 ;;; horizontal and vertical scrollbars as needed. The
-;;; update_scrollbars entry point will update the thumbs; the
-;;; update_scrollbars_leave_thumbs entry point will not.
+;;; `update_scrollbars` entry point will update the thumbs; the
+;;; `update_scrollbars_leave_thumbs` entry point will not.
 ;;;
 ;;; Assert: cached icons mapped to window space (if in icon view)
 
@@ -6316,7 +6316,7 @@ start:  sta     exact_match_flag
 
 :       sty     path_buffer
 
-        ;; Copy ptr to path_buffer
+        ;; Copy ptr to `path_buffer`
 :       lda     (ptr),y
         sta     path_buffer,y
         dey
@@ -6898,7 +6898,7 @@ size:   .word   0               ; size of a window's list
 ;;; ============================================================
 ;;; Compute full path for icon
 ;;; Inputs: IconEntry pointer in $06
-;;; Outputs: open_dir_path_buf has full path
+;;; Outputs: `open_dir_path_buf` has full path
 ;;; Exceptions: if path too long, shows error and restores saved_stack
 
 .proc compose_icon_full_path
@@ -6995,8 +6995,8 @@ has_parent:
 
 ;;; ============================================================
 ;;; Set up path and coords for new window, contents and free/used.
-;;; Inputs: IconEntry pointer in $06, new window_id in cached_window_id,
-;;;         open_dir_path_buf has full path
+;;; Inputs: IconEntry pointer in $06, new window id in `cached_window_id`,
+;;;         `open_dir_path_buf` has full path
 ;;; Outputs: Winfo configured, window path table entry set
 
 .proc prepare_new_window
@@ -7534,7 +7534,7 @@ icon_type:
 ;;; ============================================================
 ;;; Map file type (etc) to icon type
 
-;;; Input: icontype_type, icontype_auxtype, icontype_blocks populated
+;;; Input: `icontype_type`, `icontype_auxtype`, `icontype_blocks` populated
 ;;; Output: A is IconType to use (for icons, open/preview, etc)
 
 .proc get_icon_type
@@ -8709,7 +8709,7 @@ loop:   lda     name,x
 .endproc
 
 ;;; ============================================================
-;;; Populate text_buffer2 with " 12,345K"
+;;; Populate `text_buffer2` with " 12,345K"
 
 .proc compose_size_string
         stax    value           ; size in 512-byte blocks
@@ -10291,7 +10291,7 @@ step:   .byte   0
 ;;; ============================================================
 ;;; Dynamically load parts of Desktop2
 
-;;; Call load_dynamic_routine or restore_dynamic_routine
+;;; Call `load_dynamic_routine` or `restore_dynamic_routine`
 ;;; with A set to routine number (0-8); routine is loaded
 ;;; from DeskTop2 file to target address. Returns with
 ;;; minus flag set on failure.
@@ -10904,7 +10904,7 @@ drop_on_volume_icon:
         ;; Prefix name with '/'
         copy    #'/', path_buf3+1
 
-        ;; Copy to path_buf3
+        ;; Copy to `path_buf3`
         ldy     #0
         lda     ($06),y
         sta     @compare
@@ -11110,7 +11110,7 @@ all_flag:
 ;;; ============================================================
 ;;; Concatenate paths.
 ;;; Inputs: Base path in $08, second path in $06
-;;; Output: path_buf3
+;;; Output: `path_buf3`
 
 .proc join_paths
         str1 := $8
@@ -11306,7 +11306,7 @@ loop:   ldx     get_info_dialog_params::index
         jsr     icon_entry_name_lookup
         jsr     join_paths
 
-        ldy     path_buf3       ; Copy name to path_buf
+        ldy     path_buf3       ; Copy name to `path_buf`
 :       copy    path_buf3,y, path_buf,y
         dey
         bpl     :-
@@ -11496,7 +11496,7 @@ append_size:
         bne     :-
 :       stx     buf
 
-        ;; TODO: Compose directly into path_buf4.
+        ;; TODO: Compose directly into `path_buf4`.
         COPY_STRING buf, path_buf4
 
         copy16  #path_buf4, get_info_dialog_params::addr
@@ -11608,7 +11608,7 @@ loop:   lda     index
         jsr     icon_entry_name_lookup
         jsr     join_paths
 
-        ldy     path_buf3       ; copy into src_path_buf
+        ldy     path_buf3       ; copy into `src_path_buf`
 :       copy    path_buf3,y, src_path_buf,y
         dey
         bpl     :-
@@ -11622,7 +11622,7 @@ is_vol: ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
 
-        ldy     #0              ; copy into src_path_buf
+        ldy     #0              ; copy into `src_path_buf`
         lda     (icon_name_ptr),y
         tay
         sta     src_path_buf
@@ -13255,7 +13255,7 @@ op_block_count:
 .endproc
 
 ;;; ============================================================
-;;; Append name at file_entry_buf to path at src_path_buf
+;;; Append name at `file_entry_buf` to path at `src_path_buf`
 
 .proc append_to_src_path
         path := src_path_buf
@@ -13282,7 +13282,7 @@ done:   sty     path
 .endproc
 
 ;;; ============================================================
-;;; Remove segment from path at src_path_buf
+;;; Remove segment from path at `src_path_buf`
 
 .proc remove_src_path_segment
         path := src_path_buf
@@ -13305,7 +13305,7 @@ found:  dex
 .endproc
 
 ;;; ============================================================
-;;; Append name at file_entry_buf to path at dst_path_buf
+;;; Append name at `file_entry_buf` to path at `dst_path_buf`
 
 .proc append_to_dst_path
         path := dst_path_buf
@@ -13332,7 +13332,7 @@ done:   sty     path
 .endproc
 
 ;;; ============================================================
-;;; Remove segment from path at dst_path_buf
+;;; Remove segment from path at `dst_path_buf`
 
 .proc remove_dst_path_segment
         path := dst_path_buf
@@ -13355,7 +13355,7 @@ found:  dex
 .endproc
 
 ;;; ============================================================
-;;; Check if path_buf3 (src) is inside path_buf4 (dst); if so,
+;;; Check if `path_buf3` (src) is inside `path_buf4` (dst); if so,
 ;;; show an error and terminate the operation.
 
 .proc check_recursion
@@ -13391,7 +13391,7 @@ ok:     rts
 .endproc
 
 ;;; ============================================================
-;;; Copy path_buf3 to src_path_buf, path_buf4 to dst_path_buf
+;;; Copy `path_buf3` to `src_path_buf`, `path_buf4` to `dst_path_buf`
 ;;; and note last '/' in src.
 
 .proc copy_paths_to_src_and_dst_paths
@@ -13399,7 +13399,7 @@ ok:     rts
         sty     src_path_slash_index
         dey
 
-        ;; Copy path_buf3 to src_path_buf
+        ;; Copy `path_buf3` to `src_path_buf`
         ;; ... but record index of last '/'
 loop:   iny
         lda     path_buf3,y
@@ -13410,7 +13410,7 @@ loop:   iny
         cpy     path_buf3
         bne     loop
 
-        ;; Copy path_buf4 to dst_path_buf
+        ;; Copy `path_buf4` to `dst_path_buf`
         ldy     path_buf4
 :       lda     path_buf4,y
         sta     dst_path_buf,y
@@ -15706,7 +15706,7 @@ finish: pla
         cmp     #2
         bcc     done
 
-        ;; Compute new path_buf1 length
+        ;; Compute new `path_buf1` length
         ldx     path_buf2
         dex
         txa
@@ -15714,7 +15714,7 @@ finish: pla
         adc     path_buf1
         pha
 
-        ;; Copy chars from path_buf2 to path_buf1
+        ;; Copy chars from `path_buf2` to `path_buf1`
         tay
         ldx     path_buf2
 loop:   lda     path_buf2,x
@@ -15724,7 +15724,7 @@ loop:   lda     path_buf2,x
         cpy     path_buf1
         bne     loop
 
-        ;; Finish up, shrinking path_buf2 to just an insertion point
+        ;; Finish up, shrinking `path_buf2` to just an insertion point
         pla
         sta     path_buf1
         copy    #1, path_buf2
@@ -15743,7 +15743,7 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Compute width of path_buf1, offset name_input_textpos, return x coord in (A,X)
+;;; Compute width of `path_buf1`, offset `name_input_textpos`, return x coord in (A,X)
 
 .proc measure_path_buf1
         textwidth_params  := $6
@@ -15784,7 +15784,7 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Adjust ptr_str_files_suffix based on file_count
+;;; Adjust `ptr_str_files_suffix` based on `file_count`
 
 .proc adjust_str_files_suffix
         lda     file_count+1         ; > 255?

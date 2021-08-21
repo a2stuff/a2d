@@ -98,7 +98,7 @@ asp_icon:                       ; AppleWorks Spreadsheet
         .byte   PX(%0100011),PX(%1111111),PX(%1111111),PX(%1100010)
         .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111110)
-        ;; shares generic_mask
+        ;; shares `generic_mask`
 
 adb_icon:                       ; AppleWorks Database
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%0000000)
@@ -117,7 +117,7 @@ adb_icon:                       ; AppleWorks Database
         .byte   PX(%0100111),PX(%1110011),PX(%1110011),PX(%1110010)
         .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111110)
-        ;; shares generic_mask
+        ;; shares `generic_mask`
 
 iigs_file_icon:
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%0000000)
@@ -136,7 +136,7 @@ iigs_file_icon:
         .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
         .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111110)
-        ;; shares generic_mask
+        ;; shares `generic_mask`
 
 rel_file_icon:
         .byte   PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000)
@@ -186,7 +186,7 @@ font_icon:
         .byte   PX(%0101111),PX(%0000111),PX(%1000111),PX(%1111010)
         .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111110)
-        ;; shares generic_mask
+        ;; shares `generic_mask`
 
 ;;; Basic
 
@@ -241,7 +241,7 @@ a2d_file_icon:
         .byte   PX(%0100000),PX(%0111100),PX(%1111000),PX(%0000010)
         .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111110)
-        ;; shares generic_mask
+        ;; shares `generic_mask`
 
         PAD_TO $8E00
 
@@ -302,8 +302,8 @@ settextbg_params    := textwidth_params::result + 1  ; re-used
 textptr:        .addr   text_buffer
 textlen:        .byte   0
 .endparams
-        ;; text_buffer contains only the characters; the length
-        ;; is in drawtext_params::textlen
+        ;; `text_buffer` contains only the characters; the length
+        ;; is in `drawtext_params::textlen`
 text_buffer:
         .res    19, 0
 
@@ -341,7 +341,7 @@ dark_pattern:
 ;;; Icon (i.e. file, volume) details
 
 num_icons:  .byte   0
-icon_table: .res    (::kMaxIconCount+1), 0   ; index into icon_ptrs (index 0 not used)
+icon_table: .res    (::kMaxIconCount+1), 0   ; index into `icon_ptrs` (index 0 not used)
 icon_ptrs:  .res    (::kMaxIconCount+1)*2, 0 ; addresses of icon details (index 0 not used)
 
 has_highlight:                  ; 1 = has highlight, 0 = no highlight
@@ -364,8 +364,8 @@ highlight_list:                 ; selected icons
 kind:   .byte   0               ; spills into next block
 .endparams
 
-;;; findwindow_params::window_id is used as first part of
-;;; GetWinPtr params structure including window_ptr.
+;;; `findwindow_params::window_id` is used as first part of
+;;; GetWinPtr params structure including `window_ptr`.
 .params findwindow_params
 mousex: .word   0
 mousey: .word   0
@@ -586,7 +586,7 @@ bail1:  return  #1              ; Not found
 
 :       asl     a
         tax
-        copy16  icon_ptrs,x, ptr ; ptr now points at IconEntry
+        copy16  icon_ptrs,x, ptr ; `ptr` now points at IconEntry
         ldy     #IconEntry::state
         lda     (ptr),y         ; valid icon?
         bne     :+
