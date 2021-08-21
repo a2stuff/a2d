@@ -4445,6 +4445,7 @@ l3:     jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
         dex
         bpl     :-
 
+        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
         jsr     frame_tmp_rect
 l4:     jsr     peek_event
