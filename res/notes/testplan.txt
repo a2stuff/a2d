@@ -291,3 +291,6 @@
 * Launch DeskTop. Rename a volume to have the same name as another. Verify that an error is shown and the icon is removed.
 
 * Launch DeskTop. Open a window. Select an icon. Hold a modifier key and double-click an empty spot in the window (not on an icon). Verify that the selection is not cleared.
+
+* Launch DeskTop. Open a window. Select an icon. Drag a selection rectangle around another icon. Verify that the initial selection is cleared and only the second icon is selected.
+* Launch DeskTop. Open a window. Select an icon. Hold a modifier key down and drag a selection rectangle around another icon. Verify that both are selected.
