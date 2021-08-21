@@ -871,7 +871,7 @@ LAA4C:  jsr     populate_count
 .proc show_insert_source_disk_alert
         lda     #AlertID::insert_source_disk
         jsr     app::ShowAlert
-        bne     :+              ; cancel
+        bne     :+              ; `kAlertResultCancel` = 1
         jsr     app::set_watch_cursor ; try again
         rts
 

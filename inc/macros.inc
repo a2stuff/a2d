@@ -820,8 +820,10 @@ __pushorg_depth__ .set 0
 ;;;     IF_NE           aliases: IF_NOT_ZERO
 ;;;     IF_CC           aliases: IF_LT
 ;;;     IF_CS           aliases: IF_GE
-;;;     IF_PLUS         aliases: IF_POS
-;;;     IF_MINUS        aliases: IF_NEG
+;;;     IF_VC
+;;;     IF_VS
+;;;     IF_NC           aliases: IF_POS, IF_PLUS
+;;;     IF_NS           aliases: IF_NEG, IF_MINUS
 
 __depth__ .set 0
 
@@ -849,24 +851,38 @@ __depth__ .set 0
         bcc     .ident(.sprintf("__else__%d", ::__depth__))
 .endmacro
 
-.macro IF_PLUS
+.macro IF_NC
         ::__depth__ .set ::__depth__ + 1
         .scope
         bmi     .ident(.sprintf("__else__%d", ::__depth__))
 .endmacro
 
-.macro IF_MINUS
+.macro IF_NS
         ::__depth__ .set ::__depth__ + 1
         .scope
         bpl     .ident(.sprintf("__else__%d", ::__depth__))
+.endmacro
+
+.macro IF_VC
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        bvs     .ident(.sprintf("__else__%d", ::__depth__))
+.endmacro
+
+.macro IF_VS
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        bvc     .ident(.sprintf("__else__%d", ::__depth__))
 .endmacro
 
         .define IF_ZERO IF_EQ
         .define IF_NOT_ZERO IF_NE
         .define IF_GE IF_CS
         .define IF_LT IF_CC
-        .define IF_POS IF_PLUS
-        .define IF_NEG IF_MINUS
+        .define IF_PLUS IF_NC
+        .define IF_MINUS IF_NS
+        .define IF_POS IF_NC
+        .define IF_NEG IF_NS
 
 ;;; --------------------------------------------------
 

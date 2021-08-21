@@ -1191,17 +1191,6 @@ filerecords_free_start:
         rts
 .endproc
 
-.proc warning_dialog_proc_num
-        sta     warning_dialog_num
-        param_call invoke_dialog_proc, kIndexWarningDialog, warning_dialog_num
-        rts
-.endproc
-
-        copy16  #main_loop, L48E4
-
-        L48E4 := *+1
-        jmp     SELF_MODIFIED
-
 ;;; ============================================================
 
 .proc cmd_noop
@@ -1681,7 +1670,7 @@ open:   MLI_RELAY_CALL OPEN, open_params
         bne     :+
         rts
 :       lda     #kWarningMsgInsertSystemDisk
-        jsr     warning_dialog_proc_num
+        jsr     ShowWarning
         beq     open            ; ok, so try again
         return  #$FF            ; cancel, so fail
 
@@ -5677,7 +5666,7 @@ no_win:
 
         ;; Nope, show error.
         lda     #kWarningMsgTooManyWindows
-        jsr     warning_dialog_proc_num
+        jsr     ShowWarning
         ldx     saved_stack
         txs
         rts
@@ -6501,7 +6490,7 @@ too_many_files:
         lda     #kWarningMsgWindowMustBeClosed ; suggest closing a window
         bne     show            ; always
 no_win: lda     #kWarningMsgTooManyFiles ; too many files to show
-show:   jsr     warning_dialog_proc_num
+show:   jsr     ShowWarning
 
         jsr     mark_icons_not_opened_1
         jsr     clear_updates_and_redraw_desktop_icons
@@ -10384,13 +10373,13 @@ restore:
         copy16  len_table,y, read_params::request_count
         copy16  addr_table,y, read_params::data_buffer
 
-open:   MLI_RELAY_CALL OPEN, open_params
+@retry: MLI_RELAY_CALL OPEN, open_params
         beq     :+
 
         lda     #kWarningMsgInsertSystemDisk
         ora     restore_flag    ; high bit set = no cancel
-        jsr     warning_dialog_proc_num
-        beq     open
+        jsr     ShowWarning
+        beq     @retry
         return  #$FF            ; failed
 
 :       lda     open_params::ref_num
@@ -11721,9 +11710,9 @@ common2:
         beq     finish
 
         ;; Failed, maybe retry
-        jsr     JT_SHOW_ALERT
-        bne     :+
-        jmp     retry           ; TODO: Retry isn't offered???
+        jsr     JT_SHOW_ALERT   ; Alert options depend on specific ProDOS error
+        bne     :+              ; not `kAlertResultTryAgain` = 0 (either OK or Cancel)
+        jmp     retry           ; `kAlertResultTryAgain` = 0
 :       lda     #RenameDialogState::close
         jsr     run_dialog_proc
         jmp     fail
@@ -11851,9 +11840,9 @@ L97E4:  .byte   $00
 
 @retry: MLI_RELAY_CALL OPEN, open_src_dir_params
         beq     :+
-        ldx     #kAlertOptionsTryAgainCancel
+        ldx     #AlertButtonOptions::TryAgainCancel
         jsr     JT_SHOW_ALERT_OPTIONS
-        beq     @retry
+        beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     close_files_cancel_dialog
 
 :       lda     open_src_dir_params::ref_num
@@ -11862,9 +11851,9 @@ L97E4:  .byte   $00
 
 @retry2:MLI_RELAY_CALL READ, read_src_dir_header_params
         beq     :+
-        ldx     #kAlertOptionsTryAgainCancel
+        ldx     #AlertButtonOptions::TryAgainCancel
         jsr     JT_SHOW_ALERT_OPTIONS
-        beq     @retry2
+        beq     @retry2         ; `kAlertResultTryAgain` = 0
         jmp     close_files_cancel_dialog
 
 :       jmp     read_file_entry
@@ -11875,9 +11864,9 @@ L97E4:  .byte   $00
         sta     close_src_dir_params::ref_num
 @retry: MLI_RELAY_CALL CLOSE, close_src_dir_params
         beq     :+
-        ldx     #kAlertOptionsTryAgainCancel
+        ldx     #AlertButtonOptions::TryAgainCancel
         jsr     JT_SHOW_ALERT_OPTIONS
-        beq     @retry
+        beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     close_files_cancel_dialog
 
 :       rts
@@ -11891,9 +11880,9 @@ L97E4:  .byte   $00
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
-        ldx     #kAlertOptionsTryAgainCancel
+        ldx     #AlertButtonOptions::TryAgainCancel
         jsr     JT_SHOW_ALERT_OPTIONS
-        beq     @retry
+        beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     close_files_cancel_dialog
 
 :       inc     entries_read_this_block
@@ -13610,7 +13599,7 @@ flag_clear:
         beq     not_found
 
         jsr     JT_SHOW_ALERT
-        bne     LA4C2           ; cancel???
+        bne     LA4C2           ; not kAlertResultTryAgain = 0
         rts
 
 not_found:
@@ -13621,7 +13610,7 @@ not_found:
 
 :       lda     #kErrInsertSrcDisk
 show:   jsr     JT_SHOW_ALERT
-        bne     LA4C2
+        bne     LA4C2           ; not kAlertResultTryAgain = 0
         jmp     do_on_line
 
 LA4C2:  jmp     close_files_cancel_dialog
@@ -13643,7 +13632,7 @@ do_on_line:
 ;;; ============================================================
 ;;; Dialog Launcher (or just proc handler???)
 
-kNumDialogTypes = 13
+kNumDialogTypes = 12
 
 kIndexAboutDialog       = 0
 kIndexCopyDialog        = 1
@@ -13655,7 +13644,6 @@ kIndexUnlockDialog      = 8
 kIndexRenameDialog      = 9
 kIndexDownloadDialog    = 10
 kIndexGetSizeDialog     = 11
-kIndexWarningDialog     = 12
 
 invoke_dialog_proc:
         ASSERT_ADDRESS $A500, "Overlay entry point"
@@ -13674,7 +13662,6 @@ dialog_proc_table:
         .addr   rename_dialog_proc
         .addr   download_dialog_proc
         .addr   get_size_dialog_proc
-        .addr   warning_dialog_proc
         ASSERT_ADDRESS_TABLE_SIZE dialog_proc_table, kNumDialogTypes
 
 dialog_param_addr:
@@ -14961,105 +14948,6 @@ close_win:
 .endproc
 
 ;;; ============================================================
-;;; "Warning!" dialog
-;;; $6 ptr to message num
-
-.proc warning_dialog_proc
-        ptr := $6
-
-        ;; Create window
-        MGTK_RELAY_CALL MGTK::HideCursor
-        jsr     open_alert_window
-        lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
-        param_call draw_dialog_title, aux::str_warning
-        MGTK_RELAY_CALL MGTK::ShowCursor
-        jsr     copy_dialog_param_addr_to_ptr
-
-        ;; Dig up message
-        ldy     #0
-        lda     (ptr),y
-        pha
-        bmi     only_ok         ; high bit set means no cancel
-        tax
-        lda     warning_cancel_table,x
-        bne     ok_and_cancel
-
-only_ok:                        ; no cancel button
-        pla
-        and     #$7F
-        pha
-        jsr     draw_ok_button
-        jmp     draw_string
-
-ok_and_cancel:                  ; has cancel button
-        jsr     draw_ok_cancel_buttons
-
-draw_string:
-        ;; First string
-        pla
-        pha
-        asl     a               ; * 2
-        asl     a               ; * 4, since there are two strings each
-        tay
-        lda     warning_message_table+1,y
-        tax
-        lda     warning_message_table,y
-        ldy     #3              ; row
-        jsr     draw_dialog_label
-
-        ;; Second string
-        pla
-        asl     a
-        asl     a
-        tay
-        lda     warning_message_table+2+1,y
-        tax
-        lda     warning_message_table+2,y
-        ldy     #4              ; row
-        jsr     draw_dialog_label
-
-        ;; Input loop
-:       jsr     prompt_input_loop
-        bmi     :-
-
-        pha
-        jsr     close_prompt_dialog
-        jsr     set_cursor_pointer
-        pla
-        rts
-
-        ;; high bit set if "cancel" should be an option
-warning_cancel_table:
-        .byte   $80        ;; kWarningMsgInsertSystemDisk
-        .byte   $00        ;; kWarningMsgSelectorListFull
-        .byte   $00        ;; kWarningMsgSelectorListFull2
-        .byte   $00        ;; kWarningMsgWindowMustBeClosed
-        .byte   $00        ;; kWarningMsgTooManyFiles
-        .byte   $00        ;; kWarningMsgTooManyWindows
-        .byte   $80        ;; kWarningMsgSaveSelectorList
-        ASSERT_TABLE_SIZE warning_cancel_table, ::kNumWarningTypes
-
-        ;; First line / second line of message.
-warning_message_table:
-        ;; kWarningMsgInsertSystemDisk
-        .addr   aux::str_insert_system_disk, aux::str_blank
-        ;; kWarningMsgSelectorListFull
-        .addr   aux::str_selector_list_full, aux::str_selector_list_full2
-        ;; kWarningMsgSelectorListFull2
-        .addr   aux::str_selector_list_full, aux::str_selector_list_full2
-        ;; kWarningMsgWindowMustBeClosed
-        .addr   aux::str_window_must_be_closed, aux::str_blank
-        ;; kWarningMsgTooManyFiles
-        .addr   aux::str_too_many_files, aux::str_blank
-        ;; kWarningMsgTooManyWindows
-        .addr   aux::str_too_many_windows, aux::str_blank
-        ;; kWarningMsgSaveSelectorList
-        .addr   aux::str_save_selector_list, aux::str_save_selector_list2
-        ASSERT_RECORD_TABLE_SIZE warning_message_table, ::kNumWarningTypes, 4
-.endproc
-
-;;; ============================================================
 
 .proc copy_dialog_param_addr_to_ptr
         copy16  dialog_param_addr, $06
@@ -15189,20 +15077,6 @@ done:   jmp     reset_main_grafport
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
         lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
-        jsr     set_penmode_xor
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_inner_rect
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc open_alert_window
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
-        lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
-        jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintBits, aux::Alert::alert_bitmap_params
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_inner_rect

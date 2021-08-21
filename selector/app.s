@@ -696,8 +696,8 @@ quick_boot_slot:
         beq     found_desktop
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     not_desktop     ; Cancel
-        beq     :-
+        bne     not_desktop     ; `kAlertResultCancel` = 1
+        beq     :-              ; `kAlertResultTryAgain` = 0
 found_desktop:
         jmp     run_desktop
 
@@ -875,7 +875,7 @@ L943F:  jsr     load_selector_list
 
 L9443:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     :+           ; Cancel
+        bne     :+           ; `kAlertResultCancel` = 1
         jsr     set_watch_cursor
         jmp     L93FF
 
@@ -942,8 +942,8 @@ check_desktop_btn:
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     done
-        beq     :-
+        bne     done            ; `kAlertResultCancel` = 1
+        beq     :-              ; `kAlertResultTryAgain` = 0
 :       jmp     run_desktop
 
         ;; Entry selection?
@@ -1402,8 +1402,8 @@ start:  MLI_CALL OPEN, open_selector_params
         rts
 
 error:  lda     #AlertID::insert_system_disk
-        jsr     ShowAlert       ; Cancel
-        beq     start
+        jsr     ShowAlert       ; `kAlertResultCancel` = 1
+        beq     start           ; `kAlertResultTryAgain` = 0
         rts
 .endproc
 
@@ -1946,7 +1946,7 @@ L9C87:  lda     ($06),y
         cmp     #ERR_VOL_NOT_FOUND
         bne     fail
         txa
-        bne     fail            ; Cancel (Seems wrong, kAlertResultCancel = 1 ?)
+        bne     fail            ; `kAlertResultCancel` = 1
         jsr     set_watch_cursor
         jmp     L9C78
 
@@ -1996,7 +1996,7 @@ check_path:
         bne     :-
         lda     #AlertID::insert_source_disk
         jsr     ShowAlert
-        bne     clear_selected_index ; Cancel
+        bne     clear_selected_index ; `kAlertResultCancel` = 1
         jmp     try
 
 :       dey

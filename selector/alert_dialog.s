@@ -132,7 +132,7 @@ message_table:
         ;; $80 (%10xx0000) = Cancel + Try Again
         ;; $00 (%0xxxxxxx) = Ok
 
-.enum MessageFlags
+.enum AlertButtonOptions
         OkCancel = $C0
         YesNoCancel = $81
         TryAgainCancel = $80
@@ -140,14 +140,14 @@ message_table:
 .endenum
 
 alert_options_table:
-        .byte   MessageFlags::Ok
-        .byte   MessageFlags::Ok
-        .byte   MessageFlags::Ok
-        .byte   MessageFlags::Ok
-        .byte   MessageFlags::TryAgainCancel
-        .byte   MessageFlags::Ok
-        .byte   MessageFlags::TryAgainCancel
-        .byte   MessageFlags::Ok
+        .byte   AlertButtonOptions::Ok
+        .byte   AlertButtonOptions::Ok
+        .byte   AlertButtonOptions::Ok
+        .byte   AlertButtonOptions::Ok
+        .byte   AlertButtonOptions::TryAgainCancel
+        .byte   AlertButtonOptions::Ok
+        .byte   AlertButtonOptions::TryAgainCancel
+        .byte   AlertButtonOptions::Ok
         ASSERT_TABLE_SIZE alert_options_table, kNumAlertMessages
 
 .proc ShowAlertImpl

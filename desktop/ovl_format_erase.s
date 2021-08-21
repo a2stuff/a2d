@@ -129,8 +129,8 @@ L0942:  lda     winfo_prompt_dialog::window_id
 L0980:  cmp     #ERR_WRITE_PROTECTED
         bne     L098C
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     L09C2
-        jmp     L090C
+        bne     L09C2           ; `kAlertResultCancel` = 1
+        jmp     L090C           ; `kAlertResultTryAgain` = 0
 
 L098C:  jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_erasing_error
@@ -142,8 +142,8 @@ L099B:  pha
         cmp     #ERR_WRITE_PROTECTED
         bne     L09AC
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     L09C2
-        jmp     L090C
+        bne     L09C2           ; `kAlertResultCancel` = 1
+        jmp     L090C           ; `kAlertResultTryAgain` = 0
 
 L09AC:  jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_formatting_error
@@ -254,8 +254,8 @@ L0AD1:  lda     winfo_prompt_dialog::window_id
 L0B12:  cmp     #ERR_WRITE_PROTECTED
         bne     L0B1E
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     L0B31
-        jmp     L0AD1
+        bne     L0B31           ; `kAlertResultCancel` = 1
+        jmp     L0AD1           ; `kAlertResultTryAgain` = 0
 
 L0B1E:  jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_erasing_error

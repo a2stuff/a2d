@@ -3648,11 +3648,37 @@ str_download:
 str_ramcard_full:
         PASCAL_STRING res_string_download_error_ramcard_full
 
-str_blank:
-        PASCAL_STRING " "       ; do not localize
+;;; ============================================================
+;;; Show Warning Dialog
 
-str_warning:
-        PASCAL_STRING res_string_warning_dialog_title
+.proc WarningById
+        jmp     start
+
+        ;; high bit set if "cancel" should be an option
+warning_cancel_table:
+        .byte   $80        ;; kWarningMsgInsertSystemDisk
+        .byte   $00        ;; kWarningMsgSelectorListFull
+        .byte   $00        ;; kWarningMsgWindowMustBeClosed
+        .byte   $00        ;; kWarningMsgTooManyFiles
+        .byte   $00        ;; kWarningMsgTooManyWindows
+        .byte   $80        ;; kWarningMsgSaveSelectorList
+        ASSERT_TABLE_SIZE warning_cancel_table, ::kNumWarningTypes
+
+        ;; First line / second line of message.
+warning_message_table:
+        ;; kWarningMsgInsertSystemDisk
+        .addr   str_insert_system_disk, 0
+        ;; kWarningMsgSelectorListFull
+        .addr   str_selector_list_full, str_selector_list_full2
+        ;; kWarningMsgWindowMustBeClosed
+        .addr   str_window_must_be_closed, 0
+        ;; kWarningMsgTooManyFiles
+        .addr   str_too_many_files, 0
+        ;; kWarningMsgTooManyWindows
+        .addr   str_too_many_windows, 0
+        ;; kWarningMsgSaveSelectorList
+        .addr   str_save_selector_list, str_save_selector_list2
+        ASSERT_RECORD_TABLE_SIZE warning_message_table, ::kNumWarningTypes, 4
 
 str_insert_system_disk:
         PASCAL_STRING res_string_warning_insert_system_disk
@@ -3676,6 +3702,59 @@ str_save_selector_list:
 str_save_selector_list2:
         PASCAL_STRING res_string_warning_save_selector_list_line2
 
+.params alert_params
+line1:          .addr   0       ; first line of text
+line2:          .addr   0       ; optional - second line of text (TODO: wrap instead)
+buttons:        .byte   0       ; AlertButtonOptions
+options:        .byte   0       ; AlertOptions flags
+.endparams
+
+start:
+        ;; Special case: high bit set = no cancel
+        pha
+        and     #$7F
+        tax                     ; X = index
+        pla
+        bpl     :+
+        ldy     #AlertButtonOptions::Ok
+        beq     set             ; always
+
+        ;; Buttons
+:       ldy     #AlertButtonOptions::Ok
+        lda     warning_cancel_table,x
+        bpl     :+
+        ldy     #AlertButtonOptions::OkCancel
+set:    sty     alert_params::buttons
+
+        ;; Options
+        lda     #AlertOptions::Beep | AlertOptions::SaveBack
+        sta     alert_params::options
+
+        ;; Strings
+        txa
+        asl                     ; *=4
+        asl
+        tax
+
+        ldy     #0
+:       lda     warning_message_table,x
+        sta     alert_params::line1,y
+        inx
+        iny
+        cpy     #4
+        bne     :-
+
+        ;; Show the alert
+        ldax    #alert_params
+        jsr     Alert
+
+        cmp     #kAlertResultOK
+        beq     :+
+        return #$FF             ; Cancel
+:       return #0               ; OK
+
+.endproc
+
 ;;; ============================================================
 ;;; Show Alert Dialog
 ;;; Call show_alert_dialog with prompt number A, options in X
@@ -3688,6 +3767,151 @@ str_save_selector_list2:
 ;;;   0 = Try Again
 ;;;   1 = Cancel
 ;;;   2 = OK
+
+.proc AlertById
+        jmp     start
+
+;;; --------------------------------------------------
+;;; Messages
+
+err_00:  PASCAL_STRING res_string_errmsg_00
+err_27:  PASCAL_STRING res_string_errmsg_27
+err_28:  PASCAL_STRING res_string_errmsg_28
+err_2B:  PASCAL_STRING res_string_errmsg_2B
+err_40:  PASCAL_STRING res_string_errmsg_40
+err_44:  PASCAL_STRING res_string_errmsg_44
+err_45:  PASCAL_STRING res_string_errmsg_45
+err_46:  PASCAL_STRING res_string_errmsg_46
+err_47:  PASCAL_STRING res_string_errmsg_47
+err_48:  PASCAL_STRING res_string_errmsg_48
+err_49:  PASCAL_STRING res_string_errmsg_49
+err_4E:  PASCAL_STRING res_string_errmsg_4E
+err_52:  PASCAL_STRING res_string_errmsg_52
+err_57:  PASCAL_STRING res_string_errmsg_57
+        ;; Below are internal (not ProDOS MLI) error codes.
+err_F7:  PASCAL_STRING res_string_errmsg_F7
+err_F8:  PASCAL_STRING res_string_errmsg_F8
+err_F9:  PASCAL_STRING res_string_errmsg_F9
+err_FA:  PASCAL_STRING res_string_errmsg_FA
+err_FB:  PASCAL_STRING res_string_errmsg_FB
+err_FC:  PASCAL_STRING res_string_errmsg_FC
+err_FD:  PASCAL_STRING res_string_errmsg_FD
+err_FE:  PASCAL_STRING res_string_errmsg_FE
+
+        ;; number of alert messages
+        kNumAlerts = 22
+alert_count:
+        .byte   kNumAlerts
+
+        ;; message number-to-index table
+        ;; (look up by scan to determine index)
+alert_table:
+        ;; ProDOS MLI error codes:
+        .byte   $00, ERR_IO_ERROR, ERR_DEVICE_NOT_CONNECTED, ERR_WRITE_PROTECTED
+        .byte   ERR_INVALID_PATHNAME, ERR_PATH_NOT_FOUND, ERR_VOL_NOT_FOUND
+        .byte   ERR_FILE_NOT_FOUND, ERR_DUPLICATE_FILENAME, ERR_OVERRUN_ERROR
+        .byte   ERR_VOLUME_DIR_FULL, ERR_ACCESS_ERROR, ERR_NOT_PRODOS_VOLUME
+        .byte   ERR_DUPLICATE_VOLUME
+
+        ;; Internal error codes:
+        .byte   kErrNoWindowsOpen
+        .byte   kErrMoveCopyIntoSelf
+        .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
+        .byte   kErrInsertSrcDisk, kErrInsertDstDisk, kErrBasicSysNotFound
+        ASSERT_TABLE_SIZE alert_table, kNumAlerts
+
+        ;; alert index to string address
+message_table:
+        .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
+        .addr   err_47,err_48,err_49,err_4E,err_52,err_57
+        .addr   err_F7,err_F8,err_F9,err_FA
+        .addr   err_FB,err_FC,err_FD,err_FE
+        ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlerts
+
+alert_options_table:
+        .byte   AlertButtonOptions::Ok             ; dummy
+        .byte   AlertButtonOptions::Ok             ; ERR_IO_ERROR
+        .byte   AlertButtonOptions::Ok             ; ERR_DEVICE_NOT_CONNECTED
+        .byte   AlertButtonOptions::TryAgainCancel ; ERR_WRITE_PROTECTED
+        .byte   AlertButtonOptions::Ok             ; ERR_INVALID_PATHNAME
+        .byte   AlertButtonOptions::TryAgainCancel ; ERR_PATH_NOT_FOUND
+        .byte   AlertButtonOptions::Ok             ; ERR_VOL_NOT_FOUND
+        .byte   AlertButtonOptions::Ok             ; ERR_FILE_NOT_FOUND
+        .byte   AlertButtonOptions::Ok             ; ERR_DUPLICATE_FILENAME
+        .byte   AlertButtonOptions::Ok             ; ERR_OVERRUN_ERROR
+        .byte   AlertButtonOptions::Ok             ; ERR_VOLUME_DIR_FULL
+        .byte   AlertButtonOptions::Ok             ; ERR_ACCESS_ERROR
+        .byte   AlertButtonOptions::Ok             ; ERR_NOT_PRODOS_VOLUME
+        .byte   AlertButtonOptions::Ok             ; ERR_DUPLICATE_VOLUME
+
+        .byte   AlertButtonOptions::Ok             ; kErrNoWindowsOpen
+        .byte   AlertButtonOptions::Ok             ; kErrMoveCopyIntoSelf
+        .byte   AlertButtonOptions::Ok             ; kErrDuplicateVolName
+        .byte   AlertButtonOptions::Ok             ; kErrFileNotOpenable
+        .byte   AlertButtonOptions::Ok             ; kErrNameTooLong
+        .byte   AlertButtonOptions::TryAgainCancel ; kErrInsertSrcDisk
+        .byte   AlertButtonOptions::TryAgainCancel ; kErrInsertDstDisk
+        .byte   AlertButtonOptions::Ok             ; kErrBasicSysNotFound
+        ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
+
+.params alert_params
+line1:          .addr   0       ; first line of text
+line2:          .addr   0       ; optional - second line of text (TODO: wrap instead)
+buttons:        .byte   0       ; AlertButtonOptions
+options:        .byte   0       ; AlertOptions flags
+.endparams
+
+start:
+        ;; --------------------------------------------------
+        ;; Process Options, populate `alert_params`
+
+        ;; A=alert/X=options
+
+        ;; Search for alert in table, set Y to index
+        ldy     alert_count
+        dey
+:       cmp     alert_table,y
+        beq     :+
+        dey
+        bpl     :-
+        ldy     #0              ; default
+:
+
+        ;; Look up message
+        tya                     ; Y = index
+        asl     a
+        tay                     ; Y = index * 2
+        copy16  message_table,y, alert_params::line1
+        copy16  #0, alert_params::line2
+
+        ;; If options is 0, use table value; otherwise,
+        ;; mask off low bit and it's the action (N and V bits)
+
+        ;; %00000000 = Use default options
+        ;; %0....... e.g. $01 = OK
+        ;; %10...... e.g. $80 = Try Again, Cancel
+        ;; %11...... e.g. $C0 = OK, Cancel
+
+        cpx     #0
+      IF_NE
+        txa
+        and     #$FE            ; ignore low bit, e.g. treat $01 as $00
+        sta     alert_params::buttons
+      ELSE
+        tya                     ; Y = index * 2
+        lsr     a
+        tay                     ; Y = index
+        lda     alert_options_table,y
+        sta     alert_params::buttons
+      END_IF
+
+        copy    #AlertOptions::Beep | AlertOptions::SaveBack, alert_params::options
+
+        ldax    #alert_params
+        jmp     Alert
+.endproc
+
+
 
 .proc Alert
         jmp     start
@@ -3755,118 +3979,44 @@ reserved:       .byte   0
         DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
         DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
 
-        DEFINE_POINT pos_prompt, 75, 29
+        DEFINE_POINT pos_prompt1, 75, 29-11
+        DEFINE_POINT pos_prompt2, 75, 29
 
-;;; %0....... = OK
-;;; %10...... = Cancel, Try Again
-;;; %11...... = Cancel, OK
-alert_options:  .byte   0
-prompt_addr:    .addr   0
-
-;;; ============================================================
-;;; Messages
-
-err_00:  PASCAL_STRING res_string_errmsg_00
-err_27:  PASCAL_STRING res_string_errmsg_27
-err_28:  PASCAL_STRING res_string_errmsg_28
-err_2B:  PASCAL_STRING res_string_errmsg_2B
-err_40:  PASCAL_STRING res_string_errmsg_40
-err_44:  PASCAL_STRING res_string_errmsg_44
-err_45:  PASCAL_STRING res_string_errmsg_45
-err_46:  PASCAL_STRING res_string_errmsg_46
-err_47:  PASCAL_STRING res_string_errmsg_47
-err_48:  PASCAL_STRING res_string_errmsg_48
-err_49:  PASCAL_STRING res_string_errmsg_49
-err_4E:  PASCAL_STRING res_string_errmsg_4E
-err_52:  PASCAL_STRING res_string_errmsg_52
-err_57:  PASCAL_STRING res_string_errmsg_57
-        ;; Below are internal (not ProDOS MLI) error codes.
-err_F7:  PASCAL_STRING res_string_errmsg_F7
-err_F8:  PASCAL_STRING res_string_errmsg_F8
-err_F9:  PASCAL_STRING res_string_errmsg_F9
-err_FA:  PASCAL_STRING res_string_errmsg_FA
-err_FB:  PASCAL_STRING res_string_errmsg_FB
-err_FC:  PASCAL_STRING res_string_errmsg_FC
-err_FD:  PASCAL_STRING res_string_errmsg_FD
-err_FE:  PASCAL_STRING res_string_errmsg_FE
-
-        ;; number of alert messages
-        kNumAlerts = 22
-alert_count:
-        .byte   kNumAlerts
-
-        ;; message number-to-index table
-        ;; (look up by scan to determine index)
-alert_table:
-        ;; ProDOS MLI error codes:
-        .byte   $00, ERR_IO_ERROR, ERR_DEVICE_NOT_CONNECTED, ERR_WRITE_PROTECTED
-        .byte   ERR_INVALID_PATHNAME, ERR_PATH_NOT_FOUND, ERR_VOL_NOT_FOUND
-        .byte   ERR_FILE_NOT_FOUND, ERR_DUPLICATE_FILENAME, ERR_OVERRUN_ERROR
-        .byte   ERR_VOLUME_DIR_FULL, ERR_ACCESS_ERROR, ERR_NOT_PRODOS_VOLUME
-        .byte   ERR_DUPLICATE_VOLUME
-
-        ;; Internal error codes:
-        .byte   kErrNoWindowsOpen
-        .byte   kErrMoveCopyIntoSelf
-        .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
-        .byte   kErrInsertSrcDisk, kErrInsertDstDisk, kErrBasicSysNotFound
-        ASSERT_TABLE_SIZE alert_table, kNumAlerts
-
-        ;; alert index to string address
-message_table:
-        .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
-        .addr   err_47,err_48,err_49,err_4E,err_52,err_57
-        .addr   err_F7,err_F8,err_F9,err_FA
-        .addr   err_FB,err_FC,err_FD,err_FE
-        ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlerts
-
-        ;; $C0 (%11xxxxxx) = Cancel + Ok
-        ;; $81 (%10xxxxx1) = Cancel + Yes + No
-        ;; $80 (%10xx0000) = Cancel + Try Again
-        ;; $00 (%0xxxxxxx) = Ok
-
-.enum MessageFlags
-        OkCancel = $C0
-        YesNoCancel = $81
-        TryAgainCancel = $80
-        Ok = $00
-.endenum
-
-alert_options_table:
-        .byte   MessageFlags::Ok             ; dummy
-        .byte   MessageFlags::Ok             ; ERR_IO_ERROR
-        .byte   MessageFlags::Ok             ; ERR_DEVICE_NOT_CONNECTED
-        .byte   MessageFlags::TryAgainCancel ; ERR_WRITE_PROTECTED
-        .byte   MessageFlags::Ok             ; ERR_INVALID_PATHNAME
-        .byte   MessageFlags::TryAgainCancel ; ERR_PATH_NOT_FOUND
-        .byte   MessageFlags::Ok             ; ERR_VOL_NOT_FOUND
-        .byte   MessageFlags::Ok             ; ERR_FILE_NOT_FOUND
-        .byte   MessageFlags::Ok             ; ERR_DUPLICATE_FILENAME
-        .byte   MessageFlags::Ok             ; ERR_OVERRUN_ERROR
-        .byte   MessageFlags::Ok             ; ERR_VOLUME_DIR_FULL
-        .byte   MessageFlags::Ok             ; ERR_ACCESS_ERROR
-        .byte   MessageFlags::Ok             ; ERR_NOT_PRODOS_VOLUME
-        .byte   MessageFlags::Ok             ; ERR_DUPLICATE_VOLUME
-
-        .byte   MessageFlags::Ok             ; kErrNoWindowsOpen
-        .byte   MessageFlags::Ok             ; kErrMoveCopyIntoSelf
-        .byte   MessageFlags::Ok             ; kErrDuplicateVolName
-        .byte   MessageFlags::Ok             ; kErrFileNotOpenable
-        .byte   MessageFlags::Ok             ; kErrNameTooLong
-        .byte   MessageFlags::TryAgainCancel ; kErrInsertSrcDisk
-        .byte   MessageFlags::TryAgainCancel ; kErrInsertDstDisk
-        .byte   MessageFlags::Ok             ; kErrBasicSysNotFound
-        ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
+.params alert_params
+line1:          .addr   0       ; first line of text
+line2:          .addr   0       ; optional - second line of text (TODO: wrap instead)
+buttons:        .byte   0       ; AlertButtonOptions
+options:        .byte   0       ; AlertOptions flags
+.endparams
 
         ;; Actual entry point
-start:  pha                     ; error code
-        txa
-        pha                     ; options
+start:
+        ;; Copy passed params
+        stax    @addr
+        ldx     #.sizeof(alert_params)-1
+        @addr := *+1
+:       lda     SELF_MODIFIED,x
+        sta     alert_params,x
+        dex
+        bpl     :-
+
         MGTK_CALL MGTK::SetCursor, pointer_cursor
 
-        ;; play bell
-        jsr     Bell
+        ;; --------------------------------------------------
+        ;; Play bell
 
+        bit     alert_params::options
+    IF_NS                       ; N = play sound
+        jsr     Bell
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Draw alert
+
+        MGTK_CALL MGTK::HideCursor
+
+        bit     alert_params::options
+    IF_VS                       ; V = use save area
         ;; Compute save bounds
         ldax    portmap::viewloc::xcoord ; left
         jsr     CalcXSaveBounds
@@ -3891,8 +4041,8 @@ start:  pha                     ; error code
         adc     portmap::maprect::y2 ; bottom
         sta     save_y2
 
-        MGTK_CALL MGTK::HideCursor
         jsr     dialog_background_save
+     END_IF
 
         ;; Set up GrafPort
         MGTK_CALL MGTK::InitPort, main_grafport
@@ -3916,54 +4066,11 @@ start:  pha                     ; error code
 
         MGTK_CALL MGTK::ShowCursor
 
-        ;; --------------------------------------------------
-        ;; Process Options
-
-        ;; A=alert/X=options
-        pla                     ; options
-        tax
-        pla                     ; alert number
-
-        ;; Search for alert in table, populate prompt_addr
-        ldy     alert_count
-        dey
-:       cmp     alert_table,y
-        beq     :+
-        dey
-        bpl     :-
-
-        ldy     #0              ; default
-:       tya
-        asl     a
-        tay
-        copy16  message_table,y, prompt_addr
-
-        ;; If options is 0, use table value; otherwise,
-        ;; mask off low bit and it's the action (N and V bits)
-
-        ;; %00000000 = Use default options
-        ;; %0....... e.g. $01 = OK
-        ;; %10...... e.g. $80 = Try Again, Cancel
-        ;; %11...... e.g. $C0 = OK, Cancel
-
-        cpx     #0
-        beq     :+
-        txa
-        and     #$FE            ; ignore low bit, e.g. treat $01 as $00
-        sta     alert_options
-        jmp     draw_buttons
-
-:       tya
-        lsr     a
-        tay
-        lda     alert_options_table,y
-        sta     alert_options
-
         ;; Draw appropriate buttons
 draw_buttons:
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        bit     alert_options    ; high bit clear = Cancel
+        bit     alert_params::buttons ; high bit clear = Cancel
         bpl     ok_button
 
         ;; Cancel button
@@ -3971,7 +4078,7 @@ draw_buttons:
         MGTK_CALL MGTK::MoveTo, cancel_button_pos
         param_call DrawString, cancel_button_label
 
-        bit     alert_options
+        bit     alert_params::buttons
         bvs     ok_button
 
         ;; Try Again button
@@ -3989,8 +4096,17 @@ ok_button:
 
         ;; Prompt string
 draw_prompt:
-        MGTK_CALL MGTK::MoveTo, pos_prompt
-        param_call_indirect DrawString, prompt_addr
+        lda     alert_params::line2
+        ora     alert_params::line2+1
+      IF_ZERO
+        MGTK_CALL MGTK::MoveTo, pos_prompt2
+        param_call_indirect DrawString, alert_params::line1
+      ELSE
+        MGTK_CALL MGTK::MoveTo, pos_prompt1
+        param_call_indirect DrawString, alert_params::line1
+        MGTK_CALL MGTK::MoveTo, pos_prompt2
+        param_call_indirect DrawString, alert_params::line2
+      END_IF
 
         ;; --------------------------------------------------
         ;; Event Loop
@@ -4009,7 +4125,7 @@ event_loop:
         ;; --------------------------------------------------
         ;; Key Down
         lda     event_key
-        bit     alert_options   ; has Cancel?
+        bit     alert_params::buttons ; has Cancel?
         bpl     check_only_ok   ; nope
 
         cmp     #CHAR_ESCAPE
@@ -4021,7 +4137,7 @@ do_cancel:
         lda     #kAlertResultCancel
         jmp     finish
 
-:       bit     alert_options   ; has Try Again?
+:       bit     alert_params::buttons ; has Try Again?
         bvs     check_ok        ; nope
         cmp     #TO_LOWER(kShortcutTryAgain)
         bne     :+
@@ -4059,7 +4175,7 @@ handle_button_down:
         jsr     map_event_coords
         MGTK_CALL MGTK::MoveTo, event_coords
 
-        bit     alert_options   ; Cancel showing?
+        bit     alert_params::buttons ; Cancel showing?
         bpl     check_ok_rect   ; nope
 
         MGTK_CALL MGTK::InRect, cancel_button_rect ; Cancel?
@@ -4070,7 +4186,7 @@ handle_button_down:
         lda     #kAlertResultCancel
         jmp     finish
 
-:       bit     alert_options   ; Try Again showing?
+:       bit     alert_params::buttons ; Try Again showing?
         bvs     check_ok_rect   ; nope
 
         MGTK_CALL MGTK::InRect, try_again_button_rect ; Try Again?
@@ -4095,11 +4211,17 @@ no_button:
 
 ;;; ============================================================
 
-finish: pha
+finish:
+
+        bit     alert_params::options
+    IF_VS                       ; V = use save area
+        pha
         MGTK_CALL MGTK::HideCursor
         jsr     dialog_background_restore
         MGTK_CALL MGTK::ShowCursor
         pla
+    END_IF
+
         rts
 
 

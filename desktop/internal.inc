@@ -144,15 +144,14 @@ kDeviceTypeFileShare    = 4
 ;;; ============================================================
 ;;; Warning messages
 
-kNumWarningTypes = 7
+kNumWarningTypes = 6
 
 kWarningMsgInsertSystemDisk     = 0
 kWarningMsgSelectorListFull     = 1
-kWarningMsgSelectorListFull2    = 2
-kWarningMsgWindowMustBeClosed   = 3
-kWarningMsgTooManyFiles         = 4
-kWarningMsgTooManyWindows       = 5
-kWarningMsgSaveSelectorList     = 6
+kWarningMsgWindowMustBeClosed   = 2
+kWarningMsgTooManyFiles         = 3
+kWarningMsgTooManyWindows       = 4
+kWarningMsgSaveSelectorList     = 5
 
 ;;; ============================================================
 ;;; Invoker routine locations

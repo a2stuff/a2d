@@ -201,9 +201,6 @@ kPeriodicTaskDelayIIe  = $96
 kPeriodicTaskDelayIIc  = $FA
 kPeriodicTaskDelayIIgs = $FD
 
-warning_dialog_num:
-        .byte   $00
-
 ;;; Cursors (bitmap - 2x12 bytes, mask - 2x12 bytes, hotspot - 2 bytes)
 
 ;;; Pointer

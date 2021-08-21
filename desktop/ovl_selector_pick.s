@@ -40,7 +40,7 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
         bne     L9015
         jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         lda     #kWarningMsgSaveSelectorList
-        jsr     show_warning_dialog
+        jsr     ShowWarning
         bne     L9015
         jsr     write_file_to_original_prefix
         pla
@@ -119,7 +119,7 @@ L90D3:  lda     num_other_run_list_entries
 L90F1:  jmp     L900F
 
 L90F4:  lda     #kWarningMsgSelectorListFull
-L90F6:  jsr     show_warning_dialog
+L90F6:  jsr     ShowWarning
         dec     clean_flag      ; reset to "clean"
         jmp     L9016
 
@@ -1404,14 +1404,6 @@ index:  .byte   0
 .endproc
 
 ;;; ============================================================
-
-.proc show_warning_dialog
-        sta     warning_dialog_num
-        param_call main::invoke_dialog_proc, $0C, warning_dialog_num
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Write out SELECTOR.LIST file, using original prefix.
 ;;; Used if DeskTop was copied to RAMCard.
 
@@ -1446,13 +1438,12 @@ filename:
         bne     :-
         sty     filename_buffer
 
-retry_open:
-        MLI_RELAY_CALL CREATE, create_params
+@retry: MLI_RELAY_CALL CREATE, create_params
         MLI_RELAY_CALL OPEN, open_origpfx_params
         beq     write
         lda     #kWarningMsgInsertSystemDisk
-        jsr     show_warning_dialog
-        beq     retry_open
+        jsr     ShowWarning
+        beq     @retry
 
         rts
 
@@ -1460,14 +1451,13 @@ write:  lda     open_origpfx_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
 
-retry_write:
-        MLI_RELAY_CALL WRITE, write_params
+@retry: MLI_RELAY_CALL WRITE, write_params
         beq     close
         pha
         jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         pla
         jsr     JUMP_TABLE_SHOW_ALERT
-        beq     retry_write
+        beq     @retry          ; `kAlertResultTryAgain` = 0
 
 close:  MLI_RELAY_CALL CLOSE, close_params
         rts
@@ -1477,11 +1467,11 @@ close:  MLI_RELAY_CALL CLOSE, close_params
 ;;; Read SELECTOR.LIST file (using current prefix)
 
 .proc read_file
-retry:  MLI_RELAY_CALL OPEN, open_curpfx_params
+@retry: MLI_RELAY_CALL OPEN, open_curpfx_params
         beq     read
         lda     #kWarningMsgInsertSystemDisk
-        jsr     show_warning_dialog
-        beq     retry
+        jsr     ShowWarning
+        beq     @retry
         return  #$FF
 
 read:   lda     open_curpfx_params::ref_num
@@ -1500,20 +1490,20 @@ read:   lda     open_curpfx_params::ref_num
 ;;; Write SELECTOR.LIST file (using current prefix)
 
 .proc write_file
-        MLI_RELAY_CALL OPEN, open_curpfx_params
+@retry: MLI_RELAY_CALL OPEN, open_curpfx_params
         beq     write
         lda     #kWarningMsgInsertSystemDisk
-        jsr     show_warning_dialog
-        beq     write_file
+        jsr     ShowWarning
+        beq     @retry
         return  #$FF
 
 write:  lda     open_curpfx_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-:       MLI_RELAY_CALL WRITE, write_params
+@retry: MLI_RELAY_CALL WRITE, write_params
         beq     close
         jsr     JUMP_TABLE_SHOW_ALERT
-        beq     :-
+        beq     @retry          ; `kAlertResultTryAgain` = 0
 
 close:  MLI_RELAY_CALL CLOSE, close_params
         rts

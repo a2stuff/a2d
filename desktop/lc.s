@@ -246,16 +246,23 @@ op:     lda     SELF_MODIFIED
 ;;; From MAIN, show alert
 ;;; Assert: Main is banked in
 
-;;; ...with prompt #0
+;;; A=warning number
+.proc ShowWarning
+        jsr     BankInAux
+        jsr     aux::WarningById
+        jmp     BankInMain
+.endproc
+
+;;; A=alert number, with default options
 .proc ShowAlert
         ldx     #$00
         ;; fall through
 .endproc
 
-;;; ... with prompt # in X
+;;; A=alert number, X=custom options
 .proc ShowAlertOption
         jsr     BankInAux
-        jsr     aux::Alert
+        jsr     aux::AlertById
         jmp     BankInMain
 .endproc
 

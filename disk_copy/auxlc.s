@@ -49,7 +49,7 @@ kAlertMsgInsertDestionationOrCancel = 10 ; No bell, *
 ;;; automatically be dismissed when a disk is inserted.
 
 kAlertResultTryAgain    = 0
-kAlertResultOK          = 0
+kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 kAlertResultCancel      = 1
 kAlertResultYes         = 2
 kAlertResultNo          = 3
@@ -640,7 +640,7 @@ LD6F9:  lda     current_drive_selection
         MGTK_RELAY_CALL2 MGTK::PaintRect, win_frame_rect_params::rect
 
 LD734:  ldx     #0
-        lda     #kAlertMsgInsertSource
+        lda     #kAlertMsgInsertSource ; X=0 means just show alert
         jsr     show_alert_dialog
         beq     :+              ; OK
         jmp     init_dialog     ; Cancel
@@ -689,9 +689,9 @@ LD7AD:  lda     source_drive_index
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         tay
-        ldx     #$00
 
-        lda     #kAlertMsgInsertDestination
+        ldx     #0
+        lda     #kAlertMsgInsertDestination ; X=0 means just show alert
         jsr     show_alert_dialog
         beq     :+              ; OK
         jmp     init_dialog     ; Cancel
@@ -743,14 +743,14 @@ LD817:  lda     main__on_line_buffer2
         lda     drive_unitnum_table,x
         and     #$F0
         tax                     ; slot/drive
-        lda     #kAlertMsgConfirmEraseSlotDrive
+        lda     #kAlertMsgConfirmEraseSlotDrive ; X = unit number
         jmp     show
 
 LD82C:  sta     main__on_line_buffer2
         param_call adjust_case, main__on_line_buffer2
 
         ldxy    #main__on_line_buffer2
-        lda     #kAlertMsgConfirmErase
+        lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
 show:   jsr     show_alert_dialog
         cmp     #kAlertResultCancel
         beq     :+              ; Cancel
@@ -782,7 +782,7 @@ LD852:  ldx     dest_drive_index
         cmp     #$FF            ; $FF = 13-sector Disk II
         beq     LD87C
 
-:       lda     #kAlertMsgDestinationFormatFail
+:       lda     #kAlertMsgDestinationFormatFail ; no args
         jsr     show_alert_dialog
         jmp     init_dialog
 
@@ -793,12 +793,12 @@ LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         cmp     #ERR_WRITE_PROTECTED
         beq     LD89F
 
-        lda     #kAlertMsgFormatError
+        lda     #kAlertMsgFormatError ; no args
         jsr     show_alert_dialog
         beq     LD852           ; Try Again
         jmp     init_dialog     ; Cancel
 
-LD89F:  lda     #kAlertMsgDestinationProtected
+LD89F:  lda     #kAlertMsgDestinationProtected ; no args
         jsr     show_alert_dialog
         beq     LD852           ; Try Again
         jmp     init_dialog     ; Cancel
@@ -819,7 +819,7 @@ LD8A9:  lda     winfo_dialog::window_id
         pla
         tay
         ldx     #$80
-        lda     #kAlertMsgInsertSource
+        lda     #kAlertMsgInsertSource ; X != 0 means Y=unit number, auto-dismiss
         jsr     show_alert_dialog
         beq     LD8DF           ; OK
         jmp     init_dialog     ; Cancel
@@ -850,7 +850,7 @@ LD8FB:  jsr     LE4A8
         pla
         tay
         ldx     #$80
-        lda     #kAlertMsgInsertDestination
+        lda     #kAlertMsgInsertDestination ; X != 0 means Y=unit number, auto-dismiss
         jsr     show_alert_dialog
         beq     LD928           ; OK
         jmp     init_dialog     ; Cancel
@@ -873,7 +873,7 @@ LD928:  jsr     LE491
         pla
         tay
         ldx     #$80
-        lda     #kAlertMsgInsertSource
+        lda     #kAlertMsgInsertSource ; X !=0 means Y=unit number, auto-dismiss
         jsr     show_alert_dialog
         beq     LD8FB           ; OK
         jmp     init_dialog     ; Cancel
@@ -888,12 +888,12 @@ LD955:  jsr     LE507
         beq     :+
         lda     drive_unitnum_table,x
         jsr     main__eject_disk
-:       lda     #kAlertMsgCopySuccessful
+:       lda     #kAlertMsgCopySuccessful ; no args
         jsr     show_alert_dialog
         jmp     init_dialog
 
 LD97A:  jsr     main__free_vol_bitmap_pages
-        lda     #kAlertMsgCopyFailure
+        lda     #kAlertMsgCopyFailure ; no args
         jsr     show_alert_dialog
         jmp     init_dialog
 
@@ -2232,7 +2232,7 @@ flag:   .byte   0
         cmp     #ERR_WRITE_PROTECTED
         bne     l2
         jsr     Bell
-        lda     #kAlertMsgDestinationProtected
+        lda     #kAlertMsgDestinationProtected ; no args
         jsr     show_alert_dialog
         bne     :+              ; Cancel
         jsr     LE491           ; Try Again
@@ -2501,7 +2501,7 @@ message_table:
         ;; $80 (%10xx0000) = Cancel + Try Again
         ;; $00 (%0xxxxxxx) = Ok
 
-.enum MessageFlags
+.enum AlertButtonOptions
         OkCancel = $C0
         YesNoCancel = $81
         TryAgainCancel = $80
@@ -2509,17 +2509,17 @@ message_table:
 .endenum
 
 alert_options_table:
-        .byte   MessageFlags::OkCancel    ; kAlertMsgInsertSource
-        .byte   MessageFlags::OkCancel    ; kAlertMsgInsertDestination
-        .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmErase
-        .byte   MessageFlags::Ok          ; kAlertMsgDestinationFormatFail
-        .byte   MessageFlags::TryAgainCancel ; kAlertMsgFormatError
-        .byte   MessageFlags::TryAgainCancel ; kAlertMsgDestinationProtected
-        .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmEraseSlotDrive
-        .byte   MessageFlags::Ok          ; kAlertMsgCopySuccessful
-        .byte   MessageFlags::Ok          ; kAlertMsgCopyFailure
-        .byte   MessageFlags::Ok          ; kAlertMsgInsertSourceOrCancel
-        .byte   MessageFlags::Ok          ; kAlertMsgInsertDestionationOrCancel
+        .byte   AlertButtonOptions::OkCancel    ; kAlertMsgInsertSource
+        .byte   AlertButtonOptions::OkCancel    ; kAlertMsgInsertDestination
+        .byte   AlertButtonOptions::YesNoCancel ; kAlertMsgConfirmErase
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgDestinationFormatFail
+        .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgFormatError
+        .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgDestinationProtected
+        .byte   AlertButtonOptions::YesNoCancel ; kAlertMsgConfirmEraseSlotDrive
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgCopySuccessful
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgCopyFailure
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertSourceOrCancel
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertDestionationOrCancel
         ASSERT_TABLE_SIZE alert_options_table, auxlc::kNumAlertMessages
 
 message_num:
