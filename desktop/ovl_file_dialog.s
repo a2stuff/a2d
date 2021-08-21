@@ -1088,10 +1088,6 @@ l1:     ldx     num_file_names
 
 ;;; ============================================================
 
-        PAD_TO $5CF7            ; Maintain previous addresses
-
-;;; ============================================================
-
 .proc open_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_file_dialog
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_file_dialog_listbox
@@ -1538,8 +1534,6 @@ l2:     inc     l4
 l3:     .byte   0
 l4:     .byte   0
 .endproc
-
-        PAD_TO $6161            ; Maintain previous addresses
 
 ;;; ============================================================
 
