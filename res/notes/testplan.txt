@@ -16,12 +16,10 @@
 * Move a file by dragging - same volume - target is volume icon.
 * Move a file by dragging - same volume - target is folder icon.
 
-* Copy a file by dragging - same volume - target is window, using Open-Apple modifier.
-* Copy a file by dragging - same volume - target is window, using Solid-Apple modifier.
-* Copy a file by dragging - same volume - target is volume icon, using Open-Apple modifier.
-* Copy a file by dragging - same volume - target is volume icon, using Solid-Apple modifier.
-* Copy a file by dragging - same volume - target is folder icon, using Open-Apple modifier.
-* Copy a file by dragging - same volume - target is folder icon, using Solid-Apple modifier.
+* Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
+  * Copy a file by dragging - same volume - target is window, using modifier.
+  * Copy a file by dragging - same volume - target is volume icon, using modifier.
+  * Copy a file by dragging - same volume - target is folder icon, using modifier.
 
 * Copy a file by dragging - different volume - target is window.
 * Copy a file by dragging - different volume - target is volume icon.
@@ -53,10 +51,10 @@
 * Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons.
 * Run on system with realtime clock; verify that time shows in top-right of menu.
 
-* Hold Open-Apple and double-click folder; verify that parent window closes.
-* Hold Solid-Apple and double-click folder; verify that parent window closes.
-* Select folder, hold Open-Apple, select File > Open; verify that parent window closes.
-* Select folder, hold Solid-Apple, select File > Open; verify that parent window closes.
+* Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
+  * Hold modifier and double-click folder; verify that parent window closes.
+  * Select folder, hold modifier, select File > Open; verify that parent window closes.
+
 * Open folder with new files. Use File > Get Info; verify dates after 1999 show correctly.
 * Open folder with new files. Use View > By Date; verify dates after 1999 show correctly.
 
@@ -79,8 +77,8 @@
 * Verify that GS/OS filename cases show correctly (e.g. ProDOS 2.5 disk).
 
 * Open two windows. Click the close box on the active window. Verify that only the active window closes.
-* Open two windows. Hold Open-Apple and click the close box on the active window. Verify that all windows close.
-* Open two windows. Hold Solid-Apple and click the close box on the active window. Verify that all windows close.
+* Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
+  * Open two windows. Hold modifier and click the close box on the active window. Verify that all windows close.
 
 * Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that subdirectories under DESK.ACC are copied to /RAM/DESKTOP/DESK.ACC.
 * Run DeskTop on a system with Slinky Ramdisk. Verify that subdirectories under DESK.ACC are copied to /RAM5/DESKTOP/DESK.ACC (or appropriate volume path).
@@ -132,19 +130,15 @@
 
 * Launch Desktop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Verify that 8 windows can be opened, and no render glitches occur.
 
-* Launch Desktop. Click on a volume icon. Hold Open-Apple and click a different volume icon. Verify that selection is extended.
-* Launch Desktop. Click on a volume icon. Hold Solid-Apple and click a different volume icon. Verify that selection is extended.
-* Platinum IIe: Launch Desktop. Click on a volume icon. Hold Shift and click a different volume icon. Verify that selection is extended.
-* IIgs: Launch Desktop. Click on a volume icon. Hold Shift and click a different volume icon. Verify that selection is extended.
-* Launch Desktop. Select two volume icons. Hold Open-Apple and click on the desktop, not on an icon. Verify that selection is not cleared.
-* Launch Desktop. Select two volume icons. Hold Solid-Apple and click on the desktop, not on an icon. Verify that selection is not cleared.
-* IIgs: Launch Desktop. Select two volume icons. Hold Shift and click on the desktop, not on an icon. Verify that selection is not cleared.
-* Platinum IIe: Launch Desktop. Select two volume icons. Hold Shift and click on the desktop, not on an icon. Verify that selection is not cleared.
-
-* Launch Desktop. Open a volume containing files. Click on a file icon. Hold Open-Apple and click a different file icon. Verify that selection is extended.
-* Launch Desktop. Open a volume containing files. Click on a file icon. Hold Solid-Apple and click a different file icon. Verify that selection is extended.
-* Launch Desktop. Open a volume containing files. Select two file icons. Hold Open-Apple and click on the window, not on an icon. Verify that selection is not cleared.
-* Launch Desktop. Open a volume containing files. Select two file icons. Hold Solid-Apple and click on the window, not on an icon. Verify that selection is not cleared.
+* Repeat the following cases with these modifiers: Open-Apple, Solid-Apple, Shift (on a IIgs), Shift (on a Platinum IIe):
+  * Launch Desktop. Click on a volume icon. Hold modifier and click a different volume icon. Verify that selection is extended.
+  * Launch Desktop. Select two volume icons. Hold modifier and click on the desktop, not on an icon. Verify that selection is not cleared.
+  * Launch Desktop. Open a volume containing files. Click on a file icon. Hold modifier and click a different file icon. Verify that selection is extended.
+  * Launch Desktop. Open a volume containing files. Select two file icons. Hold modifier and click on the window, not on an icon. Verify that selection is not cleared.
+  * Launch DeskTop. Open a window. Select an icon. Hold modifier key and double-click an empty spot in the window (not on an icon). Verify that the selection is not cleared.
+  * Launch DeskTop. Open a window. Select an icon. Hold modifier key down and drag a selection rectangle around another icon. Verify that both are selected.
+  * Launch DeskTop. Select one or more volume icons. Hold modifier and click a volume icon. Verify that it is deselected.
+  * Launch DeskTop. Open a window. Select one or more file icons. Hold modifier and click a file icon. Verify that it is deselected.
 
 * Launch DeskTop. Special > Disk Copy.... Press Escape key. Verify that menu keyboard mode starts.
 * Launch DeskTop. Special > Disk Copy.... Press Open-Apple Q. Verify that DeskTop launches.
@@ -182,14 +176,6 @@
 * Launch DeskTop. Select > Add an Entry. Verify that the device order (via Change Drive or pressing Tab) shown matches the order of volumes shown on the DeskTop (boot device first, etc).
 * Launch Selector. File > Run a Program. Verify that the device order (via Change Drive or pressing Tab) shown matches the order of volumes shown on the DeskTop (boot device first, etc).
 
-* Launch DeskTop. Select one or more volume icons. Hold Open-Apple and click a volume icon. Verify that it is deselected.
-* Launch DeskTop. Select one or more volume icons. Hold Solid-Apple and click a volume icon. Verify that it is deselected.
-* Platinum IIe: Launch DeskTop. Select one or more volume icons. Hold Shift and click a volume icon. Verify that it is deselected.
-* IIgs: Launch DeskTop. Select one or more volume icons. Hold Shift and click a volume icon. Verify that it is deselected.
-* Launch DeskTop. Open a window. Select one or more file icons. Hold Open-Apple and click a file icon. Verify that it is deselected.
-* Launch DeskTop. Open a window. Select one or more file icons. Hold Solid-Apple and click a file icon. Verify that it is deselected.
-* Platinum IIe: Launch DeskTop. Open a window. Select one or more file icons. Hold Shift and click a file icon. Verify that it is deselected.
-* IIgs: Launch DeskTop. Open a window. Select one or more file icons. Hold Shift and click a file icon. Verify that it is deselected.
 
 * Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
 
@@ -290,9 +276,6 @@
 * Configure a system with two volumes of the same name. Launch DeskTop. Verify that an error is shown, and only one volume appears.
 * Launch DeskTop. Rename a volume to have the same name as another. Verify that an error is shown and the icon is removed.
 
-* Launch DeskTop. Open a window. Select an icon. Hold a modifier key and double-click an empty spot in the window (not on an icon). Verify that the selection is not cleared.
-
 * Launch DeskTop. Open a window. Select an icon. Drag a selection rectangle around another icon. Verify that the initial selection is cleared and only the second icon is selected.
-* Launch DeskTop. Open a window. Select an icon. Hold a modifier key down and drag a selection rectangle around another icon. Verify that both are selected.
 
 * Launch DeskTop. Open a window. File > Quit. Launch DeskTop again. Ensure the window is restored. Try to drag-select volume icons. Verify that they are selected.
