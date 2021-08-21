@@ -582,7 +582,7 @@ call_proc:
         beq     :+
         jmp     handle_volume_icon_click
 
-:       jmp     L68AA
+:       jmp     desktop_drag_select
 
 not_desktop:
         cmp     #MGTK::Area::menubar  ; menu?
@@ -4413,25 +4413,25 @@ window_id:
         DEFINE_POINT pt2, 0, 0
 
 start:  copy16  #notpenXOR, $06
-        jsr     L60D5
+        jsr     l17
 
         ldx     #.sizeof(MGTK::Point)-1
-L5F20:  lda     event_coords,x
+l1:     lda     event_coords,x
         sta     pt1,x
         sta     pt2,x
         dex
-        bpl     L5F20
+        bpl     l1
 
         jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
-        beq     L5F3F
+        beq     l3
         jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
-        bmi     L5F3E               ; selection if mis-clicking
+        bmi     l2               ; selection if mis-clicking
         jsr     clear_selection
-L5F3E:  rts
+l2:     rts
 
-L5F3F:  jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
+l3:     jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
         bmi     :+
         jsr     clear_selection
 :       lda     active_window_id
@@ -4447,17 +4447,17 @@ L5F3F:  jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
 
         jsr     set_penmode_xor
         jsr     frame_tmp_rect
-L5F6B:  jsr     peek_event
+l4:     jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
-        beq     L5FC5
+        beq     l7
         jsr     frame_tmp_rect
         ldx     #$00
-L5F80:  cpx     cached_window_icon_count
-        bne     L5F88
+l5:     cpx     cached_window_icon_count
+        bne     l6
         jmp     reset_main_grafport
 
-L5F88:  txa
+l6:     txa
         pha
         lda     cached_window_icon_list,x
         sta     icon_param
@@ -4483,72 +4483,72 @@ done_icon:
         pla
         tax
         inx
-        jmp     L5F80
+        jmp     l5
 
-L5FC5:  jsr     L60D5
-        sub16   event_xcoord, L60CF, L60CB
-        sub16   event_ycoord, L60D1, L60CD
-        lda     L60CC
-        bpl     L5FFE
-        lda     L60CB
+l7:     jsr     l17
+        sub16   event_xcoord, d5, d1
+        sub16   event_ycoord, d6, d3
+        lda     d2
+        bpl     l8
+        lda     d1
         eor     #$FF
-        sta     L60CB
-        inc     L60CB
-L5FFE:  lda     L60CE
-        bpl     L600E
-        lda     L60CD
+        sta     d1
+        inc     d1
+l8:     lda     d4
+        bpl     l9
+        lda     d3
         eor     #$FF
-        sta     L60CD
-        inc     L60CD
-L600E:  lda     L60CB
+        sta     d3
+        inc     d3
+l9:     lda     d1
         cmp     #$05
-        bcs     L601F
-        lda     L60CD
+        bcs     l10
+        lda     d3
         cmp     #$05
-        bcs     L601F
-        jmp     L5F6B
+        bcs     l10
+        jmp     l4
 
-L601F:  jsr     frame_tmp_rect
+l10:    jsr     frame_tmp_rect
 
-        COPY_STRUCT MGTK::Point, event_coords, L60CF
+        COPY_STRUCT MGTK::Point, event_coords, d5
 
         cmp16   event_xcoord, tmp_rect::x2
-        bpl     L6068
+        bpl     l12
         cmp16   event_xcoord, tmp_rect::x1
-        bmi     L6054
-        bit     L60D3
-        bpl     L6068
-L6054:  copy16  event_xcoord, tmp_rect::x1
-        copy    #$80, L60D3
-        jmp     L6079
+        bmi     l11
+        bit     d7
+        bpl     l12
+l11:    copy16  event_xcoord, tmp_rect::x1
+        copy    #$80, d7
+        jmp     l13
 
-L6068:  copy16  event_xcoord, tmp_rect::x2
-        copy    #0, L60D3
-L6079:  cmp16   event_ycoord, tmp_rect::y2
-        bpl     L60AE
+l12:    copy16  event_xcoord, tmp_rect::x2
+        copy    #0, d7
+l13:    cmp16   event_ycoord, tmp_rect::y2
+        bpl     l15
         cmp16   event_ycoord, tmp_rect::y1
-        bmi     L609A
-        bit     L60D4
-        bpl     L60AE
-L609A:  copy16  event_ycoord, tmp_rect::y1
-        copy    #$80, L60D4
-        jmp     L60BF
+        bmi     l14
+        bit     d8
+        bpl     l15
+l14:    copy16  event_ycoord, tmp_rect::y1
+        copy    #$80, d8
+        jmp     l16
 
-L60AE:  copy16  event_ycoord, tmp_rect::y2
-        copy    #0, L60D4
-L60BF:  jsr     frame_tmp_rect
-        jmp     L5F6B
+l15:    copy16  event_ycoord, tmp_rect::y2
+        copy    #0, d8
+l16:    jsr     frame_tmp_rect
+        jmp     l4
 
-L60CB:  .byte   0
-L60CC:  .byte   0
-L60CD:  .byte   0
-L60CE:  .byte   0
-L60CF:  .word   0
-L60D1:  .word   0
-L60D3:  .byte   0
-L60D4:  .byte   0
+d1:     .byte   0
+d2:     .byte   0
+d3:     .byte   0
+d4:     .byte   0
+d5:     .word   0
+d6:     .word   0
+d7:     .byte   0
+d8:     .byte   0
 
-L60D5:  jsr     push_pointers
+l17:    jsr     push_pointers
         jmp     icon_ptr_screen_to_window
 .endproc
         drag_select := drag_select_impl::start
@@ -5384,13 +5384,13 @@ deselect_vol_icon:
 
 ;;; ============================================================
 
-.proc L68AA
+.proc desktop_drag_select
         jsr     reset_main_grafport
         jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
-        bpl     L68B3               ; selection if mis-clicking
+        bpl     l1               ; selection if mis-clicking
         rts
 
-L68B3:  jsr     clear_selection
+l1:     jsr     clear_selection
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     event_coords,x
         sta     tmp_rect::topleft,x
@@ -5400,19 +5400,19 @@ L68B3:  jsr     clear_selection
         jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
-        beq     L68CF
+        beq     l2
         rts
 
-L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
+l2:     MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
         jsr     frame_tmp_rect
-L68E4:  jsr     peek_event
+l3:     jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
-        beq     L6932
+        beq     l6
         jsr     frame_tmp_rect
         ldx     #0
-L68F9:  cpx     cached_window_icon_count
+l4:     cpx     cached_window_icon_count
         bne     :+
         lda     #0
         sta     selected_window_id
@@ -5422,77 +5422,77 @@ L68F9:  cpx     cached_window_icon_count
         pha
         copy    cached_window_icon_list,x, icon_param
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
-        beq     L692C
+        beq     l5
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
-L692C:  pla
+l5:     pla
         tax
         inx
-        jmp     L68F9
+        jmp     l4
 
-L6932:  sub16   event_xcoord, L6A39, L6A35
-        sub16   event_ycoord, L6A3B, L6A37
-        lda     L6A36
-        bpl     L6968
-        lda     L6A35
+l6:     sub16   event_xcoord, d5, d1
+        sub16   event_ycoord, d6, d3
+        lda     d2
+        bpl     l7
+        lda     d1
         eor     #$FF
-        sta     L6A35
-        inc     L6A35
-L6968:  lda     L6A38
-        bpl     L6978
-        lda     L6A37
+        sta     d1
+        inc     d1
+l7:     lda     d4
+        bpl     l8
+        lda     d3
         eor     #$FF
-        sta     L6A37
-        inc     L6A37
-L6978:  lda     L6A35
+        sta     d3
+        inc     d3
+l8:     lda     d1
         cmp     #$05
-        bcs     L6989
-        lda     L6A37
+        bcs     l9
+        lda     d3
         cmp     #$05
-        bcs     L6989
-        jmp     L68E4
+        bcs     l9
+        jmp     l3
 
-L6989:  jsr     frame_tmp_rect
+l9:     jsr     frame_tmp_rect
 
-        COPY_STRUCT MGTK::Point, event_coords, L6A39
+        COPY_STRUCT MGTK::Point, event_coords, d5
 
         cmp16   event_xcoord, tmp_rect::x2
-        bpl     L69D2
+        bpl     l11
         cmp16   event_xcoord, tmp_rect::x1
-        bmi     L69BE
-        bit     L6A3D
-        bpl     L69D2
-L69BE:  copy16  event_xcoord, tmp_rect::x1
-        copy    #$80, L6A3D
-        jmp     L69E3
+        bmi     l10
+        bit     d7
+        bpl     l11
+l10:    copy16  event_xcoord, tmp_rect::x1
+        copy    #$80, d7
+        jmp     l12
 
-L69D2:  copy16  event_xcoord, tmp_rect::x2
-        copy    #0, L6A3D
-L69E3:  cmp16   event_ycoord, tmp_rect::y2
-        bpl     L6A18
+l11:    copy16  event_xcoord, tmp_rect::x2
+        copy    #0, d7
+l12:    cmp16   event_ycoord, tmp_rect::y2
+        bpl     l14
         cmp16   event_ycoord, tmp_rect::y1
-        bmi     L6A04
-        bit     L6A3E
-        bpl     L6A18
-L6A04:  copy16  event_ycoord, tmp_rect::y1
-        copy    #$80, L6A3E
-        jmp     L6A29
+        bmi     l13
+        bit     d8
+        bpl     l14
+l13:    copy16  event_ycoord, tmp_rect::y1
+        copy    #$80, d8
+        jmp     l15
 
-L6A18:  copy16  event_ycoord, tmp_rect::y2
-        copy    #0, L6A3E
-L6A29:  jsr     frame_tmp_rect
-        jmp     L68E4
+l14:    copy16  event_ycoord, tmp_rect::y2
+        copy    #0, d8
+l15:    jsr     frame_tmp_rect
+        jmp     l3
 
-L6A35:  .byte   0
-L6A36:  .byte   0
-L6A37:  .byte   0
-L6A38:  .byte   0
-L6A39:  .word   0
-L6A3B:  .word   0
-L6A3D:  .byte   0
-L6A3E:  .byte   0
+d1:     .byte   0
+d2:     .byte   0
+d3:     .byte   0
+d4:     .byte   0
+d5:     .word   0
+d6:     .word   0
+d7:     .byte   0
+d8:     .byte   0
 .endproc
 
 ;;; ============================================================
