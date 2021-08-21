@@ -336,7 +336,7 @@ Erases the specified icon by number. No error checking is done.
 
 ```
 .byte icon      icon index
-.byte state     $80 = highlighted, 0 = otherwise
+.byte state     1 = allocated, $80 = highlighted, 0 = otherwise
 .byte type/window_id
                 (bits 0-3 window_id)
                 (bits 4,5,6)

@@ -65,7 +65,7 @@ label   := *
 
 ;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
 ;;;      .byte icon      icon index
-;;;      .byte state     $80 = highlighted, 0 = otherwise
+;;;      .byte state     1 = allocated, $80 = dragging, 0 = otherwise
 ;;;      .byte type/window_id
 ;;;                      (bits 0-3 window_id)
 ;;;                      (bits 4,5,6)

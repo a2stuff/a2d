@@ -4053,15 +4053,8 @@ ctl:    .byte   0
 icon_num:  .byte   0
 
 start:  sta     icon_num
-        ldx     selected_icon_count
-        beq     maybe_extend
-        dex
-        lda     icon_num
-:       cmp     selected_icon_list,x
-        beq     was_selected
-        dex
-        bpl     :-
-        bmi     maybe_extend    ; always
+        jsr     is_icon_selected
+        bne     maybe_extend
 
         ;; Icon was already selected
 was_selected:
@@ -4438,8 +4431,10 @@ L5F20:  lda     event_coords,x
         jsr     clear_selection
 L5F3E:  rts
 
-L5F3F:  jsr     clear_selection
-        lda     active_window_id
+L5F3F:  jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
+        bmi     :+
+        jsr     clear_selection
+:       lda     active_window_id
         jsr     offset_and_set_port_from_window_id
 
         ldx     #.sizeof(MGTK::Point)-1
@@ -4468,13 +4463,22 @@ L5F88:  txa
         sta     icon_param
         jsr     icon_screen_to_window
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
-        beq     L5FB9
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        beq     done_icon
+
+        ;; Already selected?
+        lda     icon_param
+        jsr     is_icon_selected
+        beq     done_icon
+
+        ;; Highlight and add to selection
+select: ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
         copy    active_window_id, selected_window_id
-L5FB9:  lda     icon_param
+
+done_icon:
+        lda     icon_param
         jsr     icon_window_to_screen
         pla
         tax
@@ -5273,18 +5277,9 @@ disable_selector_menu_items := toggle_selector_menu_items::disable
 ;;; ============================================================
 
 .proc handle_volume_icon_click
-        lda     selected_icon_count
-        bne     :+
-        jmp     set_selection
-
-:       tax
-        dex
         lda     findicon_which_icon
-:       cmp     selected_icon_list,x
-        beq     was_selected
-        dex
-        bpl     :-
-        bmi     maybe_extend    ; always
+        jsr     is_icon_selected
+        bne     maybe_extend
 
         ;; Icon was already selected
 was_selected:
@@ -9047,7 +9042,9 @@ tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Look up file address. Index in A, address in A,X.
+;;; Look up an icon address.
+;;; Inputs: A = icon number
+;;; Output: A,X = IconEntry address
 
 .proc icon_entry_lookup
         asl     a
@@ -9061,7 +9058,9 @@ tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Look up window. Index in A, address in A,X.
+;;; Look up window.
+;;; Inputs: A = window id
+;;; Output: A,X = Winfo address
 
 .proc window_lookup
         asl     a
@@ -9075,7 +9074,7 @@ tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Look up window address
+;;; Look up window path.
 ;;; Input: A = window_id
 ;;; Output: A,X = path address
 
@@ -15935,6 +15934,26 @@ set_penmode_notcopy:
 .proc get_selection_window
         lda     selected_window_id
         rts
+.endproc
+
+;;; ============================================================
+;;; Determine if an icon is in the current selection.
+;;; Inputs: A=icon number
+;;; Outputs: Z=1 if found, X=index in `selected_icon_list`
+;;; X modified, A,Y preserved
+
+.proc is_icon_selected
+        ldx     selected_icon_count
+        beq     nope
+        dex
+:       cmp     selected_icon_list,x
+        beq     done            ; found it!
+        dex
+        bpl     :-
+
+nope:   ldx     #$FF            ; clear Z = failure
+
+done:   rts
 .endproc
 
 ;;; ============================================================

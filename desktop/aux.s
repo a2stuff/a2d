@@ -588,8 +588,8 @@ bail1:  return  #1              ; Not found
         tax
         copy16  icon_ptrs,x, ptr ; ptr now points at IconEntry
         ldy     #IconEntry::state
-        lda     (ptr),y
-        bne     :+           ; Already set ??? Routine semantics are incorrect ???
+        lda     (ptr),y         ; valid icon?
+        bne     :+
         return  #2
 
 :       lda     has_highlight
@@ -719,11 +719,11 @@ bail1:  return  #1              ; Not found
 found:  asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        ldy     #IconEntry::state
+        ldy     #IconEntry::state ; valid icon?
         lda     (ptr),y
         bne     :+
 
-        return  #2              ; Not highlighted
+        return  #2
 
         ;; Unhighlight
 :       jsr     calc_icon_poly
