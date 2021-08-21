@@ -1168,7 +1168,8 @@ loop:   ldy     #0
         add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
         jmp     loop
 
-exit:   rts
+exit:   jsr     LoadDesktopIconTable
+        rts
 
 .proc maybe_open_window
         ;; Save stack for restore on error. If the call
