@@ -289,3 +289,5 @@
 
 * Configure a system with two volumes of the same name. Launch DeskTop. Verify that an error is shown, and only one volume appears.
 * Launch DeskTop. Rename a volume to have the same name as another. Verify that an error is shown and the icon is removed.
+
+* Launch DeskTop. Open a window. Select an icon. Hold a modifier key and double-click an empty spot in the window (not on an icon). Verify that the selection is not cleared.

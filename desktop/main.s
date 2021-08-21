@@ -4038,8 +4038,12 @@ ctl:    .byte   0
         ITK_RELAY_CALL IconTK::FindIcon, findicon_params
         lda     findicon_which_icon
         bne     handle_file_icon_click
-        jsr     L5F13
-        jmp     swap_in_desktop_icon_table
+
+        ;; Not an icon - maybe a drag?
+        lda     double_click_flag
+        beq     :+
+        jsr     drag_select
+:       jmp     swap_in_desktop_icon_table
 .endproc
 
 ;;; ============================================================
@@ -4410,7 +4414,7 @@ window_id:
 ;;; ============================================================
 ;;; Drag Selection
 
-.proc L5F13_impl
+.proc drag_select_impl
 
         DEFINE_POINT pt1, 0, 0
         DEFINE_POINT pt2, 0, 0
@@ -4543,7 +4547,7 @@ L60D4:  .byte   0
 L60D5:  jsr     push_pointers
         jmp     icon_ptr_screen_to_window
 .endproc
-        L5F13 := L5F13_impl::start
+        drag_select := drag_select_impl::start
 
 ;;; ============================================================
 
