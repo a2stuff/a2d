@@ -21,6 +21,29 @@
         .include "../desktop/desktop.inc"
 
 ;;; ============================================================
+;;; Memory map
+;;;
+;;;               Main            Aux
+;;;          :             : :             :
+;;;          |             | |             |
+;;;          | DHR         | | DHR         |
+;;;  $2000   +-------------+ +-------------+
+;;;          | IO Buffer   | |Win Tables   |
+;;;  $1C00   +-------------+ |             |
+;;;          | write_buffer| |             |
+;;;  $1B00   +-------------| +-------------+
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          | DA          | | DA (copy)   |
+;;;   $800   +-------------+ +-------------+
+;;;          :             : :             :
+;;;
+
+;;; ============================================================
 
         .org DA_LOAD_ADDRESS
 
@@ -1866,8 +1889,10 @@ filename:
 filename_buffer:
         .res kPathBufferSize
 
-write_buffer:
-        .res .sizeof(DeskTopSettings)
+;;; The space between `WINDOW_ICON_TABLES` and `DA_IO_BUFFER` is usable in
+;;; Main memory only.
+        write_buffer := WINDOW_ICON_TABLES
+        .assert DA_IO_BUFFER - write_buffer >= .sizeof(DeskTopSettings), error, "Not enough room"
 
         DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
