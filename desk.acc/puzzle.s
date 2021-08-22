@@ -596,7 +596,6 @@ name:   PASCAL_STRING res_string_window_title  ; window title
 ;;; Create the window
 
 .proc create_window
-        jsr     save_zp
         MGTK_CALL MGTK::OpenWindow, winfo
 
         ;; init pieces
@@ -941,29 +940,6 @@ draw_window:
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, setport_params
         rts
-
-;;; ============================================================
-
-.proc save_zp
-        ldx     #$00
-loop:   lda     $00,x
-        sta     saved_zp,x
-        dex
-        bne     loop
-        rts
-.endproc
-
-.proc restore_zp
-        ldx     #$00
-loop:   lda     saved_zp,x
-        sta     $00,x
-        dex
-        bne     loop
-        rts
-.endproc
-
-saved_zp:
-        .res    256, 0
 
 ;;; ============================================================
 ;;; Draw pieces

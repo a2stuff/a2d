@@ -254,8 +254,6 @@ nextwinfo:      .addr   0
 ;;; Initialize window, unpack the date.
 
 init_window:
-        jsr     save_zp
-
         ;; If null date, just leave the baked in default
         lda     datelo
         ora     datehi
@@ -879,30 +877,6 @@ loop2:  sbc     #1
         bne     loop1
         rts
 .endproc
-
-;;; ============================================================
-;;; Save/restore Zero Page
-
-.proc save_zp
-        ldx     #0
-loop:   lda     $00,x
-        sta     zp_buffer,x
-        dex
-        bne     loop
-        rts
-.endproc
-
-.proc restore_zp
-        ldx     #0
-loop:   lda     zp_buffer,x
-        sta     $00,x
-        dex
-        bne     loop
-        rts
-.endproc
-
-zp_buffer:
-        .res    256, 0
 
 ;;; ============================================================
 ;;; Convert number to two ASCII digits (in A, X)
