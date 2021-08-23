@@ -1732,8 +1732,8 @@ L4CD6:  pha
         pha
         jsr     update_used_free_for_vol_windows
         pla
-        ;; TODO: Handle failure (e.g. too many icons)
-        jmp     select_and_refresh_window
+
+        jmp     select_and_refresh_window_or_close
 
         ;; --------------------------------------------------
         ;; Update used/free for windows for same vol as `path_buf4`
@@ -2167,15 +2167,9 @@ success:
         param_call find_window_for_path, path_buffer
         beq     done
 
-        pha
-        jsr     try_select_and_refresh_window
-        pla
-
-        bit     exception_flag
-        bpl     :+
-        inc     num_open_windows ; was decremented on failure
-        sta     active_window_id ; expected by close_window
-        jmp     close_window
+        jsr     select_and_refresh_window_or_close
+        beq     :+
+        rts
 :
         ;; View by Icon?
         ;; TODO: Scroll list views, as well.
@@ -2187,22 +2181,6 @@ success:
         jsr     select_new_folder_icon
 
 done:   jmp     clear_updates_and_redraw_desktop_icons
-
-;;; Calls `select_and_refresh_window`; the `exception_flag` high bit
-;;; is set on failure, clear on exit.
-;;; Inputs: A=window_id
-.proc try_select_and_refresh_window
-        ldx     #$80
-        stx     exception_flag
-        tsx
-        stx     saved_stack
-        jsr     select_and_refresh_window
-        ldx     #0
-        stx     exception_flag
-        rts
-.endproc
-exception_flag:
-        .byte   0
 
 .proc select_new_folder_icon
         ptr_icon := $6
@@ -4130,8 +4108,8 @@ process_drop:
         pha
         jsr     update_used_free_for_vol_windows
         pla
-        ;; TODO: Handle failure (e.g. too many icons)
-        jsr     select_and_refresh_window
+
+        jsr     select_and_refresh_window_or_close
         jmp     clear_updates_and_redraw_desktop_icons
 
         ;; --------------------------------------------------
@@ -4340,6 +4318,42 @@ icon_num:
 
         dec     selected_icon_count
         rts
+.endproc
+
+;;; ============================================================
+
+;;; Calls `select_and_refresh_window` - on failure (e.g. too
+;;; many files) the window is closed.
+;;; Input: A = window id
+;;; Output: A=0/Z=1/N=0 on success, A=$FF/Z=0/N=1 on failure
+
+.proc select_and_refresh_window_or_close
+        pha
+        jsr     try_select_and_refresh_window
+        pla
+
+        bit     exception_flag
+        bmi     :+
+        return  #0
+
+:       inc     num_open_windows ; was decremented on failure
+        sta     active_window_id ; expected by close_window
+        jsr     close_window
+        return  #$FF
+
+.proc try_select_and_refresh_window
+        ldx     #$80
+        stx     exception_flag
+        tsx
+        stx     saved_stack
+        jsr     select_and_refresh_window
+        ldx     #0
+        stx     exception_flag
+        rts
+.endproc
+
+exception_flag:
+        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -5344,8 +5358,8 @@ check_double_click:
         pha
         jsr     update_used_free_for_vol_windows
         pla
-        ;; TODO: Handle failure (e.g. too many icons)
-        jmp     select_and_refresh_window
+
+        jmp     select_and_refresh_window_or_close
 
 :       jsr     update_vol_free_used_for_icon
         jmp     clear_updates_and_redraw_desktop_icons
