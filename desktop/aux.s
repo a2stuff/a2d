@@ -3718,7 +3718,7 @@ start:
         ;; Buttons
 :       ldy     #AlertButtonOptions::Ok
         lda     warning_cancel_table,x
-        bpl     :+
+        bpl     set
         ldy     #AlertButtonOptions::OkCancel
 set:    sty     alert_params::buttons
 
