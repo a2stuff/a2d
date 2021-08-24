@@ -282,3 +282,5 @@
 * Launch DeskTop. Open a window. Select an icon. Drag a selection rectangle around another icon. Verify that the initial selection is cleared and only the second icon is selected.
 
 * Launch DeskTop. Open a window. File > Quit. Launch DeskTop again. Ensure the window is restored. Try to drag-select volume icons. Verify that they are selected.
+
+* Launch Selector. Eject the disk with DeskTop on it. Type Q (don't click). Dismiss the dialog by hitting Esc. Verify that the dialog disappears, and the Apple menu is not shown.

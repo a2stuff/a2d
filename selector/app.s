@@ -687,19 +687,19 @@ quick_boot_slot:
         beq     :+
         cmp     #TO_LOWER(kShortcutRunDeskTop)
         bne     not_desktop
+
 :       lda     winfo::window_id
         jsr     get_window_port
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, desktop_button_rect
         MGTK_CALL MGTK::PaintRect, desktop_button_rect
-        MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
-        beq     found_desktop
+@retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+        beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     not_desktop     ; `kAlertResultCancel` = 1
-        beq     :-              ; `kAlertResultTryAgain` = 0
-found_desktop:
-        jmp     run_desktop
+        bne     event_loop      ; `kAlertResultCancel` = 1
+        beq     @retry          ; `kAlertResultTryAgain` = 0
+:       jmp     run_desktop
 
 not_desktop:
         jsr     handle_key
@@ -938,12 +938,12 @@ check_desktop_btn:
         jsr     ButtonEventLoop
         bmi     done
 
-:       MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+@retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         bne     done            ; `kAlertResultCancel` = 1
-        beq     :-              ; `kAlertResultTryAgain` = 0
+        beq     @retry          ; `kAlertResultTryAgain` = 0
 :       jmp     run_desktop
 
         ;; Entry selection?
