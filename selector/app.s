@@ -2257,15 +2257,12 @@ len:    .byte   0
 ;;; Input: A = AlertID
 
 .proc ShowAlert
-        pha
-        jsr     Bell
-        pla
         tax
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         txa
-        jsr     ShowAlertImpl
+        jsr     AlertById
         tax
         sta     ALTZPOFF
         lda     ROMIN2

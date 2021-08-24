@@ -3702,7 +3702,7 @@ str_save_selector_list2:
 line1:          .addr   0       ; first line of text
 line2:          .addr   0       ; optional - second line of text (TODO: wrap instead)
 buttons:        .byte   0       ; AlertButtonOptions
-options:        .byte   0       ; AlertOptions flags
+options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
 .endparams
 
 start:
@@ -3721,10 +3721,6 @@ start:
         bpl     set
         ldy     #AlertButtonOptions::OkCancel
 set:    sty     alert_params::buttons
-
-        ;; Options
-        lda     #AlertOptions::Beep | AlertOptions::SaveBack
-        sta     alert_params::options
 
         ;; Strings
         txa
@@ -3796,8 +3792,6 @@ err_FE:  PASCAL_STRING res_string_errmsg_FE
 
         ;; number of alert messages
         kNumAlerts = 22
-alert_count:
-        .byte   kNumAlerts
 
         ;; message number-to-index table
         ;; (look up by scan to determine index)
@@ -3852,20 +3846,20 @@ alert_options_table:
 
 .params alert_params
 line1:          .addr   0       ; first line of text
-line2:          .addr   0       ; optional - second line of text (TODO: wrap instead)
+line2:          .addr   0       ; unused
 buttons:        .byte   0       ; AlertButtonOptions
-options:        .byte   0       ; AlertOptions flags
+options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
+
 .endparams
 
 start:
         ;; --------------------------------------------------
-        ;; Process Options, populate `alert_params`
+        ;; Process options, populate `alert_params`
 
-        ;; A=alert/X=options
+        ;; A = alert, X = options
 
         ;; Search for alert in table, set Y to index
-        ldy     alert_count
-        dey
+        ldy     #kNumAlerts-1
 :       cmp     alert_table,y
         beq     :+
         dey
@@ -3878,7 +3872,6 @@ start:
         asl     a
         tay                     ; Y = index * 2
         copy16  message_table,y, alert_params::line1
-        copy16  #0, alert_params::line2
 
         ;; If options is 0, use table value; otherwise,
         ;; mask off low bit and it's the action (N and V bits)
@@ -3897,17 +3890,20 @@ start:
         tya                     ; Y = index * 2
         lsr     a
         tay                     ; Y = index
-        lda     alert_options_table,y
-        sta     alert_params::buttons
+        copy    alert_options_table,y, alert_params::buttons
       END_IF
-
-        copy    #AlertOptions::Beep | AlertOptions::SaveBack, alert_params::options
 
         ldax    #alert_params
         jmp     Alert
 .endproc
 
+;;; ============================================================
+;;; Display alert
+;;; Inputs: A,X=alert_params structure
+;;;    { .addr line1, .addr line2, .byte AlertButtonOptions, .byte AlertOptions }
 
+        alert_yield_loop = YieldLoopFromAux
+        alert_grafport = main_grafport
 
 .proc Alert
         jmp     start
@@ -3945,6 +3941,16 @@ mapwidth:       .byte   7
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 36, 23
 .endparams
+
+pencopy:        .byte   0
+penXOR:         .byte   2
+
+event_params:   .tag    MGTK::Event
+event_kind      := event_params + MGTK::Event::kind
+event_coords    := event_params + MGTK::Event::xcoord
+event_xcoord    := event_params + MGTK::Event::xcoord
+event_ycoord    := event_params + MGTK::Event::ycoord
+event_key       := event_params + MGTK::Event::key
 
 kAlertRectWidth         = 420
 kAlertRectHeight        = 55
@@ -4038,11 +4044,11 @@ start:
         sta     save_y2
 
         jsr     dialog_background_save
-     END_IF
+    END_IF
 
         ;; Set up GrafPort
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
+        MGTK_CALL MGTK::InitPort, alert_grafport
+        MGTK_CALL MGTK::SetPort, alert_grafport
 
         MGTK_CALL MGTK::SetPortBits, screen_portbits ; viewport for screen
 
@@ -4060,10 +4066,7 @@ start:
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintBits, alert_bitmap_params
 
-        MGTK_CALL MGTK::ShowCursor
-
         ;; Draw appropriate buttons
-draw_buttons:
         MGTK_CALL MGTK::SetPenMode, penXOR
 
         bit     alert_params::buttons ; high bit clear = Cancel
@@ -4104,11 +4107,13 @@ draw_prompt:
         param_call_indirect DrawString, alert_params::line2
       END_IF
 
+        MGTK_CALL MGTK::ShowCursor
+
         ;; --------------------------------------------------
         ;; Event Loop
 
 event_loop:
-        jsr     YieldLoopFromAux
+        jsr     alert_yield_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -4220,9 +4225,7 @@ finish:
 
         rts
 
-
-        ;; --------------------------------------------------
-
+;;; ============================================================
 
 .proc map_event_coords
         sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
@@ -4238,9 +4241,7 @@ finish:
         dialog_background_save := dialog_background::Save
         dialog_background_restore := dialog_background::Restore
 
-
 .endproc
-        show_alert_dialog := Alert::start
 
 ;;; ============================================================
 ;;; Copy current GrafPort MapInfo into target buffer
