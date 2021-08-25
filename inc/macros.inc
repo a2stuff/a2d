@@ -706,7 +706,8 @@ loop:   lda     src,x
 loop:   lda     src,x
         sta     dst,x
         dex
-        bpl     loop
+        cpx     #$FF
+        bne     loop
 .endscope
 .endmacro
 
