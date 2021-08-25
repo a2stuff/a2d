@@ -546,9 +546,11 @@ slot_pos_table:
 
 ;;; ============================================================
 
+kMaxSmartportDevices = 8
+
 str_diskii:     PASCAL_STRING res_string_card_type_diskii
 str_block:      PASCAL_STRING res_string_card_type_block
-kStrSmartportReserve = .strlen(res_string_card_type_smartport) + (8*16 + 7*2) ; names + ", " seps
+kStrSmartportReserve = .strlen(res_string_card_type_smartport) + (kMaxSmartportDevices*16 + (kMaxSmartportDevices-1)*2) ; names + ", " seps
 kStrSmartportLength = .strlen(res_string_card_type_smartport)
 str_smartport:  PASCAL_STRING res_string_card_type_smartport, kStrSmartportReserve
 str_ssc:        PASCAL_STRING res_string_card_type_ssc
@@ -1746,7 +1748,11 @@ start:
         copy    #0, status_params::unit_num ; SmartPort status itself
         copy    #0, status_params::status_code
         jsr     smartport_call
-        copy    dib_buffer::Number_Devices, num_devices
+        lda     dib_buffer::Number_Devices
+        cmp     #kMaxSmartportDevices
+        bcc     :+
+        lda     #kMaxSmartportDevices
+:       sta     num_devices
         bne     :+
         jmp     finish          ; no devices!
 
