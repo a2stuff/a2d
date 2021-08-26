@@ -1425,6 +1425,10 @@ fail:   clc
         ptr := $06
         tmp := $08
 
+        ;; Hit Slot 6, which causes accelerators e.g. Zip Chip
+        ;; to slow down.
+        bit     $C0E0
+
         ldy     #4              ; $Cn04
         ldx     #2              ; try 2 times
 
