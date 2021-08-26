@@ -851,13 +851,13 @@ icon_entry_address_table:
 
 ;;; Copy from aux memory of icon list for active window (0=desktop)
 
-        ;; which window buffer (see window_icon_count_table, window_icon_list_table) is copied
+        ;; which window buffer is copied
+        ;; (see `window_entry_count_table`, `window_entry_list_table`)
 cached_window_id: .byte   0
-        ;; number of icons in copied window
-cached_window_icon_count:.byte   0
-        ;; list of icons in copied window
-cached_window_icon_list:   .res    kMaxIconCount, 0
-
+        ;; number of entries in copied window
+cached_window_entry_count:.byte   0
+        ;; list of entries (icons or file entry numbers) in copied window
+cached_window_entry_list:   .res    kMaxIconCount, 0
 
 ;;; Index of window with selection (0=desktop)
 selected_window_id:
@@ -1284,20 +1284,20 @@ result:  .byte   0
 ;;; ============================================================
 
 ;;; Each buffer is a list of icons in each window (0=desktop)
-;;; window_icon_count_table = start of buffer = icon count
-;;; window_icon_list_table = first entry in buffer (length = `kMaxIconCount`)
+;;; window_entry_count_table = start of buffer = icon count
+;;; window_entry_list_table = first entry in buffer (length = `kMaxIconCount`)
 ;;; (0 is not a valid icon number)
 
-kWindowIconTableSize = kMaxIconCount + 1
+kWindowEntryTableSize = kMaxIconCount + 1
 
-window_icon_count_table:
+window_entry_count_table:
         .repeat kMaxNumWindows+1,i
-        .addr   WINDOW_ICON_TABLES + kWindowIconTableSize * i
+        .addr   WINDOW_ENTRY_TABLES + kWindowEntryTableSize * i
         .endrepeat
 
-window_icon_list_table:
+window_entry_list_table:
         .repeat kMaxNumWindows+1,i
-        .addr   WINDOW_ICON_TABLES + kWindowIconTableSize * i + 1
+        .addr   WINDOW_ENTRY_TABLES + kWindowEntryTableSize * i + 1
         .endrepeat
 
 active_window_id:

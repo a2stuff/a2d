@@ -119,9 +119,10 @@ loop:   lda     free_icon_map,x
 .endproc
 
 ;;; ============================================================
-;;; Copy data to/from buffers (see cached_window_id / cached_window_icon_list / window_icon_count_table/2) ???
+;;; Copy data to/from buffers (see `cached_window_id` /
+;;;  `cached_window_entry_list` / `window_entry_count_table` /2)
 
-.proc XferWindowIconTable
+.proc XferWindowEntryTable
         ptr := $6
 
 from:
@@ -137,44 +138,44 @@ to:
         lda     cached_window_id
         asl     a               ; * 2
         tax
-        copy16  window_icon_count_table,x, ptr
+        copy16  window_entry_count_table,x, ptr
 
         jsr     BankInAux
         bit     flag
         bpl     set_length
 
-        ;; assign length from cached_window_icon_list
-        lda     cached_window_icon_count
+        ;; assign length from cached_window_entry_list
+        lda     cached_window_entry_count
         ldy     #0
         sta     (ptr),y
         jmp     set_copy_ptr
 
-        ;; assign length to cached_window_icon_list
+        ;; assign length to cached_window_entry_list
 set_length:
         ldy     #0
         lda     (ptr),y
-        sta     cached_window_icon_count
+        sta     cached_window_entry_count
 
 set_copy_ptr:
-        copy16  window_icon_list_table,x, ptr
+        copy16  window_entry_list_table,x, ptr
         bit     flag
         bmi     copy_from
 
-        ;; copy into cached_window_icon_list
+        ;; copy into cached_window_entry_list
         ldy     #0              ; flag clear...
-:       cpy     cached_window_icon_count
+:       cpy     cached_window_entry_count
         beq     done
         lda     (ptr),y
-        sta     cached_window_icon_list,y
+        sta     cached_window_entry_list,y
         iny
         jmp     :-
 
-        ;; copy from cached_window_icon_list
+        ;; copy from cached_window_entry_list
 copy_from:
         ldy     #0
-:       cpy     cached_window_icon_count
+:       cpy     cached_window_entry_count
         beq     done
-        lda     cached_window_icon_list,y
+        lda     cached_window_entry_list,y
         sta     (ptr),y
         iny
         jmp     :-
@@ -185,17 +186,17 @@ done:   jsr     BankInMain
 
 flag:   .byte   0
 .endproc
-        StoreWindowIconTable := XferWindowIconTable::from
-        LoadWindowIconTable := XferWindowIconTable::to
+        StoreWindowEntryTable := XferWindowEntryTable::from
+        LoadWindowEntryTable := XferWindowEntryTable::to
 
-.proc LoadActiveWindowIconTable
+.proc LoadActiveWindowEntryTable
         copy    active_window_id, cached_window_id
-        jmp     LoadWindowIconTable
+        jmp     LoadWindowEntryTable
 .endproc
 
-.proc LoadDesktopIconTable
+.proc LoadDesktopEntryTable
         copy    #0, cached_window_id
-        jmp     LoadWindowIconTable
+        jmp     LoadWindowEntryTable
 .endproc
 
 

@@ -41,7 +41,7 @@
 pathbuf:        .res    kPathBufferSize, 0
 
 font_buffer     := $D00
-kReadLength      = WINDOW_ICON_TABLES-font_buffer
+kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
 
 ;;; Maximum font size is $E00 = 3584 bytes
 ;;; (largest known is Athens, 3203 bytes)
@@ -124,7 +124,7 @@ kReadLength      = WINDOW_ICON_TABLES-font_buffer
         ;; Copy the DA code and loaded data to AUX
 
         copy16  #DA_LOAD_ADDRESS, STARTLO
-        copy16  #WINDOW_ICON_TABLES-1, ENDLO
+        copy16  #WINDOW_ENTRY_TABLES-1, ENDLO
         copy16  #DA_LOAD_ADDRESS, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE

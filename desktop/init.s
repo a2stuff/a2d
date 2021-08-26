@@ -310,11 +310,11 @@ end:
         sta     RAMWRTON
         lda     #$00
         tax
-loop:   sta     WINDOW_ICON_TABLES + $400,x         ; window 8, icon use map
-        sta     WINDOW_ICON_TABLES + $300,x         ; window 6, 7
-        sta     WINDOW_ICON_TABLES + $200,x         ; window 4, 5
-        sta     WINDOW_ICON_TABLES + $100,x         ; window 2, 3
-        sta     WINDOW_ICON_TABLES + $000,x         ; window 0, 1 (0=desktop)
+loop:   sta     WINDOW_ENTRY_TABLES + $400,x         ; window 8, icon use map
+        sta     WINDOW_ENTRY_TABLES + $300,x         ; window 6, 7
+        sta     WINDOW_ENTRY_TABLES + $200,x         ; window 4, 5
+        sta     WINDOW_ENTRY_TABLES + $100,x         ; window 2, 3
+        sta     WINDOW_ENTRY_TABLES + $000,x         ; window 0, 1 (0=desktop)
         inx
         bne     loop
         sta     RAMWRTOFF
@@ -330,11 +330,11 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
 
         copy    #0, cached_window_id
         lda     #1
-        sta     cached_window_icon_count
+        sta     cached_window_entry_count
         sta     icon_count
         jsr     AllocateIcon
         sta     trash_icon_num
-        sta     cached_window_icon_list
+        sta     cached_window_entry_list
         jsr     main::icon_entry_lookup
         stax    ptr
         ldy     #IconEntry::win_type
@@ -792,7 +792,7 @@ process_volume:
         tya
         pha
 
-        inc     cached_window_icon_count
+        inc     cached_window_entry_count
         inc     icon_count
         lda     DEVLST,y
         jsr     main::create_volume_icon ; A = unit number, Y = device index
@@ -1078,11 +1078,11 @@ count:  .byte   0
 
         ;; Add desktop icons
         ldx     #0
-iloop:  cpx     cached_window_icon_count
+iloop:  cpx     cached_window_entry_count
         beq     :+
         txa
         pha
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     main::icon_entry_lookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
@@ -1093,7 +1093,7 @@ iloop:  cpx     cached_window_icon_count
 :
         ;; Desktop icons are cached now
         copy    #0, cached_window_id
-        jsr     StoreWindowIconTable
+        jsr     StoreWindowEntryTable
 
         ;; Clear various flags
         lda     #0
@@ -1168,7 +1168,7 @@ loop:   ldy     #0
         add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
         jmp     loop
 
-exit:   jsr     LoadDesktopIconTable
+exit:   jsr     LoadDesktopEntryTable
         rts
 
 .proc maybe_open_window

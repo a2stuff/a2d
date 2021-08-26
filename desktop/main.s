@@ -36,8 +36,8 @@ JT_ITK_RELAY:           jmp     ITKRelayImpl
 JT_LOAD_OVL:            jmp     load_dynamic_routine
 JT_CLEAR_SELECTION:     jmp     clear_selection
 JT_MLI_RELAY:           jmp     MLIRelayImpl            ; *
-JT_COPY_TO_BUF:         jmp     LoadWindowIconTable
-JT_COPY_FROM_BUF:       jmp     StoreWindowIconTable
+JT_COPY_TO_BUF:         jmp     LoadWindowEntryTable
+JT_COPY_FROM_BUF:       jmp     StoreWindowEntryTable
 JT_NOOP:                jmp     cmd_noop
 JT_FILE_TYPE_STRING:    jmp     compose_file_type_string
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
@@ -145,7 +145,7 @@ update: MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
         MGTK_RELAY_CALL MGTK::EndUpdate
         rts
 
-finish: jsr     LoadDesktopIconTable
+finish: jsr     LoadDesktopEntryTable
         lda     saved_active_window_id
         sta     active_window_id
         beq     :+
@@ -197,7 +197,7 @@ draw_window_header_flag:  .byte   0
         rts
 
 L415B:  sta     active_window_id
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
         copy    #$80, draw_window_header_flag
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_port2
@@ -267,10 +267,10 @@ by_icon:
         ;; Loop over all icons
         copy    #0, index
 loop:   lda     index
-        cmp     cached_window_icon_count
+        cmp     cached_window_entry_count
         beq     done_icons
         tax
-        copy    cached_window_icon_list,x, icon_param
+        copy    cached_window_entry_list,x, icon_param
         ITK_RELAY_CALL IconTK::IconInRect, icon_param ; visible?
         beq     :+
         ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
@@ -666,9 +666,9 @@ start:  jsr     clear_selection
 continue:
         MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         copy    findwindow_window_id, active_window_id
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
         jsr     draw_window_entries
-        jsr     LoadDesktopIconTable
+        jsr     LoadDesktopEntryTable
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     check_item
         ldx     active_window_id
@@ -2187,16 +2187,16 @@ done:   jmp     clear_updates_and_redraw_desktop_icons
         ptr_name := $8
         copy16  #path_buf1, ptr_name
 
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
 
         ;; Iterate icons
         copy    #0, icon
 loop:   ldx     icon
-        cpx     cached_window_icon_count
+        cpx     cached_window_entry_count
         beq     done
 
         ;; Compare with name from dialog
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     icon_entry_lookup
         stax    ptr_icon
 
@@ -2223,7 +2223,7 @@ cloop:  lda     (ptr_icon),y
 
         ;; Match, so make selected
         ldx     icon
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         pha
         jsr     select_file_icon
         pla
@@ -2233,7 +2233,7 @@ cloop:  lda     (ptr_icon),y
 next:   inc     icon
         bne     loop
 
-done:   jsr     LoadDesktopIconTable
+done:   jsr     LoadDesktopEntryTable
         rts
 
 icon:   .byte   0
@@ -2547,16 +2547,16 @@ fail:   MLI_CALL QUIT, quit_params
 
         ;; View by icon
 entry:
-:       jsr     LoadActiveWindowIconTable
+:       jsr     LoadActiveWindowEntryTable
         ldx     #$00
         txa
-:       cpx     cached_window_icon_count
+:       cpx     cached_window_entry_count
         beq     :+
-        sta     cached_window_icon_list,x
+        sta     cached_window_entry_list,x
         inx
         jmp     :-
 
-:       sta     cached_window_icon_count
+:       sta     cached_window_entry_count
         lda     #0
         ldx     active_window_id
         dex
@@ -2601,10 +2601,10 @@ entry:
         jsr     cached_icons_screen_to_window
         copy    #0, L51EF
 L518D:  lda     L51EF
-        cmp     cached_window_icon_count
+        cmp     cached_window_entry_count
         beq     L51A7
         tax
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     icon_entry_lookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
@@ -2613,7 +2613,7 @@ L518D:  lda     L51EF
 
 L51A7:  jsr     reset_main_grafport
         jsr     cached_icons_window_to_screen
-        jsr     StoreWindowIconTable
+        jsr     StoreWindowEntryTable
         jsr     cached_icons_screen_to_window
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
@@ -2632,7 +2632,7 @@ L51C0:  ldx     L51EF
         jsr     icon_window_to_screen
         dec     L51EF
         bne     L51C0
-finish: jmp     LoadDesktopIconTable
+finish: jmp     LoadDesktopEntryTable
 
 L51EB:  .word   0
 L51ED:  .byte   0
@@ -2683,9 +2683,9 @@ L51EF:  .byte   0
         sta     selected_window_id
 
         ;; Sort the records
-sort:   jsr     LoadActiveWindowIconTable
+sort:   jsr     LoadActiveWindowEntryTable
         jsr     sort_records
-        jsr     StoreWindowIconTable
+        jsr     StoreWindowEntryTable
 
         ;; Draw the records
         lda     active_window_id
@@ -2778,20 +2778,20 @@ view:   .byte   0
 
 ;;; ============================================================
 ;;; Destroy all of the icons in the active window.
-;;; Assert: DesktopIconTable is cached (and this is restored)
+;;; Assert: DesktopEntryTable is cached (and this is restored)
 
 .proc destroy_icons_in_active_window
         ITK_RELAY_CALL IconTK::CloseWindow, active_window_id
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
         lda     icon_count
         sec
-        sbc     cached_window_icon_count
+        sbc     cached_window_entry_count
         sta     icon_count
 
         jsr     free_cached_window_icons
 
-done:   jsr     StoreWindowIconTable
-        jmp     LoadDesktopIconTable
+done:   jsr     StoreWindowEntryTable
+        jmp     LoadDesktopEntryTable
 .endproc
 
 ;;; ============================================================
@@ -2800,10 +2800,10 @@ done:   jsr     StoreWindowIconTable
         copy    #0, index
 
 loop:   ldx     index
-        cpx     cached_window_icon_count
+        cpx     cached_window_entry_count
         beq     done
 
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         pha
         jsr     FreeIcon
         pla
@@ -2813,7 +2813,7 @@ loop:   ldx     index
         copy    #$FF, window_to_dir_icon_table,x ; $FF = dir icon freed
 
 :       ldx     index
-        copy    #0, cached_window_icon_list,x
+        copy    #0, cached_window_entry_list,x
 
         inc     index
         bne     loop
@@ -2825,15 +2825,15 @@ index:  .byte   0
 
 ;;; ============================================================
 ;;; Clear active window entry count
-;;; Assert: DesktopIconTable is cached (and this is restored)
+;;; Assert: DesktopEntryTable is cached (and this is restored)
 
 .proc clear_active_window_entry_count
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
 
-        copy    #0, cached_window_icon_count
+        copy    #0, cached_window_entry_count
 
-        jsr     StoreWindowIconTable
-        jmp     LoadDesktopIconTable
+        jsr     StoreWindowEntryTable
+        jmp     LoadDesktopEntryTable
 .endproc
 
 ;;; ============================================================
@@ -3037,20 +3037,20 @@ start:
         ;; --------------------------------------------------
         ;; Icons in active window
 
-:       jsr     LoadActiveWindowIconTable
+:       jsr     LoadActiveWindowEntryTable
 
         ldx     #0              ; index in buffer and icon list
 win_loop:
-        cpx     cached_window_icon_count
+        cpx     cached_window_entry_count
         beq     :+
 
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         sta     buffer+1,x
         inc     buffer
         inx
         jmp     win_loop
 
-:       jsr     LoadDesktopIconTable
+:       jsr     LoadDesktopEntryTable
 
         ;; --------------------------------------------------
         ;; Desktop (volume) icons
@@ -3059,15 +3059,15 @@ volumes:
         ldx     buffer
         ldy     #0
 vol_loop:
-        lda     cached_window_icon_list,y
+        lda     cached_window_entry_list,y
         sta     buffer+1,x
         iny
         inx
-        cpy     cached_window_icon_count
+        cpy     cached_window_entry_count
         bne     vol_loop
         lda     buffer
         clc
-        adc     cached_window_icon_count
+        adc     cached_window_entry_count
         sta     buffer
 
 ;;; Figure out current selected index, based on selection.
@@ -3175,10 +3175,10 @@ highlight_icon:
         ;; If windowed, ensure it is visible
         lda     selected_window_id
         beq     :+
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
         lda     selected_icon_list
         jsr     scroll_icon_into_view
-        jsr     LoadDesktopIconTable
+        jsr     LoadDesktopEntryTable
 :
 
         rts
@@ -3197,18 +3197,18 @@ L566A:  ldx     active_window_id
         bpl     L5676           ; view by icons
         rts
 
-L5676:  jsr     LoadActiveWindowIconTable
-        lda     cached_window_icon_count
+L5676:  jsr     LoadActiveWindowEntryTable
+        lda     cached_window_entry_count
         bne     L5687
         jmp     finish
 
-L5687:  ldx     cached_window_icon_count
+L5687:  ldx     cached_window_entry_count
         dex
-:       copy    cached_window_icon_list,x, selected_icon_list,x
+:       copy    cached_window_entry_list,x, selected_icon_list,x
         dex
         bpl     :-
 
-        copy    cached_window_icon_count, selected_icon_count
+        copy    cached_window_entry_count, selected_icon_count
         copy    active_window_id, selected_window_id
         lda     selected_window_id
         beq     :+
@@ -3235,7 +3235,7 @@ loop:   ldx     index
         lda     selected_window_id
         beq     finish
         jsr     reset_main_grafport
-finish: jmp     LoadDesktopIconTable
+finish: jmp     LoadDesktopEntryTable
 
 index:  .byte   0
 .endproc
@@ -3322,7 +3322,7 @@ loop:   jsr     get_event
         cmp     #CHAR_ESCAPE
         bne     :+
 
-done:   jmp     LoadDesktopIconTable
+done:   jmp     LoadDesktopEntryTable
 
         ;; Horizontal ok?
 :       bit     horiz_scroll_flag
@@ -3359,7 +3359,7 @@ vertical:
 ;;; ============================================================
 
 .proc get_active_window_scroll_info
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
@@ -3513,26 +3513,26 @@ max:   .byte   0
 
 .proc cmd_check_drives
         copy    #0, pending_alert
-        jsr     LoadDesktopIconTable
+        jsr     LoadDesktopEntryTable
         jsr     cmd_close_all
         jsr     clear_selection
         jsr     reset_main_grafport
-        ldx     cached_window_icon_count
+        ldx     cached_window_entry_count
         dex
-L5916:  lda     cached_window_icon_list,x
+L5916:  lda     cached_window_entry_list,x
         cmp     trash_icon_num
         beq     L5942
         txa
         pha
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         sta     icon_param
-        copy    #0, cached_window_icon_list,x
+        copy    #0, cached_window_entry_list,x
         ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
         lda     icon_param
         jsr     free_desktop_icon_position
         lda     icon_param
         jsr     FreeIcon
-        dec     cached_window_icon_count
+        dec     cached_window_entry_count
         dec     icon_count
 
         pla
@@ -3544,7 +3544,7 @@ L5942:  dex
         ldy     DEVCNT
         sty     devlst_index
 @loop:  ldy     devlst_index
-        inc     cached_window_icon_count
+        inc     cached_window_entry_count
         inc     icon_count
         lda     #0
         sta     device_to_icon_map,y
@@ -3559,16 +3559,16 @@ L5942:  dex
         bpl     @loop
 
         ldx     #0
-L5976:  cpx     cached_window_icon_count
+L5976:  cpx     cached_window_entry_count
         bne     L5986
         lda     pending_alert
         beq     L5983
         jsr     ShowAlert
-L5983:  jmp     StoreWindowIconTable
+L5983:  jmp     StoreWindowEntryTable
 
 L5986:  txa
         pha
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         cmp     trash_icon_num
         beq     L5998
         jsr     icon_entry_lookup
@@ -3613,7 +3613,7 @@ by_icon_number:
         lda     #$C0
 
 start:  sta     check_drive_flags
-        jsr     LoadDesktopIconTable
+        jsr     LoadDesktopEntryTable
         bit     check_drive_flags
         bpl     explicit_command
         bvc     after_format_erase
@@ -3713,7 +3713,7 @@ not_in_map:
 
         jsr     clear_updates_and_redraw_desktop_icons
         jsr     clear_selection
-        jsr     LoadDesktopIconTable
+        jsr     LoadDesktopEntryTable
 
         lda     devlst_index
         tay
@@ -3732,9 +3732,9 @@ not_in_map:
         jsr     reset_main_grafport
         ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
 
-:       lda     cached_window_icon_count
+:       lda     cached_window_entry_count
         sta     previous_icon_count
-        inc     cached_window_icon_count
+        inc     cached_window_entry_count
         inc     icon_count
 
         pla
@@ -3762,25 +3762,25 @@ not_in_map:
         beq     add_icon
 
 err:    pha
-        jsr     StoreWindowIconTable
+        jsr     StoreWindowEntryTable
         pla
         jsr     ShowAlert
         rts
 
 add_icon:
-        lda     cached_window_icon_count
+        lda     cached_window_entry_count
         cmp     previous_icon_count
         beq     :+
 
         ;; If a new icon was added, more work is needed.
-        ldx     cached_window_icon_count
+        ldx     cached_window_entry_count
         dex
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     icon_entry_lookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
 
-:       jsr     StoreWindowIconTable
+:       jsr     StoreWindowEntryTable
         jmp     clear_updates_and_redraw_desktop_icons
 
 previous_icon_count:
@@ -3828,7 +3828,7 @@ active_window_view_by:
         .byte   0
 
 .proc handle_client_click
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
@@ -3937,8 +3937,8 @@ pgrt:   jsr     scroll_page_right
         jmp     done_client_click
 
 done_client_click:
-        jsr     StoreWindowIconTable
-        jmp     LoadDesktopIconTable
+        jsr     StoreWindowEntryTable
+        jmp     LoadDesktopEntryTable
 .endproc
 
 ;;; ============================================================
@@ -3951,8 +3951,8 @@ done_client_click:
         bne     :+
         rts
 :       jsr     update_scroll_thumb
-        jsr     StoreWindowIconTable
-        jmp     LoadDesktopIconTable
+        jsr     StoreWindowEntryTable
+        jmp     LoadDesktopEntryTable
 .endproc
 
 ;;; ============================================================
@@ -4163,8 +4163,8 @@ desktop:
 
 ;;; Used as additional entry point
 swap_in_desktop_icon_table:
-        jsr     StoreWindowIconTable
-        jmp     LoadDesktopIconTable
+        jsr     StoreWindowEntryTable
+        jmp     LoadDesktopEntryTable
 
 L5DF7:  ldx     saved_stack
         txs
@@ -4416,8 +4416,8 @@ exception_flag:
         pla                     ; window id
         jsr     open_directory
         jsr     cmd_view_by_icon::entry
-        jsr     StoreWindowIconTable
-        jsr     LoadActiveWindowIconTable
+        jsr     StoreWindowEntryTable
+        jsr     LoadActiveWindowEntryTable
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     draw_window_header
@@ -4427,7 +4427,7 @@ exception_flag:
 
         copy    #1, menu_click_params::item_num
         jsr     update_view_menu_check
-        jmp     LoadDesktopIconTable
+        jmp     LoadDesktopEntryTable
 
 window_id:
         .byte   0
@@ -4483,13 +4483,13 @@ l4:     jsr     peek_event
         beq     l7
         jsr     frame_tmp_rect
         ldx     #$00
-l5:     cpx     cached_window_icon_count
+l5:     cpx     cached_window_entry_count
         bne     l6
         jmp     reset_main_grafport
 
 l6:     txa
         pha
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         sta     icon_param
         jsr     icon_screen_to_window
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
@@ -4619,17 +4619,17 @@ l17:    jsr     push_pointers
         rts
 
         ;; Update icon positions
-:       jsr     LoadActiveWindowIconTable
+:       jsr     LoadActiveWindowEntryTable
         ldx     #0
-next:   cpx     cached_window_icon_count
+next:   cpx     cached_window_entry_count
         bne     :+
-        jsr     StoreWindowIconTable
-        jsr     LoadDesktopIconTable
+        jsr     StoreWindowEntryTable
+        jsr     LoadDesktopEntryTable
         jmp     done
 
 :       txa
         pha
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     icon_entry_lookup
         stax    ptr
         ldy     #IconEntry::iconx
@@ -4654,11 +4654,11 @@ deltay: .word   0
         copy    active_window_id, event_params
         MGTK_RELAY_CALL MGTK::GrowWindow, event_params
         jsr     clear_updates_and_redraw_desktop_icons
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
         jsr     cached_icons_screen_to_window
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
-        jsr     LoadDesktopIconTable
+        jsr     LoadDesktopEntryTable
         jmp     reset_main_grafport
 .endproc
 
@@ -4682,7 +4682,7 @@ deltay: .word   0
 .proc close_window
         icon_ptr := $06
 
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
 
         copy    selected_window_id, old_selected_window_id
 
@@ -4695,7 +4695,7 @@ deltay: .word   0
 
         lda     icon_count
         sec
-        sbc     cached_window_icon_count
+        sbc     cached_window_entry_count
         sta     icon_count
 
         ITK_RELAY_CALL IconTK::CloseWindow, active_window_id
@@ -4705,14 +4705,14 @@ deltay: .word   0
 iter:   dec     num_open_windows
         ldx     #0
         txa
-:       sta     cached_window_icon_list,x
-        cpx     cached_window_icon_count
+:       sta     cached_window_entry_list,x
+        cpx     cached_window_entry_count
         beq     cont
         inx
         jmp     :-
 
-cont:   sta     cached_window_icon_count
-        jsr     StoreWindowIconTable
+cont:   sta     cached_window_entry_count
+        jsr     StoreWindowEntryTable
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
 
         ;; Select & highlight dir (vol/folder) icon, if present
@@ -4759,7 +4759,7 @@ no_icon:
         sta     win_view_by_table,x
 
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
-        jsr     LoadDesktopIconTable
+        jsr     LoadDesktopEntryTable
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     check_item
         jsr     update_window_menu_items
@@ -4773,10 +4773,10 @@ no_icon:
         cmp     old_selected_window_id
         bne     :+
 
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
         jsr     set_port_from_window_id
         jsr     draw_window_entries
-        jsr     LoadDesktopIconTable
+        jsr     LoadDesktopEntryTable
 
 :       rts
 
@@ -5390,7 +5390,7 @@ was_double_click:
         cmp     trash_icon_num
         beq     L688E
         jsr     open_folder_or_volume_icon
-        jsr     StoreWindowIconTable
+        jsr     StoreWindowEntryTable
 L688E:  rts
 
         ;; ???
@@ -5442,7 +5442,7 @@ l3:     jsr     peek_event
         beq     l6
         jsr     frame_tmp_rect
         ldx     #0
-l4:     cpx     cached_window_icon_count
+l4:     cpx     cached_window_entry_count
         bne     :+
         lda     #0
         sta     selected_window_id
@@ -5450,7 +5450,7 @@ l4:     cpx     cached_window_icon_count
 
 :       txa
         pha
-        copy    cached_window_icon_list,x, icon_param
+        copy    cached_window_entry_list,x, icon_param
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     l5
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
@@ -5616,7 +5616,7 @@ found_window:
         ptr := $06
 
         sta     icon_params2
-        jsr     StoreWindowIconTable
+        jsr     StoreWindowEntryTable
         lda     icon_params2
 
         ;; Already an open window for the icon?
@@ -5639,7 +5639,7 @@ found_win:
 
         ;; Otherwise, bring the window to the front.
 :       stx     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadWindowEntryTable
 
         jsr     update_icon
 
@@ -5659,7 +5659,7 @@ select: MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         sta     active_window_id
         jsr     draw_window_entries
         jsr     clear_updates
-        jmp     LoadDesktopIconTable
+        jmp     LoadDesktopEntryTable
 
         ;; --------------------------------------------------
         ;; No associated window - check for matching path.
@@ -5713,7 +5713,7 @@ no_win:
         inx                     ; 0-based to 1-based
 
         stx     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadWindowEntryTable
 
         ;; Update View and other menus
         inc     num_open_windows
@@ -5757,10 +5757,10 @@ update_view:
         jsr     cached_icons_screen_to_window
         copy    #0, num
 :       lda     num
-        cmp     cached_window_icon_count
+        cmp     cached_window_entry_count
         beq     done
         tax
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     icon_entry_lookup ; A,X points at IconEntry
         stax    @addr2
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr2
@@ -5771,8 +5771,8 @@ update_view:
 done:   copy    cached_window_id, active_window_id
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
-        jsr     StoreWindowIconTable
-        jsr     LoadDesktopIconTable
+        jsr     StoreWindowEntryTable
+        jsr     LoadDesktopEntryTable
         jmp     reset_main_grafport
 
 ;;; Common code to update the dir (vol/folder) icon.
@@ -5853,7 +5853,7 @@ num:    .byte   0
 
         ;; If the above succeeded, update its used/free.
         ;; TODO: Only do so if data is not populated.
-        jsr     LoadActiveWindowIconTable
+        jsr     LoadActiveWindowEntryTable
         lda     active_window_id
         jsr     update_used_free_for_vol_windows
         lda     active_window_id
@@ -5941,10 +5941,10 @@ list_view:
         lda     #0
         sta     rows_done
 rloop:  lda     rows_done
-        cmp     cached_window_icon_count
+        cmp     cached_window_entry_count
         beq     done
         tax
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     draw_list_view_row
         inc     rows_done
         jmp     rloop
@@ -5974,7 +5974,7 @@ icon_view:
         txa
         pha
 
-loop:   cpx     cached_window_icon_count ; done?
+loop:   cpx     cached_window_entry_count ; done?
         bne     draw                     ; nope...
 
         pla                     ; finish up...
@@ -5988,7 +5988,7 @@ loop:   cpx     cached_window_icon_count ; done?
 
 draw:   txa
         pha
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         sta     icon_param
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     :+
@@ -6163,10 +6163,10 @@ update_thumbs_flag:
         lda     #0
         sta     count
 loop:   lda     count
-        cmp     cached_window_icon_count
+        cmp     cached_window_entry_count
         beq     done
         tax
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     icon_screen_to_window
         inc     count
         jmp     loop
@@ -6182,10 +6182,10 @@ count:  .byte   0
         lda     #0
         sta     index
 loop:   lda     index
-        cmp     cached_window_icon_count
+        cmp     cached_window_entry_count
         beq     done
         tax
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     icon_window_to_screen
         inc     index
         jmp     loop
@@ -7389,9 +7389,9 @@ thumbmax:
 
         inc     icon_count
         jsr     AllocateIcon
-        ldx     cached_window_icon_count
-        inc     cached_window_icon_count
-        sta     cached_window_icon_list,x
+        ldx     cached_window_entry_count
+        inc     cached_window_entry_count
+        sta     cached_window_entry_list,x
         jsr     icon_entry_lookup
         stax    icon_entry
         lda     LCBANK2
@@ -7485,7 +7485,7 @@ L77F0:  lda     name_tmp,x
         ldy     #IconEntry::icony
         sub16in (icon_entry),y, icon_height, (icon_entry),y
 
-        lda     cached_window_icon_count
+        lda     cached_window_entry_count
         cmp     #kIconsPerRow
         beq     L781A
         bcs     L7826
@@ -7517,9 +7517,9 @@ L7870:  lda     cached_window_id
         sta     (icon_entry),y
         ldy     #IconEntry::iconbits
         copy16in iconbits, (icon_entry),y
-        ldx     cached_window_icon_count
+        ldx     cached_window_entry_count
         dex
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     icon_window_to_screen
         add16   file_entry, #kIconSpacingY, file_entry
         rts
@@ -7686,10 +7686,10 @@ tmp:    .byte   0
         add16 window_grafport::cliprect::y1, #kWindowHeaderHeight-4, items_label_pos::ycoord
 
         ;; Draw "XXX Items"
-        lda     cached_window_icon_count
+        lda     cached_window_entry_count
         ldx     #0
         jsr     IntToStringWithSeparators
-        lda     cached_window_icon_count
+        lda     cached_window_entry_count
         jsr     adjust_item_suffix
 
         MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
@@ -7843,7 +7843,7 @@ start:
         ;; If no items, simply zero out min and done. Otherwise,
         ;; do an actual calculation.
 
-        lda     cached_window_icon_count
+        lda     cached_window_entry_count
         bne     list_view_non_empty
         ;; Just fall through if no items (min = max = 0)
 
@@ -7883,7 +7883,7 @@ icon_view:
 
 check_icon:
         lda     icon_num
-        cmp     cached_window_icon_count
+        cmp     cached_window_entry_count
         bne     more
 
         ;; Add padding around bbox
@@ -7904,7 +7904,7 @@ finish: lda     iconbb_rect::x2
         rts
 
 more:   tax
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         jsr     cache_icon_bounds
 
         ;; First icon (index 0) - just use its coordinates as min/max
@@ -8578,7 +8578,7 @@ done:   lda     LCBANK1
         lda     LCBANK1
         lda     LCBANK1
         tya
-        sta     cached_window_icon_list,x
+        sta     cached_window_entry_list,x
         lda     LCBANK2
         lda     LCBANK2
         rts
@@ -9712,7 +9712,7 @@ error:  pha                     ; save error
         ldy     devlst_index      ; remove unit from list
         lda     #0
         sta     device_to_icon_map,y
-        dec     cached_window_icon_count
+        dec     cached_window_entry_count
         dec     icon_count
         pla
         rts
@@ -9809,11 +9809,11 @@ success:
         add16in (icon_ptr),y, offset, (icon_ptr),y
 
         ;; Assign icon number
-        ldx     cached_window_icon_count
+        ldx     cached_window_entry_count
         dex
         ldy     #IconEntry::id
         lda     (icon_ptr),y
-        sta     cached_window_icon_list,x
+        sta     cached_window_entry_list,x
         jsr     pop_pointers
         return  #0
 
@@ -9824,19 +9824,19 @@ offset:         .word   0
 ;;; Compare a volume name against existing volume icons for drives.
 ;;; Inputs: String to compare against is in `cvi_data_buffer`
 ;;; Output: A=0 if not a duplicate, ERR_DUPLICATE_VOLUME if there is a duplicate.
-;;; Assert: `cached_window_icon_count` is one greater than actual count
+;;; Assert: `cached_window_entry_count` is one greater than actual count
 .proc compare_names
 
         string := cvi_data_buffer
         icon_ptr := $06
 
         jsr     push_pointers
-        ldx     cached_window_icon_count
+        ldx     cached_window_entry_count
         dex
         stx     index
 
 loop:   ldx     index
-        lda     cached_window_icon_list,x
+        lda     cached_window_entry_list,x
         cmp     trash_icon_num
         beq     next
         jsr     icon_entry_lookup
@@ -9916,23 +9916,23 @@ index:  .byte   0
 ;;; ============================================================
 
 .proc remove_icon_from_window
-        ldx     cached_window_icon_count
+        ldx     cached_window_entry_count
         dex
-:       cmp     cached_window_icon_list,x
+:       cmp     cached_window_entry_list,x
         beq     remove
         dex
         bpl     :-
         rts
 
-remove: lda     cached_window_icon_list+1,x
-        sta     cached_window_icon_list,x
+remove: lda     cached_window_entry_list+1,x
+        sta     cached_window_entry_list,x
         inx
-        cpx     cached_window_icon_count
+        cpx     cached_window_entry_count
         bne     remove
-        dec     cached_window_icon_count
-        ldx     cached_window_icon_count
+        dec     cached_window_entry_count
+        ldx     cached_window_entry_count
         lda     #0
-        sta     cached_window_icon_list,x
+        sta     cached_window_entry_list,x
         rts
 .endproc
 

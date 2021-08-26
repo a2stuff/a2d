@@ -1889,9 +1889,9 @@ filename:
 filename_buffer:
         .res kPathBufferSize
 
-;;; The space between `WINDOW_ICON_TABLES` and `DA_IO_BUFFER` is usable in
+;;; The space between `WINDOW_ENTRY_TABLES` and `DA_IO_BUFFER` is usable in
 ;;; Main memory only.
-        write_buffer := WINDOW_ICON_TABLES
+        write_buffer := WINDOW_ENTRY_TABLES
         .assert DA_IO_BUFFER - write_buffer >= .sizeof(DeskTopSettings), error, "Not enough room"
 
         DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
@@ -1969,8 +1969,8 @@ done:   rts
 ;;; ============================================================
 
 da_end  := *
-.assert * < WINDOW_ICON_TABLES, error, .sprintf("DA too big (at $%X)", *)
+.assert * < WINDOW_ENTRY_TABLES, error, .sprintf("DA too big (at $%X)", *)
         ;; I/O Buffer starts at MAIN $1C00
-        ;; ... but icon tables start at AUX $1B00
+        ;; ... but entry tables start at AUX $1B00
 
 ;;; ============================================================
