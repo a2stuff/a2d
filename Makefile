@@ -1,3 +1,7 @@
+# Enable color output in tput, used in Makefiles and scripts.
+# This is theoretically bad, but in practice it's fine.
+export TERM = xterm-256color
+
 targets := desktop desktop.system desk.acc selector
 
 .PHONY: all $(targets) mount install installsel package vercheck
