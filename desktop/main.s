@@ -2777,6 +2777,8 @@ view:   .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Destroy all of the icons in the active window.
+;;; Assert: DesktopIconTable is cached (and this is restored)
 
 .proc destroy_icons_in_active_window
         ITK_RELAY_CALL IconTK::CloseWindow, active_window_id
@@ -2816,10 +2818,22 @@ loop:   ldx     index
         inc     index
         bne     loop
 
-done:   copy    #0, cached_window_icon_count
-        rts
+done:   rts
 
 index:  .byte   0
+.endproc
+
+;;; ============================================================
+;;; Clear active window entry count
+;;; Assert: DesktopIconTable is cached (and this is restored)
+
+.proc clear_active_window_entry_count
+        jsr     LoadActiveWindowIconTable
+
+        copy    #0, cached_window_icon_count
+
+        jsr     StoreWindowIconTable
+        jmp     LoadDesktopIconTable
 .endproc
 
 ;;; ============================================================
@@ -4384,6 +4398,7 @@ exception_flag:
         lda     win_view_by_table,x
         bmi     :+              ; list view, not icons
         jsr     destroy_icons_in_active_window
+        jsr     clear_active_window_entry_count
 :       lda     active_window_id
         jsr     get_window_path
 
