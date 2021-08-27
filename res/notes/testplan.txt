@@ -286,3 +286,6 @@
 * Launch Selector. Eject the disk with DeskTop on it. Type Q (don't click). Dismiss the dialog by hitting Esc. Verify that the dialog disappears, and the Apple menu is not shown.
 
 * Configure a system with a Mockingboard and a Zip Chip, with acceleration enabled (MAME works). Launch DeskTop. Run the This Apple DA. Verify that the Mockingboard is detected.
+
+* Launch DeskTop. Select a volume icon, where the volume contains no files. Special > Get Size. Verify that numbers are shown (0) for number of files and size used.
+* Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. Special > Get Size. Verify that a "The specified path name is invalid." alert is not shown.

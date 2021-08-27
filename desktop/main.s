@@ -11148,7 +11148,12 @@ all_flag:
         buf  := path_buf3
 
         ldx     #0
-        ldy     #0
+
+        lda     str1            ; check for nullptr (volume)
+        ora     str1+1
+        beq     do_str2
+
+        ldy     #0              ; check for empty string
         lda     (str1),y
         beq     do_str2
 
@@ -14415,7 +14420,12 @@ do3:    jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         rts
 
-do2:    lda     winfo_prompt_dialog::window_id
+do2:
+        ;; If no files were seen, `do1` was never executed and so the
+        ;; counts will not be shown. Update one last time, just in case.
+        jsr     do1
+
+        lda     winfo_prompt_dialog::window_id
         jsr     set_port_from_window_id
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
