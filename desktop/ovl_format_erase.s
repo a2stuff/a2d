@@ -284,10 +284,10 @@ d2:     .byte   0
         kLabelsVOffset = 49
 
 .proc handle_click
-        cmp16   screentowindow_windowx, #40
+        cmp16   screentowindow_windowx, #kDialogLabelDefaultX
         bpl     :+
         return  #$FF
-:       cmp16   screentowindow_windowx, #360
+:       cmp16   screentowindow_windowx, #kDialogLabelDefaultX + kLabelWidth*3
         bcc     :+
         return  #$FF
 :       lda     screentowindow_windowy
@@ -311,10 +311,10 @@ d2:     .byte   0
         return  #$FF
 
 l1:     copy    #2, col
-        cmp16   screentowindow_windowx, #280
+        cmp16   screentowindow_windowx, #kDialogLabelDefaultX + kLabelWidth*2
         bcs     l2
         dec     col
-        cmp16   screentowindow_windowx, #160
+        cmp16   screentowindow_windowx, #kDialogLabelDefaultX + kLabelWidth
         bcs     l2
         dec     col
 l2:     lda     col
