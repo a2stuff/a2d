@@ -19,13 +19,14 @@ L0800:  pha
         jsr     main::set_cursor_pointer
         pla
         cmp     #$04
-        beq     L080C
-        jmp     L09D9
+        beq     format_disk
+        jmp     erase_disk
 
 ;;; ============================================================
 ;;; Format Disk
 
-L080C:  copy    #$00, has_input_field_flag
+.proc format_disk
+        copy    #$00, has_input_field_flag
         jsr     main::open_prompt_window
         lda     winfo_prompt_dialog::window_id
         jsr     main::set_port_from_window_id
@@ -33,21 +34,21 @@ L080C:  copy    #$00, has_input_field_flag
         param_call main::draw_dialog_label, 1, aux::str_select_format
         jsr     draw_volume_labels
         copy    #$FF, selected_device_index
-L0832:  copy16  #L0B48, main::jump_relay+1
+l1:     copy16  #handle_click, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
-L0841:  jsr     main::prompt_input_loop
-        bmi     L0841
+l2:     jsr     main::prompt_input_loop
+        bmi     l2
         pha
         copy16  #main::noop, main::jump_relay+1
         lda     #$00
         sta     LD8F3
         sta     format_erase_overlay_flag
         pla
-        beq     L085F
-        jmp     L09C2
+        beq     l3
+        jmp     l15
 
-L085F:  bit     selected_device_index
-        bmi     L0832
+l3:     bit     selected_device_index
+        bmi     l1
         lda     winfo_prompt_dialog::window_id
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
@@ -59,18 +60,18 @@ L085F:  bit     selected_device_index
         copy    #$00, format_erase_overlay_flag
         jsr     main::clear_path_buf2
         param_call main::draw_dialog_label, 3, aux::str_new_volume
-L08A7:  jsr     main::prompt_input_loop
-        bmi     L08A7
-        beq     L08B7
-        jmp     L09C2
+l4:     jsr     main::prompt_input_loop
+        bmi     l4
+        beq     l6
+        jmp     l15
 
-L08B1:  jsr     Bell
-        jmp     L08A7
+l5:     jsr     Bell
+        jmp     l4
 
-L08B7:  lda     path_buf1
-        beq     L08B1
+l6:     lda     path_buf1
+        beq     l5
         cmp     #$10
-        bcs     L08B1
+        bcs     l5
         jsr     main::set_cursor_pointer
         lda     winfo_prompt_dialog::window_id
         jsr     main::set_port_from_window_id
@@ -84,89 +85,92 @@ L08B7:  lda     path_buf1
         tax
         lda     DEVLST,x
 
-        sta     L09D8
-        sta     L09D7
+        sta     d2
+        sta     unit_num
         lda     #$00
         sta     has_input_field_flag
         param_call main::draw_dialog_label, 3, aux::str_confirm_format
-        lda     L09D7
-        jsr     L1A2D
+        lda     unit_num
+        jsr     append_vol_name_question
         param_call main::DrawString, ovl_string_buf
-L0902:  jsr     main::prompt_input_loop
-        bmi     L0902
-        beq     L090C
-        jmp     L09C2
+l7:     jsr     main::prompt_input_loop
+        bmi     l7
+        beq     l8
+        jmp     l15
 
-L090C:  lda     winfo_prompt_dialog::window_id
+l8:     lda     winfo_prompt_dialog::window_id
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::draw_dialog_label, 1, aux::str_formatting
-        lda     L09D7
+        lda     unit_num
         jsr     L12C1
         and     #$FF
-        bne     L0942
+        bne     l9
         jsr     main::set_cursor_watch
-        lda     L09D7
+        lda     unit_num
         jsr     L126F
-        bcs     L099B
-L0942:  lda     winfo_prompt_dialog::window_id
+        bcs     l12
+l9:     lda     winfo_prompt_dialog::window_id
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::draw_dialog_label, 1, aux::str_erasing
         param_call upcase_string, path_buf1
         ldxy    #path_buf1
-        lda     L09D7
+        lda     unit_num
         jsr     L1307
         pha
         jsr     main::set_cursor_pointer
         pla
-        bne     L0980
+        bne     l10
         lda     #$00
-        jmp     L09C2
+        jmp     l15
 
-L0980:  cmp     #ERR_WRITE_PROTECTED
-        bne     L098C
+l10:    cmp     #ERR_WRITE_PROTECTED
+        bne     l11
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     L09C2           ; `kAlertResultCancel` = 1
-        jmp     L090C           ; `kAlertResultTryAgain` = 0
+        bne     l15           ; `kAlertResultCancel` = 1
+        jmp     l8           ; `kAlertResultTryAgain` = 0
 
-L098C:  jsr     Bell
+l11:    jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_erasing_error
-        jmp     L09B8
+        jmp     l14
 
-L099B:  pha
+l12:    pha
         jsr     main::set_cursor_pointer
         pla
         cmp     #ERR_WRITE_PROTECTED
-        bne     L09AC
+        bne     l13
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     L09C2           ; `kAlertResultCancel` = 1
-        jmp     L090C           ; `kAlertResultTryAgain` = 0
+        bne     l15           ; `kAlertResultCancel` = 1
+        jmp     l8           ; `kAlertResultTryAgain` = 0
 
-L09AC:  jsr     Bell
+l13:    jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_formatting_error
-L09B8:  jsr     main::prompt_input_loop
-        bmi     L09B8
-        bne     L09C2
-        jmp     L090C
+l14:    jsr     main::prompt_input_loop
+        bmi     l14
+        bne     l15
+        jmp     l8
 
-L09C2:  pha
+l15:    pha
         jsr     main::set_cursor_pointer
         jsr     main::reset_main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        ldx     L09D8
+        ldx     d2
         pla
         rts
 
-L09D7:  .byte   0
-L09D8:  .byte   0
+unit_num:
+        .byte   0
+d2:     .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Erase Disk
 
-L09D9:  lda     #$00
+.proc erase_disk
+        lda     #$00
         sta     has_input_field_flag
         jsr     main::open_prompt_window
         lda     winfo_prompt_dialog::window_id
@@ -175,15 +179,15 @@ L09D9:  lda     #$00
         param_call main::draw_dialog_label, 1, aux::str_select_erase
         jsr     draw_volume_labels
         copy    #$FF, selected_device_index
-        copy16  #L0B48, main::jump_relay+1
+        copy16  #handle_click, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
-L0A0E:  jsr     main::prompt_input_loop
-        bmi     L0A0E
-        beq     L0A18
-        jmp     L0B31
+l1:     jsr     main::prompt_input_loop
+        bmi     l1
+        beq     l2
+        jmp     l11
 
-L0A18:  bit     selected_device_index
-        bmi     L0A0E
+l2:     bit     selected_device_index
+        bmi     l1
         copy16  #main::rts1, main::jump_relay+1
         lda     winfo_prompt_dialog::window_id
         jsr     main::set_port_from_window_id
@@ -196,18 +200,18 @@ L0A18:  bit     selected_device_index
         copy    #$00, format_erase_overlay_flag
         jsr     main::clear_path_buf2
         param_call main::draw_dialog_label, 3, aux::str_new_volume
-L0A6A:  jsr     main::prompt_input_loop
-        bmi     L0A6A
-        beq     L0A7A
-        jmp     L0B31
+l3:     jsr     main::prompt_input_loop
+        bmi     l3
+        beq     l5
+        jmp     l11
 
-L0A74:  jsr     Bell
-        jmp     L0A6A
+l4:     jsr     Bell
+        jmp     l3
 
-L0A7A:  lda     path_buf1
-        beq     L0A74
+l5:     lda     path_buf1
+        beq     l4
         cmp     #$10
-        bcs     L0A74
+        bcs     l4
         jsr     main::set_cursor_pointer
         lda     winfo_prompt_dialog::window_id
         jsr     main::set_port_from_window_id
@@ -222,19 +226,19 @@ L0A7A:  lda     path_buf1
         tax
         lda     DEVLST,x
 
-        sta     L0B47
-        sta     L0B46
+        sta     d2
+        sta     unit_num
         param_call main::draw_dialog_label, 3, aux::str_confirm_erase
-        lda     L0B46
+        lda     unit_num
         and     #$F0
-        jsr     L1A2D
+        jsr     append_vol_name_question
         param_call main::DrawString, ovl_string_buf
-L0AC7:  jsr     main::prompt_input_loop
-        bmi     L0AC7
-        beq     L0AD1
-        jmp     L0B31
+l6:     jsr     main::prompt_input_loop
+        bmi     l6
+        beq     l7
+        jmp     l11
 
-L0AD1:  lda     winfo_prompt_dialog::window_id
+l7:     lda     winfo_prompt_dialog::window_id
         jsr     main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
@@ -242,42 +246,45 @@ L0AD1:  lda     winfo_prompt_dialog::window_id
         param_call upcase_string, path_buf1
         jsr     main::set_cursor_watch
         ldxy    #path_buf1
-        lda     L0B46
+        lda     unit_num
         jsr     L1307
         pha
         jsr     main::set_cursor_pointer
         pla
-        bne     L0B12
+        bne     l8
         lda     #$00
-        jmp     L0B31
+        jmp     l11
 
-L0B12:  cmp     #ERR_WRITE_PROTECTED
-        bne     L0B1E
+l8:     cmp     #ERR_WRITE_PROTECTED
+        bne     l9
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     L0B31           ; `kAlertResultCancel` = 1
-        jmp     L0AD1           ; `kAlertResultTryAgain` = 0
+        bne     l11           ; `kAlertResultCancel` = 1
+        jmp     l7           ; `kAlertResultTryAgain` = 0
 
-L0B1E:  jsr     Bell
+l9:     jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_erasing_error
-L0B2A:  jsr     main::prompt_input_loop
-        bmi     L0B2A
-        beq     L0AD1
-L0B31:  pha
+l10:    jsr     main::prompt_input_loop
+        bmi     l10
+        beq     l7
+l11:    pha
         jsr     main::set_cursor_pointer
         jsr     main::reset_main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        ldx     L0B47
+        ldx     d2
         pla
         rts
 
-L0B46:  .byte   0
-L0B47:  .byte   0
+unit_num:
+        .byte   0
+d2:     .byte   0
+.endproc
 
 ;;; ============================================================
 
         kLabelsVOffset = 49
 
-L0B48:  cmp16   screentowindow_windowx, #40
+.proc handle_click
+        cmp16   screentowindow_windowx, #40
         bpl     :+
         return  #$FF
 :       cmp16   screentowindow_windowx, #360
@@ -300,54 +307,55 @@ L0B48:  cmp16   screentowindow_windowx, #40
         stax    screentowindow_windowy
 
         cmp     #4
-        bcc     L0B98
+        bcc     l1
         return  #$FF
 
-L0B98:  copy    #$02, L0C1F
+l1:     copy    #2, col
         cmp16   screentowindow_windowx, #280
-        bcs     L0BBB
-        dec     L0C1F
+        bcs     l2
+        dec     col
         cmp16   screentowindow_windowx, #160
-        bcs     L0BBB
-        dec     L0C1F
-L0BBB:  lda     L0C1F
+        bcs     l2
+        dec     col
+l2:     lda     col
         asl     a
         asl     a
         clc
         adc     screentowindow_windowy
         cmp     num_volumes
-        bcc     L0BDC
+        bcc     l4
         lda     selected_device_index
-        bmi     L0BD9
+        bmi     l3
         lda     selected_device_index
         jsr     highlight_volume_label
         lda     #$FF
         sta     selected_device_index
-L0BD9:  return  #$FF
+l3:     return  #$FF
 
-L0BDC:  cmp     selected_device_index
-        bne     L0C04
+l4:     cmp     selected_device_index
+        bne     l7
         jsr     main::detect_double_click
-        bmi     L0C03
-L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
+        bmi     l6
+l5:     MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         lda     #$00
-L0C03:  rts
+l6:     rts
 
-L0C04:  sta     L0C1E
+l7:     sta     d1
         lda     selected_device_index
-        bmi     L0C0F
+        bmi     l8
         jsr     highlight_volume_label
-L0C0F:  lda     L0C1E
+l8:     lda     d1
         sta     selected_device_index
         jsr     highlight_volume_label
         jsr     main::detect_double_click
-        beq     L0BE6
+        beq     l5
         rts
 
-L0C1E:  .byte   0
-L0C1F:  .byte   0
+d1:     .byte   0
+col:    .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Hilight volume label
@@ -356,9 +364,9 @@ L0C1F:  .byte   0
         kLabelWidth = 110
 
 .proc highlight_volume_label
-        ldy     #39
+        ldy     #<(kDialogLabelDefaultX-1)
         sty     select_volume_rect::x1
-        ldy     #0
+        ldy     #>(kDialogLabelDefaultX-1)
         sty     select_volume_rect::x1+1
         tax
         lsr     a               ; / 4
@@ -691,10 +699,10 @@ L12D3:  stx     @lsb
         return  #$FF
 
 L1303:  return  #$00
+L1306:  .byte   0
 
 ;;; ============================================================
 
-L1306:  .byte   0
 L1307:  sta     L124A
         and     #$F0
         sta     write_block_params::unit_num
@@ -1047,8 +1055,9 @@ L1A22:  sta     ovl_string_buf,x
         rts
 
 ;;; ============================================================
+;;; Inputs: A=unit number
 
-.proc L1A2D
+.proc append_vol_name_question
         sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
         bne     L1A6D
@@ -1068,7 +1077,7 @@ L1A22:  sta     ovl_string_buf,x
         sta     ovl_string_buf,x
         inc     ovl_string_buf
         ldx     ovl_string_buf
-        lda     #$3F
+        lda     #'?'
         sta     ovl_string_buf,x
         rts
 
