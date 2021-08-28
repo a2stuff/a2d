@@ -299,3 +299,4 @@
 * Launch DeskTop. Double-click a volume. Verify that the volume icon is still selected.
 * Launch DeskTop. Select a folder. File > Open. Verify that the folder icon is no longer selected.
 * Launch DeskTop. Double-click a folder. Verify that the volume icon is no longer selected.
+* Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Select the folder. File > Open. Verify that the folder is no longer selected.

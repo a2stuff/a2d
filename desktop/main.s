@@ -1898,25 +1898,35 @@ store:  sta     window_id_to_close
 .proc cmd_open
         ptr := $06
 
+        selected_icon_count_copy := $1F80
+        selected_icon_list_copy := $1F81
+        .assert selected_icon_list_copy + kMaxIconCount <= $2000, error, "overlap"
+
         ;; Source window to close?
         jsr     set_window_to_close_after_open
 
-ep2:    ldx     #0
-        stx     dir_count
+ep2:                            ; skip maybe closing parent
 
-L4DEC:  cpx     selected_icon_count
+        copy    #0, dir_flag
+
+        ;; Make a copy of selection
+        ldx     selected_icon_count
+        stx     selected_icon_count_copy
+:       lda     selected_icon_list-1,x
+        sta     selected_icon_list_copy-1,x
+        dex
+        bne     :-
+
+
+        ldx     #0
+loop:   cpx     selected_icon_count_copy
         bne     next
 
-        ;; Were any directories opened?
-        lda     dir_count
-        beq     done
+        ;; Finish up...
 
-        lda     selected_window_id
-        beq     :+
-        ;; TODO: Clear selection before opening instead, since the
-        ;; inactive windows won't be repainted.
-        jsr     clear_selection
-:
+        ;; Were any directories opened?
+        lda     dir_flag
+        beq     done
 
         ;; Close previous active window, depending on source/modifiers
         bit     menu_kbd_flag   ; If keyboard (Apple-O) ignore. (see issue #9)
@@ -1927,7 +1937,7 @@ done:   rts
 
 next:   txa
         pha
-        lda     selected_icon_list,x
+        lda     selected_icon_list_copy,x
         jsr     icon_entry_lookup
         stax    ptr
 
@@ -1936,36 +1946,43 @@ next:   txa
         and     #kIconEntryTypeMask
 
         cmp     #kIconEntryTypeTrash
-        beq     next_file
+        beq     next_icon
         cmp     #kIconEntryTypeDir
         bne     maybe_open_file
 
         ;; Directory
+        lda     dir_flag        ; first one seen?
+        bne     :+              ; not the first
+        inc     dir_flag        ; only do this once
+        lda     selected_window_id ; selection in a window?
+        beq     :+                 ; no
+        jsr     clear_selection
+:
+
         ldy     #0
         lda     (ptr),y
         jsr     open_folder_or_volume_icon
-        inc     dir_count
 
-next_file:
+next_icon:
         pla
         tax
         inx
-        jmp     L4DEC
+        jmp     loop
 
         ;; File (executable or data)
 maybe_open_file:
-        lda     selected_icon_count
+        lda     selected_icon_count_copy
         cmp     #2              ; multiple files open?
-        bcs     next_file       ; don't try to invoke
+        bcs     next_icon       ; don't try to invoke
 
         pla
 
         jsr     copy_win_icon_paths
         jmp     launch_file
 
-        ;; Count of opened volumes/folders; if non-zero,
-        ;; selection must be cleared before finishing.
-dir_count:
+        ;; Set when we see the first vol/folder icon, so we can
+        ;; clear selection (if it's a folder).
+dir_flag:
         .byte   0
 
 last_active_window_id:
