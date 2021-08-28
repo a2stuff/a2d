@@ -294,3 +294,8 @@
 * Configure a system with a RAMCard of at least 1MB. On a physical volume, create a directory with a system file (e.g. BASIC.SYSTEM) and a subdirectory. In the subdirectory, create 256 normal files followed by a subdirectory (with some files) followed by more files. Then run the following tests:
   * Launch DeskTop. Create a Selector entry for the system file, set to copy to RAMCard on Startup. Ensure DeskTop is set to copy to RAMCard on startup. Restart DeskTop. Verify that the directory is succesfully copied.
   * Launch DeskTop. Create a Selector entry for the system file, set to copy to RAMCard on Startup. Ensure DeskTop is set to copy to RAMCard on startup. Ensure DeskTop is set to launch Selector. Quit DeskTop. Launch Selector. Select the selector entry. Verify that the directory is succesfully copied.
+
+* Launch DeskTop. Select a volume. File > Open. Verify that the volume icon is still selected.
+* Launch DeskTop. Double-click a volume. Verify that the volume icon is still selected.
+* Launch DeskTop. Select a folder. File > Open. Verify that the folder icon is no longer selected.
+* Launch DeskTop. Double-click a folder. Verify that the volume icon is no longer selected.

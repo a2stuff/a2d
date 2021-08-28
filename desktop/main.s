@@ -1905,12 +1905,18 @@ ep2:    ldx     #0
         stx     dir_count
 
 L4DEC:  cpx     selected_icon_count
-        bne     :+
+        bne     next
 
         ;; Were any directories opened?
         lda     dir_count
         beq     done
+
+        lda     selected_window_id
+        beq     :+
+        ;; TODO: Clear selection before opening instead, since the
+        ;; inactive windows won't be repainted.
         jsr     clear_selection
+:
 
         ;; Close previous active window, depending on source/modifiers
         bit     menu_kbd_flag   ; If keyboard (Apple-O) ignore. (see issue #9)
@@ -1919,7 +1925,7 @@ L4DEC:  cpx     selected_icon_count
 
 done:   rts
 
-:       txa
+next:   txa
         pha
         lda     selected_icon_list,x
         jsr     icon_entry_lookup
@@ -4187,6 +4193,11 @@ handle_double_click:
         bne     file
 
         ;; Directory
+        lda     selected_window_id
+        beq     :+
+        jsr     clear_selection
+:
+
         lda     icon_num
         jsr     open_folder_or_volume_icon
         bmi     done
