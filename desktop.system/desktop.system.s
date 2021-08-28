@@ -480,19 +480,20 @@ close:  MLI_CALL CLOSE, close_dstfile_params
 :       rts
 .endproc
 
+;;; ============================================================
+
 recursion_depth:        .byte   0 ; How far down the directory structure are we
 entries_per_block:      .byte   13 ; TODO: Read this from directory header
 entry_index_in_dir:     .byte   0 ; TODO: Should be a word
 ref_num:                .byte   0
-target_index:           .byte   0
+target_index:           .byte   0 ; TODO: Should be a word
 
 ;;; Stack used when descending directories; keeps track of entry index within
 ;;; directories.
-index_stack:    .res    170, 0
+index_stack:    .res    ::kDirStackBufferSize, 0
 stack_index:    .byte   0
 
 entry_index_in_block:   .byte   0
-
 
 ;;; ============================================================
 

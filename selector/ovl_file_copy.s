@@ -98,138 +98,180 @@ pathname1:
 LA176:  .res    64, 0
 LA1B6:  .res    64, 0
 LA1F6:  .res    16, 0
-LA206:  .byte   0
-LA207:
-LA208           := * + 1
-LA209           := * + 2
-        .byte   $0D, $00, $00
-LA20A:  .byte   0
-LA20B:  .res    170, 0
-LA2B5:  .byte   0
-LA2B6:  .byte   0
 
-LA2B7:  ldx     LA2B5
-        lda     LA20A
-        sta     LA20B,x
+;;; ============================================================
+
+recursion_depth:        .byte   0 ; How far down the directory structure are we
+entries_per_block:      .byte   13 ; TODO: Read this from directory header
+entry_index_in_dir:     .byte   0 ; TODO: Should be a word
+ref_num:                .byte   0
+target_index:           .byte   0 ; TODO: Should be a word
+
+;;; Stack used when descending directories; keeps track of entry index within
+;;; directories.
+index_stack:    .res    ::kDirStackBufferSize, 0
+stack_index:    .byte   0
+
+entry_index_in_block:   .byte   0
+
+;;; ============================================================
+
+.proc push_index_to_stack
+        ldx     stack_index
+        lda     target_index
+        sta     index_stack,x
         inx
-        stx     LA2B5
+        stx     stack_index
         rts
+.endproc
 
-LA2C5:  ldx     LA2B5
+;;; ============================================================
+
+.proc pop_index_from_stack
+        ldx     stack_index
         dex
-        lda     LA20B,x
-        sta     LA20A
-        stx     LA2B5
+        lda     index_stack,x
+        sta     target_index
+        stx     stack_index
         rts
+.endproc
 
-LA2D3:  lda     #$00
-        sta     LA208
-        sta     LA2B6
+;;; ============================================================
+
+.proc open_src_dir
+        lda     #$00
+        sta     entry_index_in_dir
+        sta     entry_index_in_block
         MLI_CALL OPEN, open_params
-        beq     LA2E9
+        beq     l1
         jmp     handle_error_code
 
-LA2E9:  lda     open_params::ref_num
-        sta     LA209
+l1:     lda     open_params::ref_num
+        sta     ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
-        beq     LA300
+        beq     l2
         jmp     handle_error_code
 
-LA300:  jsr     LA319
+l2:     jsr     read_file_entry
         rts
+.endproc
 
-LA304:  lda     LA209
+;;; ============================================================
+
+.proc do_close_file
+        lda     ref_num
         sta     close_params::ref_num
         MLI_CALL CLOSE, close_params
-        beq     LA318
+        beq     l1
         jmp     handle_error_code
 
-LA318:  rts
+l1:     rts
+.endproc
 
-LA319:  inc     LA208
-        lda     LA209
+;;; ============================================================
+
+.proc read_file_entry
+        inc     entry_index_in_dir
+        lda     ref_num
         sta     read_params2::ref_num
         MLI_CALL READ, read_params2
-        beq     LA330
+        beq     l1
         jmp     handle_error_code
 
-LA330:  inc     LA2B6
-        lda     LA2B6
-        cmp     LA207
-        bcc     LA35B
+l1:     inc     entry_index_in_block
+        lda     entry_index_in_block
+        cmp     entries_per_block
+        bcc     l3
         lda     #$00
-        sta     LA2B6
-        lda     LA209
+        sta     entry_index_in_block
+        lda     ref_num
         sta     read_params3::ref_num
         MLI_CALL READ, read_params3
-        beq     LA354
+        beq     l2
         jmp     handle_error_code
 
-LA354:  lda     read_params3::trans_count
+l2:     lda     read_params3::trans_count
         cmp     read_params3::request_count
         rts
 
-LA35B:  return  #$00
+l3:     return  #$00
+.endproc
 
-LA35E:  lda     LA208
-        sta     LA20A
-        jsr     LA304
-        jsr     LA2B7
+;;; ============================================================
+
+.proc descend_directory
+        lda     entry_index_in_dir
+        sta     target_index
+        jsr     do_close_file
+        jsr     push_index_to_stack
         jsr     LA75D
-        jsr     LA2D3
+        jsr     open_src_dir
         rts
+.endproc
 
-LA371:  jsr     LA304
+.proc ascend_directory
+        jsr     do_close_file
         jsr     LA3E9
         jsr     LA782
-        jsr     LA2C5
-        jsr     LA2D3
-        jsr     LA387
+        jsr     pop_index_from_stack
+        jsr     open_src_dir
+        jsr     advance_to_target_entry
         jsr     LA3E6
         rts
+.endproc
 
-LA387:  lda     LA208
-        cmp     LA20A
-        beq     LA395
-        jsr     LA319
-        jmp     LA387
+.proc advance_to_target_entry
+        lda     entry_index_in_dir
+        cmp     target_index
+        beq     l1
+        jsr     read_file_entry
+        jmp     advance_to_target_entry
 
-LA395:  rts
+l1:     rts
+.endproc
 
-LA396:  lda     #$00
-        sta     LA206
-        jsr     LA2D3
-LA39E:  jsr     LA319
-        bne     LA3D0
+;;; ============================================================
+
+.proc copy_directory
+        lda     #$00
+        sta     recursion_depth
+        jsr     open_src_dir
+l1:     jsr     read_file_entry
+        bne     l2
         lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
-        beq     LA39E
+        beq     l1
         lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
         sta     LA3EC
         and     #NAME_LENGTH_MASK
         sta     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
         lda     #$00
-        sta     LA3E2
+        sta     copy_err_flag
         jsr     LA3E3
-        lda     LA3E2
-        bne     LA39E
+        lda     copy_err_flag
+        bne     l1
         lda     buf_dir_header+SubdirectoryHeader::reserved-4
         cmp     #$0F
-        bne     LA39E
-        jsr     LA35E
-        inc     LA206
-        jmp     LA39E
+        bne     l1
+        jsr     descend_directory
+        inc     recursion_depth
+        jmp     l1
 
-LA3D0:  lda     LA206
-        beq     LA3DE
-        jsr     LA371
-        dec     LA206
-        jmp     LA39E
+l2:     lda     recursion_depth
+        beq     l3
+        jsr     ascend_directory
+        dec     recursion_depth
+        jmp     l1
 
-LA3DE:  jsr     LA304
+l3:     jsr     do_close_file
         rts
+.endproc
 
-LA3E2:  .byte   0
+;;; ============================================================
+
+copy_err_flag:  .byte   0
+
+;;; ============================================================
 
 LA3E3:  jmp     (LA0EC)
 LA3E6:  jmp     (LA0EE)
@@ -339,7 +381,7 @@ LA4DB:  MLI_CALL CREATE, create_params
 
 LA4E9:  lda     LA4F8
         beq     LA4F5
-        jmp     LA396
+        jmp     copy_directory
 
         .byte   0
         rts
@@ -372,7 +414,7 @@ LA4FC:  jmp     LA7C0
 LA51A:  jsr     LA7C0
         jsr     LA782
         lda     #$FF
-        sta     LA3E2
+        sta     copy_err_flag
         jmp     LA569
 
 LA528:  jsr     LA79B
@@ -554,7 +596,7 @@ LA6FF:  lda     get_file_info_params2::storage_type
 LA711:  lda     #$FF
 LA713:  sta     LA723
         beq     LA725
-        jsr     LA396
+        jsr     copy_directory
         lda     LA724
         cmp     #$0F
         bne     LA725

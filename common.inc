@@ -28,6 +28,7 @@ SELF_MODIFIED   = $1234            ; To avoid ZP addressing mode
 
 kMaxPathLength  = 64
 kPathBufferSize = 65
+kDirStackBufferSize = 170
 
 ;;; ============================================================
 

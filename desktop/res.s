@@ -926,7 +926,7 @@ entries_to_skip:
 ;;; at the current level is pushed here, so that following a descent
 ;;; the previous entries can be skipped.
 entry_count_stack:
-        .res    170, 0
+        .res    kDirStackBufferSize, 0
 
 entry_count_stack_index:
         .byte   0
