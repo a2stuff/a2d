@@ -103,9 +103,9 @@ LA1F6:  .res    16, 0
 
 recursion_depth:        .byte   0 ; How far down the directory structure are we
 entries_per_block:      .byte   13 ; TODO: Read this from directory header
-entry_index_in_dir:     .byte   0 ; TODO: Should be a word
 ref_num:                .byte   0
-target_index:           .byte   0 ; TODO: Should be a word
+entry_index_in_dir:     .word   0
+target_index:           .word   0
 
 ;;; Stack used when descending directories; keeps track of entry index within
 ;;; directories.
@@ -121,6 +121,9 @@ entry_index_in_block:   .byte   0
         lda     target_index
         sta     index_stack,x
         inx
+        lda     target_index+1
+        sta     index_stack,x
+        inx
         stx     stack_index
         rts
 .endproc
@@ -129,6 +132,9 @@ entry_index_in_block:   .byte   0
 
 .proc pop_index_from_stack
         ldx     stack_index
+        dex
+        lda     index_stack,x
+        sta     target_index+1
         dex
         lda     index_stack,x
         sta     target_index
@@ -141,6 +147,7 @@ entry_index_in_block:   .byte   0
 .proc open_src_dir
         lda     #$00
         sta     entry_index_in_dir
+        sta     entry_index_in_dir+1
         sta     entry_index_in_block
         MLI_CALL OPEN, open_params
         beq     l1
@@ -172,7 +179,7 @@ l1:     rts
 ;;; ============================================================
 
 .proc read_file_entry
-        inc     entry_index_in_dir
+        inc16   entry_index_in_dir
         lda     ref_num
         sta     read_params2::ref_num
         MLI_CALL READ, read_params2
@@ -201,8 +208,7 @@ l3:     return  #$00
 ;;; ============================================================
 
 .proc descend_directory
-        lda     entry_index_in_dir
-        sta     target_index
+        copy16  entry_index_in_dir, target_index
         jsr     do_close_file
         jsr     push_index_to_stack
         jsr     LA75D
@@ -222,13 +228,12 @@ l3:     return  #$00
 .endproc
 
 .proc advance_to_target_entry
-        lda     entry_index_in_dir
-        cmp     target_index
-        beq     l1
+:       cmp16   entry_index_in_dir, target_index
+        beq     :+
         jsr     read_file_entry
-        jmp     advance_to_target_entry
+        jmp     :-
 
-l1:     rts
+:       rts
 .endproc
 
 ;;; ============================================================
