@@ -192,29 +192,36 @@ l1:     rts
 
 .proc read_file_entry
         inc16   entry_index_in_dir
+
+        ;; Skip entry
         lda     ref_num
         sta     read_fileentry_params::ref_num
         MLI_CALL READ, read_fileentry_params
-        beq     l1
+        beq     :+
+        cmp     #ERR_END_OF_FILE
+        beq     eof
         jmp     handle_error_code
+:
+        ;; TODO: Could AdjustFileEntryCase here
 
-l1:     inc     entry_index_in_block
+        inc     entry_index_in_block
         lda     entry_index_in_block
         cmp     entries_per_block
-        bcc     l3
-        lda     #$00
+        bcc     done
+
+        ;; Advance to first entry in next "block"
+        lda     #0
         sta     entry_index_in_block
         lda     ref_num
         sta     read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
-        beq     l2
+        beq     :+
         jmp     handle_error_code
+:
 
-l2:     lda     read_padding_bytes_params::trans_count
-        cmp     read_padding_bytes_params::request_count
-        rts
+done:   return  #0
 
-l3:     return  #$00
+eof:    return  #$FF
 .endproc
 
 ;;; ============================================================

@@ -578,8 +578,10 @@ entry_index_in_block:   .byte   0
         cmp     #ERR_END_OF_FILE
         beq     eof
         jmp     (hook_handle_error_code)
-:       ldax    #filename
+:
+        ldax    #filename
         jsr     AdjustFileEntryCase
+
         inc     entry_index_in_block
         lda     entry_index_in_block
         cmp     entries_per_block
