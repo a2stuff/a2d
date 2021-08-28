@@ -907,6 +907,9 @@ copy_run_flag:
 delete_skip_decrement_flag:     ; always set to 0 ???
         .byte   0
 
+op_ref_num:
+        .byte   0
+
 process_depth:
         .byte   0               ; tracks recursion depth
 
@@ -915,11 +918,9 @@ num_entries_per_block:
         .byte   13
 
 entries_read:
-        .byte   0
-op_ref_num:
-        .byte   0
+        .word   0
 entries_to_skip:
-        .byte   0
+        .word   0
 
 ;;; During directory traversal, the number of file entries processed
 ;;; at the current level is pushed here, so that following a descent

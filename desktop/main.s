@@ -11858,12 +11858,18 @@ L97E4:  .byte   $00
         lda     entries_to_skip
         sta     entry_count_stack,x
         inx
+        lda     entries_to_skip+1
+        sta     entry_count_stack,x
+        inx
         stx     entry_count_stack_index
         rts
 .endproc
 
 .proc pop_entry_count
         ldx     entry_count_stack_index
+        dex
+        lda     entry_count_stack,x
+        sta     entries_to_skip+1
         dex
         lda     entry_count_stack,x
         sta     entries_to_skip
@@ -11874,6 +11880,7 @@ L97E4:  .byte   $00
 .proc open_src_dir
         lda     #0
         sta     entries_read
+        sta     entries_read+1
         sta     entries_read_this_block
 
 @retry: MLI_RELAY_CALL OPEN, open_src_dir_params
@@ -11911,7 +11918,7 @@ L97E4:  .byte   $00
 .endproc
 
 .proc read_file_entry
-        inc     entries_read
+        inc16   entries_read
         lda     op_ref_num
         sta     read_src_dir_entry_params::ref_num
 @retry: MLI_RELAY_CALL READ, read_src_dir_entry_params
@@ -11938,8 +11945,7 @@ eof:    return  #$FF
 ;;; ============================================================
 
 .proc prep_to_open_dir
-        lda     entries_read
-        sta     entries_to_skip
+        copy16  entries_read, entries_to_skip
         jsr     close_src_dir
         jsr     push_entry_count
         jsr     append_to_src_path
@@ -11981,8 +11987,7 @@ eof:    return  #$FF
         jsr     sub
         jmp     op_jt2          ; second - called when exited dir
 
-sub:    lda     entries_read
-        cmp     entries_to_skip
+sub:    cmp16   entries_read, entries_to_skip
         beq     done
         jsr     read_file_entry
         jmp     sub

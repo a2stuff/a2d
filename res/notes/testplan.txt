@@ -289,3 +289,5 @@
 
 * Launch DeskTop. Select a volume icon, where the volume contains no files. Special > Get Size. Verify that numbers are shown (0) for number of files and size used.
 * Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. Special > Get Size. Verify that a "The specified path name is invalid." alert is not shown.
+
+* Launch DeskTop. Select a volume with more than 255 files in a folder (e.g. Total Replay). Special > Get Size. Verify that the count finishes.
