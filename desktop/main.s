@@ -11804,13 +11804,25 @@ len:    .byte   0
         src_path_buf := $220
 
         DEFINE_OPEN_PARAMS open_src_dir_params, src_path_buf, $800
-        DEFINE_READ_PARAMS read_src_dir_header_params, pointers_buf, 4 ; dir header: skip block pointers
-pointers_buf:  .res    4, 0
+
+        ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
+        kBlockPointersSize = 4
+        .assert .sizeof(SubdirectoryHeader) - .sizeof(FileEntry) = kBlockPointersSize, error, "bad structs"
+        DEFINE_READ_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
+buf_block_pointers:
+        .res    kBlockPointersSize, 0
 
         DEFINE_CLOSE_PARAMS close_src_dir_params
+
         DEFINE_READ_PARAMS read_src_dir_entry_params, file_entry_buf, .sizeof(FileEntry)
-        DEFINE_READ_PARAMS read_src_dir_skip5_params, skip5_buf, 5 ; ???
-skip5_buf:  .res    5, 0
+
+        ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
+        ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
+        ;; block pointers are the next 4.
+        kMaxPaddingBytes = 5
+        DEFINE_READ_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
+buf_padding_bytes:
+        .res    kMaxPaddingBytes, 0
 
         kBufSize = $A80
         .assert $1500 + kBufSize <= dst_path_buf, error, "Buffer overlap"
@@ -11892,9 +11904,9 @@ L97E4:  .byte   $00
 
 :       lda     open_src_dir_params::ref_num
         sta     op_ref_num
-        sta     read_src_dir_header_params::ref_num
+        sta     read_block_pointers_params::ref_num
 
-@retry2:MLI_RELAY_CALL READ, read_src_dir_header_params
+@retry2:MLI_RELAY_CALL READ, read_block_pointers_params
         beq     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     JT_SHOW_ALERT_OPTIONS
@@ -11935,8 +11947,8 @@ L97E4:  .byte   $00
         cmp     num_entries_per_block
         bcc     :+
         copy    #0, entries_read_this_block
-        copy    op_ref_num, read_src_dir_skip5_params::ref_num
-        MLI_RELAY_CALL READ, read_src_dir_skip5_params
+        copy    op_ref_num, read_padding_bytes_params::ref_num
+        MLI_RELAY_CALL READ, read_padding_bytes_params
 :       return  #0
 
 eof:    return  #$FF

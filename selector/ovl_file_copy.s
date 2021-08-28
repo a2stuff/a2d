@@ -29,16 +29,28 @@ exec:
 LA027:
         .byte   $00
 
+;;; ============================================================
+
         DEFINE_OPEN_PARAMS open_params, pathname1, $800
-        DEFINE_READ_PARAMS read_params, buf_read_ptr, 4 ; next/prev blocks
-buf_read_ptr:
-        .res 4, 0
+
+        ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
+        kBlockPointersSize = 4
+        .assert .sizeof(SubdirectoryHeader) - .sizeof(FileEntry) = kBlockPointersSize, error, "bad structs"
+        DEFINE_READ_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
+buf_block_pointers:
+        .res    kBlockPointersSize, 0
+
         DEFINE_CLOSE_PARAMS close_params
 
-        DEFINE_READ_PARAMS read_params2, buf_dir_header, .sizeof(SubdirectoryHeader)-4
-        DEFINE_READ_PARAMS read_params3, buf_5_bytes, 5
-buf_5_bytes:
-        .res    5, 0
+        DEFINE_READ_PARAMS read_fileentry_params, buf_dir_header, .sizeof(FileEntry)
+
+        ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
+        ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
+        ;; block pointers are the next 4.
+        kMaxPaddingBytes = 5
+        DEFINE_READ_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
+buf_padding_bytes:
+        .res    kMaxPaddingBytes, 0
 
         .res    4, 0            ; Unused???
 
@@ -155,8 +167,8 @@ entry_index_in_block:   .byte   0
 
 l1:     lda     open_params::ref_num
         sta     ref_num
-        sta     read_params::ref_num
-        MLI_CALL READ, read_params
+        sta     read_block_pointers_params::ref_num
+        MLI_CALL READ, read_block_pointers_params
         beq     l2
         jmp     handle_error_code
 
@@ -181,8 +193,8 @@ l1:     rts
 .proc read_file_entry
         inc16   entry_index_in_dir
         lda     ref_num
-        sta     read_params2::ref_num
-        MLI_CALL READ, read_params2
+        sta     read_fileentry_params::ref_num
+        MLI_CALL READ, read_fileentry_params
         beq     l1
         jmp     handle_error_code
 
@@ -193,13 +205,13 @@ l1:     inc     entry_index_in_block
         lda     #$00
         sta     entry_index_in_block
         lda     ref_num
-        sta     read_params3::ref_num
-        MLI_CALL READ, read_params3
+        sta     read_padding_bytes_params::ref_num
+        MLI_CALL READ, read_padding_bytes_params
         beq     l2
         jmp     handle_error_code
 
-l2:     lda     read_params3::trans_count
-        cmp     read_params3::request_count
+l2:     lda     read_padding_bytes_params::trans_count
+        cmp     read_padding_bytes_params::request_count
         rts
 
 l3:     return  #$00

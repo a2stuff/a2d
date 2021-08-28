@@ -147,7 +147,7 @@ show_copying_screen:
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
         kBlockPointersSize = 4
         .assert .sizeof(SubdirectoryHeader) - .sizeof(FileEntry) = kBlockPointersSize, error, "bad structs"
-        DEFINE_READ_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping pref/next pointers in directory data
+        DEFINE_READ_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
 buf_block_pointers:     .res    kBlockPointersSize, 0
 
         DEFINE_CLOSE_PARAMS close_params
