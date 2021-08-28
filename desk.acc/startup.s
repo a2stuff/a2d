@@ -377,7 +377,8 @@ notpencopy:     .byte   MGTK::notpencopy
         param_call DrawString, ramcard_label_str
 
         ldax    #rect_ramcard
-        bit     SETTINGS + DeskTopSettings::startup_ramcard
+        ldy     #DeskTopSettings::kStartupSkipRAMCard
+        jsr     get_bit
         jsr     draw_checkbox
 
         ;; --------------------------------------------------
@@ -386,7 +387,8 @@ notpencopy:     .byte   MGTK::notpencopy
         param_call DrawString, selector_label_str
 
         ldax    #rect_selector
-        bit     SETTINGS + DeskTopSettings::startup_selector
+        ldy     #DeskTopSettings::kStartupSkipSelector
+        jsr     get_bit
         jsr     draw_checkbox
 
         ;; --------------------------------------------------
@@ -395,7 +397,23 @@ notpencopy:     .byte   MGTK::notpencopy
         rts
 .endproc
 
-;;; A,X = pos ptr, N = unchecked
+;;; Inputs: Y = bit to read from DeskTopSettings::startup
+;;; Outputs: Z = bit set
+;;; Note: A,X untouched
+.proc get_bit
+        pha
+        tya
+        and     SETTINGS + DeskTopSettings::startup
+        tay
+        pla
+        sty     tmp
+        ldy     tmp
+        rts
+
+tmp:    .byte   0
+.endproc
+
+;;; A,X = pos ptr, Z = checked
 .proc draw_checkbox
         ptr := $06
 
@@ -404,7 +422,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::HideCursor
         plp
-        bpl     checked
+        beq     checked
 
 unchecked:
         ldy     #3
@@ -431,13 +449,14 @@ finish: MGTK_CALL MGTK::ShowCursor
 ;;; ============================================================
 
 .proc handle_ramcard_click
-        lda     SETTINGS + DeskTopSettings::startup_ramcard
-        eor     #$80
-        sta     SETTINGS + DeskTopSettings::startup_ramcard
+        lda     SETTINGS + DeskTopSettings::startup
+        eor     #DeskTopSettings::kStartupSkipRAMCard
+        sta     SETTINGS + DeskTopSettings::startup
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         ldax    #rect_ramcard
-        bit     SETTINGS + DeskTopSettings::startup_ramcard
+        ldy     #DeskTopSettings::kStartupSkipRAMCard
+        jsr     get_bit
         jsr     draw_checkbox
 
         jmp     input_loop
@@ -446,13 +465,14 @@ finish: MGTK_CALL MGTK::ShowCursor
 ;;; ============================================================
 
 .proc handle_selector_click
-        lda     SETTINGS + DeskTopSettings::startup_selector
-        eor     #$80
-        sta     SETTINGS + DeskTopSettings::startup_selector
+        lda     SETTINGS + DeskTopSettings::startup
+        eor     #DeskTopSettings::kStartupSkipSelector
+        sta     SETTINGS + DeskTopSettings::startup
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         ldax    #rect_selector
-        bit     SETTINGS + DeskTopSettings::startup_selector
+        ldy     #DeskTopSettings::kStartupSkipSelector
+        jsr     get_bit
         jsr     draw_checkbox
 
         jmp     input_loop

@@ -85,12 +85,14 @@ kDefaultIPBlinkSpeed    = 60
         rgb_color       .byte   ; $00 = B&W, $80 = Color
         mouse_tracking  .byte   ; 0 = normal, 1 = 2x speed
 
-        startup_ramcard .byte   ; $00 = copy to RAMCard on startup, $80 = skip
-        startup_selector .byte  ; $00 = start Selector if present, $80 = skip
+        startup         .byte   ; kStartupXYZ options
 
-        reserved        .res 110
+        reserved        .res 111
 .endstruct
         .assert .sizeof(DeskTopSettings) = $80, error, .sprintf("Expected $80, was $%0X", .sizeof(DeskTopSettings))
+
+DeskTopSettings::kStartupSkipRAMCard  = %00000001 ; skip copy to RAMCard, if set
+DeskTopSettings::kStartupSkipSelector = %00000010 ; skip starting Selector, if set
 
 ;;; ============================================================
 ;;; Alert library options

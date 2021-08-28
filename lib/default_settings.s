@@ -36,10 +36,7 @@
         ASSERT_ADDRESS settings_start + DeskTopSettings::mouse_tracking
         .byte   0
 
-        ASSERT_ADDRESS settings_start + DeskTopSettings::startup_ramcard
-        .byte   0
-
-        ASSERT_ADDRESS settings_start + DeskTopSettings::startup_selector
+        ASSERT_ADDRESS settings_start + DeskTopSettings::startup
         .byte   0
 
         ;; Reserved for future use...
