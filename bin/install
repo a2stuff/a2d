@@ -32,12 +32,12 @@ mkdir -p $PACKDIR
 # Add the files into the disk images.
 # Usage: add_file IMGFILE SRCFILE DSTFOLDER DSTFILE TYPESUFFIX
 add_file () {
-    img_file="$1"
-    src_file="$2"
-    folder="$3"
-    dst_file="$4"
-    suffix="$5"
-    tmp_file="$PACKDIR/$dst_file#$suffix"
+    local img_file="$1"
+    local src_file="$2"
+    local folder="$3"
+    local dst_file="$4"
+    local suffix="$5"
+    local tmp_file="$PACKDIR/$dst_file#$suffix"
 
     cecho green "- $folder/$dst_file"
 

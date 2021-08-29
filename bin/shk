@@ -19,9 +19,9 @@ rm -f A2D.SHK
 # Add file to staging directory
 # Usage: add_file SRC DST TYPEAUXTYPE
 function add_file {
-    src="$1"
-    dst="$2"
-    typeauxtype="$3"
+    local src="$1"
+    local dst="$2"
+    local typeauxtype="$3"
     cp "$src" "$tempdir/$dst#$typeauxtype" \
         && (cecho green "staging $dst" ) \
         || (cecho red "failed to stage $dst" ; return 1)

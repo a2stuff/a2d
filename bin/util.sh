@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # cecho - "color echo"
 # ex: cecho red ...
 # ex: cecho green ...
@@ -16,7 +18,7 @@ function cecho {
 # ex: suppress command_that_might_fail args ...
 function suppress {
     set +e
-    result=$("$@")
+    local result=$("$@")
     if [ $? -ne 0 ]; then
         cecho red "$result" >&2
         exit 1

@@ -13,11 +13,11 @@ rmdir $MOUNT_DIR/test
 # Add file to mount directory
 # Usage: add_file SRC DST TYPEAUXTYPE
 function add_file {
-    src="$1"
-    type="${3:0:2}"
-    auxh="${3:2:2}"
-    auxl="${3:4:2}"
-    dst="$2.\$$type"
+    local src="$1"
+    local type="${3:0:2}"
+    local auxh="${3:2:2}"
+    local auxl="${3:4:2}"
+    local dst="$2.\$$type"
     cp "$src" "$MOUNT_DIR/$dst" \
 	&& xattr -wx prodos.AuxType "$auxl $auxh" "$MOUNT_DIR/$dst" \
         && (cecho green "- $dst" ) \
