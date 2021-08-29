@@ -29,9 +29,13 @@ kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu
 
 kMaxDeskAccCount        = 12
 
+;;; Maximum number of ProDOS devices (2 per slot 1-7). This is the
+;;; maximum size of DEVLST not counting DEVCNT itself.
+kMaxDevListSize = 14
+
 ;;; Maximum number of volumes displayed/tracked. This is two per slot,
 ;;; except S3,D2 is assumed to be /RAM which is disconnected.
-kMaxVolumes     = 13
+kMaxVolumes     = kMaxDevListSize - 1
 
 ;;; ============================================================
 ;;; Window/Icon Metrics

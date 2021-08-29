@@ -201,9 +201,9 @@ end:
 
 .scope
         ;; Make a copy of the original device list
-        ldx     DEVCNT
-        inx
-:       lda     DEVLST-1,x
+        ldx     DEVCNT          ; number of devices
+        inx                     ; include DEVCNT itself
+:       lda     DEVLST-1,x      ; DEVCNT is at DEVLST-1
         sta     devlst_backup,x
         dex
         bpl     :-
@@ -905,8 +905,7 @@ cvi_result:
         dex
 :       inx
         copy    DEVLST+1,x, DEVLST,x
-        lda     device_to_icon_map+1,x
-        sta     device_to_icon_map,x
+        copy    device_to_icon_map+1,x, device_to_icon_map,x
         cpx     DEVCNT
         bne     :-
         dec     DEVCNT

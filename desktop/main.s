@@ -1184,8 +1184,8 @@ filerecords_free_start:
 
 .proc restore_device_list
         ldx     devlst_backup
-        inx
-:       copy    devlst_backup,x, DEVLST-1,x
+        inx                     ; include the count itself
+:       copy    devlst_backup,x, DEVLST-1,x ; DEVCNT is at DEVLST-1
         dex
         bpl     :-
         rts

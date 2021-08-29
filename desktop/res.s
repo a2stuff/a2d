@@ -938,7 +938,7 @@ entries_read_this_block:
 
 ;;; Backup copy of DEVLST made before detaching ramdisk
 devlst_backup:
-        .res    kMaxVolumes+1, 0 ; TODO: Why +1?
+        .res    kMaxDevListSize+1, 0 ; +1 for DEVCNT itself
 
         ;; index is device number (in DEVLST), value is icon number
 device_to_icon_map:
