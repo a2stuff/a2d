@@ -138,9 +138,9 @@ apply_bits:
 ;;; Per File Type Notes: File Type $19 (25) All Auxiliary Types
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
 ;;; Per File Type Notes: File Type $1A (26) All Auxiliary Types
-;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
+;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.1A.xxxx.html
 ;;; Per File Type Notes: File Type $1B (27) All Auxiliary Types
-;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
+;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.1B.xxxx.html
 ;;;
 ;;; "The volume or subdirectory auxiliary type word for this file type is
 ;;; defined to control uppercase and lowercase display of filenames. The
