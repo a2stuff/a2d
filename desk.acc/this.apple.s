@@ -550,9 +550,9 @@ kMaxSmartportDevices = 8
 
 str_diskii:     PASCAL_STRING res_string_card_type_diskii
 str_block:      PASCAL_STRING res_string_card_type_block
-kStrSmartportReserve = .strlen(res_string_card_type_smartport) + (kMaxSmartportDevices*16 + (kMaxSmartportDevices-1)*2) ; names + ", " seps
 kStrSmartportLength = .strlen(res_string_card_type_smartport)
-str_smartport:  PASCAL_STRING res_string_card_type_smartport, kStrSmartportReserve
+str_smartport:  PASCAL_STRING res_string_card_type_smartport
+        .res    (kMaxSmartportDevices*16 + (kMaxSmartportDevices-1)*2), 0 ; names + ", " seps
 str_ssc:        PASCAL_STRING res_string_card_type_ssc
 str_80col:      PASCAL_STRING res_string_card_type_80col
 str_mouse:      PASCAL_STRING res_string_card_type_mouse
@@ -1904,7 +1904,7 @@ num_devices:
 
 ;;; ============================================================
 ;;; Inputs: Character in A
-;;; Outputs: Z=0 if alpha, 1 otherwise
+;;; Outputs: Z=1 if alpha, 0 otherwise
 ;;; A is trashed
 
 .proc is_alpha

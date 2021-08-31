@@ -18,3 +18,6 @@
 .define res_string_at_infix " alle "
 .define res_string_auxtype_prefix "     Tipo Aux: $"
 .define res_string_volume " Volume"
+.define res_string_volume_type_disk_ii "Disk II"
+.define res_string_volume_type_ramcard "Espansione RAM"
+.define res_string_volume_type_fileshare "AppleShare"

@@ -13,6 +13,13 @@
 
         ovl_string_buf := path_buf0
 
+        kLabelsVOffset = 49
+
+        kLabelWidth   = 123
+        kLabelsCol1    = 20
+        kLabelsCol2    = kLabelsCol1 + kLabelWidth
+        kLabelsCol3    = kLabelsCol1 + kLabelWidth*2
+
 exec:
 
 L0800:  pha
@@ -130,8 +137,8 @@ l9:     lda     winfo_prompt_dialog::window_id
 l10:    cmp     #ERR_WRITE_PROTECTED
         bne     l11
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     l15           ; `kAlertResultCancel` = 1
-        jmp     l8           ; `kAlertResultTryAgain` = 0
+        bne     l15             ; `kAlertResultCancel` = 1
+        jmp     l8              ; `kAlertResultTryAgain` = 0
 
 l11:    jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_erasing_error
@@ -143,8 +150,8 @@ l12:    pha
         cmp     #ERR_WRITE_PROTECTED
         bne     l13
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     l15           ; `kAlertResultCancel` = 1
-        jmp     l8           ; `kAlertResultTryAgain` = 0
+        bne     l15             ; `kAlertResultCancel` = 1
+        jmp     l8              ; `kAlertResultTryAgain` = 0
 
 l13:    jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_formatting_error
@@ -258,8 +265,8 @@ l7:     lda     winfo_prompt_dialog::window_id
 l8:     cmp     #ERR_WRITE_PROTECTED
         bne     l9
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     l11           ; `kAlertResultCancel` = 1
-        jmp     l7           ; `kAlertResultTryAgain` = 0
+        bne     l11             ; `kAlertResultCancel` = 1
+        jmp     l7              ; `kAlertResultTryAgain` = 0
 
 l9:     jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_erasing_error
@@ -281,13 +288,12 @@ d2:     .byte   0
 
 ;;; ============================================================
 
-        kLabelsVOffset = 49
 
 .proc handle_click
-        cmp16   screentowindow_windowx, #kDialogLabelDefaultX
+        cmp16   screentowindow_windowx, #kLabelsCol1
         bpl     :+
         return  #$FF
-:       cmp16   screentowindow_windowx, #kDialogLabelDefaultX + kLabelWidth*3
+:       cmp16   screentowindow_windowx, #kLabelsCol3 + kLabelWidth
         bcc     :+
         return  #$FF
 :       lda     screentowindow_windowy
@@ -311,10 +317,10 @@ d2:     .byte   0
         return  #$FF
 
 l1:     copy    #2, col
-        cmp16   screentowindow_windowx, #kDialogLabelDefaultX + kLabelWidth*2
+        cmp16   screentowindow_windowx, #kLabelsCol3
         bcs     l2
         dec     col
-        cmp16   screentowindow_windowx, #kDialogLabelDefaultX + kLabelWidth
+        cmp16   screentowindow_windowx, #kLabelsCol2
         bcs     l2
         dec     col
 l2:     lda     col
@@ -361,12 +367,10 @@ col:    .byte   0
 ;;; Hilight volume label
 ;;; Input: A = volume index
 
-        kLabelWidth = 110
-
 .proc highlight_volume_label
-        ldy     #<(kDialogLabelDefaultX-1)
+        ldy     #<(kLabelsCol1-1)
         sty     select_volume_rect::x1
-        ldy     #>(kDialogLabelDefaultX-1)
+        ldy     #>(kLabelsCol1-1)
         sty     select_volume_rect::x1+1
         tax
         lsr     a               ; / 4
@@ -538,16 +542,18 @@ loop:   lda     vol
 
 :       cmp     #8              ; third column?
         bcc     :+
-        ldax    #kDialogLabelDefaultX + kLabelWidth*2
+        ldax    #kLabelsCol3
         jmp     setpos
 
 :       cmp     #4              ; second column?
-        bcc     skip
-        ldax    #kDialogLabelDefaultX + kLabelWidth
+        bcc     :+
+        ldax    #kLabelsCol2
+        jmp     setpos
+
+:       ldax    #kLabelsCol1
         ;; fall through
 
 setpos: stax    dialog_label_pos::xcoord
-skip:
 
         ;; Reverse order, so boot volume is first
         lda     DEVCNT

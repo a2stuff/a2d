@@ -1139,6 +1139,26 @@ launch_file_with_path   := launch_file_impl::with_path ; use `INVOKER_PREFIX`
 done:   rts
 .endproc
 
+;;; ============================================================
+;;; Inputs: Character in A
+;;; Outputs: Z=1 if alpha, 0 otherwise
+;;; A is trashed
+
+.proc is_alpha
+        cmp     #'@'            ; in upper/lower "plane" ?
+        bcc     nope
+        and     #CASE_MASK      ; force upper-case
+        cmp     #'A'
+        bcc     nope
+        cmp     #'Z'+1
+        bcs     nope
+
+        lda     #0
+        rts
+
+nope:   lda     #$FF
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -9531,14 +9551,17 @@ pos_win:        .word   0, 0
 
 ;;; ============================================================
 ;;; Input: A = unit_number
-;;; Output: A =
+;;; Output: A,X=name (length may be 0), Y =
 ;;;  0 = Disk II
 ;;;  1 = RAM Disk (including SmartPort RAM Disk)
 ;;;  2 = Fixed (e.g. ProFile)
 ;;;  3 = Removable (e.g. UniDisk 3.5)
 ;;;  4 = AppleTalk file share
 ;;;
-;;; NOTE: Called from Initializer (init) which resides in $800-$1200+)
+;;; NOTE: Called from Initializer (init) which resides in $800-$1200+
+;;;
+;;; Name is hardcoded if Disk II, RAM Disk, or AppleTalk; via SmartPort
+;;; (re-cased) if the call succeeds, otherwise pointer to empty string.
 
 device_type_to_icon_address_table:
         .addr floppy140_icon
@@ -9580,14 +9603,19 @@ Version:                .word   0
         sta     unit_number
 
         ;; Look up driver address
-        jsr     DeviceDriverAddress
+        jsr     DeviceDriverAddress ; populates `slot_addr`
         beq     firmware        ; is $CnXX
 
         ;; Not $CnXX so RAM-based driver
         lda     unit_number
         cmp     #kRamDrvSystemUnitNum ; Special case
-        beq     ram
-        and     #%01110000      ; Mask off slot 0SSS0000
+        bne     :+
+
+        ldax    #str_device_type_ramdisk
+        ldy     #kDeviceTypeRAMDisk
+        rts
+
+:       and     #%01110000      ; Mask off slot 0SSS0000
         lsr                     ; Shift to be $0n
         lsr
         lsr
@@ -9602,11 +9630,15 @@ firmware:
 
         ldy     #$FF            ; $CnFF: $00=Disk II, $FF=13-sector, else=block
         lda     (slot_addr),y
-        beq     f525            ; $00 = Disk II
+        bne     :+              ; $00 = Disk II
+
+        ldax    #str_device_type_diskii
+        ldy     #kDeviceTypeDiskII
+        rts
 
         ;; Smartport?
         sp_addr := $0A
-        lda     unit_number
+:       lda     unit_number
         jsr     FindSmartportDispatchAddress
         bne     not_sp
         stx     status_params::unit_num
@@ -9617,24 +9649,73 @@ firmware:
         .addr   status_params
         bcs     not_sp
 
+        ;; Trim trailing whitespace (seen in CFFA)
+.scope
+        ldy     dib_buffer::ID_String_Length
+        beq     done
+:       lda     dib_buffer::Device_Name-1,y
+        cmp     #' '
+        bne     done
+        dey
+        bne     :-
+done:   sty     dib_buffer::ID_String_Length
+.endscope
+
+        ;; Case-adjust
+.scope
+        ldy     dib_buffer::ID_String_Length
+        beq     done
+        dey
+        beq     done
+
+        ;; Look at prior and current character; if both are alpha,
+        ;; lowercase current.
+loop:   lda     dib_buffer::Device_Name-1,y ; Test previous character
+        jsr     is_alpha
+        bne     next
+        lda     dib_buffer::Device_Name,y ; Adjust this one if also alpha
+        jsr     is_alpha
+        bne     next
+        lda     dib_buffer::Device_Name,y
+        ora     #AS_BYTE(~CASE_MASK)
+        sta     dib_buffer::Device_Name,y
+
+next:   dey
+        cpy     #0
+        bne     loop
+done:
+.endscope
+
         ;; Check device type
         ;; Technical Note: SmartPort #4: SmartPort Device Types
         ;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer::Device_Type_Code
-        bne     generic         ; $00 = Memory Expansion Card (RAM Disk)
+        bne     test_size     ; $00 = Memory Expansion Card (RAM Disk)
         ;; NOTE: Codes for 3.5" disk ($01) and 5-1/4" disk ($0A) are not trusted
         ;; since emulators do weird things.
+        ;; TODO: Is that comment about false positives or false negatives?
+        ;; i.e. if $01 or $0A is seen, can that be trusted?
 
-ram:    return  #kDeviceTypeRAMDisk
+ram:    ldax    #dib_buffer::ID_String_Length
+        ldy     #kDeviceTypeRAMDisk
+        rts
 
 not_sp:
         ;; Not SmartPort - try AppleTalk
         MLI_RELAY_CALL READ_BLOCK, block_params
         beq     generic
         cmp     #ERR_NETWORK_ERROR
-        beq     share
+        bne     generic
+
+        ldax    #str_device_type_appletalk
+        ldy     #kDeviceTypeFileShare
+        rts
 
 generic:
+        copy    #0, dib_buffer::ID_String_Length
+
+test_size:
+
         ;; SmartPort or Generic Block Device
         ;; Select either 3.5" Floppy or ProFile icon
 
@@ -9661,14 +9742,17 @@ generic:
         cmp16   blocks, #kMax35FloppyBlocks+1
         bcc     f35
 
-:       return  #kDeviceTypeFixed
+:       ldax    #dib_buffer::ID_String_Length
+        ldy     #kDeviceTypeFixed
+        rts
 
-f525:   return  #kDeviceTypeDiskII
+f525:   ldax    #dib_buffer::ID_String_Length
+        ldy     #kDeviceTypeDiskII
+        rts
 
-f35:    return  #kDeviceTypeRemovable
-
-share:  return  #kDeviceTypeFileShare
-
+f35:    ldax    #dib_buffer::ID_String_Length
+        ldy     #kDeviceTypeRemovable
+        rts
 
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
         unit_number := block_params::unit_num
@@ -9677,6 +9761,13 @@ smartport_call:
         jmp     (sp_addr)
 
 blocks: .word   0
+
+str_device_type_diskii:
+        PASCAL_STRING res_string_volume_type_disk_ii
+str_device_type_ramdisk:
+        PASCAL_STRING res_string_volume_type_ramcard
+str_device_type_appletalk:
+        PASCAL_STRING res_string_volume_type_fileshare
 .endproc
 
 ;;; ============================================================
@@ -9789,6 +9880,7 @@ success:
         ;; Figure out icon
         lda     unit_number
         jsr     get_device_type
+        tya                     ; Y = kDeviceType constant
         asl                     ; * 2
         tax
         ldy     #IconEntry::iconbits

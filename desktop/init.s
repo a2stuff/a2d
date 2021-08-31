@@ -813,7 +813,7 @@ process_volume:
         bne     :+
 
         ;; TODO: Figure out if this block makes any sense.
-        ldy     device_index    ; BUG? Is there a missing pla instruction in this path?
+        ldy     device_index
         lda     DEVLST,y
         and     #$0F            ; BUG: Do not trust low nibble of unit_num
         beq     select_template ; "0 = Disk II" originally
@@ -831,29 +831,35 @@ process_volume:
         ;; fills in slot and drive as appropriate. Used in the
         ;; Format/Erase disk dialog.
 
-.proc select_template
+select_template:
         pla                     ; unit number into A
         pha
 
-        jsr     main::get_device_type
-        sta     device_type
-
-        ;; TODO: For SmartPort devices, get actual device name.
-        ;; https://github.com/a2stuff/a2d/issues/325
-
-        ;; Copy template to device name
-        asl                     ; * 2
-        tax
         src := $06
-        copy16  device_template_table,x, src
 
+        jsr     main::get_device_type
+        stax    src             ; A,X = device name (may be empty)
+
+        ;; Empty?
         ldy     #0
         lda     (src),y
-        tay
+        bne     :+
+        copy16  #str_volume_type_unknown, src
+:
+
+        ;; Set final length
+        lda     (src),y         ; Y = 0
+        clc
+        adc     #kSDPrefixLength
+        sta     str_sdname_buffer
+
+        ;; Copy string into template, after prefix
+        lda     (src),y         ; Y = 0
+        tay                     ; Y = length
 :       lda     (src),y
-        sta     (devname_ptr),y
+        sta     str_sdname_buffer + kSDPrefixLength,y
         dey
-        bpl     :-
+        bne     :-              ; leave length alone
 
         ;; Insert Slot #
         pla                     ; unit number into A
@@ -865,9 +871,7 @@ process_volume:
         lsr     a
         lsr     a
         ora     #'0'
-
-        ldy     #kDeviceTemplateSlotOffset
-        sta     (devname_ptr),y
+        sta     str_sdname_buffer + kDeviceTemplateSlotOffset
 
         ;; Insert Drive #
         pla                     ; unit number into A
@@ -876,14 +880,17 @@ process_volume:
         rol     a               ; set carry to drive - 1
         lda     #0              ; 0 + carry + '1'
         adc     #'1'            ; convert to '1' or '2'
+        sta     str_sdname_buffer + kDeviceTemplateDriveOffset
 
-        ldy     #kDeviceTemplateDriveOffset
+        ;; Copy name into table
+        ldy     str_sdname_buffer
+:       lda     str_sdname_buffer,y
         sta     (devname_ptr),y
-.endproc
+        dey
+        bpl     :-
 
-done_drive_num:
-        pla
-next:   dec     device_index
+next:   pla
+        dec     device_index
         lda     device_index
 
         bpl     :+
@@ -1199,39 +1206,16 @@ is_laser128_flag:
 
 ;;; ============================================================
 
-;;; Templates used for device names
-;;; Matches kDevice* constant ordering.
-
-device_template_table:
-        .addr   str_sd_disk_ii
-        .addr   str_sd_ramcard
-        .addr   str_sd_profile
-        .addr   str_sd_unidisk
-        .addr   str_sd_fileshare
-        ASSERT_ADDRESS_TABLE_SIZE device_template_table, ::kNumDeviceTypes
-
 kDeviceTemplateSlotOffset = res_const_sd_prefix_pattern_offset1
 kDeviceTemplateDriveOffset = res_const_sd_prefix_pattern_offset2
 
-;;; Disk II
-str_sd_disk_ii:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_disk_ii)
+kSDPrefixLength = .strlen(res_string_sd_prefix_pattern)
+str_sdname_buffer:
+        PASCAL_STRING res_string_sd_prefix_pattern ; "S#,D#: " prefix
+        .res    16, 0              ; space for actual name
 
-;;; RAM disks
-str_sd_ramcard:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_ramcard)
-
-;;; Fixed drives that aren't RAM disks
-str_sd_profile:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_profile)
-
-;;; Removable drives
-str_sd_unidisk:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_unidisk)
-
-;;; File Share
-str_sd_fileshare:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_fileshare)
+str_volume_type_unknown:
+        PASCAL_STRING res_string_volume_type_unknown
 
 ;;; ============================================================
 
