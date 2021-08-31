@@ -9602,20 +9602,33 @@ Version:                .word   0
 
         sta     unit_number
 
-        ;; Look up driver address
-        jsr     DeviceDriverAddress ; populates `slot_addr`
-        beq     firmware        ; is $CnXX
-
-        ;; Not $CnXX so RAM-based driver
-        lda     unit_number
-        cmp     #kRamDrvSystemUnitNum ; Special case
+        ;; Special case for RAM.DRV.SYSTEM
+        cmp     #kRamDrvSystemUnitNum
         bne     :+
-
         ldax    #str_device_type_ramdisk
         ldy     #kDeviceTypeRAMDisk
         rts
+:
+        ;; Look up driver address
+        jsr     DeviceDriverAddress ; populates `slot_addr`
+        beq     firmware
 
-:       and     #%01110000      ; Mask off slot 0SSS0000
+        ;; The high byte of the device driver's entry point is not $Cn.
+        ;; Technical Note: ProDOS #21 says to trust the slot bits in
+        ;; the unit number and check the I/O space for identification
+        ;; bytes, but that's wrong when ProDOS remaps SmartPort drives,
+        ;; e.g. using $FCE6.
+        ;;
+        ;; This uses a heuristic: drivers in $Fnnn are assumed to
+        ;; violate the TechNote. An alternative heuristic would be
+        ;; to only trust it for $D000 (the Disk II driver address).
+        and     #%11110000      ; Is it in $Fnnnn ?
+        cmp     #$F0
+        jeq     generic
+
+        ;; Trust the unit number's slot, per the TechNote.
+        lda     unit_number
+        and     #%01110000      ; Mask off slot 0SSS0000
         lsr                     ; Shift to be $0n
         lsr
         lsr
@@ -9696,21 +9709,22 @@ done:
         ;; TODO: Is that comment about false positives or false negatives?
         ;; i.e. if $01 or $0A is seen, can that be trusted?
 
-ram:    ldax    #dib_buffer::ID_String_Length
+        ldax    #dib_buffer::ID_String_Length
         ldy     #kDeviceTypeRAMDisk
         rts
 
 not_sp:
         ;; Not SmartPort - try AppleTalk
         MLI_RELAY_CALL READ_BLOCK, block_params
-        beq     generic
+        beq     :+
         cmp     #ERR_NETWORK_ERROR
-        bne     generic
-
+        bne     :+
         ldax    #str_device_type_appletalk
         ldy     #kDeviceTypeFileShare
         rts
+:
 
+        ;; RAM-based driver or not SmartPort
 generic:
         copy    #0, dib_buffer::ID_String_Length
 

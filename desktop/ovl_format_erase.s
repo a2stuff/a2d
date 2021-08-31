@@ -15,8 +15,8 @@
 
         kLabelsVOffset = 49
 
-        kLabelWidth   = 123
-        kLabelsCol1    = 20
+        kLabelWidth   = 127
+        kLabelsCol1    = 11
         kLabelsCol2    = kLabelsCol1 + kLabelWidth
         kLabelsCol3    = kLabelsCol1 + kLabelWidth*2
 
