@@ -2464,15 +2464,13 @@ LA3AC:  .byte   0
 LA3AD:  .byte   0
 
         ;; IconTK::RedrawIcon params
-LA3AE:  .byte   0
+        ;; IconTK::IconInRect params (in `redraw_icons_after_erase`)
+icon:   .byte   0
+icon_rect:
+        .tag    MGTK::Rect
 
-LA3AF:  .word   0
-LA3B1:  .word   0
-LA3B3:  .byte   0
+icon_in_window_flag:
         .byte   0
-        .byte   0
-        .byte   0
-LA3B7:  .byte   0
 
 .params frontwindow_params
 window_id:      .byte   0
@@ -2490,7 +2488,7 @@ window_id:      .byte   0
         beq     volume
 
         ;; File (i.e. icon in window)
-        copy    #$80, LA3B7
+        copy    #$80, icon_in_window_flag
         MGTK_CALL MGTK::SetPattern, white_pattern
         MGTK_CALL MGTK::FrontWindow, frontwindow_params ; Use window's port
         lda     frontwindow_params::window_id
@@ -2517,7 +2515,7 @@ volume:
 
 .proc erase_desktop_icon
         lda     #0
-        sta     LA3B7
+        sta     icon_in_window_flag
 
         MGTK_CALL MGTK::GetDeskPat, addr
         MGTK_CALL MGTK::SetPattern, 0, addr
@@ -2525,9 +2523,13 @@ volume:
 .endproc
 
 .proc erase_window_icon
-        copy16  poly::v0::ycoord, LA3B1
-        copy16  poly::v6::xcoord, LA3AF
-        COPY_BLOCK poly::v4, LA3B3
+        ;; Construct a bounding rect from the icon's polygon.
+        ;; Used in `redraw_icons_after_erase`
+        ;; BUG: Doesn't handle skinny names.
+        copy16  poly::v0::ycoord, icon_rect + MGTK::Rect::y1
+        copy16  poly::v6::xcoord, icon_rect + MGTK::Rect::x1
+        COPY_BLOCK poly::v4, icon_rect + MGTK::Rect::bottomright
+
         MGTK_CALL MGTK::PaintPoly, poly
         rts
 .endproc
@@ -2545,7 +2547,7 @@ volume:
 loop:   cpx     #$FF            ; =-1
         bne     LA466
 
-        bit     LA3B7
+        bit     icon_in_window_flag
         bpl     :+
         ;; TODO: Is this restoration necessary?
         MGTK_CALL MGTK::InitPort, icon_grafport
@@ -2581,18 +2583,18 @@ LA466:  txa
 
 LA49D:  ldy     #IconEntry::id ; icon num
         lda     (ptr),y
-        sta     LA3AE
-        bit     LA3B7           ; windowed?
-        bpl     LA4AC           ; nope, desktop
+        sta     icon
+        bit     icon_in_window_flag ; windowed?
+        bpl     :+           ; nope, desktop
         jsr     offset_icon_do  ; yes, adjust rect
-LA4AC:  ITK_DIRECT_CALL IconTK::IconInRect, LA3AE
+:       ITK_DIRECT_CALL IconTK::IconInRect, icon
         beq     :+
 
-        ITK_DIRECT_CALL IconTK::RedrawIcon, LA3AE
+        ITK_DIRECT_CALL IconTK::RedrawIcon, icon
 
-:       bit     LA3B7
+:       bit     icon_in_window_flag
         bpl     next
-        lda     LA3AE
+        lda     icon
         jsr     offset_icon_undo
 
 next:   pla
