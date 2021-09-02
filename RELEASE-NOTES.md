@@ -17,7 +17,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### DeskTop Enhancements
 
-* Progress bar shown while loading, and when copying to RAM disk. ([#330](https://github.com/a2stuff/a2d/issues/330))
+* Progress bar shown while loading, and when copying to RAMCard. ([#330](https://github.com/a2stuff/a2d/issues/330))
 * Tip about skipping copy to RAMCard is shown during startup. ([#140](https://github.com/a2stuff/a2d/issues/140))
 * Current day/time shown on right side of menu bar, if system has a clock. ([#7](https://github.com/a2stuff/a2d/issues/7), [#142](https://github.com/a2stuff/a2d/issues/142), [#220](https://github.com/a2stuff/a2d/issues/220))
 * Up to 13 volumes are shown on the desktop (was 10). ([#20](https://github.com/a2stuff/a2d/issues/20))
@@ -43,7 +43,7 @@ Project Page: https://github.com/a2stuff/a2d
 * **File > Get Info**, list views, etc. show file and volume sizes in kilobytes rather than blocks. ([#308](https://github.com/a2stuff/a2d/issues/308))
 * **File > Get Info** shows used/total for volumes, rather than free/total.
 * **File > Get Info** command shows aux type for files. ([#148](https://github.com/a2stuff/a2d/issues/148))
-* Use commas as a numeric separator. ([#270](https://github.com/a2stuff/a2d/issues/270), [#377](https://github.com/a2stuff/a2d/issues/377)))
+* Use commas as a numeric separator. ([#270](https://github.com/a2stuff/a2d/issues/270), [#377](https://github.com/a2stuff/a2d/issues/377))
 * BIN files can be opened with menu items without a modifier key. ([#530](https://github.com/a2stuff/a2d/issues/530), [#531](https://github.com/a2stuff/a2d/issues/531))
 * Keyboard-related changes:
   * Holding **Apple** while double-clicking or using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
@@ -52,7 +52,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Holding **Apple** while dragging a selection box around files extends selection. ([#546](https://github.com/a2stuff/a2d/issues/546))
   * When dragging files to a different volume, hold **Apple** while dragging to force move. ([#256](https://github.com/a2stuff/a2d/issues/256))
   * Dragging files to same volume moves instead of copies; hold **Apple** while dragging to force copy. ([#8](https://github.com/a2stuff/a2d/issues/8))
-  * Shift key works as modifier to extend selection, on IIgs and systems with shift key mod. ([#340](https://github.com/a2stuff/a2d/issues/340))
+  * **Shift** key works as modifier to extend selection, on IIgs and systems with shift key mod. ([#340](https://github.com/a2stuff/a2d/issues/340))
   * **Apple-\`** or **Apple-Tab** cycles through open windows; **Shift-Apple-\`** cycles in reverse. ([#143](https://github.com/a2stuff/a2d/issues/143), [#230](https://github.com/a2stuff/a2d/issues/230))
   * **Apple-Delete** deletes selected files. ([#150](https://github.com/a2stuff/a2d/issues/150))
   * **Apple-Down** opens/previews selection. ([#254](https://github.com/a2stuff/a2d/issues/254))
@@ -62,12 +62,12 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Desk Accessory Enhancements
 
-* Up to 12 desk accessories are shown in the menu (was 8). ([#90](https://github.com/a2stuff/a2d/issues/90))
+* Up to 12 desk accessories are shown in the **Apple** menu (was 8). ([#90](https://github.com/a2stuff/a2d/issues/90))
 * Desk accessory files can be executed directly. ([#101](https://github.com/a2stuff/a2d/issues/101))
-* Desk accessory files with high bit in aux type set are hidden in Apple menu. ([#102](https://github.com/a2stuff/a2d/issues/102))
+* Desk accessory files with high bit in aux type set are hidden in the **Apple** menu. ([#102](https://github.com/a2stuff/a2d/issues/102))
 * Show Text File DA: Keyboard support. **Esc** quits, arrows scroll, **Space** toggles modes. ([#4](https://github.com/a2stuff/a2d/issues/4), [#403](https://github.com/a2stuff/a2d/issues/403))
-* Apple menu can contain directories, which launch windows. ([#209](https://github.com/a2stuff/a2d/issues/209), [#292](https://github.com/a2stuff/a2d/issues/292))
-* Other executable files and previewable files can be launched from the Apple menu. ([#293](https://github.com/a2stuff/a2d/issues/293), [#295](https://github.com/a2stuff/a2d/issues/295))
+* The **Apple** menu can contain directories, which launch windows. ([#209](https://github.com/a2stuff/a2d/issues/209), [#292](https://github.com/a2stuff/a2d/issues/292))
+* Other executable files and previewable files can be launched from the **Apple** menu. ([#293](https://github.com/a2stuff/a2d/issues/293), [#295](https://github.com/a2stuff/a2d/issues/295))
 
 ### Additional Desk Accessories
 
@@ -127,7 +127,7 @@ To preview files of other types (e.g. view a BIN file as text), you
 can copy the appropriate preview handler (e.g. `SHOW.TEXT.FILE`) from
 the `PREVIEW` folder to the `DESK.ACC` folder, and restart DeskTop. To
 use them, select the file icon and then select the appropriate command
-from the Apple menu.
+from the **Apple** menu.
 
 ### Notable Fixes
 
@@ -138,10 +138,10 @@ from the Apple menu.
 * **File > Quit** returns to ProDOS 8 selector, and `/RAM` is reattached. ([#3](https://github.com/a2stuff/a2d/issues/3))
 * `SELECTOR.LIST` file created if missing. ([#92](https://github.com/a2stuff/a2d/issues/92), [#497](https://github.com/a2stuff/a2d/issues/497))
 * Handle `SELECTOR.LIST` being modified while DeskTop is running. ([#526](https://github.com/a2stuff/a2d/issues/526))
-* Update **Selector** menu size when entries are modified. ([#518](https://github.com/a2stuff/a2d/issues/518))
+* Update the **Selector** menu size when entries are modified. ([#518](https://github.com/a2stuff/a2d/issues/518))
 * Prevent crash after renaming volume. ([#99](https://github.com/a2stuff/a2d/issues/99))
 * Prevent crash with more than two volumes on a SmartPort interface. ([#45](https://github.com/a2stuff/a2d/issues/45))
-* **Startup** menu will include slot 2. ([#106](https://github.com/a2stuff/a2d/issues/106))
+* The **Startup** menu now includes slot 2. ([#106](https://github.com/a2stuff/a2d/issues/106))
 * Correct odd behavior for file type $08. ([#103](https://github.com/a2stuff/a2d/issues/103))
 * Correct rendering issues with desktop volume icons. ([#117](https://github.com/a2stuff/a2d/issues/117), [#152](https://github.com/a2stuff/a2d/issues/152), [#153](https://github.com/a2stuff/a2d/issues/153), [#182](https://github.com/a2stuff/a2d/issues/182), [#505](https://github.com/a2stuff/a2d/issues/505))
 * Correct rendering issues with file icons. ([#151](https://github.com/a2stuff/a2d/issues/151), [#181](https://github.com/a2stuff/a2d/issues/181), [#365](https://github.com/a2stuff/a2d/issues/365), [#366](https://github.com/a2stuff/a2d/issues/366), [#369](https://github.com/a2stuff/a2d/issues/369))
@@ -153,7 +153,7 @@ from the Apple menu.
 * Disk Copy works with disks over 8MB. ([#386](https://github.com/a2stuff/a2d/issues/386))
 * Scrollbars no longer activate unnecessarily. ([#347](https://github.com/a2stuff/a2d/issues/347), [#348](https://github.com/a2stuff/a2d/issues/348), [#394](https://github.com/a2stuff/a2d/issues/394))
 * "There are 2 volumes with the same name." alert is now shown correctly. ([#542](https://github.com/a2stuff/a2d/issues/542))
-* "Files remaining" counts incorrect in various cases. ([#462](https://github.com/a2stuff/a2d/issues/462), [#470](https://github.com/a2stuff/a2d/issues/470), [#534](https://github.com/a2stuff/a2d/issues/534))
+* "Files remaining" counts were incorrect in various cases. ([#462](https://github.com/a2stuff/a2d/issues/462), [#470](https://github.com/a2stuff/a2d/issues/470), [#534](https://github.com/a2stuff/a2d/issues/534))
 * Copying to RAMCard on startup could fail for directories with specific numbers of files. ([#509](https://github.com/a2stuff/a2d/issues/509))
 * Handle "Device off-line" errors after ejecting disks. ([#536](https://github.com/a2stuff/a2d/issues/536))
 * Prevent moving/copying a folder into itself. ([#495](https://github.com/a2stuff/a2d/issues/495))
@@ -164,13 +164,13 @@ from the Apple menu.
 * Clip target icon rendering while dragging. ([#381](https://github.com/a2stuff/a2d/issues/381))
 * Fix various window sizing problems. ([#180](https://github.com/a2stuff/a2d/issues/180), [#514](https://github.com/a2stuff/a2d/issues/514))
 * Prevent duplicate windows for the same directory. ([#144](https://github.com/a2stuff/a2d/issues/144))
-* Fix **New Folder...** name field behavior when re-prompted. ([#127](https://github.com/a2stuff/a2d/issues/127))
-* Fix **Rename...** name field when IP at the start. ([#232](https://github.com/a2stuff/a2d/issues/232))
-* **New Folder...** / **Rename...** input no longer truncated after IP. ([#118](https://github.com/a2stuff/a2d/issues/118))
-* Fix issues with **Format a Disk...** dialog when re-shown. ([#177](https://github.com/a2stuff/a2d/issues/177))
+* Fix **File > New Folder...** name field behavior when re-prompted. ([#127](https://github.com/a2stuff/a2d/issues/127))
+* Fix **File > Rename...** name field when IP at the start. ([#232](https://github.com/a2stuff/a2d/issues/232))
+* **File > New Folder...** / **File > Rename...** input no longer truncated after IP. ([#118](https://github.com/a2stuff/a2d/issues/118))
+* Fix issues with **File > Format a Disk...** dialog when re-shown. ([#177](https://github.com/a2stuff/a2d/issues/177))
 * Fix vertical text overlaps in dialogs. ([#126](https://github.com/a2stuff/a2d/issues/126))
 * Fix dialog inconsistencies. ([#207](https://github.com/a2stuff/a2d/issues/207), [#411](https://github.com/a2stuff/a2d/issues/411), [#528](https://github.com/a2stuff/a2d/issues/528))
-* Numerous keyboard consistency issues. ([#328](https://github.com/a2stuff/a2d/issues/328), [#332](https://github.com/a2stuff/a2d/issues/332), [#337](https://github.com/a2stuff/a2d/issues/337), [#341](https://github.com/a2stuff/a2d/issues/341), [#396](https://github.com/a2stuff/a2d/issues/396), [#406](https://github.com/a2stuff/a2d/issues/406))
+* Fix numerous keyboard consistency issues. ([#328](https://github.com/a2stuff/a2d/issues/328), [#332](https://github.com/a2stuff/a2d/issues/332), [#336](https://github.com/a2stuff/a2d/issues/336), [#337](https://github.com/a2stuff/a2d/issues/337), [#341](https://github.com/a2stuff/a2d/issues/341), [#396](https://github.com/a2stuff/a2d/issues/396), [#406](https://github.com/a2stuff/a2d/issues/406))
 * Clip long strings in dialogs. ([#465](https://github.com/a2stuff/a2d/issues/465))
 * File Picker Dialogs:
   * Correct sort order. ([#489](https://github.com/a2stuff/a2d/issues/489))
@@ -185,6 +185,7 @@ from the Apple menu.
   * Laser 128: Avoid hangs checking SmartPort status. (Use **Special > Check Drive**) ([#138](https://github.com/a2stuff/a2d/issues/138))
   * IIgs: Color DHR is re-enabled on exit. ([#43](https://github.com/a2stuff/a2d/issues/43))
   * IIgs: Mono DHR is re-enabled when returning from system control panel. ([#193](https://github.com/a2stuff/a2d/issues/193), [#440](https://github.com/a2stuff/a2d/issues/440))
+  * IIgs: `/RAM5` is now correctly recognized as a RAMCard. ([#438](https://github.com/a2stuff/a2d/issues/438), [#439](https://github.com/a2stuff/a2d/issues/439))"
   * Macintosh LC PDS IIe Option Card: Doesn't crash on startup. ([#93](https://github.com/a2stuff/a2d/issues/93))
   * Macintosh LC PDS IIe Option Card: Correct problems with interrupts affecting AppleTalk. ([#129](https://github.com/a2stuff/a2d/issues/129))
   * KEGS-based IIgs Emulators: Don't crash on startup. ([#85](https://github.com/a2stuff/a2d/issues/85))
