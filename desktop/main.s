@@ -11897,6 +11897,10 @@ common2:
 finish: lda     #RenameDialogState::close
         jsr     run_dialog_proc
 
+        ;; Case-adjust
+        ldax    new_name_ptr
+        jsr     AdjustFileNameCase
+
         ;; Replace the icon name
         ldx     index
         lda     selected_icon_list,x
@@ -11916,7 +11920,17 @@ finish: lda     #RenameDialogState::close
         dey
         bpl     :-
 
-        ;; TODO: Redraw icon here.
+        ;; Redraw the icon
+        lda     selected_window_id
+        beq     :+
+        lda     icon_param2
+        jsr     icon_screen_to_window
+:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param2
+        lda     selected_window_id
+        beq     :+
+        lda     icon_param2
+        jsr     icon_window_to_screen
+:
 
         ;; Totally done - advance to next selected icon
         inc     index

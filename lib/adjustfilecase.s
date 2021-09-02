@@ -161,10 +161,18 @@ appleworks:
         jmp     apply_bits
 
 ;;; --------------------------------------------------
+;;; File name (max 15 characters)
+
+file_name:
+        stax    ptr
+        jmp     fallback
+
+;;; --------------------------------------------------
 
 version_bytes:
         .word   0
 .endproc
 
+AdjustFileNameCase      := AdjustCaseImpl::file_name
 AdjustFileEntryCase     := AdjustCaseImpl::file_entry
 AdjustVolumeNameCase    := AdjustCaseImpl::vol_name

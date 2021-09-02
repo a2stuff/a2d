@@ -791,6 +791,7 @@ ptr_icon_idx    .addr
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
+        jsr     calc_icon_poly
         jmp     erase_icon
 .endproc
 
