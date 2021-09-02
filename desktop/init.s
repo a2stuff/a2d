@@ -384,8 +384,8 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
         clc
         adc     selector_list_data_buf+1
         sta     num_selector_list_items
-        lda     #0
-        sta     LD344
+
+        copy    #0, selector_menu_items_updated_flag
 
         lda     selector_list_data_buf
         sta     L0A93

@@ -296,7 +296,11 @@ y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
 num_selector_list_items:
         .byte   0
 
-LD344:  .byte   0
+        ;; Cleared when Selector entries changed, set once
+        ;; the menu state has been updated.
+selector_menu_items_updated_flag:
+        .byte   0
+
 buf_filename2:  .res    16, 0
 buf_win_path:   .res    43, 0
 

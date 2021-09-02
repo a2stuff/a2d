@@ -839,12 +839,12 @@ status_unit_num := status_params::unit_num
         lda     num_selector_list_items
         beq     :+
 
-        bit     LD344
+        bit     selector_menu_items_updated_flag
         bmi     check_selection
         jsr     enable_selector_menu_items
         jmp     check_selection
 
-:       bit     LD344
+:       bit     selector_menu_items_updated_flag
         bmi     check_selection
         jsr     disable_selector_menu_items
 
@@ -2969,6 +2969,10 @@ done:   jmp     clear_updates_and_redraw_desktop_icons
         jsr     clear_updates_and_redraw_desktop_icons
         pla
         beq     :+
+
+        ;; BUG: Since rename is enabled when multiple icons
+        ;; are selected, failure only means the last one failed.
+        ;; This will leave paths, icons, and name casing incorrect.
         rts
 
 :       lda     selected_window_id
@@ -5346,7 +5350,7 @@ enable:
         jsr     disable_menu_item
         lda     #kMenuItemIdSelectorRun
         jsr     disable_menu_item
-        copy    #$80, LD344
+        copy    #$80, selector_menu_items_updated_flag
         rts
 .endproc
 enable_selector_menu_items := toggle_selector_menu_items::enable
@@ -11911,6 +11915,8 @@ finish: lda     #RenameDialogState::close
         sta     (icon_name_ptr),y
         dey
         bpl     :-
+
+        ;; TODO: Redraw icon here.
 
         ;; Totally done - advance to next selected icon
         inc     index
