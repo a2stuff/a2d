@@ -8104,7 +8104,7 @@ loop:   lda     record_num
         iny
         lda     (ptr),y         ; modification_date hi
         bne     next
-        lda     #$01            ; if no mod date, set hi to 1 ???
+        lda     #$01            ; if mod date is $0000, set it to $0100 ???
         sta     (ptr),y
 
 next:   inc     record_num
@@ -8564,18 +8564,20 @@ loop:   lda     record_num
         cmp     num_records
         beq     done
         jsr     ptr_calc
-        ldy     #$00
+
+        ldy     #$00            ; Remove mark
         lda     (ptr),y
         and     #$7F
         sta     (ptr),y
-        ldy     #$17
+
+        ldy     #FileRecord::modification_date ; ???
         lda     (ptr),y
         bne     :+
         iny
-        lda     (ptr),y
+        lda     (ptr),y         ; modification_date hi
         cmp     #$01
         bne     :+
-        lda     #$00
+        lda     #$00            ; if mod date was $0000 and set to $0100, reset it
         sta     (ptr),y
 :       inc     record_num
         jmp     loop
