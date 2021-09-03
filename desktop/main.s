@@ -8492,32 +8492,15 @@ L809E:  inc     index
 .endscope
 
 ;;; --------------------------------------------------
-;;; ptr = list_start_ptr + ($800 * .sizeof(FileRecord))
+;;; ptr = `list_start_ptr` + (`record_num` * .sizeof(FileRecord))
 
 .proc ptr_calc
         ptr := $6
-        hi := $0804
 
-        lda     #0
-        sta     hi
         lda     record_num
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-
-        clc
-        adc     list_start_ptr
-        sta     ptr
-        lda     list_start_ptr+1
-        adc     hi
-        sta     ptr+1
+        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        jsr     a_times_32
+        addax   list_start_ptr, ptr
 
         rts
 .endproc
