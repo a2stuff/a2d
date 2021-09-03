@@ -7427,7 +7427,7 @@ thumbmax:
 ;;; Create icon
 
 .proc alloc_and_populate_file_icon
-        file_entry := $6
+        file_record := $6
         icon_entry := $8
         name_tmp := $1800
 
@@ -7443,11 +7443,11 @@ thumbmax:
 
         ;; Copy the name
         ldy     #FileRecord::name
-        lda     (file_entry),y
+        lda     (file_record),y
         sta     name_tmp
         iny
         ldx     #0
-:       lda     (file_entry),y
+:       lda     (file_record),y
         sta     name_tmp+1,x
         inx
         iny
@@ -7456,14 +7456,14 @@ thumbmax:
 
         ;; Check file type
         ldy     #FileRecord::file_type
-        lda     (file_entry),y
+        lda     (file_record),y
 
         ;; Handle several classes of overrides
         sta     icontype_filetype
         ldy     #FileRecord::aux_type
-        copy16in (file_entry),y, icontype_auxtype
+        copy16in (file_record),y, icontype_auxtype
         ldy     #FileRecord::blocks
-        copy16in (file_entry),y, icontype_blocks
+        copy16in (file_record),y, icontype_blocks
         jsr     get_icon_type
 
         ;; Distinguish *.SYSTEM files as apps (use $01) from other
@@ -7472,10 +7472,10 @@ thumbmax:
         bne     got_type
 
         ldy     #FileRecord::name
-        lda     (file_entry),y
+        lda     (file_record),y
         tay
         ldx     str_sys_suffix
-cloop:  lda     (file_entry),y
+cloop:  lda     (file_record),y
         jsr     upcase_char
         cmp     str_sys_suffix,x
         bne     not_app
@@ -7565,7 +7565,7 @@ L7870:  lda     cached_window_id
         dex
         lda     cached_window_entry_list,x
         jsr     icon_window_to_screen
-        add16   file_entry, #kIconSpacingY, file_entry
+        add16   file_record, #.sizeof(FileRecord), file_record
         rts
 .endproc
 
