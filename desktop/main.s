@@ -6536,7 +6536,6 @@ index_in_dir:           .byte   0
         ldx     #5              ; /= 32 .sizeof(FileRecord)
 :       lsr16   free_record_count
         dex
-        cpx     #0
         bne     :-
 
         ;; Is there room for the files?
@@ -8455,7 +8454,6 @@ iloop:  jsr     ptr_calc
         ldy     #FileRecord::file_type
         lda     (ptr),y
         ldx     type_table_copy
-        cpx     #0
         beq     place
         cmp     type_table_copy+1,x
         bne     inext
@@ -8630,40 +8628,19 @@ done:   lda     LCBANK1
 ;;; ============================================================
 ;;; A = entry number
 
-.proc draw_list_view_row_impl
+.proc draw_list_view_row
 
-addr_lo:
-        .byte   0
-
-row_height:
-        .byte   8
+        kRowHeight = 8          ; TODO: Use font height
 
         ptr := $06
 
-start:
         ;; Compute address of (A-1)th file record
-        ldy     #0
         tax                     ; 1-based to 0-based
         dex
         txa
-        sty     addr_lo
         .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
-        asl     a               ; * 32
-        rol     addr_lo
-        asl     a
-        rol     addr_lo
-        asl     a
-        rol     addr_lo
-        asl     a
-        rol     addr_lo
-        asl     a
-        rol     addr_lo
-        clc
-        adc     file_record_ptr
-        sta     ptr
-        lda     file_record_ptr+1
-        adc     addr_lo
-        sta     ptr+1
+        jsr     a_times_32      ; A,X = A * 32
+        addax   file_record_ptr, ptr
 
         ;; Copy into more convenient location (LCBANK1)
         lda     LCBANK2
@@ -8686,21 +8663,21 @@ start:
 
         lda     pos_col_type::ycoord
         clc
-        adc     row_height
+        adc     #kRowHeight
         sta     pos_col_type::ycoord
         bcc     :+
         inc     pos_col_type::ycoord+1
 :
         lda     pos_col_size::ycoord
         clc
-        adc     row_height
+        adc     #kRowHeight
         sta     pos_col_size::ycoord
         bcc     :+
         inc     pos_col_size::ycoord+1
 :
         lda     pos_col_date::ycoord
         clc
-        adc     row_height
+        adc     #kRowHeight
         sta     pos_col_date::ycoord
         bcc     :+
         inc     pos_col_date::ycoord+1
@@ -8710,7 +8687,7 @@ start:
         bmi     check_top
         lda     pos_col_name::ycoord
         clc
-        adc     row_height
+        adc     #kRowHeight
         sta     pos_col_name::ycoord
         bcc     :+
         inc     pos_col_name::ycoord+1
@@ -8720,7 +8697,7 @@ start:
 check_top:
         lda     pos_col_name::ycoord
         clc
-        adc     row_height
+        adc     #kRowHeight
         sta     pos_col_name::ycoord
         bcc     :+
         inc     pos_col_name::ycoord+1
@@ -8739,7 +8716,6 @@ in_range:
         jsr     compose_date_string
         param_jump SetPosDrawText, pos_col_date
 .endproc
-        draw_list_view_row := draw_list_view_row_impl::start
 
 ;;; ============================================================
 
@@ -9068,47 +9044,39 @@ sense_flag:     .byte   0
 
 
 ;;; ============================================================
-;;; A = A * 16, high bits into X
 
+;;; A,X = A * 16
 .proc a_times_16
-        ldx     #0
-        stx     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        ldx     tmp
-        rts
-
-tmp:    .byte   0
+        ldx     #4
+        bne     a_shift_x       ; always
 .endproc
 
-;;; ============================================================
-;;; A = A * 64, high bits into X
+;;; A,X = A * 32
+.proc a_times_32
+        ldx     #5
+        bne     a_shift_x       ; always
+.endproc
 
+;;; A,X = A * 64
 .proc a_times_64
-        ldx     #$00
-        stx     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        ldx     tmp
+        ldx     #6
+        bne     a_shift_x       ; always
+.endproc
+
+;;; A,X = A << X
+.proc a_shift_x
+        ldy     #0
+        sty     hi
+
+:       asl     a
+        rol     hi
+        dex
+        bne     :-
+
+        ldx     hi
         rts
 
-tmp:    .byte   0
+hi:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -9702,7 +9670,6 @@ loop:   lda     dib_buffer::Device_Name-1,y ; Test previous character
         sta     dib_buffer::Device_Name,y
 
 next:   dey
-        cpy     #0
         bne     loop
 done:
 .endscope
@@ -11386,7 +11353,7 @@ index:  .byte   0
 :       lda     device_to_icon_map,y
 
         @compare := *+1
-        cmp     #0
+        cmp     #0              ; self-modified
 
         beq     found
         cpy     DEVCNT
