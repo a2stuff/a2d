@@ -57,7 +57,7 @@ Project Page: https://github.com/a2stuff/a2d
   * **Apple-Delete** deletes selected files. ([#150](https://github.com/a2stuff/a2d/issues/150))
   * **Apple-Down** opens/previews selection. ([#254](https://github.com/a2stuff/a2d/issues/254))
   * **Apple-Up** opens parent window. ([#254](https://github.com/a2stuff/a2d/issues/254))
-  * **Return** is a shortcut for **File > Rename...** ([#275](https://github.com/a2stuff/a2d/issues/275))
+  * **Return** is a shortcut for **File > Rename...**. ([#275](https://github.com/a2stuff/a2d/issues/275))
   * Arrow keys change selected icon. ([#274](https://github.com/a2stuff/a2d/issues/274))
 
 ### Desk Accessory Enhancements
@@ -146,7 +146,7 @@ from the **Apple** menu.
 * Correct rendering issues with desktop volume icons. ([#117](https://github.com/a2stuff/a2d/issues/117), [#152](https://github.com/a2stuff/a2d/issues/152), [#153](https://github.com/a2stuff/a2d/issues/153), [#182](https://github.com/a2stuff/a2d/issues/182), [#505](https://github.com/a2stuff/a2d/issues/505))
 * Correct rendering issues with file icons. ([#151](https://github.com/a2stuff/a2d/issues/151), [#181](https://github.com/a2stuff/a2d/issues/181), [#365](https://github.com/a2stuff/a2d/issues/365), [#366](https://github.com/a2stuff/a2d/issues/366), [#369](https://github.com/a2stuff/a2d/issues/369))
 * Prevent occasional rectangle drawn on desktop after window close. ([#120](https://github.com/a2stuff/a2d/issues/120))
-* Fix window animation after **File > Close** ([#145](https://github.com/a2stuff/a2d/issues/145))
+* Fix window animation after **File > Close**. ([#145](https://github.com/a2stuff/a2d/issues/145))
 * Empty directories can be copied. ([#121](https://github.com/a2stuff/a2d/issues/121))
 * **Control-Reset** quits cleanly back to ProDOS (except buggy emulators). ([#141](https://github.com/a2stuff/a2d/issues/141))
 * Prevent crash with more than 8 removable devices.
@@ -156,7 +156,7 @@ from the **Apple** menu.
 * "Files remaining" counts were incorrect in various cases. ([#462](https://github.com/a2stuff/a2d/issues/462), [#470](https://github.com/a2stuff/a2d/issues/470), [#534](https://github.com/a2stuff/a2d/issues/534))
 * Copying to RAMCard on startup could fail for directories with specific numbers of files. ([#509](https://github.com/a2stuff/a2d/issues/509))
 * Handle "Device off-line" errors after ejecting disks. ([#536](https://github.com/a2stuff/a2d/issues/536))
-* Prevent moving/copying a folder into itself. ([#495](https://github.com/a2stuff/a2d/issues/495))
+* Prevent copying a folder or volume into itself. ([#495](https://github.com/a2stuff/a2d/issues/495))
 * Don't clear selection when clicking on a window's header. ([#362](https://github.com/a2stuff/a2d/issues/362))
 * Don't initiate drag-select after a double-click. ([#545](https://github.com/a2stuff/a2d/issues/545))
 * Don't wait for possible double click when clicking scrollbars. ([#183](https://github.com/a2stuff/a2d/issues/183))
@@ -167,7 +167,7 @@ from the **Apple** menu.
 * Fix **File > New Folder...** name field behavior when re-prompted. ([#127](https://github.com/a2stuff/a2d/issues/127))
 * Fix **File > Rename...** name field when IP at the start. ([#232](https://github.com/a2stuff/a2d/issues/232))
 * **File > New Folder...** / **File > Rename...** input no longer truncated after IP. ([#118](https://github.com/a2stuff/a2d/issues/118))
-* Fix issues with **File > Format a Disk...** dialog when re-shown. ([#177](https://github.com/a2stuff/a2d/issues/177))
+* Fix issues with **Special > Format a Disk...** dialog when re-shown. ([#177](https://github.com/a2stuff/a2d/issues/177))
 * Fix vertical text overlaps in dialogs. ([#126](https://github.com/a2stuff/a2d/issues/126))
 * Fix dialog inconsistencies. ([#207](https://github.com/a2stuff/a2d/issues/207), [#411](https://github.com/a2stuff/a2d/issues/411), [#528](https://github.com/a2stuff/a2d/issues/528))
 * Fix numerous keyboard consistency issues. ([#328](https://github.com/a2stuff/a2d/issues/328), [#332](https://github.com/a2stuff/a2d/issues/332), [#336](https://github.com/a2stuff/a2d/issues/336), [#337](https://github.com/a2stuff/a2d/issues/337), [#341](https://github.com/a2stuff/a2d/issues/341), [#396](https://github.com/a2stuff/a2d/issues/396), [#406](https://github.com/a2stuff/a2d/issues/406))
@@ -185,7 +185,7 @@ from the **Apple** menu.
   * Laser 128: Avoid hangs checking SmartPort status. (Use **Special > Check Drive**) ([#138](https://github.com/a2stuff/a2d/issues/138))
   * IIgs: Color DHR is re-enabled on exit. ([#43](https://github.com/a2stuff/a2d/issues/43))
   * IIgs: Mono DHR is re-enabled when returning from system control panel. ([#193](https://github.com/a2stuff/a2d/issues/193), [#440](https://github.com/a2stuff/a2d/issues/440))
-  * IIgs: `/RAM5` is now correctly recognized as a RAMCard. ([#438](https://github.com/a2stuff/a2d/issues/438), [#439](https://github.com/a2stuff/a2d/issues/439))"
+  * IIgs: `/RAM5` is now correctly recognized as a RAMCard. ([#438](https://github.com/a2stuff/a2d/issues/438), [#439](https://github.com/a2stuff/a2d/issues/439))
   * Macintosh LC PDS IIe Option Card: Doesn't crash on startup. ([#93](https://github.com/a2stuff/a2d/issues/93))
   * Macintosh LC PDS IIe Option Card: Correct problems with interrupts affecting AppleTalk. ([#129](https://github.com/a2stuff/a2d/issues/129))
   * KEGS-based IIgs Emulators: Don't crash on startup. ([#85](https://github.com/a2stuff/a2d/issues/85))
