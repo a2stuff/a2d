@@ -5697,13 +5697,8 @@ found_win:
 
         ;; Find FileRecord list
         lda     cached_window_id
-        ldx     window_id_to_filerecord_list_count
-        dex
-:       cmp     window_id_to_filerecord_list_entries,x
-        beq     select          ; found - skip loading
-        dex
-        bpl     :-
-
+        jsr     find_index_in_filerecord_list_entries
+        beq     select          ; found it
         jsr     open_directory  ; not found - load it
 
 select: MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
@@ -5962,12 +5957,8 @@ list_view:
 
         ;; Find FileRecord list
         lda     cached_window_id
-        ldx     #0
-:       cmp     window_id_to_filerecord_list_entries,x
+        jsr     find_index_in_filerecord_list_entries
         beq     :+
-        inx
-        cpx     window_id_to_filerecord_list_count
-        bne     :-
         rts
 
 :       txa
@@ -6870,13 +6861,8 @@ get_vol_free_used:
         sta     window_id
 
         ;; Find address of FileRecord list
-        ldx     #0
-:       lda     window_id_to_filerecord_list_entries,x
-        cmp     window_id
+        jsr     find_index_in_filerecord_list_entries
         beq     :+
-        inx
-        cpx     #kMaxNumWindows
-        bne     :-
         rts
 
         ;; Move list entries down by one
@@ -7303,12 +7289,8 @@ common: sta     preserve_window_size_flag
         bpl     :-
 
         lda     cached_window_id
-        ldx     window_id_to_filerecord_list_count
-        dex
-:       cmp     window_id_to_filerecord_list_entries,x
+        jsr     find_index_in_filerecord_list_entries
         beq     :+
-        dex
-        bpl     :-
         rts                     ; BUG: Needs pop_pointers?
 
         ;; Pointer to file records
@@ -8081,12 +8063,8 @@ index           := $805
         jmp     start
 
 start:  lda     cached_window_id
-        ldx     #0
-:       cmp     window_id_to_filerecord_list_entries,x
+        jsr     find_index_in_filerecord_list_entries
         beq     found
-        inx
-        cpx     window_id_to_filerecord_list_count
-        bne     :-
         rts
 
 found:  txa
@@ -16209,6 +16187,20 @@ set_penmode_notcopy:
 nope:   ldx     #$FF            ; clear Z = failure
 
 done:   rts
+.endproc
+
+;;; ============================================================
+;;; Inputs: A = window id
+;;; Outputs: Z = 1 if found, and X = index in `window_id_to_filerecord_list_entries`
+
+.proc find_index_in_filerecord_list_entries
+        ldx     window_id_to_filerecord_list_count
+        dex
+:       cmp     window_id_to_filerecord_list_entries,x
+        beq     :+
+        dex
+        bpl     :-
+:       rts
 .endproc
 
 ;;; ============================================================
