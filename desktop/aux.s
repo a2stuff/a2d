@@ -2526,10 +2526,24 @@ volume:
 .proc erase_window_icon
         ;; Construct a bounding rect from the icon's polygon.
         ;; Used in `redraw_icons_after_erase`
-        ;; BUG: Doesn't handle skinny names.
         copy16  poly::v0::ycoord, icon_rect + MGTK::Rect::y1
+        copy16  poly::v5::ycoord, icon_rect + MGTK::Rect::y2
+
+        ;; Use lower of v6, v0
+        scmp16  poly::v6::xcoord, poly::v0::xcoord
+    IF_NEG
         copy16  poly::v6::xcoord, icon_rect + MGTK::Rect::x1
-        COPY_BLOCK poly::v4, icon_rect + MGTK::Rect::bottomright
+    ELSE
+        copy16  poly::v0::xcoord, icon_rect + MGTK::Rect::x1
+    END_IF
+
+        ;; Use higher of v1, v3
+        scmp16  poly::v3::xcoord, poly::v1::xcoord
+    IF_POS
+        copy16  poly::v3::xcoord, icon_rect + MGTK::Rect::x2
+    ELSE
+        copy16  poly::v1::xcoord, icon_rect + MGTK::Rect::x2
+    END_IF
 
         MGTK_CALL MGTK::PaintPoly, poly
         rts
