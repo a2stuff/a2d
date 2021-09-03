@@ -1139,14 +1139,14 @@ icon_params2:
 
 window_title_addr_table:
         .addr   0
-        .addr   winfo1title_ptr
-        .addr   winfo2title_ptr
-        .addr   winfo3title_ptr
-        .addr   winfo4title_ptr
-        .addr   winfo5title_ptr
-        .addr   winfo6title_ptr
-        .addr   winfo7title_ptr
-        .addr   winfo8title_ptr
+        .addr   winfo1title
+        .addr   winfo2title
+        .addr   winfo3title
+        .addr   winfo4title
+        .addr   winfo5title
+        .addr   winfo6title
+        .addr   winfo7title
+        .addr   winfo8title
         ASSERT_ADDRESS_TABLE_SIZE window_title_addr_table, kMaxNumWindows + 1
 
         ;; (low nibble must match menu order)
@@ -1213,14 +1213,14 @@ nextwinfo:      .addr   0
 buflabel:       .res    18, 0
 .endmacro
 
-        WINFO_DEFN 1, winfo1, winfo1title_ptr
-        WINFO_DEFN 2, winfo2, winfo2title_ptr
-        WINFO_DEFN 3, winfo3, winfo3title_ptr
-        WINFO_DEFN 4, winfo4, winfo4title_ptr
-        WINFO_DEFN 5, winfo5, winfo5title_ptr
-        WINFO_DEFN 6, winfo6, winfo6title_ptr
-        WINFO_DEFN 7, winfo7, winfo7title_ptr
-        WINFO_DEFN 8, winfo8, winfo8title_ptr
+        WINFO_DEFN 1, winfo1, winfo1title
+        WINFO_DEFN 2, winfo2, winfo2title
+        WINFO_DEFN 3, winfo3, winfo3title
+        WINFO_DEFN 4, winfo4, winfo4title
+        WINFO_DEFN 5, winfo5, winfo5title
+        WINFO_DEFN 6, winfo6, winfo6title
+        WINFO_DEFN 7, winfo7, winfo7title
+        WINFO_DEFN 8, winfo8, winfo8title
 
 
 ;;; ============================================================

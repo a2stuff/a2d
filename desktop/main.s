@@ -6377,6 +6377,13 @@ slash:  cpy     #1
 .endproc
 
 ;;; ============================================================
+;;; `find_window_for_path`
+;;; Inputs: A,X = string (uses full string)
+;;; Output: A = window id (0 if no match)
+;;;
+;;; `find_windows_for_prefix`
+;;; Inputs: A,X = string, Y = prefix length
+;;; Outputs: `found_windows_count` and `found_windows_list` are updated
 
         ;; If 'prefix' version called, length in Y; otherwise use str len
 .proc find_windows
@@ -7092,9 +7099,9 @@ has_parent:
         jsr     push_pointers
 
         lda     cached_window_id
-        asl     a
-        tax
-        copy16  window_title_addr_table,x, title_ptr
+        jsr     get_window_title_path
+        stax    title_ptr
+
         add16   icon_ptr, #IconEntry::name, name_ptr
 
         ldy     #0
@@ -9166,6 +9173,22 @@ tmp:    .byte   0
         lda     window_path_addr_table,x
         pha
         lda     window_path_addr_table+1,x
+        tax
+        pla
+        rts
+.endproc
+
+;;; ============================================================
+;;; Look up window title path.
+;;; Input: A = window_id
+;;; Output: A,X = title path address
+
+.proc get_window_title_path
+        asl     a
+        tax
+        lda     window_title_addr_table,x
+        pha
+        lda     window_title_addr_table+1,x
         tax
         pla
         rts
@@ -11833,14 +11856,29 @@ retry:  lda     #RenameDialogState::run
         ;; Failure
 fail:   return  #$FF
 
+        ;; --------------------------------------------------
         ;; Success, new name in Y,X
         win_path_ptr := $06
         new_name_ptr := $08
 
 L962F:  sty     new_name_ptr
-        sty     new_name_addr
+        sty     new_name_ptr_stash
         stx     new_name_ptr+1
-        stx     new_name_addr+1
+        stx     new_name_ptr_stash+1
+
+        ;; Since we can't preserve casing, just upcase it for now.
+        ;; See: https://github.com/a2stuff/a2d/issues/352
+        ldy     #0
+        lda     (new_name_ptr),y
+        tay
+:       lda     (new_name_ptr),y
+        jsr     upcase_char
+        sta     (new_name_ptr),y
+        dey
+        bne     :-
+        ;; ... then recase it, so we're consistent for icons/paths.
+        ldax    new_name_ptr
+        jsr     AdjustFileNameCase
 
         ;; File or Volume?
         lda     selected_window_id
@@ -11893,20 +11931,17 @@ common2:
         jsr     run_dialog_proc
         jmp     fail
 
+        ;; --------------------------------------------------
         ;; Completed - tear down the dialog...
 finish: lda     #RenameDialogState::close
         jsr     run_dialog_proc
-
-        ;; Case-adjust
-        ldax    new_name_ptr
-        jsr     AdjustFileNameCase
 
         ;; Replace the icon name
         ldx     index
         lda     selected_icon_list,x
         sta     icon_param2
         ITK_RELAY_CALL IconTK::EraseIcon, icon_param2 ; in case name is shorter
-        copy16  new_name_addr, new_name_ptr
+        copy16  new_name_ptr_stash, new_name_ptr
         ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
@@ -11932,6 +11967,15 @@ finish: lda     #RenameDialogState::close
         jsr     icon_window_to_screen
 :
 
+        ;; TODO: If not volume, find and update associated FileEntry
+
+        ;; TODO: Use `find_window_for_path`, update same window path/title
+
+        ;; TODO: Use `find_windows_for_prefix`, update path prefixes
+
+        ;; TODO: Update icons for SYS files.
+
+        ;; --------------------------------------------------
         ;; Totally done - advance to next selected icon
         inc     index
         jmp     loop
@@ -11946,7 +11990,7 @@ str_empty:
 
 index:  .byte   0               ; selected icon index
 
-new_name_addr:
+new_name_ptr_stash:       ; copy of the pointer, since $8 gets trashed
         .addr   0
 
 len:    .byte   0
