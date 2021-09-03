@@ -303,3 +303,4 @@
 * Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Double-click the folder. Verify that the folder icon is no longer selected.
 
 * Configure a system with 14 devices. Launch and then exit DeskTop. Load another ProDOS app that enumerates devices. Verify that all expected devices are present, and that there's no "Slot 0, Drive 1" entry.
+* Launch DeskTop. Open a volume window. Hold a modifier, and drag-select icons in the window. Release the modifier. Verify that the volume icon is no longer selected. Click an empty area in the window to clear selection. Verify that the selection clears.

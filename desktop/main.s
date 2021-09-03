@@ -4512,9 +4512,12 @@ l1:     lda     event_coords,x
         jsr     clear_selection
 l2:     rts
 
-l3:     jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
+l3:     lda     selected_window_id ; different window, or desktop?
+        cmp     active_window_id   ; if so, definitely clear selection
+        bne     clear
+        jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
         bmi     :+
-        jsr     clear_selection
+clear:  jsr     clear_selection
 :       lda     active_window_id
         jsr     offset_and_set_port_from_window_id
 
