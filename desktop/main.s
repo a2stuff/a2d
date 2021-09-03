@@ -7989,8 +7989,6 @@ next:   inc     icon_num
 
 icon_num:
         .byte   0
-
-hi:     .byte   0
 .endproc
         compute_icons_bbox := compute_icons_bbox_impl::start
 
