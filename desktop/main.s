@@ -7900,21 +7900,14 @@ zero_min:
         rts
 
         ;; min.x = kListViewWidth
-        ;; min.y = (A + 2) * 8
+        ;; min.y = A * kRowHeight + kWindowHeaderHeight+1
 list_view_non_empty:
-        clc
-        adc     #2
-        ldx     #0
-        stx     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        sta     iconbb_rect::y2
-        lda     hi
-        sta     iconbb_rect::y2+1
+        kRowHeight = 9          ; Default font size
+        ldx     #0              ; A,X = count + 2
+        ldy     #kRowHeight
+        jsr     Multiply_16_8_16
+        addax   #kWindowHeaderHeight+1, iconbb_rect::y2
+
         copy16  #kListViewWidth, iconbb_rect::x2
 
         ;; Now zero out min (and done
@@ -8630,7 +8623,7 @@ done:   lda     LCBANK1
 
 .proc draw_list_view_row
 
-        kRowHeight = 8          ; TODO: Use font height
+        kRowHeight = 9          ; Default font height
 
         ptr := $06
 
