@@ -373,7 +373,7 @@ dispatch_table:
         .addr   cmd_select_all
         .addr   cmd_noop        ; --------
         .addr   cmd_get_info
-        .addr   cmd_rename_icon
+        .addr   cmd_rename
         .addr   cmd_noop        ; --------
         .addr   cmd_copy_file
         .addr   cmd_delete_file
@@ -1259,7 +1259,7 @@ filerecords_free_start:
 
         ;; Need to copy to RAMCard
         jsr     clear_updates_and_redraw_desktop_icons ; copying window is smaller
-        jsr     jt_run
+        jsr     jt_copy_to_ram
         bmi     done
         jsr     L4968
 
@@ -1317,7 +1317,7 @@ L49A6:  lda     menu_click_params::item_num
 
         lda     entry_num
         jsr     L4A47
-        jsr     jt_run
+        jsr     jt_copy_to_ram
         bpl     L49ED
         jmp     clear_updates_and_redraw_desktop_icons
 
@@ -2959,12 +2959,12 @@ done:   jmp     clear_updates_and_redraw_desktop_icons
 
 ;;; ============================================================
 
-.proc cmd_rename_icon
+.proc cmd_rename
         lda     selected_icon_count
         bne     :+
         rts
 
-:       jsr     jt_rename_icon
+:       jsr     jt_rename
         pha
         jsr     clear_updates_and_redraw_desktop_icons
         pla
@@ -10885,15 +10885,15 @@ done:   rts
 ;;; ============================================================
 
 jt_drop:        jmp     do_drop
-jt_get_info:    jmp     do_get_info ; cmd_get_info
-jt_lock:        jmp     do_lock ; cmd_lock
-jt_unlock:      jmp     do_unlock ; cmd_unlock
-jt_rename_icon: jmp     do_rename_icon ; cmd_rename_icon
-jt_eject:       jmp     do_eject ; cmd_eject ???
-jt_copy_file:   jmp     do_copy_file ; cmd_copy_file
+jt_get_info:    jmp     do_get_info    ; cmd_get_info
+jt_lock:        jmp     do_lock        ; cmd_lock
+jt_unlock:      jmp     do_unlock      ; cmd_unlock
+jt_rename:      jmp     do_rename      ; cmd_rename
+jt_eject:       jmp     do_eject       ; cmd_eject
+jt_copy_file:   jmp     do_copy_file   ; cmd_copy_file
 jt_delete_file: jmp     do_delete_file ; cmd_delete_file
-jt_run:         jmp     do_run  ; cmd_selector_action / Run
-jt_get_size:    jmp     do_get_size ; cmd_get_size
+jt_copy_to_ram: jmp     do_copy_to_ram ; cmd_selector_action / Run
+jt_get_size:    jmp     do_get_size    ; cmd_get_size
 
 
 ;;; --------------------------------------------------
@@ -10921,7 +10921,7 @@ do_copy_file:
         jsr     size_or_count_process_selected_file
         jsr     prep_callbacks_for_copy
 
-do_run2:
+do_copy_to_ram2:
         copy    #$FF, copy_run_flag
         copy    #0, delete_skip_decrement_flag
         jsr     copy_file_for_run
@@ -10946,7 +10946,7 @@ do_delete_file:
         jsr     done_dialog_phase1
         jmp     finish_operation
 
-do_run:
+do_copy_to_ram:
         copy    #$80, run_flag
         copy    #%11000000, operation_flags ; get size
         tsx
@@ -10955,7 +10955,7 @@ do_run:
         jsr     do_download_dialog_phase
         jsr     size_or_count_process_selected_file
         jsr     prep_callbacks_for_download
-        jmp     do_run2
+        jmp     do_copy_to_ram2
 
 ;;; --------------------------------------------------
 ;;; Lock
@@ -11211,7 +11211,7 @@ empty_string:
         .byte   0
 .endproc ; operations
         do_delete_file := operations::do_delete_file
-        do_run := operations::do_run
+        do_copy_to_ram := operations::do_copy_to_ram
         do_copy_file := operations::do_copy_file
         do_lock := operations::do_lock
         do_unlock := operations::do_unlock
@@ -11740,7 +11740,7 @@ str_vol:
         close = $40
 .endenum
 
-.proc do_rename_icon_impl
+.proc do_rename_impl
 
         src_path_buf := $220
         old_name_buf := $1F00
@@ -11951,7 +11951,7 @@ new_name_addr:
 
 len:    .byte   0
 .endproc
-        do_rename_icon := do_rename_icon_impl::start
+        do_rename := do_rename_impl::start
 
 ;;; ============================================================
 
