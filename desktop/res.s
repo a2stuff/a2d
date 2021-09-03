@@ -1465,7 +1465,7 @@ portptr:        .addr   0
 
         PAD_TO $ED00
 
-;;; (there's enough room here for 128 files at 25 bytes each; index 0 not used)
+;;; (there's enough room here for 128 files at up to 28 bytes each; index 0 not used)
 icon_entries:
         .assert ($FB00 - *) >= (kMaxIconCount+1) * .sizeof(IconEntry), error, "Not enough room for icons"
 

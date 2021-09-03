@@ -83,6 +83,7 @@ label   := *
 ;;;      .addr iconbits  (addr of IconDefinition)
 ;;;      .byte len       (name length)
 ;;;      .res  15  name  (name)
+;;;      .byte record_num (index of icon in window)
 
 .struct IconEntry
         id              .byte   ; 0
@@ -92,7 +93,8 @@ label   := *
         icony           .word   ; 5
         iconbits        .addr   ; 7
         name            .res 16 ; 9 (length + 15 chars)
-.endstruct
+        record_num      .byte   ; 25
+.endstruct                      ; 26
 
 ;;; Icon numbers 1...127 are supported
 ;;; (Tables keyed by icon number must hold `kMaxIconCount` + 1 entries)

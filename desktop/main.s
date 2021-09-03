@@ -2963,98 +2963,25 @@ done:   jmp     clear_updates_and_redraw_desktop_icons
         lda     selected_icon_count
         bne     :+
         rts
-
-:       jsr     jt_rename
-        pha
+:
+        jsr     jt_rename
+        sta     result
         jsr     clear_updates_and_redraw_desktop_icons
-        pla
-        beq     :+
 
-        ;; BUG: Since rename is enabled when multiple icons
-        ;; are selected, failure only means the last one failed.
-        ;; This will leave paths, icons, and name casing incorrect.
-        rts
+        bit     result
+        bpl     :+              ; N = window renamed
+        ;; TODO: Avoid repainting everything
+        MGTK_RELAY_CALL MGTK::RedrawDeskTop
+:
+        bit result
+        bvc     :+              ; V = SYS file renamed
+        lda     active_window_id
+        ;; TODO: Optimize, e.g. rebuild from existing FileRecords ?
+        jsr     select_and_refresh_window
 
-:       lda     selected_window_id
-        bne     common
+:       rts
 
-        ;; Volume icon on desktop
-
-        ;; Copy selected icons (except Trash)
-        ldx     #0
-        ldy     #0
-loop:   lda     selected_icon_list,x
-        cmp     trash_icon_num
-        beq     :+
-        sta     selected_vol_icon_list,y
-        iny
-:       inx
-        cpx     selected_icon_count
-        bne     loop
-        sty     selected_vol_icon_count
-
-common: copy    #$FF, counter   ; immediately incremented to 0
-
-        ;; Loop over selection
-
-next_icon:
-        inc     counter
-        lda     counter
-        cmp     selected_icon_count
-        bne     not_done
-
-        lda     selected_window_id
-        bne     :+
-        jmp     finish_with_vols
-:       jmp     select_and_refresh_window
-
-not_done:
-        tax
-        lda     selected_icon_list,x
-        jsr     find_window_for_dir_icon
-        bne     next_icon       ; not found
-        inx                     ; 0-based index to 1-based window_id
-        txa
-        jsr     get_window_path
-        stax    $06
-        ldy     #0
-        lda     ($06),y
-        tay
-        lda     $06
-        jsr     find_windows_for_prefix
-        lda     found_windows_count
-        beq     next_icon
-L53EF:  dec     found_windows_count
-        ldx     found_windows_count
-        lda     found_windows_list,x
-        cmp     active_window_id
-        beq     L5403
-        sta     findwindow_window_id
-        jsr     handle_inactive_window_click
-L5403:  jsr     close_window
-        lda     found_windows_count
-        bne     L53EF
-        jmp     next_icon
-
-finish_with_vols:
-:       dec     selected_vol_icon_count
-        bmi     finish
-        ldx     selected_vol_icon_count
-        lda     selected_vol_icon_list,x
-        sta     drive_to_refresh         ; icon number
-        jsr     cmd_check_single_drive_by_icon_number
-        jmp     :-
-finish: jmp     clear_updates_and_redraw_desktop_icons
-
-counter:
-        .byte   0
-
-selected_vol_icon_count:
-        .byte   0
-
-selected_vol_icon_list:
-        .res    9, 0
-
+result: .byte   0
 .endproc
 
 ;;; ============================================================
@@ -7424,11 +7351,14 @@ thumbmax:
 
 ;;; ============================================================
 ;;; Create icon
+;;; Inputs: A = record_num
 
 .proc alloc_and_populate_file_icon
         file_record := $6
         icon_entry := $8
         name_tmp := $1800
+
+        pha                     ; A = record_num
 
         inc     icon_count
         jsr     AllocateIcon
@@ -7437,6 +7367,13 @@ thumbmax:
         sta     cached_window_entry_list,x
         jsr     icon_entry_lookup
         stax    icon_entry
+
+        ;; Assign record number
+        pla                     ; A = record_num
+        ldy     #IconEntry::record_num
+        sta     (icon_entry),y
+
+        ;; Bank in the FileRecord entries
         lda     LCBANK2
         lda     LCBANK2
 
@@ -9864,6 +9801,11 @@ success:
         lda     #0
         sta     (icon_ptr),y
 
+        ;; Invalid record
+        ldy     #IconEntry::record_num
+        lda     #$FF
+        sta     (icon_ptr),y
+
         ;; Assign icon coordinates
         ldy     devlst_index
         lda     device_to_icon_map,y
@@ -11691,6 +11633,7 @@ str_vol:
 
         src_path_buf := $220
         old_name_buf := $1F00
+        new_name_buf := $1F10
 
         DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
 
@@ -11700,13 +11643,15 @@ addr:   .addr   old_name_buf
 .endparams
 
 start:
-        copy    #0, index
+        lda     #0
+        sta     index
+        sta     result_flags
 
         ;; Loop over all selected icons
 loop:   lda     index
         cmp     selected_icon_count
         bne     :+
-        return  #0
+        return  result_flags
 
 :       ldx     index
         lda     selected_icon_list,x
@@ -11778,18 +11723,17 @@ retry:  lda     #RenameDialogState::run
         beq     L962F
 
         ;; Failure
-fail:   return  #$FF
+fail:   return  result_flags
 
         ;; --------------------------------------------------
         ;; Success, new name in Y,X
-        win_path_ptr := $06
+
+L962F:
         new_name_ptr := $08
-
-L962F:  sty     new_name_ptr
-        sty     new_name_ptr_stash
+        sty     new_name_ptr
         stx     new_name_ptr+1
-        stx     new_name_ptr_stash+1
 
+        ;; Copy the name somewhere LCBANK-safe
         ;; Since we can't preserve casing, just upcase it for now.
         ;; See: https://github.com/a2stuff/a2d/issues/352
         ldy     #0
@@ -11797,12 +11741,15 @@ L962F:  sty     new_name_ptr
         tay
 :       lda     (new_name_ptr),y
         jsr     upcase_char
-        sta     (new_name_ptr),y
+        sta     new_name_buf,y
         dey
-        bne     :-
+        bpl     :-
+
         ;; ... then recase it, so we're consistent for icons/paths.
-        ldax    new_name_ptr
+        ldax    #new_name_buf
         jsr     AdjustFileNameCase
+
+        win_path_ptr := $06
 
         ;; File or Volume?
         lda     selected_window_id
@@ -11833,13 +11780,11 @@ common2:
 
         ;; Append new filename
         ldy     #0
-        lda     (new_name_ptr),y
-        sta     len
 :       inx
         iny
-        lda     (new_name_ptr),y
+        lda     new_name_buf,y
         sta     dst_path_buf,x
-        cpy     len
+        cpy     new_name_buf
         bne     :-
         stx     dst_path_buf
 
@@ -11865,16 +11810,13 @@ finish: lda     #RenameDialogState::close
         lda     selected_icon_list,x
         sta     icon_param2
         ITK_RELAY_CALL IconTK::EraseIcon, icon_param2 ; in case name is shorter
-        copy16  new_name_ptr_stash, new_name_ptr
         ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
 
         ;; Copy new string in
-        ldy     #0
-        lda     (new_name_ptr),y
-        tay
-:       lda     (new_name_ptr),y
+        ldy     new_name_buf
+:       lda     new_name_buf,y
         sta     (icon_name_ptr),y
         dey
         bpl     :-
@@ -11891,13 +11833,140 @@ finish: lda     #RenameDialogState::close
         jsr     icon_window_to_screen
 :
 
-        ;; TODO: If not volume, find and update associated FileEntry
+        ;; If not volume, find and update associated FileEntry
+        lda     selected_window_id
+    IF_NOT_ZERO
+        ;; Dig up the index of the icon within the window.
+        icon_ptr := $06
+        lda     icon_param2
+        jsr     icon_entry_lookup
+        stax    icon_ptr
+        ldy     #IconEntry::record_num
+        lda     (icon_ptr),y
+        pha                     ; A = index of icon in window
 
-        ;; TODO: Use `find_window_for_path`, update same window path/title
+        ;; Find the window's FileRecord list.
+        file_record_ptr := $06
+        lda     selected_window_id
+        jsr     find_index_in_filerecord_list_entries ; Assert: must be found
+        txa
+        asl
+        tax
+        copy16  window_filerecord_table,x, file_record_ptr ; points at head of list (entry count)
+        inc16   file_record_ptr ; now points at first FileRecord in list
 
-        ;; TODO: Use `find_windows_for_prefix`, update path prefixes
+        ;; Look up the FileRecord within the list.
+        pla                     ; A = index
+        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        jsr     a_times_32      ; A,X = index * 32
+        addax   file_record_ptr, file_record_ptr
 
-        ;; TODO: Update icons for SYS files.
+        ;; Bank in FileRecords, and copy the new name in.
+        lda     LCBANK2
+        lda     LCBANK2
+        .assert FileRecord::name = 0, error, "Name must be at start of FileRecord"
+        ldy     new_name_buf
+:       lda     new_name_buf,y
+        sta     (file_record_ptr),y
+        dey
+        bpl     :-
+
+        ;; Note if it's a SYS file
+        ldy     #FileRecord::file_type
+        lda     (file_record_ptr),y
+        cmp     #FT_SYSTEM
+        bne     :+
+        lda     result_flags
+        ora     #$40
+        sta     result_flags
+:
+
+        lda     LCBANK1
+        lda     LCBANK1
+    END_IF
+
+        ;; Is there a window for the folder/volume?
+        param_call find_window_for_path, src_path_buf
+    IF_NOT_ZERO
+        dst := $06
+        pha                     ; A = window id
+
+        ;; Update the path
+        jsr     get_window_path
+        stax    dst
+        lda     dst_path_buf
+        tay
+:       lda     dst_path_buf,y
+        sta     (dst),y
+        dey
+        bpl     :-
+
+        pla                     ; A = window id
+
+        ;; Update the window title
+        jsr     get_window_title_path
+        stax    dst
+        ldy     new_name_buf
+:       lda     new_name_buf,y
+        sta     (dst),y
+        dey
+        bpl     :-
+
+        lda     result_flags
+        ora     #$80
+        sta     result_flags
+    END_IF
+
+        ;; Update paths for any child windows.
+        ldy     src_path_buf    ; Y = length
+        param_call find_windows_for_prefix, src_path_buf
+        lda     found_windows_count
+    IF_NOT_ZERO
+        dst := $06
+
+        dec     found_windows_count
+wloop:  ldx     found_windows_count
+        lda     found_windows_list,x
+        jsr     get_window_path
+        stax    dst
+
+        ;; Set `path_buf1` to the old path (should be `src_path_buf` + suffix)
+        ldy     #0
+        lda     (dst),y
+        tay
+:       lda     (dst),y
+        sta     path_buf1,y
+        dey
+        bpl     :-
+
+        ;; Set `path_buf2` to the new prefix
+        ldy     dst_path_buf
+:       lda     dst_path_buf,y
+        sta     path_buf2,y
+        dey
+        bpl     :-
+
+        ;; Copy the suffix from `path_buf1` to `path_buf2`
+        ldx     src_path_buf
+        ldy     dst_path_buf
+:       inx                     ; advance into suffix
+        iny
+        lda     path_buf1,x
+        sta     path_buf2,y
+        cpx     path_buf1
+        bne     :-
+        sty     path_buf2
+
+        ;; Assign the new window path
+        ldy     path_buf2
+:       lda     path_buf2,y
+        sta     (dst),y
+        dey
+        bpl     :-
+
+        dec     found_windows_count
+        bpl     wloop
+    END_IF
 
         ;; --------------------------------------------------
         ;; Totally done - advance to next selected icon
@@ -11914,10 +11983,10 @@ str_empty:
 
 index:  .byte   0               ; selected icon index
 
-new_name_ptr_stash:       ; copy of the pointer, since $8 gets trashed
-        .addr   0
-
-len:    .byte   0
+;;; N bit ($80) set if a window title was changed
+;;; V bit ($40) set if a SYS file was renamed
+result_flags:
+        .byte   0
 .endproc
         do_rename := do_rename_impl::start
 
