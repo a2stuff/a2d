@@ -305,6 +305,6 @@
 * Configure a system with 14 devices. Launch and then exit DeskTop. Load another ProDOS app that enumerates devices. Verify that all expected devices are present, and that there's no "Slot 0, Drive 1" entry.
 * Launch DeskTop. Open a volume window. Hold a modifier, and drag-select icons in the window. Release the modifier. Verify that the volume icon is no longer selected. Click an empty area in the window to clear selection. Verify that the selection clears.
 
-* Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window re-opens, and the that the folder icon is selected.
-* Launch DeskTop. Open a volume window. Open a folder. Press Open-Apple+Up. Verify that the volume window is activated, and the that the folder icon is selected.
-* Launch DeskTop. Open a volume window. Open a folder. Activate the volume window. Switch the window's view to by Name. Activate the folder window. Press Open-Apple+Up. Verify that the volume window is activated.
+* Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window re-opens, and the that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
+* Launch DeskTop. Open a volume window. Open a folder. Press Open-Apple+Up. Verify that the volume window is activated, and the that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
+* Launch DeskTop. Open a volume window. Open a folder. Activate the volume window. Switch the window's view to by Name. Activate the folder window. Press Open-Apple+Up. Verify that the volume window is activated. Press Open-Apple+Up again. Verify that the volume icon is selected.

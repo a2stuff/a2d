@@ -631,44 +631,16 @@ not_menu:
 winid:  .byte   0
 
 start:  jsr     clear_selection
-
-        ;; Select window's corresponding volume icon.
-        ;; (Doesn't work for folder icons as only the active
-        ;; window and desktop can have selections.)
-        ldx     findwindow_window_id
-        dex
-        lda     window_to_dir_icon_table,x
-        bmi     continue        ; $FF = dir icon freed
-
-        sta     icon_param
-        lda     icon_param
-        jsr     icon_entry_lookup
-        stax    ptr
-
-        ldy     #IconEntry::state ; set state to open
-        lda     (ptr),y
-        beq     continue
-        ora     #kIconEntryOpenMask
-        sta     (ptr),y
-
-        iny                     ; IconEntry::win_type
-        lda     (ptr),y
-        and     #kIconEntryWinIdMask
-        sta     winid
-        jsr     prepare_highlight_grafport
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        jsr     reset_main_grafport
-        copy    winid, selected_window_id
-        copy    #1, selected_icon_count
-        copy    icon_param, selected_icon_list
+        lda     findwindow_window_id
+        jsr     select_icon_for_window
 
         ;; Actually make the window active.
-continue:
         MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         copy    findwindow_window_id, active_window_id
         jsr     LoadActiveWindowEntryTable
         jsr     draw_window_entries
         jsr     LoadDesktopEntryTable
+
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     check_item
         ldx     active_window_id
@@ -680,6 +652,47 @@ continue:
         copy    #MGTK::checkitem_check, checkitem_params::check
         jsr     check_item
         rts
+.endproc
+
+;;; ============================================================
+;;; Inputs: A = window_id
+;;; Selection should be cleared before calling
+
+.proc select_icon_for_window
+        ptr := $06
+
+        ;; Select window's corresponding volume icon.
+        ;; (Doesn't work for folder icons as only the active
+        ;; window and desktop can have selections.)
+        tax
+        dex
+        lda     window_to_dir_icon_table,x
+        bmi     done            ; $FF = dir icon freed
+
+        sta     icon_param
+        lda     icon_param
+        jsr     icon_entry_lookup
+        stax    ptr
+
+        ldy     #IconEntry::state ; set state to open
+        lda     (ptr),y
+        beq     done
+        ora     #kIconEntryOpenMask
+        sta     (ptr),y
+
+        iny                     ; IconEntry::win_type
+        lda     (ptr),y
+        and     #kIconEntryWinIdMask
+        pha
+        jsr     prepare_highlight_grafport
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        jsr     reset_main_grafport
+        pla
+        sta     selected_window_id
+        copy    #1, selected_icon_count
+        copy    icon_param, selected_icon_list
+
+done:   rts
 .endproc
 
 ;;; ============================================================
@@ -2104,7 +2117,7 @@ done:   rts
 
         ;; Truncate
 :       dex                     ; Remove '/'
-        beq     done            ; Nothing left
+        beq     volume          ; Nothing left
         stx     open_dir_path_buf
 
         ;; Try to open
@@ -2127,6 +2140,11 @@ done:   rts
         jsr     select_file_icon_by_name ; $08 = name
 
 done:   rts
+
+volume: jsr     clear_selection
+        lda     active_window_id
+        jsr     select_icon_for_window
+        rts
 
 prev:   .byte   0
 .endproc
