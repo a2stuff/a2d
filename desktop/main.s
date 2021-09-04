@@ -2095,6 +2095,7 @@ done:   rts
 
         ;; Find last '/'
         ldx     open_dir_path_buf
+        stx     prev
 :       lda     open_dir_path_buf,x
         cmp     #'/'
         beq     :+
@@ -2111,7 +2112,23 @@ done:   rts
         stx     saved_stack
         jsr     open_window_for_path
 
+        ;; Calc the name
+        name_ptr := $08
+        copy16  #open_dir_path_buf, name_ptr
+        inc     open_dir_path_buf                     ; past the '/'
+        add16_8 name_ptr, open_dir_path_buf, name_ptr ; point at suffix
+        lda     prev
+        sec
+        sbc     open_dir_path_buf ; A = name length
+        ldy     #0
+        sta     (name_ptr),y    ; assign string length
+
+        jsr     clear_selection
+        jsr     select_file_icon_by_name ; $08 = name
+
 done:   rts
+
+prev:   .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2214,22 +2231,36 @@ success:
         beq     :+
         rts
 :
+        copy16  #path_buf1, $08
+        jsr     select_file_icon_by_name ; $08 = folder name
+
+done:   jmp     clear_updates_and_redraw_desktop_icons
+
+
+name_ptr:
+        .addr   0
+.endproc
+        cmd_new_folder := cmd_new_folder_impl::start
+        path_buffer := cmd_new_folder_impl::path_buffer
+
+;;; ============================================================
+;;; Select and scroll into view an icon in the active window.
+;;; No-op if the active window is a list view.
+;;; Inputs: $08 = name
+;;; Trashes $06
+
+.proc select_file_icon_by_name
+        ptr_icon := $6
+        ptr_name := $8          ; Input
+
         ;; View by Icon?
         ;; TODO: Scroll list views, as well.
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        bmi     done
-
-        jsr     select_new_folder_icon
-
-done:   jmp     clear_updates_and_redraw_desktop_icons
-
-.proc select_new_folder_icon
-        ptr_icon := $6
-        ptr_name := $8
-        copy16  #path_buf1, ptr_name
-
+        bpl     :+
+        rts
+:
         jsr     LoadActiveWindowEntryTable
 
         ;; Iterate icons
@@ -2280,14 +2311,7 @@ done:   jsr     LoadDesktopEntryTable
         rts
 
 icon:   .byte   0
-char:   .byte   0
 .endproc
-
-name_ptr:
-        .addr   0
-.endproc
-        cmd_new_folder := cmd_new_folder_impl::start
-        path_buffer := cmd_new_folder_impl::path_buffer
 
 ;;; ============================================================
 ;;; Grab the bounds (MGTK::Rect) of an icon. Just the graphic,

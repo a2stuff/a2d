@@ -56,7 +56,7 @@ Project Page: https://github.com/a2stuff/a2d
   * **Apple-\`** or **Apple-Tab** cycles through open windows; **Shift-Apple-\`** cycles in reverse. ([#143](https://github.com/a2stuff/a2d/issues/143), [#230](https://github.com/a2stuff/a2d/issues/230))
   * **Apple-Delete** deletes selected files. ([#150](https://github.com/a2stuff/a2d/issues/150))
   * **Apple-Down** opens/previews selection. ([#254](https://github.com/a2stuff/a2d/issues/254))
-  * **Apple-Up** opens parent window. ([#254](https://github.com/a2stuff/a2d/issues/254))
+  * **Apple-Up** opens parent window. ([#254](https://github.com/a2stuff/a2d/issues/254), [#314](https://github.com/a2stuff/a2d/issues/314))
   * **Return** is a shortcut for **File > Rename...**. ([#275](https://github.com/a2stuff/a2d/issues/275))
   * Arrow keys change selected icon. ([#274](https://github.com/a2stuff/a2d/issues/274))
 
