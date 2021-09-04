@@ -243,9 +243,7 @@ L415B:  sta     active_window_id
 skip_adjust_port:
 
         ;; View type?
-        ldx     cached_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_cached_window_view_by
         bpl     by_icon
 
         ;; --------------------------------------------------
@@ -643,9 +641,7 @@ start:  jsr     clear_selection
 
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     check_item
-        ldx     active_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_active_window_view_by
         and     #$0F            ; mask off menu item number
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
@@ -2273,9 +2269,7 @@ name_ptr:
 
         ;; View by Icon?
         ;; TODO: Scroll list views, as well.
-        ldx     active_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_active_window_view_by
         bpl     :+
         rts
 :
@@ -2621,12 +2615,11 @@ fail:   MLI_CALL QUIT, quit_params
 ;;; ============================================================
 
 .proc cmd_view_by_icon
-        ldx     active_window_id
+        lda     active_window_id
         bne     :+
         rts
 
-:       dex
-        lda     win_view_by_table,x
+:       jsr     get_active_window_view_by
         bne     :+              ; not by icon
         rts
 
@@ -2731,13 +2724,12 @@ L51EF:  .byte   0
         sta     view
 
         ;; Valid?
-        ldx     active_window_id
+        lda     active_window_id
         bne     :+
         rts
 :
         ;; Is this a change?
-        dex
-        lda     win_view_by_table,x
+        jsr     get_active_window_view_by
         cmp     view
         bne     :+
         rts
@@ -3044,9 +3036,7 @@ start:
         bne     :+
         jmp     volumes
 
-:       tax
-        dex
-        lda     win_view_by_table,x
+:       jsr     get_active_window_view_by
         bpl     :+              ; by icon
         jmp     volumes
 
@@ -3204,21 +3194,21 @@ highlight_icon:
 
 .proc cmd_select_all
         lda     selected_icon_count
-        beq     L566A
+        beq     :+
         jsr     clear_selection
-L566A:  ldx     active_window_id
-        beq     L5676
-        dex
-        lda     win_view_by_table,x
-        bpl     L5676           ; view by icons
+
+:       lda     active_window_id
+        beq     :+              ; desktop is okay
+        jsr     get_active_window_view_by
+        bpl     :+              ; view by icons
         rts
 
-L5676:  jsr     LoadActiveWindowEntryTable
+:       jsr     LoadActiveWindowEntryTable
         lda     cached_window_entry_count
-        bne     L5687
-        jmp     finish
+        bne     :+
+        jmp     finish          ; nothing to select!
 
-L5687:  ldx     cached_window_entry_count
+:       ldx     cached_window_entry_count
         dex
 :       copy    cached_window_entry_list,x, selected_icon_list,x
         dex
@@ -3376,9 +3366,7 @@ vertical:
 
 .proc get_active_window_scroll_info
         jsr     LoadActiveWindowEntryTable
-        ldx     active_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_active_window_view_by
         sta     active_window_view_by
         jsr     get_active_window_hscroll_info
         sta     horiz_scroll_pos
@@ -3845,9 +3833,7 @@ active_window_view_by:
 
 .proc handle_client_click
         jsr     LoadActiveWindowEntryTable
-        ldx     active_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_active_window_view_by
         sta     active_window_view_by
 
         MGTK_RELAY_CALL MGTK::FindControl, event_coords
@@ -4413,10 +4399,7 @@ exception_flag:
         pha
         jsr     remove_window_filerecord_entries
 
-        lda     window_id
-        tax
-        dex
-        lda     win_view_by_table,x
+        jsr     get_active_window_view_by
         bmi     :+              ; list view, not icons
         jsr     destroy_icons_in_active_window
         jsr     clear_active_window_entry_count
@@ -4636,9 +4619,7 @@ l17:    jsr     push_pointers
         iny
         sub16in (ptr),y, saved_portbits+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, deltay
 
-        ldx     active_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_active_window_view_by
         beq     :+           ; view by icon
         rts
 
@@ -4712,9 +4693,7 @@ deltay: .word   0
 
         jsr     clear_selection
 
-        ldx     active_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_active_window_view_by
         bmi     iter            ; list view, not icons
 
         lda     icon_count
@@ -5194,12 +5173,11 @@ size:   .word   0
 ;;; (Called on window close)
 
 .proc update_window_menu_items
-        ldx     active_window_id
+        lda     active_window_id
         beq     disable_menu_items_requiring_window
 
         ;; Check appropriate view menu item
-        dex
-        lda     win_view_by_table,x
+        jsr     get_active_window_view_by
         and     #$0F            ; mask off menu item number
         tax
         inx
@@ -5902,9 +5880,7 @@ num:    .byte   0
 .proc draw_window_entries
         ptr := $06
 
-        ldx     cached_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_cached_window_view_by
         bmi     list_view           ; list view, not icons
         jmp     icon_view
 
@@ -6097,9 +6073,7 @@ leave_thumbs:
 
 impl:   sta     update_thumbs_flag
 
-        ldx     active_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_active_window_view_by
         bmi     :+              ; list view, not icons
         jsr     compute_icons_bbox
         jmp     config_port
@@ -7854,9 +7828,7 @@ start:
         sta     iconbb_rect+MGTK::Rect::y1+1
 
         ;; Icon view?
-        ldx     cached_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_cached_window_view_by
         bpl     icon_view           ; icon view
 
         ;; --------------------------------------------------
@@ -8093,9 +8065,7 @@ break:  lda     LCBANK1         ; Done copying records
         ;; --------------------------------------------------
 
         ;; What sort order?
-        ldx     cached_window_id
-        dex
-        lda     win_view_by_table,x
+        jsr     get_cached_window_view_by
         cmp     #kViewByName
         beq     :+
         jmp     check_date
@@ -16258,6 +16228,25 @@ done:   rts
         dex
         bpl     :-
 :       rts
+.endproc
+
+;;; ============================================================
+;;; Outputs: A = kViewBy* value for active window
+;;; If kViewByIcon, Z=1 and N=0; otherwise Z=0 and N=1
+;;; Assert: There is an active/cached window
+
+.proc get_active_window_view_by
+        ldx     active_window_id
+        dex
+        lda     win_view_by_table,x
+        rts
+.endproc
+
+.proc get_cached_window_view_by
+        ldx     cached_window_id
+        dex
+        lda     win_view_by_table,x
+        rts
 .endproc
 
 ;;; ============================================================
