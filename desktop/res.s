@@ -1155,6 +1155,7 @@ window_title_addr_table:
         kViewByDate = $82
         kViewBySize = $83
         kViewByType = $84
+        kViewByMenuMask = $0F   ; Convert kViewByXYZ to menu index
 
 win_view_by_table:
         .res    kMaxNumWindows, 0

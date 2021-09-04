@@ -642,7 +642,7 @@ start:  jsr     clear_selection
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     check_item
         jsr     get_active_window_view_by
-        and     #$0F            ; mask off menu item number
+        and     #kViewByMenuMask
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
         copy    #MGTK::checkitem_check, checkitem_params::check
@@ -2626,6 +2626,7 @@ fail:   MLI_CALL QUIT, quit_params
         ;; View by icon
 entry:
 :       jsr     LoadActiveWindowEntryTable
+
         ldx     #$00
         txa
 :       cpx     cached_window_entry_count
@@ -2633,21 +2634,22 @@ entry:
         sta     cached_window_entry_list,x
         inx
         jmp     :-
-
 :       sta     cached_window_entry_count
+
         lda     #0
         ldx     active_window_id
         dex
         sta     win_view_by_table,x
         jsr     update_view_menu_check
+
         lda     active_window_id
         jsr     offset_and_set_port_from_window_id
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
         lda     active_window_id
         jsr     compute_window_dimensions
-        stax    L51EB
-        sty     L51ED
+        stax    win_width
+        sty     win_height
 
         ptr = $06
 
@@ -2664,7 +2666,7 @@ entry:
 
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Point)-1
-:       lda     L51EB,x
+:       lda     win_width,x
         sta     (ptr),y
         dey
         dex
@@ -2677,30 +2679,32 @@ entry:
         jsr     set_port_from_window_id
 
         jsr     cached_icons_screen_to_window
-        copy    #0, L51EF
-L518D:  lda     L51EF
+        copy    #0, index
+:       lda     index
         cmp     cached_window_entry_count
-        beq     L51A7
+        beq     :+
         tax
         lda     cached_window_entry_list,x
         jsr     icon_entry_lookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
-        inc     L51EF
-        jmp     L518D
+        inc     index
+        jmp     :-
 
-L51A7:  jsr     reset_main_grafport
+:       jsr     reset_main_grafport
         jsr     cached_icons_window_to_screen
         jsr     StoreWindowEntryTable
         jsr     cached_icons_screen_to_window
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
+
+        ;; Highlight selected icons
         lda     selected_window_id
-        beq     finish
+        beq     finish          ; desktop
         lda     selected_icon_count
-        beq     finish
-        sta     L51EF
-L51C0:  ldx     L51EF
+        beq     finish          ; no selected icons
+        sta     index
+:       ldx     index
         lda     selected_icon_count,x
         sta     icon_param
         jsr     icon_screen_to_window
@@ -2708,14 +2712,16 @@ L51C0:  ldx     L51EF
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         lda     icon_param
         jsr     icon_window_to_screen
-        dec     L51EF
-        bne     L51C0
+        dec     index
+        bne     :-
+
 finish: jmp     LoadDesktopEntryTable
 
-L51EB:  .word   0
-L51ED:  .byte   0
-        .byte   0
-L51EF:  .byte   0
+win_width:
+        .word   0
+win_height:
+        .word   0
+index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2771,8 +2777,8 @@ sort:   jsr     LoadActiveWindowEntryTable
         MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
         lda     active_window_id
         jsr     compute_window_dimensions
-        stax    L5263
-        sty     L5265
+        stax    win_width
+        sty     win_height
 
         ptr := $06
 
@@ -2789,11 +2795,11 @@ sort:   jsr     LoadActiveWindowEntryTable
 
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Point)-1
-L5246:  lda     L5263,x
+:       lda     win_width,x
         sta     (ptr),y
         dey
         dex
-        bpl     L5246
+        bpl     :-
 
         copy    #$80, draw_window_header_flag
         jsr     reset_main_grafport
@@ -2803,10 +2809,10 @@ L5246:  lda     L5263,x
 
 done:   rts
 
-L5263:  .word   0
-
-L5265:  .byte   0
-        .byte   0
+win_width:
+        .word   0
+win_height:
+        .word   0
 
 view:   .byte   0
 .endproc
@@ -3480,7 +3486,7 @@ max:   .byte   0
         pha
         ldy     #MGTK::Winfo::hscroll
         lda     (ptr),y
-        and     #$01            ; active flag
+        and     #MGTK::Scroll::option_active ; low bit
         clc
         ror     a
         ror     a               ; shift to high bit
@@ -3504,7 +3510,7 @@ max:   .byte   0
         pha
         ldy     #MGTK::Winfo::vscroll
         lda     (ptr),y
-        and     #$01            ; active flag
+        and     #MGTK::Scroll::option_active ; low bit
         clc
         ror     a
         ror     a               ; shift to high bit
@@ -3850,9 +3856,9 @@ active_window_view_by:
         lda     active_window_id
         jsr     window_lookup
         stax    $06
-        ldy     #$05
+        ldy     #MGTK::Winfo::vscroll
         lda     ($06),y
-        and     #$01
+        and     #MGTK::Scroll::option_active
         bne     :+
         jmp     done_client_click
 :       jsr     get_active_window_scroll_info
@@ -3896,9 +3902,9 @@ pgdn:   jsr     scroll_page_down
 horiz:  lda     active_window_id
         jsr     window_lookup
         stax    $06
-        ldy     #$04
+        ldy     #MGTK::Winfo::hscroll
         lda     ($06),y
-        and     #$01
+        and     #MGTK::Scroll::option_active
         bne     :+
         jmp     done_client_click
 :       jsr     get_active_window_scroll_info
@@ -4523,29 +4529,32 @@ done_icon:
         jmp     l5
 
 l7:     jsr     l17
-        sub16   event_xcoord, d5, d1
-        sub16   event_ycoord, d6, d3
-        lda     d2
-        bpl     l8
-        lda     d1
+        sub16   event_xcoord, d5, deltax
+        sub16   event_ycoord, d6, deltay
+
+        lda     deltax+1
+        bpl     :+
+        lda     deltax          ; negate
         eor     #$FF
-        sta     d1
-        inc     d1
-l8:     lda     d4
-        bpl     l9
-        lda     d3
+        sta     deltax
+        inc     deltax
+
+:       lda     deltay+1
+        bpl     :+
+        lda     deltay          ; negate
         eor     #$FF
-        sta     d3
-        inc     d3
-l9:     lda     d1
-        cmp     #$05
-        bcs     l10
-        lda     d3
-        cmp     #$05
-        bcs     l10
+        sta     deltay
+        inc     deltay
+
+:       lda     deltax
+        cmp     #5
+        bcs     :+
+        lda     deltay
+        cmp     #5
+        bcs     :+
         jmp     l4
 
-l10:    jsr     frame_tmp_rect
+:       jsr     frame_tmp_rect
 
         COPY_STRUCT MGTK::Point, event_coords, d5
 
@@ -4576,10 +4585,8 @@ l15:    copy16  event_ycoord, tmp_rect::y2
 l16:    jsr     frame_tmp_rect
         jmp     l4
 
-d1:     .byte   0
-d2:     .byte   0
-d3:     .byte   0
-d4:     .byte   0
+deltax: .word   0
+deltay: .word   0
 d5:     .word   0
 d6:     .word   0
 d7:     .byte   0
@@ -5178,7 +5185,7 @@ size:   .word   0
 
         ;; Check appropriate view menu item
         jsr     get_active_window_view_by
-        and     #$0F            ; mask off menu item number
+        and     #kViewByMenuMask
         tax
         inx
         stx     checkitem_params::menu_item
@@ -5342,7 +5349,6 @@ replace_selection:
         jsr     clear_selection
 
         ;; Set selection to clicked icon
-set_selection:
         ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
         copy    #1, selected_icon_count
         copy    findicon_which_icon, selected_icon_list
