@@ -51,10 +51,6 @@
 * Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons.
 * Run on system with realtime clock; verify that time shows in top-right of menu.
 
-* Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
-  * Hold modifier and double-click folder; verify that parent window closes.
-  * Select folder, hold modifier, select File > Open; verify that parent window closes.
-
 * Open folder with new files. Use File > Get Info; verify dates after 1999 show correctly.
 * Open folder with new files. Use View > By Date; verify dates after 1999 show correctly.
 
@@ -126,19 +122,38 @@
 
 * Launch DeskTop. Special > Disk Copy.... File > Quit. Special > Disk Copy.... Ensure drive list is correct.
 
-* Launch Desktop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
+* Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
-* Launch Desktop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Verify that 8 windows can be opened, and no render glitches occur.
+* Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Verify that 8 windows can be opened, and no render glitches occur.
 
-* Repeat the following cases with these modifiers: Open-Apple, Solid-Apple, Shift (on a IIgs), Shift (on a Platinum IIe):
-  * Launch Desktop. Click on a volume icon. Hold modifier and click a different volume icon. Verify that selection is extended.
-  * Launch Desktop. Select two volume icons. Hold modifier and click on the desktop, not on an icon. Verify that selection is not cleared.
-  * Launch Desktop. Open a volume containing files. Click on a file icon. Hold modifier and click a different file icon. Verify that selection is extended.
-  * Launch Desktop. Open a volume containing files. Select two file icons. Hold modifier and click on the window, not on an icon. Verify that selection is not cleared.
-  * Launch DeskTop. Open a window. Select an icon. Hold modifier key and double-click an empty spot in the window (not on an icon). Verify that the selection is not cleared.
-  * Launch DeskTop. Open a window. Select an icon. Hold modifier key down and drag a selection rectangle around another icon. Verify that both are selected.
+* Repeat the following cases with these modifiers: Open-Apple, Shift (on a IIgs), Shift (on a Platinum IIe):
+  * Launch DeskTop. Click on a volume icon. Hold modifier and click a different volume icon. Verify that selection is extended.
+  * Launch DeskTop. Select two volume icons. Hold modifier and click on the desktop, not on an icon. Verify that selection is not cleared.
   * Launch DeskTop. Select one or more volume icons. Hold modifier and click a volume icon. Verify that it is deselected.
+  * Launch DeskTop. Hold modifier and double-click on a non-selected volume icon. Verify that it highlights then unhighlights, and does not open.
+  * Launch DeskTop. Select a volume icon. Hold modifier and double-click the selected volume icon. Verify that it unhighlights then highlights, and does not open.
+  * Launch DeskTop. Open a volume containing files. Click on a file icon. Hold modifier and click a different file icon. Verify that selection is extended.
+  * Launch DeskTop. Open a volume containing files. Select two file icons. Hold modifier and click on the window, not on an icon. Verify that selection is not cleared.
+  * Launch DeskTop. Open a window. Select an icon. Hold modifier and double-click an empty spot in the window (not on an icon). Verify that the selection is not cleared.
+  * Launch DeskTop. Open a window. Select an icon. Hold modifier down and drag a selection rectangle around another icon. Verify that both are selected.
   * Launch DeskTop. Open a window. Select one or more file icons. Hold modifier and click a file icon. Verify that it is deselected.
+  * Launch DeskTop. Open a window. Hold modifier and double-click on a non-selected file icon. Verify that it highlights then unhighlights, and does not open.
+  * Launch DeskTop. Open a window. Select a file icon. Hold modifier and double-click the selected file icon. Verify that it unhighlights then highlights, and does not open.
+* Launch DeskTop. Click on a volume icon. Hold Solid-Apple and click on a different volume icon. Verify that selection changes to the second icon.
+* Launch DeskTop. Open a volume containing files. Click on a file icon. Hold Solid-Apple and click on a different file icon. Verify that selection changes to the second icon.
+* Run on Laser 128. Launch DeskTop. Open a volume. Click on icons one by one. Verify selection changes from icon to icon, and isn't extended as if a Open-Apple key/button or Shift is down.
+
+* Launch DeskTop. Select two volume icons. Double-click one of the volume icons. Verify that two windows open.
+* Launch DeskTop. Open a window. Select two folder icons. Double-click one of the folder icons. Verify that two windows open.
+* Launch DeskTop. Open a window. Hold Solid-Apple and double-click a folder icon. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Open a window. Hold Solid-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Open a window. Hold Open-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
+
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Double-click it. Verify that nothing happens.
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Hold Solid-Apple and double-click it. Verify that nothing happens.
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Select File > Open. Verify that it executes.
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Open-Apple+O. Verify that it executes.
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Solid-Apple+O. Verify that it executes.
 
 * Launch DeskTop. Special > Disk Copy.... Press Escape key. Verify that menu keyboard mode starts.
 * Launch DeskTop. Special > Disk Copy.... Press Open-Apple Q. Verify that DeskTop launches.
@@ -227,8 +242,6 @@
 
 * Launch DeskTop. Open a volume. File > New Folder..., create A. File > New Folder..., create B. Drag B onto A. File > New folder.... Verify DeskTop doesn't hang.
 
-* Run on Laser 128. Launch DeskTop. Open a volume. Click on icons one by one. Verify selection changes from icon to icon, and isn't extended as if an Apple key/button or Shift is down.
-
 * Configure a device multiple drives connected to a Smartport controller on a higher slot, a single drive connected to a Smartport controller in a lower slot. Launch DeskTop, run the This Apple DA. Verify that the name on the lower slot doesn't have an extra character at the end.
 
 * Launch DeskTop. Open a window with files with dates with long month names (e.g. "February 29, 2020"). View > by Name. Resize the window so the lines are cut off on the right. Move the horizontal scrollbar all the way to the right. Verify that the right edges of all lines are visible.
@@ -310,3 +323,7 @@
 * Launch DeskTop. Open a volume window. Open a folder. Activate the volume window. Switch the window's view to by Name. Activate the folder window. Press Open-Apple+Up. Verify that the volume window is activated. Press Open-Apple+Up again. Verify that the volume icon is selected.
 
 * Launch DeskTop. Open a volume window with many icons. Click on a file icon to select it. Modifier-click the icon to deselect it. Drag-select on the desktop covering a large area. Verify that no file icons are erroneously painted.
+
+PROBLEM:
+* Double-clicking with modifier now never launches, since all modifiers are
+  treated the same (extend selection)

@@ -490,7 +490,7 @@ modifiers:
         jsr     upcase_char
         cmp     #CHAR_DOWN      ; Apple-Down (Open)
         bne     :+
-        jmp     cmd_open_ignore_modifiers
+        jmp     cmd_open_from_keyboard
 :       cmp     #CHAR_UP        ; Apple-Up (Open Parent)
         bne     :+
         jmp     cmd_open_parent
@@ -572,8 +572,6 @@ call_proc:
         bne     not_desktop
 
         ;; Click on desktop
-        jsr     detect_double_click
-        sta     double_click_flag
         copy    #0, findwindow_window_id
         ITK_RELAY_CALL IconTK::FindIcon, event_coords
         lda     findicon_which_icon
@@ -1908,21 +1906,6 @@ L4D9D:  pha
 .endproc
 
 ;;; ============================================================
-;;; Helper for "Open" actions - if Apple key is down, record
-;;; the parent window to close.
-
-.proc set_window_to_close_after_open
-        jsr     ModifierDown
-        bmi     :+              ; Yep
-
-        lda     #0
-        beq     store           ; always
-:       lda     selected_window_id
-store:  sta     window_id_to_close
-        rts
-.endproc
-
-;;; ============================================================
 
 .proc cmd_open
         ptr := $06
@@ -1931,11 +1914,41 @@ store:  sta     window_id_to_close
         selected_icon_list_copy := $1F81
         .assert selected_icon_list_copy + kMaxIconCount <= $2000, error, "overlap"
 
-        ;; Source window to close?
-        jsr     set_window_to_close_after_open
+        ;; --------------------------------------------------
+        ;; Entry point from menu
 
-ep2:                            ; skip maybe closing parent
+        ;; Close after open only if from real menu, and modifier is down.
+        copy    #0, window_id_to_close
+        bit     menu_kbd_flag   ; If keyboard (Apple-O) ignore. (see issue #9)
+        bmi     :+
+        jsr     ModifierDown
+        bpl     :+
+        copy    selected_window_id, window_id_to_close
+:
+        jmp     common
 
+        ;; --------------------------------------------------
+        ;; Entry point from Apple+Down
+
+        ;; Never close after open only.
+from_keyboard:
+        copy    #0, window_id_to_close
+        jmp     common
+
+        ;; --------------------------------------------------
+        ;; Entry point from double-click
+
+        ;; Close after open if modifier is down.
+from_double_click:
+        copy    #0, window_id_to_close
+        jsr     ModifierDown
+        bpl     :+
+        copy    selected_window_id, window_id_to_close
+:
+        ;; fall through
+
+        ;; --------------------------------------------------
+common:
         copy    #0, dir_flag
 
         ;; Make a copy of selection
@@ -1945,7 +1958,6 @@ ep2:                            ; skip maybe closing parent
         sta     selected_icon_list_copy-1,x
         dex
         bne     :-
-
 
         ldx     #0
 loop:   cpx     selected_icon_count_copy
@@ -1957,10 +1969,8 @@ loop:   cpx     selected_icon_count_copy
         lda     dir_flag
         beq     done
 
-        ;; Close previous active window, depending on source/modifiers
-        bit     menu_kbd_flag   ; If keyboard (Apple-O) ignore. (see issue #9)
-        bmi     done            ; Yep, ignore.
-        jsr     close_window_after_open
+        ;; Maybe close the previously active window, depending on source/modifiers
+        jsr     maybe_close_window_after_open
 
 done:   rts
 
@@ -2009,20 +2019,35 @@ maybe_open_file:
         jsr     copy_win_icon_paths
         jmp     launch_file
 
-        ;; Set when we see the first vol/folder icon, so we can
-        ;; clear selection (if it's a folder).
+
+;;; Close parent window after open, if needed. Done by activating then closing.
+;;; Modifies `findwindow_window_id`
+.proc maybe_close_window_after_open
+        lda     window_id_to_close
+        beq     done
+
+        pha
+        sta     findwindow_window_id
+        jsr     handle_inactive_window_click
+        pla
+        jsr     close_window
+
+done:   rts
+.endproc
+
+
+
+;;; Set when we see the first vol/folder icon, so we can
+;;; clear selection (if it's a folder).
 dir_flag:
         .byte   0
 
-last_active_window_id:
+;;; Parent window to close
+window_id_to_close:
         .byte   0
 .endproc
-
-;;; Like cmd_open, but will not close the parent window afterwards.
-.proc cmd_open_ignore_modifiers
-        copy    #0, window_id_to_close
-        jmp     cmd_open::ep2
-.endproc
+cmd_open_from_double_click := cmd_open::from_double_click
+cmd_open_from_keyboard := cmd_open::from_keyboard
 
 ;;; ============================================================
 ;;; Copy selection window and first selected icon paths to
@@ -2065,23 +2090,6 @@ last_active_window_id:
         rts
 .endproc
 
-
-;;; ============================================================
-;;; Close parent window after open, if needed. Done by activating then closing.
-;;; Modifies `findwindow_window_id`
-
-.proc close_window_after_open
-        lda     window_id_to_close
-        beq     done
-
-        pha
-        sta     findwindow_window_id
-        jsr     handle_inactive_window_click
-        pla
-        jsr     close_window
-
-done:   rts
-.endproc
 
 ;;; ============================================================
 
@@ -4027,9 +4035,6 @@ ctl:    .byte   0
         rts
 :
 
-        jsr     detect_double_click
-        sta     double_click_flag
-
         bit     active_window_view_by
         bpl     :+
         jmp     clear_selection
@@ -4040,10 +4045,8 @@ ctl:    .byte   0
         bne     handle_file_icon_click
 
         ;; Not an icon - maybe a drag?
-        lda     double_click_flag
-        beq     :+
         jsr     drag_select
-:       jmp     swap_in_desktop_icon_table
+        jmp     swap_in_desktop_icon_table
 .endproc
 
 ;;; ============================================================
@@ -4054,35 +4057,44 @@ icon_num:  .byte   0
 
 start:  sta     icon_num
         jsr     is_icon_selected
-        bne     maybe_extend
+        bne     not_selected
 
+        ;; --------------------------------------------------
         ;; Icon was already selected
-was_selected:
-        jsr     ModifierOrShiftDown
+        jsr     ExtendSelectionModifierDown
         bpl     :+
+
+        ;; Modifier down - remove from selection
         lda     icon_num
         jsr     deselect_file_icon ; deselect, nothing further
         jmp     swap_in_desktop_icon_table
 
-:       bit     double_click_flag
-        bmi     :+
-        jmp     handle_double_click
-:       jmp     start_icon_drag
+        ;; Double click or drag?
+:       jmp     check_double_click
 
-        ;; Extend selection (if in same window)?
-maybe_extend:
-        jsr     ModifierOrShiftDown
-        bpl     replace
+        ;; --------------------------------------------------
+        ;; Icon not already selected
+not_selected:
+        jsr     ExtendSelectionModifierDown
+        bpl     replace_selection
+
+        ;; Modifier down - add to selection
         lda     selected_window_id
         cmp     active_window_id ; same window?
         beq     :+               ; if so, retain selection
-replace:
         jsr     clear_selection
-:
+:       lda     icon_num
+        jmp     select_file_icon ; select, nothing further
+
+replace_selection:
+        jsr     clear_selection
         lda     icon_num
         jsr     select_file_icon
+        ;; fall through...
 
-        bit     double_click_flag
+        ;; --------------------------------------------------
+check_double_click:
+        jsr     detect_double_click
         bmi     start_icon_drag
         jmp     handle_double_click
 
@@ -4179,74 +4191,11 @@ L5DF7:  ldx     saved_stack
         txs
         rts
 
+        ;; --------------------------------------------------
+
 handle_double_click:
-        ;; Source window to close?
-        jsr     set_window_to_close_after_open
-
-        lda     icon_num           ; after a double-click (on file or folder)
-        jsr     icon_entry_lookup
-        stax    $06
-        ldy     #IconEntry::win_type
-        lda     ($06),y
-        and     #kIconEntryTypeMask
-
-        cmp     #kIconEntryTypeTrash
-        beq     done
-        cmp     #kIconEntryTypeDir
-        bne     file
-
-        ;; Directory
-        lda     selected_window_id
-        beq     :+
-        jsr     clear_selection
-:
-
-        lda     icon_num
-        jsr     open_folder_or_volume_icon
-        bmi     done
         jsr     swap_in_desktop_icon_table
-
-        ;; If Apple key is down, close previous window.
-        jsr     close_window_after_open
-
-done:   rts
-
-        ;; File (executable or data)
-file:   sta     icon_entry_type
-        lda     active_window_id
-        jsr     get_window_path
-        stax    $06
-
-        ldy     #0
-        lda     ($06),y
-        tay
-:       lda     ($06),y
-        sta     buf_win_path,y
-        dey
-        bpl     :-
-
-        lda     icon_num
-        jsr     icon_entry_lookup
-        stax    $06
-
-        ldy     #IconEntry::name
-        lda     ($06),y
-        tax
-        clc
-        adc     #IconEntry::name
-        tay
-:       lda     ($06),y
-        sta     buf_filename2,x
-        dey
-        dex
-        bpl     :-
-
-        lda     icon_entry_type ; WTF - dead code ???
-        cmp     #kIconEntryTypeBinary
-        bcc     :+
-        lda     icon_entry_type
-
-:       jmp     launch_file     ; when double-clicked
+        jmp     cmd_open_from_double_click
 
 .proc update_active_window
         lda     active_window_id
@@ -4447,40 +4396,43 @@ window_id:
 ;;; ============================================================
 ;;; Drag Selection
 
-.proc drag_select_impl
-
-        DEFINE_POINT pt1, 0, 0
-        DEFINE_POINT pt2, 0, 0
-
-start:
+.proc drag_select
         ;; Set up $06 to point at an imaginary `IconEntry`, to map
         ;; `event_coords` from screen to window.
         copy16  #(event_coords - IconEntry::iconx), $06
         ;; Map initial event coordinates
         jsr     coords_screen_to_window
 
+        ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
-l1:     lda     event_coords,x
+:       lda     event_coords,x
         sta     pt1,x
         sta     pt2,x
         dex
-        bpl     l1
+        bpl     :-
 
+        ;; Is this actually a drag?
         jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
-        beq     l3
-        jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
-        bmi     l2               ; selection if mis-clicking
-        jsr     clear_selection
-l2:     rts
+        beq     l3                          ; yes
 
+        ;; No, just a click; optionally clear selection
+        jsr     ExtendSelectionModifierDown ; if using modifier, be nice and don't clear
+        bmi     :+               ; selection if mis-clicking
+        jsr     clear_selection
+:       rts
+
+        ;; --------------------------------------------------
 l3:     lda     selected_window_id ; different window, or desktop?
         cmp     active_window_id   ; if so, definitely clear selection
         bne     clear
-        jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
+        jsr     ExtendSelectionModifierDown ; if using modifier, be nice and don't clear
         bmi     :+
 clear:  jsr     clear_selection
+
+        ;; --------------------------------------------------
+        ;; Set up drawing port, draw initial rect
 :       lda     active_window_id
         jsr     offset_and_set_port_from_window_id
 
@@ -4496,21 +4448,26 @@ clear:  jsr     clear_selection
         jsr     set_penmode_xor
         jsr     frame_tmp_rect
 
+        ;; --------------------------------------------------
+        ;; Event loop
 event_loop:
         jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
-        beq     l7
+        beq     update
+
+        ;; Process all icons on desktop
         jsr     frame_tmp_rect
-        ldx     #$00
-l5:     cpx     cached_window_entry_count
-        bne     l6
+        ldx     #0
+iloop:  cpx     cached_window_entry_count
+        bne     :+
+        ;; Finished!
         jmp     reset_main_grafport
 
-l6:     txa
+        ;; Check if icon should be selected
+:       txa
         pha
-        lda     cached_window_entry_list,x
-        sta     icon_param
+        copy    cached_window_entry_list,x, icon_param
         jsr     icon_screen_to_window
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     done_icon
@@ -4521,7 +4478,7 @@ l6:     txa
         beq     done_icon
 
         ;; Highlight and add to selection
-select: ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
@@ -4533,9 +4490,11 @@ done_icon:
         pla
         tax
         inx
-        jmp     l5
+        jmp     iloop
 
-l7:     jsr     coords_screen_to_window
+        ;; --------------------------------------------------
+        ;; Update rect
+update: jsr     coords_screen_to_window
         sub16   event_xcoord, start_pos+MGTK::Point::xcoord, deltax
         sub16   event_ycoord, start_pos+MGTK::Point::ycoord, deltay
 
@@ -4596,6 +4555,9 @@ l15:    copy16  event_ycoord, tmp_rect::y2
 l16:    jsr     frame_tmp_rect
         jmp     event_loop
 
+        DEFINE_POINT pt1, 0, 0
+        DEFINE_POINT pt2, 0, 0
+
 deltax: .word   0
 deltay: .word   0
 start_pos:
@@ -4607,7 +4569,6 @@ coords_screen_to_window:
         jsr     push_pointers
         jmp     icon_ptr_screen_to_window
 .endproc
-        drag_select := drag_select_impl::start
 
 ;;; ============================================================
 
@@ -5330,31 +5291,35 @@ disable_selector_menu_items := toggle_selector_menu_items::disable
 .proc handle_volume_icon_click
         lda     findicon_which_icon
         jsr     is_icon_selected
-        bne     maybe_extend
+        bne     not_selected
 
+        ;; --------------------------------------------------
         ;; Icon was already selected
-was_selected:
-        jsr     ModifierOrShiftDown
+        jsr     ExtendSelectionModifierDown
         bpl     :+
+
+        ;; Modifier down - remove from selection
         jmp     deselect_vol_icon ; deselect, nothing further
 
-:       bit     double_click_flag
-        bmi     check_double_click
-        jmp     was_double_click
+        ;; Double click or drag?
+:       jmp     check_double_click
 
-maybe_extend:
-        jsr     ModifierOrShiftDown
+        ;; --------------------------------------------------
+        ;; Icon was not already selected
+not_selected:
+        jsr     ExtendSelectionModifierDown
         bpl     replace_selection
 
-        ;; Add clicked icon to selection
-        lda     selected_window_id
-        bne     replace_selection
-        ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
+        ;; Modifier down - add to selection
+        lda     selected_window_id ; on desktop?
+        beq     :+                 ; if so, retain selection
+        jsr     clear_selection
+:       ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
         ldx     selected_icon_count
         lda     findicon_which_icon
         sta     selected_icon_list,x
         inc     selected_icon_count
-        jmp     check_double_click
+        rts                     ; select, nothing further
 
         ;; Replace selection with clicked icon
 replace_selection:
@@ -5365,10 +5330,11 @@ replace_selection:
         copy    #1, selected_icon_count
         copy    findicon_which_icon, selected_icon_list
         copy    #0, selected_window_id
+        ;; fall through...
 
-
+        ;; --------------------------------------------------
 check_double_click:
-        bit     double_click_flag
+        jsr     detect_double_click
         bpl     was_double_click
 
         ;; Drag of volume icon
@@ -5406,12 +5372,7 @@ L6878:  txa
 
         ;; Double-click on volume icon
 was_double_click:
-        lda     findicon_which_icon
-        cmp     trash_icon_num
-        beq     L688E
-        jsr     open_folder_or_volume_icon
-        jsr     StoreWindowEntryTable
-L688E:  rts
+        jmp     cmd_open_from_double_click
 
         ;; ???
 L688F:  ldx     selected_icon_count
@@ -5436,55 +5397,76 @@ deselect_vol_icon:
 
 .proc desktop_drag_select
         jsr     reset_main_grafport
-        jsr     ModifierOrShiftDown ; if using modifier, be nice and don't clear
+        jsr     ExtendSelectionModifierDown ; if using modifier, be nice and don't clear
         bpl     l1               ; selection if mis-clicking
         rts
 
+        ;; TODO: Allow extending selection using modifier.
 l1:     jsr     clear_selection
+
+        ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     event_coords,x
         sta     tmp_rect::topleft,x
         sta     tmp_rect::bottomright,x
         dex
         bpl     :-
+
+        ;; Is this actually a drag?
         jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
-        beq     l2
+        beq     l2              ; yes!
+
+        ;; No, just exit
         rts
 
+        ;; --------------------------------------------------
+        ;; Set up drawing port, draw initial rect
 l2:     MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
         jsr     frame_tmp_rect
 
+        ;; --------------------------------------------------
+        ;; Event loop
 event_loop:
         jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
-        beq     l6
+        beq     update
+
+        ;; Process all icons on desktop
         jsr     frame_tmp_rect
         ldx     #0
-l4:     cpx     cached_window_entry_count
+iloop:  cpx     cached_window_entry_count
         bne     :+
+        ;; Finished!
         lda     #0
         sta     selected_window_id
         rts
 
+        ;; Check if icon should be selected
 :       txa
         pha
         copy    cached_window_entry_list,x, icon_param
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
-        beq     l5
+        beq     done_icon
+
+        ;; Highlight and add to selection
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
-l5:     pla
+
+done_icon:
+        pla
         tax
         inx
-        jmp     l4
+        jmp     iloop
 
-l6:     sub16   event_xcoord, start_pos + MGTK::Point::xcoord, deltax
+        ;; --------------------------------------------------
+        ;; Update rect
+update: sub16   event_xcoord, start_pos + MGTK::Point::xcoord, deltax
         sub16   event_ycoord, start_pos + MGTK::Point::ycoord, deltay
 
         lda     deltax+1
@@ -5546,7 +5528,6 @@ l15:    jsr     frame_tmp_rect
 
 deltax: .word   0
 deltay: .word   0
-
 start_pos:
         .tag MGTK::Point
 d7:     .byte   0
@@ -16679,10 +16660,11 @@ save_windows := save_restore_windows::save
         rts
 .endproc
 
-;;; Test if either modifier (Open-Apple or Solid-Apple) or shift is down,
+;;; Test if either primary modifier (Open-Apple) or shift is down,
 ;;; (if shift key can be detected).
 ;;; Output: A=high bit/N flag set if either is down.
-.proc ModifierOrShiftDown
+
+.proc ExtendSelectionModifierDown
         ;; IIgs? Use KEYMODREG instead
         jsr     test_iigs
         bcc     iigs
@@ -16703,14 +16685,13 @@ save_windows := save_restore_windows::save
         lda     pb2_initial_state ; if shift key mod installed, %1xxxxxxx
         eor     BUTN2             ; ... and if shift is down, %0xxxxxxx
 
-        ;; Either way, check button states
+        ;; Either way, check button state
 :       ora     BUTN0
-        ora     BUTN1
         rts
 
         ;; IIgs - do everything using one I/O location
 iigs:   lda     KEYMODREG
-        and     #%11000001
+        and     #%10000001
         bne     :+
         rts
 

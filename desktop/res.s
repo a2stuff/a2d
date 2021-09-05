@@ -186,10 +186,6 @@ zp_use_flag0:
 goaway:.byte   0
 .endparams
 
-double_click_flag:
-        .byte   0               ; high bit clear if double-clicked, set otherwise
-
-
 ;;; Every event loop tick, a counter is incremented (by 3); when it passes
 ;;; this value, periodic tasks are run (e.g. drawing the clock, checking
 ;;; for new devices, etc).
@@ -1331,10 +1327,6 @@ datetime_for_conversion := list_view_filerecord + FileRecord::modification_date
 
 hex_digits:
         .byte   "0123456789ABCDEF"
-
-;;; Parent window to close after an Open action
-window_id_to_close:
-        .byte   0
 
 ;;; High bit set if menu dispatch via keyboard accelerator, clear otherwise.
 menu_kbd_flag:

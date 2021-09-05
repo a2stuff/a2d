@@ -1103,7 +1103,6 @@ iloop:  cpx     cached_window_entry_count
 
         ;; Clear various flags
         lda     #0
-        sta     double_click_flag
         sta     file_menu_items_enabled_flag
 
         ;; Restore state from previous session
