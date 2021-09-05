@@ -1,6 +1,6 @@
 # Apple II DeskTop
 
-[![build](https://github.com/a2stuff/a2d/actions/workflows/main.yml/badge.svg)](https://github.com/a2stuff/a2d/actions/workflows/main.yml)
+[![build](https://github.com/a2stuff/a2d/actions/workflows/main.yml/badge.svg)](https://github.com/a2stuff/a2d/actions/workflows/main.yml) [![stats](https://img.shields.io/github/downloads/a2stuff/a2d/total)](https://tooomm.github.io/github-release-stats/?username=a2stuff&repository=a2d)
 
 
 Disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk), a "Finder"-like GUI application for 8-bit Apples and clones with 128k of memory, utilizing double hi-res monochrome graphics (560x192), an optional mouse, and the ProDOS 8 operating system.
@@ -10,6 +10,7 @@ Disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk), a "Finder"
 📖 Read the [Documentation](https://a2desktop.com/docs)
 
 📝 Check the [Release Notes](https://github.com/a2stuff/a2d/blob/main/RELEASE-NOTES.md)
+
 
 ## Background
 
