@@ -4490,7 +4490,9 @@ clear:  jsr     clear_selection
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
         jsr     frame_tmp_rect
-l4:     jsr     peek_event
+
+event_loop:
+        jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
         beq     l7
@@ -4529,8 +4531,8 @@ done_icon:
         jmp     l5
 
 l7:     jsr     l17
-        sub16   event_xcoord, d5, deltax
-        sub16   event_ycoord, d6, deltay
+        sub16   event_xcoord, start_pos+MGTK::Point::xcoord, deltax
+        sub16   event_ycoord, start_pos+MGTK::Point::ycoord, deltay
 
         lda     deltax+1
         bpl     :+
@@ -4546,18 +4548,22 @@ l7:     jsr     l17
         sta     deltay
         inc     deltay
 
+        ;; TODO: Experiment with making this lower.
+        kDragBoundThreshold = 5
+
 :       lda     deltax
-        cmp     #5
+        cmp     #kDragBoundThreshold
         bcs     :+
         lda     deltay
-        cmp     #5
+        cmp     #kDragBoundThreshold
         bcs     :+
-        jmp     l4
+        jmp     event_loop
 
 :       jsr     frame_tmp_rect
 
-        COPY_STRUCT MGTK::Point, event_coords, d5
+        COPY_STRUCT MGTK::Point, event_coords, start_pos
 
+        ;; Figure out coords for rect's left/top/bottom/right
         cmp16   event_xcoord, tmp_rect::x2
         bpl     l12
         cmp16   event_xcoord, tmp_rect::x1
@@ -4583,12 +4589,12 @@ l14:    copy16  event_ycoord, tmp_rect::y1
 l15:    copy16  event_ycoord, tmp_rect::y2
         copy    #0, d8
 l16:    jsr     frame_tmp_rect
-        jmp     l4
+        jmp     event_loop
 
 deltax: .word   0
 deltay: .word   0
-d5:     .word   0
-d6:     .word   0
+start_pos:
+        .tag    MGTK::Point
 d7:     .byte   0
 d8:     .byte   0
 
@@ -5444,7 +5450,9 @@ l1:     jsr     clear_selection
 l2:     MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
         jsr     frame_tmp_rect
-l3:     jsr     peek_event
+
+event_loop:
+        jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
         beq     l6
@@ -5470,32 +5478,39 @@ l5:     pla
         inx
         jmp     l4
 
-l6:     sub16   event_xcoord, d5, d1
-        sub16   event_ycoord, d6, d3
-        lda     d2
+l6:     sub16   event_xcoord, start_pos + MGTK::Point::xcoord, deltax
+        sub16   event_ycoord, start_pos + MGTK::Point::ycoord, deltay
+
+        lda     deltax+1
         bpl     l7
-        lda     d1
+        lda     deltax          ; negate
         eor     #$FF
-        sta     d1
-        inc     d1
-l7:     lda     d4
+        sta     deltax
+        inc     deltax
+
+l7:     lda     deltay+1
         bpl     l8
-        lda     d3
+        lda     deltay          ; negate
         eor     #$FF
-        sta     d3
-        inc     d3
-l8:     lda     d1
-        cmp     #$05
+        sta     deltay
+        inc     deltay
+
+        ;; TODO: Experiment with making this lower.
+        kDragBoundThreshold = 5
+
+l8:     lda     deltax
+        cmp     #kDragBoundThreshold
         bcs     l9
-        lda     d3
-        cmp     #$05
+        lda     deltay
+        cmp     #kDragBoundThreshold
         bcs     l9
-        jmp     l3
+        jmp     event_loop
 
 l9:     jsr     frame_tmp_rect
 
-        COPY_STRUCT MGTK::Point, event_coords, d5
+        COPY_STRUCT MGTK::Point, event_coords, start_pos
 
+        ;; Figure out coords for rect's left/top/bottom/right
         cmp16   event_xcoord, tmp_rect::x2
         bpl     l11
         cmp16   event_xcoord, tmp_rect::x1
@@ -5521,14 +5536,13 @@ l13:    copy16  event_ycoord, tmp_rect::y1
 l14:    copy16  event_ycoord, tmp_rect::y2
         copy    #0, d8
 l15:    jsr     frame_tmp_rect
-        jmp     l3
+        jmp     event_loop
 
-d1:     .byte   0
-d2:     .byte   0
-d3:     .byte   0
-d4:     .byte   0
-d5:     .word   0
-d6:     .word   0
+deltax: .word   0
+deltay: .word   0
+
+start_pos:
+        .tag MGTK::Point
 d7:     .byte   0
 d8:     .byte   0
 .endproc
