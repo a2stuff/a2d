@@ -4452,8 +4452,12 @@ window_id:
         DEFINE_POINT pt1, 0, 0
         DEFINE_POINT pt2, 0, 0
 
-start:  copy16  #notpenXOR, $06
-        jsr     l17
+start:
+        ;; Set up $06 to point at an imaginary `IconEntry`, to map
+        ;; `event_coords` from screen to window.
+        copy16  #(event_coords - IconEntry::iconx), $06
+        ;; Map initial event coordinates
+        jsr     coords_screen_to_window
 
         ldx     #.sizeof(MGTK::Point)-1
 l1:     lda     event_coords,x
@@ -4531,7 +4535,7 @@ done_icon:
         inx
         jmp     l5
 
-l7:     jsr     l17
+l7:     jsr     coords_screen_to_window
         sub16   event_xcoord, start_pos+MGTK::Point::xcoord, deltax
         sub16   event_ycoord, start_pos+MGTK::Point::ycoord, deltay
 
@@ -4599,7 +4603,8 @@ start_pos:
 d7:     .byte   0
 d8:     .byte   0
 
-l17:    jsr     push_pointers
+coords_screen_to_window:
+        jsr     push_pointers
         jmp     icon_ptr_screen_to_window
 .endproc
         drag_select := drag_select_impl::start
@@ -9407,7 +9412,7 @@ pos_win:        .word   0, 0
 
 ;;; Convert icon's coordinates from screen to window
 ;;; (icon entry pointer in $6, active window)
-
+;;; NOTE: does `pop_pointers` before exiting
 .proc icon_ptr_screen_to_window
         entry_ptr := $6
         winfo_ptr := $8
