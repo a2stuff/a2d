@@ -4061,7 +4061,8 @@ was_selected:
         jsr     ModifierOrShiftDown
         bpl     :+
         lda     icon_num
-        jmp     deselect_file_icon ; deselect, nothing further
+        jsr     deselect_file_icon ; deselect, nothing further
+        jmp     swap_in_desktop_icon_table
 
 :       bit     double_click_flag
         bmi     :+
