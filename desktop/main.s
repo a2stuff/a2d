@@ -4084,7 +4084,8 @@ not_selected:
         beq     :+               ; if so, retain selection
         jsr     clear_selection
 :       lda     icon_num
-        jmp     select_file_icon ; select, nothing further
+        jsr     select_file_icon ; select, nothing further
+        jmp     swap_in_desktop_icon_table
 
 replace_selection:
         jsr     clear_selection
@@ -4394,7 +4395,7 @@ window_id:
 .endproc
 
 ;;; ============================================================
-;;; Drag Selection
+;;; Drag Selection - initiated in a window
 
 .proc drag_select
         ;; Set up $06 to point at an imaginary `IconEntry`, to map
@@ -4406,8 +4407,8 @@ window_id:
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     event_coords,x
-        sta     pt1,x
-        sta     pt2,x
+        sta     tmp_rect::topleft,x
+        sta     tmp_rect::bottomright,x
         dex
         bpl     :-
 
@@ -4418,16 +4419,17 @@ window_id:
         beq     l3                          ; yes
 
         ;; No, just a click; optionally clear selection
-        jsr     ExtendSelectionModifierDown ; if using modifier, be nice and don't clear
-        bmi     :+               ; selection if mis-clicking
+        jsr     ExtendSelectionModifierDown
+        bmi     :+              ; don't clear if mis-clicking
         jsr     clear_selection
 :       rts
 
         ;; --------------------------------------------------
+        ;; Prep selection
 l3:     lda     selected_window_id ; different window, or desktop?
         cmp     active_window_id   ; if so, definitely clear selection
         bne     clear
-        jsr     ExtendSelectionModifierDown ; if using modifier, be nice and don't clear
+        jsr     ExtendSelectionModifierDown
         bmi     :+
 clear:  jsr     clear_selection
 
@@ -4435,14 +4437,6 @@ clear:  jsr     clear_selection
         ;; Set up drawing port, draw initial rect
 :       lda     active_window_id
         jsr     offset_and_set_port_from_window_id
-
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     pt1,x
-        sta     tmp_rect::topleft,x
-        lda     pt2,x
-        sta     tmp_rect::bottomright,x
-        dex
-        bpl     :-
 
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
@@ -4493,10 +4487,10 @@ done_icon:
         jmp     iloop
 
         ;; --------------------------------------------------
-        ;; Update rect
+        ;; Check movement threshold
 update: jsr     coords_screen_to_window
-        sub16   event_xcoord, start_pos+MGTK::Point::xcoord, deltax
-        sub16   event_ycoord, start_pos+MGTK::Point::ycoord, deltay
+        sub16   event_xcoord, last_pos+MGTK::Point::xcoord, deltax
+        sub16   event_ycoord, last_pos+MGTK::Point::ycoord, deltay
 
         lda     deltax+1
         bpl     :+
@@ -4523,51 +4517,51 @@ update: jsr     coords_screen_to_window
         bcs     :+
         jmp     event_loop
 
+        ;; Beyond threshold; erase rect
 :       jsr     frame_tmp_rect
 
-        COPY_STRUCT MGTK::Point, event_coords, start_pos
+        COPY_STRUCT MGTK::Point, event_coords, last_pos
 
+        ;; --------------------------------------------------
         ;; Figure out coords for rect's left/top/bottom/right
         cmp16   event_xcoord, tmp_rect::x2
         bpl     l12
         cmp16   event_xcoord, tmp_rect::x1
         bmi     l11
-        bit     d7
+        bit     x_flag
         bpl     l12
 l11:    copy16  event_xcoord, tmp_rect::x1
-        copy    #$80, d7
-        jmp     l13
-
+        copy    #$80, x_flag
+        jmp     do_y
 l12:    copy16  event_xcoord, tmp_rect::x2
-        copy    #0, d7
-l13:    cmp16   event_ycoord, tmp_rect::y2
+        copy    #0, x_flag
+
+do_y:   cmp16   event_ycoord, tmp_rect::y2
         bpl     l15
         cmp16   event_ycoord, tmp_rect::y1
         bmi     l14
-        bit     d8
+        bit     y_flag
         bpl     l15
 l14:    copy16  event_ycoord, tmp_rect::y1
-        copy    #$80, d8
-        jmp     l16
-
+        copy    #$80, y_flag
+        jmp     draw
 l15:    copy16  event_ycoord, tmp_rect::y2
-        copy    #0, d8
-l16:    jsr     frame_tmp_rect
-        jmp     event_loop
+        copy    #0, y_flag
 
-        DEFINE_POINT pt1, 0, 0
-        DEFINE_POINT pt2, 0, 0
+draw:   jsr     frame_tmp_rect
+        jmp     event_loop
 
 deltax: .word   0
 deltay: .word   0
-start_pos:
+last_pos:
         .tag    MGTK::Point
-d7:     .byte   0
-d8:     .byte   0
+x_flag: .byte   0
+y_flag: .byte   0
 
-coords_screen_to_window:
+.proc coords_screen_to_window
         jsr     push_pointers
         jmp     icon_ptr_screen_to_window
+.endproc
 .endproc
 
 ;;; ============================================================
@@ -5394,16 +5388,9 @@ deselect_vol_icon:
 .endproc
 
 ;;; ============================================================
+;;; Drag Selection - initiated on the desktop itself
 
 .proc desktop_drag_select
-        jsr     reset_main_grafport
-        jsr     ExtendSelectionModifierDown ; if using modifier, be nice and don't clear
-        bpl     l1               ; selection if mis-clicking
-        rts
-
-        ;; TODO: Allow extending selection using modifier.
-l1:     jsr     clear_selection
-
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     event_coords,x
@@ -5418,12 +5405,25 @@ l1:     jsr     clear_selection
         cmp     #MGTK::EventKind::drag
         beq     l2              ; yes!
 
-        ;; No, just exit
-        rts
+        ;; No, just a click; optionally clear selection
+        jsr     ExtendSelectionModifierDown
+        bmi     :+               ; don't clear if mis-clicking
+        jsr     clear_selection
+:       rts
+
+        ;; --------------------------------------------------
+        ;; Prep selection
+l2:     lda     selected_window_id ; window?
+        bne     clear              ; if so, definitely clear selection
+        jsr     ExtendSelectionModifierDown
+        bmi     :+
+clear:  jsr     clear_selection
 
         ;; --------------------------------------------------
         ;; Set up drawing port, draw initial rect
-l2:     MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
+:       jsr     reset_main_grafport
+
+        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
         jsr     frame_tmp_rect
 
@@ -5441,8 +5441,7 @@ event_loop:
 iloop:  cpx     cached_window_entry_count
         bne     :+
         ;; Finished!
-        lda     #0
-        sta     selected_window_id
+        copy    #0, selected_window_id
         rts
 
         ;; Check if icon should be selected
@@ -5450,6 +5449,11 @@ iloop:  cpx     cached_window_entry_count
         pha
         copy    cached_window_entry_list,x, icon_param
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
+        beq     done_icon
+
+        ;; Already selected?
+        lda     icon_param
+        jsr     is_icon_selected
         beq     done_icon
 
         ;; Highlight and add to selection
@@ -5465,19 +5469,19 @@ done_icon:
         jmp     iloop
 
         ;; --------------------------------------------------
-        ;; Update rect
-update: sub16   event_xcoord, start_pos + MGTK::Point::xcoord, deltax
-        sub16   event_ycoord, start_pos + MGTK::Point::ycoord, deltay
+        ;; Check movement threshold
+update: sub16   event_xcoord, last_pos + MGTK::Point::xcoord, deltax
+        sub16   event_ycoord, last_pos + MGTK::Point::ycoord, deltay
 
         lda     deltax+1
-        bpl     l7
+        bpl     :+
         lda     deltax          ; negate
         eor     #$FF
         sta     deltax
         inc     deltax
 
-l7:     lda     deltay+1
-        bpl     l8
+:       lda     deltay+1
+        bpl     :+
         lda     deltay          ; negate
         eor     #$FF
         sta     deltay
@@ -5486,52 +5490,54 @@ l7:     lda     deltay+1
         ;; TODO: Experiment with making this lower.
         kDragBoundThreshold = 5
 
-l8:     lda     deltax
+:       lda     deltax
         cmp     #kDragBoundThreshold
-        bcs     l9
+        bcs     :+
         lda     deltay
         cmp     #kDragBoundThreshold
-        bcs     l9
+        bcs     :+
         jmp     event_loop
 
-l9:     jsr     frame_tmp_rect
+        ;; Beyond threshold; erase rect
+:       jsr     frame_tmp_rect
 
-        COPY_STRUCT MGTK::Point, event_coords, start_pos
+        COPY_STRUCT MGTK::Point, event_coords, last_pos
 
+        ;; --------------------------------------------------
         ;; Figure out coords for rect's left/top/bottom/right
         cmp16   event_xcoord, tmp_rect::x2
         bpl     l11
         cmp16   event_xcoord, tmp_rect::x1
         bmi     l10
-        bit     d7
+        bit     x_flag
         bpl     l11
 l10:    copy16  event_xcoord, tmp_rect::x1
-        copy    #$80, d7
-        jmp     l12
-
+        copy    #$80, x_flag
+        jmp     do_y
 l11:    copy16  event_xcoord, tmp_rect::x2
-        copy    #0, d7
-l12:    cmp16   event_ycoord, tmp_rect::y2
+        copy    #0, x_flag
+
+do_y:   cmp16   event_ycoord, tmp_rect::y2
         bpl     l14
         cmp16   event_ycoord, tmp_rect::y1
         bmi     l13
-        bit     d8
+        bit     y_flag
         bpl     l14
 l13:    copy16  event_ycoord, tmp_rect::y1
-        copy    #$80, d8
-        jmp     l15
-
+        copy    #$80, y_flag
+        jmp     draw
 l14:    copy16  event_ycoord, tmp_rect::y2
-        copy    #0, d8
-l15:    jsr     frame_tmp_rect
+        copy    #0, y_flag
+
+draw:   jsr     frame_tmp_rect
         jmp     event_loop
 
 deltax: .word   0
 deltay: .word   0
-start_pos:
+last_pos:
         .tag MGTK::Point
-d7:     .byte   0
-d8:     .byte   0
+x_flag: .byte   0
+y_flag: .byte   0
 .endproc
 
 ;;; ============================================================
