@@ -2956,17 +2956,19 @@ drive_to_refresh:
 .proc cmd_format_disk
         lda     #kDynamicRoutineFormatErase
         jsr     load_dynamic_routine
-        bmi     fail
-
-        lda     #$04
+        bpl     :+
+        rts
+:
+        lda     #4
         jsr     format_erase_overlay_exec
-        bne     :+
-        stx     drive_to_refresh ; unit number
-        jsr     clear_updates_and_redraw_desktop_icons ; TODO: Avoid doing this twice?
-        jsr     cmd_check_single_drive_by_unit_number
-:       jmp     clear_updates_and_redraw_desktop_icons ; TODO: Avoid doing this twice?
-
-fail:   rts
+        stx     drive_to_refresh ; X = unit number
+        pha                     ; A = result
+        jsr     clear_updates_and_redraw_desktop_icons ; following dialog close
+        pla                     ; A = result
+        beq     :+
+        rts
+:
+        jmp     cmd_check_single_drive_by_unit_number
 .endproc
 
 ;;; ============================================================
@@ -2974,16 +2976,19 @@ fail:   rts
 .proc cmd_erase_disk
         lda     #kDynamicRoutineFormatErase
         jsr     load_dynamic_routine
-        bmi     done
-
-        lda     #$05
+        bpl     :+
+        rts
+:
+        lda     #5
         jsr     format_erase_overlay_exec
-        bne     done
-
-        stx     drive_to_refresh ; unit number
-        jsr     clear_updates_and_redraw_desktop_icons ; TODO: Avoid doing this twice?
-        jsr     cmd_check_single_drive_by_unit_number
-done:   jmp     clear_updates_and_redraw_desktop_icons ; TODO: Avoid doing this twice?
+        stx     drive_to_refresh ; X = unit number
+        pha                     ; A = result
+        jsr     clear_updates_and_redraw_desktop_icons ; following dialog close
+        pla                     ; A = result
+        beq     :+
+        rts
+:
+        jmp     cmd_check_single_drive_by_unit_number
 .endproc
 
 ;;; ============================================================
@@ -3740,7 +3745,7 @@ close_loop:
 
 not_in_map:
 
-        jsr     clear_updates_and_redraw_desktop_icons ; TODO: Verify this is necessary.
+        jsr     clear_updates_and_redraw_desktop_icons ; following window closes
         jsr     clear_selection
         jsr     LoadDesktopEntryTable
 
@@ -4120,7 +4125,7 @@ process_drop:
         ;; NOTE: Since this opens/closes a progress dialog, every path needs to call
         ;; `clear_updates_and_redraw_desktop_icons`
 
-        ;; Failed?
+        ;; (1/4) Failed?
         cmp     #$FF
         bne     :+
         jsr     swap_in_desktop_icon_table ; TODO: Why is this only needed on this path?
@@ -4133,7 +4138,7 @@ process_drop:
         jsr     update_active_window
         ;; fall through
 
-        ;; Dropped on trash?
+        ;; (2/4) Dropped on trash?
 :       lda     drag_drop_params::result
         cmp     trash_icon_num
         bne     :+
@@ -4141,19 +4146,18 @@ process_drop:
         jsr     update_active_window
         jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
 
-        ;; Dropped on icon?
+        ;; (3/4) Dropped on icon?
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Yes, on an icon; update used/free for same-vol windows
         jsr     update_vol_free_used_for_icon
         jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
 
-        ;; Dropped on window!
+        ;; (4/4) Dropped on window!
 :       and     #$7F            ; mask off window number
         pha
         jsr     update_used_free_for_vol_windows
         pla
-
         jsr     select_and_refresh_window_or_close
         jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
 
@@ -5361,38 +5365,39 @@ check_double_click:
         ;; NOTE: Since this opens/closes a progress dialog, every path needs to call
         ;; `clear_updates_and_redraw_desktop_icons`
 
-        ;; Failed?
+        ;; (1/4) Failed?
         cmp     #$FF
         bne     :+
         jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
 
-        ;; Dropped on trash? (eject)
+        ;; (2/4) Dropped on trash? (eject)
 :       lda     drag_drop_params::result
         cmp     trash_icon_num
         bne     :+
-        jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
+        jmp     clear_updates_and_redraw_desktop_icons ; TODO: Unnecessary, as no dialog is shown?
 
-        ;; Dropped on icon?
+        ;; (3/4) Dropped on icon?
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Yes, on an icon; update used/free for same-vol windows
         jsr     update_vol_free_used_for_icon
         jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
 
-        ;; Dropped on window!
+        ;; (4/4) Dropped on window!
 :       and     #$7F            ; mask off window number
         pha
         jsr     update_used_free_for_vol_windows
         pla
-        jmp     select_and_refresh_window_or_close
+        jsr     select_and_refresh_window_or_close
+        jmp     clear_updates_and_redraw_desktop_icons ;  following progress dialog close
 
         ;; --------------------------------------------------
 
 same_or_desktop:
         txa
-        cmp     #2              ; ???
+        cmp     #2              ; TODO: What is this case???
         bne     :+
-        jmp     clear_updates_and_redraw_desktop_icons ;  following progress dialog close
+        jmp     clear_updates_and_redraw_desktop_icons ; TODO: Unknown if needed???
 
         ;; Icons moved on desktop - update and redraw
 :       ldx     selected_icon_count
