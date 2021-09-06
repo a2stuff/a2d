@@ -4051,11 +4051,8 @@ ctl:    .byte   0
 
 ;;; ============================================================
 
-
-.proc handle_file_icon_click_impl
-icon_num:  .byte   0
-
-start:  sta     icon_num
+.proc handle_file_icon_click
+        sta     icon_num
         jsr     is_icon_selected
         bne     not_selected
 
@@ -4096,12 +4093,11 @@ replace_selection:
         ;; --------------------------------------------------
 check_double_click:
         jsr     detect_double_click
-        bmi     start_icon_drag
+        bmi     :+
         jmp     handle_double_click
-
+:
         ;; --------------------------------------------------
-
-start_icon_drag:
+        ;; Drag of file icon
         copy    icon_num, drag_drop_params::icon
         ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_params
         tax
@@ -4135,7 +4131,7 @@ process_drop:
         ;; Dropped on icon?
 :       lda     drag_drop_params::result
         bmi     :+
-        ;; Update used/free for same-vol windows
+        ;; Yes, on an icon; update used/free for same-vol windows
         jsr     update_vol_free_used_for_icon
         jmp     clear_updates_and_redraw_desktop_icons
 
@@ -4151,13 +4147,14 @@ process_drop:
         ;; --------------------------------------------------
 
 desktop:
-        cpx     #$02
+        cpx     #2              ; ???
         bne     :+
         jmp     swap_in_desktop_icon_table
 
 :       cpx     #$FF
-        beq     L5DF7
+        beq     failure
 
+        ;; Redraw icons
         lda     active_window_id
         jsr     set_port_from_window_id
 
@@ -4182,13 +4179,15 @@ desktop:
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
         jsr     reset_main_grafport
+        ;; fall through
 
 ;;; Used as additional entry point
 swap_in_desktop_icon_table:
         jsr     StoreWindowEntryTable
         jmp     LoadDesktopEntryTable
 
-L5DF7:  ldx     saved_stack
+failure:
+        ldx     saved_stack
         txs
         rts
 
@@ -4205,13 +4204,16 @@ handle_double_click:
         jmp     select_and_refresh_window
 .endproc
 
+icon_num:
+        .byte   0
+
 icon_entry_type:
         .byte   0
 
 .endproc
-        handle_file_icon_click := handle_file_icon_click_impl::start
-        swap_in_desktop_icon_table := handle_file_icon_click_impl::swap_in_desktop_icon_table
-        process_drop := handle_file_icon_click_impl::process_drop
+        swap_in_desktop_icon_table := handle_file_icon_click::swap_in_desktop_icon_table
+        ;; Used for delete shortcut; set `drag_drop_params::icon` first
+        process_drop := handle_file_icon_click::process_drop
 
 ;;; ============================================================
 ;;; Add specified icon (in active window!) to selection list,
@@ -5329,56 +5331,65 @@ replace_selection:
         ;; --------------------------------------------------
 check_double_click:
         jsr     detect_double_click
-        bpl     was_double_click
+        bmi     :+
+        jmp     cmd_open_from_double_click
+:
 
+        ;; --------------------------------------------------
         ;; Drag of volume icon
         copy    findicon_which_icon, drag_drop_params::icon
         ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_params
         tax
         lda     drag_drop_params::result
-        beq     L6878
+        beq     desktop
+
         jsr     jt_drop
+
+        ;; Failed?
         cmp     #$FF
         bne     :+
         jmp     clear_updates_and_redraw_desktop_icons
 
+        ;; Dropped on trash? (eject)
 :       lda     drag_drop_params::result
         cmp     trash_icon_num
         bne     :+
         jmp     clear_updates_and_redraw_desktop_icons
 
+        ;; Dropped on icon?
 :       lda     drag_drop_params::result
-        bpl     :+
-        and     #$7F
+        bmi     :+
+        ;; Yes, on an icon; update used/free for same-vol windows
+        jsr     update_vol_free_used_for_icon
+        jmp     clear_updates_and_redraw_desktop_icons
+
+        ;; Dropped on window!
+:       and     #$7F            ; mask off window number
         pha
         jsr     update_used_free_for_vol_windows
         pla
-
         jmp     select_and_refresh_window_or_close
 
-:       jsr     update_vol_free_used_for_icon
+        ;; --------------------------------------------------
+
+desktop:
+        txa
+        cmp     #2              ; ???
+        bne     :+
         jmp     clear_updates_and_redraw_desktop_icons
 
-L6878:  txa
-        cmp     #2
-        bne     L688F
-        jmp     clear_updates_and_redraw_desktop_icons
-
-        ;; Double-click on volume icon
-was_double_click:
-        jmp     cmd_open_from_double_click
-
-        ;; ???
-L688F:  ldx     selected_icon_count
+        ;; Redraw icons
+:       ldx     selected_icon_count
         dex
-L6893:  txa
+:       txa
         pha
         copy    selected_icon_list,x, icon_param3
         ITK_RELAY_CALL IconTK::RedrawIcon, icon_param3
         pla
         tax
         dex
-        bpl     L6893
+        bpl     :-
+
         rts
 
 deselect_vol_icon:
