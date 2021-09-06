@@ -4450,7 +4450,7 @@ event_loop:
         cmp     #MGTK::EventKind::drag
         beq     update
 
-        ;; Process all icons on desktop
+        ;; Process all icons in window
         jsr     frame_tmp_rect
         ldx     #0
 iloop:  cpx     cached_window_entry_count
