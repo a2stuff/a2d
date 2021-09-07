@@ -97,10 +97,7 @@ click:  jsr     handle_click
         ;; Is it an update event?
 :       cmp     #MGTK::EventKind::update
         bne     :+
-        jsr     reset_main_grafport
-        copy    active_window_id, saved_active_window_id
-        copy    #$80, redraw_icons_flag
-        jsr     handle_update
+        jsr     clear_updates_no_peek
 
 :       jmp     main_loop
 
@@ -115,6 +112,71 @@ click:  jsr     handle_click
         rts
 .endproc
 
+.endproc
+
+;;; ============================================================
+;;; Clear Updates
+;;; MGTK sends a update event when a window needs to be redrawn
+;;; because it was revealed by another operation (e.g. close).
+;;; This is called implicitly during the main loop if an update
+;;; event is seen, and also explicitly following operations
+;;; (e.g. a window close followed by a nested loop or slow
+;;; file operation).
+;;;
+;;; This is made more complicated by the presence of desktop
+;;; (volume) icons, which MGTK is unaware of. Implicit updates
+;;; trigger a desktop icon repaint, but these are insufficient
+;;; for cases where MGTK doesn't think there's anything to
+;;; update. Therefore, most DeskTop sites will call explicitly
+;;; to both clear updates and redraw icons using the
+;;; `clear_updates_and_redraw_desktop_icons` entry point.
+
+.proc clear_updates_impl
+
+;;; Caller already called GetEvent, no need to PeekEvent;
+;;; just jump directly into the clearing loop.
+clear_no_peek:
+        jsr     reset_main_grafport
+        copy    active_window_id, saved_active_window_id
+        copy    #$80, redraw_icons_flag
+        jmp     handle_update   ; skip PeekEvent
+
+;;; Clear any pending updates, and redraw desktop icons.
+clear_and_redraw_desktop_icons:
+        jsr     reset_main_grafport
+        copy    active_window_id, saved_active_window_id
+        copy    #$80, redraw_icons_flag
+        jmp     redraw_loop
+
+;;; Clear any pending updates, but don't redraw desktop icons.
+clear:
+        jsr     reset_main_grafport
+        copy    active_window_id, saved_active_window_id
+        copy    #0, redraw_icons_flag
+        ;; fall through
+
+        ;; --------------------------------------------------
+redraw_loop:
+        jsr     peek_event
+        lda     event_kind
+        cmp     #MGTK::EventKind::update
+        bne     finish
+        jsr     get_event
+
+handle_update:
+        MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
+        bne     :+            ; did not really need updating
+        jsr     update_window
+        MGTK_RELAY_CALL MGTK::EndUpdate
+:       jmp     redraw_loop
+
+finish: jsr     LoadDesktopEntryTable
+        lda     saved_active_window_id
+        bit     redraw_icons_flag
+        bpl     :+
+        ITK_RELAY_CALL IconTK::RedrawIcons
+:       rts
+
 saved_active_window_id:
         .byte   0
 
@@ -124,49 +186,14 @@ saved_active_window_id:
 ;;; window closing, so we either need explicit calls when a window
 ;;; closes, or to come up with another heuristic. (e.g. if
 ;;; FrontWindow changes to null?)
+
 redraw_icons_flag:
         .byte   0
 
-;;; --------------------------------------------------
-
-clear_updates:
-        jsr     reset_main_grafport
-        copy    active_window_id, saved_active_window_id
-        copy    #0, redraw_icons_flag
-
-redraw_loop:
-        jsr     peek_event
-        lda     event_kind
-        cmp     #MGTK::EventKind::update
-        bne     finish
-        jsr     get_event
-
-handle_update:
-        jsr     update
-        jmp     redraw_loop
-
-update: MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
-        bne     done_redraw     ; did not really need updating
-        jsr     update_window
-        MGTK_RELAY_CALL MGTK::EndUpdate
-        rts
-
-finish: jsr     LoadDesktopEntryTable
-        lda     saved_active_window_id
-        sta     active_window_id
-        beq     :+
-        bit     running_da_flag
-        bmi     :+
-        jsr     redraw_selected_icons
-:       bit     redraw_icons_flag
-        bpl     done_redraw
-        ITK_RELAY_CALL IconTK::RedrawIcons
-
-done_redraw:
-        rts
-
 .endproc
-        clear_updates := main_loop::clear_updates
+clear_updates_no_peek := clear_updates_impl::clear_no_peek
+clear_updates := clear_updates_impl::clear
+clear_updates_and_redraw_desktop_icons := clear_updates_impl::clear_and_redraw_desktop_icons
 
 ;;; ============================================================
 ;;; Called by main and nested event loops to do periodic tasks.
@@ -716,14 +743,6 @@ done:   rts
 
 .proc get_port2
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc clear_updates_and_redraw_desktop_icons
-        jsr     clear_updates
-        ITK_RELAY_CALL IconTK::RedrawIcons
         rts
 .endproc
 
