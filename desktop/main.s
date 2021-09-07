@@ -118,6 +118,12 @@ click:  jsr     handle_click
 saved_active_window_id:
         .byte   0
 
+;;; In theory, the `redraw_icons` flag could be set whenever an
+;;; update event is seen, signalling the need to redraw a window
+;;; following a close. This is insufficient to handle the last
+;;; window closing, so we either need explicit calls when a window
+;;; closes, or to come up with another heuristic. (e.g. if
+;;; FrontWindow changes to null?)
 redraw_icons_flag:
         .byte   0
 
@@ -716,10 +722,8 @@ done:   rts
 ;;; ============================================================
 
 .proc clear_updates_and_redraw_desktop_icons
-        jsr     push_pointers
         jsr     clear_updates
         ITK_RELAY_CALL IconTK::RedrawIcons
-        jsr     pop_pointers
         rts
 .endproc
 
@@ -1743,7 +1747,9 @@ running_da_flag:
         lda     #kDynamicRoutineRestore5000
         jsr     restore_dynamic_routine
         jsr     set_cursor_pointer
+        jsr     push_pointers   ; $06 = src / $08 = dst
         jsr     clear_updates_and_redraw_desktop_icons ; following picker dialog close
+        jsr     pop_pointers    ; $06 = src / $08 = dst
         pla                     ; A = dialog result
         bpl     :+
         rts
@@ -1863,7 +1869,9 @@ running_da_flag:
         lda     #kDynamicRoutineRestore5000
         jsr     restore_dynamic_routine
         jsr     set_cursor_pointer
+        jsr     push_pointers   ; $06 is path
         jsr     clear_updates_and_redraw_desktop_icons ; following picker dialog close
+        jsr     pop_pointers    ; $06 is path
         pla                     ; A = dialog result
         bpl     :+
         rts
