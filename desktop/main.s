@@ -5362,8 +5362,11 @@ check_double_click:
         beq     same_or_desktop
 
         jsr     jt_drop
-        ;; NOTE: Since this opens/closes a progress dialog, every path needs to call
-        ;; `clear_updates_and_redraw_desktop_icons`
+
+        ;; NOTE: Since this opens/closes a progress dialog, every path
+        ;; needs to call `clear_updates_and_redraw_desktop_icons`.
+        ;; However, if drop target is trash, `jt_drop` relays to
+        ;; `JT_EJECT` and pops the return address.
 
         ;; (1/4) Failed?
         cmp     #$FF
@@ -5371,10 +5374,8 @@ check_double_click:
         jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
 
         ;; (2/4) Dropped on trash? (eject)
-:       lda     drag_drop_params::result
-        cmp     trash_icon_num
-        bne     :+
-        jmp     clear_updates_and_redraw_desktop_icons ; TODO: Unnecessary, as no dialog is shown?
+        ;; Not reached - see above.
+        ;; Assert: `drag_drop_params::result` != `trash_icon_num`
 
         ;; (3/4) Dropped on icon?
 :       lda     drag_drop_params::result
@@ -10951,6 +10952,7 @@ L8FDD:  lda     #$00            ; unlock
 L8FE1:  lda     #$80            ; lock
 :       sta     unlock_flag
         copy    #%10000000, operation_flags ; lock/unlock
+        ;; fall through
 
 L8FEB:  tsx
         stx     stack_stash
@@ -10964,10 +10966,11 @@ L8FEB:  tsx
 :       bit     delete_flag
         bpl     compute_target_prefix ; copy
 
-        ;; Delete - is it a volume?
+        ;; --------------------------------------------------
+        ;; Delete - are selected icons volumes?
         lda     selected_window_id
         beq     :+
-        jmp     begin_operation
+        jmp     begin_operation ; no, just files
 
         ;; Yes - eject it!
 :       pla
