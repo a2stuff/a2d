@@ -5389,7 +5389,7 @@ check_double_click:
         jsr     update_used_free_for_vol_windows
         pla
         jsr     select_and_refresh_window_or_close
-        jmp     clear_updates_and_redraw_desktop_icons ;  following progress dialog close
+        jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
 
         ;; --------------------------------------------------
 
