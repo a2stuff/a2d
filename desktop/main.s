@@ -49,7 +49,7 @@ JT_RESTORE_OVL:         jmp     restore_dynamic_routine
 JT_COLOR_MODE:          jmp     SetColorMode            ; *
 JT_MONO_MODE:           jmp     SetMonoMode             ; *
 JT_RESTORE_SYS:         jmp     restore_system          ; *
-JTCLEAR_UPDATES_REDRAW_ICONS:   jmp     clear_updates_and_redraw_desktop_icons ; *
+JT_CLEAR_UPDATES_REDRAW_ICONS:   jmp     clear_updates_and_redraw_desktop_icons ; *
 JT_GET_SEL_COUNT:       jmp     get_selection_count     ; *
 JT_GET_SEL_ICON:        jmp     get_selected_icon       ; *
 JT_GET_SEL_WIN:         jmp     get_selection_window    ; *
