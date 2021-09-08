@@ -164,55 +164,51 @@ Set DHR color or monochrome mode, respectively. DHR monochrome mode is supported
 
 Used when exiting DeskTop; exit DHR mode, restores DHR mode to color, restores detached devices and reformats /RAM if needed, and banks in ROM and main ZP.
 
-#### `JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS` ($404B) *
-
-Clears update events (redraw windows after move/resize/close) and redraws volume icons. Required after a drag or resize in a DA.
-
-#### `JUMP_TABLE_GET_SEL_COUNT` ($404E) *
+#### `JUMP_TABLE_GET_SEL_COUNT` ($404B) *
 
 Get number of selected icons.
 
 Output: A = count.
 
-#### `JUMP_TABLE_GET_SEL_ICON` ($4051) *
+#### `JUMP_TABLE_GET_SEL_ICON` ($404E) *
 
 Get selected IconEntry address.
 
 Input: A = index within selection.
 Output: A,X = address of IconEntry.
 
-#### `JUMP_TABLE_GET_SEL_WIN` ($4054) *
+#### `JUMP_TABLE_GET_SEL_WIN` ($4051) *
 
 Get window containing selection (if any).
 
 Output: A = window_id, or 0 for desktop.
 
-#### `JUMP_TABLE_GET_WIN_PATH` ($4057) *
+#### `JUMP_TABLE_GET_WIN_PATH` ($4054) *
 
 Get path to window.
 
 Input: A = window_id.
 Output: A,X = address of path (length-prefixed).
 
-#### `JUMP_TABLE_HILITE_MENU` ($405A) *
+#### `JUMP_TABLE_HILITE_MENU` ($4057) *
 
 Toggle hilite on last clicked menu. This should be used by a desk accessory that repaints the entire screen including the menu bar, since when the desk accessory exits the menu used to invoke it (Apple or File) will toggle.
 
-#### `JUMP_TABLE_ADJUST_FILEENTRY` ($405D) *
+#### `JUMP_TABLE_ADJUST_FILEENTRY` ($405A) *
 
 Adjust case in FileEntry structure. If GS/OS filename bits are set, those are used. If the file type is an AppleWorks file, the auxtype bits are used. Otherwise, case is inferred.
 
 Input: A,X = FileEntry structure.
 
-#### `JUMP_TABLE_CUR_IBEAM` ($4060) *
+#### `JUMP_TABLE_CUR_IBEAM` ($405D) *
 
 Changes mouse cursor to I-beam.
 
-#### `JUMP_TABLE_RGB_MODE` ($4063) *
+#### `JUMP_TABLE_RGB_MODE` ($4060) *
 
 Set DHR color or monochrome mode, based on control panel setting.
 
-#### `JUMP_TABLE_YIELD_LOOP` ($4066) *
+#### `JUMP_TABLE_YIELD_LOOP` ($4063) *
 
 Yield during an event loop for DeskTop to run tasks. This allows the menu bar clock to be updated and similar infrequent operations.
 

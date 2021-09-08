@@ -37,7 +37,6 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
         jsr     GetCopiedToRAMCardFlag
         cmp     #$80
         bne     L9015
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
         lda     #kWarningMsgSaveSelectorList
         jsr     ShowWarning
         bne     L9015
@@ -63,7 +62,7 @@ L9052:  lda     #$00
         pha
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
+        jsr     JUMP_TABLE_CLEAR_UPDATES ; Add File Dialog close
         pla
         tay
         pla
@@ -233,7 +232,7 @@ l3:     clc
         pha
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
+        jsr     JUMP_TABLE_CLEAR_UPDATES ; Edit File Dialog close
         pla
         tay
         pla
@@ -392,7 +391,7 @@ l10:    iny
         lda     L938A
         sta     buf_win_path
         jsr     close_window
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
+        jsr     JUMP_TABLE_CLEAR_UPDATES ; Run dialog OK
         jsr     JUMP_TABLE_LAUNCH_FILE
         jsr     main::set_cursor_pointer
         copy    #$FF, selected_index
@@ -400,16 +399,20 @@ l10:    iny
 .endproc
 
 ;;; ============================================================
+;;; Cancel from Edit, Delete, or Run
+;;; Also OK from Delete (since that closes immediately)
 
 .proc do_cancel
         pha
         lda     selector_action
         cmp     #SelectorAction::edit
         bne     :+
+
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
+
 :       jsr     close_window
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         pla
         jmp     L900F
 .endproc
@@ -1452,9 +1455,6 @@ write:  lda     open_origpfx_params::ref_num
 
 @retry: MLI_RELAY_CALL WRITE, write_params
         beq     close
-        pha
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-        pla
         jsr     JUMP_TABLE_SHOW_ALERT
         beq     @retry          ; `kAlertResultTryAgain` = 0
 

@@ -72,7 +72,7 @@ save_stack:  .byte   0
         ;; Redraw DeskTop's windows and icons
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         sta     RAMRDON
         sta     RAMWRTON
 

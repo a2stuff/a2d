@@ -345,7 +345,7 @@ char_label:  .byte   0
         ;; Draw DeskTop's windows and icons (from Main)
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         sta     RAMRDON
         sta     RAMWRTON
 

@@ -1047,7 +1047,7 @@ _DA specific: Menus are not supported in DAs._
 
 _DA specific:_
 
-* Call `JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS` to allow DeskTop to handle update events. This will not redraw the DA window, however.
+* Call `JUMP_TABLE_CLEAR_UPDATES` to allow DeskTop to handle update events. This will not redraw the DA window, however.
 * [Redraw](#redraw-window) DA window content
 
 
@@ -1085,7 +1085,7 @@ _DA specific:_
 
 _DA specific:_
 
-* Call `JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS` to allow DeskTop to handle update events. This will not redraw the DA window, however.
+* Call `JUMP_TABLE_CLEAR_UPDATES` to allow DeskTop to handle update events. This will not redraw the DA window, however.
 * [Redraw](#redraw-window) DA window content
 
 #### Handle Update Events
@@ -1103,4 +1103,4 @@ _DA specific:_
 
 _DA specific:_
 
-* Following a window move, resize or close (except on DA exit), call `JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS` to allow DeskTop to handle update events. This will not redraw the DA window, however.
+* Following a window move, resize or close (except on DA exit), call `JUMP_TABLE_CLEAR_UPDATES` to allow DeskTop to handle update events. This will not redraw the DA window, however.

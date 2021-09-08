@@ -31,7 +31,7 @@ JT_DATE_STRING:         jmp     compose_date_string
 JT_SELECT_WINDOW:       jmp     select_and_refresh_window
 JT_AUXLOAD:             jmp     AuxLoad
 JT_EJECT:               jmp     cmd_eject
-JT_CLEAR_UPDATES:       jmp     clear_updates
+JT_CLEAR_UPDATES:       jmp     clear_updates           ; *
 JT_ITK_RELAY:           jmp     ITKRelayImpl
 JT_LOAD_OVL:            jmp     load_dynamic_routine
 JT_CLEAR_SELECTION:     jmp     clear_selection
@@ -49,7 +49,6 @@ JT_RESTORE_OVL:         jmp     restore_dynamic_routine
 JT_COLOR_MODE:          jmp     SetColorMode            ; *
 JT_MONO_MODE:           jmp     SetMonoMode             ; *
 JT_RESTORE_SYS:         jmp     restore_system          ; *
-JT_CLEAR_UPDATES_REDRAW_ICONS:   jmp     clear_updates_and_redraw_desktop_icons ; *
 JT_GET_SEL_COUNT:       jmp     get_selection_count     ; *
 JT_GET_SEL_ICON:        jmp     get_selected_icon       ; *
 JT_GET_SEL_WIN:         jmp     get_selection_window    ; *
@@ -129,7 +128,7 @@ click:  jsr     handle_click
 ;;; for cases where MGTK doesn't think there's anything to
 ;;; update. Therefore, most DeskTop sites will call explicitly
 ;;; to both clear updates and redraw icons using the
-;;; `clear_updates_and_redraw_desktop_icons` entry point.
+;;; `clear_updates` entry point.
 
 .proc clear_updates_impl
 
@@ -138,21 +137,12 @@ click:  jsr     handle_click
 clear_no_peek:
         jsr     reset_main_grafport
         copy    active_window_id, saved_active_window_id
-        copy    #$80, redraw_icons_flag
         jmp     handle_update   ; skip PeekEvent
 
-;;; Clear any pending updates, and redraw desktop icons.
-clear_and_redraw_desktop_icons:
-        jsr     reset_main_grafport
-        copy    active_window_id, saved_active_window_id
-        copy    #$80, redraw_icons_flag
-        jmp     redraw_loop
-
-;;; Clear any pending updates, but don't redraw desktop icons.
+;;; Clear any pending updates.
 clear:
         jsr     reset_main_grafport
         copy    active_window_id, saved_active_window_id
-        copy    #0, redraw_icons_flag
         ;; fall through
 
         ;; --------------------------------------------------
@@ -171,29 +161,15 @@ handle_update:
 :       jmp     redraw_loop
 
 finish: jsr     LoadDesktopEntryTable
-        lda     saved_active_window_id
-        bit     redraw_icons_flag
-        bpl     :+
+        copy    saved_active_window_id, active_window_id
         ITK_RELAY_CALL IconTK::RedrawIcons
-:       rts
+        rts
 
 saved_active_window_id:
         .byte   0
-
-;;; In theory, the `redraw_icons` flag could be set whenever an
-;;; update event is seen, signalling the need to redraw a window
-;;; following a close. This is insufficient to handle the last
-;;; window closing, so we either need explicit calls when a window
-;;; closes, or to come up with another heuristic. (e.g. if
-;;; FrontWindow changes to null?)
-
-redraw_icons_flag:
-        .byte   0
-
 .endproc
 clear_updates_no_peek := clear_updates_impl::clear_no_peek
 clear_updates := clear_updates_impl::clear
-clear_updates_and_redraw_desktop_icons := clear_updates_impl::clear_and_redraw_desktop_icons
 
 ;;; ============================================================
 ;;; Called by main and nested event loops to do periodic tasks.
@@ -1253,17 +1229,18 @@ filerecords_free_start:
 
 .proc cmd_selector_action
         jsr     set_cursor_watch
-        lda     #kDynamicRoutineSelector1
+        lda     #kDynamicRoutineSelector1 ; selector picker dialog
         jsr     load_dynamic_routine
         bmi     done
 
         lda     menu_click_params::item_num
         cmp     #SelectorAction::delete
         bcs     :+              ; delete or run (no need for more overlays)
-        lda     #kDynamicRoutineSelector2
+
+        lda     #kDynamicRoutineSelector2 ; file dialog driver
         jsr     load_dynamic_routine
         bmi     done
-        lda     #kDynamicRoutineFileDialog
+        lda     #kDynamicRoutineFileDialog ; file dialog
         jsr     load_dynamic_routine
         bmi     done
 
@@ -1273,8 +1250,10 @@ filerecords_free_start:
         jsr     selector_picker_exec
         sta     result
         jsr     set_cursor_watch
+
         ;; Restore from overlays
-        lda     #kDynamicRoutineRestore9000
+        ;; (restore from file dialog overlay handled in picker overlay)
+        lda     #kDynamicRoutineRestore9000 ; restore from picker dialog
         jsr     restore_dynamic_routine
 
         lda     menu_click_params::item_num
@@ -1290,13 +1269,11 @@ filerecords_free_start:
         bpl     run_from_ramcard
 
         ;; Need to copy to RAMCard
-        jsr     clear_updates_and_redraw_desktop_icons ; following picker dialog close
         jsr     jt_copy_to_ram
         bmi     done
         jsr     L4968
 
 done:   jsr     set_cursor_pointer
-        jsr     clear_updates_and_redraw_desktop_icons ; following copying dialog close
         rts
 
 .proc L4968
@@ -1351,7 +1328,7 @@ L49A6:  lda     menu_click_params::item_num
         jsr     L4A47
         jsr     jt_copy_to_ram
         bpl     L49ED
-        jmp     clear_updates_and_redraw_desktop_icons ; following copying dialog close
+        rts
 
 L49E0:  jsr     GetCopiedToRAMCardFlag
         beq     not_downloaded
@@ -1714,7 +1691,7 @@ skip:   iny
 
         ;; Restore state
         jsr     reset_main_grafport
-        jsr     clear_updates_and_redraw_desktop_icons ; assume DA closed a window
+        jsr     clear_updates ; assume DA closed a window
 done:   jsr     set_cursor_pointer
         rts
 
@@ -1767,7 +1744,7 @@ running_da_flag:
         jsr     restore_dynamic_routine
         jsr     set_cursor_pointer
         jsr     push_pointers   ; $06 = src / $08 = dst
-        jsr     clear_updates_and_redraw_desktop_icons ; following picker dialog close
+        jsr     clear_updates ; following picker dialog close
         jsr     pop_pointers    ; $06 = src / $08 = dst
         pla                     ; A = dialog result
         bpl     :+
@@ -1813,8 +1790,7 @@ running_da_flag:
 
         ldax    #path_buf4
         ldy     path_buf4
-        jsr     update_vol_used_free_for_found_windows
-        jmp     clear_updates
+        jmp     update_vol_used_free_for_found_windows
 .endproc
 
 ;;; ============================================================
@@ -1889,7 +1865,7 @@ running_da_flag:
         jsr     restore_dynamic_routine
         jsr     set_cursor_pointer
         jsr     push_pointers   ; $06 is path
-        jsr     clear_updates_and_redraw_desktop_icons ; following picker dialog close
+        jsr     clear_updates ; following picker dialog close
         jsr     pop_pointers    ; $06 is path
         pla                     ; A = dialog result
         bpl     :+
@@ -1944,8 +1920,7 @@ running_da_flag:
 
         ldax    #path_buf3
         ldy     path_buf3
-        jsr     update_vol_used_free_for_found_windows
-        jmp     clear_updates
+        jmp     update_vol_used_free_for_found_windows
 .endproc
 
 ;;; ============================================================
@@ -2236,6 +2211,13 @@ fail:   rts
 
         ptr := $06
 
+.enum NewFolderDialogState
+        open  = $00
+        run   = $80
+        close = $40
+.endenum
+
+
 .params new_folder_dialog_params
 phase:  .byte   0               ; window_id?
 win_path_ptr:  .word   0
@@ -2247,14 +2229,15 @@ win_path_ptr:  .word   0
 path_buffer:
         .res    ::kPathBufferSize, 0              ; buffer is used elsewhere too
 
-start:  copy    active_window_id, new_folder_dialog_params::phase
+start:  copy    #NewFolderDialogState::open, new_folder_dialog_params::phase
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
 
 L4FC6:  lda     active_window_id
-        beq     L4FD4
+        beq     :+
         jsr     get_window_path
         stax    new_folder_dialog_params::win_path_ptr
-L4FD4:  copy    #$80, new_folder_dialog_params::phase
+
+:       copy    #NewFolderDialogState::run, new_folder_dialog_params::phase
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
         beq     :+
         jmp     done            ; Canceled
@@ -2285,7 +2268,7 @@ L4FD4:  copy    #$80, new_folder_dialog_params::phase
         jmp     L4FC6
 
 success:
-        copy    #$40, new_folder_dialog_params::phase
+        copy    #NewFolderDialogState::close, new_folder_dialog_params::phase
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
         param_call find_last_path_segment, path_buffer
         sty     path_buffer
@@ -2299,7 +2282,7 @@ success:
         copy16  #path_buf1, $08
         jsr     select_file_icon_by_name ; $08 = folder name
 
-done:   jmp     clear_updates
+done:   rts
 
 
 name_ptr:
@@ -2568,8 +2551,7 @@ loop2:  ldx     count
         dec     count
         bpl     loop2
 
-        ;; And finish up nicely
-        jmp     clear_updates_and_redraw_desktop_icons ; TODO: Verify this is necessary.
+        rts
 
 count:  .byte   0
 
@@ -2990,7 +2972,7 @@ drive_to_refresh:
         jsr     format_erase_overlay_exec
         stx     drive_to_refresh ; X = unit number
         pha                     ; A = result
-        jsr     clear_updates_and_redraw_desktop_icons ; following dialog close
+        jsr     clear_updates ; following dialog close
         pla                     ; A = result
         beq     :+
         rts
@@ -3010,7 +2992,7 @@ drive_to_refresh:
         jsr     format_erase_overlay_exec
         stx     drive_to_refresh ; X = unit number
         pha                     ; A = result
-        jsr     clear_updates_and_redraw_desktop_icons ; following dialog close
+        jsr     clear_updates ; following dialog close
         pla                     ; A = result
         beq     :+
         rts
@@ -3772,7 +3754,6 @@ close_loop:
 
 not_in_map:
 
-        jsr     clear_updates_and_redraw_desktop_icons ; following window closes
         jsr     clear_selection
         jsr     LoadDesktopEntryTable
 
@@ -3842,7 +3823,7 @@ add_icon:
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
 
 :       jsr     StoreWindowEntryTable
-        jmp     clear_updates_and_redraw_desktop_icons ; TODO: Verify this is necessary.
+        rts
 
 previous_icon_count:
         .byte    0
@@ -4149,14 +4130,11 @@ check_double_click:
 
 process_drop:
         jsr     jt_drop
-        ;; NOTE: Since this opens/closes a progress dialog, every path needs to call
-        ;; `clear_updates_and_redraw_desktop_icons`
 
         ;; (1/4) Failed?
         cmp     #$FF
         bne     :+
-        jsr     swap_in_desktop_icon_table ; TODO: Why is this only needed on this path?
-        jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
+        jmp     swap_in_desktop_icon_table ; TODO: Why is this only needed on this path?
 
         ;; Was a move?
 :       bit     move_flag
@@ -4170,23 +4148,20 @@ process_drop:
         cmp     trash_icon_num
         bne     :+
         ;; Update used/free for same-vol windows
-        jsr     update_active_window
-        jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
+        jmp     update_active_window
 
         ;; (3/4) Dropped on icon?
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Yes, on an icon; update used/free for same-vol windows
-        jsr     update_vol_free_used_for_icon
-        jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
+        jmp     update_vol_free_used_for_icon
 
         ;; (4/4) Dropped on window!
 :       and     #$7F            ; mask off window number
         pha
         jsr     update_used_free_for_vol_windows
         pla
-        jsr     select_and_refresh_window_or_close
-        jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
+        jmp     select_and_refresh_window_or_close
 
         ;; --------------------------------------------------
 
@@ -4384,7 +4359,6 @@ exception_flag:
 
 .proc select_and_refresh_window
         sta     window_id
-        jsr     clear_updates
         jsr     clear_selection
         lda     window_id
         cmp     active_window_id
@@ -4678,7 +4652,6 @@ deltay: .word   0
 .proc handle_resize_click
         copy    active_window_id, event_params
         MGTK_RELAY_CALL MGTK::GrowWindow, event_params
-        jsr     clear_updates_and_redraw_desktop_icons ; following window resize
         jsr     LoadActiveWindowEntryTable
         jsr     cached_icons_screen_to_window
         jsr     update_scrollbars
@@ -4787,7 +4760,7 @@ no_icon:
         jsr     check_item
         jsr     update_window_menu_items
 
-        jsr     clear_updates_and_redraw_desktop_icons ; following window close
+        jsr     clear_updates ; following CloseWindow above
 
         ;; If selection was cleared out of the new top-most window, force
         ;; a full redraw. https://github.com/a2stuff/a2d/issues/364
@@ -5390,15 +5363,13 @@ check_double_click:
 
         jsr     jt_drop
 
-        ;; NOTE: Since this opens/closes a progress dialog, every path
-        ;; needs to call `clear_updates_and_redraw_desktop_icons`.
-        ;; However, if drop target is trash, `jt_drop` relays to
+        ;; NOTE: If drop target is trash, `jt_drop` relays to
         ;; `JT_EJECT` and pops the return address.
 
         ;; (1/4) Failed?
         cmp     #$FF
         bne     :+
-        jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
+        rts
 
         ;; (2/4) Dropped on trash? (eject)
         ;; Not reached - see above.
@@ -5408,16 +5379,14 @@ check_double_click:
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Yes, on an icon; update used/free for same-vol windows
-        jsr     update_vol_free_used_for_icon
-        jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
+        jmp     update_vol_free_used_for_icon
 
         ;; (4/4) Dropped on window!
 :       and     #$7F            ; mask off window number
         pha
         jsr     update_used_free_for_vol_windows
         pla
-        jsr     select_and_refresh_window_or_close
-        jmp     clear_updates_and_redraw_desktop_icons ; following progress dialog close
+        jmp     select_and_refresh_window_or_close
 
         ;; --------------------------------------------------
 
@@ -5425,7 +5394,7 @@ same_or_desktop:
         txa
         cmp     #2              ; TODO: What is this case???
         bne     :+
-        jmp     clear_updates_and_redraw_desktop_icons ; TODO: Unknown if needed???
+        rts
 
         ;; Icons moved on desktop - update and redraw
 :       ldx     selected_icon_count
@@ -5728,7 +5697,6 @@ select: MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         lda     cached_window_id
         sta     active_window_id
         jsr     draw_window_entries
-        jsr     clear_updates
         jmp     LoadDesktopEntryTable
 
         ;; --------------------------------------------------
@@ -6590,7 +6558,6 @@ no_win: lda     #kWarningMsgTooManyFiles ; too many files to show
 show:   jsr     ShowWarning
 
         jsr     mark_icons_not_opened_1
-        jsr     clear_updates_and_redraw_desktop_icons ; TODO: only do this if window needed to be closed
         dec     num_open_windows
 
         ldx     saved_stack
@@ -10904,7 +10871,6 @@ do_copy_to_ram2:
         ;; fall through
 
 .proc finish_operation
-        jsr     clear_updates_and_redraw_desktop_icons ; Following progress window close
         return  #0
 .endproc
 
@@ -14419,12 +14385,10 @@ jump_relay:
         beq     close
         cmp     #CHAR_RETURN
         bne     :-
-        jmp     close
+        ;; fall through
 
 close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
-        jsr     reset_main_grafport
-        jsr     set_cursor_pointer_with_flag
-        rts
+        jmp     clear_updates ; following CloseWindow
 .endproc
 
 ;;; ============================================================
@@ -14850,17 +14814,18 @@ LAE17:  jsr     prompt_input_loop
         kParentPathLeft = 55
 
         jsr     copy_dialog_param_addr_to_ptr
-        ldy     #0
+        ldy     #0              ; phase
         lda     ($06),y
         cmp     #$80
-        bne     LAE42
+        bne     :+
         jmp     LAE70
 
-LAE42:  cmp     #$40
-        bne     LAE49
+:       cmp     #$40
+        bne     :+
         jmp     LAF16
 
-LAE49:  copy    #$80, has_input_field_flag
+        ;; Phase 0 - init
+:       copy    #$80, has_input_field_flag
         jsr     clear_path_buf2
         lda     #$00
         jsr     open_prompt_window
@@ -14871,6 +14836,7 @@ LAE49:  copy    #$80, has_input_field_flag
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         rts
 
+        ;; Phase 2 - prompt
 LAE70:  copy    #$80, has_input_field_flag
         copy    #0, prompt_button_flags
         jsr     clear_path_buf1
@@ -14925,6 +14891,7 @@ LAEFF:  inx
         ldx     #>path_buf0
         return  #0
 
+        ;; Phase 3 - close
 LAF16:  jsr     close_prompt_dialog
         jsr     set_cursor_pointer
         return  #1
@@ -16240,7 +16207,7 @@ set_penmode_notcopy:
 .proc close_prompt_dialog
         jsr     reset_main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        rts
+        jmp     clear_updates ; following CloseWindow
 .endproc
 
 ;;; ============================================================

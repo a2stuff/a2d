@@ -66,16 +66,15 @@ JUMP_TABLE_RESTORE_OVL  := $403F ; Restore from overlay routine
 JUMP_TABLE_COLOR_MODE   := $4042 ; Set DHR color mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_MONO_MODE    := $4045 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in ROM and ZP. *
-JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS   := $404B ; Redraw desktop windows and icons (e.g. after a drag) *
-JUMP_TABLE_GET_SEL_COUNT:= $404E ; Get number of selected icons (out: A=count) *
-JUMP_TABLE_GET_SEL_ICON := $4051 ; Get selected IconEntry address (in: A=index, out: A,X=addr) *
-JUMP_TABLE_GET_SEL_WIN  := $4054 ; Get window containing selection (out: A=window_id, 0 if none) *
-JUMP_TABLE_GET_WIN_PATH := $4057 ; Get path to window (in: A=window_id; out: A,X=path address) *
-JUMP_TABLE_HILITE_MENU  := $405A ; Toggle hilite on last clicked menu *
-JUMP_TABLE_ADJUST_FILEENTRY := $405D ; Adjust case in FileEntry structure (in: A,X=FileEntry) *
-JUMP_TABLE_CUR_IBEAM    := $4060 ; Changes mouse cursor to I-beam *
-JUMP_TABLE_RGB_MODE     := $4063 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
-JUMP_TABLE_YIELD_LOOP   := $4066 ; Yield the event loop *
+JUMP_TABLE_GET_SEL_COUNT:= $404B ; Get number of selected icons (out: A=count) *
+JUMP_TABLE_GET_SEL_ICON := $404E ; Get selected IconEntry address (in: A=index, out: A,X=addr) *
+JUMP_TABLE_GET_SEL_WIN  := $4051 ; Get window containing selection (out: A=window_id, 0 if none) *
+JUMP_TABLE_GET_WIN_PATH := $4054 ; Get path to window (in: A=window_id; out: A,X=path address) *
+JUMP_TABLE_HILITE_MENU  := $4057 ; Toggle hilite on last clicked menu *
+JUMP_TABLE_ADJUST_FILEENTRY := $405A ; Adjust case in FileEntry structure (in: A,X=FileEntry) *
+JUMP_TABLE_CUR_IBEAM    := $405D ; Changes mouse cursor to I-beam *
+JUMP_TABLE_RGB_MODE     := $4060 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
+JUMP_TABLE_YIELD_LOOP   := $4063 ; Yield the event loop *
 
 ;;; ============================================================
 ;;; Call MGTK
