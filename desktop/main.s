@@ -2207,16 +2207,15 @@ fail:   rts
 
 ;;; ============================================================
 
-.proc cmd_new_folder_impl
-
-        ptr := $06
-
 .enum NewFolderDialogState
         open  = $00
         run   = $80
         close = $40
 .endenum
 
+.proc cmd_new_folder_impl
+
+        ptr := $06
 
 .params new_folder_dialog_params
 phase:  .byte   0               ; window_id?
@@ -14816,11 +14815,11 @@ LAE17:  jsr     prompt_input_loop
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0              ; phase
         lda     ($06),y
-        cmp     #$80
+        cmp     #NewFolderDialogState::run
         bne     :+
         jmp     LAE70
 
-:       cmp     #$40
+:       cmp     #NewFolderDialogState::close
         bne     :+
         jmp     LAF16
 
