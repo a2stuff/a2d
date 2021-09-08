@@ -1017,9 +1017,6 @@ menu_item:      .byte   0
 disable:        .byte   0
 .endparams
 
-file_menu_items_enabled_flag:
-        .byte   0
-
 startup_menu:
         DEFINE_MENU kMenuSizeStartup
 @items: DEFINE_MENU_ITEM startup_menu_item_1

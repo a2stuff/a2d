@@ -1079,7 +1079,7 @@ count:  .byte   0
         lda     #0
         sta     active_window_id
         jsr     main::update_window_menu_items
-        jsr     main::disable_eject_menu_item
+        jsr     main::disable_menu_items_requiring_volume_selection
         jsr     main::disable_menu_items_requiring_selection
 
         ;; Add desktop icons
@@ -1100,10 +1100,6 @@ iloop:  cpx     cached_window_entry_count
         ;; Desktop icons are cached now
         copy    #0, cached_window_id
         jsr     StoreWindowEntryTable
-
-        ;; Clear various flags
-        lda     #0
-        sta     file_menu_items_enabled_flag
 
         ;; Restore state from previous session
         jsr     restore_windows

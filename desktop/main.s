@@ -862,52 +862,39 @@ check_selection:
 
         ;; --------------------------------------------------
         ;; Selected Icons
+
         lda     selected_window_id ; In a window?
-        bne     files_selected
+        beq     :+
 
-        ;; Volumes selected (not files)
-        lda     selected_icon_count
-        cmp     #2
-        bcs     multiple_volumes
+        ;; --------------------------------------------------
+        ;; Files selected (not volumes)
 
-        lda     selected_icon_list
-        cmp     trash_icon_num
-        bne     enable_eject
-        jsr     disable_eject_menu_item
-        jsr     disable_menu_items_requiring_selection
-        copy    #0, file_menu_items_enabled_flag
+        jsr     disable_menu_items_requiring_volume_selection
+        jsr     enable_menu_items_requiring_selection
         rts
 
-enable_eject:
-        jsr     enable_eject_menu_item
-        jmp     finish1
+        ;; --------------------------------------------------
+        ;; Volumes selected (not files)
 
-        ;; Files selected (not volumes)
-files_selected:
-        jsr     disable_eject_menu_item
-        jmp     finish1
+:       lda     selected_icon_count
+        cmp     #1
+        bne     :+
+        lda     selected_icon_list
+        cmp     trash_icon_num
+        beq     no_selection    ; trash only - treat as no selection
 
-multiple_volumes:
-        jsr     enable_eject_menu_item
-
-finish1:
-        bit     file_menu_items_enabled_flag
-        bmi     :+
+        ;; At least one real volume
+:       jsr     enable_menu_items_requiring_volume_selection
         jsr     enable_menu_items_requiring_selection
-        copy    #$80, file_menu_items_enabled_flag
-:       rts
+        rts
 
         ;; --------------------------------------------------
         ;; No Selection
 no_selection:
-        bit     file_menu_items_enabled_flag
-        bmi     :+
+        jsr     disable_menu_items_requiring_volume_selection
+        jsr     disable_menu_items_requiring_selection
         rts
 
-:       jsr     disable_eject_menu_item
-        jsr     disable_menu_items_requiring_selection
-        copy    #0, file_menu_items_enabled_flag
-        rts
 .endproc
 
 ;;; ============================================================
@@ -5254,7 +5241,7 @@ disable_menu_items_requiring_selection := toggle_menu_items_requiring_selection:
 
 ;;; ============================================================
 
-.proc toggle_eject_menu_item
+.proc toggle_menu_items_requiring_volume_selection
 enable:
         copy    #MGTK::disableitem_enable, disableitem_params::disable
         jmp     :+
@@ -5273,8 +5260,8 @@ disable:
         rts
 
 .endproc
-enable_eject_menu_item := toggle_eject_menu_item::enable
-disable_eject_menu_item := toggle_eject_menu_item::disable
+enable_menu_items_requiring_volume_selection := toggle_menu_items_requiring_volume_selection::enable
+disable_menu_items_requiring_volume_selection := toggle_menu_items_requiring_volume_selection::disable
 
 ;;; ============================================================
 
