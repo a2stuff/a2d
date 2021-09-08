@@ -10968,9 +10968,8 @@ compute_target_prefix:
 
         ;; Drop is on a window
         and     #%01111111      ; get window id
-        asl     a
-        tax
-        copy16  window_path_addr_table,x, $08
+        jsr     get_window_path
+        stax    $08
         copy16  #empty_string, $06
         jsr     join_paths
         dec     path_buf3       ; remove trailing '/'
@@ -10985,9 +10984,8 @@ check_icon_drop_type:
         beq     drop_on_volume_icon ; 0 = desktop (so, volume icon)
 
         ;; Drop is on a file icon.
-        asl     a
-        tax
-        copy16  window_path_addr_table,x, $08
+        jsr     get_window_path
+        stax    $08
         lda     drag_drop_params::result
         jsr     icon_entry_name_lookup
         jsr     join_paths
@@ -11401,9 +11399,8 @@ loop:   ldx     get_info_dialog_params::index
         beq     vol_icon
 
         ;; File icon
-        asl     a
-        tax
-        copy16  window_path_addr_table,x, $08
+        jsr     get_window_path
+        stax    $08
         ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
@@ -11706,9 +11703,8 @@ loop:   lda     index
         beq     is_vol          ; no window, selection is volumes
 
         ;; File - compose full path
-        asl     a
-        tax
-        copy16  window_path_addr_table,x, $08
+        jsr     get_window_path
+        stax    $08
         ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
@@ -11795,9 +11791,8 @@ L962F:
         ;; File or Volume?
         lda     selected_window_id
         beq     is_vol2
-        asl     a
-        tax
-        copy16  window_path_addr_table,x, win_path_ptr
+        jsr     get_window_path
+        stax    win_path_ptr
         jmp     common2
 
 is_vol2:
