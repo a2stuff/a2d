@@ -971,8 +971,7 @@ icon_param3:
 redraw_icon_param:
         .byte   0
 
-        ;; IconTK::HighlightIcon params
-        ;; IconTK::Icon params
+        ;; Used by multiple IconTK calls
 icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
@@ -1126,7 +1125,7 @@ blank_dd_label:
 dummy_dd_item:
         PASCAL_STRING "Rien"    ; French for "nothing" - do not localize
 
-        ;; IconTK::UNHIGHLIGHT_ICON params
+        ;; IconTK::UnhighlightIcon params
 icon_params2:
         .byte   0
 
