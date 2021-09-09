@@ -99,7 +99,6 @@ kShortcutAll      = res_char_button_all_shortcut
 ;;; * Given to MGTK to save background while menus are shown
 ;;; * Used by DeskTop to save background while alert dialog shown
 ;;; * Used by IconTK to store icon outlines during DragHighlighted
-;;; * Used by IconTK for a temp buffer during HighlightAll
 
 SAVE_AREA_BUFFER := $800        ; through $1AFF
 kSaveAreaSize   = $1300

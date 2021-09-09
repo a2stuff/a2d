@@ -444,7 +444,6 @@ desktop_jump_table:
         .addr   HighlightIconImpl
         .addr   RedrawIconImpl
         .addr   RemoveIconImpl
-        .addr   HighlightAllImpl
         .addr   RemoveAllImpl
         .addr   CloseWindowImpl
         .addr   FindIconImpl
@@ -792,87 +791,6 @@ ptr_icon_idx    .addr
         copy16  icon_ptrs,x, ptr
         jsr     calc_icon_poly
         jmp     erase_icon
-.endproc
-
-;;; ============================================================
-;;; HighlightAll
-
-;;; Highlight all icons in the specified window.
-;;; (Unused?)
-
-.proc HighlightAllImpl
-        jmp     start
-
-buffer := SAVE_AREA_BUFFER
-
-        PARAM_BLOCK params, $06
-ptr_window_id       .addr
-        END_PARAM_BLOCK
-
-        ptr := $08
-
-        ;; IconTK::HighlightIcon params
-icon:   .byte   0
-
-start:  lda     HighlightIconImpl ; ???
-        beq     start2
-        lda     highlight_list
-        sta     icon
-        ITK_DIRECT_CALL IconTK::UnhighlightIcon, icon
-        jmp     start
-
-start2:
-        ;; Zero out buffer
-        ldx     #kMaxIconCount-1
-        lda     #0
-:       sta     buffer,x
-        dex
-        bpl     :-
-        ldx     #0
-        stx     icon
-
-        ;; Walk through icons, find ones in the same window
-        ;; as the entry at ($06).
-loop:   lda     icon_table,x
-        asl     a
-        tay
-        copy16  icon_ptrs,y, ptr
-        ldy     #IconEntry::win_type
-        lda     (ptr),y
-        and     #kIconEntryWinIdMask
-        ldy     #0
-        cmp     (params::ptr_window_id),y
-        bne     :+
-
-        ;; Append icon number to buffer.
-        ldy     #IconEntry::id
-        lda     (ptr),y
-        ldy     icon
-        sta     buffer,y
-        inc     icon
-
-:       inx
-        cpx     num_icons
-        bne     loop
-
-        ldx     #0
-        txa
-        pha
-
-        ;; Highlight all the icons.
-loop2:  lda     buffer,x
-        bne     :+
-        pla
-        rts
-
-:       sta     icon
-        ITK_DIRECT_CALL IconTK::HighlightIcon, icon
-        pla
-        tax
-        inx
-        txa
-        pha
-        jmp     loop2
 .endproc
 
 ;;; ============================================================

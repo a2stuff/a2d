@@ -20,20 +20,19 @@ AddIcon         = $01   ; param is address of IconEntry
 HighlightIcon   = $02   ; { .byte icon }
 RedrawIcon      = $03   ; { .byte icon }
 RemoveIcon      = $04   ; { .byte icon }
-HighlightAll    = $05   ; { .byte window_id }
-RemoveAll       = $06   ; { .byte window_id }
-CloseWindow     = $07   ; { .byte window_id }
-FindIcon        = $08   ; { .word mousex, .word mousey, .byte result, .byte window_id }
-DragHighlighted = $09   ; { .byte param, .word mousex, .word mousey }
+RemoveAll       = $05   ; { .byte window_id }
+CloseWindow     = $06   ; { .byte window_id }
+FindIcon        = $07   ; { .word mousex, .word mousey, .byte result, .byte window_id }
+DragHighlighted = $08   ; { .byte param, .word mousex, .word mousey }
                         ; Input: specific icon being dragged, mouse coords
                         ; Output: 0 = onto desktop or same window (no-op)
                         ;  hi bit clear: low bits are target icon
                         ;  hi bit set:   low bits are target window
                         ;  if 0, X = 2 means "file icon dragged to desktop" (???)
-UnhighlightIcon = $0A   ; { .byte icon }
-RedrawIcons     = $0B   ; Repaints desktop icons *
-IconInRect      = $0C   ; { .byte icon, rect bounds }
-EraseIcon       = $0D   ; { .byte icon }
+UnhighlightIcon = $09   ; { .byte icon }
+RedrawIcons     = $0A   ; Repaints desktop icons *
+IconInRect      = $0B   ; { .byte icon, rect bounds }
+EraseIcon       = $0C   ; { .byte icon }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 ;;; `icon_index` is the index in the icon table
