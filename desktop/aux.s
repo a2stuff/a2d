@@ -449,7 +449,7 @@ desktop_jump_table:
         .addr   FindIconImpl
         .addr   DragHighlighted
         .addr   UnhighlightIconImpl
-        .addr   RedrawIconsImpl
+        .addr   RedrawDesktopIconsImpl
         .addr   IconInRectImpl
         .addr   EraseIconImpl
 
@@ -2166,9 +2166,9 @@ text_width:  .word   0
 .endproc
 
 ;;; ============================================================
-;;; RedrawIcons
+;;; RedrawDesktopIcons
 
-.proc RedrawIconsImpl
+.proc RedrawDesktopIconsImpl
         ptr := $06
 
         jmp     start

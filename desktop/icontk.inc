@@ -30,7 +30,7 @@ DragHighlighted = $08   ; { .byte param, .word mousex, .word mousey }
                         ;  hi bit set:   low bits are target window
                         ;  if 0, X = 2 means "file icon dragged to desktop" (???)
 UnhighlightIcon = $09   ; { .byte icon }
-RedrawIcons     = $0A   ; Repaints desktop icons *
+RedrawDesktopIcons = $0A ; Repaints desktop icons *
 IconInRect      = $0B   ; { .byte icon, rect bounds }
 EraseIcon       = $0C   ; { .byte icon }
 

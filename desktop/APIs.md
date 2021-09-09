@@ -297,7 +297,7 @@ Parameters: { byte icon }
 
 Unhighlights the specified icon.
 
-### `IconTK::RedrawIcons` ($0A)
+### `IconTK::RedrawDesktopIcons` ($0A)
 
 Parameters: none (pass $0000 as address)
 

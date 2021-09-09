@@ -162,7 +162,7 @@ handle_update:
 
 finish: jsr     LoadDesktopEntryTable
         copy    saved_active_window_id, active_window_id
-        ITK_RELAY_CALL IconTK::RedrawIcons
+        ITK_RELAY_CALL IconTK::RedrawDesktopIcons
         rts
 
 saved_active_window_id:
