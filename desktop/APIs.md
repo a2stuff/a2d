@@ -281,19 +281,13 @@ Parameters: { byte window_id }
 
 Remove all icons associated with the specified window. No redrawing is done.
 
-### `IconTK::GetHighlighted` ($08)
-
-Parameters: { .res 127 }
-
-Copies the selected icon numbers to the given buffer.
-
-### `IconTK::FindIcon` ($09)
+### `IconTK::FindIcon` ($08)
 
 Parameters: { word mousex, word mousey, (out) byte result }
 
 Find the icon number at the given coordinates.
 
-### `IconTK::DragHighlighted` ($0A)
+### `IconTK::DragHighlighted` ($09)
 
 Parameters: { byte param, word mousex, word mousey }
 
@@ -303,26 +297,26 @@ drop was on the desktop, high bit clear if the drop target was an icon
 (and the low bits are the icon number), high bit set if the drop
 target was a window (and the low bits are the window number).
 
-### `IconTK::UnhighlightIcon` ($0B)
+### `IconTK::UnhighlightIcon` ($0A)
 
 Parameters: { byte icon }
 
 Unhighlights the specified icon.
 
-### `IconTK::RedrawIcons` ($0C)
+### `IconTK::RedrawIcons` ($0B)
 
 Parameters: none (pass $0000 as address)
 
 Redraws the icons on the desktop (mounted volumes, trash). This call
 is required after destroying, moving, or resizing a desk accessory window.
 
-### `IconTK::IconInRect` ($0D)
+### `IconTK::IconInRect` ($0C)
 
 Parameters: { byte icon, rect bounds }
 
 Tests to see if the given icon (by number) overlaps the passed rect.
 
-### `IconTK::EraseIcon` ($0E)
+### `IconTK::EraseIcon` ($0D)
 
 Parameters: { byte icon }
 
@@ -349,6 +343,7 @@ Erases the specified icon by number. No error checking is done.
 .word icony     (pixels)
 .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
 .res  16        (length-prefixed name)
+.byte record_num (index of icon in window)
 ```
 
 <!-- ============================================================ -->

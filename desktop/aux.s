@@ -447,7 +447,6 @@ desktop_jump_table:
         .addr   HighlightAllImpl
         .addr   RemoveAllImpl
         .addr   CloseWindowImpl
-        .addr   GetHighlightedImpl
         .addr   FindIconImpl
         .addr   DragHighlighted
         .addr   UnhighlightIconImpl
@@ -994,25 +993,6 @@ L9750:  lda     #0
         ldx     highlight_count
         sta     highlight_list,x
 L9758:  jmp     loop
-.endproc
-
-;;; ============================================================
-;;; GetHighlighted
-
-;;; Copies highlighted icon numbers to ($06)
-
-.proc GetHighlightedImpl
-        ldx     #0
-        ldy     #0
-:       lda     highlight_list,x
-        sta     ($06),y
-        cpx     highlight_count
-        beq     done
-        iny
-        inx
-        jmp     :-
-
-done:   return  #0
 .endproc
 
 ;;; ============================================================
