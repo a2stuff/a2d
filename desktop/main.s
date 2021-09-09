@@ -301,59 +301,6 @@ yoff:   .word   0
 .endproc
 
 ;;; ============================================================
-
-.proc redraw_selected_icons
-        lda     selected_icon_count
-        bne     :+
-bail:   rts
-
-:       copy    #0, num
-
-        lda     selected_window_id
-        beq     desktop
-        cmp     active_window_id
-        bne     bail
-
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_port2
-        cmp     #MGTK::Error::window_obscured
-        beq     done
-        jsr     offset_window_grafport_and_set
-
-        COPY_BLOCK window_grafport::cliprect, tmp_rect
-
-        ;; Redraw selected icons in window
-window: lda     num
-        cmp     selected_icon_count
-        beq     done
-        tax
-        copy    selected_icon_list,x, icon_param
-        jsr     icon_screen_to_window
-        ITK_RELAY_CALL IconTK::IconInRect, icon_param
-        beq     :+
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-:       lda     icon_param
-        jsr     icon_window_to_screen
-        inc     num
-        jmp     window
-
-done:   jmp     reset_main_grafport
-
-        ;; Redraw selected icons on desktop
-desktop:
-        lda     num
-        cmp     selected_icon_count
-        beq     done
-        tax
-        copy    selected_icon_list,x, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-        inc     num
-        jmp     desktop
-
-num:    .byte   0
-.endproc
-
-;;; ============================================================
 ;;; Menu Dispatch
 
 .proc handle_keydown_impl
@@ -4200,8 +4147,8 @@ same_or_desktop:
         dex
         bpl     :-
 
-        lda     active_window_id
-        jsr     set_port_from_window_id
+        lda     active_window_id ; TODO: Remove???
+        jsr     set_port_from_window_id ; TODO: Remove???
 
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
@@ -10132,8 +10079,22 @@ skip:   lda     icon_params2
         lda     (ptr),y
         and     #AS_BYTE(~kIconEntryOpenMask) ; clear open_flag
         sta     (ptr),y
-        jsr     redraw_selected_icons
-        jsr     pop_pointers
+
+        and     #kIconEntryWinIdMask
+        pha                     ; A = window id
+
+        beq     :+
+        jsr     offset_and_set_port_from_window_id
+        lda     icon_params2
+        jsr     icon_screen_to_window
+:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_params2
+        pla                     ; A = window id
+        beq     :+
+        lda     icon_params2
+        jsr     icon_window_to_screen
+        jsr     reset_main_grafport
+
+:       jsr     pop_pointers
         rts
 .endproc
         mark_icons_not_opened_1 := mark_icons_not_opened::L8B19
