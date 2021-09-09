@@ -27,6 +27,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Menu filler items appear with a visible separator. ([#135](https://github.com/a2stuff/a2d/issues/135))
 * Reorganized/renamed several menu items. ([#13](https://github.com/a2stuff/a2d/issues/13), [#303](https://github.com/a2stuff/a2d/issues/303), [#304](https://github.com/a2stuff/a2d/issues/304), [#305](https://github.com/a2stuff/a2d/issues/305))
 * Add **Special > Check Drive** command to refresh a single drive. ([#97](https://github.com/a2stuff/a2d/issues/97))
+* Add **File > Duplicate...** command to duplicate files. ([#228](https://github.com/a2stuff/a2d/issues/228))
 * New file type icons: graphics, IIgs-specific, AppleWorks, relocatable, command, fonts, and DAs. ([#105](https://github.com/a2stuff/a2d/issues/105), [#116](https://github.com/a2stuff/a2d/issues/116))
 * Desktop icon shown for AppleTalk file shares. ([#88](https://github.com/a2stuff/a2d/issues/88))
 * Improvements to several existing icon bitmaps. ([#74](https://github.com/a2stuff/a2d/issues/74))

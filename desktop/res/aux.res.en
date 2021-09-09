@@ -34,6 +34,7 @@
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "Get Size"
 .define res_string_menu_item_rename_icon "Rename..."
+.define res_string_menu_item_duplicate "Duplicate..."
 .define res_string_prompt_button_yes " Yes"
 .define res_string_prompt_button_no " No"
 .define res_string_prompt_button_all " All"
@@ -61,6 +62,7 @@
 .define res_string_new_folder_label_name "Enter the folder name:"
 .define res_string_rename_label_old "Rename: "
 .define res_string_rename_label_new "New name:"
+.define res_string_rename_label_original "Original: "
 .define res_string_get_info_label_name "Name"
 .define res_string_get_info_label_locked "Locked"
 .define res_string_get_info_label_file_size "Size"

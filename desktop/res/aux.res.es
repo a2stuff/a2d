@@ -34,6 +34,7 @@
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "Obtener Tama|o"
 .define res_string_menu_item_rename_icon "Renombrar..."
+.define res_string_menu_item_duplicate "Duplicar..."
 .define res_string_prompt_button_yes " Si"
 .define res_string_prompt_button_no " No"
 .define res_string_prompt_button_all " Todo"
@@ -61,6 +62,7 @@
 .define res_string_new_folder_label_name "Escriba el nombre de la carpeta:"
 .define res_string_rename_label_old "Renombrar: "
 .define res_string_rename_label_new "Nuevo Nombre:"
+.define res_string_rename_label_original "Original: "
 .define res_string_get_info_label_name "Nombre"
 .define res_string_get_info_label_locked "Bloqueado"
 .define res_string_get_info_label_file_size "Tama|o"

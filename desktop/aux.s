@@ -3369,6 +3369,8 @@ label_get_size:
         PASCAL_STRING res_string_menu_item_get_size ; menu item
 label_rename_icon:
         PASCAL_STRING res_string_menu_item_rename_icon ; menu item
+label_duplicate_icon:
+        PASCAL_STRING res_string_menu_item_duplicate ; menu item
 
 desktop_menu:
         DEFINE_MENU_BAR 6
@@ -3390,6 +3392,7 @@ file_menu:
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_get_info, res_char_menu_item_get_info_shortcut
         DEFINE_MENU_ITEM_NOMOD label_rename_icon, CHAR_RETURN, CHAR_RETURN
+        DEFINE_MENU_ITEM label_duplicate_icon, 'D'
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_copy_file
         DEFINE_MENU_ITEM label_delete_file
@@ -3405,11 +3408,12 @@ file_menu:
         ;; --------------------
         kMenuItemIdGetInfo     = 7
         kMenuItemIdRenameIcon  = 8
+        kMenuItemIdDuplicate   = 9
         ;; --------------------
-        kMenuItemIdCopyFile    = 10
-        kMenuItemIdDeleteFile  = 11
+        kMenuItemIdCopyFile    = 11
+        kMenuItemIdDeleteFile  = 12
         ;; --------------------
-        kMenuItemIdQuit        = 13
+        kMenuItemIdQuit        = 14
 
 view_menu:
         DEFINE_MENU kMenuSizeView
@@ -3592,6 +3596,10 @@ str_rename_old:
         PASCAL_STRING res_string_rename_label_old
 str_rename_new:
         PASCAL_STRING res_string_rename_label_new
+
+        ;; "Duplicate" dialog strings
+str_duplicate_original:
+        PASCAL_STRING res_string_rename_label_original
 
         ;; "Get Info" dialog strings
 str_info_name:

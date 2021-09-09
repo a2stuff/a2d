@@ -335,3 +335,32 @@
 * Launch DeskTop. Position a volume icon near the center of the screen. Open the volume icon, and move/size the window to ensure the volume icon is visible. Open a second volume icon, and move/size the window to ensure the first volume icon is visible. Drag a file icon from the second window into the first window. Verify that after the copy dialog closes, the volume icon is still visible.
 * Launch DeskTop. Position a volume icon near the center of the screen. Open the volume icon, and move/size the window to ensure the volume icon is visible. Open a second volume icon, and move/size the window to ensure the first volume icon is visible. Drag a file icon from the second window into the first window. Repeat the drag, and cancel the copy dialog. Verify that after the copy dialog closes, the volume icon is still visible.
 * Launch DeskTop. Position a volume icon near the center of the screen. Open the volume icon, and move/size the window to ensure the volume icon is visible. Drag a file icon to the trash. Verify that after the delete dialog closes, the volume icon is still visible.
+
+* Launch DeskTop. Clear the selection (e.g. by clicking on the DeskTop). Verify that:
+  * Special > Eject Disk is disabled.
+  * Special > Check Drive is disabled.
+  * File > Duplicate... is disabled.
+  * File > Open, File > Get Info, File > Rename..., Special > Lock..., Special > Unlock..., and Special > Get Size are disabled.
+* Launch DeskTop. Select only the Trash icon. Verify that:
+  * Special > Eject Disk is disabled.
+  * Special > Check Drive is disabled.
+  * File > Duplicate... is disabled.
+  * File > Open, File > Get Info, File > Rename..., Special > Lock..., Special > Unlock..., and Special > Get Size are disabled.
+* Launch DeskTop. Select a volume. Verify that:
+  * Special > Eject Disk is enabled.
+  * Special > Check Drive is enabled.
+  * File > Duplicate... is disabled.
+  * File > Open, File > Get Info, File > Rename..., Special > Lock..., Special > Unlock..., and Special > Get Size are enabled.
+* Launch DeskTop. Select a volume icon and the Trash icon. Verify that:
+  * Special > Eject Disk is enabled.
+  * Special > Check Drive is enabled.
+  * File > Duplicate... is disabled.
+  * File > Open, File > Get Info, File > Rename..., Special > Lock..., Special > Unlock..., and Special > Get Size are enabled.
+* Launch DeskTop. Open a volume window, and select a file. Verify that:
+  * Special > Eject Disk is disabled.
+  * Special > Check Drive is disabled.
+  * File > Duplicate... is enabled.
+  * File > Open, File > Get Info, File > Rename..., Special > Lock..., Special > Unlock..., and Special > Get Size are enabled.
+* Launch DeskTop. Close all windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are disabled.
+* Launch DeskTop. Open a windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
+* Delete the SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Selector > Edit an Entry..., Selector > Delete an Entry..., and Selector > Run an Entry... are disabled. Add a Selector entry. Verify that Selector > Edit an Entry..., Selector > Delete an Entry..., and Selector > Run an Entry... are now enabled.

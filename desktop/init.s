@@ -1080,6 +1080,7 @@ count:  .byte   0
         sta     active_window_id
         jsr     main::update_window_menu_items
         jsr     main::disable_menu_items_requiring_volume_selection
+        jsr     main::disable_menu_items_requiring_file_selection
         jsr     main::disable_menu_items_requiring_selection
 
         ;; Add desktop icons

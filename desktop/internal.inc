@@ -120,7 +120,7 @@ kMenuIdStartup  = 8
 kMenuIdSelector = 3
 
 kMenuSizeApple    = 14
-kMenuSizeFile     = 13
+kMenuSizeFile     = 14
 kMenuSizeView     = 5
 kMenuSizeSpecial  = 11
 kMenuSizeStartup  = 7

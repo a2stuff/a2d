@@ -381,6 +381,7 @@ dispatch_table:
         .addr   cmd_noop        ; --------
         .addr   cmd_get_info
         .addr   cmd_rename
+        .addr   cmd_duplicate
         .addr   cmd_noop        ; --------
         .addr   cmd_copy_file
         .addr   cmd_delete_file
@@ -870,6 +871,7 @@ check_selection:
         ;; Files selected (not volumes)
 
         jsr     disable_menu_items_requiring_volume_selection
+        jsr     enable_menu_items_requiring_file_selection
         jsr     enable_menu_items_requiring_selection
         rts
 
@@ -885,6 +887,7 @@ check_selection:
 
         ;; At least one real volume
 :       jsr     enable_menu_items_requiring_volume_selection
+        jsr     disable_menu_items_requiring_file_selection
         jsr     enable_menu_items_requiring_selection
         rts
 
@@ -892,6 +895,7 @@ check_selection:
         ;; No Selection
 no_selection:
         jsr     disable_menu_items_requiring_volume_selection
+        jsr     disable_menu_items_requiring_file_selection
         jsr     disable_menu_items_requiring_selection
         rts
 
@@ -3037,6 +3041,24 @@ drive_to_refresh:
         lda     active_window_id
         ;; TODO: Optimize, e.g. rebuild from existing FileRecords ?
         jsr     select_and_refresh_window
+
+:       rts
+
+result: .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc cmd_duplicate
+        lda     selected_icon_count
+        bne     :+
+        rts
+:
+        jsr     jt_duplicate
+        beq     :+              ; flag set if window needs refreshing
+
+        lda     active_window_id
+        jsr     select_and_refresh_window_or_close
 
 :       rts
 
@@ -5238,6 +5260,26 @@ disable_menu_items_requiring_selection := toggle_menu_items_requiring_selection:
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
 .endproc
+
+;;; ============================================================
+
+.proc toggle_menu_items_requiring_file_selection
+enable:
+        copy    #MGTK::disableitem_enable, disableitem_params::disable
+        jmp     :+
+
+disable:
+        copy    #MGTK::disableitem_disable, disableitem_params::disable
+
+:       copy    #kMenuIdFile, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdDuplicate
+        jsr     disable_menu_item
+
+        rts
+
+.endproc
+enable_menu_items_requiring_file_selection := toggle_menu_items_requiring_file_selection::enable
+disable_menu_items_requiring_file_selection := toggle_menu_items_requiring_file_selection::disable
 
 ;;; ============================================================
 
@@ -10852,6 +10894,7 @@ jt_get_info:    jmp     do_get_info    ; cmd_get_info
 jt_lock:        jmp     do_lock        ; cmd_lock
 jt_unlock:      jmp     do_unlock      ; cmd_unlock
 jt_rename:      jmp     do_rename      ; cmd_rename
+jt_duplicate:   jmp     do_duplicate   ; cmd_duplicate
 jt_eject:       jmp     do_eject       ; cmd_eject
 jt_copy_file:   jmp     do_copy_file   ; cmd_copy_file
 jt_delete_file: jmp     do_delete_file ; cmd_delete_file
@@ -11963,6 +12006,173 @@ result_flags:
         .byte   0
 .endproc
         do_rename := do_rename_impl::start
+
+;;; ============================================================
+
+.enum DuplicateDialogState
+        open  = $00
+        run   = $80
+        close = $40
+.endenum
+
+.proc do_duplicate_impl
+
+        src_path_buf := $220
+        old_name_buf := $1F00
+
+.params duplicate_dialog_params
+state:  .byte   0
+addr:   .addr   old_name_buf
+.endparams
+
+start:
+        lda     #0
+        sta     index
+        sta     result_flag
+
+        ;; Verify selection is files (menu item shouldn't be enabled, though)
+        lda     selected_window_id
+        bne     :+
+        return  result_flag
+:
+        ;; Loop over all selected icons
+loop:   lda     index
+        cmp     selected_icon_count
+        bne     :+
+        return  result_flag
+:
+        ;; Compose full path
+        ldx     index
+        lda     selected_icon_list,x
+        jsr     get_icon_path   ; populates `path_buf3`
+
+        ldy     path_buf3       ; copy into `src_path_buf`
+:       copy    path_buf3,y, src_path_buf,y
+        dey
+        bpl     :-
+
+        ldx     index
+        lda     selected_icon_list,x
+        jsr     icon_entry_name_lookup
+
+        ;; Copy name for display/default
+        icon_name_ptr := $06
+
+        ldy     #0
+        lda     (icon_name_ptr),y
+        tay
+:       lda     (icon_name_ptr),y
+        sta     old_name_buf,y
+        dey
+        bpl     :-
+
+        ;; Open the dialog
+        lda     #DuplicateDialogState::open
+        jsr     run_dialog_proc
+
+        ;; Run the dialog
+retry:  lda     #DuplicateDialogState::run
+        jsr     run_dialog_proc
+        beq     success
+
+        ;; Failure
+fail:   return  result_flag
+
+        ;; --------------------------------------------------
+        ;; Success, new name in Y,X
+
+success:
+        new_name_ptr := $08
+        sty     new_name_ptr
+        stx     new_name_ptr+1
+
+        win_path_ptr := $06
+        lda     selected_window_id
+        jsr     get_window_path
+        stax    win_path_ptr
+
+        ;; Copy window path as prefix
+        ldy     #0
+        lda     (win_path_ptr),y
+        tay
+:       lda     (win_path_ptr),y
+        sta     dst_path_buf,y
+        dey
+        bpl     :-
+
+        ;; Append '/'
+        inc     dst_path_buf
+        ldx     dst_path_buf
+        lda     #'/'
+        sta     dst_path_buf,x
+
+        ;; Append new filename
+        ldy     #0
+        lda     (new_name_ptr),y
+        sta     @len
+:       inx
+        iny
+        lda     (new_name_ptr),y
+        sta     dst_path_buf,x
+        @len = * + 1
+        cpy     #0              ; self-modified
+        bne     :-
+        stx     dst_path_buf
+
+        lda     #DuplicateDialogState::close
+        jsr     run_dialog_proc
+
+        ;; --------------------------------------------------
+        ;; Check for unchanged name
+
+        ldx     src_path_buf
+        cpx     dst_path_buf
+        bne     no_match
+:       lda     src_path_buf,x
+        jsr     upcase_char
+        sta     @char
+        lda     dst_path_buf,x
+        jsr     upcase_char
+        @char := *+1
+        cmp     #0              ; self-modified
+        bne     no_match
+        dex
+        bne     :-
+
+        lda     #ERR_DUPLICATE_FILENAME
+        jsr     ShowAlert
+        jmp     fail
+no_match:
+
+        ;; --------------------------------------------------
+        ;; Try copying the file
+
+        copy16  #src_path_buf, $06
+        copy16  #dst_path_buf, $08
+        jsr     copy_paths_and_split_name
+        jsr     jt_copy_file
+        bmi     :+
+        lda     #$80
+        sta     result_flag
+:
+
+        ;; --------------------------------------------------
+        ;; Totally done - advance to next selected icon
+        inc     index
+        jmp     loop
+
+run_dialog_proc:
+        sta     duplicate_dialog_params
+        param_call invoke_dialog_proc, kIndexDuplicateDialog, duplicate_dialog_params
+        rts
+
+index:  .byte   0               ; selected icon index
+
+;;; N bit ($80) set if anything succeeded (and window needs refreshing)
+result_flag:
+        .byte   0
+.endproc
+        do_duplicate := do_duplicate_impl::start
 
 ;;; ============================================================
 
@@ -13852,7 +14062,7 @@ do_on_line:
 ;;; ============================================================
 ;;; Dialog Launcher (or just proc handler???)
 
-kNumDialogTypes = 12
+kNumDialogTypes = 13
 
 kIndexAboutDialog       = 0
 kIndexCopyDialog        = 1
@@ -13864,6 +14074,7 @@ kIndexUnlockDialog      = 8
 kIndexRenameDialog      = 9
 kIndexDownloadDialog    = 10
 kIndexGetSizeDialog     = 11
+kIndexDuplicateDialog   = 12
 
 invoke_dialog_proc:
         ASSERT_ADDRESS $A500, "Overlay entry point"
@@ -13882,6 +14093,7 @@ dialog_proc_table:
         .addr   rename_dialog_proc
         .addr   download_dialog_proc
         .addr   get_size_dialog_proc
+        .addr   duplicate_dialog_proc
         ASSERT_ADDRESS_TABLE_SIZE dialog_proc_table, kNumDialogTypes
 
 dialog_param_addr:
@@ -15143,6 +15355,81 @@ open_win:
         jsr     clear_path_buf2
 
         param_call draw_dialog_label, 2, aux::str_rename_old
+        param_call DrawString, buf_filename
+        param_call draw_dialog_label, 4, aux::str_rename_new
+        jsr     draw_filename_prompt
+        rts
+
+run_loop:
+        copy    #$00, prompt_button_flags
+        copy    #$80, has_input_field_flag
+        lda     winfo_prompt_dialog::window_id
+        jsr     set_port_from_window_id
+:       jsr     prompt_input_loop
+        bmi     :-              ; continue?
+
+        bne     close_win       ; canceled!
+
+        jsr     input_field_ip_end ; collapse name
+
+        lda     path_buf1
+        beq     :-              ; name is empty, retry
+
+        ldy     #<path_buf1
+        ldx     #>path_buf1
+        return  #0
+
+close_win:
+        jsr     close_prompt_dialog
+        jsr     set_cursor_pointer
+        return  #1
+.endproc
+
+;;; ============================================================
+;;; "Duplicate" dialog
+
+.proc duplicate_dialog_proc
+        params_ptr := $06
+
+        jsr     copy_dialog_param_addr_to_ptr
+        ldy     #0
+        lda     (params_ptr),y
+        cmp     #DuplicateDialogState::run
+        bne     :+
+        jmp     run_loop
+
+:       cmp     #DuplicateDialogState::close
+        bne     open_win
+        jmp     close_win
+
+open_win:
+        jsr     copy_dialog_param_addr_to_ptr
+        copy    #$80, has_input_field_flag
+        lda     #$00
+        jsr     open_prompt_window
+        lda     winfo_prompt_dialog::window_id
+        jsr     set_port_from_window_id
+        param_call draw_dialog_title, aux::label_duplicate_icon
+        jsr     set_penmode_xor
+        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
+        jsr     copy_dialog_param_addr_to_ptr
+        ldy     #1              ; duplicate_dialog_params::addr offset
+        copy16in ($06),y, $08
+
+        ;; Populate filename field and input (before IP)
+        ldy     #0
+        lda     ($08),y
+        tay
+:       lda     ($08),y
+        sta     buf_filename,y
+        sta     path_buf1,y
+        dey
+        bpl     :-
+
+        ;; Clear input (after IP)
+        jsr     clear_path_buf2
+
+        param_call draw_dialog_label, 2, aux::str_duplicate_original
         param_call DrawString, buf_filename
         param_call draw_dialog_label, 4, aux::str_rename_new
         jsr     draw_filename_prompt
