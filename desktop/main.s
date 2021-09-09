@@ -11081,15 +11081,11 @@ iterate_selection:
 :       ldx     #0
         stx     icon_count
 
-loop:   lda     selected_window_id
-        jsr     get_window_path
-        stax    $08
-        ldx     icon_count
+loop:   ldx     icon_count
         lda     selected_icon_list,x
         cmp     trash_icon_num
         beq     next_icon
-        jsr     icon_entry_name_lookup
-        jsr     join_paths
+        jsr     get_icon_path
 
         lda     L97E4
         beq     L913D
