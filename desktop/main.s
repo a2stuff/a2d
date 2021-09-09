@@ -11627,7 +11627,7 @@ append_size:
 
         ;; Volume
         COPY_STRING str_vol, text_buffer2::length
-        bmi     show_type           ; always
+        jmp     show_type
 
         ;; File
 :       lda     get_file_info_params5::file_type
