@@ -9095,6 +9095,42 @@ hi:     .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Inputs: A = icon id (volume or file)
+;;; Outputs: `path_buf3` populated with full path
+;;; NOTE: Does not do length checks.
+
+.proc get_icon_path
+        tay                     ; A = icon
+        jsr     push_pointers
+        tya                     ; A = icon
+
+        icon_ptr := $06
+        jsr     icon_entry_lookup
+        stax    icon_ptr
+
+        ldy     #IconEntry::win_type
+        lda     (icon_ptr),y
+        and     #kIconEntryWinIdMask
+        pha                     ; A = window id
+        add16   icon_ptr, #IconEntry::name, icon_ptr
+        pla
+        bne     file            ; A = window id
+
+        ;; Volume - no base path
+        copy16  #0, $08         ; base
+        beq     common          ; always
+
+        ;; File - window path is base path
+file:
+        jsr     get_window_path
+        stax    $08
+
+common: jsr     join_paths      ; $08 = base, $06 = file
+        jsr     pop_pointers
+        rts
+.endproc
+
+;;; ============================================================
 
 .proc compose_file_type_string
         ptr := $06
@@ -10964,7 +11000,7 @@ L8FEB:  tsx
         ;; hi bit set = target is a window; get window number
 compute_target_prefix:
         lda     drag_drop_params::result
-        bpl     check_icon_drop_type
+        bpl     target_is_icon
 
         ;; Drop is on a window
         and     #%01111111      ; get window id
@@ -10973,47 +11009,14 @@ compute_target_prefix:
         copy16  #empty_string, $06
         jsr     join_paths
         dec     path_buf3       ; remove trailing '/'
-        jmp     L9076
+        jmp     common
 
         ;; Drop is on an icon.
-        ;; Is drop on a volume or a file?
-        ;; (lower 4 bits are containing window id)
-check_icon_drop_type:
-        jsr     get_icon_entry_win_type
-        and     #kIconEntryWinIdMask
-        beq     drop_on_volume_icon ; 0 = desktop (so, volume icon)
+target_is_icon:
+        jsr     get_icon_path   ; `path_buf3` set to path
 
-        ;; Drop is on a file icon.
-        jsr     get_window_path
-        stax    $08
-        lda     drag_drop_params::result
-        jsr     icon_entry_name_lookup
-        jsr     join_paths
-        jmp     L9076
-
-        ;; Drop is on a volume icon.
-        ;;
-drop_on_volume_icon:
-        lda     drag_drop_params::result
-        jsr     icon_entry_name_lookup
-
-        ;; Prefix name with '/'
-        copy    #'/', path_buf3+1
-
-        ;; Copy to `path_buf3`
-        ldy     #0
-        lda     ($06),y
-        sta     @compare
-:       iny
-        lda     ($06),y
-        sta     path_buf3+1,y
-        @compare := *+1
-        cpy     #0              ; self-modified
-        bne     :-
-        iny
-        sty     path_buf3
-
-L9076:  ldy     path_buf3
+common:
+        ldy     path_buf3
 :       copy    path_buf3,y, path_buf4,y
         dey
         bpl     :-
@@ -11033,7 +11036,9 @@ L9076:  ldy     path_buf3
         bmi     @trash
 
         ;; Copy or Move - compare src/dst paths (etc)
-        jsr     get_window_path_ptr
+        lda     selected_window_id
+        jsr     get_window_path
+        stax    $08
         jsr     check_move_or_copy
         sta     move_flag
         jsr     do_copy_dialog_phase
@@ -11076,7 +11081,9 @@ iterate_selection:
 :       ldx     #0
         stx     icon_count
 
-loop:   jsr     get_window_path_ptr
+loop:   lda     selected_window_id
+        jsr     get_window_path
+        stax    $08
         ldx     icon_count
         lda     selected_icon_list,x
         cmp     trash_icon_num
@@ -11194,7 +11201,8 @@ all_flag:
         .byte   0
 
 ;;; ============================================================
-;;; For icon index in A, put pointer to name in $6
+;;; Input: A = icon
+;;; Output: $06 = icon name ptr
 
 .proc icon_entry_name_lookup
         asl     a
@@ -11253,18 +11261,6 @@ do_str2:
         bne     :-
 
 done:   stx     buf
-        rts
-.endproc
-
-;;; ============================================================
-;;; Points $08 to path of window with selection ($0000 if desktop)
-
-.proc get_window_path_ptr
-        ptr := $08
-
-        lda     selected_window_id
-        jsr     get_window_path
-        stax    ptr
         rts
 .endproc
 
@@ -11395,42 +11391,18 @@ loop:   ldx     get_info_dialog_params::index
         bne     :+
         jmp     done
 
-:       lda     selected_window_id
-        beq     vol_icon
-
-        ;; File icon
-        jsr     get_window_path
-        stax    $08
-        ldx     get_info_dialog_params::index
-        lda     selected_icon_list,x
-        jsr     icon_entry_name_lookup
-        jsr     join_paths
-
-        ldy     path_buf3       ; Copy name to `path_buf`
-:       copy    path_buf3,y, path_buf,y
-        dey
-        bpl     :-
-        jmp     common
-
-        ;; Volume icon
-vol_icon:
-        ldx     get_info_dialog_params::index
+:       ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
         cmp     trash_icon_num
         bne     :+
         jmp     next
-:       jsr     icon_entry_name_lookup
 
-        ldy     #0
-        lda     (ptr),y
-        tay
-        sta     path_buf
-        inc     path_buf        ; for leading '/'
-:       lda     (ptr),y
-        sta     path_buf+1,y    ; leave room for leading '/'
+:       jsr     get_icon_path   ; `path_buf3` is full path
+
+        ldy     path_buf3       ; Copy to `path_buf`
+:       copy    path_buf3,y, path_buf,y
         dey
-        bne     :-
-        copy    #'/', path_buf+1
+        bpl     :-
 
         ;; Try to get file info
 common: MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params5
@@ -11698,44 +11670,13 @@ loop:   lda     index
         inc     index
         jmp     loop
 :
-        ;; File or Volume?
-        lda     selected_window_id
-        beq     is_vol          ; no window, selection is volumes
-
-        ;; File - compose full path
-        jsr     get_window_path
-        stax    $08
-        ldx     index
-        lda     selected_icon_list,x
-        jsr     icon_entry_name_lookup
-        jsr     join_paths
+        jsr     get_icon_path
 
         ldy     path_buf3       ; copy into `src_path_buf`
 :       copy    path_buf3,y, src_path_buf,y
         dey
         bpl     :-
 
-        jmp     common          ; proceed with rename
-
-        icon_name_ptr := $06
-
-        ;; Volume - compose full path (add '/' prefix)
-is_vol: ldx     index
-        lda     selected_icon_list,x
-        jsr     icon_entry_name_lookup
-
-        ldy     #0              ; copy into `src_path_buf`
-        lda     (icon_name_ptr),y
-        tay
-        sta     src_path_buf
-        inc     src_path_buf    ; for leading '/'
-:       lda     (icon_name_ptr),y
-        sta     src_path_buf+1,y ; leave room for leading '/'
-        dey
-        bne     :-
-        copy    #'/', src_path_buf+1
-
-common:
         ldx     index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
@@ -11841,16 +11782,17 @@ common2:
 finish: lda     #RenameDialogState::close
         jsr     run_dialog_proc
 
-        ;; Replace the icon name
+        ;; Erase the icon
         ldx     index
         lda     selected_icon_list,x
         sta     icon_param2
         ITK_RELAY_CALL IconTK::EraseIcon, icon_param2 ; in case name is shorter
-        ldx     index
-        lda     selected_icon_list,x
-        jsr     icon_entry_name_lookup
 
         ;; Copy new string in
+        icon_name_ptr := $06
+        ldx     index
+        lda     selected_icon_list,x
+        jsr     icon_entry_name_lookup ; $06 = icon name ptr
         ldy     new_name_buf
 :       lda     new_name_buf,y
         sta     (icon_name_ptr),y
