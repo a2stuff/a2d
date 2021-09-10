@@ -960,18 +960,13 @@ window_id_to_filerecord_list_entries:
 window_filerecord_table:
         .res    kMaxNumWindows*2
 
-        ;; IconTK::HighlightIcon params
-icon_param2:
-        .byte   0
-
-        ;; IconTK::HighlightIcon params
-icon_param3:
-        .byte   0
-
-redraw_icon_param:
-        .byte   0
-
-        ;; Used by multiple IconTK calls
+;;; Used for multiple IconTK calls:
+;;; * IconTK::EraseIcon
+;;; * IconTK::HighlightIcon
+;;; * IconTK::IconInRect (with following `tmp_rect`)
+;;; * IconTK::RedrawIcon
+;;; * IconTK::RemoveIcon
+;;; * IconTK::UnhighlightIcon
 icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
@@ -1124,10 +1119,6 @@ blank_dd_label:
         PASCAL_STRING " "       ; do not localize
 dummy_dd_item:
         PASCAL_STRING "Rien"    ; French for "nothing" - do not localize
-
-        ;; IconTK::UnhighlightIcon params
-icon_params2:
-        .byte   0
 
 window_title_addr_table:
         .addr   0

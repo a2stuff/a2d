@@ -3217,17 +3217,17 @@ highlight_icon:
         sta     index
         dec     index
 loop:   ldx     index
-        copy    selected_icon_list,x, icon_param2
+        copy    selected_icon_list,x, icon_param
         jsr     icon_entry_lookup
         stax    $06
         lda     selected_window_id
         beq     :+
-        lda     icon_param2
+        lda     icon_param
         jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param2
+:       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         lda     selected_window_id
         beq     :+
-        lda     icon_param2
+        lda     icon_param
         jsr     icon_window_to_screen
 :       dec     index
         bpl     loop
@@ -4140,8 +4140,8 @@ same_or_desktop:
 :       txa
         pha
         lda     selected_icon_list,x
-        sta     redraw_icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, redraw_icon_param
+        sta     icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         pla
         tax
         dex
@@ -5376,8 +5376,8 @@ same_or_desktop:
         dex
 :       txa
         pha
-        copy    selected_icon_list,x, icon_param3
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param3
+        copy    selected_icon_list,x, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         pla
         tax
         dex
@@ -5634,9 +5634,9 @@ found_window:
 .proc open_folder_or_volume_icon
         ptr := $06
 
-        sta     icon_params2
+        sta     icon_param
         jsr     StoreWindowEntryTable
-        lda     icon_params2
+        lda     icon_param
 
         ;; Already an open window for the icon?
         ldx     #7
@@ -5679,7 +5679,7 @@ select: MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
 
 no_linked_win:
         ;; Compute the path (will be needed anyway).
-        lda     icon_params2
+        lda     icon_param
         jsr     icon_entry_lookup
         stax    ptr
         jsr     compose_icon_full_path
@@ -5692,7 +5692,7 @@ check_path:
         ;; Found a match - associate the window.
         tax
         dex                     ; 1-based to 0-based
-        lda     icon_params2    ; set to $FF if opening via path
+        lda     icon_param      ; set to $FF if opening via path
         bmi     :+
         sta     window_to_dir_icon_table,x
 :       jmp     found_win
@@ -5721,7 +5721,7 @@ no_win:
         jmp     :-
 
         ;; Map the window to its source icon
-:       lda     icon_params2    ; set to $FF if opening via path
+:       lda     icon_param      ; set to $FF if opening via path
         sta     window_to_dir_icon_table,x
         inx                     ; 0-based to 1-based
 
@@ -5790,7 +5790,7 @@ done:   copy    cached_window_id, active_window_id
 
 ;;; Common code to update the dir (vol/folder) icon.
 .proc update_icon
-        lda     icon_params2    ; set to $FF if opening via path
+        lda     icon_param      ; set to $FF if opening via path
         bmi     calc_name_ptr
 
         jsr     icon_entry_lookup
@@ -5811,13 +5811,13 @@ done:   copy    cached_window_id, active_window_id
         bne     done             ; but only if active window
         jsr     get_set_port2
         jsr     offset_window_grafport_and_set
-        lda     icon_params2
+        lda     icon_param
         jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_params2
+:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
 
         lda     getwinport_params2::window_id
         beq     done            ; skip if on desktop
-        lda     icon_params2    ; restore from drawing
+        lda     icon_param      ; restore from drawing
         jsr     icon_window_to_screen
         jsr     reset_main_grafport
 
@@ -5861,7 +5861,7 @@ num:    .byte   0
 ;;; Set `suppress_error_on_open_flag` to avoid alert.
 
 .proc open_window_for_path
-        copy    #$FF, icon_params2
+        copy    #$FF, icon_param
         jsr     open_folder_or_volume_icon::check_path
 
         ;; If the above succeeded, update its used/free.
@@ -6736,14 +6736,14 @@ reserved_desktop_icons:
         jsr     ShowAlert
 
         ;; If opening an icon, need to reset icon state.
-:       bit     icon_params2    ; Were we opening a path?
+:       bit     icon_param      ; Were we opening a path?
         bmi     :+              ; Yes, no icons to twiddle.
 
         jsr     mark_icons_not_opened_2
         lda     selected_window_id
         bne     :+
 
-        lda     icon_params2
+        lda     icon_param
         sta     drive_to_refresh ; icon_number
         jsr     cmd_check_single_drive_by_icon_number
 
@@ -7155,7 +7155,7 @@ has_parent:
         lda     cached_window_id
         jsr     open_directory
 
-        lda     icon_params2    ; set to $FF if opening via path
+        lda     icon_param      ; set to $FF if opening via path
         bmi     volume
 
         jsr     icon_entry_lookup
@@ -7228,7 +7228,7 @@ ep_preserve_window_size:
         ldx     cached_window_id
         dex
         lda     window_to_dir_icon_table,x
-        sta     icon_params2    ; Guaranteed to exist, since window just created
+        sta     icon_param      ; Guaranteed to exist, since window just created
         lda     #$80
         ;; Fall through
 
@@ -7364,7 +7364,7 @@ assign_height:
         sta     (winfo_ptr),y
 
         ;; Animate the window being opened
-        lda     icon_params2
+        lda     icon_param
         ldx     window_id
         jsr     animate_window_open
 
@@ -10049,11 +10049,11 @@ L8B19:  jsr     push_pointers
         jmp     start
 
         ;; This entry point removes filerecords associated with window
-L8B1F:  lda     icon_params2
+L8B1F:  lda     icon_param
         bne     :+
         rts
 :       jsr     push_pointers
-        lda     icon_params2
+        lda     icon_param
         jsr     find_window_for_dir_icon
         bne     :+
         inx
@@ -10063,7 +10063,7 @@ L8B1F:  lda     icon_params2
         ;; fall through
 
         ;; Find open window for the icon
-start:  lda     icon_params2
+start:  lda     icon_param
         jsr     find_window_for_dir_icon
         bne     skip            ; not found
 
@@ -10072,7 +10072,7 @@ start:  lda     icon_params2
         copy    #0, window_to_dir_icon_table,x
 
         ;; Update the icon and redraw
-skip:   lda     icon_params2
+skip:   lda     icon_param
         jsr     icon_entry_lookup
         stax    ptr
         ldy     #IconEntry::win_type
@@ -10085,12 +10085,12 @@ skip:   lda     icon_params2
 
         beq     :+
         jsr     offset_and_set_port_from_window_id
-        lda     icon_params2
+        lda     icon_param
         jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_params2
+:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         pla                     ; A = window id
         beq     :+
-        lda     icon_params2
+        lda     icon_param
         jsr     icon_window_to_screen
         jsr     reset_main_grafport
 
@@ -11785,8 +11785,8 @@ finish: lda     #RenameDialogState::close
         ;; Erase the icon
         ldx     index
         lda     selected_icon_list,x
-        sta     icon_param2
-        ITK_RELAY_CALL IconTK::EraseIcon, icon_param2 ; in case name is shorter
+        sta     icon_param
+        ITK_RELAY_CALL IconTK::EraseIcon, icon_param ; in case name is shorter
 
         ;; Copy new string in
         icon_name_ptr := $06
@@ -11802,12 +11802,12 @@ finish: lda     #RenameDialogState::close
         ;; Redraw the icon
         lda     selected_window_id
         beq     :+
-        lda     icon_param2
+        lda     icon_param
         jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param2
+:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         lda     selected_window_id
         beq     :+
-        lda     icon_param2
+        lda     icon_param
         jsr     icon_window_to_screen
 :
 
@@ -11816,7 +11816,7 @@ finish: lda     #RenameDialogState::close
     IF_NOT_ZERO
         ;; Dig up the index of the icon within the window.
         icon_ptr := $06
-        lda     icon_param2
+        lda     icon_param
         jsr     icon_entry_lookup
         stax    icon_ptr
         ldy     #IconEntry::record_num
