@@ -344,8 +344,6 @@ num_icons:  .byte   0
 icon_table: .res    (::kMaxIconCount+1), 0   ; index into `icon_ptrs` (index 0 not used)
 icon_ptrs:  .res    (::kMaxIconCount+1)*2, 0 ; addresses of icon details (index 0 not used)
 
-has_highlight:                  ; 1 = has highlight, 0 = no highlight
-        .byte   0
 highlight_count:                ; number of highlighted icons
         .byte   0
 highlight_list:                 ; selected icons
@@ -590,8 +588,8 @@ bail1:  return  #1              ; Not found
         bne     :+
         return  #2
 
-:       lda     has_highlight
-        beq     L9498
+:       lda     highlight_count
+        beq     L949D
 
         ;; Already in highlight list?
         dey
@@ -605,9 +603,6 @@ bail1:  return  #1              ; Not found
         jmp     L949D
 
 bail3:  return  #3              ; Already in list
-
-L9498:  lda     #1
-        sta     has_highlight
 
         ;; Append to highlight list
 L949D:  ldx     highlight_count
@@ -666,7 +661,7 @@ found:  asl     a
         tax
         copy16  icon_ptrs,x, ptr
 
-        lda     has_highlight   ; Anything highlighted?
+        lda     highlight_count ; Anything highlighted?
         bne     :+
         jmp     done
 
@@ -744,7 +739,7 @@ found:  asl     a
         lda     #0
         sta     (ptr),y
 
-        lda     has_highlight
+        lda     highlight_count
         beq     done
 
         ;; Find it in the highlight list
@@ -764,11 +759,7 @@ found2: ldx     highlight_count ; new position
 
         ;; Remove it from the highlight list and update flag
         dec     highlight_count
-        lda     highlight_count
-        bne     :+
         lda     #0
-        sta     has_highlight
-:       lda     #0
         ldx     highlight_count
         sta     highlight_list,x
 
@@ -887,7 +878,7 @@ L96E5:  dec     count
         ldy     #IconEntry::state
         lda     #0
         sta     (ptr),y
-        lda     has_highlight
+        lda     highlight_count
         beq     L9758
         ldx     #0
         ldy     #0
@@ -903,11 +894,7 @@ L973B:  lda     (ptr),y         ; icon num
         ldx     highlight_count ; new position
         jsr     change_highlight_index
         dec     highlight_count
-        lda     highlight_count
-        bne     L9750
         lda     #0
-        sta     has_highlight
-L9750:  lda     #0
         ldx     highlight_count
         sta     highlight_list,x
 L9758:  jmp     loop
@@ -1092,7 +1079,7 @@ is_drag:
 
         ;; Was there a selection?
 :       copy16  #drag_outline_buffer, $08
-        lda     has_highlight
+        lda     highlight_count
         bne     :+
         lda     #3              ; return value
         jmp     just_select
@@ -1740,7 +1727,7 @@ height: .word   0
 ptr_iconent     .addr
         END_PARAM_BLOCK
 
-start:  lda     has_highlight
+start:  lda     highlight_count
         bne     :+
         return  #1              ; No selection
 
@@ -1755,13 +1742,9 @@ start:  lda     has_highlight
         lda     #0
         sta     highlight_count,x
         dec     highlight_count
-        lda     highlight_count
-        bne     :+
-        lda     #0              ; Clear flag if no more highlighted
-        sta     has_highlight
 
         ;; Redraw
-:       ldy     #IconEntry::id
+        ldy     #IconEntry::id
         lda     (params::ptr_iconent),y
         sta     icon
         ITK_DIRECT_CALL IconTK::RedrawIcon, icon
@@ -2483,7 +2466,7 @@ LA466:  txa
         bne     next
 
         ;; Is icon highlighted?
-        lda     has_highlight
+        lda     highlight_count
         beq     LA49D
         ldy     #IconEntry::id ; icon num
         lda     (ptr),y
