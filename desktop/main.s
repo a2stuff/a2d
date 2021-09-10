@@ -4637,8 +4637,6 @@ deltay: .word   0
 
         jsr     LoadActiveWindowEntryTable
 
-        copy    selected_window_id, old_selected_window_id
-
         jsr     clear_selection
 
         jsr     get_active_window_view_by
@@ -4664,42 +4662,30 @@ iter:   dec     num_open_windows
 
 cont:   sta     cached_window_entry_count
         jsr     StoreWindowEntryTable
+
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
 
-        ;; Select & highlight dir (vol/folder) icon, if present
+        ;; --------------------------------------------------
+        ;; Do we have a parent icon for this window?
+
+        copy    #0, icon
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
-        bmi     no_icon         ; $FF = dir icon freed
-        sta     icon_param
-        jsr     icon_entry_lookup
-        stax    icon_ptr
+        bmi     :+              ; $FF = dir icon freed
 
-        ldy     #IconEntry::state
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask
-        beq     no_icon         ; Volume icon
-
-        ldy     #IconEntry::win_type
-        lda     (icon_ptr),y
-        and     #AS_BYTE(~kIconEntryOpenMask) ; clear open_flag
-        sta     (icon_ptr),y
-        and     #kIconEntryWinIdMask
-        sta     selected_window_id
-        jsr     prepare_highlight_grafport
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        jsr     reset_main_grafport
-        copy    #1, selected_icon_count
-        copy    icon_param, selected_icon_list
+        sta     icon
 
         ;; Animate closing into dir (vol/folder) icon
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
         inx
-        jsr     animate_window_close
+        jsr     animate_window_close ; A = icon id, X = window id
+:
+        ;; --------------------------------------------------
+        ;; Tidy up after closing window
 
-no_icon:
         lda     active_window_id
         jsr     remove_window_filerecord_entries
 
@@ -4717,23 +4703,46 @@ no_icon:
 
         jsr     clear_updates ; following CloseWindow above
 
-        ;; If selection was cleared out of the new top-most window, force
-        ;; a full redraw. https://github.com/a2stuff/a2d/issues/364
-        ;; TODO: Selection in non-active window shouldn't be supported. Remove this?
-        lda     active_window_id
+        ;; --------------------------------------------------
+        ;; Clean up the parent icon (if any)
+
+        lda     icon
+        beq     finish          ; none
+
+        sta     icon_param
+        jsr     icon_entry_lookup
+        stax    icon_ptr
+
+        ldy     #IconEntry::win_type ; clear open state
+        lda     (icon_ptr),y
+        and     #AS_BYTE(~kIconEntryOpenMask)
+        sta     (icon_ptr),y
+        and     #kIconEntryWinIdMask ; which window?
+        beq     :+              ; desktop, can draw/select
+        cmp     active_window_id
+        bne     finish          ; not top window, skip draw/select
+
+        ;; Set selection and redraw
+
+:       sta     selected_window_id
+        cmp     #0              ; needed, since prior cmp set Z
         beq     :+
-        cmp     old_selected_window_id
-        bne     :+
+        lda     icon_param
+        jsr     icon_screen_to_window
+        lda     selected_window_id
+        jsr     offset_and_set_port_from_window_id
+:       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        lda     selected_window_id
+        beq     :+
+        lda     icon_param
+        jsr     icon_window_to_screen
+        jsr     reset_main_grafport
+:       copy    #1, selected_icon_count
+        copy    icon, selected_icon_list
+finish: rts
 
-        jsr     LoadActiveWindowEntryTable
-        jsr     set_port_from_window_id
-        jsr     draw_window_entries
-        jsr     LoadDesktopEntryTable
+icon:   .byte   0
 
-:       rts
-
-old_selected_window_id:
-        .byte   0
 .endproc
 
 ;;; ============================================================
