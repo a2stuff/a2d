@@ -637,6 +637,7 @@ start:  jsr     clear_selection
         pha
         jsr     prepare_highlight_grafport
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         jsr     reset_main_grafport
         pla
         sta     selected_window_id
@@ -2680,6 +2681,7 @@ entry:
         jsr     icon_screen_to_window
         jsr     offset_window_grafport_and_set
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         lda     icon_param
         jsr     icon_window_to_screen
         dec     index
@@ -3144,6 +3146,7 @@ highlight_icon:
         jsr     icon_screen_to_window
 
 :       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         lda     getwinport_params2::window_id
         beq     :+              ; desktop (volume) icon
 
@@ -3225,6 +3228,7 @@ loop:   ldx     index
         lda     icon_param
         jsr     icon_screen_to_window
 :       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         lda     selected_window_id
         beq     :+
         lda     icon_param
@@ -4209,6 +4213,7 @@ icon_entry_type:
 
         jsr     offset_window_grafport_and_set
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
 
         lda     active_window_id
         jsr     set_port_from_window_id
@@ -4239,6 +4244,7 @@ icon_num:
 
         jsr     offset_window_grafport_and_set
         ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
 
         lda     active_window_id
         jsr     set_port_from_window_id
@@ -4448,6 +4454,7 @@ iloop:  cpx     cached_window_entry_count
 
         ;; Highlight and add to selection
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
@@ -4732,6 +4739,7 @@ cont:   sta     cached_window_entry_count
         lda     selected_window_id
         jsr     offset_and_set_port_from_window_id
 :       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         lda     selected_window_id
         beq     :+
         lda     icon_param
@@ -5313,6 +5321,7 @@ not_selected:
         beq     :+                 ; if so, retain selection
         jsr     clear_selection
 :       ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
+        ITK_RELAY_CALL IconTK::RedrawIcon, findicon_which_icon
         ldx     selected_icon_count
         lda     findicon_which_icon
         sta     selected_icon_list,x
@@ -5325,6 +5334,7 @@ replace_selection:
 
         ;; Set selection to clicked icon
         ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
+        ITK_RELAY_CALL IconTK::RedrawIcon, findicon_which_icon
         copy    #1, selected_icon_count
         copy    findicon_which_icon, selected_icon_list
         copy    #0, selected_window_id
@@ -5396,6 +5406,7 @@ same_or_desktop:
 
 deselect_vol_icon:
         ITK_RELAY_CALL IconTK::UnhighlightIcon, findicon_which_icon
+        ITK_RELAY_CALL IconTK::RedrawIcon, findicon_which_icon
         lda     findicon_which_icon
         jmp     remove_from_selection_list
 .endproc
@@ -5471,6 +5482,7 @@ iloop:  cpx     cached_window_entry_count
 
         ;; Highlight and add to selection
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
@@ -6048,6 +6060,7 @@ files:  lda     index
         sta     icon_param
         jsr     icon_screen_to_window
         ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         lda     icon_param
         jsr     icon_window_to_screen
         inc     index
@@ -6063,6 +6076,7 @@ volumes:
         lda     selected_icon_list,x
         sta     icon_param
         ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         inc     index
         jmp     volumes
 

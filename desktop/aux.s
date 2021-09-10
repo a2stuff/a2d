@@ -620,15 +620,7 @@ L949D:  ldx     highlight_count
         ldx     #1              ; new position
         jsr     change_icon_index
 
-        ;; Redraw
-        ldy     #IconEntry::id
-        lda     (ptr),y         ; icon num
-        sta     icon
-        ITK_DIRECT_CALL IconTK::RedrawIcon, icon
-        return  #0              ; Highlighted
-
-        ;; IconTK::RedrawIcon params
-icon:   .byte   0
+        rts
 .endproc
 
 ;;; ============================================================
@@ -1677,6 +1669,7 @@ headery:
 .proc highlight_icon
         jsr set_port_for_highlight_icon
         ITK_DIRECT_CALL IconTK::HighlightIcon, highlight_icon_id
+        ITK_DIRECT_CALL IconTK::RedrawIcon, highlight_icon_id
         MGTK_CALL MGTK::InitPort, icon_grafport
         rts
 .endproc
@@ -1684,6 +1677,7 @@ headery:
 .proc unhighlight_icon
         jsr set_port_for_highlight_icon
         ITK_DIRECT_CALL IconTK::UnhighlightIcon, highlight_icon_id
+        ITK_DIRECT_CALL IconTK::RedrawIcon, highlight_icon_id
         MGTK_CALL MGTK::InitPort, icon_grafport
         rts
 .endproc
@@ -1743,15 +1737,7 @@ start:  lda     highlight_count
         sta     highlight_count,x
         dec     highlight_count
 
-        ;; Redraw
-        ldy     #IconEntry::id
-        lda     (params::ptr_iconent),y
-        sta     icon
-        ITK_DIRECT_CALL IconTK::RedrawIcon, icon
-        return  #0
-
-        ;; IconTK::RedrawIcon params
-icon:   .byte   0
+        rts
 .endproc
 
 ;;; ============================================================

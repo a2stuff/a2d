@@ -251,6 +251,8 @@ Parameters: { byte icon }
 
 Highlights (selects) an icon by number.
 
+Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::RedrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+
 ### `IconTK::RedrawIcon` ($03)
 
 Parameters: { byte icon }
@@ -296,6 +298,8 @@ target was a window (and the low bits are the window number).
 Parameters: { byte icon }
 
 Unhighlights the specified icon.
+
+Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::RedrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
 
 ### `IconTK::RedrawDesktopIcons` ($0A)
 
