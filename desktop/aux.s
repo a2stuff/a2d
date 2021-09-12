@@ -542,7 +542,6 @@ fail:   return  #1
 
 proceed:
         jsr     sub
-        jsr     paint_icon_unhighlighted
         lda     #1
         tay
         sta     (params::ptr_icon),y
@@ -710,12 +709,8 @@ found:  asl     a
 
         return  #2
 
-        ;; Unhighlight
-:       jsr     calc_icon_poly
-        jsr     erase_icon
-
         ;; Move it to the end of the icon list
-        ldy     #IconEntry::id
+:       ldy     #IconEntry::id
         lda     (ptr),y         ; icon num
         ldx     num_icons       ; new position
         jsr     change_icon_index
@@ -755,7 +750,7 @@ found2: ldx     highlight_count ; new position
         ldx     highlight_count
         sta     highlight_list,x
 
-done:   return  #0              ; Unhighlighted
+done:   return  #0
 .endproc
 
 ;;; ============================================================

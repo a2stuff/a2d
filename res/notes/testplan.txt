@@ -364,3 +364,23 @@
 * Launch DeskTop. Close all windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are disabled.
 * Launch DeskTop. Open a windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
 * Delete the SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Selector > Edit an Entry..., Selector > Delete an Entry..., and Selector > Run an Entry... are disabled. Add a Selector entry. Verify that Selector > Edit an Entry..., Selector > Delete an Entry..., and Selector > Run an Entry... are now enabled.
+
+
+* Launch DeskTop. Open 3 windows. Close the top one. Verify that the repaint is correct.
+
+* For the following cases, "obscure a window" means to move a window to the bottom of the screen so that only the title bar is visible:
+  * Launch DeskTop. Open a window with icons. View > by Name. Obscure the window. View > as Icons. Verify that the window contents don't appear on the desktop. Move the window so the contents are visible. Verify that it contains icons.
+  * Launch DeskTop. Open a window with icons. Obscure the window. View > by Name. Verify that the window contents don't appear on the desktop. Move the window so the contents are visible. Verify that the contents display as a list.
+  * Launch DeskTop. Open a window with at least two icons. Select the first icon. Obscure the window. Press the right arrow key. Verify that the icons don't appear on the desktop.
+  * Launch DeskTop. Open a window with icons. Obscure the window. File > Select All icon. Verify that the icons don't appear on the desktop.
+  * Launch DeskTop. Open a window with icons. File > Select All icon. Obscure the window. Click on the desktop to clear selection. Verify that the icons don't appear on the desktop.
+  * Launch DeskTop. Open a window with folder icons. Open a second window from one of the folders. Verify that the folder icon in the first window is shaded. Obscure the first window. Close the second window. Verify that the folder icon doesn't appear on the desktop.
+  * Launch DeskTop. Open a window with icons. Select (but don't open) a folder. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
+  * Launch DeskTop. Open a window with icons. Select (but don't open) a folder containing 127 icons. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
+  * Launch DeskTop. Open a window. Obscure the window. File > New Folder, enter a name, OK. Verify that the folder icon doesn't appear on the desktop.
+  * Launch DeskTop. Open a window with icons. Obscure the window. File > Quit. Relaunch DeskTop. Verify that the restored window's icons don't appear on the desktop.
+  * Launch DeskTop. Open two windows with icons. Obscure one window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
+  * Launch DeskTop. Open two windows with icons. Activate a window, View > by Name, and then obscure the window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
+  * Launch DeskTop. Open a window with icons. Select an icon. Obscure the window. File > Rename..., enter a new name, OK. Verify that the icon does not paint on the desktop.
+
+* Launch DeskTop. Open a window containing a folder. Open the folder's window. Activate the first window by clicking on it. Activate the second window by clicking on it. Verify that the folder icon is not selected by moving the second window around to force repaints.

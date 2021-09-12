@@ -195,21 +195,22 @@ loop_counter:
 
 ;;; ============================================================
 
-
-draw_window_header_flag:  .byte   0
-
-
 .proc update_window
         lda     event_window_id
         cmp     #kMaxNumWindows+1 ; directory windows are 1-8
-        bcc     L415B
+        bcc     :+
         rts
 
-L415B:  sta     active_window_id
+:       sta     active_window_id
         jsr     LoadActiveWindowEntryTable
-        copy    #$80, draw_window_header_flag
+        copy    #$80, header_and_offset_flag ; We will draw/offset
+
+        ;; This correctly uses the clipped port provided by BeginUpdate.
+        ;; TODO: Document exactly what's going on here.
+
         copy    cached_window_id, getwinport_params2::window_id
-        jsr     get_port2
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+
         jsr     draw_window_header
         lda     active_window_id
         jsr     save_window_portbits
@@ -251,47 +252,10 @@ L415B:  sta     active_window_id
 
 skip_adjust_port:
 
-        ;; View type?
-        jsr     get_cached_window_view_by
-        bpl     by_icon
-
-        ;; --------------------------------------------------
-        ;; List view
+        ;; Actually draw the window icons/list
         jsr     draw_window_entries
-        jmp     done
 
-        ;; --------------------------------------------------
-        ;; Icon view
-by_icon:
-        ;; Map icons to window space
-        lda     cached_window_id
-        jsr     set_port_from_window_id
-        jsr     cached_icons_screen_to_window
-
-        ;; Set up test rect for quick exclusion
-        COPY_BLOCK window_grafport::cliprect, tmp_rect
-
-        ;; Loop over all icons
-        copy    #0, index
-loop:   lda     index
-        cmp     cached_window_entry_count
-        beq     done_icons
-        tax
-        copy    cached_window_entry_list,x, icon_param
-        ITK_RELAY_CALL IconTK::IconInRect, icon_param ; visible?
-        beq     :+
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-:       inc     index
-        jmp     loop
-done_icons:
-        ;; Map icons back to screen space
-        lda     cached_window_id
-        jsr     set_port_from_window_id
-        jsr     cached_icons_window_to_screen
-
-        ;; --------------------------------------------------
-        ;; Finish up
-done:   copy    #0, draw_window_header_flag
+done:   copy    #0, header_and_offset_flag
         lda     active_window_id
         jsr     restore_window_portbits
         jmp     reset_main_grafport
@@ -584,8 +548,6 @@ not_menu:
 winid:  .byte   0
 
 start:  jsr     clear_selection
-        lda     findwindow_window_id
-        jsr     select_icon_for_window
 
         ;; Actually make the window active.
         MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
@@ -593,6 +555,12 @@ start:  jsr     clear_selection
         jsr     LoadActiveWindowEntryTable
         jsr     draw_window_entries
         jsr     LoadDesktopEntryTable
+
+        ;; Try to select the window's parent icon. (Only works
+        ;; for volume icons, otherwise it would put selection
+        ;; in an inactive window.)
+        lda     active_window_id
+        jsr     select_icon_for_window
 
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     check_item
@@ -634,40 +602,95 @@ start:  jsr     clear_selection
         iny                     ; IconEntry::win_type
         lda     (ptr),y
         and     #kIconEntryWinIdMask
-        pha
-        jsr     prepare_highlight_grafport
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-        jsr     reset_main_grafport
-        pla
-        sta     selected_window_id
+        beq     :+
+        cmp     active_window_id ; This should never be true
+        bne     done
+
+:       sta     selected_window_id
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+
+        lda     icon_param
+        jsr     DrawIcon
 
 done:   rts
 .endproc
 
 ;;; ============================================================
+;;; Draw an icon in its window/on the desktop.
+;;; This handles skipping if the window is obscured.
+;;;
+;;; Inputs: A = icon id
+;;; Outputs: sets `icon_param` to the icon id
+;;; Assertions: `reset_main_grafport` state is in effect (and restored)
 
-.proc offset_and_set_port_from_window_id
-        sta     getwinport_params2::window_id
-        jsr     get_port2
-        jmp     offset_window_grafport_and_set
-.endproc
+.proc DrawIcon
+        sta     icon_param
+        jsr     push_pointers
 
-.proc set_port_from_window_id
-        sta     getwinport_params2::window_id
-        ;; fall through
-.endproc
+        ;; Look up the icon
+        icon_ptr := $06
+        lda     icon_param
+        jsr     icon_entry_lookup
+        stax    icon_ptr
 
-.proc get_set_port2
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
-        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
+        ;; Get the window id
+        ldy     #IconEntry::win_type
+        lda     (icon_ptr),y
+        and     #kIconEntryWinIdMask
+        sta     win
+
+        ;; Set up the port and draw the icon
+        beq     :+
+        lda     icon_param
+        jsr     icon_screen_to_window
+        lda     win
+        jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
+        bne     skip            ; MGTK::Error::window_obscured
+:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+skip:   lda     win
+        beq     :+
+        lda     icon_param
+        jsr     icon_window_to_screen
+        jsr     reset_main_grafport
+:
+        jsr     pop_pointers
         rts
+
+win:    .byte   0
 .endproc
 
-.proc get_port2
+;;; ============================================================
+
+;;; Used only for file windows; adjusts port to account for header.
+;;; Returns 0 if ok, `MGTK::Error::window_obscured` if the window is obscured.
+.proc unsafe_offset_and_set_port_from_window_id
+        sta     getwinport_params2::window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+        bne     :+              ; MGTK::Error::window_obscured
+        jsr     offset_window_grafport_and_set
+        lda     #0
+:       rts
+.endproc
+
+;;; Used for all sorts of windows, not just file windows.
+;;; For file windows, used for drawing headers (sometimes);
+;;; Returns 0 if ok, `MGTK::Error::window_obscured` if the window is obscured.
+.proc unsafe_set_port_from_window_id
+        sta     getwinport_params2::window_id
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+        bne     :+              ; MGTK::Error::window_obscured
+        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
+:       rts
+.endproc
+
+;;; Used for windows that can never be obscured (e.g. dialogs)
+.proc safe_set_port_from_window_id
+        sta     getwinport_params2::window_id
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+        ;; ASSERT: Result is not MGTK::Error::window_obscured
+        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
 
@@ -2613,9 +2636,13 @@ entry:
         jsr     update_view_menu_check
 
         lda     active_window_id
-        jsr     offset_and_set_port_from_window_id
+        jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
+    IF_ZERO                     ; Skip drawing if obscured
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
+    END_IF
+
+
         lda     active_window_id
         jsr     compute_window_dimensions
         stax    win_width
@@ -2646,7 +2673,8 @@ entry:
         jsr     create_icons_and_preserve_window_size
 
         lda     active_window_id
-        jsr     set_port_from_window_id
+        jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
+        sta     err
 
         jsr     cached_icons_screen_to_window
         copy    #0, index
@@ -2655,36 +2683,24 @@ entry:
         beq     :+
         tax
         lda     cached_window_entry_list,x
+        sta     icon_param
         jsr     icon_entry_lookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
+        lda     err
+    IF_ZERO                     ; Skip drawing if obscured
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+    END_IF
         inc     index
         jmp     :-
 
 :       jsr     reset_main_grafport
         jsr     cached_icons_window_to_screen
         jsr     StoreWindowEntryTable
+
         jsr     cached_icons_screen_to_window
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
-
-        ;; Highlight selected icons
-        lda     selected_window_id
-        beq     finish          ; desktop
-        lda     selected_icon_count
-        beq     finish          ; no selected icons
-        sta     index
-:       ldx     index
-        lda     selected_icon_count,x
-        sta     icon_param
-        jsr     icon_screen_to_window
-        jsr     offset_window_grafport_and_set
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-        lda     icon_param
-        jsr     icon_window_to_screen
-        dec     index
-        bne     :-
 
 finish: jmp     LoadDesktopEntryTable
 
@@ -2693,6 +2709,7 @@ win_width:
 win_height:
         .word   0
 index:  .byte   0
+err:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2743,47 +2760,20 @@ sort:   jsr     LoadActiveWindowEntryTable
 
         ;; Draw the records
         lda     active_window_id
-        jsr     offset_and_set_port_from_window_id
+        jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
+    IF_ZERO                     ; Skip drawing if obscured
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
-        lda     active_window_id
-        jsr     compute_window_dimensions
-        stax    win_width
-        sty     win_height
-
-        ptr := $06
-
-        lda     active_window_id
-        jsr     window_lookup
-        stax    ptr
-
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Point) - 1
-        lda     #0
-:       sta     (ptr),y
-        dey
-        cpy     #MGTK::Winfo::port + MGTK::GrafPort::maprect - 1
-        bne     :-
-
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     win_width,x
-        sta     (ptr),y
-        dey
-        dex
-        bpl     :-
-
-        copy    #$80, draw_window_header_flag
+    END_IF
         jsr     reset_main_grafport
+
+        copy    #$40, header_and_offset_flag
         jsr     draw_window_entries
+        copy    #0, header_and_offset_flag
+
         jsr     update_scrollbars
-        copy    #0, draw_window_header_flag
 
 done:   rts
-
-win_width:
-        .word   0
-win_height:
-        .word   0
 
 view:   .byte   0
 .endproc
@@ -3128,51 +3118,20 @@ highlight_icon:
         ldx     selected_index
         lda     buffer+1,x
         sta     icon_param
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
 
+        ;; Find icon's window, and set selection
         icon_ptr := $06
-
+        lda     icon_param
         jsr     icon_entry_lookup
         stax    icon_ptr
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
-        sta     getwinport_params2::window_id
-        beq     :+              ; desktop (volume) icon
 
-        ;; windowed icon - adjust port, icon coords
-        jsr     offset_and_set_port_from_window_id
-        lda     icon_param
-        jsr     icon_screen_to_window
-
-:       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-        lda     getwinport_params2::window_id
-        beq     :+              ; desktop (volume) icon
-
-        ;; windowed icon - restore port, icon coords
-        lda     icon_param
-        jsr     icon_window_to_screen
-        jsr     reset_main_grafport
-:
-
-;;; Finish up - set selection, scroll icon into view
-        ldx     selected_index
-        lda     buffer+1,x
-
-        ;; Set selection
-        sta     selected_icon_list
-
-        ;; Set window containing selection (0=desktop)
-        jsr     icon_entry_lookup
-        stax    icon_ptr
-        ldy     #IconEntry::win_type
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask
         sta     selected_window_id
-
-        ;; Always one icon selected
-        lda     #1
-        sta     selected_icon_count
+        copy    #1, selected_icon_count
+        copy    icon_param, selected_icon_list
 
         ;; If windowed, ensure it is visible
         lda     selected_window_id
@@ -3182,6 +3141,9 @@ highlight_icon:
         jsr     scroll_icon_into_view
         jsr     LoadDesktopEntryTable
 :
+
+        lda     selected_icon_list ; or `icon_param` ???
+        jsr     DrawIcon
 
         rts
 .endproc
@@ -3214,25 +3176,32 @@ highlight_icon:
         copy    active_window_id, selected_window_id
         lda     selected_window_id
         beq     :+
-        jsr     offset_and_set_port_from_window_id
+        jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
+        sta     err
+
 :       lda     selected_icon_count
         sta     index
         dec     index
 loop:   ldx     index
         copy    selected_icon_list,x, icon_param
-        jsr     icon_entry_lookup
-        stax    $06
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+
+        lda     err
+    IF_ZERO                     ; Skip drawing if obscured
+        ;; TODO: Find common pattern for redrawing multiple icons
         lda     selected_window_id
         beq     :+
         lda     icon_param
         jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
+:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
         lda     selected_window_id
         beq     :+
         lda     icon_param
         jsr     icon_window_to_screen
-:       dec     index
+:
+    END_IF
+
+        dec     index
         bpl     loop
 
         lda     selected_window_id
@@ -3241,6 +3210,7 @@ loop:   ldx     index
 finish: jmp     LoadDesktopEntryTable
 
 index:  .byte   0
+err:    .byte   0
 .endproc
 
 
@@ -3518,16 +3488,22 @@ max:   .byte   0
         jsr     cmd_close_all
         jsr     clear_selection
         jsr     reset_main_grafport
+
+        ;; --------------------------------------------------
+        ;; Destroy existing volume icons
+.scope
         ldx     cached_window_entry_count
         dex
-L5916:  lda     cached_window_entry_list,x
+loop:   lda     cached_window_entry_list,x
         cmp     trash_icon_num
-        beq     L5942
+        beq     next
+
         txa
         pha
         lda     cached_window_entry_list,x
         sta     icon_param
         copy    #0, cached_window_entry_list,x
+        ITK_RELAY_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
         ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
         lda     icon_param
         jsr     free_desktop_icon_position
@@ -3538,9 +3514,14 @@ L5916:  lda     cached_window_entry_list,x
 
         pla
         tax
-L5942:  dex
-        bpl     L5916
 
+next:   dex
+        bpl     loop
+.endscope
+
+        ;; --------------------------------------------------
+        ;; Create new volume icons
+.scope
         ;; Enumerate DEVLST in reverse order (most important volumes first)
         ldy     DEVCNT
         sty     devlst_index
@@ -3558,27 +3539,39 @@ L5942:  dex
 :       dec     devlst_index
         lda     devlst_index
         bpl     @loop
+.endscope
 
+        ;; --------------------------------------------------
+        ;; Add them to IconTK
+.scope
         ldx     #0
-L5976:  cpx     cached_window_entry_count
-        bne     L5986
-        lda     pending_alert
-        beq     L5983
-        jsr     ShowAlert
-L5983:  jmp     StoreWindowEntryTable
+loop:   cpx     cached_window_entry_count
+        bne     cont
 
-L5986:  txa
+        ;; finish up
+        lda     pending_alert
+        beq     :+
+        jsr     ShowAlert
+:       jmp     StoreWindowEntryTable
+
+
+cont:   txa
         pha
         lda     cached_window_entry_list,x
         cmp     trash_icon_num
-        beq     L5998
+        beq     next
+
+        sta     icon_param
         jsr     icon_entry_lookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
-L5998:  pla
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (desktop)
+
+next:   pla
         tax
         inx
-        jmp     L5976
+        jmp     loop
+.endscope
 .endproc
 
 ;;; ============================================================
@@ -3730,6 +3723,7 @@ not_in_map:
         lda     icon_param
         jsr     free_desktop_icon_position
         jsr     reset_main_grafport
+        ITK_RELAY_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
         ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
 
 :       lda     cached_window_entry_count
@@ -3776,9 +3770,11 @@ add_icon:
         ldx     cached_window_entry_count
         dex
         lda     cached_window_entry_list,x
+        sta     icon_param
         jsr     icon_entry_lookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (desktop)
 
 :       jsr     StoreWindowEntryTable
         rts
@@ -3954,6 +3950,7 @@ done_client_click:
 .endproc
 
 ;;; ============================================================
+;;; Called when the scroll thumb has been moved by the user.
 
 .proc update_scroll_thumb
         copy    updatethumb_stash, updatethumb_thumbpos
@@ -3973,12 +3970,19 @@ done_client_click:
         jsr     cached_icons_window_to_screen
 :
 
+        ;; Clear content background, not header
         lda     active_window_id
-        jsr     set_port_from_window_id
-
+        jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
+    IF_ZERO                     ; Skip drawing if obscured
         MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
+    END_IF
         jsr     reset_main_grafport
-        jmp     draw_window_entries
+
+        ;; Only draw content, not header
+        copy    #$40, header_and_offset_flag
+        jsr     draw_window_entries
+        copy    #0, header_and_offset_flag
+        rts
 .endproc
 
 ;;; ============================================================
@@ -4133,9 +4137,10 @@ same_or_desktop:
 
         ;; Icons moved within window - update and redraw
         lda     active_window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id ; ASSERT: not obscured
 
         jsr     cached_icons_screen_to_window
+        ;; Adjust grafport for header.
         jsr     offset_window_grafport_and_set
 
         ldx     selected_icon_count
@@ -4144,14 +4149,11 @@ same_or_desktop:
         pha
         lda     selected_icon_list,x
         sta     icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (drag)
         pla
         tax
         dex
         bpl     :-
-
-        lda     active_window_id ; TODO: Remove???
-        jsr     set_port_from_window_id ; TODO: Remove???
 
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
@@ -4198,31 +4200,17 @@ icon_entry_type:
 ;;; Input: A = icon number
 
 .proc select_file_icon
-        sta     icon_num
+        sta     icon_param
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+
         ldx     selected_icon_count
-        sta     selected_icon_list,x
+        copy    icon_param, selected_icon_list,x
         inc     selected_icon_count
         copy    active_window_id, selected_window_id
 
-        lda     active_window_id
-        jsr     set_port_from_window_id
-
-        copy    icon_num, icon_param
-        jsr     icon_screen_to_window
-
-        jsr     offset_window_grafport_and_set
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-
-        lda     active_window_id
-        jsr     set_port_from_window_id
-
-        lda     icon_num
-        jsr     icon_window_to_screen
-        jmp     reset_main_grafport
-
-icon_num:
-        .byte   0
+        lda     icon_param
+        jsr     DrawIcon
+        rts
 .endproc
 
 ;;; ============================================================
@@ -4231,29 +4219,15 @@ icon_num:
 ;;; Assert: Must be in selection list and active window.
 
 .proc deselect_file_icon
-        sta     icon_num
+        sta     icon_param
+        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
 
+        lda     icon_param
         jsr     remove_from_selection_list
 
-        lda     active_window_id
-        jsr     set_port_from_window_id
-
-        copy    icon_num, icon_param
-        jsr     icon_screen_to_window
-
-        jsr     offset_window_grafport_and_set
-        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-
-        lda     active_window_id
-        jsr     set_port_from_window_id
-
-        lda     icon_num
-        jsr     icon_window_to_screen
-        jmp     reset_main_grafport
-
-icon_num:
-        .byte   0
+        lda     icon_param
+        jsr     DrawIcon
+        rts
 .endproc
 
 ;;; ============================================================
@@ -4325,12 +4299,14 @@ exception_flag:
         beq     :+
         sta     findwindow_window_id
         jsr     handle_inactive_window_click ; bring to front
-
-:       lda     active_window_id
-        jsr     set_port_from_window_id
-
+:
+        ;; Clear background
+        lda     active_window_id
+        jsr     unsafe_set_port_from_window_id ; CHECKED
+    IF_ZERO                     ; Skip drawing if obscured
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
+    END_IF
 
         lda     active_window_id
         pha
@@ -4356,12 +4332,19 @@ exception_flag:
 
         pla                     ; window id
         jsr     open_directory
+
+        ;; Draw contents
         jsr     cmd_view_by_icon::entry
         jsr     StoreWindowEntryTable
         jsr     LoadActiveWindowEntryTable
-        copy    active_window_id, getwinport_params2::window_id
-        jsr     get_port2
+
+        ;; Draw header
+        lda     active_window_id
+        jsr     unsafe_set_port_from_window_id ; CHECKED
+    IF_ZERO                     ; Skip drawing if obscured
         jsr     draw_window_header
+    END_IF
+
         lda     #0
         ldx     active_window_id
         sta     win_view_by_table-1,x
@@ -4416,7 +4399,7 @@ clear:  jsr     clear_selection
         ;; --------------------------------------------------
         ;; Set up drawing port, draw initial rect
 :       lda     active_window_id
-        jsr     offset_and_set_port_from_window_id
+        jsr     unsafe_offset_and_set_port_from_window_id ; ASSERT: not obscured
 
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     set_penmode_xor
@@ -4453,7 +4436,7 @@ iloop:  cpx     cached_window_entry_count
 
         ;; Highlight and add to selection
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (drag select)
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
@@ -4550,61 +4533,18 @@ y_flag: .byte   0
 .proc handle_title_click
         ptr := $06
 
-        kMinYPosition = kMenuBarHeight + kTitleBarHeight
-
-        jmp     :+
-
-:       copy    active_window_id, event_params
-        MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
-        lda     active_window_id
-        jsr     save_window_portbits
-        MGTK_RELAY_CALL MGTK::DragWindow, event_params
-        lda     active_window_id
-        jsr     window_lookup
-        stax    ptr
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
-        lda     (ptr),y
-        cmp     #kMinYPosition
-        bcs     :+
-        lda     #kMinYPosition
-        sta     (ptr),y
-
-:       ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
-        sub16in (ptr),y, saved_portbits+MGTK::GrafPort::viewloc+MGTK::Point::xcoord, deltax
-        iny
-        sub16in (ptr),y, saved_portbits+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, deltay
-
+        copy    active_window_id, event_params
         jsr     get_active_window_view_by
-        beq     :+           ; view by icon
-        rts
-
-        ;; Update icon positions
-:       jsr     LoadActiveWindowEntryTable
-        ldx     #0
-next:   cpx     cached_window_entry_count
-        bne     :+
+        bmi     :+
+        jsr     LoadActiveWindowEntryTable
+        jsr     cached_icons_screen_to_window
+:       MGTK_RELAY_CALL MGTK::DragWindow, event_params
+        jsr     get_active_window_view_by
+        bmi     :+
+        jsr     cached_icons_window_to_screen
         jsr     StoreWindowEntryTable
         jsr     LoadDesktopEntryTable
-        jmp     done
-
-:       txa
-        pha
-        lda     cached_window_entry_list,x
-        jsr     icon_entry_lookup
-        stax    ptr
-        ldy     #IconEntry::iconx
-        add16in (ptr),y, deltax, (ptr),y
-        iny
-        add16in (ptr),y, deltay, (ptr),y
-        pla
-        tax
-        inx
-        jmp     next
-
-done:   rts
-
-deltax: .word   0
-deltay: .word   0
+:       rts
 
 .endproc
 
@@ -4731,21 +4671,13 @@ cont:   sta     cached_window_entry_count
         ;; Set selection and redraw
 
 :       sta     selected_window_id
-        cmp     #0              ; needed, since prior cmp set Z
-        beq     :+
-        lda     icon_param
-        jsr     icon_screen_to_window
-        lda     selected_window_id
-        jsr     offset_and_set_port_from_window_id
-:       ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-        lda     selected_window_id
-        beq     :+
-        lda     icon_param
-        jsr     icon_window_to_screen
-        jsr     reset_main_grafport
-:       copy    #1, selected_icon_count
+        copy    #1, selected_icon_count
         copy    icon, selected_icon_list
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+
+        lda     icon_param
+        jsr     DrawIcon
+
 finish: rts
 
 icon:   .byte   0
@@ -5011,9 +4943,19 @@ delta:  .word   0
         jsr     cached_icons_window_to_screen
 :
 
+        ;; Clear content background, not header
+        lda     active_window_id
+        jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
+    IF_ZERO                     ; Skip drawing if obscured
         MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
+    END_IF
         jsr     reset_main_grafport
-        jmp     draw_window_entries
+
+        ;; Only draw content, not header
+        copy    #$40, header_and_offset_flag
+        jsr     draw_window_entries
+        copy    #0, header_and_offset_flag
+        rts
 .endproc
 
 ;;; ============================================================
@@ -5319,24 +5261,13 @@ not_selected:
         lda     selected_window_id ; on desktop?
         beq     :+                 ; if so, retain selection
         jsr     clear_selection
-:       ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
-        ITK_RELAY_CALL IconTK::RedrawIcon, findicon_which_icon
-        ldx     selected_icon_count
-        lda     findicon_which_icon
-        sta     selected_icon_list,x
-        inc     selected_icon_count
+:       jsr     select_vol_icon
         rts                     ; select, nothing further
 
         ;; Replace selection with clicked icon
 replace_selection:
         jsr     clear_selection
-
-        ;; Set selection to clicked icon
-        ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
-        ITK_RELAY_CALL IconTK::RedrawIcon, findicon_which_icon
-        copy    #1, selected_icon_count
-        copy    findicon_which_icon, selected_icon_list
-        copy    #0, selected_window_id
+        jsr     select_vol_icon
         ;; fall through...
 
         ;; --------------------------------------------------
@@ -5395,7 +5326,7 @@ same_or_desktop:
 :       txa
         pha
         copy    selected_icon_list,x, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (desktop)
         pla
         tax
         dex
@@ -5403,9 +5334,17 @@ same_or_desktop:
 
         rts
 
+select_vol_icon:
+        ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
+        ITK_RELAY_CALL IconTK::RedrawIcon, findicon_which_icon ; CHECKED (desktop)
+        ldx     selected_icon_count
+        copy    findicon_which_icon, selected_icon_list,x
+        inc     selected_icon_count
+        rts
+
 deselect_vol_icon:
         ITK_RELAY_CALL IconTK::UnhighlightIcon, findicon_which_icon
-        ITK_RELAY_CALL IconTK::RedrawIcon, findicon_which_icon
+        ITK_RELAY_CALL IconTK::RedrawIcon, findicon_which_icon ; CHECKED (desktop)
         lda     findicon_which_icon
         jmp     remove_from_selection_list
 .endproc
@@ -5481,10 +5420,10 @@ iloop:  cpx     cached_window_entry_count
 
         ;; Highlight and add to selection
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (drag select)
         ldx     selected_icon_count
-        inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
+        inc     selected_icon_count
 
 done_icon:
         pla
@@ -5782,7 +5721,8 @@ update_view:
         MGTK_RELAY_CALL MGTK::OpenWindow, 0, @addr
 
         lda     active_window_id
-        jsr     set_port_from_window_id
+        jsr     unsafe_set_port_from_window_id ; CHECKED
+        sta     err
 
         jsr     draw_window_header
 
@@ -5794,9 +5734,14 @@ update_view:
         beq     done
         tax
         lda     cached_window_entry_list,x
+        sta     icon_param
         jsr     icon_entry_lookup ; A,X points at IconEntry
         stax    @addr2
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr2
+        lda     err
+    IF_ZERO                     ; Skip drawing if obscured
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+    END_IF
         inc     num
         jmp     :-
 
@@ -5807,6 +5752,8 @@ done:   copy    cached_window_id, active_window_id
         jsr     StoreWindowEntryTable
         jsr     LoadDesktopEntryTable
         jmp     reset_main_grafport
+
+err:    .byte   0
 
 ;;; Common code to update the dir (vol/folder) icon.
 .proc update_icon
@@ -5821,27 +5768,10 @@ done:   copy    cached_window_id, active_window_id
         ora     #kIconEntryOpenMask ; set open_flag
         sta     (ptr),y
 
-        ldy     #IconEntry::win_type ; get window id
-        lda     (ptr),y
-        and     #kIconEntryWinIdMask
-        sta     getwinport_params2::window_id
-
-        beq     :+               ; window 0 = desktop
-        cmp     active_window_id ; prep to redraw windowed (file) icon
-        bne     done             ; but only if active window
-        jsr     get_set_port2
-        jsr     offset_window_grafport_and_set
         lda     icon_param
-        jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
+        jsr     DrawIcon
 
-        lda     getwinport_params2::window_id
-        beq     done            ; skip if on desktop
-        lda     icon_param      ; restore from drawing
-        jsr     icon_window_to_screen
-        jsr     reset_main_grafport
-
-done:   rts
+        rts
 
 calc_name_ptr:
         ;; Find last '/'
@@ -5889,9 +5819,10 @@ num:    .byte   0
         jsr     LoadActiveWindowEntryTable
         lda     active_window_id
         jsr     update_used_free_for_vol_windows
-        lda     active_window_id
-        jsr     set_port_from_window_id
 
+        lda     active_window_id
+        jsr     unsafe_set_port_from_window_id ; CHECKED
+    IF_ZERO              ; Skip drawing if obscured
         ;; Clear the header area before redrawing it.
         copy16  window_grafport::cliprect::x1, tmp_rect::x1
         copy16  window_grafport::cliprect::x2, tmp_rect::x2
@@ -5899,6 +5830,7 @@ num:    .byte   0
         add16   window_grafport::cliprect::y1, #kWindowHeaderHeight, tmp_rect::y2
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, tmp_rect
+     END_IF
 
         jmp     draw_window_header
 .endproc
@@ -5913,8 +5845,48 @@ num:    .byte   0
 ;;; ============================================================
 ;;; Draw all entries (icons or list items) in (cached) window
 
+;;; * If $80 N=1 V=?: the caller has offset the winfo's port; the
+;;;   header is not drawn and the port is not adjusted.
+;;; * If $40 N=0 V=1: skips drawing the header and offsets the port
+;;;   for the content.
+;;; * If $00 N=0 V=0: draws the header, then adjusts the port and
+;;;   draws the content.
+header_and_offset_flag:
+        .byte   0
+
+;;; Called from:
+;;; * `update_window` flag=$80
+;;; * `handle_inactive_window_click`; flag=$00
+;;; * `view_by_nonicon_common`; flag=$40
+;;; * `update_scroll_thumb`; flag=$40
+;;; * `finish_scroll_adjust_and_redraw`; flag=$40
+;;; * `open_folder_or_volume_icon`; flag=$00
+
 .proc draw_window_entries
         ptr := $06
+
+        jsr     push_pointers
+
+        bit     header_and_offset_flag
+    IF_NS
+        lda     cached_window_id
+        jsr     unsafe_set_port_from_window_id ; CHECKED
+        jne     done
+    ELSE
+    IF_VS
+        lda     cached_window_id
+        jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
+        jne     done
+    ELSE
+        lda     cached_window_id
+        jsr     unsafe_set_port_from_window_id ; CHECKED
+        jne     done
+        jsr     draw_window_header
+        jsr     offset_window_grafport_and_set
+    END_IF
+    END_IF
+
+        ;; List or Icon view?
 
         jsr     get_cached_window_view_by
         bmi     list_view           ; list view, not icons
@@ -5923,21 +5895,6 @@ num:    .byte   0
         ;; --------------------------------------------------
         ;; List view
 list_view:
-        jsr     push_pointers
-
-        lda     cached_window_id
-        jsr     set_port_from_window_id
-
-        bit     draw_window_header_flag
-        bmi     :+
-        jsr     draw_window_header
-:       lda     cached_window_id
-        sta     getwinport_params2::window_id
-        jsr     get_port2
-        bit     draw_window_header_flag
-        bmi     :+
-        jsr     offset_window_grafport_and_set
-:
 
         ;; Find FileRecord list
         lda     cached_window_id
@@ -5976,54 +5933,50 @@ rloop:  lda     rows_done
         inc     rows_done
         jmp     rloop
 
-done:   jsr     reset_main_grafport
-        jsr     pop_pointers
-        rts
-
 rows_done:
         .byte   0
 
         ;; --------------------------------------------------
         ;; Icon view
 icon_view:
-        lda     cached_window_id
-        jsr     set_port_from_window_id
 
-        bit     draw_window_header_flag
-        bmi     :+
-        jsr     draw_window_header
-:       jsr     cached_icons_screen_to_window
-        jsr     offset_window_grafport_and_set
+        ;; Map icons to window space
+        jsr     cached_icons_screen_to_window
 
+        ;; Set up test rect for quick exclusion
         COPY_BLOCK window_grafport::cliprect, tmp_rect
 
-        ldx     #0
-        txa
-        pha
-
-loop:   cpx     cached_window_entry_count ; done?
-        bne     draw                     ; nope...
-
-        pla                     ; finish up...
-        jsr     reset_main_grafport
-
-        lda     cached_window_id
-        jsr     set_port_from_window_id
-
-        jsr     cached_icons_window_to_screen
-        rts
-
-draw:   txa
-        pha
+        ;; Loop over all icons
+        copy    #0, index
+loop:   lda     index
+        cmp     cached_window_entry_count
+        beq     done_icons
+        tax
         lda     cached_window_entry_list,x
         sta     icon_param
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     :+
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-:       pla
-        tax
-        inx
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+:       inc     index
         jmp     loop
+
+done_icons:
+        ;; Map icons back to screen space
+        jsr     cached_icons_window_to_screen
+        jmp     done
+
+index:  .byte   0
+
+        ;; --------------------------------------------------
+done:
+
+        jsr     reset_main_grafport
+        jsr     pop_pointers
+        rts
+
+
+
+
 .endproc
 
 ;;; ============================================================
@@ -6035,49 +5988,44 @@ draw:   txa
 
 :       copy    #0, index
         lda     selected_window_id
-        beq     volumes
+        beq     loop
 
-        ;; --------------------------------------------------
-        ;; Windowed (file icons)
         cmp     active_window_id ; in the active window?
         beq     use_win_port
 
         ;; Selection is in a non-active window
-        jsr     prepare_highlight_grafport ; ends up being a null port???
-        jmp     files
+        jsr     prepare_highlight_grafport ; TODO: ends up being a null port???
+        jmp     loop
 
         ;; Selection is in the active window
 use_win_port:
-        jsr     set_port_from_window_id
-        jsr     offset_window_grafport_and_set
+        jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
+        sta     err
 
-files:  lda     index
+loop:   lda     index
         cmp     selected_icon_count
         beq     finish
         tax
-        lda     selected_icon_list,x
-        sta     icon_param
-        jsr     icon_screen_to_window
+        copy    selected_icon_list,x, icon_param
         ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
+
+        lda     err
+    IF_ZERO                     ; Skip drawing if obscured
+        ;; TODO: Find common pattern for redrawing multiple icons
+        lda     selected_window_id
+        beq     :+
+        lda     icon_param
+        jsr     icon_screen_to_window
+:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+        lda     selected_window_id
+        beq     :+
         lda     icon_param
         jsr     icon_window_to_screen
-        inc     index
-        jmp     files
+:
+    END_IF
 
-        ;; --------------------------------------------------
-        ;; Desktop (volume icons)
-volumes:
-        lda     index
-        cmp     selected_icon_count
-        beq     finish
-        tax
-        lda     selected_icon_list,x
-        sta     icon_param
-        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         inc     index
-        jmp     volumes
+        jmp     loop
 
         ;; --------------------------------------------------
         ;; Clear selection list
@@ -6092,6 +6040,7 @@ finish: lda     #0
         jmp     reset_main_grafport
 
 index:  .byte   0
+err:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -6112,18 +6061,18 @@ leave_thumbs:
 impl:   sta     update_thumbs_flag
 
         jsr     get_active_window_view_by
-        bmi     :+              ; list view, not icons
-        jsr     compute_icons_bbox
-        jmp     config_port
-
+    IF_POS
         ;; List view
-:       jsr     cached_icons_screen_to_window
+        jsr     compute_icons_bbox
+    ELSE
+        ;; Icon view
+        jsr     cached_icons_screen_to_window
         jsr     compute_icons_bbox
         jsr     cached_icons_window_to_screen
+    END_IF
 
 config_port:
-        lda     active_window_id
-        jsr     set_port_from_window_id
+        jsr     apply_active_winfo_to_window_grafport
 
         ;; check horizontal bounds
         cmp16   iconbb_rect+MGTK::Rect::x1, window_grafport::cliprect::x1
@@ -6223,7 +6172,7 @@ index:  .byte   0
 .endproc
 
 ;;; ============================================================
-
+;;; Adjust grafport for header.
 .proc offset_window_grafport_impl
 
         kOffset = kWindowHeaderHeight + 1
@@ -6237,9 +6186,9 @@ flag_set:
         add16   window_grafport::viewloc::ycoord, #kOffset, window_grafport::viewloc::ycoord
         add16   window_grafport::cliprect::y1, #kOffset, window_grafport::cliprect::y1
         bit     flag
-        bmi     done
+        bmi     :+
         MGTK_RELAY_CALL MGTK::SetPort, window_grafport
-done:   rts
+:       rts
 
 flag:   .byte   0
 .endproc
@@ -10102,21 +10051,10 @@ skip:   lda     icon_param
         and     #AS_BYTE(~kIconEntryOpenMask) ; clear open_flag
         sta     (ptr),y
 
-        and     #kIconEntryWinIdMask
-        pha                     ; A = window id
-
-        beq     :+
-        jsr     offset_and_set_port_from_window_id
         lda     icon_param
-        jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-        pla                     ; A = window id
-        beq     :+
-        lda     icon_param
-        jsr     icon_window_to_screen
-        jsr     reset_main_grafport
+        jsr     DrawIcon
 
-:       jsr     pop_pointers
+        jsr     pop_pointers
         rts
 .endproc
         mark_icons_not_opened_1 := mark_icons_not_opened::L8B19
@@ -11804,11 +11742,29 @@ common2:
 finish: lda     #RenameDialogState::close
         jsr     run_dialog_proc
 
-        ;; Erase the icon
         ldx     index
         lda     selected_icon_list,x
         sta     icon_param
-        ITK_RELAY_CALL IconTK::EraseIcon, icon_param ; in case name is shorter
+
+        jsr     reset_main_grafport ; assumed for volume icons
+
+        ;; Erase the icon, in case new name is shorter
+.scope
+        lda     selected_window_id
+        beq     :+
+        ;; NOTE: EraseIcon operates with icons in screen space (?!?)
+        ;; so no need to call `icon_screen_to_window` here
+        lda     selected_window_id
+        jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
+        bne     skip            ; MGTK::Error::window_obscured
+:       ITK_RELAY_CALL IconTK::EraseIcon, icon_param ; CHECKED
+skip:   lda     selected_window_id
+        beq     :+
+        ;; NOTE: EraseIcon operates with icons in screen space (?!?)
+        ;; so no need to call `icon_window_to_screen` here
+        jsr     reset_main_grafport
+:
+.endscope
 
         ;; Copy new string in
         icon_name_ptr := $06
@@ -11821,17 +11777,8 @@ finish: lda     #RenameDialogState::close
         dey
         bpl     :-
 
-        ;; Redraw the icon
-        lda     selected_window_id
-        beq     :+
         lda     icon_param
-        jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
-        lda     selected_window_id
-        beq     :+
-        lda     icon_param
-        jsr     icon_window_to_screen
-:
+        jsr     DrawIcon
 
         ;; If not volume, find and update associated FileEntry
         lda     selected_window_id
@@ -13834,17 +13781,14 @@ loop:   iny
 
 .proc close_files_cancel_dialog
         jsr     done_dialog_phase1
-        jmp     :+
 
-        DEFINE_CLOSE_PARAMS close_params
+        MLI_RELAY_CALL CLOSE, close_params
 
-:       MLI_RELAY_CALL CLOSE, close_params
-        lda     selected_window_id
-        beq     :+
-        jsr     set_port_from_window_id
-:       ldx     stack_stash     ; restore stack, in case recursion was aborted
+        ldx     stack_stash     ; restore stack, in case recursion was aborted
         txs
         return  #$FF
+
+        DEFINE_CLOSE_PARAMS close_params
 .endproc
 
 ;;; ============================================================
@@ -14155,7 +14099,7 @@ dialog_param_addr:
         jmp     prompt_input_loop
 
 :       lda     winfo_prompt_dialog ; Is over this window... but where?
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         copy    winfo_prompt_dialog, event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -14187,7 +14131,7 @@ content:
         beq     :+
         return  #$FF
 :       lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         copy    winfo_prompt_dialog, event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -14431,7 +14375,7 @@ done:   return  #$FF
 
 .proc handle_key_ok
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
@@ -14440,7 +14384,7 @@ done:   return  #$FF
 
 .proc handle_key_cancel
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
@@ -14471,7 +14415,7 @@ jump_relay:
 
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_about_dialog
         lda     winfo_about_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_inner_rect
@@ -14553,7 +14497,7 @@ do1:    ldy     #1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
         param_call_indirect DrawString, ptr_str_files_suffix
@@ -14565,7 +14509,7 @@ do2:    ldy     #1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     clear_dest_file_rect
         jsr     copy_dialog_param_addr_to_ptr
@@ -14602,7 +14546,7 @@ do5:    jsr     close_prompt_dialog
         ;; CopyDialogLifecycle::exists
 do3:    jsr     Bell
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         param_call draw_dialog_label, 6, aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
 LAA7F:  jsr     prompt_input_loop
@@ -14617,7 +14561,7 @@ LAA7F:  jsr     prompt_input_loop
         ;; CopyDialogLifecycle::too_large
 do4:    jsr     Bell
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         bit     move_flag
     IF_MINUS
         param_call      draw_dialog_label, 6, aux::str_large_move_prompt
@@ -14671,7 +14615,7 @@ do1:    ldy     #1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
         param_call_indirect DrawString, ptr_str_files_suffix
@@ -14682,7 +14626,7 @@ do2:    ldy     #1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #3
@@ -14705,7 +14649,7 @@ do3:    jsr     close_prompt_dialog
 
 do4:    jsr     Bell
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         param_call draw_dialog_label, 6, aux::str_ramcard_full
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
@@ -14763,7 +14707,7 @@ do1:
         copy16in (ptr),y, file_count
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         copy    #kValueLeft, dialog_label_pos
         param_call draw_dialog_label, 1, str_file_count
         jsr     copy_dialog_param_addr_to_ptr
@@ -14801,7 +14745,7 @@ do2:
         jsr     do1
 
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
         bmi     :-
@@ -14851,7 +14795,7 @@ do1:    ldy     #1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         lda     delete_flag
         beq     :+
         param_call draw_dialog_label, 4, aux::str_ok_empty
@@ -14868,7 +14812,7 @@ do3:    ldy     #1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #3
@@ -14887,7 +14831,7 @@ do3:    ldy     #1
 
         ;; DeleteDialogLifecycle::confirm
 do2:    lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LADC4:  jsr     prompt_input_loop
         bmi     LADC4
@@ -14907,7 +14851,7 @@ do5:    jsr     close_prompt_dialog
 
         ;; DeleteDialogLifecycle::locked
 do4:    lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         param_call draw_dialog_label, 6, aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
 LAE17:  jsr     prompt_input_loop
@@ -14944,7 +14888,7 @@ LAE17:  jsr     prompt_input_loop
         lda     #$00
         jsr     open_prompt_window
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         param_call draw_dialog_title, aux::label_new_folder
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
@@ -14965,7 +14909,7 @@ LAE90:  lda     ($08),y
         dey
         bpl     LAE90
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         param_call draw_dialog_label, 2, aux::str_in
         param_call draw_dialog_path, path_buf0
         param_call draw_dialog_label, 4, aux::str_enter_folder_name
@@ -15035,7 +14979,7 @@ prepare_window:
         eor     #$80
         jsr     open_prompt_window
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
 
         param_call draw_dialog_title, aux::label_get_info
         jsr     copy_dialog_param_addr_to_ptr
@@ -15073,7 +15017,7 @@ draw_final_labels:
         ;; Draw a specific value
 populate_value:
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         copy    (ptr),y, row
@@ -15156,7 +15100,7 @@ do1:    ldy     #1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         param_call draw_dialog_label, 4, aux::str_lock_ok
         param_call DrawString, str_file_count
         param_call_indirect DrawString, ptr_str_files_suffix
@@ -15168,7 +15112,7 @@ do3:    ldy     #1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #3
@@ -15189,7 +15133,7 @@ do3:    ldy     #1
 
         ;; LockDialogLifecycle::loop
 do2:    lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB0FA:  jsr     prompt_input_loop
         bmi     LB0FA
@@ -15242,7 +15186,7 @@ do1:    ldy     #1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         param_call draw_dialog_label, 4, aux::str_unlock_ok
         param_call DrawString, str_file_count
         param_call_indirect DrawString, ptr_str_files_suffix
@@ -15254,7 +15198,7 @@ do3:    ldy     #1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #3
@@ -15273,7 +15217,7 @@ do3:    ldy     #1
 
         ;; LockDialogLifecycle::loop
 do2:    lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB218:  jsr     prompt_input_loop
         bmi     LB218
@@ -15316,7 +15260,7 @@ open_win:
         lda     #$00
         jsr     open_prompt_window
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         param_call draw_dialog_title, aux::label_rename_icon
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
@@ -15347,7 +15291,7 @@ run_loop:
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
 :       jsr     prompt_input_loop
         bmi     :-              ; continue?
 
@@ -15391,7 +15335,7 @@ open_win:
         lda     #$00
         jsr     open_prompt_window
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         param_call draw_dialog_title, aux::label_duplicate_icon
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
@@ -15422,7 +15366,7 @@ run_loop:
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
 :       jsr     prompt_input_loop
         bmi     :-              ; continue?
 
@@ -15572,7 +15516,7 @@ done:   jmp     reset_main_grafport
 .proc open_dialog_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_inner_rect
@@ -15803,7 +15747,7 @@ draw:   copy16  #str_insertion_point+1, textptr
         MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
         MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         rts
 .endproc
 
@@ -15811,7 +15755,7 @@ draw:   copy16  #str_insertion_point+1, textptr
 
 .proc draw_filename_prompt
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, name_input_rect
         jsr     set_penmode_xor
@@ -15822,7 +15766,7 @@ draw:   copy16  #str_insertion_point+1, textptr
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
 done:   rts
 .endproc
 
@@ -16016,7 +15960,7 @@ ip_pos: .word   0
         param_call DrawString, str_1_char
         param_call DrawString, path_buf2
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         rts
 
 param:  .byte   0
@@ -16042,7 +15986,7 @@ param:  .byte   0
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         rts
 .endproc
 
@@ -16086,7 +16030,7 @@ finish: ldx     path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         rts
 .endproc
 
@@ -16127,7 +16071,7 @@ finish: dec     path_buf2
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog::window_id
-        jsr     set_port_from_window_id
+        jsr     safe_set_port_from_window_id
         rts
 .endproc
 

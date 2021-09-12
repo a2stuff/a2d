@@ -245,6 +245,8 @@ Parameters: address of IconEntry
 
 Inserts an icon record into the table.
 
+Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::RedrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+
 ### `IconTK::HighlightIcon` ($02)
 
 Parameters: { byte icon }
@@ -264,6 +266,8 @@ Redraws an icon by number.
 Parameters: { byte icon }
 
 Removes an icon by number.
+
+Note that it does not paint the icon. Callers must make a previous call to `IconTK::EraseIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
 
 ### `IconTK::RemoveAll` ($05)
 

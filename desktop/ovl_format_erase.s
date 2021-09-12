@@ -36,7 +36,7 @@ L0800:  pha
         copy    #$00, has_input_field_flag
         jsr     main::open_prompt_window
         lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         param_call main::draw_dialog_title, aux::label_format_disk
         param_call main::draw_dialog_label, 1, aux::str_select_format
         jsr     draw_volume_labels
@@ -57,7 +57,7 @@ l2:     jsr     main::prompt_input_loop
 l3:     bit     selected_device_index
         bmi     l1
         lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -81,7 +81,7 @@ l6:     lda     path_buf1
         bcs     l5
         jsr     main::set_cursor_pointer
         lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
@@ -106,7 +106,7 @@ l7:     jsr     main::prompt_input_loop
         jmp     l15
 
 l8:     lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::draw_dialog_label, 1, aux::str_formatting
@@ -119,7 +119,7 @@ l8:     lda     winfo_prompt_dialog::window_id
         jsr     L126F
         bcs     l12
 l9:     lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::draw_dialog_label, 1, aux::str_erasing
@@ -181,7 +181,7 @@ d2:     .byte   0
         sta     has_input_field_flag
         jsr     main::open_prompt_window
         lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         param_call main::draw_dialog_title, aux::label_erase_disk
         param_call main::draw_dialog_label, 1, aux::str_select_erase
         jsr     draw_volume_labels
@@ -197,7 +197,7 @@ l2:     bit     selected_device_index
         bmi     l1
         copy16  #main::rts1, main::jump_relay+1
         lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -221,7 +221,7 @@ l5:     lda     path_buf1
         bcs     l4
         jsr     main::set_cursor_pointer
         lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         copy    #$00, has_input_field_flag
@@ -246,7 +246,7 @@ l6:     jsr     main::prompt_input_loop
         jmp     l11
 
 l7:     lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::draw_dialog_label, 1, aux::str_erasing

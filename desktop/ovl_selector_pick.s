@@ -449,7 +449,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 .proc open_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     winfo_entry_picker::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_inner_rect
@@ -628,7 +628,7 @@ handle_button:
         return  #$FF
 
 :       lda     winfo_entry_picker::window_id
-        jsr     main::set_port_from_window_id
+        jsr     main::safe_set_port_from_window_id
         lda     winfo_entry_picker::window_id
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params

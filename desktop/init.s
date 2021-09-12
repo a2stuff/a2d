@@ -1090,9 +1090,11 @@ iloop:  cpx     cached_window_entry_count
         txa
         pha
         lda     cached_window_entry_list,x
+        sta     icon_param
         jsr     main::icon_entry_lookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (desktop)
         pla
         tax
         inx
