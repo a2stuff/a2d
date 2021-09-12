@@ -64,11 +64,14 @@ label   := *
 
 ;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
 ;;;      .byte icon      icon index
-;;;      .byte state     1 = allocated, $80 = dragging, 0 = otherwise
+;;;      .byte state     bit 7 (N) = unused
+;;;                      bit 6 (V) = highlighted
+;;;                      bit 0     = set to 1 when allocated
+;;;                      $00 if not allocated
 ;;;      .byte type/window_id
 ;;;                      (bits 0-3 window_id)
 ;;;                      (bits 4,5,6)
-;;;                             000 = directory
+;;;                             000 = directory (drop target)
 ;;;                             001 = system
 ;;;                             010 = binary (maybe runnable)
 ;;;                             011 = basic

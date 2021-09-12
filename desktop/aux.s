@@ -341,7 +341,8 @@ dark_pattern:
 ;;; Icon (i.e. file, volume) details
 
 num_icons:  .byte   0
-icon_table: .res    (::kMaxIconCount+1), 0   ; index into `icon_ptrs` (index 0 not used)
+icon_list:  .res    (::kMaxIconCount+1), 0   ; list of allocated icons (index 0 not used)
+
 icon_ptrs:  .res    (::kMaxIconCount+1)*2, 0 ; addresses of icon details (index 0 not used)
 
 highlight_count:                ; number of highlighted icons
@@ -525,35 +526,52 @@ ycoord: .word   0
 
 .proc AddIconImpl
         PARAM_BLOCK params, $06
-ptr_icon        .addr
+ptr_icon        .addr           ; Caller passes in IconEntry pointer
         END_PARAM_BLOCK
 
-        ldy     #0
-        lda     (params::ptr_icon),y
-        ldx     num_icons
-        beq     proceed
-        dex
-:       cmp     icon_table,x
-        beq     fail
-        dex
-        bpl     :-
-        bmi     proceed
-fail:   return  #1
+        ;; Check if passed ID is already in the icon list
+        ldy     #IconEntry::id
+        lda     (params::ptr_icon),y ; A = icon id
+        jsr     is_in_icon_list
+        bne     :+
+        return  #1              ; That icon id is already in use
 
-proceed:
-        jsr     sub
-        lda     #1
-        tay
-        sta     (params::ptr_icon),y
-        return  #0
-
-sub:    ldx     num_icons       ; ???
-        sta     icon_table,x
+        ;; Add it to `icon_list`
+:       ldx     num_icons
+        sta     icon_list,x
         inc     num_icons
+
+        ;; Add to `icon_ptrs` table
         asl     a
         tax
         copy16  params::ptr_icon, icon_ptrs,x
+
+        lda     #1              ; $01 = allocated
+        tay                     ; And IconEntry::state
+        sta     (params::ptr_icon),y
+        return  #0
+
         rts
+.endproc
+
+;;; ============================================================
+;;; Tests if the passed icon id is in `icon_list`
+;;; Inputs: A = icon id
+;;; Outputs: Z=1 if found (and X = index), Z=0 otherwise
+;;; A is unmodified, X is trashed
+
+.proc is_in_icon_list
+        ldx     num_icons
+        beq     fail
+
+        dex
+:       cmp     icon_list,x
+        beq     done            ; found!
+        dex
+        bpl     :-
+
+fail:   ldx     #$FF            ; force Z=0
+done:   rts
 .endproc
 
 ;;; ============================================================
@@ -567,55 +585,45 @@ ptr_icon        .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
-        ldx     num_icons
-        beq     bail1
-        dex
+        ;; Is it in `icon_list`?
         ldy     #0
         lda     (params::ptr_icon),y
-:       cmp     icon_table,x
+        jsr     is_in_icon_list
         beq     :+
-        dex
-        bpl     :-
+        return  #1              ; Not found
 
-bail1:  return  #1              ; Not found
-
+        ;; Pointer to IconEntry
 :       asl     a
         tax
-        copy16  icon_ptrs,x, ptr ; `ptr` now points at IconEntry
+        copy16  icon_ptrs,x, ptr
+
         ldy     #IconEntry::state
         lda     (ptr),y         ; valid icon?
         bne     :+
-        return  #2
-
-:       lda     highlight_count
-        beq     L949D
-
-        ;; Already in highlight list?
-        dey
+        return  #2              ; Invalid icon
+:
+        and     #$40            ; V = highlighted
+        beq     :+
+        return  #3              ; Already highlighted
+:
+        ;; Mark highlighted
         lda     (ptr),y
-        ldx     highlight_count
-        dex
-:       cmp     highlight_list,x
-        beq     bail3
-        dex
-        bpl     :-
-        jmp     L949D
-
-bail3:  return  #3              ; Already in list
+        ora     #$40            ; V = highlighted
+        sta     (ptr),y
 
         ;; Append to highlight list
-L949D:  ldx     highlight_count
-        ldy     #0
-        lda     (ptr),y
+        ldy     #IconEntry::id
+        lda     (ptr),y         ; A = icon id
+        ldx     highlight_count
         sta     highlight_list,x
         inc     highlight_count
 
-        lda     (ptr),y         ; icon num
+        ;; Move it to the head of the highlight list
         ldx     #1              ; new position
         jsr     change_highlight_index
 
         ldy     #IconEntry::id
-        lda     (ptr),y         ; icon num
+        lda     (ptr),y         ; A = icon id
         ldx     #1              ; new position
         jsr     change_icon_index
 
@@ -634,44 +642,27 @@ ptr_icon        .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
-        ;; Find icon by number
-        ldx     num_icons
-        beq     bail1
-        dex
+        ;; Is it in `icon_list`?
         ldy     #0
         lda     (params::ptr_icon),y
-:       cmp     icon_table,x
-        beq     found
-        dex
-        bpl     :-
+        jsr     is_in_icon_list
+        beq     :+
+        return  #1              ; Not found
 
-bail1:  return  #1              ; Not found
-
-        ;; Pointer to icon details
-found:  asl     a
+        ;; Pointer to IconEntry
+:       asl     a
         tax
         copy16  icon_ptrs,x, ptr
 
-        lda     highlight_count ; Anything highlighted?
-        bne     :+
-        jmp     done
-
-:       ldx     highlight_count
-        dex
-        ldy     #0
+        ldy     #IconEntry::state
         lda     (ptr),y
+        and     #$40            ; V = highlighted
+        bne     :+
 
-        ;; Find in highlight list
-:       cmp     highlight_list,x
-        beq     found2
-        dex
-        bpl     :-
-        jmp     done
-
-found2: jsr     paint_icon_highlighted
+        jsr     paint_icon_unhighlighted
         return  #0
 
-done:   jsr     paint_icon_unhighlighted
+:       jsr     paint_icon_highlighted
         return  #0
 .endproc
 
@@ -686,69 +677,51 @@ ptr_icon        .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
-        ;; Find icon by number
+        ;; Is it in `icon_list`?
         ldy     #0
-        ldx     num_icons
-        beq     bail1
-        dex
         lda     (params::ptr_icon),y
-:       cmp     icon_table,x
-        beq     found
-        dex
-        bpl     :-
+        jsr     is_in_icon_list
+        beq     :+
+        return  #1              ; Not found
 
-bail1:  return  #1              ; Not found
-
-        ;; Pointer to icon details
-found:  asl     a
+        ;; Pointer to IconEntry
+:       asl     a
         tax
         copy16  icon_ptrs,x, ptr
+
         ldy     #IconEntry::state ; valid icon?
         lda     (ptr),y
         bne     :+
 
         return  #2
 
-        ;; Move it to the end of the icon list
+        ;; Move it to the end of `icon_list`
 :       ldy     #IconEntry::id
         lda     (ptr),y         ; icon num
         ldx     num_icons       ; new position
         jsr     change_icon_index
 
-        ;; Remove it from the list
+        ;; Remove it
         dec     num_icons
         lda     #0
         ldx     num_icons
-        sta     icon_table,x
+        sta     icon_list,x
 
-        ;; Clear its flag
+        ;; Mark it as free
         ldy     #IconEntry::state
-        lda     #0
+        lda     (ptr),y         ; A = state
+        pha
+        lda     #0              ; not allocated
         sta     (ptr),y
+        pla                     ; A = state
 
-        lda     highlight_count
-        beq     done
+        ;; Was it highlighted?
+        and     #$40            ; V = highlighted
+        beq     done            ; not highlighted
 
-        ;; Find it in the highlight list
-        ldx     highlight_count
-        dex
-        ldy     #0
-        lda     (ptr),y
-:       cmp     highlight_list,x
-        beq     found2
-        dex
-        bpl     :-
-        jmp     done            ; not found
-
-        ;; Move it to the end of the highlight list
-found2: ldx     highlight_count ; new position
-        jsr     change_highlight_index
-
-        ;; Remove it from the highlight list and update flag
-        dec     highlight_count
-        lda     #0
-        ldx     highlight_count
-        sta     highlight_list,x
+        ldy     #IconEntry::id
+        lda     (ptr),y         ; A = icon id
+        jsr     remove_from_highlight_list
 
 done:   return  #0
 .endproc
@@ -758,12 +731,15 @@ done:   return  #0
 
 .proc EraseIconImpl
         PARAM_BLOCK params, $06
-ptr_icon_idx    .addr
+ptr_icon        .addr
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
         ldy     #0
-        lda     (params::ptr_icon_idx),y
+        lda     (params::ptr_icon),y ; A = icon id
+
+        ;; TODO: Verify that icon is in `icon_list`???
+
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
@@ -780,7 +756,7 @@ ptr_icon_idx    .addr
         jmp     start
 
         PARAM_BLOCK params, $06
-ptr_window_id       .addr
+window_id       .byte
         END_PARAM_BLOCK
 
         icon_ptr := $08
@@ -798,7 +774,7 @@ loop:   ldx     count
         beq     done
         dec     count
         dex
-        lda     icon_table,x
+        lda     icon_list,x
         sta     icon
         asl     a
         tax
@@ -807,7 +783,7 @@ loop:   ldx     count
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
         ldy     #0
-        cmp     (params::ptr_window_id),y
+        cmp     (params::window_id),y
         bne     loop
         ITK_DIRECT_CALL IconTK::RemoveIcon, icon
         jmp     loop
@@ -822,7 +798,7 @@ done:   return  #0
 
 .proc CloseWindowImpl
         PARAM_BLOCK params, $06
-window_id       .addr
+window_id       .byte
         END_PARAM_BLOCK
 
         ptr := $08
@@ -840,7 +816,7 @@ loop:   ldx     count
 
 L96E5:  dec     count
         dex
-        lda     icon_table,x
+        lda     icon_list,x
         sta     icon
         asl     a
         tax
@@ -858,33 +834,29 @@ L96E5:  dec     count
         ldx     num_icons       ; icon index
         jsr     change_icon_index
 
+        ;; Remove it from the icon list
         dec     num_icons
         lda     #0
         ldx     num_icons
-        sta     icon_table,x
-        ldy     #IconEntry::state
-        lda     #0
-        sta     (ptr),y
-        lda     highlight_count
-        beq     L9758
-        ldx     #0
-        ldy     #0
-L972B:  lda     (ptr),y
-        cmp     highlight_list,x
-        beq     L973B
-        inx
-        cpx     highlight_count
-        bne     L972B
-        jmp     L9758
+        sta     icon_list,x
 
-L973B:  lda     (ptr),y         ; icon num
-        ldx     highlight_count ; new position
-        jsr     change_highlight_index
-        dec     highlight_count
-        lda     #0
-        ldx     highlight_count
-        sta     highlight_list,x
-L9758:  jmp     loop
+        ;; Mark it as free
+        ldy     #IconEntry::state
+        lda     (ptr),y         ; A = state
+        pha
+        lda     #0              ; not allocated
+        sta     (ptr),y
+        pla                     ; A = state
+
+        ;; Was it highlighted?
+        and     #$40            ; V = highlighted
+        beq     next            ; not highlighted
+
+        ldy     #IconEntry::id
+        lda     (ptr),y         ; A = icon id
+        jsr     remove_from_highlight_list
+
+next:   jmp     loop
 .endproc
 
 ;;; ============================================================
@@ -926,13 +898,12 @@ loop:   cpx     num_icons
         ldy     #FindIconParams::result
         lda     #0
         sta     (out_params),y
-        sta     unused
         rts
 
         ;; Check the icon
 :       txa
         pha
-        lda     icon_table,x
+        lda     icon_list,x
         asl     a
         tax
         copy16  icon_ptrs,x, icon_ptr
@@ -958,15 +929,13 @@ loop:   cpx     num_icons
         ;; Found one!
 inside: pla
         tax
-        lda     icon_table,x
+        lda     icon_list,x
         ldy     #FindIconParams::result
         sta     (out_params),y
-        sta     unused
         rts
 
 window_id:
         .byte   0
-unused: .byte   0               ; TODO: Remove
 .endproc
 
 ;;; ============================================================
@@ -1071,7 +1040,7 @@ is_drag:
         lda     #3              ; return value
         jmp     just_select
 
-:       lda     highlight_list
+:       lda     highlight_list  ; first entry
         jsr     get_icon_win
         sta     window_id2
 
@@ -1112,8 +1081,8 @@ L98F2:  lda     highlight_count,x
         bcs     :+
         dec     $08+1
 
-:       ldy     #IconEntry::state
-        lda     #$80            ; Highlighted
+:       ldy     #1              ; MGTK Polygon "not last" flag
+        lda     #$80            ; more polygons to follow
         sta     ($08),y
         jsr     pop_pointers
 
@@ -1209,7 +1178,7 @@ L99C7:  dey
 L99E1:  iny
         cpy     #kIconPolySize
         bne     L9974
-        ldy     #IconEntry::state
+        ldy     #1              ; MGTK Polygon "not last" flag
         lda     ($08),y
         beq     L99FC
         add16   $08, #kIconPolySize, $08
@@ -1312,7 +1281,7 @@ L9B62:  add16in ($08),y, rect3_x1, ($08),y
         iny
         cpy     #kIconPolySize
         bne     L9B62
-        ldy     #IconEntry::state
+        ldy     #1              ; MGTK Polygon "not last" flag
         lda     ($08),y
         beq     L9B9C
         lda     $08
@@ -1585,22 +1554,23 @@ find_icon:
         bne     :+
         jmp     done
 
-        ;; Is the icon in the highlight list?
-:       ldx     highlight_count
-        dex
-:       cmp     highlight_list,x
-        beq     done
-        dex
-        bpl     :-
-
         ;; Over an icon
+:       sta     icon_num
+
         ptr := $06
-        sta     icon_num
-        cmp     trash_icon_num
-        beq     :+
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
+
+        ;; Highlighted?
+        ldy     #IconEntry::state
+        lda     (ptr),y
+        and     #$40            ; V = highlighted
+        bne     done            ; Not valid (it's being dragged)
+
+        lda     icon_num
+        cmp     trash_icon_num  ; TODO: use type bits instead?
+        beq     :+              ; Trash is always a valid target
 
         ;; Which window?
         ldy     #IconEntry::win_type
@@ -1713,26 +1683,39 @@ height: .word   0
 
 .proc UnhighlightIconImpl
         PARAM_BLOCK params, $06
-ptr_iconent     .addr
+ptr_icon    .addr
         END_PARAM_BLOCK
+        ptr := $06              ; Overwrites param
 
-start:  lda     highlight_count
+        ;; Is it in `icon_list`?
+        ldy     #0
+        lda     (params::ptr_icon),y
+        jsr     is_in_icon_list
+        beq     :+
+        return  #1              ; Not found
+
+        ;; Pointer to IconEntry
+:       asl     a
+        tax
+        copy16  icon_ptrs,x, ptr
+
+        ldy     #IconEntry::state
+        lda     (ptr),y         ; valid icon?
         bne     :+
-        return  #1              ; No selection
+        return  #2              ; Invalid icon
+:
+        and     #$40            ; V = highlighted
+        bne     :+
+        return  #3              ; Not highlighted
+:
+        ;; Mark not highlighted
+        lda     (ptr),y
+        eor     #$40            ; V = highlighted
+        sta     (ptr),y
 
-        ;; Move it to the end of the highlight list
-:       ldx     highlight_count ; new position
         ldy     #IconEntry::id
-        lda     (params::ptr_iconent),y         ; icon num
-        jsr     change_highlight_index
-
-        ;; Remove it from the highlight list and update flag
-        ldx     highlight_count
-        lda     #0
-        sta     highlight_count,x
-        dec     highlight_count
-
-        rts
+        lda     (ptr),y
+        jmp     remove_from_highlight_list
 .endproc
 
 ;;; ============================================================
@@ -1823,9 +1806,10 @@ more_drawing_needed_flag:
 unhighlighted:
         lda     #0
         sta     icon_flags
-        beq     common
+        beq     common          ; always
 
-highlighted:  copy    #$80, icon_flags ; is highlighted
+highlighted:
+        copy    #$80, icon_flags ; is highlighted
 
 .proc common
         ;; Test if icon is open volume/folder
@@ -2153,7 +2137,7 @@ start:  jsr     push_pointers
 loop:   bmi     done
         txa
         pha
-        lda     icon_table,x
+        lda     icon_list,x
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
@@ -2183,7 +2167,7 @@ next:   pla
 
         ;; Find position of icon in icon table
         ldx     #0
-:       lda     icon_table,x
+:       lda     icon_list,x
         cmp     icon_num
         beq     :+
         inx
@@ -2192,8 +2176,8 @@ next:   pla
         rts
 
         ;; Shift items down
-:       lda     icon_table+1,x
-        sta     icon_table,x
+:       lda     icon_list+1,x
+        sta     icon_list,x
         inx
         cpx     num_icons
         bne     :-
@@ -2202,15 +2186,15 @@ next:   pla
         ldx     num_icons
 :       cpx     new_pos
         beq     place
-        lda     icon_table-2,x
-        sta     icon_table-1,x
+        lda     icon_list-2,x
+        sta     icon_list-1,x
         dex
         jmp     :-
 
         ;; Place at new position
 place:  ldx     new_pos
         lda     icon_num
-        sta     icon_table-1,x
+        sta     icon_list-1,x
         rts
 
 new_pos:        .byte   0
@@ -2219,7 +2203,7 @@ icon_num:       .byte   0
 
 ;;; ============================================================
 ;;; A = icon number to move
-;;; X = position in highlight list
+;;; X = new position in highlight list
 
 .proc change_highlight_index
         stx     new_pos
@@ -2259,6 +2243,24 @@ place:  ldx     new_pos
 
 new_pos:        .byte   0
 icon_num:       .byte   0
+.endproc
+
+;;; ============================================================
+;;; Remove icon from highlight list. Does not update icon's state.
+;;; Inputs: A=icon id
+.proc remove_from_highlight_list
+
+        ;; Move it to the end of the highlight list
+        ldx     highlight_count ; new position
+        jsr     change_highlight_index
+
+        ;; Remove it from the highlight list
+        dec     highlight_count
+        lda     #0
+        ldx     highlight_count
+        sta     highlight_list,x
+
+        rts
 .endproc
 
 ;;; ============================================================
@@ -2324,7 +2326,7 @@ erase_icon:
         jmp     LA3B9
 
 LA3AC:  .byte   0
-LA3AD:  .byte   0
+window_id:  .byte   0
 
         ;; IconTK::RedrawIcon params
         ;; IconTK::IconInRect params (in `redraw_icons_after_erase`)
@@ -2346,8 +2348,8 @@ window_id:      .byte   0
         iny
         iny
         lda     ($06),y
-        and     #$0F            ; type - is volume?
-        sta     LA3AD
+        and     #kIconEntryWinIdMask
+        sta     window_id
         beq     volume
 
         ;; File (i.e. icon in window)
@@ -2434,31 +2436,22 @@ loop:   cpx     #$FF            ; =-1
 
 LA466:  txa
         pha
-        lda     icon_table,x
+        lda     icon_list,x
         cmp     LA3AC
         beq     next
+
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
+
+        ;; Same window?
         ldy     #IconEntry::win_type
         lda     (ptr),y
-        and     #$07            ; window_id
-        cmp     LA3AD
+        and     #kIconEntryWinIdMask
+        cmp     window_id
         bne     next
 
-        ;; Is icon highlighted?
-        lda     highlight_count
-        beq     LA49D
         ldy     #IconEntry::id ; icon num
-        lda     (ptr),y
-        ldx     #0
-:       cmp     highlight_list,x
-        beq     next            ; skip it ???
-        inx
-        cpx     highlight_count
-        bne     :-
-
-LA49D:  ldy     #IconEntry::id ; icon num
         lda     (ptr),y
         sta     icon
         bit     icon_in_window_flag ; windowed?

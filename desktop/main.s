@@ -16380,6 +16380,9 @@ set_penmode_notcopy:
 ;;; X modified, A,Y preserved
 
 .proc is_icon_selected
+
+        ;; TODO: Update to use highlight bit in IconEntry::state
+
         ldx     selected_icon_count
         beq     nope
         dex
