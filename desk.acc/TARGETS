@@ -18,3 +18,4 @@ startup                         desk.acc/control.panels
 show.text.file                  preview
 show.image.file                 preview
 show.font.file                  preview
+darkness                        optional

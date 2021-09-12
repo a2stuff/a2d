@@ -13,7 +13,11 @@ New desk accessories:
 * [This Apple](this.apple.s)
   * Gives details about the computer, expanded memory, and what's in each slot.
 * [Control Panel](control.panel.s)
-  * Modify DeskTop settings: desktop pattern, double-click speed, insertion point blink speed. Also shows joystick calibration.
+  * Modify DeskTop settings: desktop pattern, double-click speed, mouse tracking speed, and insertion point blink speed.
+* [Startup Options](startup.s)
+  * Modify startup options, including launching the selector or copying to RAMCard.
+* [Joystick](joystick.s)
+  * Shows joystick calibration.
 * [System Speed](system.speed.s)
   * Enable/disable system accelerator.
 * [Eyes](eyes.s)
@@ -28,8 +32,14 @@ New desk accessories:
   * Visual distractions.
 * [Melt](melt.s)
   * Visual distractions.
+* [Invert](invert.s)
+  * Visual distractions.
 * [Find Files](find.files.s)
   * Search a directory and descendants for filenames. Use ? and * as wildcards.
+* [Show Font File](show.font.file.s)
+  * Preview MGTK font files.
+* [Darkness](darkness.s)
+  * A debugging tool that paints the whole screen a dark pattern.
 
 Note that the new desk accessories require an updated version of Apple II DeskTop and **will not work** with DeskTop 1.1 or MouseDesk.
 
