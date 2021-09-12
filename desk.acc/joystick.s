@@ -298,8 +298,18 @@ joystick_bitmap:
         rts
 .endproc
 
+.proc clear_updates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
 .proc exit
         MGTK_CALL MGTK::CloseWindow, winfo
+        jsr     clear_updates
         rts
 .endproc
 
@@ -352,11 +362,7 @@ common: bit     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     clear_updates
 
         ;; Draw DA's window
         jsr     draw_window

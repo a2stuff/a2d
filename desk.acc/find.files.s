@@ -1041,6 +1041,7 @@ top_row:        .byte   0
 
         MGTK_CALL MGTK::CloseWindow, winfo_results
         MGTK_CALL MGTK::CloseWindow, winfo
+        param_call jt_relay, JUMP_TABLE_CLEAR_UPDATES
         rts
 .endproc
 

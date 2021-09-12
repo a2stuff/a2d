@@ -19,11 +19,12 @@ DAs are documented here.
 * Draw everything
 * Flush event queue (`FlushEvents`)
 * Run an event Loop (`GetEvent`, and subsequent processing, per MGTK)
+  * Call `JUMP_TABLE_YIELD_LOOP` in the loop so DeskTop can update the clock, etc.
   * Normal event processing per MGTK
-  * In addition, following a window drag/resize, a DeskTop call must be made:
+  * Following a window drag/resize, a DeskTop call must be made:
      * `JUMP_TABLE_CLEAR_UPDATES` - redraw needed parts of windows and desktop (volume) icons.
-  * ...
 * Destroy window (`CloseWindow`)
+   * Call `JUMP_TABLE_CLEAR_UPDATES` to let DeskTop know it needs to redraw.
 * Switch control back to Main (`RAMRDOFF`/`RAMWRTOFF`)
 * Ensure ALTZP and LCBANK1 are still on
 * Restore stack pointer (if needed)

@@ -66,6 +66,7 @@ stash_stack:  .byte   $00
         ;; Back to main
         sta     RAMRDOFF
         sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
 
         ldx     stash_stack
         txs
@@ -384,6 +385,15 @@ frame_counter:
         rts
 .endproc
 
+.proc clear_updates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
 ;;; ============================================================
 
 .proc get_window_port
@@ -513,6 +523,7 @@ hit:    lda     winfo::window_id
 
 .proc close_window
         MGTK_CALL MGTK::CloseWindow, closewindow_params
+        jsr     clear_updates
         rts
 .endproc
 

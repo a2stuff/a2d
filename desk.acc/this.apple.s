@@ -937,6 +937,7 @@ done:   rts
 
 .proc exit
         MGTK_CALL MGTK::CloseWindow, winfo
+        jsr     clear_updates
         rts                     ; exits input loop
 .endproc
 
@@ -991,11 +992,7 @@ done:   rts
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     clear_updates
 
         ;; Draw DA's window
         jsr     draw_window
@@ -1033,6 +1030,15 @@ egg:    .byte   0
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+.proc clear_updates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         sta     RAMRDON
         sta     RAMWRTON
         rts

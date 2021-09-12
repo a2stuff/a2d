@@ -556,6 +556,7 @@ no_mod:
 .proc do_close
         jsr     close_file
         MGTK_CALL MGTK::CloseWindow, winfo
+        jsr     clear_updates
         rts                     ; exits input loop
 .endproc
 
@@ -1230,7 +1231,7 @@ loop:   clc
         rts
 .endproc
 
-.proc redraw_screen
+.proc clear_updates
         TRAMP_CALL JUMP_TABLE_CLEAR_UPDATES
         rts
 .endproc

@@ -1630,7 +1630,6 @@ skip:   iny
 
         ;; Restore state
         jsr     reset_main_grafport
-        jsr     clear_updates ; assume DA closed a window
 done:   jsr     set_cursor_pointer
         rts
 

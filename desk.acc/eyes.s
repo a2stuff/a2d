@@ -208,17 +208,9 @@ grow_box_bitmap:
         jmp     input_loop
 .endproc
 
-.proc yield_loop
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_YIELD_LOOP
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
 .proc exit
         MGTK_CALL MGTK::CloseWindow, winfo
+        jsr     clear_updates
         rts
 .endproc
 
@@ -305,11 +297,7 @@ common: lda     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     clear_updates
 
         ;; Draw DA's window
         lda     #0
@@ -345,6 +333,26 @@ common: lda     dragwindow_params::moved
 nope:   jmp     input_loop
 
 tmpw:   .word   0
+.endproc
+
+;;; ============================================================
+
+.proc yield_loop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+.proc clear_updates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 ;;; ============================================================

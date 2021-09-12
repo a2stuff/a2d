@@ -380,6 +380,15 @@ update_selection:
         rts
 .endproc
 
+.proc clear_updates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
 ;;; ============================================================
 
 .proc on_click
@@ -642,6 +651,7 @@ dialog_result:  .byte   0
 
 .proc destroy
         MGTK_CALL MGTK::CloseWindow, closewindow_params
+        jsr     clear_updates
 
         ;; Copy the relay routine to the zero page
         dest := $20

@@ -67,32 +67,6 @@ stash_stack:  .byte   0
         kDAWindowId = 51
 
 ;;; ============================================================
-;;; Redraw the screen (all windows) after a EventKind::drag
-
-.proc redraw_screen
-
-        dest := $20
-
-        ;; copy following routine to $20 and call it
-        COPY_BYTES sizeof_routine+1, routine, dest
-        jsr     dest
-
-        lda     #kDAWindowId
-        jsr     redraw_window
-        rts
-
-.proc routine
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-        sizeof_routine = .sizeof(routine)
-.endproc
-
-;;; ============================================================
 ;;; Redraw the DA window
 
         ;; called with window_id in A
@@ -687,17 +661,13 @@ bail:   rts
         beq     bail
 destroy:
         MGTK_CALL MGTK::CloseWindow, closewindow_params
+        jsr     clear_updates
 
-        target := $20           ; copy following to ZP and run it
-        COPY_BYTES sizeof_routine+1, routine, target
-        jmp     target
-
-.proc routine
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jmp     exit_da
-.endproc
-        sizeof_routine = .sizeof(routine)
+
+
 
         ;; title bar?
 check_title:
@@ -706,7 +676,9 @@ check_title:
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        jsr     redraw_screen
+        jsr     clear_updates
+        lda     #kDAWindowId
+        jsr     redraw_window
         rts
 
         ;; on key press - exit if Escape
@@ -723,6 +695,15 @@ check_key:
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+.proc clear_updates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         sta     RAMRDON
         sta     RAMWRTON
         rts

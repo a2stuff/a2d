@@ -65,24 +65,6 @@ save_stack:  .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Used after a event_kind_drag is completed; redraws the window.
-
-.proc redraw_screen_and_window
-
-        ;; Redraw DeskTop's windows and icons
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
-
-        ;;  Redraw window after event_kind_drag
-        jsr     draw_content
-        rts
-
-.endproc
-
-;;; ============================================================
 ;;; Call Params (and other data)
 
         ;; The following params blocks overlap for data re-use
@@ -605,6 +587,15 @@ loop:   lda     chrget_routine-1,x
         rts
 .endproc
 
+.proc clear_updates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
 ;;; ============================================================
 ;;; On Click
 
@@ -635,6 +626,7 @@ ignore_click:
         beq     ignore_click
 
 exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
+        jsr     clear_updates
         jmp     exit_da
 
 :       cmp     #MGTK::Area::dragbar ; Title bar?
@@ -642,7 +634,8 @@ exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        jsr     redraw_screen_and_window
+        jsr     clear_updates
+        jsr     draw_content
         rts
 
 ;;; ============================================================
