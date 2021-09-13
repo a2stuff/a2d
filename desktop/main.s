@@ -3675,12 +3675,13 @@ common:
         lda     (ptr),y
         tay
 :       lda     (ptr),y
-        sta     path_buf,y
+        sta     path_buf+1,y
         dey
         bpl     :-
 
         ;; Find all windows with path as prefix, and close them.
-        dec     path_buf
+        sta     path_buf
+        inc     path_buf
         lda     #'/'
         sta     path_buf+1
         ldax    #path_buf
