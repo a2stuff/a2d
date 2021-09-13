@@ -7,7 +7,6 @@
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
-        .include "../desktop/icontk.inc"
 
 ;;; ============================================================
 ;;; Memory map
@@ -51,7 +50,7 @@ kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
         DEFINE_CLOSE_PARAMS close_params
 
 ;;; ============================================================
-;;; Get filename by checking DeskTop selected window/icon
+;;; Get filename from DeskTop
 
 .proc entry
         INVOKE_PATH := $220

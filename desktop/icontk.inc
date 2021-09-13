@@ -102,6 +102,10 @@ label   := *
 ;;; (Tables keyed by icon number must hold `kMaxIconCount` + 1 entries)
 kMaxIconCount   = 127
 
+;;; Masks for IconEntry::state
+kIconEntryHighlighted = %01000000
+
+;;; Masks for IconEntry::win_type
 kIconEntryOpenMask    = %10000000
 kIconEntryTypeMask    = %01110000
 kIconEntryWinIdMask   = %00001111

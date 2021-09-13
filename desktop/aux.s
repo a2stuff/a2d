@@ -602,13 +602,13 @@ ptr_icon        .addr
         bne     :+
         return  #2              ; Invalid icon
 :
-        and     #$40            ; V = highlighted
+        and     #kIconEntryHighlighted
         beq     :+
         return  #3              ; Already highlighted
 :
         ;; Mark highlighted
         lda     (ptr),y
-        ora     #$40            ; V = highlighted
+        ora     #kIconEntryHighlighted
         sta     (ptr),y
 
         ;; Append to highlight list
@@ -656,7 +656,7 @@ ptr_icon        .addr
 
         ldy     #IconEntry::state
         lda     (ptr),y
-        and     #$40            ; V = highlighted
+        and     #kIconEntryHighlighted
         bne     :+
 
         jsr     paint_icon_unhighlighted
@@ -716,7 +716,7 @@ ptr_icon        .addr
         pla                     ; A = state
 
         ;; Was it highlighted?
-        and     #$40            ; V = highlighted
+        and     #kIconEntryHighlighted
         beq     done            ; not highlighted
 
         ldy     #IconEntry::id
@@ -849,7 +849,7 @@ L96E5:  dec     count
         pla                     ; A = state
 
         ;; Was it highlighted?
-        and     #$40            ; V = highlighted
+        and     #kIconEntryHighlighted
         beq     next            ; not highlighted
 
         ldy     #IconEntry::id
@@ -1565,7 +1565,7 @@ find_icon:
         ;; Highlighted?
         ldy     #IconEntry::state
         lda     (ptr),y
-        and     #$40            ; V = highlighted
+        and     #kIconEntryHighlighted
         bne     done            ; Not valid (it's being dragged)
 
         lda     icon_num
@@ -1704,13 +1704,13 @@ ptr_icon    .addr
         bne     :+
         return  #2              ; Invalid icon
 :
-        and     #$40            ; V = highlighted
+        and     #kIconEntryHighlighted
         bne     :+
         return  #3              ; Not highlighted
 :
         ;; Mark not highlighted
         lda     (ptr),y
-        eor     #$40            ; V = highlighted
+        eor     #kIconEntryHighlighted
         sta     (ptr),y
 
         ldy     #IconEntry::id
@@ -2487,7 +2487,8 @@ entry_poly:
         copy    #$80, offset_flags
         bmi     LA4E2           ; always
 
-entry_do:  pha
+entry_do:
+        pha
         lda     #$40
         sta     offset_flags
         jmp     LA4E2
