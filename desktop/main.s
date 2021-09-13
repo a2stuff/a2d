@@ -4080,7 +4080,8 @@ replace_selection:
 check_double_click:
         jsr     detect_double_click
         bmi     :+
-        jmp     handle_double_click
+        jsr     swap_in_desktop_icon_table
+        jmp     cmd_open_from_double_click
 :
         ;; --------------------------------------------------
         ;; Drag of file icon
@@ -4172,10 +4173,6 @@ failure:
 
         ;; --------------------------------------------------
 
-handle_double_click:
-        jsr     swap_in_desktop_icon_table
-        jmp     cmd_open_from_double_click
-
 .proc update_active_window
         lda     active_window_id
         jsr     update_used_free_for_vol_windows
@@ -4184,9 +4181,6 @@ handle_double_click:
 .endproc
 
 icon_num:
-        .byte   0
-
-icon_entry_type:
         .byte   0
 
 .endproc
