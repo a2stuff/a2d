@@ -328,11 +328,11 @@ Erases the specified icon by number. No error checking is done.
 
 ```
 .byte icon      icon index
-.byte state     1 = allocated, $80 = highlighted, 0 = otherwise
+.byte state     bit 1 = allocated, bit 6 = highlighted
 .byte type/window_id
                 (bits 0-3 window_id)
                 (bits 4,5,6)
-                       000 = directory
+                       000 = directory (drop target)
                        001 = system
                        010 = binary (maybe runnable)
                        011 = basic
