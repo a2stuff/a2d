@@ -5731,7 +5731,9 @@ update_view:
         jsr     unsafe_set_port_from_window_id ; CHECKED
         sta     err
 
+        bne     :+              ; Skip drawing if obscured
         jsr     draw_window_header
+:
 
         ;; Restore and add the icons
         jsr     cached_icons_screen_to_window
@@ -5837,9 +5839,9 @@ num:    .byte   0
         add16   window_grafport::cliprect::y1, #kWindowHeaderHeight, tmp_rect::y2
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, tmp_rect
-     END_IF
-
-        jmp     draw_window_header
+        jsr     draw_window_header
+    END_IF
+        rts
 .endproc
 
 ;;; ============================================================
