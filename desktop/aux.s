@@ -586,15 +586,10 @@ done:   rts
 
         ptr := $06              ; Overwrites params
 
-        ;; Is it in `icon_list`?
+        ;; Pointer to IconEntry
         ldy     #HighlightIconParams::icon
         lda     (params),y
-        jsr     is_in_icon_list
-        beq     :+
-        return  #1              ; Not found
-
-        ;; Pointer to IconEntry
-:       asl     a
+        asl     a
         tax
         copy16  icon_ptrs,x, ptr
 
@@ -645,15 +640,10 @@ done:   rts
 
         ptr := $06              ; Overwrites params
 
-        ;; Is it in `icon_list`?
+        ;; Pointer to IconEntry
         ldy     #DrawIconParams::icon
         lda     (params),y
-        jsr     is_in_icon_list
-        beq     :+
-        return  #1              ; Not found
-
-        ;; Pointer to IconEntry
-:       asl     a
+        asl     a
         tax
         copy16  icon_ptrs,x, ptr
 
@@ -742,14 +732,13 @@ done:   return  #0
 
         ptr := $06              ; Overwrites params
 
+        ;; Pointer to IconEntry
         ldy     #EraseIconParams::icon
-        lda     (params),y ; A = icon id
-
-        ;; TODO: Verify that icon is in `icon_list`???
-
+        lda     (params),y
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
+
         jsr     calc_icon_poly
         jmp     erase_icon
 .endproc
@@ -765,16 +754,9 @@ done:   return  #0
         window_id       .byte
 .endstruct
 
-        jmp     start
-
         icon_ptr := $08
 
-        ;; IconTK::RemoveIcon params
-icon:   .byte   0
-
-count:  .byte   0
-
-start:  lda     num_icons
+        lda     num_icons
         sta     count
 
 loop:   ldx     count
@@ -782,6 +764,7 @@ loop:   ldx     count
         beq     done
         dec     count
         dex
+
         lda     icon_list,x
         sta     icon
         asl     a
@@ -794,9 +777,15 @@ loop:   ldx     count
         cmp     (params),y
         bne     loop
         ITK_DIRECT_CALL IconTK::RemoveIcon, icon
+
         jmp     loop
 
 done:   return  #0
+
+        ;; IconTK::RemoveIcon params
+icon:   .byte   0
+
+count:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -812,12 +801,7 @@ done:   return  #0
 
         ptr := $08
 
-        jmp     start
-
-icon:   .byte   0
-count:  .byte   0
-
-start:  lda     num_icons
+        lda     num_icons
         sta     count
 loop:   ldx     count
         bne     L96E5
@@ -866,6 +850,9 @@ L96E5:  dec     count
         jsr     remove_from_highlight_list
 
 next:   jmp     loop
+
+icon:   .byte   0
+count:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -879,15 +866,12 @@ next:   jmp     loop
         window_id       .byte
 .endstruct
 
-
-        jmp     start
-
         icon_ptr   := $06       ; for `calc_icon_poly` call
         out_params := $08
 
         ;; Copy coords at $6 to param block
         .assert FindIconParams::coords = 0, error, "coords must come first"
-start:  ldy     #.sizeof(MGTK::Point)-1
+        ldy     #.sizeof(MGTK::Point)-1
 :       lda     (params),y
         sta     moveto_params2,y
         dey
@@ -1706,15 +1690,10 @@ height: .word   0
 
         ptr := $06              ; Overwrites params
 
-        ;; Is it in `icon_list`?
+        ;; Pointer to IconEntry
         ldy     #UnhighlightIconParams::icon
         lda     (params),y
-        jsr     is_in_icon_list
-        beq     :+
-        return  #1              ; Not found
-
-        ;; Pointer to IconEntry
-:       asl     a
+        asl     a
         tax
         copy16  icon_ptrs,x, ptr
 
@@ -2150,15 +2129,7 @@ text_width:  .word   0
 
         ptr := $06
 
-        jmp     start
-
-        ;; IconTK::DrawIcon params
-icon:  .byte   0
-
-done:   jsr     pop_pointers
-        rts
-
-start:  jsr     push_pointers
+        jsr     push_pointers
 
         MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport
@@ -2168,6 +2139,7 @@ start:  jsr     push_pointers
 loop:   bmi     done
         txa
         pha
+
         lda     icon_list,x
         asl     a
         tax
@@ -2175,7 +2147,7 @@ loop:   bmi     done
         ldy     #IconEntry::win_type
         lda     (ptr),y
         and     #kIconEntryWinIdMask ; desktop icon
-        bne     next                   ; no, skip it
+        bne     next                 ; no, skip it
 
         ldy     #IconEntry::id
         lda     (ptr),y
@@ -2186,6 +2158,13 @@ next:   pla
         tax
         dex
         jmp     loop
+
+done:   jsr     pop_pointers
+        rts
+
+        ;; IconTK::DrawIcon params
+icon:  .byte   0
+
 .endproc
 
 ;;; ============================================================
