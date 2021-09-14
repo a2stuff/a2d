@@ -18,7 +18,7 @@ MLI := $8E00
 
 AddIcon         = $01   ; param is address of IconEntry
 HighlightIcon   = $02   ; { .byte icon }
-DrawIcon      = $03   ; { .byte icon }
+DrawIcon        = $03   ; { .byte icon }
 RemoveIcon      = $04   ; { .byte icon }
 RemoveAll       = $05   ; { .byte window_id }
 CloseWindow     = $06   ; { .byte window_id }

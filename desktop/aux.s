@@ -446,7 +446,7 @@ desktop_jump_table:
         .addr   RemoveAllImpl
         .addr   CloseWindowImpl
         .addr   FindIconImpl
-        .addr   DragHighlighted
+        .addr   DragHighlightedImpl
         .addr   UnhighlightIconImpl
         .addr   RedrawDesktopIconsImpl
         .addr   IconInRectImpl
@@ -525,13 +525,12 @@ ycoord: .word   0
 ;;; AddIcon
 
 .proc AddIconImpl
-        PARAM_BLOCK params, $06
-ptr_icon        .addr           ; Caller passes in IconEntry pointer
-        END_PARAM_BLOCK
+        ;; Parameter is an IconEntry
+        ptr_icon := $06
 
         ;; Check if passed ID is already in the icon list
         ldy     #IconEntry::id
-        lda     (params::ptr_icon),y ; A = icon id
+        lda     (ptr_icon),y ; A = icon id
         jsr     is_in_icon_list
         bne     :+
         return  #1              ; That icon id is already in use
@@ -544,11 +543,11 @@ ptr_icon        .addr           ; Caller passes in IconEntry pointer
         ;; Add to `icon_ptrs` table
         asl     a
         tax
-        copy16  params::ptr_icon, icon_ptrs,x
+        copy16  ptr_icon, icon_ptrs,x
 
         lda     #1              ; $01 = allocated
         tay                     ; And IconEntry::state
-        sta     (params::ptr_icon),y
+        sta     (ptr_icon),y
         return  #0
 
         rts
@@ -580,14 +579,16 @@ done:   rts
 ;;; param is pointer to icon id
 
 .proc HighlightIconImpl
-        PARAM_BLOCK params, $06
-ptr_icon        .addr
-        END_PARAM_BLOCK
-        ptr := $06              ; Overwrites param
+        params := $06
+.struct HighlightIconParams
+        icon    .byte
+.endstruct
+
+        ptr := $06              ; Overwrites params
 
         ;; Is it in `icon_list`?
-        ldy     #0
-        lda     (params::ptr_icon),y
+        ldy     #HighlightIconParams::icon
+        lda     (params),y
         jsr     is_in_icon_list
         beq     :+
         return  #1              ; Not found
@@ -637,14 +638,16 @@ ptr_icon        .addr
 ;;; * Does not erase background
 
 .proc DrawIconImpl
-        PARAM_BLOCK params, $06
-ptr_icon        .addr
-        END_PARAM_BLOCK
-        ptr := $06              ; Overwrites param
+        params := $06
+.struct DrawIconParams
+        icon    .byte
+.endstruct
+
+        ptr := $06              ; Overwrites params
 
         ;; Is it in `icon_list`?
-        ldy     #0
-        lda     (params::ptr_icon),y
+        ldy     #DrawIconParams::icon
+        lda     (params),y
         jsr     is_in_icon_list
         beq     :+
         return  #1              ; Not found
@@ -672,14 +675,16 @@ ptr_icon        .addr
 ;;; param is pointer to icon number
 
 .proc RemoveIconImpl
-        PARAM_BLOCK params, $06
-ptr_icon        .addr
-        END_PARAM_BLOCK
-        ptr := $06              ; Overwrites param
+        params := $06
+.struct RemoveIconParams
+        icon    .byte
+.endstruct
+
+        ptr := $06              ; Overwrites params
 
         ;; Is it in `icon_list`?
-        ldy     #0
-        lda     (params::ptr_icon),y
+        ldy     #RemoveIconParams::icon
+        lda     (params),y
         jsr     is_in_icon_list
         beq     :+
         return  #1              ; Not found
@@ -730,13 +735,15 @@ done:   return  #0
 ;;; EraseIcon
 
 .proc EraseIconImpl
-        PARAM_BLOCK params, $06
-ptr_icon        .addr
-        END_PARAM_BLOCK
-        ptr := $06              ; Overwrites param
+        params := $06
+.struct EraseIconParams
+        icon    .byte
+.endstruct
 
-        ldy     #0
-        lda     (params::ptr_icon),y ; A = icon id
+        ptr := $06              ; Overwrites params
+
+        ldy     #EraseIconParams::icon
+        lda     (params),y ; A = icon id
 
         ;; TODO: Verify that icon is in `icon_list`???
 
@@ -753,11 +760,12 @@ ptr_icon        .addr
 ;;; param is window id (0 = desktop)
 
 .proc RemoveAllImpl
-        jmp     start
+        params := $06
+.struct RemoveAllParams
+        window_id       .byte
+.endstruct
 
-        PARAM_BLOCK params, $06
-window_id       .byte
-        END_PARAM_BLOCK
+        jmp     start
 
         icon_ptr := $08
 
@@ -782,8 +790,8 @@ loop:   ldx     count
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
-        ldy     #0
-        cmp     (params::window_id),y
+        ldy     #RemoveAllParams::window_id
+        cmp     (params),y
         bne     loop
         ITK_DIRECT_CALL IconTK::RemoveIcon, icon
         jmp     loop
@@ -797,9 +805,10 @@ done:   return  #0
 ;;; param is window id
 
 .proc CloseWindowImpl
-        PARAM_BLOCK params, $06
-window_id       .byte
-        END_PARAM_BLOCK
+        params := $06
+.struct CloseWindowParams
+        window_id       .byte
+.endstruct
 
         ptr := $08
 
@@ -824,8 +833,8 @@ L96E5:  dec     count
         ldy     #IconEntry::win_type
         lda     (ptr),y
         and     #kIconEntryWinIdMask ; check window
-        ldy     #0
-        cmp     (params::window_id),y ; match?
+        ldy     #CloseWindowParams::window_id
+        cmp     (params),y ; match?
         bne     loop                 ; nope
 
         ;; Move to end of icon list
@@ -863,19 +872,21 @@ next:   jmp     loop
 ;;; FindIcon
 
 .proc FindIconImpl
-        jmp     start
-
-        params     := $06
-        icon_ptr   := $06       ; for `calc_icon_poly` call
-        out_params := $08
-
+        params := $06
 .struct FindIconParams
-        coords          .tag MGTK::Point
-        result          .byte
+        coords  .tag MGTK::Point
+        result  .byte
         window_id       .byte
 .endstruct
 
+
+        jmp     start
+
+        icon_ptr   := $06       ; for `calc_icon_poly` call
+        out_params := $08
+
         ;; Copy coords at $6 to param block
+        .assert FindIconParams::coords = 0, error, "coords must come first"
 start:  ldy     #.sizeof(MGTK::Point)-1
 :       lda     (params),y
         sta     moveto_params2,y
@@ -941,20 +952,26 @@ window_id:
 ;;; ============================================================
 ;;; DragHighlighted
 
-.proc DragHighlighted
-        ldy     #IconEntry::id
+.proc DragHighlightedImpl
+        params := $06
+.struct DragHighlightedParams
+        icon    .byte
+        coords  .tag    MGTK::Point
+.endstruct
+
+        ldy     #DragHighlightedParams::icon
         lda     ($06),y
         sta     icon_id
         tya
         sta     ($06),y
 
         ;; Copy coords (at params+1) to
-        ldy     #.sizeof(MGTK::Point)
+        ldy     #DragHighlightedParams::coords + .sizeof(MGTK::Point)-1
 :       lda     ($06),y
         sta     coords1-1,y
         sta     coords2-1,y
         dey
-        cpy     #0
+        cpy     #DragHighlightedParams::coords-1
         bne     :-
 
         jsr     push_pointers
@@ -1682,14 +1699,16 @@ height: .word   0
 ;;; param is pointer to IconEntry
 
 .proc UnhighlightIconImpl
-        PARAM_BLOCK params, $06
-ptr_icon    .addr
-        END_PARAM_BLOCK
-        ptr := $06              ; Overwrites param
+        params := $06
+.struct UnhighlightIconParams
+        icon    .byte
+.endstruct
+
+        ptr := $06              ; Overwrites params
 
         ;; Is it in `icon_list`?
-        ldy     #0
-        lda     (params::ptr_icon),y
+        ldy     #UnhighlightIconParams::icon
+        lda     (params),y
         jsr     is_in_icon_list
         beq     :+
         return  #1              ; Not found
@@ -1722,16 +1741,26 @@ ptr_icon    .addr
 ;;; IconInRect
 
 .proc IconInRectImpl
+        params := $06
+.struct IconInRectParams
+        icon    .byte
+        rect    .tag    MGTK::Rect
+.endstruct
+
+        ptr := $06
+
         jmp     start
 
 icon:   .byte   0
         DEFINE_RECT rect, 0, 0, 0, 0
 
-start:  ldy     #0
-        lda     ($06),y
+        ;; Copy params to local data
+start:  ldy     #IconInRectParams::icon
+        lda     (params),y
         sta     icon
-        ldy     #8
-:       lda     ($06),y
+
+        ldy     #IconInRectParams::rect + .sizeof(MGTK::Rect)-1
+:       lda     (params),y
         sta     rect-1,y
         dey
         bne     :-
@@ -1739,7 +1768,7 @@ start:  ldy     #0
         lda     icon
         asl     a
         tax
-        copy16  icon_ptrs,x, $06
+        copy16  icon_ptrs,x, ptr
         jsr     calc_icon_poly
 
         ;; See vertex diagram in calc_icon_poly
@@ -2117,6 +2146,8 @@ text_width:  .word   0
 ;;; RedrawDesktopIcons
 
 .proc RedrawDesktopIconsImpl
+        ;; No params
+
         ptr := $06
 
         jmp     start
