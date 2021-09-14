@@ -648,7 +648,7 @@ done:   rts
         lda     win
         jsr     unsafe_offset_and_set_port_from_window_id ; CHECKED
         bne     skip            ; MGTK::Error::window_obscured
-:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+:       ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
 skip:   lda     win
         beq     :+
         lda     icon_param
@@ -2689,7 +2689,7 @@ entry:
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
         lda     err
     IF_ZERO                     ; Skip drawing if obscured
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
     END_IF
         inc     index
         jmp     :-
@@ -3193,7 +3193,7 @@ loop:   ldx     index
         beq     :+
         lda     icon_param
         jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+:       ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
         lda     selected_window_id
         beq     :+
         lda     icon_param
@@ -3565,7 +3565,7 @@ cont:   txa
         jsr     icon_entry_lookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (desktop)
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
 
 next:   pla
         tax
@@ -3775,7 +3775,7 @@ add_icon:
         jsr     icon_entry_lookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (desktop)
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
 
 :       jsr     StoreWindowEntryTable
         rts
@@ -4151,7 +4151,7 @@ same_or_desktop:
         pha
         lda     selected_icon_list,x
         sta     icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (drag)
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag)
         pla
         tax
         dex
@@ -4431,7 +4431,7 @@ iloop:  cpx     cached_window_entry_count
 
         ;; Highlight and add to selection
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (drag select)
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
@@ -5321,7 +5321,7 @@ same_or_desktop:
 :       txa
         pha
         copy    selected_icon_list,x, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (desktop)
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
         pla
         tax
         dex
@@ -5331,7 +5331,7 @@ same_or_desktop:
 
 select_vol_icon:
         ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
-        ITK_RELAY_CALL IconTK::RedrawIcon, findicon_which_icon ; CHECKED (desktop)
+        ITK_RELAY_CALL IconTK::DrawIcon, findicon_which_icon ; CHECKED (desktop)
         ldx     selected_icon_count
         copy    findicon_which_icon, selected_icon_list,x
         inc     selected_icon_count
@@ -5339,7 +5339,7 @@ select_vol_icon:
 
 deselect_vol_icon:
         ITK_RELAY_CALL IconTK::UnhighlightIcon, findicon_which_icon
-        ITK_RELAY_CALL IconTK::RedrawIcon, findicon_which_icon ; CHECKED (desktop)
+        ITK_RELAY_CALL IconTK::DrawIcon, findicon_which_icon ; CHECKED (desktop)
         lda     findicon_which_icon
         jmp     remove_from_selection_list
 .endproc
@@ -5415,7 +5415,7 @@ iloop:  cpx     cached_window_entry_count
 
         ;; Highlight and add to selection
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED (drag select)
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
         ldx     selected_icon_count
         copy    icon_param, selected_icon_list,x
         inc     selected_icon_count
@@ -5735,7 +5735,7 @@ update_view:
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr2
         lda     err
     IF_ZERO                     ; Skip drawing if obscured
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
     END_IF
         inc     num
         jmp     :-
@@ -5951,7 +5951,7 @@ loop:   lda     index
         sta     icon_param
         ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     :+
-        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
 :       inc     index
         jmp     loop
 
@@ -6011,7 +6011,7 @@ loop:   lda     index
         beq     :+
         lda     icon_param
         jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_param ; CHECKED
+:       ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
         lda     selected_window_id
         beq     :+
         lda     icon_param

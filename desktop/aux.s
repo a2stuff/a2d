@@ -441,7 +441,7 @@ desktop_jump_table:
         .addr   0
         .addr   AddIconImpl
         .addr   HighlightIconImpl
-        .addr   RedrawIconImpl
+        .addr   DrawIconImpl
         .addr   RemoveIconImpl
         .addr   RemoveAllImpl
         .addr   CloseWindowImpl
@@ -631,12 +631,12 @@ ptr_icon        .addr
 .endproc
 
 ;;; ============================================================
-;;; RedrawIcon
+;;; DrawIcon
 
 ;;; * Assumes correct grafport already selected/maprect specified
 ;;; * Does not erase background
 
-.proc RedrawIconImpl
+.proc DrawIconImpl
         PARAM_BLOCK params, $06
 ptr_icon        .addr
         END_PARAM_BLOCK
@@ -1634,7 +1634,7 @@ headery:
 .proc highlight_icon
         jsr set_port_for_highlight_icon
         ITK_DIRECT_CALL IconTK::HighlightIcon, highlight_icon_id
-        ITK_DIRECT_CALL IconTK::RedrawIcon, highlight_icon_id
+        ITK_DIRECT_CALL IconTK::DrawIcon, highlight_icon_id
         MGTK_CALL MGTK::InitPort, icon_grafport
         rts
 .endproc
@@ -1642,7 +1642,7 @@ headery:
 .proc unhighlight_icon
         jsr set_port_for_highlight_icon
         ITK_DIRECT_CALL IconTK::UnhighlightIcon, highlight_icon_id
-        ITK_DIRECT_CALL IconTK::RedrawIcon, highlight_icon_id
+        ITK_DIRECT_CALL IconTK::DrawIcon, highlight_icon_id
         MGTK_CALL MGTK::InitPort, icon_grafport
         rts
 .endproc
@@ -2121,7 +2121,7 @@ text_width:  .word   0
 
         jmp     start
 
-        ;; IconTK::RedrawIcon params
+        ;; IconTK::DrawIcon params
 icon:  .byte   0
 
 done:   jsr     pop_pointers
@@ -2149,7 +2149,7 @@ loop:   bmi     done
         ldy     #IconEntry::id
         lda     (ptr),y
         sta     icon
-        ITK_DIRECT_CALL IconTK::RedrawIcon, icon
+        ITK_DIRECT_CALL IconTK::DrawIcon, icon
 
 next:   pla
         tax
@@ -2328,7 +2328,7 @@ erase_icon:
 LA3AC:  .byte   0
 window_id:  .byte   0
 
-        ;; IconTK::RedrawIcon params
+        ;; IconTK::DrawIcon params
         ;; IconTK::IconInRect params (in `redraw_icons_after_erase`)
 icon:   .byte   0
 icon_rect:
@@ -2460,7 +2460,7 @@ LA466:  txa
 :       ITK_DIRECT_CALL IconTK::IconInRect, icon
         beq     :+
 
-        ITK_DIRECT_CALL IconTK::RedrawIcon, icon
+        ITK_DIRECT_CALL IconTK::DrawIcon, icon
 
 :       bit     icon_in_window_flag
         bpl     next

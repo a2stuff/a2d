@@ -964,7 +964,7 @@ window_filerecord_table:
 ;;; * IconTK::EraseIcon
 ;;; * IconTK::HighlightIcon
 ;;; * IconTK::IconInRect (with following `tmp_rect`)
-;;; * IconTK::RedrawIcon
+;;; * IconTK::DrawIcon
 ;;; * IconTK::RemoveIcon
 ;;; * IconTK::UnhighlightIcon
 icon_param:  .byte   0

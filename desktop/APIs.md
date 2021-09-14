@@ -245,7 +245,7 @@ Parameters: address of IconEntry
 
 Inserts an icon record into the table.
 
-Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::RedrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
 
 ### `IconTK::HighlightIcon` ($02)
 
@@ -253,9 +253,9 @@ Parameters: { byte icon }
 
 Highlights (selects) an icon by number.
 
-Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::RedrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
 
-### `IconTK::RedrawIcon` ($03)
+### `IconTK::DrawIcon` ($03)
 
 Parameters: { byte icon }
 
@@ -303,7 +303,7 @@ Parameters: { byte icon }
 
 Unhighlights the specified icon.
 
-Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::RedrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
 
 ### `IconTK::RedrawDesktopIcons` ($0A)
 
