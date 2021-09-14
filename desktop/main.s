@@ -4427,8 +4427,7 @@ iloop:  cpx     cached_window_entry_count
         ;; Already selected?
         lda     icon_param
         jsr     is_icon_selected
-        beq     done_icon
-
+    IF_NE
         ;; Highlight and add to selection
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
@@ -4436,6 +4435,13 @@ iloop:  cpx     cached_window_entry_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
         copy    active_window_id, selected_window_id
+    ELSE
+        ;; Unhighlight and remove from selection
+        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
+        lda     icon_param
+        jsr     remove_from_selection_list
+    END_IF
 
 done_icon:
         lda     icon_param
@@ -5411,14 +5417,20 @@ iloop:  cpx     cached_window_entry_count
         ;; Already selected?
         lda     icon_param
         jsr     is_icon_selected
-        beq     done_icon
-
+    IF_NE
         ;; Highlight and add to selection
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
         ldx     selected_icon_count
         copy    icon_param, selected_icon_list,x
         inc     selected_icon_count
+    ELSE
+        ;; Unhighlight and remove from selection
+        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
+        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
+        lda     icon_param
+        jsr     remove_from_selection_list
+    END_IF
 
 done_icon:
         pla
