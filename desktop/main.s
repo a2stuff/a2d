@@ -2261,22 +2261,58 @@ name_ptr:
         ptr_icon := $6
         ptr_name := $8          ; Input
 
-        ;; View by Icon?
-        ;; TODO: Scroll list views, as well.
-        jsr     get_active_window_view_by
-        bpl     :+
-        rts
-:
+        ldax    ptr_name
+        ldy     active_window_id
+        jsr     find_icon_by_name
+        bne     :+
+        rts                     ; not found
+
+:       pha
+        jsr     select_file_icon
         jsr     LoadActiveWindowEntryTable
+        pla
+        jsr     scroll_icon_into_view
+        jsr     LoadDesktopEntryTable
+        rts
+.endproc
+
+;;; ============================================================
+;;; Find an icon by name in the given window.
+;;; Inputs: Y = window id, A,X = name
+;;; Outputs: Z=0, A = icon id (or Z=1, A=0 if not found)
+;;; Assert: Desktop icon table cached in (and restored)
+
+.proc find_icon_by_name
+        ptr_icon := $06
+        ptr_name := $08
+
+        stax    tmp
+        jsr     push_pointers
+        copy16  tmp, ptr_name
+        tya
+
+        ;; Icon view?
+        tax
+        dex
+        lda     win_view_by_table,x
+        bpl     :+
+        rts                     ; list view
+
+:       sty     cached_window_id
+        jsr     LoadWindowEntryTable
 
         ;; Iterate icons
         copy    #0, icon
 loop:   ldx     icon
         cpx     cached_window_entry_count
-        beq     done
+        bne     :+
+
+        ;; Not found
+        copy    #0, icon
+        beq     done            ; always
 
         ;; Compare with name from dialog
-        lda     cached_window_entry_list,x
+:       lda     cached_window_entry_list,x
         jsr     icon_entry_lookup
         stax    ptr_icon
 
@@ -2301,22 +2337,21 @@ cloop:  lda     (ptr_icon),y
         dey
         bne     cloop
 
-        ;; Match, so make selected
+        ;; Match!
         ldx     icon
         lda     cached_window_entry_list,x
-        pha
-        jsr     select_file_icon
-        pla
-        jsr     scroll_icon_into_view
-        bne     done            ; always
+        sta     icon
+
+done:   jsr     LoadDesktopEntryTable
+        jsr     pop_pointers
+        lda     icon
+        rts
 
 next:   inc     icon
         bne     loop
 
-done:   jsr     LoadDesktopEntryTable
-        rts
-
-icon:   .byte   0
+icon:   .byte   0               ; index, until finishing
+tmp:    .addr   0
 .endproc
 
 ;;; ============================================================
