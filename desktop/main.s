@@ -2077,6 +2077,7 @@ cmd_open_from_keyboard := cmd_open::from_keyboard
 
         lda     active_window_id
         beq     done
+
         jsr     get_window_path
         stax    path_ptr
 
@@ -2088,20 +2089,14 @@ cmd_open_from_keyboard := cmd_open::from_keyboard
         sta     open_dir_path_buf,y
         dey
         bpl     :-
+        sta     prev            ; previous length
 
-        ;; Find last '/'
-        ldx     open_dir_path_buf
-        stx     prev
-:       lda     open_dir_path_buf,x
-        cmp     #'/'
-        beq     :+
-        dex
-        bne     :-              ; always (unless path was bogus)
+        ;; Try removing last segment
+        param_call find_last_path_segment, open_dir_path_buf ; point Y at last '/'
+        cpy     open_dir_path_buf
 
-        ;; Truncate
-:       dex                     ; Remove '/'
-        beq     volume          ; Nothing left
-        stx     open_dir_path_buf
+        beq     volume
+        sty     open_dir_path_buf
 
         ;; Try to open
         tsx
@@ -2124,6 +2119,8 @@ cmd_open_from_keyboard := cmd_open::from_keyboard
 
 done:   rts
 
+        ;; This only works if the parent icon is known.
+        ;; TODO: Select it by name.
 volume: jsr     clear_selection
         lda     active_window_id
         jsr     select_icon_for_window
