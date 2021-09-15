@@ -2098,7 +2098,10 @@ cmd_open_from_keyboard := cmd_open::from_keyboard
         beq     volume
         sty     open_dir_path_buf
 
-        ;; Try to open
+        ;; --------------------------------------------------
+        ;; Windowed
+
+        ;; Try to open by path.
         tsx
         stx     saved_stack
         jsr     open_window_for_path
@@ -2114,17 +2117,25 @@ cmd_open_from_keyboard := cmd_open::from_keyboard
         ldy     #0
         sta     (name_ptr),y    ; assign string length
 
+        ;; Select by name
         jsr     clear_selection
         jsr     select_file_icon_by_name ; $08 = name
 
 done:   rts
 
-        ;; This only works if the parent icon is known.
-        ;; TODO: Select it by name.
+        ;; --------------------------------------------------
+        ;; Find volume icon by name and select it.
+
 volume: jsr     clear_selection
-        lda     active_window_id
-        jsr     select_icon_for_window
-        rts
+        ldx     open_dir_path_buf ; Strip '/'
+        dex
+        stx     open_dir_path_buf+1
+        ldax    #open_dir_path_buf+1
+        ldy     #0              ; 0=desktop
+        jsr     find_icon_by_name
+        beq     :+
+        jsr     select_icon
+:       rts
 
 prev:   .byte   0
 .endproc
@@ -3149,6 +3160,15 @@ select_prev:
 highlight_icon:
         ldx     selected_index
         lda     buffer+1,x
+        jmp     select_icon
+.endproc
+
+;;; ============================================================
+;;; Select an arbitrary icon. If windowed, it is scrolled into view.
+;;; Inputs: A = icon id
+;;; Assert: Selection is empty. If windowed, it's in the active window.
+
+.proc select_icon
         sta     icon_param
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
 
@@ -5381,6 +5401,7 @@ deselect_vol_icon:
         lda     findicon_which_icon
         jmp     remove_from_selection_list
 .endproc
+
 
 ;;; ============================================================
 ;;; Drag Selection - initiated on the desktop itself
