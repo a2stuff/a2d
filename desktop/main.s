@@ -554,6 +554,8 @@ not_menu:
 
         jsr     clear_selection
 
+        ;; Alternate entry point when volume icon is clicked.
+no_clear:
         ;; Actually make the window active.
         MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         copy    findwindow_window_id, active_window_id
@@ -5682,23 +5684,8 @@ found_win:                    ; X = window id - 1
         rts
 
         ;; Otherwise, bring the window to the front.
-:       stx     cached_window_id
-        jsr     LoadWindowEntryTable
-
-        jsr     update_icon
-
-        ;; Find FileRecord list
-        ;; TODO: When is this ever necessary???
-        lda     cached_window_id
-        jsr     find_index_in_filerecord_list_entries
-        beq     :+              ; found it
-        jsr     open_directory  ; not found - load it
-
-:       MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
-        lda     cached_window_id
-        sta     active_window_id
-        jsr     draw_window_entries
-        jmp     LoadDesktopEntryTable
+:       stx     findwindow_window_id
+        jmp     handle_inactive_window_click::no_clear
 
         ;; --------------------------------------------------
         ;; No associated window - check for matching path.
