@@ -203,21 +203,26 @@ loop_counter:
 
 :       sta     active_window_id
         jsr     LoadActiveWindowEntryTable
-        copy    #$80, header_and_offset_flag ; We will draw/offset
+        copy    #$80, header_and_offset_flag ; We will draw/offset TODO: Move adjacent to draw_window_entries
 
         ;; This correctly uses the clipped port provided by BeginUpdate.
         ;; TODO: Document exactly what's going on here.
 
+        ;; `draw_window_header` relies on `window_grafport` for dimensions
         copy    cached_window_id, getwinport_params2::window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
-
         jsr     draw_window_header
+
+        ;; Overwrite the Winfo's port with the cliprect we got for the update
+        ;; since downstream calls will use the Winfo's port.
         lda     active_window_id
         jsr     save_window_portbits
         jsr     OverwriteWindowPort
 
         winfo_ptr := $06
 
+        ;; Determine the update's cliprect is already below the header; if
+        ;; not, we need to offset the cliprect below the header.
         lda     active_window_id
         jsr     window_lookup
         stax    winfo_ptr
@@ -229,7 +234,8 @@ loop_counter:
         ;; Adjust grafport to account for header
         jsr     offset_window_grafport
 
-        ;; MGTK doesn't like offscreen grafports.
+        ;; MGTK doesn't like offscreen grafports, so if we end up with
+        ;; nothing to draw, skip drawing!
         ;; https://github.com/a2stuff/a2d/issues/369
         ldx     #MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         cmp16   window_grafport,x, #kScreenHeight
@@ -255,9 +261,13 @@ skip_adjust_port:
         ;; Actually draw the window icons/list
         jsr     draw_window_entries
 
-done:   copy    #0, header_and_offset_flag
+done:   copy    #0, header_and_offset_flag ; TODO: Move adjacent to draw_window_entries
+
+        ;; Restore window's port
         lda     active_window_id
         jsr     restore_window_portbits
+
+        ;; Back to normal TODO: Is this needed??? Move to end of update loop?
         jmp     reset_main_grafport
 
 index:  .byte   0
@@ -623,7 +633,8 @@ done:   rts
 ;;;
 ;;; Inputs: A = icon id
 ;;; Outputs: sets `icon_param` to the icon id
-;;; Assertions: `reset_main_grafport` state is in effect (and restored)
+;;; Assert: `reset_main_grafport` state is in effect (and restored)
+;;; Assert: If windowed, the icon is in the active window.
 
 .proc DrawIcon
         sta     icon_param
@@ -884,7 +895,7 @@ compose_path:
         jsr     compose_win_file_paths
 
 with_path:
-        jsr     set_cursor_watch
+        jsr     set_cursor_watch ; before invoking
 
         ;; Get the file info to determine type.
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
@@ -911,7 +922,7 @@ with_path:
         bne     launch
         jsr     ModifierDown    ; Otherwise, only launch if a button is down
         bmi     launch
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; after not launching BIN
         rts
 
 :       cmp     #IconType::folder
@@ -1066,7 +1077,7 @@ path_length:
 
         jsr     open_window_for_path
 
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; after opening folder
         rts
 .endproc
 
@@ -1190,7 +1201,7 @@ filerecords_free_start:
 ;;; ============================================================
 
 .proc cmd_selector_action
-        jsr     set_cursor_watch
+        jsr     set_cursor_watch ; before loading overlay
         lda     #kDynamicRoutineSelector1 ; selector picker dialog
         jsr     load_dynamic_routine
         bmi     done
@@ -1206,12 +1217,12 @@ filerecords_free_start:
         jsr     load_dynamic_routine
         bmi     done
 
-:       jsr     set_cursor_pointer
+:       jsr     set_cursor_pointer ; after loading overlay
         ;; Invoke routine
         lda     menu_click_params::item_num
         jsr     selector_picker_exec
         sta     result
-        jsr     set_cursor_watch
+        jsr     set_cursor_watch ; before restoring overlay/executing
 
         ;; Restore from overlays
         ;; (restore from file dialog overlay handled in picker overlay)
@@ -1235,7 +1246,7 @@ filerecords_free_start:
         bmi     done
         jsr     L4968
 
-done:   jsr     set_cursor_pointer
+done:   jsr     set_cursor_pointer ; after restoring overlay/executing
         rts
 
 .proc L4968
@@ -1581,7 +1592,7 @@ str_desk_acc:
         PASCAL_STRING .concat(kFilenameDADir, "/") ; do not localize
 
 start:  jsr     reset_main_grafport
-        jsr     set_cursor_watch
+        jsr     set_cursor_watch ; before invoking DA
 
         ;; Get current prefix
         MLI_RELAY_CALL GET_PREFIX, get_prefix_params
@@ -1645,7 +1656,7 @@ skip:   iny
         copy    #$80, running_da_flag
 
         ;; Invoke it
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; before invoking DA
         jsr     reset_main_grafport
         jsr     DA_LOAD_ADDRESS
         lda     #0
@@ -1653,7 +1664,7 @@ skip:   iny
 
         ;; Restore state
         jsr     reset_main_grafport
-done:   jsr     set_cursor_pointer
+done:   jsr     set_cursor_pointer ; after invoking DA
         rts
 
 open:   MLI_RELAY_CALL OPEN, open_params
@@ -1685,7 +1696,7 @@ running_da_flag:
 ;;; ============================================================
 
 .proc cmd_copy_file
-        jsr     set_cursor_watch
+        jsr     set_cursor_watch ; before loading overlay
         lda     #kDynamicRoutineFileDialog
         jsr     load_dynamic_routine
         bpl     :+
@@ -1696,14 +1707,14 @@ running_da_flag:
         bpl     :+
         rts
 :
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; after loading overlay
         lda     #$00
         jsr     file_dialog_exec
         pha                     ; A = dialog result
-        jsr     set_cursor_watch
+        jsr     set_cursor_watch ; before restoring overlay
         lda     #kDynamicRoutineRestore5000
         jsr     restore_dynamic_routine
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; after restoring overlay
         jsr     push_pointers   ; $06 = src / $08 = dst
         jsr     clear_updates ; following picker dialog close
         jsr     pop_pointers    ; $06 = src / $08 = dst
@@ -1718,7 +1729,7 @@ running_da_flag:
 
         jsr     jt_copy_file
         pha                     ; A = copy result
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; after copying file
         pla                     ; A = copy result
         bpl     :+
         rts
@@ -1806,7 +1817,7 @@ running_da_flag:
 ;;; ============================================================
 
 .proc cmd_delete_file
-        jsr     set_cursor_watch
+        jsr     set_cursor_watch ; before loading overlay
         lda     #kDynamicRoutineFileDialog
         jsr     load_dynamic_routine
         bpl     :+
@@ -1817,14 +1828,14 @@ running_da_flag:
         bpl     :+
         rts
 :
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; after loading overlay
         lda     #$01
         jsr     file_dialog_exec
         pha                     ; A = dialog result
-        jsr     set_cursor_watch
+        jsr     set_cursor_watch ; before restoring overlay
         lda     #kDynamicRoutineRestore5000
         jsr     restore_dynamic_routine
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; after restoring overlay
         jsr     push_pointers   ; $06 is path
         jsr     clear_updates ; following picker dialog close
         jsr     pop_pointers    ; $06 is path
@@ -1845,7 +1856,7 @@ running_da_flag:
 
         jsr     jt_delete_file
         pha                     ; A = delete result
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; after deleting file
         pla                     ; A = delete result
         bpl     :+
         rts
@@ -3299,6 +3310,10 @@ err:    .byte   0
         cpy     #'~'
         beq     reverse
 
+        ;; TODO: Using this table as the source is a little odd.
+        ;; Ideally would be doing send-front-to-back/bring-back-to-front
+        ;; but maintaining order would be tricky.
+
         ;; --------------------------------------------------
         ;; Search upwards through window-icon map to find next.
         ;; ID is 1-based, table is 0-based, so don't need to start
@@ -4242,9 +4257,9 @@ icon_num:
         process_drop := handle_file_icon_click::process_drop
 
 ;;; ============================================================
-;;; Add specified icon (in active window!) to selection list,
-;;; and redraw.
+;;; Add specified icon to selection list, and redraw.
 ;;; Input: A = icon number
+;;; Assert: Icon is in active window.
 
 .proc select_file_icon
         sta     icon_param
@@ -4340,7 +4355,11 @@ exception_flag:
 
 .proc select_and_refresh_window
         sta     window_id
+
+        ;; Clear selection
         jsr     clear_selection
+
+        ;; Bring window to front if needed
         lda     window_id
         cmp     active_window_id
         beq     :+
@@ -4355,14 +4374,18 @@ exception_flag:
         MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
     END_IF
 
+        ;; Remove old FileRecords
         lda     active_window_id
         pha
         jsr     remove_window_filerecord_entries
 
+        ;; Remove old icons
         jsr     get_active_window_view_by
         bmi     :+              ; list view, not icons
         jsr     destroy_icons_in_active_window
         jsr     clear_active_window_entry_count
+
+        ;; Copy window path to `open_dir_path_buf`
 :       lda     active_window_id
         jsr     get_window_path
 
@@ -4377,13 +4400,14 @@ exception_flag:
         dey
         bpl     :-
 
+        ;; Load new FileRecords
         pla                     ; window id
         jsr     open_directory
 
-        ;; Draw contents
+        ;; Create icons and draw contents
         jsr     cmd_view_by_icon::entry
         jsr     StoreWindowEntryTable
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; TODO: Move adjacent to `draw_window_header` call
 
         ;; Draw header
         lda     active_window_id
@@ -4392,13 +4416,16 @@ exception_flag:
         jsr     draw_window_header
     END_IF
 
+        ;; Set view state and update menu
         lda     #0
         ldx     active_window_id
         sta     win_view_by_table-1,x
 
         copy    #1, menu_click_params::item_num
         jsr     update_view_menu_check
-        jmp     LoadDesktopEntryTable
+
+
+        jmp     LoadDesktopEntryTable ; TODO: Move adjacent to `draw_window_header` call
 
 window_id:
         .byte   0
@@ -5648,6 +5675,7 @@ found_window:
 ;;; ============================================================
 ;;; Open a folder/volume icon
 ;;; Input: A = icon
+;;; Assert: icon is on desktop or in active window
 ;;; Note: stack will be restored via `saved_stack` on failure
 
 .proc open_folder_or_volume_icon
@@ -5682,6 +5710,7 @@ found_win:
         jsr     update_icon
 
         ;; Find FileRecord list
+        ;; TODO: When is this ever necessary???
         lda     cached_window_id
         jsr     find_index_in_filerecord_list_entries
         beq     select          ; found it
@@ -5872,13 +5901,15 @@ num:    .byte   0
 ;;;
 ;;; Set `suppress_error_on_open_flag` to avoid alert.
 
+;;; TODO: See if an existing icon exists, mark it as open.
+
 .proc open_window_for_path
         copy    #$FF, icon_param
         jsr     open_folder_or_volume_icon::check_path
 
         ;; If the above succeeded, update its used/free.
         ;; TODO: Only do so if data is not populated.
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; TODO: Move adjacent to draw_window_header
         lda     active_window_id
         jsr     update_used_free_for_vol_windows
 
@@ -5893,6 +5924,7 @@ num:    .byte   0
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, tmp_rect
         jsr     draw_window_header
+        ;; TODO: Restore DesktopEntryTable
     END_IF
         rts
 .endproc
@@ -6565,7 +6597,7 @@ too_many_files:
 no_win: lda     #kWarningMsgTooManyFiles ; too many files to show
 show:   jsr     ShowWarning
 
-        jsr     mark_icons_not_opened_1
+        jsr     mark_icon_not_opened
         dec     num_open_windows
 
         ldx     saved_stack
@@ -6772,7 +6804,7 @@ reserved_desktop_icons:
 :       bit     icon_param      ; Were we opening a path?
         bmi     :+              ; Yes, no icons to twiddle.
 
-        jsr     mark_icons_not_opened_2
+        jsr     remove_filerecords_and_mark_icon_not_opened
         lda     selected_window_id
         bne     :+
 
@@ -6967,7 +6999,8 @@ size:   .word   0               ; size of a window's list
 ;;; Compute full path for icon
 ;;; Inputs: IconEntry pointer in $06
 ;;; Outputs: `open_dir_path_buf` has full path
-;;; Exceptions: if path too long, shows error and restores saved_stack
+;;; Exceptions: if path too long, shows error and restores `saved_stack`
+;;; See `get_icon_path` for a variant that doesn't length check.
 
 .proc compose_icon_full_path
         icon_ptr := $06
@@ -7022,7 +7055,7 @@ has_parent:
 
         lda     #ERR_INVALID_PATHNAME
         jsr     ShowAlert
-        jsr     mark_icons_not_opened_2
+        jsr     remove_filerecords_and_mark_icon_not_opened
         dec     num_open_windows
         ldx     saved_stack
         txs
@@ -7677,7 +7710,8 @@ tmp:    .byte   0
 
 
 ;;; ============================================================
-;;; Draw header (items/K in disk/K available/lines)
+;;; Draw header (items/K in disk/K available/lines) for active window
+;;; Assert: `cached_window_entry_count` is set (i.e. active window cached)
 
 .proc draw_window_header
 
@@ -9120,6 +9154,7 @@ hi:     .byte   0
 ;;; Inputs: A = icon id (volume or file)
 ;;; Outputs: `path_buf3` populated with full path
 ;;; NOTE: Does not do length checks.
+;;; See `compose_icon_full_path` for a variant that length checks.
 
 .proc get_icon_path
         tay                     ; A = icon
@@ -10074,15 +10109,20 @@ done:   rts
 .endproc
 
 ;;; ============================================================
+;;; Used when recovering from a failed open (bad path, too many icons, etc)
+;;; Inputs: `icon_param` points at icon
+;;; Assert: If windowed, icon is in the active window.
 
-.proc mark_icons_not_opened
+.proc mark_icon_not_opened
         ptr := $6
 
-L8B19:  jsr     push_pointers
+        ;; Primary entry point.
+        jsr     push_pointers
         jmp     start
 
         ;; This entry point removes filerecords associated with window
-L8B1F:  lda     icon_param
+remove_filerecords:
+        lda     icon_param
         bne     :+
         rts
 :       jsr     push_pointers
@@ -10097,11 +10137,12 @@ L8B1F:  lda     icon_param
 
         ;; Find open window for the icon
 start:  lda     icon_param
-        jsr     find_window_for_dir_icon
+        jsr     find_window_for_dir_icon ; X = window id-1 if found
         bne     skip            ; not found
 
-        ;; If found, remove from the table
-        ;; TODO: should this be $FF instead?
+        ;; If found, remove from the table.
+        ;; Note: 0 not $FF because we know the window doesn't exist
+        ;; any more.
         copy    #0, window_to_dir_icon_table,x
 
         ;; Update the icon and redraw
@@ -10119,8 +10160,7 @@ skip:   lda     icon_param
         jsr     pop_pointers
         rts
 .endproc
-        mark_icons_not_opened_1 := mark_icons_not_opened::L8B19
-        mark_icons_not_opened_2 := mark_icons_not_opened::L8B1F
+        remove_filerecords_and_mark_icon_not_opened := mark_icon_not_opened::remove_filerecords
 
 ;;; ============================================================
 
@@ -14110,7 +14150,7 @@ dialog_param_addr:
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
         copy16  #rts1, jump_relay+1
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; when opening dialog
 
         @jump_addr := *+1
         jmp     SELF_MODIFIED
@@ -14168,9 +14208,9 @@ dialog_param_addr:
         MGTK_RELAY_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         bne     out
-        jsr     set_cursor_ibeam_with_flag
+        jsr     set_cursor_ibeam_with_flag ; toggling in prompt dialog
         jmp     done
-out:    jsr     set_cursor_pointer_with_flag
+out:    jsr     set_cursor_pointer_with_flag ; toggling in prompt dialog
 done:   jsr     reset_main_grafport
         jmp     prompt_input_loop
 .endproc
@@ -14602,7 +14642,7 @@ do2:    ldy     #1
 
         ;; CopyDialogLifecycle::close
 do5:    jsr     close_prompt_dialog
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; when closing dialog
         rts
 
         ;; CopyDialogLifecycle::exists
@@ -14706,7 +14746,7 @@ do2:    ldy     #1
         rts
 
 do3:    jsr     close_prompt_dialog
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; when closing dialog
         rts
 
 do4:    jsr     Bell
@@ -14798,7 +14838,7 @@ do1:
         rts
 
 do3:    jsr     close_prompt_dialog
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; when closing dialog
         rts
 
 do2:
@@ -14908,7 +14948,7 @@ LADF4:  rts
 
         ;; DeleteDialogLifecycle::close
 do5:    jsr     close_prompt_dialog
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; when closing dialog
         rts
 
         ;; DeleteDialogLifecycle::locked
@@ -15013,7 +15053,7 @@ LAEFF:  inx
 
         ;; Phase 3 - close
 LAF16:  jsr     close_prompt_dialog
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; when closing dialog
         return  #1
 .endproc
 
@@ -15108,7 +15148,7 @@ populate_value:
 
         pha
         jsr     close_prompt_dialog
-        jsr     set_cursor_pointer_with_flag
+        jsr     set_cursor_pointer_with_flag ; when closing dialog with prompt
         pla
         rts
 
@@ -15211,7 +15251,7 @@ LB139:  rts
 
         ;; LockDialogLifecycle::close
 do4:    jsr     close_prompt_dialog
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; when closing dialog
         rts
 .endproc
 
@@ -15295,7 +15335,7 @@ LB257:  rts
 
         ;; LockDialogLifecycle::close
 do4:    jsr     close_prompt_dialog
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; when closing dialog
         rts
 .endproc
 
@@ -15370,7 +15410,7 @@ run_loop:
 
 close_win:
         jsr     close_prompt_dialog
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; when closing dialog
         return  #1
 .endproc
 
@@ -15445,7 +15485,7 @@ run_loop:
 
 close_win:
         jsr     close_prompt_dialog
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; when closing dialog
         return  #1
 .endproc
 
@@ -15461,7 +15501,7 @@ close_win:
 .proc set_cursor_pointer_with_flag
         bit     cursor_ibeam_flag
         bpl     :+
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; toggle routine
         copy    #0, cursor_ibeam_flag
 :       rts
 .endproc
@@ -15469,7 +15509,7 @@ close_win:
 .proc set_cursor_ibeam_with_flag
         bit     cursor_ibeam_flag
         bmi     :+
-        jsr     set_cursor_ibeam
+        jsr     set_cursor_ibeam ; toggle routine
         copy    #$80, cursor_ibeam_flag
 :       rts
 .endproc
