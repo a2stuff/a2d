@@ -6532,6 +6532,7 @@ index_in_dir:           .byte   0
 .proc start
         sta     window_id
         jsr     push_pointers
+        jsr     set_cursor_watch
 
         COPY_BYTES kPathBufferSize, open_dir_path_buf, path_buffer
 
@@ -6599,6 +6600,7 @@ show:   jsr     ShowWarning
         jsr     mark_icon_not_opened
         dec     num_open_windows
 
+        jsr     set_cursor_pointer
         ldx     saved_stack
         txs
         rts
@@ -6773,6 +6775,7 @@ L7293:  jmp     do_entry
 
 L7296:  copy16  record_ptr, filerecords_free_start
         jsr     do_close
+        jsr     set_cursor_pointer
         jsr     pop_pointers
         rts
 
