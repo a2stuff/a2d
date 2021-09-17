@@ -5710,7 +5710,13 @@ check_path:
         lda     icon_param      ; set to $FF if opening via path
         bmi     :+
         sta     window_to_dir_icon_table,x
-:       jmp     found_win
+        txa                     ; stash window id - 1
+        pha
+        lda     icon_param
+        jsr     mark_icon_open
+        pla                     ; restore window id - 1
+        tax
+:       jmp     found_win       ; wants X = window id - 1
 
         ;; --------------------------------------------------
         ;; No window - need to open one.
@@ -5815,26 +5821,15 @@ done:   copy    cached_window_id, active_window_id
 err:    .byte   0
 
 ;;; Common code to update the dir (vol/folder) icon.
-;;; * If `icon_param` is valid, marks it open and repaints it.
-;;; * Otherwise, points `ptr` at a virtual IconEntry to get the icon name.
+;;; * If `icon_param` is valid:
+;;;   Points `ptr` at IconEntry, marks it open and repaints it, and sets `ptr`.
+;;; * Otherwise:
+;;;   Points `ptr` at a virtual IconEntry, to allow referencing the icon name.
 .proc update_icon
         lda     icon_param      ; set to $FF if opening via path
-        bmi     calc_name_ptr
-
-        jsr     icon_entry_lookup
-        stax    ptr
-
-        ldy     #IconEntry::win_type
-        lda     (ptr),y
-        ora     #kIconEntryOpenMask ; set open_flag
-        sta     (ptr),y
-
-        lda     icon_param
-        jsr     DrawIcon
-
-        rts
-
-calc_name_ptr:
+        bmi     :+
+        jmp     mark_icon_open
+:
         ;; Find last '/'
         ldy     open_dir_path_buf
 :       lda     open_dir_path_buf,y
@@ -5861,6 +5856,29 @@ calc_name_ptr:
 .endproc
 
 num:    .byte   0
+.endproc
+
+;;; ============================================================
+;;; Marks icon as open and repaints it.
+;;; Input: A = icon id
+;;; Output: `ptr` ($06) points at IconEntry
+;;; Assert: icon is on desktop or active window
+
+.proc mark_icon_open
+        ptr := $06
+        lda     icon_param      ; set to $FF if opening via path
+        jsr     icon_entry_lookup
+        stax    ptr
+
+        ldy     #IconEntry::win_type
+        lda     (ptr),y
+        ora     #kIconEntryOpenMask ; set open_flag
+        sta     (ptr),y
+
+        lda     icon_param
+        jsr     DrawIcon
+
+        rts
 .endproc
 
 ;;; ============================================================
