@@ -552,11 +552,7 @@ not_menu:
 .proc handle_inactive_window_click
         ptr := $6
 
-        jmp     start
-
-winid:  .byte   0
-
-start:  jsr     clear_selection
+        jsr     clear_selection
 
         ;; Actually make the window active.
         MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
@@ -1972,7 +1968,7 @@ next:   txa
 
         ldy     #0
         lda     (ptr),y
-        jsr     open_folder_or_volume_icon
+        jsr     open_window_for_icon
 
 next_icon:
         pla
@@ -5660,7 +5656,7 @@ found_window:
 ;;; Assert: icon is on desktop or in active window
 ;;; Note: stack will be restored via `saved_stack` on failure
 
-.proc open_folder_or_volume_icon
+.proc open_window_for_icon
         ptr := $06
 
         sta     icon_param
@@ -5668,7 +5664,7 @@ found_window:
         lda     icon_param
 
         ;; Already an open window for the icon?
-        ldx     #7
+        ldx     #kMaxNumWindows-1
 :       cmp     window_to_dir_icon_table,x
         beq     found_win
         dex
@@ -5678,7 +5674,7 @@ found_window:
         ;; --------------------------------------------------
         ;; There is an existing window associated with icon.
 
-found_win:
+found_win:                    ; X = window id - 1
         ;; Is it the active window? If so, done!
         inx
         cpx     active_window_id
@@ -5695,10 +5691,10 @@ found_win:
         ;; TODO: When is this ever necessary???
         lda     cached_window_id
         jsr     find_index_in_filerecord_list_entries
-        beq     select          ; found it
+        beq     :+              ; found it
         jsr     open_directory  ; not found - load it
 
-select: MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
+:       MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         lda     cached_window_id
         sta     active_window_id
         jsr     draw_window_entries
@@ -5712,15 +5708,17 @@ no_linked_win:
         lda     icon_param
         jsr     icon_entry_lookup
         stax    ptr
-        jsr     compose_icon_full_path
+        jsr     compose_icon_full_path ; may fail
 
-        ;; Alternate entry point: opening via path.
+        ;; Alternate entry point, called by:
+        ;; `open_window_for_path` with `icon_param` = $FF
+        ;; and `open_dir_path_buf` set.
 check_path:
         param_call find_window_for_path, open_dir_path_buf
         beq     no_win
 
         ;; Found a match - associate the window.
-        tax
+        tax                     ; A = window id
         dex                     ; 1-based to 0-based
         lda     icon_param      ; set to $FF if opening via path
         bmi     :+
@@ -5780,9 +5778,10 @@ update_view:
         sta     checkitem_params::check
         jsr     check_item
 
+        ;; This ensures `ptr` points at IconEntry (real or virtual)
         jsr     update_icon
 
-        ;; Set path, size, contents, and volume free/used.
+        ;; Set path (using `ptr`), size, contents, and volume free/used.
         jsr     prepare_new_window
 
         ;; Create the window
@@ -5829,6 +5828,8 @@ done:   copy    cached_window_id, active_window_id
 err:    .byte   0
 
 ;;; Common code to update the dir (vol/folder) icon.
+;;; * If `icon_param` is valid, marks it open and repaints it.
+;;; * Otherwise, points `ptr` at a virtual IconEntry to get the icon name.
 .proc update_icon
         lda     icon_param      ; set to $FF if opening via path
         bmi     calc_name_ptr
@@ -5887,7 +5888,7 @@ num:    .byte   0
 
 .proc open_window_for_path
         copy    #$FF, icon_param
-        jsr     open_folder_or_volume_icon::check_path
+        jsr     open_window_for_icon::check_path
 
         ;; If the above succeeded, update its used/free.
         ;; TODO: Only do so if data is not populated.
@@ -5936,7 +5937,7 @@ header_and_offset_flag:
 ;;; * `view_by_nonicon_common`; flag=$40
 ;;; * `update_scroll_thumb`; flag=$40
 ;;; * `finish_scroll_adjust_and_redraw`; flag=$40
-;;; * `open_folder_or_volume_icon`; flag=$00
+;;; * `open_window_for_icon`; flag=$00
 
 .proc draw_window_entries
         ptr := $06
@@ -10085,7 +10086,7 @@ remove: lda     cached_window_entry_list+1,x
 ;;; Outputs: Z=1 && N=0 if found, X = index (0-7), A unchanged
 
 .proc find_window_for_dir_icon
-        ldx     #7
+        ldx     #kMaxNumWindows-1
 :       cmp     window_to_dir_icon_table,x
         beq     done
         dex
