@@ -202,11 +202,9 @@ loop_counter:
         rts
 
 :       sta     active_window_id
-        jsr     LoadActiveWindowEntryTable
-        copy    #$80, header_and_offset_flag ; We will draw/offset TODO: Move adjacent to draw_window_entries
+        jsr     LoadActiveWindowEntryTable ; for header and entries
 
         ;; This correctly uses the clipped port provided by BeginUpdate.
-        ;; TODO: Document exactly what's going on here.
 
         ;; `draw_window_header` relies on `window_grafport` for dimensions
         copy    cached_window_id, getwinport_params2::window_id
@@ -259,10 +257,11 @@ loop_counter:
 skip_adjust_port:
 
         ;; Actually draw the window icons/list
+        copy    #$80, header_and_offset_flag ; port already adjusted
         jsr     draw_window_entries
+        copy    #0, header_and_offset_flag
 
-done:   copy    #0, header_and_offset_flag ; TODO: Move adjacent to draw_window_entries
-
+done:
         ;; Restore window's port
         lda     active_window_id
         jsr     restore_window_portbits
@@ -4407,13 +4406,14 @@ exception_flag:
         ;; Create icons and draw contents
         jsr     cmd_view_by_icon::entry
         jsr     StoreWindowEntryTable
-        jsr     LoadActiveWindowEntryTable ; TODO: Move adjacent to `draw_window_header` call
 
         ;; Draw header
         lda     active_window_id
         jsr     unsafe_set_port_from_window_id ; CHECKED
     IF_ZERO                     ; Skip drawing if obscured
+        jsr     LoadActiveWindowEntryTable
         jsr     draw_window_header
+        jsr     LoadDesktopEntryTable
     END_IF
 
         ;; Set view state and update menu
@@ -4424,8 +4424,7 @@ exception_flag:
         copy    #1, menu_click_params::item_num
         jsr     update_view_menu_check
 
-
-        jmp     LoadDesktopEntryTable ; TODO: Move adjacent to `draw_window_header` call
+        rts
 
 window_id:
         .byte   0
@@ -5909,7 +5908,6 @@ num:    .byte   0
 
         ;; If the above succeeded, update its used/free.
         ;; TODO: Only do so if data is not populated.
-        jsr     LoadActiveWindowEntryTable ; TODO: Move adjacent to draw_window_header
         lda     active_window_id
         jsr     update_used_free_for_vol_windows
 
@@ -5923,8 +5921,9 @@ num:    .byte   0
         add16   window_grafport::cliprect::y1, #kWindowHeaderHeight, tmp_rect::y2
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, tmp_rect
+        jsr     LoadActiveWindowEntryTable
         jsr     draw_window_header
-        ;; TODO: Restore DesktopEntryTable
+        jsr     LoadDesktopEntryTable
     END_IF
         rts
 .endproc
