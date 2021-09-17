@@ -1200,7 +1200,6 @@ filerecords_free_start:
 ;;; ============================================================
 
 .proc cmd_selector_action
-        jsr     set_cursor_watch ; before loading overlay
         lda     #kDynamicRoutineSelector1 ; selector picker dialog
         jsr     load_dynamic_routine
         bmi     done
@@ -1216,12 +1215,11 @@ filerecords_free_start:
         jsr     load_dynamic_routine
         bmi     done
 
-:       jsr     set_cursor_pointer ; after loading overlay
+:
         ;; Invoke routine
         lda     menu_click_params::item_num
         jsr     selector_picker_exec
         sta     result
-        jsr     set_cursor_watch ; before restoring overlay/executing
 
         ;; Restore from overlays
         ;; (restore from file dialog overlay handled in picker overlay)
@@ -1245,8 +1243,7 @@ filerecords_free_start:
         bmi     done
         jsr     L4968
 
-done:   jsr     set_cursor_pointer ; after restoring overlay/executing
-        rts
+done:   rts
 
 .proc L4968
         jsr     make_ramcard_prefixed_path
@@ -1591,7 +1588,7 @@ str_desk_acc:
         PASCAL_STRING .concat(kFilenameDADir, "/") ; do not localize
 
 start:  jsr     reset_main_grafport
-        jsr     set_cursor_watch ; before invoking DA
+        jsr     set_cursor_watch ; before loading DA
 
         ;; Get current prefix
         MLI_RELAY_CALL GET_PREFIX, get_prefix_params
@@ -1695,7 +1692,6 @@ running_da_flag:
 ;;; ============================================================
 
 .proc cmd_copy_file
-        jsr     set_cursor_watch ; before loading overlay
         lda     #kDynamicRoutineFileDialog
         jsr     load_dynamic_routine
         bpl     :+
@@ -1706,14 +1702,11 @@ running_da_flag:
         bpl     :+
         rts
 :
-        jsr     set_cursor_pointer ; after loading overlay
         lda     #$00
         jsr     file_dialog_exec
         pha                     ; A = dialog result
-        jsr     set_cursor_watch ; before restoring overlay
         lda     #kDynamicRoutineRestore5000
         jsr     restore_dynamic_routine
-        jsr     set_cursor_pointer ; after restoring overlay
         jsr     push_pointers   ; $06 = src / $08 = dst
         jsr     clear_updates ; following picker dialog close
         jsr     pop_pointers    ; $06 = src / $08 = dst
@@ -1727,9 +1720,6 @@ running_da_flag:
         jsr     copy_paths_and_split_name
 
         jsr     jt_copy_file
-        pha                     ; A = copy result
-        jsr     set_cursor_pointer ; after copying file
-        pla                     ; A = copy result
         bpl     :+
         rts
 :
@@ -1816,7 +1806,6 @@ running_da_flag:
 ;;; ============================================================
 
 .proc cmd_delete_file
-        jsr     set_cursor_watch ; before loading overlay
         lda     #kDynamicRoutineFileDialog
         jsr     load_dynamic_routine
         bpl     :+
@@ -1827,14 +1816,11 @@ running_da_flag:
         bpl     :+
         rts
 :
-        jsr     set_cursor_pointer ; after loading overlay
         lda     #$01
         jsr     file_dialog_exec
         pha                     ; A = dialog result
-        jsr     set_cursor_watch ; before restoring overlay
         lda     #kDynamicRoutineRestore5000
         jsr     restore_dynamic_routine
-        jsr     set_cursor_pointer ; after restoring overlay
         jsr     push_pointers   ; $06 is path
         jsr     clear_updates ; following picker dialog close
         jsr     pop_pointers    ; $06 is path
@@ -1854,9 +1840,6 @@ running_da_flag:
         bpl     :-
 
         jsr     jt_delete_file
-        pha                     ; A = delete result
-        jsr     set_cursor_pointer ; after deleting file
-        pla                     ; A = delete result
         bpl     :+
         rts
 :
@@ -6532,7 +6515,7 @@ index_in_dir:           .byte   0
 .proc start
         sta     window_id
         jsr     push_pointers
-        jsr     set_cursor_watch
+        jsr     set_cursor_watch ; before loading directory
 
         COPY_BYTES kPathBufferSize, open_dir_path_buf, path_buffer
 
@@ -6600,7 +6583,7 @@ show:   jsr     ShowWarning
         jsr     mark_icon_not_opened
         dec     num_open_windows
 
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; after loading directory (failed)
         ldx     saved_stack
         txs
         rts
@@ -6775,7 +6758,7 @@ L7293:  jmp     do_entry
 
 L7296:  copy16  record_ptr, filerecords_free_start
         jsr     do_close
-        jsr     set_cursor_pointer
+        jsr     set_cursor_pointer ; after loading directory
         jsr     pop_pointers
         rts
 
@@ -10558,7 +10541,8 @@ restore:
         pha
         copy    #$80, restore_flag ; entry point with bit set
 
-:       pla
+:       jsr     set_cursor_watch ; before loading overlay
+        pla
         asl     a               ; y = A * 2 (to index into word table)
         tay
         asl     a               ; x = A * 4 (to index into dword table)
@@ -10589,6 +10573,7 @@ restore:
         MLI_RELAY_CALL SET_MARK, set_mark_params
         MLI_RELAY_CALL READ, read_params
         MLI_RELAY_CALL CLOSE, close_params
+        jsr     set_cursor_pointer ; after loading overlay
         rts
 
 .endproc

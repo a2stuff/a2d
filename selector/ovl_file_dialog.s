@@ -491,6 +491,7 @@ LA47F:  .byte   0
 :       lda     findwindow_window_id
         cmp     winfo_file_dialog::window_id
         beq     l1
+        jsr     unset_ip_cursor
         jmp     event_loop
 
 l1:     lda     winfo_file_dialog::window_id

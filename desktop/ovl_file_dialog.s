@@ -139,6 +139,7 @@ L5105:  .byte   0       ; ??? something about the picker
 :       lda     findwindow_window_id
         cmp     winfo_file_dialog::window_id
         beq     l1
+        jsr     set_cursor_pointer
         jmp     event_loop
 
 l1:     lda     winfo_file_dialog::window_id
