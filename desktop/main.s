@@ -4165,7 +4165,7 @@ process_drop:
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Yes, on an icon; update used/free for same-vol windows
-        jmp     update_vol_free_used_for_icon
+        jmp     update_vol_used_free_for_icon
 
         ;; (4/4) Dropped on window!
 :       and     #$7F            ; mask off window number
@@ -5363,7 +5363,7 @@ check_double_click:
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Yes, on an icon; update used/free for same-vol windows
-        jmp     update_vol_free_used_for_icon
+        jmp     update_vol_used_free_for_icon
 
         ;; (4/4) Dropped on window!
 :       and     #$7F            ; mask off window number
@@ -5574,7 +5574,7 @@ y_flag: .byte   0
 ;;; Update used/free values for windows related to volume icon
 ;;; Input: icon number in A
 
-.proc update_vol_free_used_for_icon
+.proc update_vol_used_free_for_icon
         ptr := $6
         path_buf := $220
 
@@ -6326,7 +6326,7 @@ pathlen:        .byte   0
         dey
         bne     :-
 
-        jsr     get_vol_free_used
+        jsr     get_vol_used_free
 
         bne     done
         lda     found_windows_count
@@ -6842,11 +6842,11 @@ do_close:
 L72E2:  lda     $0C04
         and     #$F0
         cmp     #$F0
-        beq     get_vol_free_used
+        beq     get_vol_used_free
         rts
 
 
-get_vol_free_used:
+get_vol_used_free:
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
         beq     :+
         rts
@@ -6866,7 +6866,7 @@ get_vol_free_used:
 .endproc
         vol_kb_free := open_directory::vol_kb_free
         vol_kb_used := open_directory::vol_kb_used
-        get_vol_free_used := open_directory::get_vol_free_used
+        get_vol_used_free := open_directory::get_vol_used_free
 
 ;;; ============================================================
 ;;; Remove the FileRecord entries for a window, and free/compact
