@@ -1725,31 +1725,20 @@ running_da_flag:
         ;; --------------------------------------------------
         ;; Update windows with results
 
+        ;; See if there's a window we should activate later.
         param_call find_window_for_path, path_buf4
-        beq     :+              ; no window found
-        pha
-        jsr     update_used_free_via_window
-        pla
-        jmp     select_and_refresh_window_or_close
+        pha                     ; save for later
 
-        ;; --------------------------------------------------
-        ;; Update used/free for windows for same vol as `path_buf4`
-
-:       ldy     #1
-@loop:  iny
-        lda     path_buf4,y
-        cmp     #'/'
-        beq     :+
-        cpy     path_buf4
-        bne     @loop
-        iny
-:       dey
-        sty     path_buf4
-        param_call find_windows_for_prefix, path_buf4
-
+        ;; Update cached used/free for all same-volume windows
         ldax    #path_buf4
-        ldy     path_buf4
-        jmp     update_used_free_via_found_windows
+        jsr     update_used_free_via_path
+
+        ;; Select/refresh window if there was one
+        pla
+        beq     :+
+        jmp     select_and_refresh_window_or_close
+:       rts
+
 .endproc
 
 ;;; ============================================================
@@ -1845,34 +1834,23 @@ running_da_flag:
         ;; --------------------------------------------------
         ;; Update windows with results
 
+        ;; Strip filename, so it's just the containing path.
         param_call find_last_path_segment, path_buf3
         sty     path_buf3
 
+        ;; See if there's a window we should activate later.
         param_call find_window_for_path, path_buf3
-        beq     :+
-        pha
-        jsr     update_used_free_via_window
-        pla
-        jmp     select_and_refresh_window
+        pha                     ; save for later
 
-        ;; --------------------------------------------------
-        ;; Update used/free for windows for same vol as `path_buf3`
-
-:       ldy     #1
-@loop:  iny
-        lda     path_buf3,y
-        cmp     #'/'
-        beq     :+
-        cpy     path_buf3
-        bne     @loop
-        iny
-:       dey
-        sty     path_buf3
-        param_call find_windows_for_prefix, path_buf3
-
+        ;; Update cached used/free for all same-volume windows
         ldax    #path_buf3
-        ldy     path_buf3
-        jmp     update_used_free_via_found_windows
+        jsr     update_used_free_via_path
+
+        ;; Select/refresh window if there was one
+        pla
+        beq     :+
+        jmp     select_and_refresh_window_or_close
+:       rts
 .endproc
 
 ;;; ============================================================
@@ -6265,25 +6243,35 @@ flag:   .byte   0
         ptr := $6
 
         jsr     get_window_path
-        sta     ptr
-        sta     pathptr
-        stx     ptr+1
-        stx     pathptr+1
+        jmp     update_used_free_via_path
+.endproc
+
+;;; ============================================================
+;;; Refresh vol used/free for windows of same volume as path in A,X.
+;;; Input: A = window id
+
+.proc update_used_free_via_path
+        ptr := $6
+
+        stax    ptr
+        stax    pathptr         ; stash for second call
+
         ldy     #0              ; length offset
         lda     (ptr),y
-        sta     pathlen
+        sta     pathlen         ; stash for second call
+
+        ;; Find next '/' or end of string
         iny
-loop:   iny                     ; start at 2nd character
+:       iny                     ; start at 2nd character
+        cpy     pathlen
+        beq     :+
         lda     (ptr),y
         cmp     #'/'
-        beq     found
-        cpy     pathlen
-        beq     finish
-        jmp     loop
+        bne     :-
+        dey
 
-found:  dey
-finish: sty     pathlen
-        param_call_indirect find_windows_for_prefix, ptr ; ???
+:       sty     pathlen
+        param_call_indirect find_windows_for_prefix, ptr
         ldax    pathptr
         ldy     pathlen
         jmp     update_used_free_via_found_windows
