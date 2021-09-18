@@ -6831,7 +6831,7 @@ do_close:
         bne     :-
         dex                     ; X = length of vol path
 
-        lda     path_buffer
+:       lda     path_buffer
         pha                     ; save length
         stx     path_buffer
 
