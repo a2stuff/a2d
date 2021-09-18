@@ -14636,6 +14636,7 @@ do2:    ldy     #1
         param_call draw_dialog_path, path_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
+        param_call DrawString, str_2_spaces
         rts
 
         ;; CopyDialogLifecycle::close
@@ -14741,6 +14742,7 @@ do2:    ldy     #1
         param_call draw_dialog_path, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
+        param_call DrawString, str_2_spaces
         rts
 
 do3:    jsr     close_prompt_dialog
@@ -14927,6 +14929,7 @@ do3:    ldy     #1
         param_call draw_dialog_path, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
         param_call DrawString, str_file_count
+        param_call DrawString, str_2_spaces
         rts
 
         ;; DeleteDialogLifecycle::confirm
@@ -15229,6 +15232,7 @@ do3:    ldy     #1
 
         MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
         param_call DrawString, str_file_count
+        param_call DrawString, str_2_spaces
         rts
 
         ;; LockDialogLifecycle::loop
@@ -15313,6 +15317,7 @@ do3:    ldy     #1
         param_call draw_dialog_path, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
         param_call DrawString, str_file_count
+        param_call DrawString, str_2_spaces
         rts
 
         ;; LockDialogLifecycle::loop
