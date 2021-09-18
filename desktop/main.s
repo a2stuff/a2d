@@ -5894,26 +5894,6 @@ num:    .byte   0
 .proc open_window_for_path
         copy    #$FF, icon_param
         jsr     open_window_for_icon::check_path
-
-        ;; If the above succeeded, update its used/free.
-        ;; TODO: Only do so if data is not populated.
-        lda     active_window_id
-        jsr     update_used_free_for_vol_windows
-
-        lda     active_window_id
-        jsr     unsafe_set_port_from_window_id ; CHECKED
-    IF_ZERO              ; Skip drawing if obscured
-        ;; Clear the header area before redrawing it.
-        copy16  window_grafport::cliprect::x1, tmp_rect::x1
-        copy16  window_grafport::cliprect::x2, tmp_rect::x2
-        copy16  window_grafport::cliprect::y1, tmp_rect::y1
-        add16   window_grafport::cliprect::y1, #kWindowHeaderHeight, tmp_rect::y2
-        jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintRect, tmp_rect
-        jsr     LoadActiveWindowEntryTable
-        jsr     draw_window_header
-        jsr     LoadDesktopEntryTable
-    END_IF
         rts
 .endproc
 
@@ -6326,7 +6306,7 @@ pathlen:        .byte   0
         dey
         bne     :-
 
-        jsr     get_vol_used_free
+        jsr     get_vol_used_free_for_volume
 
         bne     done
         lda     found_windows_count
@@ -6502,11 +6482,7 @@ found_windows_list:
         DEFINE_READ_PARAMS read_params, dir_buffer, $200
         DEFINE_CLOSE_PARAMS close_params
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buffer
-
         .byte   0
-vol_kb_free:  .word   0
-vol_kb_used:  .word   0
 
 ;;; Copy of data from directory header
 .params dir_header
@@ -6530,7 +6506,7 @@ index_in_dir:           .byte   0
         sta     read_params::ref_num
         sta     close_params::ref_num
         jsr     do_read
-        jsr     L72E2
+        jsr     get_vol_used_free_for_path
 
         ldx     #0
 :       lda     dir_buffer+SubdirectoryHeader::entry_length,x
@@ -6838,23 +6814,54 @@ do_close:
         rts
 
 ;;; --------------------------------------------------
+.endproc
 
-L72E2:  lda     $0C04
-        and     #$F0
-        cmp     #$F0
-        beq     get_vol_used_free
+;;; ============================================================
+;;; Inputs: `path_buffer` can point at anything
+;;; Outputs: `vol_kb_used` and `vol_kb_free` updated.
+;;; TODO: Skip if same-vol windows already have data.
+.proc get_vol_used_free_for_path
+        ;; Strip to vol name - either end of string or next slash
+        ldx     #1
+:       inx
+        cpx     path_buffer
+        beq     :+
+        lda     path_buffer,x
+        cmp     #'/'
+        bne     :-
+        dex                     ; X = length of vol path
+
+        lda     path_buffer
+        pha                     ; save length
+        stx     path_buffer
+
+        jsr     get_vol_used_free_for_volume
+
+        pla
+        sta     path_buffer
         rts
+.endproc
 
+;;; ============================================================
+;;; Query a volume for used/free data, convert to KB.
+;;; Inputs: `path_buffer` must point at a volume path
+;;; Outputs: `vol_kb_used` and `vol_kb_free` updated.
 
-get_vol_used_free:
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
+vol_kb_free:  .word   0
+vol_kb_used:  .word   0
+
+.proc get_vol_used_free_for_volume_impl
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path_buffer
+
+start:
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
         rts
 
         ;; aux = total blocks
-:       copy16  get_file_info_params4::aux_type, vol_kb_used
+:       copy16  get_file_info_params::aux_type, vol_kb_used
         ;; total - used = free
-        sub16   get_file_info_params4::aux_type, get_file_info_params4::blocks_used, vol_kb_free
+        sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, vol_kb_free
         sub16   vol_kb_used, vol_kb_free, vol_kb_used ; total - free = used
         lsr16   vol_kb_free
         php
@@ -6864,9 +6871,7 @@ get_vol_used_free:
         inc16   vol_kb_used
 :       return  #0
 .endproc
-        vol_kb_free := open_directory::vol_kb_free
-        vol_kb_used := open_directory::vol_kb_used
-        get_vol_used_free := open_directory::get_vol_used_free
+get_vol_used_free_for_volume := get_vol_used_free_for_volume_impl::start
 
 ;;; ============================================================
 ;;; Remove the FileRecord entries for a window, and free/compact
