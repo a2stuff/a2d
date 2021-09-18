@@ -1728,7 +1728,7 @@ running_da_flag:
         param_call find_window_for_path, path_buf4
         beq     :+              ; no window found
         pha
-        jsr     update_used_free_for_vol_windows
+        jsr     update_used_free_via_window
         pla
         jmp     select_and_refresh_window_or_close
 
@@ -1749,7 +1749,7 @@ running_da_flag:
 
         ldax    #path_buf4
         ldy     path_buf4
-        jmp     update_vol_used_free_for_found_windows
+        jmp     update_used_free_via_found_windows
 .endproc
 
 ;;; ============================================================
@@ -1851,7 +1851,7 @@ running_da_flag:
         param_call find_window_for_path, path_buf3
         beq     :+
         pha
-        jsr     update_used_free_for_vol_windows
+        jsr     update_used_free_via_window
         pla
         jmp     select_and_refresh_window
 
@@ -1872,7 +1872,7 @@ running_da_flag:
 
         ldax    #path_buf3
         ldy     path_buf3
-        jmp     update_vol_used_free_for_found_windows
+        jmp     update_used_free_via_found_windows
 .endproc
 
 ;;; ============================================================
@@ -4165,12 +4165,12 @@ process_drop:
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Yes, on an icon; update used/free for same-vol windows
-        jmp     update_vol_used_free_for_icon
+        jmp     update_used_free_via_icon
 
         ;; (4/4) Dropped on window!
 :       and     #$7F            ; mask off window number
         pha
-        jsr     update_used_free_for_vol_windows
+        jsr     update_used_free_via_window
         pla
         jmp     select_and_refresh_window_or_close
 
@@ -4223,7 +4223,7 @@ failure:
 
 .proc update_active_window
         lda     active_window_id
-        jsr     update_used_free_for_vol_windows
+        jsr     update_used_free_via_window
         lda     active_window_id
         jmp     select_and_refresh_window
 .endproc
@@ -5363,12 +5363,12 @@ check_double_click:
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Yes, on an icon; update used/free for same-vol windows
-        jmp     update_vol_used_free_for_icon
+        jmp     update_used_free_via_icon
 
         ;; (4/4) Dropped on window!
 :       and     #$7F            ; mask off window number
         pha
-        jsr     update_used_free_for_vol_windows
+        jsr     update_used_free_via_window
         pla
         jmp     select_and_refresh_window_or_close
 
@@ -5574,7 +5574,7 @@ y_flag: .byte   0
 ;;; Update used/free values for windows related to volume icon
 ;;; Input: icon number in A
 
-.proc update_vol_used_free_for_icon
+.proc update_used_free_via_icon
         ptr := $6
         path_buf := $220
 
@@ -5639,7 +5639,7 @@ find_windows:
         jsr     find_windows_for_prefix
         ldax    #path_buf
         ldy     path_buf
-        jmp     update_vol_used_free_for_found_windows
+        jmp     update_used_free_via_found_windows
 
         ;; --------------------------------------------------
         ;; Found an existing window for a vol icon.
@@ -5647,7 +5647,7 @@ found_window:
         inx
         txa
         pha
-        jsr     update_used_free_for_vol_windows
+        jsr     update_used_free_via_window
         pla
         jmp     select_and_refresh_window
 .endproc
@@ -6261,7 +6261,7 @@ flag:   .byte   0
 ;;; Refresh vol used/free for windows of same volume as win in A.
 ;;; Input: A = window id
 
-.proc update_used_free_for_vol_windows
+.proc update_used_free_via_window
         ptr := $6
 
         jsr     get_window_path
@@ -6286,7 +6286,7 @@ finish: sty     pathlen
         param_call_indirect find_windows_for_prefix, ptr ; ???
         ldax    pathptr
         ldy     pathlen
-        jmp     update_vol_used_free_for_found_windows
+        jmp     update_used_free_via_found_windows
 
 pathptr:        .addr   0
 pathlen:        .byte   0
@@ -6295,7 +6295,7 @@ pathlen:        .byte   0
 ;;; ============================================================
 ;;; Update used/free for results of find_window[s]_for_prefix
 
-.proc update_vol_used_free_for_found_windows
+.proc update_used_free_via_found_windows
         ptr := $6
 
         stax    ptr
@@ -6306,7 +6306,7 @@ pathlen:        .byte   0
         dey
         bne     :-
 
-        jsr     get_vol_used_free_for_volume
+        jsr     get_vol_used_free_via_volume
 
         bne     done
         lda     found_windows_count
@@ -6506,7 +6506,7 @@ index_in_dir:           .byte   0
         sta     read_params::ref_num
         sta     close_params::ref_num
         jsr     do_read
-        jsr     get_vol_used_free_for_path
+        jsr     get_vol_used_free_via_path
 
         ldx     #0
 :       lda     dir_buffer+SubdirectoryHeader::entry_length,x
@@ -6820,7 +6820,7 @@ do_close:
 ;;; Inputs: `path_buffer` can point at anything
 ;;; Outputs: `vol_kb_used` and `vol_kb_free` updated.
 ;;; TODO: Skip if same-vol windows already have data.
-.proc get_vol_used_free_for_path
+.proc get_vol_used_free_via_path
         ;; Strip to vol name - either end of string or next slash
         ldx     #1
 :       inx
@@ -6835,7 +6835,7 @@ do_close:
         pha                     ; save length
         stx     path_buffer
 
-        jsr     get_vol_used_free_for_volume
+        jsr     get_vol_used_free_via_volume
 
         pla
         sta     path_buffer
@@ -6850,7 +6850,7 @@ do_close:
 vol_kb_free:  .word   0
 vol_kb_used:  .word   0
 
-.proc get_vol_used_free_for_volume_impl
+.proc get_vol_used_free_via_volume_impl
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path_buffer
 
 start:
@@ -6871,7 +6871,7 @@ start:
         inc16   vol_kb_used
 :       return  #0
 .endproc
-get_vol_used_free_for_volume := get_vol_used_free_for_volume_impl::start
+get_vol_used_free_via_volume := get_vol_used_free_via_volume_impl::start
 
 ;;; ============================================================
 ;;; Remove the FileRecord entries for a window, and free/compact
