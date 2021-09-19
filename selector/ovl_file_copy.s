@@ -831,8 +831,8 @@ window_id:
         .addr   0
 .endproc
 
-        DEFINE_RECT_SZ rect1, 20, 49, kButtonWidth, kButtonHeight
-        DEFINE_POINT pos1, 24, 59
+        DEFINE_RECT_SZ ok_button_rect, winfo::kWidth-20-kButtonWidth, 49, kButtonWidth, kButtonHeight
+        DEFINE_POINT ok_button_pos, winfo::kWidth-20-kButtonWidth+4, 59
 
         DEFINE_RECT_INSET rect_frame1, 4, 2, winfo::kWidth, winfo::kHeight
         DEFINE_RECT_INSET rect_frame2, 5, 3, winfo::kWidth, winfo::kHeight
@@ -955,8 +955,8 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_click_ok
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::FrameRect, rect1
-        MGTK_CALL MGTK::MoveTo, pos1
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
+        MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call app::DrawString, app::ok_button_label
         jsr     set_pointer_cursor
         jmp     restore_stack_and_return
@@ -973,8 +973,8 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_copy_incomplete
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::FrameRect, rect1
-        MGTK_CALL MGTK::MoveTo, pos1
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
+        MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call app::DrawString, app::ok_button_label
         jsr     set_pointer_cursor
         jmp     restore_stack_and_return
@@ -1000,8 +1000,8 @@ event_loop:
         lda     winfo::window_id
         jsr     app::get_window_port
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect1
-        MGTK_CALL MGTK::PaintRect, rect1
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     app::set_watch_cursor
         rts
 
@@ -1020,11 +1020,11 @@ handle_button_down:
         sta     app::screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, app::screentowindow_params
         MGTK_CALL MGTK::MoveTo, app::screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect1
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     event_loop
         MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect1
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     LABE6
         bmi     event_loop
         jsr     app::set_watch_cursor
@@ -1040,7 +1040,7 @@ LABEB:  MGTK_CALL MGTK::GetEvent, app::event_params
         sta     app::screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, app::screentowindow_params
         MGTK_CALL MGTK::MoveTo, app::screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect1
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     LAC1C
         lda     LAC53
@@ -1052,7 +1052,7 @@ LAC1C:  lda     LAC53
         jmp     LABEB
 
 LAC24:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect1
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     LAC53
         clc
         adc     #$80
@@ -1064,7 +1064,7 @@ LAC3C:  lda     LAC53
         return  #$FF
 
 LAC44:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect1
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         return  #$00
 
 LAC53:  .byte   0
