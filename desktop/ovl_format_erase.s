@@ -627,9 +627,17 @@ params: .addr   0
 
 ;;; ============================================================
 
+        ;; Check low nibble of unit number; if 0, it's a 16-sector Disk II
+        ;; BUG: That's not valid per ProDOS TN21
 L126F:  sta     L12C0
         and     #$0F
         beq     L12A6
+
+        ;; This code is grabbing the high byte of the unit's address in
+        ;; DEVADR, to test if $CnFF is $FF (a 13-sector disk).
+        ;; BUG: The code doesn't verify that the high byte is $Cn so it
+        ;; will fail (badly) for RAM-based drivers, including remapped
+        ;; drives.
         ldx     #$11
         lda     L12C0
         and     #$80
