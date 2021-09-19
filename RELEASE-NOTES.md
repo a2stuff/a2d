@@ -173,7 +173,7 @@ from the **Apple** menu.
 * Fix dialog inconsistencies. ([#207](https://github.com/a2stuff/a2d/issues/207), [#411](https://github.com/a2stuff/a2d/issues/411), [#528](https://github.com/a2stuff/a2d/issues/528))
 * Fix numerous keyboard consistency issues. ([#328](https://github.com/a2stuff/a2d/issues/328), [#332](https://github.com/a2stuff/a2d/issues/332), [#336](https://github.com/a2stuff/a2d/issues/336), [#337](https://github.com/a2stuff/a2d/issues/337), [#341](https://github.com/a2stuff/a2d/issues/341), [#396](https://github.com/a2stuff/a2d/issues/396), [#406](https://github.com/a2stuff/a2d/issues/406))
 * Clip long strings in dialogs. ([#465](https://github.com/a2stuff/a2d/issues/465))
-* Prevent crashes and ms-painting when windows are offscreen. ([#555](https://github.com/a2stuff/a2d/issues/555))
+* Prevent crashes and mis-painting when windows are offscreen. ([#555](https://github.com/a2stuff/a2d/issues/555))
 * File Picker Dialogs:
   * Correct sort order. ([#489](https://github.com/a2stuff/a2d/issues/489))
   * Correct IP placement/truncation when switching focus. ([#446](https://github.com/a2stuff/a2d/issues/446))
