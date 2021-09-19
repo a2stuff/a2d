@@ -853,7 +853,7 @@ str_copying:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 346, 66
+        DEFINE_RECT maprect, 0, 0, 340, 66
 pattern:        .res    8, $FF
 masks:          .byte   $FF, $00
 penloc:         .word   0, 0
@@ -878,6 +878,8 @@ str_files_remaining:
         PASCAL_STRING res_string_label_files_remaining
 str_spaces:
         PASCAL_STRING "    "    ; do not localize
+str_space:
+        PASCAL_STRING " "    ; do not localize
 
 ;;; ============================================================
 
@@ -912,6 +914,7 @@ LAA4C:  jsr     populate_count
         param_call app::AdjustPathCase, pathname1
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_copying
+        param_call app::DrawString, str_space
         param_call app::DrawString, pathname1
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_files_remaining
