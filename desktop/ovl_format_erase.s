@@ -20,6 +20,7 @@
         kLabelsCol2    = kLabelsCol1 + kLabelWidth
         kLabelsCol3    = kLabelsCol1 + kLabelWidth*2
 
+        kDefaultFloppyBlocks = 280
 exec:
 
 L0800:  pha
@@ -605,7 +606,8 @@ tmp:    .byte   0
         DEFINE_READ_BLOCK_PARAMS read_block_params, read_buffer, 0
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
 
-L124A:  .byte   $00
+unit_num:
+        .byte   $00
 
 ;;; ============================================================
 
@@ -629,22 +631,23 @@ params: .addr   0
 
         ;; Check low nibble of unit number; if 0, it's a 16-sector Disk II
         ;; BUG: That's not valid per ProDOS TN21
-L126F:  sta     L12C0
+.proc L126F
+        sta     unit_num
         and     #$0F
-        beq     L12A6
+        beq     l2
 
         ;; This code is grabbing the high byte of the unit's address in
         ;; DEVADR, to test if $CnFF is $FF (a 13-sector disk).
         ;; BUG: The code doesn't verify that the high byte is $Cn so it
         ;; will fail (badly) for RAM-based drivers, including remapped
         ;; drives.
-        ldx     #$11
-        lda     L12C0
+        ldx     #$11  ; TODO: Just do ((unit_num & $F0) >> 3) + DEVADR
+        lda     unit_num
         and     #$80
-        beq     L1281
+        beq     l1
         ldx     #$21
-L1281:  stx     @lsb
-        lda     L12C0
+l1:     stx     @lsb
+        lda     unit_num
         and     #$70
         lsr     a
         lsr     a
@@ -653,42 +656,49 @@ L1281:  stx     @lsb
         adc     @lsb
         sta     @lsb
         @lsb := *+1
-        lda     MLI
+        lda     DEVADR & $FF00
         sta     $07
         lda     #$00
         sta     $06
         ldy     #$FF
         lda     ($06),y
-        beq     L12A6
+        beq     l2
         cmp     #$FF
-        bne     L12AD
-L12A6:  lda     L12C0
+        bne     l3
+l2:     lda     unit_num
         jsr     FormatDiskII
         rts
 
-L12AD:  ldy     #$FF            ; offset to low byte of driver address
+l3:     ldy     #$FF            ; offset to low byte of driver address
         lda     ($06),y
         sta     $06
         lda     #DRIVER_COMMAND_FORMAT
         sta     DRIVER_COMMAND
-        lda     L12C0
+        lda     unit_num
         and     #$F0
         sta     DRIVER_UNIT_NUMBER
         jmp     ($06)
 
         rts
 
-L12C0:  .byte   0
-L12C1:  sta     L1306
+unit_num:
+        .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc L12C1
+        sta     unit_num
         and     #$0F
-        beq     L1303
-        ldx     #$11
-        lda     L1306
+        beq     l2
+
+        ldx     #$11  ; TODO: Just do ((unit_num & $F0) >> 3) + DEVADR
+        lda     unit_num
         and     #$80
-        beq     L12D3
+        beq     l1
         ldx     #$21
-L12D3:  stx     @lsb
-        lda     L1306
+l1:     stx     @lsb
+        lda     unit_num
         and     #$70
         lsr     a
         lsr     a
@@ -697,31 +707,35 @@ L12D3:  stx     @lsb
         adc     @lsb
         sta     @lsb
         @lsb := *+1
-        lda     MLI
+        lda     DEVADR & $FF00
         sta     $07
         lda     #$00
         sta     $06
         ldy     #$FF
         lda     ($06),y
-        beq     L1303
+        beq     l2
         cmp     #$FF
-        beq     L1303
+        beq     l2
         ldy     #$FE
         lda     ($06),y
         and     #$08
-        bne     L1303
+        bne     l2
         return  #$FF
 
-L1303:  return  #$00
-L1306:  .byte   0
+l2:     return  #$00
+
+unit_num:
+        .byte   0
+.endproc
 
 ;;; ============================================================
 
-L1307:  sta     L124A
+.proc L1307
+        sta     unit_num
         and     #$F0
         sta     write_block_params::unit_num
-        stx     $06
-        sty     $06+1
+        stxy    $06
+
         ldy     #$01
         lda     ($06),y
         and     #CHAR_MASK
@@ -739,20 +753,20 @@ L132C:  ldy     #0
         tay
 :       lda     ($06),y
         and     #CHAR_MASK
-        sta     L14E5,y
+        sta     vol_name_buf,y
         dey
         bpl     :-
 
-        lda     L124A
+        lda     unit_num
         and     #$0F
         beq     L1394
-        ldx     #$11
-        lda     L124A
+        ldx     #$11  ; TODO: Just do ((unit_num & $F0) >> 3) + DEVADR
+        lda     unit_num
         and     #$80
         beq     L134D
         ldx     #$21
 L134D:  stx     @lsb
-        lda     L124A
+        lda     unit_num
         and     #$70
         lsr     a
         lsr     a
@@ -761,7 +775,7 @@ L134D:  stx     @lsb
         adc     @lsb
         sta     @lsb
         @lsb := *+1
-        lda     MLI
+        lda     DEVADR & $FF00
         sta     $06+1
         lda     #$00
         sta     $06
@@ -776,7 +790,7 @@ L134D:  stx     @lsb
         sta     $06
         lda     #DRIVER_COMMAND_STATUS
         sta     DRIVER_COMMAND
-        lda     L124A
+        lda     unit_num
         and     #$F0
         sta     DRIVER_UNIT_NUMBER
         lda     #$00
@@ -788,10 +802,8 @@ L134D:  stx     @lsb
 
 L1391:  jmp     ($06)
 
-L1394:  ldx     #$18
-        ldy     #$01
-L1398:  stx     L14E3
-        sty     L14E4
+L1394:  ldxy    #kDefaultFloppyBlocks
+L1398:  stxy    total_blocks
 
         ;; Write first block of loader
         copy16  #prodos_loader_blocks, write_block_params::data_buffer
@@ -808,43 +820,51 @@ L1398:  stx     L14E3
         inc     write_block_params::data_buffer+1
         jsr     write_block_and_zero
 
-        ;; Subsequent blocks...
+        ;; --------------------------------------------------
+        ;; Volume directory key block
+
         copy16  #block_buffer, write_block_params::data_buffer
-        lda     #$03
-        sta     block_buffer+$02
-        ldy     L14E5
+        lda     #3              ; block 2, points at 3
+        sta     block_buffer+2
+
+        ldy     vol_name_buf    ; volume name
         tya
         ora     #$F0
-        sta     block_buffer+$04
-L13E2:  lda     L14E5,y
-        sta     block_buffer+$04,y
+        sta     block_buffer+4
+:       lda     vol_name_buf,y
+        sta     block_buffer+4,y
         dey
-        bne     L13E2
-        ldy     #8
-L13ED:  lda     L14DC,y
-        sta     block_buffer+$22,y
+        bne     :-
+
+        ldy     #kNumKeyBlockHeaderBytes-1 ; other header bytes
+:       lda     key_block_header_bytes,y
+        sta     block_buffer+kKeyBlockHeaderOffset,y
         dey
-        bpl     L13ED
+        bpl     :-
         jsr     write_block_and_zero
 
-        copy    #$02, block_buffer
-        copy    #$04, block_buffer+$02
+        ;; Subsequent volume directory blocks (4 total)
+        copy    #2, block_buffer ; block 3, points at 2 and 4
+        copy    #4, block_buffer+2
         jsr     write_block_and_zero
 
-        copy    #$03, block_buffer
-        copy    #$05, block_buffer+$02
+        copy    #3, block_buffer ; block 4, points at 3 and 5
+        copy    #5, block_buffer+2
         jsr     write_block_and_zero
 
-        copy    #$04, block_buffer
+        copy    #4, block_buffer ; block 4, points back at 4
         jsr     write_block_and_zero
 
-        lsr16   L14E3           ; / 8
-        lsr16   L14E3
-        lsr16   L14E3
-        lda     L14E3
+        ;; --------------------------------------------------
+        ;; Bitmap blocks
+
+        lsr16   total_blocks           ; / 8
+        lsr16   total_blocks
+        lsr16   total_blocks
+        lda     total_blocks
         bne     :+
-        dec     L14E4
-:       dec     L14E3
+        dec     total_blocks+1
+:       dec     total_blocks
 L1438:  jsr     L1485
         lda     write_block_params::block_num+1
         bne     L146A
@@ -852,11 +872,11 @@ L1438:  jsr     L1485
         cmp     #$06
         bne     L146A
         copy    #$01, block_buffer
-        lda     L14E4
+        lda     total_blocks+1
         cmp     #$02
         bcc     L146A
         copy    #$00, block_buffer
-        lda     L14E4
+        lda     total_blocks+1
         lsr     a
         tax
         lda     #$FF
@@ -868,9 +888,9 @@ L1462:  clc
         bne     L1462
 L1467:  sta     block_buffer+$01
 L146A:  jsr     write_block_and_zero
-        dec     L14E4
-        dec     L14E4
-        lda     L14E4
+        dec     total_blocks+1
+        dec     total_blocks+1
+        lda     total_blocks+1
         beq     L147D
         bmi     L147D
         jmp     L1438
@@ -883,28 +903,32 @@ L147D:  lda     #$00
 L1483:  sec
         rts
 
-L1485:  ldy     L14E4
+.proc L1485
+        ldy     total_blocks+1
         beq     L148E
         ldy     #$FF
         bne     L1491
-L148E:  ldy     L14E3
+L148E:  ldy     total_blocks
 L1491:  lda     #$FF
 L1493:  sta     block_buffer,y
         dey
         bne     L1493
         sta     block_buffer
-        ldy     L14E4
+        ldy     total_blocks+1
         beq     L14B5
         cpy     #$02
         bcc     L14A9
         ldy     #$FF
         bne     L14AC
-L14A9:  ldy     L14E3
+L14A9:  ldy     total_blocks
 L14AC:  sta     block_buffer+$100,y
         dey
         bne     L14AC
         sta     block_buffer+$100
 L14B5:  rts
+.endproc
+
+.endproc
 
 ;;; ============================================================
 
@@ -936,13 +960,25 @@ zero_buffers:
 
 ;;; ============================================================
 
-L14DC:  .byte   $C3,$27,$0D,$00,$00,$06,$00
-L14E3:  .byte   $18
-L14E4:  .byte   $01
-L14E5:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00
+;;; Part of volume directory block at offset $22
+;;; $22 = access $C3
+;;; $23 = entry_length $27
+;;; $24 = entries_per_block $0D
+;;; $25 = file_count 0
+;;; $27 = bit_map_pointer 6
+;;; $29 = total_blocks
+kNumKeyBlockHeaderBytes = 9
+kKeyBlockHeaderOffset = $22
+key_block_header_bytes:
+        .byte   $C3,$27,$0D
+        .word   0
+        .word   6
+total_blocks:
+        .word   280             ; default for 140k floppy
+        ASSERT_TABLE_SIZE key_block_header_bytes, kNumKeyBlockHeaderBytes
+
+vol_name_buf:
+        .res    27,0
 
 ;;; ============================================================
 ;;; ProDOS Loader
