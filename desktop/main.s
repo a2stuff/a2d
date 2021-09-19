@@ -3007,6 +3007,11 @@ result: .byte   0
         jsr     jt_duplicate
         beq     :+              ; flag set if window needs refreshing
 
+        ;; Update cached used/free for all same-volume windows
+        ldax    #path_buf3
+        jsr     update_used_free_via_path
+
+        ;; Select/refresh window if there was one
         lda     active_window_id
         jsr     select_and_refresh_window_or_close
 
