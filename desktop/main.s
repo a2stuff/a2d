@@ -6787,7 +6787,8 @@ reserved_desktop_icons:
         sta     cached_window_id
 
         ;; And return via saved stack.
-:       ldx     saved_stack
+:       jsr     set_cursor_pointer
+        ldx     saved_stack
         txs
 
 done:   rts
