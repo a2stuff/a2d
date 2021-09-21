@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Pipe ca65/ld65 stderr through here; will cause failure on any output
+# Also color-codes everything as red.
+#
+# Workaround for: https://github.com/cc65/cc65/issues/1563
+#
+# Sample usage:
+#     ca65 -o target.o target.s $< 3>&1 1>&2 2>&3 | ../bin/warnerr
+#     ld65 -o target target.o      3>&1 1>&2 2>&3 | ../bin/warnerr
+#
+# The "3>&1 1>&2 2>&3" incantation swaps STDOUT and STDERR.
+
+bad=''
+while IFS= read -r line; do
+    tput setaf 1 && echo "$line" && tput sgr0
+    bad='bad'
+done
+
+if [ -n "$bad" ]; then
+    false
+fi
