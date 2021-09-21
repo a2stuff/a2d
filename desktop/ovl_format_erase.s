@@ -112,12 +112,12 @@ l8:     lda     winfo_prompt_dialog::window_id
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::draw_dialog_label, 1, aux::str_formatting
         lda     unit_num
-        jsr     L12C1
+        jsr     check_supports_format
         and     #$FF
         bne     l9
         jsr     main::set_cursor_watch
         lda     unit_num
-        jsr     L126F
+        jsr     format_unit
         bcs     l12
 l9:     lda     winfo_prompt_dialog::window_id
         jsr     main::safe_set_port_from_window_id
@@ -628,10 +628,12 @@ params: .addr   0
 .endproc
 
 ;;; ============================================================
+;;; Format disk
+;;; Input: A = unit number
 
+.proc format_unit
         ;; Check low nibble of unit number; if 0, it's a 16-sector Disk II
         ;; BUG: That's not valid per ProDOS TN21
-.proc L126F
         sta     unit_num
         and     #$0F
         beq     l2
@@ -659,11 +661,11 @@ l1:     stx     @lsb
         lda     DEVADR & $FF00
         sta     $07
         lda     #$00
-        sta     $06
+        sta     $06             ; point $06 at $Cn00
         ldy     #$FF
-        lda     ($06),y
-        beq     l2
-        cmp     #$FF
+        lda     ($06),y         ; load $CnFF
+        beq     l2              ; $00 = Disk II 16-sector
+        cmp     #$FF            ; $FF = Disk II 13-sector
         bne     l3
 l2:     lda     unit_num
         jsr     FormatDiskII
@@ -672,8 +674,7 @@ l2:     lda     unit_num
 l3:     ldy     #$FF            ; offset to low byte of driver address
         lda     ($06),y
         sta     $06
-        lda     #DRIVER_COMMAND_FORMAT
-        sta     DRIVER_COMMAND
+        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         lda     unit_num
         and     #$F0
         sta     DRIVER_UNIT_NUMBER
@@ -686,8 +687,13 @@ unit_num:
 .endproc
 
 ;;; ============================================================
+;;; Check if the device supports formatting
+;;; Input: A = unit number
+;;; Output: A=0/Z=1/N=0 if yes, A=$FF/Z=0/N=1 if no
 
-.proc L12C1
+.proc check_supports_format
+        ;; Check low nibble of unit number; if 0, it's a 16-sector Disk II
+        ;; BUG: That's not valid per ProDOS TN21
         sta     unit_num
         and     #$0F
         beq     l2
@@ -710,19 +716,20 @@ l1:     stx     @lsb
         lda     DEVADR & $FF00
         sta     $07
         lda     #$00
-        sta     $06
+        sta     $06             ; point $06 at $Cn00
         ldy     #$FF
-        lda     ($06),y
+        lda     ($06),y         ; load $CnFF
+        beq     l2              ; $00 = Disk II 16-sector
+        cmp     #$FF            ; $FF = Disk II 13-sector
         beq     l2
-        cmp     #$FF
-        beq     l2
-        ldy     #$FE
+        ldy     #$FE            ; $CnFE
         lda     ($06),y
-        and     #$08
+        and     #%00001000      ; Bit 3 = Supports format
         bne     l2
-        return  #$FF
 
-l2:     return  #$00
+        return  #$FF            ; no, does not support format
+
+l2:     return  #$00            ; yes, supports format
 
 unit_num:
         .byte   0
@@ -780,16 +787,15 @@ L134D:  stx     @lsb
         lda     #$00
         sta     $06
         ldy     #$FF
-        lda     ($06),y
-        beq     L1394
-        cmp     #$FF
+        lda     ($06),y         ; load $CnFF
+        beq     L1394           ; $00 = Disk II 16-sector
+        cmp     #$FF            ; $FF = Disk II 13-sector
         beq     L1394
 
         ldy     #$FF            ; offset to low byte of driver address
         lda     ($06),y
         sta     $06
-        lda     #DRIVER_COMMAND_STATUS
-        sta     DRIVER_COMMAND
+        copy    #DRIVER_COMMAND_STATUS, DRIVER_COMMAND
         lda     unit_num
         and     #$F0
         sta     DRIVER_UNIT_NUMBER
@@ -1107,10 +1113,10 @@ L194E:  lda     read_buffer + 2
         cmp     #$60
         beq     L197E
 L1959:  lda     read_block_params::unit_num
-        jsr     L19B7
+        jsr     get_slot_char
         sta     the_disk_in_slot_label + kTheDiskInSlotSlotCharOffset
         lda     read_block_params::unit_num
-        jsr     L19C1
+        jsr     get_drive_char
         sta     the_disk_in_slot_label + kTheDiskInSlotDriveCharOffset
         ldx     the_disk_in_slot_label
 L1974:  lda     the_disk_in_slot_label,x
@@ -1128,29 +1134,34 @@ L1986:  cmp     #$A5
         cmp     #$27
         bne     L1959
         lda     read_block_params::unit_num
-        jsr     L19B7
+        jsr     get_slot_char
         sta     the_dos_33_disk_label + kTheDos33DiskSlotCharOffset
         lda     read_block_params::unit_num
-        jsr     L19C1
+        jsr     get_drive_char
         sta     the_dos_33_disk_label + kTheDos33DiskDriveCharOffset
         COPY_STRING the_dos_33_disk_label, ovl_string_buf
         rts
 
         .byte   0
-L19B7:  and     #$70
+
+.proc get_slot_char
+        and     #$70
         lsr     a
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     #$30
+        adc     #'0'
         rts
+.endproc
 
-L19C1:  and     #$80
+.proc get_drive_char
+        and     #$80
         asl     a
         rol     a
-        adc     #$31
+        adc     #'1'
         rts
+.endproc
 
 L19C8:  copy16  #$0002, read_block_params::block_num
         MLI_RELAY_CALL READ_BLOCK, read_block_params
