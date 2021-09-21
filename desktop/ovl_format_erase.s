@@ -830,9 +830,9 @@ L1398:  stxy    total_blocks
         ldy     vol_name_buf    ; volume name
         tya
         ora     #$F0
-        sta     block_buffer+4
+        sta     block_buffer + VolumeDirectoryHeader::storage_type_name_length
 :       lda     vol_name_buf,y
-        sta     block_buffer+4,y
+        sta     block_buffer + VolumeDirectoryHeader::file_name - 1,y
         dey
         bne     :-
 
@@ -841,6 +841,14 @@ L1398:  stxy    total_blocks
         sta     block_buffer+kKeyBlockHeaderOffset,y
         dey
         bpl     :-
+
+        MLI_RELAY_CALL GET_TIME ; Apply timestamp
+        ldy     #3
+:       lda     DATELO,y
+        sta     block_buffer + VolumeDirectoryHeader::creation_date,y
+        dey
+        bpl     :-
+
         jsr     write_block_and_zero
 
         ;; Subsequent volume directory blocks (4 total)
@@ -1039,14 +1047,14 @@ zero_buffers:
 ;;; $25 = file_count 0
 ;;; $27 = bit_map_pointer 6
 ;;; $29 = total_blocks
-kNumKeyBlockHeaderBytes = 9
-kKeyBlockHeaderOffset = $22
+kNumKeyBlockHeaderBytes = .sizeof(VolumeDirectoryHeader) - VolumeDirectoryHeader::access
+kKeyBlockHeaderOffset = VolumeDirectoryHeader::access
 key_block_header_bytes:
         .byte   $C3,$27,$0D
         .word   0
         .word   6
 total_blocks:
-        .word   280             ; default for 140k floppy
+        .word   kDefaultFloppyBlocks
         ASSERT_TABLE_SIZE key_block_header_bytes, kNumKeyBlockHeaderBytes
 
 vol_name_buf:
