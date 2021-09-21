@@ -744,7 +744,7 @@ label_cancel:
 label_uparrow:
         PASCAL_STRING kGlyphUpArrow ; do not localize
 label_downarrow:
-        PASCAL_STRING kGlyphDdownArrow ; do not localize
+        PASCAL_STRING kGlyphDownArrow ; do not localize
 
 .params setpensize_params
 penwidth: .byte   1
