@@ -628,6 +628,26 @@ params: .addr   0
 .endproc
 
 ;;; ============================================================
+;;; Get driver address
+;;; Input: A = unit number
+;;; Output: A,X = driver address
+
+.proc get_driver_address
+        and     #$F0            ; DSSS0000 after masking
+        lsr                     ; 0DSSS000
+        lsr                     ; 00DSSS00
+        lsr                     ; 000DSSS0
+        tax
+        lda     DEVADR,x        ; low byte of driver address
+        pha
+        inx
+        lda     DEVADR,x        ; high byte of driver address
+        tax
+        pla
+        rts
+.endproc
+
+;;; ============================================================
 ;;; Format disk
 ;;; Input: A = unit number
 
@@ -638,28 +658,18 @@ params: .addr   0
         and     #$0F
         beq     l2
 
-        ;; This code is grabbing the high byte of the unit's address in
-        ;; DEVADR, to test if $CnFF is $FF (a 13-sector disk).
-        ;; BUG: The code doesn't verify that the high byte is $Cn so it
-        ;; will fail (badly) for RAM-based drivers, including remapped
-        ;; drives.
-        ldx     #$11  ; TODO: Just do ((unit_num & $F0) >> 3) + DEVADR
+        ;; Check if the driver is firmware ($CnXX) and if so if it's
+        ;; a 16-sector or 13-sector Disk II.
         lda     unit_num
-        and     #$80
-        beq     l1
-        ldx     #$21
-l1:     stx     @lsb
-        lda     unit_num
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        clc
-        adc     @lsb
-        sta     @lsb
-        @lsb := *+1
-        lda     DEVADR & $FF00
-        sta     $07
+        jsr     get_driver_address ; A,X = driver address
+
+        txa                     ; high byte
+        and     #$F0            ; look at high nibble
+        cmp     #$C0            ; firmware? ($Cn)
+        bne     l3              ; nope
+
+        txa                     ; high byte
+        sta     $06+1
         lda     #$00
         sta     $06             ; point $06 at $Cn00
         ldy     #$FF
@@ -667,13 +677,16 @@ l1:     stx     @lsb
         beq     l2              ; $00 = Disk II 16-sector
         cmp     #$FF            ; $FF = Disk II 13-sector
         bne     l3
+
+        ;; Format as Disk II
 l2:     lda     unit_num
         jsr     FormatDiskII
         rts
 
-l3:     ldy     #$FF            ; offset to low byte of driver address
-        lda     ($06),y
-        sta     $06
+        ;; Format using driver
+l3:     lda     unit_num
+        jsr     get_driver_address
+        stax    $06
         copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         lda     unit_num
         and     #$F0
@@ -698,23 +711,17 @@ unit_num:
         and     #$0F
         beq     l2
 
-        ldx     #$11  ; TODO: Just do ((unit_num & $F0) >> 3) + DEVADR
+        ;; Check if the driver is firmware ($CnXX) and if so if it's
+        ;; a 16-sector or 13-sector Disk II.
         lda     unit_num
-        and     #$80
-        beq     l1
-        ldx     #$21
-l1:     stx     @lsb
-        lda     unit_num
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        clc
-        adc     @lsb
-        sta     @lsb
-        @lsb := *+1
-        lda     DEVADR & $FF00
-        sta     $07
+        jsr     get_driver_address
+        txa                     ; high byte
+        and     #$F0            ; look at high nibble
+        cmp     #$C0            ; firmware? ($Cn)
+        bne     l2              ; TODO: Should we guess yes or no here???
+
+        txa                     ; high byte
+        sta     $06+1
         lda     #$00
         sta     $06             ; point $06 at $Cn00
         ldy     #$FF
@@ -722,6 +729,8 @@ l1:     stx     @lsb
         beq     l2              ; $00 = Disk II 16-sector
         cmp     #$FF            ; $FF = Disk II 13-sector
         beq     l2
+
+        ;; Not a Disk II; check the firmware status byte
         ldy     #$FE            ; $CnFE
         lda     ($06),y
         and     #%00001000      ; Bit 3 = Supports format
@@ -764,37 +773,33 @@ L132C:  ldy     #0
         dey
         bpl     :-
 
+        ;; --------------------------------------------------
+        ;; Get the block count for the device
+
         lda     unit_num
-        and     #$0F
-        beq     L1394
-        ldx     #$11  ; TODO: Just do ((unit_num & $F0) >> 3) + DEVADR
-        lda     unit_num
-        and     #$80
-        beq     L134D
-        ldx     #$21
-L134D:  stx     @lsb
-        lda     unit_num
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        clc
-        adc     @lsb
-        sta     @lsb
-        @lsb := *+1
-        lda     DEVADR & $FF00
+        jsr     get_driver_address
+
+        ;; Check if it's a Disk II
+        txa                     ; high byte
+        and     #$F0            ; look at high nibble
+        cmp     #$C0            ; firmware? ($Cn)
+        bne     :+              ; nope
+
+        txa                     ; high byte
         sta     $06+1
         lda     #$00
-        sta     $06
+        sta     $06             ; point $06 at $Cn00
         ldy     #$FF
         lda     ($06),y         ; load $CnFF
-        beq     L1394           ; $00 = Disk II 16-sector
+        beq     disk_ii         ; $00 = Disk II 16-sector
         cmp     #$FF            ; $FF = Disk II 13-sector
-        beq     L1394
+        beq     disk_ii
 
-        ldy     #$FF            ; offset to low byte of driver address
-        lda     ($06),y
-        sta     $06
+        ;; Not Disk II - use the driver.
+        lda     unit_num
+        jsr     get_driver_address
+        stax    $06
+
         copy    #DRIVER_COMMAND_STATUS, DRIVER_COMMAND
         lda     unit_num
         and     #$F0
@@ -802,14 +807,18 @@ L134D:  stx     @lsb
         lda     #$00
         sta     DRIVER_BLOCK_NUMBER
         sta     DRIVER_BLOCK_NUMBER+1
-        jsr     L1391
-        bcc     L1398
-        jmp     L1483
+        jsr     driver
+        bcc     L1398           ; success
+        jmp     L1483           ; failure
 
-L1391:  jmp     ($06)
+driver: jmp     ($06)
 
-L1394:  ldxy    #kDefaultFloppyBlocks
+disk_ii:
+        ldxy    #kDefaultFloppyBlocks
 L1398:  stxy    total_blocks
+
+        ;; --------------------------------------------------
+        ;; Loader blocks
 
         ;; Write first block of loader
         copy16  #prodos_loader_blocks, write_block_params::data_buffer
