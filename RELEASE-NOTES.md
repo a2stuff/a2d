@@ -152,6 +152,7 @@ from the **Apple** menu.
 * **Control-Reset** quits cleanly back to ProDOS (except buggy emulators). ([#141](https://github.com/a2stuff/a2d/issues/141))
 * Prevent crash with more than 8 removable devices.
 * Disk Copy works with disks over 8MB. ([#386](https://github.com/a2stuff/a2d/issues/386))
+* Format/Erase now works correctly with disks over 20MB. ([#557](https://github.com/a2stuff/a2d/issues/557))
 * Scrollbars no longer activate unnecessarily. ([#347](https://github.com/a2stuff/a2d/issues/347), [#348](https://github.com/a2stuff/a2d/issues/348), [#394](https://github.com/a2stuff/a2d/issues/394))
 * "There are 2 volumes with the same name." alert is now shown correctly. ([#542](https://github.com/a2stuff/a2d/issues/542))
 * "Files remaining" counts were incorrect in various cases. ([#462](https://github.com/a2stuff/a2d/issues/462), [#470](https://github.com/a2stuff/a2d/issues/470), [#534](https://github.com/a2stuff/a2d/issues/534))

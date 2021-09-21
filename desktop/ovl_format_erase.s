@@ -858,44 +858,76 @@ L1398:  stxy    total_blocks
         ;; --------------------------------------------------
         ;; Bitmap blocks
 
-        lsr16   total_blocks           ; / 8
-        lsr16   total_blocks
-        lsr16   total_blocks
-        lda     total_blocks
-        bne     :+
-        dec     total_blocks+1
-:       dec     total_blocks
-L1438:  jsr     L1485
-        lda     write_block_params::block_num+1
-        bne     L146A
-        lda     write_block_params::block_num
-        cmp     #$06
-        bne     L146A
-        copy    #$01, block_buffer
-        lda     total_blocks+1
-        cmp     #$02
-        bcc     L146A
-        copy    #$00, block_buffer
-        lda     total_blocks+1
-        lsr     a
-        tax
-        lda     #$FF
-        dex
-        beq     L1467
-L1462:  clc
-        rol     a
-        dex
-        bne     L1462
-L1467:  sta     block_buffer+$01
-L146A:  jsr     write_block_and_zero
-        dec     total_blocks+1
-        dec     total_blocks+1
-        lda     total_blocks+1
-        beq     L147D
-        bmi     L147D
-        jmp     L1438
+        ;; Do a bunch of preliminary math to make building the volume bitmap easier
 
-L147D:  lda     #$00
+        lda     total_blocks    ; A lot of the math is affected by off-by-one problems that
+        bne     :+              ; vanish if you decrease the blocks by one (go from "how many"
+        dec     total_blocks+1  ; to "last block number")
+:       dec     total_blocks
+
+        lda     total_blocks    ; Take the remainder of the last block number modulo 8
+        and     #$07
+        tax                     ; Convert that remainder to a bitmask of "n+1" set high-endian bits
+        lda     bitmask,x       ; using a lookup table and store it for later
+        sta     last_byte       ; This value will go at the end of the bitmap
+
+        lsr16   total_blocks    ; Divide the last block number by 8 in-place
+        lsr16   total_blocks    ; This will become the in-block offset to the last
+        lsr16   total_blocks    ; byte shortly
+
+        lda     total_blocks+1  ; Divide the last block number again by 512 (high byte/2) in-register to get
+        lsr     a               ; the base number of bitmap blocks needed minus 1
+        clc                     ; Finally, add 6 to account for the 6 blocks used by the boot blocks (2)
+        adc     #6              ; and volume directory (4) to get the block number of the last VBM block
+        sta     lastblock       ; This final result should ONLY fall in the range of 6-21
+
+        lda     total_blocks+1  ; Mask off the last block's "partial" byte count - this is now the offset to the
+        and     #$01            ; last byte in the last VBM block. All other blocks get filled with 512 $FF's
+        sta     total_blocks+1
+
+        ;; Main loop to build the volume bitmap
+bitmaploop:
+        jsr     buildblock      ; Build a bitmap for the current block
+
+        lda     write_block_params::block_num+1 ; Are we at a block >255?
+        bne     L1483           ; Then something's gone horribly wrong and we need to stop
+        lda     write_block_params::block_num
+        cmp     #6              ; Are we anywhere other than block 6?
+        bne     gowrite         ; Then go ahead and write the bitmap block as-is
+
+        ;; Block 6 - Set up the volume bitmap to protect the blocks at the beginning of the volume
+        copy    #$01, block_buffer ; Mark blocks 0-6 in use
+        lda     lastblock       ; What's the last block we need to protect?
+        cmp     #7
+        bcc     gowrite         ; If it's less than 7, default to always protecting 0-6
+
+        copy    #$00, block_buffer ; Otherwise (>=7) mark blocks 0-7 as "in use"
+        lda     lastblock       ; and check again
+        cmp     #15
+        bcs     :+              ; Is it 15 or more? Skip ahead.
+        and     #$07            ; Otherwise (7-14) take the low three bits
+        tax
+        lda     freemask,x      ; convert them to the correct VBM value using a lookup table
+        sta     block_buffer+1  ; put it in the bitmap
+        jmp     gowrite         ; and write the block
+
+:       copy    #$00, block_buffer+1 ; (>=15) Mark blocks 8-15 as "in use"
+        lda     lastblock       ; Then finally
+        and     #$07            ; take the low three bits
+        tax
+        lda     freemask,x      ; convert them to the correct VBM value using a lookup table
+        sta     block_buffer+2  ; put it in the bitmap, and fall through to the write
+
+        ;; Call the write/increment/zero routine, and loop back if we're not done
+gowrite:
+        jsr     write_block_and_zero
+        lda     write_block_params::block_num
+        cmp     lastblock
+        bcc     bitmaploop
+        beq     bitmaploop
+
+success:
+        lda     #$00
         sta     $08
         clc
         rts
@@ -903,29 +935,69 @@ L147D:  lda     #$00
 L1483:  sec
         rts
 
-.proc L1485
-        ldy     total_blocks+1
-        beq     L148E
-        ldy     #$FF
-        bne     L1491
-L148E:  ldy     total_blocks
-L1491:  lda     #$FF
-L1493:  sta     block_buffer,y
-        dey
-        bne     L1493
-        sta     block_buffer
-        ldy     total_blocks+1
-        beq     L14B5
-        cpy     #$02
-        bcc     L14A9
-        ldy     #$FF
-        bne     L14AC
-L14A9:  ldy     total_blocks
-L14AC:  sta     block_buffer+$100,y
-        dey
-        bne     L14AC
-        sta     block_buffer+$100
-L14B5:  rts
+;;; Values with "n+1" (1-8) high-endian bits set
+bitmask:
+        .byte   $80,$C0,$E0,$F0,$F8,$FC,$FE,$FF
+
+;;; Special mask values for setting up block 6 /NOTE OFF-BY-ONE/
+freemask:
+        .byte   $7F,$3F,$1F,$0F,$07,$03,$01,$FF
+
+;;; Contents of the last byte of the VBM
+last_byte:
+        .byte   $00
+
+;;; Block number of the last VBM block
+lastblock:
+        .byte   6
+
+;;; ============================================================
+;;; Build a single block of the VBM. These blocks are all filled with
+;;; 512 $FF values, except for the last block in the entire VBM, which
+;;; gets cleared to $00's following the final byte position.
+
+.proc buildblock
+        ldy     #$00
+        lda     #$FF
+ffloop: sta     block_buffer,y  ; Fill this entire block
+        sta     block_buffer+$100,y ; with $FF bytes
+        iny
+        bne     ffloop
+
+        lda     write_block_params::block_num
+        cmp     lastblock       ; Is this the last block?
+        bne     builddone       ; No, then just use the full block of $FF's
+
+        ldy     total_blocks    ; Get the offset to the last byte that needs to be updated
+        lda     total_blocks+1
+        bne     secondhalf      ; Is it in the first $100 or the second $100?
+
+        lda     last_byte       ; Updating the first half
+        sta     block_buffer,y  ; Put the last byte in the right location
+        lda     #$00
+        iny
+        beq     zerosecond      ; Was that the end of the first half?
+
+zerofirst:
+        sta     block_buffer,y  ; Clear the remainder of the first half
+        iny
+        bne     zerofirst
+        beq     zerosecond      ; Then go clear ALL of the second half
+
+secondhalf:
+        lda     last_byte       ; Updating the second half
+        sta     block_buffer+$100,y ; Put the last byte in the right location
+        lda     #$00
+        iny
+        beq     builddone       ; Was that the end of the second half?
+
+zerosecond:
+        sta     block_buffer+$100,y ; Clear the remainder of the second half
+        iny
+        bne     zerosecond
+
+builddone:
+        rts                     ; And we're done
 .endproc
 
 .endproc
