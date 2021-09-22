@@ -932,7 +932,7 @@ bitmaploop:
         tax
         lda     freemask,x      ; convert them to the correct VBM value using a lookup table
         sta     block_buffer+1  ; put it in the bitmap
-        jmp     gowrite         ; and write the block
+        bcc     gowrite         ; and write the block
 
 :       copy    #$00, block_buffer+1 ; (>=15) Mark blocks 8-15 as "in use"
         lda     lastblock       ; Then finally
@@ -944,10 +944,9 @@ bitmaploop:
         ;; Call the write/increment/zero routine, and loop back if we're not done
 gowrite:
         jsr     write_block_and_zero
-        lda     write_block_params::block_num
-        cmp     lastblock
-        bcc     bitmaploop
-        beq     bitmaploop
+        lda     lastblock
+        cmp     write_block_params::block_num
+        bcs     bitmaploop
 
 success:
         lda     #$00
