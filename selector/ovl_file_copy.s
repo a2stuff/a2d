@@ -311,7 +311,10 @@ LA3F0:  .addr   do_copy
         .addr   LA4FC
         .addr   LA0F2
 
-LA3F6:  ldy     #5
+;;; ============================================================
+
+.proc LA3F6
+        ldy     #5
 LA3F8:  lda     LA3F0,y
         sta     LA0EC,y
         dey
@@ -326,7 +329,7 @@ LA3F8:  lda     LA3F0,y
         jmp     handle_error_code
 
 LA41B:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, LA4F3
-        cmp16   LA4F3, LA75B
+        cmp16   LA4F3, blocks_total
         bcs     LA43F
         jmp     LAACB
 
@@ -371,7 +374,7 @@ LA491:  lda     get_file_info_params2::storage_type
         lda     #$00
         beq     LA4A2
 LA4A0:  lda     #$FF
-LA4A2:  sta     LA4F8
+LA4A2:  sta     is_dir_flag
         ldy     #$07
 LA4A7:  lda     get_file_info_params2,y
         sta     create_params,y
@@ -403,7 +406,7 @@ LA4DB:  MLI_CALL CREATE, create_params
         beq     LA4E9
         jmp     handle_error_code
 
-LA4E9:  lda     LA4F8
+LA4E9:  lda     is_dir_flag
         beq     LA4F5
         jmp     copy_directory
 
@@ -414,8 +417,13 @@ LA4F3:  .byte   0
         .byte   0
 LA4F5:  jmp     copy_dir
 
-LA4F8:  .byte   0
+is_dir_flag:
+        .byte   0
 LA4F9:  .byte   0
+.endproc
+
+;;; ============================================================
+
 LA4FA:  .byte   0
 
 saved_stack:
@@ -581,17 +589,20 @@ LA6B7:  .addr   LA729
         .addr   LA728
         .addr   LA0F2
 
-LA6BD:  ldy     #5
+;;; ============================================================
+
+.proc LA6BD
+        ldy     #5
 :       lda     LA6B7,y
         sta     addr_table,y
         dey
         bpl     :-
 
         lda     #$00
-        sta     LA759
-        sta     LA75A
-        sta     LA75B
-        sta     LA75C
+        sta     file_count
+        sta     file_count+1
+        sta     blocks_total
+        sta     blocks_total+1
         ldy     #BITMAP_SIZE-1
         lda     #$00
 LA6DA:  sta     BITMAP,y
@@ -610,7 +621,7 @@ LA6F6:  jsr     show_insert_source_disk_alert
 LA6FC:  jmp     handle_error_code
 
 LA6FF:  lda     get_file_info_params2::storage_type
-        sta     LA724
+        sta     storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     LA711
         cmp     #ST_LINKED_DIRECTORY
@@ -618,123 +629,158 @@ LA6FF:  lda     get_file_info_params2::storage_type
         lda     #$00
         beq     LA713
 LA711:  lda     #$FF
-LA713:  sta     LA723
+LA713:  sta     is_dir_flag
         beq     LA725
         jsr     copy_directory
-        lda     LA724
-        cmp     #$0F
+        lda     storage_type
+        cmp     #ST_VOLUME_DIRECTORY
         bne     LA725
+
+        ;; TODO: Increment file count to fix https://github.com/a2stuff/a2d/issues/564 ?
+
         rts
 
-LA723:  .byte   0
-LA724:  .byte   0
+is_dir_flag:
+        .byte   0
+storage_type:
+        .byte   0
+
 LA725:  jmp     LA729
+.endproc
+
+;;; ============================================================
 
 LA728:  rts
 
-LA729:  jsr     LA75D
+;;; ============================================================
+
+.proc LA729
+        jsr     LA75D
         MLI_CALL GET_FILE_INFO, get_file_info_params2
-        bne     LA74A
-        add16   LA75B, get_file_info_params2::blocks_used, LA75B
-LA74A:  inc16   LA759
+        bne     :+
+        add16   blocks_total, get_file_info_params2::blocks_used, blocks_total
+:       inc16   file_count
         jsr     LA782
         jsr     update_file_count_display
         rts
+.endproc
 
-LA759:  .byte   0
-LA75A:  .byte   0
-LA75B:  .byte   0
-LA75C:  .byte   0
-LA75D:  lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
-        bne     LA763
+file_count:
+        .word   0
+blocks_total:
+        .word   0
+
+;;; ============================================================
+
+.proc LA75D
+        lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+        bne     l1
         rts
 
-LA763:  ldx     #$00
+l1:     ldx     #$00
         ldy     pathname1
         lda     #'/'
         sta     pathname1+1,y
         iny
-LA76E:  cpx     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
-        bcs     LA77E
+l2:     cpx     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+        bcs     l3
         lda     buf_dir_header+SubdirectoryHeader::file_name-4,x
         sta     pathname1+1,y
         inx
         iny
-        jmp     LA76E
+        jmp     l2
 
-LA77E:  sty     pathname1
+l3:     sty     pathname1
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc LA782
+        ldx     pathname1
+        bne     :+
         rts
 
-LA782:  ldx     pathname1
-        bne     LA788
-        rts
-
-LA788:  lda     pathname1,x
+:       lda     pathname1,x
         cmp     #'/'
-        beq     LA796
+        beq     :+
         dex
-        bne     LA788
+        bne     :-
         stx     pathname1
         rts
 
-LA796:  dex
+:       dex
         stx     pathname1
         rts
+.endproc
 
-LA79B:  lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
-        bne     LA7A1
+;;; ============================================================
+
+.proc LA79B
+        lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+        bne     l1
         rts
 
-LA7A1:  ldx     #$00
+l1:     ldx     #$00
         ldy     pathname_dst
         lda     #'/'
         sta     pathname_dst+1,y
         iny
-LA7AC:  cpx     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
-        bcs     LA7BC
+l2:     cpx     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+        bcs     l3
         lda     buf_dir_header+SubdirectoryHeader::file_name-4,x
         sta     pathname_dst+1,y
         inx
         iny
-        jmp     LA7AC
+        jmp     l2
 
-LA7BC:  sty     pathname_dst
+l3:     sty     pathname_dst
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc LA7C0
+        ldx     pathname_dst
+        bne     l1
         rts
 
-LA7C0:  ldx     pathname_dst
-        bne     LA7C6
-        rts
-
-LA7C6:  lda     pathname_dst,x
+l1:     lda     pathname_dst,x
         cmp     #'/'
-        beq     LA7D4
+        beq     l2
         dex
-        bne     LA7C6
+        bne     l1
         stx     pathname_dst
         rts
 
-LA7D4:  dex
+l2:     dex
         stx     pathname_dst
         rts
+.endproc
 
-LA7D9:  ldy     #$00
+;;; ============================================================
+
+.proc LA7D9
+        ldy     #$00
         sta     LA4FA
         dey
-LA7DF:  iny
+l1:     iny
         lda     LA1B6,y
         cmp     #'/'
-        bne     LA7EA
+        bne     l2
         sty     LA4FA
-LA7EA:  sta     pathname1,y
+l2:     sta     pathname1,y
         cpy     LA1B6
-        bne     LA7DF
+        bne     l1
         ldy     LA176
-LA7F5:  lda     LA176,y
+l3:     lda     LA176,y
         sta     pathname_dst,y
         dey
-        bpl     LA7F5
+        bpl     l3
         rts
+.endproc
 
+        ;; TODO: Unreachable???
         return  #$00
 
 ;;; ============================================================
@@ -744,40 +790,40 @@ LA7F5:  lda     LA176,y
         ldy     #$00
         lda     ($06),y
         tay
-LA80B:  lda     ($06),y
+l1:     lda     ($06),y
         sta     LA1B6,y
         dey
-        bpl     LA80B
+        bpl     l1
         ldy     LA1B6
-LA816:  lda     LA1B6,y
+l2:     lda     LA1B6,y
         and     #CHAR_MASK
         cmp     #'/'
-        beq     LA822
+        beq     l3
         dey
-        bne     LA816
-LA822:  dey
+        bne     l2
+l3:     dey
         sty     LA1B6
-LA826:  lda     LA1B6,y
+l4:     lda     LA1B6,y
         and     #CHAR_MASK
         cmp     #'/'
-        beq     LA832
+        beq     l5
         dey
-        bpl     LA826
-LA832:  ldx     #$00
-LA834:  iny
+        bpl     l4
+l5:     ldx     #$00
+l6:     iny
         inx
         lda     LA1B6,y
         sta     LA1F6,x
         cpy     LA1B6
-        bne     LA834
+        bne     l6
         stx     LA1F6
         lda     LCBANK2
         lda     LCBANK2
         ldy     RAMCARD_PREFIX
-LA84D:  lda     RAMCARD_PREFIX,y
+l7:     lda     RAMCARD_PREFIX,y
         sta     LA176,y
         dey
-        bpl     LA84D
+        bpl     l7
         lda     ROMIN2
         rts
 .endproc
@@ -902,12 +948,15 @@ str_space:
         jsr     app::get_window_port
         MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
-ep2:    dec     LA759
-        lda     LA759
+
+ep2:    dec     file_count
+        lda     file_count
         cmp     #$FF
-        bne     LAA4C
-        dec     LA75A
-LAA4C:  jsr     populate_count
+        bne     :+
+        dec     file_count+1
+:
+
+        jsr     populate_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_count
@@ -1090,7 +1139,7 @@ LAC53:  .byte   0
 ;;; ============================================================
 
 .proc populate_count
-        copy16  LA759, value
+        copy16  file_count, value
         ldx     #7
         lda     #' '
 :       sta     str_count,x
