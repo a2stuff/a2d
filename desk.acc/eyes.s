@@ -237,7 +237,7 @@ grow_box_bitmap:
         cmp     #MGTK::Area::close_box
         beq     handle_close
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
+        jeq     handle_drag
         cmp     #MGTK::Area::content
         bne     :+
         jmp     handle_grow
@@ -262,20 +262,25 @@ grow_box_bitmap:
         inc     has_last_coords
         bne     moved
 
-        ;; Moved?
 test:
-        lda     event_params::xcoord
-        cmp     screentowindow_params::screen::xcoord
-        bne     moved
-        lda     event_params::xcoord+1
-        cmp     screentowindow_params::screen::xcoord+1
-        bne     moved
-        lda     event_params::ycoord
-        cmp     screentowindow_params::screen::ycoord
-        bne     moved
-        lda     event_params::ycoord+1
-        cmp     screentowindow_params::screen::ycoord+1
-        beq     done
+        ;; Compute absolute X delta
+        sub16   event_params::xcoord, screentowindow_params::screen::xcoord, delta
+        lda     delta+1
+        bpl     :+
+        sub16   #0, delta, delta ; negate
+:       cmp16   delta, #kMoveThresholdX
+        bpl     moved
+
+        ;; Compute absolute Y delta
+        sub16   event_params::ycoord, screentowindow_params::screen::ycoord, delta
+        lda     delta+1
+        bpl     :+
+        sub16   #0, delta, delta ; negate
+:       cmp16   delta, #kMoveThresholdY
+        bpl     moved
+
+        ;; Hasn't moved enough
+        jmp     done
 
 moved:  copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
@@ -284,6 +289,8 @@ moved:  copy16  event_params::xcoord, screentowindow_params::screen::xcoord
 
 done:   jmp     input_loop
 
+
+delta:  .word   0
 .endproc
 
 ;;; ============================================================
@@ -382,6 +389,10 @@ has_last_coords:
 ;;; Flag set once outline is drawn (cleared on window move)
 has_drawn_outline:
         .byte   0
+
+;;; Minimum threshold to move to trigger a redraw, to avoid flicker.
+kMoveThresholdX = 5
+kMoveThresholdY = 5
 
 ;;; Saved coords
         DEFINE_POINT pos_l, 0, 0
