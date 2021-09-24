@@ -10935,6 +10935,7 @@ jt_get_size:    jmp     do_get_size    ; cmd_get_size
 
 do_copy_file:
         copy    #0, operation_flags ; copy/delete
+        copy    #0, move_flag
         tsx
         stx     stack_stash
         jsr     prep_callbacks_for_size_or_count
@@ -10945,6 +10946,7 @@ do_copy_file:
 
 do_copy_to_ram2:
         copy    #$FF, copy_run_flag
+        copy    #0, move_flag
         copy    #0, delete_skip_decrement_flag
         jsr     copy_file_for_run
         jsr     done_dialog_phase1
