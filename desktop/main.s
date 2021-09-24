@@ -2087,7 +2087,6 @@ cmd_open_from_keyboard := cmd_open::from_keyboard
         sta     (name_ptr),y    ; assign string length
 
         ;; Select by name
-        jsr     clear_selection
         jsr     select_file_icon_by_name ; $08 = name
 
 done:   rts
@@ -5875,6 +5874,7 @@ num:    .byte   0
 ;;; TODO: See if an existing icon exists, mark it as open.
 
 .proc open_window_for_path
+        jsr     clear_selection
         copy    #$FF, icon_param
         jsr     open_window_for_icon::check_path
         rts

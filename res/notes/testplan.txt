@@ -389,3 +389,6 @@
 
 * Launch DeskTop. Drag a file to a same-volume window so it is moved, not copied. Use File > Copy a File... to copy a file. Verify that the file is indeed copied, not moved.
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Drag a file to a same-volume window so it is moved. Configure a Selector item to copy to RAMCard "at first use". Invoke the item. Verify that the item's files were indeed copied, not moved.
+
+* Launch DeskTop. Open a window. Select a file icon. Apple > Control Panels. Verify that the previously selected file is no longer selected.
+* Launch DeskTop. Configure a Selector entry with the target being a directory. Open a window. Select a file icon. Invoke the selector entry. Verify that the previously selected file is no longer selected.
