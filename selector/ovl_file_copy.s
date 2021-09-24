@@ -636,7 +636,13 @@ LA713:  sta     is_dir_flag
         cmp     #ST_VOLUME_DIRECTORY
         bne     LA725
 
-        ;; TODO: Increment file count to fix https://github.com/a2stuff/a2d/issues/564 ?
+        ;; If copying a volume dir to RAMCard, the volume dir
+        ;; will not be counted as a file during enumeration but
+        ;; will be counted during copy, so include it to avoid
+        ;; off-by-one.
+        ;; https://github.com/a2stuff/a2d/issues/564
+        inc16   file_count
+        jsr     update_file_count_display
 
         rts
 
