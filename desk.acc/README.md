@@ -36,6 +36,8 @@ New desk accessories:
   * Visual distractions.
 * [Find Files](find.files.s)
   * Search a directory and descendants for filenames. Use ? and * as wildcards.
+* [Show Duet File](show.duet.file.s)
+  * Play Electric Duet music files.
 * [Show Font File](show.font.file.s)
   * Preview MGTK font files.
 * [Darkness](darkness.s)
@@ -58,6 +60,8 @@ File > Open is run or the files are double-clicked.
    * Handles image files (FOT $08 and some BIN $06)
    * Supports Hires and Double Hires images, including compressed images
    * Supports MiniPix/PrintShop clip-art
+* [Show Duet File](show.duet.file.s)
+   * Handles Electric Duet music files ($D5/$D0E7)
 * [Show Font File](show.font.file.s)
    * Handles MGTK font files (FNT $07)
 

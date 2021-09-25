@@ -944,6 +944,10 @@ with_path:
         bne     :+
         param_jump invoke_desk_acc, str_preview_fnt
 
+:       cmp     #IconType::audio
+        bne     :+
+        param_jump invoke_desk_acc, str_preview_mus
+
 :       cmp     #IconType::desk_accessory
     IF_EQ
         COPY_STRING path, path_buffer ; Use this to launch the DA
@@ -1152,6 +1156,9 @@ str_preview_fnt:
 
 str_preview_txt:
         PASCAL_STRING .concat(kFilenamePreviewDir, "/show.text.file") ; do not localize
+
+str_preview_mus:
+        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.duet.file") ; do not localize
 
 ;;; ============================================================
 

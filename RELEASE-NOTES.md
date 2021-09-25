@@ -28,7 +28,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Reorganized/renamed several menu items. ([#13](https://github.com/a2stuff/a2d/issues/13), [#303](https://github.com/a2stuff/a2d/issues/303), [#304](https://github.com/a2stuff/a2d/issues/304), [#305](https://github.com/a2stuff/a2d/issues/305))
 * Add **Special > Check Drive** command to refresh a single drive. ([#97](https://github.com/a2stuff/a2d/issues/97))
 * Add **File > Duplicate...** command to duplicate files. ([#228](https://github.com/a2stuff/a2d/issues/228))
-* New file type icons: graphics, IIgs-specific, AppleWorks, relocatable, command, fonts, and DAs. ([#105](https://github.com/a2stuff/a2d/issues/105), [#116](https://github.com/a2stuff/a2d/issues/116))
+* New file type icons: graphics, IIgs-specific, AppleWorks, relocatable, command, fonts, music, and DAs. ([#105](https://github.com/a2stuff/a2d/issues/105), [#116](https://github.com/a2stuff/a2d/issues/116))
 * Desktop icon shown for AppleTalk file shares. ([#88](https://github.com/a2stuff/a2d/issues/88))
 * Improvements to several existing icon bitmaps. ([#74](https://github.com/a2stuff/a2d/issues/74))
 * Icons for volumes positioned more predictably and sensibly. ([#94](https://github.com/a2stuff/a2d/issues/94), [#375](https://github.com/a2stuff/a2d/issues/375), [#540](https://github.com/a2stuff/a2d/issues/540))
@@ -108,7 +108,7 @@ The Show Text File DA is now part of the file preview functionality (see below).
 
 ### File Preview
 
-Text, graphics, and font files with the correct file types can be
+Text, graphics, music, and font files with the correct file types can be
 previewed without leaving DeskTop; select the file icon and then select
 **File > Open**, or double-click the file icon.
 
@@ -122,6 +122,7 @@ previewed without leaving DeskTop; select the file icon and then select
     * Aux type $4000 or $4001 are packed hi-res/double hi-res images. ([#107](https://github.com/a2stuff/a2d/issues/107))
     * 17 block files are hi-res images.
     * 33 block files are double hi-res images.
+* Music files must be Electric Duet files with type $D5, aux type $D0E7.
 * Font files must be type FNT ($07) and must be MGTK font resources. (This file type is officially reserved for Apple /// SOS font files, but unlikely to be confused.)
 
 To preview files of other types (e.g. view a BIN file as text), you

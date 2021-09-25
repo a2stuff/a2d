@@ -30,6 +30,12 @@ DEFAULT_FONT    := $8800
 ;;; DeskTopSettings structure loaded from disk on startup.
 SETTINGS        := $FF80
 
+;;; A 10k buffer that can be restored using overlays; load
+;;; `kDynamicRoutineRestore5000` and call `JUMP_TABLE_RESTORE_OVL`
+;;; to restore DeskTop afterwards.
+OVERLAY_10K_BUFFER      := $5000
+kOverlay10KBufferSize   = $2800
+
 ;;; ============================================================
 ;;; Constants
 

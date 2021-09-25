@@ -1375,6 +1375,8 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_REL,       ICT_FLAGS_NONE, 0, 0, IconType::relocatable   ; $FE
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
 
+        DEFINE_ICTRECORD $FF, $D5,          ICT_FLAGS_AUX, $D0E7, 0, IconType::audio ; Electric Duet
+
         ;; IIgs-Specific Files (ranges)
         DEFINE_ICTRECORD $F0, $50,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs General  $5x
         DEFINE_ICTRECORD $F0, $A0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs BASIC    $Ax
@@ -1499,6 +1501,7 @@ icontype_iconentrytype_table:
         .byte   kIconEntryTypeGeneric ; text
         .byte   kIconEntryTypeBinary  ; binary
         .byte   kIconEntryTypeGeneric ; graphics
+        .byte   kIconEntryTypeGeneric ; audio
         .byte   kIconEntryTypeGeneric ; font
         .byte   kIconEntryTypeGeneric ; relocatable
         .byte   kIconEntryTypeGeneric ; command
@@ -1518,6 +1521,7 @@ type_icons_table:               ; map into definitions below
         .addr   txt ; text
         .addr   bin ; binary
         .addr   fot ; graphics
+        .addr   mus ; audio
         .addr   fnt ; font
         .addr   rel ; relocatable
         .addr   cmd ; command
@@ -1542,6 +1546,7 @@ dir:    DEFICON folder_icon, 4, 27, 11, folder_mask
 sys:    DEFICON sys_icon, 4, 27, 17, sys_mask
 bas:    DEFICON aux::basic_icon, 4, 27, 14, aux::basic_mask
 fot:    DEFICON aux::graphics_icon, 4, 27, 12, aux::graphics_mask
+mus:    DEFICON aux::audio_icon, 4, 27, 15, generic_mask
 adb:    DEFICON aux::adb_icon, 4, 27, 15, generic_mask
 awp:    DEFICON aux::awp_icon, 4, 27, 15, generic_mask
 asp:    DEFICON aux::asp_icon, 4, 27, 15, generic_mask
