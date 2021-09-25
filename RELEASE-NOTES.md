@@ -46,6 +46,7 @@ Project Page: https://github.com/a2stuff/a2d
 * **File > Get Info** command shows aux type for files. ([#148](https://github.com/a2stuff/a2d/issues/148))
 * Use commas as a numeric separator. ([#270](https://github.com/a2stuff/a2d/issues/270), [#377](https://github.com/a2stuff/a2d/issues/377))
 * BIN files can be opened with menu items without a modifier key. ([#530](https://github.com/a2stuff/a2d/issues/530), [#531](https://github.com/a2stuff/a2d/issues/531))
+* Double-clicking opens all selected folders/volumes. ([#363](https://github.com/a2stuff/a2d/issues/363))
 * Keyboard-related changes:
   * Holding **Solid-Apple** while double-clicking or using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
   * Holding **Apple** while clicking a window's close box closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266))
