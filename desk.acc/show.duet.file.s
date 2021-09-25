@@ -87,12 +87,15 @@ pathbuf:        .res    kPathBufferSize, 0
         bne     :-
 :       ldx     #0
 :       lda     pathbuf+1,y     ; copy filename
-        sta     name_buf+1,x
+        sta     name_buf,x
         inx
         iny
         cpy     pathbuf
         bne     :-
-        stx     name_buf
+        txa
+        clc
+        adc     str_playing
+        sta     str_playing
 
         jmp     load_file_and_run_da
 .endproc
@@ -190,13 +193,19 @@ nextwinfo:      .addr   0
 
 penXOR: .byte   MGTK::penXOR
 
-name_buf:
-        .res    16, 0
 
-        DEFINE_LABEL playing, res_string_playing, 20, 18
-        DEFINE_LABEL credit1, res_string_credit1, 20, 34
-        DEFINE_LABEL credit2, res_string_credit2, 20, 45
-        DEFINE_LABEL instructions, res_string_instructions, 20, 62
+ypos_playing:   .word   18
+ypos_credit1:   .word   34
+ypos_credit2:   .word   45
+ypos_instruct:  .word   62
+
+        DEFINE_POINT pos, 0, 0
+
+str_playing:    PASCAL_STRING res_string_playing
+name_buf:       .res    16, 0
+str_credit1:    PASCAL_STRING res_string_credit1
+str_credit2:    PASCAL_STRING res_string_credit2
+str_instruct:   PASCAL_STRING res_string_instructions
 
 ;;; ============================================================
 
@@ -213,18 +222,14 @@ name_buf:
         MGTK_CALL MGTK::FrameRect, frame_rect1
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
-        MGTK_CALL MGTK::MoveTo, playing_label_pos
-        param_call DrawString, playing_label_str
-        param_call DrawString, name_buf
-
-        MGTK_CALL MGTK::MoveTo, credit1_label_pos
-        param_call DrawString, credit1_label_str
-
-        MGTK_CALL MGTK::MoveTo, credit2_label_pos
-        param_call DrawString, credit2_label_str
-
-        MGTK_CALL MGTK::MoveTo, instructions_label_pos
-        param_call DrawString, instructions_label_str
+        copy16  ypos_playing, pos::ycoord
+        param_call draw_centered_string, str_playing
+        copy16  ypos_credit1, pos::ycoord
+        param_call draw_centered_string, str_credit1
+        copy16  ypos_credit2, pos::ycoord
+        param_call draw_centered_string, str_credit2
+        copy16  ypos_instruct, pos::ycoord
+        param_call draw_centered_string, str_instruct
 
         MGTK_CALL MGTK::FlushEvents
 
@@ -408,8 +413,28 @@ l79:    lda     ptr
 .endproc
 
 ;;; ============================================================
+;;; Draw centered string
+;;; Input: A,X = string address, `pos` used, has ycoord
+;;; Trashes $6...$A
+.proc draw_centered_string
+        text_params     := $6
+        text_addr       := text_params + 0
+        text_length     := text_params + 2
+        text_width      := text_params + 3
 
-        .include "../lib/drawstring.s"
+        stax    text_addr       ; input is length-prefixed string
+        ldy     #0
+        lda     (text_addr),y
+        sta     text_length
+        inc16   text_addr       ; point past length
+        MGTK_CALL MGTK::TextWidth, text_params
+
+        sub16   #kDAWidth, text_width, pos::xcoord
+        lsr16   pos::xcoord ; /= 2
+        MGTK_CALL MGTK::MoveTo, pos
+        MGTK_CALL MGTK::DrawText, text_params
+        rts
+.endproc
 
 ;;; ============================================================
 
