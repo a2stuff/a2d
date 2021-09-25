@@ -66,7 +66,6 @@ stash_stack:  .byte   $00
         ;; Back to main
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
 
         ldx     stash_stack
         txs
