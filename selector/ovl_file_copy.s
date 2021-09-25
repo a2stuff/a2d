@@ -52,14 +52,8 @@ buf_block_pointers:
 buf_padding_bytes:
         .res    kMaxPaddingBytes, 0
 
-        .res    4, 0            ; Unused???
-
-
         DEFINE_CLOSE_PARAMS close_params_src
         DEFINE_CLOSE_PARAMS close_params_dst
-
-        .byte   $01             ; ???
-        .addr   pathname1       ; ???
 
         io_buf_src = $D00
         io_buf_dst = $1100
@@ -76,18 +70,10 @@ buf_padding_bytes:
         DEFINE_CREATE_PARAMS create_params2, pathname_dst, $C3
 
         DEFINE_CREATE_PARAMS create_params, pathname_dst
-        .byte   0, 0            ; ???
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, pathname1
-        .byte   0               ; ???
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, pathname_dst
-        .byte   0
-
-        .byte   $02             ; ???
-        .byte   0               ; ???
-        .byte   0               ; ???
-        .byte   0               ; ???
 
 buf_dir_header:
         .res    48, 0
@@ -99,8 +85,6 @@ LA0EE:  .word   LA4FC
 LA0F0:  .word   LA0F2
 
 LA0F2:  rts
-
-        .byte   0
 
 pathname_dst:
         .res    ::kPathBufferSize, 0
