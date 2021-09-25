@@ -95,7 +95,7 @@
 .define res_string_warning_window_must_be_closed "Tiene que cerrar una ventana antes de abrir este item."
 .define res_string_warning_too_many_files "[Hay demasiados archivos para abrir este elemento!"
 .define res_string_warning_too_many_windows "[Hay demasiadas ventanas abiertas en el escritorio!"
-.define res_string_warning_save_selector_list_line1 "]Quiere guaardar la nueva lista"
+.define res_string_warning_save_selector_list_line1 "]Quiere guardar la nueva lista"
 .define res_string_warning_save_selector_list_line2 "en el disco de sistema?"
 .define res_string_errmsg_00 "Error de Sistema"
 .define res_string_errmsg_27 "Error de E/S."
