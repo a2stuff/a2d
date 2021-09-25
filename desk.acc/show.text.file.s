@@ -67,9 +67,9 @@ font_width_backup       := $1100
         beq     :+
         dey
         bne     :-
-:       ldx     #1
+:       ldx     #0
 :       lda     pathbuf+1,y     ; copy filename
-        sta     titlebuf,x
+        sta     titlebuf+1,x
         inx
         iny
         cpy     pathbuf

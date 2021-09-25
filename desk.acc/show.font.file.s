@@ -67,9 +67,9 @@ kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
         beq     :+
         dey
         bne     :-
-:       ldx     #1
+:       ldx     #0
 :       lda     pathbuf+1,y     ; copy filename
-        sta     titlebuf,x
+        sta     titlebuf+1,x
         inx
         iny
         cpy     pathbuf
