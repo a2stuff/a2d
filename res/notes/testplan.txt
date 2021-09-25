@@ -395,3 +395,5 @@
 
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Configure a Selector entry with the target in the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Selector. Invoke the entry. Verify that the copy count goes to zero and doesn't blank out.
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Configure a Selector entry with the target in a directory, not the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Selector. Invoke the entry. Verify that the copy count goes to zero and doesn't blank out.
+
+* Launch DeskTop. Open a window containing many folders. Select up to 7 folders. File > Open. Verify that as windows continue to open, the originally selected folders don't mispaint on top of them. (This will be easier to observe in emulators with acceleration disabled.)

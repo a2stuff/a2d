@@ -5644,7 +5644,6 @@ found_window:
 ;;; ============================================================
 ;;; Open a folder/volume icon
 ;;; Input: A = icon
-;;; Assert: icon is on desktop or in active window
 ;;; Note: stack will be restored via `saved_stack` on failure
 
 .proc open_window_for_icon
@@ -5851,23 +5850,31 @@ num:    .byte   0
 ;;; Marks icon as open and repaints it.
 ;;; Input: A = icon id
 ;;; Output: `ptr` ($06) points at IconEntry
-;;; Assert: icon is on desktop or active window
 
 .proc mark_icon_open
         ptr := $06
-        lda     icon_param      ; set to $FF if opening via path
+        lda     icon_param
         jsr     icon_entry_lookup
         stax    ptr
 
+        ;; Set open flag
         ldy     #IconEntry::win_type
         lda     (ptr),y
-        ora     #kIconEntryOpenMask ; set open_flag
+        ora     #kIconEntryOpenMask
         sta     (ptr),y
 
-        lda     icon_param
+        ;; Only draw to desktop or active window
+        ldy     #IconEntry::win_type
+        lda     (ptr),y
+        and     #kIconEntryWinIdMask
+        beq     :+
+        cmp     active_window_id
+        bne     done
+
+:       lda     icon_param
         jsr     DrawIcon
 
-        rts
+done:   rts
 .endproc
 
 ;;; ============================================================
