@@ -258,14 +258,23 @@ str_instruct:   PASCAL_STRING res_string_instructions
 .endproc
 
 .proc play_file
+        lda     ROMIN2
         sta     RAMRDOFF
         sta     RAMWRTOFF
+
+        jsr     NORMFAST_norm
+
         ldax    #data_buf
         bit     KBDSTRB         ; player will stop on keypress
         jsr     player
         bit     KBDSTRB         ; swallow the keypress
+
+        jsr     NORMFAST_fast
+
         sta     RAMRDON
         sta     RAMWRTON
+        lda     LCBANK1
+        lda     LCBANK1
         rts
 .endproc
 
@@ -435,6 +444,10 @@ l79:    lda     ptr
         MGTK_CALL MGTK::DrawText, text_params
         rts
 .endproc
+
+;;; ============================================================
+
+        .include "../lib/normfast.s"
 
 ;;; ============================================================
 
