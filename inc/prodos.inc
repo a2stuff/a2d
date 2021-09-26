@@ -84,6 +84,7 @@ FT_AWP          = $1A           ; AppleWorks Word Processing *
 FT_ASP          = $1B           ; AppleWorks Spreadsheet *
 FT_SRC          = $B0           ; IIgs system type; re-used?
 FT_S16          = $B3           ; IIgs Application Program
+FT_MUSIC        = $D5           ; Music File
 FT_PAS          = $EF           ; Pascal Area *
 FT_CMD          = $F0           ; ProDOS Command File *
 FT_INT          = $FA           ; Integer BASIC Program *

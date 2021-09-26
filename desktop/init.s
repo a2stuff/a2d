@@ -754,10 +754,10 @@ entry_in_block: .byte   0
 
 name_buf:       .res    ::kDAMenuItemSize, 0
 
-        kNumAppleMenuTypes = 7
+        kNumAppleMenuTypes = 8
 apple_menu_type_table:
         .byte   FT_SYSTEM, FT_S16, FT_BINARY, FT_BASIC ; Executable
-        .byte   FT_TEXT, FT_GRAPHICS, FT_FONT          ; Previewable
+        .byte   FT_TEXT, FT_GRAPHICS, FT_FONT, FT_MUSIC ; Previewable
         ASSERT_TABLE_SIZE apple_menu_type_table, kNumAppleMenuTypes
 
 end:

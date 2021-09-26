@@ -1375,7 +1375,7 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_REL,       ICT_FLAGS_NONE, 0, 0, IconType::relocatable   ; $FE
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
 
-        DEFINE_ICTRECORD $FF, $D5,          ICT_FLAGS_AUX, $D0E7, 0, IconType::audio ; Electric Duet
+        DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_AUX, $D0E7, 0, IconType::audio ; Electric Duet
 
         ;; IIgs-Specific Files (ranges)
         DEFINE_ICTRECORD $F0, $50,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs General  $5x
@@ -1463,35 +1463,40 @@ icon_entries:
 ;;; Map ProDOS file type to string (for listings/Get Info).
 ;;; If not found, $XX is used (like CATALOG).
 
-        kNumFileTypes = 12
+        kNumFileTypes = 14
 type_table:
-        .byte   FT_REL        ; rel
-        .byte   FT_CMD        ; command
+        .byte   FT_BAD        ; bad block
         .byte   FT_TEXT       ; text
         .byte   FT_BINARY     ; binary
-        .byte   FT_DIRECTORY  ; directory
-        .byte   FT_SYSTEM     ; system
-        .byte   FT_BASIC      ; basic
+        .byte   FT_FONT       ; font
         .byte   FT_GRAPHICS   ; graphics
+        .byte   FT_DIRECTORY  ; directory
         .byte   FT_ADB        ; appleworks db
         .byte   FT_AWP        ; appleworks wp
         .byte   FT_ASP        ; appleworks sp
-        .byte   FT_BAD        ; bad block
+        .byte   FT_MUSIC      ; music
+        .byte   FT_CMD        ; command
+        .byte   FT_BASIC      ; basic
+        .byte   FT_REL        ; rel
+        .byte   FT_SYSTEM     ; system
         ASSERT_TABLE_SIZE type_table, kNumFileTypes
 
 type_names_table:
-        .byte   " REL" ; rel
-        .byte   " CMD" ; rel
-        .byte   " TXT" ; text
-        .byte   " BIN" ; binary
-        .byte   " DIR" ; directory
-        .byte   " SYS" ; system
-        .byte   " BAS" ; basic
-        .byte   " FOT" ; graphics
-        .byte   " ADB" ; appleworks db
-        .byte   " AWP" ; appleworks wp
-        .byte   " ASP" ; appleworks sp
+        ;; Types marked with * are known to BASIC.SYSTEM.
         .byte   " BAD" ; bad block
+        .byte   " TXT" ; text *
+        .byte   " BIN" ; binary *
+        .byte   " FNT" ; font
+        .byte   " FOT" ; graphics
+        .byte   " DIR" ; directory *
+        .byte   " ADB" ; appleworks db *
+        .byte   " AWP" ; appleworks wp *
+        .byte   " ASP" ; appleworks sp *
+        .byte   " MUS" ; music
+        .byte   " CMD" ; command *
+        .byte   " BAS" ; basic *
+        .byte   " REL" ; rel *
+        .byte   " SYS" ; system *
         ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 4
 
 ;;; Map IconType to other icon/details
@@ -1501,7 +1506,7 @@ icontype_iconentrytype_table:
         .byte   kIconEntryTypeGeneric ; text
         .byte   kIconEntryTypeBinary  ; binary
         .byte   kIconEntryTypeGeneric ; graphics
-        .byte   kIconEntryTypeGeneric ; audio
+        .byte   kIconEntryTypeGeneric ; music
         .byte   kIconEntryTypeGeneric ; font
         .byte   kIconEntryTypeGeneric ; relocatable
         .byte   kIconEntryTypeGeneric ; command
@@ -1521,7 +1526,7 @@ type_icons_table:               ; map into definitions below
         .addr   txt ; text
         .addr   bin ; binary
         .addr   fot ; graphics
-        .addr   mus ; audio
+        .addr   mus ; music
         .addr   fnt ; font
         .addr   rel ; relocatable
         .addr   cmd ; command
@@ -1546,7 +1551,7 @@ dir:    DEFICON folder_icon, 4, 27, 11, folder_mask
 sys:    DEFICON sys_icon, 4, 27, 17, sys_mask
 bas:    DEFICON aux::basic_icon, 4, 27, 14, aux::basic_mask
 fot:    DEFICON aux::graphics_icon, 4, 27, 12, aux::graphics_mask
-mus:    DEFICON aux::audio_icon, 4, 27, 15, generic_mask
+mus:    DEFICON aux::music_icon, 4, 27, 15, generic_mask
 adb:    DEFICON aux::adb_icon, 4, 27, 15, generic_mask
 awp:    DEFICON aux::awp_icon, 4, 27, 15, generic_mask
 asp:    DEFICON aux::asp_icon, 4, 27, 15, generic_mask
