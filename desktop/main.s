@@ -944,7 +944,7 @@ with_path:
         bne     :+
         param_jump invoke_desk_acc, str_preview_fnt
 
-:       cmp     #IconType::audio
+:       cmp     #IconType::music
         bne     :+
         param_jump invoke_desk_acc, str_preview_mus
 
