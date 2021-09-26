@@ -161,6 +161,7 @@ textfont:       .addr   0
 ;;; Common Resources
 
 kCheckboxWidth       = 17
+kCheckboxLabelWidth  = 250
 kCheckboxHeight      = 8
 
 .params checked_cb_params
@@ -212,6 +213,7 @@ kCheckboxLabelOffsetY = kCheckboxHeight + 1
 
         DEFINE_LABEL ramcard, res_string_label_ramcard, kRamCardX + kCheckboxLabelOffsetX, kRamCardY + kCheckboxLabelOffsetY
         DEFINE_RECT_SZ rect_ramcard, kRamCardX, kRamCardY, kCheckboxWidth, kCheckboxHeight
+        DEFINE_RECT_SZ rect_ramcard_click, kRamCardX, kRamCardY, kCheckboxWidth + kCheckboxLabelWidth, kCheckboxHeight
 
 ;;; ============================================================
 
@@ -221,6 +223,7 @@ kCheckboxLabelOffsetY = kCheckboxHeight + 1
 
         DEFINE_LABEL selector, res_string_label_selector, kSelectorX + kCheckboxLabelOffsetX, kSelectorY + kCheckboxLabelOffsetY
         DEFINE_RECT_SZ rect_selector, kSelectorX, kSelectorY, kCheckboxWidth, kCheckboxHeight
+        DEFINE_RECT_SZ rect_selector_click, kSelectorX, kSelectorY, kCheckboxWidth + kCheckboxLabelWidth, kCheckboxHeight
 
 ;;; ============================================================
 
@@ -337,13 +340,13 @@ common: bit     dragwindow_params::moved
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, rect_ramcard
+        MGTK_CALL MGTK::InRect, rect_ramcard_click
         cmp     #MGTK::inrect_inside
         IF_EQ
         jmp     handle_ramcard_click
         END_IF
 
-        MGTK_CALL MGTK::InRect, rect_selector
+        MGTK_CALL MGTK::InRect, rect_selector_click
         cmp     #MGTK::inrect_inside
         IF_EQ
         jmp     handle_selector_click
