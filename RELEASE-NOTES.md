@@ -47,6 +47,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Use commas as a numeric separator. ([#270](https://github.com/a2stuff/a2d/issues/270), [#377](https://github.com/a2stuff/a2d/issues/377))
 * BIN files can be opened with menu items without a modifier key. ([#530](https://github.com/a2stuff/a2d/issues/530), [#531](https://github.com/a2stuff/a2d/issues/531))
 * Double-clicking opens all selected folders/volumes. ([#363](https://github.com/a2stuff/a2d/issues/363))
+* Renaming volumes/folders doesn't close affected windows. ([#469](https://github.com/a2stuff/a2d/issues/469))
 * Keyboard-related changes:
   * Holding **Solid-Apple** while double-clicking or using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
   * Holding **Apple** while clicking a window's close box closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266))
@@ -141,6 +142,7 @@ from the **Apple** menu.
 * **File > Quit** returns to ProDOS 8 selector, and `/RAM` is reattached. ([#3](https://github.com/a2stuff/a2d/issues/3))
 * `SELECTOR.LIST` file created if missing. ([#92](https://github.com/a2stuff/a2d/issues/92), [#497](https://github.com/a2stuff/a2d/issues/497))
 * Handle `SELECTOR.LIST` being modified while DeskTop is running. ([#526](https://github.com/a2stuff/a2d/issues/526))
+* Handle `SELECTOR.LIST` missing when Selector is launched. ([#485](https://github.com/a2stuff/a2d/issues/485))
 * Update the **Selector** menu size when entries are modified. ([#518](https://github.com/a2stuff/a2d/issues/518))
 * Prevent crash after renaming volume. ([#99](https://github.com/a2stuff/a2d/issues/99))
 * Prevent crash with more than two volumes on a SmartPort interface. ([#45](https://github.com/a2stuff/a2d/issues/45))
@@ -154,6 +156,7 @@ from the **Apple** menu.
 * **Control-Reset** quits cleanly back to ProDOS (except buggy emulators). ([#141](https://github.com/a2stuff/a2d/issues/141))
 * Prevent crash with more than 8 removable devices.
 * Disk Copy works with disks over 8MB. ([#386](https://github.com/a2stuff/a2d/issues/386))
+* Prevent Disk Copy crash with remapped drives. ([#306](https://github.com/a2stuff/a2d/issues/306))
 * Format/Erase now works correctly with disks over 20MB. ([#557](https://github.com/a2stuff/a2d/issues/557))
 * Scrollbars no longer activate unnecessarily. ([#347](https://github.com/a2stuff/a2d/issues/347), [#348](https://github.com/a2stuff/a2d/issues/348), [#394](https://github.com/a2stuff/a2d/issues/394))
 * "There are 2 volumes with the same name." alert is now shown correctly. ([#542](https://github.com/a2stuff/a2d/issues/542))
