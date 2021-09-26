@@ -785,13 +785,16 @@ setspeed:
         tya
         bcs     setnorm
         ora     iobase,x
+        ldy     #$d6            ; for Laser
         bne     setsta  ; always
 
 setnorm:
         eor     #$FF
         and     iobase,x
+        ldy     #$56            ; for Laser
 setsta:
         sta     iobase,x
+        sty     $7fe            ; for Laser
         rts
 
 gscheck:
