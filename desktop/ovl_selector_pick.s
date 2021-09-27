@@ -37,9 +37,6 @@ L9017:  lda     selector_list + kSelectorListNumRunListOffset
         jsr     GetCopiedToRAMCardFlag
         cmp     #$80
         bne     L9015
-        lda     #kWarningMsgSaveSelectorList
-        jsr     ShowWarning
-        bne     L9015
         jsr     write_file_to_original_prefix
         pla
         rts
@@ -1440,14 +1437,27 @@ filename:
         bne     :-
         sty     filename_buffer
 
+        copy    #0, second_try_flag
+
 @retry: MLI_RELAY_CALL CREATE, create_params
         MLI_RELAY_CALL OPEN, open_origpfx_params
         beq     write
-        lda     #kWarningMsgInsertSystemDisk
+
+        ;; First time - ask if we should even try.
+        lda     second_try_flag
+        bne     :+
+        inc     second_try_flag
+        lda     #kWarningMsgSaveSelectorList
+        jsr     ShowWarning
+        beq     @retry
+        bne     cancel          ; always
+
+        ;; Second time - prompt to insert.
+:       lda     #kWarningMsgInsertSystemDisk
         jsr     ShowWarning
         beq     @retry
 
-        rts
+cancel: rts
 
 write:  lda     open_origpfx_params::ref_num
         sta     write_params::ref_num
@@ -1460,6 +1470,9 @@ write:  lda     open_origpfx_params::ref_num
 
 close:  MLI_RELAY_CALL CLOSE, close_params
         rts
+
+second_try_flag:
+        .byte   0
 .endproc
 
 ;;; ============================================================
