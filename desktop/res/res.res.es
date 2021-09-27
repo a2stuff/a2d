@@ -23,13 +23,6 @@
 .define res_string_copy_file_label_source_filename "Nombre del archivo original:"
 .define res_string_copy_file_label_destination_filename "Nombre del archivo de destino:"
 .define res_string_delete_file_label_file_to_delete "Archivo a borrar:"
-.define res_string_weekday_abbrev_1 "Dom "
-.define res_string_weekday_abbrev_2 "Lun "
-.define res_string_weekday_abbrev_3 "Mar "
-.define res_string_weekday_abbrev_4 "Mie "
-.define res_string_weekday_abbrev_5 "Jue "
-.define res_string_weekday_abbrev_6 "Vie "
-.define res_string_weekday_abbrev_7 "Sab "
 .define res_string_menu_item_slot_pattern "Ranura #"
 .define res_const_menu_item_slot_pattern_offset1 8
 .define res_string_menu_item_add_entry "A|adir entrada..."

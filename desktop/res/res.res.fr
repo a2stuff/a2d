@@ -23,13 +23,6 @@
 .define res_string_copy_file_label_source_filename "Fichier source :"
 .define res_string_copy_file_label_destination_filename "Fichier destination :"
 .define res_string_delete_file_label_file_to_delete "Fichier @ effacer :"
-.define res_string_weekday_abbrev_1 "Dim "
-.define res_string_weekday_abbrev_2 "Lun "
-.define res_string_weekday_abbrev_3 "Mar "
-.define res_string_weekday_abbrev_4 "Mer "
-.define res_string_weekday_abbrev_5 "Jeu "
-.define res_string_weekday_abbrev_6 "Ven "
-.define res_string_weekday_abbrev_7 "Sam "
 .define res_string_menu_item_slot_pattern "Port #"
 .define res_const_menu_item_slot_pattern_offset1 6
 .define res_string_menu_item_add_entry "Ajouter..."

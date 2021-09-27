@@ -231,14 +231,6 @@ kDeskTopFileVersion  = $80  ; Increment when format changes
         rect            .tag MGTK::Rect
 .endstruct
 
-.struct ParsedDateTime
-        year    .word
-        month   .byte
-        day     .byte
-        hour    .byte
-        minute  .byte
-.endstruct
-
 ;;; ============================================================
 ;;; Segments & Overlays
 ;;;

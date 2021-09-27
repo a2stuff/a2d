@@ -117,6 +117,17 @@ DeskTopSettings::kStartupSkipSelector = %00000010 ; skip starting Selector, if s
 .endenum
 
 ;;; ============================================================
+;;; Date/Time
+
+.struct ParsedDateTime
+        year    .word
+        month   .byte
+        day     .byte
+        hour    .byte
+        minute  .byte
+.endstruct
+
+;;; ============================================================
 ;;; Offsets into launcher
 
 kLauncherDateOffset     = 3

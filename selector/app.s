@@ -2368,6 +2368,7 @@ done:   rts
         bcc     :+
         copy    #0, loop_counter
 
+        jsr     show_clock
         jsr     reset_iigs_rgb ; in case it was reset by control panel
 
 :       lda     loop_counter
@@ -2379,6 +2380,102 @@ loop_counter:
 
 ;;; ============================================================
 
+        DEFINE_POINT pos_clock, 475, 10
+
+str_time:
+        PASCAL_STRING "00:00 XM" ; do not localize
+
+str_4_spaces:
+        PASCAL_STRING "    "    ; do not localize
+
+dow_strings:
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_1)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_2)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_3)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_4)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_5)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_6)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_7)
+        ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
+
+.params dow_str_params
+addr:   .addr   0
+length: .byte   4               ; includes trailing space
+.endparams
+
+parsed_date:
+        .tag ParsedDateTime
+
+;;; GrafPort used when drawing the clock
+clock_grafport:
+        .tag MGTK::GrafPort
+
+;;; Used to save the current GrafPort while drawing the clock.
+.params getport_params
+portptr:        .addr   0
+.endparams
+
+;;; ============================================================
+
+.proc show_clock
+        lda     MACHID
+        and     #1              ; bit 0 = clock card
+        bne     :+
+        rts
+
+:       MLI_CALL GET_TIME, 0
+
+        ;; --------------------------------------------------
+        ;; Save the current GrafPort and use a custom one for drawing
+
+        MGTK_CALL MGTK::GetPort, getport_params
+        MGTK_CALL MGTK::InitPort, clock_grafport
+        MGTK_CALL MGTK::SetPort, clock_grafport
+
+        MGTK_CALL MGTK::MoveTo, pos_clock
+
+        ;; --------------------------------------------------
+        ;; Day of Week
+
+        copy16  #parsed_date, $0A
+        ldax    #DATELO
+        jsr     parse_datetime
+
+        ;; TODO: Make DOW calc work on ParsedDateTime
+        sub16   parsed_date + ParsedDateTime::year, #1900, parsed_date + ParsedDateTime::year
+        ldy     parsed_date + ParsedDateTime::year
+        ldx     parsed_date + ParsedDateTime::month
+        lda     parsed_date + ParsedDateTime::day
+        jsr     day_of_week
+        asl                     ; * 4
+        asl
+        clc
+        adc     #<dow_strings
+        sta     dow_str_params::addr
+        lda     #0
+        adc     #>dow_strings
+        sta     dow_str_params::addr+1
+        MGTK_CALL MGTK::DrawText, dow_str_params
+
+        ;; --------------------------------------------------
+        ;; Time
+
+        ldax    #parsed_date
+        jsr     make_time_string
+
+        param_call DrawString, str_time
+        param_call DrawString, str_4_spaces ; in case it got shorter
+
+        ;; --------------------------------------------------
+        ;; Restore the previous GrafPort
+
+        copy16  getport_params::portptr, @addr
+        MGTK_CALL MGTK::SetPort, 0, @addr
+.endproc
+
+;;; ============================================================
+
+        .include "../lib/datetime.s"
         .include "../lib/doubleclick.s"
         .include "../lib/drawstring.s"
         .include "../lib/muldiv.s"

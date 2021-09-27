@@ -19,7 +19,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Progress bar shown while loading, and when copying to RAMCard. ([#330](https://github.com/a2stuff/a2d/issues/330))
 * Tip about skipping copy to RAMCard is shown during startup. ([#140](https://github.com/a2stuff/a2d/issues/140))
-* Current day/time shown on right side of menu bar, if system has a clock. ([#7](https://github.com/a2stuff/a2d/issues/7), [#142](https://github.com/a2stuff/a2d/issues/142), [#220](https://github.com/a2stuff/a2d/issues/220))
+* Current day/time shown on right side of menu bar, if system has a clock. ([#7](https://github.com/a2stuff/a2d/issues/7), [#142](https://github.com/a2stuff/a2d/issues/142), [#220](https://github.com/a2stuff/a2d/issues/220), [#444](https://github.com/a2stuff/a2d/issues/444))
 * Up to 13 volumes are shown on the desktop (was 10). ([#20](https://github.com/a2stuff/a2d/issues/20))
 * Windows restored when DeskTop is relaunched. ([#210](https://github.com/a2stuff/a2d/issues/210))
 * Drag "unlimited" number of icons (was 20). ([#18](https://github.com/a2stuff/a2d/issues/18))
