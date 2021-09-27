@@ -25,13 +25,8 @@ kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut
         ASSERT_ADDRESS ::MGTK
         .include "../mgtk/mgtk.s"
 
-        PAD_TO ::FONT
-
-;;; Font
-        ASSERT_ADDRESS ::FONT, "Font location"
-        .incbin .concat("../mgtk/fonts/A2D.FONT.", kBuildLang)
-
-;;; Cursors
+;;; ============================================================
+;;; Resources
 
 pointer_cursor:
         .byte   PX(%0000000),PX(%0000000)
@@ -87,20 +82,6 @@ watch_cursor:
         .byte   PX(%0000000),PX(%0000000)
         .byte   5, 5
 
-;;; ============================================================
-
-        PAD_TO ::SETTINGS
-
-        .include "../lib/default_settings.s"
-
-        PAD_TO ::START
-
-;;; ============================================================
-;;; Application entry point
-
-        ASSERT_ADDRESS ::START
-        jmp     entry
-
 pencopy:        .byte   MGTK::pencopy
 penOR:          .byte   MGTK::penOR
 penXOR:         .byte   MGTK::penXOR
@@ -126,12 +107,6 @@ which_key:
 key_mods:
         .byte   $00
 .endparams
-
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
 
 menu:   DEFINE_MENU_BAR 3
         DEFINE_MENU_BAR_ITEM 1, str_apple, apple_menu
@@ -215,6 +190,25 @@ slot_x5:        .byte   0
 slot_x6:        .byte   0
 slot_x7:        .byte   0
 
+
+;;; ============================================================
+;;; Font
+
+        PAD_TO ::FONT
+        .incbin .concat("../mgtk/fonts/A2D.FONT.", kBuildLang)
+
+;;; ============================================================
+;;; Settings
+
+        PAD_TO ::SETTINGS
+        .include "../lib/default_settings.s"
+
+;;; ============================================================
+;;; Application entry point
+
+        PAD_TO ::START
+        jmp     entry
+
 ;;; ============================================================
 ;;; Event Params (and overlapping param structs)
 
@@ -286,42 +280,38 @@ y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
 .endparams
 
 .params winfo
+        kDialogId = 1
         kWidth = 500
         kHeight = 118
-window_id:
-        .byte   $01
-        .byte   $01
-        .addr   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .word   150
-        .word   50
-        .word   500
-        .word   140
-
-viewloc:.word   (::kScreenWidth - kWidth)/2, (::kScreenHeight - kHeight)/2
-        .word   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   $00
-
-        .word   0, 0, kWidth, kHeight
-
-        .res    8, $FF
-        .byte   $FF
-        .byte   0
-        .word   0, 0
-        .byte   1, 1
-        .byte   0
-        .byte   $7F
-        .word   FONT
-        .byte   0
-        .byte   0
+window_id:      .byte   kDialogId = 1
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   0
+vscroll:        .byte   0
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontlength:  .word   50
+maxcontwidth:   .word   500
+maxcontlength:  .word   140
+viewloc:        .word   (::kScreenWidth - kWidth)/2, (::kScreenHeight - kHeight)/2
+mapbits:        .word   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   $00
+cliprect:       .word   0, 0, kWidth, kHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   $FF, 0
+penloc:         .word   0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textback:       .byte   $7F
+textfont:       .word   FONT
+nextwinfo:      .addr   0
 .endparams
 
         DEFINE_RECT_INSET rect_frame, 4, 2, winfo::kWidth, winfo::kHeight
@@ -353,9 +343,6 @@ str_selector_title:
         DEFINE_RECT_SZ rect_entry_base, 16, 22, kEntryPickerItemWidth, kEntryPickerItemHeight - 1
 
         DEFINE_RECT rect_entry, 0, 0, 0, 0
-
-        .byte   0
-        .byte   $7F
 
         io_buf_sl = $BB00
 
@@ -399,8 +386,6 @@ desktop_available_flag:
 ;;; Index of selected entry, or $FF if none
 selected_index:
         .byte   0
-
-        .byte   0               ; ???
 
 entry_string_buf:
         .res    20
