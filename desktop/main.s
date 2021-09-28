@@ -58,8 +58,9 @@ JT_ADJUST_FILEENTRY:    jmp     AdjustFileEntryCase     ; *
 JT_CUR_IBEAM:           jmp     set_cursor_ibeam        ; *
 JT_RGB_MODE:            jmp     SetRGBMode              ; *
 JT_YIELD_LOOP:          jmp     yield_loop              ; *
+JT_SHOW_WARNING:        jmp     ShowWarning             ; *
         .assert JUMP_TABLE_MAIN_LOOP = JT_MAIN_LOOP, error, "Jump table mismatch"
-        .assert JUMP_TABLE_YIELD_LOOP = JT_YIELD_LOOP, error, "Jump table mismatch"
+        .assert JUMP_TABLE_SHOW_WARNING = JT_SHOW_WARNING, error, "Jump table mismatch"
 
         ;; Main Loop
 .proc main_loop

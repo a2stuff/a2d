@@ -1925,9 +1925,28 @@ filename_buffer:
         stax    open_params::pathname
         jsr     CopyDeskTopOriginalPrefix
         jsr     append_filename
-        jsr     do_write
+        copy    #0, second_try_flag
+@retry: jsr     do_write
+        bcc     done
+
+        ;; First time - ask if we should even try.
+        lda     second_try_flag
+        bne     :+
+        inc     second_try_flag
+        lda     #kWarningMsgSaveChanges
+        jsr     JUMP_TABLE_SHOW_WARNING
+        beq     @retry
+        bne     done            ; always
+
+        ;; Second time - prompt to insert.
+:       lda     #kWarningMsgInsertSystemDisk
+        jsr     JUMP_TABLE_SHOW_WARNING
+        beq     @retry
 
 done:   rts
+
+second_try_flag:
+        .byte   0
 
 .proc append_filename
         ;; Append filename to buffer

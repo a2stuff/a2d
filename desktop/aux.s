@@ -3548,7 +3548,7 @@ warning_cancel_table:
         .byte   $00        ;; kWarningMsgWindowMustBeClosed
         .byte   $00        ;; kWarningMsgTooManyFiles
         .byte   $00        ;; kWarningMsgTooManyWindows
-        .byte   $80        ;; kWarningMsgSaveSelectorList
+        .byte   $80        ;; kWarningMsgSaveChanges
         ASSERT_TABLE_SIZE warning_cancel_table, ::kNumWarningTypes
 
         ;; First line / second line of message.
@@ -3563,8 +3563,8 @@ warning_message_table:
         .addr   str_too_many_files, 0
         ;; kWarningMsgTooManyWindows
         .addr   str_too_many_windows, 0
-        ;; kWarningMsgSaveSelectorList
-        .addr   str_save_selector_list, str_save_selector_list2
+        ;; kWarningMsgSaveChanges
+        .addr   str_save_changes, str_save_changes2
         ASSERT_RECORD_TABLE_SIZE warning_message_table, ::kNumWarningTypes, 4
 
 str_insert_system_disk:
@@ -3584,10 +3584,10 @@ str_too_many_files:             ; alt: `res_string_warning_too_many_files`
 str_too_many_windows:
         PASCAL_STRING res_string_warning_too_many_windows
 
-str_save_selector_list:
-        PASCAL_STRING res_string_warning_save_selector_list_line1
-str_save_selector_list2:
-        PASCAL_STRING res_string_warning_save_selector_list_line2
+str_save_changes:
+        PASCAL_STRING res_string_warning_save_changes_line1
+str_save_changes2:
+        PASCAL_STRING res_string_warning_save_changes_line2
 
 .params alert_params
 line1:          .addr   0       ; first line of text

@@ -81,6 +81,7 @@ JUMP_TABLE_ADJUST_FILEENTRY := $405A ; Adjust case in FileEntry structure (in: A
 JUMP_TABLE_CUR_IBEAM    := $405D ; Changes mouse cursor to I-beam *
 JUMP_TABLE_RGB_MODE     := $4060 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_YIELD_LOOP   := $4063 ; Yield the event loop *
+JUMP_TABLE_SHOW_WARNING := $4066 ; Show warning (A=code) *
 
 ;;; ============================================================
 ;;; Call MGTK
@@ -156,3 +157,15 @@ kErrNameTooLong         = $FB
 kErrInsertSrcDisk       = $FC
 kErrInsertDstDisk       = $FD
 kErrBasicSysNotFound    = $FE
+
+;;; ============================================================
+;;; Warning messages (JUMP_TABLE_SHOW_WARNING)
+
+kNumWarningTypes = 6
+
+kWarningMsgInsertSystemDisk     = 0
+kWarningMsgSelectorListFull     = 1
+kWarningMsgWindowMustBeClosed   = 2
+kWarningMsgTooManyFiles         = 3
+kWarningMsgTooManyWindows       = 4
+kWarningMsgSaveChanges     = 5

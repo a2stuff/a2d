@@ -1447,7 +1447,7 @@ filename:
         lda     second_try_flag
         bne     :+
         inc     second_try_flag
-        lda     #kWarningMsgSaveSelectorList
+        lda     #kWarningMsgSaveChanges
         jsr     ShowWarning
         beq     @retry
         bne     cancel          ; always

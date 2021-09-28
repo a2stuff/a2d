@@ -146,18 +146,6 @@ kDeviceTypeRemovable    = 3
 kDeviceTypeFileShare    = 4
 
 ;;; ============================================================
-;;; Warning messages
-
-kNumWarningTypes = 6
-
-kWarningMsgInsertSystemDisk     = 0
-kWarningMsgSelectorListFull     = 1
-kWarningMsgWindowMustBeClosed   = 2
-kWarningMsgTooManyFiles         = 3
-kWarningMsgTooManyWindows       = 4
-kWarningMsgSaveSelectorList     = 5
-
-;;; ============================================================
 ;;; Invoker routine locations
 
 INVOKER_PREFIX          := $220 ; Prefix to set
