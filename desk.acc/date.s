@@ -28,21 +28,6 @@
 stash_stack:  .byte   $00
 
 ;;; ============================================================
-;;; MLI Call Param Blocks
-
-filename:
-        PASCAL_STRING kFilenameLauncher
-
-        DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_SET_MARK_PARAMS set_mark_params, kLauncherDateOffset
-        DEFINE_WRITE_PARAMS write_params, write_buffer, sizeof_write_buffer
-        DEFINE_CLOSE_PARAMS close_params
-
-write_buffer:
-        .byte   0,0
-        sizeof_write_buffer = * - write_buffer
-
-;;; ============================================================
 
 .proc copy2aux
 
@@ -75,11 +60,11 @@ write_buffer:
 .endproc
 
 ;;; ============================================================
-;;; Write date into DESKTOP.SYSTEM file and exit the DA
+;;; Maybe write the date into DESKTOP.SYSTEM file and exit the DA
+;;; Inputs: A,X = DATELO/DATEHI; A=0 if dialog cancelled
+;;; Assert: Running from Main
 
 .proc save_date_and_exit
-        ;; ASSERT: Running from Main
-
         stax    write_buffer
         lda     write_buffer    ; Dialog committed?
         beq     skip
@@ -88,8 +73,89 @@ write_buffer:
         ldx     clock_flag
         bne     skip
 
+        jsr     save_settings
+
+skip:   ldx     stash_stack     ; exit the DA
+        txs
+        rts
+.endproc
+
+;;; ============================================================
+
+filename:
+        PASCAL_STRING kFilenameLauncher
+
+filename_buffer:
+        .res kPathBufferSize
+
+        DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
+        DEFINE_SET_MARK_PARAMS set_mark_params, kLauncherDateOffset
+        DEFINE_WRITE_PARAMS write_params, write_buffer, sizeof_write_buffer
+        DEFINE_CLOSE_PARAMS close_params
+
+write_buffer:
+        .res    2, 0
+        sizeof_write_buffer = * - write_buffer
+
+.proc save_settings
+        ;; Write to desktop current prefix
+        ldax    #filename
+        stax    open_params::pathname
+        jsr     do_write
+
+        ;; Write to the original file location, if necessary
+        jsr     GetCopiedToRAMCardFlag
+        beq     done
+        ldax    #filename_buffer
+        stax    open_params::pathname
+        jsr     CopyDeskTopOriginalPrefix
+        jsr     append_filename
+        copy    #0, second_try_flag
+@retry: jsr     do_write
+        bcc     done
+
+        ;; First time - ask if we should even try.
+        lda     second_try_flag
+        bne     :+
+        inc     second_try_flag
+        lda     #kWarningMsgSaveChanges
+        jsr     JUMP_TABLE_SHOW_WARNING
+        beq     @retry
+        bne     done            ; always
+
+        ;; Second time - prompt to insert.
+:       lda     #kWarningMsgInsertSystemDisk
+        jsr     JUMP_TABLE_SHOW_WARNING
+        beq     @retry
+
+done:   rts
+.endproc
+
+second_try_flag:
+        .byte   0
+
+.proc append_filename
+        ;; Append filename to buffer
+        inc     filename_buffer ; Add '/' separator
+        ldx     filename_buffer
+        lda     #'/'
+        sta     filename_buffer,x
+
+        ldx     #0              ; Append filename
+        ldy     filename_buffer
+:       inx
+        iny
+        lda     filename,x
+        sta     filename_buffer,y
+        cpx     filename
+        bne     :-
+        sty     filename_buffer
+        rts
+.endproc
+
+.proc do_write
         JUMP_TABLE_MLI_CALL OPEN, open_params ; open the file
-        bne     skip
+        bcs     done
 
         lda     open_params::ref_num
         sta     set_mark_params::ref_num
@@ -97,16 +163,13 @@ write_buffer:
         sta     close_params::ref_num
 
         JUMP_TABLE_MLI_CALL SET_MARK, set_mark_params ; seek
-        bne     close
+        bcs     close
 
         JUMP_TABLE_MLI_CALL WRITE, write_params ; write the date
-
 close:  JUMP_TABLE_MLI_CALL CLOSE, close_params ; close the file
-
-skip:   ldx     stash_stack     ; exit the DA
-        txs
-        rts
+done:   rts
 .endproc
+
 
 ;;; ============================================================
 
@@ -909,6 +972,7 @@ loop:   cmp     #10
 
 ;;; ============================================================
 
+        .include "../lib/ramcard.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================
