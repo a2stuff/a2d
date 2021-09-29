@@ -147,7 +147,7 @@ clear:
         ;; fall through
 
         ;; --------------------------------------------------
-redraw_loop:
+loop:
         jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::update
@@ -155,15 +155,24 @@ redraw_loop:
         jsr     get_event
 
 handle_update:
+        lda     event_window_id
+        bne     win
+
+        ;; Desktop
         MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
-        bne     :+            ; did not really need updating
+        ITK_RELAY_CALL IconTK::RedrawDesktopIcons
+        MGTK_RELAY_CALL MGTK::EndUpdate
+        jmp     loop
+
+        ;; Window
+win:    MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
+        bne     :+            ; obscured
         jsr     update_window
         MGTK_RELAY_CALL MGTK::EndUpdate
-:       jmp     redraw_loop
+:       jmp     loop
 
 finish: jsr     LoadDesktopEntryTable
         copy    saved_active_window_id, active_window_id
-        ITK_RELAY_CALL IconTK::RedrawDesktopIcons
         rts
 
 saved_active_window_id:

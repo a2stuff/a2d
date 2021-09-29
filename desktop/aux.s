@@ -16,7 +16,7 @@
 
         .include "../mgtk/mgtk.s"
 
-        ASSERT_ADDRESS $8600
+        ASSERT_ADDRESS $8620
 
 ;;; ============================================================
 
@@ -1809,6 +1809,9 @@ more_drawing_needed_flag:
 
         DEFINE_POINT label_pos, 0, 0
 
+no_clip_vol_icons_flag:
+        .byte   0
+
 .proc paint_icon
 
 unhighlighted:
@@ -1882,6 +1885,8 @@ highlighted:
 
         bit     icon_flags      ; volume icon (on desktop) ?
         bvc     do_paint        ; nope
+        bit     no_clip_vol_icons_flag
+        bmi     do_paint
         ;; TODO: This depends on a previous proc having adjusted
         ;; the grafport (for window maprect and window's items/used/free bar)
 
@@ -2131,8 +2136,7 @@ text_width:  .word   0
 
         jsr     push_pointers
 
-        MGTK_CALL MGTK::InitPort, icon_grafport
-        MGTK_CALL MGTK::SetPort, icon_grafport
+        copy    #$80, no_clip_vol_icons_flag
 
         ldx     num_icons
         dex
@@ -2149,6 +2153,7 @@ loop:   bmi     done
         and     #kIconEntryWinIdMask ; desktop icon
         bne     next                 ; no, skip it
 
+        ;; TODO: Call GetPortBits and do IconInRect to exclude icons
         ldy     #IconEntry::id
         lda     (ptr),y
         sta     icon
@@ -2159,7 +2164,8 @@ next:   pla
         dex
         jmp     loop
 
-done:   jsr     pop_pointers
+done:   copy    #0, no_clip_vol_icons_flag
+        jsr     pop_pointers
         rts
 
         ;; IconTK::DrawIcon params

@@ -7707,7 +7707,21 @@ update_port:
         .res    .sizeof(MGTK::GrafPort)
 
 .proc BeginUpdateImpl
-        jsr     window_by_id_or_exit
+        lda     $82
+        bne     win
+
+        ;; Desktop
+        jsr     hide_cursor_save_params
+        jsr     set_desktop_port
+        MGTK_CALL MGTK::SetPortBits, set_port_params
+        copy16  active_port, previous_port
+        ldax    update_port_addr
+        jsr     assign_and_prepare_port
+        asl     preserve_zp_flag
+        rts
+
+        ;; Window
+win:    jsr     window_by_id_or_exit
 
         lda     current_winfo::id
         cmp     target_window_id
@@ -8265,12 +8279,23 @@ matched_target:
         MGTK_CALL MGTK::PaintRect, set_port_maprect
 
         jsr     show_cursor_and_restore
-        jsr     top_window
-        beq     ret
 
         php
         sei
         jsr     FlushEventsImpl
+
+        ;; Update for the desktop
+        jsr     put_event
+        bcs     plp_ret
+        tax
+        lda     #MGTK::EventKind::update
+        sta     eventbuf::kind,x
+        lda     #0
+        sta     eventbuf::window_id,x
+
+        ;; Updates for windows
+        jsr     top_window
+        beq     plp_ret
 
 :       jsr     next_window
         bne     :-
@@ -10426,4 +10451,4 @@ rect       .tag MGTK::Rect
 .endproc  ; mgtk
 
         ;; Room for future expansion
-        PAD_TO $8600
+        PAD_TO $8620

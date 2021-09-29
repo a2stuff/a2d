@@ -385,7 +385,7 @@ if `kind` is `MGTK::EventKind::key_down`:
 if `kind` is `MGTK::EventKind::update:`
 ```
 .byte       kind            MGTK::EventKind::*
-.byte       window_id
+.byte       window_id       (0=desktop)
 .res 3      reserved
 ```
 otherwise:
@@ -402,7 +402,7 @@ MGTK::EventKind::button_up       = 2    ; Mouse button was released
 MGTK::EventKind::key_down        = 3    ; Key was pressed
 MGTK::EventKind::drag            = 4    ; Mouse button still down
 MGTK::EventKind::apple_key       = 5    ; Mouse button was depressed, modifier key down
-MGTK::EventKind::update          = 6    ; Window update needed
+MGTK::EventKind::update          = 6    ; Desktop/window update needed
 
 event_modifier_open_apple  = 1 << 0
 event_modifier_solid_apple = 1 << 1
@@ -777,12 +777,14 @@ Parameters:
 
 
 #### BeginUpdate ($3E)
-Respond to update event for window
+Respond to update event for desktop/window
 
 Parameters:
 ```
-.byte       window_id
+.byte       window_id       0 if desktop
 ```
+
+Returns `Error::window_obscured` if the content area of the window is completely offscreen and drawing should be skipped. (The port rect will be invalid.)
 
 #### EndUpdate ($3F)
 
@@ -1006,7 +1008,8 @@ _Notes specific to DeskTop Desk Accessories (DA) are included where usage differ
 * If `MGTK::EventKind::drag`:
   * TODO
 * If `MGTK::EventKind::update`:
-   * [Redraw](#redraw-window) contents of `window_id`
+   * If `window_id` is 0, draw any desktop details into clipped port
+   * Otherwise, draw contents of `window_id` into clipped port
 
 
 #### Redraw window

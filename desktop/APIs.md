@@ -309,8 +309,7 @@ Note that it does not repaint the icon. Callers must make a subsequent call to `
 
 Parameters: none (pass $0000 as address)
 
-Redraws the icons on the desktop (mounted volumes, trash). This call
-is required after destroying, moving, or resizing a desk accessory window.
+Redraws the icons on the desktop (mounted volumes, trash). This call should be performed in response to an MGTK `update` event with `window_id` of 0, indicating that the desktop needs to be repainted. It assumes that overlapping windows will be repainted on top so no additional clipping is done beyond the active grafport.
 
 ### `IconTK::IconInRect` ($0B)
 
