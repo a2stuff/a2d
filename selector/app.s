@@ -2489,6 +2489,7 @@ loop_counter:
 
         copy16  getport_params::portptr, @addr
         MGTK_CALL MGTK::SetPort, 0, @addr
+        rts
 
 last_dt:
         .tag    DateTime        ; previous date/time
