@@ -404,6 +404,44 @@ lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
         .byte   0
 
 ;;; ============================================================
+;;; Clock Resources
+
+        DEFINE_POINT pos_clock, 475, 10
+
+str_time:
+        PASCAL_STRING "00:00 XM" ; do not localize
+
+str_4_spaces:
+        PASCAL_STRING "    "    ; do not localize
+
+dow_strings:
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_1)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_2)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_3)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_4)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_5)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_6)
+        .byte   .sprintf("%4s", res_string_weekday_abbrev_7)
+        ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
+
+.params dow_str_params
+addr:   .addr   0
+length: .byte   4               ; includes trailing space
+.endparams
+
+parsed_date:
+        .tag ParsedDateTime
+
+;;; GrafPort used when drawing the clock
+clock_grafport:
+        .tag MGTK::GrafPort
+
+;;; Used to save the current GrafPort while drawing the clock.
+.params getport_params
+portptr:        .addr   0
+.endparams
+
+;;; ============================================================
 ;;; App Initialization
 
 entry:
@@ -2380,41 +2418,6 @@ loop_counter:
 
 ;;; ============================================================
 
-        DEFINE_POINT pos_clock, 475, 10
-
-str_time:
-        PASCAL_STRING "00:00 XM" ; do not localize
-
-str_4_spaces:
-        PASCAL_STRING "    "    ; do not localize
-
-dow_strings:
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_1)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_2)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_3)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_4)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_5)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_6)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_7)
-        ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
-
-.params dow_str_params
-addr:   .addr   0
-length: .byte   4               ; includes trailing space
-.endparams
-
-parsed_date:
-        .tag ParsedDateTime
-
-;;; GrafPort used when drawing the clock
-clock_grafport:
-        .tag MGTK::GrafPort
-
-;;; Used to save the current GrafPort while drawing the clock.
-.params getport_params
-portptr:        .addr   0
-.endparams
-
 ;;; ============================================================
 
 .proc show_clock
@@ -2424,6 +2427,21 @@ portptr:        .addr   0
         rts
 
 :       MLI_CALL GET_TIME, 0
+
+        ;; Changed?
+        ldx     #.sizeof(DateTime)-1
+:       lda     DATELO,x
+        cmp     last_dt,x
+        bne     :+
+        dex
+        bpl     :-
+        lda     SETTINGS + DeskTopSettings::clock_24hours
+        cmp     last_s
+        bne     :+
+        rts
+
+:       COPY_STRUCT DateTime, DATELO, last_dt
+        copy    SETTINGS + DeskTopSettings::clock_24hours, last_s
 
         ;; --------------------------------------------------
         ;; Save the current GrafPort and use a custom one for drawing
@@ -2471,6 +2489,10 @@ portptr:        .addr   0
 
         copy16  getport_params::portptr, @addr
         MGTK_CALL MGTK::SetPort, 0, @addr
+
+last_dt:
+        .tag    DateTime        ; previous date/time
+last_s: .byte   0               ; previous settings
 .endproc
 
 ;;; ============================================================

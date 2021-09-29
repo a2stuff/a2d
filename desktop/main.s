@@ -10610,6 +10610,21 @@ restore:
 
 :       MLI_RELAY_CALL GET_TIME
 
+        ;; Changed?
+        ldx     #.sizeof(DateTime)-1
+:       lda     DATELO,x
+        cmp     last_dt,x
+        bne     :+
+        dex
+        bpl     :-
+        lda     SETTINGS + DeskTopSettings::clock_24hours
+        cmp     last_s
+        bne     :+
+        rts
+
+:       COPY_STRUCT DateTime, DATELO, last_dt
+        copy    SETTINGS + DeskTopSettings::clock_24hours, last_s
+
         ;; --------------------------------------------------
         ;; Save the current GrafPort and use a custom one for drawing
 
@@ -10656,6 +10671,10 @@ restore:
 
         copy16  getport_params::portptr, @addr
         MGTK_RELAY_CALL MGTK::SetPort, 0, @addr
+
+last_dt:
+        .tag    DateTime        ; previous date/time
+last_s: .byte   0               ; previous settings
 .endproc
 
 ;;; ============================================================
