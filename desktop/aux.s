@@ -2138,6 +2138,9 @@ text_width:  .word   0
 
         copy    #$80, no_clip_vol_icons_flag
 
+        ldax    #mapinfo
+        jsr     GetPortBits
+
         ldx     num_icons
         dex
 loop:   bmi     done
@@ -2145,6 +2148,9 @@ loop:   bmi     done
         pha
 
         lda     icon_list,x
+        sta     icon
+
+        ;; Is it an icon on the desktop?
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
@@ -2153,10 +2159,10 @@ loop:   bmi     done
         and     #kIconEntryWinIdMask ; desktop icon
         bne     next                 ; no, skip it
 
-        ;; TODO: Call GetPortBits and do IconInRect to exclude icons
-        ldy     #IconEntry::id
-        lda     (ptr),y
-        sta     icon
+        ;; In cliprect?
+        ITK_DIRECT_CALL IconTK::IconInRect, icon
+        beq     next            ; no, skip it
+
         ITK_DIRECT_CALL IconTK::DrawIcon, icon
 
 next:   pla
@@ -2168,8 +2174,13 @@ done:   copy    #0, no_clip_vol_icons_flag
         jsr     pop_pointers
         rts
 
-        ;; IconTK::DrawIcon params
-icon:  .byte   0
+        ;; GetPortBits params
+mapinfo:
+        .tag    MGTK::MapInfo
+
+        ;; IconTK::DrawIcon and IconTK::IconInRect params
+icon    := mapinfo + MGTK::MapInfo::maprect - 1
+rect    := mapinfo + MGTK::MapInfo::maprect
 
 .endproc
 
@@ -4151,7 +4162,7 @@ finish:
 
         MGTK_CALL MGTK::GetPort, port_ptr
 
-        ldy     #.sizeof(MGTK::MapInfo)
+        ldy     #.sizeof(MGTK::MapInfo)-1
 :       lda     (port_ptr),y
         dest_ptr := *+1
         sta     SELF_MODIFIED,y
