@@ -11604,6 +11604,7 @@ str_vol:
         old_name_buf := $1F00
         new_name_buf := $1F10
 
+        DEFINE_GET_FILE_INFO_PARAMS getfileinfo_params, dst_path_buf
         DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
 
 .params rename_dialog_params
@@ -11724,8 +11725,15 @@ common2:
         bne     :-
         stx     dst_path_buf
 
+        ;; Already exists? (Mostly for volumes, but works for files as well)
+        MLI_RELAY_CALL GET_FILE_INFO, getfileinfo_params
+        bne     :+
+        lda     #ERR_DUPLICATE_FILENAME
+        jsr     JT_SHOW_ALERT
+        jmp     retry
+
         ;; Try to rename
-        MLI_RELAY_CALL RENAME, rename_params
+:       MLI_RELAY_CALL RENAME, rename_params
         beq     finish
 
         ;; Failed, maybe retry
