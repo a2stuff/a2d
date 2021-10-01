@@ -2279,19 +2279,21 @@ name_ptr:
         ptr_icon := $06
         ptr_name := $08
 
-        stax    tmp
-        jsr     push_pointers
-        copy16  tmp, ptr_name
-        tya
+        stax    tmp             ; name
 
         ;; Icon view?
+        tya                     ; window id
         tax
         dex
         lda     win_view_by_table,x
         bpl     :+
-        rts                     ; list view
+        lda     #0              ; list view = not found
+        rts
 
-:       sty     cached_window_id
+:       jsr     push_pointers
+
+        copy16  tmp, ptr_name
+        sty     cached_window_id
         jsr     LoadWindowEntryTable
 
         ;; Iterate icons
