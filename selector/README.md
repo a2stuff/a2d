@@ -9,8 +9,8 @@ The file is broken down into multiple segments:
 | Invoker      | B$000600    | Main    | $0290-$03EF | L$0160 | `invoker.s`         |
 | MGTK + App   | B$000760    | Main    | $4000-$A1FF | L$6200 | `mgtk.s`, `app.s`   |
 | Alert Dialog | B$006960    | Aux LC1 | $D000-$D7FF | L$0800 | `alert_dialog.s`    |
-| Overlay 1    | B$007160    | Main    | $A200-$BEFF | L$1D00 | `ovl_file_dialog.s` |
-| Overlay 2    | B$008E60    | Main    | $A200-$AEFF | L$0D00 | `ovl_file_copy.s`   |
+| Overlay 1    | B$007160    | Main    | $A400-$BEFF | L$1D00 | `ovl_file_dialog.s` |
+| Overlay 2    | B$008E60    | Main    | $A400-$AEFF | L$0D00 | `ovl_file_copy.s`   |
 
 ## Segments
 
@@ -53,14 +53,14 @@ Shows a modal alert dialog. Loaded to Aux LC1
 
 ### Overlay 1 - `ovl_file_dialog.s`
 
-The File > Run a Program... implementation. Loaded to $A200.
+The File > Run a Program... implementation. Loaded to $A400.
 
 Shows a file picker, and allow selecting an arbitrary program
 to run.
 
 ### Overlay 2 - `ovl_file_copy.s`
 
-Recursive copy implementation. Loaded to $A200.
+Recursive copy implementation. Loaded to $A400.
 
 Used when invoking a program via the selector with the option
 "Copy to RAMCard" / "On first use" specified.
@@ -90,7 +90,7 @@ $B300 + - - - - - - +       |             |
       |             |       |             |
       |             |       |             |
       |             |       |             |
-$A200 +-------------+       |             |
+$A400 +-------------+       |             |
       | Selector    |       |             |
       | App Code    |       |             |
       |             |       |             |

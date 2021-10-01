@@ -38,11 +38,11 @@ kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 
 kInvokerOffset          = $600
 kInvokerSegmentSize     = $160
-kAppSegmentSize         = $6200
+kAppSegmentSize         = $6400
 kAlertSegmentSize       = $800
 OVERLAY_ADDR            := MGTK + kAppSegmentSize
 kOverlay1Offset         = kInvokerOffset + kInvokerSegmentSize + kAppSegmentSize + kAlertSegmentSize
-kOverlay1Size           = $1D00
+kOverlay1Size           = $1B00
 kOverlay2Offset         = kOverlay1Offset + kOverlay1Size
 kOverlay2Size           = $D00
 

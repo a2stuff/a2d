@@ -2299,6 +2299,18 @@ len:    .byte   0
         rts
 .endproc
 
+;;; Alert code calls here to yield; swaps memory banks back in
+;;; to do things like read the ProDOS clock.
+.proc alert_yield_loop_relay
+        sta     ALTZPOFF
+        lda     ROMIN2
+        jsr     yield_loop
+        sta     ALTZPON
+        lda     LCBANK1
+        lda     LCBANK1
+        rts
+.endproc
+
 ;;; ============================================================
 ;;; Assert: ROM is banked in
 

@@ -120,7 +120,7 @@ start:  pha                     ; alert number
         pointer_cursor = app::pointer_cursor
         Bell = app::Bell
         DrawString = app::DrawString
-        alert_yield_loop = app::yield_loop
+        alert_yield_loop = app::alert_yield_loop_relay
         alert_grafport = app::grafport2
 
 .proc Alert
