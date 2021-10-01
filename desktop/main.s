@@ -3668,6 +3668,7 @@ start:  sta     check_drive_flags
         beq     :+
         dey
         bpl     :-
+        rts                         ; Not found - not a volume icon
 
 :       sty     previous_icon_count ; BUG: overwritten?
         sty     devlst_index
@@ -6792,6 +6793,8 @@ reserved_desktop_icons:
         lda     selected_window_id
         bne     :+
 
+        ;; BUG: This is passing a file icon to something assuming a
+        ;; volume icon!
         lda     icon_param
         sta     drive_to_refresh ; icon_number
         jsr     cmd_check_single_drive_by_icon_number
@@ -11058,6 +11061,9 @@ loop:   ldx     icon_count
         bmi     :+
 
         jsr     copy_process_selected_file
+        bit     move_flag
+        bpl     next_icon
+        jsr     update_window_paths
         jmp     next_icon
 
 :       jsr     delete_process_selected_file
@@ -11843,20 +11849,6 @@ skip:   lda     selected_window_id
         param_call find_window_for_path, src_path_buf
     IF_NOT_ZERO
         dst := $06
-        pha                     ; A = window id
-
-        ;; Update the path
-        jsr     get_window_path
-        stax    dst
-        lda     dst_path_buf
-        tay
-:       lda     dst_path_buf,y
-        sta     (dst),y
-        dey
-        bpl     :-
-
-        pla                     ; A = window id
-
         ;; Update the window title
         jsr     get_window_title_path
         stax    dst
@@ -11869,6 +11861,54 @@ skip:   lda     selected_window_id
         lda     result_flags
         ora     #$80
         sta     result_flags
+    END_IF
+
+        ;; Update affected window paths
+        jsr     update_window_paths
+
+        ;; --------------------------------------------------
+        ;; Totally done - advance to next selected icon
+        inc     index
+        jmp     loop
+
+run_dialog_proc:
+        sta     rename_dialog_params
+        param_call invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
+        rts
+
+str_empty:
+        PASCAL_STRING ""        ; do not localize
+
+index:  .byte   0               ; selected icon index
+
+;;; N bit ($80) set if a window title was changed
+;;; V bit ($40) set if a SYS file was renamed
+result_flags:
+        .byte   0
+.endproc
+        do_rename := do_rename_impl::start
+
+;;; ============================================================
+;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
+;;; update any affected window paths.
+;;;
+;;; Uses `find_windows_for_prefix`
+;;; Modifies $06
+
+.proc update_window_paths
+        ;; Is there a window for the folder/volume?
+        param_call find_window_for_path, src_path_buf
+    IF_NOT_ZERO
+        dst := $06
+        ;; Update the path
+        jsr     get_window_path
+        stax    dst
+        lda     dst_path_buf
+        tay
+:       lda     dst_path_buf,y
+        sta     (dst),y
+        dey
+        bpl     :-
     END_IF
 
         ;; Update paths for any child windows.
@@ -11922,27 +11962,8 @@ wloop:  ldx     found_windows_count
         bpl     wloop
     END_IF
 
-        ;; --------------------------------------------------
-        ;; Totally done - advance to next selected icon
-        inc     index
-        jmp     loop
-
-run_dialog_proc:
-        sta     rename_dialog_params
-        param_call invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
         rts
-
-str_empty:
-        PASCAL_STRING ""        ; do not localize
-
-index:  .byte   0               ; selected icon index
-
-;;; N bit ($80) set if a window title was changed
-;;; V bit ($40) set if a SYS file was renamed
-result_flags:
-        .byte   0
 .endproc
-        do_rename := do_rename_impl::start
 
 ;;; ============================================================
 
