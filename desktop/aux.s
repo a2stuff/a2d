@@ -1750,40 +1750,43 @@ start:  ldy     #IconInRectParams::icon
         copy16  icon_ptrs,x, ptr
         jsr     calc_icon_poly
 
+        ;; Compare the rect against both the bitmap bbox and text bbox
         ;; See vertex diagram in calc_icon_poly
 
-        ;; ----------------------------------------
-        ;; Easy parts: extremes
+        ;; Bitmap's bbox: v0-v1-v2-v7
 
-        ;; top of icon > bottom of rect --> outside
+        ;; top of bitmap > bottom of rect --> outside
         cmp16   rect::y2, poly::v0::ycoord
+        bmi     :+
+
+        ;; left of bitmap > right of rect --> outside
+        cmp16   rect::x2, poly::v0::xcoord
+        bmi     :+
+
+        ;; bottom of bitmap < top of rect --> outside
+        cmp16   poly::v2::ycoord, rect::y1
+        bmi     :+
+
+        ;; right of bitmap < left of rect --> outside
+        cmp16   poly::v1::xcoord, rect::x1
+        bpl     inside
+
+        ;; Text's bbox: v6-v3-v4-v5
+:
+        ;; top of text > bottom of rect --> outside
+        cmp16   rect::y2, poly::v6::ycoord
         bmi     outside
 
-        ;; bottom of icon < top of rect --> outside
-        cmp16   poly::v5::ycoord, rect::y1
+        ;; left of text > right of rect --> outside
+        cmp16   rect::x2, poly::v6::xcoord
         bmi     outside
 
-        ;; left of icon text >= right of rect --> outside
-        cmp16   poly::v5::xcoord, rect::x2
-        bpl     outside
-
-        ;; right of icon text < left of rect --> outside
-        cmp16   poly::v4::xcoord, rect::x1
+        ;; bottom of text < top of rect --> outside
+        cmp16   poly::v4::ycoord, rect::y1
         bmi     outside
 
-        ;; ----------------------------------------
-        ;; Harder parts: rect above text on left/right
-
-        ;; top of icon text < bottom of rect --> inside
-        cmp16   poly::v7::ycoord, rect::y2
-        bmi     inside
-
-        ;; left of icon bitmap >= right of rect --> outside
-        cmp16   poly::v7::xcoord, rect::x2
-        bpl     outside
-
-        ;; right of icon bitmap >= left of rect --> inside
-        cmp16   poly::v2::xcoord, rect::x1
+        ;; right of text < left of rect --> outside
+        cmp16   poly::v3::xcoord, rect::x1
         bpl     inside
 
 outside:
