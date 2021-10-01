@@ -759,12 +759,14 @@ handle_updates:
         jmp     check_and_handle_updates
 
 @do_update:
-        MGTK_CALL MGTK::BeginUpdate, beginupdate_params
+        lda     event_window_id
+        cmp     winfo::window_id
         bne     done
+
+        MGTK_CALL MGTK::BeginUpdate, beginupdate_params
+        bne     done            ; obscured
         jsr     draw_window_and_entries
         MGTK_CALL MGTK::EndUpdate
-        rts
-
 done:   rts
 
 ;;; ============================================================
