@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 
-# Pipe ca65/ld65 stderr through here; will cause failure on any output
-# Also color-codes everything as red.
+# Call with a command to execute. If the command outputs anything to
+# stderr, this will return false (fail).
+# Also color-codes such output as red.
 #
 # Workaround for: https://github.com/cc65/cc65/issues/1563
 #
 # Sample usage:
-#     ca65 -o target.o target.s $< 3>&1 1>&2 2>&3 | ../bin/warnerr
-#     ld65 -o target target.o      3>&1 1>&2 2>&3 | ../bin/warnerr
+#     warnerr ca65 -o target.o target.s $<
+#     warnerr ld65 -o target target.o
 #
-# The "3>&1 1>&2 2>&3" incantation swaps STDOUT and STDERR.
+# Implementation notes:
+# * The "3>&1 1>&2 2>&3" incantation swaps STDOUT and STDERR.
+# * The "< <( ... )" incantation is bash process substitution.
 
 bad=''
-while IFS= read -r line; do
+
+while read line; do
     tput setaf 1 && echo "$line" && tput sgr0
     bad='bad'
-done
+done < <($@ 3>&1 1>&2 2>&3)
 
 if [ -n "$bad" ]; then
     false

@@ -16,8 +16,8 @@ clean:
 	rm -f $(TARGETS)
 
 $(OUTDIR)/desktop.o: desktop.s $(HEADERS) loader.s aux.s lc.s res.s main.s init.s ovl*.s ../disk_copy/*.s invoker.s ../mgtk/mgtk.s
-	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $< 3>&1 1>&2 2>&3 | ../bin/warnerr
+	../bin/warnerr ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Built segments
 $(OUTDIR)/%.built: $(OUTDIR)/%.o ../res/asm.cfg
-	ld65 $(LDFLAGS) -o '$@' $< 3>&1 1>&2 2>&3 | ../bin/warnerr
+	../bin/warnerr ld65 $(LDFLAGS) -o '$@' $<
