@@ -435,8 +435,6 @@ unit_num:
 ;;; ============================================================
 
 .proc copy_blocks
-        bit     KBDSTRB         ; clear strobe
-
         sta     write_flag
         and     #$FF
         bpl     :+
