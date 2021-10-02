@@ -559,26 +559,29 @@ not_menu:
 ;;; ============================================================
 ;;; Inputs: window id to activate in `findwindow_window_id`
 
+;;; Activate the window, and sets selection to its parent icon
 .proc handle_inactive_window_click
-        ptr := $6
-
         jsr     clear_selection
 
-        ;; Alternate entry point when volume icon is clicked.
-no_clear:
-        ;; Actually make the window active.
+        jsr     activate_window
+
+        ;; Try to select the window's parent icon. (Only works
+        ;; for volume icons, otherwise it would put selection
+        ;; in an inactive window.)
+        lda     active_window_id
+        jmp     select_icon_for_window
+.endproc
+
+;;; Inputs: window id to activate in `findwindow_window_id`
+.proc activate_window
+        ;; Make the window active.
         MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         copy    findwindow_window_id, active_window_id
         jsr     LoadActiveWindowEntryTable
         jsr     draw_window_entries
         jsr     LoadDesktopEntryTable
 
-        ;; Try to select the window's parent icon. (Only works
-        ;; for volume icons, otherwise it would put selection
-        ;; in an inactive window.)
-        lda     active_window_id
-        jsr     select_icon_for_window
-
+        ;; Update menu items
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     check_item
         jsr     get_active_window_view_by
@@ -586,8 +589,7 @@ no_clear:
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
         copy    #MGTK::checkitem_check, checkitem_params::check
-        jsr     check_item
-        rts
+        jmp     check_item
 .endproc
 
 ;;; ============================================================
@@ -5686,7 +5688,7 @@ found_win:                    ; X = window id - 1
 
         ;; Otherwise, bring the window to the front.
 :       stx     findwindow_window_id
-        jmp     handle_inactive_window_click::no_clear
+        jmp     activate_window
 
         ;; --------------------------------------------------
         ;; No associated window - check for matching path.
