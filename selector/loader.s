@@ -41,6 +41,8 @@ start:
         dex
         bpl     :-
 
+        jsr     init_progress
+
         ;; Open up Selector itself
         MLI_CALL OPEN, open_params
         beq     L2049
@@ -113,13 +115,45 @@ L2049:  lda     open_params::ref_num
 
 ;;; ============================================================
 
-.proc update_progress
-
         kProgressVtab = 14
         kProgressStops = kNumSegments + 1
         kProgressTick = 40 / kProgressStops
         kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
+        kProgressWidth = kProgressStops * kProgressTick
 
+.proc init_progress
+        lda     #kProgressVtab
+        jsr     VTABZ
+        lda     #kProgressHtab
+        sta     CH
+
+        ;; Enable MouseText
+        lda     #$0F|$80
+        jsr     COUT
+        lda     #$1B|$80
+        jsr     COUT
+
+        ;; Draw progress track (alternating checkerboards)
+        ldx     #kProgressWidth
+:       lda     #'V'|$80
+        jsr     COUT
+        dex
+        beq     :+
+        lda     #'W'|$80
+        jsr     COUT
+        dex
+        bne     :-
+
+        ;; Disable MouseText
+:       lda     #$18|$80
+        jsr     COUT
+        lda     #$0E|$80
+        jsr     COUT
+
+        rts
+.endproc
+
+.proc update_progress
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
