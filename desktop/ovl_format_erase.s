@@ -34,6 +34,10 @@ L0800:  pha
 ;;; Format Disk
 
 .proc format_disk
+
+        ;; --------------------------------------------------
+        ;; Prompt for device
+
         copy    #$00, has_input_field_flag
         jsr     main::open_prompt_window
         lda     winfo_prompt_dialog::window_id
@@ -45,18 +49,26 @@ L0800:  pha
 l1:     copy16  #handle_click, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
 l2:     jsr     main::prompt_input_loop
-        bmi     l2
+        bmi     l2              ; not done
         pha
         copy16  #main::noop, main::jump_relay+1
         lda     #$00
         sta     LD8F3
         sta     format_erase_overlay_flag
         pla
-        beq     l3
-        jmp     l15
+        beq     l3              ; ok
+        jmp     l15             ; cancel
 
 l3:     bit     selected_device_index
         bmi     l1
+
+        jsr     get_selected_unit_num
+        sta     d2
+        sta     unit_num
+
+        ;; --------------------------------------------------
+        ;; Prompt for name
+
         lda     winfo_prompt_dialog::window_id
         jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
@@ -69,44 +81,51 @@ l3:     bit     selected_device_index
         jsr     main::clear_path_buf2
         param_call main::draw_dialog_label, 3, aux::str_new_volume
 l4:     jsr     main::prompt_input_loop
-        bmi     l4
-        beq     l6
-        jmp     l15
+        bmi     l4              ; not done
+        beq     l6              ; ok
+        jmp     l15             ; cancel
 
 l5:     jsr     Bell
         jmp     l4
 
 l6:     lda     path_buf1
-        beq     l5
+        beq     l5              ; name is empty
         cmp     #$10
-        bcs     l5
-        jsr     main::set_cursor_pointer
+        bcs     l5              ; name > 15 characters
+        jsr     main::set_cursor_pointer_with_flag
+
+        ;; Check for conflicting name
+        ldxy    #path_buf1
+        lda     unit_num
+        jsr     check_conflicting_volume_name
+        bne     :+
+        lda     #ERR_DUPLICATE_FILENAME
+        jsr     JUMP_TABLE_SHOW_ALERT
+        jmp     l4
+:
+
+        ;; --------------------------------------------------
+        ;; Confirm format
+
         lda     winfo_prompt_dialog::window_id
         jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
-        ;; Reverse order, so boot volume is first
-        lda     DEVCNT
-        sec
-        sbc     selected_device_index
-        tax
-        lda     DEVLST,x
-
-        sta     d2
-        sta     unit_num
-        lda     #$00
-        sta     has_input_field_flag
+        copy    #0, has_input_field_flag
         param_call main::draw_dialog_label, 3, aux::str_confirm_format
         lda     unit_num
         jsr     append_vol_name_question
         param_call main::DrawString, ovl_string_buf
 l7:     jsr     main::prompt_input_loop
-        bmi     l7
-        beq     l8
-        jmp     l15
+        bmi     l7              ; not done
+        beq     l8              ; ok
+        jmp     l15             ; cancel
+l8:
+        ;; --------------------------------------------------
+        ;; Proceed with format
 
-l8:     lda     winfo_prompt_dialog::window_id
+        lda     winfo_prompt_dialog::window_id
         jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
@@ -125,9 +144,10 @@ l9:     lda     winfo_prompt_dialog::window_id
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::draw_dialog_label, 1, aux::str_erasing
         param_call upcase_string, path_buf1
+
         ldxy    #path_buf1
         lda     unit_num
-        jsr     L1307
+        jsr     write_header_blocks
         pha
         jsr     main::set_cursor_pointer
         pla
@@ -157,9 +177,9 @@ l12:    pha
 l13:    jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_formatting_error
 l14:    jsr     main::prompt_input_loop
-        bmi     l14
-        bne     l15
-        jmp     l8
+        bmi     l14             ; not done
+        bne     l15             ; ok
+        jmp     l8              ; cancel
 
 l15:    pha
         jsr     main::set_cursor_pointer
@@ -178,6 +198,9 @@ d2:     .byte   0
 ;;; Erase Disk
 
 .proc erase_disk
+        ;; --------------------------------------------------
+        ;; Prompt for device
+
         lda     #$00
         sta     has_input_field_flag
         jsr     main::open_prompt_window
@@ -190,12 +213,20 @@ d2:     .byte   0
         copy16  #handle_click, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
 l1:     jsr     main::prompt_input_loop
-        bmi     l1
-        beq     l2
-        jmp     l11
+        bmi     l1              ; not done
+        beq     l2              ; ok
+        jmp     l11             ; cancel
 
 l2:     bit     selected_device_index
         bmi     l1
+
+        jsr     get_selected_unit_num
+        sta     d2
+        sta     unit_num
+
+        ;; --------------------------------------------------
+        ;; Prompt for name
+
         copy16  #main::rts1, main::jump_relay+1
         lda     winfo_prompt_dialog::window_id
         jsr     main::safe_set_port_from_window_id
@@ -209,53 +240,62 @@ l2:     bit     selected_device_index
         jsr     main::clear_path_buf2
         param_call main::draw_dialog_label, 3, aux::str_new_volume
 l3:     jsr     main::prompt_input_loop
-        bmi     l3
-        beq     l5
-        jmp     l11
+        bmi     l3              ; not done
+        beq     l5              ; ok
+        jmp     l11             ; cancel
 
 l4:     jsr     Bell
         jmp     l3
 
 l5:     lda     path_buf1
-        beq     l4
+        beq     l4              ; name is empty
         cmp     #$10
-        bcs     l4
-        jsr     main::set_cursor_pointer
+        bcs     l4              ; name > 15 characters
+        jsr     main::set_cursor_pointer_with_flag
+
+        ;; Check for conflicting name
+        ldxy    #path_buf1
+        lda     unit_num
+        jsr     check_conflicting_volume_name
+        bne     :+
+        lda     #ERR_DUPLICATE_FILENAME
+        jsr     JUMP_TABLE_SHOW_ALERT
+        jmp     l3
+:
+
+        ;; --------------------------------------------------
+        ;; Confirm erase
+
         lda     winfo_prompt_dialog::window_id
         jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         copy    #$00, has_input_field_flag
 
-        ;; Reverse order, so boot volume is first
-        lda     DEVCNT
-        sec
-        sbc     selected_device_index
-        tax
-        lda     DEVLST,x
-
-        sta     d2
-        sta     unit_num
         param_call main::draw_dialog_label, 3, aux::str_confirm_erase
         lda     unit_num
-        and     #$F0
         jsr     append_vol_name_question
         param_call main::DrawString, ovl_string_buf
 l6:     jsr     main::prompt_input_loop
-        bmi     l6
-        beq     l7
-        jmp     l11
+        bmi     l6              ; not done
+        beq     l7              ; ok
+        jmp     l11             ; cancel
+l7:
 
-l7:     lda     winfo_prompt_dialog::window_id
+        ;; --------------------------------------------------
+        ;; Proceed with erase
+
+        lda     winfo_prompt_dialog::window_id
         jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::draw_dialog_label, 1, aux::str_erasing
         param_call upcase_string, path_buf1
         jsr     main::set_cursor_watch
+
         ldxy    #path_buf1
         lda     unit_num
-        jsr     L1307
+        jsr     write_header_blocks
         pha
         jsr     main::set_cursor_pointer
         pla
@@ -272,9 +312,9 @@ l8:     cmp     #ERR_WRITE_PROTECTED
 l9:     jsr     Bell
         param_call main::draw_dialog_label, 6, aux::str_erasing_error
 l10:    jsr     main::prompt_input_loop
-        bmi     l10
-        beq     l7
-l11:    pha
+        bmi     l10             ; not done
+        beq     l7              ; pk
+l11:    pha                     ; cancel
         jsr     main::set_cursor_pointer
         jsr     main::reset_main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
@@ -629,7 +669,7 @@ params: .addr   0
 
 ;;; ============================================================
 ;;; Get driver address
-;;; Input: A = unit number
+;;; Input: A = unit number (no need to mask off low nibble)
 ;;; Output: A,X = driver address
 
 .proc get_driver_address
@@ -649,7 +689,7 @@ params: .addr   0
 
 ;;; ============================================================
 ;;; Format disk
-;;; Input: A = unit number
+;;; Input: A = unit number (with low nibble intact)
 
 .proc format_unit
         ;; Check low nibble of unit number; if 0, it's a 16-sector Disk II
@@ -686,12 +726,19 @@ l2:     lda     unit_num
         ;; Format using driver
 l3:     lda     unit_num
         jsr     get_driver_address
-        stax    $06
+        stax    @driver
+
+        sta     ALTZPOFF        ; Main ZP/LCBANKs
+
         copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         lda     unit_num
         and     #$F0
         sta     DRIVER_UNIT_NUMBER
-        jmp     ($06)
+
+        @driver := *+1
+        jsr     SELF_MODIFIED
+
+        sta     ALTZPON         ; Aux ZP/LCBANKs
 
         rts
 
@@ -701,7 +748,7 @@ unit_num:
 
 ;;; ============================================================
 ;;; Check if the device supports formatting
-;;; Input: A = unit number
+;;; Input: A = unit number (with low nibble intact)
 ;;; Output: A=0/Z=1/N=0 if yes, A=$FF/Z=0/N=1 if no
 
 .proc check_supports_format
@@ -745,25 +792,30 @@ unit_num:
 .endproc
 
 ;;; ============================================================
+;;; Write the loader, volume directory, and volume bitmap
+;;; Inputs: A = unit number (with low nibble intact), X,Y = volume name
 
-.proc L1307
+.proc write_header_blocks
         sta     unit_num
         and     #$F0
         sta     write_block_params::unit_num
         stxy    $06
 
+        ;; Remove leading '/' from name, if necessary
         ldy     #$01
         lda     ($06),y
         and     #CHAR_MASK
         cmp     #'/'
-        bne     L132C
+        bne     L132C           ; nope
         dey
-        lda     ($06),y
+        lda     ($06),y         ; shrink string, adjust pointer
         sec
         sbc     #1
         iny
         sta     ($06),y
         inc16   $06
+
+        ;; Copy name into volume directory key block data
 L132C:  ldy     #0
         lda     ($06),y
         tay
@@ -796,9 +848,11 @@ L132C:  ldy     #0
         beq     disk_ii
 
         ;; Not Disk II - use the driver.
-        lda     unit_num
+:       lda     unit_num
         jsr     get_driver_address
-        stax    $06
+        stax    @driver
+
+        sta     ALTZPOFF        ; Main ZP/LCBANKs
 
         copy    #DRIVER_COMMAND_STATUS, DRIVER_COMMAND
         lda     unit_num
@@ -807,11 +861,14 @@ L132C:  ldy     #0
         lda     #$00
         sta     DRIVER_BLOCK_NUMBER
         sta     DRIVER_BLOCK_NUMBER+1
-        jsr     driver
+
+        @driver := *+1
+        jsr     SELF_MODIFIED
+
+        sta     ALTZPON         ; Aux ZP/LCBANKs
+
         bcc     L1398           ; success
         jmp     L1483           ; failure
-
-driver: jmp     ($06)
 
 disk_ii:
         ldxy    #kDefaultFloppyBlocks
@@ -1204,9 +1261,10 @@ L1A22:  sta     ovl_string_buf,x
         rts
 
 ;;; ============================================================
-;;; Inputs: A=unit number
+;;; Inputs: A = unit number (no need to mask off low nibble)
 
 .proc append_vol_name_question
+        and     #$F0
         sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
         bne     L1A6D
@@ -1234,6 +1292,74 @@ L1A6D:  lda     on_line_params::unit_num
         jsr     L192E
         rts
 .endproc
+
+;;; ============================================================
+;;; Gets the selected unit number from `DEVLST`
+;;; Output: A = unit number (with low nibble intact)
+;;; Assert: `selected_device_index` is valid (i.e. not $FF)
+
+.proc get_selected_unit_num
+        ;; Reverse order, so boot volume is first
+        lda     DEVCNT
+        sec
+        sbc     selected_device_index
+        tax
+        lda     DEVLST,x
+        rts
+.endproc
+
+;;; ============================================================
+;;; Inputs: A = unit number (no need to mask off low nibble), X,Y = name
+;;; Outputs: Z=1 if there's a duplicate, Z=0 otherwise
+
+.proc check_conflicting_volume_name
+        ptr := $06
+        stxy    ptr
+        and     #$F0
+        sta     unit_num
+
+        ;; Copy name, prepending '/'
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     path+1,y
+        dey
+        bpl     :-
+        clc
+        adc     #1
+        sta     path
+        copy    #'/', path+1
+
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+        bne     no_match
+
+        ;; A volume with that name exists... but is it the one
+        ;; we're about to format/erase?
+        lda     DEVNUM
+        and     #$F0
+        cmp     unit_num
+        beq     no_match
+
+        ;; Not the same device, so a match. Return Z=1
+        lda     #0
+        rts
+
+        ;; No match we care about, so return Z=0.
+no_match:
+        lda     #1
+        rts
+
+unit_num:
+        .byte   0
+
+path:
+        .res    17,0              ; length + '/' + 15-char name
+
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
+
+.endproc
+
 
 ;;; ============================================================
 
