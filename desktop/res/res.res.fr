@@ -7,10 +7,10 @@
 .define res_string_selector_label_at_first_boot "3 au d{marrage"
 .define res_string_selector_label_at_first_use "4 @ la 1}re utilisation"
 .define res_string_selector_label_never "5 jamais"
-.define res_string_the_dos_33_disk_suffix_pattern "le disque DOS 3.3 en port # lecteur # ?"
+.define res_string_the_dos_33_disk_suffix_pattern "le disque DOS 3.3 en port # lecteur #"
 .define res_const_the_dos_33_disk_suffix_pattern_offset1 27
 .define res_const_the_dos_33_disk_suffix_pattern_offset2 37
-.define res_string_the_disk_in_slot_suffix_pattern "le disque en port # lecteur # ?"
+.define res_string_the_disk_in_slot_suffix_pattern "le disque en port # lecteur #"
 .define res_const_the_disk_in_slot_suffix_pattern_offset1 19
 .define res_const_the_disk_in_slot_suffix_pattern_offset2 29
 .define res_string_file_suffix "fichier"

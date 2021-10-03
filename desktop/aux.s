@@ -3515,8 +3515,10 @@ str_select_format:
         PASCAL_STRING res_string_format_disk_label_select
 str_new_volume:
         PASCAL_STRING res_string_format_disk_label_enter_name
-str_confirm_format:
-        PASCAL_STRING res_string_format_disk_prompt_format
+str_confirm_format_prefix:
+        PASCAL_STRING res_string_format_disk_prompt_format_prefix
+str_confirm_format_suffix:
+        PASCAL_STRING res_string_format_disk_prompt_format_suffix
 str_formatting:
         PASCAL_STRING res_string_format_disk_status_formatting
 str_formatting_error:
@@ -3524,8 +3526,10 @@ str_formatting_error:
 
 str_select_erase:
         PASCAL_STRING res_string_erase_disk_label_select
-str_confirm_erase:
-        PASCAL_STRING res_string_erase_disk_prompt_erase
+str_confirm_erase_prefix:
+        PASCAL_STRING res_string_erase_disk_prompt_erase_prefix
+str_confirm_erase_suffix:
+        PASCAL_STRING res_string_erase_disk_prompt_erase_suffix
 str_erasing:
         PASCAL_STRING res_string_erase_disk_status_erasing
 str_erasing_error:

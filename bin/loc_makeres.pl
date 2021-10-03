@@ -152,13 +152,22 @@ while (<STDIN>) {
         } else {
             check($lang, $label, $en, $en);
         }
-        print {$fhs{$lang}} ".define $label ", enquote($label, $str), "\n";
 
-        if ($label =~ m/^res_string_.*_pattern$/ && $str =~ m/#/) {
-            my $counter = 0;
-            foreach my $index (indexes($str, '#')) {
-                my $l = ($label =~ s/^res_string_/res_const_/r) . "_offset" . (++$counter);
-                print {$fhs{$lang}} ".define $l $index\n";
+        if ($str =~ m/^(.*)##(.*)$/) {
+            # If string has '##', split into prefix/suffix.
+           print {$fhs{$lang}} ".define ${label}_prefix ", enquote($label, $1), "\n";
+            print {$fhs{$lang}} ".define ${label}_suffix ", enquote($label, $2), "\n";
+        } else {
+            # Normal case.
+            print {$fhs{$lang}} ".define $label ", enquote($label, $str), "\n";
+
+            # If string is a pattern, emit constants for the offsets of #.
+            if ($label =~ m/^res_string_.*_pattern$/ && $str =~ m/#/) {
+                my $counter = 0;
+                foreach my $index (indexes($str, '#')) {
+                    my $l = ($label =~ s/^res_string_/res_const_/r) . "_offset" . (++$counter);
+                    print {$fhs{$lang}} ".define $l $index\n";
+                }
             }
         }
     }

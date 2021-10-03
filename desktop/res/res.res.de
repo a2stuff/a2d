@@ -7,10 +7,10 @@
 .define res_string_selector_label_at_first_boot "3 w{hrend Startvorgang"
 .define res_string_selector_label_at_first_use "4 zur ersten Nutzung"
 .define res_string_selector_label_never "5 nie"
-.define res_string_the_dos_33_disk_suffix_pattern "DOS 3,3 Diskette im Steckplatz# Laufwerk#?"
+.define res_string_the_dos_33_disk_suffix_pattern "DOS 3,3 Diskette im Steckplatz# Laufwerk#"
 .define res_const_the_dos_33_disk_suffix_pattern_offset1 31
 .define res_const_the_dos_33_disk_suffix_pattern_offset2 41
-.define res_string_the_disk_in_slot_suffix_pattern "Diskette in Steckplatz# Laufwerk#?"
+.define res_string_the_disk_in_slot_suffix_pattern "Diskette in Steckplatz# Laufwerk#"
 .define res_const_the_disk_in_slot_suffix_pattern_offset1 23
 .define res_const_the_disk_in_slot_suffix_pattern_offset2 33
 .define res_string_file_suffix "Datei"

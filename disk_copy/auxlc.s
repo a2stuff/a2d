@@ -2439,6 +2439,8 @@ str_confirm_erase:
         PASCAL_STRING res_string_prompt_erase_prefix
 str_confirm_erase_buf:  .res    18, 0
 kLenConfirmErase = .strlen(res_string_prompt_erase_prefix)
+str_confirm_erase_suffix:
+        PASCAL_STRING res_string_prompt_erase_suffix
 
 str_dest_format_fail:
         PASCAL_STRING res_string_errmsg_dest_format_fail
@@ -2461,12 +2463,6 @@ str_insert_source_or_cancel:
         PASCAL_STRING res_string_prompt_insert_source_or_cancel
 str_insert_dest_or_cancel:
         PASCAL_STRING res_string_prompt_insert_dest_or_cancel
-
-char_space:
-        .byte   ' '
-
-char_question_mark:
-        .byte   '?'
 
 alert_table:
         .byte   kAlertMsgInsertSource
@@ -2868,16 +2864,17 @@ finish: pha
         pla
         clc
         adc     #kLenConfirmErase
-        sta     str_confirm_erase
+
         tay
-        inc     str_confirm_erase
-        inc     str_confirm_erase
-        lda     char_space
-        iny
+        ldx     #0
+:       iny
+        inx
+        lda     str_confirm_erase_suffix,x
         sta     str_confirm_erase,y
-        lda     char_question_mark
-        iny
-        sta     str_confirm_erase,y
+        cpx     str_confirm_erase_suffix
+        bne     :-
+
+        sty     str_confirm_erase
         rts
 .endproc
 

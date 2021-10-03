@@ -113,10 +113,11 @@ l6:     lda     path_buf1
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
         copy    #0, has_input_field_flag
-        param_call main::draw_dialog_label, 3, aux::str_confirm_format
+        param_call main::draw_dialog_label, 3, aux::str_confirm_format_prefix
         lda     unit_num
-        jsr     append_vol_name_question
+        jsr     get_vol_name
         param_call main::DrawString, ovl_string_buf
+        param_call main::DrawString, aux::str_confirm_format_suffix
 l7:     jsr     main::prompt_input_loop
         bmi     l7              ; not done
         beq     l8              ; ok
@@ -270,18 +271,18 @@ l5:     lda     path_buf1
         jsr     main::safe_set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        copy    #$00, has_input_field_flag
 
-        param_call main::draw_dialog_label, 3, aux::str_confirm_erase
+        copy    #0, has_input_field_flag
+        param_call main::draw_dialog_label, 3, aux::str_confirm_erase_prefix
         lda     unit_num
-        jsr     append_vol_name_question
+        jsr     get_vol_name
         param_call main::DrawString, ovl_string_buf
+        param_call main::DrawString, aux::str_confirm_erase_suffix
 l6:     jsr     main::prompt_input_loop
         bmi     l6              ; not done
         beq     l7              ; ok
         jmp     l11             ; cancel
 l7:
-
         ;; --------------------------------------------------
         ;; Proceed with erase
 
@@ -1142,6 +1143,11 @@ vol_name_buf:
 
 ;;; ============================================================
 
+;;; Note that code from around this point is overwritten when
+;;; `block_buffer` is used, so only place routines not used after
+;;; writing starts are placed here. The overlay will be reloaded
+;;; for subsequent format/erase operations.
+
 .proc upcase_string
         ptr := $06
         stx     ptr+1
@@ -1161,23 +1167,33 @@ loop:   lda     (ptr),y
         rts
 .endproc
 
-L192E:  sta     read_block_params::unit_num
+;;; ============================================================
+;;; Get a volume name for a non-ProDOS disk given a unit number.
+;;; Input: A = unit number
+;;; Output: `ovl_string_buf` is populated.
+
+.proc get_nonprodos_vol_name
+        ;; Read block 0
+        sta     read_block_params::unit_num
         lda     #0
         sta     read_block_params::block_num
         sta     read_block_params::block_num+1
         MLI_RELAY_CALL READ_BLOCK, read_block_params
-        bne     L1959
+        bne     unknown         ; failure
         lda     read_buffer + 1
-        cmp     #$E0
-        beq     L194E
-        jmp     L1986
-
-L194E:  lda     read_buffer + 2
+        cmp     #$E0            ; DOS 3.3?
+        beq     :+              ; Maybe...
+        jmp     maybe_dos
+:       lda     read_buffer + 2
         cmp     #$70
-        beq     L197E
+        beq     pascal
         cmp     #$60
-        beq     L197E
-L1959:  lda     read_block_params::unit_num
+        beq     pascal
+        ;; fall through
+
+        ;; Unknown, just use slot and drive
+unknown:
+        lda     read_block_params::unit_num
         jsr     get_slot_char
         sta     the_disk_in_slot_label + kTheDiskInSlotSlotCharOffset
         lda     read_block_params::unit_num
@@ -1190,14 +1206,19 @@ L1974:  lda     the_disk_in_slot_label,x
         bpl     L1974
         rts
 
-L197E:  param_call L19C8, ovl_string_buf
+        ;; Pascal
+pascal: param_call pascal_disk, ovl_string_buf
         rts
 
-L1986:  cmp     #$A5
-        bne     L1959
+        ;; Maybe DOS 3.3, not sure yet...
+maybe_dos:
+        cmp     #$A5
+        bne     unknown
         lda     read_buffer + 2
         cmp     #$27
-        bne     L1959
+        bne     unknown
+
+        ;; DOS 3.3, use slot and drive
         lda     read_block_params::unit_num
         jsr     get_slot_char
         sta     the_dos_33_disk_label + kTheDos33DiskSlotCharOffset
@@ -1207,7 +1228,7 @@ L1986:  cmp     #$A5
         COPY_STRING the_dos_33_disk_label, ovl_string_buf
         rts
 
-        .byte   0
+        .byte   0               ; Unused???
 
 .proc get_slot_char
         and     #$70
@@ -1228,49 +1249,44 @@ L1986:  cmp     #$A5
         rts
 .endproc
 
-L19C8:  copy16  #$0002, read_block_params::block_num
+;;; Handle Pascal disk - name suffixed with ':'
+pascal_disk:
+        copy16  #$0002, read_block_params::block_num
         MLI_RELAY_CALL READ_BLOCK, read_block_params
-        beq     L19F7
-        copy    #4, ovl_string_buf
+        beq     :+
+        ;; Pascal disk, empty name - use " :" (weird, but okay?)
+        copy    #2, ovl_string_buf
         copy    #' ', ovl_string_buf+1
         copy    #':', ovl_string_buf+2
-        copy    #' ', ovl_string_buf+3 ; Overwritten ???
-        copy    #'?', ovl_string_buf+3
         rts
 
-        ;; This straddles $1A00 which is the block buffer ($1A00-$1BFF) ???
-
-L19F7:  lda     read_buffer + 6
+        ;; Pascal disk, use name
+:       lda     read_buffer + 6
         tax
-L19FB:  lda     read_buffer + 6,x
+:       lda     read_buffer + 6,x
         sta     ovl_string_buf,x
         dex
-        bpl     L19FB
+        bpl     :-
         inc     ovl_string_buf
         ldx     ovl_string_buf
         lda     #':'
         sta     ovl_string_buf,x
-        inc     ovl_string_buf
-        ldx     ovl_string_buf
-        lda     #' '
-        sta     ovl_string_buf,x
-        inc     ovl_string_buf
-        ldx     ovl_string_buf
-        lda     #'?'
-L1A22:  sta     ovl_string_buf,x
         rts
+.endproc
 
 ;;; ============================================================
-;;; Inputs: A = unit number (no need to mask off low nibble)
+;;; Get a volume name, for ProDOS or non-ProDOS disk.
+;;; Input: A = unit number (no need to mask off low nibble)
+;;; Output: `ovl_string_buf` is populated
 
-.proc append_vol_name_question
+.proc get_vol_name
         and     #$F0
         sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
-        bne     L1A6D
+        bne     non_pro
         lda     read_buffer
         and     #NAME_LENGTH_MASK
-        beq     L1A6D
+        beq     non_pro
         sta     read_buffer
         tax
 :       lda     read_buffer,x
@@ -1278,18 +1294,11 @@ L1A22:  sta     ovl_string_buf,x
         dex
         bpl     :-
 
-        inc     ovl_string_buf
-        ldx     ovl_string_buf
-        lda     #' '
-        sta     ovl_string_buf,x
-        inc     ovl_string_buf
-        ldx     ovl_string_buf
-        lda     #'?'
-        sta     ovl_string_buf,x
         rts
 
-L1A6D:  lda     on_line_params::unit_num
-        jsr     L192E
+non_pro:
+        lda     on_line_params::unit_num
+        jsr     get_nonprodos_vol_name
         rts
 .endproc
 

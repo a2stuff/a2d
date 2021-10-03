@@ -1908,10 +1908,10 @@ str_insert:
 str_not_enough:
         PASCAL_STRING res_string_prompt_ramcard_full
 
-str_error:
+str_error_prefix:
         PASCAL_STRING res_string_error_prefix
 
-str_occured:
+str_error_suffix:
         PASCAL_STRING res_string_error_suffix
 
 str_not_completed:
@@ -1985,10 +1985,10 @@ str_not_completed:
 
         ;; Show generic error
 :       pha
-        param_call cout_string, str_error
+        param_call cout_string, str_error_prefix
         pla
         jsr     PRBYTE
-        param_call cout_string, str_occured
+        param_call cout_string, str_error_suffix
         param_call cout_string_newline, generic_copy::path2
         param_call cout_string, str_not_completed
 

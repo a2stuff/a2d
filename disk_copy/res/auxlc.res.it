@@ -36,6 +36,7 @@
 .define res_string_prompt_insert_source "Inserire il disco sorgente e cliccare OK."
 .define res_string_prompt_insert_destination "Inserire il disco destinazione e cliccare OK."
 .define res_string_prompt_erase_prefix "Vuoi cancellare "
+.define res_string_prompt_erase_suffix "?"
 .define res_string_errmsg_dest_format_fail "Il disco destinazione non pu| essere inizializzato!"
 .define res_string_errmsg_format_error "Errore durante l'inizializzazione."
 .define res_string_errmsg_dest_protected "Il disco destinazione } protetto in scrittura!"
