@@ -16,3 +16,5 @@
 .define res_string_weekday_abbrev_5 "Thu "
 .define res_string_weekday_abbrev_6 "Fri "
 .define res_string_weekday_abbrev_7 "Sat "
+.define res_char_decimal_separator '.'
+.define res_char_thousands_separator ','

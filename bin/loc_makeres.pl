@@ -72,8 +72,10 @@ sub check($$$$) {
     return $en unless $t;
 
     # Apply same leading/trailing spaces
-    $t =~ s/^[ ]+|[ ]+$//g;
-    $t = $1 . $t . $2 if $en =~ m/^([ ]*).*?([ ]*)$/;
+    if ($label !~ /^res_char_/) {
+        $t =~ s/^[ ]+|[ ]+$//g;
+        $t = $1 . $t . $2 if $en =~ m/^([ ]*).*?([ ]*)$/;
+    }
 
      # Ensure placeholders are still there
     die "Hashes mismatch at $label, line $.: $en / $t\n"
@@ -83,7 +85,7 @@ sub check($$$$) {
     die "Hexes mismatch at $label, line $.: $en / $t\n"
         unless hexes($en) eq hexes($t);
     die "Punctuation mismatch at $label, line $.: '$en' / '$t'\n"
-        unless punct($en) eq punct($t);
+        unless $label =~ /^res_char_/ || punct($en) eq punct($t);
 
     # Language specific checks:
     if ($lang eq 'fr') {

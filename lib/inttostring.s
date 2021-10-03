@@ -7,7 +7,7 @@
 
 .scope IntToStringImpl
 
-kThousandsSeparatorChar = ','
+kThousandsSeparatorChar = res_char_thousands_separator
 
 ;;; Entry point: with thousands separators
 sep:    sec

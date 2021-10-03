@@ -16,3 +16,5 @@
 .define res_string_weekday_abbrev_5 "Do "
 .define res_string_weekday_abbrev_6 "Fr "
 .define res_string_weekday_abbrev_7 "Sa "
+.define res_char_decimal_separator ','
+.define res_char_thousands_separator '.'

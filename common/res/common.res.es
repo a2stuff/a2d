@@ -16,3 +16,5 @@
 .define res_string_weekday_abbrev_5 "Jue "
 .define res_string_weekday_abbrev_6 "Vie "
 .define res_string_weekday_abbrev_7 "Sab "
+.define res_char_decimal_separator ','
+.define res_char_thousands_separator '.'
