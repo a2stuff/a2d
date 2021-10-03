@@ -7305,8 +7305,10 @@ has_goaway:
         bcs     :+
         dec     right+1
 
-:       jsr     PaintRectImpl  ; Draw title bar stripes between close box and title
-        add16   winrect::x2, #10, left
+:       cmp16   right, left     ; skip if degenerate
+        bmi     :+
+        jsr     PaintRectImpl  ; Draw title bar stripes between close box and title
+:       add16   winrect::x2, #10, left
 
         jsr     get_wintitlebar_rect
         sub16   winrect::x2, #3, right
