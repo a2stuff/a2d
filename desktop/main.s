@@ -2163,6 +2163,9 @@ fail:   rts
 
 ;;; ============================================================
 
+str_empty:
+        PASCAL_STRING ""        ; do not localize
+
 .enum NewFolderDialogState
         open  = $00
         run   = $80
@@ -2174,8 +2177,8 @@ fail:   rts
         ptr := $06
 
 .params new_folder_dialog_params
-phase:  .byte   0               ; window_id?
-win_path_ptr:  .word   0
+phase:          .byte   0
+win_path_ptr:   .addr   0
 .endparams
 
         ;; access = destroy/rename/write/read
@@ -2219,7 +2222,6 @@ L4FC6:  lda     active_window_id
 
         ;; Failure
         jsr     ShowAlert
-        copy16  name_ptr, new_folder_dialog_params::win_path_ptr
         jmp     L4FC6
 
 success:
@@ -11918,9 +11920,6 @@ run_dialog_proc:
         param_call invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
         rts
 
-str_empty:
-        PASCAL_STRING ""        ; do not localize
-
 index:  .byte   0               ; selected icon index
 
 ;;; N bit ($80) set if a window title was changed
@@ -14958,6 +14957,7 @@ LAE17:  jsr     prompt_input_loop
 
         ;; Phase 0 - init
 :       copy    #$80, has_input_field_flag
+        jsr     clear_path_buf1
         jsr     clear_path_buf2
         lda     #$00
         jsr     open_prompt_window
@@ -14971,7 +14971,6 @@ LAE17:  jsr     prompt_input_loop
         ;; Phase 2 - prompt
 LAE70:  copy    #$80, has_input_field_flag
         copy    #0, prompt_button_flags
-        jsr     clear_path_buf1
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #1
         copy16in ($06),y, $08
