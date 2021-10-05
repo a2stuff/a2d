@@ -27,8 +27,10 @@
 
 * Open a volume, open a folder, close the just volume window; re-open the volume, re-open the folder, ensure the previous window is activated.
 
-* File > Rename a file.
-* File > Rename a volume.
+* Launch DeskTop. Select a file icon. File > Rename.... Enter a unique name, hit OK. Verify that the icon updates with the new name.
+* Launch DeskTop. Select a file icon. File > Rename.... Press OK without changing the name. Verify that the dialog is dismissed and the icon doesn't change.
+* Launch DeskTop. Select a volume icon. File > Rename.... Enter a unique name, hit OK. Verify that the icon updates with the new name.
+* Launch DeskTop. Select a volume icon. File > Rename.... Press OK without changing the name. Verify that the dialog is dismissed and the icon doesn't change.
 
 * File > Get Info a file.
 * File > Get Info a volume.

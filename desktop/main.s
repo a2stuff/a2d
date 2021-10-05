@@ -11684,7 +11684,7 @@ loop:   lda     index
         ;; Run the dialog
 retry:  lda     #RenameDialogState::run
         jsr     run_dialog_proc
-        beq     L962F
+        beq     ok
 
         ;; Failure
 fail:   return  result_flags
@@ -11692,7 +11692,7 @@ fail:   return  result_flags
         ;; --------------------------------------------------
         ;; Success, new name in Y,X
 
-L962F:
+ok:
         new_name_ptr := $08
         sty     new_name_ptr
         stx     new_name_ptr+1
@@ -11708,6 +11708,28 @@ L962F:
         sta     new_name_buf,y
         dey
         bpl     :-
+
+        ;; Did the name change?
+        ldx     old_name_buf
+        cpx     new_name_buf
+        bne     changed
+:       lda     old_name_buf,x
+        jsr     upcase_char
+        sta     @char
+        lda     new_name_buf,x
+        jsr     upcase_char
+        @char := *+1
+        cmp     #0              ; self-modified
+        bne     changed
+        dex
+        bne     :-
+        ;; Didn't change, no-op
+        lda     #RenameDialogState::close
+        jsr     run_dialog_proc
+        inc     index
+        jmp     loop
+
+changed:
 
         ;; ... then recase it, so we're consistent for icons/paths.
         ldax    #new_name_buf
@@ -11914,6 +11936,7 @@ result_flags:
 ;;;
 ;;; Uses `find_windows_for_prefix`
 ;;; Modifies $06
+;;; Assert: The path actually changed.
 
 .proc update_window_paths
         ;; Is there a window for the folder/volume?
