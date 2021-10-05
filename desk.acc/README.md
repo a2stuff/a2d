@@ -3,13 +3,14 @@
 Disassembly of the original desk accessories:
 
 * [Calculator](calculator.s) - complete!
-* [Date](date.s) - complete!
 * [Puzzle](puzzle.s) - complete!
 * [Show Text File](show.text.file.s) - complete!
 * [Sort Directory](sort.directory.s) - complete!
 
 New desk accessories:
 
+* [Date and Time](date.and.time.s)
+  * Based on the original Date DA, expanded to include setting the time as well.
 * [This Apple](this.apple.s)
   * Gives details about the computer, expanded memory, and what's in each slot.
 * [Control Panel](control.panel.s)

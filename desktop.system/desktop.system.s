@@ -86,7 +86,8 @@ kShortcutMonitor = res_char_monitor_shortcut
         jmp     start
 
         ASSERT_ADDRESS PRODOS_SYS_START + kLauncherDateOffset
-header_date:   .word   0               ; written into file by Date DA
+header_date:                    ; written into file by Date DA
+        .res    .sizeof(DateTime)
 
 header_orig_prefix:
         .res    64, 0           ; written into file with original path
@@ -913,13 +914,16 @@ str_slash_desktop:
 
         sta     TXTSET
 
-        lda     DATELO          ; Any date set?
+        lda     MACHID
+        and     #%00000001      ; bit 0 = clock card
+        bne     :+
+        lda     DATELO          ; Any date already set?
         ora     DATEHI
         bne     :+
-        copy16  header_date, DATELO ; Copy timestamp embedded in this file
+        COPY_STRUCT DateTime, header_date, DATELO
 :       lda     MACHID
-        and     #$30            ; bits 4,5 set = 128k
-        cmp     #$30
+        and     #%00110000      ; bits 4,5 set = 128k
+        cmp     #%00110000
         beq     have128k
 
         ;;  If not 128k machine, just quit back to ProDOS

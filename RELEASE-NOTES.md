@@ -186,6 +186,8 @@ from the **Apple** menu.
   * Correct IP placement/truncation when switching focus. ([#446](https://github.com/a2stuff/a2d/issues/446))
   * Fix iteration with Change Drive button. ([#410](https://github.com/a2stuff/a2d/issues/410))
 * Desk Accessories:
+  * Date: Expanded to include both date and time. ([#11](https://github.com/a2stuff/a2d/issues/11))
+  * Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
   * Calculator: Doesn't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
   * Sort Directory: Don't need to click before sorting. ([#17](https://github.com/a2stuff/a2d/issues/17))

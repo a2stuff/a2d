@@ -1,7 +1,7 @@
 ;;; ============================================================
-;;; DATE - Desk Accessory
+;;; DATE.AND.TIME - Desk Accessory
 ;;;
-;;; Shows the current ProDOS date, and allows editing if there
+;;; Shows the current ProDOS date/time, and allows editing if there
 ;;; is no clock driver installed.
 ;;; ============================================================
 
@@ -41,8 +41,6 @@ stash_stack:  .byte   $00
         and     #%00000001      ; bit 0 = clock card
         sta     clock_flag
 
-        copy16  DATELO, datelo
-
         copy16  #start, STARTLO
         copy16  #end, ENDLO
         copy16  #start, DESTINATIONLO
@@ -61,17 +59,18 @@ stash_stack:  .byte   $00
 
 ;;; ============================================================
 ;;; Maybe write the date into DESKTOP.SYSTEM file and exit the DA
-;;; Inputs: A,X = DATELO/DATEHI; A=0 if dialog cancelled
+;;; Inputs: A=1 if dialog committed; A=0 if dialog cancelled
 ;;; Assert: Running from Main
 
 .proc save_date_and_exit
-        stax    write_buffer
-        lda     write_buffer    ; Dialog committed?
         beq     skip
 
         ;; If there is a system clock, don't write out the date.
         ldx     clock_flag
         bne     skip
+
+        ;; ProDOS GP has the updated data, copy somewhere usable.
+        COPY_STRUCT DateTime, DATELO, write_buffer
 
         jsr     save_settings
 
@@ -94,7 +93,7 @@ filename_buffer:
         DEFINE_CLOSE_PARAMS close_params
 
 write_buffer:
-        .res    2, 0
+        .res    .sizeof(DateTime), 0
         sizeof_write_buffer = * - write_buffer
 
 .proc save_settings
@@ -170,7 +169,10 @@ close:  JUMP_TABLE_MLI_CALL CLOSE, close_params ; close the file
 done:   rts
 .endproc
 
-
+;;; ============================================================
+;;;
+;;; Everything from here on is copied to Aux
+;;;
 ;;; ============================================================
 
 start_da:
@@ -179,35 +181,62 @@ start_da:
 ;;; ============================================================
 ;;; Param blocks
 
-
-        kDialogWidth = 239
+        kDialogWidth = 239+50-20-10
         kDialogHeight = 64
 
-        ;; The following 7 rects are iterated over to identify
+        ;; The following rects are iterated over to identify
         ;; a hit target for a click.
 
-        kNumHitRects = 7
+        kNumHitRects = 9
         kUpRectIndex = 3
         kDownRectIndex = 4
 
+        kCancelButtonLeft = 16
+        kOKButtonLeft = kDialogWidth - kButtonWidth - 16
+        kOKCancelButtonTop = 46
+
+        kFieldTop = 20
+        kField1Left = 22
+        kField2Left = kField1Left + 40
+        kField3Left = kField2Left + 48
+        kField4Left = kField3Left + 46
+        kField5Left = kField4Left + 40
+        kFieldDigitsWidth = 22
+        kFieldMonthWidth = 30
+        kFieldHeight = 10
+
+        kUpDownButtonLeft = 233
+        kUpDownButtonWidth = 10
+        kUpDownButtonHeight = 10
+
         first_hit_rect := *
-        DEFINE_RECT_SZ ok_button_rect, 105+20, 46, kButtonWidth, kButtonHeight
-        DEFINE_RECT_SZ cancel_button_rect, 16, 46, kButtonWidth, kButtonHeight
-        DEFINE_RECT_SZ up_arrow_rect, 190, 10, 10, 10
-        DEFINE_RECT_SZ down_arrow_rect, 190, 30, 10, 10
-        DEFINE_RECT_SZ day_rect, 57, 20, 22, 10
-        DEFINE_RECT_SZ month_rect, 101, 20, 30, 10
-        DEFINE_RECT_SZ year_rect, 147, 20, 22, 10
+        DEFINE_RECT_SZ ok_button_rect, kOKButtonLeft, kOKCancelButtonTop, kButtonWidth, kButtonHeight
+        DEFINE_RECT_SZ cancel_button_rect, kCancelButtonLeft, kOKCancelButtonTop, kButtonWidth, kButtonHeight
+        DEFINE_RECT_SZ up_arrow_rect, kUpDownButtonLeft, 14, kUpDownButtonWidth, kUpDownButtonHeight
+        DEFINE_RECT_SZ down_arrow_rect, kUpDownButtonLeft, 26, kUpDownButtonWidth, kUpDownButtonHeight
+        DEFINE_RECT_SZ day_rect, kField1Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
+        DEFINE_RECT_SZ month_rect, kField2Left, kFieldTop, kFieldMonthWidth, kFieldHeight
+        DEFINE_RECT_SZ year_rect, kField3Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
+        DEFINE_RECT_SZ hour_rect, kField4Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
+        DEFINE_RECT_SZ minute_rect, kField5Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
         ASSERT_RECORD_TABLE_SIZE first_hit_rect, kNumHitRects, .sizeof(MGTK::Rect)
 
-        DEFINE_POINT label_ok_pos, 109+20, 56
-        DEFINE_POINT label_cancel_pos, 21, 56
-        DEFINE_POINT label_uparrow_pos, 192, 19
-        DEFINE_POINT label_downarrow_pos, 192, 39
-        DEFINE_POINT day_pos, 63, 30
-        DEFINE_POINT month_pos, 107, 30
-        DEFINE_POINT year_pos, 153, 30
+        DEFINE_POINT label_ok_pos, kOKButtonLeft + 5, kOKCancelButtonTop + 10
+        DEFINE_POINT label_cancel_pos, kCancelButtonLeft + 5, kOKCancelButtonTop + 10
+        DEFINE_POINT label_uparrow_pos, kUpDownButtonLeft + 2, 23
+        DEFINE_POINT label_downarrow_pos, kUpDownButtonLeft + 2, 35
+        DEFINE_POINT day_pos, kField1Left + 6, kFieldTop + 10
+        DEFINE_POINT month_pos, kField2Left + 6, kFieldTop + 10
+        DEFINE_POINT year_pos, kField3Left + 6, kFieldTop + 10
+        DEFINE_POINT hour_pos, kField4Left + 6, kFieldTop + 10
+        DEFINE_POINT minute_pos, kField5Left + 6, kFieldTop + 10
 
+        DEFINE_POINT date_sep1_pos, kField2Left - 12, kFieldTop + 10
+        DEFINE_POINT date_sep2_pos, kField3Left - 12, kFieldTop + 10
+        DEFINE_POINT time_sep_pos,  kField5Left - 12 + 3, kFieldTop + 10
+
+        DEFINE_RECT_SZ date_rect, 16, 15, 122, 20
+        DEFINE_RECT_SZ time_rect, 150, 15, 74, 20
 
 .params settextbg_params
 backcolor:   .byte   0          ; black
@@ -217,19 +246,18 @@ backcolor:   .byte   0          ; black
         .res    8, $FF
 .endparams
 
-selected_field:                 ; 1 = day, 2 = month, 3 = year, 0 = none (init)
+selected_field:                 ; 1 = day, 2 = month, 3 = year, 4 = hour, 5 = minute, 0 = none (init)
         .byte   0
 
 clock_flag:
         .byte   0
 
-datelo: .byte   0
-datehi: .byte   0
-
 ;;; Originally Feb 26, 1985 (the author date?); now updated by build.
 day:    .byte   kBuildDD
 month:  .byte   kBuildMM
 year:   .byte   kBuildYY
+hour:   .byte   0
+minute: .byte   0
 
 spaces_string:
         PASCAL_STRING "    "    ; do not localize
@@ -242,6 +270,18 @@ month_string:
 
 year_string:
         PASCAL_STRING "  "      ; do not localize
+
+hour_string:
+        PASCAL_STRING "  "      ; do not localize
+
+minute_string:
+        PASCAL_STRING "  "      ; do not localize
+
+str_date_separator:
+        PASCAL_STRING "/"       ; do not localize
+
+str_time_separator:
+        PASCAL_STRING ":"       ; do not localize
 
 .params event_params
 kind:  .byte   0
@@ -317,27 +357,34 @@ nextwinfo:      .addr   0
 ;;; Initialize window, unpack the date.
 
 init_window:
+        ;; Read from ProDOS GP in Main
+        sta     RAMRDOFF
+
         ;; If null date, just leave the baked in default
-        lda     datelo
-        ora     datehi
+        lda     DATELO
+        ora     DATEHI
         beq     :+
 
         ;; Crack the date bytes. Format is:
-        ;;   |    DATEHI     |    DATELO     |
+        ;; |    DATEHI   |      DATELO       |
+        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;; |    Year     |  Month  |   Day   |
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
         ;;   |7 6 5 4 3 2 1 0 7 6 5 4 3 2 1 0|
         ;;   |    year     | month |  day    |
 
-        lda     datehi
+        lda     DATEHI
         lsr     a
         sta     year
 
-        lda     datelo
+        lda     DATELO
         and     #%11111
         sta     day
 
-        lda     datehi
+        lda     DATEHI
         ror     a
-        lda     datelo
+        lda     DATELO
         ror     a
         lsr     a
         lsr     a
@@ -345,7 +392,23 @@ init_window:
         lsr     a
         sta     month
 
-:       MGTK_CALL MGTK::OpenWindow, winfo
+        ;; |     TIMEHI    | |    TIMELO     |
+        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;; |0 0 0|  Hour   | |0 0|  Minute   |
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+
+        lda     TIMEHI
+        and     #%00011111
+        sta     hour
+
+        lda     TIMELO
+        and     #%00111111
+        sta     minute
+
+:       sta     RAMRDON
+
+        MGTK_CALL MGTK::OpenWindow, winfo
         lda     #0
         sta     selected_field
         jsr     draw_window
@@ -418,16 +481,17 @@ on_key_left:
         lda     selected_field
         sbc     #1
         bne     update_selection
-        lda     #3
+        lda     #5
         jmp     update_selection
 
 on_key_right:
         clc
         lda     selected_field
         adc     #1
-        cmp     #4
+        cmp     #6
         bne     update_selection
         lda     #1
+        ;; fall through
 
 update_selection:
         jsr     highlight_selected_field
@@ -480,7 +544,7 @@ jump:   jmp     SELF_MODIFIED
 
 hit_target_jump_table:
         .addr   on_ok, on_cancel, on_up, on_down
-        .addr   on_field_click, on_field_click, on_field_click
+        .addr   on_field_click, on_field_click, on_field_click, on_field_click, on_field_click
 .endproc
 
 ;;; ============================================================
@@ -488,8 +552,9 @@ hit_target_jump_table:
 .proc on_ok
         MGTK_CALL MGTK::PaintRect, ok_button_rect
 
-        ;; Pack the date bytes and store
+        ;; Pack the date bytes and store in ProDOS GP
         sta     RAMWRTOFF
+
         lda     month
         asl     a
         asl     a
@@ -501,6 +566,12 @@ hit_target_jump_table:
         lda     year
         rol     a
         sta     DATEHI
+
+        lda     minute
+        sta     TIMELO
+        lda     hour
+        sta     TIMEHI
+
         sta     RAMWRTON
 
         lda     #1
@@ -587,9 +658,9 @@ hit_rect_index:
 ;;; ============================================================
 
 increment_table:
-        .addr   0, increment_day, increment_month, increment_year
+        .addr   0, increment_day, increment_month, increment_year, increment_hour, increment_minute
 decrement_table:
-        .addr   0, decrement_day, decrement_month, decrement_year
+        .addr   0, decrement_day, decrement_month, decrement_year, decrement_hour, decrement_minute
 
 
         kDayMin = 1
@@ -598,6 +669,11 @@ decrement_table:
         kMonthMax = 12
         kYearMin = 0
         kYearMax = 99
+        kHourMin = 0
+        kHourMax = 23
+        kMinuteMin = 0
+        kMinuteMax = 59
+
 
 increment_day:
         clc
@@ -629,6 +705,26 @@ increment_year:
 :       sta     year
         jmp     prepare_year_string
 
+increment_hour:
+        clc
+        lda     hour
+        adc     #1
+        cmp     #kHourMax+1
+        bne     :+
+        lda     #kHourMin
+:       sta     hour
+        jmp     prepare_hour_string
+
+increment_minute:
+        clc
+        lda     minute
+        adc     #1
+        cmp     #kMinuteMax+1
+        bne     :+
+        lda     #kMinuteMin
+:       sta     minute
+        jmp     prepare_minute_string
+
 decrement_day:
         dec     day
         bne     :+
@@ -649,6 +745,20 @@ decrement_year:
         lda     #kYearMax
         sta     year
 :       jmp     prepare_year_string
+
+decrement_hour:
+        dec     hour
+        bpl     :+
+        lda     #kHourMax
+        sta     hour
+:       jmp     prepare_hour_string
+
+decrement_minute:
+        dec     minute
+        bpl     :+
+        lda     #kMinuteMax
+        sta     minute
+:       jmp     prepare_minute_string
 
 ;;; ============================================================
 
@@ -707,44 +817,40 @@ month_name_table:
         rts
 .endproc
 
+.proc prepare_hour_string
+        lda     hour
+        jsr     number_to_ascii
+        sta     hour_string+1
+        stx     hour_string+2
+        rts
+.endproc
+
+.proc prepare_minute_string
+        lda     minute
+        jsr     number_to_ascii
+        sta     minute_string+1
+        stx     minute_string+2
+        rts
+.endproc
+
 ;;; ============================================================
 ;;; Tear down the window and exit
 
+;;; Used in Aux to store result during tear-down
 dialog_result:  .byte   0
 
 .proc destroy
         MGTK_CALL MGTK::CloseWindow, closewindow_params
         jsr     clear_updates
 
-        ;; Copy the relay routine to the zero page
-        dest := $20
-
-        COPY_BYTES sizeof_routine+1, routine, dest
         lda     dialog_result
-        beq     skip
+        ;; Actual new date/time set in ProDOS GP
 
-        ;; Pack date bytes, store in X, A
-        lda     month
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        ora     day
-        tay
-        lda     year
-        rol     a
-        tax
-        tya
-
-skip:   jmp     dest
-
-.proc routine
-        sta     RAMRDOFF
+        ;; Back to Main
         sta     RAMWRTOFF
+        sta     RAMRDOFF
+
         jmp     save_date_and_exit
-.endproc
-        sizeof_routine = .sizeof(routine)
 .endproc
 
 ;;; ============================================================
@@ -798,8 +904,6 @@ done:   pla
         ;; Not DEFINE_RECT_INSET since width > 1
         DEFINE_RECT border_rect, 4, 2, kDialogWidth-5, kDialogHeight-3
 
-        DEFINE_RECT_SZ date_rect, 52, 15, 122, 20
-
 label_ok:
         PASCAL_STRING res_string_button_ok ; button label
 label_cancel:
@@ -822,6 +926,14 @@ penheight: .byte   1
         MGTK_CALL MGTK::FrameRect, border_rect
         MGTK_CALL MGTK::SetPenSize, setpensize_params
         MGTK_CALL MGTK::FrameRect, date_rect
+        MGTK_CALL MGTK::FrameRect, time_rect
+
+        MGTK_CALL MGTK::MoveTo, date_sep1_pos
+        param_call DrawString, str_date_separator
+        MGTK_CALL MGTK::MoveTo, date_sep2_pos
+        param_call DrawString, str_date_separator
+        MGTK_CALL MGTK::MoveTo, time_sep_pos
+        param_call DrawString, str_time_separator
 
         MGTK_CALL MGTK::SetPenMode, notpenxor
 
@@ -848,10 +960,14 @@ penheight: .byte   1
 :       jsr     prepare_day_string
         jsr     prepare_month_string
         jsr     prepare_year_string
+        jsr     prepare_hour_string
+        jsr     prepare_minute_string
 
         jsr     draw_day
         jsr     draw_month
         jsr     draw_year
+        jsr     draw_hour
+        jsr     draw_minute
 
         ;; If there is a system clock, don't draw the highlight.
         ldx     clock_flag
@@ -870,7 +986,11 @@ penheight: .byte   1
         beq     draw_day
         cmp     #2
         beq     draw_month
-        jmp     draw_year
+        cmp     #3
+        beq     draw_year
+        cmp     #4
+        beq     draw_hour
+        bne     draw_minute     ; always
 .endproc
 
 .proc draw_day
@@ -893,9 +1013,21 @@ penheight: .byte   1
         rts
 .endproc
 
+.proc draw_hour
+        MGTK_CALL MGTK::MoveTo, hour_pos
+        param_call DrawString, hour_string
+        rts
+.endproc
+
+.proc draw_minute
+        MGTK_CALL MGTK::MoveTo, minute_pos
+        param_call DrawString, minute_string
+        rts
+.endproc
+
 ;;; ============================================================
 ;;; Highlight selected field
-;;; Previously selected field in A, newly selected field at top of stack.
+;;; Input: A = new field to select
 
 .proc highlight_selected_field
         pha
@@ -912,7 +1044,17 @@ penheight: .byte   1
         jsr     fill_month
         jmp     update
 
-:       jsr     fill_year       ; year!
+:       cmp     #3              ; year?
+        bne     :+
+        jsr     fill_year
+        jmp     update
+
+:       cmp     #4              ; hour?
+        bne     :+
+        jsr     fill_hour
+        jmp     update
+
+:       jsr     fill_minute     ; minute!
 
 update: pla                     ; update selection
         sta     selected_field
@@ -920,10 +1062,11 @@ update: pla                     ; update selection
         beq     fill_day
         cmp     #2
         beq     fill_month
-
-fill_year:
-        MGTK_CALL MGTK::PaintRect, year_rect
-        rts
+        cmp     #3
+        beq     fill_year
+        cmp     #4
+        beq     fill_hour
+        bne     fill_minute     ; always
 
 fill_day:
         MGTK_CALL MGTK::PaintRect, day_rect
@@ -932,6 +1075,19 @@ fill_day:
 fill_month:
         MGTK_CALL MGTK::PaintRect, month_rect
         rts
+
+fill_year:
+        MGTK_CALL MGTK::PaintRect, year_rect
+        rts
+
+fill_hour:
+        MGTK_CALL MGTK::PaintRect, hour_rect
+        rts
+
+fill_minute:
+        MGTK_CALL MGTK::PaintRect, minute_rect
+        rts
+
 .endproc
 
 ;;; ============================================================
