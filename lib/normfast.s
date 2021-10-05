@@ -312,6 +312,10 @@ fcset:
         sta     fc_lock
 skipfc:
 
+        ;; ZipChip poking may twiddle annunciators, kicking
+        ;; out of DHIRES mode. Force it back on unconditionally.
+        lda     DHIRESON
+
         plp             ; restore interrupt state
         rts
 
