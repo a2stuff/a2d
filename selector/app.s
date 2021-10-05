@@ -647,6 +647,7 @@ set_startup_menu_items:
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
         jsr     SetRGBMode
         MGTK_CALL MGTK::SetMenu, menu
+        jsr     show_clock
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
 

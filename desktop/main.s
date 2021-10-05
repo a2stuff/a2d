@@ -10618,27 +10618,38 @@ restore:
 
 ;;; ============================================================
 
-.proc show_clock
-        lda     MACHID
+.proc show_clock_impl
+;;; Entry point: force an update, even if time hasn't changed
+force_update:
+        copy    #$80, force_flag
+        bne     common          ; always
+
+;;; Entry point: only update if time has changed
+normal: copy    #0, force_flag
+
+common: lda     MACHID
         and     #1              ; bit 0 = clock card
         bne     :+
         rts
 
 :       MLI_RELAY_CALL GET_TIME
 
+        bit     force_flag      ; forced update
+        bmi     update
+
         ;; Changed?
         ldx     #.sizeof(DateTime)-1
 :       lda     DATELO,x
         cmp     last_dt,x
-        bne     :+
+        bne     update
         dex
         bpl     :-
         lda     SETTINGS + DeskTopSettings::clock_24hours
         cmp     last_s
-        bne     :+
+        bne     update
         rts
 
-:       COPY_STRUCT DateTime, DATELO, last_dt
+update: COPY_STRUCT DateTime, DATELO, last_dt
         copy    SETTINGS + DeskTopSettings::clock_24hours, last_s
 
         ;; --------------------------------------------------
@@ -10692,7 +10703,12 @@ restore:
 last_dt:
         .tag    DateTime        ; previous date/time
 last_s: .byte   0               ; previous settings
+
+force_flag:
+        .byte   0               ; force update if high bit set
 .endproc
+show_clock := show_clock_impl::normal
+show_clock_force_update := show_clock_impl::force_update
 
 ;;; ============================================================
 

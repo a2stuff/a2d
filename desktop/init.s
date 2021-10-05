@@ -1075,6 +1075,7 @@ count:  .byte   0
         ;; Final MGTK configuration
         MGTK_RELAY_CALL MGTK::CheckEvents
         MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
+        jsr     main::show_clock
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         lda     #0
         sta     active_window_id

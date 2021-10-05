@@ -1311,6 +1311,7 @@ finish:
 
         MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
         jsr     main::toggle_menu_hilite
+        jsr     main::show_clock_force_update
 
         rts
 
