@@ -1899,7 +1899,10 @@ running_da_flag:
 
         ;; Never close after open only.
 from_keyboard:
-        copy    #0, window_id_to_close
+        lda     selected_icon_count
+        bne     :+
+        rts
+:       copy    #0, window_id_to_close
         jmp     common
 
         ;; --------------------------------------------------
