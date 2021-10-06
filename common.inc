@@ -20,9 +20,10 @@
 
 ;;; ============================================================
 
-;;; For addresses that will be filled in at runtime.
+;;; For addresses/values that will be filled in at runtime.
 
-SELF_MODIFIED   = $1234            ; To avoid ZP addressing mode
+SELF_MODIFIED   = $1234          ; To avoid ZP addressing mode
+SELF_MODIFIED_BYTE = $12
 
 ;;; ============================================================
 

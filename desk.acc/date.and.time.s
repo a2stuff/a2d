@@ -630,26 +630,53 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 .endproc
 
 .proc do_inc_or_dec
-        ptr := $7
+        ptr := $6
 
         jsr     delay
+
+        lda     selected_field
+        tax                     ; X = byte table offset
+        asl     a
+        tay                     ; Y = address table offset
+        copy    min_table,x, min
+        copy    max_table,x, max
+        copy16  prepare_proc_table,y, prepare_proc
+        copy16  field_table,y, ptr
+
+        ldy     #0              ; Y = 0
+        lda     (ptr),y
+        tax                     ; X = value
+
         lda     hit_rect_index
         cmp     #kUpRectIndex
         beq     incr
 
-decr:   copy16  #decrement_table, ptr
-        jmp     go
+decr:
+        cpx     min
+        bne     :+
+        ldx     max
+        inx
+:       dex
+        jmp     finish
 
-incr:   copy16  #increment_table, ptr
+incr:
+        cpx     max
+        bne     :+
+        ldx     min
+        dex
+:       inx
+        ;; fall through
 
-go:     lda     selected_field
-        asl     a
-        tay
-        copy16in (ptr),y, gosub+1
-
-gosub:  jsr     SELF_MODIFIED
+finish:
+        txa                     ; store new value
+        sta     (ptr),y
+        prepare_proc := *+1
+        jsr     SELF_MODIFIED   ; update string
         MGTK_CALL MGTK::SetTextBG, settextbg_params
         jmp     draw_selected_field
+
+min:    .byte   0
+max:    .byte   0
 .endproc
 
 hit_rect_index:
@@ -657,11 +684,7 @@ hit_rect_index:
 
 ;;; ============================================================
 
-increment_table:
-        .addr   0, increment_day, increment_month, increment_year, increment_hour, increment_minute
-decrement_table:
-        .addr   0, decrement_day, decrement_month, decrement_year, decrement_hour, decrement_minute
-
+        kNumFields = 5
 
         kDayMin = 1
         kDayMax = 31
@@ -674,91 +697,21 @@ decrement_table:
         kMinuteMin = 0
         kMinuteMax = 59
 
+field_table:
+        .addr   0, day, month, year, hour, minute
+        ASSERT_ADDRESS_TABLE_SIZE field_table, kNumFields+1
 
-increment_day:
-        clc
-        lda     day
-        adc     #1
-        cmp     #kDayMax+1
-        bne     :+
-        lda     #kMonthMin
-:       sta     day
-        jmp     prepare_day_string
+min_table:
+        .byte   0, kDayMin, kMonthMin, kYearMin, kHourMin, kMinuteMin
+        ASSERT_TABLE_SIZE min_table, kNumFields+1
 
-increment_month:
-        clc
-        lda     month
-        adc     #1
-        cmp     #kMonthMax+1
-        bne     :+
-        lda     #kMonthMin
-:       sta     month
-        jmp     prepare_month_string
+max_table:
+        .byte   0, kDayMax, kMonthMax, kYearMax, kHourMax, kMinuteMax
+        ASSERT_TABLE_SIZE max_table, kNumFields+1
 
-increment_year:
-        clc
-        lda     year
-        adc     #1
-        cmp     #kYearMax+1
-        bne     :+
-        lda     #kYearMin
-:       sta     year
-        jmp     prepare_year_string
-
-increment_hour:
-        clc
-        lda     hour
-        adc     #1
-        cmp     #kHourMax+1
-        bne     :+
-        lda     #kHourMin
-:       sta     hour
-        jmp     prepare_hour_string
-
-increment_minute:
-        clc
-        lda     minute
-        adc     #1
-        cmp     #kMinuteMax+1
-        bne     :+
-        lda     #kMinuteMin
-:       sta     minute
-        jmp     prepare_minute_string
-
-decrement_day:
-        dec     day
-        bne     :+
-        lda     #kDayMax
-        sta     day
-:       jmp     prepare_day_string
-
-decrement_month:
-        dec     month
-        bne     :+
-        lda     #kMonthMax
-        sta     month
-:       jmp     prepare_month_string
-
-decrement_year:
-        dec     year
-        bpl     :+
-        lda     #kYearMax
-        sta     year
-:       jmp     prepare_year_string
-
-decrement_hour:
-        dec     hour
-        bpl     :+
-        lda     #kHourMax
-        sta     hour
-:       jmp     prepare_hour_string
-
-decrement_minute:
-        dec     minute
-        bpl     :+
-        lda     #kMinuteMax
-        sta     minute
-:       jmp     prepare_minute_string
+prepare_proc_table:
+        .addr   0, prepare_day_string, prepare_month_string, prepare_year_string, prepare_hour_string, prepare_minute_string
+        ASSERT_ADDRESS_TABLE_SIZE prepare_proc_table, kNumFields+1
 
 ;;; ============================================================
 
