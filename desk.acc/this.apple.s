@@ -654,34 +654,43 @@ Version:                .word   0
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.07.html
 ;;; and c/o JohnMBrooks
 
-;;; Machine                    $FBB3    $FB1E    $FBC0    $FBDD    $FBBE    $FBBF
-;;; -----------------------------------------------------------------------------
-;;; Apple ][                    $38     [$AD]    [$60]                      [$2F]
-;;; Apple ][+                   $EA      $AD     [$EA]                      [$EA]
+;;; Machine                    $FBB3    $FB1E    $FBC0    $FBDD    $FBBF
+;;; --------------------------------------------------------------------
+;;; Apple ][                    $38     [$AD]    [$60]             [$2F]
+;;; Apple ][+                   $EA      $AD     [$EA]             [$EA]
 ;;; Apple /// (emulation)       $EA      $8A
-;;; Apple IIe                   $06     [$AD]     $EA     [$A9]             [$00]
-;;; Apple IIe (enhanced)        $06     [$AD]     $E0     [$A9]             [$00]
-;;; Apple IIe Option Card       $06     [$AD]     $E0      $02      $00
-;;; Apple IIc                   $06     [$4C]     $00                        $FF
-;;; Apple IIc (3.5 ROM)         $06     [$4C]     $00                        $00
-;;; Apple IIc (Org. Mem. Exp.)  $06     [$4C]     $00                        $03
-;;; Apple IIc (Rev. Mem. Exp.)  $06     [$4C]     $00                        $04
-;;; Apple IIc Plus              $06     [$4C]     $00                        $05
-;;; Apple IIgs                  $06     [$4C]     $E0  (and SEC, JSR $FE1F, CC=IIgs)
-;;; Laser 128                   $06      $AC     [$E0]
-;;; Franklin ACE 500            $06      $AD      $00                       [$00]
-;;; Franklin ACE 2000           $06      $AD      $E0      $4C     [$00]    [$00]
+;;; Apple IIe                   $06     [$AD]     $EA     [$A9]    [$00]
+;;; Apple IIe (enhanced)        $06     [$AD]     $E0     [$A9]    [$00]
+;;; Apple IIe Option Card *     $06     [$AD]     $E0      $02
+;;; Apple IIc **                $06     [$4C]     $00     [$A9]     $FF
+;;; Apple IIc (3.5 ROM)         $06     [$4C]     $00     [$A9]     $00
+;;; Apple IIc (Org. Mem. Exp.)  $06     [$4C]     $00     [$A9]     $03
+;;; Apple IIc (Rev. Mem. Exp.)  $06     [$4C]     $00     [$A9]     $04
+;;; Apple IIc Plus              $06     [$4C]     $00     [$A9]     $05
+;;; Apple IIgs ***              $06     [$4C]     $E0     [$00]    [$00]
+;;; Laser 128                   $06      $AC     [$E0]    [$8D]    [$00]
+;;; Franklin ACE 500            $06      $AD      $00      $4C     [$00]
+;;; Franklin ACE 2000 ****      $06      $AD    $EA/$E0    $4C     [$00]
 ;;;
 ;;; (Values in [] are for reference, not needed for compatibility check)
 ;;;
-;;; Location $FBBE is the version byte for the Apple IIe Card (just as $FBBF is
-;;; the version byte for the Apple IIc family) and is $00 for the first release
-;;; of the Apple IIe Card.
-
-;;; Per MG: There is more than one release of the Apple IIe Card, so we do not
-;;; check $FBBE.  If you are running the latest Apple release of "IIe Startup"
-;;; this byte is $03.
-
+;;; * = $FBBE is the version byte for the Apple IIe Card.
+;;;   $00 = first release
+;;;   $03 = latest Apple release of IIe Startup (c/o MG)
+;;;
+;;; ** = $FBBF is the version byte for the Apple IIc family:
+;;;   $FF = Original
+;;;   $00 = 3.5 ROM
+;;;   $03 = Original Memory Expansion
+;;;   $04 = Revised Memory Expansion
+;;;   $05 = IIc Plus
+;;;
+;;; *** = Apple IIgs looks like an Enhanced IIe. SEC, JSR $FE1F, CC=IIgs
+;;;
+;;; **** = Franklin ACE 2000 appears to have different ROM versions. At least one
+;;; has $FBC0=$EA (like an original IIe) and does not have $60 (RTS) at $FE1F,
+;;; so the IIgs IDROUTINE must be used with caution: it will modify A and output
+;;; text! By "revision 6", $FBC0=$E0 and $FE1F=$60, like an Enhanced IIe.
 
 .enum model
 .if ::INCLUDE_UNSUPPORTED_MACHINES
