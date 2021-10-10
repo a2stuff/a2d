@@ -6,7 +6,7 @@ The file is broken down into multiple segments:
 | Bootstrap    | B$000000    | Main    | $2000-$2026 | L$0027 | `bootstrap.s`       |
 | Quit Handler | B$000027    | Main    | $1000-$11FF | L$0200 | `quit_handler.s`    |
 | Loader       | B$000400    | Main    | $2000-$21FF | L$0200 | `loader.s`          |
-| Invoker      | B$000600    | Main    | $0290-$03EF | L$0160 | `invoker.s`         |
+| Invoker      | B$000600    | Main    | $0290-$03EF | L$0160 | `../lib/invoker.s`  |
 | MGTK + App   | B$000760    | Main    | $4000-$A1FF | L$6200 | `mgtk.s`, `app.s`   |
 | Alert Dialog | B$006960    | Aux LC1 | $D000-$D7FF | L$0800 | `alert_dialog.s`    |
 | Overlay 1    | B$007160    | Main    | $A400-$BEFF | L$1D00 | `ovl_file_dialog.s` |
@@ -35,10 +35,10 @@ padding.)
 Loads the Invoker (page 2/3), MGTK and App (above graphics pages), and
 Resources (Aux LC), then invokes the app.
 
-### Invoker - `invoker.s`
+### Invoker - `../lib/invoker.s`
 
-Responsible for loading and invoking the selected app. Very similar to
-the code in DeskTop. Handles BIN, BAS, SYS and S16 files, and selects
+Responsible for loading and invoking the selected app.
+Handles BIN, BAS, SYS and S16 files, and selects
 appropriate IO buffer location based on load address.
 
 ### MGTK and Selector App - `app.s`

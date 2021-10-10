@@ -25,7 +25,7 @@
 
         .include "init.s"
 
-        .include "invoker.s"
+        .include "../lib/invoker.s"
 
 ;;; ============================================================
 ;;; Disk Copy Overlays

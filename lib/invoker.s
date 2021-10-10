@@ -1,7 +1,7 @@
 ;;; ============================================================
 ;;; Invoker - loaded into MAIN $290-$3EF
 ;;;
-;;; Compiled as part of selector.s
+;;; Compiled as part of DeskTop and Selector
 ;;; ============================================================
 
 ;;; Used to invoke other programs (system, binary, BASIC)

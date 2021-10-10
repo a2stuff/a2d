@@ -161,6 +161,16 @@ RAMCARD_PREFIX          := $D3EE
 COPIED_TO_RAMCARD_FLAG  := $D3FF
 
 ;;; ============================================================
+;;; Invoker routine locations
+
+;;; DeskTop and Selector both use a routine at $290 to launch
+;;; other apps.
+
+INVOKER_PREFIX          := $220 ; Prefix to set
+INVOKER                 := $290 ; Invoke other programs
+INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
+
+;;; ============================================================
 ;;; Default Font
 
 ;;; Control Character Glyphs

@@ -7,9 +7,6 @@
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
 
-INVOKER_PREFIX  := $0220
-INVOKER_FILENAME:= $0280
-INVOKER         := $0290
 SAVE_AREA_BUFFER:= $0800
 LOADER          := $2000
 MGTK            := $4000
@@ -57,7 +54,7 @@ kOverlay2Size           = $D00
         .res 473
 
         .include "loader.s"
-        .include "invoker.s"
+        .include "../lib/invoker.s"
         .include "app.s"
         .include "alert_dialog.s"
         .include "ovl_file_dialog.s"

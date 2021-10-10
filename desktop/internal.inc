@@ -146,13 +146,6 @@ kDeviceTypeRemovable    = 3
 kDeviceTypeFileShare    = 4
 
 ;;; ============================================================
-;;; Invoker routine locations
-
-INVOKER_PREFIX          := $220 ; Prefix to set
-INVOKER                 := $290 ; Invoke other programs
-INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
-
-;;; ============================================================
 ;;; Relays from Main to Aux (params must be in ZP or LC)
 
 .macro MGTK_RELAY_CALL call, addr, label

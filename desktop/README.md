@@ -16,7 +16,7 @@ The file is broken down into multiple segments:
 | DeskTop       | Aux LC1 | A$FB00  | `res.s`                        |
 | DeskTop       | Main    | A$4000  | `main.s`                       |
 | Initializer   | Main    | A$0800  | `init.s`                       |
-| Invoker       | Main    | A$0290  | `invoker.s`                    |
+| Invoker       | Main    | A$0290  | `../lib/invoker.s`             |
 | Disk Copy 1/4 | Main    | A$0800  | `../disk_copy/bootstrap.s`     |
 | Disk Copy 2/4 | Main    | A$1800  | `../disk_copy/loader.s`        |
 | Disk Copy 3/4 | Aux LC1 | A$D000  | `../disk_copy/auxlc.s`         |
@@ -56,7 +56,7 @@ moving them to the appropriate destination in aux/banked/main memory.
 
 ### Invoker
 
-`invoker.s`
+`../lib/invoker.s`
 
 Loaded at $290-$03EF, this small routine is used to invoke a target,
 e.g. a double-clicked file. System files are loaded/run at $2000,
