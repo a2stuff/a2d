@@ -86,7 +86,7 @@ L0882:  lda     $D1
         ldx     L0C23
         jsr     L0823
         ldx     L0C23
-        lda     TESTWP,x        ; Check write protect???
+        lda     TESTWP,x        ; Check write protect
         lda     WPRES,x
         tay
         lda     RDMODE,x        ; Activate read mode
@@ -313,7 +313,7 @@ done:   rts
 
 .proc format_sector
         jsr     rts2
-        lda     TESTWP,x        ; Check write protect ???
+        lda     TESTWP,x        ; Check write protect
         lda     WPRES,x
 
         lda     #$FF            ; Self-sync data

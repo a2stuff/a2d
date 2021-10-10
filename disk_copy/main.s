@@ -1187,7 +1187,6 @@ done:   rts
 .endproc
 
 main__format_device   := main::format_device
-main__unit_num_to_sp_unit_number      := main::unit_num_to_sp_unit_number
 main__identify_nonprodos_disk_type    := main::identify_nonprodos_disk_type
 main__read_volume_bitmap              := main::read_volume_bitmap
 main__is_drive_removable              := main::is_drive_removable

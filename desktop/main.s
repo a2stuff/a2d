@@ -72,7 +72,7 @@ JT_SHOW_WARNING:        jmp     ShowWarning             ; *
         ;; Poll drives for updates
         jsr     check_disk_inserted_ejected
         beq     :+
-        jsr     check_drive           ; conditionally ???
+        jsr     check_drive     ; DEVLST index+3 of changed drive
 
 :       jsr     update_menu_item_states
 
@@ -3195,7 +3195,7 @@ highlight_icon:
         jsr     LoadDesktopEntryTable
 :
 
-        lda     selected_icon_list ; or `icon_param` ???
+        lda     selected_icon_list
         jsr     DrawIcon
 
         rts
@@ -8273,7 +8273,7 @@ inext:  inc     record_num
         dex
         ldy     $0806
         iny
-        jsr     L812B
+        jsr     update_cached_window_entry
 
         lda     #0
         sta     record_num
@@ -8366,7 +8366,7 @@ next:   inc     index
         dex
         ldy     $0806
         iny
-        jsr     L812B
+        jsr     update_cached_window_entry
 
         copy    #0, record_num
         jmp     loop
@@ -8448,7 +8448,7 @@ next:   inc     index
         dex
         ldy     $0806
         iny
-        jsr     L812B
+        jsr     update_cached_window_entry
 
         lda     #0
         sta     record_num
@@ -8539,7 +8539,7 @@ L809E:  inc     index
         dex
         ldy     $0806
         iny
-        jsr     L812B
+        jsr     update_cached_window_entry
 
         copy    #0, record_num
         copy    #$FF, $0806
@@ -8643,9 +8643,9 @@ done:   lda     LCBANK1
 .endproc
 
 ;;; --------------------------------------------------
-;;; ???
+;;; Inputs: X = index in window, Y = new value
 
-.proc L812B
+.proc update_cached_window_entry
         lda     LCBANK1
         lda     LCBANK1
         tya
@@ -11182,7 +11182,7 @@ move_flag:
 unlock_flag:
         .byte   0
 
-        ;; high bit set = from Selector > Run command (download???)
+        ;; high bit set = from Selector > Run command
         ;; high bit clear = Get Size
 run_flag:
         .byte   0
