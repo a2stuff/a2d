@@ -598,13 +598,13 @@ done:   rts
         bne     :+
         return  #2              ; Invalid icon
 :
-        and     #kIconEntryHighlighted
+        and     #kIconEntryStateHighlighted
         beq     :+
         return  #3              ; Already highlighted
 :
         ;; Mark highlighted
         lda     (ptr),y
-        ora     #kIconEntryHighlighted
+        ora     #kIconEntryStateHighlighted
         sta     (ptr),y
 
         ;; Append to highlight list
@@ -649,7 +649,7 @@ done:   rts
 
         ldy     #IconEntry::state
         lda     (ptr),y
-        and     #kIconEntryHighlighted
+        and     #kIconEntryStateHighlighted
         bne     :+
 
         jsr     paint_icon_unhighlighted
@@ -711,7 +711,7 @@ done:   rts
         pla                     ; A = state
 
         ;; Was it highlighted?
-        and     #kIconEntryHighlighted
+        and     #kIconEntryStateHighlighted
         beq     done            ; not highlighted
 
         ldy     #IconEntry::id
@@ -770,7 +770,7 @@ loop:   ldx     count
         asl     a
         tax
         copy16  icon_ptrs,x, icon_ptr
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
         ldy     #RemoveAllParams::window_id
@@ -814,7 +814,7 @@ L96E5:  dec     count
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask ; check window
         ldy     #CloseWindowParams::window_id
@@ -842,7 +842,7 @@ L96E5:  dec     count
         pla                     ; A = state
 
         ;; Was it highlighted?
-        and     #kIconEntryHighlighted
+        and     #kIconEntryStateHighlighted
         beq     next            ; not highlighted
 
         ldy     #IconEntry::id
@@ -904,7 +904,7 @@ loop:   cpx     num_icons
         copy16  icon_ptrs,x, icon_ptr
 
         ;; Matching window?
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
         cmp     window_id
@@ -1344,7 +1344,7 @@ L9C29:  lda     highlight_list,x
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     ($08),y
         iny
         sta     ($06),y
@@ -1566,27 +1566,23 @@ find_icon:
         ;; Highlighted?
         ldy     #IconEntry::state
         lda     (ptr),y
-        and     #kIconEntryHighlighted
+        and     #kIconEntryStateHighlighted
         bne     done            ; Not valid (it's being dragged)
 
-        lda     icon_num
-        cmp     trash_icon_num  ; TODO: use type bits instead?
-        beq     :+              ; Trash is always a valid target
+        ;; Is it a drop target?
+        ldy     #IconEntry::win_flags
+        lda     (ptr),y
+        and     #kIconEntryFlagsDropTarget
+        beq     done
 
-        ;; Which window?
-        ldy     #IconEntry::win_type
+        ;; Stash window for the future
         lda     (ptr),y
         and     #kIconEntryWinIdMask
         sta     window_id
 
-        ;; Is it a drop target?
-        lda     (ptr),y
-        and     #kIconEntryTypeMask
-        bne     done
-
         ;; Highlight it!
         lda     icon_num
-:       sta     highlight_icon_id
+        sta     highlight_icon_id
         jsr     xdraw_outline
         jsr     highlight_icon
         jsr     xdraw_outline
@@ -1620,7 +1616,7 @@ headery:
 
         jsr     get_icon_ptr
         stax    ptr
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask
         rts
@@ -1702,13 +1698,13 @@ height: .word   0
         bne     :+
         return  #2              ; Invalid icon
 :
-        and     #kIconEntryHighlighted
+        and     #kIconEntryStateHighlighted
         bne     :+
         return  #3              ; Not highlighted
 :
         ;; Mark not highlighted
         lda     (ptr),y
-        eor     #kIconEntryHighlighted
+        eor     #kIconEntryStateHighlighted
         sta     (ptr),y
 
         ldy     #IconEntry::id
@@ -1827,12 +1823,12 @@ highlighted:
 
 .proc common
         ;; Test if icon is open volume/folder
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     ($06),y
-        and     #kIconEntryOpenMask
+        and     #kIconEntryFlagsOpen
         sta     open_flag
 
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     ($06),y
         and     #kIconEntryWinIdMask
         bne     :+
@@ -2157,7 +2153,7 @@ loop:   bmi     done
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask ; desktop icon
         bne     next                 ; no, skip it
@@ -2475,7 +2471,7 @@ LA466:  txa
         copy16  icon_ptrs,x, ptr
 
         ;; Same window?
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask
         cmp     window_id

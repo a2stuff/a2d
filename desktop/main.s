@@ -615,10 +615,10 @@ not_menu:
         ldy     #IconEntry::state ; set state to open
         lda     (ptr),y
         beq     done
-        ora     #kIconEntryOpenMask
+        ora     #kIconEntryFlagsOpen
         sta     (ptr),y
 
-        iny                     ; IconEntry::win_type
+        iny                     ; IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask
         beq     :+
@@ -656,7 +656,7 @@ done:   rts
         stax    icon_ptr
 
         ;; Get the window id
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
         sta     win
@@ -1947,17 +1947,19 @@ done:   rts
 next:   txa
         pha
         lda     selected_icon_list_copy,x
+
+        ;; Trash?
+        cmp     trash_icon_num
+        beq     next_icon
+
+        ;; Look at flags...
         jsr     icon_entry_lookup
         stax    ptr
 
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (ptr),y
-        and     #kIconEntryTypeMask
-
-        cmp     #kIconEntryTypeTrash
-        beq     next_icon
-        cmp     #kIconEntryTypeDir
-        bne     maybe_open_file
+        and     #kIconEntryFlagsDropTarget ; folder or volume?
+        beq     maybe_open_file       ; nope
 
         ;; Directory
         lda     dir_flag        ; first one seen?
@@ -3176,7 +3178,7 @@ highlight_icon:
         lda     icon_param
         jsr     icon_entry_lookup
         stax    icon_ptr
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
 
@@ -3679,8 +3681,7 @@ start:  sta     check_drive_flags
         bpl     :-
         rts                         ; Not found - not a volume icon
 
-:       sty     previous_icon_count ; BUG: overwritten?
-        sty     devlst_index
+:       sty     devlst_index
         jmp     common
 
 ;;; --------------------------------------------------
@@ -3696,8 +3697,7 @@ after_format_erase:
         dey
         bpl     :-
         iny
-:       sty     previous_icon_count ; BUG: overwritten?
-        sty     devlst_index
+:       sty     devlst_index
         jmp     common
 
 ;;; --------------------------------------------------
@@ -4728,9 +4728,9 @@ cont:   sta     cached_window_entry_count
         jsr     icon_entry_lookup
         stax    icon_ptr
 
-        ldy     #IconEntry::win_type ; clear open state
+        ldy     #IconEntry::win_flags ; clear open state
         lda     (icon_ptr),y
-        and     #AS_BYTE(~kIconEntryOpenMask)
+        and     #AS_BYTE(~kIconEntryFlagsOpen)
         sta     (icon_ptr),y
         and     #kIconEntryWinIdMask ; which window?
         beq     :+              ; desktop, can draw/select
@@ -5594,7 +5594,7 @@ y_flag: .byte   0
         ;; Not a volume icon with an open window. Is it even a volume?
         jsr     icon_entry_lookup
         stax    ptr
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask
         beq     volume
@@ -5878,13 +5878,13 @@ num:    .byte   0
         stax    ptr
 
         ;; Set open flag
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (ptr),y
-        ora     #kIconEntryOpenMask
+        ora     #kIconEntryFlagsOpen
         sta     (ptr),y
 
         ;; Only draw to desktop or active window
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask
         beq     :+
@@ -7034,7 +7034,7 @@ size:   .word   0               ; size of a window's list
 
         jsr     push_pointers
 
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         pha
         add16   icon_ptr, #IconEntry::name, name_ptr
@@ -7252,7 +7252,7 @@ has_parent:
 
         jsr     icon_entry_lookup
         stax    icon_ptr
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
         beq     volume
@@ -7290,7 +7290,7 @@ copy_new_window_bounds_flag:
 
 window_id:      .byte   0
 iconbits:       .addr   0
-iconentry_type: .byte   0
+iconentry_flags: .byte   0
 icon_height:    .word   0
 
 index:  .byte   0
@@ -7615,8 +7615,8 @@ L7862:  lda     row_coords::xcoord
         inc     row_coords::xcoord+1
 
 L7870:  lda     cached_window_id
-        ora     iconentry_type
-        ldy     #IconEntry::win_type
+        ora     iconentry_flags
+        ldy     #IconEntry::win_flags
         sta     (icon_entry),y
         ldy     #IconEntry::iconbits
         copy16in iconbits, (icon_entry),y
@@ -7636,10 +7636,10 @@ L7870:  lda     cached_window_id
         sta     icon_type
         jsr     push_pointers
 
-        ;; For populating IconEntry::win_type
+        ;; For populating IconEntry::win_flags
         ldy     icon_type
-        lda     icontype_iconentrytype_table, y
-        sta     iconentry_type
+        lda     icontype_iconentryflags_table, y
+        sta     iconentry_flags
 
         ;; For populating IconEntry::iconbits
         tya
@@ -9191,7 +9191,7 @@ hi:     .byte   0
         jsr     icon_entry_lookup
         stax    icon_ptr
 
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
         pha                     ; A = window id
@@ -9953,9 +9953,9 @@ success:
 
         ;; ----------------------------------------
 
-        ;; Assign icon type
-        ldy     #IconEntry::win_type
-        lda     #0
+        ;; Assign icon flags
+        ldy     #IconEntry::win_flags
+        lda     #kIconEntryFlagsDropTarget
         sta     (icon_ptr),y
 
         ;; Invalid record
@@ -10175,9 +10175,9 @@ start:  lda     icon_param
 skip:   lda     icon_param
         jsr     icon_entry_lookup
         stax    ptr
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     (ptr),y
-        and     #AS_BYTE(~kIconEntryOpenMask) ; clear open_flag
+        and     #AS_BYTE(~kIconEntryFlagsOpen) ; clear open_flag
         sta     (ptr),y
 
         lda     icon_param
@@ -10923,11 +10923,11 @@ do_unlock:
         jsr     L8FE1
         jmp     finish_operation
 
-.proc get_icon_entry_win_type
+.proc get_icon_entry_win_flags
         asl     a
         tay
         copy16  icon_entry_address_table,y, $06
-        ldy     #IconEntry::win_type
+        ldy     #IconEntry::win_flags
         lda     ($06),y
         rts
 .endproc

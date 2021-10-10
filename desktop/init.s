@@ -337,8 +337,10 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
         sta     cached_window_entry_list
         jsr     main::icon_entry_lookup
         stax    ptr
-        ldy     #IconEntry::win_type
-        copy    #kIconEntryTypeTrash, (ptr),y
+
+        ;; Trash is a drop target
+        ldy     #IconEntry::win_flags
+        copy    #kIconEntryFlagsDropTarget, (ptr),y
 
         ldy     #IconEntry::iconx
         copy16in #kTrashIconX, (ptr),y

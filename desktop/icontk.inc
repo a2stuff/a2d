@@ -68,18 +68,11 @@ label   := *
 ;;;                      bit 6 (V) = highlighted
 ;;;                      bit 0     = set to 1 when allocated
 ;;;                      $00 if not allocated
-;;;      .byte type/window_id
-;;;                      (bits 0-3 window_id)
-;;;                      (bits 4,5,6)
-;;;                             000 = directory (drop target)
-;;;                             001 = system
-;;;                             010 = binary (maybe runnable)
-;;;                             011 = basic
-;;;                             100 = (unused)
-;;;                             101 = data (text/generic/...)
-;;;                             110 = (unused)
-;;;                             111 = trash
-;;;                      (bit 7 = open flag)
+;;;      .byte flags/window_id
+;;;                      bits 0-3 = window_id
+;;;                      bits 4,5 = unused
+;;;                      bit 6 = drop target flag (trash, folder, dir)
+;;;                      bit 7 = open flag
 ;;;      .word iconx     (pixels)
 ;;;      .word icony     (pixels)
 ;;;      .addr iconbits  (addr of IconDefinition)
@@ -90,7 +83,7 @@ label   := *
 .struct IconEntry
         id              .byte   ; 0
         state           .byte   ; 1
-        win_type        .byte   ; 2
+        win_flags       .byte   ; 2
         iconx           .word   ; 3
         icony           .word   ; 5
         iconbits        .addr   ; 7
@@ -103,20 +96,12 @@ label   := *
 kMaxIconCount   = 127
 
 ;;; Masks for IconEntry::state
-kIconEntryHighlighted = %01000000
+kIconEntryStateHighlighted = %01000000
 
-;;; Masks for IconEntry::win_type
-kIconEntryOpenMask    = %10000000
-kIconEntryTypeMask    = %01110000
-kIconEntryWinIdMask   = %00001111
-
-;;; Only kIconEntryTypeDir and kIconEntryTypeTrash define unique behavior.
-kIconEntryTypeDir     = %00000000
-kIconEntryTypeSystem  = %00010000
-kIconEntryTypeBinary  = %00100000
-kIconEntryTypeBasic   = %00110000
-kIconEntryTypeGeneric = %01010000
-kIconEntryTypeTrash   = %01110000
+;;; Masks for IconEntry::win_flags
+kIconEntryFlagsOpen             = %10000000
+kIconEntryFlagsDropTarget       = %01000000
+kIconEntryWinIdMask             = %00001111
 
 .struct IconDefinition
         ;; First part is MGTK::MapInfo without leading viewloc

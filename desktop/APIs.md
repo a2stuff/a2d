@@ -327,19 +327,13 @@ Erases the specified icon by number. No error checking is done.
 
 ```
 .byte icon      icon index
-.byte state     bit 1 = allocated, bit 6 = highlighted
+.byte state     bit 0 = allocated
+                bit 6 = highlighted
 .byte type/window_id
-                (bits 0-3 window_id)
-                (bits 4,5,6)
-                       000 = directory (drop target)
-                       001 = system
-                       010 = binary (maybe runnable)
-                       011 = basic
-                       100 = (unused)
-                       101 = data (text/generic/...)
-                       110 = (unused)
-                       111 = trash
-                (bit 7 = open flag)
+                bits 0-3 = window_id
+                bits 4,5 = unused
+                bit 6 = drop target flag (trash, folder, dir)
+                bit 7 = open flag
 .word iconx     (pixels)
 .word icony     (pixels)
 .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})

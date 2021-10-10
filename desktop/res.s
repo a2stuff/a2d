@@ -664,8 +664,6 @@ file_count:
 
         DEFINE_POINT picker_entry_pos, 2, 0
 
-        .byte   $00,$00         ; Unused ???
-
 str_folder:
         PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight} ; do not localize
 
@@ -1497,25 +1495,25 @@ type_names_table:
 
 ;;; Map IconType to other icon/details
 
-icontype_iconentrytype_table:
-        .byte   kIconEntryTypeGeneric ; generic
-        .byte   kIconEntryTypeGeneric ; text
-        .byte   kIconEntryTypeBinary  ; binary
-        .byte   kIconEntryTypeGeneric ; graphics
-        .byte   kIconEntryTypeGeneric ; music
-        .byte   kIconEntryTypeGeneric ; font
-        .byte   kIconEntryTypeGeneric ; relocatable
-        .byte   kIconEntryTypeGeneric ; command
-        .byte   kIconEntryTypeDir     ; folder
-        .byte   kIconEntryTypeGeneric ; iigs
-        .byte   kIconEntryTypeGeneric ; appleworks db
-        .byte   kIconEntryTypeGeneric ; appleworks wp
-        .byte   kIconEntryTypeGeneric ; appleworks sp
-        .byte   kIconEntryTypeGeneric ; desk accessory
-        .byte   kIconEntryTypeBasic   ; basic
-        .byte   kIconEntryTypeSystem  ; system
-        .byte   kIconEntryTypeSystem  ; application
-        ASSERT_TABLE_SIZE icontype_iconentrytype_table, IconType::COUNT
+icontype_iconentryflags_table:
+        .byte   0                    ; generic
+        .byte   0                    ; text
+        .byte   0                    ; binary
+        .byte   0                    ; graphics
+        .byte   0                    ; music
+        .byte   0                    ; font
+        .byte   0                    ; relocatable
+        .byte   0                    ; command
+        .byte   kIconEntryFlagsDropTarget ; folder
+        .byte   0                    ; iigs
+        .byte   0                    ; appleworks db
+        .byte   0                    ; appleworks wp
+        .byte   0                    ; appleworks sp
+        .byte   0                    ; desk accessory
+        .byte   0                    ; basic
+        .byte   0                    ; system
+        .byte   0                    ; application
+        ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT
 
 type_icons_table:               ; map into definitions below
         .addr   gen ; generic
