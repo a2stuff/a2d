@@ -1696,7 +1696,6 @@ params: .addr   0
         sta     len
         tay
 :       lda     (ptr),y
-        and     #CHAR_MASK      ; TODO: Is this needed?
         cmp     #'/'
         beq     :+
         dey
@@ -1705,7 +1704,6 @@ params: .addr   0
         ;; And find preceding /
 :       dey
 :       lda     (ptr),y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey

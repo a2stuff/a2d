@@ -735,7 +735,6 @@ type0:  .byte   0
 loop:   iny
         inx
         lda     (ptr),y
-        and     #CHAR_MASK
         cmp     str_system,x
         bne     fail
         cpx     str_system
@@ -800,7 +799,6 @@ len1:   .byte   0
 ;;; Convert filename character to uppercase
 
 .proc to_uppercase
-        and     #CHAR_MASK
         cmp     #'a'            ; Assumes valid filename character
         bcc     :+
         and     #CASE_MASK      ; Make upper-case

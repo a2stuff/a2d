@@ -1870,7 +1870,6 @@ bits:   .byte   $00
         ;; Strip last segment, e.g. ".../APPLEWORKS/AW.SYSTEM" -> ".../APPLEWORKS"
         ldy     entry_path2
 :       lda     entry_path2,y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey
@@ -1880,7 +1879,6 @@ bits:   .byte   $00
 
         ;; Find offset of parent directory name, e.g. "APPLEWORKS"
 :       lda     entry_path2,y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey

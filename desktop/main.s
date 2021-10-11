@@ -1548,7 +1548,6 @@ slash_index:
         ;; Walk back one segment
         tay
 :       lda     ($06),y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey
@@ -1558,7 +1557,6 @@ slash_index:
 
         ;; Walk back a second segment
 :       lda     ($06),y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey

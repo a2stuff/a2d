@@ -1585,7 +1585,6 @@ next:   dey
 done:   rts
 
 :       lda     (ptr),y
-        and     #CHAR_MASK      ; convert to ASCII
         cmp     #'/'
         beq     skip
         cmp     #'.'
@@ -1596,7 +1595,6 @@ skip:   dey
 check_alpha:
         iny
         lda     (ptr),y
-        and     #CHAR_MASK
         cmp     #'A'
         bcc     :+
         cmp     #'Z'+1

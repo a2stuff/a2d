@@ -1582,7 +1582,6 @@ done:   rts
 
         ;; Seek to next boundary
 :       lda     (ptr),y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     L99FA
         cmp     #'.'
@@ -1593,7 +1592,6 @@ L99FA:  dey
         ;; Adjust case
 L99FE:  iny
         lda     (ptr),y
-        and     #CHAR_MASK
         cmp     #'A'
         bcc     L9A10
         cmp     #'Z'+1
@@ -2252,7 +2250,6 @@ len:    .byte   0
         sta     len
         tay
 :       lda     (path_addr),y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey
@@ -2260,7 +2257,6 @@ len:    .byte   0
 
 :       dey
 :       lda     (path_addr),y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey

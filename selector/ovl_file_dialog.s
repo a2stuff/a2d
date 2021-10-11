@@ -1039,7 +1039,6 @@ l1:     .byte   0
         jmp     l6
 
 l1:     lda     path_buf,x
-        and     #CHAR_MASK
         cmp     #'/'
         beq     l2
         dex
@@ -2188,7 +2187,6 @@ l3:     lda     l7
         lda     (ptr),y
         tay
 l4:     lda     (ptr),y
-        and     #$7F
         cmp     #'.'
         beq     l5
         cmp     #'/'

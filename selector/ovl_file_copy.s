@@ -786,7 +786,6 @@ l1:     lda     ($06),y
         bpl     l1
         ldy     LA1B6
 l2:     lda     LA1B6,y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     l3
         dey
@@ -794,7 +793,6 @@ l2:     lda     LA1B6,y
 l3:     dey
         sty     LA1B6
 l4:     lda     LA1B6,y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     l5
         dey

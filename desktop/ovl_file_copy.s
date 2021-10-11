@@ -143,7 +143,6 @@ jt_destination_filename:
 
         ;; Find last slash
 :       lda     path_buf0,x
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dex

@@ -193,7 +193,7 @@ wait:   sta     KBDSTRB
 :       lda     KBD
         bpl     :-
         and     #CHAR_MASK
-        cmp     #$0D            ; Return
+        cmp     #CHAR_RETURN
         bne     wait
         jmp     start
 

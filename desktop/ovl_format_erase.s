@@ -807,7 +807,6 @@ unit_num:
         ;; Remove leading '/' from name, if necessary
         ldy     #$01
         lda     ($06),y
-        and     #CHAR_MASK
         cmp     #'/'
         bne     L132C           ; nope
         dey
@@ -823,7 +822,6 @@ L132C:  ldy     #0
         lda     ($06),y
         tay
 :       lda     ($06),y
-        and     #CHAR_MASK
         sta     vol_name_buf,y
         dey
         bpl     :-
