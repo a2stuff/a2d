@@ -98,6 +98,7 @@ header_orig_prefix:
 ;;; ============================================================
 
 start:
+        jsr     detect_mousetext
         jsr     load_settings
         jmp     copy_desktop_to_ramcard
 
@@ -1236,6 +1237,9 @@ file_loop:
         kProgressWidth = kProgressStops * kProgressTick
 
 .proc init_progress
+        bit     supports_mousetext
+        bpl     done
+
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
@@ -1264,7 +1268,7 @@ file_loop:
         lda     #$0E|$80
         jsr     COUT
 
-        rts
+done:   rts
 .endproc
 
 .proc update_progress
@@ -1380,7 +1384,8 @@ done:   dex
 ;;; ============================================================
 
 .proc show_copying_screen
-        ;; Center string
+
+        ;; Message
         lda     #80
         sec
         sbc     str_copying_to_ramcard
@@ -1396,7 +1401,10 @@ done:   dex
         cpy     str_copying_to_ramcard
         bne     :-
 
-        ;; Center string
+        ;; Tip
+        bit     supports_mousetext
+        bpl     done
+
         lda     #(80 - kLengthCopyingTip) / 2
         sta     CH
         lda     #kVtabCopyingTip
@@ -1409,7 +1417,7 @@ done:   dex
         cpy     str_tip_skip_copying
         bne     :-
 
-        rts
+done:   rts
 .endproc
 
 ;;; ============================================================
@@ -2198,6 +2206,26 @@ done:   rts
 
 .endproc
         preserve_quit_code := preserve_quit_code_impl::start
+
+;;; ============================================================
+;;; Try to detect an Enhanced IIe or later (IIc, IIgs, etc),
+;;; to infer suport for MouseText characters.
+;;; Done by testing testing for a ROM signature.
+;;; Output: Sets `supports_mousetext` to $80.
+
+.proc detect_mousetext
+        lda     ZIDBYTE
+        beq     enh    ; IIc/IIc+ have $00
+        cmp     #$E0   ; IIe original has $EA, Enh. IIe, IIgs have $E0
+        bne     done
+
+enh:    copy    #$80, supports_mousetext
+
+done:   rts
+.endproc
+
+supports_mousetext:
+        .byte   0
 
 ;;; ============================================================
 

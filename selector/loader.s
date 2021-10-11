@@ -41,6 +41,7 @@ start:
         dex
         bpl     :-
 
+        jsr     detect_mousetext
         jsr     init_progress
 
         ;; Open up Selector itself
@@ -122,6 +123,9 @@ L2049:  lda     open_params::ref_num
         kProgressWidth = kProgressStops * kProgressTick
 
 .proc init_progress
+        bit     supports_mousetext
+        bpl     done
+
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
@@ -150,7 +154,7 @@ L2049:  lda     open_params::ref_num
         lda     #$0E|$80
         jsr     COUT
 
-        rts
+done:   rts
 .endproc
 
 .proc update_progress
@@ -174,6 +178,28 @@ L2049:  lda     open_params::ref_num
 
 count:  .byte   0
 .endproc
+
+;;; ============================================================
+;;; Try to detect an Enhanced IIe or later (IIc, IIgs, etc),
+;;; to infer suport for MouseText characters.
+;;; Done by testing testing for a ROM signature.
+;;; Output: Sets `supports_mousetext` to $80.
+
+.proc detect_mousetext
+        lda     ZIDBYTE
+        beq     enh    ; IIc/IIc+ have $00
+        cmp     #$E0   ; IIe original has $EA, Enh. IIe, IIgs have $E0
+        bne     done
+
+enh:    copy    #$80, supports_mousetext
+
+done:   rts
+.endproc
+
+supports_mousetext:
+        .byte   0
+
+;;; ============================================================
 
 .endscope
 
