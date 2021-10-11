@@ -80,7 +80,7 @@ kIconSpacingY   = 32
 kIconBBoxOffsetTop      = kWindowHeaderHeight + 4
 kIconBBoxOffsetLeft     = 45
 kIconBBoxOffsetBottom   = kIconLabelHeight + 4
-kIconBBoxOffsetRight    = 37 + kIconWidth ; accomodate icon + label
+kIconBBoxOffsetRight    = 37 + kIconWidth ; accommodate icon + label
 ;;; NOTE: kIconBBoxOffsetRight should probably be se to
 ;;; kIconBBoxOffsetLeft + kIconWidth but aesthetically that looks bad.
 
