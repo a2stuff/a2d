@@ -38,10 +38,10 @@
         kScreenWidth  = 560
         kScreenHeight = 192
 
-        lda     ROMIN2
+        bit     ROMIN2
         jsr     print_screen
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 
 .proc send_spacing

@@ -12,8 +12,8 @@
 .scope
         dest := $D100
 
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         ldy     #0
 :       lda     reloc_start,y
@@ -23,7 +23,7 @@
         dey
         bne     :-
 
-        lda     ROMIN2
+        bit     ROMIN2
 
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params

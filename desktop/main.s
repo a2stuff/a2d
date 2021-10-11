@@ -2578,8 +2578,8 @@ str_quit_code:
 reset_handler:
         ;; Restore DeskTop Main expected state...
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
 start:
         ;; Restore system state: devices, /RAM, ROM/ZP banks.
@@ -2623,7 +2623,7 @@ fail:   MLI_CALL QUIT, quit_params
         jsr     SetColorMode
 
         ;; Exit graphics mode entirely
-        lda     ROMIN2
+        bit     ROMIN2
         jsr     SETVID
         jsr     SETKBD
         jsr     INIT
@@ -6612,14 +6612,12 @@ enough_room:
 
         ;; Store entry count
         lda     dir_header::file_count
-        pha
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldy     #0
-        pla
         sta     (record_ptr),y
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         copy    #AS_BYTE(-1), index_in_dir ; immediately incremented
         copy    #0, index_in_block
@@ -6744,8 +6742,8 @@ L7223:  iny
         sta     record,x
 
         ;; Copy entry composed at $1F00 to buffer in Aux LC Bank 2
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldx     #.sizeof(FileRecord)-1
         ldy     #.sizeof(FileRecord)-1
 :       lda     record,x
@@ -6753,8 +6751,8 @@ L7223:  iny
         dex
         dey
         bpl     :-
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         lda     #.sizeof(FileRecord)
         clc
         adc     record_ptr
@@ -6963,12 +6961,12 @@ get_vol_used_free_via_volume := get_vol_used_free_via_volume_impl::start
         ldy     #0
         jsr     push_pointers
 
-loop:   lda     LCBANK2
-        lda     LCBANK2
+loop:   bit     LCBANK2
+        bit     LCBANK2
         lda     (ptr_src),y
         sta     (ptr_dst),y
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         inc16   ptr_dst
         inc16   ptr_src
 
@@ -7350,13 +7348,13 @@ common: sta     preserve_window_size_flag
         asl     a
         tax
         copy16  window_filerecord_table,x, records_ptr
-        lda     LCBANK2         ; get file count (resides in LC2)
-        lda     LCBANK2
+        bit     LCBANK2         ; get file count (resides in LC2)
+        bit     LCBANK2
         ldy     #0              ; first byte in list is the list size
         lda     (records_ptr),y
         sta     num_files
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         inc16   records_ptr
         lda     cached_window_id
         sta     active_window_id
@@ -7495,8 +7493,8 @@ thumbmax:
         sta     (icon_entry),y
 
         ;; Bank in the FileRecord entries
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         ;; Copy the name
         ldy     #FileRecord::name
@@ -7556,8 +7554,8 @@ got_type:
         tay
 
         ;; Figure out icon type
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         tya
 
         jsr     find_icon_details_for_icon_type
@@ -8128,8 +8126,8 @@ found:  txa
         sta     ptr+1
         sta     list_start_ptr+1
 
-        lda     LCBANK2         ; Start copying records
-        lda     LCBANK2
+        bit     LCBANK2         ; Start copying records
+        bit     LCBANK2
 
         lda     #0              ; Number copied
         sta     record_num
@@ -8165,8 +8163,8 @@ loop:   lda     record_num
 next:   inc     record_num
         jmp     loop
 
-break:  lda     LCBANK1         ; Done copying records
-        lda     LCBANK1
+break:  bit     LCBANK1         ; Done copying records
+        bit     LCBANK1
 
         ;; --------------------------------------------------
 
@@ -8185,8 +8183,8 @@ break:  lda     LCBANK1         ; Done copying records
         kNameSize = $F
         name_len  := $804
 
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         ;; Set up highest value
         lda     #$7F            ; beyond last possible name char
@@ -8292,8 +8290,8 @@ check_date:
 .scope
         date    := $0808
 
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         lda     #0
         ldx     #.sizeof(DateTime)-1
@@ -8384,8 +8382,8 @@ check_size:
 .scope
         size := $0808
 
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         lda     #0
         sta     size
@@ -8476,8 +8474,8 @@ check_type:
         dey
         bne     :-
 
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         lda     #0
         sta     index
@@ -8635,8 +8633,8 @@ loop:   lda     record_num
 :       inc     record_num
         jmp     loop
 
-done:   lda     LCBANK1
-        lda     LCBANK1
+done:   bit     LCBANK1
+        bit     LCBANK1
         rts
 .endproc
 
@@ -8644,12 +8642,12 @@ done:   lda     LCBANK1
 ;;; Inputs: X = index in window, Y = new value
 
 .proc update_cached_window_entry
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         tya
         sta     cached_window_entry_list,x
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         rts
 .endproc
 
@@ -8674,15 +8672,15 @@ done:   lda     LCBANK1
         addax   file_record_ptr, ptr
 
         ;; Copy into more convenient location (LCBANK1)
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldy     #.sizeof(FileRecord)-1
 :       lda     (ptr),y
         sta     list_view_filerecord,y
         dey
         bpl     :-
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         ;; Clear out string
         ldx     #kTextBuffer2Len
@@ -10698,11 +10696,11 @@ done:   rts
 
 ;;; Returns with carry clear if IIgs, set otherwise.
 .proc test_iigs
-        lda     ROMIN2
+        bit     ROMIN2
         sec
         jsr     IDROUTINE
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 .endproc
 
@@ -11777,8 +11775,8 @@ skip:   lda     selected_window_id
         addax   file_record_ptr, file_record_ptr
 
         ;; Bank in FileRecords, and copy the new name in.
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         .assert FileRecord::name = 0, error, "Name must be at start of FileRecord"
         ldy     new_name_buf
 :       lda     new_name_buf,y
@@ -11796,8 +11794,8 @@ skip:   lda     selected_window_id
         sta     result_flags
 :
 
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
     END_IF
 
         ;; Is there a window for the folder/volume?
@@ -15437,16 +15435,16 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 
         ;; Bank and call
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
 
         jsr     MLI
 params:  .res    3
 
         sta     ALTZPON
-        tax
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
         rts
 .endproc
 
@@ -16636,11 +16634,11 @@ save_windows := save_restore_windows::save
         bcc     iigs
 
         ;; If a IIe, maybe use shift key mod
-        lda     ROMIN2
+        bit     ROMIN2
         ldx     ZIDBYTE         ; $00 = IIc/IIc+
         ldy     IDBYTELASER128  ; $AC = Laser 128
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         lda     #0
         cpx     #0              ; ZIDBYTE = $00 == IIc/IIc+
         beq     :+
@@ -16698,10 +16696,10 @@ format: lda     DEVLST,x
         sta     DRIVER_UNIT_NUMBER
         copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         copy16  #$2000, DRIVER_BUFFER
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         jsr     driver
-        lda     ROMIN2
+        bit     ROMIN2
         rts
 
 RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2

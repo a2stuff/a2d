@@ -656,15 +656,15 @@ unit_num:
         sty     call
         stax    params
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
         jsr     MLI
 call:   .byte   0
 params: .addr   0
-        tax
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
         rts
 .endproc
 

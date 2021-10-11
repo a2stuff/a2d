@@ -41,7 +41,7 @@ filename:
 
 start:
         ;; Show and clear 80-column text screen
-        lda     ROMIN2
+        bit     ROMIN2
         jsr     SETVID
         jsr     SETKBD
         sta     CLR80VID
@@ -105,8 +105,8 @@ install:
         copy16  IRQLOC, irq_vector_stash
 
         ;; Copy self into the ProDOS QUIT routine
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldy     #0
 :       lda     self,y
         sta     PRODOS_QUIT_ROUTINE,y
@@ -114,7 +114,7 @@ install:
         sta     PRODOS_QUIT_ROUTINE+$100,y
         dey
         bne     :-
-        lda     ROMIN2
+        bit     ROMIN2
 
         jmp     L10F2
 

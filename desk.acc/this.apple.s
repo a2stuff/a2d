@@ -812,7 +812,7 @@ model_lookup_table:
 
 .proc identify_model
         ;; Read from ROM
-        lda     ROMIN2
+        bit     ROMIN2
 
         ldx     #0              ; offset into table
 
@@ -863,8 +863,8 @@ match:  tya
         copy16  model_pix_table,x, model_pix_ptr
 
         ;; Read from LC RAM
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 .endproc
 
@@ -1589,11 +1589,11 @@ next:   inx                     ; next bank
 ;;; ============================================================
 
 .proc check_iigs_memory
-        lda     ROMIN2          ; Check ROM - is this a IIgs?
+        bit     ROMIN2          ; Check ROM - is this a IIgs?
         sec
         jsr     IDROUTINE
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         bcs     done
 
         .pushcpu
@@ -1719,11 +1719,11 @@ str_from_int:
 p6502:  return16 #str_6502
 
         ;; Distinguish 65802 and 65816 by machine ID
-p658xx: lda     ROMIN2
+p658xx: bit     ROMIN2
         sec
         jsr     IDROUTINE
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         bcs     p65802
         return16 #str_65816     ; Only IIgs supports 65816
 p65802: return16 #str_65802     ; Other boards support 65802

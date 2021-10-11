@@ -77,8 +77,8 @@ L2049:  lda     open_params::ref_num
 
         ;; Copy Alert segment to Aux LC1
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         ;; Set stack pointers to arbitrarily low values for use when
         ;; interrupts occur. DeskTop does not utilize this convention,
@@ -99,7 +99,7 @@ L2049:  lda     open_params::ref_num
         bne     :-
 
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
 
         MLI_CALL CLOSE, close_params
 

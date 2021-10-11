@@ -81,8 +81,8 @@ L183F:  sta     BITMAP+1,x
         jsr     load_settings
 
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         jmp     auxlc__start
 
@@ -101,8 +101,9 @@ fail:   jmp     fail
 
         ;; Bank in AUX LC
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
+
         txa
         asl     a
         tax
@@ -141,7 +142,7 @@ loop:   lda     (src),y
 
         ;; Bank in ROM
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
         rts
 .endproc
 

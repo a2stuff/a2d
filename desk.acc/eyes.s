@@ -506,7 +506,7 @@ ppx:    .word   0
 ppy:    .word   0
 
 .proc compute_pupil_pos
-        lda     ROMIN2
+        bit     ROMIN2
 
         FAC_LOAD_INT    cx
         FAC_STORE       cxf
@@ -592,8 +592,8 @@ skip:
         FAC_ADD         cyf
         FAC_STORE_INT   ppy
 
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         rts
 
@@ -616,7 +616,7 @@ cyf:    DEFINE_FLOAT
 .proc draw_outline
         kSegments = 36
 
-        lda     ROMIN2
+        bit     ROMIN2
 
         FAC_LOAD_INT    segw
         FAC_DIV         CON_TWO_PI
@@ -651,13 +651,13 @@ cyf:    DEFINE_FLOAT
         FAC_LOAD cyf
         FAC_STORE_INT pty
 
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         MGTK_CALL MGTK::MoveTo, drawpos
 
 loop:
-        lda     ROMIN2
+        bit     ROMIN2
 
         FAC_LOAD theta
         FAC_ADD step
@@ -674,8 +674,8 @@ loop:
         FAC_ADD cyf
         FAC_STORE_INT pty
 
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         MGTK_CALL MGTK::LineTo, drawpos
 

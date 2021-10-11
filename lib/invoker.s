@@ -56,7 +56,7 @@ str_basic_system:
 
 ;;; ============================================================
 
-begin:  lda     ROMIN2
+begin:  bit     ROMIN2
 
         copy16  #PRODOS_SYS_START, jmp_addr
 

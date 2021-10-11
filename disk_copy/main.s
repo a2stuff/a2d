@@ -59,16 +59,16 @@ volume_bitmap   := $4000
 
         ;; Bank and call
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
 
         jsr     MLI
 params:  .res    3
 
         sta     ALTZPON
-        tax
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
         rts
 .endproc
 
@@ -84,7 +84,7 @@ params:  .res    3
 .proc quit
         jsr     auxlc::restore_ram_disk
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
         sta     DHIRESOFF
         sta     TXTCLR
         sta     CLR80VID
@@ -950,12 +950,12 @@ retry:  jsr     read_block
         jsr     auxlc::show_block_error
         beq     move
         bpl     retry
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         return  #$80
 
-move:   lda     LCBANK2
-        lda     LCBANK2
+move:   bit     LCBANK2
+        bit     LCBANK2
         ldy     #$FF
         iny
 loop:   lda     default_block_buffer,y
@@ -964,8 +964,8 @@ loop:   lda     default_block_buffer,y
         sta     (ptr2),y
         iny
         bne     loop
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         return  #$00
 .endproc
 
@@ -1047,8 +1047,8 @@ loop:   lda     (ptr1),y
         iny
         bne     loop
 
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 retry:  jsr     write_block
         beq     done
         ldx     #$80            ; writing
@@ -1157,11 +1157,11 @@ memory_bitmap:
 ;;; Assert: LCBANK1 is banked in
 
 .proc reset_iigs_rgb
-        lda     ROMIN2
+        bit     ROMIN2
         sec
         jsr     IDROUTINE
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         bcs     done
 
         bit     SETTINGS + DeskTopSettings::rgb_color

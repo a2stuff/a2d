@@ -1873,7 +1873,7 @@ col:    .byte   0
         sta     @addr
 
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
         sta     TXTSET
         sta     LOWSCR
         sta     LORES
@@ -2209,26 +2209,26 @@ len:    .byte   0
 ;;; not running w/ AUXZP and LCBANK1.
 
 .proc GetCopiedToRAMCardFlag
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         lda     COPIED_TO_RAMCARD_FLAG
         tax
-        lda     ROMIN2
+        bit     ROMIN2
         txa
         rts
 .endproc
 
 .proc CopyRAMCardPrefix
         stax    @addr
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldx     RAMCARD_PREFIX
 :       lda     RAMCARD_PREFIX,x
         @addr := * + 1
         sta     SELF_MODIFIED,x
         dex
         bpl     :-
-        lda     ROMIN2
+        bit     ROMIN2
         rts
 .endproc
 
@@ -2285,13 +2285,13 @@ len:    .byte   0
 .proc ShowAlert
         tax
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         txa
         jsr     AlertById
         tax
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
         txa
         rts
 .endproc
@@ -2300,11 +2300,11 @@ len:    .byte   0
 ;;; to do things like read the ProDOS clock.
 .proc alert_yield_loop_relay
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
         jsr     yield_loop
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 .endproc
 

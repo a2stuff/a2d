@@ -805,14 +805,14 @@ l6:     iny
         cpy     LA1B6
         bne     l6
         stx     LA1F6
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldy     RAMCARD_PREFIX
 l7:     lda     RAMCARD_PREFIX,y
         sta     LA176,y
         dey
         bpl     l7
-        lda     ROMIN2
+        bit     ROMIN2
         rts
 .endproc
 

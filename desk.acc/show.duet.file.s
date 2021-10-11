@@ -258,7 +258,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
 .endproc
 
 .proc play_file
-        lda     ROMIN2
+        bit     ROMIN2
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
@@ -273,8 +273,8 @@ str_instruct:   PASCAL_STRING res_string_instructions
 
         sta     RAMRDON
         sta     RAMWRTON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 .endproc
 

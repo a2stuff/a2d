@@ -821,10 +821,10 @@ char:   .byte   0
 .proc check_extended_layout
 
         ;; Bank in ROM and do check
-        lda     ROMIN2
+        bit     ROMIN2
         jsr     check
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 
         ;; --------------------------------------------------

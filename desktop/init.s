@@ -146,8 +146,8 @@ done:
 
         ;; ... and page in LCBANK1
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         ;; Ensure we're on a IIe or later
         lda     id_version

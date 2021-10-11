@@ -60,7 +60,7 @@ start:  lda     #$80
 
         ;; Set up banks for ProDOS usage
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
 
         ;; Open self (DESKTOP2)
         MLI_CALL OPEN, open_params

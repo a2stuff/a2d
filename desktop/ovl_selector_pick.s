@@ -1643,15 +1643,15 @@ hi:     .byte   0
         sty     call
         stax    params
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
         jsr     MLI
 call:   .byte   0
 params: .addr   0
         sta     ALTZPON
-        tax
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
         rts
 .endproc
 

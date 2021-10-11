@@ -75,15 +75,15 @@ update: stxy    SETTINGS + DeskTopSettings::dblclick_speed
         ;; Successful - move settings block into place
 .if ::SETTINGS >= $C000
         sta     ALTZPON         ; Bank in Aux LC Bank 1
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 .endif
 
         COPY_STRUCT DeskTopSettings, settings_load_buf, SETTINGS
 
 .if ::SETTINGS >= $C000
         sta     ALTZPOFF        ; Bank in Main ZP/LC and ROM
-        lda     ROMIN2
+        bit     ROMIN2
 .endif
 
         ;; Finish up

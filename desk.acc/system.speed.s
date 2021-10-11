@@ -485,15 +485,15 @@ hit:    lda     winfo::window_id
         sta     RAMRDOFF
         sta     RAMWRTOFF
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
 
         jsr     NORMFAST_norm
 
         sta     RAMRDON
         sta     RAMWRTON
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         rts
 .endproc
@@ -505,15 +505,15 @@ hit:    lda     winfo::window_id
         sta     RAMRDOFF
         sta     RAMWRTOFF
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
 
         jsr     NORMFAST_fast
 
         sta     RAMRDON
         sta     RAMWRTON
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         rts
 .endproc

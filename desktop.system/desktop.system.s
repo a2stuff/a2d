@@ -951,8 +951,8 @@ resume:
 
         lda     DEVNUM          ; Most recent device
         sta     active_device
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         ;; Check quit routine
         ldx     #$08
@@ -969,7 +969,7 @@ nomatch:
 
 match:  sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
 
-        lda     ROMIN2
+        bit     ROMIN2
 
         ;; Clear flag - ramcard not found or unknown state.
         ldx     #0
@@ -1183,10 +1183,10 @@ file_loop:
 ;;; ============================================================
 
 .proc set_copied_to_ramcard_flag
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         stx     COPIED_TO_RAMCARD_FLAG
-        lda     ROMIN2
+        bit     ROMIN2
         rts
 .endproc
 
@@ -1195,8 +1195,8 @@ file_loop:
         target := RAMCARD_PREFIX
 
         stax    ptr
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldy     #0
         lda     (ptr),y
         tay
@@ -1204,7 +1204,7 @@ file_loop:
         sta     target,y
         dey
         bpl     :-
-        lda     ROMIN2
+        bit     ROMIN2
         rts
 .endproc
 
@@ -1213,8 +1213,8 @@ file_loop:
         target := DESKTOP_ORIG_PREFIX
 
         stax    ptr
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         ldy     #0
         lda     (ptr),y
@@ -1224,7 +1224,7 @@ file_loop:
         dey
         bpl     :-
 
-        lda     ROMIN2
+        bit     ROMIN2
         rts
 .endproc
 
@@ -1595,24 +1595,24 @@ copy_desktop_to_ramcard := copy_desktop_to_ramcard_impl::start
         jsr     HOME
 
         ;; Is there a RAMCard?
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         lda     COPIED_TO_RAMCARD_FLAG
-        pha
-        lda     ROMIN2
-        pla
+        php
+        bit     ROMIN2
+        plp
         bne     :+
         jmp     invoke_selector_or_desktop ; no RAMCard - skip!
 
         ;; Clear "Copied to RAMCard" flags
-:       lda     LCBANK2
-        lda     LCBANK2
+:       bit     LCBANK2
+        bit     LCBANK2
         ldx     #kSelectorListNumEntries-1
         lda     #0
 :       sta     ENTRY_COPIED_FLAGS,x
         dex
         bpl     :-
-        lda     ROMIN2
+        bit     ROMIN2
 
         ;; Load and iterate over the selector file
         jsr     read_selector_list
@@ -1636,12 +1636,12 @@ entry_loop:
         jsr     prepare_entry_paths
         jsr     copy_using_entry_paths
 
-        lda     LCBANK2         ; Mark copied
-        lda     LCBANK2
+        bit     LCBANK2         ; Mark copied
+        bit     LCBANK2
         ldx     entry_num
         lda     #$FF
         sta     ENTRY_COPIED_FLAGS,x
-        lda     ROMIN2
+        bit     ROMIN2
 
 next_entry:
         inc     entry_num
@@ -1672,15 +1672,15 @@ entry_loop2:
         jsr     prepare_entry_paths
         jsr     copy_using_entry_paths
 
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         lda     entry_num
         clc
         adc     #8
         tax
         lda     #$FF
         sta     ENTRY_COPIED_FLAGS,x
-        lda     ROMIN2
+        bit     ROMIN2
 next_entry2:
         inc     entry_num
         jmp     entry_loop2
@@ -1895,14 +1895,14 @@ bits:   .byte   $00
         stx     entry_dir_name
 
         ;; Prep entry_path1 with RAMCARD_PREFIX
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldy     RAMCARD_PREFIX
 :       lda     RAMCARD_PREFIX,y
         sta     entry_path1,y
         dey
         bpl     :-
-        lda     ROMIN2
+        bit     ROMIN2
 
         rts
 .endproc
@@ -2141,8 +2141,8 @@ quit_code_save := $1100
 str_quit_code:  PASCAL_STRING kFilenameQuitSave
 PROC_AT quit_restore_proc, ::quit_code_addr
 
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldx     #0
 :
         .repeat 3, i
@@ -2152,7 +2152,7 @@ PROC_AT quit_restore_proc, ::quit_code_addr
         dex
         bne     :-
 
-        lda     ROMIN2
+        bit     ROMIN2
 
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params
@@ -2169,8 +2169,8 @@ END_PROC_AT
         DEFINE_WRITE_PARAMS write_params, quit_code_addr, kQuitCodeSize
         DEFINE_CLOSE_PARAMS close_params
 
-start:  lda     LCBANK2
-        lda     LCBANK2
+start:  bit     LCBANK2
+        bit     LCBANK2
         ldx     #0
 :
         lda     quit_restore_proc, x
@@ -2182,7 +2182,7 @@ start:  lda     LCBANK2
         dex
         bne     :-
 
-        lda     ROMIN2
+        bit     ROMIN2
 
         ;; Create file (if needed)
         copy16  DATELO, create_params::create_date

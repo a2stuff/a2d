@@ -52,14 +52,14 @@ entry:
 
 ;;; Copy the DA to AUX for easy bank switching
 .scope
-        lda     ROMIN2
+        bit     ROMIN2
         copy16  #entry, STARTLO
         copy16  #da_end, ENDLO
         copy16  #entry, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 .endscope
 
 .scope
@@ -258,7 +258,7 @@ endloop:
         sta     RAMRDOFF
         sta     RAMWRTOFF
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
 
         bit     KBDSTRB         ; clear strobe
 
@@ -278,8 +278,8 @@ endloop:
         sta     RAMRDON
         sta     RAMWRTON
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         sty     num_entries
 

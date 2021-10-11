@@ -1347,8 +1347,8 @@ draw_title_bar:
         ;; Traps FP error via call to $36 from MON.COUT, resets stack
         ;; and returns to the input loop.
 .proc error_hook
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         jsr     reset_buffers_and_display
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -1387,14 +1387,10 @@ END_PROC_AT
         sizeof_chrget_routine = .sizeof(chrget_routine)
 
 .macro CALL_FP proc
-        pha
-        lda     ROMIN2
-        pla
+        bit     ROMIN2
         jsr     proc
-        pha
-        lda     LCBANK1
-        lda     LCBANK1
-        pla
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 .endmacro
 

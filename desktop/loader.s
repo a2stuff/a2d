@@ -16,8 +16,8 @@
         src     := quit_routine
         dst     := SELECTOR
 
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         ldy     #$00
 loop:   lda     src,y
@@ -26,7 +26,7 @@ loop:   lda     src,y
         sta     dst+$100,y
         dey
         bne     loop
-        lda     ROMIN2
+        bit     ROMIN2
 
         MLI_CALL QUIT, quit_params
 
@@ -57,7 +57,7 @@ filename:
         DEFINE_SET_PREFIX_PARAMS prefix_params, prefix_buffer
         DEFINE_OPEN_PARAMS open_params, filename, $1A00
 
-start:  lda     ROMIN2
+start:  bit     ROMIN2
 
         ;; Show a splash message on 80 column text screen
         jsr     SETVID
@@ -130,8 +130,8 @@ start:  lda     ROMIN2
         sta     reinstall_flag
 
         copy16  IRQLOC, irq_saved
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         ldy     #0
 :       lda     self,y
@@ -141,7 +141,7 @@ start:  lda     ROMIN2
         dey
         bne     :-
 
-        lda     ROMIN2
+        bit     ROMIN2
         jmp     done_reinstall
 
 no_reinstall:
@@ -336,8 +336,8 @@ segment_num:  .byte   0
         dst := $8
 
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         ;; Set stack pointers to arbitrarily low values for use when
         ;; interrupts occur. DeskTop does not utilize this convention,
@@ -377,7 +377,7 @@ loop:   lda     (src),y
         bne     loop
 
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
         rts
 
 max_page:
