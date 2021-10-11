@@ -4974,7 +4974,7 @@ delta:  .word   0
         lda     active_window_id
         jsr     window_lookup
         addax   #MGTK::Winfo::port, ptr
-        ldy     #.sizeof(MGTK::GrafPort) + 1
+        ldy     #.sizeof(MGTK::GrafPort) - 1
 :       lda     (ptr),y
         sta     window_grafport,y
         dey
