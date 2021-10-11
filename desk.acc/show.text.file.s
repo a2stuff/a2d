@@ -30,13 +30,13 @@
 ;;;  $1200   +-----------+ +-----------+
 ;;;          | Font Bkup | |           |
 ;;;  $1100   +-----------+ |           |
-;;;          | (unused)  | |           |
-;;;  $1000   +-----------+ |           |
-;;;          | IO Buffer | |           |
-;;;   $C00   +-----------+ |           |
 ;;;          |           | |           |
+;;;  $1000   |           | |           |
 ;;;          |           | |           |
-;;;          | DA        | | DA (Copy) |
+;;;   $C00   |           | |           |
+;;;          |           | |           | This DA runs primarily out of the
+;;;          |           | |           | copy in Aux. The upper bytes of
+;;;          | DA        | | DA (Copy) | the code in main are overwritten.
 ;;;   $800   +-----------+ +-----------+
 ;;;          :           : :           :
 ;;;
@@ -45,7 +45,6 @@
 ;;; the original widths are stored in this buffer, and restored on exit
 ;;; if needed.
 font_width_backup       := $1100
-
 
 
 ;;; ============================================================
@@ -1296,14 +1295,10 @@ end:    rts
 .proc toggle_mode
         ;; Toggle the state and redraw
         lda     fixed_mode_flag
-        beq     set_flag
-        dec     fixed_mode_flag ; clear flag (mode = proportional)
-        jsr     restore_proportional_font_table_if_needed
-        jmp     redraw
+        eor     #$FF
+        sta     fixed_mode_flag
 
-set_flag:
-        inc     fixed_mode_flag ; set flag (mode = fixed)
-redraw: jsr     draw_mode
+        jsr     draw_mode
         jsr     draw_content
         sec                     ; Click consumed
         rts
