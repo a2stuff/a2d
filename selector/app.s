@@ -312,7 +312,7 @@ colormasks:     .byte   $FF, 0
 penloc:         .word   0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .word   FONT
 nextwinfo:      .addr   0

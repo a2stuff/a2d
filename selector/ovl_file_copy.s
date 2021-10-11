@@ -892,7 +892,7 @@ pattern:        .res    8, $FF
 masks:          .byte   $FF, $00
 penloc:         .word   0, 0
 pensize:        .byte   1, 1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   FONT
 next:           .addr   0

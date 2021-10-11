@@ -211,7 +211,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   FONT
 nextwinfo:      .addr   0
@@ -249,7 +249,7 @@ colormasks:     .byte   $FF, 0
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textbg:         .byte   $7F
 fontptr:        .addr   FONT
 nextwinfo:      .addr   0
