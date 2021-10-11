@@ -10208,11 +10208,7 @@ open:   ldy     #$00
         ;; Get window rect
         jsr     window_lookup
         stax    ptr
-        lda     #MGTK::Winfo::port
-        clc                     ; Why add instead of just loading Y with constant ???
-        adc     #.sizeof(MGTK::GrafPort)-1
-        tay
-
+        ldy     #MGTK::Winfo::port + .sizeof(MGTK::GrafPort)-1
         ldx     #.sizeof(MGTK::GrafPort)-1
 :       lda     (ptr),y
         sta     window_grafport,x
@@ -14060,7 +14056,7 @@ do_on_line:
         PAD_TO $A500
 
 ;;; ============================================================
-;;; Dialog Launcher (or just proc handler???)
+;;; Dialog Proc Invocation
 
 kNumDialogTypes = 13
 
@@ -16209,7 +16205,6 @@ loop3:  lda     split_buf,x
 finish: pla
         sta     path_buf2
         copy    #0, path_buf1
-        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos ; Seems unnecessary???
         jsr     draw_filename_prompt
         rts
 .endproc
@@ -16252,7 +16247,6 @@ done:   rts
 
 .proc input_field_ip_end
         jsr     merge_path_buf1_path_buf2
-        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos ; Seems unnecessary???
         jsr     draw_filename_prompt
         rts
 .endproc
