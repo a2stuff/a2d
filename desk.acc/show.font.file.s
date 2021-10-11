@@ -116,8 +116,9 @@ kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
         cmp     #16+1
         bcs     exit
 
-        ;; File size should be 3 + lastchar + (lastchar * height) * (double?2:1)
-        ;; ... but files aren't exactly this size, so don't enforce this. (?!?)
+        jsr     calc_font_size
+        cmp16   expected_size, read_params::trans_count
+        bne     exit
 
         ;; --------------------------------------------------
         ;; Copy the DA code and loaded data to AUX
@@ -139,7 +140,34 @@ kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
 
 exit:   rts
 
-size:   .word   0
+.endproc
+
+;;; ============================================================
+;;; Calculate expected font file size, given font header
+;;; Populates `expected_size`
+
+expected_size:
+        .word   0
+
+.proc calc_font_size
+        copy    #0, expected_size
+
+        ;; File size should be 3 + (lastchar + 1) + ((lastchar + 1) * height) * (double?2:1)
+
+        ldx     font_buffer + MGTK::Font::lastchar
+        inx                     ; lastchar + 1
+:       add16_8 expected_size, font_buffer + MGTK::Font::height, expected_size
+        dex
+        bne     :-              ; = (lastchar + 1) * height
+
+        bit     font_buffer + MGTK::Font::fonttype
+        bpl     :+
+        asl16   expected_size            ; *= 2 if double width
+:
+        add16_8 expected_size, font_buffer + MGTK::Font::lastchar, expected_size ; += lastchar
+        add16_8 expected_size, #4, expected_size  ; += 3 + 1
+
+        rts
 .endproc
 
 ;;; ============================================================

@@ -212,7 +212,7 @@ unit_num:
 
 ;;; ============================================================
 ;;; Map unit number to smartport device number (1-4)
-;;; TODO: The logic looks sketchy, assumes specific remapping.
+;;; BUG: This assumes specific remapping, not valid in ProDOS 2.x
 
 .proc unit_num_to_sp_unit_number
         pha                     ; DSSS0000

@@ -1976,7 +1976,8 @@ index:  .byte   0
 
 .proc get_block_count
 
-        ;; TODO: Figure out why we can't just always use the device driver!
+        ;; Special case Disk II devices, since we may be formatting non-ProDOS
+        ;; disks the driver can't interrogate.
 
         pha
         tax                     ; X is device index
