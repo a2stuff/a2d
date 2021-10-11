@@ -818,52 +818,40 @@ l7:     lda     RAMCARD_PREFIX,y
 
 ;;; ============================================================
 
-.proc winfo
+.params winfo
         kWidth = 350
         kHeight = 70
-window_id:
-        .byte   $0B
-        .byte   $01,$00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $96,$00
-        .byte   $32
-        .byte   $00
-        .word   500
-        .word   140
-        .byte   $64
-        .byte   $00
-        .byte   $32
-        .byte   $00
-        .addr   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .word   350, 70
-        .byte   $FF
-        .res    8, $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
-        .byte   $01,$01
-        .byte   $00
-        .byte   $7F
-        .addr   FONT
-        .addr   0
-.endproc
+window_id:      .byte   $0B
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontheight:  .word   50
+maxcontwidth:   .word   500
+maxcontheight:  .word   140
+port:
+        DEFINE_POINT viewloc, 100, 50
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
+textback:       .byte   $7F
+textfont:       .addr   FONT
+nextwinfo:      .addr   0
+.endparams
 
         DEFINE_RECT_SZ ok_button_rect, winfo::kWidth-20-kButtonWidth, 49, kButtonWidth, kButtonHeight
         DEFINE_POINT ok_button_pos, winfo::kWidth-20-kButtonWidth+4, 59

@@ -464,7 +464,6 @@ maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
         DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
-
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0

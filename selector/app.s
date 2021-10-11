@@ -287,7 +287,7 @@ y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
         kDialogId = 1
         kWidth = 500
         kHeight = 118
-window_id:      .byte   kDialogId = 1
+window_id:      .byte   kDialogId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   0
@@ -302,14 +302,15 @@ mincontwidth:   .word   150
 mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
-viewloc:        .word   (::kScreenWidth - kWidth)/2, (::kScreenHeight - kHeight)/2
+port:
+        DEFINE_POINT viewloc, (::kScreenWidth - kWidth)/2, (::kScreenHeight - kHeight)/2
 mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   $00
-cliprect:       .word   0, 0, kWidth, kHeight
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   $FF, 0
-penloc:         .word   0, 0
+        DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
