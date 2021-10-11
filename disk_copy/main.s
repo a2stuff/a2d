@@ -104,8 +104,8 @@ params:  .res    3
         ldx     auxlc::dest_drive_index
         lda     auxlc::drive_unitnum_table,x
         sta     unit_number
-        and     #$0F
-        beq     disk_ii
+        and     #$0F            ; unit number low nibble; 0 = 16-sector Disk II
+        beq     disk_ii         ; BUG: That's not valid per ProDOS TN21
 
         ;; Get driver address
         lda     unit_number

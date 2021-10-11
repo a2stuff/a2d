@@ -814,11 +814,13 @@ process_volume:
         cmp     #ERR_DEVICE_NOT_CONNECTED
         bne     :+
 
-        ;; TODO: Figure out if this block makes any sense.
+        ;; If device is not connected, remove it from DEVLST
+        ;; unless it's a Disk II.
+
         ldy     device_index
         lda     DEVLST,y
-        and     #$0F            ; BUG: Do not trust low nibble of unit_num
-        beq     select_template ; "0 = Disk II" originally
+        and     #$0F            ; unit number low nibble; 0 = 16-sector Disk II
+        beq     select_template ; BUG: That's not valid per ProDOS TN21
         ldx     device_index
         jsr     remove_device
         jmp     next

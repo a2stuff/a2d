@@ -697,7 +697,7 @@ params: .addr   0
         ;; BUG: That's not valid per ProDOS TN21
         sta     unit_num
         and     #$0F
-        beq     l2
+        beq     disk_ii
 
         ;; Check if the driver is firmware ($CnXX) and if so if it's
         ;; a 16-sector or 13-sector Disk II.
@@ -707,7 +707,7 @@ params: .addr   0
         txa                     ; high byte
         and     #$F0            ; look at high nibble
         cmp     #$C0            ; firmware? ($Cn)
-        bne     l3              ; nope
+        bne     driver              ; nope
 
         txa                     ; high byte
         sta     $06+1
@@ -715,17 +715,18 @@ params: .addr   0
         sta     $06             ; point $06 at $Cn00
         ldy     #$FF
         lda     ($06),y         ; load $CnFF
-        beq     l2              ; $00 = Disk II 16-sector
+        beq     disk_ii         ; $00 = Disk II 16-sector
         cmp     #$FF            ; $FF = Disk II 13-sector
-        bne     l3
+        bne     driver
 
         ;; Format as Disk II
-l2:     lda     unit_num
+disk_ii:
+        lda     unit_num
         jsr     FormatDiskII
         rts
 
         ;; Format using driver
-l3:     lda     unit_num
+driver: lda     unit_num
         jsr     get_driver_address
         stax    @driver
 
@@ -757,7 +758,7 @@ unit_num:
         ;; BUG: That's not valid per ProDOS TN21
         sta     unit_num
         and     #$0F
-        beq     l2
+        beq     supported
 
         ;; Check if the driver is firmware ($CnXX) and if so if it's
         ;; a 16-sector or 13-sector Disk II.
@@ -766,7 +767,7 @@ unit_num:
         txa                     ; high byte
         and     #$F0            ; look at high nibble
         cmp     #$C0            ; firmware? ($Cn)
-        bne     l2              ; TODO: Should we guess yes or no here???
+        bne     supported       ; TODO: Should we guess yes or no here???
 
         txa                     ; high byte
         sta     $06+1
@@ -774,19 +775,20 @@ unit_num:
         sta     $06             ; point $06 at $Cn00
         ldy     #$FF
         lda     ($06),y         ; load $CnFF
-        beq     l2              ; $00 = Disk II 16-sector
+        beq     supported       ; $00 = Disk II 16-sector
         cmp     #$FF            ; $FF = Disk II 13-sector
-        beq     l2
+        beq     supported
 
         ;; Not a Disk II; check the firmware status byte
         ldy     #$FE            ; $CnFE
         lda     ($06),y
         and     #%00001000      ; Bit 3 = Supports format
-        bne     l2
+        bne     supported
 
         return  #$FF            ; no, does not support format
 
-l2:     return  #$00            ; yes, supports format
+supported:
+        return  #$00            ; yes, supports format
 
 unit_num:
         .byte   0

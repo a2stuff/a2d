@@ -650,7 +650,7 @@ loop:   jsr     read_file_entry
         beq     loop            ; deleted
 
         lda     file_entry + FileEntry::storage_type_name_length
-        and     #$0F            ; mask off name_length
+        and     #NAME_LENGTH_MASK
         sta     filename
 
         lda     #0
@@ -1045,7 +1045,7 @@ test_unit_num:
 
         ;; Copy the path
         lda     on_line_buffer
-        and     #$0F
+        and     #$0F            ; mask off name length
         tay
 
         iny

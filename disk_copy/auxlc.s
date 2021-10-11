@@ -666,8 +666,8 @@ LD763:  lda     winfo_dialog::window_id
         jmp     LD734
 
 LD77E:  lda     main__on_line_buffer2
-        and     #$0F
-        bne     LD798
+        and     #$0F            ; mask off name length
+        bne     LD798           ; 0 signals error
         lda     main__on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
@@ -677,7 +677,7 @@ LD77E:  lda     main__on_line_buffer2
         jmp     LD7AD
 
 LD798:  lda     main__on_line_buffer2
-        and     #$0F
+        and     #$0F            ; mask off name length
         sta     main__on_line_buffer2
         param_call adjust_case, main__on_line_buffer2
         jsr     LE674
@@ -706,8 +706,8 @@ LD7AD:  lda     source_drive_index
         jmp     LD852
 
 LD7E1:  lda     main__on_line_buffer2
-        and     #$0F
-        bne     LD7F2
+        and     #$0F            ; mask off name length
+        bne     LD7F2           ; 0 signals error
         lda     main__on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     LD7F2
@@ -716,8 +716,8 @@ LD7E1:  lda     main__on_line_buffer2
 LD7F2:
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$0F            ; low nibble of unit_num
-        beq     LD817           ; Disk II
+        and     #$0F            ; unit number low nibble; 0 = 16-sector Disk II
+        beq     LD817           ; BUG: That's not valid per ProDOS TN21
 
         lda     drive_unitnum_table,x
         jsr     main__unit_number_to_driver_address
@@ -737,8 +737,8 @@ LD7F2:
 :       jmp     LD8A9
 
 LD817:  lda     main__on_line_buffer2
-        and     #$0F
-        bne     LD82C
+        and     #$0F            ; mask off name length
+        bne     LD82C           ; have a name to show; otherwise, use S,D
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         and     #$F0
@@ -764,8 +764,8 @@ LD84A:  lda     disk_copy_flag
 
 LD852:  ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$0F            ; low nibble of unit_num
-        beq     LD87C           ; Disk II
+        and     #$0F            ; unit number low nibble; 0 = 16-sector Disk II
+        beq     format          ; BUG: That's not valid per ProDOS TN21
         lda     drive_unitnum_table,x
         jsr     main__unit_number_to_driver_address
         bne     :+              ; if not not firmware, skip these checks
@@ -775,18 +775,18 @@ LD852:  ldx     dest_drive_index
         ldy     #$FE            ; $CnFE
         lda     ($06),y
         and     #$08            ; bit 3 = The device supports formatting.
-        bne     LD87C
+        bne     format
         ldy     #$FF            ; low byte of driver address
         lda     ($06),y
-        beq     LD87C           ; $00 = 16-sector Disk II
+        beq     format          ; $00 = 16-sector Disk II
         cmp     #$FF            ; $FF = 13-sector Disk II
-        beq     LD87C
+        beq     format
 
 :       lda     #kAlertMsgDestinationFormatFail ; no args
         jsr     show_alert_dialog
         jmp     init_dialog
 
-LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
+format: MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         param_call DrawString, str_formatting
         jsr     main__format_device
         bcc     LD8A9
@@ -1983,8 +1983,8 @@ index:  .byte   0
         pha
         tax                     ; X is device index
         lda     drive_unitnum_table,x
-        and     #$0F            ; is Disk II ?
-        beq     disk_ii
+        and     #$0F            ; unit number low nibble; 0 = 16-sector Disk II
+        beq     disk_ii         ; BUG: That's not valid per ProDOS TN21
 
         lda     drive_unitnum_table,x
         jsr     main__unit_number_to_driver_address
