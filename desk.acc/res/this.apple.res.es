@@ -4,6 +4,7 @@
 .define res_string_model_iii "Apple /// (emulacion)"
 .define res_string_model_iie_original "Apple IIe (original)"
 .define res_string_model_iie_enhanced "Apple IIe (mejorada)"
+.define res_string_model_iie_edm "Apple IIe (EDM)"
 .define res_string_model_iie_card "Tarjeta Apple IIe"
 .define res_string_model_iic_original "Apple IIc (ROM 255)"
 .define res_string_model_iic_rom0 "Apple IIc (ROM 0)"

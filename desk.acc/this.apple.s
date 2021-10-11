@@ -451,6 +451,9 @@ str_iie_original:
 str_iie_enhanced:
         PASCAL_STRING res_string_model_iie_enhanced
 
+str_iie_edm:
+        PASCAL_STRING res_string_model_iie_edm
+
 str_iie_card:
         PASCAL_STRING res_string_model_iie_card
 
@@ -661,6 +664,7 @@ Version:                .word   0
 ;;; Apple /// (emulation)       $EA      $8A
 ;;; Apple IIe                   $06     [$AD]     $EA     [$A9]    [$00]
 ;;; Apple IIe (enhanced)        $06     [$AD]     $E0     [$A9]    [$00]
+;;; Apple IIe (Ext. Debug Mon.) $06     [$AD]     $E1
 ;;; Apple IIe Option Card *     $06     [$AD]     $E0      $02
 ;;; Apple IIc **                $06     [$4C]     $00     [$A9]     $FF
 ;;; Apple IIc (3.5 ROM)         $06     [$4C]     $00     [$A9]     $00
@@ -700,6 +704,7 @@ Version:                .word   0
 .endif
         iie_original            ; Apple IIe (original)
         iie_enhanced            ; Apple IIe (enhanced)
+        iie_edm                 ; Apple IIe (Extended Debugging Monitor)
         iic_original            ; Apple IIc
         iic_rom0                ; Apple IIc (3.5 ROM)
         iic_rom3                ; Apple IIc (Org. Mem. Exp.)
@@ -722,6 +727,7 @@ model_str_table:
 .endif
         .addr   str_iie_original ; Apple IIe (original)
         .addr   str_iie_enhanced ; Apple IIe (enhanced)
+        .addr   str_iie_edm      ; Apple IIe (Extended Debugging Monitor)
         .addr   str_iic_original ; Apple IIc
         .addr   str_iic_rom0     ; Apple IIc (3.5 ROM)
         .addr   str_iic_rom3     ; Apple IIc (Org. Mem. Exp.)
@@ -742,6 +748,7 @@ model_pix_table:
 .endif
         .addr   iie_bitmap      ; Apple IIe (original)
         .addr   iie_bitmap      ; Apple IIe (enhanced)
+        .addr   iie_bitmap      ; Apple IIe (Extended Debugging Monitor)
         .addr   iic_bitmap      ; Apple IIc
         .addr   iic_bitmap      ; Apple IIc (3.5 ROM)
         .addr   iic_bitmap      ; Apple IIc (Org. Mem. Exp.)
@@ -753,7 +760,6 @@ model_pix_table:
         .addr   ace500_bitmap   ; Franklin ACE 500
         .addr   ace2000_bitmap  ; Franklin ACE 2000
         ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
-
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.07.html
@@ -845,7 +851,11 @@ b_loop: lda     model_lookup_table,x ; offset from MODEL_ID_PAGE
 fail:   ldy     #0
 
 match:  tya
+
         ;; A has model; but now test for IIgs
+        cmp     #model::iie_enhanced   ; IIgs masquerades as Enhanced IIe
+        bne     :+
+
         sec
         jsr     IDROUTINE
         bcs     :+              ; not IIgs

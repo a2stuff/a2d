@@ -4,6 +4,7 @@
 .define res_string_model_iii "Apple /// (emulation)"
 .define res_string_model_iie_original "Apple //e (original)"
 .define res_string_model_iie_enhanced "Apple //e (am{lior{)"
+.define res_string_model_iie_edm "Apple IIe (EDM)"
 .define res_string_model_iie_card "Carte Apple //e"
 .define res_string_model_iic_original "Apple //c (ROM 255)"
 .define res_string_model_iic_rom0 "Apple //c (ROM 0)"
