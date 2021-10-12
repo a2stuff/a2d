@@ -1308,63 +1308,76 @@ end:    rts
 
 fixed_str:      PASCAL_STRING res_string_button_fixed
 prop_str:       PASCAL_STRING res_string_button_prop
-        kLabelWidth = 50
+        kLabelWidth = 80
+        kLabelHeight = 10
 
 .params mode_mapinfo                  ; bounding port for mode label
         DEFINE_POINT viewloc, 0, 0
 mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 80, 10
+        DEFINE_RECT maprect, 0, 0, kLabelWidth, kLabelHeight
 .endparams
 mode_mapinfo_viewloc_xcoord := mode_mapinfo::viewloc::xcoord
 
-.params mode_pos
-left:   .word   0               ; horizontal text offset
-base:   .word   10              ; vertical text offset (to baseline)
-.endparams
+        DEFINE_POINT mode_pos, 0, 9
+        DEFINE_RECT mode_rect, 0, 0, kLabelWidth, kLabelHeight
+
+.params winframerect_params
+window_id:      .byte   kDAWindowId
+        DEFINE_RECT rect, 0, 0, 0, 0
+.endproc
 
 ;;; ============================================================
 
 .proc calc_and_draw_mode
-        sec
-        lda     winfo::viewloc::ycoord
-        sbc     #kTitleBarHeight
-        sta     mode_mapinfo::viewloc::ycoord
-        clc
-        lda     winfo::viewloc::xcoord
-        adc     window_width
-        pha
-        lda     winfo::viewloc::xcoord+1
-        adc     window_width+1
-        tax
-        sec
-        pla
-        sbc     #<kLabelWidth
-        sta     mode_mapinfo::viewloc::xcoord
-        txa
-        sbc     #>kLabelWidth
-        sta     mode_mapinfo::viewloc::xcoord+1
+
+        MGTK_CALL MGTK::GetWinFrameRect, winframerect_params
+
+        sub16_8 winframerect_params::rect::x2, #kLabelWidth+1, mode_mapinfo::viewloc::xcoord
+        add16_8 winframerect_params::rect::y1, #1, mode_mapinfo::viewloc::ycoord
+
         ;; fall through...
 .endproc
 
 .proc draw_mode
+        ;; Set up port
         MGTK_CALL MGTK::SetPortBits, mode_mapinfo
-        MGTK_CALL MGTK::MoveTo, mode_pos
-        lda     fixed_mode_flag
-        beq     else            ; is proportional?
-        param_call DrawString, fixed_str
-        jmp     endif
-else:   param_call DrawString, prop_str
 
-endif:  COPY_STRUCT MGTK::MapInfo, default_port, winfo::port
+        ;; Clear background
+        MGTK_CALL MGTK::SetPattern, white_pattern
+        MGTK_CALL MGTK::PaintRect, mode_rect
+
+        ;; Center string
+        text_params     := $6
+        text_addr       := text_params + 0
+        text_length     := text_params + 2
+        text_width      := text_params + 3
+
+        lda     fixed_mode_flag
+    IF_NOT_ZERO
+        ldax    #fixed_str
+    ELSE
+        ldax    #prop_str
+    END_IF
+        stax    text_addr
+
+        ldy     #0
+        lda     (text_addr),y
+        sta     text_length
+        inc16   text_addr       ; point past length
+        MGTK_CALL MGTK::TextWidth, text_params
+
+        sub16   #kLabelWidth, text_width, mode_pos::xcoord
+        lsr16   mode_pos::xcoord ; /= 2
+        MGTK_CALL MGTK::MoveTo, mode_pos
+        MGTK_CALL MGTK::DrawText, text_params
+
+        ;; Reset port
+        COPY_STRUCT MGTK::MapInfo, default_port, winfo::port
         MGTK_CALL MGTK::SetPortBits, winfo::port
         rts
 .endproc
-
-;;; ============================================================
-
-        .include "../lib/drawstring.s"
 
 ;;; ============================================================
 

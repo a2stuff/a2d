@@ -1,2 +1,2 @@
-.define res_string_button_fixed "Fixe        "
+.define res_string_button_fixed "Fixe"
 .define res_string_button_prop "Proportionnel"
