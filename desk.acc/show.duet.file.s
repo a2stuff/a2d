@@ -11,6 +11,7 @@
         RESOURCE_FILE "show.duet.file.res"
 
         .include "apple2.inc"
+        .include "opcodes.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
@@ -260,9 +261,18 @@ str_instruct:   PASCAL_STRING res_string_instructions
 
         jsr     NORMFAST_norm
 
-        ldax    #data_buf
         bit     KBDSTRB         ; player will stop on keypress
+
+        lda     BUTN0
+        ora     BUTN1
+    IF_POS
+        ldax    #data_buf
         jsr     Player
+    ELSE
+        ldax    #data_buf
+        jsr     Player2
+    END_IF
+
         bit     KBDSTRB         ; swallow the keypress
 
         jsr     NORMFAST_fast
@@ -292,8 +302,6 @@ D8 := $08
 
         ptr := $09
         stax    ptr
-
-
 
         lda     #$00
         sta     D8
@@ -416,6 +424,160 @@ l79:    lda     ptr
 .endproc
 
 .endproc
+
+;;; "I found yet another version of Alex's player, this was included in
+;;; a game I had written. I don't know if this is older or newer
+;;; than the other one I posted..." - Emil Dotchevski
+
+
+.proc Player2
+
+Z3C := $00
+Z3D := $01
+Z3E := $02
+Z3F := $03
+Z40 := $04
+Z41 := $05                      ; Not initialized?
+Z42 := $06
+Z43 := $07
+Z44 := $08
+Z45 := $09
+Z46 := $0A
+
+        ptr := $0B
+        stax    ptr
+
+        lda     #$01
+        sta     Z42
+        sta     Z43
+        sta     Z44
+        sta     Z45
+L665A:  ldy     #$00
+        lda     (ptr),Y
+        bne     :+
+exit:   rts
+:
+        bit     KBD
+        bmi     exit
+
+        cmp     #$01
+        bne     :+
+        iny
+        lda     (ptr),Y
+        sta     Z42
+        iny
+        lda     (ptr),Y
+        sta     Z43
+        jmp     L66FF
+
+:       sta     Z40
+        iny
+        lda     (ptr),Y
+        sta     Z3C
+        ldx     Z42
+:       lsr
+        dex
+        bne     :-
+        sta     Z3E
+        iny
+        lda     (ptr),Y
+        sta     Z3D
+        ldx     Z43
+:       lsr
+        dex
+        bne     :-
+        sta     Z3F
+        ldx     Z3C
+        ldy     Z3D
+        lda     #$00
+L6694:  bit     Z44
+        bvs     L66A3
+        bmi     L66C3
+        bit     Z45
+        bmi     L66A9
+        nop
+        bpl     L66AC
+L66A1:  bmi     L66AC
+L66A3:  bpl     L66C4
+        bit     Z45
+        bmi     L66A1
+L66A9:  bit     SPKR
+L66AC:  sta     Z45
+        dex
+        beq     L66B9
+        cpx     Z3E
+        beq     L66BD
+        nop
+L66B6:  jmp     L66C0
+
+L66B9:  ldx     Z3C
+        beq     L66B6
+L66BD:  nop
+        eor     #$80
+L66C0:  jmp     L670E
+
+L66C4   := *+1
+L66C3:  bit     OPC_NOP
+        bit     SPKR
+        dex
+        beq     L66D3
+        cpx     Z3E
+        beq     L66D7
+        nop
+L66D0:  jmp     L66DA
+
+L66D3:  ldx     Z3C
+        beq     L66D0
+L66D7:  nop
+        eor     #$80
+L66DA:  bit     SPKR
+        dey
+        beq     L66E8
+        cpy     Z3F
+        beq     L66EC
+        nop
+L66E5:  jmp     L66EF
+
+L66E8:  ldy     Z3D
+        beq     L66E5
+L66EC:  nop
+        eor     #$40
+L66EF:  bit     SPKR
+        sta     Z44
+        dec     Z41
+        sta     SPKR
+L66F9:  bne     L6694
+        dec     Z40
+        bne     L6694
+L66FF:  lda     ptr
+        clc
+        adc     #$03
+        sta     ptr
+        bcc     L670A
+        inc     ptr+1
+L670A:  jmp     L665A
+        rts
+
+L670E:  dey
+        beq     L6719
+        cpy     Z3F
+        beq     L671D
+        nop
+L6716:  jmp     L6720
+
+L6719:  ldy     Z3D
+        beq     L6716
+L671D:  nop
+        eor     #$40
+L6720:  sta     Z44
+        jmp     L6726
+
+L6725:  rts                     ; Unreferenced?
+
+L6726:  dec     Z41
+        jmp     L66F9
+.endproc
+
 
 ;;; ============================================================
 ;;; Draw centered string
