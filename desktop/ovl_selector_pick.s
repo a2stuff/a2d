@@ -99,8 +99,8 @@ L9093:  copy16  selector_list, num_run_list_entries
 L90D0:  jmp     L900F
 
 L90D3:  lda     num_other_run_list_entries
-        cmp     #$10
-        beq     L90FF
+        cmp     #16             ; TODO: Constant for max # other run list entries
+        beq     L90F4
         ldy     copy_when       ; Flags
         lda     num_other_run_list_entries
         clc
@@ -117,10 +117,6 @@ L90F4:  lda     #kWarningMsgSelectorListFull
 L90F6:  jsr     ShowWarning
         dec     clean_flag      ; reset to "clean"
         jmp     L9016
-
-L90FF:  lda     #$02
-        bne     L90F6           ; always
-
 
 which_run_list:  .byte   0
 copy_when:  .byte   0

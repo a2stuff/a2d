@@ -426,3 +426,5 @@
 * Launch DeskTop. Clear selection by closing all windows and clicking on the desktop. Press Apple+Down. Verify that nothing happens.
 
 * Launch DeskTop. Open a volume window. View > by Name. Open a separate volume window. Open a folder window. Open a sub-folder window. View > by Name. Close the window. Verify DeskTop doesn't crash.
+
+* Launch DeskTop. Create 8 selector entries. Selector > Add an Entry.... Check the first radio button. Pick a file, OK. Enter a name, OK. Verify that a relevant alert is shown.
