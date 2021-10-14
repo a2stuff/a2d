@@ -395,9 +395,9 @@ selected_index:
 entry_string_buf:
         .res    20
 
-num_run_list_entries:
+num_primary_run_list_entries:
         .byte   0
-num_other_run_list_entries:
+num_secondary_run_list_entries:
         .byte   0
 
 L9129:  .byte   0
@@ -465,8 +465,8 @@ entry:
         copy    #$FF, selected_index
         jsr     load_selector_list
         copy    #1, L9129
-        lda     num_other_run_list_entries
-        ora     num_run_list_entries
+        lda     num_secondary_run_list_entries
+        ora     num_primary_run_list_entries
         bne     check_key_down
 
 quick_run_desktop:
@@ -508,7 +508,7 @@ check_key:
         sec
         sbc     #'1'            ; 1-8 run that selector entry
         bmi     done_keys
-        cmp     num_run_list_entries
+        cmp     num_primary_run_list_entries
         bcs     done_keys
         sta     selected_index
         jsr     get_selector_list_entry_addr
@@ -1015,7 +1015,7 @@ L954C:  sta     L959D
         bcc     L9571
         jmp     L9582
 
-L9571:  cmp     num_run_list_entries
+L9571:  cmp     num_primary_run_list_entries
         bcc     finish
         lda     selected_index
         jsr     maybe_toggle_entry_hilite
@@ -1024,7 +1024,7 @@ L9571:  cmp     num_run_list_entries
 
 L9582:  sec
         sbc     #8
-        cmp     num_other_run_list_entries
+        cmp     num_secondary_run_list_entries
         bcc     finish
         lda     selected_index
         jsr     maybe_toggle_entry_hilite
@@ -1094,7 +1094,7 @@ noop:   rts
 :       sec
         sbc     #'1'
         sta     tentative_selection
-        cmp     num_run_list_entries
+        cmp     num_primary_run_list_entries
         bcc     :+
         rts
 
@@ -1160,8 +1160,8 @@ tentative_selection:
 ;;; ============================================================
 
 .proc handle_key_right
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -1209,8 +1209,8 @@ done:   return  #$FF
 ;;; ============================================================
 
 .proc handle_key_left
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -1248,8 +1248,8 @@ done:   return  #$FF
 ;;; ============================================================
 
 .proc handle_key_up
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -1285,8 +1285,8 @@ done:   return  #$FF
 ;;; ============================================================
 
 .proc handle_key_down
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -1335,7 +1335,7 @@ done:   return  #$FF
         bpl     :-
 
         ldx     #0
-:       cpx     num_run_list_entries
+:       cpx     num_primary_run_list_entries
         beq     :+
         txa
         sta     entries_flag_table,x
@@ -1343,7 +1343,7 @@ done:   return  #$FF
         bne     :-
 
 :       ldx     #0
-:       cpx     num_other_run_list_entries
+:       cpx     num_secondary_run_list_entries
         beq     :+
         txa
         clc
@@ -1371,21 +1371,21 @@ entries_flag_table:
 
 .proc draw_entries
 
-        ;; Run List
+        ;; Primary Run List
         lda     #0
         sta     count
 :       lda     count
-        cmp     num_run_list_entries
+        cmp     num_primary_run_list_entries
         beq     :+
         jsr     draw_list_entry
         inc     count
         jmp     :-
 
-        ;; Other Run List
+        ;; Secondary Run List
 :       lda     #0
         sta     count
 :       lda     count
-        cmp     num_other_run_list_entries
+        cmp     num_secondary_run_list_entries
         beq     done
         clc
         adc     #8
@@ -1403,8 +1403,8 @@ count:  .byte   0
 .proc load_selector_list
         ;; Initialize the counts, in case load fails.
         lda     #0
-        sta     selector_list + kSelectorListNumRunListOffset
-        sta     selector_list + kSelectorListNumOtherListOffset
+        sta     selector_list + kSelectorListNumPrimaryRunListOffset
+        sta     selector_list + kSelectorListNumSecondaryRunListOffset
 
         MLI_CALL OPEN, open_selector_list_params
         bne     cache
@@ -1414,8 +1414,8 @@ count:  .byte   0
         MLI_CALL READ, read_selector_list_params
         MLI_CALL CLOSE, close_params
 
-cache:  copy    selector_list + kSelectorListNumRunListOffset, num_run_list_entries
-        copy    selector_list + kSelectorListNumOtherListOffset, num_other_run_list_entries
+cache:  copy    selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
+        copy    selector_list + kSelectorListNumSecondaryRunListOffset, num_secondary_run_list_entries
         rts
 .endproc
 

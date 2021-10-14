@@ -566,8 +566,8 @@ enter_the_name_to_appear_label:
         PASCAL_STRING res_string_selector_label_enter_name
 
         DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,               343-14, 39
-        DEFINE_LABEL run_list,           {kGlyphOpenApple,res_string_selector_label_run_list},       363-14, 48
-        DEFINE_LABEL other_run_list,     {kGlyphOpenApple,res_string_selector_label_other_run_list}, 363-14, 57
+        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},       363-14, 48
+        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, 363-14, 57
         DEFINE_LABEL down_load,          res_string_selector_label_download,                         343-14, 73
         DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},  363-14, 82
         DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},   363-14, 91
@@ -676,8 +676,8 @@ LD921:  .byte   0
 kRadioButtonWidth = 10
 kRadioButtonHeight = 6
 
-        DEFINE_RECT_SZ rect_run_list_radiobtn,       346-14, 41, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_other_run_list_radiobtn, 346-14, 50, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_primary_run_list_radiobtn,   346-14, 41, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_secondary_run_list_radiobtn, 346-14, 50, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ rect_at_first_boot_radiobtn,  346-14, 75, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ rect_at_first_use_radiobtn,   346-14, 84, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ rect_never_radiobtn,          346-14, 93, kRadioButtonWidth, kRadioButtonHeight
@@ -685,8 +685,8 @@ kRadioButtonHeight = 6
 kRadioControlWidth = 134+30
 kRadioControlHeight = 8
 
-        DEFINE_RECT_SZ rect_run_list_ctrl,       346-14, 40, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_other_run_list_ctrl, 346-14, 49, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   346-14, 40, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, 346-14, 49, kRadioControlWidth, kRadioControlHeight
         DEFINE_RECT_SZ rect_at_first_boot_ctrl,  346-14, 74, kRadioControlWidth, kRadioControlHeight
         DEFINE_RECT_SZ rect_at_first_use_ctrl,   346-14, 83, kRadioControlWidth, kRadioControlHeight
         DEFINE_RECT_SZ rect_never_ctrl,          346-14, 92, kRadioControlWidth, kRadioControlHeight

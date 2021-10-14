@@ -1622,7 +1622,7 @@ copy_desktop_to_ramcard := copy_desktop_to_ramcard_impl::start
         sta     entry_num
 entry_loop:
         lda     entry_num
-        cmp     selector_buffer + kSelectorListNumRunListOffset
+        cmp     selector_buffer + kSelectorListNumPrimaryRunListOffset
         beq     done_entries
         jsr     compute_label_addr
         stax    ptr
@@ -1654,7 +1654,7 @@ done_entries:
 
 entry_loop2:
         lda     entry_num
-        cmp     selector_buffer + kSelectorListNumOtherListOffset
+        cmp     selector_buffer + kSelectorListNumSecondaryRunListOffset
         beq     bail
         clc
         adc     #8              ; offset by 8 ???

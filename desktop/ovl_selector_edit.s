@@ -120,10 +120,10 @@ common: MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
 
         MGTK_RELAY_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
         param_call file_dialog::draw_string, add_a_new_entry_to_label_str
-        MGTK_RELAY_CALL MGTK::MoveTo, run_list_label_pos
-        param_call file_dialog::draw_string, run_list_label_str
-        MGTK_RELAY_CALL MGTK::MoveTo, other_run_list_label_pos
-        param_call file_dialog::draw_string, other_run_list_label_str
+        MGTK_RELAY_CALL MGTK::MoveTo, primary_run_list_label_pos
+        param_call file_dialog::draw_string, primary_run_list_label_str
+        MGTK_RELAY_CALL MGTK::MoveTo, secondary_run_list_label_pos
+        param_call file_dialog::draw_string, secondary_run_list_label_str
         MGTK_RELAY_CALL MGTK::MoveTo, down_load_label_pos
         param_call file_dialog::draw_string, down_load_label_str
         MGTK_RELAY_CALL MGTK::MoveTo, at_first_boot_label_pos
@@ -134,8 +134,8 @@ common: MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         param_call file_dialog::draw_string, never_label_str
 
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_run_list_radiobtn
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_other_run_list_radiobtn
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_primary_run_list_radiobtn
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_secondary_run_list_radiobtn
         MGTK_RELAY_CALL MGTK::FrameRect, rect_at_first_boot_radiobtn
         MGTK_RELAY_CALL MGTK::FrameRect, rect_at_first_use_radiobtn
         MGTK_RELAY_CALL MGTK::FrameRect, rect_never_radiobtn
@@ -243,7 +243,7 @@ finish: copy    #1, path_buf2
 ;;; ============================================================
 ;;; Close window and finish (via saved_stack) if OK
 ;;; Outputs: A = 0 if OK
-;;;          X = which run list (1=run list, 2=other run list)
+;;;          X = which run list (1=primary, 2=secondary)
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
 .proc handle_ok_name
@@ -336,14 +336,14 @@ copy_when:
 ;;; ============================================================
 
 .proc handle_click
-        MGTK_RELAY_CALL MGTK::InRect, rect_run_list_ctrl
+        MGTK_RELAY_CALL MGTK::InRect, rect_primary_run_list_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     click_run_list_ctrl
-:       MGTK_RELAY_CALL MGTK::InRect, rect_other_run_list_ctrl
+        jmp     click_primary_run_list_ctrl
+:       MGTK_RELAY_CALL MGTK::InRect, rect_secondary_run_list_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
-        jmp     click_other_run_list_ctrl
+        jmp     click_secondary_run_list_ctrl
 :       MGTK_RELAY_CALL MGTK::InRect, rect_at_first_boot_ctrl
         cmp     #MGTK::inrect_inside
         bne     :+
@@ -359,7 +359,7 @@ copy_when:
 :       return  #0
 .endproc
 
-.proc click_run_list_ctrl
+.proc click_primary_run_list_ctrl
         lda     which_run_list
         cmp     #1
         beq     :+
@@ -370,7 +370,7 @@ copy_when:
 :       return  #$FF
 .endproc
 
-.proc click_other_run_list_ctrl
+.proc click_secondary_run_list_ctrl
         lda     which_run_list
         cmp     #2
         beq     :+
@@ -419,10 +419,10 @@ copy_when:
 .proc toggle_run_list_button
         cmp     #1
         bne     :+
-        param_call draw_inset_rect, rect_run_list_radiobtn
+        param_call draw_inset_rect, rect_primary_run_list_radiobtn
         rts
 
-:       param_call draw_inset_rect, rect_other_run_list_radiobtn
+:       param_call draw_inset_rect, rect_secondary_run_list_radiobtn
         rts
 .endproc
 
@@ -500,11 +500,11 @@ copy_when:
 :       lda     event_key
         cmp     #'1'
         bne     :+
-        jmp     click_run_list_ctrl
+        jmp     click_primary_run_list_ctrl
 
 :       cmp     #'2'
         bne     :+
-        jmp     click_other_run_list_ctrl
+        jmp     click_secondary_run_list_ctrl
 
 :       cmp     #'3'
         bne     :+

@@ -29,9 +29,9 @@ L900F:  pha
 L9015:  pla
 L9016:  rts
 
-L9017:  lda     selector_list + kSelectorListNumRunListOffset
+L9017:  lda     selector_list + kSelectorListNumPrimaryRunListOffset
         clc
-        adc     selector_list + kSelectorListNumOtherListOffset
+        adc     selector_list + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
         copy    #0, selector_menu_items_updated_flag
         jsr     GetCopiedToRAMCardFlag
@@ -81,16 +81,16 @@ L9088:  sta     copy_when
         bpl     L9093
         jmp     L9016
 
-L9093:  copy16  selector_list, num_run_list_entries
+L9093:  copy16  selector_list, num_primary_run_list_entries
         lda     which_run_list
-        cmp     #$01
+        cmp     #1
         bne     L90D3
-        lda     num_run_list_entries
-        cmp     #kSelectorListNumRunListEntries
+        lda     num_primary_run_list_entries
+        cmp     #kSelectorListNumPrimaryRunListEntries
         beq     L90F4
         ldy     copy_when       ; Flags
-        lda     num_run_list_entries
-        inc     selector_list + kSelectorListNumRunListOffset
+        lda     num_primary_run_list_entries
+        inc     selector_list + kSelectorListNumPrimaryRunListOffset
         jsr     assign_entry_data
         jsr     write_file
         bpl     L90D0
@@ -98,15 +98,15 @@ L9093:  copy16  selector_list, num_run_list_entries
 
 L90D0:  jmp     L900F
 
-L90D3:  lda     num_other_run_list_entries
-        cmp     #16             ; TODO: Constant for max # other run list entries
+L90D3:  lda     num_secondary_run_list_entries
+        cmp     #kSelectorListNumSecondaryRunListEntries
         beq     L90F4
         ldy     copy_when       ; Flags
-        lda     num_other_run_list_entries
+        lda     num_secondary_run_list_entries
         clc
-        adc     #kSelectorListNumRunListEntries
-        jsr     assign_other_run_list_entry_data
-        inc     selector_list + kSelectorListNumOtherListOffset
+        adc     #kSelectorListNumPrimaryRunListEntries
+        jsr     assign_secondary_run_list_entry_data
+        inc     selector_list + kSelectorListNumSecondaryRunListOffset
         jsr     write_file
         bpl     L90F1
         jmp     L9016
@@ -118,15 +118,16 @@ L90F6:  jsr     ShowWarning
         dec     clean_flag      ; reset to "clean"
         jmp     L9016
 
-which_run_list:  .byte   0
+which_run_list:
+        .byte   0
 copy_when:  .byte   0
 
 ;;; ============================================================
 
 .proc init
         lda     #$00
-        sta     num_run_list_entries
-        sta     num_other_run_list_entries
+        sta     num_primary_run_list_entries
+        sta     num_secondary_run_list_entries
         copy    #$FF, selected_index
         jsr     open_window
         jsr     read_file_and_draw_entries
@@ -207,7 +208,7 @@ l2:     lda     ($06),y
         bpl     l2
         ldx     #$01
         lda     selected_index
-        cmp     #kSelectorListNumRunListEntries+1
+        cmp     #kSelectorListNumPrimaryRunListEntries+1
         bcc     l3
         inx
 l3:     clc
@@ -250,13 +251,13 @@ l6:     sta     copy_when
         jmp     close_window
 
 l7:     lda     selected_index
-        cmp     #kSelectorListNumRunListEntries+1
+        cmp     #kSelectorListNumPrimaryRunListEntries+1
         bcc     l10
         lda     which_run_list
-        cmp     #$02
+        cmp     #2
         beq     l13
-        lda     num_run_list_entries
-        cmp     #kSelectorListNumRunListEntries
+        lda     num_primary_run_list_entries
+        cmp     #kSelectorListNumPrimaryRunListEntries
         bne     l8
         jmp     L90F4
 
@@ -265,17 +266,17 @@ l8:     lda     selected_index
         beq     l9
         jmp     close_window
 
-l9:     ldx     num_run_list_entries
-        inc     num_run_list_entries
-        inc     selector_list + kSelectorListNumRunListOffset
+l9:     ldx     num_primary_run_list_entries
+        inc     num_primary_run_list_entries
+        inc     selector_list + kSelectorListNumPrimaryRunListOffset
         txa
         jmp     l14
 
 l10:    lda     which_run_list
-        cmp     #$01
+        cmp     #1
         beq     l13
-        lda     num_other_run_list_entries
-        cmp     #$10
+        lda     num_secondary_run_list_entries
+        cmp     #kSelectorListNumSecondaryRunListEntries
         bne     l11
         jmp     init
 
@@ -284,10 +285,10 @@ l11:    lda     selected_index
         beq     l12
         jmp     close_window
 
-l12:    ldx     num_other_run_list_entries
-        inc     num_other_run_list_entries
-        inc     selector_list + kSelectorListNumOtherListOffset
-        lda     num_other_run_list_entries
+l12:    ldx     num_secondary_run_list_entries
+        inc     num_secondary_run_list_entries
+        inc     selector_list + kSelectorListNumSecondaryRunListOffset
+        lda     num_secondary_run_list_entries
         clc
         adc     #$07
         jmp     l14
@@ -423,9 +424,9 @@ l10:    iny
 
 L938A:  .byte   0               ; ???
 
-num_run_list_entries:
+num_primary_run_list_entries:
         .byte   0
-num_other_run_list_entries:
+num_secondary_run_list_entries:
         .byte   0
 
 selected_index:
@@ -679,7 +680,7 @@ l3:     pha
         sta     new_selection
         cmp     #8
         bcs     l5
-        cmp     num_run_list_entries
+        cmp     num_primary_run_list_entries
         bcs     l6
 
 l4:     cmp     selected_index           ; same as previous selection?
@@ -693,11 +694,11 @@ l4:     cmp     selected_index           ; same as previous selection?
         rts
 
 l5:     sec
-        sbc     #kSelectorListNumRunListEntries
-        cmp     num_other_run_list_entries
+        sbc     #kSelectorListNumPrimaryRunListEntries
+        cmp     num_secondary_run_list_entries
         bcs     l6
         clc
-        adc     #kSelectorListNumRunListEntries
+        adc     #kSelectorListNumPrimaryRunListEntries
         jmp     l4
 
 l6:     lda     selected_index
@@ -821,8 +822,8 @@ l5:     ldx     #0
 ;;; ============================================================
 
 .proc handle_key_right
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -870,8 +871,8 @@ done:   return  #$FF
 ;;; ============================================================
 
 .proc handle_key_left
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -909,8 +910,8 @@ done:   return  #$FF
 ;;; ============================================================
 
 .proc handle_key_up
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -946,8 +947,8 @@ done:   return  #$FF
 ;;; ============================================================
 
 .proc handle_key_down
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -992,7 +993,7 @@ done:   return  #$FF
         bpl     :-
 
         ldx     #0
-:       cpx     num_run_list_entries
+:       cpx     num_primary_run_list_entries
         beq     :+
         txa
         sta     entries_flag_table,x
@@ -1000,7 +1001,7 @@ done:   return  #$FF
         bne     :-
 
 :       ldx     #0
-:       cpx     num_other_run_list_entries
+:       cpx     num_secondary_run_list_entries
         beq     :+
         txa
         clc
@@ -1031,7 +1032,7 @@ entries_flag_table:
 
 ;;; ============================================================
 ;;; Assigns name, flags, and path to an entry in the file buffer
-;;; and (if it's not in the other run list) also updates the
+;;; and (if it's in the primary run list) also updates the
 ;;; resource data (used for menus, etc).
 ;;; Inputs: A=entry index, Y=new flags
 ;;;         `path_buf1` is name, `path_buf0` is path
@@ -1039,7 +1040,7 @@ entries_flag_table:
 .proc assign_entry_data
         cmp     #8
         bcc     :+
-        jmp     assign_other_run_list_entry_data
+        jmp     assign_secondary_run_list_entry_data
 
 :       sta     index
         tya                     ; flags
@@ -1084,7 +1085,7 @@ index:  .byte   0
 ;;; Inputs: A=entry index, Y=new flags
 ;;;         `path_buf1` is name, `path_buf0` is path
 
-.proc assign_other_run_list_entry_data
+.proc assign_secondary_run_list_entry_data
         ptr := $06
 
         sta     index
@@ -1135,24 +1136,24 @@ index:  .byte   0
         sta     index
         cmp     #8
         bcc     run_list
-        jmp     other_run_list
+        jmp     secondary_run_list
 
         ;; Primary run list
 run_list:
 .scope
         tax
         inx
-        cpx     num_run_list_entries
+        cpx     num_primary_run_list_entries
         bne     loop
 
 finish:
-        dec     selector_list + kSelectorListNumRunListOffset
-        dec     num_run_list_entries
+        dec     selector_list + kSelectorListNumPrimaryRunListOffset
+        dec     num_primary_run_list_entries
         jsr     update_menu_resources
         jmp     write_file
 
 loop:   lda     index
-        cmp     num_run_list_entries
+        cmp     num_primary_run_list_entries
         beq     finish
 
         ;; Copy entry (in file buffer) down by one
@@ -1194,23 +1195,23 @@ loop:   lda     index
 
         ;; --------------------------------------------------
 
-other_run_list:
+secondary_run_list:
 .scope
         sec
         sbc     #ptr1+1
-        cmp     num_other_run_list_entries
+        cmp     num_secondary_run_list_entries
         bne     loop
-        dec     selector_list + kSelectorListNumOtherListOffset
-        dec     num_other_run_list_entries
+        dec     selector_list + kSelectorListNumSecondaryRunListOffset
+        dec     num_secondary_run_list_entries
         jmp     write_file
 
 loop:   lda     index
         sec
         sbc     #ptr2
-        cmp     num_other_run_list_entries
+        cmp     num_secondary_run_list_entries
         bne     L9B84
-        dec     selector_list + kSelectorListNumOtherListOffset
-        dec     num_other_run_list_entries
+        dec     selector_list + kSelectorListNumSecondaryRunListOffset
+        dec     num_secondary_run_list_entries
         jmp     write_file
 
 L9B84:  lda     index
@@ -1263,7 +1264,7 @@ index:  .byte   0
         ptr_file = $06          ; pointer into file buffer
         ptr_res = $08           ; pointer into resource data
 
-        lda     selector_list + kSelectorListNumRunListOffset
+        lda     selector_list + kSelectorListNumPrimaryRunListOffset
         sta     index
 
 loop:   dec     index
@@ -1296,7 +1297,7 @@ loop:   dec     index
 
 finish:
         ;; Menu size
-        lda     selector_list + kSelectorListNumRunListOffset
+        lda     selector_list + kSelectorListNumPrimaryRunListOffset
         clc
         adc     #kSelectorMenuMinItems
         sta     selector_menu
@@ -1529,16 +1530,16 @@ close:  MLI_RELAY_CALL CLOSE, close_params
 ;;; ============================================================
 
 .proc draw_all_entries
-        lda     selector_list + kSelectorListNumRunListOffset
-        sta     num_run_list_entries
-        beq     other_run_list
+        lda     selector_list + kSelectorListNumPrimaryRunListOffset
+        sta     num_primary_run_list_entries
+        beq     secondary_run_list
 
-        ;; Draw "run list" entries
+        ;; Draw "primary run list" entries
         lda     #0
         sta     index
 loop1:  lda     index
-        cmp     num_run_list_entries
-        beq     other_run_list
+        cmp     num_primary_run_list_entries
+        beq     secondary_run_list
         jsr     times16
         clc
         adc     #kSelectorListEntriesOffset
@@ -1552,15 +1553,15 @@ loop1:  lda     index
         inc     index
         jmp     loop1
 
-        ;; Draw "other run list" entries
-other_run_list:
-        lda     selector_list + kSelectorListNumOtherListOffset
-        sta     num_other_run_list_entries
+        ;; Draw "secondary run list" entries
+secondary_run_list:
+        lda     selector_list + kSelectorListNumSecondaryRunListOffset
+        sta     num_secondary_run_list_entries
         beq     done
         lda     #0
         sta     index
 loop2:  lda     index
-        cmp     num_other_run_list_entries
+        cmp     num_secondary_run_list_entries
         beq     done
         clc
         adc     #8

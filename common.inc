@@ -52,15 +52,16 @@ kDoubleClickDeltaY      = 4
 
 ;;; See docs/Selector_List_Format.md for file format.
 
-kSelectorListNumRunListEntries  = 8
-kSelectorListNumEntries         = 24
-kSelectorListNameLength         = 16
-kSelectorListPathLength         = 64
+kSelectorListNumPrimaryRunListEntries   = 8
+kSelectorListNumSecondaryRunListEntries = 16
+kSelectorListNumEntries                 = kSelectorListNumPrimaryRunListEntries + kSelectorListNumSecondaryRunListEntries
+kSelectorListNameLength                 = 16 ; includes leading size byte and trailing flags byte
+kSelectorListPathLength                 = 64
 
-kSelectorListNumRunListOffset   = 0
-kSelectorListNumOtherListOffset = 1
-kSelectorListEntriesOffset      = 2
-kSelectorListPathsOffset        = kSelectorListEntriesOffset + kSelectorListNumEntries * kSelectorListNameLength
+kSelectorListNumPrimaryRunListOffset    = 0
+kSelectorListNumSecondaryRunListOffset  = 1
+kSelectorListEntriesOffset              = 2
+kSelectorListPathsOffset                = kSelectorListEntriesOffset + kSelectorListNumEntries * kSelectorListNameLength
 
 kSelectorEntryFlagsOffset       = $F
 kSelectorEntryCopyOnBoot        = $00
