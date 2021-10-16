@@ -307,7 +307,7 @@ temp_string_buf:
 split_buf:
         .res    kPathBufferSize, 0
 
-;;; In common dialog (copy/edit file, add/edit selector entry):
+;;; In common dialog (copy/edit file, add/edit shortcut):
 ;;; * path_buf0 has the contents of the top input field
 ;;; * path_buf1 has the contents of the bottom input field
 ;;; * path_buf2 has the contents of the focused field after insertion point

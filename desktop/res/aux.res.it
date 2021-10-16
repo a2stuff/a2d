@@ -2,7 +2,7 @@
 .define res_string_menu_bar_item_view "Esposizione"
 .define res_string_menu_bar_item_special "Strumenti"
 .define res_string_menu_bar_item_startup "Avvio"
-.define res_string_menu_bar_item_selector "Esegui"
+.define res_string_menu_bar_item_selector "Collegamenti"
 .define res_string_menu_item_new_folder "Nuova cartella..."
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "Apri"
@@ -92,7 +92,7 @@
 .define res_string_download_dialog_title "Copia in RAM..."
 .define res_string_download_error_ramcard_full "La RAM } piena. La copia non } stata completata."
 .define res_string_warning_insert_system_disk "Per favore inserisci il disco di sistema."
-.define res_string_warning_selector_list_full_line1 "L'elenco } pieno. Devi eliminare un elemento"
+.define res_string_warning_selector_list_full_line1 "L'elenco } pieno. Devi eliminare un collegamento"
 .define res_string_warning_selector_list_full_line2 "prima di aggiungerne altri."
 .define res_string_warning_window_must_be_closed "Devi chiudere una finestra prima di aprire questo elemento."
 .define res_string_warning_too_many_files "Ci sono troppi file per aprire questo elemento!"

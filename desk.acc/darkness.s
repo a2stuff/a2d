@@ -3,7 +3,7 @@
 ;;;
 ;;; Paints the screen a dark pattern... and leaves it that way.
 ;;; For ensuring repaints are minimal. Best used bound to a
-;;; Selector entry and triggered with a shortcut key.
+;;; menu item in Shortcuts and triggered with a shortcut key.
 ;;; ============================================================
 
         .include "../config.inc"

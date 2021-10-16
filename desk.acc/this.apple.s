@@ -691,10 +691,11 @@ Version:                .word   0
 ;;;
 ;;; *** = Apple IIgs looks like an Enhanced IIe. SEC, JSR $FE1F, CC=IIgs
 ;;;
-;;; **** = Franklin ACE 2000 appears to have different ROM versions. At least one
-;;; has $FBC0=$EA (like an original IIe) and does not have $60 (RTS) at $FE1F,
-;;; so the IIgs IDROUTINE must be used with caution: it will modify A and output
-;;; text! By "revision 6", $FBC0=$E0 and $FE1F=$60, like an Enhanced IIe.
+;;; **** = Franklin ACE 2000 appears to have different ROM versions:
+;;;   v5.X - has $FBC0=$EA (like an original IIe), and does not have $60 (RTS)
+;;;          at $FE1F, so the IIgs IDROUTINE must be used with caution: it
+;;;          will modify A and output text!
+;;;   v6.0 - has $FBC0=$E0 (like an enhanced IIe), and has $FE1F=$60
 
 .enum model
 .if ::INCLUDE_UNSUPPORTED_MACHINES
