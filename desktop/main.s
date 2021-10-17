@@ -9651,32 +9651,18 @@ Version:                .word   0
         ldy     #kDeviceTypeRAMDisk
         rts
 :
+        ;; Is Disk II? A dedicated test that takes advantage of the
+        ;; fact that Disk II devices are never remapped.
+        jsr     IsDiskII
+        bne     :+
+        ldax    #str_device_type_diskii
+        ldy     #kDeviceTypeDiskII
+        rts
+:
         ;; Look up driver address
-        jsr     DeviceDriverAddress ; populates `slot_addr`
-        beq     firmware
-
-        ;; The high byte of the device driver's entry point is not $Cn.
-        ;; Technical Note: ProDOS #21 says to trust the slot bits in
-        ;; the unit number and check the I/O space for identification
-        ;; bytes, but that's wrong when ProDOS remaps SmartPort drives,
-        ;; e.g. using $FCE6.
-        ;;
-        ;; This uses a heuristic: drivers in $Fnnn are assumed to
-        ;; violate the TechNote. An alternative heuristic would be
-        ;; to only trust it for $D000 (the Disk II driver address).
-        and     #%11110000      ; Is it in $Fnnnn ?
-        cmp     #$F0
-        jeq     generic
-
-        ;; Trust the unit number's slot, per the TechNote.
         lda     unit_number
-        and     #%01110000      ; Mask off slot 0SSS0000
-        lsr                     ; Shift to be $0n
-        lsr
-        lsr
-        lsr
-        ora     #$C0            ; make $Cn...
-        sta     slot_addr+1     ; and fall through to use $Cn00 to probe
+        jsr     DeviceDriverAddress ; populates `slot_addr`, Z=1 if $Cn
+        jne     generic
 
         ;; Probe firmware ID bytes
 firmware:
@@ -16710,6 +16696,7 @@ driver: jmp     (RAMSLOT)
 ;;; ============================================================
 
         .include "../lib/datetime.s"
+        .include "../lib/is_diskii.s"
 
 ;;; ============================================================
 

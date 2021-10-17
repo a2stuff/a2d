@@ -104,12 +104,12 @@ params:  .res    3
         ldx     auxlc::dest_drive_index
         lda     auxlc::drive_unitnum_table,x
         sta     unit_number
-        and     #$0F            ; unit number low nibble; 0 = 16-sector Disk II
-        beq     disk_ii         ; BUG: That's not valid per ProDOS TN21
+        jsr     auxlc::IsDiskII
+        beq     disk_ii
 
         ;; Get driver address
         lda     unit_number
-        jsr     unit_number_to_driver_address
+        jsr     unit_number_to_driver_address ; sets $06, Z=1 if firmware
 
         lda     #DRIVER_COMMAND_FORMAT
         sta     DRIVER_COMMAND
@@ -135,7 +135,7 @@ unit_number:
         ptr := $6
 
         sta     unit_num
-        jsr     unit_number_to_driver_address
+        jsr     unit_number_to_driver_address ; sets $06, Z=1 if firmware
         bne     done            ; not firmware; can't tell if SmartPort or not
 
         lda     #$00            ; Point at $Cn00

@@ -819,8 +819,8 @@ process_volume:
 
         ldy     device_index
         lda     DEVLST,y
-        and     #$0F            ; unit number low nibble; 0 = 16-sector Disk II
-        beq     select_template ; BUG: That's not valid per ProDOS TN21
+        jsr     main::IsDiskII
+        beq     select_template ; skip
         ldx     device_index
         jsr     remove_device
         jmp     next
