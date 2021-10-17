@@ -45,9 +45,9 @@ Issues marked [Good First Bug](https://github.com/a2stuff/a2d/issues?q=is%3Aissu
 
 MouseDesk originally shipped in French, English, German, Italian. The
 project has been structured to allow localization into additional
-languages. The work involved for most contributions is just to add an
-additional column to a spreadsheet which translations for each string,
-plus updating a few constants (e.g. offsets into strings).
+languages. Since then, support for Spanish has been added. The work
+involved for most contributions is just to add an additional column to
+a spreadsheet which translations for each string.
 
 [DeskTop Localization Spreadsheet](https://docs.google.com/spreadsheets/d/1NIZQM4ua6ruLJk_P7MfTKN9S5LNwHwYJM_UhvY-ep3A/edit?usp=sharing)
 
@@ -70,18 +70,16 @@ modify. Here's a snapshot of the output for some files that could use
 attention:
 
 ```
-desktop/aux.s                   unscoped:    0  scoped:   67  raw:    0  unrefed:    0
-desktop/main.s                  unscoped:    1  scoped:  186  raw:   19  unrefed:    1
-desktop/ovl_file_dialog.s       unscoped:   11  scoped:   26  raw:    4  unrefed:    1
-desktop/ovl_format_erase.s      unscoped:   92  scoped:    2  raw:    3  unrefed:    2
-desktop/ovl_selector_pick.s     unscoped:  130  scoped:    0  raw:    1  unrefed:    0
-desktop/res.s                   unscoped:   11  scoped:    0  raw:    5  unrefed:   11
-disk_copy/auxlc.s               unscoped:   91  scoped:   79  raw:    8  unrefed:    0
-disk_copy/main.s                unscoped:    0  scoped:    6  raw:    0  unrefed:    0
-selector/alert_dialog.s         unscoped:    0  scoped:   20  raw:    0  unrefed:    0
-selector/app.s                  unscoped:    1  scoped:   33  raw:    0  unrefed:    1
-selector/ovl_file_copy.s        unscoped:  125  scoped:   20  raw:    0  unrefed:    0
-selector/ovl_file_dialog.s      unscoped:    9  scoped:   24  raw:    0  unrefed:    0
+desk.acc/show.text.file.s       unscoped:   10  scoped:    0  raw:    0  unrefed:    0
+desktop/aux.s                   unscoped:    0  scoped:   48  raw:    0  unrefed:    0
+desktop/main.s                  unscoped:    1  scoped:   70  raw:   15  unrefed:    0
+desktop/ovl_file_dialog.s       unscoped:    5  scoped:   16  raw:    2  unrefed:    1
+desktop/ovl_selector_pick.s     unscoped:   15  scoped:    1  raw:    0  unrefed:    1
+disk_copy/auxlc.s               unscoped:   79  scoped:   28  raw:    7  unrefed:    0
+mgtk/mgtk.s                     unscoped:    0  scoped:   10  raw:    8  unrefed:    0
+selector/app.s                  unscoped:    1  scoped:   32  raw:    1  unrefed:    0
+selector/ovl_file_copy.s        unscoped:   42  scoped:   37  raw:    0  unrefed:    0
+selector/ovl_file_dialog.s      unscoped:    7  scoped:   14  raw:    0  unrefed:    0
 ```
 
 * **unscoped** counts the number of auto-generated labels like `L1234`
