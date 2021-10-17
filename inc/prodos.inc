@@ -38,6 +38,10 @@ BLOCK_SIZE      = $200
 ;;; the slot and drive, as the high nibble is DSSS.
 UNIT_NUM_MASK   = $F0
 
+;;; Mask off just the slot bits from a unit number. Used when
+;;; constructing $Cn00 pointer to probe firmware.
+UNIT_NUM_SLOT_MASK      = %01110000 ; 0SSS0000
+
 ;;; ============================================================
 ;;; MLI Calls
 ;;; ============================================================

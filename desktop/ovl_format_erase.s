@@ -693,34 +693,12 @@ params: .addr   0
 ;;; Input: A = unit number (with low nibble intact)
 
 .proc format_unit
-        ;; Check low nibble of unit number; if 0, it's a 16-sector Disk II
-        ;; BUG: That's not valid per ProDOS TN21
         sta     unit_num
-        and     #$0F
-        beq     disk_ii
 
-        ;; Check if the driver is firmware ($CnXX) and if so if it's
-        ;; a 16-sector or 13-sector Disk II.
-        lda     unit_num
-        jsr     get_driver_address ; A,X = driver address
-
-        txa                     ; high byte
-        and     #$F0            ; look at high nibble
-        cmp     #$C0            ; firmware? ($Cn)
-        bne     driver              ; nope
-
-        txa                     ; high byte
-        sta     $06+1
-        lda     #$00
-        sta     $06             ; point $06 at $Cn00
-        ldy     #$FF
-        lda     ($06),y         ; load $CnFF
-        beq     disk_ii         ; $00 = Disk II 16-sector
-        cmp     #$FF            ; $FF = Disk II 13-sector
+        jsr     main::IsDiskII
         bne     driver
 
         ;; Format as Disk II
-disk_ii:
         lda     unit_num
         jsr     FormatDiskII
         rts
@@ -754,34 +732,24 @@ unit_num:
 ;;; Output: A=0/Z=1/N=0 if yes, A=$FF/Z=0/N=1 if no
 
 .proc check_supports_format
-        ;; Check low nibble of unit number; if 0, it's a 16-sector Disk II
-        ;; BUG: That's not valid per ProDOS TN21
         sta     unit_num
-        and     #$0F
+
+        jsr     main::IsDiskII
         beq     supported
 
-        ;; Check if the driver is firmware ($CnXX) and if so if it's
-        ;; a 16-sector or 13-sector Disk II.
+        ;; Check if the driver is firmware ($CnXX).
+        ptr := $06
         lda     unit_num
         jsr     get_driver_address
+        stax    ptr
         txa                     ; high byte
         and     #$F0            ; look at high nibble
         cmp     #$C0            ; firmware? ($Cn)
         bne     supported       ; TODO: Should we guess yes or no here???
 
-        txa                     ; high byte
-        sta     $06+1
-        lda     #$00
-        sta     $06             ; point $06 at $Cn00
-        ldy     #$FF
-        lda     ($06),y         ; load $CnFF
-        beq     supported       ; $00 = Disk II 16-sector
-        cmp     #$FF            ; $FF = Disk II 13-sector
-        beq     supported
-
-        ;; Not a Disk II; check the firmware status byte
+        ;; Check the firmware status byte
         ldy     #$FE            ; $CnFE
-        lda     ($06),y
+        lda     (ptr),y
         and     #%00001000      ; Bit 3 = Supports format
         bne     supported
 
@@ -829,27 +797,13 @@ L132C:  ldy     #0
         ;; --------------------------------------------------
         ;; Get the block count for the device
 
-        lda     unit_num
-        jsr     get_driver_address
-
         ;; Check if it's a Disk II
-        txa                     ; high byte
-        and     #$F0            ; look at high nibble
-        cmp     #$C0            ; firmware? ($Cn)
-        bne     :+              ; nope
-
-        txa                     ; high byte
-        sta     $06+1
-        lda     #$00
-        sta     $06             ; point $06 at $Cn00
-        ldy     #$FF
-        lda     ($06),y         ; load $CnFF
-        beq     disk_ii         ; $00 = Disk II 16-sector
-        cmp     #$FF            ; $FF = Disk II 13-sector
+        lda     unit_num
+        jsr     main::IsDiskII
         beq     disk_ii
 
         ;; Not Disk II - use the driver.
-:       lda     unit_num
+        lda     unit_num
         jsr     get_driver_address
         stax    @driver
 

@@ -716,20 +716,16 @@ LD7E1:  lda     main__on_line_buffer2
 LD7F2:
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$0F            ; unit number low nibble; 0 = 16-sector Disk II
-        beq     LD817           ; BUG: That's not valid per ProDOS TN21
+        jsr     IsDiskII
+        beq     LD817
 
+        ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        jsr     main__unit_number_to_driver_address
+        jsr     main__unit_number_to_driver_address ; sets $06, Z=1 if firmware
         bne     :+              ; if not firmware, skip these checks
 
         lda     #$00            ; point at $Cn00
         sta     $06
-        ldy     #$FF            ; $CnFF
-        lda     ($06),y
-        beq     LD817           ; = $00 means 16-sector Disk II
-        cmp     #$FF            ; = $FF means 13-sector Disk II
-        beq     LD817
         ldy     #$FE            ; $CnFE
         lda     ($06),y
         and     #$08            ; bit 3 = The device supports formatting.
@@ -764,10 +760,12 @@ LD84A:  lda     disk_copy_flag
 
 LD852:  ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$0F            ; unit number low nibble; 0 = 16-sector Disk II
-        beq     format          ; BUG: That's not valid per ProDOS TN21
+        jsr     IsDiskII
+        beq     format
+
+        ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        jsr     main__unit_number_to_driver_address
+        jsr     main__unit_number_to_driver_address ; sets $06, Z=1 if firmware
         bne     :+              ; if not not firmware, skip these checks
 
         lda     #$00            ; point at $Cn00
@@ -776,11 +774,6 @@ LD852:  ldx     dest_drive_index
         lda     ($06),y
         and     #$08            ; bit 3 = The device supports formatting.
         bne     format
-        ldy     #$FF            ; low byte of driver address
-        lda     ($06),y
-        beq     format          ; $00 = 16-sector Disk II
-        cmp     #$FF            ; $FF = 13-sector Disk II
-        beq     format
 
 :       lda     #kAlertMsgDestinationFormatFail ; no args
         jsr     show_alert_dialog
@@ -1680,10 +1673,10 @@ LE182:  lda     #$13
         bne     LE1CD
         dey
         lda     ($06),y
-        jsr     find_devlst_index ; carry set on failure
+        jsr     IsDiskII
+        jne     next_device
         lda     #ERR_DEVICE_NOT_CONNECTED
-        bcc     LE1CD
-        jmp     next_device
+        bne     LE1CD           ; always
 
 LE1CC:  rts
 
@@ -1771,41 +1764,27 @@ LE264:  .byte   0
 
 ;;; --------------------------------------------------
 ;;; Inputs: A=driver/slot (DSSSxxxx)
-;;; Outputs: C=0, X=DEVLST index is found and low bits of unit_num != 0
-;;;          C=1 otherwise
-
-.proc find_devlst_index
+;;; Outputs: full unit_num
+;;; Assert: Is present in DEVLST
+.proc find_unit_num
         and     #UNIT_NUM_MASK
-        sta     LE28C
+        sta     masked
+
         ldx     DEVCNT
 loop:   lda     DEVLST,x
         and     #UNIT_NUM_MASK
-        cmp     LE28C
+
+        masked := *+1
+        cmp     #SELF_MODIFIED_BYTE
+
         beq     match
         dex
         bpl     loop
-err:    sec
-        rts
+        ;; NOTE: Assertion violated if not found
 
-        ;; Drive/slot matches. Check low nibble.
 match:  lda     DEVLST,x
-        and     #$0F   ; unit number low nibble; 0 = 16-sector Disk II
-        bne     err    ; BUG: That's not valid per ProDOS TN21
-        clc
         rts
 .endproc
-
-;;; --------------------------------------------------
-;;; Inputs: A=driver/slot (DSSSxxxx)
-;;; Outputs: unit_num
-
-.proc find_unit_num
-        jsr     find_devlst_index
-        lda     DEVLST,x
-        rts
-.endproc
-
-LE28C:  .byte   0
 
 .endproc
 
@@ -1982,11 +1961,14 @@ index:  .byte   0
         pha
         tax                     ; X is device index
         lda     drive_unitnum_table,x
-        and     #$0F            ; unit number low nibble; 0 = 16-sector Disk II
-        beq     disk_ii         ; BUG: That's not valid per ProDOS TN21
+        jsr     IsDiskII
+        beq     disk_ii
 
+        pla
+        pha
+        tax
         lda     drive_unitnum_table,x
-        jsr     main__unit_number_to_driver_address
+        jsr     main__unit_number_to_driver_address ; sets $06, Z=1 if firmware
         jmp     use_driver
 
         ;; Disk II - always 280 blocks
@@ -2984,6 +2966,8 @@ show_alert_dialog := alert_dialog::show_alert_dialog
 loop_counter:
         .byte   0
 .endproc
+
+        .include "../lib/is_diskii.s"
 
 ;;; ============================================================
 
