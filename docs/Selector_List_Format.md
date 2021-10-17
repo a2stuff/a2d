@@ -1,9 +1,12 @@
 # `SELECTOR.LIST` File Format
 
+This defines the shortcut menu entries present in DeskTop, as well as
+the entries shown in the optional Selector application.
+
 Data length is 1922 bytes. The file is 2048 bytes, with padding making
 up the difference.
 
-There are two "run lists" (primary and secondary), which can have up
+There are two separate lists (primary and secondary), which can have up
 to 8 or 16 entries respectively. If an entry is deleted, later entries
 within each list are shifted down.
 
@@ -15,7 +18,7 @@ Header is two bytes.
 +000: NumPrimaryRunListEntries (byte)
 
    Number of entries (0-8) in the primary list. The are the entries
-   shown in DeskTop's Selector menu, and the first 8 entries shown in
+   shown in DeskTop's Shortcuts menu, and the first 8 entries shown in
    DeskTop's "Run an Entry..." dialog and Selector's dialog.
 
 +001: NumSecondaryRunListEntries (byte)
@@ -29,7 +32,7 @@ Header is two bytes.
 
 Offset +002. There are always 24 entries. Each entry is 16 bytes.
 
-The first 8 entries are for the primary run list, regardless of
+The first 8 entries are for the primary list, regardless of
 NumPrimaryListEntries.
 
 +000: LabelLength (byte)
@@ -52,5 +55,5 @@ NumPrimaryListEntries.
 Offset +386. There are always 24 entries. Each entry is a 64 byte,
 length-prefixed pathname.
 
-The first 8 entries are for the primary run list, regardless of
+The first 8 entries are for the primary list, regardless of
 NumPrimaryListEntries.
