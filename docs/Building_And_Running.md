@@ -71,6 +71,10 @@ After building, run: `make mount`
 
 This will copy the built files into the `mount/` directory  with appropriate file types/auxtypes set. Run Virtual ]\[ and use the **Media** > **Mount Folder as ProDOS Disk...** menu item, then select the `mount/` folder. A new ProDOS volume called `/MOUNT` will be available, containing DeskTop.
 
+### Option #4: Build ShrinkIt file
+
+If you have a workflow amenable to ShrinkIt disk images, first install `nulib2`, then run `make shk`. This will create an `A2D.SHK` file.
+
 ### Other
 
 If you need to copy the files some other way (e.g. via [CiderPress](http://a2ciderpress.com/)), it's probably easiest to transfer the files from the disk images created by `bin/package` as they will have the appropriate ProDOS file types and aux types.
