@@ -30,6 +30,15 @@ SELECTOR        := $D100
 BLOCK_SIZE      = $200
 
 ;;; ============================================================
+;;; Unit Numbers
+;;; ============================================================
+
+;;; Mask needed when preparing a `DEVLST` entry for use with
+;;; `DRIVER_UNIT_NUMBER` an `ON_LINE` call, or just extracting
+;;; the slot and drive, as the high nibble is DSSS.
+UNIT_NUM_MASK   = $F0
+
+;;; ============================================================
 ;;; MLI Calls
 ;;; ============================================================
 

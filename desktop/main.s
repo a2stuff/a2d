@@ -9877,7 +9877,7 @@ buffer: .res    16, 0            ; length overwritten with '/'
 
         sta     unit_number
         sty     devlst_index
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
         beq     success
@@ -16692,7 +16692,7 @@ lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
 
         ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
 format: lda     DEVLST,x
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     DRIVER_UNIT_NUMBER
         copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         copy16  #$2000, DRIVER_BUFFER

@@ -1035,7 +1035,7 @@ next_unit:
 test_unit_num:
         ;; Verify it's online.
         lda     unit_num
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
         bne     next_unit

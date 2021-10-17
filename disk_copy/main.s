@@ -114,7 +114,7 @@ params:  .res    3
         lda     #DRIVER_COMMAND_FORMAT
         sta     DRIVER_COMMAND
         lda     unit_number
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     DRIVER_UNIT_NUMBER
         jmp     ($06)
 
@@ -402,11 +402,11 @@ block_count_div8:
 
 .proc is_drive_removable
         ;; Search in DEVLST for the matching drive/slot combo.
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     unit_num
         ldx     DEVCNT
 :       lda     DEVLST,x
-        and     #$F0
+        and     #UNIT_NUM_MASK
         cmp     unit_num
         beq     found
         dex
@@ -1128,13 +1128,13 @@ memory_bitmap:
         .byte   %11111111       ; $D0-$DF - free
 
 ;;; ============================================================
-;;; Inputs: A = device num (DSSSxxxx), X,Y = driver address
+;;; Inputs: A = unit num (DSSSxxxx), X,Y = driver address
 ;;; Outputs: X,Y = blocks
 
 .proc get_device_blocks_using_driver
         sta     ALTZPOFF
 
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     DRIVER_UNIT_NUMBER
         stxy    @driver
 

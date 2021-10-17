@@ -1219,7 +1219,7 @@ draw_change_drive_button_label:
 retry:  ldx     device_num
         lda     DEVLST,x
 
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
         lda     on_line_buffer
@@ -1252,14 +1252,14 @@ found:  param_call main::AdjustVolumeNameCase, on_line_buffer
 
 .proc init_device_number
         lda     DEVNUM
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     last
 
         ldx     DEVCNT
         inx
 :       dex
         lda     DEVLST,x
-        and     #$F0
+        and     #UNIT_NUM_MASK
         cmp     last
         bne     :-
         stx     device_num
@@ -1397,7 +1397,7 @@ l3:     lda     file_list_index,x
         inc     L50A9
 l4:     ldy     #$00
         lda     (ptr),y
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         sta     (ptr),y
 
         dst_ptr := $08
@@ -1697,7 +1697,7 @@ loop2:  lda     inner_index     ; inner loop
         ldy     #0
         lda     ($06),y
         bmi     next_inner
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         sta     name_buf        ; length
 
         ldy     #1

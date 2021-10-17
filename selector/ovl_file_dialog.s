@@ -1561,7 +1561,7 @@ draw_change_drive_button_label:
 retry:  ldx     device_num
         lda     DEVLST,x
 
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
         lda     buf_on_line
@@ -1711,7 +1711,7 @@ l3:     lda     file_list_index,x
         inc     LA448
 l4:     ldy     #$00
         lda     (ptr),y
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         sta     (ptr),y
 
         dst_ptr := $08
@@ -2007,7 +2007,7 @@ loop2:  lda     inner_index     ; inner loop
         ldy     #0
         lda     ($06),y
         bmi     next_inner
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         sta     name_buf        ; length
 
         ldy     #1
@@ -2056,7 +2056,7 @@ next_inner:
         sta     ($06),y
 
         lda     #$7F            ; beyond last possible name char
-        ldx     #$0F
+        ldx     #$0F            ; max length
 :       sta     name_buf+1,x
         dex
         bpl     :-

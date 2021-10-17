@@ -674,7 +674,7 @@ params: .addr   0
 ;;; Output: A,X = driver address
 
 .proc get_driver_address
-        and     #$F0            ; DSSS0000 after masking
+        and     #UNIT_NUM_MASK  ; DSSS0000 after masking
         lsr                     ; 0DSSS000
         lsr                     ; 00DSSS00
         lsr                     ; 000DSSS0
@@ -734,7 +734,7 @@ driver: lda     unit_num
 
         copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         lda     unit_num
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     DRIVER_UNIT_NUMBER
 
         @driver := *+1
@@ -800,7 +800,7 @@ unit_num:
 
 .proc write_header_blocks
         sta     unit_num
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     write_block_params::unit_num
         stxy    $06
 
@@ -857,7 +857,7 @@ L132C:  ldy     #0
 
         copy    #DRIVER_COMMAND_STATUS, DRIVER_COMMAND
         lda     unit_num
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     DRIVER_UNIT_NUMBER
         lda     #$00
         sta     DRIVER_BLOCK_NUMBER
@@ -1280,7 +1280,7 @@ pascal_disk:
 ;;; Output: `ovl_string_buf` is populated
 
 .proc get_vol_name
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
         bne     non_pro
@@ -1324,7 +1324,7 @@ non_pro:
 .proc check_conflicting_volume_name
         ptr := $06
         stxy    ptr
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     unit_num
 
         ;; Copy name, prepending '/'
@@ -1346,7 +1346,7 @@ non_pro:
         ;; A volume with that name exists... but is it the one
         ;; we're about to format/erase?
         lda     DEVNUM
-        and     #$F0
+        and     #UNIT_NUM_MASK
         cmp     unit_num
         beq     no_match
 

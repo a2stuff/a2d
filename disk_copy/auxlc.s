@@ -741,7 +741,7 @@ LD817:  lda     main__on_line_buffer2
         bne     LD82C           ; have a name to show; otherwise, use S,D
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$F0
+        and     #UNIT_NUM_MASK
         tax                     ; slot/drive
         lda     #kAlertMsgConfirmEraseSlotDrive ; X = unit number
         jmp     show
@@ -1697,7 +1697,7 @@ LE1CD:  pha
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LE1EA
         lda     drive_unitnum_table,x
-        and     #$F0
+        and     #UNIT_NUM_MASK
         jsr     LDDFC
         beq     LE207
 LE1EA:  lda     num_drives
@@ -1775,11 +1775,11 @@ LE264:  .byte   0
 ;;;          C=1 otherwise
 
 .proc find_devlst_index
-        and     #$F0
+        and     #UNIT_NUM_MASK
         sta     LE28C
         ldx     DEVCNT
 loop:   lda     DEVLST,x
-        and     #$F0
+        and     #UNIT_NUM_MASK
         cmp     LE28C
         beq     match
         dex
@@ -1789,8 +1789,8 @@ err:    sec
 
         ;; Drive/slot matches. Check low nibble.
 match:  lda     DEVLST,x
-        and     #$0F
-        bne     err
+        and     #$0F   ; unit number low nibble; 0 = 16-sector Disk II
+        bne     err    ; BUG: That's not valid per ProDOS TN21
         clc
         rts
 .endproc
