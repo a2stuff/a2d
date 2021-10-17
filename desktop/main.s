@@ -9651,8 +9651,17 @@ Version:                .word   0
         ldy     #kDeviceTypeRAMDisk
         rts
 :
+        ;; Special case for VEDRIVE
+        jsr     DeviceDriverAddress ; populates `slot_addr`, Z=1 if $Cn
+        cmp16   slot_addr, #kVEDRIVEDriverAddress
+        bne     :+
+        ldax    #str_device_type_vedrive
+        ldy     #kDeviceTypeFileShare
+        rts
+:
         ;; Is Disk II? A dedicated test that takes advantage of the
         ;; fact that Disk II devices are never remapped.
+        lda     unit_number
         jsr     IsDiskII
         bne     :+
         ldax    #str_device_type_diskii
@@ -9809,6 +9818,8 @@ str_device_type_ramdisk:
         PASCAL_STRING res_string_volume_type_ramcard
 str_device_type_appletalk:
         PASCAL_STRING res_string_volume_type_fileshare
+str_device_type_vedrive:
+        PASCAL_STRING res_string_volume_type_vedrive
 .endproc
 
 ;;; ============================================================

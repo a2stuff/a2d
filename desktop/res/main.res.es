@@ -21,3 +21,4 @@
 .define res_string_volume_type_disk_ii "Disk II"
 .define res_string_volume_type_ramcard "RAMDisk"
 .define res_string_volume_type_fileshare "AppleShare"
+.define res_string_volume_type_vedrive "VEDRIVE"

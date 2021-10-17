@@ -135,11 +135,17 @@ DeskTopSettings::kStartupSkipSelector = %00000010 ; skip starting Selector, if s
 kLauncherDateOffset     = 3
 
 ;;; ============================================================
-;;; RAM Disk
+;;; Drive Special Cases
 
-;;; UnitNum used by Glen E. Bredon's RAM.DRV.SYSTEM
-;;; RAM disk driver for RamWorks.
+;;; Unit number used by Glen E. Bredon's RAM.DRV.SYSTEM
+;;; RAM disk driver for RamWorks, appears in `DEVLST`.
 kRamDrvSystemUnitNum = $3E
+
+;;; Driver address used by ADTPro's VEDRIVE in `DEVADR`.
+kVEDRIVEDriverAddress = $D004
+
+;;; ============================================================
+;;; RAM Disk
 
 ;;; On startup, DeskTop will copy itself (including resources) and
 ;;; (optionally) selector entries to a RAM disk if available. Flags
