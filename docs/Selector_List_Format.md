@@ -19,12 +19,12 @@ Header is two bytes.
 
    Number of entries (0-8) in the primary list. The are the entries
    shown in DeskTop's Shortcuts menu, and the first 8 entries shown in
-   DeskTop's "Run an Entry..." dialog and Selector's dialog.
+   DeskTop's "Run a Shortcut..." dialog and Selector's dialog.
 
 +001: NumSecondaryRunListEntries (byte)
 
    Number of entries (0-16) in the secondary list. These entries are
-   only shown in DeskTop's "Run an Entry..." dialog and Selector's
+   only shown in DeskTop's "Run a Shortcut..." dialog and Selector's
    dialog.
 
 

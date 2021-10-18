@@ -22,11 +22,11 @@ The file is broken down into multiple segments:
 | Disk Copy 3/4 | Aux LC1 | A$D000  | `../disk_copy/auxlc.s`         |
 | Disk Copy 4/4 | Main    | A$0800  | `../disk_copy/main.s`          |
 | Format/Erase  | Main    | A$0800  | `ovl_format_erase.s`           |
-| Selector 1/2  | Main    | A$9000  | `ovl_selector_pick.s`          |
+| Shortcuts 1/2 | Main    | A$9000  | `ovl_selector_pick.s`          |
 | File Dialog   | Main    | A$5000  | `ovl_file_dialog.s`            |
 | File Copy     | Main    | A$7000  | `ovl_file_copy.s`              |
 | File Delete   | Main    | A$7000  | `ovl_file_delete.s`            |
-| Selector 2/2  | Main    | A$7000  | `ovl_selector_edit.s`          |
+| Shortcuts 2/2 | Main    | A$7000  | `ovl_selector_edit.s`          |
 
 Lengths/offsets are defined in `internal.inc`.
 
@@ -138,7 +138,7 @@ name) but is used for operations such as alternate view types.
 `ovl_*.s`
 
 Interactive commands including disk copy/format/erase, file
-copy/delete, and Selector add/edit/delete/run all dynamically load
+copy/delete, and Shortcuts add/edit/delete/run all dynamically load
 main memory code overlays. When complete, any original code above
 $4000 is reloaded (unless a full restart is required.)
 
@@ -162,11 +162,11 @@ beginning.
 
 Simple overlay: `ovl_format_erase.s`, loaded into Main A$0800-$1BFF.
 
-#### Selector - Delete Entry / Run Entry
+#### Shortcuts - Delete Entry / Run Entry
 
 Simple overlay: `ovl_selector_pick.s` ($9000-$9FFF).
 
-#### Selector - Add Entry / Edit Entry
+#### Shortcuts - Add Entry / Edit Entry
 
 Also uses `ovl_selector_pick.s` ($9000-$9FFF) but additionally uses overlay
 `ovl_selector_edit.s` ($7000-$77FF) and the file selector dialog `ovl_file_dialog.s`

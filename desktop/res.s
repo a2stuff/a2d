@@ -359,7 +359,7 @@ nextwinfo:      .addr   0
 .endparams
 
 ;;; ============================================================
-;;; Dialog used for Selector > Add/Edit an Entry...
+;;; Dialog used for Shortcuts > Add/Edit a Shortcut...
 
 kFilePickerDlgWindowID  = $12
 kFilePickerDlgWidth     = 500
@@ -401,7 +401,7 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-;;; File picker within Add/Edit an Entry dialog
+;;; File picker within Add/Edit a Shortcut dialog
 
 kEntryListCtlWindowID = $15
 
@@ -480,7 +480,7 @@ nextwinfo:      .addr   0
 .endparams
 winfo_about_dialog_port    := winfo_about_dialog::port
 
-;;; Dialog used for Edit/Delete/Run an Entry ...
+;;; Dialog used for Edit/Delete/Run a Shortcut ...
 
 kEntryDialogWindowID = $1B
 
