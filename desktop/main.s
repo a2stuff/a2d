@@ -9655,9 +9655,18 @@ Version:                .word   0
         jsr     DeviceDriverAddress ; populates `slot_addr`, Z=1 if $Cn
         cmp16   slot_addr, #kVEDRIVEDriverAddress
         bne     :+
-        ldax    #str_device_type_vedrive
+vdrive: ldax    #str_device_type_vdrive
         ldy     #kDeviceTypeFileShare
         rts
+:
+        ;; Special case for VSDRIVE
+        cmp16   slot_addr, #kVSDRIVEDriverAddress
+        bne     :+
+        sta     ALTZPOFF        ; peek at Main/LCBANK1
+        lda     VSDRIVE_SIGNATURE_BYTE
+        sta     ALTZPON         ; back to Aux/LCBANK1
+        cmp     #kVSDRIVESignatureValue
+        beq     vdrive
 :
         ;; Is Disk II? A dedicated test that takes advantage of the
         ;; fact that Disk II devices are never remapped.
@@ -9818,8 +9827,8 @@ str_device_type_ramdisk:
         PASCAL_STRING res_string_volume_type_ramcard
 str_device_type_appletalk:
         PASCAL_STRING res_string_volume_type_fileshare
-str_device_type_vedrive:
-        PASCAL_STRING res_string_volume_type_vedrive
+str_device_type_vdrive:
+        PASCAL_STRING res_string_volume_type_vdrive
 .endproc
 
 ;;; ============================================================

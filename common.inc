@@ -141,8 +141,14 @@ kLauncherDateOffset     = 3
 ;;; RAM disk driver for RamWorks, appears in `DEVLST`.
 kRamDrvSystemUnitNum = $3E
 
+;;; ADTPro's VDRIVE: https://adtpro.com/vdrive.html
 ;;; Driver address used by ADTPro's VEDRIVE in `DEVADR`.
 kVEDRIVEDriverAddress = $D004
+;;; Driver address used by ADTPro's VSDRIVE in `DEVADR`.
+kVSDRIVEDriverAddress = $D000
+;;; Driver signature byte/value for ADTPro's VSDRIVE
+VSDRIVE_SIGNATURE_BYTE := $D003 ; in Main/LCBANK1
+kVSDRIVESignatureValue = $63
 
 ;;; ============================================================
 ;;; RAM Disk
