@@ -3293,10 +3293,12 @@ err:    .byte   0
         lda     num_open_windows
         cmp     #2
         bcc     done
-        ldx     active_window_id
 
         cpy     #'~'
         beq     reverse
+
+        jsr     ShiftDown
+        bmi     reverse
 
         ;; TODO: Using this table as the source is a little odd.
         ;; Ideally would be doing send-front-to-back/bring-back-to-front
@@ -3306,6 +3308,7 @@ err:    .byte   0
         ;; Search upwards through window-icon map to find next.
         ;; ID is 1-based, table is 0-based, so don't need to start
         ;; with an increment
+        ldx     active_window_id
 @loop:  cpx     #kMaxNumWindows
         bne     :+
         ldx     #0
@@ -3318,6 +3321,7 @@ err:    .byte   0
         ;; Search downwards through window-icon map to find next.
         ;; ID is 1-based, table is 0-based, start with decrements.
 reverse:
+        ldx     active_window_id
         dex
 @loop:  dex
         bpl     :+
@@ -16639,6 +16643,41 @@ save_windows := save_restore_windows::save
         jsr     test_iigs
         bcc     iigs
 
+        jsr     test_shift_mod  ; Shift key state, if detectable
+        ora     BUTN0           ; Either way, check button state
+        rts
+
+        ;; IIgs - do everything using one I/O location
+iigs:   lda     KEYMODREG
+        and     #%10000001      ; bit 7 = Command (OA), bit 0 = Shift
+        bne     :+
+        rts
+
+:       lda     #$80
+        rts
+.endproc
+
+;;; Test if either shift is down (if it can be detected).
+;;; Output: A=high bit/N flag set if down.
+
+.proc ShiftDown
+        jsr     test_iigs       ; IIgs?
+        bcs     test_shift_mod  ; no, rely on shift key mod
+
+        lda     KEYMODREG       ; On IIgs, use register instead
+        and     #%00000001      ; bit 7 = Command (OA), bit 0 = Shift
+        bne     :+
+        rts
+
+:       lda     #$80
+        rts
+.endproc
+
+;;; Compare the shift key mod state. Returns high bit set if
+;;; not the initial state (i.e. Shift key is likely down), if
+;;; detectable.
+
+.proc test_shift_mod
         ;; If a IIe, maybe use shift key mod
         bit     ROMIN2
         ldx     ZIDBYTE         ; $00 = IIc/IIc+
@@ -16655,18 +16694,7 @@ save_windows := save_restore_windows::save
         lda     pb2_initial_state ; if shift key mod installed, %1xxxxxxx
         eor     BUTN2             ; ... and if shift is down, %0xxxxxxx
 
-        ;; Either way, check button state
-:       ora     BUTN0
-        rts
-
-        ;; IIgs - do everything using one I/O location
-iigs:   lda     KEYMODREG
-        and     #%10000001
-        bne     :+
-        rts
-
-:       lda     #$80
-        rts
+:       rts
 .endproc
 
 ;;; Shift key mod sets PB2 if shift is *not* down. Since we can't detect

@@ -428,3 +428,10 @@
 * Launch DeskTop. Open a volume window. View > by Name. Open a separate volume window. Open a folder window. Open a sub-folder window. View > by Name. Close the window. Verify DeskTop doesn't crash.
 
 * Launch DeskTop. Create 8 shortcuts. Shortcuts > Add a Shortcut.... Check the first radio button. Pick a file, OK. Enter a name, OK. Verify that a relevant alert is shown.
+
+* Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
+  * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Tab repeatedly. Verify that windows are activated and cycle in forward order (A, B, C, A, B, C, ...).
+  * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press ` repeatedly. Verify that windows are activated cycle in forward order (A, B, C, A, B, C, ...).
+  * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and shift and press ` repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
+  * On a IIgs: Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and shift and press Tab repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
+  * On a Platinum IIe: Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and shift and press Tab repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).

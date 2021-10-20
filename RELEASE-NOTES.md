@@ -56,7 +56,7 @@ Project Page: https://github.com/a2stuff/a2d
   * **Shift** key works as modifier to extend selection, on IIgs and systems with shift key mod. ([#340](https://github.com/a2stuff/a2d/issues/340))
   * When dragging files to a different volume, hold **Apple** while dragging to force move. ([#256](https://github.com/a2stuff/a2d/issues/256))
   * Dragging files to same volume moves instead of copies; hold **Apple** while dragging to force copy. ([#8](https://github.com/a2stuff/a2d/issues/8))
-  * **Apple-\`** or **Apple-Tab** cycles through open windows; **Shift-Apple-\`** cycles in reverse. ([#143](https://github.com/a2stuff/a2d/issues/143), [#230](https://github.com/a2stuff/a2d/issues/230))
+  * **Apple-\`** or **Apple-Tab** cycles through open windows; **Shift-Apple-\`** (and **Shift-Apple-Tab**, when detectable) cycles in reverse. ([#143](https://github.com/a2stuff/a2d/issues/143), [#230](https://github.com/a2stuff/a2d/issues/230))
   * **Apple-Delete** deletes selected files. ([#150](https://github.com/a2stuff/a2d/issues/150))
   * **Apple-Down** opens/previews selection. ([#254](https://github.com/a2stuff/a2d/issues/254))
   * **Apple-Up** opens parent window or selects volume icon. ([#254](https://github.com/a2stuff/a2d/issues/254), [#314](https://github.com/a2stuff/a2d/issues/314))
