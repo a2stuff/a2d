@@ -69,8 +69,7 @@ alert_options_table:
         ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
 
 .params alert_params
-line1:          .addr   0       ; first line of text
-line2:          .addr   0       ; unused
+text:           .addr   0
 buttons:        .byte   0       ; AlertButtonOptions
 options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
 .endparams
@@ -100,7 +99,7 @@ start:  pha                     ; alert number
         tya                     ; Y = index
         asl     a
         tay                     ; Y = index * 2
-        copy16  message_table,y, alert_params::line1
+        copy16  message_table,y, alert_params::text
 
         ;; Look up button options
         tya                     ; Y = index * 2
@@ -115,7 +114,7 @@ start:  pha                     ; alert number
 ;;; ============================================================
 ;;; Display alert
 ;;; Inputs: A,X=alert_params structure
-;;;    { .addr line1, .addr line2, .byte AlertButtonOptions, .byte AlertOptions }
+;;;    { .addr text, .byte AlertButtonOptions, .byte AlertOptions }
 
         pointer_cursor = app::pointer_cursor
         Bell = app::Bell
@@ -152,8 +151,10 @@ alert_bitmap:
         .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
 
+        kAlertXMargin = 20
+
 .params alert_bitmap_params
-        DEFINE_POINT viewloc, 20, 8
+        DEFINE_POINT viewloc, kAlertXMargin, 8
 mapbits:        .addr   alert_bitmap
 mapwidth:       .byte   7
 reserved:       .byte   0
@@ -199,12 +200,24 @@ reserved:       .byte   0
         DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
         DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
 
-        DEFINE_POINT pos_prompt1, 75, 29-11
-        DEFINE_POINT pos_prompt2, 75, 29
+        kTextLeft = 75
+        kTextRight = kAlertRectWidth - kAlertXMargin
+        kWrapWidth = kTextRight - kTextLeft
+
+        DEFINE_POINT pos_prompt1, kTextLeft, 29-11
+        DEFINE_POINT pos_prompt2, kTextLeft, 29
+
+.params textwidth_params        ; Used for spitting/drawing the text.
+data:   .addr   0
+length: .byte   0
+width:  .word   0
+.endparams
+len:    .byte   0               ; total string length
+split_pos:                      ; last known split position
+        .byte   0
 
 .params alert_params
-line1:          .addr   0       ; first line of text
-line2:          .addr   0       ; optional - second line of text (TODO: wrap instead)
+text:           .addr   0
 buttons:        .byte   0       ; AlertButtonOptions
 options:        .byte   0       ; AlertOptions flags
 .endparams
@@ -313,17 +326,58 @@ ok_button:
 
         ;; Prompt string
 draw_prompt:
-        lda     alert_params::line2
-        ora     alert_params::line2+1
-      IF_ZERO
+.scope
+        ;; Measure for splitting
+        add16_8 alert_params::text, #1, textwidth_params::data
+
+        ptr := $06
+        copy16  alert_params::text, ptr
+        ldy     #0
+        sty     split_pos       ; initialize
+        lda     (ptr),y
+        sta     len             ; total length
+
+        ;; Search for space or end of string
+advance:
+:       iny
+        cpy     len
+        beq     test
+        lda     (ptr),y
+        cmp     #' '
+        bne     :-
+
+        ;; Does this much fit?
+test:   sty     textwidth_params::length
+        MGTK_CALL MGTK::TextWidth, textwidth_params
+        cmp16   textwidth_params::width, #kWrapWidth
+        bpl     split           ; no! so we know where to split now
+
+        ;; Yes, record possible split position, maybe continue.
+        ldy     textwidth_params::length
+        sty     split_pos
+        cpy     len             ; hit end of string?
+        bne     advance         ; no, keep looking
+
+        ;; Whole string fits, just draw it.
+        copy    len, textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt2
-        param_call_indirect DrawString, alert_params::line1
-      ELSE
+        MGTK_CALL MGTK::DrawText, textwidth_params
+        jmp     done
+
+        ;; Split string over two lines.
+split:  copy    split_pos, textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt1
-        param_call_indirect DrawString, alert_params::line1
+        MGTK_CALL MGTK::DrawText, textwidth_params
+        add16_8 textwidth_params::data, split_pos, textwidth_params::data
+        lda     len
+        sec
+        sbc     split_pos
+        sta     textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt2
-        param_call_indirect DrawString, alert_params::line2
-      END_IF
+        MGTK_CALL MGTK::DrawText, textwidth_params
+
+done:
+.endscope
 
         MGTK_CALL MGTK::ShowCursor
 
