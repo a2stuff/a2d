@@ -9684,24 +9684,11 @@ vdrive: ldax    #str_device_type_vdrive
         ;; Look up driver address
         lda     unit_number
         jsr     DeviceDriverAddress ; populates `slot_addr`, Z=1 if $Cn
-        jne     generic
+        jne     generic             ; not $CnXX, unknown type
 
-        ;; Probe firmware ID bytes
-firmware:
-        lda     #$00
-        sta     slot_addr       ; point at $Cn00 for firmware lookups
-
-        ldy     #$FF            ; $CnFF: $00=Disk II, $FF=13-sector, else=block
-        lda     (slot_addr),y
-        bne     :+              ; $00 = Disk II
-
-        ldax    #str_device_type_diskii
-        ldy     #kDeviceTypeDiskII
-        rts
-
-        ;; Smartport?
+        ;; Firmware driver; maybe SmartPort?
         sp_addr := $0A
-:       lda     unit_number
+        lda     unit_number
         jsr     FindSmartportDispatchAddress
         bne     not_sp
         stx     status_params::unit_num
@@ -11221,8 +11208,7 @@ index:  .byte   0
         bne     :-
 exit:   rts
 
-found:  lda     DEVLST,y        ;
-        sta     unit_number
+found:  lda     DEVLST,y        ; unit_number
 
         ;; Compute SmartPort dispatch address
         smartport_addr := $0A
@@ -11247,8 +11233,6 @@ control_code:   .byte   4       ; Eject disk
 .endparams
         control_unit_number := control_params::unit_number
 list:   .word   0               ; 0 items in list
-unit_number:
-        .byte   0
 .endproc
 
 ;;; ============================================================

@@ -2886,7 +2886,7 @@ finish: pha
 .proc is_drive_ejectable
         sty     unit_num
         tya
-        jsr     main__is_drive_removable
+        jsr     main__is_drive_ejectable
         beq     :+
         sta     ejectable_flag
 :       rts

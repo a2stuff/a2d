@@ -396,11 +396,11 @@ block_count_div8:
 
 ;;; ============================================================
 ;;; Check if device is removable.
-;;; NOTE: Test is flawed, relies on deprecated detection method.
+;;; BUG: Test is flawed, relies on deprecated detection method.
 ;;; Inputs: A=%DSSSnnnn (drive/slot part of unit number)
 ;;; Outputs: A=$80 if "removable", 0 otherwise
 
-.proc is_drive_removable
+.proc is_drive_ejectable
         ;; Search in DEVLST for the matching drive/slot combo.
         and     #UNIT_NUM_MASK
         sta     unit_num
@@ -1189,7 +1189,7 @@ done:   rts
 main__format_device   := main::format_device
 main__identify_nonprodos_disk_type    := main::identify_nonprodos_disk_type
 main__read_volume_bitmap              := main::read_volume_bitmap
-main__is_drive_removable              := main::is_drive_removable
+main__is_drive_ejectable              := main::is_drive_ejectable
 main__copy_blocks                     := main::copy_blocks
 main__free_vol_bitmap_pages           := main::free_vol_bitmap_pages
 main__call_on_line2                   := main::call_on_line2
