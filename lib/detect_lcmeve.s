@@ -49,6 +49,6 @@
         plp
 
         result := *+1
-done:   lda     #0              ; Self-modified
+done:   lda     #0              ; self-modified (but not always)
         rts
 .endproc

@@ -1640,7 +1640,7 @@ skip:   iny
         lda     #'.'
 :       sta     path,x
         len := *+1
-        cpy     #0              ; self-modified
+        cpy     #SELF_MODIFIED_BYTE
         bne     loop
         stx     path
 
@@ -2334,7 +2334,7 @@ cloop:  lda     (ptr_icon),y
         lda     (ptr_name),y
         jsr     upcase_char
         @char := *+1
-        cmp     #0              ; self-modified
+        cmp     #SELF_MODIFIED_BYTE
         bne     next
         dey
         bne     cloop
@@ -6471,7 +6471,7 @@ check_window:
         lda     path_buffer,y
         jsr     upcase_char
         @char := *+1
-        cmp     #0              ; self-modified
+        cmp     #SELF_MODIFIED_BYTE
         bne     loop
         dey
         bne     :-
@@ -8942,7 +8942,7 @@ str_at:
         sta     ($08),y
         ldy     tmp
         @compare_y := *+1
-        cpy     #0              ; self-modified
+        cpy     #SELF_MODIFIED_BYTE
         bcc     :-
         rts
 
@@ -10046,7 +10046,7 @@ cloop:  lda     (icon_ptr),y
         lda     string,y
         jsr     upcase_char
         @char := *+1
-        cmp     #0              ; self-modified
+        cmp     #SELF_MODIFIED_BYTE
         bne     next
         dey
         bne     cloop
@@ -11144,7 +11144,7 @@ all_flag:
         lda     (str1),y
         sta     buf,x
         @len := *+1
-        cpy     #0              ; self-modified
+        cpy     #SELF_MODIFIED_BYTE
         bne     :-
 
 do_str2:
@@ -11163,7 +11163,7 @@ do_str2:
         lda     (str2),y
         sta     buf,x
         @len := *+1
-        cpy     #0              ; self-modified
+        cpy     #SELF_MODIFIED_BYTE
         bne     :-
 
 done:   stx     buf
@@ -11212,7 +11212,7 @@ index:  .byte   0
 :       lda     device_to_icon_map,y
 
         @compare := *+1
-        cmp     #0              ; self-modified
+        cmp     #SELF_MODIFIED_BYTE
 
         beq     found
         cpy     DEVCNT
@@ -11640,7 +11640,7 @@ ok:
         lda     new_name_buf,x
         jsr     upcase_char
         @char := *+1
-        cmp     #0              ; self-modified
+        cmp     #SELF_MODIFIED_BYTE
         bne     changed
         dex
         bne     :-
@@ -12034,7 +12034,7 @@ success:
         lda     (new_name_ptr),y
         sta     dst_path_buf,x
         @len = * + 1
-        cpy     #0              ; self-modified
+        cpy     #SELF_MODIFIED_BYTE
         bne     :-
         stx     dst_path_buf
 
@@ -12053,7 +12053,7 @@ success:
         lda     dst_path_buf,x
         jsr     upcase_char
         @char := *+1
-        cmp     #0              ; self-modified
+        cmp     #SELF_MODIFIED_BYTE
         bne     no_match
         dex
         bne     :-
@@ -13805,7 +13805,7 @@ loop:   lda     (src_ptr),y
         lda     dst_buf,y
         jsr     upcase_char
         @char := *+1
-        cmp     #0              ; self-modified
+        cmp     #SELF_MODIFIED_BYTE
         bne     no_match
 
         ;; Same and a slash?

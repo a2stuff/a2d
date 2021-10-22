@@ -568,7 +568,7 @@ loop:   dex
         lda     (filename),y
         and     #NAME_LENGTH_MASK
         cmp_len := *+1
-        cmp     #0
+        cmp     #SELF_MODIFIED_BYTE
         bne     loop            ; lengths don't match, so not a match
 
         ;; Bytewise compare names.
@@ -583,10 +583,10 @@ next:   iny
         jsr     to_uppercase
 
         cmp_char := *+1
-        cmp     #0
+        cmp     #SELF_MODIFIED_BYTE
         bne     loop            ; no match - try next icon
         cpy_len := *+1
-        cpy     #0
+        cpy     #SELF_MODIFIED_BYTE
         bne     next
 
 done1:  stx     match           ; match, or $FF if none
@@ -611,7 +611,7 @@ loop2:  dex
         lda     (filename2),y
         and     #NAME_LENGTH_MASK
         cmp_len2 := *+1
-        cmp     #0
+        cmp     #SELF_MODIFIED_BYTE
         bne     loop2            ; lengths don't match, so not a match
 
         ;; Bytewise compare names.
@@ -626,10 +626,10 @@ next2:  iny
         jsr     to_uppercase
 
         cmp_char2 := *+1
-        cmp     #0
+        cmp     #SELF_MODIFIED_BYTE
         bne     loop2           ; no match - try next icon
         cpy_len2 := *+1
-        cpy     #0
+        cpy     #SELF_MODIFIED_BYTE
         bne     next2
 
 done2:  stx     match2          ; match, or $FF if none
@@ -780,7 +780,7 @@ rtcs:   sec
         rts
 
         len := *+1
-next:   cpy     #0
+next:   cpy     #SELF_MODIFIED_BYTE
 
         bne     loop
         lda     len2

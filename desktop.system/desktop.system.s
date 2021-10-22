@@ -2045,7 +2045,7 @@ monitor:
         ora     #$80
         jsr     COUT
         @len := *+1
-        cpy     #0              ; self-modified
+        cpy     #SELF_MODIFIED_BYTE
         bne     :-
 done:   rts
 .endproc

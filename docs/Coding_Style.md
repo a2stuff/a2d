@@ -257,14 +257,15 @@ well in the future.
 
 * Add a label for the value being modified (byte or address). Use
    [cheap local labels](https://cc65.github.io/doc/ca65.html#ss6.5) via the
-   `@`-prefix where possible so make self-modification references more
+   `@`-prefix where possible to make self-modification references more
    visible.
+* Use `SELF_MODIFIED` ($1234) or `SELF_MODIFIED_BYTE` ($12) to self-document.
 
 ```asm
         sta     @jump_addr
         stx     @jump_addr+1
         @jump_addr := *+1
-        jmp     $0000
+        jmp     SELF_MODIFIED
 ```
 ```asm
         sty     @count
@@ -272,7 +273,7 @@ well in the future.
 :       sta     table,y
         iny
         @count := *+1
-        cpy     #00
+        cpy     #SELF_MODIFIED_BYTE
         bne     :-
 ```
 
