@@ -17,6 +17,7 @@ sub enquote($$) {
     return "\"$value\"" if $label =~ /^res_string_/;
     return "'$value'" if $label =~ /^res_char_/;
     return $value if $label =~ /^res_const_/;
+    return $value if $label =~ /^res_filename_/;
 
     die "Bad label: \"$label\" at line $.\n";
 }
@@ -86,6 +87,9 @@ sub check($$$$) {
         unless hexes($en) eq hexes($t);
     die "Punctuation mismatch at $label, line $.: '$en' / '$t'\n"
         unless $label =~ /^res_char_/ || punct($en) eq punct($t);
+
+    die "Bad filename at $label, line $.: '$en' / '$t'\n"
+        if $label =~ /^res_filename/ && not ($t =~ /^[A-Za-z][A-Za-z0-9.]*$/ && length($t) <= 15);
 
     # Language specific checks:
     if ($lang eq 'fr') {
