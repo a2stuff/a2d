@@ -14227,7 +14227,7 @@ LA73D:  cmp     #CHAR_RETURN
 
 LA755:  cmp     #CHAR_DELETE
         bne     :+
-        jmp     LA88D
+        jmp     handle_key_delete
 
 :       cmp     #CHAR_UP
         bne     LA76B
@@ -14297,7 +14297,7 @@ LA7D8:  ldx     path_buf1
         beq     LA7E5
 LA7DD:  ldx     has_input_field_flag
         beq     LA7E5
-        jsr     LBB0B
+        jsr     input_field_insert_char
 LA7E5:  return  #$FF
 
 do_yes: jsr     set_penmode_xor
@@ -14366,10 +14366,13 @@ done:   return  #$FF
         return  #1
 .endproc
 
-LA88D:  lda     has_input_field_flag
-        beq     LA895
-        jsr     LBB63
-LA895:  return  #$FF
+.proc handle_key_delete
+        lda     has_input_field_flag
+        beq     :+
+        jsr     input_field_delete_char
+:       return  #$FF
+.endproc
+
 .endproc
 
 rts1:
@@ -15912,26 +15915,30 @@ ip_pos: .word   0
 .endproc
 
 ;;; ============================================================
+;;; When a non-control key is hit - insert the passed character
 
-.proc LBB0B
-        sta     param
+.proc input_field_insert_char
+        sta     char
+
+        ;; Is there room?
         lda     path_buf1
         clc
         adc     path_buf2
-        cmp     #$10
+        cmp     #$10            ; max name length
         bcc     :+
         rts
-
+:
         point := $6
         xcoord := $6
         ycoord := $8
 
-:       lda     param
+        ;; Insert, and redraw single char and right string
+        lda     char
         ldx     path_buf1
         inx
         sta     path_buf1,x
         sta     str_1_char+1
-        jsr     measure_path_buf1
+        jsr     measure_path_buf1 ; measure before extending
         inc     path_buf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
@@ -15943,21 +15950,24 @@ ip_pos: .word   0
         jsr     safe_set_port_from_window_id
         rts
 
-param:  .byte   0
+char:   .byte   0
 .endproc
 
 ;;; ============================================================
+;;; When delete (backspace) is hit - shrink left buffer by one
 
-.proc LBB63
+.proc input_field_delete_char
+        ;; Anything to delete?
         lda     path_buf1
         bne     :+
         rts
-
+:
         point := $6
         xcoord := $6
         ycoord := $8
 
-:       dec     path_buf1
+        ;; Decrease length of left string, measure and redraw right string
+        dec     path_buf1
         jsr     measure_path_buf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
