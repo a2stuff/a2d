@@ -265,9 +265,21 @@ joystick_bitmap:
         .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000)
 
+        ;; Initialized to $00 if a IIgs, $00 otherwise
+not_iigs_flag:
+        .byte   0
+
 ;;; ============================================================
 
 .proc init
+        ;; Detect IIgs, save for later
+        bit     ROMIN2
+        sec
+        jsr     IDROUTINE
+        ror     not_iigs_flag    ; shift C into high bit
+        bit     LCBANK1
+        bit     LCBANK1
+
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     draw_window
         MGTK_CALL MGTK::FlushEvents
@@ -575,6 +587,15 @@ pdl2:   .byte   0
 pdl3:   .byte   0
 
 .proc read_paddles
+        ;; Slow down on IIgs
+        bit     not_iigs_flag
+        bmi     :+
+        lda     CYAREG
+        pha
+        and     #%01111111
+        sta     CYAREG
+:
+        ;; Read all paddles
         ldx     #kNumPaddles - 1
 :       jsr     pread
         tya
@@ -582,6 +603,12 @@ pdl3:   .byte   0
         dex
         bpl     :-
 
+        ;; Restore speed on IIgs
+        bit     not_iigs_flag
+        bmi     :+
+        pla
+        sta     CYAREG
+:
         rts
 
 .proc pread
