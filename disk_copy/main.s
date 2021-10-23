@@ -131,38 +131,28 @@ unit_number:
 ;;; ============================================================
 ;;; Eject Disk via SmartPort
 
-.proc eject_disk
+.proc eject_disk_impl
+
+.params control_params
+param_count:    .byte   3
+unit_number:    .byte   0
+control_list:   .addr   list
+control_code:   .byte   $04     ; For Apple/UniDisk 3.3: Eject disk
+.endparams
+control_params_unit_number := control_params::unit_number
+list:   .word   0               ; 0 items in list
+
+
+start:
         ptr := $6
 
-        sta     unit_num
-        jsr     unit_number_to_driver_address ; sets $06, Z=1 if firmware
-        bne     done            ; not firmware; can't tell if SmartPort or not
-
-        lda     #$00            ; Point at $Cn00
-        sta     ptr
-
-        ldy     #$07            ; Check firmware bytes
-        lda     (ptr),y         ; $Cn07 = $00 ??
-        bne     done
-
-        ldy     #$FB
-        lda     (ptr),y         ; $CnFB = $7F ??
-        and     #$7F
-        bne     done
-
-        ldy     #$FF
-        lda     (ptr),y
-        clc
-        adc     #3              ; Locate dispatch routine (offset $CnFF + 3)
-        sta     ptr
-
-        lda     unit_num
-        jsr     unit_num_to_sp_unit_number
-        sta     control_params_unit_number
+        jsr     check_smartport
+        bcs     done
+        stx     control_params_unit_number
 
         ;; Do SmartPort call
         jsr     smartport_call
-        .byte   $04             ; SmartPort: CONTROL
+        .byte   SPCall::Control
         .addr   control_params
 
 done:   rts
@@ -170,19 +160,89 @@ done:   rts
 smartport_call:
         jmp     ($06)
 
-.params control_params
-param_count:    .byte   3
-unit_number:    .byte   0
-control_list:   .addr   L0D22
-control_code:   .byte   $04     ; Control Code: Eject disk
-.endparams
-control_params_unit_number := control_params::unit_number
+.endproc
+eject_disk := eject_disk_impl::start
 
-L0D22:  .byte   0, 0
-unit_num:
-        .byte   0
-        .byte   0
+;;; ============================================================
+;;; Given $06 points at a firmware location ($CnXX), determine
+;;; if it's SmartPort and (if so) point $06 at the dispatch address.
+;;; Input: A = unit_number
+;;; Output: C = 0 if SmartPort, C = 1 otherwise.
+;;;         X = SmartPort unit number
+;;; Assert: $06 points at a firmware location $CnXX
 
+;;; TODO: Merge with lib/smartport.s
+
+.proc check_smartport
+        sp_addr := $06
+
+        sta     unit_number
+
+        ;; Get device driver address
+        jsr     unit_number_to_driver_address ; sets $06, Z=1 if firmware
+        beq     :+
+fail:   sec                     ; not firmware
+        rts
+:
+        ;; Find actual address
+        copy    #$00, sp_addr   ; Point at $Cn00
+
+        ldy     #$07            ; SmartPort signature byte ($Cn07)
+        lda     (sp_addr),y     ; $00 = SmartPort
+        bne     fail            ; nope
+
+        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
+        ldy     #$FF
+        lda     (sp_addr),y
+        clc
+        adc     #3
+        sta     sp_addr
+
+        ;; Figure out SmartPort control unit number in X
+
+;;; Per Technical Note: ProDOS #21: Mirrored Devices and SmartPort
+;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.20.html
+;;; ... but that predates ProDOS 2.x, which changes the scheme.
+;;;
+;;; * ProDOS 1.2...1.9 mirror S5,D3/4 to S2,D1/2 only, and leave `DEVADR`
+;;;   entry pointing at $C5xx. Therefore, if the unit number slot matches
+;;;   the driver slot, the device is not mirrored, and SmartPort unit is
+;;;   1 or 2. Otherwise, the device is mirrored, and SmarPort unit is 3
+;;;   or 4.
+;;;
+;;; * ProDOS 2.x mirror to non-device slots, and point `DEVADR` at
+;;;   RAM-based drivers, which are already excluded above. Therefore the
+;;;   device is not mirrored, the unit number slot will match the driver
+;;;   slot, and the SmartPort unit is 1 or 2.
+
+        ldx     #1              ; start with unit 1
+        bit     unit_number     ; high bit is D
+        bpl     :+
+        inx                     ; X = 1 or 2 (for Drive 1 or 2)
+:
+        ;; Was it remapped? (ProDOS 1.x-only behavior)
+        lda     unit_number
+        and     #%01110000      ; 0SSSnnnn
+        lsr
+        lsr
+        lsr
+        lsr
+        sta     mapped_slot     ; 00000SSS
+
+        lda     sp_addr+1       ; $Cn
+        and     #%00001111      ; $0n
+        cmp     mapped_slot     ; equal = not remapped
+        beq     :+
+        inx                     ; now X = 3 or 4
+        inx
+:
+        clc                     ; exit with C=0 on success
+        rts
+
+unit_number:
+        .byte   0
+mapped_slot:
+        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -192,7 +252,7 @@ unit_num:
 ;;;         Z=1 if a firmware address ($CnXX)
 
 .proc unit_number_to_driver_address
-        addr := $06
+        slot_addr := $06
 
         and     #%11110000      ; mask off drive/slot
         lsr                     ; 0DSSS000
@@ -201,31 +261,12 @@ unit_num:
         tax                     ; = slot * 2 + (drive == 2 ? 0x10 + 0x00)
 
         lda     DEVADR,x
-        sta     addr
+        sta     slot_addr
         lda     DEVADR+1,x
-        sta     addr+1
+        sta     slot_addr+1
 
         and     #$F0            ; is it $Cn ?
         cmp     #$C0            ; leave Z flag set if so
-        rts
-.endproc
-
-;;; ============================================================
-;;; Map unit number to smartport device number (1-4)
-;;; BUG: This assumes specific remapping, not valid in ProDOS 2.x
-
-.proc unit_num_to_sp_unit_number
-        pha                     ; DSSS0000
-        rol     a               ; C=D
-        pla
-        php                     ; DSSS0000
-        and     #$20            ; 00100000 - "is an odd slot" ???
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a               ; 00000010
-        plp                     ; C=D
-        adc     #$01            ;
         rts
 .endproc
 
@@ -396,41 +437,58 @@ block_count_div8:
 
 ;;; ============================================================
 ;;; Check if device is removable.
-;;; BUG: Test is flawed, relies on deprecated detection method.
 ;;; Inputs: A=%DSSSnnnn (drive/slot part of unit number)
 ;;; Outputs: A=$80 if "removable", 0 otherwise
 
-.proc is_drive_ejectable
-        ;; Search in DEVLST for the matching drive/slot combo.
-        and     #UNIT_NUM_MASK
-        sta     unit_num
-        ldx     DEVCNT
-:       lda     DEVLST,x
-        and     #UNIT_NUM_MASK
-        cmp     unit_num
-        beq     found
-        dex
-        bpl     :-
-nope:   return  #$00
+.proc is_drive_ejectable_impl
 
-        ;; Look in the low nibble for device type. (See note)
-found:  lda     DEVLST,x
-        and     #$0F
+.params status_params
+param_count:    .byte   3
+unit_num:       .byte   1
+list_ptr:       .addr   dib_buffer
+status_code:    .byte   3       ; Return Device Information Block (DIB)
+.endparams
 
-;;; This assumes the low nibble of the unit number is an "id nibble" which
-;;; is wrong. When MouseDesk was written, $xB signaled a "removable" device
-;;; like the UniDisk 3.5, but this is not valid.
-;;;
-;;; Technical Note: ProDOS #21: Identifying ProDOS Devices
-;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+PARAM_BLOCK dib_buffer, $220
+Device_Statbyte1       .byte
+Device_Size_Lo         .byte
+Device_Size_Med        .byte
+Device_Size_Hi         .byte
+ID_String_Length       .byte
+Device_Name            .res    16
+Device_Type_Code       .byte
+Device_Subtype_Code    .byte
+Version                .word
+END_PARAM_BLOCK
 
-        cmp     #$0B
-        bne     nope
+start:
+        ptr := $6
+
+        jsr     check_smartport
+        bcs     not_removable
+        stx     status_params::unit_num
+
+        ;; Do SmartPort call
+        jsr     smartport_call
+        .byte   SPCall::Status
+        .addr   status_params
+        bcs     not_removable
+
+        lda     dib_buffer::Device_Type_Code
+        cmp     #SPDeviceType::Disk35
+        bne     not_removable
+
+        ;; Assume all 3.5" drives are ejectable
         return  #$80
 
-unit_num:
-        .byte   0
+not_removable:
+        return  #0
+
+smartport_call:
+        jmp     ($06)
 .endproc
+
+is_drive_ejectable := is_drive_ejectable_impl::start
 
 ;;; ============================================================
 

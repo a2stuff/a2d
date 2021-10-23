@@ -797,7 +797,7 @@ check_disk_in_drive:
 
         ;; Execute SmartPort call
         jsr     smartport_call
-        .byte   $00             ; $00 = STATUS
+        .byte   SPCall::Status
         .addr   status_params
 
         lda     status_buffer
@@ -9695,7 +9695,7 @@ vdrive: ldax    #str_device_type_vdrive
 
         ;; Execute SmartPort call
         jsr     smartport_call
-        .byte   $00             ; $00 = STATUS
+        .byte   SPCall::Status
         .addr   status_params
         bcs     not_sp
 
@@ -9739,6 +9739,7 @@ done:
         ;; Technical Note: SmartPort #4: SmartPort Device Types
         ;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer::Device_Type_Code
+        .assert SPDeviceType::MemoryExpansionCard = 0, error, "enum mismatch"
         bne     test_size     ; $00 = Memory Expansion Card (RAM Disk)
         ;; NOTE: Codes for 3.5" disk ($01) and 5-1/4" disk ($0A) are not trusted
         ;; since emulators do weird things.
@@ -11193,6 +11194,7 @@ index:  .byte   0
 .proc smartport_eject
         ptr := $6
 
+        ;; Look up device index by icon number
         sta     @compare
         ldy     #0
 
@@ -11213,14 +11215,14 @@ found:  lda     DEVLST,y        ; unit_number
         ;; Compute SmartPort dispatch address
         smartport_addr := $0A
         jsr     FindSmartportDispatchAddress
-        bne     exit            ; not SP
+        bne     done            ; not SP
         stx     control_unit_number
 
         ;; Execute SmartPort call
         jsr     smartport_call
-        .byte   $04             ; $04 = CONTROL
+        .byte   SPCall::Control
         .addr   control_params
-        rts
+done:   rts
 
 smartport_call:
         jmp     (smartport_addr)
@@ -11229,7 +11231,7 @@ smartport_call:
 param_count:    .byte   3
 unit_number:    .byte   0
 control_list:   .addr   list
-control_code:   .byte   4       ; Eject disk
+control_code:   .byte   $04     ; For Apple/UniDisk 3.3: Eject disk
 .endparams
         control_unit_number := control_params::unit_number
 list:   .word   0               ; 0 items in list

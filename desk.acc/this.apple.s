@@ -17,6 +17,7 @@
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
+        .include "../inc/smartport.inc"
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
@@ -1907,7 +1908,7 @@ num_devices:
         ;; https://github.com/a2stuff/a2d/issues/483
         sp_addr := * + 1
         jsr     SELF_MODIFIED
-        .byte   $00             ; $00 = STATUS
+        .byte   SPCall::Status
         .addr   status_params
         rts
 .endproc

@@ -5,6 +5,7 @@
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
+        .include "../inc/smartport.inc"
 
         .include "../common.inc"
 
@@ -1009,7 +1010,7 @@ loop:   ldx     devnum
 
         ;; Execute SmartPort call
         jsr     smartport_call
-        .byte   $00             ; $00 = STATUS
+        .byte   SPCall::Status
         .addr   status_params
         bcs     next_unit
 
@@ -1022,6 +1023,7 @@ loop:   ldx     devnum
         ;; Technical Note: SmartPort #4: SmartPort Device Types
         ;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer::Device_Type_Code
+        .assert SPDeviceType::MemoryExpansionCard = 0, error, "enum mismatch"
         bne     next_unit       ; $00 = Memory Expansion Card (RAM Disk)
         lda     unit_num
         bne     test_unit_num   ; always
