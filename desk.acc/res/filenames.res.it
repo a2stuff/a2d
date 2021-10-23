@@ -2,7 +2,7 @@
 .define res_filename_date_and_time data.e.ora
 .define res_filename_puzzle puzzle
 .define res_filename_sort_directory ordina.dir
-.define res_filename_this_apple questa.apple
+.define res_filename_this_apple questo.apple
 .define res_filename_eyes occhi
 .define res_filename_screen_dump stampa.schermo
 .define res_filename_run_basic_here basic.qui
