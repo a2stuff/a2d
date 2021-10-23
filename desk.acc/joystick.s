@@ -205,8 +205,8 @@ kJoystickDisplayY = kJoystickCalibrationY - 2
 kJoystickDisplayW = 128
 kJoystickDisplayH = 64
 
-        DEFINE_RECT_SZ joy_disp_frame_rect, kJoystickDisplayX    , kJoystickDisplayY    , kJoystickDisplayW + 7 + 1, kJoystickDisplayH + 4 + 1
-        DEFINE_RECT_SZ joy_disp_rect, kJoystickDisplayX + 1, kJoystickDisplayY + 1, kJoystickDisplayW + 7 - 1, kJoystickDisplayH + 4 - 1
+        DEFINE_RECT_SZ joy_disp_frame_rect, kJoystickDisplayX    , kJoystickDisplayY    , kJoystickDisplayW + 8, kJoystickDisplayH + 5
+        DEFINE_RECT_SZ joy_disp_rect,       kJoystickDisplayX + 1, kJoystickDisplayY + 1, kJoystickDisplayW + 6, kJoystickDisplayH + 3
 
         DEFINE_POINT joy_btn0, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 10
         DEFINE_POINT joy_btn1, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30

@@ -520,17 +520,17 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT name_input_rect, 40, 61+6, 360, 71+6
-        DEFINE_POINT name_input_textpos, 45, 70+6
+        DEFINE_RECT name_input_rect, 40, 67, 360, 77
+        DEFINE_POINT name_input_textpos, 45, 76
         DEFINE_POINT pos_dialog_title, 0, 18
 
-        DEFINE_POINT dialog_label_base_pos, 40, 35-5
+        DEFINE_POINT dialog_label_base_pos, 40, 30
 
         kDialogLabelDefaultX = 40
         DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
 
 .params name_input_mapinfo
-        DEFINE_POINT viewloc, 80, 35+7
+        DEFINE_POINT viewloc, 80, 42
         .addr   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   0
@@ -565,13 +565,13 @@ enter_the_full_pathname_label:
 enter_the_name_to_appear_label:
         PASCAL_STRING res_string_selector_label_enter_name
 
-        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,               343-14, 39
-        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},       363-14, 48
-        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, 363-14, 57
-        DEFINE_LABEL down_load,          res_string_selector_label_download,                         343-14, 73
-        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},  363-14, 82
-        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},   363-14, 91
-        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},          363-14,100
+        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 39
+        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},   349, 48
+        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, 349, 57
+        DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 73
+        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},      349, 82
+        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},       349, 91
+        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},              349,100
 
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
@@ -676,20 +676,20 @@ LD921:  .byte   0
 kRadioButtonWidth = 10
 kRadioButtonHeight = 6
 
-        DEFINE_RECT_SZ rect_primary_run_list_radiobtn,   346-14, 41, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_secondary_run_list_radiobtn, 346-14, 50, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_at_first_boot_radiobtn,  346-14, 75, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_at_first_use_radiobtn,   346-14, 84, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_never_radiobtn,          346-14, 93, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_primary_run_list_radiobtn,   332, 41, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_secondary_run_list_radiobtn, 332, 50, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_at_first_boot_radiobtn,      332, 75, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_at_first_use_radiobtn,       332, 84, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_never_radiobtn,              332, 93, kRadioButtonWidth, kRadioButtonHeight
 
-kRadioControlWidth = 134+30
+kRadioControlWidth = 164
 kRadioControlHeight = 8
 
-        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   346-14, 40, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, 346-14, 49, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_boot_ctrl,  346-14, 74, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_use_ctrl,   346-14, 83, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_never_ctrl,          346-14, 92, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   332, 40, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, 332, 49, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      332, 74, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_use_ctrl,       332, 83, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_never_ctrl,              332, 92, kRadioControlWidth, kRadioControlHeight
 
         DEFINE_RECT rect_scratch, 0, 0, 0, 0
 
@@ -701,14 +701,15 @@ kRadioControlHeight = 8
 
         DEFINE_RECT rect_D9C8, 27, 16, 174, 26
 
-        DEFINE_BUTTON change_drive, res_string_button_change_drive,  193, 28
-        DEFINE_BUTTON open,         res_string_button_open,          193, 42
-        DEFINE_BUTTON close,        res_string_button_close,         193, 56
-        DEFINE_BUTTON cancel,       res_string_button_cancel,        193, 71
-        DEFINE_BUTTON ok,           res_string_button_ok,            193, 87
+        DEFINE_BUTTON change_drive, res_string_button_change_drive, 193, 28
+        DEFINE_BUTTON open,         res_string_button_open,         193, 42
+        DEFINE_BUTTON close,        res_string_button_close,        193, 56
+        DEFINE_BUTTON cancel,       res_string_button_cancel,       193, 71
+        DEFINE_BUTTON ok,           res_string_button_ok,           193, 87
 
-        DEFINE_POINT dialog_sep_start, 323-8, 28
-        DEFINE_POINT dialog_sep_end, 323-8, 100
+;;; Dividing line
+        DEFINE_POINT dialog_sep_start, 315, 28
+        DEFINE_POINT dialog_sep_end,   315, 100
 
         .byte   $81,$D3,$00     ; ???
 

@@ -180,7 +180,7 @@ start_da:
 ;;; ============================================================
 ;;; Param blocks
 
-        kDialogWidth = 239+50-20-10
+        kDialogWidth = 259
         kDialogHeight = 64
 
         ;; The following rects are iterated over to identify
@@ -232,7 +232,7 @@ start_da:
 
         DEFINE_POINT date_sep1_pos, kField2Left - 12, kFieldTop + 10
         DEFINE_POINT date_sep2_pos, kField3Left - 12, kFieldTop + 10
-        DEFINE_POINT time_sep_pos,  kField5Left - 12 + 3, kFieldTop + 10
+        DEFINE_POINT time_sep_pos,  kField5Left -  9, kFieldTop + 10
 
         DEFINE_RECT_SZ date_rect, 16, 15, 122, 20
         DEFINE_RECT_SZ time_rect, 150, 15, 74, 20

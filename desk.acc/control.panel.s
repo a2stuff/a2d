@@ -131,7 +131,7 @@ penheight:      .byte   2
         DEFINE_POINT frame_l4a, 190, 102
         DEFINE_POINT frame_l4b, kDAWidth, 102
 
-        DEFINE_RECT frame_rect, AS_WORD(-1), AS_WORD(-1), kDAWidth - 4 + 2, kDAHeight - 2 + 2
+        DEFINE_RECT frame_rect, AS_WORD(-1), AS_WORD(-1), kDAWidth - 2, kDAHeight
 
 
 ;;; ============================================================
@@ -477,8 +477,8 @@ kMouseTrackingY = 78
         DEFINE_RECT_SZ tracking_button_rect1, kMouseTrackingX + 84, kMouseTrackingY + 8, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ tracking_button_rect2, kMouseTrackingX + 84, kMouseTrackingY + 21, kRadioButtonWidth, kRadioButtonHeight
 
-        DEFINE_LABEL tracking_slow, res_string_label_slow, kMouseTrackingX + 105, kMouseTrackingY +  8 + 8
-        DEFINE_LABEL tracking_fast, res_string_label_fast, kMouseTrackingX + 105, kMouseTrackingY + 21 + 8
+        DEFINE_LABEL tracking_slow, res_string_label_slow, kMouseTrackingX + 105, kMouseTrackingY + 16
+        DEFINE_LABEL tracking_fast, res_string_label_fast, kMouseTrackingX + 105, kMouseTrackingY + 29
 
 .params mouse_tracking_params
         DEFINE_POINT viewloc, kMouseTrackingX + 5, kMouseTrackingY
@@ -538,16 +538,16 @@ ipblink_selection:
         .byte   0
 
         DEFINE_LABEL ipblink1, res_string_label_ipblink1, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 11
-        DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 10 + 11
-        DEFINE_LABEL ipblink_slow, res_string_label_slow, kIPBlinkDisplayX + 100 - 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
-        DEFINE_LABEL ipblink_fast, res_string_label_fast, kIPBlinkDisplayX + 140 + 4 + 6, kIPBlinkDisplayY + 16 + 5 + 12 + 1
+        DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 21
+        DEFINE_LABEL ipblink_slow, res_string_label_slow, kIPBlinkDisplayX + 100, kIPBlinkDisplayY + 34
+        DEFINE_LABEL ipblink_fast, res_string_label_fast, kIPBlinkDisplayX + 150, kIPBlinkDisplayY + 34
 
-        DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 110 + 6, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ ipblink_btn2_rect, kIPBlinkDisplayX + 130 + 6, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ ipblink_btn3_rect, kIPBlinkDisplayX + 150 + 6, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 116, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ ipblink_btn2_rect, kIPBlinkDisplayX + 136, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ ipblink_btn3_rect, kIPBlinkDisplayX + 156, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
 
 .params ipblink_bitmap_params
-        DEFINE_POINT viewloc, kIPBlinkDisplayX + 120 + 3, kIPBlinkDisplayY
+        DEFINE_POINT viewloc, kIPBlinkDisplayX + 123, kIPBlinkDisplayY
 mapbits:        .addr   ipblink_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
@@ -569,7 +569,7 @@ ipblink_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000110),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000),PX(%0110000)
 
-kIPBmpPosX = kIPBlinkDisplayX + 120 + 3 + 20
+kIPBmpPosX = kIPBlinkDisplayX + 143
 kIPBmpPosY = kIPBlinkDisplayY
 kIPBmpWidth  = 2
 kIPBmpHeight = 13
