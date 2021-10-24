@@ -171,7 +171,7 @@ win:    MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
         MGTK_RELAY_CALL MGTK::EndUpdate
 :       jmp     loop
 
-finish: jsr     LoadDesktopEntryTable
+finish: jsr     LoadDesktopEntryTable ; restore after `update_window`
         copy    saved_active_window_id, active_window_id
         rts
 
@@ -212,7 +212,7 @@ loop_counter:
         rts
 
 :       sta     active_window_id
-        jsr     LoadActiveWindowEntryTable ; for header and entries
+        jsr     LoadActiveWindowEntryTable ; restored in `clear_updates`
 
         ;; This correctly uses the clipped port provided by BeginUpdate.
 
@@ -577,9 +577,9 @@ not_menu:
         ;; Make the window active.
         MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         copy    findwindow_window_id, active_window_id
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below
         jsr     draw_window_entries
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; restore from above
 
         ;; Update menu items
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
@@ -2269,10 +2269,10 @@ name_ptr:
 
 :       pha
         jsr     select_file_icon
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below
         pla
         jsr     scroll_icon_into_view
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; restore from above
         rts
 .endproc
 
@@ -2301,7 +2301,7 @@ name_ptr:
 
         copy16  tmp, ptr_name
         sty     cached_window_id
-        jsr     LoadWindowEntryTable
+        jsr     LoadWindowEntryTable ; restored below
 
         ;; Iterate icons
         copy    #0, icon
@@ -2344,7 +2344,7 @@ cloop:  lda     (ptr_icon),y
         lda     cached_window_entry_list,x
         sta     icon
 
-done:   jsr     LoadDesktopEntryTable
+done:   jsr     LoadDesktopEntryTable ; restore from above
         jsr     pop_pointers
         lda     icon
         rts
@@ -2655,7 +2655,7 @@ fail:   MLI_CALL QUIT, quit_params
 
         ;; View by icon
 entry:
-:       jsr     LoadActiveWindowEntryTable
+:       jsr     LoadActiveWindowEntryTable ; restored below
 
         ldx     #$00
         txa
@@ -2739,7 +2739,7 @@ entry:
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
 
-finish: jmp     LoadDesktopEntryTable
+finish: jmp     LoadDesktopEntryTable ; restore from above
 
 win_width:
         .word   0
@@ -2791,7 +2791,7 @@ err:    .byte   0
         sta     selected_window_id
 
         ;; Sort the records
-sort:   jsr     LoadActiveWindowEntryTable
+sort:   jsr     LoadActiveWindowEntryTable ; restored below
         jsr     sort_records
         jsr     StoreWindowEntryTable
 
@@ -2810,7 +2810,8 @@ sort:   jsr     LoadActiveWindowEntryTable
 
         jsr     update_scrollbars
 
-done:   rts
+done:   jsr     LoadDesktopEntryTable ; restored from above
+        rts
 
 view:   .byte   0
 .endproc
@@ -2863,7 +2864,7 @@ view:   .byte   0
 
 .proc destroy_icons_in_active_window
         ITK_RELAY_CALL IconTK::CloseWindow, active_window_id
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below
         lda     icon_count
         sec
         sbc     cached_window_entry_count
@@ -2872,7 +2873,7 @@ view:   .byte   0
         jsr     free_cached_window_icons
 
 done:   jsr     StoreWindowEntryTable
-        jmp     LoadDesktopEntryTable
+        jmp     LoadDesktopEntryTable ; restore from above
 .endproc
 
 ;;; ============================================================
@@ -2909,12 +2910,12 @@ index:  .byte   0
 ;;; Assert: DesktopEntryTable is cached (and this is restored)
 
 .proc clear_active_window_entry_count
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below
 
         copy    #0, cached_window_entry_count
 
         jsr     StoreWindowEntryTable
-        jmp     LoadDesktopEntryTable
+        jmp     LoadDesktopEntryTable ; restore from above
 .endproc
 
 ;;; ============================================================
@@ -3060,17 +3061,15 @@ selected_index:
 start:
         copy    #0, buffer
         lda     active_window_id
-        bne     :+
-        jmp     volumes
+        beq     volumes         ; no active window
 
-:       jsr     get_active_window_view_by
-        bpl     :+              ; by icon
-        jmp     volumes
+        jsr     get_active_window_view_by
+        bmi     volumes         ; not icon view
 
         ;; --------------------------------------------------
         ;; Icons in active window
 
-:       jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below
 
         ldx     #0              ; index in buffer and icon list
 win_loop:
@@ -3082,8 +3081,8 @@ win_loop:
         inc     buffer
         inx
         jmp     win_loop
-
-:       jsr     LoadDesktopEntryTable
+:
+        jsr     LoadDesktopEntryTable ; restore from above
 
         ;; --------------------------------------------------
         ;; Desktop (volume) icons
@@ -3187,10 +3186,10 @@ highlight_icon:
         ;; If windowed, ensure it is visible
         lda     selected_window_id
         beq     :+
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below
         lda     selected_icon_list
         jsr     scroll_icon_into_view
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; restore from above
 :
 
         lda     selected_icon_list
@@ -3212,7 +3211,7 @@ highlight_icon:
         bpl     :+              ; view by icons
         rts
 
-:       jsr     LoadActiveWindowEntryTable
+:       jsr     LoadActiveWindowEntryTable ; restored below
         lda     cached_window_entry_count
         bne     :+
         jmp     finish          ; nothing to select!
@@ -3258,7 +3257,7 @@ loop:   ldx     index
         lda     selected_window_id
         beq     finish
         jsr     reset_main_grafport
-finish: jmp     LoadDesktopEntryTable
+finish: jmp     LoadDesktopEntryTable ; restore from above
 
 index:  .byte   0
 err:    .byte   0
@@ -3354,7 +3353,7 @@ loop:   jsr     get_event
         cmp     #CHAR_ESCAPE
         bne     :+
 
-done:   jmp     LoadDesktopEntryTable
+done:   jmp     LoadDesktopEntryTable ; restore from `get_active_window_scroll_info`
 
         ;; Horizontal ok?
 :       bit     horiz_scroll_flag
@@ -3391,7 +3390,7 @@ vertical:
 ;;; ============================================================
 
 .proc get_active_window_scroll_info
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored in `cmd_scroll` and `handle_client_click`
         jsr     get_active_window_view_by
         sta     active_window_view_by
         jsr     get_active_window_hscroll_info
@@ -3543,7 +3542,7 @@ max:   .byte   0
 
 .proc cmd_check_drives
         copy    #0, pending_alert
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; TODO: Needed???
         jsr     cmd_close_all
         jsr     clear_selection
         jsr     reset_main_grafport
@@ -3666,7 +3665,7 @@ by_icon_number:
         lda     #$C0
 
 start:  sta     check_drive_flags
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; TODO: Needed???
         bit     check_drive_flags
         bpl     explicit_command
         bvc     after_format_erase
@@ -3765,7 +3764,7 @@ close_loop:
 not_in_map:
 
         jsr     clear_selection
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; TODO: Needed???
 
         lda     devlst_index
         tay
@@ -3883,13 +3882,14 @@ active_window_view_by:
         .byte   0
 
 .proc handle_client_click
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below or in `handle_content_click`
         jsr     get_active_window_view_by
         sta     active_window_view_by
 
         MGTK_RELAY_CALL MGTK::FindControl, event_coords
         lda     findcontrol_which_ctl
         bne     :+
+        ;; TODO: jmp here means `done_client_click` not called, callee responsible
         jmp     handle_content_click ; 0 = ctl_not_a_control
 :       cmp     #MGTK::Ctl::dead_zone
         bne     :+
@@ -3991,7 +3991,7 @@ pgrt:   jsr     scroll_page_right
 
 done_client_click:
         jsr     StoreWindowEntryTable
-        jmp     LoadDesktopEntryTable
+        jmp     LoadDesktopEntryTable ; restore from above
 .endproc
 
 ;;; ============================================================
@@ -4003,9 +4003,7 @@ done_client_click:
         lda     trackthumb_thumbmoved
         bne     :+
         rts
-:       jsr     update_scroll_thumb
-        jsr     StoreWindowEntryTable
-        jmp     LoadDesktopEntryTable
+:       jmp     update_scroll_thumb
 .endproc
 
 ;;; ============================================================
@@ -4091,7 +4089,7 @@ ctl:    .byte   0
 
         ;; Not an icon - maybe a drag?
         jsr     drag_select
-        jmp     swap_in_desktop_icon_table
+        jmp     done_content_click ; restore from `handle_client_click`
 .endproc
 
 ;;; ============================================================
@@ -4109,7 +4107,7 @@ ctl:    .byte   0
         ;; Modifier down - remove from selection
         lda     icon_num
         jsr     deselect_file_icon ; deselect, nothing further
-        jmp     swap_in_desktop_icon_table
+        jmp     done_content_click ; restore from `handle_client_click`
 
         ;; Double click or drag?
 :       jmp     check_double_click
@@ -4127,7 +4125,7 @@ not_selected:
         jsr     clear_selection
 :       lda     icon_num
         jsr     select_file_icon ; select, nothing further
-        jmp     swap_in_desktop_icon_table
+        jmp     done_content_click ; restore from `handle_client_click`
 
 replace_selection:
         jsr     clear_selection
@@ -4139,7 +4137,7 @@ replace_selection:
 check_double_click:
         jsr     detect_double_click
         bmi     :+
-        jsr     swap_in_desktop_icon_table
+        jsr     done_content_click ; restore from `handle_client_click`
         jmp     cmd_open_from_double_click
 :
         ;; --------------------------------------------------
@@ -4156,7 +4154,7 @@ process_drop:
         ;; (1/4) Failed?
         cmp     #$FF
         bne     :+
-        jmp     swap_in_desktop_icon_table ; TODO: Why is this only needed on this path?
+        jmp     done_content_click ; restore from `handle_client_click`
 
         ;; Was a move?
 :       bit     move_flag
@@ -4190,7 +4188,7 @@ process_drop:
 same_or_desktop:
         cpx     #2              ; file icon dragged to desktop?
         bne     :+
-        jmp     swap_in_desktop_icon_table ; yes, a no-op
+        jmp     done_content_click ; restore from `handle_client_click`
 
 :       cpx     #$FF
         beq     failure
@@ -4221,7 +4219,7 @@ same_or_desktop:
         ;; fall through
 
 ;;; Used as additional entry point
-swap_in_desktop_icon_table:
+done_content_click:     ; TODO: Obscures correct usage; remove?
         jsr     StoreWindowEntryTable
         jmp     LoadDesktopEntryTable
 
@@ -4243,7 +4241,7 @@ icon_num:
         .byte   0
 
 .endproc
-        swap_in_desktop_icon_table := handle_file_icon_click::swap_in_desktop_icon_table
+        done_content_click := handle_file_icon_click::done_content_click
         ;; Used for delete shortcut; set `drag_drop_params::icon` first
         process_drop := handle_file_icon_click::process_drop
 
@@ -4397,15 +4395,15 @@ exception_flag:
 
         ;; Create icons and draw contents
         jsr     cmd_view_by_icon::entry
-        jsr     StoreWindowEntryTable
+        jsr     StoreWindowEntryTable ; TODO: above leaves Desktop; remove?
 
         ;; Draw header
         lda     active_window_id
         jsr     unsafe_set_port_from_window_id ; CHECKED
     IF_ZERO                     ; Skip drawing if obscured
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below
         jsr     draw_window_header
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; restore from above
     END_IF
 
         ;; Set view state and update menu
@@ -4607,14 +4605,14 @@ y_flag: .byte   0
         copy    active_window_id, event_params
         jsr     get_active_window_view_by
         bmi     :+
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below
         jsr     cached_icons_screen_to_window
 :       MGTK_RELAY_CALL MGTK::DragWindow, event_params
         jsr     get_active_window_view_by
         bmi     :+
         jsr     cached_icons_window_to_screen
         jsr     StoreWindowEntryTable
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; restore from above
 :       rts
 
 .endproc
@@ -4624,11 +4622,11 @@ y_flag: .byte   0
 .proc handle_resize_click
         copy    active_window_id, event_params
         MGTK_RELAY_CALL MGTK::GrowWindow, event_params
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below
         jsr     cached_icons_screen_to_window
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; restore from above
         jmp     reset_main_grafport
 .endproc
 
@@ -4652,7 +4650,7 @@ y_flag: .byte   0
 .proc close_window
         icon_ptr := $06
 
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable ; restored below
 
         jsr     clear_selection
 
@@ -4713,7 +4711,7 @@ cont:   sta     cached_window_entry_count
         sta     win_view_by_table,x
 
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; restore from above
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     check_item
         jsr     update_window_menu_items
@@ -5757,7 +5755,7 @@ no_win:
         inx                     ; 0-based to 1-based
 
         stx     cached_window_id
-        jsr     LoadWindowEntryTable
+        jsr     LoadWindowEntryTable ; restored below
 
         ;; Update View and other menus
         inc     num_open_windows
@@ -5825,7 +5823,7 @@ done:   copy    cached_window_id, active_window_id
         jsr     update_scrollbars
         jsr     cached_icons_window_to_screen
         jsr     StoreWindowEntryTable
-        jsr     LoadDesktopEntryTable
+        jsr     LoadDesktopEntryTable ; restore from above
         jmp     reset_main_grafport
 
 err:    .byte   0
