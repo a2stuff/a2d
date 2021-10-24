@@ -1,4 +1,4 @@
-.define res_filename_calculator calculadora
+.define res_filename_calculator Calculadora
 .define res_filename_date_and_time fecha.y.hora
 .define res_filename_puzzle puzzle
 .define res_filename_sort_directory ordenar.dir
