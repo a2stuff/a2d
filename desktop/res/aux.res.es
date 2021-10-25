@@ -112,7 +112,7 @@
 .define res_string_errmsg_52 "Este no es un disco ProDOS."
 .define res_string_errmsg_57 "Hay otro volumen con el mismo nombre en el escritorio."
 .define res_string_errmsg_F7 "No hay ventanas abiertas."
-.define res_string_errmsg_F8 "El item no puede trasladarse ni copiarse dentro de si misma."
+.define res_string_errmsg_F8 "El articulo no puede trasladarse ni copiarse dentro de si misma."
 .define res_string_errmsg_F9 "Hay 2 volumenes con el mismo nombre."
 .define res_string_errmsg_FA "El archivo no puede abrirse."
 .define res_string_errmsg_FB "Ese nombre es muy largo."

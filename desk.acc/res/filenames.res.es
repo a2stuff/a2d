@@ -1,4 +1,4 @@
-.define res_filename_calculator Calculadora
+.define res_filename_calculator ducir
 .define res_filename_date_and_time fecha.y.hora
 .define res_filename_puzzle puzzle
 .define res_filename_sort_directory ordenar.dir
@@ -13,7 +13,7 @@
 .define res_filename_startup arranque
 .define res_filename_system_speed velocidad
 .define res_filename_joystick joystick
-.define res_filename_screen_savers divertimenti
+.define res_filename_screen_savers Salvapantallas
 .define res_filename_flying_toasters tosta.voladoras
 .define res_filename_melt derretir
 .define res_filename_invert inverso
