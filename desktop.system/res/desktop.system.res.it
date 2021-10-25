@@ -5,5 +5,5 @@
 .define res_string_prompt_ramcard_full "Spazio insufficiente per l'autocaricamento. Premi Return per continuare."
 .define res_string_error_prefix "Errore $"
 .define res_string_error_suffix " durante la copia "
-.define res_string_prompt_copy_not_completed "La copia non } stata completata, premere Return per continuare."
+.define res_string_prompt_copy_not_completed "La copia non } stata completata. Premere Return per continuare."
 .define res_char_monitor_shortcut 'M'

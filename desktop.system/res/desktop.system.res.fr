@@ -2,8 +2,8 @@
 .define res_string_label_tip_skip_copying "Pour ne pas copier vers la carte RAM, appuyez sur \x0F\x1B\x41\x18\x0E au d{marrage."
 .define res_string_label_copying "Copie en carte RAM de : "
 .define res_string_prompt_insert_source "Ins{rez le disque source et pressez Return pour continuer ou Esc pour annuler."
-.define res_string_prompt_ramcard_full "Pas assez de place en carte RAM, pressez Return pour continuer."
+.define res_string_prompt_ramcard_full "Pas assez de place en carte RAM. Pressez Return pour continuer."
 .define res_string_error_prefix "Erreur $"
 .define res_string_error_suffix " pendant la copie "
-.define res_string_prompt_copy_not_completed "La copie est annul{e, pressez Return pour continuer."
+.define res_string_prompt_copy_not_completed "La copie est annul{e. Pressez Return pour continuer."
 .define res_char_monitor_shortcut 'M'
