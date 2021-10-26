@@ -5028,6 +5028,7 @@ delta:  .word   0
 .endproc
 
 ;;; ============================================================
+;;; Assert: scroll bar is active; content is wider than window.
 
 .proc update_hthumb
         winfo_ptr := $06
@@ -5048,7 +5049,6 @@ delta:  .word   0
         ;; Compute size delta (content vs. window)
         sub16   iconbb_rect+MGTK::Rect::x2, iconbb_rect+MGTK::Rect::x1, size
         sub16   size, win_width, size
-        ;; BUG: Bogus if negative.
         lsr16   size            ; / 2
         ldx     size            ; X = (content size - window size)/2
 
@@ -5085,6 +5085,7 @@ size:   .word   0
 .endproc
 
 ;;; ============================================================
+;;; Assert: scroll bar is active; content is taller than window.
 
 .proc update_vthumb
         winfo_ptr := $06
@@ -5105,7 +5106,6 @@ size:   .word   0
         ;; Compute size delta (content vs. window)
         sub16   iconbb_rect+MGTK::Rect::y2, iconbb_rect+MGTK::Rect::y1, size
         sub16_8 size, win_height, size
-        ;; BUG: Bogus if negative.
         lsr16   size            ; / 4
         lsr16   size
         ldx     size            ; X = (content size - window size)/4
