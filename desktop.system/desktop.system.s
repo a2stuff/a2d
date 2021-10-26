@@ -368,8 +368,8 @@ got_dst_size:
 
         ;; Free = Total - Used
 :       sub16   get_path1_info_params::aux_type, get_path1_info_params::blocks_used, vol_free
-        ;; Take away size to overwrite - BUG: Shouldn't this be add, not subtract???
-        sub16   vol_free, dst_size, vol_free
+        ;; If overwriting, some blocks will be reclaimed.
+        add16   vol_free, dst_size, vol_free
         ;; Does it fit? (free >= needed)
         cmp16   vol_free, get_path2_info_params::blocks_used
         bcs     have_space
@@ -1465,6 +1465,7 @@ done:   rts
         copy16  #noop, generic_copy::hook_show_file
 
         jsr     generic_copy::do_copy
+        ;; TODO: Handle error.
 
 cleanup:
         jsr     remove_filename_from_src_path
@@ -1637,6 +1638,7 @@ entry_loop:
 
         jsr     prepare_entry_paths
         jsr     copy_using_entry_paths
+        ;; TODO: Handle error.
 
         bit     LCBANK2         ; Mark copied
         bit     LCBANK2
@@ -1673,6 +1675,7 @@ entry_loop2:
 
         jsr     prepare_entry_paths
         jsr     copy_using_entry_paths
+        ;; TODO: Handle error.
 
         bit     LCBANK2
         bit     LCBANK2
