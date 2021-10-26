@@ -12742,9 +12742,9 @@ done:   rts
 
 got_exist_size:
         copy16  dst_file_info_params::blocks_used, existing_size
-
+:
         ;; Compute destination volume path
-:       lda     dst_path_buf
+retry:  lda     dst_path_buf
         sta     saved_length
         ldy     #1              ; search for second '/'
 :       iny
@@ -12758,14 +12758,14 @@ got_exist_size:
         sta     vol_path_length
 
         ;; Total blocks/used blocks on destination volume
-@retry: MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
+        MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
         beq     got_info
         pha                     ; on failure, restore path
         lda     saved_length    ; in case copy is aborted
         sta     dst_path_buf
         pla
         jsr     show_error_alert_dst
-        jmp     @retry          ; BUG: Does this need to assign length again???
+        jmp     retry
 
 got_info:
         ;; aux = total blocks
