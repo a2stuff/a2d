@@ -5,7 +5,7 @@
 .define res_filename_this_apple questo.apple
 .define res_filename_eyes occhi
 .define res_filename_screen_dump stampa.schermo
-.define res_filename_run_basic_here basic.qui
+.define res_filename_run_basic_here apri.basic.qui
 .define res_filename_key_caps tastiera
 .define res_filename_find_files cerca.file
 .define res_filename_control_panels preferenze
