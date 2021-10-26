@@ -31,6 +31,7 @@ SETPWRC         := $FB6F        ; Create power-up byte.
 VERSION         := $FBB3        ; Monitor ROM ID byte. $06 = IIe or later
 ZIDBYTE2        := $FBBF        ; * IIc ROM version ($05 = IIc+)
 ZIDBYTE         := $FBC0        ; * $EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+
+IDBYTEMACIIE    := $FBDD        ; * $02 = Mac IIe Card
 BELL1           := $FBDD        ; Generate tone.
 VTAB            := $FC22        ; Vertical tab. Uses value at CV.
 VTABZ           := $FC24        ; Vertical tab (alternate entry). Uses A.
@@ -154,6 +155,11 @@ NEWVIDEO        := $C029        ; IIgs - new video modes
         ;; Bit 6 = 1 = Linearize SHR
         ;; Bit 5 = 0 = Color DHR, 1 = B/W DHR
         ;; Bits 4-0 must be 0
+
+MACIIE          := $C02B        ; Macintosh IIe Option Card
+        ;; Tech Note: Apple IIe #10: The Apple IIe Card for the Macintosh LC
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.10.html
+        ;; Bit 2 = Speed (1.9 MHz if set, 1 MHz if clear)
 
 SPKR            := $C030
 SHADOW          := $C035        ; IIgs - inhibit shadowing

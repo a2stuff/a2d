@@ -265,20 +265,40 @@ joystick_bitmap:
         .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000)
 
-        ;; Initialized to $00 if a IIgs, $00 otherwise
-not_iigs_flag:
+        ;; Initialized to $80 if a IIgs, $00 otherwise
+is_iigs_flag:
+        .byte   0
+
+        ;; Initialized to $80 if a Mac IIe Card, $00 otherwise
+is_iiecard_flag:
         .byte   0
 
 ;;; ============================================================
 
 .proc init
-        ;; Detect IIgs, save for later
+        ;; --------------------------------------------------
+        ;; Probe some ROM locations.
         bit     ROMIN2
+
+        ;; Detect IIgs, save for later
         sec
         jsr     IDROUTINE
-        ror     not_iigs_flag    ; shift C into high bit
+        bcs     :+
+        copy    #$80, is_iigs_flag
+:
+        ;; Detect IIe Card, save for later
+        lda     ZIDBYTE
+        cmp     #$E0            ; Is Enhanced IIe?
+        bne     :+
+        lda     IDBYTEMACIIE
+        cmp     #$02            ; IIe Card signature
+        bne     :+
+        copy    #$80, is_iiecard_flag
+:
         bit     LCBANK1
         bit     LCBANK1
+
+        ;; --------------------------------------------------
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     draw_window
@@ -588,13 +608,25 @@ pdl3:   .byte   0
 
 .proc read_paddles
         ;; Slow down on IIgs
-        bit     not_iigs_flag
-        bmi     :+
+        bit     is_iigs_flag
+        bpl     :+
         lda     CYAREG
         pha
-        and     #%01111111
+        and     #%01111111      ; clear bit 7
         sta     CYAREG
 :
+        ;; Slow down on IIe Card.
+        ;; Per Technical Note: Apple IIe #10: The Apple IIe Card for the Macintosh LC
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.10.html
+
+        bit     is_iiecard_flag
+        bpl     :+
+        lda     MACIIE
+        pha
+        and     #%11111011      ; clear bit 2
+        sta     MACIIE
+:
+
         ;; Read all paddles
         ldx     #kNumPaddles - 1
 :       jsr     pread
@@ -604,10 +636,16 @@ pdl3:   .byte   0
         bpl     :-
 
         ;; Restore speed on IIgs
-        bit     not_iigs_flag
-        bmi     :+
+        bit     is_iigs_flag
+        bpl     :+
         pla
         sta     CYAREG
+:
+        ;; Restore speed on IIe Card
+        bit     is_iiecard_flag
+        bpl     :+
+        pla
+        sta     MACIIE
 :
         rts
 
