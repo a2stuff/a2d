@@ -280,7 +280,7 @@ update_dir_blocks:
         copy16  #block_buf, block_params::data_buffer
         jsr     set_ptr_to_first_entry
 loop2:  jsr     set_ptr_to_next_entry
-        bcs     fail
+        bcs     done
         ldy     #0
         lda     (ptr),y
         and     #STORAGE_TYPE_MASK ; skip deleted entries
@@ -307,7 +307,6 @@ loop2:  jsr     set_ptr_to_next_entry
         jsr     write_block
         jmp     loop2
 
-fail:   pla                     ; BUG: no matching push (only works due to stack restore) ???
 done:   jmp     exit
 
 .endscope
