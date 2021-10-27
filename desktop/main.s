@@ -2782,11 +2782,6 @@ err:    .byte   0
         cmp     active_window_id
         bne     sort
         lda     #0
-        ldx     selected_icon_count
-        dex
-:       sta     selected_icon_list,x
-        dex
-        bpl     :-
         sta     selected_icon_count
         sta     selected_window_id
 
@@ -6109,11 +6104,6 @@ loop:   lda     index
         ;; --------------------------------------------------
         ;; Clear selection list
 finish: lda     #0
-        ldx     selected_icon_count
-        dex
-:       sta     selected_icon_list,x
-        dex
-        bpl     :-
         sta     selected_icon_count
         sta     selected_window_id
         jmp     reset_main_grafport
