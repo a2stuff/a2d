@@ -3,6 +3,7 @@
 ;;; Inputs: A = unit_number
 
 .proc FormatDiskII
+        .assert .lobyte(*) = 0, error, "Must be page aligned"
 
 .macro exit_with_result arg
         lda     #arg
