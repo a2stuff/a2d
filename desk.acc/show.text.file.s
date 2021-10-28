@@ -96,7 +96,7 @@ dst:    sta     start,y         ; self-modified
         inc     dst+2
         sta     RAMWRTON
         lda     dst+2
-        cmp     #$14
+        cmp     #.hibyte(da_end)+3 ; TODO: Make it +1
         bne     src
 .endproc
 
@@ -236,6 +236,10 @@ params_start:
 default_buffer  := $1200
 kReadLength      = $0100
 
+        .assert default_buffer + $200 < $1B00, error, "DA too big"
+        ;;  I/O Buffer starts at MAIN $1C00
+        ;;  ... but entry tables start at AUX $1B00
+
         DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
         DEFINE_READ_PARAMS read_params, default_buffer, kReadLength
         DEFINE_GET_EOF_PARAMS get_eof_params
@@ -247,7 +251,8 @@ pathbuf:        .res    kPathBufferSize, 0
 L0945:  .byte   $00
 L0946:  .byte   $00
 L0947:  .byte   $00
-L0948:  .byte   $00
+visible_flag:                   ; clear until text that should be visible is in view
+        .byte   0
 L0949:  .byte   $00
 
 params_end := * + 4       ; bug in original? (harmless as this is static)
@@ -262,10 +267,12 @@ white_pattern:
         kDAWindowId = 100
 
         kLineSpacing = 10
-        kRightConst = 506
+        kWrapWidth = 506
 
-L095A:  .byte   $00
-L095B:  .word   kRightConst
+tab_flag:                       ; set if last character seen was a tab
+        .byte   0
+remaining_width:
+        .word   kWrapWidth
 
 .params line_pos
 left:   .word   0
@@ -276,9 +283,14 @@ window_width:   .word   0
 window_height:  .word   0
 
 y_remaining:    .word   0
-line_count:     .word   0
-L096A:  .word   0
-L096C:  .word   0
+
+last_visible_line:
+        .word   0
+first_visible_line:
+        .word   0
+
+current_line:
+        .word   0
 
 track_scroll_delta:
         .byte   $00
@@ -801,16 +813,16 @@ loop:   beq     adjust_box_height
         sta     winfo::maprect::y2+1
         jsr     calc_line_position
         lda     #0
-        sta     L096A
-        sta     L096A+1
+        sta     first_visible_line
+        sta     first_visible_line+1
         ldx     updatethumb_params::thumbpos
 loop:   beq     end
         clc
-        lda     L096A
+        lda     first_visible_line
         adc     #5
-        sta     L096A
+        sta     first_visible_line
         bcc     :+
-        inc     L096A+1
+        inc     first_visible_line+1
 :       dex
         jmp     loop
 end:    rts
@@ -876,40 +888,51 @@ end:    rts
         sta     L0946
         sta     L0947
         sta     line_pos::base+1
-        sta     L096C
-        sta     L096C+1
-        sta     L0948
+        sta     current_line
+        sta     current_line+1
+        sta     visible_flag
         lda     #kLineSpacing
         sta     line_pos::base
         jsr     reset_line
 
 do_line:
-        lda     L096C+1
-        cmp     L096A+1
+        lda     current_line+1
+        cmp     first_visible_line+1
         bne     :+
-        lda     L096C
-        cmp     L096A
+        lda     current_line
+        cmp     first_visible_line
         bne     :+
         jsr     clear_window
-        inc     L0948
-:       MGTK_CALL MGTK::MoveTo, line_pos
+        inc     visible_flag
+:
+        ;; Position cursor, update remaining width
+        MGTK_CALL MGTK::MoveTo, line_pos
         sec
-        lda     #250
+        lda     #<kWrapWidth
         sbc     line_pos::left
-        sta     L095B
-        lda     #1
+        sta     remaining_width
+        lda     #>kWrapWidth
         sbc     line_pos::left+1
-        sta     L095B+1
+        sta     remaining_width+1
+
+        ;; Identify next run of characters
         jsr     find_text_run
         bcs     done
+
+        ;; Update pointer into buffer for next time
         clc
         lda     drawtext_params::textlen
         adc     ptr
         sta     ptr
         bcc     :+
         inc     ptr+1
-:       lda     L095A
-        bne     do_line
+:
+        ;; Did the run end due to a tab?
+        lda     tab_flag
+        ;; BUG: The following causes tab on first line to erase window!
+        bne     do_line         ; yes, keep going
+
+        ;; Nope - wrap to next line!
         clc
         lda     line_pos::base
         adc     #kLineSpacing
@@ -917,15 +940,19 @@ do_line:
         bcc     :+
         inc     line_pos::base+1
 :       jsr     reset_line
-        lda     L096C
-        cmp     line_count
+
+        ;; Have we drawn all visible lines?
+        lda     current_line
+        cmp     last_visible_line
         bne     :+
-        lda     L096C+1
-        cmp     line_count+1
+        lda     current_line+1
+        cmp     last_visible_line+1
         beq     done
-:       inc     L096C
+:
+        ;; Nope - continue on next line
+        inc     current_line
         bne     :+
-        inc     L096C+1
+        inc     current_line+1
 :       jmp     do_line
 
 done:   jsr     restore_proportional_font_table_if_needed
@@ -935,9 +962,9 @@ done:   jsr     restore_proportional_font_table_if_needed
 ;;; ============================================================
 
 .proc reset_line
-        copy16  #kRightConst, L095B
+        copy16  #kWrapWidth, remaining_width
         copy16  #3, line_pos::left
-        sta     L095A
+        sta     tab_flag        ; reset
         rts
 .endproc
 
@@ -951,7 +978,7 @@ done:   jsr     restore_proportional_font_table_if_needed
         lda     #0
         sta     run_width
         sta     run_width+1
-        sta     L095A
+        sta     tab_flag
         sta     drawtext_params::textlen
         copy16  ptr, drawtext_params::textptr
 
@@ -989,17 +1016,19 @@ more:   ldy     drawtext_params::textlen
         sta     run_width
         bcc     :+
         inc     run_width+1
-:       lda     L095B+1
+:
+        ;; Is there room?
+        lda     remaining_width+1
         cmp     run_width+1
         bne     :+
-        lda     L095B
+        lda     remaining_width
         cmp     run_width
 :       bcc     :+
         inc     drawtext_params::textlen
         jmp     loop
 
 :       lda     #0
-        sta     L095A
+        sta     tab_flag
         lda     L0F9B
         cmp     #$FF
         beq     :+
@@ -1032,7 +1061,7 @@ run_width:  .word   0
 
 .proc handle_tab
         lda     #1
-        sta     L095A
+        sta     tab_flag
         clc
         lda     run_width
         adc     line_pos::left
@@ -1055,7 +1084,7 @@ loop:   lda     times70+1,x
 :       copy16  times70,x, line_pos::left
         jmp     finish_text_run
 done:   lda     #0
-        sta     L095A
+        sta     tab_flag
         jmp     finish_text_run
 
 times70:.word   70
@@ -1071,7 +1100,7 @@ times70:.word   70
 ;;; Draw a line of content
 
 .proc draw_text_run
-        lda     L0948
+        lda     visible_flag    ; skip if not in visible range
         beq     end
         lda     drawtext_params::textlen
         beq     end
@@ -1176,8 +1205,8 @@ end:    rts
         copy16  winfo::maprect::y2, y_remaining
 
         lda     #0
-        sta     line_count
-        sta     line_count+1
+        sta     last_visible_line
+        sta     last_visible_line+1
 
 loop:   lda     y_remaining+1
         bne     :+
@@ -1191,9 +1220,9 @@ loop:   lda     y_remaining+1
         sta     y_remaining
         bcs     :+
         dec     y_remaining+1
-:       inc     line_count
+:       inc     last_visible_line
         bne     loop
-        inc     line_count+1
+        inc     last_visible_line+1
         jmp     loop
 
 end:    rts
@@ -1381,4 +1410,6 @@ window_id:      .byte   kDAWindowId
 
 ;;; ============================================================
 
-        .assert * <= default_buffer, error, "DA overlaps with read buffer"
+da_end:
+
+        .assert * <= default_buffer, error, .sprintf("DA overlaps with read buffer: $%04x", *)
