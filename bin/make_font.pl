@@ -33,7 +33,7 @@ for (my $c = 0; $c < $chars; ++$c) {
         die "expected bitmap, saw $_\n" unless m/^[.#]+$/;
         my $len = length($_);
         if (defined $widths[$c]) {
-            die "changed width\n" unless $widths[$c] == $len;
+            die sprintf("changed width: 0x%02x\n", $c) unless $widths[$c] == $len;
         } else {
             $widths[$c] = $len;
         }

@@ -233,7 +233,7 @@ params_start:
 ;;; ProDOS MLI param blocks
 
 ;;; Two pages of data are read, but separately.
-default_buffer  := $1200
+default_buffer  := $1700
 kReadLength      = $0100
 
         .assert default_buffer + $200 < $1B00, error, "DA too big"
@@ -411,15 +411,6 @@ reserved:       .byte   0
 .proc init
         lda     #0
         sta     fixed_mode_flag
-
-        ;; make backup of font width table; overwritten if fixed
-        ldx     DEFAULT_FONT + MGTK::Font::lastchar
-        sta     RAMWRTOFF
-loop:   lda     DEFAULT_FONT + MGTK::Font::charwidth - 1,x
-        sta     font_width_backup - 1,x
-        dex
-        bne     loop
-        sta     RAMWRTON
 
         ;; open file, get length
         jsr     open_file
@@ -875,7 +866,14 @@ end:    rts
 
         lda     #0
         sta     L0949
-        jsr     assign_fixed_font_width_table_if_needed
+
+        lda     fixed_mode_flag
+    IF_ZERO
+        MGTK_CALL MGTK::SetFont, DEFAULT_FONT
+    ELSE
+        MGTK_CALL MGTK::SetFont, fixed_font
+    END_IF
+
         jsr     set_file_mark
         lda     #<default_buffer
         sta     read_params::data_buffer
@@ -954,7 +952,22 @@ moveto: MGTK_CALL MGTK::MoveTo, line_pos
         inc     current_line+1
 :       jmp     do_line
 
-done:   jsr     restore_proportional_font_table_if_needed
+done:   MGTK_CALL MGTK::SetFont, DEFAULT_FONT
+        rts
+.endproc
+
+;;; ============================================================
+;;; Input: A = character
+;;; Output: A = width
+
+.proc get_char_width
+        tay
+        lda     fixed_mode_flag
+    IF_ZERO
+        lda     DEFAULT_FONT + MGTK::Font::charwidth,y
+    ELSE
+        lda     fixed_font + MGTK::Font::charwidth,y
+    END_IF
         rts
 .endproc
 
@@ -1008,8 +1021,7 @@ more:   ldy     drawtext_params::textlen
         bne     :+
         jmp     handle_tab
 
-:       tay
-        lda     DEFAULT_FONT + MGTK::Font::charwidth,y
+:       jsr     get_char_width
         clc
         adc     run_width
         sta     run_width
@@ -1262,49 +1274,6 @@ loop:   clc
         rts
 .endproc
 
-;;; ============================================================
-;;; Restore the font glyph width table when switching
-;;; back to proportional mode.
-
-.proc restore_proportional_font_table_if_needed
-        lda     fixed_mode_flag ; if not fixed (i.e. proportional)
-        beq     done            ; then exit
-
-        start := font_width_backup
-        end   := font_width_backup + $7E
-        dest  := DEFAULT_FONT + MGTK::Font::charwidth
-
-        lda     #<start
-        sta     STARTLO
-        lda     #<end
-        sta     ENDLO
-        lda     #>start
-        sta     STARTHI
-        sta     ENDHI
-
-        lda     #>dest
-        sta     DESTINATIONHI
-        lda     #<dest
-        sta     DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-done:   rts
-.endproc
-
-;;; ============================================================
-;;; Overwrite the font glyph width table (with 7s)
-;;; when switching to fixed width mode.
-
-.proc assign_fixed_font_width_table_if_needed
-        lda     fixed_mode_flag ; if not fixed (i.e. proportional)
-        beq     end             ; then exit
-        ldx     DEFAULT_FONT + MGTK::Font::lastchar
-        lda     #7              ; 7 pixels/character
-loop:   sta     DEFAULT_FONT + MGTK::Font::charwidth - 1,x
-        dex
-        bne     loop
-end:    rts
-.endproc
 
 ;;; ============================================================
 ;;; Title Bar (Proportional/Fixed mode button)
@@ -1406,6 +1375,11 @@ window_id:      .byte   kDAWindowId
         MGTK_CALL MGTK::SetPortBits, winfo::port
         rts
 .endproc
+
+;;; ============================================================
+
+fixed_font:
+        .incbin "../mgtk/fonts/fixed_width"
 
 ;;; ============================================================
 
