@@ -96,7 +96,7 @@ dst:    sta     start,y         ; self-modified
         inc     dst+2
         sta     RAMWRTON
         lda     dst+2
-        cmp     #.hibyte(da_end)+3 ; TODO: Make it +1
+        cmp     #.hibyte(da_end)+1
         bne     src
 .endproc
 
@@ -906,7 +906,7 @@ do_line:
         inc     visible_flag
 :
         ;; Position cursor, update remaining width
-        MGTK_CALL MGTK::MoveTo, line_pos
+moveto: MGTK_CALL MGTK::MoveTo, line_pos
         sec
         lda     #<kWrapWidth
         sbc     line_pos::left
@@ -929,8 +929,7 @@ do_line:
 :
         ;; Did the run end due to a tab?
         lda     tab_flag
-        ;; BUG: The following causes tab on first line to erase window!
-        bne     do_line         ; yes, keep going
+        bne     moveto          ; yes, keep going
 
         ;; Nope - wrap to next line!
         clc
