@@ -28,7 +28,7 @@ WINDOW_ENTRY_TABLES      := $1B00
 DEFAULT_FONT    := $8800
 
 ;;; DeskTopSettings structure loaded from disk on startup.
-SETTINGS        := $FF80
+SETTINGS        := $FF80 - kIntVectorsSize
 
 ;;; A 10k buffer that can be restored using overlays; load
 ;;; `kDynamicRoutineRestore5000` and call `JUMP_TABLE_RESTORE_OVL`

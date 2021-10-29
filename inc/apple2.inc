@@ -17,8 +17,15 @@ IN              := $200
 ;;; Vectors
 ;;; ============================================================
 
+NMI             := $3FB
 IRQLOC          := $3FE
 
+VECTORS         := $FFFA
+NMI_VECTOR      := $FFFA        ; on NMI
+RESET_VECTOR    := $FFFC        ; on RESET
+IRQ_VECTOR      := $FFFE        ; on IRQ or BRK
+
+kIntVectorsSize = 6             ; 3 vectors, 2 bytes each
 
 ;;; ============================================================
 ;;; Monitor ROM

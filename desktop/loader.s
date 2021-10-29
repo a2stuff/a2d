@@ -335,9 +335,15 @@ segment_num:  .byte   0
         src := $6
         dst := $8
 
+        ;; Disable interrupts, since we may overwrite IRQ vector
+        php
+        sei
+
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
+
+        COPY_BYTES kIntVectorsSize, VECTORS, vector_buf
 
         ;; Set stack pointers to arbitrarily low values for use when
         ;; interrupts occur. DeskTop does not utilize this convention,
@@ -376,12 +382,19 @@ loop:   lda     (src),y
         cmp     max_page
         bne     loop
 
+        COPY_BYTES kIntVectorsSize, vector_buf, VECTORS
+
         sta     ALTZPOFF
         bit     ROMIN2
+
+        plp
         rts
 
 max_page:
         .byte   0
+
+vector_buf:
+        .res    ::kIntVectorsSize, 0
 .endproc
 
         ;; Handle aux memory segment

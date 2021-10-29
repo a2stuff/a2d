@@ -1762,12 +1762,21 @@ app_mask:
         .byte   PX(%0000000),PX(%0000000),PX(%0011000),PX(%0000000),PX(%0000000)
 
         ;; Reserve $80 bytes for settings
-        PAD_TO $FF80
+        PAD_TO SETTINGS
 
 ;;; ============================================================
 ;;; Settings - modified by Control Panel
 ;;; ============================================================
 
         .include "../lib/default_settings.s"
+
+;;; Reserved space for 6502 vectors
+;;; * NMI is rarely used
+;;; * On RESET, the main page/ROM is banked in (Enh. IIe, IIc, IIgs)
+;;; * IRQ must be preserved; points into firmware
+;;; ... but might as well preserved
+
+        ASSERT_ADDRESS VECTORS
+        .res    kIntVectorsSize, 0
 
         ASSERT_ADDRESS $10000
