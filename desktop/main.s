@@ -9636,10 +9636,12 @@ Version:                .word   0
 
         sta     unit_number
 
-        ;; Special case for RAM.DRV.SYSTEM
+        ;; Special case for RAM.DRV.SYSTEM/RAMAUX.SYSTEM
         cmp     #kRamDrvSystemUnitNum
+        beq     ram
+        cmp     #kRamAuxSystemUnitNum
         bne     :+
-        ldax    #str_device_type_ramdisk
+ram:    ldax    #str_device_type_ramdisk
         ldy     #kDeviceTypeRAMDisk
         rts
 :

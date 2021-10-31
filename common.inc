@@ -141,6 +141,10 @@ kLauncherDateOffset     = 3
 ;;; RAM disk driver for RamWorks, appears in `DEVLST`.
 kRamDrvSystemUnitNum = $3E
 
+;;; Unit number used by John Brooks' RAMAUX.SYSTEM
+;;; RAM disk driver for RamWorks, appears in `DEVLST`.
+kRamAuxSystemUnitNum = $3F
+
 ;;; ADTPro's VDRIVE: https://adtpro.com/vdrive.html
 ;;; Driver address used by ADTPro's VEDRIVE in `DEVADR`.
 kVEDRIVEDriverAddress = $D004

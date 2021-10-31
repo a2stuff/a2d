@@ -998,8 +998,10 @@ loop:   ldx     devnum
         lda     DEVLST,x
         sta     unit_num
 
-        ;; Special case for RAM.DRV.SYSTEM.
+        ;; Special case for RAM.DRV.SYSTEM/RAMAUX.SYSTEM.
         cmp     #kRamDrvSystemUnitNum
+        beq     test_unit_num
+        cmp     #kRamAuxSystemUnitNum
         beq     test_unit_num
 
         ;; Smartport?
@@ -1482,11 +1484,12 @@ done:   rts
 
         lda     active_device
         cmp     #kRamDrvSystemUnitNum
-        bne     :+
-        jmp     next
+        beq     next
+        cmp     #kRamAuxSystemUnitNum
+        beq     next
 
         ;; Check slot for signature bytes
-:       and     #$70            ; Compute $Cn00
+        and     #$70            ; Compute $Cn00
         lsr     a
         lsr     a
         lsr     a
