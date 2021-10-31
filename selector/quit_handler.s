@@ -67,7 +67,7 @@ start:
         sec
         sbc     str_loading
         lsr     a               ; /= 2
-        sta     CH
+        sta     OURCH
         ldy     #0
 :       lda     str_loading+1,y
         ora     #$80
@@ -159,7 +159,7 @@ disk_prompt:
         sec
         sbc     prompt
         lsr     a               ; /= 2
-        sta     CH
+        sta     OURCH
 
         ;; Display prompt
         ldy     #0

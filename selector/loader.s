@@ -129,7 +129,7 @@ L2049:  lda     open_params::ref_num
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
-        sta     CH
+        sta     OURCH
 
         ;; Enable MouseText
         lda     #$0F|$80
@@ -161,7 +161,7 @@ done:   rts
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
-        sta     CH
+        sta     OURCH
 
         lda     count
         clc

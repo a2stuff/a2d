@@ -215,7 +215,8 @@ DESTINATIONHI   := $43
 ;;; Other Locations
 XFERSTARTLO     := $03ED
 XFERSTARTHI     := $03EE
-
+OURCH           := $057B        ; 80 Col horizontal position
+OURCV           := $05FB        ; 80 Col vertical position
 
 ;;; ============================================================
 ;;; Disk II / IWM I/O locations

@@ -94,7 +94,7 @@ start:  bit     ROMIN2
         sec                     ; to center
         sbc     splash_string
         lsr     a
-        sta     CH
+        sta     OURCH
 
         ldy     #$00
 :       lda     splash_string+1,y
@@ -179,7 +179,7 @@ prompt_for_system_disk:
         sec                     ; to center the string
         sbc     disk_prompt
         lsr     a
-        sta     CH
+        sta     OURCH
 
         ldy     #$00
 :       lda     disk_prompt+1,y
@@ -449,7 +449,7 @@ max_page:
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
-        sta     CH
+        sta     OURCH
 
         ;; Enable MouseText
         lda     #$0F|$80
@@ -481,7 +481,7 @@ done:   rts
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
-        sta     CH
+        sta     OURCH
 
         lda     count
         clc

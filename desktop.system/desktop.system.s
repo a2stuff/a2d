@@ -1245,7 +1245,7 @@ file_loop:
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
-        sta     CH
+        sta     OURCH
 
         ;; Enable MouseText
         lda     #$0F|$80
@@ -1277,7 +1277,7 @@ done:   rts
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
-        sta     CH
+        sta     OURCH
 
         lda     count
         clc
@@ -1392,7 +1392,7 @@ done:   dex
         sec
         sbc     str_copying_to_ramcard
         lsr     a               ; / 2 to center
-        sta     CH
+        sta     OURCH
         lda     #kVtabCopyingMsg
         jsr     VTABZ
         ldy     #0
@@ -1408,7 +1408,7 @@ done:   dex
         bpl     done
 
         lda     #(80 - kLengthCopyingTip) / 2
-        sta     CH
+        sta     OURCH
         lda     #kVtabCopyingTip
         jsr     VTABZ
         ldy     #0
@@ -1940,7 +1940,7 @@ str_not_completed:
         lda     #0
         jsr     VTABZ
         lda     #0
-        sta     CH
+        sta     OURCH
         param_call cout_string, str_copying
         param_call cout_string_newline, generic_copy::path2
         rts
@@ -1953,7 +1953,7 @@ str_not_completed:
         lda     #0
         jsr     VTABZ
         lda     #0
-        sta     CH
+        sta     OURCH
         param_call cout_string, str_insert
         jsr     wait_enter_escape
         cmp     #CHAR_ESCAPE
@@ -1973,7 +1973,7 @@ str_not_completed:
         lda     #0
         jsr     VTABZ
         lda     #0
-        sta     CH
+        sta     OURCH
         param_call cout_string, str_not_enough
         jsr     wait_enter_escape
         jsr     HOME
