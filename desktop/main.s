@@ -10,7 +10,7 @@
 ;;; Segment loaded into MAIN $4000-$BEFF
 ;;; ============================================================
 
-.proc main
+.scope main
 
 kShortcutResize = res_char_resize_shortcut
 kShortcutMove   = res_char_move_shortcut
@@ -10756,7 +10756,7 @@ jt_get_size:    jmp     do_get_size    ; cmd_get_size
 
 ;;; --------------------------------------------------
 
-.proc operations
+.scope operations
 
 do_copy_file:
         copy    #0, operation_flags ; copy/delete
@@ -11028,7 +11028,7 @@ icon_count:
 
 empty_string:
         .byte   0
-.endproc ; operations
+.endscope ; operations
         do_delete_file := operations::do_delete_file
         do_copy_to_ram := operations::do_copy_to_ram
         do_copy_file := operations::do_copy_file
@@ -16736,7 +16736,7 @@ driver: jmp     (RAMSLOT)
 
         PAD_TO $BF00
 
-.endproc ; main
+.endscope ; main
         main__pop_pointers := main::pop_pointers
         main__push_pointers := main::push_pointers
         main__yield_loop := main::yield_loop

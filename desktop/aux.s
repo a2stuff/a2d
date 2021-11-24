@@ -10,7 +10,7 @@
 ;;; Segment loaded into AUX $4000-$BFFF
 ;;; ============================================================
 
-.proc aux
+.scope aux
 
         .org $4000
 
@@ -3851,4 +3851,4 @@ music_icon:
 
         PAD_TO $C000
 
-.endproc ; aux
+.endscope ; aux

@@ -3,7 +3,7 @@
 ;;; MouseGraphics ToolKit
 ;;; ============================================================
 
-.proc mgtk
+.scope mgtk
 
 kScreenWidth    = 560
 kScreenHeight   = 192
@@ -10450,7 +10450,7 @@ rect       .tag MGTK::Rect
 
 ;;; ============================================================
 
-.endproc  ; mgtk
+.endscope  ; mgtk
 
         ;; Room for future expansion
         PAD_TO $8620

@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc main
+.scope main
         .org $800
 
 ;;; ============================================================
@@ -1242,7 +1242,7 @@ done:   rts
 
         PAD_TO $1300
 
-.endproc
+.endscope
 
 main__format_device   := main::format_device
 main__identify_nonprodos_disk_type    := main::identify_nonprodos_disk_type

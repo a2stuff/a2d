@@ -6,7 +6,7 @@
 
 ;;; Used to invoke other programs (system, binary, BASIC)
 
-.proc invoker
+.scope invoker
         .org ::INVOKER
 
 start:
@@ -207,7 +207,7 @@ update_bitmap:
 
 exit:   rts
 
-.endproc ; invoker
+.endscope ; invoker
 
         ;; Pad to $160 bytes
         PAD_TO $3F0

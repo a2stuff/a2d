@@ -53,7 +53,7 @@
 ;;; * Configure MGTK
 ;;; * Restore saved windows
 
-.proc init
+.scope init
 
         .org ::kSegmentInitializerAddress
 
@@ -1229,4 +1229,4 @@ str_volume_type_unknown:
 
         PAD_TO ::kSegmentInitializerAddress + ::kSegmentInitializerLength
 
-.endproc ; init
+.endscope ; init

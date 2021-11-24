@@ -6,7 +6,7 @@
 
         RESOURCE_FILE "auxlc.res"
 
-.proc auxlc
+.scope auxlc
         .org $D000
 
 .macro MGTK_RELAY_CALL2 op, addr, label
@@ -2979,5 +2979,5 @@ loop_counter:
 
         ASSERT_ADDRESS $F200
 
-.endproc
+.endscope
        auxlc__start := auxlc::start
