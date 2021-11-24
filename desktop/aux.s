@@ -251,7 +251,7 @@ a2d_file_icon:
 
         ASSERT_ADDRESS IconTK::MLI, "IconTK entry point"
 
-.proc icon_toolkit
+.scope icon_toolkit
 
         jmp     ITK_DIRECT
 
@@ -531,7 +531,7 @@ ycoord: .word   0
         ;; Check if passed ID is already in the icon list
         ldy     #IconEntry::id
         lda     (ptr_icon),y ; A = icon id
-        jsr     is_in_icon_list
+        jsr     IsInIconList
         bne     :+
         return  #1              ; That icon id is already in use
 
@@ -559,7 +559,7 @@ ycoord: .word   0
 ;;; Outputs: Z=1 if found (and X = index), Z=0 otherwise
 ;;; A is unmodified, X is trashed
 
-.proc is_in_icon_list
+.proc IsInIconList
         ldx     num_icons
         beq     fail
 
@@ -616,12 +616,12 @@ done:   rts
 
         ;; Move it to the head of the highlight list
         ldx     #1              ; new position
-        jsr     change_highlight_index
+        jsr     ChangeHighlightIndex
 
         ldy     #IconEntry::id
         lda     (ptr),y         ; A = icon id
         ldx     #1              ; new position
-        jsr     change_icon_index
+        jsr     ChangeIconIndex
 
         rts
 .endproc
@@ -675,7 +675,7 @@ done:   rts
         ;; Is it in `icon_list`?
         ldy     #RemoveIconParams::icon
         lda     (params),y
-        jsr     is_in_icon_list
+        jsr     IsInIconList
         beq     :+
         return  #1              ; Not found
 
@@ -694,7 +694,7 @@ done:   rts
 :       ldy     #IconEntry::id
         lda     (ptr),y         ; icon num
         ldx     num_icons       ; new position
-        jsr     change_icon_index
+        jsr     ChangeIconIndex
 
         ;; Remove it
         dec     num_icons
@@ -716,7 +716,7 @@ done:   rts
 
         ldy     #IconEntry::id
         lda     (ptr),y         ; A = icon id
-        jsr     remove_from_highlight_list
+        jsr     RemoveFromHighlightList
 
 done:   return  #0
 .endproc
@@ -739,7 +739,7 @@ done:   return  #0
         tax
         copy16  icon_ptrs,x, ptr
 
-        jsr     calc_icon_poly
+        jsr     CalcIconPoly
         jmp     erase_icon
 .endproc
 
@@ -825,7 +825,7 @@ L96E5:  dec     count
         ldy     #IconEntry::id
         lda     (ptr),y         ; icon num
         ldx     num_icons       ; icon index
-        jsr     change_icon_index
+        jsr     ChangeIconIndex
 
         ;; Remove it from the icon list
         dec     num_icons
@@ -847,7 +847,7 @@ L96E5:  dec     count
 
         ldy     #IconEntry::id
         lda     (ptr),y         ; A = icon id
-        jsr     remove_from_highlight_list
+        jsr     RemoveFromHighlightList
 
 next:   jmp     loop
 
@@ -866,7 +866,7 @@ count:  .byte   0
         window_id       .byte
 .endstruct
 
-        icon_ptr   := $06       ; for `calc_icon_poly` call
+        icon_ptr   := $06       ; for `CalcIconPoly` call
         out_params := $08
 
         ;; Copy coords at $6 to param block
@@ -911,7 +911,7 @@ loop:   cpx     num_icons
         bne     :+
 
         ;; In poly?
-        jsr     calc_icon_poly  ; requires `icon_ptr` set
+        jsr     CalcIconPoly    ; requires `icon_ptr` set
         MGTK_CALL MGTK::InPoly, poly
         bne     inside          ; yes!
 
@@ -958,7 +958,7 @@ window_id:
         cpy     #DragHighlightedParams::coords-1
         bne     :-
 
-        jsr     push_pointers
+        jsr     PushPointers
         jmp     start           ; skip over data
 
 icon_id:
@@ -985,7 +985,7 @@ start:  lda     #0
         sta     flag
 
 ;;; Determine if it's a drag or just a click
-.proc drag_detect
+.proc DragDetect
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
@@ -1032,7 +1032,7 @@ is_drag:
         lda     highlight_count
         cmp     #kMaxDraggableItems + 1
         bcc     :+
-        jmp     drag_detect::ignore_drag ; too many
+        jmp     DragDetect::ignore_drag ; too many
 
         ;; Was there a selection?
 :       copy16  #drag_outline_buffer, $08
@@ -1042,7 +1042,7 @@ is_drag:
         jmp     just_select
 
 :       lda     highlight_list  ; first entry
-        jsr     get_icon_win
+        jsr     GetIconWin
         sta     window_id2
 
         ;; Prepare grafports
@@ -1058,7 +1058,7 @@ is_drag:
         stx     L9C74
 
 L98F2:  lda     highlight_count,x
-        jsr     get_icon_ptr
+        jsr     GetIconPtr
         stax    $06
         ldy     #IconEntry::id
         lda     ($06),y
@@ -1069,11 +1069,11 @@ L98F2:  lda     highlight_count,x
 :       sta     iconinrect_params::icon
         ITK_DIRECT_CALL IconTK::IconInRect, iconinrect_params::icon
         beq     L9954
-        jsr     calc_icon_poly
+        jsr     CalcIconPoly
         lda     L9C74
         cmp     highlight_count
         beq     L9936
-        jsr     push_pointers
+        jsr     PushPointers
 
         lda     $08
         sec
@@ -1085,7 +1085,7 @@ L98F2:  lda     highlight_count,x
 :       ldy     #1              ; MGTK Polygon "not last" flag
         lda     #$80            ; more polygons to follow
         sta     ($08),y
-        jsr     pop_pointers
+        jsr     PopPointers
 
 L9936:  ldx     #kIconPolySize-1
         ldy     #kIconPolySize-1
@@ -1185,7 +1185,7 @@ L99E1:  iny
         add16   $08, #kIconPolySize, $08
         jmp     L9972
 
-L99FC:  jsr     xdraw_outline
+L99FC:  jsr     XdrawOutline
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
@@ -1199,7 +1199,7 @@ L9A20:  lda     findwindow_params,x
         bne     L9A31
         dex
         bpl     L9A20
-        jsr     find_target_and_highlight
+        jsr     FindTargetAndHighlight
         jmp     peek
 
 L9A31:  COPY_BYTES 4, findwindow_params, coords2
@@ -1214,15 +1214,15 @@ L9A31:  COPY_BYTES 4, findwindow_params, coords2
         beq     :+
 
         ;; No longer over the highlighted icon - unhighlight it
-        jsr     xdraw_outline
-        jsr     unhighlight_icon
-        jsr     xdraw_outline
+        jsr     XdrawOutline
+        jsr     UnhighlightIcon
+        jsr     XdrawOutline
         lda     #0
         sta     highlight_icon_id
 
 :       sub16   findwindow_params::mousex, coords1x, rect3_x1
         sub16   findwindow_params::mousey, coords1y, rect3_y1
-        jsr     set_rect2_to_rect1
+        jsr     SetRect2ToRect1
 
         ldx     #0
 :       add16   rect1_x2,x, rect3_x1,x, rect1_x2,x
@@ -1238,7 +1238,7 @@ L9A31:  COPY_BYTES 4, findwindow_params, coords2
         bmi     L9AF7
         cmp16   rect1_x2, #kScreenWidth
         bcs     L9AFE
-        jsr     set_coords1x_to_mousex
+        jsr     SetCoords1xToMousex
         jmp     L9B0E
 
 L9AF7:  jsr     L9CAA
@@ -1246,7 +1246,7 @@ L9AF7:  jsr     L9CAA
         bpl     L9B03
 L9AFE:  jsr     L9CD1
         bmi     L9B0E
-L9B03:  jsr     set_rect1_to_rect2_and_zero_rect3_x
+L9B03:  jsr     SetRect1ToRect2AndZeroRect3X
         lda     L9C75
         ora     #$80
         sta     L9C75
@@ -1256,7 +1256,7 @@ L9B0E:  lda     rect1_y1+1
         bcc     L9B31
         cmp16   rect1_y2, #kScreenHeight
         bcs     L9B38
-        jsr     set_coords1y_to_mousey
+        jsr     SetCoords1yToMousey
         jmp     L9B48
 
 L9B31:  jsr     L9D31
@@ -1264,7 +1264,7 @@ L9B31:  jsr     L9D31
         bpl     L9B3D
 L9B38:  jsr     L9D58
         bmi     L9B48
-L9B3D:  jsr     set_rect1_to_rect2_and_zero_rect3_y
+L9B3D:  jsr     SetRect1ToRect2AndZeroRect3Y
         lda     L9C75
         ora     #$40
         sta     L9C75
@@ -1273,7 +1273,7 @@ L9B48:  bit     L9C75
         bvc     L9B52
         jmp     peek
 
-L9B52:  jsr     xdraw_outline
+L9B52:  jsr     XdrawOutline
         copy16  #drag_outline_buffer, $08
 L9B60:  ldy     #2
 L9B62:  add16in ($08),y, rect3_x1, ($08),y
@@ -1293,13 +1293,13 @@ L9B62:  add16in ($08),y, rect3_x1, ($08),y
         inc     $08+1
 L9B99:  jmp     L9B60
 
-L9B9C:  jsr     xdraw_outline
+L9B9C:  jsr     XdrawOutline
         jmp     peek
 
-L9BA5:  jsr     xdraw_outline
+L9BA5:  jsr     XdrawOutline
         lda     highlight_icon_id
         beq     :+
-        jsr     unhighlight_icon
+        jsr     UnhighlightIcon
         jmp     L9C63
 
 :       MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -1310,7 +1310,7 @@ L9BA5:  jsr     xdraw_outline
         bmi     L9BDC
         lda     findwindow_params::window_id
         bne     L9BD4
-L9BD1:  jmp     drag_detect::ignore_drag
+L9BD1:  jmp     DragDetect::ignore_drag
 
 L9BD4:  ora     #$80
         sta     highlight_icon_id
@@ -1318,7 +1318,7 @@ L9BD4:  ora     #$80
 
 L9BDC:  lda     window_id2
         beq     L9BD1
-L9BE1:  jsr     push_pointers
+L9BE1:  jsr     PushPointers
         ldx     highlight_count
 L9BF3:  dex
         bmi     L9C18
@@ -1328,13 +1328,13 @@ L9BF3:  dex
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        jsr     calc_icon_poly
+        jsr     CalcIconPoly
         jsr     erase_icon
         pla
         tax
         jmp     L9BF3
 
-L9C18:  jsr     pop_pointers
+L9C18:  jsr     PopPointers
         ldx     highlight_count
         dex
         txa
@@ -1375,7 +1375,7 @@ L9C63:  lda     #0
 
 just_select:                    ; ???
         tay
-        jsr     pop_pointers
+        jsr     PopPointers
         tya
         tax
         ldy     #0
@@ -1416,7 +1416,7 @@ rect3_y1:       .word   0
 rect3_x2:       .word   0       ; Unused???
 rect3_y2:       .word   0       ; Unused???
 
-.proc set_rect2_to_rect1
+.proc SetRect2ToRect1
         COPY_STRUCT MGTK::Rect, rect1, rect2
         rts
 .endproc
@@ -1479,7 +1479,7 @@ L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
         add16   coords1y, rect3_y1, coords1y
         return  #$FF
 
-.proc set_rect1_to_rect2_and_zero_rect3_x
+.proc SetRect1ToRect2AndZeroRect3X
         copy16  rect2_x1, rect1_x1
         copy16  rect2_x2, rect1_x2
         lda     #0
@@ -1488,7 +1488,7 @@ L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
         rts
 .endproc
 
-.proc set_rect1_to_rect2_and_zero_rect3_y
+.proc SetRect1ToRect2AndZeroRect3Y
         copy16  rect2_y1, rect1_y1
         copy16  rect2_y2, rect1_y2
         lda     #0
@@ -1497,7 +1497,7 @@ L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
         rts
 .endproc
 
-.proc set_coords1x_to_mousex
+.proc SetCoords1xToMousex
         lda     findwindow_params::mousex+1
         sta     coords1x+1
         lda     findwindow_params::mousex
@@ -1505,7 +1505,7 @@ L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
         rts
 .endproc
 
-.proc set_coords1y_to_mousey
+.proc SetCoords1yToMousey
         lda     findwindow_params::mousey+1
         sta     coords1y+1
         lda     findwindow_params::mousey
@@ -1513,12 +1513,12 @@ L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
         rts
 .endproc
 
-.proc find_target_and_highlight
+.proc FindTargetAndHighlight
         bit     flag
         bpl     :+
         rts
 
-:       jsr     push_pointers
+:       jsr     PushPointers
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         beq     desktop
@@ -1583,11 +1583,11 @@ find_icon:
         ;; Highlight it!
         lda     icon_num
         sta     highlight_icon_id
-        jsr     xdraw_outline
-        jsr     highlight_icon
-        jsr     xdraw_outline
+        jsr     XdrawOutline
+        jsr     HighlightIcon
+        jsr     XdrawOutline
 
-done:   jsr     pop_pointers
+done:   jsr     PopPointers
         rts
 
 icon_num:
@@ -1599,7 +1599,7 @@ headery:
 
 ;;; Input: A = icon number
 ;;; Output: A,X = address of IconEntry
-.proc get_icon_ptr
+.proc GetIconPtr
         asl     a
         tay
         lda     icon_ptrs+1,y
@@ -1611,10 +1611,10 @@ headery:
 ;;; Input: A = icon number
 ;;; Output: A = window id (0=desktop)
 ;;; Trashes $06
-.proc get_icon_win
+.proc GetIconWin
         ptr := $06
 
-        jsr     get_icon_ptr
+        jsr     GetIconPtr
         stax    ptr
         ldy     #IconEntry::win_flags
         lda     (ptr),y
@@ -1622,22 +1622,22 @@ headery:
         rts
 .endproc
 
-.proc xdraw_outline
+.proc XdrawOutline
         MGTK_CALL MGTK::SetPort, drag_outline_grafport
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         rts
 .endproc
 
-.proc highlight_icon
-        jsr set_port_for_highlight_icon
+.proc HighlightIcon
+        jsr SetPortForHighlightIcon
         ITK_DIRECT_CALL IconTK::HighlightIcon, highlight_icon_id
         ITK_DIRECT_CALL IconTK::DrawIcon, highlight_icon_id
         MGTK_CALL MGTK::InitPort, icon_grafport
         rts
 .endproc
 
-.proc unhighlight_icon
-        jsr set_port_for_highlight_icon
+.proc UnhighlightIcon
+        jsr SetPortForHighlightIcon
         ITK_DIRECT_CALL IconTK::UnhighlightIcon, highlight_icon_id
         ITK_DIRECT_CALL IconTK::DrawIcon, highlight_icon_id
         MGTK_CALL MGTK::InitPort, icon_grafport
@@ -1646,11 +1646,11 @@ headery:
 
 ;;; Set cliprect to `highlight_icon_id`'s window's content area, in screen
 ;;; space, using `icon_grafport`.
-.proc set_port_for_highlight_icon
+.proc SetPortForHighlightIcon
         ptr := $06
 
         lda     highlight_icon_id
-        jsr     get_icon_win
+        jsr     GetIconWin
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params ; into icon_grafport
 
@@ -1663,7 +1663,7 @@ headery:
         add16   icon_grafport::cliprect::y1, height, icon_grafport::cliprect::y2
 
         ;; Account for window header, and set port to icon_grafport
-        jmp     shift_port_down
+        jmp     ShiftPortDown
 
 width:  .word   0
 height: .word   0
@@ -1709,7 +1709,7 @@ height: .word   0
 
         ldy     #IconEntry::id
         lda     (ptr),y
-        jmp     remove_from_highlight_list
+        jmp     RemoveFromHighlightList
 .endproc
 
 ;;; ============================================================
@@ -1744,10 +1744,10 @@ start:  ldy     #IconInRectParams::icon
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        jsr     calc_icon_poly
+        jsr     CalcIconPoly
 
         ;; Compare the rect against both the bitmap bbox and text bbox
-        ;; See vertex diagram in calc_icon_poly
+        ;; See vertex diagram in CalcIconPoly
 
         ;; Bitmap's bbox: v0-v1-v2-v7
 
@@ -1811,7 +1811,7 @@ more_drawing_needed_flag:
 no_clip_vol_icons_flag:
         .byte   0
 
-.proc paint_icon
+.proc PaintIcon
 
 unhighlighted:
         lda     #0
@@ -1821,7 +1821,7 @@ unhighlighted:
 highlighted:
         copy    #$80, icon_flags ; is highlighted
 
-.proc common
+common:
         ;; Test if icon is open volume/folder
         ldy     #IconEntry::win_flags
         lda     ($06),y
@@ -1847,7 +1847,7 @@ highlighted:
         cpy     #IconEntry::iconx + 6 ; x/y/bits
         bne     :-
 
-        jsr     push_pointers
+        jsr     PushPointers
 
         ;; copy icon definition bits
         copy16  icon_paintbits_params::mapbits, $08
@@ -1861,10 +1861,10 @@ highlighted:
         ;; Icon definition is followed by pointer to mask address.
         ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point)
         copy16in ($08),y, mask_paintbits_params::mapbits
-        jsr     pop_pointers
+        jsr     PopPointers
 
         ;; Copy, pad, and measure name
-        jsr     prepare_name
+        jsr     PrepareName
 
         ;; Center horizontally
         ;;  text_left = icon_left + icon_width/2 - text_width/2
@@ -1883,25 +1883,23 @@ highlighted:
         COPY_STRUCT MGTK::Point, moveto_params2, label_pos
 
         bit     icon_flags      ; volume icon (on desktop) ?
-        bvc     do_paint        ; nope
+        bvc     DoPaint         ; nope
         bit     no_clip_vol_icons_flag
-        bmi     do_paint
+        bmi     DoPaint
         ;; TODO: This depends on a previous proc having adjusted
         ;; the grafport (for window maprect and window's items/used/free bar)
 
         ;; Volume (i.e. icon on desktop)
         MGTK_CALL MGTK::InitPort, grafport
-        jsr     set_port_for_vol_icon
-:       jsr     calc_window_intersections
-        jsr     do_paint
+        jsr     SetPortForVolIcon
+:       jsr     CalcWindowIntersections
+        jsr     DoPaint
         lda     more_drawing_needed_flag
         bne     :-
         MGTK_CALL MGTK::SetPortBits, grafport ; default maprect
         rts
 
-.endproc
-
-.proc do_paint
+.proc DoPaint
         MGTK_CALL MGTK::HideCursor
 
         ;; --------------------------------------------------
@@ -1910,8 +1908,8 @@ highlighted:
         ;; Shade (XORs background)
         lda     open_flag
         beq     :+
-        jsr     calc_rect_opendir
-        jsr     shade
+        jsr     CalcRectOpendir
+        jsr     Shade
 
         ;; Mask (cleared to white or black)
 :       MGTK_CALL MGTK::SetPenMode, penOR
@@ -1923,7 +1921,7 @@ highlighted:
         ;; Shade again (restores background)
         lda     open_flag
         beq     :+
-        jsr     shade
+        jsr     Shade
 
         ;; Icon (drawn in black or white)
 :       MGTK_CALL MGTK::SetPenMode, penBIC
@@ -1953,7 +1951,7 @@ setbg:  sta     settextbg_params
 
         rts
 
-.proc shade
+.proc Shade
         MGTK_CALL MGTK::SetPattern, dark_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_opendir
@@ -1965,7 +1963,7 @@ done:   rts
 
 ;;; ============================================================
 
-.proc calc_rect_opendir
+.proc CalcRectOpendir
         ldx     #0
 :       add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::topleft,x, rect_opendir::topleft,x
         add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::bottomright,x, rect_opendir::bottomright,x
@@ -1976,9 +1974,9 @@ done:   rts
         rts
 .endproc
 
-.endproc ; paint_icon
-        paint_icon_unhighlighted := paint_icon::unhighlighted
-        paint_icon_highlighted := paint_icon::highlighted
+.endproc ; PaintIcon
+        paint_icon_unhighlighted := PaintIcon::unhighlighted
+        paint_icon_highlighted := PaintIcon::highlighted
 
 
 ;;; ============================================================
@@ -1996,11 +1994,11 @@ done:   rts
 
 kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
-.proc calc_icon_poly
+.proc CalcIconPoly
         entry_ptr := $6
         bitmap_ptr := $8
 
-        jsr     push_pointers
+        jsr     PushPointers
 
         ;; v0 - copy from icon entry
         ldy     #IconEntry::iconx+3
@@ -2063,7 +2061,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         sta     poly::v5::ycoord+1
 
         ;; Copy, pad, and measure name
-        jsr     prepare_name
+        jsr     PrepareName
 
         ;; Center horizontally
 
@@ -2085,7 +2083,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         add16   poly::v5::xcoord, textwidth_params::result, poly::v3::xcoord
         copy16  poly::v3::xcoord, poly::v4::xcoord
 
-        jsr     pop_pointers
+        jsr     PopPointers
         rts
 
 icon_width:  .word   0
@@ -2096,7 +2094,7 @@ text_width:  .word   0
 ;;; Copy name from IconEntry (ptr $06) to text_buffer,
 ;;; with leading/trailing spaces, and measure it.
 
-.proc prepare_name
+.proc PrepareName
         .assert text_buffer - 1 = drawtext_params::textlen, error, "location mismatch"
 
         dest := drawtext_params::textlen
@@ -2133,7 +2131,7 @@ text_width:  .word   0
 
         ptr := $06
 
-        jsr     push_pointers
+        jsr     PushPointers
 
         copy    #$80, no_clip_vol_icons_flag
 
@@ -2170,7 +2168,7 @@ next:   pla
         jmp     loop
 
 done:   copy    #0, no_clip_vol_icons_flag
-        jsr     pop_pointers
+        jsr     PopPointers
         rts
 
         ;; GetPortBits params
@@ -2187,7 +2185,7 @@ rect    := mapinfo + MGTK::MapInfo::maprect
 ;;; A = icon number to move
 ;;; X = position in highlight list
 
-.proc change_icon_index
+.proc ChangeIconIndex
         stx     new_pos
         sta     icon_num
 
@@ -2231,7 +2229,7 @@ icon_num:       .byte   0
 ;;; A = icon number to move
 ;;; X = new position in highlight list
 
-.proc change_highlight_index
+.proc ChangeHighlightIndex
         stx     new_pos
         sta     icon_num
 
@@ -2274,11 +2272,11 @@ icon_num:       .byte   0
 ;;; ============================================================
 ;;; Remove icon from highlight list. Does not update icon's state.
 ;;; Inputs: A=icon id
-.proc remove_from_highlight_list
+.proc RemoveFromHighlightList
 
         ;; Move it to the end of the highlight list
         ldx     highlight_count ; new position
-        jsr     change_highlight_index
+        jsr     ChangeHighlightIndex
 
         ;; Remove it from the highlight list
         dec     highlight_count
@@ -2291,7 +2289,7 @@ icon_num:       .byte   0
 
 ;;; ============================================================
 
-.proc push_pointers
+.proc PushPointers
         ;; save return addr
         pla
         sta     stash
@@ -2318,7 +2316,7 @@ stash:  .word   0
 
 ;;; ============================================================
 
-.proc pop_pointers
+.proc PopPointers
         ;; save return addr
         pla
         sta     stash
@@ -2355,7 +2353,7 @@ LA3AC:  .byte   0
 window_id:  .byte   0
 
         ;; IconTK::DrawIcon params
-        ;; IconTK::IconInRect params (in `redraw_icons_after_erase`)
+        ;; IconTK::IconInRect params (in `RedrawIconsAfterErase`)
 icon:   .byte   0
 icon_rect:
         .tag    MGTK::Rect
@@ -2386,25 +2384,25 @@ window_id:      .byte   0
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     offset_icon_poly
-        jsr     shift_port_down ; Further offset by window's items/used/free bar
-        jsr     erase_window_icon
-        jmp     redraw_icons_after_erase
+        jsr     ShiftPortDown ; Further offset by window's items/used/free bar
+        jsr     EraseWindowIcon
+        jmp     RedrawIconsAfterErase
 
         ;; Volume (i.e. icon on desktop)
 volume:
         MGTK_CALL MGTK::InitPort, grafport
-        jsr     set_port_for_vol_icon
-:       jsr     calc_window_intersections
-        jsr     erase_desktop_icon
+        jsr     SetPortForVolIcon
+:       jsr     CalcWindowIntersections
+        jsr     EraseDesktopIcon
         lda     more_drawing_needed_flag
         bne     :-
         MGTK_CALL MGTK::SetPortBits, grafport ; default maprect
-        jmp     redraw_icons_after_erase
+        jmp     RedrawIconsAfterErase
 .endproc
 
 ;;; ============================================================
 
-.proc erase_desktop_icon
+.proc EraseDesktopIcon
         lda     #0
         sta     icon_in_window_flag
 
@@ -2413,9 +2411,9 @@ volume:
         ;; fall through
 .endproc
 
-.proc erase_window_icon
+.proc EraseWindowIcon
         ;; Construct a bounding rect from the icon's polygon.
-        ;; Used in `redraw_icons_after_erase`
+        ;; Used in `RedrawIconsAfterErase`
         copy16  poly::v0::ycoord, icon_rect + MGTK::Rect::y1
         copy16  poly::v5::ycoord, icon_rect + MGTK::Rect::y2
 
@@ -2442,10 +2440,10 @@ volume:
 ;;; ============================================================
 ;;; After erasing an icon, redraw any overlapping icons
 
-.proc redraw_icons_after_erase
+.proc RedrawIconsAfterErase
         ptr := $8
 
-        jsr     push_pointers
+        jsr     PushPointers
         ldx     num_icons
         dex                     ; any icons to draw?
 
@@ -2457,7 +2455,7 @@ loop:   cpx     #$FF            ; =-1
         ;; TODO: Is this restoration necessary?
         MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport
-:       jsr     pop_pointers
+:       jsr     PopPointers
         rts
 
 LA466:  txa
@@ -2502,7 +2500,7 @@ next:   pla
 ;;; ============================================================
 ;;; Offset coordinates for windowed icons
 
-.proc offset_icon
+.proc OffsetIcon
 
 offset_flags:  .byte   0        ; bit 7 = offset poly, bit 6 = undo offset, otherwise do offset
 
@@ -2538,11 +2536,11 @@ LA4E2:  ldy     #MGTK::GrafPort::viewloc
         bne     :-
 
         bit     offset_flags
-        bmi     offset_poly
-        bvc     do_offset
-        jmp     undo_offset
+        bmi     OffsetPoly
+        bvc     DoOffset
+        jmp     UndoOffset
 
-.proc offset_poly
+.proc OffsetPoly
         ldx     #0
 loop1:  sub16   poly::vertices+0,x, vl_offset::xcoord, poly::vertices+0,x
         sub16   poly::vertices+2,x, vl_offset::ycoord, poly::vertices+2,x
@@ -2565,12 +2563,12 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
         rts
 .endproc
 
-.proc do_offset
+.proc DoOffset
         ptr := $06
 
         pla
         tay
-        jsr     push_pointers
+        jsr     PushPointers
         tya
         asl     a
         tax
@@ -2583,16 +2581,16 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
         sub16in (ptr),y, mr_offset::xcoord, (ptr),y ; icony -= maprect::left
         iny
         sub16in (ptr),y, mr_offset::ycoord, (ptr),y ; icony -= maprect::top
-        jsr     pop_pointers
+        jsr     PopPointers
         rts
 .endproc
 
-.proc undo_offset
+.proc UndoOffset
         ptr := $06
 
         pla
         tay
-        jsr     push_pointers
+        jsr     PushPointers
         tya
         asl     a
         tax
@@ -2605,14 +2603,14 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
         add16in (ptr),y, mr_offset::xcoord, (ptr),y ; iconx += maprect::left
         iny
         add16in (ptr),y, mr_offset::ycoord, (ptr),y ; icony += maprect::top
-        jsr     pop_pointers
+        jsr     PopPointers
         rts
 .endproc
 
 .endproc
-        offset_icon_poly := offset_icon::entry_poly
-        offset_icon_do := offset_icon::entry_do
-        offset_icon_undo := offset_icon::entry_undo
+        offset_icon_poly := OffsetIcon::entry_poly
+        offset_icon_do := OffsetIcon::entry_do
+        offset_icon_undo := OffsetIcon::entry_undo
 
 ;;; ============================================================
 ;;; This handles drawing volume icons "behind" windows. It is
@@ -2655,8 +2653,8 @@ reserved:       .byte   0
         DEFINE_RECT cliprect, 0, 0, 0, 0
 .endparams
 
-.proc set_port_for_vol_icon
-        jsr     calc_icon_poly
+.proc SetPortForVolIcon
+        jsr     CalcIconPoly
 
         ;; Set up bounds_t
         lda     poly::v0::ycoord
@@ -2714,7 +2712,7 @@ done:   MGTK_CALL MGTK::SetPortBits, portbits
 
 ;;; ============================================================
 
-.proc calc_window_intersections
+.proc CalcWindowIntersections
         ptr := $06
 
         jmp     start
@@ -2983,7 +2981,7 @@ vert:   cmp16   win_t, cr_t
 
 ;;; ============================================================
 
-.proc shift_port_down
+.proc ShiftPortDown
         ;; For window's items/used/free space bar
         kOffset = kWindowHeaderHeight + 1
 
@@ -2993,7 +2991,7 @@ vert:   cmp16   win_t, cr_t
         rts
 .endproc
 
-.endproc ; icon_toolkit
+.endscope ; icon_toolkit
 
 ;;; ============================================================
 

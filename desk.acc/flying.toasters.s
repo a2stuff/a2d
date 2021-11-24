@@ -18,11 +18,11 @@
         .org DA_LOAD_ADDRESS
 
 da_start:
-        jmp     start
+        jmp     Start
 
 save_stack:.byte   0
 
-.proc start
+.proc Start
         tsx
         stx     save_stack
 
@@ -38,7 +38,7 @@ save_stack:.byte   0
         sta     RAMRDON
 
         ;; run the DA
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit
         sta     RAMRDOFF
@@ -139,7 +139,7 @@ grafport:       .tag MGTK::GrafPort
 ;;; ============================================================
 ;;; DA Init
 
-.proc init
+.proc Init
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::SetPort, winfo::port
@@ -155,7 +155,7 @@ grafport:       .tag MGTK::GrafPort
 ;;; ============================================================
 ;;; Main Input Loop
 
-.proc input_loop
+.proc InputLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
@@ -163,8 +163,8 @@ grafport:       .tag MGTK::GrafPort
         cmp     #MGTK::EventKind::key_down  ; any key?
         beq     exit
 
-        jsr     animate
-        jmp     input_loop
+        jsr     Animate
+        jmp     InputLoop
 
 exit:
         MGTK_CALL MGTK::DrawMenu
@@ -184,7 +184,7 @@ exit:
 ;;; ============================================================
 ;;; Animate
 
-.proc animate
+.proc Animate
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, penXOR
 

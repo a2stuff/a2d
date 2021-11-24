@@ -82,7 +82,7 @@ kScreenHeight   = 192
 ;;; ============================================================
 ;;; MGTK
 
-.proc dispatch
+.proc Dispatch
         ASSERT_ADDRESS MGTK::MLI, "Entry point"
 
         lda     LOWSCR
@@ -94,7 +94,7 @@ kScreenHeight   = 192
         ;; Save $80...$FF, swap in what MGTK needs at $F4...$FF
         COPY_BYTES $80, $80, zp_saved
         COPY_BYTES $C, active_saved, active_port
-        jsr     apply_active_port_to_port
+        jsr     ApplyActivePortToPort
 
 adjust_stack:                   ; Adjust stack to account for params
         pla                     ; and stash address at params_addr.
@@ -145,7 +145,7 @@ adjust_stack:                   ; Adjust stack to account for params
         pha
         bit     desktop_initialized_flag
         bpl     :+
-        jsr     hide_cursor
+        jsr     HideCursor
 :       pla
         sta     params_addr+1
         pla
@@ -173,11 +173,11 @@ jump:   jsr     $FFFF           ; the actual call
 cleanup:
         bit     desktop_initialized_flag
         bpl     :+
-        jsr     show_cursor
+        jsr     ShowCursor
 
 :       bit     preserve_zp_flag
         bpl     exit_with_0
-        jsr     apply_port_to_active_port
+        jsr     ApplyPortToActivePort
 
         COPY_BYTES $C, active_port, active_saved
         COPY_BYTES $80, zp_saved, $80
@@ -194,7 +194,7 @@ rts1:   rts
 
 exit_with_a:
         pha
-        jsr     dispatch::cleanup
+        jsr     Dispatch::cleanup
         pla
         ldx     stack_ptr_stash
         txs
@@ -211,7 +211,7 @@ rts2:   rts
 ;;; ============================================================
 ;;; Copy port params (36 bytes) to/from active port addr
 
-.proc apply_active_port_to_port
+.proc ApplyActivePortToPort
         ldy     #.sizeof(MGTK::GrafPort)-1
 :       lda     (active_port),y
         sta     current_grafport,y
@@ -220,7 +220,7 @@ rts2:   rts
         rts
 .endproc
 
-.proc apply_port_to_active_port
+.proc ApplyPortToActivePort
         ldy     #.sizeof(MGTK::GrafPort)-1
 :       lda     current_grafport,y
         sta     (active_port),y
@@ -236,12 +236,12 @@ rts2:   rts
 hide_cursor_count:
         .byte   0
 
-.proc hide_cursor
+.proc HideCursor
         dec     hide_cursor_count
         jmp     HideCursorImpl
 .endproc
 
-.proc show_cursor
+.proc ShowCursor
         bit     hide_cursor_count
         bpl     rts2
         inc     hide_cursor_count
@@ -254,7 +254,7 @@ hide_cursor_count:
         ;; jt_rts can be used if the only thing the
         ;; routine needs to do is copy params into
         ;; the zero page (port)
-        jt_rts := dispatch::rts1
+        jt_rts := Dispatch::rts1
 
 jump_table:
         .addr   jt_rts              ; $00 NoOp
@@ -862,7 +862,7 @@ hires_table_hi:
         left                 := $92
         right                := $96
 
-        fixed_div_dividend   := $A1        ; parameters used by fixed_div proc
+        fixed_div_dividend   := $A1        ; parameters used by FixedDiv proc
         fixed_div_divisor    := $A3
         fixed_div_quotient   := $9F        ; fixed 16.16 format
 
@@ -891,7 +891,7 @@ hires_table_hi:
         .assert <pattern_buffer = 0, error, "pattern_buffer must be page-aligned"
 
 
-.proc fillmode_copy
+.proc FillmodeCopy
         lda     (vid_addr),y
         eor     (bits_addr),y
         eor     fill_eor_mask
@@ -906,7 +906,7 @@ loop:   lda     (bits_addr),y
         dey
         bne     loop
 .endproc
-.proc fillmode_copy_onechar
+.proc FillmodeCopyOnechar
         lda     (vid_addr),y
         eor     (bits_addr),y
         eor     fill_eor_mask
@@ -918,7 +918,7 @@ loop:   lda     (bits_addr),y
         rts
 .endproc
 
-.proc fillmode_or
+.proc FillmodeOr
         lda     (bits_addr),y
         eor     fill_eor_mask
         and     right_sidemask
@@ -932,7 +932,7 @@ loop:   lda     (bits_addr),y
         dey
         bne     loop
 .endproc
-.proc fillmode_or_onechar
+.proc FillmodeOrOnechar
         lda     (bits_addr),y
         eor     fill_eor_mask
         and     left_sidemask
@@ -943,7 +943,7 @@ loop:   lda     (bits_addr),y
         rts
 .endproc
 
-.proc fillmode2_xor
+.proc Fillmode2XOR
         lda     (bits_addr),y
         eor     fill_eor_mask
         and     right_sidemask
@@ -957,7 +957,7 @@ loop:   lda     (bits_addr),y
         dey
         bne     loop
 .endproc
-.proc fillmode2_xor_onechar
+.proc Fillmode2XOROnechar
         lda     (bits_addr),y
         eor     fill_eor_mask
         and     left_sidemask
@@ -968,7 +968,7 @@ loop:   lda     (bits_addr),y
         rts
 .endproc
 
-.proc fillmode_bic
+.proc FillmodeBIC
         lda     (bits_addr),y
         eor     fill_eor_mask
         and     right_sidemask
@@ -983,7 +983,7 @@ loop:   lda     (bits_addr),y
         dey
         bne     loop
 .endproc
-.proc fillmode_bic_onechar
+.proc FillmodeBICOnechar
         lda     (bits_addr),y
         eor     fill_eor_mask
         and     left_sidemask
@@ -998,7 +998,7 @@ loop:   lda     (bits_addr),y
 
         ;; Main fill loop.
 
-.proc fill_next_line
+.proc FillNextLine
         cpx     bottom                  ; fill done?
         beq     :+
         inx
@@ -1013,7 +1013,7 @@ get_srcbits_jmp_addr := *+1
         ;; Copy a line of source data from a non-display bitmap buffer to
         ;; the staging buffer at $0601.
 
-.proc ndbm_get_srcbits
+.proc NDBMGetSrcbits
         lda     load_addr
         adc     src_mapwidth
         sta     load_addr
@@ -1035,7 +1035,7 @@ load_addr       := *+1
         ;; Copy a line of source data from the DHGR screen to the staging
         ;; buffer at $0601.
 
-.proc dhgr_get_srcbits
+.proc DHGRGetSrcbits
         index         := $81
         src_byte_off  := $8A        ; char offset within source line
 
@@ -1077,16 +1077,16 @@ shift_bits_clc_jmp:
 
 shift_bits_jmp:
 shift_bits_jmp_addr := *+1
-        jmp     shift_line_jmp          ; patched to dhgr_shift_bits when needed
+        jmp     shift_line_jmp  ; patched to DHGRShiftBits when needed
 .endproc
 
 
-shift_bits_clc_jmp := dhgr_get_srcbits::shift_bits_clc_jmp
+shift_bits_clc_jmp := DHGRGetSrcbits::shift_bits_clc_jmp
 
 
         ;; Subprocedure used to shift bitmap data by a number of bits.
 
-.proc dhgr_shift_bits
+.proc DHGRShiftBits
         index   := $82
 
         stx     index
@@ -1108,17 +1108,17 @@ offset1_addr := *+1
 
 shift_line_jmp:
 shift_line_jmp_addr := *+1
-        jmp     dhgr_next_line          ; patched to dhgr_shift_line when needed
+        jmp     DHGRNextLine    ; patched to DHGRShiftLine when needed
 .endproc
 
 
-shift_line_jmp := dhgr_shift_bits::shift_line_jmp
+shift_line_jmp := DHGRShiftBits::shift_line_jmp
 
 
         ;; Subprocedure used to shift bitmap data by an integral number of
         ;; chars.
 
-.proc dhgr_shift_line
+.proc DHGRShiftLine
         index   := $82
 
         stx     index
@@ -1142,27 +1142,27 @@ offset2_addr := *+1
         beq     loop
 
         ldx     index
-        jmp     dhgr_next_line
+        jmp     DHGRNextLine
 .endproc
 
 
         ;; Entry point to start bit blit kOperation.
 
-.proc bit_blit
+.proc BitBlit
         ldx     top
         clc
-        jmp     fill_next_line::get_srcbits_jmp
+        jmp     FillNextLine::get_srcbits_jmp
 .endproc
 
 
         ;; Entry point to start fill after fill mode and destination have
         ;; been set.
 
-.proc do_fill
+.proc DoFill
         ldx     no_srcbits_addr                         ; Disable srcbits fetching
-        stx     fill_next_line::get_srcbits_jmp_addr    ; for fill kOperation.
+        stx     FillNextLine::get_srcbits_jmp_addr    ; for fill kOperation.
         ldx     no_srcbits_addr+1
-        stx     fill_next_line::get_srcbits_jmp_addr+1
+        stx     FillNextLine::get_srcbits_jmp_addr+1
 
         ldx     top
         ;; Fall-through
@@ -1170,12 +1170,12 @@ offset2_addr := *+1
 
 start_fill_jmp:
 start_fill_jmp_addr := *+1
-        jmp     dhgr_start_fill         ; patched to *_start_fill
+        jmp     DHGRStartFill         ; patched to *_start_fill
 
 
         ;; Start a fill targeting a non-display bitmap (NDBM)
 
-.proc ndbm_start_fill
+.proc NDBMStartFill
         txa                     ; pattern y-offset
         ror     a
         ror     a
@@ -1187,13 +1187,13 @@ start_fill_jmp_addr := *+1
         lda     #>pattern_buffer
         adc     #0
         sta     src_addr+1
-        jmp     dhgr_get_srcbits::get_bits
+        jmp     DHGRGetSrcbits::get_bits
 .endproc
 
 
         ;; Start a fill targeting the DHGR screen.
 
-.proc dhgr_start_fill
+.proc DHGRStartFill
         txa                     ; pattern y-offset
         ror     a
         ror     a
@@ -1207,14 +1207,14 @@ start_fill_jmp_addr := *+1
         sta     bits_addr+1
 
 next_line_jmp_addr := *+1
-        jmp     dhgr_next_line
+        jmp     DHGRNextLine
 .endproc
 
 
         ;; Advance to the next line and fill (non-display bitmap
         ;; destination.)
 
-.proc ndbm_next_line
+.proc NDBMNextLine
         lda     vid_addr
         clc
         adc     current_mapwidth
@@ -1225,13 +1225,13 @@ next_line_jmp_addr := *+1
 :       ldy     width_bytes
 
         jsr     fillmode_jmp
-        jmp     fill_next_line
+        jmp     FillNextLine
 .endproc
 
 
         ;; Set vid_addr for the next line and fill (DHGR destination.)
 
-.proc dhgr_next_line
+.proc DHGRNextLine
         lda     hires_table_hi,x
         ora     current_mapbits+1
         sta     vid_addr+1
@@ -1241,16 +1241,16 @@ next_line_jmp_addr := *+1
         sta     vid_addr
 
         ldy     #1                      ; aux mem
-        jsr     dhgr_fill_line
+        jsr     DHGRFillLine
         ldy     #0                      ; main mem
-        jsr     dhgr_fill_line
-        jmp     fill_next_line
+        jsr     DHGRFillLine
+        jmp     FillNextLine
 .endproc
 
 
         ;; Fill one line in either main or aux screen memory.
 
-.proc dhgr_fill_line
+.proc DHGRFillLine
         sta     LOWSCR,y
 
         lda     left_masks_table,y
@@ -1266,7 +1266,7 @@ next_line_jmp_addr := *+1
 .endproc
 
 fillmode_jmp:
-        jmp     fillmode_copy       ; modified with fillmode routine
+        jmp     FillmodeCopy       ; modified with fillmode routine
 
         ;; Address of jump used when drawing from a pattern rather than
         ;; source data bits.
@@ -1289,13 +1289,13 @@ aux_left_masks:
 
         ; Fill routines that handle >1 char between left and right limits.
 fill_mode_table:
-        .addr   fillmode_copy,fillmode_or,fillmode2_xor,fillmode_bic
-        .addr   fillmode_copy,fillmode_or,fillmode2_xor,fillmode_bic
+        .addr   FillmodeCopy,FillmodeOr,Fillmode2XOR,FillmodeBIC
+        .addr   FillmodeCopy,FillmodeOr,Fillmode2XOR,FillmodeBIC
 
         ; Fill routines that handle only 1 char.
 fill_mode_table_onechar:
-        .addr   fillmode_copy_onechar,fillmode_or_onechar,fillmode2_xor_onechar,fillmode_bic_onechar
-        .addr   fillmode_copy_onechar,fillmode_or_onechar,fillmode2_xor_onechar,fillmode_bic_onechar
+        .addr   FillmodeCopyOnechar,FillmodeOrOnechar,Fillmode2XOROnechar,FillmodeBICOnechar
+        .addr   FillmodeCopyOnechar,FillmodeOrOnechar,Fillmode2XOROnechar,FillmodeBICOnechar
 
 ;;; ============================================================
 ;;; SetPenMode
@@ -1313,7 +1313,7 @@ fill_mode_table_onechar:
         ;; Called from PaintRect, DrawText, etc to configure
         ;; fill routines from mode.
 
-.proc set_up_fill_mode
+.proc SetUpFillMode
         x1      := $92
         x2      := $96
 
@@ -1414,12 +1414,12 @@ rl_ge256:                               ; Divmod for right limit >= 256
         adc     #$24
         plp
         ldy     mod7_table+4,x
-        bmi     divmod7
+        bmi     DivMod7
         jmp     set_x2_bytes
 .endproc
 
 
-.proc divmod7
+.proc DivMod7
         lsr     a
         bne     :+
         txa
@@ -1444,14 +1444,14 @@ rl_ge256:                               ; Divmod for right limit >= 256
 
         ;; Set up destination (for either on-screen or off-screen bitmap.)
 
-.proc set_dest
+.proc SetDest
 kDestNDBM       = 0             ; draw to off-screen bitmap
 kDestDHGR       = 1             ; draw to DHGR screen
 
         lda     left_bytes
         ldx     top
         ldy     current_mapwidth
-        jsr     ndbm_calc_dest
+        jsr     NDBMCalcDest
         clc
         adc     current_mapbits
         sta     vid_addr
@@ -1471,9 +1471,9 @@ kDestDHGR       = 1             ; draw to DHGR screen
         txa
         inx
         stx     src_width_bytes
-        jsr     set_up_fill_mode::set_width
+        jsr     SetUpFillMode::set_width
 
-        copy16  shift_line_jmp_addr, dhgr_get_srcbits::shift_bits_jmp_addr
+        copy16  shift_line_jmp_addr, DHGRGetSrcbits::shift_bits_jmp_addr
         lda     #2*kDestNDBM
         ldx     #2*kDestNDBM
         ldy     #2*kDestNDBM
@@ -1481,13 +1481,13 @@ kDestDHGR       = 1             ; draw to DHGR screen
 on_screen:
         pha
         lda     next_line_table,x
-        sta     dhgr_start_fill::next_line_jmp_addr
+        sta     DHGRStartFill::next_line_jmp_addr
         lda     next_line_table+1,x
-        sta     dhgr_start_fill::next_line_jmp_addr+1
+        sta     DHGRStartFill::next_line_jmp_addr+1
         pla
         tax
         copy16  start_fill_table,x, start_fill_jmp+1
-        copy16  shift_line_table,y, dhgr_shift_bits::shift_line_jmp_addr
+        copy16  shift_line_table,y, DHGRShiftBits::shift_line_jmp_addr
         rts
 .endproc
 
@@ -1520,52 +1520,52 @@ shift_line_jmp_addr:
         .addr   shift_line_jmp
 
 start_fill_table:
-        .addr   ndbm_start_fill, dhgr_start_fill
+        .addr   NDBMStartFill, DHGRStartFill
 next_line_table:
-        .addr   ndbm_next_line,  dhgr_next_line
+        .addr   NDBMNextLine,  DHGRNextLine
 shift_line_table:
-        .addr   ndbm_next_line,  dhgr_shift_line
+        .addr   NDBMNextLine,  DHGRShiftLine
 
 
         ;; Set source for bitmap transfer (either on-screen or off-screen bitmap.)
 
-.proc set_source
+.proc SetSource
 kSrcNDBM        = 0
 kSrcDHGR        = 1
 
         ldx     src_y_coord
         ldy     src_mapwidth
         bmi     :+
-        jsr     mult_x_y
+        jsr     MultXY
 
 :       clc
         adc     bits_addr
-        sta     ndbm_get_srcbits::load_addr
+        sta     NDBMGetSrcbits::load_addr
         tya
         adc     bits_addr+1
-        sta     ndbm_get_srcbits::load_addr+1
+        sta     NDBMGetSrcbits::load_addr+1
 
         ldx     #2*kSrcDHGR
         bit     src_mapwidth
         bmi     :+
 
         ldx     #2*kSrcNDBM
-:       copy16  get_srcbits_table,x, fill_next_line::get_srcbits_jmp_addr
+:       copy16  get_srcbits_table,x, FillNextLine::get_srcbits_jmp_addr
         rts
 
 ;;              kSrcNDBM           kSrcDHGR
 get_srcbits_table:
-        .addr   ndbm_get_srcbits,  dhgr_get_srcbits
+        .addr   NDBMGetSrcbits,  DHGRGetSrcbits
 .endproc
 
 
         ;; Calculate destination for off-screen bitmap.
 
-.proc ndbm_calc_dest
+.proc NDBMCalcDest
         bmi     on_screen        ; do nothing for on-screen destination
         asl     a
 
-mult_x_y:
+MultXY:
         stx     $82
         sty     $83
         ldx     #8
@@ -1590,7 +1590,7 @@ on_screen:
 .endproc
 
 
-mult_x_y := ndbm_calc_dest::mult_x_y
+MultXY := NDBMCalcDest::MultXY
 
 
 ;;; ============================================================
@@ -1685,7 +1685,7 @@ rloop:  COPY_BYTES 8, left, left_masks_table
         pla
         sta     left_masks_table,x
         sty     frect_ctr
-        jsr     draw_line
+        jsr     DrawLine
         ldy     frect_ctr
         dey
         bpl     rloop
@@ -1698,7 +1698,7 @@ rect_sides:
 rect_coords:
         .byte   4,6,0,2
 
-.proc draw_line
+.proc DrawLine
         x2      := right
 
         lda     current_penwidth    ; Also: draw horizontal line $92 to $96 at $98
@@ -1730,13 +1730,13 @@ rect_coords:
 ;;; 8 bytes of params, copied to $92
 
 .proc PaintRectImpl
-        jsr     check_rect
-do_paint:
-        jsr     clip_rect
+        jsr     CheckRect
+DoPaint:
+        jsr     ClipRect
         bcc     prts
-        jsr     set_up_fill_mode
-        jsr     set_dest
-        jmp     do_fill
+        jsr     SetUpFillMode
+        jsr     SetDest
+        jmp     DoFill
 .endproc
 
 
@@ -1746,7 +1746,7 @@ do_paint:
 ;;; 8 bytes of params, copied to $92
 
 .proc InRectImpl
-        jsr     check_rect
+        jsr     CheckRect
         ldax    current_penloc_x
         cpx     left+1
         bmi     fail
@@ -1793,7 +1793,7 @@ fail:   rts
         clipped_top := $9D         ; number of bits clipped off top side
 
 
-.proc clip_rect
+.proc ClipRect
         lda     current_maprect_x2+1
         cmp     left+1
         bmi     fail
@@ -1890,7 +1890,7 @@ in_top: ldy     #0
 .endproc
 
 
-.proc check_rect
+.proc CheckRect
         sec
         lda     right
         sbc     left
@@ -1989,11 +1989,11 @@ unused_width:
         lda     bits_addr+1
         sta     $80
 
-        jsr     clip_rect
+        jsr     ClipRect
         bcs     :+
         rts
 
-:       jsr     set_up_fill_mode
+:       jsr     SetUpFillMode
         lda     width_bytes
         asl     a
         ldx     left_masks_table+1      ; need left mask on aux?
@@ -2029,7 +2029,7 @@ unused_width:
         tya
         adc     PaintBitsImpl::dbi_left+1
 
-        jsr     divmod7
+        jsr     DivMod7
         sta     src_byte_off
         tya                             ; bit offset between src and dest
         rol     a
@@ -2039,16 +2039,16 @@ unused_width:
         dex
         sbc     #7
 
-:       stx     dhgr_get_srcbits::offset1_addr
+:       stx     DHGRGetSrcbits::offset1_addr
         inx
-        stx     dhgr_get_srcbits::offset2_addr
+        stx     DHGRGetSrcbits::offset2_addr
         sta     bit_offset
 
         lda     src_byte_off
         rol     a
 
-        jsr     set_source
-        jsr     set_dest
+        jsr     SetSource
+        jsr     SetDest
         copy16  #bitmap_buffer, bits_addr
         ldx     #1
         lda     left_mod14
@@ -2058,9 +2058,9 @@ unused_width:
         bcc     :+
         sta     left_mod14
         dex
-:       stx     dhgr_shift_line::offset1_addr
+:       stx     DHGRShiftLine::offset1_addr
         inx
-        stx     dhgr_shift_line::offset2_addr
+        stx     DHGRShiftLine::offset2_addr
 
         lda     left_mod14
         sec
@@ -2077,26 +2077,26 @@ unused_width:
 :       tya
         asl     a
         tay
-        copy16  shift_table_main,y, dhgr_shift_bits::shift_main_addr
+        copy16  shift_table_main,y, DHGRShiftBits::shift_main_addr
 
-        copy16  shift_table_aux,y, dhgr_shift_bits::shift_aux_addr
+        copy16  shift_table_aux,y, DHGRShiftBits::shift_aux_addr
 
         ldy     shift_bytes
-        sty     dhgr_shift_bits::offset2_addr
+        sty     DHGRShiftBits::offset2_addr
         dey
-        sty     dhgr_shift_bits::offset1_addr
+        sty     DHGRShiftBits::offset1_addr
 
         ldx     #2*kBitsBitShift
 no_bitshift:
-        copy16  shift_bits_table,x, dhgr_get_srcbits::shift_bits_jmp_addr
-        jmp     bit_blit
+        copy16  shift_bits_table,x, DHGRGetSrcbits::shift_bits_jmp_addr
+        jmp     BitBlit
 
 kBitsNoBitShift = 0
 kBitsBitShift   = 1
 
 ;;              kBitsNoBitShift    kBitsBitShift
 shift_bits_table:
-        .addr   shift_line_jmp,    dhgr_shift_bits
+        .addr   shift_line_jmp,    DHGRShiftBits
 .endproc
 
 
@@ -2118,7 +2118,7 @@ shift_bits_table:
         poly_oper_test   := $80
 
 
-.proc load_poly
+.proc LoadPoly
         point_index      := $82
         low_point        := $A7
 
@@ -2235,11 +2235,11 @@ set_low_point:
         sec
         rts
 
-:       jmp     clip_rect
+:       jmp     ClipRect
 .endproc
 
 
-.proc next_poly
+.proc NextPoly
         lda     vertices_count
         bpl     orts
         asl     a
@@ -2290,13 +2290,13 @@ entry2: sta     poly_oper
         stx     num_maxima
         jsr     ora_2_param_bytes
 
-loop:   jsr     load_poly
-        bcs     process_poly
+loop:   jsr     LoadPoly
+        bcs     ProcessPoly
         ldx     low_vertex
-next:   jsr     next_poly
+next:   jsr     NextPoly
         bmi     loop
 
-        jmp     fill_polys
+        jmp     FillPolys
 
 bad_poly:
         EXIT_CALL MGTK::Error::bad_object
@@ -2309,7 +2309,7 @@ bad_poly:
         loop_ctr       := $AF
 
 
-.proc process_poly
+.proc ProcessPoly
         ldy     #1
         sty     loop_ctr         ; do 2 iterations of the following loop
 
@@ -2433,7 +2433,7 @@ next:   php
         lr_flag      := $AB
         start_maxima := $B1
 
-.proc fill_polys
+.proc FillPolys
         ldx     #0
         stx     start_maxima
         lda     #$80
@@ -2494,7 +2494,7 @@ scan_next:
 
         lda     poly_maxima_links,x
         sta     $82
-        jsr     calc_slope
+        jsr     CalcSlope
 
         lda     $B2
         bmi     L5517
@@ -2586,7 +2586,7 @@ shift_point:
         lda     poly_vertex_next_link,y
         sta     poly_maxima_next_vertex,x
 
-        jsr     calc_slope
+        jsr     CalcSlope
 
 scan_point:
         stx     current_vertex
@@ -2628,13 +2628,13 @@ no_swap_lr:
         sta     bottom+1
 
         bit     poly_oper
-        bpl     do_paint
+        bpl     DoPaint
 
         jsr     InRectImpl
         jmp     skip_rect
 
-do_paint:
-        jsr     PaintRectImpl::do_paint
+DoPaint:
+        jsr     PaintRectImpl::DoPaint
 
 skip_rect:
         ldx     current_vertex
@@ -2664,7 +2664,7 @@ scan_next_link:
 .endproc
 
 
-.proc calc_slope
+.proc CalcSlope
         index   := $84
 
         ldy     poly_maxima_next_vertex,x
@@ -2740,7 +2740,7 @@ PaintPolyImpl_entry2 := PaintPolyImpl::entry2
 bad_poly := PaintPolyImpl::bad_poly
 
 
-.proc fixed_div
+.proc FixedDiv
         dividend   := $A1       ; 16.0 format
         divisor    := $A3       ; 16.0 format
         quotient   := $9F       ; 16.16 format
@@ -2787,7 +2787,7 @@ loop:   asl     quotient
 done:   rts
 .endproc
 
-fixed_div2 := fixed_div::entry2
+fixed_div2 := FixedDiv::entry2
 
 
 
@@ -2808,7 +2808,7 @@ poly_loop:
         lda     vertices_count             ; ORAd param bytes
         sta     $B6
         ldx     #0
-        jsr     load_poly
+        jsr     LoadPoly
         bcc     next
 
         lda     $B3
@@ -2862,7 +2862,7 @@ next:   ldx     #1
         dex
         bpl     :-
 
-        jsr     next_poly           ; Advance to next polygon in list
+        jsr     NextPoly        ; Advance to next polygon in list
         bmi     poly_loop
         rts
 .endproc
@@ -2877,7 +2877,7 @@ next:   ldx     #1
         ydelta := $A3
 
         ldax    xdelta
-        jsr     adjust_xpos
+        jsr     AdjustXPos
         ldax    ydelta
         clc
         adc     current_penloc_y
@@ -2889,7 +2889,7 @@ next:   ldx     #1
 .endproc
 
         ;; Adjust current_penloc_x by (X,A)
-.proc adjust_xpos
+.proc AdjustXPos
         clc
         adc     current_penloc_x
         sta     current_penloc_x
@@ -2975,7 +2975,7 @@ do_draw_line:
         stx     x2+1
         sty     x1+1
 draw_line_jmp:
-        jmp     draw_line
+        jmp     DrawLine
 
 swap_start_end:
         ldx     #3              ; Swap start/end
@@ -3005,7 +3005,7 @@ L57BF:  ldx     current_penwidth
         cmp     x2
         bcc     L57E9
         bne     L57E1
-        jmp     draw_line
+        jmp     DrawLine
 
 L57E1:  lda     $A1
         ldx     $A2
@@ -3153,7 +3153,7 @@ glyph_row_hi:
 ;;; 3 bytes of params, copied to $A1
 
 .proc TextWidthImpl
-        jsr     measure_text
+        jsr     MeasureText
         ldy     #3              ; Store result (X,A) at params+3
         sta     (params_addr),y
         txa
@@ -3163,7 +3163,7 @@ glyph_row_hi:
 .endproc
 
         ;; Call with data at ($A1), length in $A3, result in (X,A)
-.proc measure_text
+.proc MeasureText
         data   := $A1
         length := $A3
 
@@ -3198,7 +3198,7 @@ loop:   sty     accum+1
         ;;    A = width
         ;;    $FF = height
         ;;
-.proc penloc_to_bounds
+.proc PenlocToBounds
         sec
         sbc     #1
         bcs     :+
@@ -3251,7 +3251,7 @@ loop:   sty     accum+1
 
 
         jsr     maybe_unstash_low_zp
-        jsr     measure_text
+        jsr     MeasureText
         stax    text_width
 
         ldy     #0
@@ -3259,8 +3259,8 @@ loop:   sty     accum+1
         sty     $A0
         sty     clipped_left
         sty     clipped_top
-        jsr     penloc_to_bounds
-        jsr     clip_rect
+        jsr     PenlocToBounds
+        jsr     ClipRect
         bcc     text_clipped
 
         tya
@@ -3285,8 +3285,8 @@ left_clip_loop:
         bne     left_clip_loop
 
 no_left_clip:
-        jsr     set_up_fill_mode
-        jsr     set_dest
+        jsr     SetUpFillMode
+        jsr     SetDest
 
         lda     left_mod14
         clc
@@ -3345,7 +3345,7 @@ text_clip_ndbm:
 text_clipped:
         jsr     maybe_stash_low_zp
         ldax    text_width
-        jmp     adjust_xpos
+        jmp     AdjustXPos
 
 
 do_draw:
@@ -3825,7 +3825,7 @@ prepare_port:
 ;;; GetPort
 
 .proc GetPortImpl
-        jsr     apply_port_to_active_port
+        jsr     ApplyPortToActivePort
         ldax    active_port
         ;;  fall through
 .endproc
@@ -3869,7 +3869,7 @@ flag    .byte
         beq     rts3
         sta     preserve_zp_flag
         bcc     rts3
-        jmp     dispatch::cleanup
+        jmp     Dispatch::cleanup
 .endproc
 
 ;;; ============================================================
@@ -4063,7 +4063,7 @@ pointer_cursor:
 pointer_cursor_addr:
         .addr   pointer_cursor
 
-.proc set_pointer_cursor
+.proc SetPointerCursor
         lda     #$FF
         sta     cursor_count
         lda     #0
@@ -4096,8 +4096,8 @@ pointer_cursor_addr:
         iny
         lda     (params_addr),y
         sta     cursor_hotspot_y
-        jsr     restore_cursor_background
-        jsr     draw_cursor
+        jsr     RestoreCursorBackground
+        jsr     DrawCursor
         plp
 .endproc
 srts:   rts
@@ -4110,7 +4110,7 @@ srts:   rts
 
         vid_ptr           := $88
 
-.proc update_cursor
+.proc UpdateCursor
         lda     cursor_count           ; hidden? if so, skip
         bne     srts
         bit     cursor_flag
@@ -4118,7 +4118,7 @@ srts:   rts
         ;; Fall-through
 .endproc
 
-.proc draw_cursor
+.proc DrawCursor
         lda     #0
         sta     cursor_count
         sta     cursor_flag
@@ -4146,7 +4146,7 @@ srts:   rts
         lda     #$FF                   ; Char index = -1
         bmi     set_divmod
 
-:       jsr     divmod7
+:       jsr     DivMod7
 set_divmod:
         sta     cursor_bytes            ; char index in line
 
@@ -4227,7 +4227,7 @@ no_shift:
         ldx     left_mod14
         ldy     cursor_bytes
         lda     cursor_softswitch
-        jsr     set_switch
+        jsr     SetSwitch
         bcs     :+
 
         lda     (vid_ptr),y
@@ -4239,7 +4239,7 @@ no_shift:
         sta     (vid_ptr),y
         dex
 :
-        jsr     switch_page
+        jsr     SwitchPage
         bcs     :+
 
         lda     (vid_ptr),y
@@ -4251,7 +4251,7 @@ no_shift:
         sta     (vid_ptr),y
         dex
 :
-        jsr     switch_page
+        jsr     SwitchPage
         bcs     :+
 
         lda     (vid_ptr),y
@@ -4274,11 +4274,11 @@ drnext:
 .endproc
 drts:   rts
 
-active_cursor        := draw_cursor::active_cursor
-active_cursor_mask   := draw_cursor::active_cursor_mask
+active_cursor        := DrawCursor::active_cursor
+active_cursor_mask   := DrawCursor::active_cursor_mask
 
 
-.proc restore_cursor_background
+.proc RestoreCursorBackground
         lda     cursor_count           ; already hidden?
         bne     drts
         bit     cursor_flag
@@ -4300,19 +4300,19 @@ cloop:  cpy     #192
 
         ldy     cursor_bytes
         lda     cursor_softswitch
-        jsr     set_switch
+        jsr     SetSwitch
         bcs     :+
         lda     cursor_savebits,x
         sta     (vid_ptr),y
         dex
 :
-        jsr     switch_page
+        jsr     SwitchPage
         bcs     :+
         lda     cursor_savebits,x
         sta     (vid_ptr),y
         dex
 :
-        jsr     switch_page
+        jsr     SwitchPage
         bcs     :+
         lda     cursor_savebits,x
         sta     (vid_ptr),y
@@ -4328,16 +4328,16 @@ lowscr_rts:
         rts
 
 
-.proc switch_page
+.proc SwitchPage
         lda     set_switch_sta_addr
         eor     #1
         cmp     #<LOWSCR
-        beq     set_switch
+        beq     SetSwitch
         iny
         ;; Fall through
 .endproc
 
-.proc set_switch
+.proc SetSwitch
         sta     switch_sta_addr
 switch_sta_addr := *+1
         sta     $C0FF
@@ -4345,7 +4345,7 @@ switch_sta_addr := *+1
         rts
 .endproc
 
-set_switch_sta_addr := set_switch::switch_sta_addr
+set_switch_sta_addr := SetSwitch::switch_sta_addr
 
 
 ;;; ============================================================
@@ -4362,7 +4362,7 @@ set_switch_sta_addr := set_switch::switch_sta_addr
         dec     cursor_count
 :       bit     cursor_flag
         bmi     done
-        jsr     draw_cursor
+        jsr     DrawCursor
 done:   plp
         rts
 .endproc
@@ -4373,7 +4373,7 @@ done:   plp
 .proc ObscureCursorImpl
         php
         sei
-        jsr     restore_cursor_background
+        jsr     RestoreCursorBackground
         lda     #$80
         sta     cursor_flag
         plp
@@ -4386,7 +4386,7 @@ done:   plp
 .proc HideCursorImpl
         php
         sei
-        jsr     restore_cursor_background
+        jsr     RestoreCursorBackground
         dec     cursor_count
         plp
 .endproc
@@ -4397,7 +4397,7 @@ mrts:   rts
 cursor_throttle:
         .byte   0
 
-.proc move_cursor
+.proc MoveCursor
         bit     use_interrupts
         bpl     :+
 
@@ -4418,19 +4418,19 @@ cursor_throttle:
         bmi     no_move
 
 mouse_moved:
-        jsr     restore_cursor_background
+        jsr     RestoreCursorBackground
         ldx     #2
         stx     cursor_flag
 :       lda     mouse_x,x
         sta     set_pos_params,x
         dex
         bpl     :-
-        jsr     update_cursor
+        jsr     UpdateCursor
 
 no_move:
         bit     no_mouse_flag
         bmi     :+
-        jsr     read_mouse_pos
+        jsr     ReadMousePos
 
 :       bit     no_mouse_flag
         bpl     :+
@@ -4439,15 +4439,15 @@ no_move:
 
 :       lda     kbd_mouse_state
         beq     rts4
-        jsr     handle_keyboard_mouse
+        jsr     HandleKeyboardMouse
 .endproc
 rts4:   rts
 
 ;;; ============================================================
 
-.proc read_mouse_pos
+.proc ReadMousePos
         ldy     #READMOUSE
-        jsr     call_mouse
+        jsr     CallMouse
         bit     mouse_hooked_flag
         bmi     do_scale_x
 
@@ -4501,7 +4501,7 @@ done:   rts
 ;;; ============================================================
 
         ;; Call mouse firmware, kOperation in Y, param in A
-.proc call_mouse
+.proc CallMouse
         proc_ptr          := $88
 
         bit     no_mouse_flag
@@ -4579,8 +4579,8 @@ savesize        .word
         copy16  params::savearea, savebehind_buffer
         copy16  params::savesize, savebehind_size
 
-        jsr     set_irq_mode
-        jsr     set_op_sys
+        jsr     SetIRQMode
+        jsr     SetOpSys
 
         ldy     #MGTK::Font::height
         lda     (params::sysfontptr),y
@@ -4634,7 +4634,7 @@ savesize        .word
         sta     mouse_scale_y
 :
         ldx     slot_num
-        jsr     find_mouse
+        jsr     FindMouse
 
         bit     slot_num
         bpl     found_mouse
@@ -4689,33 +4689,33 @@ no_irq: lda     VERSION
         bpl     :+
         cli
         ora     #8
-:       jsr     call_mouse
+:       jsr     CallMouse
 
         pla
         sta     VERSION
 
         jsr     InitGrafImpl
-        jsr     set_pointer_cursor
+        jsr     SetPointerCursor
         jsr     FlushEventsImpl
 
         lda     #0
         sta     current_window+1
 
 reset_desktop:
-        jsr     save_params_and_stack
-        jsr     set_desktop_port
+        jsr     SaveParamsAndStack
+        jsr     SetDesktopPort
 
         ;; Fills the desktop background on startup (menu left black)
         MGTK_CALL MGTK::SetPattern, desktop_pattern
         MGTK_CALL MGTK::PaintRect, fill_rect_params
-        jmp     restore_params_active_port
+        jmp     RestoreParamsActivePort
 .endproc
 
-        DEFINE_ALLOC_INTERRUPT_PARAMS alloc_interrupt_params, interrupt_handler
+        DEFINE_ALLOC_INTERRUPT_PARAMS alloc_interrupt_params, InterruptHandler
         DEFINE_DEALLOC_INTERRUPT_PARAMS dealloc_interrupt_params
 
 
-.proc set_irq_mode
+.proc SetIRQMode
         lda     #0
         sta     always_handle_irq
 
@@ -4738,7 +4738,7 @@ irq_err:
         EXIT_CALL MGTK::Error::invalid_irq_setting
 .endproc
 
-.proc set_op_sys
+.proc SetOpSys
         lda     op_sys
         beq     is_prodos
         cmp     #1
@@ -4759,9 +4759,9 @@ is_pascal:
 .proc StopDeskTopImpl
         ldy     #SETMOUSE
         lda     #MOUSE_MODE_OFF
-        jsr     call_mouse
+        jsr     CallMouse
         ldy     #SERVEMOUSE
-        jsr     call_mouse
+        jsr     CallMouse
         bit     use_interrupts
 
         bpl     :+
@@ -4828,14 +4828,14 @@ invalid_hook:
 .endproc
 
 
-.proc call_before_events_hook
+.proc CallBeforeEventsHook
         lda     before_events_hook+1
         beq     :+
-        jsr     save_params_and_stack
+        jsr     SaveParamsAndStack
 
         jsr     before_events_hook_jmp
         php
-        jsr     restore_params_active_port
+        jsr     RestoreParamsActivePort
         plp
 :       rts
 
@@ -4848,14 +4848,14 @@ before_events_hook:
         .res    2
 
 
-.proc call_after_events_hook
+.proc CallAfterEventsHook
         lda     after_events_hook+1
         beq     :+
-        jsr     save_params_and_stack
+        jsr     SaveParamsAndStack
 
         jsr     after_events_hook_jmp
         php
-        jsr     restore_params_active_port
+        jsr     RestoreParamsActivePort
         plp
 :       rts
 
@@ -4875,12 +4875,12 @@ stack_ptr_save:
         .res    1
 
 
-.proc hide_cursor_save_params
+.proc HideCursorSaveParams
         jsr     HideCursorImpl
         ;; Fall-through
 .endproc
 
-.proc save_params_and_stack
+.proc SaveParamsAndStack
         copy16  params_addr, params_addr_save
         lda     stack_ptr_stash
         sta     stack_ptr_save
@@ -4889,19 +4889,19 @@ stack_ptr_save:
 .endproc
 
 
-.proc show_cursor_and_restore
+.proc ShowCursorAndRestore
         jsr     ShowCursorImpl
         ;; Fall-through
 .endproc
 
-.proc restore_params_active_port
+.proc RestoreParamsActivePort
         asl     preserve_zp_flag
         copy16  params_addr_save, params_addr
         ldax    active_port
         ;; Fall-through
 .endproc
 
-.proc set_and_prepare_port
+.proc SetAndPreparePort
         stax    $82
         lda     stack_ptr_save
         sta     stack_ptr_stash
@@ -4915,17 +4915,17 @@ stack_ptr_save:
 .endproc
 
 
-.proc set_standard_port
+.proc SetStandardPort
         ldax    standard_port_addr
-        bne     set_and_prepare_port                  ; always
+        bne     SetAndPreparePort ; always
 .endproc
 
 standard_port_addr:
         .addr   standard_port
 
 
-.proc set_desktop_port
-        jsr     set_standard_port
+.proc SetDesktopPort
+        jsr     SetStandardPort
         MGTK_CALL MGTK::SetPortBits, desktop_port_bits
         rts
 
@@ -4938,7 +4938,7 @@ port_y:
         .res    1               ; reserved
 .endproc
 
-desktop_port_y := set_desktop_port::port_y
+desktop_port_y := SetDesktopPort::port_y
 
 
 .params fill_rect_params
@@ -5019,7 +5019,7 @@ peek_entry:
 :       jsr     CheckEventsImpl
 
 no_check:
-        jsr     next_event
+        jsr     NextEvent
         bcs     no_event
 
         plp
@@ -5040,7 +5040,7 @@ no_check:
         beq     ret
 
 no_event:
-        jsr     return_move_event
+        jsr     ReturnMoveEvent
 
 ret:    plp
         bit     use_interrupts
@@ -5076,10 +5076,10 @@ ycoord  .word
         ldx     params::xcoord
         ldy     params::xcoord+1
         lda     params::ycoord
-        jsr     set_mouse_pos
+        jsr     SetMousePos
 
 event_ok:
-        jsr     put_event
+        jsr     PutEvent
         bcs     no_room
         tax
 
@@ -5108,7 +5108,7 @@ error_return:
 
         ;; Return a no_event (if mouse up) or drag event (if mouse down)
         ;; and report the current mouse position.
-.proc return_move_event
+.proc ReturnMoveEvent
         lda     #MGTK::EventKind::no_event
 
         bit     mouse_status
@@ -5151,7 +5151,7 @@ modifiers  := * + 3
 
 irq_entry:
         sec                     ; called from interrupt handler
-        jsr     call_before_events_hook
+        jsr     CallBeforeEventsHook
         bcc     end
 
         lda     BUTN1           ; Look at buttons (apple keys), compute modifiers
@@ -5162,8 +5162,8 @@ irq_entry:
         rol     a
         sta     input::modifiers
 
-        jsr     activate_keyboard_mouse    ; check if keyboard mouse should be started
-        jsr     move_cursor
+        jsr     ActivateKeyboardMouse    ; check if keyboard mouse should be started
+        jsr     MoveCursor
         lda     mouse_status    ; bit 7 = is down, bit 6 = was down, still down
         asl     a
         eor     mouse_status
@@ -5205,7 +5205,7 @@ set_state:
         COPY_BYTES 3, set_pos_params, input::key
 
 put_key_event:
-        jsr     put_event
+        jsr     PutEvent
         tax
         ldy     #0
 :       lda     input,y
@@ -5215,7 +5215,7 @@ put_key_event:
         cpy     #MGTK::short_event_size
         bne     :-
 
-end:    jmp     call_after_events_hook
+end:    jmp     CallAfterEventsHook
 .endproc
 
 ;;; ============================================================
@@ -5228,7 +5228,7 @@ int_stash_rdpage2:
 int_stash_rd80store:
         .byte   0
 
-.proc interrupt_handler
+.proc InterruptHandler
         cld                     ; required for interrupt handlers
 
 body:                           ; returned by GetIntHandler
@@ -5243,7 +5243,7 @@ body:                           ; returned by GetIntHandler
         COPY_BYTES 9, $82, int_stash_zp ; preserve 9 bytes of ZP
 
         ldy     #SERVEMOUSE
-        jsr     call_mouse
+        jsr     CallMouse
         bcs     :+
         jsr     CheckEventsImpl::irq_entry
         clc
@@ -5273,7 +5273,7 @@ body:                           ; returned by GetIntHandler
         jmp     store_xa_at_params
 
 int_handler_addr:
-        .addr   interrupt_handler::body
+        .addr   InterruptHandler::body
 .endproc
 
 ;;; ============================================================
@@ -5308,7 +5308,7 @@ eventbuf:
         rts
 .endproc
         ;; called during PostEvent and a few other places
-.proc put_event
+.proc PutEvent
         lda     eventbuf_head
         cmp     #(kEventBufSize-1)*MGTK::short_event_size
         bne     :+                      ; if head is not at end, advance
@@ -5330,7 +5330,7 @@ rts_with_carry_set:
         rts
 
         ;; called during GetEvent
-.proc next_event
+.proc NextEvent
         lda     eventbuf_tail           ; equal?
         cmp     eventbuf_head
         beq     rts_with_carry_set
@@ -5495,7 +5495,7 @@ name       .addr
         END_PARAM_BLOCK
 
 
-.proc get_menu_count
+.proc GetMenuCount
         copy16  active_menu, $82
         ldy     #0
         lda     ($82),y
@@ -5504,7 +5504,7 @@ name       .addr
 .endproc
 
 
-.proc get_menu
+.proc GetMenu
         stx     menu_index
         lda     #2
         clc
@@ -5537,7 +5537,7 @@ name       .addr
 .endproc
 
 
-.proc put_menu
+.proc PutMenu
         ldy     #.sizeof(MGTK::MenuBarItem)-1
 :       lda     curmenu,y
         sta     (menu_ptr),y
@@ -5553,7 +5553,7 @@ name       .addr
 .endproc
 
 
-.proc get_menu_item
+.proc GetMenuItem
         stx     menu_item_index
         lda     #.sizeof(MGTK::MenuItem)
         clc
@@ -5577,7 +5577,7 @@ name       .addr
 .endproc
 
 
-.proc put_menu_item
+.proc PutMenuItem
         ldy     #.sizeof(MGTK::MenuItem)-1
 :       lda     curmenuitem,y
         sta     (menu_item_ptr),y
@@ -5588,7 +5588,7 @@ name       .addr
 
 
         ;; Set penloc to X=AX, Y=Y
-.proc set_penloc
+.proc SetPenloc
         sty     current_penloc_y
         ldy     #0
         sty     current_penloc_y+1
@@ -5597,24 +5597,24 @@ set_x:  stax    current_penloc_x
 .endproc
 
         ;; Set fill mode to A
-.proc set_fill_mode
+.proc SetFillMode
         sta     current_penmode
         jmp     SetPenModeImpl
 .endproc
 
-.proc do_measure_text
-        jsr     prepare_text_params
-        jmp     measure_text
+.proc DoMeasureText
+        jsr     PrepareTextParams
+        jmp     MeasureText
 .endproc
 
-.proc draw_text
-        jsr     prepare_text_params
+.proc DrawText
+        jsr     PrepareTextParams
         jmp     DrawTextImpl
 .endproc
 
         ;; Prepare $A1,$A2 as params for TextWidth/DrawText call
         ;; ($A3 is length)
-.proc prepare_text_params
+.proc PrepareTextParams
         temp_ptr := $82
 
         stax    temp_ptr
@@ -5622,14 +5622,14 @@ set_x:  stax    current_penloc_x
         adc     #1
         bcc     :+
         inx
-:       stax    measure_text::data
+:       stax    MeasureText::data
         ldy     #0
         lda     (temp_ptr),y
-        sta     measure_text::length
+        sta     MeasureText::length
         rts
 .endproc
 
-.proc get_and_return_event
+.proc GetAndReturnEvent
         PARAM_BLOCK event, $82
 kind       .byte
 mouse_pos  .tag MGTK::Point
@@ -5657,21 +5657,21 @@ draw_menu_impl:
         sta     savebehind_usage
         sta     savebehind_usage+1
 
-        jsr     get_menu_count  ; into menu_count
-        jsr     hide_cursor_save_params
-        jsr     set_standard_port
+        jsr     GetMenuCount    ; into menu_count
+        jsr     HideCursorSaveParams
+        jsr     SetStandardPort
 
         ldax    test_rect_params_addr
-        jsr     fill_and_frame_rect
+        jsr     FillAndFrameRect
 
         ldax    #12
         ldy     sysfont_height
         iny
-        jsr     set_penloc
+        jsr     SetPenloc
 
         ldx     #0
 menuloop:
-        jsr     get_menu
+        jsr     GetMenu
         ldax    current_penloc_x
         stax    curmenu::x_penloc
 
@@ -5687,12 +5687,12 @@ menuloop:
         stx     max_width+1
 
 itemloop:
-        jsr     get_menu_item
+        jsr     GetMenuItem
         bit     curmenuitem::options
         bvs     filler                  ; bit 6 - is filler
 
         ldax    curmenuitem::name
-        jsr     do_measure_text
+        jsr     DoMeasureText
         stax    temp
 
         lda     curmenuitem::options
@@ -5731,19 +5731,19 @@ filler: ldx     menu_item_index
         iny
         iny
         iny
-        jsr     mult_x_y                ; num items * (sysfont_height+3)
+        jsr     MultXY          ; num items * (sysfont_height+3)
         pha
 
-        copy16  max_width, fixed_div::dividend
-        copy16  #7, fixed_div::divisor
-        jsr     fixed_div               ; max width / 7
+        copy16  max_width, FixedDiv::dividend
+        copy16  #7, FixedDiv::divisor
+        jsr     FixedDiv                ; max width / 7
 
-        ldy     fixed_div::quotient+2
+        ldy     FixedDiv::quotient+2
         iny
         iny
         pla
         tax
-        jsr     mult_x_y                ; total height * ((max width / 7)+2)
+        jsr     MultXY          ; total height * ((max width / 7)+2)
 
         sta     need_savebehind
         sty     need_savebehind+1
@@ -5752,15 +5752,15 @@ filler: ldx     menu_item_index
         tya
         sbc     savebehind_usage+1
         bmi     :+
-        copy16  need_savebehind, savebehind_usage     ; calculate max savebehind data needed
+        copy16  need_savebehind, savebehind_usage ; calculate max savebehind data needed
 
 :       add16_8 curmenuinfo::x_min, max_width, curmenuinfo::x_max
 
-        jsr     put_menu
+        jsr     PutMenu
 
         ldax    curmenu::title
-        jsr     draw_text
-        jsr     get_menu_and_menu_item
+        jsr     DrawText
+        jsr     GetMenuAndMenuItem
 
         ldax    current_penloc_x
         clc
@@ -5769,10 +5769,10 @@ filler: ldx     menu_item_index
         inx
 :       stax    curmenu::x_max
 
-        jsr     put_menu
+        jsr     PutMenu
 
         ldax    #12
-        jsr     adjust_xpos
+        jsr     AdjustXPos
 
         ldx     menu_index
         inx
@@ -5784,7 +5784,7 @@ filler: ldx     menu_item_index
         sta     sel_menu_index
         sta     sel_menu_item_index
 
-        jsr     show_cursor_and_restore
+        jsr     ShowCursorAndRestore
         sec
         lda     savebehind_size
         sbc     savebehind_usage
@@ -5797,31 +5797,31 @@ filler: ldx     menu_item_index
 .endproc
         DrawMenuImpl := SetMenuImpl::draw_menu_impl
 
-.proc get_menu_and_menu_item
+.proc GetMenuAndMenuItem
         ldx     menu_index
-        jsr     get_menu
+        jsr     GetMenu
 
         ldx     menu_item_index
-        jmp     get_menu_item
+        jmp     GetMenuItem
 .endproc
 
 
         ;; Fills rect (params at X,A) then inverts border
-.proc fill_and_frame_rect
+.proc FillAndFrameRect
         stax    fill_params
         stax    draw_params
         lda     #MGTK::pencopy
-        jsr     set_fill_mode
+        jsr     SetFillMode
         MGTK_CALL MGTK::PaintRect, 0, fill_params
         lda     #MGTK::notpencopy
-        jsr     set_fill_mode
+        jsr     SetFillMode
         MGTK_CALL MGTK::FrameRect, 0, draw_params
         rts
 .endproc
 
 
-.proc find_menu_by_id_or_fail
-        jsr     find_menu_by_id
+.proc FindMenuByIdOrFail
+        jsr     FindMenuById
         bne     :+
         EXIT_CALL MGTK::Error::menu_not_found
 :       rts
@@ -5842,14 +5842,14 @@ filler: ldx     menu_item_index
         find_options          := $CA
 
 
-.proc find_menu_by_id
+.proc FindMenuById
         lda     #find_mode_by_id
 find_menu:
         sta     find_mode
 
-        jsr     get_menu_count
+        jsr     GetMenuCount
         ldx     #0
-loop:   jsr     get_menu
+loop:   jsr     GetMenu
         bit     find_mode
         bvs     find_menu_item_mode
         bmi     :+
@@ -5873,7 +5873,7 @@ loop:   jsr     get_menu
         bcs     next
 
 find_menu_item_mode:
-        jsr     find_menu_item
+        jsr     FindMenuItem
         bne     found
 
 next:   ldx     menu_index
@@ -5885,12 +5885,12 @@ next:   ldx     menu_index
 found:  return  curmenu::menu_id
 .endproc
 
-find_menu := find_menu_by_id::find_menu
+find_menu := FindMenuById::find_menu
 
 
-.proc find_menu_item
+.proc FindMenuItem
         ldx     #0
-loop:   jsr     get_menu_item
+loop:   jsr     GetMenuItem
         ldx     menu_item_index
         inx
         bit     find_mode
@@ -5944,17 +5944,17 @@ found:  rts
         lda     cur_open_menu
         sta     menu_param
 
-:       jsr     find_menu_by_id_or_fail
+:       jsr     FindMenuByIdOrFail
 
 do_hilite:
-        jsr     hide_cursor_save_params
-        jsr     set_standard_port
-        jsr     hilite_menu
-        jmp     show_cursor_and_restore
+        jsr     HideCursorSaveParams
+        jsr     SetStandardPort
+        jsr     HiliteMenu
+        jmp     ShowCursorAndRestore
 .endproc
 
         ;; Highlight/Unhighlight top level menu item
-.proc hilite_menu
+.proc HiliteMenu
         ldx     #1
 loop:   lda     curmenu::x_min,x
         sta     fill_rect_params2::left,x
@@ -5973,7 +5973,7 @@ loop:   lda     curmenu::x_min,x
         bpl     loop
 
         lda     #MGTK::penXOR
-        jsr     set_fill_mode
+        jsr     SetFillMode
         MGTK_CALL MGTK::PaintRect, fill_rect_params2
         rts
 .endproc
@@ -6028,15 +6028,15 @@ found:  ldy     #0
 .endproc
 
 
-.proc find_menu_and_menu_item
-        jsr     find_menu_by_id_or_fail
-        jsr     find_menu_item
+.proc FindMenuAndMenuItem
+        jsr     FindMenuByIdOrFail
+        jsr     FindMenuItem
         cpx     #0
 .endproc
 rrts:   rts
 
-.proc find_menu_item_or_fail
-        jsr     find_menu_and_menu_item
+.proc FindMenuItemOrFail
+        jsr     FindMenuAndMenuItem
         bne     rrts
         EXIT_CALL MGTK::Error::menu_item_not_found
 .endproc
@@ -6055,13 +6055,13 @@ disable    .byte
         END_PARAM_BLOCK
 
 
-        jsr     find_menu_item_or_fail
+        jsr     FindMenuItemOrFail
 
         asl     curmenuitem::options
         ror     params::disable
         ror     curmenuitem::options
 
-        jmp     put_menu_item
+        jmp     PutMenuItem
 .endproc
 
 ;;; ============================================================
@@ -6077,7 +6077,7 @@ check      .byte
         END_PARAM_BLOCK
 
 
-        jsr     find_menu_item_or_fail
+        jsr     FindMenuItemOrFail
 
         lda     params::check
         beq     :+
@@ -6089,7 +6089,7 @@ check      .byte
         and     curmenuitem::options
 set_options:
         sta     curmenuitem::options
-        jmp     put_menu_item
+        jmp     PutMenuItem
 .endproc
 
 ;;; ============================================================
@@ -6104,14 +6104,14 @@ disable    .byte
         END_PARAM_BLOCK
 
 
-        jsr     find_menu_by_id_or_fail
+        jsr     FindMenuByIdOrFail
 
         asl     curmenu::disabled
         ror     params::disable
         ror     curmenu::disabled
 
         ldx     menu_index
-        jmp     put_menu
+        jmp     PutMenu
 .endproc
 
 ;;; ============================================================
@@ -6133,28 +6133,28 @@ menu_item  .byte
         END_PARAM_BLOCK
 
 
-        jsr     kbd_mouse_init_tracking
+        jsr     KbdMouseInitTracking
 
-        jsr     get_menu_count
-        jsr     save_params_and_stack
-        jsr     set_standard_port
+        jsr     GetMenuCount
+        jsr     SaveParamsAndStack
+        jsr     SetStandardPort
 
         bit     kbd_mouse_state
         bpl     :+
-        jsr     kbd_menu_select
+        jsr     KbdMenuSelect
         jmp     in_menu
 
 :       lda     #0
         sta     cur_open_menu
         sta     cur_hilited_menu_item
         sta     was_in_menu_flag
-        jsr     get_and_return_event
+        jsr     GetAndReturnEvent
 event_loop:
         bit     movement_cancel
         bpl     :+
-        jmp     kbd_menu_return
+        jmp     KbdMenuReturn
 
-:       MGTK_CALL MGTK::MoveTo, get_and_return_event::event::mouse_pos
+:       MGTK_CALL MGTK::MoveTo, GetAndReturnEvent::event::mouse_pos
         MGTK_CALL MGTK::InRect, test_rect_params      ; test in menu bar
         bne     in_menu_bar
         lda     cur_open_menu
@@ -6162,9 +6162,9 @@ event_loop:
 
         MGTK_CALL MGTK::InRect, test_rect_params2     ; test in menu
         bne     in_menu_item
-        jsr     unhilite_cur_menu_item
+        jsr     UnhiliteCurMenuItem
 
-in_menu:jsr     get_and_return_event
+in_menu:jsr     GetAndReturnEvent
         cmp     #MGTK::EventKind::button_down
         beq     :+
         cmp     #MGTK::EventKind::button_up
@@ -6177,14 +6177,14 @@ in_menu:jsr     get_and_return_event
 
 :       lda     cur_hilited_menu_item
         bne     :+
-        jsr     hide_menu
+        jsr     HideMenu
         jmp     restore
 
 :       jsr     HideCursorImpl
-        jsr     set_standard_port
-        jsr     restore_menu_savebehind
+        jsr     SetStandardPort
+        jsr     RestoreMenuSavebehind
 
-restore:jsr     restore_params_active_port
+restore:jsr     RestoreParamsActivePort
         lda     #0
 
         ldx     cur_hilited_menu_item
@@ -6199,7 +6199,7 @@ restore:jsr     restore_params_active_port
 
 
 in_menu_bar:
-        jsr     unhilite_cur_menu_item
+        jsr     UnhiliteCurMenuItem
 
         lda     #find_mode_by_coord
         jsr     find_menu
@@ -6207,11 +6207,11 @@ in_menu_bar:
         cmp     cur_open_menu
         beq     in_menu
         pha
-        jsr     hide_menu
+        jsr     HideMenu
         pla
         sta     cur_open_menu
 
-        jsr     draw_menu
+        jsr     DrawMenu
         jmp     in_menu
 
 
@@ -6219,7 +6219,7 @@ in_menu_item:
         lda     #find_mode_by_coord
         sta     was_in_menu_flag
         sta     find_mode
-        jsr     find_menu_item
+        jsr     FindMenuItem
         cpx     cur_hilited_menu_item
         beq     in_menu
 
@@ -6231,10 +6231,10 @@ in_menu_item:
         ldx     #0
 :       txa
         pha
-        jsr     hilite_menu_item
+        jsr     HiliteMenuItem
         pla
         sta     cur_hilited_menu_item
-        jsr     hilite_menu_item
+        jsr     HiliteMenuItem
 
         jmp     in_menu
 .endproc
@@ -6248,7 +6248,7 @@ in_menu_item:
         savebehind_mapwidth := $90
 
 
-.proc set_up_savebehind
+.proc SetUpSavebehind
         lda     curmenuinfo::x_min+1
         lsr     a
         lda     curmenuinfo::x_min
@@ -6286,7 +6286,7 @@ in_menu_item:
 .endproc
 
 
-.proc savebehind_get_vidaddr
+.proc SavebehindGetVidaddr
         lda     hires_table_lo,x
         clc
         adc     savebehind_left_bytes
@@ -6298,7 +6298,7 @@ in_menu_item:
 .endproc
 
 
-.proc savebehind_next_line
+.proc SavebehindNextLine
         lda     savebehind_buf_addr
         sec
         adc     savebehind_mapwidth
@@ -6309,9 +6309,9 @@ in_menu_item:
 .endproc
 
 
-.proc restore_menu_savebehind
-        jsr     set_up_savebehind
-loop:   jsr     savebehind_get_vidaddr
+.proc RestoreMenuSavebehind
+        jsr     SetUpSavebehind
+loop:   jsr     SavebehindGetVidaddr
         sta     HISCR
 
         ldy     savebehind_mapwidth
@@ -6319,7 +6319,7 @@ loop:   jsr     savebehind_get_vidaddr
         sta     (savebehind_vid_addr),y
         dey
         bpl     :-
-        jsr     savebehind_next_line
+        jsr     SavebehindNextLine
         sta     LOWSCR
 
         ldy     savebehind_mapwidth
@@ -6327,7 +6327,7 @@ loop:   jsr     savebehind_get_vidaddr
         sta     (savebehind_vid_addr),y
         dey
         bpl     :-
-        jsr     savebehind_next_line
+        jsr     SavebehindNextLine
 
         inx
         cpx     savebehind_bottom
@@ -6340,13 +6340,13 @@ loop:   jsr     savebehind_get_vidaddr
 dmrts:  rts
 
 
-.proc hide_menu
+.proc HideMenu
         clc
         bcc     draw_menu_draw_or_hide
 .endproc
 
 
-.proc draw_menu
+.proc DrawMenu
         sec
 draw_or_hide:
         lda     cur_open_menu
@@ -6354,16 +6354,16 @@ draw_or_hide:
         php
 
         sta     find_menu_id
-        jsr     find_menu_by_id
+        jsr     FindMenuById
         jsr     HideCursorImpl
-        jsr     hilite_menu
+        jsr     HiliteMenu
 
         plp
-        bcc     restore_menu_savebehind
+        bcc     RestoreMenuSavebehind
 
-        jsr     set_up_savebehind
+        jsr     SetUpSavebehind
 saveloop:
-        jsr     savebehind_get_vidaddr
+        jsr     SavebehindGetVidaddr
         sta     HISCR
 
         ldy     savebehind_mapwidth
@@ -6371,7 +6371,7 @@ saveloop:
         sta     (savebehind_buf_addr),y
         dey
         bpl     :-
-        jsr     savebehind_next_line
+        jsr     SavebehindNextLine
         sta     LOWSCR
 
         ldy     savebehind_mapwidth
@@ -6379,31 +6379,31 @@ saveloop:
         sta     (savebehind_buf_addr),y
         dey
         bpl     :-
-        jsr     savebehind_next_line
+        jsr     SavebehindNextLine
 
         inx
         cpx     savebehind_bottom
         bcc     saveloop
         beq     saveloop
 
-        jsr     set_standard_port
+        jsr     SetStandardPort
 
         ldax    test_rect_params2_addr
-        jsr     fill_and_frame_rect
+        jsr     FillAndFrameRect
         inc16   fill_rect_params4::left
         lda     fill_rect_params4::right
         bne     :+
         dec     fill_rect_params4::right+1
 :       dec     fill_rect_params4::right
 
-        jsr     get_menu_and_menu_item
+        jsr     GetMenuAndMenuItem
 
         ldx     #0
-loop:   jsr     get_menu_item
+loop:   jsr     GetMenuItem
         bit     curmenuitem::options
         bvc     :+
 
-        jsr     draw_filler
+        jsr     DrawFiller
         jmp     next
 
 :       lda     curmenuitem::options
@@ -6411,7 +6411,7 @@ loop:   jsr     get_menu_item
         beq     no_mark
 
         lda     offset_checkmark
-        jsr     moveto_menuitem
+        jsr     MovetoMenuitem
 
         lda     checkmark_glyph
         sta     mark_text+1
@@ -6423,17 +6423,17 @@ loop:   jsr     get_menu_item
         sta     mark_text+1
 
 :       ldax    mark_text_addr
-        jsr     draw_text
-        jsr     get_menu_and_menu_item
+        jsr     DrawText
+        jsr     GetMenuAndMenuItem
 
 no_mark:
         lda     offset_text
-        jsr     moveto_menuitem
+        jsr     MovetoMenuitem
 
         ldax    curmenuitem::name
-        jsr     draw_text
+        jsr     DrawText
 
-        jsr     get_menu_and_menu_item
+        jsr     GetMenuAndMenuItem
 
         lda     #2              ; default is modifier + character
         sta     shortcut_text
@@ -6474,11 +6474,11 @@ shortcut:
 sst:    sta     shortcut_text+2
 
 offset: lda     offset_shortcut
-        jsr     moveto_fromright
+        jsr     MovetoFromright
 
         ldax    shortcut_text_addr
-        jsr     draw_text
-        jsr     get_menu_and_menu_item
+        jsr     DrawText
+        jsr     GetMenuAndMenuItem
 
 no_shortcut:
         bit     curmenu::disabled
@@ -6486,7 +6486,7 @@ no_shortcut:
         bit     curmenuitem::options
         bpl     next
 
-:       jsr     dim_menuitem
+:       jsr     DimMenuitem
         jmp     next                   ; useless jmp ???
 
 next:   ldx     menu_item_index
@@ -6498,7 +6498,7 @@ next:   ldx     menu_item_index
 .endproc
 
 
-.proc moveto_menuitem
+.proc MovetoMenuitem
         ldx     menu_item_index
         ldy     menu_item_y_table+1,x ; ???
         dey
@@ -6507,11 +6507,11 @@ next:   ldx     menu_item_index
         adc     curmenuinfo::x_min
         bcc     :+
         inx
-:       jmp     set_penloc
+:       jmp     SetPenloc
 .endproc
 
 
-.proc dim_menuitem
+.proc DimMenuitem
         ldx     menu_item_index
         lda     menu_item_y_table,x
         sta     fill_rect_params3_top
@@ -6522,7 +6522,7 @@ next:   ldx     menu_item_index
         MGTK_CALL MGTK::SetPattern, light_speckle_pattern
 
         lda     #MGTK::penOR
-ep2:    jsr     set_fill_mode
+ep2:    jsr     SetFillMode
 
         add16   curmenuinfo::x_min, #1, fill_rect_params3_left
         sub16   curmenuinfo::x_max, #1, fill_rect_params3_right
@@ -6531,11 +6531,11 @@ ep2:    jsr     set_fill_mode
         MGTK_CALL MGTK::SetPattern, standard_port::penpattern
 
         lda     #MGTK::penXOR
-        jsr     set_fill_mode
+        jsr     SetFillMode
         rts
 .endproc
 
-.proc draw_filler
+.proc DrawFiller
         ldx     menu_item_index
         lda     menu_item_y_table,x
         clc
@@ -6546,10 +6546,10 @@ ep2:    jsr     set_fill_mode
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
 
         lda     #MGTK::pencopy
-        beq     dim_menuitem::ep2 ; always
+        beq     DimMenuitem::ep2 ; always
 .endproc
 
-draw_menu_draw_or_hide := draw_menu::draw_or_hide
+draw_menu_draw_or_hide := DrawMenu::draw_or_hide
 
 
 light_speckle_pattern:
@@ -6575,24 +6575,24 @@ bottom: .word   0
 
 
         ;; Move to the given distance from the right side of the menu.
-.proc moveto_fromright
+.proc MovetoFromright
         sta     $82
         ldax    curmenuinfo::x_max
         sec
         sbc     $82
         bcs     :+
         dex
-:       jmp     set_penloc::set_x
+:       jmp     SetPenloc::set_x
 .endproc
 
-.proc unhilite_cur_menu_item
-        jsr     hilite_menu_item
+.proc UnhiliteCurMenuItem
+        jsr     HiliteMenuItem
         lda     #0
         sta     cur_hilited_menu_item
 .endproc
 hmrts:  rts
 
-.proc hilite_menu_item
+.proc HiliteMenuItem
         ldx     cur_hilited_menu_item
         beq     hmrts
         ldy     menu_item_y_table-1,x
@@ -6603,7 +6603,7 @@ hmrts:  rts
         jsr     HideCursorImpl
 
         lda     #MGTK::penXOR
-        jsr     set_fill_mode
+        jsr     SetFillMode
         MGTK_CALL MGTK::PaintRect, fill_rect_params4
         jmp     ShowCursorImpl
 .endproc
@@ -6667,7 +6667,7 @@ mark_char  .byte
         END_PARAM_BLOCK
 
 
-        jsr     find_menu_item_or_fail
+        jsr     FindMenuItemOrFail
 
         lda     params::set_char
         beq     :+
@@ -6678,12 +6678,12 @@ mark_char  .byte
 
         lda     params::mark_char
         sta     curmenuitem::mark_char
-        jmp     put_menu_item
+        jmp     PutMenuItem
 
 :       lda     #$FF^MGTK::MenuOpt::item_has_mark
         and     curmenuitem::options
         sta     curmenuitem::options
-        jmp     put_menu_item
+        jmp     PutMenuItem
 .endproc
 
 .struct Bitmap
@@ -6874,7 +6874,7 @@ y2         .word
 
 
         ;; Start window enumeration at top ???
-.proc top_window
+.proc TopWindow
         copy16  root_window_addr, previous_window
         ldax    current_window
         bne     set_found_window
@@ -6883,11 +6883,11 @@ end:    rts
 
         ;; Look up next window in chain. $A9/$AA will point at
         ;; window params block (also returned in X,A).
-.proc next_window
+.proc NextWindow
         copy16  window, previous_window
         ldy     #MGTK::Winfo::nextwinfo+1
         lda     (window),y
-        beq     top_window::end  ; if high byte is 0, end of chain
+        beq     TopWindow::end  ; if high byte is 0, end of chain
         tax
         dey
         lda     (window),y
@@ -6897,7 +6897,7 @@ set_found_window:
 .endproc
 
         ;; Load/refresh the ZP window data areas at $AB and $B7.
-.proc get_window
+.proc GetWindow
         ldax    found_window
 get_from_ax:
         stax    window
@@ -6920,18 +6920,18 @@ return_window:
         ldax    window
         rts
 .endproc
-        set_found_window := next_window::set_found_window
+        set_found_window := NextWindow::set_found_window
 
 
         ;; Look up window state by id (in $82); $A9/$AA will point at
         ;; winfo (also X,A).
-.proc window_by_id
-        jsr     top_window
+.proc WindowById
+        jsr     TopWindow
         beq     end
 loop:   lda     current_winfo::id
         cmp     $82
-        beq     get_window::return_window
-        jsr     next_window
+        beq     GetWindow::return_window
+        jsr     NextWindow
         bne     loop
 end:    rts
 .endproc
@@ -6940,21 +6940,23 @@ end:    rts
         ;; winfo (also X,A).
         ;; This will exit the MGTK call directly (restoring stack, etc)
         ;; if the window is not found.
-.proc window_by_id_or_exit
-        jsr     window_by_id
+.proc WindowByIdOrExit
+        jsr     WindowById
         beq     nope
         rts
 nope:   EXIT_CALL MGTK::Error::window_not_found
 .endproc
 
 
-frame_winrect:
+.proc FrameWinRect
         MGTK_CALL MGTK::FrameRect, winrect
         rts
+.endproc
 
-in_winrect:
+.proc InWinRect
         MGTK_CALL MGTK::InRect, winrect
         rts
+.endproc
 
         ;; Retrieve the rectangle of the current window and put it in winrect.
         ;;
@@ -6962,7 +6964,7 @@ in_winrect:
         ;; of the window and setting the width and height matching the width
         ;; and height of the maprect of the window's port.
         ;;
-.proc get_winrect
+.proc GetWinRect
         COPY_BLOCK current_winport::viewloc, winrect ; copy viewloc to left/top of winrect
 
         ldx     #2
@@ -6993,8 +6995,8 @@ return_winrect:
 
         ;; Return the window's rect including framing: title bar and scroll
         ;; bars.
-.proc get_winframerect
-        jsr     get_winrect
+.proc GetWinFrameRect
+        jsr     GetWinRect
         lda     winrect
         bne     :+
         dec     winrect+1
@@ -7044,8 +7046,8 @@ vert_scroll:
 .endproc
 
 
-.proc get_win_vertscrollrect
-        jsr     get_winframerect
+.proc GetWinVertScrollRect
+        jsr     GetWinFrameRect
         ldax    winrect::x2
         sec
         sbc     #$14
@@ -7067,8 +7069,8 @@ vert_scroll:
 .endproc
 
 
-.proc get_win_horizscrollrect
-        jsr     get_winframerect
+.proc GetWinHorizScrollRect
+        jsr     GetWinFrameRect
 get_rect:
         ldax    winrect::y2
         sec
@@ -7080,14 +7082,14 @@ get_rect:
 .endproc
 
 
-.proc get_win_growboxrect
-        jsr     get_win_vertscrollrect
-        jmp     get_win_horizscrollrect::get_rect
+.proc GetWinGrowBoxRect
+        jsr     GetWinVertScrollRect
+        jmp     GetWinHorizScrollRect::get_rect
 .endproc
 
 
-.proc get_wintitlebar_rect
-        jsr     get_winframerect
+.proc GetWinTitleBarRect
+        jsr     GetWinFrameRect
 
         lda     winrect::y1
         clc
@@ -7101,8 +7103,8 @@ get_rect:
 .endproc
 
 
-.proc get_wingoaway_rect
-        jsr     get_wintitlebar_rect
+.proc GetWinGoAwayRect
+        jsr     GetWinTitleBarRect
 
         ldax    winrect::x1
         clc
@@ -7132,54 +7134,54 @@ get_rect:
 .endproc
 
 
-.proc draw_window
-        jsr     get_winframerect
-        jsr     fill_and_frame_rect
+.proc DrawWindow
+        jsr     GetWinFrameRect
+        jsr     FillAndFrameRect
 
         lda     current_winfo::options
         and     #MGTK::Option::dialog_box
         bne     no_titlebar
 
-        jsr     get_wintitlebar_rect
-        jsr     fill_and_frame_rect
-        jsr     center_title_text
+        jsr     GetWinTitleBarRect
+        jsr     FillAndFrameRect
+        jsr     CenterTitleText
 
         ldax    current_winfo::title
-        jsr     draw_text
+        jsr     DrawText
 
 no_titlebar:
-        jsr     get_window
+        jsr     GetWindow
 
         bit     current_winfo::vscroll
         bpl     no_vert_scroll
 
-        jsr     get_win_vertscrollrect
-        jsr     frame_winrect
+        jsr     GetWinVertScrollRect
+        jsr     FrameWinRect
 
 no_vert_scroll:
         bit     current_winfo::hscroll
         bpl     :+
 
-        jsr     get_win_horizscrollrect
-        jsr     frame_winrect
+        jsr     GetWinHorizScrollRect
+        jsr     FrameWinRect
 
 :       lda     current_winfo::options
         and     #MGTK::Option::grow_box
         beq     :+
 
-        jsr     get_win_growboxrect
-        jsr     frame_winrect
-        jsr     get_win_vertscrollrect
-        jsr     frame_winrect
+        jsr     GetWinGrowBoxRect
+        jsr     FrameWinRect
+        jsr     GetWinVertScrollRect
+        jsr     FrameWinRect
 
-:       jsr     get_window
+:       jsr     GetWindow
 
         lda     current_winfo::id
         cmp     sel_window_id
         bne     :+
 
-        jsr     set_desktop_port
-        jmp     draw_winframe
+        jsr     SetDesktopPort
+        jmp     DrawWinframe
 :       rts
 .endproc
 
@@ -7200,8 +7202,8 @@ stripes_pattern_alt := *+1
         .byte   %11111111
 
 
-.proc set_stripes_pattern
-        jsr     get_wingoaway_rect
+.proc SetStripesPattern
+        jsr     GetWinGoAwayRect
         lda     winrect::y1
         and     #1
         beq     :+
@@ -7213,18 +7215,18 @@ stripes_pattern_alt := *+1
 .endproc
 
 
-.proc erase_winframe
+.proc EraseWinframe
         lda     #MGTK::penOR
         ldx     #0
         beq     :+
 .endproc
 
-.proc draw_winframe
+.proc DrawWinframe
         lda     #MGTK::penBIC
         ldx     #1
 
 :       stx     draw_erase_mode
-        jsr     set_fill_mode
+        jsr     SetFillMode
 
         lda     current_winfo::options
         and     #MGTK::Option::go_away_box
@@ -7234,9 +7236,9 @@ stripes_pattern_alt := *+1
         and     #MGTK::Option::dialog_box
         bne     no_goaway
 
-        jsr     get_wingoaway_rect
-        jsr     frame_winrect
-        jsr     set_stripes_pattern
+        jsr     GetWinGoAwayRect
+        jsr     FrameWinRect
+        jsr     SetStripesPattern
 
         ldax    winrect::x1
         sec
@@ -7261,10 +7263,10 @@ no_goaway:
         and     #MGTK::Option::dialog_box
         bne     no_titlebar
 
-        jsr     get_wintitlebar_rect
-        jsr     center_title_text
-        jsr     penloc_to_bounds
-        jsr     set_stripes_pattern
+        jsr     GetWinTitleBarRect
+        jsr     CenterTitleText
+        jsr     PenlocToBounds
+        jsr     SetStripesPattern
 
         ldax    winrect::x2
         clc
@@ -7310,19 +7312,19 @@ has_goaway:
         jsr     PaintRectImpl  ; Draw title bar stripes between close box and title
 :       add16   winrect::x2, #10, left
 
-        jsr     get_wintitlebar_rect
+        jsr     GetWinTitleBarRect
         sub16   winrect::x2, #3, right
 
         jsr     PaintRectImpl  ; Draw title bar stripes to right of title
         MGTK_CALL MGTK::SetPattern, standard_port::penpattern
 
 no_titlebar:
-        jsr     get_window
+        jsr     GetWindow
 
         bit     current_winfo::vscroll
         bpl     no_vscroll
 
-        jsr     get_win_vertscrollrect
+        jsr     GetWinVertScrollRect
         ldx     #3
 :       lda     winrect,x
         sta     up_scroll_params,x
@@ -7357,16 +7359,16 @@ no_hscroll:
         stax    down_scroll_params::ycoord
 
         ldax    down_scroll_addr
-        jsr     draw_icon
+        jsr     DrawIcon
 
         ldax    up_scroll_addr
-        jsr     draw_icon
+        jsr     DrawIcon
 
 no_vscroll:
         bit     current_winfo::hscroll
         bpl     no_hscrollbar
 
-        jsr     get_win_horizscrollrect
+        jsr     GetWinHorizScrollRect
         ldx     #3
 :       lda     winrect,x
         sta     left_scroll_params,x
@@ -7400,14 +7402,14 @@ no_vscroll2:
         stax    right_scroll_params
 
         ldax    right_scroll_addr
-        jsr     draw_icon
+        jsr     DrawIcon
 
         ldax    left_scroll_addr
-        jsr     draw_icon
+        jsr     DrawIcon
 
 no_hscrollbar:
         lda     #MGTK::pencopy
-        jsr     set_fill_mode
+        jsr     SetFillMode
 
         lda     current_winfo::vscroll
         and     #$01
@@ -7416,8 +7418,8 @@ no_hscrollbar:
         lda     #which_control_vert
         sta     which_control
         lda     draw_erase_mode
-        jsr     draw_or_erase_scrollbar
-        jsr     get_window
+        jsr     DrawOrEraseScrollbar
+        jsr     GetWindow
 
 :       lda     current_winfo::hscroll
         and     #$01
@@ -7426,18 +7428,18 @@ no_hscrollbar:
         lda     #which_control_horiz
         sta     which_control
         lda     draw_erase_mode
-        jsr     draw_or_erase_scrollbar
-        jsr     get_window
+        jsr     DrawOrEraseScrollbar
+        jsr     GetWindow
 
 :       lda     current_winfo::options
         and     #MGTK::Option::grow_box
         beq     ret
 
-        jsr     get_win_growboxrect
+        jsr     GetWinGrowBoxRect
         lda     draw_erase_mode
         bne     draw_resize
         ldax    #winrect
-        jsr     fill_and_frame_rect
+        jsr     FillAndFrameRect
         jmp     ret
 
         ;; Draw resize box
@@ -7449,16 +7451,16 @@ draw_resize:
         bpl     :-
 
         lda     #MGTK::notpencopy
-        jsr     set_fill_mode
+        jsr     SetFillMode
         ldax    resize_box_addr
-        jsr     draw_icon
+        jsr     DrawIcon
 ret:    rts
 .endproc
 
 
-.proc center_title_text
+.proc CenterTitleText
         ldax    current_winfo::title
-        jsr     do_measure_text
+        jsr     DoMeasureText
         stax    $82
 
         lda     winrect::x1
@@ -7507,7 +7509,7 @@ which_area  .byte
 window_id   .byte
         END_PARAM_BLOCK
 
-        jsr     save_params_and_stack
+        jsr     SaveParamsAndStack
 
         MGTK_CALL MGTK::InRect, test_rect_params ; check if in menubar
         beq     not_menubar
@@ -7519,7 +7521,7 @@ return_result:
         pha
         txa
         pha
-        jsr     restore_params_active_port
+        jsr     RestoreParamsActivePort
         pla
         tax
         pla
@@ -7530,14 +7532,14 @@ not_menubar:
         lda     #0              ; first window we see is the selected one
         sta     not_selected
 
-        jsr     top_window
+        jsr     TopWindow
         beq     no_windows
 
-loop:   jsr     get_winframerect
-        jsr     in_winrect
+loop:   jsr     GetWinFrameRect
+        jsr     InWinRect
         bne     in_window
 
-        jsr     next_window
+        jsr     NextWindow
         stx     not_selected    ; set to non-zero for subsequent windows
         bne     loop
 
@@ -7550,8 +7552,8 @@ in_window:
         and     #MGTK::Option::dialog_box
         bne     in_content
 
-        jsr     get_wintitlebar_rect
-        jsr     in_winrect
+        jsr     GetWinTitleBarRect
+        jsr     InWinRect
         beq     in_content
 
         lda     not_selected
@@ -7561,8 +7563,8 @@ in_window:
         and     #MGTK::Option::go_away_box
         beq     :+
 
-        jsr     get_wingoaway_rect
-        jsr     in_winrect
+        jsr     GetWinGoAwayRect
+        jsr     InWinRect
         beq     :+
         lda     #MGTK::Area::close_box
         bne     return_window
@@ -7578,8 +7580,8 @@ in_content:
         and     #MGTK::Option::grow_box
         beq     :+
 
-        jsr     get_win_growboxrect
-        jsr     in_winrect
+        jsr     GetWinGrowBoxRect
+        jsr     InWinRect
         beq     :+
         lda     #MGTK::Area::grow_box
 return_window:
@@ -7610,7 +7612,7 @@ not_selected:
         EXIT_CALL MGTK::Error::window_id_required
 
 :       sta     win_id
-        jsr     window_by_id
+        jsr     WindowById
         beq     :+
         EXIT_CALL MGTK::Error::window_already_exists
 
@@ -7630,14 +7632,14 @@ not_selected:
 ;;; 1 byte of params, copied to $82
 
 .proc SelectWindowImpl
-        jsr     window_by_id_or_exit
+        jsr     WindowByIdOrExit
         cmp     current_window
         bne     :+
         cpx     current_window+1
         bne     :+
         rts
 
-:       jsr     link_window
+:       jsr     LinkWindow
 do_select_win:
         ldy     #MGTK::Winfo::nextwinfo
         lda     current_window
@@ -7650,29 +7652,29 @@ do_select_win:
         pha
         lda     window+1
         pha
-        jsr     hide_cursor_save_params
-        jsr     set_desktop_port
+        jsr     HideCursorSaveParams
+        jsr     SetDesktopPort
 
-        jsr     top_window
+        jsr     TopWindow
         beq     :+
-        jsr     erase_winframe
+        jsr     EraseWinframe
 :       pla
         sta     current_window+1
         pla
         sta     current_window
 
-        jsr     top_window
+        jsr     TopWindow
         lda     current_winfo::id
         sta     sel_window_id
 
-        jsr     draw_window
-        jmp     show_cursor_and_restore
+        jsr     DrawWindow
+        jmp     ShowCursorAndRestore
 .endproc
 
 do_select_win   := SelectWindowImpl::do_select_win
 
 
-.proc link_window
+.proc LinkWindow
         ldy     #MGTK::Winfo::nextwinfo
         lda     (window),y
         sta     (previous_window),y
@@ -7691,7 +7693,7 @@ do_select_win   := SelectWindowImpl::do_select_win
 .proc GetWinPtrImpl
         ptr := $A9
 
-        jsr     window_by_id_or_exit
+        jsr     WindowByIdOrExit
         ldax    ptr
         ldy     #1
         jmp     store_xa_at_y
@@ -7713,8 +7715,8 @@ update_port:
         bne     win
 
         ;; Desktop
-        jsr     hide_cursor_save_params
-        jsr     set_desktop_port
+        jsr     HideCursorSaveParams
+        jsr     SetDesktopPort
         MGTK_CALL MGTK::SetPortBits, set_port_params
         copy16  active_port, previous_port
         ldax    update_port_addr
@@ -7723,29 +7725,29 @@ update_port:
         rts
 
         ;; Window
-win:    jsr     window_by_id_or_exit
+win:    jsr     WindowByIdOrExit
 
         lda     current_winfo::id
         cmp     target_window_id
         bne     :+
         inc     matched_target
 
-:       jsr     hide_cursor_save_params
-        jsr     set_desktop_port
+:       jsr     HideCursorSaveParams
+        jsr     SetDesktopPort
         lda     matched_target
         bne     :+
         MGTK_CALL MGTK::SetPortBits, set_port_params
 
-:       jsr     draw_window
-        jsr     set_desktop_port
+:       jsr     DrawWindow
+        jsr     SetDesktopPort
         lda     matched_target
         bne     :+
         MGTK_CALL MGTK::SetPortBits, set_port_params
 
-:       jsr     get_window
+:       jsr     GetWindow
         copy16  active_port, previous_port
 
-        jsr     prepare_winport
+        jsr     PrepareWinport
         php
         ldax    update_port_addr
         jsr     assign_and_prepare_port
@@ -7774,7 +7776,7 @@ update_port_addr:
 
         ldax    previous_port
         stax    active_port
-        jmp     set_and_prepare_port
+        jmp     SetAndPreparePort
 .endproc
 
 ;;; ============================================================
@@ -7789,14 +7791,14 @@ win_port  .addr
         END_PARAM_BLOCK
 
 
-        jsr     apply_port_to_active_port
+        jsr     ApplyPortToActivePort
 
-        jsr     window_by_id_or_exit
+        jsr     WindowByIdOrExit
         copy16  params::win_port, params_addr
 
         COPY_STRUCT MGTK::Rect, fill_rect_params, current_maprect_x1
 
-        jsr     prepare_winport
+        jsr     PrepareWinport
         bcc     err_obscured
 
         ldy     #.sizeof(MGTK::GrafPort)-1
@@ -7805,12 +7807,12 @@ win_port  .addr
         dey
         bpl     :-
 
-        jmp     apply_active_port_to_port
+        jmp     ApplyActivePortToPort
 .endproc
 
 
-.proc prepare_winport
-        jsr     get_winrect
+.proc PrepareWinport
+        jsr     GetWinRect
 
         ldx     #7
 :       lda     #0
@@ -7820,7 +7822,7 @@ win_port  .addr
         dex
         bpl     :-
 
-        jsr     clip_rect
+        jsr     ClipRect
         bcs     :+
         rts
 
@@ -7884,7 +7886,7 @@ win_port  .addr
 .proc SetWinPortImpl
         ptr := window
 
-        jsr     window_by_id_or_exit
+        jsr     WindowByIdOrExit
         lda     ptr
         clc
         adc     #MGTK::Winfo::port
@@ -7905,7 +7907,7 @@ loop:   lda     ($82),y
 ;;; FrontWindow
 
 .proc FrontWindowImpl
-        jsr     top_window
+        jsr     TopWindow
         beq     nope
         lda     current_winfo::id
         bne     :+
@@ -7922,36 +7924,36 @@ nope:   lda     #0
 in_close_box:  .byte   0
 
 .proc TrackGoAwayImpl
-        jsr     top_window
+        jsr     TopWindow
         beq     end
 
-        jsr     get_wingoaway_rect
-        jsr     save_params_and_stack
-        jsr     set_desktop_port
+        jsr     GetWinGoAwayRect
+        jsr     SaveParamsAndStack
+        jsr     SetDesktopPort
 
         lda     #$80
 toggle: sta     in_close_box
 
         lda     #MGTK::penXOR
-        jsr     set_fill_mode
+        jsr     SetFillMode
 
         jsr     HideCursorImpl
         MGTK_CALL MGTK::PaintRect, winrect
         jsr     ShowCursorImpl
 
-loop:   jsr     get_and_return_event
+loop:   jsr     GetAndReturnEvent
         cmp     #MGTK::EventKind::button_up
         beq     :+
 
         MGTK_CALL MGTK::MoveTo, set_pos_params
-        jsr     in_winrect
+        jsr     InWinRect
         eor     in_close_box
         bpl     loop
         lda     in_close_box
         eor     #$80
         jmp     toggle
 
-:       jsr     restore_params_active_port
+:       jsr     RestoreParamsActivePort
         ldy     #0
         lda     in_close_box
         beq     end
@@ -8006,7 +8008,7 @@ moved      .byte
         lda     #0
 drag_or_grow:
         sta     drag_resize_flag
-        jsr     kbd_mouse_init_tracking
+        jsr     KbdMouseInitTracking
 
         ldx     #3
 :       lda     params::dragx,x
@@ -8017,32 +8019,32 @@ drag_or_grow:
         dex
         bpl     :-
 
-        jsr     window_by_id_or_exit
+        jsr     WindowByIdOrExit
 
         bit     kbd_mouse_state
         bpl     :+
-        jsr     kbd_win_drag_or_grow
+        jsr     KbdWinDragOrGrow
 
-:       jsr     hide_cursor_save_params
-        jsr     winframe_to_set_port
+:       jsr     HideCursorSaveParams
+        jsr     WinframeToSetPort
 
         lda     #MGTK::penXOR
-        jsr     set_fill_mode
+        jsr     SetFillMode
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
 
-loop:   jsr     get_window
-        jsr     update_win_for_drag
+loop:   jsr     GetWindow
+        jsr     UpdateWinForDrag
 
-        jsr     get_winframerect
-        jsr     frame_winrect
+        jsr     GetWinFrameRect
+        jsr     FrameWinRect
         jsr     ShowCursorImpl
 
 no_change:
-        jsr     get_and_return_event
+        jsr     GetAndReturnEvent
         cmp     #MGTK::EventKind::button_up
         bne     dragging
 
-        jsr     frame_winrect
+        jsr     FrameWinRect
 
         bit     movement_cancel
         bmi     canceled
@@ -8054,7 +8056,7 @@ no_change:
         bpl     :-
 
 canceled:
-        jsr     show_cursor_and_restore
+        jsr     ShowCursorAndRestore
         lda     #0
 return_moved:
         ldy     #params::moved - params
@@ -8071,28 +8073,28 @@ changed:
         jsr     HideCursorImpl
 
         lda     current_winfo::id
-        jsr     erase_window
-        jsr     hide_cursor_save_params
+        jsr     EraseWindow
+        jsr     HideCursorSaveParams
 
         bit     movement_cancel
         bvc     :+
-        jsr     set_input
+        jsr     SetInput
 
-:       jsr     show_cursor_and_restore
+:       jsr     ShowCursorAndRestore
         lda     #$80
         jmp     return_moved
 
 dragging:
-        jsr     check_if_changed
+        jsr     CheckIfChanged
         beq     no_change
 
         jsr     HideCursorImpl
-        jsr     frame_winrect
+        jsr     FrameWinRect
         jmp     loop
 .endproc
 
 
-.proc update_win_for_drag
+.proc UpdateWinForDrag
         win_width := $82
 
         PARAM_BLOCK content, $C7
@@ -8141,7 +8143,7 @@ loop:   add16   current_winport::maprect + MGTK::Rect::x2,x, drag_delta,x, curre
         bpl     :+
 
         add16   content::minwidth,x, current_winport::maprect + MGTK::Rect::x1,x, current_winport::maprect + MGTK::Rect::x2,x
-        jsr     set_grew_flag
+        jsr     SetGrewFlag
         jmp     next
 
 :       sec
@@ -8152,28 +8154,28 @@ loop:   add16   current_winport::maprect + MGTK::Rect::x2,x, drag_delta,x, curre
         bpl     next
 
         add16   content::maxwidth,x, current_winport::maprect + MGTK::Rect::x1,x, current_winport::maprect + MGTK::Rect::x2,x
-        jsr     set_grew_flag
+        jsr     SetGrewFlag
 
 next:   inx
         inx
         cpx     #4
         bne     loop
-        jmp     finish_grow
+        jmp     FinishGrow
 .endproc
 
 
         ;; Return with Z=1 if the drag position was not changed, or Z=0
         ;; if the drag position was changed or force_tracking_change is set.
-.proc check_if_changed
+.proc CheckIfChanged
         ldx     #2
         ldy     #0
 
-loop:   lda     get_and_return_event::event::mouse_pos+1,x
+loop:   lda     GetAndReturnEvent::event::mouse_pos+1,x
         cmp     drag_curpos+1,x
         bne     :+
         iny
 :
-        lda     get_and_return_event::event::mouse_pos,x
+        lda     GetAndReturnEvent::event::mouse_pos,x
         cmp     drag_curpos,x
         bne     :+
         iny
@@ -8183,7 +8185,7 @@ loop:   lda     get_and_return_event::event::mouse_pos+1,x
         sbc     drag_initialpos,x
         sta     drag_delta,x
 
-        lda     get_and_return_event::event::mouse_pos+1,x
+        lda     GetAndReturnEvent::event::mouse_pos+1,x
         sta     drag_curpos+1,x
         sbc     drag_initialpos+1,x
         sta     drag_delta+1,x
@@ -8207,49 +8209,49 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
 ;;; 1 byte of params, copied to $82
 
 .proc CloseWindowImpl
-        jsr     window_by_id_or_exit
+        jsr     WindowByIdOrExit
 
-        jsr     hide_cursor_save_params
+        jsr     HideCursorSaveParams
 
-        jsr     winframe_to_set_port
-        jsr     link_window
+        jsr     WinframeToSetPort
+        jsr     LinkWindow
 
         ldy     #MGTK::Winfo::status
         lda     (window),y
         and     #$7F
         sta     (window),y
 
-        jsr     top_window
+        jsr     TopWindow
         lda     current_winfo::id
         sta     sel_window_id
         lda     #0
-        jmp     erase_window
+        jmp     EraseWindow
 .endproc
 
 ;;; ============================================================
 ;;; CloseAll
 
 .proc CloseAllImpl
-        jsr     top_window
+        jsr     TopWindow
         beq     :+
 
         ldy     #MGTK::Winfo::status
         lda     (window),y
         and     #$7F
         sta     (window),y
-        jsr     link_window
+        jsr     LinkWindow
 
         jmp     CloseAllImpl
 :       jmp     StartDeskTopImpl::reset_desktop
 .endproc
 
 
-.proc winframe_to_set_port
-        jsr     set_desktop_port
-        jsr     get_winframerect
+.proc WinframeToSetPort
+        jsr     SetDesktopPort
+        jsr     GetWinFrameRect
 
         COPY_BLOCK winrect, left
-        jsr     clip_rect
+        jsr     ClipRect
 
         ldx     #3
 :       lda     left,x
@@ -8268,26 +8270,26 @@ matched_target:
         .byte   0
 
         ;; Erases window after destruction
-.proc erase_window
+.proc EraseWindow
         sta     target_window_id
         lda     #0
         sta     matched_target
         MGTK_CALL MGTK::SetPortBits, set_port_params
 
         lda     #MGTK::pencopy
-        jsr     set_fill_mode
+        jsr     SetFillMode
 
         MGTK_CALL MGTK::SetPattern, desktop_pattern
         MGTK_CALL MGTK::PaintRect, set_port_maprect
 
-        jsr     show_cursor_and_restore
+        jsr     ShowCursorAndRestore
 
         php
         sei
         jsr     FlushEventsImpl
 
         ;; Update for the desktop
-        jsr     put_event
+        jsr     PutEvent
         bcs     plp_ret
         tax
         lda     #MGTK::EventKind::update
@@ -8296,13 +8298,13 @@ matched_target:
         sta     eventbuf::window_id,x
 
         ;; Updates for windows
-        jsr     top_window
+        jsr     TopWindow
         beq     plp_ret
 
-:       jsr     next_window
+:       jsr     NextWindow
         bne     :-
 
-loop:   jsr     put_event
+loop:   jsr     PutEvent
         bcs     plp_ret
         tax
 
@@ -8316,10 +8318,10 @@ loop:   jsr     put_event
         beq     plp_ret
 
         sta     $82
-        jsr     window_by_id
+        jsr     WindowById
 
         ldax    previous_window
-        jsr     get_window::get_from_ax
+        jsr     GetWindow::get_from_ax
         jmp     loop
 
 plp_ret:
@@ -8362,14 +8364,14 @@ screenx         .word           ; out
 screeny         .word           ; out
         END_PARAM_BLOCK
 
-        jsr     window_by_id_or_exit
+        jsr     WindowByIdOrExit
 
         ldx     #2
 loop:   add16   params::windowx,x, current_winport::viewloc,x, params::windowx,x
         dex
         dex
         bpl     loop
-        bmi     copy_map_results                  ; always
+        bmi     CopyMapResults                  ; always
 .endproc
 
 ;;; ============================================================
@@ -8386,7 +8388,7 @@ windowx         .word           ; out
 windowy         .word           ; out
         END_PARAM_BLOCK
 
-        jsr     window_by_id_or_exit
+        jsr     WindowByIdOrExit
 
         ldx     #2
 :       sub16   params::screenx,x, current_winport::viewloc,x, params::screenx,x
@@ -8396,7 +8398,7 @@ windowy         .word           ; out
         ;; fall through
 .endproc
 
-.proc copy_map_results
+.proc CopyMapResults
         ldy     #ScreenToWindowImpl::params::windowx - ScreenToWindowImpl::params
 :       lda     ScreenToWindowImpl::params + (ScreenToWindowImpl::params::screenx - ScreenToWindowImpl::params::windowx),y
         sta     (params_addr),y
@@ -8410,7 +8412,7 @@ windowy         .word           ; out
 
 
         ;; Used to draw scrollbar arrows and resize box
-.proc draw_icon
+.proc DrawIcon
         icon_ptr := $82
 
         stax    icon_ptr
@@ -8487,8 +8489,8 @@ activate   .byte
 ret:    rts
 
 activate:
-        jsr     hide_cursor_save_params
-        jsr     top_window
+        jsr     HideCursorSaveParams
+        jsr     TopWindow
 
         bit     which_control
         bpl     :+
@@ -8506,16 +8508,16 @@ toggle: eor     params::activate
         sta     (window),y
 
         lda     params::activate
-        jsr     draw_or_erase_scrollbar
-        jmp     show_cursor_and_restore
+        jsr     DrawOrEraseScrollbar
+        jmp     ShowCursorAndRestore
 .endproc
 
 
-.proc draw_or_erase_scrollbar
+.proc DrawOrEraseScrollbar
         bne     do_draw
 
-        jsr     get_scrollbar_scroll_area
-        jsr     set_standard_port
+        jsr     GetScrollbarScrollArea
+        jsr     SetStandardPort
         MGTK_CALL MGTK::PaintRect, winrect
         rts
 
@@ -8530,8 +8532,8 @@ vert_scrollbar:
         bit     current_winfo::vscroll
         bpl     ret
 has_scroll:
-        jsr     set_standard_port
-        jsr     get_scrollbar_scroll_area
+        jsr     SetStandardPort
+        jsr     GetScrollbarScrollArea
 
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
         MGTK_CALL MGTK::PaintRect, winrect
@@ -8548,8 +8550,8 @@ vert_thumb:
         bit     current_winfo::vscroll
         bvc     ret2
 has_thumb:
-        jsr     get_thumb_rect
-        jmp     fill_and_frame_rect
+        jsr     GetThumbRect
+        jmp     FillAndFrameRect
 .endproc
 
 
@@ -8566,11 +8568,11 @@ light_speckles_pattern:
         .byte   $00,$00
 
 
-.proc get_scrollbar_scroll_area
+.proc GetScrollbarScrollArea
         bit     which_control
         bpl     horiz
 
-        jsr     get_win_vertscrollrect
+        jsr     GetWinVertScrollRect
         lda     winrect::y1
         clc
         adc     #$0C
@@ -8608,7 +8610,7 @@ v_noscroll:
         jmp     return_winrect_jmp
 
 
-horiz:  jsr     get_win_horizscrollrect
+horiz:  jsr     GetWinHorizScrollRect
         lda     winrect::x1
         clc
         adc     #$15
@@ -8657,18 +8659,18 @@ return_winrect_jmp:
         kYThumbHeight = 12
 
 
-.proc get_thumb_rect
+.proc GetThumbRect
         thumb_coord := $82
 
-        jsr     get_scrollbar_scroll_area
+        jsr     GetScrollbarScrollArea
 
-        jsr     get_thumb_vals
-        jsr     fixed_div
+        jsr     GetThumbVals
+        jsr     FixedDiv
 
         lda     fixed_div_quotient+2    ; 8.0 integral part
         pha
-        jsr     calc_ctl_bounds
-        jsr     set_up_thumb_division
+        jsr     CalcCtlBounds
+        jsr     SetUpThumbDivision
         pla
         tax
 
@@ -8679,7 +8681,7 @@ return_winrect_jmp:
         beq     :+
 
         ldx     fixed_div_quotient+1    ; 0.8 fractional part
-        jsr     get_thumb_coord
+        jsr     GetThumbCoord
 
 :       sta     thumb_coord
         sty     thumb_coord+1
@@ -8710,17 +8712,17 @@ return_winrect_jmp:
 ;;; 4 bytes of params, copied to current_penloc
 
 .proc FindControlImpl
-        jsr     save_params_and_stack
+        jsr     SaveParamsAndStack
 
-        jsr     top_window
+        jsr     TopWindow
         bne     :+
         EXIT_CALL MGTK::Error::no_active_window
 
 :       bit     current_winfo::vscroll
         bpl     no_vscroll
 
-        jsr     get_win_vertscrollrect
-        jsr     in_winrect
+        jsr     GetWinVertScrollRect
+        jsr     InWinRect
         beq     no_vscroll
 
         ldx     #0
@@ -8731,15 +8733,15 @@ return_winrect_jmp:
         lda     #which_control_vert
         sta     which_control
 
-        jsr     get_scrollbar_scroll_area
-        jsr     in_winrect
+        jsr     GetScrollbarScrollArea
+        jsr     InWinRect
         beq     in_arrows
 
         bit     current_winfo::vscroll
         bcs     return_dead_zone ; never ???
 
-        jsr     get_thumb_rect
-        jsr     in_winrect
+        jsr     GetThumbRect
+        jsr     InWinRect
         beq     no_thumb
 
         ldx     #MGTK::Part::thumb
@@ -8752,7 +8754,7 @@ in_arrows:
 no_thumb:
         lda     #MGTK::Part::page_up
 :       pha
-        jsr     get_thumb_rect
+        jsr     GetThumbRect
         pla
         tax
         lda     current_penloc_y
@@ -8768,8 +8770,8 @@ no_vscroll:
         bit     current_winfo::hscroll
         bpl     no_hscroll
 
-        jsr     get_win_horizscrollrect
-        jsr     in_winrect
+        jsr     GetWinHorizScrollRect
+        jsr     InWinRect
         beq     no_hscroll
 
         ldx     #0
@@ -8780,15 +8782,15 @@ no_vscroll:
         lda     #which_control_horiz
         sta     which_control
 
-        jsr     get_scrollbar_scroll_area
-        jsr     in_winrect
+        jsr     GetScrollbarScrollArea
+        jsr     InWinRect
         beq     in_harrows
 
         bit     current_winfo::hscroll
         bvc     return_dead_zone
 
-        jsr     get_thumb_rect
-        jsr     in_winrect
+        jsr     GetThumbRect
+        jsr     InWinRect
         beq     no_hthumb
 
         ldx     #MGTK::Part::thumb
@@ -8801,7 +8803,7 @@ in_harrows:
 no_hthumb:
         lda     #MGTK::Part::page_left
 :       pha
-        jsr     get_thumb_rect
+        jsr     GetThumbRect
         pla
         tax
         lda     current_penloc_x+1
@@ -8818,8 +8820,8 @@ hscrollbar:
         bne     return_result
 
 no_hscroll:
-        jsr     get_winrect
-        jsr     in_winrect
+        jsr     GetWinRect
+        jsr     InWinRect
         beq     return_dead_zone
 
         lda     #MGTK::Ctl::not_a_control
@@ -8859,7 +8861,7 @@ ctlmax     .byte
 :       EXIT_CALL MGTK::Error::control_not_found
 
 got_ctl:
-        jsr     top_window
+        jsr     TopWindow
         bne     :+
 
         EXIT_CALL MGTK::Error::no_active_window
@@ -8918,36 +8920,36 @@ got_ctl:lda     params::which_ctl
         dex
         bpl     :-
 
-        jsr     top_window
+        jsr     TopWindow
         bne     :+
         EXIT_CALL MGTK::Error::no_active_window
 
-:       jsr     get_thumb_rect
-        jsr     save_params_and_stack
-        jsr     set_desktop_port
+:       jsr     GetThumbRect
+        jsr     SaveParamsAndStack
+        jsr     SetDesktopPort
 
         lda     #MGTK::penXOR
-        jsr     set_fill_mode
+        jsr     SetFillMode
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
 
         jsr     HideCursorImpl
 drag_loop:
-        jsr     frame_winrect
+        jsr     FrameWinRect
         jsr     ShowCursorImpl
 
 no_change:
-        jsr     get_and_return_event
+        jsr     GetAndReturnEvent
         cmp     #MGTK::EventKind::button_up
         beq     drag_done
 
-        jsr     check_if_changed
+        jsr     CheckIfChanged
         beq     no_change
 
         jsr     HideCursorImpl
-        jsr     frame_winrect
+        jsr     FrameWinRect
 
-        jsr     top_window
-        jsr     get_thumb_rect
+        jsr     TopWindow
+        jsr     GetThumbRect
 
         ldx     #0
         lda     #kXThumbWidth
@@ -8999,23 +9001,23 @@ in_bound2:
 
 drag_done:
         jsr     HideCursorImpl
-        jsr     frame_winrect
-        jsr     show_cursor_and_restore
+        jsr     FrameWinRect
+        jsr     ShowCursorAndRestore
 
-        jsr     set_up_thumb_division
+        jsr     SetUpThumbDivision
 
-        jsr     fixed_div
-        ldx     fixed_div::quotient+2    ; 8.0 integral part
+        jsr     FixedDiv
+        ldx     FixedDiv::quotient+2    ; 8.0 integral part
 
-        jsr     get_thumb_vals
+        jsr     GetThumbVals
 
-        lda     fixed_div::divisor
+        lda     FixedDiv::divisor
         ldy     #0
         cpx     #1
         bcs     :+
 
         ldx     fixed_div_quotient+1     ; 0.8 fractional part
-        jsr     get_thumb_coord
+        jsr     GetThumbCoord
 
 :       ldx     #1
         cmp     fixed_div_quotient+2
@@ -9038,7 +9040,7 @@ drag_done:
         ;;    A,Y = current position of thumb in 16.0 format
         ;;          (= maximum position * fraction)
         ;;
-.proc get_thumb_coord
+.proc GetThumbCoord
         increment := $82
         accum     := $84
 
@@ -9067,23 +9069,23 @@ ctl_bound1:
         .res 2
 
 
-        ;; Set fixed_div::divisor and fixed_div::dividend up for the
+        ;; Set FixedDiv::divisor and FixedDiv::dividend up for the
         ;; proportion calculation for the control in which_control.
-.proc set_up_thumb_division
-        sub16   ctl_bound2, ctl_bound1, fixed_div::divisor
+.proc SetUpThumbDivision
+        sub16   ctl_bound2, ctl_bound1, FixedDiv::divisor
         ldx     #0
         bit     which_control
         bpl     :+
 
         ldx     #2
-:       sub16   winrect,x, ctl_bound1, fixed_div::dividend
+:       sub16   winrect,x, ctl_bound1, FixedDiv::dividend
         rts
 .endproc
 
 
         ;; Set thumb_max and thumb_pos according to the control indicated
         ;; in which_control.
-.proc get_thumb_vals
+.proc GetThumbVals
         ldy     #MGTK::Winfo::hthumbmax
 
         bit     which_control
@@ -9104,7 +9106,7 @@ is_horiz:
 .endproc
 
 
-.proc calc_ctl_bounds
+.proc CalcCtlBounds
         offset := $82
 
         ldx     #0
@@ -9164,7 +9166,7 @@ bad_ctl:
         EXIT_CALL MGTK::Error::control_not_found
 
 check_win:
-        jsr     top_window
+        jsr     TopWindow
         bne     :+
         EXIT_CALL MGTK::Error::no_active_window
 
@@ -9176,10 +9178,10 @@ check_win:
 :       lda     params::thumbpos
         sta     (window),y
 
-        jsr     hide_cursor_save_params
-        jsr     set_standard_port
-        jsr     draw_or_erase_scrollbar
-        jmp     show_cursor_and_restore
+        jsr     HideCursorSaveParams
+        jsr     SetStandardPort
+        jsr     DrawOrEraseScrollbar
+        jmp     ShowCursorAndRestore
 .endproc
 
 ;;; ============================================================
@@ -9247,13 +9249,13 @@ kbd_menu_item:  .byte   $00
 movement_cancel:  .byte   $00
 kbd_mouse_status:  .byte   $00
 
-.proc kbd_mouse_save_zp
+.proc KbdMouseSaveZP
         COPY_BYTES $80, $80, kbd_mouse_zp_stash
         rts
 .endproc
 
 
-.proc kbd_mouse_restore_zp
+.proc KbdMouseRestoreZP
         COPY_BYTES $80, kbd_mouse_zp_stash,$80
         rts
 .endproc
@@ -9267,7 +9269,7 @@ kbd_mouse_zp_stash:
 ;;; X = xlo, Y = xhi, A = y
 
 
-.proc set_mouse_pos
+.proc SetMousePos
         bit     mouse_hooked_flag
         bmi     no_firmware
         bit     no_mouse_flag
@@ -9276,7 +9278,7 @@ kbd_mouse_zp_stash:
         pha
         txa
         sec
-        jsr     scale_mouse_coord
+        jsr     ScaleMouseCoord
 
         ldx     mouse_firmware_hi
         sta     MOUSE_X_LO,x
@@ -9286,7 +9288,7 @@ kbd_mouse_zp_stash:
         pla
         ldy     #$00
         clc
-        jsr     scale_mouse_coord
+        jsr     ScaleMouseCoord
 
         ldx     mouse_firmware_hi
         sta     MOUSE_Y_LO,x
@@ -9294,7 +9296,7 @@ kbd_mouse_zp_stash:
         sta     MOUSE_Y_HI,x
 
         ldy     #POSMOUSE
-        jmp     call_mouse
+        jmp     CallMouse
 
 no_firmware:
         stx     mouse_x
@@ -9303,7 +9305,7 @@ no_firmware:
         bit     mouse_hooked_flag
         bpl     not_hooked
         ldy     #POSMOUSE
-        jmp     call_mouse
+        jmp     CallMouse
 
 not_hooked:
         rts
@@ -9311,22 +9313,22 @@ not_hooked:
 
 ;;; ============================================================
 
-.proc restore_mouse_pos
+.proc RestoreMousePos
         ldx     saved_mouse_x
         ldy     saved_mouse_x+1
         lda     saved_mouse_y
-        jmp     set_mouse_pos
+        jmp     SetMousePos
 .endproc
 
-.proc set_mouse_pos_from_kbd_mouse
+.proc SetMousePosFromKbdMouse
         ldx     kbd_mouse_x
         ldy     kbd_mouse_x+1
         lda     kbd_mouse_y
-        jmp     set_mouse_pos
+        jmp     SetMousePos
 .endproc
 
 
-.proc scale_mouse_coord
+.proc ScaleMouseCoord
         bcc     scale_y
         ldx     mouse_scale_x
         bne     :+
@@ -9348,24 +9350,24 @@ scale_y:
 .endproc
 
 
-.proc kbd_mouse_to_mouse
+.proc KbdMouseToMouse
         COPY_BYTES 3, kbd_mouse_x, mouse_x
         rts
 .endproc
 
-.proc position_kbd_mouse
-        jsr     kbd_mouse_to_mouse
-        jmp     set_mouse_pos_from_kbd_mouse
+.proc PositionKbdMouse
+        jsr     KbdMouseToMouse
+        jmp     SetMousePosFromKbdMouse
 .endproc
 
 
-.proc save_mouse_pos
-        jsr     read_mouse_pos
+.proc SaveMousePos
+        jsr     ReadMousePos
         COPY_BYTES 3, mouse_x, saved_mouse_pos
         rts
 .endproc
 
-.proc restore_cursor
+.proc RestoreCursor
         jsr     stash_addr
         copy16  kbd_mouse_cursor_stash, params_addr
         jsr     SetCursorImpl
@@ -9375,10 +9377,10 @@ scale_y:
         sta     kbd_mouse_state
         lda     #$40
         sta     mouse_status
-        jmp     restore_mouse_pos
+        jmp     RestoreMousePos
 .endproc
 
-.proc kbd_mouse_init_tracking
+.proc KbdMouseInitTracking
         lda     #0
         sta     movement_cancel
         sta     force_tracking_change
@@ -9387,7 +9389,7 @@ scale_y:
 
         ;; Look at buttons (apple keys), compute modifiers in A
         ;; (bit 0 = button 0 / open apple, bit 1 = button 1 / solid apple)
-.proc compute_modifiers
+.proc ComputeModifiers
         lda     BUTN1
         asl     a
         lda     BUTN0
@@ -9398,8 +9400,8 @@ scale_y:
 .endproc
 
 
-.proc get_key
-        jsr     compute_modifiers
+.proc GetKey
+        jsr     ComputeModifiers
         sta     set_input_modifiers
 no_modifiers:
         clc
@@ -9412,26 +9414,26 @@ no_modifiers:
 .endproc
 
 
-.proc handle_keyboard_mouse
+.proc HandleKeyboardMouse
         lda     kbd_mouse_state
         bne     :+
         rts
 
 :       cmp     #kKeyboardMouseStateMouseKeys
-        beq     kbd_mouse_mousekeys
+        beq     KbdMouseMousekeys
 
-        jsr     kbd_mouse_sync_cursor
+        jsr     KbdMouseSyncCursor
 
         lda     kbd_mouse_state
         cmp     #kKeyboardMouseStateMenu
         bne     :+
-        jmp     kbd_mouse_do_menu
+        jmp     KbdMouseDoMenu
 
-:       jmp     kbd_mouse_do_window
+:       jmp     KbdMouseDoWindow
 .endproc
 
 
-.proc stash_cursor
+.proc StashCursor
         jsr     stash_addr
         copy16  active_cursor, kbd_mouse_cursor_stash
         copy16  pointer_cursor_addr, params_addr
@@ -9453,8 +9455,8 @@ restore_addr:
 stashed_addr:  .addr     0
 
 
-.proc kbd_mouse_mousekeys
-        jsr     compute_modifiers ; C=_ A=____ __SO
+.proc KbdMouseMousekeys
+        jsr     ComputeModifiers ; C=_ A=____ __SO
         ror     a                 ; C=O A=____ ___S
         ror     a                 ; C=S A=O___ ____
         ror     kbd_mouse_status  ; shift solid apple into bit 7 of kbd_mouse_status
@@ -9463,15 +9465,15 @@ stashed_addr:  .addr     0
         lda     #0
         sta     input::modifiers
 
-        jsr     get_key::no_modifiers
+        jsr     GetKey::no_modifiers
         bcc     :+
-        jmp     mousekeys_input
+        jmp     MousekeysInput
 
-:       jmp     position_kbd_mouse
+:       jmp     PositionKbdMouse
 .endproc
 
 
-.proc activate_keyboard_mouse
+.proc ActivateKeyboardMouse
         pha                     ; save modifiers
         lda     kbd_mouse_state
         bne     in_kbd_mouse    ; branch away if keyboard mouse is active
@@ -9494,7 +9496,7 @@ beeploop:
         bpl     beeploop
 
 waitloop:
-        jsr     compute_modifiers
+        jsr     ComputeModifiers
         cmp     #3
         beq     waitloop        ; wait for user to release OA+SA
         sta     input::modifiers
@@ -9520,13 +9522,13 @@ pla_ret:
 .endproc
 
 
-.proc kbd_mouse_sync_cursor
+.proc KbdMouseSyncCursor
         bit     mouse_status
         bpl     :+
 
         lda     #0
         sta     kbd_mouse_state
-        jmp     set_mouse_pos_from_kbd_mouse
+        jmp     SetMousePosFromKbdMouse
 
 :       lda     mouse_status
         pha
@@ -9542,14 +9544,14 @@ pla_ret:
         rts
 
 kbd_mouse_to_mouse_jmp:
-        jmp     kbd_mouse_to_mouse
+        jmp     KbdMouseToMouse
 .endproc
 
 
-.proc kbd_menu_select
+.proc KbdMenuSelect
         php
         sei
-        jsr     save_mouse_pos
+        jsr     SaveMousePos
 
         lda     #kKeyboardMouseStateMenu
         sta     kbd_mouse_state
@@ -9558,23 +9560,23 @@ kbd_mouse_to_mouse_jmp:
 
         lda     #$80
         sta     mouse_status
-        jsr     stash_cursor
+        jsr     StashCursor
         ldx     sel_menu_index
-        jsr     get_menu
+        jsr     GetMenu
 
         lda     curmenu::menu_id
         sta     cur_open_menu
-        jsr     draw_menu
+        jsr     DrawMenu
 
         lda     sel_menu_item_index
         sta     cur_hilited_menu_item
-        jsr     hilite_menu_item
+        jsr     HiliteMenuItem
         plp
         rts
 
 position_menu_item:
         ldx     sel_menu_index
-        jsr     get_menu
+        jsr     GetMenu
 
         add16   curmenu::x_min, #5, kbd_mouse_x
 
@@ -9583,11 +9585,11 @@ position_menu_item:
         sta     kbd_mouse_y
         lda     #$C0
         sta     mouse_status
-        jmp     position_kbd_mouse
+        jmp     PositionKbdMouse
 .endproc
 
 
-.proc kbd_menu_select_item
+.proc KbdMenuSelectItem
         bit     kbd_menu_select_flag
         bpl     :+
 
@@ -9603,20 +9605,20 @@ position_menu_item:
 .endproc
 
 
-.proc kbd_mouse_do_menu
-        jsr     kbd_mouse_save_zp
+.proc KbdMouseDoMenu
+        jsr     KbdMouseSaveZP
         jsr     :+
-        jmp     kbd_mouse_restore_zp
+        jmp     KbdMouseRestoreZP
 
-:       jsr     get_key
-        bcs     handle_menu_key
+:       jsr     GetKey
+        bcs     HandleMenuKey
         rts
 .endproc
 
         ;; Keyboard navigation of menu
-.proc handle_menu_key
+.proc HandleMenuKey
         pha
-        jsr     kbd_menu_select_item
+        jsr     KbdMenuSelectItem
         pla
         cmp     #CHAR_ESCAPE
         bne     try_return
@@ -9631,8 +9633,8 @@ position_menu_item:
 try_return:
         cmp     #CHAR_RETURN
         bne     try_up
-        jsr     kbd_mouse_to_mouse
-        jmp     restore_cursor
+        jsr     KbdMouseToMouse
+        jmp     RestoreCursor
 
 try_up:
         cmp     #CHAR_UP
@@ -9642,20 +9644,20 @@ uploop: dec     sel_menu_item_index
         bpl     :+
 
         ldx     sel_menu_index
-        jsr     get_menu
+        jsr     GetMenu
         ldx     menu_item_count
         stx     sel_menu_item_index
 
 :       ldx     sel_menu_item_index
         beq     :+
         dex
-        jsr     get_menu_item
+        jsr     GetMenuItem
 
         lda     curmenuitem::options
         and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
         bne     uploop
 
-:       jmp     kbd_menu_select::position_menu_item
+:       jmp     KbdMenuSelect::position_menu_item
 
 try_down:
         cmp     #CHAR_DOWN
@@ -9665,7 +9667,7 @@ downloop:
         inc     sel_menu_item_index
 
         ldx     sel_menu_index
-        jsr     get_menu
+        jsr     GetMenu
         lda     sel_menu_item_index
         cmp     menu_item_count
         bcc     :+
@@ -9676,12 +9678,12 @@ downloop:
 :       ldx     sel_menu_item_index
         beq     :+
         dex
-        jsr     get_menu_item
+        jsr     GetMenuItem
         lda     curmenuitem::options
         and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
         bne     downloop
 
-:       jmp     kbd_menu_select::position_menu_item
+:       jmp     KbdMenuSelect::position_menu_item
 
 try_right:
         cmp     #CHAR_RIGHT
@@ -9697,7 +9699,7 @@ try_right:
 
         lda     #0
         sta     sel_menu_index
-:       jmp     kbd_menu_select::position_menu_item
+:       jmp     KbdMenuSelect::position_menu_item
 
 try_left:
         cmp     #CHAR_LEFT
@@ -9707,14 +9709,14 @@ try_left:
         sta     sel_menu_item_index
         dec     sel_menu_index
         bmi     :+
-        jmp     kbd_menu_select::position_menu_item
+        jmp     KbdMenuSelect::position_menu_item
 
 :       ldx     menu_count
         dex
         stx     sel_menu_index
-        jmp     kbd_menu_select::position_menu_item
+        jmp     KbdMenuSelect::position_menu_item
 
-nope:   jsr     kbd_menu_by_shortcut
+nope:   jsr     KbdMenuByShortcut
         bcc     :+
 
         lda     #$80
@@ -9722,7 +9724,7 @@ nope:   jsr     kbd_menu_by_shortcut
 :       rts
 .endproc
 
-.proc kbd_menu_by_shortcut
+.proc KbdMenuByShortcut
         sta     find_shortcut
         lda     set_input_modifiers
         and     #3
@@ -9760,11 +9762,11 @@ fail:   clc
 .endproc
 
 
-.proc kbd_menu_return
+.proc KbdMenuReturn
         php
         sei
-        jsr     hide_menu
-        jsr     restore_cursor
+        jsr     HideMenu
+        jsr     RestoreCursor
 
         lda     kbd_menu
         sta     MenuSelectImpl::params::menu_id
@@ -9774,7 +9776,7 @@ fail:   clc
         sta     MenuSelectImpl::params::menu_item
         sta     cur_hilited_menu_item
 
-        jsr     restore_params_active_port
+        jsr     RestoreParamsActivePort
         lda     kbd_menu
         beq     :+
         jsr     HiliteMenuImpl
@@ -9788,14 +9790,14 @@ fail:   clc
 .endproc
 
 
-.proc kbd_win_drag_or_grow
+.proc KbdWinDragOrGrow
         php
         sei
-        jsr     save_mouse_pos
+        jsr     SaveMousePos
         lda     #$80
         sta     mouse_status
 
-        jsr     get_winframerect
+        jsr     GetWinFrameRect
         bit     drag_resize_flag
         bpl     do_drag
 
@@ -9835,8 +9837,8 @@ fail:   clc
         lda     #>(kScreenHeight-1)
         sbc     drag_initialpos::ycoord+1
         bmi     no_grow
-        jsr     position_kbd_mouse
-        jsr     stash_cursor
+        jsr     PositionKbdMouse
+        jsr     StashCursor
         plp
         rts
 
@@ -9893,14 +9895,14 @@ is_y:   adc     #5
         bpl     :-
 
 xpositive:
-        jsr     position_kbd_mouse
-        jsr     stash_cursor
+        jsr     PositionKbdMouse
+        jsr     StashCursor
         plp
         rts
 .endproc
 
 
-.proc kbd_mouse_add_to_y
+.proc KbdMouseAddToY
         php
         clc
         adc     kbd_mouse_y
@@ -9911,7 +9913,7 @@ xpositive:
         bcc     :+
         lda     #0
         sta     kbd_mouse_y
-:       jmp     position_kbd_mouse
+:       jmp     PositionKbdMouse
 
 yclamp: cmp     #<kScreenHeight
         bcc     :-
@@ -9921,12 +9923,12 @@ yclamp: cmp     #<kScreenHeight
 .endproc
 
 
-.proc kbd_mouse_do_window
-        jsr     kbd_mouse_save_zp
+.proc KbdMouseDoWindow
+        jsr     KbdMouseSaveZP
         jsr     :+
-        jmp     kbd_mouse_restore_zp
+        jmp     KbdMouseRestoreZP
 
-:       jsr     get_key
+:       jsr     GetKey
         bcs     :+
         rts
 
@@ -9935,11 +9937,11 @@ yclamp: cmp     #<kScreenHeight
 
         lda     #$80
         sta     movement_cancel
-        jmp     restore_cursor
+        jmp     RestoreCursor
 
 :       cmp     #CHAR_RETURN
         bne     :+
-        jmp     restore_cursor
+        jmp     RestoreCursor
 
 :       pha
         lda     set_input_modifiers
@@ -9952,7 +9954,7 @@ yclamp: cmp     #<kScreenHeight
         ;; Fall-through
 .endproc
 
-.proc mousekeys_input
+.proc MousekeysInput
         cmp     #CHAR_UP
         bne     not_up
 
@@ -9960,7 +9962,7 @@ yclamp: cmp     #<kScreenHeight
         bit     set_input_modifiers
         bpl     :+
         lda     #256-48
-:       jmp     kbd_mouse_add_to_y
+:       jmp     KbdMouseAddToY
 
 not_up:
         cmp     #CHAR_DOWN
@@ -9970,13 +9972,13 @@ not_up:
         bit     set_input_modifiers
         bpl     :+
         lda     #48
-:       jmp     kbd_mouse_add_to_y
+:       jmp     KbdMouseAddToY
 
 not_down:
         cmp     #CHAR_RIGHT
         bne     not_right
 
-        jsr     kbd_mouse_check_xmax
+        jsr     KbdMouseCheckXmax
         bcc     out_of_bounds
 
         clc
@@ -10002,13 +10004,13 @@ not_down:
         lda     #<(kScreenWidth-1)
         sta     kbd_mouse_x
 out_of_bounds:
-        jmp     position_kbd_mouse
+        jmp     PositionKbdMouse
 
 not_right:
         cmp     #CHAR_LEFT
         bne     not_left
 
-        jsr     kbd_mouse_check_xmin
+        jsr     KbdMouseCheckXmin
         bcc     out_of_boundsl
 
         lda     kbd_mouse_x
@@ -10029,7 +10031,7 @@ move_left:
         sta     kbd_mouse_x
         sta     kbd_mouse_x+1
 out_of_boundsl:
-        jmp     position_kbd_mouse
+        jmp     PositionKbdMouse
 
 not_left:
         sta     set_input_key
@@ -10037,7 +10039,7 @@ not_left:
         COPY_STRUCT MGTK::GrafPort, $A7, $0600
 
         lda     set_input_key
-        jsr     kbd_menu_by_shortcut
+        jsr     KbdMenuByShortcut
         php
 
         COPY_STRUCT MGTK::GrafPort, $0600, $A7
@@ -10047,13 +10049,13 @@ not_left:
 
         lda     #$40
         sta     movement_cancel
-        jmp     restore_cursor
+        jmp     RestoreCursor
 
 :       rts
 .endproc
 
 
-.proc set_input
+.proc SetInput
         MGTK_CALL MGTK::PostEvent, set_input_params
         rts
 .endproc
@@ -10067,13 +10069,13 @@ modifiers:
         set_input_key := set_input_params::key
         set_input_modifiers := set_input_params::modifiers
 
-        ;; Set to true to force the return value of check_if_changed to true
+        ;; Set to true to force the return value of CheckIfChanged to true
         ;; during a tracking kOperation.
 force_tracking_change:
         .byte   0
 
 
-.proc kbd_mouse_check_xmin
+.proc KbdMouseCheckXmin
         lda     kbd_mouse_state
         cmp     #kKeyboardMouseStateMouseKeys
         beq     ret_ok
@@ -10088,7 +10090,7 @@ force_tracking_change:
 ret_ok: sec
         rts
 
-:       jsr     get_winframerect
+:       jsr     GetWinFrameRect
         lda     winrect::x2+1
         bne     min_ok
         lda     #9
@@ -10118,7 +10120,7 @@ min_ok: inc     force_tracking_change
 .endproc
 
 
-.proc kbd_mouse_check_xmax
+.proc KbdMouseCheckXmax
         lda     kbd_mouse_state
         cmp     #kKeyboardMouseStateMouseKeys
         beq     :+
@@ -10136,7 +10138,7 @@ min_ok: inc     force_tracking_change
 :       sec
         rts
 
-is_max: jsr     get_winframerect
+is_max: jsr     GetWinFrameRect
         sec
         lda     #<(kScreenWidth-1)
         sbc     winrect::x1
@@ -10183,21 +10185,21 @@ in_range:
 grew_flag:
         .byte   0
 
-.proc set_grew_flag
+.proc SetGrewFlag
         lda     #$80
         sta     grew_flag
 grts:   rts
 .endproc
 
 
-.proc finish_grow
+.proc FinishGrow
         bit     kbd_mouse_state
-        bpl     set_grew_flag::grts
+        bpl     SetGrewFlag::grts
 
         bit     grew_flag
-        bpl     set_grew_flag::grts
+        bpl     SetGrewFlag::grts
 
-        jsr     get_winframerect
+        jsr     GetWinFrameRect
         php
         sei
         ldx     #0
@@ -10207,7 +10209,7 @@ grts:   rts
         cpx     #4
         bcc     :-
 
-        jsr     position_kbd_mouse
+        jsr     PositionKbdMouse
         plp
         rts
 .endproc
@@ -10262,7 +10264,7 @@ set_clamps:
         sta     CLAMP_MAX_HI
 :       lda     #CLAMP_X
         ldy     #CLAMPMOUSE
-        jsr     call_mouse
+        jsr     CallMouse
 
         lda     mouse_scale_y
         asl     a
@@ -10286,7 +10288,7 @@ set_clamps:
         sta     CLAMP_MAX_HI
 :       lda     #CLAMP_Y
         ldy     #CLAMPMOUSE
-        jsr     call_mouse
+        jsr     CallMouse
 end:    rts
 
 clamp_x_table:  .word   kScreenWidth-1, kScreenWidth/2-1, kScreenWidth/4-1, kScreenWidth/8-1
@@ -10301,11 +10303,11 @@ clamp_y_table:  .word   kScreenHeight-1, kScreenHeight/2-1, kScreenHeight/4-1, k
         ;; If X's high bit is set, only slot in low bits is tested.
         ;; Otherwise all slots are scanned.
 
-.proc find_mouse
+.proc FindMouse
         txa
         and     #$7F
         beq     scan
-        jsr     check_mouse_in_a
+        jsr     CheckMouseInA
         sta     no_mouse_flag
         beq     found
         ldx     #0
@@ -10314,7 +10316,7 @@ clamp_y_table:  .word   kScreenHeight-1, kScreenHeight/2-1, kScreenHeight/4-1, k
         ;; Scan for mouse starting at slot 7
 scan:   ldx     #7
 loop:   txa
-        jsr     check_mouse_in_a
+        jsr     CheckMouseInA
         sta     no_mouse_flag
         beq     found
         dex
@@ -10323,17 +10325,17 @@ loop:   txa
         rts
 
 found:  ldy     #INITMOUSE
-        jsr     call_mouse
+        jsr     CallMouse
         jsr     ScaleMouseImpl::set_clamps
         ldy     #HOMEMOUSE
-        jsr     call_mouse
+        jsr     CallMouse
         lda     mouse_firmware_hi
         and     #$0F
         tax                     ; return with mouse slot in X
         rts
 
         ;; Check for mouse in slot A
-.proc check_mouse_in_a
+.proc CheckMouseInA
         ptr := $88
 
         ora     #>$C000
@@ -10404,8 +10406,8 @@ window_id  .byte
 rect       .tag MGTK::Rect
         END_PARAM_BLOCK
 
-        jsr     window_by_id_or_exit
-        jsr     get_winframerect
+        jsr     WindowByIdOrExit
+        jsr     GetWinFrameRect
 
         ;; Copy Rect from winrect to params_addr + 1
         kOffset = params::rect - params
@@ -10421,17 +10423,17 @@ rect       .tag MGTK::Rect
 ;;; RedrawDeskTop
 
 .proc RedrawDeskTopImpl
-        jsr     set_desktop_port
+        jsr     SetDesktopPort
 
         ldx     #3
-:       lda     set_desktop_port::desktop_port_bits,x
+:       lda     SetDesktopPort::desktop_port_bits,x
         sta     left,x
         lda     fill_rect_params::right,x
         sta     right,x
         dex
         bpl     :-
 
-        jsr     clip_rect
+        jsr     ClipRect
 
         ldx     #3
 :       lda     left,x
@@ -10442,10 +10444,10 @@ rect       .tag MGTK::Rect
         dex
         bpl     :-
 
-        ;; Restored by `erase_window`
-        jsr     hide_cursor_save_params
+        ;; Restored by `EraseWindow`
+        jsr     HideCursorSaveParams
         lda     #0              ; window to erase (none)
-        jmp     erase_window
+        jmp     EraseWindow
 .endproc
 
 ;;; ============================================================

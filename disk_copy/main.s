@@ -74,15 +74,15 @@ params:  .res    3
 
 ;;; ============================================================
 
-.proc noop
+.proc NoOp
         rts
 .endproc
 
 ;;; ============================================================
 ;;; Quit back to ProDOS (which will launch DeskTop)
 
-.proc quit
-        jsr     auxlc::restore_ram_disk
+.proc Quit
+        jsr     auxlc::RestoreRamDisk
         sta     ALTZPOFF
         bit     ROMIN2
         sta     DHIRESOFF
@@ -100,7 +100,7 @@ params:  .res    3
 
 ;;; ============================================================
 
-.proc format_device
+.proc FormatDevice
         ldx     auxlc::dest_drive_index
         lda     auxlc::drive_unitnum_table,x
         sta     unit_number
@@ -109,7 +109,7 @@ params:  .res    3
 
         ;; Get driver address
         lda     unit_number
-        jsr     unit_number_to_driver_address ; sets $06, Z=1 if firmware
+        jsr     UnitNumberToDriverAddress ; sets $06, Z=1 if firmware
 
         lda     #DRIVER_COMMAND_FORMAT
         sta     DRIVER_COMMAND
@@ -131,7 +131,7 @@ unit_number:
 ;;; ============================================================
 ;;; Eject Disk via SmartPort
 
-.proc eject_disk_impl
+.proc EjectDiskImpl
 
 .params control_params
 param_count:    .byte   3
@@ -146,7 +146,7 @@ list:   .word   0               ; 0 items in list
 start:
         ptr := $6
 
-        jsr     check_smartport
+        jsr     CheckSmartport
         bcs     done
         stx     control_params_unit_number
 
@@ -161,7 +161,7 @@ smartport_call:
         jmp     ($06)
 
 .endproc
-eject_disk := eject_disk_impl::start
+EjectDisk := EjectDiskImpl::start
 
 ;;; ============================================================
 ;;; Given $06 points at a firmware location ($CnXX), determine
@@ -173,13 +173,13 @@ eject_disk := eject_disk_impl::start
 
 ;;; TODO: Merge with lib/smartport.s
 
-.proc check_smartport
+.proc CheckSmartport
         sp_addr := $06
 
         sta     unit_number
 
         ;; Get device driver address
-        jsr     unit_number_to_driver_address ; sets $06, Z=1 if firmware
+        jsr     UnitNumberToDriverAddress ; sets $06, Z=1 if firmware
         beq     :+
 fail:   sec                     ; not firmware
         rts
@@ -251,7 +251,7 @@ mapped_slot:
 ;;; Output: $6/$7 points at driver address
 ;;;         Z=1 if a firmware address ($CnXX)
 
-.proc unit_number_to_driver_address
+.proc UnitNumberToDriverAddress
         slot_addr := $06
 
         and     #%11110000      ; mask off drive/slot
@@ -278,14 +278,14 @@ mapped_slot:
 ;;;            $81 = unknown/failure
 ;;;            $C0 = Pascal
 ;;;            $80 = DOS 3.3
-.proc identify_nonprodos_disk_type
+.proc IdentifyNonprodosDiskType
         ldx     auxlc::source_drive_index
         lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
         lda     #$00
         sta     block_params::block_num
         sta     block_params::block_num+1
-        jsr     read_block
+        jsr     ReadBlock
         bne     fail
 
         lda     default_block_buffer+1
@@ -304,7 +304,7 @@ fail:   lda     #$81
         rts
 
 l2:     param_call auxlc::LDE9F, on_line_buffer2
-        param_call auxlc::adjust_case, on_line_buffer2
+        param_call auxlc::AdjustCase, on_line_buffer2
         lda     #$C0
         sta     auxlc::LD44D
         rts
@@ -322,10 +322,10 @@ l3:     cmp     #$A5
 ;;; ============================================================
 ;;; Reads the volume bitmap (blocks 6 through ...)
 
-.proc read_volume_bitmap
+.proc ReadVolumeBitmap
 
         lda     #>volume_bitmap
-        jsr     mark_used_in_memory_bitmap
+        jsr     MarkUsedInMemoryBitmap
 
         lda     auxlc::source_drive_index
         asl     a
@@ -339,7 +339,7 @@ l3:     cmp     #$A5
         bmi     :+
         lda     auxlc::disk_copy_flag
         bne     :+
-        jmp     quick_copy
+        jmp     QuickCopy
 :
 
         ;; --------------------------------------------------
@@ -390,20 +390,20 @@ loop:   inc     ptr
 l5:     pla
 
 l6:     lda     ptr
-        jsr     mark_used_in_memory_bitmap
+        jsr     MarkUsedInMemoryBitmap
         rts
 .endscope
 
         ;; --------------------------------------------------
         ;; Quick Copy - load volume bitmap from disk
         ;; so only used blocks are copied
-.proc quick_copy
+.proc QuickCopy
         copy16  #6, block_params::block_num
         ldx     auxlc::source_drive_index
         lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
         copy16  #volume_bitmap, block_params::data_buffer
-        jsr     read_block
+        jsr     ReadBlock
         beq     loop
         brk                     ; rude!
 
@@ -422,8 +422,8 @@ loop:   sub16   block_count_div8, #$200, block_count_div8
 
         inc     block_params::block_num
         lda     block_params::data_buffer+1
-        jsr     mark_used_in_memory_bitmap
-        jsr     read_block
+        jsr     MarkUsedInMemoryBitmap
+        jsr     ReadBlock
         beq     :+
         brk                     ; rude!
 
@@ -440,7 +440,7 @@ block_count_div8:
 ;;; Inputs: A=%DSSSnnnn (drive/slot part of unit number)
 ;;; Outputs: A=$80 if "removable", 0 otherwise
 
-.proc is_drive_ejectable_impl
+.proc IsDriveEjectableImpl
 
 .params status_params
 param_count:    .byte   3
@@ -464,7 +464,7 @@ END_PARAM_BLOCK
 start:
         ptr := $6
 
-        jsr     check_smartport
+        jsr     CheckSmartport
         bcs     not_removable
         stx     status_params::unit_num
 
@@ -488,11 +488,11 @@ smartport_call:
         jmp     ($06)
 .endproc
 
-is_drive_ejectable := is_drive_ejectable_impl::start
+IsDriveEjectable := IsDriveEjectableImpl::start
 
 ;;; ============================================================
 
-.proc copy_blocks
+.proc CopyBlocks
         sta     write_flag
         and     #$FF
         bpl     :+
@@ -522,7 +522,7 @@ loop:
         cmp     #(CHAR_ESCAPE | $80)
         bne     :+
         bit     KBDSTRB
-        jsr     auxlc::flash_escape_message
+        jsr     auxlc::FlashEscapeMessage
         jmp     error
 :
 
@@ -531,7 +531,7 @@ loop:
         bit     L0FE5
         bmi     L0F69
 
-        jsr     advance_to_next_block_index
+        jsr     AdvanceToNextBlockIndex
         bcc     L0F51
         bne     :+
         cpx     #$00
@@ -539,14 +539,14 @@ loop:
 :       ldy     #$80
         sty     L0FE4
 L0F51:  stax    mem_block_addr
-        jsr     advance_to_next_block
-        bcc     read_or_write_block
+        jsr     AdvanceToNextBlock
+        bcc     ReadOrWriteBlock
         bne     L0F62
         cpx     #$00
         beq     L0F69
 L0F62:  ldy     #$80
         sty     L0FE5
-        bne     read_or_write_block
+        bne     ReadOrWriteBlock
 
 L0F69:  return  #$80
 
@@ -555,7 +555,7 @@ success:
 
 error:  return  #1
 
-.proc read_or_write_block
+.proc ReadOrWriteBlock
         stax    block_params::block_num
 
         ;; A,X = address in memory
@@ -574,11 +574,11 @@ error:  return  #1
 
         bit     write_flag
         bmi     :+
-        jsr     read_block_to_main
+        jsr     ReadBlockToMain
         bmi     error
         jmp     loop
 
-:       jsr     write_block_from_main
+:       jsr     WriteBlockFromMain
         bmi     error
         jmp     loop
 
@@ -597,11 +597,11 @@ need_move:
 
         bit     write_flag
         bmi     :+
-        jsr     read_block_to_lcbank1
+        jsr     ReadBlockToLcbank1
         bmi     error
         jmp     loop
 
-:       jsr     write_block_from_lcbank1
+:       jsr     WriteBlockFromLcbank1
         bmi     error
         jmp     loop
 
@@ -611,11 +611,11 @@ need_move:
 use_auxmem:
         bit     write_flag      ; 16-28
         bmi     :+
-        jsr     auxlc::read_block_to_auxmem
+        jsr     auxlc::ReadBlockToAuxmem
         bmi     error
         jmp     loop
 
-:       jsr     auxlc::write_block_from_auxmem
+:       jsr     auxlc::WriteBlockFromAuxmem
         bmi     error
         jmp     loop
 
@@ -625,11 +625,11 @@ use_auxmem:
 use_lcbank2:
         bit     write_flag
         bmi     :+
-        jsr     read_block_to_lcbank2
+        jsr     ReadBlockToLcbank2
         bmi     error
         jmp     loop
 
-:       jsr     write_block_from_lcbank2
+:       jsr     WriteBlockFromLcbank2
         bmi     l4
         jmp     loop
 
@@ -653,22 +653,22 @@ mem_block_addr:
 ;;; Output: C=0 and A,X=block number if one exists
 ;;;         C=1 and A,X=$0000 if last block reached
 
-.proc advance_to_next_block
-repeat: jsr     lookup_in_volume_bitmap ; A,X=block number, Y=free?
+.proc AdvanceToNextBlock
+repeat: jsr     LookupInVolumeBitmap ; A,X=block number, Y=free?
         cpy     #0
         bne     free
         pha
-        jsr     next
+        jsr     Next
         pla
         rts
 
-free:   jsr     next
+free:   jsr     Next
         bcc     repeat          ; repeat unless last block
         lda     #0
         tax
         rts
 
-.proc next
+.proc Next
         dec     auxlc::block_num_shift
         lda     auxlc::block_num_shift
         cmp     #$FF
@@ -698,7 +698,7 @@ not_last:
 ;;; Input: Uses `block_num_div8` and `block_num_shift`
 ;;; Output: A,X = block number, Y = $FF if set in vol bitmap, $0 otherwise
 
-.proc lookup_in_volume_bitmap
+.proc LookupInVolumeBitmap
         ptr := $06
 
         ;; Find byte in volume bitmap
@@ -759,23 +759,23 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 
 ;;; ============================================================
 
-.proc advance_to_next_block_index
-        jsr     compute_memory_page_signature
+.proc AdvanceToNextBlockIndex
+        jsr     ComputeMemoryPageSignature
         cpy     #0
         beq     :+
         pha
-        jsr     next
+        jsr     Next
         pla
         rts
 
-:       jsr     next
-        bcc     advance_to_next_block_index
+:       jsr     Next
+        bcc     AdvanceToNextBlockIndex
         lda     #$00
         tax
         rts
 
 ;;; Advance to next
-.proc next
+.proc Next
         dec     auxlc::block_index_shift
         lda     auxlc::block_index_shift
         cmp     #$FF
@@ -801,7 +801,7 @@ ok:     clc
 ;;; Input: `block_index_div8` and `block_index_shift`
 ;;; Output: A,X=address to store block; Y=bit is set in bitmap
 
-.proc compute_memory_page_signature
+.proc ComputeMemoryPageSignature
         ;; Read from bitmap
         ldx     auxlc::block_index_div8
         lda     memory_bitmap,x
@@ -854,7 +854,7 @@ table:  .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
 
 ;;; ============================================================
 
-.proc free_vol_bitmap_pages
+.proc FreeVolBitmapPages
         page_num := $06         ; not a pointer, for once!
 
         lda     #>volume_bitmap
@@ -862,7 +862,7 @@ table:  .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
         lda     #0
         sta     count
 loop:   lda     page_num
-        jsr     mark_free_in_memory_bitmap
+        jsr     MarkFreeInMemoryBitmap
         inc     page_num
         inc     page_num
         inc     count
@@ -875,8 +875,8 @@ loop:   lda     page_num
 
 count:  .byte   0
 
-.proc mark_free_in_memory_bitmap
-        jsr     get_bitmap_offset_shift
+.proc MarkFreeInMemoryBitmap
+        jsr     GetBitmapOffsetShift
         tay
         lda     #1
         cpx     #0
@@ -894,8 +894,8 @@ mask:   ora     memory_bitmap,y
 
 ;;; ============================================================
 
-.proc mark_used_in_memory_bitmap
-        jsr     get_bitmap_offset_shift
+.proc MarkUsedInMemoryBitmap
+        jsr     GetBitmapOffsetShift
         tay
         lda     #1
         cpx     #0
@@ -917,7 +917,7 @@ mask:   eor     #$FF
 ;;; e.g. $76 ==> A = $07
 ;;;              X = $04
 
-.proc get_bitmap_offset_shift
+.proc GetBitmapOffsetShift
         pha
         and     #$0F
         lsr     a
@@ -939,12 +939,12 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc read_block_to_main
+.proc ReadBlockToMain
         stax    block_params::data_buffer
-retry:  jsr     read_block
+retry:  jsr     ReadBlock
         beq     done
         ldx     #0              ; reading
-        jsr     auxlc::show_block_error
+        jsr     auxlc::ShowBlockError
         bmi     done
         bne     retry
 done:   rts
@@ -955,7 +955,7 @@ done:   rts
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc read_block_to_lcbank1
+.proc ReadBlockToLcbank1
         ptr1 := $06
         ptr2 := $08             ; one page up
 
@@ -966,10 +966,10 @@ done:   rts
         inc     ptr2+1
 
         copy16  #default_block_buffer, block_params::data_buffer
-retry:  jsr     read_block
+retry:  jsr     ReadBlock
         beq     move
         ldx     #0              ; reading
-        jsr     auxlc::show_block_error
+        jsr     auxlc::ShowBlockError
         beq     move
         bpl     retry
         return  #$80
@@ -991,7 +991,7 @@ loop:   lda     default_block_buffer,y
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc read_block_to_lcbank2
+.proc ReadBlockToLcbank2
         ptr1 := $06
         ptr2 := $08             ; one page up
 
@@ -1002,10 +1002,10 @@ loop:   lda     default_block_buffer,y
         inc     ptr2+1
 
         copy16  #default_block_buffer, block_params::data_buffer
-retry:  jsr     read_block
+retry:  jsr     ReadBlock
         beq     move
         ldx     #0              ; reading
-        jsr     auxlc::show_block_error
+        jsr     auxlc::ShowBlockError
         beq     move
         bpl     retry
         bit     LCBANK1
@@ -1032,12 +1032,12 @@ loop:   lda     default_block_buffer,y
 ;;; Inputs: A,X=address to read from
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc write_block_from_main
+.proc WriteBlockFromMain
         stax    block_params::data_buffer
-retry:  jsr     write_block
+retry:  jsr     WriteBlock
         beq     done
         ldx     #$80            ; writing
-        jsr     auxlc::show_block_error
+        jsr     auxlc::ShowBlockError
         beq     done
         bpl     retry
 done:   rts
@@ -1048,7 +1048,7 @@ done:   rts
 ;;; Inputs: A,X=address to read from
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc write_block_from_lcbank1
+.proc WriteBlockFromLcbank1
         ptr1 := $06
         ptr2 := $08             ; one page up
 
@@ -1068,10 +1068,10 @@ loop:   lda     (ptr1),y
         iny
         bne     loop
 
-retry:  jsr     write_block
+retry:  jsr     WriteBlock
         beq     done
         ldx     #$80            ; writing
-        jsr     auxlc::show_block_error
+        jsr     auxlc::ShowBlockError
         beq     done
         bpl     retry
 done:   rts
@@ -1082,7 +1082,7 @@ done:   rts
 ;;; Inputs: A,X=address to read from
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc write_block_from_lcbank2
+.proc WriteBlockFromLcbank2
         bit     LCBANK2
         bit     LCBANK2
 
@@ -1107,10 +1107,10 @@ loop:   lda     (ptr1),y
 
         bit     LCBANK1
         bit     LCBANK1
-retry:  jsr     write_block
+retry:  jsr     WriteBlock
         beq     done
         ldx     #$80            ; writing
-        jsr     auxlc::show_block_error
+        jsr     auxlc::ShowBlockError
         beq     done
         bpl     retry
 done:   rts
@@ -1118,22 +1118,22 @@ done:   rts
 
 ;;; ============================================================
 
-.proc call_on_line2
+.proc CallOnLine2
         MLI_RELAY_CALL ON_LINE, on_line_params2
         rts
 .endproc
 
-.proc call_on_line
+.proc CallOnLine
         MLI_RELAY_CALL ON_LINE, on_line_params
         rts
 .endproc
 
-.proc write_block
+.proc WriteBlock
         MLI_RELAY_CALL WRITE_BLOCK, block_params
         rts
 .endproc
 
-.proc read_block
+.proc ReadBlock
         MLI_RELAY_CALL READ_BLOCK, block_params
         rts
 .endproc
@@ -1189,7 +1189,7 @@ memory_bitmap:
 ;;; Inputs: A = unit num (DSSSxxxx), X,Y = driver address
 ;;; Outputs: X,Y = blocks
 
-.proc get_device_blocks_using_driver
+.proc GetDeviceBlocksUsingDriver
         sta     ALTZPOFF
 
         and     #UNIT_NUM_MASK
@@ -1214,7 +1214,7 @@ memory_bitmap:
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
 ;;; Assert: LCBANK1 is banked in
 
-.proc reset_iigs_rgb
+.proc ResetIIgsRGB
         bit     ROMIN2
         sec
         jsr     IDROUTINE
@@ -1244,26 +1244,26 @@ done:   rts
 
 .endscope
 
-main__format_device   := main::format_device
-main__identify_nonprodos_disk_type    := main::identify_nonprodos_disk_type
-main__read_volume_bitmap              := main::read_volume_bitmap
-main__is_drive_ejectable              := main::is_drive_ejectable
-main__copy_blocks                     := main::copy_blocks
-main__free_vol_bitmap_pages           := main::free_vol_bitmap_pages
-main__call_on_line2                   := main::call_on_line2
-main__call_on_line                    := main::call_on_line
-main__write_block                     := main::write_block
-main__read_block                      := main::read_block
-main__block_params_block_num          := main::block_params::block_num
-main__block_params_data_buffer        := main::block_params::data_buffer
-main__block_params_unit_num           := main::block_params::unit_num
-main__eject_disk                      := main::eject_disk
-main__noop                            := main::noop
-main__on_line_buffer                  := main::on_line_buffer
-main__on_line_params2_unit_num        := main::on_line_params2::unit_num
-main__on_line_params_unit_num         := main::on_line_params::unit_num
-main__quit                            := main::quit
-main__unit_number_to_driver_address   := main::unit_number_to_driver_address
-main__get_device_blocks_using_driver  := main::get_device_blocks_using_driver
-main__on_line_buffer2                 := main::on_line_buffer2
-main__reset_iigs_rgb                  := main::reset_iigs_rgb
+main__FormatDevice              := main::FormatDevice
+main__IdentifyNonprodosDiskType := main::IdentifyNonprodosDiskType
+main__ReadVolumeBitmap          := main::ReadVolumeBitmap
+main__IsDriveEjectable          := main::IsDriveEjectable
+main__CopyBlocks                := main::CopyBlocks
+main__FreeVolBitmapPages        := main::FreeVolBitmapPages
+main__CallOnLine2               := main::CallOnLine2
+main__CallOnLine                := main::CallOnLine
+main__WriteBlock                := main::WriteBlock
+main__ReadBlock                 := main::ReadBlock
+main__block_params_block_num    := main::block_params::block_num
+main__block_params_data_buffer  := main::block_params::data_buffer
+main__block_params_unit_num     := main::block_params::unit_num
+main__EjectDisk                 := main::EjectDisk
+main__NoOp                      := main::NoOp
+main__on_line_buffer            := main::on_line_buffer
+main__on_line_params2_unit_num  := main::on_line_params2::unit_num
+main__on_line_params_unit_num   := main::on_line_params::unit_num
+main__Quit                      := main::Quit
+main__UnitNumberToDriverAddress := main::UnitNumberToDriverAddress
+main__GetDeviceBlocksUsingDriver := main::GetDeviceBlocksUsingDriver
+main__on_line_buffer2           := main::on_line_buffer2
+main__ResetIIgsRGB              := main::ResetIIgsRGB

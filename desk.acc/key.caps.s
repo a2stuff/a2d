@@ -35,7 +35,7 @@ da_start:
         ;; Run the DA from Aux
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
 
         ;; Tear down/exit, back to Main
         sta     RAMRDOFF
@@ -551,8 +551,8 @@ tmp_poly:
 
 ;;; ============================================================
 
-.proc init
-        jsr     check_extended_layout ; returns C=1 if extended
+.proc Init
+        jsr     CheckExtendedLayout ; returns C=1 if extended
 
         ;; Invert Carry if modifier is down
         lda     BUTN0
@@ -578,30 +578,30 @@ tmp_poly:
 
 continue:
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
+        bne     Exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
         bne     :+
-        jmp     handle_down
+        jmp     HandleDown
 
 
 :       cmp     #MGTK::EventKind::key_down  ; any key?
         bne     :+
-        jmp     handle_key
+        jmp     HandleKey
 
 
-:       jmp     input_loop
+:       jmp     InputLoop
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -610,7 +610,7 @@ continue:
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -619,29 +619,29 @@ continue:
         rts
 .endproc
 
-.proc exit
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     clear_updates
+        jsr     ClearUpdates
         rts                     ; exits input loop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         ;; Apple-Q to quit
         lda     event_params::modifiers
         beq     start
         lda     event_params::key
         cmp     #kShortcutQuit
-        beq     exit
+        beq     Exit
         cmp     #TO_LOWER(kShortcutQuit)
-        beq     exit
+        beq     Exit
 
 start:  lda     KBD
         and     #CHAR_MASK
         sta     last_char
 
-        jsr     construct_key_poly
+        jsr     ConstructKeyPoly
 
         MGTK_CALL MGTK::GetWinPort, winport_params
         cmp     #MGTK::Error::window_obscured
@@ -664,7 +664,7 @@ start:  lda     KBD
 
 :       MGTK_CALL MGTK::PaintPoly, tmp_poly
 
-done:   jmp     input_loop
+done:   jmp     InputLoop
 
 last_char:
         .byte   0
@@ -675,37 +675,37 @@ return_flag:
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
         bpl     :+
-        jmp     exit
+        jmp     Exit
 :       lda     findwindow_params::window_id
         cmp     winfo::window_id
         bpl     :+
-        jmp     input_loop
+        jmp     InputLoop
 :       lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
-        jmp     input_loop
+        beq     HandleDrag
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
         bne     :+
-        jmp     input_loop
-:       jmp     exit
+        jmp     InputLoop
+:       jmp     Exit
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -714,18 +714,18 @@ return_flag:
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        jsr     clear_updates
+        jsr     ClearUpdates
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 ;;; ============================================================
 
-.proc draw_window
+.proc DrawWindow
         ptr := $06
 
         MGTK_CALL MGTK::GetWinPort, winport_params
@@ -818,7 +818,7 @@ char:   .byte   0
 ;;; Returns Carry set if extended layout should be used.
 ;;; This is the layout of the Platinum IIe, IIc+ and IIgs.
 
-.proc check_extended_layout
+.proc CheckExtendedLayout
 
         ;; Bank in ROM and do check
         bit     ROMIN2
@@ -863,7 +863,7 @@ check:  sec
 ;;; Construct "inner" polygon for key in A.
 ;;; Output: tmp_poly is populated
 
-.proc construct_key_poly
+.proc ConstructKeyPoly
         ptr := $06
 
         cmp     #CHAR_RETURN

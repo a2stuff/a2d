@@ -21,14 +21,14 @@
 
 ;;; ============================================================
 
-        jmp     copy2aux
+        jmp     Copy2Aux
 
 
 stash_stack:  .byte   $00
 
 ;;; ============================================================
 
-.proc copy2aux
+.proc Copy2Aux
 
         start := start_da
         end   := last
@@ -61,7 +61,7 @@ stash_stack:  .byte   $00
 ;;; Inputs: A=1 if dialog committed; A=0 if dialog cancelled
 ;;; Assert: Running from Main
 
-.proc save_date_and_exit
+.proc SaveDateAndExit
         beq     skip
 
         ;; If there is a system clock, don't write out the date.
@@ -71,7 +71,7 @@ stash_stack:  .byte   $00
         ;; ProDOS GP has the updated data, copy somewhere usable.
         COPY_STRUCT DateTime, DATELO, write_buffer
 
-        jsr     save_settings
+        jsr     SaveSettings
 
 skip:   ldx     stash_stack     ; exit the DA
         txs
@@ -95,11 +95,11 @@ write_buffer:
         .res    .sizeof(DateTime), 0
         sizeof_write_buffer = * - write_buffer
 
-.proc save_settings
+.proc SaveSettings
         ;; Write to desktop current prefix
         ldax    #filename
         stax    open_params::pathname
-        jsr     do_write
+        jsr     DoWrite
 
         ;; Write to the original file location, if necessary
         jsr     GetCopiedToRAMCardFlag
@@ -107,9 +107,9 @@ write_buffer:
         ldax    #filename_buffer
         stax    open_params::pathname
         jsr     CopyDeskTopOriginalPrefix
-        jsr     append_filename
+        jsr     AppendFilename
         copy    #0, second_try_flag
-@retry: jsr     do_write
+@retry: jsr     DoWrite
         bcc     done
 
         ;; First time - ask if we should even try.
@@ -132,7 +132,7 @@ done:   rts
 second_try_flag:
         .byte   0
 
-.proc append_filename
+.proc AppendFilename
         ;; Append filename to buffer
         inc     filename_buffer ; Add '/' separator
         ldx     filename_buffer
@@ -151,7 +151,7 @@ second_try_flag:
         rts
 .endproc
 
-.proc do_write
+.proc DoWrite
         JUMP_TABLE_MLI_CALL OPEN, open_params ; open the file
         bcs     done
 
@@ -410,41 +410,41 @@ init_window:
         MGTK_CALL MGTK::OpenWindow, winfo
         lda     #0
         sta     selected_field
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
 
 ;;; ============================================================
 ;;; Input loop
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jsr     on_click
-        jmp     input_loop
+        jsr     OnClick
+        jmp     InputLoop
 
 :       cmp     #MGTK::EventKind::key_down
-        bne     input_loop
+        bne     InputLoop
         ;; fall through
 .endproc
 
-.proc on_key
+.proc OnKey
         lda     event_params::modifiers
-        bne     input_loop
+        bne     InputLoop
         lda     event_params::key
         cmp     #CHAR_RETURN
         bne     :+
-        jmp     on_ok
+        jmp     OnOk
 
         ;; If there is a system clock, only the first button is active
 :       ldx     clock_flag
         beq     :+
         cmp     #CHAR_ESCAPE    ; allow Escape to close as well
-        bne     input_loop
-        jmp     on_ok
+        bne     InputLoop
+        jmp     OnOk
 
         ;; All controls are active
 :       cmp     #CHAR_ESCAPE
@@ -455,25 +455,25 @@ init_window:
         cmp     #CHAR_RIGHT
         beq     on_key_right
         cmp     #CHAR_DOWN
-        beq     on_key_down
+        beq     OnKeyDown
         cmp     #CHAR_UP
-        bne     input_loop
+        bne     InputLoop
 
 on_key_up:
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
         lda     #kUpRectIndex
         sta     hit_rect_index
-        jsr     do_inc_or_dec
+        jsr     DoIncOrDec
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
-        jmp     input_loop
+        jmp     InputLoop
 
-on_key_down:
+OnKeyDown:
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
         lda     #kDownRectIndex
         sta     hit_rect_index
-        jsr     do_inc_or_dec
+        jsr     DoIncOrDec
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
-        jmp     input_loop
+        jmp     InputLoop
 
 on_key_left:
         sec
@@ -493,11 +493,11 @@ on_key_right:
         ;; fall through
 
 update_selection:
-        jsr     highlight_selected_field
-        jmp     input_loop
+        jsr     HighlightSelectedField
+        jmp     InputLoop
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -506,7 +506,7 @@ update_selection:
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -517,7 +517,7 @@ update_selection:
 
 ;;; ============================================================
 
-.proc on_click
+.proc OnClick
         MGTK_CALL MGTK::FindWindow, event_params::xcoord
         MGTK_CALL MGTK::SetPenMode, penxor
         MGTK_CALL MGTK::SetPattern, white_pattern
@@ -530,7 +530,7 @@ miss:   rts
 
 hit:    cmp     #MGTK::Area::content
         bne     miss
-        jsr     find_hit_target
+        jsr     FindHitTarget
         cpx     #0
         beq     miss
         txa
@@ -542,13 +542,13 @@ hit:    cmp     #MGTK::Area::content
 jump:   jmp     SELF_MODIFIED
 
 hit_target_jump_table:
-        .addr   on_ok, on_cancel, on_up, on_down
+        .addr   OnOk, on_cancel, on_up, on_down
         .addr   on_field_click, on_field_click, on_field_click, on_field_click, on_field_click
 .endproc
 
 ;;; ============================================================
 
-.proc on_ok
+.proc OnOk
         MGTK_CALL MGTK::PaintRect, ok_button_rect
 
         ;; Pack the date bytes and store in ProDOS GP
@@ -575,14 +575,14 @@ hit_target_jump_table:
 
         lda     #1
         sta     dialog_result
-        jmp     destroy
+        jmp     Destroy
 .endproc
 
 on_cancel:
         MGTK_CALL MGTK::PaintRect, cancel_button_rect
         lda     #0
         sta     dialog_result
-        jmp     destroy
+        jmp     Destroy
 
 on_up:
         txa
@@ -590,7 +590,7 @@ on_up:
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
         pla
         tax
-        jsr     on_up_or_down
+        jsr     OnUpOrDown
         rts
 
 on_down:
@@ -599,22 +599,22 @@ on_down:
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
         pla
         tax
-        jsr     on_up_or_down
+        jsr     OnUpOrDown
         rts
 
 on_field_click:
         txa
         sec
         sbc     #4
-        jmp     highlight_selected_field
+        jmp     HighlightSelectedField
 
-.proc on_up_or_down
+.proc OnUpOrDown
         stx     hit_rect_index
 loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_up
         beq     :+
-        jsr     do_inc_or_dec
+        jsr     DoIncOrDec
         jmp     loop
 
 :       lda     hit_rect_index
@@ -628,10 +628,10 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         rts
 .endproc
 
-.proc do_inc_or_dec
+.proc DoIncOrDec
         ptr := $6
 
-        jsr     delay
+        jsr     Delay
 
         lda     selected_field
         tax                     ; X = byte table offset
@@ -672,7 +672,7 @@ finish:
         prepare_proc := *+1
         jsr     SELF_MODIFIED   ; update string
         MGTK_CALL MGTK::SetTextBG, settextbg_params
-        jmp     draw_selected_field
+        jmp     DrawSelectedField
 
 min:    .byte   0
 max:    .byte   0
@@ -709,20 +709,20 @@ max_table:
         ASSERT_TABLE_SIZE max_table, kNumFields+1
 
 prepare_proc_table:
-        .addr   0, prepare_day_string, prepare_month_string, prepare_year_string, prepare_hour_string, prepare_minute_string
+        .addr   0, PrepareDayString, PrepareMonthString, PrepareYearString, PrepareHourString, PrepareMinuteString
         ASSERT_ADDRESS_TABLE_SIZE prepare_proc_table, kNumFields+1
 
 ;;; ============================================================
 
-.proc prepare_day_string
+.proc PrepareDayString
         lda     day
-        jsr     number_to_ascii
+        jsr     NumberToASCII
         sta     day_string+1    ; first char
         stx     day_string+2    ; second char
         rts
 .endproc
 
-.proc prepare_month_string
+.proc PrepareMonthString
         lda     month           ; month * 3 - 1
         asl     a
         clc
@@ -761,25 +761,25 @@ month_name_table:
         .byte   .sprintf("%3s", res_string_month_abbrev_12)
         ASSERT_RECORD_TABLE_SIZE month_name_table, 12, 3
 
-.proc prepare_year_string
+.proc PrepareYearString
         lda     year
-        jsr     number_to_ascii
+        jsr     NumberToASCII
         sta     year_string+1
         stx     year_string+2
         rts
 .endproc
 
-.proc prepare_hour_string
+.proc PrepareHourString
         lda     hour
-        jsr     number_to_ascii
+        jsr     NumberToASCII
         sta     hour_string+1
         stx     hour_string+2
         rts
 .endproc
 
-.proc prepare_minute_string
+.proc PrepareMinuteString
         lda     minute
-        jsr     number_to_ascii
+        jsr     NumberToASCII
         sta     minute_string+1
         stx     minute_string+2
         rts
@@ -791,9 +791,9 @@ month_name_table:
 ;;; Used in Aux to store result during tear-down
 dialog_result:  .byte   0
 
-.proc destroy
+.proc Destroy
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        jsr     clear_updates
+        jsr     ClearUpdates
 
         lda     dialog_result
         ;; Actual new date/time set in ProDOS GP
@@ -802,14 +802,14 @@ dialog_result:  .byte   0
         sta     RAMWRTOFF
         sta     RAMRDOFF
 
-        jmp     save_date_and_exit
+        jmp     SaveDateAndExit
 .endproc
 
 ;;; ============================================================
 ;;; Figure out which button was hit (if any).
 ;;; Index returned in X.
 
-.proc find_hit_target
+.proc FindHitTarget
         copy16  event_params::xcoord, screentowindow_params::screenx
         copy16  event_params::ycoord, screentowindow_params::screeny
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -873,7 +873,7 @@ penheight: .byte   1
 ;;; ============================================================
 ;;; Render the window contents
 
-.proc draw_window
+.proc DrawWindow
         MGTK_CALL MGTK::SetPort, winfo::port
         MGTK_CALL MGTK::FrameRect, border_rect
         MGTK_CALL MGTK::SetPenSize, setpensize_params
@@ -909,17 +909,17 @@ penheight: .byte   1
         param_call DrawString, label_downarrow
         MGTK_CALL MGTK::FrameRect, down_arrow_rect
 
-:       jsr     prepare_day_string
-        jsr     prepare_month_string
-        jsr     prepare_year_string
-        jsr     prepare_hour_string
-        jsr     prepare_minute_string
+:       jsr     PrepareDayString
+        jsr     PrepareMonthString
+        jsr     PrepareYearString
+        jsr     PrepareHourString
+        jsr     PrepareMinuteString
 
-        jsr     draw_day
-        jsr     draw_month
-        jsr     draw_year
-        jsr     draw_hour
-        jsr     draw_minute
+        jsr     DrawDay
+        jsr     DrawMonth
+        jsr     DrawYear
+        jsr     DrawHour
+        jsr     DrawMinute
 
         ;; If there is a system clock, don't draw the highlight.
         ldx     clock_flag
@@ -929,29 +929,29 @@ penheight: .byte   1
 :       MGTK_CALL MGTK::SetPenMode, penxor
         MGTK_CALL MGTK::SetPattern, white_pattern
         lda     #1
-        jmp     highlight_selected_field
+        jmp     HighlightSelectedField
 .endproc
 
-.proc draw_selected_field
+.proc DrawSelectedField
         lda     selected_field
         cmp     #1
-        beq     draw_day
+        beq     DrawDay
         cmp     #2
-        beq     draw_month
+        beq     DrawMonth
         cmp     #3
-        beq     draw_year
+        beq     DrawYear
         cmp     #4
-        beq     draw_hour
-        bne     draw_minute     ; always
+        beq     DrawHour
+        bne     DrawMinute      ; always
 .endproc
 
-.proc draw_day
+.proc DrawDay
         MGTK_CALL MGTK::MoveTo, day_pos
         param_call DrawString, day_string
         rts
 .endproc
 
-.proc draw_month
+.proc DrawMonth
         MGTK_CALL MGTK::MoveTo, month_pos
         param_call DrawString, spaces_string ; variable width, so clear first
         MGTK_CALL MGTK::MoveTo, month_pos
@@ -959,19 +959,19 @@ penheight: .byte   1
         rts
 .endproc
 
-.proc draw_year
+.proc DrawYear
         MGTK_CALL MGTK::MoveTo, year_pos
         param_call DrawString, year_string
         rts
 .endproc
 
-.proc draw_hour
+.proc DrawHour
         MGTK_CALL MGTK::MoveTo, hour_pos
         param_call DrawString, hour_string
         rts
 .endproc
 
-.proc draw_minute
+.proc DrawMinute
         MGTK_CALL MGTK::MoveTo, minute_pos
         param_call DrawString, minute_string
         rts
@@ -981,7 +981,7 @@ penheight: .byte   1
 ;;; Highlight selected field
 ;;; Input: A = new field to select
 
-.proc highlight_selected_field
+.proc HighlightSelectedField
         pha
         lda     selected_field  ; initial state is 0, so nothing
         beq     update          ; to invert back to normal
@@ -1045,7 +1045,7 @@ fill_minute:
 ;;; ============================================================
 ;;; Delay
 
-.proc delay
+.proc Delay
         lda     #255
         sec
 loop1:  pha
@@ -1062,7 +1062,7 @@ loop2:  sbc     #1
 ;;; ============================================================
 ;;; Convert number to two ASCII digits (in A, X)
 
-.proc number_to_ascii
+.proc NumberToASCII
         ldy     #0
 loop:   cmp     #10
         bcc     :+

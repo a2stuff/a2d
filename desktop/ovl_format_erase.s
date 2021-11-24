@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc format_erase_overlay
+.scope format_erase_overlay
         .org $800
 
         MLIRelayImpl := main::MLIRelayImpl
@@ -24,34 +24,34 @@
 exec:
 
 L0800:  pha
-        jsr     main::set_cursor_pointer
+        jsr     main::SetCursorPointer
         pla
         cmp     #$04
-        beq     format_disk
-        jmp     erase_disk
+        beq     FormatDisk
+        jmp     EraseDisk
 
 ;;; ============================================================
 ;;; Format Disk
 
-.proc format_disk
+.proc FormatDisk
 
         ;; --------------------------------------------------
         ;; Prompt for device
 
         copy    #$00, has_input_field_flag
-        jsr     main::open_prompt_window
+        jsr     main::OpenPromptWindow
         lda     winfo_prompt_dialog::window_id
-        jsr     main::safe_set_port_from_window_id
-        param_call main::draw_dialog_title, aux::label_format_disk
-        param_call main::draw_dialog_label, 1, aux::str_select_format
-        jsr     draw_volume_labels
+        jsr     main::SafeSetPortFromWindowId
+        param_call main::DrawDialogTitle, aux::label_format_disk
+        param_call main::DrawDialogLabel, 1, aux::str_select_format
+        jsr     DrawVolumeLabels
         copy    #$FF, selected_device_index
-l1:     copy16  #handle_click, main::jump_relay+1
+l1:     copy16  #HandleClick, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
-l2:     jsr     main::prompt_input_loop
+l2:     jsr     main::PromptInputLoop
         bmi     l2              ; not done
         pha
-        copy16  #main::noop, main::jump_relay+1
+        copy16  #main::NoOp, main::jump_relay+1
         lda     #$00
         sta     LD8F3
         sta     format_erase_overlay_flag
@@ -62,7 +62,7 @@ l2:     jsr     main::prompt_input_loop
 l3:     bit     selected_device_index
         bmi     l1
 
-        jsr     get_selected_unit_num
+        jsr     GetSelectedUnitNum
         sta     d2
         sta     unit_num
 
@@ -70,17 +70,17 @@ l3:     bit     selected_device_index
         ;; Prompt for name
 
         lda     winfo_prompt_dialog::window_id
-        jsr     main::safe_set_port_from_window_id
+        jsr     main::SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        jsr     main::clear_path_buf1
+        jsr     main::ClearPathBuf1
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
-        jsr     main::clear_path_buf2
-        param_call main::draw_dialog_label, 3, aux::str_new_volume
-l4:     jsr     main::prompt_input_loop
+        jsr     main::ClearPathBuf2
+        param_call main::DrawDialogLabel, 3, aux::str_new_volume
+l4:     jsr     main::PromptInputLoop
         bmi     l4              ; not done
         beq     l6              ; ok
         jmp     l15             ; cancel
@@ -92,12 +92,12 @@ l6:     lda     path_buf1
         beq     l5              ; name is empty
         cmp     #$10
         bcs     l5              ; name > 15 characters
-        jsr     main::set_cursor_pointer_with_flag
+        jsr     main::SetCursorPointerWithFlag
 
         ;; Check for conflicting name
         ldxy    #path_buf1
         lda     unit_num
-        jsr     check_conflicting_volume_name
+        jsr     CheckConflictingVolumeName
         bne     :+
         lda     #ERR_DUPLICATE_FILENAME
         jsr     JUMP_TABLE_SHOW_ALERT
@@ -108,17 +108,17 @@ l6:     lda     path_buf1
         ;; Confirm format
 
         lda     winfo_prompt_dialog::window_id
-        jsr     main::safe_set_port_from_window_id
+        jsr     main::SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
         copy    #0, has_input_field_flag
-        param_call main::draw_dialog_label, 3, aux::str_confirm_format_prefix
+        param_call main::DrawDialogLabel, 3, aux::str_confirm_format_prefix
         lda     unit_num
-        jsr     get_vol_name
+        jsr     GetVolName
         param_call main::DrawString, ovl_string_buf
         param_call main::DrawString, aux::str_confirm_format_suffix
-l7:     jsr     main::prompt_input_loop
+l7:     jsr     main::PromptInputLoop
         bmi     l7              ; not done
         beq     l8              ; ok
         jmp     l15             ; cancel
@@ -127,30 +127,30 @@ l8:
         ;; Proceed with format
 
         lda     winfo_prompt_dialog::window_id
-        jsr     main::safe_set_port_from_window_id
+        jsr     main::SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        param_call main::draw_dialog_label, 1, aux::str_formatting
+        param_call main::DrawDialogLabel, 1, aux::str_formatting
         lda     unit_num
-        jsr     check_supports_format
+        jsr     CheckSupportsFormat
         and     #$FF
         bne     l9
-        jsr     main::set_cursor_watch
+        jsr     main::SetCursorWatch
         lda     unit_num
-        jsr     format_unit
+        jsr     FormatUnit
         bcs     l12
 l9:     lda     winfo_prompt_dialog::window_id
-        jsr     main::safe_set_port_from_window_id
+        jsr     main::SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        param_call main::draw_dialog_label, 1, aux::str_erasing
-        param_call upcase_string, path_buf1
+        param_call main::DrawDialogLabel, 1, aux::str_erasing
+        param_call UpcaseString, path_buf1
 
         ldxy    #path_buf1
         lda     unit_num
-        jsr     write_header_blocks
+        jsr     WriteHeaderBlocks
         pha
-        jsr     main::set_cursor_pointer
+        jsr     main::SetCursorPointer
         pla
         bne     l10
         lda     #$00
@@ -163,11 +163,11 @@ l10:    cmp     #ERR_WRITE_PROTECTED
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
 l11:    jsr     Bell
-        param_call main::draw_dialog_label, 6, aux::str_erasing_error
+        param_call main::DrawDialogLabel, 6, aux::str_erasing_error
         jmp     l14
 
 l12:    pha
-        jsr     main::set_cursor_pointer
+        jsr     main::SetCursorPointer
         pla
         cmp     #ERR_WRITE_PROTECTED
         bne     l13
@@ -176,15 +176,15 @@ l12:    pha
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
 l13:    jsr     Bell
-        param_call main::draw_dialog_label, 6, aux::str_formatting_error
-l14:    jsr     main::prompt_input_loop
+        param_call main::DrawDialogLabel, 6, aux::str_formatting_error
+l14:    jsr     main::PromptInputLoop
         bmi     l14             ; not done
         bne     l15             ; ok
         jmp     l8              ; cancel
 
 l15:    pha
-        jsr     main::set_cursor_pointer
-        jsr     main::reset_main_grafport
+        jsr     main::SetCursorPointer
+        jsr     main::ResetMainGrafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         ldx     d2
         pla
@@ -198,22 +198,22 @@ d2:     .byte   0
 ;;; ============================================================
 ;;; Erase Disk
 
-.proc erase_disk
+.proc EraseDisk
         ;; --------------------------------------------------
         ;; Prompt for device
 
         lda     #$00
         sta     has_input_field_flag
-        jsr     main::open_prompt_window
+        jsr     main::OpenPromptWindow
         lda     winfo_prompt_dialog::window_id
-        jsr     main::safe_set_port_from_window_id
-        param_call main::draw_dialog_title, aux::label_erase_disk
-        param_call main::draw_dialog_label, 1, aux::str_select_erase
-        jsr     draw_volume_labels
+        jsr     main::SafeSetPortFromWindowId
+        param_call main::DrawDialogTitle, aux::label_erase_disk
+        param_call main::DrawDialogLabel, 1, aux::str_select_erase
+        jsr     DrawVolumeLabels
         copy    #$FF, selected_device_index
-        copy16  #handle_click, main::jump_relay+1
+        copy16  #HandleClick, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
-l1:     jsr     main::prompt_input_loop
+l1:     jsr     main::PromptInputLoop
         bmi     l1              ; not done
         beq     l2              ; ok
         jmp     l11             ; cancel
@@ -221,7 +221,7 @@ l1:     jsr     main::prompt_input_loop
 l2:     bit     selected_device_index
         bmi     l1
 
-        jsr     get_selected_unit_num
+        jsr     GetSelectedUnitNum
         sta     d2
         sta     unit_num
 
@@ -230,17 +230,17 @@ l2:     bit     selected_device_index
 
         copy16  #main::rts1, main::jump_relay+1
         lda     winfo_prompt_dialog::window_id
-        jsr     main::safe_set_port_from_window_id
+        jsr     main::SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        jsr     main::clear_path_buf1
+        jsr     main::ClearPathBuf1
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
-        jsr     main::clear_path_buf2
-        param_call main::draw_dialog_label, 3, aux::str_new_volume
-l3:     jsr     main::prompt_input_loop
+        jsr     main::ClearPathBuf2
+        param_call main::DrawDialogLabel, 3, aux::str_new_volume
+l3:     jsr     main::PromptInputLoop
         bmi     l3              ; not done
         beq     l5              ; ok
         jmp     l11             ; cancel
@@ -252,12 +252,12 @@ l5:     lda     path_buf1
         beq     l4              ; name is empty
         cmp     #$10
         bcs     l4              ; name > 15 characters
-        jsr     main::set_cursor_pointer_with_flag
+        jsr     main::SetCursorPointerWithFlag
 
         ;; Check for conflicting name
         ldxy    #path_buf1
         lda     unit_num
-        jsr     check_conflicting_volume_name
+        jsr     CheckConflictingVolumeName
         bne     :+
         lda     #ERR_DUPLICATE_FILENAME
         jsr     JUMP_TABLE_SHOW_ALERT
@@ -268,17 +268,17 @@ l5:     lda     path_buf1
         ;; Confirm erase
 
         lda     winfo_prompt_dialog::window_id
-        jsr     main::safe_set_port_from_window_id
+        jsr     main::SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
         copy    #0, has_input_field_flag
-        param_call main::draw_dialog_label, 3, aux::str_confirm_erase_prefix
+        param_call main::DrawDialogLabel, 3, aux::str_confirm_erase_prefix
         lda     unit_num
-        jsr     get_vol_name
+        jsr     GetVolName
         param_call main::DrawString, ovl_string_buf
         param_call main::DrawString, aux::str_confirm_erase_suffix
-l6:     jsr     main::prompt_input_loop
+l6:     jsr     main::PromptInputLoop
         bmi     l6              ; not done
         beq     l7              ; ok
         jmp     l11             ; cancel
@@ -287,18 +287,18 @@ l7:
         ;; Proceed with erase
 
         lda     winfo_prompt_dialog::window_id
-        jsr     main::safe_set_port_from_window_id
+        jsr     main::SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        param_call main::draw_dialog_label, 1, aux::str_erasing
-        param_call upcase_string, path_buf1
-        jsr     main::set_cursor_watch
+        param_call main::DrawDialogLabel, 1, aux::str_erasing
+        param_call UpcaseString, path_buf1
+        jsr     main::SetCursorWatch
 
         ldxy    #path_buf1
         lda     unit_num
-        jsr     write_header_blocks
+        jsr     WriteHeaderBlocks
         pha
-        jsr     main::set_cursor_pointer
+        jsr     main::SetCursorPointer
         pla
         bne     l8
         lda     #$00
@@ -311,13 +311,13 @@ l8:     cmp     #ERR_WRITE_PROTECTED
         jmp     l7              ; `kAlertResultTryAgain` = 0
 
 l9:     jsr     Bell
-        param_call main::draw_dialog_label, 6, aux::str_erasing_error
-l10:    jsr     main::prompt_input_loop
+        param_call main::DrawDialogLabel, 6, aux::str_erasing_error
+l10:    jsr     main::PromptInputLoop
         bmi     l10             ; not done
         beq     l7              ; pk
 l11:    pha                     ; cancel
-        jsr     main::set_cursor_pointer
-        jsr     main::reset_main_grafport
+        jsr     main::SetCursorPointer
+        jsr     main::ResetMainGrafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
         ldx     d2
         pla
@@ -331,7 +331,7 @@ d2:     .byte   0
 ;;; ============================================================
 
 
-.proc handle_click
+.proc HandleClick
         cmp16   screentowindow_windowx, #kLabelsCol1
         bpl     :+
         return  #$FF
@@ -375,14 +375,14 @@ l2:     lda     col
         lda     selected_device_index
         bmi     l3
         lda     selected_device_index
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
         lda     #$FF
         sta     selected_device_index
 l3:     return  #$FF
 
 l4:     cmp     selected_device_index
         bne     l7
-        jsr     main::detect_double_click
+        jsr     main::StashCoordsAndDetectDoubleClick
         bmi     l6
 l5:     MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
@@ -393,11 +393,11 @@ l6:     rts
 l7:     sta     d1
         lda     selected_device_index
         bmi     l8
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
 l8:     lda     d1
         sta     selected_device_index
-        jsr     highlight_volume_label
-        jsr     main::detect_double_click
+        jsr     HighlightVolumeLabel
+        jsr     main::StashCoordsAndDetectDoubleClick
         beq     l5
         rts
 
@@ -409,7 +409,7 @@ col:    .byte   0
 ;;; Hilight volume label
 ;;; Input: A = volume index
 
-.proc highlight_volume_label
+.proc HighlightVolumeLabel
         ldy     #<(kLabelsCol1-1)
         sty     select_volume_rect::x1
         ldy     #>(kLabelsCol1-1)
@@ -447,10 +447,10 @@ L0CA9:  .byte   0
 
 ;;; ============================================================
 
-.proc maybe_highlight_selected_index
+.proc MaybeHighlightSelectedIndex
         lda     selected_device_index
         bmi     :+
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
         copy    #$FF, selected_device_index
 :       rts
 .endproc
@@ -458,7 +458,7 @@ L0CA9:  .byte   0
 ;;; ============================================================
 
         ;; Called from main
-.proc prompt_handle_key_right
+.proc PromptHandleKeyRight
         lda     selected_device_index
         bpl     :+              ; has selection
 
@@ -478,17 +478,17 @@ L0CA9:  .byte   0
         lda     #0              ; wrap to 0 if needed
 
 :       pha
-        jsr     maybe_highlight_selected_index
+        jsr     MaybeHighlightSelectedIndex
         pla
 set:    sta     selected_device_index
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
         ;; Called from main
-.proc prompt_handle_key_left
+.proc PromptHandleKeyLeft
         lda     selected_device_index
         bpl     loop            ; has selection
 
@@ -518,18 +518,18 @@ loop:   sec
         bcs     loop
 
         pha
-        jsr     maybe_highlight_selected_index
+        jsr     MaybeHighlightSelectedIndex
         pla
 
 set:    sta     selected_device_index
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
         ;; Called from main
-.proc prompt_handle_key_down
+.proc PromptHandleKeyDown
         lda     selected_device_index ; $FF if none, would inc to #0
         clc
         adc     #1
@@ -537,17 +537,17 @@ done:   return  #$FF
         bcc     :+
         lda     #0              ; wrap to first
 :       pha
-        jsr     maybe_highlight_selected_index
+        jsr     MaybeHighlightSelectedIndex
         pla
         sta     selected_device_index
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
         return  #$FF
 .endproc
 
 ;;; ============================================================
 
         ;; Called from main
-.proc prompt_handle_key_up
+.proc PromptHandleKeyUp
         lda     selected_device_index
         bmi     wrap            ; if no selection, wrap
         sec
@@ -559,17 +559,17 @@ wrap:   ldx     num_volumes     ; go to last (num - 1)
         txa
 
 :       pha
-        jsr     maybe_highlight_selected_index
+        jsr     MaybeHighlightSelectedIndex
         pla
         sta     selected_device_index
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
         return  #$FF
 .endproc
 
 ;;; ============================================================
 ;;; Draw volume labels
 
-.proc draw_volume_labels
+.proc DrawVolumeLabels
         ldx     DEVCNT
         inx
         stx     num_volumes
@@ -625,7 +625,7 @@ setpos: stax    dialog_label_pos::xcoord
         iny
 
         pla                     ; A,X has pointer again
-        jsr     main::draw_dialog_label
+        jsr     main::DrawDialogLabel
         inc     vol
         jmp     loop
 
@@ -673,7 +673,7 @@ params: .addr   0
 ;;; Input: A = unit number (no need to mask off low nibble)
 ;;; Output: A,X = driver address
 
-.proc get_driver_address
+.proc GetDriverAddress
         and     #UNIT_NUM_MASK  ; DSSS0000 after masking
         lsr                     ; 0DSSS000
         lsr                     ; 00DSSS00
@@ -692,7 +692,7 @@ params: .addr   0
 ;;; Format disk
 ;;; Input: A = unit number (with low nibble intact)
 
-.proc format_unit
+.proc FormatUnit
         sta     unit_num
 
         jsr     main::IsDiskII
@@ -705,7 +705,7 @@ params: .addr   0
 
         ;; Format using driver
 driver: lda     unit_num
-        jsr     get_driver_address
+        jsr     GetDriverAddress
         stax    @driver
 
         sta     ALTZPOFF        ; Main ZP/LCBANKs
@@ -731,7 +731,7 @@ unit_num:
 ;;; Input: A = unit number (with low nibble intact)
 ;;; Output: A=0/Z=1/N=0 if yes, A=$FF/Z=0/N=1 if no
 
-.proc check_supports_format
+.proc CheckSupportsFormat
         sta     unit_num
 
         jsr     main::IsDiskII
@@ -740,7 +740,7 @@ unit_num:
         ;; Check if the driver is firmware ($CnXX).
         ptr := $06
         lda     unit_num
-        jsr     get_driver_address
+        jsr     GetDriverAddress
         stax    ptr
         txa                     ; high byte
         and     #$F0            ; look at high nibble
@@ -766,7 +766,7 @@ unit_num:
 ;;; Write the loader, volume directory, and volume bitmap
 ;;; Inputs: A = unit number (with low nibble intact), X,Y = volume name
 
-.proc write_header_blocks
+.proc WriteHeaderBlocks
         sta     unit_num
         and     #UNIT_NUM_MASK
         sta     write_block_params::unit_num
@@ -804,7 +804,7 @@ L132C:  ldy     #0
 
         ;; Not Disk II - use the driver.
         lda     unit_num
-        jsr     get_driver_address
+        jsr     GetDriverAddress
         stax    @driver
 
         sta     ALTZPOFF        ; Main ZP/LCBANKs
@@ -845,7 +845,7 @@ L1398:  stxy    total_blocks
 :       inc     write_block_params::block_num     ; next block needs...
         inc     write_block_params::data_buffer+1 ; next $200 of data
         inc     write_block_params::data_buffer+1
-        jsr     write_block_and_zero
+        jsr     WriteBlockAndZero
 
         ;; --------------------------------------------------
         ;; Volume directory key block
@@ -876,19 +876,19 @@ L1398:  stxy    total_blocks
         dey
         bpl     :-
 
-        jsr     write_block_and_zero
+        jsr     WriteBlockAndZero
 
         ;; Subsequent volume directory blocks (4 total)
         copy    #2, block_buffer ; block 3, points at 2 and 4
         copy    #4, block_buffer+2
-        jsr     write_block_and_zero
+        jsr     WriteBlockAndZero
 
         copy    #3, block_buffer ; block 4, points at 3 and 5
         copy    #5, block_buffer+2
-        jsr     write_block_and_zero
+        jsr     WriteBlockAndZero
 
         copy    #4, block_buffer ; block 4, points back at 4
-        jsr     write_block_and_zero
+        jsr     WriteBlockAndZero
 
         ;; --------------------------------------------------
         ;; Bitmap blocks
@@ -922,7 +922,7 @@ L1398:  stxy    total_blocks
 
         ;; Main loop to build the volume bitmap
 bitmaploop:
-        jsr     buildblock      ; Build a bitmap for the current block
+        jsr     BuildBlock      ; Build a bitmap for the current block
 
         lda     write_block_params::block_num+1 ; Are we at a block >255?
         bne     L1483           ; Then something's gone horribly wrong and we need to stop
@@ -955,7 +955,7 @@ bitmaploop:
 
         ;; Call the write/increment/zero routine, and loop back if we're not done
 gowrite:
-        jsr     write_block_and_zero
+        jsr     WriteBlockAndZero
         lda     lastblock
         cmp     write_block_params::block_num
         bcs     bitmaploop
@@ -990,7 +990,7 @@ lastblock:
 ;;; 512 $FF values, except for the last block in the entire VBM, which
 ;;; gets cleared to $00's following the final byte position.
 
-.proc buildblock
+.proc BuildBlock
         ldy     #$00
         lda     #$FF
 ffloop: sta     block_buffer,y  ; Fill this entire block
@@ -1045,7 +1045,7 @@ fail2:  sec
 
 ;;; ============================================================
 
-.proc write_block_and_zero
+.proc WriteBlockAndZero
         MLI_RELAY_CALL WRITE_BLOCK, write_block_params
         bne     fail
         jsr     zero_buffers
@@ -1090,10 +1090,9 @@ vol_name_buf:
 ;;; ProDOS Loader
 ;;; ============================================================
 
-.proc prodos_loader_blocks
+prodos_loader_blocks:
         .incbin "../inc/pdload.dat"
-.endproc
-        .assert .sizeof(prodos_loader_blocks) = $400, error, "Bad data"
+        .assert * - prodos_loader_blocks = $400, error, "Bad data"
 
 ;;; ============================================================
 
@@ -1102,7 +1101,7 @@ vol_name_buf:
 ;;; writing starts are placed here. The overlay will be reloaded
 ;;; for subsequent format/erase operations.
 
-.proc upcase_string
+.proc UpcaseString
         ptr := $06
         stx     ptr+1
         sta     ptr
@@ -1126,7 +1125,7 @@ loop:   lda     (ptr),y
 ;;; Input: A = unit number
 ;;; Output: `ovl_string_buf` is populated.
 
-.proc get_nonprodos_vol_name
+.proc GetNonprodosVolName
         ;; Read block 0
         sta     read_block_params::unit_num
         lda     #0
@@ -1148,10 +1147,10 @@ loop:   lda     (ptr),y
         ;; Unknown, just use slot and drive
 unknown:
         lda     read_block_params::unit_num
-        jsr     get_slot_char
+        jsr     GetSlotChar
         sta     the_disk_in_slot_label + kTheDiskInSlotSlotCharOffset
         lda     read_block_params::unit_num
-        jsr     get_drive_char
+        jsr     GetDriveChar
         sta     the_disk_in_slot_label + kTheDiskInSlotDriveCharOffset
         ldx     the_disk_in_slot_label
 L1974:  lda     the_disk_in_slot_label,x
@@ -1174,17 +1173,17 @@ maybe_dos:
 
         ;; DOS 3.3, use slot and drive
         lda     read_block_params::unit_num
-        jsr     get_slot_char
+        jsr     GetSlotChar
         sta     the_dos_33_disk_label + kTheDos33DiskSlotCharOffset
         lda     read_block_params::unit_num
-        jsr     get_drive_char
+        jsr     GetDriveChar
         sta     the_dos_33_disk_label + kTheDos33DiskDriveCharOffset
         COPY_STRING the_dos_33_disk_label, ovl_string_buf
         rts
 
         .byte   0               ; Unused???
 
-.proc get_slot_char
+.proc GetSlotChar
         and     #$70
         lsr     a
         lsr     a
@@ -1195,7 +1194,7 @@ maybe_dos:
         rts
 .endproc
 
-.proc get_drive_char
+.proc GetDriveChar
         and     #$80
         asl     a
         rol     a
@@ -1233,7 +1232,7 @@ pascal_disk:
 ;;; Input: A = unit number (no need to mask off low nibble)
 ;;; Output: `ovl_string_buf` is populated
 
-.proc get_vol_name
+.proc GetVolName
         and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
@@ -1252,7 +1251,7 @@ pascal_disk:
 
 non_pro:
         lda     on_line_params::unit_num
-        jsr     get_nonprodos_vol_name
+        jsr     GetNonprodosVolName
         rts
 .endproc
 
@@ -1261,7 +1260,7 @@ non_pro:
 ;;; Output: A = unit number (with low nibble intact)
 ;;; Assert: `selected_device_index` is valid (i.e. not $FF)
 
-.proc get_selected_unit_num
+.proc GetSelectedUnitNum
         ;; Reverse order, so boot volume is first
         lda     DEVCNT
         sec
@@ -1275,7 +1274,7 @@ non_pro:
 ;;; Inputs: A = unit number (no need to mask off low nibble), X,Y = name
 ;;; Outputs: Z=1 if there's a duplicate, Z=0 otherwise
 
-.proc check_conflicting_volume_name
+.proc CheckConflictingVolumeName
         ptr := $06
         stxy    ptr
         and     #UNIT_NUM_MASK
@@ -1328,11 +1327,11 @@ path:
 
         PAD_TO $1C00
 
-.endproc ; format_erase_overlay
+.endscope ; format_erase_overlay
 
-format_erase_overlay_prompt_handle_key_left     := format_erase_overlay::prompt_handle_key_left
-format_erase_overlay_prompt_handle_key_right    := format_erase_overlay::prompt_handle_key_right
-format_erase_overlay_prompt_handle_key_down     := format_erase_overlay::prompt_handle_key_down
-format_erase_overlay_prompt_handle_key_up       := format_erase_overlay::prompt_handle_key_up
+format_erase_overlay__PromptHandleKeyLeft     := format_erase_overlay::PromptHandleKeyLeft
+format_erase_overlay__PromptHandleKeyRight    := format_erase_overlay::PromptHandleKeyRight
+format_erase_overlay__PromptHandleKeyDown     := format_erase_overlay::PromptHandleKeyDown
+format_erase_overlay__PromptHandleKeyUp       := format_erase_overlay::PromptHandleKeyUp
 
 format_erase_overlay_exec := format_erase_overlay::exec

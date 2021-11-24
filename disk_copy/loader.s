@@ -9,7 +9,7 @@
 
 SETTINGS := $F180
 
-.proc part2
+.scope part2
         .org $1800
 
         jmp     start
@@ -69,7 +69,7 @@ L183F:  sta     BITMAP+1,x
         copy16  len1, read_params::request_count
         MLI_CALL READ, read_params
         bcs     fail
-        jsr     copy_to_lc
+        jsr     CopyToLc
 
         copy16  buf2, read_params::data_buffer
         copy16  len2, read_params::request_count
@@ -78,7 +78,7 @@ L183F:  sta     BITMAP+1,x
         MLI_CALL CLOSE, close_params
         bcs     fail
 
-        jsr     load_settings
+        jsr     LoadSettings
 
         sta     ALTZPON
         bit     LCBANK1
@@ -94,7 +94,7 @@ fail:   jmp     fail
 ;;; ============================================================
 ;;; Copy first chunk to the Language Card
 
-.proc copy_to_lc
+.proc CopyToLc
         src := $6
         end := $8
         dst := $A
@@ -155,4 +155,4 @@ loop:   lda     (src),y
 
         PAD_TO $1A00
 
-.endproc ; part2
+.endscope ; part2

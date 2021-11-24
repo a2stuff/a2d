@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc part1
+.scope part1
         .org $800
 
         jmp     start
@@ -80,4 +80,4 @@ start:  lda     #$80
 
         PAD_TO $A00
 
-.endproc ; part1
+.endscope ; part1

@@ -99,9 +99,9 @@ header_orig_prefix:
 ;;; ============================================================
 
 start:
-        jsr     detect_mousetext
-        jsr     load_settings
-        jmp     copy_desktop_to_ramcard
+        jsr     DetectMousetext
+        jsr     LoadSettings
+        jmp     CopyDesktopToRamcard
 
 ;;; ============================================================
 
@@ -114,12 +114,12 @@ start:
 ;;;
 ;;; ============================================================
 
-;;; Entry point is generic_copy::do_copy
-;;; * Source path is generic_copy::path2
-;;; * Destination path is generic_copy::path1
-;;; * Callbacks (generic_copy::hook_*) must be populated
+;;; Entry point is GenericCopy::DoCopy
+;;; * Source path is GenericCopy::path2
+;;; * Destination path is GenericCopy::path1
+;;; * Callbacks (GenericCopy::hook_*) must be populated
 
-.proc generic_copy
+.proc GenericCopy
 
 ;;; ============================================================
 
@@ -135,10 +135,10 @@ hook_show_file:           .addr   0 ; called when `path2` updated
 
 ;;; ============================================================
 
-show_insert_prompt:
+ShowInsertPrompt:
         jmp     (hook_insert_source)
 
-show_copying_screen:
+ShowCopyingScreen:
         jmp     (hook_show_file)
 
         DEFINE_GET_FILE_INFO_PARAMS get_path2_info_params, path2
@@ -180,7 +180,7 @@ filename:
 ;;; Perform the file copy.
 ;;; Inputs: `path2` is source path
 ;;;         `path1` is destination path
-.proc do_copy
+.proc DoCopy
         ;; Check destination dir
         MLI_CALL GET_FILE_INFO, get_path1_info_params
         cmp     #ERR_FILE_NOT_FOUND
@@ -199,7 +199,7 @@ okerr:  MLI_CALL GET_FILE_INFO, get_path2_info_params
         cmp     #ERR_FILE_NOT_FOUND
         bne     fail
 
-prompt: jsr     show_insert_prompt
+prompt: jsr     ShowInsertPrompt
         jmp     okerr
 
 fail:   jmp     (hook_handle_error_code)
@@ -224,7 +224,7 @@ is_dir: lda     #$FF
         bne     :-
         lda     #ACCESS_DEFAULT
         sta     create_params::access
-        jsr     check_space_available
+        jsr     CheckSpaceAvailable
         bcc     :+
         jmp     (hook_handle_no_space)
 
@@ -243,8 +243,8 @@ is_dir: lda     #$FF
 
 :       lda     is_dir_flag
         beq     :+
-        jmp     copy_directory
-:       jmp     copy_normal_file
+        jmp     CopyDirectory
+:       jmp     CopyNormalFile
 
 is_dir_flag:
         .byte   0
@@ -257,62 +257,62 @@ is_dir_flag:
 ;;; Inputs: `file_entry` populated with FileEntry
 ;;;         `path2` has source directory path
 ;;;         `path1` has destination directory path
-;;; Errors: handle_error_code is invoked
+;;; Errors: HandleErrorCode is invoked
 
-.proc copy_entry
+.proc CopyEntry
         lda     file_entry + FileEntry::file_type
         cmp     #FT_DIRECTORY
         bne     do_file
 
         ;; --------------------------------------------------
         ;; Directory
-        jsr     append_filename_to_path2
-        jsr     show_copying_screen
+        jsr     AppendFilenameToPath2
+        jsr     ShowCopyingScreen
         MLI_CALL GET_FILE_INFO, get_path2_info_params
         beq     ok
         jmp     (hook_handle_error_code)
 
-onerr:  jsr     remove_filename_from_path1
-        jsr     remove_filename_from_path2
+onerr:  jsr     RemoveFilenameFromPath1
+        jsr     RemoveFilenameFromPath2
         lda     #$FF
         sta     copy_err_flag
         jmp     exit
 
-ok:     jsr     append_filename_to_path1
-        jsr     create_dir
+ok:     jsr     AppendFilenameToPath1
+        jsr     CreateDir
         bcs     onerr
-        jsr     remove_filename_from_path2
+        jsr     RemoveFilenameFromPath2
         jmp     exit
 
         ;; --------------------------------------------------
         ;; File
 do_file:
-        jsr     append_filename_to_path1
-        jsr     append_filename_to_path2
-        jsr     show_copying_screen
+        jsr     AppendFilenameToPath1
+        jsr     AppendFilenameToPath2
+        jsr     ShowCopyingScreen
         MLI_CALL GET_FILE_INFO, get_path2_info_params
         beq     :+
         jmp     (hook_handle_error_code)
 
-:       jsr     check_space_available
+:       jsr     CheckSpaceAvailable
         bcc     :+
         jmp     (hook_handle_no_space)
 
         ;; Create parent dir if necessary
-:       jsr     remove_filename_from_path2
-        jsr     create_dir
+:       jsr     RemoveFilenameFromPath2
+        jsr     CreateDir
         bcs     cleanup
-        jsr     append_filename_to_path2
+        jsr     AppendFilenameToPath2
 
         ;; Do the copy
-        jsr     copy_normal_file
-        jsr     remove_filename_from_path2
-        jsr     remove_filename_from_path1
+        jsr     CopyNormalFile
+        jsr     RemoveFilenameFromPath2
+        jsr     RemoveFilenameFromPath1
 
 exit:   rts
 
 cleanup:
-        jsr     remove_filename_from_path1
+        jsr     RemoveFilenameFromPath1
         rts
 .endproc
 
@@ -321,7 +321,7 @@ cleanup:
 ;;; Inputs: `path2` is source; `path1` is target
 ;;; Outputs: C=0 if there is sufficient space, C=1 otherwise
 
-.proc check_space_available
+.proc CheckSpaceAvailable
 
         ;; --------------------------------------------------
         ;; Get source size
@@ -393,9 +393,9 @@ dst_size:       .word   0
 ;;; Copy a normal (non-directory) file. File info is copied too.
 ;;; Inputs: `open_srcfile_params` populated
 ;;;         `open_dstfile_params` populated; file already created
-;;; Errors: handle_error_code is invoked
+;;; Errors: HandleErrorCode is invoked
 
-.proc copy_normal_file
+.proc CopyNormalFile
         ;; Open source
         MLI_CALL OPEN, open_srcfile_params
         beq     :+
@@ -456,7 +456,7 @@ close:  MLI_CALL CLOSE, close_dstfile_params
 
 ;;; ============================================================
 
-.proc create_dir
+.proc CreateDir
         ;; Copy file_type, aux_type, storage_type
         ldx     #7
 :       lda     get_path2_info_params,x
@@ -500,7 +500,7 @@ entry_index_in_block:   .byte   0
 
 ;;; ============================================================
 
-.proc push_index_to_stack
+.proc PushIndexToStack
         ldx     stack_index
         lda     target_index
         sta     index_stack,x
@@ -514,7 +514,7 @@ entry_index_in_block:   .byte   0
 
 ;;; ============================================================
 
-.proc pop_index_from_stack
+.proc PopIndexFromStack
         ldx     stack_index
         dex
         lda     index_stack,x
@@ -531,7 +531,7 @@ entry_index_in_block:   .byte   0
 ;;; Inputs: path2 set to dir
 ;;; Outputs: ref_num
 
-.proc open_src_dir
+.proc OpenSrcDir
         lda     #0
         sta     entry_index_in_dir
         sta     entry_index_in_dir+1
@@ -550,14 +550,14 @@ entry_index_in_block:   .byte   0
 
         ;; Header size is next/prev blocks + a file entry
         .assert .sizeof(SubdirectoryHeader) = .sizeof(FileEntry) + 4, error, "incorrect struct size"
-:       jsr     read_file_entry ; read the rest of the header
+:       jsr     ReadFileEntry   ; read the rest of the header
 
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc do_close_file
+.proc DoCloseFile
         lda     ref_num
         sta     close_params::ref_num
         MLI_CALL CLOSE, close_params
@@ -570,7 +570,7 @@ entry_index_in_block:   .byte   0
 ;;; Read the next file entry in the directory into `file_entry`
 ;;; NOTE: Also used to read the vol/dir header.
 
-.proc read_file_entry
+.proc ReadFileEntry
         inc16   entry_index_in_dir
 
         ;; Skip entry
@@ -607,29 +607,29 @@ eof:    return  #$FF
 
 ;;; ============================================================
 
-.proc descend_directory
+.proc DescendDirectory
         copy16  entry_index_in_dir, target_index
-        jsr     do_close_file
-        jsr     push_index_to_stack
-        jsr     append_filename_to_path2
-        jsr     open_src_dir
+        jsr     DoCloseFile
+        jsr     PushIndexToStack
+        jsr     AppendFilenameToPath2
+        jsr     OpenSrcDir
         rts
 .endproc
 
-.proc ascend_directory
-        jsr     do_close_file
-        jsr     remove_filename_from_path2
-        jsr     pop_index_from_stack
-        jsr     open_src_dir
-        jsr     advance_to_target_entry
-        jsr     remove_filename_from_path1
+.proc AscendDirectory
+        jsr     DoCloseFile
+        jsr     RemoveFilenameFromPath2
+        jsr     PopIndexFromStack
+        jsr     OpenSrcDir
+        jsr     AdvanceToTargetEntry
+        jsr     RemoveFilenameFromPath1
         rts
 .endproc
 
-.proc advance_to_target_entry
+.proc AdvanceToTargetEntry
 :       cmp16   entry_index_in_dir, target_index
         beq     :+
-        jsr     read_file_entry
+        jsr     ReadFileEntry
         jmp     :-
 
 :       rts
@@ -639,12 +639,12 @@ eof:    return  #$FF
 ;;; Recursively copy
 ;;; Inputs: path2 points at source directory
 
-.proc copy_directory
+.proc CopyDirectory
         lda     #0
         sta     recursion_depth
-        jsr     open_src_dir
+        jsr     OpenSrcDir
 
-loop:   jsr     read_file_entry
+loop:   jsr     ReadFileEntry
         bne     next
 
         lda     file_entry + FileEntry::storage_type_name_length
@@ -657,7 +657,7 @@ loop:   jsr     read_file_entry
         lda     #0
         sta     copy_err_flag
 
-        jsr     copy_entry
+        jsr     CopyEntry
 
         lda     copy_err_flag   ; don't recurse if the copy failed
         bne     loop
@@ -666,17 +666,17 @@ loop:   jsr     read_file_entry
         bne     loop            ; and don't recurse unless it's a directory
 
         ;; Recurse into child directory
-        jsr     descend_directory
+        jsr     DescendDirectory
         inc     recursion_depth
         jmp     loop
 
 next:   lda     recursion_depth
         beq     done
-        jsr     ascend_directory
+        jsr     AscendDirectory
         dec     recursion_depth
         jmp     loop
 
-done:   jsr     do_close_file
+done:   jsr     DoCloseFile
         rts
 .endproc
 
@@ -689,7 +689,7 @@ copy_err_flag:
 
 ;;; ============================================================
 
-.proc append_filename_to_path2
+.proc AppendFilenameToPath2
         lda     filename
         bne     :+
         rts
@@ -713,7 +713,7 @@ done:   sty     path2
 
 ;;; ============================================================
 
-.proc remove_filename_from_path2
+.proc RemoveFilenameFromPath2
         ldx     path2
         bne     loop
         rts
@@ -733,7 +733,7 @@ done:   dex
 
 ;;; ============================================================
 
-.proc append_filename_to_path1
+.proc AppendFilenameToPath1
         lda     filename
         bne     :+
         rts
@@ -757,7 +757,7 @@ done:   sty     path1
 
 ;;; ============================================================
 
-.proc remove_filename_from_path1
+.proc RemoveFilenameFromPath1
         ldx     path1
         bne     loop
         rts
@@ -783,12 +783,12 @@ done:   dex
 ;;;
 ;;; ============================================================
 
-.proc copy_desktop_to_ramcard_impl
+.proc CopyDesktopToRamcardImpl
 
 ;;; ============================================================
 ;;; Data buffers and param blocks
 
-        ;; Used in check_desktop2_on_device
+        ;; Used in CheckDesktop2OnDevice
         path_buf := $D00
         DEFINE_GET_PREFIX_PARAMS get_prefix_params2, path_buf
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buf
@@ -898,7 +898,7 @@ str_slash_desktop:
 
 ;;; ============================================================
 
-.proc start
+.proc Start
         sta     MIXCLR
         sta     HIRES
         sta     TXTCLR
@@ -974,24 +974,24 @@ match:  sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
 
         ;; Clear flag - ramcard not found or unknown state.
         ldx     #0
-        jsr     set_copied_to_ramcard_flag
+        jsr     SetCopiedToRamcardFlag
 
         ;; Skip RAMCard install if flag is set
         lda     SETTINGS + DeskTopSettings::startup
         and     #DeskTopSettings::kStartupSkipRAMCard
         beq     :+
-        jmp     did_not_copy
+        jmp     DidNotCopy
 
         ;; Skip RAMCard install if button is down
 :       lda     BUTN0
         ora     BUTN1
-        bpl     search_devices
-        jmp     did_not_copy
+        bpl     SearchDevices
+        jmp     DidNotCopy
 
         ;; --------------------------------------------------
         ;; Look for RAM disk
 
-.proc search_devices
+.proc SearchDevices
         copy    DEVCNT, devnum
 
 loop:   ldx     devnum
@@ -1033,7 +1033,7 @@ loop:   ldx     devnum
 next_unit:
         dec     devnum
         bpl     loop
-        jmp     did_not_copy
+        jmp     DidNotCopy
 
         ;; Have a prospective device.
 test_unit_num:
@@ -1064,18 +1064,18 @@ test_unit_num:
 
         ;; Record that candidate device is found.
         ldx     #$C0
-        jsr     set_copied_to_ramcard_flag
+        jsr     SetCopiedToRamcardFlag
 
         ;; Already installed?
-        param_call set_ramcard_prefix, dst_path
-        jsr     check_desktop2_on_device
-        bcs     start_copy      ; No, start copy.
+        param_call SetRamcardPrefix, dst_path
+        jsr     CheckDesktop2OnDevice
+        bcs     StartCopy       ; No, start copy.
 
         ;; Already copied - record that it was installed and grab path.
         ldx     #$80
-        jsr     set_copied_to_ramcard_flag
-        jsr     copy_orig_prefix_to_desktop_orig_prefix
-        jmp     did_not_copy
+        jsr     SetCopiedToRamcardFlag
+        jsr     CopyOrigPrefixToDesktopOrigPrefix
+        jmp     DidNotCopy
 
 smartport_call:
         jmp     (sp_addr)
@@ -1084,20 +1084,20 @@ smartport_call:
 .endproc
 .endproc
 
-.proc start_copy
+.proc StartCopy
         ptr := $06
 
-        jsr     show_copying_screen
-        jsr     init_progress
+        jsr     ShowCopyingScreen
+        jsr     InitProgress
 
         MLI_CALL GET_PREFIX, get_prefix_params
         beq     :+
-        jmp     did_not_copy
+        jmp     DidNotCopy
 :       dec     src_path
 
         ;; Record that the copy was performed.
         ldx     #$80
-        jsr     set_copied_to_ramcard_flag
+        jsr     SetCopiedToRamcardFlag
 
         ldy     src_path
 :       lda     src_path,y
@@ -1121,7 +1121,7 @@ smartport_call:
         beq     :+
         cmp     #ERR_DUPLICATE_FILENAME
         beq     :+
-        jsr     did_not_copy
+        jsr     DidNotCopy
 :
 
         ;; --------------------------------------------------
@@ -1134,7 +1134,7 @@ smartport_call:
         copy    #0, filenum
 
 file_loop:
-        jsr     update_progress
+        jsr     UpdateProgress
 
         lda     filenum
         asl     a
@@ -1147,23 +1147,23 @@ file_loop:
         sta     filename_buf,y
         dey
         bpl     :-
-        jsr     copy_file
+        jsr     CopyFile
         inc     filenum
         lda     filenum
         cmp     #kNumFilenames
         bne     file_loop
 
-        jsr     update_progress
+        jsr     UpdateProgress
         ;; fall through
 .endproc
 
-.proc finish_dt_copy
+.proc FinishDtCopy
         lda     copied_flag
         beq     :+
         sta     dst_path
         MLI_CALL SET_PREFIX, set_prefix_params
 :       jsr     update_self_file
-        jsr     copy_orig_prefix_to_desktop_orig_prefix
+        jsr     CopyOrigPrefixToDesktopOrigPrefix
 
         lda     #0
         sta     RAMWORKS_BANK   ; Just in case???
@@ -1174,19 +1174,19 @@ file_loop:
         bpl     :-
 
         ;; Done! Move on to Part 2.
-        jmp     copy_selector_entries_to_ramcard
+        jmp     CopySelectorEntriesToRamcard
 .endproc
 
 ;;; ============================================================
 
-.proc did_not_copy
+.proc DidNotCopy
         copy    #0, copied_flag
-        jmp     finish_dt_copy
+        jmp     FinishDtCopy
 .endproc
 
 ;;; ============================================================
 
-.proc set_copied_to_ramcard_flag
+.proc SetCopiedToRamcardFlag
         bit     LCBANK2
         bit     LCBANK2
         stx     COPIED_TO_RAMCARD_FLAG
@@ -1194,7 +1194,7 @@ file_loop:
         rts
 .endproc
 
-.proc set_ramcard_prefix
+.proc SetRamcardPrefix
         ptr := $6
         target := RAMCARD_PREFIX
 
@@ -1212,7 +1212,7 @@ file_loop:
         rts
 .endproc
 
-.proc set_desktop_orig_prefix
+.proc SetDesktopOrigPrefix
         ptr := $6
         target := DESKTOP_ORIG_PREFIX
 
@@ -1240,7 +1240,7 @@ file_loop:
         kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
         kProgressWidth = kProgressStops * kProgressTick
 
-.proc init_progress
+.proc InitProgress
         bit     supports_mousetext
         bpl     done
 
@@ -1275,7 +1275,7 @@ file_loop:
 done:   rts
 .endproc
 
-.proc update_progress
+.proc UpdateProgress
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
@@ -1299,7 +1299,7 @@ count:  .byte   0
 
 ;;; ============================================================
 
-.proc append_filename_to_src_path
+.proc AppendFilenameToSrcPath
         lda     filename_buf
         bne     :+
         rts
@@ -1323,7 +1323,7 @@ done:   sty     src_path
 
 ;;; ============================================================
 
-.proc remove_filename_from_src_path
+.proc RemoveFilenameFromSrcPath
         ldx     src_path
         bne     :+
         rts
@@ -1343,7 +1343,7 @@ done:   dex
 
 ;;; ============================================================
 
-.proc append_filename_to_dst_path
+.proc AppendFilenameToDstPath
         lda     filename_buf
         bne     :+
         rts
@@ -1367,7 +1367,7 @@ done:   sty     dst_path
 
 ;;; ============================================================
 
-.proc remove_filename_from_dst_path
+.proc RemoveFilenameFromDstPath
         ldx     dst_path
         bne     :+
         rts
@@ -1387,7 +1387,7 @@ done:   dex
 
 ;;; ============================================================
 
-.proc show_copying_screen
+.proc ShowCopyingScreen
 
         ;; Message
         lda     #80
@@ -1427,51 +1427,51 @@ done:   rts
 ;;; ============================================================
 ;;; Callback from copy failure; restores stack and proceeds.
 
-.proc fail_copy
+.proc FailCopy
         ldx     saved_stack
         txs
 
-        jmp     did_not_copy
+        jmp     DidNotCopy
 .endproc
 
 ;;; ============================================================
 ;;; Copy `filename` from `src_path` to `dst_path`
 
-.proc copy_file
-        jsr     append_filename_to_dst_path
-        jsr     append_filename_to_src_path
+.proc CopyFile
+        jsr     AppendFilenameToDstPath
+        jsr     AppendFilenameToSrcPath
         MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
         cmp     #ERR_FILE_NOT_FOUND
         beq     cleanup
-        jmp     did_not_copy
+        jmp     DidNotCopy
 :
 
         ;; Set up source path
         ldy     src_path
 :       lda     src_path,y
-        sta     generic_copy::path2,y
+        sta     GenericCopy::path2,y
         dey
         bpl     :-
 
         ;; Set up destination path
         ldy     dst_path
 :       lda     dst_path,y
-        sta     generic_copy::path1,y
+        sta     GenericCopy::path1,y
         dey
         bpl     :-
 
-        copy16  #fail_copy, generic_copy::hook_handle_error_code
-        copy16  #fail_copy, generic_copy::hook_handle_no_space
-        copy16  #fail_copy, generic_copy::hook_insert_source
-        copy16  #noop, generic_copy::hook_show_file
+        copy16  #FailCopy, GenericCopy::hook_handle_error_code
+        copy16  #FailCopy, GenericCopy::hook_handle_no_space
+        copy16  #FailCopy, GenericCopy::hook_insert_source
+        copy16  #noop, GenericCopy::hook_show_file
 
-        jsr     generic_copy::do_copy
+        jsr     GenericCopy::DoCopy
         ;; TODO: Handle error.
 
 cleanup:
-        jsr     remove_filename_from_src_path
-        jsr     remove_filename_from_dst_path
+        jsr     RemoveFilenameFromSrcPath
+        jsr     RemoveFilenameFromDstPath
 
 noop:
 done:   rts
@@ -1479,7 +1479,7 @@ done:   rts
 
 ;;; ============================================================
 
-.proc check_desktop2_on_device
+.proc CheckDesktop2OnDevice
         slot_ptr = $8
 
         lda     active_device
@@ -1542,7 +1542,7 @@ str_desktop2:
 ;;; Update the live (RAM or disk) copy of this file with the
 ;;; original prefix.
 
-.proc update_self_file_impl
+.proc UpdateSelfFileImpl
         dt1_addr := $2000
 
         DEFINE_OPEN_PARAMS open_params, str_desktop1_path, dst_io_buffer
@@ -1561,12 +1561,12 @@ start:  MLI_CALL OPEN, open_params
         MLI_CALL CLOSE, close_params
 :       rts
 .endproc
-        update_self_file := update_self_file_impl::start
+        update_self_file := UpdateSelfFileImpl::start
 
 ;;; ============================================================
 
-.proc copy_orig_prefix_to_desktop_orig_prefix
-        param_call set_desktop_orig_prefix, header_orig_prefix
+.proc CopyOrigPrefixToDesktopOrigPrefix
+        param_call SetDesktopOrigPrefix, header_orig_prefix
         rts
 .endproc
 
@@ -1577,9 +1577,9 @@ start:  MLI_CALL OPEN, open_params
 prodos_loader_blocks:
         .incbin "../inc/pdload.dat"
 
-.endproc ; copy_desktop_to_ramcard_impl
+.endproc ; CopyDesktopToRamcardImpl
 
-copy_desktop_to_ramcard := copy_desktop_to_ramcard_impl::start
+CopyDesktopToRamcard := CopyDesktopToRamcardImpl::Start
 
 
 ;;; ============================================================
@@ -1588,12 +1588,12 @@ copy_desktop_to_ramcard := copy_desktop_to_ramcard_impl::start
 ;;;
 ;;; ============================================================
 
-.proc copy_selector_entries_to_ramcard
+.proc CopySelectorEntriesToRamcard
 
 
 ;;; See docs/Selector_List_Format.md for file format
 
-.proc process_selector_list
+.proc ProcessSelectorList
         ptr := $6
 
         ;; Clear screen
@@ -1621,7 +1621,7 @@ copy_desktop_to_ramcard := copy_desktop_to_ramcard_impl::start
         bit     ROMIN2
 
         ;; Load and iterate over the selector file
-        jsr     read_selector_list
+        jsr     ReadSelectorList
         beq     :+
         jmp     bail
 :       lda     #0
@@ -1630,17 +1630,17 @@ entry_loop:
         lda     entry_num
         cmp     selector_buffer + kSelectorListNumPrimaryRunListOffset
         beq     done_entries
-        jsr     compute_label_addr
+        jsr     ComputeLabelAddr
         stax    ptr
 
         ldy     #kSelectorEntryFlagsOffset ; Check Copy-to-RamCARD flags
         lda     (ptr),y
         bne     next_entry      ; not "On first use"
         lda     entry_num
-        jsr     compute_path_addr
+        jsr     ComputePathAddr
 
-        jsr     prepare_entry_paths
-        jsr     copy_using_entry_paths
+        jsr     PrepareEntryPaths
+        jsr     CopyUsingEntryPaths
         ;; TODO: Handle error.
 
         bit     LCBANK2         ; Mark copied
@@ -1665,7 +1665,7 @@ entry_loop2:
         beq     bail
         clc
         adc     #8              ; offset by 8 ???
-        jsr     compute_label_addr
+        jsr     ComputeLabelAddr
         stax    ptr
 
         ldy     #$0F
@@ -1674,10 +1674,10 @@ entry_loop2:
         lda     entry_num
         clc
         adc     #8
-        jsr     compute_path_addr
+        jsr     ComputePathAddr
 
-        jsr     prepare_entry_paths
-        jsr     copy_using_entry_paths
+        jsr     PrepareEntryPaths
+        jsr     CopyUsingEntryPaths
         ;; TODO: Handle error.
 
         bit     LCBANK2
@@ -1710,50 +1710,50 @@ entry_dir_name:
 
 ;;; ============================================================
 
-.proc copy_using_entry_paths
-        jsr     prepare_paths_from_entry_paths
+.proc CopyUsingEntryPaths
+        jsr     PreparePathsFromEntryPaths
 
         ;; Set up destination dir path, e.g. "/RAM/APPLEWORKS"
-        ldx     generic_copy::path1           ; Append '/' to path1
+        ldx     GenericCopy::path1 ; Append '/' to path1
         lda     #'/'
-        sta     generic_copy::path1+1,x
-        inc     generic_copy::path1
+        sta     GenericCopy::path1+1,x
+        inc     GenericCopy::path1
 
         ldy     #0              ; Append entry_dir_name to path1
-        ldx     generic_copy::path1
+        ldx     GenericCopy::path1
 :       iny
         inx
         lda     entry_dir_name,y
-        sta     generic_copy::path1,x
+        sta     GenericCopy::path1,x
         cpy     entry_dir_name
         bne     :-
-        stx     generic_copy::path1
+        stx     GenericCopy::path1
 
         ;; Install callbacks and invoke
-        copy16  #handle_error_code, generic_copy::hook_handle_error_code
-        copy16  #show_no_space_prompt, generic_copy::hook_handle_no_space
-        copy16  #show_insert_prompt, generic_copy::hook_insert_source
-        copy16  #show_copying_screen, generic_copy::hook_show_file
-        jmp     generic_copy::do_copy
+        copy16  #HandleErrorCode, GenericCopy::hook_handle_error_code
+        copy16  #ShowNoSpacePrompt, GenericCopy::hook_handle_no_space
+        copy16  #ShowInsertPrompt, GenericCopy::hook_insert_source
+        copy16  #ShowCopyingScreen, GenericCopy::hook_show_file
+        jmp     GenericCopy::DoCopy
 .endproc
 
 ;;; ============================================================
 ;;; Copy entry_path1/2 to path1/2
 
-.proc prepare_paths_from_entry_paths
+.proc PreparePathsFromEntryPaths
         ldy     #$FF
 
         ;; Copy entry_path2 to path2
 loop:   iny
         lda     entry_path2,y
-        sta     generic_copy::path2,y
+        sta     GenericCopy::path2,y
         cpy     entry_path2
         bne     loop
 
         ;; Copy entry_path1 to path1
         ldy     entry_path1
 loop2:  lda     entry_path1,y
-        sta     generic_copy::path1,y
+        sta     GenericCopy::path1,y
         dey
         bpl     loop2
 
@@ -1764,10 +1764,10 @@ loop2:  lda     entry_path1,y
 ;;; ============================================================
 ;;; Compute first offset into selector file - A*16 + 2
 
-.proc compute_label_addr
+.proc ComputeLabelAddr
         addr := selector_buffer + kSelectorListEntriesOffset
 
-        jsr     ax_times_16
+        jsr     AxTimes16
         clc
         adc     #<addr
         tay
@@ -1781,10 +1781,10 @@ loop2:  lda     entry_path1,y
 ;;; ============================================================
 ;;; Compute second offset into selector file - A*64 + $182
 
-.proc compute_path_addr
+.proc ComputePathAddr
         addr := selector_buffer + kSelectorListPathsOffset
 
-        jsr     ax_times_64
+        jsr     AxTimes64
         clc
         adc     #<addr
         tay
@@ -1797,7 +1797,7 @@ loop2:  lda     entry_path1,y
 
 ;;; ============================================================
 
-.proc read_selector_list_impl
+.proc ReadSelectorListImpl
         DEFINE_OPEN_PARAMS open_params, str_selector_list, src_io_buffer
 str_selector_list:
         PASCAL_STRING kFilenameSelectorList
@@ -1813,11 +1813,11 @@ start:  MLI_CALL OPEN, open_params
         lda     #0
 :       rts
 .endproc
-        read_selector_list := read_selector_list_impl::start
+        ReadSelectorList := ReadSelectorListImpl::start
 
 ;;; ============================================================
 
-.proc ax_times_16
+.proc AxTimes16
         ldx     #0
         stx     bits
 
@@ -1834,7 +1834,7 @@ bits:   .byte   0
 
 ;;; ============================================================
 
-.proc ax_times_64
+.proc AxTimes64
         ldx     #0
         stx     bits
 
@@ -1861,7 +1861,7 @@ bits:   .byte   $00
 ;;;            e.g. "/RAM"
 ;;; Trashes $06
 
-.proc prepare_entry_paths
+.proc PrepareEntryPaths
         ptr := $6
 
         stax    ptr
@@ -1937,31 +1937,31 @@ str_not_completed:
 
 ;;; ============================================================
 
-;;; Callback; used for generic_copy::hook_show_file
-.proc show_copying_screen
+;;; Callback; used for GenericCopy::hook_show_file
+.proc ShowCopyingScreen
         jsr     HOME
         lda     #0
         jsr     VTABZ
         lda     #0
         sta     OURCH
-        param_call cout_string, str_copying
-        param_call cout_string_newline, generic_copy::path2
+        param_call CoutString, str_copying
+        param_call CoutStringNewline, GenericCopy::path2
         rts
 .endproc
 
 ;;; ============================================================
 
-;;; Callback; used for generic_copy::hook_insert_source
-.proc show_insert_prompt
+;;; Callback; used for GenericCopy::hook_insert_source
+.proc ShowInsertPrompt
         lda     #0
         jsr     VTABZ
         lda     #0
         sta     OURCH
-        param_call cout_string, str_insert
-        jsr     wait_enter_escape
+        param_call CoutString, str_insert
+        jsr     WaitEnterEscape
         cmp     #CHAR_ESCAPE
         bne     :+
-        jmp     finish_and_invoke
+        jmp     FinishAndInvoke
 
 :       jsr     HOME
         rts
@@ -1969,16 +1969,16 @@ str_not_completed:
 
 ;;; ============================================================
 
-;;; Callback; used for generic_copy::hook_handle_no_space
-.proc show_no_space_prompt
+;;; Callback; used for GenericCopy::hook_handle_no_space
+.proc ShowNoSpacePrompt
         ;; TODO: Reset stack?
 
         lda     #0
         jsr     VTABZ
         lda     #0
         sta     OURCH
-        param_call cout_string, str_not_enough
-        jsr     wait_enter_escape
+        param_call CoutString, str_not_enough
+        jsr     WaitEnterEscape
         jsr     HOME
         jmp     invoke_selector_or_desktop
 .endproc
@@ -1987,28 +1987,28 @@ str_not_completed:
 ;;; On copy failure, show an appropriate error; wait for key
 ;;; and invoke app.
 
-;;; Callback; used for generic_copy::hook_handle_error_code
-.proc handle_error_code
+;;; Callback; used for GenericCopy::hook_handle_error_code
+.proc HandleErrorCode
         ;; TODO: Reset stack?
 
         cmp     #ERR_OVERRUN_ERROR
         bne     :+
-        jsr     show_no_space_prompt
-        jmp     finish_and_invoke
+        jsr     ShowNoSpacePrompt
+        jmp     FinishAndInvoke
 
 :       cmp     #ERR_VOLUME_DIR_FULL
         bne     :+
-        jsr     show_no_space_prompt
-        jmp     finish_and_invoke
+        jsr     ShowNoSpacePrompt
+        jmp     FinishAndInvoke
 
         ;; Show generic error
 :       pha
-        param_call cout_string, str_error_prefix
+        param_call CoutString, str_error_prefix
         pla
         jsr     PRBYTE
-        param_call cout_string, str_error_suffix
-        param_call cout_string_newline, generic_copy::path2
-        param_call cout_string, str_not_completed
+        param_call CoutString, str_error_suffix
+        param_call CoutStringNewline, GenericCopy::path2
+        param_call CoutString, str_not_completed
 
         ;; Wait for keyboard
         sta     KBDSTRB
@@ -2033,14 +2033,14 @@ monitor:
 
 ;;; ============================================================
 
-.proc cout_string_newline
-        jsr     cout_string
+.proc CoutStringNewline
+        jsr     CoutString
         lda     #$80|CHAR_RETURN
         jmp     COUT
         ;; fall through
 .endproc
 
-.proc cout_string
+.proc CoutString
         ptr := $6
 
         stax    ptr
@@ -2060,28 +2060,28 @@ done:   rts
 
 ;;; ============================================================
 
-.proc wait_enter_escape
+.proc WaitEnterEscape
         lda     KBD
-        bpl     wait_enter_escape
+        bpl     WaitEnterEscape
         sta     KBDSTRB
         and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     done
         cmp     #CHAR_RETURN
-        bne     wait_enter_escape
+        bne     WaitEnterEscape
 done:   rts
 .endproc
 
 ;;; ============================================================
 
-.proc finish_and_invoke
+.proc FinishAndInvoke
         jsr     HOME
         jmp     invoke_selector_or_desktop
 .endproc
 
 ;;; ============================================================
 
-.endproc ; copy_selector_entries_to_ramcard
+.endproc ; CopySelectorEntriesToRamcard
 
 
 ;;; ============================================================
@@ -2090,7 +2090,7 @@ done:   rts
 ;;;
 ;;; ============================================================
 
-.proc invoke_selector_or_desktop_impl
+.proc InvokeSelectorOrDesktopImpl
         app_bootstrap_start := $2000
         kAppBootstrapSize = $400
 
@@ -2135,7 +2135,7 @@ read:   sta     read_params::ref_num
         MLI_CALL CLOSE, close_everything_params
         jmp     app_bootstrap_start
 .endproc
-        invoke_selector_or_desktop := invoke_selector_or_desktop_impl::start
+        invoke_selector_or_desktop := InvokeSelectorOrDesktopImpl::start
 
 
 ;;; ============================================================
@@ -2169,7 +2169,7 @@ PROC_AT quit_restore_proc, ::quit_code_addr
 END_PROC_AT
         .assert .sizeof(quit_restore_proc) = $100, error, "Proc length mismatch"
 
-.proc preserve_quit_code_impl
+.proc PreserveQuitCodeImpl
         quit_code_io := $800
         kQuitCodeSize = $400
         DEFINE_CREATE_PARAMS create_params, str_quit_code, ACCESS_DEFAULT, $F1
@@ -2211,7 +2211,7 @@ start:  bit     LCBANK2
 done:   rts
 
 .endproc
-        preserve_quit_code := preserve_quit_code_impl::start
+        preserve_quit_code := PreserveQuitCodeImpl::start
 
 ;;; ============================================================
 ;;; Try to detect an Enhanced IIe or later (IIc, IIgs, etc),
@@ -2219,7 +2219,7 @@ done:   rts
 ;;; Done by testing testing for a ROM signature.
 ;;; Output: Sets `supports_mousetext` to $80.
 
-.proc detect_mousetext
+.proc DetectMousetext
         lda     ZIDBYTE
         beq     enh    ; IIc/IIc+ have $00
         cmp     #$E0   ; IIe original has $EA, Enh. IIe, IIgs have $E0

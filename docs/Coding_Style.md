@@ -43,7 +43,7 @@ The naming style is in flux: see https://github.com/a2stuff/a2d/issues/112
 
 * Constants (symbols) should use `kTitleCase`, and are defined with `=`, e.g. `kExample = 1234`
 
-* Callable procedures should use `snake_case` or `TitleCase`, and are defined with `.proc`
+* Callable procedures should use `TitleCase`, and are defined with `.proc`
 
 * Structure definitions (`.struct`) should use `TitleCase`, with member labels in `snake_case`.
 
@@ -136,7 +136,7 @@ xcoord: .word
 * Delimit code blocks with `.proc`:
 
 ```asm
-.proc some_routine
+.proc SomeRoutine
         lda     $06
         rol
         rts
@@ -146,7 +146,7 @@ xcoord: .word
 * Try to encapsulate locally used data as much as possible.
 
 ```asm
-.proc some_routine
+.proc SomeRoutine
         ptr := $06
         lda     ptr
         sta     stash
@@ -156,10 +156,10 @@ stash:  .byte   0
 .endproc
 ```
 
-* Use `impl` if the entry point is not at the start:
+* Use `Impl` if the entry point is not at the start:
 
 ```asm
-.proc some_routine_impl
+.proc SomeRoutineImpl
 stash:  .byte   0
 
         ptr := $06
@@ -169,7 +169,7 @@ start:  lda     ptr
         rts
 
 .endproc
-        some_routine := some_routine_impl::start
+        SomeRoutine := SomeRoutineImpl::start
 ```
 
 * Delimit procedures with comments and document inputs, outputs, errors, and other assumptions.

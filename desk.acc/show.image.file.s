@@ -48,12 +48,12 @@
         .org DA_LOAD_ADDRESS
 
 da_start:
-        jmp     start
+        jmp     Start
 
 save_stack:
         .byte   0
 
-.proc start
+.proc Start
         tsx
         stx     save_stack
 
@@ -65,7 +65,7 @@ save_stack:
         jsr     AUXMOVE
 
         ;; run the DA
-        jsr     init
+        jsr     Init
 
         ldx     save_stack
         txs
@@ -132,7 +132,7 @@ nextwinfo:      .addr   0
 
 ;;; ============================================================
 
-.proc copy_event_aux_to_main
+.proc CopyEventAuxToMain
         copy16  #event_params, STARTLO
         copy16  #event_params + .sizeof(MGTK::Event) - 1, ENDLO
         copy16  #event_params, DESTINATIONLO
@@ -143,7 +143,7 @@ nextwinfo:      .addr   0
 ;;; ============================================================
 
 
-.proc init
+.proc Init
         copy    #0, mode
 
         INVOKE_PATH := $220
@@ -161,9 +161,9 @@ nextwinfo:      .addr   0
         sta     close_params::ref_num
 
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
-        jsr     clear_screen
-        jsr     set_color_mode
-        jsr     show_file
+        jsr     ClearScreen
+        jsr     SetColorMode
+        jsr     ShowFile
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
 
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
@@ -175,20 +175,20 @@ nextwinfo:      .addr   0
 ;;; ============================================================
 ;;; Main Input Loop
 
-.proc input_loop
+.proc InputLoop
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
-        jsr     copy_event_aux_to_main
+        jsr     CopyEventAuxToMain
 
         lda     event_params + MGTK::Event::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
         beq     exit
         cmp     #MGTK::EventKind::key_down  ; any key?
         beq     on_key
-        bne     input_loop
+        bne     InputLoop
 
 on_key:
         lda     event_params + MGTK::Event::modifiers
-        bne     input_loop
+        bne     InputLoop
         lda     event_params + MGTK::Event::key
         cmp     #CHAR_ESCAPE
         beq     exit
@@ -196,8 +196,8 @@ on_key:
         beq     exit
         cmp     #' '
         bne     :+
-        jsr     toggle_mode
-:       jmp     input_loop
+        jsr     ToggleMode
+:       jmp     InputLoop
 
 exit:
         jsr     JUMP_TABLE_RGB_MODE
@@ -210,7 +210,7 @@ exit:
         rts                     ; exits input loop
 .endproc
 
-.proc show_file
+.proc ShowFile
         ;; Check file type
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
@@ -223,15 +223,15 @@ fail:   rts
         ;; FOT files - auxtype $4000 / $4001 are packed hires/double-hires
         lda     get_file_info_params::aux_type+1
         cmp     #$40
-        bne     show_fot_file
+        bne     ShowFOTFile
 
         lda     get_file_info_params::aux_type
         cmp     #$00
         bne     :+
-        jmp     show_packed_hr_file
+        jmp     ShowPackedHRFile
 :       cmp     #$01
-        bne     show_fot_file
-        jmp     show_packed_dhr_file
+        bne     ShowFOTFile
+        jmp     ShowPackedDHRFile
 
         ;; Otherwise, rely on size heuristics to determine the type
 get_eof:
@@ -246,7 +246,7 @@ get_eof:
         lda     get_eof_params::eof+2
         sbc     #^(kHiresSize+1)
         bcc     :+
-        jmp     show_dhr_file
+        jmp     ShowDHRFile
 
         ;; If bigger than 576, assume HR
 
@@ -255,14 +255,14 @@ get_eof:
         lda     get_eof_params::eof+1
         sbc     #>(kMinipixSrcSize+1)
         bcc     :+
-        jmp     show_hr_file
+        jmp     ShowHRFile
 
         ;; Otherwise, assume Minipix
 
-:       jmp     show_minipix_file
+:       jmp     ShowMinipixFile
 .endproc
 
-.proc show_fot_file
+.proc ShowFOTFile
         ;; Per File Type $08 (8) Note:
 
         ;; ...you can determine the mode of the file by examining byte
@@ -291,11 +291,11 @@ kSigDHR         = %00000010
         bne     dhr
 
         ;; If HR, convert to DHR.
-        jsr     hr_to_dhr
+        jsr     HRToDHR
         jmp     finish
 
         ;; If DHR, copy Main>Aux and load Main page.
-dhr:    jsr     copy_hires_to_aux
+dhr:    jsr     CopyHiresToAux
         JUMP_TABLE_MLI_CALL READ, read_params
 
 finish: JUMP_TABLE_MLI_CALL CLOSE, close_params
@@ -303,7 +303,7 @@ finish: JUMP_TABLE_MLI_CALL CLOSE, close_params
         lda     signature
         and     #kSigColor
         bne     :+
-        jsr     set_bw_mode
+        jsr     SetBWMode
 :       rts
 
 signature:
@@ -311,16 +311,16 @@ signature:
 .endproc
 
 
-.proc show_hr_file
+.proc ShowHRFile
         sta     PAGE2OFF
         JUMP_TABLE_MLI_CALL READ, read_params
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
-        jsr     hr_to_dhr
+        jsr     HRToDHR
         rts
 .endproc
 
-.proc show_dhr_file
+.proc ShowDHRFile
         ptr := $06
 
         ;; AUX memory half
@@ -333,7 +333,7 @@ signature:
         ;; slower in the non-RamWorks case.
         ;; TODO: Load directly into Aux if RamWorks is not present.
 
-        jsr     copy_hires_to_aux
+        jsr     CopyHiresToAux
 
         ;; MAIN memory half
         JUMP_TABLE_MLI_CALL READ, read_params
@@ -342,7 +342,7 @@ signature:
         rts
 .endproc
 
-.proc copy_hires_to_aux
+.proc CopyHiresToAux
         ptr := $06
 
         sta     CLR80COL
@@ -365,15 +365,15 @@ signature:
 .endproc
 
 
-.proc show_minipix_file
-        jsr     set_bw_mode
+.proc ShowMinipixFile
+        jsr     SetBWMode
 
         ;; Load file at minipix_src_buf (MAIN $1800)
         JUMP_TABLE_MLI_CALL READ, read_minipix_params
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         ;; Convert (main to aux)
-        jsr     convert_minipix_to_bitmap
+        jsr     ConvertMinipixToBitmap
 
         ;; Draw
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, winfo::port
@@ -402,7 +402,7 @@ reserved:       .byte   0
 ;;; Assumes the image is loaded to MAIN $2000 and
 ;;; relies on the hr_to_dhr.inc table.
 
-.proc hr_to_dhr
+.proc HRToDHR
         ptr     := $06
         kRows   = 192
         kCols   = 40
@@ -468,7 +468,7 @@ done:   rts
 ;;; Assert: Running from Main
 ;;; Source is in Main, destination is in Aux
 
-.proc convert_minipix_to_bitmap
+.proc ConvertMinipixToBitmap
         kRows   = 52
         kCols   = 88            ; pixels
 
@@ -497,8 +497,8 @@ dorow:  ldx     #8
         ldx     #kCols
 
         ;; Process each bit
-:       jsr     getbit
-        jsr     putbit2
+:       jsr     GetBit
+        jsr     PutBit2
         dex
         bne     :-
 
@@ -506,7 +506,7 @@ dorow:  ldx     #8
         ;; the last bit.  We need to get it from the MSB to the LSB, so it needs
         ;; to be shifted down 7 bits
 :       clc
-        jsr     putbit1
+        jsr     PutBit1
         dex
         cpx     #AS_BYTE(-7)    ; do 7 times == 7 bits
         bne     :-
@@ -516,7 +516,7 @@ dorow:  ldx     #8
 
         rts
 
-.proc getbit
+.proc GetBit
         lda     (src),y
         rol
         sta     (src),y
@@ -532,13 +532,13 @@ dorow:  ldx     #8
 done:   rts
 .endproc
 
-.proc putbit2
+.proc PutBit2
         php
-        jsr     putbit1
+        jsr     PutBit1
         plp
         ;; fall through
 .endproc
-.proc putbit1
+.proc PutBit1
         sta     RAMRDON
         sta     RAMWRTON
 
@@ -569,13 +569,13 @@ done:
 
 mode:   .byte   0               ; 0 = B&W, $80 = color
 
-.proc toggle_mode
+.proc ToggleMode
         lda     mode
-        bne     set_bw_mode
+        bne     SetBWMode
         ;; fall through
 .endproc
 
-.proc set_color_mode
+.proc SetColorMode
         lda     mode
         bne     done
         copy    #$80, mode
@@ -585,7 +585,7 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
 done:   rts
 .endproc
 
-.proc set_bw_mode
+.proc SetBWMode
         lda     mode
         beq     done
         copy    #0, mode
@@ -597,7 +597,7 @@ done:   rts
 
 ;;; ============================================================
 
-.proc unpack_read
+.proc UnpackRead
         DEFINE_READ_PARAMS read_buf_params, read_buf, 0
 
         ptr := $06
@@ -627,7 +627,7 @@ loop:   copy    #1, read_buf_params::request_count
         JUMP_TABLE_MLI_CALL CLOSE, close_params
         bit     dhr_flag        ; if hires, need to convert
         bmi     :+
-        jsr     hr_to_dhr
+        jsr     HRToDHR
 :       rts
 
         ;; Process op/count
@@ -649,7 +649,7 @@ body:   lda     read_buf
 
         ldx     #0
 :       lda     read_buf,x
-        jsr     write
+        jsr     Write
         inx
         cpx     count
         bne     :-
@@ -669,7 +669,7 @@ not_00: cmp     #%01000000
         ldy     #0
         lda     read_buf
 
-:       jsr     write
+:       jsr     Write
         dec     count
         bne     :-
 
@@ -688,13 +688,13 @@ not_01: cmp     #%10000000
         ldy     #0
 
 :       lda     read_buf+0
-        jsr     write
+        jsr     Write
         lda     read_buf+1
-        jsr     write
+        jsr     Write
         lda     read_buf+2
-        jsr     write
+        jsr     Write
         lda     read_buf+3
-        jsr     write
+        jsr     Write
         dec     count
         bne     :-
 
@@ -711,10 +711,10 @@ not_10:
         ldy     #0
         lda     read_buf
 
-:       jsr     write
-        jsr     write
-        jsr     write
-        jsr     write
+:       jsr     Write
+        jsr     Write
+        jsr     Write
+        jsr     Write
         dec     count
         bne     :-
 
@@ -722,7 +722,7 @@ not_10:
 
         ;; --------------------------------------------------
 
-.proc write
+.proc Write
         ;; ASSERT: Y=0
         sta     (ptr),y
         inc     ptr
@@ -752,7 +752,7 @@ not_10:
         tya
         pha
 
-        jsr     copy_hires_to_aux
+        jsr     CopyHiresToAux
 
         ;; Restore ptr, X, Y
         pla
@@ -779,13 +779,13 @@ read_buf:
         .res    64
 
 .endproc
-show_packed_hr_file     := unpack_read::hr_file
-show_packed_dhr_file    := unpack_read::dhr_file
+ShowPackedHRFile     := UnpackRead::hr_file
+ShowPackedDHRFile    := UnpackRead::dhr_file
 
 ;;; ============================================================
 ;;; Clear screen to black
 
-.proc clear_screen
+.proc ClearScreen
         ptr := $6
         kHiresSize = $2000
 

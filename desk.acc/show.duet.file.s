@@ -57,7 +57,7 @@ kReadLength      = kOverlay10KBufferSize
         .org DA_LOAD_ADDRESS
 
 da_start:
-        jmp     entry
+        jmp     Entry
 
 ;;; ============================================================
 
@@ -70,7 +70,7 @@ pathbuf:        .res    kPathBufferSize, 0
 ;;; ============================================================
 ;;; Get filename from DeskTop
 
-.proc entry
+.proc Entry
         INVOKE_PATH := $220
         lda     INVOKE_PATH
     IF_EQ
@@ -97,13 +97,13 @@ pathbuf:        .res    kPathBufferSize, 0
         adc     str_playing
         sta     str_playing
 
-        jmp     load_file_and_run_da
+        jmp     LoadFileAndRunDA
 .endproc
 
 ;;; ============================================================
 ;;; Load the file
 
-.proc load_file_and_run_da
+.proc LoadFileAndRunDA
 
         ;; TODO: Ensure there's enough room, fail if not
 
@@ -138,7 +138,7 @@ pathbuf:        .res    kPathBufferSize, 0
 
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
@@ -209,7 +209,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         MGTK_CALL MGTK::OpenWindow, winfo
 
         ;; --------------------------------------------------
@@ -223,32 +223,32 @@ str_instruct:   PASCAL_STRING res_string_instructions
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
         copy16  ypos_playing, pos::ycoord
-        param_call draw_centered_string, str_playing
+        param_call DrawCenteredString, str_playing
         copy16  ypos_credit1, pos::ycoord
-        param_call draw_centered_string, str_credit1
+        param_call DrawCenteredString, str_credit1
         copy16  ypos_credit2, pos::ycoord
-        param_call draw_centered_string, str_credit2
+        param_call DrawCenteredString, str_credit2
         copy16  ypos_instruct, pos::ycoord
-        param_call draw_centered_string, str_instruct
+        param_call DrawCenteredString, str_instruct
 
         MGTK_CALL MGTK::FlushEvents
 
         ;; --------------------------------------------------
         ;; Play the music
 
-        jsr     play_file
+        jsr     PlayFile
 
         ;; --------------------------------------------------
         ;; Close the window
 
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     clear_updates
+        jsr     ClearUpdates
 
         MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -257,7 +257,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
         rts
 .endproc
 
-.proc play_file
+.proc PlayFile
         bit     ROMIN2
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -266,7 +266,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
 
         ldax    #data_buf
         bit     KBDSTRB         ; player will stop on keypress
-        jsr     player
+        jsr     Player
         bit     KBDSTRB         ; swallow the keypress
 
         jsr     NORMFAST_fast
@@ -284,7 +284,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
 ;;; Electric Duet player by Alex Patalenski
 ;;; https://www.reddit.com/r/apple2/comments/pue775/improved_electric_duet_player_by_alex_patalenski/
 
-.proc player
+.proc Player
 
 D2 := $02
 D3 := $03
@@ -314,14 +314,14 @@ exit:   rts
         bmi     exit
 
         ldx     #$00
-        jsr     sub
+        jsr     Sub
         sta     l30+1
         sta     l37+1
         stx     l31+1
         stx     l38+1
 
         ldx     #$01
-        jsr     sub
+        jsr     Sub
         sta     l53+1
         sta     l60+1
         stx     l54+1
@@ -400,7 +400,7 @@ l79:    lda     ptr
         inc     ptr+1
 :       jmp     l1
 
-.proc sub
+.proc Sub
         iny
         lda     (ptr),Y
         php
@@ -425,7 +425,7 @@ l79:    lda     ptr
 ;;; Draw centered string
 ;;; Input: A,X = string address, `pos` used, has ycoord
 ;;; Trashes $6...$A
-.proc draw_centered_string
+.proc DrawCenteredString
         text_params     := $6
         text_addr       := text_params + 0
         text_length     := text_params + 2

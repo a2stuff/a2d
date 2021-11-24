@@ -94,7 +94,7 @@ entry:
         sta     RAMRDON
         sta     RAMWRTON
 
-        jsr     init
+        jsr     Init
 
         ;; Back to main for exit
         sta     RAMRDOFF
@@ -108,7 +108,7 @@ no_windows:
 
 ;;; ============================================================
 
-.proc get_entry_addr
+.proc GetEntryAddr
         sta     num
         sta     offset
         lda     #0
@@ -133,7 +133,7 @@ offset: .addr   0
 ;;; Make call into Main from Aux (for JUMP_TABLE calls)
 ;;; Inputs: A,X = address
 
-.proc jt_relay
+.proc JTRelay
         sta     RAMRDOFF
         sta     RAMWRTOFF
         stax    @addr
@@ -149,7 +149,7 @@ offset: .addr   0
 ;;; Make a path character uppercase; assumes no char >'z' is
 ;;; a valid path character.
 
-.proc upcase_path_char
+.proc UpcasePathChar
         cmp     #'a'
         bcc     :+
         and     #CASE_MASK
@@ -248,7 +248,7 @@ saved_stack:
         cpy     #0
         beq     endloop
 loop:   lda     buf_search,y    ; copy characters
-        jsr     upcase_path_char
+        jsr     UpcasePathChar
         sta     pattern-1,y
         dey
         bne     loop
@@ -271,7 +271,7 @@ endloop:
         sta     Depth
         sta     num_entries
 
-        jsr     relay           ; for stack restore
+        jsr     Relay           ; for stack restore
         ldy     num_entries
 
         ;; DA runs out of Aux with aux ZP and LC
@@ -285,7 +285,7 @@ endloop:
 
         rts
 
-.proc relay
+.proc Relay
         tsx
         stx     saved_stack
 
@@ -294,7 +294,7 @@ endloop:
 .endproc
 .endproc
 
-.proc terminate
+.proc Terminate
         MLI_CALL CLOSE, CloseParms ; close the directory
 
         ldx     saved_stack
@@ -353,7 +353,7 @@ nextEntry:
         bpl     :+
         sta     KBDSTRB
         cmp     #$80|CHAR_ESCAPE
-        beq     terminate
+        beq     Terminate
 :
 
         jsr     GetNext         ; get pointer to next entry
@@ -421,13 +421,13 @@ OpenDone:
         ;; Does the file match the search pattern?
         lda     pattern         ; Skip if pattern is empty
         beq     :+
-        jsr     is_match
+        jsr     IsMatch
         bcc     exit            ; No match
 :
 
         ptr := $0A
         lda     num_entries
-        jsr     get_entry_addr
+        jsr     GetEntryAddr
         stax    ptr
 
         ;; Copy name to buffer
@@ -453,7 +453,7 @@ OpenDone:
         ;; If we've hit max number of entries, terminate operation.
         lda     num_entries
         cmp     #kMaxFilePaths
-        jeq     terminate
+        jeq     Terminate
 
 exit:   rts
 .endproc
@@ -526,7 +526,7 @@ exit:   rts
 ;;; program.
 ;;;
 
-        jmp     terminate
+        jmp     Terminate
 
 reOpened:
 ;;;
@@ -693,7 +693,7 @@ entPerBlk:      .res    1       ; entries per block
 pattern:        .res    16      ; 15 + null terminator
 string:         .res    16      ; 15 + null terminator
 
-.proc is_match
+.proc IsMatch
 
 .scope
         ;; Copy filename to null terminated string buffer
@@ -707,7 +707,7 @@ string:         .res    16      ; 15 + null terminator
         cpy     #0
         beq     endloop
 loop:   lda     (entPtr),y      ; copy characters
-        jsr     upcase_path_char
+        jsr     UpcasePathChar
 
         sta     string-1,y
         dey
@@ -1000,7 +1000,7 @@ top_row:        .byte   0
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         ;; Prep input string
         copy    #0, buf_left
 
@@ -1013,35 +1013,35 @@ top_row:        .byte   0
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::OpenWindow, winfo_results
         MGTK_CALL MGTK::HideCursor
-        jsr     draw_window
-        jsr     draw_input_text
-        jsr     draw_results
+        jsr     DrawWindow
+        jsr     DrawInputText
+        jsr     DrawResults
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
 .endproc
 
-.proc input_loop
-        jsr     blink_ip
-        param_call jt_relay, JUMP_TABLE_YIELD_LOOP
+.proc InputLoop
+        jsr     BlinkIP
+        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
+        bne     Exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        jeq     handle_down
+        jeq     HandleDown
         cmp     #MGTK::EventKind::key_down
-        jeq     handle_key
+        jeq     HandleKey
         cmp     #MGTK::EventKind::no_event
-        jeq     handle_no_event
-        jmp     input_loop
+        jeq     HandleNoEvent
+        jmp     InputLoop
 .endproc
 
-.proc exit
-        param_call jt_relay, JUMP_TABLE_CUR_POINTER
+.proc Exit
+        param_call JTRelay, JUMP_TABLE_CUR_POINTER
 
         MGTK_CALL MGTK::CloseWindow, winfo_results
         MGTK_CALL MGTK::CloseWindow, winfo
-        param_call jt_relay, JUMP_TABLE_CLEAR_UPDATES
+        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
         rts
 .endproc
 
@@ -1049,7 +1049,7 @@ top_row:        .byte   0
 
         prompt_insertion_point_blink_count = $14
 
-.proc blink_ip
+.proc BlinkIP
         dec     ip_blink_counter
         bne     done
         copy    #prompt_insertion_point_blink_count, ip_blink_counter
@@ -1059,38 +1059,38 @@ top_row:        .byte   0
 
 set:    copy    #$80, ip_blink_flag
         copy    #kGlyphSpacer, buf_right+1
-        jsr     draw_input_text
+        jsr     DrawInputText
         rts
 
 
 clear:  copy    #0, ip_blink_flag
         copy    #kGlyphInsertionPoint, buf_right+1
-        jsr     draw_input_text
+        jsr     DrawInputText
 
 done:   rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_params::modifiers
         beq     not_meta
 
         ;; Button down
         lda     event_params::key
         cmp     #CHAR_LEFT
-        jeq     do_meta_left
+        jeq     DoMetaLeft
         cmp     #CHAR_RIGHT
-        jeq     do_meta_right
+        jeq     DoMetaRight
         cmp     #CHAR_UP
     IF_EQ
         copy    #MGTK::Part::page_up, findcontrol_params::which_part
-        jmp     handle_scroll
+        jmp     HandleScroll
     END_IF
         cmp     #CHAR_DOWN
     IF_EQ
         copy    #MGTK::Part::page_down, findcontrol_params::which_part
-        jmp     handle_scroll
+        jmp     HandleScroll
     END_IF
         jmp     ignore_char
 
@@ -1098,62 +1098,62 @@ not_meta:
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         bne     :+
-        param_call flash_button, cancel_button_rect
-        jmp     exit
+        param_call FlashButton, cancel_button_rect
+        jmp     Exit
 
 :       cmp     #CHAR_RETURN
         bne     :+
-        param_call flash_button, search_button_rect
-        jmp     do_search
+        param_call FlashButton, search_button_rect
+        jmp     DoSearch
 
 :       cmp     #CHAR_LEFT
-        jeq     do_left
+        jeq     DoLeft
 
         cmp     #CHAR_RIGHT
-        jeq     do_right
+        jeq     DoRight
 
         cmp     #CHAR_DELETE
-        jeq     do_delete
+        jeq     DoDelete
 
         cmp     #CHAR_UP
     IF_EQ
         copy    #MGTK::Part::up_arrow, findcontrol_params::which_part
-        jmp     handle_scroll
+        jmp     HandleScroll
     END_IF
         cmp     #CHAR_DOWN
     IF_EQ
         copy    #MGTK::Part::down_arrow, findcontrol_params::which_part
-        jmp     handle_scroll
+        jmp     HandleScroll
     END_IF
 
         ;; Valid characters are . 0-9 A-Z a-z ? *
         cmp     #'*'            ; Wildcard
-        beq     do_char
+        beq     DoChar
         cmp     #'?'            ; Wildcard
-        beq     do_char
+        beq     DoChar
         cmp     #'.'            ; Filename char (here and below)
-        beq     do_char
+        beq     DoChar
         cmp     #'0'
         bcc     ignore_char
         cmp     #'9'+1
-        bcc     do_char
+        bcc     DoChar
         cmp     #'A'
         bcc     ignore_char
         cmp     #'Z'+1
-        bcc     do_char
+        bcc     DoChar
         cmp     #'a'
         bcc     ignore_char
         cmp     #'z'+1
-        bcc     do_char
+        bcc     DoChar
         ;; fall through
 .endproc
 
 ignore_char:
-        jmp     input_loop
+        jmp     InputLoop
 
 ;;; ------------------------------------------------------------
 
-.proc do_char
+.proc DoChar
         ;; check length
         tax
         clc
@@ -1168,18 +1168,18 @@ ignore_char:
         inx
         sta     buf_left,x
         stx     buf_left
-        jsr     draw_input_text
-        jmp     input_loop
+        jsr     DrawInputText
+        jmp     InputLoop
 .endproc
 
 ;;; ------------------------------------------------------------
 
-.proc do_meta_left
-        jsr     move_ip_to_end
-        jmp     input_loop
+.proc DoMetaLeft
+        jsr     MoveIPToEnd
+        jmp     InputLoop
 .endproc
 
-.proc move_ip_to_start
+.proc MoveIPToStart
         lda     buf_left            ; length of string to left of IP
         beq     done
 
@@ -1209,14 +1209,14 @@ move:   ldx     buf_left
 
         copy    #0, buf_left
 
-        jsr     draw_input_text
+        jsr     DrawInputText
 
 done:   rts
 .endproc
 
 ;;; ------------------------------------------------------------
 
-.proc do_left
+.proc DoLeft
         lda     buf_left            ; length of string to left of IP
         beq     done
 
@@ -1239,19 +1239,19 @@ done:   rts
         dec     buf_left
         inc     buf_right
 
-        jsr     draw_input_text
+        jsr     DrawInputText
 
-done:   jmp     input_loop
+done:   jmp     InputLoop
 .endproc
 
 ;;; ------------------------------------------------------------
 
-.proc do_meta_right
-        jsr     move_ip_to_end
-        jmp     input_loop
+.proc DoMetaRight
+        jsr     MoveIPToEnd
+        jmp     InputLoop
 .endproc
 
-.proc move_ip_to_end
+.proc MoveIPToEnd
         lda     buf_right       ; length of string from IP rightwards
         cmp     #2              ; must be at least one char (plus IP)
         bcc     done
@@ -1277,14 +1277,14 @@ done:   jmp     input_loop
 
         copy    #1, buf_right
 
-        jsr     draw_input_text
+        jsr     DrawInputText
 
 done:   rts
 .endproc
 
 ;;; ------------------------------------------------------------
 
-.proc do_right
+.proc DoRight
         lda     buf_right       ; length of string from IP rightwards
         cmp     #2              ; must be at least one char (plus IP)
         bcc     done
@@ -1308,26 +1308,26 @@ done:   rts
         inc     buf_left
         dec     buf_right
 
-        jsr     draw_input_text
+        jsr     DrawInputText
 
-done:   jmp     input_loop
+done:   jmp     InputLoop
 .endproc
 
 ;;; ------------------------------------------------------------
 
-.proc do_delete
+.proc DoDelete
         lda     buf_left            ; length of string to left of IP
         beq     done
 
         dec     buf_left
-        jsr     draw_input_text
+        jsr     DrawInputText
 
-done:   jmp     input_loop
+done:   jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc do_search
+.proc DoSearch
         ;; Concatenate left/right strings
         ldx     buf_left
         beq     right
@@ -1351,7 +1351,7 @@ right:
 done_concat:
         stx     buf_search
 
-        param_call jt_relay, JUMP_TABLE_CUR_WATCH
+        param_call JTRelay, JUMP_TABLE_CUR_WATCH
 
         ;; Do the search
         jsr     RecursiveCatalog::Start
@@ -1376,23 +1376,23 @@ done_concat:
 
         ;; Update the results display
         copy    #0, top_row
-        jsr     update_viewport
-        jsr     draw_results
+        jsr     UpdateViewport
+        jsr     DrawResults
 
         bit     cursor_ip_flag
     IF_PLUS
-        param_call jt_relay, JUMP_TABLE_CUR_POINTER
+        param_call JTRelay, JUMP_TABLE_CUR_POINTER
     ELSE
-        param_call jt_relay, JUMP_TABLE_CUR_IBEAM
+        param_call JTRelay, JUMP_TABLE_CUR_IBEAM
     END_IF
 
-finish: jmp     input_loop
+finish: jmp     InputLoop
 .endproc
 
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -1406,19 +1406,19 @@ finish: jmp     input_loop
         bne     done
 
         ;; Click in DA content area
-        param_call button_press, search_button_rect
+        param_call ButtonPress, search_button_rect
         beq     :+
         bmi     done
-        jmp     do_search
+        jmp     DoSearch
 
-:       param_call button_press, cancel_button_rect
+:       param_call ButtonPress, cancel_button_rect
         beq     :+
         bmi     done
-        jmp     exit
+        jmp     Exit
 
-:       jsr     handle_click_in_textbox
+:       jsr     HandleClickInTextbox
 
-done:   jmp     input_loop
+done:   jmp     InputLoop
 
         ;; Click in Results content area
 results:
@@ -1429,7 +1429,7 @@ results:
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     done
 
-        jmp     handle_scroll
+        jmp     HandleScroll
 .endproc
 
 
@@ -1437,7 +1437,7 @@ results:
 ;;; Handle scroll bar
 
 
-.proc handle_scroll
+.proc HandleScroll
         lda     num_entries
         sec
         sbc     #kResultsRows
@@ -1507,16 +1507,16 @@ store:  sta     top_row
 update: copy    top_row, updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
-        jsr     update_viewport
-        jsr     draw_results
+        jsr     UpdateViewport
+        jsr     DrawResults
 
-done:   jmp     input_loop
+done:   jmp     InputLoop
 
 max_top:        .byte   0
 .endproc
 
 ;;; Assumes `top_row` is set.
-.proc update_viewport
+.proc UpdateViewport
         ;; Compute height of line (font height + 1)
         copy16  #1, line_height
         add16_8 line_height, DEFAULT_FONT+MGTK::Font::height, line_height
@@ -1541,7 +1541,7 @@ line_height:    .word   0
 ;;; Call with rect addr in A,X
 ;;; Returns: 0 (beq) if outside, $FF (bmi) if canceled, 1 if clicked
 
-.proc button_press
+.proc ButtonPress
         kOutside         = 0
         kCanceled        = $FF
         kClicked         = 1
@@ -1609,7 +1609,7 @@ invert_rect:
 ;;; ============================================================
 ;;; Call with rect addr in A,X
 
-.proc flash_button
+.proc FlashButton
         stax    fillrect_addr
 
         copy    #kDAWindowID, winport_params::window_id
@@ -1626,7 +1626,7 @@ sub:    MGTK_CALL MGTK::PaintRect, 0, fillrect_addr
 
 ;;; ============================================================
 
-.proc handle_click_in_textbox
+.proc HandleClickInTextbox
 
         PARAM_BLOCK tw_params, $06
 data    .addr
@@ -1645,21 +1645,21 @@ width   .word
         rts
 
         ;; Is click to left or right of insertion point?
-:       jsr     calc_ip_pos
+:       jsr     CalcIPPos
 
         width := $6
 
         stax    width
         cmp16   click_coords, width
-        bcs     to_right
-        jmp     to_left
+        bcs     ToRight
+        jmp     ToLeft
 
 ;;; --------------------------------------------------
 
         ;; Click is to the right of IP
 
-.proc to_right
-        jsr     calc_ip_pos
+.proc ToRight
+        jsr     CalcIPPos
         stax    ip_pos
 
         ldx     buf_right
@@ -1686,8 +1686,8 @@ width   .word
 :       lda     tw_params::length
         cmp     buf_right
         bcc     :+
-        dec     buf_right          ; remove appended space
-        jmp     move_ip_to_end     ; use this shortcut
+        dec     buf_right       ; remove appended space
+        jmp     MoveIPToEnd     ; use this shortcut
 
         ;; Append from `buf_right` into `buf_left`
 :       ldx     #2
@@ -1724,7 +1724,7 @@ width   .word
 
         ;; Click to left of IP
 
-.proc to_left
+.proc ToLeft
         ;; Iterate to find the position
         copy16  #buf_left, tw_params::data
         copy    buf_left, tw_params::length
@@ -1736,7 +1736,7 @@ width   .word
         lda     tw_params::length
         cmp     #1
         bcs     :-
-        jmp     move_ip_to_start ; use this shortcut
+        jmp     MoveIPToStart ; use this shortcut
 
         ;; Found position; copy everything to the right of
         ;; the new position from `buf_left` to `buf_search`
@@ -1779,7 +1779,7 @@ width   .word
 .endproc
 
 finish:
-        jsr     draw_input_text
+        jsr     DrawInputText
         rts
 
 ip_pos: .word   0
@@ -1788,7 +1788,7 @@ ip_pos: .word   0
 
 ;;; ============================================================
 
-.proc calc_ip_pos
+.proc CalcIPPos
         PARAM_BLOCK params, $06
 data    .addr
 length  .byte
@@ -1816,7 +1816,7 @@ width   .word
 
 ;;; ============================================================
 
-.proc handle_no_event
+.proc HandleNoEvent
         copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -1830,21 +1830,21 @@ outside:
         bit     cursor_ip_flag
         bpl     done
         copy    #0, cursor_ip_flag
-        param_call jt_relay, JUMP_TABLE_CUR_POINTER
+        param_call JTRelay, JUMP_TABLE_CUR_POINTER
         jmp     done
 
 inside:
         bit     cursor_ip_flag
         bmi     done
         copy    #$80, cursor_ip_flag
-        param_call jt_relay, JUMP_TABLE_CUR_IBEAM
+        param_call JTRelay, JUMP_TABLE_CUR_IBEAM
 
-done:   jmp     input_loop
+done:   jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc draw_window
+.proc DrawWindow
         copy    #kDAWindowID, winport_params::window_id
         MGTK_CALL MGTK::GetWinPort, winport_params
         ;; No need to check results, since window is always visible.
@@ -1856,16 +1856,16 @@ done:   jmp     input_loop
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
         MGTK_CALL MGTK::MoveTo, find_label_pos
-        param_call draw_string, find_label_str
+        param_call DrawString, find_label_str
         MGTK_CALL MGTK::FrameRect, input_rect
 
         MGTK_CALL MGTK::FrameRect, search_button_rect
         MGTK_CALL MGTK::MoveTo, search_button_pos
-        param_call draw_string, search_button_label
+        param_call DrawString, search_button_label
 
         MGTK_CALL MGTK::FrameRect, cancel_button_rect
         MGTK_CALL MGTK::MoveTo, cancel_button_pos
-        param_call draw_string, cancel_button_label
+        param_call DrawString, cancel_button_label
 
         MGTK_CALL MGTK::ShowCursor
 done:   rts
@@ -1873,22 +1873,22 @@ done:   rts
 
 ;;; ============================================================
 
-.proc draw_input_text
+.proc DrawInputText
         copy    #kDAWindowID, winport_params::window_id
         MGTK_CALL MGTK::GetWinPort, winport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::MoveTo, input_textpos
         MGTK_CALL MGTK::HideCursor
-        param_call draw_string, buf_left
-        param_call draw_string, buf_right
-        param_call draw_string, suffix
+        param_call DrawString, buf_left
+        param_call DrawString, buf_right
+        param_call DrawString, suffix
         MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc draw_results
+.proc DrawResults
         copy    DEFAULT_FONT+MGTK::Font::height, line_height
         inc     line_height
 
@@ -1910,9 +1910,9 @@ loop:   add16_8   pos_ycoord, line_height, pos_ycoord
         MGTK_CALL MGTK::MoveTo, pos
 
         lda     line
-        jsr     get_entry
+        jsr     GetEntry
 
-        param_call draw_string, entry_buf
+        param_call DrawString, entry_buf
         inc     line
         lda     line
         cmp     num_entries
@@ -1934,7 +1934,7 @@ line:   .byte   0
 ;;; ============================================================
 ;;; Helper to draw a PASCAL_STRING; call with addr in A,X
 
-.proc draw_string
+.proc DrawString
         PARAM_BLOCK params, $06
 addr    .addr
 length  .byte
@@ -1953,8 +1953,8 @@ done:   rts
 ;;; ============================================================
 ;;; Populate entry_buf with entry in A
 
-.proc get_entry
-        jsr     get_entry_addr
+.proc GetEntry
+        jsr     GetEntryAddr
         stax    STARTLO
 
         add16   STARTLO, #64, ENDLO

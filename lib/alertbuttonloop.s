@@ -3,7 +3,7 @@
 ;;; inverting as mouse is dragged in/out.
 ;;; (The `ButtonEventLoop` proc is not used as these buttons
 ;;; are not in a window, so ScreenToWindow can not be used.)
-;;; A `map_event_coords` proc must be defined.
+;;; A `MapEventCoords` proc must be defined.
 ;;; Inputs: A,X = rect address
 ;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
 
@@ -19,7 +19,7 @@ loop:   LIB_MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     button_up
-        jsr     map_event_coords
+        jsr     MapEventCoords
         LIB_MGTK_CALL MGTK::MoveTo, event_coords
         LIB_MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr1
         cmp     #MGTK::inrect_inside

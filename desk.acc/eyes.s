@@ -34,7 +34,7 @@ da_start:
         ;; Run the DA
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
 
         ;; Back to main for exit
         sta     RAMRDOFF
@@ -184,78 +184,78 @@ grow_box_bitmap:
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         lda     #0
         sta     SHIFT_SIGN_EXT  ; Must zero before using FP ops
 
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
+        bne     Exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        beq     handle_down
+        beq     HandleDown
         cmp     #MGTK::EventKind::key_down
-        beq     handle_key
+        beq     HandleKey
         cmp     #MGTK::EventKind::no_event
-        beq     handle_no_event
-        jmp     input_loop
+        beq     HandleNoEvent
+        jmp     InputLoop
 .endproc
 
-.proc exit
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     clear_updates
+        jsr     ClearUpdates
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     exit
-        bne     input_loop
+        beq     Exit
+        bne     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bne     exit
+        bne     Exit
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bne     input_loop
+        bne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        jeq     handle_drag
+        jeq     HandleDrag
         cmp     #MGTK::Area::content
         bne     :+
-        jmp     handle_grow
-:       jmp     input_loop
+        jmp     HandleGrow
+:       jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        bne     exit
-        jmp     input_loop
+        bne     Exit
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_no_event
+.proc HandleNoEvent
         ;; First time? Need to store last coords
         lda     has_last_coords
         bne     test
@@ -285,9 +285,9 @@ test:
 moved:  copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        jsr     draw_window
+        jsr     DrawWindow
 
-done:   jmp     input_loop
+done:   jmp     InputLoop
 
 
 delta:  .word   0
@@ -295,7 +295,7 @@ delta:  .word   0
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -304,21 +304,21 @@ common: lda     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons
-        jsr     clear_updates
+        jsr     ClearUpdates
 
         ;; Draw DA's window
         lda     #0
         sta     has_last_coords
         sta     has_drawn_outline
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 ;;; ============================================================
 
-.proc handle_grow
+.proc HandleGrow
         ;; Is the hit within the grow box area?
         copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
@@ -335,16 +335,16 @@ common: lda     dragwindow_params::moved
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::GrowWindow, dragwindow_params
-        jmp     handle_drag::common
+        jmp     HandleDrag::common
 
-nope:   jmp     input_loop
+nope:   jmp     InputLoop
 
 tmpw:   .word   0
 .endproc
 
 ;;; ============================================================
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -353,7 +353,7 @@ tmpw:   .word   0
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -400,7 +400,7 @@ kMoveThresholdY = 5
 
 ;;; ============================================================
 
-.proc draw_window
+.proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, winport_params
         cmp     #MGTK::Error::window_obscured
@@ -443,11 +443,11 @@ kMoveThresholdY = 5
 
         copy16  rx, cx
         copy16  ry, cy
-        jsr draw_outline
+        jsr DrawOutline
 
         add16   rx, cx, cx
         add16   rx, cx, cx
-        jsr draw_outline
+        jsr DrawOutline
 
         ;; Skip erasing pupils if we're redrawing
         jmp     draw_pupils
@@ -467,7 +467,7 @@ draw_pupils:
 
         copy16  rx, cx
         copy16  ry, cy
-        jsr     compute_pupil_pos
+        jsr     ComputePupilPos
         sub16  ppx, #kPupilW/2, pos_l::xcoord
         sub16  ppy, #kPupilH/2, pos_l::ycoord
         MGTK_CALL MGTK::MoveTo, pos_l
@@ -475,7 +475,7 @@ draw_pupils:
 
         add16   rx, cx, cx
         add16   rx, cx, cx
-        jsr     compute_pupil_pos
+        jsr     ComputePupilPos
         sub16  ppx, #kPupilW/2, pos_r::xcoord
         sub16  ppy, #kPupilH/2, pos_r::ycoord
         MGTK_CALL MGTK::MoveTo, pos_r
@@ -505,7 +505,7 @@ cy:     .word   0
 ppx:    .word   0
 ppy:    .word   0
 
-.proc compute_pupil_pos
+.proc ComputePupilPos
         bit     ROMIN2
 
         FAC_LOAD_INT    cx
@@ -613,7 +613,7 @@ cyf:    DEFINE_FLOAT
 ;;; Draw eye outlines as a 36-sided polygon
 ;;; Inputs: cx, cy, rx, ry
 
-.proc draw_outline
+.proc DrawOutline
         kSegments = 36
 
         bit     ROMIN2

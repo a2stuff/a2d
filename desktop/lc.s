@@ -133,7 +133,7 @@ to:
         lda     #$00
 
 :       sta     flag
-        jsr     main__push_pointers
+        jsr     main__PushPointers
 
         lda     cached_window_id
         asl     a               ; * 2
@@ -144,13 +144,13 @@ to:
         bit     flag
         bpl     set_length
 
-        ;; assign length from cached_window_entry_list
+        ;; assign length from `cached_window_entry_list`
         lda     cached_window_entry_count
         ldy     #0
         sta     (ptr),y
         jmp     set_copy_ptr
 
-        ;; assign length to cached_window_entry_list
+        ;; assign length to `cached_window_entry_list`
 set_length:
         ldy     #0
         lda     (ptr),y
@@ -161,7 +161,7 @@ set_copy_ptr:
         bit     flag
         bmi     copy_from
 
-        ;; copy into cached_window_entry_list
+        ;; copy into `cached_window_entry_list`
         ldy     #0              ; flag clear...
 :       cpy     cached_window_entry_count
         beq     done
@@ -170,7 +170,7 @@ set_copy_ptr:
         iny
         jmp     :-
 
-        ;; copy from cached_window_entry_list
+        ;; copy from `cached_window_entry_list`
 copy_from:
         ldy     #0
 :       cpy     cached_window_entry_count
@@ -181,7 +181,7 @@ copy_from:
         jmp     :-
 
 done:   jsr     BankInMain
-        jsr     main__pop_pointers
+        jsr     main__PopPointers
         rts
 
 flag:   .byte   0
@@ -336,7 +336,7 @@ op:     lda     SELF_MODIFIED
 
 .proc YieldLoopFromAux
         jsr     BankInMain
-        jsr     main__yield_loop
+        jsr     main__YieldLoop
         jmp     BankInAux
 .endproc
 

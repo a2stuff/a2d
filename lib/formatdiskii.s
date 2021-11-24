@@ -7,7 +7,7 @@
 
 .macro exit_with_result arg
         lda     #arg
-        jmp     exit
+        jmp     Exit
 .endmacro
 
         php
@@ -44,7 +44,7 @@ L0823:  asl     a
         lsr     a
         tay
         lda     seltrack_track
-        jsr     select_track
+        jsr     SelectTrack
         lsr     current_track
         rts
 
@@ -103,7 +103,7 @@ L0882:  lda     $D1
         cpy     L0C1F
         bcs     L08B2
         lda     #4
-L08B2:  jmp     exit
+L08B2:  jmp     Exit
 
 L08B5:  ldy     $D4
         cpy     L0C1F
@@ -136,7 +136,7 @@ L08DB:  ldx     L0C23
         lda     #0
         ;; fall through
 
-.proc exit
+.proc Exit
         pha
         ldx     L0C23
         lda     DISABLE,x       ; Turn drive off
@@ -261,7 +261,7 @@ return_with_carry_clear:
 ;;; ============================================================
 ;;; Move head to track - A = track, X = slot * 16
 
-.proc select_track
+.proc SelectTrack
         stx     seltrack_slot
         sta     seltrack_track
         cmp     current_track
@@ -312,7 +312,7 @@ done:   rts
 
 ;;; ============================================================
 
-.proc format_sector
+.proc FormatSector
         jsr     rts2
         lda     TESTWP,x        ; Check write protect
         lda     WPRES,x
@@ -496,7 +496,7 @@ L0B73:  ldx     L0C23
         jmp     rts2
 
 L0B7E:  ldx     L0C23
-        jsr     format_sector
+        jsr     FormatSector
         inc     $D2
         lda     $D2
         cmp     #$10

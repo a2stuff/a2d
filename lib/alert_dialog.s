@@ -280,7 +280,7 @@ event_loop:
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jmp     handle_button_down
+        jmp     HandleButtonDown
 
 :       cmp     #MGTK::EventKind::key_down
         bne     event_loop
@@ -334,8 +334,8 @@ do_ok:  LIB_MGTK_CALL MGTK::SetPenMode, penXOR
         ;; --------------------------------------------------
         ;; Buttons
 
-handle_button_down:
-        jsr     map_event_coords
+HandleButtonDown:
+        jsr     MapEventCoords
         LIB_MGTK_CALL MGTK::MoveTo, event_coords
 
         bit     alert_params::buttons ; Cancel showing?
@@ -389,7 +389,7 @@ finish:
 
 ;;; ============================================================
 
-.proc map_event_coords
+.proc MapEventCoords
         sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
         sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
         rts

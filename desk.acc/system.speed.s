@@ -37,14 +37,14 @@ kShortcutFast = res_char_button_fast_shortcut
 start:
 ;;; ============================================================
 
-        jmp     copy2aux
+        jmp     Copy2Aux
 
 
 stash_stack:  .byte   $00
 
 ;;; ============================================================
 
-.proc copy2aux
+.proc Copy2Aux
 
         end   := last
 
@@ -61,7 +61,7 @@ stash_stack:  .byte   $00
         sta     RAMRDON
         sta     RAMWRTON
 
-        jsr     run_da
+        jsr     RunDA
 
         ;; Back to main
         sta     RAMRDOFF
@@ -93,14 +93,14 @@ kButtonInsetX   = 25
 
 event_params := *
 event_kind := event_params + 0
-        ;; if kind is key_down
+        ;; if `kind` is key_down
 event_key := event_params + 1
 event_modifiers := event_params + 2
-        ;; if kind is no_event, button_down/up, drag, or apple_key:
+        ;; if `kind` is no_event, button_down/up, drag, or apple_key:
 event_coords := event_params + 1
 event_xcoord := event_params + 1
 event_ycoord := event_params + 3
-        ;; if kind is update:
+        ;; if `kind` is update:
 event_window_id := event_params + 1
 
 screentowindow_params := *
@@ -269,7 +269,7 @@ frame_counter:
 ;;; ============================================================
 ;;; Initialize window, unpack the date.
 
-.proc run_da
+.proc RunDA
         MGTK_CALL MGTK::OpenWindow, winfo
 
         MGTK_CALL MGTK::SetPort, winfo::port
@@ -278,7 +278,7 @@ frame_counter:
         MGTK_CALL MGTK::FrameRect, frame_rect1
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
-        param_call draw_title_string, title_label_str
+        param_call DrawTitleString, title_label_str
 
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
@@ -299,83 +299,83 @@ frame_counter:
 ;;; ============================================================
 ;;; Input loop
 
-.proc input_loop
-        jsr     anim_frame
+.proc InputLoop
+        jsr     AnimFrame
 
-        jsr     yield_loop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
 
         cmp     #MGTK::EventKind::no_event
-        jeq     on_move
+        jeq     OnMove
 
         cmp     #MGTK::EventKind::button_down
-        jeq     on_click
+        jeq     OnClick
 
         cmp     #MGTK::EventKind::key_down
-        bne     input_loop
+        bne     InputLoop
         ;; fall through
 .endproc
 
-.proc on_key
+.proc OnKey
         lda     event_modifiers
-        bne     input_loop
+        bne     InputLoop
         lda     event_key
 
         cmp     #CHAR_RETURN
-        beq     on_key_ok
+        beq     OnKeyOk
 
         cmp     #CHAR_ESCAPE
-        beq     on_key_ok
+        beq     OnKeyOk
 
         cmp     #kShortcutNorm
-        beq     on_key_norm
+        beq     OnKeyNorm
         cmp     #TO_LOWER(kShortcutNorm)
-        beq     on_key_norm
+        beq     OnKeyNorm
 
         cmp     #kShortcutFast
-        beq     on_key_fast
+        beq     OnKeyFast
         cmp     #TO_LOWER(kShortcutFast)
-        beq     on_key_fast
+        beq     OnKeyFast
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
-.proc on_key_ok
+.proc OnKeyOk
         lda     winfo::window_id
-        jsr     get_window_port
+        jsr     GetWindowPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         MGTK_CALL MGTK::PaintRect, ok_button_rect
 
-        jmp     close_window
+        jmp     CloseWindow
 .endproc
 
-.proc on_key_norm
+.proc OnKeyNorm
         lda     winfo::window_id
-        jsr     get_window_port
+        jsr     GetWindowPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, norm_button_rect
         MGTK_CALL MGTK::PaintRect, norm_button_rect
 
-        jsr     do_norm
-        jmp     input_loop
+        jsr     DoNorm
+        jmp     InputLoop
 .endproc
 
-.proc on_key_fast
+.proc OnKeyFast
         lda     winfo::window_id
-        jsr     get_window_port
+        jsr     GetWindowPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, fast_button_rect
         MGTK_CALL MGTK::PaintRect, fast_button_rect
 
-        jsr     do_fast
-        jmp     input_loop
+        jsr     DoFast
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -384,7 +384,7 @@ frame_counter:
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -395,7 +395,7 @@ frame_counter:
 
 ;;; ============================================================
 
-.proc get_window_port
+.proc GetWindowPort
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
@@ -405,19 +405,19 @@ frame_counter:
 
 ;;; ============================================================
 
-.proc on_move
+.proc OnMove
         lda     winfo::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, anim_cursor_rect
         sta     cursor_flag
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc on_click
+.proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
         lda     findwindow_window_id
@@ -428,10 +428,10 @@ frame_counter:
         cmp     #MGTK::Area::content
         beq     hit
 
-miss:   jmp     input_loop
+miss:   jmp     InputLoop
 
 hit:    lda     winfo::window_id
-        jsr     get_window_port
+        jsr     GetWindowPort
         lda     winfo::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -439,48 +439,48 @@ hit:    lda     winfo::window_id
 
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
-        jeq     on_click_ok
+        jeq     OnClickOk
 
         MGTK_CALL MGTK::InRect, norm_button_rect
         cmp     #MGTK::inrect_inside
-        jeq     on_click_norm
+        jeq     OnClickNorm
 
         MGTK_CALL MGTK::InRect, fast_button_rect
         cmp     #MGTK::inrect_inside
-        jeq     on_click_fast
+        jeq     OnClickFast
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc on_click_ok
+.proc OnClickOk
         param_call ButtonEventLoop, kDAWindowId, ok_button_rect
-        jeq     close_window
-        jmp     input_loop
+        jeq     CloseWindow
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc on_click_norm
+.proc OnClickNorm
         param_call ButtonEventLoop, kDAWindowId, norm_button_rect
         bne     :+
-        jsr     do_norm
-:       jmp     input_loop
+        jsr     DoNorm
+:       jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc on_click_fast
+.proc OnClickFast
         param_call ButtonEventLoop, kDAWindowId, fast_button_rect
         bne     :+
-        jsr     do_fast
-:       jmp     input_loop
+        jsr     DoFast
+:       jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc do_norm
+.proc DoNorm
         ;; Run NORMFAST with "normal" banks
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -500,7 +500,7 @@ hit:    lda     winfo::window_id
 
 ;;; ============================================================
 
-.proc do_fast
+.proc DoFast
         ;; Run NORMFAST with "normal" banks
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -520,9 +520,9 @@ hit:    lda     winfo::window_id
 
 ;;; ============================================================
 
-.proc close_window
+.proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        jsr     clear_updates
+        jsr     ClearUpdates
         rts
 .endproc
 
@@ -530,7 +530,7 @@ hit:    lda     winfo::window_id
 ;;; Draw Title String (centered at top of port)
 ;;; Input: A,X = string address
 
-.proc draw_title_string
+.proc DrawTitleString
         text_params     := $6
         text_addr       := text_params + 0
         text_length     := text_params + 2
@@ -552,7 +552,7 @@ hit:    lda     winfo::window_id
 
 ;;; ============================================================
 
-.proc anim_frame
+.proc AnimFrame
         lda     frame_counter
         lsr                     ; /= 4
         lsr                     ;

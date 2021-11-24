@@ -68,9 +68,9 @@ save_stack:
 
 start:  tsx
         stx     save_stack
-        jmp     start2
+        jmp     Start2
 
-.proc exit
+.proc Exit
         ldx     save_stack
         txs
         lda     window_id
@@ -86,35 +86,35 @@ start:  tsx
 ;;; ============================================================
 ;;; ProDOS Relays
 
-.proc open
+.proc Open
         sta     ALTZPOFF
         MLI_CALL OPEN, open_params
         sta     ALTZPON
         rts
 .endproc
 
-.proc read
+.proc Read
         sta     ALTZPOFF
         MLI_CALL READ, read_params
         sta     ALTZPON
         rts
 .endproc
 
-.proc write_block
+.proc WriteBlock
         sta     ALTZPOFF
         MLI_CALL WRITE_BLOCK, block_params
         sta     ALTZPON
         rts
 .endproc
 
-.proc read_block
+.proc ReadBlock
         sta     ALTZPOFF
         MLI_CALL READ_BLOCK, block_params
         sta     ALTZPON
         rts
 .endproc
 
-.proc close
+.proc Close
         sta     ALTZPOFF
         MLI_CALL CLOSE, close_params
         sta     ALTZPON
@@ -143,9 +143,9 @@ path_buf:
 ;;; ============================================================
 ;;; Main DA logic
 
-exit1:  jmp     exit
+exit1:  jmp     Exit
 
-.proc start2
+.proc Start2
         ;; Grab top window
         JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, window_id
         lda     window_id       ; any window open?
@@ -174,7 +174,7 @@ exit1:  jmp     exit
         ;; Fall through...
 .endproc
 
-.proc read_sort_write
+.proc ReadSortWrite
 
         ptr := $06
 
@@ -182,7 +182,7 @@ exit1:  jmp     exit
         ;; Read the directory (up to 14 blocks)
 .scope read
 
-        jsr     open
+        jsr     Open
         bne     exit1
         lda     open_params::ref_num
         sta     read_params::ref_num
@@ -191,8 +191,8 @@ exit1:  jmp     exit
         ;; Save last accessed device's unit_num for block operations.
         copy    DEVNUM, unit_num
 
-        jsr     read
-        jsr     close
+        jsr     Read
+        jsr     Close
         bne     exit1
         ldx     #2
 
@@ -227,9 +227,9 @@ loop:
         clc
         adc     #>dir_data_buffer
         sta     end_block_page
-        jsr     set_ptr_to_first_entry
+        jsr     SetPtrToFirstEntry
 
-:       jsr     set_ptr_to_next_entry
+:       jsr     SetPtrToNextEntry
         bcs     jmp_exit
         ldy     #0
         lda     (ptr),y
@@ -242,7 +242,7 @@ loop:
         ;; --------------------------------------------------
         ;; Sort the directory entries
 
-        jsr     bubble_sort
+        jsr     BubbleSort
 
         ;; --------------------------------------------------
         ;; Write the directory back out
@@ -264,13 +264,13 @@ loop1:  lda     block_index
         adc     #>dir_data_buffer
         sta     block_params::data_buffer+1
         copy    #0, block_params::data_buffer
-        jsr     write_block     ; Write it out
+        jsr     WriteBlock      ; Write it out
         bne     jmp_exit
         inc     block_index
         bne     loop1
 
 jmp_exit:
-        jmp     exit
+        jmp     Exit
 
         block_buf := DA_IO_BUFFER
 
@@ -278,8 +278,8 @@ jmp_exit:
         ;; See ProDOS 8 Technical Reference Manual B.2.3 - Subdirectory Headers
 update_dir_blocks:
         copy16  #block_buf, block_params::data_buffer
-        jsr     set_ptr_to_first_entry
-loop2:  jsr     set_ptr_to_next_entry
+        jsr     SetPtrToFirstEntry
+loop2:  jsr     SetPtrToNextEntry
         bcs     done
         ldy     #0
         lda     (ptr),y
@@ -291,7 +291,7 @@ loop2:  jsr     set_ptr_to_next_entry
         ;; Grab key block, using pointer in directory.
         ldy     #FileEntry::key_pointer
         copy16in (ptr),y, block_params::block_num
-        jsr     read_block
+        jsr     ReadBlock
         bne     done
 
         ;; Calculate entry's block index from address
@@ -304,10 +304,10 @@ loop2:  jsr     set_ptr_to_next_entry
         ;; Update pointers and rewrite key block.
         copy16  block_num_table,y, block_buf + SubdirectoryHeader::parent_pointer
         copy    entry_num, block_buf + SubdirectoryHeader::parent_entry_number
-        jsr     write_block
+        jsr     WriteBlock
         jmp     loop2
 
-done:   jmp     exit
+done:   jmp     Exit
 
 .endscope
         jmp_exit := write::jmp_exit
@@ -340,22 +340,22 @@ entry_num:
 ;;; ============================================================
 ;;; Bubble sort entries
 
-.proc bubble_sort
+.proc BubbleSort
         ptr1 := $06
         ptr2 := $08
 
 start:  lda     #0
         sta     flag
-        jsr     set_ptr_to_first_entry
-        jsr     set_ptr_to_next_entry
+        jsr     SetPtrToFirstEntry
+        jsr     SetPtrToNextEntry
 
 loop:   copy16  ptr1, ptr2
-        jsr     set_ptr_to_next_entry
+        jsr     SetPtrToNextEntry
         bcs     done
 
-        jsr     compare_file_entries
+        jsr     CompareFileEntries
         bcc     loop
-        jsr     swap_entries
+        jsr     SwapEntries
         lda     #$FF
         sta     flag
         bne     loop
@@ -369,7 +369,7 @@ flag:   .byte   0
 
 ;;; ============================================================
 
-.proc set_ptr_to_next_entry
+.proc SetPtrToNextEntry
         ptr := $06
 
         inc     entry_num
@@ -401,7 +401,7 @@ rtcs:   sec
 
 ;;; ============================================================
 
-.proc set_ptr_to_first_entry
+.proc SetPtrToFirstEntry
         ptr := $06
 
         lda     #1
@@ -413,7 +413,7 @@ rtcs:   sec
 ;;; ============================================================
 ;;; Swap file entries
 
-.proc swap_entries
+.proc SwapEntries
         ptr1 := $06
         ptr2 := $08
 
@@ -432,10 +432,10 @@ loop:   lda     (ptr1),y
 ;;; ============================================================
 ;;; Compare file entries ($06, $08); order returned in carry.
 
-;;; Uses compare_selection_orders, compare_file_entry_names,
-;;; and compare_entry_types_and_names as appropriate.
+;;; Uses CompareSelectionOrders, CompareFileEntryNames,
+;;; and CompareEntryTypesAndNames as appropriate.
 
-.proc compare_file_entries
+.proc CompareFileEntries
         ptr1 := $06
         ptr2 := $08
 
@@ -456,14 +456,14 @@ loop:   lda     (ptr1),y
         jsr     JUMP_TABLE_GET_SEL_WIN
         cmp     window_id       ; Is selection in the active window?
         bne     :+              ; Nope (desktop or inactive window)
-        jmp     compare_selection_orders
+        jmp     CompareSelectionOrders
 
 :       ldax    ptr2
-        jsr     check_system_file
+        jsr     CheckSystemFile
         bcc     rtcc
 
         ldax    ptr1
-        jsr     check_system_file
+        jsr     CheckSystemFile
         bcc     rtcs
 
         ldy     #0
@@ -495,21 +495,21 @@ dirs:   lda     storage_type1
         bne     rtcc
 
         ;; Both are dirs, order by name
-        jsr     compare_file_entry_names
+        jsr     CompareFileEntryNames
         bcc     rtcc
         bcs     rtcs
 
         ;; TXT files first
 check_types:
         lda     #FT_TEXT
-        jsr     compare_entry_types_and_names
+        jsr     CompareEntryTypesAndNames
         bne     :+
         bcc     rtcc
         bcs     rtcs
 
         ;; SYS files next
 :       lda     #FT_SYSTEM
-        jsr     compare_entry_types_and_names
+        jsr     CompareEntryTypesAndNames
         bne     :+
         bcc     rtcc
         bcs     rtcs
@@ -520,7 +520,7 @@ check_types:
 loop:   dec     type
         lda     type
         beq     rtcc
-        jsr     compare_entry_types_and_names
+        jsr     CompareEntryTypesAndNames
         bne     loop
         bcs     rtcs
         jmp     rtcc
@@ -542,7 +542,7 @@ type:   .byte   0
 ;;; Compare selection order of icons; order returned in carry.
 ;;; Handles either icon being not selected.
 
-.proc compare_selection_orders
+.proc CompareSelectionOrders
         entry_ptr := $10
         filename  := $06
         filename2 := $08
@@ -575,11 +575,11 @@ loop:   dex
 next:   iny
 
         lda     (entry_ptr),y
-        jsr     to_uppercase
+        jsr     ToUppercase
         sta     cmp_char
 
         lda     (filename),y
-        jsr     to_uppercase
+        jsr     ToUppercase
 
         cmp_char := *+1
         cmp     #SELF_MODIFIED_BYTE
@@ -618,11 +618,11 @@ loop2:  dex
 next2:  iny
 
         lda     (entry_ptr),y
-        jsr     to_uppercase
+        jsr     ToUppercase
         sta     cmp_char2
 
         lda     (filename2),y
-        jsr     to_uppercase
+        jsr     ToUppercase
 
         cmp_char2 := *+1
         cmp     #SELF_MODIFIED_BYTE
@@ -658,7 +658,7 @@ match2: .byte   0
 ;;;
 ;;; Output: A=$FF if neither matches type; A=$00 and carry is order
 
-.proc compare_entry_types_and_names
+.proc CompareEntryTypesAndNames
         ptr1 := $06
         ptr2 := $08
         kMaxLength = 16
@@ -684,7 +684,7 @@ match2: .byte   0
 :       lda     type1
         cmp     type0
         bne     rtcc
-        jsr     compare_file_entry_names
+        jsr     CompareFileEntryNames
         bcc     rtcc
         bcs     rtcs
 
@@ -709,7 +709,7 @@ type0:  .byte   0
 ;;; Is the file entry a SYS file with .SYSTEM suffix?
 ;;; Returns carry clear if true, set if false.
 
-.proc check_system_file
+.proc CheckSystemFile
         ptr := $00
 
         ;; Check for SYS
@@ -752,7 +752,7 @@ str_system:
 ;;; ============================================================
 ;;; Compare file entry names; carry indicates order
 
-.proc compare_file_entry_names
+.proc CompareFileEntryNames
         ptr1 := $06
         ptr2 := $08
 
@@ -797,7 +797,7 @@ len1:   .byte   0
 ;;; ============================================================
 ;;; Convert filename character to uppercase
 
-.proc to_uppercase
+.proc ToUppercase
         cmp     #'a'            ; Assumes valid filename character
         bcc     :+
         and     #CASE_MASK      ; Make upper-case

@@ -19,11 +19,11 @@
 
 
 da_start:
-        jmp     start
+        jmp     Start
 
 save_stack:.byte   0
 
-.proc start
+.proc Start
         tsx
         stx     save_stack
 
@@ -39,7 +39,7 @@ save_stack:.byte   0
         sta     RAMRDON
 
         ;; run the DA
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit
         sta     RAMRDOFF
@@ -60,7 +60,7 @@ event_params:   .tag MGTK::Event
 ;;; ============================================================
 ;;; DA Init
 
-.proc init
+.proc Init
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::FlushEvents
 .endproc
@@ -68,7 +68,7 @@ event_params:   .tag MGTK::Event
 ;;; ============================================================
 ;;; Main Input Loop
 
-.proc input_loop
+.proc InputLoop
         dec     delta
         bne     :+
         lda     #7
@@ -98,8 +98,8 @@ event_params:   .tag MGTK::Event
         cmp     #MGTK::EventKind::key_down  ; any key?
         beq     exit
 
-        jsr     animate
-        jmp     input_loop
+        jsr     Animate
+        jmp     InputLoop
 
 exit:
         MGTK_CALL MGTK::RedrawDeskTop
@@ -122,7 +122,7 @@ col:    .byte   20
 delta:  .byte   3
 deltac: .byte   31
 
-.proc animate
+.proc Animate
 
         kNumCols = 40
 

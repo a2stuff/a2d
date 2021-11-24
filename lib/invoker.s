@@ -38,7 +38,7 @@ str_basic_system:
 
 ;;; ============================================================
 
-.proc set_prefix
+.proc SetPrefix
         MLI_CALL SET_PREFIX, set_prefix_params
         beq     :+
         pla
@@ -49,7 +49,7 @@ str_basic_system:
 
 ;;; ============================================================
 
-.proc open
+.proc Open
         MLI_CALL OPEN, open_params
         rts
 .endproc
@@ -67,7 +67,7 @@ begin:  bit     ROMIN2
         dex
         bne     :-
 
-        jsr     set_prefix
+        jsr     SetPrefix
         lda     INVOKER_PREFIX
         sta     prefix_length
         MLI_CALL GET_FILE_INFO, get_info_params
@@ -114,7 +114,7 @@ not_binary:
 
         ;; Try opening interpreter with current prefix.
 check_for_interpreter:
-        jsr     open
+        jsr     Open
         beq     found_interpreter
         ldy     INVOKER_PREFIX   ; Pop a path segment to try
 :       lda     INVOKER_PREFIX,y ; parent directory.
@@ -128,7 +128,7 @@ check_for_interpreter:
 update_prefix:                  ; Update prefix and try again.
         dey
         sty     INVOKER_PREFIX
-        jsr     set_prefix
+        jsr     SetPrefix
         jmp     check_for_interpreter
 
 found_interpreter:
@@ -161,7 +161,7 @@ not_basic:
 ;;; Load target at given address
 
 load_target:
-        jsr     open
+        jsr     Open
         bne     exit
 do_read:
         lda     open_params::ref_num
@@ -176,7 +176,7 @@ do_read:
         bit     interpreter_flag
         bpl     update_stack
 
-        jsr     set_prefix
+        jsr     SetPrefix
         ldy     INVOKER_FILENAME
 :       lda     INVOKER_FILENAME,y
         sta     PRODOS_INTERPRETER_BUF,y         ; ProDOS interpreter protocol

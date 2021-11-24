@@ -1,9 +1,9 @@
 ;;; ============================================================
 
-;;; Populate str_time with time. Uses clock_24hours flag in settings.
+;;; Populate `str_time` with time. Uses `clock_24hours` flag in settings.
 ;;; Inputs: A,X = ParsedDateTime
-;;; Outputs: str_time is populated
-.proc make_time_string
+;;; Outputs: `str_time` is populated
+.proc MakeTimeString
         parsed_ptr := $06
 
         stax    parsed_ptr
@@ -32,7 +32,7 @@
         lda     #12             ; 0 -> 12
 :
 
-skip:   jsr     split
+skip:   jsr     Split
         pha
         txa                     ; tens (if > 0)
         bit     SETTINGS + DeskTopSettings::clock_24hours
@@ -54,7 +54,7 @@ ones:   pla                     ; ones
 
         ;; Minutes
         lda     min
-        jsr     split
+        jsr     Split
         pha
         txa                     ; tens
         ora     #'0'
@@ -93,7 +93,7 @@ min:    .byte   0
 
 ;;; Input: A = number
 ;;; Output: X = tens, A = ones
-.proc split
+.proc Split
         ldx     #0
 
 loop:   cmp     #10
@@ -114,7 +114,7 @@ done:   rts
 ;;; c/o http://6502.org/source/misc/dow.htm
 ;;; Inputs: Y = year (0=1900), X = month (1=Jan), A = day (1...31)
 ;;; Output: A = weekday (0=Sunday)
-.proc day_of_week
+.proc DayOfWeek
         tmp := $06
 
         cpx     #3              ; Year starts in March to bypass
@@ -148,7 +148,7 @@ month_offset_table:
 ;;; Input: A,X = addr of datetime to parse
 ;;; $0A points at ParsedDateTime to be filled
 
-.proc parse_datetime
+.proc ParseDatetime
         parsed_ptr := $0A
         datetime_ptr := $0C
 

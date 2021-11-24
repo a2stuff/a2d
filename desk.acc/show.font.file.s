@@ -33,7 +33,7 @@
 
         .org DA_LOAD_ADDRESS
 
-        jmp     entry
+        jmp     Entry
 
 ;;; ============================================================
 
@@ -52,7 +52,7 @@ kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
 ;;; ============================================================
 ;;; Get filename from DeskTop
 
-.proc entry
+.proc Entry
         INVOKE_PATH := $220
         lda     INVOKE_PATH
     IF_EQ
@@ -76,13 +76,13 @@ kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
         bne     :-
         stx     titlebuf
 
-        jmp     load_file_and_run_da
+        jmp     LoadFileAndRunDA
 .endproc
 
 ;;; ============================================================
 ;;; Load the file
 
-.proc load_file_and_run_da
+.proc LoadFileAndRunDA
 
         ;; TODO: Ensure there's enough room, fail if not
 
@@ -116,7 +116,7 @@ kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
         cmp     #16+1
         bcs     exit
 
-        jsr     calc_font_size
+        jsr     CalcFontSize
         cmp16   expected_size, read_params::trans_count
         bne     exit
 
@@ -134,7 +134,7 @@ kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
 
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
@@ -149,7 +149,7 @@ exit:   rts
 expected_size:
         .word   0
 
-.proc calc_font_size
+.proc CalcFontSize
         copy    #0, expected_size
 
         ;; File size should be 3 + (lastchar + 1) + ((lastchar + 1) * height) * (double?2:1)
@@ -280,32 +280,32 @@ char_label:  .byte   0
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
+        bne     Exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
         bne     :+
-        jmp     handle_down
+        jmp     HandleDown
 
 
 :       cmp     #MGTK::EventKind::key_down  ; any key?
         bne     :+
-        jmp     handle_key
+        jmp     HandleKey
 
 
-:       jmp     input_loop
+:       jmp     InputLoop
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -314,7 +314,7 @@ char_label:  .byte   0
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -323,55 +323,55 @@ char_label:  .byte   0
         rts
 .endproc
 
-.proc exit
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     clear_updates
+        jsr     ClearUpdates
         rts                     ; exits input loop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         bne     :+
-        jmp     exit
-:       jmp     input_loop
+        jmp     Exit
+:       jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
         bpl     :+
-        jmp     exit
+        jmp     Exit
 :       lda     findwindow_params::window_id
         cmp     winfo::window_id
         bpl     :+
-        jmp     input_loop
+        jmp     InputLoop
 :       lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
-        jmp     input_loop
+        beq     HandleDrag
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
         bne     :+
-        jmp     input_loop
-:       jmp     exit
+        jmp     InputLoop
+:       jmp     Exit
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -380,12 +380,12 @@ char_label:  .byte   0
         bpl     :+
 
         ;; Draw DeskTop's windows and icons (from Main)
-        jsr     clear_updates
+        jsr     ClearUpdates
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
@@ -410,7 +410,7 @@ line_addrs:
         kLineHeight = 15
 
 
-.proc draw_window
+.proc DrawWindow
         ptr := $06
 
 PARAM_BLOCK params, $06

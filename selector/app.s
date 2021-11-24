@@ -218,14 +218,14 @@ watch_cursor:
 
 event_params := *
 event_kind := event_params + 0
-        ;; if kind is key_down
+        ;; if `kind` is key_down
 event_key := event_params + 1
 event_modifiers := event_params + 2
-        ;; if kind is no_event, button_down/up, drag, or apple_key:
+        ;; if `kind` is no_event, button_down/up, drag, or apple_key:
 event_coords := event_params + 1
 event_xcoord := event_params + 1
 event_ycoord := event_params + 3
-        ;; if kind is update:
+        ;; if `kind` is update:
 event_window_id := event_params + 1
 
 screentowindow_params := *
@@ -450,7 +450,7 @@ portptr:        .addr   0
 ;;; App Initialization
 
 entry:
-.proc app_init
+.proc AppInit
         cli
 
         sec
@@ -463,7 +463,7 @@ entry:
 :
 
         copy    #$FF, selected_index
-        jsr     load_selector_list
+        jsr     LoadSelectorList
         copy    #1, L9129
         lda     num_secondary_run_list_entries
         ora     num_primary_run_list_entries
@@ -473,7 +473,7 @@ quick_run_desktop:
         MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     :+
         jmp     done_keys
-:       jmp     run_desktop
+:       jmp     RunDesktop
 
         ;; --------------------------------------------------
         ;; Check for key down
@@ -511,7 +511,7 @@ check_key:
         cmp     num_primary_run_list_entries
         bcs     done_keys
         sta     selected_index
-        jsr     get_selector_list_entry_addr
+        jsr     GetSelectorListEntryAddr
 
         entry_ptr := $06
 
@@ -522,12 +522,12 @@ check_key:
         beq     :+
         jsr     GetCopiedToRAMCardFlag
         beq     done_keys
-        jsr     get_selected_index_file_info
+        jsr     GetSelectedIndexFileInfo
         beq     :+
         jmp     done_keys
 
 :       lda     selected_index
-        jsr     invoke_entry
+        jsr     InvokeEntry
 
         ;; --------------------------------------------------
 
@@ -537,7 +537,7 @@ done_keys:
 
         ;; --------------------------------------------------
 
-        jsr     disconnect_ramdisk
+        jsr     DisconnectRamdisk
 
         ;; --------------------------------------------------
         ;; Find slots with devices using ProDOS Device ID Bytes
@@ -648,7 +648,7 @@ set_startup_menu_items:
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
         jsr     SetRGBMode
         MGTK_CALL MGTK::SetMenu, menu
-        jsr     show_clock
+        jsr     ShowClock
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
 
@@ -682,10 +682,10 @@ set_startup_menu_items:
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     get_port_and_draw_window
         copy    #$FF, selected_index
-        jsr     load_selector_list
-        jsr     populate_entries_flag_table
-        jsr     draw_entries
-        jmp     event_loop
+        jsr     LoadSelectorList
+        jsr     PopulateEntriesFlagTable
+        jsr     DrawEntries
+        jmp     EventLoop
 
 quick_boot_slot:
         .byte   0
@@ -694,14 +694,14 @@ quick_boot_slot:
 ;;; ============================================================
 ;;; Event Loop
 
-.proc event_loop
-        jsr     yield_loop
+.proc EventLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jsr     handle_button_down
-        jmp     event_loop
+        jsr     HandleButtonDown
+        jmp     EventLoop
 
 :       cmp     #MGTK::EventKind::key_down
         bne     not_key
@@ -718,7 +718,7 @@ quick_boot_slot:
         bne     not_desktop
 
 :       lda     winfo::window_id
-        jsr     get_window_port
+        jsr     GetWindowPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, desktop_button_rect
         MGTK_CALL MGTK::PaintRect, desktop_button_rect
@@ -726,13 +726,13 @@ quick_boot_slot:
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     event_loop      ; `kAlertResultCancel` = 1
+        bne     EventLoop      ; `kAlertResultCancel` = 1
         beq     @retry          ; `kAlertResultTryAgain` = 0
-:       jmp     run_desktop
+:       jmp     RunDesktop
 
 not_desktop:
-        jsr     handle_key
-        jmp     event_loop
+        jsr     HandleKey
+        jmp     EventLoop
 
         ;; --------------------------------------------------
 
@@ -742,7 +742,7 @@ not_key:
         jsr     handle_updates
 
 not_update:
-        jmp     event_loop
+        jmp     EventLoop
 .endproc
 
 ;;; ============================================================
@@ -767,15 +767,15 @@ handle_updates:
 
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
         bne     done            ; obscured
-        jsr     draw_window_and_entries
+        jsr     DrawWindowAndEntries
         MGTK_CALL MGTK::EndUpdate
 done:   rts
 
 ;;; ============================================================
 
-.proc draw_window_and_entries
-        jsr     draw_window
-        jsr     draw_entries
+.proc DrawWindowAndEntries
+        jsr     DrawWindow
+        jsr     DrawEntries
         rts
 .endproc
 
@@ -793,16 +793,16 @@ menu1:  .addr   noop
         .addr   noop
 
         ;; File menu
-menu2:  .addr   cmd_run_a_program
+menu2:  .addr   CmdRunAProgram
 
         ;; Startup menu
-menu3:  .addr   cmd_startup
-        .addr   cmd_startup
-        .addr   cmd_startup
-        .addr   cmd_startup
-        .addr   cmd_startup
-        .addr   cmd_startup
-        .addr   cmd_startup
+menu3:  .addr   CmdStartup
+        .addr   CmdStartup
+        .addr   CmdStartup
+        .addr   CmdStartup
+        .addr   CmdStartup
+        .addr   CmdStartup
+        .addr   CmdStartup
 menu_end:
 
 menu_addr_table:
@@ -813,14 +813,14 @@ menu_addr_table:
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_modifiers
         bne     has_modifiers
         lda     event_key
         cmp     #CHAR_ESCAPE
         beq     menukey
 
-other:  jmp     handle_nonmenu_key
+other:  jmp     HandleNonmenuKey
 
 has_modifiers:
         lda     event_key
@@ -847,12 +847,12 @@ menukey:
 
 ;;; ==================================================
 
-.proc handle_menu
+.proc HandleMenu
         ldx     menu_params::menu_item
         beq     L93BE
         ldx     menu_params::menu_id
         bne     L93C1
-L93BE:  jmp     event_loop
+L93BE:  jmp     EventLoop
 
 L93C1:  dex
         lda     menu_addr_table,x
@@ -880,13 +880,13 @@ L93EB:  tsx
 
 ;;; ============================================================
 
-.proc cmd_run_a_program
+.proc CmdRunAProgram
         lda     selected_index
         bmi     L93FF
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         lda     #$FF
         sta     selected_index
-L93FF:  jsr     set_watch_cursor
+L93FF:  jsr     SetWatchCursor
         MLI_CALL OPEN, open_selector_params
         bne     L9443
         lda     open_selector_params::ref_num
@@ -901,13 +901,13 @@ L9436:  tya
         jsr     invoke_entry_ep2
         jsr     file_dialog_loop
         beq     L9436
-L943F:  jsr     load_selector_list
+L943F:  jsr     LoadSelectorList
         rts
 
 L9443:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         bne     :+           ; `kAlertResultCancel` = 1
-        jsr     set_watch_cursor
+        jsr     SetWatchCursor
         jmp     L93FF
 
 :       rts
@@ -915,7 +915,7 @@ L9443:  lda     #AlertID::insert_system_disk
 
 ;;; ============================================================
 
-.proc handle_button_down
+.proc HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
         bne     :+
@@ -924,7 +924,7 @@ L9443:  lda     #AlertID::insert_system_disk
 :       cmp     #MGTK::Area::menubar
         bne     :+
         MGTK_CALL MGTK::MenuSelect, menu_params
-        jmp     handle_menu
+        jmp     HandleMenu
 
 :       cmp     #MGTK::Area::content
         beq     :+
@@ -936,7 +936,7 @@ L9443:  lda     #AlertID::insert_system_disk
         rts
 
 :       lda     winfo::window_id
-        jsr     get_window_port
+        jsr     GetWindowPort
         lda     winfo::window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -952,7 +952,7 @@ L9443:  lda     #AlertID::insert_system_disk
         ldax    #ok_button_rect
         jsr     ButtonEventLoop
         bmi     done
-        jsr     try_invoke_selected_index
+        jsr     TryInvokeSelectedIndex
 done:   rts
 
         ;; DeskTop button?
@@ -975,7 +975,7 @@ check_desktop_btn:
         jsr     ShowAlert
         bne     done            ; `kAlertResultCancel` = 1
         beq     @retry          ; `kAlertResultTryAgain` = 0
-:       jmp     run_desktop
+:       jmp     RunDesktop
 
         ;; Entry selection?
 
@@ -985,7 +985,7 @@ check_entries:
         lda     entry_click_y+1
         bpl     :+
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         copy    #$FF, selected_index
         rts
 
@@ -995,7 +995,7 @@ check_entries:
         cmp     #8              ; only care about low byte in A
         bcc     L954C
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         copy    #$FF, selected_index
         rts
 
@@ -1018,7 +1018,7 @@ L954C:  sta     L959D
 L9571:  cmp     num_primary_run_list_entries
         bcc     finish
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         copy    #$FF, selected_index
         rts
 
@@ -1027,12 +1027,12 @@ L9582:  sec
         cmp     num_secondary_run_list_entries
         bcc     finish
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         copy    #$FF, selected_index
         rts
 
 finish: lda     L959E
-        jsr     handle_entry_click
+        jsr     HandleEntryClick
         rts
 
 L959D:  .byte   0
@@ -1047,10 +1047,10 @@ noop:   rts
 
 ;;; ============================================================
 
-.proc run_desktop
+.proc RunDesktop
         ;; DeskTop will immediately disconnect RAMDisk, but it is
         ;; restored differently.
-        jsr     reconnect_ramdisk
+        jsr     ReconnectRamdisk
         MLI_CALL OPEN, open_desktop2_params
         lda     open_desktop2_params::ref_num
         sta     read_desktop2_params::ref_num
@@ -1070,10 +1070,10 @@ noop:   rts
 
 ;;; ============================================================
 
-.proc handle_nonmenu_key
+.proc HandleNonmenuKey
 
         lda     winfo::window_id
-        jsr     get_window_port
+        jsr     GetWindowPort
         lda     event_key
         cmp     #$1C            ; Control character?
         bcs     :+
@@ -1105,11 +1105,11 @@ noop:   rts
         rts
 
 :       lda     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 no_cur_sel:
         lda     tentative_selection
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         rts
 
         ;; --------------------------------------------------
@@ -1121,11 +1121,11 @@ control_char:
         cmp     #CHAR_RETURN
         bne     not_return
         lda     winfo::window_id
-        jsr     get_window_port
+        jsr     GetWindowPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         MGTK_CALL MGTK::PaintRect, ok_button_rect
-        jsr     try_invoke_selected_index
+        jsr     TryInvokeSelectedIndex
         rts
 not_return:
 
@@ -1134,19 +1134,19 @@ not_return:
 
         cmp     #CHAR_LEFT
         bne     :+
-        jmp     handle_key_left
+        jmp     HandleKeyLeft
 
 :       cmp     #CHAR_RIGHT
         bne     :+
-        jmp     handle_key_right
+        jmp     HandleKeyRight
 
 :       cmp     #CHAR_DOWN
         bne     :+
-        jmp     handle_key_down
+        jmp     HandleKeyDown
 
 :       cmp     #CHAR_UP
         bne     :+
-        jmp     handle_key_up
+        jmp     HandleKeyUp
 
 :       rts
 
@@ -1159,7 +1159,7 @@ tentative_selection:
 
 ;;; ============================================================
 
-.proc handle_key_right
+.proc HandleKeyRight
         lda     num_primary_run_list_entries
         ora     num_secondary_run_list_entries
         beq     done
@@ -1182,7 +1182,7 @@ tentative_selection:
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         lda     selected_index
 loop:   clc
@@ -1201,14 +1201,14 @@ loop:   clc
 
 set:    txa
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_left
+.proc HandleKeyLeft
         lda     num_primary_run_list_entries
         ora     num_secondary_run_list_entries
         beq     done
@@ -1217,11 +1217,11 @@ done:   return  #$FF
         bpl     move            ; have a selection
 
         ;; No selection - re-use logic to find last item
-        jmp     handle_key_up
+        jmp     HandleKeyUp
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         lda     selected_index
 loop:   sec
@@ -1240,14 +1240,14 @@ loop:   sec
 
 set:    txa
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_up
+.proc HandleKeyUp
         lda     num_primary_run_list_entries
         ora     num_secondary_run_list_entries
         beq     done
@@ -1264,7 +1264,7 @@ done:   return  #$FF
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         ldx     selected_index
 loop:   dex                     ; to previous
@@ -1277,14 +1277,14 @@ wrap:   ldx     #kSelectorListNumEntries
         jmp     loop
 
 set:    sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_down
+.proc HandleKeyDown
         lda     num_primary_run_list_entries
         ora     num_secondary_run_list_entries
         beq     done
@@ -1301,7 +1301,7 @@ done:   return  #$FF
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         ldx     selected_index
 loop:   inx                     ; to next
@@ -1316,7 +1316,7 @@ wrap:   ldx     #AS_BYTE(-1)
 
         ;; Set the selection
 set:    sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
@@ -1327,7 +1327,7 @@ done:   return  #$FF
 
 ;;; ============================================================
 
-.proc populate_entries_flag_table
+.proc PopulateEntriesFlagTable
         ldx     #kSelectorListNumEntries - 1
         lda     #$FF
 :       sta     entries_flag_table,x
@@ -1360,16 +1360,16 @@ entries_flag_table:
 
 ;;; ============================================================
 
-.proc try_invoke_selected_index
+.proc TryInvokeSelectedIndex
         lda     selected_index
         bmi     :+
-        jsr     invoke_entry
+        jsr     InvokeEntry
 :       rts
 .endproc
 
 ;;; ============================================================
 
-.proc draw_entries
+.proc DrawEntries
 
         ;; Primary Run List
         lda     #0
@@ -1377,7 +1377,7 @@ entries_flag_table:
 :       lda     count
         cmp     num_primary_run_list_entries
         beq     :+
-        jsr     draw_list_entry
+        jsr     DrawListEntry
         inc     count
         jmp     :-
 
@@ -1389,7 +1389,7 @@ entries_flag_table:
         beq     done
         clc
         adc     #8
-        jsr     draw_list_entry
+        jsr     DrawListEntry
         inc     count
         jmp     :-
 
@@ -1400,7 +1400,7 @@ count:  .byte   0
 
 ;;; ============================================================
 
-.proc load_selector_list
+.proc LoadSelectorList
         ;; Initialize the counts, in case load fails.
         lda     #0
         sta     selector_list + kSelectorListNumPrimaryRunListOffset
@@ -1421,7 +1421,7 @@ cache:  copy    selector_list + kSelectorListNumPrimaryRunListOffset, num_primar
 
 ;;; ============================================================
 
-.proc load_overlay2
+.proc LoadOverlay2
 start:  MLI_CALL OPEN, open_selector_params
         bne     error
         lda     open_selector_params::ref_num
@@ -1440,12 +1440,12 @@ error:  lda     #AlertID::insert_system_disk
 
 ;;; ============================================================
 
-.proc set_watch_cursor
+.proc SetWatchCursor
         MGTK_CALL MGTK::SetCursor, watch_cursor
         rts
 .endproc
 
-.proc set_pointer_cursor
+.proc SetPointerCursor
         MGTK_CALL MGTK::SetCursor, pointer_cursor
         rts
 .endproc
@@ -1453,7 +1453,7 @@ error:  lda     #AlertID::insert_system_disk
 ;;; ============================================================
 
 ;;; Disconnect /RAM
-.proc disconnect_ramdisk
+.proc DisconnectRamdisk
         ldx     DEVCNT
 :       lda     DEVLST,x
         and     #%11110000      ; DSSSnnnn
@@ -1479,7 +1479,7 @@ done:   dec     DEVCNT
 .endproc
 
 ;;; Restore /RAM
-.proc reconnect_ramdisk
+.proc ReconnectRamdisk
         lda     saved_ram_unitnum
         beq     done
 
@@ -1497,10 +1497,10 @@ saved_ram_unitnum:
 
 get_port_and_draw_window:
         lda     winfo::window_id
-        jsr     get_window_port
+        jsr     GetWindowPort
         ;; Fall through
 
-.proc draw_window
+.proc DrawWindow
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::SetPenSize, setpensize_params
 
@@ -1511,11 +1511,11 @@ get_port_and_draw_window:
         bmi     :+
         MGTK_CALL MGTK::FrameRect, desktop_button_rect
 :
-        param_call draw_title_string, str_selector_title
-        jsr     draw_ok_label
+        param_call DrawTitleString, str_selector_title
+        jsr     DrawOkLabel
         bit     desktop_available_flag
         bmi     :+
-        jsr     draw_desktop_label
+        jsr     DrawDesktopLabel
 :
         MGTK_CALL MGTK::MoveTo, line1_pt1
         MGTK_CALL MGTK::LineTo, line1_pt2
@@ -1526,13 +1526,13 @@ get_port_and_draw_window:
 
 ;;; ============================================================
 
-.proc draw_ok_label
+.proc DrawOkLabel
         MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call DrawString, ok_button_label
         rts
 .endproc
 
-.proc draw_desktop_label
+.proc DrawDesktopLabel
         MGTK_CALL MGTK::MoveTo, desktop_button_pos
         param_call DrawString, desktop_button_label
         rts
@@ -1542,7 +1542,7 @@ get_port_and_draw_window:
 ;;; Draw Title String (centered at top of port)
 ;;; Input: A,X = string address
 
-.proc draw_title_string
+.proc DrawTitleString
         text_params     := $6
         text_addr       := text_params + 0
         text_length     := text_params + 2
@@ -1610,7 +1610,7 @@ L9A10:  dey
 ;;; Set the active GrafPort to the selected window's port
 ;;; Input: A = window id
 
-.proc get_window_port
+.proc GetWindowPort
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
@@ -1621,7 +1621,7 @@ L9A10:  dey
 ;;; Input: A = Entry number
 ;;; Output: A,X = Entry address
 
-.proc get_selector_list_entry_addr
+.proc GetSelectorListEntryAddr
         addr := selector_list + kSelectorListEntriesOffset
 
         ldx     #0
@@ -1648,7 +1648,7 @@ hi:     .byte   0
 
 ;;; ============================================================
 
-.proc get_selector_list_path_addr
+.proc GetSelectorListPathAddr
         addr := selector_list + kSelectorListPathsOffset
 
         ldx     #0
@@ -1672,7 +1672,7 @@ hi:    .byte   0
 
 ;;; ============================================================
 
-.proc set_entry_text_pos
+.proc SetEntryTextPos
 
         pha                     ; stack has index
         lsr     a
@@ -1717,11 +1717,11 @@ tmp:    .byte   0
 ;;; ============================================================
 ;;; Input: A = entry number
 
-.proc draw_list_entry
+.proc DrawListEntry
         ptr := $06
 
         pha
-        jsr     get_selector_list_entry_addr
+        jsr     GetSelectorListEntryAddr
         stax    ptr
         ldy     #0
         lda     (ptr),y         ; length
@@ -1764,9 +1764,9 @@ prefix: pla
 
         ;; Draw the string
 common: lda     winfo::window_id
-        jsr     get_window_port
+        jsr     GetWindowPort
         pla
-        jsr     set_entry_text_pos
+        jsr     SetEntryTextPos
         MGTK_CALL MGTK::MoveTo, pos_entry_str
         param_call DrawString, entry_string_buf
         rts
@@ -1775,21 +1775,21 @@ common: lda     winfo::window_id
 ;;; ============================================================
 ;;; Input: A = clicked entry
 
-.proc handle_entry_click
+.proc HandleEntryClick
         cmp     selected_index  ; same as previous selection?
         beq     :+
         pha
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite ; un-highlight old entry
+        jsr     MaybeToggleEntryHilite ; un-highlight old entry
         pla
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite ; highlight new entry
+        jsr     MaybeToggleEntryHilite ; highlight new entry
 :
 
         jsr     DetectDoubleClick
         bne     :+
 
-        jmp     invoke_entry
+        jmp     InvokeEntry
 
 :       rts
 
@@ -1799,7 +1799,7 @@ common: lda     winfo::window_id
 ;;; Toggle the highlight on an entry in the list
 ;;; Input: A = entry number
 
-.proc maybe_toggle_entry_hilite
+.proc MaybeToggleEntryHilite
         bpl     :+
         rts
 
@@ -1865,7 +1865,7 @@ col:    .byte   0
 
 ;;; ============================================================
 
-.proc cmd_startup
+.proc CmdStartup
         ldy     menu_params::menu_item
         lda     slot_table,y
         ora     #>$C000         ; compute $Cn00
@@ -1896,13 +1896,13 @@ col:    .byte   0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_invoke_params, INVOKER_PREFIX
 
-.proc invoke_entry
+.proc InvokeEntry
         lda     L9129
         bne     :+
-        jsr     set_watch_cursor
+        jsr     SetWatchCursor
         lda     selected_index
         bmi     :+
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 :       jmp     try
 
 ep2:    jmp     L9C7E
@@ -1918,7 +1918,7 @@ L9C2A:  jsr     GetCopiedToRAMCardFlag
         jmp     L9C78
 
 L9C32:  lda     selected_index
-        jsr     get_selector_list_entry_addr
+        jsr     GetSelectorListEntryAddr
         stax    $06
         ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
@@ -1929,30 +1929,30 @@ L9C32:  lda     selected_index
         ;; Copy on boot
         lda     L9129
         bne     L9C6F
-        jsr     get_selected_index_file_info
+        jsr     GetSelectedIndexFileInfo
         beq     L9C6F
-        jsr     load_overlay2
+        jsr     LoadOverlay2
         lda     selected_index
         jsr     file_copier_exec
         pha
         jsr     check_and_handle_updates
         pla
         beq     L9C6F
-        jsr     set_pointer_cursor
-        jmp     clear_selected_index
+        jsr     SetPointerCursor
+        jmp     ClearSelectedIndex
 
 L9C65:  lda     L9129
         bne     L9C6F
-        jsr     get_selected_index_file_info
+        jsr     GetSelectedIndexFileInfo
         bne     L9C78
 L9C6F:  lda     selected_index
-        jsr     compose_dst_path
+        jsr     ComposeDstPath
         jmp     L9C7E
 
         ;; --------------------------------------------------
 
 L9C78:  lda     selected_index
-        jsr     get_selector_list_path_addr
+        jsr     GetSelectorListPathAddr
 L9C7E:  stax    $06
         ldy     #$00
         lda     ($06),y
@@ -1976,10 +1976,10 @@ L9C87:  lda     ($06),y
         bne     fail
         txa
         bne     fail            ; `kAlertResultCancel` = 1
-        jsr     set_watch_cursor
+        jsr     SetWatchCursor
         jmp     L9C78
 
-fail:   jmp     clear_selected_index
+fail:   jmp     ClearSelectedIndex
 
         ;; --------------------------------------------------
         ;; Check file type
@@ -1990,12 +1990,12 @@ check_type:
         lda     get_file_info_invoke_params::file_type
         cmp     #FT_BASIC
         bne     not_basic
-        jsr     check_basic_system
+        jsr     CheckBasicSystem
         jeq     check_path
 
         lda     #AlertID::basic_system_not_found
         jsr     ShowAlert
-        jmp     clear_selected_index
+        jmp     ClearSelectedIndex
 
 not_basic:
         cmp     #FT_BINARY
@@ -2011,7 +2011,7 @@ not_basic:
         ;; Don't know how to invoke
         lda     #AlertID::selector_unable_to_run
         jsr     ShowAlert
-        jmp     clear_selected_index
+        jmp     ClearSelectedIndex
 
         ;; --------------------------------------------------
         ;; Check Path
@@ -2025,7 +2025,7 @@ check_path:
         bne     :-
         lda     #AlertID::insert_source_disk
         jsr     ShowAlert
-        bne     clear_selected_index ; `kAlertResultCancel` = 1
+        bne     ClearSelectedIndex ; `kAlertResultCancel` = 1
         jmp     try
 
 :       dey
@@ -2042,13 +2042,13 @@ check_path:
         stx     INVOKER_FILENAME
         pla
         sta     INVOKER_PREFIX
-        param_call upcase_string, INVOKER_PREFIX
-        param_call upcase_string, INVOKER_FILENAME
+        param_call UpcaseString, INVOKER_PREFIX
+        param_call UpcaseString, INVOKER_FILENAME
 
         ;; --------------------------------------------------
         ;; Invoke
 
-        jsr     reconnect_ramdisk
+        jsr     ReconnectRamdisk
         jsr     SETVID
         jsr     SETKBD
         jsr     INIT
@@ -2073,11 +2073,11 @@ check_path:
         brk
 
 .endproc
-        invoke_entry_ep2 := invoke_entry::ep2
+        invoke_entry_ep2 := InvokeEntry::ep2
 
         DEFINE_QUIT_PARAMS quit_params
 
-.proc clear_selected_index
+.proc ClearSelectedIndex
         lda     L9129
         bne     :+
         lda     #$FF
@@ -2094,7 +2094,7 @@ kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
 str_basix_system:
         PASCAL_STRING "BASIx.SYSTEM" ; do not localize
 
-.proc check_basix_system_impl
+.proc CheckBasixSystemImpl
         launch_path := INVOKER_PREFIX
         path_buf := $1C00
 
@@ -2157,14 +2157,14 @@ L9DC8:  cpx     #$01
 len:    .byte   0
 
 .endproc
-        check_basic_system := check_basix_system_impl::basic
-        check_basis_system := check_basix_system_impl::basis
+        CheckBasicSystem := CheckBasixSystemImpl::basic
+        check_basis_system := CheckBasixSystemImpl::basis
 
 ;;; ============================================================
 ;;; Uppercase a string
 ;;; Input: A,X = Address
 
-.proc upcase_string
+.proc UpcaseString
         ptr := $06
 
         stax    ptr
@@ -2185,11 +2185,11 @@ len:    .byte   0
 
 ;;; ============================================================
 
-.proc get_selected_index_file_info
+.proc GetSelectedIndexFileInfo
         ptr := $06
 
         lda     selected_index
-        jsr     compose_dst_path
+        jsr     ComposeDstPath
         stax    ptr
         ldy     #0
         lda     (ptr),y
@@ -2235,13 +2235,13 @@ len:    .byte   0
 
 ;;; ============================================================
 
-.proc compose_dst_path
+.proc ComposeDstPath
         buf := $800
 
         sta     tmp
         param_call CopyRAMCardPrefix, buf
         lda     tmp
-        jsr     get_selector_list_path_addr
+        jsr     GetSelectorListPathAddr
 
         path_addr := $06
 
@@ -2299,10 +2299,10 @@ len:    .byte   0
 
 ;;; Alert code calls here to yield; swaps memory banks back in
 ;;; to do things like read the ProDOS clock.
-.proc alert_yield_loop_relay
+.proc AlertYieldLoopRelay
         sta     ALTZPOFF
         bit     ROMIN2
-        jsr     yield_loop
+        jsr     YieldLoop
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
@@ -2389,7 +2389,7 @@ done:   rts
 ;;; ============================================================
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
 
-.proc reset_iigs_rgb
+.proc ResetIIgsRGB
         bit     not_iigs_flag
         bmi     done
 
@@ -2412,7 +2412,7 @@ done:   rts
 ;;; Called by main and nested event loops to do periodic tasks.
 ;;; Returns 0 if the periodic tasks were run.
 
-.proc yield_loop
+.proc YieldLoop
         kMaxCounter = $E0       ; arbitrary
 
         inc     loop_counter
@@ -2422,8 +2422,8 @@ done:   rts
         bcc     :+
         copy    #0, loop_counter
 
-        jsr     show_clock
-        jsr     reset_iigs_rgb ; in case it was reset by control panel
+        jsr     ShowClock
+        jsr     ResetIIgsRGB   ; in case it was reset by control panel
 
 :       lda     loop_counter
         rts

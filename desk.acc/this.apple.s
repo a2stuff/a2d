@@ -36,9 +36,9 @@ kShortcutEasterEgg = res_char_easter_egg_shortcut
 da_start:
 ;;; Some static checks where we can cache the results.
 .scope
-        jsr     identify_model
-        jsr     identify_prodos_version
-        jsr     identify_memory
+        jsr     IdentifyModel
+        jsr     IdentifyProDOSVersion
+        jsr     IdentifyMemory
 .endscope
 
 ;;; Copy the DA to AUX for easy bank switching
@@ -54,7 +54,7 @@ da_start:
         ;; run the DA (from Aux)
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit (back to Main)
         sta     RAMRDOFF
@@ -536,7 +536,7 @@ slot_pos_table:
 ;;; ============================================================
 
         PAD_TO $0FFD
-.proc z80_routine
+.proc Z80Routine
         .assert * = $0FFD, error, "Must be at $0FFD / FFFDH"
         ;; .org $FFFD
         patch := *+2
@@ -818,7 +818,7 @@ model_lookup_table:
 
         .byte   $FF             ; sentinel
 
-.proc identify_model
+.proc IdentifyModel
         ;; Read from ROM
         bit     ROMIN2
 
@@ -897,7 +897,7 @@ match:  tya
 ;;; $24         2.4.x
 
 ;;; Assert: Main is banked in
-.proc identify_prodos_version
+.proc IdentifyProDOSVersion
 
         ;; Read ProDOS version field from global page in main
         lda     KVERSION
@@ -937,74 +937,74 @@ done:   rts
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
+        bne     Exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        beq     handle_down
+        beq     HandleDown
         cmp     #MGTK::EventKind::key_down  ; any key?
-        beq     handle_key
-        jmp     input_loop
+        beq     HandleKey
+        jmp     InputLoop
 .endproc
 
-.proc exit
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     clear_updates
+        jsr     ClearUpdates
         rts                     ; exits input loop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     exit
+        beq     Exit
         cmp     #kShortcutEasterEgg
         beq     :+
         cmp     #TO_LOWER(kShortcutEasterEgg)
-        bne     input_loop
-:       jmp     handle_egg
+        bne     InputLoop
+:       jmp     HandleEgg
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bne     exit
+        bne     Exit
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bne     input_loop
+        bne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
-        jmp     input_loop
+        beq     HandleDrag
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        beq     input_loop
-        bne     exit
+        beq     InputLoop
+        bne     Exit
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -1013,18 +1013,18 @@ done:   rts
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        jsr     clear_updates
+        jsr     ClearUpdates
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 ;;; ============================================================
 
-.proc handle_egg
+.proc HandleEgg
         lda     egg
         asl
         tax
@@ -1038,16 +1038,16 @@ done:   rts
         lda     #0
         sta     egg
 
-:       jsr     clear_window
-        jsr     draw_window
-done:   jmp     input_loop
+:       jsr     ClearWindow
+        jsr     DrawWindow
+done:   jmp     InputLoop
 
 egg:    .byte   0
 .endproc
 
 ;;; ============================================================
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -1056,7 +1056,7 @@ egg:    .byte   0
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -1067,7 +1067,7 @@ egg:    .byte   0
 
 ;;; ============================================================
 
-.proc clear_window
+.proc ClearWindow
         MGTK_CALL MGTK::GetWinPort, winport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
@@ -1080,7 +1080,7 @@ egg:    .byte   0
 
 ;;; ============================================================
 
-.proc draw_window
+.proc DrawWindow
         ptr := $06
 
         MGTK_CALL MGTK::GetWinPort, winport_params
@@ -1110,7 +1110,7 @@ egg:    .byte   0
         param_call DrawString, str_from_int
         param_call DrawString, str_memory_suffix
         param_call DrawString, str_cpu_prefix
-        jsr     cpuid
+        jsr     CPUId
         jsr     DrawString
 
         lda     #7
@@ -1142,10 +1142,10 @@ loop:   lda     slot
 
         ;; ProDOS thinks there's a card...
         lda     slot
-        jsr     probe_slot      ; check for matching firmware
+        jsr     ProbeSlot       ; check for matching firmware
         bcs     draw
         lda     slot            ; check non-firmware cases in case of
-        jsr     probe_slot_no_firmware ; false-positive (e.g. emulator)
+        jsr     ProbeSlotNoFirmware ; false-positive (e.g. emulator)
         bcs     draw
 
         ldax    #str_unknown
@@ -1153,7 +1153,7 @@ loop:   lda     slot
 
 pro_no:
         lda     slot
-        jsr     probe_slot_no_firmware
+        jsr     ProbeSlotNoFirmware
         bcs     draw
 
         ldax    #str_empty
@@ -1175,7 +1175,7 @@ penmode:.byte   MGTK::notpencopy
 ;;; ============================================================
 ;;; Point $06/$07 at $Cn00
 ;;; Input: Slot in A
-.proc set_slot_ptr
+.proc SetSlotPtr
         ptr     := $6
 
         ora     #$C0
@@ -1197,11 +1197,11 @@ penmode:.byte   MGTK::notpencopy
 ;;;   http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
 ;;; * "ProDOS BASIC Programming Examples" disk
 
-.proc probe_slot
+.proc ProbeSlot
         ptr     := $6
 
         ;; Point ptr at $Cn00
-        jsr     set_slot_ptr
+        jsr     SetSlotPtr
 
         ;; Get Firmware Byte
 .macro GET_FWB offset
@@ -1249,7 +1249,7 @@ penmode:.byte   MGTK::notpencopy
         RESULT  str_block
 
 :
-        jsr     populate_smartport_name
+        jsr     PopulateSmartportName
         RESULT  str_smartport
 notpro:
 ;;; ---------------------------------------------
@@ -1360,23 +1360,23 @@ notpas:
 ;;; Input: Slot # in A
 ;;; Output: Carry set and string ptr in A,X if detected, carry clear otherwise
 
-.proc probe_slot_no_firmware
+.proc ProbeSlotNoFirmware
         ptr     := $6
 
         ;; Point ptr at $Cn00
-        jsr     set_slot_ptr
+        jsr     SetSlotPtr
 
-        jsr     detect_mockingboard
+        jsr     DetectMockingboard
         bcc     :+
         RESULT  str_mockingboard
 :
 
-        jsr     detect_z80
+        jsr     DetectZ80
         bcc     :+
         RESULT  str_z80
 :
 
-        jsr     detect_uthernet2
+        jsr     DetectUthernet2
         bcc     :+
         RESULT  str_uthernet2
 :
@@ -1387,21 +1387,21 @@ notpas:
 ;;; Detect Z80
 ;;; Assumes $06 points at $Cn00, returns carry set if found
 
-.proc detect_z80
+.proc DetectZ80
         ;; Convert $Cn to $En, update Z80 code
         lda     $07             ; $Cn
         ora     #$E0
-        sta     z80_routine::patch
+        sta     Z80Routine::patch
 
         ;; Clear detection flag
-        copy    #0, z80_routine::flag
+        copy    #0, Z80Routine::flag
 
         ;; Try to invoke Z80
         ldy     #0
         sta     ($06),y
 
         ;; Flag will be set to 1 by routine if Z80 was present.
-        lda     z80_routine::flag
+        lda     Z80Routine::flag
         ror                     ; move flag into carry
         rts
 .endproc
@@ -1409,7 +1409,7 @@ notpas:
 ;;; Detect Uthernet II
 ;;; Assumes $06 points at $Cn00, returns carry set if found
 
-.proc detect_uthernet2
+.proc DetectUthernet2
         ;; Based on the a2RetroSystems Uthernet II manual
 
         MR := $C084
@@ -1448,7 +1448,7 @@ fail:   clc
 ;;; Detect Mockingboard
 ;;; Assumes $06 points at $Cn00, returns carry set if found
 
-.proc detect_mockingboard
+.proc DetectMockingboard
         ptr := $06
         tmp := $08
 
@@ -1480,18 +1480,18 @@ fail:   clc
 ;;; ============================================================
 ;;; Update str_memory with memory count in kilobytes
 
-;;; Assert: Main is banked in (for `check_slinky_memory` call)
-.proc identify_memory
+;;; Assert: Main is banked in (for `CheckSlinkyMemory` call)
+.proc IdentifyMemory
         copy16  #0, memory
-        jsr     check_ramworks_memory
+        jsr     CheckRamworksMemory
         sty     memory          ; Y is number of 64k banks
         cpy     #0              ; 0 means 256 banks
         bne     :+
         inc     memory+1
 :       inc16   memory          ; Main 64k memory
 
-        jsr     check_iigs_memory
-        jsr     check_slinky_memory
+        jsr     CheckIIgsMemory
+        jsr     CheckSlinkyMemory
 
         asl16   memory          ; * 64
         asl16   memory
@@ -1528,7 +1528,7 @@ fail:   clc
 ;;; will be handled by an invalid signature check for other banks.
 ;;;
 ;;; Assert: Main is banked in
-.proc check_ramworks_memory
+.proc CheckRamworksMemory
         sigb0   := $00
         sigb1   := $01
 
@@ -1600,7 +1600,7 @@ next:   inx                     ; next bank
 
 ;;; ============================================================
 
-.proc check_iigs_memory
+.proc CheckIIgsMemory
         bit     ROMIN2          ; Check ROM - is this a IIgs?
         sec
         jsr     IDROUTINE
@@ -1628,7 +1628,7 @@ done:   rts
 
 ;;; Assert: Main is banked in (due to SmartPort calls)
 
-.proc check_slinky_memory
+.proc CheckSlinkyMemory
         slot_ptr := $06
 
         lda     #7
@@ -1636,7 +1636,7 @@ done:   rts
 
         ;; Point at $Cn00, look for SmartPort signature bytes
 loop:   lda     slot
-        jsr     set_slot_ptr
+        jsr     SetSlotPtr
 
         ldx     #3
 :       ldy     sig_offsets,x
@@ -1713,7 +1713,7 @@ str_from_int:
 ;;; ============================================================
 ;;; Identify CPU - string pointer returned in A,X
 
-.proc cpuid
+.proc CPUId
         sed
         lda     #$99
         clc
@@ -1751,7 +1751,7 @@ p65802: return16 #str_65802     ; Other boards support 65802
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
 
 ;;; Assert: Main is banked in (due to SmartPort calls)
-.proc populate_smartport_name_main_impl
+.proc PopulateSmartportNameMainImpl
 
 .params status_params
 param_count:    .byte   3
@@ -1778,7 +1778,7 @@ start:
         ;; Query number of devices
         copy    #0, status_params::unit_num ; SmartPort status itself
         copy    #0, status_params::status_code
-        jsr     smartport_call
+        jsr     SmartPortCall
         lda     dib_buffer::Number_Devices
         cmp     #kMaxSmartportDevices
         bcc     :+
@@ -1793,7 +1793,7 @@ start:
 
 device_loop:
         ;; Make the call
-        jsr     smartport_call
+        jsr     SmartPortCall
         bcs     next
 
         ;; Trim trailing whitespace (seen in CFFA)
@@ -1818,10 +1818,10 @@ done:   sty     dib_buffer::ID_String_Length
         ;; Look at prior and current character; if both are alpha,
         ;; lowercase current.
 loop:   lda     dib_buffer::Device_Name-1,y ; Test previous character
-        jsr     is_alpha
+        jsr     IsAlpha
         bne     next
         lda     dib_buffer::Device_Name,y ; Adjust this one if also alpha
-        jsr     is_alpha
+        jsr     IsAlpha
         bne     next
         lda     dib_buffer::Device_Name,y
         ora     #AS_BYTE(~CASE_MASK)
@@ -1903,7 +1903,7 @@ empty_flag:
 num_devices:
         .byte   0
 
-.proc smartport_call
+.proc SmartPortCall
         ;; NOTE: Must be done from Main.
         ;; https://github.com/a2stuff/a2d/issues/483
         sp_addr := * + 1
@@ -1912,16 +1912,16 @@ num_devices:
         .addr   status_params
         rts
 .endproc
-        sp_addr = smartport_call::sp_addr
+        sp_addr = SmartPortCall::sp_addr
 
 .endproc
 
 ;;; Assert: Aux is banked in (relays to Main)
-.proc populate_smartport_name
+.proc PopulateSmartportName
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
-        jsr     populate_smartport_name_main_impl::start
+        jsr     PopulateSmartportNameMainImpl::start
 
         sta     RAMWRTON
         COPY_STRING str_smartport, str_smartport
@@ -1934,7 +1934,7 @@ num_devices:
 ;;; Outputs: Z=1 if alpha, 0 otherwise
 ;;; A is trashed
 
-.proc is_alpha
+.proc IsAlpha
         cmp     #'@'            ; in upper/lower "plane" ?
         bcc     nope
         and     #CASE_MASK      ; force upper-case

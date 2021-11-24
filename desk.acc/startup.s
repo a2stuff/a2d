@@ -36,13 +36,13 @@ da_start:
         ;; run the DA
         sta     RAMRDON         ; Run from Aux
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit
         sta     RAMRDOFF        ; Back to Main
         sta     RAMWRTOFF
 
-        jmp     save_settings
+        jmp     SaveSettings
 
 .endscope
 
@@ -226,27 +226,27 @@ kCheckboxLabelOffsetY = kCheckboxHeight + 1
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
+        bne     Exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        beq     handle_down
+        beq     HandleDown
         cmp     #MGTK::EventKind::key_down
-        beq     handle_key
+        beq     HandleKey
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -255,7 +255,7 @@ kCheckboxLabelOffsetY = kCheckboxHeight + 1
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -264,53 +264,53 @@ kCheckboxLabelOffsetY = kCheckboxHeight + 1
         rts
 .endproc
 
-.proc exit
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     clear_updates
+        jsr     ClearUpdates
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     exit
-        bne     input_loop
+        beq     Exit
+        bne     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bne     exit
+        bne     Exit
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bne     input_loop
+        bne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
+        beq     HandleDrag
         cmp     #MGTK::Area::content
-        beq     handle_click
-        jmp     input_loop
+        beq     HandleClick
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        bne     exit
-        jmp     input_loop
+        bne     Exit
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -319,18 +319,18 @@ common: bit     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        jsr     clear_updates
+        jsr     ClearUpdates
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 ;;; ============================================================
 
-.proc handle_click
+.proc HandleClick
         copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -342,18 +342,18 @@ common: bit     dragwindow_params::moved
         MGTK_CALL MGTK::InRect, rect_ramcard_click
         cmp     #MGTK::inrect_inside
         IF_EQ
-        jmp     handle_ramcard_click
+        jmp     HandleRamcardClick
         END_IF
 
         MGTK_CALL MGTK::InRect, rect_selector_click
         cmp     #MGTK::inrect_inside
         IF_EQ
-        jmp     handle_selector_click
+        jmp     HandleSelectorClick
         END_IF
 
         ;; ----------------------------------------
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 
@@ -367,7 +367,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
 ;;; ============================================================
 
-.proc draw_window
+.proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, winport_params
         cmp     #MGTK::Error::window_obscured
@@ -385,8 +385,8 @@ notpencopy:     .byte   MGTK::notpencopy
 
         ldax    #rect_ramcard
         ldy     #DeskTopSettings::kStartupSkipRAMCard
-        jsr     get_bit
-        jsr     draw_checkbox
+        jsr     GetBit
+        jsr     DrawCheckbox
 
         ;; --------------------------------------------------
 
@@ -395,8 +395,8 @@ notpencopy:     .byte   MGTK::notpencopy
 
         ldax    #rect_selector
         ldy     #DeskTopSettings::kStartupSkipSelector
-        jsr     get_bit
-        jsr     draw_checkbox
+        jsr     GetBit
+        jsr     DrawCheckbox
 
         ;; --------------------------------------------------
 
@@ -407,7 +407,7 @@ notpencopy:     .byte   MGTK::notpencopy
 ;;; Inputs: Y = bit to read from DeskTopSettings::startup
 ;;; Outputs: Z = bit set
 ;;; Note: A,X untouched
-.proc get_bit
+.proc GetBit
         pha
         tya
         and     SETTINGS + DeskTopSettings::startup
@@ -421,7 +421,7 @@ tmp:    .byte   0
 .endproc
 
 ;;; A,X = pos ptr, Z = checked
-.proc draw_checkbox
+.proc DrawCheckbox
         ptr := $06
 
         stax    ptr
@@ -455,7 +455,7 @@ finish: MGTK_CALL MGTK::ShowCursor
 
 ;;; ============================================================
 
-.proc handle_ramcard_click
+.proc HandleRamcardClick
         lda     SETTINGS + DeskTopSettings::startup
         eor     #DeskTopSettings::kStartupSkipRAMCard
         sta     SETTINGS + DeskTopSettings::startup
@@ -463,15 +463,15 @@ finish: MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::SetPenMode, notpencopy
         ldax    #rect_ramcard
         ldy     #DeskTopSettings::kStartupSkipRAMCard
-        jsr     get_bit
-        jsr     draw_checkbox
+        jsr     GetBit
+        jsr     DrawCheckbox
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_selector_click
+.proc HandleSelectorClick
         lda     SETTINGS + DeskTopSettings::startup
         eor     #DeskTopSettings::kStartupSkipSelector
         sta     SETTINGS + DeskTopSettings::startup
@@ -479,10 +479,10 @@ finish: MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::SetPenMode, notpencopy
         ldax    #rect_selector
         ldy     #DeskTopSettings::kStartupSkipSelector
-        jsr     get_bit
-        jsr     draw_checkbox
+        jsr     GetBit
+        jsr     DrawCheckbox
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================

@@ -20,11 +20,11 @@
         .org DA_LOAD_ADDRESS
 
 da_start:
-        jmp     start
+        jmp     Start
 
 save_stack:.byte   0
 
-.proc start
+.proc Start
         tsx
         stx     save_stack
 
@@ -40,7 +40,7 @@ save_stack:.byte   0
         sta     RAMRDON
 
         ;; run the DA
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit
         sta     RAMRDOFF
@@ -74,7 +74,7 @@ grafport:
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor

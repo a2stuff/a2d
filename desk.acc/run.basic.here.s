@@ -60,13 +60,13 @@ fail:   jmp     JUMP_TABLE_SHOW_ALERT ; NOTE: Trashes AUX $800-$1AFF
 
 start:
         ;; Get active window's path
-        jsr     get_win_path
+        jsr     GetWinPath
         beq     :+
         lda     #kErrNoWindowsOpen
         bne     fail            ; always
 
         ;; Find BASIC.SYSTEM
-:       jsr     check_basic_system
+:       jsr     CheckBasicSystem
         beq     :+
         lda     #kErrBasicSysNotFound
         bne     fail
@@ -103,7 +103,7 @@ quit:   MLI_CALL QUIT, quit_params
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, bs_path
 
-.proc check_basic_system
+.proc CheckBasicSystem
         ;; Was DeskTop copied to a RAM Card?
         jsr     GetCopiedToRAMCardFlag
         bpl     get_current_prefix ; nope
@@ -163,7 +163,7 @@ str_basic_system:
 
 ;;; ============================================================
 
-.proc get_win_path
+.proc GetWinPath
         ptr := $06
 
         JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr

@@ -51,7 +51,7 @@ font_width_backup       := $1100
 
         .org DA_LOAD_ADDRESS
 
-.proc start
+.proc Start
         INVOKE_PATH := $220
         lda     INVOKE_PATH
     IF_EQ
@@ -75,20 +75,20 @@ font_width_backup       := $1100
         bne     :-
         stx     titlebuf
 
-        jmp     copy2aux
+        jmp     Copy2Aux
 .endproc
 
 
 save_stack:.byte   0
 
 ;;; Copy $800 through $13FF (the DA) to aux
-.proc copy2aux
+.proc Copy2Aux
         tsx
         stx     save_stack
         sta     RAMWRTON
         ldy     #0
-src:    lda     start,y         ; self-modified
-dst:    sta     start,y         ; self-modified
+src:    lda     Start,y         ; self-modified
+dst:    sta     Start,y         ; self-modified
         dey
         bne     src
         sta     RAMWRTOFF
@@ -103,15 +103,15 @@ dst:    sta     start,y         ; self-modified
 call_main_trampoline   := $20 ; installed on ZP, turns off auxmem and calls...
 call_main_addr         := call_main_trampoline+7        ; address patched in here
 
-;;; Copy the following "call_main_template" routine to $20
+;;; Copy the following "CallMainTemplate" routine to $20
 .scope
         sta     RAMWRTON
         sta     RAMRDON
-        COPY_BYTES sizeof_call_main_template+1, call_main_template, call_main_trampoline
-        jmp     call_init
+        COPY_BYTES sizeof_CallMainTemplate+1, CallMainTemplate, call_main_trampoline
+        jmp     CallInit
 .endscope
 
-.proc call_main_template
+.proc CallMainTemplate
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     SELF_MODIFIED   ; overwritten (in zp version)
@@ -119,7 +119,7 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
         sta     RAMWRTON
         rts
 .endproc
-        sizeof_call_main_template = .sizeof(call_main_template)
+        sizeof_CallMainTemplate = .sizeof(CallMainTemplate)
 
 .macro TRAMP_CALL addr
         copy16  #addr, call_main_addr
@@ -135,9 +135,9 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
 
 ;;; ============================================================
 
-.proc call_init
+.proc CallInit
         ;; run the DA
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit
         sta     RAMRDOFF
@@ -150,55 +150,55 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
 ;;; ============================================================
 ;;; ProDOS MLI calls
 
-.proc open_file
-        jsr     copy_params_aux_to_main
+.proc OpenFile
+        jsr     CopyParamsAuxToMain
         sta     ALTZPOFF
         MLI_CALL OPEN, open_params
         sta     ALTZPON
-        jsr     copy_params_main_to_aux
+        jsr     CopyParamsMainToAux
         rts
 .endproc
 
-.proc read_file
-        jsr     copy_params_aux_to_main
+.proc ReadFile
+        jsr     CopyParamsAuxToMain
         sta     ALTZPOFF
         MLI_CALL READ, read_params
         sta     ALTZPON
-        jsr     copy_params_main_to_aux
+        jsr     CopyParamsMainToAux
         rts
 .endproc
 
-.proc get_file_eof
-        jsr     copy_params_aux_to_main
+.proc GetFileEof
+        jsr     CopyParamsAuxToMain
         sta     ALTZPOFF
         MLI_CALL GET_EOF, get_eof_params
         sta     ALTZPON
-        jsr     copy_params_main_to_aux
+        jsr     CopyParamsMainToAux
         rts
 .endproc
 
-.proc set_file_mark
-        jsr     copy_params_aux_to_main
+.proc SetFileMark
+        jsr     CopyParamsAuxToMain
         sta     ALTZPOFF
         MLI_CALL SET_MARK, set_mark_params
         sta     ALTZPON
-        jsr     copy_params_main_to_aux
+        jsr     CopyParamsMainToAux
         rts
 .endproc
 
-.proc close_file
-        jsr     copy_params_aux_to_main
+.proc CloseFile
+        jsr     CopyParamsAuxToMain
         sta     ALTZPOFF
         MLI_CALL CLOSE, close_params
         sta     ALTZPON
-        jsr     copy_params_main_to_aux
+        jsr     CopyParamsMainToAux
         rts
 .endproc
 
 ;;; ============================================================
 
 ;;; Copies param blocks from Aux to Main
-.proc copy_params_aux_to_main
+.proc CopyParamsAuxToMain
         ldy     #(params_end - params_start + 1)
         sta     RAMWRTOFF
 loop:   lda     params_start - 1,y
@@ -210,7 +210,7 @@ loop:   lda     params_start - 1,y
 .endproc
 
 ;;; Copies param blocks from Main to Aux
-.proc copy_params_main_to_aux
+.proc CopyParamsMainToAux
         pha
         php
         sta     RAMWRTON
@@ -408,12 +408,12 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kDefaultWidth, kDefaultHeight
 .endparams
 
-.proc init
+.proc Init
         lda     #0
         sta     fixed_mode_flag
 
         ;; open file, get length
-        jsr     open_file
+        jsr     OpenFile
         beq     :+
         rts
 
@@ -422,14 +422,14 @@ reserved:       .byte   0
         sta     set_mark_params::ref_num
         sta     get_eof_params::ref_num
         sta     close_params::ref_num
-        jsr     get_file_eof
+        jsr     GetFileEof
 
         ;; create window
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::SetPort, winfo::port
-        jsr     calc_window_size
-        jsr     calc_and_draw_mode
-        jsr     draw_content
+        jsr     CalcWindowSize
+        jsr     CalcAndDrawMode
+        jsr     DrawContent
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
 .endproc
@@ -437,25 +437,25 @@ reserved:       .byte   0
 ;;; ============================================================
 ;;; Main Input Loop
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params
         cmp     #MGTK::EventKind::key_down    ; key?
-        beq     on_key_down
+        beq     OnKeyDown
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        bne     input_loop      ; nope, keep waiting
+        bne     InputLoop      ; nope, keep waiting
 
         MGTK_CALL MGTK::FindWindow, event_params::coords
         lda     findwindow_params::window_id ; in our window?
         cmp     #kDAWindowId
-        bne     input_loop
+        bne     InputLoop
 
         ;; which part of the window?
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         bne     :+
-        jmp     on_close_click
+        jmp     OnCloseClick
 
         ;; title and resize clicks need mouse location
 :       ldx     event_params::mousex
@@ -471,15 +471,15 @@ reserved:       .byte   0
         cmp     #MGTK::Area::dragbar
         beq     title
         cmp     #MGTK::Area::grow_box ; not enabled, so this will never match
-        beq     input_loop
-        jsr     on_client_click
-        jmp     input_loop
+        beq     InputLoop
+        jsr     OnClientClick
+        jmp     InputLoop
 
-title:  jsr     on_title_bar_click
-        jmp     input_loop
+title:  jsr     OnTitleBarClick
+        jmp     InputLoop
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -491,7 +491,7 @@ title:  jsr     on_title_bar_click
 ;;; ============================================================
 ;;; Key
 
-.proc on_key_down
+.proc OnKeyDown
         lda     event_params::modifiers
         beq     no_mod
 
@@ -500,24 +500,24 @@ title:  jsr     on_title_bar_click
 
         cmp     #CHAR_DOWN      ; Apple-Down = Page Down
         bne     :+
-        jsr     page_down
-        jmp     input_loop
+        jsr     PageDown
+        jmp     InputLoop
 
 :       cmp     #CHAR_UP        ; Apple-Up = Page Up
         bne     :+
-        jsr     page_up
-        jmp     input_loop
+        jsr     PageUp
+        jmp     InputLoop
 
 :       cmp     #CHAR_LEFT      ; Apple-Left = Home
         bne     :+
-        jsr     scroll_top
-        jmp     input_loop
+        jsr     ScrollTop
+        jmp     InputLoop
 
 :       cmp     #CHAR_RIGHT     ; Apple-Right = End
         bne     :+
-        jsr     scroll_bottom
+        jsr     ScrollBottom
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
         ;; No modifiers
 no_mod:
@@ -525,39 +525,39 @@ no_mod:
 
         cmp     #CHAR_ESCAPE
         bne     :+
-        jmp     do_close
+        jmp     DoClose
 
 :       cmp     #' '
         bne     :+
-        jsr     toggle_mode
-        jmp     input_loop
+        jsr     ToggleMode
+        jmp     InputLoop
 
 :       cmp     #CHAR_DOWN
         bne     :+
-        jsr     scroll_down
-        jmp     input_loop
+        jsr     ScrollDown
+        jmp     InputLoop
 
 :       cmp     #CHAR_UP
         bne     :+
-        jsr     scroll_up
+        jsr     ScrollUp
 
-:       jmp     input_loop
+:       jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 ;;; Close Button
 
-.proc on_close_click
+.proc OnCloseClick
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway ; did click complete?
-        bne     do_close        ; yes
-        jmp     input_loop      ; no
+        bne     DoClose                    ; yes
+        jmp     InputLoop                  ; no
 .endproc
 
-.proc do_close
-        jsr     close_file
+.proc DoClose
+        jsr     CloseFile
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     clear_updates
+        jsr     ClearUpdates
         rts                     ; exits input loop
 .endproc
 
@@ -565,114 +565,114 @@ no_mod:
 ;;; Client Area
 
 ;;; Non-title (client) area clicked
-.proc on_client_click
+.proc OnClientClick
         ;; On one of the scroll bars?
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        beq     on_vscroll_click
+        beq     OnVScrollClick
 end:    rts
 .endproc
 
 ;;; ============================================================
 ;;; Vertical Scroll Bar
 
-.proc on_vscroll_click
+.proc OnVScrollClick
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     trackthumb_params::which_ctl
         sta     updatethumb_params::which_ctl
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
-        beq     on_vscroll_thumb_click
+        beq     OnVScrollThumbClick
         cmp     #MGTK::Part::page_down
-        beq     on_vscroll_below_click
+        beq     OnVScrollBelowClick
         cmp     #MGTK::Part::page_up
-        beq     on_vscroll_above_click
+        beq     OnVScrollAboveClick
         cmp     #MGTK::Part::up_arrow
-        beq     on_vscroll_up_click
+        beq     OnVScrollUpClick
         cmp     #MGTK::Part::down_arrow
         bne     end
-        jmp     on_vscroll_down_click
+        jmp     OnVScrollDownClick
 end:    rts
 .endproc
 
-.proc on_vscroll_thumb_click
-        jsr     do_trackthumb
+.proc OnVScrollThumbClick
+        jsr     DoTrackthumb
         lda     trackthumb_params::thumbmoved
         beq     end
         lda     trackthumb_params::thumbpos
         sta     updatethumb_params::thumbpos
-        jsr     update_voffset
-        jsr     update_vscroll
-        jsr     draw_content
+        jsr     UpdateVOffset
+        jsr     UpdateVScroll
+        jsr     DrawContent
         lda     L0947
         beq     end
         lda     L0949
         bne     end
-        jsr     clear_window
+        jsr     ClearWindow
 end:    rts
 .endproc
 
-.proc on_vscroll_above_click
-loop:   jsr     page_up
-        jsr     check_button_release
+.proc OnVScrollAboveClick
+loop:   jsr     PageUp
+        jsr     CheckButtonRelease
         bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
-.proc page_up
+.proc PageUp
         lda     winfo::vthumbpos
         beq     end
-        jsr     calc_track_scroll_delta
+        jsr     CalcTrackScrollDelta
         sec
         lda     winfo::vthumbpos
         sbc     track_scroll_delta
         bcs     store
         lda     #0              ; underflow
 store:  sta     updatethumb_params::thumbpos
-        jsr     update_scroll_pos
+        jsr     UpdateScrollPos
 end:    rts
 .endproc
 
-.proc on_vscroll_up_click
-loop:   jsr     scroll_up
-        jsr     check_button_release
+.proc OnVScrollUpClick
+loop:   jsr     ScrollUp
+        jsr     CheckButtonRelease
         bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
-.proc scroll_up
+.proc ScrollUp
         lda     winfo::vthumbpos
         beq     end
         sec
         sbc     #1
         sta     updatethumb_params::thumbpos
-        jsr     update_scroll_pos
+        jsr     UpdateScrollPos
 end:    rts
 .endproc
 
-.proc scroll_top
+.proc ScrollTop
         lda     winfo::vthumbpos
         beq     end
         copy    #0, updatethumb_params::thumbpos
-        jsr     update_scroll_pos
+        jsr     UpdateScrollPos
 end:    rts
 .endproc
 
 kVScrollMax = $FA
 
-.proc on_vscroll_below_click
-loop:   jsr     page_down
-        jsr     check_button_release
+.proc OnVScrollBelowClick
+loop:   jsr     PageDown
+        jsr     CheckButtonRelease
         bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
-.proc page_down
+.proc PageDown
         lda     winfo::vthumbpos
         cmp     #kVScrollMax    ; pos == max ?
         beq     end
-        jsr     calc_track_scroll_delta
+        jsr     CalcTrackScrollDelta
         clc
         lda     winfo::vthumbpos
         adc     track_scroll_delta ; pos + delta
@@ -682,53 +682,53 @@ end:    rts
 overflow:
         lda     #kVScrollMax    ; set to max
 store:  sta     updatethumb_params::thumbpos
-        jsr     update_scroll_pos
+        jsr     UpdateScrollPos
 end:    rts
 .endproc
 
-.proc on_vscroll_down_click
-loop:   jsr     scroll_down
-        jsr     check_button_release
+.proc OnVScrollDownClick
+loop:   jsr     ScrollDown
+        jsr     CheckButtonRelease
         bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
-.proc scroll_down
+.proc ScrollDown
         lda     winfo::vthumbpos
         cmp     #kVScrollMax
         beq     end
         clc
         adc     #1
         sta     updatethumb_params::thumbpos
-        jsr     update_scroll_pos
+        jsr     UpdateScrollPos
 end:    rts
 .endproc
 
-.proc scroll_bottom
+.proc ScrollBottom
         lda     winfo::vthumbpos
         cmp     #kVScrollMax
         beq     end
         copy    #kVScrollMax, updatethumb_params::thumbpos
-        jsr     update_scroll_pos
+        jsr     UpdateScrollPos
 end:    rts
 .endproc
 
-.proc update_scroll_pos         ; Returns with carry set if mouse released
-        jsr     update_voffset
-        jsr     update_vscroll
-        jsr     draw_content
+.proc UpdateScrollPos       ; Returns with carry set if mouse released
+        jsr     UpdateVOffset
+        jsr     UpdateVScroll
+        jsr     DrawContent
         rts
 .endproc
 
-.proc check_button_release
-        jsr     was_button_released
+.proc CheckButtonRelease
+        jsr     WasButtonReleased
         clc
         bne     end
         sec
 end:    rts
 .endproc
 
-.proc calc_track_scroll_delta
+.proc CalcTrackScrollDelta
         lda     window_height   ; ceil(height / 50)
         ldx     #0
 loop:   inx
@@ -744,7 +744,7 @@ loop:   inx
 ;;; UI Helpers
 
         ;; Used at start of thumb EventKind::drag
-.proc do_trackthumb
+.proc DoTrackthumb
         copy16  event_params::mousex, trackthumb_params::mousex
         lda     event_params::mousey
         sta     trackthumb_params::mousey
@@ -753,7 +753,7 @@ loop:   inx
 .endproc
 
 ;;; Checks button state; z clear if button was released, set otherwise
-.proc was_button_released
+.proc WasButtonReleased
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params
         cmp     #2
@@ -761,11 +761,11 @@ loop:   inx
 .endproc
 
 ;;; only used from hscroll code?
-.proc adjust_box_width
+.proc AdjustBoxWidth
 
         res := $06
         lda     winfo::hthumbpos
-        jsr     mul_by_16
+        jsr     MulBy16
         clc
         lda     res
         sta     winfo::maprect::x1
@@ -778,12 +778,12 @@ loop:   inx
         rts
 .endproc
 
-.proc update_voffset
+.proc UpdateVOffset
         lda     #0
         sta     winfo::maprect::y1
         sta     winfo::maprect::y1+1
         ldx     updatethumb_params::thumbpos
-loop:   beq     adjust_box_height
+loop:   beq     AdjustBoxHeight
         clc
         lda     winfo::maprect::y1
         adc     #50
@@ -794,7 +794,7 @@ loop:   beq     adjust_box_height
         jmp     loop
 .endproc
 
-.proc adjust_box_height
+.proc AdjustBoxHeight
         clc
         lda     winfo::maprect::y1
         adc     window_height
@@ -802,7 +802,7 @@ loop:   beq     adjust_box_height
         lda     winfo::maprect::y1+1
         adc     window_height+1
         sta     winfo::maprect::y2+1
-        jsr     calc_line_position
+        jsr     CalcLinePosition
         lda     #0
         sta     first_visible_line
         sta     first_visible_line+1
@@ -819,39 +819,39 @@ loop:   beq     end
 end:    rts
 .endproc
 
-.proc update_hscroll
+.proc UpdateHScroll
         lda     #2
         sta     updatethumb_params::which_ctl
 
         val := $06
         copy16  winfo::maprect::x1, val
-        jsr     div_by_16
+        jsr     DivBy16
         sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 .endproc
 
-.proc update_vscroll            ; updatethumb_params::thumbpos set by caller
+.proc UpdateVScroll       ; updatethumb_params::thumbpos set by caller
         lda     #1
         sta     updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 .endproc
 
-.proc finish_resize             ; only called from dead code
+.proc FinishResize              ; only called from dead code
         MGTK_CALL MGTK::SetPort, winfo::port
         lda     winfo::hscroll
         ror     a               ; check if low bit (track enabled) is set
         bcc     :+
-        jsr     update_hscroll
+        jsr     UpdateHScroll
 :       lda     winfo::vthumbpos
         sta     updatethumb_params::thumbpos
-        jsr     update_vscroll
-        jsr     draw_content
-        jmp     input_loop
+        jsr     UpdateVScroll
+        jsr     DrawContent
+        jmp     InputLoop
 .endproc
 
-.proc clear_window
+.proc ClearWindow
         MGTK_CALL MGTK::SetPattern, white_pattern
         MGTK_CALL MGTK::PaintRect, winfo::maprect::x1
         MGTK_CALL MGTK::SetPattern, black_pattern
@@ -861,7 +861,7 @@ end:    rts
 ;;; ============================================================
 ;;; Content Rendering
 
-.proc draw_content
+.proc DrawContent
         ptr := $06
 
         lda     #0
@@ -874,7 +874,7 @@ end:    rts
         MGTK_CALL MGTK::SetFont, fixed_font
     END_IF
 
-        jsr     set_file_mark
+        jsr     SetFileMark
         lda     #<default_buffer
         sta     read_params::data_buffer
         sta     ptr
@@ -891,7 +891,7 @@ end:    rts
         sta     visible_flag
         lda     #kLineSpacing
         sta     line_pos::base
-        jsr     reset_line
+        jsr     ResetLine
 
 do_line:
         lda     current_line+1
@@ -900,7 +900,7 @@ do_line:
         lda     current_line
         cmp     first_visible_line
         bne     :+
-        jsr     clear_window
+        jsr     ClearWindow
         inc     visible_flag
 :
         ;; Position cursor, update remaining width
@@ -914,7 +914,7 @@ moveto: MGTK_CALL MGTK::MoveTo, line_pos
         sta     remaining_width+1
 
         ;; Identify next run of characters
-        jsr     find_text_run
+        jsr     FindTextRun
         bcs     done
 
         ;; Update pointer into buffer for next time
@@ -936,7 +936,7 @@ moveto: MGTK_CALL MGTK::MoveTo, line_pos
         sta     line_pos::base
         bcc     :+
         inc     line_pos::base+1
-:       jsr     reset_line
+:       jsr     ResetLine
 
         ;; Have we drawn all visible lines?
         lda     current_line
@@ -960,7 +960,7 @@ done:   MGTK_CALL MGTK::SetFont, DEFAULT_FONT
 ;;; Input: A = character
 ;;; Output: A = width
 
-.proc get_char_width
+.proc GetCharWidth
         tay
         lda     fixed_mode_flag
     IF_ZERO
@@ -973,7 +973,7 @@ done:   MGTK_CALL MGTK::SetFont, DEFAULT_FONT
 
 ;;; ============================================================
 
-.proc reset_line
+.proc ResetLine
         copy16  #kWrapWidth, remaining_width
         copy16  #3, line_pos::left
         sta     tab_flag        ; reset
@@ -982,7 +982,7 @@ done:   MGTK_CALL MGTK::SetFont, DEFAULT_FONT
 
 ;;; ============================================================
 
-.proc find_text_run
+.proc FindTextRun
         ptr := $06
 
         lda     #$FF
@@ -998,18 +998,18 @@ loop:   lda     L0945
         bne     more
         lda     L0947
         beq     :+
-        jsr     draw_text_run
+        jsr     DrawTextRun
         sec
         rts
 
-:       jsr     ensure_page_buffered
+:       jsr     EnsurePageBuffered
 more:   ldy     drawtext_params::textlen
         lda     (ptr),y
         and     #CHAR_MASK
         sta     (ptr),y
         inc     L0945
         cmp     #CHAR_RETURN
-        beq     finish_text_run
+        beq     FinishTextRun
         cmp     #' '
         bne     :+
         sty     L0F9B
@@ -1019,9 +1019,9 @@ more:   ldy     drawtext_params::textlen
         pla
 :       cmp     #CHAR_TAB
         bne     :+
-        jmp     handle_tab
+        jmp     HandleTab
 
-:       jsr     get_char_width
+:       jsr     GetCharWidth
         clc
         adc     run_width
         sta     run_width
@@ -1050,10 +1050,10 @@ more:   ldy     drawtext_params::textlen
         ;; fall through
 .endproc
 
-.proc finish_text_run
+.proc FinishTextRun
         ptr := $06
 
-        jsr     draw_text_run
+        jsr     DrawTextRun
         ldy     drawtext_params::textlen
         lda     (ptr),y
         cmp     #CHAR_TAB
@@ -1070,7 +1070,7 @@ tab:    inc     drawtext_params::textlen
 L0F9B:  .byte   0
 run_width:  .word   0
 
-.proc handle_tab
+.proc HandleTab
         lda     #1
         sta     tab_flag
         clc
@@ -1093,10 +1093,10 @@ loop:   lda     times70+1,x
         beq     done
         jmp     loop
 :       copy16  times70,x, line_pos::left
-        jmp     finish_text_run
+        jmp     FinishTextRun
 done:   lda     #0
         sta     tab_flag
-        jmp     finish_text_run
+        jmp     FinishTextRun
 
 times70:.word   70
         .word   140
@@ -1110,7 +1110,7 @@ times70:.word   70
 ;;; ============================================================
 ;;; Draw a line of content
 
-.proc draw_text_run
+.proc DrawTextRun
         lda     visible_flag    ; skip if not in visible range
         beq     end
         lda     drawtext_params::textlen
@@ -1123,7 +1123,7 @@ end:    rts
 
 ;;; ============================================================
 
-.proc ensure_page_buffered
+.proc EnsurePageBuffered
         ptr := $06
 
         ;; Pointing at second page already?
@@ -1144,7 +1144,7 @@ loop:   lda     default_buffer+$100,y
         ;; Read into second page.
 read:   lda     #0
         sta     L0945
-        jsr     read_file_page
+        jsr     ReadFilePage
         lda     read_params::data_buffer+1
         cmp     #>default_buffer
         bne     :+
@@ -1154,7 +1154,7 @@ read:   lda     #0
 
 ;;; ============================================================
 
-.proc read_file_page
+.proc ReadFilePage
         copy16  read_params::data_buffer, @store_addr
 
         lda     #' '            ; fill buffer with spaces
@@ -1169,7 +1169,7 @@ store:  sta     default_buffer,x         ; self-modified
         sta     RAMWRTON        ; read file chunk
         lda     #0
         sta     L0947
-        jsr     read_file
+        jsr     ReadFile
 
         pha                     ; copy read buffer main>aux
         lda     #$00
@@ -1194,7 +1194,7 @@ done:   lda     #1
 end:    rts
 .endproc
 
-.proc calc_window_size
+.proc CalcWindowSize
         sec
         lda     winfo::maprect::x2
         sbc     winfo::maprect::x1
@@ -1212,7 +1212,7 @@ end:    rts
 
 ;;; ============================================================
 
-.proc calc_line_position
+.proc CalcLinePosition
         copy16  winfo::maprect::y2, y_remaining
 
         lda     #0
@@ -1241,7 +1241,7 @@ end:    rts
 
 ;;; ============================================================
 
-.proc div_by_16                 ; input in $06/$07, output in a
+.proc DivBy16                   ; input in $06/$07, output in a
         val := $06
 
         ldx     #4
@@ -1254,7 +1254,7 @@ loop:   clc
         rts
 .endproc
 
-.proc mul_by_16                 ; input in a, output in $06/$07
+.proc MulBy16                   ; input in a, output in $06/$07
         res := $06
 
         sta     res
@@ -1269,7 +1269,7 @@ loop:   clc
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         TRAMP_CALL JUMP_TABLE_CLEAR_UPDATES
         rts
 .endproc
@@ -1278,25 +1278,25 @@ loop:   clc
 ;;; ============================================================
 ;;; Title Bar (Proportional/Fixed mode button)
 
-.proc on_title_bar_click
+.proc OnTitleBarClick
         lda     event_params::mousex+1           ; mouse x high byte?
         cmp     mode_mapinfo_viewloc_xcoord+1
         bne     :+
         lda     event_params::mousex
         cmp     mode_mapinfo_viewloc_xcoord
-:       bcs     toggle_mode
+:       bcs     ToggleMode
         clc                     ; Click ignored
         rts
 .endproc
 
-.proc toggle_mode
+.proc ToggleMode
         ;; Toggle the state and redraw
         lda     fixed_mode_flag
         eor     #$FF
         sta     fixed_mode_flag
 
-        jsr     draw_mode
-        jsr     draw_content
+        jsr     DrawMode
+        jsr     DrawContent
         sec                     ; Click consumed
         rts
 .endproc
@@ -1327,7 +1327,7 @@ window_id:      .byte   kDAWindowId
 
 ;;; ============================================================
 
-.proc calc_and_draw_mode
+.proc CalcAndDrawMode
 
         MGTK_CALL MGTK::GetWinFrameRect, winframerect_params
 
@@ -1337,7 +1337,7 @@ window_id:      .byte   kDAWindowId
         ;; fall through...
 .endproc
 
-.proc draw_mode
+.proc DrawMode
         ;; Set up port
         MGTK_CALL MGTK::SetPortBits, mode_mapinfo
 

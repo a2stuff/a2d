@@ -20,7 +20,7 @@ filename_buffer:
         DEFINE_WRITE_PARAMS write_params, write_buffer, .sizeof(DeskTopSettings)
         DEFINE_CLOSE_PARAMS close_params
 
-.proc save_settings
+.proc SaveSettings
         ;; Run from Main, but with LCBANK1 in
 
         ;; Copy from LCBANK to somewhere ProDOS can read.
@@ -30,7 +30,7 @@ filename_buffer:
         ldax    #filename
         stax    create_params::pathname
         stax    open_params::pathname
-        jsr     do_write
+        jsr     DoWrite
 
         ;; Write to the original file location, if necessary
         jsr     GetCopiedToRAMCardFlag
@@ -39,9 +39,9 @@ filename_buffer:
         stax    create_params::pathname
         stax    open_params::pathname
         jsr     CopyDeskTopOriginalPrefix
-        jsr     append_filename
+        jsr     AppendFilename
         copy    #0, second_try_flag
-@retry: jsr     do_write
+@retry: jsr     DoWrite
         bcc     done
 
         ;; First time - ask if we should even try.
@@ -63,7 +63,7 @@ done:   rts
 second_try_flag:
         .byte   0
 
-.proc append_filename
+.proc AppendFilename
         ;; Append filename to buffer
         inc     filename_buffer ; Add '/' separator
         ldx     filename_buffer
@@ -82,7 +82,7 @@ second_try_flag:
         rts
 .endproc
 
-.proc do_write
+.proc DoWrite
         ;; Create if necessary
         copy16  DATELO, create_params::create_date
         copy16  TIMELO, create_params::create_time

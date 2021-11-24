@@ -10,7 +10,7 @@
 ;;;    `str_time` to populate
 ;;;    `str_4_spaces`
 
-.proc show_clock_impl
+.proc ShowClockImpl
 ;;; Entry point: force an update, even if time hasn't changed
 force_update:
         copy    #$80, force_flag
@@ -58,14 +58,14 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
 
         copy16  #parsed_date, $0A
         ldax    #DATELO
-        jsr     parse_datetime
+        jsr     ParseDatetime
 
         ;; TODO: Make DOW calc work on ParsedDateTime
         sub16   parsed_date + ParsedDateTime::year, #1900, parsed_date + ParsedDateTime::year
         ldy     parsed_date + ParsedDateTime::year
         ldx     parsed_date + ParsedDateTime::month
         lda     parsed_date + ParsedDateTime::day
-        jsr     day_of_week
+        jsr     DayOfWeek
         asl                     ; * 4
         asl
         clc
@@ -80,7 +80,7 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         ;; Time
 
         ldax    #parsed_date
-        jsr     make_time_string
+        jsr     MakeTimeString
 
         param_call DrawString, str_time
         param_call DrawString, str_4_spaces ; in case it got shorter
@@ -99,5 +99,5 @@ last_s: .byte   0               ; previous settings
 force_flag:
         .byte   0               ; force update if high bit set
 .endproc
-show_clock := show_clock_impl::normal
-show_clock_force_update := show_clock_impl::force_update
+ShowClock := ShowClockImpl::normal
+ShowClockForceUpdate := ShowClockImpl::force_update

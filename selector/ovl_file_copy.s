@@ -11,18 +11,18 @@
 .scope file_copier
 exec:
         sta     LA027
-        jsr     open_window
+        jsr     OpenWindow
         lda     LA027
-        jsr     app::get_selector_list_path_addr
+        jsr     app::GetSelectorListPathAddr
         jsr     LA802
         jsr     LA6BD
-        jsr     draw_window_content
+        jsr     DrawWindowContent
         lda     LA027
-        jsr     app::get_selector_list_path_addr
+        jsr     app::GetSelectorListPathAddr
         jsr     LA802
         jsr     LA3F6
         pha
-        jsr     close_window
+        jsr     CloseWindow
         pla
         rts
 
@@ -80,7 +80,7 @@ buf_dir_header:
 
 addr_table:
 
-LA0EC:  .word   do_copy
+LA0EC:  .word   DoCopy
 LA0EE:  .word   LA4FC
 LA0F0:  .word   LA0F2
 
@@ -112,7 +112,7 @@ entry_index_in_block:   .byte   0
 
 ;;; ============================================================
 
-.proc push_index_to_stack
+.proc PushIndexToStack
         ldx     stack_index
         lda     target_index
         sta     index_stack,x
@@ -126,7 +126,7 @@ entry_index_in_block:   .byte   0
 
 ;;; ============================================================
 
-.proc pop_index_from_stack
+.proc PopIndexFromStack
         ldx     stack_index
         dex
         lda     index_stack,x
@@ -140,41 +140,41 @@ entry_index_in_block:   .byte   0
 
 ;;; ============================================================
 
-.proc open_src_dir
+.proc OpenSrcDir
         lda     #$00
         sta     entry_index_in_dir
         sta     entry_index_in_dir+1
         sta     entry_index_in_block
         MLI_CALL OPEN, open_params
         beq     l1
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 l1:     lda     open_params::ref_num
         sta     ref_num
         sta     read_block_pointers_params::ref_num
         MLI_CALL READ, read_block_pointers_params
         beq     l2
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
-l2:     jsr     read_file_entry
+l2:     jsr     ReadFileEntry
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc do_close_file
+.proc DoCloseFile
         lda     ref_num
         sta     close_params::ref_num
         MLI_CALL CLOSE, close_params
         beq     l1
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 l1:     rts
 .endproc
 
 ;;; ============================================================
 
-.proc read_file_entry
+.proc ReadFileEntry
         inc16   entry_index_in_dir
 
         ;; Skip entry
@@ -184,7 +184,7 @@ l1:     rts
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 :
         ;; TODO: Could AdjustFileEntryCase here
 
@@ -200,7 +200,7 @@ l1:     rts
         sta     read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
         beq     :+
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 :
 
 done:   return  #0
@@ -210,30 +210,30 @@ eof:    return  #$FF
 
 ;;; ============================================================
 
-.proc descend_directory
+.proc DescendDirectory
         copy16  entry_index_in_dir, target_index
-        jsr     do_close_file
-        jsr     push_index_to_stack
+        jsr     DoCloseFile
+        jsr     PushIndexToStack
         jsr     LA75D
-        jsr     open_src_dir
+        jsr     OpenSrcDir
         rts
 .endproc
 
-.proc ascend_directory
-        jsr     do_close_file
+.proc AscendDirectory
+        jsr     DoCloseFile
         jsr     LA3E9
         jsr     LA782
-        jsr     pop_index_from_stack
-        jsr     open_src_dir
-        jsr     advance_to_target_entry
+        jsr     PopIndexFromStack
+        jsr     OpenSrcDir
+        jsr     AdvanceToTargetEntry
         jsr     LA3E6
         rts
 .endproc
 
-.proc advance_to_target_entry
+.proc AdvanceToTargetEntry
 :       cmp16   entry_index_in_dir, target_index
         beq     :+
-        jsr     read_file_entry
+        jsr     ReadFileEntry
         jmp     :-
 
 :       rts
@@ -241,11 +241,11 @@ eof:    return  #$FF
 
 ;;; ============================================================
 
-.proc copy_directory
+.proc CopyDirectory
         lda     #$00
         sta     recursion_depth
-        jsr     open_src_dir
-l1:     jsr     read_file_entry
+        jsr     OpenSrcDir
+l1:     jsr     ReadFileEntry
         bne     l2
         lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
         beq     l1
@@ -261,17 +261,17 @@ l1:     jsr     read_file_entry
         lda     buf_dir_header+SubdirectoryHeader::reserved-4
         cmp     #$0F
         bne     l1
-        jsr     descend_directory
+        jsr     DescendDirectory
         inc     recursion_depth
         jmp     l1
 
 l2:     lda     recursion_depth
         beq     l3
-        jsr     ascend_directory
+        jsr     AscendDirectory
         dec     recursion_depth
         jmp     l1
 
-l3:     jsr     do_close_file
+l3:     jsr     DoCloseFile
         rts
 .endproc
 
@@ -291,7 +291,7 @@ LA3EC:  .byte   0
         .byte   0
 
 
-LA3F0:  .addr   do_copy
+LA3F0:  .addr   DoCopy
         .addr   LA4FC
         .addr   LA0F2
 
@@ -310,7 +310,7 @@ LA3F8:  lda     LA3F0,y
         jsr     LA7D9
         MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     LA41B
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA41B:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, LA4F3
         cmp16   LA4F3, blocks_total
@@ -345,10 +345,10 @@ LA475:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA488
         cmp     #ERR_FILE_NOT_FOUND
         bne     LA48E
-LA488:  jsr     show_insert_source_disk_alert
+LA488:  jsr     ShowInsertSourceDiskAlert
         jmp     LA475           ; retry
 
-LA48E:  jmp     handle_error_code
+LA48E:  jmp     HandleErrorCode
 
 LA491:  lda     get_file_info_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
@@ -388,18 +388,18 @@ LA4BF:  ldy     #(get_file_info_params2::create_time+1 - get_file_info_params2)
         sta     create_params::storage_type
 LA4DB:  MLI_CALL CREATE, create_params
         beq     LA4E9
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA4E9:  lda     is_dir_flag
         beq     LA4F5
-        jmp     copy_directory
+        jmp     CopyDirectory
 
         .byte   0
         rts
 
 LA4F3:  .byte   0
         .byte   0
-LA4F5:  jmp     copy_dir
+LA4F5:  jmp     CopyDir
 
 is_dir_flag:
         .byte   0
@@ -417,7 +417,7 @@ LA4FC:  jmp     LA7C0
 
 ;;; ============================================================
 
-.proc do_copy
+.proc DoCopy
         lda     buf_dir_header+SubdirectoryHeader::reserved-4
         cmp     #$0F
         bne     LA536
@@ -425,7 +425,7 @@ LA4FC:  jmp     LA7C0
         jsr     draw_window_content_ep2
         MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA528
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA51A:  jsr     LA7C0
         jsr     LA782
@@ -444,7 +444,7 @@ LA536:  jsr     LA79B
         jsr     draw_window_content_ep2
         MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA54D
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA54D:  jsr     LA56D
         bcc     LA555
@@ -454,7 +454,7 @@ LA555:  jsr     LA782
         jsr     LA69A
         bcs     LA56A
         jsr     LA75D
-        jsr     copy_dir
+        jsr     CopyDir
         jsr     LA782
         jsr     LA7C0
 LA569:  rts
@@ -467,7 +467,7 @@ LA569:  rts
 LA56A:  jsr     LA7C0
 LA56D:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA57B
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA57B:  lda     #$00
         sta     LA60E
@@ -476,7 +476,7 @@ LA57B:  lda     #$00
         beq     LA595
         cmp     #ERR_FILE_NOT_FOUND
         beq     LA5A1
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA595:  copy16  get_file_info_params::blocks_used, LA60E
 LA5A1:  lda     pathname_dst
@@ -493,7 +493,7 @@ LA5A9:  iny
         sta     LA60D
         MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     LA5CB
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA5CB:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, LA60A
         sub16   LA60A, LA60E, LA60A
@@ -514,13 +514,13 @@ LA60F:  .byte   0
 
 ;;; ============================================================
 
-.proc copy_dir
+.proc CopyDir
         MLI_CALL OPEN, open_params_src
         beq     LA61E
-        jsr     handle_error_code
+        jsr     HandleErrorCode
 LA61E:  MLI_CALL OPEN, open_params_dst
         beq     LA62C
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA62C:  lda     open_params_src::ref_num
         sta     read_params_src::ref_num
@@ -533,14 +533,14 @@ LA63E:  copy16  #kDirCopyBufSize, read_params_src::request_count
         beq     LA65A
         cmp     #ERR_END_OF_FILE
         beq     LA687
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA65A:  copy16  read_params_src::trans_count, write_params_dst::request_count
         ora     read_params_src::trans_count
         beq     LA687
         MLI_CALL WRITE, write_params_dst
         beq     LA679
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA679:  lda     write_params_dst::trans_count
         cmp     #<kDirCopyBufSize
@@ -565,7 +565,7 @@ LA69C:  lda     get_file_info_params2,x
         MLI_CALL CREATE, create_params2
         clc
         beq     LA6B6
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA6B6:  rts
 
@@ -599,10 +599,10 @@ LA6E3:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA6F6
         cmp     #ERR_FILE_NOT_FOUND
         bne     LA6FC
-LA6F6:  jsr     show_insert_source_disk_alert
+LA6F6:  jsr     ShowInsertSourceDiskAlert
         jmp     LA6E3           ; retry
 
-LA6FC:  jmp     handle_error_code
+LA6FC:  jmp     HandleErrorCode
 
 LA6FF:  lda     get_file_info_params2::storage_type
         sta     storage_type
@@ -615,7 +615,7 @@ LA6FF:  lda     get_file_info_params2::storage_type
 LA711:  lda     #$FF
 LA713:  sta     is_dir_flag
         beq     LA725
-        jsr     copy_directory
+        jsr     CopyDirectory
         lda     storage_type
         cmp     #ST_VOLUME_DIRECTORY
         bne     LA725
@@ -626,7 +626,7 @@ LA713:  sta     is_dir_flag
         ;; off-by-one.
         ;; https://github.com/a2stuff/a2d/issues/564
         inc16   file_count
-        jsr     update_file_count_display
+        jsr     UpdateFileCountDisplay
 
         rts
 
@@ -651,7 +651,7 @@ LA728:  rts
         add16   blocks_total, get_file_info_params2::blocks_used, blocks_total
 :       inc16   file_count
         jsr     LA782
-        jsr     update_file_count_display
+        jsr     UpdateFileCountDisplay
         rts
 .endproc
 
@@ -905,10 +905,10 @@ str_space:
 
 ;;; ============================================================
 
-.proc open_window
+.proc OpenWindow
         MGTK_CALL MGTK::OpenWindow, winfo
         lda     winfo::window_id
-        jsr     app::get_window_port
+        jsr     app::GetWindowPort
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::FrameRect, rect_frame1
         MGTK_CALL MGTK::FrameRect, rect_frame2
@@ -919,9 +919,9 @@ str_space:
 
 ;;; ============================================================
 
-.proc draw_window_content
+.proc DrawWindowContent
         lda     winfo::window_id
-        jsr     app::get_window_port
+        jsr     app::GetWindowPort
         MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
 
@@ -932,7 +932,7 @@ ep2:    dec     file_count
         dec     file_count+1
 :
 
-        jsr     populate_count
+        jsr     PopulateCount
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_count
@@ -947,11 +947,11 @@ ep2:    dec     file_count
         param_call app::DrawString, str_spaces
         rts
 .endproc
-        draw_window_content_ep2 := draw_window_content::ep2
+        draw_window_content_ep2 := DrawWindowContent::ep2
 ;;; ============================================================
 
-.proc update_file_count_display
-        jsr     populate_count
+.proc UpdateFileCountDisplay
+        jsr     PopulateCount
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_files_to_copy
@@ -962,20 +962,20 @@ ep2:    dec     file_count
 
 ;;; ============================================================
 
-.proc show_insert_source_disk_alert
+.proc ShowInsertSourceDiskAlert
         lda     #AlertID::insert_source_disk
         jsr     app::ShowAlert
         bne     :+              ; `kAlertResultCancel` = 1
-        jsr     app::set_watch_cursor ; try again
+        jsr     app::SetWatchCursor ; try again
         rts
 
-:       jmp     restore_stack_and_return
+:       jmp     RestoreStackAndReturn
 .endproc
 
 ;;; ============================================================
 
 LAACB:  lda     winfo::window_id
-        jsr     app::get_window_port
+        jsr     app::GetWindowPort
         MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
         MGTK_CALL MGTK::MoveTo, pos_copying
@@ -986,14 +986,14 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call app::DrawString, app::ok_button_label
-        jsr     set_pointer_cursor
-        jmp     restore_stack_and_return
+        jsr     SetPointerCursor
+        jmp     RestoreStackAndReturn
 
 ;;; ============================================================
 
-.proc handle_error_code
+.proc HandleErrorCode
         lda     winfo::window_id
-        jsr     app::get_window_port
+        jsr     app::GetWindowPort
         MGTK_CALL MGTK::SetPenMode, app::pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
         MGTK_CALL MGTK::MoveTo, pos_copying
@@ -1004,14 +1004,14 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call app::DrawString, app::ok_button_label
-        jsr     set_pointer_cursor
-        jmp     restore_stack_and_return
+        jsr     SetPointerCursor
+        jmp     RestoreStackAndReturn
 .endproc
 
 ;;; ============================================================
 
-set_pointer_cursor:
-        jsr     app::set_pointer_cursor
+SetPointerCursor:
+        jsr     app::SetPointerCursor
 
 ;;; ============================================================
 
@@ -1019,21 +1019,21 @@ event_loop:
         MGTK_CALL MGTK::GetEvent, app::event_params
         lda     app::event_kind
         cmp     #MGTK::EventKind::button_down
-        beq     handle_button_down
+        beq     HandleButtonDown
         cmp     #MGTK::EventKind::key_down
         bne     event_loop
         lda     app::event_key
         cmp     #CHAR_RETURN
         bne     event_loop
         lda     winfo::window_id
-        jsr     app::get_window_port
+        jsr     app::GetWindowPort
         MGTK_CALL MGTK::SetPenMode, app::penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         MGTK_CALL MGTK::PaintRect, ok_button_rect
-        jsr     app::set_watch_cursor
+        jsr     app::SetWatchCursor
         rts
 
-handle_button_down:
+HandleButtonDown:
         MGTK_CALL MGTK::FindWindow, app::findwindow_params
         lda     app::findwindow_which_area
         beq     event_loop
@@ -1043,7 +1043,7 @@ handle_button_down:
         cmp     winfo::window_id
         bne     event_loop
         lda     winfo::window_id
-        jsr     app::get_window_port
+        jsr     app::GetWindowPort
         lda     winfo::window_id
         sta     app::screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, app::screentowindow_params
@@ -1055,7 +1055,7 @@ handle_button_down:
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     LABE6
         bmi     event_loop
-        jsr     app::set_watch_cursor
+        jsr     app::SetWatchCursor
         rts
 
 LABE6:  lda     #$00
@@ -1099,7 +1099,7 @@ LAC53:  .byte   0
 
 ;;; ============================================================
 
-.proc restore_stack_and_return
+.proc RestoreStackAndReturn
         ldx     saved_stack
         txs
         return  #$FF
@@ -1107,14 +1107,14 @@ LAC53:  .byte   0
 
 ;;; ============================================================
 
-.proc close_window
+.proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, winfo
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc populate_count
+.proc PopulateCount
         copy16  file_count, value
         ldx     #7
         lda     #' '

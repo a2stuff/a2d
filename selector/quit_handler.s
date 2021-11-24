@@ -95,7 +95,7 @@ start:
         bne     proceed
         MLI_CALL GET_PREFIX, get_prefix_params
         beq     install
-        jmp     error_handler
+        jmp     ErrorHandler
 
         ;; --------------------------------------------------
 
@@ -132,17 +132,17 @@ L10F2:  MLI_CALL SET_PREFIX, get_prefix_params
 
 :       MLI_CALL OPEN, open_params
         beq     :+
-        jmp     error_handler
+        jmp     ErrorHandler
 
 :       lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
         beq     :+
-        jmp     error_handler
+        jmp     ErrorHandler
 
 :       MLI_CALL CLOSE, close_params
         beq     :+
-        jmp     error_handler
+        jmp     ErrorHandler
 
 :       jmp     LOADER
 
@@ -187,7 +187,7 @@ irq_vector_stash:
 ;;; ============================================================
 ;;; Error Handler
 
-.proc error_handler
+.proc ErrorHandler
         sta     $06
         jmp     MONZ
 .endproc

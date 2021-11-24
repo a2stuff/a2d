@@ -41,8 +41,8 @@ start:
         dex
         bpl     :-
 
-        jsr     detect_mousetext
-        jsr     init_progress
+        jsr     DetectMousetext
+        jsr     InitProgress
 
         ;; Open up Selector itself
         MLI_CALL OPEN, open_params
@@ -61,19 +61,19 @@ L2049:  lda     open_params::ref_num
         MLI_CALL SET_MARK, set_mark_params
         beq     :+
         brk
-:       jsr     update_progress
+:       jsr     UpdateProgress
         MLI_CALL READ, read_params1
         beq     :+
         brk
-:       jsr     update_progress
+:       jsr     UpdateProgress
         MLI_CALL READ, read_params2
         beq     :+
         brk
-:       jsr     update_progress
+:       jsr     UpdateProgress
         MLI_CALL READ, read_params3
         beq     :+
         brk
-:       jsr     update_progress
+:       jsr     UpdateProgress
 
         ;; Copy Alert segment to Aux LC1
         sta     ALTZPON
@@ -103,7 +103,7 @@ L2049:  lda     open_params::ref_num
 
         MLI_CALL CLOSE, close_params
 
-        jsr     load_settings
+        jsr     LoadSettings
 
         ;; --------------------------------------------------
         ;; Invoke the Selector application
@@ -122,7 +122,7 @@ L2049:  lda     open_params::ref_num
         kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
         kProgressWidth = kProgressStops * kProgressTick
 
-.proc init_progress
+.proc InitProgress
         bit     supports_mousetext
         bpl     done
 
@@ -157,7 +157,7 @@ L2049:  lda     open_params::ref_num
 done:   rts
 .endproc
 
-.proc update_progress
+.proc UpdateProgress
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
@@ -185,7 +185,7 @@ count:  .byte   0
 ;;; Done by testing testing for a ROM signature.
 ;;; Output: Sets `supports_mousetext` to $80.
 
-.proc detect_mousetext
+.proc DetectMousetext
         lda     ZIDBYTE
         beq     enh    ; IIc/IIc+ have $00
         cmp     #$E0   ; IIe original has $EA, Enh. IIe, IIgs have $E0

@@ -10,10 +10,10 @@
 ;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)
 ;;; and invoke QUIT. Note that only $200 bytes are copied.
 
-.proc install_as_quit
+.proc InstallAsQuit
         .org $2000
 
-        src     := quit_routine
+        src     := QuitRoutine
         dst     := SELECTOR
 
         bit     LCBANK2
@@ -31,13 +31,13 @@ loop:   lda     src,y
         MLI_CALL QUIT, quit_params
 
         DEFINE_QUIT_PARAMS quit_params
-.endproc ; install_as_quit
+.endproc ; InstallAsQuit
 
 ;;; ============================================================
 ;;; New QUIT routine. Gets relocated to $1000 by ProDOS before
 ;;; being executed.
 
-.proc quit_routine
+.proc QuitRoutine
         .org    $1000
 self:
         jmp     start
@@ -209,7 +209,7 @@ crash:  sta     $6              ; Crash?
 prefix_buffer:
         .res    64, 0
 
-.endproc ; quit_routine
+.endproc ; QuitRoutine
 
 ;;; ============================================================
 ;;; This chunk is invoked at $2000 after the quit handler has been invoked
@@ -217,9 +217,9 @@ prefix_buffer:
 ;;; DeskTop application into various parts of main, aux, and bank-switched
 ;;; memory, then invokes the DeskTop initialization routine.
 
-.proc install_segments
+.proc InstallSegments
         ;; Pad to be at $200 into the file
-        .res    $200 - (.sizeof(install_as_quit) + .sizeof(quit_routine)), 0
+        .res    $200 - (.sizeof(InstallAsQuit) + .sizeof(QuitRoutine)), 0
 
         .org $2000
 
@@ -278,8 +278,8 @@ start:
         dex
         bpl     :-
 
-        jsr     detect_mousetext
-        jsr     init_progress
+        jsr     DetectMousetext
+        jsr     InitProgress
 
         ;; Open this system file
         MLI_CALL OPEN, open_params
@@ -294,7 +294,7 @@ start:
 :       lda     #0
         sta     segment_num
 
-loop:   jsr     update_progress
+loop:   jsr     UpdateProgress
         lda     segment_num
         cmp     num_segments
         bne     continue
@@ -303,7 +303,7 @@ loop:   jsr     update_progress
         MLI_CALL CLOSE, close_params
         beq     :+
         brk                     ; crash
-:       jsr     load_settings
+:       jsr     LoadSettings
 
         jmp     kSegmentInitializerAddress
 
@@ -320,9 +320,9 @@ continue:
         beq     next_segment    ; type 0 = main, so done
         cmp     #2
         beq     :+
-        jsr     aux_segment
+        jsr     AuxSegment
         jmp     next_segment
-:       jsr     banked_segment
+:       jsr     BankedSegment
 
 next_segment:
         inc     segment_num
@@ -331,7 +331,7 @@ next_segment:
 segment_num:  .byte   0
 
         ;; Handle bank-switched memory segment
-.proc banked_segment
+.proc BankedSegment
         src := $6
         dst := $8
 
@@ -398,7 +398,7 @@ vector_buf:
 .endproc
 
         ;; Handle aux memory segment
-.proc aux_segment
+.proc AuxSegment
         src := $6
         dst := $8
 
@@ -442,7 +442,7 @@ max_page:
         kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
         kProgressWidth = kProgressStops * kProgressTick
 
-.proc init_progress
+.proc InitProgress
         bit     supports_mousetext
         bpl     done
 
@@ -477,7 +477,7 @@ max_page:
 done:   rts
 .endproc
 
-.proc update_progress
+.proc UpdateProgress
         lda     #kProgressVtab
         jsr     VTABZ
         lda     #kProgressHtab
@@ -505,7 +505,7 @@ count:  .byte   0
 ;;; Done by testing testing for a ROM signature.
 ;;; Output: Sets `supports_mousetext` to $80.
 
-.proc detect_mousetext
+.proc DetectMousetext
         lda     ZIDBYTE
         beq     enh    ; IIc/IIc+ have $00
         cmp     #$E0   ; IIe original has $EA, Enh. IIe, IIgs have $E0
@@ -527,8 +527,8 @@ supports_mousetext:
 ;;; ============================================================
 
         PAD_TO $2380
-.endproc ; install_segments
+.endproc ; InstallSegments
 
 ;;; ============================================================
 
-        .assert .sizeof(install_as_quit) + .sizeof(quit_routine) + .sizeof(install_segments) = $580, error, "Size mismatch"
+        .assert .sizeof(InstallAsQuit) + .sizeof(QuitRoutine) + .sizeof(InstallSegments) = $580, error, "Size mismatch"

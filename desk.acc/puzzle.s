@@ -18,7 +18,7 @@
 
         .org DA_LOAD_ADDRESS
 
-        jmp     copy2aux
+        jmp     Copy2Aux
 
         .res    36, 0
 
@@ -26,11 +26,11 @@
 ;;; Copy the DA to AUX and invoke it
 
 stash_stack:  .byte   0
-.proc copy2aux
+.proc Copy2Aux
         tsx
         stx     stash_stack
 
-        start := enter_da
+        start := EnterDA
         end := last
 
         copy16  #start, STARTLO
@@ -39,7 +39,7 @@ stash_stack:  .byte   0
         sec                     ; main>aux
         jsr     AUXMOVE
 
-        copy16  #enter_da, XFERSTARTLO
+        copy16  #EnterDA, XFERSTARTLO
         php
         pla
         ora     #$40            ; set overflow: use aux zp/stack
@@ -52,16 +52,16 @@ stash_stack:  .byte   0
 ;;; ============================================================
 ;;; Set up / tear down
 
-.proc exit_da
+.proc ExitDA
         ldx     stash_stack
         txs
         rts
 .endproc
 
-.proc enter_da
+.proc EnterDA
         lda     #0
         sta     $08
-        jmp     create_window
+        jmp     CreateWindow
 .endproc
 
         kDAWindowId = 51
@@ -82,7 +82,7 @@ redraw_window:
         lda     getwinport_params_window_id
         cmp     #kDAWindowId
         bne     :+
-        jmp     draw_window
+        jmp     DrawWindow
 
 :       rts
 
@@ -503,10 +503,10 @@ hole_y: .byte   0
 click_x:  .byte   $00
 click_y:  .byte   $00
 
-        ;; param for draw_row/draw_col
+        ;; param for DrawRow/DrawCol
 draw_rc:  .byte   $00
 
-        ;; params for draw_selected
+        ;; params for DrawSelected
 draw_end:  .byte   $00
 draw_inc:  .byte   $00
 
@@ -569,7 +569,7 @@ name:   PASCAL_STRING res_string_window_title  ; window title
 ;;; ============================================================
 ;;; Create the window
 
-.proc create_window
+.proc CreateWindow
         MGTK_CALL MGTK::OpenWindow, winfo
 
         ;; init pieces
@@ -584,7 +584,7 @@ loop:   tya
         MGTK_CALL MGTK::FlushEvents
 
         ;; Scramble?
-.proc scramble
+.proc Scramble
         ldy     #3
 sloop:  tya
         pha
@@ -607,34 +607,34 @@ ploop:  lda     position_table+1,y
         stx     position_table+1
 .endproc
 
-        jsr     yield_loop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        beq     scramble
-        jsr     check_victory
-        bcs     scramble
-        jsr     draw_all
-        jsr     find_hole
+        beq     Scramble
+        jsr     CheckVictory
+        bcs     Scramble
+        jsr     DrawAll
+        jsr     FindHole
         ; fall through
 .endproc
 
 ;;; ============================================================
 ;;; Input loop and processing
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
         jsr     on_click
-        jmp     input_loop
+        jmp     InputLoop
 
         ;; key?
 :       cmp     #MGTK::EventKind::key_down
-        bne     input_loop
+        bne     InputLoop
         jsr     check_key
-        jmp     input_loop
+        jmp     InputLoop
 
         ;; click - where?
 on_click:
@@ -649,9 +649,9 @@ bail:   rts
         ;; client area?
 :       cmp     #MGTK::Area::content
         bne     :+
-        jsr     find_click_piece
+        jsr     FindClickPiece
         bcc     bail
-        jmp     process_click
+        jmp     ProcessClick
 
         ;; close port?
 :       cmp     #MGTK::Area::close_box
@@ -661,11 +661,11 @@ bail:   rts
         beq     bail
 destroy:
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        jsr     clear_updates
+        jsr     ClearUpdates
 
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jmp     exit_da
+        jmp     ExitDA
 
 
 
@@ -676,7 +676,7 @@ check_title:
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        jsr     clear_updates
+        jsr     ClearUpdates
         lda     #kDAWindowId
         jsr     redraw_window
         rts
@@ -691,7 +691,7 @@ check_key:
 :       rts
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -700,7 +700,7 @@ check_key:
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -712,7 +712,7 @@ check_key:
 ;;; ============================================================
 ;;; Map click to piece x/y
 
-.proc find_click_piece
+.proc FindClickPiece
         lda     #kDAWindowId
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -727,25 +727,25 @@ check_key:
         bcc     nope
         cmp     #kRow2+1
         bcs     :+
-        jsr     find_click_x
+        jsr     FindClickX
         bcc     nope
         lda     #0
         beq     yep
 :       cmp     #kRow3+1
         bcs     :+
-        jsr     find_click_x
+        jsr     FindClickX
         bcc     nope
         lda     #1
         bne     yep
 :       cmp     #kRow4+1
         bcs     :+
-        jsr     find_click_x
+        jsr     FindClickX
         bcc     nope
         lda     #2
         bne     yep
 :       cmp     #kRow4+kRowHeight+1
         bcs     nope
-        jsr     find_click_x
+        jsr     FindClickX
         bcc     nope
         lda     #3
 
@@ -757,7 +757,7 @@ nope:   clc
         rts
 .endproc
 
-.proc find_click_x
+.proc FindClickX
         cpx     #kCol1
         bcc     nope
         cpx     #kCol2
@@ -789,7 +789,7 @@ nope:   clc
 
         kHolePiece = 12
 
-.proc process_click
+.proc ProcessClick
 
         lda     #0
         ldy     hole_y
@@ -805,14 +805,14 @@ found:  sta     draw_rc
         tay
         lda     click_x
         cmp     hole_x
-        beq     click_in_col
+        beq     ClickInCol
         lda     click_y
         cmp     hole_y
-        beq     click_in_row
+        beq     ClickInRow
 
 miss:   rts                     ; Click on hole, or not row/col with hole
 
-.proc click_in_row
+.proc ClickInRow
         lda     click_x
         cmp     hole_x
         beq     miss
@@ -841,7 +841,7 @@ aloop:  lda     position_table+1,y
         beq     row
 .endproc
 
-.proc click_in_col
+.proc ClickInCol
         lda     click_y
         cmp     hole_y
         beq     miss
@@ -877,22 +877,22 @@ aloop:  lda     position_table+4,y
 
 col:    lda     #kHolePiece
         sta     position_table,y
-        jsr     draw_col
+        jsr     DrawCol
         jmp     done
 
 row:    lda     #kHolePiece
         sta     position_table,y
-        jsr     draw_row
+        jsr     DrawRow
 
-done:   jsr     check_victory
+done:   jsr     CheckVictory
         bcc     after_click
 
         ;; Yay! Play the sound 4 times
-.proc on_victory
+.proc OnVictory
         ldx     #4
 loop:   txa
         pha
-        jsr     play_sound
+        jsr     PlaySound
         pla
         tax
         dex
@@ -900,13 +900,13 @@ loop:   txa
 .endproc
 
 after_click:
-        jmp     find_hole
+        jmp     FindHole
 .endproc
 
 ;;; ============================================================
 ;;; Clear the background
 
-draw_window:
+DrawWindow:
         MGTK_CALL MGTK::SetPattern, pattern_speckles
         MGTK_CALL MGTK::PaintRect, paintrect_params
         MGTK_CALL MGTK::SetPattern, pattern_black
@@ -914,7 +914,7 @@ draw_window:
         MGTK_CALL MGTK::MoveTo, moveto_params
         MGTK_CALL MGTK::Line, line_params
 
-        jsr     draw_all
+        jsr     DrawAll
 
         lda     #kDAWindowId
         sta     getwinport_params::window_id
@@ -925,16 +925,16 @@ draw_window:
 ;;; ============================================================
 ;;; Draw pieces
 
-.proc draw_all
+.proc DrawAll
         ldy     #1
         sty     draw_inc
         dey
         lda     #16
         sta     draw_end
-        bne     draw_selected
+        bne     DrawSelected
 .endproc
 
-.proc draw_row                  ; row specified in draw_rc
+.proc DrawRow                   ; row specified in draw_rc
         lda     #1
         sta     draw_inc
         lda     draw_rc
@@ -942,10 +942,10 @@ draw_window:
         clc
         adc     #4
         sta     draw_end
-        bne     draw_selected
+        bne     DrawSelected
 .endproc
 
-.proc draw_col                  ; col specified in draw_rc
+.proc DrawCol                   ; col specified in draw_rc
         lda     #4
         sta     draw_inc
         ldy     hole_x
@@ -955,7 +955,7 @@ draw_window:
 .endproc
 
         ;; Draw pieces from A to draw_end, step draw_inc
-.proc draw_selected
+.proc DrawSelected
         tya
         pha
         MGTK_CALL MGTK::HideCursor
@@ -991,7 +991,7 @@ loop:   tya
 ;;; ============================================================
 ;;; Play sound
 
-.proc play_sound
+.proc PlaySound
         ldx     #$80
 loop1:  lda     #88
 loop2:  ldy     #27
@@ -1013,7 +1013,7 @@ delay2: dey
 ;;; Puzzle complete?
 
         ;; Returns with carry set if puzzle complete
-.proc check_victory             ; Allows for swapped indistinct pieces, etc.
+.proc CheckVictory        ; Allows for swapped indistinct pieces, etc.
         ;; 0/12 can be swapped
         lda     position_table
         beq     :+
@@ -1084,7 +1084,7 @@ nope:   clc
 ;;; ============================================================
 ;;; Find hole piece
 
-.proc find_hole
+.proc FindHole
         ldy     #15
 loop:   lda     position_table,y
         cmp     #kHolePiece

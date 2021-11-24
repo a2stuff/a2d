@@ -4,26 +4,26 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc file_copy_overlay
+.proc FileCopyOverlay
         .org $7000
 
-.proc init
-        jsr     file_dialog::open_window
-        jsr     draw_controls
-        jsr     file_dialog::device_on_line
-        jsr     file_dialog::read_dir
+.proc Init
+        jsr     file_dialog::OpenWindow
+        jsr     DrawControls
+        jsr     file_dialog::DeviceOnLine
+        jsr     file_dialog::ReadDir
         jsr     file_dialog::update_scrollbar
-        jsr     file_dialog::update_disk_name
-        jsr     file_dialog::draw_list_entries
-        jsr     install_source_callback_table
+        jsr     file_dialog::UpdateDiskName
+        jsr     file_dialog::DrawListEntries
+        jsr     InstallSourceCallbackTable
         jsr     file_dialog::jt_prep_path
         jsr     file_dialog::jt_redraw_input
 
         copy    #$FF, LD8EC
-        jmp     file_dialog::event_loop
+        jmp     file_dialog::EventLoop
 .endproc
 
-.proc install_source_callback_table
+.proc InstallSourceCallbackTable
         ldx     jt_source_filename
 :       lda     jt_source_filename+1,x
         sta     file_dialog::jump_table,x
@@ -44,12 +44,12 @@
         rts
 .endproc
 
-.proc draw_controls
+.proc DrawControls
         lda     winfo_file_dialog::window_id
-        jsr     file_dialog::set_port_for_window
-        param_call file_dialog::draw_title_centered, aux::label_copy_file
-        param_call file_dialog::draw_input1_label, file_dialog_res::source_filename_label
-        param_call file_dialog::draw_input2_label, file_dialog_res::destination_filename_label
+        jsr     file_dialog::SetPortForWindow
+        param_call file_dialog::DrawTitleCentered, aux::label_copy_file
+        param_call file_dialog::DrawInput1Label, file_dialog_res::source_filename_label
+        param_call file_dialog::DrawInput2Label, file_dialog_res::destination_filename_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
@@ -60,44 +60,44 @@
 
 jt_source_filename:
         .byte file_dialog::kJumpTableSize-1
-        jump_table_entry handle_ok_source
-        jump_table_entry handle_cancel
-        jump_table_entry file_dialog::blink_f1_ip
-        jump_table_entry file_dialog::redraw_f1
-        jump_table_entry file_dialog::strip_f1_path_segment
+        jump_table_entry HandleOkSource
+        jump_table_entry HandleCancel
+        jump_table_entry file_dialog::BlinkF1IP
+        jump_table_entry file_dialog::RedrawF1
+        jump_table_entry file_dialog::StripF1PathSegment
         jump_table_entry file_dialog::handle_f1_selection_change
-        jump_table_entry file_dialog::prep_path_buf0
-        jump_table_entry file_dialog::handle_f1_other_key
-        jump_table_entry file_dialog::handle_f1_delete_key
-        jump_table_entry file_dialog::handle_f1_left_key
-        jump_table_entry file_dialog::handle_f1_right_key
-        jump_table_entry file_dialog::handle_f1_meta_left_key
-        jump_table_entry file_dialog::handle_f1_meta_right_key
-        jump_table_entry file_dialog::handle_f1_click
+        jump_table_entry file_dialog::PrepPathBuf0
+        jump_table_entry file_dialog::HandleF1OtherKey
+        jump_table_entry file_dialog::HandleF1DeleteKey
+        jump_table_entry file_dialog::HandleF1LeftKey
+        jump_table_entry file_dialog::HandleF1RightKey
+        jump_table_entry file_dialog::HandleF1MetaLeftKey
+        jump_table_entry file_dialog::HandleF1MetaRightKey
+        jump_table_entry file_dialog::HandleF1Click
         .assert * - jt_source_filename = file_dialog::kJumpTableSize+1, error, "Table size error"
 
 jt_destination_filename:
         .byte file_dialog::kJumpTableSize-1
-        jump_table_entry handle_ok_destination
-        jump_table_entry handle_cancel_destination
-        jump_table_entry file_dialog::blink_f2_ip
-        jump_table_entry file_dialog::redraw_f2
-        jump_table_entry file_dialog::strip_f2_path_segment
+        jump_table_entry HandleOkDestination
+        jump_table_entry HandleCancelDestination
+        jump_table_entry file_dialog::BlinkF2IP
+        jump_table_entry file_dialog::RedrawF2
+        jump_table_entry file_dialog::StripF2PathSegment
         jump_table_entry file_dialog::handle_f2_selection_change
-        jump_table_entry file_dialog::prep_path_buf1
-        jump_table_entry file_dialog::handle_f2_other_key
-        jump_table_entry file_dialog::handle_f2_delete_key
-        jump_table_entry file_dialog::handle_f2_left_key
-        jump_table_entry file_dialog::handle_f2_right_key
-        jump_table_entry file_dialog::handle_f2_meta_left_key
-        jump_table_entry file_dialog::handle_f2_meta_right_key
-        jump_table_entry file_dialog::handle_f2_click
+        jump_table_entry file_dialog::PrepPathBuf1
+        jump_table_entry file_dialog::HandleF2OtherKey
+        jump_table_entry file_dialog::HandleF2DeleteKey
+        jump_table_entry file_dialog::HandleF2LeftKey
+        jump_table_entry file_dialog::HandleF2RightKey
+        jump_table_entry file_dialog::HandleF2MetaLeftKey
+        jump_table_entry file_dialog::HandleF2MetaRightKey
+        jump_table_entry file_dialog::HandleF2Click
         .assert * - jt_destination_filename = file_dialog::kJumpTableSize+1, error, "Table size error"
 
 ;;; ============================================================
 
-.proc handle_ok_source
-        jsr     file_dialog::move_ip_to_end_f1
+.proc HandleOkSource
+        jsr     file_dialog::MoveIPToEndF1
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
@@ -122,12 +122,12 @@ jt_destination_filename:
         sta     LD921
         lda     #$FF
         sta     selected_index
-        jsr     file_dialog::device_on_line
-        jsr     file_dialog::read_dir
+        jsr     file_dialog::DeviceOnLine
+        jsr     file_dialog::ReadDir
         jsr     file_dialog::update_scrollbar
-        jsr     file_dialog::update_disk_name
+        jsr     file_dialog::UpdateDiskName
 
-        jsr     file_dialog::draw_list_entries
+        jsr     file_dialog::DrawListEntries
 
         ldx     file_dialog::path_buf
 :       lda     file_dialog::path_buf,x
@@ -175,7 +175,7 @@ done:   jsr     file_dialog::jt_redraw_input
 
 ;;; ============================================================
 
-.proc handle_ok_destination
+.proc HandleOkDestination
         param_call file_dialog::L647C, path_buf0
         beq     :+
 err:    lda     #ERR_INVALID_PATHNAME
@@ -188,7 +188,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
         copy    #0, file_dialog::L50A8
         copy    #0, LD8EC
-        jsr     file_dialog::set_cursor_pointer
+        jsr     file_dialog::SetCursorPointer
         copy16  #path_buf0, $6
         copy16  #path_buf1, $8
         ldx     file_dialog::stash_stack
@@ -201,12 +201,12 @@ err:    lda     #ERR_INVALID_PATHNAME
 
 ;;; ============================================================
 
-.proc handle_cancel
+.proc HandleCancel
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
         lda     #0
         sta     LD8EC
-        jsr     file_dialog::set_cursor_pointer
+        jsr     file_dialog::SetCursorPointer
         ldx     file_dialog::stash_stack
         txs
         return  #$FF
@@ -214,8 +214,8 @@ err:    lda     #ERR_INVALID_PATHNAME
 
 ;;; ============================================================
 
-.proc handle_cancel_destination
-        jsr     file_dialog::move_ip_to_end_f2
+.proc HandleCancelDestination
+        jsr     file_dialog::MoveIPToEndF2
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
@@ -244,37 +244,37 @@ err:    lda     #ERR_INVALID_PATHNAME
 
         COPY_STRING path_buf0, file_dialog::path_buf
 
-        jsr     file_dialog::strip_path_segment
+        jsr     file_dialog::StripPathSegment
         bit     LD8F0
         bpl     L726D
-        jsr     file_dialog::device_on_line
+        jsr     file_dialog::DeviceOnLine
         lda     #0
-        jsr     file_dialog::scroll_clip_rect
-        jsr     file_dialog::read_dir
+        jsr     file_dialog::ScrollClipRect
+        jsr     file_dialog::ReadDir
         jsr     file_dialog::update_scrollbar
-        jsr     file_dialog::update_disk_name
-        jsr     file_dialog::draw_list_entries
+        jsr     file_dialog::UpdateDiskName
+        jsr     file_dialog::DrawListEntries
         jsr     file_dialog::jt_redraw_input
         jmp     L7295
 
 L726D:  lda     file_dialog::path_buf
         bne     L7281
-L7272:  jsr     file_dialog::device_on_line
+L7272:  jsr     file_dialog::DeviceOnLine
         lda     #$00
-        jsr     file_dialog::scroll_clip_rect
-        jsr     file_dialog::read_dir
+        jsr     file_dialog::ScrollClipRect
+        jsr     file_dialog::ReadDir
         lda     #$FF
         bne     L7289
-L7281:  jsr     file_dialog::read_dir
+L7281:  jsr     file_dialog::ReadDir
         bcs     L7272
         lda     LD921
 L7289:  sta     selected_index
         cmp     #$FF            ; if no selection...
         bne     :+              ; make scroll index 0
         lda     #$00
-:       jsr     file_dialog::update_scrollbar2
-        jsr     file_dialog::update_disk_name
-        jsr     file_dialog::draw_list_entries
+:       jsr     file_dialog::UpdateScrollbar2
+        jsr     file_dialog::UpdateDiskName
+        jsr     file_dialog::DrawListEntries
 L7295:  rts
 .endproc
 
@@ -282,4 +282,4 @@ L7295:  rts
 
         PAD_TO $7800
 
-.endproc ; file_copy_overlay
+.endproc ; FileCopyOverlay

@@ -33,7 +33,7 @@ da_start:
         ;; run the DA
         sta     RAMRDON         ; Run from Aux
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit
         sta     RAMRDOFF        ; Back to Main
@@ -275,7 +275,7 @@ is_iiecard_flag:
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         ;; --------------------------------------------------
         ;; Probe some ROM locations.
         bit     ROMIN2
@@ -301,27 +301,27 @@ is_iiecard_flag:
         ;; --------------------------------------------------
 
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         ;; fall through
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
+        bne     Exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        beq     handle_down
+        beq     HandleDown
         cmp     #MGTK::EventKind::key_down
-        beq     handle_key
+        beq     HandleKey
 
-        jsr     do_joystick
+        jsr     DoJoystick
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -330,7 +330,7 @@ is_iiecard_flag:
         rts
 .endproc
 
-.proc clear_updates
+.proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -339,53 +339,53 @@ is_iiecard_flag:
         rts
 .endproc
 
-.proc exit
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     clear_updates
+        jsr     ClearUpdates
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     exit
-        bne     input_loop
+        beq     Exit
+        bne     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bne     exit
+        bne     Exit
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bne     input_loop
+        bne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
+        beq     HandleDrag
         cmp     #MGTK::Area::content
-        beq     handle_click
-        jmp     input_loop
+        beq     HandleClick
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        bne     exit
-        jmp     input_loop
+        bne     Exit
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -394,21 +394,21 @@ common: bit     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        jsr     clear_updates
+        jsr     ClearUpdates
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 
 ;;; ============================================================
 
-.proc handle_click
+.proc HandleClick
         ;; no-op
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
@@ -421,7 +421,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
 ;;; ============================================================
 
-.proc draw_window
+.proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, winport_params
         cmp     #MGTK::Error::window_obscured
@@ -458,7 +458,7 @@ done:   MGTK_CALL MGTK::ShowCursor
 
 
 ;;; A,X = pos ptr, Z = checked
-.proc draw_radio_button
+.proc DrawRadioButton
         ptr := $06
 
         stax    ptr
@@ -499,9 +499,9 @@ checked:
         butn2   .byte
 .endstruct
 
-.proc do_joystick
+.proc DoJoystick
 
-        jsr     read_paddles
+        jsr     ReadPaddles
 
         ;; TODO: Visualize all 4 paddles.
 
@@ -573,17 +573,17 @@ changed:
         ldax    #joy_btn0
         ldy     curr+InputState::butn0
         cpy     #$80
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         ldax    #joy_btn1
         ldy     curr+InputState::butn1
         cpy     #$80
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         ldax    #joy_btn2
         ldy     curr+InputState::butn2
         cpy     #$80
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         MGTK_CALL MGTK::ShowCursor
 done:   rts
@@ -606,7 +606,7 @@ pdl1:   .byte   0
 pdl2:   .byte   0
 pdl3:   .byte   0
 
-.proc read_paddles
+.proc ReadPaddles
         ;; Slow down on IIgs
         bit     is_iigs_flag
         bpl     :+
@@ -629,7 +629,7 @@ pdl3:   .byte   0
 
         ;; Read all paddles
         ldx     #kNumPaddles - 1
-:       jsr     pread
+:       jsr     PRead
         tya
         sta     pdl0,x
         dex
@@ -649,7 +649,7 @@ pdl3:   .byte   0
 :
         rts
 
-.proc pread
+.proc PRead
         ;; Let any previous timer reset (but don't wait forever)
         ldy     #0
 :       dey

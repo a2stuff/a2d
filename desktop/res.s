@@ -26,14 +26,14 @@ notpenBIC:      .byte   7
 
 event_params := *
 event_kind := event_params + 0
-        ;; if kind is key_down
+        ;; if `kind` is key_down
 event_key := event_params + 1
 event_modifiers := event_params + 2
-        ;; if kind is no_event, button_down/up, drag, or apple_key:
+        ;; if `kind` is no_event, button_down/up, drag, or apple_key:
 event_coords := event_params + 1
 event_xcoord := event_params + 1
 event_ycoord := event_params + 3
-        ;; if kind is update:
+        ;; if `kind` is update:
 event_window_id := event_params + 1
 
 activatectl_params := *
@@ -942,7 +942,7 @@ devlst_backup:
 device_to_icon_map:
         .res    kMaxVolumes+1, 0 ; TODO: Why +1?
 
-;;; Path buffer for open_directory logic
+;;; Path buffer for OpenDirectory logic
 open_dir_path_buf:
         .res    kPathBufferSize, 0
 

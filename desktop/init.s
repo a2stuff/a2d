@@ -225,7 +225,7 @@ end:
         bmi     end
 
 found_ram:
-        jsr     remove_device
+        jsr     RemoveDevice
         ;; fall through
 
 end:
@@ -272,12 +272,12 @@ end:
 .scope
         ptr := $6
 
-        jsr     main::push_pointers
+        jsr     main::PushPointers
         copy16  #icon_entries, ptr
         ldx     #1
 loop:   cpx     #kMaxIconCount+1 ; allow up to the maximum
         bne     :+
-        jsr     main::pop_pointers
+        jsr     main::PopPointers
         jmp     end
 :       txa
         pha
@@ -318,14 +318,14 @@ loop:   sta     WINDOW_ENTRY_TABLES + $400,x         ; window 8, icon use map
         inx
         bne     loop
         sta     RAMWRTOFF
-        jmp     create_trash_icon
+        jmp     CreateTrashIcon
 .endscope
 
 ;;; ============================================================
 
 trash_name:  PASCAL_STRING res_string_trash_icon_name
 
-.proc create_trash_icon
+.proc CreateTrashIcon
         ptr := $6
 
         copy    #0, cached_window_id
@@ -335,7 +335,7 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
         jsr     AllocateIcon
         sta     trash_icon_num
         sta     cached_window_entry_list
-        jsr     main::icon_entry_lookup
+        jsr     main::IconEntryLookup
         stax    ptr
 
         ;; Trash is a drop target
@@ -367,7 +367,7 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
 
 ;;; See docs/Selector_List_Format.md for file format
 
-.proc load_selector_list
+.proc LoadSelectorList
         ptr1 := $6
         ptr2 := $8
 
@@ -379,7 +379,7 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
         MGTK_RELAY_CALL MGTK::CheckEvents
 
         copy    #0, L0A92
-        jsr     read_selector_list
+        jsr     ReadSelectorList
         bne     done
 
         lda     selector_list_data_buf
@@ -426,7 +426,7 @@ L0A7F:  lda     (ptr1),y
         inc     selector_menu
         jmp     L0A3B
 
-done:   jmp     calc_header_item_widths
+done:   jmp     CalcHeaderItemWidths
 
 L0A92:  .byte   0
 L0A93:  .byte   0
@@ -435,7 +435,7 @@ L0A93:  .byte   0
 ;;; --------------------------------------------------
 
 calc_data_addr:
-        jsr     main::a_times_16
+        jsr     main::ATimes16
         clc
         adc     #<(selector_list_data_buf+2)
         tay
@@ -446,7 +446,7 @@ calc_data_addr:
         rts
 
 calc_entry_addr:
-        jsr     main::a_times_16
+        jsr     main::ATimes16
         clc
         adc     #<run_list_entries
         tay
@@ -457,7 +457,7 @@ calc_entry_addr:
         rts
 
 calc_entry_str:
-        jsr     main::a_times_64
+        jsr     main::ATimes64
         clc
         adc     #<run_list_paths
         tay
@@ -468,7 +468,7 @@ calc_entry_str:
         rts
 
 calc_data_str:
-        jsr     main::a_times_64
+        jsr     main::ATimes64
         clc
         adc     #<(selector_list_data_buf+2 + $180)
         tay
@@ -488,10 +488,10 @@ str_selector_list:
         DEFINE_READ_PARAMS read_params, selector_list_data_buf, kSelectorListShortSize
         DEFINE_CLOSE_PARAMS close_params
 
-.proc read_selector_list
+.proc ReadSelectorList
         MLI_RELAY_CALL OPEN, open_params
         ;;         bne     done
-        bne     write_selector_list
+        bne     WriteSelectorList
 
         lda     open_params::ref_num
         sta     read_params::ref_num
@@ -503,7 +503,7 @@ done:   rts
         DEFINE_CREATE_PARAMS create_params, str_selector_list, ACCESS_DEFAULT, $F1
         DEFINE_WRITE_PARAMS write_params, selector_list_data_buf, kSelectorListShortSize
 
-.proc write_selector_list
+.proc WriteSelectorList
         ptr := $06
 
         ;; Clear buffer
@@ -535,21 +535,21 @@ done:   rts
 
 ;;; ============================================================
 
-.proc calc_header_item_widths
+.proc CalcHeaderItemWidths
         ;; Enough space for "123,456"
-        param_call main::measure_text1, str_from_int
+        param_call main::MeasureText1, str_from_int
         stax    dx
 
         ;; Width of "123,456 Items"
-        param_call main::measure_text1, str_items_suffix
+        param_call main::MeasureText1, str_items_suffix
         addax   dx, width_items_label
 
         ;; Width of "123,456K in disk"
-        param_call main::measure_text1, str_k_in_disk
+        param_call main::MeasureText1, str_k_in_disk
         addax   dx, width_k_in_disk_label
 
         ;; Width of "123,456K available"
-        param_call main::measure_text1, str_k_available
+        param_call main::MeasureText1, str_k_available
         addax   dx, width_k_available_label
 
         add16   width_k_in_disk_label, width_k_available_label, width_right_labels
@@ -768,7 +768,7 @@ end:
 ;;; ============================================================
 ;;; Populate volume icons and device names
 
-;;; TODO: Dedupe with cmd_check_drives
+;;; TODO: Dedupe with CmdCheckDrives
 
 .scope
         devname_ptr := $08
@@ -797,7 +797,7 @@ process_volume:
         inc     cached_window_entry_count
         inc     icon_count
         lda     DEVLST,y
-        jsr     main::create_volume_icon ; A = unit number, Y = device index
+        jsr     main::CreateVolumeIcon ; A = unit number, Y = device index
         sta     cvi_result
         MGTK_RELAY_CALL MGTK::CheckEvents
 
@@ -822,7 +822,7 @@ process_volume:
         jsr     main::IsDiskII
         beq     select_template ; skip
         ldx     device_index
-        jsr     remove_device
+        jsr     RemoveDevice
         jmp     next
 
 :       cmp     #ERR_DUPLICATE_VOLUME
@@ -841,7 +841,7 @@ select_template:
 
         src := $06
 
-        jsr     main::get_device_type
+        jsr     main::GetDeviceType
         stax    src             ; A,X = device name (may be empty)
 
         ;; Empty?
@@ -898,7 +898,7 @@ next:   pla
         lda     device_index
 
         bpl     :+
-        bmi     populate_startup_menu
+        bmi     PopulateStartupMenu
 :       jmp     process_volume  ; next!
 
 device_type:
@@ -912,7 +912,7 @@ cvi_result:
 ;;; ============================================================
 
         ;; Remove device num in X from devices list
-.proc remove_device
+.proc RemoveDevice
         dex
 :       inx
         copy    DEVLST+1,x, DEVLST,x
@@ -925,7 +925,7 @@ cvi_result:
 
 ;;; ============================================================
 
-.proc populate_startup_menu
+.proc PopulateStartupMenu
         slot_ptr := $06         ; pointed at $Cn00
         table_ptr := $08        ; points into slot_string_table
 
@@ -979,7 +979,7 @@ next:   dec     slot
 
         ;; Set number of menu items.
         stx     startup_menu
-        jmp     initialize_disks_in_devices_tables
+        jmp     InitializeDisksInDevicesTables
 
 slot:   .byte   0
 
@@ -999,12 +999,12 @@ slot_string_table:
 ;;; these, and check to see which have disks in them. The list
 ;;; will be polled periodically to detect changes and refresh.
 ;;; List is built in DEVLST order since processing is in
-;;; `check_disks_in_devices` (etc) is done in reverse order.
+;;; `CheckDisksInDevices` (etc) is done in reverse order.
 ;;;
 ;;; Some hardware (machine/slot) combinations are filtered out
 ;;; due to known-buggy firmware.
 
-.proc initialize_disks_in_devices_tables
+.proc InitializeDisksInDevicesTables
         slot_ptr := $0A
 
         lda     #0
@@ -1031,7 +1031,7 @@ next:   inc     index
         lda     count
         sta     main::removable_device_table
         sta     main::disk_in_device_table
-        jsr     main::check_disks_in_devices
+        jsr     main::CheckDisksInDevices
 
         ;; Make copy of table
         ldx     main::disk_in_device_table
@@ -1040,7 +1040,7 @@ next:   inc     index
         dex
         bpl     :-
 
-done:   jmp     final_setup
+done:   jmp     FinalSetup
 
         ;; Maybe add device to the removable device table
 append: ldy     index
@@ -1075,18 +1075,18 @@ count:  .byte   0
 
 ;;; ============================================================
 
-.proc final_setup
+.proc FinalSetup
         ;; Final MGTK configuration
         MGTK_RELAY_CALL MGTK::CheckEvents
         MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
-        jsr     main::show_clock
+        jsr     main::ShowClock
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         lda     #0
         sta     active_window_id
-        jsr     main::update_window_menu_items
-        jsr     main::disable_menu_items_requiring_volume_selection
-        jsr     main::disable_menu_items_requiring_file_selection
-        jsr     main::disable_menu_items_requiring_selection
+        jsr     main::UpdateWindowMenuItems
+        jsr     main::DisableMenuItemsRequiringVolumeSelection
+        jsr     main::DisableMenuItemsRequiringFileSelection
+        jsr     main::DisableMenuItemsRequiringSelection
 
         ;; Add desktop icons
         ldx     #0
@@ -1096,7 +1096,7 @@ iloop:  cpx     cached_window_entry_count
         pha
         lda     cached_window_entry_list,x
         sta     icon_param
-        jsr     main::icon_entry_lookup
+        jsr     main::IconEntryLookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
         ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
@@ -1110,7 +1110,7 @@ iloop:  cpx     cached_window_entry_count
         jsr     StoreWindowEntryTable
 
         ;; Restore state from previous session
-        jsr     restore_windows
+        jsr     RestoreWindows
 
         ;; Display any pending error messages
         lda     main::pending_alert
@@ -1120,21 +1120,21 @@ iloop:  cpx     cached_window_entry_count
 :
 
         ;; And start pumping events
-        jmp     main::main_loop
+        jmp     main::MainLoop
 .endproc
 
 ;;; ============================================================
 
-.proc restore_windows
+.proc RestoreWindows
         data_ptr := $06
 
-        jsr     main::save_restore_windows::open
+        jsr     main::save_restore_windows::Open
         bcs     exit
         lda     main::save_restore_windows::open_params::ref_num
         sta     main::save_restore_windows::read_params::ref_num
         sta     main::save_restore_windows::close_params::ref_num
         MLI_RELAY_CALL READ, main::save_restore_windows::read_params
-        jsr     main::save_restore_windows::close
+        jsr     main::save_restore_windows::Close
 
         ;; Validate version bytes
         lda     main::save_restore_windows::desktop_file_data_buf
@@ -1162,17 +1162,17 @@ loop:   ldy     #0
         dex
         bpl     :-
 
-        jsr     main::push_pointers
+        jsr     main::PushPointers
 
         lda     #$80
         sta     main::copy_new_window_bounds_flag
-        sta     main::open_directory::suppress_error_on_open_flag
-        jsr     maybe_open_window
+        sta     main::OpenDirectory::suppress_error_on_open_flag
+        jsr     MaybeOpenWindow
         lda     #0
         sta     main::copy_new_window_bounds_flag
-        sta     main::open_directory::suppress_error_on_open_flag
+        sta     main::OpenDirectory::suppress_error_on_open_flag
 
-        jsr     main::pop_pointers
+        jsr     main::PopPointers
 
         add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
         jmp     loop
@@ -1180,13 +1180,13 @@ loop:   ldy     #0
 exit:   jsr     LoadDesktopEntryTable
         rts
 
-.proc maybe_open_window
+.proc MaybeOpenWindow
         ;; Save stack for restore on error. If the call
         ;; fails, the routine will restore the stack then
         ;; rts, returning to our caller.
         tsx
         stx     saved_stack
-        jmp     main::open_window_for_path
+        jmp     main::OpenWindowForPath
 .endproc
 
 .endproc
