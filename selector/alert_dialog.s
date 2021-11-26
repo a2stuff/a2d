@@ -119,7 +119,7 @@ start:  pha                     ; alert number
         pointer_cursor = app::pointer_cursor
         Bell = app::Bell
         DrawString = app::DrawString
-        alert_yield_loop = app::AlertYieldLoopRelay
+        AlertYieldLoop = app::AlertYieldLoopRelay
         alert_grafport = app::grafport2
 
         .define LIB_MGTK_CALL MGTK_CALL

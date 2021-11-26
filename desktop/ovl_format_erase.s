@@ -21,9 +21,9 @@
         kLabelsCol3    = kLabelsCol1 + kLabelWidth*2
 
         kDefaultFloppyBlocks = 280
-exec:
 
-L0800:  pha
+Exec:
+        pha
         jsr     main::SetCursorPointer
         pla
         cmp     #$04
@@ -1334,4 +1334,4 @@ format_erase_overlay__PromptHandleKeyRight    := format_erase_overlay::PromptHan
 format_erase_overlay__PromptHandleKeyDown     := format_erase_overlay::PromptHandleKeyDown
 format_erase_overlay__PromptHandleKeyUp       := format_erase_overlay::PromptHandleKeyUp
 
-format_erase_overlay_exec := format_erase_overlay::exec
+format_erase_overlay__Exec := format_erase_overlay::Exec

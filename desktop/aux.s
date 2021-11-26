@@ -3793,7 +3793,7 @@ start:
 ;;; Inputs: A,X=alert_params structure
 ;;;    { .addr text, .byte AlertButtonOptions, .byte AlertOptions }
 
-        alert_yield_loop = YieldLoopFromAux
+        AlertYieldLoop = YieldLoopFromAux
         alert_grafport = main_grafport
         .define LIB_MGTK_CALL MGTK_CALL
         .include "../lib/alert_dialog.s"

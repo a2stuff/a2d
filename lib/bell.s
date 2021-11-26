@@ -14,17 +14,17 @@
         lda     #32             ;duration of tone
         sta     length
 bell1:  lda     #2              ;short delay...click
-        jsr     wait
+        jsr     Wait
         sta     SPKR
         lda     #32             ;long delay...click
-        jsr     wait
+        jsr     Wait
         sta     SPKR
         dec     length
         bne     bell1           ;repeat length times
         rts
 
 ;;; This is the wait routine from the Monitor ROM.
-wait:   sec
+Wait:   sec
 wait2:  pha
 wait3:  sbc     #1
         bne     wait3

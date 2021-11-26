@@ -12,7 +12,7 @@
         jsr     DrawControls
         jsr     file_dialog::DeviceOnLine
         jsr     file_dialog::ReadDir
-        jsr     file_dialog::update_scrollbar
+        jsr     file_dialog::UpdateScrollbar
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         jsr     InstallSourceCallbackTable
@@ -124,7 +124,7 @@ jt_destination_filename:
         sta     selected_index
         jsr     file_dialog::DeviceOnLine
         jsr     file_dialog::ReadDir
-        jsr     file_dialog::update_scrollbar
+        jsr     file_dialog::UpdateScrollbar
         jsr     file_dialog::UpdateDiskName
 
         jsr     file_dialog::DrawListEntries
@@ -251,7 +251,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         lda     #0
         jsr     file_dialog::ScrollClipRect
         jsr     file_dialog::ReadDir
-        jsr     file_dialog::update_scrollbar
+        jsr     file_dialog::UpdateScrollbar
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         jsr     file_dialog::jt_redraw_input

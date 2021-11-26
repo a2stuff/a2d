@@ -9,7 +9,7 @@
         .org OVERLAY_ADDR
 
 .scope file_copier
-exec:
+Exec:
         sta     LA027
         jsr     OpenWindow
         lda     LA027
@@ -1180,6 +1180,6 @@ str_count:
 
 .endscope
 
-file_copier_exec   := file_copier::exec
+file_copier__Exec   := file_copier::Exec
 
         PAD_TO OVERLAY_ADDR + kOverlay2Size

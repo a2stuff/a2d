@@ -29,8 +29,10 @@ kMaxInputLength = $3F
 
 ;;; ============================================================
 
-exec:
-L5000:  jmp     Start
+Exec:
+        jmp     Start
+
+;;; ============================================================
 
         io_buf := $1000
         dir_read_buf := $1400
@@ -387,7 +389,7 @@ folder: and     #$7F
         jsr     AppendToPathBuf
 
         jsr     ReadDir
-        jsr     update_scrollbar
+        jsr     UpdateScrollbar
         lda     #0
         jsr     ScrollClipRect
         jsr     UpdateDiskName
@@ -649,7 +651,7 @@ l1:     lda     #$00
         jsr     AppendToPathBuf
 
         jsr     ReadDir
-        jsr     update_scrollbar
+        jsr     UpdateScrollbar
         lda     #$00
         jsr     ScrollClipRect
         jsr     UpdateDiskName
@@ -667,7 +669,7 @@ l2:     .byte   0
         jsr     DecDeviceNum
         jsr     DeviceOnLine
         jsr     ReadDir
-        jsr     update_scrollbar
+        jsr     UpdateScrollbar
         lda     #$00
         jsr     ScrollClipRect
         jsr     UpdateDiskName
@@ -703,7 +705,7 @@ l3:     jsr     StripPathSegment
         lda     #$FF
         sta     selected_index
         jsr     ReadDir
-        jsr     update_scrollbar
+        jsr     UpdateScrollbar
         lda     #$00
         jsr     ScrollClipRect
         jsr     UpdateDiskName
@@ -1100,11 +1102,11 @@ l1:     ldx     num_file_names
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::cancel_button_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::change_drive_button_rect
-        jsr     draw_ok_button_label
-        jsr     draw_open_button_label
-        jsr     draw_close_button_label
-        jsr     draw_cancel_button_label
-        jsr     draw_change_drive_button_label
+        jsr     DrawOkButtonLabel
+        jsr     DrawOpenButtonLabel
+        jsr     DrawCloseButtonLabel
+        jsr     DrawCancelButtonLabel
+        jsr     DrawChangeDriveButtonLabel
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
         MGTK_RELAY_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport
@@ -1112,27 +1114,27 @@ l1:     ldx     num_file_names
         rts
 .endproc
 
-draw_ok_button_label:
+DrawOkButtonLabel:
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::ok_button_pos
         param_call DrawString, file_dialog_res::ok_button_label
         rts
 
-draw_open_button_label:
+DrawOpenButtonLabel:
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
         param_call DrawString, file_dialog_res::open_button_label
         rts
 
-draw_close_button_label:
+DrawCloseButtonLabel:
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
         param_call DrawString, file_dialog_res::close_button_label
         rts
 
-draw_cancel_button_label:
+DrawCancelButtonLabel:
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::cancel_button_pos
         param_call DrawString, file_dialog_res::cancel_button_label
         rts
 
-draw_change_drive_button_label:
+DrawChangeDriveButtonLabel:
         MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
         param_call DrawString, file_dialog_res::change_drive_button_label
         rts
@@ -1537,7 +1539,7 @@ l4:     .byte   0
 
 ;;; ============================================================
 
-update_scrollbar:
+UpdateScrollbar:
         lda     #$00
 
 .proc UpdateScrollbar2
@@ -3146,4 +3148,4 @@ done:   rts
 
 .endscope ; file_dialog
 
-file_dialog_exec := file_dialog::exec
+file_dialog__Exec := file_dialog::Exec

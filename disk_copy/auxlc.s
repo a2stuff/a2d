@@ -562,7 +562,7 @@ init:   jsr     RemoveRamDisk
         sta     LD5E0
         jsr     OpenDialog
 
-init_dialog:
+InitDialog:
         lda     #$00
         sta     LD367
         sta     LD368
@@ -593,7 +593,7 @@ LD674:  jsr     LD986
         bmi     LD674
         beq     LD687
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        jmp     init_dialog
+        jmp     InitDialog
 
 LD687:  lda     current_drive_selection
         bmi     LD674
@@ -617,7 +617,7 @@ LD6E6:  jsr     LD986
         bmi     LD6E6
         beq     LD6F9
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        jmp     init_dialog
+        jmp     InitDialog
 
 LD6F9:  lda     current_drive_selection
         bmi     LD6E6
@@ -643,7 +643,7 @@ LD734:  ldx     #0
         lda     #kAlertMsgInsertSource ; X=0 means just show alert
         jsr     ShowAlertDialog
         beq     :+              ; OK
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 :       lda     #$00
         sta     LD44D
@@ -694,7 +694,7 @@ LD7AD:  lda     source_drive_index
         lda     #kAlertMsgInsertDestination ; X=0 means just show alert
         jsr     ShowAlertDialog
         beq     :+              ; OK
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 :       ldx     dest_drive_index
         lda     drive_unitnum_table,x
@@ -752,7 +752,7 @@ show:   jsr     ShowAlertDialog
         beq     :+              ; Cancel
         cmp     #kAlertResultYes
         beq     LD84A           ; Yes
-:       jmp     init_dialog     ; No
+:       jmp     InitDialog      ; No
 
 LD84A:  lda     disk_copy_flag
         bne     LD852
@@ -777,7 +777,7 @@ LD852:  ldx     dest_drive_index
 
 :       lda     #kAlertMsgDestinationFormatFail ; no args
         jsr     ShowAlertDialog
-        jmp     init_dialog
+        jmp     InitDialog
 
 format: MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         param_call DrawString, str_formatting
@@ -789,12 +789,12 @@ format: MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         lda     #kAlertMsgFormatError ; no args
         jsr     ShowAlertDialog
         beq     LD852           ; Try Again
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 LD89F:  lda     #kAlertMsgDestinationProtected ; no args
         jsr     ShowAlertDialog
         beq     LD852           ; Try Again
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 LD8A9:  lda     winfo_dialog::window_id
         jsr     SetWinPort
@@ -815,7 +815,7 @@ LD8A9:  lda     winfo_dialog::window_id
         lda     #kAlertMsgInsertSource ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
         beq     LD8DF           ; OK
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 LD8DF:  jsr     main__ReadVolumeBitmap
         lda     #$00
@@ -846,7 +846,7 @@ LD8FB:  jsr     LE4A8
         lda     #kAlertMsgInsertDestination ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
         beq     LD928           ; OK
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 LD928:  jsr     LE491
         lda     #$80
@@ -869,7 +869,7 @@ LD928:  jsr     LE491
         lda     #kAlertMsgInsertSource ; X !=0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
         beq     LD8FB           ; OK
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 LD955:  jsr     LE507
         jsr     main__FreeVolBitmapPages
@@ -883,12 +883,12 @@ LD955:  jsr     LE507
         jsr     main__EjectDisk
 :       lda     #kAlertMsgCopySuccessful ; no args
         jsr     ShowAlertDialog
-        jmp     init_dialog
+        jmp     InitDialog
 
 LD97A:  jsr     main__FreeVolBitmapPages
         lda     #kAlertMsgCopyFailure ; no args
         jsr     ShowAlertDialog
-        jmp     init_dialog
+        jmp     InitDialog
 
         .byte   0
 LD986:  MGTK_RELAY_CALL2 MGTK::InitPort, grafport
@@ -2641,7 +2641,7 @@ draw_prompt:
         ;; --------------------------------------------------
         ;; Event Loop
 
-event_loop:
+EventLoop:
         bit     ejectable_flag
         bpl     LED45
         jsr     WaitForDiskOrEsc
@@ -2658,7 +2658,7 @@ LED45:
         jmp     HandleButtonDown
 
 :       cmp     #MGTK::EventKind::key_down
-        bne     event_loop
+        bne     EventLoop
 
         ;; --------------------------------------------------
         ;; Key Down
@@ -2693,7 +2693,7 @@ finish_cancel:
         beq     do_yes
         cmp     #TO_LOWER(kShortcutYes)
         beq     do_yes
-        jmp     event_loop
+        jmp     EventLoop
 
 do_no:  jsr     SetPenXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, no_button_rect
@@ -2720,7 +2720,7 @@ do_try_again:
         beq     do_try_again
         cmp     #CHAR_RETURN    ; also allow Return as default
         beq     do_try_again
-        jmp     event_loop
+        jmp     EventLoop
 
 check_only_ok:
         cmp     #CHAR_ESCAPE    ; also allow Escape as default
@@ -2735,7 +2735,7 @@ finish_ok:
         lda     #kAlertResultOK
         jmp     finish
 
-:       jmp     event_loop
+:       jmp     EventLoop
 
         ;; --------------------------------------------------
         ;; Buttons
@@ -2798,7 +2798,7 @@ check_ok_rect:
         jmp     finish
 
 no_button:
-        jmp     event_loop
+        jmp     EventLoop
 
 ;;; ============================================================
 

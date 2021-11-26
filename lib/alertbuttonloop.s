@@ -13,7 +13,7 @@
         lda     #0
         sta     flag
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR
-        jsr     invert
+        jsr     Invert
 
 loop:   LIB_MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -32,7 +32,7 @@ inside: lda     flag
         bne     toggle
         jmp     loop
 
-toggle: jsr     invert
+toggle: jsr     Invert
         lda     flag
         eor     #$80
         sta     flag
@@ -42,7 +42,8 @@ button_up:
         lda     flag
         rts
 
-invert: LIB_MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr2
+Invert:
+        LIB_MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr2
         rts
 
         ;; High bit clear if button is depressed

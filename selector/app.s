@@ -680,7 +680,7 @@ set_startup_menu_items:
         ;; Open the window
 
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     get_port_and_draw_window
+        jsr     GetPortAndDrawWindow
         copy    #$FF, selected_index
         jsr     LoadSelectorList
         jsr     PopulateEntriesFlagTable
@@ -739,7 +739,7 @@ not_desktop:
 not_key:
         cmp     #MGTK::EventKind::update
         bne     not_update
-        jsr     handle_updates
+        jsr     ClearUpdates
 
 not_update:
         jmp     EventLoop
@@ -748,7 +748,7 @@ not_update:
 ;;; ============================================================
 ;;; Handle update events
 
-check_and_handle_updates:
+CheckAndClearUpdates:
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::update
@@ -756,9 +756,9 @@ check_and_handle_updates:
         MGTK_CALL MGTK::GetEvent, event_params
         ;; Fall through.
 
-handle_updates:
+ClearUpdates:
         jsr     @do_update
-        jmp     check_and_handle_updates
+        jmp     CheckAndClearUpdates
 
 @do_update:
         lda     event_window_id
@@ -1495,10 +1495,11 @@ saved_ram_unitnum:
 
 ;;; ============================================================
 
-get_port_and_draw_window:
+.proc GetPortAndDrawWindow
         lda     winfo::window_id
         jsr     GetWindowPort
-        ;; Fall through
+        ;; fall through
+.endproc
 
 .proc DrawWindow
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -1933,9 +1934,9 @@ L9C32:  lda     selected_index
         beq     L9C6F
         jsr     LoadOverlay2
         lda     selected_index
-        jsr     file_copier_exec
+        jsr     file_copier__Exec
         pha
-        jsr     check_and_handle_updates
+        jsr     CheckAndClearUpdates
         pla
         beq     L9C6F
         jsr     SetPointerCursor

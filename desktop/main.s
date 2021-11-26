@@ -30,7 +30,7 @@ JT_SIZE_STRING:         jmp     ComposeSizeString
 JT_DATE_STRING:         jmp     ComposeDateString
 JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow
 JT_AUXLOAD:             jmp     AuxLoad
-JT_EJECT:               jmp     cmd_eject
+JT_EJECT:               jmp     CmdEject
 JT_CLEAR_UPDATES:       jmp     ClearUpdates            ; *
 JT_ITK_RELAY:           jmp     ITKRelayImpl
 JT_LOAD_OVL:            jmp     LoadDynamicRoutine
@@ -240,7 +240,7 @@ loop_counter:
         bpl     skip_adjust_port
 
         ;; Adjust grafport to account for header
-        jsr     offset_window_grafport
+        jsr     OffsetWindowGrafport
 
         ;; MGTK doesn't like offscreen grafports, so if we end up with
         ;; nothing to draw, skip drawing!
@@ -348,8 +348,8 @@ dispatch_table:
         ;; Special menu (5)
         menu5_start := *
         .addr   CmdCheckDrives
-        .addr   cmd_check_drive
-        .addr   cmd_eject
+        .addr   CmdCheckDrive
+        .addr   CmdEject
         .addr   CmdNoOp         ; --------
         .addr   CmdFormatDisk
         .addr   CmdEraseDisk
@@ -689,7 +689,7 @@ win:    .byte   0
         sta     getwinport_params2::window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         bne     :+              ; MGTK::Error::window_obscured
-        jsr     offset_window_grafport_and_set
+        jsr     OffsetWindowGrafportAndSet
         lda     #0
 :       rts
 .endproc
@@ -796,7 +796,7 @@ check_disk_in_drive:
         stx     status_unit_num
 
         ;; Execute SmartPort call
-        jsr     smartport_call
+        jsr     SmartportCall
         .byte   SPCall::Status
         .addr   status_params
 
@@ -815,7 +815,7 @@ finish: sta     result
         tax
         return  result
 
-smartport_call:
+SmartportCall:
         jmp     (sp_addr)
 
 unit_number:
@@ -1235,7 +1235,7 @@ filerecords_free_start:
 :
         ;; Invoke routine
         lda     menu_click_params::item_num
-        jsr     selector_picker_exec
+        jsr     selector_picker__Exec
         sta     result
 
         ;; Restore from overlays
@@ -1718,7 +1718,7 @@ running_da_flag:
         rts
 :
         lda     #$00
-        jsr     file_dialog_exec
+        jsr     file_dialog__Exec
         pha                     ; A = dialog result
         lda     #kDynamicRoutineRestore5000
         jsr     RestoreDynamicRoutine
@@ -1821,7 +1821,7 @@ running_da_flag:
         rts
 :
         lda     #$01
-        jsr     file_dialog_exec
+        jsr     file_dialog__Exec
         pha                     ; A = dialog result
         lda     #kDynamicRoutineRestore5000
         jsr     RestoreDynamicRoutine
@@ -2159,7 +2159,7 @@ done:   rts
         lda     #kDynamicRoutineDiskCopy
         jsr     LoadDynamicRoutine
         bmi     fail
-        jmp     format_erase_overlay_exec
+        jmp     format_erase_overlay__Exec
 
 fail:   rts
 .endproc
@@ -2555,8 +2555,8 @@ count:  .byte   0
 eject_flag:
         .byte   0
 .endproc
-        cmd_eject       := CmdCheckOrEject::eject
-        cmd_check_drive := CmdCheckOrEject::check
+        CmdEject        := CmdCheckOrEject::eject
+        CmdCheckDrive   := CmdCheckOrEject::check
 
 ;;; ============================================================
 
@@ -2930,7 +2930,7 @@ drive_to_refresh:
         rts
 :
         lda     #4
-        jsr     format_erase_overlay_exec
+        jsr     format_erase_overlay__Exec
         stx     drive_to_refresh ; X = unit number
         pha                     ; A = result
         jsr     ClearUpdates ; following dialog close
@@ -2950,7 +2950,7 @@ drive_to_refresh:
         rts
 :
         lda     #5
-        jsr     format_erase_overlay_exec
+        jsr     format_erase_overlay__Exec
         stx     drive_to_refresh ; X = unit number
         pha                     ; A = result
         jsr     ClearUpdates ; following dialog close
@@ -3357,12 +3357,12 @@ done:   jmp     LoadDesktopEntryTable ; restore from `GetActiveWindowScrollInfo`
 
 :       cmp     #CHAR_RIGHT
         bne     :+
-        jsr     scroll_right
+        jsr     ScrollRight
         jmp     loop
 
 :       cmp     #CHAR_LEFT
         bne     vertical
-        jsr     scroll_left
+        jsr     ScrollLeft
         jmp     loop
 
         ;; Vertical ok?
@@ -3401,14 +3401,14 @@ vertical:
 
 ;;; ============================================================
 
-scroll_right:                   ; elevator right / contents left
+ScrollRight:                   ; elevator right / contents left
         lda     horiz_scroll_pos
         ldx     horiz_scroll_max
         jsr     DoScrollRight
         sta     horiz_scroll_pos
         rts
 
-scroll_left:                    ; elevator left / contents right
+ScrollLeft:                    ; elevator left / contents right
         lda     horiz_scroll_pos
         jsr     DoScrollLeft
         sta     horiz_scroll_pos
@@ -3956,7 +3956,7 @@ horiz:  lda     active_window_id
 
 :       cmp     #MGTK::Part::left_arrow
         bne     :+
-left:   jsr     scroll_left
+left:   jsr     ScrollLeft
         lda     #MGTK::Part::left_arrow
         jsr     CheckControlRepeat
         bpl     left
@@ -3964,7 +3964,7 @@ left:   jsr     scroll_left
 
 :       cmp     #MGTK::Part::right_arrow
         bne     :+
-rght:   jsr     scroll_right
+rght:   jsr     ScrollRight
         lda     #MGTK::Part::right_arrow
         jsr     CheckControlRepeat
         bpl     rght
@@ -4194,7 +4194,7 @@ same_or_desktop:
 
         jsr     CachedIconsScreenToWindow
         ;; Adjust grafport for header.
-        jsr     offset_window_grafport_and_set
+        jsr     OffsetWindowGrafportAndSet
 
         ldx     selected_icon_count
         dex
@@ -5959,7 +5959,7 @@ header_and_offset_flag:
         jsr     UnsafeSetPortFromWindowId ; CHECKED
         jne     done
         jsr     DrawWindowHeader
-        jsr     offset_window_grafport_and_set
+        jsr     OffsetWindowGrafportAndSet
     END_IF
     END_IF
 
@@ -6155,7 +6155,7 @@ config_port:
         ;; deactivate horizontal scrollbar
         copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_which_ctl
         copy    #MGTK::activatectl_deactivate, activatectl_activate
-        jsr     activate_ctl
+        jsr     ActivateCtl
 
         jmp     check_vscroll
 
@@ -6163,7 +6163,7 @@ activate_hscroll:
         ;; activate horizontal scrollbar
         copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_which_ctl
         copy    #MGTK::activatectl_activate, activatectl_activate
-        jsr     activate_ctl
+        jsr     ActivateCtl
 
         bit     update_thumbs_flag
         bpl     :+
@@ -6180,7 +6180,7 @@ check_vscroll:
         ;; deactivate vertical scrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
         copy    #MGTK::activatectl_deactivate, activatectl_activate
-        jsr     activate_ctl
+        jsr     ActivateCtl
 
         rts
 
@@ -6188,16 +6188,17 @@ activate_vscroll:
         ;; activate vertical scrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
         copy    #MGTK::activatectl_activate, activatectl_activate
-        jsr     activate_ctl
+        jsr     ActivateCtl
 
         bit     update_thumbs_flag
         bpl     :+
         jmp     UpdateVThumb
 :
 
-activate_ctl:
+.proc ActivateCtl
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         rts
+.endproc
 
 update_thumbs_flag:
         .byte   0
@@ -6264,8 +6265,8 @@ flag_set:
 
 flag:   .byte   0
 .endproc
-        offset_window_grafport := OffsetWindowGrafportImpl::flag_clear
-        offset_window_grafport_and_set := OffsetWindowGrafportImpl::flag_set
+        OffsetWindowGrafport := OffsetWindowGrafportImpl::flag_clear
+        OffsetWindowGrafportAndSet := OffsetWindowGrafportImpl::flag_set
 
 ;;; ============================================================
 ;;; Refresh vol used/free for windows of same volume as win in A.
@@ -6525,7 +6526,7 @@ index_in_dir:           .byte   0
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        jsr     do_read
+        jsr     DoRead
         jsr     GetVolUsedFreeViaPath
 
         ldx     #0
@@ -6643,7 +6644,7 @@ L71CB:  inc     index_in_block
 
 L71E7:  copy    #$00, index_in_block
         copy16  #$0C04, entry_ptr
-        jsr     do_read
+        jsr     DoRead
 
 L71F7:  ldx     #$00
         ldy     #$00
@@ -6826,7 +6827,7 @@ suppress_error_on_open_flag:
 
 ;;; --------------------------------------------------
 
-do_read:
+DoRead:
         MLI_RELAY_CALL READ, read_params
         rts
 
@@ -7788,7 +7789,7 @@ tmp:    .byte   0
         jsr     adjust_item_suffix
 
         MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
-        jsr     draw_int_string
+        jsr     DrawIntString
         param_call_indirect DrawPascalString, ptr_str_items_suffix
 
         ;; Draw "XXXK in disk"
@@ -7805,7 +7806,7 @@ tmp:    .byte   0
         tya
         jsr     IntToStringWithSeparators
         MGTK_RELAY_CALL MGTK::MoveTo, pos_k_in_disk
-        jsr     draw_int_string
+        jsr     DrawIntString
         param_call DrawPascalString, str_k_in_disk
 
         ;; Draw "XXXK available"
@@ -7821,7 +7822,7 @@ tmp:    .byte   0
         tya
         jsr     IntToStringWithSeparators
         MGTK_RELAY_CALL MGTK::MoveTo, pos_k_available
-        jsr     draw_int_string
+        jsr     DrawIntString
         param_call DrawPascalString, str_k_available
         rts
 
@@ -7885,8 +7886,9 @@ finish:
         rts
 .endproc ; CalcHeaderCoords
 
-draw_int_string:
+.proc DrawIntString
         param_jump DrawPascalString, str_from_int
+.endproc
 
 xcoord:
         .word   0
@@ -9281,14 +9283,14 @@ file_type:
 
         ;; Append type
         lda     auxtype+1
-        jsr     do_byte
+        jsr     DoByte
         lda     auxtype
-        jsr     do_byte
+        jsr     DoByte
 
         sty     text_buffer2::length
         rts
 
-do_byte:
+DoByte:
         pha
         lsr
         lsr
@@ -9687,7 +9689,7 @@ vdrive: ldax    #str_device_type_vdrive
         stx     status_params::unit_num
 
         ;; Execute SmartPort call
-        jsr     smartport_call
+        jsr     SmartportCall
         .byte   SPCall::Status
         .addr   status_params
         bcs     not_sp
@@ -9801,7 +9803,7 @@ f35:    ldax    #dib_buffer::ID_String_Length
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
         unit_number := block_params::unit_num
 
-smartport_call:
+SmartportCall:
         jmp     (sp_addr)
 
 blocks: .word   0
@@ -10733,16 +10735,16 @@ done:   rts
 ;;; ============================================================
 
 jt_drop:        jmp     DoDrop
-jt_get_info:    jmp     DoGetInfo    ; CmdGetInfo
+jt_get_info:    jmp     DoGetInfo      ; CmdGetInfo
 jt_lock:        jmp     do_lock        ; CmdLock
 jt_unlock:      jmp     do_unlock      ; CmdUnlock
 jt_rename:      jmp     do_rename      ; CmdRename
 jt_duplicate:   jmp     do_duplicate   ; CmdDuplicate
-jt_eject:       jmp     DoEject       ; cmd_eject
+jt_eject:       jmp     DoEject        ; CmdEject
 jt_copy_file:   jmp     do_copy_file   ; CmdCopyFile
 jt_delete_file: jmp     do_delete_file ; CmdDeleteFile
 jt_copy_to_ram: jmp     do_copy_to_ram ; CmdSelectorAction / Run
-jt_get_size:    jmp     DoGetSize    ; CmdGetSize
+jt_get_size:    jmp     DoGetSize      ; CmdGetSize
 
 
 ;;; --------------------------------------------------
@@ -11212,12 +11214,12 @@ found:  lda     DEVLST,y        ; unit_number
         stx     control_unit_number
 
         ;; Execute SmartPort call
-        jsr     smartport_call
+        jsr     SmartportCall
         .byte   SPCall::Control
         .addr   control_params
 done:   rts
 
-smartport_call:
+SmartportCall:
         jmp     (smartport_addr)
 
 .params control_params
@@ -11579,11 +11581,11 @@ loop:   lda     index
 
         ;; Open the dialog
         lda     #RenameDialogState::open
-        jsr     run_dialog_proc
+        jsr     RunDialogProc
 
         ;; Run the dialog
 retry:  lda     #RenameDialogState::run
-        jsr     run_dialog_proc
+        jsr     RunDialogProc
         beq     ok
 
         ;; Failure
@@ -11625,7 +11627,7 @@ ok:
         bne     :-
         ;; Didn't change, no-op
         lda     #RenameDialogState::close
-        jsr     run_dialog_proc
+        jsr     RunDialogProc
         inc     index
         jmp     loop
 
@@ -11689,13 +11691,13 @@ common2:
         bne     :+              ; not `kAlertResultTryAgain` = 0 (either OK or Cancel)
         jmp     retry           ; `kAlertResultTryAgain` = 0
 :       lda     #RenameDialogState::close
-        jsr     run_dialog_proc
+        jsr     RunDialogProc
         jmp     fail
 
         ;; --------------------------------------------------
         ;; Completed - tear down the dialog...
 finish: lda     #RenameDialogState::close
-        jsr     run_dialog_proc
+        jsr     RunDialogProc
 
         ldx     index
         lda     selected_icon_list,x
@@ -11813,10 +11815,11 @@ skip:   lda     selected_window_id
         inc     index
         jmp     loop
 
-run_dialog_proc:
+.proc RunDialogProc
         sta     rename_dialog_params
         param_call invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
         rts
+.endproc
 
 index:  .byte   0               ; selected icon index
 
@@ -11966,11 +11969,11 @@ loop:   lda     index
 
         ;; Open the dialog
         lda     #DuplicateDialogState::open
-        jsr     run_dialog_proc
+        jsr     RunDialogProc
 
         ;; Run the dialog
 retry:  lda     #DuplicateDialogState::run
-        jsr     run_dialog_proc
+        jsr     RunDialogProc
         beq     success
 
         ;; Failure
@@ -12018,7 +12021,7 @@ success:
         stx     dst_path_buf
 
         lda     #DuplicateDialogState::close
-        jsr     run_dialog_proc
+        jsr     RunDialogProc
 
         ;; --------------------------------------------------
         ;; Check for unchanged name
@@ -12059,10 +12062,11 @@ no_match:
         inc     index
         jmp     loop
 
-run_dialog_proc:
+.proc RunDialogProc
         sta     duplicate_dialog_params
         param_call invoke_dialog_proc, kIndexDuplicateDialog, duplicate_dialog_params
         rts
+.endproc
 
 index:  .byte   0               ; selected icon index
 
@@ -12131,9 +12135,9 @@ file_entry_buf:  .res    .sizeof(FileEntry), 0
 op_jt_addrs:
 op_jt_addr1:  .addr   CopyProcessDirectoryEntry     ; defaults are for copy
 op_jt_addr2:  .addr   copy_pop_directory
-op_jt_addr3:  .addr   do_nothing
+op_jt_addr3:  .addr   DoNothing
 
-do_nothing:   rts
+DoNothing:   rts
 
 L97E4:  .byte   $00
 
@@ -12993,7 +12997,7 @@ failure:
 ;;; Overlays for delete operation (op_jt_addrs)
 callbacks_for_delete:
         .addr   DeleteProcessDirectoryEntry
-        .addr   do_nothing
+        .addr   DoNothing
         .addr   DeleteFinishDirectory
 
 .params delete_dialog_params
@@ -13227,8 +13231,8 @@ done:   rts
 ;;; Overlays for lock/unlock operation (op_jt_addrs)
 callbacks_for_lock:
         .addr   lock_process_directory_entry
-        .addr   do_nothing
-        .addr   do_nothing
+        .addr   DoNothing
+        .addr   DoNothing
 
 .enum LockDialogLifecycle
         open            = 0 ; opening window, initial label
@@ -13475,9 +13479,9 @@ get_size_rts2:
 
 ;;; Overlays for size operation (op_jt_addrs)
 callbacks_for_size_or_count:
-        .addr   size_or_count_process_directory_entry
-        .addr   do_nothing
-        .addr   do_nothing
+        .addr   SizeOrCountProcessDirectoryEntry
+        .addr   DoNothing
+        .addr   DoNothing
 
 .proc PrepCallbacksForSizeOrCount
         ldy     #kOpJTAddrsSize-1
@@ -13541,13 +13545,13 @@ storage_type:
         .byte   0
 
 do_sum_file_size:
-        jmp     size_or_count_process_directory_entry
+        jmp     SizeOrCountProcessDirectoryEntry
 .endproc
 
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
 
-size_or_count_process_directory_entry:
+.proc SizeOrCountProcessDirectoryEntry
         bit     operation_flags
         bvc     :+              ; not size
 
@@ -13565,6 +13569,7 @@ size_or_count_process_directory_entry:
 
 :       ldax    op_file_count
         jmp     done_dialog_phase0
+.endproc
 
 op_file_count:
         .word   0

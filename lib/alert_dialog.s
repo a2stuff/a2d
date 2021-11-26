@@ -5,7 +5,7 @@
 ;;; * `pointer_cursor`
 ;;; * `Bell`
 ;;; * `DrawString`
-;;; * `alert_yield_loop`
+;;; * `AlertYieldLoop`
 ;;; Requires the following data definitions:
 ;;; * `alert_grafport`
 ;;; Requires the following macro definitions:
@@ -164,7 +164,7 @@ start:
         adc     portmap::maprect::y2 ; bottom
         sta     save_y2
 
-        jsr     dialog_background_save
+        jsr     DialogBackgroundSave
     END_IF
 
         ;; Set up GrafPort
@@ -275,7 +275,7 @@ done:
         ;; Event Loop
 
 event_loop:
-        jsr     alert_yield_loop
+        jsr     AlertYieldLoop
         LIB_MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -380,7 +380,7 @@ finish:
     IF_VS                       ; V = use save area
         pha
         LIB_MGTK_CALL MGTK::HideCursor
-        jsr     dialog_background_restore
+        jsr     DialogBackgroundRestore
         LIB_MGTK_CALL MGTK::ShowCursor
         pla
     END_IF
@@ -397,7 +397,7 @@ finish:
 
         .include "alertbuttonloop.s"
         .include "savedialogbackground.s"
-        dialog_background_save := dialog_background::Save
-        dialog_background_restore := dialog_background::Restore
+        DialogBackgroundSave := dialog_background::Save
+        DialogBackgroundRestore := dialog_background::Restore
 
 .endproc

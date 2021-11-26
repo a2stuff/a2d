@@ -327,17 +327,17 @@ done:   rts
 
 sync:   pha
         pla
-        jsr     write2
+        jsr     Write2
         dey
         bne     sync
 
         ;; Address marks
         lda     #$D5
-        jsr     write
+        jsr     Write
         lda     #$AA
-        jsr     write
+        jsr     Write
         lda     #$AD
-        jsr     write
+        jsr     Write
         ldy     #$56
         nop
         nop
@@ -367,22 +367,22 @@ check:  jsr     rts2
         bne     check
 
         ;; Slip marks
-        jsr     write
+        jsr     Write
         lda     #$DE
-        jsr     write
+        jsr     Write
         lda     #$AA
-        jsr     write
+        jsr     Write
         lda     #$EB
-        jsr     write
+        jsr     Write
         lda     #$FF
-        jsr     write
+        jsr     Write
         lda     RDMODE,x        ; Turn off write mode
         lda     XMIT,x
         rts
 
         ;; Write with appropriate cycle counts
-write:  nop
-write2: pha
+Write:  nop
+Write2: pha
         pla
         sta     DATA,x
         cmp     XMIT,x

@@ -151,13 +151,13 @@ start:
         stx     control_params_unit_number
 
         ;; Do SmartPort call
-        jsr     smartport_call
+        jsr     SmartportCall
         .byte   SPCall::Control
         .addr   control_params
 
 done:   rts
 
-smartport_call:
+SmartportCall:
         jmp     ($06)
 
 .endproc
@@ -469,7 +469,7 @@ start:
         stx     status_params::unit_num
 
         ;; Do SmartPort call
-        jsr     smartport_call
+        jsr     SmartportCall
         .byte   SPCall::Status
         .addr   status_params
         bcs     not_removable
@@ -484,7 +484,7 @@ start:
 not_removable:
         return  #0
 
-smartport_call:
+SmartportCall:
         jmp     ($06)
 .endproc
 

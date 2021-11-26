@@ -15,7 +15,7 @@ io_buf := $0800
 
 selector_list   := $0C00
 
-exec:
+Exec:
         sta     selector_action
         ldx     #$FF
         stx     clean_flag      ; set "clean"
@@ -51,7 +51,7 @@ L9052:  lda     #$00
         sta     path_buf1
         ldy     #$03
         lda     #$02
-        jsr     file_dialog_L5000
+        jsr     file_dialog__Exec
         pha
         txa
         pha
@@ -218,7 +218,7 @@ l3:     clc
         adc     #$01
         tay
         lda     #$02
-        jsr     file_dialog_L5000
+        jsr     file_dialog__Exec
         pha
         txa
         pha
@@ -1732,4 +1732,4 @@ buf:    .res    ::kPathBufferSize
 
 .endproc ; SelectorOverlay2
 
-selector_picker_exec    := SelectorOverlay2::exec
+selector_picker__Exec    := SelectorOverlay2::Exec

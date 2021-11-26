@@ -1548,11 +1548,11 @@ line_height:    .word   0
 
         stax    inrect_addr
         stax    fillrect_addr
-        jsr     test_rect
+        jsr     TestRect
         beq     :+
         return  #kOutside
 
-:       jsr     invert_rect
+:       jsr     InvertRect
 
         copy    #0, down_flag
 
@@ -1561,7 +1561,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         cmp     #MGTK::EventKind::button_up
         beq     exit
 
-        jsr     test_rect
+        jsr     TestRect
         beq     inside
 
         lda     down_flag       ; outside but was inside?
@@ -1572,7 +1572,7 @@ inside: lda     down_flag       ; already depressed?
         bne     invert
         jmp     loop
 
-invert: jsr     invert_rect
+invert: jsr     InvertRect
         lda     down_flag
         clc
         adc     #$80
@@ -1582,13 +1582,13 @@ invert: jsr     invert_rect
 exit:   lda     down_flag       ; was depressed?
         beq     :+
         return  #kCanceled
-:       jsr     invert_rect     ; invert one last time
+:       jsr     InvertRect     ; invert one last time
         return  #kClicked
 
 down_flag:
         .byte   0
 
-test_rect:
+TestRect:
         copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -1597,7 +1597,7 @@ test_rect:
         cmp     #MGTK::inrect_inside
         rts
 
-invert_rect:
+InvertRect:
         copy    #kDAWindowID, winport_params::window_id
         MGTK_CALL MGTK::GetWinPort, winport_params
         MGTK_CALL MGTK::SetPort, grafport

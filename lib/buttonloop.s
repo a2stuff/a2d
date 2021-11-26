@@ -14,7 +14,7 @@
 
         ;; Do initial inversion
         MGTK_CALL MGTK::SetPenMode, penXOR
-        jsr     invert
+        jsr     Invert
 
         ;; Event loop
 loop:   MGTK_CALL MGTK::GetEvent, event_params
@@ -37,7 +37,7 @@ inside: lda     down_flag       ; already depressed?
         bne     toggle
         jmp     loop
 
-toggle: jsr     invert
+toggle: jsr     Invert
         lda     down_flag
         eor     #$80
         sta     down_flag
@@ -45,13 +45,13 @@ toggle: jsr     invert
 
 exit:   lda     down_flag       ; was depressed?
         bne     :+
-        jsr     invert
+        jsr     Invert
 :       lda     down_flag
         rts
 
         ;; --------------------------------------------------
 
-invert: MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr2
+Invert: MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr2
         rts
 
         ;; --------------------------------------------------
