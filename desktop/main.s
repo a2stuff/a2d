@@ -5352,7 +5352,7 @@ check_double_click:
         jsr     JTDrop
 
         ;; NOTE: If drop target is trash, `JTDrop` relays to
-        ;; `JT_EJECT` and pops the return address.
+        ;; `CmdEject` and pops the return address.
 
         ;; (1/4) Failed?
         cmp     #$FF
@@ -10879,7 +10879,7 @@ L8FEB:  tsx
         ;; Yes - eject it!
 :       pla
         pla
-        jmp     JT_EJECT
+        jmp     CmdEject
 
 ;;; --------------------------------------------------
 ;;; For drop onto window/icon, compute target prefix.
@@ -11166,7 +11166,7 @@ done:   stx     buf
         dex
         bpl     :-
 
-        jsr     JT_CLEAR_SELECTION
+        jsr     ClearSelection
         ldx     #0
         stx     index
 loop:   ldx     index
@@ -11412,7 +11412,7 @@ volume:
         ;; field and the total blocks for all files is returned in blocks_used.
 
         ldax    get_file_info_params5::blocks_used
-        jsr     JT_SIZE_STRING
+        jsr     ComposeSizeString
 
         ;; text_buffer2 now has " 12345K" (used space)
 
@@ -11440,7 +11440,7 @@ volume:
 
         ;; Compute " 12345K" (either volume size or file size)
 append_size:
-        jsr     JT_SIZE_STRING
+        jsr     ComposeSizeString
 
         ;; Append latest to buffer
         ldx     buf
@@ -11464,7 +11464,7 @@ append_size:
         ;; Created date
         copy    #GetInfoDialogState::created, get_info_dialog_params::state
         COPY_STRUCT DateTime, get_file_info_params5::create_date, datetime_for_conversion
-        jsr     JT_DATE_STRING
+        jsr     ComposeDateString
         copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     RunGetInfoDialogProc
 
@@ -11472,7 +11472,7 @@ append_size:
         ;; Modified date
         copy    #GetInfoDialogState::modified, get_info_dialog_params::state
         COPY_STRUCT DateTime, get_file_info_params5::mod_date, datetime_for_conversion
-        jsr     JT_DATE_STRING
+        jsr     ComposeDateString
         copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     RunGetInfoDialogProc
 
@@ -11489,7 +11489,7 @@ append_size:
 
         ;; File
 :       lda     get_file_info_params5::file_type
-        jsr     JT_FILE_TYPE_STRING
+        jsr     ComposeFileTypeString
         COPY_STRING str_file_type, text_buffer2::length
         ldax    get_file_info_params5::aux_type
         jsr     AppendAuxType
@@ -11678,7 +11678,7 @@ common2:
         MLI_RELAY_CALL GET_FILE_INFO, getfileinfo_params
         bne     :+
         lda     #ERR_DUPLICATE_FILENAME
-        jsr     JT_SHOW_ALERT
+        jsr     ShowAlert
         jmp     retry
 
         ;; Try to rename
@@ -11686,7 +11686,7 @@ common2:
         beq     finish
 
         ;; Failed, maybe retry
-        jsr     JT_SHOW_ALERT   ; Alert options depend on specific ProDOS error
+        jsr     ShowAlert       ; Alert options depend on specific ProDOS error
         bne     :+              ; not `kAlertResultTryAgain` = 0 (either OK or Cancel)
         jmp     retry           ; `kAlertResultTryAgain` = 0
 :       lda     #RenameDialogState::close
@@ -12174,7 +12174,7 @@ L97E4:  .byte   $00
 @retry: MLI_RELAY_CALL OPEN, open_src_dir_params
         beq     :+
         ldx     #AlertButtonOptions::TryAgainCancel
-        jsr     JT_SHOW_ALERT_OPTIONS
+        jsr     ShowAlertOption
         beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialog
 
@@ -12185,7 +12185,7 @@ L97E4:  .byte   $00
 @retry2:MLI_RELAY_CALL READ, read_block_pointers_params
         beq     :+
         ldx     #AlertButtonOptions::TryAgainCancel
-        jsr     JT_SHOW_ALERT_OPTIONS
+        jsr     ShowAlertOption
         beq     @retry2         ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialog
 
@@ -12198,7 +12198,7 @@ L97E4:  .byte   $00
 @retry: MLI_RELAY_CALL CLOSE, close_src_dir_params
         beq     :+
         ldx     #AlertButtonOptions::TryAgainCancel
-        jsr     JT_SHOW_ALERT_OPTIONS
+        jsr     ShowAlertOption
         beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialog
 
@@ -12214,7 +12214,7 @@ L97E4:  .byte   $00
         cmp     #ERR_END_OF_FILE
         beq     eof
         ldx     #AlertButtonOptions::TryAgainCancel
-        jsr     JT_SHOW_ALERT_OPTIONS
+        jsr     ShowAlertOption
         beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialog
 
@@ -13927,7 +13927,7 @@ flag_clear:
         cmp     #ERR_PATH_NOT_FOUND
         beq     not_found
 
-        jsr     JT_SHOW_ALERT
+        jsr     ShowAlert
         bne     LA4C2           ; not kAlertResultTryAgain = 0
         rts
 
@@ -13938,7 +13938,7 @@ not_found:
         jmp     show
 
 :       lda     #kErrInsertSrcDisk
-show:   jsr     JT_SHOW_ALERT
+show:   jsr     ShowAlert
         bne     LA4C2           ; not kAlertResultTryAgain = 0
         jmp     do_on_line
 
@@ -14901,7 +14901,7 @@ LAEC6:  jsr     PromptInputLoop
         cmp     #16             ; max filename length + 1
         bcc     LAEE1
 LAED6:  lda     #kErrNameTooLong
-        jsr     JT_SHOW_ALERT
+        jsr     ShowAlert
         jsr     DrawFilenamePrompt
         jmp     LAEC6
 
