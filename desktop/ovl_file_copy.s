@@ -16,8 +16,8 @@
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         jsr     InstallSourceCallbackTable
-        jsr     file_dialog::jt_prep_path
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::JTPrepPath
+        jsr     file_dialog::JTRedrawInput
 
         copy    #$FF, LD8EC
         jmp     file_dialog::EventLoop
@@ -101,7 +101,7 @@ jt_destination_filename:
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::JTRedrawInput
 
         ;; install destination handlers
         ldx     jt_destination_filename
@@ -160,7 +160,7 @@ jt_destination_filename:
         iny
         jmp     :-
 
-done:   jsr     file_dialog::jt_redraw_input
+done:   jsr     file_dialog::JTRedrawInput
 
         ;; Twiddle flags
         lda     LD8F0
@@ -219,7 +219,7 @@ err:    lda     #ERR_INVALID_PATHNAME
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::JTRedrawInput
 
         ldx     jt_source_filename
 :       lda     jt_source_filename+1,x
@@ -254,7 +254,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         jsr     file_dialog::UpdateScrollbar
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::JTRedrawInput
         jmp     L7295
 
 L726D:  lda     file_dialog::path_buf

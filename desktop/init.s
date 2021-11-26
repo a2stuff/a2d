@@ -69,9 +69,9 @@ start:
 .scope hook_reset_vector
 
         ;; Main hook
-        lda     #<main::reset_handler
+        lda     #<main::ResetHandler
         sta     SOFTEV
-        lda     #>main::reset_handler
+        lda     #>main::ResetHandler
         sta     SOFTEV+1
         eor     #$A5
         sta     SOFTEV+2
@@ -394,10 +394,10 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
 L0A3B:  lda     L0A92
         cmp     L0A93
         beq     done
-        jsr     calc_data_addr
+        jsr     CalcDataAddr
         stax    ptr1
         lda     L0A92
-        jsr     calc_entry_addr
+        jsr     CalcEntryAddr
         stax    ptr2
         ldy     #0
         lda     (ptr1),y
@@ -410,10 +410,10 @@ L0A59:  lda     (ptr1),y
         lda     (ptr1),y
         sta     (ptr2),y
         lda     L0A92
-        jsr     calc_data_str
+        jsr     CalcDataStr
         stax    ptr1
         lda     L0A92
-        jsr     calc_entry_str
+        jsr     CalcEntryStr
         stax    ptr2
         ldy     #0
         lda     (ptr1),y
@@ -434,7 +434,7 @@ L0A93:  .byte   0
 
 ;;; --------------------------------------------------
 
-calc_data_addr:
+CalcDataAddr:
         jsr     main::ATimes16
         clc
         adc     #<(selector_list_data_buf+2)
@@ -445,7 +445,7 @@ calc_data_addr:
         tya
         rts
 
-calc_entry_addr:
+CalcEntryAddr:
         jsr     main::ATimes16
         clc
         adc     #<run_list_entries
@@ -456,7 +456,7 @@ calc_entry_addr:
         tya
         rts
 
-calc_entry_str:
+CalcEntryStr:
         jsr     main::ATimes64
         clc
         adc     #<run_list_paths
@@ -467,7 +467,7 @@ calc_entry_str:
         tya
         rts
 
-calc_data_str:
+CalcDataStr:
         jsr     main::ATimes64
         clc
         adc     #<(selector_list_data_buf+2 + $180)

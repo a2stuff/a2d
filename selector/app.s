@@ -2006,7 +2006,7 @@ not_basic:
         cmp     #FT_S16
         beq     check_path
 
-        jsr     check_basis_system ; Is fallback BASIS.SYSTEM present?
+        jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
         beq     check_path
 
         ;; Don't know how to invoke
@@ -2158,8 +2158,8 @@ L9DC8:  cpx     #$01
 len:    .byte   0
 
 .endproc
-        CheckBasicSystem := CheckBasixSystemImpl::basic
-        check_basis_system := CheckBasixSystemImpl::basis
+CheckBasicSystem        := CheckBasixSystemImpl::basic
+CheckBasisSystem        := CheckBasixSystemImpl::basis
 
 ;;; ============================================================
 ;;; Uppercase a string

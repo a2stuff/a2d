@@ -940,7 +940,7 @@ have128k:
         ;; Save original Quit routine and small loader
         ;; TODO: Assumes prefix is retained. Compose correct path.
 
-        jsr     preserve_quit_code
+        jsr     PreserveQuitCode
 
 resume:
         ;; IIgs: Reset shadowing
@@ -1162,7 +1162,7 @@ file_loop:
         beq     :+
         sta     dst_path
         MLI_CALL SET_PREFIX, set_prefix_params
-:       jsr     update_self_file
+:       jsr     UpdateSelfFile
         jsr     CopyOrigPrefixToDesktopOrigPrefix
 
         lda     #0
@@ -1561,7 +1561,7 @@ start:  MLI_CALL OPEN, open_params
         MLI_CALL CLOSE, close_params
 :       rts
 .endproc
-        update_self_file := UpdateSelfFileImpl::start
+UpdateSelfFile  := UpdateSelfFileImpl::start
 
 ;;; ============================================================
 
@@ -1608,7 +1608,7 @@ CopyDesktopToRamcard := CopyDesktopToRamcardImpl::Start
         bit     ROMIN2
         plp
         bne     :+
-        jmp     invoke_selector_or_desktop ; no RAMCard - skip!
+        jmp     InvokeSelectorOrDesktop ; no RAMCard - skip!
 
         ;; Clear "Copied to RAMCard" flags
 :       bit     LCBANK2
@@ -1693,7 +1693,7 @@ next_entry2:
         inc     entry_num
         jmp     entry_loop2
 
-bail:   jmp     invoke_selector_or_desktop
+bail:   jmp     InvokeSelectorOrDesktop
 
 entry_num:
         .byte   0
@@ -1813,7 +1813,7 @@ start:  MLI_CALL OPEN, open_params
         lda     #0
 :       rts
 .endproc
-        ReadSelectorList := ReadSelectorListImpl::start
+ReadSelectorList        := ReadSelectorListImpl::start
 
 ;;; ============================================================
 
@@ -1980,7 +1980,7 @@ str_not_completed:
         param_call CoutString, str_not_enough
         jsr     WaitEnterEscape
         jsr     HOME
-        jmp     invoke_selector_or_desktop
+        jmp     InvokeSelectorOrDesktop
 .endproc
 
 ;;; ============================================================
@@ -2025,7 +2025,7 @@ loop:   lda     KBD
         cmp     #CHAR_RETURN
         bne     loop
         jsr     HOME
-        jmp     invoke_selector_or_desktop
+        jmp     InvokeSelectorOrDesktop
 .endproc
 
 monitor:
@@ -2076,7 +2076,7 @@ done:   rts
 
 .proc FinishAndInvoke
         jsr     HOME
-        jmp     invoke_selector_or_desktop
+        jmp     InvokeSelectorOrDesktop
 .endproc
 
 ;;; ============================================================
@@ -2135,7 +2135,7 @@ read:   sta     read_params::ref_num
         MLI_CALL CLOSE, close_everything_params
         jmp     app_bootstrap_start
 .endproc
-        invoke_selector_or_desktop := InvokeSelectorOrDesktopImpl::start
+InvokeSelectorOrDesktop := InvokeSelectorOrDesktopImpl::start
 
 
 ;;; ============================================================
@@ -2211,7 +2211,7 @@ start:  bit     LCBANK2
 done:   rts
 
 .endproc
-        preserve_quit_code := PreserveQuitCodeImpl::start
+PreserveQuitCode        := PreserveQuitCodeImpl::start
 
 ;;; ============================================================
 ;;; Try to detect an Enhanced IIe or later (IIc, IIgs, etc),

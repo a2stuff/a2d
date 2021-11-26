@@ -56,10 +56,10 @@ finish: jsr     file_dialog::ReadDir
         jsr     file_dialog::DrawListEntries
         lda     path_buf0
         bne     :+
-        jsr     file_dialog::jt_prep_path
+        jsr     file_dialog::JTPrepPath
 :       copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::JTRedrawInput
         jsr     file_dialog::RedrawF2
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
@@ -192,7 +192,7 @@ jt_entry_name:
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::JTRedrawInput
 
         ldx     jt_entry_name
 :       lda     jt_entry_name+1,x
@@ -236,7 +236,7 @@ found_slash:
         sty     path_buf1
 finish: copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::JTRedrawInput
         rts
 .endproc
 
@@ -303,7 +303,7 @@ ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::JTRedrawInput
 
         ldx     jt_pathname
 :       lda     jt_pathname+1,x
@@ -317,7 +317,7 @@ ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
 
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::JTRedrawInput
         lda     #$00
         sta     file_dialog::L5105
         sta     file_dialog::focus_in_input2_flag

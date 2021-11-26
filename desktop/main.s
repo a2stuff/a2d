@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; DeskTop - Main Memory Segment
+;;; Desktop - Main Memory Segment
 ;;;
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
@@ -91,7 +91,7 @@ click:  jsr     HandleClick
         ;; Is it a key down event?
 :       cmp     #MGTK::EventKind::key_down
         bne     :+
-        jsr     handle_keydown
+        jsr     HandleKeydown
         jmp     MainLoop
 
         ;; Is it an update event?
@@ -297,13 +297,13 @@ dispatch_table:
         .addr   CmdAbout
         .addr   CmdNoOp         ; --------
         .repeat ::kMaxDeskAccCount
-        .addr   cmd_deskacc
+        .addr   CmdDeskAcc
         .endrepeat
         ASSERT_ADDRESS_TABLE_SIZE menu1_start, ::kMenuSizeApple
 
         ;; File menu (2)
         menu2_start := *
-        .addr   cmd_new_folder
+        .addr   CmdNewFolder
         .addr   CmdOpen
         .addr   CmdClose
         .addr   CmdCloseAll
@@ -316,7 +316,7 @@ dispatch_table:
         .addr   CmdCopyFile
         .addr   CmdDeleteFile
         .addr   CmdNoOp         ; --------
-        .addr   cmd_quit
+        .addr   CmdQuit
         ASSERT_ADDRESS_TABLE_SIZE menu2_start, ::kMenuSizeFile
 
         ;; Selector menu (3)
@@ -326,14 +326,14 @@ dispatch_table:
         .addr   CmdSelectorAction
         .addr   CmdSelectorAction
         .addr   CmdNoOp         ; --------
-        .addr   cmd_selector_item
-        .addr   cmd_selector_item
-        .addr   cmd_selector_item
-        .addr   cmd_selector_item
-        .addr   cmd_selector_item
-        .addr   cmd_selector_item
-        .addr   cmd_selector_item
-        .addr   cmd_selector_item
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
         ASSERT_ADDRESS_TABLE_SIZE menu3_start, ::kMenuSizeSelector
 
         ;; View menu (4)
@@ -393,7 +393,7 @@ offset_table:
 flag:   .byte   $00
 
         ;; Handle accelerator keys
-handle_keydown:
+HandleKeydown:
         lda     event_modifiers
         bne     modifiers       ; either Open-Apple or Solid-Apple ?
 
@@ -467,7 +467,7 @@ menu_accelerators:
         copy    #$80, menu_kbd_flag ; note that source is keyboard
         MGTK_RELAY_CALL MGTK::MenuKey, menu_click_params
 
-menu_dispatch2:
+MenuDispatch2:
         ldx     menu_click_params::menu_id
         bne     :+
         rts
@@ -497,9 +497,9 @@ call_proc:
         jmp     SELF_MODIFIED
 .endproc
 
-        handle_keydown := HandleKeydownImpl::handle_keydown
-        menu_dispatch2 := HandleKeydownImpl::menu_dispatch2
-        menu_dispatch_flag := HandleKeydownImpl::flag
+HandleKeydown   := HandleKeydownImpl::HandleKeydown
+MenuDispatch2   := HandleKeydownImpl::MenuDispatch2
+menu_dispatch_flag      := HandleKeydownImpl::flag
 
 ;;; ============================================================
 ;;; Handle click
@@ -525,7 +525,7 @@ not_desktop:
         bne     not_menu
         copy    #0, menu_kbd_flag ; note that source is not keyboard
         MGTK_RELAY_CALL MGTK::MenuSelect, menu_click_params
-        jmp     menu_dispatch2
+        jmp     MenuDispatch2
 
 not_menu:
         pha                     ; which window - active or not?
@@ -981,7 +981,7 @@ no_file_sel:
     END_IF
 
 
-        jsr     check_basis_system ; Is fallback BASIS.SYSTEM present?
+        jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
         beq     launch
         lda     #kErrFileNotOpenable
         jmp     ShowAlert
@@ -1073,8 +1073,8 @@ path_length:
         .byte   0
 
 .endproc
-        CheckBasicSystem := CheckBasixSystemImpl::basic
-        check_basis_system := CheckBasixSystemImpl::basis
+CheckBasicSystem        := CheckBasixSystemImpl::basic
+CheckBasisSystem        := CheckBasixSystemImpl::basis
 
 ;;; --------------------------------------------------
 
@@ -1256,7 +1256,7 @@ filerecords_free_start:
         bpl     run_from_ramcard
 
         ;; Need to copy to RAMCard
-        jsr     jt_copy_to_ram
+        jsr     JTCopyToRAM
         bmi     done
         jsr     L4968
 
@@ -1312,7 +1312,7 @@ L49A6:  lda     menu_click_params::item_num
 
         lda     entry_num
         jsr     L4A47
-        jsr     jt_copy_to_ram
+        jsr     JTCopyToRAM
         bpl     L49ED
         rts
 
@@ -1484,11 +1484,11 @@ slash_index:
 .endproc
 
 .endproc
-        cmd_selector_item := CmdSelectorItemImpl::start
+CmdSelectorItem := CmdSelectorItemImpl::start
 
-        LaunchBufWinPath := CmdSelectorItemImpl::LaunchBufWinPath
-        StripPathSegments := CmdSelectorItemImpl::StripPathSegments
-        MakeRamcardPrefixedPath := CmdSelectorItemImpl::MakeRamcardPrefixedPath
+LaunchBufWinPath        := CmdSelectorItemImpl::LaunchBufWinPath
+StripPathSegments       := CmdSelectorItemImpl::StripPathSegments
+MakeRamcardPrefixedPath := CmdSelectorItemImpl::MakeRamcardPrefixedPath
 
 ;;; ============================================================
 ;;; Append filename to directory path in `path_buffer`
@@ -1647,7 +1647,7 @@ skip:   iny
         ;; Allow arbitrary types in menu (e.g. folders)
         jmp     LaunchFileWithPath
 .endproc
-        cmd_deskacc := CmdDeskaccImpl::start
+CmdDeskAcc      := CmdDeskaccImpl::start
 
 ;;; ============================================================
 ;;; Invoke Desk Accessory
@@ -1734,7 +1734,7 @@ running_da_flag:
 
         jsr     CopyPathsAndSplitName
 
-        jsr     jt_copy_file
+        jsr     JTCopyFile
         bpl     :+
         rts
 :
@@ -1743,7 +1743,7 @@ running_da_flag:
         ;; Update windows with results
 
         ;; See if there's a window we should activate later.
-        param_call find_window_for_path, path_buf4
+        param_call FindWindowForPath, path_buf4
         pha                     ; save for later
 
         ;; Update cached used/free for all same-volume windows
@@ -1843,7 +1843,7 @@ running_da_flag:
         dey
         bpl     :-
 
-        jsr     jt_delete_file
+        jsr     JTDeleteFile
         bpl     :+
         rts
 :
@@ -1856,7 +1856,7 @@ running_da_flag:
         sty     path_buf3
 
         ;; See if there's a window we should activate later.
-        param_call find_window_for_path, path_buf3
+        param_call FindWindowForPath, path_buf3
         pha                     ; save for later
 
         ;; Update cached used/free for all same-volume windows
@@ -2232,7 +2232,7 @@ success:
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
         param_call FindLastPathSegment, path_buffer
         sty     path_buffer
-        param_call find_window_for_path, path_buffer
+        param_call FindWindowForPath, path_buffer
         beq     done
 
         jsr     SelectAndRefreshWindowOrClose
@@ -2248,8 +2248,8 @@ done:   rts
 name_ptr:
         .addr   0
 .endproc
-        cmd_new_folder := CmdNewFolderImpl::start
-        path_buffer := CmdNewFolderImpl::path_buffer
+CmdNewFolder    := CmdNewFolderImpl::start
+path_buffer     := CmdNewFolderImpl::path_buffer
 
 ;;; ============================================================
 ;;; Select and scroll into view an icon in the active window.
@@ -2537,7 +2537,7 @@ loop1:  lda     selected_icon_list,y
         ;; Do the ejection
         bit     eject_flag
         bpl     :+
-        jsr     jt_eject
+        jsr     JTEject
 :
 
         ;; Check each of the recorded volumes
@@ -2575,7 +2575,7 @@ eject_flag:
 str_quit_code:
         PASCAL_STRING kFilenameQuitSave
 
-reset_handler:
+ResetHandler:
         ;; Restore DeskTop Main expected state...
         sta     ALTZPON
         bit     LCBANK1
@@ -2599,8 +2599,8 @@ fail:   MLI_CALL QUIT, quit_params
         brk
 
 .endproc
-        cmd_quit := CmdQuitImpl::start
-        reset_handler := CmdQuitImpl::reset_handler
+CmdQuit := CmdQuitImpl::start
+ResetHandler    := CmdQuitImpl::ResetHandler
 
 ;;; ============================================================
 ;;; Exit DHR, restore device list, reformat /RAM.
@@ -2964,25 +2964,25 @@ drive_to_refresh:
 ;;; ============================================================
 
 .proc CmdGetInfo
-        jmp     jt_get_info
+        jmp     JTGetInfo
 .endproc
 
 ;;; ============================================================
 
 .proc CmdGetSize
-        jmp     jt_get_size
+        jmp     JTGetSize
 .endproc
 
 ;;; ============================================================
 
 .proc CmdUnlock
-        jmp     jt_unlock
+        jmp     JTUnlock
 .endproc
 
 ;;; ============================================================
 
 .proc CmdLock
-        jmp     jt_lock
+        jmp     JTLock
 .endproc
 
 ;;; ============================================================
@@ -2999,7 +2999,7 @@ drive_to_refresh:
         bne     :+
         rts
 :
-        jsr     jt_rename
+        jsr     JTRename
         sta     result
 
         bit     result
@@ -3025,7 +3025,7 @@ result: .byte   0
         bne     :+
         rts
 :
-        jsr     jt_duplicate
+        jsr     JTDuplicate
         beq     :+              ; flag set if window needs refreshing
 
         ;; Update cached used/free for all same-volume windows
@@ -3738,7 +3738,7 @@ common:
         sta     path_buf+1
         ldax    #path_buf
         ldy     path_buf
-        jsr     find_windows_for_prefix
+        jsr     FindWindowsForPrefix
         lda     found_windows_count
         beq     not_in_map
 
@@ -4144,7 +4144,7 @@ check_double_click:
         beq     same_or_desktop
 
 process_drop:
-        jsr     jt_drop
+        jsr     JTDrop
 
         ;; (1/4) Failed?
         cmp     #$FF
@@ -4691,7 +4691,7 @@ cont:   sta     cached_window_entry_count
         dex
         lda     window_to_dir_icon_table,x
         inx
-        jsr     animate_window_close ; A = icon id, X = window id
+        jsr     AnimateWindowClose ; A = icon id, X = window id
 :
         ;; --------------------------------------------------
         ;; Tidy up after closing window
@@ -5349,9 +5349,9 @@ check_double_click:
         lda     drag_drop_params::result
         beq     same_or_desktop
 
-        jsr     jt_drop
+        jsr     JTDrop
 
-        ;; NOTE: If drop target is trash, `jt_drop` relays to
+        ;; NOTE: If drop target is trash, `JTDrop` relays to
         ;; `JT_EJECT` and pops the return address.
 
         ;; (1/4) Failed?
@@ -5643,7 +5643,7 @@ volume:
 FindWindows:
         ldax    #path_buf
         ldy     path_buf
-        jsr     find_windows_for_prefix
+        jsr     FindWindowsForPrefix
         ldax    #path_buf
         ldy     path_buf
         jmp     UpdateUsedFreeViaFoundWindows
@@ -5707,7 +5707,7 @@ no_linked_win:
         ;; `OpenWindowForPath` with `icon_param` = $FF
         ;; and `open_dir_path_buf` set.
 check_path:
-        param_call find_window_for_path, open_dir_path_buf
+        param_call FindWindowForPath, open_dir_path_buf
         beq     no_win
 
         ;; Found a match - associate the window.
@@ -6203,8 +6203,8 @@ activate_vscroll:
 update_thumbs_flag:
         .byte   0
 .endproc
-        UpdateScrollbars := UpdateScrollbarsImpl::update_thumbs
-        UpdateScrollbarsLeaveThumbs := UpdateScrollbarsImpl::leave_thumbs
+UpdateScrollbars        := UpdateScrollbarsImpl::update_thumbs
+UpdateScrollbarsLeaveThumbs     := UpdateScrollbarsImpl::leave_thumbs
 
 ;;; ============================================================
 
@@ -6265,8 +6265,8 @@ flag_set:
 
 flag:   .byte   0
 .endproc
-        OffsetWindowGrafport := OffsetWindowGrafportImpl::flag_clear
-        OffsetWindowGrafportAndSet := OffsetWindowGrafportImpl::flag_set
+OffsetWindowGrafport    := OffsetWindowGrafportImpl::flag_clear
+OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::flag_set
 
 ;;; ============================================================
 ;;; Refresh vol used/free for windows of same volume as win in A.
@@ -6304,7 +6304,7 @@ flag:   .byte   0
         dey
 
 :       sty     pathlen
-        param_call_indirect find_windows_for_prefix, ptr
+        param_call_indirect FindWindowsForPrefix, ptr
         ldax    pathptr
         ldy     pathlen
         jmp     UpdateUsedFreeViaFoundWindows
@@ -6384,11 +6384,11 @@ slash:  cpy     #1
 .endproc
 
 ;;; ============================================================
-;;; `find_window_for_path`
+;;; `FindWindowForPath`
 ;;; Inputs: A,X = string (uses full string)
 ;;; Output: A = window id (0 if no match)
 ;;;
-;;; `find_windows_for_prefix`
+;;; `FindWindowsForPrefix`
 ;;; Inputs: A,X = string, Y = prefix length
 ;;; Outputs: `found_windows_count` and `found_windows_list` are updated
 
@@ -6483,8 +6483,8 @@ window_num:
 exact_match_flag:
         .byte   0
 .endproc
-        find_window_for_path := FindWindows::exact
-        find_windows_for_prefix := FindWindows::prefix
+        FindWindowForPath := FindWindows::exact
+        FindWindowsForPrefix := FindWindows::prefix
 
 found_windows_count:
         .byte   0
@@ -7450,7 +7450,7 @@ assign_height:
         ;; Animate the window being opened
         lda     icon_param
         ldx     window_id
-        jsr     animate_window_open
+        jsr     AnimateWindowOpen
 
         ;; Finished
         jsr     PopPointers
@@ -7652,8 +7652,8 @@ icon_type:
 .endproc
 
 .endproc
-        CreateIconsAndPreserveWindowSize := CreateIconsForWindow::Impl::ep_preserve_window_size
-        CreateIconsAndSetWindowSize := CreateIconsForWindow::Impl::ep_set_window_size
+CreateIconsAndPreserveWindowSize        := CreateIconsForWindow::Impl::ep_preserve_window_size
+CreateIconsAndSetWindowSize             := CreateIconsForWindow::Impl::ep_set_window_size
 
 
 ;;; ============================================================
@@ -8042,7 +8042,7 @@ next:   inc     icon_num
 icon_num:
         .byte   0
 .endproc
-        ComputeIconsBBox := ComputeIconsBBoxImpl::start
+ComputeIconsBBox        := ComputeIconsBBoxImpl::start
 
 ;;; ============================================================
 ;;; Compute dimensions of window
@@ -9851,7 +9851,7 @@ error:  sec
 path:   .byte   0               ; becomes length-prefixed path
 buffer: .res    16, 0            ; length overwritten with '/'
 .endproc
-        GetBlockCount := GetBlockCountImpl::start
+GetBlockCount   := GetBlockCountImpl::start
 
 ;;; ============================================================
 ;;; Create Volume Icon
@@ -10339,8 +10339,8 @@ L8D52:  .word   0
 L8D54:  .word   0
 L8D56:  .word   0
 .endproc
-        animate_window_close := AnimateWindow::close
-        animate_window_open := AnimateWindow::open
+AnimateWindowClose      := AnimateWindow::close
+AnimateWindowOpen       := AnimateWindow::open
 
 ;;; ============================================================
 
@@ -10603,8 +10603,8 @@ restore:
         rts
 
 .endproc
-        LoadDynamicRoutine := LoadDynamicRoutineImpl::load
-        RestoreDynamicRoutine := LoadDynamicRoutineImpl::restore
+LoadDynamicRoutine      := LoadDynamicRoutineImpl::load
+RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
 ;;; ============================================================
 
@@ -10734,18 +10734,17 @@ done:   rts
 
 ;;; ============================================================
 
-jt_drop:        jmp     DoDrop
-jt_get_info:    jmp     DoGetInfo      ; CmdGetInfo
-jt_lock:        jmp     do_lock        ; CmdLock
-jt_unlock:      jmp     do_unlock      ; CmdUnlock
-jt_rename:      jmp     do_rename      ; CmdRename
-jt_duplicate:   jmp     do_duplicate   ; CmdDuplicate
-jt_eject:       jmp     DoEject        ; CmdEject
-jt_copy_file:   jmp     do_copy_file   ; CmdCopyFile
-jt_delete_file: jmp     do_delete_file ; CmdDeleteFile
-jt_copy_to_ram: jmp     do_copy_to_ram ; CmdSelectorAction / Run
-jt_get_size:    jmp     DoGetSize      ; CmdGetSize
-
+JTDrop:         jmp     DoDrop
+JTGetInfo:      jmp     DoGetInfo      ; CmdGetInfo
+JTLock:         jmp     DoLock         ; CmdLock
+JTUnlock:       jmp     DoUnlock       ; CmdUnlock
+JTRename:       jmp     DoRename       ; CmdRename
+JTDuplicate:    jmp     DoDuplicate    ; CmdDuplicate
+JTEject:        jmp     DoEject        ; CmdEject
+JTCopyFile:     jmp     DoCopyFile     ; CmdCopyFile
+JTDeleteFile:   jmp     DoDeleteFile   ; CmdDeleteFile
+JTCopyToRAM:    jmp     DoCopyToRAM    ; CmdSelectorAction / Run
+JTGetSize:      jmp     DoGetSize      ; CmdGetSize
 
 ;;; --------------------------------------------------
 
@@ -10763,7 +10762,7 @@ jt_get_size:    jmp     DoGetSize      ; CmdGetSize
 
 .scope operations
 
-do_copy_file:
+DoCopyFile:
         copy    #0, operation_flags ; copy/delete
         copy    #0, move_flag
         tsx
@@ -10774,7 +10773,7 @@ do_copy_file:
         jsr     PrepCallbacksForCopy
         ;; fall through
 
-do_copy_to_ram2:
+DoCopyToRAM2:
         copy    #$FF, copy_run_flag
         copy    #0, move_flag
         copy    #0, delete_skip_decrement_flag
@@ -10786,7 +10785,7 @@ do_copy_to_ram2:
         return  #0
 .endproc
 
-do_delete_file:
+DoDeleteFile:
         copy    #0, operation_flags ; copy/delete
         tsx
         stx     stack_stash
@@ -10800,7 +10799,7 @@ do_delete_file:
         jsr     done_dialog_phase1
         jmp     FinishOperation
 
-do_copy_to_ram:
+DoCopyToRAM:
         copy    #$80, run_flag
         copy    #%11000000, operation_flags ; get size
         tsx
@@ -10809,16 +10808,16 @@ do_copy_to_ram:
         jsr     DoDownloadDialogPhase
         jsr     SizeOrCountProcessSelectedFile
         jsr     PrepCallbacksForDownload
-        jmp     do_copy_to_ram2
+        jmp     DoCopyToRAM2
 
 ;;; --------------------------------------------------
 ;;; Lock
 
-do_lock:
+DoLock:
         jsr     L8FDD
         jmp     FinishOperation
 
-do_unlock:
+DoUnlock:
         jsr     L8FE1
         jmp     FinishOperation
 
@@ -11034,11 +11033,11 @@ icon_count:
 empty_string:
         .byte   0
 .endscope ; operations
-        do_delete_file := operations::do_delete_file
-        do_copy_to_ram := operations::do_copy_to_ram
-        do_copy_file := operations::do_copy_file
-        do_lock := operations::do_lock
-        do_unlock := operations::do_unlock
+        DoDeleteFile := operations::DoDeleteFile
+        DoCopyToRAM := operations::DoCopyToRAM
+        DoCopyFile := operations::DoCopyFile
+        DoLock := operations::DoLock
+        DoUnlock := operations::DoUnlock
         DoGetSize := operations::DoGetSize
         DoDrop := operations::DoDrop
 
@@ -11790,7 +11789,7 @@ skip:   lda     selected_window_id
     END_IF
 
         ;; Is there a window for the folder/volume?
-        param_call find_window_for_path, src_path_buf
+        param_call FindWindowForPath, src_path_buf
     IF_NOT_ZERO
         dst := $06
         ;; Update the window title
@@ -11828,19 +11827,19 @@ index:  .byte   0               ; selected icon index
 result_flags:
         .byte   0
 .endproc
-        do_rename := DoRenameImpl::start
+DoRename        := DoRenameImpl::start
 
 ;;; ============================================================
 ;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
 ;;; update any affected window paths.
 ;;;
-;;; Uses `find_windows_for_prefix`
+;;; Uses `FindWindowsForPrefix`
 ;;; Modifies $06
 ;;; Assert: The path actually changed.
 
 .proc UpdateWindowPaths
         ;; Is there a window for the folder/volume?
-        param_call find_window_for_path, src_path_buf
+        param_call FindWindowForPath, src_path_buf
     IF_NOT_ZERO
         dst := $06
         ;; Update the path
@@ -11856,7 +11855,7 @@ result_flags:
 
         ;; Update paths for any child windows.
         ldy     src_path_buf    ; Y = length
-        param_call find_windows_for_prefix, src_path_buf
+        param_call FindWindowsForPrefix, src_path_buf
         lda     found_windows_count
     IF_NOT_ZERO
         dst := $06
@@ -12051,7 +12050,7 @@ no_match:
         copy16  #src_path_buf, $06
         copy16  #dst_path_buf, $08
         jsr     CopyPathsAndSplitName
-        jsr     jt_copy_file
+        jsr     JTCopyFile
         bmi     :+
         lda     #$80
         sta     result_flag
@@ -12074,7 +12073,7 @@ index:  .byte   0               ; selected icon index
 result_flag:
         .byte   0
 .endproc
-        do_duplicate := DoDuplicateImpl::start
+DoDuplicate     := DoDuplicateImpl::start
 
 ;;; ============================================================
 
@@ -13952,8 +13951,8 @@ do_on_line:
         rts
 
 .endproc
-        ShowErrorAlert := ShowErrorAlertImpl::flag_clear
-        ShowErrorAlertDst := ShowErrorAlertImpl::flag_set
+ShowErrorAlert  := ShowErrorAlertImpl::flag_clear
+ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 
 ;;; ============================================================
 

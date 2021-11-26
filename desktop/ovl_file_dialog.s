@@ -115,7 +115,7 @@ L5105:  .byte   0       ; ??? something about the picker
 
         dec     prompt_ip_counter
         bne     :+
-        jsr     jt_blink_ip
+        jsr     JTBlinkIP
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
 :       jsr     main::YieldLoop
@@ -261,8 +261,8 @@ L5216:  lda     winfo_file_dialog::window_id
 
         param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
-        jsr     jt_handle_meta_right_key
-        jsr     jt_handle_ok
+        jsr     JTHandleMetaRightKey
+        jsr     JTHandleOk
 :       jmp     SetUpPorts
 .endproc
 
@@ -274,7 +274,7 @@ L5216:  lda     winfo_file_dialog::window_id
 
         param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
-        jsr     jt_handle_cancel
+        jsr     JTHandleCancel
 :       jmp     SetUpPorts
 .endproc
 
@@ -284,7 +284,7 @@ L5216:  lda     winfo_file_dialog::window_id
         bpl     :+
         jsr     click_handler_hook
         bmi     SetUpPorts
-:       jsr     jt_handle_click
+:       jsr     JTHandleClick
         rts
 .endproc
 .endproc
@@ -352,7 +352,7 @@ open:   ldx     selected_index
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        jsr     jt_handle_ok
+        jsr     JTHandleOk
         jmp     rts1
 
         ;; Folder - open it.
@@ -411,18 +411,18 @@ different:
 
 :       lda     selected_index
         bmi     :+
-        jsr     jt_strip_path_segment
+        jsr     JTStripPathSegment
         lda     selected_index
         jsr     InvertEntry
 :       lda     screentowindow_windowy
         sta     selected_index
         bit     LD8F0
         bpl     :+
-        jsr     jt_prep_path
-        jsr     jt_redraw_input
+        jsr     JTPrepPath
+        jsr     JTRedrawInput
 :       lda     selected_index
         jsr     InvertEntry
-        jsr     jt_list_selection_change
+        jsr     JTListSelectionChange
 
         jsr     main::StashCoordsAndDetectDoubleClick
         bmi     :+
@@ -626,7 +626,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         pha
         bit     LD8F0
         bpl     l1
-        jsr     jt_prep_path
+        jsr     JTPrepPath
 l1:     lda     #$00
         sta     l2
         copy16  #file_names, $08
@@ -674,8 +674,8 @@ l2:     .byte   0
         jsr     ScrollClipRect
         jsr     UpdateDiskName
         jsr     DrawListEntries
-        jsr     jt_prep_path
-        jsr     jt_redraw_input
+        jsr     JTPrepPath
+        jsr     JTRedrawInput
         rts
 .endproc
 
@@ -714,14 +714,14 @@ l3:     jsr     StripPathSegment
         sta     selected_index
         bit     l7
         bmi     l4
-        jsr     jt_strip_path_segment
+        jsr     JTStripPathSegment
         lda     selected_index
         bmi     l5
-        jsr     jt_strip_path_segment
+        jsr     JTStripPathSegment
         jmp     l5
 
-l4:     jsr     jt_prep_path
-        jsr     jt_redraw_input
+l4:     jsr     JTPrepPath
+        jsr     JTRedrawInput
 l5:     lda     #$FF
         sta     selected_index
 l6:     rts
@@ -754,11 +754,11 @@ L56E3:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
 
         cmp     #CHAR_LEFT
         bne     :+
-        jmp     jt_handle_meta_left_key ; start of line
+        jmp     JTHandleMetaLeftKey ; start of line
 
 :       cmp     #CHAR_RIGHT
         bne     :+
-        jmp     jt_handle_meta_right_key ; end of line
+        jmp     JTHandleMetaRightKey ; end of line
 
 :       bit     L5105
         bmi     L59E4
@@ -787,11 +787,11 @@ L59F7:  lda     event_key
 
         cmp     #CHAR_LEFT
         bne     :+
-        jmp     jt_handle_left_key
+        jmp     JTHandleLeftKey
 
 :       cmp     #CHAR_RIGHT
         bne     :+
-        jmp     jt_handle_right_key
+        jmp     JTHandleRightKey
 
 :       cmp     #CHAR_RETURN
         bne     :+
@@ -856,7 +856,7 @@ not_ctrl_o:
         bne     finish
         jmp     KeyUp
 
-finish: jsr     jt_handle_other_key
+finish: jsr     JTHandleOtherKey
         rts
 
 exit:   jsr     L56E3
@@ -870,8 +870,8 @@ exit:   jsr     L56E3
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        jsr     jt_handle_meta_right_key
-        jsr     jt_handle_ok
+        jsr     JTHandleMetaRightKey
+        jsr     JTHandleOk
         jsr     L56E3
         rts
 .endproc
@@ -884,7 +884,7 @@ exit:   jsr     L56E3
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
-        jsr     jt_handle_cancel
+        jsr     JTHandleCancel
         jsr     L56E3
         rts
 .endproc
@@ -892,7 +892,7 @@ exit:   jsr     L56E3
 ;;; ============================================================
 
 .proc KeyDelete
-        jsr     jt_handle_delete_key
+        jsr     JTHandleDeleteKey
         rts
 .endproc
 
@@ -916,7 +916,7 @@ key_meta_digit:
 l1:     rts
 
 l2:     jsr     InvertEntry
-        jsr     jt_strip_path_segment
+        jsr     JTStripPathSegment
         inc     selected_index
         lda     selected_index
         jmp     UpdateListSelection
@@ -936,7 +936,7 @@ l3:     lda     #0
 l1:     rts
 
 l2:     jsr     InvertEntry
-        jsr     jt_strip_path_segment
+        jsr     JTStripPathSegment
         dec     selected_index
         lda     selected_index
         jmp     UpdateListSelection
@@ -964,7 +964,7 @@ CheckAlpha:
         lda     selected_index
         bmi     L5B99
         jsr     InvertEntry
-        jsr     jt_strip_path_segment
+        jsr     JTStripPathSegment
 L5B99:  pla
         jmp     UpdateListSelection
 
@@ -1043,7 +1043,7 @@ done:   rts
 l1:     rts
 
 l2:     jsr     InvertEntry
-        jsr     jt_strip_path_segment
+        jsr     JTStripPathSegment
 l3:     lda     #$00
         jmp     UpdateListSelection
 .endproc
@@ -1063,7 +1063,7 @@ done:   rts
 :       dex
         txa
         jsr     InvertEntry
-        jsr     jt_strip_path_segment
+        jsr     JTStripPathSegment
 l1:     ldx     num_file_names
         dex
         txa
@@ -1074,7 +1074,7 @@ l1:     ldx     num_file_names
 
 .proc UpdateListSelection
         sta     selected_index
-        jsr     jt_list_selection_change
+        jsr     JTListSelectionChange
 
         lda     selected_index
         jsr     CalcTopIndex
@@ -1084,7 +1084,7 @@ l1:     ldx     num_file_names
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
 
-        jsr     jt_redraw_input
+        jsr     JTRedrawInput
         rts
 .endproc
 
@@ -2120,9 +2120,9 @@ length  .byte
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     done
-        jsr     jt_handle_ok    ; move focus to input2
+        jsr     JTHandleOk    ; move focus to input2
         ;; NOTE: Assumes screentowindow_window* has not been changed.
-        jmp     handle_f2_click__ep2
+        jmp     HandleF2Click__ep2
 
 done:   rts
 
@@ -2259,8 +2259,8 @@ width   .word
         ;; fall through
 .endproc
 
-finish: jsr     jt_redraw_input
-        jsr     select_matching_file_in_list__f1
+finish: jsr     JTRedrawInput
+        jsr     SelectMatchingFileInList__f1
         rts
 
 ip_pos: .word   0
@@ -2290,7 +2290,7 @@ ip_pos: .word   0
         MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         bne     done
-        jsr     jt_handle_cancel ; Move focus to input1
+        jsr     JTHandleCancel ; Move focus to input1
         ;; NOTE: Assumes screentowindow_window* has not been changed.
         jmp     HandleF1Click::ep2
 
@@ -2429,13 +2429,13 @@ width   .word
         ;; fall through
 .endproc
 
-finish: jsr     jt_redraw_input
-        jsr     select_matching_file_in_list__f2
+finish: jsr     JTRedrawInput
+        jsr     SelectMatchingFileInList__f2
         rts
 
 ip_pos: .word   0
 .endproc
-handle_f2_click__ep2 := HandleF2Click::ep2
+HandleF2Click__ep2 := HandleF2Click::ep2
 
 ;;; ============================================================
 
@@ -2463,7 +2463,7 @@ continue:
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call DrawString, str_1_char
         param_call DrawString, path_buf2
-        jsr     select_matching_file_in_list__f1
+        jsr     SelectMatchingFileInList__f1
         rts
 
 tmp:    .byte   0
@@ -2485,7 +2485,7 @@ tmp:    .byte   0
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        jsr     select_matching_file_in_list__f1
+        jsr     SelectMatchingFileInList__f1
         rts
 .endproc
 
@@ -2518,7 +2518,7 @@ skip:   ldx     path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        jsr     select_matching_file_in_list__f1
+        jsr     SelectMatchingFileInList__f1
         rts
 .endproc
 
@@ -2553,7 +2553,7 @@ finish: dec     path_buf2
         param_call DrawString, path_buf0
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        jsr     select_matching_file_in_list__f1
+        jsr     SelectMatchingFileInList__f1
         rts
 .endproc
 
@@ -2588,8 +2588,8 @@ skip:   sty     path_buf0
         stx     path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
         copy    #0, path_buf0
-        jsr     jt_redraw_input
-        jsr     select_matching_file_in_list__f1
+        jsr     JTRedrawInput
+        jsr     SelectMatchingFileInList__f1
         rts
 .endproc
 
@@ -2597,8 +2597,8 @@ skip:   sty     path_buf0
 
 .proc HandleF1MetaRightKey
         jsr     MoveIPToEndF1
-        jsr     jt_redraw_input
-        jsr     select_matching_file_in_list__f1
+        jsr     JTRedrawInput
+        jsr     SelectMatchingFileInList__f1
         rts
 .endproc
 
@@ -2627,7 +2627,7 @@ skip:   sty     path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call DrawString, str_1_char
         param_call DrawString, path_buf2
-        jsr     select_matching_file_in_list__f2
+        jsr     SelectMatchingFileInList__f2
         rts
 
 l1:     .byte   0
@@ -2649,7 +2649,7 @@ l1:     .byte   0
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        jsr     select_matching_file_in_list__f2
+        jsr     SelectMatchingFileInList__f2
         rts
 .endproc
 
@@ -2681,7 +2681,7 @@ l3:     ldx     path_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        jsr     select_matching_file_in_list__f2
+        jsr     SelectMatchingFileInList__f2
         rts
 .endproc
 
@@ -2714,7 +2714,7 @@ l3:     dec     path_buf2
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        jsr     select_matching_file_in_list__f2
+        jsr     SelectMatchingFileInList__f2
         rts
 .endproc
 
@@ -2746,8 +2746,8 @@ l4:     lda     path_buf1,y
         stx     path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
         copy    #0, path_buf1
-        jsr     jt_redraw_input
-        jsr     select_matching_file_in_list__f2
+        jsr     JTRedrawInput
+        jsr     SelectMatchingFileInList__f2
         rts
 .endproc
 
@@ -2755,8 +2755,8 @@ l4:     lda     path_buf1,y
 
 .proc HandleF2MetaRightKey
         jsr     MoveIPToEndF2
-        jsr     jt_redraw_input
-        jsr     select_matching_file_in_list__f2
+        jsr     JTRedrawInput
+        jsr     SelectMatchingFileInList__f2
         rts
 .endproc
 
@@ -2767,20 +2767,20 @@ l4:     lda     path_buf1,y
 
 kJumpTableSize = $2A
 jump_table:
-jt_handle_ok:                   jmp     0
-jt_handle_cancel:               jmp     0
-jt_blink_ip:                    jmp     0
-jt_redraw_input:                jmp     0
-jt_strip_path_segment:          jmp     0
-jt_list_selection_change:       jmp     0
-jt_prep_path:                   jmp     0
-jt_handle_other_key:            jmp     0
-jt_handle_delete_key:           jmp     0
-jt_handle_left_key:             jmp     0
-jt_handle_right_key:            jmp     0
-jt_handle_meta_left_key:        jmp     0
-jt_handle_meta_right_key:       jmp     0
-jt_handle_click:                jmp     0
+JTHandleOk:                   jmp     0
+JTHandleCancel:               jmp     0
+JTBlinkIP:                    jmp     0
+JTRedrawInput:                jmp     0
+JTStripPathSegment:          jmp     0
+JTListSelectionChange:       jmp     0
+JTPrepPath:                   jmp     0
+JTHandleOtherKey:            jmp     0
+JTHandleDeleteKey:           jmp     0
+JTHandleLeftKey:             jmp     0
+JTHandleRightKey:            jmp     0
+JTHandleMetaLeftKey:        jmp     0
+JTHandleMetaRightKey:       jmp     0
+JTHandleClick:                jmp     0
         .assert * - jump_table = kJumpTableSize, error, "Table size mismatch"
 
 ;;; ============================================================
@@ -2880,7 +2880,7 @@ jt_handle_click:                jmp     0
 
 .proc StripF1PathSegment
         jsr     StripPathBuf0Segment
-        jsr     jt_redraw_input
+        jsr     JTRedrawInput
         rts
 .endproc
 
@@ -2888,7 +2888,7 @@ jt_handle_click:                jmp     0
 
 .proc StripF2PathSegment
         jsr     StripPathBuf1Segment
-        jsr     jt_redraw_input
+        jsr     JTRedrawInput
         rts
 .endproc
 
@@ -2935,7 +2935,7 @@ handle_f2_selection_change:
 
 f1:     jsr     AppendToPathBuf0
 
-:       jsr     jt_redraw_input
+:       jsr     JTRedrawInput
         rts
 
 hi:     .byte   0               ; high byte
@@ -3091,8 +3091,8 @@ l9:     jsr     StripPathSegment
 d1:     .byte   0
 d2:     .byte   0
 .endproc
-select_matching_file_in_list__f1 := SelectMatchingFileInList::f1
-select_matching_file_in_list__f2 := SelectMatchingFileInList::f2
+SelectMatchingFileInList__f1 := SelectMatchingFileInList::f1
+SelectMatchingFileInList__f2 := SelectMatchingFileInList::f2
 
 ;;; ============================================================
 

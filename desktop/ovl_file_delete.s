@@ -16,8 +16,8 @@
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         jsr     InstallCallbackTable
-        jsr     file_dialog::jt_prep_path
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::JTPrepPath
+        jsr     file_dialog::JTRedrawInput
 
         copy    #$FF, LD8EC
         jmp     file_dialog::EventLoop

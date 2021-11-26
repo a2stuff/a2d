@@ -169,7 +169,7 @@ start:  lda     ptr
         rts
 
 .endproc
-        SomeRoutine := SomeRoutineImpl::start
+SomeRoutine := SomeRoutineImpl::start
 ```
 
 * Delimit procedures with comments and document inputs, outputs, errors, and other assumptions.
