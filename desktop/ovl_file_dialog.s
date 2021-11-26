@@ -159,7 +159,7 @@ l1:     lda     winfo_file_dialog::window_id
 l2:     MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     l4
-l3:     jsr     SetCursorIbeam
+l3:     jsr     SetCursorIBeam
         jmp     l5
 
 l4:     jsr     SetCursorPointer
@@ -605,7 +605,7 @@ different:
 
 ;;; ============================================================
 
-.proc SetCursorIbeam
+.proc SetCursorIBeam
         bit     cursor_ibeam_flag
         bmi     done
         MGTK_RELAY_CALL MGTK::SetCursor, ibeam_cursor

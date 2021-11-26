@@ -503,7 +503,7 @@ l1:     lda     winfo_file_dialog::window_id
         MGTK_CALL MGTK::InRect, rect_input
         cmp     #MGTK::inrect_inside
         bne     l2
-        jsr     SetCursorIbeam
+        jsr     SetCursorIBeam
         jmp     l3
 
 l2:     jsr     UnsetIPCursor
@@ -953,7 +953,7 @@ different:
 
 ;;; ============================================================
 
-.proc SetCursorIbeam
+.proc SetCursorIBeam
         bit     cursor_ibeam_flag
         bmi     :+
         MGTK_CALL MGTK::SetCursor, ibeam_cursor

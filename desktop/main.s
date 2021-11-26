@@ -25,17 +25,17 @@ dst_path_buf   := $1F80
         ;; "Exported" by desktop.inc
 
 JT_MAIN_LOOP:           jmp     MainLoop
-JT_MGTK_RELAY:          jmp     MGTKRelayImpl           ; *
+JT_MGTK_CALL:           jmp     MGTKRelayImpl           ; *
 JT_SIZE_STRING:         jmp     ComposeSizeString
 JT_DATE_STRING:         jmp     ComposeDateString
-JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow
+JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
 JT_AUXLOAD:             jmp     AuxLoad
 JT_EJECT:               jmp     CmdEject
 JT_CLEAR_UPDATES:       jmp     ClearUpdates            ; *
 JT_ITK_RELAY:           jmp     ITKRelayImpl
 JT_LOAD_OVL:            jmp     LoadDynamicRoutine
 JT_CLEAR_SELECTION:     jmp     ClearSelection
-JT_MLI_RELAY:           jmp     MLIRelayImpl            ; *
+JT_MLI_CALL:            jmp     MLIRelayImpl            ; *
 JT_COPY_TO_BUF:         jmp     LoadWindowEntryTable
 JT_COPY_FROM_BUF:       jmp     StoreWindowEntryTable
 JT_NOOP:                jmp     CmdNoOp
@@ -45,7 +45,7 @@ JT_SHOW_ALERT_OPTIONS:  jmp     ShowAlertOption
 JT_LAUNCH_FILE:         jmp     LaunchFile
 JT_CUR_POINTER:         jmp     SetCursorPointer        ; *
 JT_CUR_WATCH:           jmp     SetCursorWatch          ; *
-JT_RESTORE_OVL:         jmp     RestoreDynamicRoutine
+JT_RESTORE_OVL:         jmp     RestoreDynamicRoutine   ; *
 JT_COLOR_MODE:          jmp     SetColorMode            ; *
 JT_MONO_MODE:           jmp     SetMonoMode             ; *
 JT_RESTORE_SYS:         jmp     RestoreSystem           ; *
@@ -55,7 +55,7 @@ JT_GET_SEL_WIN:         jmp     GetSelectionWindow      ; *
 JT_GET_WIN_PATH:        jmp     GetWindowPath           ; *
 JT_HILITE_MENU:         jmp     ToggleMenuHilite        ; *
 JT_ADJUST_FILEENTRY:    jmp     AdjustFileEntryCase     ; *
-JT_CUR_IBEAM:           jmp     SetCursorIbeam          ; *
+JT_CUR_IBEAM:           jmp     SetCursorIBeam          ; *
 JT_RGB_MODE:            jmp     SetRGBMode              ; *
 JT_YIELD_LOOP:          jmp     YieldLoop               ; *
 JT_SHOW_WARNING:        jmp     ShowWarning             ; *
@@ -14078,7 +14078,7 @@ dialog_param_addr:
         MGTK_RELAY_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         bne     out
-        jsr     SetCursorIbeamWithFlag ; toggling in prompt dialog
+        jsr     SetCursorIBeamWithFlag ; toggling in prompt dialog
         jmp     done
 out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
 done:   jsr     ResetMainGrafport
@@ -15384,10 +15384,10 @@ close_win:
 :       rts
 .endproc
 
-.proc SetCursorIbeamWithFlag
+.proc SetCursorIBeamWithFlag
         bit     cursor_ibeam_flag
         bmi     :+
-        jsr     SetCursorIbeam ; toggle routine
+        jsr     SetCursorIBeam ; toggle routine
         copy    #$80, cursor_ibeam_flag
 :       rts
 .endproc
@@ -15456,7 +15456,7 @@ params:  .res    3
         rts
 .endproc
 
-.proc SetCursorIbeam
+.proc SetCursorIBeam
         MGTK_RELAY_CALL MGTK::SetCursor, ibeam_cursor
         rts
 .endproc
