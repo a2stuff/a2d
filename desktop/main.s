@@ -4169,6 +4169,8 @@ process_drop:
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Yes, on an icon; update used/free for same-vol windows
+        ;; BUG: If a move to a folder in the same window, icon no longer valid
+        ;; since the source window has been updated above.
         jmp     UpdateUsedFreeViaIcon
 
         ;; (4/4) Dropped on window!
@@ -7477,6 +7479,7 @@ thumbmax:
 
         inc     icon_count
         jsr     AllocateIcon
+        sta     icon_num
         ldx     cached_window_entry_count
         inc     cached_window_entry_count
         sta     cached_window_entry_list,x
@@ -7616,8 +7619,34 @@ L7870:  lda     cached_window_id
         dex
         lda     cached_window_entry_list,x
         jsr     IconWindowToScreen
+
+        ;; If folder, see if there's an associated window
+        lda     icontype_filetype
+        cmp     #FT_DIRECTORY
+        bne     :+
+        lda     icon_num
+        jsr     GetIconPath     ; `path_buf3` set to path
+        jsr     PushPointers
+        ldax    #path_buf3
+        jsr     FindWindowForPath
+        tay
+        jsr     PopPointers
+        tya                     ; A = window id, 0 if none
+        beq     :+
+        tax
+        dex                     ; 1-based to 0-based
+        lda     icon_num
+        sta     window_to_dir_icon_table,x
+
+        ldy     #IconEntry::win_flags ; mark as open
+        lda     (icon_entry),y
+        ora     #kIconEntryFlagsOpen
+        sta     (icon_entry),y
+:
         add16   file_record, #.sizeof(FileRecord), file_record
         rts
+
+icon_num:       .byte   0
 .endproc
 
 ;;; ============================================================
