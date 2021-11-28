@@ -12155,8 +12155,6 @@ buf_padding_bytes:
 
 ;;; ============================================================
 
-file_entry_buf:  .res    .sizeof(FileEntry), 0
-
         ;; overlayed indirect jump table
         kOpJTAddrsSize = 6
 
@@ -12166,6 +12164,8 @@ op_jt_addr2:  .addr   copy_pop_directory
 op_jt_addr3:  .addr   DoNothing
 
 DoNothing:   rts
+
+file_entry_buf:  .res    .sizeof(FileEntry), 0
 
 L97E4:  .byte   $00
 
