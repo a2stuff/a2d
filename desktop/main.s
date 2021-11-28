@@ -2357,6 +2357,77 @@ tmp:    .addr   0
 .endproc
 
 ;;; ============================================================
+;;; Save/Restore drop target icon ID in case the window was rebuilt.
+
+;;; Inputs: `drag_drop_params::result`
+;;; Assert: If taget is a file icon, icon is in active window.
+;;; Trashes $06
+.proc MaybeStashDropTargetName
+        icon_ptr := $06
+
+        ;; Flag as not stashed
+        ldy     #0
+        sty     stashed_name
+
+        ;; Is the target an icon?
+        lda     drag_drop_params::result
+        bmi     done            ; high bit set = window
+
+        jsr     IconEntryLookup
+        stax    icon_ptr
+
+        ldy     #IconEntry::win_flags ; file icon?
+        lda     (icon_ptr),y
+        and     #kIconEntryWinIdMask
+        beq     done            ; nope, vol icon
+
+        ;; Stash name
+        add16_8 icon_ptr, #IconEntry::name, icon_ptr
+        ldy     #0
+        lda     (icon_ptr),y
+        tay
+:       lda     (icon_ptr),y
+        sta     stashed_name,y
+        dey
+        bpl     :-
+
+done:   rts
+.endproc
+
+;;; Outputs: `drag_drop_params::result` updated if needed
+;;; Assert: `MaybeStashDropTargetName` was previously called
+;;; Trashes $06
+.proc MaybeUpdateDropTargetFromName
+        ;; Did we previously stash an icon's name?
+        lda     stashed_name
+        beq     done            ; not stashed
+
+        ;; Try to find the icon by name.
+        lda     cached_window_id
+        sta     prev_cached_window_id
+        jsr     LoadDesktopEntryTable ; expected by `FindIconByName`
+        ldy     active_window_id
+        ldax    #stashed_name
+        jsr     FindIconByName
+        pha
+        lda     prev_cached_window_id
+        jsr     LoadWindowEntryTable ; restore previous state
+        pla                          ; A = `FindIconByName` result
+        beq     done                 ; no match
+
+        ;; Update drop target with new icon id.
+        sta     drag_drop_params::result
+
+done:   rts
+
+prev_cached_window_id:
+        .byte   0
+.endproc
+
+stashed_name:
+        .res    16, 0
+
+;;; ============================================================
 ;;; Grab the bounds (MGTK::Rect) of an icon. Just the graphic,
 ;;; not the label.
 ;;; Inputs: A = icon number
@@ -4153,13 +4224,15 @@ process_drop:
 
         ;; Was a move?
 :       bit     move_flag
-        bpl     :+
+    IF_NS
         ;; Update source vol's contents
+        jsr     MaybeStashDropTargetName ; in case target is in window...
         jsr     UpdateActiveWindow
-        ;; fall through
+        jsr     MaybeUpdateDropTargetFromName ; ...restore after update.
+    END_IF
 
         ;; (2/4) Dropped on trash?
-:       lda     drag_drop_params::result
+        lda     drag_drop_params::result
         cmp     trash_icon_num
         bne     :+
         ;; Update used/free for same-vol windows
@@ -4169,8 +4242,6 @@ process_drop:
 :       lda     drag_drop_params::result
         bmi     :+
         ;; Yes, on an icon; update used/free for same-vol windows
-        ;; BUG: If a move to a folder in the same window, icon no longer valid
-        ;; since the source window has been updated above.
         jmp     UpdateUsedFreeViaIcon
 
         ;; (4/4) Dropped on window!

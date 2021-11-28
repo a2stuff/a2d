@@ -438,3 +438,4 @@
 
 * Launch DeskTop. Open a volume window containing a folder. Open the folder window. Note that the folder icon is shaded. Close the volume window. Open the volume window again. Verify that the folder icon is shaded.
 * Launch DeskTop. Open a volume window. In the volume window, create a new folder F1 and open it. Note that the F1 icon is shaded. In the volume window, create a new folder F2. Verify that the F1 icon is still shaded.
+* Launch DeskTop. Open a volume window containing a file and a folder. Open the folder window. Drag the file to the folder icon (not the window). Verify that the folder window activates and updates to show the file.
