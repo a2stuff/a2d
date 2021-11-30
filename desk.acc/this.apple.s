@@ -575,6 +575,7 @@ str_network:    PASCAL_STRING res_string_card_type_network
 str_mockingboard: PASCAL_STRING res_string_card_type_mockingboard
 str_z80:        PASCAL_STRING res_string_card_type_z80
 str_uthernet2:  PASCAL_STRING res_string_card_type_uthernet2
+str_vidhd:      PASCAL_STRING res_string_card_type_vidhd
 str_unknown:    PASCAL_STRING res_string_unknown
 str_empty:      PASCAL_STRING res_string_empty
 str_none:       PASCAL_STRING res_string_none
@@ -1252,6 +1253,19 @@ penmode:.byte   MGTK::notpencopy
         jsr     PopulateSmartportName
         RESULT  str_smartport
 notpro:
+
+;;; ---------------------------------------------
+;;; VidHD
+
+        COMPARE_FWB $00, $24
+        bne     :+
+        COMPARE_FWB $01, $EA
+        bne     :+
+        COMPARE_FWB $02, $4C
+        bne     :+
+        RESULT  str_vidhd
+:
+
 ;;; ---------------------------------------------
 ;;; Apple IIe Technical Reference Manual
 ;;; Pascal 1.1 firmware protocol
