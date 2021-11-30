@@ -1216,54 +1216,39 @@ penmode:.byte   MGTK::notpencopy
         cmp     #value
 .endmacro
 
-.macro RESULT value
-        lda     #<value
-        ldx     #>value
-        sec
-        rts
-.endmacro
-
 ;;; ---------------------------------------------
 ;;; Per Technical Note: Miscellaneous #8: Pascal 1.1 Firmware Protocol ID Bytes
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
 
 ;;; ProDOS and SmartPort Devices
 
-        COMPARE_FWB $01, $20    ; $Cn01 == $20 ?
-        bne     notpro
-
-        COMPARE_FWB $03, $00    ; $Cn03 == $00 ?
-        bne     notpro
-
-        COMPARE_FWB $05, $03    ; $Cn05 == $03 ?
-        bne     notpro
+        ldax    #sigtable_prodos_device
+        jsr     SigCheck
+        bcc     notpro
 
 ;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
         COMPARE_FWB $FF, $00    ; $CnFF == $00 ?
         bne     :+
-        RESULT  str_diskii
+        return16 #str_diskii
 :
-
         COMPARE_FWB $07, $00    ; $Cn07 == $00 ?
         beq     :+
-        RESULT  str_block
-
+        sec
+        return16 #str_block
 :
         jsr     PopulateSmartportName
-        RESULT  str_smartport
+        sec
+        return16 #str_smartport
 notpro:
 
 ;;; ---------------------------------------------
 ;;; VidHD
 
-        COMPARE_FWB $00, $24
-        bne     :+
-        COMPARE_FWB $01, $EA
-        bne     :+
-        COMPARE_FWB $02, $4C
-        bne     :+
-        RESULT  str_vidhd
+        ldax    #sigtable_vidhd
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_vidhd
 :
 
 ;;; ---------------------------------------------
@@ -1277,21 +1262,16 @@ notpro:
 ;;;              c = device class
 ;;;              i = unique identifier
 
-        COMPARE_FWB $05, $38    ; $Cn05 == $38 ?
-        jne     notpas
-
-        COMPARE_FWB $07, $18    ; $Cn07 == $18 ?
-        jne     notpas
-
-        COMPARE_FWB $0B, $01    ; $Cn0B == $01 ?
-        jne     notpas
+        ldax    #sigtable_pascal
+        jsr     SigCheck
+        jcc     notpas
 
         GET_FWB $0C             ; $Cn0C == ....
 
 .macro IF_SIGNATURE_THEN_RETURN     byte, arg
         cmp     #byte
         bne     :+
-        RESULT  arg
+        return16 #arg           ; C=1 implicitly if Z=1
 :
 .endmacro
 
@@ -1314,7 +1294,8 @@ notpro:
 
         ;; Pascal Firmware, but unknown type. Return
         ;; "unknown" otherwise it will be detected as serial below.
-        RESULT  str_unknown
+        sec
+        return16 #str_unknown
 
 notpas:
 
@@ -1322,51 +1303,88 @@ notpas:
 ;;; Based on ProDOS BASIC Programming Examples
 
 ;;; Silentype
-        COMPARE_FWB $17, $C9
-        bne     :+
-        COMPARE_FWB $37, $CF
-        bne     :+
-        COMPARE_FWB $4C, $EA
-        bne     :+
-        RESULT  str_silentype
+        ldax    #sigtable_silentype
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_silentype
 :
 
 ;;; Clock
-        COMPARE_FWB $00, $08
-        bne     :+
-        COMPARE_FWB $01, $78
-        bne     :+
-        COMPARE_FWB $02, $28
-        bne     :+
-        RESULT  str_clock
+        ldax    #sigtable_clock
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_clock
 :
 
 ;;; Communications Card
-        COMPARE_FWB $05, $18
-        bne     :+
-        COMPARE_FWB $07, $38
-        bne     :+
-        RESULT  str_comm
+        ldax    #sigtable_comm
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_comm
 :
 
 ;;; Serial Card
-        COMPARE_FWB $05, $38
-        bne     :+
-        COMPARE_FWB $07, $18
-        bne     :+
-        RESULT  str_serial
+        ldax    #sigtable_serial
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_serial
 :
 
 ;;; Parallel Card
-        COMPARE_FWB $05, $48
-        bne     :+
-        COMPARE_FWB $07, $48
-        bne     :+
-        RESULT  str_parallel
+        ldax    #sigtable_parallel
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_parallel
 :
 
+        rts
+
+;;; Input: A,X = pointer to table (num, offset, value, offset, value, ...)
+;;; Output: C=1 on match, C=0 on no match
+.proc SigCheck
+        stax    table_ptr
+
+        ldx     #0              ; first byte in table is number of pairs
+        jsr     get_next
+        asl     a               ; if 2 entries, then point at table[4] (etc)
+        tax
+
+:       jsr     get_next        ; second byte in pair is value
+        sta     @compare_byte
+        dex
+        jsr     get_next        ; first byte in pair is offset
+        tay
+        lda     (ptr),y
+        @compare_byte := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     no_match
+        dex
+        bne     :-
+
+        ;; match
+        sec
+        rts
+
+no_match:
         clc
         rts
+
+get_next:
+        table_ptr := *+1
+        lda     SELF_MODIFIED,x
+        rts
+.endproc
+
+;;; Format is: num, offset, value, offset, value, ...
+sigtable_prodos_device: .byte   3, $01, $20, $03, $00, $05, $03
+sigtable_vidhd:         .byte   3, $00, $24, $01, $EA, $02, $4C
+sigtable_pascal:        .byte   3, $05, $38, $07, $18, $0B, $01
+sigtable_silentype:     .byte   3, $17, $C9, $37, $CF, $4C, $EA
+sigtable_clock:         .byte   3, $00, $08, $01, $78, $02, $28
+sigtable_comm:          .byte   2, $05, $18, $07, $38
+sigtable_serial:        .byte   2, $05, $38, $07, $18
+sigtable_parallel:      .byte   2, $05, $48, $07, $48
+
 .endproc
 
 ;;; ============================================================
@@ -1382,17 +1400,17 @@ notpas:
 
         jsr     DetectMockingboard
         bcc     :+
-        RESULT  str_mockingboard
+        return16 #str_mockingboard
 :
 
         jsr     DetectZ80
         bcc     :+
-        RESULT  str_z80
+        return16 #str_z80
 :
 
         jsr     DetectUthernet2
         bcc     :+
-        RESULT  str_uthernet2
+        return16 #str_uthernet2
 :
         clc
         rts
