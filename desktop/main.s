@@ -7721,15 +7721,17 @@ icon_num:       .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Inputs: A = `IconType` member
+;;; Outputs: Populates `iconentry_flags`, `iconbits`, `icon_height`
 
 .proc FindIconDetailsForIconType
         ptr := $6
 
-        sta     icon_type
+        tay
         jsr     PushPointers
+        tya
 
         ;; For populating IconEntry::win_flags
-        ldy     icon_type
         lda     icontype_iconentryflags_table, y
         sta     iconentry_flags
 
@@ -7746,9 +7748,6 @@ icon_num:       .byte   0
 
         jsr     PopPointers
         rts
-
-icon_type:
-        .byte   0
 .endproc
 
 .endproc
@@ -9451,7 +9450,7 @@ exit:   rts
 .endproc
 
 ;;; ============================================================
-;;; Pushes two words from $6/$8 to stack
+;;; Pushes two words from $6/$8 to stack; trashes A,X
 
 .proc PushPointers
         ptr := $6
