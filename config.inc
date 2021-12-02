@@ -15,10 +15,10 @@
 kDeskTopVersionMajor = 1
 kDeskTopVersionMinor = 2
 .define kDeskTopVersionSuffix "-alpha39"
-.define kBuildDate " 24, 2021"
+.define kBuildDate "December 1, 2021"
 kBuildYY = 21
-kBuildMM = 11
-kBuildDD = 24
+kBuildMM = 12
+kBuildDD = 1
 
 ;;; Localization - applies language suffix to filename
 
