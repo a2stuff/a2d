@@ -14512,12 +14512,6 @@ jump_relay:
         beq     close
         cmp     #MGTK::EventKind::key_down
         bne     :-
-        lda     event_key
-        cmp     #CHAR_ESCAPE
-        beq     close
-        cmp     #CHAR_RETURN
-        bne     :-
-        ;; fall through
 
 close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         jmp     ClearUpdates ; following CloseWindow
