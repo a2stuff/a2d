@@ -1018,6 +1018,8 @@ l1:     .byte   0
 .proc ChangeDrive
         lda     #$FF
         sta     selected_index
+        jsr     app::ModifierDown
+        sta     drive_dir_flag
         jsr     NextDeviceNum
         jsr     DeviceOnLine
         jsr     ReadDir
@@ -1590,8 +1592,11 @@ found:  param_call AdjustVolumeNameCase, buf_on_line
 
 ;;; ============================================================
 
+drive_dir_flag:
+        .byte   0
+
 .proc NextDeviceNum
-        jsr     app::ModifierDown
+        bit     drive_dir_flag
         bmi     incr
 
         ;; Decrement
