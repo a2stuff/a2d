@@ -471,9 +471,11 @@ LA47F:  .byte   0
 :       jsr     app::YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
+        cmp     #MGTK::EventKind::apple_key
+        beq     is_btn
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jsr     HandleButtonDown
+is_btn: jsr     HandleButtonDown
         jmp     EventLoop
 
 :       cmp     #MGTK::EventKind::key_down
@@ -1016,7 +1018,7 @@ l1:     .byte   0
 .proc ChangeDrive
         lda     #$FF
         sta     selected_index
-        jsr     DecDeviceNum
+        jsr     NextDeviceNum
         jsr     DeviceOnLine
         jsr     ReadDir
         jsr     UpdateScrollbar
@@ -1105,6 +1107,9 @@ l7:     .byte   0
         ;; With modifiers
         lda     event_key
 
+        cmp     #CHAR_TAB
+        jeq     is_tab
+
         cmp     #CHAR_LEFT
         bne     :+
         jmp     InputIPToStart  ; start of line
@@ -1166,7 +1171,7 @@ no_modifiers:
 
 :       cmp     #CHAR_TAB
         bne     not_tab
-        lda     winfo_file_dialog::window_id
+is_tab: lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, change_drive_button_rect
@@ -1573,7 +1578,7 @@ retry:  ldx     device_num
         and     #NAME_LENGTH_MASK
         sta     buf_on_line
         bne     found
-        jsr     DecDeviceNum
+        jsr     NextDeviceNum
         jmp     retry
 
 found:  param_call AdjustVolumeNameCase, buf_on_line
@@ -1585,11 +1590,24 @@ found:  param_call AdjustVolumeNameCase, buf_on_line
 
 ;;; ============================================================
 
-.proc DecDeviceNum
+.proc NextDeviceNum
+        jsr     app::ModifierDown
+        bmi     incr
+
+        ;; Decrement
         dec     device_num
         bpl     :+
         copy    DEVCNT, device_num
 :       rts
+
+        ;; Increment
+incr:   ldx     device_num
+        cpx     DEVCNT
+        bne     :+
+        ldx     #AS_BYTE(-1)
+:       inx
+        stx     device_num
+        rts
 .endproc
 
 ;;; ============================================================

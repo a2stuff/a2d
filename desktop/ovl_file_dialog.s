@@ -121,9 +121,11 @@ L5105:  .byte   0       ; ??? something about the picker
 :       jsr     main::YieldLoop
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
+        cmp     #MGTK::EventKind::apple_key
+        beq     is_btn
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jsr     HandleButtonDown
+is_btn: jsr     HandleButtonDown
         jmp     EventLoop
 
 :       cmp     #MGTK::EventKind::key_down
@@ -666,7 +668,7 @@ l2:     .byte   0
 .proc ChangeDrive
         lda     #$FF
         sta     selected_index
-        jsr     DecDeviceNum
+        jsr     NextDeviceNum
         jsr     DeviceOnLine
         jsr     ReadDir
         jsr     UpdateScrollbar
@@ -752,6 +754,9 @@ L56E3:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         ;; With modifiers
         lda     event_key
 
+        cmp     #CHAR_TAB
+        jeq     is_tab
+
         cmp     #CHAR_LEFT
         bne     :+
         jmp     JTHandleMetaLeftKey ; start of line
@@ -809,9 +814,10 @@ L59F7:  lda     event_key
         bpl     :+
         jmp     finish
 
+        ;; TODO: Handle modifier+tab
 :       cmp     #CHAR_TAB
         bne     not_tab
-        lda     winfo_file_dialog::window_id
+is_tab: lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
@@ -1228,7 +1234,7 @@ retry:  ldx     device_num
         and     #NAME_LENGTH_MASK
         sta     on_line_buffer
         bne     found
-        jsr     DecDeviceNum
+        jsr     NextDeviceNum
         jmp     retry
 
 found:  param_call main::AdjustVolumeNameCase, on_line_buffer
@@ -1240,11 +1246,24 @@ found:  param_call main::AdjustVolumeNameCase, on_line_buffer
 
 ;;; ============================================================
 
-.proc DecDeviceNum
+.proc NextDeviceNum
+        jsr     main::ModifierDown
+        bmi     incr
+
+        ;; Decrement
         dec     device_num
         bpl     :+
         copy    DEVCNT, device_num
 :       rts
+
+        ;; Increment
+incr:   ldx     device_num
+        cpx     DEVCNT
+        bne     :+
+        ldx     #AS_BYTE(-1)
+:       inx
+        stx     device_num
+        rts
 .endproc
 
 ;;; ============================================================

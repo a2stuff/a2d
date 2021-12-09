@@ -16761,7 +16761,7 @@ iigs:   lda     KEYMODREG
         rts
 .endproc
 
-;;; Test if either shift is down (if it can be detected).
+;;; Test if shift is down (if it can be detected).
 ;;; Output: A=high bit/N flag set if down.
 
 .proc ShiftDown

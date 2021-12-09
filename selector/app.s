@@ -2434,6 +2434,14 @@ loop_counter:
 .endproc
 
 ;;; ============================================================
+;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
+;;; Output: A=high bit/N flag set if either is down.
+
+.proc ModifierDown
+        lda     BUTN0
+        ora     BUTN1
+        rts
+.endproc
 
 ;;; ============================================================
 
