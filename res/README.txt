@@ -1,9 +1,11 @@
 Apple II DeskTop
 ================
 
-A2DeskTop-1.2-..._800k.2mg is an 800k image containing the full
-application and all accessories. It can be transferred to a 3.5"
-floppy using ADTPro.
+A2DeskTop-1.2-..._800k.2mg and .hdv files are 800k images containing
+the full application and all accessories. The .2mg file can be
+transferred to a 3.5" floppy using ADTPro. The .hdv file has the same
+contents, just a slightly different file format which other
+tools/emulators/solid state drives prefer.
 
 A2DeskTop-1.2-..._140k_disk1.po and A2DeskTop-1.2-..._140k_disk2.po
 are 140k images containing different parts of the application, and can

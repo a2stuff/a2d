@@ -31,7 +31,8 @@ cecho yellow "Building disk images: $version"
 # One 800k image (complete), and two 140k images (two parts).
 
 mkdir -p out
-IMGFILE_COMPLETE="out/A2DeskTop-${version}_800k.2mg"
+IMGFILE_COMPLETE_2MG="out/A2DeskTop-${version}_800k.2mg"
+IMGFILE_COMPLETE_HDV="out/A2DeskTop-${version}_800k.hdv"
 IMGFILE_PART1="out/A2DeskTop-${version}_140k_disk1.po"
 IMGFILE_PART2="out/A2DeskTop-${version}_140k_disk2.po"
 
@@ -39,7 +40,7 @@ VOLNAME_COMPLETE="A2.DeskTop"
 VOLNAME_PART1="A2.DeskTop.1"
 VOLNAME_PART2="A2.DeskTop.2"
 
-IMAGES="$IMGFILE_COMPLETE $IMGFILE_PART1 $IMGFILE_PART2"
+IMAGES="$IMGFILE_COMPLETE_2MG $IMGFILE_COMPLETE_HDV $IMGFILE_PART1 $IMGFILE_PART2"
 
 # Create disk images.
 
@@ -47,7 +48,8 @@ for img in $IMAGES; do
     rm -f "$img"
 done
 
-suppress cadius CREATEVOLUME $IMGFILE_COMPLETE $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
+suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_2MG $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
+suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_HDV $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
 suppress cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet --no-case-bits
 suppress cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-case-bits
 
@@ -75,7 +77,8 @@ add_file () {
     local dst_file="$4"
     local suffix="$5"
 
-    add_file_internal $IMGFILE_COMPLETE "$src_file" "/$VOLNAME_COMPLETE/$folder" "$dst_file" "$suffix"
+    add_file_internal $IMGFILE_COMPLETE_2MG "$src_file" "/$VOLNAME_COMPLETE/$folder" "$dst_file" "$suffix"
+    add_file_internal $IMGFILE_COMPLETE_HDV "$src_file" "/$VOLNAME_COMPLETE/$folder" "$dst_file" "$suffix"
     if [ "$disposition" = "required" ]; then
         add_file_internal $IMGFILE_PART1 "$src_file" "/$VOLNAME_PART1/$folder" "$dst_file" "$suffix"
     else
@@ -97,7 +100,8 @@ create_folder() {
     local disposition="$1"
     local path="$2"
 
-    create_folder_internal $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/$path"
+    create_folder_internal $IMGFILE_COMPLETE_2MG "/$VOLNAME_COMPLETE/$path"
+    create_folder_internal $IMGFILE_COMPLETE_HDV "/$VOLNAME_COMPLETE/$path"
     if [ "$disposition" = "required" ]; then
         create_folder_internal $IMGFILE_PART1 "/$VOLNAME_PART1/$path"
     else
