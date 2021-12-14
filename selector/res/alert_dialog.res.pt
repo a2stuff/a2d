@@ -1,0 +1,8 @@
+.define res_string_alert_selector_unable_to_run "Voc& n[o pode executar o programa."
+.define res_string_alert_io_error "Erro de E / S."
+.define res_string_alert_no_device "Nenhum dispositivo conectado."
+.define res_string_alert_pathname_does_not_exist "Parte da rota n[o existe."
+.define res_string_alert_insert_source_disk "Insira o disco de origem."
+.define res_string_alert_file_not_found "O arquivo n[o pode ser encontrado."
+.define res_string_alert_insert_system_disk "Insira o disco do sistema."
+.define res_string_alert_basic_system_not_found "O BASIC.SYSTEM n[o pode ser encontrado."

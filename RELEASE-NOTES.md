@@ -13,6 +13,7 @@ Project Page: https://github.com/a2stuff/a2d
   * French
   * Italian
   * Spanish
+  * Portuguese
   * German
 
 ### DeskTop Enhancements

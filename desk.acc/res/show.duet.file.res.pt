@@ -1,0 +1,4 @@
+.define res_string_playing "Reproduzir: "
+.define res_string_credit1 "Electric Duet de Paul Lutus"
+.define res_string_credit2 "Reprodu][o por Alexander Patalenski"
+.define res_string_instructions "Pressione qualquer tecla para parar"

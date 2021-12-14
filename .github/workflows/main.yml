@@ -28,6 +28,8 @@ jobs:
         run: bin/setlang it && make && make package
       - name: build a2d - es
         run: bin/setlang es && make && make package
+      - name: build a2d - pt
+        run: bin/setlang pt && make && make package
       - name: build a2d - de
         run: bin/setlang de && make && make package
 
