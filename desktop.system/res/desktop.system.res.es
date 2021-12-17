@@ -4,6 +4,6 @@
 .define res_string_prompt_insert_source "Inserte el disco original y presione Return para continuar o Esc para cancelar."
 .define res_string_prompt_ramcard_full "No hay suficiente espacio en la Memoria RAM. Presione Return para continuar."
 .define res_string_error_prefix "Error $"
-.define res_string_error_suffix " ocurrio durante la copia "
-.define res_string_prompt_copy_not_completed "La copia no termino. Presione Return para continuar."
+.define res_string_error_suffix " ocurri\x13 durante la copia "
+.define res_string_prompt_copy_not_completed "La copia no termin\x13. Presione Return para continuar."
 .define res_char_monitor_shortcut 'M'

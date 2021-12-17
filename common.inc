@@ -195,11 +195,11 @@ INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 ;;; Glyphs $00-$1F are useful symbols; some overlap with MouseText
 ;;; (called out as MT:X in the table below)
 ;;;
-;;; $00 = space                $10 = TM left
-;;; $01 = folder left  (MT:X)  $11 = TM right
-;;; $02 = folder right (MT:Y)  $12 = pound
-;;; $03 = hourglass    (MT:C)  $13 = pi
-;;; $04 = insertion pt         $14 = divide
+;;; $00 = space                $10 = TM left      *
+;;; $01 = folder left  (MT:X)  $11 = TM right     *
+;;; $02 = folder right (MT:Y)  $12 = pound        *
+;;; $03 = hourglass    (MT:C)  $13 = pi           *
+;;; $04 = insertion pt         $14 = divide       *
 ;;; $05 = pointer      (MT:B)  $15 = rarrow       (MT:U)
 ;;; $06 = vbar         (MT:_)  $16 = tri
 ;;; $07 = hbar         (MT:S)  $17 = open circ
@@ -211,6 +211,9 @@ INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 ;;; $0D = return       (MT:M)  $1D = check        (MT:D)
 ;;; $0E = (C)                  $1E = solid apple  (MT:@)
 ;;; $0F = (R)                  $1F = open apple   (MT:A)
+;;;
+;;; * = used to provide additional characters in some languages
+;;; (notably Spanish) where Apple's character sets are lacking.
 
 kGlyphFolderLeft        = $01
 kGlyphFolderRight       = $02

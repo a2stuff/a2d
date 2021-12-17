@@ -46,6 +46,8 @@ sub encode($$) {
         $s =~ tr/£§˚çéùàòèì/#@[\\]`{|}~/;
     } elsif ($lang eq 'es') {
         $s =~ tr/£§¡Ñ¿`˚ñç~/#@[\\]`{|}~/;
+        # unofficial extensions for A2D
+        $s =~ tr/áéíóú/\x10-\x14/;
     } elsif ($lang eq 'da') {
         $s =~ tr/#@ÆØÅ`æøå~/#@[\\]`{|}~/;
     } elsif ($lang eq 'sv') {
@@ -57,6 +59,7 @@ sub encode($$) {
     }
     $s =~ s|\\|\\\\|g; # Escape newly generated \
     $s =~ tr/\xFF/\\/; # Restore the original \ (see above)
+    $s =~ s/([\x10-\x14])/sprintf("\\x%02x",ord($1))/seg; # Escape control chars
 
     die "Unencodable ($lang) in line $.: $s\n" unless $s =~ /^[\x20-\x7e]*$/;
 

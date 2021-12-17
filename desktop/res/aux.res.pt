@@ -101,7 +101,7 @@
 .define res_string_errmsg_27 "Erro de E / S."
 .define res_string_errmsg_28 "N[o h@ nenhum dispositivo conectado."
 .define res_string_errmsg_2B "O disco est@ protegido contra grava][o."
-.define res_string_errmsg_40 "a sintaxe do local ` inv@lida."
+.define res_string_errmsg_40 "A sintaxe do local ` inv@lida."
 .define res_string_errmsg_44 "Parte do local n[o existe."
 .define res_string_errmsg_45 "O volume est@ faltando."
 .define res_string_errmsg_46 "O arquivo n[o pode ser encontrado."

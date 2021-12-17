@@ -3,10 +3,10 @@
 .define res_string_menu_item_desktop "%s Version %d.%d"
 .define res_string_dc_menu_item_quit "Salir"
 .define res_char_dc_menu_item_quit_shortcut 'Q'
-.define res_string_menu_item_quick_copy "Copia Rapida"
+.define res_string_menu_item_quick_copy "Copia R\x10pida"
 .define res_string_dc_menu_item_disk_copy "Copiar Disco"
 .define res_string_disk_copy_padded_dialog_title "    Copiar Disco    "
-.define res_string_quick_copy_padded_dialog_title "    Copia Rapida    "
+.define res_string_quick_copy_padded_dialog_title "    Copia R\x10pida    "
 .define res_string_button_read_drive "Leer Unidad   D"
 .define res_char_button_read_drive_shortcut 'D'
 .define res_string_label_slot_drive_name "Ranura, Unidad, Nombre"
@@ -16,8 +16,8 @@
 .define res_string_label_status_writing "Escribiendo...   "
 .define res_string_label_status_reading "Leyendo...    "
 .define res_string_unknown "Desconocido"
-.define res_string_label_select_quit "Seleccione Salir del menu (%cQ) para regresar al escritorio"
-.define res_string_label_blocks_read "Bloques leidos: "
+.define res_string_label_select_quit "Seleccione Salir del men\x14 (%cQ) para regresar al escritorio"
+.define res_string_label_blocks_read "Bloques le\x12dos: "
 .define res_string_label_blocks_written "Bloques escritos: "
 .define res_string_label_blocks_to_transfer "Bloques a transferir: "
 .define res_string_source "Origen "
@@ -38,8 +38,8 @@
 .define res_string_prompt_erase_prefix "]Quiere borrar "
 .define res_string_prompt_erase_suffix "?"
 .define res_string_errmsg_dest_format_fail "[El disco de destino no puede inicializarse!"
-.define res_string_errmsg_format_error "error de inicializacion."
-.define res_string_errmsg_dest_protected "[El volumen de destino esta protegido contra escritura!"
+.define res_string_errmsg_format_error "Error de inicializaci\x13n."
+.define res_string_errmsg_dest_protected "[El volumen de destino est\x10 protegido contra escritura!"
 .define res_string_prompt_erase_slot_drive_pattern "]Quiere borrar el disco en la ranura # unidad #?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 38
 .define res_const_prompt_erase_slot_drive_pattern_offset2 47

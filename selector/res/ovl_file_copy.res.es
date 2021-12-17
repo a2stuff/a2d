@@ -1,6 +1,6 @@
 .define res_string_label_download "Copiando a RAMDisk..."
 .define res_string_label_copying "Copiando:"
-.define res_string_errmsg_not_enough_room "No hay sitio suficiente en la RAMDisk para copiar la aplicacion."
+.define res_string_errmsg_not_enough_room "No hay sitio suficiente en la RAMDisk para copiar la aplicaci\x13n."
 .define res_string_prompt_click_ok "Presiona OK para continuar."
 .define res_string_errmsg_error_download "Ha ocurrido un error durante la descarga."
 .define res_string_errmsg_copy_incomplete "La copia no se ha completado."
