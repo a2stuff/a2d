@@ -96,7 +96,7 @@
 .define res_string_warning_window_must_be_closed "Tiene que cerrar una ventana antes de abrir este \x12tem."
 .define res_string_warning_too_many_files "[Hay demasiados archivos para abrir este elemento!"
 .define res_string_warning_too_many_windows "[Hay demasiadas ventanas abiertas en el escritorio!"
-.define res_string_warning_save_changes "]Quieres guardar los cambios en el disco de sistema?"
+.define res_string_warning_save_changes "]Quiere guardar los cambios en el disco de sistema?"
 .define res_string_errmsg_00 "Error de Sistema"
 .define res_string_errmsg_27 "Error de E/S."
 .define res_string_errmsg_28 "No hay dispositivo conectado."
