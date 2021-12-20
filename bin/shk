@@ -8,8 +8,10 @@
 set -e
 source "bin/util.sh"
 
-NULIB2=$(command -v nulib2 || echo '')
-NULIB2="${PNULIB2:-$HOME/dev/nulib2/nulib2/nulib2}"
+if ! command -v "nulib2" >/dev/null; then
+    cecho red "NuLib2 not installed."
+    exit 1
+fi
 
 tempdir=$(mktemp -d "${TMPDIR:-/tmp}/shk.XXXXXXXXX")
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
@@ -58,7 +60,7 @@ cecho yellow "Creating SHK..."
 
 cdir=`pwd`
 cd "${tempdir}"
-$NULIB2 aer "${cdir}/out/A2D.SHK" * || (cecho red "failed to write ${cdir}/out/A2D.SHK" ; return 1)
+nulib2 aer "${cdir}/out/A2D.SHK" * || (cecho red "failed to write ${cdir}/out/A2D.SHK" ; return 1)
 cd "${cdir}"
 rm -rf "${tempdir}"
 
