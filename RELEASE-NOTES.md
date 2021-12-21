@@ -103,6 +103,8 @@ Project Page: https://github.com/a2stuff/a2d
     * Another classic screen saver effect: the screen melts down like dripping wax. ([#27](https://github.com/a2stuff/a2d/issues/27))
   * **Invert**
     * Invert the screen until the next click/key. ([#261](https://github.com/a2stuff/a2d/issues/261))
+  * **Matrix**
+    * Digital rain effect, inspired by https://github.com/neilk/apple-ii-matrix
 
 Note that the desk accessories from version 1.2 will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
