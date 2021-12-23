@@ -24,9 +24,11 @@
         jsr     SaveText
         sta     TXTSET
         sta     CLR80VID
+        sta     DHIRESOFF
 
         jsr     Run
 
+        sta     DHIRESON
         sta     TXTCLR
         sta     SET80VID
         jsr     RestoreText
