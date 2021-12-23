@@ -1,7 +1,8 @@
 ;;; ============================================================
-;;; INVERT - Desk Accessory
+;;; MATRIX - Desk Accessory
 ;;;
-;;; Inverts the screen.
+;;; Digital waterfall effect from The Matrix.
+;;; (This is a good sample for text-mode screen savers.)
 ;;; ============================================================
 
         .include "../config.inc"
