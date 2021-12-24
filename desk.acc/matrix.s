@@ -18,17 +18,18 @@
 
         .org DA_LOAD_ADDRESS
 
+kMainPageClearByte = ' '|$80    ; space
+kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
+
 .proc Start
         sta     ROMIN2
         sta     ALTZPOFF
         jsr     SaveText
         sta     TXTSET
         sta     CLR80VID
-        sta     DHIRESOFF
 
         jsr     Run
 
-        sta     DHIRESON
         sta     TXTCLR
         sta     SET80VID
         jsr     RestoreText
@@ -41,56 +42,84 @@
 
 ;;; ============================================================
 
-;;; Save text page 1 (not screen holes)
+;;; Save and clear main/aux text page 1 (preserving screen holes)
 .proc SaveText
+        sta     SET80COL        ; 80STORE on - let page1/2 control banking
         lda     #0
         sta     CV
 
-        ptr := $06
+        ptr1 := $06
+        ptr2 := $08
 
         ;; Set BASL/H
-loop:   jsr     VTAB
-        add16   BASL, #save_buffer-$400, ptr
+rloop:  jsr     VTAB
+        add16   BASL, #save_buffer-$400, ptr1
+        add16   ptr2, $400, ptr2
         ldy     #39
         ldx     #0
 
-:       lda     (BASL),y
-        sta     (ptr),y
-        lda     #' '|$80
+cloop:
+        ;; Main
+        lda     (BASL),y
+        sta     (ptr1),y
+        lda     #kMainPageClearByte
         sta     (BASL),y
+
+        ;; Aux
+        sta     PAGE2ON
+        lda     (BASL),y
+        sta     (ptr1),y
+        lda     #kAuxPageClearByte
+        sta     (BASL),y
+        sta     PAGE2OFF
+
         dey
-        bpl     :-
+        bpl     cloop
 
         inc     CV
         lda     CV
         cmp     #24
-        bne     loop
+        bne     rloop
 
+        sta     CLR80COL
         rts
 .endproc
 
-;;; Restore text page 1 (not screen holes)
+;;; Restore main/aux text page 1 (preserving screen holes)
 .proc RestoreText
+        sta     SET80COL        ; 80STORE on - let page1/2 control banking
         lda     #0
         sta     CV
 
-        ptr := $06
+        ptr1 := $06
+        ptr2 := $08
 
         ;; Set BASL/H
-loop:   jsr     VTAB
-        add16   BASL, #save_buffer-$400, ptr
+rloop:  jsr     VTAB
+        add16   BASL, #save_buffer-$400, ptr1
+        add16   ptr1, $400, ptr2
         ldy     #39
 
-:       lda     (ptr),y
+cloop:
+        ;; Main
+        lda     (ptr1),y
         sta     (BASL),y
+
+        ;; Aux
+        sta     PAGE2ON
+        lda     (ptr2),y
+        sta     (BASL),y
+        sta     PAGE2OFF
+
         dey
-        bpl     :-
+        bpl     cloop
 
         inc     CV
         lda     CV
         cmp     #24
-        bne     loop
+        bne     rloop
 
+        sta     CLR80COL
         rts
 .endproc
 
@@ -320,10 +349,9 @@ InitLoop:
 
 ;;; ============================================================
 
-save_buffer:
+.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
 
-;;; ============================================================
+save_buffer := *
 
-.assert * + $400 < WINDOW_ENTRY_TABLES, error, .sprintf("DA too big (at $%X)", *)
-        ;; I/O Buffer starts at MAIN $1C00
-        ;; ... but entry tables start at AUX $1B00
+;;; Ensure there's enough room for both main and aux text page
+.assert * + $800 < $2000, error, .sprintf("Not enough room for save buffers")
