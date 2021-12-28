@@ -359,7 +359,7 @@ nextwinfo:      .addr   0
 .endparams
 
 ;;; ============================================================
-;;; Dialog used for Shortcuts > Add/Edit a Shortcut...
+;;; File Picker Dialog
 
 kFilePickerDlgWindowID  = $12
 kFilePickerDlgWidth     = 500
@@ -401,7 +401,7 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-;;; File picker within Add/Edit a Shortcut dialog
+;;; Listbox within File Picker
 
 kEntryListCtlWindowID = $15
 
@@ -429,6 +429,7 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
+maprect:
         DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -441,6 +442,7 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
+;;; ============================================================
 ;;; "About Apple II DeskTop" Dialog
 
 .params winfo_about_dialog
@@ -610,13 +612,13 @@ has_input_field_flag:
         .byte   0
 
 prompt_ip_counter:
-        .byte   1               ; immediately decremented to 0 and reset
+        .byte   1             ; immediately decremented to 0 and reset
 
 prompt_ip_flag:
         .byte   0
 
-;;; Flag that controls the behavior of the file dialog picker.
-LD8EC:  .byte   0
+blink_ip_flag:                ; when set, IP in file dialog blinks
+        .byte   0
 
 format_erase_overlay_flag:
         .byte   0
@@ -626,12 +628,20 @@ str_insertion_point:
 
 ;;; Flags that control the behavior of the file picker dialog.
 
-LD8F0:  .byte   0
-LD8F1:  .byte   0
-LD8F2:  .byte   0
-LD8F3:  .byte   0
-LD8F4:  .byte   0
-LD8F5:  .byte   0
+input_dirty_flag:               ; set when input has changed value
+        .byte   0
+input1_dirty_flag:              ; stash dirty flag when input2 is active
+        .byte   0
+input2_dirty_flag:              ; stash dirty flag when input1 is active
+        .byte   0
+
+LD8F3:  .byte   0               ; TODO: written, never read
+LD8F4:  .byte   0               ; TODO: unused
+
+        ;; If set, prompt is not limited to filename characters.
+        ;; (This is never set by DeskTop.)
+input_allow_all_chars_flag:
+        .byte   0
 
         ;; Used to draw/clear insertion point; overwritten with char
         ;; to right of insertion point as needed.
@@ -657,11 +667,16 @@ str_kb_suffix:
 file_count:
         .word   0
 
-        DEFINE_POINT file_dialog_title_pos, 0, 13
+.scope file_dialog_res2
 
-        DEFINE_RECT rect_file_dialog_selection, 0, 0, 125, 0
+        DEFINE_POINT pos_title, 0, 13
+
+        DEFINE_RECT rect_selection, 0, 0, 125, 0
 
         DEFINE_POINT picker_entry_pos, 2, 0
+
+
+
 
 str_folder:
         PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight} ; do not localize
@@ -669,6 +684,7 @@ str_folder:
 selected_index:                 ; $FF if none
         .byte   0
 
+.endscope
 
 LD921:  .byte   0
 
@@ -699,7 +715,7 @@ kRadioControlHeight = 8
 
         DEFINE_RECT_INSET dialog_frame_rect, 4, 2, kFilePickerDlgWidth, kFilePickerDlgHeight
 
-        DEFINE_RECT rect_D9C8, 27, 16, 174, 26
+        DEFINE_RECT disk_name_rect, 27, 16, 174, 26
 
         DEFINE_BUTTON change_drive, res_string_button_change_drive, 193, 28
         DEFINE_BUTTON open,         res_string_button_open,         193, 42
@@ -741,7 +757,7 @@ kCommonInputHeight = 11
 file_to_delete_label:
         PASCAL_STRING res_string_delete_file_label_file_to_delete
 
-.endscope
+.endscope ; file_dialog_res
 
 ;;; ============================================================
 

@@ -4,12 +4,22 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+.define LIB_MGTK_CALL MGTK_RELAY_CALL
+.define LIB_MLI_CALL MLI_RELAY_CALL
+
 .scope file_dialog
         .org $5000
 
         MLIRelayImpl := main::MLIRelayImpl
+        CheckMouseMoved := main::CheckMouseMoved
+        YieldLoop := main::YieldLoop
+        DetectDoubleClick := main::StashCoordsAndDetectDoubleClick
+        ButtonEventLoop := ButtonEventLoopRelay
+        ModifierDown := main::ModifierDown
+        AdjustVolumeNameCase := main::AdjustVolumeNameCase
+        AdjustFileEntryCase := main::AdjustFileEntryCase
 
-;;; Map from index in files_names to list entry; high bit is
+;;; Map from index in file_names to list entry; high bit is
 ;;; set for directories.
 file_list_index := $1780
 
@@ -27,6 +37,10 @@ kPageDelta = 8
 
 kMaxInputLength = $3F
 
+buf_input1_left := path_buf0
+buf_input2_left := path_buf1
+buf_input_right := path_buf2
+
 ;;; ============================================================
 
 Exec:
@@ -34,22 +48,26 @@ Exec:
 
 ;;; ============================================================
 
+        DEFINE_ON_LINE_PARAMS on_line_params, 0, on_line_buffer
+
         io_buf := $1000
         dir_read_buf := $1400
         kDirReadSize = $200
 
-        DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
         DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
         DEFINE_READ_PARAMS read_params, dir_read_buf, kDirReadSize
         DEFINE_CLOSE_PARAMS close_params
 
 on_line_buffer: .res    16, 0
-device_num:  .byte   0          ; next device number to try
+device_num:     .byte   0       ; current drive, index in DEVLST
 path_buf:       .res    128, 0
-L50A8:  .byte   0
-L50A9:  .byte   0
 
-stash_stack:
+only_show_dirs_flag:            ; set when selecting copy destination
+        .byte   0
+dir_count:
+        .byte   0
+
+saved_stack:
         .byte   0
 
 ;;; ============================================================
@@ -62,25 +80,25 @@ routine_table:  .addr   $7000, $7000, $7000
         sty     stash_y
         stx     stash_x
         tsx
-        stx     stash_stack
+        stx     saved_stack
         pha
 
         copy    DEVCNT, device_num
 
         lda     #0
-        sta     L50A8
+        sta     only_show_dirs_flag
         sta     prompt_ip_flag
-        sta     LD8EC
-        sta     LD8F0
-        sta     LD8F1
-        sta     LD8F2
+        sta     blink_ip_flag
+        sta     input_dirty_flag
+        sta     input1_dirty_flag
+        sta     input2_dirty_flag
         sta     cursor_ibeam_flag
         sta     dual_inputs_flag
         sta     extra_controls_flag
-        sta     L5105
+        sta     listbox_disabled_flag
 
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
-        copy    #$FF, selected_index
+        copy    #$FF, file_dialog_res2::selected_index
 
         pla
         asl     a
@@ -105,21 +123,22 @@ extra_controls_flag:    ; Set when `click_handler_hook` should be called
 dual_inputs_flag:       ; Set when there are two text input fields
         .byte   0
 
-L5105:  .byte   0       ; ??? something about the picker
+listbox_disabled_flag:  ; Set when the listbox is not active
+        .byte   0
 
 ;;; ============================================================
 
 .proc EventLoop
-        bit     LD8EC
+        bit     blink_ip_flag
         bpl     :+
 
         dec     prompt_ip_counter
         bne     :+
-        jsr     JTBlinkIP
+        jsr     BlinkIP
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
-:       jsr     main::YieldLoop
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+:       jsr     YieldLoop
+        LIB_MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::apple_key
         beq     is_btn
@@ -133,40 +152,40 @@ is_btn: jsr     HandleButtonDown
         jsr     HandleKey
         jmp     EventLoop
 
-:       jsr     main::CheckMouseMoved
+:       jsr     CheckMouseMoved
         bcc     EventLoop
 
-        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
         bne     :+
         jmp     EventLoop
 :       lda     findwindow_window_id
         cmp     winfo_file_dialog::window_id
         beq     l1
-        jsr     SetCursorPointer
+        jsr     UnsetCursorIBeam
         jmp     EventLoop
 
 l1:     lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
         lda     winfo_file_dialog::window_id
         sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+        LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         bit     focus_in_input2_flag
         bmi     l2
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
+        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         bne     l4
         beq     l3
-l2:     MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
+l2:     LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     l4
 l3:     jsr     SetCursorIBeam
         jmp     l5
 
-l4:     jsr     SetCursorPointer
-l5:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+l4:     jsr     UnsetCursorIBeam
+l5:     LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, main_grafport
         jmp     EventLoop
 .endproc
 
@@ -176,7 +195,7 @@ focus_in_input2_flag:
 ;;; ============================================================
 
 .proc HandleButtonDown
-        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
         bne     :+
         rts
@@ -198,85 +217,85 @@ focus_in_input2_flag:
         jsr     SetPortForWindow
         lda     winfo_file_dialog::window_id
         sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+        LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
 
         ;; --------------------------------------------------
 .proc CheckOpenButton
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::open_button_rect
+        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::open_button_rect
         cmp     #MGTK::inrect_inside
         bne     CheckChangeDriveButton
 
-        bit     L5105
-        bmi     L520A
-        lda     selected_index
-        bpl     L520D
-L520A:  jmp     SetUpPorts
+        bit     listbox_disabled_flag
+        bmi     l1
+        lda     file_dialog_res2::selected_index
+        bpl     l2
+l1:     jmp     SetUpPorts
 
-L520D:  tax
+l2:     tax
         lda     file_list_index,x
-        bmi     L5216
-L5213:  jmp     SetUpPorts
+        bmi     l4
+l3:     jmp     SetUpPorts
 
-L5216:  lda     winfo_file_dialog::window_id
+l4:     lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::open_button_rect
-        bmi     L5213
-        jsr     L5607
+        param_call ButtonEventLoop, kFilePickerDlgWindowID, file_dialog_res::open_button_rect
+        bmi     l3
+        jsr     OpenSelectedItem
         jmp     SetUpPorts
 .endproc
 
         ;; --------------------------------------------------
 .proc CheckChangeDriveButton
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
+        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
         cmp     #MGTK::inrect_inside
         bne     CheckCloseButton
-        bit     L5105
+        bit     listbox_disabled_flag
         bmi     :+
 
-        param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
+        param_call ButtonEventLoop, kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
         bmi     :+
         jsr     ChangeDrive
-
-:       jmp     SetUpPorts
+:
+        jmp     SetUpPorts
 .endproc
 
         ;; --------------------------------------------------
 .proc CheckCloseButton
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::close_button_rect
+        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::close_button_rect
         cmp     #MGTK::inrect_inside
         bne     CheckOkButton
-        bit     L5105
+        bit     listbox_disabled_flag
         bmi     :+
 
-        param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::close_button_rect
+        param_call ButtonEventLoop, kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         bmi     :+
-        jsr     L567F
+        jsr     DoClose
 :       jmp     SetUpPorts
 .endproc
 
         ;; --------------------------------------------------
 .proc CheckOkButton
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::ok_button_rect
+        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     CheckCancelButton
 
-        param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
+        param_call ButtonEventLoop, kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
-        jsr     JTHandleMetaRightKey
-        jsr     JTHandleOk
+        jsr     HandleMetaRightKey
+        jsr     HandleOk
 :       jmp     SetUpPorts
 .endproc
 
         ;; --------------------------------------------------
 .proc CheckCancelButton
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
+        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
         cmp     #MGTK::inrect_inside
         bne     CheckOtherClick
 
-        param_call ButtonEventLoopRelay, kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
+        param_call ButtonEventLoop, kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
-        jsr     JTHandleCancel
+        jsr     HandleCancel
 :       jmp     SetUpPorts
 .endproc
 
@@ -286,18 +305,19 @@ L5216:  lda     winfo_file_dialog::window_id
         bpl     :+
         jsr     click_handler_hook
         bmi     SetUpPorts
-:       jsr     JTHandleClick
+:       jsr     HandleClick
         rts
-.endproc
 .endproc
 
 ;;; ============================================================
 
 .proc SetUpPorts
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
+
+.endproc ; HandleContentClick
 
 ;;; ============================================================
 ;;; This vector gets patched by overlays that add controls.
@@ -309,11 +329,12 @@ click_handler_hook:
 ;;; ============================================================
 
 .proc HandleListButtonDown
-        bit     L5105
+        bit     listbox_disabled_flag
         bmi     rts1
-        MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
+        LIB_MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_which_ctl
-        beq     L5341
+        beq     in_list
+
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     rts1
         lda     winfo_file_dialog_listbox::vscroll
@@ -323,16 +344,17 @@ click_handler_hook:
 
 rts1:   rts
 
-L5341:  lda     winfo_file_dialog_listbox::window_id
+in_list:
+        lda     winfo_file_dialog_listbox::window_id
         sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_windowy, winfo_file_dialog_listbox::cliprect+2, screentowindow_windowy
+        LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        add16   screentowindow_windowy, winfo_file_dialog_listbox::cliprect::y1, screentowindow_windowy
         ldax    screentowindow_windowy
         ldy     #kListEntryHeight
         jsr     Divide_16_8_16
         stax    screentowindow_windowy
 
-        lda     selected_index
+        lda     file_dialog_res2::selected_index
         cmp     screentowindow_windowy
         beq     same
         jmp     different
@@ -340,21 +362,21 @@ L5341:  lda     winfo_file_dialog_listbox::window_id
         ;; --------------------------------------------------
         ;; Click on the previous entry
 
-same:   jsr     main::StashCoordsAndDetectDoubleClick
+same:   jsr     DetectDoubleClick
         beq     open
         rts
 
-open:   ldx     selected_index
+open:   ldx     file_dialog_res2::selected_index
         lda     file_list_index,x
         bmi     folder
 
         ;; File - select it.
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        jsr     JTHandleOk
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        jsr     HandleOk
         jmp     rts1
 
         ;; Folder - open it.
@@ -362,14 +384,14 @@ folder: and     #$7F
         pha
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
         lda     #0
         sta     hi
 
         ptr := $08
-        copy16  #file_names, $08
+        copy16  #file_names, ptr
         pla
         asl     a
         rol     hi
@@ -396,8 +418,8 @@ folder: and     #$7F
         jsr     ScrollClipRect
         jsr     UpdateDiskName
         jsr     DrawListEntries
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, window_grafport
         rts
 
 hi:     .byte   0
@@ -411,22 +433,22 @@ different:
         bcc     :+
         rts
 
-:       lda     selected_index
+:       lda     file_dialog_res2::selected_index
         bmi     :+
-        jsr     JTStripPathSegment
-        lda     selected_index
+        jsr     StripPathSegmentLeftAndRedraw
+        lda     file_dialog_res2::selected_index
         jsr     InvertEntry
 :       lda     screentowindow_windowy
-        sta     selected_index
-        bit     LD8F0
+        sta     file_dialog_res2::selected_index
+        bit     input_dirty_flag
         bpl     :+
-        jsr     JTPrepPath
-        jsr     JTRedrawInput
-:       lda     selected_index
+        jsr     PrepPath
+        jsr     RedrawInput
+:       lda     file_dialog_res2::selected_index
         jsr     InvertEntry
-        jsr     JTListSelectionChange
+        jsr     HandleSelectionChange
 
-        jsr     main::StashCoordsAndDetectDoubleClick
+        jsr     DetectDoubleClick
         bmi     :+
         jmp     open
 
@@ -455,16 +477,17 @@ different:
 
         ;; Track thumb
 :       lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     trackthumb_params
-        MGTK_RELAY_CALL MGTK::TrackThumb, trackthumb_params
+        sta     trackthumb_which_ctl
+        LIB_MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_thumbmoved
         bne     :+
         rts
+
 :       lda     trackthumb_thumbpos
         sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
-        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_stash
         jsr     ScrollClipRect
         jsr     DrawListEntries
@@ -482,7 +505,7 @@ different:
 :       sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
-        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
@@ -502,7 +525,7 @@ different:
 :       sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
-        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
@@ -521,7 +544,7 @@ different:
         sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
-        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
@@ -542,7 +565,7 @@ different:
         sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
-        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
@@ -553,7 +576,7 @@ different:
 ;;; ============================================================
 
 .proc CheckArrowRepeat
-        MGTK_RELAY_CALL MGTK::PeekEvent, event_params
+        LIB_MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         beq     :+
@@ -563,8 +586,8 @@ different:
         pla
         rts
 
-:       MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+:       LIB_MGTK_CALL MGTK::GetEvent, event_params
+        LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_window_id
         cmp     winfo_file_dialog_listbox::window_id
         beq     :+
@@ -579,7 +602,7 @@ different:
         pla
         rts
 
-:       MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
+:       LIB_MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
         beq     :+
@@ -597,10 +620,10 @@ different:
 
 ;;; ============================================================
 
-.proc SetCursorPointer
+.proc UnsetCursorIBeam
         bit     cursor_ibeam_flag
         bpl     :+
-        MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
+        LIB_MGTK_CALL MGTK::SetCursor, pointer_cursor
         copy    #0, cursor_ibeam_flag
 :       rts
 .endproc
@@ -609,11 +632,10 @@ different:
 
 .proc SetCursorIBeam
         bit     cursor_ibeam_flag
-        bmi     done
-        MGTK_RELAY_CALL MGTK::SetCursor, ibeam_cursor
-        lda     #$80
-        sta     cursor_ibeam_flag
-done:   rts
+        bmi     :+
+        LIB_MGTK_CALL MGTK::SetCursor, ibeam_cursor
+        copy    #$80, cursor_ibeam_flag
+:       rts
 .endproc
 
 cursor_ibeam_flag:              ; high bit set when cursor is I-beam
@@ -621,34 +643,34 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 ;;; ============================================================
 
-.proc L5607
-        ldx     selected_index
+.proc OpenSelectedItem
+        ldx     file_dialog_res2::selected_index
         lda     file_list_index,x
         and     #$7F
         pha
-        bit     LD8F0
-        bpl     l1
-        jsr     JTPrepPath
-l1:     lda     #$00
-        sta     l2
+        bit     input_dirty_flag
+        bpl     :+
+        jsr     PrepPath
+:       lda     #0
+        sta     tmp
         copy16  #file_names, $08
         pla
+        asl     a               ; * 16
+        rol     tmp
         asl     a
-        rol     l2
+        rol     tmp
         asl     a
-        rol     l2
+        rol     tmp
         asl     a
-        rol     l2
-        asl     a
-        rol     l2
+        rol     tmp
         clc
         adc     $08
         sta     $08
-        lda     l2
-        adc     $09
-        sta     $09
+        lda     tmp
+        adc     $08+1
+        sta     $08+1
 
-        ldx     $09
+        ldx     $08+1
         lda     $08
         jsr     AppendToPathBuf
 
@@ -660,15 +682,15 @@ l1:     lda     #$00
         jsr     DrawListEntries
         rts
 
-l2:     .byte   0
+tmp:     .byte   0
 .endproc
 
 ;;; ============================================================
 
 .proc ChangeDrive
         lda     #$FF
-        sta     selected_index
-        jsr     main::ModifierDown
+        sta     file_dialog_res2::selected_index
+        jsr     ModifierDown
         sta     drive_dir_flag
         jsr     NextDeviceNum
         jsr     DeviceOnLine
@@ -678,14 +700,14 @@ l2:     .byte   0
         jsr     ScrollClipRect
         jsr     UpdateDiskName
         jsr     DrawListEntries
-        jsr     JTPrepPath
-        jsr     JTRedrawInput
+        jsr     PrepPath
+        jsr     RedrawInput
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc L567F
+.proc DoClose
         lda     #$00
         sta     l7
         ldx     path_buf
@@ -704,10 +726,10 @@ l2:     cpx     #$01
         jmp     l6
 
 l3:     jsr     StripPathSegment
-        lda     selected_index
+        lda     file_dialog_res2::selected_index
         pha
         lda     #$FF
-        sta     selected_index
+        sta     file_dialog_res2::selected_index
         jsr     ReadDir
         jsr     UpdateScrollbar
         lda     #$00
@@ -715,30 +737,31 @@ l3:     jsr     StripPathSegment
         jsr     UpdateDiskName
         jsr     DrawListEntries
         pla
-        sta     selected_index
+        sta     file_dialog_res2::selected_index
         bit     l7
         bmi     l4
-        jsr     JTStripPathSegment
-        lda     selected_index
+        jsr     StripPathSegmentLeftAndRedraw
+        lda     file_dialog_res2::selected_index
         bmi     l5
-        jsr     JTStripPathSegment
+        jsr     StripPathSegmentLeftAndRedraw
         jmp     l5
 
-l4:     jsr     JTPrepPath
-        jsr     JTRedrawInput
+l4:     jsr     PrepPath
+        jsr     RedrawInput
 l5:     lda     #$FF
-        sta     selected_index
+        sta     file_dialog_res2::selected_index
 l6:     rts
 
 l7:     .byte   0
-
 .endproc
 
 ;;; ============================================================
 
-L56E3:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+.proc InitSetGrafport
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, main_grafport
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -751,7 +774,7 @@ L56E3:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
 
 .proc HandleKey
         lda     event_modifiers
-        beq     L59F7
+        beq     no_modifiers
 
         ;; With modifiers
         lda     event_key
@@ -761,44 +784,46 @@ L56E3:  MGTK_RELAY_CALL MGTK::InitPort, main_grafport
 
         cmp     #CHAR_LEFT
         bne     :+
-        jmp     JTHandleMetaLeftKey ; start of line
+        jmp     HandleMetaLeftKey ; start of line
 
 :       cmp     #CHAR_RIGHT
         bne     :+
-        jmp     JTHandleMetaRightKey ; end of line
+        jmp     HandleMetaRightKey ; end of line
 
-:       bit     L5105
-        bmi     L59E4
+:       bit     listbox_disabled_flag
+        bmi     not_arrow
         cmp     #CHAR_DOWN
         bne     :+
         jmp     ScrollListBottom ; end of list
 
 :       cmp     #CHAR_UP
-        bne     L59E4
-        jmp     ScrollListTop ; start of list
+        bne     not_arrow
+        jmp     ScrollListTop   ; start of list
 
-L59E4:  cmp     #'0'
+not_arrow:
+        cmp     #'0'
         bcc     :+
         cmp     #'9'+1
         bcs     :+
         jmp     key_meta_digit
 
-:       bit     L5105
-        bmi     L5A4F
+:       bit     listbox_disabled_flag
+        bmi     jmp_exit
         jmp     CheckAlpha
 
         ;; --------------------------------------------------
         ;; No modifiers
 
-L59F7:  lda     event_key
+no_modifiers:
+        lda     event_key
 
         cmp     #CHAR_LEFT
         bne     :+
-        jmp     JTHandleLeftKey
+        jmp     HandleLeftKey
 
 :       cmp     #CHAR_RIGHT
         bne     :+
-        jmp     JTHandleRightKey
+        jmp     HandleRightKey
 
 :       cmp     #CHAR_RETURN
         bne     :+
@@ -812,25 +837,25 @@ L59F7:  lda     event_key
         bne     :+
         jmp     KeyDelete
 
-:       bit     L5105
+:       bit     listbox_disabled_flag
         bpl     :+
         jmp     finish
 
-        ;; TODO: Handle modifier+tab
 :       cmp     #CHAR_TAB
         bne     not_tab
 is_tab: lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
         jsr     ChangeDrive
-L5A4F:  jmp     exit
+jmp_exit:
+        jmp     exit
 
 not_tab:
         cmp     #CHAR_CTRL_O    ; Open
         bne     not_ctrl_o
-        lda     selected_index
+        lda     file_dialog_res2::selected_index
         bmi     exit
         tax
         lda     file_list_index,x
@@ -839,10 +864,10 @@ not_tab:
 
 :       lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-        jsr     L5607
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        jsr     OpenSelectedItem
         jmp     exit
 
 not_ctrl_o:
@@ -850,10 +875,10 @@ not_ctrl_o:
         bne     :+
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
-        jsr     L567F
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
+        jsr     DoClose
         jmp     exit
 
 :       cmp     #CHAR_DOWN
@@ -864,10 +889,10 @@ not_ctrl_o:
         bne     finish
         jmp     KeyUp
 
-finish: jsr     JTHandleOtherKey
+finish: jsr     HandleOtherKey
         rts
 
-exit:   jsr     L56E3
+exit:   jsr     InitSetGrafport
         rts
 
 ;;; ============================================================
@@ -875,12 +900,12 @@ exit:   jsr     L56E3
 .proc KeyReturn
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        jsr     JTHandleMetaRightKey
-        jsr     JTHandleOk
-        jsr     L56E3
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        jsr     HandleMetaRightKey
+        jsr     HandleOk
+        jsr     InitSetGrafport
         rts
 .endproc
 
@@ -889,18 +914,18 @@ exit:   jsr     L56E3
 .proc KeyEscape
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
-        jsr     JTHandleCancel
-        jsr     L56E3
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
+        jsr     HandleCancel
+        jsr     InitSetGrafport
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc KeyDelete
-        jsr     JTHandleDeleteKey
+        jsr     HandleDeleteKey
         rts
 .endproc
 
@@ -915,7 +940,7 @@ key_meta_digit:
 .proc KeyDown
         lda     num_file_names
         beq     l1
-        lda     selected_index
+        lda     file_dialog_res2::selected_index
         bmi     l3
         tax
         inx
@@ -924,9 +949,9 @@ key_meta_digit:
 l1:     rts
 
 l2:     jsr     InvertEntry
-        jsr     JTStripPathSegment
-        inc     selected_index
-        lda     selected_index
+        jsr     StripPathSegmentLeftAndRedraw
+        inc     file_dialog_res2::selected_index
+        lda     file_dialog_res2::selected_index
         jmp     UpdateListSelection
 
 l3:     lda     #0
@@ -938,15 +963,15 @@ l3:     lda     #0
 .proc KeyUp
         lda     num_file_names
         beq     l1
-        lda     selected_index
+        lda     file_dialog_res2::selected_index
         bmi     l3
         bne     l2
 l1:     rts
 
 l2:     jsr     InvertEntry
-        jsr     JTStripPathSegment
-        dec     selected_index
-        lda     selected_index
+        jsr     StripPathSegmentLeftAndRedraw
+        dec     file_dialog_res2::selected_index
+        lda     file_dialog_res2::selected_index
         jmp     UpdateListSelection
 
 l3:     ldx     num_file_names
@@ -957,77 +982,82 @@ l3:     ldx     num_file_names
 
 ;;; ============================================================
 
-CheckAlpha:
+.proc CheckAlpha
         jsr     UpcaseChar
         cmp     #'A'
         bcc     done
         cmp     #'Z'+1
         bcs     done
 
-        jsr     L5B9D
+        jsr     FindMatch
         bmi     done
-        cmp     selected_index
+        cmp     file_dialog_res2::selected_index
         beq     done
         pha
-        lda     selected_index
-        bmi     L5B99
+        lda     file_dialog_res2::selected_index
+        bmi     :+
         jsr     InvertEntry
-        jsr     JTStripPathSegment
-L5B99:  pla
+        jsr     StripPathSegmentLeftAndRedraw
+:       pla
         jmp     UpdateListSelection
 
 done:   rts
 
-.proc L5B9D
-        sta     L5BF5
-        lda     #0
-        sta     L5BF3
-L5BA5:  lda     L5BF3
+.proc FindMatch
+        sta     char
+        copy    #0, index
+
+loop:   lda     index
         cmp     num_file_names
-        beq     L5BC4
-        jsr     L5BCB
+        beq     fail
+        jsr     SetPtrToNthFilename
         ldy     #1
         lda     ($06),y
-        cmp     L5BF5
-        bcc     L5BBE
-        beq     L5BC7
-        jmp     L5BC4
+        cmp     char
+        bcc     next
+        beq     found
+        jmp     fail
 
-L5BBE:  inc     L5BF3
-        jmp     L5BA5
+next:   inc     index
+        jmp     loop
 
-L5BC4:  return  #$FF
+fail:   return  #$FF
 
-L5BC7:  return  L5BF3
+found:  return  index
 .endproc
 
-.proc L5BCB
+;;; Inputs: A = index
+;;; Outputs: $06 points at filename
+.proc SetPtrToNthFilename
         tax
         lda     file_list_index,x
         and     #$7F
         ldx     #$00
-        stx     L5BF4
+        stx     tmp
         asl     a
-        rol     L5BF4
+        rol     tmp
         asl     a
-        rol     L5BF4
+        rol     tmp
         asl     a
-        rol     L5BF4
+        rol     tmp
         asl     a
-        rol     L5BF4
+        rol     tmp
         clc
         adc     #<file_names
         sta     $06
-        lda     L5BF4
+        lda     tmp
         adc     #>file_names
-        sta     $07
+        sta     $06+1
         rts
 .endproc
 
-L5BF3:  .byte   0
-L5BF4:  .byte   0
-L5BF5:  .byte   0
-.endproc
+index:  .byte   0
+tmp:    .byte   0
+char:   .byte   0
+
+.endproc ; CheckAlpha
+
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -1044,15 +1074,18 @@ done:   rts
 
 .proc ScrollListTop
         lda     num_file_names
-        beq     l1
-        lda     selected_index
-        bmi     l3
-        bne     l2
-l1:     rts
+        beq     done
+        lda     file_dialog_res2::selected_index
+        bmi     select
+        bne     deselect
+done:   rts
 
-l2:     jsr     InvertEntry
-        jsr     JTStripPathSegment
-l3:     lda     #$00
+deselect:
+        jsr     InvertEntry
+        jsr     StripPathSegmentLeftAndRedraw
+
+select:
+        lda     #$00
         jmp     UpdateListSelection
 .endproc
 
@@ -1061,7 +1094,7 @@ l3:     lda     #$00
 .proc ScrollListBottom
         lda     num_file_names
         beq     done
-        ldx     selected_index
+        ldx     file_dialog_res2::selected_index
         bmi     l1
         inx
         cpx     num_file_names
@@ -1071,7 +1104,7 @@ done:   rts
 :       dex
         txa
         jsr     InvertEntry
-        jsr     JTStripPathSegment
+        jsr     StripPathSegmentLeftAndRedraw
 l1:     ldx     num_file_names
         dex
         txa
@@ -1081,71 +1114,76 @@ l1:     ldx     num_file_names
 ;;; ============================================================
 
 .proc UpdateListSelection
-        sta     selected_index
-        jsr     JTListSelectionChange
+        sta     file_dialog_res2::selected_index
+        jsr     HandleSelectionChange
 
-        lda     selected_index
+        lda     file_dialog_res2::selected_index
         jsr     CalcTopIndex
         jsr     UpdateScrollbar2
         jsr     DrawListEntries
 
-        copy    #1, path_buf2
-        copy    #' ', path_buf2+1
+        copy    #1, buf_input_right
+        copy    #' ', buf_input_right+1
 
-        jsr     JTRedrawInput
+        jsr     RedrawInput
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc OpenWindow
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_file_dialog
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_file_dialog_listbox
+        LIB_MGTK_CALL MGTK::OpenWindow, winfo_file_dialog
+        LIB_MGTK_CALL MGTK::OpenWindow, winfo_file_dialog_listbox
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::ok_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::open_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::cancel_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::change_drive_button_rect
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
+        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
+        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::ok_button_rect
+        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::open_button_rect
+        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
+        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::cancel_button_rect
+        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::change_drive_button_rect
         jsr     DrawOkButtonLabel
         jsr     DrawOpenButtonLabel
         jsr     DrawCloseButtonLabel
         jsr     DrawCancelButtonLabel
         jsr     DrawChangeDriveButtonLabel
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
-        MGTK_RELAY_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
+        LIB_MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
-DrawOkButtonLabel:
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::ok_button_pos
+.proc DrawOkButtonLabel
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::ok_button_pos
         param_call DrawString, file_dialog_res::ok_button_label
         rts
+.endproc
 
-DrawOpenButtonLabel:
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
+.proc DrawOpenButtonLabel
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
         param_call DrawString, file_dialog_res::open_button_label
         rts
+.endproc
 
-DrawCloseButtonLabel:
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
+.proc DrawCloseButtonLabel
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
         param_call DrawString, file_dialog_res::close_button_label
         rts
+.endproc
 
-DrawCancelButtonLabel:
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::cancel_button_pos
+.proc DrawCancelButtonLabel
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::cancel_button_pos
         param_call DrawString, file_dialog_res::cancel_button_label
         rts
+.endproc
 
-DrawChangeDriveButtonLabel:
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
+.proc DrawChangeDriveButtonLabel
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
         param_call DrawString, file_dialog_res::change_drive_button_label
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -1176,7 +1214,7 @@ DrawChangeDriveButtonLabel:
         lda     (ptr),y
         sta     params+2
         inc16   params
-        MGTK_RELAY_CALL MGTK::DrawText, params
+        LIB_MGTK_CALL MGTK::DrawText, params
         rts
 .endproc
 
@@ -1192,12 +1230,12 @@ DrawChangeDriveButtonLabel:
         jsr     AuxLoad
         sta     text_length
         inc16   text_addr ; point past length byte
-        MGTK_RELAY_CALL MGTK::TextWidth, text_params
+        LIB_MGTK_CALL MGTK::TextWidth, text_params
 
-        sub16   #kFilePickerDlgWidth, text_width, file_dialog_title_pos::xcoord
-        lsr16   file_dialog_title_pos::xcoord ; /= 2
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_title_pos
-        MGTK_RELAY_CALL MGTK::DrawText, text_params
+        sub16   #kFilePickerDlgWidth, text_width, file_dialog_res2::pos_title::xcoord
+        lsr16   file_dialog_res2::pos_title::xcoord ; /= 2
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res2::pos_title
+        LIB_MGTK_CALL MGTK::DrawText, text_params
         rts
 .endproc
 
@@ -1206,7 +1244,7 @@ DrawChangeDriveButtonLabel:
 .proc DrawInput1Label
         jsr     CopyStringToLcbuf
         stax    $06
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
         ldax    $06
         jsr     DrawString
         rts
@@ -1217,7 +1255,7 @@ DrawChangeDriveButtonLabel:
 .proc DrawInput2Label
         jsr     CopyStringToLcbuf
         stax    $06
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input2_label_pos
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_label_pos
         ldax    $06
         jsr     DrawString
         rts
@@ -1231,7 +1269,7 @@ retry:  ldx     device_num
 
         and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
-        MLI_RELAY_CALL ON_LINE, on_line_params
+        LIB_MLI_CALL ON_LINE, on_line_params
         lda     on_line_buffer
         and     #NAME_LENGTH_MASK
         sta     on_line_buffer
@@ -1239,7 +1277,7 @@ retry:  ldx     device_num
         jsr     NextDeviceNum
         jmp     retry
 
-found:  param_call main::AdjustVolumeNameCase, on_line_buffer
+found:  param_call AdjustVolumeNameCase, on_line_buffer
         lda     #0
         sta     path_buf
         param_call AppendToPathBuf, on_line_buffer
@@ -1299,22 +1337,23 @@ last:   .byte   0
 .proc OpenDir
         lda     #$00
         sta     open_dir_flag
-retry:  MLI_RELAY_CALL OPEN, open_params
+retry:
+        LIB_MLI_CALL OPEN, open_params
         beq     :+
         jsr     DeviceOnLine
         lda     #$FF
-        sta     selected_index
+        sta     file_dialog_res2::selected_index
         sta     open_dir_flag
         jmp     retry
 
 :       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        MLI_RELAY_CALL READ, read_params
+        LIB_MLI_CALL READ, read_params
         beq     :+
         jsr     DeviceOnLine
         lda     #$FF
-        sta     selected_index
+        sta     file_dialog_res2::selected_index
         sta     open_dir_flag
         jmp     retry
 
@@ -1358,7 +1397,7 @@ open_dir_flag:
         pla
         sta     path_buf
         lda     #$FF
-        sta     selected_index
+        sta     file_dialog_res2::selected_index
 
         return  #$00
 .endproc
@@ -1381,11 +1420,11 @@ open_dir_flag:
 .proc ReadDir
         jsr     OpenDir
         lda     #0
-        sta     l12
-        sta     l13
-        sta     L50A9
+        sta     d1
+        sta     d2
+        sta     dir_count
         lda     #1
-        sta     l14
+        sta     d3
         copy16  dir_read_buf+SubdirectoryHeader::entry_length, entry_length
         lda     dir_read_buf+SubdirectoryHeader::file_count
         and     #$7F
@@ -1396,7 +1435,7 @@ open_dir_flag:
         ptr := $06
 :       copy16  #dir_read_buf+.sizeof(SubdirectoryHeader), ptr
 
-l1:     param_call_indirect main::AdjustFileEntryCase, ptr
+l1:     param_call_indirect AdjustFileEntryCase, ptr
 
         ldy     #0
         lda     (ptr),y
@@ -1404,7 +1443,7 @@ l1:     param_call_indirect main::AdjustFileEntryCase, ptr
         bne     l2
         jmp     l6
 
-l2:     ldx     l12
+l2:     ldx     d1
         txa
         sta     file_list_index,x
         ldy     #0
@@ -1412,15 +1451,15 @@ l2:     ldx     l12
         and     #STORAGE_TYPE_MASK
         cmp     #ST_LINKED_DIRECTORY << 4
         beq     l3
-        bit     L50A8
+        bit     only_show_dirs_flag
         bpl     l4
-        inc     l13
+        inc     d2
         jmp     l6
 
 l3:     lda     file_list_index,x
         ora     #$80
         sta     file_list_index,x
-        inc     L50A9
+        inc     dir_count
 l4:     ldy     #$00
         lda     (ptr),y
         and     #NAME_LENGTH_MASK
@@ -1429,20 +1468,20 @@ l4:     ldy     #$00
         dst_ptr := $08
         copy16  #file_names, dst_ptr
         lda     #$00
-        sta     l17
-        lda     l12
+        sta     hi
+        lda     d1
         asl     a               ; *= 16
-        rol     l17
+        rol     hi
         asl     a
-        rol     l17
+        rol     hi
         asl     a
-        rol     l17
+        rol     hi
         asl     a
-        rol     l17
+        rol     hi
         clc
         adc     dst_ptr
         sta     dst_ptr
-        lda     l17
+        lda     hi
         adc     dst_ptr+1
         sta     dst_ptr+1
 
@@ -1454,20 +1493,20 @@ l4:     ldy     #$00
         dey
         bpl     :-
 
-        inc     l12
-        inc     l13
-l6:     inc     l14
-        lda     l13
+        inc     d1
+        inc     d2
+l6:     inc     d3
+        lda     d2
         cmp     num_file_names
         bne     next
 
-close:  MLI_RELAY_CALL CLOSE, close_params
-        bit     L50A8
+close:  LIB_MLI_CALL CLOSE, close_params
+        bit     only_show_dirs_flag
         bpl     :+
-        lda     L50A9
+        lda     dir_count
         sta     num_file_names
 :       jsr     SortFileNames
-        jsr     L64E2
+        jsr     SetPtrAfterFilenames
         lda     open_dir_flag
         bpl     l9
         sec
@@ -1476,25 +1515,25 @@ close:  MLI_RELAY_CALL CLOSE, close_params
 l9:     clc
         rts
 
-next:   lda     l14
-        cmp     l16
+next:   lda     d3
+        cmp     d4
         beq     :+
         add16_8 ptr, entry_length, ptr
         jmp     l1
 
-:       MLI_RELAY_CALL READ, read_params
+:       LIB_MLI_CALL READ, read_params
         copy16  #dir_read_buf+$04, ptr
         lda     #$00
-        sta     l14
+        sta     d3
         jmp     l1
 
-l12:    .byte   0
-l13:    .byte   0
-l14:    .byte   0
+d1:     .byte   0
+d2:     .byte   0
+d3:     .byte   0
 entry_length:
         .byte   0
-l16:    .byte   0
-l17:    .byte   0
+d4:     .byte   0
+hi:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1502,19 +1541,19 @@ l17:    .byte   0
 .proc DrawListEntries
         lda     winfo_file_dialog_listbox::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::PaintRect, winfo_file_dialog_listbox::cliprect
-        copy    #kListEntryNameX, picker_entry_pos::xcoord ; high byte always 0
-        copy16  #kListEntryHeight, picker_entry_pos::ycoord
+        LIB_MGTK_CALL MGTK::PaintRect, winfo_file_dialog_listbox::cliprect
+        copy    #kListEntryNameX, file_dialog_res2::picker_entry_pos::xcoord ; high byte always 0
+        copy16  #kListEntryHeight, file_dialog_res2::picker_entry_pos::ycoord
         copy    #0, l4
 
 loop:   lda     l4
         cmp     num_file_names
         bne     :+
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, main_grafport
         rts
 
-:       MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
+:       LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res2::picker_entry_pos
         ldx     l4
         lda     file_list_index,x
         and     #$7F
@@ -1541,20 +1580,20 @@ loop:   lda     l4
         bpl     :+
 
         ;; Folder glyph
-        copy    #kListEntryGlyphX, picker_entry_pos::xcoord
-        MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
-        param_call DrawString, str_folder
-        copy    #kListEntryNameX, picker_entry_pos::xcoord
+        copy    #kListEntryGlyphX, file_dialog_res2::picker_entry_pos::xcoord
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res2::picker_entry_pos
+        param_call DrawString, file_dialog_res2::str_folder
+        copy    #kListEntryNameX, file_dialog_res2::picker_entry_pos::xcoord
 
 :       lda     l4
-        cmp     selected_index
+        cmp     file_dialog_res2::selected_index
         bne     l2
         jsr     InvertEntry
         lda     winfo_file_dialog_listbox::window_id
         jsr     SetPortForWindow
 l2:     inc     l4
 
-        add16_8 picker_entry_pos::ycoord, #kListEntryHeight, picker_entry_pos::ycoord
+        add16_8 file_dialog_res2::picker_entry_pos::ycoord, #kListEntryHeight, file_dialog_res2::picker_entry_pos::ycoord
         jmp     loop
 
 l3:     .byte   0
@@ -1572,11 +1611,9 @@ UpdateScrollbar:
         cmp     #kPageDelta + 1
         bcs     :+
 
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     activatectl_which_ctl
-        lda     #MGTK::activatectl_deactivate
-        sta     activatectl_activate
-        MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
+        copy    #MGTK::activatectl_deactivate, activatectl_activate
+        LIB_MGTK_CALL MGTK::ActivateCtl, activatectl_params
         lda     #0
         jmp     ScrollClipRect
 
@@ -1586,13 +1623,13 @@ UpdateScrollbar:
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         sta     activatectl_activate
-        MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
+        LIB_MGTK_CALL MGTK::ActivateCtl, activatectl_params
         lda     index
         sta     updatethumb_thumbpos
         jsr     ScrollClipRect
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
-        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
 index:  .byte   0
@@ -1603,7 +1640,7 @@ index:  .byte   0
 .proc UpdateDiskName
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::rect_D9C8
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
         copy16  #path_buf, $06
         ldy     #$00
         lda     ($06),y
@@ -1623,15 +1660,15 @@ l3:     ldy     #$00
 l4:     inx
         iny
         lda     ($06),y
-        sta     $0220,x
+        sta     INVOKER_PREFIX,x
         cpy     l5
         bne     l4
-        stx     $0220
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
+        stx     INVOKER_PREFIX
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         param_call DrawString, file_dialog_res::disk_label_str
-        param_call DrawString, $0220
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+        param_call DrawString, INVOKER_PREFIX
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, main_grafport
         rts
 
 l5:     .byte   0
@@ -1640,19 +1677,19 @@ l5:     .byte   0
 ;;; ============================================================
 
 .proc ScrollClipRect
-        sta     l5
+        sta     tmp
         clc
         adc     #kPageDelta
         cmp     num_file_names
         beq     l1
         bcs     l2
-l1:     lda     l5
+l1:     lda     tmp
         jmp     l4
 
 l2:     lda     num_file_names
         cmp     #kPageDelta+1
         bcs     l3
-        lda     l5
+        lda     tmp
         jmp     l4
 
 l3:     sec
@@ -1665,7 +1702,7 @@ l4:     ldx     #$00            ; A,X = line
         add16_8 winfo_file_dialog_listbox::cliprect::y1, #winfo_file_dialog_listbox::kHeight, winfo_file_dialog_listbox::cliprect::y2
         rts
 
-l5:     .byte   0
+tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1675,16 +1712,16 @@ l5:     .byte   0
         ldx     #0              ; A,X = entry
         ldy     #kListEntryHeight
         jsr     Multiply_16_8_16
-        stax    rect_file_dialog_selection::y1
+        stax    file_dialog_res2::rect_selection::y1
 
-        add16_8 rect_file_dialog_selection::y1, #kListEntryHeight, rect_file_dialog_selection::y2
+        add16_8 file_dialog_res2::rect_selection::y1, #kListEntryHeight, file_dialog_res2::rect_selection::y2
 
         lda     winfo_file_dialog_listbox::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_file_dialog_selection
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res2::rect_selection
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, main_grafport
         rts
 
 tmp:    .byte   0
@@ -1694,8 +1731,8 @@ tmp:    .byte   0
 
 .proc SetPortForWindow
         sta     getwinport_params2::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
-        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
+        LIB_MGTK_CALL MGTK::GetWinPort, getwinport_params2
+        LIB_MGTK_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
 
@@ -1772,7 +1809,7 @@ next_inner:
         sta     ($06),y
 
         lda     #$7F            ; beyond last possible name char
-        ldx     #15
+        ldx     #15             ; max length
 :       sta     name_buf+1,x
         dex
         bpl     :-
@@ -1828,9 +1865,9 @@ outer_index:
         .byte   0
 l19:    .byte   0
 name_buf:
-        .res 17, 0
+        .res    17, 0
 
-l22:    .res 127, 0
+l22:    .res    127, 0
 
 ;;; --------------------------------------------------
 
@@ -1859,95 +1896,105 @@ l22:    .res 127, 0
         sta     ptr+1
         rts
 
-tmp:     .byte   0
+tmp:    .byte   0
 .endproc
-.endproc
+.endproc ; SortFileNames
 
 ;;; ============================================================
 
-.proc L647C
+.proc VerifyValidPath
         ptr := $06
 
         stax    ptr
         ldy     #$01
         lda     (ptr),y
-        cmp     #'/'
-        bne     l6
+        cmp     #'/'            ; must be a full path
+        bne     fail
         dey
         lda     (ptr),y
-        cmp     #$02
-        bcc     l6
+        cmp     #2              ; must include vol name
+        bcc     fail
         tay
         lda     (ptr),y
         cmp     #'/'
-        beq     l6
-        ldx     #$00
-        stx     l7
+        beq     fail            ; can't end in '/'
+
+        ldx     #0
+        stx     index
 l1:     lda     (ptr),y
         cmp     #'/'
         beq     l2
         inx
-        cpx     #$10
-        beq     l6
+        cpx     #16
+        beq     fail
         dey
         bne     l1
         beq     l3
-l2:     inc     l7
-        ldx     #$00
+l2:     inc     index
+        ldx     #0
         dey
         bne     l1
-l3:     ldy     #$00
+
+l3:
+        ;; lda     index
+        ;; cmp     #2
+        ;; bcc     fail
+
+        ldy     #0
         lda     (ptr),y
         tay
 l4:     lda     (ptr),y
         cmp     #'.'
         beq     l5
         cmp     #'/'
-        bcc     l6
+        bcc     fail
         cmp     #'9'+1
         bcc     l5
         cmp     #'A'
-        bcc     l6
+        bcc     fail
         cmp     #'Z'+1
         bcc     l5
         cmp     #'a'
-        bcc     l6
+        bcc     fail
         cmp     #'z'+1
-        bcs     l6
+        bcs     fail
 l5:     dey
         bne     l4
         return  #$00
 
-l6:     return  #$FF
+fail:   return  #$FF
 
-l7:     .byte   0
+index:  .byte   0
 .endproc
 
 ;;; ============================================================
 
-.proc L64E2
+.proc SetPtrAfterFilenames
         ptr := $06
 
         lda     num_file_names
-        bne     l2
-l1:     rts
+        bne     iter
+done:   rts
 
-l2:     lda     #$00
-        sta     l4
+iter:   lda     #0
+        sta     index
         copy16  #file_names, ptr
-l3:     lda     l4
+loop:   lda     index
         cmp     num_file_names
-        beq     l1
-        inc     l4
+        beq     done
+        inc     index
+
+        ;; TODO: Replace this with <<4
         lda     ptr
         clc
-        adc     #$10
+        adc     #16
         sta     ptr
-        bcc     l3
+        bcc     loop
         inc     ptr+1
-        jmp     l3
 
-l4:     .byte   0
+        jmp     loop
+
+index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1961,49 +2008,49 @@ l4:     .byte   0
         lda     ($06),y
         tay
 :       lda     ($06),y
-        sta     l9,y
+        sta     d2,y
         dey
         bpl     :-
         lda     #$00
-        sta     l8
+        sta     d1
         copy16  #file_names, $06
-l2:     lda     l8
+l1:     lda     d1
         cmp     num_file_names
-        beq     l5
+        beq     l4
         ldy     #$00
         lda     ($06),y
-        cmp     l9
-        bne     l4
-        tay
-l3:     lda     ($06),y
-        cmp     l9,y
-        bne     l4
-        dey
+        cmp     d2
         bne     l3
-        jmp     l6
+        tay
+l2:     lda     ($06),y
+        cmp     d2,y
+        bne     l3
+        dey
+        bne     l2
+        jmp     l5
 
-l4:     inc     l8
+l3:     inc     d1
         lda     $06
         clc
         adc     #$10
         sta     $06
-        bcc     l2
+        bcc     l1
         inc     $07
-        jmp     l2
+        jmp     l1
 
-l5:     return  #$FF
+l4:     return  #$FF
 
-l6:     ldx     num_file_names
-l7:     dex
+l5:     ldx     num_file_names
+l6:     dex
         lda     file_list_index,x
         and     #$7F
-        cmp     l8
-        bne     l7
+        cmp     d1
+        bne     l6
         txa
         rts
 
-l8:     .byte   0
-l9:     .res 16, 0
+d1:     .byte   0
+d2:     .res    16, 0
 .endproc
 
 ;;; ============================================================
@@ -2030,17 +2077,17 @@ has_sel:
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
         jsr     CalcInput1IPPos
-        stax    $06
-        copy16  file_dialog_res::input1_textpos+2, $08
-        MGTK_RELAY_CALL MGTK::MoveTo, pt
+        stax    pt
+        copy16  file_dialog_res::input1_textpos::ycoord, pt+2
+        LIB_MGTK_CALL MGTK::MoveTo, pt
         bit     prompt_ip_flag
         bpl     bg2
 
-        MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg1
+        LIB_MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg1
         copy    #$00, prompt_ip_flag
         beq     :+
 
-bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
+bg2:    LIB_MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         copy    #$FF, prompt_ip_flag
 
         PARAM_BLOCK dt_params, $06
@@ -2050,8 +2097,8 @@ length  .byte
 
 :       copy16  #str_insertion_point+1, dt_params::data
         copy    str_insertion_point, dt_params::length
-        MGTK_RELAY_CALL MGTK::DrawText, dt_params
-        jsr     L56E3
+        LIB_MGTK_CALL MGTK::DrawText, dt_params
+        jsr     InitSetGrafport
         rts
 .endproc
 
@@ -2064,16 +2111,16 @@ length  .byte
         jsr     SetPortForWindow
         jsr     CalcInput2IPPos
         stax    $06
-        copy16  file_dialog_res::input2_textpos+2, $08
-        MGTK_RELAY_CALL MGTK::MoveTo, pt
+        copy16  file_dialog_res::input2_textpos::ycoord, $08
+        LIB_MGTK_CALL MGTK::MoveTo, pt
         bit     prompt_ip_flag
         bpl     bg2
 
-        MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg1
+        LIB_MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg1
         copy    #$00, prompt_ip_flag
         jmp     :+
 
-bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, file_dialog_res::textbg2
+bg2:    LIB_MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         copy    #$FF, prompt_ip_flag
 
         PARAM_BLOCK dt_params, $06
@@ -2083,8 +2130,8 @@ length  .byte
 
 :       copy16  #str_insertion_point+1, dt_params::data
         copy    str_insertion_point, dt_params::length
-        MGTK_RELAY_CALL MGTK::DrawText, pt
-        jsr     L56E3
+        LIB_MGTK_CALL MGTK::DrawText, pt
+        jsr     InitSetGrafport
         rts
 .endproc
 
@@ -2093,14 +2140,14 @@ length  .byte
 .proc RedrawF1
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::input1_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
-        lda     path_buf0
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_rect
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
+        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
+        lda     buf_input1_left
         beq     :+
-        param_call DrawString, path_buf0
-:       param_call DrawString, path_buf2
+        param_call DrawString, buf_input1_left
+:       param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
         rts
 .endproc
@@ -2110,14 +2157,14 @@ length  .byte
 .proc RedrawF2
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::PaintRect, file_dialog_res::input2_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
-        lda     path_buf1
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
+        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
+        lda     buf_input2_left
         beq     :+
-        param_call DrawString, path_buf1
-:       param_call DrawString, path_buf2
+        param_call DrawString, buf_input2_left
+:       param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
         rts
 .endproc
@@ -2128,23 +2175,23 @@ length  .byte
 .proc HandleF1Click
         lda     winfo_file_dialog::window_id
         sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
 
         ;; Inside input1 ?
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
+        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         beq     ep2
 
         ;; Inside input2 ?
         bit     dual_inputs_flag
         bpl     done
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
+        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     done
-        jsr     JTHandleOk    ; move focus to input2
+        jsr     HandleOk    ; move focus to input2
         ;; NOTE: Assumes screentowindow_window* has not been changed.
         jmp     HandleF2Click__ep2
 
@@ -2164,20 +2211,21 @@ width   .word
         END_PARAM_BLOCK
 
         ;; --------------------------------------------------
+        ;; Click to right of insertion point
 
 .proc ToRight
         jsr     CalcInput1IPPos
         stax    ip_pos
-        ldx     path_buf2
+        ldx     buf_input_right
         inx
         lda     #' '            ; append space at end
-        sta     path_buf2,x
-        inc     path_buf2
+        sta     buf_input_right,x
+        inc     buf_input_right
 
         ;; Iterate to find the position
-        copy16  #path_buf2, tw_params::data
-        copy    path_buf2, tw_params::length
-@loop:  MGTK_RELAY_CALL MGTK::TextWidth, tw_params
+        copy16  #buf_input_right, tw_params::data
+        copy    buf_input_right, tw_params::length
+@loop:  LIB_MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, ip_pos, tw_params::width
         cmp16   tw_params::width, screentowindow_windowx
         bcc     :+
@@ -2186,55 +2234,56 @@ width   .word
         cmp     #1
         bne     @loop
 
-        dec     path_buf2       ; remove appended space
+        dec     buf_input_right ; remove appended space
         jmp     finish
 
         ;; Was it to the right of the string?
 :       lda     tw_params::length
-        cmp     path_buf2
+        cmp     buf_input_right
         bcc     :+
-        dec     path_buf2       ; remove appended space
+        dec     buf_input_right      ; remove appended space
         jmp     HandleF1MetaRightKey ; and use this shortcut
 
-        ;; Append from `path_buf2` into `path_buf0`
+        ;; Append from `buf_input_right` into `buf_input1_left`
 :       ldx     #2
-        ldy     path_buf0
+        ldy     buf_input1_left
         iny
-:       lda     path_buf2,x
-        sta     path_buf0,y
+:       lda     buf_input_right,x
+        sta     buf_input1_left,y
         cpx     tw_params::length
         beq     :+
         iny
         inx
         jmp     :-
-:       sty     path_buf0
+:       sty     buf_input1_left
 
-        ;; Shift contents of `path_buf2` down,
+        ;; Shift contents of `buf_input_right` down,
         ;; preserving IP at the start.
         ldy     #2
         ldx     tw_params::length
         inx
-:       lda     path_buf2,x
-        sta     path_buf2,y
-        cpx     path_buf2
+:       lda     buf_input_right,x
+        sta     buf_input_right,y
+        cpx     buf_input_right
         beq     :+
         iny
         inx
         jmp     :-
 
 :       dey
-        sty     path_buf2
+        sty     buf_input_right
         jmp     finish
 .endproc
 
         ;; --------------------------------------------------
+        ;; Click to left of insertion point
 
 .proc ToLeft
         ;; Iterate to find the position
-        copy16  #path_buf0, tw_params::data
-        copy    path_buf0, tw_params::length
-@loop:  MGTK_RELAY_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, file_dialog_res::input1_textpos, tw_params::width
+        copy16  #buf_input1_left, tw_params::data
+        copy    buf_input1_left, tw_params::length
+@loop:  LIB_MGTK_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, file_dialog_res::input1_textpos::xcoord, tw_params::width
         cmp16   tw_params::width, screentowindow_windowx
         bcc     :+
         dec     tw_params::length
@@ -2244,51 +2293,51 @@ width   .word
         jmp     HandleF1MetaLeftKey
 
         ;; Found position; copy everything to the right of
-        ;; the new position from `path_buf0` to `split_buf`
+        ;; the new position from `buf_input1_left` to `split_buf`
 :       inc     tw_params::length
         ldy     #0
         ldx     tw_params::length
-:       cpx     path_buf0
+:       cpx     buf_input1_left
         beq     :+
         inx
         iny
-        lda     path_buf0,x
+        lda     buf_input1_left,x
         sta     split_buf+1,y
         jmp     :-
 :       iny
         sty     split_buf
 
-        ;; Append `path_buf2` to `split_buf`
+        ;; Append `buf_input_right` to `split_buf`
         ldx     #1
         ldy     split_buf
-:       cpx     path_buf2
+:       cpx     buf_input_right
         beq     :+
         inx
         iny
-        lda     path_buf2,x
+        lda     buf_input_right,x
         sta     split_buf,y
         jmp     :-
 :       sty     split_buf
 
-        ;; Copy IP and `split_buf` into `path_buf2`
+        ;; Copy IP and `split_buf` into `buf_input_right`
         copy    #kGlyphInsertionPoint, split_buf+1
 :       lda     split_buf,y
-        sta     path_buf2,y
+        sta     buf_input_right,y
         dey
         bpl     :-
 
         ;; Adjust length
         lda     tw_params::length
-        sta     path_buf0
+        sta     buf_input1_left
         ;; fall through
 .endproc
 
-finish: jsr     JTRedrawInput
-        jsr     SelectMatchingFileInList__f1
+finish: jsr     RedrawInput
+        jsr     SelectMatchingFileInListF1
         rts
 
 ip_pos: .word   0
-.endproc
+.endproc ; HandleF1Click
 
 ;;; ============================================================
 ;;; A click when f2 has focus (click may be elsewhere)
@@ -2298,23 +2347,23 @@ ip_pos: .word   0
         ;; Was click inside text box?
         lda     winfo_file_dialog::window_id
         sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
 
         ;; Inside input2 ?
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input2_rect
+        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         beq     ep2
 
         ;; Inside input1 ?
         bit     dual_inputs_flag
         bpl     done
-        MGTK_RELAY_CALL MGTK::InRect, file_dialog_res::input1_rect
+        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         bne     done
-        jsr     JTHandleCancel ; Move focus to input1
+        jsr     HandleCancel ; Move focus to input1
         ;; NOTE: Assumes screentowindow_window* has not been changed.
         jmp     HandleF1Click::ep2
 
@@ -2338,16 +2387,16 @@ width   .word
 .proc ToRight
         jsr     CalcInput2IPPos
         stax    ip_pos
-        ldx     path_buf2
+        ldx     buf_input_right
         inx
         lda     #' '            ; append space at end
-        sta     path_buf2,x
-        inc     path_buf2
+        sta     buf_input_right,x
+        inc     buf_input_right
 
         ;; Iterate to find the position
-        copy16  #path_buf2, tw_params::data
-        copy    path_buf2, tw_params::length
-@loop:  MGTK_RELAY_CALL MGTK::TextWidth, tw_params
+        copy16  #buf_input_right, tw_params::data
+        copy    buf_input_right, tw_params::length
+@loop:  LIB_MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, ip_pos, tw_params::width
         cmp16   tw_params::width, screentowindow_windowx
         bcc     :+
@@ -2356,44 +2405,44 @@ width   .word
         cmp     #1
         bne     @loop
 
-        dec     path_buf2       ; remove appended space
+        dec     buf_input_right       ; remove appended space
         jmp     finish
 
         ;; Was it to the right of the string?
 :       lda     tw_params::length
-        cmp     path_buf2
+        cmp     buf_input_right
         bcc     :+
-        dec     path_buf2       ; remove appended space
+        dec     buf_input_right       ; remove appended space
         jmp     HandleF2MetaRightKey ; and use this shortcut
 
-        ;; Append from `path_buf2` into `path_buf1`
+        ;; Append from `buf_input_right` into `buf_input2_left`
 :       ldx     #2
-        ldy     path_buf1
+        ldy     buf_input2_left
         iny
-:       lda     path_buf2,x
-        sta     path_buf1,y
+:       lda     buf_input_right,x
+        sta     buf_input2_left,y
         cpx     $08
         beq     :+
         iny
         inx
         jmp     :-
-:       sty     path_buf1
+:       sty     buf_input2_left
 
-        ;; Shift contents of `path_buf2` down,
+        ;; Shift contents of `buf_input_right` down,
         ;; preserving IP at the start.
         ldy     #2
         ldx     tw_params::length
         inx
-:       lda     path_buf2,x
-        sta     path_buf2,y
-        cpx     path_buf2
+:       lda     buf_input_right,x
+        sta     buf_input_right,y
+        cpx     buf_input_right
         beq     :+
         iny
         inx
         jmp     :-
 
 :       dey
-        sty     path_buf2
+        sty     buf_input_right
         jmp     finish
 .endproc
 
@@ -2401,9 +2450,9 @@ width   .word
         ;; Click to left of insertion point
 
 .proc ToLeft
-        copy16  #path_buf1, tw_params::data
-        copy    path_buf1, tw_params::length
-@loop:  MGTK_RELAY_CALL MGTK::TextWidth, $06
+        copy16  #buf_input2_left, tw_params::data
+        copy    buf_input2_left, tw_params::length
+@loop:  LIB_MGTK_CALL MGTK::TextWidth, $06
         add16   tw_params::width, file_dialog_res::input2_textpos, tw_params::width
         cmp16   tw_params::width, screentowindow_windowx
         bcc     :+
@@ -2414,47 +2463,47 @@ width   .word
         jmp     HandleF2MetaLeftKey
 
         ;; Found position; copy everything to the right of
-        ;; the new position from `path_buf1` to `split_buf`
+        ;; the new position from `buf_input2_left` to `split_buf`
 :       inc     tw_params::length
         ldy     #0
         ldx     tw_params::length
-:       cpx     path_buf1
+:       cpx     buf_input2_left
         beq     :+
         inx
         iny
-        lda     path_buf1,x
+        lda     buf_input2_left,x
         sta     split_buf+1,y
         jmp     :-
 :       iny
         sty     split_buf
 
-        ;; Append `path_buf2` to `split_buf`
+        ;; Append `buf_input_right` to `split_buf`
         ldx     #1
         ldy     split_buf
-:       cpx     path_buf2
+:       cpx     buf_input_right
         beq     :+
         inx
         iny
-        lda     path_buf2,x
+        lda     buf_input_right,x
         sta     split_buf,y
         jmp     :-
 :       sty     split_buf
 
-        ;; Copy IP and `split_buf` into `path_buf2`
+        ;; Copy IP and `split_buf` into `buf_input_right`
         copy    #kGlyphInsertionPoint, split_buf+1
 :       lda     split_buf,y
-        sta     path_buf2,y
+        sta     buf_input_right,y
         dey
         bpl     :-
 
         ;; Adjust length
         lda     tw_params::length
-        sta     path_buf1
+        sta     buf_input2_left
         ;; fall through
 .endproc
 
-finish: jsr     JTRedrawInput
-        jsr     SelectMatchingFileInList__f2
+finish: jsr     RedrawInput
+        jsr     SelectMatchingFileInListF2
         rts
 
 ip_pos: .word   0
@@ -2465,29 +2514,29 @@ HandleF2Click__ep2 := HandleF2Click::ep2
 
 .proc HandleF1OtherKey
         sta     tmp
-        lda     path_buf0
+        lda     buf_input1_left
         clc
-        adc     path_buf2
+        adc     buf_input_right
         cmp     #kMaxInputLength
         bcc     continue
         rts
 
 continue:
         lda     tmp
-        ldx     path_buf0
+        ldx     buf_input1_left
         inx
-        sta     path_buf0,x
+        sta     buf_input1_left,x
         sta     str_1_char+1
         jsr     CalcInput1IPPos
-        inc     path_buf0
+        inc     buf_input1_left
         stax    $06
-        copy16  file_dialog_res::input1_textpos+2, $08
+        copy16  file_dialog_res::input1_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::MoveTo, $06
+        LIB_MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, str_1_char
-        param_call DrawString, path_buf2
-        jsr     SelectMatchingFileInList__f1
+        param_call DrawString, buf_input_right
+        jsr     SelectMatchingFileInListF1
         rts
 
 tmp:    .byte   0
@@ -2496,124 +2545,124 @@ tmp:    .byte   0
 ;;; ============================================================
 
 .proc HandleF1DeleteKey
-        lda     path_buf0
+        lda     buf_input1_left
         bne     :+
         rts
 
-:       dec     path_buf0
+:       dec     buf_input1_left
         jsr     CalcInput1IPPos
         stax    $06
-        copy16  file_dialog_res::input1_textpos+2, $08
+        copy16  file_dialog_res::input1_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::MoveTo, $06
-        param_call DrawString, path_buf2
+        LIB_MGTK_CALL MGTK::MoveTo, $06
+        param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
-        jsr     SelectMatchingFileInList__f1
+        jsr     SelectMatchingFileInListF1
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc HandleF1LeftKey
-        lda     path_buf0
+        lda     buf_input1_left
         bne     :+
         rts
 
-:       ldx     path_buf2
+:       ldx     buf_input_right
         cpx     #1
         beq     skip
-:       lda     path_buf2,x
-        sta     path_buf2+1,x
+:       lda     buf_input_right,x
+        sta     buf_input_right+1,x
         dex
         cpx     #1
         bne     :-
 
-skip:   ldx     path_buf0
-        lda     path_buf0,x
-        sta     path_buf2+2
-        dec     path_buf0
-        inc     path_buf2
+skip:   ldx     buf_input1_left
+        lda     buf_input1_left,x
+        sta     buf_input_right+2
+        dec     buf_input1_left
+        inc     buf_input_right
         jsr     CalcInput1IPPos
         stax    $06
-        copy16  file_dialog_res::input1_textpos+2, $08
+        copy16  file_dialog_res::input1_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::MoveTo, $06
-        param_call DrawString, path_buf2
+        LIB_MGTK_CALL MGTK::MoveTo, $06
+        param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
-        jsr     SelectMatchingFileInList__f1
+        jsr     SelectMatchingFileInListF1
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc HandleF1RightKey
-        lda     path_buf2
+        lda     buf_input_right
         cmp     #2
         bcs     :+
         rts
 
-:       ldx     path_buf0
+:       ldx     buf_input1_left
         inx
-        lda     path_buf2+2
-        sta     path_buf0,x
-        inc     path_buf0
-        ldx     path_buf2
+        lda     buf_input_right+2
+        sta     buf_input1_left,x
+        inc     buf_input1_left
+        ldx     buf_input_right
         cpx     #3
         bcc     finish
 
         ldx     #2
-:       lda     path_buf2+1,x
-        sta     path_buf2,x
+:       lda     buf_input_right+1,x
+        sta     buf_input_right,x
         inx
-        cpx     path_buf2
+        cpx     buf_input_right
         bne     :-
 
-finish: dec     path_buf2
+finish: dec     buf_input_right
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
-        param_call DrawString, path_buf0
-        param_call DrawString, path_buf2
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
+        param_call DrawString, buf_input1_left
+        param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
-        jsr     SelectMatchingFileInList__f1
+        jsr     SelectMatchingFileInListF1
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc HandleF1MetaLeftKey
-        lda     path_buf0
+        lda     buf_input1_left
         bne     :+
         rts
 
-:       ldy     path_buf0
-        lda     path_buf2
+:       ldy     buf_input1_left
+        lda     buf_input_right
         cmp     #2
         bcc     skip
 
         ldx     #1
 :       iny
         inx
-        lda     path_buf2,x
-        sta     path_buf0,y
-        cpx     path_buf2
+        lda     buf_input_right,x
+        sta     buf_input1_left,y
+        cpx     buf_input_right
         bne     :-
 
-skip:   sty     path_buf0
+skip:   sty     buf_input1_left
 
-:       lda     path_buf0,y
-        sta     path_buf2+1,y
+:       lda     buf_input1_left,y
+        sta     buf_input_right+1,y
         dey
         bne     :-
-        ldx     path_buf0
+        ldx     buf_input1_left
         inx
-        stx     path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
-        copy    #0, path_buf0
-        jsr     JTRedrawInput
-        jsr     SelectMatchingFileInList__f1
+        stx     buf_input_right
+        copy    #kGlyphInsertionPoint, buf_input_right+1
+        copy    #0, buf_input1_left
+        jsr     RedrawInput
+        jsr     SelectMatchingFileInListF1
         rts
 .endproc
 
@@ -2621,8 +2670,8 @@ skip:   sty     path_buf0
 
 .proc HandleF1MetaRightKey
         jsr     MoveIPToEndF1
-        jsr     JTRedrawInput
-        jsr     SelectMatchingFileInList__f1
+        jsr     RedrawInput
+        jsr     SelectMatchingFileInListF1
         rts
 .endproc
 
@@ -2630,28 +2679,28 @@ skip:   sty     path_buf0
 
 .proc HandleF2OtherKey
         sta     l1
-        lda     path_buf1
+        lda     buf_input2_left
         clc
-        adc     path_buf2
+        adc     buf_input_right
         cmp     #kMaxInputLength
         bcc     :+
         rts
 
 :       lda     l1
-        ldx     path_buf1
+        ldx     buf_input2_left
         inx
-        sta     path_buf1,x
+        sta     buf_input2_left,x
         sta     str_1_char+1
         jsr     CalcInput2IPPos
-        inc     path_buf1
+        inc     buf_input2_left
         stax    $06
-        copy16  file_dialog_res::input2_textpos+2, $08
+        copy16  file_dialog_res::input2_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::MoveTo, $06
+        LIB_MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, str_1_char
-        param_call DrawString, path_buf2
-        jsr     SelectMatchingFileInList__f2
+        param_call DrawString, buf_input_right
+        jsr     SelectMatchingFileInListF2
         rts
 
 l1:     .byte   0
@@ -2660,118 +2709,118 @@ l1:     .byte   0
 ;;; ============================================================
 
 .proc HandleF2DeleteKey
-        lda     path_buf1
+        lda     buf_input2_left
         bne     :+
         rts
 
-:       dec     path_buf1
+:       dec     buf_input2_left
         jsr     CalcInput2IPPos
         stax    $06
-        copy16  file_dialog_res::input2_textpos+2, $08
+        copy16  file_dialog_res::input2_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::MoveTo, $06
-        param_call DrawString, path_buf2
+        LIB_MGTK_CALL MGTK::MoveTo, $06
+        param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
-        jsr     SelectMatchingFileInList__f2
+        jsr     SelectMatchingFileInListF2
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc HandleF2LeftKey
-        lda     path_buf1
+        lda     buf_input2_left
         bne     l1
         rts
 
-l1:     ldx     path_buf2
+l1:     ldx     buf_input_right
         cpx     #$01
         beq     l3
-l2:     lda     path_buf2,x
-        sta     path_buf2+1,x
+l2:     lda     buf_input_right,x
+        sta     buf_input_right+1,x
         dex
         cpx     #$01
         bne     l2
-l3:     ldx     path_buf1
-        lda     path_buf1,x
-        sta     path_buf2+2
-        dec     path_buf1
-        inc     path_buf2
+l3:     ldx     buf_input2_left
+        lda     buf_input2_left,x
+        sta     buf_input_right+2
+        dec     buf_input2_left
+        inc     buf_input_right
         jsr     CalcInput2IPPos
         stax    $06
-        copy16  file_dialog_res::input2_textpos+2, $08
+        copy16  file_dialog_res::input2_textpos::ycoord, $08
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::MoveTo, $06
-        param_call DrawString, path_buf2
+        LIB_MGTK_CALL MGTK::MoveTo, $06
+        param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
-        jsr     SelectMatchingFileInList__f2
+        jsr     SelectMatchingFileInListF2
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc HandleF2RightKey
-        lda     path_buf2
+        lda     buf_input_right
         cmp     #$02
         bcs     l1
         rts
 
-l1:     ldx     path_buf1
+l1:     ldx     buf_input2_left
         inx
-        lda     path_buf2+2
-        sta     path_buf1,x
-        inc     path_buf1
-        ldx     path_buf2
+        lda     buf_input_right+2
+        sta     buf_input2_left,x
+        inc     buf_input2_left
+        ldx     buf_input_right
         cpx     #$03
         bcc     l3
         ldx     #$02
-l2:     lda     path_buf2+1,x
-        sta     path_buf2,x
+l2:     lda     buf_input_right+1,x
+        sta     buf_input_right,x
         inx
-        cpx     path_buf2
+        cpx     buf_input_right
         bne     l2
-l3:     dec     path_buf2
+l3:     dec     buf_input_right
         lda     winfo_file_dialog::window_id
         jsr     SetPortForWindow
-        MGTK_RELAY_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
-        param_call DrawString, path_buf1
-        param_call DrawString, path_buf2
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
+        param_call DrawString, buf_input2_left
+        param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
-        jsr     SelectMatchingFileInList__f2
+        jsr     SelectMatchingFileInListF2
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc HandleF2MetaLeftKey
-        lda     path_buf1
+        lda     buf_input2_left
         bne     l1
         rts
 
-l1:     ldy     path_buf1
-        lda     path_buf2
+l1:     ldy     buf_input2_left
+        lda     buf_input_right
         cmp     #$02
         bcc     l3
         ldx     #$01
 l2:     iny
         inx
-        lda     path_buf2,x
-        sta     path_buf1,y
-        cpx     path_buf2
+        lda     buf_input_right,x
+        sta     buf_input2_left,y
+        cpx     buf_input_right
         bne     l2
-l3:     sty     path_buf1
-l4:     lda     path_buf1,y
-        sta     path_buf2+1,y
+l3:     sty     buf_input2_left
+l4:     lda     buf_input2_left,y
+        sta     buf_input_right+1,y
         dey
         bne     l4
-        ldx     path_buf1
+        ldx     buf_input2_left
         inx
-        stx     path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
-        copy    #0, path_buf1
-        jsr     JTRedrawInput
-        jsr     SelectMatchingFileInList__f2
+        stx     buf_input_right
+        copy    #kGlyphInsertionPoint, buf_input_right+1
+        copy    #0, buf_input2_left
+        jsr     RedrawInput
+        jsr     SelectMatchingFileInListF2
         rts
 .endproc
 
@@ -2779,8 +2828,8 @@ l4:     lda     path_buf1,y
 
 .proc HandleF2MetaRightKey
         jsr     MoveIPToEndF2
-        jsr     JTRedrawInput
-        jsr     SelectMatchingFileInList__f2
+        jsr     RedrawInput
+        jsr     SelectMatchingFileInListF2
         rts
 .endproc
 
@@ -2791,20 +2840,20 @@ l4:     lda     path_buf1,y
 
 kJumpTableSize = $2A
 jump_table:
-JTHandleOk:                   jmp     0
-JTHandleCancel:               jmp     0
-JTBlinkIP:                    jmp     0
-JTRedrawInput:                jmp     0
-JTStripPathSegment:          jmp     0
-JTListSelectionChange:       jmp     0
-JTPrepPath:                   jmp     0
-JTHandleOtherKey:            jmp     0
-JTHandleDeleteKey:           jmp     0
-JTHandleLeftKey:             jmp     0
-JTHandleRightKey:            jmp     0
-JTHandleMetaLeftKey:        jmp     0
-JTHandleMetaRightKey:       jmp     0
-JTHandleClick:                jmp     0
+HandleOk:             jmp     0
+HandleCancel:         jmp     0
+BlinkIP:              jmp     0
+RedrawInput:          jmp     0
+StripPathSegmentLeftAndRedraw:     jmp     0
+HandleSelectionChange:  jmp     0
+PrepPath:             jmp     0
+HandleOtherKey:       jmp     0
+HandleDeleteKey:      jmp     0
+HandleLeftKey:        jmp     0
+HandleRightKey:       jmp     0
+HandleMetaLeftKey:    jmp     0
+HandleMetaRightKey:   jmp     0
+HandleClick:          jmp     0
         .assert * - jump_table = kJumpTableSize, error, "Table size mismatch"
 
 ;;; ============================================================
@@ -2815,28 +2864,28 @@ JTHandleClick:                jmp     0
 
         stax    ptr
 
-        ldx     path_buf0
+        ldx     buf_input1_left
         lda     #'/'
-        sta     path_buf0+1,x
-        inc     path_buf0
+        sta     buf_input1_left+1,x
+        inc     buf_input1_left
 
         ldy     #0
         lda     (ptr),y
         tay
         clc
-        adc     path_buf0
+        adc     buf_input1_left
         pha
         tax
 
 :       lda     (ptr),y
-        sta     path_buf0,x
+        sta     buf_input1_left,x
         dey
         dex
-        cpx     path_buf0
+        cpx     buf_input1_left
         bne     :-
 
         pla
-        sta     path_buf0
+        sta     buf_input1_left
         rts
 .endproc
 
@@ -2848,28 +2897,28 @@ JTHandleClick:                jmp     0
 
         stax    ptr
 
-        ldx     path_buf1
+        ldx     buf_input2_left
         lda     #'/'
-        sta     path_buf1+1,x
-        inc     path_buf1
+        sta     buf_input2_left+1,x
+        inc     buf_input2_left
 
         ldy     #$00
         lda     (ptr),y
         tay
         clc
-        adc     path_buf1
+        adc     buf_input2_left
         pha
         tax
 
 :       lda     (ptr),y
-        sta     path_buf1,x
+        sta     buf_input2_left,x
         dey
         dex
-        cpx     path_buf1
+        cpx     buf_input2_left
         bne     :-
 
         pla
-        sta     path_buf1
+        sta     buf_input2_left
         rts
 .endproc
 
@@ -2877,11 +2926,11 @@ JTHandleClick:                jmp     0
 ;;; Trim end of left segment to rightmost '/'
 
 .proc StripPathBuf0Segment
-:       ldx     path_buf0
+:       ldx     buf_input1_left
         cpx     #0
         beq     :+
-        dec     path_buf0
-        lda     path_buf0,x
+        dec     buf_input1_left
+        lda     buf_input1_left,x
         cmp     #'/'
         bne     :-
 :       rts
@@ -2890,11 +2939,11 @@ JTHandleClick:                jmp     0
 ;;; ============================================================
 
 .proc StripPathBuf1Segment
-:       ldx     path_buf1
+:       ldx     buf_input2_left
         cpx     #0
         beq     :+
-        dec     path_buf1
-        lda     path_buf1,x
+        dec     buf_input2_left
+        lda     buf_input2_left,x
         cmp     #'/'
         bne     :-
 :       rts
@@ -2904,7 +2953,7 @@ JTHandleClick:                jmp     0
 
 .proc StripF1PathSegment
         jsr     StripPathBuf0Segment
-        jsr     JTRedrawInput
+        jsr     RedrawInput
         rts
 .endproc
 
@@ -2912,30 +2961,32 @@ JTHandleClick:                jmp     0
 
 .proc StripF2PathSegment
         jsr     StripPathBuf1Segment
-        jsr     JTRedrawInput
+        jsr     RedrawInput
         rts
 .endproc
 
 ;;; ============================================================
 
-handle_f1_selection_change:
+HandleF1SelectionChange:
         lda     #$00
-        beq     L6DD6
+        beq     ListSelectionChange
 
-handle_f2_selection_change:
+HandleF2SelectionChange:
         lda     #$80
+        ;; fall through
 
-.proc L6DD6
+.proc ListSelectionChange
         ptr := $06
 
         sta     flag
         copy16  #file_names, ptr
-        ldx     selected_index
+        ldx     file_dialog_res2::selected_index
         lda     file_list_index,x
         and     #$7F
 
         ldx     #0
         stx     hi
+
         asl     a               ; * 16
         rol     hi
         asl     a
@@ -2944,6 +2995,7 @@ handle_f2_selection_change:
         rol     hi
         asl     a
         rol     hi
+
         clc
         adc     ptr
         tay
@@ -2959,29 +3011,29 @@ handle_f2_selection_change:
 
 f1:     jsr     AppendToPathBuf0
 
-:       jsr     JTRedrawInput
+:       jsr     RedrawInput
         rts
 
-hi:     .byte   0               ; high byte
+hi:     .byte   0
 flag:   .byte   0
 .endproc
 
 ;;; ============================================================
 
-.proc PrepPathBuf0
-        COPY_STRING path_buf, path_buf0
+.proc PrepPathInput1
+        COPY_STRING path_buf, buf_input1_left
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc PrepPathBuf1
-        COPY_STRING path_buf, path_buf1
+.proc PrepPathInput2
+        COPY_STRING path_buf, buf_input2_left
         rts
 .endproc
 
 ;;; ============================================================
-;;; Output: A,X = coordinates of input string end
+;;; Output: A,X = X coordinate of input string end
 
 .proc CalcInput1IPPos
         PARAM_BLOCK params, $06
@@ -2993,19 +3045,19 @@ width   .word
         lda     #0
         sta     params::width
         sta     params::width+1
-        lda     path_buf0
+        lda     buf_input1_left
         beq     :+
 
         sta     params::length
-        copy16  #path_buf0+1, params::data
-        MGTK_RELAY_CALL MGTK::TextWidth, params
+        copy16  #buf_input1_left+1, params::data
+        LIB_MGTK_CALL MGTK::TextWidth, params
 
 :       lda     params::width
         clc
-        adc     file_dialog_res::input1_textpos
+        adc     file_dialog_res::input1_textpos::xcoord
         tay
         lda     params::width+1
-        adc     file_dialog_res::input1_textpos+1
+        adc     file_dialog_res::input1_textpos::xcoord+1
         tax
         tya
         rts
@@ -3023,12 +3075,12 @@ width   .word
         lda     #0
         sta     params::width
         sta     params::width+1
-        lda     path_buf1
+        lda     buf_input2_left
         beq     :+
 
         sta     params::length
-        copy16  #path_buf1+1, params::data
-        MGTK_RELAY_CALL MGTK::TextWidth, params
+        copy16  #buf_input2_left+1, params::data
+        LIB_MGTK_CALL MGTK::TextWidth, params
 
 :       lda     params::width
         clc
@@ -3046,19 +3098,21 @@ width   .word
 .proc SelectMatchingFileInList
 
 f2:     lda     #$FF
-        bmi     l1
+        bmi     :+
 
 f1:     lda     #$00
 
-l1:     bmi     l3
-        COPY_STRING path_buf0, split_buf
-        jmp     l4
+:       bmi     :+
+        COPY_STRING buf_input1_left, split_buf
+        jmp     common
 
-l3:     COPY_STRING path_buf1, split_buf
+:       COPY_STRING buf_input2_left, split_buf
 
-l4:     lda     selected_index
+common:
+
+        lda     file_dialog_res2::selected_index
         sta     d2
-        bmi     l5
+        bmi     l1
         ldx     #<file_names
         stx     $06
         ldx     #>file_names
@@ -3085,79 +3139,79 @@ l4:     lda     selected_index
         tya
         jsr     AppendToPathBuf
 
-l5:     lda     split_buf
+l1:     lda     split_buf
         cmp     path_buf
-        bne     l7
+        bne     l3
         tax
-l6:     lda     split_buf,x
+:       lda     split_buf,x
         cmp     path_buf,x
-        bne     l7
+        bne     l3
         dex
-        bne     l6
+        bne     :-
         lda     #0
-        sta     LD8F0
-        jsr     l8
+        sta     input_dirty_flag
+        jsr     l4
         rts
 
-l7:     lda     #$FF
-        sta     LD8F0
-        jsr     l8
+l3:     lda     #$FF
+        sta     input_dirty_flag
+        jsr     l4
         rts
 
-l8:     lda     d2
-        sta     selected_index
-        bpl     l9
+l4:     lda     d2
+        sta     file_dialog_res2::selected_index
+        bpl     l5
         rts
 
-l9:     jsr     StripPathSegment
+l5:     jsr     StripPathSegment
         rts
 
 d1:     .byte   0
 d2:     .byte   0
 .endproc
-SelectMatchingFileInList__f1 := SelectMatchingFileInList::f1
-SelectMatchingFileInList__f2 := SelectMatchingFileInList::f2
+SelectMatchingFileInListF1 := SelectMatchingFileInList::f1
+SelectMatchingFileInListF2 := SelectMatchingFileInList::f2
 
 ;;; ============================================================
 
 .proc MoveIPToEndF1
-        lda     path_buf2
+        lda     buf_input_right
         cmp     #2
         bcc     done
 
         ldx     #1
-        ldy     path_buf0
+        ldy     buf_input1_left
 :       inx
         iny
-        lda     path_buf2,x
-        sta     path_buf0,y
-        cpx     path_buf2
+        lda     buf_input_right,x
+        sta     buf_input1_left,y
+        cpx     buf_input_right
         bne     :-
-        sty     path_buf0
+        sty     buf_input1_left
 
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #1, buf_input_right
+        copy    #kGlyphInsertionPoint, buf_input_right+1
 
 done:   rts
 .endproc
 
 .proc MoveIPToEndF2
-        lda     path_buf2
+        lda     buf_input_right
         cmp     #2
         bcc     done
 
         ldx     #1
-        ldy     path_buf1
+        ldy     buf_input2_left
 :       inx
         iny
-        lda     path_buf2,x
-        sta     path_buf1,y
-        cpx     path_buf2
+        lda     buf_input_right,x
+        sta     buf_input2_left,y
+        cpx     buf_input_right
         bne     :-
-        sty     path_buf1
+        sty     buf_input2_left
 
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #1, buf_input_right
+        copy    #kGlyphInsertionPoint, buf_input_right+1
 
 done:   rts
 .endproc
@@ -3173,3 +3227,6 @@ done:   rts
 .endscope ; file_dialog
 
 file_dialog__Exec := file_dialog::Exec
+
+.undefine LIB_MGTK_CALL
+.undefine LIB_MLI_CALL

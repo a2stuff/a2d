@@ -16,10 +16,10 @@
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         jsr     InstallCallbackTable
-        jsr     file_dialog::JTPrepPath
-        jsr     file_dialog::JTRedrawInput
+        jsr     file_dialog::PrepPath
+        jsr     file_dialog::RedrawInput
 
-        copy    #$FF, LD8EC
+        copy    #$FF, blink_ip_flag
         jmp     file_dialog::EventLoop
 .endproc
 
@@ -62,8 +62,8 @@ jt_filename:
         jump_table_entry file_dialog::BlinkF1IP
         jump_table_entry file_dialog::RedrawF1
         jump_table_entry file_dialog::StripF1PathSegment
-        jump_table_entry file_dialog::handle_f1_selection_change
-        jump_table_entry file_dialog::PrepPathBuf0
+        jump_table_entry file_dialog::HandleF1SelectionChange
+        jump_table_entry file_dialog::PrepPathInput1
         jump_table_entry file_dialog::HandleF1OtherKey
         jump_table_entry file_dialog::HandleF1DeleteKey
         jump_table_entry file_dialog::HandleF1LeftKey
@@ -75,7 +75,7 @@ jt_filename:
 
 
 .proc HandleOk
-        param_call file_dialog::L647C, path_buf0
+        param_call file_dialog::VerifyValidPath, path_buf0
         beq     :+
         lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_SHOW_ALERT
@@ -83,11 +83,10 @@ jt_filename:
 
 :       MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
-        lda     #0
-        sta     LD8EC
-        jsr     file_dialog::SetCursorPointer
+        copy    #0, blink_ip_flag
+        jsr     file_dialog::UnsetCursorIBeam
         copy16  #path_buf0, $6
-        ldx     file_dialog::stash_stack
+        ldx     file_dialog::saved_stack
         txs
         lda     #0
         rts
@@ -99,10 +98,9 @@ jt_filename:
 .proc HandleCancel
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
-        lda     #0
-        sta     LD8EC
-        jsr     file_dialog::SetCursorPointer
-        ldx     file_dialog::stash_stack
+        copy    #0, blink_ip_flag
+        jsr     file_dialog::UnsetCursorIBeam
+        ldx     file_dialog::saved_stack
         txs
         return  #$FF
 .endproc

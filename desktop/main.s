@@ -14107,12 +14107,12 @@ dialog_param_addr:
 
         lda     #0
         sta     prompt_ip_flag
-        sta     LD8EC
-        sta     LD8F0
-        sta     LD8F1
-        sta     LD8F2
+        sta     blink_ip_flag
+        sta     input_dirty_flag
+        sta     input1_dirty_flag
+        sta     input2_dirty_flag
         sta     has_input_field_flag
-        sta     LD8F5
+        sta     input_allow_all_chars_flag
         sta     format_erase_overlay_flag
         sta     cursor_ibeam_flag
 
@@ -14356,7 +14356,7 @@ LA77A:  bit     prompt_button_flags
         cmp     #CHAR_RETURN
         beq     do_yes
 
-LA79B:  bit     LD8F5
+LA79B:  bit     input_allow_all_chars_flag
         bmi     LA7C8
         cmp     #'.'
         beq     LA7D8

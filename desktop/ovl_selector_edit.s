@@ -49,22 +49,21 @@ finish: jsr     file_dialog::ReadDir
         lda     #$00
         bcs     :+
         param_call file_dialog::FindFilenameIndex, buffer
-        sta     selected_index
+        sta     file_dialog_res2::selected_index
         jsr     file_dialog::CalcTopIndex
 :       jsr     file_dialog::UpdateScrollbar2
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         lda     path_buf0
         bne     :+
-        jsr     file_dialog::JTPrepPath
+        jsr     file_dialog::PrepPath
 :       copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     file_dialog::JTRedrawInput
+        jsr     file_dialog::RedrawInput
         jsr     file_dialog::RedrawF2
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        lda     #$FF
-        sta     LD8EC
+        copy    #$FF, blink_ip_flag
         jsr     file_dialog::InitDeviceNumber
         jmp     file_dialog::EventLoop
 
@@ -156,8 +155,8 @@ jt_pathname:
         jump_table_entry file_dialog::BlinkF1IP
         jump_table_entry file_dialog::RedrawF1
         jump_table_entry file_dialog::StripF1PathSegment
-        jump_table_entry file_dialog::handle_f1_selection_change
-        jump_table_entry file_dialog::PrepPathBuf0
+        jump_table_entry file_dialog::HandleF1SelectionChange
+        jump_table_entry file_dialog::PrepPathInput1
         jump_table_entry file_dialog::HandleF1OtherKey
         jump_table_entry file_dialog::HandleF1DeleteKey
         jump_table_entry file_dialog::HandleF1LeftKey
@@ -174,8 +173,8 @@ jt_entry_name:
         jump_table_entry file_dialog::BlinkF2IP
         jump_table_entry file_dialog::RedrawF2
         jump_table_entry file_dialog::StripF2PathSegment
-        jump_table_entry file_dialog::handle_f2_selection_change
-        jump_table_entry file_dialog::PrepPathBuf1
+        jump_table_entry file_dialog::HandleF2SelectionChange
+        jump_table_entry file_dialog::PrepPathInput2
         jump_table_entry file_dialog::HandleF2OtherKey
         jump_table_entry file_dialog::HandleF2DeleteKey
         jump_table_entry file_dialog::HandleF2LeftKey
@@ -192,7 +191,7 @@ jt_entry_name:
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     file_dialog::JTRedrawInput
+        jsr     file_dialog::RedrawInput
 
         ldx     jt_entry_name
 :       lda     jt_entry_name+1,x
@@ -206,11 +205,11 @@ jt_entry_name:
 
         lda     #$80
         sta     file_dialog::focus_in_input2_flag
-        sta     file_dialog::L5105
-        lda     LD8F0
-        sta     LD8F1
+        sta     file_dialog::listbox_disabled_flag
+        lda     input_dirty_flag
+        sta     input1_dirty_flag
         lda     #$00
-        sta     LD8F0
+        sta     input_dirty_flag
         lda     path_buf1
         bne     finish
         lda     #$00
@@ -236,7 +235,7 @@ found_slash:
         sty     path_buf1
 finish: copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        jsr     file_dialog::JTRedrawInput
+        jsr     file_dialog::RedrawInput
         rts
 .endproc
 
@@ -247,7 +246,7 @@ finish: copy    #1, path_buf2
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
 .proc HandleOkName
-        param_call file_dialog::L647C, path_buf0
+        param_call file_dialog::VerifyValidPath, path_buf0
         bne     invalid
         lda     path_buf1
         beq     fail
@@ -269,11 +268,12 @@ ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
-        sta     LD8EC
-        jsr     file_dialog::SetCursorPointer
+        ;; BUG: Missing lda #0 ?
+        sta     blink_ip_flag
+        jsr     file_dialog::UnsetCursorIBeam
         copy16  #file_dialog::NoOp, file_dialog::HandleKey::key_meta_digit+1
 
-        ldx     file_dialog::stash_stack
+        ldx     file_dialog::saved_stack
         txs
         ldx     which_run_list
         ldy     copy_when
@@ -287,11 +287,10 @@ ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
-        lda     #0
-        sta     LD8EC
-        jsr     file_dialog::SetCursorPointer
+        copy    #0, blink_ip_flag
+        jsr     file_dialog::UnsetCursorIBeam
         copy16  #file_dialog::NoOp, file_dialog::HandleKey::key_meta_digit+1
-        ldx     file_dialog::stash_stack
+        ldx     file_dialog::saved_stack
         txs
         return  #$FF
 .endproc
@@ -303,7 +302,7 @@ ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     file_dialog::JTRedrawInput
+        jsr     file_dialog::RedrawInput
 
         ldx     jt_pathname
 :       lda     jt_pathname+1,x
@@ -317,12 +316,12 @@ ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
 
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        jsr     file_dialog::JTRedrawInput
+        jsr     file_dialog::RedrawInput
         lda     #$00
-        sta     file_dialog::L5105
+        sta     file_dialog::listbox_disabled_flag
         sta     file_dialog::focus_in_input2_flag
-        lda     LD8F1
-        sta     LD8F0
+        lda     input1_dirty_flag
+        sta     input_dirty_flag
         rts
 .endproc
 

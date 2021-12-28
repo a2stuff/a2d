@@ -16,10 +16,10 @@
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         jsr     InstallSourceCallbackTable
-        jsr     file_dialog::JTPrepPath
-        jsr     file_dialog::JTRedrawInput
+        jsr     file_dialog::PrepPath
+        jsr     file_dialog::RedrawInput
 
-        copy    #$FF, LD8EC
+        copy    #$FF, blink_ip_flag
         jmp     file_dialog::EventLoop
 .endproc
 
@@ -65,8 +65,8 @@ jt_source_filename:
         jump_table_entry file_dialog::BlinkF1IP
         jump_table_entry file_dialog::RedrawF1
         jump_table_entry file_dialog::StripF1PathSegment
-        jump_table_entry file_dialog::handle_f1_selection_change
-        jump_table_entry file_dialog::PrepPathBuf0
+        jump_table_entry file_dialog::HandleF1SelectionChange
+        jump_table_entry file_dialog::PrepPathInput1
         jump_table_entry file_dialog::HandleF1OtherKey
         jump_table_entry file_dialog::HandleF1DeleteKey
         jump_table_entry file_dialog::HandleF1LeftKey
@@ -83,8 +83,8 @@ jt_destination_filename:
         jump_table_entry file_dialog::BlinkF2IP
         jump_table_entry file_dialog::RedrawF2
         jump_table_entry file_dialog::StripF2PathSegment
-        jump_table_entry file_dialog::handle_f2_selection_change
-        jump_table_entry file_dialog::PrepPathBuf1
+        jump_table_entry file_dialog::HandleF2SelectionChange
+        jump_table_entry file_dialog::PrepPathInput2
         jump_table_entry file_dialog::HandleF2OtherKey
         jump_table_entry file_dialog::HandleF2DeleteKey
         jump_table_entry file_dialog::HandleF2LeftKey
@@ -101,7 +101,7 @@ jt_destination_filename:
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     file_dialog::JTRedrawInput
+        jsr     file_dialog::RedrawInput
 
         ;; install destination handlers
         ldx     jt_destination_filename
@@ -116,12 +116,12 @@ jt_destination_filename:
 
         ;; set up flags for destination
         lda     #$80
-        sta     file_dialog::L50A8
+        sta     file_dialog::only_show_dirs_flag
         sta     file_dialog::focus_in_input2_flag
-        lda     selected_index
+        lda     file_dialog_res2::selected_index
         sta     LD921
         lda     #$FF
-        sta     selected_index
+        sta     file_dialog_res2::selected_index
         jsr     file_dialog::DeviceOnLine
         jsr     file_dialog::ReadDir
         jsr     file_dialog::UpdateScrollbar
@@ -160,13 +160,13 @@ jt_destination_filename:
         iny
         jmp     :-
 
-done:   jsr     file_dialog::JTRedrawInput
+done:   jsr     file_dialog::RedrawInput
 
         ;; Twiddle flags
-        lda     LD8F0
-        sta     LD8F1
-        lda     LD8F2
-        sta     LD8F0
+        lda     input_dirty_flag
+        sta     input1_dirty_flag
+        lda     input2_dirty_flag
+        sta     input_dirty_flag
         rts
 .endproc
 
@@ -176,22 +176,22 @@ done:   jsr     file_dialog::JTRedrawInput
 ;;; ============================================================
 
 .proc HandleOkDestination
-        param_call file_dialog::L647C, path_buf0
+        param_call file_dialog::VerifyValidPath, path_buf0
         beq     :+
 err:    lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_SHOW_ALERT
         rts
 
-:       param_call file_dialog::L647C, path_buf1
+:       param_call file_dialog::VerifyValidPath, path_buf1
         bne     err
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
-        copy    #0, file_dialog::L50A8
-        copy    #0, LD8EC
-        jsr     file_dialog::SetCursorPointer
+        copy    #0, file_dialog::only_show_dirs_flag
+        copy    #0, blink_ip_flag
+        jsr     file_dialog::UnsetCursorIBeam
         copy16  #path_buf0, $6
         copy16  #path_buf1, $8
-        ldx     file_dialog::stash_stack
+        ldx     file_dialog::saved_stack
         txs
         return  #$00
 .endproc
@@ -204,10 +204,9 @@ err:    lda     #ERR_INVALID_PATHNAME
 .proc HandleCancel
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
-        lda     #0
-        sta     LD8EC
-        jsr     file_dialog::SetCursorPointer
-        ldx     file_dialog::stash_stack
+        copy    #0, blink_ip_flag
+        jsr     file_dialog::UnsetCursorIBeam
+        ldx     file_dialog::saved_stack
         txs
         return  #$FF
 .endproc
@@ -219,7 +218,7 @@ err:    lda     #ERR_INVALID_PATHNAME
 
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
-        jsr     file_dialog::JTRedrawInput
+        jsr     file_dialog::RedrawInput
 
         ldx     jt_source_filename
 :       lda     jt_source_filename+1,x
@@ -233,19 +232,19 @@ err:    lda     #ERR_INVALID_PATHNAME
 
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        copy    #0, file_dialog::L50A8
-        copy    #$FF, selected_index
+        copy    #0, file_dialog::only_show_dirs_flag
+        copy    #$FF, file_dialog_res2::selected_index
         copy    #0, file_dialog::focus_in_input2_flag
 
-        lda     LD8F0
-        sta     LD8F2
-        lda     LD8F1
-        sta     LD8F0
+        lda     input_dirty_flag
+        sta     input2_dirty_flag
+        lda     input1_dirty_flag
+        sta     input_dirty_flag
 
         COPY_STRING path_buf0, file_dialog::path_buf
 
         jsr     file_dialog::StripPathSegment
-        bit     LD8F0
+        bit     input_dirty_flag
         bpl     L726D
         jsr     file_dialog::DeviceOnLine
         lda     #0
@@ -254,7 +253,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         jsr     file_dialog::UpdateScrollbar
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
-        jsr     file_dialog::JTRedrawInput
+        jsr     file_dialog::RedrawInput
         jmp     L7295
 
 L726D:  lda     file_dialog::path_buf
@@ -268,7 +267,7 @@ L7272:  jsr     file_dialog::DeviceOnLine
 L7281:  jsr     file_dialog::ReadDir
         bcs     L7272
         lda     LD921
-L7289:  sta     selected_index
+L7289:  sta     file_dialog_res2::selected_index
         cmp     #$FF            ; if no selection...
         bne     :+              ; make scroll index 0
         lda     #$00
