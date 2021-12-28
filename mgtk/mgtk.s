@@ -5076,6 +5076,7 @@ ycoord  .word
         ldx     params::xcoord
         ldy     params::xcoord+1
         lda     params::ycoord
+        jsr     SetMouseCoords
         jsr     SetMousePos
 
 event_ok:
@@ -9299,15 +9300,20 @@ kbd_mouse_zp_stash:
         jmp     CallMouse
 
 no_firmware:
-        stx     mouse_x
-        sty     mouse_x+1
-        sta     mouse_y
+        jsr     SetMouseCoords
         bit     mouse_hooked_flag
         bpl     not_hooked
         ldy     #POSMOUSE
         jmp     CallMouse
 
 not_hooked:
+        rts
+.endproc
+
+.proc SetMouseCoords
+        stx     mouse_x
+        sty     mouse_x+1
+        sta     mouse_y
         rts
 .endproc
 
