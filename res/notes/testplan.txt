@@ -195,7 +195,7 @@
 
 * Launch DeskTop. Special > Format a Disk. Verify that the device order shown matches the order of volumes shown on the DeskTop (boot device first, etc). Format a disk. Verify the correct device was formatted.
 * Launch DeskTop. Special > Erase a Disk. Verify that the device order shown matches the order of volumes shown on the DeskTop (boot device first, etc). Erase a disk. Verify the correct device was erased.
-* Launch DeskTop. Select > Add a Shortcut. Verify that the device order (via Change Drive or pressing Tab) shown matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
+* Launch DeskTop. Shortcuts > Add a Shortcut. Verify that the device order (via Change Drive or pressing Tab) shown matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
 * Launch Selector. File > Run a Program. Verify that the device order (via Change Drive or pressing Tab) shown matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
 
 * Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
@@ -443,3 +443,5 @@
 * Launch DeskTop. Apple > About Apple II DeskTop. Press any non-modifier key screen. Verify that the dialog closes.
 
 * Launch DeskTop, invoke Control Panel DA. Under Mouse Tracking, toggle Slow and Fast. Verify that the mouse cursor doesn't warp to a new position, and that the mouse cursor doesn't flash briefly on the left edge of the screen.
+
+* Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume directory that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that file picker shows both the correct disk name and the correct full path.

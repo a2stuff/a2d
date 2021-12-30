@@ -23,6 +23,12 @@
         bpl     :-
 
         jsr     file_dialog::StripPathSegment
+        ;; Was it just a volume name, e.g. "/VOL"?
+        lda     file_dialog::path_buf
+        bne     :+
+        copy    path_buf0, file_dialog::path_buf ; yes, restore it
+:
+
         ldy     path_buf0
 :       lda     path_buf0,y
         cmp     #'/'
