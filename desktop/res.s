@@ -92,7 +92,7 @@ findicon_window_id := findicon_params + 5
 
 ;;; ============================================================
 
-.params getwinport_params2
+.params getwinport_params
 window_id:     .byte   0
 a_grafport:     .addr   window_grafport
 .endparams
@@ -304,7 +304,7 @@ temp_string_buf:
         .res    kPathBufferSize, 0
 
         ;; used when splitting string for text field
-split_buf:
+buf_text:
         .res    kPathBufferSize, 0
 
 ;;; In common dialog (copy/edit file, add/edit shortcut):

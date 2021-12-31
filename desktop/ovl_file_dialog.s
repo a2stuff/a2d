@@ -623,9 +623,16 @@ different:
 .proc UnsetCursorIBeam
         bit     cursor_ibeam_flag
         bpl     :+
-        LIB_MGTK_CALL MGTK::SetCursor, pointer_cursor
+        jsr     SetCursorPointer
         copy    #0, cursor_ibeam_flag
 :       rts
+.endproc
+
+;;; ============================================================
+
+.proc SetCursorPointer
+        LIB_MGTK_CALL MGTK::SetCursor, pointer_cursor
+        rts
 .endproc
 
 ;;; ============================================================
@@ -1366,9 +1373,9 @@ open_dir_flag:
 ;;; ============================================================
 
 .proc AppendToPathBuf
-        jsr     CopyStringToLcbuf
         ptr := $06
 
+        jsr     CopyStringToLcbuf
         stax    ptr
         ldx     path_buf
         lda     #'/'
@@ -1730,8 +1737,8 @@ tmp:    .byte   0
 ;;; ============================================================
 
 .proc SetPortForWindow
-        sta     getwinport_params2::window_id
-        LIB_MGTK_CALL MGTK::GetWinPort, getwinport_params2
+        sta     getwinport_params::window_id
+        LIB_MGTK_CALL MGTK::GetWinPort, getwinport_params
         LIB_MGTK_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
@@ -1779,7 +1786,7 @@ l3:     lda     ($06),y
         jmp     next_inner
 
 l5:     lda     inner_index
-        sta     l19
+        sta     d1
 
         ldx     #15
         lda     #' '            ; before first possible name char
@@ -1801,7 +1808,7 @@ next_inner:
         beq     :+
         jmp     loop2
 
-:       lda     l19
+:       lda     d1
         jsr     CalcEntryPtr
         ldy     #0              ; mark as done
         lda     ($06),y
@@ -1815,8 +1822,8 @@ next_inner:
         bpl     :-
 
         ldx     outer_index
-        lda     l19
-        sta     l22,x
+        lda     d1
+        sta     d2,x
         lda     #0
         sta     inner_index
         inc     outer_index
@@ -1826,48 +1833,48 @@ next_inner:
 finish: ldx     num_file_names
         dex
         stx     outer_index
-l11:    lda     outer_index
-        bpl     l16
+l10:    lda     outer_index
+        bpl     l14
         ldx     num_file_names
         beq     done
         dex
-l12:    lda     l22,x
+l11:    lda     d2,x
         tay
         lda     file_list_index,y
-        bpl     l13
-        lda     l22,x
-        ora     #$80
-        sta     l22,x
-l13:    dex
         bpl     l12
+        lda     d2,x
+        ora     #$80
+        sta     d2,x
+l12:    dex
+        bpl     l11
 
         ldx     num_file_names
         beq     done
         dex
-:       lda     l22,x
+:       lda     d2,x
         sta     file_list_index,x
         dex
         bpl     :-
 
 done:   rts
 
-l16:    jsr     CalcEntryPtr
+l14:    jsr     CalcEntryPtr
         ldy     #0
         lda     ($06),y
         and     #$7F
         sta     ($06),y
         dec     outer_index
-        jmp     l11
+        jmp     l10
 
 inner_index:
         .byte   0
 outer_index:
         .byte   0
-l19:    .byte   0
+d1:     .byte   0
 name_buf:
         .res    17, 0
 
-l22:    .res    127, 0
+d2:     .res    127, 0
 
 ;;; --------------------------------------------------
 
@@ -1936,10 +1943,6 @@ l2:     inc     index
         bne     l1
 
 l3:
-        ;; lda     index
-        ;; cmp     #2
-        ;; bcc     fail
-
         ldy     #0
         lda     (ptr),y
         tay
@@ -2293,7 +2296,7 @@ width   .word
         jmp     HandleF1MetaLeftKey
 
         ;; Found position; copy everything to the right of
-        ;; the new position from `buf_input1_left` to `split_buf`
+        ;; the new position from `buf_input1_left` to `buf_text`
 :       inc     tw_params::length
         ldy     #0
         ldx     tw_params::length
@@ -2302,26 +2305,26 @@ width   .word
         inx
         iny
         lda     buf_input1_left,x
-        sta     split_buf+1,y
+        sta     buf_text+1,y
         jmp     :-
 :       iny
-        sty     split_buf
+        sty     buf_text
 
-        ;; Append `buf_input_right` to `split_buf`
+        ;; Append `buf_input_right` to `buf_text`
         ldx     #1
-        ldy     split_buf
+        ldy     buf_text
 :       cpx     buf_input_right
         beq     :+
         inx
         iny
         lda     buf_input_right,x
-        sta     split_buf,y
+        sta     buf_text,y
         jmp     :-
-:       sty     split_buf
+:       sty     buf_text
 
-        ;; Copy IP and `split_buf` into `buf_input_right`
-        copy    #kGlyphInsertionPoint, split_buf+1
-:       lda     split_buf,y
+        ;; Copy IP and `buf_text` into `buf_input_right`
+        copy    #kGlyphInsertionPoint, buf_text+1
+:       lda     buf_text,y
         sta     buf_input_right,y
         dey
         bpl     :-
@@ -2463,7 +2466,7 @@ width   .word
         jmp     HandleF2MetaLeftKey
 
         ;; Found position; copy everything to the right of
-        ;; the new position from `buf_input2_left` to `split_buf`
+        ;; the new position from `buf_input2_left` to `buf_text`
 :       inc     tw_params::length
         ldy     #0
         ldx     tw_params::length
@@ -2472,26 +2475,26 @@ width   .word
         inx
         iny
         lda     buf_input2_left,x
-        sta     split_buf+1,y
+        sta     buf_text+1,y
         jmp     :-
 :       iny
-        sty     split_buf
+        sty     buf_text
 
-        ;; Append `buf_input_right` to `split_buf`
+        ;; Append `buf_input_right` to `buf_text`
         ldx     #1
-        ldy     split_buf
+        ldy     buf_text
 :       cpx     buf_input_right
         beq     :+
         inx
         iny
         lda     buf_input_right,x
-        sta     split_buf,y
+        sta     buf_text,y
         jmp     :-
-:       sty     split_buf
+:       sty     buf_text
 
-        ;; Copy IP and `split_buf` into `buf_input_right`
-        copy    #kGlyphInsertionPoint, split_buf+1
-:       lda     split_buf,y
+        ;; Copy IP and `buf_text` into `buf_input_right`
+        copy    #kGlyphInsertionPoint, buf_text+1
+:       lda     buf_text,y
         sta     buf_input_right,y
         dey
         bpl     :-
@@ -3033,7 +3036,7 @@ flag:   .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Output: A,X = X coordinate of input string end
+;;; Output: A,X = X coordinate of insertion point
 
 .proc CalcInput1IPPos
         PARAM_BLOCK params, $06
@@ -3103,10 +3106,10 @@ f2:     lda     #$FF
 f1:     lda     #$00
 
 :       bmi     :+
-        COPY_STRING buf_input1_left, split_buf
+        COPY_STRING buf_input1_left, buf_text
         jmp     common
 
-:       COPY_STRING buf_input2_left, split_buf
+:       COPY_STRING buf_input2_left, buf_text
 
 common:
 
@@ -3139,11 +3142,11 @@ common:
         tya
         jsr     AppendToPathBuf
 
-l1:     lda     split_buf
+l1:     lda     buf_text
         cmp     path_buf
         bne     l3
         tax
-:       lda     split_buf,x
+:       lda     buf_text,x
         cmp     path_buf,x
         bne     l3
         dex

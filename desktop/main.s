@@ -217,8 +217,8 @@ loop_counter:
         ;; This correctly uses the clipped port provided by BeginUpdate.
 
         ;; `DrawWindowHeader` relies on `window_grafport` for dimensions
-        copy    cached_window_id, getwinport_params2::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+        copy    cached_window_id, getwinport_params::window_id
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params
         jsr     DrawWindowHeader
 
         ;; Overwrite the Winfo's port with the cliprect we got for the update
@@ -686,8 +686,8 @@ win:    .byte   0
 ;;; Used only for file windows; adjusts port to account for header.
 ;;; Returns 0 if ok, `MGTK::Error::window_obscured` if the window is obscured.
 .proc UnsafeOffsetAndSetPortFromWindowId
-        sta     getwinport_params2::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+        sta     getwinport_params::window_id
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params
         bne     :+              ; MGTK::Error::window_obscured
         jsr     OffsetWindowGrafportAndSet
         lda     #0
@@ -698,8 +698,8 @@ win:    .byte   0
 ;;; For file windows, used for drawing headers (sometimes);
 ;;; Returns 0 if ok, `MGTK::Error::window_obscured` if the window is obscured.
 .proc UnsafeSetPortFromWindowId
-        sta     getwinport_params2::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+        sta     getwinport_params::window_id
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params
         bne     :+              ; MGTK::Error::window_obscured
         MGTK_RELAY_CALL MGTK::SetPort, window_grafport
 :       rts
@@ -707,8 +707,8 @@ win:    .byte   0
 
 ;;; Used for windows that can never be obscured (e.g. dialogs)
 .proc SafeSetPortFromWindowId
-        sta     getwinport_params2::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+        sta     getwinport_params::window_id
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params
         ;; ASSERT: Result is not MGTK::Error::window_obscured
         MGTK_RELAY_CALL MGTK::SetPort, window_grafport
         rts
@@ -15970,7 +15970,7 @@ width   .word
         jmp     InputFieldIPStart
 
         ;; Found position; copy everything to the right of
-        ;; the new position from `path_buf1` to `split_buf`
+        ;; the new position from `path_buf1` to `buf_text`
 :       inc     tw_params::length
         ldy     #0
         ldx     tw_params::length
@@ -15979,26 +15979,26 @@ width   .word
         inx
         iny
         lda     path_buf1,x
-        sta     split_buf+1,y
+        sta     buf_text+1,y
         jmp     :-
 :       iny
-        sty     split_buf
+        sty     buf_text
 
-        ;; Append `path_buf2` to `split_buf`
+        ;; Append `path_buf2` to `buf_text`
         ldx     #1
-        ldy     split_buf
+        ldy     buf_text
 :       cpx     path_buf2
         beq     :+
         inx
         iny
         lda     path_buf2,x
-        sta     split_buf,y
+        sta     buf_text,y
         jmp     :-
-:       sty     split_buf
+:       sty     buf_text
 
-        ;; Copy IP and `split_buf` into `path_buf2`
-        copy    #kGlyphInsertionPoint, split_buf+1
-:       lda     split_buf,y
+        ;; Copy IP and `buf_text` into `path_buf2`
+        copy    #kGlyphInsertionPoint, buf_text+1
+:       lda     buf_text,y
         sta     path_buf2,y
         dey
         bpl     :-
@@ -16183,7 +16183,7 @@ finish: dec     path_buf2
         ;; Preserve right characters up to make room.
         ;; TODO: Why not just shift them up???
 loop1:  lda     path_buf2,x
-        sta     split_buf-1,x
+        sta     buf_text-1,x
         dex
         cpx     #1
         bne     loop1
@@ -16191,7 +16191,7 @@ loop1:  lda     path_buf2,x
 
         ;; Move characters left to right
 move:   dex
-        stx     split_buf
+        stx     buf_text
         ldx     path_buf1
 loop2:  lda     path_buf1,x
         sta     path_buf2+1,x
@@ -16205,14 +16205,14 @@ loop2:  lda     path_buf1,x
         sta     path_buf2
         lda     path_buf1
         clc
-        adc     split_buf
+        adc     buf_text
         tay
         pha
 
         ;; Append right right characters again if needed.
-        ldx     split_buf
+        ldx     buf_text
         beq     finish
-loop3:  lda     split_buf,x
+loop3:  lda     buf_text,x
         sta     path_buf2,y
         dex
         dey

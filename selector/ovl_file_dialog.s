@@ -116,12 +116,12 @@ findcontrol_which_part := findcontrol_params + 5
 
 .params getwinport_params
 window_id:     .byte   0
-a_grafport:    .addr   grafport
+a_grafport:    .addr   window_grafport
 .endparams
 
-grafport:
+window_grafport:
         .tag    MGTK::GrafPort
-grafport2:
+main_grafport:
         .tag    MGTK::GrafPort
 
 double_click_counter_init:
@@ -412,8 +412,8 @@ start:  jsr     OpenWindow
         param_call DrawInput1Label, str_file_to_run
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR
         LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        LIB_MGTK_CALL MGTK::InitPort, grafport2
-        LIB_MGTK_CALL MGTK::SetPort, grafport2
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
@@ -552,13 +552,13 @@ l1:     lda     winfo_file_dialog::window_id
         LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
-        bne     l2
+        bne     l4
         jsr     SetCursorIBeam
-        jmp     l3
+        jmp     l5
 
-l2:     jsr     UnsetCursorIBeam
-l3:     LIB_MGTK_CALL MGTK::InitPort, grafport2
-        LIB_MGTK_CALL MGTK::SetPort, grafport2
+l4:     jsr     UnsetCursorIBeam
+l5:     LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, main_grafport
         jmp     EventLoop
 .endproc
 
@@ -685,8 +685,8 @@ l4:     lda     winfo_file_dialog::window_id
 ;;; ============================================================
 
 .proc SetUpPorts
-        LIB_MGTK_CALL MGTK::InitPort, grafport2
-        LIB_MGTK_CALL MGTK::SetPort, grafport
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
 
@@ -791,8 +791,8 @@ folder: and     #$7F
         jsr     ScrollClipRect
         jsr     UpdateDiskName
         jsr     DrawListEntries
-        LIB_MGTK_CALL MGTK::InitPort, grafport2
-        LIB_MGTK_CALL MGTK::SetPort, grafport
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
+        LIB_MGTK_CALL MGTK::SetPort, window_grafport
         rts
 
 hi:     .byte   0
@@ -1138,16 +1138,16 @@ l7:     .byte   0
 ;;; ============================================================
 
 .proc InitSetGrafport
-        LIB_MGTK_CALL MGTK::InitPort, grafport2
+        LIB_MGTK_CALL MGTK::InitPort, main_grafport
         ldx     #3
         lda     #0
-:       sta     grafport2,x
-        sta     grafport2+MGTK::GrafPort::maprect,x
+:       sta     main_grafport,x
+        sta     main_grafport+MGTK::GrafPort::maprect,x
         dex
         bpl     :-
-        copy16  #550, grafport2+MGTK::GrafPort::maprect+MGTK::Rect::x2
-        copy16  #185, grafport2+MGTK::GrafPort::maprect+MGTK::Rect::y2
-        LIB_MGTK_CALL MGTK::SetPort, grafport2
+        copy16  #550, main_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x2
+        copy16  #185, main_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y2
+        LIB_MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
@@ -1708,6 +1708,7 @@ open_dir_flag:
 
 .proc AppendToPathBuf
         ptr := $06
+
         stax    ptr
         ldx     path_buf
         lda     #'/'
@@ -2068,7 +2069,7 @@ tmp:    .byte   0
 .proc SetPortForWindow
         sta     getwinport_params::window_id
         LIB_MGTK_CALL MGTK::GetWinPort, getwinport_params
-        LIB_MGTK_CALL MGTK::SetPort, grafport
+        LIB_MGTK_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
 
@@ -2115,7 +2116,7 @@ l3:     lda     ($06),y
         jmp     next_inner
 
 l5:     lda     inner_index
-        sta     l17
+        sta     d1
 
         ldx     #15
         lda     #' '            ; before first possible name char
@@ -2137,7 +2138,7 @@ next_inner:
         beq     :+
         jmp     loop2
 
-:       lda     l17
+:       lda     d1
         jsr     CalcEntryPtr
         ldy     #0              ; mark as done
         lda     ($06),y
@@ -2151,8 +2152,8 @@ next_inner:
         bpl     :-
 
         ldx     outer_index
-        lda     l17
-        sta     l20,x
+        lda     d1
+        sta     d2,x
         lda     #0
         sta     inner_index
         inc     outer_index
@@ -2167,20 +2168,20 @@ l10:    lda     outer_index
         ldx     num_file_names
         beq     done
         dex
-l11:    lda     l20,x
+l11:    lda     d2,x
         tay
         lda     file_list_index,y
         bpl     l12
-        lda     l20,x
+        lda     d2,x
         ora     #$80
-        sta     l20,x
+        sta     d2,x
 l12:    dex
         bpl     l11
 
         ldx     num_file_names
         beq     done
         dex
-:       lda     l20,x
+:       lda     d2,x
         sta     file_list_index,x
         dex
         bpl     :-
@@ -2199,11 +2200,11 @@ inner_index:
         .byte   0
 outer_index:
         .byte   0
-l17:    .byte   0
+d1:     .byte   0
 name_buf:
         .res    17, 0
 
-l20:    .res    127, 0
+d2:     .res    127, 0
 
 ;;; --------------------------------------------------
 
@@ -2331,62 +2332,6 @@ loop:   lda     index
         jmp     loop
 
 index:  .byte   0
-.endproc
-
-;;; ============================================================
-;;; Find index to filename in file_list_index.
-;;; Input: $06 = ptr to filename
-;;; Output: A = index, or $FF if not found
-
-;;; Unreferenced - TODO: Remove
-.proc FindFilenameIndex
-        stax    $06
-        ldy     #$00
-        lda     ($06),y
-        tay
-:       lda     ($06),y
-        sta     d2,y
-        dey
-        bpl     :-
-        lda     #$00
-        sta     d1
-        copy16  #file_names, $06
-l1:     lda     d1
-        cmp     num_file_names
-        beq     l4
-        ldy     #$00
-        lda     ($06),y
-        cmp     d2
-        bne     l3
-        tay
-l2:     lda     ($06),y
-        cmp     d2,y
-        bne     l3
-        dey
-        bne     l2
-        jmp     l5
-
-l3:     inc     d1
-        lda     $06
-        clc
-        adc     #$10
-        sta     $06
-        bcc     l1
-        inc     $07
-        jmp     l1
-
-l4:     return  #$FF
-
-l5:     ldx     num_file_names
-        lda     d1
-l6:     dex
-        cmp     file_list_index,x
-        bne     l6
-        txa
-        rts
-
-d1:     .byte   0
-d2:     .res    16, 0
 .endproc
 
 ;;; ============================================================
@@ -2772,22 +2717,7 @@ skip:   sty     buf_input1_left
 ;;; ============================================================
 
 .proc HandleF1MetaRightKey
-        lda     buf_input_right
-        cmp     #2
-        bcs     :+
-        rts
-
-:       ldx     #1
-        ldy     buf_input1_left
-@loop:  inx
-        iny
-        lda     buf_input_right,x
-        sta     buf_input1_left,y
-        cpx     buf_input_right
-        bne     @loop
-        sty     buf_input1_left
-        copy    #1, buf_input_right
-        copy    #kGlyphInsertionPoint, buf_input_right+1
+        jsr     MoveIPToEndF1
         jsr     RedrawInput
         jsr     SelectMatchingFileInListF1
         rts
@@ -2882,13 +2812,6 @@ done:   rts
         rts
 
 hi:     .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc LBB09                     ; Unreferenced - TODO: Remove
-        COPY_STRING path_buf, buf_input1_left
-        rts
 .endproc
 
 ;;; ============================================================
@@ -2992,6 +2915,29 @@ l5:     jsr     StripPathSegment
 
 d1:     .byte   0
 d2:     .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc MoveIPToEndF1
+        lda     buf_input_right
+        cmp     #2
+        bcc     done
+
+        ldx     #1
+        ldy     buf_input1_left
+:       inx
+        iny
+        lda     buf_input_right,x
+        sta     buf_input1_left,y
+        cpx     buf_input_right
+        bne     :-
+        sty     buf_input1_left
+
+        copy    #1, buf_input_right
+        copy    #kGlyphInsertionPoint, buf_input_right+1
+
+done:   rts
 .endproc
 
 ;;; ============================================================
