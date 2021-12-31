@@ -890,7 +890,7 @@ different:
 .proc HandlePageDown
         lda     winfo_file_dialog_listbox::vthumbpos
         clc
-        adc     #$09            ; TODO: Should be kPageDelta
+        adc     #kPageDelta
         cmp     num_file_names
         beq     :+
         bcc     :+
