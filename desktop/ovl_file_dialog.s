@@ -180,7 +180,8 @@ l1:     lda     winfo_file_dialog::window_id
 l2:     LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     l4
-l3:     jsr     SetCursorIBeam
+l3:
+        jsr     SetCursorIBeam
         jmp     l5
 
 l4:     jsr     UnsetCursorIBeam
@@ -771,12 +772,6 @@ l7:     .byte   0
 .endproc
 
 ;;; ============================================================
-
-.proc NoOp
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Key handler
 
 .proc HandleKey
@@ -1138,6 +1133,12 @@ l1:     ldx     num_file_names
 
 ;;; ============================================================
 
+.proc NoOp
+        rts
+.endproc
+
+;;; ============================================================
+
 .proc OpenWindow
         LIB_MGTK_CALL MGTK::OpenWindow, winfo_file_dialog
         LIB_MGTK_CALL MGTK::OpenWindow, winfo_file_dialog_listbox
@@ -1157,8 +1158,7 @@ l1:     ldx     num_file_names
         jsr     DrawChangeDriveButtonLabel
         LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
         LIB_MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
-        LIB_MGTK_CALL MGTK::InitPort, main_grafport
-        LIB_MGTK_CALL MGTK::SetPort, main_grafport
+        jsr     InitSetGrafport
         rts
 .endproc
 
@@ -1556,8 +1556,7 @@ hi:     .byte   0
 loop:   lda     l4
         cmp     num_file_names
         bne     :+
-        LIB_MGTK_CALL MGTK::InitPort, main_grafport
-        LIB_MGTK_CALL MGTK::SetPort, main_grafport
+        jsr     InitSetGrafport
         rts
 
 :       LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res2::picker_entry_pos
@@ -1674,8 +1673,7 @@ l4:     inx
         LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         param_call DrawString, file_dialog_res::disk_label_str
         param_call DrawString, INVOKER_PREFIX
-        LIB_MGTK_CALL MGTK::InitPort, main_grafport
-        LIB_MGTK_CALL MGTK::SetPort, main_grafport
+        jsr     InitSetGrafport
         rts
 
 l5:     .byte   0
@@ -1727,8 +1725,7 @@ tmp:    .byte   0
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res2::rect_selection
-        LIB_MGTK_CALL MGTK::InitPort, main_grafport
-        LIB_MGTK_CALL MGTK::SetPort, main_grafport
+        jsr     InitSetGrafport
         rts
 
 tmp:    .byte   0

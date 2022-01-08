@@ -553,6 +553,7 @@ l1:     lda     winfo_file_dialog::window_id
         LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         bne     l4
+
         jsr     SetCursorIBeam
         jmp     l5
 
@@ -1139,14 +1140,6 @@ l7:     .byte   0
 
 .proc InitSetGrafport
         LIB_MGTK_CALL MGTK::InitPort, main_grafport
-        ldx     #3
-        lda     #0
-:       sta     main_grafport,x
-        sta     main_grafport+MGTK::GrafPort::maprect,x
-        dex
-        bpl     :-
-        copy16  #550, main_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x2
-        copy16  #185, main_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y2
         LIB_MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
@@ -1876,8 +1869,6 @@ hi:     .byte   0
 ;;; ============================================================
 
 .proc DrawListEntries
-        jsr     InitSetGrafport
-
         lda     winfo_file_dialog_listbox::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::PaintRect, winfo_file_dialog_listbox::cliprect
@@ -2569,8 +2560,6 @@ ip_pos: .word   0
         bcc     continue
         rts
 
-tmp:    .byte   0
-
 continue:
         lda     tmp
         ldx     buf_input1_left
@@ -2588,6 +2577,8 @@ continue:
         param_call DrawString, buf_input_right
         jsr     SelectMatchingFileInListF1
         rts
+
+tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
