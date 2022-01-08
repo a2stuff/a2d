@@ -6,6 +6,10 @@
 .define res_char_button_yes_shortcut 'S'
 .define res_string_button_no "N[o"
 .define res_char_button_no_shortcut 'N'
+.define res_string_button_change_drive "Mudar Unidade"
+.define res_string_button_open "Abrir"
+.define res_string_button_close "Fechar"
+.define res_string_label_disk " Disco: "
 .define res_string_copyright_line1 "Copyright Apple Computer Inc., 1986"
 .define res_string_copyright_line2 "Copyright Version Soft, 1985 - 1986"
 .define res_string_copyright_line3 "Todos os direitos reservados"

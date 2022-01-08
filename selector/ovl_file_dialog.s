@@ -360,7 +360,7 @@ textbg1:
 textbg2:
         .byte   $7F
 disk_label_str:
-        PASCAL_STRING res_string_disk
+        PASCAL_STRING res_string_label_disk
 
 kCommonInputWidth = 435
 kCommonInputHeight = 11

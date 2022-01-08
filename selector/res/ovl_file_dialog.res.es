@@ -1,5 +1,1 @@
-.define res_string_button_change_drive "Cambiar unidad"
-.define res_string_button_open "Abrir"
-.define res_string_button_close "Cerrar"
-.define res_string_disk " Disco: "
 .define res_string_label_file_to_run "Archivo a ejecutar:"
