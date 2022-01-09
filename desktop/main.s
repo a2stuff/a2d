@@ -14730,7 +14730,7 @@ do4:    jsr     Bell
 :       jsr     PromptInputLoop
         bmi     :-
         pha
-        jsr     EraeOkButton
+        jsr     EraseOkButton
         jsr     SetPenModeCopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect
         pla
@@ -14826,7 +14826,7 @@ do2:
         bmi     :-
         jsr     SetPenModeCopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        jsr     EraeOkButton
+        jsr     EraseOkButton
         return  #0
 .endproc
 
@@ -15745,7 +15745,7 @@ string: .addr   0
         rts
 .endproc
 
-.proc EraeOkButton
+.proc EraseOkButton
         jsr     SetPenModeCopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
         rts
