@@ -445,3 +445,5 @@
 * Launch DeskTop, invoke Control Panel DA. Under Mouse Tracking, toggle Slow and Fast. Verify that the mouse cursor doesn't warp to a new position, and that the mouse cursor doesn't flash briefly on the left edge of the screen.
 
 * Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume directory that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that file picker shows both the correct disk name and the correct full path.
+
+* Configure a system with a RAMCard, and ensure DeskTop is configured to copy itself to RAMCard on start. Launch DeskTop. Open the RAM Disk volume. Open the Desktop folder. Apple > Control Panels. Drag Desk.Acc from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be movied or copied into itself.

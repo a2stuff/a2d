@@ -13805,7 +13805,12 @@ found:  dex
 compare:
         ldx     path_buf3
 :       lda     path_buf3,x
-        cmp     path_buf4,x
+        jsr     UpcaseChar
+        sta     @char
+        lda     path_buf4,x
+        jsr     UpcaseChar
+        @char := *+1
+        cmp     #SELF_MODIFIED_BYTE
         bne     ok
         dex
         bne     :-
