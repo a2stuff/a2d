@@ -12118,9 +12118,6 @@ success:
         bne     :-
         stx     dst_path_buf
 
-        lda     #DuplicateDialogState::close
-        jsr     RunDialogProc
-
         ;; --------------------------------------------------
         ;; Check for unchanged name
 
@@ -12140,8 +12137,12 @@ success:
 
         lda     #ERR_DUPLICATE_FILENAME
         jsr     ShowAlert
-        jmp     fail
+        jmp     retry
 no_match:
+
+        ;; Close the dialog
+        lda     #DuplicateDialogState::close
+        jsr     RunDialogProc
 
         ;; --------------------------------------------------
         ;; Try copying the file
