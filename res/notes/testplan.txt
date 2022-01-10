@@ -238,6 +238,7 @@
 * Launch DeskTop. File > Copy a File.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
 
 * Launch DeskTop. Select a file. File > Rename.... Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
+* Launch DeskTop. Open a window. File > New Folder.... Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
 * Launch DeskTop. Special > Format a Disk.... Select a disk (other than the startup disk) and click OK. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
 * Launch DeskTop. Special > Erase a Disk.... Select a disk (other than the startup disk) and click OK. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
 
