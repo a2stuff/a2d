@@ -86,9 +86,9 @@ start:
         HIRES_ADDR = $2000
         kHiresSize = $2000
 
-        sta     PAGE2ON         ; Clear aux
+        sta     RAMWRTON        ; Clear aux
         jsr     clear
-        sta     PAGE2OFF        ; Clear main
+        sta     RAMWRTOFF       ; Clear main
         jsr     clear
         jmp     done
 
