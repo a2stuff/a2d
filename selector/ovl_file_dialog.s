@@ -310,7 +310,9 @@ str_1_char:
 str_2_spaces:
         PASCAL_STRING "  "      ; do not localize
 
-.scope file_dialog_res2
+;;; ============================================================
+
+.scope file_dialog_res
 
         DEFINE_POINT pos_title, 0, 13
 
@@ -318,24 +320,13 @@ str_2_spaces:
 
         DEFINE_POINT picker_entry_pos, 2, 0
 
-        .byte   0
-        .byte   0
-
 str_folder:
         PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight} ; do not localize
 
 selected_index:                 ; $FF if none
         .byte   0
 
-.endscope ; file_dialog_res2
-
-        .byte   $00
-
-;;; ============================================================
-
-.scope file_dialog_res
-
-        DEFINE_RECT_INSET dialog_frame_rect, 4, 2, winfo_file_dialog::kWidth, winfo_file_dialog::kHeight
+        DEFINE_RECT_INSET dialog_frame_rect, 4, 2, kFilePickerDlgWidth, kFilePickerDlgHeight
 
         DEFINE_RECT disk_name_rect, 27, 16, 174, 26
 
@@ -347,10 +338,9 @@ selected_index:                 ; $FF if none
 
 ;;; Dividing line
         DEFINE_POINT dialog_sep_start, 315, 28
-        DEFINE_POINT dialog_sep_end, 315, 100
+        DEFINE_POINT dialog_sep_end,   315, 100
 
-
-        DEFINE_POINT disk_label_pos, 28, 25
+        DEFINE_LABEL disk, res_string_label_disk, 28, 25
 
         DEFINE_POINT input1_label_pos, 28, 112
         DEFINE_POINT input2_label_pos, 28, 135 ; Unused
@@ -359,8 +349,6 @@ textbg1:
         .byte   0
 textbg2:
         .byte   $7F
-disk_label_str:
-        PASCAL_STRING res_string_label_disk
 
 kCommonInputWidth = 435
 kCommonInputHeight = 11
@@ -486,7 +474,7 @@ init:   tsx
         sta     listbox_disabled_flag
 
         copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
-        copy    #$FF, file_dialog_res2::selected_index
+        copy    #$FF, file_dialog_res::selected_index
 
         jmp     start
 
@@ -602,7 +590,7 @@ focus_in_input2_flag:
 
         bit     listbox_disabled_flag
         bmi     l1
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         bpl     l2
 l1:     jmp     SetUpPorts
 
@@ -728,7 +716,7 @@ in_list:
         jsr     Divide_16_8_16
         stax    screentowindow_windowy
 
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         cmp     screentowindow_windowy
         beq     same
         jmp     different
@@ -740,7 +728,7 @@ same:   jsr     DetectDoubleClick
         beq     open
         rts
 
-open:   ldx     file_dialog_res2::selected_index
+open:   ldx     file_dialog_res::selected_index
         lda     file_list_index,x
         bmi     folder
 
@@ -807,18 +795,18 @@ different:
         bcc     :+
         rts
 
-:       lda     file_dialog_res2::selected_index
+:       lda     file_dialog_res::selected_index
         bmi     :+
         jsr     StripPathSegmentLeftAndRedraw
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         jsr     InvertEntry
 :       lda     screentowindow_windowy
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
         bit     input_dirty_flag
         bpl     :+
         jsr     PrepPath
         jsr     RedrawInput
-:       lda     file_dialog_res2::selected_index
+:       lda     file_dialog_res::selected_index
         jsr     InvertEntry
         jsr     HandleSelectionChange
 
@@ -1025,7 +1013,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 ;;; ============================================================
 
 .proc OpenSelectedItem
-        ldx     file_dialog_res2::selected_index
+        ldx     file_dialog_res::selected_index
         lda     file_list_index,x
         and     #$7F
         pha
@@ -1070,7 +1058,7 @@ tmp:     .byte   0
 
 .proc ChangeDrive
         lda     #$FF
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
         jsr     ModifierDown
         sta     drive_dir_flag
         jsr     NextDeviceNum
@@ -1107,10 +1095,10 @@ l2:     cpx     #$01
         jmp     l6
 
 l3:     jsr     StripPathSegment
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         pha
         lda     #$FF
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
         jsr     ReadDir
         jsr     UpdateScrollbar
         lda     #$00
@@ -1118,11 +1106,11 @@ l3:     jsr     StripPathSegment
         jsr     UpdateDiskName
         jsr     DrawListEntries
         pla
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
         bit     l7
         bmi     l4
         jsr     StripPathSegmentLeftAndRedraw
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         bmi     l5
         jsr     StripPathSegmentLeftAndRedraw
         jmp     l5
@@ -1130,7 +1118,7 @@ l3:     jsr     StripPathSegment
 l4:     jsr     PrepPath
         jsr     RedrawInput
 l5:     lda     #$FF
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
 l6:     rts
 
 l7:     .byte   0
@@ -1230,7 +1218,7 @@ jmp_exit:
 not_tab:
         cmp     #CHAR_CTRL_O    ; Open
         bne     not_ctrl_o
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         bmi     exit
         tax
         lda     file_list_index,x
@@ -1273,7 +1261,7 @@ exit:   jsr     InitSetGrafport
 ;;; ============================================================
 
 .proc KeyReturn
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         bpl     :+
         bit     input_dirty_flag
         bmi     :+
@@ -1321,7 +1309,7 @@ key_meta_digit:
 .proc KeyDown
         lda     num_file_names
         beq     l1
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         bmi     l3
         tax
         inx
@@ -1331,8 +1319,8 @@ l1:     rts
 
 l2:     jsr     InvertEntry
         jsr     StripPathSegmentLeftAndRedraw
-        inc     file_dialog_res2::selected_index
-        lda     file_dialog_res2::selected_index
+        inc     file_dialog_res::selected_index
+        lda     file_dialog_res::selected_index
         jmp     UpdateListSelection
 
 l3:     lda     #0
@@ -1344,15 +1332,15 @@ l3:     lda     #0
 .proc KeyUp
         lda     num_file_names
         beq     l1
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         bmi     l3
         bne     l2
 l1:     rts
 
 l2:     jsr     InvertEntry
         jsr     StripPathSegmentLeftAndRedraw
-        dec     file_dialog_res2::selected_index
-        lda     file_dialog_res2::selected_index
+        dec     file_dialog_res::selected_index
+        lda     file_dialog_res::selected_index
         jmp     UpdateListSelection
 
 l3:     ldx     num_file_names
@@ -1372,10 +1360,10 @@ l3:     ldx     num_file_names
 
         jsr     FindMatch
         bmi     done
-        cmp     file_dialog_res2::selected_index
+        cmp     file_dialog_res::selected_index
         beq     done
         pha
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         bmi     :+
         jsr     InvertEntry
         jsr     StripPathSegmentLeftAndRedraw
@@ -1456,7 +1444,7 @@ done:   rts
 .proc ScrollListTop
         lda     num_file_names
         beq     done
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         bmi     select
         bne     deselect
 done:   rts
@@ -1475,7 +1463,7 @@ select:
 .proc ScrollListBottom
         lda     num_file_names
         beq     done
-        ldx     file_dialog_res2::selected_index
+        ldx     file_dialog_res::selected_index
         bmi     l1
         inx
         cpx     num_file_names
@@ -1495,10 +1483,10 @@ l1:     ldx     num_file_names
 ;;; ============================================================
 
 .proc UpdateListSelection
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
         jsr     HandleSelectionChange
 
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         jsr     CalcTopIndex
         jsr     UpdateScrollbar2
         jsr     DrawListEntries
@@ -1601,9 +1589,9 @@ l1:     ldx     num_file_names
         inc16   text_addr ; point past length byte
         LIB_MGTK_CALL MGTK::TextWidth, text_params
 
-        sub16   #kFilePickerDlgWidth, text_width, file_dialog_res2::pos_title::xcoord
-        lsr16   file_dialog_res2::pos_title::xcoord ; /= 2
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res2::pos_title
+        sub16   #kFilePickerDlgWidth, text_width, file_dialog_res::pos_title::xcoord
+        lsr16   file_dialog_res::pos_title::xcoord ; /= 2
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
         LIB_MGTK_CALL MGTK::DrawText, text_params
         rts
 .endproc
@@ -1676,7 +1664,7 @@ retry:
         beq     :+
         jsr     DeviceOnLine
         lda     #$FF
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
         lda     #$FF
         sta     open_dir_flag
         jmp     retry
@@ -1688,7 +1676,7 @@ retry:
         beq     :+
         jsr     DeviceOnLine
         lda     #$FF
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
         jmp     retry
 
 :       rts
@@ -1727,7 +1715,7 @@ open_dir_flag:
         pla
         sta     path_buf
         lda     #$FF
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
 
         rts
 .endproc
@@ -1872,8 +1860,8 @@ hi:     .byte   0
         lda     winfo_file_dialog_listbox::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::PaintRect, winfo_file_dialog_listbox::cliprect
-        copy    #kListEntryNameX, file_dialog_res2::picker_entry_pos::xcoord ; high byte always 0
-        copy16  #kListEntryHeight, file_dialog_res2::picker_entry_pos::ycoord
+        copy    #kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
+        copy16  #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
         copy    #0, l4
 
 loop:   lda     l4
@@ -1882,7 +1870,7 @@ loop:   lda     l4
         jsr     InitSetGrafport
         rts
 
-:       LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res2::picker_entry_pos
+:       LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
         ldx     l4
         lda     file_list_index,x
         and     #$7F
@@ -1909,20 +1897,20 @@ loop:   lda     l4
         bpl     :+
 
         ;; Folder glyph
-        copy    #kListEntryGlyphX, file_dialog_res2::picker_entry_pos::xcoord
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res2::picker_entry_pos
-        param_call DrawString, file_dialog_res2::str_folder
-        copy    #kListEntryNameX, file_dialog_res2::picker_entry_pos::xcoord
+        copy    #kListEntryGlyphX, file_dialog_res::picker_entry_pos::xcoord
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
+        param_call DrawString, file_dialog_res::str_folder
+        copy    #kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord
 
 :       lda     l4
-        cmp     file_dialog_res2::selected_index
+        cmp     file_dialog_res::selected_index
         bne     l2
         jsr     InvertEntry
         lda     winfo_file_dialog_listbox::window_id
         jsr     SetPortForWindow
 l2:     inc     l4
 
-        add16_8 file_dialog_res2::picker_entry_pos::ycoord, #kListEntryHeight, file_dialog_res2::picker_entry_pos::ycoord
+        add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
         jmp     loop
 
 l3:     .byte   0
@@ -2041,14 +2029,14 @@ tmp:    .byte   0
         ldx     #0              ; A,X = entry
         ldy     #kListEntryHeight
         jsr     Multiply_16_8_16
-        stax    file_dialog_res2::rect_selection::y1
+        stax    file_dialog_res::rect_selection::y1
 
-        add16_8 file_dialog_res2::rect_selection::y1, #kListEntryHeight, file_dialog_res2::rect_selection::y2
+        add16_8 file_dialog_res::rect_selection::y1, #kListEntryHeight, file_dialog_res::rect_selection::y2
 
         lda     winfo_file_dialog_listbox::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res2::rect_selection
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::rect_selection
         jsr     InitSetGrafport
         rts
 
@@ -2775,7 +2763,7 @@ done:   rts
         ptr := $06
 
         copy16  #file_names, ptr
-        ldx     file_dialog_res2::selected_index
+        ldx     file_dialog_res::selected_index
         lda     file_list_index,x
         and     #$7F
 
@@ -2848,7 +2836,7 @@ width   .word
 .proc SelectMatchingFileInListF1
         COPY_STRING buf_input1_left, buf_text
 
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         sta     d2
         bmi     l1
         ldx     #<file_names
@@ -2897,7 +2885,7 @@ l3:     lda     #$FF
         rts
 
 l4:     lda     d2
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
         bpl     l5
         rts
 

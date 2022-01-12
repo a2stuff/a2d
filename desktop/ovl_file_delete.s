@@ -47,7 +47,7 @@
         lda     winfo_file_dialog::window_id
         jsr     file_dialog::SetPortForWindow
         param_call file_dialog::DrawTitleCentered, aux::label_delete_file
-        param_call file_dialog::DrawInput1Label, file_dialog_res::file_to_delete_label
+        param_call file_dialog::DrawInput1Label, file_to_delete_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport

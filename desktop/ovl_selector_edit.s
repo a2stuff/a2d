@@ -55,7 +55,7 @@ finish: jsr     file_dialog::ReadDir
         lda     #$00
         bcs     :+
         param_call file_dialog::FindFilenameIndex, buffer
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
         jsr     file_dialog::CalcTopIndex
 :       jsr     file_dialog::UpdateScrollbar2
         jsr     file_dialog::UpdateDiskName

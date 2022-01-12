@@ -48,8 +48,8 @@
         lda     winfo_file_dialog::window_id
         jsr     file_dialog::SetPortForWindow
         param_call file_dialog::DrawTitleCentered, aux::label_copy_file
-        param_call file_dialog::DrawInput1Label, file_dialog_res::source_filename_label
-        param_call file_dialog::DrawInput2Label, file_dialog_res::destination_filename_label
+        param_call file_dialog::DrawInput1Label, source_filename_label
+        param_call file_dialog::DrawInput2Label, destination_filename_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
@@ -118,10 +118,10 @@ jt_destination_filename:
         lda     #$80
         sta     file_dialog::only_show_dirs_flag
         sta     file_dialog::focus_in_input2_flag
-        lda     file_dialog_res2::selected_index
+        lda     file_dialog_res::selected_index
         sta     LD921
         lda     #$FF
-        sta     file_dialog_res2::selected_index
+        sta     file_dialog_res::selected_index
         jsr     file_dialog::DeviceOnLine
         jsr     file_dialog::ReadDir
         jsr     file_dialog::UpdateScrollbar
@@ -233,7 +233,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
         copy    #0, file_dialog::only_show_dirs_flag
-        copy    #$FF, file_dialog_res2::selected_index
+        copy    #$FF, file_dialog_res::selected_index
         copy    #0, file_dialog::focus_in_input2_flag
 
         lda     input_dirty_flag
@@ -267,7 +267,7 @@ L7272:  jsr     file_dialog::DeviceOnLine
 L7281:  jsr     file_dialog::ReadDir
         bcs     L7272
         lda     LD921
-L7289:  sta     file_dialog_res2::selected_index
+L7289:  sta     file_dialog_res::selected_index
         cmp     #$FF            ; if no selection...
         bne     :+              ; make scroll index 0
         lda     #$00
