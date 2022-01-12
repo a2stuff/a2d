@@ -1054,18 +1054,38 @@ noop:   rts
         MLI_CALL OPEN, open_desktop2_params
         lda     open_desktop2_params::ref_num
         sta     read_desktop2_params::ref_num
-        sta     DHIRESOFF
-        sta     TXTCLR
-        sta     CLR80VID
-        sta     SETALTCHAR
-        sta     CLR80COL
+
+        jsr     RestoreTextMode
+
+        MLI_CALL READ, read_desktop2_params
+        MLI_CALL CLOSE, close_params
+        jmp     desktop_load_addr
+.endproc
+
+;;; ============================================================
+;;; Disable 80-col firmware, clear and show the text screen.
+;;; Assert: ROM is banked in, ALTZP is off
+
+.proc RestoreTextMode
+        lda     #$11            ; Ctrl-Q - disable 80-col firmware
+        jsr     COUT
+
         jsr     SETVID
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
-        MLI_CALL READ, read_desktop2_params
-        MLI_CALL CLOSE, close_params
-        jmp     desktop_load_addr
+
+        sta     DHIRESOFF
+        sta     TXTSET
+        sta     LOWSCR
+        sta     LORES
+        sta     MIXCLR
+
+        sta     CLRALTCHAR
+        sta     CLR80VID
+        sta     CLR80COL
+
+        rts
 .endproc
 
 ;;; ============================================================
@@ -1876,18 +1896,8 @@ col:    .byte   0
 
         sta     ALTZPOFF
         bit     ROMIN2
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-        sta     DHIRESOFF
-        sta     CLRALTCHAR
-        sta     CLR80VID
-        sta     CLR80COL
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
+
+        jsr     RestoreTextMode
 
         @addr := * + 1
         jmp     SELF_MODIFIED
@@ -2050,19 +2060,9 @@ check_path:
         ;; Invoke
 
         jsr     ReconnectRamdisk
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
-        sta     DHIRESOFF
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-        sta     CLRALTCHAR
         jsr     SetColorMode
-        sta     CLR80VID
-        sta     CLR80COL
+
+        jsr     RestoreTextMode
 
         jsr     INVOKER
 

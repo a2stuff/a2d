@@ -85,15 +85,25 @@ params:  .res    3
         jsr     auxlc::RestoreRamDisk
         sta     ALTZPOFF
         bit     ROMIN2
-        sta     DHIRESOFF
-        sta     TXTCLR
-        sta     CLR80VID
-        sta     SETALTCHAR
-        sta     CLR80COL
+
+        lda     #$11            ; Ctrl-Q - disable 80-col firmware
+        jsr     COUT
+
         jsr     SETVID
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
+
+        sta     DHIRESOFF
+        sta     TXTSET
+        sta     LOWSCR
+        sta     LORES
+        sta     MIXCLR
+
+        sta     CLRALTCHAR
+        sta     CLR80VID
+        sta     CLR80COL
+
         MLI_CALL QUIT, quit_params
         rts
 .endproc
