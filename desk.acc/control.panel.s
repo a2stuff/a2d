@@ -213,6 +213,9 @@ textfont:       .addr   0
 ;;; ============================================================
 ;;; Common Resources
 
+;;; Padding between radio/checkbox and label
+kLabelPadding = 5
+
 kRadioButtonWidth       = 15
 kRadioButtonHeight      = 7
 
@@ -365,9 +368,9 @@ rarr_bitmap:
         .byte   PX(%1111000)
         .byte   PX(%1100000)
 
-        DEFINE_LABEL rgb_color, res_string_label_rgb_color, kPatternEditX + 68, kPatternEditY + 59
-
-        DEFINE_RECT_SZ rect_rgb, kPatternEditX + 46, kPatternEditY + 50, kCheckboxWidth, kCheckboxHeight
+        DEFINE_LABEL rgb_color, res_string_label_rgb_color, kPatternEditX + kCheckboxWidth + 46 + kLabelPadding, kPatternEditY + 59
+        ;; for hit testing; label width is added dynamically
+        DEFINE_RECT_SZ rect_rgb, kPatternEditX + 46, kPatternEditY + 50, kCheckboxWidth + kLabelPadding, kCheckboxHeight
 
 ;;; ============================================================
 ;;; Double-Click Speed Resources
@@ -406,6 +409,7 @@ arrows_table:
         DEFINE_POINT dblclick_arrow_pos6, kDblClickX + 155, kDblClickY + 23
         ASSERT_RECORD_TABLE_SIZE arrows_table, kNumArrows, .sizeof(MGTK::Point)
 
+        ;; for hit testing
         DEFINE_RECT_SZ dblclick_button_rect1, kDblClickX + 175, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ dblclick_button_rect2, kDblClickX + 130, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ dblclick_button_rect3, kDblClickX +  85, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
@@ -473,11 +477,11 @@ kMouseTrackingY = 78
 
         DEFINE_LABEL mouse_tracking, res_string_label_mouse_tracking, kMouseTrackingX + 30, kMouseTrackingY + 45
 
-        DEFINE_RECT_SZ tracking_button_rect1, kMouseTrackingX + 84, kMouseTrackingY + 8, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ tracking_button_rect2, kMouseTrackingX + 84, kMouseTrackingY + 21, kRadioButtonWidth, kRadioButtonHeight
-
-        DEFINE_LABEL tracking_slow, res_string_label_slow, kMouseTrackingX + 105, kMouseTrackingY + 16
-        DEFINE_LABEL tracking_fast, res_string_label_fast, kMouseTrackingX + 105, kMouseTrackingY + 29
+        DEFINE_LABEL tracking_slow, res_string_label_slow, kMouseTrackingX + 84 + kRadioButtonWidth + kLabelPadding, kMouseTrackingY + 16
+        DEFINE_LABEL tracking_fast, res_string_label_fast, kMouseTrackingX + 84 + kRadioButtonWidth + kLabelPadding, kMouseTrackingY + 29
+        ;; for hit testing; label width is added dynamically
+        DEFINE_RECT_SZ tracking_button_rect1, kMouseTrackingX + 84, kMouseTrackingY + 8, kRadioButtonWidth + kLabelPadding, kRadioButtonHeight
+        DEFINE_RECT_SZ tracking_button_rect2, kMouseTrackingX + 84, kMouseTrackingY + 21, kRadioButtonWidth + kLabelPadding, kRadioButtonHeight
 
 .params mouse_tracking_params
         DEFINE_POINT viewloc, kMouseTrackingX + 5, kMouseTrackingY
@@ -540,7 +544,7 @@ ipblink_selection:
         DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 21
         DEFINE_LABEL ipblink_slow, res_string_label_slow, kIPBlinkDisplayX + 100, kIPBlinkDisplayY + 34
         DEFINE_LABEL ipblink_fast, res_string_label_fast, kIPBlinkDisplayX + 150, kIPBlinkDisplayY + 34
-
+        ;; for hit testing
         DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 116, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ ipblink_btn2_rect, kIPBlinkDisplayX + 136, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ ipblink_btn3_rect, kIPBlinkDisplayX + 156, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
@@ -616,11 +620,11 @@ kHourDisplayY = 114
 
         DEFINE_LABEL clock, res_string_label_clock, kHourDisplayX+kRadioButtonWidth-15, kHourDisplayY+8
 
-        DEFINE_RECT_SZ rect_12hour, kHourDisplayX+60-10, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_LABEL clock_12hour, res_string_label_clock_12hour, kHourDisplayX+60+kRadioButtonWidth+6-10, kHourDisplayY+8
-
-        DEFINE_RECT_SZ rect_24hour, kHourDisplayX+120, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_LABEL clock_24hour, res_string_label_clock_24hour, kHourDisplayX+120+kRadioButtonWidth+6, kHourDisplayY+8
+        DEFINE_LABEL clock_12hour, res_string_label_clock_12hour, kHourDisplayX+60+kRadioButtonWidth+kLabelPadding-10, kHourDisplayY+8
+        DEFINE_LABEL clock_24hour, res_string_label_clock_24hour, kHourDisplayX+120+kRadioButtonWidth+kLabelPadding, kHourDisplayY+8
+        ;; for hit testing; label width is added dynamically
+        DEFINE_RECT_SZ rect_12hour, kHourDisplayX+60-10, kHourDisplayY, kRadioButtonWidth+kLabelPadding, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_24hour, kHourDisplayX+120, kHourDisplayY, kRadioButtonWidth+kLabelPadding, kRadioButtonHeight
 
 ;;; ============================================================
 
@@ -628,6 +632,17 @@ kHourDisplayY = 114
         jsr     InitPattern
         jsr     InitIpblink
         jsr     InitDblclick
+
+        param_call MeasureText, rgb_color_label_str
+        addax   rect_rgb::x2, rect_rgb::x2
+        param_call MeasureText, tracking_slow_label_str
+        addax   tracking_button_rect1::x2, tracking_button_rect1::x2
+        param_call MeasureText, tracking_fast_label_str
+        addax   tracking_button_rect2::x2, tracking_button_rect2::x2
+        param_call MeasureText, clock_12hour_label_str
+        addax   rect_12hour::x2, rect_12hour::x2
+        param_call MeasureText, clock_24hour_label_str
+        addax   rect_24hour::x2, rect_24hour::x2
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
@@ -1883,6 +1898,24 @@ done:   rts
         jsr     DrawHourButtons
         MGTK_CALL MGTK::ShowCursor
         jmp     InputLoop
+.endproc
+
+;;; ============================================================
+;;; Measure text, pascal string address in A,X; result in A,X
+
+.proc MeasureText
+        ptr := $6
+        len := $8
+        result := $9
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        inc16   ptr
+        MGTK_CALL MGTK::TextWidth, ptr
+        ldax    result
+        rts
 .endproc
 
 ;;; ============================================================
