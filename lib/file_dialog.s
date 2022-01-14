@@ -185,14 +185,14 @@ is_btn: jsr     HandleButtonDown
         bne     :+
         jmp     EventLoop
 :       lda     findwindow_window_id
-        cmp     winfo_file_dialog::window_id
+        cmp     file_dialog_res::winfo::window_id
         beq     l1
         jsr     UnsetCursorIBeam
         jmp     EventLoop
 
-l1:     lda     winfo_file_dialog::window_id
+l1:     lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         sta     screentowindow_window_id
         LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
@@ -243,13 +243,13 @@ focus_in_input2_flag:
 
 .proc HandleContentClick
         lda     findwindow_window_id
-        cmp     winfo_file_dialog::window_id
+        cmp     file_dialog_res::winfo::window_id
         beq     :+
         jmp     HandleListButtonDown
 
-:       lda     winfo_file_dialog::window_id
+:       lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         sta     screentowindow_window_id
         LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
@@ -271,9 +271,9 @@ l2:     tax
         bmi     l4
 l3:     jmp     SetUpPorts
 
-l4:     lda     winfo_file_dialog::window_id
+l4:     lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        param_call ButtonEventLoop, kFilePickerDlgWindowID, file_dialog_res::open_button_rect
+        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         bmi     l3
         jsr     OpenSelectedItem
         jmp     SetUpPorts
@@ -287,7 +287,7 @@ l4:     lda     winfo_file_dialog::window_id
         bit     listbox_disabled_flag
         bmi     :+
 
-        param_call ButtonEventLoop, kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
+        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
         bmi     :+
         jsr     ChangeDrive
 :
@@ -302,7 +302,7 @@ l4:     lda     winfo_file_dialog::window_id
         bit     listbox_disabled_flag
         bmi     :+
 
-        param_call ButtonEventLoop, kFilePickerDlgWindowID, file_dialog_res::close_button_rect
+        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         bmi     :+
         jsr     DoClose
 :       jmp     SetUpPorts
@@ -314,7 +314,7 @@ l4:     lda     winfo_file_dialog::window_id
         cmp     #MGTK::inrect_inside
         bne     CheckCancelButton
 
-        param_call ButtonEventLoop, kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
+        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
         jsr     HandleMetaRightKey
         jsr     HandleOk
@@ -327,7 +327,7 @@ l4:     lda     winfo_file_dialog::window_id
         cmp     #MGTK::inrect_inside
         bne     CheckOtherClick
 
-        param_call ButtonEventLoop, kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
+        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
         jsr     HandleCancel
 :       jmp     SetUpPorts
@@ -369,7 +369,7 @@ click_handler_hook:
 
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     rts1
-        lda     winfo_file_dialog_listbox::vscroll
+        lda     file_dialog_res::winfo_listbox::vscroll
         and     #MGTK::Ctl::vertical_scroll_bar ; vertical scroll enabled?
         beq     rts1
         jmp     HandleVScrollClick
@@ -377,10 +377,10 @@ click_handler_hook:
 rts1:   rts
 
 in_list:
-        lda     winfo_file_dialog_listbox::window_id
+        lda     file_dialog_res::winfo_listbox::window_id
         sta     screentowindow_window_id
         LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_windowy, winfo_file_dialog_listbox::cliprect::y1, screentowindow_windowy
+        add16   screentowindow_windowy, file_dialog_res::winfo_listbox::cliprect::y1, screentowindow_windowy
         ldax    screentowindow_windowy
         ldy     #kListEntryHeight
         jsr     Divide_16_8_16
@@ -403,7 +403,7 @@ open:   ldx     file_dialog_res::selected_index
         bmi     folder
 
         ;; File - select it.
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
@@ -414,7 +414,7 @@ open:   ldx     file_dialog_res::selected_index
         ;; Folder - open it.
 folder: and     #$7F
         pha
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
@@ -529,7 +529,7 @@ different:
 ;;; ============================================================
 
 .proc HandlePageUp
-        lda     winfo_file_dialog_listbox::vthumbpos
+        lda     file_dialog_res::winfo_listbox::vthumbpos
         sec
         sbc     #kPageDelta
         bpl     :+
@@ -547,7 +547,7 @@ different:
 ;;; ============================================================
 
 .proc HandlePageDown
-        lda     winfo_file_dialog_listbox::vthumbpos
+        lda     file_dialog_res::winfo_listbox::vthumbpos
         clc
         adc     #kPageDelta
         cmp     num_file_names
@@ -567,7 +567,7 @@ different:
 ;;; ============================================================
 
 .proc HandleLineUp
-        lda     winfo_file_dialog_listbox::vthumbpos
+        lda     file_dialog_res::winfo_listbox::vthumbpos
         bne     :+
         rts
 
@@ -587,8 +587,8 @@ different:
 ;;; ============================================================
 
 .proc HandleLineDown
-        lda     winfo_file_dialog_listbox::vthumbpos
-        cmp     winfo_file_dialog_listbox::vthumbmax
+        lda     file_dialog_res::winfo_listbox::vthumbpos
+        cmp     file_dialog_res::winfo_listbox::vthumbmax
         bne     :+
         rts
 
@@ -621,7 +621,7 @@ different:
 :       LIB_MGTK_CALL MGTK::GetEvent, event_params
         LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_window_id
-        cmp     winfo_file_dialog_listbox::window_id
+        cmp     file_dialog_res::winfo_listbox::window_id
         beq     :+
         pla
         pla
@@ -876,7 +876,7 @@ no_modifiers:
 
 :       cmp     #CHAR_TAB
         bne     not_tab
-is_tab: lda     winfo_file_dialog::window_id
+is_tab: lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
@@ -895,7 +895,7 @@ not_tab:
         bmi     :+
         jmp     exit
 
-:       lda     winfo_file_dialog::window_id
+:       lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
@@ -906,7 +906,7 @@ not_tab:
 not_ctrl_o:
         cmp     #CHAR_CTRL_C    ; Close
         bne     :+
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
@@ -939,7 +939,7 @@ exit:   jsr     InitSetGrafport
         rts
 :
 .endif
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
@@ -954,7 +954,7 @@ exit:   jsr     InitSetGrafport
 
 
 .proc KeyEscape
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
@@ -1180,9 +1180,9 @@ l1:     ldx     num_file_names
 ;;; ============================================================
 
 .proc OpenWindow
-        LIB_MGTK_CALL MGTK::OpenWindow, winfo_file_dialog
-        LIB_MGTK_CALL MGTK::OpenWindow, winfo_file_dialog_listbox
-        lda     winfo_file_dialog::window_id
+        LIB_MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo
+        LIB_MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo_listbox
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR
         LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
@@ -1288,7 +1288,7 @@ l1:     ldx     num_file_names
         inc16   text_addr ; point past length byte
         LIB_MGTK_CALL MGTK::TextWidth, text_params
 
-        sub16   #kFilePickerDlgWidth, text_width, file_dialog_res::pos_title::xcoord
+        sub16   #file_dialog_res::kFilePickerDlgWidth, text_width, file_dialog_res::pos_title::xcoord
         lsr16   file_dialog_res::pos_title::xcoord ; /= 2
         LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
         LIB_MGTK_CALL MGTK::DrawText, text_params
@@ -1623,9 +1623,9 @@ hi:     .byte   0
 ;;; ============================================================
 
 .proc DrawListEntries
-        lda     winfo_file_dialog_listbox::window_id
+        lda     file_dialog_res::winfo_listbox::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::PaintRect, winfo_file_dialog_listbox::cliprect
+        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::cliprect
         copy    #kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
         copy16  #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
         copy    #0, l4
@@ -1672,7 +1672,7 @@ loop:   lda     l4
         cmp     file_dialog_res::selected_index
         bne     l2
         jsr     InvertEntry
-        lda     winfo_file_dialog_listbox::window_id
+        lda     file_dialog_res::winfo_listbox::window_id
         jsr     SetPortForWindow
 l2:     inc     l4
 
@@ -1701,7 +1701,7 @@ UpdateScrollbar:
         jmp     ScrollClipRect
 
 :       lda     num_file_names
-        sta     winfo_file_dialog_listbox::vthumbmax
+        sta     file_dialog_res::winfo_listbox::vthumbmax
         .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
@@ -1721,7 +1721,7 @@ index:  .byte   0
 ;;; ============================================================
 
 .proc UpdateDiskName
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
 .if !FD_EXTENDED
@@ -1786,8 +1786,8 @@ l3:     sec
 l4:     ldx     #$00            ; A,X = line
         ldy     #kListEntryHeight
         jsr     Multiply_16_8_16
-        stax    winfo_file_dialog_listbox::cliprect::y1
-        add16_8 winfo_file_dialog_listbox::cliprect::y1, #winfo_file_dialog_listbox::kHeight, winfo_file_dialog_listbox::cliprect::y2
+        stax    file_dialog_res::winfo_listbox::cliprect::y1
+        add16_8 file_dialog_res::winfo_listbox::cliprect::y1, #file_dialog_res::winfo_listbox::kHeight, file_dialog_res::winfo_listbox::cliprect::y2
         rts
 
 tmp:    .byte   0
@@ -1804,7 +1804,7 @@ tmp:    .byte   0
 
         add16_8 file_dialog_res::rect_selection::y1, #kListEntryHeight, file_dialog_res::rect_selection::y2
 
-        lda     winfo_file_dialog_listbox::window_id
+        lda     file_dialog_res::winfo_listbox::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::rect_selection
@@ -2166,7 +2166,7 @@ has_sel:
 .proc BlinkF1IP
         pt := $06
 
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         jsr     CalcInput1IPPos
         stax    pt
@@ -2200,7 +2200,7 @@ length  .byte
 .proc BlinkF2IP
         pt := $06
 
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         jsr     CalcInput2IPPos
         stax    $06
@@ -2232,7 +2232,7 @@ length  .byte
 ;;; ============================================================
 
 .proc RedrawF1
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_rect
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR
@@ -2250,7 +2250,7 @@ length  .byte
 
 .if FD_EXTENDED
 .proc RedrawF2
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR
@@ -2269,10 +2269,10 @@ length  .byte
 ;;; A click when f1 has focus (click may be elsewhere)
 
 .proc HandleF1Click
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         sta     screentowindow_window_id
         LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
 
@@ -2449,10 +2449,10 @@ ip_pos: .word   0
 .proc HandleF2Click
 
         ;; Was click inside text box?
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         sta     screentowindow_window_id
         LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
 
@@ -2638,7 +2638,7 @@ continue:
         inc     buf_input1_left
         stax    $06
         copy16  file_dialog_res::input1_textpos::ycoord, $08
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, str_1_char
@@ -2660,7 +2660,7 @@ tmp:    .byte   0
         jsr     CalcInput1IPPos
         stax    $06
         copy16  file_dialog_res::input1_textpos::ycoord, $08
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, buf_input_right
@@ -2693,7 +2693,7 @@ skip:   ldx     buf_input1_left
         jsr     CalcInput1IPPos
         stax    $06
         copy16  file_dialog_res::input1_textpos::ycoord, $08
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, buf_input_right
@@ -2727,7 +2727,7 @@ skip:   ldx     buf_input1_left
         bne     :-
 
 finish: dec     buf_input_right
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
         param_call DrawString, buf_input1_left
@@ -2803,7 +2803,7 @@ skip:   sty     buf_input1_left
         inc     buf_input2_left
         stax    $06
         copy16  file_dialog_res::input2_textpos::ycoord, $08
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, str_1_char
@@ -2827,7 +2827,7 @@ l1:     .byte   0
         jsr     CalcInput2IPPos
         stax    $06
         copy16  file_dialog_res::input2_textpos::ycoord, $08
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, buf_input_right
@@ -2861,7 +2861,7 @@ l3:     ldx     buf_input2_left
         jsr     CalcInput2IPPos
         stax    $06
         copy16  file_dialog_res::input2_textpos::ycoord, $08
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, buf_input_right
@@ -2895,7 +2895,7 @@ l2:     lda     buf_input_right+1,x
         cpx     buf_input_right
         bne     l2
 l3:     dec     buf_input_right
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
         param_call DrawString, buf_input2_left

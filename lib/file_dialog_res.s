@@ -52,4 +52,87 @@ kCommonInputHeight = 11
         DEFINE_RECT_SZ input2_rect, 28, 136, kCommonInputWidth, kCommonInputHeight
         DEFINE_POINT input2_textpos, 30, 146
 
+kFilePickerDlgWindowID  = $3E
+kFilePickerDlgWidth     = 500
+kFilePickerDlgHeight    = 153
+
+;;; File Picker Dialog
+
+.params winfo
+        kWidth = kFilePickerDlgWidth
+        kHeight = kFilePickerDlgHeight
+
+window_id:      .byte   kFilePickerDlgWindowID
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontlength:  .word   50
+maxcontwidth:   .word   500
+maxcontlength:  .word   140
+port:
+        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+penpattern:     .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
+textbg:         .byte   MGTK::textbg_white
+fontptr:        .addr   FONT
+nextwinfo:      .addr   0
+.endparams
+
+;;; Listbox within File Picker Dialog
+
+kEntryListCtlWindowID = $3F
+
+.params winfo_listbox
+        kWidth = 125
+        kHeight = 72
+
+window_id:      .byte   kEntryListCtlWindowID
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_normal
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   3
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   100
+mincontlength:  .word   kHeight
+maxcontwidth:   .word   100
+maxcontlength:  .word   kHeight
+port:
+        DEFINE_POINT viewloc, 53, 48
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+maprect:
+        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+penpattern:     .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
+textbg:         .byte   MGTK::textbg_white
+fontptr:        .addr   FONT
+nextwinfo:      .addr   0
+.endparams
+
 .endscope ; file_dialog_res

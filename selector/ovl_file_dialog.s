@@ -163,86 +163,6 @@ buf_input_right:        .res    68, 0 ; IP and right
 ;;; ============================================================
 ;;; File Picker Dialog
 
-kFilePickerDlgWindowID  = $3E
-kFilePickerDlgWidth     = 500
-kFilePickerDlgHeight    = 153
-
-.params winfo_file_dialog
-        kWidth = kFilePickerDlgWidth
-        kHeight = kFilePickerDlgHeight
-
-window_id:      .byte   kFilePickerDlgWindowID
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_none
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   0
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   150
-mincontlength:  .word   50
-maxcontwidth:   .word   500
-maxcontlength:  .word   140
-port:
-        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
-penpattern:     .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   FONT
-nextwinfo:      .addr   0
-.endparams
-
-;;; Listbox within File Picker
-
-kEntryListCtlWindowID = $3F
-
-.params winfo_file_dialog_listbox
-        kWidth = 125
-        kHeight = 72
-
-window_id:      .byte   kEntryListCtlWindowID
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_normal
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   3
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   100
-mincontlength:  .word   kHeight
-maxcontwidth:   .word   100
-maxcontlength:  .word   kHeight
-port:
-        DEFINE_POINT viewloc, 53, 48
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-maprect:
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
-penpattern:     .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   FONT
-nextwinfo:      .addr   0
-.endparams
 
 ;;; ============================================================
 
@@ -319,7 +239,7 @@ start:  jsr     OpenWindow
 ;;; ============================================================
 
 .proc DrawWindow
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         param_call DrawTitleCentered, app::str_run_a_program
         param_call DrawInput1Label, str_file_to_run
@@ -348,8 +268,8 @@ start:  jsr     OpenWindow
 ;;; ============================================================
 
 .proc HandleCancel
-        MGTK_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
-        MGTK_CALL MGTK::CloseWindow, winfo_file_dialog
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         lda     #$00
         sta     blink_ip_flag
         jsr     UnsetCursorIBeam

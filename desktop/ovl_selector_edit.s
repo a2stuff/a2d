@@ -94,7 +94,7 @@ buffer: .res 16, 0
         copy    #$80, file_dialog::dual_inputs_flag
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         lda     which_run_list
         jsr     ToggleRunListButton
@@ -109,7 +109,7 @@ buffer: .res 16, 0
 ;;; ============================================================
 
 .proc L7101
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         lda     path_buf0
         beq     add
@@ -272,8 +272,8 @@ too_long:
 
 ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
         ;; BUG: Missing lda #0 ?
         sta     blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
@@ -291,8 +291,8 @@ ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
 .proc HandleCancelFilename
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         copy16  #file_dialog::NoOp, file_dialog::HandleKey::key_meta_digit+1
@@ -496,7 +496,7 @@ copy_when:
 ;;; ============================================================
 
 .proc HandleKey
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         lda     event_modifiers
         bne     :+

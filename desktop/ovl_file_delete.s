@@ -44,7 +44,7 @@
 .endproc
 
 .proc DrawControls
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         param_call file_dialog::DrawTitleCentered, aux::label_delete_file
         param_call file_dialog::DrawInput1Label, file_to_delete_label
@@ -81,8 +81,8 @@ jt_filename:
         jsr     JUMP_TABLE_SHOW_ALERT
         rts
 
-:       MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
+:       MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         copy16  #path_buf0, $6
@@ -96,8 +96,8 @@ jt_filename:
         .byte   0
 
 .proc HandleCancel
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         ldx     file_dialog::saved_stack

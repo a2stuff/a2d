@@ -45,7 +45,7 @@
 .endproc
 
 .proc DrawControls
-        lda     winfo_file_dialog::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         param_call file_dialog::DrawTitleCentered, aux::label_copy_file
         param_call file_dialog::DrawInput1Label, source_filename_label
@@ -184,8 +184,8 @@ err:    lda     #ERR_INVALID_PATHNAME
 
 :       param_call file_dialog::VerifyValidPath, path_buf1
         bne     err
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, file_dialog::only_show_dirs_flag
         copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
@@ -202,8 +202,8 @@ err:    lda     #ERR_INVALID_PATHNAME
 ;;; ============================================================
 
 .proc HandleCancel
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         ldx     file_dialog::saved_stack
