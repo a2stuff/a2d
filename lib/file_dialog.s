@@ -1060,13 +1060,13 @@ loop:   lda     index
         jsr     UpcaseChar
         cmp     char
         bcc     next
-        beq     found
-        jmp     fail
+        bcs     found           ; always
 
 next:   inc     index
         jmp     loop
 
-fail:   return  #$FF
+fail:   dec     index           ; select last
+        ;; fall through
 
 found:  return  index
 .endproc
