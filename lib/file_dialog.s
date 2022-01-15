@@ -1055,6 +1055,7 @@ loop:   lda     index
         jsr     SetPtrToNthFilename
         ldy     #1
         lda     ($06),y
+        jsr     UpcaseChar
         cmp     char
         bcc     next
         beq     found
