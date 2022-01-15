@@ -222,6 +222,7 @@ YieldLoop               := app::YieldLoop
 DetectDoubleClick       := app::DetectDoubleClick
 ButtonEventLoop         := app::ButtonEventLoop
 ModifierDown            := app::ModifierDown
+ShiftDown               := app::ShiftDown
 
 ;;; Required data definitions:
 buf_input1_left := buf_input_left

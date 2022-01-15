@@ -22,6 +22,7 @@ YieldLoop               := main::YieldLoop
 DetectDoubleClick       := main::StashCoordsAndDetectDoubleClick
 ButtonEventLoop         := ButtonEventLoopRelay
 ModifierDown            := main::ModifierDown
+ShiftDown               := main::ShiftDown
 AdjustVolumeNameCase    := main::AdjustVolumeNameCase
 AdjustFileEntryCase     := main::AdjustFileEntryCase
 

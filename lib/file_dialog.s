@@ -6,18 +6,15 @@
 ;;; * lib/event_params.s
 ;;; * lib/muldiv.s
 ;;; Requires the following proc definitions:
-;;; * `YieldLoop`
-;;; * `DetectDoubleClick`
-;;; * `ButtonEventLoop`
-;;; * `ModifierDown`
-;;; * `MLIRelayImpl`
-;;; * `CheckMouseMoved`
-;;; * `YieldLoop`
-;;; * `DetectDoubleClick`
-;;; * `ButtonEventLoop`
-;;; * `ModifierDown`
-;;; * `AdjustVolumeNameCase`
 ;;; * `AdjustFileEntryCase`
+;;; * `AdjustVolumeNameCase`
+;;; * `ButtonEventLoop`
+;;; * `CheckMouseMoved`
+;;; * `DetectDoubleClick`
+;;; * `MLIRelayImpl`
+;;; * `ModifierDown`
+;;; * `ShiftDown`
+;;; * `YieldLoop`
 ;;; Requires the following data definitions:
 ;;; * `buf_text`
 ;;; * `buf_input1_left`
@@ -729,8 +726,13 @@ tmp:     .byte   0
 .proc ChangeDrive
         lda     #$FF
         sta     file_dialog_res::selected_index
+
         jsr     ModifierDown
         sta     drive_dir_flag
+        jsr     ShiftDown
+        ora     drive_dir_flag
+        sta     drive_dir_flag
+
         jsr     NextDeviceNum
         jsr     DeviceOnLine
         jsr     ReadDir
