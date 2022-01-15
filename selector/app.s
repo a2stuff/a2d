@@ -216,44 +216,7 @@ watch_cursor:
 ;;; ============================================================
 ;;; Event Params (and overlapping param structs)
 
-event_params := *
-event_kind := event_params + 0
-        ;; if `kind` is key_down
-event_key := event_params + 1
-event_modifiers := event_params + 2
-        ;; if `kind` is no_event, button_down/up, drag, or apple_key:
-event_coords := event_params + 1
-event_xcoord := event_params + 1
-event_ycoord := event_params + 3
-        ;; if `kind` is update:
-event_window_id := event_params + 1
-
-screentowindow_params := *
-screentowindow_window_id := screentowindow_params + 0
-screentowindow_screenx := screentowindow_params + 1
-screentowindow_screeny := screentowindow_params + 3
-screentowindow_windowx := screentowindow_params + 5
-screentowindow_windowy := screentowindow_params + 7
-        .assert screentowindow_screenx = event_xcoord, error, "param mismatch"
-        .assert screentowindow_screeny = event_ycoord, error, "param mismatch"
-
-findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
-findwindow_mousex := findwindow_params + 0
-findwindow_mousey := findwindow_params + 2
-findwindow_which_area := findwindow_params + 4
-findwindow_window_id := findwindow_params + 5
-        .assert findwindow_mousex = event_xcoord, error, "param mismatch"
-        .assert findwindow_mousey = event_ycoord, error, "param mismatch"
-
-beginupdate_params := * + 1
-beginupdate_window_id := beginupdate_params + 0
-
-;;; Coords used when entry is clicked
-entry_click_x := * + 5
-entry_click_y := * + 7
-
-;;; Union of above params
-        .res    10, 0
+        .include "../lib/event_params.s"
 
 ;;; ============================================================
 
@@ -699,7 +662,7 @@ quick_boot_slot:
 .proc EventLoop
         jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
         jsr     HandleButtonDown
@@ -713,7 +676,7 @@ quick_boot_slot:
 
         bit     desktop_available_flag
         bmi     not_desktop
-        lda     event_key
+        lda     event_params::key
         cmp     #kShortcutRunDeskTop
         beq     :+
         cmp     #TO_LOWER(kShortcutRunDeskTop)
@@ -752,7 +715,7 @@ not_update:
 
 CheckAndClearUpdates:
         MGTK_CALL MGTK::PeekEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::update
         bne     done
         MGTK_CALL MGTK::GetEvent, event_params
@@ -763,7 +726,7 @@ ClearUpdates:
         jmp     CheckAndClearUpdates
 
 @do_update:
-        lda     event_window_id
+        lda     event_params::window_id
         cmp     winfo::window_id
         bne     done
 
@@ -816,16 +779,16 @@ menu_addr_table:
 ;;; ============================================================
 
 .proc HandleKey
-        lda     event_modifiers
+        lda     event_params::modifiers
         bne     has_modifiers
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     menukey
 
 other:  jmp     HandleNonmenuKey
 
 has_modifiers:
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     menukey
         cmp     #kShortcutRunProgram
@@ -839,7 +802,7 @@ has_modifiers:
 
 menukey:
         sta     menu_params::which_key
-        lda     event_modifiers
+        lda     event_params::modifiers
         beq     :+
         lda     #1
 :       sta     menu_params::key_mods
@@ -919,7 +882,7 @@ L9443:  lda     #AlertID::insert_system_disk
 
 .proc HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_which_area
+        lda     findwindow_params::which_area
         bne     :+
         rts
 
@@ -932,7 +895,7 @@ L9443:  lda     #AlertID::insert_system_disk
         beq     :+
         rts
 
-:       lda     findwindow_window_id
+:       lda     findwindow_params::window_id
         cmp     winfo::window_id
         beq     :+
         rts
@@ -982,6 +945,10 @@ check_desktop_btn:
         ;; Entry selection?
 
 check_entries:
+
+        entry_click_x := screentowindow_params::windowx
+        entry_click_y := screentowindow_params::windowy
+
         sub16   entry_click_x, pos_entry_base::xcoord, entry_click_x
         sub16   entry_click_y, pt0::ycoord, entry_click_y
         lda     entry_click_y+1
@@ -1096,7 +1063,7 @@ noop:   rts
 
         lda     winfo::window_id
         jsr     GetWindowPort
-        lda     event_key
+        lda     event_params::key
         cmp     #$1C            ; Control character?
         bcs     :+
         jmp     control_char

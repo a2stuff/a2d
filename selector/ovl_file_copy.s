@@ -1017,12 +1017,12 @@ SetPointerCursor:
 
 event_loop:
         MGTK_CALL MGTK::GetEvent, app::event_params
-        lda     app::event_kind
+        lda     app::event_params::kind
         cmp     #MGTK::EventKind::button_down
         beq     HandleButtonDown
         cmp     #MGTK::EventKind::key_down
         bne     event_loop
-        lda     app::event_key
+        lda     app::event_params::key
         cmp     #CHAR_RETURN
         bne     event_loop
         lda     winfo::window_id
@@ -1035,11 +1035,11 @@ event_loop:
 
 HandleButtonDown:
         MGTK_CALL MGTK::FindWindow, app::findwindow_params
-        lda     app::findwindow_which_area
+        lda     app::findwindow_params::which_area
         beq     event_loop
         cmp     #MGTK::Area::content
         bne     event_loop
-        lda     app::findwindow_window_id
+        lda     app::findwindow_params::window_id
         cmp     winfo::window_id
         bne     event_loop
         lda     winfo::window_id
@@ -1061,7 +1061,7 @@ HandleButtonDown:
 LABE6:  lda     #$00
         sta     LAC53
 LABEB:  MGTK_CALL MGTK::GetEvent, app::event_params
-        lda     app::event_kind
+        lda     app::event_params::kind
         cmp     #MGTK::EventKind::button_up
         beq     LAC3C
         lda     winfo::window_id

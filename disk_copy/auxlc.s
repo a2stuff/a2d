@@ -174,32 +174,7 @@ menu_item:      .byte   0
 check:          .byte   0
 .endparams
 
-event_params := *
-        event_kind := event_params + 0
-        ;;  if `kind` is key_down
-        event_key := event_params + 1
-        event_modifiers := event_params + 2
-        ;;  if `kind` is no_event, button_down/up, drag, or apple_key:
-        event_coords := event_params + 1
-        event_xcoord := event_params + 1
-        event_ycoord := event_params + 3
-        ;;  if `kind` is update:
-        event_window_id := event_params + 1
-
-screentowindow_params := *
-        screentowindow_window_id := screentowindow_params + 0
-        screentowindow_screenx := screentowindow_params + 1
-        screentowindow_screeny := screentowindow_params + 3
-        screentowindow_windowx := screentowindow_params + 5
-        screentowindow_windowy := screentowindow_params + 7
-
-findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
-        findwindow_mousex := findwindow_params + 0
-        findwindow_mousey := findwindow_params + 2
-        findwindow_which_area := findwindow_params + 4
-        findwindow_window_id := findwindow_params + 5
-
-        .res 10, 0              ; union of all of the above
+        .include "../lib/event_params.s"
 
 grafport:  .res .sizeof(MGTK::GrafPort), 0
 
@@ -901,7 +876,7 @@ LD998:  bit     LD368
         sta     LD368
 :       jsr     YieldLoop
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     LD9BA
         jmp     HandleButtonDown
@@ -926,17 +901,17 @@ menu_command_table:
 menu_offset_table:
         .byte   0, 5*2, 6*2, 8*2
 
-LD9D5:  lda     event_modifiers
+LD9D5:  lda     event_params::modifiers
         bne     :+
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     :+
         jmp     dialog_shortcuts
 
         ;; Keyboard-based menu selection
-:       lda     event_key
+:       lda     event_params::key
         sta     menukey_params::which_key
-        lda     event_modifiers
+        lda     event_params::modifiers
         beq     :+
         lda     #1              ; treat Solid-Apple same as Open-Apple
 :       sta     menukey_params::key_mods
@@ -1002,8 +977,8 @@ LDA7D:  copy    #0, checkitem_params::check
         rts
 
 HandleButtonDown:
-        MGTK_RELAY_CALL2 MGTK::FindWindow, event_xcoord
-        lda     findwindow_which_area
+        MGTK_RELAY_CALL2 MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
         bne     :+
         rts                     ; desktop - ignore
 :       cmp     #MGTK::Area::menubar
@@ -1016,7 +991,7 @@ HandleButtonDown:
 :       return  #$FF
 
 handle_content_button_down:
-        lda     findwindow_window_id
+        lda     findwindow_params::window_id
         cmp     winfo_dialog::window_id
         bne     check_drive_select
         jmp     handle_dialog_button_down
@@ -1029,10 +1004,10 @@ check_drive_select:
 
 handle_dialog_button_down:
         lda     winfo_dialog::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         jsr     SetWinPort
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
+        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_params::windowx
 
 CheckOkButton:
         MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
@@ -1057,14 +1032,14 @@ check_read_drive_button:
 
 handle_drive_select_button_down:
         lda     winfo_drive_select::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         jsr     SetWinPort
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
-        lsr16   screentowindow_windowy ; / 8
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lda     screentowindow_windowy
+        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_params::windowx
+        lsr16   screentowindow_params::windowy ; / 8
+        lsr16   screentowindow_params::windowy
+        lsr16   screentowindow_params::windowy
+        lda     screentowindow_params::windowy
         cmp     num_drives
         bcc     LDB98
         lda     current_drive_selection
@@ -1133,7 +1108,7 @@ params: .res    3
 .endproc
 
 dialog_shortcuts:
-        lda     event_key
+        lda     event_params::key
         cmp     #kShortcutReadDisk
         beq     LDC09
         cmp     #TO_LOWER(kShortcutReadDisk)
@@ -1202,13 +1177,13 @@ LDCA9:  return  #$FF
         lda     #$00
         sta     state
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_up
         beq     LDD14
         lda     winfo_dialog::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
+        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_params::windowx
         MGTK_RELAY_CALL2 MGTK::InRect, read_drive_button_rect
         cmp     #MGTK::inrect_inside
         beq     LDCEE
@@ -1247,13 +1222,13 @@ state:  .byte   0
         lda     #$00
         sta     state
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_up
         beq     LDDA0
         lda     winfo_dialog::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
+        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_params::windowx
         MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     LDD7A
@@ -2652,7 +2627,7 @@ EventLoop:
 LED45:
         jsr     YieldLoop
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
         jmp     HandleButtonDown
@@ -2662,7 +2637,7 @@ LED45:
 
         ;; --------------------------------------------------
         ;; Key Down
-        lda     event_key
+        lda     event_params::key
         bit     alert_options   ; has Cancel?
         bmi     :+              ; yes
         jmp     check_only_ok   ; nope
@@ -2742,7 +2717,7 @@ finish_ok:
 
 HandleButtonDown:
         jsr     MapEventCoords
-        MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
+        MGTK_RELAY_CALL2 MGTK::MoveTo, event_params::coords
 
         bit     alert_options   ; Anything but OK?
         bpl     check_ok_rect   ; nope
@@ -2818,8 +2793,8 @@ finish: pha
 ;;; ============================================================
 
 .proc MapEventCoords
-        sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
-        sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
+        sub16   event_params::xcoord, portmap::viewloc::xcoord, event_params::xcoord
+        sub16   event_params::ycoord, portmap::viewloc::ycoord, event_params::ycoord
         rts
 .endproc
 
@@ -2918,11 +2893,11 @@ finish: pha
 
         jsr     YieldLoop
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::key_down
         bne     @retry
 
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_ESCAPE
         bne     @retry
         return  #$80

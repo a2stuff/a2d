@@ -498,11 +498,11 @@ copy_when:
 .proc HandleKey
         lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
-        lda     event_modifiers
+        lda     event_params::modifiers
         bne     :+
         rts
 
-:       lda     event_key
+:       lda     event_params::key
         cmp     #'1'
         bne     :+
         jmp     ClickPrimaryRunListCtrl

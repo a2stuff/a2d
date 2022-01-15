@@ -598,7 +598,7 @@ xcoord: .byte   0
 .proc EventLoop
         jsr     main::YieldLoop
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
         jmp     handle_button
@@ -608,7 +608,7 @@ xcoord: .byte   0
 
 handle_button:
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_which_area
+        lda     findwindow_params::which_area
         bne     :+
         return  #$FF
 
@@ -616,7 +616,7 @@ handle_button:
         beq     :+
         return  #$FF
 
-:       lda     findwindow_window_id
+:       lda     findwindow_params::window_id
         cmp     winfo_entry_picker
         beq     :+
         return  #$FF
@@ -624,9 +624,9 @@ handle_button:
 :       lda     winfo_entry_picker::window_id
         jsr     main::SafeSetPortFromWindowId
         lda     winfo_entry_picker::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_params::windowx
         MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
         cmp     #MGTK::inrect_inside
         bne     not_ok
@@ -644,15 +644,15 @@ not_ok: MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
 :       rts
 
 not_cancel:
-        sub16   screentowindow_windowx, #10, screentowindow_windowx
-        sub16   screentowindow_windowy, #25, screentowindow_windowy
+        sub16   screentowindow_params::windowx, #10, screentowindow_params::windowx
+        sub16   screentowindow_params::windowy, #25, screentowindow_params::windowy
         bpl     :+
         return  #$FF            ; nothing selected, re-enter loop
 
         ;; Determine column
-:       cmp16   screentowindow_windowx, #110
+:       cmp16   screentowindow_params::windowx, #110
         bmi     l2
-        cmp16   screentowindow_windowx, #220
+        cmp16   screentowindow_params::windowx, #220
         bmi     l1
         lda     #2
         bne     l3
@@ -662,10 +662,10 @@ l2:     lda     #0
 
         ;; Determine row
 l3:     pha
-        ldax    screentowindow_windowy
+        ldax    screentowindow_params::windowy
         ldy     #kEntryPickerItemHeight
         jsr     Divide_16_8_16
-        stax    screentowindow_windowy
+        stax    screentowindow_params::windowy
         cmp     #8
         bcc     :+
         pla
@@ -676,7 +676,7 @@ l3:     pha
         asl     a
         asl     a
         clc
-        adc     screentowindow_windowy
+        adc     screentowindow_params::windowy
         sta     new_selection
         cmp     #8
         bcs     l5
@@ -768,11 +768,11 @@ l5:     ldx     #0
 ;;; Key down handler
 
 .proc HandleKey
-        lda     event_modifiers
+        lda     event_params::modifiers
         cmp     #MGTK::event_modifier_solid_apple
         bne     :+
         return  #$FF
-:       lda     event_key
+:       lda     event_params::key
 
         cmp     #CHAR_LEFT
         bne     :+

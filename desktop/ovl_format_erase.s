@@ -334,44 +334,44 @@ d2:     .byte   0
 
 
 .proc HandleClick
-        cmp16   screentowindow_windowx, #kLabelsCol1
+        cmp16   screentowindow_params::windowx, #kLabelsCol1
         bpl     :+
         return  #$FF
-:       cmp16   screentowindow_windowx, #kLabelsCol3 + kLabelWidth
+:       cmp16   screentowindow_params::windowx, #kLabelsCol3 + kLabelWidth
         bcc     :+
         return  #$FF
-:       lda     screentowindow_windowy
+:       lda     screentowindow_params::windowy
         sec
         sbc     #kLabelsVOffset
-        sta     screentowindow_windowy
-        lda     screentowindow_windowy+1
+        sta     screentowindow_params::windowy
+        lda     screentowindow_params::windowy+1
         sbc     #0
         bpl     :+
         return  #$FF
-:       sta     screentowindow_windowy+1
+:       sta     screentowindow_params::windowy+1
 
         ;; Divide by aux::kDialogLabelHeight
-        ldax    screentowindow_windowy
+        ldax    screentowindow_params::windowy
         ldy     #aux::kDialogLabelHeight
         jsr     Divide_16_8_16
-        stax    screentowindow_windowy
+        stax    screentowindow_params::windowy
 
         cmp     #4
         bcc     l1
         return  #$FF
 
 l1:     copy    #2, col
-        cmp16   screentowindow_windowx, #kLabelsCol3
+        cmp16   screentowindow_params::windowx, #kLabelsCol3
         bcs     l2
         dec     col
-        cmp16   screentowindow_windowx, #kLabelsCol2
+        cmp16   screentowindow_params::windowx, #kLabelsCol2
         bcs     l2
         dec     col
 l2:     lda     col
         asl     a
         asl     a
         clc
-        adc     screentowindow_windowy
+        adc     screentowindow_params::windowy
         cmp     num_volumes
         bcc     l4
         lda     selected_device_index

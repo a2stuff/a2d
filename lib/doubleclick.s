@@ -48,11 +48,11 @@ exit:   return  #$FF            ; not double-click
         ;; Is the new coord within range of the old coord?
 .proc CheckDelta
         ;; compute x delta
-        lda     event_xcoord
+        lda     event_params + MGTK::Event::xcoord
         sec
         sbc     xcoord
         sta     delta
-        lda     event_xcoord+1
+        lda     event_params + MGTK::Event::xcoord+1
         sbc     xcoord+1
         bpl     :+
 
@@ -69,11 +69,11 @@ fail:   return  #$FF
 
         ;; compute y delta
 check_y:
-        lda     event_ycoord
+        lda     event_params+MGTK::Event::ycoord
         sec
         sbc     ycoord
         sta     delta
-        lda     event_ycoord+1
+        lda     event_params+MGTK::Event::ycoord+1
         sbc     ycoord+1
         bpl     :+
 

@@ -78,7 +78,7 @@ JT_SHOW_WARNING:        jmp     ShowWarning             ; *
 
         ;; Get an event
         jsr     GetEvent
-        lda     event_kind
+        lda     event_params::kind
 
         ;; Is it a button-down event? (including w/ modifiers)
         cmp     #MGTK::EventKind::button_down
@@ -149,23 +149,23 @@ clear:
         ;; --------------------------------------------------
 loop:
         jsr     PeekEvent
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::update
         bne     finish
         jsr     GetEvent
 
 handle_update:
-        lda     event_window_id
+        lda     event_params::window_id
         bne     win
 
         ;; Desktop
-        MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
+        MGTK_RELAY_CALL MGTK::BeginUpdate, event_params::window_id
         ITK_RELAY_CALL IconTK::RedrawDesktopIcons
         MGTK_RELAY_CALL MGTK::EndUpdate
         jmp     loop
 
         ;; Window
-win:    MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
+win:    MGTK_RELAY_CALL MGTK::BeginUpdate, event_params::window_id
         bne     :+            ; obscured
         jsr     UpdateWindow
         MGTK_RELAY_CALL MGTK::EndUpdate
@@ -206,7 +206,7 @@ loop_counter:
 ;;; ============================================================
 
 .proc UpdateWindow
-        lda     event_window_id
+        lda     event_params::window_id
         cmp     #kMaxNumWindows+1 ; directory windows are 1-8
         bcc     :+
         rts
@@ -394,13 +394,13 @@ flag:   .byte   $00
 
         ;; Handle accelerator keys
 HandleKeydown:
-        lda     event_modifiers
+        lda     event_params::modifiers
         bne     modifiers       ; either Open-Apple or Solid-Apple ?
 
         ;; --------------------------------------------------
         ;; No modifiers
 
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_LEFT
         bne     :+
         jmp     CmdHighlight
@@ -426,7 +426,7 @@ modifiers:
         rts
 
         ;; Non-menu keys
-:       lda     event_key
+:       lda     event_params::key
         jsr     UpcaseChar
         cmp     #CHAR_DOWN      ; Apple-Down (Open)
         bne     :+
@@ -459,8 +459,8 @@ cycle:  jmp     CmdCycleWindows
         ;; Not one of our shortcuts - check for menu keys
         ;; (shortcuts or entering keyboard menu mode)
 menu_accelerators:
-        copy    event_key, menu_click_params::which_key
-        lda     event_modifiers
+        copy    event_params::key, menu_click_params::which_key
+        lda     event_params::modifiers
         beq     :+
         lda     #1              ; treat Solid-Apple same as Open-Apple
 :       sta     menu_click_params::key_mods
@@ -507,14 +507,14 @@ menu_dispatch_flag      := HandleKeydownImpl::flag
 .proc HandleClick
         tsx
         stx     saved_stack
-        MGTK_RELAY_CALL MGTK::FindWindow, event_coords
-        lda     findwindow_which_area
+        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
         bne     not_desktop
 
         ;; Click on desktop
-        copy    #0, findwindow_window_id
-        ITK_RELAY_CALL IconTK::FindIcon, event_coords
-        lda     findicon_which_icon
+        copy    #0, findwindow_params::window_id
+        ITK_RELAY_CALL IconTK::FindIcon, event_params::coords
+        lda     findicon_params::which_icon
         beq     :+
         jmp     HandleVolumeIconClick
 
@@ -530,7 +530,7 @@ not_desktop:
 not_menu:
         pha                     ; which window - active or not?
         lda     active_window_id
-        cmp     findwindow_window_id
+        cmp     findwindow_params::window_id
         beq     HandleActiveWindowClick
         pla
         jmp     HandleInactiveWindowClick
@@ -557,7 +557,7 @@ not_menu:
 .endproc
 
 ;;; ============================================================
-;;; Inputs: window id to activate in `findwindow_window_id`
+;;; Inputs: window id to activate in `findwindow_params::window_id`
 
 ;;; Activate the window, and sets selection to its parent icon
 .proc HandleInactiveWindowClick
@@ -572,11 +572,11 @@ not_menu:
         jmp     SelectIconForWindow
 .endproc
 
-;;; Inputs: window id to activate in `findwindow_window_id`
+;;; Inputs: window id to activate in `findwindow_params::window_id`
 .proc ActivateWindow
         ;; Make the window active.
-        MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
-        copy    findwindow_window_id, active_window_id
+        MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params::window_id
+        copy    findwindow_params::window_id, active_window_id
         jsr     LoadActiveWindowEntryTable ; restored below
         jsr     DrawWindowEntries
         jsr     LoadDesktopEntryTable ; restore from above
@@ -1991,13 +1991,13 @@ maybe_open_file:
 
 
 ;;; Close parent window after open, if needed. Done by activating then closing.
-;;; Modifies `findwindow_window_id`
+;;; Modifies `findwindow_params::window_id`
 .proc MaybeCloseWindowAfterOpen
         lda     window_id_to_close
         beq     done
 
         pha
-        sta     findwindow_window_id
+        sta     findwindow_params::window_id
         jsr     HandleInactiveWindowClick
         pla
         jsr     CloseWindow
@@ -3200,7 +3200,7 @@ pick_next_prev:
         stx     selected_index
         jsr     ClearSelection
 
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_LEFT
         beq     select_prev
         cmp     #CHAR_UP
@@ -3401,7 +3401,7 @@ reverse:
         ;;  fall through...
 
 found:  inx
-        stx     findwindow_window_id
+        stx     findwindow_params::window_id
         jmp     HandleInactiveWindowClick
 
 done:   rts
@@ -3413,12 +3413,12 @@ done:   rts
 .proc CmdScroll
         jsr     GetActiveWindowScrollInfo
 loop:   jsr     GetEvent
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         beq     done
         cmp     #MGTK::EventKind::key_down
         bne     loop
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_RETURN
         beq     done
         cmp     #CHAR_ESCAPE
@@ -3514,11 +3514,11 @@ vert_scroll_max:        .byte   0
         stx     max
         cmp     max
         beq     :+
-        sta     updatethumb_stash
-        inc     updatethumb_stash
-        copy    #MGTK::Ctl::horizontal_scroll_bar, updatethumb_which_ctl
+        sta     updatethumb_params::stash
+        inc     updatethumb_params::stash
+        copy    #MGTK::Ctl::horizontal_scroll_bar, updatethumb_params::which_ctl
         jsr     UpdateScrollThumb
-        lda     updatethumb_stash
+        lda     updatethumb_params::stash
 :       rts
 
 max:   .byte   0
@@ -3526,11 +3526,11 @@ max:   .byte   0
 
 .proc DoScrollLeft
         beq     :+
-        sta     updatethumb_stash
-        dec     updatethumb_stash
-        copy    #MGTK::Ctl::horizontal_scroll_bar, updatethumb_which_ctl
+        sta     updatethumb_params::stash
+        dec     updatethumb_params::stash
+        copy    #MGTK::Ctl::horizontal_scroll_bar, updatethumb_params::which_ctl
         jsr     UpdateScrollThumb
-        lda     updatethumb_stash
+        lda     updatethumb_params::stash
 :       rts
         .byte   0
 .endproc
@@ -3539,11 +3539,11 @@ max:   .byte   0
         stx     max
         cmp     max
         beq     :+
-        sta     updatethumb_stash
-        inc     updatethumb_stash
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_which_ctl
+        sta     updatethumb_params::stash
+        inc     updatethumb_params::stash
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         jsr     UpdateScrollThumb
-        lda     updatethumb_stash
+        lda     updatethumb_params::stash
 :       rts
 
 max:   .byte   0
@@ -3551,11 +3551,11 @@ max:   .byte   0
 
 .proc DoScrollUp
         beq     :+
-        sta     updatethumb_stash
-        dec     updatethumb_stash
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_which_ctl
+        sta     updatethumb_params::stash
+        dec     updatethumb_params::stash
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         jsr     UpdateScrollThumb
-        lda     updatethumb_stash
+        lda     updatethumb_params::stash
 :       rts
 
         .byte   0
@@ -3825,7 +3825,7 @@ close_loop:
         lda     found_windows_list,x
         cmp     active_window_id
         beq     :+
-        sta     findwindow_window_id
+        sta     findwindow_params::window_id
         jsr     HandleInactiveWindowClick
 
 :       jsr     CloseWindow
@@ -3957,8 +3957,8 @@ active_window_view_by:
         jsr     GetActiveWindowViewBy
         sta     active_window_view_by
 
-        MGTK_RELAY_CALL MGTK::FindControl, event_coords
-        lda     findcontrol_which_ctl
+        MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
         bne     :+
         ;; TODO: jmp here means `done_client_click` not called, callee responsible
         jmp     HandleContentClick ; 0 = ctl_not_a_control
@@ -3978,7 +3978,7 @@ active_window_view_by:
         bne     :+
         jmp     done_client_click
 :       jsr     GetActiveWindowScrollInfo
-        lda     findcontrol_which_part
+        lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
         bne     :+
         jsr     DoTrackThumb
@@ -4024,7 +4024,7 @@ horiz:  lda     active_window_id
         bne     :+
         jmp     done_client_click
 :       jsr     GetActiveWindowScrollInfo
-        lda     findcontrol_which_part
+        lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
         bne     :+
         jsr     DoTrackThumb
@@ -4068,10 +4068,10 @@ done_client_click:
 ;;; ============================================================
 
 .proc DoTrackThumb
-        lda     findcontrol_which_ctl
-        sta     trackthumb_which_ctl
+        lda     findcontrol_params::which_ctl
+        sta     trackthumb_params::which_ctl
         MGTK_RELAY_CALL MGTK::TrackThumb, trackthumb_params
-        lda     trackthumb_thumbmoved
+        lda     trackthumb_params::thumbmoved
         bne     :+
         rts
 :       jmp     UpdateScrollThumb
@@ -4081,7 +4081,7 @@ done_client_click:
 ;;; Called when the scroll thumb has been moved by the user.
 
 .proc UpdateScrollThumb
-        copy    updatethumb_stash, updatethumb_thumbpos
+        copy    updatethumb_params::stash, updatethumb_params::thumbpos
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     ApplyActiveWinfoToWindowGrafport
 
@@ -4119,17 +4119,17 @@ done_client_click:
 .proc CheckControlRepeat
         sta     ctl
         jsr     PeekEvent
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::drag
         beq     :+
 bail:   return  #$FF            ; high bit set = not repeating
 
-:       MGTK_RELAY_CALL MGTK::FindControl, event_coords
-        lda     findcontrol_which_ctl
+:       MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
         beq     bail
         cmp     #MGTK::Ctl::dead_zone
         beq     bail
-        lda     findcontrol_which_part
+        lda     findcontrol_params::which_part
         cmp     ctl
         bne     bail
         return  #0              ; high bit set = repeating
@@ -4141,9 +4141,9 @@ ctl:    .byte   0
 
 .proc HandleContentClick
         ;; Ignore clicks in the header area
-        copy    active_window_id, screentowindow_window_id
+        copy    active_window_id, screentowindow_params::window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     screentowindow_windowy
+        lda     screentowindow_params::windowy
         cmp     #kWindowHeaderHeight + 1
         bcs     :+
         rts
@@ -4153,9 +4153,9 @@ ctl:    .byte   0
         bpl     :+
         jmp     ClearSelection
 
-:       copy    active_window_id, findicon_window_id
+:       copy    active_window_id, findicon_params::window_id
         ITK_RELAY_CALL IconTK::FindIcon, findicon_params
-        lda     findicon_which_icon
+        lda     findicon_params::which_icon
         bne     HandleFileIconClick
 
         ;; Not an icon - maybe a drag?
@@ -4425,7 +4425,7 @@ exception_flag:
         lda     window_id
         cmp     active_window_id
         beq     :+
-        sta     findwindow_window_id
+        sta     findwindow_params::window_id
         jsr     HandleInactiveWindowClick ; bring to front
 :
         ;; Clear background
@@ -4498,14 +4498,14 @@ window_id:
 
 .proc DragSelect
         ;; Set up $06 to point at an imaginary `IconEntry`, to map
-        ;; `event_coords` from screen to window.
-        copy16  #(event_coords - IconEntry::iconx), $06
+        ;; `event_params::coords` from screen to window.
+        copy16  #(event_params::coords - IconEntry::iconx), $06
         ;; Map initial event coordinates
         jsr     CoordsScreenToWindow
 
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_coords,x
+:       lda     event_params::coords,x
         sta     tmp_rect::topleft,x
         sta     tmp_rect::bottomright,x
         dex
@@ -4513,7 +4513,7 @@ window_id:
 
         ;; Is this actually a drag?
         jsr     PeekEvent
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::drag
         beq     l3                          ; yes
 
@@ -4545,7 +4545,7 @@ clear:  jsr     ClearSelection
         ;; Event loop
 event_loop:
         jsr     PeekEvent
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::drag
         beq     update
 
@@ -4595,8 +4595,8 @@ done_icon:
         ;; --------------------------------------------------
         ;; Check movement threshold
 update: jsr     CoordsScreenToWindow
-        sub16   event_xcoord, last_pos+MGTK::Point::xcoord, deltax
-        sub16   event_ycoord, last_pos+MGTK::Point::ycoord, deltay
+        sub16   event_params::xcoord, last_pos+MGTK::Point::xcoord, deltax
+        sub16   event_params::ycoord, last_pos+MGTK::Point::ycoord, deltay
 
         lda     deltax+1
         bpl     :+
@@ -4626,32 +4626,32 @@ update: jsr     CoordsScreenToWindow
         ;; Beyond threshold; erase rect
 :       jsr     FrameTmpRect
 
-        COPY_STRUCT MGTK::Point, event_coords, last_pos
+        COPY_STRUCT MGTK::Point, event_params::coords, last_pos
 
         ;; --------------------------------------------------
         ;; Figure out coords for rect's left/top/bottom/right
-        cmp16   event_xcoord, tmp_rect::x2
+        cmp16   event_params::xcoord, tmp_rect::x2
         bpl     l12
-        cmp16   event_xcoord, tmp_rect::x1
+        cmp16   event_params::xcoord, tmp_rect::x1
         bmi     l11
         bit     x_flag
         bpl     l12
-l11:    copy16  event_xcoord, tmp_rect::x1
+l11:    copy16  event_params::xcoord, tmp_rect::x1
         copy    #$80, x_flag
         jmp     do_y
-l12:    copy16  event_xcoord, tmp_rect::x2
+l12:    copy16  event_params::xcoord, tmp_rect::x2
         copy    #0, x_flag
 
-do_y:   cmp16   event_ycoord, tmp_rect::y2
+do_y:   cmp16   event_params::ycoord, tmp_rect::y2
         bpl     l15
-        cmp16   event_ycoord, tmp_rect::y1
+        cmp16   event_params::ycoord, tmp_rect::y1
         bmi     l14
         bit     y_flag
         bpl     l15
-l14:    copy16  event_ycoord, tmp_rect::y1
+l14:    copy16  event_params::ycoord, tmp_rect::y1
         copy    #$80, y_flag
         jmp     draw
-l15:    copy16  event_ycoord, tmp_rect::y2
+l15:    copy16  event_params::ycoord, tmp_rect::y2
         copy    #0, y_flag
 
 draw:   jsr     FrameTmpRect
@@ -5146,9 +5146,9 @@ delta:  .word   0
         ;; R = thumbpos
 calc:   jsr     CalculateThumbPos
 
-skip:   sta     updatethumb_thumbpos
+skip:   sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     updatethumb_which_ctl
+        sta     updatethumb_params::which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
@@ -5205,9 +5205,9 @@ neg:    lsr16   size            ; / 4
         ;; R = thumbpos
 calc:   jsr     CalculateThumbPos
 
-skip:   sta     updatethumb_thumbpos
+skip:   sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
+        sta     updatethumb_params::which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
@@ -5378,7 +5378,7 @@ DisableSelectorMenuItems := ToggleSelectorMenuItems::disable
 ;;; ============================================================
 
 .proc HandleVolumeIconClick
-        lda     findicon_which_icon
+        lda     findicon_params::which_icon
         jsr     IsIconSelected
         bne     not_selected
 
@@ -5421,7 +5421,7 @@ check_double_click:
 
         ;; --------------------------------------------------
         ;; Drag of volume icon
-        copy    findicon_which_icon, drag_drop_params::icon
+        copy    findicon_params::which_icon, drag_drop_params::icon
         ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_params
         tax
         lda     drag_drop_params::result
@@ -5477,18 +5477,18 @@ same_or_desktop:
         rts
 
 .proc SelectVolIcon
-        ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
-        ITK_RELAY_CALL IconTK::DrawIcon, findicon_which_icon ; CHECKED (desktop)
+        ITK_RELAY_CALL IconTK::HighlightIcon, findicon_params::which_icon
+        ITK_RELAY_CALL IconTK::DrawIcon, findicon_params::which_icon ; CHECKED (desktop)
         ldx     selected_icon_count
-        copy    findicon_which_icon, selected_icon_list,x
+        copy    findicon_params::which_icon, selected_icon_list,x
         inc     selected_icon_count
         rts
 .endproc
 
 .proc DeselectVolIcon
-        ITK_RELAY_CALL IconTK::UnhighlightIcon, findicon_which_icon
-        ITK_RELAY_CALL IconTK::DrawIcon, findicon_which_icon ; CHECKED (desktop)
-        lda     findicon_which_icon
+        ITK_RELAY_CALL IconTK::UnhighlightIcon, findicon_params::which_icon
+        ITK_RELAY_CALL IconTK::DrawIcon, findicon_params::which_icon ; CHECKED (desktop)
+        lda     findicon_params::which_icon
         jmp     RemoveFromSelectionList
 .endproc
 
@@ -5501,7 +5501,7 @@ same_or_desktop:
 .proc DesktopDragSelect
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_coords,x
+:       lda     event_params::coords,x
         sta     tmp_rect::topleft,x
         sta     tmp_rect::bottomright,x
         dex
@@ -5509,7 +5509,7 @@ same_or_desktop:
 
         ;; Is this actually a drag?
         jsr     PeekEvent
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::drag
         beq     l2              ; yes!
 
@@ -5539,7 +5539,7 @@ clear:  jsr     ClearSelection
         ;; Event loop
 event_loop:
         jsr     PeekEvent
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::drag
         beq     update
 
@@ -5585,8 +5585,8 @@ done_icon:
 
         ;; --------------------------------------------------
         ;; Check movement threshold
-update: sub16   event_xcoord, last_pos + MGTK::Point::xcoord, deltax
-        sub16   event_ycoord, last_pos + MGTK::Point::ycoord, deltay
+update: sub16   event_params::xcoord, last_pos + MGTK::Point::xcoord, deltax
+        sub16   event_params::ycoord, last_pos + MGTK::Point::ycoord, deltay
 
         lda     deltax+1
         bpl     :+
@@ -5616,32 +5616,32 @@ update: sub16   event_xcoord, last_pos + MGTK::Point::xcoord, deltax
         ;; Beyond threshold; erase rect
 :       jsr     FrameTmpRect
 
-        COPY_STRUCT MGTK::Point, event_coords, last_pos
+        COPY_STRUCT MGTK::Point, event_params::coords, last_pos
 
         ;; --------------------------------------------------
         ;; Figure out coords for rect's left/top/bottom/right
-        cmp16   event_xcoord, tmp_rect::x2
+        cmp16   event_params::xcoord, tmp_rect::x2
         bpl     l11
-        cmp16   event_xcoord, tmp_rect::x1
+        cmp16   event_params::xcoord, tmp_rect::x1
         bmi     l10
         bit     x_flag
         bpl     l11
-l10:    copy16  event_xcoord, tmp_rect::x1
+l10:    copy16  event_params::xcoord, tmp_rect::x1
         copy    #$80, x_flag
         jmp     do_y
-l11:    copy16  event_xcoord, tmp_rect::x2
+l11:    copy16  event_params::xcoord, tmp_rect::x2
         copy    #0, x_flag
 
-do_y:   cmp16   event_ycoord, tmp_rect::y2
+do_y:   cmp16   event_params::ycoord, tmp_rect::y2
         bpl     l14
-        cmp16   event_ycoord, tmp_rect::y1
+        cmp16   event_params::ycoord, tmp_rect::y1
         bmi     l13
         bit     y_flag
         bpl     l14
-l13:    copy16  event_ycoord, tmp_rect::y1
+l13:    copy16  event_params::ycoord, tmp_rect::y1
         copy    #$80, y_flag
         jmp     draw
-l14:    copy16  event_ycoord, tmp_rect::y2
+l14:    copy16  event_params::ycoord, tmp_rect::y2
         copy    #0, y_flag
 
 draw:   jsr     FrameTmpRect
@@ -5768,7 +5768,7 @@ found_win:                    ; X = window id - 1
         rts
 
         ;; Otherwise, bring the window to the front.
-:       stx     findwindow_window_id
+:       stx     findwindow_params::window_id
         jmp     ActivateWindow
 
         ;; --------------------------------------------------
@@ -6231,16 +6231,16 @@ config_port:
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
-        copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_which_ctl
-        copy    #MGTK::activatectl_deactivate, activatectl_activate
+        copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_params::which_ctl
+        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
         jsr     ActivateCtl
 
         jmp     check_vscroll
 
 activate_hscroll:
         ;; activate horizontal scrollbar
-        copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_which_ctl
-        copy    #MGTK::activatectl_activate, activatectl_activate
+        copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_params::which_ctl
+        copy    #MGTK::activatectl_activate, activatectl_params::activate
         jsr     ActivateCtl
 
         bit     update_thumbs_flag
@@ -6256,16 +6256,16 @@ check_vscroll:
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
-        copy    #MGTK::activatectl_deactivate, activatectl_activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
         jsr     ActivateCtl
 
         rts
 
 activate_vscroll:
         ;; activate vertical scrollbar
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
-        copy    #MGTK::activatectl_activate, activatectl_activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        copy    #MGTK::activatectl_activate, activatectl_params::activate
         jsr     ActivateCtl
 
         bit     update_thumbs_flag
@@ -9071,7 +9071,7 @@ concat_len:
         ;; and an offset to Winfo::hthumbmax or Winfo::vthumbmax
         .assert MGTK::Point::xcoord - MGTK::Point::ycoord = MGTK::Winfo::hthumbmax - MGTK::Winfo::vthumbmax, error, "Offsets should match"
 
-        lda     updatethumb_which_ctl
+        lda     updatethumb_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar ; vertical?
         bne     horiz
         asl     a               ; == Point::ycoord
@@ -9118,7 +9118,7 @@ horiz:  lda     #0              ; == Point::xcoord
         ldy     delta           ; scroll range / 4
         pla                     ; thumbmax
         tax
-        lda     updatethumb_thumbpos ; thumbpos
+        lda     updatethumb_params::thumbpos ; thumbpos
 
         ;; A:X = R:Y
         ;; A = thumbpos
@@ -13945,10 +13945,10 @@ flag:   .byte   0
 
 .proc CheckEscapeKeyDown
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::key_down
         bne     nope
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_ESCAPE
         bne     nope
         lda     #$FF
@@ -14153,7 +14153,7 @@ dialog_param_addr:
         ;; Dispatch event types - mouse down, key press
 :       jsr     YieldLoop
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
         jmp     PromptClickHandler
@@ -14170,12 +14170,12 @@ dialog_param_addr:
         jsr     CheckMouseMoved
         bcc     PromptInputLoop
 
-        MGTK_RELAY_CALL MGTK::FindWindow, event_coords
-        lda     findwindow_which_area
+        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
         bne     :+
         jmp     PromptInputLoop
 
-:       lda     findwindow_window_id
+:       lda     findwindow_params::window_id
         cmp     winfo_prompt_dialog
         beq     :+
         jmp     PromptInputLoop
@@ -14184,7 +14184,7 @@ dialog_param_addr:
         jsr     SafeSetPortFromWindowId
         copy    winfo_prompt_dialog, event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_params::windowx
         MGTK_RELAY_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         bne     out
@@ -14198,8 +14198,8 @@ done:   jsr     ResetMainGrafport
 ;;; Click handler for prompt dialog
 
 .proc PromptClickHandler
-        MGTK_RELAY_CALL MGTK::FindWindow, event_coords
-        lda     findwindow_which_area
+        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
         bne     :+
         return  #$FF
 :       cmp     #MGTK::Area::content
@@ -14208,7 +14208,7 @@ done:   jsr     ResetMainGrafport
 :       return  #$FF
 
 content:
-        lda     findwindow_window_id
+        lda     findwindow_params::window_id
         cmp     winfo_prompt_dialog
         beq     :+
         return  #$FF
@@ -14216,7 +14216,7 @@ content:
         jsr     SafeSetPortFromWindowId
         copy    winfo_prompt_dialog, event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_params::windowx
         bit     prompt_button_flags
         bvc     :+
         jmp     check_button_yes
@@ -14286,11 +14286,11 @@ LA6F7:  jsr     HandleClickInTextbox
 ;;; Key handler for prompt dialog
 
 .proc PromptKeyHandler
-        lda     event_modifiers
+        lda     event_params::modifiers
         beq     no_mods
 
         ;; Modifier key down.
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_LEFT
         bne     :+
         jmp     LeftWithMod
@@ -14303,7 +14303,7 @@ done:   return  #$FF
 
         ;; No modifier key down.
 no_mods:
-        lda     event_key
+        lda     event_params::key
 
         cmp     #CHAR_LEFT
         bne     LA72E
@@ -14518,7 +14518,7 @@ jump_relay:
 
 :       jsr     YieldLoop
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         beq     close
         cmp     #MGTK::EventKind::key_down
@@ -15571,7 +15571,7 @@ params:  .res    3
 
 .proc StashCoordsAndDetectDoubleClick
         ;; Stash coords for double-click in windows
-        COPY_STRUCT MGTK::Point, event_coords, drag_drop_params::coords
+        COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
 
         jmp     DetectDoubleClick
 .endproc
@@ -15876,7 +15876,7 @@ length  .byte
 width   .word
         END_PARAM_BLOCK
 
-        click_coords := screentowindow_windowx
+        click_coords := screentowindow_params::windowx
 
         ;; Mouse coords to window coords; is click inside name field?
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -16551,7 +16551,7 @@ done:   rts
 
 .proc CheckMouseMoved
         ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_coords,x
+:       lda     event_params::coords,x
         cmp     coords,x
         bne     diff
         dex
@@ -16559,7 +16559,7 @@ done:   rts
         clc
         rts
 
-diff:   COPY_STRUCT MGTK::Point, event_coords, coords
+diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
         sec
         rts
 
@@ -16707,7 +16707,7 @@ exit:   rts
 
 .endproc                        ; WriteWindowInfo
 
-window_id := findwindow_window_id
+window_id := findwindow_params::window_id
 
 depth:  .byte   0
 

@@ -294,11 +294,12 @@ ycoord    := *+2
 .endparams
         ;; xcoord/ycoord are used to query...
 .params findwindow_params
-mousex    := *
+mousex    := *                  ; TODO: These are wrong; fix this union
 mousey    := *+2
 which_area:.byte   0
 window_id: .byte   0
 .endparams
+
 
         kDAWindowId = 100
 

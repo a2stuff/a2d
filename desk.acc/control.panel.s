@@ -135,46 +135,9 @@ penheight:      .byte   2
 
 ;;; ============================================================
 
-
-.params event_params
-kind := * + 0
-        ;; if `kind` is key_down
-key := * + 1
-modifiers := * + 2
-        ;; if `kind` is no_event, button_down/up, drag, or apple_key:
-coords := * + 1
-xcoord := * + 1
-ycoord := * + 3
-        ;; if `kind` is update:
-window_id := * + 1
-.endparams
-
-.params screentowindow_params
-window_id := * + 0
-screen    := * + 1
-screenx   := * + 1
-screeny   := * + 3
-window    := * + 5
-windowx   := * + 5
-windowy   := * + 7
-        .assert screenx = event_params::xcoord, error, "param mismatch"
-        .assert screeny = event_params::ycoord, error, "param mismatch"
-.endparams
-
+        .include "../lib/event_params.s"
 mx := screentowindow_params::windowx
 my := screentowindow_params::windowy
-
-findwindow_params          := * + 1
-findwindow_mousex          := findwindow_params + 0
-findwindow_mousey          := findwindow_params + 2
-findwindow_which_area      := findwindow_params + 4
-findwindow_window_id       := findwindow_params + 5
-        .assert findwindow_mousex = event_params::xcoord, error, "param mismatch"
-        .assert findwindow_mousey = event_params::ycoord, error, "param mismatch"
-
-;;; Union of above params
-        .res    10, 0
-
 
 .params trackgoaway_params
 clicked:        .byte   0
@@ -655,7 +618,7 @@ kHourDisplayY = 114
         jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         bne     Exit
-        lda     event_params::kind
+        lda     event_kind
         cmp     #MGTK::EventKind::no_event
         beq     HandleMove
         cmp     #MGTK::EventKind::button_down
@@ -693,9 +656,9 @@ kHourDisplayY = 114
 ;;; ============================================================
 
 .proc HandleMove
-        copy    winfo::window_id, screentowindow_params::window_id
+        copy    winfo::window_id, screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, anim_cursor_rect
         sta     cursor_flag
         jmp     InputLoop
@@ -715,10 +678,10 @@ kHourDisplayY = 114
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         bne     Exit
-        lda     findwindow_window_id
+        lda     findwindow_params::window_id
         cmp     winfo::window_id
         jne     InputLoop
-        lda     findwindow_which_area
+        lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
         cmp     #MGTK::Area::dragbar
@@ -761,12 +724,12 @@ common: bit     dragwindow_params::moved
 ;;; ============================================================
 
 .proc HandleClick
-        copy    winfo::window_id, screentowindow_params::window_id
+        copy    winfo::window_id, screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, fatbits_rect
         cmp     #MGTK::inrect_inside
         IF_EQ
@@ -962,15 +925,15 @@ loop:   ldx     mx
 
         ;; Repeat until mouse-up
 event:  MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        lda     event_kind
         cmp     #MGTK::EventKind::button_up
         bne     :+
         jmp     InputLoop
 
-:       copy    winfo::window_id, screentowindow_params::window_id
+:       copy    winfo::window_id, screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, fatbits_rect
         cmp     #MGTK::inrect_inside
         bne     event
@@ -1100,7 +1063,7 @@ next:   dex
 
         ;; Set the cursor to the same position (c/o click event),
         ;; to avoid it warping due to the scale change.
-        copy    #MGTK::EventKind::no_event, event_params::kind
+        copy    #MGTK::EventKind::no_event, event_kind
         MGTK_CALL MGTK::PostEvent, event_params
 
         ;; --------------------------------------------------

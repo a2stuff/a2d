@@ -313,7 +313,7 @@ mousey  := *+2
         .res    4               ; space for both
 .endparams
 
-.params findwindow_params
+.params findwindow_params       ; TODO: Make this address correct, via union
 which_area:   .byte   0
 window_id:    .byte   0
 .endparams

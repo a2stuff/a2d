@@ -3,6 +3,7 @@
 ;;;
 ;;; Required includes:
 ;;; * lib/file_dialog_res.s
+;;; * lib/event_params.s
 ;;; * lib/muldiv.s
 ;;; Requires the following proc definitions:
 ;;; * `YieldLoop`
@@ -23,8 +24,7 @@
 ;;; * `buf_input_right`
 ;;; * `window_grafport`
 ;;; * `main_grafport`
-;;; * `pencopy`, etc.
-;;; * `event_params` standard union, etc.
+;;; * `penXOR`
 ;;; Requires the following macro definitions:
 ;;; * `LIB_MGTK_CALL`
 ;;; * `LIB_MLI_CALL`
@@ -164,7 +164,7 @@ listbox_disabled_flag:  ; Set when the listbox is not active
 
 :       jsr     YieldLoop
         LIB_MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::apple_key
         beq     is_btn
         cmp     #MGTK::EventKind::button_down
@@ -181,10 +181,10 @@ is_btn: jsr     HandleButtonDown
         bcc     EventLoop
 
         LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_which_area
+        lda     findwindow_params::which_area
         bne     :+
         jmp     EventLoop
-:       lda     findwindow_window_id
+:       lda     findwindow_params::window_id
         cmp     file_dialog_res::winfo::window_id
         beq     l1
         jsr     UnsetCursorIBeam
@@ -193,9 +193,9 @@ is_btn: jsr     HandleButtonDown
 l1:     lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         lda     file_dialog_res::winfo::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
 
 .if FD_EXTENDED
         bit     focus_in_input2_flag
@@ -230,7 +230,7 @@ focus_in_input2_flag:
 
 .proc HandleButtonDown
         LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_which_area
+        lda     findwindow_params::which_area
         bne     :+
         rts
 
@@ -242,7 +242,7 @@ focus_in_input2_flag:
 .endproc
 
 .proc HandleContentClick
-        lda     findwindow_window_id
+        lda     findwindow_params::window_id
         cmp     file_dialog_res::winfo::window_id
         beq     :+
         jmp     HandleListButtonDown
@@ -250,9 +250,9 @@ focus_in_input2_flag:
 :       lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         lda     file_dialog_res::winfo::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
 
         ;; --------------------------------------------------
 .proc CheckOpenButton
@@ -364,7 +364,7 @@ click_handler_hook:
         bit     listbox_disabled_flag
         bmi     rts1
         LIB_MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_which_ctl
+        lda     findcontrol_params::which_ctl
         beq     in_list
 
         cmp     #MGTK::Ctl::vertical_scroll_bar
@@ -378,16 +378,16 @@ rts1:   rts
 
 in_list:
         lda     file_dialog_res::winfo_listbox::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_windowy, file_dialog_res::winfo_listbox::cliprect::y1, screentowindow_windowy
-        ldax    screentowindow_windowy
+        add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::cliprect::y1, screentowindow_params::windowy
+        ldax    screentowindow_params::windowy
         ldy     #kListEntryHeight
         jsr     Divide_16_8_16
-        stax    screentowindow_windowy
+        stax    screentowindow_params::windowy
 
         lda     file_dialog_res::selected_index
-        cmp     screentowindow_windowy
+        cmp     screentowindow_params::windowy
         beq     same
         jmp     different
 
@@ -460,7 +460,7 @@ hi:     .byte   0
         ;; Click on a different entry
 
 different:
-        lda     screentowindow_windowy
+        lda     screentowindow_params::windowy
         cmp     num_file_names
         bcc     :+
         rts
@@ -470,7 +470,7 @@ different:
         jsr     StripPathSegmentLeftAndRedraw
         lda     file_dialog_res::selected_index
         jsr     InvertEntry
-:       lda     screentowindow_windowy
+:       lda     screentowindow_params::windowy
         sta     file_dialog_res::selected_index
         bit     input_dirty_flag
         bpl     :+
@@ -490,7 +490,7 @@ different:
 ;;; ============================================================
 
 .proc HandleVScrollClick
-        lda     findcontrol_which_part
+        lda     findcontrol_params::which_part
         cmp     #MGTK::Part::up_arrow
         bne     :+
         jmp     HandleLineUp
@@ -509,18 +509,18 @@ different:
 
         ;; Track thumb
 :       lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     trackthumb_which_ctl
+        sta     trackthumb_params::which_ctl
         LIB_MGTK_CALL MGTK::TrackThumb, trackthumb_params
-        lda     trackthumb_thumbmoved
+        lda     trackthumb_params::thumbmoved
         bne     :+
         rts
 
-:       lda     trackthumb_thumbpos
-        sta     updatethumb_thumbpos
+:       lda     trackthumb_params::thumbpos
+        sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
+        sta     updatethumb_params::which_ctl
         LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_stash
+        lda     updatethumb_params::stash
         jsr     ScrollClipRect
         jsr     DrawListEntries
         rts
@@ -534,11 +534,11 @@ different:
         sbc     #kPageDelta
         bpl     :+
         lda     #0
-:       sta     updatethumb_thumbpos
+:       sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
+        sta     updatethumb_params::which_ctl
         LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_thumbpos
+        lda     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
         rts
@@ -554,11 +554,11 @@ different:
         beq     :+
         bcc     :+
         lda     num_file_names
-:       sta     updatethumb_thumbpos
+:       sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
+        sta     updatethumb_params::which_ctl
         LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_thumbpos
+        lda     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
         rts
@@ -573,11 +573,11 @@ different:
 
 :       sec
         sbc     #kLineDelta
-        sta     updatethumb_thumbpos
+        sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
+        sta     updatethumb_params::which_ctl
         LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_thumbpos
+        lda     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
         jsr     CheckArrowRepeat
@@ -594,11 +594,11 @@ different:
 
 :       clc
         adc     #kLineDelta
-        sta     updatethumb_thumbpos
+        sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
+        sta     updatethumb_params::which_ctl
         LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_thumbpos
+        lda     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
         jsr     CheckArrowRepeat
@@ -609,7 +609,7 @@ different:
 
 .proc CheckArrowRepeat
         LIB_MGTK_CALL MGTK::PeekEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         beq     :+
         cmp     #MGTK::EventKind::drag
@@ -620,14 +620,14 @@ different:
 
 :       LIB_MGTK_CALL MGTK::GetEvent, event_params
         LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_window_id
+        lda     findwindow_params::window_id
         cmp     file_dialog_res::winfo_listbox::window_id
         beq     :+
         pla
         pla
         rts
 
-:       lda     findwindow_which_area
+:       lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
         beq     :+
         pla
@@ -635,14 +635,14 @@ different:
         rts
 
 :       LIB_MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_which_ctl
+        lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
         beq     :+
         pla
         pla
         rts
 
-:       lda     findcontrol_which_part
+:       lda     findcontrol_params::which_part
         cmp     #MGTK::Part::page_up ; up_arrow or down_arrow ?
         bcc     :+                   ; Yes, continue
         pla
@@ -806,11 +806,11 @@ l7:     .byte   0
 ;;; Key handler
 
 .proc HandleKey
-        lda     event_modifiers
+        lda     event_params::modifiers
         beq     no_modifiers
 
         ;; With modifiers
-        lda     event_key
+        lda     event_params::key
 
         cmp     #CHAR_TAB
         jeq     is_tab
@@ -848,7 +848,7 @@ not_arrow:
         ;; No modifiers
 
 no_modifiers:
-        lda     event_key
+        lda     event_params::key
 
         cmp     #CHAR_LEFT
         bne     :+
@@ -1694,8 +1694,8 @@ UpdateScrollbar:
         cmp     #kPageDelta + 1
         bcs     :+
 
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
-        copy    #MGTK::activatectl_deactivate, activatectl_activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
         LIB_MGTK_CALL MGTK::ActivateCtl, activatectl_params
         lda     #0
         jmp     ScrollClipRect
@@ -1704,14 +1704,14 @@ UpdateScrollbar:
         sta     file_dialog_res::winfo_listbox::vthumbmax
         .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     activatectl_which_ctl
-        sta     activatectl_activate
+        sta     activatectl_params::which_ctl
+        sta     activatectl_params::activate
         LIB_MGTK_CALL MGTK::ActivateCtl, activatectl_params
         lda     index
-        sta     updatethumb_thumbpos
+        sta     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
+        sta     updatethumb_params::which_ctl
         LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
@@ -2270,11 +2270,11 @@ length  .byte
 
 .proc HandleF1Click
         lda     file_dialog_res::winfo::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
 
         ;; Inside input1 ?
         LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
@@ -2293,7 +2293,7 @@ length  .byte
         cmp     #MGTK::inrect_inside
         bne     done
         jsr     HandleOk    ; move focus to input2
-        ;; NOTE: Assumes screentowindow_window* has not been changed.
+        ;; NOTE: Assumes screentowindow_params::window* has not been changed.
         jmp     HandleF2Click__ep2
 
 done:   rts
@@ -2303,7 +2303,7 @@ ep2:
         ;; Is click to left or right of insertion point?
         jsr     CalcInput1IPPos
         stax    $06
-        cmp16   screentowindow_windowx, $06
+        cmp16   screentowindow_params::windowx, $06
         bcs     ToRight
         jmp     ToLeft
 
@@ -2330,7 +2330,7 @@ width   .word
         copy    buf_input_right, tw_params::length
 @loop:  LIB_MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, ip_pos, tw_params::width
-        cmp16   tw_params::width, screentowindow_windowx
+        cmp16   tw_params::width, screentowindow_params::windowx
         bcc     :+
         dec     tw_params::length
         lda     tw_params::length
@@ -2387,7 +2387,7 @@ width   .word
         copy    buf_input1_left, tw_params::length
 @loop:  LIB_MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, file_dialog_res::input1_textpos::xcoord, tw_params::width
-        cmp16   tw_params::width, screentowindow_windowx
+        cmp16   tw_params::width, screentowindow_params::windowx
         bcc     :+
         dec     tw_params::length
         lda     tw_params::length
@@ -2450,11 +2450,11 @@ ip_pos: .word   0
 
         ;; Was click inside text box?
         lda     file_dialog_res::winfo::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
 
         ;; Inside input2 ?
         LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
@@ -2468,7 +2468,7 @@ ip_pos: .word   0
         cmp     #MGTK::inrect_inside
         bne     done
         jsr     HandleCancel ; Move focus to input1
-        ;; NOTE: Assumes screentowindow_window* has not been changed.
+        ;; NOTE: Assumes screentowindow_params::window* has not been changed.
         jmp     HandleF1Click::ep2
 
 done:   rts
@@ -2476,7 +2476,7 @@ done:   rts
         ;; Is click to left or right of insertion point?
 ep2:    jsr     CalcInput2IPPos
         stax    $06
-        cmp16   screentowindow_windowx, $06
+        cmp16   screentowindow_params::windowx, $06
         bcs     ToRight
         jmp     ToLeft
 
@@ -2502,7 +2502,7 @@ width   .word
         copy    buf_input_right, tw_params::length
 @loop:  LIB_MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, ip_pos, tw_params::width
-        cmp16   tw_params::width, screentowindow_windowx
+        cmp16   tw_params::width, screentowindow_params::windowx
         bcc     :+
         dec     tw_params::length
         lda     tw_params::length
@@ -2558,7 +2558,7 @@ width   .word
         copy    buf_input2_left, tw_params::length
 @loop:  LIB_MGTK_CALL MGTK::TextWidth, $06
         add16   tw_params::width, file_dialog_res::input2_textpos, tw_params::width
-        cmp16   tw_params::width, screentowindow_windowx
+        cmp16   tw_params::width, screentowindow_params::windowx
         bcc     :+
         dec     tw_params::length
         lda     tw_params::length

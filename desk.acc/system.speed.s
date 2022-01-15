@@ -91,37 +91,7 @@ kButtonInsetX   = 25
 
 ;;; ============================================================
 
-event_params := *
-event_kind := event_params + 0
-        ;; if `kind` is key_down
-event_key := event_params + 1
-event_modifiers := event_params + 2
-        ;; if `kind` is no_event, button_down/up, drag, or apple_key:
-event_coords := event_params + 1
-event_xcoord := event_params + 1
-event_ycoord := event_params + 3
-        ;; if `kind` is update:
-event_window_id := event_params + 1
-
-screentowindow_params := *
-screentowindow_window_id := screentowindow_params + 0
-screentowindow_screenx := screentowindow_params + 1
-screentowindow_screeny := screentowindow_params + 3
-screentowindow_windowx := screentowindow_params + 5
-screentowindow_windowy := screentowindow_params + 7
-        .assert screentowindow_screenx = event_xcoord, error, "param mismatch"
-        .assert screentowindow_screeny = event_ycoord, error, "param mismatch"
-
-findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
-findwindow_mousex := findwindow_params + 0
-findwindow_mousey := findwindow_params + 2
-findwindow_which_area := findwindow_params + 4
-findwindow_window_id := findwindow_params + 5
-        .assert findwindow_mousex = event_xcoord, error, "param mismatch"
-        .assert findwindow_mousey = event_ycoord, error, "param mismatch"
-
-;;; Union of above params
-        .res    10, 0
+        .include "../lib/event_params.s"
 
 ;;; ============================================================
 
@@ -304,7 +274,7 @@ frame_counter:
 
         jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
 
         cmp     #MGTK::EventKind::no_event
         jeq     OnMove
@@ -318,9 +288,9 @@ frame_counter:
 .endproc
 
 .proc OnKey
-        lda     event_modifiers
+        lda     event_params::modifiers
         bne     InputLoop
-        lda     event_key
+        lda     event_params::key
 
         cmp     #CHAR_RETURN
         beq     OnKeyOk
@@ -420,11 +390,11 @@ frame_counter:
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
-        lda     findwindow_window_id
+        lda     findwindow_params::window_id
         cmp     #kDAWindowId
         bne     miss
 
-        lda     findwindow_which_area
+        lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
         beq     hit
 
