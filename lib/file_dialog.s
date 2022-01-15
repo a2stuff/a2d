@@ -547,10 +547,10 @@ different:
         lda     file_dialog_res::winfo_listbox::vthumbpos
         clc
         adc     #kPageDelta
-        cmp     num_file_names
+        cmp     file_dialog_res::winfo_listbox::vthumbmax
         beq     :+
         bcc     :+
-        lda     num_file_names
+        lda     file_dialog_res::winfo_listbox::vthumbmax
 :       sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
@@ -1704,6 +1704,8 @@ UpdateScrollbar:
         jmp     ScrollClipRect
 
 :       lda     num_file_names
+        sec
+        sbc     #kPageDelta
         sta     file_dialog_res::winfo_listbox::vthumbmax
         .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::Ctl::vertical_scroll_bar

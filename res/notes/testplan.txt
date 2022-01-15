@@ -210,8 +210,8 @@
   * Verify that the device order (via clicking Change Drive or pressing Tab) matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
     * On a IIgs: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
     * On a Platinum IIe: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
-
-
+  * Browse to a directory containing 8 files. Verify that the scrollbar is inactive.
+  * Browse to a directory containing 9 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
 
 * Launch DeskTop. Special > Disk Copy. Copy a disk with more than 999 blocks. Verify thousands separators are shown in block counts.
 * Launch DeskTop. Select a 32MB volume. File > Get Info. Verify total size shows as 32,768K not 0K.
