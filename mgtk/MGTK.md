@@ -355,9 +355,9 @@ Parameters:
 
 ## Mouse Keys
 
-* To enter Mouse Keys mode, hold down the Open-Apple key and then press and release the Solid-Apple key.
-* While holding the Open-Apple key  down, you can you can navigate the cursor with the Arrow keys, and click using the Solid-Apple key.
-* To exit Mouse Keys mode, release the Open-Apple key.
+* To enter Mouse Keys mode, hold down both the Open-Apple key and the Solid-Apple (Option) key and then press the Space key. A confirmation sound will play.
+* Move the mouse cursor using the arrow keys. Use the Solid-Apple (or Option) key as the mouse button.
+* To exit Mouse Keys mode, hold down both the Open-Apple key and the Solid-Apple (Option) key and then press the Space key. A confirmation sound will play.
 
 
 ## Concepts

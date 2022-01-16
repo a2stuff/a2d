@@ -9489,17 +9489,11 @@ stashed_addr:  .addr     0
         bit     mouse_status
         bmi     ret             ; branch away if button is down
 
-        lda     #4
-        sta     kbd_mouse_state
+        jsr     CheckSequence
+        bne     ret
 
-        ldx     #10
-beeploop:
-        lda     SPKR            ; Beep
-        ldy     #0
-:       dey
-        bne     :-
-        dex
-        bpl     beeploop
+        lda     #kKeyboardMouseStateMouseKeys
+        sta     kbd_mouse_state
 
 waitloop:
         jsr     ComputeModifiers
@@ -9516,7 +9510,8 @@ in_kbd_mouse:
         cmp     #kKeyboardMouseStateMouseKeys
         bne     pla_ret
         pla
-        and     #1              ; modifiers
+
+        jsr     CheckSequence
         bne     :+
         lda     #0
         sta     kbd_mouse_state
@@ -9525,6 +9520,35 @@ in_kbd_mouse:
 pla_ret:
         pla
         rts
+
+
+.proc CheckSequence
+        ;; Wait until either both Apple keys are released or
+        ;; a key is hit.
+:       jsr     ComputeModifiers
+        cmp     #3
+        bne     ret
+        lda     KBD
+        bpl     :-
+        cmp     #' '|$80
+        bne     ret
+        bit     KBDSTRB
+
+        ;; Play sound
+        ldx     #10
+beeploop:
+        lda     SPKR
+        ldy     #0
+:       dey
+        bne     :-
+        dex
+        bpl     beeploop
+
+        tya                     ; set Z flag, to signal activation
+
+ret:    rts
+.endproc
+
 .endproc
 
 
@@ -10464,4 +10488,4 @@ rect       .tag MGTK::Rect
 .endscope  ; mgtk
 
         ;; Room for future expansion
-        PAD_TO $8620
+        PAD_TO $8640
