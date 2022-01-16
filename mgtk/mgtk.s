@@ -9915,12 +9915,15 @@ xpositive:
         sta     kbd_mouse_y
         plp
         bpl     yclamp
+
+        ;; Negative offset - if wrapped, clamp to 0
         cmp     #<kScreenHeight
         bcc     :+
         lda     #0
         sta     kbd_mouse_y
 :       jmp     PositionKbdMouse
 
+        ;; Positive offset - if beyond screen, clamp to max
 yclamp: cmp     #<kScreenHeight
         bcc     :-
         lda     #<(kScreenHeight-1)
@@ -9964,11 +9967,11 @@ yclamp: cmp     #<kScreenHeight
         cmp     #CHAR_UP
         bne     not_up
 
-        lda     #256-8
-        bit     set_input_modifiers
-        bpl     :+
         lda     #256-48
-:       jmp     KbdMouseAddToY
+        bit     set_input_modifiers
+        bmi     :+              ; leave N flag set
+        lda     #256-8          ; sets N flag
+:       jmp     KbdMouseAddToY  ; N flag must be set here
 
 not_up:
         cmp     #CHAR_DOWN
@@ -9976,9 +9979,9 @@ not_up:
 
         lda     #8
         bit     set_input_modifiers
-        bpl     :+
-        lda     #48
-:       jmp     KbdMouseAddToY
+        bpl     :+              ; leave N flag clear
+        lda     #48             ; clears N flag
+:       jmp     KbdMouseAddToY  ; N flag must be clear here
 
 not_down:
         cmp     #CHAR_RIGHT
