@@ -26,16 +26,12 @@ loop:   dec16   counter
 
         lda     event_kind
         cmp     #MGTK::EventKind::no_event
-        beq     loop
+        beq     consume
         cmp     #MGTK::EventKind::drag
-        beq     loop
+        beq     consume
         cmp     #MGTK::EventKind::button_up
-        bne     :+
-
-        MGTK_CALL MGTK::GetEvent, event_params
-        jmp     loop
-
-:       cmp     #MGTK::EventKind::button_down
+        beq     consume
+        cmp     #MGTK::EventKind::button_down
         beq     :+
         cmp     #MGTK::EventKind::apple_key ; modified-click
         bne     exit
@@ -44,6 +40,10 @@ loop:   dec16   counter
         return  #0              ; double-click
 
 exit:   return  #$FF            ; not double-click
+
+consume:
+        MGTK_CALL MGTK::GetEvent, event_params
+        jmp     loop
 
         ;; Is the new coord within range of the old coord?
 .proc CheckDelta
