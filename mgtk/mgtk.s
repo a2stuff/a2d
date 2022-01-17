@@ -9495,12 +9495,6 @@ stashed_addr:  .addr     0
         lda     #kKeyboardMouseStateMouseKeys
         sta     kbd_mouse_state
 
-waitloop:
-        jsr     ComputeModifiers
-        cmp     #3
-        beq     waitloop        ; wait for user to release OA+SA
-        sta     input::modifiers
-
         lda     #0
         sta     kbd_mouse_status ; reset mouse button status
         COPY_BYTES 3, set_pos_params, kbd_mouse_x
@@ -9544,7 +9538,11 @@ beeploop:
         dex
         bpl     beeploop
 
-        tya                     ; set Z flag, to signal activation
+        ;; Wait for OA and SA to be released
+:       jsr     ComputeModifiers
+        bne     :-
+        sta     input::modifiers
+        ;; Z flag is set
 
 ret:    rts
 .endproc
