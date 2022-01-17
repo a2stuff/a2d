@@ -10065,6 +10065,10 @@ out_of_boundsl:
 not_left:
         sta     set_input_key
 
+        lda     kbd_mouse_state
+        cmp     #kKeyboardMouseStateMenu
+        bne     :+
+
         COPY_STRUCT MGTK::GrafPort, $A7, $0600
 
         lda     set_input_key
