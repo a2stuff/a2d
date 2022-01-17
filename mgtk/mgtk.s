@@ -9191,7 +9191,7 @@ check_win:
 ;;; 1 byte of params, copied to $82
 
 .proc KeyboardMouse
-        lda     #$80
+        lda     #kKeyboardMouseStateForced
         sta     kbd_mouse_state
         jmp     FlushEventsImpl
 .endproc
@@ -9219,13 +9219,14 @@ menu_item_index         .byte
 
 ;;; ============================================================
 
-        ;; Set to $80 by KeyboardMouse call; also set to $04,
-        ;; $01 elsewhere.
-kbd_mouse_state:
-        .byte   0
 
-kKeyboardMouseStateMenu = 1
-kKeyboardMouseStateMouseKeys = 4
+kKeyboardMouseStateInactive = 0  ; Disabled
+kKeyboardMouseStateMenu = 1      ; Menu activation with keyboard
+kKeyboardMouseStateMouseKeys = 4 ; MouseKeys mode
+kKeyboardMouseStateForced = $80  ; KeyboardMouse call
+
+kbd_mouse_state:
+        .byte   kKeyboardMouseStateInactive
 
 
 kbd_mouse_x:  .word     0
@@ -9379,7 +9380,7 @@ scale_y:
         jsr     SetCursorImpl
         jsr     restore_addr
 
-        lda     #0
+        lda     #kKeyboardMouseStateInactive
         sta     kbd_mouse_state
         lda     #$40
         sta     mouse_status
@@ -9480,43 +9481,13 @@ stashed_addr:  .addr     0
 
 
 .proc ActivateKeyboardMouse
-        pha                     ; save modifiers
         lda     kbd_mouse_state
         bne     in_kbd_mouse    ; branch away if keyboard mouse is active
-        pla
-        cmp     #3              ; open apple+solid apple
-        bne     ret
+
+        ;; Activate?
         bit     mouse_status
         bmi     ret             ; branch away if button is down
 
-        jsr     CheckSequence
-        bne     ret
-
-        lda     #kKeyboardMouseStateMouseKeys
-        sta     kbd_mouse_state
-
-        lda     #0
-        sta     kbd_mouse_status ; reset mouse button status
-        COPY_BYTES 3, set_pos_params, kbd_mouse_x
-ret:    rts
-
-in_kbd_mouse:
-        cmp     #kKeyboardMouseStateMouseKeys
-        bne     pla_ret
-        pla
-
-        jsr     CheckSequence
-        bne     :+
-        lda     #0
-        sta     kbd_mouse_state
-:       rts
-
-pla_ret:
-        pla
-        rts
-
-
-.proc CheckSequence
         ;; Wait until either both Apple keys are released or
         ;; a key is hit.
 :       jsr     ComputeModifiers
@@ -9524,11 +9495,44 @@ pla_ret:
         bne     ret
         lda     KBD
         bpl     :-
-        cmp     #' '|$80
-        bne     ret
+        cmp     #' '|$80        ; space?
+        bne     ret             ; no, ignore
+
+        ;; Give immediate feedback
+        jsr     ClearStrobeAndPlaySound
+
+        ;; Wait for OA and SA to be released
+:       jsr     ComputeModifiers
+        bne     :-
+        sta     input::modifiers
+
+        lda     #kKeyboardMouseStateMouseKeys
+        sta     kbd_mouse_state
+        lda     #0
+        sta     kbd_mouse_status ; reset mouse button status
+        COPY_BYTES 3, set_pos_params, kbd_mouse_x
+
+ret:    rts
+
+        ;; Deactivate?
+in_kbd_mouse:
+        cmp     #kKeyboardMouseStateMouseKeys
+        bne     :+
+
+        lda     KBD
+        cmp     #CHAR_ESCAPE|$80
+        bne     :+
+
+        ;; Give immediate feedback
+        jsr     ClearStrobeAndPlaySound
+        lda     #kKeyboardMouseStateInactive
+        sta     kbd_mouse_state
+
+:       rts
+
+.proc ClearStrobeAndPlaySound
         bit     KBDSTRB
 
-        ;; Play sound
         ldx     #10
 beeploop:
         lda     SPKR
@@ -9538,13 +9542,7 @@ beeploop:
         dex
         bpl     beeploop
 
-        ;; Wait for OA and SA to be released
-:       jsr     ComputeModifiers
-        bne     :-
-        sta     input::modifiers
-        ;; Z flag is set
-
-ret:    rts
+        rts
 .endproc
 
 .endproc
@@ -9554,7 +9552,7 @@ ret:    rts
         bit     mouse_status
         bpl     :+
 
-        lda     #0
+        lda     #kKeyboardMouseStateInactive
         sta     kbd_mouse_state
         jmp     SetMousePosFromKbdMouse
 
@@ -9871,7 +9869,7 @@ fail:   clc
         rts
 
 no_grow:
-        lda     #0
+        lda     #kKeyboardMouseStateInactive
         sta     kbd_mouse_state
         lda     #MGTK::Error::window_not_resizable
         plp
@@ -9882,7 +9880,7 @@ do_drag:
         and     #MGTK::Option::dialog_box
         beq     no_dialog
 
-        lda     #0
+        lda     #kKeyboardMouseStateInactive
         sta     kbd_mouse_state
         EXIT_CALL MGTK::Error::window_not_draggable
 
