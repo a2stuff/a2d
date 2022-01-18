@@ -2,6 +2,8 @@
 
 > Status: Work in Progress
 
+# DeskTop
+
 * Open a volume with double-click.
 * Open a directory with double-click.
 * Open a text file with double-click.
@@ -38,17 +40,8 @@
 * Position a volume icon in the middle of the DeskTop. Incrementally move a window so that it obscures all 8 positions around it (top, top right, right, etc). Ensure the icon repaints fully, and no part of the window is over-drawn.
 
 * Launch DeskTop, File > Quit, run BASIC.SYSTEM. Ensure /RAM exists.
-* Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.
-* Launch Selector, invoke DeskTop, File > Quit, run BASIC.SYSTEM. Ensure /RAM exists.
 
 * File > Quit - verify that there is no crash under ProDOS 8.
-
-* Preview a text file; verify that up/down arrow keys scroll.
-* Preview a text file; verify that Open-Apple plus up/down arrow keys scroll by page.
-* Preview a text file; verify that Solid-Apple plus up/down arrow keys scroll by page.
-* Preview a text file; verify that Escape key exits.
-* Preview an image file; verify that Escape key exits.
-* Preview an image file on IIgs or with RGB card; verify that space bar toggles color/mono.
 
 * Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons.
 * Run on system with realtime clock; verify that time shows in top-right of menu.
@@ -58,17 +51,7 @@
 
 * Open a window for a volume; open a window for a folder; close volume window; close folder window. Repeat 10 times to verify that the volume table doesn't have leaks.
 
-* Open a folder containing directory. Open a folder by double-clicking. Apple > Sort Directory. Verify that files are sorted by type/name.
-
 * Run DeskTop on a IIc+ from a 3.5" floppy on internal drive. Verify that the disk doesn't spin constantly.
-
-* Run DeskTop on a system without a system clock. Run Apple > Control Panels > Date. Set date. Reboot system, and re-run DeskTop. Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
-
-* Run Apple > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
-
-* Run Apple > Calculator. Drag Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen.
-
-* On a system with a system clock, invoke Apple > Control Panels > Date. Verify that the date is read-only.
 
 * Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, Floppy Emu); verify that all show up.
 
@@ -88,22 +71,6 @@
 * On an IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop remains in color.
 * On an IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop resets to monochrome.
 
-* Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.
-* Run System Speed DA. Click Fast then click OK. Verify DeskTop does not lock up.
-
-* Put `SHOW.IMAGE.FILE` in `DESK.ACC`, start DeskTop.
-    * Select no icon, select DA from Apple menu. Verify nothing happens.
-    * Select volume icon, select DA from Apple menu. Verify nothing happens.
-    * Select image file icon, select DA from Apple menu. Verify image is shown.
-* Put `SHOW.TEXT.FILE` in `DESK.ACC`, start DeskTop.
-    * Select no icon, select DA from Apple menu. Verify nothing happens.
-    * Select volume icon, select DA from Apple menu. Verify nothing happens.
-    * Select text file icon, select DA from Apple menu. Verify text is shown.
-* Put `SHOW.FONT.FILE` in `DESK.ACC`, start DeskTop.
-    * Select no icon, select DA from Apple menu. Verify nothing happens.
-    * Select volume icon, select DA from Apple menu. Verify nothing happens.
-    * Select font file icon, select DA from Apple menu. Verify font is shown.
-
 * Put image file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify image is shown.
 * Put text file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify text is shown.
 * Put font file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify font is shown.
@@ -115,14 +82,7 @@
 * Open a folder with only one item. Verify window header says "1 Item"
 * Open a folder with two or more items. Verify window header says "2 Items"
 
-* Launch Selector. Type Open-Apple and R. Ensure "Run a Program..." dialog appears
-* Launch Selector. Type Solid-Apple and R. Ensure "Run a Program..." dialog appears
-* Launch Selector. Type Open-Apple and 6. Ensure machine boots from Slot 6
-* Launch Selector. Type Solid-Apple and 6. Ensure machine boots from Slot 6
-
 * Launch DeskTop. Special > Format a Disk.... Ensure left/right arrows move selection correctly.
-
-* Launch DeskTop. Special > Disk Copy.... File > Quit. Special > Disk Copy.... Ensure drive list is correct.
 
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
@@ -162,12 +122,6 @@
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Open-Apple+O. Verify that it executes.
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Solid-Apple+O. Verify that it executes.
 
-* Launch DeskTop. Special > Disk Copy.... Press Escape key. Verify that menu keyboard mode starts.
-* Launch DeskTop. Special > Disk Copy.... Press Open-Apple Q. Verify that DeskTop launches.
-* Launch DeskTop. Special > Disk Copy.... Press Solid-Apple Q. Verify that DeskTop launches.
-
-* Launch DeskTop. Special > Format a Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy a File.... Verify that the file list is populated.
-
 * Launch DeskTop. Try to move a file (drag on same volume) where there is not enough space to make a temporary copy. Verify that the error message says that the file is too large to move.
 * Launch DeskTop. Try to copy a file (drag to different volume) where there is not enough space to make the copy. Verify that the error message says that the file is too large to copy.
 
@@ -196,57 +150,24 @@
 * Launch DeskTop. Special > Format a Disk. Verify that the device order shown matches the order of volumes shown on the DeskTop (boot device first, etc). Format a disk. Verify the correct device was formatted.
 * Launch DeskTop. Special > Erase a Disk. Verify that the device order shown matches the order of volumes shown on the DeskTop (boot device first, etc). Erase a disk. Verify the correct device was erased.
 
-* Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
-
-* Configure a system with a realtime clock. Launch DeskTop. Run the Date desk accessory. Press Escape key. Verify the desk accessory exits. Repeat with the Return key.
-
 * Launch DeskTop. Open a window containing folders and files. Scroll window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the obscured part of the folder. Verify the folder doesn't highlight.
 * Launch DeskTop. Open a window containing folders and files. Scroll window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the visible part of the folder. Verify the folder highlights but doesn't render past window bounds.
 
-* Repeat the following cases with DeskTop's File > Copy a File... and Selector's File > Run a File...:
-  * Browse to a directory containing multiple files. Press Apple+letter. Verify that if any filename starts with that letter, the first such file is selected (e.g. 'A' selects "Alpha"); if no filename starts with that letter then the alphabetically next file is selected (e.g. 'M' selects "November"), or the last file is selected if none (e.g. 'Z' selects "Whiskey").
-  * Browse to a directory containing one or more files starting with lowercase letters (AppleWorks or GS/OS). Verify the files appear with correct names. Press Apple+letter. Verify that the first file starting with that letter is selected.
-  * Browse to a directory containing one or more files with starting with mixed case (AppleWorks or GS/OS). Verify the filenames appear with correct case.
-  * Verify that the device order (via clicking Change Drive or pressing Tab) matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
-    * On a IIgs: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
-    * On a Platinum IIe: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
-  * Browse to a directory containing 8 files. Verify that the scrollbar is inactive.
-  * Browse to a directory containing 9 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
-
-* Launch DeskTop. Special > Disk Copy. Copy a disk with more than 999 blocks. Verify thousands separators are shown in block counts.
 * Launch DeskTop. Select a 32MB volume. File > Get Info. Verify total size shows as 32,768K not 0K.
-
-* Launch DeskTop. Special > Disk Copy.... Copy a 32MB disk image using Quick Copy (the default mode). Verify that the screen is not garbled, and that the copy is successful.
-* Launch DeskTop. Special > Disk Copy.... Copy a 32MB disk image using Disk Copy (the other mode). Verify that the screen is not garbled, and that the copy is successful.
 
 * Launch DeskTop. Open a window containing folders and files. Open another window, for an empty volume. Drag an icon from the first to the second. Ensure no scrollbars activate in the target window.
 * Launch DeskTop. Open a window containing folders and files, with no scrollbars active. Open another window. Drag an icon from the first to the second. Ensure no scrollbars activate in the source window.
-
-* Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.
-* Launch Selector. Trigger an alert with only OK (e.g. running an shortcut with disk ejected). Verify that Escape key closes alert.
-* Launch DeskTop. Run Special > Disk Copy. Trigger an alert with only OK. Verify that Escape key closes alert.
 
 * Set up multiple volumes (e.g. V1, V2, V3). Launch DeskTop. Use Shortcuts > Add a Shortcut... to add an shortcut on V2. Run Shortcuts > Edit a Shortcut... and select the added shortcut to edit it, which should init the dialog showing V2. Click Change Drive. Verify that the picker now shows V3.
 
 * Launch DeskTop. Open some windows. Special > Disk Copy. Quit back to DeskTop. Verify that the windows are restored.
 * Launch DeskTop. Close all windows. Special > Disk Copy. Quit back to DeskTop. Verify that no windows are restored.
 
-* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter text in the first field. Move the IP into the middle of the text. Click in the second field. Verify that the first field is not truncated.
-* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter a name in the first field. Move the IP into the middle of the text. Click OK. Verify that the first field is not truncated.
-* Launch DeskTop. File > Copy a File.... Enter text in the first field. Move the IP into the middle of the text. Click in the second field. Verify that the first field is not truncated.
-* Launch DeskTop. File > Copy a File.... Enter a name in the first field. Move the IP into the middle of the text. Click OK. Verify that the first field is not truncated.
-
-* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter text in the second field. Move the IP into the middle of the text. Click in the first field. Verify that the second field is not truncated.
-* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
-* Launch DeskTop. File > Copy a File.... Enter text in the second field. Move the IP into the middle of the text. Click in the first field. Verify that the second field is not truncated.
-* Launch DeskTop. File > Copy a File.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
 
 * Launch DeskTop. Select a file. File > Rename.... Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
 * Launch DeskTop. Open a window. File > New Folder.... Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
 * Launch DeskTop. Special > Format a Disk.... Select a disk (other than the startup disk) and click OK. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
 * Launch DeskTop. Special > Erase a Disk.... Select a disk (other than the startup disk) and click OK. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
-
-* Launch DeskTop. File > Copy a File.... Enter text in the first field. Enter text in the second field. Click in the middle of the text in the first field. Verify that the IP is positioned near the click. Click in the middle of the text in the second field. Verify that the IP is positioned near the click.
 
 * Configure a system with removable disks. (e.g. Virtual II OmniDisks) Launch DeskTop. Verify that volume icons are positioned without gaps (down from the top-right, then across the bottom right to left). Eject one of the middle volumes. Verify icon disappears. Insert a new volume. Verify icon takes up the vacated spot. Repeat test, ejecting multiple volumes verify that positions are filled in order (down from the top-right, etc).
 
@@ -257,18 +178,9 @@
 
 * Launch DeskTop. Open a volume. File > New Folder..., create A. File > New Folder..., create B. Drag B onto A. File > New folder.... Verify DeskTop doesn't hang.
 
-* Configure a device multiple drives connected to a Smartport controller on a higher slot, a single drive connected to a Smartport controller in a lower slot. Launch DeskTop, run the This Apple DA. Verify that the name on the lower slot doesn't have an extra character at the end.
-
 * Launch DeskTop. Open a window with files with dates with long month names (e.g. "February 29, 2020"). View > by Name. Resize the window so the lines are cut off on the right. Move the horizontal scrollbar all the way to the right. Verify that the right edges of all lines are visible.
 
-* Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Launch This Apple DA, close it. Verify that the file is still present on Ram5.
-
 * Launch DeskTop. Double-click on a file that DeskTop can't open (and where no BASIS.SYSTEM is present). Click OK in the "This file cannot be opened." alert. Double-click on the file again. Verify that the alert renders with an opaque background.
-* Launch DeskTop. File > Copy a File... Navigate to a directory with more than 9 files, and at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
-
-* Create a directory, and in the directory create a file named "A.B" then a file named "A". Launch DeskTop. File > Copy a File.... Navigate to the directory. Verify "A" sorts before "A.B". Launch Selector. File > Run a Program. Navigate to the directory. Verify "A" sorts before "A.B".
-
-* Run DeskTop on a IIc. Launch Control Panel > System Speed. Click Normal and Fast. Verify that display does not switch from DHR to HR.
 
 * Launch DeskTop. Create a sequence of nested folders approaching maximum path length, e.g. /RAM/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF12345. Try to copy a file into the folder. Verify that stray pixels do not appear in the top line of the screen.
 
@@ -279,13 +191,9 @@
 * Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to move it into itself by dragging. Verify that an error is shown.
 * Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to copy it into itself by dragging with an Apple key depressed. Verify that an error is shown.
 
-* Ensure the default drive has 10 or more files. Load DeskTop. File > Copy a File.... Verify that an active scrollbar appears in the file list. Click OK. Click Cancel. Verify that the scrollbar is scrolled to the top.
-
 * Load DeskTop. Open a volume. Adjust the window size so that horizontal and vertical scrolling is required. Scroll to the bottom-right. Quit DeskTop, reload. Verify that the window size was restored correctly.
 
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Shortcuts > Add a Shortcut.... Create a shortcut, click OK. Verify that when the "Do you want to save the new list on the system disk?" warning appears that the desktop volume icons repaint.
-
-* Launch DeskTop. Apple > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
 
 * Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. /HD. Launch DeskTop. Open the startup volume. Apple > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
 
@@ -308,10 +216,6 @@
 * Launch DeskTop. Rename a volume to have the same name as another. Verify that an error is shown and the icon is removed.
 
 * Launch DeskTop. Open a window. File > Quit. Launch DeskTop again. Ensure the window is restored. Try to drag-select volume icons. Verify that they are selected.
-
-* Launch Selector. Eject the disk with DeskTop on it. Type Q (don't click). Dismiss the dialog by hitting Esc. Verify that the dialog disappears, and the Apple menu is not shown.
-
-* Configure a system with a Mockingboard and a Zip Chip, with acceleration enabled (MAME works). Launch DeskTop. Run the This Apple DA. Verify that the Mockingboard is detected.
 
 * Launch DeskTop. Select a volume icon, where the volume contains no files. Special > Get Size. Verify that numbers are shown (0) for number of files and size used.
 * Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. Special > Get Size. Verify that a "The specified path name is invalid." alert is not shown.
@@ -374,7 +278,6 @@
 * Launch DeskTop. Close all windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are disabled.
 * Launch DeskTop. Open a windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
 * Delete the SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
-
 
 * Launch DeskTop. Open 3 windows. Close the top one. Verify that the repaint is correct.
 
@@ -439,19 +342,14 @@
 
 * Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
   * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Tab repeatedly. Verify that windows are activated and cycle in forward order (A, B, C, A, B, C, ...).
-  * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press ` repeatedly. Verify that windows are activated cycle in forward order (A, B, C, A, B, C, ...).
-  * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and shift and press ` repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
+  * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press \` repeatedly. Verify that windows are activated cycle in forward order (A, B, C, A, B, C, ...).
+  * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and shift and press \` repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
   * On a IIgs: Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and shift and press Tab repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
   * On a Platinum IIe: Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and shift and press Tab repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
 
 * Launch DeskTop. Open a volume window containing a folder. Open the folder window. Note that the folder icon is shaded. Close the volume window. Open the volume window again. Verify that the folder icon is shaded.
 * Launch DeskTop. Open a volume window. In the volume window, create a new folder F1 and open it. Note that the F1 icon is shaded. In the volume window, create a new folder F2. Verify that the F1 icon is still shaded.
 * Launch DeskTop. Open a volume window containing a file and a folder. Open the folder window. Drag the file to the folder icon (not the window). Verify that the folder window activates and updates to show the file.
-
-* Launch DeskTop. Apple > About Apple II DeskTop. Click anywhere on the screen. Verify that the dialog closes.
-* Launch DeskTop. Apple > About Apple II DeskTop. Press any non-modifier key screen. Verify that the dialog closes.
-
-* Launch DeskTop, invoke Control Panel DA. Under Mouse Tracking, toggle Slow and Fast. Verify that the mouse cursor doesn't warp to a new position, and that the mouse cursor doesn't flash briefly on the left edge of the screen.
 
 * Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume directory that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that file picker shows both the correct disk name and the correct full path.
 
@@ -464,3 +362,122 @@
   * Select an icon. Press the Return key. Verify that MouseKeys mode is not silently exited, and the cursor is not distorted.
   * Use keys to click on a menu. Without holding the button down, move over the menu items. Verify that the menu does not spontaneously close.
   * Use keys to double-click on an icon. Verify it opens.
+
+# Preview
+
+* Preview a text file; verify that up/down arrow keys scroll.
+* Preview a text file; verify that Open-Apple plus up/down arrow keys scroll by page.
+* Preview a text file; verify that Solid-Apple plus up/down arrow keys scroll by page.
+* Preview a text file; verify that Escape key exits.
+* Preview an image file; verify that Escape key exits.
+* Preview an image file on IIgs or with RGB card; verify that space bar toggles color/mono.
+
+# Desk Accessories
+
+* Run Apple > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
+
+* Run Apple > Calculator. Drag Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen.
+
+* Configure a system with a realtime clock. Launch DeskTop. Run the Date desk accessory. Press Escape key. Verify the desk accessory exits. Repeat with the Return key.
+
+* Configure a system with a Mockingboard and a Zip Chip, with acceleration enabled (MAME works). Launch DeskTop. Run the This Apple DA. Verify that the Mockingboard is detected.
+
+* Run DeskTop on a system without a system clock. Run Apple > Control Panels > Date. Set date. Reboot system, and re-run DeskTop. Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
+
+* On a system with a system clock, invoke Apple > Control Panels > Date. Verify that the date is read-only.
+
+* Open a folder containing directory. Open a folder by double-clicking. Apple > Sort Directory. Verify that files are sorted by type/name.
+
+* Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
+
+* Launch DeskTop. Apple > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
+
+* Launch DeskTop. Apple > About Apple II DeskTop. Click anywhere on the screen. Verify that the dialog closes.
+* Launch DeskTop. Apple > About Apple II DeskTop. Press any non-modifier key screen. Verify that the dialog closes.
+
+* Launch DeskTop, invoke Control Panel DA. Under Mouse Tracking, toggle Slow and Fast. Verify that the mouse cursor doesn't warp to a new position, and that the mouse cursor doesn't flash briefly on the left edge of the screen.
+
+* Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.
+* Run System Speed DA. Click Fast then click OK. Verify DeskTop does not lock up.
+* Run DeskTop on a IIc. Launch Control Panel > System Speed. Click Normal and Fast. Verify that display does not switch from DHR to HR.
+
+* Put `SHOW.IMAGE.FILE` in `DESK.ACC`, start DeskTop.
+    * Select no icon, select DA from Apple menu. Verify nothing happens.
+    * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select image file icon, select DA from Apple menu. Verify image is shown.
+* Put `SHOW.TEXT.FILE` in `DESK.ACC`, start DeskTop.
+    * Select no icon, select DA from Apple menu. Verify nothing happens.
+    * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select text file icon, select DA from Apple menu. Verify text is shown.
+* Put `SHOW.FONT.FILE` in `DESK.ACC`, start DeskTop.
+    * Select no icon, select DA from Apple menu. Verify nothing happens.
+    * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select font file icon, select DA from Apple menu. Verify font is shown.
+
+* Configure a device multiple drives connected to a Smartport controller on a higher slot, a single drive connected to a Smartport controller in a lower slot. Launch DeskTop, run the This Apple DA. Verify that the name on the lower slot doesn't have an extra character at the end.
+
+* Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Launch This Apple DA, close it. Verify that the file is still present on Ram5.
+
+
+# Selector
+
+* Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.
+* Launch Selector, invoke DeskTop, File > Quit, run BASIC.SYSTEM. Ensure /RAM exists.
+
+* Launch Selector. Type Open-Apple and R. Ensure "Run a Program..." dialog appears
+* Launch Selector. Type Solid-Apple and R. Ensure "Run a Program..." dialog appears
+* Launch Selector. Type Open-Apple and 6. Ensure machine boots from Slot 6
+* Launch Selector. Type Solid-Apple and 6. Ensure machine boots from Slot 6
+
+* Launch Selector. Eject the disk with DeskTop on it. Type Q (don't click). Dismiss the dialog by hitting Esc. Verify that the dialog disappears, and the Apple menu is not shown.
+
+# Disk Copy
+
+* Launch DeskTop. Special > Disk Copy.... File > Quit. Special > Disk Copy.... Ensure drive list is correct.
+
+* Launch DeskTop. Special > Disk Copy.... Press Escape key. Verify that menu keyboard mode starts.
+* Launch DeskTop. Special > Disk Copy.... Press Open-Apple Q. Verify that DeskTop launches.
+* Launch DeskTop. Special > Disk Copy.... Press Solid-Apple Q. Verify that DeskTop launches.
+
+* Launch DeskTop. Special > Disk Copy. Copy a disk with more than 999 blocks. Verify thousands separators are shown in block counts.
+* Launch DeskTop. Special > Disk Copy.... Copy a 32MB disk image using Quick Copy (the default mode). Verify that the screen is not garbled, and that the copy is successful.
+* Launch DeskTop. Special > Disk Copy.... Copy a 32MB disk image using Disk Copy (the other mode). Verify that the screen is not garbled, and that the copy is successful.
+
+
+# Alerts
+
+* Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.
+* Launch Selector. Trigger an alert with only OK (e.g. running an shortcut with disk ejected). Verify that Escape key closes alert.
+* Launch DeskTop. Run Special > Disk Copy. Trigger an alert with only OK. Verify that Escape key closes alert.
+
+# File Picker
+
+* Repeat the following cases with DeskTop's File > Copy a File... and Selector's File > Run a File...:
+  * Browse to a directory containing multiple files. Press Apple+letter. Verify that if any filename starts with that letter, the first such file is selected (e.g. 'A' selects "Alpha"); if no filename starts with that letter then the alphabetically next file is selected (e.g. 'M' selects "November"), or the last file is selected if none (e.g. 'Z' selects "Whiskey").
+  * Browse to a directory containing one or more files starting with lowercase letters (AppleWorks or GS/OS). Verify the files appear with correct names. Press Apple+letter. Verify that the first file starting with that letter is selected.
+  * Browse to a directory containing one or more files with starting with mixed case (AppleWorks or GS/OS). Verify the filenames appear with correct case.
+  * Verify that the device order (via clicking Change Drive or pressing Tab) matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
+    * On a IIgs: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
+    * On a Platinum IIe: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
+  * Browse to a directory containing 8 files. Verify that the scrollbar is inactive.
+  * Browse to a directory containing 9 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
+
+* Launch DeskTop. File > Copy a File.... Enter text in the first field. Enter text in the second field. Click in the middle of the text in the first field. Verify that the IP is positioned near the click. Click in the middle of the text in the second field. Verify that the IP is positioned near the click.
+
+* Ensure the default drive has 10 or more files. Load DeskTop. File > Copy a File.... Verify that an active scrollbar appears in the file list. Click OK. Click Cancel. Verify that the scrollbar is scrolled to the top.
+
+* Launch DeskTop. Special > Format a Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy a File.... Verify that the file list is populated.
+
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter text in the first field. Move the IP into the middle of the text. Click in the second field. Verify that the first field is not truncated.
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter a name in the first field. Move the IP into the middle of the text. Click OK. Verify that the first field is not truncated.
+* Launch DeskTop. File > Copy a File.... Enter text in the first field. Move the IP into the middle of the text. Click in the second field. Verify that the first field is not truncated.
+* Launch DeskTop. File > Copy a File.... Enter a name in the first field. Move the IP into the middle of the text. Click OK. Verify that the first field is not truncated.
+
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter text in the second field. Move the IP into the middle of the text. Click in the first field. Verify that the second field is not truncated.
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
+* Launch DeskTop. File > Copy a File.... Enter text in the second field. Move the IP into the middle of the text. Click in the first field. Verify that the second field is not truncated.
+* Launch DeskTop. File > Copy a File.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
+
+* Create a directory, and in the directory create a file named "A.B" then a file named "A". Launch DeskTop. File > Copy a File.... Navigate to the directory. Verify "A" sorts before "A.B". Launch Selector. File > Run a Program. Navigate to the directory. Verify "A" sorts before "A.B".
+
+* Launch DeskTop. File > Copy a File... Navigate to a directory with more than 9 files, and at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
