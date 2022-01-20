@@ -179,9 +179,9 @@ is_btn: jsr     HandleButtonDown
 
         LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-        bne     :+
-        jmp     EventLoop
-:       lda     findwindow_params::window_id
+        jeq     EventLoop
+
+        lda     findwindow_params::window_id
         cmp     file_dialog_res::winfo::window_id
         beq     l1
         jsr     UnsetCursorIBeam
@@ -232,10 +232,9 @@ focus_in_input2_flag:
         rts
 
 :       cmp     #MGTK::Area::content
-        bne     :+
-        jmp     HandleContentClick
+        jeq     HandleContentClick
 
-:       rts
+        rts
 .endproc
 
 .proc HandleContentClick
@@ -489,23 +488,19 @@ different:
 .proc HandleVScrollClick
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::up_arrow
-        bne     :+
-        jmp     HandleLineUp
+        jeq     HandleLineUp
 
-:       cmp     #MGTK::Part::down_arrow
-        bne     :+
-        jmp     HandleLineDown
+        cmp     #MGTK::Part::down_arrow
+        jeq     HandleLineDown
 
-:       cmp     #MGTK::Part::page_up
-        bne     :+
-        jmp     HandlePageUp
+        cmp     #MGTK::Part::page_up
+        jeq     HandlePageUp
 
-:       cmp     #MGTK::Part::page_down
-        bne     :+
-        jmp     HandlePageDown
+        cmp     #MGTK::Part::page_down
+        jeq     HandlePageDown
 
         ;; Track thumb
-:       lda     #MGTK::Ctl::vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     trackthumb_params::which_ctl
         LIB_MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
@@ -818,22 +813,18 @@ l7:     .byte   0
         jeq     is_tab
 
         cmp     #CHAR_LEFT
-        bne     :+
-        jmp     HandleMetaLeftKey ; start of line
+        jeq     HandleMetaLeftKey ; start of line
 
-:       cmp     #CHAR_RIGHT
-        bne     :+
-        jmp     HandleMetaRightKey ; end of line
+        cmp     #CHAR_RIGHT
+        jeq     HandleMetaRightKey ; end of line
 
-:       bit     listbox_disabled_flag
+        bit     listbox_disabled_flag
         bmi     not_arrow
         cmp     #CHAR_DOWN
-        bne     :+
-        jmp     ScrollListBottom ; end of list
+        jeq     ScrollListBottom ; end of list
 
-:       cmp     #CHAR_UP
-        bne     not_arrow
-        jmp     ScrollListTop   ; start of list
+        cmp     #CHAR_UP
+        jeq     ScrollListTop   ; start of list
 
 not_arrow:
         cmp     #'0'
@@ -853,26 +844,21 @@ no_modifiers:
         lda     event_params::key
 
         cmp     #CHAR_LEFT
-        bne     :+
-        jmp     HandleLeftKey
+        jeq     HandleLeftKey
 
-:       cmp     #CHAR_RIGHT
-        bne     :+
-        jmp     HandleRightKey
+        cmp     #CHAR_RIGHT
+        jeq     HandleRightKey
 
-:       cmp     #CHAR_RETURN
-        bne     :+
-        jmp     KeyReturn
+        cmp     #CHAR_RETURN
+        jeq     KeyReturn
 
-:       cmp     #CHAR_ESCAPE
-        bne     :+
-        jmp     KeyEscape
+        cmp     #CHAR_ESCAPE
+        jeq     KeyEscape
 
-:       cmp     #CHAR_DELETE
-        bne     :+
-        jmp     KeyDelete
+        cmp     #CHAR_DELETE
+        jeq     KeyDelete
 
-:       bit     listbox_disabled_flag
+        bit     listbox_disabled_flag
         bpl     :+
         jmp     finish
 
@@ -917,12 +903,10 @@ not_ctrl_o:
         jmp     exit
 
 :       cmp     #CHAR_DOWN
-        bne     :+
-        jmp     KeyDown
+        jeq     KeyDown
 
-:       cmp     #CHAR_UP
-        bne     finish
-        jmp     KeyUp
+        cmp     #CHAR_UP
+        jeq     KeyUp
 
 finish: jsr     HandleOtherKey
         rts

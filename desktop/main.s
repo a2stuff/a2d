@@ -402,20 +402,15 @@ HandleKeydown:
 
         lda     event_params::key
         cmp     #CHAR_LEFT
-        bne     :+
-        jmp     CmdHighlight
-:       cmp     #CHAR_UP
-        bne     :+
-        jmp     CmdHighlight
-:       cmp     #CHAR_RIGHT
-        bne     :+
-        jmp     CmdHighlight
-:       cmp     #CHAR_DOWN
-        bne     :+
-        jmp     CmdHighlight
+        jeq     CmdHighlight
+        cmp     #CHAR_UP
+        jeq     CmdHighlight
+        cmp     #CHAR_RIGHT
+        jeq     CmdHighlight
+        cmp     #CHAR_DOWN
+        jeq     CmdHighlight
 
-
-:       jmp     menu_accelerators
+        jmp     menu_accelerators
 
         ;; --------------------------------------------------
         ;; Modifiers
@@ -429,26 +424,20 @@ modifiers:
 :       lda     event_params::key
         jsr     UpcaseChar
         cmp     #CHAR_DOWN      ; Apple-Down (Open)
-        bne     :+
-        jmp     CmdOpenFromKeyboard
-:       cmp     #CHAR_UP        ; Apple-Up (Open Parent)
-        bne     :+
-        jmp     CmdOpenParent
-:       bit     flag
+        jeq     CmdOpenFromKeyboard
+        cmp     #CHAR_UP        ; Apple-Up (Open Parent)
+        jeq     CmdOpenParent
+        bit     flag
         bpl     menu_accelerators
         cmp     #kShortcutResize ; Apple-G (Resize)
-        bne     :+
-        jmp     CmdResize
-:       cmp     #kShortcutMove  ; Apple-M (Move)
-        bne     :+
-        jmp     CmdMove
-:       cmp     #kShortcutScroll ; Apple-X (Scroll)
-        bne     :+
-        jmp     CmdScroll
-:       cmp     #CHAR_DELETE    ; Apple-Delete (Delete)
-        bne     :+
-        jmp     CmdDeleteSelection
-:       cmp     #'`'            ; Apple-` (Cycle Windows)
+        jeq     CmdResize
+        cmp     #kShortcutMove  ; Apple-M (Move)
+        jeq     CmdMove
+        cmp     #kShortcutScroll ; Apple-X (Scroll)
+        jeq     CmdScroll
+        cmp     #CHAR_DELETE    ; Apple-Delete (Delete)
+        jeq     CmdDeleteSelection
+        cmp     #'`'            ; Apple-` (Cycle Windows)
         beq     cycle
         cmp     #'~'            ; Shift-Apple-` (Cycle Windows)
         beq     cycle
@@ -542,18 +531,14 @@ not_menu:
 .proc HandleActiveWindowClick
         pla
         cmp     #MGTK::Area::content
-        bne     :+
-        jmp     HandleClientClick
-:       cmp     #MGTK::Area::dragbar
-        bne     :+
-        jmp     HandleTitleClick
-:       cmp     #MGTK::Area::grow_box
-        bne     :+
-        jmp     HandleResizeClick
-:       cmp     #MGTK::Area::close_box
-        bne     :+
-        jmp     HandleCloseClick
-:       rts
+        jeq     HandleClientClick
+        cmp     #MGTK::Area::dragbar
+        jeq     HandleTitleClick
+        cmp     #MGTK::Area::grow_box
+        jeq     HandleResizeClick
+        cmp     #MGTK::Area::close_box
+        jeq     HandleCloseClick
+        rts
 .endproc
 
 ;;; ============================================================
@@ -935,10 +920,9 @@ with_path:
         rts
 
 :       cmp     #IconType::folder
-        bne     :+
-        jmp     OpenFolder
+        jeq     OpenFolder
 
-:       cmp     #IconType::system
+        cmp     #IconType::system
         beq     launch
 
         cmp     #IconType::application
@@ -3284,10 +3268,9 @@ HighlightIcon:
 
 :       jsr     LoadActiveWindowEntryTable ; restored below
         lda     cached_window_entry_count
-        bne     :+
-        jmp     finish          ; nothing to select!
+        jeq     finish          ; nothing to select!
 
-:       ldx     cached_window_entry_count
+        ldx     cached_window_entry_count
         dex
 :       copy    cached_window_entry_list,x, selected_icon_list,x
         dex
@@ -3787,13 +3770,12 @@ explicit_command:
 common:
         ldy     devlst_index
         lda     device_to_icon_map,y
-        bne     :+
-        jmp     not_in_map
+        jeq     not_in_map
 
         ;; Close any associated windows.
 
         ;; A = icon number
-:       jsr     IconEntryNameLookup
+        jsr     IconEntryNameLookup
 
         ptr := $06
         path_buf := $1F00
@@ -3959,10 +3941,10 @@ active_window_view_by:
 
         MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
-        bne     :+
         ;; TODO: jmp here means `done_client_click` not called, callee responsible
-        jmp     HandleContentClick ; 0 = ctl_not_a_control
-:       cmp     #MGTK::Ctl::dead_zone
+        jeq     HandleContentClick ; 0 = ctl_not_a_control
+
+        cmp     #MGTK::Ctl::dead_zone
         bne     :+
         rts
 :       cmp     #MGTK::Ctl::vertical_scroll_bar
@@ -3975,9 +3957,9 @@ active_window_view_by:
         ldy     #MGTK::Winfo::vscroll
         lda     ($06),y
         and     #MGTK::Scroll::option_active
-        bne     :+
-        jmp     done_client_click
-:       jsr     GetActiveWindowScrollInfo
+        jeq     done_client_click
+
+        jsr     GetActiveWindowScrollInfo
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
         bne     :+
@@ -4021,9 +4003,9 @@ horiz:  lda     active_window_id
         ldy     #MGTK::Winfo::hscroll
         lda     ($06),y
         and     #MGTK::Scroll::option_active
-        bne     :+
-        jmp     done_client_click
-:       jsr     GetActiveWindowScrollInfo
+        jeq     done_client_click
+
+        jsr     GetActiveWindowScrollInfo
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
         bne     :+
@@ -4224,11 +4206,10 @@ process_drop:
 
         ;; (1/4) Failed?
         cmp     #$FF
-        bne     :+
-        jmp     done_content_click ; restore from `HandleClientClick`
+        jeq     done_content_click ; restore from `HandleClientClick`
 
         ;; Was a move?
-:       bit     move_flag
+        bit     move_flag
     IF_NS
         ;; Update source vol's contents
         jsr     MaybeStashDropTargetName ; in case target is in window...
@@ -4239,18 +4220,16 @@ process_drop:
         ;; (2/4) Dropped on trash?
         lda     drag_drop_params::result
         cmp     trash_icon_num
-        bne     :+
         ;; Update used/free for same-vol windows
-        jmp     UpdateActiveWindow
+        jeq     UpdateActiveWindow
 
         ;; (3/4) Dropped on icon?
-:       lda     drag_drop_params::result
-        bmi     :+
+        lda     drag_drop_params::result
         ;; Yes, on an icon; update used/free for same-vol windows
-        jmp     UpdateUsedFreeViaIcon
+        jpl     UpdateUsedFreeViaIcon
 
         ;; (4/4) Dropped on window!
-:       and     #$7F            ; mask off window number
+        and     #$7F            ; mask off window number
         pha
         jsr     UpdateUsedFreeViaWindow
         pla
@@ -4260,10 +4239,9 @@ process_drop:
 
 same_or_desktop:
         cpx     #2              ; file icon dragged to desktop?
-        bne     :+
-        jmp     done_content_click ; restore from `HandleClientClick`
+        jeq     done_content_click ; restore from `HandleClientClick`
 
-:       cpx     #$FF
+        cpx     #$FF
         beq     failure
 
         ;; Icons moved within window - update and redraw
@@ -4553,12 +4531,11 @@ event_loop:
         jsr     FrameTmpRect
         ldx     #0
 iloop:  cpx     cached_window_entry_count
-        bne     :+
         ;; Finished!
-        jmp     ResetMainGrafport
+        jeq     ResetMainGrafport
 
         ;; Check if icon should be selected
-:       txa
+        txa
         pha
         copy    cached_window_entry_list,x, icon_param
         jsr     IconScreenToWindow
@@ -7063,10 +7040,9 @@ loop:   bit     LCBANK2
 
 loop2:  lda     index
         cmp     window_id_to_filerecord_list_count
-        bne     :+
-        jmp     finish
+        jeq     finish
 
-:       lda     index
+        lda     index
         asl     a
         tax
         sub16   window_filerecord_table+2,x, window_filerecord_table,x, size
@@ -11068,10 +11044,9 @@ L90BA:  bit     operation_flags
 
 iterate_selection:
         lda     selected_icon_count
-        bne     :+
-        jmp     finish
+        jeq     finish
 
-:       ldx     #0
+        ldx     #0
         stx     icon_count
 
 loop:   ldx     icon_count
@@ -11378,16 +11353,14 @@ index:  .byte   0               ; index in selected icon list
         jsr     ResetMainGrafport
 loop:   ldx     get_info_dialog_params::index
         cpx     selected_icon_count
-        bne     :+
-        jmp     done
+        jeq     done
 
-:       ldx     get_info_dialog_params::index
+        ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
         cmp     trash_icon_num
-        bne     :+
-        jmp     next
+        jeq     next
 
-:       jsr     GetIconPath   ; `path_buf3` is full path
+        jsr     GetIconPath   ; `path_buf3` is full path
 
         ldy     path_buf3       ; Copy to `path_buf`
 :       copy    path_buf3,y, path_buf,y
@@ -14155,15 +14128,13 @@ dialog_param_addr:
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        bne     :+
-        jmp     PromptClickHandler
+        jeq     PromptClickHandler
 
-:       cmp     #MGTK::EventKind::key_down
-        bne     :+
-        jmp     PromptKeyHandler
+        cmp     #MGTK::EventKind::key_down
+        jeq     PromptKeyHandler
 
         ;; Does the dialog have an input field?
-:       lda     has_input_field_flag
+        lda     has_input_field_flag
         beq     PromptInputLoop
 
         ;; Check if mouse is over input field, change cursor appropriately.
@@ -14172,15 +14143,13 @@ dialog_param_addr:
 
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-        bne     :+
-        jmp     PromptInputLoop
+        jeq     PromptInputLoop
 
-:       lda     findwindow_params::window_id
+        lda     findwindow_params::window_id
         cmp     winfo_prompt_dialog
-        beq     :+
-        jmp     PromptInputLoop
+        jne     PromptInputLoop
 
-:       lda     winfo_prompt_dialog ; Is over this window... but where?
+        lda     winfo_prompt_dialog ; Is over this window... but where?
         jsr     SafeSetPortFromWindowId
         copy    winfo_prompt_dialog, event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -14203,9 +14172,8 @@ done:   jsr     ResetMainGrafport
         bne     :+
         return  #$FF
 :       cmp     #MGTK::Area::content
-        bne     :+
-        jmp     content
-:       return  #$FF
+        jeq     content
+        return  #$FF
 
 content:
         lda     findwindow_params::window_id
@@ -14292,12 +14260,10 @@ LA6F7:  jsr     HandleClickInTextbox
         ;; Modifier key down.
         lda     event_params::key
         cmp     #CHAR_LEFT
-        bne     :+
-        jmp     LeftWithMod
+        jeq     LeftWithMod
 
-:       cmp     #CHAR_RIGHT
-        bne     done
-        jmp     RightWithMod
+        cmp     #CHAR_RIGHT
+        jeq     RightWithMod
 
 done:   return  #$FF
 
@@ -14333,10 +14299,9 @@ LA73D:  cmp     #CHAR_RETURN
 :       jmp     HandleKeyOk
 
 LA755:  cmp     #CHAR_DELETE
-        bne     :+
-        jmp     HandleKeyDelete
+        jeq     HandleKeyDelete
 
-:       cmp     #CHAR_UP
+        cmp     #CHAR_UP
         bne     LA76B
         bit     format_erase_overlay_flag
         bmi     :+
@@ -14538,23 +14503,18 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         lda     (ptr),y
 
         cmp     #CopyDialogLifecycle::populate
-        bne     :+
-        jmp     do1
-:       cmp     #CopyDialogLifecycle::show
-        bne     :+
-        jmp     do2
-:       cmp     #CopyDialogLifecycle::exists
-        bne     :+
-        jmp     do3
-:       cmp     #CopyDialogLifecycle::too_large
-        bne     :+
-        jmp     do4
-:       cmp     #CopyDialogLifecycle::close
-        bne     :+
-        jmp     do5
+        jeq     do1
+        cmp     #CopyDialogLifecycle::show
+        jeq     do2
+        cmp     #CopyDialogLifecycle::exists
+        jeq     do3
+        cmp     #CopyDialogLifecycle::too_large
+        jeq     do4
+        cmp     #CopyDialogLifecycle::close
+        jeq     do5
 
         ;; CopyDialogLifecycle::open
-:       copy    #0, has_input_field_flag
+        copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
 
         param_call DrawDialogLabel, 2, aux::str_copy_from
@@ -14669,19 +14629,15 @@ do4:    jsr     Bell
         ldy     #0
         lda     (ptr),y
         cmp     #1
-        bne     :+
-        jmp     do1
-:       cmp     #2
-        bne     :+
-        jmp     do2
-:       cmp     #3
-        bne     :+
-        jmp     do3
-:       cmp     #4
-        bne     else
-        jmp     do4
+        jeq     do1
+        cmp     #2
+        jeq     do2
+        cmp     #3
+        jeq     do3
+        cmp     #4
+        jeq     do4
 
-else:   copy    #0, has_input_field_flag
+        copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::str_download
         param_call DrawDialogLabel, 1, aux::str_copy_copying
@@ -14755,16 +14711,13 @@ do4:    jsr     Bell
         ldy     #0
         lda     (ptr),y
         cmp     #1
-        bne     :+
-        jmp     do1
-:       cmp     #2
-        bne     :+
-        jmp     do2
-:       cmp     #3
-        bne     else
-        jmp     do3
+        jeq     do1
+        cmp     #2
+        jeq     do2
+        cmp     #3
+        jeq     do3
 
-else:   jsr     OpenDialogWindow
+        jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::label_get_size
         param_call DrawDialogLabel, 1, aux::str_size_number
         ldy     #1
@@ -14845,23 +14798,18 @@ do2:
         lda     ($06),y         ; phase
 
         cmp     #DeleteDialogLifecycle::populate
-        bne     :+
-        jmp     do1
-:       cmp     #DeleteDialogLifecycle::confirm
-        bne     :+
-        jmp     do2
-:       cmp     #DeleteDialogLifecycle::show
-        bne     :+
-        jmp     do3
-:       cmp     #DeleteDialogLifecycle::locked
-        bne     :+
-        jmp     do4
-:       cmp     #DeleteDialogLifecycle::close
-        bne     :+
-        jmp     do5
+        jeq     do1
+        cmp     #DeleteDialogLifecycle::confirm
+        jeq     do2
+        cmp     #DeleteDialogLifecycle::show
+        jeq     do3
+        cmp     #DeleteDialogLifecycle::locked
+        jeq     do4
+        cmp     #DeleteDialogLifecycle::close
+        jeq     do5
 
         ;; DeleteDialogLifecycle::open or trash
-:       sta     delete_flag
+        sta     delete_flag
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::str_delete_title
@@ -14957,15 +14905,13 @@ LAE17:  jsr     PromptInputLoop
         ldy     #0              ; phase
         lda     ($06),y
         cmp     #NewFolderDialogState::run
-        bne     :+
-        jmp     LAE70
+        jeq     LAE70
 
-:       cmp     #NewFolderDialogState::close
-        bne     :+
-        jmp     LAF16
+        cmp     #NewFolderDialogState::close
+        jeq     LAF16
 
         ;; Phase 0 - init
-:       copy    #$80, has_input_field_flag
+        copy    #$80, has_input_field_flag
         jsr     ClearPathBuf1
         jsr     ClearPathBuf2
         lda     #$00
@@ -15158,20 +15104,16 @@ row:    .byte   0
         lda     ($06),y
 
         cmp     #LockDialogLifecycle::populate
-        bne     :+
-        jmp     do1
-:       cmp     #LockDialogLifecycle::loop
-        bne     :+
-        jmp     do2
-:       cmp     #LockDialogLifecycle::operation
-        bne     :+
-        jmp     do3
-:       cmp     #LockDialogLifecycle::close
-        bne     :+
-        jmp     do4
+        jeq     do1
+        cmp     #LockDialogLifecycle::loop
+        jeq     do2
+        cmp     #LockDialogLifecycle::operation
+        jeq     do3
+        cmp     #LockDialogLifecycle::close
+        jeq     do4
 
         ;; LockDialogLifecycle::open
-:       copy    #0, has_input_field_flag
+        copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::label_lock
         rts
@@ -15245,20 +15187,16 @@ do4:    jsr     ClosePromptDialog
         lda     ($06),y
 
         cmp     #LockDialogLifecycle::populate
-        bne     :+
-        jmp     do1
-:       cmp     #LockDialogLifecycle::loop
-        bne     :+
-        jmp     do2
-:       cmp     #LockDialogLifecycle::operation
-        bne     :+
-        jmp     do3
-:       cmp     #LockDialogLifecycle::close
-        bne     :+
-        jmp     do4
+        jeq     do1
+        cmp     #LockDialogLifecycle::loop
+        jeq     do2
+        cmp     #LockDialogLifecycle::operation
+        jeq     do3
+        cmp     #LockDialogLifecycle::close
+        jeq     do4
 
         ;; LockDialogLifecycle::open
-:       copy    #0, has_input_field_flag
+        copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::label_unlock
         rts
@@ -15331,14 +15269,11 @@ do4:    jsr     ClosePromptDialog
         ldy     #0
         lda     (params_ptr),y
         cmp     #RenameDialogState::run
-        bne     :+
-        jmp     run_loop
+        jeq     run_loop
 
-:       cmp     #RenameDialogState::close
-        bne     open_win
-        jmp     close_win
+        cmp     #RenameDialogState::close
+        jeq     close_win
 
-open_win:
         jsr     CopyDialogParamAddrToPtr
         copy    #$80, has_input_field_flag
         lda     #$00
@@ -15406,14 +15341,11 @@ close_win:
         ldy     #0
         lda     (params_ptr),y
         cmp     #DuplicateDialogState::run
-        bne     :+
-        jmp     run_loop
+        jeq     run_loop
 
-:       cmp     #DuplicateDialogState::close
-        bne     open_win
-        jmp     close_win
+        cmp     #DuplicateDialogState::close
+        jeq     close_win
 
-open_win:
         jsr     CopyDialogParamAddrToPtr
         copy    #$80, has_input_field_flag
         lda     #$00

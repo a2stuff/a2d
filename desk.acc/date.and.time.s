@@ -436,12 +436,12 @@ init_window:
         lda     event_params::modifiers
         bne     InputLoop
         lda     event_params::key
+
         cmp     #CHAR_RETURN
-        bne     :+
-        jmp     OnOk
+        jeq     OnOk
 
         ;; If there is a system clock, only the first button is active
-:       ldx     clock_flag
+        ldx     clock_flag
         beq     :+
         cmp     #CHAR_ESCAPE    ; allow Escape to close as well
         bne     InputLoop
@@ -449,9 +449,8 @@ init_window:
 
         ;; All controls are active
 :       cmp     #CHAR_ESCAPE
-        bne     :+
-        jmp     on_cancel
-:       cmp     #CHAR_LEFT
+        jeq     on_cancel
+        cmp     #CHAR_LEFT
         beq     on_key_left
         cmp     #CHAR_RIGHT
         beq     on_key_right

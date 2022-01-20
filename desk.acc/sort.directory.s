@@ -442,16 +442,14 @@ loop:   lda     (ptr1),y
         ldy     #0
         lda     (ptr1),y
         and     #STORAGE_TYPE_MASK ; Active file entry?
-        bne     :+
-        jmp     rtcc
+        jeq     rtcc
 
-:       lda     (ptr2),y
+        lda     (ptr2),y
         and     #STORAGE_TYPE_MASK ; Active file entry?
-        bne     :+
-        jmp     rtcs
+        jeq     rtcs
 
         ;; Are we sorting by selection order?
-:       jsr     JUMP_TABLE_GET_SEL_COUNT
+        jsr     JUMP_TABLE_GET_SEL_COUNT
         beq     :+              ; No selection, so nope.
         jsr     JUMP_TABLE_GET_SEL_WIN
         cmp     window_id       ; Is selection in the active window?

@@ -293,16 +293,12 @@ char_label:  .byte   0
         bne     Exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        bne     :+
-        jmp     HandleDown
+        jeq     HandleDown
 
+        cmp     #MGTK::EventKind::key_down  ; any key?
+        jeq     HandleKey
 
-:       cmp     #MGTK::EventKind::key_down  ; any key?
-        bne     :+
-        jmp     HandleKey
-
-
-:       jmp     InputLoop
+        jmp     InputLoop
 .endproc
 
 .proc YieldLoop
@@ -334,9 +330,9 @@ char_label:  .byte   0
 .proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        bne     :+
-        jmp     Exit
-:       jmp     InputLoop
+        jeq     Exit
+
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
@@ -364,9 +360,9 @@ char_label:  .byte   0
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        bne     :+
-        jmp     InputLoop
-:       jmp     Exit
+        jeq     InputLoop
+
+        jmp     Exit
 .endproc
 
 ;;; ============================================================

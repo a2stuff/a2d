@@ -343,25 +343,25 @@ copy_when:
 .proc HandleClick
         MGTK_RELAY_CALL MGTK::InRect, rect_primary_run_list_ctrl
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     ClickPrimaryRunListCtrl
-:       MGTK_RELAY_CALL MGTK::InRect, rect_secondary_run_list_ctrl
+        jeq     ClickPrimaryRunListCtrl
+
+        MGTK_RELAY_CALL MGTK::InRect, rect_secondary_run_list_ctrl
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     ClickSecondaryRunListCtrl
-:       MGTK_RELAY_CALL MGTK::InRect, rect_at_first_boot_ctrl
+        jeq     ClickSecondaryRunListCtrl
+
+        MGTK_RELAY_CALL MGTK::InRect, rect_at_first_boot_ctrl
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     ClickAtFirstBootCtrl
-:       MGTK_RELAY_CALL MGTK::InRect, rect_at_first_use_ctrl
+        jeq     ClickAtFirstBootCtrl
+
+        MGTK_RELAY_CALL MGTK::InRect, rect_at_first_use_ctrl
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     ClickAtFirstUseCtrl
-:       MGTK_RELAY_CALL MGTK::InRect, rect_never_ctrl
+        jeq     ClickAtFirstUseCtrl
+
+        MGTK_RELAY_CALL MGTK::InRect, rect_never_ctrl
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     ClickNeverCtrl
-:       return  #0
+        jeq     ClickNeverCtrl
+
+        return  #0
 .endproc
 
 .proc ClickPrimaryRunListCtrl
@@ -504,26 +504,21 @@ copy_when:
 
 :       lda     event_params::key
         cmp     #'1'
-        bne     :+
-        jmp     ClickPrimaryRunListCtrl
+        jeq     ClickPrimaryRunListCtrl
 
-:       cmp     #'2'
-        bne     :+
-        jmp     ClickSecondaryRunListCtrl
+        cmp     #'2'
+        jeq     ClickSecondaryRunListCtrl
 
-:       cmp     #'3'
-        bne     :+
-        jmp     ClickAtFirstBootCtrl
+        cmp     #'3'
+        jeq     ClickAtFirstBootCtrl
 
-:       cmp     #'4'
-        bne     :+
-        jmp     ClickAtFirstUseCtrl
+        cmp     #'4'
+        jeq     ClickAtFirstUseCtrl
 
-:       cmp     #'5'
-        bne     :+
-        jmp     ClickNeverCtrl
+        cmp     #'5'
+        jeq     ClickNeverCtrl
 
-:       rts
+        rts
 .endproc
 
 ;;; ============================================================

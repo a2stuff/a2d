@@ -588,17 +588,14 @@ continue:
         MGTK_CALL MGTK::GetEvent, event_params
         bne     Exit
         lda     event_params::kind
+
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        bne     :+
-        jmp     HandleDown
+        jeq     HandleDown
 
+        cmp     #MGTK::EventKind::key_down  ; any key?
+        jeq     HandleKey
 
-:       cmp     #MGTK::EventKind::key_down  ; any key?
-        bne     :+
-        jmp     HandleKey
-
-
-:       jmp     InputLoop
+        jmp     InputLoop
 .endproc
 
 .proc YieldLoop

@@ -239,9 +239,8 @@ grow_box_bitmap:
         cmp     #MGTK::Area::dragbar
         jeq     HandleDrag
         cmp     #MGTK::Area::content
-        bne     :+
-        jmp     HandleGrow
-:       jmp     InputLoop
+        jeq     HandleGrow
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================

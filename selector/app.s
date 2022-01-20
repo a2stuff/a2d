@@ -1124,22 +1124,18 @@ not_return:
         ;; Arrow keys?
 
         cmp     #CHAR_LEFT
-        bne     :+
-        jmp     HandleKeyLeft
+        jeq     HandleKeyLeft
 
-:       cmp     #CHAR_RIGHT
-        bne     :+
-        jmp     HandleKeyRight
+        cmp     #CHAR_RIGHT
+        jeq     HandleKeyRight
 
-:       cmp     #CHAR_DOWN
-        bne     :+
-        jmp     HandleKeyDown
+        cmp     #CHAR_DOWN
+        jeq     HandleKeyDown
 
-:       cmp     #CHAR_UP
-        bne     :+
-        jmp     HandleKeyUp
+        cmp     #CHAR_UP
+        jeq     HandleKeyUp
 
-:       rts
+        rts
 
 ;;; ============================================================
 
@@ -1779,11 +1775,9 @@ common: lda     winfo::window_id
 :
 
         jsr     DetectDoubleClick
-        bne     :+
+        jeq     InvokeEntry
 
-        jmp     InvokeEntry
-
-:       rts
+        rts
 
 .endproc
 

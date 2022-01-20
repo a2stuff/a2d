@@ -279,10 +279,9 @@ event_loop:
         LIB_MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
-        bne     :+
-        jmp     HandleButtonDown
+        jeq     HandleButtonDown
 
-:       cmp     #MGTK::EventKind::key_down
+        cmp     #MGTK::EventKind::key_down
         bne     event_loop
 
         ;; --------------------------------------------------

@@ -81,10 +81,9 @@ redraw_window:
         MGTK_CALL MGTK::SetPort, setport_params
         lda     getwinport_params_window_id
         cmp     #kDAWindowId
-        bne     :+
-        jmp     DrawWindow
+        jeq     DrawWindow
 
-:       rts
+        rts
 
 ;;; ============================================================
 ;;; Param Blocks

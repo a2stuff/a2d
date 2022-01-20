@@ -454,11 +454,10 @@ reserved:       .byte   0
         ;; which part of the window?
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        bne     :+
-        jmp     OnCloseClick
+        jeq     OnCloseClick
 
         ;; title and resize clicks need mouse location
-:       ldx     event_params::mousex
+        ldx     event_params::mousex
         stx     growwindow_params::mousex
         stx     findcontrol_params::mousex
         ldx     event_params::mousex+1
@@ -524,10 +523,9 @@ no_mod:
         lda     event_params::key
 
         cmp     #CHAR_ESCAPE
-        bne     :+
-        jmp     DoClose
+        jeq     DoClose
 
-:       cmp     #' '
+        cmp     #' '
         bne     :+
         jsr     ToggleMode
         jmp     InputLoop
@@ -1012,16 +1010,17 @@ more:   ldy     drawtext_params::textlen
         beq     FinishTextRun
         cmp     #' '
         bne     :+
+
         sty     L0F9B
         pha
         lda     L0945
         sta     L0946
         pla
-:       cmp     #CHAR_TAB
-        bne     :+
-        jmp     HandleTab
 
-:       jsr     GetCharWidth
+:       cmp     #CHAR_TAB
+        jeq     HandleTab
+
+        jsr     GetCharWidth
         clc
         adc     run_width
         sta     run_width

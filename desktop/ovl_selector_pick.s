@@ -150,10 +150,9 @@ dialog_loop:
         bmi     dialog_loop
         lda     selector_action
         cmp     #SelectorAction::edit
-        bne     :+
-        jmp     DoEdit
+        jeq     DoEdit
 
-:       cmp     #SelectorAction::delete
+        cmp     #SelectorAction::delete
         bne     :+
         beq     DoDelete       ; always
 
@@ -600,9 +599,9 @@ xcoord: .byte   0
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        bne     :+
-        jmp     handle_button
-:       cmp     #MGTK::EventKind::key_down
+        jeq     handle_button
+
+        cmp     #MGTK::EventKind::key_down
         bne     EventLoop
         jmp     HandleKey
 
@@ -775,30 +774,24 @@ l5:     ldx     #0
 :       lda     event_params::key
 
         cmp     #CHAR_LEFT
-        bne     :+
-        jmp     HandleKeyLeft
+        jeq     HandleKeyLeft
 
-:       cmp     #CHAR_RIGHT
-        bne     :+
-        jmp     HandleKeyRight
+        cmp     #CHAR_RIGHT
+        jeq     HandleKeyRight
 
-:       cmp     #CHAR_RETURN
-        bne     :+
-        jmp     HandleKeyReturn
+        cmp     #CHAR_RETURN
+        jeq     HandleKeyReturn
 
-:       cmp     #CHAR_ESCAPE
-        bne     :+
-        jmp     HandleKeyEscape
+        cmp     #CHAR_ESCAPE
+        jeq     HandleKeyEscape
 
-:       cmp     #CHAR_DOWN
-        bne     :+
-        jmp     HandleKeyDown
+        cmp     #CHAR_DOWN
+        jeq     HandleKeyDown
 
-:       cmp     #CHAR_UP
-        bne     :+
-        jmp     HandleKeyUp
+        cmp     #CHAR_UP
+        jeq     HandleKeyUp
 
-:       return  #$FF
+        return  #$FF
 .endproc
 
 ;;; ============================================================
