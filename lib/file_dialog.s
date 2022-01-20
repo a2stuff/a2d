@@ -98,6 +98,7 @@ routine_table:  .addr   $7000, $7000, $7000
         copy    DEVCNT, device_num
 
         lda     #0
+        sta     file_dialog_res::type_down_buf
         sta     only_show_dirs_flag
         sta     prompt_ip_flag
 .if FD_EXTENDED
@@ -161,11 +162,13 @@ listbox_disabled_flag:  ; Set when the listbox is not active
 
 :       jsr     YieldLoop
         LIB_MGTK_CALL MGTK::GetEvent, event_params
+
         lda     event_params::kind
         cmp     #MGTK::EventKind::apple_key
         beq     is_btn
         cmp     #MGTK::EventKind::button_down
         bne     :+
+        copy    #0, file_dialog_res::type_down_buf
 is_btn: jsr     HandleButtonDown
         jmp     EventLoop
 
@@ -176,6 +179,8 @@ is_btn: jsr     HandleButtonDown
 
 :       jsr     CheckMouseMoved
         bcc     EventLoop
+
+        copy    #0, file_dialog_res::type_down_buf
 
         LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
@@ -809,6 +814,12 @@ l7:     .byte   0
         ;; With modifiers
         lda     event_params::key
 
+        bit     listbox_disabled_flag
+        bmi     :+
+        jsr     CheckTypeDown
+        jeq     exit
+:
+        lda     event_params::key
         cmp     #CHAR_TAB
         jeq     is_tab
 
@@ -830,17 +841,15 @@ not_arrow:
         cmp     #'0'
         bcc     :+
         cmp     #'9'+1
-        bcs     :+
+        bcs     jmp_exit
         jmp     key_meta_digit
-
-:       bit     listbox_disabled_flag
-        bmi     jmp_exit
-        jmp     CheckAlpha
 
         ;; --------------------------------------------------
         ;; No modifiers
 
 no_modifiers:
+        copy    #0, file_dialog_res::type_down_buf
+
         lda     event_params::key
 
         cmp     #CHAR_LEFT
@@ -1010,12 +1019,35 @@ l3:     ldx     num_file_names
 
 ;;; ============================================================
 
-.proc CheckAlpha
+.proc CheckTypeDown
         jsr     UpcaseChar
         cmp     #'A'
-        bcc     done
+        bcc     :+
         cmp     #'Z'+1
-        bcs     done
+        bcc     file_char
+
+:       ldx     file_dialog_res::type_down_buf
+        beq     not_file_char
+
+        cmp     #'.'
+        beq     file_char
+        cmp     #'0'
+        bcc     not_file_char
+        cmp     #'9'+1
+        bcc     file_char
+
+not_file_char:
+        return  #$FF
+
+file_char:
+        ldx     file_dialog_res::type_down_buf
+        cpx     #15
+        bne     :+
+        rts                     ; Z=1 to consume
+:
+        inx
+        stx     file_dialog_res::type_down_buf
+        sta     file_dialog_res::type_down_buf,x
 
         jsr     FindMatch
         bmi     done
@@ -1029,30 +1061,46 @@ l3:     ldx     num_file_names
 :       pla
         jmp     UpdateListSelection
 
-done:   rts
+done:   return  #0
 
 .proc FindMatch
-        sta     char
+        lda     num_file_names
+        bne     :+
+        return  #$FF
+:
         copy    #0, index
 
 loop:   lda     index
-        cmp     num_file_names
-        beq     fail
         jsr     SetPtrToNthFilename
-        ldy     #1
+
+        ldy     #0
         lda     ($06),y
+        sta     len
+
+        ldy     #1              ; compare strings (length >= 1)
+cloop:  lda     ($06),y
         jsr     UpcaseChar
-        cmp     char
+        cmp     file_dialog_res::type_down_buf,y
         bcc     next
-        bcs     found           ; always
+        beq     :+
+        bcs     found
+:
+        cpy     file_dialog_res::type_down_buf
+        beq     found
+
+        iny
+        cpy     len
+        bcc     cloop
+        beq     cloop
 
 next:   inc     index
-        jmp     loop
-
-fail:   dec     index           ; select last
-        ;; fall through
-
+        lda     index
+        cmp     num_file_names
+        bne     loop
+        dec     index
 found:  return  index
+
+len:    .byte   0
 .endproc
 
 ;;; Inputs: A = index

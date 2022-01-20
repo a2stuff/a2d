@@ -7,6 +7,11 @@
 
 .scope file_dialog_res
 
+;;; Buffer used when selecting filename by holding Apple key and typing name.
+;;; Length-prefixed string, initialized to 0 when the dialog is shown.
+type_down_buf:
+        .res    16, 0
+
         DEFINE_POINT pos_title, 0, 13
 
         DEFINE_RECT rect_selection, 0, 0, 125, 0

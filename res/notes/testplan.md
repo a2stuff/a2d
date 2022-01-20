@@ -452,19 +452,32 @@
 
 # File Picker
 
-* Repeat the following cases with DeskTop's File > Copy a File... and Selector's File > Run a File...:
-  * Browse to a directory containing multiple files. Press Apple+letter. Verify that if any filename starts with that letter, the first such file is selected (e.g. 'A' selects "Alpha"); if no filename starts with that letter then the alphabetically next file is selected (e.g. 'M' selects "November"), or the last file is selected if none (e.g. 'Z' selects "Whiskey").
-  * Browse to a directory containing one or more files starting with lowercase letters (AppleWorks or GS/OS). Verify the files appear with correct names. Press Apple+letter. Verify that the first file starting with that letter is selected.
-  * Browse to a directory containing one or more files with starting with mixed case (AppleWorks or GS/OS). Verify the filenames appear with correct case.
-  * Verify that the device order (via clicking Change Drive or pressing Tab) matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
-    * On a IIgs: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
-    * On a Platinum IIe: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
-  * Browse to a directory containing 8 files. Verify that the scrollbar is inactive.
-  * Browse to a directory containing 9 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
+This covers:
+
+* Selector: File > Run a File...
+* DeskTop: File > Copy a File...
+* DeskTop: File > Delete a File...
+* DeskTop: Shortcuts > Add a Shortcut...
+* DeskTop: Shortcuts > Edit a Shortcut...
+
+Test the following in all of the above, except where called out specifically:
+
+* Browse to a directory containing multiple files. Hold an Apple key and start typing a filename. Verify that a prefix-matching file or the subsequent file is selected, or the last file. For example, if the files "Alfa", "November" and "Whiskey" are present, typing "A" selects "Alfa", typing "AB" selects "Alfa", typing "AL" selects "Alfa", typing "ALFAA" selects "November", typing "B" selects "November", typing "Z" selects "Whiskey". Repeat including filenames with numbers and periods.
+* Browse to a directory containing multiple files. Hold an Apple key and start typing a filename. Move the mouse, or press a key without holding Apple. Hold an Apple key and start typing another filename. Verify that the matching is reset.
+* Browse to a directory containing no files. Hold an Apple key and start typing a filename. Verify nothing happens.
+* Browse to a directory containing one or more files starting with lowercase letters (AppleWorks or GS/OS). Verify the files appear with correct names. Press Apple+letter. Verify that the first file starting with that letter is selected.
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Press Apple+1 through Apple+5. Verify that the radio buttons on the right are selected.
+
+* Browse to a directory containing one or more files with starting with mixed case (AppleWorks or GS/OS). Verify the filenames appear with correct case.
+* Verify that the device order (via clicking Change Drive or pressing Tab) matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
+  * On a IIgs: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
+  * On a Platinum IIe: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
+* Browse to a directory containing 8 files. Verify that the scrollbar is inactive.
+* Browse to a directory containing 9 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
 
 * Launch DeskTop. File > Copy a File.... Enter text in the first field. Enter text in the second field. Click in the middle of the text in the first field. Verify that the IP is positioned near the click. Click in the middle of the text in the second field. Verify that the IP is positioned near the click.
 
-* Ensure the default drive has 10 or more files. Load DeskTop. File > Copy a File.... Verify that an active scrollbar appears in the file list. Click OK. Click Cancel. Verify that the scrollbar is scrolled to the top.
+* Ensure the default drive has 10 or more files. Verify that an active scrollbar appears in the file list. Click OK. Click Cancel. Verify that the scrollbar is scrolled to the top.
 
 * Launch DeskTop. Special > Format a Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy a File.... Verify that the file list is populated.
 
@@ -478,6 +491,6 @@
 * Launch DeskTop. File > Copy a File.... Enter text in the second field. Move the IP into the middle of the text. Click in the first field. Verify that the second field is not truncated.
 * Launch DeskTop. File > Copy a File.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
 
-* Create a directory, and in the directory create a file named "A.B" then a file named "A". Launch DeskTop. File > Copy a File.... Navigate to the directory. Verify "A" sorts before "A.B". Launch Selector. File > Run a Program. Navigate to the directory. Verify "A" sorts before "A.B".
+* Create a directory, and in the directory create a file named "A.B" then a file named "A". Browse to the directory. Verify "A" sorts before "A.B".
 
-* Launch DeskTop. File > Copy a File... Navigate to a directory with more than 9 files, and at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
+* Browse to a directory with more than 9 files, and at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
