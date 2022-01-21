@@ -26,7 +26,8 @@ loop:   dec16   counter
 
         lda     event_kind
         cmp     #MGTK::EventKind::no_event
-        beq     consume
+        beq     loop            ; nothing to consume
+
         cmp     #MGTK::EventKind::drag
         beq     consume
         cmp     #MGTK::EventKind::button_up

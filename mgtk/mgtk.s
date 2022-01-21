@@ -5198,10 +5198,9 @@ irq_entry:
 :       lda     #MGTK::EventKind::button_down
         bne     set_state
 
-up:     lda     #MGTK::EventKind::button_up
-        bit     mouse_status
-        bvs     set_state
-        lda     #MGTK::EventKind::no_event
+up:     bit     mouse_status
+        bvc     end
+        lda     #MGTK::EventKind::button_up
 
 set_state:
         sta     input::state

@@ -357,7 +357,7 @@ Parameters:
 
 * To enter Mouse Keys mode, hold down both the Open-Apple key and the Solid-Apple (Option) key and then press the Space key. A confirmation sound will play.
 * Move the mouse cursor using the arrow keys. Use the Solid-Apple (or Option) key as the mouse button.
-* To exit Mouse Keys mode, hold down both the Open-Apple key and the Solid-Apple (Option) key and then press the Space key. A confirmation sound will play.
+* To exit Mouse Keys mode, press Escape. A confirmation sound will play.
 
 
 ## Concepts
@@ -607,7 +607,9 @@ _DA specific:_
 No parameters.
 
 #### PeekEvent ($2C)
+Observe the next event in the queue, without removing it.
 
+`EventKind::no_event` signals that there was no event in the queue.
 
 Parameters:
 ```
