@@ -50,7 +50,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Double-clicking opens all selected folders/volumes. ([#363](https://github.com/a2stuff/a2d/issues/363))
 * Renaming volumes/folders doesn't close affected windows. ([#469](https://github.com/a2stuff/a2d/issues/469))
 * Keyboard-related changes:
-  * Holding **Solid-Apple** while double-clicking or using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
+  * Holding **Solid-Apple** while double-clicking or holding **Apple** while using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
   * Holding **Apple** while clicking a window's close box closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266))
   * Holding **Open-Apple** on while clicking a selected file deselects it. ([#359](https://github.com/a2stuff/a2d/issues/359))
   * Holding **Open-Apple** while dragging a selection box around files extends selection. ([#546](https://github.com/a2stuff/a2d/issues/546))
@@ -96,6 +96,8 @@ Project Page: https://github.com/a2stuff/a2d
   * Eyes that follow the mouse. ([#53](https://github.com/a2stuff/a2d/issues/53))
 * **Find Files**
   * Search a directory and descendants for filenames. Use ? and * as wildcards. ([#21](https://github.com/a2stuff/a2d/issues/21))
+* **Darkness** (optional)
+  * A debugging tool that paints the whole screen a dark pattern.
 * **Screen Savers**
   * **Flying Toasters**
     * Homage to the classic After Dark screen saver by Jack Eastman. ([#27](https://github.com/a2stuff/a2d/issues/27))
@@ -194,6 +196,7 @@ from the **Apple** menu.
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
   * Calculator: Doesn't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
   * Sort Directory: Don't need to click before sorting. ([#17](https://github.com/a2stuff/a2d/issues/17))
+  * Prevent files in list from disappearing in certain cases. ([#487](https://github.com/a2stuff/a2d/issues/487))
 * Hardware/Emulator Specific:
   * IIc Plus: Doesn't spin slot 5 drives constantly. (Use **Special > Check Drive**) ([#25](https://github.com/a2stuff/a2d/issues/25))
   * Laser 128: Avoid hangs checking SmartPort status. (Use **Special > Check Drive**) ([#138](https://github.com/a2stuff/a2d/issues/138))

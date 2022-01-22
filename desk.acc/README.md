@@ -1,21 +1,20 @@
 # Desk Accessories
 
-Disassembly of the original desk accessories:
+Original desk accessories from MouseDesk:
 
-* [Calculator](calculator.s) - complete!
-* [Puzzle](puzzle.s) - complete!
-* [Show Text File](show.text.file.s) - complete!
-* [Sort Directory](sort.directory.s) - complete!
-
-New desk accessories:
-
+* [Calculator](calculator.s)
+  * A basic four function calculator. Original DA from MouseDesk, with fixes.
+* [Puzzle](puzzle.s)
+  * Sliding tile puzzle. Original DA from MouseDesk, with fixes.
+* [Sort Directory](sort.directory.s)
+  * Reorders the files in the active window by file type or selection. Original DA from MouseDesk, with fixes.
 * [Date and Time](date.and.time.s)
-  * Based on the original Date DA, expanded to include setting the time as well.
+  * Based on the original Date DA from MouseDesk, expanded to include setting the time as well.
 * [This Apple](this.apple.s)
   * Gives details about the computer, expanded memory, and what's in each slot.
 * [Control Panel](control.panel.s)
   * Modify DeskTop settings: desktop pattern, double-click speed, mouse tracking speed, and insertion point blink speed.
-* [Startup Options](startup.s)
+* [Startup](startup.s)
   * Modify startup options, including launching the selector or copying to RAMCard.
 * [Joystick](joystick.s)
   * Shows joystick calibration.
@@ -37,10 +36,6 @@ New desk accessories:
   * Visual distractions.
 * [Find Files](find.files.s)
   * Search a directory and descendants for filenames. Use ? and * as wildcards.
-* [Show Duet File](show.duet.file.s)
-  * Play Electric Duet music files.
-* [Show Font File](show.font.file.s)
-  * Preview MGTK font files.
 * [Darkness](darkness.s)
   * A debugging tool that paints the whole screen a dark pattern.
 
@@ -56,7 +51,7 @@ These DAs will be invoked automatically for certain file types when
 File > Open is run or the files are double-clicked.
 
 * [Show Text File](show.text.file.s)
-   * Handles text files (TXT $04)
+   * Handles text files (TXT $04). Original DA from MouseDesk, with fixes.
 * [Show Image File](show.image.file.s)
    * Handles image files (FOT $08 and some BIN $06)
    * Supports Hires and Double Hires images, including compressed images
