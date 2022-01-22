@@ -179,10 +179,14 @@ done:   jsr     file_dialog::RedrawInput
         param_call file_dialog::VerifyValidPath, path_buf0
         beq     :+
 err:    lda     #ERR_INVALID_PATHNAME
-        jsr     JUMP_TABLE_SHOW_ALERT
-        rts
-
-:       param_call file_dialog::VerifyValidPath, path_buf1
+        jmp     JUMP_TABLE_SHOW_ALERT
+:
+        jsr     ComparePathBufs
+        bne     :+
+        lda     #ERR_DUPLICATE_FILENAME
+        jmp     JUMP_TABLE_SHOW_ALERT
+:
+        param_call file_dialog::VerifyValidPath, path_buf1
         bne     err
         MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
@@ -275,6 +279,30 @@ L7289:  sta     file_dialog_res::selected_index
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
 L7295:  rts
+.endproc
+
+;;; ============================================================
+
+.proc ComparePathBufs
+        ;; Compare lengths
+        lda     path_buf0
+        cmp     path_buf1
+        bne     done
+
+        ;; Compare characters, case-insensitive
+        tax
+:       lda     path_buf0,x
+        jsr     main::UpcaseChar
+        sta     @char
+        lda     path_buf1,x
+        jsr     main::UpcaseChar
+        @char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     done
+        dex
+        bne     :-
+
+done:   rts
 .endproc
 
 ;;; ============================================================
