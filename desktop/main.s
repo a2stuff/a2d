@@ -11943,6 +11943,25 @@ wloop:  ldx     found_windows_count
         jsr     GetWindowPath
         stax    dst
 
+        jsr     UpdateTargetPath
+
+        dec     found_windows_count
+        bpl     wloop
+    END_IF
+
+        rts
+.endproc
+
+;;; ============================================================
+;;; Replace `src_path_buf` as the prefix of path at $06 with `dst_path_buf`.
+;;; Assert: `src_path_buf` is a prefix of the path at $06!
+;;; Inputs: $06 = path to update, `src_path_buf` and `dst_path_buf`,
+;;; Outputs: Path at $06 updated.
+;;; Modifies `path_buf1` and `path_buf2`
+
+.proc UpdateTargetPath
+        dst := $06
+
         ;; Set `path_buf1` to the old path (should be `src_path_buf` + suffix)
         ldy     #0
         lda     (dst),y
@@ -11977,12 +11996,54 @@ wloop:  ldx     found_windows_count
         dey
         bpl     :-
 
-        dec     found_windows_count
-        bpl     wloop
-    END_IF
-
         rts
 .endproc
+
+;;; ============================================================
+;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
+;;; update the target path if needed.
+;;;
+;;; Inputs: $06 = pointer to path to update
+;;; Outputs: Path at $06 updated, Z=1 if updated, Z=0 if no change
+
+.if 0
+.proc MaybeUpdateTargetPath
+        ptr := $06
+
+        ;; Is `src_path_buf` a prefix?
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+
+        cmp     src_path_buf
+        bcc     no_change       ; too short, can't be a prefix
+        bne     :+              ; same length, maybe a prefix
+        tay                     ; longer, but still need to ensure that
+        iny                     ; the next path char is a '/'
+        lda     (ptr),y
+        cmp     #'/'
+        bne     no_change
+:
+        ;; Compare strings
+:       ldy     len
+        lda     (ptr),y
+        cmp     src_path_buf,y
+        bne     no_change
+        dey
+        bne     :-
+
+        ;; It's a prefix! Do the replacement
+        jsr     UpdateTargetPath
+
+        return  #0
+
+no_change:
+        return  #$FF
+
+len:    .byte   0
+
+.endproc
+.endif
 
 ;;; ============================================================
 
