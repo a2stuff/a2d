@@ -101,7 +101,7 @@
 .define res_string_errmsg_27 "Errore I/O."
 .define res_string_errmsg_28 "Periferica non collegata."
 .define res_string_errmsg_2B "Protetto in scrittura."
-.define res_string_errmsg_40 "Sintassi percorso errata."
+.define res_string_errmsg_40 "Il percorso } troppo lungo o non valido."
 .define res_string_errmsg_44 "Percorso non esistente."
 .define res_string_errmsg_45 "Volume non collegato."
 .define res_string_errmsg_46 "File non trovato."

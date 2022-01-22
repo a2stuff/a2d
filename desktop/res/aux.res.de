@@ -101,7 +101,7 @@
 .define res_string_errmsg_27 "E/A Fehler."
 .define res_string_errmsg_28 "Kein Ger{t angeschlossen."
 .define res_string_errmsg_2B "Schreibgesch}tzt."
-.define res_string_errmsg_40 "Ung}ltiger Pfadname."
+.define res_string_errmsg_40 "Der Pfadname ist zu lang oder ung}ltig."
 .define res_string_errmsg_44 "Pfad existiert nicht."
 .define res_string_errmsg_45 "Volumen nicht gefunden."
 .define res_string_errmsg_46 "Datei nicht gefunden."

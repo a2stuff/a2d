@@ -101,7 +101,7 @@
 .define res_string_errmsg_27 "I/O Error."
 .define res_string_errmsg_28 "No device connected."
 .define res_string_errmsg_2B "The disk is write protected."
-.define res_string_errmsg_40 "The syntax of the pathname is invalid."
+.define res_string_errmsg_40 "The pathname is too long or not valid."
 .define res_string_errmsg_44 "Part of the pathname doesn't exist."
 .define res_string_errmsg_45 "The volume cannot be found."
 .define res_string_errmsg_46 "The file cannot be found."

@@ -101,7 +101,7 @@
 .define res_string_errmsg_27 "Error de E/S."
 .define res_string_errmsg_28 "No hay dispositivo conectado."
 .define res_string_errmsg_2B "El disco est\x10 protegido contra escritura."
-.define res_string_errmsg_40 "La sintaxis de la localizaci\x13n es inv\x10lida."
+.define res_string_errmsg_40 "La ruta es demasiado larga o no es v\x10lida."
 .define res_string_errmsg_44 "Parte de la localizaci\x13n no existe."
 .define res_string_errmsg_45 "El Volumen no se encuentra."
 .define res_string_errmsg_46 "El archivo no se encuentra."

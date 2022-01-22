@@ -101,7 +101,7 @@
 .define res_string_errmsg_27 "Erreur d'E/S."
 .define res_string_errmsg_28 "Pas d'unit{ connect{e."
 .define res_string_errmsg_2B "Disque prot{g{ en {criture."
-.define res_string_errmsg_40 "Nom d'acc}s incorrect."
+.define res_string_errmsg_40 "Le nom d'acc}s est trop long ou n'est pas valide."
 .define res_string_errmsg_44 "Nom d'acc}s inconnu."
 .define res_string_errmsg_45 "Volume inconnu."
 .define res_string_errmsg_46 "Fichier inconnu."
