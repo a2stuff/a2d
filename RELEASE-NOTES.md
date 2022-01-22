@@ -15,6 +15,10 @@ Project Page: https://github.com/a2stuff/a2d
   * Spanish
   * Portuguese
   * German
+* MouseKeys mode simplified: ([#185](https://github.com/a2stuff/a2d/issues/185))
+  * OA+SA+Space to enter MouseKeys mode. A sound will play.
+  * SA acts as mouse button.
+  * Escape to exit MouseKeys mode. A sound will play.
 
 ### DeskTop Enhancements
 
@@ -51,8 +55,8 @@ Project Page: https://github.com/a2stuff/a2d
 * Renaming volumes/folders doesn't close affected windows. ([#469](https://github.com/a2stuff/a2d/issues/469))
 * Show appropriate error when copying a file onto itself. ([#630](https://github.com/a2stuff/a2d/issues/630))
 * Keyboard-related changes:
-  * Holding **Solid-Apple** while double-clicking or holding **Apple** while using **File > Open** closes parent folder. ([#9](https://github.com/a2stuff/a2d/issues/9))
-  * Holding **Apple** while clicking a window's close box closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266))
+  * Holding **Solid-Apple** while double-clicking, or holding **Apple** while using **File > Open**, or **Open-Apple+Solid-Apple+O** opens the selected items then closes parent window. ([#9](https://github.com/a2stuff/a2d/issues/9), [#625](https://github.com/a2stuff/a2d/issues/625))
+  * Holding **Apple** while clicking a window's close box, or pressing **Open-Apple+Solid-Apple+W**  closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266), [#626](https://github.com/a2stuff/a2d/issues/626))
   * Holding **Open-Apple** on while clicking a selected file deselects it. ([#359](https://github.com/a2stuff/a2d/issues/359))
   * Holding **Open-Apple** while dragging a selection box around files extends selection. ([#546](https://github.com/a2stuff/a2d/issues/546))
   * **Shift** key works as modifier to extend selection, on IIgs and systems with shift key mod. ([#340](https://github.com/a2stuff/a2d/issues/340))
@@ -64,7 +68,6 @@ Project Page: https://github.com/a2stuff/a2d
   * **Apple-Up** opens parent window or selects volume icon. ([#254](https://github.com/a2stuff/a2d/issues/254), [#314](https://github.com/a2stuff/a2d/issues/314))
   * **Return** is a shortcut for **File > Rename...**. ([#275](https://github.com/a2stuff/a2d/issues/275))
   * Arrow keys change selected icon. ([#274](https://github.com/a2stuff/a2d/issues/274))
-
 ### Desk Accessory Enhancements
 
 * Up to 12 desk accessories are shown in the **Apple** menu (was 8). ([#90](https://github.com/a2stuff/a2d/issues/90))

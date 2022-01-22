@@ -9490,13 +9490,12 @@ stashed_addr:  .addr     0
         bit     mouse_status
         bmi     ret             ; branch away if button is down
 
-        ;; Wait until either both Apple keys are released or
-        ;; a key is hit.
-:       jsr     ComputeModifiers
+        ;; Check for OA+SA+Space
+        jsr     ComputeModifiers
         cmp     #3
         bne     ret
         lda     KBD
-        bpl     :-
+        bpl     ret
         cmp     #' '|$80        ; space?
         bne     ret             ; no, ignore
 

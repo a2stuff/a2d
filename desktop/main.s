@@ -417,11 +417,18 @@ HandleKeydown:
 
 modifiers:
         cmp     #3              ; both Open-Apple + Solid-Apple ?
-        bne     :+              ; nope
+    IF_EQ
+        ;; Double-modifier shortcuts
+        lda     event_params::key
+        cmp     #'O'
+        jeq     CmdOpenThenCloseParent
+        cmp     #'W'
+        jeq     CmdCloseAll
         rts
+    END_IF
 
         ;; Non-menu keys
-:       lda     event_params::key
+        lda     event_params::key
         jsr     UpcaseChar
         cmp     #CHAR_DOWN      ; Apple-Down (Open)
         jeq     CmdOpenFromKeyboard
@@ -1876,6 +1883,17 @@ running_da_flag:
 :
         jmp     common
 
+
+        ;; --------------------------------------------------
+        ;; Entry point from OA+SA+O
+
+open_then_close_parent:
+        lda     selected_icon_count
+        bne     :+
+        rts
+:       copy    selected_window_id, window_id_to_close
+        jmp     common
+
         ;; --------------------------------------------------
         ;; Entry point from Apple+Down
 
@@ -2000,6 +2018,7 @@ dir_flag:
 window_id_to_close:
         .byte   0
 .endproc
+CmdOpenThenCloseParent := CmdOpen::open_then_close_parent
 CmdOpenFromDoubleClick := CmdOpen::from_double_click
 CmdOpenFromKeyboard := CmdOpen::from_keyboard
 

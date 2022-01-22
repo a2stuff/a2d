@@ -60,6 +60,7 @@
 * Open two windows. Click the close box on the active window. Verify that only the active window closes.
 * Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
   * Open two windows. Hold modifier and click the close box on the active window. Verify that all windows close.
+* Open two windows. Press Open-Apple+Solid-Apple+W. Verify that all windows close.
 
 * Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that subdirectories under DESK.ACC are copied to /RAM/DESKTOP/DESK.ACC.
 * Run DeskTop on a system with Slinky Ramdisk. Verify that subdirectories under DESK.ACC are copied to /RAM5/DESKTOP/DESK.ACC (or appropriate volume path).
@@ -116,8 +117,10 @@
 * Launch DeskTop. Select two volume icons. Double-click one of the volume icons. Verify that two windows open.
 * Launch DeskTop. Open a window. Select two folder icons. Double-click one of the folder icons. Verify that two windows open.
 * Launch DeskTop. Open a window. Hold Solid-Apple and double-click a folder icon. Verify that the folder opens, and that the original window closes.
-* Launch DeskTop. Open a window. Hold Solid-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
-* Launch DeskTop. Open a window. Hold Open-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Open a window. Select a folder icon. Hold Solid-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Open a window. Select a folder icon. Hold Open-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Open a window. Select a folder icon. Press Open-Apple+Solid-Apple+O. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+O. Verify that nothing happens.
 
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Double-click it. Verify that nothing happens.
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Hold Solid-Apple and double-click it. Verify that nothing happens.
