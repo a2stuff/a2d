@@ -111,6 +111,7 @@
 .define res_string_errmsg_4E "The file is locked."
 .define res_string_errmsg_52 "This is not a ProDOS disk."
 .define res_string_errmsg_57 "There is another volume with that name on the desktop."
+.define res_string_errmsg_F6 "Unsupported file type."
 .define res_string_errmsg_F7 "There are no windows open."
 .define res_string_errmsg_F8 "An item can't be moved or copied into itself."
 .define res_string_errmsg_F9 "There are 2 volumes with the same name."

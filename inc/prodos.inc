@@ -128,7 +128,11 @@ ACCESS_LOCKED   = %00100001
 ;;; Storage Types
 ;;; ============================================================
 
-ST_STANDARD_FILE        = $01
+ST_SEEDLING_FILE        = $01
+ST_SAPLING_FILE         = $02
+ST_TREE_FILE            = $03
+ST_PASCAL_AREA          = $04   ; not supported by DeskTop
+ST_FORKED_FILE          = $05   ; not supported by DeskTop
 ST_LINKED_DIRECTORY     = $0D
 ST_VOLUME_DIRECTORY     = $0F
 

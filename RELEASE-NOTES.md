@@ -54,6 +54,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Double-clicking opens all selected folders/volumes. ([#363](https://github.com/a2stuff/a2d/issues/363))
 * Renaming volumes/folders doesn't close affected windows. ([#469](https://github.com/a2stuff/a2d/issues/469))
 * Show appropriate error when copying a file onto itself. ([#630](https://github.com/a2stuff/a2d/issues/630))
+* Show appropriate error when a non-ProDOS-8 storage type (e.g. GS/OS forked file) is encountered. ([#631](https://github.com/a2stuff/a2d/issues/631))
 * Keyboard-related changes:
   * Holding **Solid-Apple** while double-clicking, or holding **Apple** while using **File > Open**, or **Open-Apple+Solid-Apple+O** opens the selected items then closes parent window. ([#9](https://github.com/a2stuff/a2d/issues/9), [#625](https://github.com/a2stuff/a2d/issues/625))
   * Holding **Apple** while clicking a window's close box, or pressing **Open-Apple+Solid-Apple+W**  closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266), [#626](https://github.com/a2stuff/a2d/issues/626))

@@ -3652,6 +3652,7 @@ err_4E:  PASCAL_STRING res_string_errmsg_4E
 err_52:  PASCAL_STRING res_string_errmsg_52
 err_57:  PASCAL_STRING res_string_errmsg_57
         ;; Below are internal (not ProDOS MLI) error codes.
+err_F6:  PASCAL_STRING res_string_errmsg_F6
 err_F7:  PASCAL_STRING res_string_errmsg_F7
 err_F8:  PASCAL_STRING res_string_errmsg_F8
 err_F9:  PASCAL_STRING res_string_errmsg_F9
@@ -3660,10 +3661,9 @@ err_FB:  PASCAL_STRING res_string_errmsg_FB
 err_FC:  PASCAL_STRING res_string_errmsg_FC
 err_FD:  PASCAL_STRING res_string_errmsg_FD
 err_FE:  PASCAL_STRING res_string_errmsg_FE
-err_FF:  PASCAL_STRING "This is a very long string it should wrap somewhere?"
 
         ;; number of alert messages
-        kNumAlerts = 22
+        kNumAlerts = 23
 
         ;; message number-to-index table
         ;; (look up by scan to determine index)
@@ -3676,7 +3676,7 @@ alert_table:
         .byte   ERR_DUPLICATE_VOLUME
 
         ;; Internal error codes:
-        .byte   kErrNoWindowsOpen
+        .byte   kErrFileTypeNotSupported, kErrNoWindowsOpen
         .byte   kErrMoveCopyIntoSelf
         .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
         .byte   kErrInsertSrcDisk, kErrInsertDstDisk, kErrBasicSysNotFound
@@ -3686,7 +3686,7 @@ alert_table:
 message_table:
         .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
         .addr   err_47,err_48,err_49,err_4E,err_52,err_57
-        .addr   err_F7,err_F8,err_F9,err_FA
+        .addr   err_F6, err_F7,err_F8,err_F9,err_FA
         .addr   err_FB,err_FC,err_FD,err_FE
         ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlerts
 
@@ -3706,6 +3706,7 @@ alert_options_table:
         .byte   AlertButtonOptions::Ok             ; ERR_NOT_PRODOS_VOLUME
         .byte   AlertButtonOptions::Ok             ; ERR_DUPLICATE_VOLUME
 
+        .byte   AlertButtonOptions::OkCancel       ; kErrFileTypeNotSupported
         .byte   AlertButtonOptions::Ok             ; kErrNoWindowsOpen
         .byte   AlertButtonOptions::Ok             ; kErrMoveCopyIntoSelf
         .byte   AlertButtonOptions::Ok             ; kErrDuplicateVolName

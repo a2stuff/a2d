@@ -149,6 +149,7 @@ kAlertResultOK          = 2
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors
 
+kErrFileTypeNotSupported = $F6
 kErrNoWindowsOpen       = $F7
 kErrMoveCopyIntoSelf    = $F8
 kErrDuplicateVolName    = $F9

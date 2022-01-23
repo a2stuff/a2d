@@ -372,6 +372,9 @@
   * Launch DeskTop. Verify that the Ram5 volume is shown with a RAMDisk icon.
   * Configure DeskTop to copy to RAMCard on startup, and restart. Verify it is copied to /RAM5.
 
+* Launch DeskTop. Try to copy files including a GS/OS forked file. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
+* Launch DeskTop. Try to delete files including a GS/OS forked file. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
+
 # Preview
 
 * Preview a text file; verify that up/down arrow keys scroll.

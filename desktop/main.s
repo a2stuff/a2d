@@ -12659,6 +12659,15 @@ get_src_info:
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
         beq     is_dir
+        cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
+    IF_GE
+        lda     #kErrFileTypeNotSupported
+        jsr     ShowAlert
+        cmp     #kAlertResultCancel
+        jeq     CloseFilesCancelDialog
+        jmp     failure
+    END_IF
+
         lda     #$00
         beq     store
 is_dir: lda     #$FF
@@ -13223,6 +13232,15 @@ count:  .word   0
         sta     storage_type
         cmp     #ST_LINKED_DIRECTORY
         beq     :+
+        cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
+    IF_GE
+        lda     #kErrFileTypeNotSupported
+        jsr     ShowAlert
+        cmp     #kAlertResultCancel
+        jeq     CloseFilesCancelDialog
+        jmp     done
+    END_IF
+
         lda     #0
         beq     store
 :       lda     #$FF
