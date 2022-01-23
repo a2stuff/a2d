@@ -12606,6 +12606,7 @@ for_run:
 :       sta     is_run_flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         jsr     CheckRecursion
+        jsr     CheckBadReplacement
         jsr     CopyPathsToSrcAndDstPaths
         bit     operation_flags
         bvc     @not_run
@@ -12620,17 +12621,7 @@ for_run:
         bne     :+
         jmp     CopyDir
 
-:       ldx     dst_path_buf
-        ldy     src_path_slash_index
-        dey
-:       iny
-        inx
-        lda     src_path_buf,y
-        sta     dst_path_buf,x
-        cpy     src_path_buf
-        bne     :-
-
-        stx     dst_path_buf
+:       jsr     AppendSrcPathLastSegmentToDstPath
         jmp     get_src_info
 
         ;; Append filename to dst_path_buf
@@ -12661,7 +12652,7 @@ get_src_info:
         beq     is_dir
         cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
     IF_GE
-        lda     #kErrFileTypeNotSupported
+        lda     #kErrUnsupportedFileType
         jsr     ShowAlert
         cmp     #kAlertResultCancel
         jeq     CloseFilesCancelDialog
@@ -13234,7 +13225,7 @@ count:  .word   0
         beq     :+
         cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
     IF_GE
-        lda     #kErrFileTypeNotSupported
+        lda     #kErrUnsupportedFileType
         jsr     ShowAlert
         cmp     #kAlertResultCancel
         jeq     CloseFilesCancelDialog
@@ -13507,16 +13498,7 @@ unlock_dialog_lifecycle:
 .proc LockProcessSelectedFile
         copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
         jsr     CopyPathsToSrcAndDstPaths
-        ldx     dst_path_buf
-        ldy     src_path_slash_index
-        dey
-LA123:  iny
-        inx
-        lda     src_path_buf,y
-        sta     dst_path_buf,x
-        cpy     src_path_buf
-        bne     LA123
-        stx     dst_path_buf
+        jsr     AppendSrcPathLastSegmentToDstPath
 
 @retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
@@ -13880,11 +13862,11 @@ found:  dex
 
         ;; Potentially self or a subfolder; compare strings.
 compare:
-        ldx     path_buf3
-:       lda     path_buf3,x
+        ldx     src
+:       lda     src,x
         jsr     UpcaseChar
         sta     @char
-        lda     path_buf4,x
+        lda     dst,x
         jsr     UpcaseChar
         @char := *+1
         cmp     #SELF_MODIFIED_BYTE
@@ -13894,6 +13876,63 @@ compare:
 
         ;; Self or subfolder; show a fatal error.
         lda     #kErrMoveCopyIntoSelf
+        jsr     ShowErrorAlert
+
+ok:     rts
+
+.endproc
+
+;;; ============================================================
+;;; Check for replacing an item with itself oa descendant.
+;;; `path_buf3` is source file, `path_buf4` is destination dir.
+;;; If so, show an error and terminate the operation.
+
+.proc CheckBadReplacement
+
+        ;; Examples:
+        ;; src: '/a/p'   dst: '/a' (replace with self)
+        ;; src: '/a/c/c' dst: '/a' (replace with item inside self)
+
+        ;; Set `src_path_buf`, `dst_path_buf` and `src_path_slash_index`
+        jsr     CopyPathsToSrcAndDstPaths
+        jsr     AppendSrcPathLastSegmentToDstPath
+
+        ;; Now:
+        ;; src: '/a/p'   dst: '/a/p' (replace with self)
+        ;; src: '/a/c/c' dst: '/a/c' (replace with item inside self)
+
+        ;; Check for dst being subset of src
+
+        src := src_path_buf
+        dst := dst_path_buf
+
+        ldx     dst             ; Compare string lengths. If the same, need
+        cpx     src             ; to compare strings. If `dst` > `src`
+        beq     compare         ; ('/a/b' vs. '/a'), then it's not a problem.
+        bcs     ok
+
+        ;; Assert: `dst` is shorter then `src`
+        inx                     ; See if `src` is possibly a subfolder
+        lda     src,x           ; ('/a/b/c' vs. '/a/b') or a sibling
+        cmp     #'/'            ; ('/a/bc' vs. /a/b').
+        bne     ok              ; At worst, a sibling - that's okay.
+
+        ;; Potentially self or a subfolder; compare strings.
+compare:
+        ldx     dst
+:       lda     dst,x
+        jsr     UpcaseChar
+        sta     @char
+        lda     src,x
+        jsr     UpcaseChar
+        @char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     ok
+        dex
+        bne     :-
+
+        ;; Self or subfolder; show a fatal error.
+        lda     #kErrBadReplacement
         jsr     ShowErrorAlert
 
 ok:     rts
@@ -13926,6 +13965,26 @@ loop:   iny
         sta     dst_path_buf,y
         dey
         bpl     :-
+        rts
+.endproc
+
+;;; ============================================================
+;;; Assuming CopyPathsToSrcAndDstPaths has been called, append
+;;; the last path segment of `src_path_buf` to `dst_path_buf`.
+;;; Assert: `src_path_slash_index` is set properly.
+
+.proc AppendSrcPathLastSegmentToDstPath
+        ldx     dst_path_buf
+        ldy     src_path_slash_index
+        dey
+:       iny
+        inx
+        lda     src_path_buf,y
+        sta     dst_path_buf,x
+        cpy     src_path_buf
+        bne     :-
+
+        stx     dst_path_buf
         rts
 .endproc
 

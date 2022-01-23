@@ -196,6 +196,10 @@
 * Load DeskTop. Create a folder e.g. /RAM/F. Try to copy the folder into itself using File > Copy a File. Verify that an error is shown.
 * Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to move it into itself by dragging. Verify that an error is shown.
 * Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to copy it into itself by dragging with an Apple key depressed. Verify that an error is shown.
+* Load DeskTop. Open a volume window. Drag a file from the volume window to the volume icon. Verify that an error is shown.
+* Load DeskTop. Create a folder, and a file within the folder with the same name as the folder (e.g. /RAM/F and /RAM/F/F). Try to copy the file over the folder using File > Copy a File.... Verify that an error is shown.
+* Load DeskTop. Create a folder, and a file within the folder with the same name as the folder (e.g. /RAM/F and /RAM/F/F). Try to copy the file over the folder using drag and drop. Verify that an error is shown.
+
 
 * Load DeskTop. Open a volume. Adjust the window size so that horizontal and vertical scrolling is required. Scroll to the bottom-right. Quit DeskTop, reload. Verify that the window size was restored correctly.
 
