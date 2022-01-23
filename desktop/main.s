@@ -11014,7 +11014,7 @@ common:
 ;;; Start the actual operation
 
 .proc BeginOperation
-        copy    #0, L97E4
+        copy    #0, do_op_flag
 
         jsr     PrepCallbacksForSizeOrCount
         bit     operation_flags
@@ -11074,8 +11074,9 @@ loop:   ldx     icon_count
         beq     next_icon
         jsr     GetIconPath
 
-        lda     L97E4
-        beq     L913D
+        lda     do_op_flag
+        beq     just_size_and_count
+
         bit     operation_flags
         bmi     @lock_or_size
         bit     delete_flag
@@ -11098,7 +11099,16 @@ loop:   ldx     icon_count
 @size:  jsr     SizeOrCountProcessSelectedFile
         jmp     next_icon
 
-L913D:  jsr     SizeOrCountProcessSelectedFile
+just_size_and_count:
+        ;; Just enumerate files...
+        bit     operation_flags
+        bmi     :+
+        bit     delete_flag
+        bmi     :+
+        ;; But if copying, validate the target.
+        jsr     CheckRecursion
+        jsr     CheckBadReplacement
+:       jsr     SizeOrCountProcessSelectedFile
 
 next_icon:
         inc     icon_count
@@ -11106,9 +11116,9 @@ next_icon:
         cpx     selected_icon_count
         bne     loop
 
-        lda     L97E4
+        lda     do_op_flag
         bne     finish
-        inc     L97E4
+        inc     do_op_flag
         bit     operation_flags
         bmi     @lock_or_size
         bit     delete_flag
@@ -12296,8 +12306,10 @@ DoNothing:   rts
 
 file_entry_buf:  .res    .sizeof(FileEntry), 0
 
-L97E4:  .byte   $00
 
+;;; 0 for count/size pass, non-zero for actual operation
+do_op_flag:
+        .byte   0
 
 .proc PushEntryCount
         ldx     entry_count_stack_index
@@ -12605,8 +12617,6 @@ for_run:
 
 :       sta     is_run_flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
-        jsr     CheckRecursion
-        jsr     CheckBadReplacement
         jsr     CopyPathsToSrcAndDstPaths
         bit     operation_flags
         bvc     @not_run
