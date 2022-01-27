@@ -1422,7 +1422,7 @@ slash_index:
         copy16  #$800, $06
         copy16  #$840, $08
 
-        jsr     CopyPathsAndSplitName
+        jsr     CopyPathsFromPtrsToBufsAndSplitName
         rts
 .endproc
 
@@ -1723,7 +1723,7 @@ running_da_flag:
         ;; --------------------------------------------------
         ;; Try the copy
 
-        jsr     CopyPathsAndSplitName
+        jsr     CopyPathsFromPtrsToBufsAndSplitName
 
         jsr     JTCopyFile
         bpl     :+
@@ -1753,7 +1753,7 @@ running_da_flag:
 ;;; Copy string at ($6) to `path_buf3`, string at ($8) to `path_buf4`,
 ;;; split filename off `path_buf4` and store in `filename_buf`
 
-.proc CopyPathsAndSplitName
+.proc CopyPathsFromPtrsToBufsAndSplitName
 
         ;; Copy string at $6 to `path_buf3`
         ldy     #0
@@ -12217,7 +12217,7 @@ no_match:
 
         copy16  #src_path_buf, $06
         copy16  #dst_path_buf, $08
-        jsr     CopyPathsAndSplitName
+        jsr     CopyPathsFromPtrsToBufsAndSplitName
         jsr     JTCopyFile
         bmi     :+
         lda     #$80
@@ -12617,7 +12617,7 @@ for_run:
 
 :       sta     is_run_flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
-        jsr     CopyPathsToSrcAndDstPaths
+        jsr     CopyPathsFromBufsToSrcAndDst
         bit     operation_flags
         bvc     @not_run
         jsr     CheckVolBlocksFree           ; dst is a volume path (RAM Card)
@@ -13231,7 +13231,7 @@ count:  .word   0
 
 .proc DeleteProcessSelectedFile
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
-        jsr     CopyPathsToSrcAndDstPaths
+        jsr     CopyPathsFromBufsToSrcAndDst
 
 @retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
@@ -13529,7 +13529,7 @@ unlock_dialog_lifecycle:
 
 .proc LockProcessSelectedFile
         copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
-        jsr     CopyPathsToSrcAndDstPaths
+        jsr     CopyPathsFromBufsToSrcAndDst
         jsr     AppendSrcPathLastSegmentToDstPath
 
 @retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
@@ -13692,7 +13692,7 @@ callbacks_for_size_or_count:
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
 .proc SizeOrCountProcessSelectedFile
-        jsr     CopyPathsToSrcAndDstPaths
+        jsr     CopyPathsFromBufsToSrcAndDst
 @retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     ShowErrorAlert
@@ -13926,7 +13926,7 @@ ok:     rts
         ;; src: '/a/c/c' dst: '/a' (replace with item inside self)
 
         ;; Set `src_path_buf`, `dst_path_buf` and `src_path_slash_index`
-        jsr     CopyPathsToSrcAndDstPaths
+        jsr     CopyPathsFromBufsToSrcAndDst
         jsr     AppendSrcPathLastSegmentToDstPath
 
         ;; Now:
@@ -13975,7 +13975,7 @@ ok:     rts
 ;;; Copy `path_buf3` to `src_path_buf`, `path_buf4` to `dst_path_buf`
 ;;; and note last '/' in src.
 
-.proc CopyPathsToSrcAndDstPaths
+.proc CopyPathsFromBufsToSrcAndDst
         ldy     #0
         sty     src_path_slash_index
         dey
@@ -14001,7 +14001,7 @@ loop:   iny
 .endproc
 
 ;;; ============================================================
-;;; Assuming CopyPathsToSrcAndDstPaths has been called, append
+;;; Assuming CopyPathsFromBufsToSrcAndDst has been called, append
 ;;; the last path segment of `src_path_buf` to `dst_path_buf`.
 ;;; Assert: `src_path_slash_index` is set properly.
 
