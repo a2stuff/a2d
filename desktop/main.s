@@ -12831,8 +12831,18 @@ regular_file:
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
+:
+        lda     src_file_info_params::storage_type
+        cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
+    IF_GE
+        lda     #kErrUnsupportedFileType
+        jsr     ShowAlert
+        cmp     #kAlertResultCancel
+        jeq     CloseFilesCancelDialog
+        jmp     skip
+    END_IF
 
-:       jsr     CheckSpaceAndShowPrompt
+        jsr     CheckSpaceAndShowPrompt
         bcc     :+
         jmp     CloseFilesCancelDialog
 
@@ -12842,7 +12852,7 @@ regular_file:
         jsr     AppendToSrcPath
         jsr     DoFileCopy
         jsr     MaybeFinishFileMove
-        jsr     RemoveSrcPathSegment
+skip:   jsr     RemoveSrcPathSegment
 :       jsr     RemoveDstPathSegment
 done:   rts
 .endproc
@@ -13273,6 +13283,10 @@ do_destroy:
 
 retry:  MLI_RELAY_CALL DESTROY, destroy_params
         beq     done
+
+        ;; Failed, try to unlock.
+        ;; TODO: If it's a directory, this could be because it's not empty,
+        ;; e.g. if it contained files that could not be deleted.
         cmp     #ERR_ACCESS_ERROR
         bne     error
         bit     all_flag
@@ -13341,6 +13355,14 @@ done:   rts
 :       lda     src_file_info_params::storage_type
         cmp     #ST_LINKED_DIRECTORY
         beq     next_file
+        cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
+    IF_GE
+        lda     #kErrUnsupportedFileType
+        jsr     ShowAlert
+        cmp     #kAlertResultCancel
+        jeq     CloseFilesCancelDialog
+        jmp     next_file
+    END_IF
 
 loop:   MLI_RELAY_CALL DESTROY, destroy_params
         beq     next_file
