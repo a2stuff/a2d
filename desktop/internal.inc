@@ -92,6 +92,12 @@ kShortcutNo       = res_char_button_no_shortcut
 kShortcutTryAgain = res_char_button_try_again_shortcut
 kShortcutAll      = res_char_button_all_shortcut
 
+;;; ============================================================
+;;; Operations
+
+kOperationSucceeded     = 0
+kOperationCanceled      = 1
+kOperationFailed        = $FF
 
 ;;; ============================================================
 ;;; Memory Areas

@@ -1733,9 +1733,7 @@ running_da_flag:
         ;; Copy
         jsr     CopyPathsFromPtrsToBufsAndSplitName
         jsr     JTCopyFile
-        bpl     :+
-        rts
-:
+        ;; result is ignored; update regardless
 
         ;; --------------------------------------------------
         ;; Update windows with results
@@ -1868,7 +1866,8 @@ running_da_flag:
         bpl     :-
 
         jsr     JTDeleteFile
-        bpl     :+
+        cmp     #kOperationCanceled
+        bne     :+
         rts
 :
 
@@ -4256,8 +4255,9 @@ check_double_click:
 process_drop:
         jsr     JTDrop
 
-        ;; (1/4) Failed?
-        cmp     #$FF
+        ;; (1/4) Canceled?
+        cmp     #kOperationCanceled
+        ;; TODO: Refresh source/dest if partial success
         jeq     done_content_click ; restore from `HandleClientClick`
 
         ;; Was a move?
@@ -5461,8 +5461,8 @@ check_double_click:
         ;; NOTE: If drop target is trash, `JTDrop` relays to
         ;; `CmdEject` and pops the return address.
 
-        ;; (1/4) Failed?
-        cmp     #$FF
+        ;; (1/4) Canceled?
+        cmp     #kOperationCanceled
         bne     :+
         rts
 
@@ -10915,7 +10915,7 @@ DoCopyToRAM2:
         ;; fall through
 
 .proc FinishOperation
-        return  #0
+        return  #kOperationSucceeded
 .endproc
 
 DoDeleteFile:
@@ -13229,7 +13229,8 @@ count:  .word   0
         copy    #DeleteDialogLifecycle::confirm, delete_dialog_params::phase
         jsr     RunDeleteDialogProc
         beq     :+
-        jmp     CloseFilesCancelDialog
+        lda     #kOperationCanceled
+        jmp     CloseFilesCancelDialogWithResult
 :       rts
 .endproc
 
@@ -14042,16 +14043,23 @@ loop:   iny
 ;;; Closes dialog, closes all open files, and restores stack.
 
 .proc CloseFilesCancelDialog
+        lda     #kOperationFailed
+ep2:    sta     @result
+
         jsr     done_dialog_phase1
 
         MLI_RELAY_CALL CLOSE, close_params
 
         ldx     stack_stash     ; restore stack, in case recursion was aborted
         txs
-        return  #$FF
+
+        @result := *+1
+        lda     #SELF_MODIFIED_BYTE
+        rts
 
         DEFINE_CLOSE_PARAMS close_params
 .endproc
+CloseFilesCancelDialogWithResult := CloseFilesCancelDialog::ep2
 
 ;;; ============================================================
 ;;; Move or Copy? Compare src/dst paths, same vol = move.
