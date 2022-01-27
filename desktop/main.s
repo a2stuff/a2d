@@ -12187,26 +12187,14 @@ success:
         stx     dst_path_buf
 
         ;; --------------------------------------------------
-        ;; Check for unchanged name
+        ;; Check for unchanged/duplicate name
 
-        ldx     src_path_buf
-        cpx     dst_path_buf
-        bne     no_match
-:       lda     src_path_buf,x
-        jsr     UpcaseChar
-        sta     @char
-        lda     dst_path_buf,x
-        jsr     UpcaseChar
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     no_match
-        dex
-        bne     :-
-
+        MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
+    IF_ZERO
         lda     #ERR_DUPLICATE_FILENAME
         jsr     ShowAlert
         jmp     retry
-no_match:
+    END_IF
 
         ;; Close the dialog
         lda     #DuplicateDialogState::close
