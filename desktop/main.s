@@ -1723,8 +1723,15 @@ running_da_flag:
         ;; --------------------------------------------------
         ;; Try the copy
 
-        jsr     CopyPathsFromPtrsToBufsAndSplitName
+        ;; Validate
+        jsr     CopyPathsFromPtrsToSrcAndDst
+        jsr     CheckRecursion
+        jne     ShowAlert
+        jsr     CheckBadReplacement
+        jne     ShowAlert
 
+        ;; Copy
+        jsr     CopyPathsFromPtrsToBufsAndSplitName
         jsr     JTCopyFile
         bpl     :+
         rts
@@ -1747,6 +1754,32 @@ running_da_flag:
         jmp     SelectAndRefreshWindowOrClose
 :       rts
 
+.endproc
+
+;;; ============================================================
+;;; Copy string at ($6) to `src_path_buf`, string at ($8) to `dst_path_path`.
+
+.proc CopyPathsFromPtrsToSrcAndDst
+        src := $06
+        dst := $08
+
+        ldy     #0
+        lda     (src),y
+        tay
+:       lda     (src),y
+        sta     src_path_buf,y
+        dey
+        bpl     :-
+
+        ldy     #0
+        lda     (dst),y
+        tay
+:       lda     (dst),y
+        sta     dst_path_buf,y
+        dey
+        bpl     :-
+
+        rts
 .endproc
 
 ;;; ============================================================
@@ -10866,6 +10899,7 @@ DoCopyFile:
         copy    #0, move_flag
         tsx
         stx     stack_stash
+
         jsr     PrepCallbacksForSizeOrCount
         jsr     DoCopyDialogPhase
         jsr     SizeOrCountProcessSelectedFile
@@ -11105,9 +11139,15 @@ just_size_and_count:
         bmi     :+
         bit     delete_flag
         bmi     :+
+
         ;; But if copying, validate the target.
+        jsr     CopyPathsFromBufsToSrcAndDst
         jsr     CheckRecursion
+        jne     ShowErrorAlert
+        jsr     AppendSrcPathLastSegmentToDstPath
         jsr     CheckBadReplacement
+        jne     ShowErrorAlert
+
 :       jsr     SizeOrCountProcessSelectedFile
 
 next_icon:
@@ -13862,12 +13902,12 @@ found:  dex
 .endproc
 
 ;;; ============================================================
-;;; Check if `path_buf3` (src) is inside `path_buf4` (dst); if so,
-;;; show an error and terminate the operation.
+;;; Check if `src_path_buf` is inside `dst_path_buf`.
+;;; Output: A=0 if ok, A=err code otherwise.
 
 .proc CheckRecursion
-        src := path_buf3
-        dst := path_buf4
+        src := src_path_buf
+        dst := dst_path_buf
 
         ldx     src             ; Compare string lengths. If the same, need
         cpx     dst             ; to compare strings. If `src` > `dst`
@@ -13895,29 +13935,20 @@ compare:
         bne     :-
 
         ;; Self or subfolder; show a fatal error.
-        lda     #kErrMoveCopyIntoSelf
-        jsr     ShowErrorAlert
+        return  #kErrMoveCopyIntoSelf
 
-ok:     rts
+ok:     return  #0
 
 .endproc
 
 ;;; ============================================================
-;;; Check for replacing an item with itself oa descendant.
-;;; `path_buf3` is source file, `path_buf4` is destination dir.
-;;; If so, show an error and terminate the operation.
+;;; Check for replacing an item with itself or a descendant.
+;;; Input: `src_path_buf` and `dst_path_buf` are full paths
+;;; Output: A=0 if ok, A=err code otherwise.
 
 .proc CheckBadReplacement
 
         ;; Examples:
-        ;; src: '/a/p'   dst: '/a' (replace with self)
-        ;; src: '/a/c/c' dst: '/a' (replace with item inside self)
-
-        ;; Set `src_path_buf`, `dst_path_buf` and `src_path_slash_index`
-        jsr     CopyPathsFromBufsToSrcAndDst
-        jsr     AppendSrcPathLastSegmentToDstPath
-
-        ;; Now:
         ;; src: '/a/p'   dst: '/a/p' (replace with self)
         ;; src: '/a/c/c' dst: '/a/c' (replace with item inside self)
 
@@ -13952,10 +13983,9 @@ compare:
         bne     :-
 
         ;; Self or subfolder; show a fatal error.
-        lda     #kErrBadReplacement
-        jsr     ShowErrorAlert
+        return  #kErrBadReplacement
 
-ok:     rts
+ok:     return  #0
 
 .endproc
 
