@@ -183,7 +183,7 @@ err:    lda     #ERR_INVALID_PATHNAME
 :
         jsr     ComparePathBufs
         bne     :+
-        lda     #ERR_DUPLICATE_FILENAME
+        lda     #kErrBadReplacement
         jmp     JUMP_TABLE_SHOW_ALERT
 :
         param_call file_dialog::VerifyValidPath, path_buf1
