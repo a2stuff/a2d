@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        RESOURCE_FILE "aux.res"
+        RESOURCE_FILE "auxmem.res"
 
 ;;; ============================================================
 ;;; Segment loaded into AUX $4000-$BFFF

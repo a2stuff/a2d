@@ -19,7 +19,7 @@
 
         .include "loader.s"
 
-        .include "aux.s"
+        .include "auxmem.s"
         .include "lc.s"
         .include "res.s"
         .include "main.s"
