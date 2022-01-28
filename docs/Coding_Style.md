@@ -117,6 +117,10 @@ xcoord: .word
         jmp     @retry
 ```
 
+* **Do** use tail-call optimization (replacing `JSR label` / `RTS` with `JMP label`) as this pattern is well understood.
+    * As always, add comments if the usage might not be obvious (e.g. not at the end of a proc)
+    * The con of this is the true call stack is obscured, making debugging more difficult, but the pattern is common enough that this can't be relied on.
+
 ## Literals
 
 * Use binary `%00110110` for bit patterns
@@ -124,11 +128,11 @@ xcoord: .word
 * Use hex for geeky values, e.g. $7F (bit mask), $80 (high bit),
    $FF (all bits set) when bits would be less readble.
 * Avoid magic numbers where possible:
-   * Define local variables (e.g. `ptr := $06`)
-   * Define offsets, constants, etc.
-   * Use `.struct` definitions to define offsets into structures
-   * Use math where necessary (e.g. `ldy #offset2 - offset1`)
-   * Use `.sizeof()` (or math if needed) rather than hardcoding sizes
+    * Define local variables (e.g. `ptr := $06`)
+    * Define offsets, constants, etc.
+    * Use `.struct` definitions to define offsets into structures
+    * Use math where necessary (e.g. `ldy #offset2 - offset1`)
+    * Use `.sizeof()` (or math if needed) rather than hardcoding sizes
 
 
 ## Structure
