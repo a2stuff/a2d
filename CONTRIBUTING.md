@@ -70,16 +70,14 @@ modify. Here's a snapshot of the output for some files that could use
 attention:
 
 ```
-desk.acc/show.text.file.s       unscoped:   10  scoped:    0  raw:    0  unrefed:    0
-desktop/aux.s                   unscoped:    0  scoped:   48  raw:    0  unrefed:    0
-desktop/main.s                  unscoped:    1  scoped:   70  raw:   15  unrefed:    0
-desktop/ovl_file_dialog.s       unscoped:    5  scoped:   16  raw:    2  unrefed:    1
+desktop/auxmem.s                unscoped:    0  scoped:   48  raw:    0  unrefed:    0
+desktop/main.s                  unscoped:    0  scoped:   66  raw:   15  unrefed:    0
 desktop/ovl_selector_pick.s     unscoped:   15  scoped:    1  raw:    0  unrefed:    1
-disk_copy/auxlc.s               unscoped:   79  scoped:   28  raw:    7  unrefed:    0
+disk_copy/auxlc.s               unscoped:   79  scoped:   27  raw:    7  unrefed:    0
+lib/formatdiskii.s              unscoped:   43  scoped:   15  raw:    0  unrefed:    0
 mgtk/mgtk.s                     unscoped:    0  scoped:   10  raw:    8  unrefed:    0
 selector/app.s                  unscoped:    1  scoped:   32  raw:    1  unrefed:    0
 selector/ovl_file_copy.s        unscoped:   42  scoped:   37  raw:    0  unrefed:    0
-selector/ovl_file_dialog.s      unscoped:    7  scoped:   14  raw:    0  unrefed:    0
 ```
 
 * **unscoped** counts the number of auto-generated labels like `L1234`

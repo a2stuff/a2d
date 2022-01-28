@@ -11,7 +11,7 @@ The file is broken down into multiple segments:
 | Purpose       | Bank    | Address | Sources                        |
 |---------------|---------|---------|--------------------------------|
 | Loader        | Main    | A$2000  | `loader.s`                     |
-| MGTK/DeskTop  | Aux     | A$4000  | `mgtk.s`, `aux.s`              |
+| MGTK/DeskTop  | Aux     | A$4000  | `mgtk.s`, `auxmem.s`           |
 | DeskTop       | Aux LC1 | A$D000  | `lc.s`,`res.s`                 |
 | DeskTop       | Aux LC1 | A$FB00  | `res.s`                        |
 | DeskTop       | Main    | A$4000  | `main.s`                       |
@@ -77,7 +77,7 @@ run.
 
 The main application includes:
 * `main.s`
-* `aux.s`
+* `auxmem.s`
 * `lc.s`
 * `res.s`
 
@@ -108,7 +108,7 @@ When running, memory use includes:
  * $1F80-$1FFF is a map of used/free icon numbers, as they are reassigned
      as windows are opened and closed.
  * $2000-$3FFF is the hires graphics page.
- * $4000-$BFFF (`aux.s`) includes these:
+ * $4000-$BFFF (`auxmem.s`) includes these:
  * $4000-$85FF is the [MouseGraphics ToolKit](../mgtk/MGTK.md)
  * $8600-$8DFF - Resources, including icons and font
  * $8E00-$A6xx - [Icon ToolKit](APIs.md)
@@ -126,7 +126,7 @@ main code) are relays, buffers and resources:
 
 `res.s` defines these common resources. It is built as part of
 `desktop.s`. Many additional resources needed for MGTK operations
-exist in `aux.s` as well.
+exist in `auxmem.s` as well.
 
 The Aux memory language card bank 2 ($D000-$DFFF) holds `FileRecord`
 entries, 32-byte structures which hold metadata for files in open
