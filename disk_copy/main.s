@@ -86,13 +86,13 @@ params:  .res    3
         sta     ALTZPOFF
         bit     ROMIN2
 
+        jsr     HOME            ; Clear 80-col screen
         lda     #$11            ; Ctrl-Q - disable 80-col firmware
         jsr     COUT
 
         jsr     SETVID
         jsr     SETKBD
         jsr     INIT
-        jsr     HOME
 
         sta     DHIRESOFF
         sta     TXTSET
