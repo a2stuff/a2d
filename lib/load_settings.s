@@ -47,6 +47,7 @@ start:
         cmp     #$AC
         bne     :+
         ldxy    #kDefaultDblClickSpeed*4
+        jmp     update
 :
 
         ;; Default:
