@@ -238,6 +238,13 @@ end:
         stx     arg+1
 .endmacro
 
+;;; Store Y,X
+;;;    styx $1234       ; absolute
+.macro styx arg
+        sty     arg
+        stx     arg+1
+.endmacro
+
 ;;; Store X,Y
 ;;;    stxy $1234       ; absolute
 .macro stxy arg
@@ -422,12 +429,39 @@ end:
 .macro add16in arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16in adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
+;;; (absolute, absolute, absolute, but requiring carry clear already)
+.macro add16nc arg1, arg2, arg3, arg4, arg5, arg6
+    lda arg1
+    adc arg2
+    sta arg3
+    lda arg1 + 1
+    adc arg2 + 1
+    sta arg3 + 1
+.endmacro
+;;; (absolute, absolute, absolute, but requiring carry set already)
+.macro sub16nc arg1, arg2, arg3, arg4, arg5, arg6
+    lda arg1
+    sbc arg2
+    sta arg3
+    lda arg1 + 1
+    sbc arg2 + 1
+    sta arg3 + 1
+.endmacro
 
 
 ;;; Add arg1 (absolute) to arg2 (8-bit absolute), store to arg3
 ;;;    add16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
 ;;;    add16_8 $1111, $22, $3333        ; absolute, absolute, absolute
 .macro add16_8 arg1, arg2, arg3
+    .ifblank arg3
+        _op_lo  lda, {arg1}
+        clc
+        adc     arg2
+        sta     arg1
+        bcc     :+
+        _op_hi  inc, {arg1}
+:
+    .else
         _op_lo  lda, {arg1}
         clc
         adc     arg2
@@ -435,6 +469,7 @@ end:
         _op_hi  lda, {arg1}
         adc     #0
         sta     arg3+1
+    .endif
 .endmacro
 
 ;;; Add A,X to arg1 (immediate or absolute), store to arg2
@@ -549,6 +584,28 @@ end:
         .error "Indirect indexed required at least one use of y reg"
     .endif
 .endmacro
+
+;;; Copy low/high 16-bit value
+;;; 8 bits from $1111[,x] to $3333
+;;; 8 bits from $2222[,x] to $3333+1
+;;;    copylohi $1111, $2222, $3333        ; absolute, absolute
+;;;    copylohi $1111,x, $2222,x, $3333    ; indirect load, absolute store
+.macro copylohi arg1, arg2, arg3, arg4, arg5
+    .if _is_register {arg2}
+        ;; indexed load
+        ;; arg4 is also a register
+        lda     arg1,arg2
+        sta     arg5
+        lda     arg3,arg4
+        sta     arg5+1
+    .else
+        lda     arg1
+        sta     arg3
+        lda     arg2
+        sta     arg3+1
+    .endif
+.endmacro
+
 
 
 ;;; Compare 16-bit values

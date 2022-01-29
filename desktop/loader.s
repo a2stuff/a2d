@@ -112,10 +112,10 @@ start:  bit     ROMIN2
         lda     #$01            ; Protect ProDOS global page
         sta     BITMAP,x
         dex
-        lda     #$00
+        lsr
 :       sta     BITMAP,x
         dex
-        bpl     :-
+        bne     :-
         lda     #%11001111       ; Protect ZP, stack, Text Page 1
         sta     BITMAP
 
@@ -126,14 +126,13 @@ start:  bit     ROMIN2
         MLI_CALL GET_PREFIX, prefix_params
         beq     :+
         jmp     crash
-:       lda     #$FF
-        sta     reinstall_flag
+:       dec     reinstall_flag
 
+        tay
         copy16  IRQLOC, irq_saved
         bit     LCBANK2
         bit     LCBANK2
 
-        ldy     #0
 :       lda     self,y
         sta     SELECTOR,y
         lda     self+$100,y
@@ -152,20 +151,16 @@ done_reinstall:
         ;; file in (at $1E00), and invoke $200 bytes into it (at $2000)
 
         MLI_CALL SET_PREFIX, prefix_params
-        beq     :+
-        jmp     prompt_for_system_disk
-:       MLI_CALL OPEN, open_params
-        beq     :+
-        jmp     crash
-:       lda     open_params::ref_num
+        bne     prompt_for_system_disk
+        MLI_CALL OPEN, open_params
+        bne     crash
+        lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
-        beq     :+
-        jmp     crash
-:       MLI_CALL CLOSE, close_params
-        beq     :+
-        jmp     crash
-:       jmp     $2000           ; Invoke system file
+        bne     crash
+        MLI_CALL CLOSE, close_params
+        bne     crash
+        jmp     $2000           ; Invoke system file
 
 
         ;; Display a string, and wait for Return keypress
@@ -192,8 +187,7 @@ prompt_for_system_disk:
 wait:   sta     KBDSTRB
 :       lda     KBD
         bpl     :-
-        and     #CHAR_MASK
-        cmp     #CHAR_RETURN
+        cmp     #CHAR_RETURN | $80
         bne     wait
         jmp     start
 
@@ -248,27 +242,34 @@ filename:
 
 kNumSegments = 6
 
-segment_addr_table:             ; Temporary load addresses
-        .word   $3F00,$4000,$4000 ; loaded here and then moved into Aux / LC banks
-        .word   kSegmentDeskTopMainAddress,kSegmentInitializerAddress,kSegmentInvokerAddress ; "moved" in place
-        ASSERT_ADDRESS_TABLE_SIZE segment_addr_table, kNumSegments
+segment_addr_table_low:         ; Temporary load addresses
+        .byte   <$3F00,<$4000,<$4000 ; loaded here and then moved into Aux / LC banks
+        .byte   <kSegmentDeskTopMainAddress,<kSegmentInitializerAddress,<kSegmentInvokerAddress ; "moved" in place
+        ASSERT_TABLE_SIZE segment_addr_table_low, kNumSegments
 
-segment_dest_table:             ; Runtime addresses (moved here)
-        .addr   kSegmentDeskTopAuxAddress,kSegmentDeskTopLC1AAddress,kSegmentDeskTopLC1BAddress
-        .addr   kSegmentDeskTopMainAddress,kSegmentInitializerAddress,kSegmentInvokerAddress
-        ASSERT_ADDRESS_TABLE_SIZE segment_dest_table, kNumSegments
+segment_addr_table_high:        ; Temporary load addresses
+        .byte   >$3F00,>$4000,>$4000 ; loaded here and then moved into Aux / LC banks
+        .byte   >kSegmentDeskTopMainAddress,>kSegmentInitializerAddress,>kSegmentInvokerAddress ; "moved" in place
+        ASSERT_TABLE_SIZE segment_addr_table_high, kNumSegments
 
-segment_size_table:
-        .word   kSegmentDeskTopAuxLength,kSegmentDeskTopLC1ALength,kSegmentDeskTopLC1BLength
-        .word   kSegmentDeskTopMainLength,kSegmentInitializerLength,kSegmentInvokerLength
-        ASSERT_ADDRESS_TABLE_SIZE segment_size_table, kNumSegments
+segment_dest_table_high:        ; Runtime addresses (moved here)
+        .byte   >kSegmentDeskTopAuxAddress,>kSegmentDeskTopLC1AAddress,>kSegmentDeskTopLC1BAddress
+        .byte   >kSegmentDeskTopMainAddress,>kSegmentInitializerAddress,>kSegmentInvokerAddress
+        ASSERT_TABLE_SIZE segment_dest_table_high, kNumSegments
+
+segment_size_table_low:
+        .byte   <kSegmentDeskTopAuxLength,<kSegmentDeskTopLC1ALength,<kSegmentDeskTopLC1BLength
+        .byte   <kSegmentDeskTopMainLength,<kSegmentInitializerLength,<kSegmentInvokerLength
+        ASSERT_TABLE_SIZE segment_size_table_low, kNumSegments
+
+segment_size_table_high:
+        .byte   >kSegmentDeskTopAuxLength,>kSegmentDeskTopLC1ALength,>kSegmentDeskTopLC1BLength
+        .byte   >kSegmentDeskTopMainLength,>kSegmentInitializerLength,>kSegmentInvokerLength
+        ASSERT_TABLE_SIZE segment_size_table_high, kNumSegments
 
 segment_type_table:             ; 0 = main, 1 = aux, 2 = banked (aux)
         .byte   1,2,2,0,0,0
         ASSERT_TABLE_SIZE segment_type_table, kNumSegments
-
-num_segments:
-        .byte   kNumSegments
 
 start:
         ;; Configure system bitmap - everything is available
@@ -291,12 +292,12 @@ start:
         MLI_CALL SET_MARK, set_mark_params
         beq     :+
         brk                     ; crash
-:       lda     #0
-        sta     segment_num
+:       sta     segment_num
 
 loop:   jsr     UpdateProgress
-        lda     segment_num
-        cmp     num_segments
+segment_num := * + 1
+        ldx     #0
+        cpx     #kNumSegments
         bne     continue
 
         ;; Close
@@ -308,33 +309,19 @@ loop:   jsr     UpdateProgress
         jmp     kSegmentInitializerAddress
 
 continue:
-        asl     a
-        tax
-        copy16  segment_addr_table,x, read_params::data_buffer
-        copy16  segment_size_table,x, read_params::request_count
+        copylohi segment_addr_table_low,x, segment_addr_table_high,x, read_params::data_buffer
+        copylohi segment_size_table_low,x, segment_size_table_high,x, read_params::request_count
         MLI_CALL READ, read_params
         beq     :+
         brk                     ; crash
 :       ldx     segment_num
-        lda     segment_type_table,x
-        beq     next_segment    ; type 0 = main, so done
-        cmp     #2
-        beq     :+
-        jsr     AuxSegment
-        jmp     next_segment
-:       jsr     BankedSegment
-
-next_segment:
         inc     segment_num
-        jmp     loop
-
-segment_num:  .byte   0
+        lda     segment_type_table,x
+        beq     loop            ; type 0 = main, so done
+        cmp     #2              ; carry set if banked, clear if aux
+        bcc     :+
 
         ;; Handle bank-switched memory segment
-.proc BankedSegment
-        src := $6
-        dst := $8
-
         ;; Disable interrupts, since we may overwrite IRQ vector
         php
         sei
@@ -344,6 +331,8 @@ segment_num:  .byte   0
         bit     LCBANK1
 
         COPY_BYTES kIntVectorsSize, VECTORS, vector_buf
+        ldx     segment_num
+        dex
 
         ;; Set stack pointers to arbitrarily low values for use when
         ;; interrupts occur. DeskTop does not utilize this convention,
@@ -354,33 +343,27 @@ segment_num:  .byte   0
         sta     $0100           ; Main stack pointer, in Aux ZP
         sta     $0101           ; Aux stack pointer, in Aux ZP
 
-        lda     #0
-        sta     src
-        sta     dst
-        lda     segment_num
-        asl     a
-        tax
-        lda     segment_dest_table+1,x
-        sta     dst+1
-        lda     read_params::data_buffer+1
-        sta     src+1
-        clc
-        adc     segment_size_table+1,x
-        sta     max_page
-        lda     segment_size_table,x
-        beq     :+
-        inc     max_page
-
+        src := $6
+        dst := $8
 :       ldy     #0
-loop:   lda     (src),y
-        sta     (dst),y
+        sty     src
+        sty     dst
+        ldy     segment_dest_table_high,x
+        sty     dst+1
+        ldy     read_params::data_buffer+1
+        sty     src+1
+
+        ldy     segment_size_table_high,x
+        lda     segment_size_table_low,x
+        beq     :+
         iny
-        bne     loop
-        inc     src+1
-        inc     dst+1
-        lda     src+1
-        cmp     max_page
-        bne     loop
+:       tya
+        tax
+        ldy     #0
+        sta     RAMWRTON
+        jsr     CopySegment
+        sta     RAMWRTOFF
+        bcc     :+
 
         COPY_BYTES kIntVectorsSize, vector_buf, VECTORS
 
@@ -388,50 +371,23 @@ loop:   lda     (src),y
         bit     ROMIN2
 
         plp
-        rts
-
-max_page:
-        .byte   0
+:       jmp     loop
 
 vector_buf:
         .res    ::kIntVectorsSize, 0
-.endproc
 
-        ;; Handle aux memory segment
-.proc AuxSegment
-        src := $6
-        dst := $8
-
-        lda     #0
-        sta     src
-        sta     dst
-        lda     segment_num
-        asl     a
-        tax
-        lda     segment_dest_table+1,x
-        sta     dst+1
-        lda     read_params::data_buffer+1
-        sta     src+1
-        clc
-        adc     segment_size_table+1,x
-        sta     max_page
-        sta     RAMRDOFF
-        sta     RAMWRTON
-        ldy     #0
+        ;; Handle banked/aux memory segment
+        ;; Corresponding vectors are set before call
+.proc CopySegment
 loop:   lda     (src),y
         sta     (dst),y
         iny
         bne     loop
         inc     src+1
         inc     dst+1
-        lda     src+1
-        cmp     max_page
+        dex
         bne     loop
-        sta     RAMWRTOFF
         rts
-
-max_page:
-        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -483,7 +439,8 @@ done:   rts
         lda     #kProgressHtab
         sta     OURCH
 
-        lda     count
+count := * + 1
+        lda     #0
         clc
         adc     #kProgressTick
         sta     count
@@ -496,7 +453,6 @@ done:   rts
 
         rts
 
-count:  .byte   0
 .endproc
 
 ;;; ============================================================
