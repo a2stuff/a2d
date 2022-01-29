@@ -106,7 +106,7 @@ col:    lda     xbyte
 .proc NextPtrForRow
         inc     row_tmp
         lda     row_tmp
-        jmp     ComputeHBASL
+        bne     ComputeHBASL    ; always
 .endproc
 
 ;;; ============================================================
