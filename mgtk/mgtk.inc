@@ -186,9 +186,9 @@ DrawText        = $19           ; Drawn at penpos as left, baseline
 ;;; --------------------------------------------------
 ;;; Utility Commands
 
-SetZP1          = $1A           ; Configure lower half of ZP usage by API (speed vs. convenience)
-SetZP2          = $1B           ; Configure upper half ZP usage by API (speed vs. convenience)
-;;; .byte       preserve        0=stash/no auto restore; 1=restore now and onward
+SetZP1          = $1A           ; Configure usage of upper ZP ($80-$FF) (speed vs. convenience)
+SetZP2          = $1B           ; Configure usage of lower ZP ($00-$43) (speed vs. convenience)
+;;; .byte       preserve        $00=stash/no auto restore; $80=restore now and onward
 
 Version         = $1C           ; Get toolkit version
 ;;; .byte       (out) major

@@ -333,19 +333,31 @@ Parameters:
 ### Utility - configuration and version
 
 #### SetZP1 ($1A)
-Configure lower half of ZP usage by API (speed vs. convenience)
+Configure usage of upper ($80-$FF) ZP by API (speed vs. convenience)
+
+If high bit is set (the default), part of the ZP is preserved across MGTK
+calls. This is convenient for callers, at the expense of performance.
+
+If the high bit is clear, MGTK assumes that the caller will not modify
+this part of the ZP.
 
 Parameters:
 ```
-.byte       preserve        0=stash/no auto restore; 1=restore now and onward
+.byte       preserve        $00=stash/no auto restore; $80=restore now and onward
 ```
 
 #### SetZP2 ($1B)
-Configure upper half ZP usage by API (speed vs. convenience)
+Configure usage of lower ($00-$43) ZP API (speed vs. convenience)
+
+If high bit is set (the default), part of the ZP is preserved across MGTK
+calls. This is convenient for callers, at the expense of performance.
+
+If the high bit is clear, MGTK assumes that the caller will not modify
+this part of the ZP.
 
 Parameters:
 ```
-.byte       preserve        0=stash/no auto restore; 1=restore now and onward
+.byte       preserve        $00=stash/no auto restore; $80=restore now and onward
 ```
 
 
