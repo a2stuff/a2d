@@ -389,8 +389,19 @@
 * Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the source window is updated.
 * Launch DeskTop. Using File > Delete a File..., try to delete a GS/OS forked file, where the containing window is visible. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the containing window is updated.
 
-
-
+* Repeat the following:
+  * For these permutations:
+    * DeskTop (1) copied to RAMCard and (2) not copied to RAMCard.
+    * Renaming (1) the volume that DeskTop loaded from, and renaming (2) the DeskTop folder itself.
+  * Verify that the following still function:
+    * File > Copy a File... (overlays)
+    * Special > Disk Copy (and that File > Quit returns to DeskTop) (overlay + quit handler)
+    * Apple > Calculator (desk accessories)
+    * Apple > Control Panels (relative folders)
+    * Control Panel, change desktop pattern, close, quit, restart (settings)
+    * Windows are saved on exit/restored on restart (configuration)
+    * Invoking another application, then quitting back to DeskTop (quit handler)
+    * Modifying shortcuts (selector)
 
 # Preview
 

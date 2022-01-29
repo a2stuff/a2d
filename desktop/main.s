@@ -11120,6 +11120,7 @@ loop:   ldx     icon_count
         bit     move_flag
         bpl     next_icon
         jsr     UpdateWindowPaths
+        jsr     UpdatePrefix
         jmp     next_icon
 
 :       jsr     DeleteProcessSelectedFile
@@ -11952,8 +11953,9 @@ skip:   lda     selected_window_id
         sta     result_flags
     END_IF
 
-        ;; Update affected window paths
+        ;; Update affected window paths, ProDOS prefix
         jsr     UpdateWindowPaths
+        jsr     UpdatePrefix
 
         ;; --------------------------------------------------
         ;; Totally done - advance to next selected icon
@@ -12049,6 +12051,9 @@ wloop:  ldx     found_windows_count
 
         ;; Copy the suffix from `path_buf1` to `path_buf2`
         ldx     src_path_buf
+        cpx     path_buf1
+        beq     assign          ; paths are equal, no copying needed
+
         ldy     dst_path_buf
 :       inx                     ; advance into suffix
         iny
@@ -12059,7 +12064,7 @@ wloop:  ldx     found_windows_count
         sty     path_buf2
 
         ;; Assign the new window path
-        ldy     path_buf2
+assign: ldy     path_buf2
 :       lda     path_buf2,y
         sta     (dst),y
         dey
@@ -12075,28 +12080,43 @@ wloop:  ldx     found_windows_count
 ;;; Inputs: $06 = pointer to path to update
 ;;; Outputs: Path at $06 updated, Z=1 if updated, Z=0 if no change
 
-.if 0
 .proc MaybeUpdateTargetPath
         ptr := $06
 
-        ;; Is `src_path_buf` a prefix?
+        ;; Did path end with a '/'? If so, set flag and remove.
         ldy     #0
+        sty     slash_flag
         lda     (ptr),y
-        sta     len
-
-        cmp     src_path_buf
-        bcc     no_change       ; too short, can't be a prefix
-        bne     :+              ; same length, maybe a prefix
-        tay                     ; longer, but still need to ensure that
-        iny                     ; the next path char is a '/'
+        tay                     ; Y=target path length
         lda     (ptr),y
         cmp     #'/'
-        bne     no_change
+        bne     :+
+        sta     slash_flag      ; need to restore it later, but
+        ldy     #0              ; remove the '/' for now
+        lda     (ptr),y
+        sec
+        sbc     #1
+        sta     (ptr),y
+        tay                     ; Y=updated target path length
+:
+        ;; Is `src_path_buf` a prefix?
+        cpy     src_path_buf
+        bcc     no_change       ; string is shorter, can't be a prefix
+        beq     :+              ; same length, maybe a prefix
+        iny                     ; string is longer, but still need to ensure
+        lda     (ptr),y         ; that the next path char is a '/'
+        cmp     #'/'
+        bne     no_change       ; nope, so can't be a prefix
 :
         ;; Compare strings
-:       ldy     len
-        lda     (ptr),y
-        cmp     src_path_buf,y
+        ldy     src_path_buf
+:       lda     (ptr),y
+        jsr     UpcaseChar
+        sta     @char
+        lda     src_path_buf,y
+        jsr     UpcaseChar
+        @char := *+1
+        cmp     #SELF_MODIFIED_BYTE
         bne     no_change
         dey
         bne     :-
@@ -12104,15 +12124,73 @@ wloop:  ldx     found_windows_count
         ;; It's a prefix! Do the replacement
         jsr     UpdateTargetPath
 
+        ;; Restore trailing '/' if needed
+        lda     slash_flag
+        beq     :+
+        ldy     #0
+        lda     (ptr),y
+        clc
+        adc     #1
+        sta     (ptr),y
+        tay
+        lda     #'/'
+        sta     (ptr),y
+:
         return  #0
 
 no_change:
         return  #$FF
 
-len:    .byte   0
+slash_flag:                     ; non-zero if trailing slash needed
+        .byte   0
 
 .endproc
-.endif
+
+;;; ============================================================
+
+.proc UpdatePrefix
+        ptr := $06
+        path := path_buffer
+
+        ;; ProDOS Prefix
+        MLI_RELAY_CALL GET_PREFIX, get_set_prefix_params
+        copy16  #path, ptr
+        jsr     MaybeUpdateTargetPath
+    IF_EQ
+        MLI_RELAY_CALL SET_PREFIX, get_set_prefix_params
+    END_IF
+
+        ;; Original Prefix
+        jsr     GetCopiedToRAMCardFlag
+    IF_MINUS
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+        copy16  #DESKTOP_ORIG_PREFIX, ptr
+        jsr     MaybeUpdateTargetPath
+        copy16  #RAMCARD_PREFIX, ptr
+        jsr     MaybeUpdateTargetPath
+        copy16  #SELECTOR + QuitRoutine::prefix_buffer_offset, ptr
+        jsr     MaybeUpdateTargetPath
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+    END_IF
+
+        ;; Restart Prefix
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+        copy16  #SELECTOR + QuitRoutine::prefix_buffer_offset, ptr
+        jsr     MaybeUpdateTargetPath
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+
+        rts
+
+        DEFINE_GET_PREFIX_PARAMS get_set_prefix_params, path
+.endproc
 
 ;;; ============================================================
 
@@ -12325,15 +12403,16 @@ buf_padding_bytes:
         ;; overlayed indirect jump table
         kOpJTAddrsSize = 6
 
+file_entry_buf:  .res    .sizeof(FileEntry), 0
+
+;;; NOTE: These are referenced by indirect JMP and *must not*
+;;; cross page boundaries.
 op_jt_addrs:
 op_jt_addr1:  .addr   CopyProcessDirectoryEntry     ; defaults are for copy
 op_jt_addr2:  .addr   copy_pop_directory
 op_jt_addr3:  .addr   DoNothing
 
 DoNothing:   rts
-
-file_entry_buf:  .res    .sizeof(FileEntry), 0
-
 
 ;;; 0 for count/size pass, non-zero for actual operation
 do_op_flag:

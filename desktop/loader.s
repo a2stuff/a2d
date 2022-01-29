@@ -203,6 +203,9 @@ crash:  sta     $6              ; Crash?
 prefix_buffer:
         .res    64, 0
 
+;;; Updated by DeskTop if parts of the path are renamed.
+prefix_buffer_offset := prefix_buffer - self
+
 .endproc ; QuitRoutine
 
 ;;; ============================================================
