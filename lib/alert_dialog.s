@@ -326,8 +326,7 @@ check_ok:
 do_ok:  LIB_MGTK_CALL MGTK::SetPenMode, penXOR
         LIB_MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     #kAlertResultOK
-        .assert kAlertResultOK <> 0, error, "kAlertResultOK must be non-zero"
-        bne     finish          ; always
+        jmp     finish
 
         ;; --------------------------------------------------
         ;; Buttons
@@ -367,8 +366,7 @@ check_ok_rect:
         param_call AlertButtonEventLoop, ok_button_rect
         bne     no_button
         lda     #kAlertResultOK
-        .assert kAlertResultOK <> 0, error, "kAlertResultOK must be non-zero"
-        bne     finish          ; always
+        jmp     finish
 
 no_button:
         jmp     event_loop
