@@ -323,7 +323,8 @@ dark_pattern:
 num_icons:  .byte   0
 icon_list:  .res    (::kMaxIconCount+1), 0   ; list of allocated icons (index 0 not used)
 
-icon_ptrs:  .res    (::kMaxIconCount+1)*2, 0 ; addresses of icon details (index 0 not used)
+icon_ptrs_low:  .res    (::kMaxIconCount+1), 0 ; addresses of icon details (index 0 not used)
+icon_ptrs_high: .res    (::kMaxIconCount+1), 0 ; addresses of icon details (index 0 not used)
 
 highlight_count:                ; number of highlighted icons
         .byte   0
@@ -417,20 +418,35 @@ fontptr:        .addr   0
 ;;; ============================================================
 ;;; IconTK command jump table
 
-desktop_jump_table:
-        .addr   0
-        .addr   AddIconImpl
-        .addr   HighlightIconImpl
-        .addr   DrawIconImpl
-        .addr   RemoveIconImpl
-        .addr   RemoveAllImpl
-        .addr   CloseWindowImpl
-        .addr   FindIconImpl
-        .addr   DragHighlightedImpl
-        .addr   UnhighlightIconImpl
-        .addr   RedrawDesktopIconsImpl
-        .addr   IconInRectImpl
-        .addr   EraseIconImpl
+desktop_jump_table_low:
+        .byte   0
+        .byte   <AddIconImpl
+        .byte   <HighlightIconImpl
+        .byte   <DrawIconImpl
+        .byte   <RemoveIconImpl
+        .byte   <RemoveAllImpl
+        .byte   <CloseWindowImpl
+        .byte   <FindIconImpl
+        .byte   <DragHighlightedImpl
+        .byte   <UnhighlightIconImpl
+        .byte   <RedrawDesktopIconsImpl
+        .byte   <IconInRectImpl
+        .byte   <EraseIconImpl
+
+desktop_jump_table_high:
+        .byte   0
+        .byte   >AddIconImpl
+        .byte   >HighlightIconImpl
+        .byte   >DrawIconImpl
+        .byte   >RemoveIconImpl
+        .byte   >RemoveAllImpl
+        .byte   >CloseWindowImpl
+        .byte   >FindIconImpl
+        .byte   >DragHighlightedImpl
+        .byte   >UnhighlightIconImpl
+        .byte   >RedrawDesktopIconsImpl
+        .byte   >IconInRectImpl
+        .byte   >EraseIconImpl
 
 .macro  ITK_DIRECT_CALL    op, addr, label
         jsr ITK_DIRECT
@@ -465,13 +481,18 @@ desktop_jump_table:
         bne     :-
 
         ;; Point ($06) at call command
-        add16   call_params, #1, $06
+        ldx     call_params
+        ldy     call_params + 1
+        inx
+        bne     :+
+        iny
+:       stx     $06
+        sty     $07
 
         ldy     #0
         lda     ($06),y
-        asl     a
         tax
-        copy16  desktop_jump_table,x, dispatch + 1
+        copylohi  desktop_jump_table_low,x, desktop_jump_table_high,x, dispatch + 1
         iny
         lda     ($06),y
         tax
@@ -488,8 +509,7 @@ dispatch:
 :       pla
         sta     $06,x
         dex
-        cpx     #$FF
-        bne     :-
+        bpl     :-
         tya
         rts
 
@@ -521,14 +541,13 @@ ycoord: .word   0
         inc     num_icons
 
         ;; Add to `icon_ptrs` table
-        asl     a
         tax
-        copy16  ptr_icon, icon_ptrs,x
+        copylohi  ptr_icon, icon_ptrs_low,x, icon_ptrs_high,x
 
         lda     #1              ; $01 = allocated
         tay                     ; And IconEntry::state
         sta     (ptr_icon),y
-        return  #0
+        lsr
 
         rts
 .endproc
@@ -541,15 +560,11 @@ ycoord: .word   0
 
 .proc IsInIconList
         ldx     num_icons
-        beq     fail
+:       dex
+        bmi     done            ; X=#$FF, Z=0
+        cmp     icon_list,x
+        bne     :-              ; not found
 
-        dex
-:       cmp     icon_list,x
-        beq     done            ; found!
-        dex
-        bpl     :-
-
-fail:   ldx     #$FF            ; force Z=0
 done:   rts
 .endproc
 
@@ -569,26 +584,29 @@ done:   rts
         ;; Pointer to IconEntry
         ldy     #HighlightIconParams::icon
         lda     (params),y
-        asl     a
         tax
-        copy16  icon_ptrs,x, ptr
+        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ldy     #IconEntry::state
         lda     (ptr),y         ; valid icon?
         bne     :+
         return  #2              ; Invalid icon
 :
-        and     #kIconEntryStateHighlighted
-        beq     :+
+        ;;and     #kIconEntryStateHighlighted
+        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
+        asl
+        bpl     :+
         return  #3              ; Already highlighted
 :
         ;; Mark highlighted
-        lda     (ptr),y
+        ror
         ora     #kIconEntryStateHighlighted
         sta     (ptr),y
 
         ;; Append to highlight list
-        ldy     #IconEntry::id
+        ;;ldy     #IconEntry::id
+        .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
+        dey
         lda     (ptr),y         ; A = icon id
         ldx     highlight_count
         sta     highlight_list,x
@@ -601,9 +619,7 @@ done:   rts
         ldy     #IconEntry::id
         lda     (ptr),y         ; A = icon id
         ldx     #1              ; new position
-        jsr     ChangeIconIndex
-
-        rts
+        jmp     ChangeIconIndex
 .endproc
 
 ;;; ============================================================
@@ -623,14 +639,15 @@ done:   rts
         ;; Pointer to IconEntry
         ldy     #DrawIconParams::icon
         lda     (params),y
-        asl     a
         tax
-        copy16  icon_ptrs,x, ptr
+        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ldy     #IconEntry::state
         lda     (ptr),y
-        and     #kIconEntryStateHighlighted
-        bne     :+
+        ;;and     #kIconEntryStateHighlighted
+        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
+        asl
+        bmi     :+
 
         jsr     paint_icon_unhighlighted
         return  #0
@@ -660,9 +677,7 @@ done:   rts
         return  #1              ; Not found
 
         ;; Pointer to IconEntry
-:       asl     a
-        tax
-        copy16  icon_ptrs,x, ptr
+:       copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ldy     #IconEntry::state ; valid icon?
         lda     (ptr),y
@@ -671,7 +686,9 @@ done:   rts
         return  #2
 
         ;; Move it to the end of `icon_list`
-:       ldy     #IconEntry::id
+        ;;ldy     #IconEntry::id
+        .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
+:       dey
         lda     (ptr),y         ; icon num
         ldx     num_icons       ; new position
         jsr     ChangeIconIndex
@@ -685,16 +702,19 @@ done:   rts
         ;; Mark it as free
         ldy     #IconEntry::state
         lda     (ptr),y         ; A = state
-        pha
+        ;; Was it highlighted?
+        ;;and     #kIconEntryStateHighlighted
+        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
+        asl
+        asl                     ; carry set if highlighted
         lda     #0              ; not allocated
         sta     (ptr),y
-        pla                     ; A = state
 
-        ;; Was it highlighted?
-        and     #kIconEntryStateHighlighted
-        beq     done            ; not highlighted
+        bcc     done            ; not highlighted
 
-        ldy     #IconEntry::id
+        ;;ldy     #IconEntry::id
+        .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
+        dey
         lda     (ptr),y         ; A = icon id
         jsr     RemoveFromHighlightList
 
@@ -715,9 +735,8 @@ done:   return  #0
         ;; Pointer to IconEntry
         ldy     #EraseIconParams::icon
         lda     (params),y
-        asl     a
         tax
-        copy16  icon_ptrs,x, ptr
+        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         jsr     CalcIconPoly
         jmp     erase_icon
@@ -740,16 +759,13 @@ done:   return  #0
         sta     count
 
 loop:   ldx     count
-        cpx     #0
         beq     done
         dec     count
         dex
 
-        lda     icon_list,x
-        sta     icon
-        asl     a
-        tax
-        copy16  icon_ptrs,x, icon_ptr
+        ldy     icon_list,x
+        sty     icon
+        copylohi icon_ptrs_low,y, icon_ptrs_high,y, icon_ptr
         ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
@@ -785,15 +801,14 @@ count:  .byte   0
         sta     count
 loop:   ldx     count
         bne     L96E5
-        return  #0
+        txa
+        rts
 
 L96E5:  dec     count
         dex
-        lda     icon_list,x
-        sta     icon
-        asl     a
-        tax
-        copy16  icon_ptrs,x, ptr
+        ldy     icon_list,x
+        sty     icon
+        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask ; check window
@@ -816,16 +831,19 @@ L96E5:  dec     count
         ;; Mark it as free
         ldy     #IconEntry::state
         lda     (ptr),y         ; A = state
-        pha
+        ;; Was it highlighted?
+        ;;and     #kIconEntryStateHighlighted
+        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
+        asl
+        asl                     ; carry set if highlighted
         lda     #0              ; not allocated
         sta     (ptr),y
-        pla                     ; A = state
 
-        ;; Was it highlighted?
-        and     #kIconEntryStateHighlighted
-        beq     next            ; not highlighted
+        bcc     next            ; not highlighted
 
-        ldy     #IconEntry::id
+        ;;ldy     #IconEntry::id
+        .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
+        dey
         lda     (ptr),y         ; A = icon id
         jsr     RemoveFromHighlightList
 
@@ -878,10 +896,8 @@ loop:   cpx     num_icons
         ;; Check the icon
 :       txa
         pha
-        lda     icon_list,x
-        asl     a
-        tax
-        copy16  icon_ptrs,x, icon_ptr
+        ldy     icon_list,x
+        copylohi icon_ptrs_low,y, icon_ptrs_high,y, icon_ptr
 
         ;; Matching window?
         ldy     #IconEntry::win_flags
@@ -899,7 +915,7 @@ loop:   cpx     num_icons
 :       pla
         tax
         inx
-        jmp     loop
+        bne     loop            ; always
 
         ;; Found one!
 inside: pla
@@ -935,7 +951,8 @@ window_id:
         sta     coords1-1,y
         sta     coords2-1,y
         dey
-        cpy     #DragHighlightedParams::coords-1
+        ;;cpy     #DragHighlightedParams::coords-1
+        .assert DragHighlightedParams::coords = 1, error, "coords must be 1"
         bne     :-
 
         jsr     PushPointers
@@ -983,39 +1000,35 @@ drag:   sub16   findwindow_params::mousex, coords1x, deltax
         kDragDelta = 5
 
         ;; compare x delta
-        lda     deltax+1
-        bpl     x_lo
         lda     deltax
+        ldx     deltax+1
+        bpl     x_lo
         cmp     #AS_BYTE(-kDragDelta)
         bcc     is_drag
-        jmp     check_deltay
-x_lo:   lda     deltax
-        cmp     #kDragDelta
+        bcs     check_deltay
+x_lo:   cmp     #kDragDelta
         bcs     is_drag
 
         ;; compare y delta
 check_deltay:
-        lda     deltay+1
-        bpl     y_lo
         lda     deltay
+        ldx     deltay+1
+        bpl     y_lo
         cmp     #AS_BYTE(-kDragDelta)
         bcc     is_drag
-        jmp     peek
-y_lo:   lda     deltay
-        cmp     #kDragDelta
-        bcs     is_drag
-        jmp     peek
+        bcs     peek
+y_lo:   cmp     #kDragDelta
+        bcc     peek
 .endproc
 
         ;; Meets the threshold - it is a drag, not just a click.
 is_drag:
         lda     highlight_count
         cmp     #kMaxDraggableItems + 1
-        bcc     :+
-        jmp     DragDetect::ignore_drag ; too many
+        bcs     DragDetect::ignore_drag ; too many
 
         ;; Was there a selection?
-:       copy16  #drag_outline_buffer, $08
+        copy16  #drag_outline_buffer, $08
         lda     highlight_count
         bne     :+
         lda     #3              ; return value
@@ -1067,17 +1080,15 @@ L98F2:  lda     highlight_count,x
         sta     ($08),y
         jsr     PopPointers
 
-L9936:  ldx     #kIconPolySize-1
-        ldy     #kIconPolySize-1
+L9936:  ldy     #kIconPolySize-1
 
-:       lda     poly,x
+:       lda     poly,y
         sta     ($08),y
         dey
-        dex
         bpl     :-
 
         lda     #8
-        ldy     #0
+        iny
         sta     ($08),y
         lda     $08
         clc
@@ -1086,11 +1097,10 @@ L9936:  ldx     #kIconPolySize-1
         bcc     L9954
         inc     $08+1
 L9954:  dec     L9C74
-        beq     :+
         ldx     L9C74
-        jmp     L98F2
+        bne     L98F2
 
-:       COPY_BYTES 8, drag_outline_buffer+2, rect1
+        COPY_BYTES 8, drag_outline_buffer+2, rect1
 
         copy16  #drag_outline_buffer, $08
 
@@ -1108,7 +1118,7 @@ L9974:  lda     ($08),y
         lda     ($08),y
         sta     rect1_x1
         iny
-        jmp     L99AA
+        bne     L99AA           ; always
 
 L9990:  dey
         lda     ($08),y
@@ -1139,7 +1149,7 @@ L99AA:  iny
         lda     ($08),y
         sta     rect1_y1
         iny
-        jmp     L99E1
+        bne     L99E1           ; always
 
 L99C7:  dey
         lda     ($08),y
@@ -1162,7 +1172,7 @@ L99E1:  iny
         ldy     #1              ; MGTK Polygon "not last" flag
         lda     ($08),y
         beq     L99FC
-        add16   $08, #kIconPolySize, $08
+        add16_8 $08, #kIconPolySize
         jmp     L9972
 
 L99FC:  jsr     XdrawOutline
@@ -1201,12 +1211,12 @@ L9A31:  COPY_BYTES 4, findwindow_params, coords2
         sta     highlight_icon_id
 
 :       sub16   findwindow_params::mousex, coords1x, rect3_x1
-        sub16   findwindow_params::mousey, coords1y, rect3_y1
+        sub16nc findwindow_params::mousey, coords1y, rect3_y1
         jsr     SetRect2ToRect1
 
         ldx     #0
 :       add16   rect1_x2,x, rect3_x1,x, rect1_x2,x
-        add16   rect1_x1,x, rect3_x1,x, rect1_x1,x
+        add16nc rect1_x1,x, rect3_x1,x, rect1_x1,x
         inx
         inx
         cpx     #4
@@ -1219,7 +1229,7 @@ L9A31:  COPY_BYTES 4, findwindow_params, coords2
         cmp16   rect1_x2, #kScreenWidth
         bcs     L9AFE
         jsr     SetCoords1xToMousex
-        jmp     L9B0E
+        bcc     L9B0E           ; always
 
 L9AF7:  jsr     L9CAA
         bmi     L9B0E
@@ -1237,7 +1247,7 @@ L9B0E:  lda     rect1_y1+1
         cmp16   rect1_y2, #kScreenHeight
         bcs     L9B38
         jsr     SetCoords1yToMousey
-        jmp     L9B48
+        bcc     L9B48           ; always
 
 L9B31:  jsr     L9D31
         bmi     L9B48
@@ -1258,7 +1268,7 @@ L9B52:  jsr     XdrawOutline
 L9B60:  ldy     #2
 L9B62:  add16in ($08),y, rect3_x1, ($08),y
         iny
-        add16in ($08),y, rect3_y1, ($08),y
+        add16innc ($08),y, rect3_y1, ($08),y
         iny
         cpy     #kIconPolySize
         bne     L9B62
@@ -1294,7 +1304,7 @@ L9BD1:  jmp     DragDetect::ignore_drag
 
 L9BD4:  ora     #$80
         sta     highlight_icon_id
-        jmp     L9C63
+        bne     L9C63           ; always
 
 L9BDC:  lda     window_id2
         beq     L9BD1
@@ -1304,26 +1314,21 @@ L9BF3:  dex
         bmi     L9C18
         txa
         pha
-        lda     highlight_list,x
-        asl     a
-        tax
-        copy16  icon_ptrs,x, $06
+        ldy     highlight_list,x
+        copylohi  icon_ptrs_low,y, icon_ptrs_high,y, $06
         jsr     CalcIconPoly
         jsr     erase_icon
         pla
         tax
-        jmp     L9BF3
+        bpl     L9BF3           ; always
 
 L9C18:  jsr     PopPointers
         ldx     highlight_count
-        dex
-        txa
-        pha
         copy16  #drag_outline_buffer, $08
-L9C29:  lda     highlight_list,x
-        asl     a
-        tax
-        copy16  icon_ptrs,x, $06
+L9C29:  dex
+        bmi     L9C63
+        ldy     highlight_list,x
+        copylohi icon_ptrs_low,y, icon_ptrs_high,y, $06
         ldy     #IconEntry::win_flags
         lda     ($08),y
         iny
@@ -1337,19 +1342,13 @@ L9C29:  lda     highlight_list,x
         lda     ($08),y
         iny
         sta     ($06),y
-        pla
-        tax
-        dex
-        bmi     L9C63
-        txa
-        pha
         lda     $08
         clc
         adc     #kIconPolySize
         sta     $08
-        bcc     L9C60
+        bcc     L9C29
         inc     $08+1
-L9C60:  jmp     L9C29
+        bne     L9C29           ; always
 
 L9C63:  lda     #0
 
@@ -1406,9 +1405,9 @@ rect3_y2:       .word   0       ; Unused???
         cmp     L9C7E
         bne     :+
         lda     rect1_x1+1
-        cmp     L9C7E+1
+        eor     L9C7E+1
         bne     :+
-        return  #0
+        rts
 
 :       sub16   #0, rect2_x1, rect3_x1
         jmp     L9CF5
@@ -1419,15 +1418,15 @@ rect3_y2:       .word   0       ; Unused???
         cmp     const_screen_width
         bne     L9CE4
         lda     rect1_x2+1
-        cmp     const_screen_width+1
+        eor     const_screen_width+1
         bne     L9CE4
-        return  #0
+        rts
 .endproc
 
 L9CE4:  sub16   #kScreenWidth, rect2_x2, rect3_x1
 L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
-        add16   rect2_x2, rect3_x1, rect1_x2
-        add16   coords1x, rect3_x1, coords1x
+        add16nc rect2_x2, rect3_x1, rect1_x2
+        add16nc coords1x, rect3_x1, coords1x
         return  #$FF
 
 .proc L9D31
@@ -1435,9 +1434,9 @@ L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
         cmp     L9C80
         bne     :+
         lda     rect1_y1+1
-        cmp     L9C80+1
+        eor     L9C80+1
         bne     :+
-        return  #0
+        rts
 
 :       sub16   #kMenuBarHeight, rect2_y1, rect3_y1
         jmp     L9D7C
@@ -1448,15 +1447,15 @@ L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
         cmp     const_screen_height
         bne     L9D6B
         lda     rect1_y2+1
-        cmp     const_screen_height+1
+        eor     const_screen_height+1
         bne     L9D6B
-        return  #0
+        rts
 .endproc
 
 L9D6B:  sub16   #kScreenHeight-1, rect2_y2, rect3_y1
 L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
-        add16   rect2_y2, rect3_y1, rect1_y2
-        add16   coords1y, rect3_y1, coords1y
+        add16nc rect2_y2, rect3_y1, rect1_y2
+        add16nc coords1y, rect3_y1, coords1y
         return  #$FF
 
 .proc SetRect1ToRect2AndZeroRect3X
@@ -1511,11 +1510,10 @@ L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
 :       COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
-        beq     :+              ; 0 = MGTK::Ctl::not_a_control
-        jmp     done            ; scrollbar, etc.
-
+        bne     done            ; scrollbar, etc.
+                                ; else 0 = MGTK::Ctl::not_a_control
         ;; Ignore if y coord < window's header height
-:       MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
+        MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
         win_ptr := $06
         copy16  window_ptr, win_ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
@@ -1531,32 +1529,35 @@ desktop:
 
 find_icon:
         ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params
-        lda     findwindow_params::which_area ; Icon ID
-        bne     :+
-        jmp     done
+        ldx     findwindow_params::which_area ; Icon ID
+        beq     done
 
         ;; Over an icon
-:       sta     icon_num
+        stx     icon_num
 
         ptr := $06
-        asl     a
-        tax
-        copy16  icon_ptrs,x, ptr
+        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ;; Highlighted?
         ldy     #IconEntry::state
         lda     (ptr),y
-        and     #kIconEntryStateHighlighted
-        bne     done            ; Not valid (it's being dragged)
+        ;;and     #kIconEntryStateHighlighted
+        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
+        asl
+        bmi     done            ; Not valid (it's being dragged)
 
         ;; Is it a drop target?
-        ldy     #IconEntry::win_flags
+        ;;ldy     #IconEntry::win_flags
+        .assert (IconEntry::win_flags - IconEntry::state) = 1, error, "win_flags must be 1 more than state"
+        iny
         lda     (ptr),y
-        and     #kIconEntryFlagsDropTarget
-        beq     done
+        ;;and     #kIconEntryFlagsDropTarget
+        .assert kIconEntryFlagsDropTarget = $40, error, "kIconEntryFlagsDropTarget must be $40"
+        asl
+        bpl     done
 
         ;; Stash window for the future
-        lda     (ptr),y
+        lsr
         and     #kIconEntryWinIdMask
         sta     window_id
 
@@ -1567,7 +1568,7 @@ find_icon:
         jsr     HighlightIcon
         jsr     XdrawOutline
 
-done:   jsr     PopPointers
+done:   jsr     PopPointers     ; do not tail-call optimise!
         rts
 
 icon_num:
@@ -1580,11 +1581,9 @@ headery:
 ;;; Input: A = icon number
 ;;; Output: A,X = address of IconEntry
 .proc GetIconPtr
-        asl     a
         tay
-        lda     icon_ptrs+1,y
-        tax
-        lda     icon_ptrs,y
+        ldx     icon_ptrs_high,y
+        lda     icon_ptrs_low,y
         rts
 .endproc
 
@@ -1635,12 +1634,12 @@ headery:
         MGTK_CALL MGTK::GetWinPort, getwinport_params ; into icon_grafport
 
         sub16   icon_grafport::cliprect::x2, icon_grafport::cliprect::x1, width
-        sub16   icon_grafport::cliprect::y2, icon_grafport::cliprect::y1, height
+        sub16nc icon_grafport::cliprect::y2, icon_grafport::cliprect::y1, height
 
         COPY_STRUCT MGTK::Point, icon_grafport::viewloc, icon_grafport::cliprect
 
         add16   icon_grafport::cliprect::x1, width, icon_grafport::cliprect::x2
-        add16   icon_grafport::cliprect::y1, height, icon_grafport::cliprect::y2
+        add16nc icon_grafport::cliprect::y1, height, icon_grafport::cliprect::y2
 
         ;; Account for window header, and set port to icon_grafport
         jmp     ShiftPortDown
@@ -1669,25 +1668,30 @@ height: .word   0
         ;; Pointer to IconEntry
         ldy     #UnhighlightIconParams::icon
         lda     (params),y
-        asl     a
         tax
-        copy16  icon_ptrs,x, ptr
+        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
-        ldy     #IconEntry::state
+        ;;ldy     #IconEntry::state
+        .assert (IconEntry::state - UnhighlightIconParams::icon) = 1, error, "state must be 1 more than icon"
+        iny
         lda     (ptr),y         ; valid icon?
         bne     :+
         return  #2              ; Invalid icon
 :
-        and     #kIconEntryStateHighlighted
-        bne     :+
+        ;;and     #kIconEntryStateHighlighted
+        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
+        asl
+        bmi     :+
         return  #3              ; Not highlighted
 :
         ;; Mark not highlighted
-        lda     (ptr),y
+        ror
         eor     #kIconEntryStateHighlighted
         sta     (ptr),y
 
-        ldy     #IconEntry::id
+        ;;ldy     #IconEntry::id
+        .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
+        dey
         lda     (ptr),y
         jmp     RemoveFromHighlightList
 .endproc
@@ -1720,10 +1724,8 @@ start:  ldy     #IconInRectParams::icon
         dey
         bne     :-
 
-        lda     icon
-        asl     a
-        tax
-        copy16  icon_ptrs,x, ptr
+        ldx     icon
+        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
         jsr     CalcIconPoly
 
         ;; Compare the rect against both the bitmap bbox and text bbox
@@ -1808,7 +1810,6 @@ common:
         and     #kIconEntryFlagsOpen
         sta     open_flag
 
-        ldy     #IconEntry::win_flags
         lda     ($06),y
         and     #kIconEntryWinIdMask
         bne     :+
@@ -1819,12 +1820,13 @@ common:
         sta     icon_flags
 
         ;; copy icon entry coords and bits
-:       ldy     #IconEntry::iconx
-:       lda     ($06),y
+        ;;ldy     #IconEntry::iconx
+        .assert (IconEntry::iconx - IconEntry::win_flags) = 1, error, "iconx must be 1 more than win_flags"
+:       iny
+        lda     ($06),y
         sta     icon_paintbits_params::viewloc-IconEntry::iconx,y
         sta     mask_paintbits_params::viewloc-IconEntry::iconx,y
-        iny
-        cpy     #IconEntry::iconx + 6 ; x/y/bits
+        cpy     #IconEntry::iconx + 5 ; x/y/bits
         bne     :-
 
         jsr     PushPointers
@@ -1849,6 +1851,7 @@ common:
         ;; Center horizontally
         ;;  text_left = icon_left + icon_width/2 - text_width/2
         ;;            = (icon_left*2 + icon_width - text_width) / 2
+;;xxx
         copy16  icon_paintbits_params::viewloc::xcoord, moveto_params2::xcoord ; = icon_left
         asl16   moveto_params2::xcoord ; *= 2
         add16   moveto_params2::xcoord, icon_paintbits_params::maprect::x2, moveto_params2::xcoord ; += icon_width
@@ -1946,7 +1949,7 @@ done:   rts
 .proc CalcRectOpendir
         ldx     #0
 :       add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::topleft,x, rect_opendir::topleft,x
-        add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::bottomright,x, rect_opendir::bottomright,x
+        add16nc icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::bottomright,x, rect_opendir::bottomright,x
         inx
         inx
         cpx     #.sizeof(MGTK::Point)
@@ -2012,7 +2015,9 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         sta     poly::v2::xcoord+1
 
         ;; Bottom edge of icon (v2, v7)
-        ldy     #IconDefinition::maprect + MGTK::Rect::y2
+        ;;ldy     #IconDefinition::maprect + MGTK::Rect::y2
+        .assert (MGTK::Rect::y2 - MGTK::Rect::x2) = 2, error, "y2 must be 2 more than x2"
+        iny
         add16in (bitmap_ptr),y, poly::v0::ycoord, poly::v2::ycoord
 
         lda     poly::v2::ycoord ; 2px down
@@ -2031,7 +2036,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
         ;; Bottom edge of label (v4, v5)
         lda     font_height
-        clc
+        ;;clc
         adc     poly::v2::ycoord
         sta     poly::v4::ycoord
         sta     poly::v5::ycoord
@@ -2052,6 +2057,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         ;;  text_left = icon_left + icon_width/2 - text_width/2
         ;;            = (icon_left*2 + icon_width - text_width) / 2
         ;; NOTE: Left is computed before right to match rendering code
+;;xxx
         copy16  poly::v0::xcoord, poly::v5::xcoord
         asl16   poly::v5::xcoord
         add16   poly::v5::xcoord, icon_width, poly::v5::xcoord
@@ -2063,7 +2069,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         add16   poly::v5::xcoord, textwidth_params::result, poly::v3::xcoord
         copy16  poly::v3::xcoord, poly::v4::xcoord
 
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 
 icon_width:  .word   0
@@ -2119,18 +2125,16 @@ text_width:  .word   0
         jsr     GetPortBits
 
         ldx     num_icons
-        dex
-loop:   bmi     done
+loop:   dex
+        bmi     done
         txa
         pha
 
-        lda     icon_list,x
-        sta     icon
+        ldy     icon_list,x
+        sty     icon
 
         ;; Is it an icon on the desktop?
-        asl     a
-        tax
-        copy16  icon_ptrs,x, ptr
+        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask ; desktop icon
@@ -2144,11 +2148,10 @@ loop:   bmi     done
 
 next:   pla
         tax
-        dex
-        jmp     loop
+        bpl     loop            ; always
 
 done:   copy    #0, no_clip_vol_icons_flag
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 
         ;; GetPortBits params
@@ -2272,26 +2275,26 @@ icon_num:       .byte   0
 .proc PushPointers
         ;; save return addr
         pla
-        sta     stash
+        sta     stash_low
         pla
-        sta     stash+1
+        sta     stash_high
 
         ;; push $06...$09 to stack
-        ldx     #0
-:       lda     $06,x
+        ldx     #-4 & 255
+:       lda     $06 + 4,x
         pha
         inx
-        cpx     #4
         bne     :-
 
         ;; restore return addr
-        lda     stash+1
+stash_high := * + 1
+        lda     #$11
         pha
-        lda     stash
+stash_low := * + 1
+        lda     #$22
         pha
         rts
 
-stash:  .word   0
 .endproc
 
 ;;; ============================================================
@@ -2299,9 +2302,9 @@ stash:  .word   0
 .proc PopPointers
         ;; save return addr
         pla
-        sta     stash
+        sta     stash_low
         pla
-        sta     stash+1
+        sta     stash_high
 
         ;; pull $06...$09 to stack
         ldx     #3
@@ -2311,13 +2314,13 @@ stash:  .word   0
         bpl     :-
 
         ;; restore return addr
-        lda     stash+1
+stash_high := * + 1
+        lda     #$11
         pha
-        lda     stash
+stash_low := * + 1
+        lda     #$22
         pha
         rts
-
-stash:  .word   0
 
 .endproc
 
@@ -2425,28 +2428,25 @@ volume:
 
         jsr     PushPointers
         ldx     num_icons
-        dex                     ; any icons to draw?
+loop:   dex                     ; any icons to draw?
 
-loop:   cpx     #$FF            ; =-1
-        bne     LA466
+        bpl     LA466
 
         bit     icon_in_window_flag
         bpl     :+
         ;; TODO: Is this restoration necessary?
         MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport
-:       jsr     PopPointers
+:       jsr     PopPointers     ; do not tail-call optimise!
         rts
 
 LA466:  txa
         pha
-        lda     icon_list,x
-        cmp     LA3AC
+        ldy     icon_list,x
+        cpy     LA3AC
         beq     next
 
-        asl     a
-        tax
-        copy16  icon_ptrs,x, ptr
+        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
 
         ;; Same window?
         ldy     #IconEntry::win_flags
@@ -2473,8 +2473,7 @@ LA466:  txa
 
 next:   pla
         tax
-        dex
-        jmp     loop
+        bpl     loop
 .endproc
 
 ;;; ============================================================
@@ -2523,7 +2522,7 @@ LA4E2:  ldy     #MGTK::GrafPort::viewloc
 .proc OffsetPoly
         ldx     #0
 loop1:  sub16   poly::vertices+0,x, vl_offset::xcoord, poly::vertices+0,x
-        sub16   poly::vertices+2,x, vl_offset::ycoord, poly::vertices+2,x
+        sub16nc poly::vertices+2,x, vl_offset::ycoord, poly::vertices+2,x
         inx
         inx
         inx
@@ -2533,7 +2532,7 @@ loop1:  sub16   poly::vertices+0,x, vl_offset::xcoord, poly::vertices+0,x
         ldx     #0
 
 loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
-        add16   poly::vertices+2,x, mr_offset::ycoord, poly::vertices+2,x
+        add16nc poly::vertices+2,x, mr_offset::ycoord, poly::vertices+2,x
         inx
         inx
         inx
@@ -2549,19 +2548,16 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
         pla
         tay
         jsr     PushPointers
-        tya
-        asl     a
-        tax
-        copy16  icon_ptrs,x, ptr
+        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::iconx
         add16in (ptr),y, vl_offset::xcoord, (ptr),y ; iconx += viewloc::xcoord
         iny
-        add16in (ptr),y, vl_offset::ycoord, (ptr),y ; icony += viewloc::xcoord
+        add16innc (ptr),y, vl_offset::ycoord, (ptr),y ; icony += viewloc::xcoord
         ldy     #IconEntry::iconx
         sub16in (ptr),y, mr_offset::xcoord, (ptr),y ; icony -= maprect::left
         iny
-        sub16in (ptr),y, mr_offset::ycoord, (ptr),y ; icony -= maprect::top
-        jsr     PopPointers
+        sub16innc (ptr),y, mr_offset::ycoord, (ptr),y ; icony -= maprect::top
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
@@ -2571,19 +2567,16 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
         pla
         tay
         jsr     PushPointers
-        tya
-        asl     a
-        tax
-        copy16  icon_ptrs,x, ptr
+        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::iconx
         sub16in (ptr),y, vl_offset::xcoord, (ptr),y ; iconx -= viewloc::xcoord
         iny
-        sub16in (ptr),y, vl_offset::ycoord, (ptr),y ; icony -= viewloc::xcoord
+        sub16innc (ptr),y, vl_offset::ycoord, (ptr),y ; icony -= viewloc::xcoord
         ldy     #IconEntry::iconx
         add16in (ptr),y, mr_offset::xcoord, (ptr),y ; iconx += maprect::left
         iny
-        add16in (ptr),y, mr_offset::ycoord, (ptr),y ; icony += maprect::top
-        jsr     PopPointers
+        add16innc (ptr),y, mr_offset::ycoord, (ptr),y ; icony += maprect::top
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
@@ -2798,9 +2791,8 @@ reclip: lda     cr_l
 next_pt:
         ;; Done all 4 points?
         lda     pt_num
-        cmp     #4
+        eor     #4
         bne     do_pt
-        lda     #0
         sta     pt_num
 
         ;; --------------------------------------------------
@@ -2950,7 +2942,7 @@ vert:   cmp16   win_t, cr_t
         adc     #0
         sta     cr_l+1
         sta     vx+1
-        add16   stash_r, #2, cr_r
+        add16nc stash_r, #2, cr_r
         jmp     reclip
 
         ;; Case 5 - done!
@@ -2966,7 +2958,7 @@ vert:   cmp16   win_t, cr_t
         kOffset = kWindowHeaderHeight + 1
 
         add16   icon_grafport::viewloc::ycoord, #kOffset, icon_grafport::viewloc::ycoord
-        add16   icon_grafport::cliprect::y1, #kOffset, icon_grafport::cliprect::y1
+        add16nc   icon_grafport::cliprect::y1, #kOffset, icon_grafport::cliprect::y1
         MGTK_CALL MGTK::SetPort, icon_grafport
         rts
 .endproc
@@ -3550,14 +3542,23 @@ warning_cancel_table:
         ASSERT_TABLE_SIZE warning_cancel_table, ::kNumWarningTypes
 
         ;; Message strings.
-warning_message_table:
-        .addr   str_insert_system_disk    ; kWarningMsgInsertSystemDisk
-        .addr   str_selector_list_full    ; kWarningMsgSelectorListFull
-        .addr   str_window_must_be_closed ; kWarningMsgWindowMustBeClosed
-        .addr   str_too_many_files        ; kWarningMsgTooManyFiles
-        .addr   str_too_many_windows      ; kWarningMsgTooManyWindows
-        .addr   str_save_changes          ; kWarningMsgSaveChanges
-        ASSERT_ADDRESS_TABLE_SIZE warning_message_table, ::kNumWarningTypes
+warning_message_table_low:
+        .byte   <str_insert_system_disk    ; kWarningMsgInsertSystemDisk
+        .byte   <str_selector_list_full    ; kWarningMsgSelectorListFull
+        .byte   <str_window_must_be_closed ; kWarningMsgWindowMustBeClosed
+        .byte   <str_too_many_files        ; kWarningMsgTooManyFiles
+        .byte   <str_too_many_windows      ; kWarningMsgTooManyWindows
+        .byte   <str_save_changes          ; kWarningMsgSaveChanges
+        ASSERT_TABLE_SIZE warning_message_table_low, ::kNumWarningTypes
+
+warning_message_table_high:
+        .byte   >str_insert_system_disk    ; kWarningMsgInsertSystemDisk
+        .byte   >str_selector_list_full    ; kWarningMsgSelectorListFull
+        .byte   >str_window_must_be_closed ; kWarningMsgWindowMustBeClosed
+        .byte   >str_too_many_files        ; kWarningMsgTooManyFiles
+        .byte   >str_too_many_windows      ; kWarningMsgTooManyWindows
+        .byte   >str_save_changes          ; kWarningMsgSaveChanges
+        ASSERT_TABLE_SIZE warning_message_table_high, ::kNumWarningTypes
 
 str_insert_system_disk:
         PASCAL_STRING res_string_warning_insert_system_disk
@@ -3601,11 +3602,8 @@ start:
 set:    sty     alert_params::buttons
 
         ;; Strings
-        txa
-        asl                     ; *=2
-        tax
 
-        copy16  warning_message_table,x, alert_params::text
+        copylohi  warning_message_table_low,x, warning_message_table_high,x, alert_params::text
 
         ;; Show the alert
         ldax    #alert_params
@@ -3684,12 +3682,19 @@ alert_table:
         ASSERT_TABLE_SIZE alert_table, kNumAlerts
 
         ;; alert index to string address
-message_table:
-        .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
-        .addr   err_47,err_48,err_49,err_4E,err_52,err_57
-        .addr   err_F5, err_F6, err_F7,err_F8,err_F9,err_FA
-        .addr   err_FB,err_FC,err_FD,err_FE
-        ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlerts
+message_table_low:
+        .byte   <err_00,<err_27,<err_28,<err_2B,<err_40,<err_44,<err_45,<err_46
+        .byte   <err_47,<err_48,<err_49,<err_4E,<err_52,<err_57
+        .byte   <err_F5,<err_F6,<err_F7,<err_F8,<err_F9,<err_FA
+        .byte   <err_FB,<err_FC,<err_FD,<err_FE
+        ASSERT_TABLE_SIZE message_table_low, kNumAlerts
+
+message_table_high:
+        .byte   >err_00,>err_27,>err_28,>err_2B,>err_40,>err_44,>err_45,>err_46
+        .byte   >err_47,>err_48,>err_49,>err_4E,>err_52,>err_57
+        .byte   >err_F5,>err_F6,>err_F7,>err_F8,>err_F9,>err_FA
+        .byte   >err_FB,>err_FC,>err_FD,>err_FE
+        ASSERT_TABLE_SIZE message_table_high, kNumAlerts
 
 alert_options_table:
         .byte   AlertButtonOptions::Ok             ; dummy
@@ -3738,14 +3743,11 @@ start:
         beq     :+
         dey
         bpl     :-
-        ldy     #0              ; default
+        iny                     ; default
 :
 
         ;; Look up message
-        tya                     ; Y = index
-        asl     a
-        tay                     ; Y = index * 2
-        copy16  message_table,y, alert_params::text
+        copylohi  message_table_low,y, message_table_high,y, alert_params::text
 
         ;; If options is 0, use table value; otherwise,
         ;; mask off low bit and it's the action (N and V bits)
@@ -3761,14 +3763,12 @@ start:
         and     #$FE            ; ignore low bit, e.g. treat $01 as $00
         sta     alert_params::buttons
       ELSE
-        tya                     ; Y = index * 2
-        lsr     a
-        tay                     ; Y = index
         copy    alert_options_table,y, alert_params::buttons
       END_IF
 
         ldax    #alert_params
-        jmp     Alert
+        ;;jmp     Alert
+        ;; fall through
 .endproc
 
 ;;; ============================================================
