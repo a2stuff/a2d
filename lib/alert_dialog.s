@@ -279,7 +279,7 @@ event_loop:
         LIB_MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
-        jeq     HandleButtonDown
+        beq     HandleButtonDown
 
         cmp     #MGTK::EventKind::key_down
         bne     event_loop
@@ -314,21 +314,20 @@ do_try_again:
         beq     do_try_again
         cmp     #CHAR_RETURN    ; also allow Return as default
         beq     do_try_again
-        jmp     event_loop
+        bne     event_loop
 
 check_only_ok:
         cmp     #CHAR_ESCAPE    ; also allow Escape as default
         beq     do_ok
 check_ok:
         cmp     #CHAR_RETURN
-        bne     :+
+        bne     event_loop
 
 do_ok:  LIB_MGTK_CALL MGTK::SetPenMode, penXOR
         LIB_MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     #kAlertResultOK
-        jmp     finish
-
-:       jmp     event_loop
+        .assert kAlertResultOK <> 0, error, "kAlertResultOK must be non-zero"
+        bne     finish          ; always
 
         ;; --------------------------------------------------
         ;; Buttons
@@ -346,7 +345,8 @@ HandleButtonDown:
         param_call AlertButtonEventLoop, cancel_button_rect
         bne     no_button
         lda     #kAlertResultCancel
-        jmp     finish
+        .assert kAlertResultCancel <> 0, error, "kAlertResultCancel must be non-zero"
+        bne     finish          ; always
 
 :       bit     alert_params::buttons ; Try Again showing?
         bvs     check_ok_rect   ; nope
@@ -357,7 +357,8 @@ HandleButtonDown:
         param_call AlertButtonEventLoop, try_again_button_rect
         bne     no_button
         lda     #kAlertResultTryAgain
-        jmp     finish
+        .assert kAlertResultTryAgain = 0, error, "kAlertResultTryAgain must be non-zero"
+        beq     finish          ; always
 
 check_ok_rect:
         LIB_MGTK_CALL MGTK::InRect, ok_button_rect ; OK?
@@ -366,7 +367,8 @@ check_ok_rect:
         param_call AlertButtonEventLoop, ok_button_rect
         bne     no_button
         lda     #kAlertResultOK
-        jmp     finish
+        .assert kAlertResultOK <> 0, error, "kAlertResultOK must be non-zero"
+        bne     finish          ; always
 
 no_button:
         jmp     event_loop
@@ -390,7 +392,7 @@ finish:
 
 .proc MapEventCoords
         sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
-        sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
+        sub16nc event_ycoord, portmap::viewloc::ycoord, event_ycoord
         rts
 .endproc
 
