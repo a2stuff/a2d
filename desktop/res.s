@@ -632,6 +632,21 @@ desktop_icon_usage_table:
 
 ;;; ============================================================
 
+str_jan:PASCAL_STRING res_string_month_name_1
+str_feb:PASCAL_STRING res_string_month_name_2
+str_mar:PASCAL_STRING res_string_month_name_3
+str_apr:PASCAL_STRING res_string_month_name_4
+str_may:PASCAL_STRING res_string_month_name_5
+str_jun:PASCAL_STRING res_string_month_name_6
+str_jul:PASCAL_STRING res_string_month_name_7
+str_aug:PASCAL_STRING res_string_month_name_8
+str_sep:PASCAL_STRING res_string_month_name_9
+str_oct:PASCAL_STRING res_string_month_name_10
+str_nov:PASCAL_STRING res_string_month_name_11
+str_dec:PASCAL_STRING res_string_month_name_12
+
+;;; ============================================================
+
         PAD_TO $DB00
 
 ;;; ============================================================
