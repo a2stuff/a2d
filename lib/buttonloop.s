@@ -31,11 +31,10 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         beq     inside
         lda     down_flag       ; outside but was inside?
         beq     toggle
-        jmp     loop
+        bne     loop            ; always
 
 inside: lda     down_flag       ; already depressed?
-        bne     toggle
-        jmp     loop
+        beq     loop
 
 toggle: jsr     Invert
         lda     down_flag
