@@ -431,23 +431,75 @@ end:
 .endmacro
 ;;; (absolute, absolute, absolute, but requiring carry clear already)
 .macro add16nc arg1, arg2, arg3, arg4, arg5, arg6
-    lda arg1
-    adc arg2
-    sta arg3
-    lda arg1 + 1
-    adc arg2 + 1
-    sta arg3 + 1
+    .ifblank arg4
+        lda arg1
+        adc arg2
+        sta arg3
+        lda arg1 + 1
+        adc arg2 + 1
+        sta arg3 + 1
+    .elseif _is_register {arg4}
+        lda arg1,arg2
+        adc arg3,arg4
+        sta arg5,arg6
+        lda arg1 + 1,arg2
+        adc arg3 + 1,arg4
+        sta arg5 + 1,arg6
+    .else
+        lda arg1,arg2
+        adc arg3
+        sta arg4,arg5
+        lda arg1 + 1,arg2
+        adc arg3 + 1
+        sta arg4 + 1,arg5
+    .endif
 .endmacro
 ;;; (absolute, absolute, absolute, but requiring carry set already)
 .macro sub16nc arg1, arg2, arg3, arg4, arg5, arg6
-    lda arg1
-    sbc arg2
-    sta arg3
-    lda arg1 + 1
-    sbc arg2 + 1
-    sta arg3 + 1
+    .ifblank arg4
+        lda arg1
+        sbc arg2
+        sta arg3
+        lda arg1 + 1
+        sbc arg2 + 1
+        sta arg3 + 1
+    .elseif _is_register {arg4}
+        lda arg1,arg2
+        sbc arg3,arg4
+        sta arg5,arg6
+        lda arg1 + 1,arg2
+        sbc arg3 + 1,arg4
+        sta arg5 + 1,arg6
+    .else
+        lda arg1,arg2
+        sbc arg3
+        sta arg4,arg5
+        lda arg1 + 1,arg2
+        sbc arg3 + 1
+        sta arg4 + 1,arg5
+    .endif
+.endmacro
+;;; (indirect, absolute, indirect, but requiring carry clear already)
+.macro add16innc arg1, arg2, arg3, arg4, arg5
+    lda arg1,arg2
+    adc arg3
+    sta arg4,arg5
+    iny
+    lda arg1,arg2
+    adc arg3 + 1
+    sta arg4,arg5
 .endmacro
 
+;;; (indirect, absolute, indirect, but requiring carry set already)
+.macro sub16innc arg1, arg2, arg3, arg4, arg5
+    lda arg1,arg2
+    sbc arg3
+    sta arg4,arg5
+    iny
+    lda arg1,arg2
+    sbc arg3 + 1
+    sta arg4,arg5
+.endmacro
 
 ;;; Add arg1 (absolute) to arg2 (8-bit absolute), store to arg3
 ;;;    add16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
@@ -588,8 +640,11 @@ end:
 ;;; Copy low/high 16-bit value
 ;;; 8 bits from $1111[,x] to $3333
 ;;; 8 bits from $2222[,x] to $3333+1
+;;; 8 bits from $1111 to $2222
+;;; 8 bits from $1111+1 to $3333
 ;;;    copylohi $1111, $2222, $3333        ; absolute, absolute
 ;;;    copylohi $1111,x, $2222,x, $3333    ; indirect load, absolute store
+;;;    copylohi $1111, $2222,x, $3333,x    ; absolute load, indirect store
 .macro copylohi arg1, arg2, arg3, arg4, arg5
     .if _is_register {arg2}
         ;; indexed load
@@ -598,6 +653,12 @@ end:
         sta     arg5
         lda     arg3,arg4
         sta     arg5+1
+    .elseif _is_register {arg3}
+        ;; indexed store
+        lda     arg1
+        sta     arg2,arg3
+        lda     arg1+1
+        sta     arg4,arg5
     .else
         lda     arg1
         sta     arg3

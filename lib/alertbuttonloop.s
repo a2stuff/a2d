@@ -26,11 +26,10 @@ loop:   LIB_MGTK_CALL MGTK::GetEvent, event_params
         beq     inside
         lda     flag
         beq     toggle
-        jmp     loop
+        bne     loop
 
 inside: lda     flag
-        bne     toggle
-        jmp     loop
+        beq     loop
 
 toggle: jsr     Invert
         lda     flag
