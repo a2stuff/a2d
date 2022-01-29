@@ -27,28 +27,22 @@ start:
         ;; IIgs?
         sec                     ; Follow detection protocol
         jsr     IDROUTINE       ; RTS on pre-IIgs
-        bcs     :+              ; carry clear = IIgs
+
         ldxy    #kDefaultDblClickSpeed*4
-        jmp     update
-:
+        bcc     update          ; carry clear = IIgs
 
         ;; IIc Plus?
         lda     ZIDBYTE         ; $00 = IIc or later
         bne     :+
         lda     ZIDBYTE2        ; IIc ROM Version
         cmp     #5
-        bne     :+
-        ldxy    #kDefaultDblClickSpeed*4
-        jmp     update
+        beq     update          ; 4x speed
 :
 
         ;; Laser 128?
         lda     IDBYTELASER128  ; $AC = Laser 128
         cmp     #$AC
-        bne     :+
-        ldxy    #kDefaultDblClickSpeed*4
-        jmp     update
-:
+        beq     update          ; 4x speed
 
         ;; Default:
         ldxy    #kDefaultDblClickSpeed
