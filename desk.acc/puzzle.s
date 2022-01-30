@@ -609,7 +609,8 @@ ploop:  lda     position_table+1,y
         jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        beq     Scramble
+        cmp     #MGTK::EventKind::button_down
+        bne     Scramble
         jsr     CheckVictory
         bcs     Scramble
         jsr     DrawAll

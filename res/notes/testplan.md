@@ -458,6 +458,7 @@
 
 * Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Launch This Apple DA, close it. Verify that the file is still present on Ram5.
 
+* Launch DeskTop. Apple > Puzzle. Verify that the puzzle does not show as scrambled until the mouse button is pressed. Repeat and verify that the puzzle is scrambled differently each time.
 
 # Selector
 
