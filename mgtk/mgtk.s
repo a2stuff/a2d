@@ -3866,10 +3866,9 @@ flag    .byte
 
         lda     params::flag
         cmp     preserve_zp_flag
-        beq     rts3
+        beq     :+
         sta     preserve_zp_flag
-        bcc     rts3
-        jmp     Dispatch::cleanup
+:       rts
 .endproc
 
 ;;; ============================================================
