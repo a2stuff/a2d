@@ -126,8 +126,9 @@ pb2_initial_state:
 .endparams
 
 .params initmenu_params
-solid_char:     .byte   kGlyphSolidApple
 open_char:      .byte   kGlyphOpenApple
+solid_char:     .byte   kGlyphSolidApple
+        .assert (solid_char - open_char) = 1, error, "solid_char must follow open_char immediately"
 check_char:     .byte   kGlyphCheckmark
 control_char:   .byte   '^'
 .endparams
