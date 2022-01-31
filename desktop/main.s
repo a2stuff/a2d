@@ -14381,7 +14381,7 @@ dialog_param_addr:
         sta     format_erase_overlay_flag
         sta     cursor_ibeam_flag
 
-        copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
         copy16  #rts1, jump_relay+1
         jsr     SetCursorPointer ; when opening dialog
@@ -14399,10 +14399,12 @@ dialog_param_addr:
         beq     :+
 
         ;; Blink the insertion point
-        dec     prompt_ip_counter
+        dec16   prompt_ip_counter
+        lda     prompt_ip_counter
+        ora     prompt_ip_counter+1
         bne     :+
         jsr     RedrawPromptInsertionPoint
-        copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
         ;; Dispatch event types - mouse down, key press
 :       jsr     YieldLoop

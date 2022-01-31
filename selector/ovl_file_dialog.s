@@ -107,7 +107,7 @@ buf_input_right:        .res    68, 0 ; IP and right
         .byte   $00
 
 prompt_ip_counter:
-        .byte   1             ; immediately decremented to 0 and reset
+        .word   1             ; immediately decremented to 0 and reset
 
         .byte   $00
 

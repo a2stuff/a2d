@@ -11,7 +11,7 @@
         jmp     start
 
         DEFINE_OPEN_PARAMS open_params, str_config, settings_io_buf
-        DEFINE_READ_PARAMS read_params, settings_load_buf, .sizeof(DeskTopSettings)
+        DEFINE_READ_PARAMS read_params, settings_load_buf, kDeskTopSettingsFileSize
         DEFINE_CLOSE_PARAMS close_params
 
 str_config:
@@ -60,11 +60,8 @@ update: stxy    SETTINGS + DeskTopSettings::dblclick_speed
         bcs     close
 
         ;; Check version bytes; ignore on mismatch
-        lda     settings_load_buf + DeskTopSettings::version_major
-        cmp     #kDeskTopVersionMajor
-        bne     close
-        lda     settings_load_buf + DeskTopSettings::version_minor
-        cmp     #kDeskTopVersionMinor
+        lda     settings_load_buf
+        cmp     #kDeskTopSettingsFileVersion
         bne     close
 
         ;; Successful - move settings block into place
@@ -74,7 +71,7 @@ update: stxy    SETTINGS + DeskTopSettings::dblclick_speed
         bit     LCBANK1
 .endif
 
-        COPY_STRUCT DeskTopSettings, settings_load_buf, SETTINGS
+        COPY_STRUCT DeskTopSettings, settings_load_buf + kDeskTopSettingsFileOffset, SETTINGS
 
 .if ::SETTINGS >= $C000
         sta     ALTZPOFF        ; Bank in Main ZP/LC and ROM

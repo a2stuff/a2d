@@ -618,14 +618,14 @@ kHourDisplayY = 114
         jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::EventKind::no_event
+        .assert MGTK::EventKind::no_event = 0, error, "no_event must be 0"
         beq     HandleMove
         cmp     #MGTK::EventKind::button_down
         beq     HandleDown
         cmp     #MGTK::EventKind::key_down
         beq     HandleKey
 
-        jmp     InputLoop
+        bne     InputLoop       ; always
 .endproc
 
 .proc YieldLoop
@@ -706,7 +706,7 @@ kHourDisplayY = 114
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-common: bit     dragwindow_params::moved
+        bit     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
@@ -731,33 +731,23 @@ common: bit     dragwindow_params::moved
         MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, fatbits_rect
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     HandleBitsClick
-        END_IF
+        jeq     HandleBitsClick
 
         MGTK_CALL MGTK::InRect, larr_rect
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     HandleLArrClick
-        END_IF
+        jeq     HandleLArrClick
 
         MGTK_CALL MGTK::InRect, rarr_rect
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     HandleRArrClick
-        END_IF
+        jeq     HandleRArrClick
 
         MGTK_CALL MGTK::InRect, preview_rect
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     HandlePatternClick
-        END_IF
+        jeq     HandlePatternClick
 
         MGTK_CALL MGTK::InRect, rect_rgb
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     HandleRGBClick
-        END_IF
+        jeq     HandleRGBClick
 
         ;; ----------------------------------------
 
@@ -898,7 +888,7 @@ common: bit     dragwindow_params::moved
         and     mask1,x
         beq     :+
         lda     #0
-        jmp     @store
+        beq     @store          ; always
 :       lda     #$FF
 @store: sta     flag
 
@@ -937,16 +927,15 @@ event:  MGTK_CALL MGTK::GetEvent, event_params
         bne     event
 
         jsr     MapCoords
-        lda     mx
-        cmp     lastx
+        ldx     mx
+        ldy     my
+        cpx     lastx
         bne     moved
-        lda     my
-        cmp     lasty
-        bne     moved
-        jmp     event
+        cpy     lasty
+        beq     event
 
-moved:  copy    mx, lastx
-        copy    my, lasty
+moved:  stx     lastx
+        sty     lasty
         jmp     loop
 
 mask1:  .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
@@ -1010,7 +999,7 @@ next:   dex
 .endproc
 
 .proc HandleDblclickClick
-        sta     dblclick_selection  ; 1, 2 or 3
+        sta     dblclick_selection ; 1, 2 or 3
         asl                     ; *= 2
         tax
         dex
@@ -1178,7 +1167,7 @@ loop:   ldy     #3
         bpl     :-
 
         MGTK_CALL MGTK::PaintBits, darrow_params
-        add16_8 addr, #.sizeof(MGTK::Point), addr
+        add16_8 addr, #.sizeof(MGTK::Point)
         inc     arrow_num
         lda     arrow_num
         cmp     #kNumArrows
@@ -1466,11 +1455,11 @@ rotated_pattern:
 
         copy    #0, ypos
         copy16  fatbits_rect::y1, bitrect::y1
-        add16   bitrect::y1, #kFatBitHeight-1, bitrect::y2
+        add16_8 bitrect::y1, #kFatBitHeight-1, bitrect::y2
 
 yloop:  copy    #0, xpos
         copy16  fatbits_rect::x1, bitrect::x1
-        add16   bitrect::x1, #kFatBitWidth-1, bitrect::x2
+        add16_8 bitrect::x1, #kFatBitWidth-1, bitrect::x2
         ldy     ypos
         copy    pattern,y, row
 
@@ -1489,8 +1478,8 @@ store:  sta     mode
         lda     xpos
         cmp     #8
         IF_NE
-        add16   bitrect::x1, #kFatBitWidth, bitrect::x1
-        add16   bitrect::x2, #kFatBitWidth, bitrect::x2
+        add16_8 bitrect::x1, #kFatBitWidth
+        add16_8 bitrect::x2, #kFatBitWidth
         jmp     xloop
         END_IF
 
@@ -1499,8 +1488,8 @@ store:  sta     mode
         lda     ypos
         cmp     #8
         IF_NE
-        add16   bitrect::y1, #kFatBitHeight, bitrect::y1
-        add16   bitrect::y2, #kFatBitHeight, bitrect::y2
+        add16_8 bitrect::y1, #kFatBitHeight
+        add16_8 bitrect::y2, #kFatBitHeight
         jmp     yloop
         END_IF
 
@@ -1537,9 +1526,9 @@ mode:   .byte   0
         bne     :-
 
         add16   bitrect::x1, fatbits_rect::x1, bitrect::x1
-        add16   bitrect::x1, #kFatBitWidth-1, bitrect::x2
+        add16_8 bitrect::x1, #kFatBitWidth-1, bitrect::x2
         add16   bitrect::y1, fatbits_rect::y1, bitrect::y1
-        add16   bitrect::y1, #kFatBitHeight-1, bitrect::y2
+        add16_8 bitrect::y1, #kFatBitHeight-1, bitrect::y2
 
         lda     #MGTK::pencopy
         bit     mode
@@ -1769,32 +1758,44 @@ pattern_cE:      .res 8, $77     ; E = aqua
 kIPBlinkSpeedTableSize = 3
 
 ipblink_speed_table:
-        .byte   kDefaultIPBlinkSpeed * 2
-        .byte   kDefaultIPBlinkSpeed * 1
-        .byte   kDefaultIPBlinkSpeed * 1/2
+        .word   kDefaultIPBlinkSpeed * 2
+        .word   kDefaultIPBlinkSpeed * 1
+        .word   kDefaultIPBlinkSpeed * 1/2
 
 ipblink_counter:
-        .byte   120
+        .word   kDefaultIPBlinkSpeed
 
 .proc InitIpblink
-        lda     SETTINGS + DeskTopSettings::ip_blink_speed
-        ldx     #kIPBlinkSpeedTableSize
-:       cmp     ipblink_speed_table-1,x
-        beq     done
-        dex
-        bne     :-
+        ;; Find matching index in word table, or 0
+        ldx     #kIPBlinkSpeedTableSize * 2
+loop:   lda     SETTINGS + DeskTopSettings::ip_blink_speed
+        cmp     ipblink_speed_table-2,x
+        bne     next
+        lda     SETTINGS + DeskTopSettings::ip_blink_speed+1
+        cmp     ipblink_speed_table-2+1,x
+        bne     next
+        ;; Found a match
+        txa
+        lsr                     ; /= 2
+        sta     ipblink_selection
+        rts
 
-done:   stx     ipblink_selection
+next:   dex
+        dex
+        bpl     loop
+        copy    #0, ipblink_selection ; not found
         rts
 .endproc
 
 .proc HandleIpblinkClick
-        sta     ipblink_selection
-
+        sta     ipblink_selection ; 1, 2 or 3
+        asl                     ; *= 2
         tax
-        lda     ipblink_speed_table-1,x
-        sta     SETTINGS + DeskTopSettings::ip_blink_speed
-        sta     ipblink_counter
+        dex
+        dex                     ; 0, 2 or 4
+
+        copy16  ipblink_speed_table,x, SETTINGS + DeskTopSettings::ip_blink_speed
+        copy16  ipblink_speed_table,x, ipblink_counter
 
         MGTK_CALL MGTK::GetWinPort, winport_params
         MGTK_CALL MGTK::SetPort, grafport
@@ -1805,11 +1806,12 @@ done:   stx     ipblink_selection
 .endproc
 
 .proc DoIPBlink
-        dec     ipblink_counter
+        dec16   ipblink_counter
         lda     ipblink_counter
+        ora     ipblink_counter+1
         bne     done
 
-        copy    SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_counter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_counter
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, winport_params
         cmp     #MGTK::Error::window_obscured

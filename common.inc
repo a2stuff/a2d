@@ -78,23 +78,25 @@ kDefaultDblClickSpeed   = $12C
 kDefaultIPBlinkSpeed    = 60
 
 .struct DeskTopSettings
-        version_major   .byte
-        version_minor   .byte
         pattern         .res 8
         dblclick_speed  .word
-        ip_blink_speed  .byte
+        ip_blink_speed  .word
         clock_24hours   .byte   ; $00 = 12 hour, $80 = 24 hour
         rgb_color       .byte   ; $00 = B&W, $80 = Color
         mouse_tracking  .byte   ; 0 = normal, 1 = 2x speed
 
         startup         .byte   ; kStartupXYZ options
 
-        reserved        .res 111
+        reserved        .res 112
 .endstruct
         .assert .sizeof(DeskTopSettings) = $80, error, .sprintf("Expected $80, was $%0X", .sizeof(DeskTopSettings))
 
 DeskTopSettings::kStartupSkipRAMCard  = %00000001 ; skip copy to RAMCard, if set
 DeskTopSettings::kStartupSkipSelector = %00000010 ; skip starting Selector, if set
+
+kDeskTopSettingsFileVersion = 2
+kDeskTopSettingsFileSize = 1 + .sizeof(DeskTopSettings)
+kDeskTopSettingsFileOffset = 1  ; offset into file of settings (first byte is version)
 
 ;;; ============================================================
 ;;; Alert library options

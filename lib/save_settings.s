@@ -13,18 +13,19 @@ filename_buffer:
 ;;; The space between `WINDOW_ENTRY_TABLES` and `DA_IO_BUFFER` is usable in
 ;;; Main memory only.
         write_buffer := WINDOW_ENTRY_TABLES
-        .assert DA_IO_BUFFER - write_buffer >= .sizeof(DeskTopSettings), error, "Not enough room"
+        .assert DA_IO_BUFFER - write_buffer >= kDeskTopSettingsFileSize, error, "Not enough room"
 
         DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_WRITE_PARAMS write_params, write_buffer, .sizeof(DeskTopSettings)
+        DEFINE_WRITE_PARAMS write_params, write_buffer, kDeskTopSettingsFileSize
         DEFINE_CLOSE_PARAMS close_params
 
 .proc SaveSettings
         ;; Run from Main, but with LCBANK1 in
 
         ;; Copy from LCBANK to somewhere ProDOS can read.
-        COPY_STRUCT DeskTopSettings, SETTINGS, write_buffer
+        COPY_STRUCT DeskTopSettings, SETTINGS, write_buffer + kDeskTopSettingsFileOffset
+        copy    #kDeskTopSettingsFileVersion, write_buffer
 
         ;; Write to desktop current prefix
         ldax    #filename

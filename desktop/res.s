@@ -463,7 +463,7 @@ has_input_field_flag:
         .byte   0
 
 prompt_ip_counter:
-        .byte   1             ; immediately decremented to 0 and reset
+        .word   1             ; immediately decremented to 0 and reset
 
 prompt_ip_flag:
         .byte   0

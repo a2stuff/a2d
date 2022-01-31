@@ -116,7 +116,7 @@ routine_table:  .addr   $7000, $7000, $7000
         sta     extra_controls_flag
         sta     listbox_disabled_flag
 
-        copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
         copy    #$FF, file_dialog_res::selected_index
 
 .if FD_EXTENDED
@@ -155,10 +155,12 @@ listbox_disabled_flag:  ; Set when the listbox is not active
         bit     blink_ip_flag
         bpl     :+
 
-        dec     prompt_ip_counter
+        dec16   prompt_ip_counter
+        lda     prompt_ip_counter
+        ora     prompt_ip_counter+1
         bne     :+
         jsr     BlinkIP
-        copy    SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
 :       jsr     YieldLoop
         LIB_MGTK_CALL MGTK::GetEvent, event_params
