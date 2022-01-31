@@ -617,7 +617,6 @@ kHourDisplayY = 114
         jsr     DoIPBlink
         jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     Exit
         lda     event_kind
         cmp     #MGTK::EventKind::no_event
         beq     HandleMove

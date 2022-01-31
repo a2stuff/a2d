@@ -197,7 +197,6 @@ grow_box_bitmap:
 .proc InputLoop
         jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     Exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         beq     HandleDown

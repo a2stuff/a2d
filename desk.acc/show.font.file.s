@@ -290,7 +290,6 @@ char_label:  .byte   0
 .proc InputLoop
         jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     Exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
         jeq     HandleDown
