@@ -16788,7 +16788,7 @@ diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
 .scope save_restore_windows
         desktop_file_io_buf := IO_BUFFER
         desktop_file_data_buf := $1800
-        kFileSize = 2 + 8 * .sizeof(DeskTopFileItem) + 1
+        kFileSize = 1 + 8 * .sizeof(DeskTopFileItem) + 1
 
         DEFINE_CREATE_PARAMS create_params, str_desktop_file, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, str_desktop_file, desktop_file_io_buf
@@ -16802,8 +16802,9 @@ str_desktop_file:
         data_ptr := $06
         winfo_ptr := $08
 
-        ;; Write version bytes
+        ;; Write file format version byte
         copy    #kDeskTopFileVersion, desktop_file_data_buf
+
         copy16  #desktop_file_data_buf+1, data_ptr
 
         ;; Get first window pointer

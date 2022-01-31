@@ -1136,10 +1136,11 @@ iloop:  cpx     cached_window_entry_count
         MLI_RELAY_CALL READ, main::save_restore_windows::read_params
         jsr     main::save_restore_windows::Close
 
-        ;; Validate version bytes
+        ;; Validate file format version byte
         lda     main::save_restore_windows::desktop_file_data_buf
         cmp     #kDeskTopFileVersion
         bne     exit
+
         copy16  #main::save_restore_windows::desktop_file_data_buf+1, data_ptr
 
 loop:   ldy     #0
