@@ -463,6 +463,8 @@
 
 * Launch DeskTop. Apple > Puzzle. Verify that the puzzle does not show as scrambled until the mouse button is pressed. Repeat and verify that the puzzle is scrambled differently each time.
 
+* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Ensure BASIC.SYSTEM is present on the boot volume. Launch DeskTop. Open a window. Apple > Run Basic Here. Verify that BASIC.SYSTEM starts.
+
 # Selector
 
 * Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.

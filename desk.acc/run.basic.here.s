@@ -111,6 +111,9 @@ quit:   MLI_CALL QUIT, quit_params
         ;; Use original location, since BASIC.SYSTEM was unlikely
         ;; to be copied.
         param_call CopyDeskTopOriginalPrefix, bs_path
+        inc     bs_path         ; Append trailing '/'
+        ldx     bs_path
+        copy    #'/', bs_path,x
         jmp     got_prefix
 
 get_current_prefix:
