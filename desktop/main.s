@@ -1667,6 +1667,7 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         sta     running_da_flag
 
         ;; Restore state
+        jsr     ShowClockForceUpdate
         jsr     ResetMainGrafport
 done:   jsr     SetCursorPointer ; after invoking DA
         rts

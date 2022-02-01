@@ -412,6 +412,8 @@
 * Preview an image file; verify that Escape key exits.
 * Preview an image file on IIgs or with RGB card; verify that space bar toggles color/mono.
 
+* Configure a system with a realtime clock. Launch DeskTop. Preview an image file. Exit the preview. Verify that the menu bar clock reappears immediately.
+
 # Desk Accessories
 
 * Run Apple > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
@@ -431,6 +433,7 @@
 * Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
 
 * Launch DeskTop. Apple > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
+* Configure a system with a realtime clock. Launch DeskTop. Apple > Screen Savers. Run a screen saver that uses the full graphics screen and conceals the menu (Flying Toasters or Melt). Exit it. Verify that the menu bar clock reappears immediately.
 
 * Launch DeskTop. Apple > About Apple II DeskTop. Click anywhere on the screen. Verify that the dialog closes.
 * Launch DeskTop. Apple > About Apple II DeskTop. Press any non-modifier key screen. Verify that the dialog closes.
