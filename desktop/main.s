@@ -1660,7 +1660,9 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         ;; Invoke it
         jsr     SetCursorPointer ; before invoking DA
         jsr     ResetMainGrafport
+        MGTK_RELAY_CALL MGTK::SetZP1, setzp_params_preserve
         jsr     DA_LOAD_ADDRESS
+        MGTK_RELAY_CALL MGTK::SetZP1, setzp_params_nopreserve
         lda     #0
         sta     running_da_flag
 
@@ -15725,7 +15727,7 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 ;;; ============================================================
 
 .proc MLIRelayImpl
-        params_src := $80
+        params_src := $7E
 
         ;; Adjust return address on stack, compute
         ;; original params address.

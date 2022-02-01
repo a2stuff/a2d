@@ -114,14 +114,6 @@ window_id:     .byte   kDAWindowId
 .endparams
         getwinport_params_window_id := getwinport_params::window_id
 
-.params preserve_zp_params
-flag:   .byte   MGTK::zp_preserve
-.endparams
-
-.params overwrite_zp_params
-flag:   .byte   MGTK::zp_overwrite
-.endparams
-
 ;;; ============================================================
 ;;; Button Definitions
 

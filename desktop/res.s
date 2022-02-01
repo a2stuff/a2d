@@ -114,8 +114,11 @@ check_char:     .byte   kGlyphCheckmark
 control_char:   .byte   '^'
 .endparams
 
-zp_use_flag0:
-        .byte   0
+setzp_params_nopreserve:           ; performance over convenience
+        .byte   MGTK::zp_overwrite ; set at startup
+
+setzp_params_preserve:            ; convenience over performance
+        .byte   MGTK::zp_preserve ; used while DAs are running
 
 .params trackgoaway_params
 goaway:.byte   0

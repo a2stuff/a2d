@@ -235,6 +235,7 @@ end:
 ;;; Initialize MGTK
 
 .scope
+        MGTK_RELAY_CALL MGTK::SetZP1, setzp_params_nopreserve
         MGTK_RELAY_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
         MGTK_RELAY_CALL MGTK::InitMenu, initmenu_params

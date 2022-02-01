@@ -74,8 +74,8 @@ kSelectorListBufSize = $800
 ;;; ============================================================
 ;;; Settings Config File
 
-kDefaultDblClickSpeed   = $12C
-kDefaultIPBlinkSpeed    = 60
+kDefaultDblClickSpeed   = 1200
+kDefaultIPBlinkSpeed    =  500
 
 .struct DeskTopSettings
         pattern         .res 8

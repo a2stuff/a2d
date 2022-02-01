@@ -16,7 +16,7 @@
 ;;; Common code for main>aux relays with MLI-style params
 
 .proc ParamsRelayImpl
-        params_src := $80
+        params_src := $7E
 
         ;; Adjust return address on stack, compute
         ;; original params address.

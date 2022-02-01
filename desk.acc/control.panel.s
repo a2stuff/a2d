@@ -1795,7 +1795,7 @@ next:   dex
         dex                     ; 0, 2 or 4
 
         copy16  ipblink_speed_table,x, SETTINGS + DeskTopSettings::ip_blink_speed
-        copy16  ipblink_speed_table,x, ipblink_counter
+        jsr     ResetIPBlinkCounter
 
         MGTK_CALL MGTK::GetWinPort, winport_params
         MGTK_CALL MGTK::SetPort, grafport
@@ -1805,13 +1805,26 @@ next:   dex
         jmp     InputLoop
 .endproc
 
+.proc ResetIPBlinkCounter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_counter
+        ;; Scale it because it's much slower in the DA than in DeskTop
+        ;; prompts. This is 1/32 speed, which is slightly too slow.
+        ldx     #4
+:       lsr16   ipblink_counter
+        dex
+        bpl     :-
+        rts
+.endproc
+
+
 .proc DoIPBlink
         dec16   ipblink_counter
         lda     ipblink_counter
         ora     ipblink_counter+1
         bne     done
 
-        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_counter
+        jsr     ResetIPBlinkCounter
+
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, winport_params
         cmp     #MGTK::Error::window_obscured

@@ -34,7 +34,7 @@ volume_bitmap   := $4000
 ;;; ============================================================
 
 .proc MLIRelayImpl
-        params_src := $80
+        params_src := $7E
 
         ;; Adjust return address on stack, compute
         ;; original params address.

@@ -125,15 +125,6 @@ window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
 
-
-.params preserve_zp_params
-flag:   .byte   MGTK::zp_preserve
-.endparams
-
-.params overwrite_zp_params
-flag:   .byte   MGTK::zp_overwrite
-.endparams
-
 .params screentowindow_params
 window_id:      .byte   kDAWindowId
         DEFINE_POINT screen, 0, 0

@@ -1073,7 +1073,7 @@ LDBD6:  pla
         jmp     LDBC0
 
 .proc MGTK_RELAY2
-        params_src := $80
+        params_src := $7E
 
         ;; Adjust return address on stack, compute
         ;; original params address.

@@ -230,6 +230,8 @@ a_grafport:    .addr   grafport
 
 grafport:       .tag    MGTK::GrafPort
 
+setzp_params:   .byte   MGTK::zp_overwrite ; performance over convenience
+
 .params startdesktop_params
 machine:        .byte   $06
 subid:          .byte   $EA
@@ -612,6 +614,7 @@ set_startup_menu_items:
 
         jsr     ClearDHRToBlack
 
+        MGTK_CALL MGTK::SetZP1, setzp_params
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
         jsr     SetRGBMode
         MGTK_CALL MGTK::SetMenu, menu
