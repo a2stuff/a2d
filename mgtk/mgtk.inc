@@ -262,7 +262,7 @@ HideCursor      = $26           ; Cursor hidden until ShowCursor call
 ObscureCursor   = $27           ; Cursor hidden until moved
 ;;; (no parameters)
 
-GetCursorAddr   = $28           ; Get cursor definition
+GetCursorAdr    = $28           ; Get cursor definition
 ;;; .addr definition            (out) Address of cursor record
 
 ;;; --------------------------------------------------
@@ -539,7 +539,7 @@ notpenOR        = 5
 notpenXOR       = 6
 notpenBIC       = 7
 
-;;; Used in SetZP1
+;;; Used in SetZP1/SetZP2
 zp_overwrite       = 0
 zp_preserve        = 1<<7
 

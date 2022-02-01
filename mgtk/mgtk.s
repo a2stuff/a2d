@@ -318,7 +318,7 @@ jump_table:
         .addr   ShowCursorImpl      ; $25 ShowCursor
         .addr   HideCursorImpl      ; $26 HideCursor
         .addr   ObscureCursorImpl   ; $27 ObscureCursor
-        .addr   GetCursorAddrImpl   ; $28 GetCursorAddr
+        .addr   GetCursorAdrImpl    ; $28 GetCursorAdr
 
         ;; Event Manager Calls
         .addr   CheckEventsImpl     ; $29 CheckEvents
@@ -440,7 +440,7 @@ param_lengths:
         PARAM_DEFN  0, $00, 0                ; $25 ShowCursor
         PARAM_DEFN  0, $00, 0                ; $26 HideCursor
         PARAM_DEFN  0, $00, 0                ; $27 ObscureCursor
-        PARAM_DEFN  0, $00, 0                ; $28 GetCursorAddr
+        PARAM_DEFN  0, $00, 0                ; $28 GetCursorAdr
 
         ;; Event Manager
         PARAM_DEFN  0, $00, 0                ; $29 CheckEvents
@@ -4491,9 +4491,9 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; GetCursorAddr
+;;; GetCursorAdr
 
-.proc GetCursorAddrImpl
+.proc GetCursorAdrImpl
         ldax    active_cursor
         jmp     store_xa_at_params
 .endproc

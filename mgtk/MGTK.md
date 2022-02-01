@@ -5,6 +5,8 @@ This is a complex API library written by Apple circa 1985. The Apple Programmers
 * [Graphics Primitives](https://drive.google.com/open?id=1YqdtxkMlzEebU5HxL6sOv6PhhddSLhHe)
 * [Mouse Graphics Tool Kit](https://drive.google.com/open?id=1EHjwyu77FJAjNhAt8DwMxBhAdUL0RKMM)
 
+> Changes from this documentation are called out below.
+
 ---
 
 * [Graphics Primitives](#graphics-primitives) - screen management, lines, rects, polys, text, patterns, pens
@@ -158,6 +160,8 @@ Parameters:
 .addr       port            (out)
 ```
 
+This also copies the current GrafPort data from the zero page to the current port. When `SetZP1` has been called to disable preserving the zero page, it is necessary to call this manually to retain the GrafPort state.
+
 #### SetPortBits ($06)
 Set just the mapinfo (viewloc, mapbits) of the current grafport.
 
@@ -173,6 +177,16 @@ Parameters:
 ```
 .byte       mode            pen*/notpen*
 ```
+
+Pen modes are:
+* 0 = pencopy
+* 1 = penOR
+* 2 = penXOR
+* 3 = penBIC
+* 4 = notpencopy
+* 5 = notpenOR
+* 6 = notpenXOR
+* 7 = notpenBIC
 
 #### SetPattern ($08)
 Set the pattern of the current grafport.
@@ -190,6 +204,8 @@ Parameters:
 .byte       and_mask
 .byte       or_mask
 ```
+
+These flags are primarily for controlling the high bit of bytes on the double-hires graphics screen, which is useful for certain RGB cards.
 
 #### SetPenSize ($0A)
 Set the pen size of the current grafport.
@@ -209,7 +225,7 @@ Parameters:
 ```
 
 #### SetTextBG ($0C)
-Set the text background of the current grafport.
+Set the text background of the current grafport. Text is drawn in the inverse of this color.
 
 Parameters:
 ```
@@ -333,33 +349,44 @@ Parameters:
 ### Utility - configuration and version
 
 #### SetZP1 ($1A)
-Configure usage of upper ($80-$FF) ZP by API (speed vs. convenience)
+Configure usage of upper ($80-$FF) zero page by the API (speed vs. convenience)
 
-If high bit is set (the default), part of the ZP is preserved across MGTK
-calls. This is convenient for callers, at the expense of performance.
+If high bit is set (the default), part of the zero page is preserved across all MGTK calls. This is convenient for callers, at the expense of performance.
 
-If the high bit is clear, MGTK assumes that the caller will not modify
-this part of the ZP.
+If the high bit is clear, MGTK assumes that the caller will not modify this part of the zero page.
 
 Parameters:
 ```
 .byte       preserve        $00=stash/no auto restore; $80=restore now and onward
 ```
+
+When zero page preservation is turned on (the default), the active GrafPort is automatically updated after each call, and so changes made by calls (e.g. `SetPenMode`) will be retained when the port is re-selected in the future.
+
+If zero page preservation is turned off, the active GrafPort will not be updated by calls. In this mode, the application may force the active GrafPort to be updated by calling `GetPort`.
 
 #### SetZP2 ($1B)
-Configure usage of lower ($00-$43) ZP API (speed vs. convenience)
+Configure usage of lower ($00-$43) zero page by the API (speed vs. convenience)
 
-If high bit is set (the default), part of the ZP is preserved across MGTK
-calls. This is convenient for callers, at the expense of performance.
+If high bit is set (the default), part of the zero page is preserved across `DrawText` calls. This is convenient for callers, at the expense of performance.
 
-If the high bit is clear, MGTK assumes that the caller will not modify
-this part of the ZP.
+If the high bit is clear, MGTK assumes that the caller will not modify this part of the zero page.
 
 Parameters:
 ```
 .byte       preserve        $00=stash/no auto restore; $80=restore now and onward
 ```
 
+#### Version ($1C)
+Get toolkit version
+
+Parameters:
+```
+.byte       (out) major
+.byte       (out) minor
+.byte       (out) patch
+.byte       (out) status
+.word       (out) number
+```
 
 ---
 
@@ -487,18 +514,6 @@ MGTK::Scroll::option_normal    = option_present | option_thumb | option_active
 
 ### Initialization
 
-#### Version ($1C)
-Get toolkit version
-
-Parameters:
-```
-.byte       (out) major
-.byte       (out) minor
-.byte       (out) patch
-.byte       (out) status
-.word       (out) number
-```
-
 #### StartDeskTop ($1D)
 Inits state, registers interrupt handler, draws desktop
 
@@ -547,7 +562,7 @@ Parameters:
 ```
 
 #### KeyboardMouse ($22)
-Next operation will be performed by keyboard
+Next operation (`DragWindow` or `GrowWindow`) will be performed by keyboard
 
 No parameters.
 
@@ -556,8 +571,10 @@ Get address of interrupt handler
 
 Parameters:
 ```
-.addr       handler         (out) Address of interrupt handler (after cld)
+.addr       handler         (out) Address of interrupt handler (after `CLD`)
 ```
+
+> This call is not present in the 1985 APDA documentation. All subsequent call numbers are offset by one.
 
 
 ### Cursor Manager - set, show, hide
@@ -571,21 +588,21 @@ Parameters:
 ```
 
 #### ShowCursor ($25)
-Return cursor to visibility
+Return cursor to visibility.
 
 No parameters.
 
 #### HideCursor ($26)
-Cursor hidden until ShowCursor call
+Cursor hidden until `ShowCursor` call
 
 No parameters.
 
 #### ObscureCursor ($27)
-Cursor hidden until moved
+Cursor hidden until moved.
 
 No parameters.
 
-#### GetCursorAddr ($28)
+#### GetCursorAdr ($28)
 Get cursor definition
 
 Parameters:
@@ -596,12 +613,12 @@ Parameters:
 ### Event Manager - get, peek, post
 
 #### CheckEvents ($29)
-Process mouse/kbd if GetEvent will be delayed.
+Process mouse/kbd if `GetEvent` will be delayed.
 
 No parameters.
 
 #### GetEvent ($2A)
-
+Return the next event from the queue.
 
 Parameters:
 ```
@@ -614,7 +631,7 @@ _DA specific:_
 
 
 #### FlushEvents ($2B)
-
+Drop any pending events from the queue.
 
 No parameters.
 
@@ -629,7 +646,7 @@ Parameters:
 ```
 
 #### PostEvent ($2D)
-Post event to queue
+Post event to queue.
 
 Parameters:
 ```
@@ -658,6 +675,8 @@ Parameters:
 .byte       check_char      char code to use for checkmark glyph
 .byte       control_char    char code to use for control key glyph
 ```
+
+> The 1985 APDA documentation defines a `inactive_char` parameter, but this was removed.
 
 #### SetMenu ($30)
 Configure (and draw) menu
@@ -777,7 +796,7 @@ Parameters:
 .addr       port            address of GrafPort to populate
 ```
 
-Returns `Error::window_obscured` if the content area of the window is completely offscreen and drawing should be skipped. (The port rect will be invalid.)
+Returns `Error::window_obscured` if the content area of the window is completely offscreen and drawing must be skipped. (The port rect will be invalid.)
 
 
 #### SetWinPort ($3D)
@@ -799,6 +818,8 @@ Parameters:
 ```
 
 Returns `Error::window_obscured` if the content area of the window is completely offscreen and drawing should be skipped. (The port rect will be invalid.)
+
+> Update events with `window_id` of 0 are a modern addition, and not present in the 1985 APDA documentation. They are added to support redrawing onto the desktop itself, e.g. volume icons.
 
 #### EndUpdate ($3F)
 
@@ -851,6 +872,7 @@ Parameters:
 .byte       moved           (out) high bit set if moved, clear if not
 ```
 
+> The 1986 APDA documentation specified that the `moved` parameter has values of 1 for yes, 0 for no. The implementation uses the high bit instead.
 
 #### GrowWindow ($45)
 
@@ -860,8 +882,10 @@ Parameters:
 .byte       window_id
 .word       mousex
 .word       mousey
-.byte       itgrew          (out) 0 = no change, 1 = moved
+.byte       itgrew          (out) high bit set if resized, clear if not
 ```
+
+> The 1986 APDA documentation specified that the `itgrew` parameter has values of 1 for yes, 0 for now. The implementation uses the high bit instead.
 
 #### ScreenToWindow ($46)
 Map screen coords to content coords
@@ -944,6 +968,31 @@ Parameters:
 
 ### Miscellaneous
 
+#### BitBlt ($4D)
+Lower level (and screen-only?) than PaintBits.
+
+> Further documentation is needed.
+
+Parameters:
+```
+(input is address of MapInfo record)
+```
+
+> This call was not listed in the 1985 APDA documentation, so the behavior is inferred from the source.
+
+#### SetMenuSelection ($4E)
+Set selected menu
+
+> Further documentation is needed.
+
+Parameters:
+```
+.byte       menu_id         Top level menu identifier.
+.byte       menu_item       Index (1-based) of item in menu.
+```
+
+> This call was not listed in the 1985 APDA documentation, so the behavior is inferred from the source.
+
 #### GetDeskPat ($4F)
 Get address of desktop pattern.
 
@@ -951,6 +1000,8 @@ Parameters:
 ```
 .addr       pattern         (out) 8x8 pixel pattern
 ```
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 #### SetDeskPat ($50)
 Set new desktop pattern. Note that this does NOT redraw anything.
@@ -961,12 +1012,16 @@ Parameters:
 .res 8      pattern         8x8 pixel pattern
 ```
 
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
 #### DrawMenu ($51)
 Redraws the current menu bar. Useful after full-screen operations.
 Note that hilite state of menu bar items is not restored; this must
 be done by manual calls to `HiliteMenu`
 
 No parameters.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 #### GetWinFrameRect ($52)
 Get the rectangle framing a window. This is in screen coordinates,
@@ -979,11 +1034,15 @@ Parameters:
 Rect        rect            (out)
 ```
 
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
 #### RedrawDeskTop ($51)
 Redraws the desktop background, and posts update events for all
 windows.
 
 No parameters.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 # Creating Applications and DeskTop Desk Accessories
 
@@ -993,6 +1052,7 @@ _Notes specific to DeskTop Desk Accessories (DA) are included where usage differ
 
 #### Initialization
 
+* `SetZP1` (optional)
 * `StartDeskTop`
 * `InitMenu` (if necessary; the defaults are sensible)
 * `SetMenu`
@@ -1063,9 +1123,9 @@ _DA specific: Menus are not supported in DAs._
 
 * `SelectWindow` to make topmost if necessary
 * `DragWindow` to initiate drag modal loop
-* If not `moved` - done
-* [Handle update events](#handle-update-events)
-* [Redraw](#redraw-window) window content if not moved and was made topmost.
+* If `moved` is true:
+  * [Handle update events](#handle-update-events)
+  * [Redraw](#redraw-window) window content if not moved and was made topmost.
 
 _DA specific:_
 
@@ -1103,10 +1163,10 @@ _DA specific:_
 #### Handle Window Resize
 
 * `GrowWindow` to initiate modal resize loop
-* If not `itgrew` - done
-* `UpdateThumb` if needed to adjust scroll bars
-* [Handle update events](#handle-update-events)
-* [Redraw](#redraw-window) window content
+* If `itgrew` is true:
+  * `UpdateThumb` if needed to adjust scroll bars
+  * [Handle update events](#handle-update-events)
+  * [Redraw](#redraw-window) window content
 
 _DA specific:_
 
@@ -1123,7 +1183,8 @@ _DA specific:_
     * `BeginUpdate`
     * If error, continue
     * Otherwise:
-      * [Redraw](#redraw-window) `window_id`'s content
+      * If `window_id` is 0, redraw any desktop content (e.g. icons)
+      * Otherwise, [redraw](#redraw-window) `window_id`'s content
       * `EndUpdate`
 
 _DA specific:_
