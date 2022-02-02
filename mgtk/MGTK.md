@@ -666,12 +666,12 @@ Parameters:
 
 #### InitMenu ($2F)
 Configure characters used for menu glyphs. Optional. The defaults
-are solid=$1E, open=$1F, check=$1D, control=$01.
+are open=$1F, solid=$1E, check=$1D, control=$01.
 
 Parameters:
 ```
-.byte       solid_char      char code to use for solid apple glyph
 .byte       open_char       char code to use for open apple glyph
+.byte       solid_char      char code to use for solid apple glyph
 .byte       check_char      char code to use for checkmark glyph
 .byte       control_char    char code to use for control key glyph
 ```

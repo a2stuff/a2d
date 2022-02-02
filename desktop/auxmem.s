@@ -473,11 +473,10 @@ desktop_jump_table_high:
         pha
 
         ;; Save $06..$09 on the stack
-        ldx     #0
-:       lda     $06,x
+        ldx     #AS_BYTE(-4)
+:       lda     $06 + 4,x
         pha
         inx
-        cpx     #4
         bne     :-
 
         ;; Point ($06) at call command
@@ -643,9 +642,7 @@ done:   rts
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ldy     #IconEntry::state
-        lda     (ptr),y
-        ;;and     #kIconEntryStateHighlighted
-        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
+        lda     (ptr),y         ; valid icon?
         asl
         bmi     :+
 
@@ -799,7 +796,8 @@ count:  .byte   0
 
         lda     num_icons
         sta     count
-loop:   ldx     count
+count := * + 1
+loop:   ldx     #$11
         bne     L96E5
         txa
         rts
@@ -807,7 +805,6 @@ loop:   ldx     count
 L96E5:  dec     count
         dex
         ldy     icon_list,x
-        sty     icon
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::win_flags
         lda     (ptr),y
@@ -848,9 +845,6 @@ L96E5:  dec     count
         jsr     RemoveFromHighlightList
 
 next:   jmp     loop
-
-icon:   .byte   0
-count:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -903,7 +897,9 @@ loop:   cpx     num_icons
         ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
-        cmp     window_id
+
+window_id := * + 1
+        cmp     #$11
         bne     :+
 
         ;; In poly?
@@ -924,9 +920,6 @@ inside: pla
         ldy     #FindIconParams::result
         sta     (out_params),y
         rts
-
-window_id:
-        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -994,30 +987,36 @@ ignore_drag:
         jmp     just_select
 
         ;; Compute mouse delta
-drag:   sub16   findwindow_params::mousex, coords1x, deltax
-        sub16   findwindow_params::mousey, coords1y, deltay
+drag:   lda     findwindow_params::mousex
+        sec
+        sbc     coords1x
+        tax
+        lda     findwindow_params::mousex + 1
+        sbc     coords1x + 1
 
         kDragDelta = 5
 
         ;; compare x delta
-        lda     deltax
-        ldx     deltax+1
         bpl     x_lo
-        cmp     #AS_BYTE(-kDragDelta)
+        cpx     #AS_BYTE(-kDragDelta)
         bcc     is_drag
         bcs     check_deltay
-x_lo:   cmp     #kDragDelta
+x_lo:   cpx     #kDragDelta
         bcs     is_drag
 
         ;; compare y delta
 check_deltay:
-        lda     deltay
-        ldx     deltay+1
+        lda     findwindow_params::mousey
+        sec
+        sbc     coords1y
+        tax
+        lda     findwindow_params::mousey + 1
+        sbc     coords1y + 1
         bpl     y_lo
-        cmp     #AS_BYTE(-kDragDelta)
+        cpx     #AS_BYTE(-kDragDelta)
         bcc     is_drag
         bcs     peek
-y_lo:   cmp     #kDragDelta
+y_lo:   cpx     #kDragDelta
         bcc     peek
 .endproc
 
@@ -1176,7 +1175,11 @@ L99E1:  iny
         ldy     #1              ; MGTK Polygon "not last" flag
         lda     ($08),y
         beq     L99FC
-        add16_8 $08, #kIconPolySize
+        lda     $08
+        adc     #kIconPolySize - 1
+        sta     $08
+        bcc     L9972
+        inc     $09
         jmp     L9972
 
 L99FC:  jsr     XdrawOutline
@@ -1215,19 +1218,18 @@ L9A31:  COPY_BYTES 4, findwindow_params, coords2
         sta     highlight_icon_id
 
 :       sub16   findwindow_params::mousex, coords1x, rect3_x1
-        sub16nc findwindow_params::mousey, coords1y, rect3_y1
+        sub16   findwindow_params::mousey, coords1y, rect3_y1
         jsr     SetRect2ToRect1
 
         ldx     #0
+        stx     L9C75
 :       add16   rect1_x2,x, rect3_x1,x, rect1_x2,x
-        add16nc rect1_x1,x, rect3_x1,x, rect1_x1,x
+        add16   rect1_x1,x, rect3_x1,x, rect1_x1,x
         inx
         inx
         cpx     #4
         bne     :-
 
-        lda     #0
-        sta     L9C75
         lda     rect1_x1+1
         bmi     L9AF7
         cmp16   rect1_x2, #kScreenWidth
@@ -1241,9 +1243,8 @@ L9AF7:  jsr     L9CAA
 L9AFE:  jsr     L9CD1
         bmi     L9B0E
 L9B03:  jsr     SetRect1ToRect2AndZeroRect3X
-        lda     L9C75
-        ora     #$80
-        sta     L9C75
+        sec
+        ror     L9C75
 L9B0E:  lda     rect1_y1+1
         bmi     L9B31
         cmp16   rect1_y1, #kMenuBarHeight
@@ -1272,7 +1273,7 @@ L9B52:  jsr     XdrawOutline
 L9B60:  ldy     #2
 L9B62:  add16in ($08),y, rect3_x1, ($08),y
         iny
-        add16innc ($08),y, rect3_y1, ($08),y
+        add16in ($08),y, rect3_y1, ($08),y
         iny
         cpy     #kIconPolySize
         bne     L9B62
@@ -1283,9 +1284,9 @@ L9B62:  add16in ($08),y, rect3_x1, ($08),y
         clc
         adc     #kIconPolySize
         sta     $08
-        bcc     L9B99
+        bcc     L9B60
         inc     $08+1
-L9B99:  jmp     L9B60
+        bcs     L9B60
 
 L9B9C:  jsr     XdrawOutline
         jmp     peek
@@ -1429,8 +1430,8 @@ rect3_y2:       .word   0       ; Unused???
 
 L9CE4:  sub16   #kScreenWidth, rect2_x2, rect3_x1
 L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
-        add16nc rect2_x2, rect3_x1, rect1_x2
-        add16nc coords1x, rect3_x1, coords1x
+        add16   rect2_x2, rect3_x1, rect1_x2
+        add16   coords1x, rect3_x1, coords1x
         return  #$FF
 
 .proc L9D31
@@ -1458,8 +1459,8 @@ L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
 
 L9D6B:  sub16   #kScreenHeight-1, rect2_y2, rect3_y1
 L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
-        add16nc rect2_y2, rect3_y1, rect1_y2
-        add16nc coords1y, rect3_y1, coords1y
+        add16   rect2_y2, rect3_y1, rect1_y2
+        add16   coords1y, rect3_y1, coords1y
         return  #$FF
 
 .proc SetRect1ToRect2AndZeroRect3X
@@ -1638,12 +1639,12 @@ headery:
         MGTK_CALL MGTK::GetWinPort, getwinport_params ; into icon_grafport
 
         sub16   icon_grafport::cliprect::x2, icon_grafport::cliprect::x1, width
-        sub16nc icon_grafport::cliprect::y2, icon_grafport::cliprect::y1, height
+        sub16   icon_grafport::cliprect::y2, icon_grafport::cliprect::y1, height
 
         COPY_STRUCT MGTK::Point, icon_grafport::viewloc, icon_grafport::cliprect
 
         add16   icon_grafport::cliprect::x1, width, icon_grafport::cliprect::x2
-        add16nc icon_grafport::cliprect::y1, height, icon_grafport::cliprect::y2
+        add16   icon_grafport::cliprect::y1, height, icon_grafport::cliprect::y2
 
         ;; Account for window header, and set port to icon_grafport
         jmp     ShiftPortDown
@@ -1953,7 +1954,7 @@ done:   rts
 .proc CalcRectOpendir
         ldx     #0
 :       add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::topleft,x, rect_opendir::topleft,x
-        add16nc icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::bottomright,x, rect_opendir::bottomright,x
+        add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::bottomright,x, rect_opendir::bottomright,x
         inx
         inx
         cpx     #.sizeof(MGTK::Point)
@@ -2526,7 +2527,7 @@ LA4E2:  ldy     #MGTK::GrafPort::viewloc
 .proc OffsetPoly
         ldx     #0
 loop1:  sub16   poly::vertices+0,x, vl_offset::xcoord, poly::vertices+0,x
-        sub16nc poly::vertices+2,x, vl_offset::ycoord, poly::vertices+2,x
+        sub16   poly::vertices+2,x, vl_offset::ycoord, poly::vertices+2,x
         inx
         inx
         inx
@@ -2536,7 +2537,7 @@ loop1:  sub16   poly::vertices+0,x, vl_offset::xcoord, poly::vertices+0,x
         ldx     #0
 
 loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
-        add16nc poly::vertices+2,x, mr_offset::ycoord, poly::vertices+2,x
+        add16   poly::vertices+2,x, mr_offset::ycoord, poly::vertices+2,x
         inx
         inx
         inx
@@ -2556,11 +2557,11 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
         ldy     #IconEntry::iconx
         add16in (ptr),y, vl_offset::xcoord, (ptr),y ; iconx += viewloc::xcoord
         iny
-        add16innc (ptr),y, vl_offset::ycoord, (ptr),y ; icony += viewloc::xcoord
+        add16in (ptr),y, vl_offset::ycoord, (ptr),y ; icony += viewloc::xcoord
         ldy     #IconEntry::iconx
         sub16in (ptr),y, mr_offset::xcoord, (ptr),y ; icony -= maprect::left
         iny
-        sub16innc (ptr),y, mr_offset::ycoord, (ptr),y ; icony -= maprect::top
+        sub16in (ptr),y, mr_offset::ycoord, (ptr),y ; icony -= maprect::top
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
@@ -2575,11 +2576,11 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
         ldy     #IconEntry::iconx
         sub16in (ptr),y, vl_offset::xcoord, (ptr),y ; iconx -= viewloc::xcoord
         iny
-        sub16innc (ptr),y, vl_offset::ycoord, (ptr),y ; icony -= viewloc::xcoord
+        sub16in (ptr),y, vl_offset::ycoord, (ptr),y ; icony -= viewloc::xcoord
         ldy     #IconEntry::iconx
         add16in (ptr),y, mr_offset::xcoord, (ptr),y ; iconx += maprect::left
         iny
-        add16innc (ptr),y, mr_offset::ycoord, (ptr),y ; icony += maprect::top
+        add16in (ptr),y, mr_offset::ycoord, (ptr),y ; icony += maprect::top
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
@@ -2946,7 +2947,7 @@ vert:   cmp16   win_t, cr_t
         adc     #0
         sta     cr_l+1
         sta     vx+1
-        add16nc stash_r, #2, cr_r
+        add16   stash_r, #2, cr_r
         jmp     reclip
 
         ;; Case 5 - done!
@@ -2962,7 +2963,7 @@ vert:   cmp16   win_t, cr_t
         kOffset = kWindowHeaderHeight + 1
 
         add16   icon_grafport::viewloc::ycoord, #kOffset, icon_grafport::viewloc::ycoord
-        add16nc   icon_grafport::cliprect::y1, #kOffset, icon_grafport::cliprect::y1
+        add16   icon_grafport::cliprect::y1, #kOffset, icon_grafport::cliprect::y1
         MGTK_CALL MGTK::SetPort, icon_grafport
         rts
 .endproc
