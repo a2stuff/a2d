@@ -323,7 +323,7 @@
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Modify a shortcut. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Modify a shortcut. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
 
-* Repeat the following cases with the Startup Options and Control Panel DAs, and the Date DA (on a system without a real-time clock):
+* Repeat the following cases with the Startup Options and Control Panel DAs, and the Date and Time DA (on a system without a real-time clock):
   * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Launch the DA and modify a setting. Verify that no prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
   * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and Modify a setting. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
   * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and modify a setting. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
@@ -420,13 +420,13 @@
 
 * Run Apple > Calculator. Drag Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen.
 
-* Configure a system with a realtime clock. Launch DeskTop. Run the Date desk accessory. Press Escape key. Verify the desk accessory exits. Repeat with the Return key.
+* Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time desk accessory. Press Escape key. Verify the desk accessory exits. Repeat with the Return key.
 
 * Configure a system with a Mockingboard and a Zip Chip, with acceleration enabled (MAME works). Launch DeskTop. Run the This Apple DA. Verify that the Mockingboard is detected.
 
-* Run DeskTop on a system without a system clock. Run Apple > Control Panels > Date. Set date. Reboot system, and re-run DeskTop. Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
+* Run DeskTop on a system without a system clock. Run Apple > Control Panels > Date and Time. Set date. Reboot system, and re-run DeskTop. Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
 
-* On a system with a system clock, invoke Apple > Control Panels > Date. Verify that the date is read-only.
+* On a system with a system clock, invoke Apple > Control Panels > Date and Time. Verify that the date is read-only.
 
 * Open a folder containing directory. Open a folder by double-clicking. Apple > Sort Directory. Verify that files are sorted by type/name.
 

@@ -87,7 +87,7 @@ kShortcutMonitor = res_char_monitor_shortcut
         jmp     start
 
         ASSERT_ADDRESS PRODOS_SYS_START + kLauncherDateOffset
-header_date:                    ; written into file by Date DA
+header_date:                    ; written into file by Date and Time DA
         .res    .sizeof(DateTime)
 
 header_orig_prefix:
