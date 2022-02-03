@@ -1999,25 +1999,26 @@ unused_width:
 
         lda     #2
         sta     shift_bytes
-        lda     clipped_top             ; Calculate starting Y-coordinate
-        eor     #$ff                    ;  = dbi_top - clipped_top
-        sec
+        lda     #0                      ; Calculate starting Y-coordinate
+        sec                             ;  = dbi_top - clipped_top
+        sbc     clipped_top
+        clc
         adc     PaintBitsImpl::dbi_top
         sta     PaintBitsImpl::dbi_top
 
-        lda     clipped_left            ; Calculate starting X-coordinate
-        eor     #$ff                    ;  = dbi_left - clipped_left
+        lda     #0                      ; Calculate starting X-coordinate
+        sec                             ;  = dbi_left - clipped_left
+        sbc     clipped_left
         tax
-        lda     clipped_left+1
-        eor     #$ff
+        lda     #0
+        sbc     clipped_left+1
         tay
 
         txa
-        sec
+        clc
         adc     PaintBitsImpl::dbi_left
         tax
         tya
-        sec
         adc     PaintBitsImpl::dbi_left+1
 
         jsr     DivMod7
