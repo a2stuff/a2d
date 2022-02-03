@@ -218,7 +218,13 @@ ok_button:
 draw_prompt:
 .scope
         ;; Measure for splitting
-        add16_8 alert_params::text, #1, textwidth_params::data
+        ldx     alert_params::text
+        ldy     alert_params::text + 1
+        inx
+        bne     :+
+        iny
+        stx     textwidth_params::data
+        sty     textwidth_params::data + 1
 
         ptr := $06
         copy16  alert_params::text, ptr
@@ -258,8 +264,13 @@ test:   sty     textwidth_params::length
 split:  copy    split_pos, textwidth_params::length
         LIB_MGTK_CALL MGTK::MoveTo, pos_prompt1
         LIB_MGTK_CALL MGTK::DrawText, textwidth_params
-        add16_8 textwidth_params::data, split_pos, textwidth_params::data
-        lda     len
+        lda     textwidth_params::data
+        clc
+        adc     split_pos
+        sta     textwidth_params::data
+        bcc     :+
+        inc     textwidth_params::data + 1
+:       lda     len
         sec
         sbc     split_pos
         sta     textwidth_params::length
@@ -326,7 +337,7 @@ check_ok:
 do_ok:  LIB_MGTK_CALL MGTK::SetPenMode, penXOR
         LIB_MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     #kAlertResultOK
-        jmp     finish
+        jmp     finish          ; not a fixed value, cannot BNE/BEQ
 
         ;; --------------------------------------------------
         ;; Buttons
@@ -366,7 +377,7 @@ check_ok_rect:
         param_call AlertButtonEventLoop, ok_button_rect
         bne     no_button
         lda     #kAlertResultOK
-        jmp     finish
+        jmp     finish          ; not a fixed value, cannot BNE/BEQ
 
 no_button:
         jmp     event_loop

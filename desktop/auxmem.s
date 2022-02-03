@@ -1414,7 +1414,13 @@ rect3_y2:       .word   0       ; Unused???
         bne     :+
         rts
 
-:       sub16   #0, rect2_x1, rect3_x1
+:       lda     #0
+        sec
+        sbc     rect2_x1
+        tax
+        lda     #0
+        sbc     rect2_x1 + 1
+        tay
         jmp     L9CF5
 .endproc
 
@@ -1428,10 +1434,36 @@ rect3_y2:       .word   0       ; Unused???
         rts
 .endproc
 
-L9CE4:  sub16   #kScreenWidth, rect2_x2, rect3_x1
-L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
-        add16   rect2_x2, rect3_x1, rect1_x2
-        add16   coords1x, rect3_x1, coords1x
+L9CE4:  lda     #<kScreenWidth
+        sec
+        sbc     rect2_x2
+        tax
+        lda     #>kScreenWidth
+        sbc     rect2_x2 + 1
+        tay
+L9CF5:  stx     rect3_x1
+        sty     rect3_x1 + 1
+        txa
+        clc
+        adc     rect2_x1
+        sta     rect1_x1
+        tya
+        adc     rect2_x1 + 1
+        sta     rect1_x1 + 1
+        txa
+        clc
+        adc     rect2_x2
+        sta     rect1_x2
+        tya
+        adc     rect2_x2 + 1
+        sta     rect1_x2 + 1
+        txa
+        clc
+        adc     coords1x
+        sta     coords1x
+        tya
+        adc     coords1x + 1
+        sta     coords1x + 1
         return  #$FF
 
 .proc L9D31
@@ -1443,7 +1475,13 @@ L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
         bne     :+
         rts
 
-:       sub16   #kMenuBarHeight, rect2_y1, rect3_y1
+:       lda     #<kMenuBarHeight
+        sec
+        sbc     rect2_y1
+        tax
+        lda     #>kMenuBarHeight
+        sbc     rect2_y1 + 1
+        tay
         jmp     L9D7C
 .endproc
 
@@ -1457,27 +1495,54 @@ L9CF5:  add16   rect2_x1, rect3_x1, rect1_x1
         rts
 .endproc
 
-L9D6B:  sub16   #kScreenHeight-1, rect2_y2, rect3_y1
-L9D7C:  add16   rect2_y1, rect3_y1, rect1_y1
-        add16   rect2_y2, rect3_y1, rect1_y2
-        add16   coords1y, rect3_y1, coords1y
+L9D6B:  lda     #<(kScreenHeight-1)
+        sec
+        sbc     rect2_y2
+        tax
+        lda     #>(kScreenHeight-1)
+        sbc     rect2_y2 + 1
+        tay
+L9D7C:  stx     rect3_y1
+        sty     rect3_y1 + 1
+        txa
+        clc
+        adc     rect2_y1
+        sta     rect1_y1
+        tya
+        adc     rect2_y1 + 1
+        sta     rect1_y1 + 1
+        txa
+        clc
+        adc     rect2_y2
+        sta     rect1_y2
+        tya
+        adc     rect2_y2 + 1
+        sta     rect1_y2 + 1
+        txa
+        clc
+        adc     coords1y
+        sta     coords1y
+        tya
+        adc     coords1y + 1
+        sta     coords1y + 1
         return  #$FF
 
 .proc SetRect1ToRect2AndZeroRect3X
-        copy16  rect2_x1, rect1_x1
-        copy16  rect2_x2, rect1_x2
-        lda     #0
-        sta     rect3_x1
-        sta     rect3_x1+1
-        rts
+        ldx     #0
+        beq     SetRectCommon
 .endproc
 
 .proc SetRect1ToRect2AndZeroRect3Y
-        copy16  rect2_y1, rect1_y1
-        copy16  rect2_y2, rect1_y2
+        ldx     #rect2_y1 - rect2_x1
+        ;; Fall through...
+.endproc
+
+.proc SetRectCommon
+        copy16  rect2_y1,x, rect1_y1,x
+        copy16  rect2_y2,x, rect1_y2,x
         lda     #0
-        sta     rect3_y1
-        sta     rect3_y1+1
+        sta     rect3_y1,x
+        sta     rect3_y1+1,x
         rts
 .endproc
 
@@ -1856,17 +1921,45 @@ common:
         ;; Center horizontally
         ;;  text_left = icon_left + icon_width/2 - text_width/2
         ;;            = (icon_left*2 + icon_width - text_width) / 2
-;;xxx
-        copy16  icon_paintbits_params::viewloc::xcoord, moveto_params2::xcoord ; = icon_left
-        asl16   moveto_params2::xcoord ; *= 2
-        add16   moveto_params2::xcoord, icon_paintbits_params::maprect::x2, moveto_params2::xcoord ; += icon_width
-        sub16   moveto_params2::xcoord, textwidth_params::result, moveto_params2::xcoord ; -= text_width
-        asr16   moveto_params2::xcoord ; /= 2 - signed!
+        lda     icon_paintbits_params::viewloc::xcoord ; = icon_left
+        asl ; *= 2
+        tax
+        lda     icon_paintbits_params::viewloc::xcoord + 1
+        rol
+        tay
+        txa
+        clc
+        adc     icon_paintbits_params::maprect::x2 ; += icon_width
+        tax
+        tya
+        adc     icon_paintbits_params::maprect::x2 + 1
+        tay
+        txa
+        sec
+        sbc     textwidth_params::result ; -= text_width
+        sta     moveto_params2::xcoord
+        tya
+        sbc     textwidth_params::result + 1
+        sta     moveto_params2::xcoord + 1
+        rol
+        ror     moveto_params2::xcoord + 1 ; /= 2 - signed!
+        ror     moveto_params2::xcoord
 
         ;; Align vertically
-        add16_8 icon_paintbits_params::viewloc::ycoord, icon_paintbits_params::maprect::y2, moveto_params2::ycoord
-        add16   moveto_params2::ycoord, #1, moveto_params2::ycoord
-        add16_8 moveto_params2::ycoord, font_height, moveto_params2::ycoord
+        lda     icon_paintbits_params::viewloc::ycoord
+        sec ; + 1
+        adc     icon_paintbits_params::maprect::y2
+        tax
+        lda     icon_paintbits_params::viewloc::ycoord + 1
+        adc     icon_paintbits_params::maprect::y2 + 1
+        sta     moveto_params2::ycoord + 1
+        txa
+        clc
+        adc     font_height
+        sta     moveto_params2::ycoord
+        bcc     :+
+        inc     moveto_params2::ycoord + 1
+:
 
         COPY_STRUCT MGTK::Point, moveto_params2, label_pos
 
@@ -2024,7 +2117,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         .assert (MGTK::Rect::y2 - MGTK::Rect::x2) = 2, error, "y2 must be 2 more than x2"
         iny
         add16in (bitmap_ptr),y, poly::v0::ycoord, poly::v2::ycoord
-
+;;xxx
         lda     poly::v2::ycoord ; 2px down
         clc
         adc     #2
@@ -2618,7 +2711,6 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
 ;;; ============================================================
 
 ;;; Initial bounds, saved for re-entry.
-bounds_l:  .word   0               ; written but never read???
 bounds_t:  .word   0
 bounds_r:  .word   0
 bounds_b:  .word   0
@@ -2645,16 +2737,18 @@ reserved:       .byte   0
         sta     portbits::viewloc::ycoord+1
 
         ;; Set up bounds_l
-        copy16  poly::v0::xcoord, bounds_l
-        cmp16   bounds_l, poly::v5::xcoord
+        ldx     poly::v0::xcoord
+        ldy     poly::v0::xcoord + 1
+        cpx     poly::v5::xcoord
+        tya
+        sbc     poly::v5::xcoord + 1
         bcc     :+
-        copy16  poly::v5::xcoord, bounds_l
-:       lda     bounds_l
-        sta     portbits::cliprect::x1
-        sta     portbits::viewloc::xcoord
-        lda     bounds_l+1
-        sta     portbits::cliprect::x1+1
-        sta     portbits::viewloc::xcoord+1
+        ldx     poly::v5::xcoord
+        ldy     poly::v5::xcoord + 1
+:       stx     portbits::cliprect::x1
+        stx     portbits::viewloc::xcoord
+        sty     portbits::cliprect::x1+1
+        sty     portbits::viewloc::xcoord+1
 
         ;; Set up bounds_b
         lda     poly::v4::ycoord
@@ -2665,26 +2759,28 @@ reserved:       .byte   0
         sta     portbits::cliprect::y2+1
 
         ;; Set up bounds_r
-        copy16  poly::v1::xcoord, bounds_r
-        cmp16   bounds_r, poly::v3::xcoord
+        ldx     poly::v1::xcoord
+        ldy     poly::v1::xcoord + 1
+        cpx     poly::v3::xcoord
+        tya
+        sbc     poly::v3::xcoord + 1
         bcs     :+
-        copy16  poly::v3::xcoord, bounds_r
-:       lda     bounds_r
-        sta     portbits::cliprect::x2
-        lda     bounds_r+1
-        sta     portbits::cliprect::x2+1
-
+        ldx     poly::v3::xcoord
+        ldy     poly::v3::xcoord + 1
+:
         ;; if (bounds_r > kScreenWidth - 1) bounds_r = kScreenWidth - 1
-        cmp16   bounds_r, #kScreenWidth - 1
+        cpx     #<(kScreenWidth - 1)
+        tya
+        sbc     #>(kScreenWidth - 1)
         bmi     done
-        lda     #<(kScreenWidth - 1)
-        sta     bounds_r
-        sta     portbits::cliprect::x2
-        lda     #>(kScreenWidth - 1)
-        sta     bounds_r+1
-        sta     portbits::cliprect::x2+1
+        ldx     #<(kScreenWidth - 1)
+        ldy     #>(kScreenWidth - 1)
 
-done:   MGTK_CALL MGTK::SetPortBits, portbits
+done:   stx     bounds_r
+        sty     bounds_r+1
+        stx     portbits::cliprect::x2
+        sty     portbits::cliprect::x2+1
+        MGTK_CALL MGTK::SetPortBits, portbits
         rts
 .endproc
 
@@ -2742,15 +2838,15 @@ start:  lda     more_drawing_needed_flag
 
         ;; cr_l = cr_r + 1
         ;; vx   = cr_r + 1
-        lda     cr_r
-        clc
-        adc     #1
-        sta     cr_l
-        sta     vx
-        lda     cr_r+1
-        adc     #0
-        sta     cr_l+1
-        sta     vx+1
+        ldx     cr_r
+        ldy     cr_r+1
+        inx
+        stx     cr_l
+        stx     vx
+        bne     :+
+        iny
+:       sty     cr_l+1
+        sty     vx+1
 
         ;; cr_t = bounds_t
         ;; cr_r = bounds_r
@@ -2814,11 +2910,10 @@ set_bits:
 :       MGTK_CALL MGTK::SetPortBits, portbits
         ;; if (cr_r < bounds_r) more drawing is needed
         cmp16   cr_r, bounds_r
-        bmi     :+
-        copy    #0, more_drawing_needed_flag
-        rts
-
-:       copy    #1, more_drawing_needed_flag
+        asl
+        lda     #0
+        rol
+        sta     more_drawing_needed_flag
         rts
 
         ;; ==================================================
@@ -2887,15 +2982,22 @@ do_pt:  lda     pt_num
         ;; if (cr_r > win_r)
         ;; . cr_r = win_r + 1
         cmp16   cr_r, win_r
-        bmi     :+
+        bmi     case789
 
-        add16   win_r, #1, cr_r
+        ldx     win_r
+        ldy     win_r + 1
+        inx
+        bne     :+
+        iny
+:       stx     cr_r
+        sty     cr_r + 1
         jmp     vert
 
         ;; Cases 7/8/9 (and done)
         ;; if (win_l > cr_l)
         ;; . cr_r = win_l
-:       cmp16   win_l, cr_l
+case789:
+        cmp16   win_l, cr_l
         bmi     vert
 
         copy16  win_l, cr_r
@@ -2916,17 +3018,17 @@ vert:   cmp16   win_t, cr_t
         ;; . cr_t = win_b + 2
         ;; . vy   = win_b + 2
 :       cmp16   win_b, cr_b
-        bpl     :+
+        bpl     case2
 
-        lda     win_b
-        clc
-        adc     #1
-        sta     cr_t
-        sta     vy
-        lda     win_b+1
-        adc     #0
-        sta     cr_t+1
-        sta     vy+1
+        ldx     win_b
+        ldy     win_b+1
+        inx
+        stx     cr_t
+        stx     vy
+        bne     :+
+        iny
+:       sty     cr_t+1
+        sty     vy+1
         copy    #1, more_drawing_needed_flag
         jmp     reclip
 
@@ -2935,7 +3037,8 @@ vert:   cmp16   win_t, cr_t
         ;; . cr_l = win_r + 2
         ;; . vx   = win_r + 2
         ;; . cr_r = stash_r + 2 (workaround for https://github.com/a2stuff/a2d/issues/153)
-:       cmp16   win_r, stash_r
+case2:
+        cmp16   win_r, stash_r
         bpl     :+
 
         lda     win_r
@@ -2952,7 +3055,13 @@ vert:   cmp16   win_t, cr_t
 
         ;; Case 5 - done!
 :       copy16  bounds_r, cr_r
-        add16   bounds_r, #1, cr_l
+        ldx     bounds_r
+        ldy     bounds_r + 1
+        inx
+        bne     :+
+        iny
+:       stx     cr_l
+        sty     cr_l + 1
         jmp     set_bits
 .endproc
 
