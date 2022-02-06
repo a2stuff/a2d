@@ -9,6 +9,7 @@
 .define _is_y_register(arg)      (.match ({arg}, y))
 .define _immediate_value(arg)    (.right (.tcount ({arg})-1, {arg}))
 
+;;; 16-bit helpers
 .macro _op_lo op, arg
     .if _is_immediate {arg}
         op #<_immediate_value {arg}
@@ -22,6 +23,39 @@
         op #>_immediate_value {arg}
     .else
         op arg+1
+    .endif
+.endmacro
+
+;;; 32-bit helpers
+.macro _op_b0 op, arg
+    .if _is_immediate {arg}
+        op #.lobyte(_immediate_value {arg})
+    .else
+        op arg
+    .endif
+.endmacro
+
+.macro _op_b1 op, arg
+    .if _is_immediate {arg}
+        op #.hibyte(_immediate_value {arg})
+    .else
+        op arg+1
+    .endif
+.endmacro
+
+.macro _op_b2 op, arg
+    .if _is_immediate {arg}
+        op #.bankbyte(_immediate_value {arg})
+    .else
+        op arg+2
+    .endif
+.endmacro
+
+.macro _op_b3 op, arg
+    .if _is_immediate {arg}
+        op #.hibyte(.hiword(_immediate_value {arg}))
+    .else
+        op arg+3
     .endif
 .endmacro
 
@@ -708,6 +742,73 @@ skip:
         dec     arg+1
 skip:   dec     arg
 .endmacro
+
+;;; ============================================================
+;;; 32-bit pseudo-ops
+
+;;; Core for add32/sub32
+.macro _addsub32 op, opc, arg1, arg2, arg3
+        opc
+        _op_b0 lda, {arg1}
+        _op_b0 op, {arg2}
+        sta     arg3
+        _op_b1 lda, {arg1}
+        _op_b1 op, {arg2}
+        sta     arg3+1
+        _op_b2 lda, {arg1}
+        _op_b2 op, {arg2}
+        sta     arg3+2
+        _op_b3 lda, {arg1}
+        _op_b3 op, {arg2}
+        sta     arg3+3
+.endmacro
+
+;;; absolute  + absolute  => absolute
+;;; immediate + absolute  => absolute
+;;; absolute  + immediate => absolute
+.macro add32 arg1, arg2, arg3
+    _addsub32 adc, clc, arg1, arg2, arg3
+.endmacro
+
+;;; absolute  - absolute  => absolute
+;;; immediate - absolute  => absolute
+;;; absolute  - immediate => absolute
+.macro sub32 arg1, arg2, arg3
+    _addsub32 sbc, sec, arg1, arg2, arg3
+.endmacro
+
+;;; Copy 32-bit value
+;;;    copy32 #$11111111, $2222 ; immediate, absolute
+;;;    copy32 $1111, $2222      ; absolute, absolute
+.macro copy32 arg1, arg2
+        _op_b0  lda, {arg1}
+        sta     arg2
+        _op_b1  lda, {arg1}
+        sta     arg2+1
+        _op_b2  lda, {arg1}
+        sta     arg2+2
+        _op_b3  lda, {arg1}
+        sta     arg2+3
+.endmacro
+
+;;; Shift 32-bit values
+;;;    asl32 $1111      ; absolute
+.macro asl32 arg1
+        asl     arg1
+        rol     arg1+1
+        rol     arg1+2
+        rol     arg1+3
+.endmacro
+
+;;;    lsr32 $1111      ; absolute
+.macro lsr32 arg1
+        lsr     arg1+3
+        ror     arg1+2
+        ror     arg1+1
+        ror     arg1
+.endmacro
+
+
 
 ;;; ============================================================
 ;;; Placed Param Blocks
