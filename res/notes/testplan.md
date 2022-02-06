@@ -362,6 +362,7 @@
 * Launch DeskTop. Open a volume window containing a file and a folder. Open the folder window. Drag the file to the folder icon (not the window). Verify that the folder window activates and updates to show the file.
 
 * Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume directory that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that file picker shows both the correct disk name and the correct full path.
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Verify that if the pathname is a volume directory (e.g. "/VOL") and either "at boot" or "at first use" is selected, then an alert is shown when trying to commit the dialog.
 
 * Configure a system with a RAMCard, and ensure DeskTop is configured to copy itself to RAMCard on start. Launch DeskTop. Open the RAM Disk volume. Open the Desktop folder. Apple > Control Panels. Drag Desk.Acc from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be movied or copied into itself.
 

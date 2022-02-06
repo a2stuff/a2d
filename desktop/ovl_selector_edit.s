@@ -258,7 +258,11 @@ finish: copy    #1, path_buf2
         beq     fail
         cmp     #$0F            ; Max selector name length
         bcs     too_long
-        jmp     ok
+        jsr     IsVolPath
+        bcs     ok              ; nope
+        lda     copy_when       ; Disallow copying volume to ramcard
+        cmp     #3
+        beq     ok
 
 invalid:
         lda     #ERR_INVALID_PATHNAME
@@ -284,6 +288,20 @@ ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         ldx     which_run_list
         ldy     copy_when
         return  #0
+.endproc
+
+;;; Returns C=0 if `path_buf0` is a volume path, C=1 otherwise
+;;; Assert: Path is valid
+.proc IsVolPath
+        ldy     path_buf0
+:       lda     path_buf0,y
+        cmp     #'/'
+        beq     found
+        dey
+        bne     :-
+
+found:  cpy     #2
+        rts
 .endproc
 
 ;;; ============================================================
