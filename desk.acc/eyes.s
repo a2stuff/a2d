@@ -399,11 +399,6 @@ kPenH    = 4
 kPupilW  = kPenW * 2
 kPupilH  = kPenH * 2
 
-.params minimal_pensize
-penwidth:       .byte   1
-penheight:      .byte   1
-.endparams
-
 .params pupil_pensize
 penwidth:       .byte   kPupilW
 penheight:      .byte   kPupilH
@@ -441,6 +436,8 @@ kMoveThresholdY = 5
 :
 
         MGTK_CALL MGTK::SetPort, grafport
+
+        ;; TODO: Only hide/show cursor if inside the window
         MGTK_CALL MGTK::HideCursor
 
         lda     has_drawn_outline
@@ -448,15 +445,14 @@ kMoveThresholdY = 5
         jmp     erase_pupils
 :       inc     has_drawn_outline
 
-        ;; Draw resize box
         MGTK_CALL MGTK::SetPenMode, notpencopy
+
+        ;; Draw resize box
         sub16   winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
         sub16   winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
         MGTK_CALL MGTK::PaintBits, grow_box_params
 
         ;; Draw outline
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::SetPenSize, minimal_pensize
 
         ;; Left
         copy16  #0, eye_rect+MGTK::Rect::x1
@@ -546,7 +542,8 @@ loop:
         copy16  yy, bo_params::vert
         jsr     BumpOval
 
-        copy16  yy, point+MGTK::Point::ycoord
+        copy16  yy, rect+MGTK::Rect::y1
+        copy16  yy, rect+MGTK::Rect::y2
 
         cmp16   yy, inner_oval+OvalRec::top
         bmi     outer_only
@@ -554,24 +551,21 @@ loop:
         bpl     outer_only
 
         ;; Need to draw the left and right edges
-        copy16  outer_oval+OvalRec::leftEdge+2, point+MGTK::Point::xcoord
-        MGTK_CALL MGTK::MoveTo, point
-        copy16  inner_oval+OvalRec::leftEdge+2, point+MGTK::Point::xcoord
-        MGTK_CALL MGTK::LineTo, point
+        copy16  outer_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x1
+        copy16  inner_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x2
+        MGTK_CALL MGTK::PaintRect, rect
 
-        copy16  inner_oval+OvalRec::rightEdge+2, point+MGTK::Point::xcoord
-        MGTK_CALL MGTK::MoveTo, point
-        copy16  outer_oval+OvalRec::rightEdge+2, point+MGTK::Point::xcoord
-        MGTK_CALL MGTK::LineTo, point
+        copy16  inner_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x1
+        copy16  outer_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x2
+        MGTK_CALL MGTK::PaintRect, rect
 
         jmp     next
 
         ;; Only need to draw the outer oval
 outer_only:
-        copy16  outer_oval+OvalRec::leftEdge+2, point+MGTK::Point::xcoord
-        MGTK_CALL MGTK::MoveTo, point
-        copy16  outer_oval+OvalRec::rightEdge+2, point+MGTK::Point::xcoord
-        MGTK_CALL MGTK::LineTo, point
+        copy16  outer_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x1
+        copy16  outer_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x2
+        MGTK_CALL MGTK::PaintRect, rect
 
 next:
         inc16   yy
@@ -581,7 +575,7 @@ next:
         rts
 
 yy:     .word   0
-point:  .tag    MGTK::Point
+rect:   .tag    MGTK::Rect
 outer_oval:
         .tag    OvalRec
 inner_oval:
