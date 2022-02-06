@@ -223,7 +223,7 @@ draw_prompt:
         inx
         bne     :+
         iny
-        stx     textwidth_params::data
+:       stx     textwidth_params::data
         sty     textwidth_params::data + 1
 
         ptr := $06
