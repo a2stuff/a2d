@@ -66,6 +66,9 @@ JT_SHOW_WARNING:        jmp     ShowWarning             ; *
 .proc MainLoop
         jsr     ResetMainGrafport
 
+        ;; Close any windows that are not longer valid, if necessary
+        jsr     ValidateWindows
+
         jsr     YieldLoop
         bne     :+
 
@@ -1876,6 +1879,8 @@ running_da_flag:
 
         ;; --------------------------------------------------
         ;; Update windows with results
+
+        copy    #$80, validate_windows_flag
 
         ;; Strip filename, so it's just the containing path.
         param_call FindLastPathSegment, path_buf3
@@ -4276,7 +4281,10 @@ process_drop:
         lda     drag_drop_params::result
         cmp     trash_icon_num
         ;; Update used/free for same-vol windows
-        jeq     UpdateActiveWindow
+    IF_EQ
+        copy    #$80, validate_windows_flag
+        bne     UpdateActiveWindow ; always
+    END_IF
 
         ;; (3/4) Dropped on icon?
         lda     drag_drop_params::result
@@ -4856,6 +4864,62 @@ finish: rts
 
 icon:   .byte   0
 
+.endproc
+
+;;; ============================================================
+;;; Check windows and close any where the backing volume/file no
+;;; longer exists.
+
+;;; Set to $80 to run a validation pass and close as needed.
+validate_windows_flag:
+        .byte   0
+
+.proc ValidateWindows
+        pathbuf := $220
+        ptr := $06
+
+        bit     validate_windows_flag
+        bpl     done
+        copy    #0, validate_windows_flag
+
+        copy    #kMaxNumWindows, window_id
+
+loop:
+        ;; Check if the window is in use
+        ldx     window_id
+        lda     window_to_dir_icon_table-1,x
+        beq     next
+
+        ;; Get and copy its path somewhere useful
+        txa
+        jsr     GetWindowPath
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       copy    (ptr),y, pathbuf,y
+        dey
+        bpl     :-
+
+        ;; See if it exists
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params5
+        beq     next
+
+        ;; Nope - close the window
+        lda     window_id
+        pha
+        sta     findwindow_params::window_id
+        jsr     HandleInactiveWindowClick
+        pla
+        jsr     CloseWindow
+
+next:   dec     window_id
+        bne     loop
+
+done:   rts
+
+window_id:
+        .byte   0
 .endproc
 
 ;;; ============================================================
