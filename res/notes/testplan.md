@@ -404,7 +404,7 @@
     * Modifying shortcuts (selector)
 
 * Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. Go back to the volume window, and drag the folder icon to the trash. Click OK in the delete confirmation dialog. Verify that the folder's window closes.
-* Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. File > Delete a File.... Select the folder and click OK. Click OK in the dlete confirmation dialog. Verify that the folder's window closes.
+* Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. File > Delete a File.... Select the folder and click OK. Click OK in the delete confirmation dialog. Verify that the folder's window closes.
 
 # Preview
 
