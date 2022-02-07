@@ -16,7 +16,8 @@ kShortcutResize = res_char_resize_shortcut
 kShortcutMove   = res_char_move_shortcut
 kShortcutScroll = res_char_scroll_shortcut
 
-dst_path_buf   := $1F80
+src_path_buf    := INVOKER_PREFIX
+dst_path_buf    := $1F80
 
         .org $4000
 
@@ -888,12 +889,19 @@ no_selection:
 .endproc
 
 ;;; ============================================================
+;;; Common re-used param blocks
+
+        DEFINE_GET_FILE_INFO_PARAMS src_file_info_params, src_path_buf
+        DEFINE_GET_FILE_INFO_PARAMS dst_file_info_params, dst_path_buf
+
+        .assert src_path_buf = INVOKER_PREFIX, error, "Params re-use"
+        .define get_file_info_params src_file_info_params
+
+;;; ============================================================
 ;;; Launch file (File > Open, Selector menu, or double-click)
 
 .proc LaunchFileImpl
         path := INVOKER_PREFIX
-
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
 
 compose_path:
         jsr     ComposeWinFilePaths
@@ -1275,16 +1283,8 @@ result: .byte   0
 
 ;;; ============================================================
 
-.proc CmdSelectorItemImpl
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, $220
-
-start:
-        jmp     L49A6
-
-entry_num:
-        .byte   0
-
-L49A6:  lda     menu_click_params::item_num
+.proc CmdSelectorItem
+        lda     menu_click_params::item_num
         sec
         sbc     #6              ; 4 items + separator (and make 0 based)
         sta     entry_num
@@ -1369,6 +1369,9 @@ L4A0F:  lda     ($06),y
 slash_index:
         .byte   0
 .endproc
+
+entry_num:
+        .byte   0
 
 ;;; --------------------------------------------------
 
@@ -1470,6 +1473,8 @@ slash_index:
         rts
 .endproc
 
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, 0
+
 .proc CheckDownloadedPath
         jsr     ComposeDownloadedEntryPath
         stax    get_file_info_params3::pathname
@@ -1478,11 +1483,10 @@ slash_index:
 .endproc
 
 .endproc
-CmdSelectorItem := CmdSelectorItemImpl::start
 
-LaunchBufWinPath        := CmdSelectorItemImpl::LaunchBufWinPath
-StripPathSegments       := CmdSelectorItemImpl::StripPathSegments
-MakeRamcardPrefixedPath := CmdSelectorItemImpl::MakeRamcardPrefixedPath
+LaunchBufWinPath        := CmdSelectorItem::LaunchBufWinPath
+StripPathSegments       := CmdSelectorItem::StripPathSegments
+MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 
 ;;; ============================================================
 ;;; Append filename to directory path in `path_buffer`
@@ -4875,7 +4879,7 @@ validate_windows_flag:
         .byte   0
 
 .proc ValidateWindows
-        pathbuf := $220
+        pathbuf := INVOKER_PREFIX
         ptr := $06
 
         bit     validate_windows_flag
@@ -4902,7 +4906,7 @@ loop:
         bpl     :-
 
         ;; See if it exists
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params5
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     next
 
         ;; Nope - close the window
@@ -5757,7 +5761,7 @@ y_flag: .byte   0
 
 .proc UpdateUsedFreeViaIcon
         ptr := $6
-        path_buf := $220
+        path_buf := INVOKER_PREFIX
 
         ;; Volume icon with an open window?
         jsr     FindWindowForDirIcon
@@ -7040,7 +7044,7 @@ DoClose:
 
 ;;; ============================================================
 ;;; Query a volume for used/free data, convert to KB.
-;;; Inputs: `path_buffer` must point at a volume path
+;;; Inputs: `path_buffer` must contain a volume path
 ;;; Outputs: `vol_kb_used` and `vol_kb_free` updated.
 
 vol_kb_free:  .word   0
@@ -11440,8 +11444,6 @@ list:   .word   0               ; 0 items in list
 ;;; "Get Info" dialog state and logic
 ;;; ============================================================
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params5, $220
-
         DEFINE_READ_BLOCK_PARAMS block_params, $800, $A
 
 .params get_info_dialog_params
@@ -11468,7 +11470,7 @@ index:  .byte   0               ; index in selected icon list
 ;;; Get Info
 
 .proc DoGetInfo
-        path_buf := $220
+        path_buf := INVOKER_PREFIX
         ptr := $6
 
         lda     selected_icon_count
@@ -11494,7 +11496,7 @@ loop:   ldx     get_info_dialog_params::index
         bpl     :-
 
         ;; Try to get file info
-common: MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params5
+common: MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
         jsr     ShowErrorAlert
         beq     common
@@ -11579,7 +11581,7 @@ common2:
         bpl     not_protected
 
 is_file:
-        lda     get_file_info_params5::access ; File
+        lda     get_file_info_params::access ; File
         and     #ACCESS_DEFAULT
         cmp     #ACCESS_DEFAULT
         beq     not_protected
@@ -11597,14 +11599,14 @@ show_protected:
         copy    #GetInfoDialogState::size, get_info_dialog_params::state
 
         ;; Compose " 12345K" or " 12345K / 67890K" string
-        buf := $220
+        buf := INVOKER_PREFIX
         copy    #0, buf
 
         lda     selected_window_id ; volume?
         beq     volume                ; yes
 
         ;; A file, so just show the size
-        ldax    get_file_info_params5::blocks_used
+        ldax    get_file_info_params::blocks_used
         jmp     append_size
 
         ;; A volume.
@@ -11614,7 +11616,7 @@ volume:
         ;; total number of blocks on the volume is returned in the aux_type
         ;; field and the total blocks for all files is returned in blocks_used.
 
-        ldax    get_file_info_params5::blocks_used
+        ldax    get_file_info_params::blocks_used
         jsr     ComposeSizeString
 
         ;; text_buffer2 now has " 12345K" (used space)
@@ -11639,7 +11641,7 @@ volume:
         stx     buf
 
         ;; Load up the total volume size...
-        ldax    get_file_info_params5::aux_type
+        ldax    get_file_info_params::aux_type
 
         ;; Compute " 12345K" (either volume size or file size)
 append_size:
@@ -11666,7 +11668,7 @@ append_size:
         ;; --------------------------------------------------
         ;; Created date
         copy    #GetInfoDialogState::created, get_info_dialog_params::state
-        COPY_STRUCT DateTime, get_file_info_params5::create_date, datetime_for_conversion
+        COPY_STRUCT DateTime, get_file_info_params::create_date, datetime_for_conversion
         jsr     ComposeDateString
         copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     RunGetInfoDialogProc
@@ -11674,7 +11676,7 @@ append_size:
         ;; --------------------------------------------------
         ;; Modified date
         copy    #GetInfoDialogState::modified, get_info_dialog_params::state
-        COPY_STRUCT DateTime, get_file_info_params5::mod_date, datetime_for_conversion
+        COPY_STRUCT DateTime, get_file_info_params::mod_date, datetime_for_conversion
         jsr     ComposeDateString
         copy16  #text_buffer2::length, get_info_dialog_params::addr
         jsr     RunGetInfoDialogProc
@@ -11691,10 +11693,10 @@ append_size:
         jmp     show_type
 
         ;; File
-:       lda     get_file_info_params5::file_type
+:       lda     get_file_info_params::file_type
         jsr     ComposeFileTypeString
         COPY_STRING str_file_type, text_buffer2::length
-        ldax    get_file_info_params5::aux_type
+        ldax    get_file_info_params::aux_type
         jsr     AppendAuxType
 
 show_type:
@@ -11730,11 +11732,9 @@ str_vol:
 
 .proc DoRenameImpl
 
-        src_path_buf := $220
         old_name_buf := $1F00
         new_name_buf := $1F10
 
-        DEFINE_GET_FILE_INFO_PARAMS getfileinfo_params, dst_path_buf
         DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
 
 .params rename_dialog_params
@@ -11878,7 +11878,7 @@ common2:
         stx     dst_path_buf
 
         ;; Already exists? (Mostly for volumes, but works for files as well)
-        MLI_RELAY_CALL GET_FILE_INFO, getfileinfo_params
+        MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
         bne     :+
         lda     #ERR_DUPLICATE_FILENAME
         jsr     ShowAlert
@@ -12258,7 +12258,6 @@ slash_flag:                     ; non-zero if trailing slash needed
 
 .proc DoDuplicateImpl
 
-        src_path_buf := $220
         old_name_buf := $1F00
 
 .params duplicate_dialog_params
@@ -12407,8 +12406,6 @@ DoDuplicate     := DoDuplicateImpl::start
 
 ;;; ============================================================
 
-        src_path_buf := $220
-
         DEFINE_OPEN_PARAMS open_src_dir_params, src_path_buf, $800
 
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
@@ -12444,9 +12441,6 @@ buf_padding_bytes:
         DEFINE_CREATE_PARAMS create_params2, dst_path_buf
 
         .byte   0,0
-
-        DEFINE_GET_FILE_INFO_PARAMS src_file_info_params, src_path_buf
-        DEFINE_GET_FILE_INFO_PARAMS dst_file_info_params, dst_path_buf
 
         DEFINE_SET_EOF_PARAMS set_eof_params, 0
         DEFINE_SET_MARK_PARAMS mark_src_params, 0
@@ -13487,9 +13481,10 @@ error:  jsr     ShowErrorAlert
         bne     done
         lda     #ACCESS_DEFAULT
         sta     src_file_info_params::access
-        copy    #7, src_file_info_params ; param count for SET_FILE_INFO
+        copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
         MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
-        copy    #$A, src_file_info_params ; param count for GET_FILE_INFO
+        ;; TODO: php/plp instead?
+        copy    #$A, src_file_info_params::param_count ; GET_FILE_INFO
         lda     #0                        ; success
 done:   rts
 .endproc
@@ -13551,9 +13546,9 @@ loop:   MLI_RELAY_CALL DESTROY, destroy_params
 :       jmp     CloseFilesCancelDialog
 
 unlock: copy    #ACCESS_DEFAULT, src_file_info_params::access
-        copy    #7, src_file_info_params ; param count for SET_FILE_INFO
+        copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
         MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
-        copy    #$A,src_file_info_params ; param count for GET_FILE_INFO
+        copy    #$A,src_file_info_params::param_count ; GET_FILE_INFO
         jmp     loop
 
 err:    jsr     ShowErrorAlert
@@ -13763,10 +13758,10 @@ lock_process_directory_entry:
 :       lda     #ACCESS_LOCKED
 set:    sta     src_file_info_params::access
 
-:       copy    #7, src_file_info_params ; param count for SET_FILE_INFO
+:       copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
         MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
         pha
-        copy    #$A, src_file_info_params ; param count for GET_FILE_INFO
+        copy    #$A, src_file_info_params::param_count ; GET_FILE_INFO
         pla
         beq     ok
         jsr     ShowErrorAlert
@@ -14328,10 +14323,10 @@ done:   rts
 .endproc
 
 .proc SetDstFileInfo
-:       copy    #7, dst_file_info_params ; SET_FILE_INFO param_count
+:       copy    #7, dst_file_info_params::param_count ; SET_FILE_INFO
         MLI_RELAY_CALL SET_FILE_INFO, dst_file_info_params
         pha
-        copy    #$A, dst_file_info_params ; GET_FILE_INFO param_count
+        copy    #$A, dst_file_info_params::param_count ; GET_FILE_INFO
         pla
         beq     done
         jsr     ShowErrorAlertDst
