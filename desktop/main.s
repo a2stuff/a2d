@@ -9787,6 +9787,8 @@ pos_win:        .word   0, 0
 ;;;
 ;;; Name is hardcoded if Disk II, RAM Disk, or AppleTalk; via SmartPort
 ;;; (re-cased) if the call succeeds, otherwise pointer to empty string.
+;;;
+;;; Uses start of $800 as a param buffer
 
 device_type_to_icon_address_table:
         .addr floppy140_icon
@@ -9803,17 +9805,17 @@ list_ptr:       .addr   dib_buffer
 status_code:    .byte   3       ; Return Device Information Block (DIB)
 .endparams
 
-.params dib_buffer
-Device_Statbyte1:       .byte   0
-Device_Size_Lo:         .byte   0
-Device_Size_Med:        .byte   0
-Device_Size_Hi:         .byte   0
-ID_String_Length:       .byte   0
-Device_Name:            .res    16
-Device_Type_Code:       .byte   0
-Device_Subtype_Code:    .byte   0
-Version:                .word   0
-.endparams
+PARAM_BLOCK dib_buffer, $800
+Device_Statbyte1        .byte
+Device_Size_Lo          .byte
+Device_Size_Med         .byte
+Device_Size_Hi          .byte
+ID_String_Length        .byte
+Device_Name             .res    16
+Device_Type_Code        .byte
+Device_Subtype_Code     .byte
+Version                 .word
+END_PARAM_BLOCK
 
 ;;; Roughly follows:
 ;;; Technical Note: ProDOS #21: Identifying ProDOS Devices
