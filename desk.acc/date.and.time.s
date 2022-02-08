@@ -347,7 +347,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   MGTK::notpenXOR
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -870,8 +870,6 @@ label_downarrow:
 
 .proc DrawWindow
         MGTK_CALL MGTK::SetPort, winfo::port
-        MGTK_CALL MGTK::FrameRect, outer_rect
-        MGTK_CALL MGTK::FrameRect, inner_rect
         MGTK_CALL MGTK::FrameRect, date_rect
         MGTK_CALL MGTK::FrameRect, time_rect
 
@@ -883,6 +881,9 @@ label_downarrow:
         param_call DrawString, str_time_separator
 
         MGTK_CALL MGTK::SetPenMode, notpenxor
+
+        MGTK_CALL MGTK::FrameRect, outer_rect
+        MGTK_CALL MGTK::FrameRect, inner_rect
 
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, label_ok_pos

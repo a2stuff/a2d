@@ -15252,7 +15252,7 @@ LAE17:  jsr     PromptInputLoop
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_new_folder
-        jsr     SetPenModeXOR
+        jsr     SetPenModeNotCopy
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         rts
 
@@ -15614,7 +15614,7 @@ do4:    jsr     ClosePromptDialog
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_rename_icon
-        jsr     SetPenModeXOR
+        jsr     SetPenModeNotCopy
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     CopyDialogParamAddrToPtr
         ldy     #1              ; rename_dialog_params::addr offset
@@ -15686,7 +15686,7 @@ close_win:
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_duplicate_icon
-        jsr     SetPenModeXOR
+        jsr     SetPenModeNotCopy
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     CopyDialogParamAddrToPtr
         ldy     #1              ; duplicate_dialog_params::addr offset
@@ -16118,7 +16118,7 @@ draw:   copy16  #str_insertion_point+1, textptr
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeCopy
         MGTK_RELAY_CALL MGTK::PaintRect, name_input_rect
-        jsr     SetPenModeXOR
+        jsr     SetPenModeNotCopy
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo

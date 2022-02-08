@@ -117,7 +117,7 @@ buffer: .res 16, 0
         jmp     common
 
 add:    param_call file_dialog::DrawTitleCentered, label_add
-common: MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+common: MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label

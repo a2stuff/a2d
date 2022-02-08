@@ -597,15 +597,15 @@ kHourDisplayY = 114
         jsr     InitDblclick
 
         param_call MeasureText, rgb_color_label_str
-        addax   rect_rgb::x2, rect_rgb::x2
+        addax   rect_rgb::x2
         param_call MeasureText, tracking_slow_label_str
-        addax   tracking_button_rect1::x2, tracking_button_rect1::x2
+        addax   tracking_button_rect1::x2
         param_call MeasureText, tracking_fast_label_str
-        addax   tracking_button_rect2::x2, tracking_button_rect2::x2
+        addax   tracking_button_rect2::x2
         param_call MeasureText, clock_12hour_label_str
-        addax   rect_12hour::x2, rect_12hour::x2
+        addax   rect_12hour::x2
         param_call MeasureText, clock_24hour_label_str
-        addax   rect_24hour::x2, rect_24hour::x2
+        addax   rect_24hour::x2
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow

@@ -73,7 +73,7 @@ l3:     bit     selected_device_index
         jsr     main::SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     main::ClearPathBuf1
         copy    #$80, has_input_field_flag
@@ -234,7 +234,7 @@ l2:     bit     selected_device_index
         jsr     main::SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     main::ClearPathBuf1
         copy    #$80, has_input_field_flag

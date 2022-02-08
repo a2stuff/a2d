@@ -50,7 +50,7 @@
         param_call file_dialog::DrawTitleCentered, aux::label_copy_file
         param_call file_dialog::DrawInput1Label, source_filename_label
         param_call file_dialog::DrawInput2Label, destination_filename_label
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
+        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport

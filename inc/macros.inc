@@ -498,13 +498,23 @@ end:
 ;;; Add A,X to arg1 (immediate or absolute), store to arg2
 ;;;    addax #$1111, $3333       ; immediate, absolute
 ;;;    addax $1111, $3333        ; absolute, absolute
+;;;    addax $1111               ; absolute
 .macro addax arg1, arg2
+    .ifblank arg2
+        clc
+        adc     arg1
+        sta     arg1
+        txa
+        adc     arg1+1
+        sta     arg1+1
+    .else
         clc
         _op_lo adc, {arg1}
         sta     arg2
         txa
         _op_hi adc, {arg1}
         sta     arg2+1
+     .endif
 .endmacro
 
 ;;; Subtract arg2 from arg1, store to arg3

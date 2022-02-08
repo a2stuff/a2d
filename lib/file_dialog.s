@@ -2274,7 +2274,7 @@ length  .byte
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_rect
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
+        LIB_MGTK_CALL MGTK::SetPenMode, notpencopy
         LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
         lda     buf_input1_left
@@ -2292,7 +2292,7 @@ length  .byte
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
+        LIB_MGTK_CALL MGTK::SetPenMode, notpencopy
         LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
         lda     buf_input2_left

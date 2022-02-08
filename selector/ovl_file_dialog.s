@@ -20,6 +20,7 @@ ep_loop:
 ;;; ============================================================
 
 penXOR:         .byte   MGTK::penXOR
+notpencopy:     .byte   MGTK::notpencopy
 
         .include "../lib/event_params.s"
 
@@ -180,7 +181,7 @@ start:  jsr     OpenWindow
         jsr     SetPortForWindow
         param_call DrawTitleCentered, app::str_run_a_program
         param_call DrawInput1Label, str_file_to_run
-        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_CALL MGTK::InitPort, main_grafport
         MGTK_CALL MGTK::SetPort, main_grafport

@@ -841,7 +841,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
+penmode:        .byte   MGTK::notpencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -967,8 +967,9 @@ ctlmax:         .byte   0
 
         DEFINE_LABEL find, res_string_label_find, 20, 20
 
-        DEFINE_RECT input_rect, 90, 10, kDAWidth-250, 21
-        DEFINE_POINT input_textpos, 95, 20
+        ;; Left edges are adjusted dynamically based on label width
+        DEFINE_RECT input_rect, 23, 10, kDAWidth-250, 21
+        DEFINE_POINT input_textpos, 5, 20
 
         ;; figure out coords here
 .params input_mapinfo
@@ -1009,6 +1010,10 @@ top_row:        .byte   0
 
         copy    #0, ip_blink_flag
         copy    #prompt_insertion_point_blink_count, ip_blink_counter
+
+        param_call MeasureText, find_label_str
+        addax   input_rect::x1
+        add16   input_rect::x1, input_textpos::xcoord, input_textpos::xcoord
 
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::OpenWindow, winfo_results
@@ -1850,13 +1855,14 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
+        MGTK_CALL MGTK::FrameRect, input_rect
+
         MGTK_CALL MGTK::SetPenMode, penxor
         MGTK_CALL MGTK::FrameRect, frame_rect1
         MGTK_CALL MGTK::FrameRect, frame_rect2
 
         MGTK_CALL MGTK::MoveTo, find_label_pos
         param_call DrawString, find_label_str
-        MGTK_CALL MGTK::FrameRect, input_rect
 
         MGTK_CALL MGTK::FrameRect, search_button_rect
         MGTK_CALL MGTK::MoveTo, search_button_pos
@@ -1966,6 +1972,22 @@ done:   rts
 .endproc
 
 ;;; ============================================================
+;;; Measure text, pascal string address in A,X; result in A,X
+
+.proc MeasureText
+        ptr := $6
+        len := $8
+        result := $9
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        inc16   ptr
+        MGTK_CALL MGTK::TextWidth, ptr
+        ldax    result
+        rts
+.endproc
 
 ;;; ============================================================
 

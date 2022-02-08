@@ -376,8 +376,8 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT name_input_rect, 40, 67, 360, 77
-        DEFINE_POINT name_input_textpos, 45, 76
+        DEFINE_RECT name_input_rect, 40, 67, 360, 78
+        DEFINE_POINT name_input_textpos, 45, 77
         DEFINE_POINT pos_dialog_title, 0, 18
 
         DEFINE_POINT dialog_label_base_pos, 40, 30
