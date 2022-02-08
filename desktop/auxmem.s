@@ -797,7 +797,7 @@ count:  .byte   0
         lda     num_icons
         sta     count
 count := * + 1
-loop:   ldx     #$11
+loop:   ldx     #SELF_MODIFIED_BYTE
         bne     L96E5
         txa
         rts
@@ -899,7 +899,7 @@ loop:   cpx     num_icons
         and     #kIconEntryWinIdMask
 
 window_id := * + 1
-        cmp     #$11
+        cmp     #SELF_MODIFIED_BYTE
         bne     :+
 
         ;; In poly?
@@ -2386,10 +2386,10 @@ icon_num:       .byte   0
 
         ;; restore return addr
 stash_high := * + 1
-        lda     #$11
+        lda     #SELF_MODIFIED_BYTE
         pha
 stash_low := * + 1
-        lda     #$22
+        lda     #SELF_MODIFIED_BYTE
         pha
         rts
 
@@ -2413,10 +2413,10 @@ stash_low := * + 1
 
         ;; restore return addr
 stash_high := * + 1
-        lda     #$11
+        lda     #SELF_MODIFIED_BYTE
         pha
 stash_low := * + 1
-        lda     #$22
+        lda     #SELF_MODIFIED_BYTE
         pha
         rts
 
