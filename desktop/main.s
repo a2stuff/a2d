@@ -228,7 +228,7 @@ loop_counter:
         ;; Overwrite the Winfo's port with the cliprect we got for the update
         ;; since downstream calls will use the Winfo's port.
         lda     active_window_id
-        jsr     SaveWindowPortbits
+        jsr     SwapWindowPortbits
         jsr     OverwriteWindowPort
 
         winfo_ptr := $06
@@ -278,7 +278,7 @@ skip_adjust_port:
 done:
         ;; Restore window's port
         lda     active_window_id
-        jsr     RestoreWindowPortbits
+        jsr     SwapWindowPortbits
 
         ;; Back to normal TODO: Is this needed??? Move to end of update loop?
         jmp     ResetMainGrafport
@@ -9589,10 +9589,7 @@ addr:   .addr   0
 
 ;;; ============================================================
 
-saved_portbits:
-        .res    .sizeof(MGTK::GrafPort)+1, 0
-
-.proc SaveWindowPortbits
+.proc SwapWindowPortbits
         ptr := $6
 
         tay
@@ -9600,36 +9597,22 @@ saved_portbits:
         tya
         jsr     WindowLookup
         stax    ptr
-        ldx     #0
+
         ldy     #MGTK::Winfo::port
 :       lda     (ptr),y
-        sta     saved_portbits,x
-        iny
-        inx
-        cpx     #.sizeof(MGTK::GrafPort)
-        bne     :-
-        jsr     PopPointers
-        rts
-.endproc
-
-.proc RestoreWindowPortbits
-        ptr := $6
-
-        tay
-        jsr     PushPointers
-        tya
-        jsr     WindowLookup
-        stax    ptr
-        ldx     #0
-        ldy     #MGTK::Winfo::port
-:       lda     saved_portbits,x
+        tax
+        lda     saved_portbits-MGTK::Winfo::port,y
         sta     (ptr),y
+        txa
+        sta     saved_portbits-MGTK::Winfo::port,y
         iny
-        inx
-        cpx     #.sizeof(MGTK::GrafPort)
+        cpy     #MGTK::Winfo::port+.sizeof(MGTK::GrafPort)
         bne     :-
         jsr     PopPointers
         rts
+
+saved_portbits:
+        .res    .sizeof(MGTK::GrafPort)+1, 0
 .endproc
 
 ;;; ============================================================
