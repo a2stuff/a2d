@@ -323,34 +323,17 @@ dispatch_table:
         .addr   CmdQuit
         ASSERT_ADDRESS_TABLE_SIZE menu2_start, ::kMenuSizeFile
 
-        ;; Selector menu (3)
+        ;; View menu (3)
         menu3_start := *
-        .addr   CmdSelectorAction
-        .addr   CmdSelectorAction
-        .addr   CmdSelectorAction
-        .addr   CmdSelectorAction
-        .addr   CmdNoOp         ; --------
-        .addr   CmdSelectorItem
-        .addr   CmdSelectorItem
-        .addr   CmdSelectorItem
-        .addr   CmdSelectorItem
-        .addr   CmdSelectorItem
-        .addr   CmdSelectorItem
-        .addr   CmdSelectorItem
-        .addr   CmdSelectorItem
-        ASSERT_ADDRESS_TABLE_SIZE menu3_start, ::kMenuSizeSelector
-
-        ;; View menu (4)
-        menu4_start := *
         .addr   CmdViewByIcon
         .addr   CmdViewByName
         .addr   CmdViewByDate
         .addr   CmdViewBySize
         .addr   CmdViewByType
-        ASSERT_ADDRESS_TABLE_SIZE menu4_start, ::kMenuSizeView
+        ASSERT_ADDRESS_TABLE_SIZE menu3_start, ::kMenuSizeView
 
-        ;; Special menu (5)
-        menu5_start := *
+        ;; Special menu (4)
+        menu4_start := *
         .addr   CmdCheckDrives
         .addr   CmdCheckDrive
         .addr   CmdEject
@@ -362,22 +345,35 @@ dispatch_table:
         .addr   CmdLock
         .addr   CmdUnlock
         .addr   CmdGetSize
-        ASSERT_ADDRESS_TABLE_SIZE menu5_start, ::kMenuSizeSpecial
+        ASSERT_ADDRESS_TABLE_SIZE menu4_start, ::kMenuSizeSpecial
 
-        ;; 6/7 unused
+        ;; Startup menu (5)
+        menu5_start := *
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        ASSERT_ADDRESS_TABLE_SIZE menu5_start, ::kMenuSizeStartup
+
+        ;; Selector menu (6)
         menu6_start := *
-        menu7_start := *
-
-        ;; Startup menu (8)
-        menu8_start := *
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        ASSERT_ADDRESS_TABLE_SIZE menu8_start, ::kMenuSizeStartup
+        .addr   CmdSelectorAction
+        .addr   CmdSelectorAction
+        .addr   CmdSelectorAction
+        .addr   CmdSelectorAction
+        .addr   CmdNoOp         ; --------
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        .addr   CmdSelectorItem
+        ASSERT_ADDRESS_TABLE_SIZE menu6_start, ::kMenuSizeSelector
 
         menu_end := *
 
@@ -389,12 +385,10 @@ offset_table:
         .byte   menu4_start - dispatch_table
         .byte   menu5_start - dispatch_table
         .byte   menu6_start - dispatch_table
-        .byte   menu7_start - dispatch_table
-        .byte   menu8_start - dispatch_table
         .byte   menu_end - dispatch_table
 
         ;; Set if there are open windows
-flag:   .byte   $00
+window_open_flag:   .byte   $00
 
         ;; Handle accelerator keys
 HandleKeydown:
@@ -438,7 +432,7 @@ modifiers:
         jeq     CmdOpenFromKeyboard
         cmp     #CHAR_UP        ; Apple-Up (Open Parent)
         jeq     CmdOpenParent
-        bit     flag
+        bit     window_open_flag
         bpl     menu_accelerators
         cmp     #kShortcutResize ; Apple-G (Resize)
         jeq     CmdResize
@@ -499,7 +493,7 @@ call_proc:
 
 HandleKeydown   := HandleKeydownImpl::HandleKeydown
 MenuDispatch2   := HandleKeydownImpl::MenuDispatch2
-menu_dispatch_flag      := HandleKeydownImpl::flag
+window_open_flag := HandleKeydownImpl::window_open_flag
 
 ;;; ============================================================
 ;;; Handle click
@@ -5345,13 +5339,13 @@ size:   .word   0
 enable:
         copy    #MGTK::disablemenu_enable, disablemenu_params::disable
         copy    #MGTK::disableitem_enable, disableitem_params::disable
-        copy    #$80, menu_dispatch_flag
+        copy    #$80, window_open_flag
         jmp     :+
 
 disable:
         copy    #MGTK::disablemenu_disable, disablemenu_params::disable
         copy    #MGTK::disableitem_disable, disableitem_params::disable
-        copy    #0, menu_dispatch_flag
+        copy    #0, window_open_flag
 
 :       MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params ; View menu
 

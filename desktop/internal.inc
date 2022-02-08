@@ -120,10 +120,10 @@ IO_BUFFER := $1C00
 
 kMenuIdApple    = 1
 kMenuIdFile     = 2
-kMenuIdView     = 4
-kMenuIdSpecial  = 5
-kMenuIdStartup  = 8
-kMenuIdSelector = 3
+kMenuIdView     = 3
+kMenuIdSpecial  = 4
+kMenuIdStartup  = 5
+kMenuIdSelector = 6
 
 kMenuSizeApple    = 14
 kMenuSizeFile     = 14
