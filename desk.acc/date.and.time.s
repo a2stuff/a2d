@@ -345,9 +345,9 @@ reserved2:      .byte   0
 pattern:        .res    8,$00
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   4
-penheight:      .byte   2
-penmode:        .byte   MGTK::pencopy
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::notpenXOR
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -853,8 +853,8 @@ done:   pla
 ;;; ============================================================
 ;;; Params for the display
 
-        ;; Not DEFINE_RECT_INSET since width > 1
-        DEFINE_RECT border_rect, 4, 2, kDialogWidth-5, kDialogHeight-3
+        DEFINE_RECT_INSET inner_rect, 4, 2, kDialogWidth, kDialogHeight
+        DEFINE_RECT_INSET outer_rect, 5, 3, kDialogWidth, kDialogHeight
 
 label_ok:
         PASCAL_STRING res_string_button_ok ; button label
@@ -865,18 +865,13 @@ label_uparrow:
 label_downarrow:
         PASCAL_STRING kGlyphDownArrow ; do not localize
 
-.params setpensize_params
-penwidth: .byte   1
-penheight: .byte   1
-.endparams
-
 ;;; ============================================================
 ;;; Render the window contents
 
 .proc DrawWindow
         MGTK_CALL MGTK::SetPort, winfo::port
-        MGTK_CALL MGTK::FrameRect, border_rect
-        MGTK_CALL MGTK::SetPenSize, setpensize_params
+        MGTK_CALL MGTK::FrameRect, outer_rect
+        MGTK_CALL MGTK::FrameRect, inner_rect
         MGTK_CALL MGTK::FrameRect, date_rect
         MGTK_CALL MGTK::FrameRect, time_rect
 
