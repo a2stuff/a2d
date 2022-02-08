@@ -891,11 +891,20 @@ no_selection:
 ;;; ============================================================
 ;;; Common re-used param blocks
 
+        DEFINE_GET_FILE_INFO_PARAMS file_info_params, SELF_MODIFIED
         DEFINE_GET_FILE_INFO_PARAMS src_file_info_params, src_path_buf
         DEFINE_GET_FILE_INFO_PARAMS dst_file_info_params, dst_path_buf
 
         .assert src_path_buf = INVOKER_PREFIX, error, "Params re-use"
         .define get_file_info_params src_file_info_params
+
+;;; Call GET_FILE_INFO on path at A,X; results are in `file_info_params`
+;;; Output: MLI result (carry/zero flag, etc)
+.proc GetFileInfo
+        stax    file_info_params::pathname
+        MLI_RELAY_CALL GET_FILE_INFO, file_info_params
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Launch file (File > Open, Selector menu, or double-click)
@@ -1019,8 +1028,6 @@ launch:
         launch_path := INVOKER_PREFIX
         path := $1800
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, path
-
 basic:  lda     #'C'            ; "BASI?" -> "BASIC"
         bne     start           ; always
 
@@ -1048,7 +1055,7 @@ loop:
         cpy     str_basix_system
         bne     :-
         stx     path
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params2
+        param_call GetFileInfo, path
         bne     not_found
         rts                     ; zero is success
 
@@ -1473,13 +1480,9 @@ entry_num:
         rts
 .endproc
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, 0
-
 .proc CheckDownloadedPath
         jsr     ComposeDownloadedEntryPath
-        stax    get_file_info_params3::pathname
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params3
-        rts
+        jmp     GetFileInfo
 .endproc
 
 .endproc
@@ -7050,18 +7053,15 @@ DoClose:
 vol_kb_free:  .word   0
 vol_kb_used:  .word   0
 
-.proc GetVolUsedFreeViaVolumeImpl
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path_buffer
-
-start:
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+.proc GetVolUsedFreeViaVolume
+        param_call GetFileInfo, path_buffer
         beq     :+
         rts
 
         ;; aux = total blocks
-:       copy16  get_file_info_params::aux_type, vol_kb_used
+:       copy16  file_info_params::aux_type, vol_kb_used
         ;; total - used = free
-        sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, vol_kb_free
+        sub16   file_info_params::aux_type, file_info_params::blocks_used, vol_kb_free
         sub16   vol_kb_used, vol_kb_free, vol_kb_used ; total - free = used
         lsr16   vol_kb_free
         php
@@ -7071,7 +7071,6 @@ start:
         inc16   vol_kb_used
 :       return  #0
 .endproc
-GetVolUsedFreeViaVolume := GetVolUsedFreeViaVolumeImpl::start
 
 ;;; ============================================================
 ;;; Remove the FileRecord entries for a window, and free/compact
@@ -10015,12 +10014,15 @@ str_device_type_vdrive:
 ;;; Input: A=unit_number
 ;;; Output: C=0, blocks in A,X on success, C=1 on error
 .proc GetBlockCountImpl
+        ;; Use $800 scratch space right after `dib_buffer`
+        path := $880            ; becomes length-prefixed path
+        buffer := path+1        ; length overwritten with '/'
+
         DEFINE_ON_LINE_PARAMS on_line_params,, buffer
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
 
 start:  sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
-        bne     error
+        bcs     ret
 
         ;; Prefix the path with '/'
         lda     buffer
@@ -10030,18 +10032,11 @@ start:  sta     on_line_params::unit_num
         sta     path
         copy    #'/', buffer
 
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
-        bne     error
+        param_call GetFileInfo, path
+        bcs     ret
+        ldax    file_info_params::aux_type
 
-        ldax    get_file_info_params::aux_type
-        clc
-        rts
-
-error:  sec
-        rts
-
-path:   .byte   0               ; becomes length-prefixed path
-buffer: .res    16, 0            ; length overwritten with '/'
+ret:    rts
 .endproc
 GetBlockCount   := GetBlockCountImpl::start
 
@@ -10115,11 +10110,14 @@ success:
         ldy     #IconEntry::name
         sta     (icon_ptr),y
 
+        ;; NOTE: Done with `cvi_data_buffer` at this point,
+        ;; so $800 is free.
+
         ;; ----------------------------------------
 
         ;; Figure out icon
         lda     unit_number
-        jsr     GetDeviceType
+        jsr     GetDeviceType   ; uses $800 as DIB buffer
         tya                     ; Y = kDeviceType constant
         asl                     ; * 2
         tax
@@ -12406,41 +12404,54 @@ DoDuplicate     := DoDuplicateImpl::start
 
 ;;; ============================================================
 
-        DEFINE_OPEN_PARAMS open_src_dir_params, src_path_buf, $800
+;;; Memory Map
+;;; ...
+;;; $1F80 - $1FFF   - dst path buffer
+;;; $1500 - $1F7F   - file data buffer
+;;; $1100 - $14FF   - dst file I/O buffer
+;;; $0D00 - $10FF   - src file I/O buffer
+;;; $0C00 - $0CFF   - dir data buffer
+;;; $0800 - $0BFF   - src dir I/O buffer
+;;; ...
 
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
-        kBlockPointersSize = 4
+        .define kBlockPointersSize 4
         .assert .sizeof(SubdirectoryHeader) - .sizeof(FileEntry) = kBlockPointersSize, error, "bad structs"
-        DEFINE_READ_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
-buf_block_pointers:
-        .res    kBlockPointersSize, 0
+
+        ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
+        ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
+        ;; block pointers are the next 4.
+        .define kMaxPaddingBytes 5
+
+        PARAM_BLOCK dir_data, $C00
+buf_block_pointers      .res    kBlockPointersSize
+buf_padding_bytes       .res    kMaxPaddingBytes
+file_entry_buf          .res    .sizeof(FileEntry)
+        END_PARAM_BLOCK
+        file_entry_buf := dir_data::file_entry_buf
+
+        DEFINE_OPEN_PARAMS open_src_dir_params, src_path_buf, $800
+        DEFINE_READ_PARAMS read_block_pointers_params, dir_data::buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
 
         DEFINE_CLOSE_PARAMS close_src_dir_params
 
         DEFINE_READ_PARAMS read_src_dir_entry_params, file_entry_buf, .sizeof(FileEntry)
 
-        ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
-        ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
-        ;; block pointers are the next 4.
-        kMaxPaddingBytes = 5
-        DEFINE_READ_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
-buf_padding_bytes:
-        .res    kMaxPaddingBytes, 0
+        DEFINE_READ_PARAMS read_padding_bytes_params, dir_data::buf_padding_bytes, kMaxPaddingBytes
 
+        file_data_buffer := $1500
         kBufSize = $A80
-        .assert $1500 + kBufSize <= dst_path_buf, error, "Buffer overlap"
+        .assert file_data_buffer + kBufSize <= dst_path_buf, error, "Buffer overlap"
 
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
         DEFINE_DESTROY_PARAMS destroy_params, src_path_buf
         DEFINE_OPEN_PARAMS open_src_params, src_path_buf, $0D00
         DEFINE_OPEN_PARAMS open_dst_params, dst_path_buf, $1100
-        DEFINE_READ_PARAMS read_src_params, $1500, kBufSize
-        DEFINE_WRITE_PARAMS write_dst_params, $1500, kBufSize
+        DEFINE_READ_PARAMS read_src_params, file_data_buffer, kBufSize
+        DEFINE_WRITE_PARAMS write_dst_params, file_data_buffer, kBufSize
         DEFINE_CREATE_PARAMS create_params3, dst_path_buf, ACCESS_DEFAULT
         DEFINE_CREATE_PARAMS create_params2, dst_path_buf
-
-        .byte   0,0
 
         DEFINE_SET_EOF_PARAMS set_eof_params, 0
         DEFINE_SET_MARK_PARAMS mark_src_params, 0
@@ -12452,8 +12463,6 @@ buf_padding_bytes:
 
         ;; overlayed indirect jump table
         kOpJTAddrsSize = 6
-
-file_entry_buf:  .res    .sizeof(FileEntry), 0
 
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
