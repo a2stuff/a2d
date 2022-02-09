@@ -1235,6 +1235,9 @@ l1:     ldx     num_file_names
         jsr     DrawChangeDriveButtonLabel
         LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
         LIB_MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
+        LIB_MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
+        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep_start
+        LIB_MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep_end
         jsr     InitSetGrafport
         rts
 .endproc

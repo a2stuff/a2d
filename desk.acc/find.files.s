@@ -965,23 +965,16 @@ ctlmax:         .byte   0
         DEFINE_RECT_INSET frame_rect1, 4, 2, kDAWidth, kDAHeight
         DEFINE_RECT_INSET frame_rect2, 5, 3, kDAWidth, kDAHeight
 
-        DEFINE_LABEL find, res_string_label_find, 20, 20
+        kControlsTop = 10
+        kFindLeft = 20
+        DEFINE_LABEL find, res_string_label_find, kFindLeft, 20
 
         ;; Left edges are adjusted dynamically based on label width
-        DEFINE_RECT input_rect, 23, 10, kDAWidth-250, 21
-        DEFINE_POINT input_textpos, 5, 20
+        DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
+        DEFINE_POINT input_textpos, kTextBoxTextHOffset, kControlsTop + kTextBoxTextVOffset
 
-        ;; figure out coords here
-.params input_mapinfo
-        DEFINE_POINT viewloc, 75, 35
-        .addr   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   0
-        DEFINE_RECT maprect, 0, 0, 358, 100
-.endparams
-
-        DEFINE_BUTTON search, res_string_button_search, kDAWidth-235, 10
-        DEFINE_BUTTON cancel, res_string_button_cancel,   kDAWidth-120, 10
+        DEFINE_BUTTON search, res_string_button_search, kDAWidth-235, kControlsTop
+        DEFINE_BUTTON cancel, res_string_button_cancel, kDAWidth-120, kControlsTop
 
 penxor: .byte   MGTK::penXOR
 

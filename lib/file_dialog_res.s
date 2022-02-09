@@ -14,7 +14,9 @@ type_down_buf:
 
         DEFINE_POINT pos_title, 0, 13
 
-        DEFINE_RECT rect_selection, 0, 0, 125, 0
+        kListBoxWidth = 125
+
+        DEFINE_RECT rect_selection, 0, 0, kListBoxWidth, 0
 
         DEFINE_POINT picker_entry_pos, 2, 0
 
@@ -24,49 +26,61 @@ str_folder:
 selected_index:                 ; $FF if none
         .byte   0
 
+        kControlsLeft = 28
+        kControlsTop  = 27
+        kButtonGap = 3
+        kSep = kButtonGap + 1 + kButtonGap
+
         DEFINE_RECT_INSET dialog_frame_rect, 4, 2, kFilePickerDlgWidth, kFilePickerDlgHeight
 
-        DEFINE_RECT disk_name_rect, 27, 16, 174, 26
+        DEFINE_RECT disk_name_rect, kControlsLeft, 16, 174, 26
 
-        DEFINE_BUTTON change_drive, res_string_button_change_drive, 193, 28
-        DEFINE_BUTTON open,         res_string_button_open,         193, 42
-        DEFINE_BUTTON close,        res_string_button_close,        193, 56
-        DEFINE_BUTTON cancel,       res_string_button_cancel,       193, 71
-        DEFINE_BUTTON ok,           res_string_button_ok,           193, 87
+        DEFINE_BUTTON change_drive, res_string_button_change_drive, 195, kControlsTop + 0 * (kButtonHeight + kButtonGap)
+        DEFINE_BUTTON open,         res_string_button_open,         195, kControlsTop + 1 * (kButtonHeight + kButtonGap)
+        DEFINE_BUTTON close,        res_string_button_close,        195, kControlsTop + 2 * (kButtonHeight + kButtonGap)
+        DEFINE_BUTTON cancel,       res_string_button_cancel,       195, kControlsTop + 3 * (kButtonHeight + kButtonGap) + kSep
+        DEFINE_BUTTON ok,           res_string_button_ok,           195, kControlsTop + 4 * (kButtonHeight + kButtonGap) + kSep
 
 ;;; Dividing line
-        DEFINE_POINT dialog_sep_start, 315, 28
+        DEFINE_POINT dialog_sep_start, 315, kControlsTop + 1
         DEFINE_POINT dialog_sep_end,   315, 100
 
-        DEFINE_LABEL disk, res_string_label_disk, 28, 25
+        kButtonSepY = kControlsTop + 3*kButtonHeight + 3*kButtonGap + 2
+        DEFINE_POINT button_sep_start, 195, kButtonSepY
+        DEFINE_POINT button_sep_end,   195 + kButtonWidth, kButtonSepY
 
-        DEFINE_POINT input1_label_pos, 28, 112
-        DEFINE_POINT input2_label_pos, 28, 135
+        DEFINE_LABEL disk, res_string_label_disk, kControlsLeft, 25
+
+        DEFINE_POINT input1_label_pos, kControlsLeft, 112
+        DEFINE_POINT input2_label_pos, kControlsLeft, 135
 
 textbg1:
         .byte   0
 textbg2:
         .byte   $7F
 
+checkerboard_pattern:
+        .byte   $55, $AA, $55, $AA, $55, $AA, $55, $AA
+
 kCommonInputWidth = 435
-kCommonInputHeight = 11
+kCommonInputHeight = kTextBoxHeight
 
-        DEFINE_RECT_SZ input1_rect, 28, 113, kCommonInputWidth, kCommonInputHeight
-        DEFINE_POINT input1_textpos, 30, 123
+        DEFINE_RECT_SZ input1_rect, kControlsLeft, 113, kCommonInputWidth, kCommonInputHeight
+        DEFINE_POINT input1_textpos, kControlsLeft + kTextBoxTextHOffset, 113 + kTextBoxTextVOffset
 
-        DEFINE_RECT_SZ input2_rect, 28, 136, kCommonInputWidth, kCommonInputHeight
-        DEFINE_POINT input2_textpos, 30, 146
+        DEFINE_RECT_SZ input2_rect, kControlsLeft, 136, kCommonInputWidth, kCommonInputHeight
+        DEFINE_POINT input2_textpos, kControlsLeft + kTextBoxTextHOffset, 136 + kTextBoxTextVOffset
+
 
 kFilePickerDlgWindowID  = $3E
 kFilePickerDlgWidth     = 500
 kFilePickerDlgHeight    = 153
+kFilePickerDlgLeft      = (kScreenWidth - kFilePickerDlgWidth) / 2
+kFilePickerDlgTop       = (kScreenHeight - kFilePickerDlgHeight) / 2
 
 ;;; File Picker Dialog
 
 .params winfo
-        kWidth = kFilePickerDlgWidth
-        kHeight = kFilePickerDlgHeight
-
 window_id:      .byte   kFilePickerDlgWindowID
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -83,11 +97,11 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
+        DEFINE_POINT viewloc, kFilePickerDlgLeft, kFilePickerDlgTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+        DEFINE_RECT cliprect, 0, 0, kFilePickerDlgWidth, kFilePickerDlgHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -104,8 +118,10 @@ nextwinfo:      .addr   0
 kEntryListCtlWindowID = $3F
 
 .params winfo_listbox
-        kWidth = 125
+        kWidth = kListBoxWidth
         kHeight = 72
+        kLeft =   kFilePickerDlgLeft + kControlsLeft + 1 ; +1 for external border
+        kTop =    kFilePickerDlgTop + 28
 
 window_id:      .byte   kEntryListCtlWindowID
 options:        .byte   MGTK::Option::dialog_box
@@ -123,7 +139,7 @@ mincontlength:  .word   kHeight
 maxcontwidth:   .word   100
 maxcontlength:  .word   kHeight
 port:
-        DEFINE_POINT viewloc, 53, 48
+        DEFINE_POINT viewloc, kLeft, kTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0

@@ -16,7 +16,7 @@
 .define res_string_label_status_writing "Writing...   "
 .define res_string_label_status_reading "Reading...    "
 .define res_string_unknown "Unknown"
-.define res_string_label_select_quit "Select Quit from the file menu (%cQ) to go back to the DeskTop"
+.define res_string_label_select_quit "Select Quit from the File menu (%cQ) to go back to the DeskTop"
 .define res_string_label_blocks_read "Blocks Read: "
 .define res_string_label_blocks_written "Blocks Written: "
 .define res_string_label_blocks_to_transfer "Blocks to transfer: "

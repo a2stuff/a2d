@@ -376,21 +376,28 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT name_input_rect, 40, 67, 360, 78
-        DEFINE_POINT name_input_textpos, 45, 77
+        kDialogLabelDefaultX = 40
+
+        kNameInputLeft = kDialogLabelDefaultX
+        kNameInputTop = 67
+        kNameInputWidth = 320
+
+        DEFINE_RECT_SZ name_input_rect, kNameInputLeft, kNameInputTop, kNameInputWidth, kTextBoxHeight
+        DEFINE_POINT name_input_textpos, kNameInputLeft + kTextBoxTextHOffset, kNameInputTop + kTextBoxTextVOffset
         DEFINE_POINT pos_dialog_title, 0, 18
 
-        DEFINE_POINT dialog_label_base_pos, 40, 30
+        DEFINE_POINT dialog_label_base_pos, kDialogLabelDefaultX, 30
 
-        kDialogLabelDefaultX = 40
         DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
 
+        ;; Clipping region that maintains the same coordinates as the dialog,
+        ;; but ensures that text doesn't render outside the box.
 .params name_input_mapinfo
-        DEFINE_POINT viewloc, 80, 42
+        DEFINE_POINT viewloc, aux::kPromptDialogLeft, aux::kPromptDialogTop
         .addr   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   0
-        DEFINE_RECT maprect, 0, 0, 358, 100
+        DEFINE_RECT maprect, 0, 0, kNameInputLeft + kNameInputWidth - 2, 100 ; anything > kNameInputTop + kTextBoxHeight
 .endparams
 
         kEntryPickerCol2 = 115

@@ -9,7 +9,7 @@
 .define res_string_button_change_drive "Laufwerk"
 .define res_string_button_open "\\ffnen"
 .define res_string_button_close "Schlie~en"
-.define res_string_label_disk " Laufwerk: "
+.define res_string_label_disk "Laufwerk: "
 .define res_string_copyright_line1 "Copyright Apple Computer Inc., 1986"
 .define res_string_copyright_line2 "Copyright Version Soft, 1985 - 1986"
 .define res_string_copyright_line3 "Alle Rechte vorbehalten"
