@@ -544,3 +544,5 @@ Test the following in all of the above, except where called out specifically:
 * Create a directory, and in the directory create a file named "A.B" then a file named "A". Browse to the directory. Verify "A" sorts before "A.B".
 
 * Browse to a directory with more than 8 files, with at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
+
+* Browse to a directory with files. Select a file. Click in the middle of the pathname. Click Change Drive. Verify that the entire path is replaced with the new volume name.

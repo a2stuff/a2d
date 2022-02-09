@@ -743,8 +743,17 @@ tmp:     .byte   0
         jsr     ScrollClipRect
         jsr     UpdateDiskName
         jsr     DrawListEntries
+        jsr     ClearRight
         jsr     PrepPath
         jsr     RedrawInput
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc ClearRight
+        copy    #1, buf_input_right
+        copy    #kGlyphInsertionPoint, buf_input_right+1
         rts
 .endproc
 
@@ -1201,8 +1210,7 @@ l1:     ldx     num_file_names
         jsr     UpdateScrollbar2
         jsr     DrawListEntries
 
-        copy    #1, buf_input_right
-        copy    #' ', buf_input_right+1
+        jsr     ClearRight
 
         jsr     RedrawInput
         rts
@@ -3413,8 +3421,7 @@ SelectMatchingFileInListF2 := SelectMatchingFileInList::f2
         bne     :-
         sty     buf_input1_left
 
-        copy    #1, buf_input_right
-        copy    #kGlyphInsertionPoint, buf_input_right+1
+        jsr     ClearRight
 
 done:   rts
 .endproc
@@ -3435,8 +3442,7 @@ done:   rts
         bne     :-
         sty     buf_input2_left
 
-        copy    #1, buf_input_right
-        copy    #kGlyphInsertionPoint, buf_input_right+1
+        jsr     ClearRight
 
 done:   rts
 .endproc
