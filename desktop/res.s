@@ -238,9 +238,6 @@ selector_menu_items_updated_flag:
 buf_filename2:  .res    16, 0
 buf_win_path:   .res    43, 0
 
-temp_string_buf:
-        .res    kPathBufferSize, 0
-
         ;; used when splitting string for text field
 buf_text:
         .res    kPathBufferSize, 0
@@ -778,10 +775,6 @@ devlst_backup:
         ;; index is device number (in DEVLST), value is icon number
 device_to_icon_map:
         .res    kMaxVolumes+1, 0 ; TODO: Why +1?
-
-;;; Path buffer for OpenDirectory logic
-open_dir_path_buf:
-        .res    kPathBufferSize, 0
 
 ;;; Window to file record mapping list. Each entry is a window
 ;;; id. Position in the list is the same as position in the

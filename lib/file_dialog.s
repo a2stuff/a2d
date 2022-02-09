@@ -1291,10 +1291,10 @@ l1:     ldx     num_file_names
         lda     (ptr),y
         tay
 :       lda     (ptr),y
-        sta     temp_string_buf,y
+        sta     buf_text,y
         dey
         bpl     :-
-        ldax    #temp_string_buf
+        ldax    #buf_text
         rts
 .endproc
 .endif

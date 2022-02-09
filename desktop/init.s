@@ -1148,7 +1148,7 @@ loop:   ldy     #0
         lda     (data_ptr),y
         beq     exit
 
-        ;; Copy path to `open_dir_path_buf`
+        open_dir_path_buf := INVOKER_PREFIX
         tay
 :       lda     (data_ptr),y
         sta     open_dir_path_buf,y

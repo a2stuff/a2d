@@ -19,6 +19,8 @@ kShortcutScroll = res_char_scroll_shortcut
 src_path_buf    := INVOKER_PREFIX
 dst_path_buf    := $1F80
 
+open_dir_path_buf := INVOKER_PREFIX
+
         .org $4000
 
         ;; Jump table
