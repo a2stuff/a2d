@@ -1259,7 +1259,7 @@ filerecords_free_start:
         bpl     run_from_ramcard
 
         ;; Need to copy to RAMCard
-        jsr     JTCopyToRAM
+        jsr     DoCopyToRAM
         bmi     done
         jsr     L4968
 
@@ -1307,7 +1307,7 @@ result: .byte   0
 
         lda     entry_num
         jsr     L4A47
-        jsr     JTCopyToRAM
+        jsr     DoCopyToRAM
         bpl     L49ED
         rts
 
@@ -1739,7 +1739,7 @@ running_da_flag:
 
         ;; Copy
         jsr     CopyPathsFromPtrsToBufsAndSplitName
-        jsr     JTCopyFile
+        jsr     DoCopyFile
         ;; result is ignored; update regardless
 
         ;; --------------------------------------------------
@@ -1872,7 +1872,7 @@ running_da_flag:
         dey
         bpl     :-
 
-        jsr     JTDeleteFile
+        jsr     DoDeleteFile
         cmp     #kOperationCanceled
         bne     :+
         rts
@@ -2652,7 +2652,7 @@ loop1:  lda     selected_icon_list,y
         ;; Do the ejection
         bit     eject_flag
         bpl     :+
-        jsr     JTEject
+        jsr     DoEject
 :
 
         ;; Check each of the recorded volumes
@@ -3083,27 +3083,12 @@ drive_to_refresh:
 
 ;;; ============================================================
 
-.proc CmdGetInfo
-        jmp     JTGetInfo
-.endproc
+;;; These commands don't need anything beyond the operation.
 
-;;; ============================================================
-
-.proc CmdGetSize
-        jmp     JTGetSize
-.endproc
-
-;;; ============================================================
-
-.proc CmdUnlock
-        jmp     JTUnlock
-.endproc
-
-;;; ============================================================
-
-.proc CmdLock
-        jmp     JTLock
-.endproc
+CmdGetInfo      := DoGetInfo
+CmdGetSize      := DoGetSize
+CmdUnlock       := DoUnlock
+CmdLock         := DoLock
 
 ;;; ============================================================
 
@@ -3119,7 +3104,7 @@ drive_to_refresh:
         bne     :+
         rts
 :
-        jsr     JTRename
+        jsr     DoRename
         sta     result
 
         bit     result
@@ -3145,7 +3130,7 @@ result: .byte   0
         bne     :+
         rts
 :
-        jsr     JTDuplicate
+        jsr     DoDuplicate
         beq     :+              ; flag set if window needs refreshing
 
         ;; Update cached used/free for all same-volume windows
@@ -4262,7 +4247,7 @@ check_double_click:
         beq     same_or_desktop
 
 process_drop:
-        jsr     JTDrop
+        jsr     DoDrop
 
         ;; (1/4) Canceled?
         cmp     #kOperationCanceled
@@ -5524,7 +5509,7 @@ check_double_click:
         lda     drag_drop_params::result
         beq     same_or_desktop
 
-        jsr     JTDrop
+        jsr     DoDrop
 
         ;; NOTE: If drop target is trash, `JTDrop` relays to
         ;; `CmdEject` and pops the return address.
@@ -10901,20 +10886,6 @@ done:   rts
 
 ;;; ============================================================
 
-JTDrop:         jmp     DoDrop
-JTGetInfo:      jmp     DoGetInfo      ; CmdGetInfo
-JTLock:         jmp     DoLock         ; CmdLock
-JTUnlock:       jmp     DoUnlock       ; CmdUnlock
-JTRename:       jmp     DoRename       ; CmdRename
-JTDuplicate:    jmp     DoDuplicate    ; CmdDuplicate
-JTEject:        jmp     DoEject        ; CmdEject
-JTCopyFile:     jmp     DoCopyFile     ; CmdCopyFile
-JTDeleteFile:   jmp     DoDeleteFile   ; CmdDeleteFile
-JTCopyToRAM:    jmp     DoCopyToRAM    ; CmdSelectorAction / Run
-JTGetSize:      jmp     DoGetSize      ; CmdGetSize
-
-;;; --------------------------------------------------
-
 .enum DeleteDialogLifecycle
         open            = 0
         populate        = 1
@@ -12354,7 +12325,7 @@ success:
         copy16  #src_path_buf, $06
         copy16  #dst_path_buf, $08
         jsr     CopyPathsFromPtrsToBufsAndSplitName
-        jsr     JTCopyFile
+        jsr     DoCopyFile
         bmi     :+
         lda     #$80
         sta     result_flag
