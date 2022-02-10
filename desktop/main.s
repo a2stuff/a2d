@@ -1022,7 +1022,7 @@ launch:
 
 .proc CheckBasixSystemImpl
         launch_path := INVOKER_PREFIX
-        path := $1800
+        tmp_path := $1800
 
 basic:  lda     #'C'            ; "BASI?" -> "BASIC"
         bne     start           ; always
@@ -1034,31 +1034,31 @@ start:  sta     str_basix_system + kBSOffset
 
         ldx     launch_path
         stx     path_length
-:       copy    launch_path,x, path,x
+:       copy    launch_path,x, tmp_path,x
         dex
         bpl     :-
 
-        inc     path
-        ldx     path
-        copy    #'/', path,x
+        inc     tmp_path
+        ldx     tmp_path
+        copy    #'/', tmp_path,x
 loop:
         ;; Append BASI?.SYSTEM to path and check for file.
-        ldx     path
+        ldx     tmp_path
         ldy     #0
 :       inx
         iny
-        copy    str_basix_system,y, path,x
+        copy    str_basix_system,y, tmp_path,x
         cpy     str_basix_system
         bne     :-
-        stx     path
-        param_call GetFileInfo, path
+        stx     tmp_path
+        param_call GetFileInfo, tmp_path
         bne     not_found
         rts                     ; zero is success
 
         ;; Pop off a path segment and try again.
 not_found:
         ldx     path_length
-:       lda     path,x
+:       lda     tmp_path,x
         cmp     #'/'
         beq     found_slash
         dex
@@ -1069,7 +1069,7 @@ no_bs:  return  #$FF            ; non-zero is failure
 found_slash:
         cpx     #1
         beq     no_bs
-        stx     path
+        stx     tmp_path
         dex
         stx     path_length
         jmp     loop
