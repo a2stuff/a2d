@@ -1770,23 +1770,11 @@ running_da_flag:
         src := $06
         dst := $08
 
-        ldy     #0
-        lda     (src),y
-        tay
-:       lda     (src),y
-        sta     src_path_buf,y
-        dey
-        bpl     :-
+        ldax    src
+        jsr     CopyToSrcPath
 
-        ldy     #0
-        lda     (dst),y
-        tay
-:       lda     (dst),y
-        sta     dst_path_buf,y
-        dey
-        bpl     :-
-
-        rts
+        ldax    dst
+        jmp     CopyToDstPath
 .endproc
 
 ;;; ============================================================
@@ -2110,23 +2098,13 @@ CmdOpenFromKeyboard := CmdOpen::from_keyboard
 ;;; ============================================================
 
 .proc CmdOpenParent
-        path_ptr := $06
-
         lda     active_window_id
         beq     done
 
         jsr     GetWindowPath
-        stax    path_ptr
-
-        ;; Copy path
-        ldy     #0
-        lda     (path_ptr),y
-        tay
-:       lda     (path_ptr),y
-        sta     open_dir_path_buf,y
-        dey
-        bpl     :-
-        sta     prev            ; previous length
+        .assert src_path_buf = open_dir_path_buf, error, "Buffer alias"
+        jsr     CopyToSrcPath
+        copy    open_dir_path_buf, prev ; previous length
 
         ;; Try removing last segment
         param_call FindLastPathSegment, open_dir_path_buf ; point Y at last '/'
@@ -4479,17 +4457,8 @@ exception_flag:
         ;; Copy window path to `open_dir_path_buf`
 :       lda     active_window_id
         jsr     GetWindowPath
-
-        ptr := $06
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     open_dir_path_buf,y
-        dey
-        bpl     :-
+        .assert src_path_buf = open_dir_path_buf, error, "Buffer alias"
+        jsr     CopyToSrcPath
 
         ;; Load new FileRecords
         pla                     ; window id
@@ -4864,7 +4833,6 @@ validate_windows_flag:
 
 .proc ValidateWindows
         pathbuf := INVOKER_PREFIX
-        ptr := $06
 
         bit     validate_windows_flag
         bpl     done
@@ -4881,13 +4849,8 @@ loop:
         ;; Get and copy its path somewhere useful
         txa
         jsr     GetWindowPath
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       copy    (ptr),y, pathbuf,y
-        dey
-        bpl     :-
+        .assert src_path_buf = pathbuf, error, "Buffer alias"
+        jsr     CopyToSrcPath
 
         ;; See if it exists
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
@@ -5762,14 +5725,8 @@ y_flag: .byte   0
         ;; --------------------------------------------------
         ;; Icon in a folder (A=window_id)
         jsr     GetWindowPath
-        stax    ptr
-        ldy     #0              ; copy to window path to `path_buf`
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     path_buf,y
-        dey
-        bpl     :-
+        .assert src_path_buf = path_buf, error, "Buffer alias"
+        jsr     CopyToSrcPath
 
         ;; Strip to vol name - either end of string or next slash
         ldx     #1
@@ -6658,7 +6615,7 @@ found_windows_list:
 .proc OpenDirectory
         jmp     Start
 
-        DEFINE_OPEN_PARAMS open_params, path_buffer, $800
+        DEFINE_OPEN_PARAMS open_params, open_dir_path_buf, $800
 
         dir_buffer := $C00
 
@@ -6681,8 +6638,6 @@ index_in_dir:           .byte   0
         sta     window_id
         jsr     PushPointers
         jsr     SetCursorWatch ; before loading directory
-
-        COPY_BYTES kPathBufferSize, open_dir_path_buf, path_buffer
 
         jsr     DoOpen
         lda     open_params::ref_num
@@ -7226,8 +7181,8 @@ has_parent:
         clc
         adc     (name_ptr),y
         cmp     #kPathBufferSize
-        bcc     :+
 
+    IF_GE
         lda     #ERR_INVALID_PATHNAME
         jsr     ShowAlert
         jsr     remove_filerecords_and_mark_icon_not_opened
@@ -7235,35 +7190,14 @@ has_parent:
         ldx     saved_stack
         txs
         rts
+    END_IF
 
         ;; Copy parent path to open_dir_path_buf
-:       ldy     #0
-        lda     (parent_path_ptr),y
-        tay
-:       lda     (parent_path_ptr),y
-        sta     open_dir_path_buf,y
-        dey
-        bpl     :-
-
-        ;; Suffix with '/'
-        lda     #'/'
-        inc     open_dir_path_buf
-        ldx     open_dir_path_buf
-        sta     open_dir_path_buf,x
-
-        ;; Append icon name
-        ldy     #0
-        lda     (name_ptr),y
-        clc
-        adc     open_dir_path_buf
-        sta     open_dir_path_buf
-
-:       iny
-        inx
-        lda     (name_ptr),y
-        sta     open_dir_path_buf,x
-        cpx     open_dir_path_buf
-        bne     :-
+        .assert src_path_buf = open_dir_path_buf, error, "Buffer alias"
+        ldax    parent_path_ptr
+        jsr     CopyToSrcPath
+        ldax    name_ptr
+        jsr     AppendFilenameToSrcPath
 
         jsr     PopPointers
         rts
@@ -9373,6 +9307,96 @@ file:
 
 common: jsr     JoinPaths      ; $08 = base, $06 = file
         jsr     PopPointers
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Input: A,X = path to copy
+;;; Output: populates `src_path_buf` a.k.a. `open_dir_path_buf` a.k.a. `INVOKER_PREFIX`
+.proc CopyToSrcPath
+        stax    @ptr1
+        stax    @ptr2
+        ldy     #0
+        @ptr1 := *+1
+        lda     SELF_MODIFIED,y
+        tay
+        @ptr2 := *+1
+:       lda     SELF_MODIFIED,y
+        sta     src_path_buf,y
+        dey
+        bpl     :-
+        rts
+.endproc
+
+;;; Input: A,X = path to copy
+;;; Output: populates `dst_path_buf`
+.proc CopyToDstPath
+        stax    @ptr1
+        stax    @ptr2
+        ldy     #0
+        @ptr1 := *+1
+        lda     SELF_MODIFIED,y
+        tay
+        @ptr2 := *+1
+:       lda     SELF_MODIFIED,y
+        sta     dst_path_buf,y
+        dey
+        bpl     :-
+        rts
+.endproc
+
+;;; Input: A,X = path to append
+;;; Output: appends '/' and path to `src_path_buf` a.k.a. `open_dir_path_buf` a.k.a. `INVOKER_PREFIX`
+.proc AppendFilenameToSrcPath
+        stax    @ptr1
+        stax    @ptr2
+
+        ;; Append '/'
+        ldx     src_path_buf
+        inx
+        lda     #'/'
+        sta     src_path_buf,x
+
+        ;; Append new filename
+        ldy     #0
+:       inx
+        iny
+        @ptr1 := *+1
+        lda     SELF_MODIFIED,y
+        sta     src_path_buf,x
+        @ptr2 := *+1
+        cpy     SELF_MODIFIED
+        bne     :-
+        stx     src_path_buf
+
+        rts
+.endproc
+
+;;; Input: A,X = path to append
+;;; Output: appends '/' and path to `dst_path_buf`
+.proc AppendFilenameToDstPath
+        stax    @ptr1
+        stax    @ptr2
+
+        ;; Append '/'
+        ldx     dst_path_buf
+        inx
+        lda     #'/'
+        sta     dst_path_buf,x
+
+        ;; Append new filename
+        ldy     #0
+:       inx
+        iny
+        @ptr1 := *+1
+        lda     SELF_MODIFIED,y
+        sta     dst_path_buf,x
+        @ptr2 := *+1
+        cpy     SELF_MODIFIED
+        bne     :-
+        stx     dst_path_buf
+
         rts
 .endproc
 
@@ -11710,10 +11734,8 @@ loop:   lda     index
 :
         jsr     GetIconPath
 
-        ldy     path_buf3       ; copy into `src_path_buf`
-:       copy    path_buf3,y, src_path_buf,y
-        dey
-        bpl     :-
+        ldax    #path_buf3
+        jsr     CopyToSrcPath
 
         ldx     index
         lda     selected_icon_list,x
@@ -11787,43 +11809,20 @@ changed:
         ldax    #new_name_buf
         jsr     AdjustFileNameCase
 
-        win_path_ptr := $06
-
         ;; File or Volume?
         lda     selected_window_id
-        beq     is_vol2
+    IF_NOT_ZERO
         jsr     GetWindowPath
-        stax    win_path_ptr
-        jmp     common2
+    ELSE
+        ldax    #str_empty
+    END_IF
 
-is_vol2:
-        copy16  #str_empty, win_path_ptr
-
-common2:
         ;; Copy window path as prefix
-        ldy     #0
-        lda     (win_path_ptr),y
-        tay
-:       lda     (win_path_ptr),y
-        sta     dst_path_buf,y
-        dey
-        bpl     :-
-
-        ;; Append '/'
-        inc     dst_path_buf
-        ldx     dst_path_buf
-        lda     #'/'
-        sta     dst_path_buf,x
+        jsr     CopyToDstPath
 
         ;; Append new filename
-        ldy     #0
-:       inx
-        iny
-        lda     new_name_buf,y
-        sta     dst_path_buf,x
-        cpy     new_name_buf
-        bne     :-
-        stx     dst_path_buf
+        ldax    #new_name_buf
+        jsr     AppendFilenameToDstPath
 
         ;; Already exists? (Mostly for volumes, but works for files as well)
         MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
@@ -12234,10 +12233,8 @@ loop:   lda     index
         lda     selected_icon_list,x
         jsr     GetIconPath   ; populates `path_buf3`
 
-        ldy     path_buf3       ; copy into `src_path_buf`
-:       copy    path_buf3,y, src_path_buf,y
-        dey
-        bpl     :-
+        ldax    #path_buf3
+        jsr     CopyToSrcPath
 
         ldx     index
         lda     selected_icon_list,x
@@ -12274,38 +12271,13 @@ success:
         sty     new_name_ptr
         stx     new_name_ptr+1
 
-        win_path_ptr := $06
         lda     selected_window_id
         jsr     GetWindowPath
-        stax    win_path_ptr
-
-        ;; Copy window path as prefix
-        ldy     #0
-        lda     (win_path_ptr),y
-        tay
-:       lda     (win_path_ptr),y
-        sta     dst_path_buf,y
-        dey
-        bpl     :-
-
-        ;; Append '/'
-        inc     dst_path_buf
-        ldx     dst_path_buf
-        lda     #'/'
-        sta     dst_path_buf,x
+        jsr     CopyToDstPath
 
         ;; Append new filename
-        ldy     #0
-        lda     (new_name_ptr),y
-        sta     @len
-:       inx
-        iny
-        lda     (new_name_ptr),y
-        sta     dst_path_buf,x
-        @len = * + 1
-        cpy     #SELF_MODIFIED_BYTE
-        bne     :-
-        stx     dst_path_buf
+        ldax    new_name_ptr
+        jsr     AppendFilenameToDstPath
 
         ;; --------------------------------------------------
         ;; Check for unchanged/duplicate name
@@ -12750,20 +12722,9 @@ for_run:
 :       jsr     AppendSrcPathLastSegmentToDstPath
         jmp     get_src_info
 
-        ;; Append filename to dst_path_buf
-L9A50:  ldx     dst_path_buf
-        lda     #'/'
-        sta     dst_path_buf+1,x
-        inc     dst_path_buf
-        ldy     #0
-        ldx     dst_path_buf
-:       iny
-        inx
-        lda     filename_buf,y
-        sta     dst_path_buf,x
-        cpy     filename_buf
-        bne     :-
-        stx     dst_path_buf
+        ;; Append filename to `dst_path_buf`
+L9A50:  ldax    #filename_buf
+        jsr     AppendFilenameToDstPath
 
 get_src_info:
 @retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
@@ -13900,22 +13861,9 @@ op_block_count:
         lda     file_entry_buf
         bne     :+
         rts
-
-:       ldx     #0
-        ldy     path
-        copy    #'/', path+1,y
-
-        iny
-loop:   cpx     file_entry_buf
-        bcs     done
-        lda     file_entry_buf+1,x
-        sta     path+1,y
-        inx
-        iny
-        jmp     loop
-
-done:   sty     path
-        rts
+:
+        ldax    #file_entry_buf
+        jmp     AppendFilenameToSrcPath
 .endproc
 
 ;;; ============================================================
@@ -13950,22 +13898,9 @@ found:  dex
         lda     file_entry_buf
         bne     :+
         rts
-
-:       ldx     #0
-        ldy     path
-        copy    #'/', path+1,y
-
-        iny
-loop:   cpx     file_entry_buf
-        bcs     done
-        lda     file_entry_buf+1,x
-        sta     path+1,y
-        inx
-        iny
-        jmp     loop
-
-done:   sty     path
-        rts
+:
+        ldax    #file_entry_buf
+        jmp     AppendFilenameToDstPath
 .endproc
 
 ;;; ============================================================
@@ -14100,12 +14035,8 @@ loop:   iny
         bne     loop
 
         ;; Copy `path_buf4` to `dst_path_buf`
-        ldy     path_buf4
-:       lda     path_buf4,y
-        sta     dst_path_buf,y
-        dey
-        bpl     :-
-        rts
+        ldax    #path_buf4
+        jmp     CopyToDstPath
 .endproc
 
 ;;; ============================================================

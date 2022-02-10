@@ -236,7 +236,10 @@ selector_menu_items_updated_flag:
         .byte   0
 
 buf_filename2:  .res    16, 0
-buf_win_path:   .res    43, 0
+
+        ;; Used during launching
+buf_win_path:
+        .res    kPathBufferSize, 0
 
         ;; used when splitting string for text field
 buf_text:
