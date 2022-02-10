@@ -1084,19 +1084,13 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
 ;;; --------------------------------------------------
 
 .proc OpenFolder
-        ;; Copy path
-        ldx     path
-:       copy    path,x, open_dir_path_buf,x
-        dex
-        bpl     :-
-
         tsx
         stx     saved_stack
 
+        .assert path = open_dir_path_buf, error, "Buffer alias"
         jsr     OpenWindowForPath
 
-        jsr     SetCursorPointer ; after opening folder
-        rts
+        jmp     SetCursorPointer ; after opening folder
 .endproc
 
 ;;; --------------------------------------------------
