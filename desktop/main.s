@@ -1492,7 +1492,7 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 ;;; Inputs: A,X = ptr to path suffix to append
 ;;; Outputs: `path_buffer` has '/' and suffix appended
 
-.proc AppendToPathBuffer
+.proc AppendFilenameToPathBuffer
 
         stax    @filename1
         stax    @filename2
@@ -9312,9 +9312,9 @@ common: jsr     JoinPaths      ; $08 = base, $06 = file
 .endproc
 
 ;;; ============================================================
-
 ;;; Input: A,X = path to copy
 ;;; Output: populates `src_path_buf` a.k.a. `open_dir_path_buf` a.k.a. `INVOKER_PREFIX`
+
 .proc CopyToSrcPath
         stax    @ptr1
         stax    @ptr2
@@ -9330,8 +9330,10 @@ common: jsr     JoinPaths      ; $08 = base, $06 = file
         rts
 .endproc
 
+;;; ============================================================
 ;;; Input: A,X = path to copy
 ;;; Output: populates `dst_path_buf`
+
 .proc CopyToDstPath
         stax    @ptr1
         stax    @ptr2
@@ -9347,8 +9349,10 @@ common: jsr     JoinPaths      ; $08 = base, $06 = file
         rts
 .endproc
 
+;;; ============================================================
 ;;; Input: A,X = path to append
 ;;; Output: appends '/' and path to `src_path_buf` a.k.a. `open_dir_path_buf` a.k.a. `INVOKER_PREFIX`
+
 .proc AppendFilenameToSrcPath
         stax    @ptr1
         stax    @ptr2
@@ -9374,8 +9378,10 @@ common: jsr     JoinPaths      ; $08 = base, $06 = file
         rts
 .endproc
 
+;;; ============================================================
 ;;; Input: A,X = path to append
 ;;; Output: appends '/' and path to `dst_path_buf`
+
 .proc AppendFilenameToDstPath
         stax    @ptr1
         stax    @ptr2
@@ -12495,7 +12501,7 @@ eof:    return  #$FF
         copy16  entries_read, entries_to_skip
         jsr     CloseSrcDir
         jsr     PushEntryCount
-        jsr     AppendToSrcPath
+        jsr     AppendFileEntryToSrcPath
         jmp     OpenSrcDir
 .endproc
 
@@ -12881,13 +12887,13 @@ done:   rts
         bne     regular_file
 
         ;; Directory
-        jsr     AppendToSrcPath
+        jsr     AppendFileEntryToSrcPath
 @retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
 
-:       jsr     AppendToDstPath
+:       jsr     AppendFileEntryToDstPath
         jsr     DecFileCountAndRunCopyDialogProc
 
         jsr     TryCreateDst
@@ -12902,8 +12908,8 @@ done:   rts
 
         ;; File
 regular_file:
-        jsr     AppendToDstPath
-        jsr     AppendToSrcPath
+        jsr     AppendFileEntryToDstPath
+        jsr     AppendFileEntryToSrcPath
         jsr     DecFileCountAndRunCopyDialogProc
 @retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
@@ -12927,7 +12933,7 @@ regular_file:
 :       jsr     RemoveSrcPathSegment
         jsr     TryCreateDst
         bcs     :+
-        jsr     AppendToSrcPath
+        jsr     AppendFileEntryToSrcPath
         jsr     DoFileCopy
         jsr     MaybeFinishFileMove
 skip:   jsr     RemoveSrcPathSegment
@@ -13419,7 +13425,7 @@ done:   rts
         beq     :+
         jmp     CloseFilesCancelDialog
 
-:       jsr     AppendToSrcPath
+:       jsr     AppendFileEntryToSrcPath
         bit     delete_skip_decrement_flag
         bmi     :+
         jsr     DecFileCountAndRunDeleteDialogProc
@@ -13647,14 +13653,14 @@ storage_type:
 
 do_lock:
         jsr     LockFileCommon
-        jmp     AppendToSrcPath
+        jmp     AppendFileEntryToSrcPath
 .endproc
 
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
 
 lock_process_directory_entry:
-        jsr     AppendToSrcPath
+        jsr     AppendFileEntryToSrcPath
         ;; fall through
 
 .proc LockFileCommon
@@ -13825,7 +13831,7 @@ do_sum_file_size:
         bvc     :+              ; not size
 
         ;; If operation is "get size", add the block count to the sum
-        jsr     AppendToSrcPath
+        jsr     AppendFileEntryToSrcPath
         MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         bne     :+
         add16   op_block_count, src_file_info_params::blocks_used, op_block_count
@@ -13856,13 +13862,7 @@ op_block_count:
 ;;; ============================================================
 ;;; Append name at `file_entry_buf` to path at `src_path_buf`
 
-.proc AppendToSrcPath
-        path := src_path_buf
-
-        lda     file_entry_buf
-        bne     :+
-        rts
-:
+.proc AppendFileEntryToSrcPath
         ldax    #file_entry_buf
         jmp     AppendFilenameToSrcPath
 .endproc
@@ -13893,13 +13893,7 @@ found:  dex
 ;;; ============================================================
 ;;; Append name at `file_entry_buf` to path at `dst_path_buf`
 
-.proc AppendToDstPath
-        path := dst_path_buf
-
-        lda     file_entry_buf
-        bne     :+
-        rts
-:
+.proc AppendFileEntryToDstPath
         ldax    #file_entry_buf
         jmp     AppendFilenameToDstPath
 .endproc
@@ -16814,7 +16808,7 @@ finish: ldy     #0              ; Write sentinel
         jsr     GetCopiedToRAMCardFlag
         bpl     exit
         param_call CopyDeskTopOriginalPrefix, path_buffer
-        param_call AppendToPathBuffer, str_desktop_file
+        param_call AppendFilenameToPathBuffer, str_desktop_file
         lda     #<path_buffer
         sta     create_params::pathname
         sta     open_params::pathname
