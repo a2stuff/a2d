@@ -6928,6 +6928,7 @@ reserved_desktop_icons:
 :       ldy     cached_window_id
         dey
         bmi     :+
+        lda     #0
         sta     window_to_dir_icon_table,y
         sta     cached_window_id
 
