@@ -12966,6 +12966,7 @@ blocks_free:
 .proc CheckSpaceAndShowPrompt
         jsr     CheckSpace
         bcc     done
+        ;; TODO: Convert this to an alert
         copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
         jsr     RunCopyDialogProc
         beq     :+
@@ -12998,30 +12999,25 @@ got_exist_size:
         copy16  dst_file_info_params::blocks_used, existing_size
 :
         ;; Compute destination volume path
-retry:  lda     dst_path_buf
-        sta     saved_length
+retry:  copy    dst_path_buf, saved_length
         ldy     #1              ; search for second '/'
 :       iny
-        cpy     dst_path_buf
-        bcs     has_room
+        cpy     dst_path_buf    ; destination path is always fully composed
+        bcs     has_room        ; so this test should never be needed
         lda     dst_path_buf,y
         cmp     #'/'
         bne     :-
-        tya
-        sta     dst_path_buf
-        sta     vol_path_length
+        sty     dst_path_buf
 
         ;; Total blocks/used blocks on destination volume
         MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
-        beq     got_info
-        pha                     ; on failure, restore path
-        lda     saved_length    ; in case copy is aborted
-        sta     dst_path_buf
+        pha
+        copy    saved_length, dst_path_buf
         pla
+        beq     :+
         jsr     ShowErrorAlertDst
         jmp     retry
-
-got_info:
+:
         ;; aux = total blocks
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
         add16   blocks_free, existing_size, blocks_free
@@ -13030,19 +13026,15 @@ got_info:
 
         ;; not enough room
         sec
-        bcs     :+
+        rts
+
 has_room:
         clc
-
-:       lda     saved_length
-        sta     dst_path_buf
         rts
 
 blocks_free:
         .word   0
 saved_length:
-        .byte   0
-vol_path_length:
         .byte   0
 existing_size:
         .word   0
