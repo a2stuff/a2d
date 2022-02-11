@@ -5724,15 +5724,15 @@ y_flag: .byte   0
 
         ;; Strip to vol name - either end of string or next slash
         ldx     #1
-:       inx
+:       inx                     ; start at 2nd character
         cpx     path_buf
         beq     :+
         lda     path_buf,x
         cmp     #'/'
         bne     :-
         dex
-
 :       stx     path_buf
+
         jmp     FindWindows
 
         ;; --------------------------------------------------
@@ -6406,7 +6406,7 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::flag_set
         lda     (ptr),y
         sta     pathlen         ; stash for second call
 
-        ;; Find next '/' or end of string
+        ;; Strip to vol name - either end of string or next slash
         iny
 :       iny                     ; start at 2nd character
         cpy     pathlen
@@ -6415,8 +6415,8 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::flag_set
         cmp     #'/'
         bne     :-
         dey
-
 :       sty     pathlen
+
         param_call_indirect FindWindowsForPrefix, ptr
         ldax    pathptr
         ldy     pathlen
@@ -6951,28 +6951,29 @@ DoClose:
 .endproc
 
 ;;; ============================================================
-;;; Inputs: `path_buffer` can point at anything
+;;; Inputs: `path_buffer` set to full path
 ;;; Outputs: `vol_kb_used` and `vol_kb_free` updated.
 ;;; TODO: Skip if same-vol windows already have data.
 .proc GetVolUsedFreeViaPath
+        lda     path_buffer
+        pha                     ; save length
+
         ;; Strip to vol name - either end of string or next slash
         ldx     #1
-:       inx
+:       inx                     ; start at 2nd character
         cpx     path_buffer
         beq     :+
         lda     path_buffer,x
         cmp     #'/'
         bne     :-
-        dex                     ; X = length of vol path
-
-:       lda     path_buffer
-        pha                     ; save length
-        stx     path_buffer
+        dex
+:       stx     path_buffer
 
         jsr     GetVolUsedFreeViaVolume
 
         pla
         sta     path_buffer
+
         rts
 .endproc
 
@@ -13000,14 +13001,17 @@ got_exist_size:
 :
         ;; Compute destination volume path
 retry:  copy    dst_path_buf, saved_length
-        ldy     #1              ; search for second '/'
-:       iny
-        cpy     dst_path_buf    ; destination path is always fully composed
-        bcs     has_room        ; so this test should never be needed
+
+        ;; Strip to vol name - either end of string or next slash
+        ldy     #1
+:       iny                     ; start at 2nd character
+        cpy     dst_path_buf
+        beq     :+
         lda     dst_path_buf,y
         cmp     #'/'
         bne     :-
-        sty     dst_path_buf
+        dey
+:       sty     dst_path_buf
 
         ;; Total blocks/used blocks on destination volume
         MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
