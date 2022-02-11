@@ -39,6 +39,17 @@ kMaxDevListSize = 14
 kMaxVolumes     = kMaxDevListSize - 1
 
 ;;; ============================================================
+;;; View types
+
+;;; (low nibble must match menu order)
+kViewByIcon     = $00
+kViewByName     = $81
+kViewByDate     = $82
+kViewBySize     = $83
+kViewByType     = $84
+kViewByMenuMask = $0F           ; Convert kViewByXYZ to menu index
+
+;;; ============================================================
 ;;; Window/Icon Metrics
 
 ;;; Offsets for created windows

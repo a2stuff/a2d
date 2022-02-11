@@ -963,14 +963,6 @@ window_title_addr_table:
         .addr   winfo8title
         ASSERT_ADDRESS_TABLE_SIZE window_title_addr_table, kMaxNumWindows + 1
 
-        ;; (low nibble must match menu order)
-        kViewByIcon = $00
-        kViewByName = $81
-        kViewByDate = $82
-        kViewBySize = $83
-        kViewByType = $84
-        kViewByMenuMask = $0F   ; Convert kViewByXYZ to menu index
-
 win_view_by_table:
         .res    kMaxNumWindows, 0
 

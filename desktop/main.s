@@ -1648,8 +1648,13 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         stax    open_pathname
 
         ;; Load the DA
-        jsr     open
-        bmi     done
+@retry: MLI_RELAY_CALL OPEN, open_params
+        beq     :+
+        lda     #kWarningMsgInsertSystemDisk
+        jsr     ShowWarning
+        beq     @retry          ; ok, so try again
+        rts                     ; cancel, so fail
+:
         lda     open_ref_num
         sta     read_ref_num
         sta     close_ref_num
@@ -1671,14 +1676,6 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         jsr     ResetMainGrafport
 done:   jsr     SetCursorPointer ; after invoking DA
         rts
-
-open:   MLI_RELAY_CALL OPEN, open_params
-        bne     :+
-        rts
-:       lda     #kWarningMsgInsertSystemDisk
-        jsr     ShowWarning
-        beq     open            ; ok, so try again
-        return  #$FF            ; cancel, so fail
 
         DEFINE_OPEN_PARAMS open_params, 0, DA_IO_BUFFER
         open_ref_num := open_params::ref_num
@@ -2254,9 +2251,8 @@ success:
         beq     done
 
         jsr     SelectAndRefreshWindowOrClose
-        beq     :+
-        rts
-:
+        bne     done
+
         copy16  #path_buf1, $08
         jsr     SelectFileIconByName ; $08 = folder name
 
@@ -2282,16 +2278,16 @@ path_buffer     := CmdNewFolderImpl::path_buffer
         ldax    ptr_name
         ldy     active_window_id
         jsr     FindIconByName
-        bne     :+
-        rts                     ; not found
+        beq     ret             ; not found
 
-:       pha
+        pha
         jsr     SelectFileIcon
         jsr     LoadActiveWindowEntryTable ; restored below
         pla
         jsr     ScrollIconIntoView
         jsr     LoadDesktopEntryTable ; restore from above
-        rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -2850,17 +2846,15 @@ err:    .byte   0
 
         ;; Valid?
         lda     active_window_id
-        bne     :+
-        rts
-:
+        beq     ret
+
         ;; Is this a change?
         jsr     GetActiveWindowViewBy
         cmp     view
-        bne     :+
-        rts
-:
+        beq     ret
+
         ;; Destroy existing icons
-        cmp     #$00
+        cmp     #kViewByIcon
         bne     :+
         jsr     DestroyIconsInActiveWindow
 :
@@ -2900,7 +2894,7 @@ sort:   jsr     LoadActiveWindowEntryTable ; restored below
         jsr     UpdateScrollbars
 
 done:   jsr     LoadDesktopEntryTable ; restored from above
-        rts
+ret:    rts
 
 view:   .byte   0
 .endproc
@@ -3075,9 +3069,8 @@ CmdLock         := DoLock
 
 .proc CmdRename
         lda     selected_icon_count
-        bne     :+
-        rts
-:
+        beq     ret
+
         jsr     DoRename
         sta     result
 
@@ -3086,13 +3079,13 @@ CmdLock         := DoLock
         ;; TODO: Avoid repainting everything
         MGTK_RELAY_CALL MGTK::RedrawDeskTop
 :
-        bit result
-        bvc     :+              ; V = SYS file renamed
+        bit     result
+        bvc     ret             ; V = SYS file renamed
         lda     active_window_id
         ;; TODO: Optimize, e.g. rebuild from existing FileRecords ?
         jsr     SelectAndRefreshWindow
 
-:       rts
+ret:    rts
 
 result: .byte   0
 .endproc
@@ -3101,11 +3094,10 @@ result: .byte   0
 
 .proc CmdDuplicate
         lda     selected_icon_count
-        bne     :+
-        rts
-:
+        beq     ret
+
         jsr     DoDuplicate
-        beq     :+              ; flag set if window needs refreshing
+        beq     ret             ; flag set if window needs refreshing
 
         ;; Update cached used/free for all same-volume windows
         ldax    #path_buf3
@@ -3115,7 +3107,7 @@ result: .byte   0
         lda     active_window_id
         jsr     SelectAndRefreshWindowOrClose
 
-:       rts
+ret:    rts
 
 result: .byte   0
 .endproc
@@ -6987,11 +6979,10 @@ vol_kb_used:  .word   0
 
 .proc GetVolUsedFreeViaVolume
         param_call GetFileInfo, path_buffer
-        beq     :+
-        rts
+        bne     done
 
         ;; aux = total blocks
-:       copy16  file_info_params::aux_type, vol_kb_used
+        copy16  file_info_params::aux_type, vol_kb_used
         ;; total - used = free
         sub16   file_info_params::aux_type, file_info_params::blocks_used, vol_kb_free
         sub16   vol_kb_used, vol_kb_free, vol_kb_used ; total - free = used
@@ -7001,7 +6992,9 @@ vol_kb_used:  .word   0
         plp
         bcc     :+
         inc16   vol_kb_used
-:       return  #0
+:       lda     #0
+
+done:   rts
 .endproc
 
 ;;; ============================================================
@@ -10318,9 +10311,9 @@ done:   rts
         ;; This entry point removes filerecords associated with window
 remove_filerecords:
         lda     icon_param
-        bne     :+
-        rts
-:       jsr     PushPointers
+        beq     ret
+
+        jsr     PushPointers
         lda     icon_param
         jsr     FindWindowForDirIcon
         bne     :+
@@ -10353,7 +10346,8 @@ skip:   lda     icon_param
         jsr     DrawIcon
 
         jsr     PopPointers
-        rts
+
+ret:    rts
 .endproc
         remove_filerecords_and_mark_icon_not_opened := MarkIconNotOpened::remove_filerecords
 
@@ -11339,9 +11333,9 @@ done:   stx     buf
 
 .proc DoEject
         lda     selected_icon_count
-        bne     :+
-        rts
-:       ldx     selected_icon_count
+        beq     ret
+
+        ldx     selected_icon_count
         stx     $800
         dex
 :       lda     selected_icon_list,x
@@ -11361,7 +11355,8 @@ loop:   ldx     index
         ldx     index
         cpx     $800
         bne     loop
-        rts
+
+ret:    rts
 
 index:  .byte   0
 .endproc
@@ -13382,8 +13377,7 @@ retry:  MLI_RELAY_CALL DESTROY, destroy_params
 :       jmp     CloseFilesCancelDialog
 
 do_it:  jsr     UnlockSrcFile
-        bne     done
-        jmp     retry
+        beq     retry
 
 done:   rts
 
@@ -13394,15 +13388,17 @@ error:  jsr     ShowErrorAlert
 .proc UnlockSrcFile
         MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         lda     src_file_info_params::access
-        and     #$80
-        bne     done
+        and     #$80            ; destroy enabled bit set?
+        bne     done            ; yes, no need to unlock
+
         lda     #ACCESS_DEFAULT
         sta     src_file_info_params::access
         copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
         MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
-        ;; TODO: php/plp instead?
+        pha
         copy    #$A, src_file_info_params::param_count ; GET_FILE_INFO
-        lda     #0                        ; success
+        pla
+
 done:   rts
 .endproc
 
@@ -13864,8 +13860,7 @@ op_block_count:
         path := src_path_buf
 
         ldx     path            ; length
-        bne     :+
-        rts
+        beq     ret
 
 :       lda     path,x
         cmp     #'/'
@@ -13877,7 +13872,8 @@ op_block_count:
 
 found:  dex
         stx     path
-        rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -13895,8 +13891,7 @@ found:  dex
         path := dst_path_buf
 
         ldx     path            ; length
-        bne     :+
-        rts
+        beq     ret
 
 :       lda     path,x
         cmp     #'/'
@@ -13908,7 +13903,8 @@ found:  dex
 
 found:  dex
         stx     path
-        rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -14457,9 +14453,8 @@ maybe_check_button_cancel:
 check_button_cancel:
         MGTK_RELAY_CALL MGTK::InRect, aux::cancel_button_rect
         cmp     #MGTK::inrect_inside
-        beq     :+
-        jmp     LA6ED
-:       param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::cancel_button_rect
+        bne     LA6ED
+        param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::cancel_button_rect
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
@@ -15288,8 +15283,7 @@ populate_value:
         ;; If not 6 (the last one), run modal loop
         lda     row
         cmp     #GetInfoDialogState::type
-        beq     :+
-        rts
+        bne     done
 
 :       jsr     PromptInputLoop
         bmi     :-
@@ -15298,7 +15292,7 @@ populate_value:
         jsr     ClosePromptDialog
         jsr     SetCursorPointerWithFlag ; when closing dialog with prompt
         pla
-        rts
+done:   rts
 
 is_volume_flag:
         .byte   0               ; high bit set if volume, clear if file
@@ -16225,9 +16219,8 @@ char:   .byte   0
 .proc InputFieldDeleteChar
         ;; Anything to delete?
         lda     path_buf1
-        bne     :+
-        rts
-:
+        beq     ret
+
         point := $6
         xcoord := $6
         ycoord := $8
@@ -16243,7 +16236,8 @@ char:   .byte   0
         param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
-        rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -16252,14 +16246,13 @@ char:   .byte   0
 .proc InputFieldIPLeft
         ;; Any characters to left of IP?
         lda     path_buf1
-        bne     :+
-        rts
+        beq     ret
 
         point := $6
         xcoord := $6
         ycoord := $8
 
-:       ldx     path_buf2
+        ldx     path_buf2
         cpx     #1
         beq     finish
 
@@ -16287,7 +16280,8 @@ finish: ldx     path_buf1
         param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
-        rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -16337,11 +16331,10 @@ finish: dec     path_buf2
 .proc InputFieldIPStart
         ;; Any characters to left of IP?
         lda     path_buf1
-        bne     :+
-        rts
+        beq     ret
 
         ;; Any characters to right of IP?
-:       ldx     path_buf2
+        ldx     path_buf2
         cpx     #1
         beq     move
 
@@ -16388,7 +16381,8 @@ finish: pla
         sta     path_buf2
         copy    #0, path_buf1
         jsr     DrawFilenamePrompt
-        rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -16920,11 +16914,9 @@ SaveWindows := save_restore_windows::Save
         ;; IIgs - do everything using one I/O location
 iigs:   lda     KEYMODREG
         and     #%10000001      ; bit 7 = Command (OA), bit 0 = Shift
-        bne     :+
-        rts
-
-:       lda     #$80
-        rts
+        beq     ret
+        lda     #$80
+ret:    rts
 .endproc
 
 ;;; Test if shift is down (if it can be detected).
@@ -16936,11 +16928,9 @@ iigs:   lda     KEYMODREG
 
         lda     KEYMODREG       ; On IIgs, use register instead
         and     #%00000001      ; bit 7 = Command (OA), bit 0 = Shift
-        bne     :+
-        rts
-
-:       lda     #$80
-        rts
+        beq     ret
+        lda     #$80
+ret:    rts
 .endproc
 
 ;;; Compare the shift key mod state. Returns high bit set if
