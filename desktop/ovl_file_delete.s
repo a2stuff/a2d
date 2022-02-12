@@ -75,7 +75,7 @@ jt_filename:
 
 
 .proc HandleOk
-        param_call file_dialog::VerifyValidPath, path_buf0
+        param_call file_dialog::VerifyValidNonVolumePath, path_buf0
         beq     :+
         lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_SHOW_ALERT

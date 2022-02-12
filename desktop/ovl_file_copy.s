@@ -176,7 +176,7 @@ done:   jsr     file_dialog::RedrawInput
 ;;; ============================================================
 
 .proc HandleOkDestination
-        param_call file_dialog::VerifyValidPath, path_buf0
+        param_call file_dialog::VerifyValidNonVolumePath, path_buf0
         beq     :+
 err:    lda     #ERR_INVALID_PATHNAME
         jmp     JUMP_TABLE_SHOW_ALERT
@@ -186,7 +186,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         lda     #kErrBadReplacement
         jmp     JUMP_TABLE_SHOW_ALERT
 :
-        param_call file_dialog::VerifyValidPath, path_buf1
+        param_call file_dialog::VerifyValidNonVolumePath, path_buf1
         bne     err
         MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo

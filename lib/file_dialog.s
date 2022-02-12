@@ -2107,6 +2107,29 @@ fail:   return  #$FF
 index:  .byte   0
 .endproc
 
+.proc VerifyValidNonVolumePath
+        ptr := $06
+        jsr     VerifyValidPath ; stores A,X to $06
+        bne     ret
+
+        ;; Valid, so make sure it's not a volume - find last '/'
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        cmp     #'/'
+        beq     :+
+        dey
+        bpl     :-
+
+:       cpy     #1
+        beq     fail
+        lda     #0
+        rts
+fail:   lda     #$FF
+ret:    rts
+.endproc
+
 ;;; ============================================================
 
 .proc SetPtrAfterFilenames

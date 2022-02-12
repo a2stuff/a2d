@@ -191,7 +191,7 @@ start:  jsr     OpenWindow
 ;;; ============================================================
 
 .proc HandleOk
-        param_call VerifyValidPath, buf_input1_left
+        param_call VerifyValidNonVolumePath, buf_input1_left
         beq     :+
         rts
 
