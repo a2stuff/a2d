@@ -1792,9 +1792,7 @@ length  .byte
 width   .word
         END_PARAM_BLOCK
 
-        lda     #0
-        sta     params::width
-        sta     params::width+1
+        copy16  #0, params::width
         lda     buf_left
         beq     :+
         sta     params::length

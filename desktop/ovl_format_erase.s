@@ -836,9 +836,7 @@ L1398:  stxy    total_blocks
 
         ;; Write first block of loader
         copy16  #prodos_loader_blocks, write_block_params::data_buffer
-        lda     #0
-        sta     write_block_params::block_num
-        sta     write_block_params::block_num+1
+        copy16  #0, write_block_params::block_num
         MLI_RELAY_CALL WRITE_BLOCK, write_block_params
         beq     :+
         jmp     fail2
@@ -1130,9 +1128,7 @@ loop:   lda     (ptr),y
 .proc GetNonprodosVolName
         ;; Read block 0
         sta     read_block_params::unit_num
-        lda     #0
-        sta     read_block_params::block_num
-        sta     read_block_params::block_num+1
+        copy16  #0, read_block_params::block_num
         MLI_RELAY_CALL READ_BLOCK, read_block_params
         bne     unknown         ; failure
         lda     read_buffer + 1

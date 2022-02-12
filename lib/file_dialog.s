@@ -3260,9 +3260,7 @@ length  .byte
 width   .word
         END_PARAM_BLOCK
 
-        lda     #0
-        sta     params::width
-        sta     params::width+1
+        copy16  #0, params::width
         lda     buf_input1_left
         beq     :+
 
@@ -3291,9 +3289,7 @@ length  .byte
 width   .word
         END_PARAM_BLOCK
 
-        lda     #0
-        sta     params::width
-        sta     params::width+1
+        copy16  #0, params::width
         lda     buf_input2_left
         beq     :+
 

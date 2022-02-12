@@ -582,15 +582,29 @@ end:
         sta     arg3+1
     .elseif _is_register {arg3}
         ;; indexed store variant (arg3 is x or y)
+      .if .xmatch ({arg1}, #0)
+        ;; Common special case
+        lda     #0
+        sta     arg2,arg3
+        sta     arg2+1,arg3
+      .else
         _op_lo  lda, {arg1}
         sta     arg2,arg3
         _op_hi  lda, {arg1}
         sta     arg2+1,arg3
+      .endif
     .else
+      .if .xmatch ({arg1}, #0)
+        ;; Common special case
+        lda     #0
+        sta     arg2
+        sta     arg2+1
+      .else
         _op_lo  lda, {arg1}
         sta     arg2
         _op_hi  lda, {arg1}
         sta     arg2+1
+      .endif
     .endif
 .endmacro
 

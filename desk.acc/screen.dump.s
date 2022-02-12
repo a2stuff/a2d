@@ -83,9 +83,7 @@ init_graphics:
         sty     col_num
         lda     #1
         sta     mask
-        lda     #0
-        sta     x_coord
-        sta     x_coord+1
+        copy16  #0, x_coord
 
 col_loop:
         lda     #8              ; 8 vertical pixels per row

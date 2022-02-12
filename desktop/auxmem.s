@@ -1540,9 +1540,7 @@ L9D7C:  stx     rect3_y1
 .proc SetRectCommon
         copy16  rect2_y1,x, rect1_y1,x
         copy16  rect2_y2,x, rect1_y2,x
-        lda     #0
-        sta     rect3_y1,x
-        sta     rect3_y1+1,x
+        copy16  #0, rect3_y1,x
         rts
 .endproc
 

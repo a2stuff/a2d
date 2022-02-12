@@ -829,9 +829,7 @@ oval:   .tag    OvalRec
         quotient   := aspect_ratio ; [16.16]
         remainder  := temp         ; [16.0]
 
-        lda     #0
-        sta     remainder
-        sta     remainder+1
+        copy16  #0, remainder
 
         ldy     #32
 

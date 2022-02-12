@@ -8513,9 +8513,7 @@ next:   inc     index
         ora     #$80
         sta     (ptr),y
 
-        lda     #0
-        sta     size
-        sta     size+1
+        copy16  #0, size
 
         ldx     index
         dex
@@ -12945,9 +12943,7 @@ done:   rts
         jmp     @retry
 
         ;; If destination doesn't exist, 0 blocks will be reclaimed.
-:       lda     #0
-        sta     existing_size
-        sta     existing_size+1
+:       copy16  #0, existing_size
 
         ;; Does destination exist?
 @retry2:MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params

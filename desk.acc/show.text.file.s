@@ -777,9 +777,7 @@ loop:   inx
 .endproc
 
 .proc UpdateVOffset
-        lda     #0
-        sta     winfo::maprect::y1
-        sta     winfo::maprect::y1+1
+        copy16  #0, winfo::maprect::y1
         ldx     updatethumb_params::thumbpos
 loop:   beq     AdjustBoxHeight
         clc
@@ -801,9 +799,7 @@ loop:   beq     AdjustBoxHeight
         adc     window_height+1
         sta     winfo::maprect::y2+1
         jsr     CalcLinePosition
-        lda     #0
-        sta     first_visible_line
-        sta     first_visible_line+1
+        copy16  #0, first_visible_line
         ldx     updatethumb_params::thumbpos
 loop:   beq     end
         clc
@@ -1213,10 +1209,7 @@ end:    rts
 
 .proc CalcLinePosition
         copy16  winfo::maprect::y2, y_remaining
-
-        lda     #0
-        sta     last_visible_line
-        sta     last_visible_line+1
+        copy16  #0, last_visible_line
 
 loop:   lda     y_remaining+1
         bne     :+
