@@ -1103,3 +1103,16 @@ __depth__ .set 0
 .macro ENDIF
         .error "Do you mean END_IF ?"
 .endmacro
+
+;;; ============================================================
+;;; Jump Table Definitions
+;;; ============================================================
+
+.macro JT_INIT addr
+        __jt_addr__ .set addr
+.endmacro
+
+.macro JT_ENTRY name
+        name := __jt_addr__
+        __jt_addr__ .set __jt_addr__ + 3
+.endmacro

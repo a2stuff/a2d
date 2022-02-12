@@ -47,41 +47,30 @@ kMaxDeskTopWindows      = 8
 
 ;;; * = Used by Desk Accessories
 
-JUMP_TABLE_MAIN_LOOP    := $4000 ; Enter DeskTop main loop
-JUMP_TABLE_MGTK_RELAY   := $4003 ; MGTK call (MLI-style, params follow) *
-JUMP_TABLE_SIZE_STRING  := $4006 ; Compose "nnn Blocks" string into internal buffer
-JUMP_TABLE_DATE_STRING  := $4009 ; Compose date string into internal buffer
-JUMP_TABLE_SELECT_WINDOW:= $400C ; Select and refresh given window
-JUMP_TABLE_AUXLOAD      := $400F ; Auxload
-JUMP_TABLE_EJECT        := $4012 ; Eject command
-JUMP_TABLE_CLEAR_UPDATES := $4015 ; Clear update events (e.g. after a drag) *
-JUMP_TABLE_ITK_RELAY    := $4018 ; Icon ToolKit (MLI-style, params follow)
-JUMP_TABLE_LOAD_OVL     := $401B ; Load overlay routine
-JUMP_TABLE_CLEAR_SEL    := $401E ; Clear DeskTop selection *
-JUMP_TABLE_MLI_RELAY    := $4021 ; ProDOS MLI call (MLI-style, params follow) *
-JUMP_TABLE_COPY_TO_BUF  := $4024 ; Copy to buffer
-JUMP_TABLE_COPY_FROM_BUF:= $4027 ; Copy from buffer
-JUMP_TABLE_NOOP         := $402A ; No-Op command (RTS)
-JUMP_TABLE_FILE_TYPE_STRING := $402D ; Compose file type string into internal buffer
-JUMP_TABLE_SHOW_ALERT      := $4030 ; Show alert (A=err code, default options)
-JUMP_TABLE_SHOW_ALERT_OPTIONS      := $4033 ; Show alert X (A=err code, X=options)
-JUMP_TABLE_LAUNCH_FILE  := $4036 ; Launch file
-JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer *
-JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch *
-JUMP_TABLE_RESTORE_OVL  := $403F ; Restore from overlay routine
-JUMP_TABLE_COLOR_MODE   := $4042 ; Set DHR color mode (IIgs, AppleColor, Le Chat Mauve) *
-JUMP_TABLE_MONO_MODE    := $4045 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
-JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in ROM and ZP. *
-JUMP_TABLE_GET_SEL_COUNT:= $404B ; Get number of selected icons (out: A=count) *
-JUMP_TABLE_GET_SEL_ICON := $404E ; Get selected IconEntry address (in: A=index, out: A,X=addr) *
-JUMP_TABLE_GET_SEL_WIN  := $4051 ; Get window containing selection (out: A=window_id, 0 if none) *
-JUMP_TABLE_GET_WIN_PATH := $4054 ; Get path to window (in: A=window_id; out: A,X=path address) *
-JUMP_TABLE_HILITE_MENU  := $4057 ; Toggle hilite on last clicked menu *
-JUMP_TABLE_ADJUST_FILEENTRY := $405A ; Adjust case in FileEntry structure (in: A,X=FileEntry) *
-JUMP_TABLE_CUR_IBEAM    := $405D ; Changes mouse cursor to I-beam *
-JUMP_TABLE_RGB_MODE     := $4060 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
-JUMP_TABLE_YIELD_LOOP   := $4063 ; Yield the event loop *
-JUMP_TABLE_SHOW_WARNING := $4066 ; Show warning (A=code) *
+JT_INIT $4000
+JT_ENTRY JUMP_TABLE_MGTK_RELAY    ; MGTK call (MLI-style, params follow) *
+JT_ENTRY JUMP_TABLE_MLI_RELAY     ; ProDOS MLI call (MLI-style, params follow) *
+JT_ENTRY JUMP_TABLE_CLEAR_UPDATES ; Clear update events (e.g. after a drag) *
+JT_ENTRY JUMP_TABLE_YIELD_LOOP    ; Yield the event loop *
+JT_ENTRY JUMP_TABLE_SELECT_WINDOW ; Select and refresh given window *
+JT_ENTRY JUMP_TABLE_SHOW_ALERT    ; Show alert (A=kErrXXX or ProDOS error code, default options)
+JT_ENTRY JUMP_TABLE_SHOW_ALERT_OPTIONS       ; Show alert X (A=err code, X=options)
+JT_ENTRY JUMP_TABLE_SHOW_WARNING  ; Show warning (A=kWarningMsgXXX code) *
+JT_ENTRY JUMP_TABLE_LAUNCH_FILE   ; Launch file
+JT_ENTRY JUMP_TABLE_CUR_POINTER   ; Changes mouse cursor to pointer *
+JT_ENTRY JUMP_TABLE_CUR_WATCH     ; Changes mouse cursor to watch *
+JT_ENTRY JUMP_TABLE_CUR_IBEAM     ; Changes mouse cursor to I-beam *
+JT_ENTRY JUMP_TABLE_RESTORE_OVL   ; Restore from overlay routine
+JT_ENTRY JUMP_TABLE_COLOR_MODE    ; Set DHR color mode (IIgs, AppleColor, Le Chat Mauve) *
+JT_ENTRY JUMP_TABLE_MONO_MODE     ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
+JT_ENTRY JUMP_TABLE_RGB_MODE      ; Reset DHR mode to settings (IIgs, AppleColor, Le Chat Mauve) *
+JT_ENTRY JUMP_TABLE_RESTORE_SYS   ; Exit DHR, restore devices and /RAM, bank in ROM and ZP. *
+JT_ENTRY JUMP_TABLE_GET_SEL_COUNT ; Get number of selected icons (out: A=count) *
+JT_ENTRY JUMP_TABLE_GET_SEL_ICON  ; Get selected IconEntry address (in: A=index, out: A,X=addr) *
+JT_ENTRY JUMP_TABLE_GET_SEL_WIN   ; Get window containing selection (out: A=window_id, 0 if none) *
+JT_ENTRY JUMP_TABLE_GET_WIN_PATH  ; Get path to window (in: A=window_id; out: A,X=path address) *
+JT_ENTRY JUMP_TABLE_HILITE_MENU   ; Toggle hilite on last clicked menu *
+JT_ENTRY JUMP_TABLE_ADJUST_FILEENTRY  ; Adjust case in FileEntry structure (in: A,X=FileEntry) *
 
 ;;; ============================================================
 ;;; Call MGTK

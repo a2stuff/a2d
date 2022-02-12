@@ -31,14 +31,9 @@ Call from MAIN (RAMRDOFF/RAMWRTOFF); AUX language card RAM must be banked in. Ca
 ```
 Some calls take parameters in registers.
 
-> NOTE: Not all of the calls have been identified.
 > Routines marked with * are used by Desk Accessories.
 
-#### `JUMP_TABLE_MAIN_LOOP` ($4000)
-
-Enter DeskTop main loop
-
-#### `JUMP_TABLE_MGTK_RELAY` ($4003)
+#### `JUMP_TABLE_MGTK_RELAY` *
 
 MouseGraphics ToolKit call (main>aux). Follow by call (`.byte`) and params (`.addr`).
 
@@ -46,175 +41,124 @@ MouseGraphics ToolKit call (main>aux). Follow by call (`.byte`) and params (`.ad
 
 Use the `JUMP_TABLE_MGTK_CALL` macro for convenience.
 
-#### `JUMP_TABLE_SIZE_STRING` ($4006)
+#### `JUMP_TABLE_MLI_RELAY` *
 
-Compose "nnn Blocks" string into internal buffer
-
-Input is block count in (A,X).
-Output string is in `text_buffer2`.
-
-#### `JUMP_TABLE_DATE_STRING` ($4009)
-
-Compose date string into internal buffer.
-
-Input date/time must be in `datetime_for_conversion`.
-Output string is in `text_buffer2`.
-
-#### `JUMP_TABLE_SELECT_WINDOW` ($400C)
-
-Select and refresh the specified window (A = window id)
-
-#### `JUMP_TABLE_AUXLOAD` ($400F)
-
-Load (A,X) from Aux memory into A.
-
-#### `JUMP_TABLE_EJECT` ($4012)
-
-Eject selected drive icon.
-
-#### `JUMP_TABLE_CLEAR_UPDATES` ($4015) *
-
-Clear update events - i.e. redraw windows as needed after move/resize/close.
-
-#### `JUMP_TABLE_ITK_RELAY` ($4018)
-
-Icon ToolKit call (main>aux). Follow by call (`.byte`) and params (`.addr`).
-
-(Params must reside in aux memory, lower 48k or LC banks.)
-
-#### `JUMP_TABLE_LOAD_OVL` ($401B)
-
-Load overlay routine.
-
-Routines are defined in `desktop/desktop.inc`.
-
-#### `JUMP_TABLE_CLEAR_SEL` ($401E) *
-
-Deselect all DeskTop icons (volumes/files).
-
-#### `JUMP_TABLE_MLI_RELAY` ($4021)
-
-ProDOS MLI call. Follow by call (`.byte`) and params (`.addr`). *
+ProDOS MLI call. Follow by call (`.byte`) and params (`.addr`).
 
 (Params must reside in main memory, lower 48k.)
 
 Use the `JUMP_TABLE_MLI_CALL` macro for convenience.
 
-#### `JUMP_TABLE_COPY_TO_BUF` ($4024)
+#### `JUMP_TABLE_CLEAR_UPDATES` *
 
-Copy to buffer.
+Clear update events - i.e. redraw windows as needed after move/resize/close.
 
-#### `JUMP_TABLE_COPY_FROM_BUF` ($4027)
-
-Copy from buffer.
-
-#### `JUMP_TABLE_NOOP` ($402A)
-
-No-Op command (RTS)
-
-#### `JUMP_TABLE_FILE_TYPE_STRING` ($402D)
-
-Composes file type string.
-
-Input is ProDOS file type in A.
-Output string is in `str_file_type`.
-
-#### `JUMP_TABLE_SHOW_ALERT` ($4030)
-
-Show alert, with default button options for error number
-
-Error number is in A - either a ProDOS error number, or a DeskTop error as defined in `desktop/desktop.inc`.
-
-NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
-
-#### `JUMP_TABLE_SHOW_ALERT_OPTIONS` ($4033)
-
-Show alert, with custom button options.
-
-Error number is in A - either a ProDOS error number, or a DeskTop error as defined in `desktop/desktop.inc`.
-
-Button options are in X per `desktop/desktop.inc`.
-
-NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
-
-#### `JUMP_TABLE_LAUNCH_FILE` ($4036)
-
-Launch file. Equivalent of **File > Open** command.
-
-#### `JUMP_TABLE_CUR_POINTER` ($4039)
-
-Changes mouse cursor to pointer.
-
-#### `JUMP_TABLE_CUR_WATCH` ($403C)
-
-Changes mouse cursor to watch.
-
-#### `JUMP_TABLE_RESTORE_OVL` ($403F)
-
-Restore from overlay routine
-
-Routines are defined in `desktop/desktop.inc`.
-
-#### `JUMP_TABLE_COLOR_MODE` ($4042) *
-#### `JUMP_TABLE_MONO_MODE` ($4045) *
-
-Set DHR color or monochrome mode, respectively. DHR monochrome mode is supported natively on the Apple IIgs, and via the AppleColor card and Le Chat Mauve, and is used by default by DeskTop. Desk Accessories that display images or exit DeskTop can can toggle the mode.
-
-#### `JUMP_TABLE_RESTORE_SYS` ($4048) *
-
-Used when exiting DeskTop; exit DHR mode, restores DHR mode to color, restores detached devices and reformats /RAM if needed, and banks in ROM and main ZP.
-
-#### `JUMP_TABLE_GET_SEL_COUNT` ($404B) *
-
-Get number of selected icons.
-
-Output: A = count.
-
-#### `JUMP_TABLE_GET_SEL_ICON` ($404E) *
-
-Get selected IconEntry address.
-
-Input: A = index within selection.
-Output: A,X = address of IconEntry.
-
-#### `JUMP_TABLE_GET_SEL_WIN` ($4051) *
-
-Get window containing selection (if any).
-
-Output: A = window_id, or 0 for desktop.
-
-#### `JUMP_TABLE_GET_WIN_PATH` ($4054) *
-
-Get path to window.
-
-Input: A = window_id.
-Output: A,X = address of path (length-prefixed).
-
-#### `JUMP_TABLE_HILITE_MENU` ($4057) *
-
-Toggle hilite on last clicked menu. This should be used by a desk accessory that repaints the entire screen including the menu bar, since when the desk accessory exits the menu used to invoke it (Apple or File) will toggle.
-
-#### `JUMP_TABLE_ADJUST_FILEENTRY` ($405A) *
-
-Adjust case in FileEntry structure. If GS/OS filename bits are set, those are used. If the file type is an AppleWorks file, the auxtype bits are used. Otherwise, case is inferred.
-
-Input: A,X = FileEntry structure.
-
-#### `JUMP_TABLE_CUR_IBEAM` ($405D) *
-
-Changes mouse cursor to I-beam.
-
-#### `JUMP_TABLE_RGB_MODE` ($4060) *
-
-Set DHR color or monochrome mode, based on control panel setting.
-
-#### `JUMP_TABLE_YIELD_LOOP` ($4063) *
+#### `JUMP_TABLE_YIELD_LOOP` *
 
 Yield during an event loop for DeskTop to run tasks. This allows the menu bar clock to be updated and similar infrequent operations.
 
 Desk Accessories should call this (from main!) from their event loop unless they need to have total control of the system (e.g. screen savers). A good place to do this is just before a call to `MGTK::GetEvent`. Note that the current grafport may be modified during this call.
 
 Yielding during further nested loops (e.g. button tracking, etc) can be done but is not worth the effort.
+
+#### `JUMP_TABLE_SELECT_WINDOW`
+
+Select and refresh the specified window (A = window id)
+
+#### `JUMP_TABLE_SHOW_ALERT`
+
+Show alert, with default button options for error number
+
+Error number is in A - either a ProDOS error number, or a DeskTop `kErrXXX` error as defined in `desktop/desktop.inc`.
+
+NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
+
+#### `JUMP_TABLE_SHOW_ALERT_OPTIONS`
+
+Show alert, with custom button options.
+
+Error number is in A - either a ProDOS error number, or a DeskTop `kErrXXX` error as defined in `desktop/desktop.inc`.
+
+Button options are in X per `desktop/desktop.inc`.
+
+NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
+
+#### `JUMP_TABLE_SHOW_WARNING`
+
+Show warning message (`kWarningMsgXXX` as defined in `desktop/desktop.inc`), with default button options.
+
+NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
+
+#### `JUMP_TABLE_LAUNCH_FILE`
+
+Launch file. Equivalent of **File > Open** command.
+
+#### `JUMP_TABLE_CUR_POINTER`
+
+Changes mouse cursor to pointer.
+
+#### `JUMP_TABLE_CUR_WATCH`
+
+Changes mouse cursor to watch.
+
+#### `JUMP_TABLE_CUR_IBEAM` *
+
+Changes mouse cursor to I-beam.
+
+#### `JUMP_TABLE_RESTORE_OVL`
+
+Restore from overlay routine
+
+Routines are defined in `desktop/desktop.inc`.
+
+#### `JUMP_TABLE_COLOR_MODE` *
+#### `JUMP_TABLE_MONO_MODE` *
+
+Set DHR color or monochrome mode, respectively. DHR monochrome mode is supported natively on the Apple IIgs, and via the AppleColor card and Le Chat Mauve, and is used by default by DeskTop. Desk Accessories that display images or exit DeskTop can can toggle the mode.
+
+#### `JUMP_TABLE_RGB_MODE` *
+
+Set DHR color or monochrome mode, based on control panel setting.
+
+#### `JUMP_TABLE_RESTORE_SYS` *
+
+Used when exiting DeskTop; exit DHR mode, restores DHR mode to color, restores detached devices and reformats /RAM if needed, and banks in ROM and main ZP.
+
+#### `JUMP_TABLE_GET_SEL_COUNT` *
+
+Get number of selected icons.
+
+Output: A = count.
+
+#### `JUMP_TABLE_GET_SEL_ICON` *
+
+Get selected IconEntry address.
+
+Input: A = index within selection.
+Output: A,X = address of IconEntry.
+
+#### `JUMP_TABLE_GET_SEL_WIN` *
+
+Get window containing selection (if any).
+
+Output: A = window_id, or 0 for desktop.
+
+#### `JUMP_TABLE_GET_WIN_PATH` *
+
+Get path to window.
+
+Input: A = window_id.
+Output: A,X = address of path (length-prefixed).
+
+#### `JUMP_TABLE_HILITE_MENU` *
+
+Toggle hilite on last clicked menu. This should be used by a desk accessory that repaints the entire screen including the menu bar, since when the desk accessory exits the menu used to invoke it (Apple or File) will toggle.
+
+#### `JUMP_TABLE_ADJUST_FILEENTRY` *
+
+Adjust case in FileEntry structure. If GS/OS filename bits are set, those are used. If the file type is an AppleWorks file, the auxtype bits are used. Otherwise, case is inferred.
+
+Input: A,X = FileEntry structure.
 
 <!-- ============================================================ -->
 

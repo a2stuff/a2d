@@ -27,30 +27,22 @@ open_dir_path_buf := INVOKER_PREFIX
         ;; Entries marked with * are used by DAs
         ;; "Exported" by desktop.inc
 
-JT_MAIN_LOOP:           jmp     MainLoop
 JT_MGTK_CALL:           jmp     MGTKRelayImpl           ; *
-JT_SIZE_STRING:         jmp     ComposeSizeString
-JT_DATE_STRING:         jmp     ComposeDateString
-JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
-JT_AUXLOAD:             jmp     AuxLoad
-JT_EJECT:               jmp     CmdEject
-JT_CLEAR_UPDATES:       jmp     ClearUpdates            ; *
-JT_ITK_RELAY:           jmp     ITKRelayImpl
-JT_LOAD_OVL:            jmp     LoadDynamicRoutine
-JT_CLEAR_SELECTION:     jmp     ClearSelection
 JT_MLI_CALL:            jmp     MLIRelayImpl            ; *
-JT_COPY_TO_BUF:         jmp     LoadWindowEntryTable
-JT_COPY_FROM_BUF:       jmp     StoreWindowEntryTable
-JT_NOOP:                jmp     CmdNoOp
-JT_FILE_TYPE_STRING:    jmp     ComposeFileTypeString
+JT_CLEAR_UPDATES:       jmp     ClearUpdates            ; *
+JT_YIELD_LOOP:          jmp     YieldLoop               ; *
+JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
 JT_SHOW_ALERT_OPTIONS:  jmp     ShowAlertOption
+JT_SHOW_WARNING:        jmp     ShowWarning             ; *
 JT_LAUNCH_FILE:         jmp     LaunchFile
 JT_CUR_POINTER:         jmp     SetCursorPointer        ; *
 JT_CUR_WATCH:           jmp     SetCursorWatch          ; *
+JT_CUR_IBEAM:           jmp     SetCursorIBeam          ; *
 JT_RESTORE_OVL:         jmp     RestoreDynamicRoutine   ; *
 JT_COLOR_MODE:          jmp     SetColorMode            ; *
 JT_MONO_MODE:           jmp     SetMonoMode             ; *
+JT_RGB_MODE:            jmp     SetRGBMode              ; *
 JT_RESTORE_SYS:         jmp     RestoreSystem           ; *
 JT_GET_SEL_COUNT:       jmp     GetSelectionCount       ; *
 JT_GET_SEL_ICON:        jmp     GetSelectedIcon         ; *
@@ -58,11 +50,7 @@ JT_GET_SEL_WIN:         jmp     GetSelectionWindow      ; *
 JT_GET_WIN_PATH:        jmp     GetWindowPath           ; *
 JT_HILITE_MENU:         jmp     ToggleMenuHilite        ; *
 JT_ADJUST_FILEENTRY:    jmp     AdjustFileEntryCase     ; *
-JT_CUR_IBEAM:           jmp     SetCursorIBeam          ; *
-JT_RGB_MODE:            jmp     SetRGBMode              ; *
-JT_YIELD_LOOP:          jmp     YieldLoop               ; *
-JT_SHOW_WARNING:        jmp     ShowWarning             ; *
-        .assert JUMP_TABLE_MAIN_LOOP = JT_MAIN_LOOP, error, "Jump table mismatch"
+
         .assert JUMP_TABLE_SHOW_WARNING = JT_SHOW_WARNING, error, "Jump table mismatch"
 
         ;; Main Loop
