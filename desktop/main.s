@@ -10757,8 +10757,8 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
 .proc SetColorMode
         ;; IIgs?
-        jsr     TestIIgs
-        bcc     iigs
+        bit     machine_config::iigs_flag
+        bmi     iigs
 
         ;; AppleColor Card - Mode 2 (Color 140x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
@@ -10773,7 +10773,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         ;; lda AN3_OFF ; already done above
-        bit     lcm_eve_flag
+        bit     machine_config::lcm_eve_flag
         bpl     done
         sta     HR2_OFF
         sta     HR3_OFF
@@ -10789,8 +10789,8 @@ done:   rts
 
 .proc SetMonoMode
         ;; IIgs?
-        jsr     TestIIgs
-        bcc     iigs
+        bit     machine_config::iigs_flag
+        bmi     iigs
 
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
@@ -10806,7 +10806,7 @@ done:   rts
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         ;; lda AN3_OFF ; already done above
-        bit     lcm_eve_flag
+        bit     machine_config::lcm_eve_flag
         bpl     done
         sta     HR2_ON
         sta     HR3_ON
@@ -10820,20 +10820,10 @@ iigs:   lda     NEWVIDEO
 done:   rts
 .endproc
 
-;;; Returns with carry clear if IIgs, set otherwise.
-.proc TestIIgs
-        bit     ROMIN2
-        sec
-        jsr     IDROUTINE
-        bit     LCBANK1
-        bit     LCBANK1
-        rts
-.endproc
-
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
 .proc ResetIIgsRGB
-        jsr     TestIIgs
-        bcs     done
+        bit     machine_config::iigs_flag
+        bpl     done            ; nope
 
         bit     SETTINGS + DeskTopSettings::rgb_color
         bmi     color
@@ -10844,7 +10834,7 @@ mono:   lda     NEWVIDEO
         rts
 
 color:  lda     NEWVIDEO
-        and     #<~(1<<5)        ; Color
+        and     #<~(1<<5)       ; Color
         sta     NEWVIDEO
 
 done:   rts
@@ -16843,8 +16833,8 @@ SaveWindows := save_restore_windows::Save
 
 .proc ExtendSelectionModifierDown
         ;; IIgs? Use KEYMODREG instead
-        jsr     TestIIgs
-        bcc     iigs
+        bit     machine_config::iigs_flag
+        bmi     iigs
 
         jsr     TestShiftMod  ; Shift key state, if detectable
         ora     BUTN0           ; Either way, check button state
@@ -16862,8 +16852,8 @@ ret:    rts
 ;;; Output: A=high bit/N flag set if down.
 
 .proc ShiftDown
-        jsr     TestIIgs       ; IIgs?
-        bcs     TestShiftMod  ; no, rely on shift key mod
+        bit     machine_config::iigs_flag
+        bpl     TestShiftMod    ; no, rely on shift key mod
 
         lda     KEYMODREG       ; On IIgs, use register instead
         and     #%00000001      ; bit 7 = Command (OA), bit 0 = Shift
@@ -16878,11 +16868,8 @@ ret:    rts
 
 .proc TestShiftMod
         ;; If a IIe, maybe use shift key mod
-        bit     ROMIN2
-        ldx     ZIDBYTE         ; $00 = IIc/IIc+
-        ldy     IDBYTELASER128  ; $AC = Laser 128
-        bit     LCBANK1
-        bit     LCBANK1
+        ldx     machine_config::id_idbyte ; $00 = IIc/IIc+
+        ldy     machine_config::id_idlaser ; $AC = Laser 128
         lda     #0
         cpx     #0              ; ZIDBYTE = $00 == IIc/IIc+
         beq     :+
@@ -16890,19 +16877,11 @@ ret:    rts
         beq     :+              ; On Laser, BUTN2 set when mouse button clicked
 
         ;; It's a IIe, compare shift key state
-        lda     pb2_initial_state ; if shift key mod installed, %1xxxxxxx
+        lda     machine_config::pb2_initial_state ; if shift key mod installed, %1xxxxxxx
         eor     BUTN2             ; ... and if shift is down, %0xxxxxxx
 
 :       rts
 .endproc
-
-;;; Shift key mod sets PB2 if shift is *not* down. Since we can't detect
-;;; the mod, snapshot on init (and assume shift is not down) and XOR.
-pb2_initial_state:
-        .byte   0
-
-lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
-        .byte   0
 
 ;;; ============================================================
 ;;; Reformat /RAM (Slot 3, Drive 2) if present

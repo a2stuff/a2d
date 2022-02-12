@@ -108,23 +108,6 @@ done:
 .endscope
 
 ;;; ============================================================
-;;; Snapshot state of PB2 (shift key mod)
-
-.scope pb2_state
-        copy    BUTN2, main::pb2_initial_state
-.endscope
-
-;;; ============================================================
-;;; Detect Le Chat Mauve Eve RGB card
-
-.scope lcm
-        jsr     DetectLeChatMauveEve
-        bne     :+
-        copy    #$80, main::lcm_eve_flag
-:
-.endscope
-
-;;; ============================================================
 ;;; Detect Machine Type - set flags and periodic task delay
 
 ;;; NOTE: Starts with ROM paged in, exits with LCBANK1 paged in.
@@ -136,37 +119,54 @@ done:
         sec                     ; Follow detection protocol
         jsr     IDROUTINE       ; RTS on pre-IIgs
         bcs     :+              ; carry clear = IIgs
-        copy    #$80, is_iigs_flag
+        copy    #$80, tmp_iigs_flag
 :
         ;; Now stash the bytes we need
-        copy    VERSION, id_version ; $06 = IIe or later
-        copy    ZIDBYTE, id_idbyte ; $00 = IIc or later
-        copy    ZIDBYTE2, id_idbyte2 ; IIc ROM version (IIc+ = $05)
-        copy    IDBYTELASER128, id_idlaser ; $AC = Laser 128
+        copy    VERSION, tmp_version  ; $06 = IIe or later
+        copy    ZIDBYTE, tmp_idbyte   ; $00 = IIc or later
+        copy    ZIDBYTE2, tmp_idbyte2 ; IIc ROM version (IIc+ = $05)
+        copy    IDBYTELASER128, tmp_idlaser ; $AC = Laser 128
 
         ;; ... and page in LCBANK1
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
 
+        ;; Place the version bytes somewhere useful later
+        tmp_version := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::id_version
+        tmp_idbyte := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::id_idbyte
+        tmp_idbyte2 := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::id_idbyte2
+        tmp_idlaser := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::id_idlaser
+        tmp_iigs_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::iigs_flag
+
         ;; Ensure we're on a IIe or later
-        lda     id_version
+        lda     machine_config::id_version
         cmp     #$06            ; Ensure a IIe or later
         beq     :+
         brk                     ; Otherwise (][, ][+, ///), just crash
 
         ;; State needed by MGTK
-:       copy    id_version, startdesktop_params::machine
-        copy    id_idbyte, startdesktop_params::subid
+:       copy    machine_config::id_version, startdesktop_params::machine
+        copy    machine_config::id_idbyte, startdesktop_params::subid
 
         ;; Identify machine type (periodic delays and other flags)
-        lda     id_idbyte
+        lda     machine_config::id_idbyte
         beq     is_iic          ; $FBC0 = $00 -> is IIc or IIc+
-        bit     is_iigs_flag
+        bit     machine_config::iigs_flag
         bmi     is_iigs
 
         ;; Laser 128?
-        lda     id_idlaser           ; Is it a Laser 128?
+        lda     machine_config::id_idlaser ; Is it a Laser 128?
         cmp     #$AC
         bne     is_iie
 
@@ -184,7 +184,7 @@ is_iigs:
         bne     end             ; always
 
         ;; IIc or IIc+
-is_iic: lda     id_idbyte2            ; ROM version
+is_iic: lda     machine_config::id_idbyte2 ; ROM version
         cmp     #$05                  ; IIc Plus = $05
         bne     :+
         copy    #$80, is_iic_plus_flag
@@ -194,6 +194,28 @@ end:
         sta     periodic_task_delay
 
         ;; Fall through
+.endscope
+
+;;; ============================================================
+;;; Snapshot state of PB2 (shift key mod)
+
+.scope pb2_state
+        copy    BUTN2, machine_config::pb2_initial_state
+.endscope
+
+;;; ============================================================
+;;; Detect Le Chat Mauve Eve RGB card
+
+.scope lcm
+        bit     ROMIN2
+        jsr     DetectLeChatMauveEve
+        pha
+        bit     LCBANK1
+        bit     LCBANK1
+        pla
+        bne     :+
+        copy    #$80, machine_config::lcm_eve_flag
+:
 .endscope
 
 ;;; ============================================================
@@ -252,7 +274,7 @@ end:
         inc     scalemouse_params::y_exponent
         END_IF
         ;; Also doubled if a IIc
-        lda     id_idbyte       ; ZIDBYTE=0 for IIc / IIc+
+        lda     machine_config::id_idbyte ; ZIDBYTE=0 for IIc / IIc+
         IF_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
@@ -1195,15 +1217,7 @@ exit:   jsr     LoadDesktopEntryTable
 
 ;;; ============================================================
 
-;;; ID bytes, copied from ROM
-id_idlaser:     .byte   0
-id_version:     .byte   0
-id_idbyte:      .byte   0
-id_idbyte2:     .byte   0
-
 ;;; High bits set if specific machine type detected.
-is_iigs_flag:
-        .byte   0
 is_iic_plus_flag:
         .byte   0
 is_laser128_flag:
