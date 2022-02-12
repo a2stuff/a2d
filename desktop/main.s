@@ -166,11 +166,10 @@ win:    MGTK_RELAY_CALL MGTK::BeginUpdate, event_params::window_id
 :       jmp     loop
 
 finish: jsr     LoadDesktopEntryTable ; restore after `UpdateWindow`
-        copy    saved_active_window_id, active_window_id
+        saved_active_window_id := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     active_window_id
         rts
-
-saved_active_window_id:
-        .byte   0
 .endproc
 ClearUpdatesNoPeek := ClearUpdatesImpl::clear_no_peek
 ClearUpdates := ClearUpdatesImpl::clear
@@ -182,7 +181,8 @@ ClearUpdates := ClearUpdatesImpl::clear
 .proc YieldLoop
         inc     loop_counter
         inc     loop_counter
-        lda     loop_counter
+        loop_counter := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     periodic_task_delay    ; for per-machine timing
         bcc     :+
         copy    #0, loop_counter
@@ -192,9 +192,6 @@ ClearUpdates := ClearUpdatesImpl::clear
 
 :       lda     loop_counter
         rts
-
-loop_counter:
-        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -273,7 +270,6 @@ done:
         ;; Back to normal TODO: Is this needed??? Move to end of update loop?
         jmp     ResetMainGrafport
 
-index:  .byte   0
 yoff:   .word   0
 .endproc
 
@@ -644,7 +640,8 @@ done:   rts
         beq     :+
         lda     icon_param
         jsr     IconScreenToWindow
-        lda     win
+        win := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         bne     skip            ; MGTK::Error::window_obscured
 :       ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
@@ -656,8 +653,6 @@ skip:   lda     win
 :
         jsr     PopPointers
         rts
-
-win:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -769,7 +764,8 @@ check_disk_in_drive:
         pha
 
         sp_addr := $0A
-        lda     unit_number
+        unit_number := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     FindSmartportDispatchAddress
         bne     notsp           ; not SmartPort
         stx     status_unit_num
@@ -792,14 +788,12 @@ finish: sta     result
         tay
         pla
         tax
-        return  result
+        result := *+1
+        lda     #SELF_MODIFIED_BYTE
+        rts
 
 SmartportCall:
         jmp     (sp_addr)
-
-unit_number:
-        .byte   0
-result: .byte   0
 
         ;; params for call
 .params status_params
@@ -1044,7 +1038,8 @@ loop:
 
         ;; Pop off a path segment and try again.
 not_found:
-        ldx     path_length
+        path_length := *+1
+        ldx     #SELF_MODIFIED_BYTE
 :       lda     tmp_path,x
         cmp     #'/'
         beq     found_slash
@@ -1060,10 +1055,6 @@ found_slash:
         dex
         stx     path_length
         jmp     loop
-
-path_length:
-        .byte   0
-
 .endproc
 CheckBasicSystem        := CheckBasixSystemImpl::basic
 CheckBasisSystem        := CheckBasixSystemImpl::basis
@@ -1234,7 +1225,8 @@ filerecords_free_start:
         bne     done
 
         ;; "Run" command
-        lda     result
+        result := *+1
+        lda     #SELF_MODIFIED_BYTE
         bpl     done
         jsr     MakeRamcardPrefixedPath
         jsr     StripPathSegments
@@ -1260,8 +1252,6 @@ run_from_ramcard:
         COPY_STRING $800, buf_win_path
         jsr     LaunchBufWinPath
         jmp     done
-
-result: .byte   0
 .endproc
 
 
@@ -1330,7 +1320,8 @@ L4A0F:  lda     ($06),y
         bpl     :-
 
 :       dey
-        sty     slash_index
+        tya
+        pha                     ; A = slash index
 
         ;; Copy filename to buf_filename2
         ldx     #0
@@ -1341,17 +1332,14 @@ L4A0F:  lda     ($06),y
         sta     buf_filename2,x
         cpy     buf_win_path
         bne     :-
+        stx     buf_filename2
 
         ;; Truncate path
-        stx     buf_filename2
-        lda     slash_index
+        pla                     ; A = slash index
         sta     buf_win_path
         lda     #0
 
         jmp     LaunchFile
-
-slash_index:
-        .byte   0
 .endproc
 
 entry_num:
@@ -1516,12 +1504,13 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
         param_call CopyRAMCardPrefix, path_buffer
 
         ;; Find entry path
-        lda     entry_num
+        entry_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     ATimes64
         addax   #run_list_paths, $06
         ldy     #0
         lda     ($06),y
-        sta     prefix_length
+        sta     @prefix_length
 
         ;; Walk back one segment
         tay
@@ -1548,18 +1537,13 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
         iny
         lda     ($06),y
         sta     path_buffer,x
-        cpy     prefix_length
+        @prefix_length := *+1
+        cpy     #SELF_MODIFIED_BYTE
         bne     :-
 
         stx     path_buffer
         ldax    #path_buffer
         rts
-
-entry_num:
-        .byte   0
-
-prefix_length:
-        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1647,7 +1631,6 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         sta     close_ref_num
         MLI_RELAY_CALL READ, read_params
         MLI_RELAY_CALL CLOSE, close_params
-        copy    #$80, running_da_flag
 
         ;; Invoke it
         jsr     SetCursorPointer ; before invoking DA
@@ -1655,8 +1638,6 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         MGTK_RELAY_CALL MGTK::SetZP1, setzp_params_preserve
         jsr     DA_LOAD_ADDRESS
         MGTK_RELAY_CALL MGTK::SetZP1, setzp_params_nopreserve
-        lda     #0
-        sta     running_da_flag
 
         ;; Restore state
         jsr     ShowClockForceUpdate
@@ -1675,12 +1656,6 @@ done:   jsr     SetCursorPointer ; after invoking DA
         close_ref_num := close_params::ref_num
 
 .endproc
-
-;;; ============================================================
-
-        ;; high bit set while a DA is running
-running_da_flag:
-        .byte   0
 
 ;;; ============================================================
 
@@ -1971,7 +1946,12 @@ next:   txa
         beq     maybe_open_file       ; nope
 
         ;; Directory
-        lda     dir_flag        ; first one seen?
+
+        ;; Set when we see the first vol/folder icon, so we can
+        ;; clear selection (if it's a folder).
+        dir_flag := *+1         ; first one seen?
+        lda     #SELF_MODIFIED_BYTE
+
         bne     :+              ; not the first
         inc     dir_flag        ; only do this once
         lda     selected_window_id ; selection in a window?
@@ -2015,13 +1995,6 @@ maybe_open_file:
 
 done:   rts
 .endproc
-
-
-
-;;; Set when we see the first vol/folder icon, so we can
-;;; clear selection (if it's a folder).
-dir_flag:
-        .byte   0
 
 ;;; Parent window to close
 window_id_to_close:
@@ -2104,7 +2077,8 @@ CmdOpenFromKeyboard := CmdOpen::from_keyboard
         copy16  #open_dir_path_buf, name_ptr
         inc     open_dir_path_buf                     ; past the '/'
         add16_8 name_ptr, open_dir_path_buf, name_ptr ; point at suffix
-        lda     prev
+        prev := *+1
+        lda     #SELF_MODIFIED_BYTE
         sec
         sbc     open_dir_path_buf ; A = name length
         ldy     #0
@@ -2128,8 +2102,6 @@ volume: jsr     ClearSelection
         beq     :+
         jsr     SelectIcon
 :       rts
-
-prev:   .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2306,7 +2278,9 @@ ret:    rts
 
         ;; Iterate icons
         copy    #0, icon
-loop:   ldx     icon
+
+        icon := *+1
+loop:   ldx     #SELF_MODIFIED_BYTE
         cpx     cached_window_entry_count
         bne     :+
 
@@ -2353,7 +2327,6 @@ done:   jsr     LoadDesktopEntryTable ; restore from above
 next:   inc     icon
         bne     loop
 
-icon:   .byte   0               ; index, until finishing
 tmp:    .addr   0
 .endproc
 
@@ -2411,7 +2384,8 @@ done:   rts
         ldax    #stashed_name
         jsr     FindIconByName
         pha
-        lda     prev_cached_window_id
+        prev_cached_window_id := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     LoadWindowEntryTable ; restore previous state
         pla                          ; A = `FindIconByName` result
         beq     done                 ; no match
@@ -2420,9 +2394,6 @@ done:   rts
         sta     drag_drop_params::result
 
 done:   rts
-
-prev_cached_window_id:
-        .byte   0
 .endproc
 
 stashed_name:
@@ -2487,7 +2458,8 @@ stashed_name:
         jsr     IconScreenToWindow
 
         ;; Grab the icon coords
-        lda     icon_num
+        icon_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     CacheIconBounds
 
         ;; Restore coordinates
@@ -2503,8 +2475,8 @@ stashed_name:
         ;; X adjustment
 
         ;; Is left of icon beyond window? If so, adjust by delta (negative)
-        sub16_8 cur_icon_bounds::x1, #kIconBBoxOffsetLeft, tmp
-        sub16   tmp, window_grafport::cliprect::x1, delta
+        sub16_8 cur_icon_bounds::x1, #kIconBBoxOffsetLeft, delta
+        sub16   delta, window_grafport::cliprect::x1, delta
         bmi     adjustx
 
         ;; Is right of icon beyond window? If so, adjust by delta (positive)
@@ -2527,8 +2499,8 @@ donex:
         ;; Y adjustment
 
         ;; Is top of icon beyond window? If so, adjust by delta (negative)
-        sub16_8 cur_icon_bounds::y1, #kIconBBoxOffsetTop, tmp
-        sub16   tmp, window_grafport::cliprect::y1, delta
+        sub16_8 cur_icon_bounds::y1, #kIconBBoxOffsetTop, delta
+        sub16   delta, window_grafport::cliprect::y1, delta
         bmi     adjusty
 
         ;; Is bottom of icon beyond window? If so, adjust by delta (positive)
@@ -2546,7 +2518,8 @@ adjusty:
         add16   window_grafport::cliprect::y2, delta, window_grafport::cliprect::y2
 
 doney:
-        lda     dirty
+        dirty := *+1
+        lda     #SELF_MODIFIED_BYTE
         beq     done
 
         jsr     CachedIconsScreenToWindow ; assumed by...
@@ -2554,14 +2527,7 @@ doney:
 
 done:   rts
 
-icon_num:
-        .byte   0
-
-dirty:  .byte   0
-
 delta:  .word   0
-
-tmp:    .word   0
 .endproc
 
 ;;; ============================================================
@@ -2613,7 +2579,8 @@ loop1:  lda     selected_icon_list,y
 :
 
         ;; Check each of the recorded volumes
-loop2:  ldx     count
+        count := *+1
+loop2:  ldx     #SELF_MODIFIED_BYTE
         lda     buffer,x
         sta     drive_to_refresh ; icon number
         jsr     CmdCheckSingleDriveByIconNumber
@@ -2621,8 +2588,6 @@ loop2:  ldx     count
         bpl     loop2
 
         rts
-
-count:  .byte   0
 
 eject_flag:
         .byte   0
@@ -2792,7 +2757,8 @@ entry:
 
         jsr     CachedIconsScreenToWindow
         copy    #0, index
-:       lda     index
+        index := *+1
+:       lda     #SELF_MODIFIED_BYTE
         cmp     cached_window_entry_count
         beq     :+
         tax
@@ -2801,7 +2767,8 @@ entry:
         jsr     IconEntryLookup
         stax    @addr
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
-        lda     err
+        err := *+1
+        lda     #SELF_MODIFIED_BYTE
     IF_ZERO                     ; Skip drawing if obscured
         ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
     END_IF
@@ -2822,8 +2789,6 @@ win_width:
         .word   0
 win_height:
         .word   0
-index:  .byte   0
-err:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2837,7 +2802,8 @@ err:    .byte   0
 
         ;; Is this a change?
         jsr     GetActiveWindowViewBy
-        cmp     view
+        view := *+1
+        cmp     #SELF_MODIFIED_BYTE
         beq     ret
 
         ;; Destroy existing icons
@@ -2882,8 +2848,6 @@ sort:   jsr     LoadActiveWindowEntryTable ; restored below
 
 done:   jsr     LoadDesktopEntryTable ; restored from above
 ret:    rts
-
-view:   .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2951,7 +2915,8 @@ done:   jsr     StoreWindowEntryTable
 .proc FreeCachedWindowIcons
         copy    #0, index
 
-loop:   ldx     index
+        index := *+1
+loop:   ldx     #SELF_MODIFIED_BYTE
         cpx     cached_window_entry_count
         beq     done
 
@@ -2971,8 +2936,6 @@ loop:   ldx     index
         bne     loop
 
 done:   rts
-
-index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -3095,23 +3058,16 @@ result: .byte   0
         jsr     SelectAndRefreshWindowOrClose
 
 ret:    rts
-
-result: .byte   0
 .endproc
 
 ;;; ============================================================
 ;;; Handle keyboard-based icon selection ("highlighting")
 
 .proc CmdHighlight
-        jmp     start
 
 ;;; First byte is icon count. Rest is a list of selectable icons.
 buffer := $1800
 
-selected_index:
-        .byte   0
-
-start:
         copy    #0, buffer
         lda     active_window_id
         beq     volumes         ; no active window
@@ -3190,7 +3146,8 @@ pick_next_prev:
         ;; fall through
 
 select_next:
-        ldx     selected_index
+        selected_index := *+1
+        ldx     #SELF_MODIFIED_BYTE
         inx
         cpx     buffer
         bne     :+
@@ -3284,11 +3241,13 @@ HighlightIcon:
 :       lda     selected_icon_count
         sta     index
         dec     index
-loop:   ldx     index
+        index := *+1
+loop:   ldx     #SELF_MODIFIED_BYTE
         copy    selected_icon_list,x, icon_param
         ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
 
-        lda     err
+        err := *+1
+        lda     #SELF_MODIFIED_BYTE
     IF_ZERO                     ; Skip drawing if obscured
         ;; TODO: Find common pattern for redrawing multiple icons
         lda     selected_window_id
@@ -3310,9 +3269,6 @@ loop:   ldx     index
         beq     finish
         jsr     ResetMainGrafport
 finish: jmp     LoadDesktopEntryTable ; restore from above
-
-index:  .byte   0
-err:    .byte   0
 .endproc
 
 
@@ -3491,7 +3447,8 @@ vert_scroll_max:        .byte   0
 
 .proc DoScrollRight
         stx     max
-        cmp     max
+        max := *+1
+        cmp     #SELF_MODIFIED_BYTE
         beq     :+
         sta     updatethumb_params::stash
         inc     updatethumb_params::stash
@@ -3499,8 +3456,6 @@ vert_scroll_max:        .byte   0
         jsr     UpdateScrollThumb
         lda     updatethumb_params::stash
 :       rts
-
-max:   .byte   0
 .endproc
 
 .proc DoScrollLeft
@@ -3511,12 +3466,12 @@ max:   .byte   0
         jsr     UpdateScrollThumb
         lda     updatethumb_params::stash
 :       rts
-        .byte   0
 .endproc
 
 .proc DoScrollDown
         stx     max
-        cmp     max
+        max := *+1
+        cmp     #SELF_MODIFIED_BYTE
         beq     :+
         sta     updatethumb_params::stash
         inc     updatethumb_params::stash
@@ -3524,8 +3479,6 @@ max:   .byte   0
         jsr     UpdateScrollThumb
         lda     updatethumb_params::stash
 :       rts
-
-max:   .byte   0
 .endproc
 
 .proc DoScrollUp
@@ -3536,8 +3489,6 @@ max:   .byte   0
         jsr     UpdateScrollThumb
         lda     updatethumb_params::stash
 :       rts
-
-        .byte   0
 .endproc
 
 ;;; Output: A = hscroll pos, X = hscroll max, Y = hscroll active flag (high bit)
@@ -3633,7 +3584,8 @@ next:   dex
         ;; Enumerate DEVLST in reverse order (most important volumes first)
         ldy     DEVCNT
         sty     devlst_index
-@loop:  ldy     devlst_index
+        devlst_index := *+1
+@loop:  ldy     #SELF_MODIFIED_BYTE
         inc     cached_window_entry_count
         inc     icon_count
         lda     #0
@@ -3645,7 +3597,6 @@ next:   dex
         lda     #kErrDuplicateVolName
         sta     pending_alert
 :       dec     devlst_index
-        lda     devlst_index
         bpl     @loop
 .endscope
 
@@ -3680,12 +3631,10 @@ next:   pla
         inx
         jmp     loop
 .endscope
+
 .endproc
 
 ;;; ============================================================
-
-devlst_index:
-        .byte   0
 
 pending_alert:
         .byte   0
@@ -3870,7 +3819,8 @@ err:    pha
 
 add_icon:
         lda     cached_window_entry_count
-        cmp     previous_icon_count
+        previous_icon_count := *+1
+        cmp     #SELF_MODIFIED_BYTE
         beq     :+
 
         ;; If a new icon was added, more work is needed.
@@ -3885,9 +3835,6 @@ add_icon:
 
 :       jsr     StoreWindowEntryTable
         rts
-
-previous_icon_count:
-        .byte    0
 
 ;;; 0 = command, $80 = format/erase, $C0 = open/eject/rename
 check_drive_flags:
@@ -4108,11 +4055,10 @@ bail:   return  #$FF            ; high bit set = not repeating
         cmp     #MGTK::Ctl::dead_zone
         beq     bail
         lda     findcontrol_params::which_part
-        cmp     ctl
+        ctl := *+1
+        cmp     #SELF_MODIFIED_BYTE
         bne     bail
         return  #0              ; high bit set = repeating
-
-ctl:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -4153,7 +4099,8 @@ ctl:    .byte   0
         bpl     :+
 
         ;; Modifier down - remove from selection
-        lda     icon_num
+        icon_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     DeselectFileIcon ; deselect, nothing further
         jmp     done_content_click ; restore from `HandleClientClick`
 
@@ -4287,9 +4234,6 @@ failure:
         jmp     SelectAndRefreshWindow
 .endproc
 
-icon_num:
-        .byte   0
-
 .endproc
         done_content_click := HandleFileIconClick::done_content_click
         ;; Used for delete shortcut; set `drag_drop_params::icon` first
@@ -4393,13 +4337,13 @@ exception_flag:
 ;;; ============================================================
 
 .proc SelectAndRefreshWindow
-        sta     window_id
+        pha                     ; A = window_id
 
         ;; Clear selection
         jsr     ClearSelection
 
         ;; Bring window to front if needed
-        lda     window_id
+        pla                     ; A = window_id
         cmp     active_window_id
         beq     :+
         sta     findwindow_params::window_id
@@ -4456,9 +4400,6 @@ exception_flag:
         jsr     UpdateViewMenuCheck
 
         rts
-
-window_id:
-        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -4759,7 +4700,8 @@ cont:   sta     cached_window_entry_count
         ;; --------------------------------------------------
         ;; Clean up the parent icon (if any)
 
-        lda     icon
+        icon := *+1
+        lda     #SELF_MODIFIED_BYTE
         beq     finish          ; none
 
         sta     icon_param
@@ -4786,9 +4728,6 @@ cont:   sta     cached_window_entry_count
         jsr     DrawIcon
 
 finish: rts
-
-icon:   .byte   0
-
 .endproc
 
 ;;; ============================================================
@@ -4810,7 +4749,8 @@ validate_windows_flag:
 
 loop:
         ;; Check if the window is in use
-        ldx     window_id
+        window_id := *+1
+        ldx     #SELF_MODIFIED_BYTE
         lda     window_to_dir_icon_table-1,x
         beq     next
 
@@ -4836,9 +4776,6 @@ next:   dec     window_id
         bne     loop
 
 done:   rts
-
-window_id:
-        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -4954,7 +4891,6 @@ useful_height:
         .byte   0               ; without header
 height: .byte   0               ; of window's port
 delta:  .word   0
-
 .endproc
 
 ;;; ============================================================
@@ -5893,7 +5829,8 @@ update_view:
         jsr     IconEntryLookup ; A,X points at IconEntry
         stax    @addr2
         ITK_RELAY_CALL IconTK::AddIcon, 0, @addr2
-        lda     err
+        err := *+1
+        lda     #SELF_MODIFIED_BYTE
     IF_ZERO                     ; Skip drawing if obscured
         ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
     END_IF
@@ -5907,8 +5844,6 @@ done:   copy    cached_window_id, active_window_id
         jsr     StoreWindowEntryTable
         jsr     LoadDesktopEntryTable ; restore from above
         jmp     ResetMainGrafport
-
-err:    .byte   0
 
 ;;; Common code to update the dir (vol/folder) icon.
 ;;; * If `icon_param` is valid:
@@ -6083,7 +6018,8 @@ list_view:
         ;; Draw each list view row
         lda     #0
         sta     rows_done
-rloop:  lda     rows_done
+        rows_done := *+1
+rloop:  lda     #SELF_MODIFIED_BYTE
         cmp     cached_window_entry_count
         beq     done
         tax
@@ -6091,9 +6027,6 @@ rloop:  lda     rows_done
         jsr     DrawListViewRow
         inc     rows_done
         jmp     rloop
-
-rows_done:
-        .byte   0
 
         ;; --------------------------------------------------
         ;; Icon view
@@ -6107,7 +6040,8 @@ icon_view:
 
         ;; Loop over all icons
         copy    #0, index
-loop:   lda     index
+        index := *+1
+loop:   lda     #SELF_MODIFIED_BYTE
         cmp     cached_window_entry_count
         beq     done_icons
         tax
@@ -6124,18 +6058,11 @@ done_icons:
         jsr     CachedIconsWindowToScreen
         jmp     done
 
-index:  .byte   0
-
         ;; --------------------------------------------------
 done:
-
         jsr     ResetMainGrafport
         jsr     PopPointers
         rts
-
-
-
-
 .endproc
 
 ;;; ============================================================
@@ -6161,14 +6088,16 @@ use_win_port:
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         sta     err
 
-loop:   lda     index
+        index := *+1
+loop:   lda     #SELF_MODIFIED_BYTE
         cmp     selected_icon_count
         beq     finish
         tax
         copy    selected_icon_list,x, icon_param
         ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
 
-        lda     err
+        err := *+1
+        lda     #SELF_MODIFIED_BYTE
     IF_ZERO                     ; Skip drawing if obscured
         ;; TODO: Find common pattern for redrawing multiple icons
         lda     selected_window_id
@@ -6192,9 +6121,6 @@ finish: lda     #0
         sta     selected_icon_count
         sta     selected_window_id
         jmp     ResetMainGrafport
-
-index:  .byte   0
-err:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -6289,9 +6215,9 @@ UpdateScrollbarsLeaveThumbs     := UpdateScrollbarsImpl::leave_thumbs
 ;;; ============================================================
 
 .proc CachedIconsScreenToWindow
-        lda     #0
-        sta     count
-loop:   lda     count
+        copy    #0, count
+        count := *+1
+loop:   lda     #SELF_MODIFIED_BYTE
         cmp     cached_window_entry_count
         beq     done
         tax
@@ -6301,8 +6227,6 @@ loop:   lda     count
         jmp     loop
 
 done:   rts
-
-count:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -6310,7 +6234,8 @@ count:  .byte   0
 .proc CachedIconsWindowToScreen
         lda     #0
         sta     index
-loop:   lda     index
+        index := *+1
+loop:   lda     #SELF_MODIFIED_BYTE
         cmp     cached_window_entry_count
         beq     done
         tax
@@ -6320,8 +6245,6 @@ loop:   lda     index
         jmp     loop
 
 done:   rts
-
-index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -6376,7 +6299,8 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::flag_set
         ;; Strip to vol name - either end of string or next slash
         iny
 :       iny                     ; start at 2nd character
-        cpy     pathlen
+        pathlen := *+1
+        cpy     #SELF_MODIFIED_BYTE
         beq     :+
         lda     (ptr),y
         cmp     #'/'
@@ -6390,7 +6314,6 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::flag_set
         jmp     UpdateUsedFreeViaFoundWindows
 
 pathptr:        .addr   0
-pathlen:        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -6503,7 +6426,9 @@ start:  sta     exact_match_flag
         sta     window_num
 
 loop:   inc     window_num
-        lda     window_num
+
+        window_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     #kMaxNumWindows+1 ; directory windows are 1-8
         bcc     check_window
         bit     exact_match_flag
@@ -6558,8 +6483,6 @@ check_window:
 
 done:   return  window_num
 
-window_num:
-        .byte   0
 exact_match_flag:
         .byte   0
 .endproc
@@ -6582,8 +6505,6 @@ found_windows_list:
 
         DEFINE_READ_PARAMS read_params, dir_buffer, $200
         DEFINE_CLOSE_PARAMS close_params
-
-        .byte   0
 
 ;;; Copy of data from directory header
 .params dir_header
@@ -6680,7 +6601,8 @@ enough_room:
         tax
         copy16  record_ptr, window_filerecord_table,x ; update pointer table
         ldx     window_id_to_filerecord_list_count    ; get window id offset
-        lda     window_id
+        window_id := *+1
+        lda     #SELF_MODIFIED_BYTE
         sta     window_id_to_filerecord_list_entries,x ; update window id list
         inc     window_id_to_filerecord_list_count
 
@@ -6839,9 +6761,6 @@ L7296:  copy16  record_ptr, filerecords_free_start
         jsr     PopPointers
         rts
 
-window_id:
-        .byte   0
-
 free_record_count:
         .word   0
 
@@ -6976,8 +6895,6 @@ done:   rts
 ;;; A = window id
 
 .proc RemoveWindowFilerecordEntries
-        sta     window_id
-
         ;; Find address of FileRecord list
         jsr     FindIndexInFilerecordListEntries
         beq     :+
@@ -6996,7 +6913,8 @@ done:   rts
         dec     window_id_to_filerecord_list_count
 
         ;; Was that the last one?
-        lda     index
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     window_id_to_filerecord_list_count
         bne     :+
         ldx     index           ; yes...
@@ -7080,9 +6998,6 @@ finish:
         add16   window_filerecord_table,x, deltam, filerecords_free_start
         rts
 
-window_id:
-        .byte   0
-index:  .byte   0
 deltam: .word   0               ; memory delta
 size:   .word   0               ; size of a window's list
 .endproc
@@ -7338,8 +7253,6 @@ iconbits:       .addr   0
 iconentry_flags: .byte   0
 icon_height:    .word   0
 
-index:  .byte   0
-
         ;; first icon in window
         DEFINE_POINT initial_coords, kIconBBoxOffsetLeft, kMaxIconHeight + kIconBBoxOffsetTop
 
@@ -7409,8 +7322,10 @@ common: sta     preserve_window_size_flag
         sta     active_window_id
 
         ;; Loop over files, creating icon for each
-:       lda     index
-        cmp     num_files
+        index := *+1
+:       lda     #SELF_MODIFIED_BYTE
+        num_files := *+1
+        cmp     #SELF_MODIFIED_BYTE
         beq     :+
         jsr     AllocAndPopulateFileIcon
         inc     index
@@ -7509,9 +7424,7 @@ assign_height:
         jsr     PopPointers
         rts
 
-num_files:
-        .byte   0
-
+        ;; TODO: Make this a constant?
 thumbmax:
         .byte   20
 
@@ -7675,7 +7588,8 @@ L7870:  lda     cached_window_id
         lda     icontype_filetype
         cmp     #FT_DIRECTORY
         bne     :+
-        lda     icon_num
+        icon_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     GetIconPath     ; `path_buf3` set to path
         jsr     PushPointers
         ldax    #path_buf3
@@ -7696,8 +7610,6 @@ L7870:  lda     cached_window_id
 :
         add16   file_record, #.sizeof(FileRecord), file_record
         rts
-
-icon_num:       .byte   0
 .endproc
 
 ;;; ============================================================
@@ -7794,7 +7706,8 @@ match:  ldy     #ICTRecord::icontype
         lda     (ptr),y
         sta     tmp
         jsr     PopPointers
-        lda     tmp
+        tmp := *+1
+        lda     #SELF_MODIFIED_BYTE
         rts
 
         ;; Next entry
@@ -7802,7 +7715,6 @@ next:   add16   ptr, #.sizeof(ICTRecord), ptr
         jmp     loop
 
 flags:  .byte   0
-tmp:    .byte   0
 .endproc
 
 
@@ -8047,7 +7959,8 @@ list_view_non_empty:
 icon_view:
 
 check_icon:
-        lda     icon_num
+        icon_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     cached_window_entry_count
         bne     more
 
@@ -8113,9 +8026,6 @@ adjust_min_y:
 
 next:   inc     icon_num
         jmp     check_icon
-
-icon_num:
-        .byte   0
 .endproc
 ComputeIconsBBox        := ComputeIconsBBoxImpl::start
 
@@ -8979,22 +8889,20 @@ str_at:
         adc     ($06),y
         sta     ($08),y
         lda     ($06),y
-        sta     @compare_y
+        sta     compare_y
 :       inc     concat_len
         iny
         lda     ($06),y
         sty     tmp
-        ldy     concat_len
+        concat_len := *+1
+        ldy     #SELF_MODIFIED_BYTE
         sta     ($08),y
-        ldy     tmp
-        @compare_y := *+1
+        tmp := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        compare_y := *+1
         cpy     #SELF_MODIFIED_BYTE
         bcc     :-
         rts
-
-tmp:    .byte   0
-concat_len:
-        .byte   0
 .endproc
 
 .endproc
@@ -9152,10 +9060,9 @@ sense_flag:     .byte   0
         dex
         bne     :-
 
-        ldx     hi
+        hi := *+1
+        ldx     #SELF_MODIFIED_BYTE
         rts
-
-hi:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -9364,7 +9271,8 @@ common: jsr     JoinPaths      ; $08 = base, $06 = file
         copy16  #type_table, ptr
         ldy     #kNumFileTypes-1
 :       lda     (ptr),y
-        cmp     file_type
+        file_type := *+1
+        cmp     #SELF_MODIFIED_BYTE
         beq     found
         dey
         bpl     :-
@@ -9408,10 +9316,6 @@ not_found:
         copy    hex_digits,x, str_file_type+4
 
         rts
-
-file_type:
-        .byte   0
-
 .endproc
 
 ;;; ============================================================
@@ -10059,7 +9963,8 @@ success:
         ;; ----------------------------------------
 
         ;; Figure out icon
-        lda     unit_number
+        unit_number := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     GetDeviceType   ; uses $800 as DIB buffer
         tya                     ; Y = kDeviceType constant
         asl                     ; * 2
@@ -10086,7 +9991,8 @@ success:
         sta     (icon_ptr),y
 
         ;; Assign icon coordinates
-        ldy     devlst_index
+        devlst_index := *+1
+        ldy     #SELF_MODIFIED_BYTE
         lda     device_to_icon_map,y
         jsr     AllocDesktopIconPosition
         txa
@@ -10123,8 +10029,6 @@ success:
         jsr     PopPointers
         return  #0
 
-unit_number:    .byte   0
-devlst_index:   .byte   0
 offset:         .word   0
 
 ;;; Compare a volume name against existing volume icons for drives.
@@ -10141,7 +10045,8 @@ offset:         .word   0
         dex
         stx     index
 
-loop:   ldx     index
+        index := *+1
+loop:   ldx     #SELF_MODIFIED_BYTE
         lda     cached_window_entry_list,x
         cmp     trash_icon_num
         beq     next
@@ -10180,8 +10085,6 @@ next:   dec     index
         jsr     PopPointers
         lda     #0
         rts
-
-index:  .byte   0
 .endproc
 
 
@@ -10325,8 +10228,7 @@ open:   ldy     #$00
 :       sty     close_flag
 
         sta     icon_id
-        stx     window_id
-        txa
+        txa                     ; A = window_id
 
         ;; Get window rect
         jsr     WindowLookup
@@ -10340,7 +10242,8 @@ open:   ldy     #$00
         bpl     :-
 
         ;; Get icon position
-        lda     icon_id
+        icon_id := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     IconEntryLookup
         stax    ptr
         ldy     #IconEntry::iconx
@@ -10444,7 +10347,8 @@ L8D0A:  add16   rect_table,x, L8D54, rect_table+4,x ; right
         add16   rect_table+2,x, L8D56, rect_table+6,x ; bottom
 
         inc     step
-        lda     step
+        step := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     #10
         jne     L8C8C
 
@@ -10459,12 +10363,6 @@ L8D0A:  add16   rect_table,x, L8D54, rect_table+4,x ; right
 close_flag:
         .byte   0
 
-icon_id:
-        .byte   0
-window_id:
-        .byte   0
-
-step:   .byte   0
 flag:   .byte   0               ; ???
 flag2:  .byte   0               ; ???
 L8D50:  .word   0
@@ -10541,12 +10439,11 @@ erase:  lda     step
         jsr     FrameTmpRect
 
 next:   inc     step
-        lda     step
+        step := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     #kMaxAnimationStep+3
         bne     loop
         rts
-
-step:   .byte   0
 .endproc
 
 ;;; ============================================================
@@ -10613,12 +10510,11 @@ erase:  lda     step
         jsr     FrameTmpRect
 
 next:   dec     step
-        lda     step
+        step := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     #AS_BYTE(-3)
         bne     loop
         rts
-
-step:   .byte   0
 .endproc
 
 ;;; ============================================================
@@ -10687,9 +10583,6 @@ str_desktop2:
         DEFINE_READ_PARAMS read_params, 0, 0
         DEFINE_CLOSE_PARAMS close_params
 
-restore_flag:
-        .byte   0
-
         ;; Called with routine # in A
 
 load:   pha                     ; entry point with bit clear
@@ -10717,13 +10610,14 @@ restore:
         copy16  len_table,y, read_params::request_count
         copy16  addr_table,y, read_params::data_buffer
 
-@retry: MLI_RELAY_CALL OPEN, open_params
+retry:  MLI_RELAY_CALL OPEN, open_params
         beq     :+
 
         lda     #kWarningMsgInsertSystemDisk
-        ora     restore_flag    ; high bit set = no cancel
+        restore_flag := *+1
+        ora     #SELF_MODIFIED_BYTE ; high bit set = no cancel
         jsr     ShowWarning
-        beq     @retry
+        beq     retry
         return  #$FF            ; failed
 
 :       lda     open_params::ref_num
@@ -11077,7 +10971,8 @@ iterate_selection:
         ldx     #0
         stx     icon_count
 
-loop:   ldx     icon_count
+        icon_count := *+1
+loop:   ldx     #SELF_MODIFIED_BYTE
         lda     selected_icon_list,x
         cmp     trash_icon_num
         beq     next_icon
@@ -11149,9 +11044,6 @@ not_trash:
 
 finish: jsr     done_dialog_phase1
         return  #0
-
-icon_count:
-        .byte   0
 .endproc
 
 empty_string:
@@ -11293,7 +11185,8 @@ done:   stx     buf
         jsr     ClearSelection
         ldx     #0
         stx     index
-loop:   ldx     index
+        index := *+1
+loop:   ldx     #SELF_MODIFIED_BYTE
         lda     $0801,x
         cmp     #$01
         beq     :+
@@ -11304,8 +11197,6 @@ loop:   ldx     index
         bne     loop
 
 ret:    rts
-
-index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -11664,7 +11555,8 @@ start:
         sta     result_flags
 
         ;; Loop over all selected icons
-loop:   lda     index
+        index := *+1
+loop:   lda     #SELF_MODIFIED_BYTE
         cmp     selected_icon_count
         bne     :+
         return  result_flags
@@ -11914,8 +11806,6 @@ skip:   lda     selected_window_id
         rts
 .endproc
 
-index:  .byte   0               ; selected icon index
-
 ;;; N bit ($80) set if a window title was changed
 ;;; V bit ($40) set if a SYS file was renamed
 result_flags:
@@ -12071,7 +11961,8 @@ assign: ldy     path_buf2
         jsr     UpdateTargetPath
 
         ;; Restore trailing '/' if needed
-        lda     slash_flag
+        slash_flag := *+1       ; non-zero if trailing slash needed
+        lda     #SELF_MODIFIED_BYTE
         beq     :+
         ldy     #0
         lda     (ptr),y
@@ -12086,10 +11977,6 @@ assign: ldy     path_buf2
 
 no_change:
         return  #$FF
-
-slash_flag:                     ; non-zero if trailing slash needed
-        .byte   0
-
 .endproc
 
 ;;; ============================================================
@@ -12166,7 +12053,8 @@ start:
         return  result_flag
 :
         ;; Loop over all selected icons
-loop:   lda     index
+        index := *+1
+loop:   lda     #SELF_MODIFIED_BYTE
         cmp     selected_icon_count
         bne     :+
         return  result_flag
@@ -12258,8 +12146,6 @@ success:
         param_call invoke_dialog_proc, kIndexDuplicateDialog, duplicate_dialog_params
         rts
 .endproc
-
-index:  .byte   0               ; selected icon index
 
 ;;; N bit ($80) set if anything succeeded (and window needs refreshing)
 result_flag:
@@ -12656,7 +12542,8 @@ for_run:
         bit     copy_run_flag
         bpl     get_src_info    ; never taken ???
         bvs     L9A50
-        lda     is_run_flag
+        is_run_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
         bne     :+
         lda     selected_window_id ; dragging from window?
         jeq     CopyDir
@@ -12757,7 +12644,8 @@ err:    jsr     ShowErrorAlert
         jmp     retry
 
 success:
-        lda     is_dir_flag
+        is_dir_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
         beq     CopyFile
 CopyDir:                       ; also used when dragging a volume icon
         jsr     ProcessDir
@@ -12768,12 +12656,6 @@ CopyFile:
 
 failure:
         rts
-
-is_dir_flag:
-        .byte   0
-
-is_run_flag:
-        .byte   0
 .endproc
         copy_file_for_run := CopyProcessSelectedFile::for_run
 
@@ -12951,7 +12833,9 @@ retry:  copy    dst_path_buf, saved_length
         ;; Total blocks/used blocks on destination volume
         MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
         pha
-        copy    saved_length, dst_path_buf
+        saved_length := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     dst_path_buf
         pla
         beq     :+
         jsr     ShowErrorAlertDst
@@ -12973,8 +12857,6 @@ has_room:
 
 blocks_free:
         .word   0
-saved_length:
-        .byte   0
 existing_size:
         .word   0
 .endproc
@@ -13265,25 +13147,20 @@ count:  .word   0
         lda     #0
         beq     store
 :       lda     #$FF
-store:  sta     is_dir_flag
+
+store:  ;; sta     is_dir_flag - unused
         beq     do_destroy
 
         ;; Recurse, and process directory
         jsr     ProcessDir
 
         ;; Was it a directory?
-        lda     storage_type
+        storage_type := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     #ST_LINKED_DIRECTORY
         bne     :+
         copy    #$FF, storage_type ; is this re-checked?
 :       jmp     do_destroy
-
-        ;; Written, not read???
-is_dir_flag:
-        .byte   0
-
-storage_type:
-        .byte   0
 
 do_destroy:
         bit     delete_skip_decrement_flag
@@ -13556,24 +13433,18 @@ unlock_dialog_lifecycle:
         lda     #$00
         beq     store
 is_dir: lda     #$FF
-store:  sta     is_dir_flag
+store:  ;; sta     is_dir_flag - unused
         beq     do_lock
 
         ;; Process files in directory
         jsr     ProcessDir
 
         ;; If this wasn't a volume directory, lock it too
-        lda     storage_type
+        storage_type := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     #ST_VOLUME_DIRECTORY
         bne     do_lock
         rts
-
-        ;; Written, not read???
-is_dir_flag:
-        .byte   0
-
-storage_type:
-        .byte   0
 
 do_lock:
         jsr     LockFileCommon
@@ -13718,11 +13589,12 @@ callbacks_for_size_or_count:
 
 is_dir: lda     #$FF
 
-store:  sta     is_dir_flag
+store:  ;; sta     is_dir_flag - unused
         beq     do_sum_file_size           ; if not a dir
 
         jsr     ProcessDir
-        lda     storage_type
+        storage_type := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     #ST_VOLUME_DIRECTORY
         bne     do_sum_file_size           ; if a subdirectory
 
@@ -13735,13 +13607,6 @@ store:  sta     is_dir_flag
         bpl     :+
         inc16   op_file_count
 :       rts
-
-        ;; Written, not read???
-is_dir_flag:
-        .byte   0
-
-storage_type:
-        .byte   0
 
 do_sum_file_size:
         jmp     SizeOrCountProcessDirectoryEntry
@@ -14033,7 +13898,8 @@ loop:   lda     (src_ptr),y
         beq     match
 
         ;; End of src?
-check:  cpy     src_len
+        src_len := *+1
+check:  cpy     #SELF_MODIFIED_BYTE
         bcc     :+
         cpy     dst_buf         ; dst also done?
         bcs     match
@@ -14055,17 +13921,13 @@ check_slash:
         ;; fall through
 
 no_match:
-        lda     flag
+        flag := *+1
+        lda     #SELF_MODIFIED_BYTE
         rts
 
 match:  lda     flag
         eor     #$80
         rts
-
-src_len:
-        .byte   0
-
-flag:   .byte   0
 .endproc
 
 ;;; ============================================================
@@ -14234,7 +14096,7 @@ dialog_proc_table:
 
 dialog_param_addr:
         .addr   0
-        .byte   0
+        .byte   0               ; ???
 
 .proc InvokeDialogProcImpl
         stax    dialog_param_addr
@@ -15207,7 +15069,8 @@ populate_value:
         tax
         dey
         lda     (ptr),y
-        ldy     row
+        row := *+1
+        ldy     #SELF_MODIFIED_BYTE
         jsr     DrawDialogLabel
 
         ;; If not 6 (the last one), run modal loop
@@ -15226,8 +15089,6 @@ done:   rts
 
 is_volume_flag:
         .byte   0               ; high bit set if volume, clear if file
-
-row:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -16122,7 +15983,8 @@ ip_pos: .word   0
         ycoord := $8
 
         ;; Insert, and redraw single char and right string
-        lda     char
+        char := *+1
+        lda     #SELF_MODIFIED_BYTE
         ldx     path_buf1
         inx
         sta     path_buf1,x
@@ -16138,8 +16000,6 @@ ip_pos: .word   0
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         rts
-
-char:   .byte   0
 .endproc
 
 ;;; ============================================================
@@ -16700,7 +16560,8 @@ recurse_down:
 
 recurse_up:
         jsr     WriteWindowInfo
-        lda     depth           ; Last window?
+        depth := *+1            ; Last window?
+        lda     #SELF_MODIFIED_BYTE
         beq     finish          ; Yes - we're done!
 
         dec     depth           ; No, pop the stack and write the next
@@ -16786,8 +16647,6 @@ exit:   rts
 .endproc                        ; WriteWindowInfo
 
 window_id := findwindow_params::window_id
-
-depth:  .byte   0
 
 .endproc                        ; save
 
