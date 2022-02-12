@@ -511,10 +511,9 @@ window_open_flag := HandleKeydownImpl::window_open_flag
         copy    #0, findwindow_params::window_id
         ITK_RELAY_CALL IconTK::FindIcon, event_params::coords
         lda     findicon_params::which_icon
-        beq     :+
-        jmp     HandleVolumeIconClick
+        jne     HandleVolumeIconClick
 
-:       jmp     DesktopDragSelect
+        jmp     DesktopDragSelect
 
 not_desktop:
         cmp     #MGTK::Area::menubar  ; menu?
@@ -1748,9 +1747,9 @@ running_da_flag:
 
         ;; Select/refresh window if there was one
         pla
-        beq     :+
-        jmp     SelectAndRefreshWindowOrClose
-:       rts
+        jne     SelectAndRefreshWindowOrClose
+
+        rts
 
 .endproc
 
@@ -1878,9 +1877,9 @@ running_da_flag:
 
         ;; Select/refresh window if there was one
         pla
-        beq     :+
-        jmp     SelectAndRefreshWindowOrClose
-:       rts
+        jne     SelectAndRefreshWindowOrClose
+
+        rts
 .endproc
 
 ;;; ============================================================
@@ -2171,12 +2170,12 @@ done:   rts
 
 .proc CmdDiskCopy
         jsr     SaveWindows
+
         lda     #kDynamicRoutineDiskCopy
         jsr     LoadDynamicRoutine
-        bmi     fail
-        jmp     format_erase_overlay__Exec
+        jpl     format_erase_overlay__Exec
 
-fail:   rts
+        rts
 .endproc
 
 ;;; ============================================================
@@ -2215,9 +2214,9 @@ L4FC6:  lda     active_window_id
 
 :       copy    #NewFolderDialogState::run, new_folder_dialog_params::phase
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
-        beq     :+
-        jmp     done            ; Canceled
-:       stx     ptr+1
+        jne     done            ; Canceled
+
+        stx     ptr+1
         stx     name_ptr+1
         sty     ptr
         sty     name_ptr
@@ -3422,10 +3421,9 @@ done:   jmp     LoadDesktopEntryTable ; restore from `GetActiveWindowScrollInfo`
 
         ;; Horizontal ok?
 :       bit     horiz_scroll_flag
-        bmi     :+
-        jmp     vertical
+        jpl     vertical
 
-:       cmp     #CHAR_RIGHT
+        cmp     #CHAR_RIGHT
         bne     :+
         jsr     ScrollRight
         jmp     loop
@@ -3438,10 +3436,9 @@ done:   jmp     LoadDesktopEntryTable ; restore from `GetActiveWindowScrollInfo`
         ;; Vertical ok?
 vertical:
         bit     vert_scroll_flag
-        bmi     :+
-        jmp     loop
+        jpl     loop
 
-:       cmp     #CHAR_DOWN
+        cmp     #CHAR_DOWN
         bne     :+
         jsr     ScrollDown
         jmp     loop
@@ -4143,10 +4140,9 @@ ctl:    .byte   0
 :
 
         bit     active_window_view_by
-        bpl     :+
-        jmp     ClearSelection
+        jmi     ClearSelection
 
-:       copy    active_window_id, findicon_params::window_id
+        copy    active_window_id, findicon_params::window_id
         ITK_RELAY_CALL IconTK::FindIcon, findicon_params
         lda     findicon_params::which_icon
         bne     HandleFileIconClick
@@ -4603,8 +4599,7 @@ update: jsr     CoordsScreenToWindow
         bcs     :+
         lda     deltay
         cmp     #kDragBoundThreshold
-        bcs     :+
-        jmp     event_loop
+        jcc     event_loop
 
         ;; Beyond threshold; erase rect
 :       jsr     FrameTmpRect
@@ -4697,9 +4692,8 @@ y_flag: .byte   0
 
         ;; If modifier is down, close all windows
 :       jsr     ModifierDown
-        bpl     :+
-        jmp     CmdCloseAll
-:
+        jmi     CmdCloseAll
+
         ;; fall through...
 .endproc
 
@@ -5448,9 +5442,7 @@ replace_selection:
         ;; --------------------------------------------------
 check_double_click:
         jsr     StashCoordsAndDetectDoubleClick
-        bmi     :+
-        jmp     CmdOpenFromDoubleClick
-:
+        jpl     CmdOpenFromDoubleClick
 
         ;; --------------------------------------------------
         ;; Drag of volume icon
@@ -5643,8 +5635,7 @@ update: sub16   event_params::xcoord, last_pos + MGTK::Point::xcoord, deltax
         bcs     :+
         lda     deltay
         cmp     #kDragBoundThreshold
-        bcs     :+
-        jmp     event_loop
+        jcc     event_loop
 
         ;; Beyond threshold; erase rect
 :       jsr     FrameTmpRect
@@ -5938,9 +5929,8 @@ err:    .byte   0
 ;;;   Points `ptr` at a virtual IconEntry, to allow referencing the icon name.
 .proc UpdateIcon
         lda     icon_param      ; set to $FF if opening via path
-        bmi     :+
-        jmp     MarkIconOpen
-:
+        jpl     MarkIconOpen
+
         ;; Find last '/'
         ldy     open_dir_path_buf
 :       lda     open_dir_path_buf,y
@@ -6071,8 +6061,7 @@ header_and_offset_flag:
         ;; List or Icon view?
 
         jsr     GetCachedWindowViewBy
-        bmi     list_view           ; list view, not icons
-        jmp     icon_view
+        jpl     icon_view
 
         ;; --------------------------------------------------
         ;; List view
@@ -6296,9 +6285,7 @@ activate_vscroll:
         jsr     ActivateCtl
 
         bit     update_thumbs_flag
-        bpl     :+
-        jmp     UpdateVThumb
-:
+        jmi     UpdateVThumb
 
 .proc ActivateCtl
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
@@ -6735,10 +6722,9 @@ do_entry:
         inc     index_in_dir
         lda     index_in_dir
         cmp     dir_header::file_count
-        bne     L71CB
-        jmp     L7296
+        jeq     L7296
 
-L71CB:  inc     index_in_block
+        inc     index_in_block
         lda     index_in_block
         cmp     dir_header::entries_per_block
         beq     L71E7
@@ -6758,10 +6744,9 @@ L71F7:  ldx     #$00
         inc     index_in_block
         lda     index_in_block
         cmp     dir_header::entries_per_block
-        bne     L7212
-        jmp     L71E7
+        jeq     L71E7
 
-L7212:  add16_8 entry_ptr, dir_header::entry_length, entry_ptr
+        add16_8 entry_ptr, dir_header::entry_length, entry_ptr
         jmp     L71F7
 
 L7223:  iny
@@ -7954,14 +7939,12 @@ ptr_str_items_suffix:
 
         ;; Is there room to spread things out?
         sub16   xcoord, width_items_label, xcoord
-        bpl     :+
-        jmp     skipcenter
-:       sub16   xcoord, width_right_labels, xcoord
-        bpl     :+
-        jmp     skipcenter
+        jmi     skipcenter
+        sub16   xcoord, width_right_labels, xcoord
+        jmi     skipcenter
 
         ;; Yes - center "K in disk"
-:       add16   width_left_labels, xcoord, pos_k_available::xcoord
+        add16   width_left_labels, xcoord, pos_k_available::xcoord
         lda     xcoord+1
         beq     :+
         lda     xcoord
@@ -8115,8 +8098,7 @@ compare_x:
         scmp16  cur_icon_bounds::x1, iconbb_rect::x1
         bmi     adjust_min_x
         scmp16  cur_icon_bounds::x1, iconbb_rect::x2
-        bpl     adjust_max_x
-        jmp     compare_y
+        jmi     compare_y
 
 adjust_max_x:
         copy16  cur_icon_bounds::x1, iconbb_rect::x2
@@ -8132,8 +8114,7 @@ compare_y:
         scmp16  cur_icon_bounds::y1, iconbb_rect::y1
         bmi     adjust_min_y
         scmp16  cur_icon_bounds::y2, iconbb_rect::y2
-        bpl     adjust_max_y
-        jmp     next
+        jmi     next
 
 adjust_max_y:
         copy16  cur_icon_bounds::y2, iconbb_rect::y2
@@ -8274,10 +8255,8 @@ break:  bit     LCBANK1         ; Done copying records
         ;; What sort order?
         jsr     GetCachedWindowViewBy
         cmp     #kViewByName
-        beq     :+
-        jmp     check_date
+        jne     check_date
 
-:
         ;; By Name
 
         ;; Sorted in increasing lexicographical order
@@ -8347,10 +8326,9 @@ place:  lda     record_num
 inext:  inc     record_num
         lda     record_num
         cmp     num_records
-        beq     :+
-        jmp     iloop
+        jne     iloop
 
-:       inc     index
+        inc     index
         lda     $0806
         sta     record_num
         jsr     PtrCalc
@@ -8383,10 +8361,8 @@ inext:  inc     record_num
 
 check_date:
         cmp     #kViewByDate
-        beq     :+
-        jmp     check_size
+        jne     check_size
 
-:
         ;; By Date
 
         ;; Sorted by decreasing date
@@ -8475,10 +8451,8 @@ next:   inc     index
 
 check_size:
         cmp     #kViewBySize
-        beq     :+
-        jmp     check_type
+        jne     check_type
 
-:
         ;; By Size
 
         ;; Sorted by decreasing size
@@ -10486,10 +10460,9 @@ L8D0A:  add16   rect_table,x, L8D54, rect_table+4,x ; right
         inc     step
         lda     step
         cmp     #10
-        beq     :+
-        jmp     L8C8C
+        jne     L8C8C
 
-:       bit     close_flag
+        bit     close_flag
         bmi     :+
         jsr     AnimateWindowOpenImpl
         rts
@@ -11024,21 +10997,19 @@ L8FEB:  tsx
         copy    #0, delete_skip_decrement_flag
         jsr     ResetMainGrafport
         lda     operation_flags
-        beq     :+              ; copy/delete
-        jmp     BeginOperation
+        jne     BeginOperation  ; copy/delete
 
         ;; Copy or delete
-:       bit     delete_flag
+        bit     delete_flag
         bpl     compute_target_prefix ; copy
 
         ;; --------------------------------------------------
         ;; Delete - are selected icons volumes?
         lda     selected_window_id
-        beq     :+
-        jmp     BeginOperation ; no, just files
+        jne     BeginOperation ; no, just files
 
         ;; Yes - eject it!
-:       pla
+        pla
         pla
         jmp     CmdEject
 
@@ -11834,9 +11805,8 @@ changed:
 
         ;; Failed, maybe retry
         jsr     ShowAlert       ; Alert options depend on specific ProDOS error
-        bne     :+              ; not `kAlertResultTryAgain` = 0 (either OK or Cancel)
-        jmp     retry           ; `kAlertResultTryAgain` = 0
-:       lda     #RenameDialogState::close
+        jeq     retry           ; `kAlertResultTryAgain` = 0
+        lda     #RenameDialogState::close
         jsr     RunDialogProc
         jmp     fail
 
@@ -12713,8 +12683,7 @@ for_run:
         lda     is_run_flag
         bne     :+
         lda     selected_window_id ; dragging from window?
-        bne     :+
-        jmp     CopyDir
+        jeq     CopyDir
 
 :       jsr     AppendSrcPathLastSegmentToDstPath
         jmp     get_src_info
@@ -12869,10 +12838,9 @@ done:   rts
 
 .proc CopyProcessDirectoryEntry
         jsr     CheckEscapeKeyDown
-        beq     :+
-        jmp     CloseFilesCancelDialog
+        jne     CloseFilesCancelDialog
 
-:       lda     file_entry_buf + FileEntry::file_type
+        lda     file_entry_buf + FileEntry::file_type
         cmp     #FT_DIRECTORY
         bne     regular_file
 
@@ -12917,10 +12885,9 @@ regular_file:
     END_IF
 
         jsr     CheckSpaceAndShowPrompt
-        bcc     :+
-        jmp     CloseFilesCancelDialog
+        jcs     CloseFilesCancelDialog
 
-:       jsr     RemoveSrcPathSegment
+        jsr     RemoveSrcPathSegment
         jsr     TryCreateDst
         bcs     :+
         jsr     AppendFileEntryToSrcPath
@@ -12948,10 +12915,9 @@ done:   rts
 
 :       sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
         cmp16   blocks_free, op_block_count
-        bcs     :+
-        jmp     done_dialog_phase3
+        jcc     done_dialog_phase3
 
-:       rts
+        rts
 
 blocks_free:
         .word   0
@@ -12965,9 +12931,9 @@ blocks_free:
         ;; TODO: Convert this to an alert
         copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
         jsr     RunCopyDialogProc
-        beq     :+
-        jmp     CloseFilesCancelDialog
-:       copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
+        jne     CloseFilesCancelDialog
+
+        copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
         sec
 done:   rts
 
@@ -13408,10 +13374,9 @@ done:   rts
 .proc DeleteProcessDirectoryEntry
         ;; Cancel if escape pressed
         jsr     CheckEscapeKeyDown
-        beq     :+
-        jmp     CloseFilesCancelDialog
+        jne     CloseFilesCancelDialog
 
-:       jsr     AppendFileEntryToSrcPath
+        jsr     AppendFileEntryToSrcPath
         bit     delete_skip_decrement_flag
         bmi     :+
         jsr     DecFileCountAndRunDeleteDialogProc
@@ -13554,18 +13519,17 @@ files_remaining_count:
 .proc LockDialogPhase2Callback
         copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
         jsr     lock_dialog_lifecycle
-        beq     :+
-        jmp     CloseFilesCancelDialog
+        jne     CloseFilesCancelDialog
 
-:       rts
+        rts
 .endproc
 
 .proc UnlockDialogPhase2Callback
         copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
         jsr     unlock_dialog_lifecycle
-        beq     :+
-        jmp     CloseFilesCancelDialog
-:       rts
+        jne     CloseFilesCancelDialog
+
+        rts
 .endproc
 
 .proc PrepCallbacksForLock
@@ -14404,10 +14368,9 @@ content:
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_params::windowx
         bit     prompt_button_flags
-        bvc     :+
-        jmp     check_button_yes
+        jvs     check_button_yes
 
-:       MGTK_RELAY_CALL MGTK::InRect, aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, aux::ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     check_button_ok
         jmp     maybe_check_button_cancel
@@ -14491,16 +14454,14 @@ no_mods:
         cmp     #CHAR_LEFT
         bne     LA72E
         bit     format_erase_overlay_flag
-        bpl     :+
-        jmp     format_erase_overlay__PromptHandleKeyLeft
-:       jmp     HandleKeyLeft
+        jmi     format_erase_overlay__PromptHandleKeyLeft
+        jmp     HandleKeyLeft
 
 LA72E:  cmp     #CHAR_RIGHT
         bne     LA73D
         bit     format_erase_overlay_flag
-        bpl     :+
-        jmp     format_erase_overlay__PromptHandleKeyRight
-:       jmp     HandleKeyRight
+        jmi     format_erase_overlay__PromptHandleKeyRight
+        jmp     HandleKeyRight
 
 LA73D:  cmp     #CHAR_RETURN
         bne     :+
@@ -14511,9 +14472,8 @@ LA73D:  cmp     #CHAR_RETURN
 :       cmp     #CHAR_ESCAPE
         bne     LA755
         bit     prompt_button_flags
-        bmi     :+
-        jmp     HandleKeyCancel
-:       jmp     HandleKeyOk
+        jpl     HandleKeyCancel
+        jmp     HandleKeyOk
 
 LA755:  cmp     #CHAR_DELETE
         jeq     HandleKeyDelete
@@ -14521,16 +14481,14 @@ LA755:  cmp     #CHAR_DELETE
         cmp     #CHAR_UP
         bne     LA76B
         bit     format_erase_overlay_flag
-        bmi     :+
-        jmp     done
-:       jmp     format_erase_overlay__PromptHandleKeyUp
+        jpl     done
+        jmp     format_erase_overlay__PromptHandleKeyUp
 
 LA76B:  cmp     #CHAR_DOWN
         bne     LA77A
         bit     format_erase_overlay_flag
-        bmi     :+
-        jmp     done
-:       jmp     format_erase_overlay__PromptHandleKeyDown
+        jpl     done
+        jmp     format_erase_overlay__PromptHandleKeyDown
 
 LA77A:  bit     prompt_button_flags
         bvc     LA79B
@@ -14619,10 +14577,9 @@ do_all: jsr     SetPenModeXOR
         lda     has_input_field_flag
         beq     done
         bit     format_erase_overlay_flag ; BUG? Should never be set here based on caller test.
-        bpl     :+
-        jmp     format_erase_overlay__PromptHandleKeyRight
+        jmi     format_erase_overlay__PromptHandleKeyRight
 
-:       jsr     InputFieldIPLeft
+        jsr     InputFieldIPLeft
 done:   return  #$FF
 .endproc
 
@@ -14630,10 +14587,9 @@ done:   return  #$FF
         lda     has_input_field_flag
         beq     done
         bit     format_erase_overlay_flag ; BUG? Should never be set here based on caller test.
-        bpl     :+
-        jmp     format_erase_overlay__PromptHandleKeyLeft
+        jmi     format_erase_overlay__PromptHandleKeyLeft
 
-:       jsr     InputFieldIPRight
+        jsr     InputFieldIPRight
 done:   return  #$FF
 .endproc
 
@@ -15774,11 +15730,10 @@ done:   jmp     ResetMainGrafport
         stx     ptr+1
         sta     ptr
         tya
-        bmi     :+
-        jmp     skip
+        jpl     skip
 
         ;; Compute text width and center it
-:       and     #$7F            ; strip "center?" flag
+        and     #$7F            ; strip "center?" flag
         pha
         add16   ptr, #1, textptr
         ldax    ptr
