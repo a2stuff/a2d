@@ -26,7 +26,6 @@
 .define res_string_menu_item_delete_entry "Supprimer un raccourci..."
 .define res_string_menu_item_run_entry "Ex{cuter un raccourci..."
 .define res_string_menu_item_about "A propos d'%s"
-.define res_string_splash_menu_label "%s Version %d.%d%s"
 .define res_string_window_header_item_suffix " {l{ment"
 .define res_string_window_header_items_suffix " {l{ments"
 .define res_string_window_header_k_used_suffix "K sur disque"

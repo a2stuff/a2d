@@ -10,24 +10,6 @@
         jmp     start
 
 ;;; ============================================================
-;;; Menu - relocated up ot $D400
-
-        menu_target := $D400
-
-.params menu_bar
-        DEFINE_MENU_BAR 1
-        DEFINE_MENU_BAR_ITEM 1, menu_target + (menu_label - menu_bar), menu_target + (menu - menu_bar)
-
-menu:   DEFINE_MENU 1
-        DEFINE_MENU_ITEM menu_target + (item_label - menu_bar)
-
-menu_label:
-        PASCAL_STRING .sprintf("       Disk Copy Version %d.%d   ",::kDeskTopVersionMajor,::kDeskTopVersionMinor) ; do not localize
-item_label:
-        PASCAL_STRING "Rien"    ; French for "nothing" - do not localize
-.endparams
-
-;;; ============================================================
 
         DEFINE_OPEN_PARAMS open_params, str_desktop2, $1C00
         DEFINE_SET_MARK_PARAMS set_mark_params, kOverlayDiskCopy2Offset
@@ -46,10 +28,6 @@ start:  lda     #$80
         ITK_RELAY_CALL IconTK::RemoveAll, 0 ; volume icons
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetZP1, ptr
-
-        ;; Copy menu bar up to language card, and use it.
-        COPY_BYTES .sizeof(menu_bar)+1, menu_bar, $D400
-        MGTK_RELAY_CALL MGTK::SetMenu, menu_target
 
         ;; Clear most of the system bitmap
         ldx     #BITMAP_SIZE - 3

@@ -26,7 +26,6 @@
 .define res_string_menu_item_delete_entry "Deletar Atalho..."
 .define res_string_menu_item_run_entry "Executar Atalho..."
 .define res_string_menu_item_about "Sobre %s"
-.define res_string_splash_menu_label "%s Vers[o %d.%d%s"
 .define res_string_window_header_item_suffix " Item"
 .define res_string_window_header_items_suffix " Itens"
 .define res_string_window_header_k_used_suffix "K no disco"

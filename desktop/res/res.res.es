@@ -26,7 +26,6 @@
 .define res_string_menu_item_delete_entry "Borrar acceso directo..."
 .define res_string_menu_item_run_entry "Ejecutar acceso directo..."
 .define res_string_menu_item_about "Acerca %s"
-.define res_string_splash_menu_label "%s Version %d.%d%s"
 .define res_string_window_header_item_suffix " Elemento"
 .define res_string_window_header_items_suffix " Elementos"
 .define res_string_window_header_k_used_suffix "K en disco"

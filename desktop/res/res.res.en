@@ -26,7 +26,6 @@
 .define res_string_menu_item_delete_entry "Delete a Shortcut..."
 .define res_string_menu_item_run_entry "Run a Shortcut..."
 .define res_string_menu_item_about "About %s"
-.define res_string_splash_menu_label "%s Version %d.%d%s"
 .define res_string_window_header_item_suffix " Item"
 .define res_string_window_header_items_suffix " Items"
 .define res_string_window_header_k_used_suffix "K in disk"

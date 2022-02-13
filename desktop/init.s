@@ -262,7 +262,8 @@ end:
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
         MGTK_RELAY_CALL MGTK::InitMenu, initmenu_params
         jsr     main::SetRGBMode
-        MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
+        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
+        jsr     main::ShowClock
 
         ;; --------------------------------------------------
         ;; Cursor tracking
@@ -1101,8 +1102,6 @@ count:  .byte   0
 .proc FinalSetup
         ;; Final MGTK configuration
         MGTK_RELAY_CALL MGTK::CheckEvents
-        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
-        jsr     main::ShowClock
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         lda     #0
         sta     active_window_id

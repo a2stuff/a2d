@@ -949,26 +949,6 @@ label_about:
 desk_acc_names:
         .res    kMaxDeskAccCount * kDAMenuItemSize, 0
 
-splash_menu:
-        DEFINE_MENU_BAR 1
-        DEFINE_MENU_BAR_ITEM 1, splash_menu_label, dummy_dd_menu
-
-blank_menu:
-        DEFINE_MENU_BAR 1
-        DEFINE_MENU_BAR_ITEM 1, blank_dd_label, dummy_dd_menu
-
-dummy_dd_menu:
-        DEFINE_MENU 1
-        DEFINE_MENU_ITEM dummy_dd_item
-
-splash_menu_label:
-        PASCAL_STRING .sprintf(res_string_splash_menu_label, kDeskTopProductName, kDeskTopVersionMajor, kDeskTopVersionMinor, kDeskTopVersionSuffix)
-
-blank_dd_label:
-        PASCAL_STRING " "       ; do not localize
-dummy_dd_item:
-        PASCAL_STRING "Rien"    ; French for "nothing" - do not localize
-
 window_title_addr_table:
         .addr   0
         .addr   winfo1title
