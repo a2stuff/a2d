@@ -97,7 +97,7 @@
 .define res_string_warning_too_many_files "Ci sono troppi file per aprire questo elemento!"
 .define res_string_warning_too_many_windows "Ci sono troppe finestre aperte sulla scrivania!"
 .define res_string_warning_save_changes "Vuoi salvare le modifiche sul disco di sistema?"
-.define res_string_errmsg_00 "Errore di sistema"
+.define res_string_errmsg_00 "Si } verificato un errore sconosciuto."
 .define res_string_errmsg_27 "Errore I/O."
 .define res_string_errmsg_28 "Periferica non collegata."
 .define res_string_errmsg_2B "Protetto in scrittura."

@@ -1,5 +1,5 @@
 .define res_string_alert_selector_unable_to_run "Kann Programm nicht starten."
-.define res_string_alert_io_error "E/A Fehler."
+.define res_string_alert_io_error "I/O-Fehler."
 .define res_string_alert_no_device "Kein Ger{t angeschlossen."
 .define res_string_alert_pathname_does_not_exist "Pfad existiert nicht."
 .define res_string_alert_insert_source_disk "Originaldiskette einlegen."

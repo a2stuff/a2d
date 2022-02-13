@@ -97,7 +97,7 @@
 .define res_string_warning_too_many_files "Il y a trop de fichiers pour ouvrir cet {l{ment !"
 .define res_string_warning_too_many_windows "Il y a trop de fenetres ouvertes sur le bureau !"
 .define res_string_warning_save_changes "Voulez-vous sauvegarder les modifications sur le disque syst}me ?"
-.define res_string_errmsg_00 "Erreur syst}me"
+.define res_string_errmsg_00 "Une erreur inconnue s'est produite."
 .define res_string_errmsg_27 "Erreur d'E/S."
 .define res_string_errmsg_28 "Pas d'unit{ connect{e."
 .define res_string_errmsg_2B "Disque prot{g{ en {criture."

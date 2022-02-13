@@ -97,7 +97,7 @@
 .define res_string_warning_too_many_files "[Hay demasiados archivos para abrir este elemento!"
 .define res_string_warning_too_many_windows "[Hay demasiadas ventanas abiertas en el escritorio!"
 .define res_string_warning_save_changes "]Quiere guardar los cambios en el disco de sistema?"
-.define res_string_errmsg_00 "Error de Sistema"
+.define res_string_errmsg_00 "Se ha producido un error desconocido."
 .define res_string_errmsg_27 "Error de E/S."
 .define res_string_errmsg_28 "No hay dispositivo conectado."
 .define res_string_errmsg_2B "El disco est\x10 protegido contra escritura."

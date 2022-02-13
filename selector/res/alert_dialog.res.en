@@ -1,5 +1,5 @@
 .define res_string_alert_selector_unable_to_run "Unable to run the program."
-.define res_string_alert_io_error "I/O Error."
+.define res_string_alert_io_error "I/O error."
 .define res_string_alert_no_device "No device connected."
 .define res_string_alert_pathname_does_not_exist "Part of the pathname does not exist."
 .define res_string_alert_insert_source_disk "Please insert source disk."
