@@ -743,7 +743,6 @@ tmp:     .byte   0
         jsr     ScrollClipRect
         jsr     UpdateDiskName
         jsr     DrawListEntries
-        jsr     ClearRight
         jsr     PrepPath
         jsr     RedrawInput
         rts
@@ -3261,7 +3260,7 @@ flag:   .byte   0
 
 .proc PrepPathInput1
         COPY_STRING path_buf, buf_input1_left
-        rts
+        jmp     ClearRight
 .endproc
 
 ;;; ============================================================

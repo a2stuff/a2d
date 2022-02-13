@@ -545,7 +545,7 @@ Test the following in all of the above, except where called out specifically:
 
 * Browse to a directory with more than 8 files, with at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
 
-* Browse to a directory with files. Select a file. Click in the middle of the pathname. Click Change Drive. Verify that the entire path is replaced with the new volume name.
+* Browse to a directory with files. Select a file. Click in the middle of the pathname. Click Change Drive. Verify that the entire path is replaced with the new volume name. (This does not apply to the second field in DeskTop: File > Copy a File...)
 
 Repeat for each file picker:
 * In each pathname field, type in an invalid path name. Click OK (multiple times if needed to commit the dialog). Verify that an alert is shown.
