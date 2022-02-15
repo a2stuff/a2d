@@ -182,9 +182,9 @@ kLabelPadding = 5
 kRadioButtonWidth       = 15
 kRadioButtonHeight      = 7
 
-.params checked_rb_params
+.params rb_params
         DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   checked_rb_bitmap
+mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
         DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
@@ -200,14 +200,6 @@ checked_rb_bitmap:
         .byte   PX(%0011100),PX(%0000111),PX(%0000000)
         .byte   PX(%0000111),PX(%1111100),PX(%0000000)
 
-.params unchecked_rb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   unchecked_rb_bitmap
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
-.endparams
-
 unchecked_rb_bitmap:
         .byte   PX(%0000111),PX(%1111100),PX(%0000000)
         .byte   PX(%0011100),PX(%0000111),PX(%0000000)
@@ -221,9 +213,9 @@ unchecked_rb_bitmap:
 kCheckboxWidth       = 17
 kCheckboxHeight      = 8
 
-.params checked_cb_params
+.params cb_params
         DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   checked_cb_bitmap
+mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
         DEFINE_RECT cliprect, 0, 0, kCheckboxWidth, kCheckboxHeight
@@ -239,14 +231,6 @@ checked_cb_bitmap:
         .byte   PX(%1100110),PX(%0000011),PX(%0011000)
         .byte   PX(%1111000),PX(%0000000),PX(%1111000)
         .byte   PX(%1111111),PX(%1111111),PX(%1111000)
-
-.params unchecked_cb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   unchecked_cb_bitmap
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kCheckboxWidth, kCheckboxHeight
-.endparams
 
 unchecked_cb_bitmap:
         .byte   PX(%1111111),PX(%1111111),PX(%1111000)
@@ -1344,24 +1328,20 @@ arrow_num:
         ptr := $06
 
         stax    ptr
-        beq     checked
 
-unchecked:
+    IF_EQ
+        copy16  #checked_rb_bitmap, rb_params::mapbits
+    ELSE
+        copy16  #unchecked_rb_bitmap, rb_params::mapbits
+    END_IF
+
         ldy     #3
 :       lda     (ptr),y
-        sta     unchecked_rb_params::viewloc,y
+        sta     rb_params::viewloc,y
         dey
         bpl     :-
-        MGTK_CALL MGTK::PaintBits, unchecked_rb_params
-        rts
 
-checked:
-        ldy     #3
-:       lda     (ptr),y
-        sta     checked_rb_params::viewloc,y
-        dey
-        bpl     :-
-        MGTK_CALL MGTK::PaintBits, checked_rb_params
+        MGTK_CALL MGTK::PaintBits, rb_params
         rts
 .endproc
 
@@ -1370,24 +1350,20 @@ checked:
         ptr := $06
 
         stax    ptr
-        beq     checked
 
-unchecked:
+    IF_EQ
+        copy16  #checked_cb_bitmap, cb_params::mapbits
+    ELSE
+        copy16  #unchecked_cb_bitmap, cb_params::mapbits
+    END_IF
+
         ldy     #3
 :       lda     (ptr),y
-        sta     unchecked_cb_params::viewloc,y
+        sta     cb_params::viewloc,y
         dey
         bpl     :-
-        MGTK_CALL MGTK::PaintBits, unchecked_cb_params
-        rts
 
-checked:
-        ldy     #3
-:       lda     (ptr),y
-        sta     checked_cb_params::viewloc,y
-        dey
-        bpl     :-
-        MGTK_CALL MGTK::PaintBits, checked_cb_params
+        MGTK_CALL MGTK::PaintBits, cb_params
         rts
 .endproc
 
@@ -1897,7 +1873,6 @@ done:   rts
 ;;; ============================================================
 
         .include "../lib/save_settings.s"
-        .include "../lib/ramcard.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================

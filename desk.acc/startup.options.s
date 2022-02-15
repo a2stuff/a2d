@@ -487,7 +487,6 @@ finish: MGTK_CALL MGTK::ShowCursor
 ;;; ============================================================
 
         .include "../lib/save_settings.s"
-        .include "../lib/ramcard.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================

@@ -105,12 +105,12 @@ quit:   MLI_CALL QUIT, quit_params
 
 .proc CheckBasicSystem
         ;; Was DeskTop copied to a RAM Card?
-        jsr     GetCopiedToRAMCardFlag
+        jsr     JUMP_TABLE_GET_RAMCARD_FLAG
         bpl     get_current_prefix ; nope
 
         ;; Use original location, since BASIC.SYSTEM was unlikely
         ;; to be copied.
-        param_call CopyDeskTopOriginalPrefix, bs_path
+        param_call JUMP_TABLE_GET_ORIG_PREFIX, bs_path
         inc     bs_path         ; Append trailing '/'
         ldx     bs_path
         copy    #'/', bs_path,x
@@ -191,5 +191,3 @@ fail:   return  #1
 .endproc
 
 ;;; ============================================================
-
-        .include "../lib/ramcard.s"

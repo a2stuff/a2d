@@ -50,8 +50,10 @@ JT_GET_SEL_WIN:         jmp     GetSelectionWindow      ; *
 JT_GET_WIN_PATH:        jmp     GetWindowPath           ; *
 JT_HILITE_MENU:         jmp     ToggleMenuHilite        ; *
 JT_ADJUST_FILEENTRY:    jmp     AdjustFileEntryCase     ; *
+JT_GET_RAMCARD_FLAG:    jmp     GetCopiedToRAMCardFlag  ; *
+JT_GET_ORIG_PREFIX:     jmp     CopyDeskTopOriginalPrefix ; *
 
-        .assert JUMP_TABLE_SHOW_WARNING = JT_SHOW_WARNING, error, "Jump table mismatch"
+        .assert JUMP_TABLE_GET_ORIG_PREFIX = JT_GET_ORIG_PREFIX, error, "Jump table mismatch"
 
         ;; Main Loop
 .proc MainLoop

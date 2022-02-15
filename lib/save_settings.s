@@ -34,12 +34,12 @@ filename_buffer:
         jsr     DoWrite
 
         ;; Write to the original file location, if necessary
-        jsr     GetCopiedToRAMCardFlag
+        jsr     JUMP_TABLE_GET_RAMCARD_FLAG
         beq     done
         ldax    #filename_buffer
         stax    create_params::pathname
         stax    open_params::pathname
-        jsr     CopyDeskTopOriginalPrefix
+        jsr     JUMP_TABLE_GET_ORIG_PREFIX
         jsr     AppendFilename
         copy    #0, second_try_flag
 @retry: jsr     DoWrite

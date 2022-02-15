@@ -160,6 +160,16 @@ Adjust case in FileEntry structure. If GS/OS filename bits are set, those are us
 
 Input: A,X = FileEntry structure.
 
+#### `JUMP_TABLE_GET_RAMCARD_FLAG` *
+
+Returns Z=1/N=0 if DeskTop is running from its original location, and Z=0/N=1 if DeskTop was copied to RAMCard.
+
+#### `JUMP_TABLE_GET_ORIG_PREFIX` *
+
+If DeskTop was copied to RAMCard, this populates the passed buffer with the original prefix path (with trailing `/`). Do not call if DeskTop was not copied to RAMCard.
+
+Input: A,X = Path buffer.
+
 <!-- ============================================================ -->
 
 ## Icon ToolKit
