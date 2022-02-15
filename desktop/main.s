@@ -1153,6 +1153,8 @@ str_preview_mus:
 
 ;;; ============================================================
 
+str_empty:
+        PASCAL_STRING ""        ; do not localize
 
 ;;; ============================================================
 ;;; Aux $D000-$DFFF b2 holds FileRecord entries. These are stored
@@ -2141,9 +2143,6 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-
-str_empty:
-        PASCAL_STRING ""        ; do not localize
 
 .enum NewFolderDialogState
         open  = $00
@@ -10899,7 +10898,7 @@ compute_target_prefix:
         and     #%01111111      ; get window id
         jsr     GetWindowPath
         stax    $08
-        copy16  #empty_string, $06
+        copy16  #str_empty, $06
         jsr     JoinPaths
         dec     path_buf3       ; remove trailing '/'
         jmp     common
@@ -11048,8 +11047,6 @@ finish: jsr     done_dialog_phase1
         return  #0
 .endproc
 
-empty_string:
-        .byte   0
 .endscope ; operations
         DoDeleteFile := operations::DoDeleteFile
         DoCopyToRAM := operations::DoCopyToRAM
