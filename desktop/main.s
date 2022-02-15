@@ -9410,25 +9410,27 @@ exit:   rts
 .proc PushPointers
         ptr := $6
 
-        pla                     ; stash return address
-        sta     addr
+        ;; Stash return address
         pla
-        sta     addr+1
+        sta     lo
+        pla
+        sta     hi
 
-        ldx     #0              ; copy 4 bytes from $8 to stack
-loop:   lda     ptr,x
+        ;; Copy 4 bytes from $8 to stack
+        ldx     #AS_BYTE(-4)
+:       lda     $06 + 4,x
         pha
         inx
-        cpx     #4
-        bne     loop
+        bne     :-
 
-        lda     addr+1           ; restore return address
+        ;; Restore return address
+        hi := *+1
+        lda     #SELF_MODIFIED_BYTE
         pha
-        lda     addr
+        lo := *+1
+        lda     #SELF_MODIFIED_BYTE
         pha
         rts
-
-addr:   .addr   0
 .endproc
 
 ;;; ============================================================
@@ -9437,25 +9439,27 @@ addr:   .addr   0
 .proc PopPointers
         ptr := $6
 
-        pla                     ; stash return address
-        sta     addr
+        ;; Stash return address
         pla
-        sta     addr+1
+        sta     lo
+        pla
+        sta     hi
 
-        ldx     #3              ; copy 4 bytes from stack to $6
-loop:   pla
-        sta     ptr,x
+        ;; Copy 4 bytes from stack to $6
+        ldx     #3
+:       pla
+        sta     $06,x
         dex
-        cpx     #$FF            ; why not bpl ???
-        bne     loop
+        bpl     :-
 
-        lda     addr+1          ; restore return address to stack
+        ;; Restore return address to stack
+        hi := *+1
+        lda     #SELF_MODIFIED_BYTE
         pha
-        lda     addr
+        lo := *+1
+        lda     #SELF_MODIFIED_BYTE
         pha
         rts
-
-addr:   .addr   0
 .endproc
 
 ;;; ============================================================

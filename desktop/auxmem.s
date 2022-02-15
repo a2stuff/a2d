@@ -2376,7 +2376,7 @@ icon_num:       .byte   0
         sta     stash_high
 
         ;; push $06...$09 to stack
-        ldx     #-4 & 255
+        ldx     #AS_BYTE(-4)
 :       lda     $06 + 4,x
         pha
         inx
