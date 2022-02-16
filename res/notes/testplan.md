@@ -407,6 +407,8 @@
 * Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. Go back to the volume window, and drag the folder icon to the trash. Click OK in the delete confirmation dialog. Verify that the folder's window closes.
 * Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. File > Delete a File.... Select the folder and click OK. Click OK in the delete confirmation dialog. Verify that the folder's window closes.
 
+* Launch DeskTop. Open the Control Panel DA. Use the pattern editor to create a custom pattern, then click the desktop preview to apply it. Close the DA. Open the Control Panel DA. Click the right arrow above the desktop preview. Verify that the default checkerboard pattern is shown.
+
 # Preview
 
 * Preview a text file; verify that up/down arrow keys scroll.

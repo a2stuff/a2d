@@ -831,7 +831,6 @@ kHourDisplayY = 114
 .proc HandleLArrClick
         dec     pattern_index
 
-        lda     pattern_index
         IF_NEG
         copy    #kPatternCount-1, pattern_index
         END_IF
@@ -1537,7 +1536,12 @@ pattern:
         .byte   %01010101
         .byte   %10101010
 
-pattern_index:  .byte   0
+;;; The index of the pattern in the table below. We start with -1
+;;; representing the current desktop pattern; either incrementing
+;;; to 0 or decrementing (to a negative and wrapping) will start
+;;; iterating through the table.
+pattern_index:  .byte   AS_BYTE(-1)
+
 kPatternCount = 15 + 14 + 1 ; 15 B&W patterns, 14 solid color patterns + 1
 patterns:
         .addr pattern_checkerboard, pattern_dark, pattern_vdark, pattern_black
