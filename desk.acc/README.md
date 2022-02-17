@@ -20,6 +20,8 @@ Original desk accessories from MouseDesk:
   * Shows joystick calibration.
 * [System Speed](system.speed.s)
   * Enable/disable system accelerator.
+* [Calendar](calendar.s)
+  * Displays any month, from 1901 through 2155.
 * [Eyes](eyes.s)
   * Eyes that follow the mouse.
 * [Screen Dump](screen.dump.s)

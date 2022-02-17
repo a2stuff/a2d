@@ -17,3 +17,4 @@
 .define res_filename_flying_toasters gril.volant
 .define res_filename_melt fondre
 .define res_filename_invert inverse
+.define res_filename_calendar Calendrier

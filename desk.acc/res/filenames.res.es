@@ -17,3 +17,4 @@
 .define res_filename_flying_toasters tosta.voladoras
 .define res_filename_melt derretir
 .define res_filename_invert inverso
+.define res_filename_calendar Calendario

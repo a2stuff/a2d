@@ -17,3 +17,4 @@
 .define res_filename_flying_toasters fliegende.toast
 .define res_filename_melt zergehen
 .define res_filename_invert invers
+.define res_filename_calendar Kalender

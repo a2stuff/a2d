@@ -17,3 +17,4 @@
 .define res_filename_flying_toasters toast.voladoras
 .define res_filename_melt fundicao
 .define res_filename_invert marcha.re
+.define res_filename_calendar Calendario

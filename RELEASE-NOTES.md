@@ -99,6 +99,8 @@ Project Page: https://github.com/a2stuff/a2d
   * Shows an on-screen keyboard map and indicates which key is pressed.
 * **Screen Dump**
   * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in slot 1. ([#46](https://github.com/a2stuff/a2d/issues/46))
+* **Calendar**
+  * Displays any month, from 1901 through 2155. ([#231](https://github.com/a2stuff/a2d/issues/231))
 * **Eyes**
   * Eyes that follow the mouse. ([#53](https://github.com/a2stuff/a2d/issues/53))
 * **Find Files**
