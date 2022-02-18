@@ -100,7 +100,7 @@ write_buffer:
         ldax    #filename
         stax    open_params::pathname
         jsr     DoWrite
-        ;; TODO: Retry if this fails?
+        bcs     done            ; failed and canceled
 
         ;; Write to the original file location, if necessary
         jsr     JUMP_TABLE_GET_RAMCARD_FLAG
@@ -109,31 +109,10 @@ write_buffer:
         stax    open_params::pathname
         jsr     JUMP_TABLE_GET_ORIG_PREFIX
         jsr     AppendFilename
-        copy    #0, second_try_flag
-@retry: jsr     DoWrite
-        bcc     done
-
-        ;; First time - ask if we should even try.
-        lda     second_try_flag
-        bne     :+
-        inc     second_try_flag
-        lda     #kErrSaveChanges
-        jsr     JUMP_TABLE_SHOW_ALERT
-        cmp     #kAlertResultOK
-        beq     @retry
-        bne     done            ; always
-
-        ;; Second time - prompt to insert.
-:       lda     #kErrInsertSystemDisk
-        jsr     JUMP_TABLE_SHOW_ALERT
-        cmp     #kAlertResultOK
-        beq     @retry
+        jsr     DoWrite
 
 done:   rts
 .endproc
-
-second_try_flag:
-        .byte   0
 
 .proc AppendFilename
         ;; Append filename to buffer
@@ -155,9 +134,12 @@ second_try_flag:
 .endproc
 
 .proc DoWrite
-        JUMP_TABLE_MLI_CALL OPEN, open_params ; open the file
-        bcs     done
+        ;; First time - ask if we should even try.
+        copy    #kErrSaveChanges, message
 
+retry:
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+        bcs     error
         lda     open_params::ref_num
         sta     set_mark_params::ref_num
         sta     write_params::ref_num
@@ -165,10 +147,29 @@ second_try_flag:
 
         JUMP_TABLE_MLI_CALL SET_MARK, set_mark_params ; seek
         bcs     close
+        JUMP_TABLE_MLI_CALL WRITE, write_params
+close:  php                     ; preserve result
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        plp
+        bcc     ret             ; succeeded
 
-        JUMP_TABLE_MLI_CALL WRITE, write_params ; write the date
-close:  JUMP_TABLE_MLI_CALL CLOSE, close_params ; close the file
-done:   rts
+error:
+        message := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     JUMP_TABLE_SHOW_ALERT
+
+        ;; Second time - prompt to insert.
+        ldx     #kErrInsertSystemDisk
+        stx     message
+
+        cmp     #kAlertResultOK
+        beq     retry
+
+        sec                     ; failed
+ret:    rts
+
+second_try_flag:
+        .byte   0
 .endproc
 
 ;;; ============================================================
