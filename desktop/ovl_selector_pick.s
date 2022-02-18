@@ -34,7 +34,7 @@ L9017:  lda     selector_list + kSelectorListNumPrimaryRunListOffset
         adc     selector_list + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
         copy    #0, selector_menu_items_updated_flag
-        jsr     GetCopiedToRAMCardFlag
+        jsr     main::GetCopiedToRAMCardFlag
         cmp     #$80
         bne     L9015
         jsr     WriteFileToOriginalPrefix
@@ -319,7 +319,7 @@ flags:  .byte   0
         cmp     #kSelectorEntryCopyNever
         beq     l5
         sta     L938A
-        jsr     GetCopiedToRAMCardFlag
+        jsr     main::GetCopiedToRAMCardFlag
         beq     l5
         lda     L938A
         beq     l2
@@ -1412,7 +1412,7 @@ filename:
         DEFINE_CLOSE_PARAMS close_params
 
 .proc WriteFileToOriginalPrefix
-        param_call CopyDeskTopOriginalPrefix, filename_buffer
+        param_call main::CopyDeskTopOriginalPrefix, filename_buffer
         inc     filename_buffer ; Append '/' separator
         ldx     filename_buffer
         lda     #'/'
@@ -1650,10 +1650,6 @@ params: .addr   0
 .endproc
 
 ;;; ============================================================
-
-        .include "../lib/ramcard.s"
-
-;;; ============================================================
 ;;; Populate `get_file_info_params` with the info for the entry
 ;;; as copied to RAMCard.
 ;;; Input: A=entry number
@@ -1679,7 +1675,7 @@ params: .addr   0
         ptr := $06
 
         sta     index
-        param_call CopyRAMCardPrefix, buf
+        param_call main::CopyRAMCardPrefix, buf
         lda     index
         jsr     GetFilePathAddr
         stax    ptr
