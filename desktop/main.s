@@ -1494,6 +1494,7 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 ;;; ============================================================
 
         .include "../lib/ramcard.s"
+        .assert * <= $5000, error, "Routine used by overlays in overlay zone"
 
 ;;; ============================================================
 ;;; For entry copied ("down loaded") to RAM card, compose path
@@ -14066,19 +14067,19 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 ;;; ============================================================
 ;;; Dialog Proc Invocation
 
-kNumDialogTypes = 13
+kNumDialogTypes = 11
 
 kIndexAboutDialog       = 0
 kIndexCopyDialog        = 1
 kIndexDeleteDialog      = 2
 kIndexNewFolderDialog   = 3
-kIndexGetInfoDialog     = 6
-kIndexLockDialog        = 7
-kIndexUnlockDialog      = 8
-kIndexRenameDialog      = 9
-kIndexDownloadDialog    = 10
-kIndexGetSizeDialog     = 11
-kIndexDuplicateDialog   = 12
+kIndexGetInfoDialog     = 4
+kIndexLockDialog        = 5
+kIndexUnlockDialog      = 6
+kIndexRenameDialog      = 7
+kIndexDownloadDialog    = 8
+kIndexGetSizeDialog     = 9
+kIndexDuplicateDialog   = 10
 
 invoke_dialog_proc:
         ASSERT_ADDRESS $A500, "Overlay entry point"
@@ -14089,8 +14090,6 @@ dialog_proc_table:
         .addr   CopyDialogProc
         .addr   DeleteDialogProc
         .addr   NewFolderDialogProc
-        .addr   rts1
-        .addr   rts1
         .addr   GetInfoDialogProc
         .addr   LockDialogProc
         .addr   UnlockDialogProc
@@ -14102,7 +14101,6 @@ dialog_proc_table:
 
 dialog_param_addr:
         .addr   0
-        .byte   0               ; ???
 
 .proc InvokeDialogProcImpl
         stax    dialog_param_addr
