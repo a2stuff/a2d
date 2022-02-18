@@ -22,6 +22,10 @@
 
         kDefaultFloppyBlocks = 280
 
+        kMaxVolumesInPicker = 12 ; 3 cols * 4 rows
+
+;;; ============================================================
+
 Exec:
         pha
         jsr     main::SetCursorPointer
@@ -29,6 +33,16 @@ Exec:
         cmp     #$04
         beq     FormatDisk
         jmp     EraseDisk
+
+;;; ============================================================
+
+;;; The selected index (0-based), or $FF if no drive is selected
+selected_device_index:
+        .byte   0
+
+;;; Number of volumes; min(DEVCNT+1, kMaxVolumesInPicker)
+num_volumes:
+        .byte   0
 
 ;;; ============================================================
 ;;; Format Disk
@@ -53,7 +67,6 @@ l2:     jsr     main::PromptInputLoop
         pha
         copy16  #main::NoOp, main::jump_relay+1
         lda     #$00
-        sta     LD8F3
         sta     format_erase_overlay_flag
         pla
         beq     l3              ; ok
@@ -572,9 +585,12 @@ wrap:   ldx     num_volumes     ; go to last (num - 1)
 ;;; Draw volume labels
 
 .proc DrawVolumeLabels
-        ldx     DEVCNT
+        ldx     DEVCNT          ; number of volumes - 1
         inx
-        stx     num_volumes
+        cpx     #kMaxVolumesInPicker
+        bcc     :+
+        ldx     #kMaxVolumesInPicker
+:       stx     num_volumes
 
         lda     #0
         sta     vol
@@ -600,8 +616,9 @@ loop:   lda     vol
 setpos: stax    dialog_label_pos::xcoord
 
         ;; Reverse order, so boot volume is first
-        lda     DEVCNT
+        lda     num_volumes
         sec
+        sbc     #1
         sbc     vol
         asl     a
         tay
@@ -1260,8 +1277,9 @@ non_pro:
 
 .proc GetSelectedUnitNum
         ;; Reverse order, so boot volume is first
-        lda     DEVCNT
+        lda     num_volumes
         sec
+        sbc     #1
         sbc     selected_device_index
         tax
         lda     DEVLST,x

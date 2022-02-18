@@ -83,8 +83,6 @@
 * Open a folder with only one item. Verify window header says "1 Item"
 * Open a folder with two or more items. Verify window header says "2 Items"
 
-* Launch DeskTop. Special > Format a Disk.... Ensure left/right arrows move selection correctly.
-
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Verify that 8 windows can be opened, and no render glitches occur.
@@ -153,9 +151,6 @@
 
 * Launch DeskTop. Open a folder containing subfolders. Select all the icons in the folder. Double-click one of the subfolders. Verify that the selection is retained in the parent window. Position the child window over top of the parent so it overlaps some of the icons. Close the child window. Verify that the parent window correctly shows only the previously opened folder as highlighted.
 
-* Launch DeskTop. Special > Format a Disk. Verify that the device order shown matches the order of volumes shown on the DeskTop (boot device first, etc). Format a disk. Verify the correct device was formatted.
-* Launch DeskTop. Special > Erase a Disk. Verify that the device order shown matches the order of volumes shown on the DeskTop (boot device first, etc). Erase a disk. Verify the correct device was erased.
-
 * Launch DeskTop. Open a window containing folders and files. Scroll window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the obscured part of the folder. Verify the folder doesn't highlight.
 * Launch DeskTop. Open a window containing folders and files. Scroll window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the visible part of the folder. Verify the folder highlights but doesn't render past window bounds.
 
@@ -169,15 +164,10 @@
 * Launch DeskTop. Open some windows. Special > Disk Copy. Quit back to DeskTop. Verify that the windows are restored.
 * Launch DeskTop. Close all windows. Special > Disk Copy. Quit back to DeskTop. Verify that no windows are restored.
 
-
-* Launch DeskTop. Select a file. File > Rename.... Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
-* Launch DeskTop. Open a window. File > New Folder.... Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
-* Launch DeskTop. Special > Format a Disk.... Select a disk (other than the startup disk) and click OK. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
-* Launch DeskTop. Special > Erase a Disk.... Select a disk (other than the startup disk) and click OK. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
+* Repeat the following cases for File > New Folder, File > Rename, and File > Duplicate:
+  * Launch DeskTop. Open a window (if needed) select a file. Run the command. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
 
 * Configure a system with removable disks. (e.g. Virtual II OmniDisks) Launch DeskTop. Verify that volume icons are positioned without gaps (down from the top-right, then across the bottom right to left). Eject one of the middle volumes. Verify icon disappears. Insert a new volume. Verify icon takes up the vacated spot. Repeat test, ejecting multiple volumes verify that positions are filled in order (down from the top-right, etc).
-
-* Configure a system with at least 9 volumes. Launch DeskTop. Special > Format a Disk. Select a volume in the third column. Click OK. Verify that the selection rect is fully erased.
 
 * Launch DeskTop. Open a window. File > New Folder..., enter name, OK. Copy the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
 * Launch DeskTop. Open a window. File > New Folder..., enter name, OK. Move the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
@@ -339,9 +329,14 @@
 * Launch DeskTop. Open a window. Create a folder with a short name (e.g. "A"). Open the folder. Drag the folder's window so it covers just the left edge of the icon. Drag it away. Verify that the folder repaints. Repeat for the right edge.
 
 * Repeat the following cases for Special > Format a Disk and Special > Erase a Disk:
+  * Launch DeskTop. Run the command. Ensure left/right arrows move selection correctly.
+  * Launch DeskTop. Run the command. Verify that the device order shown matches the order of volumes shown on the DeskTop (boot device first, etc). Select a device and proceed with the operation. Verify the correct device was formatted or erased.
   * Launch DeskTop. Run the command. For the new name, enter a volume name not currently in use. Verify that you are not prompted for a new name.
   * Launch DeskTop. Run the command. For the new name, enter the name of a volume in a different slot/drive. Verify that an alert shows, indicating that the name is in use.
   * Launch DeskTop. Run the command. For the new name, enter the name of the current disk in that slot/drive. Verify that you are not prompted for a new name.
+  * Launch DeskTop. Run the command. Select a disk (other than the startup disk) and click OK. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
+  * Configure a system with at least 9 volumes. Launch DeskTop. Run the command. Select a volume in the third column. Click OK. Verify that the selection rect is fully erased.
+  * Configure a system with 13 volumes, not counting /RAM. Launch DeskTop. Run the command. Verify that the boot device is excluded from the list so that only 12 devices are shown. Verify using the arrow keys that there aren't any overlapping volume entries.
 
 * Launch DeskTop. Open a window. File > New Folder..., enter a unique name, OK. File > New Folder..., enter the same name, OK. Verify that an alert is shown. Dismiss the alert. Verify that the input field still has the previously typed name.
 

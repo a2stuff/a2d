@@ -458,16 +458,8 @@ enter_the_name_to_appear_label:
 
         DEFINE_RECT entry_picker_all_items_rect, 6, 23, 344, winfo_entry_picker::kHeight-23
 
-;;; In Format/Erase Disk picker dialog, this is the selected index (0-based),
-;;; or $FF if no drive is selected
-selected_device_index:
-        .byte   0
-
-        DEFINE_RECT select_volume_rect, 0, 0, 0, 0
-
 ;;; Used in Format/Erase dialogs
-num_volumes:
-        .byte   0
+        DEFINE_RECT select_volume_rect, 0, 0, 0, 0
 
 the_dos_33_disk_label:
         PASCAL_STRING res_string_the_dos_33_disk_suffix_pattern
@@ -513,9 +505,6 @@ input1_dirty_flag:              ; stash dirty flag when input2 is active
         .byte   0
 input2_dirty_flag:              ; stash dirty flag when input1 is active
         .byte   0
-
-LD8F3:  .byte   0               ; TODO: written, never read
-LD8F4:  .byte   0               ; TODO: unused
 
         ;; If set, prompt is not limited to filename characters.
         ;; (This is never set by DeskTop.)
