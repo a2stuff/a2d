@@ -113,8 +113,8 @@ L90D3:  lda     num_secondary_run_list_entries
 
 L90F1:  jmp     L900F
 
-L90F4:  lda     #kWarningMsgSelectorListFull
-L90F6:  jsr     ShowWarning
+L90F4:  lda     #kErrSelectorListFull
+L90F6:  jsr     ShowAlert
         dec     clean_flag      ; reset to "clean"
         jmp     L9016
 
@@ -1438,14 +1438,16 @@ filename:
         lda     second_try_flag
         bne     :+
         inc     second_try_flag
-        lda     #kWarningMsgSaveChanges
-        jsr     ShowWarning
+        lda     #kErrSaveChanges
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
         beq     @retry
         bne     cancel          ; always
 
         ;; Second time - prompt to insert.
-:       lda     #kWarningMsgInsertSystemDisk
-        jsr     ShowWarning
+:       lda     #kErrInsertSystemDisk
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
         beq     @retry
 
 cancel: rts
@@ -1472,8 +1474,9 @@ second_try_flag:
 .proc ReadFile
 @retry: MLI_RELAY_CALL OPEN, open_curpfx_params
         beq     read
-        lda     #kWarningMsgInsertSystemDisk
-        jsr     ShowWarning
+        lda     #kErrInsertSystemDisk
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
         beq     @retry
         return  #$FF
 
@@ -1495,8 +1498,9 @@ read:   lda     open_curpfx_params::ref_num
 .proc WriteFile
 @retry: MLI_RELAY_CALL OPEN, open_curpfx_params
         beq     write
-        lda     #kWarningMsgInsertSystemDisk
-        jsr     ShowWarning
+        lda     #kErrInsertSystemDisk
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
         beq     @retry
         return  #$FF
 

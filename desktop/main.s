@@ -34,7 +34,6 @@ JT_YIELD_LOOP:          jmp     YieldLoop               ; *
 JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
 JT_SHOW_ALERT_OPTIONS:  jmp     ShowAlertOption
-JT_SHOW_WARNING:        jmp     ShowWarning             ; *
 JT_LAUNCH_FILE:         jmp     LaunchFile
 JT_CUR_POINTER:         jmp     SetCursorPointer        ; *
 JT_CUR_WATCH:           jmp     SetCursorWatch          ; *
@@ -1625,8 +1624,9 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         ;; Load the DA
 @retry: MLI_RELAY_CALL OPEN, open_params
         beq     :+
-        lda     #kWarningMsgInsertSystemDisk
-        jsr     ShowWarning
+        lda     #kErrInsertSystemDisk
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
         beq     @retry          ; ok, so try again
         rts                     ; cancel, so fail
 :
@@ -5755,8 +5755,8 @@ no_win:
         bcc     :+
 
         ;; Nope, show error.
-        lda     #kWarningMsgTooManyWindows
-        jsr     ShowWarning
+        lda     #kErrTooManyWindows
+        jsr     ShowAlert
         ldx     saved_stack
         txs
         rts
@@ -6578,10 +6578,10 @@ too_many_files:
 
         lda     active_window_id ; is a window open?
         beq     no_win
-        lda     #kWarningMsgWindowMustBeClosed ; suggest closing a window
+        lda     #kErrWindowMustBeClosed ; suggest closing a window
         bne     show            ; always
-no_win: lda     #kWarningMsgTooManyFiles ; too many files to show
-show:   jsr     ShowWarning
+no_win: lda     #kErrTooManyFiles ; too many files to show
+show:   jsr     ShowAlert
 
         jsr     MarkIconNotOpened
         dec     num_open_windows
@@ -10590,13 +10590,15 @@ str_desktop2:
 
         ;; Called with routine # in A
 
-load:   pha                     ; entry point with bit clear
-        copy    #0, restore_flag
-        beq     :+              ; always
+load:   pha
+        copy    #AlertButtonOptions::OkCancel, button_options
+        .assert AlertButtonOptions::OkCancel <> 0, error, "bne always assumption"
+        bne     :+              ; always
 
 restore:
         pha
-        copy    #$80, restore_flag ; entry point with bit set
+        ;; Need to set low bit in this case to override the default.
+        copy    #AlertButtonOptions::Ok|%00000001, button_options
 
 :       jsr     SetCursorWatch ; before loading overlay
         pla
@@ -10618,10 +10620,11 @@ restore:
 retry:  MLI_RELAY_CALL OPEN, open_params
         beq     :+
 
-        lda     #kWarningMsgInsertSystemDisk
-        restore_flag := *+1
-        ora     #SELF_MODIFIED_BYTE ; high bit set = no cancel
-        jsr     ShowWarning
+        lda     #kErrInsertSystemDisk
+        button_options := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        jsr     ShowAlertOption
+        cmp     #kAlertResultOK
         beq     retry
         return  #$FF            ; failed
 

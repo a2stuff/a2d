@@ -83,12 +83,6 @@ Button options are in X per `desktop/desktop.inc`.
 
 NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
 
-#### `JUMP_TABLE_SHOW_WARNING`
-
-Show warning message (`kWarningMsgXXX` as defined in `desktop/desktop.inc`), with default button options.
-
-NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
-
 #### `JUMP_TABLE_LAUNCH_FILE`
 
 Launch file. Equivalent of **File > Open** command.

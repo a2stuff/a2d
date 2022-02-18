@@ -3638,97 +3638,6 @@ str_ramcard_full:
         PASCAL_STRING res_string_download_error_ramcard_full
 
 ;;; ============================================================
-;;; Show Warning Dialog
-
-.proc WarningById
-        jmp     start
-
-        ;; high bit set if "cancel" should be an option
-warning_cancel_table:
-        .byte   $80        ; kWarningMsgInsertSystemDisk
-        .byte   $00        ; kWarningMsgSelectorListFull
-        .byte   $00        ; kWarningMsgWindowMustBeClosed
-        .byte   $00        ; kWarningMsgTooManyFiles
-        .byte   $00        ; kWarningMsgTooManyWindows
-        .byte   $80        ; kWarningMsgSaveChanges
-        ASSERT_TABLE_SIZE warning_cancel_table, ::kNumWarningTypes
-
-        ;; Message strings.
-warning_message_table_low:
-        .byte   <str_insert_system_disk    ; kWarningMsgInsertSystemDisk
-        .byte   <str_selector_list_full    ; kWarningMsgSelectorListFull
-        .byte   <str_window_must_be_closed ; kWarningMsgWindowMustBeClosed
-        .byte   <str_too_many_files        ; kWarningMsgTooManyFiles
-        .byte   <str_too_many_windows      ; kWarningMsgTooManyWindows
-        .byte   <str_save_changes          ; kWarningMsgSaveChanges
-        ASSERT_TABLE_SIZE warning_message_table_low, ::kNumWarningTypes
-
-warning_message_table_high:
-        .byte   >str_insert_system_disk    ; kWarningMsgInsertSystemDisk
-        .byte   >str_selector_list_full    ; kWarningMsgSelectorListFull
-        .byte   >str_window_must_be_closed ; kWarningMsgWindowMustBeClosed
-        .byte   >str_too_many_files        ; kWarningMsgTooManyFiles
-        .byte   >str_too_many_windows      ; kWarningMsgTooManyWindows
-        .byte   >str_save_changes          ; kWarningMsgSaveChanges
-        ASSERT_TABLE_SIZE warning_message_table_high, ::kNumWarningTypes
-
-str_insert_system_disk:
-        PASCAL_STRING res_string_warning_insert_system_disk
-
-str_selector_list_full:
-        PASCAL_STRING res_string_warning_selector_list_full
-
-;;; The same string is used for both of these cases as the second case
-;;; (a single directory with too many items) is very difficult to hit.
-str_window_must_be_closed:
-str_too_many_files:             ; alt: `res_string_warning_too_many_files`
-        PASCAL_STRING res_string_warning_window_must_be_closed
-
-str_too_many_windows:
-        PASCAL_STRING res_string_warning_too_many_windows
-
-str_save_changes:
-        PASCAL_STRING res_string_warning_save_changes
-
-.params alert_params
-text:           .addr   0
-buttons:        .byte   0       ; AlertButtonOptions
-options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
-.endparams
-
-start:
-        ;; Special case: high bit set = no cancel
-        pha
-        and     #$7F
-        tax                     ; X = index
-        pla
-        bpl     :+
-        ldy     #AlertButtonOptions::Ok
-        beq     set             ; always
-
-        ;; Buttons
-:       ldy     #AlertButtonOptions::Ok
-        lda     warning_cancel_table,x
-        bpl     set
-        ldy     #AlertButtonOptions::OkCancel
-set:    sty     alert_params::buttons
-
-        ;; Strings
-
-        copylohi  warning_message_table_low,x, warning_message_table_high,x, alert_params::text
-
-        ;; Show the alert
-        ldax    #alert_params
-        jsr     Alert
-
-        cmp     #kAlertResultOK
-        beq     :+
-        return #$FF             ; Cancel
-:       return #0               ; OK
-
-.endproc
-
-;;; ============================================================
 ;;; Show Alert Dialog
 ;;; Call show_alert_dialog with prompt number A, options in X
 ;;; Options:
@@ -3762,6 +3671,16 @@ err_4E:  PASCAL_STRING res_string_errmsg_4E
 err_52:  PASCAL_STRING res_string_errmsg_52
 err_57:  PASCAL_STRING res_string_errmsg_57
         ;; Below are internal (not ProDOS MLI) error codes.
+err_E0:  PASCAL_STRING res_string_warning_insert_system_disk
+err_E1:  PASCAL_STRING res_string_warning_selector_list_full
+;;; The same string is used for both of these cases as the second case
+;;; (a single directory with too many items) is very difficult to hit.
+;;; alt: `res_string_warning_too_many_files` for E3
+err_E2:
+err_E3:  PASCAL_STRING res_string_warning_window_must_be_closed
+err_E4:  PASCAL_STRING res_string_warning_too_many_windows
+err_E5:  PASCAL_STRING res_string_warning_save_changes
+
 err_F5:  PASCAL_STRING res_string_errmsg_F5
 err_F6:  PASCAL_STRING res_string_errmsg_F6
 err_F7:  PASCAL_STRING res_string_errmsg_F7
@@ -3774,7 +3693,7 @@ err_FD:  PASCAL_STRING res_string_errmsg_FD
 err_FE:  PASCAL_STRING res_string_errmsg_FE
 
         ;; number of alert messages
-        kNumAlerts = 24
+        kNumAlerts = 30
 
         ;; message number-to-index table
         ;; (look up by scan to determine index)
@@ -3787,6 +3706,8 @@ alert_table:
         .byte   ERR_DUPLICATE_VOLUME
 
         ;; Internal error codes:
+        .byte   kErrInsertSystemDisk, kErrSelectorListFull, kErrWindowMustBeClosed
+        .byte   kErrTooManyFiles, kErrTooManyWindows, kErrSaveChanges
         .byte   kErrBadReplacement, kErrUnsupportedFileType, kErrNoWindowsOpen
         .byte   kErrMoveCopyIntoSelf
         .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
@@ -3797,6 +3718,7 @@ alert_table:
 message_table_low:
         .byte   <err_00,<err_27,<err_28,<err_2B,<err_40,<err_44,<err_45,<err_46
         .byte   <err_47,<err_48,<err_49,<err_4E,<err_52,<err_57
+        .byte   <err_E0, <err_E1, <err_E2, <err_E3, <err_E4, <err_E5
         .byte   <err_F5,<err_F6,<err_F7,<err_F8,<err_F9,<err_FA
         .byte   <err_FB,<err_FC,<err_FD,<err_FE
         ASSERT_TABLE_SIZE message_table_low, kNumAlerts
@@ -3804,6 +3726,7 @@ message_table_low:
 message_table_high:
         .byte   >err_00,>err_27,>err_28,>err_2B,>err_40,>err_44,>err_45,>err_46
         .byte   >err_47,>err_48,>err_49,>err_4E,>err_52,>err_57
+        .byte   >err_E0, >err_E1, >err_E2, >err_E3, >err_E4, >err_E5
         .byte   >err_F5,>err_F6,>err_F7,>err_F8,>err_F9,>err_FA
         .byte   >err_FB,>err_FC,>err_FD,>err_FE
         ASSERT_TABLE_SIZE message_table_high, kNumAlerts
@@ -3823,6 +3746,13 @@ alert_options_table:
         .byte   AlertButtonOptions::Ok             ; ERR_ACCESS_ERROR
         .byte   AlertButtonOptions::Ok             ; ERR_NOT_PRODOS_VOLUME
         .byte   AlertButtonOptions::Ok             ; ERR_DUPLICATE_VOLUME
+
+        .byte   AlertButtonOptions::OkCancel       ; kErrInsertSystemDisk
+        .byte   AlertButtonOptions::Ok             ; kErrSelectorListFull
+        .byte   AlertButtonOptions::Ok             ; kErrWindowMustBeClosed
+        .byte   AlertButtonOptions::Ok             ; kErrTooManyFiles
+        .byte   AlertButtonOptions::Ok             ; kErrTooManyWindows
+        .byte   AlertButtonOptions::OkCancel       ; kErrSaveChanges
 
         .byte   AlertButtonOptions::Ok             ; kErrBadReplacement
         .byte   AlertButtonOptions::OkCancel       ; kErrUnsupportedFileType

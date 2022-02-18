@@ -55,7 +55,6 @@ JT_ENTRY JUMP_TABLE_YIELD_LOOP    ; Yield the event loop *
 JT_ENTRY JUMP_TABLE_SELECT_WINDOW ; Select and refresh given window *
 JT_ENTRY JUMP_TABLE_SHOW_ALERT    ; Show alert (A=kErrXXX or ProDOS error code, default options)
 JT_ENTRY JUMP_TABLE_SHOW_ALERT_OPTIONS       ; Show alert X (A=err code, X=options)
-JT_ENTRY JUMP_TABLE_SHOW_WARNING  ; Show warning (A=kWarningMsgXXX code) *
 JT_ENTRY JUMP_TABLE_LAUNCH_FILE   ; Launch file
 JT_ENTRY JUMP_TABLE_CUR_POINTER   ; Changes mouse cursor to pointer *
 JT_ENTRY JUMP_TABLE_CUR_WATCH     ; Changes mouse cursor to watch *
@@ -140,6 +139,13 @@ kAlertResultOK          = 2
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors
 
+kErrInsertSystemDisk    = $E0
+kErrSelectorListFull    = $E1
+kErrWindowMustBeClosed  = $E2
+kErrTooManyFiles        = $E3
+kErrTooManyWindows      = $E4
+kErrSaveChanges         = $E5
+
 kErrBadReplacement      = $F5
 kErrUnsupportedFileType = $F6
 kErrNoWindowsOpen       = $F7
@@ -155,10 +161,3 @@ kErrBasicSysNotFound    = $FE
 ;;; Warning messages (JUMP_TABLE_SHOW_WARNING)
 
 kNumWarningTypes = 6
-
-kWarningMsgInsertSystemDisk     = 0
-kWarningMsgSelectorListFull     = 1
-kWarningMsgWindowMustBeClosed   = 2
-kWarningMsgTooManyFiles         = 3
-kWarningMsgTooManyWindows       = 4
-kWarningMsgSaveChanges     = 5

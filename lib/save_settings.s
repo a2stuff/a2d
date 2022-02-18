@@ -32,6 +32,7 @@ filename_buffer:
         stax    create_params::pathname
         stax    open_params::pathname
         jsr     DoWrite
+        ;; TODO: Retry if this fails?
 
         ;; Write to the original file location, if necessary
         jsr     JUMP_TABLE_GET_RAMCARD_FLAG
@@ -49,14 +50,16 @@ filename_buffer:
         lda     second_try_flag
         bne     :+
         inc     second_try_flag
-        lda     #kWarningMsgSaveChanges
-        jsr     JUMP_TABLE_SHOW_WARNING
+        lda     #kErrSaveChanges
+        jsr     JUMP_TABLE_SHOW_ALERT
+        cmp     #kAlertResultOK
         beq     @retry
         bne     done            ; always
 
         ;; Second time - prompt to insert.
-:       lda     #kWarningMsgInsertSystemDisk
-        jsr     JUMP_TABLE_SHOW_WARNING
+:       lda     #kErrInsertSystemDisk
+        jsr     JUMP_TABLE_SHOW_ALERT
+        cmp     #kAlertResultOK
         beq     @retry
 
 done:   rts
