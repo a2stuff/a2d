@@ -6074,7 +6074,9 @@ done:
         bne     :+
         rts
 
-:       copy    #0, index
+:       lda     #0
+        sta     index
+        sta     err
         lda     selected_window_id
         beq     loop
 
