@@ -6007,11 +6007,13 @@ list_view:
         ;; First row
 
         lda     #kFirstRowBaseline
+        sta     pos_col_icon::ycoord
         sta     pos_col_name::ycoord
         sta     pos_col_type::ycoord
         sta     pos_col_size::ycoord
         sta     pos_col_date::ycoord
         lda     #0
+        sta     pos_col_icon::ycoord+1
         sta     pos_col_name::ycoord+1
         sta     pos_col_type::ycoord+1
         sta     pos_col_size::ycoord+1
@@ -8659,60 +8661,25 @@ done:   bit     LCBANK1
         bit     LCBANK1
         bit     LCBANK1
 
-        ;; Clear out string
-        ldx     #kTextBuffer2Len
-        lda     #' '
-:       sta     text_buffer2::data-1,x
-        dex
-        bpl     :-
-        copy    #0, text_buffer2::length
-
-        lda     pos_col_type::ycoord
-        clc
-        adc     #kRowHeight
-        sta     pos_col_type::ycoord
-        bcc     :+
-        inc     pos_col_type::ycoord+1
-:
-        lda     pos_col_size::ycoord
-        clc
-        adc     #kRowHeight
-        sta     pos_col_size::ycoord
-        bcc     :+
-        inc     pos_col_size::ycoord+1
-:
-        lda     pos_col_date::ycoord
-        clc
-        adc     #kRowHeight
-        sta     pos_col_date::ycoord
-        bcc     :+
-        inc     pos_col_date::ycoord+1
-:
         ;; Below bottom?
         cmp16   pos_col_name::ycoord, window_grafport::cliprect::y2
-        bmi     check_top
-        lda     pos_col_name::ycoord
-        clc
-        adc     #kRowHeight
-        sta     pos_col_name::ycoord
-        bcc     :+
-        inc     pos_col_name::ycoord+1
-:       rts
+        bpl     ret
+
+        add16_8 pos_col_icon::ycoord, #kRowHeight
+        add16_8 pos_col_name::ycoord, #kRowHeight
+        add16_8 pos_col_type::ycoord, #kRowHeight
+        add16_8 pos_col_size::ycoord, #kRowHeight
+        add16_8 pos_col_date::ycoord, #kRowHeight
 
         ;; Above top?
-check_top:
-        lda     pos_col_name::ycoord
-        clc
-        adc     #kRowHeight
-        sta     pos_col_name::ycoord
-        bcc     :+
-        inc     pos_col_name::ycoord+1
-:       cmp16   pos_col_name::ycoord, window_grafport::cliprect::y1
+        cmp16   pos_col_name::ycoord, window_grafport::cliprect::y1
         bpl     in_range
-        rts
+ret:    rts
 
         ;; Draw it!
 in_range:
+        jsr     PrepareColGlyph
+        param_call SetPosDrawText, pos_col_icon
         jsr     PrepareColName
         param_call SetPosDrawText, pos_col_name
         jsr     PrepareColType
@@ -8725,6 +8692,24 @@ in_range:
 
 ;;; ============================================================
 
+.proc PrepareColGlyph
+        file_type := list_view_filerecord + FileRecord::file_type
+
+        lda     file_type
+        cmp     #FT_DIRECTORY
+    IF_EQ
+        copy    #kGlyphFolderLeft, text_buffer2::data
+        copy    #kGlyphFolderRight, text_buffer2::data+1
+        lda     #2
+    ELSE
+        copy    #' ', text_buffer2::data
+        lda     #1
+    END_IF
+        sta     text_buffer2::length
+
+        rts
+.endproc
+
 .proc PrepareColName
         name := list_view_filerecord + FileRecord::name
 
@@ -8732,13 +8717,11 @@ in_range:
         and     #NAME_LENGTH_MASK
         sta     text_buffer2::length
         tax
-loop:   lda     name,x
-        sta     text_buffer2::data,x
+:       lda     name,x
+        sta     text_buffer2::data-1,x
         dex
-        bne     loop
-        lda     #' '
-        sta     text_buffer2::data
-        inc     text_buffer2::length
+        bne     :-
+
         rts
 .endproc
 

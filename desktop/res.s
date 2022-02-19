@@ -953,7 +953,8 @@ window_title_addr_table:
 win_view_by_table:
         .res    kMaxNumWindows, 0
 
-        DEFINE_POINT pos_col_name, 0, 0
+        DEFINE_POINT pos_col_icon,   4, 0
+        DEFINE_POINT pos_col_name,  22, 0
         DEFINE_POINT pos_col_type, 128, 0
         DEFINE_POINT pos_col_size, 166, 0
         DEFINE_POINT pos_col_date, 231, 0
