@@ -233,14 +233,26 @@ end:
 .endscope
 
 ;;; ============================================================
-;;; Make current volume first in list
+;;; Make startup volume first in list
 
 .scope
-        ;; Find the current device's index in the list
+        ;; Find the startup volume's unit number
+        copy    DEVNUM, target
+        jsr     main::GetCopiedToRAMCardFlag
+    IF_MINUS
+        param_call main::CopyDeskTopOriginalPrefix, INVOKER_PREFIX
+        MLI_RELAY_CALL GET_FILE_INFO, main::src_file_info_params
+        bcs     :+
+        copy    DEVNUM, target
+:
+    END_IF
+
+        ;; Find the device's index in the list
         ldx     #0
 :       lda     DEVLST,x
         and     #$F0            ; just want S/D
-        cmp     DEVNUM
+        target := *+1
+        cmp     #SELF_MODIFIED_BYTE
         beq     found
         inx
         cpx     DEVCNT
