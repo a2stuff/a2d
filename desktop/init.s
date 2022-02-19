@@ -233,6 +233,38 @@ end:
 .endscope
 
 ;;; ============================================================
+;;; Make current volume first in list
+
+.scope
+        ;; Find the current device's index in the list
+        ldx     #0
+:       lda     DEVLST,x
+        and     #$F0            ; just want S/D
+        cmp     DEVNUM
+        beq     found
+        inx
+        cpx     DEVCNT
+        bcc     :-
+        bcs     done            ; last one or not found
+
+        ;; Save it
+found:  ldy     DEVLST,x
+
+        ;; Move everything up
+:       lda     DEVLST+1,x
+        sta     DEVLST,x
+        inx
+        cpx     DEVCNT
+        bne     :-
+
+        ;; Place it at the end
+        tya
+        sta     DEVLST,x
+
+done:
+.endscope
+
+;;; ============================================================
 ;;; Detach aux-memory RAM Disk
 
 .scope
