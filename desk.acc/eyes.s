@@ -173,6 +173,12 @@ grow_box_bitmap:
         .byte   PX(%1000000),PX(%0000000),PX(%0000001)
         .byte   PX(%1111111),PX(%1111111),PX(%1111111)
 
+setzp_params_nopreserve:           ; performance over convenience
+        .byte   MGTK::zp_overwrite
+
+setzp_params_preserve:            ; convenience over performance
+        .byte   MGTK::zp_preserve
+
 ;;; ============================================================
 
 .struct OvalRec
@@ -454,6 +460,8 @@ kMoveThresholdY = 5
 
         ;; Draw outline
 
+        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
+
         ;; Left
         copy16  #0, eye_rect+MGTK::Rect::x1
         copy16  #0, eye_rect+MGTK::Rect::y1
@@ -466,6 +474,8 @@ kMoveThresholdY = 5
         copy16  eye_rect+MGTK::Rect::x2, eye_rect+MGTK::Rect::x1
         copy16  winfo::maprect::x2, eye_rect+MGTK::Rect::x2
         jsr     DrawEyeball
+
+        MGTK_CALL MGTK::SetZP1, setzp_params_preserve
 
         ;; Skip erasing pupils if we're redrawing
         jmp     draw_pupils
