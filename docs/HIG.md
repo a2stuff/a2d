@@ -16,7 +16,7 @@ Note that these are for inspiration, not to be dutifully followed.
 * Interior border
   * 2x4 pixels thick.
   * Offset 2x4 pixels from the window frame.
-  * Drawn with solid black pen (not XOR)
+  * Drawn with solid black pen (not XOR).
 
 ## Buttons
 
@@ -33,6 +33,7 @@ Note that these are for inspiration, not to be dutifully followed.
 ## Text Input Boxes
 
 * Height is 11 pixels.
+* Border is 1x1 pixels thick, drawn with solid pen black pen (not XOR).
 * Text baseline is 5x10 pixels from top left corner of rect.
 
 ## Keyboard
