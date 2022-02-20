@@ -3480,8 +3480,8 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
         DEFINE_RECT prompt_rect, 40, kDialogLabelRow5+1, 360, kDialogLabelRow6
         DEFINE_POINT current_target_file_pos, 75, kDialogLabelRow2
         DEFINE_POINT current_dest_file_pos, 75, kDialogLabelRow3
-        DEFINE_RECT current_target_file_rect, 75, kDialogLabelRow1+1, 394, kDialogLabelRow2
-        DEFINE_RECT current_dest_file_rect, 75, kDialogLabelRow2+1, 394, kDialogLabelRow3
+        DEFINE_RECT current_target_file_rect, 75, kDialogLabelRow1+1, 390, kDialogLabelRow2
+        DEFINE_RECT current_dest_file_rect, 75, kDialogLabelRow2+1, 390, kDialogLabelRow3
 
 ;;; ============================================================
 ;;; "About" dialog resources
