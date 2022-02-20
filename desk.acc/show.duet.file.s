@@ -180,19 +180,15 @@ reserved2:      .byte   0
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
+penwidth:       .byte   kBorderDX
+penheight:      .byte   kBorderDY
+penmode:        .byte   MGTK::notpencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT_INSET frame_rect1, 4, 2, kDAWidth, kDAHeight
-        DEFINE_RECT_INSET frame_rect2, 5, 3, kDAWidth, kDAHeight
-
-penXOR: .byte   MGTK::penXOR
-
+        DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
 
 ypos_playing:   .word   18
 ypos_credit1:   .word   34
@@ -218,9 +214,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
         MGTK_CALL MGTK::SetPort, winfo::port
         MGTK_CALL MGTK::HideCursor
 
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FrameRect, frame_rect1
-        MGTK_CALL MGTK::FrameRect, frame_rect2
+        MGTK_CALL MGTK::FrameRect, frame_rect
 
         copy16  ypos_playing, pos::ycoord
         param_call DrawCenteredString, str_playing

@@ -14464,9 +14464,11 @@ jump_relay:
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_about_dialog
         lda     winfo_about_dialog::window_id
         jsr     SafeSetPortFromWindowId
+        jsr     SetPenModeNotCopy
+        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_frame_rect
+        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_normal
         jsr     SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_outer_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_inner_rect
         param_call DrawDialogTitle, aux::str_about1
         param_call DrawDialogLabel, 1 | DDL_CENTER, aux::str_about2
         param_call DrawDialogLabel, 2 | DDL_CENTER, aux::str_about3
@@ -15529,9 +15531,11 @@ done:   jmp     ResetMainGrafport
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
-        jsr     SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_outer_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_inner_rect
+        jsr     SetPenModeNotCopy
+        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_frame_rect
+        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_normal
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         rts
 .endproc
 

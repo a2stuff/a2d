@@ -265,12 +265,13 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT_INSET rect_outer_frame, 4, 2, kDialogWidth, kDialogHeight
-        DEFINE_RECT_INSET rect_inner_frame, 5, 3, kDialogWidth, kDialogHeight
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+        DEFINE_RECT_FRAME rect_frame, kDialogWidth, kDialogHeight
 
         ;; For erasing parts of the window
-        DEFINE_RECT_SZ rect_erase_dialog_upper, 6, 20, kDialogWidth-12, 82 ; under title to bottom of list
-        DEFINE_RECT_SZ rect_erase_dialog_lower, 6, 103, kDialogWidth-12, 42 ; bottom of list to bottom of dialog
+        DEFINE_RECT_SZ rect_erase_dialog_upper, 8, 20, kDialogWidth-16, 82 ; under title to bottom of list
+        DEFINE_RECT_SZ rect_erase_dialog_lower, 8, 103, kDialogWidth-16, 42 ; bottom of list to bottom of dialog
 
         DEFINE_BUTTON ok, res_string_button_ok, 350, 90
 
@@ -1448,9 +1449,9 @@ saved_ram_unitnum:
         MGTK_RELAY_CALL2 MGTK::OpenWindow, winfo_dialog
         lda     winfo_dialog::window_id
         jsr     SetWinPort
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_outer_frame
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_inner_frame
+        MGTK_RELAY_CALL2 MGTK::SetPenMode, notpencopy
+        MGTK_RELAY_CALL2 MGTK::SetPenSize, pensize_frame
+        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_frame
 
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport

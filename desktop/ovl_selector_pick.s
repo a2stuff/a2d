@@ -443,13 +443,15 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     winfo_entry_picker::window_id
         jsr     main::SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_outer_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_inner_rect
+        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
+        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_frame_rect
+        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_normal
         MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_line1_start
         MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line1_end
         MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_line2_start
         MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line2_end
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_ok_rect
         MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_cancel_rect
         jsr     DrawOkLabel
@@ -504,8 +506,7 @@ l2:     ldx     #0
 
         cmp     #8
         bcs     :+
-        lda     #0              ; col 1
-        tax
+        ldax    #kEntryPickerCol1
         beq     l3              ; always
 
 :       cmp     #16
@@ -719,18 +720,19 @@ l1:     pha
         lsr     a
         lsr     a
         lsr     a
-        tax
-        beq     l3
-        cmp     #1
-        bne     l2
+        bne     :+
+        ldax    #kEntryPickerCol1
+        jmp     l3
 
+:       cmp     #1
+        bne     :+
         ldax    #kEntryPickerCol2
         jmp     l3
 
-l2:     ldax    #kEntryPickerCol3
+:       ldax    #kEntryPickerCol3
 
 l3:     clc
-        adc     #8              ; highlight starts at +8 offset
+        adc     #4              ; highlight starts at +4 offset
         sta     entry_picker_item_rect::x1
         txa
         adc     #0

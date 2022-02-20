@@ -284,25 +284,25 @@ textfont:       .word   FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT_INSET rect_frame, 4, 2, winfo::kWidth, winfo::kHeight
+        DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok,      res_string_button_ok, 340, 102
-        DEFINE_BUTTON desktop, res_string_button_desktop,    60, 102
+        DEFINE_BUTTON ok,      res_string_button_ok, 340, 100
+        DEFINE_BUTTON desktop, res_string_button_desktop,    60, 100
 
-setpensize_params:
-        .byte   2, 1
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
 
-        DEFINE_POINT pos_title_string, 0, 15
+        DEFINE_POINT pos_title_string, 0, 16
 
 str_selector_title:
         PASCAL_STRING res_string_selector_dialog_title ; dialog title
 
         DEFINE_POINT pt0, 5, 22
 
-        DEFINE_POINT line1_pt1, 5, 20
-        DEFINE_POINT line1_pt2, winfo::kWidth - 5, 20
-        DEFINE_POINT line2_pt1, 5, winfo::kHeight - 20
-        DEFINE_POINT line2_pt2, winfo::kWidth - 5, winfo::kHeight - 20
+        DEFINE_POINT line1_pt1, kBorderDX*2, 20
+        DEFINE_POINT line1_pt2, winfo::kWidth - kBorderDX*2, 20
+        DEFINE_POINT line2_pt1, kBorderDX*2, winfo::kHeight - 22
+        DEFINE_POINT line2_pt2, winfo::kWidth - kBorderDX*2, winfo::kHeight - 22
 
 ;;; Position of entries box
         DEFINE_POINT pos_entry_base, 16, 30
@@ -1492,10 +1492,12 @@ saved_ram_unitnum:
 .endproc
 
 .proc DrawWindow
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::SetPenSize, setpensize_params
-
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, rect_frame
+
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
         MGTK_CALL MGTK::FrameRect, ok_button_rect
 
         bit     desktop_available_flag

@@ -125,18 +125,39 @@ common: MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
 
         MGTK_RELAY_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
         param_call file_dialog::DrawString, add_a_new_entry_to_label_str
+
         MGTK_RELAY_CALL MGTK::MoveTo, primary_run_list_label_pos
         param_call file_dialog::DrawString, primary_run_list_label_str
+        param_call file_dialog::MeasureString, primary_run_list_label_str
+        addax   rect_primary_run_list_ctrl::x1, rect_primary_run_list_ctrl::x2
+        add16_8 rect_primary_run_list_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
+
         MGTK_RELAY_CALL MGTK::MoveTo, secondary_run_list_label_pos
         param_call file_dialog::DrawString, secondary_run_list_label_str
+        param_call file_dialog::MeasureString, secondary_run_list_label_str
+        addax   rect_secondary_run_list_ctrl::x1, rect_secondary_run_list_ctrl::x2
+        add16_8 rect_secondary_run_list_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
+
         MGTK_RELAY_CALL MGTK::MoveTo, down_load_label_pos
         param_call file_dialog::DrawString, down_load_label_str
+
         MGTK_RELAY_CALL MGTK::MoveTo, at_first_boot_label_pos
         param_call file_dialog::DrawString, at_first_boot_label_str
+        param_call file_dialog::MeasureString, at_first_boot_label_str
+        addax   rect_at_first_boot_ctrl::x1, rect_at_first_boot_ctrl::x2
+        add16_8 rect_at_first_boot_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
+
         MGTK_RELAY_CALL MGTK::MoveTo, at_first_use_label_pos
         param_call file_dialog::DrawString, at_first_use_label_str
+        param_call file_dialog::MeasureString, at_first_use_label_str
+        addax   rect_at_first_use_ctrl::x1, rect_at_first_use_ctrl::x2
+        add16_8 rect_at_first_use_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
+
         MGTK_RELAY_CALL MGTK::MoveTo, never_label_pos
         param_call file_dialog::DrawString, never_label_str
+        param_call file_dialog::MeasureString, never_label_str
+        addax   rect_never_ctrl::x1, rect_never_ctrl::x2
+        add16_8 rect_never_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
 
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, rect_primary_run_list_radiobtn

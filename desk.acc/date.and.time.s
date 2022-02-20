@@ -857,8 +857,9 @@ done:   pla
 ;;; ============================================================
 ;;; Params for the display
 
-        DEFINE_RECT_INSET inner_rect, 4, 2, kDialogWidth, kDialogHeight
-        DEFINE_RECT_INSET outer_rect, 5, 3, kDialogWidth, kDialogHeight
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+        DEFINE_RECT_FRAME frame_rect, kDialogWidth, kDialogHeight
 
 label_ok:
         PASCAL_STRING res_string_button_ok ; button label
@@ -884,10 +885,11 @@ label_downarrow:
         MGTK_CALL MGTK::MoveTo, time_sep_pos
         param_call DrawString, str_time_separator
 
-        MGTK_CALL MGTK::SetPenMode, notpenxor
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
 
-        MGTK_CALL MGTK::FrameRect, outer_rect
-        MGTK_CALL MGTK::FrameRect, inner_rect
+        MGTK_CALL MGTK::SetPenMode, notpenxor
 
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, label_ok_pos

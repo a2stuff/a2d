@@ -274,3 +274,18 @@ kGlyphCheckmark         = $1D
         .ident(.sprintf("%s_label_str", .string(ident))) := *
         PASCAL_STRING {label}
 .endmacro
+
+;;; Define an rect for an inset frame drawn with a 4x2 pen, with a 4x2
+;;; gap between the passed window bounds and the border. This is the
+;;; standard style for modal dialog boxes and alerts.
+kBorderDX = 4
+kBorderDY = 2
+.macro DEFINE_RECT_FRAME ident, width, height
+        ident := *
+.scope ident
+x1:     .word   kBorderDX
+y1:     .word   kBorderDY
+x2:     .word   ((width) - kBorderDX*2 + 1)
+y2:     .word   ((height) - kBorderDY*2 + 1)
+.endscope
+.endmacro

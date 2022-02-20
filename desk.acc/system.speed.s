@@ -108,6 +108,9 @@ notpenOR:       .byte   5
 notpenXOR:      .byte   6
 notpenBIC:      .byte   7
 
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+
 .params winfo
 window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::dialog_box
@@ -141,9 +144,7 @@ textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT_INSET frame_rect1, 4, 2, kDAWidth, kDAHeight
-        DEFINE_RECT_INSET frame_rect2, 5, 3, kDAWidth, kDAHeight
-
+        DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
 
 .params getwinport_params
 window_id:      .byte   0
@@ -243,10 +244,13 @@ frame_counter:
         MGTK_CALL MGTK::OpenWindow, winfo
 
         MGTK_CALL MGTK::SetPort, winfo::port
-        MGTK_CALL MGTK::SetPenMode, penXOR
 
-        MGTK_CALL MGTK::FrameRect, frame_rect1
-        MGTK_CALL MGTK::FrameRect, frame_rect2
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, frame_rect
+
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         param_call DrawTitleString, title_label_str
 

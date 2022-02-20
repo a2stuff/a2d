@@ -51,8 +51,9 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 36, 23
 .endparams
 
-pencopy:        .byte   0
-penXOR:         .byte   2
+pencopy:        .byte   MGTK::pencopy
+notpencopy:     .byte   MGTK::notpencopy
+penXOR:         .byte   MGTK::penXOR
 
 event_params:   .tag    MGTK::Event
 event_kind      := event_params + MGTK::Event::kind
@@ -66,9 +67,19 @@ kAlertRectHeight        = 55
 kAlertRectLeft          = (::kScreenWidth - kAlertRectWidth)/2
 kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
 
-        DEFINE_RECT_SZ alert_rect, kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
-        DEFINE_RECT_INSET alert_inner_frame_rect1, 4, 2, kAlertRectWidth, kAlertRectHeight
-        DEFINE_RECT_INSET alert_inner_frame_rect2, 5, 3, kAlertRectWidth, kAlertRectHeight
+;;; Window frame is outside the rect proper
+kAlertFrameLeft = kAlertRectLeft - 1
+kAlertFrameTop = kAlertRectTop - 1
+kAlertFrameWidth = kAlertRectWidth + 2
+kAlertFrameHeight = kAlertRectHeight + 2
+        DEFINE_RECT_SZ alert_rect, kAlertFrameLeft, kAlertFrameTop, kAlertFrameWidth, kAlertFrameHeight
+
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+        DEFINE_RECT_FRAME alert_inner_frame_rect, kAlertRectWidth, kAlertRectHeight
+
+;;; TODO: Frame is too close to border for alerts!
+
 
 .params screen_portbits
         DEFINE_POINT viewloc, 0, 0
@@ -141,27 +152,19 @@ start:
         bit     alert_params::options
     IF_VS                       ; V = use save area
         ;; Compute save bounds
-        ldax    portmap::viewloc::xcoord ; left
+        ldax    #kAlertFrameLeft
         jsr     CalcXSaveBounds
         sty     save_x1_byte
         sta     save_x1_bit
 
-        lda     portmap::viewloc::xcoord ; right
-        clc
-        adc     portmap::maprect::x2
-        pha
-        lda     portmap::viewloc::xcoord+1
-        adc     portmap::maprect::x2+1
-        tax
-        pla
+        ldax    #kAlertFrameLeft + kAlertFrameWidth
         jsr     CalcXSaveBounds
         sty     save_x2_byte
         sta     save_x2_bit
 
-        lda     portmap::viewloc::ycoord ; top
+        lda     #kAlertFrameTop
         sta     save_y1
-        clc
-        adc     portmap::maprect::y2 ; bottom
+        lda     #kAlertFrameTop + kAlertFrameHeight
         sta     save_y2
 
         jsr     DialogBackgroundSave
@@ -176,18 +179,21 @@ start:
         ;; Draw alert box and bitmap - coordinates are in screen space
         LIB_MGTK_CALL MGTK::SetPenMode, pencopy
         LIB_MGTK_CALL MGTK::PaintRect, alert_rect ; alert background
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; ensures corners are inverted
+        LIB_MGTK_CALL MGTK::SetPenMode, notpencopy
         LIB_MGTK_CALL MGTK::FrameRect, alert_rect ; alert outline
 
         LIB_MGTK_CALL MGTK::SetPortBits, portmap ; viewport for remaining operations
 
         ;; Draw rest of alert - coordinates are relative to portmap
-        LIB_MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect1 ; inner 2x border
-        LIB_MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect2
+        LIB_MGTK_CALL MGTK::SetPenMode, notpencopy
+        LIB_MGTK_CALL MGTK::SetPenSize, pensize_frame
+        LIB_MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect
+
         LIB_MGTK_CALL MGTK::SetPenMode, pencopy
         LIB_MGTK_CALL MGTK::PaintBits, alert_bitmap_params
 
         ;; Draw appropriate buttons
+        LIB_MGTK_CALL MGTK::SetPenSize, pensize_normal
         LIB_MGTK_CALL MGTK::SetPenMode, penXOR
 
         bit     alert_params::buttons ; high bit clear = Cancel

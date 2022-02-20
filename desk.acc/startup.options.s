@@ -160,7 +160,6 @@ textfont:       .addr   0
 ;;; Common Resources
 
 kCheckboxWidth       = 17
-kCheckboxLabelWidth  = 250
 kCheckboxHeight      = 8
 
 .params checked_cb_params
@@ -212,7 +211,7 @@ kCheckboxLabelOffsetY = kCheckboxHeight + 1
 
         DEFINE_LABEL ramcard, res_string_label_ramcard, kRamCardX + kCheckboxLabelOffsetX, kRamCardY + kCheckboxLabelOffsetY
         DEFINE_RECT_SZ rect_ramcard, kRamCardX, kRamCardY, kCheckboxWidth, kCheckboxHeight
-        DEFINE_RECT_SZ rect_ramcard_click, kRamCardX, kRamCardY, kCheckboxWidth + kCheckboxLabelWidth, kCheckboxHeight
+        DEFINE_RECT_SZ rect_ramcard_click, kRamCardX, kRamCardY, kCheckboxLabelOffsetX, kCheckboxHeight
 
 ;;; ============================================================
 
@@ -222,11 +221,16 @@ kCheckboxLabelOffsetY = kCheckboxHeight + 1
 
         DEFINE_LABEL selector, res_string_label_selector, kSelectorX + kCheckboxLabelOffsetX, kSelectorY + kCheckboxLabelOffsetY
         DEFINE_RECT_SZ rect_selector, kSelectorX, kSelectorY, kCheckboxWidth, kCheckboxHeight
-        DEFINE_RECT_SZ rect_selector_click, kSelectorX, kSelectorY, kCheckboxWidth + kCheckboxLabelWidth, kCheckboxHeight
+        DEFINE_RECT_SZ rect_selector_click, kSelectorX, kSelectorY, kCheckboxLabelOffsetX, kCheckboxHeight
 
 ;;; ============================================================
 
 .proc Init
+        param_call MeasureText, ramcard_label_str
+        addax   rect_ramcard_click::x2
+        param_call MeasureText, selector_label_str
+        addax   rect_selector_click::x2
+
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
@@ -482,6 +486,24 @@ finish: MGTK_CALL MGTK::ShowCursor
         jsr     DrawCheckbox
 
         jmp     InputLoop
+.endproc
+
+;;; ============================================================
+;;; Measure text, pascal string address in A,X; result in A,X
+
+.proc MeasureText
+        ptr := $6
+        len := $8
+        result := $9
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        inc16   ptr
+        MGTK_CALL MGTK::TextWidth, ptr
+        ldax    result
+        rts
 .endproc
 
 ;;; ============================================================

@@ -1228,8 +1228,11 @@ l1:     ldx     num_file_names
         LIB_MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo_listbox
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
+        LIB_MGTK_CALL MGTK::SetPenMode, notpencopy
+        LIB_MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_frame
         LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
+        LIB_MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
+        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
         LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::ok_button_rect
         LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::open_button_rect
         LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
@@ -1313,6 +1316,25 @@ l1:     ldx     num_file_names
         sta     params+2
         inc16   params
         LIB_MGTK_CALL MGTK::DrawText, params
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc MeasureString
+        ptr := $06
+        params := $06
+
+.if FD_EXTENDED
+        jsr     CopyStringToLcbuf
+.endif
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     params+2
+        inc16   params
+        LIB_MGTK_CALL MGTK::TextWidth, params
+        ldax    params+3
         rts
 .endproc
 

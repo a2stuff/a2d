@@ -418,21 +418,23 @@ nextwinfo:      .addr   0
         DEFINE_RECT maprect, 0, 0, kNameInputLeft + kNameInputWidth - 2, 100 ; anything > kNameInputTop + kTextBoxHeight
 .endparams
 
+        kEntryPickerCol1 =  10
         kEntryPickerCol2 = 115
         kEntryPickerCol3 = 220
         kEntryPickerItemWidth  = 104
         kEntryPickerItemHeight = 9 ; default font height
 
-        DEFINE_RECT_INSET entry_picker_outer_rect, 4, 2, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
-        DEFINE_RECT_INSET entry_picker_inner_rect, 5, 3, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+        DEFINE_RECT_FRAME entry_picker_frame_rect, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
 
         ;; Line endpoints
-        DEFINE_POINT entry_picker_line1_start, 6, 22
-        DEFINE_POINT entry_picker_line1_end, 344, 22
+        DEFINE_POINT entry_picker_line1_start, 7, 22
+        DEFINE_POINT entry_picker_line1_end, 343, 22
 
         ;; Line endpoints
-        DEFINE_POINT entry_picker_line2_start, 6, winfo_entry_picker::kHeight-21
-        DEFINE_POINT entry_picker_line2_end, 344, winfo_entry_picker::kHeight-21
+        DEFINE_POINT entry_picker_line2_start, 7, winfo_entry_picker::kHeight-21
+        DEFINE_POINT entry_picker_line2_end, 343, winfo_entry_picker::kHeight-21
 
         DEFINE_RECT_SZ entry_picker_ok_rect, 210, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
 
@@ -447,12 +449,12 @@ enter_the_name_to_appear_label:
         PASCAL_STRING res_string_selector_label_enter_name
 
         DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 39
-        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},   349, 48
-        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, 349, 57
+        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},   kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 48
+        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 57
         DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 73
-        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},      349, 82
-        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},       349, 91
-        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},              349,100
+        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},      kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 82
+        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},       kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 91
+        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},              kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset,100
 
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
@@ -537,24 +539,25 @@ file_count:
 
 LD921:  .byte   0
 
+kRadioButtonWidth  = 10
+kRadioButtonHeight  = 6
+kRadioButtonLeft  = 332
+kRadioButtonHOffset = 7
 
-kRadioButtonWidth = 10
-kRadioButtonHeight = 6
+        DEFINE_RECT_SZ rect_primary_run_list_radiobtn,   kRadioButtonLeft, 41, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_secondary_run_list_radiobtn, kRadioButtonLeft, 50, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_at_first_boot_radiobtn,      kRadioButtonLeft, 75, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_at_first_use_radiobtn,       kRadioButtonLeft, 84, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_never_radiobtn,              kRadioButtonLeft, 93, kRadioButtonWidth, kRadioButtonHeight
 
-        DEFINE_RECT_SZ rect_primary_run_list_radiobtn,   332, 41, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_secondary_run_list_radiobtn, 332, 50, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_at_first_boot_radiobtn,      332, 75, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_at_first_use_radiobtn,       332, 84, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_never_radiobtn,              332, 93, kRadioButtonWidth, kRadioButtonHeight
-
-kRadioControlWidth = 164
+kRadioControlWidth = 0          ; dynamically computed based on label
 kRadioControlHeight = 8
 
-        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   332, 40, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, 332, 49, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      332, 74, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_use_ctrl,       332, 83, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_never_ctrl,              332, 92, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   kRadioButtonLeft, 40, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, kRadioButtonLeft, 49, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      kRadioButtonLeft, 74, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_use_ctrl,       kRadioButtonLeft, 83, kRadioControlWidth, kRadioControlHeight
+        DEFINE_RECT_SZ rect_never_ctrl,              kRadioButtonLeft, 92, kRadioControlWidth, kRadioControlHeight
 
         DEFINE_RECT rect_scratch, 0, 0, 0, 0
 

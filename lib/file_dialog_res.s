@@ -12,7 +12,7 @@
 type_down_buf:
         .res    16, 0
 
-        DEFINE_POINT pos_title, 0, 13
+        DEFINE_POINT pos_title, 0, 14
 
         kListBoxWidth = 125
 
@@ -31,7 +31,10 @@ selected_index:                 ; $FF if none
         kButtonGap = 3
         kSep = kButtonGap + 1 + kButtonGap
 
-        DEFINE_RECT_INSET dialog_frame_rect, 4, 2, kFilePickerDlgWidth, kFilePickerDlgHeight
+
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+        DEFINE_RECT_FRAME dialog_frame_rect, kFilePickerDlgWidth, kFilePickerDlgHeight
 
         DEFINE_RECT disk_name_rect, kControlsLeft, 16, 174, 26
 

@@ -3435,8 +3435,7 @@ special_menu:
         kPromptDialogLeft = (kScreenWidth - kPromptDialogWidth) / 2
         kPromptDialogTop  = (kScreenHeight - kPromptDialogHeight) / 2
 
-        DEFINE_RECT_INSET confirm_dialog_outer_rect, 4, 2, kPromptDialogWidth, kPromptDialogHeight
-        DEFINE_RECT_INSET confirm_dialog_inner_rect, 5, 3, kPromptDialogWidth, kPromptDialogHeight
+        DEFINE_RECT_FRAME confirm_dialog_frame_rect, kPromptDialogWidth, kPromptDialogHeight
 
         DEFINE_BUTTON ok,     res_string_button_ok, 260, kPromptDialogHeight-19
         DEFINE_BUTTON cancel, res_string_button_cancel,   40, kPromptDialogHeight-19
@@ -3490,8 +3489,7 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
 kAboutDialogWidth       = 400
 kAboutDialogHeight      = 120
 
-        DEFINE_RECT_INSET about_dialog_outer_rect, 4, 2, kAboutDialogWidth, kAboutDialogHeight
-        DEFINE_RECT_INSET about_dialog_inner_rect, 5, 3, kAboutDialogWidth, kAboutDialogHeight
+        DEFINE_RECT_FRAME about_dialog_frame_rect, kAboutDialogWidth, kAboutDialogHeight
 
 str_about1:  PASCAL_STRING kDeskTopProductName
 str_about2:  PASCAL_STRING res_string_copyright_line1

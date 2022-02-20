@@ -962,8 +962,7 @@ ctlmax:         .byte   0
 
 ;;; ============================================================
 
-        DEFINE_RECT_INSET frame_rect1, 4, 2, kDAWidth, kDAHeight
-        DEFINE_RECT_INSET frame_rect2, 5, 3, kDAWidth, kDAHeight
+        DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
 
         kControlsTop = 10
         kFindLeft = 20
@@ -976,7 +975,10 @@ ctlmax:         .byte   0
         DEFINE_BUTTON search, res_string_button_search, kDAWidth-235, kControlsTop
         DEFINE_BUTTON cancel, res_string_button_cancel, kDAWidth-120, kControlsTop
 
-penxor: .byte   MGTK::penXOR
+penXOR:         .byte   MGTK::penXOR
+notpencopy:     .byte   MGTK::notpencopy
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
 
 cursor_ip_flag: .byte   0
 
@@ -1598,7 +1600,7 @@ InvertRect:
         copy    #kDAWindowID, winport_params::window_id
         MGTK_CALL MGTK::GetWinPort, winport_params
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPenMode, penxor
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, 0, fillrect_addr
         rts
 .endproc
@@ -1612,7 +1614,7 @@ InvertRect:
         copy    #kDAWindowID, winport_params::window_id
         MGTK_CALL MGTK::GetWinPort, winport_params
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPenMode, penxor
+        MGTK_CALL MGTK::SetPenMode, penXOR
         jsr     sub
         ;; fall through...
 
@@ -1848,13 +1850,14 @@ done:   jmp     InputLoop
 
         MGTK_CALL MGTK::FrameRect, input_rect
 
-        MGTK_CALL MGTK::SetPenMode, penxor
-        MGTK_CALL MGTK::FrameRect, frame_rect1
-        MGTK_CALL MGTK::FrameRect, frame_rect2
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, find_label_pos
         param_call DrawString, find_label_str
 
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, search_button_rect
         MGTK_CALL MGTK::MoveTo, search_button_pos
         param_call DrawString, search_button_label
