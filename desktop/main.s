@@ -10747,7 +10747,7 @@ done:   rts
 
 .enum DeleteDialogLifecycle
         open            = 0
-        populate        = 1
+        count           = 1
         confirm         = 2     ; confirmation before deleting
         show            = 3
         locked          = 4     ; confirm deletion of locked file
@@ -10776,7 +10776,7 @@ DoCopyToRAM2:
         copy    #0, move_flag
         copy    #0, delete_skip_decrement_flag
         jsr     copy_file_for_run
-        jsr     done_dialog_phase1
+        jsr     InvokeOperationCompleteCallback
         ;; fall through
 
 .proc FinishOperation
@@ -10791,10 +10791,10 @@ DoDeleteFile:
         lda     #DeleteDialogLifecycle::open
         jsr     DoDeleteDialogPhase
         jsr     SizeOrCountProcessSelectedFile
-        jsr     done_dialog_phase2
+        jsr     InvokeOperationConfirmCallback
         jsr     PrepCallbacksForDelete
         jsr     DeleteProcessSelectedFile
-        jsr     done_dialog_phase1
+        jsr     InvokeOperationCompleteCallback
         jmp     FinishOperation
 
 DoCopyToRAM:
@@ -10936,12 +10936,13 @@ common:
 @lock:  jsr     DoLockDialogPhase
         jmp     iterate_selection
 
-@size:  jsr     do_get_size_dialog_phase
+@size:  jsr     DoGetSizeDialogPhase
         jmp     iterate_selection
 
 ;;; Perform operation
 
-L90BA:  bit     operation_flags
+perform:
+        bit     operation_flags
         bvs     @size
         bmi     @lock
         bit     delete_flag
@@ -11030,13 +11031,13 @@ next_icon:
         bpl     not_trash
 
 @lock_or_size:
-        jsr     done_dialog_phase2
+        jsr     InvokeOperationConfirmCallback
         bit     operation_flags
         bvs     finish
 not_trash:
-        jmp     L90BA
+        jmp     perform
 
-finish: jsr     done_dialog_phase1
+finish: jsr     InvokeOperationCompleteCallback
         return  #0
 .endproc
 
@@ -11051,20 +11052,24 @@ finish: jsr     done_dialog_phase1
 
 ;;; ============================================================
 
-done_dialog_phase0:
-        dialog_phase0_callback := *+1
+;;; Called for each file during enumeration; A,X = file count
+InvokeOperationEnumerationCallback:
+        operation_enumeration_callback := *+1
         jmp     SELF_MODIFIED
 
-done_dialog_phase1:
-        dialog_phase1_callback := *+1
+;;; Called on operation completion (success or failure)
+InvokeOperationCompleteCallback:
+        operation_complete_callback := *+1
         jmp     SELF_MODIFIED
 
-done_dialog_phase2:
-        dialog_phase2_callback := *+1
+;;; Called once enumeration is complete, to confirm the operation.
+InvokeOperationConfirmCallback:
+        operation_confirm_callback := *+1
         jmp     SELF_MODIFIED
 
-done_dialog_phase3:
-        dialog_phase3_callback := *+1
+;;; Called when there are not enough free blocks on destination.
+InvokeOperationTooLargeCallback:
+        operation_toolarge_callback := *+1
         jmp     SELF_MODIFIED
 
 stack_stash:
@@ -12389,12 +12394,12 @@ loop:   jsr     ReadFileEntry
 
 end_dir:
         lda     process_depth
-        beq     L9920
+        beq     :+
         jsr     FinishDir
         dec     process_depth
         jmp     loop
 
-L9920:  jmp     CloseSrcDir
+:       jmp     CloseSrcDir
 .endproc
 
 cancel_descent_flag:  .byte   0
@@ -12424,7 +12429,7 @@ callbacks_for_copy:
 
 .enum CopyDialogLifecycle
         open            = 0
-        populate        = 1
+        count           = 1
         show            = 2
         exists          = 3     ; show "file exists" prompt
         too_large       = 4     ; show "too large" prompt
@@ -12440,14 +12445,14 @@ count:  .addr   0
 
 .proc DoCopyDialogPhase
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
-        copy16  #CopyDialogPhase0Callback, dialog_phase0_callback
-        copy16  #CopyDialogPhase1Callback, dialog_phase1_callback
+        copy16  #CopyDialogEnumerationCallback, operation_enumeration_callback
+        copy16  #CopyDialogCompleteCallback, operation_complete_callback
         jmp     RunCopyDialogProc
 .endproc
 
-.proc CopyDialogPhase0Callback
+.proc CopyDialogEnumerationCallback
         stax    copy_dialog_params::count
-        copy    #CopyDialogLifecycle::populate, copy_dialog_params::phase
+        copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
         jmp     RunCopyDialogProc
 .endproc
 
@@ -12457,12 +12462,11 @@ count:  .addr   0
         dey
         bpl     :-
 
-        lda     #0
-        sta     all_flag
+        copy    #0, all_flag
         rts
 .endproc
 
-.proc CopyDialogPhase1Callback
+.proc CopyDialogCompleteCallback
         copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
         jmp     RunCopyDialogProc
 .endproc
@@ -12470,17 +12474,25 @@ count:  .addr   0
 ;;; ============================================================
 ;;; "Download" - shares heavily with Copy
 
+.enum DownloadDialogLifecycle
+        open            = 0
+        count           = 1
+        show            = 2
+        close           = 3
+        too_large       = 4
+.endenum
+
 .proc DoDownloadDialogPhase
-        copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
-        copy16  #DownloadDialogPhase0Callback, dialog_phase0_callback
-        copy16  #DownloadDialogPhase1Callback, dialog_phase1_callback
+        copy    #DownloadDialogLifecycle::open, copy_dialog_params::phase
+        copy16  #DownloadDialogEnumerationCallback, operation_enumeration_callback
+        copy16  #DownloadDialogCompleteCallback, operation_complete_callback
         param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
-.proc DownloadDialogPhase0Callback
+.proc DownloadDialogEnumerationCallback
         stax    copy_dialog_params::count
-        copy    #CopyDialogLifecycle::populate, copy_dialog_params::phase
+        copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
         param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
@@ -12493,19 +12505,21 @@ count:  .addr   0
         dey
         bpl     :-
 
-        copy16  #DownloadDialogPhase3Callback, dialog_phase3_callback
+        copy16  #DownloadDialogTooLargeCallback, operation_toolarge_callback
         rts
 .endproc
 
-.proc DownloadDialogPhase1Callback
-        copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
+.proc DownloadDialogCompleteCallback
+        copy    #DownloadDialogLifecycle::close, copy_dialog_params::phase
         param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
         rts
 .endproc
 
-.proc DownloadDialogPhase3Callback
-        copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
+.proc DownloadDialogTooLargeCallback
+        copy    #DownloadDialogLifecycle::too_large, copy_dialog_params::phase
         param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
+        ;; TODO: The dialog (in `DownloadDialogProc`) only has an OK button,
+        ;; so the result is never yes.
         cmp     #PromptResult::yes
         bne     :+
         rts
@@ -12765,7 +12779,7 @@ done:   rts
 
 :       sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
         cmp16   blocks_free, op_block_count
-        jcc     done_dialog_phase3
+        jcc     InvokeOperationTooLargeCallback
 
         rts
 
@@ -13068,19 +13082,19 @@ count:  .word   0
 
 .proc DoDeleteDialogPhase
         sta     delete_dialog_params::phase
-        copy16  #ConfirmDeleteDialog, dialog_phase2_callback
-        copy16  #PopulateDeleteDialog, dialog_phase0_callback
+        copy16  #DeleteDialogConfirmCallback, operation_confirm_callback
+        copy16  #DeleteDialogEnumerationCallback, operation_enumeration_callback
         jsr     RunDeleteDialogProc
-        copy16  #L9ED3, dialog_phase1_callback
+        copy16  #DeleteDialogCompleteCallback, operation_complete_callback
         rts
 
-.proc PopulateDeleteDialog
+.proc DeleteDialogEnumerationCallback
         stax    delete_dialog_params::count
-        copy    #DeleteDialogLifecycle::populate, delete_dialog_params::phase
+        copy    #DeleteDialogLifecycle::count, delete_dialog_params::phase
         jmp     RunDeleteDialogProc
 .endproc
 
-.proc ConfirmDeleteDialog
+.proc DeleteDialogConfirmCallback
         copy    #DeleteDialogLifecycle::confirm, delete_dialog_params::phase
         jsr     RunDeleteDialogProc
         beq     :+
@@ -13099,12 +13113,11 @@ count:  .word   0
         dey
         bpl     :-
 
-        lda     #0
-        sta     all_flag
+        copy    #0, all_flag
         rts
 .endproc
 
-.proc L9ED3
+.proc DeleteDialogCompleteCallback
         copy    #DeleteDialogLifecycle::close, delete_dialog_params::phase
         jmp     RunDeleteDialogProc
 .endproc
@@ -13303,19 +13316,19 @@ done:   rts
 
 ;;; LockProcessSelectedFile
 ;;;  - called for each file in selection; calls ProcessDir to recurse
-;;; lock_process_directory_entry
+;;; LockProcessDirectoryEntry
 ;;;  - c/o ProcessDir for each file in dir; skips if dir, locks otherwise
 
 ;;; Overlays for lock/unlock operation (op_jt_addrs)
 callbacks_for_lock:
-        .addr   lock_process_directory_entry
+        .addr   LockProcessDirectoryEntry
         .addr   DoNothing
         .addr   DoNothing
 
 .enum LockDialogLifecycle
         open            = 0 ; opening window, initial label
-        populate        = 1 ; show operation details (e.g. file count)
-        loop            = 2 ; draw buttons, input loop
+        count           = 1 ; show operation details (e.g. file count)
+        prompt          = 2 ; draw buttons, input loop
         operation       = 3 ; performing operation
         close           = 4 ; destroy window
 .endenum
@@ -13333,43 +13346,43 @@ files_remaining_count:
         bpl     :+
 
         ;; Unlock
-        copy16  #UnlockDialogPhase2Callback, dialog_phase2_callback
-        copy16  #UnlockDialogPhase0Callback, dialog_phase0_callback
-        jsr     unlock_dialog_lifecycle
-        copy16  #CloseUnlockDialog, dialog_phase1_callback
+        copy16  #UnlockDialogConfirmCallback, operation_confirm_callback
+        copy16  #UnlockDialogEnumerationCallback, operation_enumeration_callback
+        jsr     RunUnlockDialogProc
+        copy16  #UnlockDialogCompleteCallback, operation_complete_callback
         rts
 
         ;; Lock
-:       copy16  #LockDialogPhase2Callback, dialog_phase2_callback
-        copy16  #LockDialogPhase0Callback, dialog_phase0_callback
-        jsr     lock_dialog_lifecycle
-        copy16  #CloseLockDialog, dialog_phase1_callback
+:       copy16  #LockDialogConfirmCallback, operation_confirm_callback
+        copy16  #LockDialogEnumerationCallback, operation_enumeration_callback
+        jsr     RunLockDialogProc
+        copy16  #LockDialogCompleteCallback, operation_complete_callback
         rts
 .endproc
 
-.proc LockDialogPhase0Callback
+.proc LockDialogEnumerationCallback
         stax    lock_unlock_dialog_params::files_remaining_count
-        copy    #LockDialogLifecycle::populate, lock_unlock_dialog_params::phase
-        jmp     lock_dialog_lifecycle
+        copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
+        jmp     RunLockDialogProc
 .endproc
 
-.proc UnlockDialogPhase0Callback
+.proc UnlockDialogEnumerationCallback
         stax    lock_unlock_dialog_params::files_remaining_count
-        copy    #LockDialogLifecycle::populate, lock_unlock_dialog_params::phase
-        jmp     unlock_dialog_lifecycle
+        copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
+        jmp     RunUnlockDialogProc
 .endproc
 
-.proc LockDialogPhase2Callback
-        copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
-        jsr     lock_dialog_lifecycle
+.proc LockDialogConfirmCallback
+        copy    #LockDialogLifecycle::prompt, lock_unlock_dialog_params::phase
+        jsr     RunLockDialogProc
         jne     CloseFilesCancelDialog
 
         rts
 .endproc
 
-.proc UnlockDialogPhase2Callback
-        copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
-        jsr     unlock_dialog_lifecycle
+.proc UnlockDialogConfirmCallback
+        copy    #LockDialogLifecycle::prompt, lock_unlock_dialog_params::phase
+        jsr     RunUnlockDialogProc
         jne     CloseFilesCancelDialog
 
         rts
@@ -13384,21 +13397,21 @@ files_remaining_count:
         rts
 .endproc
 
-.proc CloseLockDialog
+.proc LockDialogCompleteCallback
         copy    #LockDialogLifecycle::close, lock_unlock_dialog_params::phase
-        jmp     lock_dialog_lifecycle
+        jmp     RunLockDialogProc
 .endproc
 
-.proc CloseUnlockDialog
+.proc UnlockDialogCompleteCallback
         copy    #LockDialogLifecycle::close, lock_unlock_dialog_params::phase
-        jmp     unlock_dialog_lifecycle
+        jmp     RunUnlockDialogProc
 .endproc
 
-lock_dialog_lifecycle:
+RunLockDialogProc:
         param_call invoke_dialog_proc, kIndexLockDialog, lock_unlock_dialog_params
         rts
 
-unlock_dialog_lifecycle:
+RunUnlockDialogProc:
         param_call invoke_dialog_proc, kIndexUnlockDialog, lock_unlock_dialog_params
         rts
 
@@ -13446,7 +13459,7 @@ do_lock:
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
 
-lock_process_directory_entry:
+LockProcessDirectoryEntry:
         jsr     AppendFileEntryToSrcPath
         ;; fall through
 
@@ -13468,7 +13481,7 @@ lock_process_directory_entry:
         bit     unlock_flag
         bpl     :+
         lda     #ACCESS_DEFAULT
-        bne     set
+        bne     set             ; always
 :       lda     #ACCESS_LOCKED
 set:    sta     src_file_info_params::access
 
@@ -13486,10 +13499,10 @@ ok:     jmp     RemoveSrcPathSegment
 update_dialog:
         sub16   op_file_count, #1, lock_unlock_dialog_params::files_remaining_count
         bit     unlock_flag
-        bpl     LA1DC
-        jmp     unlock_dialog_lifecycle
+        bpl     :+
+        jmp     RunUnlockDialogProc
 
-LA1DC:  jmp     lock_dialog_lifecycle
+:       jmp     RunLockDialogProc
 .endproc
 
 ;;; ============================================================
@@ -13500,36 +13513,44 @@ LA1DC:  jmp     lock_dialog_lifecycle
 ;;; other operations (copy, delete, lock, unlock) to populate
 ;;; confirmation dialog.
 
+.enum GetSizeDialogLifecycle
+        open    = 0
+        count   = 1
+        prompt  = 2
+        close   = 3
+.endenum
+
 .params get_size_dialog_params
 phase:  .byte   0
         .addr   op_file_count, op_block_count
 .endparams
 
-do_get_size_dialog_phase:
+.proc DoGetSizeDialogPhase
         copy    #0, get_size_dialog_params::phase
-        copy16  #GetSizeDialogPhase2Callback, dialog_phase2_callback
-        copy16  #GetSizeDialogPhase0Callback, dialog_phase0_callback
+        copy16  #GetSizeDialogConfirmCallback, operation_confirm_callback
+        copy16  #GetSizeDialogEnumerationCallback, operation_enumeration_callback
         param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
-        copy16  #GetSizeDialogPhase1Callback, dialog_phase1_callback
+        copy16  #GetSizeDialogCompleteCallback, operation_complete_callback
         rts
+.endproc
 
-.proc GetSizeDialogPhase0Callback
-        copy    #1, get_size_dialog_params::phase
+.proc GetSizeDialogEnumerationCallback
+        copy    #GetSizeDialogLifecycle::count, get_size_dialog_params::phase
         param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
         ;; fall through
 .endproc
 get_size_rts1:
         rts
 
-.proc GetSizeDialogPhase2Callback
-        copy    #2, get_size_dialog_params::phase
+.proc GetSizeDialogConfirmCallback
+        copy    #GetSizeDialogLifecycle::prompt, get_size_dialog_params::phase
         param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
         beq     get_size_rts1
         jmp     CloseFilesCancelDialog
 .endproc
 
-.proc GetSizeDialogPhase1Callback
-        copy    #3, get_size_dialog_params::phase
+.proc GetSizeDialogCompleteCallback
+        copy    #GetSizeDialogLifecycle::close, get_size_dialog_params::phase
         param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
 .endproc
 get_size_rts2:
@@ -13624,7 +13645,7 @@ do_sum_file_size:
         jsr     RemoveSrcPathSegment
 
 :       ldax    op_file_count
-        jmp     done_dialog_phase0
+        jmp     InvokeOperationEnumerationCallback
 .endproc
 
 op_file_count:
@@ -13842,7 +13863,7 @@ loop:   iny
         lda     #kOperationFailed
 ep2:    sta     @result
 
-        jsr     done_dialog_phase1
+        jsr     InvokeOperationCompleteCallback
 
         MLI_RELAY_CALL CLOSE, close_params
 
@@ -14019,7 +14040,7 @@ flag_clear:
         beq     not_found
 
         jsr     ShowAlert
-        bne     LA4C2           ; not kAlertResultTryAgain = 0
+        bne     close           ; not kAlertResultTryAgain = 0
         rts
 
 not_found:
@@ -14030,10 +14051,10 @@ not_found:
 
 :       lda     #kErrInsertSrcDisk
 show:   jsr     ShowAlert
-        bne     LA4C2           ; not kAlertResultTryAgain = 0
+        bne     close           ; not kAlertResultTryAgain = 0
         jmp     do_on_line
 
-LA4C2:  jmp     CloseFilesCancelDialog
+close:  jmp     CloseFilesCancelDialog
 
 flag:   .byte   0
 
@@ -14241,18 +14262,20 @@ maybe_check_button_cancel:
 check_button_cancel:
         MGTK_RELAY_CALL MGTK::InRect, aux::cancel_button_rect
         cmp     #MGTK::inrect_inside
-        bne     LA6ED
+    IF_EQ
         param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::cancel_button_rect
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
+    END_IF
 
-LA6ED:  bit     has_input_field_flag
-        bmi     LA6F7
+        bit     has_input_field_flag
+    IF_PLUS
         lda     #$FF
         jmp     jump_relay
+    END_IF
 
-LA6F7:  jsr     HandleClickInTextbox
+        jsr     HandleClickInTextbox
         return  #$FF
 .endproc
 
@@ -14277,46 +14300,46 @@ no_mods:
         lda     event_params::key
 
         cmp     #CHAR_LEFT
-        bne     LA72E
+        bne     :+
         bit     format_erase_overlay_flag
         jmi     format_erase_overlay__PromptHandleKeyLeft
         jmp     HandleKeyLeft
 
-LA72E:  cmp     #CHAR_RIGHT
-        bne     LA73D
+:       cmp     #CHAR_RIGHT
+        bne     :+
         bit     format_erase_overlay_flag
         jmi     format_erase_overlay__PromptHandleKeyRight
         jmp     HandleKeyRight
 
-LA73D:  cmp     #CHAR_RETURN
+:       cmp     #CHAR_RETURN
         bne     :+
         bit     prompt_button_flags
         bvs     done
         jmp     HandleKeyOk
 
 :       cmp     #CHAR_ESCAPE
-        bne     LA755
+        bne     :+
         bit     prompt_button_flags
         jpl     HandleKeyCancel
         jmp     HandleKeyOk
 
-LA755:  cmp     #CHAR_DELETE
+:       cmp     #CHAR_DELETE
         jeq     HandleKeyDelete
 
         cmp     #CHAR_UP
-        bne     LA76B
+        bne     :+
         bit     format_erase_overlay_flag
         jpl     done
         jmp     format_erase_overlay__PromptHandleKeyUp
 
-LA76B:  cmp     #CHAR_DOWN
-        bne     LA77A
+:       cmp     #CHAR_DOWN
+        bne     :+
         bit     format_erase_overlay_flag
         jpl     done
         jmp     format_erase_overlay__PromptHandleKeyDown
 
-LA77A:  bit     prompt_button_flags
-        bvc     LA79B
+:       bit     prompt_button_flags
+        bvc     :+
         cmp     #kShortcutYes
         beq     do_yes
         cmp     #TO_LOWER(kShortcutYes)
@@ -14332,7 +14355,7 @@ LA77A:  bit     prompt_button_flags
         cmp     #CHAR_RETURN
         beq     do_yes
 
-LA79B:  bit     input_allow_all_chars_flag
+:       bit     input_allow_all_chars_flag
         bmi     LA7C8
         cmp     #'.'
         beq     LA7D8
@@ -14366,11 +14389,11 @@ LA7CF:  cmp     #'~'
         jmp     done
 
 LA7D8:  ldx     path_buf1
-        beq     LA7E5
+        beq     fail
 LA7DD:  ldx     has_input_field_flag
-        beq     LA7E5
+        beq     fail
         jsr     InputFieldInsertChar
-LA7E5:  return  #$FF
+fail:   return  #$FF
 
 do_yes: jsr     SetPenModeXOR
         MGTK_RELAY_CALL MGTK::PaintRect, aux::yes_button_rect
@@ -14502,7 +14525,7 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         ldy     #0
         lda     (ptr),y
 
-        cmp     #CopyDialogLifecycle::populate
+        cmp     #CopyDialogLifecycle::count
         jeq     do1
         cmp     #CopyDialogLifecycle::show
         jeq     do2
@@ -14530,7 +14553,7 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         param_call DrawDialogLabel, 4, aux::str_move_remaining
         rts
 
-        ;; CopyDialogLifecycle::populate
+        ;; CopyDialogLifecycle::count
 do1:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     AdjustStrFilesSuffix
@@ -14589,8 +14612,8 @@ do3:    jsr     Bell
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 6, aux::str_exists_prompt
         jsr     DrawYesNoAllCancelButtons
-LAA7F:  jsr     PromptInputLoop
-        bmi     LAA7F
+:       jsr     PromptInputLoop
+        bmi     :-
         pha
         jsr     EraseYesNoAllCancelButtons
         jsr     SetPenModeCopy
@@ -14628,15 +14651,16 @@ do4:    jsr     Bell
         jsr     CopyDialogParamAddrToPtr
         ldy     #0
         lda     (ptr),y
-        cmp     #1
+        cmp     #DownloadDialogLifecycle::count
         jeq     do1
-        cmp     #2
+        cmp     #DownloadDialogLifecycle::show
         jeq     do2
-        cmp     #3
+        cmp     #DownloadDialogLifecycle::close
         jeq     do3
-        cmp     #4
+        cmp     #DownloadDialogLifecycle::too_large
         jeq     do4
 
+        ;; DownloadDialogLifecycle::open
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::str_download
@@ -14646,6 +14670,7 @@ do4:    jsr     Bell
         param_call DrawDialogLabel, 4, aux::str_copy_remaining
         rts
 
+        ;; DownloadDialogLifecycle::count
 do1:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     AdjustStrFilesSuffix
@@ -14657,6 +14682,7 @@ do1:    ldy     #1
         param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
+        ;; DownloadDialogLifecycle::show
 do2:    ldy     #1
         copy16in (ptr),y, file_count
         jsr     AdjustStrFilesSuffix
@@ -14680,10 +14706,12 @@ do2:    ldy     #1
         param_call DrawString, str_2_spaces
         rts
 
+        ;; DownloadDialogLifecycle::close
 do3:    jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         rts
 
+        ;; DownloadDialogLifecycle::too_large
 do4:    jsr     Bell
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
@@ -14710,13 +14738,14 @@ do4:    jsr     Bell
         jsr     CopyDialogParamAddrToPtr
         ldy     #0
         lda     (ptr),y
-        cmp     #1
+        cmp     #GetSizeDialogLifecycle::count
         jeq     do1
-        cmp     #2
+        cmp     #GetSizeDialogLifecycle::prompt
         jeq     do2
-        cmp     #3
+        cmp     #GetSizeDialogLifecycle::close
         jeq     do3
 
+        ;; GetSizeDialogLifecycle::open
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::label_get_size
         param_call DrawDialogLabel, 1, aux::str_size_number
@@ -14727,6 +14756,7 @@ do4:    jsr     Bell
         jsr     DrawColon
         rts
 
+        ;; GetSizeDialogLifecycle::count
 do1:
         ;; File Count
         ldy     #1
@@ -14769,10 +14799,12 @@ do1:
         param_call DrawString, str_kb_suffix
         rts
 
+        ;; GetSizeDialogLifecycle::close
 do3:    jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         rts
 
+        ;; GetSizeDialogLifecycle::confirm
 do2:
         ;; If no files were seen, `do1` was never executed and so the
         ;; counts will not be shown. Update one last time, just in case.
@@ -14797,7 +14829,7 @@ do2:
         ldy     #0
         lda     ($06),y         ; phase
 
-        cmp     #DeleteDialogLifecycle::populate
+        cmp     #DeleteDialogLifecycle::count
         jeq     do1
         cmp     #DeleteDialogLifecycle::confirm
         jeq     do2
@@ -14818,7 +14850,7 @@ do2:
 delete_flag:                    ; clear if trash, set if delete
         .byte   0
 
-        ;; DeleteDialogLifecycle::populate
+        ;; DeleteDialogLifecycle::count
 do1:    ldy     #1
         copy16in ($06),y, file_count
         jsr     AdjustStrFilesSuffix
@@ -15101,9 +15133,9 @@ is_volume_flag:
         ldy     #0
         lda     ($06),y
 
-        cmp     #LockDialogLifecycle::populate
+        cmp     #LockDialogLifecycle::count
         jeq     do1
-        cmp     #LockDialogLifecycle::loop
+        cmp     #LockDialogLifecycle::prompt
         jeq     do2
         cmp     #LockDialogLifecycle::operation
         jeq     do3
@@ -15116,7 +15148,7 @@ is_volume_flag:
         param_call DrawDialogTitle, aux::label_lock
         rts
 
-        ;; LockDialogLifecycle::populate
+        ;; LockDialogLifecycle::count
 do1:    ldy     #1
         copy16in ($06),y, file_count
         jsr     AdjustStrFilesSuffix
@@ -15154,7 +15186,7 @@ do3:    ldy     #1
         param_call DrawString, str_2_spaces
         rts
 
-        ;; LockDialogLifecycle::loop
+        ;; LockDialogLifecycle::prompt
 do2:    lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkCancelButtons
@@ -15184,9 +15216,9 @@ do4:    jsr     ClosePromptDialog
         ldy     #0
         lda     ($06),y
 
-        cmp     #LockDialogLifecycle::populate
+        cmp     #LockDialogLifecycle::count
         jeq     do1
-        cmp     #LockDialogLifecycle::loop
+        cmp     #LockDialogLifecycle::prompt
         jeq     do2
         cmp     #LockDialogLifecycle::operation
         jeq     do3
@@ -15199,7 +15231,7 @@ do4:    jsr     ClosePromptDialog
         param_call DrawDialogTitle, aux::label_unlock
         rts
 
-        ;; LockDialogLifecycle::populate
+        ;; LockDialogLifecycle::count
 do1:    ldy     #1
         copy16in ($06),y, file_count
         jsr     AdjustStrFilesSuffix
@@ -15235,7 +15267,7 @@ do3:    ldy     #1
         param_call DrawString, str_2_spaces
         rts
 
-        ;; LockDialogLifecycle::loop
+        ;; LockDialogLifecycle::prompt
 do2:    lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkCancelButtons
