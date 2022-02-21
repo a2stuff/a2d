@@ -75,6 +75,25 @@ JT_GET_ORIG_PREFIX:     jmp     CopyDeskTopOriginalPrefix ; *
         jsr     GetEvent
         lda     event_params::kind
 
+        ;; Is it a key down event?
+        cmp     #MGTK::EventKind::key_down
+    IF_EQ
+        jsr     HandleKeydown
+        jmp     MainLoop
+    END_IF
+
+        ;; Was it maybe a mouse move?
+        cmp     #MGTK::EventKind::no_event
+    IF_EQ
+        jsr     CheckMouseMoved
+        bcc     MainLoop        ; nope, ignore
+        ;; fall through...
+    END_IF
+
+        ;; Cancel any type down selection.
+        jsr     ClearTypeDown
+        lda     event_params::kind
+
         ;; Is it a button-down event? (including w/ modifiers)
         cmp     #MGTK::EventKind::button_down
         beq     click
@@ -82,19 +101,15 @@ JT_GET_ORIG_PREFIX:     jmp     CopyDeskTopOriginalPrefix ; *
         bne     :+
 click:  jsr     HandleClick
         jmp     MainLoop
-
-        ;; Is it a key down event?
-:       cmp     #MGTK::EventKind::key_down
-        bne     :+
-        jsr     HandleKeydown
-        jmp     MainLoop
+:
 
         ;; Is it an update event?
-:       cmp     #MGTK::EventKind::update
-        bne     :+
+        cmp     #MGTK::EventKind::update
+    IF_EQ
         jsr     ClearUpdatesNoPeek
+    END_IF
 
-:       jmp     MainLoop
+        jmp     MainLoop
 
 ;;; --------------------------------------------------
 
@@ -386,6 +401,12 @@ HandleKeydown:
         ;; No modifiers
 
         lda     event_params::key
+        jsr     CheckTypeDown
+        bne     :+
+        rts
+:       jsr     ClearTypeDown
+
+        lda     event_params::key
         cmp     #CHAR_LEFT
         jeq     CmdHighlight
         cmp     #CHAR_UP
@@ -401,6 +422,9 @@ HandleKeydown:
         ;; Modifiers
 
 modifiers:
+        jsr     ClearTypeDown
+
+        lda     event_params::modifiers
         cmp     #3              ; both Open-Apple + Solid-Apple ?
     IF_EQ
         ;; Double-modifier shortcuts
@@ -3068,50 +3092,8 @@ ret:    rts
 .proc CmdHighlight
 
 ;;; First byte is icon count. Rest is a list of selectable icons.
-buffer := $1800
-
-        copy    #0, buffer
-        lda     active_window_id
-        beq     volumes         ; no active window
-
-        jsr     GetActiveWindowViewBy
-        bmi     volumes         ; not icon view
-
-        ;; --------------------------------------------------
-        ;; Icons in active window
-
-        jsr     LoadActiveWindowEntryTable ; restored below
-
-        ldx     #0              ; index in buffer and icon list
-win_loop:
-        cpx     cached_window_entry_count
-        beq     :+
-
-        lda     cached_window_entry_list,x
-        sta     buffer+1,x
-        inc     buffer
-        inx
-        jmp     win_loop
-:
-        jsr     LoadDesktopEntryTable ; restore from above
-
-        ;; --------------------------------------------------
-        ;; Desktop (volume) icons
-
-volumes:
-        ldx     buffer
-        ldy     #0
-vol_loop:
-        lda     cached_window_entry_list,y
-        sta     buffer+1,x
-        iny
-        inx
-        cpy     cached_window_entry_count
-        bne     vol_loop
-        lda     buffer
-        clc
-        adc     cached_window_entry_count
-        sta     buffer
+        buffer := $1800
+        jsr     GetSelectableIcons
 
 ;;; Figure out current selected index, based on selection.
 
@@ -3171,6 +3153,289 @@ HighlightIcon:
         ldx     selected_index
         lda     buffer+1,x
         jmp     SelectIcon
+.endproc
+
+;;; ============================================================
+;;; Type Down Selection
+
+.proc ClearTypeDown
+        copy    #0, typedown_buf
+        rts
+.endproc
+
+;;; Returns Z=1 if consumed, Z=0 otherwise.
+.proc CheckTypeDown
+        jsr     UpcaseChar
+        cmp     #'A'
+        bcc     :+
+        cmp     #'Z'+1
+        bcc     file_char
+
+:       ldx     typedown_buf
+        beq     not_file_char
+
+        cmp     #'.'
+        beq     file_char
+        cmp     #'0'
+        bcc     not_file_char
+        cmp     #'9'+1
+        bcc     file_char
+
+not_file_char:
+        return  #$FF            ; Z=0 to ignore
+
+file_char:
+        ldx     typedown_buf
+        cpx     #15
+        bne     :+
+        rts                     ; Z=1 to consume
+:
+        inx
+        stx     typedown_buf
+        sta     typedown_buf,x
+
+        ;; Collect and sort the potential type-down matches
+        jsr     BuildTable
+
+        ;; Find a match. There will always be one, since
+        ;; desktop icons (including Trash) are considered.
+        jsr     FindMatch
+
+        ;; Icon to select
+        tax
+        lda     table,x         ; index to icon
+        sta     icon
+
+        ;; Already the selection?
+        lda     selected_icon_count
+        cmp     #1
+        bne     update
+        lda     selected_icon_list
+        cmp     icon
+        beq     done            ; yes, nothing to do
+
+        ;; Update the selection.
+update: jsr     ClearSelection
+        icon := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     SelectIcon
+
+done:   lda     #0
+ret:    rts
+
+        num_filenames := $1800
+        table := $1801
+        ptr1 := $06
+        ptr2 := $08
+
+;;; Gather the selectable icons (in active window plus desktop) into
+;;; `table` and sort them by name.
+.proc BuildTable
+        ;; Init table with unsorted list of icons (never empty)
+        jsr     GetSelectableIcons
+
+        ;; Selection sort. In each outer iteration, the highest
+        ;; remaining element is moved to the end of the unsorted
+        ;; region, and the region is reduced by one. O(n^2)
+        ldx     num_filenames
+        dex
+        stx     outer
+
+        outer := *+1
+oloop:  lda     #SELF_MODIFIED_BYTE
+        jsr     GetNthFilename
+        stax    ptr2
+
+        lda     #0
+        sta     inner
+
+        inner := *+1
+iloop:  lda     #SELF_MODIFIED_BYTE
+        jsr     GetNthFilename
+        stax    ptr1
+
+        jsr     CompareStrings
+        bcc     next
+
+        ;; Swap
+        ldx     inner
+        ldy     outer
+        lda     table,x
+        pha
+        lda     table,y
+        sta     table,x
+        pla
+        sta     table,y
+        tya
+        jsr     GetNthFilename
+        stax    ptr2
+
+next:   inc     inner
+        lda     inner
+        cmp     outer
+        bne     iloop
+
+        dec     outer
+        bne     oloop
+
+ret:    rts
+.endproc
+
+;;; Compare strings at $06 (1) and $08 (2).
+;;; Returns C=0 for 1<2 , C=1 for 1>=2, Z=1 for 1=2
+.proc CompareStrings
+        ldy     #0
+        copy    (ptr1),y, len1
+        copy    (ptr2),y, len2
+        iny
+
+loop:   lda     (ptr2),y
+        jsr     UpcaseChar
+        sta     char
+        lda     (ptr1),y
+        jsr     UpcaseChar
+        char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     ret             ; differ at Yth character
+
+        ;; End of string 1?
+        len1 := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :+
+        cpy     len2            ; 1<2 or 1=2 ?
+        rts
+
+        ;; End of string 2?
+        len2 := *+1
+:       cpy     SELF_MODIFIED_BYTE
+        beq     gt              ; 1>2
+        iny
+        bne     loop            ; always
+
+gt:     lda     #$FF            ; Z=0
+        sec
+ret:    rts
+.endproc
+
+;;; Find the substring match for `typedown_buf`, or the next
+;;; match in lexicographic order, or the last item in the table.
+.proc FindMatch
+        ptr     := $06
+
+        copy    #0, index
+
+        index := *+1
+loop:   lda     #SELF_MODIFIED_BYTE
+        jsr     GetNthFilename
+        stax    ptr
+
+        ;; NOTE: Can't use `CompareStrings` as we want to match
+        ;; on subset-or-equals.
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+
+        ldy     #1
+cloop:  lda     (ptr),y
+        jsr     UpcaseChar
+        cmp     typedown_buf,y
+        bcc     next
+        beq     :+
+        bcs     found
+:
+        cpy     typedown_buf
+        beq     found
+
+        iny
+        len := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bcc     cloop
+        beq     cloop
+
+next:   inc     index
+        lda     index
+        cmp     num_filenames
+        bne     loop
+        dec     index
+found:  return  index
+.endproc
+
+;;; Return ptr to name in A,X
+.proc GetNthFilename
+        tax
+        lda     table,x         ; A = icon num
+        asl     a
+        tay
+        lda     icon_entry_address_table,y
+        clc
+        adc     #IconEntry::name
+        pha
+        lda     icon_entry_address_table+1,y
+        adc     #0
+        tax
+        pla
+        rts
+.endproc
+
+.endproc
+
+;;; Length plus filename
+typedown_buf:
+        .res    16, 0
+
+;;; ============================================================
+;;; Build list of selectable icons.
+;;; Includes icons in the active window (if any, and if icon view)
+;;; followed by the volume icons on the desktop, including Trash.
+;;; Output: Buffer at $1800 (length prefixed)
+
+.proc GetSelectableIcons
+        buffer := $1800
+
+        copy    #0, buffer
+        lda     active_window_id
+        beq     volumes         ; no active window
+
+        jsr     GetActiveWindowViewBy
+        bmi     volumes         ; not icon view
+
+        ;; --------------------------------------------------
+        ;; Icons in active window
+
+        jsr     LoadActiveWindowEntryTable ; restored below
+
+        ldx     #0              ; index in buffer and icon list
+win_loop:
+        cpx     cached_window_entry_count
+        beq     :+
+
+        lda     cached_window_entry_list,x
+        sta     buffer+1,x
+        inc     buffer
+        inx
+        jmp     win_loop
+:
+        jsr     LoadDesktopEntryTable ; restore from above
+
+        ;; --------------------------------------------------
+        ;; Desktop (volume) icons
+
+volumes:
+        ldx     buffer
+        ldy     #0
+vol_loop:
+        lda     cached_window_entry_list,y
+        sta     buffer+1,x
+        iny
+        inx
+        cpy     cached_window_entry_count
+        bne     vol_loop
+        lda     buffer
+        clc
+        adc     cached_window_entry_count
+        sta     buffer
+
+        rts
 .endproc
 
 ;;; ============================================================

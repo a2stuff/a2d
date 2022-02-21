@@ -71,6 +71,8 @@ Project Page: https://github.com/a2stuff/a2d
   * **Apple-Up** opens parent window or selects volume icon. ([#254](https://github.com/a2stuff/a2d/issues/254), [#314](https://github.com/a2stuff/a2d/issues/314))
   * **Return** is a shortcut for **File > Rename...**. ([#275](https://github.com/a2stuff/a2d/issues/275))
   * Arrow keys change selected icon. ([#274](https://github.com/a2stuff/a2d/issues/274))
+  * Type-down selection is supported. ([#275](https://github.com/a2stuff/a2d/issues/275))
+
 ### Desk Accessory Enhancements
 
 * Up to 12 desk accessories are shown in the **Apple** menu (was 8). ([#90](https://github.com/a2stuff/a2d/issues/90))
@@ -199,6 +201,7 @@ from the **Apple** menu.
   * Correct sort order. ([#489](https://github.com/a2stuff/a2d/issues/489))
   * Correct IP placement/truncation when switching focus. ([#446](https://github.com/a2stuff/a2d/issues/446))
   * Fix iteration with Change Drive button. ([#410](https://github.com/a2stuff/a2d/issues/410))
+  * Type-down selection (while holding Apple) is supported. ([#610](https://github.com/a2stuff/a2d/issues/610))
 * Desk Accessories:
   * Date: Expanded to include both date and time. ([#11](https://github.com/a2stuff/a2d/issues/11))
   * Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
