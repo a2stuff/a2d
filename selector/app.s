@@ -250,7 +250,7 @@ y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
 
 .params winfo
         kDialogId = 1
-        kWidth = 500
+        kWidth = 460
         kHeight = 118
 window_id:      .byte   kDialogId
 options:        .byte   MGTK::Option::dialog_box
@@ -286,7 +286,7 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok,      res_string_button_ok, 340, 100
+        DEFINE_BUTTON ok,      res_string_button_ok, winfo::kWidth - kButtonWidth - 60, 100
         DEFINE_BUTTON desktop, res_string_button_desktop,    60, 100
 
 pensize_normal: .byte   1, 1
@@ -297,20 +297,21 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 str_selector_title:
         PASCAL_STRING res_string_selector_dialog_title ; dialog title
 
-        DEFINE_POINT pt0, 5, 22
+        kEntryPickerLeft = (winfo::kWidth - kEntryPickerItemWidth * 3) / 2
+        kEntryPickerTop  = 22
 
-        DEFINE_POINT line1_pt1, kBorderDX*2, 20
-        DEFINE_POINT line1_pt2, winfo::kWidth - kBorderDX*2, 20
+        DEFINE_POINT line1_pt1, kBorderDX*2, 19
+        DEFINE_POINT line1_pt2, winfo::kWidth - kBorderDX*2, 19
         DEFINE_POINT line2_pt1, kBorderDX*2, winfo::kHeight - 22
         DEFINE_POINT line2_pt2, winfo::kWidth - kBorderDX*2, winfo::kHeight - 22
 
 ;;; Position of entries box
-        DEFINE_POINT pos_entry_base, 16, 30
+        DEFINE_POINT pos_entry_base, kEntryPickerLeft + 4, kEntryPickerTop + 8
 
 ;;; Point used when rendering entries
         DEFINE_POINT pos_entry_str, 0, 0
 
-        DEFINE_RECT_SZ rect_entry_base, 16, 22, kEntryPickerItemWidth, kEntryPickerItemHeight - 1
+        DEFINE_RECT_SZ rect_entry_base, kEntryPickerLeft, kEntryPickerTop, kEntryPickerItemWidth, kEntryPickerItemHeight - 1
 
         DEFINE_RECT rect_entry, 0, 0, 0, 0
 
@@ -955,7 +956,7 @@ check_entries:
         entry_click_y := screentowindow_params::windowy
 
         sub16   entry_click_x, pos_entry_base::xcoord, entry_click_x
-        sub16   entry_click_y, pt0::ycoord, entry_click_y
+        sub16_8 entry_click_y, #kEntryPickerTop, entry_click_y
         lda     entry_click_y+1
         bpl     :+
         lda     selected_index
