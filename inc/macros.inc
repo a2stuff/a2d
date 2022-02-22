@@ -137,12 +137,12 @@ end:
 
 .macro param_call target, param1, param2
 .if     .paramcount = 2
-        lda     #<param1
-        ldx     #>param1
+        lda     #<(param1)
+        ldx     #>(param1)
 .elseif .paramcount = 3
         ldy     #param1
-        lda     #<param2
-        ldx     #>param2
+        lda     #<(param2)
+        ldx     #>(param2)
 .else
         .error "incorrect macro usage"
 .endif
@@ -165,12 +165,12 @@ end:
 
 .macro param_jump target, param1, param2
 .if     .paramcount = 2
-        lda     #<param1
-        ldx     #>param1
+        lda     #<(param1)
+        ldx     #>(param1)
 .elseif .paramcount = 3
         ldy     #param1
-        lda     #<param2
-        ldx     #>param2
+        lda     #<(param2)
+        ldx     #>(param2)
 .else
         .error "incorrect macro usage"
 .endif
