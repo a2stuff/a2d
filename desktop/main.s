@@ -1736,7 +1736,14 @@ done:   jsr     SetCursorPointer ; after invoking DA
         ;; Try the copy
 
         ;; Validate
-        jsr     CopyPathsFromPtrsToSrcAndDst
+        src := $06
+        ldax    src
+        jsr     CopyToSrcPath
+
+        dst := $08
+        ldax    dst
+        jmp     CopyToDstPath
+
         jsr     CheckRecursion
         jne     ShowAlert
         jsr     CheckBadReplacement
@@ -1763,20 +1770,6 @@ done:   jsr     SetCursorPointer ; after invoking DA
 
         rts
 
-.endproc
-
-;;; ============================================================
-;;; Copy string at ($6) to `src_path_buf`, string at ($8) to `dst_path_path`.
-
-.proc CopyPathsFromPtrsToSrcAndDst
-        src := $06
-        dst := $08
-
-        ldax    src
-        jsr     CopyToSrcPath
-
-        ldax    dst
-        jmp     CopyToDstPath
 .endproc
 
 ;;; ============================================================
@@ -2724,11 +2717,7 @@ entry:
 
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-    IF_ZERO                     ; Skip drawing if obscured
-        jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
-    END_IF
-
+        jsr     ClearWindowBackgroundIfNotObscured
 
         lda     active_window_id
         jsr     ComputeWindowDimensions
@@ -2842,10 +2831,7 @@ sort:   jsr     LoadActiveWindowEntryTable ; restored below
         ;; Draw the records
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-    IF_ZERO                     ; Skip drawing if obscured
-        jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
-    END_IF
+        jsr     ClearWindowBackgroundIfNotObscured
         jsr     ResetMainGrafport
 
         copy    #$40, header_and_offset_flag
@@ -4298,9 +4284,7 @@ done_client_click:
         ;; Clear content background, not header
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-    IF_ZERO                     ; Skip drawing if obscured
-        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
-    END_IF
+        jsr     ClearWindowBackgroundIfNotObscured
         jsr     ResetMainGrafport
 
         ;; Only draw content, not header
@@ -4635,10 +4619,7 @@ exception_flag:
         ;; Clear background
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
-    IF_ZERO                     ; Skip drawing if obscured
-        jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
-    END_IF
+        jsr     ClearWindowBackgroundIfNotObscured
 
         ;; Remove old FileRecords
         lda     active_window_id
@@ -4686,6 +4667,18 @@ exception_flag:
 .endproc
 
 ;;; ============================================================
+;;; Clear the window background, following a call to either
+;;; `UnsafeSetPortFromWindowId` or `UnsafeOffsetAndSetPortFromWindowId`
+
+.proc ClearWindowBackgroundIfNotObscured
+    IF_ZERO                     ; Skip drawing if obscured
+        jsr     SetPenModeCopy
+        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
+    END_IF
+        rts
+.endproc
+
+;;; ============================================================
 ;;; Drag Selection - initiated in a window
 
 .proc DragSelect
@@ -4729,8 +4722,6 @@ clear:  jsr     ClearSelection
 :       lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; ASSERT: not obscured
 
-        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
-        jsr     SetPenModeXOR
         jsr     FrameTmpRect
 
         ;; --------------------------------------------------
@@ -5322,9 +5313,7 @@ delta:  .word   0
         ;; Clear content background, not header
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-    IF_ZERO                     ; Skip drawing if obscured
-        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
-    END_IF
+        jsr     ClearWindowBackgroundIfNotObscured
         jsr     ResetMainGrafport
 
         ;; Only draw content, not header
@@ -5774,8 +5763,6 @@ clear:  jsr     ClearSelection
         ;; Set up drawing port, draw initial rect
 :       jsr     ResetMainGrafport
 
-        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
-        jsr     SetPenModeXOR
         jsr     FrameTmpRect
 
         ;; --------------------------------------------------
@@ -10559,8 +10546,6 @@ kMaxAnimationStep = 11
         lda     #0
         sta     step
         jsr     ResetMainGrafport
-        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
-        jsr     SetPenModeXOR
 
         ;; If N in 0..11, draw N
 loop:   lda     step            ; draw the Nth
@@ -10630,8 +10615,6 @@ next:   inc     step
         lda     #kMaxAnimationStep
         sta     step
         jsr     ResetMainGrafport
-        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
-        jsr     SetPenModeXOR
 
         ;; If N in 0..11, draw N
 loop:   lda     step
@@ -10691,6 +10674,8 @@ next:   dec     step
 ;;; ============================================================
 
 .proc FrameTmpRect
+        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
+        jsr     SetPenModeXOR
         MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
         rts
 .endproc
@@ -12597,7 +12582,9 @@ callbacks_for_copy:
 .params copy_dialog_params
 phase:  .byte   0
 count:  .addr   0
+src_buf_addr:
         .addr   src_path_buf
+dst_buf_addr:
         .addr   dst_path_buf
 .endparams
 
@@ -13495,6 +13482,7 @@ callbacks_for_lock:
 phase:  .byte   0
 files_remaining_count:
         .word   0
+buf_addr:
         .addr   src_path_buf
 .endparams
 
@@ -14733,7 +14721,7 @@ do2:    ldy     #1
         jsr     ClearTargetFileRect
         jsr     ClearDestFileRect
         jsr     CopyDialogParamAddrToPtr
-        ldy     #$03
+        ldy     #copy_dialog_params::src_buf_addr - copy_dialog_params
         lda     (ptr),y
         tax
         iny
@@ -14744,7 +14732,7 @@ do2:    ldy     #1
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
         jsr     CopyDialogParamAddrToPtr
-        ldy     #$05
+        ldy     #copy_dialog_params::dst_buf_addr - copy_dialog_params
         lda     (ptr),y
         tax
         iny
@@ -14983,9 +14971,11 @@ do2:
 ;;; "Delete File" dialog
 
 .proc DeleteDialogProc
+        ptr := $06
+
         jsr     CopyDialogParamAddrToPtr
         ldy     #0
-        lda     ($06),y         ; phase
+        lda     (ptr),y         ; phase
 
         cmp     #DeleteDialogLifecycle::count
         jeq     do1
@@ -15010,7 +15000,7 @@ delete_flag:                    ; clear if trash, set if delete
 
         ;; DeleteDialogLifecycle::count
 do1:    ldy     #1
-        copy16in ($06),y, file_count
+        copy16in (ptr),y, file_count
         jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
         lda     winfo_prompt_dialog::window_id
@@ -15027,7 +15017,7 @@ show_count:
 
         ;; DeleteDialogLifecycle::show
 do3:    ldy     #1
-        copy16in ($06),y, file_count
+        copy16in (ptr),y, file_count
         jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
         lda     winfo_prompt_dialog::window_id
@@ -15035,12 +15025,12 @@ do3:    ldy     #1
         jsr     ClearTargetFileRect
         jsr     CopyDialogParamAddrToPtr
         ldy     #3
-        lda     ($06),y
+        lda     (ptr),y
         tax
         iny
-        lda     ($06),y
-        sta     $06+1
-        stx     $06
+        lda     (ptr),y
+        sta     ptr+1
+        stx     ptr
         jsr     CopyNameToBuf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
@@ -15109,8 +15099,7 @@ LAE17:  jsr     PromptInputLoop
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_new_folder
-        jsr     SetPenModeNotCopy
-        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
+        jsr     FrameNameInputRect
         rts
 
         ;; Phase 2 - prompt
@@ -15282,9 +15271,11 @@ is_volume_flag:
 ;;; "Lock" dialog
 
 .proc LockDialogProc
+        ptr := $06
+
         jsr     CopyDialogParamAddrToPtr
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
 
         cmp     #LockDialogLifecycle::count
         jeq     do1
@@ -15303,7 +15294,7 @@ is_volume_flag:
 
         ;; LockDialogLifecycle::count
 do1:    ldy     #1
-        copy16in ($06),y, file_count
+        copy16in (ptr),y, file_count
         jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
         lda     winfo_prompt_dialog::window_id
@@ -15315,7 +15306,7 @@ do1:    ldy     #1
 
         ;; LockDialogLifecycle::operation
 do3:    ldy     #1
-        copy16in ($06),y, file_count
+        copy16in (ptr),y, file_count
         jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
         lda     winfo_prompt_dialog::window_id
@@ -15323,17 +15314,15 @@ do3:    ldy     #1
         jsr     ClearTargetFileRect
         jsr     CopyDialogParamAddrToPtr
         ldy     #3
-        lda     ($06),y
+        lda     (ptr),y
         tax
         iny
-        lda     ($06),y
-        sta     $06+1
-        stx     $06
+        lda     (ptr),y
+        sta     ptr+1
+        stx     ptr
         jsr     CopyNameToBuf0
-
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
-
         MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
         param_call DrawString, str_file_count
         param_call DrawString, str_2_spaces
@@ -15365,9 +15354,11 @@ do4:    jsr     ClosePromptDialog
 ;;; "Unlock" dialog
 
 .proc UnlockDialogProc
+        ptr := $06
+
         jsr     CopyDialogParamAddrToPtr
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
 
         cmp     #LockDialogLifecycle::count
         jeq     do1
@@ -15386,7 +15377,7 @@ do4:    jsr     ClosePromptDialog
 
         ;; LockDialogLifecycle::count
 do1:    ldy     #1
-        copy16in ($06),y, file_count
+        copy16in (ptr),y, file_count
         jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
         lda     winfo_prompt_dialog::window_id
@@ -15398,20 +15389,20 @@ do1:    ldy     #1
 
         ;; LockDialogLifecycle::operation
 do3:    ldy     #1
-        copy16in ($06),y, file_count
+        copy16in (ptr),y, file_count
         jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
         jsr     CopyDialogParamAddrToPtr
-        ldy     #3
-        lda     ($06),y
+        ldy     #lock_unlock_dialog_params::buf_addr - lock_unlock_dialog_params
+        lda     (ptr),y
         tax
         iny
-        lda     ($06),y
-        sta     $06+1
-        stx     $06
+        lda     (ptr),y
+        sta     ptr+1
+        stx     ptr
         jsr     CopyNameToBuf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
@@ -15464,8 +15455,7 @@ do4:    jsr     ClosePromptDialog
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_rename_icon
-        jsr     SetPenModeNotCopy
-        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
+        jsr     FrameNameInputRect
         jsr     CopyDialogParamAddrToPtr
         ldy     #1              ; rename_dialog_params::addr offset
         copy16in ($06),y, $08
@@ -15536,8 +15526,7 @@ close_win:
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_duplicate_icon
-        jsr     SetPenModeNotCopy
-        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
+        jsr     FrameNameInputRect
         jsr     CopyDialogParamAddrToPtr
         ldy     #1              ; duplicate_dialog_params::addr offset
         copy16in ($06),y, $08
@@ -15701,12 +15690,10 @@ params:  .res    3
         jsr     DrawYesNoAllCancelButtons
         jmp     no_ok
 
-:       MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
-        jsr     DrawOkLabel
+:       jsr     DrawOkFrameAndLabel
 no_ok:  bit     prompt_button_flags
         bmi     done
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
-        jsr     DrawCancelLabel
+        jsr     DrawCancelFrameAndLabel
 done:   jmp     ResetMainGrafport
 .endproc
 
@@ -15789,46 +15776,38 @@ string: .addr   0
 
 ;;; ============================================================
 
-.proc DrawOkLabel
+;;; Caller must set XOR penmode
+.proc DrawOkFrameAndLabel
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::MoveTo, aux::ok_button_pos
         param_call DrawString, aux::ok_button_label
         rts
 .endproc
 
-.proc DrawCancelLabel
+;;; Caller must set XOR penmode
+.proc DrawCancelFrameAndLabel
+        MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
         MGTK_RELAY_CALL MGTK::MoveTo, aux::cancel_button_pos
         param_call DrawString, aux::cancel_button_label
         rts
 .endproc
 
-.proc DrawYesLabel
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::yes_button_pos
-        param_call DrawString, aux::yes_button_label
-        rts
-.endproc
-
-.proc DrawNoLabel
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::no_button_pos
-        param_call DrawString, aux::no_button_label
-        rts
-.endproc
-
-.proc DrawAllLabel
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::all_button_pos
-        param_call DrawString, aux::all_button_label
-        rts
-.endproc
-
 .proc DrawYesNoAllCancelButtons
         jsr     SetPenModeXOR
+
         MGTK_RELAY_CALL MGTK::FrameRect, aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::yes_button_pos
+        param_call DrawString, aux::yes_button_label
+
         MGTK_RELAY_CALL MGTK::FrameRect, aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::no_button_pos
+        param_call DrawString, aux::no_button_label
+
         MGTK_RELAY_CALL MGTK::FrameRect, aux::all_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
-        jsr     DrawYesLabel
-        jsr     DrawNoLabel
-        jsr     DrawAllLabel
-        jsr     DrawCancelLabel
+        MGTK_RELAY_CALL MGTK::MoveTo, aux::all_button_pos
+        param_call DrawString, aux::all_button_label
+
+        jsr     DrawCancelFrameAndLabel
         copy    #$40, prompt_button_flags
         rts
 .endproc
@@ -15844,10 +15823,8 @@ string: .addr   0
 
 .proc DrawOkCancelButtons
         jsr     SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
-        jsr     DrawOkLabel
-        jsr     DrawCancelLabel
+        jsr     DrawOkFrameAndLabel
+        jsr     DrawCancelFrameAndLabel
         copy    #$00, prompt_button_flags
         rts
 .endproc
@@ -15861,8 +15838,7 @@ string: .addr   0
 
 .proc DrawOkButton
         jsr     SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
-        jsr     DrawOkLabel
+        jsr     DrawOkFrameAndLabel
         copy    #$80, prompt_button_flags
         rts
 .endproc
@@ -15936,7 +15912,7 @@ done:   rts
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
-        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
+        jsr     SetNameInputClipRect
         bit     prompt_ip_flag
         bpl     set_flag
 
@@ -15969,16 +15945,26 @@ draw:   copy16  #str_insertion_point+1, textptr
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeCopy
         MGTK_RELAY_CALL MGTK::PaintRect, name_input_rect
-        jsr     SetPenModeNotCopy
-        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
+        jsr     FrameNameInputRect
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
-        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
+        jsr     SetNameInputClipRect
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
 done:   rts
+.endproc
+
+.proc FrameNameInputRect
+        jsr     SetPenModeNotCopy
+        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
+        rts
+.endproc
+
+.proc SetNameInputClipRect
+        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
+        rts
 .endproc
 
 ;;; ============================================================
@@ -16172,7 +16158,7 @@ ip_pos: .word   0
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
-        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
+        jsr     SetNameInputClipRect
         param_call DrawString, str_1_char
         param_call DrawString, path_buf2
         lda     winfo_prompt_dialog::window_id
@@ -16198,7 +16184,7 @@ ip_pos: .word   0
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
-        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
+        jsr     SetNameInputClipRect
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog::window_id
@@ -16242,7 +16228,7 @@ finish: ldx     path_buf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
-        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
+        jsr     SetNameInputClipRect
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
         lda     winfo_prompt_dialog::window_id
@@ -16283,7 +16269,7 @@ loop:   lda     path_buf2+1,x
 finish: dec     path_buf2
 
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
-        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
+        jsr     SetNameInputClipRect
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
