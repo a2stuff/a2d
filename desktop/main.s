@@ -1755,8 +1755,7 @@ done:   jsr     SetCursorPointer ; after invoking DA
         pha                     ; save for later
 
         ;; Update cached used/free for all same-volume windows
-        ldax    #path_buf4
-        jsr     UpdateUsedFreeViaPath
+        param_call UpdateUsedFreeViaPath, path_buf4
 
         ;; Select/refresh window if there was one
         pla
@@ -1867,8 +1866,7 @@ done:   jsr     SetCursorPointer ; after invoking DA
         pha                     ; save for later
 
         ;; Update cached used/free for all same-volume windows
-        ldax    #path_buf3
-        jsr     UpdateUsedFreeViaPath
+        param_call UpdateUsedFreeViaPath, path_buf3
 
         ;; Select/refresh window if there was one
         pla
@@ -2935,11 +2933,12 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         jsr     FreeIcon
         pla
 
-        jsr     FindWindowForDirIcon
-        bne     :+
+        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
+    IF_EQ
         copy    #$FF, window_to_dir_icon_table,x ; $FF = dir icon freed
+    END_IF
 
-:       ldx     index
+        ldx     index
         copy    #0, cached_window_entry_list,x
 
         inc     index
@@ -3060,12 +3059,11 @@ result: .byte   0
         beq     ret             ; flag set if window needs refreshing
 
         ;; Update cached used/free for all same-volume windows
-        ldax    #path_buf3
-        jsr     UpdateUsedFreeViaPath
+        param_call UpdateUsedFreeViaPath, path_buf3
 
         ;; Select/refresh window if there was one
         lda     active_window_id
-        jsr     SelectAndRefreshWindowOrClose
+        jne     SelectAndRefreshWindowOrClose
 
 ret:    rts
 .endproc
@@ -4445,8 +4443,19 @@ process_drop:
 
         ;; (3/4) Dropped on icon?
         lda     drag_drop_params::result
+    IF_POS
         ;; Yes, on an icon; update used/free for same-vol windows
-        jpl     UpdateUsedFreeViaIcon
+        pha
+        jsr     UpdateUsedFreeViaIcon
+        pla
+        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
+      IF_EQ
+        inx
+        txa
+        jmp     SelectAndRefreshWindowOrClose
+      END_IF
+        rts
+    END_IF
 
         ;; (4/4) Dropped on window!
         and     #$7F            ; mask off window number
@@ -4505,7 +4514,7 @@ failure:
         lda     active_window_id
         jsr     UpdateUsedFreeViaWindow
         lda     active_window_id
-        jmp     SelectAndRefreshWindow
+        jmp     SelectAndRefreshWindowOrClose
 .endproc
 
 .endproc
@@ -5657,21 +5666,32 @@ check_double_click:
 
         ;; (1/4) Canceled?
         cmp     #kOperationCanceled
-        bne     :+
+    IF_EQ
         rts
+    END_IF
 
         ;; (2/4) Dropped on trash? (eject)
         ;; Not reached - see above.
         ;; Assert: `drag_drop_params::result` != `trash_icon_num`
 
         ;; (3/4) Dropped on icon?
-:       lda     drag_drop_params::result
-        bmi     :+
+        lda     drag_drop_params::result
+    IF_POS
         ;; Yes, on an icon; update used/free for same-vol windows
-        jmp     UpdateUsedFreeViaIcon
+        pha
+        jsr     UpdateUsedFreeViaIcon
+        pla
+        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
+      IF_EQ
+        inx
+        txa
+        jmp     SelectAndRefreshWindowOrClose
+      END_IF
+        rts
+    END_IF
 
         ;; (4/4) Dropped on window!
-:       and     #$7F            ; mask off window number
+        and     #$7F            ; mask off window number
         pha
         jsr     UpdateUsedFreeViaWindow
         pla
@@ -5697,7 +5717,7 @@ same_or_desktop:
         dex
         bpl     :-
 
-        rts
+ret:    rts
 
 .proc SelectVolIcon
         ITK_RELAY_CALL IconTK::HighlightIcon, findicon_params::which_icon
@@ -5875,75 +5895,6 @@ last_pos:
         .tag MGTK::Point
 x_flag: .byte   0
 y_flag: .byte   0
-.endproc
-
-;;; ============================================================
-;;; Update used/free values for windows related to volume icon
-;;; Input: icon number in A
-
-.proc UpdateUsedFreeViaIcon
-        ptr := $6
-        path_buf := INVOKER_PREFIX
-
-        ;; Volume icon with an open window?
-        jsr     FindWindowForDirIcon
-        beq     found_window
-
-        ;; Not a volume icon with an open window. Is it even a volume?
-        jsr     IconEntryLookup
-        stax    ptr
-        ldy     #IconEntry::win_flags
-        lda     (ptr),y
-        and     #kIconEntryWinIdMask
-        beq     volume
-
-        ;; --------------------------------------------------
-        ;; Icon in a folder (A=window_id)
-        jsr     GetWindowPath
-        .assert src_path_buf = path_buf, error, "Buffer alias"
-        jsr     CopyToSrcPath
-
-        ;; Strip to vol name - either end of string or next slash
-        ldx     #1
-:       inx                     ; start at 2nd character
-        cpx     path_buf
-        beq     :+
-        lda     path_buf,x
-        cmp     #'/'
-        bne     :-
-        dex
-:       stx     path_buf
-
-        jmp     FindWindows
-
-        ;; --------------------------------------------------
-        ;; Volume icon; maybe related windows?
-volume:
-        add16_8 ptr, #IconEntry::name
-
-        ;; Create "/volname"
-        param_call CopyPtr1ToBuf, path_buf+1 ; leave room for leading '/'
-        sta     path_buf
-        inc     path_buf
-        copy    #'/', path_buf+1
-
-FindWindows:
-        ldax    #path_buf
-        ldy     path_buf
-        jsr     FindWindowsForPrefix
-        ldax    #path_buf
-        ldy     path_buf
-        jmp     UpdateUsedFreeViaFoundWindows
-
-        ;; --------------------------------------------------
-        ;; Found an existing window for a vol icon.
-found_window:
-        inx
-        txa
-        pha
-        jsr     UpdateUsedFreeViaWindow
-        pla
-        jmp     SelectAndRefreshWindow
 .endproc
 
 ;;; ============================================================
@@ -6543,13 +6494,20 @@ OffsetWindowGrafport    := OffsetWindowGrafportImpl::flag_clear
 OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::flag_set
 
 ;;; ============================================================
+;;; Update used/free values for windows related to volume icon
+;;; Input: A = icon number
+
+.proc UpdateUsedFreeViaIcon
+        jsr     GetIconPath   ; `path_buf3` set to path
+        param_jump UpdateUsedFreeViaPath, path_buf3
+.endproc
+
+;;; ============================================================
 ;;; Refresh vol used/free for windows of same volume as win in A.
 ;;; Input: A = window id
 
 .proc UpdateUsedFreeViaWindow
-        ptr := $6
-
-        jsr     GetWindowPath
+        jsr     GetWindowPath   ; into A,X
         jmp     UpdateUsedFreeViaPath
 .endproc
 
@@ -6561,13 +6519,12 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::flag_set
         ptr := $6
 
         stax    ptr
-        stax    pathptr         ; stash for second call
-
-        ldy     #0              ; length offset
-        lda     (ptr),y
-        sta     pathlen         ; stash for second call
+        jsr     PushPointers    ; save $06 = path
 
         ;; Strip to vol name - either end of string or next slash
+        ldy     #0              ; length offset
+        lda     (ptr),y
+        sta     pathlen
         iny
 :       iny                     ; start at 2nd character
         pathlen := *+1
@@ -6577,48 +6534,34 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::flag_set
         cmp     #'/'
         bne     :-
         dey
-:       sty     pathlen
+:
+        ;; NOTE: Path is unchanged, but Y has effective length for
+        ;; the following call.
 
+        ;; Update `found_windows_count` and `found_windows_list`
         param_call_indirect FindWindowsForPrefix, ptr
-        ldax    pathptr
-        ldy     pathlen
-        jmp     UpdateUsedFreeViaFoundWindows
 
-pathptr:        .addr   0
-.endproc
+        ;; Determine if there are windows to update
+        jsr     PopPointers     ; $06 = vol path
 
-;;; ============================================================
-;;; Update used/free for results of find_window[s]_for_prefix
+        param_call CopyPtr1ToBuf, path_buffer
 
-.proc UpdateUsedFreeViaFoundWindows
-        ptr := $6
-
-        stax    ptr
-        sty     path_buffer
-
-:       lda     (ptr),y
-        sta     path_buffer,y
-        dey
-        bne     :-
-
-        jsr     GetVolUsedFreeViaVolume
-
+        jsr     GetVolUsedFreeViaPath
         bne     done
-        lda     found_windows_count
+
+        ldy     found_windows_count
         beq     done
-loop:   dec     found_windows_count
-        bmi     done
-        ldx     found_windows_count
-        lda     found_windows_list,x
-        sec
-        sbc     #1
+loop:   lda     found_windows_list,y
         asl     a
         tax
-        copy16  vol_kb_used, window_k_used_table,x
-        copy16  vol_kb_free, window_k_free_table,x
-        jmp     loop
+        copy16  vol_kb_used, window_k_used_table-2,x ; 1-based to 0-based
+        copy16  vol_kb_free, window_k_free_table-2,x
+        dey
+        bpl     loop
 
 done:   rts
+
+pathptr:        .addr   0
 .endproc
 
 ;;; ============================================================
@@ -7106,12 +7049,13 @@ DoClose:
 .endproc
 
 ;;; ============================================================
-;;; Inputs: `path_buffer` set to full path
-;;; Outputs: `vol_kb_used` and `vol_kb_free` updated.
+;;; Inputs: `path_buffer` set to full path (not modified)
+;;; Outputs: Z=1 on success, `vol_kb_used` and `vol_kb_free` updated.
 ;;; TODO: Skip if same-vol windows already have data.
+
 .proc GetVolUsedFreeViaPath
         lda     path_buffer
-        pha                     ; save length
+        sta     saved_length
 
         ;; Strip to vol name - either end of string or next slash
         ldx     #1
@@ -7124,41 +7068,37 @@ DoClose:
         dex
 :       stx     path_buffer
 
-        jsr     GetVolUsedFreeViaVolume
-
-        pla
-        sta     path_buffer
-
-        rts
-.endproc
-
-;;; ============================================================
-;;; Query a volume for used/free data, convert to KB.
-;;; Inputs: `path_buffer` must contain a volume path
-;;; Outputs: `vol_kb_used` and `vol_kb_free` updated.
-
-vol_kb_free:  .word   0
-vol_kb_used:  .word   0
-
-.proc GetVolUsedFreeViaVolume
+        ;; Get volume information
         param_call GetFileInfo, path_buffer
-        bne     done
+        bne     finish          ; failure
 
         ;; aux = total blocks
         copy16  file_info_params::aux_type, vol_kb_used
         ;; total - used = free
         sub16   file_info_params::aux_type, file_info_params::blocks_used, vol_kb_free
         sub16   vol_kb_used, vol_kb_free, vol_kb_used ; total - free = used
+
+        ;; Blocks to K
         lsr16   vol_kb_free
         php
         lsr16   vol_kb_used
         plp
         bcc     :+
         inc16   vol_kb_used
-:       lda     #0
+:       lda     #0              ; success
 
-done:   rts
+finish: php
+
+        saved_length := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     path_buffer
+
+        plp
+        rts
 .endproc
+
+vol_kb_free:  .word   0
+vol_kb_used:  .word   0
 
 ;;; ============================================================
 ;;; Remove the FileRecord entries for a window, and free/compact
@@ -10382,7 +10322,7 @@ remove: lda     cached_window_entry_list+1,x
 ;;; Inputs: A = icon number
 ;;; Outputs: Z=1 && N=0 if found, X = index (0-7), A unchanged
 
-.proc FindWindowForDirIcon
+.proc FindWindowIndexForDirIcon
         ldx     #kMaxNumWindows-1
 :       cmp     window_to_dir_icon_table,x
         beq     done
@@ -10410,26 +10350,25 @@ remove_filerecords:
 
         jsr     PushPointers
         lda     icon_param
-        jsr     FindWindowForDirIcon
-        bne     :+
+        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
+    IF_EQ
         inx
         txa
         jsr     RemoveWindowFilerecordEntries
-:
+    END_IF
         ;; fall through
 
         ;; Find open window for the icon
 start:  lda     icon_param
-        jsr     FindWindowForDirIcon ; X = window id-1 if found
-        bne     skip            ; not found
-
+        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
+    IF_EQ
         ;; If found, remove from the table.
         ;; Note: 0 not $FF because we know the window doesn't exist
         ;; any more.
         copy    #0, window_to_dir_icon_table,x
-
+    END_IF
         ;; Update the icon and redraw
-skip:   lda     icon_param
+        lda     icon_param
         jsr     IconEntryLookup
         stax    ptr
         ldy     #IconEntry::win_flags

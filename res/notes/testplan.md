@@ -424,6 +424,20 @@
     * Clear selection. Press Shift+Tab repeatedly. Verify that icons are selected in reverse lexicographic order.
     * Select an icon. Press Shift+Tab. Verify that the previous icon in lexicographic order is selected.
 
+* Repeat the following, with a volume icon (A), an open volume window (B) with a folder icon (C), and a window for that folder (D).
+  * Drag a file from another volume onto A. Verify that B activates and refreshes, and that B's used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Drag a file from another volume onto B. Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Copy a file from another volume onto B using File > Copy a File.... Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Drag a file from another volume onto D. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Copy file from another volume onto D using File > Copy File.... Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Drag a file from B to the trash. Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Delete a file from B using File > Delete a File.... Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Drag a file from D to the trash. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Delete a file from D using File > Delete a File.... Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Duplicate a file in D using File > Duplicate.... Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Drag a file in B onto C while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Drag a file in B onto D while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+
 # Preview
 
 * Preview a text file; verify that up/down arrow keys scroll.
