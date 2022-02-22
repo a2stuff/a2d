@@ -665,6 +665,22 @@ str_oct:PASCAL_STRING res_string_month_name_10
 str_nov:PASCAL_STRING res_string_month_name_11
 str_dec:PASCAL_STRING res_string_month_name_12
 
+month_table:
+        .addr   str_no_date
+        .addr   str_jan,str_feb,str_mar,str_apr,str_may,str_jun
+        .addr   str_jul,str_aug,str_sep,str_oct,str_nov,str_dec
+        ASSERT_ADDRESS_TABLE_SIZE month_table, 13
+
+str_no_date:
+        PASCAL_STRING res_string_no_date
+
+str_space:
+        PASCAL_STRING " "       ; do not localize
+str_comma:
+        PASCAL_STRING res_string_comma_infix
+str_at:
+        PASCAL_STRING res_string_at_infix
+
 ;;; ============================================================
 
         PAD_TO $DB00

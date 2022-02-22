@@ -30,3 +30,6 @@
 .define res_string_window_header_items_suffix " Elementos"
 .define res_string_window_header_k_used_suffix "K en disco"
 .define res_string_window_header_k_available_suffix "K disponible"
+.define res_string_no_date "sin fecha"
+.define res_string_comma_infix ", "
+.define res_string_at_infix " en "
