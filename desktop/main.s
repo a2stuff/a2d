@@ -1330,13 +1330,7 @@ not_downloaded:
         jsr     ATimes64
         addax   #run_list_paths, $06
 
-L4A0A:  ldy     #$00
-        lda     ($06),y
-        tay
-L4A0F:  lda     ($06),y
-        sta     buf_win_path,y
-        dey
-        bpl     L4A0F
+L4A0A:  param_call CopyPtr1ToBuf, buf_win_path
         ;; fall through
 
 .proc LaunchBufWinPath
@@ -1381,25 +1375,12 @@ entry_num:
         pha
         jsr     ATimes64
         addax   #run_list_paths, $06
-        ldy     #0
-        lda     ($06),y
-        tay
-:       lda     ($06),y
-        sta     $800,y
-        dey
-        bpl     :-
-        pla
+        param_call CopyPtr1ToBuf, $800
 
         ;; Copy "down loaded" path to $840
+        pla
         jsr     ComposeDownloadedEntryPath
-        stax    $08
-        ldy     #0
-        lda     ($08),y
-        tay
-:       lda     ($08),y
-        sta     $840,y
-        dey
-        bpl     :-
+        param_call CopyPtr2ToBuf, $840
         ;; fall through
 .endproc
 
@@ -1484,6 +1465,44 @@ entry_num:
 LaunchBufWinPath        := CmdSelectorItem::LaunchBufWinPath
 StripPathSegments       := CmdSelectorItem::StripPathSegments
 MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
+
+;;; ============================================================
+;;; Copy the string at $06 to target at A,X
+;;; Inputs: Source string at $06, target buffer at A,X
+;;; Output: String length in A
+
+.proc CopyPtr1ToBuf
+        ptr1 := $06
+
+        stax    addr
+        ldy     #0
+        lda     (ptr1),y
+        tay
+:       lda     (ptr1),y
+        addr := *+1
+        sta     SELF_MODIFIED,y
+        dey
+        bpl     :-
+        rts
+.endproc
+
+;;; Copy the string at $08 to target at A,X
+;;; Inputs: Source string at $08, target buffer at A,X
+;;; Output: String length in A
+.proc CopyPtr2ToBuf
+        ptr2 := $08
+
+        stax    addr
+        ldy     #0
+        lda     (ptr2),y
+        tay
+:       lda     (ptr2),y
+        addr := *+1
+        sta     SELF_MODIFIED,y
+        dey
+        bpl     :-
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Append filename to directory path in `path_buffer`
@@ -1768,22 +1787,10 @@ done:   jsr     SetCursorPointer ; after invoking DA
 .proc CopyPathsFromPtrsToBufsAndSplitName
 
         ;; Copy string at $6 to `path_buf3`
-        ldy     #0
-        lda     ($06),y
-        tay
-:       lda     ($06),y
-        sta     path_buf3,y
-        dey
-        bpl     :-
+        param_call CopyPtr1ToBuf, path_buf3
 
         ;; Copy string at $8 to `path_buf4`
-        ldy     #0
-        lda     ($08),y
-        tay
-:       lda     ($08),y
-        sta     path_buf4,y
-        dey
-        bpl     :-
+        param_call CopyPtr2ToBuf, path_buf4
 
         param_call FindLastPathSegment, path_buf4
 
@@ -1838,13 +1845,7 @@ done:   jsr     SetCursorPointer ; after invoking DA
         ;; --------------------------------------------------
         ;; Try the delete
 
-        ldy     #0
-        lda     ($06),y
-        tay
-:       lda     ($06),y
-        sta     path_buf3,y
-        dey
-        bpl     :-
+        param_call CopyPtr1ToBuf, path_buf3
 
         jsr     DoDeleteFile
         cmp     #kOperationCanceled
@@ -2046,14 +2047,7 @@ CmdOpenFromKeyboard := CmdOpen::from_keyboard
         lda     selected_window_id
         jsr     GetWindowPath
         stax    win_path_ptr
-
-        ldy     #0
-        lda     (win_path_ptr),y
-        tay
-:       lda     (win_path_ptr),y
-        sta     buf_win_path,y
-        dey
-        bpl     :-
+        param_call CopyPtr1ToBuf, buf_win_path
 
         ;; Copy file path to buf_filename2
         icon_ptr := $06
@@ -2106,8 +2100,8 @@ CmdOpenFromKeyboard := CmdOpen::from_keyboard
         ;; Calc the name
         name_ptr := $08
         copy16  #open_dir_path_buf, name_ptr
-        inc     open_dir_path_buf                     ; past the '/'
-        add16_8 name_ptr, open_dir_path_buf, name_ptr ; point at suffix
+        inc     open_dir_path_buf           ; past the '/'
+        add16_8 name_ptr, open_dir_path_buf ; point at suffix
         prev := *+1
         lda     #SELF_MODIFIED_BYTE
         sec
@@ -2210,13 +2204,7 @@ L4FC6:  lda     active_window_id
         sty     name_ptr
 
         ;; Copy path
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     path_buffer,y
-        dey
-        bpl     :-
+        param_call CopyPtr1ToBuf, path_buffer
 
         ;; Create with current date
         COPY_STRUCT DateTime, DATELO, create_params::create_date
@@ -2384,14 +2372,8 @@ tmp:    .addr   0
         beq     done            ; nope, vol icon
 
         ;; Stash name
-        add16_8 icon_ptr, #IconEntry::name, icon_ptr
-        ldy     #0
-        lda     (icon_ptr),y
-        tay
-:       lda     (icon_ptr),y
-        sta     stashed_name,y
-        dey
-        bpl     :-
+        add16_8 icon_ptr, #IconEntry::name
+        param_call CopyPtr1ToBuf, stashed_name
 
 done:   rts
 .endproc
@@ -2508,7 +2490,7 @@ stashed_name:
         bmi     adjustx
 
         ;; Is right of icon beyond window? If so, adjust by delta (positive)
-        add16_8 cur_icon_bounds::x1, #kIconBBoxOffsetRight, cur_icon_bounds::x1
+        add16_8 cur_icon_bounds::x1, #kIconBBoxOffsetRight
         sub16   cur_icon_bounds::x1, window_grafport::cliprect::x2, delta
         bmi     donex
 
@@ -2532,7 +2514,7 @@ donex:
         bmi     adjusty
 
         ;; Is bottom of icon beyond window? If so, adjust by delta (positive)
-        add16_8 cur_icon_bounds::y2, #kIconBBoxOffsetBottom, cur_icon_bounds::y2
+        add16_8 cur_icon_bounds::y2, #kIconBBoxOffsetBottom
         sub16   cur_icon_bounds::y2, window_grafport::cliprect::y2, delta
         bmi     doney
 
@@ -4024,19 +4006,13 @@ common:
         path_buf := $1F00
 
         ;; Copy volume path to $1F00
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     path_buf+1,y
-        dey
-        bpl     :-
+        param_call CopyPtr1ToBuf, path_buf+1
 
         ;; Find all windows with path as prefix, and close them.
         sta     path_buf
         inc     path_buf
-        lda     #'/'
-        sta     path_buf+1
+        copy    #'/', path_buf+1
+
         ldax    #path_buf
         ldy     path_buf
         jsr     FindWindowsForPrefix
@@ -5943,20 +5919,13 @@ y_flag: .byte   0
         ;; --------------------------------------------------
         ;; Volume icon; maybe related windows?
 volume:
-        add16_8 ptr, #IconEntry::name, ptr
+        add16_8 ptr, #IconEntry::name
 
         ;; Create "/volname"
-        ldy     #0
-        lda     (ptr),y
-        tax
-        tay
-:       lda     (ptr),y
-        sta     path_buf+1,y    ; leave room for leading '/'
-        dey
-        bpl     :-
+        param_call CopyPtr1ToBuf, path_buf+1 ; leave room for leading '/'
+        sta     path_buf
+        inc     path_buf
         copy    #'/', path_buf+1
-        inx
-        stx     path_buf
 
 FindWindows:
         ldax    #path_buf
@@ -6940,7 +6909,7 @@ do_entry:
         lda     index_in_block
         cmp     dir_header::entries_per_block
         beq     L71E7
-        add16_8 entry_ptr, dir_header::entry_length, entry_ptr
+        add16_8 entry_ptr, dir_header::entry_length
         jmp     L71F7
 
 L71E7:  copy    #$00, index_in_block
@@ -6958,7 +6927,7 @@ L71F7:  ldx     #$00
         cmp     dir_header::entries_per_block
         jeq     L71E7
 
-        add16_8 entry_ptr, dir_header::entry_length, entry_ptr
+        add16_8 entry_ptr, dir_header::entry_length
         jmp     L71F7
 
 L7223:  iny
@@ -7329,19 +7298,11 @@ size:   .word   0               ; size of a window's list
         ;; Desktop (volume) icon - no parent path
 
         ;; Copy name
-        ldy     #0
-        lda     (name_ptr),y
-        tay                     ; Y = length
-:       lda     (name_ptr),y
-        sta     open_dir_path_buf+1,y ; Leave room for leading '/'
-        dey
-        bne     :-
-
+        param_call CopyPtr1ToBuf, open_dir_path_buf+1 ; Leave room for leading '/'
         ;; Add leading '/' and adjust length
-        copy    #'/', open_dir_path_buf+1
-        lda     (name_ptr),y
         sta     open_dir_path_buf
         inc     open_dir_path_buf
+        copy    #'/', open_dir_path_buf+1
 
         jsr     PopPointers
         rts
@@ -10323,7 +10284,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         beq     next
         jsr     IconEntryLookup
         stax    icon_ptr
-        add16_8 icon_ptr, #IconEntry::name, icon_ptr
+        add16_8 icon_ptr, #IconEntry::name
 
         ;; Lengths match?
         ldy     #0
@@ -11854,15 +11815,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         lda     selected_icon_list,x
         jsr     IconEntryNameLookup
 
-        ptr := $06
-
-        ldy     #0              ; copy name again
-        lda     (ptr),y         ; to old_name_buf
-        tay
-:       lda     (ptr),y
-        sta     old_name_buf,y
-        dey
-        bpl     :-
+        param_call CopyPtr1ToBuf, old_name_buf
 
         ;; Open the dialog
         lda     #RenameDialogState::open
@@ -12147,13 +12100,7 @@ wloop:  ldx     found_windows_count
         dst := $06
 
         ;; Set `path_buf1` to the old path (should be `src_path_buf` + suffix)
-        ldy     #0
-        lda     (dst),y
-        tay
-:       lda     (dst),y
-        sta     path_buf1,y
-        dey
-        bpl     :-
+        param_call CopyPtr1ToBuf, path_buf1
 
         ;; Set `path_buf2` to the new prefix
         ldy     dst_path_buf
@@ -12349,15 +12296,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         jsr     IconEntryNameLookup
 
         ;; Copy name for display/default
-        icon_name_ptr := $06
-
-        ldy     #0
-        lda     (icon_name_ptr),y
-        tay
-:       lda     (icon_name_ptr),y
-        sta     old_name_buf,y
-        dey
-        bpl     :-
+        param_call CopyPtr1ToBuf, old_name_buf
 
         ;; Open the dialog
         lda     #DuplicateDialogState::open
@@ -15241,13 +15180,8 @@ LAE70:  copy    #$80, has_input_field_flag
         jsr     CopyDialogParamAddrToPtr
         ldy     #1
         copy16in ($06),y, $08
-        ldy     #0
-        lda     ($08),y
-        tay
-LAE90:  lda     ($08),y
-        sta     path_buf0,y
-        dey
-        bpl     LAE90
+        param_call CopyPtr2ToBuf, path_buf0
+
         lda     winfo_prompt_dialog::window_id
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 2, aux::str_in
@@ -16610,29 +16544,11 @@ ptr_str_files_suffix:
 ;;; ============================================================
 
 .proc CopyNameToBuf0
-        ptr := $6
-
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     path_buf0,y
-        dey
-        bpl     :-
-        rts
+        param_jump CopyPtr1ToBuf, path_buf0
 .endproc
 
 .proc CopyNameToBuf1
-        ptr := $6
-
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     path_buf1,y
-        dey
-        bpl     :-
-        rts
+        param_jump CopyPtr1ToBuf, path_buf1
 .endproc
 
 ;;; ============================================================
@@ -16946,7 +16862,7 @@ exit:   rts
         bpl     :-
 
         ;; Offset to next entry
-        add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
+        add16_8 data_ptr, #.sizeof(DeskTopFileItem)
         rts
 
 .endproc                        ; WriteWindowInfo
