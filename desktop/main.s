@@ -408,13 +408,15 @@ HandleKeydown:
 
         lda     event_params::key
         cmp     #CHAR_LEFT
-        jeq     CmdHighlight
+        jeq     CmdHighlightPrev
         cmp     #CHAR_UP
-        jeq     CmdHighlight
+        jeq     CmdHighlightPrev
         cmp     #CHAR_RIGHT
-        jeq     CmdHighlight
+        jeq     CmdHighlightNext
         cmp     #CHAR_DOWN
-        jeq     CmdHighlight
+        jeq     CmdHighlightNext
+        cmp     #CHAR_TAB
+        jeq     CmdHighlightAlpha
 
         jmp     menu_accelerators
 
@@ -3091,13 +3093,28 @@ ret:    rts
 
 .proc CmdHighlight
 
+        ;; Tab / Shift+Tab - next/prev in sorted order
+
+alpha:  jsr     ShiftDown
+        sta     flag
+        jsr     GetSelectableIconsSorted
+        jmp     common
+
+        ;; Arrows - next/prev in icon order
+
+prev:   lda     #$80
+        beq     store
+
+next:   lda     #$00
+store:  sta     flag
+
 ;;; First byte is icon count. Rest is a list of selectable icons.
         buffer := $1800
         jsr     GetSelectableIcons
 
 ;;; Figure out current selected index, based on selection.
 
-        lda     selected_icon_count
+common: lda     selected_icon_count
         beq     pick_first
 
         ;; Try to find actual selection in our list
@@ -3122,11 +3139,9 @@ pick_next_prev:
         stx     selected_index
         jsr     ClearSelection
 
-        lda     event_params::key
-        cmp     #CHAR_LEFT
-        beq     select_prev
-        cmp     #CHAR_UP
-        beq     select_prev
+        flag := *+1
+        lda     #SELF_MODIFIED_BYTE
+        bmi     select_prev
         ;; fall through
 
 select_next:
@@ -3154,6 +3169,9 @@ HighlightIcon:
         lda     buffer+1,x
         jmp     SelectIcon
 .endproc
+CmdHighlightPrev := CmdHighlight::prev
+CmdHighlightNext := CmdHighlight::next
+CmdHighlightAlpha := CmdHighlight::alpha
 
 ;;; ============================================================
 ;;; Type Down Selection
@@ -3195,7 +3213,7 @@ file_char:
         sta     typedown_buf,x
 
         ;; Collect and sort the potential type-down matches
-        jsr     BuildTable
+        jsr     GetSelectableIconsSorted
 
         ;; Find a match. There will always be one, since
         ;; desktop icons (including Trash) are considered.
@@ -3228,95 +3246,6 @@ ret:    rts
         ptr1 := $06
         ptr2 := $08
 
-;;; Gather the selectable icons (in active window plus desktop) into
-;;; `table` and sort them by name.
-.proc BuildTable
-        ;; Init table with unsorted list of icons (never empty)
-        jsr     GetSelectableIcons
-
-        ;; Selection sort. In each outer iteration, the highest
-        ;; remaining element is moved to the end of the unsorted
-        ;; region, and the region is reduced by one. O(n^2)
-        ldx     num_filenames
-        dex
-        stx     outer
-
-        outer := *+1
-oloop:  lda     #SELF_MODIFIED_BYTE
-        jsr     GetNthFilename
-        stax    ptr2
-
-        lda     #0
-        sta     inner
-
-        inner := *+1
-iloop:  lda     #SELF_MODIFIED_BYTE
-        jsr     GetNthFilename
-        stax    ptr1
-
-        jsr     CompareStrings
-        bcc     next
-
-        ;; Swap
-        ldx     inner
-        ldy     outer
-        lda     table,x
-        pha
-        lda     table,y
-        sta     table,x
-        pla
-        sta     table,y
-        tya
-        jsr     GetNthFilename
-        stax    ptr2
-
-next:   inc     inner
-        lda     inner
-        cmp     outer
-        bne     iloop
-
-        dec     outer
-        bne     oloop
-
-ret:    rts
-.endproc
-
-;;; Compare strings at $06 (1) and $08 (2).
-;;; Returns C=0 for 1<2 , C=1 for 1>=2, Z=1 for 1=2
-.proc CompareStrings
-        ldy     #0
-        copy    (ptr1),y, len1
-        copy    (ptr2),y, len2
-        iny
-
-loop:   lda     (ptr2),y
-        jsr     UpcaseChar
-        sta     char
-        lda     (ptr1),y
-        jsr     UpcaseChar
-        char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     ret             ; differ at Yth character
-
-        ;; End of string 1?
-        len1 := *+1
-        cpy     #SELF_MODIFIED_BYTE
-        bne     :+
-        cpy     len2            ; 1<2 or 1=2 ?
-        rts
-
-        ;; End of string 2?
-        len2 := *+1
-:       cpy     SELF_MODIFIED_BYTE
-        beq     gt              ; 1>2
-        iny
-        bne     loop            ; always
-
-gt:     lda     #$FF            ; Z=0
-        sec
-ret:    rts
-.endproc
-
 ;;; Find the substring match for `typedown_buf`, or the next
 ;;; match in lexicographic order, or the last item in the table.
 .proc FindMatch
@@ -3326,7 +3255,7 @@ ret:    rts
 
         index := *+1
 loop:   lda     #SELF_MODIFIED_BYTE
-        jsr     GetNthFilename
+        jsr     GetNthSelectableIconName
         stax    ptr
 
         ;; NOTE: Can't use `CompareStrings` as we want to match
@@ -3358,23 +3287,6 @@ next:   inc     index
         bne     loop
         dec     index
 found:  return  index
-.endproc
-
-;;; Return ptr to name in A,X
-.proc GetNthFilename
-        tax
-        lda     table,x         ; A = icon num
-        asl     a
-        tay
-        lda     icon_entry_address_table,y
-        clc
-        adc     #IconEntry::name
-        pha
-        lda     icon_entry_address_table+1,y
-        adc     #0
-        tax
-        pla
-        rts
 .endproc
 
 .endproc
@@ -3437,6 +3349,125 @@ vol_loop:
 
         rts
 .endproc
+
+;;; Gather the selectable icons (in active window plus desktop) into
+;;; buffer at $1800, as above, but also sort them by name.
+;;; Output: Buffer at $1800 (length prefixed)
+
+.proc GetSelectableIconsSorted
+        buffer := $1800
+        ptr1 := $06
+        ptr2 := $08
+
+        ;; Init table with unsorted list of icons (never empty)
+        jsr     GetSelectableIcons
+
+        ;; Selection sort. In each outer iteration, the highest
+        ;; remaining element is moved to the end of the unsorted
+        ;; region, and the region is reduced by one. O(n^2)
+        ldx     buffer          ; count
+        dex
+        stx     outer
+
+        outer := *+1
+oloop:  lda     #SELF_MODIFIED_BYTE
+        jsr     GetNthSelectableIconName
+        stax    ptr2
+
+        lda     #0
+        sta     inner
+
+        inner := *+1
+iloop:  lda     #SELF_MODIFIED_BYTE
+        jsr     GetNthSelectableIconName
+        stax    ptr1
+
+        jsr     CompareStrings
+        bcc     next
+
+        ;; Swap
+        ldx     inner
+        ldy     outer
+        lda     buffer+1,x
+        pha
+        lda     buffer+1,y
+        sta     buffer+1,x
+        pla
+        sta     buffer+1,y
+        tya
+        jsr     GetNthSelectableIconName
+        stax    ptr2
+
+next:   inc     inner
+        lda     inner
+        cmp     outer
+        bne     iloop
+
+        dec     outer
+        bne     oloop
+
+ret:    rts
+
+;;; Compare strings at $06 (1) and $08 (2).
+;;; Returns C=0 for 1<2 , C=1 for 1>=2, Z=1 for 1=2
+.proc CompareStrings
+        ldy     #0
+        copy    (ptr1),y, len1
+        copy    (ptr2),y, len2
+        iny
+
+loop:   lda     (ptr2),y
+        jsr     UpcaseChar
+        sta     char
+        lda     (ptr1),y
+        jsr     UpcaseChar
+        char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     ret             ; differ at Yth character
+
+        ;; End of string 1?
+        len1 := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :+
+        cpy     len2            ; 1<2 or 1=2 ?
+        rts
+
+        ;; End of string 2?
+        len2 := *+1
+:       cpy     SELF_MODIFIED_BYTE
+        beq     gt              ; 1>2
+        iny
+        bne     loop            ; always
+
+gt:     lda     #$FF            ; Z=0
+        sec
+ret:    rts
+.endproc
+
+.endproc
+
+;;; Assuming selectable icon buffer at $1800 is populated by the
+;;; above functions, return ptr to nth icon's name in A,X
+;;; Input: A = index
+;;; Output: A,X = icon name pointer
+.proc GetNthSelectableIconName
+        buffer := $1800
+
+        tax
+        lda     buffer+1,x         ; A = icon num
+        asl     a
+        tay
+        lda     icon_entry_address_table,y
+        clc
+        adc     #IconEntry::name
+        pha
+        lda     icon_entry_address_table+1,y
+        adc     #0
+        tax
+        pla
+        rts
+.endproc
+
 
 ;;; ============================================================
 ;;; Select an arbitrary icon. If windowed, it is scrolled into view.
