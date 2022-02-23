@@ -3069,7 +3069,7 @@ alpha:  jsr     ShiftDown
         ;; Arrows - next/prev in icon order
 
 prev:   lda     #$80
-        beq     store
+        bne     store           ; always
 
 next:   lda     #$00
 store:  sta     flag
