@@ -13648,9 +13648,7 @@ a_blocks:       .addr  op_block_count
 
 .proc GetSizeDialogConfirmCallback
         copy    #GetSizeDialogLifecycle::prompt, get_size_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
-        jne     CloseFilesCancelDialog
-        rts
+        param_jump invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
 .endproc
 
 .proc GetSizeDialogCompleteCallback
@@ -14876,7 +14874,7 @@ do3:    jsr     ClosePromptDialog
         jmp     SetCursorPointer ; when closing dialog
 
         ;; --------------------------------------------------
-        ;; GetSizeDialogLifecycle::confirm
+        ;; GetSizeDialogLifecycle::prompt
 do2:
         ;; If no files were seen, `do1` was never executed and so the
         ;; counts will not be shown. Update one last time, just in case.
