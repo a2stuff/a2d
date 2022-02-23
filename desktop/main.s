@@ -1033,13 +1033,9 @@ launch:
         tmp_path := $1800
 
 basic:  lda     #'C'            ; "BASI?" -> "BASIC"
-        bne     start           ; always
-
-        ;; TODO: Use OPC_BIT_abs
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 basis:  lda     #'S'            ; "BASI?" -> "BASIS"
-        ;; fall through
-
-start:  sta     str_basix_system + kBSOffset
+        sta     str_basix_system + kBSOffset
 
         ldx     launch_path
         stx     path_length

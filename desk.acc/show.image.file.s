@@ -1,6 +1,7 @@
         .include "../config.inc"
 
         .include "apple2.inc"
+        .include "opcodes.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
@@ -570,17 +571,13 @@ done:   rts
 
         ptr := $06
 
-hr_file:
-        lda     #0
-        beq     start           ; Always
-        ;; TODO: Use OPC_BIT_abs (but reverse the order so #$C0 is safe!)
-
 dhr_file:
         lda     #$C0            ; S = is dhr?, V = is aux page?
-        ;; Fall through
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+hr_file:
+        lda     #0
+        sta     dhr_flag
 
-
-start:  sta     dhr_flag
         copy16  #hires, ptr
 
         sta     PAGE2OFF
