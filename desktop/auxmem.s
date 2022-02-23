@@ -1535,7 +1535,7 @@ L9D7C:  stx     rect3_y1
 
 .proc SetRect1ToRect2AndZeroRect3Y
         ldx     #rect2_y1 - rect2_x1
-        ;; Fall through...
+        FALL_THROUGH_TO SetRectCommon
 .endproc
 
 .proc SetRectCommon
@@ -2488,7 +2488,7 @@ volume:
 
         MGTK_CALL MGTK::GetDeskPat, addr
         MGTK_CALL MGTK::SetPattern, 0, addr
-        ;; fall through
+        FALL_THROUGH_TO EraseWindowIcon
 .endproc
 
 .proc EraseWindowIcon
@@ -3808,8 +3808,7 @@ start:
       END_IF
 
         ldax    #alert_params
-        ;;jmp     Alert
-        ;; fall through
+        FALL_THROUGH_TO Alert
 .endproc
 
 ;;; ============================================================

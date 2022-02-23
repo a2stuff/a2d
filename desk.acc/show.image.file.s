@@ -131,7 +131,7 @@ event_params:   .tag MGTK::Event
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         JUMP_TABLE_MGTK_CALL MGTK::ObscureCursor
 
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
 ;;; ============================================================
@@ -504,7 +504,7 @@ done:   rts
         php
         jsr     PutBit1
         plp
-        ;; fall through
+        FALL_THROUGH_TO PutBit1
 .endproc
 .proc PutBit1
         sta     RAMRDON
@@ -540,7 +540,7 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
 .proc ToggleMode
         lda     mode
         bne     SetBWMode
-        ;; fall through
+        FALL_THROUGH_TO SetColorMode
 .endproc
 
 .proc SetColorMode
@@ -573,6 +573,7 @@ done:   rts
 hr_file:
         lda     #0
         beq     start           ; Always
+        ;; TODO: Use OPC_BIT_abs (but reverse the order so #$C0 is safe!)
 
 dhr_file:
         lda     #$C0            ; S = is dhr?, V = is aux page?

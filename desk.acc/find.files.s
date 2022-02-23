@@ -1018,7 +1018,7 @@ top_row:        .byte   0
         jsr     DrawResults
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
 .proc InputLoop
@@ -1144,7 +1144,7 @@ not_meta:
         bcc     ignore_char
         cmp     #'z'+1
         bcc     DoChar
-        ;; fall through
+        FALL_THROUGH_TO ignore_char
 .endproc
 
 ignore_char:
@@ -1616,7 +1616,7 @@ InvertRect:
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, penXOR
         jsr     sub
-        ;; fall through...
+        FALL_THROUGH_TO sub
 
 sub:    MGTK_CALL MGTK::PaintRect, 0, fillrect_addr
         rts
@@ -1774,7 +1774,7 @@ width   .word
         ;; Adjust length
         lda     tw_params::length
         sta     buf_left
-        ;; fall through
+        FALL_THROUGH_TO finish
 .endproc
 
 finish:

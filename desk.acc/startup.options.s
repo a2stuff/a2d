@@ -234,7 +234,7 @@ kCheckboxLabelOffsetY = kCheckboxHeight + 1
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
 .proc InputLoop

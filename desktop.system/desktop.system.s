@@ -1154,7 +1154,7 @@ file_loop:
         bne     file_loop
 
         jsr     UpdateProgress
-        ;; fall through
+        FALL_THROUGH_TO FinishDtCopy
 .endproc
 
 .proc FinishDtCopy
@@ -2037,7 +2037,7 @@ monitor:
         jsr     CoutString
         lda     #$80|CHAR_RETURN
         jmp     COUT
-        ;; fall through
+        FALL_THROUGH_TO CoutString
 .endproc
 
 .proc CoutString

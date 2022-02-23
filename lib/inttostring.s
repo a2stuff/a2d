@@ -15,7 +15,7 @@ sep:    sec
 
 ;;; Entry point: without thousands separators
 nosep:  clc
-        ;; fall through...
+        FALL_THROUGH_TO common
 
 common: stax    value
         ror                     ; move carry to high bit

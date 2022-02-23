@@ -171,7 +171,7 @@ exit1:  jmp     Exit
         dey
         bpl     :-
 
-        ;; Fall through...
+        FALL_THROUGH_TO ReadSortWrite
 .endproc
 
 .proc ReadSortWrite

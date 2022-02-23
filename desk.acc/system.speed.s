@@ -267,7 +267,7 @@ frame_counter:
         param_call DrawString, fast_button_label
 
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
 ;;; ============================================================
@@ -288,7 +288,7 @@ frame_counter:
 
         cmp     #MGTK::EventKind::key_down
         bne     InputLoop
-        ;; fall through
+        FALL_THROUGH_TO OnKey
 .endproc
 
 .proc OnKey

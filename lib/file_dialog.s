@@ -2526,7 +2526,7 @@ width   .word
         ;; Adjust length
         lda     tw_params::length
         sta     buf_input1_left
-        ;; fall through
+        FALL_THROUGH_TO finish
 .endproc
 
 finish: jsr     RedrawInput
@@ -2697,7 +2697,7 @@ width   .word
         ;; Adjust length
         lda     tw_params::length
         sta     buf_input2_left
-        ;; fall through
+        FALL_THROUGH_TO finish
 .endproc
 
 finish: jsr     RedrawInput
@@ -3222,7 +3222,7 @@ HandleF1SelectionChange:
 
 HandleF2SelectionChange:
         lda     #$80
-        ;; fall through
+        FALL_THROUGH_TO ListSelectionChange
 .endif
 
 .proc ListSelectionChange

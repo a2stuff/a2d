@@ -725,7 +725,7 @@ CheckAndClearUpdates:
         cmp     #MGTK::EventKind::update
         bne     done
         MGTK_CALL MGTK::GetEvent, event_params
-        ;; Fall through.
+        FALL_THROUGH_TO ClearUpdates
 
 ClearUpdates:
         jsr     @do_update
@@ -813,7 +813,7 @@ menukey:
         lda     #1
 :       sta     menu_params::key_mods
         MGTK_CALL MGTK::MenuKey, menu_params::menu_id
-        ;; Fall through
+        FALL_THROUGH_TO HandleMenu
 .endproc
 
 ;;; ==================================================
@@ -1489,7 +1489,7 @@ saved_ram_unitnum:
 .proc GetPortAndDrawWindow
         lda     winfo::window_id
         jsr     GetWindowPort
-        ;; fall through
+        FALL_THROUGH_TO DrawWindow
 .endproc
 
 .proc DrawWindow
@@ -2072,6 +2072,7 @@ str_basix_system:
 
 basic:  lda     #'C'            ; "BASI?" -> "BASIC"
         bne     start           ; always
+        ;; TODO: Use OPC_BIT_abs
 
 basis:  lda     #'S'            ; "BASI?" -> "BASIS"
         ;; fall through
@@ -2467,7 +2468,7 @@ pb2_initial_state:
         sta     RAMWRTON        ; Clear aux
         jsr     clear
         sta     RAMWRTOFF       ; Clear main
-        ;; fall through
+        FALL_THROUGH_TO clear
 
 clear:  copy16  #HIRES_ADDR, ptr
         lda     #0              ; clear to black

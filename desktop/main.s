@@ -154,7 +154,7 @@ clear_no_peek:
 clear:
         jsr     ResetMainGrafport
         copy    active_window_id, saved_active_window_id
-        ;; fall through
+        FALL_THROUGH_TO loop
 
         ;; --------------------------------------------------
 loop:
@@ -1035,6 +1035,7 @@ launch:
 basic:  lda     #'C'            ; "BASI?" -> "BASIC"
         bne     start           ; always
 
+        ;; TODO: Use OPC_BIT_abs
 basis:  lda     #'S'            ; "BASI?" -> "BASIS"
         ;; fall through
 
@@ -1331,7 +1332,7 @@ not_downloaded:
         addax   #run_list_paths, $06
 
 L4A0A:  param_call CopyPtr1ToBuf, buf_win_path
-        ;; fall through
+        FALL_THROUGH_TO LaunchBufWinPath
 
 .proc LaunchBufWinPath
         ;; Find last '/'
@@ -1381,7 +1382,7 @@ entry_num:
         pla
         jsr     ComposeDownloadedEntryPath
         param_call CopyPtr2ToBuf, $840
-        ;; fall through
+        FALL_THROUGH_TO StripPathSegments
 .endproc
 
         ;; Strip segment off path at $800
@@ -1922,7 +1923,7 @@ from_double_click:
         bpl     :+
         copy    selected_window_id, window_id_to_close
 :
-        ;; fall through
+        FALL_THROUGH_TO common
 
         ;; --------------------------------------------------
 common:
@@ -3104,7 +3105,7 @@ pick_next_prev:
         flag := *+1
         lda     #SELF_MODIFIED_BYTE
         bmi     select_prev
-        ;; fall through
+        FALL_THROUGH_TO select_next
 
 select_next:
         selected_index := *+1
@@ -3123,7 +3124,7 @@ select_prev:
         ldx     buffer
         dex
 :       stx     selected_index
-        ;; fall through
+        FALL_THROUGH_TO HighlightIcon
 
 ;;; Highlight the icon in the list at `selected_index`
 HighlightIcon:
@@ -3595,7 +3596,7 @@ reverse:
         ldx     #kMaxNumWindows-1
 :       lda     window_to_dir_icon_table,x
         beq     @loop           ; 0 = window free
-        ;;  fall through...
+        FALL_THROUGH_TO found
 
 found:  inx
         stx     findwindow_params::window_id
@@ -4112,7 +4113,7 @@ check_drive_flags:
         sta     reset_and_invoke_target+1
         lda     #<$C000
         sta     reset_and_invoke_target
-        ;; fall through
+        FALL_THROUGH_TO ResetAndInvoke
 .endproc
 
         ;; also invoked by launcher code
@@ -4378,7 +4379,7 @@ replace_selection:
         jsr     ClearSelection
         lda     icon_num
         jsr     SelectFileIcon
-        ;; fall through...
+        FALL_THROUGH_TO check_double_click
 
         ;; --------------------------------------------------
 check_double_click:
@@ -4476,7 +4477,7 @@ same_or_desktop:
         jsr     UpdateScrollbars
         jsr     CachedIconsWindowToScreen
         jsr     ResetMainGrafport
-        ;; fall through
+        FALL_THROUGH_TO done_content_click
 
 ;;; Used as additional entry point
 done_content_click:     ; TODO: Obscures correct usage; remove?
@@ -4893,7 +4894,7 @@ y_flag: .byte   0
 :       jsr     ModifierDown
         jmi     CmdCloseAll
 
-        ;; fall through...
+        FALL_THROUGH_TO CloseWindow
 .endproc
 
 .proc CloseWindow
@@ -5629,7 +5630,7 @@ not_selected:
 replace_selection:
         jsr     ClearSelection
         jsr     SelectVolIcon
-        ;; fall through...
+        FALL_THROUGH_TO check_double_click
 
         ;; --------------------------------------------------
 check_double_click:
@@ -7460,7 +7461,7 @@ ep_preserve_window_size:
         lda     window_to_dir_icon_table,x
         sta     icon_param      ; Guaranteed to exist, since window just created
         lda     #$80
-        ;; Fall through
+        FALL_THROUGH_TO common
 
 common: sta     preserve_window_size_flag
         pla
@@ -7691,7 +7692,7 @@ str_sys_suffix:
 
 not_app:
         lda     #IconType::system
-        ;; fall through
+        FALL_THROUGH_TO got_type
 
 got_type:
         tay
@@ -8914,7 +8915,7 @@ in_range:
         blocks := list_view_filerecord + FileRecord::blocks
 
         ldax    blocks
-        ;; fall through
+        FALL_THROUGH_TO ComposeSizeString
 .endproc
 
 ;;; ============================================================
@@ -9704,7 +9705,7 @@ pos_win:        .word   0, 0
         tya
         jsr     IconEntryLookup
         stax    $06
-        ;; fall through
+        FALL_THROUGH_TO IconPtrScreenToWindow
 .endproc
 
 ;;; Convert icon's coordinates from screen to window
@@ -10333,7 +10334,7 @@ remove_filerecords:
         txa
         jsr     RemoveWindowFilerecordEntries
     END_IF
-        ;; fall through
+        FALL_THROUGH_TO start
 
         ;; Find open window for the icon
 start:  lda     icon_param
@@ -10922,7 +10923,7 @@ DoCopyFile:
         jsr     DoCopyDialogPhase
         jsr     SizeOrCountProcessSelectedFile
         jsr     PrepCallbacksForCopy
-        ;; fall through
+        FALL_THROUGH_TO DoCopyToRAM2
 
 DoCopyToRAM2:
         copy    #$FF, copy_run_flag
@@ -10930,7 +10931,7 @@ DoCopyToRAM2:
         copy    #0, delete_skip_decrement_flag
         jsr     copy_file_for_run
         jsr     InvokeOperationCompleteCallback
-        ;; fall through
+        FALL_THROUGH_TO FinishOperation
 
 .proc FinishOperation
         return  #kOperationSucceeded
@@ -11007,7 +11008,7 @@ L8FDD:  lda     #$00            ; unlock
 L8FE1:  lda     #$80            ; lock
         sta     unlock_flag
         copy    #%10000000, operation_flags ; lock/unlock
-        ;; fall through
+        FALL_THROUGH_TO L8FEB
 
 L8FEB:  tsx
         stx     stack_stash
@@ -11058,7 +11059,7 @@ common:
 :       copy    path_buf3,y, path_buf4,y
         dey
         bpl     :-
-        ;; fall through
+        FALL_THROUGH_TO BeginOperation
 
 ;;; --------------------------------------------------
 ;;; Start the actual operation
@@ -13590,7 +13591,7 @@ do_lock:
 
 LockProcessDirectoryEntry:
         jsr     AppendFileEntryToSrcPath
-        ;; fall through
+        FALL_THROUGH_TO LockFileCommon
 
 .proc LockFileCommon
         jsr     update_dialog
@@ -13667,7 +13668,7 @@ a_blocks:       .addr  op_block_count
 .proc GetSizeDialogEnumerationCallback
         copy    #GetSizeDialogLifecycle::count, get_size_dialog_params::phase
         param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
-        ;; fall through
+        FALL_THROUGH_TO get_size_rts1
 .endproc
 get_size_rts1:
         rts
@@ -13682,6 +13683,7 @@ get_size_rts1:
 .proc GetSizeDialogCompleteCallback
         copy    #GetSizeDialogLifecycle::close, get_size_dialog_params::phase
         param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
+        FALL_THROUGH_TO get_size_rts2
 .endproc
 get_size_rts2:
         rts
@@ -14061,7 +14063,7 @@ check:  cpy     #SELF_MODIFIED_BYTE
 check_slash:
         cmp     #'/'
         beq     match           ; if so, same vol
-        ;; fall through
+        FALL_THROUGH_TO no_match
 
 no_match:
         flag := *+1
@@ -16116,7 +16118,7 @@ width   .word
         ;; Adjust length
         lda     tw_params::length
         sta     path_buf1
-        ;; fall through
+        FALL_THROUGH_TO finish
 .endproc
 
 finish: jsr     DrawFilenamePrompt

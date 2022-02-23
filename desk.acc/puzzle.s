@@ -615,7 +615,7 @@ ploop:  lda     position_table+1,y
         bcs     Scramble
         jsr     DrawAll
         jsr     FindHole
-        ; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
 ;;; ============================================================
@@ -951,7 +951,7 @@ DrawWindow:
         ldy     hole_x
         lda     #16
         sta     draw_end
-        ;; fall through
+        FALL_THROUGH_TO DrawSelected
 .endproc
 
         ;; Draw pieces from A to draw_end, step draw_inc

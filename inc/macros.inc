@@ -992,6 +992,9 @@ __pushorg_depth__ .set 0
         .assert (* - name) = (size) * (record_length), error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), (size) * (record_length), * - name)
 .endmacro
 
+.macro FALL_THROUGH_TO label
+        .assert * = (label), error, .sprintf("Fall through expectation failed: %s", .string(label))
+.endmacro
 
 ;;; ============================================================
 ;;; Flow Control

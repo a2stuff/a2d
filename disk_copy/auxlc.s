@@ -1167,7 +1167,7 @@ LDC9C:  ldx     num_drives
         stx     current_drive_selection
 LDCA3:  lda     current_drive_selection
         jsr     HighlightRow
-        ;; fall through
+        FALL_THROUGH_TO LDCA9
 .endproc
 
 LDCA9:  return  #$FF
@@ -2612,7 +2612,7 @@ draw_ok_btn:
 draw_prompt:
         MGTK_RELAY_CALL2 MGTK::MoveTo, pos_prompt
         param_call_indirect DrawString, prompt_addr
-        ;; fall through
+        FALL_THROUGH_TO EventLoop
 
         ;; --------------------------------------------------
         ;; Event Loop

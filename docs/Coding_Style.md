@@ -121,6 +121,20 @@ xcoord: .word
     * As always, add comments if the usage might not be obvious (e.g. not at the end of a proc)
     * The con of this is the true call stack is obscured, making debugging more difficult, but the pattern is common enough that this can't be relied on.
 
+* **Do** use `IF_xx` / `ELSE` / `END_IF` macros to avoid throw-away local labels.
+
+* Annotate fall-through. A `;; fall through` comment can be used, but the preferred form is with the `FALL_THROUGH_TO` assertion macro to prevent refactoring mistakes.
+
+```asm
+        ...
+        lda     #alert_num
+        FALL_THROUGH_TO ShowAlert
+.endproc
+
+.proc ShowAlert
+        ...
+```
+
 ## Literals
 
 * Use binary `%00110110` for bit patterns

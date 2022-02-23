@@ -69,7 +69,7 @@ file_entry:
 
         ldy     #FileEntry::version
         copy16in (ptr),y, version_bytes
-        ;; fall through
+        FALL_THROUGH_TO common
 
 common:
         asl16   version_bytes

@@ -431,7 +431,7 @@ reserved:       .byte   0
         jsr     CalcAndDrawMode
         jsr     DrawContent
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
 ;;; ============================================================
@@ -1042,7 +1042,7 @@ more:   ldy     drawtext_params::textlen
         lda     L0946
         sta     L0945
 :       inc     drawtext_params::textlen
-        ;; fall through
+        FALL_THROUGH_TO FinishTextRun
 .endproc
 
 .proc FinishTextRun
@@ -1202,7 +1202,7 @@ end:    rts
         lda     winfo::maprect::y2
         sbc     winfo::maprect::y1
         sta     window_height
-        ;; fall through
+        FALL_THROUGH_TO CalcLinePosition
 .endproc
 
 ;;; ============================================================
@@ -1326,7 +1326,7 @@ window_id:      .byte   kDAWindowId
         sub16_8 winframerect_params::rect::x2, #kLabelWidth+1, mode_mapinfo::viewloc::xcoord
         add16_8 winframerect_params::rect::y1, #1, mode_mapinfo::viewloc::ycoord
 
-        ;; fall through...
+        FALL_THROUGH_TO DrawMode
 .endproc
 
 .proc DrawMode

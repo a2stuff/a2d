@@ -246,7 +246,7 @@ op:     lda     SELF_MODIFIED
 ;;; A=alert number, with default options
 .proc ShowAlert
         ldx     #$00
-        ;; fall through
+        FALL_THROUGH_TO ShowAlertOption
 .endproc
 
 ;;; A=alert number, X=custom options

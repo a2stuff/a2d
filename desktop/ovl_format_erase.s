@@ -611,7 +611,7 @@ loop:   lda     vol
         jmp     setpos
 
 :       ldax    #kLabelsCol1
-        ;; fall through
+        FALL_THROUGH_TO setpos
 
 setpos: stax    dialog_label_pos::xcoord
 
@@ -1157,7 +1157,7 @@ loop:   lda     (ptr),y
         beq     pascal
         cmp     #$60
         beq     pascal
-        ;; fall through
+        FALL_THROUGH_TO unknown
 
         ;; Unknown, just use slot and drive
 unknown:

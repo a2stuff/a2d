@@ -40,7 +40,7 @@ save_stack:  .byte   0
         sec                     ; main>aux
         jsr     AUXMOVE
 
-        ;; Fall through
+        FALL_THROUGH_TO InitDA
 .endproc
 
 ;;; ============================================================
@@ -551,7 +551,8 @@ loop:   lda     chrget_routine-1,x
         jsr     ProcessKey
         lda     #'C'
         jsr     ProcessKey
-        ;; fall through
+
+        FALL_THROUGH_TO InputLoop
 .endproc
 
 ;;; ============================================================
@@ -1121,7 +1122,7 @@ pad:    lda     #' '
         dex
         bpl     pad
 end:    jsr     DisplayBuffer1
-        ; fall through
+        FALL_THROUGH_TO ResetBuffer1AndState
 .endproc
 .proc ResetBuffer1AndState
         jsr     ResetBuffer1
@@ -1217,7 +1218,7 @@ loop:   lda     #' '
 .proc ResetBuffersAndDisplay
         jsr     ResetBuffer1
         jsr     ResetBuffer2
-        ; fall through
+        FALL_THROUGH_TO DisplayBuffer1
 .endproc
 .proc DisplayBuffer1
         MGTK_CALL MGTK::GetWinPort, getwinport_params

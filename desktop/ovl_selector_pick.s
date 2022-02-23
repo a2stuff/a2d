@@ -135,7 +135,7 @@ copy_when:  .byte   0
         jmp     CloseWindow
 
 :       jsr     PopulateEntriesFlagTable
-        ;; Fall through
+        FALL_THROUGH_TO dialog_loop
 .endproc
 
 dialog_loop:

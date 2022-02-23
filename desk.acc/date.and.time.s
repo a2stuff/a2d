@@ -417,7 +417,7 @@ init_window:
         sta     selected_field
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 
 ;;; ============================================================
 ;;; Input loop
@@ -433,7 +433,7 @@ init_window:
 
 :       cmp     #MGTK::EventKind::key_down
         bne     InputLoop
-        ;; fall through
+        FALL_THROUGH_TO OnKey
 .endproc
 
 .proc OnKey
@@ -494,7 +494,7 @@ on_key_right:
         cmp     #6
         bne     update_selection
         lda     #1
-        ;; fall through
+        FALL_THROUGH_TO update_selection
 
 update_selection:
         jsr     HighlightSelectedField
@@ -668,7 +668,7 @@ incr:
         ldx     min
         dex
 :       inx
-        ;; fall through
+        FALL_THROUGH_TO finish
 
 finish:
         txa                     ; store new value

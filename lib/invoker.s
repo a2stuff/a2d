@@ -203,7 +203,7 @@ update_bitmap:
         sta     BITMAP+BITMAP_SIZE-1
         lda     #%11001111      ; ZP, Stack, Text Page 1
         sta     BITMAP
-        ;; fall through
+        FALL_THROUGH_TO exit
 
 exit:   rts
 

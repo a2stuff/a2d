@@ -134,7 +134,7 @@ L08DB:  ldx     L0C23
         bcc     L0882
 
         lda     #0
-        ;; fall through
+        FALL_THROUGH_TO Exit
 
 .proc Exit
         pha
