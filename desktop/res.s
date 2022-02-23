@@ -394,7 +394,9 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        kDialogLabelDefaultX = 40
+        kDialogLabelDefaultX    =  40
+        kDialogLabelRightX      = 160
+        kDialogValueLeft        = 170
 
         kNameInputLeft = kDialogLabelDefaultX
         kNameInputTop = 67
@@ -1309,20 +1311,20 @@ type_table:
 
 type_names_table:
         ;; Types marked with * are known to BASIC.SYSTEM.
-        .byte   " BAD" ; bad block
-        .byte   " TXT" ; text *
-        .byte   " BIN" ; binary *
-        .byte   " FNT" ; font
-        .byte   " FOT" ; graphics
-        .byte   " DIR" ; directory *
-        .byte   " ADB" ; appleworks db *
-        .byte   " AWP" ; appleworks wp *
-        .byte   " ASP" ; appleworks sp *
-        .byte   " MUS" ; music
-        .byte   " CMD" ; command *
-        .byte   " BAS" ; basic *
-        .byte   " REL" ; rel *
-        .byte   " SYS" ; system *
+        .byte   "BAD " ; bad block
+        .byte   "TXT " ; text *
+        .byte   "BIN " ; binary *
+        .byte   "FNT " ; font
+        .byte   "FOT " ; graphics
+        .byte   "DIR " ; directory *
+        .byte   "ADB " ; appleworks db *
+        .byte   "AWP " ; appleworks wp *
+        .byte   "ASP " ; appleworks sp *
+        .byte   "MUS " ; music
+        .byte   "CMD " ; command *
+        .byte   "BAS " ; basic *
+        .byte   "REL " ; rel *
+        .byte   "SYS " ; system *
         ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 4
 
 ;;; Map IconType to other icon/details

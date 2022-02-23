@@ -8900,7 +8900,7 @@ in_range:
         lda     file_type
         jsr     ComposeFileTypeString
 
-        COPY_BYTES 5, str_file_type, text_buffer2::length ; 4 characters + length
+        COPY_BYTES 4, str_file_type, text_buffer2::length ; 3 characters + length
 
         rts
 .endproc
@@ -8913,7 +8913,7 @@ in_range:
 .endproc
 
 ;;; ============================================================
-;;; Populate `text_buffer2` with " 12,345K"
+;;; Populate `text_buffer2` with "12,345K"
 
 .proc ComposeSizeString
         stax    value           ; size in 512-byte blocks
@@ -8925,11 +8925,7 @@ in_range:
 
         ldax    value
         jsr     IntToStringWithSeparators
-
-        ;; Leading space
-        ldx     #1
-        stx     text_buffer2::length
-        copy    #' ', text_buffer2::data
+        ldx     #0
 
         ;; Append number
         ldy     #0
@@ -8959,13 +8955,7 @@ value:  .word   0
 ;;; ============================================================
 
 .proc ComposeDateString
-        ldx     #kTextBuffer2Len
-        lda     #' '
-:       sta     text_buffer2::data-1,x
-        dex
-        bpl     :-
-        lda     #1
-        sta     text_buffer2::length
+        copy    #0, text_buffer2::length
         copy16  #text_buffer2::length, $8
         lda     datetime_for_conversion ; any bits set?
         ora     datetime_for_conversion+1
@@ -9408,6 +9398,8 @@ common: jsr     JoinPaths      ; $08 = base, $06 = file
         ptr := $06
 
         sta     file_type
+
+        ;; Search `type_table` for type
         copy16  #type_table, ptr
         ldy     #kNumFileTypes-1
 :       lda     (ptr),y
@@ -9418,9 +9410,9 @@ common: jsr     JoinPaths      ; $08 = base, $06 = file
         bpl     :-
         jmp     not_found
 
-        ;; Found - copy string from table
+        ;; Found - copy string from `type_names_table`
 found:  tya
-        asl     a
+        asl     a               ; *4
         asl     a
         tay
         copy16  #type_names_table, ptr
@@ -9430,7 +9422,7 @@ found:  tya
         sta     str_file_type+1,x
         iny
         inx
-        cpx     #4
+        cpx     #3
         bne     :-
 
         stx     str_file_type
@@ -9438,22 +9430,22 @@ found:  tya
 
         ;; Type not found - use generic " $xx"
 not_found:
-        copy    #4, str_file_type
-        copy    #' ', str_file_type+1
-        copy    #'$', str_file_type+2
+        copy    #3, str_file_type
+        copy    #'$', str_file_type+1
 
         lda     file_type
+        pha
         lsr     a
         lsr     a
         lsr     a
         lsr     a
         tax
-        copy    hex_digits,x, str_file_type+3
+        copy    hex_digits,x, str_file_type+2
 
-        lda     file_type
+        pla                     ; A = file_type
         and     #$0F
         tax
-        copy    hex_digits,x, str_file_type+4
+        copy    hex_digits,x, str_file_type+3
 
         rts
 .endproc
@@ -11399,17 +11391,19 @@ list:   .word   0               ; 0 items in list
 
 .params get_info_dialog_params
 state:  .byte   0
-a_path: .addr   0               ; e.g. string address
+a_str:  .addr   0               ; e.g. string address
 index:  .byte   0               ; index in selected icon list
 .endparams
 
 .enum GetInfoDialogState
         name    = 1
-        locked  = 2             ; locked (file)/protected (volume)
+        type    = 2             ; blank for vol
         size    = 3             ; blocks (file)/size (volume)
         created = 4
         modified = 5
-        type    = 6             ; blank for vol, but signifies end-of-data
+        locked  = 6             ; locked (file)/protected (volume)
+
+        prompt  = 7             ; signals the dialog to enter loop
 
         prepare_file = $80      ; +2 if multiple
         prepare_vol  = $81      ; +2 if multiple
@@ -11501,55 +11495,41 @@ vol_icon2:
 common2:
         ;; --------------------------------------------------
         ;; Name
+        copy    #GetInfoDialogState::name, get_info_dialog_params::state
         ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
         jsr     IconEntryNameLookup
-
-        ;; Prepend space, like the other fields
-        ;; TODO: Update all the other strings?
-        ldy     #0
-        lda     (ptr),y
-        sta     text_buffer2::length
-        inc     text_buffer2::length ; for leading space
-        tay
-:       copy    (ptr),y, text_buffer2::data,y
-        dey
-        bne     :-
-        copy    #' ', text_buffer2::data
-
-        copy    #GetInfoDialogState::name, get_info_dialog_params::state
-        copy16  #text_buffer2::length, get_info_dialog_params::a_path
+        copy16  $06, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
-        ;; Locked/Protected
-        copy    #GetInfoDialogState::locked, get_info_dialog_params::state
+        ;; Type
+        copy    #GetInfoDialogState::type, get_info_dialog_params::state
         lda     selected_window_id
-        bne     is_file
-
-        bit     write_protected_flag ; Volume
-        bmi     is_protected
-        bpl     not_protected
-
-is_file:
-        lda     get_file_info_params::access ; File
-        and     #ACCESS_DEFAULT
-        cmp     #ACCESS_DEFAULT
-        beq     not_protected
-
-is_protected:
-        copy16  #aux::yes_button_label, get_info_dialog_params::a_path
-        bne     show_protected           ; always
-not_protected:
-        copy16  #aux::no_button_label, get_info_dialog_params::a_path
-show_protected:
+    IF_ZERO
+        ;; Volume
+        COPY_STRING str_vol, text_buffer2::length
+    ELSE
+        ;; File
+        lda     get_file_info_params::file_type
+        pha
+        jsr     ComposeFileTypeString
+        COPY_STRING str_file_type, text_buffer2::length
+        pla                     ; A = file type
+        cmp     #FT_DIRECTORY
+      IF_NE
+        ldax    get_file_info_params::aux_type
+        jsr     AppendAuxType
+      END_IF
+    END_IF
+        copy16  #text_buffer2::length, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
         ;; Size/Blocks
         copy    #GetInfoDialogState::size, get_info_dialog_params::state
 
-        ;; Compose " 12345K" or " 12345K / 67890K" string
+        ;; Compose "12345K" or "12345K / 67890K" string
         buf := INVOKER_PREFIX
         copy    #0, buf
 
@@ -11570,7 +11550,7 @@ volume:
         ldax    get_file_info_params::blocks_used
         jsr     ComposeSizeString
 
-        ;; text_buffer2 now has " 12345K" (used space)
+        ;; text_buffer2 now has "12345K"
 
         ;; Copy into buf
         ldx     buf
@@ -11582,19 +11562,22 @@ volume:
         cpy     text_buffer2::length
         bne     :-
 
-        ;; Append ' /' to buf
+        ;; Append " / " to buf
         inx
         lda     #' '
         sta     buf,x
         inx
         lda     #'/'
         sta     buf,x
+        inx
+        lda     #' '
+        sta     buf,x
         stx     buf
 
         ;; Load up the total volume size...
         ldax    get_file_info_params::aux_type
 
-        ;; Compute " 12345K" (either volume size or file size)
+        ;; Compute "12345K" (either volume size or file size)
 append_size:
         jsr     ComposeSizeString
 
@@ -11613,7 +11596,7 @@ append_size:
         ;; TODO: Compose directly into `path_buf4`.
         COPY_STRING buf, path_buf4
 
-        copy16  #path_buf4, get_info_dialog_params::a_path
+        copy16  #path_buf4, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -11621,7 +11604,7 @@ append_size:
         copy    #GetInfoDialogState::created, get_info_dialog_params::state
         COPY_STRUCT DateTime, get_file_info_params::create_date, datetime_for_conversion
         jsr     ComposeDateString
-        copy16  #text_buffer2::length, get_info_dialog_params::a_path
+        copy16  #text_buffer2::length, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -11629,29 +11612,37 @@ append_size:
         copy    #GetInfoDialogState::modified, get_info_dialog_params::state
         COPY_STRUCT DateTime, get_file_info_params::mod_date, datetime_for_conversion
         jsr     ComposeDateString
-        copy16  #text_buffer2::length, get_info_dialog_params::a_path
+        copy16  #text_buffer2::length, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
+        ;; --------------------------------------------------
+        ;; Locked/Protected
+        copy    #GetInfoDialogState::locked, get_info_dialog_params::state
+        lda     selected_window_id
+        bne     is_file
+
+        bit     write_protected_flag ; Volume
+        bmi     is_protected
+        bpl     not_protected
+
+is_file:
+        lda     get_file_info_params::access ; File
+        and     #ACCESS_DEFAULT
+        cmp     #ACCESS_DEFAULT
+        beq     not_protected
+
+is_protected:
+        ldax    #aux::str_info_yes
+        bne     show_protected           ; always
+not_protected:
+        ldax    #aux::str_info_no
+show_protected:
+        stax    get_info_dialog_params::a_str
+        jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
-        ;; Type
-        copy    #GetInfoDialogState::type, get_info_dialog_params::state
-        lda     selected_window_id
-        bne     :+
 
-        ;; Volume
-        COPY_STRING str_vol, text_buffer2::length
-        jmp     show_type
-
-        ;; File
-:       lda     get_file_info_params::file_type
-        jsr     ComposeFileTypeString
-        COPY_STRING str_file_type, text_buffer2::length
-        ldax    get_file_info_params::aux_type
-        jsr     AppendAuxType
-
-show_type:
-        copy16  #text_buffer2::length, get_info_dialog_params::a_path
+        copy    #GetInfoDialogState::prompt, get_info_dialog_params::state
         jsr     RunGetInfoDialogProc
         bne     done
 
@@ -14596,8 +14587,6 @@ jump_relay:
 
 .proc AboutDialogProc
 
-        kVersionLeft = winfo_about_dialog::kWidth - 90 - (7 * .strlen(kDeskTopVersionSuffix))
-
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_about_dialog
         lda     #winfo_about_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
@@ -14614,9 +14603,7 @@ jump_relay:
         param_call DrawDialogLabel, 6 | DDL_CENTER, aux::str_about6
         param_call DrawDialogLabel, 7 | DDL_CENTER, aux::str_about7
         param_call DrawDialogLabel, 9, aux::str_about8
-        copy16  #kVersionLeft, dialog_label_pos
-        param_call DrawDialogLabel, 9, aux::str_about9
-        copy16  #kDialogLabelDefaultX, dialog_label_pos
+        param_call DrawDialogLabel, 9 | DDL_RIGHT, aux::str_about9
 
 :       jsr     YieldLoop
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -14838,8 +14825,6 @@ do4:    jsr     Bell
 .proc GetSizeDialogProc
         ptr := $6
 
-        kValueLeft = 165
-
         jsr     CopyDialogParamAddrToPtr
         ldy     #get_size_dialog_params::phase - get_size_dialog_params
         lda     (ptr),y
@@ -14854,13 +14839,8 @@ do4:    jsr     Bell
         ;; GetSizeDialogLifecycle::open
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::label_get_size
-        param_call DrawDialogLabel, 1, aux::str_size_number
-        ldy     #1
-        jsr     DrawColon
-        param_call DrawDialogLabel, 2, aux::str_size_blocks
-        ldy     #2
-        jsr     DrawColon
-        rts
+        param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_size_number
+        param_jump DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_size_blocks
 
         ;; --------------------------------------------------
         ;; GetSizeDialogLifecycle::count
@@ -14872,8 +14852,7 @@ do1:
         jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
-        copy    #kValueLeft, dialog_label_pos
-        param_call DrawDialogLabel, 1, str_file_count
+        param_call DrawDialogLabel, 1 | DDL_VALUE, str_file_count
 
         ;; Size
         jsr     CopyDialogParamAddrToPtr
@@ -14887,9 +14866,8 @@ do1:
 :
 
         jsr     ComposeFileCountString
-        copy    #kValueLeft, dialog_label_pos
         dec     str_file_count  ; remove trailing space
-        param_call DrawDialogLabel, 2, str_file_count
+        param_call DrawDialogLabel, 2 | DDL_VALUE, str_file_count
         param_jump DrawString, str_kb_suffix
 
         ;; --------------------------------------------------
@@ -15112,14 +15090,18 @@ do_close:
 .proc GetInfoDialogProc
         ptr := $6
 
-        kValueLeft = 165
-
         jsr     CopyDialogParamAddrToPtr
         ldy     #get_info_dialog_params::state - get_info_dialog_params
         lda     (ptr),y
         bmi     prepare_window
+
+        cmp     #GetInfoDialogState::prompt
+        jeq     do_prompt
+
         jmp     populate_value
 
+        ;; --------------------------------------------------
+        ;; GetInfoDialogState::prepare_*
         ;; Draw the field labels (e.g. "Size:")
 prepare_window:
         copy    #0, has_input_field_flag
@@ -15142,43 +15124,43 @@ prepare_window:
         sta     is_volume_flag
 
         ;; Draw labels
-        param_call DrawDialogLabel, 1, aux::str_info_name
-
+        param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_info_name
+        param_call DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_info_type
+        ;; Blocks (file) or Size (volume)
+        bit     is_volume_flag
+    IF_NEG
+        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
+    ELSE
+        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
+    END_IF
+        param_call DrawDialogLabel, 4 | DDL_LRIGHT, aux::str_info_create
+        param_call DrawDialogLabel, 5 | DDL_LRIGHT, aux::str_info_mod
         ;; Locked (file) or Protected (volume)
         bit     is_volume_flag
-        bmi     :+
-        param_call DrawDialogLabel, 2, aux::str_info_locked
-        jmp     draw_size_label
-:       param_call DrawDialogLabel, 2, aux::str_info_protected
+    IF_POS
+        param_call DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_locked
+    ELSE
+        param_call DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
+    END_IF
 
-        ;; Blocks (file) or Size (volume)
-draw_size_label:
-        bit     is_volume_flag
-        bpl     :+
-        param_call DrawDialogLabel, 3, aux::str_info_vol_size
-        jmp     draw_final_labels
-:       param_call DrawDialogLabel, 3, aux::str_info_file_size
-
-draw_final_labels:
-        param_call DrawDialogLabel, 4, aux::str_info_create
-        param_call DrawDialogLabel, 5, aux::str_info_mod
-        param_call DrawDialogLabel, 6, aux::str_info_type
         jmp     ResetMainGrafport
 
+        ;; --------------------------------------------------
+        ;; GetInfoDialogState::* (name, type, etc)
         ;; Draw a specific value
+
 populate_value:
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     CopyDialogParamAddrToPtr
         ldy     #get_info_dialog_params::state - get_info_dialog_params
-        copy    (ptr),y, row
-        tay
-        jsr     DrawColon
-        copy    #kValueLeft, dialog_label_pos
+        lda     (ptr),y
+        ora     #DDL_VALUE
+        sta     row
 
-        ;; Draw the string at addr
+        ;; Draw the string at `get_info_dialog_params::a_str`
         jsr     CopyDialogParamAddrToPtr
-        ldy     #get_info_dialog_params::a_path - get_info_dialog_params + 1
+        ldy     #get_info_dialog_params::a_str - get_info_dialog_params + 1
         lda     (ptr),y
         tax
         dey
@@ -15187,10 +15169,12 @@ populate_value:
         ldy     #SELF_MODIFIED_BYTE
         jsr     DrawDialogLabel
 
-        ;; If not 6 (the last one), run modal loop
-        lda     row
-        cmp     #GetInfoDialogState::type
-        bne     done
+        rts
+
+        ;; --------------------------------------------------
+        ;; GetInfoDialogState::prompt
+
+do_prompt:
 
 :       jsr     PromptInputLoop
         bmi     :-
@@ -15199,21 +15183,10 @@ populate_value:
         jsr     ClosePromptDialog
         jsr     SetCursorPointerWithFlag ; when closing dialog with prompt
         pla
-done:   rts
+        rts
 
 is_volume_flag:
         .byte   0               ; high bit set if volume, clear if file
-.endproc
-
-;;; ============================================================
-;;; Draw ":" after dialog label
-
-.proc DrawColon
-        kColonLeft = 160
-
-        copy    #kColonLeft, dialog_label_pos
-        param_call DrawDialogLabel, aux::str_colon
-        rts
 .endproc
 
 ;;; ============================================================
@@ -15685,9 +15658,13 @@ done:   jmp     ResetMainGrafport
 
 ;;; Draw dialog label.
 ;;; A,X has pointer to DrawText params block
-;;; Y has row number (1, 2, ... ) with high bit to center it
+;;; Y has row number (1, 2, ... ) in low nibble, alignment in top nibble
 
-        DDL_CENTER = $80
+        DDL_LEFT   = $00      ; Left aligned relative to `kDialogLabelDefaultX`
+        DDL_VALUE  = $10      ; Left aligned relative to `kDialogValueLeft`
+        DDL_CENTER = $20      ; centered within dialog
+        DDL_RIGHT  = $30      ; Right aligned
+        DDL_LRIGHT = $40      ; Right aligned relative to `kDialogLabelRightX`
 
 .proc DrawDialogLabel
         textwidth_params := $8
@@ -15700,30 +15677,55 @@ done:   jmp     ResetMainGrafport
         stx     ptr+1
         sta     ptr
         tya
-        jpl     skip
+        and     #%00001111
+        sta     row
+        tya
+        and     #%11110000      ; A = flags
+        beq     calc_y          ; DDL_LEFT
 
-        ;; Compute text width and center it
-        and     #$7F            ; strip "center?" flag
-        pha
+        cmp     #DDL_VALUE
+    IF_EQ
+        copy16  #kDialogValueLeft, dialog_label_pos::xcoord
+        jmp     calc_y
+    END_IF
+
+        ;; Compute text width
+        pha                     ; A = flags
         add16   ptr, #1, textptr
         ldax    ptr
         jsr     AuxLoad
         sta     textlen
         MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
-        lsr16   result
-        sub16   #aux::kPromptDialogWidth/2, result, dialog_label_pos
-        pla
+        pla                     ; A = flags
 
+        cmp     #DDL_CENTER
+     IF_EQ
+        sub16   #aux::kPromptDialogWidth, result, dialog_label_pos::xcoord
+        lsr16   dialog_label_pos::xcoord
+        jmp     calc_y
+     END_IF
+
+        cmp     #DDL_RIGHT
+     IF_EQ
+        sub16   #aux::kPromptDialogWidth - kDialogLabelDefaultX, result, dialog_label_pos::xcoord
+     ELSE
+        ;; DDL_LRIGHT
+        sub16   #kDialogLabelRightX, result, dialog_label_pos::xcoord
+     END_IF
+
+calc_y:
         ;; y = base + aux::kDialogLabelHeight * line
-skip:   ldx     #0
+        row := *+1
+        lda     #SELF_MODIFIED_BYTE ; low byte
+        ldx     #0                  ; high byte
         ldy     #aux::kDialogLabelHeight
         jsr     Multiply_16_8_16
-        stax    dialog_label_pos::ycoord
-        add16   dialog_label_pos::ycoord, dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
+        addax   dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         param_call_indirect DrawString, ptr
-        ldx     dialog_label_pos
-        copy    #kDialogLabelDefaultX,dialog_label_pos::xcoord ; restore original x coord
+
+        ;; Restore default X position
+        copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
         rts
 .endproc
 

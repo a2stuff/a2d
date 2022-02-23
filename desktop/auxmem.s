@@ -3581,9 +3581,10 @@ str_info_protected:
         PASCAL_STRING res_string_get_info_label_protected
 str_info_vol_size:
         PASCAL_STRING res_string_get_info_label_vol_size
-
-str_colon:
-        PASCAL_STRING res_string_get_info_colon_prefix
+str_info_yes:
+        PASCAL_STRING res_string_get_info_label_yes
+str_info_no:
+        PASCAL_STRING res_string_get_info_label_no
 
         DEFINE_POINT unlock_remaining_count_pos, 205, kDialogLabelRow4
         DEFINE_POINT lock_remaining_count_pos, 195, kDialogLabelRow4
