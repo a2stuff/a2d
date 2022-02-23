@@ -674,7 +674,8 @@ done:   rts
         return  #1              ; Not found
 
         ;; Pointer to IconEntry
-:       copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
+:       tax
+        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ldy     #IconEntry::state ; valid icon?
         lda     (ptr),y
