@@ -2162,14 +2162,14 @@ done:   rts
         close = $40
 .endenum
 
+.params new_folder_dialog_params
+phase:  .byte   0
+a_path: .addr   0
+.endparams
+
 .proc CmdNewFolderImpl
 
         ptr := $06
-
-.params new_folder_dialog_params
-phase:          .byte   0
-win_path_ptr:   .addr   0
-.endparams
 
         ;; access = destroy/rename/write/read
         DEFINE_CREATE_PARAMS create_params, path_buffer, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
@@ -2183,7 +2183,7 @@ start:  copy    #NewFolderDialogState::open, new_folder_dialog_params::phase
 L4FC6:  lda     active_window_id
         beq     :+
         jsr     GetWindowPath
-        stax    new_folder_dialog_params::win_path_ptr
+        stax    new_folder_dialog_params::a_path
 
 :       copy    #NewFolderDialogState::run, new_folder_dialog_params::phase
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
@@ -11417,7 +11417,7 @@ list:   .word   0               ; 0 items in list
 
 .params get_info_dialog_params
 state:  .byte   0
-addr:   .addr   0               ; e.g. string address
+a_path: .addr   0               ; e.g. string address
 index:  .byte   0               ; index in selected icon list
 .endparams
 
@@ -11536,7 +11536,7 @@ common2:
         copy    #' ', text_buffer2::data
 
         copy    #GetInfoDialogState::name, get_info_dialog_params::state
-        copy16  #text_buffer2::length, get_info_dialog_params::addr
+        copy16  #text_buffer2::length, get_info_dialog_params::a_path
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -11556,10 +11556,10 @@ is_file:
         beq     not_protected
 
 is_protected:
-        copy16  #aux::yes_button_label, get_info_dialog_params::addr
+        copy16  #aux::yes_button_label, get_info_dialog_params::a_path
         bne     show_protected           ; always
 not_protected:
-        copy16  #aux::no_button_label, get_info_dialog_params::addr
+        copy16  #aux::no_button_label, get_info_dialog_params::a_path
 show_protected:
         jsr     RunGetInfoDialogProc
 
@@ -11631,7 +11631,7 @@ append_size:
         ;; TODO: Compose directly into `path_buf4`.
         COPY_STRING buf, path_buf4
 
-        copy16  #path_buf4, get_info_dialog_params::addr
+        copy16  #path_buf4, get_info_dialog_params::a_path
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -11639,7 +11639,7 @@ append_size:
         copy    #GetInfoDialogState::created, get_info_dialog_params::state
         COPY_STRUCT DateTime, get_file_info_params::create_date, datetime_for_conversion
         jsr     ComposeDateString
-        copy16  #text_buffer2::length, get_info_dialog_params::addr
+        copy16  #text_buffer2::length, get_info_dialog_params::a_path
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -11647,7 +11647,7 @@ append_size:
         copy    #GetInfoDialogState::modified, get_info_dialog_params::state
         COPY_STRUCT DateTime, get_file_info_params::mod_date, datetime_for_conversion
         jsr     ComposeDateString
-        copy16  #text_buffer2::length, get_info_dialog_params::addr
+        copy16  #text_buffer2::length, get_info_dialog_params::a_path
         jsr     RunGetInfoDialogProc
 
 
@@ -11669,7 +11669,7 @@ append_size:
         jsr     AppendAuxType
 
 show_type:
-        copy16  #text_buffer2::length, get_info_dialog_params::addr
+        copy16  #text_buffer2::length, get_info_dialog_params::a_path
         jsr     RunGetInfoDialogProc
         bne     done
 
@@ -11699,8 +11699,6 @@ str_vol:
         close = $40
 .endenum
 
-.proc DoRenameImpl
-
         old_name_buf := $1F00
         new_name_buf := $1F10
 
@@ -11708,8 +11706,10 @@ str_vol:
 
 .params rename_dialog_params
 state:  .byte   0
-addr:   .addr   old_name_buf
+a_path: .addr   old_name_buf
 .endparams
+
+.proc DoRenameImpl
 
 start:
         lda     #0
@@ -12181,14 +12181,12 @@ no_change:
         close = $40
 .endenum
 
-.proc DoDuplicateImpl
-
-        old_name_buf := $1F00
-
 .params duplicate_dialog_params
 state:  .byte   0
-addr:   .addr   old_name_buf
+a_path: .addr   old_name_buf
 .endparams
+
+.proc DoDuplicateImpl
 
 start:
         lda     #0
@@ -12579,13 +12577,12 @@ callbacks_for_copy:
         close           = 5
 .endenum
 
+;;; Also used for Download
 .params copy_dialog_params
 phase:  .byte   0
 count:  .addr   0
-src_buf_addr:
-        .addr   src_path_buf
-dst_buf_addr:
-        .addr   dst_path_buf
+a_src:  .addr   src_path_buf
+a_dst:  .addr   dst_path_buf
 .endparams
 
 .proc DoCopyDialogPhase
@@ -13222,7 +13219,7 @@ callbacks_for_delete:
 .params delete_dialog_params
 phase:  .byte   0
 count:  .word   0
-        .addr   src_path_buf
+a_path: .addr   src_path_buf
 .endparams
 
 .proc DoDeleteDialogPhase
@@ -13480,10 +13477,8 @@ callbacks_for_lock:
 
 .params lock_unlock_dialog_params
 phase:  .byte   0
-files_remaining_count:
-        .word   0
-buf_addr:
-        .addr   src_path_buf
+count:  .word   0
+a_path: .addr   src_path_buf
 .endparams
 
 .proc DoLockDialogPhase
@@ -13507,13 +13502,13 @@ buf_addr:
 .endproc
 
 .proc LockDialogEnumerationCallback
-        stax    lock_unlock_dialog_params::files_remaining_count
+        stax    lock_unlock_dialog_params::count
         copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
         jmp     RunLockDialogProc
 .endproc
 
 .proc UnlockDialogEnumerationCallback
-        stax    lock_unlock_dialog_params::files_remaining_count
+        stax    lock_unlock_dialog_params::count
         copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
         jmp     RunUnlockDialogProc
 .endproc
@@ -13643,7 +13638,7 @@ set:    sta     src_file_info_params::access
 ok:     jmp     RemoveSrcPathSegment
 
 update_dialog:
-        sub16   op_file_count, #1, lock_unlock_dialog_params::files_remaining_count
+        sub16   op_file_count, #1, lock_unlock_dialog_params::count
         bit     unlock_flag
         bpl     :+
         jmp     RunUnlockDialogProc
@@ -13667,8 +13662,9 @@ update_dialog:
 .endenum
 
 .params get_size_dialog_params
-phase:  .byte   0
-        .addr   op_file_count, op_block_count
+phase:          .byte   0
+a_files:        .addr  op_file_count
+a_blocks:       .addr  op_block_count
 .endparams
 
 .proc DoGetSizeDialogPhase
@@ -14320,7 +14316,7 @@ dialog_param_addr:
         jeq     PromptInputLoop
 
         lda     findwindow_params::window_id
-        cmp     winfo_prompt_dialog
+        cmp     #winfo_prompt_dialog::kWindowId
         jne     PromptInputLoop
 
         lda     winfo_prompt_dialog ; Is over this window... but where?
@@ -14351,10 +14347,10 @@ done:   jsr     ResetMainGrafport
 
 content:
         lda     findwindow_params::window_id
-        cmp     winfo_prompt_dialog
+        cmp     #winfo_prompt_dialog::kWindowId
         beq     :+
         return  #$FF
-:       lda     winfo_prompt_dialog::window_id
+:       lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         copy    winfo_prompt_dialog, event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -14368,7 +14364,7 @@ content:
         jmp     maybe_check_button_cancel
 
 check_button_ok:
-        param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::ok_button_rect
+        param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::ok_button_rect
         bmi     :+
         lda     #PromptResult::ok
 :       rts
@@ -14377,7 +14373,7 @@ check_button_yes:
         MGTK_RELAY_CALL MGTK::InRect, aux::yes_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_no
-        param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::yes_button_rect
+        param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::yes_button_rect
         bmi     :+
         lda     #PromptResult::yes
 :       rts
@@ -14386,7 +14382,7 @@ check_button_no:
         MGTK_RELAY_CALL MGTK::InRect, aux::no_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_all
-        param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::no_button_rect
+        param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::no_button_rect
         bmi     :+
         lda     #PromptResult::no
 :       rts
@@ -14395,7 +14391,7 @@ check_button_all:
         MGTK_RELAY_CALL MGTK::InRect, aux::all_button_rect
         cmp     #MGTK::inrect_inside
         bne     maybe_check_button_cancel
-        param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::all_button_rect
+        param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::all_button_rect
         bmi     :+
         lda     #PromptResult::all
 :       rts
@@ -14409,7 +14405,7 @@ check_button_cancel:
         MGTK_RELAY_CALL MGTK::InRect, aux::cancel_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonEventLoopRelay, kPromptDialogWindowID, aux::cancel_button_rect
+        param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::cancel_button_rect
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
@@ -14588,7 +14584,7 @@ done:   return  #$FF
 .endproc
 
 .proc HandleKeyOk
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeXOR
         MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
@@ -14597,7 +14593,7 @@ done:   return  #$FF
 .endproc
 
 .proc HandleKeyCancel
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeXOR
         MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
@@ -14631,7 +14627,7 @@ jump_relay:
         kVersionLeft = winfo_about_dialog::kWidth - 90 - (7 * .strlen(kDeskTopVersionSuffix))
 
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_about_dialog
-        lda     winfo_about_dialog::window_id
+        lda     #winfo_about_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeNotCopy
         MGTK_RELAY_CALL MGTK::SetPenSize, pensize_frame
@@ -14668,7 +14664,7 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         ptr := $6
 
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0
+        ldy     #copy_dialog_params::phase - copy_dialog_params
         lda     (ptr),y
 
         cmp     #CopyDialogLifecycle::count
@@ -14682,6 +14678,7 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         cmp     #CopyDialogLifecycle::close
         jeq     do5
 
+        ;; --------------------------------------------------
         ;; CopyDialogLifecycle::open
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
@@ -14699,62 +14696,57 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         param_call DrawDialogLabel, 4, aux::str_move_remaining
         rts
 
+        ;; --------------------------------------------------
         ;; CopyDialogLifecycle::count
-do1:    ldy     #1
+do1:    ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
         param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
+        ;; --------------------------------------------------
         ;; CopyDialogLifecycle::exists
-do2:    ldy     #1
+do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
         jsr     ClearDestFileRect
+
         jsr     CopyDialogParamAddrToPtr
-        ldy     #copy_dialog_params::src_buf_addr - copy_dialog_params
-        lda     (ptr),y
-        tax
-        iny
-        lda     (ptr),y
-        sta     ptr+1
-        stx     ptr
+        ldy     #copy_dialog_params::a_src - copy_dialog_params
+        jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
+
         jsr     CopyDialogParamAddrToPtr
-        ldy     #copy_dialog_params::dst_buf_addr - copy_dialog_params
-        lda     (ptr),y
-        tax
-        iny
-        lda     (ptr),y
-        sta     ptr+1
-        stx     ptr
+        ldy     #copy_dialog_params::a_dst - copy_dialog_params
+        jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf1
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_dest_file_pos
         param_call DrawDialogPath, path_buf1
+
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
         param_call DrawString, str_2_spaces
         rts
 
+        ;; --------------------------------------------------
         ;; CopyDialogLifecycle::close
 do5:    jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         rts
 
+        ;; --------------------------------------------------
         ;; CopyDialogLifecycle::exists
 do3:    jsr     Bell
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 6, aux::str_exists_prompt
         jsr     DrawYesNoAllCancelButtons
@@ -14767,9 +14759,10 @@ do3:    jsr     Bell
         pla
         rts
 
+        ;; --------------------------------------------------
         ;; CopyDialogLifecycle::too_large
 do4:    jsr     Bell
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         bit     move_flag
     IF_MINUS
@@ -14795,7 +14788,7 @@ do4:    jsr     Bell
         ptr := $6
 
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0
+        ldy     #copy_dialog_params::phase - copy_dialog_params
         lda     (ptr),y
         cmp     #DownloadDialogLifecycle::count
         jeq     do1
@@ -14806,6 +14799,7 @@ do4:    jsr     Bell
         cmp     #DownloadDialogLifecycle::too_large
         jeq     do4
 
+        ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::open
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
@@ -14816,34 +14810,29 @@ do4:    jsr     Bell
         param_call DrawDialogLabel, 4, aux::str_copy_remaining
         rts
 
+        ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::count
-do1:    ldy     #1
+do1:    ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
         param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
+        ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::show
-do2:    ldy     #1
+do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
         jsr     CopyDialogParamAddrToPtr
-        ldy     #3
-        lda     (ptr),y
-        tax
-        iny
-        lda     (ptr),y
-        sta     ptr+1
-        stx     ptr
+        ldy     #copy_dialog_params::a_src - copy_dialog_params
+        jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
@@ -14852,14 +14841,16 @@ do2:    ldy     #1
         param_call DrawString, str_2_spaces
         rts
 
+        ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::close
 do3:    jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         rts
 
+        ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::too_large
 do4:    jsr     Bell
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 6, aux::str_ramcard_full
         jsr     DrawOkButton
@@ -14882,7 +14873,7 @@ do4:    jsr     Bell
         kValueLeft = 165
 
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0
+        ldy     #get_size_dialog_params::phase - get_size_dialog_params
         lda     (ptr),y
         cmp     #GetSizeDialogLifecycle::count
         jeq     do1
@@ -14891,6 +14882,7 @@ do4:    jsr     Bell
         cmp     #GetSizeDialogLifecycle::close
         jeq     do3
 
+        ;; --------------------------------------------------
         ;; GetSizeDialogLifecycle::open
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::label_get_size
@@ -14902,35 +14894,23 @@ do4:    jsr     Bell
         jsr     DrawColon
         rts
 
+        ;; --------------------------------------------------
         ;; GetSizeDialogLifecycle::count
 do1:
         ;; File Count
-        ldy     #1
-        lda     (ptr),y
-        sta     file_count
-        tax
-        iny
-        lda     (ptr),y
-        sta     ptr+1
-        stx     ptr
-        ldy     #0
+        ldy     #get_size_dialog_params::a_files - get_size_dialog_params
+        jsr     DereferencePtrToAddr
         copy16in (ptr),y, file_count
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         copy    #kValueLeft, dialog_label_pos
         param_call DrawDialogLabel, 1, str_file_count
-        jsr     CopyDialogParamAddrToPtr
 
         ;; Size
-        ldy     #3
-        lda     (ptr),y
-        tax
-        iny
-        lda     (ptr),y
-        sta     ptr+1
-        stx     ptr
-        ldy     #0
+        jsr     CopyDialogParamAddrToPtr
+        ldy     #get_size_dialog_params::a_blocks - get_size_dialog_params
+        jsr     DereferencePtrToAddr
         copy16in (ptr),y, file_count
 
         lsr16   file_count      ; Convert blocks to K, rounding up
@@ -14945,18 +14925,20 @@ do1:
         param_call DrawString, str_kb_suffix
         rts
 
+        ;; --------------------------------------------------
         ;; GetSizeDialogLifecycle::close
 do3:    jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         rts
 
+        ;; --------------------------------------------------
         ;; GetSizeDialogLifecycle::confirm
 do2:
         ;; If no files were seen, `do1` was never executed and so the
         ;; counts will not be shown. Update one last time, just in case.
         jsr     do1
 
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkButton
 :       jsr     PromptInputLoop
@@ -14974,7 +14956,7 @@ do2:
         ptr := $06
 
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0
+        ldy     #delete_dialog_params::phase - delete_dialog_params
         lda     (ptr),y         ; phase
 
         cmp     #DeleteDialogLifecycle::count
@@ -14988,6 +14970,7 @@ do2:
         cmp     #DeleteDialogLifecycle::close
         jeq     do5
 
+        ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::open or trash
         sta     delete_flag
         copy    #0, has_input_field_flag
@@ -14998,12 +14981,12 @@ do2:
 delete_flag:                    ; clear if trash, set if delete
         .byte   0
 
+        ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::count
 do1:    ldy     #1
         copy16in (ptr),y, file_count
-        jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         lda     delete_flag
         beq     :+
@@ -15015,22 +14998,17 @@ show_count:
         param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
+        ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::show
 do3:    ldy     #1
         copy16in (ptr),y, file_count
-        jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
         jsr     CopyDialogParamAddrToPtr
-        ldy     #3
-        lda     (ptr),y
-        tax
-        iny
-        lda     (ptr),y
-        sta     ptr+1
-        stx     ptr
+        ldy     #delete_dialog_params::a_path - delete_dialog_params
+        jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
@@ -15039,8 +15017,9 @@ do3:    ldy     #1
         param_call DrawString, str_2_spaces
         rts
 
+        ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::confirm
-do2:    lda     winfo_prompt_dialog::window_id
+do2:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkCancelButtons
 LADC4:  jsr     PromptInputLoop
@@ -15054,13 +15033,15 @@ LADC4:  jsr     PromptInputLoop
         lda     #$00
 LADF4:  rts
 
+        ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::close
 do5:    jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         rts
 
+        ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::locked
-do4:    lda     winfo_prompt_dialog::window_id
+do4:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 6, aux::str_delete_locked_file
         jsr     DrawYesNoAllCancelButtons
@@ -15082,35 +15063,37 @@ LAE17:  jsr     PromptInputLoop
         kParentPathLeft = 55
 
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0              ; phase
+        ldy     #new_folder_dialog_params::phase - new_folder_dialog_params
         lda     ($06),y
         cmp     #NewFolderDialogState::run
-        jeq     LAE70
+        jeq     do_run
 
         cmp     #NewFolderDialogState::close
-        jeq     LAF16
+        jeq     do_close
 
-        ;; Phase 0 - init
+        ;; --------------------------------------------------
+        ;; NewFolderDialogState::open
         copy    #$80, has_input_field_flag
         jsr     ClearPathBuf1
         jsr     ClearPathBuf2
         lda     #$00
         jsr     OpenPromptWindow
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_new_folder
         jsr     FrameNameInputRect
         rts
 
-        ;; Phase 2 - prompt
-LAE70:  copy    #$80, has_input_field_flag
+        ;; --------------------------------------------------
+        ;; NewFolderDialogState::run
+do_run: copy    #$80, has_input_field_flag
         copy    #0, prompt_button_flags
         jsr     CopyDialogParamAddrToPtr
-        ldy     #1
+        ldy     #new_folder_dialog_params::a_path - new_folder_dialog_params
         copy16in ($06),y, $08
         param_call CopyPtr2ToBuf, path_buf0
 
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 2, aux::str_in
         param_call DrawDialogPath, path_buf0
@@ -15118,7 +15101,7 @@ LAE70:  copy    #$80, has_input_field_flag
         jsr     DrawFilenamePrompt
 LAEC6:  jsr     PromptInputLoop
         bmi     LAEC6
-        bne     LAF16
+        bne     do_close
         jsr     MergePathBuf1PathBuf2
         lda     path_buf1
         beq     LAEC6
@@ -15151,8 +15134,10 @@ LAEFF:  inx
         ldx     #>path_buf0
         return  #0
 
-        ;; Phase 3 - close
-LAF16:  jsr     ClosePromptDialog
+        ;; --------------------------------------------------
+        ;; NewFolderDialogState::close
+do_close:
+        jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         return  #1
 .endproc
@@ -15166,7 +15151,7 @@ LAF16:  jsr     ClosePromptDialog
         kValueLeft = 165
 
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0
+        ldy     #get_info_dialog_params::state - get_info_dialog_params
         lda     (ptr),y
         bmi     prepare_window
         jmp     populate_value
@@ -15180,12 +15165,12 @@ prepare_window:
         ror     a
         eor     #$80
         jsr     OpenPromptWindow
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 
         param_call DrawDialogTitle, aux::label_get_info
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0
+        ldy     #get_info_dialog_params::state - get_info_dialog_params
         lda     (ptr),y
         and     #$7F
         lsr     a
@@ -15218,18 +15203,18 @@ draw_final_labels:
 
         ;; Draw a specific value
 populate_value:
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0
+        ldy     #get_info_dialog_params::state - get_info_dialog_params
         copy    (ptr),y, row
         tay
         jsr     DrawColon
         copy    #kValueLeft, dialog_label_pos
-        jsr     CopyDialogParamAddrToPtr
 
         ;; Draw the string at addr
-        ldy     #2
+        jsr     CopyDialogParamAddrToPtr
+        ldy     #get_info_dialog_params::a_path - get_info_dialog_params + 1
         lda     (ptr),y
         tax
         dey
@@ -15274,7 +15259,7 @@ is_volume_flag:
         ptr := $06
 
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0
+        ldy     #lock_unlock_dialog_params::phase - lock_unlock_dialog_params
         lda     (ptr),y
 
         cmp     #LockDialogLifecycle::count
@@ -15286,40 +15271,36 @@ is_volume_flag:
         cmp     #LockDialogLifecycle::close
         jeq     do4
 
+        ;; --------------------------------------------------
         ;; LockDialogLifecycle::open
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::label_lock
         rts
 
+        ;; --------------------------------------------------
         ;; LockDialogLifecycle::count
-do1:    ldy     #1
+do1:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
-        jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 4, aux::str_lock_ok
         param_call DrawString, str_file_count
         param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
+        ;; --------------------------------------------------
         ;; LockDialogLifecycle::operation
-do3:    ldy     #1
+do3:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
-        jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
         jsr     CopyDialogParamAddrToPtr
-        ldy     #3
-        lda     (ptr),y
-        tax
-        iny
-        lda     (ptr),y
-        sta     ptr+1
-        stx     ptr
+        ldy     #lock_unlock_dialog_params::a_path - lock_unlock_dialog_params
+        jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
@@ -15328,8 +15309,9 @@ do3:    ldy     #1
         param_call DrawString, str_2_spaces
         rts
 
+        ;; --------------------------------------------------
         ;; LockDialogLifecycle::prompt
-do2:    lda     winfo_prompt_dialog::window_id
+do2:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkCancelButtons
 LB0FA:  jsr     PromptInputLoop
@@ -15369,40 +15351,36 @@ do4:    jsr     ClosePromptDialog
         cmp     #LockDialogLifecycle::close
         jeq     do4
 
+        ;; --------------------------------------------------
         ;; LockDialogLifecycle::open
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::label_unlock
         rts
 
+        ;; --------------------------------------------------
         ;; LockDialogLifecycle::count
 do1:    ldy     #1
         copy16in (ptr),y, file_count
-        jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 4, aux::str_unlock_ok
         param_call DrawString, str_file_count
         param_call_indirect DrawString, ptr_str_files_suffix
         rts
 
+        ;; --------------------------------------------------
         ;; LockDialogLifecycle::operation
 do3:    ldy     #1
         copy16in (ptr),y, file_count
-        jsr     AdjustStrFilesSuffix
         jsr     ComposeFileCountString
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
         jsr     CopyDialogParamAddrToPtr
-        ldy     #lock_unlock_dialog_params::buf_addr - lock_unlock_dialog_params
-        lda     (ptr),y
-        tax
-        iny
-        lda     (ptr),y
-        sta     ptr+1
-        stx     ptr
+        ldy     #lock_unlock_dialog_params::a_path - lock_unlock_dialog_params
+        jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
@@ -15411,8 +15389,9 @@ do3:    ldy     #1
         param_call DrawString, str_2_spaces
         rts
 
+        ;; --------------------------------------------------
         ;; LockDialogLifecycle::prompt
-do2:    lda     winfo_prompt_dialog::window_id
+do2:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkCancelButtons
 LB218:  jsr     PromptInputLoop
@@ -15427,6 +15406,7 @@ LB218:  jsr     PromptInputLoop
         lda     #$00
 LB257:  rts
 
+        ;; --------------------------------------------------
         ;; LockDialogLifecycle::close
 do4:    jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
@@ -15440,24 +15420,26 @@ do4:    jsr     ClosePromptDialog
         params_ptr := $06
 
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0
+        ldy     #rename_dialog_params::state - rename_dialog_params
         lda     (params_ptr),y
         cmp     #RenameDialogState::run
-        jeq     run_loop
+        jeq     do_run
 
         cmp     #RenameDialogState::close
-        jeq     close_win
+        jeq     do_close
 
+        ;; ----------------------------------------
+        ;; RenameDialogState::open
         jsr     CopyDialogParamAddrToPtr
         copy    #$80, has_input_field_flag
         lda     #$00
         jsr     OpenPromptWindow
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_rename_icon
         jsr     FrameNameInputRect
         jsr     CopyDialogParamAddrToPtr
-        ldy     #1              ; rename_dialog_params::addr offset
+        ldy     #rename_dialog_params::a_path - rename_dialog_params
         copy16in ($06),y, $08
 
         ;; Populate filename field and input (before IP)
@@ -15479,15 +15461,17 @@ do4:    jsr     ClosePromptDialog
         jsr     DrawFilenamePrompt
         rts
 
-run_loop:
+        ;; --------------------------------------------------
+        ;; RenameDialogState::run
+do_run:
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 :       jsr     PromptInputLoop
         bmi     :-              ; continue?
 
-        bne     close_win       ; canceled!
+        bne     do_close        ; canceled!
 
         jsr     InputFieldIPEnd ; collapse name
 
@@ -15498,7 +15482,9 @@ run_loop:
         ldx     #>path_buf1
         return  #0
 
-close_win:
+        ;; --------------------------------------------------
+        ;; RenameDialogState::close
+do_close:
         jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         return  #1
@@ -15514,21 +15500,24 @@ close_win:
         ldy     #0
         lda     (params_ptr),y
         cmp     #DuplicateDialogState::run
-        jeq     run_loop
+        jeq     do_run
 
         cmp     #DuplicateDialogState::close
-        jeq     close_win
+        jeq     do_close
+
+        ;; --------------------------------------------------
+        ;; DuplicateDialogState::open
 
         jsr     CopyDialogParamAddrToPtr
         copy    #$80, has_input_field_flag
         lda     #$00
         jsr     OpenPromptWindow
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_duplicate_icon
         jsr     FrameNameInputRect
         jsr     CopyDialogParamAddrToPtr
-        ldy     #1              ; duplicate_dialog_params::addr offset
+        ldy     #duplicate_dialog_params::a_path - duplicate_dialog_params
         copy16in ($06),y, $08
 
         ;; Populate filename field and input (before IP)
@@ -15550,15 +15539,17 @@ close_win:
         jsr     DrawFilenamePrompt
         rts
 
-run_loop:
+        ;; --------------------------------------------------
+        ;; DuplicateDialogState::run
+do_run:
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 :       jsr     PromptInputLoop
         bmi     :-              ; continue?
 
-        bne     close_win       ; canceled!
+        bne     do_close        ; canceled!
 
         jsr     InputFieldIPEnd ; collapse name
 
@@ -15569,7 +15560,9 @@ run_loop:
         ldx     #>path_buf1
         return  #0
 
-close_win:
+        ;; --------------------------------------------------
+        ;; DuplicateDialogState::run
+do_close:
         jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         return  #1
@@ -15579,6 +15572,23 @@ close_win:
 
 .proc CopyDialogParamAddrToPtr
         copy16  dialog_param_addr, $06
+        rts
+.endproc
+
+;;; ============================================================
+;;; Convert a pointer-to-pointer to just a pointer.
+;;; Inputs: $06,Y references an address
+;;; Outputs: $06 set to that address, and Y=0 for quick use
+
+.proc DereferencePtrToAddr
+        ptr := $06
+        lda     (ptr),y
+        tax
+        iny
+        lda     (ptr),y
+        sta     ptr+1
+        stx     ptr
+        ldy     #0
         rts
 .endproc
 
@@ -15701,7 +15711,7 @@ done:   jmp     ResetMainGrafport
 
 .proc OpenDialogWindow
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeNotCopy
         MGTK_RELAY_CALL MGTK::SetPenSize, pensize_frame
@@ -15933,7 +15943,7 @@ draw:   copy16  #str_insertion_point+1, textptr
         copy    str_insertion_point, textlen
         MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
         MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         rts
 .endproc
@@ -15941,7 +15951,7 @@ draw:   copy16  #str_insertion_point+1, textptr
 ;;; ============================================================
 
 .proc DrawFilenamePrompt
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeCopy
         MGTK_RELAY_CALL MGTK::PaintRect, name_input_rect
@@ -15951,7 +15961,7 @@ draw:   copy16  #str_insertion_point+1, textptr
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 done:   rts
 .endproc
@@ -16161,7 +16171,7 @@ ip_pos: .word   0
         jsr     SetNameInputClipRect
         param_call DrawString, str_1_char
         param_call DrawString, path_buf2
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         rts
 .endproc
@@ -16187,7 +16197,7 @@ ip_pos: .word   0
         jsr     SetNameInputClipRect
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 
 ret:    rts
@@ -16231,7 +16241,7 @@ finish: ldx     path_buf1
         jsr     SetNameInputClipRect
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 
 ret:    rts
@@ -16273,7 +16283,7 @@ finish: dec     path_buf2
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
-        lda     winfo_prompt_dialog::window_id
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         rts
 .endproc
@@ -16422,29 +16432,18 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Adjust `ptr_str_files_suffix` based on `file_count`
-
-.proc AdjustStrFilesSuffix
-        lda     file_count+1         ; > 255?
-        bne     :+
-        lda     file_count
-        cmp     #2              ; > 2?
-        bcs     :+
-
-        copy16  #str_file_suffix, ptr_str_files_suffix ; singular
-        rts
-
-:       copy16  #str_files_suffix, ptr_str_files_suffix ; plural
-        rts
-.endproc
 
 ;;; Adjusted to point at file/files (singular/plural)
 ptr_str_files_suffix:
         .addr   str_files_suffix
 
 ;;; ============================================================
+;;; Populate `str_file_count` based on `file_count`. As a side
+;;; effect, adjusts `ptr_str_files_suffix` as well, on the
+;;; assumption it may be output as well.
 
 .proc ComposeFileCountString
+        ;; Populate `str_file_count`
         ldax    file_count
         jsr     IntToStringWithSeparators
 
@@ -16463,6 +16462,17 @@ ptr_str_files_suffix:
         copy    #' ', str_file_count,y
         sty     str_file_count
 
+        ;; Adjust `ptr_str_files_suffix`
+        lda     file_count+1    ; > 255?
+        bne     :+
+        lda     file_count
+        cmp     #1
+        bne     :+
+
+        copy16  #str_file_suffix, ptr_str_files_suffix ; singular
+        rts
+
+:       copy16  #str_files_suffix, ptr_str_files_suffix ; plural
         rts
 .endproc
 

@@ -441,7 +441,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 
 .proc OpenWindow
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
-        lda     winfo_entry_picker::window_id
+        lda     #winfo_entry_picker::kWindowId
         jsr     main::SafeSetPortFromWindowId
         MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
         MGTK_RELAY_CALL MGTK::SetPenSize, pensize_frame
@@ -621,16 +621,16 @@ handle_button:
         beq     :+
         return  #$FF
 
-:       lda     winfo_entry_picker::window_id
+:       lda     #winfo_entry_picker::kWindowId
         jsr     main::SafeSetPortFromWindowId
-        lda     winfo_entry_picker::window_id
+        lda     #winfo_entry_picker::kWindowId
         sta     screentowindow_params::window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_params::windowx
         MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
         cmp     #MGTK::inrect_inside
         bne     not_ok
-        param_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_ok_rect
+        param_call ButtonEventLoopRelay, winfo_entry_picker::kWindowId, entry_picker_ok_rect
         bmi     :+              ; nothing selected, re-enter loop
         lda     #$00            ; OK selected
 :       rts
@@ -638,7 +638,7 @@ handle_button:
 not_ok: MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
         cmp     #MGTK::inrect_inside
         bne     not_cancel
-        param_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_cancel_rect
+        param_call ButtonEventLoopRelay, winfo_entry_picker::kWindowId, entry_picker_cancel_rect
         bmi     :+              ; nothing selected, re-enter loop
         lda     #$01            ; Cancel selected
 :       rts

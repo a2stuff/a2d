@@ -276,13 +276,12 @@ path_buf2:  .res    kPathBufferSize, 0
 ;;; ============================================================
 ;;; Dialog used for prompts (yes/no/all) and operation progress
 
-kPromptDialogWindowID = $0F
-
 .params winfo_prompt_dialog
+        kWindowId = $0F
         kWidth = aux::kPromptDialogWidth
         kHeight = aux::kPromptDialogHeight
 
-window_id:      .byte   kPromptDialogWindowID
+window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -318,10 +317,11 @@ nextwinfo:      .addr   0
 ;;; "About Apple II DeskTop" Dialog
 
 .params winfo_about_dialog
+        kWindowId = $18
         kWidth = aux::kAboutDialogWidth
         kHeight = aux::kAboutDialogHeight
 
-window_id:      .byte   $18
+window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -356,13 +356,13 @@ winfo_about_dialog_port    := winfo_about_dialog::port
 
 ;;; Dialog used for Edit/Delete/Run a Shortcut ...
 
-kEntryDialogWindowID = $1B
 
 .params winfo_entry_picker
+        kWindowId = $1B
         kWidth = 350
         kHeight = 118
 
-window_id:      .byte   kEntryDialogWindowID
+window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
