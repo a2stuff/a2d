@@ -1779,7 +1779,11 @@ done:   jsr     SetCursorPointer ; after invoking DA
 
         ;; Copy string at $8 to `path_buf4`
         param_call CopyPtr2ToBuf, path_buf4
+        FALL_THROUGH_TO SplitPathBuf4
+.endproc
 
+;;; Split filename off `path_buf4` and store in `filename_buf`
+.proc SplitPathBuf4
         param_call FindLastPathSegment, path_buf4
 
         ;; Copy filename part to buf
@@ -6086,7 +6090,7 @@ num:    .byte   0
 
 .proc MarkIconOpen
         ptr := $06
-        lda     icon_param
+        sta     icon
         jsr     IconEntryLookup
         stax    ptr
 
@@ -6104,7 +6108,8 @@ num:    .byte   0
         cmp     active_window_id
         bne     done
 
-:       lda     icon_param
+        icon := *+1
+:       lda     #SELF_MODIFIED_BYTE
         jsr     DrawIcon
 
 done:   rts
@@ -6118,13 +6123,44 @@ done:   rts
 ;;;
 ;;; Set `suppress_error_on_open_flag` to avoid alert.
 
-;;; TODO: See if an existing icon exists, mark it as open.
-
 .proc OpenWindowForPath
         jsr     ClearSelection
         copy    #$FF, icon_param
         jsr     OpenWindowForIcon::check_path
-        rts
+
+        ;; Is there already an icon associated with this window?
+        ldx     active_window_id
+        lda     window_to_dir_icon_table-1,x
+        bpl     ret             ; yes, so skip
+
+        ;; Try to find a matching volume or folder icon.
+        COPY_STRING open_dir_path_buf, path_buf4
+        param_call FindLastPathSegment, path_buf4
+        cpy     path_buf4       ; was there a filename?
+    IF_EQ
+        ;; Volume - make it a filename
+        ldx     path_buf4       ; Strip '/'
+        dex
+        stx     path_buf4+1
+        ldax    #path_buf4+1
+        ldy     #0              ; 0=desktop
+    ELSE
+        ;; File - need to see if there's a window
+        jsr     SplitPathBuf4
+        param_call FindWindowForPath, path_buf4
+        beq     ret             ; no matching window
+        tay                     ; Y=window id
+        ldax    #filename_buf   ; A,X=filename
+    END_IF
+        jsr     FindIconByName
+        beq     ret             ; no matching icon
+
+        ;; Associate window with icon, and mark it open.
+        ldx     active_window_id
+        sta     window_to_dir_icon_table-1,x
+        jsr     MarkIconOpen
+
+ret:    rts
 .endproc
 
 ;;; ============================================================

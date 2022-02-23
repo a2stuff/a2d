@@ -193,6 +193,7 @@
 * Load DeskTop. Create a folder, and a file within the folder with the same name as the folder, and another file (e.g. /RAM/F and /RAM/F/F and /RAM/F/B). Select both files and try to move them into the parent folder using drag and drop. Verify that an error is shown before any files are moved.
 
 * Load DeskTop. Open a volume. Adjust the window size so that horizontal and vertical scrolling is required. Scroll to the bottom-right. Quit DeskTop, reload. Verify that the window size was restored correctly.
+* Load DeskTop. Open a volume. Quit DeskTop, reload. Verify that the volume window was restored, and that the volume icon is marked open. Close the volume window. Verify that the volume icon is no longer marked open.
 
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Shortcuts > Add a Shortcut.... Create a shortcut, click OK. Verify that when the "Do you want to save the new list on the system disk?" warning appears that the desktop volume icons repaint.
 
