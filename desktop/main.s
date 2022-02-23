@@ -1742,7 +1742,7 @@ done:   jsr     SetCursorPointer ; after invoking DA
 
         dst := $08
         ldax    dst
-        jmp     CopyToDstPath
+        jsr     CopyToDstPath
 
         jsr     CheckRecursion
         jne     ShowAlert
