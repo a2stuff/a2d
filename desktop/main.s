@@ -2536,13 +2536,10 @@ delta:  .word   0
 .proc CmdCheckOrEject
         buffer := $1800
 
-eject:
-        lda     #$80
-        bne     common          ; always
-
+eject:  lda     #$80
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 check:  lda     #0
-
-common: sta     eject_flag
+        sta     eject_flag
 
         ;; Ensure that volumes are selected
         lda     selected_window_id
@@ -3069,10 +3066,9 @@ alpha:  jsr     ShiftDown
         ;; Arrows - next/prev in icon order
 
 prev:   lda     #$80
-        bne     store           ; always
-
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 next:   lda     #$00
-store:  sta     flag
+        sta     flag
 
 ;;; First byte is icon count. Rest is a list of selectable icons.
         buffer := $1800
@@ -3908,26 +3904,26 @@ pending_alert:
 ;;; following Format (etc)
 ;;;
 
-.proc CmdCheckSingleDrive
+.proc CmdCheckSingleDriveImpl
 
         ;; index in DEVLST
         devlst_index  := menu_click_params::item_num
 
+        ;; After open/eject/rename
+by_icon_number:
+        lda     #$C0            ; NOTE: This not safe to skip!
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+
         ;; Check Drive command
 by_menu:
         lda     #$00
-        beq     start           ; always
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
         ;; After format/erase
 by_unit_number:
         lda     #$80
-        bne     start           ; always
 
-        ;; After open/eject/rename
-by_icon_number:
-        lda     #$C0
-
-start:  sta     check_drive_flags
+        sta     check_drive_flags
         jsr     LoadDesktopEntryTable ; TODO: Needed???
         bit     check_drive_flags
         bpl     explicit_command
@@ -4100,9 +4096,9 @@ check_drive_flags:
 
 .endproc
 
-        CmdCheckSingleDriveByMenu := CmdCheckSingleDrive::by_menu
-        CmdCheckSingleDriveByUnitNumber := CmdCheckSingleDrive::by_unit_number
-        CmdCheckSingleDriveByIconNumber := CmdCheckSingleDrive::by_icon_number
+        CmdCheckSingleDriveByMenu := CmdCheckSingleDriveImpl::by_menu
+        CmdCheckSingleDriveByUnitNumber := CmdCheckSingleDriveImpl::by_unit_number
+        CmdCheckSingleDriveByIconNumber := CmdCheckSingleDriveImpl::by_icon_number
 
 
 ;;; ============================================================
@@ -6343,11 +6339,10 @@ finish: lda     #0
 .proc UpdateScrollbarsImpl
 update_thumbs:
         lda     #$80
-        bne     impl            ; always
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 leave_thumbs:
         lda     #$00
-
-impl:   sta     update_thumbs_flag
+        sta     update_thumbs_flag
 
         jsr     GetActiveWindowViewBy
     IF_POS
@@ -6462,12 +6457,10 @@ done:   rts
 
         kOffset = kWindowHeaderHeight + 1
 
-flag_clear:
-        lda     #$80
-        beq     :+
-flag_set:
-        lda     #0
-:       sta     flag
+noset:  lda     #$80
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+set:    lda     #0
+        sta     flag
         add16   window_grafport::viewloc::ycoord, #kOffset, window_grafport::viewloc::ycoord
         add16   window_grafport::cliprect::y1, #kOffset, window_grafport::cliprect::y1
         bit     flag
@@ -6477,8 +6470,8 @@ flag_set:
 
 flag:   .byte   0
 .endproc
-OffsetWindowGrafport    := OffsetWindowGrafportImpl::flag_clear
-OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::flag_set
+OffsetWindowGrafport    := OffsetWindowGrafportImpl::noset
+OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
 
 ;;; ============================================================
 ;;; Update used/free values for windows related to volume icon
@@ -6600,14 +6593,11 @@ slash:  cpy     #1
 .proc FindWindows
         ptr := $6
 
-exact:  stax    ptr
-        lda     #$80
-        bne     start
-
-prefix: stax    ptr
-        lda     #0
-
-start:  sta     exact_match_flag
+exact:  ldy     #$80
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+prefix: ldy     #0
+        stax    ptr
+        sty     exact_match_flag
         bit     exact_match_flag
         bpl     :+
         ldy     #0              ; Use full length
@@ -10379,11 +10369,9 @@ ret:    rts
         rect_table := $800
 
 close:  ldy     #$80
-        bne     :+
-
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 open:   ldy     #$00
-
-:       sty     close_flag
+        sty     close_flag
 
         sta     icon_id
         txa                     ; A = window_id
@@ -11006,18 +10994,18 @@ DoUnlock:
         cmp     trash_icon_num
         bne     :+
         lda     #$80
-        bne     set           ; always
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 :       lda     #$00
-set:    sta     delete_flag
+        sta     delete_flag
         copy    #0, operation_flags ; copy/delete
         jmp     L8FEB
 .endproc
 
         ;; common for lock/unlock
 L8FDD:  lda     #$00            ; unlock
-        beq     :+
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 L8FE1:  lda     #$80            ; lock
-:       sta     unlock_flag
+        sta     unlock_flag
         copy    #%10000000, operation_flags ; lock/unlock
         ;; fall through
 
@@ -14170,12 +14158,11 @@ done:   rts
 
 flag_set:
         ldx     #$80
-        bne     :+
-
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 flag_clear:
         ldx     #0
+        stx     flag
 
-:       stx     flag
         cmp     #ERR_VOL_NOT_FOUND ; if err is "not found"
         beq     not_found       ; prompt specifically for src/dst disk
         cmp     #ERR_PATH_NOT_FOUND

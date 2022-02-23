@@ -1,6 +1,7 @@
         .include "../config.inc"
 
         .include "apple2.inc"
+        .include "opcodes.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"

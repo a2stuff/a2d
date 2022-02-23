@@ -125,14 +125,10 @@ loop:   lda     free_icon_map,x
 .proc XferWindowEntryTable
         ptr := $6
 
-from:
-        lda     #$80
-        bne     :+              ; always
-
-to:
-        lda     #$00
-
-:       sta     flag
+from:   lda     #$80
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+to:     lda     #$00
+        sta     flag
         jsr     main__PushPointers
 
         lda     cached_window_id

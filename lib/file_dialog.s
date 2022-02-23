@@ -3218,7 +3218,7 @@ HandleClick:          jmp     0
 .if FD_EXTENDED
 HandleF1SelectionChange:
         lda     #$00
-        beq     ListSelectionChange
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
 HandleF2SelectionChange:
         lda     #$80

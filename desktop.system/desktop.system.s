@@ -2,6 +2,7 @@
         RESOURCE_FILE "desktop.system.res"
 
         .include "apple2.inc"
+        .include "opcodes.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
@@ -962,13 +963,12 @@ resume:
         bne     nomatch
         dex
         bpl     :-
-        lda     #0
-        beq     match
 
+        lda     #0
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 nomatch:
         lda     #$80
-
-match:  sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
+        sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
 
         bit     ROMIN2
 
