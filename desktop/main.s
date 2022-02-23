@@ -13750,7 +13750,9 @@ store:  ;; sta     is_dir_flag - unused
 :       rts
 
 do_sum_file_size:
-        jmp     SizeOrCountProcessDirectoryEntry
+        ;; Make subsequent call to `AppendFileEntryToSrcPath` a no-op
+        copy    #0, file_entry_buf + FileEntry::storage_type_name_length
+        FALL_THROUGH_TO SizeOrCountProcessDirectoryEntry
 .endproc
 
 ;;; ============================================================
@@ -13761,7 +13763,10 @@ do_sum_file_size:
         bvc     :+              ; not size
 
         ;; If operation is "get size", add the block count to the sum
+        lda     file_entry_buf + FileEntry::storage_type_name_length
+    IF_NOT_ZERO
         jsr     AppendFileEntryToSrcPath
+    END_IF
         MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         bne     :+
         add16   op_block_count, src_file_info_params::blocks_used, op_block_count
