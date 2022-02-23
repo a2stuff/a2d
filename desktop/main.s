@@ -1595,8 +1595,7 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 ;;; ============================================================
 
 .proc CmdAbout
-        param_call invoke_dialog_proc, kIndexAboutDialog, $0000
-        rts
+        param_jump invoke_dialog_proc, kIndexAboutDialog, $0000
 .endproc
 
 ;;; ============================================================
@@ -7991,8 +7990,7 @@ flags:  .byte   0
         jsr     IntToStringWithSeparators
         MGTK_RELAY_CALL MGTK::MoveTo, pos_k_available
         jsr     DrawIntString
-        param_call DrawPascalString, str_k_available
-        rts
+        param_jump DrawPascalString, str_k_available
 
 .proc  adjust_item_suffix
         cmp     #1
@@ -11104,10 +11102,9 @@ perform:
         jmp     iterate_selection
 
 @lock:  jsr     PrepCallbacksForLock
-        jmp     iterate_selection
+        FALL_THROUGH_TO iterate_selection
 
-@size:  jsr     get_size_rts2           ; no-op ???
-        jmp     iterate_selection
+@size:  FALL_THROUGH_TO iterate_selection
 
 iterate_selection:
         lda     selected_icon_count
@@ -11671,8 +11668,7 @@ str_vol:
         PASCAL_STRING res_string_volume
 
 .proc RunGetInfoDialogProc
-        param_call invoke_dialog_proc, kIndexGetInfoDialog, get_info_dialog_params
-        rts
+        param_jump invoke_dialog_proc, kIndexGetInfoDialog, get_info_dialog_params
 .endproc
 .endproc
 
@@ -11941,8 +11937,7 @@ skip:   lda     selected_window_id
 
 .proc RunDialogProc
         sta     rename_dialog_params
-        param_call invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
-        rts
+        param_jump invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
 .endproc
 
 ;;; N bit ($80) set if a window title was changed
@@ -12266,8 +12261,7 @@ success:
 
 .proc RunDialogProc
         sta     duplicate_dialog_params
-        param_call invoke_dialog_proc, kIndexDuplicateDialog, duplicate_dialog_params
-        rts
+        param_jump invoke_dialog_proc, kIndexDuplicateDialog, duplicate_dialog_params
 .endproc
 
 ;;; N bit ($80) set if anything succeeded (and window needs refreshing)
@@ -12613,15 +12607,13 @@ a_dst:  .addr   dst_path_buf
         copy    #DownloadDialogLifecycle::open, copy_dialog_params::phase
         copy16  #DownloadDialogEnumerationCallback, operation_enumeration_callback
         copy16  #DownloadDialogCompleteCallback, operation_complete_callback
-        param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
-        rts
+        param_jump invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
 .endproc
 
 .proc DownloadDialogEnumerationCallback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
-        rts
+        param_jump invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
 .endproc
 
 .proc PrepCallbacksForDownload
@@ -12638,8 +12630,7 @@ a_dst:  .addr   dst_path_buf
 
 .proc DownloadDialogCompleteCallback
         copy    #DownloadDialogLifecycle::close, copy_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
-        rts
+        param_jump invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
 .endproc
 
 .proc DownloadDialogTooLargeCallback
@@ -12892,8 +12883,7 @@ done:   rts
 ;;; ============================================================
 
 .proc RunCopyDialogProc
-        param_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
-        rts
+        param_jump invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
 .endproc
 
 ;;; ============================================================
@@ -13433,8 +13423,7 @@ done:   rts
 .endproc
 
 .proc RunDeleteDialogProc
-        param_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
-        rts
+        param_jump invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
 .endproc
 
 ;;; ============================================================
@@ -13533,13 +13522,13 @@ a_path: .addr   src_path_buf
         jmp     RunUnlockDialogProc
 .endproc
 
-RunLockDialogProc:
-        param_call invoke_dialog_proc, kIndexLockDialog, lock_unlock_dialog_params
-        rts
+.proc RunLockDialogProc
+        param_jump invoke_dialog_proc, kIndexLockDialog, lock_unlock_dialog_params
+.endproc
 
-RunUnlockDialogProc:
-        param_call invoke_dialog_proc, kIndexUnlockDialog, lock_unlock_dialog_params
-        rts
+.proc RunUnlockDialogProc
+        param_jump invoke_dialog_proc, kIndexUnlockDialog, lock_unlock_dialog_params
+.endproc
 
 ;;; ============================================================
 ;;; Handle locking of a selected file.
@@ -13663,26 +13652,21 @@ a_blocks:       .addr  op_block_count
 
 .proc GetSizeDialogEnumerationCallback
         copy    #GetSizeDialogLifecycle::count, get_size_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
-        FALL_THROUGH_TO get_size_rts1
+        param_jump invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
 .endproc
-get_size_rts1:
-        rts
 
 .proc GetSizeDialogConfirmCallback
         copy    #GetSizeDialogLifecycle::prompt, get_size_dialog_params::phase
         param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
-        beq     get_size_rts1
-        jmp     CloseFilesCancelDialog
+        jne     CloseFilesCancelDialog
+        rts
 .endproc
 
 .proc GetSizeDialogCompleteCallback
         copy    #GetSizeDialogLifecycle::close, get_size_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
-        FALL_THROUGH_TO get_size_rts2
+        param_jump invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
+
 .endproc
-get_size_rts2:
-        rts
 
 ;;; ============================================================
 ;;; Most operations start by doing a traversal to just count
@@ -14096,14 +14080,12 @@ done:   rts
 
 .proc DecFileCountAndRunDeleteDialogProc
         sub16   op_file_count, #1, delete_dialog_params::count
-        param_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
-        rts
+        param_jump invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
 .endproc
 
 .proc DecFileCountAndRunCopyDialogProc
         sub16   op_file_count, #1, copy_dialog_params::count
-        param_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
-        rts
+        param_jump invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
 .endproc
 
 ;;; ============================================================
@@ -14679,12 +14661,11 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         bmi     :+
         param_call DrawDialogTitle, aux::str_copy_title
         param_call DrawDialogLabel, 1, aux::str_copy_copying
-        param_call DrawDialogLabel, 4, aux::str_copy_remaining
-        rts
+        param_jump DrawDialogLabel, 4, aux::str_copy_remaining
+
 :       param_call DrawDialogTitle, aux::str_move_title
         param_call DrawDialogLabel, 1, aux::str_move_moving
-        param_call DrawDialogLabel, 4, aux::str_move_remaining
-        rts
+        param_jump DrawDialogLabel, 4, aux::str_move_remaining
 
         ;; --------------------------------------------------
         ;; CopyDialogLifecycle::count
@@ -14724,8 +14705,7 @@ do2:    ldy     #copy_dialog_params::count - copy_dialog_params
 
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
-        param_call DrawString, str_2_spaces
-        rts
+        param_jump DrawString, str_2_spaces
 
         ;; --------------------------------------------------
         ;; CopyDialogLifecycle::close
@@ -14797,8 +14777,7 @@ do4:    jsr     Bell
         param_call DrawDialogLabel, 1, aux::str_copy_copying
         param_call DrawDialogLabel, 2, aux::str_copy_from
         param_call DrawDialogLabel, 3, aux::str_copy_to
-        param_call DrawDialogLabel, 4, aux::str_copy_remaining
-        rts
+        param_jump DrawDialogLabel, 4, aux::str_copy_remaining
 
         ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::count
@@ -14828,8 +14807,7 @@ do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         param_call DrawDialogPath, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
-        param_call DrawString, str_2_spaces
-        rts
+        param_jump DrawString, str_2_spaces
 
         ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::close
@@ -14912,14 +14890,12 @@ do1:
         copy    #kValueLeft, dialog_label_pos
         dec     str_file_count  ; remove trailing space
         param_call DrawDialogLabel, 2, str_file_count
-        param_call DrawString, str_kb_suffix
-        rts
+        param_jump DrawString, str_kb_suffix
 
         ;; --------------------------------------------------
         ;; GetSizeDialogLifecycle::close
 do3:    jsr     ClosePromptDialog
-        jsr     SetCursorPointer ; when closing dialog
-        rts
+        jmp     SetCursorPointer ; when closing dialog
 
         ;; --------------------------------------------------
         ;; GetSizeDialogLifecycle::confirm
@@ -14965,8 +14941,7 @@ do2:
         sta     delete_flag
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
-        param_call DrawDialogTitle, aux::str_delete_title
-        rts
+        param_jump DrawDialogTitle, aux::str_delete_title
 
 delete_flag:                    ; clear if trash, set if delete
         .byte   0
@@ -15004,8 +14979,7 @@ do3:    ldy     #1
         param_call DrawDialogPath, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
         param_call DrawString, str_file_count
-        param_call DrawString, str_2_spaces
-        rts
+        param_jump DrawString, str_2_spaces
 
         ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::confirm
@@ -15265,8 +15239,7 @@ is_volume_flag:
         ;; LockDialogLifecycle::open
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
-        param_call DrawDialogTitle, aux::label_lock
-        rts
+        param_jump DrawDialogTitle, aux::label_lock
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::count
@@ -15296,8 +15269,7 @@ do3:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         param_call DrawDialogPath, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
         param_call DrawString, str_file_count
-        param_call DrawString, str_2_spaces
-        rts
+        param_jump DrawString, str_2_spaces
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::prompt
@@ -15345,8 +15317,7 @@ do4:    jsr     ClosePromptDialog
         ;; LockDialogLifecycle::open
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
-        param_call DrawDialogTitle, aux::label_unlock
-        rts
+        param_jump DrawDialogTitle, aux::label_unlock
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::count
@@ -15376,8 +15347,7 @@ do3:    ldy     #1
         param_call DrawDialogPath, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
         param_call DrawString, str_file_count
-        param_call DrawString, str_2_spaces
-        rts
+        param_jump DrawString, str_2_spaces
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::prompt
@@ -15780,16 +15750,14 @@ string: .addr   0
 .proc DrawOkFrameAndLabel
         MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::MoveTo, aux::ok_button_pos
-        param_call DrawString, aux::ok_button_label
-        rts
+        param_jump DrawString, aux::ok_button_label
 .endproc
 
 ;;; Caller must set XOR penmode
 .proc DrawCancelFrameAndLabel
         MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
         MGTK_RELAY_CALL MGTK::MoveTo, aux::cancel_button_pos
-        param_call DrawString, aux::cancel_button_label
-        rts
+        param_jump DrawString, aux::cancel_button_label
 .endproc
 
 .proc DrawYesNoAllCancelButtons
@@ -16274,8 +16242,7 @@ finish: dec     path_buf2
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
         lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
-        rts
+        jmp     SafeSetPortFromWindowId
 .endproc
 
 ;;; ============================================================
