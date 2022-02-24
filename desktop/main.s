@@ -605,8 +605,7 @@ not_menu:
         ;; (Doesn't work for folder icons as only the active
         ;; window and desktop can have selections.)
         tax
-        dex
-        lda     window_to_dir_icon_table,x
+        lda     window_to_dir_icon_table-1,x
         bmi     done            ; $FF = dir icon freed
 
         sta     icon_param
@@ -2270,9 +2269,9 @@ ret:    rts
 
         ;; Icon view?
         tya                     ; window id
+        beq     :+              ; 0=desktop (so yes)
         tax
-        dex
-        lda     win_view_by_table,x
+        lda     win_view_by_table-1,x
         bpl     :+
         lda     #0              ; list view = not found
         rts
@@ -2708,8 +2707,7 @@ entry:
 
         lda     #0
         ldx     active_window_id
-        dex
-        sta     win_view_by_table,x
+        sta     win_view_by_table-1,x
         jsr     UpdateViewMenuCheck
 
         lda     active_window_id
@@ -2809,8 +2807,7 @@ win_height:
         jsr     UpdateViewMenuCheck
         lda     view
         ldx     active_window_id
-        dex
-        sta     win_view_by_table,x
+        sta     win_view_by_table-1,x
 
         ;; Clear selection if in the window
         lda     selected_window_id
@@ -4934,17 +4931,14 @@ cont:   sta     cached_window_entry_count
 
         copy    #0, icon
         ldx     active_window_id
-        dex
-        lda     window_to_dir_icon_table,x
+        lda     window_to_dir_icon_table-1,x
         bmi     :+              ; $FF = dir icon freed
 
         sta     icon
 
         ;; Animate closing into dir (vol/folder) icon
         ldx     active_window_id
-        dex
-        lda     window_to_dir_icon_table,x
-        inx
+        lda     window_to_dir_icon_table-1,x
         jsr     AnimateWindowClose ; A = icon id, X = window id
 :
         ;; --------------------------------------------------
@@ -4954,10 +4948,9 @@ cont:   sta     cached_window_entry_count
         jsr     RemoveWindowFilerecordEntries
 
         ldx     active_window_id
-        dex
         lda     #0
-        sta     window_to_dir_icon_table,x ; 0 = window free
-        sta     win_view_by_table,x
+        sta     window_to_dir_icon_table-1,x ; 0 = window free
+        sta     win_view_by_table-1,x
 
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         jsr     LoadDesktopEntryTable ; restore from above
@@ -5979,8 +5972,7 @@ no_win:
         ;; Update View and other menus
         inc     num_open_windows
         ldx     cached_window_id
-        dex
-        copy    #0, win_view_by_table,x
+        copy    #0, win_view_by_table-1,x
 
         lda     num_open_windows ; Was there already a window open?
         cmp     #2
@@ -7488,8 +7480,7 @@ ep_set_window_size:
 ep_preserve_window_size:
         pha
         ldx     cached_window_id
-        dex
-        lda     window_to_dir_icon_table,x
+        lda     window_to_dir_icon_table-1,x
         sta     icon_param      ; Guaranteed to exist, since window just created
         lda     #$80
         FALL_THROUGH_TO common
@@ -7811,9 +7802,8 @@ L7870:  lda     cached_window_id
         tya                     ; A = window id, 0 if none
         beq     :+
         tax
-        dex                     ; 1-based to 0-based
         lda     icon_num
-        sta     window_to_dir_icon_table,x
+        sta     window_to_dir_icon_table-1,x
 
         ldy     #IconEntry::win_flags ; mark as open
         lda     (icon_entry),y
@@ -16610,15 +16600,13 @@ done:   rts
 
 .proc GetActiveWindowViewBy
         ldx     active_window_id
-        dex
-        lda     win_view_by_table,x
+        lda     win_view_by_table-1,x
         rts
 .endproc
 
 .proc GetCachedWindowViewBy
         ldx     cached_window_id
-        dex
-        lda     win_view_by_table,x
+        lda     win_view_by_table-1,x
         rts
 .endproc
 
