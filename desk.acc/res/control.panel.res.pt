@@ -7,6 +7,3 @@
 .define res_string_label_fast "Rapidez"
 .define res_string_label_ipblink1 "Ponto de velocidade"
 .define res_string_label_ipblink2 "de inser][o piscando"
-.define res_string_label_clock "Rel~gio"
-.define res_string_label_clock_12hour "12hr"
-.define res_string_label_clock_24hour "24hr"

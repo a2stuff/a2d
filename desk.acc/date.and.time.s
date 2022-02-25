@@ -2,10 +2,12 @@
 ;;; DATE.AND.TIME - Desk Accessory
 ;;;
 ;;; Shows the current ProDOS date/time, and allows editing if there
-;;; is no clock driver installed.
+;;; is no clock driver installed. Also exposes the 12/24-hour clock
+;;; setting, and will update the settings file.
 ;;; ============================================================
 
         .include "../config.inc"
+        RESOURCE_FILE "date.and.time.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -22,7 +24,6 @@
 ;;; ============================================================
 
         jmp     Copy2Aux
-
 
 stash_stack:  .byte   $00
 
@@ -58,33 +59,34 @@ stash_stack:  .byte   $00
 
 ;;; ============================================================
 ;;; Maybe write the date into DESKTOP.SYSTEM file and exit the DA
-;;; Inputs: A=1 if dialog committed; A=0 if dialog cancelled
 ;;; Assert: Running from Main
 
-.proc SaveDateAndExit
-        beq     skip
-
-        ;; If there is a system clock, don't write out the date.
-        ldx     clock_flag
-        bne     skip
-
+.proc SaveAndExit
+        bit     dialog_result
+    IF_NS
         ;; ProDOS GP has the updated data, copy somewhere usable.
         COPY_STRUCT DateTime, DATELO, write_buffer
+        jsr     SaveDate
+    END_IF
 
+        bit     dialog_result
+    IF_VS
         jsr     SaveSettings
+    END_IF
 
-skip:   ldx     stash_stack     ; exit the DA
+        ldx     stash_stack     ; exit the DA
         txs
         rts
 .endproc
 
 ;;; ============================================================
 
+.proc save_date
 filename:
         PASCAL_STRING kFilenameLauncher
 
 filename_buffer:
-        .res kPathBufferSize
+        .res ::kPathBufferSize
 
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
         DEFINE_SET_MARK_PARAMS set_mark_params, kLauncherDateOffset
@@ -171,6 +173,8 @@ ret:    rts
 second_try_flag:
         .byte   0
 .endproc
+.endproc ; save_date
+SaveDate := save_date::SaveSettings
 
 ;;; ============================================================
 ;;;
@@ -185,20 +189,19 @@ start_da:
 ;;; Param blocks
 
         kDialogWidth = 287
-        kDialogHeight = 64
+        kDialogHeight = 75
 
         ;; The following rects are iterated over to identify
         ;; a hit target for a click.
 
-        kNumHitRects = 10
-        kUpRectIndex = 3
-        kDownRectIndex = 4
+        kNumHitRects = 9
+        kUpRectIndex = 2
+        kDownRectIndex = 3
 
         kControlMarginX = 16
 
-        kCancelButtonLeft = kControlMarginX
         kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
-        kOKCancelButtonTop = kDialogHeight - kButtonHeight - 7
+        kOKButtonTop = kDialogHeight - kButtonHeight - 7
 
         kFieldTop = 20
         kField1Left = 22
@@ -217,8 +220,7 @@ start_da:
         kUpDownButtonLeft = kDialogWidth - kUpDownButtonWidth - kControlMarginX
 
         first_hit_rect := *
-        DEFINE_RECT_SZ ok_button_rect, kOKButtonLeft, kOKCancelButtonTop, kButtonWidth, kButtonHeight
-        DEFINE_RECT_SZ cancel_button_rect, kCancelButtonLeft, kOKCancelButtonTop, kButtonWidth, kButtonHeight
+        DEFINE_RECT_SZ ok_button_rect, kOKButtonLeft, kOKButtonTop, kButtonWidth, kButtonHeight
         DEFINE_RECT_SZ up_arrow_rect, kUpDownButtonLeft, 14, kUpDownButtonWidth, kUpDownButtonHeight
         DEFINE_RECT_SZ down_arrow_rect, kUpDownButtonLeft, 26, kUpDownButtonWidth, kUpDownButtonHeight
         DEFINE_RECT_SZ day_rect, kField1Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
@@ -229,8 +231,7 @@ start_da:
         DEFINE_RECT_SZ period_rect, kField6Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
         ASSERT_RECORD_TABLE_SIZE first_hit_rect, kNumHitRects, .sizeof(MGTK::Rect)
 
-        DEFINE_POINT label_ok_pos, kOKButtonLeft + 5, kOKCancelButtonTop + 10
-        DEFINE_POINT label_cancel_pos, kCancelButtonLeft + 5, kOKCancelButtonTop + 10
+        DEFINE_POINT label_ok_pos, kOKButtonLeft + 5, kOKButtonTop + 10
         DEFINE_POINT label_uparrow_pos, kUpDownButtonLeft + 2, 23
         DEFINE_POINT label_downarrow_pos, kUpDownButtonLeft + 2, 35
         DEFINE_POINT day_pos, kField1Left + 6, kFieldTop + 10
@@ -253,10 +254,6 @@ backcolor:   .byte   0          ; black
 
 .params settextbg_white_params
 backcolor:   .byte   $FF        ; white
-.endparams
-
-.params white_pattern
-        .res    8, $FF
 .endparams
 
 .enum Field
@@ -342,7 +339,7 @@ window_id:     .byte   kDAWindowId
 .endparams
 
 penxor:         .byte   MGTK::penXOR
-notpenxor:      .byte   MGTK::notpenXOR
+notpencopy:     .byte   MGTK::notpencopy
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -366,16 +363,62 @@ mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT cliprect, 0, 0, kDialogWidth, kDialogHeight
-pattern:        .res    8,$00
+pattern:        .res    8,$FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
+penmode:        .byte   MGTK::notpencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
+
+;;; ============================================================
+;;; 12/24 Hour Resources
+
+;;; Padding between radio/checkbox and label
+kLabelPadding = 5
+
+kRadioButtonWidth       = 15
+kRadioButtonHeight      = 7
+
+.params rb_params
+        DEFINE_POINT viewloc, 0, 0
+mapbits:        .addr   SELF_MODIFIED
+mapwidth:       .byte   3
+reserved:       .byte   0
+        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+.endparams
+
+checked_rb_bitmap:
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
+        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
+        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
+        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+
+unchecked_rb_bitmap:
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
+        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
+        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
+        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+
+kOptionDisplayX = 30
+kOptionDisplayY = 44
+
+        DEFINE_LABEL clock_12hour, res_string_label_clock_12hour, kOptionDisplayX+60+kRadioButtonWidth+kLabelPadding-10, kOptionDisplayY+8
+        DEFINE_LABEL clock_24hour, res_string_label_clock_24hour, kOptionDisplayX+120+kRadioButtonWidth+kLabelPadding, kOptionDisplayY+8
+        ;; for hit testing; label width is added dynamically
+        DEFINE_RECT_SZ rect_12hour, kOptionDisplayX+60-10, kOptionDisplayY, kRadioButtonWidth+kLabelPadding, kRadioButtonHeight
+        DEFINE_RECT_SZ rect_24hour, kOptionDisplayX+120, kOptionDisplayY, kRadioButtonWidth+kLabelPadding, kRadioButtonHeight
 
 ;;; ============================================================
 ;;; Initialize window, unpack the date.
@@ -432,6 +475,11 @@ init_window:
 
 :       sta     RAMRDON
 
+        param_call MeasureText, clock_12hour_label_str
+        addax   rect_12hour::x2
+        param_call MeasureText, clock_24hour_label_str
+        addax   rect_24hour::x2
+
         MGTK_CALL MGTK::OpenWindow, winfo
         lda     #0
         sta     selected_field
@@ -457,23 +505,23 @@ init_window:
 .endproc
 
 .proc OnKey
+        MGTK_CALL MGTK::SetPort, winfo::port
+        MGTK_CALL MGTK::SetPenMode, penxor
+
         lda     event_params::modifiers
         bne     InputLoop
         lda     event_params::key
 
         cmp     #CHAR_RETURN
         jeq     OnOk
+        cmp     #CHAR_ESCAPE
+        jeq     OnOk
 
-        ;; If there is a system clock, only the first button is active
+        ;; If there is a system clock, fields are read-only
         ldx     clock_flag
-        beq     :+
-        cmp     #CHAR_ESCAPE    ; allow Escape to close as well
         bne     InputLoop
-        jmp     OnOk
 
         ;; All controls are active
-:       cmp     #CHAR_ESCAPE
-        jeq     OnCancel
         cmp     #CHAR_LEFT
         beq     OnKeyLeft
         cmp     #CHAR_RIGHT
@@ -482,6 +530,7 @@ init_window:
         beq     OnKeyDown
         cmp     #CHAR_UP
         bne     InputLoop
+        FALL_THROUGH_TO OnKeyUp
 
 .proc OnKeyUp
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
@@ -532,7 +581,7 @@ init_window:
 .endproc
 
 .proc UpdateSelection
-        jsr     HighlightSelectedField
+        jsr     SelectField
         jmp     InputLoop
 .endproc
 .endproc
@@ -558,15 +607,20 @@ init_window:
 ;;; ============================================================
 
 .proc OnClick
-        MGTK_CALL MGTK::FindWindow, event_params::xcoord
+        MGTK_CALL MGTK::SetPort, winfo::port
         MGTK_CALL MGTK::SetPenMode, penxor
-        MGTK_CALL MGTK::SetPattern, white_pattern
+
+        MGTK_CALL MGTK::FindWindow, event_params::xcoord
         lda     findwindow_params::window_id
         cmp     #kDAWindowId
         bne     miss
         lda     findwindow_params::which_area
         bne     hit
 miss:   rts
+
+
+        ;; ----------------------------------------
+
 
 hit:    cmp     #MGTK::Area::content
         bne     miss
@@ -582,7 +636,7 @@ hit:    cmp     #MGTK::Area::content
 jump:   jmp     SELF_MODIFIED
 
 hit_target_jump_table:
-        .addr   OnOk, OnCancel, OnUp, OnDown
+        .addr   OnOk, OnUp, OnDown
         .addr   OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick
         ASSERT_ADDRESS_TABLE_SIZE hit_target_jump_table, ::kNumHitRects
 .endproc
@@ -591,38 +645,7 @@ hit_target_jump_table:
 
 .proc OnOk
         MGTK_CALL MGTK::PaintRect, ok_button_rect
-
-        ;; Pack the date bytes and store in ProDOS GP
-        sta     RAMWRTOFF
-
-        lda     month
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        ora     day
-        sta     DATELO
-        lda     year
-        rol     a
-        sta     DATEHI
-
-        lda     minute
-        sta     TIMELO
-        lda     hour
-        sta     TIMEHI
-
-        sta     RAMWRTON
-
-        lda     #1
-        sta     dialog_result
-        jmp     Destroy
-.endproc
-
-.proc OnCancel
-        MGTK_CALL MGTK::PaintRect, cancel_button_rect
-        lda     #0
-        sta     dialog_result
+        jsr     UpdateProDOS
         jmp     Destroy
 .endproc
 
@@ -649,8 +672,8 @@ hit_target_jump_table:
 .proc OnFieldClick
         txa
         sec
-        sbc     #4
-        jmp     HighlightSelectedField
+        sbc     #3
+        jmp     SelectField
 .endproc
 
 .proc OnUpOrDown
@@ -742,8 +765,8 @@ finish:
         sta     (ptr),y
         prepare_proc := *+1
         jsr     SELF_MODIFIED   ; update string
-        MGTK_CALL MGTK::SetTextBG, settextbg_black_params
-        jsr     DrawSelectedField
+        lda     selected_field
+        jsr     DrawField
 
         ;; If month changed, make sure day is in range and update if not.
         jsr     SetMonthLength
@@ -753,9 +776,16 @@ finish:
         sta     day
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         jsr     PrepareDayString
-        jsr     DrawDay
+        lda     #Field::day
+        jsr     DrawField
 :
-        rts
+        ;; Set dirty bit
+        lda     #$80
+        ora     dialog_result
+        sta     dialog_result
+
+        ;; Update ProDOS
+        jmp     UpdateProDOS
 
 min:    .byte   0
 max:    .byte   0
@@ -776,8 +806,9 @@ hit_rect_index:
         sbc     #12
     END_IF
         sta     hour
-        MGTK_CALL MGTK::SetTextBG, settextbg_black_params
-        jmp     DrawPeriod
+
+        lda     #Field::period
+        jmp     DrawField
 .endproc
 
 ;;; ============================================================
@@ -915,6 +946,8 @@ str_pm: PASCAL_STRING "PM"
 ;;; Tear down the window and exit
 
 ;;; Used in Aux to store result during tear-down
+;;; bit7 = time changed
+;;; bit6 = settings changed
 dialog_result:  .byte   0
 
 .proc Destroy
@@ -928,7 +961,9 @@ dialog_result:  .byte   0
         sta     RAMWRTOFF
         sta     RAMRDOFF
 
-        jmp     SaveDateAndExit
+        sta     dialog_result
+
+        jmp     SaveAndExit
 .endproc
 
 ;;; ============================================================
@@ -940,6 +975,25 @@ dialog_result:  .byte   0
         copy16  event_params::ycoord, screentowindow_params::screeny
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+
+        ;; ----------------------------------------
+
+        MGTK_CALL MGTK::InRect, rect_12hour
+        cmp     #MGTK::inrect_inside
+        IF_EQ
+        lda     #$00
+        jmp     HandleOptionClick
+        END_IF
+
+        MGTK_CALL MGTK::InRect, rect_24hour
+        cmp     #MGTK::inrect_inside
+        IF_EQ
+        lda     #$80
+        jmp     HandleOptionClick
+        END_IF
+
+        ;; ----------------------------------------
+
         ldx     #1
         copy16  #first_hit_rect, test_addr
 
@@ -950,19 +1004,14 @@ loop:   txa
 
         ;; If there is a system clock, only the first button is active
         ldx     clock_flag
-        beq     next
+    IF_NE
         pla
         ldx     #0
         rts
+    END_IF
 
-
-next:   clc
-        lda     test_addr
-        adc     #.sizeof(MGTK::Rect)
-        sta     test_addr
-        bcc     :+
-        inc     test_addr+1
-:       pla
+        add16_8 test_addr, #.sizeof(MGTK::Rect)
+        pla
         tax
         inx
         cpx     #kNumHitRects+1
@@ -1011,7 +1060,7 @@ label_downarrow:
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
-        MGTK_CALL MGTK::SetPenMode, notpenxor
+        MGTK_CALL MGTK::SetPenMode, penxor
 
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, label_ok_pos
@@ -1019,12 +1068,7 @@ label_downarrow:
 
         ;; If there is a system clock, only draw the OK button.
         ldx     clock_flag
-        bne     :+
-
-        MGTK_CALL MGTK::FrameRect, cancel_button_rect
-        MGTK_CALL MGTK::MoveTo, label_cancel_pos
-        param_call DrawString, label_cancel
-
+    IF_EQ
         MGTK_CALL MGTK::MoveTo, label_uparrow_pos
         param_call DrawString, label_uparrow
         MGTK_CALL MGTK::FrameRect, up_arrow_rect
@@ -1032,33 +1076,71 @@ label_downarrow:
         MGTK_CALL MGTK::MoveTo, label_downarrow_pos
         param_call DrawString, label_downarrow
         MGTK_CALL MGTK::FrameRect, down_arrow_rect
+    END_IF
 
-:       jsr     PrepareDayString
+        jsr     PrepareDayString
         jsr     PrepareMonthString
         jsr     PrepareYearString
         jsr     PrepareHourString
         jsr     PrepareMinuteString
 
-        jsr     DrawDay
-        jsr     DrawMonth
-        jsr     DrawYear
-        jsr     DrawHour
-        jsr     DrawMinute
-        jsr     DrawPeriod
+        lda     #Field::day
+        jsr     DrawField
+        lda     #Field::month
+        jsr     DrawField
+        lda     #Field::year
+        jsr     DrawField
+        lda     #Field::hour
+        jsr     DrawField
+        lda     #Field::minute
+        jsr     DrawField
+        lda     #Field::period
+        jsr     DrawField
 
         ;; If there is a system clock, don't draw the highlight.
         ldx     clock_flag
-        beq     :+
-        rts
+    IF_EQ
+        lda     #Field::day
+        jsr     SelectField
+    END_IF
 
-:       MGTK_CALL MGTK::SetPenMode, penxor
-        MGTK_CALL MGTK::SetPattern, white_pattern
-        lda     #1
-        jmp     HighlightSelectedField
+        ;; --------------------------------------------------
+
+        MGTK_CALL MGTK::MoveTo, clock_12hour_label_pos
+        param_call DrawString, clock_12hour_label_str
+        MGTK_CALL MGTK::MoveTo, clock_24hour_label_pos
+        param_call DrawString, clock_24hour_label_str
+
+        FALL_THROUGH_TO DrawOptionButtons
 .endproc
 
-.proc DrawSelectedField
-        lda     selected_field
+.proc DrawOptionButtons
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+
+        ldax    #rect_12hour
+        ldy     SETTINGS + DeskTopSettings::clock_24hours
+        cpy     #0
+        jsr     DrawRadioButton
+
+        ldax    #rect_24hour
+        ldy     SETTINGS + DeskTopSettings::clock_24hours
+        cpy     #$80
+        jsr     DrawRadioButton
+
+        rts
+.endproc
+
+;;; A = field
+.proc DrawField
+        pha
+        cmp     selected_field
+    IF_EQ
+        MGTK_CALL MGTK::SetTextBG, settextbg_black_params
+    ELSE
+        MGTK_CALL MGTK::SetTextBG, settextbg_white_params
+    END_IF
+
+        pla
         cmp     #Field::day
         beq     DrawDay
         cmp     #Field::month
@@ -1069,8 +1151,9 @@ label_downarrow:
         beq     DrawHour
         cmp     #Field::minute
         beq     DrawMinute
-        bne     DrawPeriod      ; always
-.endproc
+        cmp     #Field::period
+        beq     DrawPeriod
+        rts
 
 .proc DrawDay
         MGTK_CALL MGTK::MoveTo, day_pos
@@ -1100,34 +1183,36 @@ label_downarrow:
 .endproc
 
 .proc DrawPeriod
-        ;; Skip if 24-hour
-        bit     SETTINGS + DeskTopSettings::clock_24hours
-        bpl     :+
-        rts
-:
         MGTK_CALL MGTK::MoveTo, period_pos
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+    IF_NS
+        param_call DrawString, spaces_string
+    ELSE
         lda     hour
         cmp     #12
-    IF_LT
+      IF_LT
         param_jump DrawString, str_am
-    ELSE
+      ELSE
         param_jump DrawString, str_pm
+      END_IF
     END_IF
+        rts
+.endproc
 .endproc
 
 ;;; ============================================================
-;;; Highlight selected field
+;;; Selected a field (dehighlight the old one, highlight the new one)
 ;;; Input: A = new field to select
 
-.proc HighlightSelectedField
+.proc SelectField
         pha
-        lda     selected_field  ; initial state is 0, so nothing
-        beq     :+              ; to invert back to normal
+        MGTK_CALL MGTK::SetPenMode, penxor
 
-        jsr     invert          ; invert old
-
-:       pla                     ; update to new
+        lda     selected_field  ; invert old
+        jsr     invert
+        pla                     ; update to new
         sta     selected_field
+        FALL_THROUGH_TO invert
 
 invert: cmp     #Field::day
         beq     fill_day
@@ -1139,7 +1224,9 @@ invert: cmp     #Field::day
         beq     fill_hour
         cmp     #Field::minute
         beq     fill_minute
-        bne     fill_period     ; always
+        cmp     #Field::period
+        beq     fill_period
+        rts
 
 fill_day:
         MGTK_CALL MGTK::PaintRect, day_rect
@@ -1224,6 +1311,107 @@ loop:   cmp     #10
 
 ;;; ============================================================
 
+.proc HandleOptionClick
+        sta     SETTINGS + DeskTopSettings::clock_24hours
+        MGTK_CALL MGTK::HideCursor
+        jsr     DrawOptionButtons
+        MGTK_CALL MGTK::ShowCursor
+
+        ;; Set dirty bit
+        lda     #$40
+        ora     dialog_result
+        sta     dialog_result
+
+        lda     selected_field
+        cmp     #Field::period
+    IF_EQ
+        lda     #Field::minute
+        jsr     SelectField
+    END_IF
+
+        lda     #Field::period
+        jsr     DrawField
+
+        jsr     PrepareHourString
+        lda     #Field::hour
+        jsr     DrawField
+
+        jmp     InputLoop
+.endproc
+
+;;; ============================================================
+;;; Measure text, pascal string address in A,X; result in A,X
+
+.proc MeasureText
+        ptr := $6
+        len := $8
+        result := $9
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        inc16   ptr
+        MGTK_CALL MGTK::TextWidth, ptr
+        ldax    result
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; A,X = pos ptr, Z = checked
+.proc DrawRadioButton
+        ptr := $06
+
+        stax    ptr
+
+    IF_EQ
+        copy16  #checked_rb_bitmap, rb_params::mapbits
+    ELSE
+        copy16  #unchecked_rb_bitmap, rb_params::mapbits
+    END_IF
+
+        ldy     #3
+:       lda     (ptr),y
+        sta     rb_params::viewloc,y
+        dey
+        bpl     :-
+
+        MGTK_CALL MGTK::PaintBits, rb_params
+        rts
+.endproc
+
+;;; ============================================================
+;;; Assert: Called from Aux
+
+.proc UpdateProDOS
+        ;; Pack the date bytes and store in ProDOS GP
+        sta     RAMWRTOFF
+
+        lda     month
+        asl     a
+        asl     a
+        asl     a
+        asl     a
+        asl     a
+        ora     day
+        sta     DATELO
+        lda     year
+        rol     a
+        sta     DATEHI
+
+        lda     minute
+        sta     TIMELO
+        lda     hour
+        sta     TIMEHI
+
+        sta     RAMWRTON
+        rts
+.endproc
+
+;;; ============================================================
+
+        .include "../lib/save_settings.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================

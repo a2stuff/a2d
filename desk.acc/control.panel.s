@@ -6,7 +6,6 @@
 ;;;   * Mouse tracking speed
 ;;;   * Double-click speed
 ;;;   * Insertion point blink rate
-;;;   * Time 12- or 24-hour display
 ;;; ============================================================
 
         .include "../config.inc"
@@ -123,12 +122,10 @@ penheight:      .byte   2
 
         DEFINE_POINT frame_l1a, 0, 68
         DEFINE_POINT frame_l1b, 190, 68
-        DEFINE_POINT frame_l2a, 190, 58
-        DEFINE_POINT frame_l2b, kDAWidth, 58
+        DEFINE_POINT frame_l2a, 190, 68
+        DEFINE_POINT frame_l2b, kDAWidth, 68
         DEFINE_POINT frame_l3a, 190, 0
         DEFINE_POINT frame_l3b, 190, kDAHeight
-        DEFINE_POINT frame_l4a, 190, 102
-        DEFINE_POINT frame_l4b, kDAWidth, 102
 
         DEFINE_RECT frame_rect, AS_WORD(-1), AS_WORD(-1), kDAWidth - 2, kDAHeight
 
@@ -481,7 +478,7 @@ y_exponent:     .byte   0
 ;;; IP Blink Speed Resources
 
 kIPBlinkDisplayX = 214
-kIPBlinkDisplayY = 65
+kIPBlinkDisplayY = 85
 
         ;; Selected index (1-3, or 0 for 'no match')
 ipblink_selection:
@@ -560,20 +557,6 @@ ipblink_ip_bitmap:
 
 
 ;;; ============================================================
-;;; 12/24 Hour Resources
-
-kHourDisplayX = 210
-kHourDisplayY = 114
-
-        DEFINE_LABEL clock, res_string_label_clock, kHourDisplayX+kRadioButtonWidth-15, kHourDisplayY+8
-
-        DEFINE_LABEL clock_12hour, res_string_label_clock_12hour, kHourDisplayX+60+kRadioButtonWidth+kLabelPadding-10, kHourDisplayY+8
-        DEFINE_LABEL clock_24hour, res_string_label_clock_24hour, kHourDisplayX+120+kRadioButtonWidth+kLabelPadding, kHourDisplayY+8
-        ;; for hit testing; label width is added dynamically
-        DEFINE_RECT_SZ rect_12hour, kHourDisplayX+60-10, kHourDisplayY, kRadioButtonWidth+kLabelPadding, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_24hour, kHourDisplayX+120, kHourDisplayY, kRadioButtonWidth+kLabelPadding, kRadioButtonHeight
-
-;;; ============================================================
 
 .proc Init
         jsr     InitPattern
@@ -586,10 +569,6 @@ kHourDisplayY = 114
         addax   tracking_button_rect1::x2
         param_call MeasureText, tracking_fast_label_str
         addax   tracking_button_rect2::x2
-        param_call MeasureText, clock_12hour_label_str
-        addax   rect_12hour::x2
-        param_call MeasureText, clock_24hour_label_str
-        addax   rect_24hour::x2
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
@@ -793,22 +772,6 @@ kHourDisplayY = 114
         IF_EQ
         lda     #3
         jmp     HandleIpblinkClick
-        END_IF
-
-        ;; ----------------------------------------
-
-        MGTK_CALL MGTK::InRect, rect_12hour
-        cmp     #MGTK::inrect_inside
-        IF_EQ
-        lda     #$00
-        jmp     HandleHourClick
-        END_IF
-
-        MGTK_CALL MGTK::InRect, rect_24hour
-        cmp     #MGTK::inrect_inside
-        IF_EQ
-        lda     #$80
-        jmp     HandleHourClick
         END_IF
 
         jmp     InputLoop
@@ -1198,20 +1161,6 @@ loop:   ldy     #3
         jsr     DrawIpblinkButtons
 
         ;; ==============================
-        ;; 12/24 Hour Clock
-
-        MGTK_CALL MGTK::MoveTo, clock_label_pos
-        param_call DrawString, clock_label_str
-
-        MGTK_CALL MGTK::MoveTo, clock_12hour_label_pos
-        param_call DrawString, clock_12hour_label_str
-
-        MGTK_CALL MGTK::MoveTo, clock_24hour_label_pos
-        param_call DrawString, clock_24hour_label_str
-
-        jsr     DrawHourButtons
-
-        ;; ==============================
         ;; Frame
 
         MGTK_CALL MGTK::SetPenSize, frame_pensize
@@ -1221,8 +1170,6 @@ loop:   ldy     #3
         MGTK_CALL MGTK::LineTo, frame_l2b
         MGTK_CALL MGTK::MoveTo, frame_l3a
         MGTK_CALL MGTK::LineTo, frame_l3b
-        MGTK_CALL MGTK::MoveTo, frame_l4a
-        MGTK_CALL MGTK::LineTo, frame_l4b
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, winfo::penwidth
 
@@ -1289,22 +1236,6 @@ arrow_num:
         ldax    #ipblink_btn3_rect
         ldy     ipblink_selection
         cpy     #3
-        jsr     DrawRadioButton
-
-        rts
-.endproc
-
-.proc DrawHourButtons
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-
-        ldax    #rect_12hour
-        ldy     SETTINGS + DeskTopSettings::clock_24hours
-        cpy     #0
-        jsr     DrawRadioButton
-
-        ldax    #rect_24hour
-        ldy     SETTINGS + DeskTopSettings::clock_24hours
-        cpy     #$80
         jsr     DrawRadioButton
 
         rts
@@ -1843,16 +1774,6 @@ done:   rts
         sta     RAMRDON
         sta     RAMWRTON
 
-        jmp     InputLoop
-.endproc
-
-;;; ============================================================
-
-.proc HandleHourClick
-        sta     SETTINGS + DeskTopSettings::clock_24hours
-        MGTK_CALL MGTK::HideCursor
-        jsr     DrawHourButtons
-        MGTK_CALL MGTK::ShowCursor
         jmp     InputLoop
 .endproc
 

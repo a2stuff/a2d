@@ -7,6 +7,3 @@
 .define res_string_label_fast "R\x10pido"
 .define res_string_label_ipblink1 "Velocidad de Inserci\x13n"
 .define res_string_label_ipblink2 "Punto Parpadeando"
-.define res_string_label_clock "Reloj"
-.define res_string_label_clock_12hour "12hr"
-.define res_string_label_clock_24hour "24hr"
