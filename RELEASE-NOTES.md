@@ -58,7 +58,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Show appropriate error when a non-ProDOS-8 storage type (e.g. GS/OS forked file) is encountered. ([#631](https://github.com/a2stuff/a2d/issues/631))
 * Keyboard-related changes:
-  * Holding **Solid-Apple** while double-clicking, or holding **Apple** while using **File > Open**, or **Open-Apple+Solid-Apple+O** opens the selected items then closes parent window. ([#9](https://github.com/a2stuff/a2d/issues/9), [#625](https://github.com/a2stuff/a2d/issues/625))
+  * Holding **Solid-Apple** while double-clicking, or holding **Apple** while using **File > Open**, or **Open-Apple+Solid-Apple+O**, or **Open-Apple+Solid-Apple+Down** opens the selected items then closes parent window. ([#9](https://github.com/a2stuff/a2d/issues/9), [#625](https://github.com/a2stuff/a2d/issues/625), ([#660](https://github.com/a2stuff/a2d/issues/660))
   * Holding **Apple** while clicking a window's close box, or pressing **Open-Apple+Solid-Apple+W**  closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266), [#626](https://github.com/a2stuff/a2d/issues/626))
   * Holding **Open-Apple** on while clicking a selected file deselects it. ([#359](https://github.com/a2stuff/a2d/issues/359))
   * Holding **Open-Apple** while dragging a selection box around files extends selection. ([#546](https://github.com/a2stuff/a2d/issues/546))
@@ -69,6 +69,7 @@ Project Page: https://github.com/a2stuff/a2d
   * **Apple+Delete** deletes selected files. ([#150](https://github.com/a2stuff/a2d/issues/150))
   * **Apple+Down** opens/previews selection. ([#254](https://github.com/a2stuff/a2d/issues/254))
   * **Apple+Up** opens parent window or selects volume icon. ([#254](https://github.com/a2stuff/a2d/issues/254), [#314](https://github.com/a2stuff/a2d/issues/314))
+  * **Open-Apple+Solid-Apple+Up** opens parent window or selects volume icon and closes current window. ([#661](https://github.com/a2stuff/a2d/issues/661))
   * **Return** is a shortcut for **File > Rename...**. ([#275](https://github.com/a2stuff/a2d/issues/275))
   * Arrow keys change selected icon. ([#274](https://github.com/a2stuff/a2d/issues/274))
   * **Tab**/**Shift+Tab** change selected icon in alphabetical order. ([#275](https://github.com/a2stuff/a2d/issues/275))

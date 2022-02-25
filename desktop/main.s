@@ -432,7 +432,11 @@ modifiers:
         ;; Double-modifier shortcuts
         lda     event_params::key
         cmp     #'O'
-        jeq     CmdOpenThenCloseParent
+        jeq     CmdOpenThenCloseCurrent
+        cmp     #CHAR_DOWN
+        jeq     CmdOpenThenCloseCurrent
+        cmp     #CHAR_UP
+        jeq     CmdOpenParentThenCloseCurrent
         cmp     #'W'
         jeq     CmdCloseAll
         rts
@@ -1891,9 +1895,9 @@ done:   jsr     SetCursorPointer ; after invoking DA
 
 
         ;; --------------------------------------------------
-        ;; Entry point from OA+SA+O
+        ;; Entry point from OA+SA+O / OA+SA+Down
 
-open_then_close_parent:
+open_then_close_current:
         lda     selected_icon_count
         bne     :+
         rts
@@ -2001,9 +2005,15 @@ maybe_open_file:
 
         jsr     CopyWinIconPaths
         jmp     LaunchFile
+.endproc
+CmdOpenThenCloseCurrent := CmdOpen::open_then_close_current
+CmdOpenFromDoubleClick := CmdOpen::from_double_click
+CmdOpenFromKeyboard := CmdOpen::from_keyboard
 
+;;; ============================================================
 
 ;;; Close parent window after open, if needed. Done by activating then closing.
+;;; Input: `window_id_to_close` set by caller.
 ;;; Modifies `findwindow_params::window_id`
 .proc MaybeCloseWindowAfterOpen
         lda     window_id_to_close
@@ -2021,10 +2031,6 @@ done:   rts
 ;;; Parent window to close
 window_id_to_close:
         .byte   0
-.endproc
-CmdOpenThenCloseParent := CmdOpen::open_then_close_parent
-CmdOpenFromDoubleClick := CmdOpen::from_double_click
-CmdOpenFromKeyboard := CmdOpen::from_keyboard
 
 ;;; ============================================================
 ;;; Copy selection window and first selected icon paths to
@@ -2063,7 +2069,14 @@ CmdOpenFromKeyboard := CmdOpen::from_keyboard
 
 ;;; ============================================================
 
-.proc CmdOpenParent
+.proc CmdOpenParentImpl
+
+close_current:
+        lda     active_window_id
+        .byte   OPC_BIT_abs     ; Skip next 2-byte instruction
+normal: lda     #0
+        sta     window_id_to_close
+
         lda     active_window_id
         beq     done
 
@@ -2099,6 +2112,10 @@ CmdOpenFromKeyboard := CmdOpen::from_keyboard
         ldy     #0
         sta     (name_ptr),y    ; assign string length
 
+        jsr     PushPointers
+        jsr     MaybeCloseWindowAfterOpen
+        jsr     PopPointers
+
         ;; Select by name
         jsr     SelectFileIconByName ; $08 = name
 
@@ -2107,7 +2124,10 @@ done:   rts
         ;; --------------------------------------------------
         ;; Find volume icon by name and select it.
 
-volume: jsr     ClearSelection
+volume: lda     window_id_to_close
+        beq     :+
+        jsr     CloseWindow
+:       jsr     ClearSelection
         ldx     open_dir_path_buf ; Strip '/'
         dex
         stx     open_dir_path_buf+1
@@ -2118,6 +2138,8 @@ volume: jsr     ClearSelection
         jsr     SelectIcon
 :       rts
 .endproc
+CmdOpenParent := CmdOpenParentImpl::normal
+CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
 
 ;;; ============================================================
 
