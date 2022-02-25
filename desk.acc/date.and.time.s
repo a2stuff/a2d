@@ -31,7 +31,7 @@ stash_stack:  .byte   $00
 .proc Copy2Aux
 
         start := start_da
-        end   := last
+        end   := end_da
 
         tsx
         stx     stash_stack
@@ -184,19 +184,21 @@ start_da:
 ;;; ============================================================
 ;;; Param blocks
 
-        kDialogWidth = 259
+        kDialogWidth = 287
         kDialogHeight = 64
 
         ;; The following rects are iterated over to identify
         ;; a hit target for a click.
 
-        kNumHitRects = 9
+        kNumHitRects = 10
         kUpRectIndex = 3
         kDownRectIndex = 4
 
-        kCancelButtonLeft = 16
-        kOKButtonLeft = kDialogWidth - kButtonWidth - 16
-        kOKCancelButtonTop = 46
+        kControlMarginX = 16
+
+        kCancelButtonLeft = kControlMarginX
+        kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
+        kOKCancelButtonTop = kDialogHeight - kButtonHeight - 7
 
         kFieldTop = 20
         kField1Left = 22
@@ -204,13 +206,15 @@ start_da:
         kField3Left = kField2Left + 48
         kField4Left = kField3Left + 46
         kField5Left = kField4Left + 40
+        kField6Left = kField5Left + 28
         kFieldDigitsWidth = 22
         kFieldMonthWidth = 30
         kFieldHeight = 10
+        kFieldPaddingY = 5
 
-        kUpDownButtonLeft = 233
         kUpDownButtonWidth = 10
         kUpDownButtonHeight = 10
+        kUpDownButtonLeft = kDialogWidth - kUpDownButtonWidth - kControlMarginX
 
         first_hit_rect := *
         DEFINE_RECT_SZ ok_button_rect, kOKButtonLeft, kOKCancelButtonTop, kButtonWidth, kButtonHeight
@@ -222,6 +226,7 @@ start_da:
         DEFINE_RECT_SZ year_rect, kField3Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
         DEFINE_RECT_SZ hour_rect, kField4Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
         DEFINE_RECT_SZ minute_rect, kField5Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
+        DEFINE_RECT_SZ period_rect, kField6Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
         ASSERT_RECORD_TABLE_SIZE first_hit_rect, kNumHitRects, .sizeof(MGTK::Rect)
 
         DEFINE_POINT label_ok_pos, kOKButtonLeft + 5, kOKCancelButtonTop + 10
@@ -233,24 +238,39 @@ start_da:
         DEFINE_POINT year_pos, kField3Left + 6, kFieldTop + 10
         DEFINE_POINT hour_pos, kField4Left + 6, kFieldTop + 10
         DEFINE_POINT minute_pos, kField5Left + 6, kFieldTop + 10
+        DEFINE_POINT period_pos, kField6Left + 6, kFieldTop + 10
 
         DEFINE_POINT date_sep1_pos, kField2Left - 12, kFieldTop + 10
         DEFINE_POINT date_sep2_pos, kField3Left - 12, kFieldTop + 10
         DEFINE_POINT time_sep_pos,  kField5Left -  9, kFieldTop + 10
 
-        DEFINE_RECT_SZ date_rect, 16, 15, 122, 20
-        DEFINE_RECT_SZ time_rect, 150, 15, 74, 20
+        DEFINE_RECT_SZ date_rect, kControlMarginX, kFieldTop-kFieldPaddingY, 122, kFieldHeight+kFieldPaddingY*2
+        DEFINE_RECT_SZ time_rect, 150, kFieldTop-kFieldPaddingY, 102, kFieldHeight+kFieldPaddingY*2
 
-.params settextbg_params
+.params settextbg_black_params
 backcolor:   .byte   0          ; black
+.endparams
+
+.params settextbg_white_params
+backcolor:   .byte   $FF        ; white
 .endparams
 
 .params white_pattern
         .res    8, $FF
 .endparams
 
-selected_field:                 ; 1 = day, 2 = month, 3 = year, 4 = hour, 5 = minute, 0 = none (init)
-        .byte   0
+.enum Field
+        none    = 0
+        day     = 1
+        month   = 2
+        year    = 3
+        hour    = 4
+        minute  = 5
+        period  = 6
+.endenum
+
+selected_field:
+        .byte   Field::none
 
 clock_flag:
         .byte   0
@@ -453,52 +473,68 @@ init_window:
 
         ;; All controls are active
 :       cmp     #CHAR_ESCAPE
-        jeq     on_cancel
+        jeq     OnCancel
         cmp     #CHAR_LEFT
-        beq     on_key_left
+        beq     OnKeyLeft
         cmp     #CHAR_RIGHT
-        beq     on_key_right
+        beq     OnKeyRight
         cmp     #CHAR_DOWN
         beq     OnKeyDown
         cmp     #CHAR_UP
         bne     InputLoop
 
-on_key_up:
+.proc OnKeyUp
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
         lda     #kUpRectIndex
         sta     hit_rect_index
         jsr     DoIncOrDec
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
         jmp     InputLoop
+.endproc
 
-OnKeyDown:
+.proc OnKeyDown
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
         lda     #kDownRectIndex
         sta     hit_rect_index
         jsr     DoIncOrDec
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
         jmp     InputLoop
+.endproc
 
-on_key_left:
+.proc OnKeyLeft
         sec
         lda     selected_field
         sbc     #1
-        bne     update_selection
-        lda     #5
-        jmp     update_selection
+        bne     UpdateSelection
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+    IF_NC
+        lda     #Field::period
+    ELSE
+        lda     #Field::period-1
+    END_IF
+        jmp     UpdateSelection
+.endproc
 
-on_key_right:
+.proc OnKeyRight
         clc
         lda     selected_field
         adc     #1
-        cmp     #6
-        bne     update_selection
-        lda     #1
-        FALL_THROUGH_TO update_selection
 
-update_selection:
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+    IF_NC
+        cmp     #Field::period+1
+    ELSE
+        cmp     #Field::period
+    END_IF
+        bne     UpdateSelection
+        lda     #Field::day
+        FALL_THROUGH_TO UpdateSelection
+.endproc
+
+.proc UpdateSelection
         jsr     HighlightSelectedField
         jmp     InputLoop
+.endproc
 .endproc
 
 .proc YieldLoop
@@ -546,8 +582,9 @@ hit:    cmp     #MGTK::Area::content
 jump:   jmp     SELF_MODIFIED
 
 hit_target_jump_table:
-        .addr   OnOk, on_cancel, on_up, on_down
-        .addr   on_field_click, on_field_click, on_field_click, on_field_click, on_field_click
+        .addr   OnOk, OnCancel, OnUp, OnDown
+        .addr   OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick
+        ASSERT_ADDRESS_TABLE_SIZE hit_target_jump_table, ::kNumHitRects
 .endproc
 
 ;;; ============================================================
@@ -582,13 +619,14 @@ hit_target_jump_table:
         jmp     Destroy
 .endproc
 
-on_cancel:
+.proc OnCancel
         MGTK_CALL MGTK::PaintRect, cancel_button_rect
         lda     #0
         sta     dialog_result
         jmp     Destroy
+.endproc
 
-on_up:
+.proc OnUp
         txa
         pha
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
@@ -596,8 +634,9 @@ on_up:
         tax
         jsr     OnUpOrDown
         rts
+.endproc
 
-on_down:
+.proc OnDown
         txa
         pha
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
@@ -605,12 +644,14 @@ on_down:
         tax
         jsr     OnUpOrDown
         rts
+.endproc
 
-on_field_click:
+.proc OnFieldClick
         txa
         sec
         sbc     #4
         jmp     HighlightSelectedField
+.endproc
 
 .proc OnUpOrDown
         stx     hit_rect_index
@@ -637,14 +678,40 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
         jsr     Delay
 
+        ;; Set day max, based on month/year.
+        jsr     SetMonthLength
+
+        ;; Hour requires special handling for 12-hour clock; patch the
+        ;; min/max table depending on clock setting and period.
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+    IF_NC
+        lda     hour
+        cmp     #12
+      IF_LT
+        copy    #kHourMin, min_table + Field::hour - 1
+        copy    #11, max_table + Field::hour - 1
+      ELSE
+        copy    #12, min_table + Field::hour - 1
+        copy    #kHourMax, max_table + Field::hour - 1
+      END_IF
+    ELSE
+        copy    #kHourMin, min_table + Field::hour - 1
+        copy    #kHourMax, max_table + Field::hour - 1
+    END_IF
+
         lda     selected_field
+
+        ;; Period also needs special handling
+        cmp     #Field::period
+        beq     TogglePeriod
+
         tax                     ; X = byte table offset
         asl     a
         tay                     ; Y = address table offset
-        copy    min_table,x, min
-        copy    max_table,x, max
-        copy16  prepare_proc_table,y, prepare_proc
-        copy16  field_table,y, ptr
+        copy    min_table-1,x, min
+        copy    max_table-1,x, max
+        copy16  prepare_proc_table-2,y, prepare_proc
+        copy16  field_table-2,y, ptr
 
         ldy     #0              ; Y = 0
         lda     (ptr),y
@@ -675,8 +742,20 @@ finish:
         sta     (ptr),y
         prepare_proc := *+1
         jsr     SELF_MODIFIED   ; update string
-        MGTK_CALL MGTK::SetTextBG, settextbg_params
-        jmp     DrawSelectedField
+        MGTK_CALL MGTK::SetTextBG, settextbg_black_params
+        jsr     DrawSelectedField
+
+        ;; If month changed, make sure day is in range and update if not.
+        jsr     SetMonthLength
+        lda     max_table+Field::day-1
+        cmp     day
+        bcs     :+
+        sta     day
+        MGTK_CALL MGTK::SetTextBG, settextbg_white_params
+        jsr     PrepareDayString
+        jsr     DrawDay
+:
+        rts
 
 min:    .byte   0
 max:    .byte   0
@@ -687,7 +766,23 @@ hit_rect_index:
 
 ;;; ============================================================
 
-        kNumFields = 5
+.proc TogglePeriod
+        ;; Flip to other period
+        lda     hour
+        cmp     #12             ; also sets C correctly for adc/sbc
+    IF_LT
+        adc     #12
+    ELSE
+        sbc     #12
+    END_IF
+        sta     hour
+        MGTK_CALL MGTK::SetTextBG, settextbg_black_params
+        jmp     DrawPeriod
+.endproc
+
+;;; ============================================================
+
+        kNumFields = 6
 
         kDayMin = 1
         kDayMax = 31
@@ -700,21 +795,27 @@ hit_rect_index:
         kMinuteMin = 0
         kMinuteMax = 59
 
+;;; The following tables don't include period (which gets special handling)
+
 field_table:
-        .addr   0, day, month, year, hour, minute
-        ASSERT_ADDRESS_TABLE_SIZE field_table, kNumFields+1
+        .addr   day, month, year, hour, minute
+        ASSERT_ADDRESS_TABLE_SIZE field_table, kNumFields-1
 
 min_table:
-        .byte   0, kDayMin, kMonthMin, kYearMin, kHourMin, kMinuteMin
-        ASSERT_TABLE_SIZE min_table, kNumFields+1
+        .byte   kDayMin, kMonthMin, kYearMin, kHourMin, kMinuteMin
+        ASSERT_TABLE_SIZE min_table, kNumFields-1
 
 max_table:
-        .byte   0, kDayMax, kMonthMax, kYearMax, kHourMax, kMinuteMax
-        ASSERT_TABLE_SIZE max_table, kNumFields+1
+        .byte   kDayMax, kMonthMax, kYearMax, kHourMax, kMinuteMax
+        ASSERT_TABLE_SIZE max_table, kNumFields-1
 
 prepare_proc_table:
-        .addr   0, PrepareDayString, PrepareMonthString, PrepareYearString, PrepareHourString, PrepareMinuteString
-        ASSERT_ADDRESS_TABLE_SIZE prepare_proc_table, kNumFields+1
+        .addr   PrepareDayString, PrepareMonthString, PrepareYearString, PrepareHourString, PrepareMinuteString
+        ASSERT_ADDRESS_TABLE_SIZE prepare_proc_table, kNumFields-1
+
+month_length_table:
+        .byte   31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+        ASSERT_TABLE_SIZE month_length_table, 12
 
 ;;; ============================================================
 
@@ -765,6 +866,9 @@ month_name_table:
         .byte   .sprintf("%3s", res_string_month_abbrev_12)
         ASSERT_RECORD_TABLE_SIZE month_name_table, 12, 3
 
+str_am: PASCAL_STRING "AM"
+str_pm: PASCAL_STRING "PM"
+
 .proc PrepareYearString
         lda     year
         jsr     NumberToASCII
@@ -775,7 +879,25 @@ month_name_table:
 
 .proc PrepareHourString
         lda     hour
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+    IF_NC
+        cmp     #0
+        bne     :+
+        lda     #12
+:       cmp     #13
+        bcc     :+
+        sbc     #12
+:
+    END_IF
+
         jsr     NumberToASCII
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+    IF_NC
+        cmp     #'0'
+        bne     :+
+        lda     #' '
+:
+    END_IF
         sta     hour_string+1
         stx     hour_string+2
         rts
@@ -922,6 +1044,7 @@ label_downarrow:
         jsr     DrawYear
         jsr     DrawHour
         jsr     DrawMinute
+        jsr     DrawPeriod
 
         ;; If there is a system clock, don't draw the highlight.
         ldx     clock_flag
@@ -936,47 +1059,60 @@ label_downarrow:
 
 .proc DrawSelectedField
         lda     selected_field
-        cmp     #1
+        cmp     #Field::day
         beq     DrawDay
-        cmp     #2
+        cmp     #Field::month
         beq     DrawMonth
-        cmp     #3
+        cmp     #Field::year
         beq     DrawYear
-        cmp     #4
+        cmp     #Field::hour
         beq     DrawHour
-        bne     DrawMinute      ; always
+        cmp     #Field::minute
+        beq     DrawMinute
+        bne     DrawPeriod      ; always
 .endproc
 
 .proc DrawDay
         MGTK_CALL MGTK::MoveTo, day_pos
-        param_call DrawString, day_string
-        rts
+        param_jump DrawString, day_string
 .endproc
 
 .proc DrawMonth
         MGTK_CALL MGTK::MoveTo, month_pos
         param_call DrawString, spaces_string ; variable width, so clear first
         MGTK_CALL MGTK::MoveTo, month_pos
-        param_call DrawString, month_string
-        rts
+        param_jump DrawString, month_string
 .endproc
 
 .proc DrawYear
         MGTK_CALL MGTK::MoveTo, year_pos
-        param_call DrawString, year_string
-        rts
+        param_jump DrawString, year_string
 .endproc
 
 .proc DrawHour
         MGTK_CALL MGTK::MoveTo, hour_pos
-        param_call DrawString, hour_string
-        rts
+        param_jump DrawString, hour_string
 .endproc
 
 .proc DrawMinute
         MGTK_CALL MGTK::MoveTo, minute_pos
-        param_call DrawString, minute_string
+        param_jump DrawString, minute_string
+.endproc
+
+.proc DrawPeriod
+        ;; Skip if 24-hour
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bpl     :+
         rts
+:
+        MGTK_CALL MGTK::MoveTo, period_pos
+        lda     hour
+        cmp     #12
+    IF_LT
+        param_jump DrawString, str_am
+    ELSE
+        param_jump DrawString, str_pm
+    END_IF
 .endproc
 
 ;;; ============================================================
@@ -986,41 +1122,24 @@ label_downarrow:
 .proc HighlightSelectedField
         pha
         lda     selected_field  ; initial state is 0, so nothing
-        beq     update          ; to invert back to normal
+        beq     :+              ; to invert back to normal
 
-        cmp     #1              ; day?
-        bne     :+
-        jsr     fill_day
-        jmp     update
+        jsr     invert          ; invert old
 
-:       cmp     #2              ; month?
-        bne     :+
-        jsr     fill_month
-        jmp     update
-
-:       cmp     #3              ; year?
-        bne     :+
-        jsr     fill_year
-        jmp     update
-
-:       cmp     #4              ; hour?
-        bne     :+
-        jsr     fill_hour
-        jmp     update
-
-:       jsr     fill_minute     ; minute!
-
-update: pla                     ; update selection
+:       pla                     ; update to new
         sta     selected_field
-        cmp     #1
+
+invert: cmp     #Field::day
         beq     fill_day
-        cmp     #2
+        cmp     #Field::month
         beq     fill_month
-        cmp     #3
+        cmp     #Field::year
         beq     fill_year
-        cmp     #4
+        cmp     #Field::hour
         beq     fill_hour
-        bne     fill_minute     ; always
+        cmp     #Field::minute
+        beq     fill_minute
+        bne     fill_period     ; always
 
 fill_day:
         MGTK_CALL MGTK::PaintRect, day_rect
@@ -1040,6 +1159,10 @@ fill_hour:
 
 fill_minute:
         MGTK_CALL MGTK::PaintRect, minute_rect
+        rts
+
+fill_period:
+        MGTK_CALL MGTK::PaintRect, period_rect
         rts
 
 .endproc
@@ -1081,9 +1204,33 @@ loop:   cmp     #10
 .endproc
 
 ;;; ============================================================
+;;; Update the `max_table` for the max day given the month/year.
+
+.proc SetMonthLength
+        ;; Month lengths
+        ldx     month
+        ldy     month_length_table-1,x
+        cpx     #2              ; February?
+    IF_EQ
+        lda     year            ; Handle leap years; interpreted as either
+        and     #3              ; (1900+Y) or (Y<40 ? 2000+Y : 1900+Y) - which is
+        bne     :+              ; correct for 1901 through 2199, so good enough.
+        iny                     ;
+:
+    END_IF
+        sty     max_table + Field::day - 1
+        rts
+.endproc
+
+;;; ============================================================
 
         .include "../lib/drawstring.s"
 
 ;;; ============================================================
 
-last := *
+end_da  := *
+.assert * < WINDOW_ENTRY_TABLES, error, .sprintf("DA too big (at $%X)", *)
+        ;; I/O Buffer starts at MAIN $1C00
+        ;; ... but entry tables start at AUX $1B00
+
+;;; ============================================================
