@@ -89,7 +89,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * **Control Panels**
   * **Control Panel**
-    * Allows editing the double-click speed ([#2](https://github.com/a2stuff/a2d/issues/2)), desktop pattern ([#31](https://github.com/a2stuff/a2d/issues/31)), insertion point blink speed, and mouse tracking speed ([#273](https://github.com/a2stuff/a2d/issues/273)).
+    * Allows editing the double-click speed ([#2](https://github.com/a2stuff/a2d/issues/2)), desktop pattern ([#31](https://github.com/a2stuff/a2d/issues/31)), insertion point blink speed, and mouse tracking speed. ([#273](https://github.com/a2stuff/a2d/issues/273)).
   * **Joystick**
     * A joystick/paddle calibration tool. ([#72](https://github.com/a2stuff/a2d/issues/72))
   * **System Speed**
@@ -209,7 +209,7 @@ from the **Apple** menu.
   * Date and Time:
     * Expanded to include both date and time. ([#11](https://github.com/a2stuff/a2d/issues/11))
     * Read-only on systems with a clock. On systems without a clock, date is saved for next session. ([#30](https://github.com/a2stuff/a2d/issues/30), [#39](https://github.com/a2stuff/a2d/issues/39))
-    * Shows 12/24hr setting ([#220](https://github.com/a2stuff/a2d/issues/220))
+    * Shows 12/24hr setting. ([#220](https://github.com/a2stuff/a2d/issues/220))
   * Calculator: Doesn't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
   * Sort Directory: Don't need to click before sorting. ([#17](https://github.com/a2stuff/a2d/issues/17))
   * Prevent files in list from disappearing in certain cases. ([#487](https://github.com/a2stuff/a2d/issues/487))
