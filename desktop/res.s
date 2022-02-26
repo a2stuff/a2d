@@ -1208,6 +1208,7 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
 
         DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_AUX, $D0E7, 0, IconType::music ; Electric Duet
+        DEFINE_ICTRECORD $FF, $E0,          ICT_FLAGS_AUX, $8002, 0, IconType::archive ; ShrinkIt
 
         ;; IIgs-Specific Files (ranges)
         DEFINE_ICTRECORD $F0, $50,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs General  $5x
@@ -1343,6 +1344,7 @@ icontype_iconentryflags_table:
         .byte   0                    ; appleworks db
         .byte   0                    ; appleworks wp
         .byte   0                    ; appleworks sp
+        .byte   0                    ; archive
         .byte   0                    ; desk accessory
         .byte   0                    ; basic
         .byte   0                    ; system
@@ -1363,6 +1365,7 @@ type_icons_table:               ; map into definitions below
         .addr   adb ; appleworks db
         .addr   awp ; appleworks wp
         .addr   asp ; appleworks sp
+        .addr   arc ; archive
         .addr   a2d ; desk accessory
         .addr   bas ; basic
         .addr   sys ; system
@@ -1383,6 +1386,7 @@ mus:    DEFICON aux::music_icon, 4, 27, 15, generic_mask
 adb:    DEFICON aux::adb_icon, 4, 27, 15, generic_mask
 awp:    DEFICON aux::awp_icon, 4, 27, 15, generic_mask
 asp:    DEFICON aux::asp_icon, 4, 27, 15, generic_mask
+arc:    DEFICON aux::archive_icon, 4, 25, 14, aux::archive_mask
 a2d:    DEFICON aux::a2d_file_icon, 4, 27, 15, generic_mask
 fnt:    DEFICON aux::font_icon, 4, 27, 15, generic_mask
 app:    DEFICON app_icon, 5, 34, 16, app_mask
