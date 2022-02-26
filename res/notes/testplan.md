@@ -373,9 +373,9 @@
 * Launch DeskTop. Open a volume window. Select two files. File > Duplicate.... Leave the filename unchanged and click OK. Verify that an alert is shown, but the dialog is not dismissed. Change the name and click OK. Verify that a prompt is shown for the second file.
 * Launch DeskTop. Open a volume window. Select two files. File > Duplicate.... Change the filename to the name of another file in the directory and click OK. Verify that an alert is shown, but the dialog is not dismissed. Change the name and click OK. Verify that a prompt is shown for the second file.
 
-* Perform the following tests in DeskTop using MouseKeys mode:
+* Perform the following tests in DeskTop using Mouse Keys mode:
   * Use the arrow keys to move the mouse to the top, bottom, left, and right edges of the screen. Verify that the mouse is clamped to the edges and does not wrap.
-  * Select an icon. Press the Return key. Verify that MouseKeys mode is not silently exited, and the cursor is not distorted.
+  * Select an icon. Press the Return key. Verify that Mouse Keys mode is not silently exited, and the cursor is not distorted.
   * Use keys to click on a menu. Without holding the button down, move over the menu items. Verify that the menu does not spontaneously close.
   * Use keys to double-click on an icon. Verify it opens.
 

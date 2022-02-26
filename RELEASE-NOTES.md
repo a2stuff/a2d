@@ -15,10 +15,10 @@ Project Page: https://github.com/a2stuff/a2d
   * Spanish
   * Portuguese
   * German
-* MouseKeys mode simplified: ([#185](https://github.com/a2stuff/a2d/issues/185))
-  * OA+SA+Space to enter MouseKeys mode. A sound will play.
+* Mouse Keys mode simplified: ([#185](https://github.com/a2stuff/a2d/issues/185))
+  * OA+SA+Space to enter Mouse Keys mode. A sound will play.
   * SA acts as mouse button.
-  * Escape to exit MouseKeys mode. A sound will play.
+  * Escape to exit Mouse Keys mode. A sound will play.
 
 ### DeskTop Enhancements
 
