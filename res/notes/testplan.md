@@ -553,7 +553,7 @@
 
 This covers:
 
-* Selector: File > Run a File...
+* Selector: File > Run a Program...
 * DeskTop: File > Copy a File...
 * DeskTop: File > Delete a File...
 * DeskTop: Shortcuts > Add a Shortcut...
@@ -599,7 +599,7 @@ Test the following in all of the above, except where called out specifically:
 Repeat for each file picker:
 * In each pathname field, type in an invalid path name. Click OK (multiple times if needed to commit the dialog). Verify that an alert is shown.
 * In each pathname field, type in a volume path (e.g. "/VOL"). Click OK (multiple times if needed to commit dialog).
-  * Selector: File > Run a File... - nothing should happen, and the dialog should remain open.
+  * Selector: File > Run a Program... - nothing should happen, and the dialog should remain open.
   * DeskTop: File > Copy a File... - an alert should show.
   * DeskTop: File > Delete a File... - an alert should show.
   * DeskTop: Shortcuts > Add a Shortcut... - the dialog should close.
