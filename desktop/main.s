@@ -6637,11 +6637,14 @@ slash:  cpy     #1
 .proc FindWindows
         ptr := $6
 
-exact:  ldy     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-prefix: ldy     #0
-        stax    ptr
-        sty     exact_match_flag
+exact:  stax    ptr
+        lda     #$80
+        bne     start           ; always
+
+prefix: stax    ptr
+        lda     #0
+
+start:  sta     exact_match_flag
         bit     exact_match_flag
         bpl     :+
         ldy     #0              ; Use full length
