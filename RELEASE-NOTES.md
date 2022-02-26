@@ -57,6 +57,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Show appropriate error when trying to replace an item with itself or an item it contains. ([#634](https://github.com/a2stuff/a2d/issues/634), [#635](https://github.com/a2stuff/a2d/issues/635), [#636](https://github.com/a2stuff/a2d/issues/636))
 
 * Show appropriate error when a non-ProDOS-8 storage type (e.g. GS/OS forked file) is encountered. ([#631](https://github.com/a2stuff/a2d/issues/631))
+* Support opening archives using AUTO UnShrinkIt by Andrew E. Nicholas.
 * Keyboard-related changes:
   * Holding **Solid-Apple** while double-clicking, or holding **Apple** while using **File > Open**, or **Open-Apple+Solid-Apple+O**, or **Open-Apple+Solid-Apple+Down** opens the selected items then closes parent window. ([#9](https://github.com/a2stuff/a2d/issues/9), [#625](https://github.com/a2stuff/a2d/issues/625), ([#660](https://github.com/a2stuff/a2d/issues/660))
   * Holding **Apple** while clicking a window's close box, or pressing **Open-Apple+Solid-Apple+W**  closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266), [#626](https://github.com/a2stuff/a2d/issues/626))

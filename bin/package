@@ -151,6 +151,7 @@ disposition="optional"
 # Add Selector
 create_folder $disposition "Optional"
 add_file $disposition "selector/out/selector.built" "Optional" "Selector" F10000
+add_file $disposition "res/package/UNSHRINK" "Optional" "UnShrink" FF0000
 
 # Add Desk Accessories
 for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do

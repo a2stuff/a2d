@@ -42,6 +42,7 @@ add_file "desktop/out/desktop.built" "DESKTOP2" F10000
 
 mkdir -p $tempdir/OPTIONAL
 add_file "selector/out/selector.built" "OPTIONAL/SELECTOR" F10000
+add_file "res/package/UNSHRINK" "OPTIONAL/UNSHRINK" FF0000
 
 for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do
     uc=$(echo "$path" | tr /a-z/ /A-Z/)
