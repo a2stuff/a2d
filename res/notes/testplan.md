@@ -469,7 +469,7 @@
 
 * Run DeskTop on a system without a system clock. Run Apple > Control Panels > Date and Time. Set date. Reboot system, and re-run DeskTop. Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
 
-* On a system with a system clock, invoke Apple > Control Panels > Date and Time. Verify that the date is read-only.
+* On a system with a system clock, invoke Apple > Control Panels > Date and Time. Verify that the date and time are read-only.
 
 * Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 12 hour. Verify that the time is shown as 12-hour, and if less than 10 is displayed without a leading 0.
 * Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 24 hour. Verify that the time is shown as 24-hour, and if less than 10 is displayed with a leading 0.

@@ -89,7 +89,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * **Control Panels**
   * **Control Panel**
-    * Allows editing the double-click speed ([#2](https://github.com/a2stuff/a2d/issues/2)), desktop pattern ([#31](https://github.com/a2stuff/a2d/issues/31)), insertion point blink speed, and mouse tracking speed. ([#273](https://github.com/a2stuff/a2d/issues/273)).
+    * Allows editing the double-click speed ([#2](https://github.com/a2stuff/a2d/issues/2)), desktop pattern ([#31](https://github.com/a2stuff/a2d/issues/31)), insertion point blink speed, and mouse tracking speed ([#273](https://github.com/a2stuff/a2d/issues/273)).
   * **Joystick**
     * A joystick/paddle calibration tool. ([#72](https://github.com/a2stuff/a2d/issues/72))
   * **System Speed**
