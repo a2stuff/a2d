@@ -64,12 +64,28 @@ da_start:
         jsr     Init
 
         ;; tear down/exit
+        lda     dialog_result
         sta     RAMRDOFF        ; Back to Main
         sta     RAMWRTOFF
 
-        jmp     SaveSettings
+        ;; Save settings if dirty
+        jmi     SaveSettings
+        rts
 
 .endscope
+
+;;; ============================================================
+
+;;; High bit set when anything changes.
+dialog_result:
+        .byte   0
+
+.proc MarkDirty
+        lda     #$80
+        ora     dialog_result
+        sta     dialog_result
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -952,6 +968,7 @@ next:   dex
         dex                     ; 0, 2 or 4
 
         copy16  dblclick_speed_table,x, SETTINGS + DeskTopSettings::dblclick_speed
+        jsr     MarkDirty
 
         MGTK_CALL MGTK::GetWinPort, winport_params
         MGTK_CALL MGTK::SetPort, grafport
@@ -968,6 +985,8 @@ next:   dex
         ;; Update Settings
 
         sta     SETTINGS + DeskTopSettings::mouse_tracking
+        jsr     MarkDirty
+
         ;; --------------------------------------------------
         ;; Update MGTK
 
@@ -1029,6 +1048,7 @@ next:   dex
 .proc HandlePatternClick
         MGTK_CALL MGTK::SetDeskPat, pattern
         COPY_STRUCT MGTK::Pattern, pattern, SETTINGS + DeskTopSettings::pattern
+        jsr     MarkDirty
 
         MGTK_CALL MGTK::RedrawDeskTop
 
@@ -1706,6 +1726,7 @@ next:   dex
         dex                     ; 0, 2 or 4
 
         copy16  ipblink_speed_table,x, SETTINGS + DeskTopSettings::ip_blink_speed
+        jsr     MarkDirty
         jsr     ResetIPBlinkCounter
 
         MGTK_CALL MGTK::GetWinPort, winport_params
@@ -1763,6 +1784,7 @@ done:   rts
         lda     SETTINGS + DeskTopSettings::rgb_color
         eor     #$80
         sta     SETTINGS + DeskTopSettings::rgb_color
+        jsr     MarkDirty
 
         MGTK_CALL MGTK::HideCursor
         jsr     DrawRGBCheckbox

@@ -518,6 +518,11 @@
 * Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop. From within DeskTop, launch another app e.g. Basic.system. Eject the DeskTop volume. Exit the app back to DeskTop. Verify that the remaining volumes appear in default order.
 * Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop.
 
+* Open the Control Panel DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
+* Open the Control Panel DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
+* Open the Startup Options DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
+* Open the Startup Options DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
+
 # Selector
 
 * Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.

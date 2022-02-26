@@ -39,12 +39,28 @@ da_start:
         jsr     Init
 
         ;; tear down/exit
+        lda     dialog_result
         sta     RAMRDOFF        ; Back to Main
         sta     RAMWRTOFF
 
-        jmp     SaveSettings
+        ;; Save settings if dirty
+        jmi     SaveSettings
+        rts
 
 .endscope
+
+;;; ============================================================
+
+;;; High bit set when anything changes.
+dialog_result:
+        .byte   0
+
+.proc MarkDirty
+        lda     #$80
+        ora     dialog_result
+        sta     dialog_result
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -469,6 +485,7 @@ finish: MGTK_CALL MGTK::ShowCursor
         jsr     GetBit
         jsr     DrawCheckbox
 
+        jsr     MarkDirty
         jmp     InputLoop
 .endproc
 
@@ -485,6 +502,7 @@ finish: MGTK_CALL MGTK::ShowCursor
         jsr     GetBit
         jsr     DrawCheckbox
 
+        jsr     MarkDirty
         jmp     InputLoop
 .endproc
 
