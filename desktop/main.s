@@ -56,8 +56,6 @@ JT_GET_ORIG_PREFIX:     jmp     CopyDeskTopOriginalPrefix ; *
 
         ;; Main Loop
 .proc MainLoop
-        jsr     ResetMainGrafport
-
         ;; Close any windows that are not longer valid, if necessary
         jsr     ValidateWindows
 
