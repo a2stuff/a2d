@@ -20,6 +20,7 @@
         jsr     file_dialog::RedrawInput
 
         copy    #$FF, blink_ip_flag
+        copy    #0, input_allow_all_chars_flag
         jmp     file_dialog::EventLoop
 .endproc
 

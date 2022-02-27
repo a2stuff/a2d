@@ -70,6 +70,7 @@ finish: jsr     file_dialog::ReadDir
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
         copy    #$FF, blink_ip_flag
+        copy    #0, input_allow_all_chars_flag
         jsr     file_dialog::InitDeviceNumber
         jmp     file_dialog::EventLoop
 
@@ -262,6 +263,7 @@ found_slash:
         sty     path_buf1
 finish: copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #$80, input_allow_all_chars_flag
         jsr     file_dialog::RedrawInput
         rts
 .endproc
@@ -361,6 +363,7 @@ found:  cpy     #2
 
         copy    #1, path_buf2
         copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #0, input_allow_all_chars_flag
         jsr     file_dialog::RedrawInput
         lda     #$00
         sta     file_dialog::listbox_disabled_flag

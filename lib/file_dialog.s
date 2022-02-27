@@ -927,8 +927,10 @@ not_ctrl_o:
         cmp     #CHAR_UP
         jeq     KeyUp
 
-finish: jsr     HandleOtherKey
-        rts
+finish: cmp     #' '
+        bcc     ret
+        jsr     HandleOtherKey
+ret:    rts
 
 exit:   jsr     InitSetGrafport
         rts
@@ -2711,16 +2713,43 @@ HandleF2Click__ep2 := HandleF2Click::ep2
 
 ;;; ============================================================
 
+.proc IsPathChar
+        jsr     UpcaseChar
+        cmp     #'A'
+        bcc     :+
+        cmp     #'Z'+1
+        bcc     yes
+:       cmp     #'0'
+        bcc     :+
+        cmp     #'9'+1
+        bcc     yes
+:       cmp     #'.'
+        beq     yes
+        cmp     #'/'
+        beq     yes
+
+        sec
+        rts
+
+yes:    clc
+        rts
+.endproc
+
 ;;; ============================================================
 
 .proc HandleF1OtherKey
         sta     tmp
+        bit     input_allow_all_chars_flag
+        bmi     :+
+        jsr     IsPathChar
+        bcs     ret
+:
         lda     buf_input1_left
         clc
         adc     buf_input_right
         cmp     #kMaxInputLength
         bcc     continue
-        rts
+ret:    rts
 
 continue:
         lda     tmp
@@ -2880,15 +2909,20 @@ skip:   sty     buf_input1_left
 
 .if FD_EXTENDED
 .proc HandleF2OtherKey
-        sta     l1
+        sta     tmp
+        bit     input_allow_all_chars_flag
+        bmi     :+
+        jsr     IsPathChar
+        bcs     ret
+:
         lda     buf_input2_left
         clc
         adc     buf_input_right
         cmp     #kMaxInputLength
         bcc     :+
-        rts
+ret:    rts
 
-:       lda     l1
+:       lda     tmp
         ldx     buf_input2_left
         inx
         sta     buf_input2_left,x
@@ -2905,7 +2939,7 @@ skip:   sty     buf_input1_left
         jsr     SelectMatchingFileInListF2
         rts
 
-l1:     .byte   0
+tmp:    .byte   0
 .endproc
 .endif
 

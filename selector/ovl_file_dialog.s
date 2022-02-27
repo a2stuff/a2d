@@ -37,6 +37,9 @@ main_grafport:
 double_click_counter_init:
         .byte   $FF
 
+input_allow_all_chars_flag:
+        .byte   0
+
 pointer_cursor:
         .byte   PX(%0000000),PX(%0000000)
         .byte   PX(%0100000),PX(%0000000)

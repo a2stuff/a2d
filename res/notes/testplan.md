@@ -609,3 +609,8 @@ Repeat for each file picker:
   * DeskTop: File > Delete a File... - an alert should show.
   * DeskTop: Shortcuts > Add a Shortcut... - the dialog should close.
   * DeskTop: Shortcuts > Edit a Shortcut... - the dialog should close.
+
+Repeat for each file picker:
+* In each field, type a control character that is not an alias for an arrow/Tab/Return/Escape, e.g. Control+D. Verify that it is ignored.
+* In each pathname field, type a non-path character (i.e. anything other A-Za-z0-9/.). Verify that it is ignored.
+* In the Shortcuts > Add/Edit a Shortcut... name field, type a non-path, non-control character. Verify that it is accepted.
