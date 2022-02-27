@@ -53,8 +53,9 @@ suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_HDV $VOLNAME_COMPLETE 800KB --qui
 suppress cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet --no-case-bits
 suppress cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-case-bits
 
-# Add a file to the appropriate images.
-# Usage: add_file PARTN SRCFILE FOLDER DSTFILE TYPESUFFIX
+# ============================================================
+# Implementations for manifest operations
+
 add_file () {
     # Add the files into the disk images.
     # Usage: add_file_internal IMGFILE SRCFILE DSTFOLDER DSTFILE TYPESUFFIX
@@ -67,6 +68,11 @@ add_file () {
 
         local tmp_file="$tempdir/$dst_file#$suffix"
         cp "$src_file" "$tmp_file"
+
+        if [ "$suffix" = "040000" ]; then
+            perl -p -i -e 's/\r?\n/\r/g' "$tmp_file" # Ensure Apple line endings
+        fi
+
         suppress cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits
         rm "$tmp_file"
     }
@@ -86,8 +92,6 @@ add_file () {
     fi
 }
 
-# Create a folder on the appropriate images.
-# Usage: create_folder PARTN PATH
 create_folder() {
     # Create a folder in the volume
     # Usage: create_folder_internal IMGFILE PATH
@@ -109,72 +113,23 @@ create_folder() {
     fi
 }
 
-get_da_loc_name() {
-    local res="res_filename_${1//./_}"
-    local filename="desk.acc/res/filenames.res.${lang}"
-    local match=$(egrep -i "^\.define ${res} " "${filename}" | cut -d' ' -f3)
-    test -n "$match" && echo "$match" # else returns false
-}
-
-get_da_loc_path() {
-    local path="$1"
-    if [[ "$path" == */* ]]; then
-        head=$(expr "$path" : '\(.*\)/')
-        tail=$(expr "$path" : '.*/\(.*\)')
-        tail=$(get_da_loc_name "$tail" || echo "$tail")
-        path="$head/$tail"
-    fi
-    echo $path
+remove_file() {
+    # no-op
+    true
 }
 
 # ============================================================
 # Populate the images with files and directories
 
-# Part 1: The bare minimum for a bootable disk.
-disposition="required"
-
-# Add ProDOS
-add_file $disposition "res/package/PRODOS" "" "ProDOS" FF0000
-
-# Add READ.ME
-perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
-add_file $disposition "res/package/READ.ME" "" "Read.Me" 040000
-perl -p -i -e 's/\r/\n/g' "res/package/READ.ME" # Restore Unix line endings
-
-# Add Launcher and DeskTop
-add_file $disposition "desktop.system/out/desktop.system.SYS" "" "DeskTop.system" FF0000
-add_file $disposition "desktop/out/desktop.built" "" "DeskTop2" F10000
-
-# Part 2: Optional extras.
-disposition="optional"
-
-# Add Selector
-create_folder $disposition "Optional"
-add_file $disposition "selector/out/selector.built" "Optional" "Selector" F10000
-add_file $disposition "res/package/UNSHRINK" "Optional" "UnShrink" FF0000
-
-# Add Desk Accessories
-for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do
-    ploc=$(get_da_loc_path "$path")
-    create_folder $disposition $ploc
-done
-for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
-    IFS=',' read -ra array <<< "$line"
-    file="${array[0]}"
-    loc=$(get_da_loc_name "$file" || echo "$file")
-    path="${array[1]}"
-    ploc=$(get_da_loc_path "$path")
-    add_file $disposition "desk.acc/out/$file.da" "$ploc" "$loc" F10641
-done
-
-# Add BASIC.SYSTEM
-add_file $disposition "res/package/BASIC.SYSTEM" "" "BASIC.system" FF2000
+manifest="$(bin/manifest $@)"
+eval "$manifest"
 
 # ============================================================
 # Verify and clean up
 
 for img in $IMAGES; do
-    ls -l "$img"
+    ls -1 "$img"
+    cadius CATALOG "$img" | tail -1
 done
 
 rmdir "$tempdir"

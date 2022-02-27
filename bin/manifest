@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+
+# Output a manifest of files and metadata for packaging.
+# Consumed by other tools.
+#
+# Example:
+#
+#   manifest="$(bin/manifest $@)"
+#   eval "$manifest"
+#
+# Will output:
+#
+#   add_file disposition src_file folder dst_file suffix
+#     disposition = required | optional
+#     src_file    = e.g. "desk.acc/out/calculator.da"
+#     folder      = e.g. "desk.acc"
+#     dst_file    = e.g. "calculator"
+#     suffix      = e.g. "F10641"
+#
+#   create_folder disposition path
+#     disposition = "required" | "optional"
+#     path        = e.g. "desk.acc"
+#
+#   remove_file path
+#     path        = e.g. "optional/selector"
+
+set -e
+source "bin/util.sh"
+
+# ============================================================
+# Extract metadata for the build
+
+vmajor=$(grep 'kDeskTopVersionMajor =' config.inc | sed -e 's/.* = //')
+vminor=$(grep 'kDeskTopVersionMinor =' config.inc | sed -e 's/.* = //')
+vsuffix=$(grep 'define kDeskTopVersionSuffix' config.inc | cut -d'"' -f2)
+lang=$(grep 'define kBuildLang' config.inc | cut -d'"' -f2)
+version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})
+
+# ============================================================
+# Utility functions
+
+get_da_loc_name() {
+    local res="res_filename_${1//./_}"
+    local filename="desk.acc/res/filenames.res.${lang}"
+    local match=$(egrep -i "^\.define ${res} " "${filename}" | cut -d' ' -f3)
+    test -n "$match" && echo "$match" # else returns false
+}
+
+get_da_loc_path() {
+    local path="$1"
+    if [[ "$path" == */* ]]; then
+        head=$(expr "$path" : '\(.*\)/')
+        tail=$(expr "$path" : '.*/\(.*\)')
+        tail=$(get_da_loc_name "$tail" || echo "$tail")
+        path="$head/$tail"
+    fi
+    echo $path
+}
+
+emit() {
+    command="$1"; shift
+    echo -n "$command "
+    for var in "$@"; do
+        echo -n \"$var\"' '
+    done
+    echo ""
+}
+
+# ============================================================
+# Output instructions for installation onto media
+
+# Part 1: The bare minimum for a bootable disk.
+disposition="required"
+
+# Add ProDOS
+emit add_file $disposition "res/package/PRODOS" "" "ProDOS" FF0000
+
+# Add READ.ME
+emit add_file $disposition "res/package/READ.ME" "" "Read.Me" 040000
+
+# Add Launcher and DeskTop
+emit add_file $disposition "desktop.system/out/desktop.system.SYS" "" "DeskTop.system" FF0000
+emit add_file $disposition "desktop/out/desktop.built" "" "DeskTop2" F10000
+
+# Part 2: Optional extras.
+disposition="optional"
+
+emit create_folder $disposition "optional"
+
+# Add Selector
+if [ "$1" = "selector" ]; then
+    emit remove_file "optional/selector"
+    emit add_file $disposition "selector/out/selector.built" "" "Selector" F10000
+else
+    emit remove_file "selector"
+    emit add_file $disposition "selector/out/selector.built" "optional" "Selector" F10000
+fi
+
+# Add UnShrink
+emit add_file $disposition "res/package/UNSHRINK" "Optional" "UnShrink" FF0000
+
+# Add Desk Accessories
+for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do
+    ploc=$(get_da_loc_path "$path")
+    emit create_folder $disposition $ploc
+done
+for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
+    IFS=',' read -ra array <<< "$line"
+    file="${array[0]}"
+    loc=$(get_da_loc_name "$file" || echo "$file")
+    path="${array[1]}"
+    ploc=$(get_da_loc_path "$path")
+    emit add_file $disposition "desk.acc/out/$file.da" "$ploc" "$loc" F10641
+done
+
+# Add BASIC.SYSTEM
+emit add_file $disposition "res/package/BASIC.SYSTEM" "" "BASIC.system" FF2000
