@@ -1167,7 +1167,7 @@ str_basix_system:
         PASCAL_STRING "BASIx.SYSTEM" ; do not localize
 
 str_unshrink:
-        PASCAL_STRING "Optional/UnShrink"
+        PASCAL_STRING .concat(kFilenameOptionalDir, "/UnShrink") ; do not localize
 
 str_preview_fot:
         PASCAL_STRING .concat(kFilenamePreviewDir, "/show.image.file") ; do not localize
