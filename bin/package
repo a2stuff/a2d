@@ -113,11 +113,6 @@ create_folder() {
     fi
 }
 
-remove_file() {
-    # no-op
-    true
-}
-
 # ============================================================
 # Populate the images with files and directories
 

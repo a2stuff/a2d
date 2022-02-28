@@ -21,4 +21,4 @@ show.text.file                  preview
 show.image.file                 preview
 show.font.file                  preview
 show.duet.file                  preview
-darkness                        optional
+darkness                        extras

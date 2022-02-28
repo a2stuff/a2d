@@ -46,11 +46,6 @@ create_folder() {
     mkdir -p "$MOUNT_DIR/$path"
 }
 
-remove_file() {
-    # no-op
-    true
-}
-
 # ============================================================
 
 cecho yellow "Copying files to $MOUNT_DIR/"

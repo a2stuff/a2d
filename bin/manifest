@@ -20,9 +20,6 @@
 #   create_folder disposition path
 #     disposition = "required" | "optional"
 #     path        = e.g. "desk.acc"
-#
-#   remove_file path
-#     path        = e.g. "optional/selector"
 
 set -e
 source "bin/util.sh"
@@ -85,19 +82,13 @@ emit add_file $disposition "desktop/out/desktop.built" "" "DeskTop2" F10000
 # Part 2: Optional extras.
 disposition="optional"
 
-emit create_folder $disposition "optional"
+emit create_folder $disposition "Extras"
 
 # Add Selector
-if [ "$1" = "selector" ]; then
-    emit remove_file "optional/selector"
-    emit add_file $disposition "selector/out/selector.built" "" "Selector" F10000
-else
-    emit remove_file "selector"
-    emit add_file $disposition "selector/out/selector.built" "optional" "Selector" F10000
-fi
+emit add_file $disposition "selector/out/selector.built" "" "Selector" F10000
 
 # Add UnShrink
-emit add_file $disposition "res/package/UNSHRINK" "Optional" "UnShrink" FF0000
+emit add_file $disposition "res/package/UNSHRINK" "Extras" "UnShrink" FF0000
 
 # Add Desk Accessories
 for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do

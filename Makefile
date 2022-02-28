@@ -4,7 +4,7 @@ export TERM = xterm-256color
 
 targets := desktop desktop.system desk.acc selector
 
-.PHONY: all $(targets) mount install installsel package vercheck
+.PHONY: all $(targets) mount install package shk vercheck
 
 all: vercheck $(targets)
 
@@ -22,10 +22,6 @@ mount:
 # Optional target: run install script. Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
 install:
 	bin/install
-
-# Optional target: run install script. Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
-installsel:
-	bin/install selector
 
 # Optional target: run package script. Requires Cadius.
 package:

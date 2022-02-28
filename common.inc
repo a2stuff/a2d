@@ -15,7 +15,7 @@
 .define kFilenameDeskTopState  "DeskTop.file"
 .define kFilenameDADir         "Desk.Acc"
 .define kFilenamePreviewDir    "Preview"
-.define kFilenameOptionalDir   "Optional"
+.define kFilenameExtrasDir     "Extras"
 .define kFilenameQuitSave      "Quit.tmp"
 .define kFilenameRAMCardDir    "DeskTop"
 

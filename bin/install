@@ -63,12 +63,6 @@ create_folder() {
     suppress cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/$path" --quiet --no-case-bits
 }
 
-remove_file() {
-    local path="$1"
-
-    suppress cadius DELETEFILE "$INSTALL_IMG" "$INSTALL_PATH/$path"
-}
-
 # ============================================================
 # Install
 

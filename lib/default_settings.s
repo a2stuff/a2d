@@ -32,7 +32,7 @@
         .byte   0
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::startup
-        .byte   0
+        .byte   DeskTopSettings::kStartupSkipSelector
 
         ;; Reserved for future use...
 

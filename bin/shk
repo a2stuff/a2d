@@ -46,11 +46,6 @@ create_folder() {
     mkdir -p "$tempdir/$path"
 }
 
-remove_file() {
-    # no-op
-    true
-}
-
 # ============================================================
 # Populate the images with files and directories
 

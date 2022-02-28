@@ -58,7 +58,7 @@ selector_buffer := $1600        ; Room for kSelectorListBufSize
 copy_buffer     := $4000
 kCopyBufferSize = MLI - copy_buffer
 
-SETTINGS        := $1F80
+SETTINGS        := copy_buffer - .sizeof(DeskTopSettings)
 
 ;;; ============================================================
 
@@ -843,7 +843,7 @@ str_f6: PASCAL_STRING kFilenameSelector
 str_f7: PASCAL_STRING kFilenameQuitSave
 str_f8: PASCAL_STRING kFilenameDeskTopConfig
 str_f9: PASCAL_STRING kFilenameDeskTopState
-str_fA: PASCAL_STRING kFilenameOptionalDir
+str_fA: PASCAL_STRING kFilenameExtrasDir
 
 filename_table:
         .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8,str_f9,str_fA
@@ -2121,6 +2121,11 @@ start:  MLI_CALL CLOSE, close_everything_params
 :       MLI_CALL OPEN, open_desktop2_params
         beq     desktop2
 
+        ;; But if DeskTop2 wasn't present, ignore options and try Selector.
+        ;; This supports a Selector-only install without config, e.g. by admins.
+        MLI_CALL OPEN, open_selector_params
+        beq     selector
+
         brk                     ; just crash
 
 desktop2:
@@ -2245,5 +2250,13 @@ supports_mousetext:
         .undefine LIB_MLI_CALL
 
 ;;; ============================================================
+        ;; Reserve $80 bytes for settings
+        PAD_TO SETTINGS
 
-        PAD_TO $4000
+;;; ============================================================
+;;; Settings - modified by Control Panel
+;;; ============================================================
+
+        .include "../lib/default_settings.s"
+
+        PAD_TO copy_buffer

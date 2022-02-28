@@ -59,7 +59,7 @@ Then run: `make install`
 
 This will create the target ProDOS directory if necessary, then copy the built files in, overwriting an existing files.
 
-Optionally, to have Selector installed, run: `make installsel`
+After building and installing, you can use `bin/setopt sel` and `bin/setopt sel` to toggle whether Selector starts or not. This can be controlled within DeskTop using the Startup Options control panel, but being able to toggle this on the command line is useful during development.
 
 ### Option #3: Mount Folder in Virtual ]\[
 
@@ -90,7 +90,7 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
    /HD/
      A2.DESKTOP/          DIR
        DESKTOP.SYSTEM     SYS
-       SELECTOR           $F1   $0000     (Optional)
+       SELECTOR           $F1   $0000
        DESKTOP2           $F1   $0000
        DESK.ACC/          DIR
          CALCULATOR       $F1   $0641
@@ -103,5 +103,8 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
        PREVIEW/           DIR
          SHOW.FONT.FILE   $F1   $0641
          SHOW.IMAGE.FILE  $F1   $0641
+         ...
+       EXTRAS/            DIR
+         UNSHRINK         SYS
          ...
 ```
