@@ -451,12 +451,12 @@ enter_the_name_to_appear_label:
         PASCAL_STRING res_string_selector_label_enter_name
 
         DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 39
-        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},   kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 48
-        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 57
+        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},   kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 49
+        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 58
         DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 73
-        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},      kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 82
-        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},       kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 91
-        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},              kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset,100
+        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},      kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 83
+        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},       kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 92
+        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},              kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset,101
 
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
@@ -541,27 +541,54 @@ file_count:
 
 LD921:  .byte   0
 
-kRadioButtonWidth  = 10
-kRadioButtonHeight  = 6
+
+;;; ============================================================
+;;; Resources for Add/Edit a Shortcut dialog
+
+;;; Padding between radio/checkbox and label
+kLabelPadding = 5
+
+kRadioButtonWidth       = 15
+kRadioButtonHeight      = 7
+
+.params rb_params
+        DEFINE_POINT viewloc, 0, 0
+mapbits:        .addr   SELF_MODIFIED
+mapwidth:       .byte   3
+reserved:       .byte   0
+        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+.endparams
+
+checked_rb_bitmap:
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
+        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
+        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
+        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+
+unchecked_rb_bitmap:
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
+        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
+        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
+        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+
 kRadioButtonLeft  = 332
-kRadioButtonHOffset = 7
+kRadioButtonHOffset = kLabelPadding
+kRadioControlHeight = 8         ; system font height - 1
 
-        DEFINE_RECT_SZ rect_primary_run_list_radiobtn,   kRadioButtonLeft, 41, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_secondary_run_list_radiobtn, kRadioButtonLeft, 50, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_at_first_boot_radiobtn,      kRadioButtonLeft, 75, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_at_first_use_radiobtn,       kRadioButtonLeft, 84, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_never_radiobtn,              kRadioButtonLeft, 93, kRadioButtonWidth, kRadioButtonHeight
-
-kRadioControlWidth = 0          ; dynamically computed based on label
-kRadioControlHeight = 8
-
-        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   kRadioButtonLeft, 40, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, kRadioButtonLeft, 49, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      kRadioButtonLeft, 74, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_use_ctrl,       kRadioButtonLeft, 83, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_never_ctrl,              kRadioButtonLeft, 92, kRadioControlWidth, kRadioControlHeight
-
-        DEFINE_RECT rect_scratch, 0, 0, 0, 0
+        ;; Widths are dynamically computed based on label
+        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   kRadioButtonLeft, 41, 0, kRadioControlHeight
+        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, kRadioButtonLeft, 50, 0, kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      kRadioButtonLeft, 75, 0, kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_use_ctrl,       kRadioButtonLeft, 84, 0, kRadioControlHeight
+        DEFINE_RECT_SZ rect_never_ctrl,              kRadioButtonLeft, 93, 0, kRadioControlHeight
 
 ;;; ============================================================
 

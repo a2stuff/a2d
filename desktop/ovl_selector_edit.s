@@ -98,9 +98,11 @@ buffer: .res 16, 0
         lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         lda     which_run_list
-        jsr     ToggleRunListButton
+        sec
+        jsr     DrawRunListButton
         lda     copy_when
-        jsr     ToggleCopyWhenButton
+        sec
+        jsr     DrawCopyWhenButton
         copy    #$80, file_dialog::extra_controls_flag
         copy16  #HandleClick, file_dialog::click_handler_hook+1
         copy16  #HandleKey, file_dialog::HandleKey::key_meta_digit+1
@@ -160,12 +162,22 @@ common: MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
         addax   rect_never_ctrl::x1, rect_never_ctrl::x2
         add16_8 rect_never_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
 
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_primary_run_list_radiobtn
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_secondary_run_list_radiobtn
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_at_first_boot_radiobtn
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_at_first_use_radiobtn
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_never_radiobtn
+        lda     #1
+        clc
+        jsr     DrawRunListButton
+        lda     #2
+        clc
+        jsr     DrawRunListButton
+        lda     #1
+        clc
+        jsr     DrawCopyWhenButton
+        lda     #2
+        clc
+        jsr     DrawCopyWhenButton
+        lda     #3
+        clc
+        jsr     DrawCopyWhenButton
+
         MGTK_RELAY_CALL MGTK::InitPort, main_grafport
         MGTK_RELAY_CALL MGTK::SetPort, main_grafport
         rts
@@ -410,10 +422,12 @@ copy_when:
         lda     which_run_list
         cmp     #1
         beq     :+
-        jsr     ToggleRunListButton
+        clc
+        jsr     DrawRunListButton
         lda     #1
         sta     which_run_list
-        jsr     ToggleRunListButton
+        sec
+        jsr     DrawRunListButton
 :       return  #$FF
 .endproc
 
@@ -421,10 +435,12 @@ copy_when:
         lda     which_run_list
         cmp     #2
         beq     :+
-        jsr     ToggleRunListButton
+        clc
+        jsr     DrawRunListButton
         lda     #2
         sta     which_run_list
-        jsr     ToggleRunListButton
+        sec
+        jsr     DrawRunListButton
 :       return  #$FF
 .endproc
 
@@ -432,10 +448,12 @@ copy_when:
         lda     copy_when
         cmp     #1
         beq     :+
-        jsr     ToggleCopyWhenButton
+        clc
+        jsr     DrawCopyWhenButton
         lda     #1
         sta     copy_when
-        jsr     ToggleCopyWhenButton
+        sec
+        jsr     DrawCopyWhenButton
 :       return  #$FF
 .endproc
 
@@ -443,10 +461,12 @@ copy_when:
         lda     copy_when
         cmp     #2
         beq     :+
-        jsr     ToggleCopyWhenButton
+        clc
+        jsr     DrawCopyWhenButton
         lda     #2
         sta     copy_when
-        jsr     ToggleCopyWhenButton
+        sec
+        jsr     DrawCopyWhenButton
 :       return  #$FF
 .endproc
 
@@ -454,85 +474,70 @@ copy_when:
         lda     copy_when
         cmp     #3
         beq     :+
-        jsr     ToggleCopyWhenButton
+        clc
+        jsr     DrawCopyWhenButton
         lda     #3
         sta     copy_when
-        jsr     ToggleCopyWhenButton
+        sec
+        jsr     DrawCopyWhenButton
 :       return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc ToggleRunListButton
+.proc DrawRunListButton
+        pha
+    IF_CC
+        copy16  #unchecked_rb_bitmap, rb_params::mapbits
+    ELSE
+        copy16  #checked_rb_bitmap, rb_params::mapbits
+    END_IF
+
+        pla
         cmp     #1
-        bne     :+
-        param_call DrawInsetRect, rect_primary_run_list_radiobtn
-        rts
+    IF_EQ
+        ldax    #rect_primary_run_list_ctrl
+    ELSE
+        ldax    #rect_secondary_run_list_ctrl
+    END_IF
 
-:       param_call DrawInsetRect, rect_secondary_run_list_radiobtn
-        rts
-.endproc
-
-.proc ToggleCopyWhenButton
-        cmp     #1
-        bne     :+
-        param_call DrawInsetRect, rect_at_first_boot_radiobtn
-        rts
-
-:       cmp     #2
-        bne     :+
-        param_call DrawInsetRect, rect_at_first_use_radiobtn
-        rts
-
-:       param_call DrawInsetRect, rect_never_radiobtn
-        rts
-.endproc
-
-;;; ============================================================
-;;; Draw rect inset by 2px. Pointer to Rect in A,X.
-
-.proc DrawInsetRect
         ptr := $06
-
-        ;; Copy to scratch rect
+draw:
         stax    ptr
-        ldy     #.sizeof(MGTK::Rect)-1
+        ldy     #.sizeof(MGTK::Point)-1
 :       lda     (ptr),y
-        sta     rect_scratch,y
+        sta     rb_params::viewloc,y
         dey
         bpl     :-
 
-        lda     rect_scratch::x1
-        clc
-        adc     #2
-        sta     rect_scratch::x1
-        bcc     :+
-        inc     rect_scratch::x1+1
-
-:       lda     rect_scratch::y1
-        clc
-        adc     #2
-        sta     rect_scratch::y1
-        bcc     :+
-        inc     rect_scratch::y1+1
-
-:       lda     rect_scratch::x2
-        sec
-        sbc     #2
-        sta     rect_scratch::x2
-        bcs     :+
-        dec     rect_scratch::x2+1
-
-:       lda     rect_scratch::y2
-        sec
-        sbc     #2
-        sta     rect_scratch::y2
-        bcs     :+
-        dec     rect_scratch::y2+1
-
-:       MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_scratch
+        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
+        MGTK_RELAY_CALL MGTK::HideCursor
+        MGTK_RELAY_CALL MGTK::PaintBits, rb_params
+        MGTK_RELAY_CALL MGTK::ShowCursor
         rts
+.endproc
+
+.proc DrawCopyWhenButton
+        pha
+    IF_CC
+        copy16  #unchecked_rb_bitmap, rb_params::mapbits
+    ELSE
+        copy16  #checked_rb_bitmap, rb_params::mapbits
+    END_IF
+
+        pla
+        cmp     #1
+        bne     :+
+        ldax    #rect_at_first_boot_ctrl
+        bne     DrawRunListButton::draw ; always
+
+:       cmp     #2
+        bne     :+
+        ldax    #rect_at_first_use_ctrl
+        bne     DrawRunListButton::draw ; always
+
+:       ldax    #rect_never_ctrl
+        bne     DrawRunListButton::draw ; always
 .endproc
 
 ;;; ============================================================
