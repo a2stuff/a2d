@@ -10914,8 +10914,10 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
         ;; Apple IIgs - DHR Color
 iigs:   lda     NEWVIDEO
-        and     #<~(1<<5)        ; Color
+        and     #<~(1<<5)       ; Color
         sta     NEWVIDEO
+        lda     #$00            ; Color
+        sta     MONOCOLOR
 
 done:   rts
 .endproc
@@ -10949,6 +10951,8 @@ done:   rts
 iigs:   lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
         sta     NEWVIDEO
+        lda     #$80            ; Mono
+        sta     MONOCOLOR
 
 done:   rts
 .endproc
@@ -10956,21 +10960,11 @@ done:   rts
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
 .proc ResetIIgsRGB
         bit     machine_config::iigs_flag
-        bpl     done            ; nope
+        bpl     SetMonoMode::done ; nope
 
         bit     SETTINGS + DeskTopSettings::rgb_color
-        bmi     color
-
-mono:   lda     NEWVIDEO
-        ora     #(1<<5)         ; B&W
-        sta     NEWVIDEO
-        rts
-
-color:  lda     NEWVIDEO
-        and     #<~(1<<5)       ; Color
-        sta     NEWVIDEO
-
-done:   rts
+        bmi     SetColorMode::iigs
+        bpl     SetMonoMode::iigs ; always
 .endproc
 
 ;;; ============================================================

@@ -22,7 +22,7 @@ on_line_buffer2 := $1300
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 
-on_line_buffer:
+on_line_buffer:                 ; TODO: Move to $240 ?
         .res    16, 0
 
         DEFINE_READ_BLOCK_PARAMS block_params, default_block_buffer, 0
@@ -130,12 +130,10 @@ params:  .res    3
 
         ;; Use Disk II-specific code
 disk_ii:
-        lda     unit_number
+        unit_number := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     FormatDiskII
         rts
-
-unit_number:
-        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -231,7 +229,8 @@ fail:   sec                     ; not firmware
         inx                     ; X = 1 or 2 (for Drive 1 or 2)
 :
         ;; Was it remapped? (ProDOS 1.x-only behavior)
-        lda     unit_number
+        unit_number := *+1
+        lda     #SELF_MODIFIED_BYTE
         and     #%01110000      ; 0SSSnnnn
         lsr
         lsr
@@ -241,18 +240,15 @@ fail:   sec                     ; not firmware
 
         lda     sp_addr+1       ; $Cn
         and     #%00001111      ; $0n
-        cmp     mapped_slot     ; equal = not remapped
+
+        mapped_slot := *+1
+        cmp     #SELF_MODIFIED_BYTE ; equal = not remapped
         beq     :+
         inx                     ; now X = 3 or 4
         inx
 :
         clc                     ; exit with C=0 on success
         rts
-
-unit_number:
-        .byte   0
-mapped_slot:
-        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -755,7 +751,8 @@ set:    ldy     #$FF
         adc     table,x
 
         pha
-        lda     tmp
+        tmp := *+1
+        lda     #SELF_MODIFIED_BYTE
         adc     #$00
         tax
         pla
@@ -763,7 +760,6 @@ set:    ldy     #$FF
         ;; A,X = block number
         rts
 
-tmp:    .byte   0
 table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 .endproc
 
@@ -877,13 +873,13 @@ loop:   lda     page_num
         inc     page_num
         inc     count
         inc     count
-        lda     count
+
+        count := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     auxlc::block_count_div8+1
         beq     loop
         bcc     loop
         rts
-
-count:  .byte   0
 
 .proc MarkFreeInMemoryBitmap
         jsr     GetBitmapOffsetShift
@@ -1235,14 +1231,17 @@ memory_bitmap:
         bit     SETTINGS + DeskTopSettings::rgb_color
         bmi     color
 
-mono:   lda     NEWVIDEO
+mono:   ldy     #$80            ; MONOCOLOR - Mono
+        lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
-        sta     NEWVIDEO
-        rts
+        bne     store           ; always
 
-color:  lda     NEWVIDEO
+color:  ldy     #$00            ; MONOCOLOR - Color
+        lda     NEWVIDEO
         and     #<~(1<<5)       ; Color
-        sta     NEWVIDEO
+
+store:  sta     NEWVIDEO
+        sty     MONOCOLOR
 
 done:   rts
 .endproc

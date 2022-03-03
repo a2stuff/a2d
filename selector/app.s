@@ -2316,6 +2316,8 @@ len:    .byte   0
 iigs:   lda     NEWVIDEO
         and     #<~(1<<5)       ; Color
         sta     NEWVIDEO
+        lda     #$00            ; Color
+        sta     MONOCOLOR
 
 done:   rts
 .endproc
@@ -2350,6 +2352,8 @@ done:   rts
 iigs:   lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
         sta     NEWVIDEO
+        lda     #$80            ; Mono
+        sta     MONOCOLOR
 
 done:   rts
 .endproc
@@ -2360,21 +2364,11 @@ done:   rts
 
 .proc ResetIIgsRGB
         bit     not_iigs_flag
-        bmi     done
+        bmi     SetMonoMode::done
 
         bit     SETTINGS + DeskTopSettings::rgb_color
-        bmi     color
-
-mono:   lda     NEWVIDEO
-        ora     #(1<<5)         ; B&W
-        sta     NEWVIDEO
-        rts
-
-color:  lda     NEWVIDEO
-        and     #<~(1<<5)        ; Color
-        sta     NEWVIDEO
-
-done:   rts
+        bmi     SetColorMode::iigs
+        bpl     SetMonoMode::iigs ; always
 .endproc
 
 ;;; ============================================================

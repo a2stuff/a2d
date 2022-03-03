@@ -147,6 +147,8 @@ RDALTZP         := $C016        ; Bit 7 = 1 if slot zp enabled
 RD80STORE       := $C018        ; Bit 7 = 1 if 80-column store
 RDPAGE2         := $C01C
 
+MONOCOLOR       := $C021        ; IIgs - bit 7=1 switches composite to mono
+
 KEYMODREG       := $C025        ; IIgs - keyboard modifiers
         ;; bit 7= Open Apple key active
         ;; bit 6= Closed Apple key active
