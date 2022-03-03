@@ -1213,10 +1213,9 @@ loop:   ldy     #0
         lda     (data_ptr),y
         beq     exit
 
-        open_dir_path_buf := INVOKER_PREFIX
         tay
 :       lda     (data_ptr),y
-        sta     open_dir_path_buf,y
+        sta     INVOKER_PREFIX,y
         dey
         bpl     :-
 

@@ -19,8 +19,6 @@ kShortcutScroll = res_char_scroll_shortcut
 src_path_buf    := INVOKER_PREFIX
 dst_path_buf    := $1F80
 
-open_dir_path_buf := INVOKER_PREFIX
-
         .org $4000
 
         ;; Jump table
@@ -901,7 +899,6 @@ no_selection:
         DEFINE_GET_FILE_INFO_PARAMS dst_file_info_params, dst_path_buf
 
         .assert src_path_buf = INVOKER_PREFIX, error, "Params re-use"
-        .define get_file_info_params src_file_info_params
 
 ;;; Call GET_FILE_INFO on path at A,X; results are in `file_info_params`
 ;;; Output: MLI result (carry/zero flag, etc)
@@ -915,8 +912,6 @@ no_selection:
 ;;; Launch file (File > Open, Selector menu, or double-click)
 
 .proc LaunchFileImpl
-        path := INVOKER_PREFIX
-
 compose_path:
         jsr     ComposeWinFilePaths
 
@@ -924,15 +919,15 @@ with_path:
         jsr     SetCursorWatch ; before invoking
 
         ;; Get the file info to determine type.
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+        MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     ShowAlert
         rts
 
         ;; Check file type.
-:       copy    get_file_info_params::file_type, icontype_filetype
-        copy16  get_file_info_params::aux_type, icontype_auxtype
-        copy16  get_file_info_params::blocks_used, icontype_blocks
+:       copy    src_file_info_params::file_type, icontype_filetype
+        copy16  src_file_info_params::aux_type, icontype_auxtype
+        copy16  src_file_info_params::blocks_used, icontype_blocks
         jsr     GetIconType
 
         cmp     #IconType::basic
@@ -982,7 +977,7 @@ with_path:
 
 :       cmp     #IconType::desk_accessory
     IF_EQ
-        COPY_STRING path, path_buffer ; Use this to launch the DA
+        COPY_STRING src_path_buf, path_buffer ; Use this to launch the DA
 
         ;; As a convenience for DAs, set path to first selected file.
         lda     selected_window_id
@@ -995,11 +990,12 @@ with_path:
         jmp     :+
 
 no_file_sel:
-        copy    #0, path        ; Signal no file selection
+        copy    #0, src_path_buf ; Signal no file selection
 
 :       param_jump InvokeDeskAcc, path_buffer
     END_IF
 
+        ;; --------------------------------------------------
 
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
         beq     launch
@@ -1094,7 +1090,6 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         tsx
         stx     saved_stack
 
-        .assert path = open_dir_path_buf, error, "Buffer alias"
         jsr     OpenWindowForPath
 
         jmp     SetCursorPointer ; after opening folder
@@ -1106,20 +1101,20 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         ;; Compose window path plus icon path
         ldx     #$FF
 :       inx
-        copy    buf_win_path,x, path,x
+        copy    buf_win_path,x, src_path_buf,x
         cpx     buf_win_path
         bne     :-
 
         inx
-        copy    #'/', path,x
+        copy    #'/', src_path_buf,x
 
         ldy     #0
 :       iny
         inx
-        copy    buf_filename2,y, path,x
+        copy    buf_filename2,y, src_path_buf,x
         cpy     buf_filename2
         bne     :-
-        stx     path
+        stx     src_path_buf
 
         rts
 .endproc
@@ -2159,16 +2154,15 @@ normal: lda     #0
         beq     done
 
         jsr     GetWindowPath
-        .assert src_path_buf = open_dir_path_buf, error, "Buffer alias"
         jsr     CopyToSrcPath
-        copy    open_dir_path_buf, prev ; previous length
+        copy    src_path_buf, prev ; previous length
 
         ;; Try removing last segment
-        param_call FindLastPathSegment, open_dir_path_buf ; point Y at last '/'
-        cpy     open_dir_path_buf
+        param_call FindLastPathSegment, src_path_buf ; point Y at last '/'
+        cpy     src_path_buf
 
         beq     volume
-        sty     open_dir_path_buf
+        sty     src_path_buf
 
         ;; --------------------------------------------------
         ;; Windowed
@@ -2180,13 +2174,13 @@ normal: lda     #0
 
         ;; Calc the name
         name_ptr := $08
-        copy16  #open_dir_path_buf, name_ptr
-        inc     open_dir_path_buf           ; past the '/'
-        add16_8 name_ptr, open_dir_path_buf ; point at suffix
+        copy16  #src_path_buf, name_ptr
+        inc     src_path_buf           ; past the '/'
+        add16_8 name_ptr, src_path_buf ; point at suffix
         prev := *+1
         lda     #SELF_MODIFIED_BYTE
         sec
-        sbc     open_dir_path_buf ; A = name length
+        sbc     src_path_buf ; A = name length
         ldy     #0
         sta     (name_ptr),y    ; assign string length
 
@@ -2206,10 +2200,10 @@ volume: lda     window_id_to_close
         beq     :+
         jsr     CloseWindow
 :       jsr     ClearSelection
-        ldx     open_dir_path_buf ; Strip '/'
+        ldx     src_path_buf ; Strip '/'
         dex
-        stx     open_dir_path_buf+1
-        ldax    #open_dir_path_buf+1
+        stx     src_path_buf+1
+        ldax    #src_path_buf+1
         ldy     #0              ; 0=desktop
         jsr     FindIconByName
         beq     :+
@@ -4725,10 +4719,9 @@ exception_flag:
         jsr     DestroyIconsInActiveWindow
         jsr     ClearActiveWindowEntryCount
 
-        ;; Copy window path to `open_dir_path_buf`
+        ;; Copy window path to `src_path_buf`
 :       lda     active_window_id
         jsr     GetWindowPath
-        .assert src_path_buf = open_dir_path_buf, error, "Buffer alias"
         jsr     CopyToSrcPath
 
         ;; Load new FileRecords
@@ -5102,8 +5095,6 @@ validate_windows_flag:
         .byte   0
 
 .proc ValidateWindows
-        pathbuf := INVOKER_PREFIX
-
         bit     validate_windows_flag
         bpl     done
         copy    #0, validate_windows_flag
@@ -5120,11 +5111,10 @@ loop:
         ;; Get and copy its path somewhere useful
         txa
         jsr     GetWindowPath
-        .assert src_path_buf = pathbuf, error, "Buffer alias"
         jsr     CopyToSrcPath
 
         ;; See if it exists
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+        MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     next
 
         ;; Nope - close the window
@@ -6019,9 +6009,9 @@ no_linked_win:
 
         ;; Alternate entry point, called by:
         ;; `OpenWindowForPath` with `icon_param` = $FF
-        ;; and `open_dir_path_buf` set.
+        ;; and `src_path_buf` set.
 check_path:
-        param_call FindWindowForPath, open_dir_path_buf
+        param_call FindWindowForPath, src_path_buf
         beq     no_win
 
         ;; Found a match - associate the window.
@@ -6148,8 +6138,8 @@ done:   copy    cached_window_id, active_window_id
         jpl     MarkIconOpen
 
         ;; Find last '/'
-        ldy     open_dir_path_buf
-:       lda     open_dir_path_buf,y
+        ldy     src_path_buf
+:       lda     src_path_buf,y
         cmp     #'/'
         beq     :+
         dey
@@ -6160,9 +6150,9 @@ done:   copy    cached_window_id, active_window_id
 
 :       iny
         inx
-        lda     open_dir_path_buf,y
+        lda     src_path_buf,y
         sta     buf_filename2,x
-        cpy     open_dir_path_buf
+        cpy     src_path_buf
         bne     :-
 
         stx     buf_filename2
@@ -6209,7 +6199,7 @@ done:   rts
 
 ;;; ============================================================
 ;;; Open a folder/volume icon
-;;; Input: `open_dir_path_buf` should have full path.
+;;; Input: `src_path_buf` should have full path.
 ;;;   If a case match for existing window path, it will be activated.
 ;;; Note: stack will be restored via `saved_stack` on failure
 ;;;
@@ -6226,7 +6216,7 @@ done:   rts
         bpl     ret             ; yes, so skip
 
         ;; Try to find a matching volume or folder icon.
-        COPY_STRING open_dir_path_buf, path_buf4
+        COPY_STRING src_path_buf, path_buf4
         param_call FindLastPathSegment, path_buf4
         cpy     path_buf4       ; was there a filename?
     IF_EQ
@@ -6817,7 +6807,7 @@ found_windows_list:
 .proc OpenDirectory
         jmp     Start
 
-        DEFINE_OPEN_PARAMS open_params, open_dir_path_buf, $800
+        DEFINE_OPEN_PARAMS open_params, src_path_buf, $800
 
         dir_buffer := $C00
 
@@ -7320,7 +7310,7 @@ size:   .word   0               ; size of a window's list
 ;;; ============================================================
 ;;; Compute full path for icon
 ;;; Inputs: IconEntry pointer in $06
-;;; Outputs: `open_dir_path_buf` has full path
+;;; Outputs: `src_path_buf` has full path
 ;;; Exceptions: if path too long, shows error and restores `saved_stack`
 ;;; See `GetIconPath` for a variant that doesn't length check.
 
@@ -7342,11 +7332,11 @@ size:   .word   0               ; size of a window's list
         ;; Desktop (volume) icon - no parent path
 
         ;; Copy name
-        param_call CopyPtr1ToBuf, open_dir_path_buf+1 ; Leave room for leading '/'
+        param_call CopyPtr1ToBuf, src_path_buf+1 ; Leave room for leading '/'
         ;; Add leading '/' and adjust length
-        sta     open_dir_path_buf
-        inc     open_dir_path_buf
-        copy    #'/', open_dir_path_buf+1
+        sta     src_path_buf
+        inc     src_path_buf
+        copy    #'/', src_path_buf+1
 
         jsr     PopPointers
         rts
@@ -7376,8 +7366,7 @@ has_parent:
         rts
     END_IF
 
-        ;; Copy parent path to open_dir_path_buf
-        .assert src_path_buf = open_dir_path_buf, error, "Buffer alias"
+        ;; Copy parent path to src_path_buf
         ldax    parent_path_ptr
         jsr     CopyToSrcPath
         ldax    name_ptr
@@ -7390,7 +7379,7 @@ has_parent:
 ;;; ============================================================
 ;;; Set up path and coords for new window, contents and free/used.
 ;;; Inputs: IconEntry pointer in $06, new window id in `cached_window_id`,
-;;;         `open_dir_path_buf` has full path
+;;;         `src_path_buf` has full path
 ;;; Outputs: Winfo configured, window path table entry set
 
 .proc PrepareNewWindow
@@ -7427,8 +7416,8 @@ has_parent:
         lda     cached_window_id
         jsr     GetWindowPath
         stax    path_ptr
-        ldy     open_dir_path_buf
-:       lda     open_dir_path_buf,y
+        ldy     src_path_buf
+:       lda     src_path_buf,y
         sta     (path_ptr),y
         dey
         bpl     :-
@@ -9427,7 +9416,7 @@ common: jsr     JoinPaths      ; $08 = base, $06 = file
 
 ;;; ============================================================
 ;;; Input: A,X = path to copy
-;;; Output: populates `src_path_buf` a.k.a. `open_dir_path_buf` a.k.a. `INVOKER_PREFIX`
+;;; Output: populates `src_path_buf` a.k.a. `INVOKER_PREFIX`
 
 .proc CopyToSrcPath
         stax    @ptr1
@@ -9465,7 +9454,7 @@ common: jsr     JoinPaths      ; $08 = base, $06 = file
 
 ;;; ============================================================
 ;;; Input: A,X = path to append
-;;; Output: appends '/' and path to `src_path_buf` a.k.a. `open_dir_path_buf` a.k.a. `INVOKER_PREFIX`
+;;; Output: appends '/' and path to `src_path_buf` a.k.a. `INVOKER_PREFIX`
 
 .proc AppendFilenameToSrcPath
         stax    @ptr1
@@ -11544,7 +11533,6 @@ index:  .byte   0               ; index in selected icon list
 ;;; Get Info
 
 .proc DoGetInfo
-        path_buf := INVOKER_PREFIX
         ptr := $6
 
         lda     selected_icon_count
@@ -11564,13 +11552,13 @@ loop:   ldx     get_info_dialog_params::index
 
         jsr     GetIconPath   ; `path_buf3` is full path
 
-        ldy     path_buf3       ; Copy to `path_buf`
-:       copy    path_buf3,y, path_buf,y
+        ldy     path_buf3       ; Copy to `src_path_buf`
+:       copy    path_buf3,y, src_path_buf,y
         dey
         bpl     :-
 
         ;; Try to get file info
-common: MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+common: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     ShowErrorAlert
         beq     common
@@ -11640,14 +11628,14 @@ common2:
         COPY_STRING str_vol, text_buffer2::length
     ELSE
         ;; File
-        lda     get_file_info_params::file_type
+        lda     src_file_info_params::file_type
         pha
         jsr     ComposeFileTypeString
         COPY_STRING str_file_type, text_buffer2::length
         pla                     ; A = file type
         cmp     #FT_DIRECTORY
       IF_NE
-        ldax    get_file_info_params::aux_type
+        ldax    src_file_info_params::aux_type
         jsr     AppendAuxType
       END_IF
     END_IF
@@ -11666,7 +11654,7 @@ common2:
         beq     volume                ; yes
 
         ;; A file, so just show the size
-        ldax    get_file_info_params::blocks_used
+        ldax    src_file_info_params::blocks_used
         jmp     append_size
 
         ;; A volume.
@@ -11676,7 +11664,7 @@ volume:
         ;; total number of blocks on the volume is returned in the aux_type
         ;; field and the total blocks for all files is returned in blocks_used.
 
-        ldax    get_file_info_params::blocks_used
+        ldax    src_file_info_params::blocks_used
         jsr     ComposeSizeString
 
         ;; text_buffer2 now has "12345K"
@@ -11704,7 +11692,7 @@ volume:
         stx     buf
 
         ;; Load up the total volume size...
-        ldax    get_file_info_params::aux_type
+        ldax    src_file_info_params::aux_type
 
         ;; Compute "12345K" (either volume size or file size)
 append_size:
@@ -11731,7 +11719,7 @@ append_size:
         ;; --------------------------------------------------
         ;; Created date
         copy    #GetInfoDialogState::created, get_info_dialog_params::state
-        COPY_STRUCT DateTime, get_file_info_params::create_date, datetime_for_conversion
+        COPY_STRUCT DateTime, src_file_info_params::create_date, datetime_for_conversion
         jsr     ComposeDateString
         copy16  #text_buffer2::length, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
@@ -11739,7 +11727,7 @@ append_size:
         ;; --------------------------------------------------
         ;; Modified date
         copy    #GetInfoDialogState::modified, get_info_dialog_params::state
-        COPY_STRUCT DateTime, get_file_info_params::mod_date, datetime_for_conversion
+        COPY_STRUCT DateTime, src_file_info_params::mod_date, datetime_for_conversion
         jsr     ComposeDateString
         copy16  #text_buffer2::length, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
@@ -11755,7 +11743,7 @@ append_size:
         bpl     not_protected
 
 is_file:
-        lda     get_file_info_params::access ; File
+        lda     src_file_info_params::access ; File
         and     #ACCESS_DEFAULT
         cmp     #ACCESS_DEFAULT
         beq     not_protected
