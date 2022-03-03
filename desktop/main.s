@@ -908,6 +908,20 @@ no_selection:
         rts
 .endproc
 
+;;; Call GET_FILE_INFO on file at `src_path_buf` a.k.a. `INVOKER_PREFIX`
+;;; Output: MLI result (carry/zero flag, etc), `src_file_info_params` populated
+.proc GetSrcFileInfo
+        MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+        rts
+.endproc
+
+;;; Call GET_FILE_INFO on file at `dst_path_buf`
+;;; Output: MLI result (carry/zero flag, etc), `dst_file_info_params` populated
+.proc GetDstFileInfo
+        MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
+        rts
+.endproc
+
 ;;; ============================================================
 ;;; Launch file (File > Open, Selector menu, or double-click)
 
@@ -919,7 +933,7 @@ with_path:
         jsr     SetCursorWatch ; before invoking
 
         ;; Get the file info to determine type.
-        MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+        jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowAlert
         rts
@@ -5114,7 +5128,7 @@ loop:
         jsr     CopyToSrcPath
 
         ;; See if it exists
-        MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+        jsr     GetSrcFileInfo
         beq     next
 
         ;; Nope - close the window
@@ -11558,7 +11572,7 @@ loop:   ldx     get_info_dialog_params::index
         bpl     :-
 
         ;; Try to get file info
-common: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+common: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         beq     common
@@ -11904,7 +11918,7 @@ changed:
         jsr     AppendFilenameToDstPath
 
         ;; Already exists? (Mostly for volumes, but works for files as well)
-        MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
+        jsr     GetDstFileInfo
         bne     :+
         lda     #ERR_DUPLICATE_FILENAME
         jsr     ShowAlert
@@ -12339,7 +12353,7 @@ success:
         ;; --------------------------------------------------
         ;; Check for unchanged/duplicate name
 
-        MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
+        jsr     GetDstFileInfo
     IF_ZERO
         lda     #ERR_DUPLICATE_FILENAME
         jsr     ShowAlert
@@ -12788,7 +12802,7 @@ L9A50:  ldax    #filename_buf
         jsr     AppendFilenameToDstPath
 
 get_src_info:
-@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+@retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
@@ -12936,7 +12950,7 @@ done:   rts
 
         ;; Directory
         jsr     AppendFileEntryToSrcPath
-@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+@retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
@@ -12959,7 +12973,7 @@ regular_file:
         jsr     AppendFileEntryToDstPath
         jsr     AppendFileEntryToSrcPath
         jsr     DecFileCountAndRunCopyDialogProc
-@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+@retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
@@ -12997,7 +13011,7 @@ done:   rts
 ;;; ============================================================
 
 .proc CheckVolBlocksFree
-@retry: MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
+@retry: jsr     GetDstFileInfo
         beq     :+
         jsr     ShowErrorAlertDst
         jmp     @retry
@@ -13028,7 +13042,7 @@ done:   rts
 
 .proc CheckSpace
         ;; Size of source
-@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+@retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
@@ -13037,7 +13051,7 @@ done:   rts
 :       copy16  #0, existing_size
 
         ;; Does destination exist?
-@retry2:MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
+@retry2:jsr     GetDstFileInfo
         beq     got_exist_size
         cmp     #ERR_FILE_NOT_FOUND
         beq     :+
@@ -13062,7 +13076,7 @@ retry:  copy    dst_path_buf, saved_length
 :       sty     dst_path_buf
 
         ;; Total blocks/used blocks on destination volume
-        MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
+        jsr     GetDstFileInfo
         pha
         saved_length := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -13355,7 +13369,7 @@ a_path: .addr   src_path_buf
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
 
-@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+@retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
@@ -13433,7 +13447,7 @@ error:  jsr     ShowErrorAlert
 .endproc
 
 .proc UnlockSrcFile
-        MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+        jsr     GetSrcFileInfo
         lda     src_file_info_params::access
         and     #$80            ; destroy enabled bit set?
         bne     done            ; yes, no need to unlock
@@ -13464,7 +13478,7 @@ done:   rts
 :       jsr     DecrementOpFileCount
 
         ;; Check file type
-@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+@retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
@@ -13647,7 +13661,7 @@ a_path: .addr   src_path_buf
         jsr     CopyPathsFromBufsToSrcAndDst
         jsr     AppendSrcPathLastSegmentToDstPath
 
-@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+@retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
@@ -13691,7 +13705,7 @@ LockProcessDirectoryEntry:
 
         jsr     DecrementOpFileCount
 
-@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+@retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
@@ -13805,7 +13819,7 @@ callbacks_for_size_or_count:
 
 .proc SizeOrCountProcessSelectedFile
         jsr     CopyPathsFromBufsToSrcAndDst
-@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+@retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
@@ -13857,7 +13871,7 @@ do_sum_file_size:
     IF_NOT_ZERO
         jsr     AppendFileEntryToSrcPath
     END_IF
-        MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+        jsr     GetSrcFileInfo
         bne     :+
         add16   op_block_count, src_file_info_params::blocks_used, op_block_count
 
