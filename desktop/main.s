@@ -2419,7 +2419,7 @@ tmp:    .addr   0
 ;;; Save/Restore drop target icon ID in case the window was rebuilt.
 
 ;;; Inputs: `drag_drop_params::result`
-;;; Assert: If taget is a file icon, icon is in active window.
+;;; Assert: If target is a file icon, icon is in active window.
 ;;; Trashes $06
 .proc MaybeStashDropTargetName
         icon_ptr := $06

@@ -460,7 +460,7 @@ count := * + 1
 
 ;;; ============================================================
 ;;; Try to detect an Enhanced IIe or later (IIc, IIgs, etc),
-;;; to infer suport for MouseText characters.
+;;; to infer support for MouseText characters.
 ;;; Done by testing testing for a ROM signature.
 ;;; Output: Sets `supports_mousetext` to $80.
 
