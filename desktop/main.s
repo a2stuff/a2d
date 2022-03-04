@@ -1466,6 +1466,9 @@ entry_num:
         sta     $840,x
         cpy     $800
         bne     :-
+
+        stx     $840
+
         rts
 .endproc
 
