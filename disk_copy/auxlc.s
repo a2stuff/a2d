@@ -346,7 +346,7 @@ num_drives:
 
 LD376:  .byte   0
 
-kMaxNumDrives = 8
+kMaxNumDrives = 9               ; TODO: Support 13 (scrolling NYI)
 
 drive_name_table:
         .res    kMaxNumDrives * 16, 0
@@ -1730,7 +1730,7 @@ LE24D:  lda     ($06),y
 next_device:
         inc     device_index
         lda     device_index
-        cmp     #$08            ; max number of devices shown???
+        cmp     #kMaxNumDrives+1
         beq     LE262
         jmp     LE182
 
