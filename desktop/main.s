@@ -923,6 +923,15 @@ no_selection:
 .endproc
 
 ;;; ============================================================
+
+;;; Additional path buffer used by a handful of locations where
+;;; MLI calls require it to be in main memory.
+;;; * Prefer `src_path_buf` unless it's already in use
+;;; * Prefer `dst_path_buf`, but it's inside `IO_BUFFER`
+tmp_path_buf:
+        .res    ::kPathBufferSize, 0
+
+;;; ============================================================
 ;;; Launch file (File > Open, Selector menu, or double-click)
 
 .proc LaunchFileImpl
@@ -991,7 +1000,9 @@ with_path:
 
 :       cmp     #IconType::desk_accessory
     IF_EQ
-        COPY_STRING src_path_buf, path_buffer ; Use this to launch the DA
+        ;; * Can't use `dst_path_buf` as it is within DA_IO_BUFFER
+        ;; * Can't use `src_path_buf` as it holds file selection
+        COPY_STRING src_path_buf, tmp_path_buf ; Use this to launch the DA
 
         ;; As a convenience for DAs, set path to first selected file.
         lda     selected_window_id
@@ -1006,7 +1017,7 @@ with_path:
 no_file_sel:
         copy    #0, src_path_buf ; Signal no file selection
 
-:       param_jump InvokeDeskAcc, path_buffer
+:       param_jump InvokeDeskAcc, tmp_path_buf
     END_IF
 
         ;; --------------------------------------------------
@@ -1522,38 +1533,6 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 .endproc
 
 ;;; ============================================================
-;;; Append filename to directory path in `path_buffer`
-;;; Inputs: A,X = ptr to path suffix to append
-;;; Outputs: `path_buffer` has '/' and suffix appended
-
-.proc AppendFilenameToPathBuffer
-
-        stax    @filename1
-        stax    @filename2
-
-        ;; Append '/' separator
-        ldy     path_buffer
-        iny
-        lda     #'/'
-        sta     path_buffer,y
-
-        ;; Append filename
-        ldx     #0
-:       inx
-        iny
-        @filename1 := *+1
-        lda     SELF_MODIFIED,x
-        sta     path_buffer,y
-        @filename2 := *+1
-        cpx     SELF_MODIFIED
-        bne     :-
-        sty     path_buffer
-
-        rts
-
-.endproc
-
-;;; ============================================================
 
         .include "../lib/ramcard.s"
         .assert * <= $5000, error, "Routine used by overlays in overlay zone"
@@ -1561,13 +1540,13 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 ;;; ============================================================
 ;;; For entry copied ("down loaded") to RAM card, compose path
 ;;; using RAM card prefix plus last two segments of path
-;;; (e.g. "/RAM" + "/" + "MOUSEPAINT/MP.SYSTEM") into `path_buffer`
+;;; (e.g. "/RAM" + "/" + "MOUSEPAINT/MP.SYSTEM") into `src_path_buf`
 
 .proc ComposeDownloadedEntryPath
         sta     entry_num
 
         ;; Initialize buffer
-        param_call CopyRAMCardPrefix, path_buffer
+        param_call CopyRAMCardPrefix, src_path_buf
 
         ;; Find entry path
         entry_num := *+1
@@ -1598,17 +1577,17 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 :       dey
 
         ;; Append last two segments to path
-        ldx     path_buffer
+        ldx     src_path_buf
 :       inx
         iny
         lda     ($06),y
-        sta     path_buffer,x
+        sta     src_path_buf,x
         @prefix_length := *+1
         cpy     #SELF_MODIFIED_BYTE
         bne     :-
 
-        stx     path_buffer
-        ldax    #path_buffer
+        stx     src_path_buf
+        ldax    #src_path_buf
         rts
 .endproc
 
@@ -2282,30 +2261,23 @@ a_path: .addr   0
         ptr := $06
 
         ;; access = destroy/rename/write/read
-        DEFINE_CREATE_PARAMS create_params, path_buffer, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
-
-path_buffer:
-        .res    ::kPathBufferSize, 0              ; buffer is used elsewhere too
+        DEFINE_CREATE_PARAMS create_params, src_path_buf, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
 start:  copy    #NewFolderDialogState::open, new_folder_dialog_params::phase
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
 
 L4FC6:  lda     active_window_id
-        beq     :+
+        beq     done            ; command should not be active without a window
         jsr     GetWindowPath
         stax    new_folder_dialog_params::a_path
 
-:       copy    #NewFolderDialogState::run, new_folder_dialog_params::phase
+        copy    #NewFolderDialogState::run, new_folder_dialog_params::phase
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
         jne     done            ; Canceled
 
-        stx     ptr+1
-        stx     name_ptr+1
-        sty     ptr
-        sty     name_ptr
-
         ;; Copy path
-        param_call CopyPtr1ToBuf, path_buffer
+        tya                     ; A,X = Y,X
+        jsr     CopyToSrcPath
 
         ;; Create with current date
         COPY_STRUCT DateTime, DATELO, create_params::create_date
@@ -2321,9 +2293,9 @@ L4FC6:  lda     active_window_id
 success:
         copy    #NewFolderDialogState::close, new_folder_dialog_params::phase
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
-        param_call FindLastPathSegment, path_buffer
-        sty     path_buffer
-        param_call FindWindowForPath, path_buffer
+        param_call FindLastPathSegment, src_path_buf
+        sty     src_path_buf
+        param_call FindWindowForPath, src_path_buf
         beq     done
 
         jsr     SelectAndRefreshWindowOrClose
@@ -2334,12 +2306,8 @@ success:
 
 done:   rts
 
-
-name_ptr:
-        .addr   0
 .endproc
 CmdNewFolder    := CmdNewFolderImpl::start
-path_buffer     := CmdNewFolderImpl::path_buffer
 
 ;;; ============================================================
 ;;; Select and scroll into view an icon in the active window.
@@ -6655,8 +6623,8 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
         ;; Determine if there are windows to update
         jsr     PopPointers     ; $06 = vol path
 
-        param_call CopyPtr1ToBuf, path_buffer
-
+        ldax    ptr
+        jsr     CopyToSrcPath
         jsr     GetVolUsedFreeViaPath
         bne     done
 
@@ -6724,6 +6692,9 @@ slash:  cpy     #1
 .proc FindWindows
         ptr := $6
 
+        ;; NOTE: Not used for MLI calls, so another buffer could be used.
+        path := tmp_path_buf
+
 exact:  stax    ptr
         lda     #$80
         bne     start           ; always
@@ -6738,11 +6709,11 @@ start:  sta     exact_match_flag
         lda     (ptr),y
         tay
 
-:       sty     path_buffer
+:       sty     tmp_path_buf
 
-        ;; Copy ptr to `path_buffer`
+        ;; Copy ptr to `path`
 :       lda     (ptr),y
-        sta     path_buffer,y
+        sta     path,y
         dey
         bne     :-
 
@@ -6774,12 +6745,12 @@ check_window:
         ldy     #0
         lda     (ptr),y
         tay
-        cmp     path_buffer
+        cmp     path
         beq     :+
 
         bit     exact_match_flag
         bmi     loop
-        ldy     path_buffer
+        ldy     path
         iny
         lda     (ptr),y
         cmp     #'/'
@@ -6790,7 +6761,7 @@ check_window:
 :       lda     (ptr),y
         jsr     UpcaseChar
         sta     @char
-        lda     path_buffer,y
+        lda     path,y
         jsr     UpcaseChar
         @char := *+1
         cmp     #SELF_MODIFIED_BYTE
@@ -6851,7 +6822,7 @@ index_in_dir:           .byte   0
         sta     read_params::ref_num
         sta     close_params::ref_num
         jsr     DoRead
-        jsr     GetVolUsedFreeViaPath
+        jsr     GetVolUsedFreeViaPath ; uses `src_path_buf`
 
         ldx     #0
 :       lda     dir_buffer+SubdirectoryHeader::entry_length,x
@@ -7160,33 +7131,32 @@ DoClose:
 .endproc
 
 ;;; ============================================================
-;;; Inputs: `path_buffer` set to full path (not modified)
+;;; Inputs: `src_path_buf` set to full path (not modified)
 ;;; Outputs: Z=1 on success, `vol_kb_used` and `vol_kb_free` updated.
 ;;; TODO: Skip if same-vol windows already have data.
 
 .proc GetVolUsedFreeViaPath
-        lda     path_buffer
-        sta     saved_length
+        copy    src_path_buf, saved_length
 
         ;; Strip to vol name - either end of string or next slash
         ldx     #1
 :       inx                     ; start at 2nd character
-        cpx     path_buffer
+        cpx     src_path_buf
         beq     :+
-        lda     path_buffer,x
+        lda     src_path_buf,x
         cmp     #'/'
         bne     :-
         dex
-:       stx     path_buffer
+:       stx     src_path_buf
 
         ;; Get volume information
-        param_call GetFileInfo, path_buffer
+        jsr     GetSrcFileInfo
         bne     finish          ; failure
 
         ;; aux = total blocks
-        copy16  file_info_params::aux_type, vol_kb_used
+        copy16  src_file_info_params::aux_type, vol_kb_used
         ;; total - used = free
-        sub16   file_info_params::aux_type, file_info_params::blocks_used, vol_kb_free
+        sub16   src_file_info_params::aux_type, src_file_info_params::blocks_used, vol_kb_free
         sub16   vol_kb_used, vol_kb_free, vol_kb_used ; total - free = used
 
         ;; Blocks to K
@@ -7202,7 +7172,7 @@ finish: php
 
         saved_length := *+1
         lda     #SELF_MODIFIED_BYTE
-        sta     path_buffer
+        sta     src_path_buf
 
         plp
         rts
@@ -12236,7 +12206,7 @@ no_change:
 
 .proc UpdatePrefix
         ptr := $06
-        path := path_buffer
+        path := src_path_buf
 
         ;; ProDOS Prefix
         MLI_RELAY_CALL GET_PREFIX, get_set_prefix_params
@@ -16826,12 +16796,31 @@ finish: ldy     #0              ; Write sentinel
         ;; If DeskTop was copied to RAMCard, also write to original prefix.
         jsr     GetCopiedToRAMCardFlag
         bpl     exit
-        param_call CopyDeskTopOriginalPrefix, path_buffer
-        param_call AppendFilenameToPathBuffer, str_desktop_file
-        lda     #<path_buffer
+
+        ;; * Can't use `src_path_buf`, that's holding external path to invoke
+        ;; * Can't use `dst_path_buf`, that's inside `IO_BUFFER`
+        param_call CopyDeskTopOriginalPrefix, tmp_path_buf
+
+        ;; Append '/'
+        ldy     tmp_path_buf
+        iny
+        lda     #'/'
+        sta     tmp_path_buf,y
+
+        ;; Append filename
+        ldx     #0
+:       inx
+        iny
+        copy    str_desktop_file,x, tmp_path_buf,y
+        cpx     str_desktop_file
+        bne     :-
+        sty     tmp_path_buf
+
+        ;; Write the file
+        lda     #<tmp_path_buf
         sta     create_params::pathname
         sta     open_params::pathname
-        lda     #>path_buffer
+        lda     #>tmp_path_buf
         sta     create_params::pathname+1
         sta     open_params::pathname+1
         jsr     WriteOutFile
