@@ -856,8 +856,7 @@ nextwinfo:      .addr   0
         DEFINE_RECT_SZ ok_button_rect, winfo::kWidth-20-kButtonWidth, 49, kButtonWidth, kButtonHeight
         DEFINE_POINT ok_button_pos, winfo::kWidth-20-kButtonWidth+4, 59
 
-        DEFINE_RECT_INSET rect_frame1, 4, 2, winfo::kWidth, winfo::kHeight
-        DEFINE_RECT_INSET rect_frame2, 5, 3, winfo::kWidth, winfo::kHeight
+        DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
         DEFINE_LABEL download, res_string_label_download, 116, 16
 
@@ -867,8 +866,8 @@ nextwinfo:      .addr   0
 str_copying:
         PASCAL_STRING res_string_label_copying
 
-        DEFINE_RECT rect_clear_count, 18, 24, 344, 32
-        DEFINE_RECT rect_clear_details, 6, 24, 344, 66
+        DEFINE_RECT rect_clear_count, 18, 24, winfo::kWidth-kBorderDX*2, 32
+        DEFINE_RECT rect_clear_details, kBorderDX*2, 24, winfo::kWidth-kBorderDX*2, winfo::kHeight-kBorderDY*2
 
 .params setportbits_params
         DEFINE_POINT viewloc, 100, 50
@@ -909,9 +908,12 @@ str_space:
         MGTK_CALL MGTK::OpenWindow, winfo
         lda     winfo::window_id
         jsr     app::GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::FrameRect, rect_frame1
-        MGTK_CALL MGTK::FrameRect, rect_frame2
+
+        MGTK_CALL MGTK::SetPenMode, app::notpencopy
+        MGTK_CALL MGTK::SetPenSize, app::pensize_frame
+        MGTK_CALL MGTK::FrameRect, rect_frame
+        MGTK_CALL MGTK::SetPenSize, app::pensize_normal
+
         MGTK_CALL MGTK::MoveTo, download_label_pos
         param_call app::DrawString, download_label_str
         rts
