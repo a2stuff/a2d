@@ -909,6 +909,9 @@ LD97A:  jsr     main__FreeVolBitmapPages
         jmp     InitDialog
 
         .byte   0
+
+;;; ============================================================
+
 LD986:  MGTK_RELAY_CALL2 MGTK::InitPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport
 LD998:  bit     LD368
@@ -928,6 +931,8 @@ LD9BA:  cmp     #MGTK::EventKind::key_down
         bne     LD998
         jmp     LD9D5
 
+;;; ============================================================
+
 menu_command_table:
         ;; Apple menu
         .addr   main__NoOp
@@ -943,6 +948,8 @@ menu_command_table:
 
 menu_offset_table:
         .byte   0, 5*2, 6*2, 8*2
+
+;;; ============================================================
 
 LD9D5:  lda     event_params::modifiers
         bne     :+
@@ -962,7 +969,7 @@ LD9D5:  lda     event_params::modifiers
 handle_menu_selection:
         ldx     menuselect_params::menu_id
         bne     :+
-        rts
+        return  #$FF
         ;; Compute offset into command table - menu offset + item offset
 :       dex
         lda     menu_offset_table,x
@@ -986,6 +993,8 @@ do_jump:
         stx     stack_stash
         jump_addr := *+1
         jmp     SELF_MODIFIED
+
+;;; ============================================================
 
 cmd_quick_copy:
         lda     disk_copy_flag
