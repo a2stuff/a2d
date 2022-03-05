@@ -342,12 +342,12 @@ end:
 .scope
         ptr := $6
 
-        jsr     main::PushPointers
+        jsr     PushPointers
         copy16  #icon_entries, ptr
         ldx     #1
 loop:   cpx     #kMaxIconCount+1 ; allow up to the maximum
         bne     :+
-        jsr     main::PopPointers
+        jsr     PopPointers
         jmp     end
 :       txa
         pha
@@ -1230,7 +1230,7 @@ loop:   ldy     #0
         dex
         bpl     :-
 
-        jsr     main::PushPointers
+        jsr     PushPointers
 
         lda     #$80
         sta     main::copy_new_window_bounds_flag
@@ -1240,7 +1240,7 @@ loop:   ldy     #0
         sta     main::copy_new_window_bounds_flag
         sta     main::OpenDirectory::suppress_error_on_open_flag
 
-        jsr     main::PopPointers
+        jsr     PopPointers
 
         add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
         jmp     loop

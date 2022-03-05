@@ -9654,82 +9654,6 @@ exit:   rts
 .endproc
 
 ;;; ============================================================
-;;; Pushes two words from $6/$8 to stack; preserves A,X,Y
-
-.proc PushPointers
-        ;; Stash A,X
-        sta     a_save
-        stx     x_save
-
-        ;; Stash return address
-        pla
-        sta     lo
-        pla
-        sta     hi
-
-        ;; Copy 4 bytes from $8 to stack
-        ldx     #AS_BYTE(-4)
-:       lda     $06 + 4,x
-        pha
-        inx
-        bne     :-
-
-        ;; Restore return address
-        hi := *+1
-        lda     #SELF_MODIFIED_BYTE
-        pha
-        lo := *+1
-        lda     #SELF_MODIFIED_BYTE
-        pha
-
-        ;; Restore A,X
-        x_save := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        a_save := *+1
-        lda     #SELF_MODIFIED_BYTE
-
-        rts
-.endproc
-
-;;; ============================================================
-;;; Pops two words from stack to $6/$8; preserves A,X,Y
-
-.proc PopPointers
-        ;; Stash A,X
-        sta     a_save
-        stx     x_save
-
-        ;; Stash return address
-        pla
-        sta     lo
-        pla
-        sta     hi
-
-        ;; Copy 4 bytes from stack to $6
-        ldx     #3
-:       pla
-        sta     $06,x
-        dex
-        bpl     :-
-
-        ;; Restore return address to stack
-        hi := *+1
-        lda     #SELF_MODIFIED_BYTE
-        pha
-        lo := *+1
-        lda     #SELF_MODIFIED_BYTE
-        pha
-
-        ;; Restore A,X
-        x_save := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        a_save := *+1
-        lda     #SELF_MODIFIED_BYTE
-
-        rts
-.endproc
-
-;;; ============================================================
 
 .proc SwapWindowPortbits
         ptr := $6
@@ -17035,6 +16959,4 @@ driver: jmp     (RAMSLOT)
         PAD_TO $BF00
 
 .endscope ; main
-        main__PopPointers := main::PopPointers
-        main__PushPointers := main::PushPointers
         main__YieldLoop := main::YieldLoop
