@@ -2628,9 +2628,16 @@ kAlertRectHeight        = 55
 kAlertRectLeft          = (::kScreenWidth - kAlertRectWidth)/2
 kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
 
-        DEFINE_RECT_SZ alert_rect, kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
-        DEFINE_RECT_INSET alert_inner_frame_rect1, 4, 2, kAlertRectWidth, kAlertRectHeight
-        DEFINE_RECT_INSET alert_inner_frame_rect2, 5, 3, kAlertRectWidth, kAlertRectHeight
+;;; Window frame is outside the rect proper
+kAlertFrameLeft = kAlertRectLeft - 1
+kAlertFrameTop = kAlertRectTop - 1
+kAlertFrameWidth = kAlertRectWidth + 2
+kAlertFrameHeight = kAlertRectHeight + 2
+        DEFINE_RECT_SZ alert_rect, kAlertFrameLeft, kAlertFrameTop, kAlertFrameWidth, kAlertFrameHeight
+
+pensize_normal:  .byte   1, 1
+pensize_frame:    .byte   kBorderDX, kBorderDY
+        DEFINE_RECT_FRAME alert_inner_frame_rect, kAlertRectWidth, kAlertRectHeight
 
 .params portmap
         DEFINE_POINT viewloc, kAlertRectLeft, kAlertRectTop
@@ -2770,15 +2777,20 @@ show_alert_dialog:
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport
 
+        ;; Draw alert box and bitmap - coordinates are in screen space
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, alert_rect
-        jsr     SetPenXOR
-        MGTK_RELAY_CALL2 MGTK::FrameRect, alert_rect
-        MGTK_RELAY_CALL2 MGTK::SetPortBits, portmap
-        MGTK_RELAY_CALL2 MGTK::FrameRect, alert_inner_frame_rect1
-        MGTK_RELAY_CALL2 MGTK::FrameRect, alert_inner_frame_rect2
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
+        MGTK_RELAY_CALL2 MGTK::PaintRect, alert_rect ; alert background
+        MGTK_RELAY_CALL2 MGTK::SetPenMode, notpencopy
+        MGTK_RELAY_CALL2 MGTK::FrameRect, alert_rect ; alert outline
 
+        MGTK_RELAY_CALL2 MGTK::SetPortBits, portmap ; viewport for remaining operations
+
+        ;; Draw rect of alert - coordinates are relative to portmap
+        MGTK_RELAY_CALL2 MGTK::SetPenMode, notpencopy
+        MGTK_RELAY_CALL2 MGTK::SetPenSize, pensize_frame
+        MGTK_RELAY_CALL2 MGTK::FrameRect, alert_inner_frame_rect
+
+        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::HideCursor
         MGTK_RELAY_CALL2 MGTK::PaintBits, alert_bitmap_params
         MGTK_RELAY_CALL2 MGTK::ShowCursor
@@ -2852,6 +2864,7 @@ find_in_alert_table:
 
         ;; Draw appropriate buttons
 :       jsr     SetPenXOR
+        MGTK_RELAY_CALL2 MGTK::SetPenSize, pensize_normal
         bit     alert_options
         bpl     draw_ok_btn
 

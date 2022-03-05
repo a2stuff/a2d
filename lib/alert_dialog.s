@@ -78,9 +78,6 @@ pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME alert_inner_frame_rect, kAlertRectWidth, kAlertRectHeight
 
-;;; TODO: Frame is too close to border for alerts!
-
-
 .params screen_portbits
         DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
