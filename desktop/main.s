@@ -7886,9 +7886,8 @@ L7870:  lda     cached_window_id
         jsr     PushPointers
         ldax    #path_buf3
         jsr     FindWindowForPath
-        tay
         jsr     PopPointers
-        tya                     ; A = window id, 0 if none
+        cmp     #0              ; A = window id, 0 if none
         beq     :+
         tax
         lda     icon_num
@@ -7910,9 +7909,7 @@ L7870:  lda     cached_window_id
 .proc FindIconDetailsForIconType
         ptr := $6
 
-        tay
         jsr     PushPointers
-        tya
 
         ;; For populating IconEntry::win_flags
         lda     icontype_iconentryflags_table, y
@@ -9381,9 +9378,7 @@ sense_flag:     .byte   0
 ;;; See `ComposeIconFullPath` for a variant that length checks.
 
 .proc GetIconPath
-        tay                     ; A = icon
         jsr     PushPointers
-        tya                     ; A = icon
 
         icon_ptr := $06
         jsr     IconEntryLookup
@@ -9651,10 +9646,12 @@ exit:   rts
 .endproc
 
 ;;; ============================================================
-;;; Pushes two words from $6/$8 to stack; trashes A,X
+;;; Pushes two words from $6/$8 to stack; preserves A,X,Y
 
 .proc PushPointers
-        ptr := $6
+        ;; Stash A,X
+        sta     a_save
+        stx     x_save
 
         ;; Stash return address
         pla
@@ -9676,14 +9673,23 @@ exit:   rts
         lo := *+1
         lda     #SELF_MODIFIED_BYTE
         pha
+
+        ;; Restore A,X
+        x_save := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        a_save := *+1
+        lda     #SELF_MODIFIED_BYTE
+
         rts
 .endproc
 
 ;;; ============================================================
-;;; Pops two words from stack to $6/$8; trashes A,X
+;;; Pops two words from stack to $6/$8; preserves A,X,Y
 
 .proc PopPointers
-        ptr := $6
+        ;; Stash A,X
+        sta     a_save
+        stx     x_save
 
         ;; Stash return address
         pla
@@ -9705,6 +9711,13 @@ exit:   rts
         lo := *+1
         lda     #SELF_MODIFIED_BYTE
         pha
+
+        ;; Restore A,X
+        x_save := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        a_save := *+1
+        lda     #SELF_MODIFIED_BYTE
+
         rts
 .endproc
 
@@ -9713,9 +9726,7 @@ exit:   rts
 .proc SwapWindowPortbits
         ptr := $6
 
-        tay
         jsr     PushPointers
-        tya
         jsr     WindowLookup
         stax    ptr
 
@@ -9744,9 +9755,7 @@ saved_portbits:
         entry_ptr := $6
         winfo_ptr := $8
 
-        tay
         jsr     PushPointers
-        tya
         jsr     IconEntryLookup
         stax    entry_ptr
 
@@ -9801,9 +9810,7 @@ pos_win:        .word   0, 0
 ;;; (icon index in A, active window)
 
 .proc IconScreenToWindow
-        tay
         jsr     PushPointers
-        tya
         jsr     IconEntryLookup
         stax    $06
         FALL_THROUGH_TO IconPtrScreenToWindow
@@ -10324,17 +10331,17 @@ cloop:  lda     (icon_ptr),y
         bne     cloop
 
         ;; It matches; report a duplicate.
-        jsr     PopPointers
         lda     #ERR_DUPLICATE_VOLUME
-        rts
+        bne     finish          ; always
 
         ;; Doesn't match, try again
 next:   dec     index
         bpl     loop
 
         ;; All done, clean up and report no duplicates.
-        jsr     PopPointers
         lda     #0
+
+finish: jsr     PopPointers
         rts
 .endproc
 

@@ -2371,8 +2371,13 @@ icon_num:       .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Pushes two words from $6/$8 to stack; preserves A,X,Y
 
 .proc PushPointers
+        ;; Stash A,X
+        sta     a_save
+        stx     x_save
+
         ;; save return addr
         pla
         sta     stash_low
@@ -2393,13 +2398,24 @@ stash_high := * + 1
 stash_low := * + 1
         lda     #SELF_MODIFIED_BYTE
         pha
-        rts
 
+        ;; Restore A,X
+        x_save := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        a_save := *+1
+        lda     #SELF_MODIFIED_BYTE
+
+        rts
 .endproc
 
 ;;; ============================================================
+;;; Pops two words from stack to $6/$8; preserves A,X,Y
 
 .proc PopPointers
+        ;; Stash A,X
+        sta     a_save
+        stx     x_save
+
         ;; save return addr
         pla
         sta     stash_low
@@ -2420,8 +2436,14 @@ stash_high := * + 1
 stash_low := * + 1
         lda     #SELF_MODIFIED_BYTE
         pha
-        rts
 
+        ;; Restore A,X
+        x_save := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        a_save := *+1
+        lda     #SELF_MODIFIED_BYTE
+
+        rts
 .endproc
 
 ;;; ============================================================
