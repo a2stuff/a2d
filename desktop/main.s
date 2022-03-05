@@ -955,6 +955,7 @@ with_path:
 :       copy    src_file_info_params::file_type, icontype_filetype
         copy16  src_file_info_params::aux_type, icontype_auxtype
         copy16  src_file_info_params::blocks_used, icontype_blocks
+        copy16  #buf_filename2, icontype_filename
         jsr     GetIconType
 
         cmp     #IconType::basic
@@ -7751,7 +7752,7 @@ thumbmax:
         bit     LCBANK2
         bit     LCBANK2
 
-        ;; Copy the name
+        ;; Copy the name out of LCBANK2
         ldy     #FileRecord::name
         lda     (file_record),y
         sta     name_tmp
@@ -7764,55 +7765,21 @@ thumbmax:
         cpx     name_tmp
         bne     :-
 
-        ;; Check file type
+        ;; Find the icon type
         ldy     #FileRecord::file_type
         lda     (file_record),y
-
-        ;; Handle several classes of overrides
         sta     icontype_filetype
         ldy     #FileRecord::aux_type
         copy16in (file_record),y, icontype_auxtype
         ldy     #FileRecord::blocks
         copy16in (file_record),y, icontype_blocks
+        copy16  #name_tmp, icontype_filename
+
+        ;; Back in the resources we need
+        bit     LCBANK1
+        bit     LCBANK1
+
         jsr     GetIconType
-
-        ;; Distinguish *.SYSTEM files as apps (use $01) from other
-        ;; type=SYS files (use $FF).
-        cmp     #IconType::system
-        bne     got_type
-
-        ldy     #FileRecord::name
-        lda     (file_record),y
-        tay
-        ldx     str_sys_suffix
-cloop:  lda     (file_record),y
-        jsr     UpcaseChar
-        cmp     str_sys_suffix,x
-        bne     not_app
-        dey
-        beq     not_app
-        dex
-        bne     cloop
-
-is_app:
-        lda     #IconType::application
-        bne     got_type        ; always
-
-str_sys_suffix:
-        PASCAL_STRING ".SYSTEM" ; do not localize
-
-not_app:
-        lda     #IconType::system
-        FALL_THROUGH_TO got_type
-
-got_type:
-        tay
-
-        ;; Figure out icon type
-        bit     LCBANK1
-        bit     LCBANK1
-        tya
-
         jsr     FindIconDetailsForIconType
         ldy     #IconEntry::name
         ldx     #0
@@ -7912,6 +7879,7 @@ L7870:  lda     cached_window_id
         jsr     PushPointers
 
         ;; For populating IconEntry::win_flags
+        tay
         lda     icontype_iconentryflags_table, y
         sta     iconentry_flags
 
@@ -7938,7 +7906,7 @@ CreateIconsAndSetWindowSize             := CreateIconsForWindow::Impl::ep_set_wi
 ;;; ============================================================
 ;;; Map file type (etc) to icon type
 
-;;; Input: `icontype_type`, `icontype_auxtype`, `icontype_blocks` populated
+;;; Input: `icontype_filetype`, `icontype_auxtype`, `icontype_blocks`, `icontype_filename` populated
 ;;; Output: A is IconType to use (for icons, open/preview, etc)
 
 .proc GetIconType
@@ -7958,7 +7926,7 @@ loop:   ldy     #0              ; type_mask, or $00 if done
 :       and     icontype_filetype    ; A = type & type_mask
         iny                     ; ASSERT: Y = ICTRecord::type
         cmp     (ptr),y         ; type check
-        bne     next
+        jne     next
 
         ;; Flags
         iny                     ; ASSERT: Y = ICTRecord::flags
@@ -7967,8 +7935,8 @@ loop:   ldy     #0              ; type_mask, or $00 if done
 
         ;; Does Aux Type matter, and if so does it match?
         bit     flags
-        bpl     blocks          ; bit 7 = compare aux
-        iny                     ; ASSERT: Y = FTORecord::aux
+    IF_NS                       ; bit 7 = compare aux
+        iny                     ; ASSERT: Y = FTORecord::aux_suf
         lda     icontype_auxtype
         cmp     (ptr),y
         bne     next
@@ -7976,10 +7944,11 @@ loop:   ldy     #0              ; type_mask, or $00 if done
         lda     icontype_auxtype+1
         cmp     (ptr),y
         bne     next
+    END_IF
 
         ;; Does Block Count matter, and if so does it match?
 blocks: bit     flags
-        bvc     match           ; bit 6 = compare blocks
+    IF_VS                       ; bit 6 = compare blocks
         ldy     #ICTRecord::blocks
         lda     icontype_blocks
         cmp     (ptr),y
@@ -7988,6 +7957,45 @@ blocks: bit     flags
         lda     icontype_blocks+1
         cmp     (ptr),y
         bne     next
+    END_IF
+
+        ;; Filename suffix?
+suffix: lda     flags
+        and     #ICT_FLAGS_SUFFIX
+    IF_NOT_ZERO
+        ;; Set up pointers to suffix and filename
+        ptr_suffix      := $08
+        ptr_filename    := $0A
+        ldy     #ICTRecord::aux_suf
+        copy16in (ptr),y, ptr_suffix
+        copy16  icontype_filename, ptr_filename
+        ;; Start at the end of the strings
+        ldy     #0
+        lda     (ptr_suffix),y
+        sta     suffix_pos
+        lda     (ptr_filename),y
+        sta     filename_pos
+        ;; Case-insensitive compare each character
+        suffix_pos := *+1
+:       ldy     #SELF_MODIFIED_BYTE
+        lda     (ptr_suffix),y
+        jsr     UpcaseChar
+        sta     char
+        filename_pos := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        lda     (ptr_filename),y
+        jsr     UpcaseChar
+        char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     next            ; no match
+        ;; Move to previous characters
+        dec     suffix_pos
+        beq     :+              ; if we ran out of suffix, it's a match
+        dec     filename_pos
+        beq     next            ; but if we ran out of filename, it's not
+        bne     :-              ; otherwise, keep going
+:
+    END_IF
 
         ;; Have a match
 match:  ldy     #ICTRecord::icontype

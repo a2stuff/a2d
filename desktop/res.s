@@ -1184,6 +1184,7 @@ menu_kbd_flag:
 icontype_filetype:   .byte   0
 icontype_auxtype:    .word   0
 icontype_blocks:     .word   0
+icontype_filename:   .addr   0
 
 ;;; Mapping from file info to icon type
 ;;;
@@ -1194,21 +1195,22 @@ icontype_blocks:     .word   0
         mask     .byte ; 0     incoming type masked before comparison
         filetype .byte ; 1     file type for the record (must match)
         flags    .byte ; 2     bit 7 = compare aux; 6 = compare blocks
-        aux      .word ; 3     optional aux type
+        aux_suf  .word ; 3     if ICT_FLAGS_AUX: aux type; if ICT_FLAGS_SUFFIX: suffix string
         blocks   .word ; 5     optional block count
         icontype .byte ; 7     IconType
 .endstruct
-.macro DEFINE_ICTRECORD mask, filetype, flags, aux, blocks, icontype
+.macro DEFINE_ICTRECORD mask, filetype, flags, aux_suf, blocks, icontype
         .byte   mask
         .byte   filetype
         .byte   flags
-        .word   aux
+        .word   aux_suf
         .word   blocks
         .byte   icontype
 .endmacro
         ICT_FLAGS_NONE   = %00000000
-        ICT_FLAGS_AUX    = %10000000
+        ICT_FLAGS_AUX    = %10000000 ; exclusive with ICT_FLAGS_SUFFIX
         ICT_FLAGS_BLOCKS = %01000000
+        ICT_FLAGS_SUFFIX = %00100000 ; exclusive with ICT_FLAGS_AUX
 
 icontype_table:
         ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
@@ -1232,6 +1234,7 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_CMD,       ICT_FLAGS_NONE, 0, 0, IconType::command       ; $F0
         DEFINE_ICTRECORD $FF, FT_BASIC,     ICT_FLAGS_NONE, 0, 0, IconType::basic         ; $FC
         DEFINE_ICTRECORD $FF, FT_REL,       ICT_FLAGS_NONE, 0, 0, IconType::relocatable   ; $FE
+        DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_SUFFIX, str_sys_suffix, 0, IconType::application ; $FF
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
 
         DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_AUX, $D0E7, 0, IconType::music ; Electric Duet
@@ -1248,6 +1251,9 @@ icontype_table:
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType, 0, IconType::desk_accessory
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType|$8000, 0, IconType::desk_accessory
         .byte   0               ; Sentinel - done!
+
+str_sys_suffix:
+        PASCAL_STRING ".SYSTEM"
 
 ;;; --------------------------------------------------
 
