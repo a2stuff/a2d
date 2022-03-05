@@ -33,7 +33,7 @@ Some calls take parameters in registers.
 
 > Routines marked with * are used by Desk Accessories.
 
-#### `JUMP_TABLE_MGTK_RELAY` *
+#### `JUMP_TABLE_MGTK_CALL` *
 
 MouseGraphics ToolKit call (main>aux). Follow by call (`.byte`) and params (`.addr`).
 
@@ -41,7 +41,7 @@ MouseGraphics ToolKit call (main>aux). Follow by call (`.byte`) and params (`.ad
 
 Use the `JUMP_TABLE_MGTK_CALL` macro for convenience.
 
-#### `JUMP_TABLE_MLI_RELAY` *
+#### `JUMP_TABLE_MLI_CALL` *
 
 ProDOS MLI call. Follow by call (`.byte`) and params (`.addr`).
 

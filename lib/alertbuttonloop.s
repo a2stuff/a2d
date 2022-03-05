@@ -12,16 +12,16 @@
         stax    rect_addr2
         lda     #0
         sta     flag
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenMode, penXOR
         jsr     Invert
 
-loop:   LIB_MGTK_CALL MGTK::GetEvent, event_params
+loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     button_up
         jsr     MapEventCoords
-        LIB_MGTK_CALL MGTK::MoveTo, event_coords
-        LIB_MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr1
+        MGTK_CALL MGTK::MoveTo, event_coords
+        MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr1
         cmp     #MGTK::inrect_inside
         beq     inside
         lda     flag
@@ -42,7 +42,7 @@ button_up:
         rts
 
 Invert:
-        LIB_MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr2
+        MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr2
         rts
 
         ;; High bit clear if button is depressed

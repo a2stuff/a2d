@@ -24,6 +24,8 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
+        MGTKEntry := MGTKAuxEntry
+
 ;;; ============================================================
 
 kShortcutNorm = res_char_button_norm_shortcut

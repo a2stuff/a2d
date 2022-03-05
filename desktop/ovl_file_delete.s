@@ -7,6 +7,8 @@
 .proc FileDeleteOverlay
         .org $7000
 
+        MGTKEntry := MGTKRelayImpl
+
 .proc Init
         jsr     file_dialog::OpenWindow
         jsr     DrawControls
@@ -49,10 +51,10 @@
         jsr     file_dialog::SetPortForWindow
         param_call file_dialog::DrawTitleCentered, aux::label_delete_file
         param_call file_dialog::DrawInput1Label, file_to_delete_label
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
@@ -82,8 +84,8 @@ jt_filename:
         jsr     JUMP_TABLE_SHOW_ALERT
         rts
 
-:       MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
+:       MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         copy16  #path_buf0, $6
@@ -97,8 +99,8 @@ jt_filename:
         .byte   0
 
 .proc HandleCancel
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         ldx     file_dialog::saved_stack

@@ -274,11 +274,18 @@ DRIVER_COMMAND_FORMAT  = 3
 ;;; Macros
 ;;; ============================================================
 
-.macro  MLI_CALL    op, addr
-        jsr MLI
-        .byte op
-        .addr addr
+;;; Scopes define their own MLIEntry identifiers (e.g. MLIEntry := MLI)
+;;; This allows for helpers that e.g. bank switch before calling.
+.macro MLI_CALL call, addr
+        jsr     MLIEntry
+        .byte   call
+    .if .paramcount > 1
+        .addr   addr
+    .else
+        .addr   0
+    .endif
 .endmacro
+
 
 .macro DEFINE_OPEN_PARAMS name, pn, io, rn
     .if .xmatch(.string(pn), "pathname")

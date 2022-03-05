@@ -122,9 +122,7 @@ start:  pha                     ; alert number
         AlertYieldLoop = app::AlertYieldLoopRelay
         alert_grafport = app::grafport2
 
-        .define LIB_MGTK_CALL MGTK_CALL
         .include "../lib/alert_dialog.s"
-        .undefine LIB_MGTK_CALL
 
 ;;; ============================================================
 

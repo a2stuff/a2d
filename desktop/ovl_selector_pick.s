@@ -9,7 +9,8 @@
 .proc SelectorOverlay2
         .org $9000
 
-        MLIRelayImpl := main::MLIRelayImpl
+        MLIEntry := main::MLIRelayImpl
+        MGTKEntry := MGTKRelayImpl
 
 io_buf := $0800
 
@@ -413,9 +414,9 @@ l10:    iny
 ;;; ============================================================
 
 .proc CloseWindow
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
+        MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, main_grafport
+        MGTK_CALL MGTK::CloseWindow, winfo_entry_picker
         rts
 .endproc
 
@@ -440,20 +441,20 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 ;;; ============================================================
 
 .proc OpenWindow
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
+        MGTK_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     #winfo_entry_picker::kWindowId
         jsr     main::SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
-        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_frame_rect
-        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_normal
-        MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_line1_start
-        MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line1_end
-        MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_line2_start
-        MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line2_end
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_ok_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_cancel_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, entry_picker_frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+        MGTK_CALL MGTK::MoveTo, entry_picker_line1_start
+        MGTK_CALL MGTK::LineTo, entry_picker_line1_end
+        MGTK_CALL MGTK::MoveTo, entry_picker_line2_start
+        MGTK_CALL MGTK::LineTo, entry_picker_line2_end
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::FrameRect, entry_picker_ok_rect
+        MGTK_CALL MGTK::FrameRect, entry_picker_cancel_rect
         jsr     DrawOkLabel
         jsr     DrawCancelLabel
         lda     selector_action
@@ -522,7 +523,7 @@ l3:     clc
         txa
         adc     #0
         sta     dialog_label_pos::xcoord+1
-        MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
+        MGTK_CALL MGTK::MoveTo, dialog_label_pos
         ldax    $06
         jsr     DrawString
         lda     xcoord
@@ -537,13 +538,13 @@ xcoord: .byte   0
 ;;; ============================================================
 
 .proc DrawOkLabel
-        MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_ok_pos
+        MGTK_CALL MGTK::MoveTo, entry_picker_ok_pos
         param_call main::DrawString, aux::ok_button_label
         rts
 .endproc
 
 .proc DrawCancelLabel
-        MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_cancel_pos
+        MGTK_CALL MGTK::MoveTo, entry_picker_cancel_pos
         param_call main::DrawString, aux::cancel_button_label
         rts
 .endproc
@@ -563,7 +564,7 @@ xcoord: .byte   0
         bpl     :-
 
         copy16  #path_buf2+3, path_buf2
-        MGTK_RELAY_CALL MGTK::DrawText, path_buf2
+        MGTK_CALL MGTK::DrawText, path_buf2
         rts
 .endproc
 
@@ -580,12 +581,12 @@ xcoord: .byte   0
         lda     (text_addr),y
         sta     text_length
         inc16   text_addr ; point past length byte
-        MGTK_RELAY_CALL MGTK::TextWidth, text_params
+        MGTK_CALL MGTK::TextWidth, text_params
 
         sub16   #winfo_entry_picker::kWidth, text_width, pos_dialog_title::xcoord
         lsr16   pos_dialog_title::xcoord ; /= 2
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_dialog_title
-        MGTK_RELAY_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::MoveTo, pos_dialog_title
+        MGTK_CALL MGTK::DrawText, text_params
         rts
 .endproc
 
@@ -597,7 +598,7 @@ xcoord: .byte   0
 
 .proc EventLoop
         jsr     main::YieldLoop
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         jeq     handle_button
@@ -607,7 +608,7 @@ xcoord: .byte   0
         jmp     HandleKey
 
 handle_button:
-        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         bne     :+
         return  #$FF
@@ -625,9 +626,9 @@ handle_button:
         jsr     main::SafeSetPortFromWindowId
         lda     #winfo_entry_picker::kWindowId
         sta     screentowindow_params::window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_params::windowx
-        MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::InRect, entry_picker_ok_rect
         cmp     #MGTK::inrect_inside
         bne     not_ok
         param_call ButtonEventLoopRelay, winfo_entry_picker::kWindowId, entry_picker_ok_rect
@@ -635,7 +636,7 @@ handle_button:
         lda     #$00            ; OK selected
 :       rts
 
-not_ok: MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
+not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_rect
         cmp     #MGTK::inrect_inside
         bne     not_cancel
         param_call ButtonEventLoopRelay, winfo_entry_picker::kWindowId, entry_picker_cancel_rect
@@ -759,9 +760,9 @@ l5:     ldx     #0
         sta     entry_picker_item_rect::y1+1
         add16   entry_picker_item_rect::x1, #kEntryPickerItemWidth-1, entry_picker_item_rect::x2
         add16   entry_picker_item_rect::y1, #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_item_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, entry_picker_item_rect
+        MGTK_CALL MGTK::SetPenMode, pencopy
         rts
 .endproc
 
@@ -799,18 +800,18 @@ l5:     ldx     #0
 ;;; ============================================================
 
 .proc HandleKeyReturn
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, entry_picker_ok_rect
+        MGTK_CALL MGTK::PaintRect, entry_picker_ok_rect
         return  #0
 .endproc
 
 ;;; ============================================================
 
 .proc HandleKeyEscape
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, entry_picker_cancel_rect
+        MGTK_CALL MGTK::PaintRect, entry_picker_cancel_rect
         return  #1
 .endproc
 
@@ -1014,8 +1015,8 @@ entries_flag_table:
 ;;; ============================================================
 
 .proc DrawItemsRect
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_all_items_rect
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, entry_picker_all_items_rect
         rts
 .endproc
 
@@ -1301,7 +1302,7 @@ finish:
         ;; That will un-hilite the Selector menu, so re-hilite it so
         ;; it un-hilites correctly when finally dismissed.
 
-        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
+        MGTK_CALL MGTK::SetMenu, aux::desktop_menu
         jsr     main::ToggleMenuHilite
         jsr     main::ShowClockForceUpdate
 
@@ -1432,8 +1433,8 @@ filename:
 
         copy    #0, second_try_flag
 
-@retry: MLI_RELAY_CALL CREATE, create_params
-        MLI_RELAY_CALL OPEN, open_origpfx_params
+@retry: MLI_CALL CREATE, create_params
+        MLI_CALL OPEN, open_origpfx_params
         beq     write
 
         ;; First time - ask if we should even try.
@@ -1458,12 +1459,12 @@ write:  lda     open_origpfx_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
 
-@retry: MLI_RELAY_CALL WRITE, write_params
+@retry: MLI_CALL WRITE, write_params
         beq     close
         jsr     JUMP_TABLE_SHOW_ALERT
         beq     @retry          ; `kAlertResultTryAgain` = 0
 
-close:  MLI_RELAY_CALL CLOSE, close_params
+close:  MLI_CALL CLOSE, close_params
         rts
 
 second_try_flag:
@@ -1474,7 +1475,7 @@ second_try_flag:
 ;;; Read SELECTOR.LIST file (using current prefix)
 
 .proc ReadFile
-@retry: MLI_RELAY_CALL OPEN, open_curpfx_params
+@retry: MLI_CALL OPEN, open_curpfx_params
         beq     read
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
@@ -1485,10 +1486,10 @@ second_try_flag:
 read:   lda     open_curpfx_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        MLI_RELAY_CALL READ, read_params
+        MLI_CALL READ, read_params
         php
         pha
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_params
         pla
         plp
         rts
@@ -1498,7 +1499,7 @@ read:   lda     open_curpfx_params::ref_num
 ;;; Write SELECTOR.LIST file (using current prefix)
 
 .proc WriteFile
-@retry: MLI_RELAY_CALL OPEN, open_curpfx_params
+@retry: MLI_CALL OPEN, open_curpfx_params
         beq     write
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
@@ -1509,12 +1510,12 @@ read:   lda     open_curpfx_params::ref_num
 write:  lda     open_curpfx_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-@retry: MLI_RELAY_CALL WRITE, write_params
+@retry: MLI_CALL WRITE, write_params
         beq     close
         jsr     JUMP_TABLE_SHOW_ALERT
         beq     @retry          ; `kAlertResultTryAgain` = 0
 
-close:  MLI_RELAY_CALL CLOSE, close_params
+close:  MLI_CALL CLOSE, close_params
         rts
 .endproc
 
@@ -1635,7 +1636,7 @@ hi:     .byte   0
 
 ;;; ============================================================
 
-.proc MLI_RELAY
+.proc MLI_CALL
         sty     call
         stax    params
         sta     ALTZPOFF
@@ -1662,7 +1663,7 @@ params: .addr   0
 .proc GetEntryRamcardFileInfo
         jsr     GetEntryRamcardPath
         stax    get_file_info_params::pathname
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         rts
 .endproc
 

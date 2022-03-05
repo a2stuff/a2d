@@ -43,9 +43,10 @@ EraseIcon       = $0C   ; { .byte icon }
 ;;;     ITK_CALL n                      - params is $0000
 ;;;     ITK_CALL n, params_addr
 ;;;     ITK_CALL m, params_addr, label  - params_addr is labeled for modifying
-
+;;; Scopes define their own ITKEntry identifiers (e.g. ITKEntry := IconTK::MLI)
+;;; This allows for helpers that e.g. bank switch before calling.
 .macro ITK_CALL    op, addr, label
-        jsr     IconTK::MLI
+        jsr     ITKEntry
         .byte   op
 
     .if .paramcount > 2

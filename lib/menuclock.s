@@ -2,8 +2,7 @@
 ;;;
 ;;; Requires:
 ;;;    `SETTINGS` defined
-;;;    `LIB_MLI_CALL` defined
-;;;    `LIB_MGTK_CALL` defined
+;;;    `MGTK_CALL` defined
 ;;;    lib/datetime.s for parsing functions
 ;;;    lib/drawstring.s for string drawing
 ;;;    `dow_strings` table
@@ -24,7 +23,7 @@ common: lda     MACHID
         bne     :+
         rts
 
-:       LIB_MLI_CALL GET_TIME, 0
+:       MLI_CALL GET_TIME, 0
 
         bit     force_flag      ; forced update
         bmi     update
@@ -47,11 +46,11 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         ;; --------------------------------------------------
         ;; Save the current GrafPort and use a custom one for drawing
 
-        LIB_MGTK_CALL MGTK::GetPort, getport_params
-        LIB_MGTK_CALL MGTK::InitPort, clock_grafport
-        LIB_MGTK_CALL MGTK::SetPort, clock_grafport
+        MGTK_CALL MGTK::GetPort, getport_params
+        MGTK_CALL MGTK::InitPort, clock_grafport
+        MGTK_CALL MGTK::SetPort, clock_grafport
 
-        LIB_MGTK_CALL MGTK::MoveTo, pos_clock
+        MGTK_CALL MGTK::MoveTo, pos_clock
 
         ;; --------------------------------------------------
         ;; Day of Week
@@ -74,7 +73,7 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         lda     #0
         adc     #>dow_strings
         sta     dow_str_params::addr+1
-        LIB_MGTK_CALL MGTK::DrawText, dow_str_params
+        MGTK_CALL MGTK::DrawText, dow_str_params
 
         ;; --------------------------------------------------
         ;; Time
@@ -89,7 +88,7 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         ;; Restore the previous GrafPort
 
         copy16  getport_params::portptr, @addr
-        LIB_MGTK_CALL MGTK::SetPort, 0, @addr
+        MGTK_CALL MGTK::SetPort, 0, @addr
         rts
 
 last_dt:

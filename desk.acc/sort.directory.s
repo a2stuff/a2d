@@ -45,6 +45,8 @@
 
         .org DA_LOAD_ADDRESS
 
+        MLIEntry := MLI
+
 dir_data_buffer     := $0E00
         .assert (<dir_data_buffer) = 0, error, "Must be page aligned"
 

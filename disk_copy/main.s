@@ -7,6 +7,8 @@
 .scope main
         .org $800
 
+        MLIEntry := MLIRelayImpl
+
 ;;; ============================================================
 
         .include "../lib/formatdiskii.s"
@@ -82,6 +84,9 @@ params:  .res    3
 ;;; Quit back to ProDOS (which will launch DeskTop)
 
 .proc Quit
+        ;; Override in this scope
+        MLIEntry := MLI
+
         jsr     auxlc::RestoreRamDisk
         sta     ALTZPOFF
         bit     ROMIN2
@@ -1125,22 +1130,22 @@ done:   rts
 ;;; ============================================================
 
 .proc CallOnLine2
-        MLI_RELAY_CALL ON_LINE, on_line_params2
+        MLI_CALL ON_LINE, on_line_params2
         rts
 .endproc
 
 .proc CallOnLine
-        MLI_RELAY_CALL ON_LINE, on_line_params
+        MLI_CALL ON_LINE, on_line_params
         rts
 .endproc
 
 .proc WriteBlock
-        MLI_RELAY_CALL WRITE_BLOCK, block_params
+        MLI_CALL WRITE_BLOCK, block_params
         rts
 .endproc
 
 .proc ReadBlock
-        MLI_RELAY_CALL READ_BLOCK, block_params
+        MLI_CALL READ_BLOCK, block_params
         rts
 .endproc
 

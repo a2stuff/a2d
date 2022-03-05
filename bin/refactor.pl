@@ -125,13 +125,6 @@ $text =~ s/
      /"MLI_CALL " . (exists $mli{$1} ? "$mli{$1}" : $1) . ", \$$3$2"/egx;
 
 $text =~ s/
-     \b  ldy \s+ \#(\$[0-9A-F]{2}) \n
-     \s+ lda \s+ \#\$([0-9A-F]{2}) \n
-     \s+ ldx \s+ \#\$([0-9A-F]{2}) \n
-     \s+ jsr \s+ MGTK_RELAY \b
-     /"MGTK_RELAY_CALL MGTK::$mgtk{$1}, \$$3$2"/egx;
-
-$text =~ s/
      \b  ldy \s+ \#\$([0-9A-F]{2}) \n
      \s+ lda \s+ \#\$([0-9A-F]{2}) \n
      \s+ ldx \s+ \#\$([0-9A-F]{2}) \n
@@ -253,10 +246,5 @@ $text =~ s/
 $text =~ s/
      \b  brk \b
      /.byte   0/gx;
-
-$text =~ s/
-     \b  ( MGTK_RELAY_CALL \s+ MGTK::InRect, .* \n
-     \s+ ) cmp \s+ \#\$80 \b
-     /$1cmp     #MGTK::inrect_inside/gx;
 
 print $text;

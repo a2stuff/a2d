@@ -12,6 +12,10 @@
 
 .scope main
 
+        MLIEntry  := MLIRelayImpl
+        MGTKEntry := ::MGTKRelayImpl
+        ITKEntry  := ITKRelayImpl
+
 kShortcutResize = res_char_resize_shortcut
 kShortcutMove   = res_char_move_shortcut
 kShortcutScroll = res_char_scroll_shortcut
@@ -25,7 +29,7 @@ dst_path_buf    := $1F80
         ;; Entries marked with * are used by DAs
         ;; "Exported" by desktop.inc
 
-JT_MGTK_CALL:           jmp     MGTKRelayImpl           ; *
+JT_MGTK_CALL:           jmp     ::MGTKRelayImpl         ; *
 JT_MLI_CALL:            jmp     MLIRelayImpl            ; *
 JT_CLEAR_UPDATES:       jmp     ClearUpdates            ; *
 JT_YIELD_LOOP:          jmp     YieldLoop               ; *
@@ -165,16 +169,16 @@ handle_update:
         bne     win
 
         ;; Desktop
-        MGTK_RELAY_CALL MGTK::BeginUpdate, event_params::window_id
-        ITK_RELAY_CALL IconTK::RedrawDesktopIcons
-        MGTK_RELAY_CALL MGTK::EndUpdate
+        MGTK_CALL MGTK::BeginUpdate, event_params::window_id
+        ITK_CALL IconTK::RedrawDesktopIcons
+        MGTK_CALL MGTK::EndUpdate
         jmp     loop
 
         ;; Window
-win:    MGTK_RELAY_CALL MGTK::BeginUpdate, event_params::window_id
+win:    MGTK_CALL MGTK::BeginUpdate, event_params::window_id
         bne     :+            ; obscured
         jsr     UpdateWindow
-        MGTK_RELAY_CALL MGTK::EndUpdate
+        MGTK_CALL MGTK::EndUpdate
 :       jmp     loop
 
 finish: jsr     LoadDesktopEntryTable ; restore after `UpdateWindow`
@@ -221,7 +225,7 @@ ClearUpdates := ClearUpdatesImpl::clear
 
         ;; `DrawWindowHeader` relies on `window_grafport` for dimensions
         copy    cached_window_id, getwinport_params::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     DrawWindowHeader
 
         ;; Overwrite the Winfo's port with the cliprect we got for the update
@@ -472,7 +476,7 @@ menu_accelerators:
         lda     #1              ; treat Solid-Apple same as Open-Apple
 :       sta     menu_click_params::key_mods
         copy    #$80, menu_kbd_flag ; note that source is keyboard
-        MGTK_RELAY_CALL MGTK::MenuKey, menu_click_params
+        MGTK_CALL MGTK::MenuKey, menu_click_params
 
 MenuDispatch2:
         ldx     menu_click_params::menu_id
@@ -493,7 +497,7 @@ MenuDispatch2:
         tax
         copy16  dispatch_table,x, proc_addr
         jsr     call_proc
-        MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
+        MGTK_CALL MGTK::HiliteMenu, menu_click_params
         copy    #0, menu_click_params::menu_id ; for `ToggleMenuHilite`
         rts
 
@@ -514,13 +518,13 @@ window_open_flag := HandleKeydownImpl::window_open_flag
 .proc HandleClick
         tsx
         stx     saved_stack
-        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         bne     not_desktop
 
         ;; Click on desktop
         copy    #0, findwindow_params::window_id
-        ITK_RELAY_CALL IconTK::FindIcon, event_params::coords
+        ITK_CALL IconTK::FindIcon, event_params::coords
         lda     findicon_params::which_icon
         jne     HandleVolumeIconClick
 
@@ -530,7 +534,7 @@ not_desktop:
         cmp     #MGTK::Area::menubar  ; menu?
         bne     not_menu
         copy    #0, menu_kbd_flag ; note that source is not keyboard
-        MGTK_RELAY_CALL MGTK::MenuSelect, menu_click_params
+        MGTK_CALL MGTK::MenuSelect, menu_click_params
         jmp     MenuDispatch2
 
 not_menu:
@@ -577,7 +581,7 @@ not_menu:
 ;;; Inputs: window id to activate in `findwindow_params::window_id`
 .proc ActivateWindow
         ;; Make the window active.
-        MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params::window_id
+        MGTK_CALL MGTK::SelectWindow, findwindow_params::window_id
         copy    findwindow_params::window_id, active_window_id
         jsr     LoadActiveWindowEntryTable ; restored below
         jsr     DrawWindowEntries
@@ -629,7 +633,7 @@ not_menu:
 :       sta     selected_window_id
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_CALL IconTK::HighlightIcon, icon_param
 
         lda     icon_param
         jsr     DrawIcon
@@ -670,7 +674,7 @@ done:   rts
         lda     #SELF_MODIFIED_BYTE
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         bne     skip            ; MGTK::Error::window_obscured
-:       ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
+:       ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
 skip:   lda     win
         beq     :+
         lda     icon_param
@@ -687,7 +691,7 @@ skip:   lda     win
 ;;; Returns 0 if ok, `MGTK::Error::window_obscured` if the window is obscured.
 .proc UnsafeOffsetAndSetPortFromWindowId
         sta     getwinport_params::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         bne     :+              ; MGTK::Error::window_obscured
         jsr     OffsetWindowGrafportAndSet
         lda     #0
@@ -699,18 +703,18 @@ skip:   lda     win
 ;;; Returns 0 if ok, `MGTK::Error::window_obscured` if the window is obscured.
 .proc UnsafeSetPortFromWindowId
         sta     getwinport_params::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         bne     :+              ; MGTK::Error::window_obscured
-        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
+        MGTK_CALL MGTK::SetPort, window_grafport
 :       rts
 .endproc
 
 ;;; Used for windows that can never be obscured (e.g. dialogs)
 .proc SafeSetPortFromWindowId
         sta     getwinport_params::window_id
-        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         ;; ASSERT: Result is not MGTK::Error::window_obscured
-        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
+        MGTK_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
 
@@ -904,21 +908,21 @@ no_selection:
 ;;; Output: MLI result (carry/zero flag, etc)
 .proc GetFileInfo
         stax    file_info_params::pathname
-        MLI_RELAY_CALL GET_FILE_INFO, file_info_params
+        MLI_CALL GET_FILE_INFO, file_info_params
         rts
 .endproc
 
 ;;; Call GET_FILE_INFO on file at `src_path_buf` a.k.a. `INVOKER_PREFIX`
 ;;; Output: MLI result (carry/zero flag, etc), `src_file_info_params` populated
 .proc GetSrcFileInfo
-        MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+        MLI_CALL GET_FILE_INFO, src_file_info_params
         rts
 .endproc
 
 ;;; Call GET_FILE_INFO on file at `dst_path_buf`
 ;;; Output: MLI result (carry/zero flag, etc), `dst_file_info_params` populated
 .proc GetDstFileInfo
-        MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
+        MLI_CALL GET_FILE_INFO, dst_file_info_params
         rts
 .endproc
 
@@ -1612,7 +1616,7 @@ start:  jsr     ResetMainGrafport
         jsr     SetCursorWatch  ; before loading DA
 
         ;; Get current prefix
-        MLI_RELAY_CALL GET_PREFIX, get_prefix_params
+        MLI_CALL GET_PREFIX, get_prefix_params
 
         ;; Find DA name
         lda     menu_click_params::item_num           ; menu item index (1-based)
@@ -1663,7 +1667,7 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         stax    open_pathname
 
         ;; Load the DA
-@retry: MLI_RELAY_CALL OPEN, open_params
+@retry: MLI_CALL OPEN, open_params
         beq     :+
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
@@ -1674,15 +1678,15 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         lda     open_ref_num
         sta     read_ref_num
         sta     close_ref_num
-        MLI_RELAY_CALL READ, read_params
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL READ, read_params
+        MLI_CALL CLOSE, close_params
 
         ;; Invoke it
         jsr     SetCursorPointer ; before invoking DA
         jsr     ResetMainGrafport
-        MGTK_RELAY_CALL MGTK::SetZP1, setzp_params_preserve
+        MGTK_CALL MGTK::SetZP1, setzp_params_preserve
         jsr     DA_LOAD_ADDRESS
-        MGTK_RELAY_CALL MGTK::SetZP1, setzp_params_nopreserve
+        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
 
         ;; Restore state
         jsr     ShowClockForceUpdate
@@ -1737,6 +1741,9 @@ done:   jsr     SetCursorPointer ; after invoking DA
         jmp     ROUTINE_TARGET
 
 PROC_AT routine, InvokeInterpreter::ROUTINE_TARGET
+        ;; Override within the proc
+        MLIEntry := MLI
+
         jmp     start
 
         io_buf := $1C00
@@ -2283,7 +2290,7 @@ L4FC6:  lda     active_window_id
         COPY_STRUCT DateTime, DATELO, create_params::create_date
 
         ;; Create folder
-        MLI_RELAY_CALL CREATE, create_params
+        MLI_CALL CREATE, create_params
         beq     success
 
         ;; Failure
@@ -2674,6 +2681,9 @@ eject_flag:
 ;;; ============================================================
 
 .proc CmdQuitImpl
+        ;; Override within this scope
+        MLIEntry := MLI
+
         ;; TODO: Assumes prefix is retained. Compose correct path.
 
         quit_code_io := $800
@@ -2837,11 +2847,11 @@ entry:
         sta     icon_param
         jsr     IconEntryLookup
         stax    @addr
-        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
+        ITK_CALL IconTK::AddIcon, 0, @addr
         err := *+1
         lda     #SELF_MODIFIED_BYTE
     IF_ZERO                     ; Skip drawing if obscured
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
     END_IF
         inc     index
         jmp     :-
@@ -2964,7 +2974,7 @@ ret:    rts
 ;;; Assert: DesktopEntryTable is cached (and this is restored)
 
 .proc DestroyIconsInActiveWindow
-        ITK_RELAY_CALL IconTK::CloseWindow, active_window_id
+        ITK_CALL IconTK::CloseWindow, active_window_id
         jsr     LoadActiveWindowEntryTable ; restored below
         lda     icon_count
         sec
@@ -3095,7 +3105,7 @@ CmdLock         := DoLock
         bit     result
         bpl     :+              ; N = window renamed
         ;; TODO: Avoid repainting everything
-        MGTK_RELAY_CALL MGTK::RedrawDeskTop
+        MGTK_CALL MGTK::RedrawDeskTop
 :
         bit     result
         bvc     ret             ; V = SYS file renamed
@@ -3514,7 +3524,7 @@ ret:    rts
 
 .proc SelectIcon
         sta     icon_param
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_CALL IconTK::HighlightIcon, icon_param
 
         ;; Find icon's window, and set selection
         icon_ptr := $06
@@ -3580,7 +3590,7 @@ ret:    rts
         index := *+1
 loop:   ldx     #SELF_MODIFIED_BYTE
         copy    selected_icon_list,x, icon_param
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_CALL IconTK::HighlightIcon, icon_param
 
         err := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -3590,7 +3600,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         beq     :+
         lda     icon_param
         jsr     IconScreenToWindow
-:       ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
+:       ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
         lda     selected_window_id
         beq     :+
         lda     icon_param
@@ -3612,7 +3622,7 @@ finish: jmp     LoadDesktopEntryTable ; restore from above
 ;;; Initiate keyboard-based resizing
 
 .proc CmdResize
-        MGTK_RELAY_CALL MGTK::KeyboardMouse
+        MGTK_CALL MGTK::KeyboardMouse
         jmp     HandleResizeClick
 .endproc
 
@@ -3620,7 +3630,7 @@ finish: jmp     LoadDesktopEntryTable ; restore from above
 ;;; Initiate keyboard-based window moving
 
 .proc CmdMove
-        MGTK_RELAY_CALL MGTK::KeyboardMouse
+        MGTK_CALL MGTK::KeyboardMouse
         jmp     HandleTitleClick
 .endproc
 
@@ -3898,8 +3908,8 @@ loop:   lda     cached_window_entry_list,x
         lda     cached_window_entry_list,x
         sta     icon_param
         copy    #0, cached_window_entry_list,x
-        ITK_RELAY_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
-        ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
+        ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
+        ITK_CALL IconTK::RemoveIcon, icon_param
         lda     icon_param
         jsr     FreeDesktopIconPosition
         lda     icon_param
@@ -3959,8 +3969,8 @@ cont:   txa
         sta     icon_param
         jsr     IconEntryLookup
         stax    @addr
-        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
+        ITK_CALL IconTK::AddIcon, 0, @addr
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
 
 next:   pla
         tax
@@ -4109,8 +4119,8 @@ not_in_map:
         lda     icon_param
         jsr     FreeDesktopIconPosition
         jsr     ResetMainGrafport
-        ITK_RELAY_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
-        ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
+        ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
+        ITK_CALL IconTK::RemoveIcon, icon_param
 
 :       lda     cached_window_entry_count
         sta     previous_icon_count
@@ -4160,8 +4170,8 @@ add_icon:
         sta     icon_param
         jsr     IconEntryLookup
         stax    @addr
-        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
+        ITK_CALL IconTK::AddIcon, 0, @addr
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
 
 :       jsr     StoreWindowEntryTable
         rts
@@ -4212,7 +4222,7 @@ active_window_view_by:
         jsr     GetActiveWindowViewBy
         sta     active_window_view_by
 
-        MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
+        MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         ;; TODO: jmp here means `done_client_click` not called, callee responsible
         jeq     HandleContentClick ; 0 = ctl_not_a_control
@@ -4325,7 +4335,7 @@ done_client_click:
 .proc DoTrackThumb
         lda     findcontrol_params::which_ctl
         sta     trackthumb_params::which_ctl
-        MGTK_RELAY_CALL MGTK::TrackThumb, trackthumb_params
+        MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         bne     :+
         rts
@@ -4337,7 +4347,7 @@ done_client_click:
 
 .proc UpdateScrollThumb
         copy    updatethumb_params::stash, updatethumb_params::thumbpos
-        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     ApplyActiveWinfoToWindowGrafport
 
         bit     active_window_view_by
@@ -4377,7 +4387,7 @@ done_client_click:
         beq     :+
 bail:   return  #$FF            ; high bit set = not repeating
 
-:       MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
+:       MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         beq     bail
         cmp     #MGTK::Ctl::dead_zone
@@ -4394,7 +4404,7 @@ bail:   return  #$FF            ; high bit set = not repeating
 .proc HandleContentClick
         ;; Ignore clicks in the header area
         copy    active_window_id, screentowindow_params::window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     screentowindow_params::windowy
         cmp     #kWindowHeaderHeight + 1
         bcs     :+
@@ -4405,7 +4415,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         jmi     ClearSelection
 
         copy    active_window_id, findicon_params::window_id
-        ITK_RELAY_CALL IconTK::FindIcon, findicon_params
+        ITK_CALL IconTK::FindIcon, findicon_params
         lda     findicon_params::which_icon
         bne     HandleFileIconClick
 
@@ -4466,7 +4476,7 @@ check_double_click:
         ;; --------------------------------------------------
         ;; Drag of file icon
         copy    icon_num, drag_drop_params::icon
-        ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_params
+        ITK_CALL IconTK::DragHighlighted, drag_drop_params
         tax
         lda     drag_drop_params::result
         beq     same_or_desktop
@@ -4543,7 +4553,7 @@ same_or_desktop:
         pha
         lda     selected_icon_list,x
         sta     icon_param
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag)
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag)
         pla
         tax
         dex
@@ -4585,7 +4595,7 @@ failure:
 
 .proc SelectFileIcon
         sta     icon_param
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_CALL IconTK::HighlightIcon, icon_param
 
         ldx     selected_icon_count
         copy    icon_param, selected_icon_list,x
@@ -4604,7 +4614,7 @@ failure:
 
 .proc DeselectFileIcon
         sta     icon_param
-        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
+        ITK_CALL IconTK::UnhighlightIcon, icon_param
 
         lda     icon_param
         jsr     RemoveFromSelectionList
@@ -4744,7 +4754,7 @@ exception_flag:
 .proc ClearWindowBackgroundIfNotObscured
     IF_ZERO                     ; Skip drawing if obscured
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, window_grafport::cliprect
+        MGTK_CALL MGTK::PaintRect, window_grafport::cliprect
     END_IF
         rts
 .endproc
@@ -4815,7 +4825,7 @@ iloop:  cpx     cached_window_entry_count
         pha
         copy    cached_window_entry_list,x, icon_param
         jsr     IconScreenToWindow
-        ITK_RELAY_CALL IconTK::IconInRect, icon_param
+        ITK_CALL IconTK::IconInRect, icon_param
         beq     done_icon
 
         ;; Already selected?
@@ -4823,16 +4833,16 @@ iloop:  cpx     cached_window_entry_count
         jsr     IsIconSelected
     IF_NE
         ;; Highlight and add to selection
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
+        ITK_CALL IconTK::HighlightIcon, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
         copy    active_window_id, selected_window_id
     ELSE
         ;; Unhighlight and remove from selection
-        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
+        ITK_CALL IconTK::UnhighlightIcon, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
         lda     icon_param
         jsr     RemoveFromSelectionList
     END_IF
@@ -4932,7 +4942,7 @@ y_flag: .byte   0
         bmi     :+
         jsr     LoadActiveWindowEntryTable ; restored below
         jsr     CachedIconsScreenToWindow
-:       MGTK_RELAY_CALL MGTK::DragWindow, event_params
+:       MGTK_CALL MGTK::DragWindow, event_params
         jsr     GetActiveWindowViewBy
         bmi     :+
         jsr     CachedIconsWindowToScreen
@@ -4946,7 +4956,7 @@ y_flag: .byte   0
 
 .proc HandleResizeClick
         copy    active_window_id, event_params
-        MGTK_RELAY_CALL MGTK::GrowWindow, event_params
+        MGTK_CALL MGTK::GrowWindow, event_params
         jsr     LoadActiveWindowEntryTable ; restored below
         jsr     CachedIconsScreenToWindow
         jsr     UpdateScrollbars
@@ -4959,7 +4969,7 @@ y_flag: .byte   0
 
 .proc HandleCloseClick
         lda     active_window_id
-        MGTK_RELAY_CALL MGTK::TrackGoAway, trackgoaway_params
+        MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
         bne     :+
         rts
@@ -4986,7 +4996,7 @@ y_flag: .byte   0
         sbc     cached_window_entry_count
         sta     icon_count
 
-        ITK_RELAY_CALL IconTK::CloseWindow, active_window_id
+        ITK_CALL IconTK::CloseWindow, active_window_id
 
         jsr     FreeCachedWindowIcons
 
@@ -5002,7 +5012,7 @@ iter:   dec     num_open_windows
 cont:   sta     cached_window_entry_count
         jsr     StoreWindowEntryTable
 
-        MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
+        MGTK_CALL MGTK::CloseWindow, active_window_id
 
         ;; --------------------------------------------------
         ;; Do we have a parent icon for this window?
@@ -5030,7 +5040,7 @@ cont:   sta     cached_window_entry_count
         sta     window_to_dir_icon_table-1,x ; 0 = window free
         sta     win_view_by_table-1,x
 
-        MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
+        MGTK_CALL MGTK::FrontWindow, active_window_id
         jsr     LoadDesktopEntryTable ; restore from above
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         jsr     CheckItem
@@ -5063,7 +5073,7 @@ cont:   sta     cached_window_entry_count
 :       sta     selected_window_id
         copy    #1, selected_icon_count
         copy    icon, selected_icon_list
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
+        ITK_CALL IconTK::HighlightIcon, icon_param
 
         lda     icon_param
         jsr     DrawIcon
@@ -5436,7 +5446,7 @@ calc:   jsr     CalculateThumbPos
 skip:   sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::horizontal_scroll_bar
         sta     updatethumb_params::which_ctl
-        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
 win_width:
@@ -5495,7 +5505,7 @@ calc:   jsr     CalculateThumbPos
 skip:   sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
-        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
 win_height:
@@ -5537,7 +5547,7 @@ disable:
         copy    #MGTK::disableitem_disable, disableitem_params::disable
         copy    #0, window_open_flag
 
-:       MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params ; View menu
+:       MGTK_CALL MGTK::DisableMenu, disablemenu_params ; View menu
 
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdNewFolder
@@ -5591,7 +5601,7 @@ DisableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::disable
 
 .proc DisableMenuItem
         sta     disableitem_params::menu_item
-        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
+        MGTK_CALL MGTK::DisableItem, disableitem_params
         rts
 .endproc
 
@@ -5707,7 +5717,7 @@ check_double_click:
         ;; --------------------------------------------------
         ;; Drag of volume icon
         copy    findicon_params::which_icon, drag_drop_params::icon
-        ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_params
+        ITK_CALL IconTK::DragHighlighted, drag_drop_params
         tax
         lda     drag_drop_params::result
         beq     same_or_desktop
@@ -5764,7 +5774,7 @@ same_or_desktop:
 :       txa
         pha
         copy    selected_icon_list,x, icon_param
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
         pla
         tax
         dex
@@ -5773,8 +5783,8 @@ same_or_desktop:
 ret:    rts
 
 .proc SelectVolIcon
-        ITK_RELAY_CALL IconTK::HighlightIcon, findicon_params::which_icon
-        ITK_RELAY_CALL IconTK::DrawIcon, findicon_params::which_icon ; CHECKED (desktop)
+        ITK_CALL IconTK::HighlightIcon, findicon_params::which_icon
+        ITK_CALL IconTK::DrawIcon, findicon_params::which_icon ; CHECKED (desktop)
         ldx     selected_icon_count
         copy    findicon_params::which_icon, selected_icon_list,x
         inc     selected_icon_count
@@ -5782,8 +5792,8 @@ ret:    rts
 .endproc
 
 .proc DeselectVolIcon
-        ITK_RELAY_CALL IconTK::UnhighlightIcon, findicon_params::which_icon
-        ITK_RELAY_CALL IconTK::DrawIcon, findicon_params::which_icon ; CHECKED (desktop)
+        ITK_CALL IconTK::UnhighlightIcon, findicon_params::which_icon
+        ITK_CALL IconTK::DrawIcon, findicon_params::which_icon ; CHECKED (desktop)
         lda     findicon_params::which_icon
         jmp     RemoveFromSelectionList
 .endproc
@@ -5850,7 +5860,7 @@ iloop:  cpx     cached_window_entry_count
 :       txa
         pha
         copy    cached_window_entry_list,x, icon_param
-        ITK_RELAY_CALL IconTK::IconInRect, icon_param
+        ITK_CALL IconTK::IconInRect, icon_param
         beq     done_icon
 
         ;; Already selected?
@@ -5858,15 +5868,15 @@ iloop:  cpx     cached_window_entry_count
         jsr     IsIconSelected
     IF_NE
         ;; Highlight and add to selection
-        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
+        ITK_CALL IconTK::HighlightIcon, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
         ldx     selected_icon_count
         copy    icon_param, selected_icon_list,x
         inc     selected_icon_count
     ELSE
         ;; Unhighlight and remove from selection
-        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
+        ITK_CALL IconTK::UnhighlightIcon, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
         lda     icon_param
         jsr     RemoveFromSelectionList
     END_IF
@@ -6075,7 +6085,7 @@ update_view:
         lda     cached_window_id
         jsr     WindowLookup   ; A,X points at Winfo
         stax    @addr
-        MGTK_RELAY_CALL MGTK::OpenWindow, 0, @addr
+        MGTK_CALL MGTK::OpenWindow, 0, @addr
 
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
@@ -6096,11 +6106,11 @@ update_view:
         sta     icon_param
         jsr     IconEntryLookup ; A,X points at IconEntry
         stax    @addr2
-        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr2
+        ITK_CALL IconTK::AddIcon, 0, @addr2
         err := *+1
         lda     #SELF_MODIFIED_BYTE
     IF_ZERO                     ; Skip drawing if obscured
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
     END_IF
         inc     num
         jmp     :-
@@ -6233,7 +6243,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc CheckItem
-        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
+        MGTK_CALL MGTK::CheckItem, checkitem_params
         rts
 .endproc
 
@@ -6349,9 +6359,9 @@ loop:   lda     #SELF_MODIFIED_BYTE
         tax
         lda     cached_window_entry_list,x
         sta     icon_param
-        ITK_RELAY_CALL IconTK::IconInRect, icon_param
+        ITK_CALL IconTK::IconInRect, icon_param
         beq     :+
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
 :       inc     index
         jmp     loop
 
@@ -6398,7 +6408,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         beq     finish
         tax
         copy    selected_icon_list,x, icon_param
-        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
+        ITK_CALL IconTK::UnhighlightIcon, icon_param
 
         err := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -6408,7 +6418,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         beq     :+
         lda     icon_param
         jsr     IconScreenToWindow
-:       ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED
+:       ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
         lda     selected_window_id
         beq     :+
         lda     icon_param
@@ -6505,7 +6515,7 @@ activate_vscroll:
         jmi     UpdateVThumb
 
 .proc ActivateCtl
-        MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
 .endproc
 
@@ -6564,7 +6574,7 @@ set:    lda     #0
         add16   window_grafport::cliprect::y1, #kOffset, window_grafport::cliprect::y1
         bit     flag
         bmi     :+
-        MGTK_RELAY_CALL MGTK::SetPort, window_grafport
+        MGTK_CALL MGTK::SetPort, window_grafport
 :       rts
 
 flag:   .byte   0
@@ -7067,7 +7077,7 @@ reserved_desktop_icons:
 ;;; --------------------------------------------------
 
 .proc DoOpen
-        MLI_RELAY_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
         beq     done
 
         ;; On error, clean up state
@@ -7120,11 +7130,11 @@ suppress_error_on_open_flag:
 ;;; --------------------------------------------------
 
 DoRead:
-        MLI_RELAY_CALL READ, read_params
+        MLI_CALL READ, read_params
         rts
 
 DoClose:
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_params
         rts
 
 ;;; --------------------------------------------------
@@ -8030,10 +8040,10 @@ flags:  .byte   0
         sta     header_line_right::ycoord+1
 
         ;; Draw top line
-        MGTK_RELAY_CALL MGTK::MoveTo, header_line_left
+        MGTK_CALL MGTK::MoveTo, header_line_left
         copy16  window_grafport::cliprect::x2, header_line_right::xcoord
         jsr     SetPenModeNotCopy
-        MGTK_RELAY_CALL MGTK::LineTo, header_line_right
+        MGTK_CALL MGTK::LineTo, header_line_right
 
         ;; Offset down by 2px
         lda     header_line_left::ycoord
@@ -8047,8 +8057,8 @@ flags:  .byte   0
         sta     header_line_right::ycoord+1
 
         ;; Draw bottom line
-        MGTK_RELAY_CALL MGTK::MoveTo, header_line_left
-        MGTK_RELAY_CALL MGTK::LineTo, header_line_right
+        MGTK_CALL MGTK::MoveTo, header_line_left
+        MGTK_CALL MGTK::LineTo, header_line_right
 
         ;; Baseline for header text
         add16 window_grafport::cliprect::y1, #kWindowHeaderHeight-4, items_label_pos::ycoord
@@ -8060,7 +8070,7 @@ flags:  .byte   0
         lda     cached_window_entry_count
         jsr     adjust_item_suffix
 
-        MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
+        MGTK_CALL MGTK::MoveTo, items_label_pos
         jsr     DrawIntString
         param_call_indirect DrawPascalString, ptr_str_items_suffix
 
@@ -8077,7 +8087,7 @@ flags:  .byte   0
         tax
         tya
         jsr     IntToStringWithSeparators
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_k_in_disk
+        MGTK_CALL MGTK::MoveTo, pos_k_in_disk
         jsr     DrawIntString
         param_call DrawPascalString, str_k_in_disk
 
@@ -8093,7 +8103,7 @@ flags:  .byte   0
         tax
         tya
         jsr     IntToStringWithSeparators
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_k_available
+        MGTK_CALL MGTK::MoveTo, pos_k_available
         jsr     DrawIntString
         param_jump DrawPascalString, str_k_available
 
@@ -9618,7 +9628,7 @@ auxtype:
         beq     exit
         sta     textlen
         inc16   textptr
-        MGTK_RELAY_CALL MGTK::DrawText, params
+        MGTK_CALL MGTK::DrawText, params
 exit:   rts
 .endproc
 
@@ -9635,7 +9645,7 @@ exit:   rts
         lda     (ptr),y
         sta     len
         inc16   ptr
-        MGTK_RELAY_CALL MGTK::TextWidth, ptr
+        MGTK_CALL MGTK::TextWidth, ptr
         ldax    result
         rts
 .endproc
@@ -9861,7 +9871,7 @@ pos_win:        .word   0, 0
         inx
         cpx     #.sizeof(MGTK::Point)
         bne     :-
-        MGTK_RELAY_CALL MGTK::SetPort, highlight_grafport
+        MGTK_CALL MGTK::SetPort, highlight_grafport
         rts
 .endproc
 
@@ -10026,7 +10036,7 @@ done:
 
 not_sp:
         ;; Not SmartPort - try AppleTalk
-        MLI_RELAY_CALL READ_BLOCK, block_params
+        MLI_CALL READ_BLOCK, block_params
         beq     :+
         cmp     #ERR_NETWORK_ERROR
         bne     :+
@@ -10109,7 +10119,7 @@ str_device_type_vdrive:
         DEFINE_ON_LINE_PARAMS on_line_params,, buffer
 
 start:  sta     on_line_params::unit_num
-        MLI_RELAY_CALL ON_LINE, on_line_params
+        MLI_CALL ON_LINE, on_line_params
         bcs     ret
 
         ;; Prefix the path with '/'
@@ -10147,7 +10157,7 @@ GetBlockCount   := GetBlockCountImpl::start
         sty     devlst_index
         and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
-        MLI_RELAY_CALL ON_LINE, on_line_params
+        MLI_CALL ON_LINE, on_line_params
         beq     success
 
 error:  pha                     ; save error
@@ -10754,9 +10764,9 @@ next:   dec     step
 ;;; ============================================================
 
 .proc FrameTmpRect
-        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
+        MGTK_CALL MGTK::FrameRect, tmp_rect
         rts
 .endproc
 
@@ -10848,7 +10858,7 @@ restore:
         copy16  len_table,y, read_params::request_count
         copy16  addr_table,y, read_params::data_buffer
 
-retry:  MLI_RELAY_CALL OPEN, open_params
+retry:  MLI_CALL OPEN, open_params
         beq     :+
 
         lda     #kErrInsertSystemDisk
@@ -10862,9 +10872,9 @@ retry:  MLI_RELAY_CALL OPEN, open_params
 :       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     set_mark_params::ref_num
-        MLI_RELAY_CALL SET_MARK, set_mark_params
-        MLI_RELAY_CALL READ, read_params
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL SET_MARK, set_mark_params
+        MLI_CALL READ, read_params
+        MLI_CALL CLOSE, close_params
         jsr     SetCursorPointer ; after loading overlay
         rts
 
@@ -10874,11 +10884,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
 ;;; ============================================================
 
-        .define LIB_MGTK_CALL MGTK_RELAY_CALL
-        .define LIB_MLI_CALL MLI_RELAY_CALL
         .include "../lib/menuclock.s"
-        .undefine LIB_MLI_CALL
-        .undefine LIB_MGTK_CALL
 
 ;;; ============================================================
 
@@ -11583,9 +11589,9 @@ vol_icon2:
         jmp     common2
 :       lda     DEVLST,y
         sta     block_params::unit_num
-        MLI_RELAY_CALL READ_BLOCK, block_params
+        MLI_CALL READ_BLOCK, block_params
         bne     common2
-        MLI_RELAY_CALL WRITE_BLOCK, block_params
+        MLI_CALL WRITE_BLOCK, block_params
         cmp     #ERR_WRITE_PROTECTED
         bne     common2
         copy    #$80, write_protected_flag
@@ -11892,7 +11898,7 @@ changed:
         jmp     retry
 
         ;; Try to rename
-:       MLI_RELAY_CALL RENAME, rename_params
+:       MLI_CALL RENAME, rename_params
         beq     finish
 
         ;; Failed, maybe retry
@@ -11922,7 +11928,7 @@ finish: lda     #RenameDialogState::close
         lda     selected_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         bne     skip            ; MGTK::Error::window_obscured
-:       ITK_RELAY_CALL IconTK::EraseIcon, icon_param ; CHECKED
+:       ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED
 skip:   lda     selected_window_id
         beq     :+
         ;; NOTE: EraseIcon operates with icons in screen space (?!?)
@@ -12203,11 +12209,11 @@ no_change:
         path := src_path_buf
 
         ;; ProDOS Prefix
-        MLI_RELAY_CALL GET_PREFIX, get_set_prefix_params
+        MLI_CALL GET_PREFIX, get_set_prefix_params
         copy16  #path, ptr
         jsr     MaybeUpdateTargetPath
     IF_EQ
-        MLI_RELAY_CALL SET_PREFIX, get_set_prefix_params
+        MLI_CALL SET_PREFIX, get_set_prefix_params
     END_IF
 
         ;; Original Prefix
@@ -12464,7 +12470,7 @@ do_op_flag:
         sta     entries_read+1
         sta     entries_read_this_block
 
-@retry: MLI_RELAY_CALL OPEN, open_src_dir_params
+@retry: MLI_CALL OPEN, open_src_dir_params
         beq     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
@@ -12475,7 +12481,7 @@ do_op_flag:
         sta     op_ref_num
         sta     read_block_pointers_params::ref_num
 
-@retry2:MLI_RELAY_CALL READ, read_block_pointers_params
+@retry2:MLI_CALL READ, read_block_pointers_params
         beq     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
@@ -12488,7 +12494,7 @@ do_op_flag:
 .proc CloseSrcDir
         lda     op_ref_num
         sta     close_src_dir_params::ref_num
-@retry: MLI_RELAY_CALL CLOSE, close_src_dir_params
+@retry: MLI_CALL CLOSE, close_src_dir_params
         beq     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
@@ -12502,7 +12508,7 @@ do_op_flag:
         inc16   entries_read
         lda     op_ref_num
         sta     read_src_dir_entry_params::ref_num
-@retry: MLI_RELAY_CALL READ, read_src_dir_entry_params
+@retry: MLI_CALL READ, read_src_dir_entry_params
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
@@ -12517,7 +12523,7 @@ do_op_flag:
         bcc     :+
         copy    #0, entries_read_this_block
         copy    op_ref_num, read_padding_bytes_params::ref_num
-        MLI_RELAY_CALL READ, read_padding_bytes_params
+        MLI_CALL READ, read_padding_bytes_params
 :       return  #0
 
 eof:    return  #$FF
@@ -12828,7 +12834,7 @@ store:  sta     is_dir_flag
 
         ;; TODO: Dedupe with `TryCreateDst`
         jsr     DecrementOpFileCount
-retry:  MLI_RELAY_CALL CREATE, create_params2
+retry:  MLI_CALL CREATE, create_params2
         beq     success
 
         cmp     #ERR_DUPLICATE_FILENAME
@@ -12891,7 +12897,7 @@ copy_pop_directory:
         bpl     done
 
         ;; Was a move - delete file
-@retry: MLI_RELAY_CALL DESTROY, destroy_params
+@retry: MLI_CALL DESTROY, destroy_params
         beq     done
         cmp     #ERR_ACCESS_ERROR
         bne     :+
@@ -13106,7 +13112,7 @@ read:   jsr     ReadSrc
 :       jsr     OpenDst
         bne     :-
         jsr     CopyDstRefNum
-        MLI_RELAY_CALL SET_MARK, mark_dst_params
+        MLI_CALL SET_MARK, mark_dst_params
 
         ;; Write
 write:  bit     src_eof_flag
@@ -13118,7 +13124,7 @@ write:  bit     src_eof_flag
         jsr     OpenSrc
         jsr     CopySrcRefNum
 
-        MLI_RELAY_CALL SET_MARK, mark_src_params
+        MLI_CALL SET_MARK, mark_src_params
         beq     read
         copy    #$FF, src_eof_flag
         jmp     read
@@ -13132,7 +13138,7 @@ eof:    jsr     CloseDst
         jmp     SetDstFileInfo
 
 .proc OpenSrc
-@retry: MLI_RELAY_CALL OPEN, open_src_params
+@retry: MLI_CALL OPEN, open_src_params
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
@@ -13148,7 +13154,7 @@ eof:    jsr     CloseDst
 .endproc
 
 .proc OpenDst
-@retry: MLI_RELAY_CALL OPEN, open_dst_params
+@retry: MLI_CALL OPEN, open_dst_params
         beq     done
         cmp     #ERR_VOL_NOT_FOUND
         beq     not_found
@@ -13172,7 +13178,7 @@ done:   rts
 
 .proc ReadSrc
         copy16  #kBufSize, read_src_params::request_count
-@retry: MLI_RELAY_CALL READ, read_src_params
+@retry: MLI_CALL READ, read_src_params
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
@@ -13183,26 +13189,26 @@ done:   rts
         ora     read_src_params::trans_count
         bne     :+
 eof:    copy    #$FF, src_eof_flag
-:       MLI_RELAY_CALL GET_MARK, mark_src_params
+:       MLI_CALL GET_MARK, mark_src_params
         rts
 .endproc
 
 .proc WriteDst
-@retry: MLI_RELAY_CALL WRITE, write_dst_params
+@retry: MLI_CALL WRITE, write_dst_params
         beq     :+
         jsr     ShowErrorAlertDst
         jmp     @retry
-:       MLI_RELAY_CALL GET_MARK, mark_dst_params
+:       MLI_CALL GET_MARK, mark_dst_params
         rts
 .endproc
 
 .proc CloseDst
-        MLI_RELAY_CALL CLOSE, close_dst_params
+        MLI_CALL CLOSE, close_dst_params
         rts
 .endproc
 
 .proc CloseSrc
-        MLI_RELAY_CALL CLOSE, close_src_params
+        MLI_CALL CLOSE, close_src_params
         rts
 .endproc
 
@@ -13227,7 +13233,7 @@ src_eof_flag:
         bne     :-
 
         jsr     DecrementOpFileCount
-retry:  MLI_RELAY_CALL CREATE, create_params3
+retry:  MLI_CALL CREATE, create_params3
         beq     success
 
         cmp     #ERR_DUPLICATE_FILENAME
@@ -13379,7 +13385,7 @@ do_destroy:
         jsr     DecFileCountAndRunDeleteDialogProc
 :       jsr     DecrementOpFileCount
 
-retry:  MLI_RELAY_CALL DESTROY, destroy_params
+retry:  MLI_CALL DESTROY, destroy_params
         beq     done
 
         ;; Failed, try to unlock.
@@ -13422,7 +13428,7 @@ error:  jsr     ShowErrorAlert
         lda     #ACCESS_DEFAULT
         sta     src_file_info_params::access
         copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
-        MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
+        MLI_CALL SET_FILE_INFO, src_file_info_params
         pha
         copy    #$A, src_file_info_params::param_count ; GET_FILE_INFO
         pla
@@ -13463,7 +13469,7 @@ done:   rts
         jmp     next_file
     END_IF
 
-loop:   MLI_RELAY_CALL DESTROY, destroy_params
+loop:   MLI_CALL DESTROY, destroy_params
         beq     next_file
         cmp     #ERR_ACCESS_ERROR
         bne     err
@@ -13487,7 +13493,7 @@ loop:   MLI_RELAY_CALL DESTROY, destroy_params
 
 unlock: copy    #ACCESS_DEFAULT, src_file_info_params::access
         copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
-        MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
+        MLI_CALL SET_FILE_INFO, src_file_info_params
         copy    #$A,src_file_info_params::param_count ; GET_FILE_INFO
         jmp     loop
 
@@ -13502,7 +13508,7 @@ next_file:
 ;;; Delete directory when exiting via traversal
 
 .proc DeleteFinishDirectory
-@retry: MLI_RELAY_CALL DESTROY, destroy_params
+@retry: MLI_CALL DESTROY, destroy_params
         beq     done
         cmp     #ERR_ACCESS_ERROR
         beq     done
@@ -13690,7 +13696,7 @@ LockProcessDirectoryEntry:
 set:    sta     src_file_info_params::access
 
 :       copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
-        MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
+        MLI_CALL SET_FILE_INFO, src_file_info_params
         pha
         copy    #$A, src_file_info_params::param_count ; GET_FILE_INFO
         pla
@@ -14069,7 +14075,7 @@ ep2:    sta     @result
 
         jsr     InvokeOperationCompleteCallback
 
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_params
 
         ldx     stack_stash     ; restore stack, in case recursion was aborted
         txs
@@ -14150,7 +14156,7 @@ match:  lda     flag
 ;;; ============================================================
 
 .proc CheckEscapeKeyDown
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::key_down
         bne     nope
@@ -14186,7 +14192,7 @@ done:   rts
         beq     done
 
         ;; If a regular file, open/set eof/close
-        MLI_RELAY_CALL OPEN, open_dst_params
+        MLI_CALL OPEN, open_dst_params
         beq     :+
         jsr     ShowErrorAlertDst
         jmp     :-              ; retry
@@ -14194,12 +14200,12 @@ done:   rts
 :       lda     open_dst_params::ref_num
         sta     set_eof_params::ref_num
         sta     close_dst_params::ref_num
-@retry: MLI_RELAY_CALL SET_EOF, set_eof_params
+@retry: MLI_CALL SET_EOF, set_eof_params
         beq     close
         jsr     ShowErrorAlertDst
         jmp     @retry
 
-close:  MLI_RELAY_CALL CLOSE, close_dst_params
+close:  MLI_CALL CLOSE, close_dst_params
 done:   rts
 .endproc
 
@@ -14210,7 +14216,7 @@ done:   rts
 
 .proc SetDstFileInfo
 :       copy    #7, dst_file_info_params::param_count ; SET_FILE_INFO
-        MLI_RELAY_CALL SET_FILE_INFO, dst_file_info_params
+        MLI_CALL SET_FILE_INFO, dst_file_info_params
         pha
         copy    #$A, dst_file_info_params::param_count ; GET_FILE_INFO
         pla
@@ -14260,7 +14266,7 @@ close:  jmp     CloseFilesCancelDialog
 flag:   .byte   0
 
 do_on_line:
-        MLI_RELAY_CALL ON_LINE, on_line_params2
+        MLI_CALL ON_LINE, on_line_params2
         rts
 
 .endproc
@@ -14354,7 +14360,7 @@ dialog_param_addr:
 
         ;; Dispatch event types - mouse down, key press
 :       jsr     YieldLoop
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         jeq     PromptClickHandler
@@ -14370,7 +14376,7 @@ dialog_param_addr:
         jsr     CheckMouseMoved
         bcc     PromptInputLoop
 
-        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         jeq     PromptInputLoop
 
@@ -14381,9 +14387,9 @@ dialog_param_addr:
         lda     winfo_prompt_dialog ; Is over this window... but where?
         jsr     SafeSetPortFromWindowId
         copy    winfo_prompt_dialog, event_params
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_params::windowx
-        MGTK_RELAY_CALL MGTK::InRect, name_input_rect
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         bne     out
         jsr     SetCursorIBeamWithFlag ; toggling in prompt dialog
@@ -14396,7 +14402,7 @@ done:   jsr     ResetMainGrafport
 ;;; Click handler for prompt dialog
 
 .proc PromptClickHandler
-        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         bne     :+
         return  #$FF
@@ -14412,12 +14418,12 @@ content:
 :       lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         copy    winfo_prompt_dialog, event_params
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
         bit     prompt_button_flags
         jvs     check_button_yes
 
-        MGTK_RELAY_CALL MGTK::InRect, aux::ok_button_rect
+        MGTK_CALL MGTK::InRect, aux::ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     check_button_ok
         jmp     maybe_check_button_cancel
@@ -14429,7 +14435,7 @@ check_button_ok:
 :       rts
 
 check_button_yes:
-        MGTK_RELAY_CALL MGTK::InRect, aux::yes_button_rect
+        MGTK_CALL MGTK::InRect, aux::yes_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_no
         param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::yes_button_rect
@@ -14438,7 +14444,7 @@ check_button_yes:
 :       rts
 
 check_button_no:
-        MGTK_RELAY_CALL MGTK::InRect, aux::no_button_rect
+        MGTK_CALL MGTK::InRect, aux::no_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_all
         param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::no_button_rect
@@ -14447,7 +14453,7 @@ check_button_no:
 :       rts
 
 check_button_all:
-        MGTK_RELAY_CALL MGTK::InRect, aux::all_button_rect
+        MGTK_CALL MGTK::InRect, aux::all_button_rect
         cmp     #MGTK::inrect_inside
         bne     maybe_check_button_cancel
         param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::all_button_rect
@@ -14461,7 +14467,7 @@ maybe_check_button_cancel:
         return  #$FF
 
 check_button_cancel:
-        MGTK_RELAY_CALL MGTK::InRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::InRect, aux::cancel_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
         param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::cancel_button_rect
@@ -14597,15 +14603,15 @@ LA7DD:  ldx     has_input_field_flag
 fail:   return  #$FF
 
 do_yes: jsr     SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::yes_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::yes_button_rect
         return  #PromptResult::yes
 
 do_no:  jsr     SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::no_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::no_button_rect
         return  #PromptResult::no
 
 do_all: jsr     SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::all_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::all_button_rect
         return  #PromptResult::all
 
 .proc LeftWithMod
@@ -14646,8 +14652,8 @@ done:   return  #$FF
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
         return  #0
 .endproc
 
@@ -14655,8 +14661,8 @@ done:   return  #$FF
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
         return  #1
 .endproc
 
@@ -14683,13 +14689,13 @@ jump_relay:
 
 .proc AboutDialogProc
 
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_about_dialog
+        MGTK_CALL MGTK::OpenWindow, winfo_about_dialog
         lda     #winfo_about_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeNotCopy
-        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::about_dialog_frame_rect
-        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_normal
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, aux::about_dialog_frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
         jsr     SetPenModeXOR
         param_call DrawDialogTitle, aux::str_about1
         param_call DrawDialogLabel, 1 | DDL_CENTER, aux::str_about2
@@ -14702,14 +14708,14 @@ jump_relay:
         param_call DrawDialogLabel, 9 | DDL_RIGHT, aux::str_about9
 
 :       jsr     YieldLoop
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         beq     close
         cmp     #MGTK::EventKind::key_down
         bne     :-
 
-close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
+close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         jmp     ClearUpdates ; following CloseWindow
 .endproc
 
@@ -14757,7 +14763,7 @@ do1:    ldy     #copy_dialog_params::count - copy_dialog_params
         jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
+        MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
         param_call_indirect DrawString, ptr_str_files_suffix
         rts
@@ -14776,17 +14782,17 @@ do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         ldy     #copy_dialog_params::a_src - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
+        MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
 
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_dst - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf1
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_dest_file_pos
+        MGTK_CALL MGTK::MoveTo, aux::current_dest_file_pos
         param_call DrawDialogPath, path_buf1
 
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
+        MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
         param_jump DrawString, str_2_spaces
 
@@ -14808,7 +14814,7 @@ do3:    jsr     Bell
         pha
         jsr     EraseYesNoAllCancelButtons
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect
+        MGTK_CALL MGTK::PaintRect, aux::prompt_rect
         pla
         rts
 
@@ -14829,7 +14835,7 @@ do4:    jsr     Bell
         pha
         jsr     EraseOkCancelButtons
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect
+        MGTK_CALL MGTK::PaintRect, aux::prompt_rect
         pla
         rts
 .endproc
@@ -14869,7 +14875,7 @@ do1:    ldy     #copy_dialog_params::count - copy_dialog_params
         jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos
+        MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos
         param_call DrawString, str_file_count
         param_call_indirect DrawString, ptr_str_files_suffix
         rts
@@ -14886,9 +14892,9 @@ do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         ldy     #copy_dialog_params::a_src - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
+        MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::copy_file_count_pos2
+        MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         param_call DrawString, str_file_count
         param_jump DrawString, str_2_spaces
 
@@ -14910,7 +14916,7 @@ do4:    jsr     Bell
         pha
         jsr     EraseOkButton
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect
+        MGTK_CALL MGTK::PaintRect, aux::prompt_rect
         pla
         rts
 .endproc
@@ -14984,7 +14990,7 @@ do2:
 :       jsr     PromptInputLoop
         bmi     :-
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         jsr     EraseOkButton
         return  #0
 .endproc
@@ -15049,9 +15055,9 @@ do3:    ldy     #1
         ldy     #delete_dialog_params::a_path - delete_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
+        MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
+        MGTK_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
         param_call DrawString, str_file_count
         param_jump DrawString, str_2_spaces
 
@@ -15064,7 +15070,7 @@ LADC4:  jsr     PromptInputLoop
         bmi     LADC4
         bne     LADF4
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         jsr     EraseOkCancelButtons
         param_call DrawDialogLabel, 2, aux::str_file_colon
         param_call DrawDialogLabel, 4, aux::str_delete_remaining
@@ -15088,7 +15094,7 @@ LAE17:  jsr     PromptInputLoop
         pha
         jsr     EraseYesNoAllCancelButtons
         jsr     SetPenModeCopy ; white
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::prompt_rect ; erase prompt
+        MGTK_CALL MGTK::PaintRect, aux::prompt_rect ; erase prompt
         pla
         rts
 .endproc
@@ -15334,9 +15340,9 @@ do3:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         ldy     #lock_unlock_dialog_params::a_path - lock_unlock_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
+        MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
+        MGTK_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
         param_call DrawString, str_file_count
         param_jump DrawString, str_2_spaces
 
@@ -15349,9 +15355,9 @@ LB0FA:  jsr     PromptInputLoop
         bmi     LB0FA
         bne     LB139
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
         param_call DrawDialogLabel, 2, aux::str_file_colon
         param_call DrawDialogLabel, 4, aux::str_lock_remaining
         lda     #$00
@@ -15412,9 +15418,9 @@ do3:    ldy     #1
         ldy     #lock_unlock_dialog_params::a_path - lock_unlock_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::current_target_file_pos
+        MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         param_call DrawDialogPath, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
+        MGTK_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
         param_call DrawString, str_file_count
         param_jump DrawString, str_2_spaces
 
@@ -15427,9 +15433,9 @@ LB218:  jsr     PromptInputLoop
         bmi     LB218
         bne     LB257
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
         param_call DrawDialogLabel, 2, aux::str_file_colon
         param_call DrawDialogLabel, 4, aux::str_unlock_remaining
         lda     #$00
@@ -15694,17 +15700,17 @@ params:  .res    3
 ;;; ============================================================
 
 .proc SetCursorWatch
-        MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
+        MGTK_CALL MGTK::SetCursor, watch_cursor
         rts
 .endproc
 
 .proc SetCursorPointer
-        MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::SetCursor, pointer_cursor
         rts
 .endproc
 
 .proc SetCursorIBeam
-        MGTK_RELAY_CALL MGTK::SetCursor, ibeam_cursor
+        MGTK_CALL MGTK::SetCursor, ibeam_cursor
         rts
 .endproc
 
@@ -15739,14 +15745,14 @@ done:   jmp     ResetMainGrafport
 ;;; ============================================================
 
 .proc OpenDialogWindow
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_prompt_dialog
+        MGTK_CALL MGTK::OpenWindow, winfo_prompt_dialog
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeNotCopy
-        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::confirm_dialog_frame_rect
-        MGTK_RELAY_CALL MGTK::SetPenSize, pensize_normal
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, aux::confirm_dialog_frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+        MGTK_CALL MGTK::SetPenMode, penXOR
         rts
 .endproc
 
@@ -15791,7 +15797,7 @@ done:   jmp     ResetMainGrafport
         ldax    ptr
         jsr     AuxLoad
         sta     textlen
-        MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
+        MGTK_CALL MGTK::TextWidth, textwidth_params
         pla                     ; A = flags
 
         cmp     #DDL_CENTER
@@ -15817,7 +15823,7 @@ calc_y:
         ldy     #aux::kDialogLabelHeight
         jsr     Multiply_16_8_16
         addax   dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
-        MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
+        MGTK_CALL MGTK::MoveTo, dialog_label_pos
         param_call_indirect DrawString, ptr
 
         ;; Restore default X position
@@ -15833,10 +15839,10 @@ calc_y:
 .proc DrawDialogPath
         stax    string
         param_call GetPortBits, tmp_mapinfo
-        MGTK_RELAY_CALL MGTK::SetPortBits, aux::prompt_dialog_labels_mapinfo
+        MGTK_CALL MGTK::SetPortBits, aux::prompt_dialog_labels_mapinfo
         ldax    string
         jsr     DrawString
-        MGTK_RELAY_CALL MGTK::SetPortBits, tmp_mapinfo
+        MGTK_CALL MGTK::SetPortBits, tmp_mapinfo
         rts
 
 string: .addr   0
@@ -15846,31 +15852,31 @@ string: .addr   0
 
 ;;; Caller must set XOR penmode
 .proc DrawOkFrameAndLabel
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::ok_button_pos
+        MGTK_CALL MGTK::FrameRect, aux::ok_button_rect
+        MGTK_CALL MGTK::MoveTo, aux::ok_button_pos
         param_jump DrawString, aux::ok_button_label
 .endproc
 
 ;;; Caller must set XOR penmode
 .proc DrawCancelFrameAndLabel
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::cancel_button_rect
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::cancel_button_pos
+        MGTK_CALL MGTK::FrameRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::MoveTo, aux::cancel_button_pos
         param_jump DrawString, aux::cancel_button_label
 .endproc
 
 .proc DrawYesNoAllCancelButtons
         jsr     SetPenModeXOR
 
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::yes_button_rect
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::yes_button_pos
+        MGTK_CALL MGTK::FrameRect, aux::yes_button_rect
+        MGTK_CALL MGTK::MoveTo, aux::yes_button_pos
         param_call DrawString, aux::yes_button_label
 
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::no_button_rect
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::no_button_pos
+        MGTK_CALL MGTK::FrameRect, aux::no_button_rect
+        MGTK_CALL MGTK::MoveTo, aux::no_button_pos
         param_call DrawString, aux::no_button_label
 
-        MGTK_RELAY_CALL MGTK::FrameRect, aux::all_button_rect
-        MGTK_RELAY_CALL MGTK::MoveTo, aux::all_button_pos
+        MGTK_CALL MGTK::FrameRect, aux::all_button_rect
+        MGTK_CALL MGTK::MoveTo, aux::all_button_pos
         param_call DrawString, aux::all_button_label
 
         jsr     DrawCancelFrameAndLabel
@@ -15880,10 +15886,10 @@ string: .addr   0
 
 .proc EraseYesNoAllCancelButtons
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::yes_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::no_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::all_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::yes_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::no_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::all_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
         rts
 .endproc
 
@@ -15897,8 +15903,8 @@ string: .addr   0
 
 .proc EraseOkCancelButtons
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
         rts
 .endproc
 
@@ -15911,7 +15917,7 @@ string: .addr   0
 
 .proc EraseOkButton
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
         rts
 .endproc
 
@@ -15927,7 +15933,7 @@ string: .addr   0
         beq     done
         sta     textlen
         inc16   textptr
-        MGTK_RELAY_CALL MGTK::DrawText, params
+        MGTK_CALL MGTK::DrawText, params
 done:   rts
 .endproc
 
@@ -15943,23 +15949,21 @@ done:   rts
         jsr     AuxLoad
         sta     text_length
         inc16   text_addr        ; point past length byte
-        MGTK_RELAY_CALL MGTK::TextWidth, text_params
+        MGTK_CALL MGTK::TextWidth, text_params
 
         sub16   #aux::kPromptDialogWidth, text_width, pos_dialog_title::xcoord
         lsr16   pos_dialog_title::xcoord ; /= 2
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_dialog_title
-        MGTK_RELAY_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::MoveTo, pos_dialog_title
+        MGTK_CALL MGTK::DrawText, text_params
         rts
 .endproc
 
 ;;; ============================================================
 
-        .define LIB_MLI_CALL MLI_RELAY_CALL
         ADJUSTCASE_VOLPATH := $810
         ADJUSTCASE_VOLBUF  := $820
         ADJUSTCASE_IO_BUFFER := IO_BUFFER
         .include "../lib/adjustfilecase.s"
-        .undefine LIB_MLI_CALL
 
 ;;; ============================================================
 
@@ -15977,18 +15981,18 @@ done:   rts
         jsr     MeasurePathBuf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
-        MGTK_RELAY_CALL MGTK::MoveTo, point
+        MGTK_CALL MGTK::MoveTo, point
         jsr     SetNameInputClipRect
         bit     prompt_ip_flag
         bpl     set_flag
 
 clear_flag:
-        MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_black
+        MGTK_CALL MGTK::SetTextBG, aux::textbg_black
         copy    #0, prompt_ip_flag
         beq     draw            ; always
 
 set_flag:
-        MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
+        MGTK_CALL MGTK::SetTextBG, aux::textbg_white
         copy    #$FF, prompt_ip_flag
 
         drawtext_params := $6
@@ -15997,8 +16001,8 @@ set_flag:
 
 draw:   copy16  #str_insertion_point+1, textptr
         copy    str_insertion_point, textlen
-        MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
-        MGTK_RELAY_CALL MGTK::SetTextBG, aux::textbg_white
+        MGTK_CALL MGTK::DrawText, drawtext_params
+        MGTK_CALL MGTK::SetTextBG, aux::textbg_white
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         rts
@@ -16010,9 +16014,9 @@ draw:   copy16  #str_insertion_point+1, textptr
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, name_input_rect
+        MGTK_CALL MGTK::PaintRect, name_input_rect
         jsr     FrameNameInputRect
-        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
+        MGTK_CALL MGTK::MoveTo, name_input_textpos
         jsr     SetNameInputClipRect
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
@@ -16024,12 +16028,12 @@ done:   rts
 
 .proc FrameNameInputRect
         jsr     SetPenModeNotCopy
-        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
+        MGTK_CALL MGTK::FrameRect, name_input_rect
         rts
 .endproc
 
 .proc SetNameInputClipRect
-        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
+        MGTK_CALL MGTK::SetPortBits, name_input_mapinfo
         rts
 .endproc
 
@@ -16047,9 +16051,9 @@ width   .word
         click_coords := screentowindow_params::windowx
 
         ;; Mouse coords to window coords; is click inside name field?
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, click_coords
-        MGTK_RELAY_CALL MGTK::InRect, name_input_rect
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, click_coords
+        MGTK_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         rts
@@ -16080,7 +16084,7 @@ width   .word
         ;; Iterate to find the position
         copy16  #path_buf2, tw_params::data
         copy    path_buf2, tw_params::length
-@loop:  MGTK_RELAY_CALL MGTK::TextWidth, tw_params
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, ip_pos, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
@@ -16138,7 +16142,7 @@ width   .word
         ;; Iterate to find the position
         copy16  #path_buf1, tw_params::data
         copy    path_buf1, tw_params::length
-:       MGTK_RELAY_CALL MGTK::TextWidth, tw_params
+:       MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, name_input_textpos::xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
@@ -16223,7 +16227,7 @@ ip_pos: .word   0
         inc     path_buf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
-        MGTK_RELAY_CALL MGTK::MoveTo, point
+        MGTK_CALL MGTK::MoveTo, point
         jsr     SetNameInputClipRect
         param_call DrawString, str_1_char
         param_call DrawString, path_buf2
@@ -16249,7 +16253,7 @@ ip_pos: .word   0
         jsr     MeasurePathBuf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
-        MGTK_RELAY_CALL MGTK::MoveTo, point
+        MGTK_CALL MGTK::MoveTo, point
         jsr     SetNameInputClipRect
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
@@ -16293,7 +16297,7 @@ finish: ldx     path_buf1
         jsr     MeasurePathBuf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
-        MGTK_RELAY_CALL MGTK::MoveTo, point
+        MGTK_CALL MGTK::MoveTo, point
         jsr     SetNameInputClipRect
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
@@ -16334,7 +16338,7 @@ loop:   lda     path_buf2+1,x
         ;; Redraw (the whole thing)
 finish: dec     path_buf2
 
-        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
+        MGTK_CALL MGTK::MoveTo, name_input_textpos
         jsr     SetNameInputClipRect
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
@@ -16461,7 +16465,7 @@ done:   rts
         ldax    name_input_textpos::xcoord
         rts
 
-:       MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
+:       MGTK_CALL MGTK::TextWidth, textwidth_params
         lda     result
         clc
         adc     name_input_textpos::xcoord
@@ -16545,48 +16549,48 @@ ptr_str_files_suffix:
 
 .proc ClearTargetFileRect
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::current_target_file_rect
+        MGTK_CALL MGTK::PaintRect, aux::current_target_file_rect
         rts
 .endproc
 
 .proc ClearDestFileRect
         jsr     SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::current_dest_file_rect
+        MGTK_CALL MGTK::PaintRect, aux::current_dest_file_rect
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc GetEvent
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::GetEvent, event_params
         rts
 .endproc
 
 .proc PeekEvent
-        MGTK_RELAY_CALL MGTK::PeekEvent, event_params
+        MGTK_CALL MGTK::PeekEvent, event_params
         rts
 .endproc
 
 .proc SetPenModeXOR
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenMode, penXOR
         rts
 .endproc
 
 .proc SetPenModeCopy
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::SetPenMode, pencopy
         rts
 .endproc
 
 .proc SetPenModeNotCopy
-        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenMode, notpencopy
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc ResetMainGrafport
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+        MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
@@ -16594,7 +16598,7 @@ ptr_str_files_suffix:
 
 .proc ClosePromptDialog
         jsr     ResetMainGrafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+        MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jmp     ClearUpdates ; following CloseWindow
 .endproc
 
@@ -16687,7 +16691,7 @@ done:   rts
 .proc ToggleMenuHilite
         lda     menu_click_params::menu_id
         beq     :+
-        MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
+        MGTK_CALL MGTK::HiliteMenu, menu_click_params
 :       rts
 .endproc
 
@@ -16741,7 +16745,7 @@ str_desktop_file:
         copy16  #desktop_file_data_buf+1, data_ptr
 
         ;; Get first window pointer
-        MGTK_RELAY_CALL MGTK::FrontWindow, window_id
+        MGTK_CALL MGTK::FrontWindow, window_id
         lda     window_id
         beq     finish
         jsr     WindowLookup
@@ -16879,23 +16883,23 @@ window_id := findwindow_params::window_id
 .endproc                        ; save
 
 .proc Open
-        MLI_RELAY_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
         rts
 .endproc
 
 .proc Close
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_params
         rts
 .endproc
 
 .proc WriteOutFile
-        MLI_RELAY_CALL CREATE, create_params
+        MLI_CALL CREATE, create_params
         jsr     Open
         bcs     :+
         lda     open_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-        MLI_RELAY_CALL WRITE, write_params
+        MLI_CALL WRITE, write_params
         jsr     Close
 :       rts
 .endproc

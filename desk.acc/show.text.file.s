@@ -9,6 +9,8 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
+        MGTKEntry := MGTKAuxEntry
+
 ;;; ============================================================
 ;;; Memory map
 ;;;
@@ -50,6 +52,8 @@ font_width_backup       := $1100
 ;;; ============================================================
 
         .org DA_LOAD_ADDRESS
+
+        MLIEntry := MLI
 
 .proc Start
         INVOKE_PATH := $220

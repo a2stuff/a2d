@@ -9,7 +9,7 @@
 ;;; Requires the following data definitions:
 ;;; * `alert_grafport`
 ;;; Requires the following macro definitions:
-;;; * `LIB_MGTK_CALL`
+;;; * `MGTK_CALL`
 ;;; ============================================================
 
 .proc Alert
@@ -131,7 +131,7 @@ start:
         dex
         bpl     :-
 
-        LIB_MGTK_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::SetCursor, pointer_cursor
 
         ;; --------------------------------------------------
         ;; Play bell
@@ -144,7 +144,7 @@ start:
         ;; --------------------------------------------------
         ;; Draw alert
 
-        LIB_MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::HideCursor
 
         bit     alert_params::options
     IF_VS                       ; V = use save area
@@ -168,53 +168,53 @@ start:
     END_IF
 
         ;; Set up GrafPort
-        LIB_MGTK_CALL MGTK::InitPort, alert_grafport
-        LIB_MGTK_CALL MGTK::SetPort, alert_grafport
+        MGTK_CALL MGTK::InitPort, alert_grafport
+        MGTK_CALL MGTK::SetPort, alert_grafport
 
-        LIB_MGTK_CALL MGTK::SetPortBits, screen_portbits ; viewport for screen
+        MGTK_CALL MGTK::SetPortBits, screen_portbits ; viewport for screen
 
         ;; Draw alert box and bitmap - coordinates are in screen space
-        LIB_MGTK_CALL MGTK::SetPenMode, pencopy
-        LIB_MGTK_CALL MGTK::PaintRect, alert_rect ; alert background
-        LIB_MGTK_CALL MGTK::SetPenMode, notpencopy
-        LIB_MGTK_CALL MGTK::FrameRect, alert_rect ; alert outline
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, alert_rect ; alert background
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, alert_rect ; alert outline
 
-        LIB_MGTK_CALL MGTK::SetPortBits, portmap ; viewport for remaining operations
+        MGTK_CALL MGTK::SetPortBits, portmap ; viewport for remaining operations
 
         ;; Draw rest of alert - coordinates are relative to portmap
-        LIB_MGTK_CALL MGTK::SetPenMode, notpencopy
-        LIB_MGTK_CALL MGTK::SetPenSize, pensize_frame
-        LIB_MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect
 
-        LIB_MGTK_CALL MGTK::SetPenMode, pencopy
-        LIB_MGTK_CALL MGTK::PaintBits, alert_bitmap_params
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintBits, alert_bitmap_params
 
         ;; Draw appropriate buttons
-        LIB_MGTK_CALL MGTK::SetPenSize, pensize_normal
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+        MGTK_CALL MGTK::SetPenMode, penXOR
 
         bit     alert_params::buttons ; high bit clear = Cancel
         bpl     ok_button
 
         ;; Cancel button
-        LIB_MGTK_CALL MGTK::FrameRect, cancel_button_rect
-        LIB_MGTK_CALL MGTK::MoveTo, cancel_button_pos
+        MGTK_CALL MGTK::FrameRect, cancel_button_rect
+        MGTK_CALL MGTK::MoveTo, cancel_button_pos
         param_call DrawString, cancel_button_label
 
         bit     alert_params::buttons
         bvs     ok_button
 
         ;; Try Again button
-        LIB_MGTK_CALL MGTK::FrameRect, try_again_button_rect
-        LIB_MGTK_CALL MGTK::MoveTo, try_again_button_pos
+        MGTK_CALL MGTK::FrameRect, try_again_button_rect
+        MGTK_CALL MGTK::MoveTo, try_again_button_pos
         param_call DrawString, try_again_button_label
 
         jmp     draw_prompt
 
         ;; OK button
 ok_button:
-        LIB_MGTK_CALL MGTK::FrameRect, ok_button_rect
-        LIB_MGTK_CALL MGTK::MoveTo, ok_button_pos
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
+        MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call DrawString, ok_button_label
 
         ;; Prompt string
@@ -247,7 +247,7 @@ advance:
 
         ;; Does this much fit?
 test:   sty     textwidth_params::length
-        LIB_MGTK_CALL MGTK::TextWidth, textwidth_params
+        MGTK_CALL MGTK::TextWidth, textwidth_params
         cmp16   textwidth_params::width, #kWrapWidth
         bpl     split           ; no! so we know where to split now
 
@@ -259,14 +259,14 @@ test:   sty     textwidth_params::length
 
         ;; Whole string fits, just draw it.
         copy    len, textwidth_params::length
-        LIB_MGTK_CALL MGTK::MoveTo, pos_prompt2
-        LIB_MGTK_CALL MGTK::DrawText, textwidth_params
+        MGTK_CALL MGTK::MoveTo, pos_prompt2
+        MGTK_CALL MGTK::DrawText, textwidth_params
         jmp     done
 
         ;; Split string over two lines.
 split:  copy    split_pos, textwidth_params::length
-        LIB_MGTK_CALL MGTK::MoveTo, pos_prompt1
-        LIB_MGTK_CALL MGTK::DrawText, textwidth_params
+        MGTK_CALL MGTK::MoveTo, pos_prompt1
+        MGTK_CALL MGTK::DrawText, textwidth_params
         lda     textwidth_params::data
         clc
         adc     split_pos
@@ -277,20 +277,20 @@ split:  copy    split_pos, textwidth_params::length
         sec
         sbc     split_pos
         sta     textwidth_params::length
-        LIB_MGTK_CALL MGTK::MoveTo, pos_prompt2
-        LIB_MGTK_CALL MGTK::DrawText, textwidth_params
+        MGTK_CALL MGTK::MoveTo, pos_prompt2
+        MGTK_CALL MGTK::DrawText, textwidth_params
 
 done:
 .endscope
 
-        LIB_MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::ShowCursor
 
         ;; --------------------------------------------------
         ;; Event Loop
 
 event_loop:
         jsr     AlertYieldLoop
-        LIB_MGTK_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         beq     HandleButtonDown
@@ -308,8 +308,8 @@ event_loop:
         bne     :+
 
 do_cancel:
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
-        LIB_MGTK_CALL MGTK::PaintRect, cancel_button_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
         lda     #kAlertResultCancel
         jmp     finish
 
@@ -319,8 +319,8 @@ do_cancel:
         bne     :+
 
 do_try_again:
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
-        LIB_MGTK_CALL MGTK::PaintRect, try_again_button_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_button_rect
         lda     #kAlertResultTryAgain
         jmp     finish
 
@@ -337,8 +337,8 @@ check_ok:
         cmp     #CHAR_RETURN
         bne     event_loop
 
-do_ok:  LIB_MGTK_CALL MGTK::SetPenMode, penXOR
-        LIB_MGTK_CALL MGTK::PaintRect, ok_button_rect
+do_ok:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     #kAlertResultOK
         jmp     finish          ; not a fixed value, cannot BNE/BEQ
 
@@ -347,12 +347,12 @@ do_ok:  LIB_MGTK_CALL MGTK::SetPenMode, penXOR
 
 HandleButtonDown:
         jsr     MapEventCoords
-        LIB_MGTK_CALL MGTK::MoveTo, event_coords
+        MGTK_CALL MGTK::MoveTo, event_coords
 
         bit     alert_params::buttons ; Cancel showing?
         bpl     check_ok_rect   ; nope
 
-        LIB_MGTK_CALL MGTK::InRect, cancel_button_rect ; Cancel?
+        MGTK_CALL MGTK::InRect, cancel_button_rect ; Cancel?
         cmp     #MGTK::inrect_inside
         bne     :+
         param_call AlertButtonEventLoop, cancel_button_rect
@@ -364,7 +364,7 @@ HandleButtonDown:
 :       bit     alert_params::buttons ; Try Again showing?
         bvs     check_ok_rect   ; nope
 
-        LIB_MGTK_CALL MGTK::InRect, try_again_button_rect ; Try Again?
+        MGTK_CALL MGTK::InRect, try_again_button_rect ; Try Again?
         cmp     #MGTK::inrect_inside
         bne     no_button
         param_call AlertButtonEventLoop, try_again_button_rect
@@ -374,7 +374,7 @@ HandleButtonDown:
         beq     finish          ; always
 
 check_ok_rect:
-        LIB_MGTK_CALL MGTK::InRect, ok_button_rect ; OK?
+        MGTK_CALL MGTK::InRect, ok_button_rect ; OK?
         cmp     #MGTK::inrect_inside
         bne     no_button
         param_call AlertButtonEventLoop, ok_button_rect
@@ -392,9 +392,9 @@ finish:
         bit     alert_params::options
     IF_VS                       ; V = use save area
         pha
-        LIB_MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::HideCursor
         jsr     DialogBackgroundRestore
-        LIB_MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::ShowCursor
         pla
     END_IF
 

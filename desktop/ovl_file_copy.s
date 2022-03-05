@@ -7,6 +7,8 @@
 .proc FileCopyOverlay
         .org $7000
 
+        MGTKEntry := MGTKRelayImpl
+
 .proc Init
         jsr     file_dialog::OpenWindow
         jsr     DrawControls
@@ -51,11 +53,11 @@
         param_call file_dialog::DrawTitleCentered, aux::label_copy_file
         param_call file_dialog::DrawInput1Label, source_filename_label
         param_call file_dialog::DrawInput2Label, destination_filename_label
-        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
@@ -189,8 +191,8 @@ err:    lda     #ERR_INVALID_PATHNAME
 :
         param_call file_dialog::VerifyValidNonVolumePath, path_buf1
         bne     err
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, file_dialog::only_show_dirs_flag
         copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
@@ -207,8 +209,8 @@ err:    lda     #ERR_INVALID_PATHNAME
 ;;; ============================================================
 
 .proc HandleCancel
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         ldx     file_dialog::saved_stack

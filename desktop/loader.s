@@ -6,6 +6,8 @@
 
         RESOURCE_FILE "loader.res"
 
+        MLIEntry := MLI
+
 ;;; ============================================================
 ;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)
 ;;; and invoke QUIT. Note that only $200 bytes are copied.

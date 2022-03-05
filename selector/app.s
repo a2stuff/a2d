@@ -22,7 +22,7 @@ kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut
 ;;; ============================================================
 ;;; MGTK library
 
-        ASSERT_ADDRESS ::MGTK
+        ASSERT_ADDRESS ::MGTKEntry
         .include "../mgtk/mgtk.s"
 
 ;;; ============================================================
@@ -2475,14 +2475,7 @@ clear:  copy16  #HIRES_ADDR, ptr
 
 ;;; ============================================================
 
-        .define LIB_MGTK_CALL MGTK_CALL
-        .define LIB_MLI_CALL MLI_CALL
         .include "../lib/menuclock.s"
-        .undefine LIB_MLI_CALL
-        .undefine LIB_MGTK_CALL
-
-;;; ============================================================
-
         .include "../lib/datetime.s"
         .include "../lib/doubleclick.s"
         .include "../lib/drawstring.s"

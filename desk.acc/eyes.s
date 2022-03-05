@@ -15,6 +15,8 @@
         .include "../desktop/desktop.inc"
         .include "../inc/fp_macros.inc"
 
+        MGTKEntry := MGTKAuxEntry
+
 ;;; ============================================================
 
         .org DA_LOAD_ADDRESS

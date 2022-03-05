@@ -23,8 +23,7 @@
 ;;; * `main_grafport`
 ;;; * `penXOR`
 ;;; Requires the following macro definitions:
-;;; * `LIB_MGTK_CALL`
-;;; * `LIB_MLI_CALL`
+;;; * `MGTK_CALL`
 ;;;
 ;;; If `FD_EXTENDED` is defined as 1:
 ;;; * two input fields are supported
@@ -163,7 +162,7 @@ listbox_disabled_flag:  ; Set when the listbox is not active
         copy16  SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
 :       jsr     YieldLoop
-        LIB_MGTK_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
         cmp     #MGTK::EventKind::apple_key
@@ -184,7 +183,7 @@ is_btn: jsr     HandleButtonDown
 
         copy    #0, file_dialog_res::type_down_buf
 
-        LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         jeq     EventLoop
 
@@ -198,21 +197,21 @@ l1:     lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         lda     file_dialog_res::winfo::window_id
         sta     screentowindow_params::window_id
-        LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
 
 .if FD_EXTENDED
         bit     focus_in_input2_flag
         bmi     l2
 .endif
 
-        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         bne     l4
 
 .if FD_EXTENDED
         beq     l3
-l2:     LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
+l2:     MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     l4
 l3:
@@ -222,8 +221,8 @@ l3:
         jmp     l5
 
 l4:     jsr     UnsetCursorIBeam
-l5:     LIB_MGTK_CALL MGTK::InitPort, main_grafport
-        LIB_MGTK_CALL MGTK::SetPort, main_grafport
+l5:     MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, main_grafport
         jmp     EventLoop
 .endproc
 
@@ -233,7 +232,7 @@ focus_in_input2_flag:
 ;;; ============================================================
 
 .proc HandleButtonDown
-        LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         bne     :+
         rts
@@ -254,12 +253,12 @@ focus_in_input2_flag:
         jsr     SetPortForWindow
         lda     file_dialog_res::winfo::window_id
         sta     screentowindow_params::window_id
-        LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
 
         ;; --------------------------------------------------
 .proc CheckOpenButton
-        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::open_button_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::open_button_rect
         cmp     #MGTK::inrect_inside
         bne     CheckChangeDriveButton
 
@@ -284,7 +283,7 @@ l4:     lda     file_dialog_res::winfo::window_id
 
         ;; --------------------------------------------------
 .proc CheckChangeDriveButton
-        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
         cmp     #MGTK::inrect_inside
         bne     CheckCloseButton
         bit     listbox_disabled_flag
@@ -299,7 +298,7 @@ l4:     lda     file_dialog_res::winfo::window_id
 
         ;; --------------------------------------------------
 .proc CheckCloseButton
-        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::close_button_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::close_button_rect
         cmp     #MGTK::inrect_inside
         bne     CheckOkButton
         bit     listbox_disabled_flag
@@ -313,7 +312,7 @@ l4:     lda     file_dialog_res::winfo::window_id
 
         ;; --------------------------------------------------
 .proc CheckOkButton
-        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     CheckCancelButton
 
@@ -326,7 +325,7 @@ l4:     lda     file_dialog_res::winfo::window_id
 
         ;; --------------------------------------------------
 .proc CheckCancelButton
-        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
         cmp     #MGTK::inrect_inside
         bne     CheckOtherClick
 
@@ -347,8 +346,8 @@ l4:     lda     file_dialog_res::winfo::window_id
 .endproc
 
 .proc SetUpPorts
-        LIB_MGTK_CALL MGTK::InitPort, main_grafport
-        LIB_MGTK_CALL MGTK::SetPort, window_grafport
+        MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
 
@@ -366,7 +365,7 @@ click_handler_hook:
 .proc HandleListButtonDown
         bit     listbox_disabled_flag
         bmi     rts1
-        LIB_MGTK_CALL MGTK::FindControl, findcontrol_params
+        MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         beq     in_list
 
@@ -382,7 +381,7 @@ rts1:   rts
 in_list:
         lda     file_dialog_res::winfo_listbox::window_id
         sta     screentowindow_params::window_id
-        LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::cliprect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
         ldy     #kListEntryHeight
@@ -408,9 +407,9 @@ open:   ldx     file_dialog_res::selected_index
         ;; File - select it.
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         jsr     HandleOk
         jmp     rts1
 
@@ -419,9 +418,9 @@ folder: and     #$7F
         pha
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
         lda     #0
         sta     hi
 
@@ -453,8 +452,8 @@ folder: and     #$7F
         jsr     ScrollClipRect
         jsr     UpdateDiskName
         jsr     DrawListEntries
-        LIB_MGTK_CALL MGTK::InitPort, main_grafport
-        LIB_MGTK_CALL MGTK::SetPort, window_grafport
+        MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, window_grafport
         rts
 
 hi:     .byte   0
@@ -509,7 +508,7 @@ different:
         ;; Track thumb
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     trackthumb_params::which_ctl
-        LIB_MGTK_CALL MGTK::TrackThumb, trackthumb_params
+        MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         bne     :+
         rts
@@ -518,7 +517,7 @@ different:
         sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
-        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_params::stash
         jsr     ScrollClipRect
         jsr     DrawListEntries
@@ -536,7 +535,7 @@ different:
 :       sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
-        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
@@ -556,7 +555,7 @@ different:
 :       sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
-        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
@@ -575,7 +574,7 @@ different:
         sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
-        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
@@ -596,7 +595,7 @@ different:
         sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
-        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         jsr     DrawListEntries
@@ -607,7 +606,7 @@ different:
 ;;; ============================================================
 
 .proc CheckArrowRepeat
-        LIB_MGTK_CALL MGTK::PeekEvent, event_params
+        MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         beq     :+
@@ -617,8 +616,8 @@ different:
         pla
         rts
 
-:       LIB_MGTK_CALL MGTK::GetEvent, event_params
-        LIB_MGTK_CALL MGTK::FindWindow, findwindow_params
+:       MGTK_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         cmp     file_dialog_res::winfo_listbox::window_id
         beq     :+
@@ -633,7 +632,7 @@ different:
         pla
         rts
 
-:       LIB_MGTK_CALL MGTK::FindControl, findcontrol_params
+:       MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
         beq     :+
@@ -662,7 +661,7 @@ different:
 ;;; ============================================================
 
 .proc SetCursorPointer
-        LIB_MGTK_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::SetCursor, pointer_cursor
         rts
 .endproc
 
@@ -671,7 +670,7 @@ different:
 .proc SetCursorIBeam
         bit     cursor_ibeam_flag
         bmi     :+
-        LIB_MGTK_CALL MGTK::SetCursor, ibeam_cursor
+        MGTK_CALL MGTK::SetCursor, ibeam_cursor
         copy    #$80, cursor_ibeam_flag
 :       rts
 .endproc
@@ -809,8 +808,8 @@ l7:     .byte   0
 ;;; ============================================================
 
 .proc InitSetGrafport
-        LIB_MGTK_CALL MGTK::InitPort, main_grafport
-        LIB_MGTK_CALL MGTK::SetPort, main_grafport
+        MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
@@ -885,9 +884,9 @@ no_modifiers:
         bne     not_tab
 is_tab: lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
         jsr     ChangeDrive
 jmp_exit:
         jmp     exit
@@ -904,9 +903,9 @@ not_tab:
 
 :       lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
         jsr     OpenSelectedItem
         jmp     exit
 
@@ -915,9 +914,9 @@ not_ctrl_o:
         bne     :+
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
         jsr     DoClose
         jmp     exit
 
@@ -948,9 +947,9 @@ exit:   jsr     InitSetGrafport
 .endif
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         jsr     HandleMetaRightKey
         jsr     HandleOk
         jsr     InitSetGrafport
@@ -963,9 +962,9 @@ exit:   jsr     InitSetGrafport
 .proc KeyEscape
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
         jsr     HandleCancel
         jsr     InitSetGrafport
         rts
@@ -1226,60 +1225,60 @@ l1:     ldx     num_file_names
 ;;; ============================================================
 
 .proc OpenWindow
-        LIB_MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo
-        LIB_MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo_listbox
+        MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo
+        MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo_listbox
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::SetPenMode, notpencopy
-        LIB_MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_frame
-        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
-        LIB_MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
-        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::ok_button_rect
-        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::open_button_rect
-        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
-        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::cancel_button_rect
-        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::change_drive_button_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_frame
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
+        MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::ok_button_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::open_button_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::cancel_button_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::change_drive_button_rect
         jsr     DrawOkButtonLabel
         jsr     DrawOpenButtonLabel
         jsr     DrawCloseButtonLabel
         jsr     DrawCancelButtonLabel
         jsr     DrawChangeDriveButtonLabel
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
-        LIB_MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
-        LIB_MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep_start
-        LIB_MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep_end
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
+        MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
+        MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep_start
+        MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep_end
         jsr     InitSetGrafport
         rts
 .endproc
 
 .proc DrawOkButtonLabel
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::ok_button_pos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::ok_button_pos
         param_call DrawString, file_dialog_res::ok_button_label
         rts
 .endproc
 
 .proc DrawOpenButtonLabel
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
         param_call DrawString, file_dialog_res::open_button_label
         rts
 .endproc
 
 .proc DrawCloseButtonLabel
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
         param_call DrawString, file_dialog_res::close_button_label
         rts
 .endproc
 
 .proc DrawCancelButtonLabel
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::cancel_button_pos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::cancel_button_pos
         param_call DrawString, file_dialog_res::cancel_button_label
         rts
 .endproc
 
 .proc DrawChangeDriveButtonLabel
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
         param_call DrawString, file_dialog_res::change_drive_button_label
         rts
 .endproc
@@ -1317,7 +1316,7 @@ l1:     ldx     num_file_names
         lda     (ptr),y
         sta     params+2
         inc16   params
-        LIB_MGTK_CALL MGTK::DrawText, params
+        MGTK_CALL MGTK::DrawText, params
         rts
 .endproc
 
@@ -1335,7 +1334,7 @@ l1:     ldx     num_file_names
         lda     (ptr),y
         sta     params+2
         inc16   params
-        LIB_MGTK_CALL MGTK::TextWidth, params
+        MGTK_CALL MGTK::TextWidth, params
         ldax    params+3
         rts
 .endproc
@@ -1357,12 +1356,12 @@ l1:     ldx     num_file_names
 .endif
         sta     text_length
         inc16   text_addr ; point past length byte
-        LIB_MGTK_CALL MGTK::TextWidth, text_params
+        MGTK_CALL MGTK::TextWidth, text_params
 
         sub16   #file_dialog_res::kFilePickerDlgWidth, text_width, file_dialog_res::pos_title::xcoord
         lsr16   file_dialog_res::pos_title::xcoord ; /= 2
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
-        LIB_MGTK_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
+        MGTK_CALL MGTK::DrawText, text_params
         rts
 .endproc
 
@@ -1373,7 +1372,7 @@ l1:     ldx     num_file_names
         jsr     CopyStringToLcbuf
 .endif
         stax    $06
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
         ldax    $06
         jsr     DrawString
         rts
@@ -1385,7 +1384,7 @@ l1:     ldx     num_file_names
 .proc DrawInput2Label
         jsr     CopyStringToLcbuf
         stax    $06
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_label_pos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_label_pos
         ldax    $06
         jsr     DrawString
         rts
@@ -1400,7 +1399,7 @@ retry:  ldx     device_num
 
         and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
-        LIB_MLI_CALL ON_LINE, on_line_params
+        MLI_CALL ON_LINE, on_line_params
         lda     on_line_buffer
         and     #NAME_LENGTH_MASK
         sta     on_line_buffer
@@ -1478,7 +1477,7 @@ retry:
 .if FD_EXTENDED
 retry:
 .endif
-        LIB_MLI_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
         beq     :+
         jsr     DeviceOnLine
         lda     #$FF
@@ -1492,7 +1491,7 @@ retry:
 :       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        LIB_MLI_CALL READ, read_params
+        MLI_CALL READ, read_params
         beq     :+
         jsr     DeviceOnLine
         lda     #$FF
@@ -1655,7 +1654,7 @@ l6:     inc     d3
         cmp     num_file_names
         bne     next
 
-close:  LIB_MLI_CALL CLOSE, close_params
+close:  MLI_CALL CLOSE, close_params
         bit     only_show_dirs_flag
         bpl     :+
         lda     dir_count
@@ -1676,7 +1675,7 @@ next:   lda     d3
         add16_8 ptr, entry_length, ptr
         jmp     l1
 
-:       LIB_MLI_CALL READ, read_params
+:       MLI_CALL READ, read_params
         copy16  #dir_read_buf+$04, ptr
         lda     #$00
         sta     d3
@@ -1696,7 +1695,7 @@ hi:     .byte   0
 .proc DrawListEntries
         lda     file_dialog_res::winfo_listbox::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::cliprect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::cliprect
         copy    #kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
         copy16  #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
         copy    #0, l4
@@ -1707,7 +1706,7 @@ loop:   lda     l4
         jsr     InitSetGrafport
         rts
 
-:       LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
+:       MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
         ldx     l4
         lda     file_list_index,x
         and     #$7F
@@ -1735,7 +1734,7 @@ loop:   lda     l4
 
         ;; Folder glyph
         copy    #kListEntryGlyphX, file_dialog_res::picker_entry_pos::xcoord
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
         param_call DrawString, file_dialog_res::str_folder
         copy    #kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord
 
@@ -1767,7 +1766,7 @@ UpdateScrollbar:
 
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         copy    #MGTK::activatectl_deactivate, activatectl_params::activate
-        LIB_MGTK_CALL MGTK::ActivateCtl, activatectl_params
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
         lda     #0
         jmp     ScrollClipRect
 
@@ -1779,13 +1778,13 @@ UpdateScrollbar:
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_params::which_ctl
         sta     activatectl_params::activate
-        LIB_MGTK_CALL MGTK::ActivateCtl, activatectl_params
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
         lda     index
         sta     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
-        LIB_MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
 index:  .byte   0
@@ -1796,9 +1795,9 @@ index:  .byte   0
 .proc UpdateDiskName
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
 .if !FD_EXTENDED
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenMode, penXOR
 .endif
         copy16  #path_buf, $06
         ldy     #$00
@@ -1823,7 +1822,7 @@ l4:     inx
         cpy     l5
         bne     l4
         stx     INVOKER_PREFIX
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         param_call DrawString, file_dialog_res::disk_label_str
         param_call DrawString, INVOKER_PREFIX
         jsr     InitSetGrafport
@@ -1879,8 +1878,8 @@ tmp:    .byte   0
 
         lda     file_dialog_res::winfo_listbox::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::SetPenMode, penXOR
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::rect_selection
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::rect_selection
         jsr     InitSetGrafport
         rts
 
@@ -1891,8 +1890,8 @@ tmp:    .byte   0
 
 .proc SetPortForWindow
         sta     getwinport_params::window_id
-        LIB_MGTK_CALL MGTK::GetWinPort, getwinport_params
-        LIB_MGTK_CALL MGTK::SetPort, window_grafport
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, window_grafport
         rts
 .endproc
 
@@ -2267,15 +2266,15 @@ has_sel:
         jsr     CalcInput1IPPos
         stax    pt
         copy16  file_dialog_res::input1_textpos::ycoord, pt+2
-        LIB_MGTK_CALL MGTK::MoveTo, pt
+        MGTK_CALL MGTK::MoveTo, pt
         bit     prompt_ip_flag
         bpl     bg2
 
-        LIB_MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg1
+        MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg1
         copy    #$00, prompt_ip_flag
         beq     :+
 
-bg2:    LIB_MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg2
+bg2:    MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         copy    #$FF, prompt_ip_flag
 
         PARAM_BLOCK dt_params, $06
@@ -2285,7 +2284,7 @@ length  .byte
 
 :       copy16  #str_insertion_point+1, dt_params::data
         copy    str_insertion_point, dt_params::length
-        LIB_MGTK_CALL MGTK::DrawText, dt_params
+        MGTK_CALL MGTK::DrawText, dt_params
         jsr     InitSetGrafport
         rts
 .endproc
@@ -2301,15 +2300,15 @@ length  .byte
         jsr     CalcInput2IPPos
         stax    $06
         copy16  file_dialog_res::input2_textpos::ycoord, $08
-        LIB_MGTK_CALL MGTK::MoveTo, pt
+        MGTK_CALL MGTK::MoveTo, pt
         bit     prompt_ip_flag
         bpl     bg2
 
-        LIB_MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg1
+        MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg1
         copy    #$00, prompt_ip_flag
         jmp     :+
 
-bg2:    LIB_MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg2
+bg2:    MGTK_CALL MGTK::SetTextBG, file_dialog_res::textbg2
         copy    #$FF, prompt_ip_flag
 
         PARAM_BLOCK dt_params, $06
@@ -2319,7 +2318,7 @@ length  .byte
 
 :       copy16  #str_insertion_point+1, dt_params::data
         copy    str_insertion_point, dt_params::length
-        LIB_MGTK_CALL MGTK::DrawText, pt
+        MGTK_CALL MGTK::DrawText, pt
         jsr     InitSetGrafport
         rts
 .endproc
@@ -2330,10 +2329,10 @@ length  .byte
 .proc RedrawF1
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_rect
-        LIB_MGTK_CALL MGTK::SetPenMode, notpencopy
-        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
         lda     buf_input1_left
         beq     :+
         param_call DrawString, buf_input1_left
@@ -2348,10 +2347,10 @@ length  .byte
 .proc RedrawF2
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
-        LIB_MGTK_CALL MGTK::SetPenMode, notpencopy
-        LIB_MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
         lda     buf_input2_left
         beq     :+
         param_call DrawString, buf_input2_left
@@ -2367,13 +2366,13 @@ length  .byte
 .proc HandleF1Click
         lda     file_dialog_res::winfo::window_id
         sta     screentowindow_params::window_id
-        LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
 
         ;; Inside input1 ?
-        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
 .if !FD_EXTENDED
         beq     :+
@@ -2385,7 +2384,7 @@ length  .byte
         ;; Inside input2 ?
         bit     dual_inputs_flag
         bpl     done
-        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         bne     done
         jsr     HandleOk    ; move focus to input2
@@ -2424,7 +2423,7 @@ width   .word
         ;; Iterate to find the position
         copy16  #buf_input_right, tw_params::data
         copy    buf_input_right, tw_params::length
-@loop:  LIB_MGTK_CALL MGTK::TextWidth, tw_params
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, ip_pos, tw_params::width
         cmp16   tw_params::width, screentowindow_params::windowx
         bcc     :+
@@ -2481,7 +2480,7 @@ width   .word
         ;; Iterate to find the position
         copy16  #buf_input1_left, tw_params::data
         copy    buf_input1_left, tw_params::length
-@loop:  LIB_MGTK_CALL MGTK::TextWidth, tw_params
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, file_dialog_res::input1_textpos::xcoord, tw_params::width
         cmp16   tw_params::width, screentowindow_params::windowx
         bcc     :+
@@ -2547,20 +2546,20 @@ ip_pos: .word   0
         ;; Was click inside text box?
         lda     file_dialog_res::winfo::window_id
         sta     screentowindow_params::window_id
-        LIB_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
 
         ;; Inside input2 ?
-        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
         cmp     #MGTK::inrect_inside
         beq     ep2
 
         ;; Inside input1 ?
         bit     dual_inputs_flag
         bpl     done
-        LIB_MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         bne     done
         jsr     HandleCancel ; Move focus to input1
@@ -2596,7 +2595,7 @@ width   .word
         ;; Iterate to find the position
         copy16  #buf_input_right, tw_params::data
         copy    buf_input_right, tw_params::length
-@loop:  LIB_MGTK_CALL MGTK::TextWidth, tw_params
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, ip_pos, tw_params::width
         cmp16   tw_params::width, screentowindow_params::windowx
         bcc     :+
@@ -2652,7 +2651,7 @@ width   .word
 .proc ToLeft
         copy16  #buf_input2_left, tw_params::data
         copy    buf_input2_left, tw_params::length
-@loop:  LIB_MGTK_CALL MGTK::TextWidth, $06
+@loop:  MGTK_CALL MGTK::TextWidth, $06
         add16   tw_params::width, file_dialog_res::input2_textpos, tw_params::width
         cmp16   tw_params::width, screentowindow_params::windowx
         bcc     :+
@@ -2763,7 +2762,7 @@ continue:
         copy16  file_dialog_res::input1_textpos::ycoord, $08
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, $06
+        MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, str_1_char
         param_call DrawString, buf_input_right
         jsr     SelectMatchingFileInListF1
@@ -2785,7 +2784,7 @@ tmp:    .byte   0
         copy16  file_dialog_res::input1_textpos::ycoord, $08
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, $06
+        MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
         jsr     SelectMatchingFileInListF1
@@ -2818,7 +2817,7 @@ skip:   ldx     buf_input1_left
         copy16  file_dialog_res::input1_textpos::ycoord, $08
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, $06
+        MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
         jsr     SelectMatchingFileInListF1
@@ -2852,7 +2851,7 @@ skip:   ldx     buf_input1_left
 finish: dec     buf_input_right
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
         param_call DrawString, buf_input1_left
         param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
@@ -2933,7 +2932,7 @@ ret:    rts
         copy16  file_dialog_res::input2_textpos::ycoord, $08
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, $06
+        MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, str_1_char
         param_call DrawString, buf_input_right
         jsr     SelectMatchingFileInListF2
@@ -2957,7 +2956,7 @@ tmp:    .byte   0
         copy16  file_dialog_res::input2_textpos::ycoord, $08
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, $06
+        MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
         jsr     SelectMatchingFileInListF2
@@ -2991,7 +2990,7 @@ l3:     ldx     buf_input2_left
         copy16  file_dialog_res::input2_textpos::ycoord, $08
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, $06
+        MGTK_CALL MGTK::MoveTo, $06
         param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
         jsr     SelectMatchingFileInListF2
@@ -3025,7 +3024,7 @@ l2:     lda     buf_input_right+1,x
 l3:     dec     buf_input_right
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        LIB_MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
         param_call DrawString, buf_input2_left
         param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
@@ -3344,7 +3343,7 @@ width   .word
 
         sta     params::length
         copy16  #buf_input1_left+1, params::data
-        LIB_MGTK_CALL MGTK::TextWidth, params
+        MGTK_CALL MGTK::TextWidth, params
 
 :       lda     params::width
         clc
@@ -3373,7 +3372,7 @@ width   .word
 
         sta     params::length
         copy16  #buf_input2_left+1, params::data
-        LIB_MGTK_CALL MGTK::TextWidth, params
+        MGTK_CALL MGTK::TextWidth, params
 
 :       lda     params::width
         clc

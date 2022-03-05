@@ -51,7 +51,7 @@ params:  .res    3
 ;;; MGTK call from main>aux, MLI-style params
 
 .proc MGTKRelayImpl
-        copy16  #MGTK::MLI, ParamsRelayImpl::call_addr
+        copy16  #MGTKAuxEntry, ParamsRelayImpl::call_addr
         jmp     ParamsRelayImpl
 .endproc
 
@@ -70,6 +70,7 @@ params:  .res    3
 .proc SetPosDrawText
         stax    addr
         jsr     BankInAux
+        MGTKEntry := aux::MGTKEntry
         MGTK_CALL MGTK::MoveTo, 0, addr
         MGTK_CALL MGTK::DrawText, text_buffer2
         jmp     BankInMain
@@ -205,6 +206,7 @@ flag:   .byte   0
 
         jsr     BankInAux
 
+        MGTKEntry := aux::MGTKEntry
         MGTK_CALL MGTK::GetPort, src ; grab window state
 
         lda     active_window_id   ; which desktop window?

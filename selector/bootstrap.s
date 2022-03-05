@@ -10,6 +10,8 @@
 ;;; (Main, LCBANK2) and invoke it.
 
 .scope
+        MLIEntry := MLI
+
         dest := $D100
 
         bit     LCBANK2

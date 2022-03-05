@@ -57,7 +57,9 @@
 
         .org ::kSegmentInitializerAddress
 
-        MLIRelayImpl := main::MLIRelayImpl
+        MLIEntry  := main::MLIRelayImpl
+        MGTKEntry := MGTKRelayImpl
+        ITKEntry  := ITKRelayImpl
 
         data_buf := $1200
         kDataBufferSize = $400
@@ -241,7 +243,7 @@ end:
         jsr     main::GetCopiedToRAMCardFlag
     IF_MINUS
         param_call main::CopyDeskTopOriginalPrefix, INVOKER_PREFIX
-        MLI_RELAY_CALL GET_FILE_INFO, main::src_file_info_params
+        MLI_CALL GET_FILE_INFO, main::src_file_info_params
         bcs     :+
         copy    DEVNUM, target
 :
@@ -301,12 +303,12 @@ end:
 ;;; Initialize MGTK
 
 .scope
-        MGTK_RELAY_CALL MGTK::SetZP1, setzp_params_nopreserve
-        MGTK_RELAY_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
-        MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
-        MGTK_RELAY_CALL MGTK::InitMenu, initmenu_params
+        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
+        MGTK_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
+        MGTK_CALL MGTK::StartDeskTop, startdesktop_params
+        MGTK_CALL MGTK::InitMenu, initmenu_params
         jsr     main::SetRGBMode
-        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
+        MGTK_CALL MGTK::SetMenu, aux::desktop_menu
         jsr     main::ShowClock
 
         ;; --------------------------------------------------
@@ -324,12 +326,12 @@ end:
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
         END_IF
-        MGTK_RELAY_CALL MGTK::ScaleMouse, scalemouse_params
+        MGTK_CALL MGTK::ScaleMouse, scalemouse_params
 
         ;; --------------------------------------------------
 
-        MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
-        MGTK_RELAY_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::SetCursor, watch_cursor
+        MGTK_CALL MGTK::ShowCursor
 
         ;; fall through
 .endscope
@@ -444,7 +446,7 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
         kSelectorListShortSize = $400
         .assert kSelectorListShortSize <= kDataBufferSize, error, "Buffer size error"
 
-        MGTK_RELAY_CALL MGTK::CheckEvents
+        MGTK_CALL MGTK::CheckEvents
 
         copy    #0, L0A92
         jsr     ReadSelectorList
@@ -557,14 +559,14 @@ str_selector_list:
         DEFINE_CLOSE_PARAMS close_params
 
 .proc ReadSelectorList
-        MLI_RELAY_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
         ;;         bne     done
         bne     WriteSelectorList
 
         lda     open_params::ref_num
         sta     read_params::ref_num
-        MLI_RELAY_CALL READ, read_params
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL READ, read_params
+        MLI_CALL CLOSE, close_params
 done:   rts
 .endproc
 
@@ -586,15 +588,15 @@ ploop:  ldy     #0
         bne     ploop
 
         ;; Write out file
-        MLI_RELAY_CALL CREATE, create_params
+        MLI_CALL CREATE, create_params
         bne     done
-        MLI_RELAY_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
         lda     open_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-        MLI_RELAY_CALL WRITE, write_params ; two blocks of $400
-        MLI_RELAY_CALL WRITE, write_params
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL WRITE, write_params ; two blocks of $400
+        MLI_CALL WRITE, write_params
+        MLI_CALL CLOSE, close_params
 
 done:   rts
 .endproc
@@ -635,12 +637,12 @@ end:
 ;;; Enumerate Desk Accessories
 
 .scope
-        MGTK_RELAY_CALL MGTK::CheckEvents
+        MGTK_CALL MGTK::CheckEvents
 
         read_dir_buffer := data_buf
 
         ;; Does the directory exist?
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
         jmp     end
 
@@ -650,11 +652,11 @@ end:
         jmp     end
 
 open_dir:
-        MLI_RELAY_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
         lda     open_ref_num
         sta     read_ref_num
         sta     close_ref_num
-        MLI_RELAY_CALL READ, read_params
+        MLI_CALL READ, read_params
 
         lda     #0
         sta     entry_num
@@ -785,7 +787,7 @@ next_entry:
         lda     entry_in_block
         cmp     entries_per_block
         bne     :+
-        MLI_RELAY_CALL READ, read_params
+        MLI_CALL READ, read_params
         copy16  #read_dir_buffer + 4, dir_ptr
 
         lda     #0
@@ -796,7 +798,7 @@ next_entry:
         jmp     process_block
 
 close_dir:
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_params
         jmp     end
 
         DEFINE_OPEN_PARAMS open_params, str_desk_acc, IO_BUFFER
@@ -867,7 +869,7 @@ process_volume:
         lda     DEVLST,y
         jsr     main::CreateVolumeIcon ; A = unit number, Y = device index
         sta     cvi_result
-        MGTK_RELAY_CALL MGTK::CheckEvents
+        MGTK_CALL MGTK::CheckEvents
 
         pla                     ; restore all registers
         tay
@@ -1145,8 +1147,8 @@ count:  .byte   0
 
 .proc FinalSetup
         ;; Final MGTK configuration
-        MGTK_RELAY_CALL MGTK::CheckEvents
-        MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::CheckEvents
+        MGTK_CALL MGTK::SetCursor, pointer_cursor
         lda     #0
         sta     active_window_id
         jsr     main::UpdateWindowMenuItems
@@ -1164,8 +1166,8 @@ iloop:  cpx     cached_window_entry_count
         sta     icon_param
         jsr     main::IconEntryLookup
         stax    @addr
-        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
-        ITK_RELAY_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
+        ITK_CALL IconTK::AddIcon, 0, @addr
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
         pla
         tax
         inx
@@ -1199,7 +1201,7 @@ iloop:  cpx     cached_window_entry_count
         lda     main::save_restore_windows::open_params::ref_num
         sta     main::save_restore_windows::read_params::ref_num
         sta     main::save_restore_windows::close_params::ref_num
-        MLI_RELAY_CALL READ, main::save_restore_windows::read_params
+        MLI_CALL READ, main::save_restore_windows::read_params
         jsr     main::save_restore_windows::Close
 
         ;; Validate file format version byte

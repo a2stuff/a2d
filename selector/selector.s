@@ -10,12 +10,13 @@
 
 SAVE_AREA_BUFFER:= $0800
 LOADER          := $2000
-MGTK            := $4000
-MGTK::MLI       := MGTK
+MGTKEntry       := $4000
 FONT            := $8800
 START           := $8E00
 
 SETTINGS        := $8D80
+
+MLIEntry        := MLI
 
 .enum AlertID
 selector_unable_to_run  = $00
@@ -38,7 +39,7 @@ kInvokerOffset          = $600
 kInvokerSegmentSize     = $160
 kAppSegmentSize         = $6400
 kAlertSegmentSize       = $800
-OVERLAY_ADDR            := MGTK + kAppSegmentSize
+OVERLAY_ADDR            := MGTKEntry + kAppSegmentSize
 kOverlay1Offset         = kInvokerOffset + kInvokerSegmentSize + kAppSegmentSize + kAlertSegmentSize
 kOverlay1Size           = $1B00
 kOverlay2Offset         = kOverlay1Offset + kOverlay1Size
@@ -56,6 +57,7 @@ kOverlay2Size           = $D00
 
         .include "loader.s"
         .include "../lib/invoker.s"
+
         .include "app.s"
         .include "alert_dialog.s"
         .include "ovl_file_dialog.s"

@@ -47,6 +47,8 @@
 ;;;    $800  +-------------+
 ;;;          :             :
 
+MLIEntry        := MLI
+
 dir_io_buffer   := $800         ; 1024 bytes for I/O
 dir_buffer      := $C00         ; 512 bytes (BLOCK_SIZE)
 kDirBufSize     = BLOCK_SIZE
@@ -2245,9 +2247,7 @@ supports_mousetext:
         ADJUSTCASE_VOLPATH := $810
         ADJUSTCASE_VOLBUF  := $820
         ADJUSTCASE_IO_BUFFER := src_io_buffer
-        .define LIB_MLI_CALL MLI_CALL
         .include "../lib/adjustfilecase.s"
-        .undefine LIB_MLI_CALL
 
 ;;; ============================================================
         ;; Reserve $80 bytes for settings

@@ -9,6 +9,8 @@
 .scope invoker
         .org ::INVOKER
 
+        MLIEntry := MLI
+
 start:
         jmp     begin
 

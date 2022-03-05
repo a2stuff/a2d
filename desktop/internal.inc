@@ -164,50 +164,6 @@ kDeviceTypeRemovable    = 3
 kDeviceTypeFileShare    = 4
 
 ;;; ============================================================
-;;; Relays from Main to Aux (params must be in ZP or LC)
-
-.macro MGTK_RELAY_CALL call, addr, label
-        jsr     MGTKRelayImpl
-        .byte   call
-    .if .paramcount > 2
-        label := *
-    .endif
-    .if .paramcount > 1
-        .addr   addr
-    .else
-        .addr   0
-    .endif
-.endmacro
-
-.macro ITK_RELAY_CALL call, addr, label
-        jsr     ITKRelayImpl
-        .byte   call
-    .if .paramcount > 2
-        label := *
-    .endif
-    .if .paramcount > 1
-        .addr   addr
-    .else
-        .addr   0
-    .endif
-.endmacro
-
-;;; Scopes define their own MLIRelayImpl procs.
-
-.macro MLI_RELAY_CALL call, addr
-        jsr     MLIRelayImpl
-        .byte   call
-    .if .paramcount > 2
-        label := *
-    .endif
-    .if .paramcount > 1
-        .addr   addr
-    .else
-        .addr   0
-    .endif
-.endmacro
-
-;;; ============================================================
 ;;; Internals - miscellaneous structures
 
 .struct FileRecord

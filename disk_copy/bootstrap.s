@@ -7,6 +7,10 @@
 .scope part1
         .org $800
 
+        MLIEntry  := MLI
+        MGTKEntry := MGTKRelayImpl ; in LC, temporarily left over from DeskTop
+        ITKEntry  := ITKRelayImpl ; in LC, temporarily left over from DeskTop
+
         jmp     start
 
 ;;; ============================================================
@@ -25,9 +29,9 @@ str_desktop2:
 
 start:  lda     #$80
         sta     ptr
-        ITK_RELAY_CALL IconTK::RemoveAll, 0 ; volume icons
-        MGTK_RELAY_CALL MGTK::CloseAll
-        MGTK_RELAY_CALL MGTK::SetZP1, ptr
+        ITK_CALL IconTK::RemoveAll, 0 ; volume icons
+        MGTK_CALL MGTK::CloseAll
+        MGTK_CALL MGTK::SetZP1, ptr
 
         ;; Clear most of the system bitmap
         ldx     #BITMAP_SIZE - 3

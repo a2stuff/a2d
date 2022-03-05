@@ -4,6 +4,7 @@
 ;;; ============================================================
 
 .scope mgtk
+        MGTKEntry := *
 
 kScreenWidth    = 560
 kScreenHeight   = 192
@@ -83,8 +84,6 @@ kScreenHeight   = 192
 ;;; MGTK
 
 .proc Dispatch
-        ASSERT_ADDRESS MGTK::MLI, "Entry point"
-
         lda     LOWSCR
         sta     SET80COL
 

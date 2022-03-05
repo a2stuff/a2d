@@ -18,6 +18,8 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
+        MGTKEntry := MGTKAuxEntry
+
 ;;; ============================================================
 ;;; Memory map
 ;;;
@@ -44,6 +46,8 @@
 ;;; ============================================================
 
         .org DA_LOAD_ADDRESS
+
+        MLIEntry := MLI
 
         block_buffer := $1A00
 

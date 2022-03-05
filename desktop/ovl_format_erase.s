@@ -7,7 +7,8 @@
 .scope format_erase_overlay
         .org $800
 
-        MLIRelayImpl := main::MLIRelayImpl
+        MLIEntry := main::MLIRelayImpl
+        MGTKEntry := MGTKRelayImpl
 
         block_buffer := $1A00
 
@@ -84,10 +85,10 @@ l3:     bit     selected_device_index
 
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
-        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, name_input_rect
         jsr     main::ClearPathBuf1
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
@@ -123,8 +124,8 @@ l6:     jsr     main::MergePathBuf1PathBuf2
 
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
         copy    #0, has_input_field_flag
         param_call main::DrawDialogLabel, 3, aux::str_confirm_format_prefix
@@ -142,8 +143,8 @@ l8:
 
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_formatting
         lda     unit_num
         jsr     CheckSupportsFormat
@@ -155,8 +156,8 @@ l8:
         bcs     l12
 l9:     lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
         param_call UpcaseString, path_buf1
 
@@ -199,7 +200,7 @@ l14:    jsr     main::PromptInputLoop
 l15:    pha
         jsr     main::SetCursorPointer
         jsr     main::ResetMainGrafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+        MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
         ldx     d2
         pla
         rts
@@ -245,10 +246,10 @@ l2:     bit     selected_device_index
         copy16  #main::rts1, main::jump_relay+1
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
-        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, name_input_rect
         jsr     main::ClearPathBuf1
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
@@ -284,8 +285,8 @@ l5:     jsr     main::MergePathBuf1PathBuf2
 
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
         copy    #0, has_input_field_flag
         param_call main::DrawDialogLabel, 3, aux::str_confirm_erase_prefix
@@ -303,8 +304,8 @@ l7:
 
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
         param_call UpcaseString, path_buf1
         jsr     main::SetCursorWatch
@@ -333,7 +334,7 @@ l10:    jsr     main::PromptInputLoop
 l11:    pha                     ; cancel
         jsr     main::SetCursorPointer
         jsr     main::ResetMainGrafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
+        MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
         ldx     d2
         pla
         rts
@@ -399,9 +400,9 @@ l4:     cmp     selected_device_index
         bne     l7
         jsr     main::StashCoordsAndDetectDoubleClick
         bmi     l6
-l5:     MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
+l5:     MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
         lda     #$00
 l6:     rts
 
@@ -453,8 +454,8 @@ col:    .byte   0
 
         add16   select_volume_rect::x1, #kLabelWidth-1, select_volume_rect::x2
         add16   select_volume_rect::y1, #aux::kDialogLabelHeight-1, select_volume_rect::y2
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, select_volume_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, select_volume_rect
         rts
 
 L0CA9:  .byte   0
@@ -671,7 +672,7 @@ unit_num:
 
 ;;; ============================================================
 
-.proc MLI_RELAY
+.proc MLI_CALL
         sty     call
         stax    params
         sta     ALTZPOFF
@@ -854,7 +855,7 @@ L1398:  stxy    total_blocks
         ;; Write first block of loader
         copy16  #prodos_loader_blocks, write_block_params::data_buffer
         copy16  #0, write_block_params::block_num
-        MLI_RELAY_CALL WRITE_BLOCK, write_block_params
+        MLI_CALL WRITE_BLOCK, write_block_params
         beq     :+
         jmp     fail2
 
@@ -886,7 +887,7 @@ L1398:  stxy    total_blocks
         dey
         bpl     :-
 
-        MLI_RELAY_CALL GET_TIME ; Apply timestamp
+        MLI_CALL GET_TIME ; Apply timestamp
         ldy     #3
 :       lda     DATELO,y
         sta     block_buffer + VolumeDirectoryHeader::creation_date,y
@@ -1063,7 +1064,7 @@ fail2:  sec
 ;;; ============================================================
 
 .proc WriteBlockAndZero
-        MLI_RELAY_CALL WRITE_BLOCK, write_block_params
+        MLI_CALL WRITE_BLOCK, write_block_params
         bne     fail
         jsr     zero_buffers
         inc     write_block_params::block_num
@@ -1146,7 +1147,7 @@ loop:   lda     (ptr),y
         ;; Read block 0
         sta     read_block_params::unit_num
         copy16  #0, read_block_params::block_num
-        MLI_RELAY_CALL READ_BLOCK, read_block_params
+        MLI_CALL READ_BLOCK, read_block_params
         bne     unknown         ; failure
         lda     read_buffer + 1
         cmp     #$E0            ; DOS 3.3?
@@ -1220,7 +1221,7 @@ maybe_dos:
 ;;; Handle Pascal disk - name suffixed with ':'
 pascal_disk:
         copy16  #$0002, read_block_params::block_num
-        MLI_RELAY_CALL READ_BLOCK, read_block_params
+        MLI_CALL READ_BLOCK, read_block_params
         beq     :+
         ;; Pascal disk, empty name - use " :" (weird, but okay?)
         copy    #2, ovl_string_buf
@@ -1250,7 +1251,7 @@ pascal_disk:
 .proc GetVolName
         and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
-        MLI_RELAY_CALL ON_LINE, on_line_params
+        MLI_CALL ON_LINE, on_line_params
         bne     non_pro
         lda     read_buffer
         and     #NAME_LENGTH_MASK
@@ -1309,7 +1310,7 @@ non_pro:
         sta     path
         copy    #'/', path+1
 
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         bne     no_match
 
         ;; A volume with that name exists... but is it the one

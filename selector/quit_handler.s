@@ -12,6 +12,8 @@
 ;;; $1000 Main.
 
 .scope
+        MLIEntry := MLI
+
         self := *
 
         jmp     start

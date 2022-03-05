@@ -232,9 +232,6 @@ ShiftDown               := app::ShiftDown
 buf_input1_left := buf_input_left
 
 ;;; Required macro definitions:
-.define LIB_MGTK_CALL MGTK_CALL
-.define LIB_MLI_CALL MLI_CALL
-
         .define FD_EXTENDED 0
         .include "../lib/file_dialog.s"
 
@@ -276,6 +273,3 @@ file_dialog_loop   := file_dialog::ep_loop
 
         PAD_TO OVERLAY_ADDR + kOverlay1Size
         .assert * <= $BF00, error, "Overwrites ProDOS Global Page"
-
-.undefine LIB_MGTK_CALL
-.undefine LIB_MLI_CALL

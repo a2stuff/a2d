@@ -8,6 +8,9 @@
 .scope file_dialog
         .org $5000
 
+        MLIEntry := main::MLIRelayImpl
+        MGTKEntry := MGTKRelayImpl
+
 ;;; ============================================================
 
 Exec:
@@ -32,9 +35,6 @@ buf_input2_left := path_buf1
 buf_input_right := path_buf2
 
 ;;; Required macro definitions
-.define LIB_MGTK_CALL MGTK_RELAY_CALL
-.define LIB_MLI_CALL MLI_RELAY_CALL
-
         .define FD_EXTENDED 1
         .include "../lib/file_dialog.s"
         .include "../lib/muldiv.s"
@@ -46,6 +46,3 @@ buf_input_right := path_buf2
 .endscope ; file_dialog
 
 file_dialog__Exec := file_dialog::Exec
-
-.undefine LIB_MGTK_CALL
-.undefine LIB_MLI_CALL

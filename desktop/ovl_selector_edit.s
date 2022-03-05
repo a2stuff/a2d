@@ -7,6 +7,8 @@
 .proc SelectorOverlay
         .org $7000
 
+        MGTKEntry := MGTKRelayImpl
+
 .proc Init
         stx     which_run_list
         sty     copy_when
@@ -120,43 +122,43 @@ buffer: .res 16, 0
         jmp     common
 
 add:    param_call file_dialog::DrawTitleCentered, label_add
-common: MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
+common: MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
         param_call file_dialog::DrawInput2Label, enter_the_name_to_appear_label
 
-        MGTK_RELAY_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
+        MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
         param_call file_dialog::DrawString, add_a_new_entry_to_label_str
 
-        MGTK_RELAY_CALL MGTK::MoveTo, primary_run_list_label_pos
+        MGTK_CALL MGTK::MoveTo, primary_run_list_label_pos
         param_call file_dialog::DrawString, primary_run_list_label_str
         param_call file_dialog::MeasureString, primary_run_list_label_str
         addax   rect_primary_run_list_ctrl::x1, rect_primary_run_list_ctrl::x2
         add16_8 rect_primary_run_list_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
 
-        MGTK_RELAY_CALL MGTK::MoveTo, secondary_run_list_label_pos
+        MGTK_CALL MGTK::MoveTo, secondary_run_list_label_pos
         param_call file_dialog::DrawString, secondary_run_list_label_str
         param_call file_dialog::MeasureString, secondary_run_list_label_str
         addax   rect_secondary_run_list_ctrl::x1, rect_secondary_run_list_ctrl::x2
         add16_8 rect_secondary_run_list_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
 
-        MGTK_RELAY_CALL MGTK::MoveTo, down_load_label_pos
+        MGTK_CALL MGTK::MoveTo, down_load_label_pos
         param_call file_dialog::DrawString, down_load_label_str
 
-        MGTK_RELAY_CALL MGTK::MoveTo, at_first_boot_label_pos
+        MGTK_CALL MGTK::MoveTo, at_first_boot_label_pos
         param_call file_dialog::DrawString, at_first_boot_label_str
         param_call file_dialog::MeasureString, at_first_boot_label_str
         addax   rect_at_first_boot_ctrl::x1, rect_at_first_boot_ctrl::x2
         add16_8 rect_at_first_boot_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
 
-        MGTK_RELAY_CALL MGTK::MoveTo, at_first_use_label_pos
+        MGTK_CALL MGTK::MoveTo, at_first_use_label_pos
         param_call file_dialog::DrawString, at_first_use_label_str
         param_call file_dialog::MeasureString, at_first_use_label_str
         addax   rect_at_first_use_ctrl::x1, rect_at_first_use_ctrl::x2
         add16_8 rect_at_first_use_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
 
-        MGTK_RELAY_CALL MGTK::MoveTo, never_label_pos
+        MGTK_CALL MGTK::MoveTo, never_label_pos
         param_call file_dialog::DrawString, never_label_str
         param_call file_dialog::MeasureString, never_label_str
         addax   rect_never_ctrl::x1, rect_never_ctrl::x2
@@ -178,8 +180,8 @@ common: MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
         clc
         jsr     DrawCopyWhenButton
 
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+        MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
@@ -309,10 +311,10 @@ too_long:
         jsr     JUMP_TABLE_SHOW_ALERT
         rts
 
-ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
+ok:     MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, main_grafport
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         ;; BUG: Missing lda #0 ?
         sta     blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
@@ -342,10 +344,10 @@ found:  cpy     #2
 ;;; ============================================================
 
 .proc HandleCancelFilename
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, file_dialog_res::winfo
+        MGTK_CALL MGTK::InitPort, main_grafport
+        MGTK_CALL MGTK::SetPort, main_grafport
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         copy16  #file_dialog::NoOp, file_dialog::HandleKey::key_meta_digit+1
@@ -395,23 +397,23 @@ copy_when:
 ;;; ============================================================
 
 .proc HandleClick
-        MGTK_RELAY_CALL MGTK::InRect, rect_primary_run_list_ctrl
+        MGTK_CALL MGTK::InRect, rect_primary_run_list_ctrl
         cmp     #MGTK::inrect_inside
         jeq     ClickPrimaryRunListCtrl
 
-        MGTK_RELAY_CALL MGTK::InRect, rect_secondary_run_list_ctrl
+        MGTK_CALL MGTK::InRect, rect_secondary_run_list_ctrl
         cmp     #MGTK::inrect_inside
         jeq     ClickSecondaryRunListCtrl
 
-        MGTK_RELAY_CALL MGTK::InRect, rect_at_first_boot_ctrl
+        MGTK_CALL MGTK::InRect, rect_at_first_boot_ctrl
         cmp     #MGTK::inrect_inside
         jeq     ClickAtFirstBootCtrl
 
-        MGTK_RELAY_CALL MGTK::InRect, rect_at_first_use_ctrl
+        MGTK_CALL MGTK::InRect, rect_at_first_use_ctrl
         cmp     #MGTK::inrect_inside
         jeq     ClickAtFirstUseCtrl
 
-        MGTK_RELAY_CALL MGTK::InRect, rect_never_ctrl
+        MGTK_CALL MGTK::InRect, rect_never_ctrl
         cmp     #MGTK::inrect_inside
         jeq     ClickNeverCtrl
 
@@ -510,10 +512,10 @@ draw:
         dey
         bpl     :-
 
-        MGTK_RELAY_CALL MGTK::SetPenMode, notpencopy
-        MGTK_RELAY_CALL MGTK::HideCursor
-        MGTK_RELAY_CALL MGTK::PaintBits, rb_params
-        MGTK_RELAY_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::PaintBits, rb_params
+        MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 

@@ -14,6 +14,8 @@
 
         .org $4000
 
+        MLIEntry := MLI ; this makes no sense
+        MGTKEntry := *
         .include "../mgtk/mgtk.s"
 
 ;;; ============================================================
@@ -229,6 +231,7 @@ a2d_file_icon:
 ;;; Entry point for "Icon ToolKit"
 ;;; ============================================================
 
+        ITKEntry := *
         ASSERT_ADDRESS IconTK::MLI, "IconTK entry point"
 
 .scope icon_toolkit
@@ -3819,9 +3822,7 @@ start:
 
         AlertYieldLoop = YieldLoopFromAux
         alert_grafport = main_grafport
-        .define LIB_MGTK_CALL MGTK_CALL
         .include "../lib/alert_dialog.s"
-        .undefine LIB_MGTK_CALL
 
 ;;; ============================================================
 ;;; Copy current GrafPort MapInfo into target buffer

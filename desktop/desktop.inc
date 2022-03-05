@@ -7,8 +7,8 @@
 ;;;  * Desk Accessories & Preview Accessories
 ;;; ============================================================
 
-;;; MGTK loaded into AUX; to call from MAIN use JUMP_TABLE_MGTK_RELAY
-MGTK::MLI   := $4000
+;;; MGTK loaded into AUX; to call from MAIN use JUMP_TABLE_MGTK_CALL
+MGTKAuxEntry    := $4000
 
 ;;; Desk Accessories are loaded in Main ($800-$1BFF) using
 ;;; an I/O buffer (Main $1C00-1FFF). DAs often copy themselves
@@ -48,8 +48,8 @@ kMaxDeskTopWindows      = 8
 ;;; * = Used by Desk Accessories
 
 JT_INIT $4000
-JT_ENTRY JUMP_TABLE_MGTK_RELAY    ; MGTK call (MLI-style, params follow) *
-JT_ENTRY JUMP_TABLE_MLI_RELAY     ; ProDOS MLI call (MLI-style, params follow) *
+JT_ENTRY JUMP_TABLE_MGTK_CALL    ; MGTK call (MLI-style, params follow) *
+JT_ENTRY JUMP_TABLE_MLI_CALL     ; ProDOS MLI call (MLI-style, params follow) *
 JT_ENTRY JUMP_TABLE_CLEAR_UPDATES ; Clear update events (e.g. after a drag) *
 JT_ENTRY JUMP_TABLE_YIELD_LOOP    ; Yield the event loop *
 JT_ENTRY JUMP_TABLE_SELECT_WINDOW ; Select and refresh given window *
@@ -80,7 +80,7 @@ JT_ENTRY JUMP_TABLE_GET_ORIG_PREFIX   ; Returns original prefix, if copied (in: 
 ;;;     JUMP_TABLE_MGTK_CALL m, params_addr, label  - params_addr is labeled for modifying
 
 .macro  JUMP_TABLE_MGTK_CALL    op, addr, label
-        jsr JUMP_TABLE_MGTK_RELAY
+        jsr JUMP_TABLE_MGTK_CALL
         .byte op
 .if .paramcount > 2
         label := *
@@ -99,7 +99,7 @@ JT_ENTRY JUMP_TABLE_GET_ORIG_PREFIX   ; Returns original prefix, if copied (in: 
 ;;;     JUMP_TABLE_MLI_CALL m, params_addr, label  - params_addr is labeled for modifying
 
 .macro  JUMP_TABLE_MLI_CALL    op, addr, label
-        jsr JUMP_TABLE_MLI_RELAY
+        jsr JUMP_TABLE_MLI_CALL
         .byte op
 .if .paramcount > 2
         label := *
