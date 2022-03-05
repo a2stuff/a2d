@@ -9,6 +9,17 @@ This is a complex API library written by Apple circa 1985. The Apple Programmers
 
 ---
 
+The Graphics Primitives are likely originally authored by Bill Budge, based on his _The Graphics Page_ series in Softalk magazine:
+* [Debut: The Graphics Page](https://archive.org/details/softalkv4n02oct1983) (Oct 1983)
+* [De-Wozzing the Apple II](https://archive.org/details/softalkv4n03nov1983) (Nov 1983)
+* [Facts of the Apple's hi-res screen](https://archive.org/details/softalkv4n04dec1983) (Dec 1983)
+* [Budge's Graphics Zone, HLine](https://archive.org/details/softalkv4n06feb1984) (Feb 1984)
+* [Pretzel Logic: HLine, swatches, SetPattern](https://archive.org/details/softalkv4n07mar1984) (Mar 1984)
+* [Hi-res clipping and windowing](https://archive.org/details/softalkv4n08apr1984) (Apr 1984)
+* [Cartesian square dancing](https://archive.org/details/softalkv4n10jun1984) (Jun 1984)
+
+---
+
 * [Graphics Primitives](#graphics-primitives) - screen management, lines, rects, polys, text, patterns, pens
   * [Concepts](#concepts)
   * [Commands](#commands)
