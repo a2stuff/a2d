@@ -229,7 +229,7 @@ kListBoxOffsetTop = 30
 kListBoxLeft = kDialogLeft + kListBoxOffsetLeft
 kListBoxTop = kDialogTop + kListBoxOffsetTop
 kListBoxWidth = 150
-kListBoxHeight = 70
+kListBoxHeight = kListItemHeight*kListRows-1
 
 .params winfo_drive_select
         kWindowId = 2
@@ -237,7 +237,7 @@ window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_present
+vscroll:        .byte   MGTK::Scroll::option_normal
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   3
@@ -323,20 +323,37 @@ bg_white:
 
 current_drive_selection:        ; $FF if no selection
         .byte   0
+
+top_row:                        ; top row visible in list box
+        .byte   0
+
+kListRows = 9                   ; number of visible rows
+kListItemHeight = 8             ; height of list item
+kListItemTextOffset = 8         ; top to baseline
+
+selection_mode:
+        .byte   0               ; high bit clear = source; set = desination
+
+;;; TODO: Unused???
         .byte   0
         .byte   0
         .byte   0
 
 LD367:  .byte   0
-
 LD368:  .byte   0
+
+;;; TODO: Unused???
         .byte   0
         .byte   0
         .byte   0
         .byte   0
 
-        DEFINE_POINT point_D36D, 0, 0
-        .byte   0
+kListEntrySlotOffset    = 8
+kListEntryDriveOffset   = 40
+kListEntryNameOffset    = 65
+        DEFINE_POINT list_entry_pos, 0, 0
+
+        .byte   0               ; TODO: Unused???
         .byte   0
         .byte   $47
         .byte   0
@@ -344,15 +361,19 @@ LD368:  .byte   0
 num_drives:
         .byte   0
 
-LD376:  .byte   0
+num_src_drives:
+        .byte   0
 
-kMaxNumDrives = 9               ; TODO: Support 13 (scrolling NYI)
+;;; 13 devices = 7 slots * 2 devices/slot - 1 device for S3D2 /RAM
+kMaxNumDrives = 13
 
 drive_name_table:
         .res    kMaxNumDrives * 16, 0
 drive_unitnum_table:
         .res    kMaxNumDrives, 0
-LD3FF:  .res    kMaxNumDrives, 0
+;;; Mapping from filtered destination list index to drive_*_table index
+destination_index_table:
+        .res    kMaxNumDrives, 0
 block_count_table:
         .res    kMaxNumDrives * 2, 0
 
@@ -395,16 +416,21 @@ id:     .byte   winfo_drive_select::kWindowId
 rect:   .tag    MGTK::Rect
 .endparams
 
-LD43A:  .res 18, 0
+device_name_buf:
+        .res 18, 0
+
 LD44C:  .byte   0
 LD44D:  .byte   0
 LD44E:  .byte   0
+
+;;; TODO: Unused???
         .byte   0
         .byte   0
 
 disk_copy_flag:                 ; mode: 0 = Disk Copy, 1 = Quick Copy
         .byte   0
 
+;;; TODO: Unused???
         .byte   1, 0
 
 str_2_spaces:   PASCAL_STRING "  "      ; do not localize
@@ -558,47 +584,63 @@ InitDialog:
         sta     LD429
         lda     #$FF
         sta     LD44C
+
         jsr     EnumerateDevices
+        copy    #$00, selection_mode
+        copy    #0, top_row
+        jsr     UpdateViewport
+        jsr     EnableScrollbar
 
         lda     LD5E0
         bne     :+
         jsr     GetAllBlockCounts
 :       jsr     DrawDeviceListEntries
         inc     LD5E0
+
+        ;; Loop until there's a selection (or drive check)
 LD674:  jsr     LD986
         bmi     LD674
         beq     LD687
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
         jmp     InitDialog
-
 LD687:  lda     current_drive_selection
         bmi     LD674
+
+        ;; Have a source selection
         copy    #1, disablemenu_params::disable
         MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
         lda     current_drive_selection
         sta     source_drive_index
-        lda     winfo_drive_select::window_id
-        jsr     SetWinPort
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, winfo_drive_select::cliprect
+
         lda     winfo_dialog::window_id
         jsr     SetWinPort
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_select_src
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_source
         param_call DrawString, str_select_destination
-        jsr     LE559
-        jsr     LE2B1
+        jsr     DrawSourceDriveInfo
+
+        ;; Prepare for destination selection
+        jsr     EnumerateDestinationDevices
+        copy    #$80, selection_mode
+        copy    #0, top_row
+        jsr     UpdateViewport
+        jsr     EnableScrollbar
+
+        jsr     DrawDestinationListEntries
+
+        ;; Loop until there's a selection (or drive check)
 LD6E6:  jsr     LD986
         bmi     LD6E6
         beq     LD6F9
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
         jmp     InitDialog
-
 LD6F9:  lda     current_drive_selection
         bmi     LD6E6
+
+        ;; Have a destination selection
         tax
-        lda     LD3FF,x
+        lda     destination_index_table,x
         sta     dest_drive_index
         lda     #$00
         sta     LD44C
@@ -632,7 +674,7 @@ LD734:  ldx     #0
         bne     LD763
         jsr     main__IdentifyNonprodosDiskType
         jsr     LE674
-        jsr     LE559
+        jsr     DrawSourceDriveInfo
         jmp     LD7AD
 
 LD763:  lda     winfo_dialog::window_id
@@ -649,7 +691,7 @@ LD77E:  lda     main__on_line_buffer2
         bne     LD763
         jsr     main__IdentifyNonprodosDiskType
         jsr     LE674
-        jsr     LE559
+        jsr     DrawSourceDriveInfo
         jmp     LD7AD
 
 LD798:  lda     main__on_line_buffer2
@@ -657,10 +699,10 @@ LD798:  lda     main__on_line_buffer2
         sta     main__on_line_buffer2
         param_call AdjustCase, main__on_line_buffer2
         jsr     LE674
-        jsr     LE559
+        jsr     DrawSourceDriveInfo
 LD7AD:  lda     source_drive_index
         jsr     GetBlockCount
-        jsr     LE5E1
+        jsr     DrawDestinationDriveInfo
         jsr     LE63F
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
@@ -1032,15 +1074,25 @@ check_read_drive_button:
 :       return  #$FF
 
 handle_drive_select_button_down:
+        MGTK_RELAY_CALL2 MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+        jeq     HandleScroll
+
+        cmp     #MGTK::Ctl::not_a_control
+        jne     LDBCA
+
         lda     winfo_drive_select::window_id
         sta     screentowindow_params::window_id
         jsr     SetWinPort
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_params::windowx
-        lsr16   screentowindow_params::windowy ; / 8
+        lsr16   screentowindow_params::windowy ; / 8 = kListItemHeight
         lsr16   screentowindow_params::windowy
         lsr16   screentowindow_params::windowy
         lda     screentowindow_params::windowy
+        clc
+        adc     top_row
         cmp     num_drives
         bcc     LDB98
         lda     current_drive_selection
@@ -1148,7 +1200,11 @@ LDC6F:  inc     current_drive_selection
         bcc     LDC7F
         lda     #$00
         sta     current_drive_selection
-LDC7F:  jsr     HighlightRow
+LDC7F:
+        pha
+        jsr     ScrollIntoView
+        pla
+        jsr     HighlightRow
         jmp     LDCA9
 .endproc
 
@@ -1166,6 +1222,9 @@ LDC9C:  ldx     num_drives
         dex
         stx     current_drive_selection
 LDCA3:  lda     current_drive_selection
+        pha
+        jsr     ScrollIntoView
+        pla
         jsr     HighlightRow
         FALL_THROUGH_TO LDCA9
 .endproc
@@ -1588,13 +1647,14 @@ CheckAlpha:
 
 ;;; ============================================================
 
+;;; A = row to highlight
 .proc HighlightRow
-        asl     a               ; * 8
+        asl     a               ; * 8 = kListItemHeight
         asl     a
         asl     a
         sta     rect_highlight_row::y1
         clc
-        adc     #7
+        adc     #kListItemHeight - 1
         sta     rect_highlight_row::y2
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_highlight_row
@@ -1603,6 +1663,166 @@ CheckAlpha:
 
 ;;; ============================================================
 
+;;; Enable/disable scrollbar as appropriate; resets thumb pos.
+;;; Assert: `num_drives` and `top_row` are set.
+.proc EnableScrollbar
+        lda     #0              ; deactivate
+        ldx     num_drives
+        cpx     #kListRows+1
+        bcc     :+
+        lda     #1              ; activate
+:       sta     activatectl_params::activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        MGTK_RELAY_CALL2 MGTK::ActivateCtl, activatectl_params
+
+        copy    top_row, updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_RELAY_CALL2 MGTK::UpdateThumb, updatethumb_params
+
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Assert: `top_row` is set.
+.proc HandleScroll
+        lda     num_drives
+        sec
+        sbc     #kListRows
+        sta     max_top
+
+        lda     findcontrol_params::which_part
+
+        cmp     #MGTK::Part::up_arrow
+    IF_EQ
+        lda     top_row
+        cmp     #0
+        jeq     done
+
+        dec     top_row
+        bpl     update
+    END_IF
+
+        cmp     #MGTK::Part::down_arrow
+    IF_EQ
+        lda     top_row
+        cmp     max_top
+        jcs     done
+
+        inc     top_row
+        bpl     update
+    END_IF
+
+        cmp     #MGTK::Part::page_up
+    IF_EQ
+        lda     top_row
+        cmp     #kListRows
+        bcs     :+
+        lda     #0
+        beq     store
+:       sec
+        sbc     #kListRows
+        jmp     store
+    END_IF
+
+        cmp     #MGTK::Part::page_down
+    IF_EQ
+        lda     top_row
+        clc
+        adc     #kListRows
+        cmp     max_top
+        bcc     store
+        lda     max_top
+        jmp     store
+    END_IF
+
+        cmp     #MGTK::Part::thumb
+    IF_EQ
+        copy16  event_params::xcoord, trackthumb_params::mousex
+        copy16  event_params::ycoord, trackthumb_params::mousey
+        MGTK_RELAY_CALL2 MGTK::TrackThumb, trackthumb_params
+        lda     trackthumb_params::thumbmoved
+        beq     done
+        lda     trackthumb_params::thumbpos
+        FALL_THROUGH_TO store
+    END_IF
+
+store:  sta     top_row
+
+update: copy    top_row, updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_RELAY_CALL2 MGTK::UpdateThumb, updatethumb_params
+
+        jsr     UpdateViewport
+        jsr     DrawListEntries
+        lda     current_drive_selection
+        bmi     :+
+        jsr     HighlightRow
+:
+done:   return  #$FF
+
+max_top:
+        .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc DrawListEntries
+        bit     selection_mode  ; source or destination?
+        jpl     DrawDeviceListEntries
+        jmp     DrawDestinationListEntries
+.endproc
+
+;;; ============================================================
+
+;;; Input: A = row to ensure visible
+;;; Assert: `top_row` is set.
+.proc ScrollIntoView
+        cmp     top_row
+    IF_LT
+        sta     top_row
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_RELAY_CALL2 MGTK::UpdateThumb, updatethumb_params
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+    END_IF
+
+        sec
+        sbc     #kListRows-1
+        bmi     ret
+        cmp     top_row
+        beq     ret
+    IF_GE
+        sta     top_row
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_RELAY_CALL2 MGTK::UpdateThumb, updatethumb_params
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+    END_IF
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+;;; Assert: `top_row` is set.
+.proc UpdateViewport
+        copy16  #0, winfo_drive_select::cliprect::y1
+        lda     top_row
+        asl     a               ; * 8 = kListItemHeight
+        asl     a
+        asl     a
+        sta     winfo_drive_select::cliprect::y1
+        add16   winfo_drive_select::cliprect::y1, #kListBoxHeight, winfo_drive_select::cliprect::y2
+
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Populates `num_drives`, `drive_unitnum_table` and `drive_name_table`
 .proc EnumerateDevices
         lda     #$00
         sta     LD44E
@@ -1772,16 +1992,18 @@ match:  lda     DEVLST,x
         lda     winfo_drive_select::window_id
         jsr     SetWinPort
 
+        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
+        MGTK_RELAY_CALL2 MGTK::PaintRect, winfo_drive_select::cliprect
+
         lda     #0
         sta     index
 
 loop:   lda     index
         jsr     SetYCoord
-
         lda     index
         jsr     DrawDeviceListEntry
-        inc     index
 
+        inc     index
         lda     index
         cmp     num_drives
         bne     loop
@@ -1793,50 +2015,87 @@ index:  .byte   0
 
 ;;; ============================================================
 
-LE2B1:  lda     winfo_drive_select::window_id
-        jsr     SetWinPort
+;;; Sets `num_drives` to the number of plausible destination devices,
+;;; and populates `destination_index_table`. Also clears selection.
+.proc EnumerateDestinationDevices
+        ;; Stash source drive details
         lda     current_drive_selection
         asl     a
         tax
         lda     block_count_table,x
-        sta     LE318
+        sta     src_block_count
         lda     block_count_table+1,x
-        sta     LE318+1
+        sta     src_block_count+1
+
         lda     num_drives
-        sta     LD376
-        lda     #$00
+        sta     num_src_drives
+
+        lda     #0
         sta     num_drives
-        sta     LE317
-LE2D6:  lda     LE317
+        sta     index
+loop:   lda     index
+
+        ;; Compare block counts
         asl     a
         tax
         lda     block_count_table,x
-        cmp     LE318
-        bne     LE303
+        cmp     src_block_count
+        bne     next
         lda     block_count_table+1,x
-        cmp     LE318+1
-        bne     LE303
-        lda     LE317
-        ldx     num_drives
-        sta     LD3FF,x
-        lda     num_drives
-        jsr     SetYCoord
-        lda     LE317
-        jsr     DrawDeviceListEntry
-        inc     num_drives
-LE303:  inc     LE317
-        lda     LE317
-        cmp     LD376
-        beq     LE311
-        jmp     LE2D6
+        cmp     src_block_count+1
+        bne     next
 
-LE311:  lda     #$FF
+        ;; Same - add it
+        lda     index
+        ldx     num_drives
+        sta     destination_index_table,x
+
+        ;; Keep going
+        inc     num_drives
+next:   inc     index
+        lda     index
+        cmp     num_src_drives
+        beq     finish
+        jmp     loop
+
+        ;; Clear selection
+finish: lda     #$FF
         sta     current_drive_selection
         rts
 
-LE317:  .byte   0
-LE318:  .addr   0
-        .byte   0
+index:  .byte   0
+
+src_block_count:
+        .word   0
+.endproc
+
+;;; ============================================================
+
+.proc DrawDestinationListEntries
+        lda     winfo_drive_select::window_id
+        jsr     SetWinPort
+
+        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
+        MGTK_RELAY_CALL2 MGTK::PaintRect, winfo_drive_select::cliprect
+
+        lda     #0
+        sta     index
+
+loop:   lda     index
+        jsr     SetYCoord
+        ldx     index
+        lda     destination_index_table,x
+        jsr     DrawDeviceListEntry
+
+        inc     index
+        lda     index
+        cmp     num_drives
+        bne     loop
+
+        rts
+
+index:  .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -1844,9 +2103,9 @@ LE318:  .addr   0
         sta     device_index
 
         ;; Slot
-        lda     #8
-        sta     point_D36D::xcoord
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
+        lda     #kListEntrySlotOffset
+        sta     list_entry_pos::xcoord
+        MGTK_RELAY_CALL2 MGTK::MoveTo, list_entry_pos
         ldx     device_index
         lda     drive_unitnum_table,x
         and     #$70
@@ -1859,9 +2118,9 @@ LE318:  .addr   0
         param_call DrawString, str_s
 
         ;; Drive
-        lda     #40
-        sta     point_D36D::xcoord
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
+        lda     #kListEntryDriveOffset
+        sta     list_entry_pos::xcoord
+        MGTK_RELAY_CALL2 MGTK::MoveTo, list_entry_pos
         ldx     device_index
         lda     drive_unitnum_table,x
         and     #$80
@@ -1873,9 +2132,9 @@ LE318:  .addr   0
         param_call DrawString, str_d
 
         ;; Name
-        lda     #65
-        sta     point_D36D::xcoord
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
+        lda     #kListEntryNameOffset
+        sta     list_entry_pos::xcoord
+        MGTK_RELAY_CALL2 MGTK::MoveTo, list_entry_pos
         lda     device_index
         asl     a
         asl     a
@@ -1902,11 +2161,11 @@ device_index:
 ;;; ============================================================
 
 .proc SetYCoord
-        asl     a               ; * 8
+        asl     a               ; * 8 = kListItemHeight
         asl     a
         asl     a
-        adc     #8
-        sta     point_D36D::ycoord
+        adc     #kListItemTextOffset
+        sta     list_entry_pos::ycoord
         rts
 .endproc
 
@@ -2051,7 +2310,11 @@ LE522:  lda     winfo_dialog::window_id
 LE550:  .byte   7,6,5,4,3,2,1,0
 
 LE558:  .byte   0
-LE559:  lda     winfo_dialog::window_id
+
+;;; ============================================================
+
+.proc DrawSourceDriveInfo
+        lda     winfo_dialog::window_id
         jsr     SetWinPort
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_source2
         param_call DrawString, str_source
@@ -2087,11 +2350,15 @@ LE559:  lda     winfo_dialog::window_id
 LE5C5:  rts
 
 LE5C6:  param_call DrawString, str_2_spaces
-        COPY_STRING main__on_line_buffer2, LD43A
-        param_call DrawString, LD43A
+        COPY_STRING main__on_line_buffer2, device_name_buf
+        param_call DrawString, device_name_buf
         rts
+.endproc
 
-LE5E1:  lda     winfo_dialog::window_id
+;;; ============================================================
+
+.proc DrawDestinationDriveInfo
+        lda     winfo_dialog::window_id
         jsr     SetWinPort
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_destination
         param_call DrawString, str_destination
@@ -2118,6 +2385,9 @@ LE5E1:  lda     winfo_dialog::window_id
         param_call DrawString, str_drive
         param_call DrawString, str_d
         rts
+.endproc
+
+;;; ============================================================
 
 LE63F:  lda     winfo_dialog::window_id
         jsr     SetWinPort
