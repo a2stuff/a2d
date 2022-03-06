@@ -607,19 +607,19 @@ done:   rts
 
 .proc CalcHeaderItemWidths
         ;; Enough space for "123,456"
-        param_call main::MeasureText1, str_from_int
+        param_call main::MeasureLCString, str_from_int
         stax    dx
 
         ;; Width of "123,456 Items"
-        param_call main::MeasureText1, str_items_suffix
+        param_call main::MeasureLCString, str_items_suffix
         addax   dx, width_items_label
 
         ;; Width of "123,456K in disk"
-        param_call main::MeasureText1, str_k_in_disk
+        param_call main::MeasureLCString, str_k_in_disk
         addax   dx, width_k_in_disk_label
 
         ;; Width of "123,456K available"
-        param_call main::MeasureText1, str_k_available
+        param_call main::MeasureLCString, str_k_available
         addax   dx, width_k_available_label
 
         add16   width_k_in_disk_label, width_k_available_label, width_right_labels

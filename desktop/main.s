@@ -8078,7 +8078,7 @@ flags:  .byte   0
 
         MGTK_CALL MGTK::MoveTo, items_label_pos
         jsr     DrawIntString
-        param_call_indirect DrawPascalString, ptr_str_items_suffix
+        param_call_indirect DrawLCString, ptr_str_items_suffix
 
         ;; Draw "XXXK in disk"
         jsr     CalcHeaderCoords
@@ -8095,7 +8095,7 @@ flags:  .byte   0
         jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, pos_k_in_disk
         jsr     DrawIntString
-        param_call DrawPascalString, str_k_in_disk
+        param_call DrawLCString, str_k_in_disk
 
         ;; Draw "XXXK available"
         ldx     active_window_id
@@ -8111,7 +8111,7 @@ flags:  .byte   0
         jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, pos_k_available
         jsr     DrawIntString
-        param_jump DrawPascalString, str_k_available
+        param_jump DrawLCString, str_k_available
 
 .proc  adjust_item_suffix
         cmp     #1
@@ -8172,7 +8172,7 @@ finish:
 .endproc ; CalcHeaderCoords
 
 .proc DrawIntString
-        param_jump DrawPascalString, str_from_int
+        param_jump DrawLCString, str_from_int
 .endproc
 
 xcoord:
@@ -9620,8 +9620,9 @@ auxtype:
 
 ;;; ============================================================
 ;;; Draw text, pascal string address in A,X
+;;; String must be in LC area (visible to both main and aux code)
 
-.proc DrawPascalString
+.proc DrawLCString
         params := $6
         textptr := $6
         textlen := $8
@@ -9638,8 +9639,9 @@ exit:   rts
 
 ;;; ============================================================
 ;;; Measure text, pascal string address in A,X; result in A,X
+;;; String must be in LC area (visible to both main and aux code)
 
-.proc MeasureText1
+.proc MeasureLCString
         ptr := $6
         len := $8
         result := $9
@@ -15862,6 +15864,8 @@ string: .addr   0
 .endproc
 
 ;;; ============================================================
+;;; Draw text, pascal string address in A,X
+;;; String must be in aux memory.
 
 .proc DrawString
         params := $6
