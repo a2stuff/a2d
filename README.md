@@ -14,7 +14,7 @@ Disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk), a "Finder"
 
 ## Background
 
-The application started its life as **MouseDesk** by Version Soft. Apple Computer licensed the software and released it, at first as MouseDesk 2.0, then rebranded **Apple II DeskTop** as the initial [system software for the Apple IIgs](http://www.whatisthe2gs.apple2.org.za/system-applications) before 16-bit GS/OS replaced it. It still functions on 8-bit Apples, including the Apple IIe, Apple IIc, Apple IIc Plus, Apple IIe Option Card for Macintosh, and the Laser 128 family.
+The application started its life as **MouseDesk** by Version Soft. Apple Computer licensed the software and released it, at first as MouseDesk 2.0, then rebranded **Apple II DeskTop** as the initial [system software for the Apple IIgs](http://www.whatisthe2gs.apple2.org.za/system-applications.html) before 16-bit GS/OS replaced it. It still functions on 8-bit Apples, including the Apple IIe, Apple IIc, Apple IIc Plus, Apple IIe Option Card for Macintosh, and the Laser 128 family.
 
 * [History of MouseDesk/Apple II DeskTop Versions](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info), by Jay Edwards
 * Overviews: [GUI Gallery](http://toastytech.com/guis/a2desk.html) &mdash; [GUIdebook](https://guidebookgallery.org/guis/apple2/mousedesk)
