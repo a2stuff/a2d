@@ -7917,6 +7917,7 @@ CreateIconsAndSetWindowSize             := CreateIconsForWindow::Impl::ep_set_wi
 
 loop:   ldy     #0              ; type_mask, or $00 if done
         lda     (ptr),y
+        cmp     #kICTSentinel
         bne     :+
         jsr     PopPointers
         lda     #IconType::generic

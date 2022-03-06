@@ -1199,7 +1199,11 @@ icontype_filename:   .addr   0
         blocks   .word ; 5     optional block count
         icontype .byte ; 7     IconType
 .endstruct
+
+kICTSentinel = $01     ; not $00, because $00 as a mask is useful
+
 .macro DEFINE_ICTRECORD mask, filetype, flags, aux_suf, blocks, icontype
+        .assert mask <> kICTSentinel, error, "Can't use sentinel value as a mask"
         .byte   mask
         .byte   filetype
         .byte   flags
@@ -1213,6 +1217,11 @@ icontype_filename:   .addr   0
         ICT_FLAGS_SUFFIX = %00100000 ; exclusive with ICT_FLAGS_AUX
 
 icontype_table:
+        ;; Types entirely defined by file suffix
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_shk_suffix, 0, IconType::archive ; NuFX
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bny_suffix, 0, IconType::archive ; Binary II
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bxy_suffix, 0, IconType::archive ; NuFX in Binary II
+
         ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 17, IconType::graphics ; HR image as FOT
@@ -1238,7 +1247,7 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
 
         DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_AUX, $D0E7, 0, IconType::music ; Electric Duet
-        DEFINE_ICTRECORD $FF, $E0,          ICT_FLAGS_AUX, $8002, 0, IconType::archive ; ShrinkIt
+        DEFINE_ICTRECORD $FF, $E0,          ICT_FLAGS_AUX, $8002, 0, IconType::archive ; NuFX
 
         ;; IIgs-Specific Files (ranges)
         DEFINE_ICTRECORD $F0, $50,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs General  $5x
@@ -1250,10 +1259,20 @@ icontype_table:
         ;; Desk Accessories/Applets $F1/$0641 and $F1/$8641
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType, 0, IconType::desk_accessory
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType|$8000, 0, IconType::desk_accessory
-        .byte   0               ; Sentinel - done!
+        .byte   kICTSentinel
 
-str_sys_suffix:
+;;; Suffixes
+str_sys_suffix:                 ; SYS files with .SYSTEM suffix are given "application" icon
         PASCAL_STRING ".SYSTEM"
+
+str_shk_suffix:                 ; ShrinkIt NuFX files, that have lost their type info.
+        PASCAL_STRING ".SHK"
+
+str_bny_suffix:                 ; Binary II files, which contain metadata as a header
+        PASCAL_STRING ".BNY"    ; (pronounced "bunny", per A2-Central, Vol 5. No. 7, Aug 1989 )
+
+str_bxy_suffix:                 ; ShrinkIt NuFX files, in a Binary II package
+        PASCAL_STRING ".BXY"    ; (pronounced "boxy", per A2-Central, Vol 5. No. 7, Aug 1989 )
 
 ;;; --------------------------------------------------
 
