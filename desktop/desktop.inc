@@ -114,15 +114,14 @@ JT_ENTRY JUMP_TABLE_GET_ORIG_PREFIX   ; Returns original prefix, if copied (in: 
 ;;; ============================================================
 ;;; Overlay routines, for JUMP_TABLE_LOAD_OVL
 
-kDynamicRoutineDiskCopy         = 0
-kDynamicRoutineFormatErase      = 1
-kDynamicRoutineSelector1        = 2
-kDynamicRoutineFileDialog       = 3
-kDynamicRoutineFileCopy         = 4
-kDynamicRoutineFileDelete       = 5
-kDynamicRoutineSelector2        = 6
-kDynamicRoutineRestore5000      = 7
-kDynamicRoutineRestore9000      = 8
+kDynamicRoutineFormatErase      = 0
+kDynamicRoutineSelector1        = 1
+kDynamicRoutineFileDialog       = 2
+kDynamicRoutineFileCopy         = 3
+kDynamicRoutineFileDelete       = 4
+kDynamicRoutineSelector2        = 5
+kDynamicRoutineRestore5000      = 6
+kDynamicRoutineRestore9000      = 7
 
 ;;; ============================================================
 ;;; Results from JUMP_TABLE_SHOW_ALERT / JUMP_TABLE_SHOW_ALERT_OPTIONS

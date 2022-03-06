@@ -5,6 +5,7 @@
 ;;; ============================================================
 
         RESOURCE_FILE "main.res"
+        .include "../disk_copy/disk_copy.inc"
 
 ;;; ============================================================
 ;;; Segment loaded into MAIN $4000-$BEFF
@@ -2242,13 +2243,52 @@ done:   rts
 ;;; ============================================================
 
 .proc CmdDiskCopy
+        jmp     start
+
+        DEFINE_OPEN_PARAMS open_params, str_disk_copy, IO_BUFFER
+        DEFINE_READ_PARAMS read_params, DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
+        DEFINE_CLOSE_PARAMS close_params
+
+str_disk_copy:
+        PASCAL_STRING kFilenameDiskCopy
+
+start:
+@retry:
+        ;; Do this now since we'll use up the space later.
+        ;; TODO: See if we can rearrange the memory map to preserve this.
         jsr     SaveWindows
 
-        lda     #kDynamicRoutineDiskCopy
-        jsr     LoadDynamicRoutine
-        jpl     format_erase_overlay__Exec
+        MLI_CALL OPEN, open_params
+        beq     :+
+        lda     #kErrInsertSystemDisk
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
+        beq     @retry          ; ok, so try again
+        rts                     ; cancel, so fail
+:
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL READ, read_params
+        MLI_CALL CLOSE, close_params
 
-        rts
+        ;; Successful - start to clean up
+        ITK_CALL IconTK::RemoveAll, 0 ; volume icons
+        MGTK_CALL MGTK::CloseAll
+        MGTK_CALL MGTK::SetZP1, setzp_params_preserve
+
+        ;; Clear most of the system bitmap
+        ldx     #BITMAP_SIZE - 3
+        lda     #0
+:       sta     BITMAP+1,x
+        dex
+        bpl     :-
+
+        ;; Set up banks for ProDOS usage
+        sta     ALTZPOFF
+        bit     ROMIN2
+
+        jmp     DISK_COPY_BOOTSTRAP
 .endproc
 
 ;;; ============================================================
@@ -10721,24 +10761,23 @@ next:   dec     step
 ;;; minus flag set on failure.
 
 ;;; Routines are:
-;;;  0 = disk copy                - A$ 800,L$ 200
-;;;  1 = format/erase disk        - A$ 800,L$1400 call w/ A = 4 = format, A = 5 = erase
-;;;  2 = selector actions (all)   - A$9000,L$1000
-;;;  3 = common file dialog       - A$5000,L$2000
-;;;  4 = part of copy file        - A$7000,L$ 800
-;;;  5 = part of delete file      - A$7000,L$ 800
-;;;  6 = selector add/edit        - L$7000,L$ 800
-;;;  7 = restore 1                - A$5000,L$2800 (restore $5000...$77FF)
-;;;  8 = restore 2                - A$9000,L$1000 (restore $9000...$9FFF)
+;;;  0 = format/erase disk        - A$ 800,L$1400 call w/ A = 4 = format, A = 5 = erase
+;;;  1 = selector actions (all)   - A$9000,L$1000
+;;;  2 = common file dialog       - A$5000,L$2000
+;;;  3 = part of copy file        - A$7000,L$ 800
+;;;  4 = part of delete file      - A$7000,L$ 800
+;;;  5 = selector add/edit        - L$7000,L$ 800
+;;;  6 = restore 1                - A$5000,L$2800 (restore $5000...$77FF)
+;;;  7 = restore 2                - A$9000,L$1000 (restore $9000...$9FFF)
 ;;;
-;;; Routines 2-6 need appropriate "restore routines" applied when complete.
+;;; Routines 1-5 need appropriate "restore routines" applied when complete.
 
 .proc LoadDynamicRoutineImpl
 
-kNumOverlays = 9
+kNumOverlays = 8
 
 pos_table:
-        .dword  kOverlayDiskCopy1Offset, kOverlayFormatEraseOffset
+        .dword  kOverlayFormatEraseOffset
         .dword  kOverlaySelector1Offset, kOverlayFileDialogOffset
         .dword  kOverlayFileCopyOffset, kOverlayFileDeleteOffset
         .dword  kOverlaySelector2Offset, kOverlayDeskTopRestore1Offset
@@ -10746,7 +10785,7 @@ pos_table:
         ASSERT_RECORD_TABLE_SIZE pos_table, kNumOverlays, 4
 
 len_table:
-        .word   kOverlayDiskCopy1Length, kOverlayFormatEraseLength
+        .word   kOverlayFormatEraseLength
         .word   kOverlaySelector1Length, kOverlayFileDialogLength
         .word   kOverlayFileCopyLength, kOverlayFileDeleteLength
         .word   kOverlaySelector2Length, kOverlayDeskTopRestore1Length
@@ -10754,7 +10793,7 @@ len_table:
         ASSERT_RECORD_TABLE_SIZE len_table, kNumOverlays, 2
 
 addr_table:
-        .word   kOverlayDiskCopy1Address, kOverlayFormatEraseAddress
+        .word   kOverlayFormatEraseAddress
         .word   kOverlaySelector1Address, kOverlayFileDialogAddress
         .word   kOverlayFileCopyAddress, kOverlayFileDeleteAddress
         .word   kOverlaySelector2Address, kOverlayDeskTopRestore1Address

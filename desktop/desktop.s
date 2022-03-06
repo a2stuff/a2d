@@ -30,16 +30,6 @@
         .include "../lib/invoker.s"
 
 ;;; ============================================================
-;;; Disk Copy Overlays
-
-.scope disk_copy
-        .include "../disk_copy/bootstrap.s"
-        .include "../disk_copy/loader.s"
-        .include "../disk_copy/auxlc.s"
-        .include "../disk_copy/main.s"
-.endscope
-
-;;; ============================================================
 ;;; Other Overlays
 
 .macro jump_table_entry addr

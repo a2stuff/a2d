@@ -1,7 +1,7 @@
 ;;; ============================================================
-;;; Overlay for Disk Copy - $D000 - $F1FF (file 3/4)
+;;; Disk Copy - Auxiliary LC Segment $D000 - $F1FF
 ;;;
-;;; Compiled as part of desktop.s
+;;; Compiled as part of disk_copy.s
 ;;; ============================================================
 
         RESOURCE_FILE "auxlc.res"
@@ -11,6 +11,9 @@
 
         MGTKEntry := MGTKRelayImpl
 
+kShortcutYes      = res_char_button_yes_shortcut
+kShortcutNo       = res_char_button_no_shortcut
+kShortcutTryAgain = res_char_button_try_again_shortcut
 kShortcutReadDisk = res_char_button_read_drive_shortcut
 
 ;;; ============================================================
@@ -3226,7 +3229,7 @@ loop_counter:
 
 ;;; ============================================================
 
-        PAD_TO ::disk_copy::SETTINGS
+        PAD_TO ::SETTINGS
 
         .include "../lib/default_settings.s"
 

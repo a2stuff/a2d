@@ -200,6 +200,7 @@ from the **Apple** menu.
 * Clip long strings in dialogs. ([#465](https://github.com/a2stuff/a2d/issues/465))
 * Prevent crashes and mis-painting when windows are offscreen. ([#555](https://github.com/a2stuff/a2d/issues/555))
 * Prevent renaming, formatting, or erasing a volume to have the same name as another volume. ([#570](https://github.com/a2stuff/a2d/issues/570), [#577](https://github.com/a2stuff/a2d/issues/577))
+* Disk Copy moved to a separate file that can be optionally removed, allowing other components to fit on a floppy disk. [#216](https://github.com/a2stuff/a2d/issues/216)
 * File Picker Dialogs:
   * Correct sort order. ([#489](https://github.com/a2stuff/a2d/issues/489))
   * Correct IP placement/truncation when switching focus. ([#446](https://github.com/a2stuff/a2d/issues/446))

@@ -2,7 +2,7 @@
 # This is theoretically bad, but in practice it's fine.
 export TERM = xterm-256color
 
-targets := desktop desktop.system desk.acc selector
+targets := desktop desktop.system desk.acc disk_copy selector
 
 .PHONY: all $(targets) mount install package shk vercheck
 

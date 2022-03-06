@@ -9,6 +9,7 @@
 
 .define kFilenameLauncher      "DeskTop.system"
 .define kFilenameDeskTop       "DeskTop2"
+.define kFilenameDiskCopy      "Disk.Copy"
 .define kFilenameSelector      "Selector"
 .define kFilenameSelectorList  "Selector.List"
 .define kFilenameDeskTopConfig "DeskTop.config"

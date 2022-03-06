@@ -1,7 +1,7 @@
 ;;; ============================================================
-;;; Overlay for Disk Copy - $0800 - $12FF (file 4/4)
+;;; Disk Copy - Main Memory Segment $0800 - $12FF
 ;;;
-;;; Compiled as part of desktop.s
+;;; Compiled as part of disk_copy.s
 ;;; ============================================================
 
 .scope main

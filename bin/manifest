@@ -75,9 +75,10 @@ emit add_file $disposition "res/package/PRODOS" "" "ProDOS" FF0000
 # Add READ.ME
 emit add_file $disposition "res/package/READ.ME" "" "Read.Me" 040000
 
-# Add Launcher and DeskTop
+# Add Launcher, DeskTop, and Disk Copy
 emit add_file $disposition "desktop.system/out/desktop.system.SYS" "" "DeskTop.system" FF0000
 emit add_file $disposition "desktop/out/desktop.built" "" "DeskTop2" F10000
+emit add_file $disposition "disk_copy/out/disk_copy.built" "" "Disk.Copy" F10000
 
 # Part 2: Optional extras.
 disposition="optional"

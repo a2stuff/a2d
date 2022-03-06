@@ -1,13 +1,9 @@
 ;;; ============================================================
-;;; Overlay for Disk Copy - $1800 - $19FF (file 2/4)
+;;; Disk Copy - $1800 - $19FF
 ;;;
-;;; Compiled as part of desktop.s
+;;; Compiled as part of disk_copy.s
 ;;; ============================================================
 
-;;; Within `disk_copy` scope, settings are an overlay on top of
-;;; the auxlc segment in the aux LC.
-
-SETTINGS := $F180
 
 .scope part2
         .org $1800
@@ -22,7 +18,7 @@ io_buf := $1C00
 load_buf := $4000
 
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
-filename:   PASCAL_STRING kFilenameDeskTop
+filename:   PASCAL_STRING kFilenameDiskCopy
 
         DEFINE_READ_PARAMS read_params, 0, 0
         DEFINE_SET_MARK_PARAMS set_mark_params, kOverlayDiskCopy3Offset
@@ -150,7 +146,7 @@ loop:   lda     (src),y
 
 ;;; ============================================================
 
-        ;; Already .included: "../lib/load_settings.s"
+        .include "../lib/load_settings.s"
         DEFINEPROC_LOAD_SETTINGS io_buf, load_buf
 
 ;;; ============================================================

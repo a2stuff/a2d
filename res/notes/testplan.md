@@ -550,6 +550,13 @@
 
 * Launch DeskTop. Special > Disk Copy.... Make a device selection (using mouse or keyboard) but don't click OK. Open the menu (using mouse or keyboard) but dismiss it. Verify that source device wasn't accepted.
 
+* Rename the DISK.COPY file to something else. Launch DeskTop. Special > Disk Copy.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.
+* Launch DeskTop. Eject the boot volume. Special > Disk Copy.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.
+* Launch DeskTop. Eject the boot volume. Special > Disk Copy.... Verify that an alert is shown. Re-insert the boot volume. Click OK in the alert. Verify that Disk Copy starts.
+* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Special > Disk Copy.... Verify that Disk Copy starts.
+* Launch DeskTop. Open and position a window. Special > Disk Copy.... File > Quit. Verify that DeskTop restores the window.
+* On a IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Special > Disk Copy.... Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that the display remains in color.
+* On a IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Special > Disk Copy.... Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that the display resets to monochrome.
 
 # Alerts
 

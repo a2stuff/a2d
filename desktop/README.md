@@ -1,7 +1,7 @@
 
 # DeskTop diassembly notes - DESKTOP2.$F1
 
-This is large - 111k. It includes a loader and the DeskTop app with
+This is large - 95k. It includes a loader and the DeskTop app with
 both main memory and aux memory segments, filling everything from
 $4000 to $FFFF (except for I/O space and ProDOS), and still having
 more code segments swapped in dynamically.
@@ -17,10 +17,6 @@ The file is broken down into multiple segments:
 | DeskTop       | Main    | A$4000  | `main.s`                       |
 | Initializer   | Main    | A$0800  | `init.s`                       |
 | Invoker       | Main    | A$0290  | `../lib/invoker.s`             |
-| Disk Copy 1/4 | Main    | A$0800  | `../disk_copy/bootstrap.s`     |
-| Disk Copy 2/4 | Main    | A$1800  | `../disk_copy/loader.s`        |
-| Disk Copy 3/4 | Aux LC1 | A$D000  | `../disk_copy/auxlc.s`         |
-| Disk Copy 4/4 | Main    | A$0800  | `../disk_copy/main.s`          |
 | Format/Erase  | Main    | A$0800  | `ovl_format_erase.s`           |
 | Shortcuts 1/2 | Main    | A$9000  | `ovl_selector_pick.s`          |
 | File Dialog   | Main    | A$5000  | `ovl_file_dialog.s`            |
@@ -37,6 +33,9 @@ routines, resources, and buffers. More details below.
 A monolithic source file `desktop.s` is used to assemble the entire
 target. It includes other source files for each of the various
 segments.
+
+Note that Disk Copy (see `../disk_copy/`) used to be built into the
+DeskTop binary as well, but has been pulled out.
 
 ## Structure
 
@@ -144,19 +143,6 @@ $4000 is reloaded (unless a full restart is required.)
 
 Several of the overlays also use a common file selector dialog overlay
 `ovl_file_dialog.s` ($5000-$6FFF).
-
-#### Disk Copy Overlay
-
-The Disk Copy command replaces large chunks of memory and is best
-thought of as a separate application. The sources live in `../disk_copy/`.
-
-The first part (`bootstrap.s`, $800-$9FF) loads into main memory the other
-overlays, but in turn it loads a second short ($200-byte) overlay
-(`loader.s`, $1800-$19FF). This then loads a replacement for the
-resources in the aux language card area (`auxlc.s`, Aux LC
-$D000-$F1FF) and another block of code in main memory (`main.s`, Main
-$0800-$12FF). When exiting, the DeskTop is restarted from the
-beginning.
 
 #### Disk Format/Disk Erase
 

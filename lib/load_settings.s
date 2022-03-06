@@ -6,7 +6,7 @@
 .macro DEFINEPROC_LOAD_SETTINGS settings_io_buf, settings_load_buf
 
 .proc LoadSettings
-        .assert SETTINGS <> settings_load_buf, error, "Load address must not be SETTINGS"
+        .assert ::SETTINGS <> settings_load_buf, error, "Load address must not be SETTINGS"
 
         jmp     start
 

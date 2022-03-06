@@ -2,7 +2,7 @@ HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard ../lib/*.s) $
 
 include ../res/Makefile.common
 
-TARGETS = $(OUTDIR)/desktop.built
+TARGETS = $(OUTDIR)/disk_copy.built
 
 .PHONY: clean all
 all: $(OUTDIR) $(TARGETS)
@@ -15,7 +15,7 @@ clean:
 	rm -f $(OUTDIR)/*.list
 	rm -f $(TARGETS)
 
-$(OUTDIR)/desktop.o: desktop.s $(HEADERS) loader.s auxmem.s lc.s res.s main.s init.s ovl*.s ../disk_copy/disk_copy.inc ../mgtk/mgtk.s
+$(OUTDIR)/disk_copy.o: disk_copy.s $(HEADERS) loader.s auxlc.s main.s
 	../bin/warnerr ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Built segments
