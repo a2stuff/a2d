@@ -581,11 +581,11 @@ ipblink_ip_bitmap:
         jsr     InitIpblink
         jsr     InitDblclick
 
-        param_call MeasureText, rgb_color_label_str
+        param_call MeasureString, rgb_color_label_str
         addax   rect_rgb::x2
-        param_call MeasureText, tracking_slow_label_str
+        param_call MeasureString, tracking_slow_label_str
         addax   tracking_button_rect1::x2
-        param_call MeasureText, tracking_fast_label_str
+        param_call MeasureString, tracking_fast_label_str
         addax   tracking_button_rect2::x2
 
         MGTK_CALL MGTK::OpenWindow, winfo
@@ -1802,27 +1802,10 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Measure text, pascal string address in A,X; result in A,X
-
-.proc MeasureText
-        ptr := $6
-        len := $8
-        result := $9
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     len
-        inc16   ptr
-        MGTK_CALL MGTK::TextWidth, ptr
-        ldax    result
-        rts
-.endproc
-
-;;; ============================================================
 
         .include "../lib/save_settings.s"
         .include "../lib/drawstring.s"
+        .include "../lib/measurestring.s"
 
 ;;; ============================================================
 

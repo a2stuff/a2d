@@ -523,11 +523,11 @@ update: lda     #0
         ;; Measure month + space + year width, to center
         copy16  #0, width
         ldax    ptr_str_month
-        jsr     MeasureText
+        jsr     MeasureString
         addax   width
-        param_call MeasureText, str_space
+        param_call MeasureString, str_space
         addax   width
-        param_call MeasureText, str_year
+        param_call MeasureString, str_year
         addax   width
         sub16   #kDAWidth, width, pos_month_year::xcoord
         lsr16   pos_month_year::xcoord
@@ -727,24 +727,6 @@ DrawWindow := PaintWindow::draw
 UpdateWindow := PaintWindow::update
 
 ;;; ============================================================
-;;; Measure text, pascal string address in A,X; result in A,X
-
-.proc MeasureText
-        ptr := $6
-        len := $8
-        result := $9
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     len
-        inc16   ptr
-        MGTK_CALL MGTK::TextWidth, ptr
-        ldax    result
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Populates `str_year` from `datetime` (a `ParsedDateTime`)
 ;;; ASSERT: year between 1900 and 2155
 
@@ -797,6 +779,7 @@ tmp:    .word   0
 ;;; ============================================================
 
         .include "../lib/drawstring.s"
+        .include "../lib/measurestring.s"
 
         str_time := 0           ; unused
         .include "../lib/datetime.s"
@@ -804,7 +787,7 @@ tmp:    .word   0
 ;;; ============================================================
 
 da_end  := *
-.assert * < WINDOW_ENTRY_TABLES, error, "DA too big"
+.assert * < WINDOW_ENTRY_TABLES, error, .sprintf("DA too big (at $%X)", *)
         ;; I/O Buffer starts at MAIN $1C00
         ;; ... but entry tables start at AUX $1B00
 

@@ -477,9 +477,9 @@ init_window:
 
 :       sta     RAMRDON
 
-        param_call MeasureText, clock_12hour_label_str
+        param_call MeasureString, clock_12hour_label_str
         addax   rect_12hour::x2
-        param_call MeasureText, clock_24hour_label_str
+        param_call MeasureString, clock_24hour_label_str
         addax   rect_24hour::x2
 
         MGTK_CALL MGTK::OpenWindow, winfo
@@ -1342,24 +1342,6 @@ loop:   cmp     #10
 .endproc
 
 ;;; ============================================================
-;;; Measure text, pascal string address in A,X; result in A,X
-
-.proc MeasureText
-        ptr := $6
-        len := $8
-        result := $9
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     len
-        inc16   ptr
-        MGTK_CALL MGTK::TextWidth, ptr
-        ldax    result
-        rts
-.endproc
-
-;;; ============================================================
 
 ;;; A,X = pos ptr, Z = checked
 .proc DrawRadioButton
@@ -1415,6 +1397,7 @@ loop:   cmp     #10
 
         .include "../lib/save_settings.s"
         .include "../lib/drawstring.s"
+        .include "../lib/measurestring.s"
 
 ;;; ============================================================
 

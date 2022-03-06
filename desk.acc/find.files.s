@@ -1010,7 +1010,7 @@ top_row:        .byte   0
         copy    #0, ip_blink_flag
         copy    #prompt_insertion_point_blink_count, ip_blink_counter
 
-        param_call MeasureText, find_label_str
+        param_call MeasureString, find_label_str
         addax   input_rect::x1
         add16   input_rect::x1, input_textpos::xcoord, input_textpos::xcoord
 
@@ -1935,25 +1935,6 @@ line:   .byte   0
 
 
 ;;; ============================================================
-;;; Helper to draw a PASCAL_STRING; call with addr in A,X
-
-.proc DrawString
-        PARAM_BLOCK params, $06
-addr    .addr
-length  .byte
-        END_PARAM_BLOCK
-
-        stax    params::addr
-        ldy     #0
-        lda     (params::addr),y
-        beq     done
-        sta     params::length
-        inc16   params::addr
-        MGTK_CALL MGTK::DrawText, params
-done:   rts
-.endproc
-
-;;; ============================================================
 ;;; Populate entry_buf with entry in A
 
 .proc GetEntry
@@ -1970,27 +1951,13 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Measure text, pascal string address in A,X; result in A,X
 
-.proc MeasureText
-        ptr := $6
-        len := $8
-        result := $9
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     len
-        inc16   ptr
-        MGTK_CALL MGTK::TextWidth, ptr
-        ldax    result
-        rts
-.endproc
+        .include "../lib/drawstring.s"
+        .include "../lib/measurestring.s"
 
 ;;; ============================================================
 
 da_end  := *
-
-.assert * < WINDOW_ENTRY_TABLES, error, "DA too big"
+.assert * < WINDOW_ENTRY_TABLES, error, .sprintf("DA too big (at $%X)", *)
         ;; I/O Buffer starts at MAIN $1C00
         ;; ... but entry tables start at AUX $1B00

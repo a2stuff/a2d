@@ -244,9 +244,9 @@ kCheckboxLabelOffsetY = kCheckboxHeight + 1
 ;;; ============================================================
 
 .proc Init
-        param_call MeasureText, ramcard_label_str
+        param_call MeasureString, ramcard_label_str
         addax   rect_ramcard_click::x2
-        param_call MeasureText, selector_label_str
+        param_call MeasureString, selector_label_str
         addax   rect_selector_click::x2
 
         MGTK_CALL MGTK::OpenWindow, winfo
@@ -509,27 +509,10 @@ finish: MGTK_CALL MGTK::ShowCursor
 .endproc
 
 ;;; ============================================================
-;;; Measure text, pascal string address in A,X; result in A,X
-
-.proc MeasureText
-        ptr := $6
-        len := $8
-        result := $9
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     len
-        inc16   ptr
-        MGTK_CALL MGTK::TextWidth, ptr
-        ldax    result
-        rts
-.endproc
-
-;;; ============================================================
 
         .include "../lib/save_settings.s"
         .include "../lib/drawstring.s"
+        .include "../lib/measurestring.s"
 
 ;;; ============================================================
 
