@@ -598,7 +598,6 @@ wrap:   ldx     num_volumes     ; go to last (num - 1)
 loop:   lda     vol
         cmp     num_volumes
         bne     :+
-        copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
         rts
 
 :       cmp     #8              ; third column?
@@ -631,16 +630,9 @@ setpos: stax    dialog_label_pos::xcoord
 
         ;; Compute label line into Y
         lda     vol
-        lsr     a
-        lsr     a
-        asl     a
-        asl     a
-        sta     tmp
-        lda     vol
-        sec
-        sbc     tmp
+        and     #%00000011      ; %4
         tay
-        iny
+        iny                     ; +3
         iny
         iny
 
@@ -650,7 +642,6 @@ setpos: stax    dialog_label_pos::xcoord
         jmp     loop
 
 vol:    .byte   0               ; volume being drawn
-tmp:    .byte   0
 .endproc
 
         PAD_TO $E00

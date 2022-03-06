@@ -919,7 +919,7 @@ device_name_table:
 
         .repeat kMaxVolumes+1, i
         .ident(.sprintf("dev%ds", i)) := *
-        .res    28, 0
+        .res    28, 0           ; TODO: Only need 24 = 1 (len) + 16 (name) + 7 (prefix)
         .endrepeat
 
 ;;; Startup menu items (populated by slot scan at startup)
