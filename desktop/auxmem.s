@@ -1211,12 +1211,12 @@ L9A31:  COPY_BYTES 4, findwindow_params, coords2
         sta     highlight_icon_id
 
 :       sub16   findwindow_params::mousex, coords1x, rect3_x1
-        sub16nc findwindow_params::mousey, coords1y, rect3_y1
+        sub16   findwindow_params::mousey, coords1y, rect3_y1
         jsr     SetRect2ToRect1
 
         ldx     #0
 :       add16   rect1_x2,x, rect3_x1,x, rect1_x2,x
-        add16nc rect1_x1,x, rect3_x1,x, rect1_x1,x
+        add16   rect1_x1,x, rect3_x1,x, rect1_x1,x
         inx
         inx
         cpx     #4
