@@ -213,6 +213,7 @@ from the **Apple** menu.
     * Shows 12/24hr setting. ([#220](https://github.com/a2stuff/a2d/issues/220))
   * Calculator: Doesn't mis-paint when moved offscreen and other fixes. ([#33](https://github.com/a2stuff/a2d/issues/33), [#34](https://github.com/a2stuff/a2d/issues/34))
   * Sort Directory: Don't need to click before sorting. ([#17](https://github.com/a2stuff/a2d/issues/17))
+  * Sort Directory: Support as many entries as DeskTop supports. ([#86](https://github.com/a2stuff/a2d/issues/86))
   * Prevent files in list from disappearing in certain cases. ([#487](https://github.com/a2stuff/a2d/issues/487))
 * Hardware/Emulator Specific:
   * IIc Plus: Doesn't spin slot 5 drives constantly. (Use **Special > Check Drive**) ([#25](https://github.com/a2stuff/a2d/issues/25))

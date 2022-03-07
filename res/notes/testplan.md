@@ -524,6 +524,8 @@
 * Open the Startup Options DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
 * Open the Startup Options DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
 
+* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open a volume window. Create a folder. Open the folder window, and close the volume window. Apple > Run Basic Here. Run a program such as `10 FOR I = 1 to 127-14 : ?CHR$(4);"SAVE F";I : NEXT` to create as many files as possible while keeping the total icon count to 127. `BYE` to return to DeskTop. Apple > Sort Directory. Make sure all the files are sorted lexicographically (e.g. F1, F10, F100, F101, ...)
+
 # Selector
 
 * Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.

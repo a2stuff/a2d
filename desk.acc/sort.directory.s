@@ -24,6 +24,15 @@
 ;;;              Main           Aux
 ;;;          :           : :           :
 ;;;          |           | |           |
+;;;  $7800   +-----------+ |           |
+;;;          | Directory | |           |
+;;;          | Data      | |           |
+;;;          | Buffer    | |           |
+;;;  $5000   +-----------+ |           |
+;;;          :           : :           :
+;;;  $4000   +-----------+ +-----------+
+;;;          |           | |           |
+;;;          :           : :           :
 ;;;          | DHR       | | DHR       |
 ;;;  $2000   +-----------+ +-----------+
 ;;;          | IO Buffer | |Win Tables |
@@ -31,15 +40,14 @@
 ;;;  $1B00   |           | +-----------+
 ;;;          |           | |           |
 ;;;          |           | |           |
+;;;          | (unused)  | |           |
 ;;;          |           | |           |
-;;;          | Dir Buff  | |           |
 ;;;   $E00   +-----------+ |           |
 ;;;          |           | |           |
 ;;;          |           | | (unused)  |
 ;;;          | DA        | |           |
 ;;;   $800   +-----------+ +-----------+
 ;;;          :           : :           :
-;;;
 
 ;;; ============================================================
 
@@ -47,10 +55,16 @@
 
         MLIEntry := MLI
 
-dir_data_buffer     := $0E00
+;;; There is not enough room in the DA load area to a directory with
+;;; 127 entries, the maximum number of icons DeskTop can handle. A 10k
+;;; buffer is available in DeskTop itself, in an area that can be
+;;; restored after use.
+dir_data_buffer         := OVERLAY_10K_BUFFER
         .assert (<dir_data_buffer) = 0, error, "Must be page aligned"
 
-kDirDataBufferLen   = DA_IO_BUFFER - dir_data_buffer
+kDirDataBufferLen       = kOverlay10KBufferSize
+
+;;; ============================================================
 
 ;;; ID of window for directory to sort
 window_id := $0A
@@ -81,7 +95,10 @@ start:  tsx
         lda     #kErrNoWindowsOpen
         jmp     JUMP_TABLE_SHOW_ALERT ; NOTE: Trashes AUX $800-$1AFF
 
-:       lda     window_id
+:       lda     #kDynamicRoutineRestore5000
+        jsr     JUMP_TABLE_RESTORE_OVL
+
+        lda     window_id
         jmp     JUMP_TABLE_SELECT_WINDOW
 .endproc
 
