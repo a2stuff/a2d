@@ -1329,10 +1329,10 @@ fill_mode_table_onechar_high:
         x2_bytes := $82
 
         add16   x_offset, x2, x2
-        add16nc y_offset, bottom, bottom
+        add16   y_offset, bottom, bottom
 
-        add16nc x_offset, x1, x1
-        add16nc y_offset, top, top
+        add16   x_offset, x1, x1
+        add16   y_offset, top, top
 
         lsr     x2+1
         bne     rl_ge256
@@ -1776,7 +1776,7 @@ fail:   rts
 
 .proc SetPortBitsImpl
         sub16   current_viewloc_x, current_maprect_x1, x_offset
-        sub16nc current_viewloc_y, current_maprect_y1, y_offset
+        sub16   current_viewloc_y, current_maprect_y1, y_offset
         rts
 .endproc
 
