@@ -22,6 +22,8 @@ kMainPageClearByte = ' '|$80    ; space
 kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
 .proc Start
+        JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
+
         sta     ROMIN2
         sta     ALTZPOFF
         jsr     SaveText
@@ -124,6 +126,20 @@ cloop:
 .endproc
 
 ;;; ============================================================
+
+event_params:   .tag MGTK::Event
+
+;;; ============================================================
+
+.proc CopyEventAuxToMain
+        copy16  #event_params, STARTLO
+        copy16  #event_params + .sizeof(MGTK::Event) - 1, ENDLO
+        copy16  #event_params, DESTINATIONLO
+        clc                     ; aux > main
+        jmp     AUXMOVE
+.endproc
+
+;;; ============================================================
 ;;; Guts of the screen saver
 
 ;;; Inspired by: https://github.com/neilk/apple-ii-matrix
@@ -138,9 +154,6 @@ kNumCursors = 4
         vpos    .byte
         mode    .byte           ; high bit set = erase
 .endstruct
-
-
-        sta     KBDSTRB
 
         jsr     InitRand
 
@@ -158,15 +171,20 @@ kNumCursors = 4
         ;; --------------------------------------------------
 
 MainLoop:
-        ;; End on keypress
-        lda     KBD
-        bpl     :+
-        sta     KBDSTRB
-        rts
-:
-        ;; Speed control
-        lda     #64
-        jsr     Wait
+        ;; See if there's an event that should make us exit.
+        bit     LCBANK1
+        bit     LCBANK1
+        sta     ALTZPON
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
+        sta     ALTZPOFF
+        bit     ROMIN2
+        jsr     CopyEventAuxToMain
+
+        lda     event_params + MGTK::Event::kind
+        cmp     #MGTK::EventKind::button_down
+        beq     exit
+        cmp     #MGTK::EventKind::key_down
+        beq     exit
 
         ;; Iterate over all cursors
         lda     #kNumCursors-1
@@ -189,6 +207,8 @@ CursorLoop:
         dec     index
         bpl     CursorLoop
         bmi     MainLoop        ; always
+
+exit:   rts
 
         ;; --------------------------------------------------
 

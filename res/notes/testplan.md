@@ -485,6 +485,8 @@
 * Launch DeskTop. Apple > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
 * Configure a system with a realtime clock. Launch DeskTop. Apple > Screen Savers. Run a screen saver that uses the full graphics screen and conceals the menu (Flying Toasters or Melt). Exit it. Verify that the menu bar clock reappears immediately.
 
+* Launch DeskTop. Apple > Screen Savers. Run Matrix. Click the mouse button. Verify that the screen saver exits. Run Matrix. Press a key. Verify that the screen saver exits.
+
 * Launch DeskTop. Apple > About Apple II DeskTop. Click anywhere on the screen. Verify that the dialog closes.
 * Launch DeskTop. Apple > About Apple II DeskTop. Press any non-modifier key screen. Verify that the dialog closes.
 
