@@ -506,6 +506,9 @@ str_memory_prefix:
 str_memory_suffix:
         PASCAL_STRING res_string_memory_suffix       ; memory size suffix for kilobytes
 
+str_list_separator:
+        PASCAL_STRING ", "
+
 memory:.word    0
 
 ;;; ============================================================
@@ -1161,6 +1164,18 @@ pro_no:
         ldax    #str_empty
 
 draw:   jsr     DrawString
+
+        ;; Special case for Slot 3 cards
+        lda     slot
+        cmp     #3
+    IF_EQ
+        jsr     SetSlotPtr
+        jsr     DetectUthernet2
+      IF_CS
+        param_call DrawString, str_list_separator
+        param_call DrawString, str_uthernet2
+      END_IF
+    END_IF
 
         lsr     mask
         dec     slot
