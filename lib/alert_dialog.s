@@ -404,7 +404,7 @@ finish:
 
 .proc MapEventCoords
         sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
-        sub16nc event_ycoord, portmap::viewloc::ycoord, event_ycoord
+        sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
         rts
 .endproc
 

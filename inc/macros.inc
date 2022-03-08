@@ -459,17 +459,9 @@ end:
 .macro add16 arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16 adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
-;;; (as above, but requiring carry clear already)
-.macro add16nc arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub16 adc,, arg1, arg2, arg3, arg4, arg5, arg6
-.endmacro
 ;;; (as above, but indirect indexed, y register is incremented)
 .macro add16in arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16in adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
-.endmacro
-;;; (as above, but indirect indexed, y register is incremented), requiring carry clear already)
-.macro add16innc arg1, arg2, arg3, arg4, arg5
-    _addsub16in adc,, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
 
 ;;; Add arg1 (absolute) to arg2 (8-bit absolute), store to arg3
@@ -531,17 +523,9 @@ end:
 .macro sub16 arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16 sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
-;;; (as above, but requiring carry set already)
-.macro sub16nc arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub16 sbc,, arg1, arg2, arg3, arg4, arg5, arg6
-.endmacro
 ;;; (as above, but indirect indexed, y register incremented)
 .macro sub16in arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16in sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
-.endmacro
-;;; (as above, but indirect indexed, y register incremented, requiring carry set already)
-.macro sub16innc arg1, arg2, arg3, arg4, arg5
-    _addsub16in sbc,, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
 
 
