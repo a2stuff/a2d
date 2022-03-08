@@ -1165,7 +1165,7 @@ offset2_addr := *+1
         stx     FillNextLine::get_srcbits_jmp_addr+1
 
         ldx     top
-        ;; Fall-through
+        FALL_THROUGH_TO start_fill_jmp
 .endproc
 
 start_fill_jmp:
@@ -1263,7 +1263,7 @@ next_line_jmp_addr := *+1
         sta     right_sidemask
 
         ldy     width_bytes
-        ;; Fall-through
+        FALL_THROUGH_TO fillmode_jmp
 .endproc
 
 fillmode_jmp:
@@ -1420,7 +1420,7 @@ rl_ge256:                               ; Divmod for right limit >= 256
 
 .proc xx_ge256x
         txa
-        ;; Fall through...
+        FALL_THROUGH_TO xx_ge256
 .endproc
 
 .proc xx_ge256
@@ -1711,7 +1711,7 @@ rect_coords:
         sta     bottom
         bcc     PaintRectImpl
         inc     bottom+1
-        ;; Fall through...
+        FALL_THROUGH_TO PaintRectImpl
 .endproc
 
 
@@ -1958,7 +1958,7 @@ unused_width:
         sta     top+1
         adc     offset+1
         sta     bottom+1
-        ;; fall through to BitBlt
+        FALL_THROUGH_TO BitBltImpl
 .endproc
 
 ;;; ============================================================
@@ -2245,7 +2245,7 @@ set_low_point:
         sta     params_addr
         bcc     ora_2_param_bytes
         inc     params_addr+1
-        ;; Fall-through
+        FALL_THROUGH_TO ora_2_param_bytes
 .endproc
 
         ;; ORAs together first two bytes at (params_addr) and stores
@@ -2911,7 +2911,7 @@ loop:   add16   xdelta,x, current_penloc_x,x, $92,x
         dex
         dex
         bpl     loop
-        ;; fall through
+        FALL_THROUGH_TO LineToImpl
 .endproc
 
 ;;; ============================================================
@@ -3812,13 +3812,13 @@ table:  .byte   <(TXTCLR / 2), <(MIXCLR / 2), <(LOWSCR / 2), <(LORES / 2)
 
 .proc SetPortImpl
         ldax    params_addr
-        ;; fall through
+        FALL_THROUGH_TO assign_and_prepare_port
 .endproc
 
         ;; Call with port address in (X,A)
 assign_and_prepare_port:
         stax    active_port
-        ;; fall through
+        FALL_THROUGH_TO prepare_port
 
         ;; Initializes font (if needed), port, pattern, and fill mode
 prepare_port:
@@ -3835,7 +3835,7 @@ prepare_port:
 .proc GetPortImpl
         jsr     ApplyPortToActivePort
         ldax    active_port
-        ;;  fall through
+        FALL_THROUGH_TO store_xa_at_params
 .endproc
 
         ;; Store result (X,A) at params
@@ -4079,7 +4079,7 @@ pointer_cursor_addr:
         sta     params_addr
         lda     pointer_cursor_addr+1
         sta     params_addr+1
-        ;; fall through
+        FALL_THROUGH_TO SetCursorImpl
 .endproc
 
 ;;; ============================================================
@@ -4122,7 +4122,7 @@ srts:   rts
         bne     srts
         bit     cursor_flag
         bmi     srts
-        ;; Fall-through
+        FALL_THROUGH_TO DrawCursor
 .endproc
 
 .proc DrawCursor
@@ -4338,7 +4338,7 @@ lowscr_rts:
         cmp     #<LOWSCR
         beq     SetSwitch
         iny
-        ;; Fall through
+        FALL_THROUGH_TO SetSwitch
 .endproc
 
 .proc SetSwitch
@@ -4867,7 +4867,7 @@ stack_ptr_save:
 
 .proc HideCursorSaveParams
         jsr     HideCursorImpl
-        ;; Fall-through
+        FALL_THROUGH_TO SaveParamsAndStack
 .endproc
 
 .proc SaveParamsAndStack
@@ -4881,14 +4881,14 @@ stack_ptr_save:
 
 .proc ShowCursorAndRestore
         jsr     ShowCursorImpl
-        ;; Fall-through
+        FALL_THROUGH_TO RestoreParamsActivePort
 .endproc
 
 .proc RestoreParamsActivePort
         asl     preserve_zp_flag
         copy16  params_addr_save, params_addr
         ldax    active_port
-        ;; Fall-through
+        FALL_THROUGH_TO SetAndPreparePort
 .endproc
 
 .proc SetAndPreparePort
@@ -4983,7 +4983,8 @@ fail:   EXIT_CALL MGTK::Error::desktop_already_initialized
 
 .proc PeekEventImpl
         clc
-        .byte   $b0             ; mask next byte (sec)
+        .byte   OPC_BCS         ; mask next byte (sec)
+        FALL_THROUGH_TO GetEventImpl
 .endproc
 
 
@@ -5096,7 +5097,7 @@ error_return:
         lda     #MGTK::EventKind::no_event
         .assert MGTK::EventKind::no_event = 0, error, "MGTK::EventKind::no_event is not zero"
         tay
- 
+
         bit     mouse_status
         bpl     :+
         lda     #MGTK::EventKind::drag
@@ -6320,7 +6321,8 @@ dmrts:  rts
 
 .proc HideMenu
         clc
-        .byte   $b0             ; mask next byte (sec)
+        .byte   OPC_BCS         ; mask next byte (sec)
+        FALL_THROUGH_TO DrawMenu
 .endproc
 
 
@@ -6857,7 +6859,7 @@ end:    rts
         lda     (window),y
 set_found_window:
         stax    found_window
-        ;; Fall-through
+        FALL_THROUGH_TO GetWindow
 .endproc
 
         ;; Load/refresh the ZP window data areas at $AB and $B7.
@@ -6950,7 +6952,7 @@ nope:   EXIT_CALL MGTK::Error::window_not_found
         dex
         dex
         bpl     :-
-        ;; Fall-through
+        FALL_THROUGH_TO return_winrect
 .endproc
 return_winrect:
         ldax    #winrect
@@ -7728,7 +7730,7 @@ win:    jsr     WindowByIdOrExit
         bcc     :+
         rts
 :       jsr     EndUpdateImpl
-        ;; fall through
+        FALL_THROUGH_TO err_obscured
 .endproc
 
 err_obscured:
@@ -8367,7 +8369,7 @@ windowy         .word           ; out
         dex
         dex
         bpl     :-
-        ;; fall through
+        FALL_THROUGH_TO CopyMapResults
 .endproc
 
 .proc CopyMapResults
@@ -9745,7 +9747,7 @@ nope:   jsr     KbdMenuByShortcut
         lda     curmenu::menu_id
         sta     kbd_menu
         sec
-        .byte   $90             ; mask next byte (clc)
+        .byte   OPC_BCC         ; mask next byte (clc)
 
 fail:   clc
         pla
@@ -9952,7 +9954,7 @@ yclamp: cmp     #<kScreenHeight
 :       txa
         ldx     #$C0
         stx     mouse_status
-        ;; Fall-through
+        FALL_THROUGH_TO MousekeysInput
 .endproc
 
 .proc MousekeysInput
