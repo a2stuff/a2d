@@ -721,8 +721,10 @@ y2:     .word   bottom
 .macro DEFINE_RECT_SZ ident, left, top, width, height
         ident := *
 .scope ident
+topleft:
 x1:     .word   left
 y1:     .word   top
+bottomright:
 x2:     .word   ((left) + (width))
 y2:     .word   ((top) + (height))
 .endscope
@@ -732,8 +734,10 @@ y2:     .word   ((top) + (height))
 .macro DEFINE_RECT_INSET ident, left, top, width, height
         ident := *
 .scope ident
+topleft:
 x1:     .word   left
 y1:     .word   top
+bottomright:
 x2:     .word   ((width) - (left))
 y2:     .word   ((height) - (top))
 .endscope
