@@ -1378,7 +1378,7 @@ set_x1_bytes:
 set_width:                                      ; Set width for destination.
         sta     width_bytes
         ldx     current_penmode
-        cmp     #0
+        tay
         bne     :+                              ; Check if one or more than one is needed
 
         lda     left_masks_table+1              ; Only one char is needed, so combine
@@ -1389,9 +1389,10 @@ set_width:                                      ; Set width for destination.
         and     right_masks_table
         sta     left_masks_table
         sta     right_masks_table
-
-        copylohi  fill_mode_table_onechar_low,x, fill_mode_table_onechar_high,x, fillmode_jmp+1
-        rts
+        txa
+        clc
+        adc     #fill_mode_table_onechar_low - fill_mode_table_low
+        tax
 
 :       copylohi  fill_mode_table_low,x, fill_mode_table_high,x, fillmode_jmp+1
         rts
@@ -1404,8 +1405,8 @@ ll_ge256:                               ; Divmod for left limit >= 256
 rl_ge256:                               ; Divmod for right limit >= 256
         lda     x2
         jsr     xx_ge256
-        bmi     DivMod7
-        jmp     set_x2_bytes
+        bpl     set_x2_bytes
+        ;; fall through
 .endproc
 
 .proc DivMod7
@@ -2061,14 +2062,13 @@ unused_width:
         adc     #7
         inc     src_width_bytes
         dec     shift_bytes
-:       tay                                     ; check if bit shift required
-        bne     :+
-        ;;ldx     #2*kBitsNoBitShift
+:       ;;ldx     #2*kBitsNoBitShift
         .assert <kBitsNoBitShift = 0, error, "kBitsNoBitShift must be 0"
         tax
         beq     no_bitshift
-
-:       copylohi shift_table_main_low,y, shift_table_main_high,y, DHGRShiftBits::shift_main_addr
+        tay                                     ; check if bit shift required
+ 
+        copylohi shift_table_main_low,y, shift_table_main_high,y, DHGRShiftBits::shift_main_addr
 
         copylohi shift_table_aux_low,y, shift_table_aux_high,y, DHGRShiftBits::shift_aux_addr
 
@@ -2715,12 +2715,12 @@ scan_next_link:
         lda     fixed_div_quotient+1
         sta     poly_maxima_slope1,x
         ror     a
-        pha
+        tay
         lda     fixed_div_quotient
         sta     poly_maxima_slope0,x
         ror     a
         sta     poly_maxima_x_fracl,x
-        pla
+        tya
         clc
         adc     #$80
         sta     poly_maxima_x_frach,x
@@ -3457,7 +3457,7 @@ text_dest_next:
         bpl     :-
         sta     doublewidth_flag
         sta     shift_aux_ptr               ; zero
-        lda     #$80
+        ror                                 ; lda #$80
         sta     shift_main_ptr
 
         ldy     text_index
@@ -3794,14 +3794,8 @@ loop:   lsr     params::switches ; shift low bit into carry
         lda     table,x
         rol     a
         tay                     ; y = table[x] * 2 + carry
-        bcs     store
-
-        lda     $C000,y         ; why load vs. store ???
-        bcc     :+
-
-store:  sta     $C000,y
-
-:       dex
+        sta     $C000,y
+        dex
         bpl     loop
         rts
 
@@ -4198,23 +4192,23 @@ dloop:  cpy     #192
         stx     left_mod14
 
         ldy     left_bytes
-        ldx     #$01
+        ldx     #$02
 :
 active_cursor           := * + 1
         lda     $FFFF,y
-        sta     cursor_bits,x
+        sta     cursor_bits - 1,x
 active_cursor_mask      := * + 1
         lda     $FFFF,y
-        sta     cursor_mask,x
+        sta     cursor_mask - 1,x
         dey
         dex
-        bpl     :-
-        lda     #0
-        sta     cursor_bits+2
-        sta     cursor_mask+2
+        bne     :-
+        stx     cursor_bits+2
+        stx     cursor_mask+2
 
         ldy     cursor_mod7
         beq     no_shift
+        txa
 
         ldy     #5
 :       ldx     cursor_bits-1,y
@@ -4380,8 +4374,8 @@ done:   plp
         php
         sei
         jsr     RestoreCursorBackground
-        lda     #$80
-        sta     cursor_flag
+        sec
+        ror     cursor_flag
         plp
         rts
 .endproc
@@ -4404,6 +4398,7 @@ cursor_throttle:
         .byte   0
 
 .proc MoveCursor
+        ldx     #2
         bit     use_interrupts
         bpl     :+
 
@@ -4412,10 +4407,8 @@ cursor_throttle:
         dec     cursor_throttle
         lda     cursor_throttle
         bpl     mrts
-        lda     #2
-        sta     cursor_throttle
+        stx     cursor_throttle
 
-:       ldx     #2
 :       lda     mouse_x,x
         cmp     set_pos_params,x
         bne     mouse_moved
@@ -4670,9 +4663,8 @@ no_mouse:
         iny
         lda     use_interrupts
         sta     (params_addr),y
-        bit     use_interrupts
-        bpl     no_irq
-        bit     op_sys
+        lda     use_interrupts
+        and     op_sys
         bpl     no_irq
 
         MLI_CALL ALLOC_INTERRUPT, alloc_interrupt_params
@@ -4762,10 +4754,8 @@ is_pascal:
         jsr     CallMouse
         ldy     #SERVEMOUSE
         jsr     CallMouse
-        bit     use_interrupts
-
-        bpl     :+
-        bit     op_sys
+        lda     use_interrupts
+        and     op_sys
         bpl     :+
         lda     alloc_interrupt_params::int_num
         sta     dealloc_interrupt_params::int_num
@@ -4995,21 +4985,22 @@ fail:   EXIT_CALL MGTK::Error::desktop_already_initialized
 .proc GetEventImpl
         sec
 peek_entry:
-        php
         bit     use_interrupts
-        bpl     :+
-        sei
+        php
         bmi     no_check
 
-:       jsr     CheckEventsImpl
-
+        jsr     CheckEventsImpl
+        .byte   $A9             ; LDA #imm, hide sei
 no_check:
+        sei
         jsr     NextEvent
         bcs     no_event
 
         plp
         php
-        bcc     :+              ; skip advancing tail mark if in peek mode
+        bpl     :+
+        sei                     ; reduce race-condition window
+:       bcc     :+              ; skip advancing tail mark if in peek mode
         sta     eventbuf_tail
 
 :       tax
@@ -5028,10 +5019,7 @@ no_event:
         jsr     ReturnMoveEvent
 
 ret:    plp
-        bit     use_interrupts
-        bpl     :+
-        cli
-:       rts
+        rts
 .endproc
 
 GetEventImpl_peek_entry := GetEventImpl::peek_entry
@@ -5141,12 +5129,7 @@ irq_entry:
         jsr     CallBeforeEventsHook
         bcc     end
 
-        lda     BUTN1           ; Look at buttons (apple keys), compute modifiers
-        asl     a
-        lda     BUTN0
-        and     #$80
-        rol     a
-        rol     a
+        jsr     ComputeModifiers
         sta     input::modifiers
 
         jsr     ActivateKeyboardMouse    ; check if keyboard mouse should be started
