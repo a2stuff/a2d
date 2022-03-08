@@ -517,9 +517,9 @@
 
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Ensure BASIC.SYSTEM is present on the boot volume. Launch DeskTop. Open a window. Apple > Run Basic Here. Verify that BASIC.SYSTEM starts.
 
-* Configure a system without a RAMCard. Launch DeskTop. Verify that the volume containing DeskTop appears in the top right corner of the desktop.
-* Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop. From within DeskTop, launch another app e.g. Basic.system. Eject the DeskTop volume. Exit the app back to DeskTop. Verify that the remaining volumes appear in default order.
-* Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop.
+* Configure a system without a RAMCard. Launch DeskTop. Verify that the volume containing DeskTop appears in the top right corner of the desktop. File > Copy a File.... Verify that the volume containing DeskTop is the first disk shown.
+* Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop. File > Copy a File.... Verify that the non-RAMCard volume containing DeskTop is the first disk shown. From within DeskTop, launch another app e.g. Basic.system. Eject the DeskTop volume. Exit the app back to DeskTop. Verify that the remaining volumes appear in default order.
+* Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop. File > Copy a File.... Verify that the non-RAMCard volume containing DeskTop is the first disk shown.
 
 * Open the Control Panel DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
 * Open the Control Panel DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
@@ -539,6 +539,10 @@
 * Launch Selector. Type Solid-Apple and 6. Ensure machine boots from Slot 6
 
 * Launch Selector. Eject the disk with DeskTop on it. Type Q (don't click). Dismiss the dialog by hitting Esc. Verify that the dialog disappears, and the Apple menu is not shown.
+
+* Configure a system without a RAMCard. Launch Selector. File > Run a Program.... Verify that the volume containing Selector is the first disk shown.
+* Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch Selector. File > Run a Program... Verify that the non-RAMCard volume containing DeskTop is the first disk shown.
+* Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch Selector. File > Run a Program File.... Verify that the non-RAMCard volume containing Selector is the first disk shown.
 
 # Disk Copy
 

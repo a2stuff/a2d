@@ -505,6 +505,7 @@ done_keys:
 
         ;; --------------------------------------------------
 
+        jsr     SaveAndAdjustDeviceList
         jsr     DisconnectRamdisk
 
         ;; --------------------------------------------------
@@ -1026,12 +1027,13 @@ noop:   rts
         ;; DeskTop will immediately disconnect RAMDisk, but it is
         ;; restored differently.
         jsr     ReconnectRamdisk
+        jsr     RestoreDeviceList
+        ;; no SetColorMode since DeskTop will immediately override
+        jsr     RestoreTextMode
+
         MLI_CALL OPEN, open_desktop2_params
         lda     open_desktop2_params::ref_num
         sta     read_desktop2_params::ref_num
-
-        jsr     RestoreTextMode
-
         MLI_CALL READ, read_desktop2_params
         MLI_CALL CLOSE, close_params
         jmp     desktop_load_addr
@@ -1486,6 +1488,66 @@ saved_ram_unitnum:
 
 ;;; ============================================================
 
+.proc SaveAndAdjustDeviceList
+        ;; Save original DEVLST
+        ldx     DEVCNT
+:       copy    DEVLST,x, backup_devlst,x
+        dex
+        bpl     :-
+
+        ;; Find the startup volume's unit number
+        copy    DEVNUM, target
+        jsr     GetCopiedToRAMCardFlag
+    IF_MINUS
+        param_call CopyDeskTopOriginalPrefix, INVOKER_PREFIX
+        MLI_CALL GET_FILE_INFO, get_file_info_invoke_params
+        bcs     :+
+        copy    DEVNUM, target
+:
+    END_IF
+
+        ;; Find the device's index in the list
+        ldx     #0
+:       lda     DEVLST,x
+        and     #$F0            ; just want S/D
+        target := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        beq     found
+        inx
+        cpx     DEVCNT
+        bcc     :-
+        bcs     done            ; last one or not found
+
+        ;; Save it
+found:  ldy     DEVLST,x
+
+        ;; Move everything up
+:       lda     DEVLST+1,x
+        sta     DEVLST,x
+        inx
+        cpx     DEVCNT
+        bne     :-
+
+        ;; Place it at the end
+        tya
+        sta     DEVLST,x
+
+done:   rts
+.endproc
+
+.proc RestoreDeviceList
+        ldx     DEVCNT
+:       copy    backup_devlst,x, DEVLST,x
+        dex
+        bpl     :-
+        rts
+.endproc
+
+backup_devlst:
+        .res    14, 0
+
+;;; ============================================================
+
 .proc GetPortAndDrawWindow
         lda     winfo::window_id
         jsr     GetWindowPort
@@ -1865,10 +1927,13 @@ col:    .byte   0
         lda     #<$C000
         sta     @addr
 
+        jsr     ReconnectRamdisk  ; unnecessary, but harmless
+        jsr     RestoreDeviceList ; unnecessary, but harmless
+        jsr     SetColorMode
+        jsr     RestoreTextMode
+
         sta     ALTZPOFF
         bit     ROMIN2
-
-        jsr     RestoreTextMode
 
         @addr := * + 1
         jmp     SELF_MODIFIED
@@ -2031,8 +2096,8 @@ check_path:
         ;; Invoke
 
         jsr     ReconnectRamdisk
+        jsr     RestoreDeviceList
         jsr     SetColorMode
-
         jsr     RestoreTextMode
 
         jsr     INVOKER
@@ -2198,6 +2263,24 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         sta     SELF_MODIFIED,x
         dex
         bpl     :-
+        bit     ROMIN2
+        rts
+.endproc
+
+;;; Copy the original DeskTop prefix (e.g. "/HD/A2D") to the passed buffer.
+;;; Input: A,X=destination buffer
+.proc CopyDeskTopOriginalPrefix
+        stax    @addr
+        bit     LCBANK2
+        bit     LCBANK2
+
+        ldx     DESKTOP_ORIG_PREFIX
+:       lda     DESKTOP_ORIG_PREFIX,x
+        @addr := *+1
+        sta     SELF_MODIFIED,x
+        dex
+        bpl     :-
+
         bit     ROMIN2
         rts
 .endproc
