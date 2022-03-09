@@ -875,10 +875,7 @@ match:  tya
         lda     #model::iigs
 
         ;; A has model
-:       asl
-        tax
-        copy16  model_str_table,x, model_str_ptr
-        copy16  model_pix_table,x, model_pix_ptr
+:       jsr     SetModelPtrs
 
         ;; Read from LC RAM
         bit     LCBANK1
@@ -886,6 +883,17 @@ match:  tya
         rts
 .endproc
 
+;;; ============================================================
+
+;;; Input: A = model index
+;;; Output: Sets `model_str_ptr` and `model_pix_ptr`
+.proc SetModelPtrs
+        asl
+        tax
+        copy16  model_str_table,x, model_str_ptr
+        copy16  model_pix_table,x, model_pix_ptr
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -1031,21 +1039,18 @@ done:   rts
 
 .proc HandleEgg
         lda     egg
-        asl
-        tax
-        copy16  model_str_table,x, model_str_ptr
-        copy16  model_pix_table,x, model_pix_ptr
+        jsr     SetModelPtrs
 
-        inc     egg
-        lda     egg
-        cmp     #kNumModels
+        ldx     egg
+        inx
+        cpx     #kNumModels
         bne     :+
-        lda     #0
-        sta     egg
+        ldx     #0
+:       stx     egg
 
-:       jsr     ClearWindow
+        jsr     ClearWindow
         jsr     DrawWindow
-done:   jmp     InputLoop
+        jmp     InputLoop
 
 egg:    .byte   0
 .endproc
@@ -1541,12 +1546,10 @@ fail:   clc
         jsr     CheckIIgsMemory
         jsr     CheckSlinkyMemory
 
-        asl16   memory          ; * 64
-        asl16   memory
-        asl16   memory
-        asl16   memory
-        asl16   memory
-        asl16   memory
+        ldy     #6
+:       asl16   memory          ; * 64
+        dey
+        bne     :-
         ldax    memory
         jsr     IntToStringWithSeparators
         rts
