@@ -1182,7 +1182,7 @@ draw:   php
         cmp     #3
     IF_EQ
         jsr     SetSlotPtr
-        jsr     DetectUthernet2
+        param_call WithInterruptsDisabled, DetectUthernet2
       IF_CS
         param_call DrawString, str_list_separator
         param_call DrawString, str_uthernet2
@@ -1429,23 +1429,48 @@ sigtable_parallel:      .byte   2, $05, $48, $07, $48
         ;; Point ptr at $Cn00
         jsr     SetSlotPtr
 
-        jsr     DetectMockingboard
+        param_call WithInterruptsDisabled, DetectMockingboard
         bcc     :+
         return16 #str_mockingboard
 :
 
-        jsr     DetectZ80
+        param_call WithInterruptsDisabled, DetectZ80
         bcc     :+
         return16 #str_z80
 :
 
-        jsr     DetectUthernet2
+        param_call WithInterruptsDisabled, DetectUthernet2
         bcc     :+
         return16 #str_uthernet2
 :
         clc
         rts
 .endproc
+
+;;; Wrapper for calling procs with interrupts disabled.
+;;; Inputs: A,X = proc to call
+;;; Outputs: A,X,Y registers and C flag return from proc unscathed.
+;;; Other flags will be trashed.
+.proc WithInterruptsDisabled
+        stax    addr
+
+        ;; Disable interrupts
+        php
+        sei
+
+        addr := *+1
+        jsr     SELF_MODIFIED
+
+        ;; Restore interrupts, while stashing/restoring C
+        rol     tmp
+        plp
+        ror     tmp
+
+        rts
+
+tmp:    .byte   0
+.endproc
+
 
 ;;; Detect Z80
 ;;; Assumes $06 points at $Cn00, returns carry set if found
@@ -1473,9 +1498,18 @@ sigtable_parallel:      .byte   2, $05, $48, $07, $48
 ;;; Assumes $06 points at $Cn00, returns carry set if found
 
 .proc DetectUthernet2
-        ;; Based on the a2RetroSystems Uthernet II manual
+        ;;  Based on the a2RetroSystems Uthernet II manual
 
         MR := $C084
+        ;; Mode Register
+        ;; * bit 7 = Software Reset
+        ;; * bit 6 = Reserved
+        ;; * bit 5 = Reserved
+        ;; * bit 4 = Ping Block mode
+        ;; * bit 3 = PPPoE mode
+        ;; * bit 2 = Not Used
+        ;; * bit 1 = Address Auto-Increment
+        ;; * bit 0 = Indirect Bus mode (must be 1 to operate)
 
         lda     $07             ; $Cn
         and     #$0F            ; $0n
@@ -1485,6 +1519,30 @@ sigtable_parallel:      .byte   2, $05, $48, $07, $48
         asl                     ; $n0
         tax                     ; Slot in high nibble of X
 
+        ;; First, test if it is potentially an Uthernet II in operation
+        ;; (e.g. running VEDRIVE). If so, avoid resetting it.
+        lda     MR,x
+        and     #%00000001      ; required for operation
+        beq     oldtest         ; not set, try reset
+
+        ;; --------------------------------------------------
+        ;; Probe without resetting the device
+newtest:
+        lda     MR,x
+        and     #%01111111      ; Be absolutely sure we don't reset
+        eor     #%01110111      ; Flip all the non-significant bits
+        sta     MR,x
+        cmp     MR,x            ; Did they "stick"?
+        bne     fail
+        eor     #%01110111      ; Flip them all back
+        sta     MR,x
+        cmp     MR,x            ; Did they "stick" again?
+        beq     success
+        bne     fail            ; always
+
+        ;; --------------------------------------------------
+        ;; Probe using reset
+oldtest:
         ;; Send the RESET command
         lda     #$80
         sta     MR,x
@@ -1496,11 +1554,11 @@ sigtable_parallel:      .byte   2, $05, $48, $07, $48
         ;; Configure operating mode with auto-increment
         lda     #3              ; Operating mode
         sta     MR,x
-        lda     MR,x            ; Read back MR
-        cmp     #3
+        cmp     MR,x            ; Read back MR
         bne     fail
 
         ;; Probe successful
+success:
         sec
         rts
 
