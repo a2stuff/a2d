@@ -73,7 +73,7 @@ Project Page: https://github.com/a2stuff/a2d
   * **Open-Apple+Solid-Apple+Up** opens parent window or selects volume icon and closes current window. ([#661](https://github.com/a2stuff/a2d/issues/661))
   * **Return** is a shortcut for **File > Rename...**. ([#275](https://github.com/a2stuff/a2d/issues/275))
   * Arrow keys change selected icon. ([#274](https://github.com/a2stuff/a2d/issues/274))
-  * **Tab**/**Shift+Tab** change selected icon in alphabetical order. ([#275](https://github.com/a2stuff/a2d/issues/275))
+  * **Tab**/**Shift+Tab** (or **\`**/**Shift+\`**) change selected icon in alphabetical order. ([#275](https://github.com/a2stuff/a2d/issues/275), [#671](https://github.com/a2stuff/a2d/issues/671))
   * Type-down selection is supported. ([#275](https://github.com/a2stuff/a2d/issues/275))
 
 ### Desk Accessory Enhancements

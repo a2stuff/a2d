@@ -429,6 +429,10 @@
   * Run these steps:
     * Clear selection. Press Tab repeatedly. Verify that icons are selected in lexicographic order.
     * Select an icon. Press Tab. Verify that the next icon in lexicographic order is selected.
+    * Clear selection. Press \` repeatedly. Verify that icons are selected in lexicographic order.
+    * Select an icon. Press \`. Verify that the next icon in lexicographic order is selected.
+    * Clear selection. Hold shift and press \` repeatedly. Verify that icons are selected in reverse lexicographic order.
+    * Select an icon. Hold shift and press \`. Verify that the next icon in reverse lexicographic order is selected.
   * On a IIgs and a Platinum IIe:
     * Clear selection. Press Shift+Tab repeatedly. Verify that icons are selected in reverse lexicographic order.
     * Select an icon. Press Shift+Tab. Verify that the previous icon in lexicographic order is selected.

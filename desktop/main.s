@@ -418,7 +418,10 @@ HandleKeydown:
         jeq     CmdHighlightNext
         cmp     #CHAR_TAB
         jeq     CmdHighlightAlpha
-
+        cmp     #'`'
+        jeq     CmdHighlightAlphaNext ; like Tab
+        cmp     #'~'
+        jeq     CmdHighlightAlphaPrev ; like Shift+Tab
         jmp     menu_accelerators
 
         ;; --------------------------------------------------
@@ -3186,10 +3189,16 @@ ret:    rts
 
 .proc CmdHighlight
 
-        ;; Tab / Shift+Tab - next/prev in sorted order
+        ;; Next/prev in sorted order
+a_prev: lda     #$80
+        bne     store           ; always
+a_next: lda     #$00
+        beq     store           ; always
 
+        ;; Tab / Shift+Tab - next/prev in sorted order, based on shift
 alpha:  jsr     ShiftDown
-        sta     flag
+
+store:  sta     flag
         jsr     GetSelectableIconsSorted
         jmp     common
 
@@ -3264,6 +3273,8 @@ HighlightIcon:
 CmdHighlightPrev := CmdHighlight::prev
 CmdHighlightNext := CmdHighlight::next
 CmdHighlightAlpha := CmdHighlight::alpha
+CmdHighlightAlphaPrev := CmdHighlight::a_prev
+CmdHighlightAlphaNext := CmdHighlight::a_next
 
 ;;; ============================================================
 ;;; Type Down Selection
