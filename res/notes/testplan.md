@@ -541,8 +541,8 @@
 * Launch Selector. Eject the disk with DeskTop on it. Type Q (don't click). Dismiss the dialog by hitting Esc. Verify that the dialog disappears, and the Apple menu is not shown.
 
 * Configure a system without a RAMCard. Launch Selector. File > Run a Program.... Verify that the volume containing Selector is the first disk shown.
-* Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch Selector. File > Run a Program... Verify that the non-RAMCard volume containing DeskTop is the first disk shown.
-* Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch Selector. File > Run a Program File.... Verify that the non-RAMCard volume containing Selector is the first disk shown.
+* Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch Selector. File > Run a Program.... Verify that the non-RAMCard volume containing Selector is the first disk shown.
+* Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch Selector. File > Run a Program.... Verify that the non-RAMCard volume containing Selector is the first disk shown.
 
 # Disk Copy
 
