@@ -1665,12 +1665,23 @@ CheckAlpha:
 ;;; Enable/disable scrollbar as appropriate; resets thumb pos.
 ;;; Assert: `num_drives` and `top_row` are set.
 .proc EnableScrollbar
-        lda     #0              ; deactivate
-        ldx     num_drives
-        cpx     #kListRows+1
-        bcc     :+
-        lda     #1              ; activate
-:       sta     activatectl_params::activate
+        lda     num_drives
+        cmp     #kListRows+1
+    IF_LT
+        copy    #0, activatectl_params::activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+        rts
+    END_IF
+
+        lda     num_drives
+        sec
+        sbc     #kListRows
+        sta     setctlmax_params::ctlmax
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+
+        copy    #1, activatectl_params::activate
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
 
@@ -1685,6 +1696,11 @@ CheckAlpha:
 
 ;;; Assert: `top_row` is set.
 .proc HandleScroll
+        lda     winfo_drive_select::vscroll
+        and     #MGTK::Scroll::option_active
+        bne     :+
+        rts
+:
         lda     num_drives
         sec
         sbc     #kListRows
@@ -1911,13 +1927,6 @@ LE207:  inc     num_drives
         ;; Valid ProDOS volume
 LE20D:  ldx     num_drives
         ldy     #$00
-        lda     ($06),y
-        and     #$70            ; slot 3?
-        cmp     #$30
-        bne     LE21D
-        jmp     next_device     ; if so, skip
-
-LE21D:  ldy     #$00
         lda     ($06),y
         jsr     FindUnitNum
         ldx     num_drives

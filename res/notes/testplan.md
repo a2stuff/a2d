@@ -566,6 +566,11 @@
 * On a IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Special > Disk Copy.... Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that the display remains in color.
 * On a IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Special > Disk Copy.... Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that the display resets to monochrome.
 
+* Configure a system with a RAMDisk in Slot 3, e.g. using RAM.DRV.SYSTEM or RAMAUX.SYSTEM. Launch DeskTop. Special > Disk Copy.... Verify that the RAMDisk appears.
+* Configure a system with 9 or fewer drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is inactive.
+* Configure a system with 10 or more drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is active.
+
+
 # Alerts
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.

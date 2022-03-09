@@ -2284,6 +2284,9 @@ start:
         dex
         bpl     :-
 
+        ;; Restore modified ProDOS state
+        jsr     RestoreDeviceList
+
         ;; Set up banks for ProDOS usage
         sta     ALTZPOFF
         bit     ROMIN2

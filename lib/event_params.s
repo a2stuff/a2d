@@ -28,6 +28,11 @@ window_id := * + 1
 event_kind := event_params::kind
 event_coords := event_params::coords
 
+.params setctlmax_params
+which_ctl := * + 0
+ctlmax    := * + 1
+.endparams
+
 .params activatectl_params
 which_ctl := * + 0
 activate  := * + 1
