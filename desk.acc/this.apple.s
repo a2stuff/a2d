@@ -561,7 +561,6 @@ str_diskii:     PASCAL_STRING res_string_card_type_diskii
 str_block:      PASCAL_STRING res_string_card_type_block
 kStrSmartportLength = .strlen(res_string_card_type_smartport)
 str_smartport:  PASCAL_STRING res_string_card_type_smartport
-        .res    (kMaxSmartportDevices*16 + (kMaxSmartportDevices-1)*2), 0 ; names + ", " seps
 str_ssc:        PASCAL_STRING res_string_card_type_ssc
 str_80col:      PASCAL_STRING res_string_card_type_80col
 str_mouse:      PASCAL_STRING res_string_card_type_mouse
@@ -1168,7 +1167,15 @@ pro_no:
 
         ldax    #str_empty
 
-draw:   jsr     DrawString
+draw:   php
+        jsr     DrawString
+        plp
+    IF_VS
+        ;; V=1 means smartport - print out the names
+        lda     slot
+        jsr     SetSlotPtr
+        jsr     ShowSmartPortDeviceNames
+    END_IF
 
         ;; Special case for Slot 3 cards
         lda     slot
@@ -1184,7 +1191,7 @@ draw:   jsr     DrawString
 
         lsr     mask
         dec     slot
-        bne     loop
+        jne     loop
 
         MGTK_CALL MGTK::ShowCursor
         rts
@@ -1211,6 +1218,7 @@ penmode:.byte   MGTK::notpencopy
 ;;; Firmware Detector:
 ;;; Input: Slot # in A
 ;;; Output: Carry set and string ptr in A,X if detected, carry clear otherwise
+;;;         Overflow set if SmartPort.
 ;;;
 ;;; Uses a variety of sources:
 ;;; * Technical Note: ProDOS #21: Identifying ProDOS Devices
@@ -1258,9 +1266,11 @@ penmode:.byte   MGTK::notpencopy
         sec
         return16 #str_block
 :
-        jsr     PopulateSmartportName
         sec
-        return16 #str_smartport
+        bit     ret             ; set V flag to signal SmartPort
+        ldax    #str_smartport
+ret:    rts
+
 notpro:
 
 ;;; ---------------------------------------------
@@ -1801,8 +1811,7 @@ p65802: return16 #str_65802     ; Other boards support 65802
 ;;; Follows Technical Note: SmartPort #4: SmartPort Device Types
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
 
-;;; Assert: Main is banked in (due to SmartPort calls)
-.proc PopulateSmartportNameMainImpl
+.proc ShowSmartPortDeviceNamesImpl
 
 .params status_params
 param_count:    .byte   3
@@ -1813,7 +1822,10 @@ status_code:    .byte   3       ; Return Device Information Block (DIB)
 
         slot_ptr := $06
 
-start:
+start:  ;; Most SmartPort logic needs to run from Main
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+
         copy    #$80, empty_flag
         copy    #kStrSmartportLength, str_smartport
 
@@ -1884,48 +1896,24 @@ next:   dey
 done:
 .endscope
 
-        ldx     str_smartport
-
-        ;; Append separator, unless it's the first
-.scope
+        ;; Need a comma?
         bit     empty_flag
-        bmi     :+
-        lda     #','
-        inx
-        sta     str_smartport,x
-        lda     #' '
-        inx
-        sta     str_smartport,x
-:
-.endscope
-
-        ;; Append device name
-.scope
-        copy    #0, empty_flag  ; saw a unit!
-
-        lda    dib_buffer::ID_String_Length
-    IF_ZERO
-        ;; Seen in wDrive
-        ldy     #0
-:       lda     str_unknown+1,y
-        inx
-        sta     str_smartport,x
-        iny
-        cpy     str_unknown
-        bne     :-
-    ELSE
-        ldy     #0
-:       lda     dib_buffer::Device_Name,y
-        inx
-        sta     str_smartport,x
-        iny
-        cpy     dib_buffer::ID_String_Length
-        bne     :-
+    IF_PLUS
+        ldax    #str_list_separator
+        jsr     DrawStringFromMain
     END_IF
-.endscope
 
-        stx     str_smartport
+        ;; Draw the device name
+        copy    #0, empty_flag  ; saw a unit!
+        lda     dib_buffer::ID_String_Length
+    IF_ZERO
+        ldax    #str_unknown
+    ELSE
+        ldax    #dib_buffer::ID_String_Length
+    END_IF
+        jsr     DrawStringFromMain
 
+        ;; Next!
 next:   lda     status_params::unit_num
         cmp     num_devices
         beq     finish
@@ -1935,19 +1923,14 @@ next:   lda     status_params::unit_num
 finish:
         ;; If no units, populate with "(none)"
         bit     empty_flag
-        bpl     exit
+    IF_MINUS
+        ldax    #str_none
+        jsr     DrawStringFromMain
+    END_IF
 
-        ldx     str_smartport
-        ldy     #0
-:       lda     str_none+1,y
-        inx
-        sta     str_smartport,x
-        iny
-        cpy     str_none
-        bne     :-
-        stx     str_smartport
-
-exit:   rts
+exit:   sta     RAMWRTON
+        sta     RAMRDON
+        rts
 
 empty_flag:
         .byte   0
@@ -1965,20 +1948,36 @@ num_devices:
 .endproc
         sp_addr = SmartPortCall::sp_addr
 
-.endproc
+;;; Inputs: A,X = string to draw
+;;; Assert: Called from Main
+.proc DrawStringFromMain
+        ptr := $06
+        stax    ptr
 
-;;; Assert: Aux is banked in (relays to Main)
-.proc PopulateSmartportName
+        ;; Copy the string Main>Aux
+        sta     RAMWRTON
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     (ptr),y
+        dey
+        bpl     :-
+
+        ;; Draw it from Aux
+        sta     RAMRDON
+        ldax    ptr
+        jsr     DrawString
+
+        ;; Return to Main
         sta     RAMRDOFF
         sta     RAMWRTOFF
-
-        jsr     PopulateSmartportNameMainImpl::start
-
-        sta     RAMWRTON
-        COPY_STRING str_smartport, str_smartport
-        sta     RAMRDON
         rts
 .endproc
+
+.endproc
+ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
+
 
 ;;; ============================================================
 ;;; Inputs: Character in A
