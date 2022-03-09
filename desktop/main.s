@@ -9632,11 +9632,11 @@ not_found:
 
         ;; Append prefix
         ldx     #0
-:       lda     prefix+1,x
+:       lda     str_auxtype_prefix+1,x
         sta     text_buffer2::data,y
         inx
         iny
-        cpx     prefix
+        cpx     str_auxtype_prefix
         bne     :-
 
         ;; Append type
@@ -9665,8 +9665,6 @@ DoByte:
         sta     text_buffer2::data,y
         iny
         rts
-
-prefix: PASCAL_STRING res_string_auxtype_prefix
 
 auxtype:
         .word 0
@@ -10093,14 +10091,6 @@ SmartportCall:
 
 blocks: .word   0
 
-str_device_type_diskii:
-        PASCAL_STRING res_string_volume_type_disk_ii
-str_device_type_ramdisk:
-        PASCAL_STRING res_string_volume_type_ramcard
-str_device_type_appletalk:
-        PASCAL_STRING res_string_volume_type_fileshare
-str_device_type_vdrive:
-        PASCAL_STRING res_string_volume_type_vdrive
 .endproc
 
 ;;; ============================================================
@@ -11607,7 +11597,7 @@ common2:
         lda     selected_window_id
     IF_ZERO
         ;; Volume
-        COPY_STRING str_vol, text_buffer2::length
+        COPY_STRING str_volume, text_buffer2::length
     ELSE
         ;; File
         lda     src_file_info_params::file_type
@@ -11753,9 +11743,6 @@ done:   copy    #0, path_buf4
 
 write_protected_flag:
         .byte   0
-
-str_vol:
-        PASCAL_STRING res_string_volume
 
 .proc RunGetInfoDialogProc
         param_jump invoke_dialog_proc, kIndexGetInfoDialog, get_info_dialog_params
@@ -17011,6 +16998,23 @@ driver: jmp     (RAMSLOT)
 
         .include "../lib/datetime.s"
         .include "../lib/is_diskii.s"
+
+;;; ============================================================
+
+str_auxtype_prefix:
+        PASCAL_STRING res_string_auxtype_prefix
+
+str_device_type_diskii:
+        PASCAL_STRING res_string_volume_type_disk_ii
+str_device_type_ramdisk:
+        PASCAL_STRING res_string_volume_type_ramcard
+str_device_type_appletalk:
+        PASCAL_STRING res_string_volume_type_fileshare
+str_device_type_vdrive:
+        PASCAL_STRING res_string_volume_type_vdrive
+
+str_volume:
+        PASCAL_STRING res_string_volume
 
 ;;; ============================================================
 
