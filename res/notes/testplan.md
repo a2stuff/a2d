@@ -358,9 +358,9 @@
 * Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
   * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Tab repeatedly. Verify that windows are activated and cycle in forward order (A, B, C, A, B, C, ...).
   * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press \` repeatedly. Verify that windows are activated cycle in forward order (A, B, C, A, B, C, ...).
-  * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and shift and press \` repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
-  * On a IIgs: Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and shift and press Tab repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
-  * On a Platinum IIe: Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and shift and press Tab repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
+  * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Shift+\` repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
+  * On a IIgs: Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Shift+Tab repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
+  * On a Platinum IIe: Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Shift+Tab repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
 
 * Launch DeskTop. Open a volume window containing a folder. Open the folder window. Note that the folder icon is shaded. Close the volume window. Open the volume window again. Verify that the folder icon is shaded.
 * Launch DeskTop. Open a volume window. In the volume window, create a new folder F1 and open it. Note that the F1 icon is shaded. In the volume window, create a new folder F2. Verify that the F1 icon is still shaded.
@@ -431,8 +431,8 @@
     * Select an icon. Press Tab. Verify that the next icon in lexicographic order is selected.
     * Clear selection. Press \` repeatedly. Verify that icons are selected in lexicographic order.
     * Select an icon. Press \`. Verify that the next icon in lexicographic order is selected.
-    * Clear selection. Hold shift and press \` repeatedly. Verify that icons are selected in reverse lexicographic order.
-    * Select an icon. Hold shift and press \`. Verify that the next icon in reverse lexicographic order is selected.
+    * Clear selection. Press Shift+\` repeatedly. Verify that icons are selected in reverse lexicographic order.
+    * Select an icon. Press Shift+\`. Verify that the previous icon in lexicographic order is selected.
   * On a IIgs and a Platinum IIe:
     * Clear selection. Press Shift+Tab repeatedly. Verify that icons are selected in reverse lexicographic order.
     * Select an icon. Press Shift+Tab. Verify that the previous icon in lexicographic order is selected.
@@ -601,8 +601,8 @@ Test the following in all of the above, except where called out specifically:
 
 * Browse to a directory containing one or more files with starting with mixed case (AppleWorks or GS/OS). Verify the filenames appear with correct case.
 * Verify that the device order (via clicking Change Drive or pressing Tab) matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
-  * On a IIgs: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
-  * On a Platinum IIe: Hold the Shift key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
+  * On a IIgs: Hold the Shift key when clicking Change Drive, or press Shift+Tab, and verify that the order is reversed.
+  * On a Platinum IIe: Hold the Shift key when clicking Change Drive, or press Shift+Tab, and verify that the order is reversed.
 * Browse to a directory containing 8 files. Verify that the scrollbar is inactive.
 * Browse to a directory containing 9 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
 
