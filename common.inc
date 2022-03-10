@@ -8,16 +8,18 @@
 ;;; Filenames
 
 .define kFilenameLauncher      "DeskTop.system"
-.define kFilenameDeskTop       "DeskTop2"
-.define kFilenameDiskCopy      "Disk.Copy"
-.define kFilenameSelector      "Selector"
-.define kFilenameSelectorList  "Selector.List"
-.define kFilenameDeskTopConfig "DeskTop.config"
-.define kFilenameDeskTopState  "DeskTop.file"
+.define kFilenameModulesDir    "Modules"
+.define kFilenameDeskTop       .concat(kFilenameModulesDir, "/DeskTop2")
+.define kFilenameDiskCopy      .concat(kFilenameModulesDir, "/Disk.Copy")
+.define kFilenameSelector      .concat(kFilenameModulesDir, "/Selector")
+.define kFilenameLocalDir      "Local"
+.define kFilenameSelectorList  .concat(kFilenameLocalDir, "/Selector.List")
+.define kFilenameDeskTopConfig .concat(kFilenameLocalDir, "/DeskTop.config")
+.define kFilenameDeskTopState  .concat(kFilenameLocalDir, "/DeskTop.file")
+.define kFilenameQuitSave      .concat(kFilenameLocalDir, "/Quit.tmp")
 .define kFilenameDADir         "Desk.Acc"
 .define kFilenamePreviewDir    "Preview"
 .define kFilenameExtrasDir     "Extras"
-.define kFilenameQuitSave      "Quit.tmp"
 .define kFilenameRAMCardDir    "DeskTop"
 
 ;;; ============================================================

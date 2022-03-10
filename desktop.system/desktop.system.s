@@ -99,12 +99,25 @@ header_orig_prefix:
         kWriteBackSize = * - PRODOS_SYS_START
 
 
+
+
 ;;; ============================================================
 
 start:
         jsr     DetectMousetext
+        jsr     CreateLocalDir
         jsr     LoadSettings
         jmp     CopyDesktopToRamcard
+
+;;; ============================================================
+
+local_dir:      PASCAL_STRING kFilenameLocalDir
+        DEFINE_CREATE_PARAMS create_params, local_dir, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
+
+.proc CreateLocalDir
+        MLI_CALL CREATE, create_params
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -833,23 +846,18 @@ copied_flag:                    ; set to dst_path's length, or reset
         DEFINE_CREATE_PARAMS create_dt_dir_params, dst_path, ACCESS_DEFAULT, FT_DIRECTORY, 0, ST_LINKED_DIRECTORY
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, src_path
 
-kNumFilenames = 11
+kNumFilenames = 6
 
         ;; Files/Directories to copy
 str_f1: PASCAL_STRING kFilenameLauncher
-str_f2: PASCAL_STRING kFilenameDeskTop
-str_f3: PASCAL_STRING kFilenameDiskCopy
-str_f4: PASCAL_STRING kFilenameSelector
-str_f5: PASCAL_STRING kFilenameDADir
-str_f6: PASCAL_STRING kFilenamePreviewDir
-str_f7: PASCAL_STRING kFilenameExtrasDir
-str_f8: PASCAL_STRING kFilenameSelectorList
-str_f9: PASCAL_STRING kFilenameQuitSave
-str_fA: PASCAL_STRING kFilenameDeskTopConfig
-str_fB: PASCAL_STRING kFilenameDeskTopState
+str_f2: PASCAL_STRING kFilenameModulesDir
+str_f3: PASCAL_STRING kFilenameLocalDir
+str_f4: PASCAL_STRING kFilenameDADir
+str_f5: PASCAL_STRING kFilenamePreviewDir
+str_f6: PASCAL_STRING kFilenameExtrasDir
 
 filename_table:
-        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8,str_f9,str_fA,str_fB
+        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6
         ASSERT_ADDRESS_TABLE_SIZE filename_table, kNumFilenames
 
         kVtabCopyingMsg = 12

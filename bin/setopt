@@ -36,7 +36,7 @@ fi
 # Read config file
 tempdir=$(mktemp -d "${TMPDIR:-/tmp}/shk.XXXXXXXXX")
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
-suppress cadius EXTRACTFILE "$INSTALL_IMG" "$INSTALL_PATH/DeskTop.config" "$tempdir" --quiet --no-case-bits
+suppress cadius EXTRACTFILE "$INSTALL_IMG" "$INSTALL_PATH/Local/DeskTop.config" "$tempdir" --quiet --no-case-bits
 config="$tempdir/DESKTOP.CONFIG#F10000"
 
 # ============================================================

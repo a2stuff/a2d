@@ -32,8 +32,13 @@ storage device:
 
 * `A2.DESKTOP/` - any name is allowed, can be in any subdirectory
   * `DESKTOP.SYSTEM` - run this to launch DeskTop
-  * `DESKTOP2` - application file
-  * `SELECTOR` - application file (enable in Startup Options)
-  * `DESK.ACC/` - contains Desk Accessories (DAs), including Control Panels
+  * `MODULES/` - contains parts of the application
+    * `DESKTOP2` - application file
+    * `DISK.COPY` - application file
+    * `SELECTOR` - application file
+  * `DESK.ACC/` - contains Desk Accessories (DAs)
+    * `CONTROL.PANELS/` - DAs for modifying DeskTop settings
+    * `SCREEN.SAVERS/` - DAs that provide full-screen entertainment
   * `PREVIEW/` - contains file preview handlers (special type of DAs)
   * `EXTRAS/` - contains additional utilities
+  * `LOCAL/` - contains files created at runtime (settings, etc)

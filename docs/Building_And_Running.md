@@ -90,8 +90,10 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
    /HD/
      A2.DESKTOP/          DIR
        DESKTOP.SYSTEM     SYS
-       SELECTOR           $F1   $0000
-       DESKTOP2           $F1   $0000
+       MODULES/           DIR
+         DESKTOP2         $F1   $0000
+         DISK.COPY        $F1   $0000
+         SELECTOR         $F1   $0000
        DESK.ACC/          DIR
          CALCULATOR       $F1   $0641
          EYES             $F1   $0641
