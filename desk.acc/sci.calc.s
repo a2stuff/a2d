@@ -519,10 +519,10 @@ penmode:   .byte   MGTK::pencopy
 penmode:   .byte   MGTK::notpenXOR
 .endparams
 
-        kWindowWidth = 130 + kBasicOffset
-        kWindowHeight = 96
-        kDefaultLeft = 210
-        kDefaultTop = 60
+        kDAWidth = 130 + kBasicOffset
+        kDAHeight = 96
+        kDALeft         = (kScreenWidth - kDAWidth)/2
+        kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -536,16 +536,16 @@ vthumbmax:      .byte   0
 vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   kWindowWidth
-mincontlength:  .word   kWindowHeight
-maxcontwidth:   .word   kWindowWidth
-maxcontlength:  .word   kWindowHeight
-left:           .word   kDefaultLeft
-top:            .word   kDefaultTop
+mincontwidth:   .word   kDAWidth
+mincontlength:  .word   kDAHeight
+maxcontwidth:   .word   kDAWidth
+maxcontlength:  .word   kDAHeight
+left:           .word   kDALeft
+top:            .word   kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kWindowWidth, kWindowHeight
+        DEFINE_RECT cliprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
