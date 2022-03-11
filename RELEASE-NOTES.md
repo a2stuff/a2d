@@ -110,8 +110,11 @@ Project Page: https://github.com/a2stuff/a2d
   * Eyes that follow the mouse. ([#53](https://github.com/a2stuff/a2d/issues/53))
 * **Find Files**
   * Search a directory and descendants for filenames. Use ? and * as wildcards. ([#21](https://github.com/a2stuff/a2d/issues/21))
-* **Darkness** (optional)
-  * A debugging tool that paints the whole screen a dark pattern.
+* **Extras** (optional)
+  * **Scientific Calculator**
+    * Calculator with trigonometry and other additional functions. ([#211](https://github.com/a2stuff/a2d/issues/211))
+  * **Darkness**
+    * A debugging tool that paints the whole screen a dark pattern.
 * **Screen Savers**
   * **Flying Toasters**
     * Homage to the classic After Dark screen saver by Jack Eastman. ([#27](https://github.com/a2stuff/a2d/issues/27))

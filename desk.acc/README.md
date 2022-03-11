@@ -40,6 +40,8 @@ Original desk accessories from MouseDesk:
   * Search a directory and descendants for filenames. Use ? and * as wildcards.
 * [Darkness](darkness.s)
   * A debugging tool that paints the whole screen a dark pattern.
+* [Scientific Calculator](sci.calc.s)
+  * Calculator with trigonometry and other additional functions
 
 Note that the new desk accessories require an updated version of Apple II DeskTop and **will not work** with DeskTop 1.1 or MouseDesk.
 
