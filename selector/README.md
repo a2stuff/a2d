@@ -5,7 +5,7 @@ The file is broken down into multiple segments:
 |--------------|-------------|---------|-------------|--------|---------------------|
 | Bootstrap    | B$000000    | Main    | $2000-$2026 | L$0027 | `bootstrap.s`       |
 | Quit Handler | B$000027    | Main    | $1000-$11FF | L$0200 | `quit_handler.s`    |
-| Loader       | B$000400    | Main    | $2000-$21FF | L$0200 | `loader.s`          |
+| Loader       | B$000300    | Main    | $2000-$22FF | L$0300 | `loader.s`          |
 | Invoker      | B$000600    | Main    | $0290-$03EF | L$0160 | `../lib/invoker.s`  |
 | MGTK + App   | B$000760    | Main    | $4000-$A1FF | L$6200 | `mgtk.s`, `app.s`   |
 | Alert Dialog | B$006960    | Aux LC1 | $D000-$D7FF | L$0800 | `alert_dialog.s`    |
@@ -24,11 +24,11 @@ Copies the next segment (Quit Handler) to the ProDOS quit handler, then invokes 
 
 Invoked via ProDOS QUIT, so relocated/executed at $1000.
 
-Loads the Loader - reads SELECTOR $600 bytes at $1C00, and jumps to $2000
+Loads the Loader - reads SELECTOR $600 bytes at $1D00, and jumps to $2000
 
-(Note that the first chunk of bytes that end up at $1C00 are not used
+(Note that the first chunk of bytes that end up at $1D00 are not used
 as that is the Bootstrap and the Quit Handler code; this is followed by
-padding.)
+padding. Just avoids a SET_MARK call.)
 
 ### Loader - `loader.s`
 

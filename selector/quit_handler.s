@@ -33,7 +33,7 @@ filename:
         ;; ProDOS MLI call param blocks
 
         io_buf := $1800
-        load_target := $1C00
+        load_target := $1D00
         kLoadSize = $600
 
         DEFINE_READ_PARAMS read_params, load_target, kLoadSize
@@ -125,8 +125,8 @@ proceed:
 
 ;;; ============================================================
 ;;; Load the Loader at $2000 and invoke it.
-;;; The code is at offset $400 length $200 in the file; load it
-;;; by loading $600 at $2000-$400=$1C00 as a shortcut (?!?).
+;;; The code is at offset $300 length $300 in the file; load it
+;;; by loading $600 at $2000-$400=$1D00 to avoid a SET_MARK call.
 
 L10F2:  MLI_CALL SET_PREFIX, get_prefix_params
         beq     :+

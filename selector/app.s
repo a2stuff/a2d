@@ -202,21 +202,15 @@ watch_cursor:
 
 
 ;;; ============================================================
-;;; Settings
+;;; Event Params (and overlapping param structs)
 
-        PAD_TO ::SETTINGS
-        .include "../lib/default_settings.s"
+        .include "../lib/event_params.s"
 
 ;;; ============================================================
 ;;; Application entry point
 
         PAD_TO ::START
         jmp     entry
-
-;;; ============================================================
-;;; Event Params (and overlapping param structs)
-
-        .include "../lib/event_params.s"
 
 ;;; ============================================================
 
@@ -2565,6 +2559,15 @@ clear:  copy16  #HIRES_ADDR, ptr
         .include "../lib/muldiv.s"
         .include "../lib/bell.s"
         .include "../lib/detect_lcmeve.s"
+
+;;; ============================================================
+;;; Settings - modified by Control Panels
+;;; ============================================================
+
+        PAD_TO ::SETTINGS
+        .include "../lib/default_settings.s"
+
+;;; ============================================================
 
 .endscope
 

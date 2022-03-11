@@ -14,7 +14,8 @@ MGTKEntry       := $4000
 FONT            := $8800
 START           := $8E00
 
-SETTINGS        := $8D80
+OVERLAY_ADDR    := MGTKEntry + kAppSegmentSize
+SETTINGS        := OVERLAY_ADDR - .sizeof(DeskTopSettings)
 
 MLIEntry        := MLI
 
@@ -39,7 +40,6 @@ kInvokerOffset          = $600
 kInvokerSegmentSize     = $160
 kAppSegmentSize         = $6400
 kAlertSegmentSize       = $800
-OVERLAY_ADDR            := MGTKEntry + kAppSegmentSize
 kOverlay1Offset         = kInvokerOffset + kInvokerSegmentSize + kAppSegmentSize + kAlertSegmentSize
 kOverlay1Size           = $1B00
 kOverlay2Offset         = kOverlay1Offset + kOverlay1Size
@@ -52,8 +52,8 @@ kOverlay2Size           = $D00
         .include "bootstrap.s"
         .include "quit_handler.s"
 
-        ;; Ensure loader.starts at correct offset from start of file.
-        .res 473
+        ;; Ensure loader.starts at correct offset ($300) from start of file.
+        .res 217
 
         .include "loader.s"
         .include "../lib/invoker.s"
