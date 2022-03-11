@@ -158,13 +158,6 @@ my := screentowindow_params::windowy
 clicked:        .byte   0
 .endparams
 
-.params dragwindow_params
-window_id:      .byte   0
-dragx:          .word   0
-dragy:          .word   0
-moved:          .byte   0
-.endparams
-
 .params winport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
@@ -684,8 +677,6 @@ ipblink_ip_bitmap:
 
 .proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
-        copy16  event_params::xcoord, dragwindow_params::dragx
-        copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
         bpl     :+

@@ -67,6 +67,15 @@ windowy := * + 7
 screentowindow_window_id := screentowindow_params::window_id
 screentowindow_windowx := screentowindow_params::windowx
 
+.params dragwindow_params
+window_id      := *
+dragx   := * + 1
+dragy   := * + 3
+moved   := * + 5
+        .assert dragx = event_params::xcoord, error, "param mismatch"
+        .assert dragy = event_params::ycoord, error, "param mismatch"
+.endparams
+
 ;;; --------------------------------------------------
 
 ;;; The following are offset so x/y overlap event_params x/y

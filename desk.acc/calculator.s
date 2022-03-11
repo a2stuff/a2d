@@ -1126,6 +1126,7 @@ pad:    lda     #' '
 end:    jsr     DisplayBuffer1
         FALL_THROUGH_TO ResetBuffer1AndState
 .endproc
+
 .proc ResetBuffer1AndState
         jsr     ResetBuffer1
         lda     #0
@@ -1222,6 +1223,7 @@ loop:   lda     #' '
         jsr     ResetBuffer2
         FALL_THROUGH_TO DisplayBuffer1
 .endproc
+
 .proc DisplayBuffer1
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
@@ -1284,7 +1286,7 @@ end:    rts
         copy16  #btn_c, ptr
 loop:   ldy     #0
         lda     (ptr),y
-        beq     draw_title_bar  ; done!
+        beq     DrawTitleBar    ; done!
 
         lda     ptr             ; address for shadowed rect params
         sta     bitmap_addr
@@ -1318,7 +1320,7 @@ loop:   ldy     #0
 ;;; ============================================================
 ;;; Draw the title bar decoration
 
-draw_title_bar:
+.proc DrawTitleBar
         kOffsetLeft     = 115  ; pixels from left of client area
         kOffsetTop      = 22   ; pixels from top of client area (up!)
         ldx     winfo::left+1
@@ -1342,9 +1344,12 @@ draw_title_bar:
         MGTK_CALL MGTK::ShowCursor
         jsr     DisplayBuffer2
         rts
+.endproc
 
-        ;; Traps FP error via call to $36 from MON.COUT, resets stack
-        ;; and returns to the input loop.
+;;; ============================================================
+;;; Traps FP error via call to $36 from MON.COUT, resets stack
+;;; and returns to the input loop.
+
 .proc ErrorHook
         bit     LCBANK1
         bit     LCBANK1
@@ -1385,14 +1390,20 @@ end:    rts
 END_PROC_AT
         sizeof_chrget_routine = .sizeof(chrget_routine)
 
+;;; ============================================================
+;;; Floating Point Relays
+
 .macro CALL_FP proc
+        pha                     ; Some procs depend on Z flag
         bit     ROMIN2
+        pla
         jsr     proc
+        pha
         bit     LCBANK1
         bit     LCBANK1
+        pla
         rts
 .endmacro
-
 
 CALL_FLOAT:
         CALL_FP FLOAT

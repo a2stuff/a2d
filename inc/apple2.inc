@@ -67,6 +67,7 @@ CHRGET          := $B1          ; Routine called by ROM
 TXTPTR          := $B8
 FAC             := $9D
 SHIFT_SIGN_EXT  := $A4          ; Zero before using FP ops
+ARG             := $A5
 
 ;;; Entry Points
 GIVAYF          := $E2F2        ; FAC from signed integer in (Y,A)
@@ -81,16 +82,16 @@ ZERO_FAC        := $E84E        ; FAC = 0
 LOG             := $E941        ; FAC = LOG(FAC)
 FMULT           := $E97F        ; FAC = (Y,A) * FAC
 FMULTT          := $E982        ; FAC = ARG * FAC
+LOAD_ARG        := $E9E3        ; ARG = (Y,A)
 DIV10           := $EA55        ; FAC = FAC / 10
 FDIV            := $EA66        ; FAC = (Y,A) / FAC
 FDIVT           := $EA69        ; FAC = ARG / FAC
-LOAD_ARG        := $EAE3        ; ARG = (Y,A)
 MOVFM           := $EAF9        ; FAC = (Y,A)
 LOAD_FAC        := $EAF9        ; FAC = (Y,A)
 MOVMF           := $EB2B        ; (Y,X) = FAC
 ROUND           := $EB2B        ; Round FAC, store at (Y,X)
-ARG_TO_FAC      := $EB53        ; ARG = FAC
-FAC_TO_ARG_R    := $EB63        ; FAC = ARG, rounded
+ARG_TO_FAC      := $EB53        ; FAC = ARG
+FAC_TO_ARG_R    := $EB63        ; ARG = FAC, rounded
 SGN             := $EB90        ; FAC = SGN(FAC)
 FLOAT           := $EB93        ; FAC = A as signed byte
 FLOAT1          := $EB9B        ; FAC from unsigned integer in FAC+1,2 eX
@@ -102,12 +103,13 @@ INT             := $EC23        ; FAC = INT(FAC)
 FIN             := $EC4A        ; Parse TEXTPTR to FAC (first char in A, C set if digit)
 FOUT            := $ED34        ; FAC as string to FBUFFR (trashes FAC)
 SQR             := $EE8D        ; FAC = SQR(FAC)
+FPWRT           := $EE97        ; FAC = ARG ^ FAC
 NEGOP           := $EED0        ; FAC = -FAC
 EXP             := $EF09        ; FAC = EXP(FAC)
 RND             := $EFAE        ; FAC = RND(FAC)
 COS             := $EFEA        ; FAC = COS(FAC)
 SIN             := $EFF1        ; FAC = SIN(FAC)
-TAN             := $F03A        ; FAC = SIN(FAC)
+TAN             := $F03A        ; FAC = TAN(FAC)
 ATN             := $F09E        ; FAC = ATN(FAC)
 
 ;;; Constants
