@@ -2564,6 +2564,9 @@ clear:  copy16  #HIRES_ADDR, ptr
 ;;; Settings - modified by Control Panels
 ;;; ============================================================
 
+        PAD_TO ::BELLDATA
+        .include "../lib/default_sound.s"
+
         PAD_TO ::SETTINGS
         .include "../lib/default_settings.s"
 

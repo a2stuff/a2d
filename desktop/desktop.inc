@@ -27,8 +27,9 @@ WINDOW_ENTRY_TABLES      := $1B00
 ;;; Used by DAs for window definitions
 DEFAULT_FONT    := $8800
 
-;;; DeskTopSettings structure loaded from disk on startup.
+;;; Settings loaded from disk on startup.
 SETTINGS        := $FF80 - kIntVectorsSize
+BELLDATA        := SETTINGS - kBellProcLength
 
 ;;; A 10k buffer that can be restored using overlays; load
 ;;; `kDynamicRoutineRestore5000` and call `JUMP_TABLE_RESTORE_OVL`

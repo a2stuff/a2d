@@ -18,3 +18,4 @@
 .define res_filename_melt zergehen
 .define res_filename_invert invers
 .define res_filename_calendar Kalender
+.define res_filename_sounds Tone

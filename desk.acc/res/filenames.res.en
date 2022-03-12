@@ -18,3 +18,4 @@
 .define res_filename_melt melt
 .define res_filename_invert invert
 .define res_filename_calendar Calendar
+.define res_filename_sounds Sounds

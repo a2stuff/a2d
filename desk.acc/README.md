@@ -14,6 +14,8 @@ Original desk accessories from MouseDesk:
   * Gives details about the computer, expanded memory, and what's in each slot.
 * [Control Panel](control.panel.s)
   * Modify DeskTop settings: desktop pattern, double-click speed, mouse tracking speed, and insertion point blink speed.
+* [Sounds](sounds.s)
+  * Select different alert sounds.
 * [Startup](startup.s)
   * Modify startup options, including launching the selector or copying to RAMCard.
 * [Joystick](joystick.s)

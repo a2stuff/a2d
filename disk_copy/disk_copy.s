@@ -22,6 +22,9 @@ DEFAULT_FONT    := $8800
 ;;; Settings - loaded over top of auxlc
 SETTINGS        := $F200 - .sizeof(DeskTopSettings)
 
+;;; Alert Sound - ditto
+BELLDATA        := SETTINGS - kBellProcLength
+
 ;;; ============================================================
 ;;; File Segments
 

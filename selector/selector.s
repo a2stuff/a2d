@@ -16,6 +16,7 @@ START           := $8E00
 
 OVERLAY_ADDR    := MGTKEntry + kAppSegmentSize
 SETTINGS        := OVERLAY_ADDR - .sizeof(DeskTopSettings)
+BELLDATA        := SETTINGS - kBellProcLength
 
 MLIEntry        := MLI
 

@@ -18,3 +18,4 @@
 .define res_filename_melt sciolto
 .define res_filename_invert inverso
 .define res_filename_calendar Calendario
+.define res_filename_sounds Suoni

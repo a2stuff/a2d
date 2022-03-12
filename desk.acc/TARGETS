@@ -1,6 +1,7 @@
 control.panel                   desk.acc/control.panels
 date.and.time                   desk.acc/control.panels
 joystick                        desk.acc/control.panels
+sounds                          desk.acc/control.panels
 startup.options                 desk.acc/control.panels
 system.speed                    desk.acc/control.panels
 flying.toasters                 desk.acc/screen.savers

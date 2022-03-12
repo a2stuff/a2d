@@ -16,6 +16,7 @@
 .define kFilenameSelectorList  .concat(kFilenameLocalDir, "/Selector.List")
 .define kFilenameDeskTopConfig .concat(kFilenameLocalDir, "/DeskTop.config")
 .define kFilenameDeskTopState  .concat(kFilenameLocalDir, "/DeskTop.file")
+.define kFilenameBellProc     .concat(kFilenameLocalDir, "/Bell.proc")
 .define kFilenameQuitSave      .concat(kFilenameLocalDir, "/Quit.tmp")
 .define kFilenameDADir         "Desk.Acc"
 .define kFilenamePreviewDir    "Preview"
@@ -109,6 +110,12 @@ DeskTopSettings::kStartupSkipSelector = %00000010 ; skip starting Selector, if s
 kDeskTopSettingsFileVersion = 2
 kDeskTopSettingsFileSize = 1 + .sizeof(DeskTopSettings)
 kDeskTopSettingsFileOffset = 1  ; offset into file of settings (first byte is version)
+
+;;; ============================================================
+;;; Alert Sounds
+
+kBellProcLength = 128
+BELLPROC   := $300
 
 ;;; ============================================================
 ;;; Alert library options

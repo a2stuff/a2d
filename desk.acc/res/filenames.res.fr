@@ -18,3 +18,4 @@
 .define res_filename_melt fondre
 .define res_filename_invert inverse
 .define res_filename_calendar Calendrier
+.define res_filename_sounds Sons

@@ -1,0 +1,2 @@
+.define res_string_window_title "Sons"
+.define res_string_label_alert "Son d'alerte :"
