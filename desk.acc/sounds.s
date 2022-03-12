@@ -360,6 +360,15 @@ textfont:       .addr   0
         MGTK_CALL MGTK::OpenWindow, winfo_listbox
 
         jsr     DrawWindow
+
+        jsr     SearchForCurrent
+        sta     selected_index
+    IF_POS
+        jsr     ScrollIntoView
+        lda     selected_index
+        jsr     HighlightIndex
+    END_IF
+
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
 .endproc
@@ -863,11 +872,85 @@ loop:   lda     #SELF_MODIFIED_BYTE
 .endproc
 
 ;;; ============================================================
+
+.proc SearchForCurrent
+        ldax    #BELLDATA
+        ldy     #kChecksumLength
+        jsr     CRC
+        sta     crc_lo
+        stx     crc_hi
+
+        lda     #0
+        sta     index
+
+        index := *+1
+loop:   lda     #SELF_MODIFIED_BYTE
+
+        asl
+        tay
+        lda     proc_table,y
+        ldx     proc_table+1,y
+        ldy     #kChecksumLength
+        jsr     CRC
+
+        crc_lo := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     next
+        crc_hi := *+1
+        cpx     #SELF_MODIFIED_BYTE
+        bne     next
+
+        ;; Match!
+        lda     index
+        rts
+
+next:   inc     index
+        lda     index
+        cmp     #kNumSounds
+        bne     loop
+
+        ;; Not Found
+        lda     #$FF
+        rts
+
+.endproc
+
+
+;;; ============================================================
+
+;;; Inputs: A,X = address, Y = number of bytes (<=128)
+.proc CRC
+        stax    addr
+
+        lda     #0
+        sta     hi
+        dey
+
+        addr := *+1
+:       eor     SELF_MODIFIED,y
+        rol                     ; shift left 16
+        rol     hi
+        php                     ; but stash the high bit that
+        ror                     ; was shifted out, and shift
+        plp                     ; it back in as the new low bit
+        rol
+
+        dey
+        bpl     :-
+
+        hi := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        rts
+.endproc
+
+;;; ============================================================
 ;;; Sound Routines
 ;;; ============================================================
 
 ;;; Wrappers for sound procs, which place the routine at the
 ;;; correct location and verify the length.
+
+kChecksumLength = 16
 
 .macro SOUND_PROC name
         .define __CURRENT_SOUND_PROC name
@@ -879,6 +962,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         .poporg
 .endproc
         .assert .sizeof(__CURRENT_SOUND_PROC) <= kBellProcLength, error, "Sound proc too large"
+        .assert .sizeof(__CURRENT_SOUND_PROC) >= kChecksumLength, error, "Sound proc too small"
         .undefine __CURRENT_SOUND_PROC
 .endmacro
 
