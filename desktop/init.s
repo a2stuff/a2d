@@ -83,31 +83,7 @@ start:
 ;;; ============================================================
 ;;; Clear DHR screen to black before it is shown
 
-.scope clear_screen
-        ptr := $6
-        HIRES_ADDR = $2000
-        kHiresSize = $2000
-
-        sta     RAMWRTON        ; Clear aux
-        jsr     clear
-        sta     RAMWRTOFF       ; Clear main
-        jsr     clear
-        jmp     done
-
-clear:  copy16  #HIRES_ADDR, ptr
-        lda     #0              ; clear to black
-        ldx     #>kHiresSize    ; number of pages
-        ldy     #0              ; pointer within page
-:       sta     (ptr),y
-        iny
-        bne     :-
-        inc     ptr+1
-        dex
-        bne     :-
-        rts
-
-done:
-.endscope
+        jsr     ClearDHRToBlack
 
 ;;; ============================================================
 ;;; Detect Machine Type - set flags and periodic task delay
@@ -1283,6 +1259,7 @@ str_volume_type_unknown:
 ;;; ============================================================
 
         .include "../lib/detect_lcmeve.s"
+        .include "../lib/clear_dhr.s"
 
 ;;; ============================================================
 

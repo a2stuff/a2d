@@ -2525,32 +2525,6 @@ pb2_initial_state:
         .byte   0
 
 ;;; ============================================================
-;;; Clear DHR screen to black
-
-.proc ClearDHRToBlack
-        ptr := $6
-        HIRES_ADDR = $2000
-        kHiresSize = $2000
-
-        sta     RAMWRTON        ; Clear aux
-        jsr     clear
-        sta     RAMWRTOFF       ; Clear main
-        FALL_THROUGH_TO clear
-
-clear:  copy16  #HIRES_ADDR, ptr
-        lda     #0              ; clear to black
-        ldx     #>kHiresSize    ; number of pages
-        ldy     #0              ; pointer within page
-:       sta     (ptr),y
-        iny
-        bne     :-
-        inc     ptr+1
-        dex
-        bne     :-
-        rts
-.endproc
-
-;;; ============================================================
 
         .include "../lib/menuclock.s"
         .include "../lib/datetime.s"
@@ -2559,6 +2533,7 @@ clear:  copy16  #HIRES_ADDR, ptr
         .include "../lib/muldiv.s"
         .include "../lib/bell.s"
         .include "../lib/detect_lcmeve.s"
+        .include "../lib/clear_dhr.s"
 
 ;;; ============================================================
 ;;; Settings - modified by Control Panels
