@@ -493,6 +493,13 @@ window_title:
         PASCAL_STRING res_string_window_title
 
 ;;; ==================================================
+
+.macro ROM_CALL addr
+        jsr     ROMCall
+        .addr   addr
+.endmacro
+
+;;; ==================================================
 ;;; DA Init
 
 .proc Init
@@ -532,19 +539,19 @@ loop:   lda     chrget_routine-1,x
         copy16  #ErrorHook, COUT_HOOK ; set up FP error handler
 
         lda     #1
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         ldxy    #farg
-        jsr     CALL_ROUND
+        ROM_CALL ROUND
         lda     #0              ; set FAC to 0
-        jsr     CALL_FLOAT
-        jsr     CALL_FADD
-        jsr     CALL_FOUT
+        ROM_CALL FLOAT
+        ROM_CALL FADD
+        ROM_CALL FOUT
         lda     #$07
-        jsr     CALL_FMULT
+        ROM_CALL FMULT
         lda     #$00
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         ldxy    #farg
-        jsr     CALL_ROUND
+        ROM_CALL ROUND
 
         tsx
         stx     saved_stack
@@ -810,9 +817,9 @@ miss:   clc
         lda     #'c'
         jsr     DepressButton
         lda     #0
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         ldxy    #farg
-        jsr     CALL_ROUND
+        ROM_CALL ROUND
         lda     #'='
         sta     calc_op
         lda     #0
@@ -1051,7 +1058,7 @@ rts3:   rts
         lda     calc_g
         bne     reparse
         lda     #0
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         jmp     do_op
 
 :       lda     calc_g
@@ -1062,7 +1069,7 @@ rts3:   rts
 
 reparse:copy16  #text_buffer1, TXTPTR
         jsr     CHRGET
-        jsr     CALL_FIN
+        ROM_CALL FIN
 
 do_op:  pla
         ldx     calc_op
@@ -1072,22 +1079,22 @@ do_op:  pla
 
         cpx     #'+'
         bne     :+
-        jsr     CALL_FADD
+        ROM_CALL FADD
         jmp     PostOp
 
 :       cpx     #'-'
         bne     :+
-        jsr     CALL_FSUB
+        ROM_CALL FSUB
         jmp     PostOp
 
 :       cpx     #'*'
         bne     :+
-        jsr     CALL_FMULT
+        ROM_CALL FMULT
         jmp     PostOp
 
 :       cpx     #'/'
         bne     :+
-        jsr     CALL_FDIV
+        ROM_CALL FDIV
         jmp     PostOp
 
 :       cpx     #'='
@@ -1098,9 +1105,9 @@ do_op:  pla
 .endproc
 
 .proc PostOp
-        ldxy    #farg          ; after the FP kOperation is done
-        jsr     CALL_ROUND
-        jsr     CALL_FOUT            ; output as null-terminated string to FBUFFR
+        ldxy    #farg           ; after the FP kOperation is done
+        ROM_CALL ROUND
+        ROM_CALL FOUT           ; output as null-terminated string to FBUFFR
 
         ldy     #0              ; count the size
 sloop:  lda     FBUFFR,y
@@ -1391,47 +1398,9 @@ END_PROC_AT
         sizeof_chrget_routine = .sizeof(chrget_routine)
 
 ;;; ============================================================
-;;; Floating Point Relays
-
-.macro CALL_FP proc
-        pha                     ; Some procs depend on Z flag
-        bit     ROMIN2
-        pla
-        jsr     proc
-        pha
-        bit     LCBANK1
-        bit     LCBANK1
-        pla
-        rts
-.endmacro
-
-CALL_FLOAT:
-        CALL_FP FLOAT
-
-CALL_FADD:
-        CALL_FP FADD
-
-CALL_FSUB:
-        CALL_FP FSUB
-
-CALL_FMULT:
-        CALL_FP FMULT
-
-CALL_FDIV:
-        CALL_FP FDIV
-
-CALL_FIN:
-        CALL_FP FIN
-
-CALL_FOUT:
-        CALL_FP FOUT
-
-CALL_ROUND:
-        CALL_FP ROUND
-
-;;; ============================================================
 
         .include "../lib/drawstring.s"
+        .include "../lib/rom_call.s"
 
 ;;; ============================================================
 

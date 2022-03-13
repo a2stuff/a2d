@@ -562,6 +562,13 @@ window_title:
         PASCAL_STRING res_string_window_title
 
 ;;; ==================================================
+
+.macro ROM_CALL addr
+        jsr     ROMCall
+        .addr   addr
+.endmacro
+
+;;; ==================================================
 ;;; DA Init
 
 init:   MGTK_CALL MGTK::OpenWindow, winfo
@@ -601,19 +608,19 @@ loop:   lda     chrget_routine-1,x
         copy16  #ErrorHook, COUT_HOOK ; set up FP error handler
 
         lda     #1
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         ldxy    #farg
-        jsr     CALL_ROUND
+        ROM_CALL ROUND
         lda     #0              ; set FAC to 0
-        jsr     CALL_FLOAT
-        jsr     CALL_FADD
-        jsr     CALL_FOUT
+        ROM_CALL FLOAT
+        ROM_CALL FADD
+        ROM_CALL FOUT
         lda     #$07
-        jsr     CALL_FMULT
+        ROM_CALL FMULT
         lda     #$00
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         ldxy    #farg
-        jsr     CALL_ROUND
+        ROM_CALL ROUND
 
         tsx
         stx     saved_stack
@@ -859,9 +866,9 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         cmp     #Function::clear
     IF_EQ
         lda     #0
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         ldxy    #farg
-        jsr     CALL_ROUND
+        ROM_CALL ROUND
         lda     #Function::equals
         sta     calc_op
         lda     #0
@@ -974,7 +981,7 @@ ret:   rts
         ;; Parse `text_buffer1` into FAC.
         copy16  #text_buffer1, TXTPTR
         jsr     CHRGET
-        jsr     CALL_FIN
+        ROM_CALL FIN
     END_IF
         pla
 
@@ -982,83 +989,83 @@ ret:   rts
         ;; Function? These modify the FAC in place
         cmp     #Function::fn_sin
     IF_EQ
-        jsr     CALL_SIN
+        ROM_CALL SIN
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_cos
     IF_EQ
-        jsr     CALL_COS
+        ROM_CALL COS
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_tan
     IF_EQ
-        jsr     CALL_TAN
+        ROM_CALL TAN
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_asin
     IF_EQ
         ;; ASIN(x) = ATN(X/SQR(-X*X+1))
-        jsr     CALL_FAC_TO_ARG_R ; ARG = X
+        ROM_CALL FAC_TO_ARG_R   ; ARG = X
         jsr     PushARG
-        jsr     CALL_FMULTT     ; FAC = X * X
-        jsr     CALL_NEGOP      ; FAC = -X*X
+        ROM_CALL FMULTT         ; FAC = X * X
+        ROM_CALL NEGOP          ; FAC = -X*X
         lday    #CON_ONE
-        jsr     CALL_FADD       ; FAC = -X*X+1
-        jsr     CALL_ABS        ;
-        jsr     CALL_SQR        ; FAC = SQR(-X*X+1)
+        ROM_CALL FADD           ; FAC = -X*X+1
+        ROM_CALL ABS
+        ROM_CALL SQR            ; FAC = SQR(-X*X+1)
         jsr     PopARG          ; ARG = X
-        jsr     CALL_FDIVT      ; FAC = X/SQR(-X*X+1)
-        jsr     CALL_ATN        ; FAC = ATN(X/SQR(-X*X+1))
+        ROM_CALL FDIVT          ; FAC = X/SQR(-X*X+1)
+        ROM_CALL ATN            ; FAC = ATN(X/SQR(-X*X+1))
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_acos
     IF_EQ
         ;; ACOS(x) = -ATN(X/SQR(-X*X+l))+1.5708
-        jsr     CALL_FAC_TO_ARG_R ; ARG = X
+        ROM_CALL FAC_TO_ARG_R   ; ARG = X
         jsr     PushARG
-        jsr     CALL_FMULTT     ; FAC = X * X
-        jsr     CALL_NEGOP      ; FAC = -X*X
+        ROM_CALL FMULTT         ; FAC = X * X
+        ROM_CALL NEGOP          ; FAC = -X*X
         lday    #CON_ONE
-        jsr     CALL_FADD       ; FAC = -X*X+1
-        jsr     CALL_ABS        ;
-        jsr     CALL_SQR        ; FAC = SQR(-X*X+1)
+        ROM_CALL FADD           ; FAC = -X*X+1
+        ROM_CALL ABS
+        ROM_CALL SQR            ; FAC = SQR(-X*X+1)
         jsr     PopARG          ; ARG = X
-        jsr     CALL_FDIVT      ; FAC = X/SQR(-X*X+1)
-        jsr     CALL_ATN        ; FAC = ATN(X/SQR(-X*X+1))
-        jsr     CALL_NEGOP      ; FAC = -ATN(X/SQR(-X*X+1))
+        ROM_CALL FDIVT          ; FAC = X/SQR(-X*X+1)
+        ROM_CALL ATN            ; FAC = ATN(X/SQR(-X*X+1))
+        ROM_CALL NEGOP          ; FAC = -ATN(X/SQR(-X*X+1))
         lday    #CON_HALF_PI    ;
-        jsr     CALL_FADD       ; FAC = -ATN(X/SQR(-X*X+1))+1
+        ROM_CALL FADD           ; FAC = -ATN(X/SQR(-X*X+1))+1
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_atan
     IF_EQ
-        jsr     CALL_ATN
+        ROM_CALL ATN
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_sqrt
     IF_EQ
-        jsr     CALL_SQR
+        ROM_CALL SQR
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_neg
     IF_EQ
-        jsr     CALL_NEGOP
+        ROM_CALL NEGOP
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_ln
     IF_EQ
-        jsr     CALL_LOG
+        ROM_CALL LOG
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_exp
     IF_EQ
-        jsr     CALL_EXP
+        ROM_CALL EXP
         jmp     PostOp
     END_IF
         cmp     #Function::fn_inv
     IF_EQ
         lday    #CON_ONE
-        jsr     CALL_FDIV
+        ROM_CALL FDIV
         jmp     PostFunc
     END_IF
 
@@ -1076,7 +1083,7 @@ ret:   rts
         bne     do_op           ; reparsed above, proceed
 
         lda     #0              ; otherwise, reset to 0
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         jmp     do_op
     END_IF
 
@@ -1104,28 +1111,28 @@ do_op:
 
         cpx     #Function::op_add
         bne     :+
-        jsr     CALL_FADD       ; FAC = (Y,A) + FAC
+        ROM_CALL FADD           ; FAC = (Y,A) + FAC
         jmp     PostOp
 
 :       cpx     #Function::op_subtract
         bne     :+
-        jsr     CALL_FSUB       ; FAC = (Y,A) - FAC
+        ROM_CALL FSUB           ; FAC = (Y,A) - FAC
         jmp     PostOp
 
 :       cpx     #Function::op_multiply
         bne     :+
-        jsr     CALL_FMULT      ; FAC = (Y,A) * FAC
+        ROM_CALL FMULT          ; FAC = (Y,A) * FAC
         jmp     PostOp
 
 :       cpx     #Function::op_divide
         bne     :+
-        jsr     CALL_FDIV       ; FAC = (Y,A) / FAC
+        ROM_CALL FDIV           ; FAC = (Y,A) / FAC
         jmp     PostOp
 
 :       cpx     #Function::op_power
         bne     :+
-        jsr     CALL_LOAD_ARG   ; ARG = (A,Y)
-        jsr     CALL_FPWRT
+        ROM_CALL LOAD_ARG       ; ARG = (A,Y)
+        ROM_CALL FPWRT          ; FAC = ARG ^ FAC
         jmp     PostOp
 
 :       cpx     #Function::equals
@@ -1141,10 +1148,10 @@ do_op:
 
 .proc PostOp
         ldxy    #farg           ; save intermediate result
-        jsr     CALL_ROUND
+        ROM_CALL ROUND
 
 ep2:    jsr     PushFAC
-        jsr     CALL_FOUT       ; output as null-terminated string to FBUFFR
+        ROM_CALL FOUT       ; output as null-terminated string to FBUFFR
         jsr     PopFAC
 
         ldy     #0              ; count the size
@@ -1509,78 +1516,8 @@ END_PROC_AT
 
 ;;; ============================================================
 
-.macro CALL_FP proc
-        php                     ; some calls need Z=0
-        bit     ROMIN2
-        plp
-        jsr     proc
-        php
-        bit     LCBANK1
-        bit     LCBANK1
-        plp
-        rts
-.endmacro
-
-CALL_FLOAT:
-        CALL_FP FLOAT
-
-CALL_FADD:
-        CALL_FP FADD
-
-CALL_FSUB:
-        CALL_FP FSUB
-
-CALL_FMULT:
-        CALL_FP FMULT
-
-CALL_FDIV:
-        CALL_FP FDIV
-
-CALL_FDIVT:
-        CALL_FP FDIVT
-
-CALL_FIN:
-        CALL_FP FIN
-
-CALL_FOUT:
-        CALL_FP FOUT
-
-CALL_ROUND:
-        CALL_FP ROUND
-
-CALL_SIN:
-        CALL_FP SIN
-CALL_COS:
-        CALL_FP COS
-CALL_TAN:
-        CALL_FP TAN
-CALL_ATN:
-        CALL_FP ATN
-CALL_NEGOP:
-        CALL_FP NEGOP
-CALL_EXP:
-        CALL_FP EXP
-
-CALL_LOG:
-        CALL_FP LOG
-CALL_SQR:
-        CALL_FP SQR
-CALL_FPWRT:
-        CALL_FP FPWRT
-CALL_FMULTT:
-        CALL_FP FMULTT
-CALL_LOAD_ARG:
-        CALL_FP LOAD_ARG
-CALL_ARG_TO_FAC:
-        CALL_FP ARG_TO_FAC
-CALL_FAC_TO_ARG_R:
-        CALL_FP FAC_TO_ARG_R
-CALL_ABS:
-        CALL_FP ABS
-
-;;; ============================================================
-
         .include "../lib/drawstring.s"
+        .include "../lib/rom_call.s"
 
 ;;; ============================================================
 
