@@ -14786,11 +14786,11 @@ do5:    jsr     ClosePromptDialog
 
         ;; --------------------------------------------------
         ;; CopyDialogLifecycle::exists
-do3:    jsr     Bell
-        lda     #winfo_prompt_dialog::kWindowId
+do3:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 6, aux::str_exists_prompt
         jsr     DrawYesNoAllCancelButtons
+        jsr     Bell
 :       jsr     PromptInputLoop
         bmi     :-
         pha
@@ -14802,8 +14802,7 @@ do3:    jsr     Bell
 
         ;; --------------------------------------------------
         ;; CopyDialogLifecycle::too_large
-do4:    jsr     Bell
-        lda     #winfo_prompt_dialog::kWindowId
+do4:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         bit     move_flag
     IF_MINUS
@@ -14812,6 +14811,7 @@ do4:    jsr     Bell
         param_call      DrawDialogLabel, 6, aux::str_large_copy_prompt
     END_IF
         jsr     DrawOkCancelButtons
+        jsr     Bell
 :       jsr     PromptInputLoop
         bmi     :-
         pha
@@ -14888,11 +14888,11 @@ do3:    jsr     ClosePromptDialog
 
         ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::too_large
-do4:    jsr     Bell
-        lda     #winfo_prompt_dialog::kWindowId
+do4:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 6, aux::str_ramcard_full
         jsr     DrawOkButton
+        jsr     Bell
 :       jsr     PromptInputLoop
         bmi     :-
         pha
@@ -15048,8 +15048,9 @@ do3:    ldy     #1
 do2:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkCancelButtons
-LADC4:  jsr     PromptInputLoop
-        bmi     LADC4
+        jsr     Bell
+:       jsr     PromptInputLoop
+        bmi     :-
         bne     LADF4
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
