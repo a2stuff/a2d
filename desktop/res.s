@@ -1290,7 +1290,7 @@ checkerboard_pattern:
 ;;; ============================================================
 ;;; Resources for clock on menu bar
 
-        DEFINE_POINT pos_clock, 475, 10
+        DEFINE_POINT pos_clock, kScreenWidth - 11, 10
 
 str_time:
         PASCAL_STRING "00:00 XM" ; do not localize
@@ -1299,19 +1299,14 @@ str_4_spaces:
         PASCAL_STRING "    "    ; do not localize
 
 dow_strings:
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_1)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_2)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_3)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_4)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_5)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_6)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_7)
+        PASCAL_STRING res_string_weekday_abbrev_1, 3
+        PASCAL_STRING res_string_weekday_abbrev_2, 3
+        PASCAL_STRING res_string_weekday_abbrev_3, 3
+        PASCAL_STRING res_string_weekday_abbrev_4, 3
+        PASCAL_STRING res_string_weekday_abbrev_5, 3
+        PASCAL_STRING res_string_weekday_abbrev_6, 3
+        PASCAL_STRING res_string_weekday_abbrev_7, 3
         ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
-
-.params dow_str_params
-addr:   .addr   0
-length: .byte   4               ; includes trailing space
-.endparams
 
 parsed_date:
         .tag ParsedDateTime

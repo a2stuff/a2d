@@ -65,13 +65,13 @@ ones:   pla                     ; ones
         iny
         sta     str_time,y
 
+        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bmi     done
+
         ;; Space
         lda     #' '
         iny
         sta     str_time,y
-
-        bit     SETTINGS + DeskTopSettings::clock_24hours
-        bmi     done
 
         lda     hour
         cmp     #12

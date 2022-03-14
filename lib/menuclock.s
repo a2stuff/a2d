@@ -52,12 +52,23 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
 
         MGTK_CALL MGTK::MoveTo, pos_clock
 
+        ;; Components are drawn right-to-left.
+
         ;; --------------------------------------------------
-        ;; Day of Week
+        ;; Time
 
         copy16  #parsed_date, $0A
         ldax    #DATELO
         jsr     ParseDatetime
+
+        ldax    #parsed_date
+        jsr     MakeTimeString
+
+        param_call DrawStringRight, str_time
+        param_call DrawStringRight, str_space
+
+        ;; --------------------------------------------------
+        ;; Day of Week
 
         ;; TODO: Make DOW calc work on ParsedDateTime
         sub16   parsed_date + ParsedDateTime::year, #1900, parsed_date + ParsedDateTime::year
@@ -69,20 +80,17 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         asl
         clc
         adc     #<dow_strings
-        sta     dow_str_params::addr
+        tay
         lda     #0
         adc     #>dow_strings
-        sta     dow_str_params::addr+1
-        MGTK_CALL MGTK::DrawText, dow_str_params
+        tax
+        tya
+        jsr     DrawStringRight
 
         ;; --------------------------------------------------
-        ;; Time
+        ;; In case string got shorter
 
-        ldax    #parsed_date
-        jsr     MakeTimeString
-
-        param_call DrawString, str_time
-        param_call DrawString, str_4_spaces ; in case it got shorter
+        param_call DrawStringRight, str_4_spaces
 
         ;; --------------------------------------------------
         ;; Restore the previous GrafPort
@@ -90,6 +98,30 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         copy16  getport_params::portptr, @addr
         MGTK_CALL MGTK::SetPort, 0, @addr
         rts
+
+;;; Draw string right-aligned to current coords, updating the
+;;; current coords to be on the left side of the string.
+.proc DrawStringRight
+        params := $6
+        textptr := $6
+        textlen := $8
+        result := $9
+
+        stax    textptr
+        ldy     #0
+        lda     (textptr),y
+        sta     textlen
+        inc16   textptr
+        MGTK_CALL MGTK::TextWidth, params
+        sub16   #0, result, result
+        lda     #0
+        sta     result+2
+        sta     result+3
+        MGTK_CALL MGTK::Move, result
+        MGTK_CALL MGTK::DrawText, params
+        MGTK_CALL MGTK::Move, result
+done:   rts
+.endproc
 
 last_dt:
         .tag    DateTime        ; previous date/time
