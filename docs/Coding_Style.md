@@ -140,7 +140,7 @@ xcoord: .word
 * Use binary `%00110110` for bit patterns
 * Use decimal for numbers (counts, dimensions, etc)
 * Use hex for geeky values, e.g. $7F (bit mask), $80 (high bit),
-   $FF (all bits set) when bits would be less readble.
+   $FF (all bits set) when bits would be less readable.
 * Avoid magic numbers where possible:
     * Define local variables (e.g. `ptr := $06`)
     * Define offsets, constants, etc.

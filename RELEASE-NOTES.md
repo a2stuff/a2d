@@ -16,7 +16,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Portuguese
   * German
 * Mouse Keys mode simplified: ([#185](https://github.com/a2stuff/a2d/issues/185))
-  * **Open-Apple+Solid-Apple++Space** to enter Mouse Keys mode. A sound will play.
+  * **Open-Apple+Solid-Apple+Space** to enter Mouse Keys mode. A sound will play.
   * **Solid-Apple** acts as mouse button.
   * **Esc** to exit Mouse Keys mode. A sound will play.
 
@@ -56,11 +56,11 @@ Project Page: https://github.com/a2stuff/a2d
 * Show appropriate error when trying to replace an item with itself or an item it contains. ([#630](https://github.com/a2stuff/a2d/issues/630), [#634](https://github.com/a2stuff/a2d/issues/634), [#635](https://github.com/a2stuff/a2d/issues/635), [#636](https://github.com/a2stuff/a2d/issues/636))
 * Show appropriate error when a non-ProDOS-8 storage type (e.g. GS/OS forked file) is encountered. ([#631](https://github.com/a2stuff/a2d/issues/631))
 * Support opening archives using AUTO UnShrinkIt by Andrew E. Nicholas.
-* Desk accessories, directories, and previewable files can now be the target of Shortcuts.
+* Desk accessories, folders, volumes, and previewable files can now be the target of Shortcuts.
 * Disk Copy moved to a separate file that can be optionally removed, allowing other components to fit on a floppy disk. ([#216](https://github.com/a2stuff/a2d/issues/216))
 * File Picker Dialogs:
   * Type-down selection (while holding **Apple**) is supported. ([#610](https://github.com/a2stuff/a2d/issues/610))
-  * Pressing **Apple+Tab** (or **Shift+Tab**, when detectable), or holding **Apple** (or **Shift**, when detectable) while clicking Change Drive reverses the order. ([#598](https://github.com/a2stuff/a2d/issues/598), [#605](https://github.com/a2stuff/a2d/issues/605))
+  * Pressing **Apple+Tab** (or **Shift+Tab**, when detectable), or holding **Apple** (or **Shift**, when detectable) while clicking Change Drive reverses the order in which the drive changes. ([#598](https://github.com/a2stuff/a2d/issues/598), [#605](https://github.com/a2stuff/a2d/issues/605))
 * Keyboard-related changes:
   * Holding **Solid-Apple** while double-clicking, or holding **Apple** while using **File > Open**, or **Open-Apple+Solid-Apple+O**, or **Open-Apple+Solid-Apple+Down** opens the selected items then closes parent window. ([#9](https://github.com/a2stuff/a2d/issues/9), [#625](https://github.com/a2stuff/a2d/issues/625), ([#660](https://github.com/a2stuff/a2d/issues/660))
   * Holding **Apple** while clicking a window's close box, or pressing **Open-Apple+Solid-Apple+W**  closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266), [#626](https://github.com/a2stuff/a2d/issues/626))
@@ -76,7 +76,7 @@ Project Page: https://github.com/a2stuff/a2d
   * **Open-Apple+Solid-Apple+Up** opens parent window or selects volume icon and closes current window. ([#661](https://github.com/a2stuff/a2d/issues/661))
   * **Return** is a shortcut for **File > Rename...**. ([#275](https://github.com/a2stuff/a2d/issues/275))
   * Arrow keys change selected icon. ([#274](https://github.com/a2stuff/a2d/issues/274))
-  * **Tab** or **\`** changes selected icon in alphabetical order; **Shuft+`** (or **Shift+Tab**, when detectable) changes selected icon in reverse. ([#275](https://github.com/a2stuff/a2d/issues/275), [#671](https://github.com/a2stuff/a2d/issues/671))
+  * **Tab** or **\`** changes selected icon in alphabetical order; **Shift+\`** (or **Shift+Tab**, when detectable) changes selected icon in reverse. ([#275](https://github.com/a2stuff/a2d/issues/275), [#671](https://github.com/a2stuff/a2d/issues/671))
   * Type-down selection is supported. ([#275](https://github.com/a2stuff/a2d/issues/275))
 
 ### Desk Accessory and Apple Menu Enhancements
@@ -132,7 +132,7 @@ Project Page: https://github.com/a2stuff/a2d
   * **Invert**
     * Invert the screen until the next click/key. ([#261](https://github.com/a2stuff/a2d/issues/261))
   * **Matrix**
-    * Digital rain effect, inspired by [https://github.com/neilk/apple-ii-matrix](https://github.com/neilk/apple-ii-matrix).
+    * Digital rain effect, inspired by https://github.com/neilk/apple-ii-matrix.
 
 Note that the desk accessories from version 1.2 will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
@@ -224,11 +224,11 @@ from the **Apple** menu.
 * Hardware/Emulator Specific:
   * IIc Plus: Doesn't spin slot 5 drives constantly. (Use **Special > Check Drive**) ([#25](https://github.com/a2stuff/a2d/issues/25))
   * Laser 128: Avoid hangs checking SmartPort status. (Use **Special > Check Drive**) ([#138](https://github.com/a2stuff/a2d/issues/138))
-  * IIgs
+  * IIgs:
     * Color DHR is re-enabled on exit. ([#43](https://github.com/a2stuff/a2d/issues/43))
     * Mono DHR is re-enabled when returning from system control panel. ([#193](https://github.com/a2stuff/a2d/issues/193), [#440](https://github.com/a2stuff/a2d/issues/440))
     * `/RAM5` is now correctly recognized as a RAMCard. ([#438](https://github.com/a2stuff/a2d/issues/438), [#439](https://github.com/a2stuff/a2d/issues/439))
-  * Macintosh LC PDS IIe Option Card
+  * Macintosh LC PDS IIe Option Card:
     * Doesn't crash on startup. ([#93](https://github.com/a2stuff/a2d/issues/93))
     * Correct problems with interrupts affecting AppleTalk. ([#129](https://github.com/a2stuff/a2d/issues/129))
   * KEGS-based IIgs Emulators: Don't crash on startup. ([#85](https://github.com/a2stuff/a2d/issues/85))
