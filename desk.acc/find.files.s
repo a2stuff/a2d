@@ -1157,6 +1157,8 @@ ignore_char:
 ;;; ------------------------------------------------------------
 
 .proc DoChar
+        jsr     ObscureCursor
+
         ;; check length
         tax
         clc
@@ -1178,7 +1180,8 @@ ignore_char:
 ;;; ------------------------------------------------------------
 
 .proc DoMetaLeft
-        jsr     MoveIPToEnd
+        jsr     ObscureCursor
+        jsr     MoveIPToStart
         jmp     InputLoop
 .endproc
 
@@ -1220,6 +1223,7 @@ done:   rts
 ;;; ------------------------------------------------------------
 
 .proc DoLeft
+        jsr     ObscureCursor
         lda     buf_left            ; length of string to left of IP
         beq     done
 
@@ -1250,6 +1254,7 @@ done:   jmp     InputLoop
 ;;; ------------------------------------------------------------
 
 .proc DoMetaRight
+        jsr     ObscureCursor
         jsr     MoveIPToEnd
         jmp     InputLoop
 .endproc
@@ -1288,6 +1293,7 @@ done:   rts
 ;;; ------------------------------------------------------------
 
 .proc DoRight
+        jsr     ObscureCursor
         lda     buf_right       ; length of string from IP rightwards
         cmp     #2              ; must be at least one char (plus IP)
         bcc     done
@@ -1319,6 +1325,7 @@ done:   jmp     InputLoop
 ;;; ------------------------------------------------------------
 
 .proc DoDelete
+        jsr     ObscureCursor
         lda     buf_left            ; length of string to left of IP
         beq     done
 
@@ -1947,6 +1954,15 @@ line:   .byte   0
         sec                     ; main>aux
         jsr     AUXMOVE
 
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc ObscureCursor
+        pha
+        MGTK_CALL MGTK::ObscureCursor
+        pla
         rts
 .endproc
 

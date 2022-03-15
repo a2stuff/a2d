@@ -973,6 +973,7 @@ exit:   jsr     InitSetGrafport
 ;;; ============================================================
 
 .proc KeyDelete
+        jsr     ObscureCursor
         jsr     HandleDeleteKey
         rts
 .endproc
@@ -2737,6 +2738,7 @@ yes:    clc
 ;;; ============================================================
 
 .proc HandleF1OtherKey
+        jsr     ObscureCursor
         sta     tmp
         bit     input_allow_all_chars_flag
         bmi     :+
@@ -2794,6 +2796,7 @@ tmp:    .byte   0
 ;;; ============================================================
 
 .proc HandleF1LeftKey
+        jsr     ObscureCursor
         lda     buf_input1_left
         bne     :+
         rts
@@ -2827,6 +2830,7 @@ skip:   ldx     buf_input1_left
 ;;; ============================================================
 
 .proc HandleF1RightKey
+        jsr     ObscureCursor
         lda     buf_input_right
         cmp     #2
         bcs     :+
@@ -2862,6 +2866,7 @@ finish: dec     buf_input_right
 ;;; ============================================================
 
 .proc HandleF1MetaLeftKey
+        jsr     ObscureCursor
         lda     buf_input1_left
         bne     :+
         rts
@@ -2898,6 +2903,7 @@ skip:   sty     buf_input1_left
 ;;; ============================================================
 
 .proc HandleF1MetaRightKey
+        jsr     ObscureCursor
         jsr     MoveIPToEndF1
         jsr     RedrawInput
         jsr     SelectMatchingFileInListF1
@@ -2908,6 +2914,7 @@ skip:   sty     buf_input1_left
 
 .if FD_EXTENDED
 .proc HandleF2OtherKey
+        jsr     ObscureCursor
         sta     tmp
         bit     input_allow_all_chars_flag
         bmi     :+
@@ -2968,6 +2975,7 @@ tmp:    .byte   0
 
 .if FD_EXTENDED
 .proc HandleF2LeftKey
+        jsr     ObscureCursor
         lda     buf_input2_left
         bne     l1
         rts
@@ -3002,6 +3010,7 @@ l3:     ldx     buf_input2_left
 
 .if FD_EXTENDED
 .proc HandleF2RightKey
+        jsr     ObscureCursor
         lda     buf_input_right
         cmp     #$02
         bcs     l1
@@ -3037,6 +3046,7 @@ l3:     dec     buf_input_right
 
 .if FD_EXTENDED
 .proc HandleF2MetaLeftKey
+        jsr     ObscureCursor
         lda     buf_input2_left
         bne     l1
         rts
@@ -3072,6 +3082,7 @@ l4:     lda     buf_input2_left,y
 
 .if FD_EXTENDED
 .proc HandleF2MetaRightKey
+        jsr     ObscureCursor
         jsr     MoveIPToEndF2
         jsr     RedrawInput
         jsr     SelectMatchingFileInListF2
@@ -3520,5 +3531,14 @@ done:   rts
 done:   rts
 .endproc
 .endif
+
+;;; ============================================================
+
+.proc ObscureCursor
+        pha
+        MGTK_CALL MGTK::ObscureCursor
+        pla
+        rts
+.endproc
 
 ;;; ============================================================

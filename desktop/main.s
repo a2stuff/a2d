@@ -14599,6 +14599,7 @@ do_all: jsr     SetPenModeXOR
 .proc LeftWithMod
         lda     has_input_field_flag
         beq     :+
+        jsr     ObscureCursor
         jsr     InputFieldIPStart
 :       return  #$FF
 .endproc
@@ -14606,6 +14607,7 @@ do_all: jsr     SetPenModeXOR
 .proc RightWithMod
         lda     has_input_field_flag
         beq     :+
+        jsr     ObscureCursor
         jsr     InputFieldIPEnd
 :       return  #$FF
 .endproc
@@ -14616,6 +14618,7 @@ do_all: jsr     SetPenModeXOR
         bit     format_erase_overlay_flag ; BUG? Should never be set here based on caller test.
         jmi     format_erase_overlay__PromptHandleKeyRight
 
+        jsr     ObscureCursor
         jsr     InputFieldIPLeft
 done:   return  #$FF
 .endproc
@@ -14626,6 +14629,7 @@ done:   return  #$FF
         bit     format_erase_overlay_flag ; BUG? Should never be set here based on caller test.
         jmi     format_erase_overlay__PromptHandleKeyLeft
 
+        jsr     ObscureCursor
         jsr     InputFieldIPRight
 done:   return  #$FF
 .endproc
@@ -14651,6 +14655,7 @@ done:   return  #$FF
 .proc HandleKeyDelete
         lda     has_input_field_flag
         beq     :+
+        jsr     ObscureCursor
         jsr     InputFieldDeleteChar
 :       return  #$FF
 .endproc
@@ -16187,6 +16192,7 @@ ip_pos: .word   0
 ;;; When a non-control key is hit - insert the passed character
 
 .proc InputFieldInsertChar
+        jsr     ObscureCursor
         sta     char
 
         ;; Is there room?
@@ -16472,6 +16478,15 @@ done:   rts
 
 .proc ClearPathBuf1
         copy    #0, path_buf1   ; length
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc ObscureCursor
+        pha
+        MGTK_CALL MGTK::ObscureCursor
+        pla
         rts
 .endproc
 
