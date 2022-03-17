@@ -641,3 +641,60 @@ Repeat for each file picker:
 * In each field, type a control character that is not an alias for an arrow/Tab/Return/Escape, e.g. Control+D. Verify that it is ignored.
 * In each pathname field, type a non-path character (i.e. anything other A-Za-z0-9/.). Verify that it is ignored.
 * In the Shortcuts > Add/Edit a Shortcut... name field, type a non-path, non-control character. Verify that it is accepted.
+
+# Text Input Fields
+
+This covers:
+ * DeskTop's name prompt, used in:
+   * File > Duplicate...
+   * File > Rename...
+   * Special > Format a Disk...
+   * Special > Erase a Disk...
+ * Find Files DA.
+ * File picker - some have two fields.
+
+"IP" = Insertion Point, also known as the caret or cursor.
+
+Repeat for each field:
+ * Type a printable character.
+   * Should insert a character at IP, unless invalid in context or length limit reached.
+   * Mouse cursor should be hidden until moved.
+   * Test with IP at start, in middle, and at end of the string.
+ * Delete key
+   * Should delete character before IP, unless at start of string.
+   * Mouse cursor should be hidden until moved.
+   * Test with IP at start, in middle, and at end of the string.
+ * Left arrow
+   * Should move IP one character to the left, unless at start of string.
+   * Mouse cursor should be hidden until moved.
+   * Test with IP at start, in middle, and at end of the string.
+ * Right arrow
+   * Should move IP one character to the right, unless at end of string.
+   * Mouse cursor should be hidden until moved.
+   * Test with IP at start, in middle, and at end of the string.
+ * Apple+Left arrow
+   * Should move IP to start of string.
+   * Mouse cursor should be hidden until moved.
+   * Test with IP at start, in middle, and at end of the string.
+ * Apple+Right arrow
+   * Should move IP to end of string.
+   * Mouse cursor should be hidden until moved.
+   * Test at start, in middle, and at end of the string.
+ * Click to left of string.
+ * Click to left of IP, within the string.
+ * Click to right string.
+ * Click to right of IP, within the string.
+ * Place IP within string, click OK.
+ * Place IP at start of string, click OK.
+ * Place IP at end of string, click OK.
+
+For file pickers with two fields:
+ * Click in first field. Click in second field.
+ * Click in second field. Click in first field.
+ * Click in first field. Click OK.
+ * Click in second field. Click Cancel.
+
+Watch out for:
+ * Parts of the IP not erased.
+ * Text being truncated when OK clicked.
+ * IP being placed in the wrong place by a click.

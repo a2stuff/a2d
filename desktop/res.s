@@ -414,11 +414,11 @@ nextwinfo:      .addr   0
         ;; Clipping region that maintains the same coordinates as the dialog,
         ;; but ensures that text doesn't render outside the box.
 .params name_input_mapinfo
-        DEFINE_POINT viewloc, aux::kPromptDialogLeft, aux::kPromptDialogTop
+        DEFINE_POINT viewloc, aux::kPromptDialogLeft + kNameInputLeft + 1, aux::kPromptDialogTop + kNameInputTop + 1
         .addr   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   0
-        DEFINE_RECT maprect, 0, 0, kNameInputLeft + kNameInputWidth - 2, 100 ; anything > kNameInputTop + kTextBoxHeight
+        DEFINE_RECT maprect, kNameInputLeft + 1, kNameInputTop + 1, kNameInputLeft + kNameInputWidth - 1, kNameInputTop + kTextBoxHeight - 1
 .endparams
 
         kEntryPickerCol1 =  10
@@ -498,9 +498,6 @@ blink_ip_flag:                ; when set, IP in file dialog blinks
 
 format_erase_overlay_flag:      ; set when prompt is showing device picker
         .byte   0
-
-str_insertion_point:
-        PASCAL_STRING {kGlyphInsertionPoint} ; do not localize
 
 ;;; Flags that control the behavior of the file picker dialog.
 

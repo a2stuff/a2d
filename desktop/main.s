@@ -14337,7 +14337,7 @@ dialog_param_addr:
         lda     prompt_ip_counter
         ora     prompt_ip_counter+1
         bne     :+
-        jsr     RedrawPromptInsertionPoint
+        jsr     TogglePromptIP
         copy16  SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
 
         ;; Dispatch event types - mouse down, key press
@@ -15128,7 +15128,7 @@ do_run: copy    #$80, has_input_field_flag
 LAEC6:  jsr     PromptInputLoop
         bmi     LAEC6
         bne     do_close
-        jsr     MergePathBuf1PathBuf2
+        jsr     InputFieldIPEnd
         lda     path_buf1
         beq     LAEC6
         cmp     #16             ; max filename length + 1
@@ -15957,62 +15957,76 @@ done:   rts
 
 ;;; ============================================================
 
-.proc RedrawPromptInsertionPoint
+.proc TogglePromptIP
+        ;; Toggle flag
+        lda     prompt_ip_flag
+        eor     #$80
+        sta     prompt_ip_flag
+        FALL_THROUGH_TO XDrawPromptIP
+.endproc
+
+.proc XDrawPromptIP
         point := $6
         xcoord := $6
         ycoord := $8
 
+        jsr     SetNameInputClipRect
+
+        ;; TODO: Do this with a 1px rect instead of a line
         jsr     MeasurePathBuf1
         stax    xcoord
+        dec16   xcoord
         copy16  name_input_textpos::ycoord, ycoord
+
         MGTK_CALL MGTK::MoveTo, point
-        jsr     SetNameInputClipRect
-        bit     prompt_ip_flag
-        bpl     set_flag
+        jsr     SetPenModeXOR
+        copy16  #0, xcoord
+        copy16  #AS_WORD(-kSystemFontHeight), ycoord
+        MGTK_CALL MGTK::Line, point
 
-clear_flag:
-        MGTK_CALL MGTK::SetTextBG, aux::textbg_black
-        copy    #0, prompt_ip_flag
-        beq     draw            ; always
-
-set_flag:
-        MGTK_CALL MGTK::SetTextBG, aux::textbg_white
-        copy    #$FF, prompt_ip_flag
-
-        drawtext_params := $6
-        textptr := drawtext_params + 0
-        textlen := drawtext_params + 2
-
-draw:   copy16  #str_insertion_point+1, textptr
-        copy    str_insertion_point, textlen
-        MGTK_CALL MGTK::DrawText, drawtext_params
-        MGTK_CALL MGTK::SetTextBG, aux::textbg_white
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         rts
 .endproc
 
+.proc HidePromptIP
+        bit     prompt_ip_flag
+        bmi     XDrawPromptIP
+        rts
+.endproc
+ShowPromptIP := HidePromptIP
+
 ;;; ============================================================
 
 .proc DrawFilenamePrompt
+        jsr     HidePromptIP    ; Redraw
+
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, name_input_rect
         jsr     FrameNameInputRect
-        MGTK_CALL MGTK::MoveTo, name_input_textpos
         jsr     SetNameInputClipRect
+        jsr     ClearNameInputRect
+        MGTK_CALL MGTK::MoveTo, name_input_textpos
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
+
+        jsr     ShowPromptIP
+
 done:   rts
 .endproc
 
 .proc FrameNameInputRect
         jsr     SetPenModeNotCopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
+        rts
+.endproc
+
+.proc ClearNameInputRect
+        jsr     SetPenModeCopy
+        MGTK_CALL MGTK::PaintRect, name_input_rect
         rts
 .endproc
 
@@ -16026,12 +16040,6 @@ done:   rts
 .proc HandleClickInTextbox
         ptr := $6
 
-        PARAM_BLOCK tw_params, $06
-data    .addr
-length  .byte
-width   .word
-        END_PARAM_BLOCK
-
         click_coords := screentowindow_params::windowx
 
         ;; Mouse coords to window coords; is click inside name field?
@@ -16042,141 +16050,154 @@ width   .word
         beq     :+
         rts
 
-        ;; Is it to the right of the text?
+        ;; Is click to the left or right of insertion point?
 :       jsr     MeasurePathBuf1
 
-        width := $6
+        width := $06
 
         stax    width
         cmp16   click_coords, width
-        bcs     ToRight
-        jmp     ToLeft
+        jcc     ToLeft
+        FALL_THROUGH_TO ToRight
 
-;;; --------------------------------------------------
+        PARAM_BLOCK tw_params, $06
+data    .addr
+length  .byte
+width   .word
+        END_PARAM_BLOCK
 
+        buf_left := path_buf1
+        buf_right := path_buf2
+
+        ;; --------------------------------------------------
         ;; Click is to the right of IP
 
 .proc ToRight
+        lda     buf_right
+        beq     ret
+
         jsr     MeasurePathBuf1
         stax    ip_pos
 
-        ldx     path_buf2
-        inx
-        copy    #' ', path_buf2,x ; append space at end
-        inc     path_buf2
-
         ;; Iterate to find the position
-        copy16  #path_buf2, tw_params::data
-        copy    path_buf2, tw_params::length
+        copy16  #buf_right, tw_params::data
+        copy    buf_right, tw_params::length
 @loop:  MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, ip_pos, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
         dec     tw_params::length
         lda     tw_params::length
-        cmp     #1
         bne     @loop
-
-        dec     path_buf2
-        jmp     finish
+ret:    rts
 
         ;; Was it to the right of the string?
 :       lda     tw_params::length
-        cmp     path_buf2
+        beq     ret
+        cmp     buf_right
         bcc     :+
-        dec     path_buf2          ; remove appended space
-        jmp     InputFieldIPEnd ; use this shortcut
+        jmp     InputFieldIPEnd
+:
+        copy    tw_params::length, len
+        jsr     HidePromptIP    ; Click Right
 
-        ;; Append from `path_buf2` into `path_buf0`
-:       ldx     #2
-        ldy     path_buf1
+        ;; Append from `buf_right` into `buf_left`
+        ldx     #1
+        ldy     buf_left
         iny
-:       lda     path_buf2,x
-        sta     path_buf1,y
-        cpx     tw_params::length
+:       lda     buf_right,x
+        sta     buf_left,y
+        cpx     len
         beq     :+
         iny
         inx
         jmp     :-
-:       sty     path_buf1
+:       sty     buf_left
 
-        ;; Shift contents of `path_buf2` down,
-        ;; preserving IP at the start.
-        ldy     #2
-        ldx     tw_params::length
+        ;; Shift contents of `buf_right` down.
+        ldy     #1
+        len := *+1
+        ldx     #SELF_MODIFIED_BYTE
         inx
-:       lda     path_buf2,x
-        sta     path_buf2,y
-        cpx     path_buf2
+:       lda     buf_right,x
+        sta     buf_right,y
+        cpx     buf_right
         beq     :+
         iny
         inx
         jmp     :-
 
-:       dey
-        sty     path_buf2
+:       sty     buf_right
         jmp     finish
 .endproc
 
-;;; --------------------------------------------------
-
+        ;; --------------------------------------------------
         ;; Click to left of IP
 
 .proc ToLeft
+        lda     buf_left
+        bne     :+
+ret:    rts
+:
         ;; Iterate to find the position
-        copy16  #path_buf1, tw_params::data
-        copy    path_buf1, tw_params::length
-:       MGTK_CALL MGTK::TextWidth, tw_params
+        copy16  #buf_left, tw_params::data
+        copy    buf_left, tw_params::length
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, name_input_textpos::xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
         dec     tw_params::length
         lda     tw_params::length
         cmp     #1
-        bcs     :-
+        bcs     @loop
         jmp     InputFieldIPStart
-
-        ;; Found position; copy everything to the right of
-        ;; the new position from `path_buf1` to `buf_text`
-:       inc     tw_params::length
-        ldy     #0
-        ldx     tw_params::length
-:       cpx     path_buf1
-        beq     :+
-        inx
-        iny
-        lda     path_buf1,x
-        sta     buf_text+1,y
-        jmp     :-
-:       iny
-        sty     buf_text
-
-        ;; Append `path_buf2` to `buf_text`
-        ldx     #1
-        ldy     buf_text
-:       cpx     path_buf2
-        beq     :+
-        inx
-        iny
-        lda     path_buf2,x
-        sta     buf_text,y
-        jmp     :-
-:       sty     buf_text
-
-        ;; Copy IP and `buf_text` into `path_buf2`
-        copy    #kGlyphInsertionPoint, buf_text+1
-:       lda     buf_text,y
-        sta     path_buf2,y
-        dey
-        bpl     :-
-
-        ;; Adjust length
+:
         lda     tw_params::length
-        sta     path_buf1
+        cmp     buf_left
+        bcs     ret
+        sta     len
+
+        jsr     HidePromptIP    ; Click Left
+        inc     len
+
+        ;; Shift everything in `buf_right` up to make room
+        lda     buf_right
+        pha
+        lda     buf_left
+        sec
+        sbc     len
+        clc
+        adc     buf_right
+        sta     buf_right
+        tax
+        pla
+    IF_NOT_ZERO
+        tay
+:       lda     buf_right,y
+        sta     buf_right,x
+        dex
+        dey
+        bne     :-
+    END_IF
+
+        ;; Copy everything to the right from `buf_left` to `buf_right`
+        ldy     #0
+        len := *+1
+        ldx     #SELF_MODIFIED_BYTE
+:       cpx     buf_left
+        beq     :+
+        inx
+        iny
+        lda     buf_left,x
+        sta     buf_right,y
+        jmp     :-
+:
+        ;; Adjust length
+        copy    len, buf_left
         FALL_THROUGH_TO finish
 .endproc
 
-finish: jsr     DrawFilenamePrompt
+finish: jsr     ShowPromptIP
         rts
 
 ip_pos: .word   0
@@ -16193,13 +16214,10 @@ ip_pos: .word   0
         lda     path_buf1
         clc
         adc     path_buf2
-        cmp     #$10            ; max name length
-        bcc     :+
-        rts
-:
-        point := $6
-        xcoord := $6
-        ycoord := $8
+        cmp     #15
+        bcs     ret
+
+        jsr     HidePromptIP    ; Insert
 
         ;; Insert, and redraw single char and right string
         char := *+1
@@ -16208,8 +16226,16 @@ ip_pos: .word   0
         inx
         sta     path_buf1,x
         sta     str_1_char+1
-        jsr     MeasurePathBuf1 ; measure before extending
+
+        ;; Redraw string to right of IP
+
+        point := $6
+        xcoord := $6
+        ycoord := $8
+
+        jsr     MeasurePathBuf1 ; measure before updating length
         inc     path_buf1
+
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_CALL MGTK::MoveTo, point
@@ -16218,7 +16244,10 @@ ip_pos: .word   0
         param_call DrawString, path_buf2
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
-        rts
+
+        jsr     ShowPromptIP
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -16228,6 +16257,8 @@ ip_pos: .word   0
         ;; Anything to delete?
         lda     path_buf1
         beq     ret
+
+        jsr     HidePromptIP    ; Delete
 
         point := $6
         xcoord := $6
@@ -16245,6 +16276,8 @@ ip_pos: .word   0
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 
+        jsr     ShowPromptIP
+
 ret:    rts
 .endproc
 
@@ -16252,42 +16285,33 @@ ret:    rts
 ;;; Move IP one character left.
 
 .proc InputFieldIPLeft
+        buf_left := path_buf1
+        buf_right = path_buf2
+
         ;; Any characters to left of IP?
-        lda     path_buf1
+        lda     buf_left
         beq     ret
 
-        point := $6
-        xcoord := $6
-        ycoord := $8
+        jsr     HidePromptIP    ; Left
 
-        ldx     path_buf2
-        cpx     #1
-        beq     finish
-
-        ;; Shift right up by a character.
-loop:   lda     path_buf2,x
-        sta     path_buf2+1,x
+        ;; Shift right up by a character if needed.
+        ldx     buf_right
+    IF_NOT_ZERO
+:       lda     buf_right,x
+        sta     buf_right+1,x
         dex
-        cpx     #1
-        bne     loop
+        bne     :-
+    END_IF
 
         ;; Copy character left to right and adjust lengths.
-finish: ldx     path_buf1
-        lda     path_buf1,x
-        sta     path_buf2+2
-        dec     path_buf1
-        inc     path_buf2
+        ldx     buf_left
+        lda     buf_left,x
+        sta     buf_right+1
+        dec     buf_left
+        inc     buf_right
 
-        ;; Redraw (just the right part)
-        jsr     MeasurePathBuf1
-        stax    xcoord
-        copy16  name_input_textpos::ycoord, ycoord
-        MGTK_CALL MGTK::MoveTo, point
-        jsr     SetNameInputClipRect
-        param_call DrawString, path_buf2
-        param_call DrawString, str_2_spaces
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
+        ;; Finish up
+        jsr     ShowPromptIP
 
 ret:    rts
 .endproc
@@ -16296,142 +16320,113 @@ ret:    rts
 ;;; Move IP one character right.
 
 .proc InputFieldIPRight
+        buf_left := path_buf1
+        buf_right := path_buf2
+
         ;; Any characters to right of IP?
-        lda     path_buf2
+        lda     buf_right
+        beq     ret
+
+        jsr     HidePromptIP    ; Right
+
+        ;; Copy first char from right to left and adjust left length.
+        lda     buf_right+1
+        ldx     buf_left
+        inx
+        sta     buf_left,x
+        inc     buf_left
+
+        ;; Shift right string down, if needed.
+        lda     buf_right
         cmp     #2
-        bcs     :+
-        rts
-
-        ;; Copy char from right to left and adjust lengths.
-:       ldx     path_buf1
+    IF_GE
+        ldx     #1
+:       lda     buf_right+1,x
+        sta     buf_right,x
         inx
-        lda     path_buf2+2
-        sta     path_buf1,x
-        inc     path_buf1
-        ldx     path_buf2
-        cpx     #3
-        bcc     finish
+        cpx     buf_right
+        bne     :-
+    END_IF
+        dec     buf_right
 
-        ;; Shift right string down.
-        ldx     #2
-loop:   lda     path_buf2+1,x
-        sta     path_buf2,x
-        inx
-        cpx     path_buf2
-        bne     loop
+        ;; Finish up
+        jsr     ShowPromptIP
 
-        ;; Redraw (the whole thing)
-finish: dec     path_buf2
-
-        MGTK_CALL MGTK::MoveTo, name_input_textpos
-        jsr     SetNameInputClipRect
-        param_call DrawString, path_buf1
-        param_call DrawString, path_buf2
-        param_call DrawString, str_2_spaces
-        lda     #winfo_prompt_dialog::kWindowId
-        jmp     SafeSetPortFromWindowId
+ret:    rts
 .endproc
 
 ;;; ============================================================
 ;;; Move IP to start of input field.
 
 .proc InputFieldIPStart
+        buf_left = path_buf1
+        buf_right = path_buf2
+
         ;; Any characters to left of IP?
-        lda     path_buf1
+        lda     buf_left
         beq     ret
 
-        ;; Any characters to right of IP?
-        ldx     path_buf2
-        cpx     #1
-        beq     move
+        jsr     HidePromptIP    ; Home
 
-        ;; Preserve right characters up to make room.
-        ;; TODO: Why not just shift them up???
-loop1:  lda     path_buf2,x
-        sta     buf_text-1,x
-        dex
-        cpx     #1
-        bne     loop1
-        ldx     path_buf2
-
-        ;; Move characters left to right
-move:   dex
-        stx     buf_text
-        ldx     path_buf1
-loop2:  lda     path_buf1,x
-        sta     path_buf2+1,x
-        dex
-        bne     loop2
-
-        ;; Adjust lengths.
-        copy    #kGlyphInsertionPoint, path_buf2+1
-        inc     path_buf1
-        lda     path_buf1
-        sta     path_buf2
-        lda     path_buf1
+        ;; Shift right string up N
         clc
-        adc     buf_text
+        adc     buf_right
         tay
-        pha
-
-        ;; Append right right characters again if needed.
-        ldx     buf_text
-        beq     finish
-loop3:  lda     buf_text,x
-        sta     path_buf2,y
+        ldx     buf_right
+:       beq     move
+        copy    buf_right,x, buf_right,y
         dex
         dey
-        cpy     path_buf2
-        bne     loop3
+        bne     :-              ; always
 
-finish: pla
-        sta     path_buf2
-        copy    #0, path_buf1
-        jsr     DrawFilenamePrompt
+        ;; Move chars from left string to right string
+move:   ldx     buf_left
+:       copy    buf_left,x, buf_right,x
+        dex
+        bne     :-
+
+        ;; Adjust lengths
+        lda     buf_left
+        clc
+        adc     buf_right
+        sta     buf_right
+
+        copy    #0, buf_left
+
+        ;; Finish up
+        jsr     ShowPromptIP
 
 ret:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc MergePathBuf1PathBuf2
-        lda     path_buf2
-        cmp     #2
-        bcc     done
-
-        ;; Compute new `path_buf1` length
-        ldx     path_buf2
-        dex
-        txa
-        clc
-        adc     path_buf1
-        pha
-
-        ;; Copy chars from `path_buf2` to `path_buf1`
-        tay
-        ldx     path_buf2
-loop:   lda     path_buf2,x
-        sta     path_buf1,y
-        dex
-        dey
-        cpy     path_buf1
-        bne     loop
-
-        ;; Finish up, shrinking `path_buf2` to just an insertion point
-        pla
-        sta     path_buf1
-        copy    #1, path_buf2
-
-done:   rts
-.endproc
-
-;;; ============================================================
-;;; Move IP to end of input field.
-
 .proc InputFieldIPEnd
-        jsr     MergePathBuf1PathBuf2
-        jsr     DrawFilenamePrompt
-        rts
+        buf_left := path_buf1
+        buf_right := path_buf2
+
+        lda     buf_right
+        beq     ret
+
+        jsr     HidePromptIP    ; End
+
+        ;; Append right string to left
+        ldx     #0
+        ldy     buf_left
+:       inx
+        iny
+        lda     buf_right,x
+        sta     buf_left,y
+        cpx     buf_right
+        bne     :-
+        sty     buf_left
+
+        ;; Clear right string
+        copy    #0, buf_right
+
+        jsr     ShowPromptIP
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -16465,8 +16460,7 @@ done:   rts
 ;;; ============================================================
 
 .proc ClearPathBuf2
-        copy    #1, path_buf2   ; length
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #0, path_buf2   ; length
         rts
 .endproc
 

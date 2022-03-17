@@ -65,12 +65,10 @@ finish: jsr     file_dialog::ReadDir
         lda     path_buf0
         bne     :+
         jsr     file_dialog::PrepPath
-:       copy    #1, path_buf2
-        copy    #' ', path_buf2+1
+:       copy    #0, path_buf2
         jsr     file_dialog::RedrawInput
         jsr     file_dialog::RedrawF2
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #0, path_buf2
         copy    #$FF, blink_ip_flag
         copy    #0, input_allow_all_chars_flag
         jsr     file_dialog::InitDeviceNumber
@@ -95,8 +93,7 @@ buffer: .res 16, 0
 
         copy    #0, file_dialog::focus_in_input2_flag
         copy    #$80, file_dialog::dual_inputs_flag
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #0, path_buf2
         lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         lda     which_run_list
@@ -194,7 +191,7 @@ jt_pathname:
         .byte file_dialog::kJumpTableSize-1
         jump_table_entry HandleOkFilename
         jump_table_entry HandleCancelFilename
-        jump_table_entry file_dialog::BlinkF1IP
+        jump_table_entry file_dialog::BlinkIPF1
         jump_table_entry file_dialog::RedrawF1
         jump_table_entry file_dialog::StripF1PathSegment
         jump_table_entry file_dialog::HandleF1SelectionChange
@@ -212,7 +209,7 @@ jt_entry_name:
         .byte file_dialog::kJumpTableSize-1
         jump_table_entry HandleOkName
         jump_table_entry HandleCancelName
-        jump_table_entry file_dialog::BlinkF2IP
+        jump_table_entry file_dialog::BlinkIPF2
         jump_table_entry file_dialog::RedrawF2
         jump_table_entry file_dialog::StripF2PathSegment
         jump_table_entry file_dialog::HandleF2SelectionChange
@@ -229,10 +226,10 @@ jt_entry_name:
 ;;; ============================================================
 
 .proc HandleOkFilename
+        jsr     file_dialog::HideIPF1 ; Switch
         jsr     file_dialog::MoveIPToEndF1
 
-        copy    #1, path_buf2
-        copy    #' ', path_buf2+1
+        copy    #0, path_buf2
         jsr     file_dialog::RedrawInput
 
         ldx     jt_entry_name
@@ -273,12 +270,12 @@ found_slash:
         sta     path_buf1,y
         cpx     path_buf0
         bne     :-
-
         sty     path_buf1
-finish: copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+
+finish: copy    #0, path_buf2
         copy    #$80, input_allow_all_chars_flag
         jsr     file_dialog::RedrawInput
+        jsr     file_dialog::ShowIPF2
         rts
 .endproc
 
@@ -359,10 +356,10 @@ found:  cpy     #2
 ;;; ============================================================
 
 .proc HandleCancelName
+        jsr     file_dialog::HideIPF2 ; Switch
         jsr     file_dialog::MoveIPToEndF2
 
-        copy    #1, path_buf2
-        copy    #' ', path_buf2+1
+        copy    #0, path_buf2
         jsr     file_dialog::RedrawInput
 
         ldx     jt_pathname
@@ -375,8 +372,7 @@ found:  cpy     #2
         dex
         bpl     :-
 
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #0, path_buf2
         copy    #0, input_allow_all_chars_flag
         jsr     file_dialog::RedrawInput
         lda     #$00
@@ -384,6 +380,8 @@ found:  cpy     #2
         sta     file_dialog::focus_in_input2_flag
         lda     input1_dirty_flag
         sta     input_dirty_flag
+
+        jsr     file_dialog::ShowIPF1
         rts
 .endproc
 

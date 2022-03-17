@@ -58,6 +58,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Support opening archives using AUTO UnShrinkIt by Andrew E. Nicholas.
 * Desk accessories, folders, volumes, and previewable files can now be the target of Shortcuts.
 * Disk Copy moved to a separate file that can be optionally removed, allowing other components to fit on a floppy disk. ([#216](https://github.com/a2stuff/a2d/issues/216))
+* Appearance and movement of insertion point in text input fields is improved.
 * File Picker Dialogs:
   * Type-down selection (while holding **Apple**) is supported. ([#610](https://github.com/a2stuff/a2d/issues/610))
   * Pressing **Apple+Tab** (or **Shift+Tab**, when detectable), or holding **Apple** (or **Shift**, when detectable) while clicking Change Drive reverses the order in which the drive changes. ([#598](https://github.com/a2stuff/a2d/issues/598), [#605](https://github.com/a2stuff/a2d/issues/605))

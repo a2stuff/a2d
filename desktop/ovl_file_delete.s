@@ -41,8 +41,7 @@
         sta     path_buf0
         sta     file_dialog::focus_in_input2_flag
 
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #0, path_buf2
         rts
 .endproc
 
@@ -62,7 +61,7 @@ jt_filename:
         .byte file_dialog::kJumpTableSize-1
         jump_table_entry HandleOk
         jump_table_entry HandleCancel
-        jump_table_entry file_dialog::BlinkF1IP
+        jump_table_entry file_dialog::BlinkIPF1
         jump_table_entry file_dialog::RedrawF1
         jump_table_entry file_dialog::StripF1PathSegment
         jump_table_entry file_dialog::HandleF1SelectionChange

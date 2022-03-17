@@ -121,9 +121,6 @@ blink_ip_flag:
         .byte   $00
         .byte   $00
 
-str_insertion_point:
-        PASCAL_STRING {kGlyphInsertionPoint} ; do not localize
-
 ;;; Flags that control the behavior of the file picker dialog.
 
 input_dirty_flag:
@@ -172,8 +169,7 @@ start:  jsr     OpenWindow
         lda     #$00
         sta     buf_input1_left
         sta     focus_in_input2_flag
-        copy    #1, buf_input_right
-        copy    #kGlyphInsertionPoint, buf_input_right+1
+        copy    #0, buf_input_right
         rts
 .endproc
 

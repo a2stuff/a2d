@@ -1003,9 +1003,7 @@ top_row:        .byte   0
 .proc Init
         ;; Prep input string
         copy    #0, buf_left
-
-        copy    #1, buf_right
-        copy    #kGlyphInsertionPoint, buf_right+1
+        copy    #0, buf_right
 
         copy    #0, ip_blink_flag
         copy    #prompt_insertion_point_blink_count, ip_blink_counter
@@ -1053,25 +1051,48 @@ top_row:        .byte   0
         prompt_insertion_point_blink_count = $14
 
 .proc BlinkIP
+        ;; TODO: Why isn't this 16 bits from SETTINGS?
         dec     ip_blink_counter
-        bne     done
-        copy    #prompt_insertion_point_blink_count, ip_blink_counter
-
-        bit     ip_blink_flag
-        bmi     clear
-
-set:    copy    #$80, ip_blink_flag
-        copy    #kGlyphSpacer, buf_right+1
-        jsr     DrawInputText
+        beq     :+
         rts
+:       copy    #prompt_insertion_point_blink_count, ip_blink_counter
 
-
-clear:  copy    #0, ip_blink_flag
-        copy    #kGlyphInsertionPoint, buf_right+1
-        jsr     DrawInputText
-
-done:   rts
+        lda     ip_blink_flag
+        eor     #$80
+        sta     ip_blink_flag
+        FALL_THROUGH_TO XDrawIP
 .endproc
+
+.proc XDrawIP
+        point := $6
+        xcoord := $6
+        ycoord := $8
+
+        ;; TODO: Do this with a 1px rect instead of a line
+        jsr     CalcIPPos
+        stax    xcoord
+        dec16   xcoord
+        copy16  input_textpos::ycoord, ycoord
+
+        copy    #kDAWindowID, winport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::SetPort, grafport
+
+        MGTK_CALL MGTK::MoveTo, point
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        copy16  #0, xcoord
+        copy16  #AS_WORD(-kSystemFontHeight), ycoord
+        MGTK_CALL MGTK::Line, point
+
+        rts
+.endproc
+
+.proc HideIP
+        bit     ip_blink_flag
+        bmi     XDrawIP
+        rts
+.endproc
+ShowIP := HideIP
 
 ;;; ============================================================
 
@@ -1148,33 +1169,38 @@ not_meta:
         bcc     ignore_char
         cmp     #'z'+1
         bcc     DoChar
-        FALL_THROUGH_TO ignore_char
-.endproc
-
 ignore_char:
         jmp     InputLoop
+.endproc
+
 
 ;;; ------------------------------------------------------------
 
 .proc DoChar
         jsr     ObscureCursor
+        sta     char
 
         ;; check length
-        tax
-        clc
         lda     buf_left
+        clc
         adc     buf_right
-        cmp     #16             ; max length is 15, plus ip
-        bcs     ignore_char
+        cmp     #15             ; max length is 15
+        bcs     ret
+
+        jsr     HideIP          ; Insert
 
         ;; append char
-        txa
+        char := *+1
+        lda     #SELF_MODIFIED_BYTE
         ldx     buf_left
         inx
         sta     buf_left,x
         stx     buf_left
         jsr     DrawInputText
-        jmp     InputLoop
+
+        jsr     ShowIP
+
+ret:    jmp     InputLoop
 .endproc
 
 ;;; ------------------------------------------------------------
@@ -1186,28 +1212,31 @@ ignore_char:
 .endproc
 
 .proc MoveIPToStart
-        lda     buf_left            ; length of string to left of IP
-        beq     done
+        ;; Any characters to left of IP?
+        lda     buf_left
+        beq     ret
 
-        ;; shift right string up N (apart from IP)
+        jsr     HideIP          ; Home
+
+        ;; Shift right string up N
+        lda     buf_left
         clc
         adc     buf_right
         tay
         ldx     buf_right
-:       cpx     #1
-        beq     move
+:       beq     move
         copy    buf_right,x, buf_right,y
         dex
         dey
         bne     :-              ; always
 
-        ;; move chars from left string to just after IP in right string
+        ;; Move chars from left string to right string
 move:   ldx     buf_left
-:       copy    buf_left,x, buf_right+1,x
+:       copy    buf_left,x, buf_right,x
         dex
         bne     :-
 
-        ;; adjust lengths
+        ;; Adjust lengths
         lda     buf_left
         clc
         adc     buf_right
@@ -1215,40 +1244,44 @@ move:   ldx     buf_left
 
         copy    #0, buf_left
 
-        jsr     DrawInputText
+        ;; Finish up
+        jsr     ShowIP
 
-done:   rts
+ret:    rts
 .endproc
 
 ;;; ------------------------------------------------------------
+;;; Move IP one character left.
 
 .proc DoLeft
         jsr     ObscureCursor
-        lda     buf_left            ; length of string to left of IP
-        beq     done
 
-        ;; shift right string up one (apart from IP)
+        ;; Any characters to left of IP?
+        lda     buf_left
+        beq     ret
+
+        jsr     HideIP          ; Left
+
+        ;; Shift right up by a character if needed.
         ldx     buf_right
-        ldy     buf_right
-        iny
-:       cpx     #1
-        beq     :+
-        copy    buf_right,x, buf_right,y
+    IF_NOT_ZERO
+:       lda     buf_right,x
+        sta     buf_right+1,x
         dex
-        dey
-        bne     :-              ; always
+        bne     :-
+    END_IF
 
-        ;; move char from end of left string to just after IP in right string
-:       ldx     buf_left
-        copy    buf_left,x, buf_right+2
-
-        ;; adjust lengths
+        ;; Copy character left to right and adjust lengths.
+        ldx     buf_left
+        lda     buf_left,x
+        sta     buf_right+1
         dec     buf_left
         inc     buf_right
 
-        jsr     DrawInputText
+        ;; Finish up
+        jsr     ShowIP
 
-done:   jmp     InputLoop
+ret:    jmp     InputLoop
 .endproc
 
 ;;; ------------------------------------------------------------
@@ -1260,77 +1293,83 @@ done:   jmp     InputLoop
 .endproc
 
 .proc MoveIPToEnd
-        lda     buf_right       ; length of string from IP rightwards
-        cmp     #2              ; must be at least one char (plus IP)
-        bcc     done
+        lda     buf_right
+        beq     ret
 
-        ;; append right string to left
-        ldx     #2
+        jsr     HideIP          ; End
+
+        ;; Append right string to left
+        ldx     #0
         ldy     buf_left
+:       inx
         iny
-:       copy    buf_right,x, buf_left,y
+        lda     buf_right,x
+        sta     buf_left,y
         cpx     buf_right
-        beq     :+
-        inx
-        iny
-        bne     :-              ; always
+        bne     :-
+        sty     buf_left
 
-        ;; adjust lengths
-:       lda     buf_left
-        clc
-        adc     buf_right
-        sec
-        sbc     #1
-        sta     buf_left
+        ;; Clear right string
+        copy    #0, buf_right
 
-        copy    #1, buf_right
+        jsr     ShowIP
 
-        jsr     DrawInputText
-
-done:   rts
+ret:    rts
 .endproc
 
 ;;; ------------------------------------------------------------
+;;; Move IP one character right.
 
 .proc DoRight
         jsr     ObscureCursor
-        lda     buf_right       ; length of string from IP rightwards
-        cmp     #2              ; must be at least one char (plus IP)
-        bcc     done
 
-        ;; copy char from start of right to end of left
-        lda     buf_right+2
+        ;; Any characters to right of IP?
+        lda     buf_right
+        beq     ret
+
+        jsr     HideIP          ; Right
+
+        ;; Copy first char from right to left and adjust left length.
+        lda     buf_right+1
         ldx     buf_left
         inx
         sta     buf_left,x
-
-        ;; shift right string down one (apart from IP)
-        ldx     #3
-        ldy     #2
-:       copy    buf_right,x, buf_right,y
-        inx
-        iny
-        cpy     buf_right
-        bcc     :-
-
-        ;; adjust lengths
         inc     buf_left
+
+        ;; Shift right string down, if needed.
+        lda     buf_right
+        cmp     #2
+    IF_GE
+        ldx     #1
+:       lda     buf_right+1,x
+        sta     buf_right,x
+        inx
+        cpx     buf_right
+        bne     :-
+    END_IF
         dec     buf_right
 
-        jsr     DrawInputText
+        ;; Finish up
+        jsr     ShowIP
 
-done:   jmp     InputLoop
+ret:    jmp     InputLoop
 .endproc
 
 ;;; ------------------------------------------------------------
 
 .proc DoDelete
         jsr     ObscureCursor
-        lda     buf_left            ; length of string to left of IP
+
+        lda     buf_left        ; length of string to left of IP
         beq     done
 
+        jsr     HideIP          ; Delete
+
         dec     buf_left
+
         jsr     DrawInputText
+
+        jsr     ShowIP
 
 done:   jmp     InputLoop
 .endproc
@@ -1350,7 +1389,7 @@ done:   jmp     InputLoop
 
         ;; Append right
 right:
-        ldy     #1
+        ldy     #0
 :       cpy     buf_right
         beq     done_concat
         iny
@@ -1637,13 +1676,6 @@ sub:    MGTK_CALL MGTK::PaintRect, 0, fillrect_addr
 ;;; ============================================================
 
 .proc HandleClickInTextbox
-
-        PARAM_BLOCK tw_params, $06
-data    .addr
-length  .byte
-width   .word
-        END_PARAM_BLOCK
-
         click_coords := screentowindow_params::window::xcoord
 
         ;; Mouse coords to window coords; is click inside name field?
@@ -1657,25 +1689,28 @@ width   .word
         ;; Is click to left or right of insertion point?
 :       jsr     CalcIPPos
 
-        width := $6
+        width := $06
 
         stax    width
         cmp16   click_coords, width
-        bcs     ToRight
-        jmp     ToLeft
+        jcc     ToLeft
+        FALL_THROUGH_TO ToRight
 
-;;; --------------------------------------------------
+        PARAM_BLOCK tw_params, $06
+data    .addr
+length  .byte
+width   .word
+        END_PARAM_BLOCK
 
+        ;; --------------------------------------------------
         ;; Click is to the right of IP
 
 .proc ToRight
+        lda     buf_right
+        beq     ret
+
         jsr     CalcIPPos
         stax    ip_pos
-
-        ldx     buf_right
-        inx
-        copy    #' ', buf_right,x ; append space at end
-        inc     buf_right
 
         ;; Iterate to find the position
         copy16  #buf_right, tw_params::data
@@ -1686,36 +1721,36 @@ width   .word
         bcc     :+
         dec     tw_params::length
         lda     tw_params::length
-        cmp     #1
         bne     @loop
-
-        dec     buf_right
-        jmp     finish
+ret:    rts
 
         ;; Was it to the right of the string?
 :       lda     tw_params::length
+        beq     ret
         cmp     buf_right
         bcc     :+
-        dec     buf_right       ; remove appended space
-        jmp     MoveIPToEnd     ; use this shortcut
+        jmp     MoveIPToEnd
+:
+        copy    tw_params::length, len
+        jsr     HideIP          ; Click Right
 
         ;; Append from `buf_right` into `buf_left`
-:       ldx     #2
+        ldx     #1
         ldy     buf_left
         iny
 :       lda     buf_right,x
         sta     buf_left,y
-        cpx     tw_params::length
+        cpx     len
         beq     :+
         iny
         inx
         jmp     :-
 :       sty     buf_left
 
-        ;; Shift contents of `buf_right` down,
-        ;; preserving IP at the start.
-        ldy     #2
-        ldx     tw_params::length
+        ;; Shift contents of `buf_right` down.
+        ldy     #1
+        len := *+1
+        ldx     #SELF_MODIFIED_BYTE
         inx
 :       lda     buf_right,x
         sta     buf_right,y
@@ -1725,76 +1760,81 @@ width   .word
         inx
         jmp     :-
 
-:       dey
-        sty     buf_right
+:       sty     buf_right
         jmp     finish
 .endproc
 
-;;; --------------------------------------------------
-
+        ;; --------------------------------------------------
         ;; Click to left of IP
 
 .proc ToLeft
+        lda     buf_left
+        bne     :+
+ret:    rts
+:
         ;; Iterate to find the position
         copy16  #buf_left, tw_params::data
         copy    buf_left, tw_params::length
-:       MGTK_CALL MGTK::TextWidth, tw_params
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
         add16   tw_params::width, input_textpos::xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
         dec     tw_params::length
         lda     tw_params::length
         cmp     #1
-        bcs     :-
-        jmp     MoveIPToStart ; use this shortcut
+        bcs     @loop
+        jmp     MoveIPToStart
+:
+        lda     tw_params::length
+        cmp     buf_left
+        bcs     ret
+        sta     len
 
-        ;; Found position; copy everything to the right of
-        ;; the new position from `buf_left` to `buf_search`
-:       inc     tw_params::length
+        jsr     HideIP          ; Click Left
+        inc     len
+
+        ;; Shift everything in `buf_right` up to make room
+        lda     buf_right
+        pha
+        lda     buf_left
+        sec
+        sbc     len
+        clc
+        adc     buf_right
+        sta     buf_right
+        tax
+        pla
+    IF_NOT_ZERO
+        tay
+:       lda     buf_right,y
+        sta     buf_right,x
+        dex
+        dey
+        bne     :-
+    END_IF
+
+        ;; Copy everything to the right from `buf_left` to `buf_right`
         ldy     #0
-        ldx     tw_params::length
+        len := *+1
+        ldx     #SELF_MODIFIED_BYTE
 :       cpx     buf_left
         beq     :+
         inx
         iny
         lda     buf_left,x
-        sta     buf_search+1,y
-        jmp     :-
-:       iny
-        sty     buf_search
-
-        ;; Append `buf_right` to `buf_search`
-        ldx     #1
-        ldy     buf_search
-:       cpx     buf_right
-        beq     :+
-        inx
-        iny
-        lda     buf_right,x
-        sta     buf_search,y
-        jmp     :-
-:       sty     buf_search
-
-        ;; Copy IP and `buf_search` into `buf_right`
-        copy    #kGlyphInsertionPoint, buf_search+1
-:       lda     buf_search,y
         sta     buf_right,y
-        dey
-        bpl     :-
-
+        jmp     :-
+:
         ;; Adjust length
-        lda     tw_params::length
-        sta     buf_left
+        copy    len, buf_left
         FALL_THROUGH_TO finish
 .endproc
 
-finish:
-        jsr     DrawInputText
+finish: jsr     ShowIP
         rts
 
 ip_pos: .word   0
 .endproc
-
 
 ;;; ============================================================
 
@@ -1813,10 +1853,10 @@ width   .word
         MGTK_CALL MGTK::TextWidth, params
 :       lda     params::width
         clc
-        adc     input_rect::x1
+        adc     input_textpos::xcoord
         tay
         lda     params::width+1
-        adc     input_rect::x1+1
+        adc     input_textpos::xcoord+1
         tax
         tya
         rts

@@ -41,9 +41,8 @@
 
         lda     #0
         sta     path_buf0
+        sta     path_buf2
         sta     file_dialog::focus_in_input2_flag
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
         rts
 .endproc
 
@@ -65,7 +64,7 @@ jt_source_filename:
         .byte file_dialog::kJumpTableSize-1
         jump_table_entry HandleOkSource
         jump_table_entry HandleCancel
-        jump_table_entry file_dialog::BlinkF1IP
+        jump_table_entry file_dialog::BlinkIPF1
         jump_table_entry file_dialog::RedrawF1
         jump_table_entry file_dialog::StripF1PathSegment
         jump_table_entry file_dialog::HandleF1SelectionChange
@@ -83,7 +82,7 @@ jt_destination_filename:
         .byte file_dialog::kJumpTableSize-1
         jump_table_entry HandleOkDestination
         jump_table_entry HandleCancelDestination
-        jump_table_entry file_dialog::BlinkF2IP
+        jump_table_entry file_dialog::BlinkIPF2
         jump_table_entry file_dialog::RedrawF2
         jump_table_entry file_dialog::StripF2PathSegment
         jump_table_entry file_dialog::HandleF2SelectionChange
@@ -100,10 +99,10 @@ jt_destination_filename:
 ;;; ============================================================
 
 .proc HandleOkSource
+        jsr     file_dialog::HideIPF1 ; Switch
         jsr     file_dialog::MoveIPToEndF1
 
-        copy    #1, path_buf2
-        copy    #' ', path_buf2+1
+        copy    #0, path_buf2
         jsr     file_dialog::RedrawInput
 
         ;; install destination handlers
@@ -138,8 +137,7 @@ jt_destination_filename:
         dex
         bpl     :-
 
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #0, path_buf2
 
         ldx     path_buf0
         beq     done
@@ -150,10 +148,10 @@ jt_destination_filename:
         beq     :+
         dex
         bne     :-
-:       ldy     #2
-        dex
-
+:
         ;; Copy filename into path_buf2
+        ldy     #1
+        dex
 :       cpx     path_buf0
         beq     done
         inx
@@ -164,6 +162,7 @@ jt_destination_filename:
         jmp     :-
 
 done:   jsr     file_dialog::RedrawInput
+        jsr     file_dialog::ShowIPF2
 
         ;; Twiddle flags
         lda     input_dirty_flag
@@ -221,10 +220,10 @@ err:    lda     #ERR_INVALID_PATHNAME
 ;;; ============================================================
 
 .proc HandleCancelDestination
+        jsr     file_dialog::HideIPF2 ; Switch
         jsr     file_dialog::MoveIPToEndF2
 
-        copy    #1, path_buf2
-        copy    #' ', path_buf2+1
+        copy    #0, path_buf2
         jsr     file_dialog::RedrawInput
 
         ldx     jt_source_filename
@@ -237,8 +236,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         dex
         bpl     :-
 
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
+        copy    #0, path_buf2
         copy    #0, file_dialog::only_show_dirs_flag
         copy    #$FF, file_dialog_res::selected_index
         copy    #0, file_dialog::focus_in_input2_flag
@@ -281,7 +279,9 @@ L7289:  sta     file_dialog_res::selected_index
 :       jsr     file_dialog::UpdateScrollbar2
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
-L7295:  rts
+
+L7295:  jsr     file_dialog::ShowIPF1
+        rts
 .endproc
 
 ;;; ============================================================
