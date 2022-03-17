@@ -14614,24 +14614,18 @@ do_all: jsr     SetPenModeXOR
 
 .proc HandleKeyLeft
         lda     has_input_field_flag
-        beq     done
-        bit     format_erase_overlay_flag ; BUG? Should never be set here based on caller test.
-        jmi     format_erase_overlay__PromptHandleKeyRight
-
+        beq     :+
         jsr     ObscureCursor
         jsr     InputFieldIPLeft
-done:   return  #$FF
+:       return  #$FF
 .endproc
 
 .proc HandleKeyRight
         lda     has_input_field_flag
-        beq     done
-        bit     format_erase_overlay_flag ; BUG? Should never be set here based on caller test.
-        jmi     format_erase_overlay__PromptHandleKeyLeft
-
+        beq     :+
         jsr     ObscureCursor
         jsr     InputFieldIPRight
-done:   return  #$FF
+:       return  #$FF
 .endproc
 
 .proc HandleKeyOk

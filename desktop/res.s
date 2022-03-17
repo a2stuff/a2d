@@ -496,7 +496,7 @@ prompt_ip_flag:
 blink_ip_flag:                ; when set, IP in file dialog blinks
         .byte   0
 
-format_erase_overlay_flag:
+format_erase_overlay_flag:      ; set when prompt is showing device picker
         .byte   0
 
 str_insertion_point:
