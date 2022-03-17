@@ -425,7 +425,7 @@ nextwinfo:      .addr   0
         kEntryPickerCol2 = 115
         kEntryPickerCol3 = 220
         kEntryPickerItemWidth  = 104
-        kEntryPickerItemHeight = 9 ; default font height
+        kEntryPickerItemHeight = kSystemFontHeight
 
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY

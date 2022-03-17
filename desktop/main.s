@@ -8293,7 +8293,7 @@ zero_min:
         ;; min.x = kListViewWidth
         ;; min.y = A * kRowHeight + kWindowHeaderHeight+1
 list_view_non_empty:
-        kRowHeight = 9          ; Default font size
+        kRowHeight = kSystemFontHeight
         ldx     #0              ; A,X = count + 2
         ldy     #kRowHeight
         jsr     Multiply_16_8_16
@@ -8982,7 +8982,7 @@ done:   bit     LCBANK1
 
 .proc DrawListViewRow
 
-        kRowHeight = 9          ; Default font height
+        kRowHeight = kSystemFontHeight
 
         ptr := $06
 

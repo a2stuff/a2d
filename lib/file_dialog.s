@@ -41,7 +41,7 @@ num_file_names  := $177F
 ;;; Sequence of 16-byte records, filenames in current directory.
 file_names      := $1800
 
-kListEntryHeight = 9            ; Default font height
+kListEntryHeight = kSystemFontHeight
 kListEntryGlyphX = 1
 kListEntryNameX  = 16
 

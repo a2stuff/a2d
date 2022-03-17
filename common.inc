@@ -41,6 +41,9 @@ kDirStackBufferSize = 170
 kScreenWidth    = 560
 kScreenHeight   = 192
 
+;;; Prefer DEFAULT_FONT+MGTK::Font::height, but that's not always convenient.
+kSystemFontHeight = 9
+
 kMenuBarHeight  = 13
 kTitleBarHeight = 12
 

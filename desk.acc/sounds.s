@@ -227,7 +227,7 @@ nextwinfo:      .addr   0
 
         kMarginX = 18
         kMarginY = 10
-        kTextHeight = 9
+        kTextHeight = kSystemFontHeight
         kButtonMarginY = 6
 
         DEFINE_BUTTON ok, res_string_button_ok, kDAWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight

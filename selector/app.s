@@ -14,7 +14,7 @@
 selector_list   := $B300
 
 kEntryPickerItemWidth = 127
-kEntryPickerItemHeight = 9
+kEntryPickerItemHeight = kSystemFontHeight
 
 kShortcutRunDeskTop = res_char_button_desktop_shortcut
 kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut

@@ -3398,7 +3398,7 @@ textbg_white:  .byte   $7F
 
 ;;; ============================================================
 
-kDialogLabelHeight      = 9
+kDialogLabelHeight      = kSystemFontHeight
 kDialogLabelBaseY       = 30
 kDialogLabelRow1        = kDialogLabelBaseY + kDialogLabelHeight * 1
 kDialogLabelRow2        = kDialogLabelBaseY + kDialogLabelHeight * 2

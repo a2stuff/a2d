@@ -78,7 +78,7 @@ kListViewWidth          = 410
 
 kMaxIconHeight          = 17
 kIconWidth              = 28
-kIconLabelHeight        = 9     ; default font height
+kIconLabelHeight        = kSystemFontHeight
 
 kIconsPerRow    = 5
 kIconSpacingX   = 80
