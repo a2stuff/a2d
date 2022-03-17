@@ -135,7 +135,7 @@ Project Page: https://github.com/a2stuff/a2d
     * Digital rain effect, inspired by https://github.com/neilk/apple-ii-matrix.
 
 Note that the desk accessories from version 1.2 will not work with older versions
-of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
+of Apple II DeskTop/Mouse Desk, due to dependence on new APIs.
 
 Show Text File is now part of the file preview functionality (see below).
 
@@ -248,6 +248,6 @@ Final release by Version Soft/Apple Computer dated November 26, 1986.
 
 See also:
 
-* Jay Edwards' [MouseDesk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
+* Jay Edwards' [Mouse Desk/DeskTop History](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info)
 * https://www.a2desktop.com/history
 * https://www.a2desktop.com/releases

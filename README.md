@@ -3,7 +3,7 @@
 [![build](https://github.com/a2stuff/a2d/actions/workflows/main.yml/badge.svg)](https://github.com/a2stuff/a2d/actions/workflows/main.yml) [![stats](https://img.shields.io/github/downloads/a2stuff/a2d/total)](https://tooomm.github.io/github-release-stats/?username=a2stuff&repository=a2d)
 
 
-Disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk), a "Finder"-like GUI application for 8-bit Apples and clones with 128k of memory, utilizing double hi-res monochrome graphics (560x192), an optional mouse, and the ProDOS 8 operating system.
+Disassembly and enhancements for Apple II DeskTop (a.k.a. Mouse Desk), a "Finder"-like GUI application for 8-bit Apples and clones with 128k of memory, utilizing double hi-res monochrome graphics (560x192), an optional mouse, and the ProDOS 8 operating system.
 
 💾 Download [Disk Images](https://github.com/a2stuff/a2d/releases)
 
@@ -14,12 +14,12 @@ Disassembly and enhancements for Apple II DeskTop (a.k.a. MouseDesk), a "Finder"
 
 ## Background
 
-The application started its life as **MouseDesk** by Version Soft. Apple Computer licensed the software and released it, at first as MouseDesk 2.0, then rebranded **Apple II DeskTop** as the initial [system software for the Apple IIgs](http://www.whatisthe2gs.apple2.org.za/system-applications.html) before 16-bit GS/OS replaced it. It still functions on 8-bit Apples, including the Apple IIe, Apple IIc, Apple IIc Plus, Apple IIe Option Card for Macintosh, and the Laser 128 family.
+The application started its life as **Mouse Desk** by Version Soft. Apple Computer licensed the software and released it, at first as Mouse Desk 2.0, then rebranded **Apple II DeskTop** as the initial [system software for the Apple IIgs](http://www.whatisthe2gs.apple2.org.za/system-applications.html) before 16-bit GS/OS replaced it. It still functions on 8-bit Apples, including the Apple IIe, Apple IIc, Apple IIc Plus, Apple IIe Option Card for Macintosh, Laser 128, and Franklin ACE 2X00/500.
 
-* [History of MouseDesk/Apple II DeskTop Versions](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info), by Jay Edwards
+* [History of Mouse Desk/Apple II DeskTop Versions](https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info), by Jay Edwards
 * Overviews: [GUI Gallery](http://toastytech.com/guis/a2desk.html) &mdash; [GUIdebook](https://guidebookgallery.org/guis/apple2/mousedesk)
 * Manual: [Apple IIgs System Disk User’s Guide (1986)](https://mirrors.apple2.org.za/ftp.apple.asimov.net/documentation/misc/Apple%20IIgs%20System%20Disk%20Users%20Guide%20%281986%29.pdf) - Chapter 2 “The DeskTop”
-* [Disk Images for MouseDesk and Apple II DeskTop](https://mirrors.apple2.org.za/ftp.apple.asimov.net/images/masters/other_os/gui/)
+* [Disk Images for Mouse Desk and Apple II DeskTop](https://mirrors.apple2.org.za/ftp.apple.asimov.net/images/masters/other_os/gui/)
 
 Other GUI environments exist for the 8-bit Apples, including [GEOS](http://toastytech.com/guis/a2geos.html) (which includes productivity applications) and [Quark Catalyst](http://toastytech.com/guis/qcat.html). While Apple II DeskTop is more limited then GEOS, serving only as a file manager and application launcher, it follows more common interface paradigms and is better integrated with ProDOS.
 
