@@ -66,16 +66,16 @@ jt_source_filename:
         jump_table_entry HandleCancel
         jump_table_entry file_dialog::BlinkIPF1
         jump_table_entry file_dialog::RedrawF1
-        jump_table_entry file_dialog::StripF1PathSegment
-        jump_table_entry file_dialog::HandleF1SelectionChange
-        jump_table_entry file_dialog::PrepPathInput1
-        jump_table_entry file_dialog::HandleF1OtherKey
-        jump_table_entry file_dialog::HandleF1DeleteKey
-        jump_table_entry file_dialog::HandleF1LeftKey
-        jump_table_entry file_dialog::HandleF1RightKey
-        jump_table_entry file_dialog::HandleF1MetaLeftKey
-        jump_table_entry file_dialog::HandleF1MetaRightKey
-        jump_table_entry file_dialog::HandleF1Click
+        jump_table_entry file_dialog::StripPathSegmentAndRedrawF1
+        jump_table_entry file_dialog::HandleSelectionChangeF1
+        jump_table_entry file_dialog::PrepPathF1
+        jump_table_entry file_dialog::HandleOtherKeyF1
+        jump_table_entry file_dialog::HandleDeleteKeyF1
+        jump_table_entry file_dialog::HandleLeftKeyF1
+        jump_table_entry file_dialog::HandleRightKeyF1
+        jump_table_entry file_dialog::HandleMetaLeftKeyF1
+        jump_table_entry file_dialog::HandleMetaRightKeyF1
+        jump_table_entry file_dialog::HandleClickF1
         .assert * - jt_source_filename = file_dialog::kJumpTableSize+1, error, "Table size error"
 
 jt_destination_filename:
@@ -84,16 +84,16 @@ jt_destination_filename:
         jump_table_entry HandleCancelDestination
         jump_table_entry file_dialog::BlinkIPF2
         jump_table_entry file_dialog::RedrawF2
-        jump_table_entry file_dialog::StripF2PathSegment
-        jump_table_entry file_dialog::HandleF2SelectionChange
-        jump_table_entry file_dialog::PrepPathInput2
-        jump_table_entry file_dialog::HandleF2OtherKey
-        jump_table_entry file_dialog::HandleF2DeleteKey
-        jump_table_entry file_dialog::HandleF2LeftKey
-        jump_table_entry file_dialog::HandleF2RightKey
-        jump_table_entry file_dialog::HandleF2MetaLeftKey
-        jump_table_entry file_dialog::HandleF2MetaRightKey
-        jump_table_entry file_dialog::HandleF2Click
+        jump_table_entry file_dialog::StripPathSegmentAndRedrawF2
+        jump_table_entry file_dialog::HandleSelectionChangeF2
+        jump_table_entry file_dialog::PrepPathF2
+        jump_table_entry file_dialog::HandleOtherKeyF2
+        jump_table_entry file_dialog::HandleDeleteKeyF2
+        jump_table_entry file_dialog::HandleLeftKeyF2
+        jump_table_entry file_dialog::HandleRightKeyF2
+        jump_table_entry file_dialog::HandleMetaLeftKeyF2
+        jump_table_entry file_dialog::HandleMetaRightKeyF2
+        jump_table_entry file_dialog::HandleClickF2
         .assert * - jt_destination_filename = file_dialog::kJumpTableSize+1, error, "Table size error"
 
 ;;; ============================================================

@@ -157,7 +157,7 @@ start:  jsr     OpenWindow
         jsr     UpdateDiskName
         jsr     DrawListEntries
         jsr     InitInput
-        jsr     PrepPathInput1
+        jsr     PrepPathF1
         jsr     RedrawInput
         lda     #$FF
         sta     blink_ip_flag

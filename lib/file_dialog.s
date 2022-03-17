@@ -469,7 +469,7 @@ different:
 
 :       lda     file_dialog_res::selected_index
         bmi     :+
-        jsr     StripPathSegmentLeftAndRedraw
+        jsr     StripPathSegmentAndRedraw
         lda     file_dialog_res::selected_index
         jsr     InvertEntry
 :       lda     screentowindow_params::windowy
@@ -789,10 +789,10 @@ l3:     jsr     StripPathSegment
         sta     file_dialog_res::selected_index
         bit     l7
         bmi     l4
-        jsr     StripPathSegmentLeftAndRedraw
+        jsr     StripPathSegmentAndRedraw
         lda     file_dialog_res::selected_index
         bmi     l5
-        jsr     StripPathSegmentLeftAndRedraw
+        jsr     StripPathSegmentAndRedraw
         jmp     l5
 
 l4:     jsr     PrepPath
@@ -997,7 +997,7 @@ key_meta_digit:
 l1:     rts
 
 l2:     jsr     InvertEntry
-        jsr     StripPathSegmentLeftAndRedraw
+        jsr     StripPathSegmentAndRedraw
         inc     file_dialog_res::selected_index
         lda     file_dialog_res::selected_index
         jmp     UpdateListSelection
@@ -1017,7 +1017,7 @@ l3:     lda     #0
 l1:     rts
 
 l2:     jsr     InvertEntry
-        jsr     StripPathSegmentLeftAndRedraw
+        jsr     StripPathSegmentAndRedraw
         dec     file_dialog_res::selected_index
         lda     file_dialog_res::selected_index
         jmp     UpdateListSelection
@@ -1068,7 +1068,7 @@ file_char:
         lda     file_dialog_res::selected_index
         bmi     :+
         jsr     InvertEntry
-        jsr     StripPathSegmentLeftAndRedraw
+        jsr     StripPathSegmentAndRedraw
 :       pla
         jmp     UpdateListSelection
 
@@ -1170,7 +1170,7 @@ done:   rts
 
 deselect:
         jsr     InvertEntry
-        jsr     StripPathSegmentLeftAndRedraw
+        jsr     StripPathSegmentAndRedraw
 
 select:
         lda     #$00
@@ -1192,7 +1192,7 @@ done:   rts
 :       dex
         txa
         jsr     InvertEntry
-        jsr     StripPathSegmentLeftAndRedraw
+        jsr     StripPathSegmentAndRedraw
 l1:     ldx     num_file_names
         dex
         txa
@@ -2379,7 +2379,7 @@ ShowIPF2 := HideIPF2
 ;;; ============================================================
 ;;; A click when f1 has focus (click may be elsewhere)
 
-.proc HandleF1Click
+.proc HandleClickF1
         click_coords := screentowindow_params::windowx
 
         lda     file_dialog_res::winfo::window_id
@@ -2456,7 +2456,7 @@ ret:    rts
         beq     ret
         cmp     buf_right
         bcc     :+
-        jmp     HandleF1MetaRightKey
+        jmp     HandleMetaRightKeyF1
 :
         copy    tw_params::length, len
         jsr     HideIPF1        ; Click Right F1
@@ -2510,7 +2510,7 @@ ret:    rts
         lda     tw_params::length
         cmp     #1
         bcs     @loop
-        jmp     HandleF1MetaLeftKey
+        jmp     HandleMetaLeftKeyF1
 :
         lda     tw_params::length
         cmp     buf_left
@@ -2561,13 +2561,13 @@ finish: jsr     ShowIPF1
         rts
 
 ip_pos: .word   0
-.endproc ; HandleF1Click
+.endproc ; HandleClickF1
 
 ;;; ============================================================
 ;;; A click when f2 has focus (click may be elsewhere)
 
 .if FD_EXTENDED
-.proc HandleF2Click
+.proc HandleClickF2
         click_coords := screentowindow_params::windowx
 
         ;; Was click inside text box?
@@ -2591,7 +2591,7 @@ ip_pos: .word   0
         bne     done
         jsr     HandleCancel ; Move focus to input1
         ;; NOTE: Assumes screentowindow_params::window* has not been changed.
-        jmp     HandleF1Click::ep2
+        jmp     HandleClickF1::ep2
 
 done:   rts
 
@@ -2642,7 +2642,7 @@ ret:    rts
         beq     ret
         cmp     buf_right
         bcc     :+
-        jmp     HandleF2MetaRightKey
+        jmp     HandleMetaRightKeyF2
 :
         copy    tw_params::length, len
         jsr     HideIPF2        ; Click Right F2
@@ -2696,7 +2696,7 @@ ret:    rts
         lda     tw_params::length
         cmp     #1
         bcs     @loop
-        jmp     HandleF2MetaLeftKey
+        jmp     HandleMetaLeftKeyF2
 :
         lda     tw_params::length
         cmp     buf_left
@@ -2748,7 +2748,7 @@ finish: jsr     ShowIPF2
 
 ip_pos: .word   0
 .endproc
-HandleF2Click__ep2 := HandleF2Click::ep2
+HandleF2Click__ep2 := HandleClickF2::ep2
 .endif
 
 ;;; ============================================================
@@ -2777,7 +2777,7 @@ yes:    clc
 
 ;;; ============================================================
 
-.proc HandleF1OtherKey
+.proc HandleOtherKeyF1
         buf_left := buf_input1_left
         buf_right := buf_input_right
 
@@ -2832,7 +2832,7 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc HandleF1DeleteKey
+.proc HandleDeleteKeyF1
         lda     buf_input1_left
         bne     :+
         rts
@@ -2857,7 +2857,7 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc HandleF1LeftKey
+.proc HandleLeftKeyF1
         jsr     ObscureCursor
 
         buf_left := buf_input1_left
@@ -2894,7 +2894,7 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character right.
 
-.proc HandleF1RightKey
+.proc HandleRightKeyF1
         jsr     ObscureCursor
 
         buf_left := buf_input1_left
@@ -2934,7 +2934,7 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc HandleF1MetaLeftKey
+.proc HandleMetaLeftKeyF1
         jsr     ObscureCursor
 
         buf_left := buf_input1_left
@@ -2980,7 +2980,7 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc HandleF1MetaRightKey
+.proc HandleMetaRightKeyF1
         jsr     ObscureCursor
         jsr     HideIPF1        ; End F1
         jsr     MoveIPToEndF1
@@ -2991,7 +2991,7 @@ ret:    rts
 ;;; ============================================================
 
 .if FD_EXTENDED
-.proc HandleF2OtherKey
+.proc HandleOtherKeyF2
         buf_left := buf_input2_left
         buf_right := buf_input_right
 
@@ -3048,7 +3048,7 @@ ret:    rts
 ;;; ============================================================
 
 .if FD_EXTENDED
-.proc HandleF2DeleteKey
+.proc HandleDeleteKeyF2
         lda     buf_input2_left
         bne     :+
         rts
@@ -3076,7 +3076,7 @@ ret:    rts
 ;;; Move IP one character left.
 
 .if FD_EXTENDED
-.proc HandleF2LeftKey
+.proc HandleLeftKeyF2
         jsr     ObscureCursor
 
         buf_left := buf_input2_left
@@ -3114,7 +3114,7 @@ ret:    rts
 ;;; ============================================================
 
 .if FD_EXTENDED
-.proc HandleF2RightKey
+.proc HandleRightKeyF2
         jsr     ObscureCursor
 
         buf_left := buf_input2_left
@@ -3156,7 +3156,7 @@ ret:    rts
 ;;; ============================================================
 
 .if FD_EXTENDED
-.proc HandleF2MetaLeftKey
+.proc HandleMetaLeftKeyF2
         jsr     ObscureCursor
 
         buf_left = buf_input2_left
@@ -3204,7 +3204,7 @@ ret:    rts
 ;;; ============================================================
 
 .if FD_EXTENDED
-.proc HandleF2MetaRightKey
+.proc HandleMetaRightKeyF2
         jsr     ObscureCursor
         jsr     HideIPF2        ; End F2
         jsr     MoveIPToEndF2
@@ -3221,15 +3221,16 @@ ret:    rts
 
 BlinkIP                 := BlinkIPF1
 RedrawInput             := RedrawF1
+StripPathSegmentAndRedraw := StripPathSegmentAndRedrawF1
 HandleSelectionChange   := ListSelectionChange
-PrepPath                := PrepPathInput1
-HandleOtherKey          := HandleF1OtherKey
-HandleDeleteKey         := HandleF1DeleteKey
-HandleLeftKey           := HandleF1LeftKey
-HandleRightKey          := HandleF1RightKey
-HandleMetaLeftKey       := HandleF1MetaLeftKey
-HandleMetaRightKey      := HandleF1MetaRightKey
-HandleClick             := HandleF1Click
+PrepPath                := PrepPathF1
+HandleOtherKey          := HandleOtherKeyF1
+HandleDeleteKey         := HandleDeleteKeyF1
+HandleLeftKey           := HandleLeftKeyF1
+HandleRightKey          := HandleRightKeyF1
+HandleMetaLeftKey       := HandleMetaLeftKeyF1
+HandleMetaRightKey      := HandleMetaRightKeyF1
+HandleClick             := HandleClickF1
 
 .else
 
@@ -3242,7 +3243,7 @@ HandleOk:             jmp     0
 HandleCancel:         jmp     0
 BlinkIP:              jmp     0
 RedrawInput:          jmp     0
-StripPathSegmentLeftAndRedraw:     jmp     0
+StripPathSegmentAndRedraw:     jmp     0
 HandleSelectionChange:  jmp     0
 PrepPath:             jmp     0
 HandleOtherKey:       jmp     0
@@ -3326,7 +3327,7 @@ HandleClick:          jmp     0
 ;;; ============================================================
 ;;; Trim end of left segment to rightmost '/'
 
-.proc StripPathSegmentInput1
+.proc StripPathSegmentF1
 :       ldx     buf_input1_left
         cpx     #0
         beq     :+
@@ -3340,7 +3341,7 @@ HandleClick:          jmp     0
 ;;; ============================================================
 
 .if FD_EXTENDED
-.proc StripPathSegmentInput2
+.proc StripPathSegmentF2
 :       ldx     buf_input2_left
         cpx     #0
         beq     :+
@@ -3355,23 +3356,16 @@ HandleClick:          jmp     0
 ;;; ============================================================
 
 
-.if !FD_EXTENDED
 
-.proc StripPathSegmentLeftAndRedraw
-        jsr     StripPathSegmentInput1
+.proc StripPathSegmentAndRedrawF1
+        jsr     StripPathSegmentF1
         jsr     RedrawInput
         rts
 .endproc
 
-.else
-.proc StripF1PathSegment
-        jsr     StripPathSegmentInput1
-        jsr     RedrawInput
-        rts
-.endproc
-
-.proc StripF2PathSegment
-        jsr     StripPathSegmentInput2
+.if FD_EXTENDED
+.proc StripPathSegmentAndRedrawF2
+        jsr     StripPathSegmentF2
         jsr     RedrawInput
         rts
 .endproc
@@ -3383,11 +3377,11 @@ HandleClick:          jmp     0
 ;;; ============================================================
 
 .if FD_EXTENDED
-HandleF1SelectionChange:
+HandleSelectionChangeF1:
         lda     #$00
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
-HandleF2SelectionChange:
+HandleSelectionChangeF2:
         lda     #$80
         FALL_THROUGH_TO ListSelectionChange
 .endif
@@ -3447,7 +3441,7 @@ flag:   .byte   0
 
 ;;; ============================================================
 
-.proc PrepPathInput1
+.proc PrepPathF1
         COPY_STRING path_buf, buf_input1_left
         jmp     ClearRight
 .endproc
@@ -3455,7 +3449,7 @@ flag:   .byte   0
 ;;; ============================================================
 
 .if FD_EXTENDED
-.proc PrepPathInput2
+.proc PrepPathF2
         COPY_STRING path_buf, buf_input2_left
         rts
 .endproc
