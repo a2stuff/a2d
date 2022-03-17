@@ -191,36 +191,12 @@ jt_pathname:
         .byte file_dialog::kJumpTableSize-1
         jump_table_entry HandleOkFilename
         jump_table_entry HandleCancelFilename
-        jump_table_entry file_dialog::BlinkIPF1
-        jump_table_entry file_dialog::RedrawF1
-        jump_table_entry file_dialog::StripPathSegmentAndRedrawF1
-        jump_table_entry file_dialog::HandleSelectionChangeF1
-        jump_table_entry file_dialog::PrepPathF1
-        jump_table_entry file_dialog::HandleOtherKeyF1
-        jump_table_entry file_dialog::HandleDeleteKeyF1
-        jump_table_entry file_dialog::HandleLeftKeyF1
-        jump_table_entry file_dialog::HandleRightKeyF1
-        jump_table_entry file_dialog::HandleMetaLeftKeyF1
-        jump_table_entry file_dialog::HandleMetaRightKeyF1
-        jump_table_entry file_dialog::HandleClickF1
         .assert * - jt_pathname = file_dialog::kJumpTableSize+1, error, "Table size error"
 
 jt_entry_name:
         .byte file_dialog::kJumpTableSize-1
         jump_table_entry HandleOkName
         jump_table_entry HandleCancelName
-        jump_table_entry file_dialog::BlinkIPF2
-        jump_table_entry file_dialog::RedrawF2
-        jump_table_entry file_dialog::StripPathSegmentAndRedrawF2
-        jump_table_entry file_dialog::HandleSelectionChangeF2
-        jump_table_entry file_dialog::PrepPathF2
-        jump_table_entry file_dialog::HandleOtherKeyF2
-        jump_table_entry file_dialog::HandleDeleteKeyF2
-        jump_table_entry file_dialog::HandleLeftKeyF2
-        jump_table_entry file_dialog::HandleRightKeyF2
-        jump_table_entry file_dialog::HandleMetaLeftKeyF2
-        jump_table_entry file_dialog::HandleMetaRightKeyF2
-        jump_table_entry file_dialog::HandleClickF2
         .assert * - jt_entry_name = file_dialog::kJumpTableSize+1, error, "Table size error"
 
 ;;; ============================================================

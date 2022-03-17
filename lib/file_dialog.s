@@ -3237,23 +3237,72 @@ HandleClick             := HandleClickF1
 ;;; Dynamically altered table of handlers for focused
 ;;; input field (e.g. source/destination filename, etc)
 
-kJumpTableSize = $2A
+kJumpTableSize = 6
 jump_table:
 HandleOk:             jmp     0
 HandleCancel:         jmp     0
-BlinkIP:              jmp     0
-RedrawInput:          jmp     0
-StripPathSegmentAndRedraw:     jmp     0
-HandleSelectionChange:  jmp     0
-PrepPath:             jmp     0
-HandleOtherKey:       jmp     0
-HandleDeleteKey:      jmp     0
-HandleLeftKey:        jmp     0
-HandleRightKey:       jmp     0
-HandleMetaLeftKey:    jmp     0
-HandleMetaRightKey:   jmp     0
-HandleClick:          jmp     0
         .assert * - jump_table = kJumpTableSize, error, "Table size mismatch"
+
+BlinkIP:
+        bit     focus_in_input2_flag
+        jpl     BlinkIPF1
+        jmp     BlinkIPF2
+
+RedrawInput:
+        bit     focus_in_input2_flag
+        jpl     RedrawF1
+        jmp     RedrawF2
+
+StripPathSegmentAndRedraw:
+        bit     focus_in_input2_flag
+        jpl     StripPathSegmentAndRedrawF1
+        jmp     StripPathSegmentAndRedrawF2
+
+HandleSelectionChange:
+        bit     focus_in_input2_flag
+        jpl     HandleSelectionChangeF1
+        jmp     HandleSelectionChangeF2
+
+PrepPath:
+        bit     focus_in_input2_flag
+        jpl     PrepPathF1
+        jmp     PrepPathF2
+
+HandleOtherKey:
+        bit     focus_in_input2_flag
+        jpl     HandleOtherKeyF1
+        jmp     HandleOtherKeyF2
+
+HandleDeleteKey:
+        bit     focus_in_input2_flag
+        jpl     HandleDeleteKeyF1
+        jmp     HandleDeleteKeyF2
+
+HandleLeftKey:
+        bit     focus_in_input2_flag
+        jpl     HandleLeftKeyF1
+        jmp     HandleLeftKeyF2
+
+HandleRightKey:
+        bit     focus_in_input2_flag
+        jpl     HandleRightKeyF1
+        jmp     HandleRightKeyF2
+
+HandleMetaLeftKey:
+        bit     focus_in_input2_flag
+        jpl     HandleMetaLeftKeyF1
+        jmp     HandleMetaLeftKeyF2
+
+HandleMetaRightKey:
+        bit     focus_in_input2_flag
+        jpl     HandleMetaRightKeyF1
+        jmp     HandleMetaRightKeyF2
+
+HandleClick:
+        bit     focus_in_input2_flag
+        jpl     HandleClickF1
+        jmp     HandleClickF2
+
 .endif
 
 ;;; ============================================================
