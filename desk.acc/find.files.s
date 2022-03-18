@@ -980,6 +980,7 @@ ctlmax:         .byte   0
         DEFINE_BUTTON cancel, res_string_button_cancel, kDAWidth-120, kControlsTop
 
 penXOR:         .byte   MGTK::penXOR
+pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
@@ -1138,6 +1139,9 @@ not_meta:
 
         cmp     #CHAR_DELETE
         jeq     DoDelete
+
+        cmp     #CHAR_CLEAR
+        jeq     DoClear
 
         cmp     #CHAR_UP
     IF_EQ
@@ -1368,6 +1372,34 @@ ret:    jmp     InputLoop
         dec     buf_left
 
         jsr     DrawInputText
+
+        jsr     ShowIP
+
+done:   jmp     InputLoop
+.endproc
+
+;;; ------------------------------------------------------------
+
+.proc DoClear
+        jsr     ObscureCursor
+
+        lda     buf_left        ; length of string to left of IP
+        ora     buf_right       ; length of string to right of IP
+        beq     done
+
+        jsr     HideIP          ; Clear
+
+        lda     #0
+        sta     buf_left
+        sta     buf_right
+
+        copy    #kDAWindowID, winport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, input_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, input_rect
 
         jsr     ShowIP
 

@@ -302,5 +302,6 @@ CHAR_UP         = $0B
 CHAR_RETURN     = $0D
 CHAR_CTRL_O     = $0F
 CHAR_RIGHT      = $15
+CHAR_CLEAR      = $18
 CHAR_ESCAPE     = $1B
 CHAR_DELETE     = $7F

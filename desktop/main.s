@@ -14515,6 +14515,9 @@ no_mods:
 :       cmp     #CHAR_DELETE
         jeq     HandleKeyDelete
 
+        cmp     #CHAR_CLEAR
+        jeq     HandleKeyClear
+
         cmp     #CHAR_UP
         bne     :+
         bit     format_erase_overlay_flag
@@ -14651,6 +14654,14 @@ do_all: jsr     SetPenModeXOR
         beq     :+
         jsr     ObscureCursor
         jsr     InputFieldDeleteChar
+:       return  #$FF
+.endproc
+
+.proc HandleKeyClear
+        lda     has_input_field_flag
+        beq     :+
+        jsr     ObscureCursor
+        jsr     InputFieldClear
 :       return  #$FF
 .endproc
 
@@ -16273,6 +16284,33 @@ ret:    rts
         jsr     SetNameInputClipRect
         param_call DrawString, path_buf2
         param_call DrawString, str_2_spaces
+        lda     #winfo_prompt_dialog::kWindowId
+        jsr     SafeSetPortFromWindowId
+
+        jsr     ShowPromptIP
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc InputFieldClear
+        buf_left := path_buf1
+        buf_right := path_buf2
+
+        ;; Anything to delete?
+        lda     buf_left
+        ora     buf_right
+        beq     ret
+
+        jsr     HidePromptIP    ; Clear
+
+        lda     #0
+        sta     buf_left
+        sta     buf_right
+
+        jsr     SetNameInputClipRect
+        jsr     ClearNameInputRect
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 

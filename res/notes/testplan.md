@@ -664,6 +664,10 @@ Repeat for each field:
    * Should delete character before IP, unless at start of string.
    * Mouse cursor should be hidden until moved.
    * Test with IP at start, in middle, and at end of the string.
+ * Control+X (or Clear key on IIgs)
+   * Should clear all text.
+   * Mouse cursor should be hidden until moved.
+   * Test with IP at start, in middle, and at end of the string.
  * Left arrow
    * Should move IP one character to the left, unless at start of string.
    * Mouse cursor should be hidden until moved.

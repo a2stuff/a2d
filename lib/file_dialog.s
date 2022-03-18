@@ -875,6 +875,9 @@ no_modifiers:
         cmp     #CHAR_DELETE
         jeq     KeyDelete
 
+        cmp     #CHAR_CLEAR
+        jeq     KeyClear
+
         bit     listbox_disabled_flag
         bpl     :+
         jmp     finish
@@ -974,6 +977,14 @@ exit:   jsr     InitSetGrafport
 .proc KeyDelete
         jsr     ObscureCursor
         jsr     HandleDeleteKey
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc KeyClear
+        jsr     ObscureCursor
+        jsr     HandleClearKey
         rts
 .endproc
 
@@ -2289,6 +2300,7 @@ has_sel:
         copy16  #0, xcoord
         copy16  #AS_WORD(-kSystemFontHeight), ycoord
         MGTK_CALL MGTK::Line, point
+        MGTK_CALL MGTK::SetPenMode, pencopy
 
         rts
 .endproc
@@ -2349,6 +2361,9 @@ ShowIPF2 := HideIPF2
 .proc RedrawF1
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
+
+        jsr     HideIPF1        ; Redraw F1
+
         MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
@@ -2356,6 +2371,9 @@ ShowIPF2 := HideIPF2
         param_call DrawString, buf_input1_left
         param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
+
+        jsr     ShowIPF1
+
         rts
 .endproc
 
@@ -2365,6 +2383,9 @@ ShowIPF2 := HideIPF2
 .proc RedrawF2
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
+
+        jsr     HideIPF2        ; Redraw F2
+
         MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
@@ -2372,6 +2393,9 @@ ShowIPF2 := HideIPF2
         param_call DrawString, buf_input2_left
         param_call DrawString, buf_input_right
         param_call DrawString, str_2_spaces
+
+        jsr     ShowIPF2
+
         rts
 .endproc
 .endif
@@ -2834,9 +2858,8 @@ ret:    rts
 
 .proc HandleDeleteKeyF1
         lda     buf_input1_left
-        bne     :+
-        rts
-:
+        beq     ret
+
         jsr     HideIPF1        ; Delete F1
 
         dec     buf_input1_left
@@ -2852,7 +2875,35 @@ ret:    rts
         jsr     ShowIPF1
         jsr     SelectMatchingFileInListF1
 
-        rts
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleClearKeyF1
+        buf_left := buf_input1_left
+        buf_right := buf_input_right
+
+        lda     buf_left
+        ora     buf_right
+        beq     ret
+
+        jsr     HideIPF1        ; Clear F1
+
+        lda     #0
+        sta     buf_left
+        sta     buf_right
+
+        lda     file_dialog_res::winfo::window_id
+        jsr     SetPortForWindow
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+
+        jsr     ShowIPF1
+        jsr     SelectMatchingFileInListF1
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -3073,6 +3124,36 @@ ret:    rts
 .endif
 
 ;;; ============================================================
+
+.if FD_EXTENDED
+.proc HandleClearKeyF2
+        buf_left := buf_input2_left
+        buf_right := buf_input_right
+
+        lda     buf_left
+        ora     buf_right
+        beq     ret
+
+        jsr     HideIPF2        ; Clear F2
+
+        lda     #0
+        sta     buf_left
+        sta     buf_right
+
+        lda     file_dialog_res::winfo::window_id
+        jsr     SetPortForWindow
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
+
+        jsr     ShowIPF2
+        jsr     SelectMatchingFileInListF2
+
+ret:    rts
+.endproc
+.endif
+
+;;; ============================================================
 ;;; Move IP one character left.
 
 .if FD_EXTENDED
@@ -3226,6 +3307,7 @@ HandleSelectionChange   := ListSelectionChange
 PrepPath                := PrepPathF1
 HandleOtherKey          := HandleOtherKeyF1
 HandleDeleteKey         := HandleDeleteKeyF1
+HandleClearKey          := HandleClearKeyF1
 HandleLeftKey           := HandleLeftKeyF1
 HandleRightKey          := HandleRightKeyF1
 HandleMetaLeftKey       := HandleMetaLeftKeyF1
@@ -3277,6 +3359,11 @@ HandleDeleteKey:
         bit     focus_in_input2_flag
         jpl     HandleDeleteKeyF1
         jmp     HandleDeleteKeyF2
+
+HandleClearKey:
+        bit     focus_in_input2_flag
+        jpl     HandleClearKeyF1
+        jmp     HandleClearKeyF2
 
 HandleLeftKey:
         bit     focus_in_input2_flag

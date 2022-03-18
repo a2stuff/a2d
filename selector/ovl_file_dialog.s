@@ -20,6 +20,7 @@ ep_loop:
 ;;; ============================================================
 
 penXOR:         .byte   MGTK::penXOR
+pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 
         .include "../lib/event_params.s"
