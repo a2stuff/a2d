@@ -774,7 +774,7 @@ l2:     cpx     #$01
         bne     l3
         jmp     l6
 
-l3:     jsr     StripPathSegment
+l3:     jsr     StripPathBufSegment
         lda     file_dialog_res::selected_index
         pha
         lda     #$FF
@@ -1245,8 +1245,10 @@ l1:     ldx     num_file_names
         jsr     UpdateScrollbar2
         jsr     DrawListEntries
 
+        ;; TODO: Move this earlier?
         jsr     ClearRight
 
+        ;; TODO: Redundant with HandleSelectionChange
         jsr     RedrawInput
         rts
 .endproc
@@ -1594,7 +1596,7 @@ open_dir_flag:
 
 ;;; ============================================================
 
-.proc StripPathSegment
+.proc StripPathBufSegment
 :       ldx     path_buf
         cpx     #0
         beq     :+
@@ -2344,7 +2346,7 @@ ShowIPF1 := HideIPF1
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
 
-        jsr     HideIPF1        ; Redraw F1
+        ;; jsr     HideIPF1        ; Redraw F1
 
         MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -2896,7 +2898,7 @@ ShowIPF2 := HideIPF2
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
 
-        jsr     HideIPF2        ; Redraw F2
+        ;; jsr     HideIPF2        ; Redraw F2
 
         MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -3350,6 +3352,7 @@ ret:    rts
 
 BlinkIP                 := BlinkIPF1
 RedrawInput             := RedrawF1
+StripPathSegment        := StripPathSegmentF1
 StripPathSegmentAndRedraw := StripPathSegmentAndRedrawF1
 HandleSelectionChange   := ListSelectionChange
 PrepPath                := PrepPathF1
@@ -3382,6 +3385,11 @@ RedrawInput:
         bit     focus_in_input2_flag
         jpl     RedrawF1
         jmp     RedrawF2
+
+StripPathSegment:
+        bit     focus_in_input2_flag
+        jpl     StripPathSegmentF1
+        jmp     StripPathSegmentF2
 
 StripPathSegmentAndRedraw:
         bit     focus_in_input2_flag
@@ -3776,7 +3784,7 @@ l4:     lda     d2
         bpl     l5
         rts
 
-l5:     jsr     StripPathSegment
+l5:     jsr     StripPathBufSegment
         rts
 
 d1:     .byte   0

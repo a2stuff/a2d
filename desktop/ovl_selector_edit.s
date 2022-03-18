@@ -24,7 +24,7 @@
         dey
         bpl     :-
 
-        jsr     file_dialog::StripPathSegment
+        jsr     file_dialog::StripPathBufSegment
         ;; Was it just a volume name, e.g. "/VOL"?
         lda     file_dialog::path_buf
         bne     :+
@@ -205,9 +205,7 @@ jt_entry_name:
         jsr     file_dialog::HideIPF1 ; Switch
         jsr     file_dialog::MoveIPToEndF1
 
-        copy    #0, path_buf2
-        jsr     file_dialog::RedrawInput
-
+        ;; install name field handlers
         ldx     jt_entry_name
 :       lda     jt_entry_name+1,x
         sta     file_dialog::jump_table,x
@@ -248,10 +246,8 @@ found_slash:
         bne     :-
         sty     path_buf1
 
-finish: copy    #0, path_buf2
-        copy    #$80, input_allow_all_chars_flag
+finish: copy    #$80, input_allow_all_chars_flag
         jsr     file_dialog::RedrawInput
-        jsr     file_dialog::ShowIPF2
         rts
 .endproc
 
@@ -265,24 +261,23 @@ finish: copy    #0, path_buf2
         param_call file_dialog::VerifyValidPath, path_buf0
         bne     invalid
         lda     path_buf1
-        beq     fail
-        cmp     #$0F            ; Max selector name length
+        jeq     Bell            ; empty - give a subtle error
+        cmp     #14+1           ; Max selector name length
         bcs     too_long
         jsr     IsVolPath
         bcs     ok              ; nope
         lda     copy_when       ; Disallow copying volume to ramcard
         cmp     #3
         beq     ok
+        FALL_THROUGH_TO invalid
 
 invalid:
         lda     #ERR_INVALID_PATHNAME
-        jsr     JUMP_TABLE_SHOW_ALERT
-fail:   rts
+        jmp     JUMP_TABLE_SHOW_ALERT
 
 too_long:
         lda     #kErrNameTooLong
-        jsr     JUMP_TABLE_SHOW_ALERT
-        rts
+        jmp     JUMP_TABLE_SHOW_ALERT
 
 ok:     MGTK_CALL MGTK::InitPort, main_grafport
         MGTK_CALL MGTK::SetPort, main_grafport
@@ -335,9 +330,7 @@ found:  cpy     #2
         jsr     file_dialog::HideIPF2 ; Switch
         jsr     file_dialog::MoveIPToEndF2
 
-        copy    #0, path_buf2
-        jsr     file_dialog::RedrawInput
-
+        ;; install pathname field handlers
         ldx     jt_pathname
 :       lda     jt_pathname+1,x
         sta     file_dialog::jump_table,x
@@ -348,9 +341,7 @@ found:  cpy     #2
         dex
         bpl     :-
 
-        copy    #0, path_buf2
         copy    #0, input_allow_all_chars_flag
-        jsr     file_dialog::RedrawInput
         lda     #$00
         sta     file_dialog::listbox_disabled_flag
         sta     file_dialog::focus_in_input2_flag

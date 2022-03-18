@@ -1387,7 +1387,8 @@ done:   jmp     InputLoop
         ora     buf_right       ; length of string to right of IP
         beq     done
 
-        jsr     HideIP          ; Clear
+        ;; Unnecessary - the entire field will be repainted.
+        ;; jsr     HideIP          ; Clear
 
         lda     #0
         sta     buf_left

@@ -16010,7 +16010,8 @@ ShowPromptIP := HidePromptIP
 ;;; ============================================================
 
 .proc DrawFilenamePrompt
-        jsr     HidePromptIP    ; Redraw
+        ;; Unnecessary - the entire field will be repainted.
+        ;; jsr     HidePromptIP    ; Redraw
 
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
