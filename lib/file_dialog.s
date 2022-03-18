@@ -1171,6 +1171,30 @@ done:   rts
 
 ;;; ============================================================
 
+.proc IsPathChar
+        jsr     UpcaseChar
+        cmp     #'A'
+        bcc     :+
+        cmp     #'Z'+1
+        bcc     yes
+:       cmp     #'0'
+        bcc     :+
+        cmp     #'9'+1
+        bcc     yes
+:       cmp     #'.'
+        beq     yes
+        cmp     #'/'
+        beq     yes
+
+        sec
+        rts
+
+yes:    clc
+        rts
+.endproc
+
+;;; ============================================================
+
 .proc ScrollListTop
         lda     num_file_names
         beq     done
@@ -2269,6 +2293,8 @@ has_sel:
 .endproc
 
 ;;; ============================================================
+;;; Text Input Field 1
+;;; ============================================================
 
 .proc BlinkIPF1
         pt := $06
@@ -2314,50 +2340,6 @@ ShowIPF1 := HideIPF1
 
 ;;; ============================================================
 
-.if FD_EXTENDED
-.proc BlinkIPF2
-        pt := $06
-
-        ;; Toggle flag
-        lda     prompt_ip_flag
-        eor     #$80
-        sta     prompt_ip_flag
-
-        FALL_THROUGH_TO XDrawIPF2
-.endproc
-
-.proc XDrawIPF2
-        point := $6
-        xcoord := $6
-        ycoord := $8
-
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
-
-        ;; TODO: Do this with a 1px rect instead of a line
-        jsr     CalcInput2IPPos
-        stax    xcoord
-        copy16  file_dialog_res::input2_textpos::ycoord, ycoord
-
-        MGTK_CALL MGTK::MoveTo, point
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        copy16  #0, xcoord
-        copy16  #AS_WORD(-9), ycoord
-        MGTK_CALL MGTK::Line, point
-
-        rts
-.endproc
-
-.proc HideIPF2
-        bit     prompt_ip_flag
-        bmi     XDrawIPF2
-        rts
-.endproc
-ShowIPF2 := HideIPF2
-.endif
-
-;;; ============================================================
-
 .proc RedrawF1
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
@@ -2376,29 +2358,6 @@ ShowIPF2 := HideIPF2
 
         rts
 .endproc
-
-;;; ============================================================
-
-.if FD_EXTENDED
-.proc RedrawF2
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
-
-        jsr     HideIPF2        ; Redraw F2
-
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
-        param_call DrawString, buf_input2_left
-        param_call DrawString, buf_input_right
-        param_call DrawString, str_2_spaces
-
-        jsr     ShowIPF2
-
-        rts
-.endproc
-.endif
 
 ;;; ============================================================
 ;;; A click when f1 has focus (click may be elsewhere)
@@ -2586,218 +2545,6 @@ finish: jsr     ShowIPF1
 
 ip_pos: .word   0
 .endproc ; HandleClickF1
-
-;;; ============================================================
-;;; A click when f2 has focus (click may be elsewhere)
-
-.if FD_EXTENDED
-.proc HandleClickF2
-        click_coords := screentowindow_params::windowx
-
-        ;; Was click inside text box?
-        lda     file_dialog_res::winfo::window_id
-        sta     screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
-        MGTK_CALL MGTK::MoveTo, click_coords
-
-        ;; Inside input2 ?
-        MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
-        cmp     #MGTK::inrect_inside
-        beq     ep2
-
-        ;; Inside input1 ?
-        bit     dual_inputs_flag
-        bpl     done
-        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
-        cmp     #MGTK::inrect_inside
-        bne     done
-        jsr     HandleCancel ; Move focus to input1
-        ;; NOTE: Assumes screentowindow_params::window* has not been changed.
-        jmp     HandleClickF1::ep2
-
-done:   rts
-
-ep2:
-        ;; Is click to left or right of insertion point?
-        jsr     CalcInput2IPPos
-
-        width := $06
-
-        stax    width
-        cmp16   click_coords, width
-        jcc     ToLeft
-        FALL_THROUGH_TO ToRight
-
-        PARAM_BLOCK tw_params, $06
-data    .addr
-length  .byte
-width   .word
-        END_PARAM_BLOCK
-
-        buf_left := buf_input2_left
-        buf_right := buf_input_right
-
-        ;; --------------------------------------------------
-        ;; Click is to the right of IP
-
-.proc ToRight
-        lda     buf_right
-        beq     ret
-
-        jsr     CalcInput2IPPos
-        stax    ip_pos
-
-        ;; Iterate to find the position
-        copy16  #buf_right, tw_params::data
-        copy    buf_right, tw_params::length
-@loop:  MGTK_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, ip_pos, tw_params::width
-        cmp16   tw_params::width, click_coords
-        bcc     :+
-        dec     tw_params::length
-        lda     tw_params::length
-        bne     @loop
-ret:    rts
-
-        ;; Was it to the right of the string?
-:       lda     tw_params::length
-        beq     ret
-        cmp     buf_right
-        bcc     :+
-        jmp     HandleMetaRightKeyF2
-:
-        copy    tw_params::length, len
-        jsr     HideIPF2        ; Click Right F2
-
-        ;; Append from `buf_right` into `buf_left`
-        ldx     #1
-        ldy     buf_left
-        iny
-:       lda     buf_right,x
-        sta     buf_left,y
-        cpx     len
-        beq     :+
-        iny
-        inx
-        jmp     :-
-:       sty     buf_left
-
-        ;; Shift contents of `buf_right` down
-        ldy     #1
-        len := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        inx
-:       lda     buf_right,x
-        sta     buf_right,y
-        cpx     buf_right
-        beq     :+
-        iny
-        inx
-        jmp     :-
-
-:       sty     buf_right
-        jmp     finish
-.endproc
-
-        ;; --------------------------------------------------
-        ;; Click to left of IP
-
-.proc ToLeft
-        lda     buf_left
-        bne     :+
-ret:    rts
-:
-        ;; Iterate to find the position
-        copy16  #buf_left, tw_params::data
-        copy    buf_left, tw_params::length
-@loop:  MGTK_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, file_dialog_res::input2_textpos, tw_params::width
-        cmp16   tw_params::width, click_coords
-        bcc     :+
-        dec     tw_params::length
-        lda     tw_params::length
-        cmp     #1
-        bcs     @loop
-        jmp     HandleMetaLeftKeyF2
-:
-        lda     tw_params::length
-        cmp     buf_left
-        bcs     ret
-        sta     len
-
-        jsr     HideIPF2        ; Click Left F2
-        inc     len
-
-        ;; Shift everything in `buf_right` up to make room
-        lda     buf_right
-        pha
-        lda     buf_left
-        sec
-        sbc     len
-        clc
-        adc     buf_right
-        sta     buf_right
-        tax
-        pla
-    IF_NOT_ZERO
-        tay
-:       lda     buf_right,y
-        sta     buf_right,x
-        dex
-        dey
-        bne     :-
-    END_IF
-
-        ;; Copy everything to the right from `buf_left` to `buf_right`
-        ldy     #0
-        len := *+1
-        ldx     #SELF_MODIFIED_BYTE
-:       cpx     buf_left
-        beq     :+
-        inx
-        iny
-        lda     buf_left,x
-        sta     buf_right,y
-        jmp     :-
-:
-        ;; Adjust length
-        copy    len, buf_left
-        FALL_THROUGH_TO finish
-.endproc
-
-finish: jsr     ShowIPF2
-        rts
-
-ip_pos: .word   0
-.endproc
-HandleF2Click__ep2 := HandleClickF2::ep2
-.endif
-
-;;; ============================================================
-
-.proc IsPathChar
-        jsr     UpcaseChar
-        cmp     #'A'
-        bcc     :+
-        cmp     #'Z'+1
-        bcc     yes
-:       cmp     #'0'
-        bcc     :+
-        cmp     #'9'+1
-        bcc     yes
-:       cmp     #'.'
-        beq     yes
-        cmp     #'/'
-        beq     yes
-
-        sec
-        rts
-
-yes:    clc
-        rts
-.endproc
 
 ;;; ============================================================
 
@@ -3040,8 +2787,318 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Trim end of left segment to rightmost '/'
+
+.proc StripPathSegmentF1
+:       ldx     buf_input1_left
+        cpx     #0
+        beq     :+
+        dec     buf_input1_left
+        lda     buf_input1_left,x
+        cmp     #'/'
+        bne     :-
+:       rts
+.endproc
+
+;;; ============================================================
+
+.proc StripPathSegmentAndRedrawF1
+        jsr     StripPathSegmentF1
+        jsr     RedrawInput
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc PrepPathF1
+        COPY_STRING path_buf, buf_input1_left
+        jmp     ClearRight
+.endproc
+
+;;; ============================================================
+
+.proc MoveIPToEndF1
+        buf_left := buf_input1_left
+        buf_right := buf_input_right
+
+        lda     buf_right
+        beq     ret
+
+        ;; Append right string to left
+        ldx     #0
+        ldy     buf_left
+:       inx
+        iny
+        lda     buf_right,x
+        sta     buf_left,y
+        cpx     buf_right
+        bne     :-
+        sty     buf_left
+
+        ;; Clear right string
+        jsr     ClearRight
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+;;; Text Input Field 2
+;;; ============================================================
 
 .if FD_EXTENDED
+
+;;; ============================================================
+
+.proc BlinkIPF2
+        pt := $06
+
+        ;; Toggle flag
+        lda     prompt_ip_flag
+        eor     #$80
+        sta     prompt_ip_flag
+
+        FALL_THROUGH_TO XDrawIPF2
+.endproc
+
+.proc XDrawIPF2
+        point := $6
+        xcoord := $6
+        ycoord := $8
+
+        lda     file_dialog_res::winfo::window_id
+        jsr     SetPortForWindow
+
+        ;; TODO: Do this with a 1px rect instead of a line
+        jsr     CalcInput2IPPos
+        stax    xcoord
+        copy16  file_dialog_res::input2_textpos::ycoord, ycoord
+
+        MGTK_CALL MGTK::MoveTo, point
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        copy16  #0, xcoord
+        copy16  #AS_WORD(-9), ycoord
+        MGTK_CALL MGTK::Line, point
+        MGTK_CALL MGTK::SetPenMode, pencopy
+
+        rts
+.endproc
+
+.proc HideIPF2
+        bit     prompt_ip_flag
+        bmi     XDrawIPF2
+        rts
+.endproc
+ShowIPF2 := HideIPF2
+
+;;; ============================================================
+
+.proc RedrawF2
+        lda     file_dialog_res::winfo::window_id
+        jsr     SetPortForWindow
+
+        jsr     HideIPF2        ; Redraw F2
+
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
+        param_call DrawString, buf_input2_left
+        param_call DrawString, buf_input_right
+        param_call DrawString, str_2_spaces
+
+        jsr     ShowIPF2
+
+        rts
+.endproc
+
+;;; ============================================================
+;;; A click when f2 has focus (click may be elsewhere)
+
+.proc HandleClickF2
+        click_coords := screentowindow_params::windowx
+
+        ;; Was click inside text box?
+        lda     file_dialog_res::winfo::window_id
+        sta     screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        lda     file_dialog_res::winfo::window_id
+        jsr     SetPortForWindow
+        MGTK_CALL MGTK::MoveTo, click_coords
+
+        ;; Inside input2 ?
+        MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
+        cmp     #MGTK::inrect_inside
+        beq     ep2
+
+        ;; Inside input1 ?
+        bit     dual_inputs_flag
+        bpl     done
+        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
+        cmp     #MGTK::inrect_inside
+        bne     done
+        jsr     HandleCancel ; Move focus to input1
+        ;; NOTE: Assumes screentowindow_params::window* has not been changed.
+        jmp     HandleClickF1::ep2
+
+done:   rts
+
+ep2:
+        ;; Is click to left or right of insertion point?
+        jsr     CalcInput2IPPos
+
+        width := $06
+
+        stax    width
+        cmp16   click_coords, width
+        jcc     ToLeft
+        FALL_THROUGH_TO ToRight
+
+        PARAM_BLOCK tw_params, $06
+data    .addr
+length  .byte
+width   .word
+        END_PARAM_BLOCK
+
+        buf_left := buf_input2_left
+        buf_right := buf_input_right
+
+        ;; --------------------------------------------------
+        ;; Click is to the right of IP
+
+.proc ToRight
+        lda     buf_right
+        beq     ret
+
+        jsr     CalcInput2IPPos
+        stax    ip_pos
+
+        ;; Iterate to find the position
+        copy16  #buf_right, tw_params::data
+        copy    buf_right, tw_params::length
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, ip_pos, tw_params::width
+        cmp16   tw_params::width, click_coords
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
+        bne     @loop
+ret:    rts
+
+        ;; Was it to the right of the string?
+:       lda     tw_params::length
+        beq     ret
+        cmp     buf_right
+        bcc     :+
+        jmp     HandleMetaRightKeyF2
+:
+        copy    tw_params::length, len
+        jsr     HideIPF2        ; Click Right F2
+
+        ;; Append from `buf_right` into `buf_left`
+        ldx     #1
+        ldy     buf_left
+        iny
+:       lda     buf_right,x
+        sta     buf_left,y
+        cpx     len
+        beq     :+
+        iny
+        inx
+        jmp     :-
+:       sty     buf_left
+
+        ;; Shift contents of `buf_right` down
+        ldy     #1
+        len := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        inx
+:       lda     buf_right,x
+        sta     buf_right,y
+        cpx     buf_right
+        beq     :+
+        iny
+        inx
+        jmp     :-
+
+:       sty     buf_right
+        jmp     finish
+.endproc
+
+        ;; --------------------------------------------------
+        ;; Click to left of IP
+
+.proc ToLeft
+        lda     buf_left
+        bne     :+
+ret:    rts
+:
+        ;; Iterate to find the position
+        copy16  #buf_left, tw_params::data
+        copy    buf_left, tw_params::length
+@loop:  MGTK_CALL MGTK::TextWidth, tw_params
+        add16   tw_params::width, file_dialog_res::input2_textpos, tw_params::width
+        cmp16   tw_params::width, click_coords
+        bcc     :+
+        dec     tw_params::length
+        lda     tw_params::length
+        cmp     #1
+        bcs     @loop
+        jmp     HandleMetaLeftKeyF2
+:
+        lda     tw_params::length
+        cmp     buf_left
+        bcs     ret
+        sta     len
+
+        jsr     HideIPF2        ; Click Left F2
+        inc     len
+
+        ;; Shift everything in `buf_right` up to make room
+        lda     buf_right
+        pha
+        lda     buf_left
+        sec
+        sbc     len
+        clc
+        adc     buf_right
+        sta     buf_right
+        tax
+        pla
+    IF_NOT_ZERO
+        tay
+:       lda     buf_right,y
+        sta     buf_right,x
+        dex
+        dey
+        bne     :-
+    END_IF
+
+        ;; Copy everything to the right from `buf_left` to `buf_right`
+        ldy     #0
+        len := *+1
+        ldx     #SELF_MODIFIED_BYTE
+:       cpx     buf_left
+        beq     :+
+        inx
+        iny
+        lda     buf_left,x
+        sta     buf_right,y
+        jmp     :-
+:
+        ;; Adjust length
+        copy    len, buf_left
+        FALL_THROUGH_TO finish
+.endproc
+
+finish: jsr     ShowIPF2
+        rts
+
+ip_pos: .word   0
+.endproc
+HandleF2Click__ep2 := HandleClickF2::ep2
+
+;;; ============================================================
+
 .proc HandleOtherKeyF2
         buf_left := buf_input2_left
         buf_right := buf_input_right
@@ -3094,11 +3151,9 @@ ret:    rts
 
 ret:    rts
 .endproc
-.endif
 
 ;;; ============================================================
 
-.if FD_EXTENDED
 .proc HandleDeleteKeyF2
         lda     buf_input2_left
         bne     :+
@@ -3121,11 +3176,9 @@ ret:    rts
 
         rts
 .endproc
-.endif
 
 ;;; ============================================================
 
-.if FD_EXTENDED
 .proc HandleClearKeyF2
         buf_left := buf_input2_left
         buf_right := buf_input_right
@@ -3151,12 +3204,10 @@ ret:    rts
 
 ret:    rts
 .endproc
-.endif
 
 ;;; ============================================================
 ;;; Move IP one character left.
 
-.if FD_EXTENDED
 .proc HandleLeftKeyF2
         jsr     ObscureCursor
 
@@ -3190,11 +3241,9 @@ ret:    rts
 
 ret:    rts
 .endproc
-.endif
 
 ;;; ============================================================
 
-.if FD_EXTENDED
 .proc HandleRightKeyF2
         jsr     ObscureCursor
 
@@ -3232,11 +3281,9 @@ ret:    rts
 
 ret:    rts
 .endproc
-.endif
 
 ;;; ============================================================
 
-.if FD_EXTENDED
 .proc HandleMetaLeftKeyF2
         jsr     ObscureCursor
 
@@ -3280,11 +3327,9 @@ move:   ldx     buf_left
 
 ret:    rts
 .endproc
-.endif
 
 ;;; ============================================================
 
-.if FD_EXTENDED
 .proc HandleMetaRightKeyF2
         jsr     ObscureCursor
         jsr     HideIPF2        ; End F2
@@ -3292,7 +3337,10 @@ ret:    rts
         jsr     ShowIPF2
         rts
 .endproc
-.endif
+
+;;; ============================================================
+
+.endif ; FD_EXTENDED
 
 ;;; ============================================================
 
@@ -3463,19 +3511,6 @@ HandleClick:
 ;;; ============================================================
 ;;; Trim end of left segment to rightmost '/'
 
-.proc StripPathSegmentF1
-:       ldx     buf_input1_left
-        cpx     #0
-        beq     :+
-        dec     buf_input1_left
-        lda     buf_input1_left,x
-        cmp     #'/'
-        bne     :-
-:       rts
-.endproc
-
-;;; ============================================================
-
 .if FD_EXTENDED
 .proc StripPathSegmentF2
 :       ldx     buf_input2_left
@@ -3490,14 +3525,6 @@ HandleClick:
 .endif
 
 ;;; ============================================================
-
-
-
-.proc StripPathSegmentAndRedrawF1
-        jsr     StripPathSegmentF1
-        jsr     RedrawInput
-        rts
-.endproc
 
 .if FD_EXTENDED
 .proc StripPathSegmentAndRedrawF2
@@ -3577,13 +3604,6 @@ flag:   .byte   0
 
 ;;; ============================================================
 
-.proc PrepPathF1
-        COPY_STRING path_buf, buf_input1_left
-        jmp     ClearRight
-.endproc
-
-;;; ============================================================
-
 .if FD_EXTENDED
 .proc PrepPathF2
         COPY_STRING path_buf, buf_input2_left
@@ -3647,6 +3667,33 @@ width   .word
         tax
         tya
         rts
+.endproc
+.endif
+
+;;; ============================================================
+
+.if FD_EXTENDED
+.proc MoveIPToEndF2
+        buf_left := buf_input2_left
+        buf_right := buf_input_right
+
+        lda     buf_right
+        beq     ret
+
+        ;; Append right string to left
+        ldx     #0
+        ldy     buf_left
+:       inx
+        iny
+        lda     buf_right,x
+        sta     buf_left,y
+        cpx     buf_right
+        bne     :-
+        sty     buf_left
+
+        jsr     ClearRight
+
+ret:    rts
 .endproc
 .endif
 
@@ -3740,57 +3787,6 @@ SelectMatchingFileInListF1 := SelectMatchingFileInList::f1
 SelectMatchingFileInListF2 := SelectMatchingFileInList::f2
 .endif
 
-
-;;; ============================================================
-
-.proc MoveIPToEndF1
-        buf_left := buf_input1_left
-        buf_right := buf_input_right
-
-        lda     buf_right
-        beq     ret
-
-        ;; Append right string to left
-        ldx     #0
-        ldy     buf_left
-:       inx
-        iny
-        lda     buf_right,x
-        sta     buf_left,y
-        cpx     buf_right
-        bne     :-
-        sty     buf_left
-
-        ;; Clear right string
-        jsr     ClearRight
-
-ret:    rts
-.endproc
-
-.if FD_EXTENDED
-.proc MoveIPToEndF2
-        buf_left := buf_input2_left
-        buf_right := buf_input_right
-
-        lda     buf_right
-        beq     ret
-
-        ;; Append right string to left
-        ldx     #0
-        ldy     buf_left
-:       inx
-        iny
-        lda     buf_right,x
-        sta     buf_left,y
-        cpx     buf_right
-        bne     :-
-        sty     buf_left
-
-        jsr     ClearRight
-
-ret:    rts
-.endproc
-.endif
 
 ;;; ============================================================
 
