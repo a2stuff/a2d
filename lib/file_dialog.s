@@ -1189,10 +1189,16 @@ l1:     ldx     num_file_names
 
         lda     file_dialog_res::selected_index
         jsr     CalcTopIndex
-        jsr     UpdateScrollbar2
-        jsr     DrawListEntries
+        cmp     file_dialog_res::winfo_listbox::vthumbpos
+        beq     :+
 
-        rts
+        ;; View changed - redraw everything
+        jsr     UpdateScrollbar2
+        jmp     DrawListEntries
+:
+        ;; No change - just adjust highlights
+        lda     file_dialog_res::selected_index
+        jmp     InvertEntry
 .endproc
 
 ;;; ============================================================
@@ -1706,28 +1712,38 @@ UpdateScrollbar:
         lda     num_file_names
         cmp     #kPageDelta + 1
         bcs     :+
-
+        ;; Deactivate scrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         copy    #MGTK::activatectl_deactivate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
+        copy    #0, file_dialog_res::winfo_listbox::vthumbmax
         lda     #0
         jmp     ScrollClipRect
-
-:       lda     num_file_names
+:
+        ;; Activate scrollbar
+        lda     num_file_names
         sec
         sbc     #kPageDelta
+        cmp     file_dialog_res::winfo_listbox::vthumbmax
+        beq     :+
         sta     file_dialog_res::winfo_listbox::vthumbmax
         .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_params::which_ctl
         sta     activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
+:
+        ;; Update position
         lda     index
+        cmp     file_dialog_res::winfo_listbox::vthumbpos
+    IF_NE
         sta     updatethumb_params::thumbpos
         jsr     ScrollClipRect
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+    END_IF
+
         rts
 
 index:  .byte   0
@@ -2158,13 +2174,25 @@ d2:     .res    16, 0
 
 .proc CalcTopIndex
         bpl     has_sel
-:       return  #0
+        return  #0
 
 has_sel:
-        cmp     #kPageDelta
-        bcc     :-
+        cmp     file_dialog_res::winfo_listbox::vthumbpos
+    IF_LT
+        rts
+    END_IF
+
         sec
         sbc     #kPageDelta-1
+        bmi     no_change
+        cmp     file_dialog_res::winfo_listbox::vthumbpos
+        beq     no_change
+    IF_GE
+        rts
+    END_IF
+
+no_change:
+        lda     file_dialog_res::winfo_listbox::vthumbpos
         rts
 .endproc
 
