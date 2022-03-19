@@ -422,6 +422,58 @@ kOptionDisplayY = 44
         DEFINE_RECT_SZ rect_12hour, kOptionDisplayX+60-10, kOptionDisplayY, kRadioButtonWidth+kLabelPadding, kRadioButtonHeight
         DEFINE_RECT_SZ rect_24hour, kOptionDisplayX+120, kOptionDisplayY, kRadioButtonWidth+kLabelPadding, kRadioButtonHeight
 
+.params date_bitmap_params
+        DEFINE_POINT viewloc, 14, 40
+mapbits:        .addr   date_bitmap
+mapwidth:       .byte   6
+reserved:       .byte   0
+        DEFINE_RECT cliprect, 0, 0, 39, 17
+.endparams
+date_bitmap:
+        .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%1100111),PX(%1111111),PX(%1111111),PX(%1111100),PX(%0000000),PX(%0000000)
+        .byte   PX(%1100110),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0000000),PX(%0000000)
+        .byte   PX(%1100111),PX(%1111111),PX(%1111111),PX(%1111100),PX(%0000000),PX(%0000000)
+        .byte   PX(%1100110),PX(%0000000),PX(%0000000),PX(%0001100),PX(%0001111),PX(%1111110)
+        .byte   PX(%1100110),PX(%0001111),PX(%1111110),PX(%0001111),PX(%1110000),PX(%0000110)
+        .byte   PX(%1100110),PX(%0011100),PX(%0000111),PX(%1111100),PX(%0000000),PX(%0000110)
+        .byte   PX(%1100110),PX(%0011100),PX(%0000111),PX(%0000000),PX(%0111000),PX(%0000110)
+        .byte   PX(%1100110),PX(%0000000),PX(%0011111),PX(%0000000),PX(%1111000),PX(%0000110)
+        .byte   PX(%1100110),PX(%0000000),PX(%1111011),PX(%0000111),PX(%1111000),PX(%0000110)
+        .byte   PX(%1100110),PX(%0000011),PX(%1100011),PX(%0000000),PX(%1111000),PX(%0000110)
+        .byte   PX(%1100110),PX(%0001111),PX(%0000011),PX(%0000000),PX(%1111000),PX(%0000110)
+        .byte   PX(%1100110),PX(%0011110),PX(%0000011),PX(%0000000),PX(%1111000),PX(%0000110)
+        .byte   PX(%1100110),PX(%0011111),PX(%1111111),PX(%0000000),PX(%1111000),PX(%0000110)
+        .byte   PX(%1111110),PX(%0000000),PX(%0000011),PX(%0000000),PX(%1111000),PX(%0000110)
+        .byte   PX(%0000111),PX(%1111111),PX(%1111111),PX(%0000111),PX(%1111111),PX(%0000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000011),PX(%0000000),PX(%0000000),PX(%0000110)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000011),PX(%1111111),PX(%1111111),PX(%1111110)
+
+.params time_bitmap_params
+        DEFINE_POINT viewloc, kDialogWidth - 32 - 11, 39
+mapbits:        .addr   time_bitmap
+mapwidth:       .byte   5
+reserved:       .byte   0
+        DEFINE_RECT cliprect, 0, 0, 31, 14
+.endparams
+time_bitmap:
+        .byte   PX(%0000000),PX(%0001111),PX(%1111111),PX(%1000000),PX(%0000000)
+        .byte   PX(%0000001),PX(%1110000),PX(%0000000),PX(%0111100),PX(%0000000)
+        .byte   PX(%0000110),PX(%0000000),PX(%0110000),PX(%0000011),PX(%0000000)
+        .byte   PX(%0011000),PX(%0000000),PX(%0110000),PX(%0000000),PX(%1100000)
+        .byte   PX(%0110000),PX(%0000000),PX(%0110000),PX(%0000000),PX(%0110000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0110000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0110000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0110000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0001100),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0000011),PX(%0000000),PX(%0011000)
+        .byte   PX(%0110000),PX(%0000000),PX(%0000000),PX(%1100000),PX(%0110000)
+        .byte   PX(%0011000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1100000)
+        .byte   PX(%0000110),PX(%0000000),PX(%0000000),PX(%0000011),PX(%0000000)
+        .byte   PX(%0000001),PX(%1110000),PX(%0000000),PX(%0111100),PX(%0000000)
+        .byte   PX(%0000000),PX(%0001111),PX(%1111111),PX(%1000000),PX(%0000000)
+
+
 ;;; ============================================================
 ;;; Initialize window, unpack the date.
 
@@ -1050,6 +1102,9 @@ label_downarrow:
         MGTK_CALL MGTK::SetPort, winfo::port
         MGTK_CALL MGTK::FrameRect, date_rect
         MGTK_CALL MGTK::FrameRect, time_rect
+
+        MGTK_CALL MGTK::PaintBits, date_bitmap_params
+        MGTK_CALL MGTK::PaintBits, time_bitmap_params
 
         MGTK_CALL MGTK::MoveTo, date_sep1_pos
         param_call DrawString, str_date_separator
