@@ -1,2 +1,3 @@
 .define res_string_window_title "Sounds"
 .define res_string_label_alert "Alert Sound:"
+.define res_string_name_silent "Silent"

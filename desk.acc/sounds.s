@@ -301,7 +301,7 @@ top_row:
 str_buzz:       PASCAL_STRING "ProDOS Buzz"
 str_bonk:       PASCAL_STRING "IIgs Bonk"
 str_bell:       PASCAL_STRING "Control-G"
-str_silent:     PASCAL_STRING "Silent"
+str_silent:     PASCAL_STRING res_string_name_silent
 str_awbeep:     PASCAL_STRING "Apple Writer II"
 str_dazzledraw: PASCAL_STRING "Dazzle Draw"
 str_koala:      PASCAL_STRING "Koala Illustrator"
