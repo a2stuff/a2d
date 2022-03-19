@@ -1188,7 +1188,7 @@ ignore_char:
         lda     buf_left
         clc
         adc     buf_right
-        cmp     #15             ; max length is 15
+        cmp     #kMaxFilenameLength
         bcs     ret
 
         jsr     HideIP          ; Insert

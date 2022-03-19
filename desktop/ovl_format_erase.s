@@ -105,7 +105,7 @@ l5:     jsr     Bell
 l6:     jsr     main::InputFieldIPEnd
         lda     path_buf1
         beq     l5              ; name is empty
-        cmp     #16
+        cmp     #kMaxFilenameLength+1
         bcs     l5              ; name > 15 characters
         jsr     main::SetCursorPointerWithFlag
 
@@ -266,7 +266,7 @@ l4:     jsr     Bell
 l5:     jsr     main::InputFieldIPEnd
         lda     path_buf1
         beq     l4              ; name is empty
-        cmp     #$10
+        cmp     #kMaxFilenameLength+1
         bcs     l4              ; name > 15 characters
         jsr     main::SetCursorPointerWithFlag
 

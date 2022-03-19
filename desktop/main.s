@@ -3307,7 +3307,7 @@ not_file_char:
 
 file_char:
         ldx     typedown_buf
-        cpx     #15
+        cpx     #kMaxFilenameLength
         bne     :+
         rts                     ; Z=1 to consume
 :
@@ -15142,7 +15142,7 @@ LAEC6:  jsr     PromptInputLoop
         jsr     InputFieldIPEnd
         lda     path_buf1
         beq     LAEC6
-        cmp     #16             ; max filename length + 1
+        cmp     #kMaxFilenameLength+1
         bcc     LAEE1
 LAED6:  lda     #kErrNameTooLong
         jsr     ShowAlert
@@ -16226,7 +16226,7 @@ ip_pos: .word   0
         lda     path_buf1
         clc
         adc     path_buf2
-        cmp     #15
+        cmp     #kMaxFilenameLength
         bcs     ret
 
         jsr     HidePromptIP    ; Insert

@@ -35,6 +35,7 @@ SELF_MODIFIED_BYTE = $12
 kMaxPathLength  = 64
 kPathBufferSize = 65
 kDirStackBufferSize = 170
+kMaxFilenameLength = 15
 
 ;;; ============================================================
 
