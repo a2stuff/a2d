@@ -301,6 +301,7 @@ top_row:
 str_buzz:       PASCAL_STRING "ProDOS Buzz"
 str_bonk:       PASCAL_STRING "IIgs Bonk"
 str_bell:       PASCAL_STRING "Control-G"
+str_silent:     PASCAL_STRING "Silent"
 str_awbeep:     PASCAL_STRING "Apple Writer II"
 str_dazzledraw: PASCAL_STRING "Dazzle Draw"
 str_koala:      PASCAL_STRING "Koala Illustrator"
@@ -309,16 +310,16 @@ str_aal_swoop:  PASCAL_STRING "Assembly Line Swoop"
 str_aal_blast:  PASCAL_STRING "Assembly Line Laser"
 str_aal_bell:   PASCAL_STRING "Assembly Line Bell"
 str_aal_klaxon: PASCAL_STRING "Assembly Line Klaxon"
-        kNumSounds = 11
+        kNumSounds = 12
 
 name_table:
-        .addr   str_buzz, str_bonk, str_bell
+        .addr   str_buzz, str_bonk, str_bell, str_silent
         .addr   str_awbeep, str_dazzledraw, str_koala, str_816paint
         .addr   str_aal_swoop, str_aal_blast, str_aal_bell, str_aal_klaxon
         ASSERT_ADDRESS_TABLE_SIZE name_table, kNumSounds
 
 proc_table:
-        .addr   Buzz, Bonk, ClassicBeep
+        .addr   Buzz, Bonk, ClassicBeep, Silent
         .addr   AwBeep, DazzleDraw, Koala, Paint816
         .addr   AALLaserSwoop, AALLaserBlast, AALSCBell, AALKlaxon
         ASSERT_ADDRESS_TABLE_SIZE proc_table, kNumSounds
@@ -1412,6 +1413,86 @@ SOUNDS_2:
        RTS
 ;;; --------------------------------
 END_SOUND_PROC
+
+;;; ============================================================
+;;; "Silent" - flashes the menu bar
+
+SOUND_PROC Silent
+        ptr := $06
+
+        jsr     InvertMenu
+
+        ;; Delay using some heuristic.
+
+        ;; Option #1: Hit speaker to slow accelerator, with inaudible pitch.
+        ;;
+        ;; (1) This causes Virtual ][ to stop playing sounds for a bit (!)
+        ;; (2) This has an audible click in MAME (!)
+        ;;         sta     SPKR
+        ;;         sta     SPKR
+
+        ;; Option #2: Wait based on double-click setting.
+        ;;
+        ;; The assumption is that users will adjust the setting based on
+        ;; factors such as acceleration/emulation speed, so use it as
+        ;; the basis of a timing loop.
+        copy16  SETTINGS + DeskTopSettings::dblclick_speed, ptr
+loop:   ldx     #48
+:       dex
+        bne     :-
+        dec     ptr
+        bne     loop
+        dec     ptr+1
+        bne     loop
+
+        ;; TODO: Consider using VBL on Enh IIe/IIc/IIgs
+        ;; https://comp.sys.apple2.narkive.com/dHkvl39d/vblank-apple-iic
+        ;; Note that emulators tend to not throttle to 60/50Hz real time,
+        ;; but have VBL synchronized to cycle counts.
+
+        FALL_THROUGH_TO InvertMenu
+
+.proc InvertMenu
+        sta     SET80COL
+
+        ldx     #kMenuBarHeight-1
+rloop:  lda     hires_table_lo,x
+        sta     ptr
+        lda     hires_table_hi,x
+        sta     ptr+1
+
+        sta     PAGE2ON
+        jsr     DoRow
+        sta     PAGE2OFF
+        jsr     DoRow
+
+        dex
+        bpl     rloop
+
+        sta     CLR80COL
+
+        rts
+
+.proc DoRow
+        ldy     #39
+cloop:  lda     (ptr),y
+        eor     #$7F
+        sta     (ptr),y
+        dey
+        bpl     cloop
+        rts
+.endproc
+.endproc
+
+hires_table_lo:
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00
+	.byte	$80,$80,$80,$80,$80,$80,$80,$80
+
+hires_table_hi:
+	.byte	$20,$24,$28,$2c,$30,$34,$38,$3c
+	.byte	$20,$24,$28,$2c,$30,$34,$38,$3c
+END_SOUND_PROC
+
 
 ;;; ============================================================
 
