@@ -37,6 +37,14 @@ Note that these are for inspiration, not to be dutifully followed.
 * Height is 11 pixels.
 * Border is 1x1 pixels thick, drawn with solid pen black pen (not XOR).
 * Text baseline is 5x10 pixels from top left corner of rect.
+* Insertion point (a.k.a. text caret) is the full height of field, XOR-drawn between text glyphs. Moving the insertion point does not cause the string to change.
+* The following keyboard shortcuts are supported:
+  * Left Arrow - move IP one character left.
+  * Right Arrow - move IP one character right.
+  * Apple+Left Arrow - move IP to start of text.
+  * Apple+Right Arrow - move IP to end of string.
+  * Delete - erase character to the left of the IP.
+  * Control+X - erase all text
 
 ## Keyboard
 

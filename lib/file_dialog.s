@@ -386,10 +386,11 @@ in_list:
         ldax    screentowindow_params::windowy
         ldy     #kListEntryHeight
         jsr     Divide_16_8_16
+        new_index := screentowindow_params::windowy
         stax    screentowindow_params::windowy
 
         lda     file_dialog_res::selected_index
-        cmp     screentowindow_params::windowy
+        cmp     new_index
         beq     same
         jmp     different
 
@@ -415,35 +416,16 @@ open:   ldx     file_dialog_res::selected_index
 
         ;; Folder - open it.
 folder: and     #$7F
-        pha
+        pha                     ; A = index
+
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-        lda     #0
-        sta     hi
 
-        ptr := $08
-        copy16  #file_names, ptr
-        pla
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        clc
-        adc     ptr
-        sta     ptr
-        lda     hi
-        adc     ptr+1
-        sta     ptr+1
-
-        ldx     ptr+1
-        lda     ptr
+        pla                     ; A = index
+        jsr     GetNthFilename
         jsr     AppendToPathBuf
 
         jsr     ReadDir
@@ -456,29 +438,21 @@ folder: and     #$7F
         MGTK_CALL MGTK::SetPort, window_grafport
         rts
 
-hi:     .byte   0
-
         ;; --------------------------------------------------
         ;; Click on a different entry
 
 different:
-        lda     screentowindow_params::windowy
+        lda     new_index
         cmp     num_file_names
         bcc     :+
         rts
 
 :       lda     file_dialog_res::selected_index
         bmi     :+
-        jsr     StripPathSegmentAndRedraw
         lda     file_dialog_res::selected_index
         jsr     InvertEntry
-:       lda     screentowindow_params::windowy
+:       lda     new_index
         sta     file_dialog_res::selected_index
-        bit     input_dirty_flag
-        bpl     :+
-        jsr     PrepPath
-        jsr     RedrawInput
-:       lda     file_dialog_res::selected_index
         jsr     InvertEntry
         jsr     HandleSelectionChange
 
@@ -684,42 +658,21 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         ldx     file_dialog_res::selected_index
         lda     file_list_index,x
         and     #$7F
-        pha
-        bit     input_dirty_flag
-        bpl     :+
-        jsr     PrepPath
-:       lda     #0
-        sta     tmp
-        copy16  #file_names, $08
-        pla
-        asl     a               ; * 16
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        clc
-        adc     $08
-        sta     $08
-        lda     tmp
-        adc     $08+1
-        sta     $08+1
 
-        ldx     $08+1
-        lda     $08
+        pha                     ; A = index
+        jsr     PrepPath
+        pla                     ; A = index
+
+        jsr     GetNthFilename
         jsr     AppendToPathBuf
 
         jsr     ReadDir
         jsr     UpdateScrollbar
-        lda     #$00
+        lda     #0
         jsr     ScrollClipRect
         jsr     UpdateDiskName
         jsr     DrawListEntries
         rts
-
-tmp:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -757,51 +710,37 @@ tmp:     .byte   0
 ;;; ============================================================
 
 .proc DoClose
-        lda     #$00
-        sta     l7
+        ;; Walk back looking for last '/'
         ldx     path_buf
-        bne     l1
-        jmp     l6
-
-l1:     lda     path_buf,x
+        beq     ret             ; no-op if empty
+:       lda     path_buf,x
         cmp     #'/'
-        beq     l2
+        beq     :+
         dex
-        bpl     l1
-        jmp     l6
+        bpl     :-
+        bmi     ret             ; always
 
-l2:     cpx     #$01
-        bne     l3
-        jmp     l6
+        ;; Volume?
+:       cpx     #1
+        beq     ret             ; no-op
 
-l3:     jsr     StripPathBufSegment
-        lda     file_dialog_res::selected_index
-        pha
+        ;; Remove last segment
+        jsr     StripPathBufSegment
+
         lda     #$FF
         sta     file_dialog_res::selected_index
+
         jsr     ReadDir
         jsr     UpdateScrollbar
         lda     #$00
         jsr     ScrollClipRect
         jsr     UpdateDiskName
         jsr     DrawListEntries
-        pla
-        sta     file_dialog_res::selected_index
-        bit     l7
-        bmi     l4
-        jsr     StripPathSegmentAndRedraw
-        lda     file_dialog_res::selected_index
-        bmi     l5
-        jsr     StripPathSegmentAndRedraw
-        jmp     l5
 
-l4:     jsr     PrepPath
+        jsr     PrepPath
         jsr     RedrawInput
-l5:     lda     #$FF
-        sta     file_dialog_res::selected_index
-l6:     rts
 
-l7:     .byte   0
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -1008,7 +947,6 @@ key_meta_digit:
 l1:     rts
 
 l2:     jsr     InvertEntry
-        jsr     StripPathSegmentAndRedraw
         inc     file_dialog_res::selected_index
         lda     file_dialog_res::selected_index
         jmp     UpdateListSelection
@@ -1028,7 +966,6 @@ l3:     lda     #0
 l1:     rts
 
 l2:     jsr     InvertEntry
-        jsr     StripPathSegmentAndRedraw
         dec     file_dialog_res::selected_index
         lda     file_dialog_res::selected_index
         jmp     UpdateListSelection
@@ -1079,7 +1016,6 @@ file_char:
         lda     file_dialog_res::selected_index
         bmi     :+
         jsr     InvertEntry
-        jsr     StripPathSegmentAndRedraw
 :       pla
         jmp     UpdateListSelection
 
@@ -1092,7 +1028,9 @@ done:   return  #0
 :
         copy    #0, index
 
-loop:   lda     index
+loop:   ldx     index
+        lda     file_list_index,x
+        and     #$7F
         jsr     SetPtrToNthFilename
 
         ldy     #0
@@ -1125,38 +1063,49 @@ found:  return  index
 len:    .byte   0
 .endproc
 
-;;; Inputs: A = index
-;;; Outputs: $06 points at filename
-.proc SetPtrToNthFilename
-        tax
-        lda     file_list_index,x
-        and     #$7F
-        ldx     #$00
-        stx     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        clc
-        adc     #<file_names
-        sta     $06
-        lda     tmp
-        adc     #>file_names
-        sta     $06+1
-        rts
-.endproc
-
 index:  .byte   0
-tmp:    .byte   0
 char:   .byte   0
 
 .endproc ; CheckAlpha
 
 .endproc ; HandleKey
+
+;;; ============================================================
+
+;;; Input: A = index
+;;; Output: A,X = filename
+.proc GetNthFilename
+        ldx     #$00
+        stx     hi
+
+        asl     a               ; * 16
+        rol     hi
+        asl     a
+        rol     hi
+        asl     a
+        rol     hi
+        asl     a
+        rol     hi
+
+        clc
+        adc     #<file_names
+        tay
+        hi := *+1
+        lda     #SELF_MODIFIED_BYTE
+        adc     #>file_names
+
+        tax
+        tya
+        rts
+.endproc
+
+;;; Input: A = index
+;;; Output: $06 and A,X = filename
+.proc SetPtrToNthFilename
+        jsr     GetNthFilename
+        stax    $06
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -1205,7 +1154,6 @@ done:   rts
 
 deselect:
         jsr     InvertEntry
-        jsr     StripPathSegmentAndRedraw
 
 select:
         lda     #$00
@@ -1227,7 +1175,6 @@ done:   rts
 :       dex
         txa
         jsr     InvertEntry
-        jsr     StripPathSegmentAndRedraw
 l1:     ldx     num_file_names
         dex
         txa
@@ -1245,11 +1192,6 @@ l1:     ldx     num_file_names
         jsr     UpdateScrollbar2
         jsr     DrawListEntries
 
-        ;; TODO: Move this earlier?
-        jsr     ClearRight
-
-        ;; TODO: Redundant with HandleSelectionChange
-        jsr     RedrawInput
         rts
 .endproc
 
@@ -1547,13 +1489,8 @@ open_dir_flag:
 
 ;;; ============================================================
 
-;;; ============================================================
-
 .proc AppendToPathBuf
         ptr := $06
-.if FD_EXTENDED
-        jsr     CopyStringToLcbuf
-.endif
         stax    ptr
         ldx     path_buf
         lda     #'/'
@@ -1658,24 +1595,9 @@ l4:     ldy     #$00
         sta     (ptr),y
 
         dst_ptr := $08
-        copy16  #file_names, dst_ptr
-        lda     #$00
-        sta     hi
         lda     d1
-        asl     a               ; *= 16
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        clc
-        adc     dst_ptr
-        sta     dst_ptr
-        lda     hi
-        adc     dst_ptr+1
-        sta     dst_ptr+1
+        jsr     GetNthFilename
+        stax    dst_ptr
 
         ldy     #0
         lda     (ptr),y
@@ -1725,7 +1647,6 @@ d3:     .byte   0
 entry_length:
         .byte   0
 d4:     .byte   0
-hi:     .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1736,37 +1657,22 @@ hi:     .byte   0
         MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::cliprect
         copy    #kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
         copy16  #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
-        copy    #0, l4
+        copy    #0, index
 
-loop:   lda     l4
+loop:   lda     index
         cmp     num_file_names
         bne     :+
         jsr     InitSetGrafport
         rts
 
 :       MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
-        ldx     l4
+        ldx     index
         lda     file_list_index,x
         and     #$7F
-        ldx     #$00
-        stx     l3
-        asl     a
-        rol     l3
-        asl     a
-        rol     l3
-        asl     a
-        rol     l3
-        asl     a
-        rol     l3
-        clc
-        adc     #<file_names
-        tay
-        lda     l3
-        adc     #>file_names
-        tax
-        tya
+
+        jsr     GetNthFilename
         jsr     DrawString
-        ldx     l4
+        ldx     index
         lda     file_list_index,x
         bpl     :+
 
@@ -1776,19 +1682,18 @@ loop:   lda     l4
         param_call DrawString, file_dialog_res::str_folder
         copy    #kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord
 
-:       lda     l4
+:       lda     index
         cmp     file_dialog_res::selected_index
         bne     l2
         jsr     InvertEntry
         lda     file_dialog_res::winfo_listbox::window_id
         jsr     SetPortForWindow
-l2:     inc     l4
+l2:     inc     index
 
         add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
         jmp     loop
 
-l3:     .byte   0
-l4:     .byte   0
+index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1920,8 +1825,6 @@ tmp:    .byte   0
         MGTK_CALL MGTK::PaintRect, file_dialog_res::rect_selection
         jsr     InitSetGrafport
         rts
-
-tmp:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1953,7 +1856,7 @@ loop:   lda     outer_index     ; outer loop
         jmp     finish
 
 loop2:  lda     inner_index     ; inner loop
-        jsr     CalcEntryPtr
+        jsr     SetPtrToNthFilename
         ldy     #0
         lda     ($06),y
         bmi     next_inner
@@ -1999,7 +1902,7 @@ next_inner:
         jmp     loop2
 
 :       lda     d1
-        jsr     CalcEntryPtr
+        jsr     SetPtrToNthFilename
         ldy     #0              ; mark as done
         lda     ($06),y
         ora     #$80
@@ -2048,7 +1951,7 @@ l12:    dex
 
 done:   rts
 
-l14:    jsr     CalcEntryPtr
+l14:    jsr     SetPtrToNthFilename
         ldy     #0
         lda     ($06),y
         and     #$7F
@@ -2066,35 +1969,6 @@ name_buf:
 
 d2:     .res    127, 0
 
-;;; --------------------------------------------------
-
-.proc CalcEntryPtr
-        ptr := $06
-
-        ldx     #<file_names
-        stx     ptr
-        ldx     #>file_names
-        stx     ptr+1
-        ldx     #$00
-        stx     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        asl     a
-        rol     tmp
-        clc
-        adc     ptr
-        sta     ptr
-        lda     tmp
-        adc     ptr+1
-        sta     ptr+1
-        rts
-
-tmp:    .byte   0
-.endproc
 .endproc ; SortFileNames
 
 ;;; ============================================================
@@ -2598,7 +2472,7 @@ ip_pos: .word   0
         param_call DrawString, buf_right
 
         jsr     ShowIPF1
-        jsr     SelectMatchingFileInListF1
+        jsr     UpdateDirtyFlagF1
 
 ret:    rts
 .endproc
@@ -2622,7 +2496,7 @@ ret:    rts
         param_call DrawString, str_2_spaces
 
         jsr     ShowIPF1
-        jsr     SelectMatchingFileInListF1
+        jsr     UpdateDirtyFlagF1
 
 ret:    rts
 .endproc
@@ -2650,7 +2524,7 @@ ret:    rts
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
 
         jsr     ShowIPF1
-        jsr     SelectMatchingFileInListF1
+        jsr     UpdateDirtyFlagF1
 
 ret:    rts
 .endproc
@@ -2785,28 +2659,6 @@ ret:    rts
         jsr     HideIPF1        ; End F1
         jsr     MoveIPToEndF1
         jsr     ShowIPF1
-        rts
-.endproc
-
-;;; ============================================================
-;;; Trim end of left segment to rightmost '/'
-
-.proc StripPathSegmentF1
-:       ldx     buf_input1_left
-        cpx     #0
-        beq     :+
-        dec     buf_input1_left
-        lda     buf_input1_left,x
-        cmp     #'/'
-        bne     :-
-:       rts
-.endproc
-
-;;; ============================================================
-
-.proc StripPathSegmentAndRedrawF1
-        jsr     StripPathSegmentF1
-        jsr     RedrawInput
         rts
 .endproc
 
@@ -3149,7 +3001,7 @@ HandleF2Click__ep2 := HandleClickF2::ep2
         param_call DrawString, buf_right
 
         jsr     ShowIPF2
-        jsr     SelectMatchingFileInListF2
+        jsr     UpdateDirtyFlagF2
 
 ret:    rts
 .endproc
@@ -3174,7 +3026,7 @@ ret:    rts
         param_call DrawString, str_2_spaces
 
         jsr     ShowIPF2
-        jsr     SelectMatchingFileInListF2
+        jsr     UpdateDirtyFlagF2
 
         rts
 .endproc
@@ -3202,7 +3054,7 @@ ret:    rts
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
 
         jsr     ShowIPF2
-        jsr     SelectMatchingFileInListF2
+        jsr     UpdateDirtyFlagF2
 
 ret:    rts
 .endproc
@@ -3352,8 +3204,6 @@ ret:    rts
 
 BlinkIP                 := BlinkIPF1
 RedrawInput             := RedrawF1
-StripPathSegment        := StripPathSegmentF1
-StripPathSegmentAndRedraw := StripPathSegmentAndRedrawF1
 HandleSelectionChange   := ListSelectionChange
 PrepPath                := PrepPathF1
 HandleOtherKey          := HandleOtherKeyF1
@@ -3385,16 +3235,6 @@ RedrawInput:
         bit     focus_in_input2_flag
         jpl     RedrawF1
         jmp     RedrawF2
-
-StripPathSegment:
-        bit     focus_in_input2_flag
-        jpl     StripPathSegmentF1
-        jmp     StripPathSegmentF2
-
-StripPathSegmentAndRedraw:
-        bit     focus_in_input2_flag
-        jpl     StripPathSegmentAndRedrawF1
-        jmp     StripPathSegmentAndRedrawF2
 
 HandleSelectionChange:
         bit     focus_in_input2_flag
@@ -3517,35 +3357,6 @@ HandleClick:
 .endif
 
 ;;; ============================================================
-;;; Trim end of left segment to rightmost '/'
-
-.if FD_EXTENDED
-.proc StripPathSegmentF2
-:       ldx     buf_input2_left
-        cpx     #0
-        beq     :+
-        dec     buf_input2_left
-        lda     buf_input2_left,x
-        cmp     #'/'
-        bne     :-
-:       rts
-.endproc
-.endif
-
-;;; ============================================================
-
-.if FD_EXTENDED
-.proc StripPathSegmentAndRedrawF2
-        jsr     StripPathSegmentF2
-        jsr     RedrawInput
-        rts
-.endproc
-
-.endif
-
-;;; ============================================================
-
-;;; ============================================================
 
 .if FD_EXTENDED
 HandleSelectionChangeF1:
@@ -3564,47 +3375,38 @@ HandleSelectionChangeF2:
         sta     flag
 .endif
 
+        ;; Reset path to current dir path
+.if !FD_EXTENDED
+        jsr     PrepPathF1
+.else
+        bit     flag
+    IF_NC
+        jsr     PrepPathF1
+    ELSE
+        jsr     PrepPathF2
+    END_IF
+.endif
+        ;; Find name of selected item
         copy16  #file_names, ptr
         ldx     file_dialog_res::selected_index
         lda     file_list_index,x
         and     #$7F
+        jsr     GetNthFilename
 
-        ldx     #0
-        stx     hi
-
-        asl     a               ; * 16
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-
-        clc
-        adc     ptr
-        tay
-        lda     hi
-        adc     ptr+1
-        tax
-        tya
-
+        ;; Append selected name to text
 .if !FD_EXTENDED
         jsr     AppendSegmentToInput1
 .else
         bit     flag
-        bpl     f1
+    IF_NC
+        jsr     AppendSegmentToInput1
+    ELSE
         jsr     AppendSegmentToInput2
-        jmp     :+
-
-f1:     jsr     AppendSegmentToInput1
-
-:
+    END_IF
 .endif
         jsr     RedrawInput
         rts
 
-hi:     .byte   0
 .if FD_EXTENDED
 flag:   .byte   0
 .endif
@@ -3615,7 +3417,7 @@ flag:   .byte   0
 .if FD_EXTENDED
 .proc PrepPathF2
         COPY_STRING path_buf, buf_input2_left
-        rts
+        jmp     ClearRight
 .endproc
 .endif
 
@@ -3706,15 +3508,23 @@ ret:    rts
 .endif
 
 ;;; ============================================================
+;;; Set the `input_dirty_flag`
+;;; Flag is set if:
+;;; * Current text in active input field is case-sensitive match
+;;;   for the current path (if no selection), or current
+;;;   path+selected filename (if there is a selection).
+;;; The flag is used to control:
+;;; * Destination Cancel in file copy (alters how state is reset)
+;;; * How Return is handled in Selector (if set and no sel, ignore)
 
 .if !FD_EXTENDED
 
-.proc SelectMatchingFileInListF1
+.proc UpdateDirtyFlagF1
         COPY_STRING buf_input1_left, buf_text
 
 .else
 
-.proc SelectMatchingFileInList
+.proc UpdateDirtyFlag
 
 f2:     lda     #$FF
         bmi     :+
@@ -3731,70 +3541,57 @@ common:
 
 .endif
 
+        ;; Build full path (with seleciton or not) into `path_buf`
         lda     file_dialog_res::selected_index
-        sta     d2
-        bmi     l1
-        ldx     #<file_names
-        stx     $06
-        ldx     #>file_names
-        stx     $07
-        ldx     #0
-        stx     d1
+        sta     current_selection
+        bmi     compare_paths   ; no selection
+
+        ptr := $06
         tax
         lda     file_list_index,x
-        and     #$7F
-        asl     a
-        rol     d1
-        asl     a
-        rol     d1
-        asl     a
-        rol     d1
-        asl     a
-        rol     d1
-        clc
-        adc     $06
-        tay
-        lda     d1
-        adc     $07
-        tax
-        tya
+        and     #$7F            ; mask off "is folder?" bit
+        jsr     GetNthFilename
         jsr     AppendToPathBuf
 
-l1:     lda     buf_text
+        ;; Compare with path buf
+        ;; NOTE: Case sensitive, since we're always comparing adjusted paths.
+compare_paths:
+        lda     buf_text
         cmp     path_buf
-        bne     l3
+        bne     no_match
         tax
 :       lda     buf_text,x
         cmp     path_buf,x
-        bne     l3
+        bne     no_match
         dex
         bne     :-
+
+        ;; Matched
         lda     #0
-        sta     input_dirty_flag
-        jsr     l4
-        rts
+        beq     update_flag     ; always
 
-l3:     lda     #$FF
-        sta     input_dirty_flag
-        jsr     l4
-        rts
+        ;; Did not match
+no_match:
+        lda     #$FF
+        FALL_THROUGH_TO update_flag
 
-l4:     lda     d2
+update_flag:
+        sta     input_dirty_flag
+
+        ;; Restore selection following `AppendToPathBuf` call above.
+        lda     current_selection
         sta     file_dialog_res::selected_index
-        bpl     l5
-        rts
+        bmi     :+
+        jsr     StripPathBufSegment
+:       rts
 
-l5:     jsr     StripPathBufSegment
-        rts
-
-d1:     .byte   0
-d2:     .byte   0
+current_selection:
+        .byte   0
 .endproc
 .if FD_EXTENDED
-SelectMatchingFileInListF1 := SelectMatchingFileInList::f1
-SelectMatchingFileInListF2 := SelectMatchingFileInList::f2
+UpdateDirtyFlagF1 := UpdateDirtyFlag::f1
+UpdateDirtyFlagF2 := UpdateDirtyFlag::f2
 .endif
-
 
 ;;; ============================================================
 

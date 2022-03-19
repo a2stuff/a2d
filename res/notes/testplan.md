@@ -478,8 +478,8 @@
 
 * Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 12 hour. Verify that the time is shown as 12-hour, and if less than 10 is displayed without a leading 0.
 * Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 24 hour. Verify that the time is shown as 24-hour, and if less than 10 is displayed with a leading 0.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 12 hour. Verify that the time is shown as 12-hour, and if less than 10 is displayed without a leading 0. Use the right and left arrow keys and the mouse, and verify that the AM/PM field is selectable. Select the AM/PM field. Use the up and down arrow keys and the arrow buttons, and verify that the field toggles. Select the hours field. Use the up and down arrow keys and the arrow buttons, and verify that the field cycles from 1 through 12.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 24 hour. Verify that the time is shown as 24-hour, and if less than 10 is displayed with a leading 0. Use the right and left arrow keys and the mouse, and verify that the AM/PM field is not selectable. Use the up and down arrow keys and the arrow buttons, and verify that the field cycles from 0 through 23.
+* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 12 hour. Verify that the time is shown as 12-hour, and if less than 10 is displayed without a leading 0. Use the Right Arrow and Left Arrow keys and the mouse, and verify that the AM/PM field is selectable. Select the AM/PM field. Use the up and down arrow keys and the arrow buttons, and verify that the field toggles. Select the hours field. Use the up and down arrow keys and the arrow buttons, and verify that the field cycles from 1 through 12.
+* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 24 hour. Verify that the time is shown as 24-hour, and if less than 10 is displayed with a leading 0. Use the Right Arrow and Left Arrow keys and the mouse, and verify that the AM/PM field is not selectable. Use the up and down arrow keys and the arrow buttons, and verify that the field cycles from 0 through 23.
 * Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Change the month and year, and verify that the day range is clamped to 28, 29, 30 or 31 as appropriate, including for leap years.
 
 * Open a folder containing directory. Open a folder by double-clicking. Apple > Sort Directory. Verify that files are sorted by type/name.
@@ -641,6 +641,8 @@ Repeat for each file picker:
 * In each field, type a control character that is not an alias for an arrow/Tab/Return/Escape, e.g. Control+D. Verify that it is ignored.
 * In each pathname field, type a non-path character (i.e. anything other A-Za-z0-9/.). Verify that it is ignored.
 * In the Shortcuts > Add/Edit a Shortcut... name field, type a non-path, non-control character. Verify that it is accepted.
+* Click a file in the list. Move the IP into an earlier part of the filename (e.g. "/VO|L/FILE"). Click on another file. Verify that the path is updated correctly. Repeat with other mean of changing the selected file: Up, Down, Apple+Up, Apple+Down, and holding Apple while typing a filename.
+* Click a folder in the list. Edit the path shown. Click Open. Verify that the selected folder opens and that the path is updated correctly.
 
 # Text Input Fields
 
@@ -668,19 +670,19 @@ Repeat for each field:
    * Should clear all text.
    * Mouse cursor should be hidden until moved.
    * Test with IP at start, in middle, and at end of the string.
- * Left arrow
+ * Left Arrow
    * Should move IP one character to the left, unless at start of string.
    * Mouse cursor should be hidden until moved.
    * Test with IP at start, in middle, and at end of the string.
- * Right arrow
+ * Right Arrow
    * Should move IP one character to the right, unless at end of string.
    * Mouse cursor should be hidden until moved.
    * Test with IP at start, in middle, and at end of the string.
- * Apple+Left arrow
+ * Apple+Left Arrow
    * Should move IP to start of string.
    * Mouse cursor should be hidden until moved.
    * Test with IP at start, in middle, and at end of the string.
- * Apple+Right arrow
+ * Apple+Right Arrow
    * Should move IP to end of string.
    * Mouse cursor should be hidden until moved.
    * Test at start, in middle, and at end of the string.

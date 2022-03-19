@@ -215,6 +215,8 @@ err:    lda     #ERR_INVALID_PATHNAME
         bit     input_dirty_flag
         bpl     L726D
 
+        ;; TODO: Understand how these paths differ.
+        ;; If selection is "dirty", do this...
         jsr     file_dialog::DeviceOnLine
         lda     #0
         jsr     file_dialog::ScrollClipRect
@@ -225,17 +227,21 @@ err:    lda     #ERR_INVALID_PATHNAME
         jsr     file_dialog::RedrawInput
         rts
 
+        ;; Otherwise do this...
 L726D:  lda     file_dialog::path_buf
         bne     L7281
+
 L7272:  jsr     file_dialog::DeviceOnLine
-        lda     #$00
+        lda     #0
         jsr     file_dialog::ScrollClipRect
         jsr     file_dialog::ReadDir
-        lda     #$FF
-        bne     L7289
+        lda     #$FF            ; clear selection
+        bne     L7289           ; always
+
 L7281:  jsr     file_dialog::ReadDir
         bcs     L7272
         lda     LD921
+
 L7289:  sta     file_dialog_res::selected_index
         cmp     #$FF            ; if no selection...
         bne     :+              ; make scroll index 0
