@@ -127,4 +127,11 @@ for img in $IMAGES; do
     cadius CATALOG "$img" | tail -1
 done
 
+cecho yellow "Building package: $version"
+
+ZIPFILE="out/A2DeskTop-${version}.zip"
+rm -f "$ZIPFILE"
+zip --junk-paths "$ZIPFILE" $IMAGES res/README.txt
+unzip -l "$ZIPFILE"
+
 rmdir "$tempdir"

@@ -38,5 +38,5 @@ jobs:
         uses: ncipollo/release-action@v1.8.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: "out/*.2mg,out/*.hdv,out/*.po,res/README.txt"
+          artifacts: "out/*.zip,res/README.txt"
           prerelease: true
