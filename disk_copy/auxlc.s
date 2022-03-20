@@ -314,6 +314,7 @@ bg_white:
 current_drive_selection:        ; $FF if no selection
         .byte   0
 
+;;; TODO: This can just use vthumbpos
 top_row:                        ; top row visible in list box
         .byte   0
 
@@ -324,29 +325,14 @@ kListItemTextOffset = 8         ; top to baseline
 selection_mode:
         .byte   0               ; high bit clear = source; set = desination
 
-;;; TODO: Unused???
-        .byte   0
-        .byte   0
-        .byte   0
 
 LD367:  .byte   0
 LD368:  .byte   0
-
-;;; TODO: Unused???
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
 
 kListEntrySlotOffset    = 8
 kListEntryDriveOffset   = 40
 kListEntryNameOffset    = 65
         DEFINE_POINT list_entry_pos, 0, 0
-
-        .byte   0               ; TODO: Unused???
-        .byte   0
-        .byte   $47
-        .byte   0
 
 num_drives:
         .byte   0
@@ -413,15 +399,8 @@ LD44C:  .byte   0
 LD44D:  .byte   0
 LD44E:  .byte   0
 
-;;; TODO: Unused???
-        .byte   0
-        .byte   0
-
 disk_copy_flag:                 ; mode: 0 = Disk Copy, 1 = Quick Copy
         .byte   0
-
-;;; TODO: Unused???
-        .byte   1, 0
 
 str_2_spaces:   PASCAL_STRING "  "      ; do not localize
 str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString - do not localize
@@ -897,8 +876,6 @@ LD97A:  jsr     main__FreeVolBitmapPages
         lda     #kAlertMsgCopyFailure ; no args
         jsr     ShowAlertDialog
         jmp     InitDialog
-
-        .byte   0
 
 ;;; ============================================================
 
@@ -1411,8 +1388,6 @@ LDE83:  lda     str_dos33_s_d,x
         lda     #$43
         sta     $0300
         return  #$00
-
-        .byte   0
 
 .proc LDE9F
         ptr := $06
@@ -2588,7 +2563,7 @@ done:   rts
 
 .scope alert_dialog
 
-alert_bitmap:
+question_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -2614,9 +2589,35 @@ alert_bitmap:
         .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
 
+exclamation_bitmap:
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%1111111),PX(%1100000),PX(%0000000)
+        .byte   PX(%0111100),PX(%1111100),PX(%0000111),PX(%1111111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0111100),PX(%1111100),PX(%0001111),PX(%1110001),PX(%1111110),PX(%0000000)
+        .byte   PX(%0111100),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1110001),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1110001),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111110),PX(%0000000),PX(%0011111),PX(%1111111),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1100000),PX(%0011111),PX(%1110001),PX(%1111110),PX(%0000000)
+        .byte   PX(%0111111),PX(%1100000),PX(%0111111),PX(%1110001),PX(%1111100),PX(%0000000)
+        .byte   PX(%0111000),PX(%0000011),PX(%1111111),PX(%1111111),PX(%1100000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+
 .params alert_bitmap_params
         DEFINE_POINT viewloc, 20, 8
-mapbits:        .addr   alert_bitmap
+mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   6
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 36, 23
@@ -2764,43 +2765,15 @@ alert_options_table:
 
 message_num:
         .byte   0
-xarg:   .byte   0
-yarg:   .byte   0
 
 show_alert_dialog:
         sta     message_num
-        stx     xarg
-        sty     yarg
 
-        ;; Draw the alert
-        MGTK_CALL MGTK::InitPort, grafport
-        MGTK_CALL MGTK::SetPort, grafport
-
-        ;; Draw alert box and bitmap - coordinates are in screen space
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, alert_rect ; alert background
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, alert_rect ; alert outline
-
-        MGTK_CALL MGTK::SetPortBits, portmap ; viewport for remaining operations
-
-        ;; Draw rect of alert - coordinates are relative to portmap
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect
-
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::PaintBits, alert_bitmap_params
-        MGTK_CALL MGTK::ShowCursor
+        ;; --------------------------------------------------
+        ;; Determine alert options
 
         copy    #0, ejectable_flag
 
-        lda     message_num
-        jsr     MaybeBell
-
-        ldy     yarg
-        ldx     xarg
         lda     message_num
     IF_EQ                       ; kAlertMsgInsertSource
         .assert kAlertMsgInsertSource = 0, error, "enum mismatch"
@@ -2857,11 +2830,41 @@ find_in_alert_table:
         tay
         copy    alert_options_table,y, alert_options
 
-        bit     ejectable_flag
-        bpl     :+
-        jmp     draw_prompt
+        ;; --------------------------------------------------
+        ;; Draw alert
+
+        MGTK_CALL MGTK::HideCursor
+
+        MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
+
+        ;; Draw alert box and bitmap - coordinates are in screen space
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, alert_rect ; alert background
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, alert_rect ; alert outline
+
+        MGTK_CALL MGTK::SetPortBits, portmap ; viewport for remaining operations
+
+        ;; Draw rect of alert - coordinates are relative to portmap
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect
+
+        ldax    #exclamation_bitmap
+        ldy     alert_options
+    IF_NOT_ZERO
+        ldax    #question_bitmap
+    END_IF
+        stax    alert_bitmap_params::mapbits
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintBits, alert_bitmap_params
 
         ;; Draw appropriate buttons
+        bit     ejectable_flag
+        bpl     :+
+        jmp     done_buttons
+
 :       jsr     SetPenXOR
         MGTK_CALL MGTK::SetPenSize, pensize_normal
         bit     alert_options
@@ -2886,13 +2889,13 @@ find_in_alert_table:
         MGTK_CALL MGTK::FrameRect, no_button_rect
         MGTK_CALL MGTK::MoveTo, no_button_pos
         param_call DrawString, no_button_label
-        jmp     draw_prompt
+        jmp     done_buttons
 
 draw_try_again_btn:
         MGTK_CALL MGTK::FrameRect, try_again_button_rect
         MGTK_CALL MGTK::MoveTo, try_again_button_pos
         param_call DrawString, try_again_button_label
-        jmp     draw_prompt
+        jmp     done_buttons
 
         ;; OK button
 draw_ok_btn:
@@ -2900,10 +2903,19 @@ draw_ok_btn:
         MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call DrawString, ok_button_label
 
-draw_prompt:
+done_buttons:
+
+        ;; Prompt string
         MGTK_CALL MGTK::MoveTo, pos_prompt
         param_call_indirect DrawString, prompt_addr
-        FALL_THROUGH_TO EventLoop
+
+        MGTK_CALL MGTK::ShowCursor
+
+        ;; --------------------------------------------------
+        ;; Play bell
+
+        lda     message_num
+        jsr     MaybeBell
 
         ;; --------------------------------------------------
         ;; Event Loop
@@ -3150,6 +3162,7 @@ finish: pha
 ;;; ============================================================
 
 ;;; Y = unit number
+;;; If ejectable, sets `ejectable_flag`
 .proc IsDriveEjectable
         sty     unit_num
         tya
@@ -3220,7 +3233,9 @@ ShowAlertDialog := alert_dialog::show_alert_dialog
 
         inc     loop_counter
         inc     loop_counter
-        lda     loop_counter
+
+        loop_counter := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     #kMaxCounter
         bcc     :+
         copy    #0, loop_counter
@@ -3229,9 +3244,6 @@ ShowAlertDialog := alert_dialog::show_alert_dialog
 
 :       lda     loop_counter
         rts
-
-loop_counter:
-        .byte   0
 .endproc
 
         .include "../lib/is_diskii.s"

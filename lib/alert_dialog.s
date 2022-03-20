@@ -15,7 +15,7 @@
 .proc Alert
         jmp     start
 
-alert_bitmap:
+question_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -41,11 +41,37 @@ alert_bitmap:
         .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
 
+exclamation_bitmap:
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%1111111),PX(%1100000),PX(%0000000)
+        .byte   PX(%0111100),PX(%1111100),PX(%0000111),PX(%1111111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0111100),PX(%1111100),PX(%0001111),PX(%1110001),PX(%1111110),PX(%0000000)
+        .byte   PX(%0111100),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100000),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1110001),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1110001),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111110),PX(%0000000),PX(%0011111),PX(%1111111),PX(%1111111),PX(%0000000)
+        .byte   PX(%0111111),PX(%1100000),PX(%0011111),PX(%1110001),PX(%1111110),PX(%0000000)
+        .byte   PX(%0111111),PX(%1100000),PX(%0111111),PX(%1110001),PX(%1111100),PX(%0000000)
+        .byte   PX(%0111000),PX(%0000011),PX(%1111111),PX(%1111111),PX(%1100000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+
         kAlertXMargin = 20
 
 .params alert_bitmap_params
         DEFINE_POINT viewloc, kAlertXMargin, 8
-mapbits:        .addr   alert_bitmap
+mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   6
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 36, 23
@@ -134,14 +160,6 @@ start:
         MGTK_CALL MGTK::SetCursor, pointer_cursor
 
         ;; --------------------------------------------------
-        ;; Play bell
-
-        bit     alert_params::options
-    IF_NS                       ; N = play sound
-        jsr     Bell
-    END_IF
-
-        ;; --------------------------------------------------
         ;; Draw alert
 
         MGTK_CALL MGTK::HideCursor
@@ -186,6 +204,12 @@ start:
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect
 
+        ldax    #exclamation_bitmap
+        ldy     alert_params::buttons
+    IF_NOT_ZERO
+        ldax    #question_bitmap
+    END_IF
+        stax    alert_bitmap_params::mapbits
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintBits, alert_bitmap_params
 
@@ -284,6 +308,14 @@ done:
 .endscope
 
         MGTK_CALL MGTK::ShowCursor
+
+        ;; --------------------------------------------------
+        ;; Play bell
+
+        bit     alert_params::options
+    IF_NS                       ; N = play sound
+        jsr     Bell
+    END_IF
 
         ;; --------------------------------------------------
         ;; Event Loop
