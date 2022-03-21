@@ -3441,8 +3441,37 @@ flag:   .byte   0
 
 .if FD_EXTENDED
 .proc PrepPathF2
-        COPY_STRING path_buf, buf_input2_left
-        jmp     ClearRight
+        buf_left := buf_input2_left
+        buf_right := buf_input_right
+
+        ;; Whenever the path is updated, preserve last segment of
+        ;; the path (the filename) as a suffix. This is fairly
+        ;; specific to "Copy a File".
+
+        ;; Collapse paths, search for last '/'
+        jsr     MoveIPToEndF2
+        ldx     buf_left
+        beq     finish
+:       lda     buf_left,x
+        cmp     #'/'
+        beq     :+
+        dex
+        beq     finish
+        bne     :-              ; always
+:
+        ;; Copy slash and last segment to right
+        ldy     #1
+:       lda     buf_left,x
+        sta     buf_right,y
+        cpx     buf_input2_left
+        beq     :+
+        iny
+        inx
+        bne     :-              ; always
+
+:       sty     buf_right
+
+finish: COPY_STRING path_buf, buf_left
 .endproc
 .endif
 

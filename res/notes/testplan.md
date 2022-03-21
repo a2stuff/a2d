@@ -645,6 +645,10 @@ Repeat for each file picker:
 * Click a folder in the list. Edit the path shown. Click Open. Verify that the selected folder opens and that the path is updated correctly.
 * Click a folder in the list. Click Open. Verify that the selected folder opens and that the path is updated correctly.
 
+* Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, after the insertion point. Click a folder. Verify that the path updates, with the file name appended, after the insertion point. Click Change Drive. Verify that the new path still has the file name appended, after the insertion point. Repeat the above, but move the insertion point before clicking.
+* Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, after the insertion point. Edit the file name. Click a folder. Verify that the path updates, with the edited file name appended, after the insertion point. Click Change Drive. Verify that the new path still has the edited file name appended, after the insertion point. Repeat the above, but move the insertion point before clicking.
+
+
 # Text Input Fields
 
 This covers:
