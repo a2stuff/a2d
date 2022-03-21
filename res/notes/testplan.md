@@ -643,6 +643,7 @@ Repeat for each file picker:
 * In the Shortcuts > Add/Edit a Shortcut... name field, type a non-path, non-control character. Verify that it is accepted.
 * Click a file in the list. Move the IP into an earlier part of the filename (e.g. "/VO|L/FILE"). Click on another file. Verify that the path is updated correctly. Repeat with other mean of changing the selected file: Up, Down, Apple+Up, Apple+Down, and holding Apple while typing a filename.
 * Click a folder in the list. Edit the path shown. Click Open. Verify that the selected folder opens and that the path is updated correctly.
+* Click a folder in the list. Click Open. Verify that the selected folder opens and that the path is updated correctly.
 
 # Text Input Fields
 

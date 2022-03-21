@@ -659,12 +659,9 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         lda     file_list_index,x
         and     #$7F
 
-        pha                     ; A = index
-        jsr     PrepPath
-        pla                     ; A = index
-
         jsr     GetNthFilename
         jsr     AppendToPathBuf
+        jsr     PrepPath
 
         jsr     ReadDir
         jsr     UpdateScrollbar
