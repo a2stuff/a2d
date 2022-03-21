@@ -1752,39 +1752,29 @@ index:  .byte   0
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
-.if !FD_EXTENDED
-        MGTK_CALL MGTK::SetPenMode, penXOR
-.endif
         copy16  #path_buf, $06
-        ldy     #$00
-        lda     ($06),y
-        sta     l5
-        iny
-l1:     iny
-        lda     ($06),y
+
+        ;; Copy first segment
+        ldy     #0
+        ldx     #2              ; skip leading slash
+:       lda     path_buf,x
         cmp     #'/'
-        beq     l2
-        cpy     l5
-        bne     l1
-        beq     l3
-l2:     dey
-        sty     l5
-l3:     ldy     #$00
-        ldx     #$00
-l4:     inx
+        beq     finish
         iny
-        lda     ($06),y
-        sta     INVOKER_PREFIX,x
-        cpy     l5
-        bne     l4
-        stx     INVOKER_PREFIX
+        sta     INVOKER_PREFIX,y
+        cpx     path_buf
+        beq     finish
+        inx
+        bne     :-
+
+finish: sty     INVOKER_PREFIX
+
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         param_call DrawString, file_dialog_res::disk_label_str
         param_call DrawString, INVOKER_PREFIX
+
         jsr     InitSetGrafport
         rts
-
-l5:     .byte   0
 .endproc
 
 ;;; ============================================================
