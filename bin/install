@@ -58,7 +58,7 @@ add_file () {
         perl -p -i -e 's/\r?\n/\r/g' "$tmp_file" # Ensure Apple line endings
     fi
 
-    suppress cadius DELETEFILE "$INSTALL_IMG" "$dst_dir/$dst_file"
+    cadius DELETEFILE "$INSTALL_IMG" "$dst_dir/$dst_file" > /dev/null || true
     suppress cadius ADDFILE "$INSTALL_IMG" "$dst_dir" "$tmp_file" --quiet --no-case-bits
     rm "$tmp_file"
 }
