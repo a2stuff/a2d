@@ -246,15 +246,16 @@ loop:
         clc
         adc     #>dir_data_buffer
         sta     end_block_page
-        jsr     SetPtrToFirstEntry
 
+        ;; Get key block of directory by using header pointer of first entry
+        jsr     SetPtrToFirstEntry
 :       jsr     SetPtrToNextEntry
         bcs     jmp_exit
         ldy     #0
         lda     (ptr),y
         and     #STORAGE_TYPE_MASK ; skip deleted entries
         beq     :-
-        ldy     #SubdirectoryHeader::file_count
+        ldy     #FileEntry::header_pointer
         copy16in (ptr),y, block_num_table
 .endscope
 
