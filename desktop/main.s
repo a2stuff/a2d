@@ -531,7 +531,8 @@ window_open_flag := HandleKeydownImpl::window_open_flag
         lda     findicon_params::which_icon
         jne     HandleVolumeIconClick
 
-        jmp     DesktopDragSelect
+        lda     #0
+        jmp     DragSelect
 
 not_desktop:
         cmp     #MGTK::Area::menubar  ; menu?
@@ -4464,6 +4465,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         bne     HandleFileIconClick
 
         ;; Not an icon - maybe a drag?
+        lda     active_window_id
         jsr     DragSelect
         jmp     done_content_click ; restore from `HandleClientClick`
 .endproc
@@ -4804,14 +4806,19 @@ exception_flag:
 .endproc
 
 ;;; ============================================================
-;;; Drag Selection - initiated in a window
+;;; Drag Selection
+;;; Inputs: A = window_id (0 for desktop)
 
 .proc DragSelect
+        sta     window_id
+
+    IF_NOT_ZERO
         ;; Set up $06 to point at an imaginary `IconEntry`, to map
         ;; `event_params::coords` from screen to window.
         copy16  #(event_params::coords - IconEntry::iconx), $06
         ;; Map initial event coordinates
         jsr     CoordsScreenToWindow
+    END_IF
 
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
@@ -4825,27 +4832,31 @@ exception_flag:
         jsr     PeekEvent
         lda     event_params::kind
         cmp     #MGTK::EventKind::drag
-        beq     l3                          ; yes
-
+        beq     :+              ; yes
         ;; No, just a click; optionally clear selection
         jsr     ExtendSelectionModifierDown
-        bmi     :+              ; don't clear if mis-clicking
-        jsr     ClearSelection
-:       rts
+        jpl     ClearSelection  ; don't clear if mis-clicking
+        rts
+:
 
         ;; --------------------------------------------------
         ;; Prep selection
-l3:     lda     selected_window_id ; different window, or desktop?
-        cmp     active_window_id   ; if so, definitely clear selection
+        lda     window_id
+        cmp     selected_window_id
         bne     clear
         jsr     ExtendSelectionModifierDown
         bmi     :+
 clear:  jsr     ClearSelection
+:
 
         ;; --------------------------------------------------
         ;; Set up drawing port, draw initial rect
-:       lda     active_window_id
+        lda     window_id
+    IF_NOT_ZERO
         jsr     UnsafeOffsetAndSetPortFromWindowId ; ASSERT: not obscured
+    ELSE
+        jsr     ResetMainGrafport
+    END_IF
 
         jsr     FrameTmpRect
 
@@ -4855,20 +4866,32 @@ event_loop:
         jsr     PeekEvent
         lda     event_params::kind
         cmp     #MGTK::EventKind::drag
-        beq     update
+        jeq     update
 
         ;; Process all icons in window
         jsr     FrameTmpRect
         ldx     #0
 iloop:  cpx     cached_window_entry_count
+    IF_ZERO
         ;; Finished!
-        jeq     ResetMainGrafport
+        lda     window_id
+      IF_NOT_ZERO
+        jmp     ResetMainGrafport
+      ELSE
+        copy    #0, selected_window_id
+        rts
+      END_IF
+    END_IF
 
         ;; Check if icon should be selected
         txa
         pha
         copy    cached_window_entry_list,x, icon_param
+        lda     window_id
+    IF_NOT_ZERO
+        lda     icon_param
         jsr     IconScreenToWindow
+    END_IF
         ITK_CALL IconTK::IconInRect, icon_param
         beq     done_icon
 
@@ -4882,7 +4905,7 @@ iloop:  cpx     cached_window_entry_count
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
-        copy    active_window_id, selected_window_id
+        copy    window_id, selected_window_id
     ELSE
         ;; Unhighlight and remove from selection
         ITK_CALL IconTK::UnhighlightIcon, icon_param
@@ -4892,8 +4915,11 @@ iloop:  cpx     cached_window_entry_count
     END_IF
 
 done_icon:
+        lda     window_id
+    IF_NOT_ZERO
         lda     icon_param
         jsr     IconWindowToScreen
+    END_IF
         pla
         tax
         inx
@@ -4901,7 +4927,10 @@ done_icon:
 
         ;; --------------------------------------------------
         ;; Check movement threshold
-update: jsr     CoordsScreenToWindow
+update: lda     window_id
+    IF_NOT_ZERO
+        jsr     CoordsScreenToWindow
+    END_IF
         sub16   event_params::xcoord, last_pos+MGTK::Point::xcoord, deltax
         sub16   event_params::ycoord, last_pos+MGTK::Point::ycoord, deltay
 
@@ -4962,6 +4991,9 @@ l15:    copy16  event_params::ycoord, tmp_rect::y2
 
 draw:   jsr     FrameTmpRect
         jmp     event_loop
+
+window_id:                      ; 0 = desktop, assumed to be active otherwise
+        .byte   0
 
 deltax: .word   0
 deltay: .word   0
@@ -5836,164 +5868,6 @@ ret:    rts
         jmp     RemoveFromSelectionList
 .endproc
 
-.endproc
-
-
-;;; ============================================================
-;;; Drag Selection - initiated on the desktop itself
-
-.proc DesktopDragSelect
-        ;; Stash initial coords
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_params::coords,x
-        sta     tmp_rect::topleft,x
-        sta     tmp_rect::bottomright,x
-        dex
-        bpl     :-
-
-        ;; Is this actually a drag?
-        jsr     PeekEvent
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::drag
-        beq     l2              ; yes!
-
-        ;; No, just a click; optionally clear selection
-        jsr     ExtendSelectionModifierDown
-        bmi     :+               ; don't clear if mis-clicking
-        jsr     ClearSelection
-:       rts
-
-        ;; --------------------------------------------------
-        ;; Prep selection
-l2:     lda     selected_window_id ; window?
-        bne     clear              ; if so, definitely clear selection
-        jsr     ExtendSelectionModifierDown
-        bmi     :+
-clear:  jsr     ClearSelection
-
-        ;; --------------------------------------------------
-        ;; Set up drawing port, draw initial rect
-:       jsr     ResetMainGrafport
-
-        jsr     FrameTmpRect
-
-        ;; --------------------------------------------------
-        ;; Event loop
-event_loop:
-        jsr     PeekEvent
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::drag
-        beq     update
-
-        ;; Process all icons on desktop
-        jsr     FrameTmpRect
-        ldx     #0
-iloop:  cpx     cached_window_entry_count
-        bne     :+
-        ;; Finished!
-        copy    #0, selected_window_id
-        rts
-
-        ;; Check if icon should be selected
-:       txa
-        pha
-        copy    cached_window_entry_list,x, icon_param
-        ITK_CALL IconTK::IconInRect, icon_param
-        beq     done_icon
-
-        ;; Already selected?
-        lda     icon_param
-        jsr     IsIconSelected
-    IF_NE
-        ;; Highlight and add to selection
-        ITK_CALL IconTK::HighlightIcon, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
-        ldx     selected_icon_count
-        copy    icon_param, selected_icon_list,x
-        inc     selected_icon_count
-    ELSE
-        ;; Unhighlight and remove from selection
-        ITK_CALL IconTK::UnhighlightIcon, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
-        lda     icon_param
-        jsr     RemoveFromSelectionList
-    END_IF
-
-done_icon:
-        pla
-        tax
-        inx
-        jmp     iloop
-
-        ;; --------------------------------------------------
-        ;; Check movement threshold
-update: sub16   event_params::xcoord, last_pos + MGTK::Point::xcoord, deltax
-        sub16   event_params::ycoord, last_pos + MGTK::Point::ycoord, deltay
-
-        lda     deltax+1
-        bpl     :+
-        lda     deltax          ; negate
-        eor     #$FF
-        sta     deltax
-        inc     deltax
-
-:       lda     deltay+1
-        bpl     :+
-        lda     deltay          ; negate
-        eor     #$FF
-        sta     deltay
-        inc     deltay
-
-        ;; TODO: Experiment with making this lower.
-        kDragBoundThreshold = 5
-
-:       lda     deltax
-        cmp     #kDragBoundThreshold
-        bcs     :+
-        lda     deltay
-        cmp     #kDragBoundThreshold
-        jcc     event_loop
-
-        ;; Beyond threshold; erase rect
-:       jsr     FrameTmpRect
-
-        COPY_STRUCT MGTK::Point, event_params::coords, last_pos
-
-        ;; --------------------------------------------------
-        ;; Figure out coords for rect's left/top/bottom/right
-        cmp16   event_params::xcoord, tmp_rect::x2
-        bpl     l11
-        cmp16   event_params::xcoord, tmp_rect::x1
-        bmi     l10
-        bit     x_flag
-        bpl     l11
-l10:    copy16  event_params::xcoord, tmp_rect::x1
-        copy    #$80, x_flag
-        jmp     do_y
-l11:    copy16  event_params::xcoord, tmp_rect::x2
-        copy    #0, x_flag
-
-do_y:   cmp16   event_params::ycoord, tmp_rect::y2
-        bpl     l14
-        cmp16   event_params::ycoord, tmp_rect::y1
-        bmi     l13
-        bit     y_flag
-        bpl     l14
-l13:    copy16  event_params::ycoord, tmp_rect::y1
-        copy    #$80, y_flag
-        jmp     draw
-l14:    copy16  event_params::ycoord, tmp_rect::y2
-        copy    #0, y_flag
-
-draw:   jsr     FrameTmpRect
-        jmp     event_loop
-
-deltax: .word   0
-deltay: .word   0
-last_pos:
-        .tag MGTK::Point
-x_flag: .byte   0
-y_flag: .byte   0
 .endproc
 
 ;;; ============================================================
