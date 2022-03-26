@@ -333,6 +333,13 @@
 * Launch DeskTop. File > Copy a File.... Select a file, and click OK. Click OK without changing the destination name. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Copy a File dialog is still showing.
 * Launch DeskTop. Open a volume window. Open a folder window. Select the volume icon and rename it. Verify that neither window is closed, and volume window is renamed.
 
+* Launch DeskTop. Select a SYS file. Rename it to have a .SYSTEM suffix. Verify that it has an application (diamond and hand) icon, without moving.
+* Launch DeskTop. Select a SYS file. Rename it to not have a .SYSTEM suffix. Verify that has a system (computer) icon, without moving.
+* Launch DeskTop. Select a TXT file. Rename it to to have a .SHK suffix. Verify that it shows as an archive icon, without moving.
+* Launch DeskTop. Select a TXT file. Rename it to to have a .BXY suffix. Verify that it shows as an archive icon, without moving.
+* Launch DeskTop. Select a TXT file. Rename it to to have a .BNY suffix. Verify that it shows as an archive icon, without moving.
+* Launch DeskTop. Select a TXT file. Rename it to to have a .BXY suffix. Verify that it shows as an archive icon, without moving.
+
 * Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double click on B. Verify that the existing B window activates.
 
 * Launch DeskTop. Open a window. Create a folder with a short name (e.g. "A"). Open the folder. Drag the folder's window so it covers just the left edge of the icon. Drag it away. Verify that the folder repaints. Repeat for the right edge.

@@ -3154,11 +3154,6 @@ CmdLock         := DoLock
         ;; TODO: Avoid repainting everything
         MGTK_CALL MGTK::RedrawDeskTop
 :
-        bit     result
-        bvc     ret             ; V = SYS file renamed
-        lda     active_window_id
-        ;; TODO: Optimize, e.g. rebuild from existing FileRecords ?
-        jsr     SelectAndRefreshWindow
 
 ret:    rts
 
@@ -7829,7 +7824,7 @@ thumbmax:
         copy16in (file_record),y, icontype_blocks
         copy16  #name_tmp, icontype_filename
 
-        ;; Back in the resources we need
+        ;; Bank in the resources we need
         bit     LCBANK1
         bit     LCBANK1
 
@@ -11930,12 +11925,10 @@ skip:   lda     selected_window_id
         dey
         bpl     :-
 
-        lda     icon_param
-        jsr     DrawIcon
-
         ;; If not volume, find and update associated FileEntry
         lda     selected_window_id
-    IF_NOT_ZERO
+        jeq     end_filerecord_and_icon_update
+
         ;; Dig up the index of the icon within the window.
         icon_ptr := $06
         lda     icon_param
@@ -11946,7 +11939,7 @@ skip:   lda     selected_window_id
         pha                     ; A = index of icon in window
 
         ;; Find the window's FileRecord list.
-        file_record_ptr := $06
+        file_record_ptr := $08
         lda     selected_window_id
         jsr     FindIndexInFilerecordListEntries ; Assert: must be found
         txa
@@ -11958,7 +11951,7 @@ skip:   lda     selected_window_id
         ;; Look up the FileRecord within the list.
         pla                     ; A = index
         .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
-        jsr     ATimes32      ; A,X = index * 32
+        jsr     ATimes32        ; A,X = index * 32
         addax   file_record_ptr, file_record_ptr
 
         ;; Bank in FileRecords, and copy the new name in.
@@ -11971,19 +11964,43 @@ skip:   lda     selected_window_id
         dey
         bpl     :-
 
-        ;; Note if it's a SYS file
+        ;; Filename change may alter icon. Don't bank out FileRecords yet.
         ldy     #FileRecord::file_type
         lda     (file_record_ptr),y
-        cmp     #FT_SYSTEM
-        bne     :+
-        lda     result_flags
-        ora     #$40
-        sta     result_flags
-:
+        sta     icontype_filetype
+        ldy     #FileRecord::aux_type
+        copy16in (file_record_ptr),y, icontype_auxtype
+        ldy     #FileRecord::blocks
+        copy16in (file_record_ptr),y, icontype_blocks
+        copy16  #new_name_buf, icontype_filename
 
+        ;; Now we're done with FileRecords.
         bit     LCBANK1
         bit     LCBANK1
-    END_IF
+
+        jsr     GetIconType
+        jsr     CreateIconsForWindow::FindIconDetailsForIconType
+
+        ;; Use new `icon_height` to offset vertically.
+        ;; Add old icon height to make icony top of text
+        icondef_ptr := $08
+        ldy     #IconEntry::iconbits
+        copy16in (icon_ptr),y, icondef_ptr
+        ldy     #IconDefinition::maprect + MGTK::Rect::y2
+        copy16in (icondef_ptr),y, icony
+        ldy     #IconEntry::icony
+        add16in (icon_ptr),y, icony, (icon_ptr),y
+        ldy     #IconEntry::icony
+        sub16in (icon_ptr),y, CreateIconsForWindow::icon_height, (icon_ptr),y
+        ;; Use `iconbits` to populate IconEntry::iconbits
+        ldy     #IconEntry::iconbits
+        copy16in CreateIconsForWindow::iconbits, (icon_ptr),y
+        ;; Assumes `iconentry_flags` will not change, regardless of icon.
+end_filerecord_and_icon_update:
+
+        ;; Draw the (maybe new) icon
+        lda     icon_param
+        jsr     DrawIcon
 
         ;; Is there a window for the folder/volume?
         param_call FindWindowForPath, src_path_buf
@@ -12018,9 +12035,10 @@ skip:   lda     selected_window_id
 .endproc
 
 ;;; N bit ($80) set if a window title was changed
-;;; V bit ($40) set if a SYS file was renamed
 result_flags:
         .byte   0
+
+icony:  .word   0
 .endproc
 DoRename        := DoRenameImpl::start
 
