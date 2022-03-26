@@ -334,11 +334,10 @@
 * Launch DeskTop. Open a volume window. Open a folder window. Select the volume icon and rename it. Verify that neither window is closed, and volume window is renamed.
 
 * Launch DeskTop. Select a SYS file. Rename it to have a .SYSTEM suffix. Verify that it has an application (diamond and hand) icon, without moving.
-* Launch DeskTop. Select a SYS file. Rename it to not have a .SYSTEM suffix. Verify that has a system (computer) icon, without moving.
-* Launch DeskTop. Select a TXT file. Rename it to to have a .SHK suffix. Verify that it shows as an archive icon, without moving.
-* Launch DeskTop. Select a TXT file. Rename it to to have a .BXY suffix. Verify that it shows as an archive icon, without moving.
-* Launch DeskTop. Select a TXT file. Rename it to to have a .BNY suffix. Verify that it shows as an archive icon, without moving.
-* Launch DeskTop. Select a TXT file. Rename it to to have a .BXY suffix. Verify that it shows as an archive icon, without moving.
+* Launch DeskTop. Select a SYS file. Rename it to not have a .SYSTEM suffix. Verify that it has a system (computer) icon, without moving.
+* Launch DeskTop. Select a TXT file. Rename it to have a .SHK suffix. Verify that it has an archive icon, without moving.
+* Launch DeskTop. Select a TXT file. Rename it to have a .BXY suffix. Verify that it has an archive icon, without moving.
+* Launch DeskTop. Select a TXT file. Rename it to have a .BNY suffix. Verify that it has an archive icon, without moving.
 
 * Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double click on B. Verify that the existing B window activates.
 
