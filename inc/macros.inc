@@ -177,6 +177,20 @@ end:
         jmp     target
 .endmacro
 
+.macro param_jump_indirect target, param1, param2
+.if     .paramcount = 2
+        lda     param1
+        ldx     param1+1
+.elseif .paramcount = 3
+        ldy     #param1
+        lda     param2
+        ldx     param2+1
+.else
+        .error "incorrect macro usage"
+.endif
+        jmp     target
+.endmacro
+
 
 ;;; ============================================================
 ;;; Long branch pseudo-ops

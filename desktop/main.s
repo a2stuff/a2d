@@ -2349,7 +2349,7 @@ success:
         param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
         param_call FindLastPathSegment, src_path_buf
         sty     src_path_buf
-        param_call FindWindowForPath, src_path_buf
+        jsr     FindWindowForSrcPath
         beq     done
 
         jsr     SelectAndRefreshWindowOrClose
@@ -6054,7 +6054,7 @@ no_linked_win:
         ;; `OpenWindowForPath` with `icon_param` = $FF
         ;; and `src_path_buf` set.
 check_path:
-        param_call FindWindowForPath, src_path_buf
+        jsr     FindWindowForSrcPath
         beq     no_win
 
         ;; Found a match - associate the window.
@@ -6740,6 +6740,13 @@ slash:  cpy     #1
         beq     restore
         dey
         rts
+.endproc
+
+;;; ============================================================
+
+.proc FindWindowForSrcPath
+        ldax    #src_path_buf
+        FALL_THROUGH_TO FindWindowForPath
 .endproc
 
 ;;; ============================================================
@@ -7896,8 +7903,7 @@ L7870:  lda     cached_window_id
         lda     #SELF_MODIFIED_BYTE
         jsr     GetIconPath     ; `path_buf3` set to path
         jsr     PushPointers
-        ldax    #path_buf3
-        jsr     FindWindowForPath
+        param_call FindWindowForPath, path_buf3
         jsr     PopPointers
         cmp     #0              ; A = window id, 0 if none
         beq     :+
@@ -11994,7 +12000,7 @@ end_filerecord_and_icon_update:
         jsr     DrawIcon
 
         ;; Is there a window for the folder/volume?
-        param_call FindWindowForPath, src_path_buf
+        jsr     FindWindowForSrcPath
     IF_NOT_ZERO
         dst := $06
         ;; Update the window title
@@ -12043,7 +12049,7 @@ DoRename        := DoRenameImpl::start
 
 .proc UpdateWindowPaths
         ;; Is there a window for the folder/volume?
-        param_call FindWindowForPath, src_path_buf
+        jsr     FindWindowForSrcPath
     IF_NOT_ZERO
         dst := $06
         ;; Update the path
@@ -14761,19 +14767,15 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ;; CopyDialogLifecycle::count
 do1:    ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos
-        param_call DrawString, str_file_count
-        param_call_indirect DrawString, ptr_str_files_suffix
-        rts
+        jmp     DrawFileCountWithSuffix
 
         ;; --------------------------------------------------
         ;; CopyDialogLifecycle::exists
 do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
@@ -14784,7 +14786,7 @@ do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawDialogPath, path_buf0
+        jsr     DrawDialogPathBuf0
 
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_dst - copy_dialog_params
@@ -14794,8 +14796,7 @@ do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         param_call DrawDialogPath, path_buf1
 
         MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos2
-        param_call DrawString, str_file_count
-        param_jump DrawString, str_2_spaces
+        jmp     DrawFileCountWithTrailingSpaces
 
         ;; --------------------------------------------------
         ;; CopyDialogLifecycle::close
@@ -14814,8 +14815,7 @@ do3:    lda     #winfo_prompt_dialog::kWindowId
         bmi     :-
         pha
         jsr     EraseYesNoAllCancelButtons
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::prompt_rect
+        jsr     ErasePrompt
         pla
         rts
 
@@ -14835,8 +14835,7 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         bmi     :-
         pha
         jsr     EraseOkCancelButtons
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::prompt_rect
+        jsr     ErasePrompt
         pla
         rts
 .endproc
@@ -14873,19 +14872,15 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         ;; DownloadDialogLifecycle::count
 do1:    ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos
-        param_call DrawString, str_file_count
-        param_call_indirect DrawString, ptr_str_files_suffix
-        rts
+        jmp     DrawFileCountWithSuffix
 
         ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::show
 do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
@@ -14894,10 +14889,9 @@ do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawDialogPath, path_buf0
+        jsr     DrawDialogPathBuf0
         MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos2
-        param_call DrawString, str_file_count
-        param_jump DrawString, str_2_spaces
+        jmp     DrawFileCountWithTrailingSpaces
 
         ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::close
@@ -14916,8 +14910,7 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         bmi     :-
         pha
         jsr     EraseOkButton
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::prompt_rect
+        jsr     ErasePrompt
         pla
         rts
 .endproc
@@ -14990,8 +14983,7 @@ do2:
         jsr     DrawOkButton
 :       jsr     PromptInputLoop
         bmi     :-
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        jsr     EraseDialogLabels
         jsr     EraseOkButton
         return  #0
 .endproc
@@ -15029,9 +15021,8 @@ delete_flag:                    ; clear if trash, set if delete
 
         ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::count
-do1:    ldy     #1
+do1:    ldy     #delete_dialog_params::count - delete_dialog_params
         copy16in (ptr),y, file_count
-        jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         lda     delete_flag
@@ -15040,15 +15031,12 @@ do1:    ldy     #1
         jmp     show_count
 :       param_call DrawDialogLabel, 4, aux::str_delete_ok
 show_count:
-        param_call DrawString, str_file_count
-        param_call_indirect DrawString, ptr_str_files_suffix
-        rts
+        jmp     DrawFileCountWithSuffix
 
         ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::show
-do3:    ldy     #1
+do3:    ldy     #delete_dialog_params::count - delete_dialog_params
         copy16in (ptr),y, file_count
-        jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
@@ -15057,10 +15045,9 @@ do3:    ldy     #1
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawDialogPath, path_buf0
+        jsr     DrawDialogPathBuf0
         MGTK_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
-        param_call DrawString, str_file_count
-        param_jump DrawString, str_2_spaces
+        jmp     DrawFileCountWithTrailingSpaces
 
         ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::confirm
@@ -15070,14 +15057,13 @@ do2:    lda     #winfo_prompt_dialog::kWindowId
         jsr     Bell
 :       jsr     PromptInputLoop
         bmi     :-
-        bne     LADF4
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        bne     :+
+        jsr     EraseDialogLabels
         jsr     EraseOkCancelButtons
         param_call DrawDialogLabel, 2, aux::str_file_colon
         param_call DrawDialogLabel, 4, aux::str_delete_remaining
         lda     #$00
-LADF4:  rts
+:       rts
 
         ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::close
@@ -15091,12 +15077,11 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 6, aux::str_delete_locked_file
         jsr     DrawYesNoAllCancelButtons
-LAE17:  jsr     PromptInputLoop
-        bmi     LAE17
+:       jsr     PromptInputLoop
+        bmi     :-
         pha
         jsr     EraseYesNoAllCancelButtons
-        jsr     SetPenModeCopy ; white
-        MGTK_CALL MGTK::PaintRect, aux::prompt_rect ; erase prompt
+        jsr     ErasePrompt
         pla
         rts
 .endproc
@@ -15142,7 +15127,7 @@ do_run: copy    #$80, has_input_field_flag
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 2, aux::str_in
-        param_call DrawDialogPath, path_buf0
+        jsr     DrawDialogPathBuf0
         param_call DrawDialogLabel, 4, aux::str_enter_folder_name
         jsr     DrawFilenamePrompt
 LAEC6:  jsr     PromptInputLoop
@@ -15322,19 +15307,15 @@ is_volume_flag:
         ;; LockDialogLifecycle::count
 do1:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
-        jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 4, aux::str_lock_ok
-        param_call DrawString, str_file_count
-        param_call_indirect DrawString, ptr_str_files_suffix
-        rts
+        jmp     DrawFileCountWithSuffix
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::operation
 do3:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
-        jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
@@ -15343,28 +15324,26 @@ do3:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawDialogPath, path_buf0
+        jsr     DrawDialogPathBuf0
         MGTK_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
-        param_call DrawString, str_file_count
-        param_jump DrawString, str_2_spaces
+        jmp     DrawFileCountWithTrailingSpaces
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::prompt
 do2:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkCancelButtons
-LB0FA:  jsr     PromptInputLoop
-        bmi     LB0FA
-        bne     LB139
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
+:       jsr     PromptInputLoop
+        bmi     :-
+        bne     :+
+        jsr     EraseDialogLabels
+        jsr     EraseOkCancelButtons
         param_call DrawDialogLabel, 2, aux::str_file_colon
         param_call DrawDialogLabel, 4, aux::str_lock_remaining
         lda     #$00
-LB139:  rts
+:       rts
 
+        ;; --------------------------------------------------
         ;; LockDialogLifecycle::close
 do4:    jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
@@ -15398,21 +15377,17 @@ do4:    jsr     ClosePromptDialog
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::count
-do1:    ldy     #1
+do1:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
-        jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 4, aux::str_unlock_ok
-        param_call DrawString, str_file_count
-        param_call_indirect DrawString, ptr_str_files_suffix
-        rts
+        jmp     DrawFileCountWithSuffix
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::operation
-do3:    ldy     #1
+do3:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
-        jsr     ComposeFileCountString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     ClearTargetFileRect
@@ -15421,27 +15396,24 @@ do3:    ldy     #1
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
-        param_call DrawDialogPath, path_buf0
+        jsr     DrawDialogPathBuf0
         MGTK_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
-        param_call DrawString, str_file_count
-        param_jump DrawString, str_2_spaces
+        jmp     DrawFileCountWithTrailingSpaces
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::prompt
 do2:    lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkCancelButtons
-LB218:  jsr     PromptInputLoop
-        bmi     LB218
-        bne     LB257
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
+:       jsr     PromptInputLoop
+        bmi     :-
+        bne     :+
+        jsr     EraseDialogLabels
+        jsr     EraseOkCancelButtons
         param_call DrawDialogLabel, 2, aux::str_file_colon
         param_call DrawDialogLabel, 4, aux::str_unlock_remaining
         lda     #$00
-LB257:  rts
+:       rts
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::close
@@ -15627,6 +15599,26 @@ do_close:
         stx     ptr
         ldy     #0
         rts
+.endproc
+
+;;; ============================================================
+
+;;; `file_count` must be populated
+.proc DrawFileCountWithSuffix
+        jsr     ComposeFileCountString
+        param_call DrawString, str_file_count
+        param_jump_indirect DrawString, ptr_str_files_suffix
+.endproc
+
+;;; `file_count` must be populated
+.proc DrawFileCountWithTrailingSpaces
+        jsr     ComposeFileCountString
+        param_call DrawString, str_file_count
+        FALL_THROUGH_TO Draw2SpacesString
+.endproc
+
+.proc Draw2SpacesString
+        param_jump DrawString, str_2_spaces
 .endproc
 
 ;;; ============================================================
@@ -15835,6 +15827,11 @@ calc_y:
 
 ;;; ============================================================
 
+.proc DrawDialogPathBuf0
+        ldax    #path_buf0
+        FALL_THROUGH_TO DrawDialogPath
+.endproc
+
 ;;; Set up clipping to draw a path (long string) in a dialog
 ;;; without intruding into the border.
 ;;; Inputs: A,X = string address
@@ -15920,6 +15917,18 @@ string: .addr   0
 .proc EraseOkButton
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
+        rts
+.endproc
+
+.proc EraseDialogLabels
+        jsr     SetPenModeCopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        rts
+.endproc
+
+.proc ErasePrompt
+        jsr     SetPenModeCopy
+        MGTK_CALL MGTK::PaintRect, aux::prompt_rect
         rts
 .endproc
 
@@ -16030,7 +16039,7 @@ ShowPromptIP := HidePromptIP
         MGTK_CALL MGTK::MoveTo, name_input_textpos
         param_call DrawString, path_buf1
         param_call DrawString, path_buf2
-        param_call DrawString, str_2_spaces
+        jsr     Draw2SpacesString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 
@@ -16293,7 +16302,7 @@ ret:    rts
         MGTK_CALL MGTK::MoveTo, point
         jsr     SetNameInputClipRect
         param_call DrawString, path_buf2
-        param_call DrawString, str_2_spaces
+        jsr     Draw2SpacesString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 
