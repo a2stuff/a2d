@@ -275,9 +275,8 @@ ClearUpdates := ClearUpdatesImpl::clear
 skip_adjust_port:
 
         ;; Actually draw the window icons/list
-        copy    #$80, header_and_offset_flag ; port already adjusted
+        lda     #kDrawWindowEntriesContentOnlyPortAdjusted
         jsr     DrawWindowEntries
-        copy    #0, header_and_offset_flag
 
 done:
         ;; Restore window's port
@@ -588,6 +587,7 @@ not_menu:
         MGTK_CALL MGTK::SelectWindow, findwindow_params::window_id
         copy    findwindow_params::window_id, active_window_id
         jsr     LoadActiveWindowEntryTable ; restored below
+        lda     #kDrawWindowEntriesHeaderAndContent
         jsr     DrawWindowEntries
         jsr     LoadDesktopEntryTable ; restore from above
 
@@ -2964,9 +2964,8 @@ sort:   jsr     LoadActiveWindowEntryTable ; restored below
         jsr     ClearWindowBackgroundIfNotObscured
         jsr     ResetMainGrafport
 
-        copy    #$40, header_and_offset_flag
+        lda     #kDrawWindowEntriesContentOnly
         jsr     DrawWindowEntries
-        copy    #0, header_and_offset_flag
 
         jsr     UpdateScrollbars
 
@@ -4389,7 +4388,8 @@ done_client_click:
         lda     trackthumb_params::thumbmoved
         bne     :+
         rts
-:       jmp     UpdateScrollThumb
+:
+        FALL_THROUGH_TO UpdateScrollThumb
 .endproc
 
 ;;; ============================================================
@@ -4420,9 +4420,8 @@ done_client_click:
         jsr     ResetMainGrafport
 
         ;; Only draw content, not header
-        copy    #$40, header_and_offset_flag
+        lda     #kDrawWindowEntriesContentOnly
         jsr     DrawWindowEntries
-        copy    #0, header_and_offset_flag
         rts
 .endproc
 
@@ -5441,9 +5440,8 @@ delta:  .word   0
         jsr     ResetMainGrafport
 
         ;; Only draw content, not header
-        copy    #$40, header_and_offset_flag
+        lda     #kDrawWindowEntriesContentOnly
         jsr     DrawWindowEntries
-        copy    #0, header_and_offset_flag
         rts
 .endproc
 
@@ -6299,26 +6297,22 @@ ret:    rts
 
 ;;; ============================================================
 ;;; Draw all entries (icons or list items) in (cached) window
-
-;;; * If $80 N=1 V=?: the caller has offset the winfo's port; the
-;;;   header is not drawn and the port is not adjusted.
-;;; * If $40 N=0 V=1: skips drawing the header and offsets the port
-;;;   for the content.
-;;; * If $00 N=0 V=0: draws the header, then adjusts the port and
-;;;   draws the content.
-header_and_offset_flag:
-        .byte   0
-
+;;; Input: A=flag
+;;;
 ;;; Called from:
 ;;; * `UpdateWindow` flag=$80
-;;; * `HandleInactiveWindowClick`; flag=$00
+;;; * `ActivateWindow`; flag=$00
 ;;; * `ViewByNoniconCommon`; flag=$40
 ;;; * `UpdateScrollThumb`; flag=$40
 ;;; * `FinishScrollAdjustAndRedraw`; flag=$40
 ;;; * `OpenWindowForIcon`; flag=$00
+kDrawWindowEntriesHeaderAndContent        = $00
+kDrawWindowEntriesContentOnly             = $40
+kDrawWindowEntriesContentOnlyPortAdjusted = $80
 
 .proc DrawWindowEntries
         ptr := $06
+        sta     header_and_offset_flag
 
         jsr     PushPointers
 
@@ -6425,6 +6419,15 @@ done:
         jsr     ResetMainGrafport
         jsr     PopPointers
         rts
+
+;;; * If $80 N=1 V=?: the caller has offset the winfo's port; the
+;;;   header is not drawn and the port is not adjusted.
+;;; * If $40 N=0 V=1: skips drawing the header and offsets the port
+;;;   for the content.
+;;; * If $00 N=0 V=0: draws the header, then adjusts the port and
+;;;   draws the content.
+header_and_offset_flag:
+        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -6988,7 +6991,7 @@ do_entry:
         inc     index_in_dir
         lda     index_in_dir
         cmp     dir_header::file_count
-        jeq     L7296
+        jeq     finish
 
         inc     index_in_block
         lda     index_in_block
@@ -7094,24 +7097,17 @@ L7223:  iny
         ;; Copy entry composed at $1F00 to buffer in Aux LC Bank 2
         bit     LCBANK2
         bit     LCBANK2
-        ldx     #.sizeof(FileRecord)-1
         ldy     #.sizeof(FileRecord)-1
-:       lda     record,x
+:       lda     record,y
         sta     (record_ptr),y
-        dex
         dey
         bpl     :-
         bit     LCBANK1
         bit     LCBANK1
-        lda     #.sizeof(FileRecord)
-        clc
-        adc     record_ptr
-        sta     record_ptr
-        bcc     L7293
-        inc     record_ptr+1
-L7293:  jmp     do_entry
+        add16_8 record_ptr, #.sizeof(FileRecord)
+        jmp     do_entry
 
-L7296:  copy16  record_ptr, filerecords_free_start
+finish: copy16  record_ptr, filerecords_free_start
         jsr     DoClose
         jsr     SetCursorPointer ; after loading directory
         jsr     PopPointers
@@ -8784,10 +8780,9 @@ check_type:
         type_table_copy := $807
 
         ;; Copy type_table prefixed by length to $807
-        copy16  #type_table, $08
         copy    #kNumFileTypes, type_table_copy
         ldy     #kNumFileTypes-1
-:       lda     ($08),y
+:       lda     type_table,y
         sta     type_table_copy+1,y
         dey
         bne     :-
@@ -9563,14 +9558,11 @@ common: jsr     JoinPaths      ; $08 = base, $06 = file
 ;;; ============================================================
 
 .proc ComposeFileTypeString
-        ptr := $06
-
         sta     file_type
 
         ;; Search `type_table` for type
-        copy16  #type_table, ptr
         ldy     #kNumFileTypes-1
-:       lda     (ptr),y
+:       lda     type_table,y
         file_type := *+1
         cmp     #SELF_MODIFIED_BYTE
         beq     found
@@ -9583,10 +9575,9 @@ found:  tya
         asl     a               ; *4
         asl     a
         tay
-        copy16  #type_names_table, ptr
 
         ldx     #0
-:       lda     (ptr),y
+:       lda     type_names_table,y
         sta     str_file_type+1,x
         iny
         inx
