@@ -5649,14 +5649,13 @@ DisableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::disable
 ;;; ============================================================
 
 .proc ToggleMenuItemsRequiringFileSelection
-enable:
-        copy    #MGTK::disableitem_enable, disableitem_params::disable
-        jmp     :+
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
 
-disable:
-        copy    #MGTK::disableitem_disable, disableitem_params::disable
-
-:       copy    #kMenuIdFile, disableitem_params::menu_id
+        copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdDuplicate
         jsr     DisableMenuItem
 
@@ -5669,14 +5668,13 @@ DisableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection:
 ;;; ============================================================
 
 .proc ToggleMenuItemsRequiringVolumeSelection
-enable:
-        copy    #MGTK::disableitem_enable, disableitem_params::disable
-        jmp     :+
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
 
-disable:
-        copy    #MGTK::disableitem_disable, disableitem_params::disable
-
-:       copy    #kMenuIdSpecial, disableitem_params::menu_id
+        copy    #kMenuIdSpecial, disableitem_params::menu_id
         lda     #aux::kMenuItemIdEject
         jsr     DisableMenuItem
 
@@ -5693,14 +5691,13 @@ DisableMenuItemsRequiringVolumeSelection := ToggleMenuItemsRequiringVolumeSelect
 ;;; ============================================================
 
 .proc ToggleSelectorMenuItems
-disable:
-        copy    #MGTK::disableitem_disable, disableitem_params::disable
-        jmp     :+
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
 
-enable:
-        copy    #MGTK::disableitem_enable, disableitem_params::disable
-
-:       copy    #kMenuIdSelector, disableitem_params::menu_id
+        copy    #kMenuIdSelector, disableitem_params::menu_id
         lda     #kMenuItemIdSelectorEdit
         jsr     DisableMenuItem
         lda     #kMenuItemIdSelectorDelete
