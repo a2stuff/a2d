@@ -592,14 +592,12 @@ not_menu:
         jsr     LoadDesktopEntryTable ; restore from above
 
         ;; Update menu items
-        copy    #MGTK::checkitem_uncheck, checkitem_params::check
-        jsr     CheckItem
+        jsr     UncheckViewMenuItem
         jsr     GetActiveWindowViewBy
         and     #kViewByMenuMask
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
-        copy    #MGTK::checkitem_check, checkitem_params::check
-        jmp     CheckItem
+        jmp     CheckViewMenuItem
 .endproc
 
 ;;; ============================================================
@@ -3005,14 +3003,11 @@ ret:    rts
 
 .proc UpdateViewMenuCheck
         ;; Uncheck last checked
-        copy    #MGTK::checkitem_uncheck, checkitem_params::check
-        jsr     CheckItem
+        jsr     UncheckViewMenuItem
 
         ;; Check the new one
         copy    menu_click_params::item_num, checkitem_params::menu_item
-        copy    #MGTK::checkitem_check, checkitem_params::check
-        jsr     CheckItem
-        rts
+        jmp     CheckViewMenuItem
 .endproc
 
 ;;; ============================================================
@@ -5091,8 +5086,7 @@ cont:   sta     cached_window_entry_count
 
         MGTK_CALL MGTK::FrontWindow, active_window_id
         jsr     LoadDesktopEntryTable ; restore from above
-        copy    #MGTK::checkitem_uncheck, checkitem_params::check
-        jsr     CheckItem
+        jsr     UncheckViewMenuItem
         jsr     UpdateWindowMenuItems
 
         jsr     ClearUpdates ; following CloseWindow above
@@ -5576,8 +5570,7 @@ size:   .word   0
         tax
         inx
         stx     checkitem_params::menu_item
-        copy    #MGTK::checkitem_check, checkitem_params::check
-        jsr     CheckItem
+        jsr     CheckViewMenuItem
         rts
 .endproc
 
@@ -6113,15 +6106,11 @@ no_win:
         jsr     EnableMenuItemsRequiringWindow
         jmp     update_view
 
-:       copy    #MGTK::checkitem_uncheck, checkitem_params::check
-        jsr     CheckItem
+:       jsr     UncheckViewMenuItem
 
 update_view:
-        .assert MGTK::checkitem_check = aux::kMenuItemIdViewByIcon, error, "const mismatch"
-        lda     #aux::kMenuItemIdViewByIcon
-        sta     checkitem_params::menu_item
-        sta     checkitem_params::check
-        jsr     CheckItem
+        copy    #aux::kMenuItemIdViewByIcon, checkitem_params::menu_item
+        jsr     CheckViewMenuItem
 
         ;; This ensures `ptr` points at IconEntry (real or virtual)
         jsr     UpdateIcon
@@ -6290,10 +6279,20 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc CheckItem
+;;; Inputs: A = MGTK::checkitem_check or MGTK::checkitem_uncheck
+;;; Assumes checkitem_params::menu_item has been updated or is last checked.
+.proc CheckViewMenuItemImpl
+check:  lda     #MGTK::checkitem_check
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::checkitem_uncheck <> $C0, error, "Bad BIT skip"
+uncheck:lda     #MGTK::checkitem_uncheck
+
+        sta     checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
         rts
 .endproc
+CheckViewMenuItem := CheckViewMenuItemImpl::check
+UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
 
 ;;; ============================================================
 ;;; Draw all entries (icons or list items) in (cached) window
