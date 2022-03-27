@@ -4403,22 +4403,7 @@ done_client_click:
 
         jsr     UpdateCliprectAfterScroll
         jsr     UpdateScrollbarsLeaveThumbs
-
-        bit     active_window_view_by
-        bmi     :+              ; list view, no icons
-        jsr     CachedIconsWindowToScreen
-:
-
-        ;; Clear content background, not header
-        lda     active_window_id
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        jsr     ClearWindowBackgroundIfNotObscured
-        jsr     ResetMainGrafport
-
-        ;; Only draw content, not header
-        lda     #kDrawWindowEntriesContentOnly
-        jsr     DrawWindowEntries
-        rts
+        jmp     RedrawAfterScroll
 .endproc
 
 ;;; ============================================================
@@ -5453,12 +5438,14 @@ delta:  .word   0
 .proc FinishScrollAdjustAndRedraw
         jsr     AssignActiveWindowCliprect
         jsr     UpdateScrollbars
+        FALL_THROUGH_TO RedrawAfterScroll
+.endproc
 
+.proc RedrawAfterScroll
         bit     active_window_view_by
         bmi     :+
         jsr     CachedIconsWindowToScreen
 :
-
         ;; Clear content background, not header
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
@@ -5467,8 +5454,7 @@ delta:  .word   0
 
         ;; Only draw content, not header
         lda     #kDrawWindowEntriesContentOnly
-        jsr     DrawWindowEntries
-        rts
+        jmp     DrawWindowEntries
 .endproc
 
 ;;; ============================================================
