@@ -9295,11 +9295,84 @@ saved_portbits:
 
 .proc IconWindowToScreen
         entry_ptr := $6
-        winfo_ptr := $8
 
         jsr     PushPointers
         jsr     IconEntryLookup
         stax    entry_ptr
+
+        jsr     PrepActiveWindowScreenMapping
+
+        ;; iconx
+        ldy     #IconEntry::iconx
+        add16in (entry_ptr),y, pos_screen, (entry_ptr),y
+        iny
+
+        ;; icony
+        add16in (entry_ptr),y, pos_screen+2, (entry_ptr),y
+
+        ;; iconx
+        ldy     #IconEntry::iconx
+        sub16in (entry_ptr),y, pos_win, (entry_ptr),y
+        iny
+
+        ;; icony
+        sub16in (entry_ptr),y, pos_win+2, (entry_ptr),y
+
+        jsr     PopPointers
+        rts
+.endproc
+
+;;; ============================================================
+;;; Convert icon's coordinates from screen to window
+;;; (icon index in A, active window)
+
+.proc IconScreenToWindow
+        jsr     PushPointers
+        jsr     IconEntryLookup
+        stax    $06
+        FALL_THROUGH_TO IconPtrScreenToWindow
+.endproc
+
+;;; Convert icon's coordinates from screen to window
+;;; (icon entry pointer in $6, active window)
+;;; NOTE: does `PopPointers` before exiting
+.proc IconPtrScreenToWindow
+        entry_ptr := $6
+
+        jsr     PrepActiveWindowScreenMapping
+
+        ;; iconx
+        ldy     #IconEntry::iconx
+        sub16in (entry_ptr),y, pos_screen, (entry_ptr),y
+        iny
+
+        ;; icony
+        sub16in (entry_ptr),y, pos_screen+2, (entry_ptr),y
+
+        ;; iconx
+        ldy     #IconEntry::iconx
+        add16in (entry_ptr),y, pos_win, (entry_ptr),y
+        iny
+
+        ;; icony
+        add16in (entry_ptr),y, pos_win+2, (entry_ptr),y
+
+        jsr     PopPointers
+        rts
+.endproc
+
+;;; ============================================================
+
+        DEFINE_POINT pos_screen, 0, 0
+        DEFINE_POINT pos_win, 0, 0
+
+;;; Inits `pos_screen` and `pos_window` for window/screen mapping
+;;; for active window.
+;;; Inputs: `active_window_id` set
+;;; Trashes: $08
+
+.proc PrepActiveWindowScreenMapping
+        winfo_ptr := $8
 
         lda     active_window_id
         jsr     WindowLookup
@@ -9323,88 +9396,7 @@ saved_portbits:
         dex
         bpl     :-
 
-        ;; iconx
-        ldy     #IconEntry::iconx
-        add16in (entry_ptr),y, pos_screen, (entry_ptr),y
-        iny
-
-        ;; icony
-        add16in (entry_ptr),y, pos_screen+2, (entry_ptr),y
-
-        ;; iconx
-        ldy     #IconEntry::iconx
-        sub16in (entry_ptr),y, pos_win, (entry_ptr),y
-        iny
-
-        ;; icony
-        sub16in (entry_ptr),y, pos_win+2, (entry_ptr),y
-
-        jsr     PopPointers
         rts
-
-pos_screen:     .word   0, 0
-pos_win:        .word   0, 0
-
-.endproc
-
-;;; ============================================================
-;;; Convert icon's coordinates from screen to window
-;;; (icon index in A, active window)
-
-.proc IconScreenToWindow
-        jsr     PushPointers
-        jsr     IconEntryLookup
-        stax    $06
-        FALL_THROUGH_TO IconPtrScreenToWindow
-.endproc
-
-;;; Convert icon's coordinates from screen to window
-;;; (icon entry pointer in $6, active window)
-;;; NOTE: does `PopPointers` before exiting
-.proc IconPtrScreenToWindow
-        entry_ptr := $6
-        winfo_ptr := $8
-
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    winfo_ptr
-
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 3
-        ldx     #3
-:       lda     (winfo_ptr),y
-        sta     pos_screen,x
-        dey
-        dex
-        bpl     :-
-
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 3
-        ldx     #3
-:       lda     (winfo_ptr),y
-        sta     pos_win,x
-        dey
-        dex
-        bpl     :-
-
-        ;; iconx
-        ldy     #IconEntry::iconx
-        sub16in (entry_ptr),y, pos_screen, (entry_ptr),y
-        iny
-
-        ;; icony
-        sub16in (entry_ptr),y, pos_screen+2, (entry_ptr),y
-
-        ;; iconx
-        ldy     #IconEntry::iconx
-        add16in (entry_ptr),y, pos_win, (entry_ptr),y
-        iny
-
-        ;; icony
-        add16in (entry_ptr),y, pos_win+2, (entry_ptr),y
-        jsr     PopPointers
-        rts
-
-pos_screen:     .word   0, 0
-pos_win:        .word   0, 0
 .endproc
 
 ;;; ============================================================
@@ -10182,48 +10174,14 @@ kMaxAnimationStep = 11
 loop:   lda     step            ; draw the Nth
         cmp     #kMaxAnimationStep+1
         bcs     erase
-
-        ;; Compute offset into rect table
-        asl     a
-        asl     a
-        asl     a
-        clc
-        adc     #.sizeof(MGTK::Rect)-1
-        tax
-
-        ;; Copy rect to draw
-        ldy     #.sizeof(MGTK::Rect)-1
-:       lda     rect_table,x
-        sta     tmp_rect,y
-        dex
-        dey
-        bpl     :-
-
-        jsr     FrameTmpRect
+        jsr     FrameTableRect
 
         ;; If N in 2..13, erase N-2 (i.e. 0..11, 2 behind)
 erase:  lda     step
         sec
         sbc     #2              ; erase the (N-2)th
         bmi     next
-
-        ;; Compute offset into rect table
-        asl     a               ; * 8 (size of Rect)
-        asl     a
-        asl     a
-        clc
-        adc     #.sizeof(MGTK::Rect)-1
-        tax
-
-        ;; Copy rect to erase
-        ldy     #.sizeof(MGTK::Rect)-1
-:       lda     rect_table,x
-        sta     tmp_rect,y
-        dex
-        dey
-        bpl     :-
-
-        jsr     FrameTmpRect
+        jsr     FrameTableRect
 
 next:   inc     step
         step := *+1
@@ -10250,9 +10208,32 @@ next:   inc     step
         ;; If N in 0..11, draw N
 loop:   lda     step
         bmi     erase
+        jsr     FrameTableRect
+
+        ;; If N in -2..9, erase N+2 (0..11, i.e. 2 behind)
+erase:  lda     step
+        clc
+        adc     #2
+        cmp     #kMaxAnimationStep+1
+        bcs     next
+        jsr     FrameTableRect
+
+next:   dec     step
+        step := *+1
+        lda     #SELF_MODIFIED_BYTE
+        cmp     #AS_BYTE(-3)
+        bne     loop
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Inputs: A = rect in `rect_table` to frame
+.proc FrameTableRect
+        rect_table := $800
 
         ;; Compute offset into rect table
-        asl     a               ; * 8 (size of Rect)
+        asl     a
         asl     a
         asl     a
         clc
@@ -10267,42 +10248,8 @@ loop:   lda     step
         dey
         bpl     :-
 
-        jsr     FrameTmpRect
-
-        ;; If N in -2..9, erase N+2 (0..11, i.e. 2 behind)
-erase:  lda     step
-        clc
-        adc     #2
-        cmp     #kMaxAnimationStep+1
-        bcs     next
-
-        ;; Compute offset into rect table
-        asl     a
-        asl     a
-        asl     a
-        clc
-        adc     #.sizeof(MGTK::Rect)-1
-        tax
-
-        ;; Copy rect to erase
-        ldy     #.sizeof(MGTK::Rect)-1
-:       lda     rect_table,x
-        sta     tmp_rect,y
-        dex
-        dey
-        bpl     :-
-
-        jsr     FrameTmpRect
-
-next:   dec     step
-        step := *+1
-        lda     #SELF_MODIFIED_BYTE
-        cmp     #AS_BYTE(-3)
-        bne     loop
-        rts
+        FALL_THROUGH_TO FrameTmpRect
 .endproc
-
-;;; ============================================================
 
 .proc FrameTmpRect
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
@@ -14832,7 +14779,7 @@ is_volume_flag:
 .endproc
 
 ;;; ============================================================
-;;; "Lock" dialog
+;;; "Lock"/"Unlock" dialog
 
 .proc LockDialogProc
         ptr := $06
@@ -14854,79 +14801,12 @@ is_volume_flag:
         ;; LockDialogLifecycle::open
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
-        param_jump DrawDialogTitle, aux::label_lock
-
-        ;; --------------------------------------------------
-        ;; LockDialogLifecycle::count
-do1:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
-        copy16in (ptr),y, file_count
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
-        param_call DrawDialogLabel, 4, aux::str_lock_ok
-        jmp     DrawFileCountWithSuffix
-
-        ;; --------------------------------------------------
-        ;; LockDialogLifecycle::operation
-do3:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
-        copy16in (ptr),y, file_count
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
-        jsr     ClearTargetFileRect
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #lock_unlock_dialog_params::a_path - lock_unlock_dialog_params
-        jsr     DereferencePtrToAddr
-        jsr     CopyNameToBuf0
-        MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
-        jsr     DrawDialogPathBuf0
-        MGTK_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
-        jmp     DrawFileCountWithTrailingSpaces
-
-        ;; --------------------------------------------------
-        ;; LockDialogLifecycle::prompt
-do2:    lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
-        jsr     DrawOkCancelButtons
-:       jsr     PromptInputLoop
-        bmi     :-
-        bne     :+
-        jsr     EraseDialogLabels
-        jsr     EraseOkCancelButtons
-        param_call DrawDialogLabel, 2, aux::str_file_colon
-        param_call DrawDialogLabel, 4, aux::str_lock_remaining
-        lda     #$00
-:       rts
-
-        ;; --------------------------------------------------
-        ;; LockDialogLifecycle::close
-do4:    jsr     ClosePromptDialog
-        jsr     SetCursorPointer ; when closing dialog
-        rts
-.endproc
-
-;;; ============================================================
-;;; "Unlock" dialog
-
-.proc UnlockDialogProc
-        ptr := $06
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #0
-        lda     (ptr),y
-
-        cmp     #LockDialogLifecycle::count
-        jeq     do1
-        cmp     #LockDialogLifecycle::prompt
-        jeq     do2
-        cmp     #LockDialogLifecycle::operation
-        jeq     do3
-        cmp     #LockDialogLifecycle::close
-        jeq     do4
-
-        ;; --------------------------------------------------
-        ;; LockDialogLifecycle::open
-        copy    #0, has_input_field_flag
-        jsr     OpenDialogWindow
+        bit     unlock_flag
+    IF_NS
         param_jump DrawDialogTitle, aux::label_unlock
+    ELSE
+        param_jump DrawDialogTitle, aux::label_lock
+    END_IF
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::count
@@ -14934,7 +14814,12 @@ do1:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
+        bit     unlock_flag
+    IF_NS
         param_call DrawDialogLabel, 4, aux::str_unlock_ok
+    ELSE
+        param_call DrawDialogLabel, 4, aux::str_lock_ok
+    END_IF
         jmp     DrawFileCountWithSuffix
 
         ;; --------------------------------------------------
@@ -14950,7 +14835,12 @@ do3:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         jsr     CopyNameToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
+        bit     unlock_flag
+    IF_NS
         MGTK_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
+    ELSE
+        MGTK_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
+    END_IF
         jmp     DrawFileCountWithTrailingSpaces
 
         ;; --------------------------------------------------
@@ -14964,7 +14854,12 @@ do2:    lda     #winfo_prompt_dialog::kWindowId
         jsr     EraseDialogLabels
         jsr     EraseOkCancelButtons
         param_call DrawDialogLabel, 2, aux::str_file_colon
+        bit     unlock_flag
+    IF_NS
         param_call DrawDialogLabel, 4, aux::str_unlock_remaining
+    ELSE
+        param_call DrawDialogLabel, 4, aux::str_lock_remaining
+    END_IF
         lda     #$00
 :       rts
 
@@ -14974,6 +14869,7 @@ do4:    jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         rts
 .endproc
+UnlockDialogProc := LockDialogProc
 
 ;;; ============================================================
 ;;; "Rename" dialog
@@ -14992,6 +14888,7 @@ do4:    jsr     ClosePromptDialog
 
         ;; ----------------------------------------
         ;; RenameDialogState::open
+
         jsr     CopyDialogParamAddrToPtr
         copy    #$80, has_input_field_flag
         lda     #$00
@@ -15059,7 +14956,7 @@ do_close:
         params_ptr := $06
 
         jsr     CopyDialogParamAddrToPtr
-        ldy     #0
+        ldy     #duplicate_dialog_params::state - duplicate_dialog_params
         lda     (params_ptr),y
         cmp     #DuplicateDialogState::run
         jeq     do_run
