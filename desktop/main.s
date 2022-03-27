@@ -11799,8 +11799,8 @@ skip:   lda     selected_window_id
         ;; Dig up the index of the icon within the window.
         icon_ptr := $06
         lda     icon_param
-        jsr     IconEntryLookup
-        stax    icon_ptr
+        jsr     CacheIconBounds ; inits `icon_ptr` and `cur_icon_bounds`
+
         ldy     #IconEntry::record_num
         lda     (icon_ptr),y
         pha                     ; A = index of icon in window
@@ -11850,15 +11850,8 @@ skip:   lda     selected_window_id
 
         ;; Use new `icon_height` to offset vertically.
         ;; Add old icon height to make icony top of text
-        icondef_ptr := $08
-        ldy     #IconEntry::iconbits
-        copy16in (icon_ptr),y, icondef_ptr
-        ldy     #IconDefinition::maprect + MGTK::Rect::y2
-        copy16in (icondef_ptr),y, icony
         ldy     #IconEntry::icony
-        add16in (icon_ptr),y, icony, (icon_ptr),y
-        ldy     #IconEntry::icony
-        sub16in (icon_ptr),y, CreateIconsForWindow::icon_height, (icon_ptr),y
+        sub16in cur_icon_bounds::y2, CreateIconsForWindow::icon_height, (icon_ptr),y
         ;; Use `iconbits` to populate IconEntry::iconbits
         ldy     #IconEntry::iconbits
         copy16in CreateIconsForWindow::iconbits, (icon_ptr),y
