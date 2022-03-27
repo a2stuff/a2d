@@ -6216,14 +6216,8 @@ list_view:
 
         ;; Find FileRecord list
         lda     cached_window_id
-        jsr     FindIndexInFilerecordListEntries
-        beq     :+
-        rts
-
-:       txa
-        asl     a
-        tax
-        copy16  window_filerecord_table,x, file_record_ptr ; points at head of list (entry count)
+        jsr     GetFileRecordListForWindow
+        stax    file_record_ptr ; points at head of list (entry count)
         inc16   file_record_ptr ; now points at first entry in list
 
         ;; First row
@@ -7513,18 +7507,12 @@ common: sta     preserve_window_size_flag
         dex
         bpl     :-
 
-        lda     cached_window_id
-        jsr     FindIndexInFilerecordListEntries
-        beq     :+
-        rts                     ; BUG: Needs PopPointers?
-
         ;; Pointer to file records
         records_ptr := $06
 
-:       txa
-        asl     a
-        tax
-        copy16  window_filerecord_table,x, records_ptr
+        lda     cached_window_id
+        jsr     GetFileRecordListForWindow
+        stax    records_ptr
         bit     LCBANK2         ; get file count (resides in LC2)
         bit     LCBANK2
         ldy     #0              ; first byte in list is the list size
@@ -8311,25 +8299,15 @@ scratch_space   := $804         ; can be used by comparison funcs
         sta     CompareFileRecords_sort_by
 
         lda     cached_window_id
-        jsr     FindIndexInFilerecordListEntries
-        beq     :+
-        rts
-:
-        txa
-        asl     a
-        tax
-        lda     window_filerecord_table,x         ; Ptr points at start of record
-        sta     ptr
-        sta     list_start_ptr
-        lda     window_filerecord_table+1,x
-        sta     ptr+1
-        sta     list_start_ptr+1
+        jsr     GetFileRecordListForWindow
+        stax    ptr
+        stax    list_start_ptr
 
         bit     LCBANK2         ; Start copying records
         bit     LCBANK2
 
         ldy     #0
-        lda     (ptr),y         ; Number to copy
+        lda     (ptr),y         ; Number to sort
         sta     num_records
 
         inc     ptr             ; Point past number
@@ -11523,11 +11501,8 @@ skip:   lda     selected_window_id
         ;; Find the window's FileRecord list.
         file_record_ptr := $08
         lda     selected_window_id
-        jsr     FindIndexInFilerecordListEntries ; Assert: must be found
-        txa
-        asl
-        tax
-        copy16  window_filerecord_table,x, file_record_ptr ; points at head of list (entry count)
+        jsr     GetFileRecordListForWindow
+        stax    file_record_ptr ; points at head of list (entry count)
         inc16   file_record_ptr ; now points at first FileRecord in list
 
         ;; Look up the FileRecord within the list.
@@ -16290,6 +16265,22 @@ done:   rts
         dex
         bpl     :-
 :       rts
+.endproc
+
+;;; Input: A = window_id
+;;; Output: A,X = address of FileRecord list (first entry is length)
+;;; Assert: Window is found in list.
+.proc GetFileRecordListForWindow
+        jsr     FindIndexInFilerecordListEntries
+        txa
+        asl
+        tax
+        lda     window_filerecord_table,x
+        pha
+        lda     window_filerecord_table+1,x
+        tax
+        pla
+        rts
 .endproc
 
 ;;; ============================================================
