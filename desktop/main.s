@@ -8304,20 +8304,20 @@ ComputeIconsBBox        := ComputeIconsBBoxImpl::start
 record_num      := $800
 list_start_ptr  := $801
 num_records     := $803
-        ;; $804 = scratch byte
-index           := $805
+scratch_space   := $804         ; can be used by comparison funcs
 
-        jmp     start
 
-start:  lda     cached_window_id
+        jsr     GetCachedWindowViewBy
+        sta     CompareFileRecords_sort_by
+
+        lda     cached_window_id
         jsr     FindIndexInFilerecordListEntries
-        beq     found
+        beq     :+
         rts
-
-found:  txa
+:
+        txa
         asl     a
         tax
-
         lda     window_filerecord_table,x         ; Ptr points at start of record
         sta     ptr
         sta     list_start_ptr
@@ -8328,513 +8328,228 @@ found:  txa
         bit     LCBANK2         ; Start copying records
         bit     LCBANK2
 
-        lda     #0              ; Number copied
-        sta     record_num
-        tay
+        ldy     #0
         lda     (ptr),y         ; Number to copy
         sta     num_records
 
         inc     ptr             ; Point past number
         inc     list_start_ptr
-        bne     loop
+        bne     :+
         inc     ptr+1
         inc     list_start_ptr+1
+:
 
-loop:   lda     record_num
-        cmp     num_records
-        beq     break
-        jsr     PtrCalc
+        ;; --------------------------------------------------
+        ;; Init the list to actually sort
 
-        ldy     #0
-        lda     (ptr),y
-        and     #$7F            ; mask off high bit
-        sta     (ptr),y         ; mark as ???
-
-        ldy     #FileRecord::modification_date ; ???
-        lda     (ptr),y
-        bne     next
-        iny
-        lda     (ptr),y         ; modification_date hi
-        bne     next
-        lda     #$01            ; if mod date is $0000, set it to $0100 ???
-        sta     (ptr),y
-
-next:   inc     record_num
-        jmp     loop
-
-break:  bit     LCBANK1         ; Done copying records
+        bit     LCBANK1
         bit     LCBANK1
 
-        ;; --------------------------------------------------
-
-        ;; What sort order?
-        jsr     GetCachedWindowViewBy
-        cmp     #kViewByName
-        jne     check_date
-
-        ;; By Name
-
-        ;; Sorted in increasing lexicographical order
-.scope
-        name := $807
-        kNameSize = $F
-        name_len  := $804
-
-        bit     LCBANK2
-        bit     LCBANK2
-
-        ;; Set up highest value
-        lda     #$7F            ; beyond last possible name char
-        ldx     #kNameSize
-:       sta     name+1,x
+        ldx     num_records
+:       txa
+        sta     cached_window_entry_list-1,x ; entries are 1-based
         dex
-        bpl     :-
-
-        lda     #0
-        sta     index
-        sta     record_num
-
-loop:   lda     index
-        cmp     num_records
-        bne     iloop
-        jmp     FinishViewChange
-
-iloop:  jsr     PtrCalc
-
-        ;; Check record for mark
-        ldy     #0
-        lda     (ptr),y
-        bmi     inext
-
-        ;; Compare names
-        and     #NAME_LENGTH_MASK
-        sta     name_len
-        ldy     #1
-cloop:  lda     (ptr),y
-        jsr     UpcaseChar
-        cmp     name,y
-        beq     :+
-        bcs     inext
-        jmp     place
-:       iny
-        cpy     #$10
-        bne     cloop
-        jmp     inext
-
-        ;; if less than
-place:  lda     record_num
-        sta     $0806
-
-        ldx     #kNameSize
-        lda     #' '
-:       sta     name+1,x
-        dex
-        bpl     :-
-
-        ldy     name_len
-:       lda     (ptr),y
-        jsr     UpcaseChar
-        sta     name,y
-        dey
         bne     :-
 
-inext:  inc     record_num
-        lda     record_num
-        cmp     num_records
-        jne     iloop
-
-        inc     index
-        lda     $0806
-        sta     record_num
-        jsr     PtrCalc
-
-        ;; Mark record
-        ldy     #0
-        lda     (ptr),y
-        ora     #$80
-        sta     (ptr),y
-
-        kMaxFilenameLength = 15
-        lda     #$7F            ; beyond last possible name char
-        ldx     #kMaxFilenameLength
-:       sta     $0808,x
-        dex
-        bpl     :-
-
-        ldx     index
-        dex
-        ldy     $0806
-        iny
-        jsr     UpdateCachedWindowEntry
-
-        lda     #0
-        sta     record_num
-        jmp     loop
-.endscope
-
         ;; --------------------------------------------------
+        ;; Selection sort
+label:
+        ptr1 := $06
+        ptr2 := $08
 
-check_date:
-        cmp     #kViewByDate
-        jne     check_size
+        ldx     num_records
+        dex
+        stx     outer
 
-        ;; By Date
-
-        ;; Sorted by decreasing date
-.scope
-        date    := $0808
-
-        bit     LCBANK2
-        bit     LCBANK2
+        outer := *+1
+oloop:  lda     #SELF_MODIFIED_BYTE
+        jsr     CalcPtr
+        stax    ptr2
 
         lda     #0
-        ldx     #.sizeof(DateTime)-1
-:       sta     date,x
-        dex
-        bpl     :-
-        sta     index
-        sta     record_num
+        sta     inner
 
-loop:   lda     index
-        cmp     num_records
+        inner := *+1
+iloop:  lda     #SELF_MODIFIED_BYTE
+        jsr     CalcPtr
+        stax    ptr1
+
+        bit     LCBANK2
+        bit     LCBANK2
+        jsr     CompareFileRecords
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
+        bcc     next
+
+        ;; Swap
+        ldx     inner
+        ldy     outer
+        lda     cached_window_entry_list,x
+        pha
+        lda     cached_window_entry_list,y
+        sta     cached_window_entry_list,x
+        pla
+        sta     cached_window_entry_list,y
+
+        lda     outer
+        jsr     CalcPtr
+        stax    ptr2
+
+next:   inc     inner
+        lda     inner
+        cmp     outer
         bne     iloop
-        jmp     FinishViewChange
 
-iloop:  jsr     PtrCalc
+        dec     outer
+        bne     oloop
 
-        ;; Check record for mark
-        ldy     #0
-        lda     (ptr),y
-        bmi     inext
-
-        ;; Compare dates
-        ldy     #FileRecord::modification_date + .sizeof(DateTime)-1
-        ldx     #.sizeof(DateTime)-1
-:       copy    (ptr),y, date_a,x ; current
-        copy    date,x, date_b,x  ; maximum
-        dey
-        dex
-        bpl     :-
-        jsr     CompareDates
-        beq     inext
-        bcc     inext
-
-        ;; if greater than
-place:  ldy     #FileRecord::modification_date + .sizeof(DateTime)-1
-        ldx     #.sizeof(DateTime)-1
-:       copy    (ptr),y, date,x ; new maximum
-        dey
-        dex
-        bpl     :-
-
-        lda     record_num
-        sta     $0806
-inext:  inc     record_num
-        lda     record_num
-        cmp     num_records
-        beq     next
-        jmp     iloop
-
-next:   inc     index
-        lda     $0806
-        sta     record_num
-        jsr     PtrCalc
-
-        ;; Mark record
-        ldy     #0
-        lda     (ptr),y
-        ora     #$80
-        sta     (ptr),y
-
-        lda     #0              ; Zero out date
-        ldx     #.sizeof(DateTime)-1
-:       sta     date,x
-        dex
-        bpl     :-
-
-        ldx     index
-        dex
-        ldy     $0806
-        iny
-        jsr     UpdateCachedWindowEntry
-
-        copy    #0, record_num
-        jmp     loop
-.endscope
-
-        ;; --------------------------------------------------
-
-check_size:
-        cmp     #kViewBySize
-        jne     check_type
-
-        ;; By Size
-
-        ;; Sorted by decreasing size
-.scope
-        size := $0808
-
-        bit     LCBANK2
-        bit     LCBANK2
-
-        lda     #0
-        sta     size
-        sta     size+1
-        sta     index
-        sta     record_num
-
-loop:   lda     index
-        cmp     num_records
-        bne     iloop
-        jmp     FinishViewChange
-
-iloop:  jsr     PtrCalc
-
-        ;; Check record for mark
-        ldy     #0
-        lda     (ptr),y
-        bmi     inext
-
-        ldy     #FileRecord::blocks+1
-        lda     (ptr),y
-        cmp     size+1          ; hi byte
-        beq     :+
-        bcs     place
-:       dey
-        lda     (ptr),y
-        cmp     size            ; lo byte
-        beq     place
-        bcc     inext
-
-        ;; if greater than
-place:  copy16in (ptr),y, size
-        lda     record_num
-        sta     $0806
-
-inext:  inc     record_num
-        lda     record_num
-        cmp     num_records
-        beq     next
-        jmp     iloop
-
-next:   inc     index
-        lda     $0806
-        sta     record_num
-        jsr     PtrCalc
-
-        ;; Mark record
-        ldy     #0
-        lda     (ptr),y
-        ora     #$80
-        sta     (ptr),y
-
-        copy16  #0, size
-
-        ldx     index
-        dex
-        ldy     $0806
-        iny
-        jsr     UpdateCachedWindowEntry
-
-        lda     #0
-        sta     record_num
-        jmp     loop
-.endscope
-
-        ;; --------------------------------------------------
-
-check_type:
-        cmp     #kViewByType
-        beq     :+
         rts
 
-:
-        ;; By Type
-
-        ;; Types are ordered by type_table
-.scope
-        type_table_copy := $807
-
-        ;; Copy type_table prefixed by length to $807
-        copy    #kNumFileTypes, type_table_copy
-        ldy     #kNumFileTypes-1
-:       lda     type_table,y
-        sta     type_table_copy+1,y
-        dey
-        bne     :-
-
-        bit     LCBANK2
-        bit     LCBANK2
-
-        lda     #0
-        sta     index
-        sta     record_num
-        copy    #$FF, $0806
-
-loop:   lda     index
-        cmp     num_records
-        bne     iloop
-        jmp     FinishViewChange
-
-iloop:  jsr     PtrCalc
-
-        ;; Check record for mark
-        ldy     #0
-        lda     (ptr),y
-        bmi     inext
-
-        ;; Compare types
-        ldy     #FileRecord::file_type
-        lda     (ptr),y
-        ldx     type_table_copy
-        beq     place
-        cmp     type_table_copy+1,x
-        bne     inext
-
-place:  lda     record_num
-        sta     $0806
-        jmp     L809E
-
-inext:  inc     record_num
-        lda     record_num
-        cmp     num_records
-        beq     next
-        jmp     iloop
-
-next:   lda     $0806
-        cmp     #$FF
-        bne     L809E
-        dec     type_table_copy ; size of table
-        lda     #0
-        sta     record_num
-        jmp     iloop
-
-L809E:  inc     index
-        lda     $0806
-        sta     record_num
-        jsr     PtrCalc
-
-        ;; Mark record
-        ldy     #0
-        lda     (ptr),y
-        ora     #$80
-        sta     (ptr),y
-
-        ldx     index
-        dex
-        ldy     $0806
-        iny
-        jsr     UpdateCachedWindowEntry
-
-        copy    #0, record_num
-        copy    #$FF, $0806
-        jmp     loop
-.endscope
-
 ;;; --------------------------------------------------
-;;; ptr = `list_start_ptr` + (`record_num` * .sizeof(FileRecord))
+;;; Input: A = index in list being sorted
+;;; Output: A,X = pointer to FileRecord
 
-.proc PtrCalc
+.proc CalcPtr
         ptr := $6
 
-        lda     record_num
+        ;; Map from sorting list index to FileRecord index
+        tax
+        ldy     cached_window_entry_list,x
+        dey                     ; 1-based to 0-based
+        tya
+
+        ;; Calculate the pointer
         .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
         jsr     ATimes32
-        addax   list_start_ptr, ptr
+
+        clc
+        adc     list_start_ptr
+        pha
+        txa
+        adc     list_start_ptr+1
+        tax
+        pla
 
         rts
 .endproc
 
 ;;; --------------------------------------------------
 
-date_a: .tag    DateTime
-date_b: .tag    DateTime
+;;; Inputs: $06 and $08 point at FileRecords
+;;; Assert: LCBANK2 banked in so FileRecords are visible
 
-.proc CompareDates
+.proc CompareFileRecords
+        ptr1 := $06
+        ptr2 := $08
+
+        ;; Set by caller
+        sort_by := *+1
+        lda     #SELF_MODIFIED_BYTE
+        cmp     #kViewByName
+    IF_EQ
+        .assert FileRecord::name = 0, error, "Assumes name is at offset 0"
+        jmp     GetSelectableIconsSorted::CompareStrings
+    END_IF
+
+        cmp     #kViewByDate
+    IF_EQ
+PARAM_BLOCK scratch, $804       ; `scratch_space`
+date_a  .tag    DateTime
+date_b  .tag    DateTime
+parsed_a .tag ParsedDateTime
+parsed_b .tag ParsedDateTime
+END_PARAM_BLOCK
+
+        ;; Copy the dates somewhere easier to work with
+        ldy     #FileRecord::modification_date + .sizeof(DateTime)-1
+        ldx     #.sizeof(DateTime)-1
+:       copy    (ptr2),y, scratch::date_a,x ; order descending
+        copy    (ptr1),y, scratch::date_b,x
+        dey
+        dex
+        bpl     :-
+
+        ;; Crack the ProDOS values into more useful structs, and
+        ;; handle various year encodings.
         ptr := $0A
 
-        copy16  #parsed_a, ptr
-        ldax    #date_a
+        copy16  #scratch::parsed_a, ptr
+        ldax    #scratch::date_a
         jsr     ParseDatetime
 
-        copy16  #parsed_b, ptr
-        ldax    #date_b
+        copy16  #scratch::parsed_b, ptr
+        ldax    #scratch::date_b
         jsr     ParseDatetime
 
+        ;; Compare member-wise (just year/month/day)
+        year_a  := scratch::parsed_a + ParsedDateTime::year
+        year_b  := scratch::parsed_b + ParsedDateTime::year
         lda     year_a+1
         cmp     year_b+1
         bne     done
         lda     year_a
         cmp     year_b
         bne     done
+
+        month_a := scratch::parsed_a + ParsedDateTime::month
+        month_b := scratch::parsed_b + ParsedDateTime::month
         lda     month_a
         cmp     month_b
         bne     done
+
+        day_a   := scratch::parsed_a + ParsedDateTime::day
+        day_b   := scratch::parsed_b + ParsedDateTime::day
         lda     day_a
         cmp     day_b
 done:   rts
+    END_IF
 
-parsed_a:
-        .tag ParsedDateTime
-year_a  := parsed_a + ParsedDateTime::year
-month_a := parsed_a + ParsedDateTime::month
-day_a   := parsed_a + ParsedDateTime::day
-hour_a  := parsed_a + ParsedDateTime::hour
-min_a   := parsed_a + ParsedDateTime::minute
-
-parsed_b:
-        .tag ParsedDateTime
-year_b  := parsed_b + ParsedDateTime::year
-month_b := parsed_b + ParsedDateTime::month
-day_b   := parsed_b + ParsedDateTime::day
-hour_b  := parsed_b + ParsedDateTime::hour
-min_b   := parsed_b + ParsedDateTime::minute
-
-.endproc
-
-;;; --------------------------------------------------
-;;; ???
-
-.proc FinishViewChange
-        ptr := $06
-
-        copy    #0, record_num
-
-loop:   lda     record_num
-        cmp     num_records
-        beq     done
-        jsr     PtrCalc
-
-        ldy     #$00            ; Remove mark
-        lda     (ptr),y
-        and     #$7F
-        sta     (ptr),y
-
-        ldy     #FileRecord::modification_date ; ???
-        lda     (ptr),y
-        bne     :+
+        cmp     #kViewBySize
+    IF_EQ
+        ldy     #FileRecord::blocks
+        lda     (ptr2),y        ; order descending
+        cmp     (ptr1),y
         iny
-        lda     (ptr),y         ; modification_date hi
-        cmp     #$01
-        bne     :+
-        lda     #$00            ; if mod date was $0000 and set to $0100, reset it
-        sta     (ptr),y
-:       inc     record_num
-        jmp     loop
-
-done:   bit     LCBANK1
-        bit     LCBANK1
+        lda     (ptr2),y
+        sbc     (ptr1),y
         rts
+    END_IF
+
+        ;; Assert: kViewByType
+        ldy     #FileRecord::file_type
+        lda     (ptr1),y
+        jsr     GetTypeIndex
+        sta     index1
+        lda     (ptr2),y
+        jsr     GetTypeIndex
+        index1 := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        rts
+
 .endproc
+CompareFileRecords_sort_by := CompareFileRecords::sort_by
 
 ;;; --------------------------------------------------
-;;; Inputs: X = index in window, Y = new value
+;;; Input: A = file type
+;;; Output: A = sorting weight
+;;; Assert: LCBANK2 is active
+.proc GetTypeIndex
+        bit     LCBANK1
+        bit     LCBANK1
 
-.proc UpdateCachedWindowEntry
-        bit     LCBANK1
-        bit     LCBANK1
-        tya
-        sta     cached_window_entry_list,x
+        ldx     #kNumFileTypes-1
+:       cmp     type_table,x
+        beq     found
+        dex
+        bpl     :-
+
+        ;; Not found
+        ldx     #0
+
+found:  txa
+
         bit     LCBANK2
         bit     LCBANK2
         rts
