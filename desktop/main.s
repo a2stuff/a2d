@@ -11320,42 +11320,13 @@ ok:
         stx     new_name_ptr+1
 
         ;; Copy the name somewhere LCBANK-safe
-        ;; Since we can't preserve casing, just upcase it for now.
-        ;; See: https://github.com/a2stuff/a2d/issues/352
         ldy     #0
         lda     (new_name_ptr),y
         tay
 :       lda     (new_name_ptr),y
-        jsr     UpcaseChar
         sta     new_name_buf,y
         dey
         bpl     :-
-
-        ;; Did the name change?
-        ldx     old_name_buf
-        cpx     new_name_buf
-        bne     changed
-:       lda     old_name_buf,x
-        jsr     UpcaseChar
-        sta     @char
-        lda     new_name_buf,x
-        jsr     UpcaseChar
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     changed
-        dex
-        bne     :-
-        ;; Didn't change, no-op
-        lda     #RenameDialogState::close
-        jsr     RunDialogProc
-        inc     index
-        jmp     loop
-
-changed:
-
-        ;; ... then recase it, so we're consistent for icons/paths.
-        ldax    #new_name_buf
-        jsr     AdjustFileNameCase
 
         ;; File or Volume?
         lda     selected_window_id
@@ -11372,6 +11343,23 @@ changed:
         ldax    #new_name_buf
         jsr     AppendFilenameToDstPath
 
+        ;; Did the name change (ignoring case)?
+        ldx     old_name_buf
+        cpx     new_name_buf
+        bne     changed
+:       lda     old_name_buf,x
+        jsr     UpcaseChar
+        sta     @char
+        lda     new_name_buf,x
+        jsr     UpcaseChar
+        @char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     changed
+        dex
+        bne     :-
+        beq     no_change       ; always
+changed:
+
         ;; Already exists? (Mostly for volumes, but works for files as well)
         jsr     GetDstFileInfo
         bne     :+
@@ -11380,9 +11368,13 @@ changed:
         jmp     retry
 
         ;; Try to rename
-:       MLI_CALL RENAME, rename_params
-        beq     finish
+:
+no_change:
+        ;; Update case bits, in memory or on disk
+        jsr     ApplyCaseBits
 
+        MLI_CALL RENAME, rename_params
+        beq     finish
         ;; Failed, maybe retry
         jsr     ShowAlert       ; Alert options depend on specific ProDOS error
         jeq     retry           ; `kAlertResultTryAgain` = 0
@@ -13757,6 +13749,56 @@ do_on_line:
 .endproc
 ShowErrorAlert  := ShowErrorAlertImpl::flag_clear
 ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
+
+;;; ============================================================
+
+;;; Inputs: `src_path_buf` is file, `new_name_buf` is new name
+;;; Outputs: `new_name_buf` had "resulting" file case
+
+.proc ApplyCaseBits
+        jsr     GetSrcFileInfo
+        bcs     fallback
+
+        lda     src_file_info_params::file_type
+        cmp     #FT_ADB
+        beq     appleworks
+        cmp     #FT_AWP
+        beq     appleworks
+        cmp     #FT_ASP
+        beq     appleworks
+
+        ;; TODO: Handle GS/OS case bits
+
+        ;; --------------------------------------------------
+fallback:
+        ;; Since we can't preserve casing, just upcase it for now.
+        ;; See: https://github.com/a2stuff/a2d/issues/352
+        ldy     new_name_buf
+:       lda     new_name_buf,y
+        jsr     UpcaseChar
+        sta     new_name_buf,y
+        dey
+        bne     :-
+
+        ;; ... then recase it, so we're consistent for icons/paths.
+        ldax    #new_name_buf
+        jmp     AdjustFileNameCase
+
+        ;; --------------------------------------------------
+appleworks:
+        ;; We can preserve case, so apply it
+        ldx     #15
+        clc
+
+:       ror     src_file_info_params::aux_type
+        ror     src_file_info_params::aux_type+1
+        lda     new_name_buf,x
+        cmp     #'a'
+        dex
+        bpl     :-
+
+        jmp     SetSrcFileInfo
+.endproc
 
 ;;; ============================================================
 
