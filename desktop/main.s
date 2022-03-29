@@ -922,6 +922,18 @@ no_selection:
         rts
 .endproc
 
+;;; Call SET_FILE_INFO on file at `src_path_buf` a.k.a. `INVOKER_PREFIX`
+;;; Input: `src_file_info_params` used
+;;; Output: MLI result (carry/zero flag, etc)
+.proc SetSrcFileInfo
+        copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
+        MLI_CALL SET_FILE_INFO, src_file_info_params
+        pha
+        copy    #$A, src_file_info_params::param_count ; GET_FILE_INFO
+        pla
+        rts
+.endproc
+
 ;;; Call GET_FILE_INFO on file at `dst_path_buf`
 ;;; Output: MLI result (carry/zero flag, etc), `dst_file_info_params` populated
 .proc GetDstFileInfo
@@ -12910,11 +12922,7 @@ error:  jsr     ShowErrorAlert
 
         lda     #ACCESS_DEFAULT
         sta     src_file_info_params::access
-        copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
-        MLI_CALL SET_FILE_INFO, src_file_info_params
-        pha
-        copy    #$A, src_file_info_params::param_count ; GET_FILE_INFO
-        pla
+        jsr     SetSrcFileInfo
 
 done:   rts
 .endproc
@@ -12975,9 +12983,7 @@ loop:   MLI_CALL DESTROY, destroy_params
 :       jmp     CloseFilesCancelDialog
 
 unlock: copy    #ACCESS_DEFAULT, src_file_info_params::access
-        copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
-        MLI_CALL SET_FILE_INFO, src_file_info_params
-        copy    #$A,src_file_info_params::param_count ; GET_FILE_INFO
+        jsr     SetSrcFileInfo
         jmp     loop
 
 err:    jsr     ShowErrorAlert
@@ -13178,11 +13184,7 @@ LockProcessDirectoryEntry:
 :       lda     #ACCESS_LOCKED
 set:    sta     src_file_info_params::access
 
-:       copy    #7, src_file_info_params::param_count ; SET_FILE_INFO
-        MLI_CALL SET_FILE_INFO, src_file_info_params
-        pha
-        copy    #$A, src_file_info_params::param_count ; GET_FILE_INFO
-        pla
+:       jsr     SetSrcFileInfo
         beq     ok
         jsr     ShowErrorAlert
         jmp     :-
