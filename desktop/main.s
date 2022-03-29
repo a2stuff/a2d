@@ -11258,7 +11258,7 @@ write_protected_flag:
 .endenum
 
         old_name_buf := $1F00
-        new_name_buf := $1F10
+        new_name_buf := stashed_name
 
         DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
 
@@ -11320,13 +11320,7 @@ ok:
         stx     new_name_ptr+1
 
         ;; Copy the name somewhere LCBANK-safe
-        ldy     #0
-        lda     (new_name_ptr),y
-        tay
-:       lda     (new_name_ptr),y
-        sta     new_name_buf,y
-        dey
-        bpl     :-
+        param_call CopyPtr2ToBuf, new_name_buf
 
         ;; File or Volume?
         lda     selected_window_id
@@ -11801,6 +11795,7 @@ success:
         new_name_ptr := $08
         sty     new_name_ptr
         stx     new_name_ptr+1
+        param_call CopyPtr2ToBuf, new_name_buf
 
         lda     selected_window_id
         jsr     GetWindowPath
@@ -11834,6 +11829,9 @@ success:
         bmi     :+
         lda     #$80
         sta     result_flag
+        ;; Update name case bits on disk, if possible.
+        COPY_STRING dst_path_buf, src_path_buf
+        jsr     ApplyCaseBits
 :
 
         ;; --------------------------------------------------
@@ -13752,7 +13750,7 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 
 ;;; ============================================================
 
-;;; Inputs: `src_path_buf` is file, `new_name_buf` is new name
+;;; Inputs: `src_path_buf` is file, `stashed_name` is new name
 ;;; Outputs: `new_name_buf` had "resulting" file case
 
 .proc ApplyCaseBits
@@ -13773,15 +13771,15 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 fallback:
         ;; Since we can't preserve casing, just upcase it for now.
         ;; See: https://github.com/a2stuff/a2d/issues/352
-        ldy     new_name_buf
-:       lda     new_name_buf,y
+        ldy     stashed_name
+:       lda     stashed_name,y
         jsr     UpcaseChar
-        sta     new_name_buf,y
+        sta     stashed_name,y
         dey
         bne     :-
 
         ;; ... then recase it, so we're consistent for icons/paths.
-        ldax    #new_name_buf
+        ldax    #stashed_name
         jmp     AdjustFileNameCase
 
         ;; --------------------------------------------------
@@ -13792,7 +13790,7 @@ appleworks:
 
 :       ror     src_file_info_params::aux_type
         ror     src_file_info_params::aux_type+1
-        lda     new_name_buf,x
+        lda     stashed_name,x
         cmp     #'a'
         dex
         bpl     :-

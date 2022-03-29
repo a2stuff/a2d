@@ -33,7 +33,9 @@
 * Launch DeskTop. Select a file icon. File > Rename.... Press OK without changing the name. Verify that the dialog is dismissed and the icon doesn't change.
 * Launch DeskTop. Select a volume icon. File > Rename.... Enter a unique name, hit OK. Verify that the icon updates with the new name.
 * Launch DeskTop. Select a volume icon. File > Rename.... Press OK without changing the name. Verify that the dialog is dismissed and the icon doesn't change.
+
 * Launch DeskTop. Select an AppleWorks file icon. File > Rename..., and specify a name using a mix of uppercase and lowercase. Click OK. Close the containing window and re-open it. Verify that the filename case is retained.
+* Launch DeskTop. Select an AppleWorks file icon. File > Duplicate..., and specify a name using a mix of uppercase and lowercase. Click OK. Close the containing window and re-open it. Verify that the filename case is retained.
 
 * File > Get Info a file.
 * File > Get Info a volume.
