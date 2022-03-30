@@ -1062,6 +1062,7 @@ loop:   ldy     index
         sta     unit_num
         jsr     main::DeviceDriverAddress
         bne     next            ; if RAM-based driver (not $CnXX), skip
+        stx     slot_ptr+1      ; just need high byte ($Cn)
         copy    #0, slot_ptr    ; make $Cn00
         ldy     #$FF            ; Firmware ID byte
         lda     (slot_ptr),y    ; $CnFF: $00=Disk II, $FF=13-sector, else=block
@@ -1129,11 +1130,12 @@ append: lda     unit_num
 :
         ;; Do SmartPort STATUS call to filter out 5.25 devices
         lda     unit_num
-        sp_addr := $0A
         jsr     main::FindSmartportDispatchAddress
-        bne     :+              ; couldn't determine
-        stx     status_params::unit_num
-        jsr     SmartportCall
+        bcs     :+              ; couldn't determine
+        stax    dispatch
+        sty     status_params::unit_num
+        dispatch := *+1
+        jsr     SELF_MODIFIED
         .byte   SPCall::Status
         .addr   status_params
         bcs     :+              ; call failed
@@ -1152,9 +1154,6 @@ index:  .byte   0
 count:  .byte   0
 unit_num:
         .byte   0
-
-SmartportCall:
-        jmp     (sp_addr)
 .endproc
 
 ;;; ============================================================

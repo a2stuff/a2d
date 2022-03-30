@@ -796,15 +796,16 @@ check_disk_in_drive:
         tya
         pha
 
-        sp_addr := $0A
         unit_number := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     FindSmartportDispatchAddress
-        bne     notsp           ; not SmartPort
-        stx     status_unit_num
+        bcs     notsp           ; not SmartPort
+        stax    dispatch
+        sty     status_unit_num
 
         ;; Execute SmartPort call
-        jsr     SmartportCall
+        dispatch := *+1
+        jsr     SELF_MODIFIED
         .byte   SPCall::Status
         .addr   status_params
 
@@ -824,9 +825,6 @@ finish: sta     result
         result := *+1
         lda     #SELF_MODIFIED_BYTE
         rts
-
-SmartportCall:
-        jmp     (sp_addr)
 
         ;; params for call
 .params status_params
@@ -9463,8 +9461,6 @@ END_PARAM_BLOCK
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
 
 .proc GetDeviceType
-        slot_addr := $0A
-
         ;; Avoid Initializer memory ($800-$1200)
         block_buffer := $1E00
 
@@ -9479,8 +9475,10 @@ ram:    ldax    #str_device_type_ramdisk
         ldy     #kDeviceTypeRAMDisk
         rts
 :
+        slot_addr := $0A
         ;; Special case for VEDRIVE
-        jsr     DeviceDriverAddress ; populates `slot_addr`, Z=1 if $Cn
+        jsr     DeviceDriverAddress
+        stax    slot_addr
         cmp16   slot_addr, #kVEDRIVEDriverAddress
         bne     :+
 vdrive: ldax    #str_device_type_vdrive
@@ -9507,18 +9505,19 @@ vdrive: ldax    #str_device_type_vdrive
 :
         ;; Look up driver address
         lda     unit_number
-        jsr     DeviceDriverAddress ; populates `slot_addr`, Z=1 if $Cn
+        jsr     DeviceDriverAddress ; Z=1 if $Cn
         jne     generic             ; not $CnXX, unknown type
 
         ;; Firmware driver; maybe SmartPort?
-        sp_addr := $0A
         lda     unit_number
         jsr     FindSmartportDispatchAddress
-        bne     not_sp
-        stx     status_params::unit_num
+        bcs     not_sp
+        stax    dispatch
+        sty     status_params::unit_num
 
         ;; Execute SmartPort call
-        jsr     SmartportCall
+        dispatch := *+1
+        jsr     SELF_MODIFIED
         .byte   SPCall::Status
         .addr   status_params
         bcs     not_sp
@@ -9631,9 +9630,6 @@ f35:    ldax    #dib_buffer::ID_String_Length
 
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
         unit_number := block_params::unit_num
-
-SmartportCall:
-        jmp     (sp_addr)
 
 blocks: .word   0
 
@@ -10950,19 +10946,17 @@ exit:   rts
 found:  lda     DEVLST,y        ; unit_number
 
         ;; Compute SmartPort dispatch address
-        smartport_addr := $0A
         jsr     FindSmartportDispatchAddress
-        bne     done            ; not SP
-        stx     control_unit_number
+        bcs     done            ; not SP
+        stax    dispatch
+        sty     control_unit_number
 
         ;; Execute SmartPort call
-        jsr     SmartportCall
+        dispatch := *+1
+        jsr     SELF_MODIFIED
         .byte   SPCall::Control
         .addr   control_params
 done:   rts
-
-SmartportCall:
-        jmp     (smartport_addr)
 
 .params control_params
 param_count:    .byte   3

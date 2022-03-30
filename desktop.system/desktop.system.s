@@ -1017,13 +1017,14 @@ loop:   ldx     devnum
         beq     test_unit_num
 
         ;; Smartport?
-        sp_addr := $0A
         jsr     FindSmartportDispatchAddress
-        bne     next_unit
-        stx     status_params::unit_num
+        bcs     next_unit
+        stax    dispatch
+        sty     status_params::unit_num
 
         ;; Execute SmartPort call
-        jsr     smartport_call
+        dispatch := *+1
+        jsr     SELF_MODIFIED
         .byte   SPCall::Status
         .addr   status_params
         bcs     next_unit
@@ -1088,10 +1089,6 @@ test_unit_num:
         jsr     SetCopiedToRamcardFlag
         jsr     CopyOrigPrefixToDesktopOrigPrefix
         jmp     DidNotCopy
-
-smartport_call:
-        jmp     (sp_addr)
-
 
 .endproc
 .endproc

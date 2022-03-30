@@ -1,31 +1,30 @@
 ;;; ============================================================
 ;;; Look up SmartPort dispatch address.
 ;;; Input: A = unit number
-;;; Output: Z=1 if SP, $0A/$0B dispatch address, X = SP unit num
-;;;         Z=0 if not SP
+;;; Output: C=0 if SP, A,X=dispatch address, Y = SP unit num
+;;;         C=1 if not SP
 
 .proc FindSmartportDispatchAddress
-        sp_addr := $0A
-
         sta     unit_number     ; DSSSnnnn
 
         ;; Get device driver address
         jsr     DeviceDriverAddress
-        bne     exit            ; RAM-based driver (exit with Z=0 on failure)
+        bne     fail            ; RAM-based driver (exit with Z=0 on failure)
+        stx     dispatch_hi     ; just need high byte ($Cn)
+        stx     hi1
+        stx     hi2
 
         ;; Find actual address
-        copy    #$00, sp_addr   ; point at $Cn00 for firmware lookups
-
-        ldy     #$07            ; SmartPort signature byte ($Cn07)
-        lda     (sp_addr),y     ; $00 = SmartPort
-        bne     exit            ; nope (exit with Z=0 on failure)
+        hi1 := *+2
+        lda     $C007           ; SmartPort signature byte ($Cn07)
+        bne     fail            ; nope (exit with Z=0 on failure)
 
         ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
-        ldy     #$FF
-        lda     (sp_addr),y
+        hi2 := *+2
+        lda     $C0FF
         clc
         adc     #3
-        sta     sp_addr
+        sta     dispatch_lo
 
         ;; Figure out SmartPort control unit number in X
 
@@ -44,13 +43,14 @@
 ;;;   device is not mirrored, the unit number slot will match the driver
 ;;;   slot, and the SmartPort unit is 1 or 2.
 
-        ldx     #1              ; start with unit 1
+        ldy     #1              ; start with unit 1
         bit     unit_number     ; high bit is D
         bpl     :+
-        inx                     ; X = 1 or 2 (for Drive 1 or 2)
+        iny                     ; Y = 1 or 2 (for Drive 1 or 2)
 :
         ;; Was it remapped? (ProDOS 1.x-only behavior)
-        lda     unit_number
+        unit_number := *+1
+        lda     #SELF_MODIFIED_BYTE
         and     #%01110000      ; 0SSSnnnn
         lsr
         lsr
@@ -58,31 +58,33 @@
         lsr
         sta     mapped_slot     ; 00000SSS
 
-        lda     sp_addr+1       ; $Cn
+        lda     dispatch_hi     ; $Cn
         and     #%00001111      ; $0n
-        cmp     mapped_slot     ; equal = not remapped
+        mapped_slot := *+1
+        cmp     #SELF_MODIFIED_BYTE ; equal = not remapped
         beq     :+
-        inx                     ; now X = 3 or 4
-        inx
+        iny                     ; now Y = 3 or 4
+        iny
 :
-        lda     #0              ; exit with Z set on success
-exit:   rts
+        dispatch_lo := *+1
+        lda     #SELF_MODIFIED_BYTE
+        dispatch_hi := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        clc
+        rts
 
-unit_number:
-        .byte   0
-mapped_slot:
-        .byte   0
+fail:   sec
+        rts
+
 .endproc
 
 ;;; ============================================================
 ;;; Get driver address for unit number
 ;;; Input: A = unit number
-;;; Output: $A/$B points at driver address
+;;; Output: A,X=driver address
 ;;;         Z=1 if a firmware address ($CnXX)
 
 .proc DeviceDriverAddress
-        slot_addr := $0A
-
         and     #%11110000      ; mask off drive/slot
         lsr                     ; 0DSSS000
         lsr                     ; 00DSSS00
@@ -90,11 +92,14 @@ mapped_slot:
         tax                     ; = slot * 2 + (drive == 2 ? 0x10 + 0x00)
 
         lda     DEVADR,x
-        sta     slot_addr
+        tay                     ; Y = lo
         lda     DEVADR+1,x
-        sta     slot_addr+1
+        tax                     ; X = hi
 
         and     #$F0            ; is it $Cn ?
         cmp     #$C0            ; leave Z flag set if so
+        php
+        tya                     ; A = lo
+        plp
         rts
 .endproc
