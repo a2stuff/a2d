@@ -7618,9 +7618,10 @@ assign_height:
 
         ;; Animate the window being opened
         lda     icon_param
+        bmi     :+              ; TODO: Find some plausible source icon
         ldx     window_id
         jsr     AnimateWindowOpen
-
+:
         ;; Finished
         jsr     PopPointers
         rts
