@@ -1059,6 +1059,7 @@ slot_string_table:
 
 loop:   ldy     index
         lda     DEVLST,y
+        sta     unit_num
         jsr     main::DeviceDriverAddress
         bne     next            ; if RAM-based driver (not $CnXX), skip
         copy    #0, slot_ptr    ; make $Cn00
@@ -1088,9 +1089,27 @@ next:   inc     index
 
 done:   jmp     FinalSetup
 
+.params status_params
+param_count:    .byte   3
+unit_num:       .byte   SELF_MODIFIED_BYTE
+list_ptr:       .addr   dib_buffer
+status_code:    .byte   3       ; Return Device Information Block (DIB)
+.endparams
+
+PARAM_BLOCK dib_buffer, ::IO_BUFFER
+Device_Statbyte1        .byte
+Device_Size_Lo          .byte
+Device_Size_Med         .byte
+Device_Size_Hi          .byte
+ID_String_Length        .byte
+Device_Name             .res    16
+Device_Type_Code        .byte
+Device_Subtype_Code     .byte
+Version                 .word
+END_PARAM_BLOCK
+
         ;; Maybe add device to the removable device table
-append: ldy     index
-        lda     DEVLST,y
+append: lda     unit_num
 
         ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
         ;; the motor to spin. https://github.com/a2stuff/a2d/issues/25
@@ -1107,16 +1126,35 @@ append: ldy     index
         and     #%01110000      ; mask off slot
         cmp     #$70            ; is it slot 7?
         beq     next            ; if so, ignore
+:
+        ;; Do SmartPort STATUS call to filter out 5.25 devices
+        lda     unit_num
+        sp_addr := $0A
+        jsr     main::FindSmartportDispatchAddress
+        bne     :+              ; couldn't determine
+        stx     status_params::unit_num
+        jsr     SmartportCall
+        .byte   SPCall::Status
+        .addr   status_params
+        bcs     :+              ; call failed
+        lda     dib_buffer::Device_Type_Code
+        cmp     #SPDeviceType::Disk525
+        beq     next            ; is 5.25 - skip it!
 
-:       lda     DEVLST,y
-
-        inc     count
+        ;; Append the device
+:       inc     count
         ldx     count
+        lda     unit_num
         sta     main::removable_device_table,x
         bne     next            ; always
 
 index:  .byte   0
 count:  .byte   0
+unit_num:
+        .byte   0
+
+SmartportCall:
+        jmp     (sp_addr)
 .endproc
 
 ;;; ============================================================

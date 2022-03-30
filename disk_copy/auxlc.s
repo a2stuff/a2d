@@ -753,7 +753,7 @@ LD852:  ldx     dest_drive_index
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         jsr     main__UnitNumberToDriverAddress ; sets $06, Z=1 if firmware
-        bne     :+              ; if not not firmware, skip these checks
+        bne     :+              ; if not firmware, skip these checks
 
         lda     #$00            ; point at $Cn00
         sta     $06
