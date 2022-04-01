@@ -30,24 +30,15 @@
 ;;;  $1300   +-----------+ +-----------+ text file, and are loaded/swapped
 ;;;          | buf1      | | buf2 copy | as the file is scrolled.
 ;;;  $1200   +-----------+ +-----------+
-;;;          | Font Bkup | |           |
-;;;  $1100   +-----------+ |           |
 ;;;          |           | |           |
-;;;  $1000   |           | |           |
 ;;;          |           | |           |
-;;;   $C00   |           | |           |
+;;;          |           | |           |
 ;;;          |           | |           | This DA runs primarily out of the
 ;;;          |           | |           | copy in Aux. The upper bytes of
 ;;;          | DA        | | DA (Copy) | the code in main are overwritten.
 ;;;   $800   +-----------+ +-----------+
 ;;;          :           : :           :
 ;;;
-
-;;; DeskTop's font is modified to be fixed-width when the mode is toggled;
-;;; the original widths are stored in this buffer, and restored on exit
-;;; if needed.
-font_width_backup       := $1100
-
 
 ;;; ============================================================
 
@@ -1193,6 +1184,8 @@ done:   lda     #1
 end:    rts
 .endproc
 
+;;; ============================================================
+
 .proc CalcWindowSize
         sec
         lda     winfo::maprect::x2
@@ -1265,11 +1258,12 @@ loop:   clc
         rts
 .endproc
 
+;;; ============================================================
+
 .proc ClearUpdates
         TRAMP_CALL JUMP_TABLE_CLEAR_UPDATES
         rts
 .endproc
-
 
 ;;; ============================================================
 ;;; Title Bar (Proportional/Fixed mode button)
