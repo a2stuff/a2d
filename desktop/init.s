@@ -1061,6 +1061,7 @@ loop:   ldy     index
         lda     DEVLST,y
         sta     unit_num
         jsr     main::DeviceDriverAddress
+        bvs     append          ; remapped SmartPort, it's usable
         bne     next            ; if RAM-based driver (not $CnXX), skip
         stx     slot_ptr+1      ; just need high byte ($Cn)
         copy    #0, slot_ptr    ; make $Cn00

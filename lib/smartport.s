@@ -1,3 +1,17 @@
+;;; .define SP_ALTZP as 1 if called with ALTZPON active, 0 if ALTZPOFF
+;;; .define SP_LCBANK1 as 1 if called with LCBANK1 active, 0 if ROMIN2
+
+
+;;; Internal ProDOS tables are used to handle mirrored drives. The
+;;; locations vary between ProDOS versions. For details, see:
+;;; https://github.com/a2stuff/a2d/issues/685
+;;; TODO: Handle versions other than 2.4, either by adding more
+;;; logic or building mirroring tables ourselves on startup.
+DevAdrP24       = $FCE6
+SPUnitP24       = $D6EF
+SPVecLP24       = $FD51
+SPVecHP24       = $FD60
+
 ;;; ============================================================
 ;;; Look up SmartPort dispatch address.
 ;;; Input: A = unit number
@@ -9,7 +23,8 @@
 
         ;; Get device driver address
         jsr     DeviceDriverAddress
-        bne     fail            ; RAM-based driver (exit with Z=0 on failure)
+        bvs     mirrored
+        bne     fail            ; RAM-based driver
         stx     dispatch_hi     ; just need high byte ($Cn)
         stx     hi1
         stx     hi2
@@ -26,16 +41,18 @@
         adc     #3
         sta     dispatch_lo
 
-        ;; Figure out SmartPort control unit number in X
+        ;; Figure out SmartPort control unit number in Y
 
 ;;; Per Technical Note: ProDOS #21: Mirrored Devices and SmartPort
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.20.html
 ;;; ... but that predates ProDOS 2.x, which changes the scheme.
 ;;;
+;;; Since we know that the `DEVADR` entry is a firmware ($Cn) address:
+;;;
 ;;; * ProDOS 1.2...1.9 mirror S5,D3/4 to S2,D1/2 only, and leave `DEVADR`
 ;;;   entry pointing at $C5xx. Therefore, if the unit number slot matches
 ;;;   the driver slot, the device is not mirrored, and SmartPort unit is
-;;;   1 or 2. Otherwise, the device is mirrored, and SmarPort unit is 3
+;;;   1 or 2. Otherwise, the device is mirrored, and SmartPort unit is 3
 ;;;   or 4.
 ;;;
 ;;; * ProDOS 2.x mirror to non-device slots, and point `DEVADR` at
@@ -48,7 +65,7 @@
         bpl     :+
         iny                     ; Y = 1 or 2 (for Drive 1 or 2)
 :
-        ;; Was it remapped? (ProDOS 1.x-only behavior)
+        ;; Was it mirrored? (ProDOS 1.x-only behavior)
         unit_number := *+1
         lda     #SELF_MODIFIED_BYTE
         and     #%01110000      ; 0SSSnnnn
@@ -56,12 +73,12 @@
         lsr
         lsr
         lsr
-        sta     mapped_slot     ; 00000SSS
+        sta     mirrored_slot   ; 00000SSS
 
         lda     dispatch_hi     ; $Cn
         and     #%00001111      ; $0n
-        mapped_slot := *+1
-        cmp     #SELF_MODIFIED_BYTE ; equal = not remapped
+        mirrored_slot := *+1
+        cmp     #SELF_MODIFIED_BYTE ; equal = not mirrored
         beq     :+
         iny                     ; now Y = 3 or 4
         iny
@@ -76,30 +93,76 @@
 fail:   sec
         rts
 
+        ;; --------------------------------------------------
+        ;; Mirrored SmartPort device with a known handler.
+        ;; Look at ProDOS's internal tables to determine.
+mirrored:
+        lda     unit_number
+        lsr
+        lsr
+        lsr
+        lsr
+        tay                     ; Y = offset
+
+.if SP_ALTZP
+        sta     ALTZPOFF
+.endif
+.if !SP_LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
+.endif
+
+        ldx     SPVecHP24,y     ; X = sp vec hi
+        lda     SPVecLP24,y
+        pha
+        lda     SPUnitP24,y
+        tay                     ; Y = sp unit
+        pla                     ; A = sp vec lo
+
+.if SP_ALTZP
+        sta     ALTZPON
+.endif
+.if !SP_LCBANK1
+        bit     ROMIN2
+.endif
+
+        clc
+        rts
+
 .endproc
 
 ;;; ============================================================
 ;;; Get driver address for unit number
 ;;; Input: A = unit number
 ;;; Output: A,X=driver address
+;;;         V=1 if a mirrored SmartPort device (ProDOS 2.4 only)
 ;;;         Z=1 if a firmware address ($CnXX)
 
 .proc DeviceDriverAddress
+        clv
+
         and     #%11110000      ; mask off drive/slot
         lsr                     ; 0DSSS000
         lsr                     ; 00DSSS00
         lsr                     ; 000DSSS0
-        tax                     ; = slot * 2 + (drive == 2 ? 0x10 + 0x00)
+        tay                     ; = slot * 2 + (drive == 2 ? 0x10 + 0x00)
 
-        lda     DEVADR,x
-        tay                     ; Y = lo
-        lda     DEVADR+1,x
-        tax                     ; X = hi
+        lda     DEVADR,y        ; A = lo
+        ldx     DEVADR+1,y      ; X = hi
 
-        and     #$F0            ; is it $Cn ?
-        cmp     #$C0            ; leave Z flag set if so
-        php
-        tya                     ; A = lo
-        plp
+        ;; ProDOS 2.4.x SmartPort remapping?
+        cmp     #<DevAdrP24
+        bne     :+
+        cpx     #>DevAdrP24
+        bne     :+
+        bit     ret             ; set V
+ret:    rts
+:
+        pha
+        txa
+        and     #$F0
+        tay
+        pla
+        cpy     #$C0            ; leave Z set if it is $Cn
         rts
 .endproc

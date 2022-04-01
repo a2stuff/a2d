@@ -708,7 +708,8 @@ LD7F2:
 
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        jsr     main__UnitNumberToDriverAddress ; sets $06, Z=1 if firmware
+        jsr     main__DeviceDriverAddress ; Z=1 if firmware
+        stax    $06
         bne     :+              ; if not firmware, skip these checks
 
         lda     #$00            ; point at $Cn00
@@ -752,7 +753,8 @@ LD852:  ldx     dest_drive_index
 
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        jsr     main__UnitNumberToDriverAddress ; sets $06, Z=1 if firmware
+        jsr     main__DeviceDriverAddress ; Z=1 if firmware
+        stax    $06
         bne     :+              ; if not firmware, skip these checks
 
         lda     #$00            ; point at $Cn00
@@ -1825,9 +1827,9 @@ ret:    rts
 LE17A:  lda     #$00
         sta     device_index
         sta     num_drives
-LE182:  lda     #$13
+LE182:  lda     #>main__on_line_buffer2
         sta     $07
-        lda     #$00
+        lda     #<main__on_line_buffer2
         sta     $06
         sta     LE264
         lda     device_index
@@ -2188,7 +2190,8 @@ index:  .byte   0
         pha
         tax
         lda     drive_unitnum_table,x
-        jsr     main__UnitNumberToDriverAddress ; sets $06, Z=1 if firmware
+        jsr     main__DeviceDriverAddress ; Z=1 if firmware
+        stax    $06
         jmp     use_driver
 
         ;; Disk II - always 280 blocks

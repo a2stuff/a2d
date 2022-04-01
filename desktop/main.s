@@ -9475,18 +9475,20 @@ ram:    ldax    #str_device_type_ramdisk
         ldy     #kDeviceTypeRAMDisk
         rts
 :
-        slot_addr := $0A
         ;; Special case for VEDRIVE
         jsr     DeviceDriverAddress
-        stax    slot_addr
-        cmp16   slot_addr, #kVEDRIVEDriverAddress
+        cmp     #<kVEDRIVEDriverAddress
+        bne     :+
+        cpx     #>kVEDRIVEDriverAddress
         bne     :+
 vdrive: ldax    #str_device_type_vdrive
         ldy     #kDeviceTypeFileShare
         rts
 :
         ;; Special case for VSDRIVE
-        cmp16   slot_addr, #kVSDRIVEDriverAddress
+        cmp     #<kVSDRIVEDriverAddress
+        bne     :+
+        cpx     #>kVSDRIVEDriverAddress
         bne     :+
         sta     ALTZPOFF        ; peek at Main/LCBANK1
         lda     VSDRIVE_SIGNATURE_BYTE
@@ -9506,10 +9508,11 @@ vdrive: ldax    #str_device_type_vdrive
         ;; Look up driver address
         lda     unit_number
         jsr     DeviceDriverAddress ; Z=1 if $Cn
+        bvs     is_sp
         jne     generic             ; not $CnXX, unknown type
 
         ;; Firmware driver; maybe SmartPort?
-        lda     unit_number
+is_sp:  lda     unit_number
         jsr     FindSmartportDispatchAddress
         bcs     not_sp
         stax    dispatch
@@ -10994,6 +10997,8 @@ index:  .byte   0               ; index in selected icon list
         prepare_vol  = $81      ; +2 if multiple
 .endenum
 
+        .define SP_ALTZP 1
+        .define SP_LCBANK1 1
         .include "../lib/smartport.s"
 
 ;;; ============================================================

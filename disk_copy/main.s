@@ -19,7 +19,7 @@
 
         DEFINE_QUIT_PARAMS quit_params
 
-on_line_buffer2 := $1300
+on_line_buffer2 := $1380
         DEFINE_ON_LINE_PARAMS on_line_params2,, on_line_buffer2
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
@@ -124,7 +124,8 @@ params:  .res    3
 
         ;; Get driver address
         lda     unit_number
-        jsr     UnitNumberToDriverAddress ; sets $06, Z=1 if firmware
+        jsr     DeviceDriverAddress
+        stax    $06
 
         lda     #DRIVER_COMMAND_FORMAT
         sta     DRIVER_COMMAND
@@ -155,131 +156,23 @@ control_code:   .byte   $04     ; For Apple/UniDisk 3.3: Eject disk
 control_params_unit_number := control_params::unit_number
 list:   .word   0               ; 0 items in list
 
-
 start:
-        ptr := $6
-
-        jsr     CheckSmartport
+        jsr     FindSmartportDispatchAddress
         bcs     done
-        stx     control_params_unit_number
+
+        stax    dispatch
+        sty     control_params_unit_number
 
         ;; Do SmartPort call
-        jsr     SmartportCall
+        dispatch := *+1
+        jsr     SELF_MODIFIED
         .byte   SPCall::Control
         .addr   control_params
 
 done:   rts
 
-SmartportCall:
-        jmp     ($06)
-
 .endproc
 EjectDisk := EjectDiskImpl::start
-
-;;; ============================================================
-;;; Given $06 points at a firmware location ($CnXX), determine
-;;; if it's SmartPort and (if so) point $06 at the dispatch address.
-;;; Input: A = unit_number
-;;; Output: C = 0 if SmartPort, C = 1 otherwise.
-;;;         X = SmartPort unit number
-;;; Assert: $06 points at a firmware location $CnXX
-
-;;; TODO: Merge with lib/smartport.s
-
-.proc CheckSmartport
-        sp_addr := $06
-
-        sta     unit_number
-
-        ;; Get device driver address
-        jsr     UnitNumberToDriverAddress ; sets $06, Z=1 if firmware
-        beq     :+
-fail:   sec                     ; not firmware
-        rts
-:
-        ;; Find actual address
-        copy    #$00, sp_addr   ; Point at $Cn00
-
-        ldy     #$07            ; SmartPort signature byte ($Cn07)
-        lda     (sp_addr),y     ; $00 = SmartPort
-        bne     fail            ; nope
-
-        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
-        ldy     #$FF
-        lda     (sp_addr),y
-        clc
-        adc     #3
-        sta     sp_addr
-
-        ;; Figure out SmartPort control unit number in X
-
-;;; Per Technical Note: ProDOS #21: Mirrored Devices and SmartPort
-;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.20.html
-;;; ... but that predates ProDOS 2.x, which changes the scheme.
-;;;
-;;; * ProDOS 1.2...1.9 mirror S5,D3/4 to S2,D1/2 only, and leave `DEVADR`
-;;;   entry pointing at $C5xx. Therefore, if the unit number slot matches
-;;;   the driver slot, the device is not mirrored, and SmartPort unit is
-;;;   1 or 2. Otherwise, the device is mirrored, and SmarPort unit is 3
-;;;   or 4.
-;;;
-;;; * ProDOS 2.x mirror to non-device slots, and point `DEVADR` at
-;;;   RAM-based drivers, which are already excluded above. Therefore the
-;;;   device is not mirrored, the unit number slot will match the driver
-;;;   slot, and the SmartPort unit is 1 or 2.
-
-        ldx     #1              ; start with unit 1
-        bit     unit_number     ; high bit is D
-        bpl     :+
-        inx                     ; X = 1 or 2 (for Drive 1 or 2)
-:
-        ;; Was it remapped? (ProDOS 1.x-only behavior)
-        unit_number := *+1
-        lda     #SELF_MODIFIED_BYTE
-        and     #%01110000      ; 0SSSnnnn
-        lsr
-        lsr
-        lsr
-        lsr
-        sta     mapped_slot     ; 00000SSS
-
-        lda     sp_addr+1       ; $Cn
-        and     #%00001111      ; $0n
-
-        mapped_slot := *+1
-        cmp     #SELF_MODIFIED_BYTE ; equal = not remapped
-        beq     :+
-        inx                     ; now X = 3 or 4
-        inx
-:
-        clc                     ; exit with C=0 on success
-        rts
-.endproc
-
-;;; ============================================================
-;;; Get driver address for unit number
-;;; Input: unit_number in A
-;;; Output: $6/$7 points at driver address
-;;;         Z=1 if a firmware address ($CnXX)
-
-.proc UnitNumberToDriverAddress
-        slot_addr := $06
-
-        and     #%11110000      ; mask off drive/slot
-        lsr                     ; 0DSSS000
-        lsr                     ; 00DSSS00
-        lsr                     ; 000DSSS0
-        tax                     ; = slot * 2 + (drive == 2 ? 0x10 + 0x00)
-
-        lda     DEVADR,x
-        sta     slot_addr
-        lda     DEVADR+1,x
-        sta     slot_addr+1
-
-        and     #$F0            ; is it $Cn ?
-        cmp     #$C0            ; leave Z flag set if so
-        rts
-.endproc
 
 ;;; ============================================================
 ;;; Identify the disk type by reading the first block.
@@ -475,12 +368,14 @@ END_PARAM_BLOCK
 start:
         ptr := $6
 
-        jsr     CheckSmartport
+        jsr     FindSmartportDispatchAddress
         bcs     not_removable
-        stx     status_params::unit_num
+        stax    dispatch
+        sty     status_params::unit_num
 
         ;; Do SmartPort call
-        jsr     SmartportCall
+        dispatch := *+1
+        jsr     SELF_MODIFIED
         .byte   SPCall::Status
         .addr   status_params
         bcs     not_removable
@@ -495,8 +390,6 @@ start:
 not_removable:
         return  #0
 
-SmartportCall:
-        jmp     ($06)
 .endproc
 
 IsDriveEjectable := IsDriveEjectableImpl::start
@@ -1251,10 +1144,15 @@ store:  sta     NEWVIDEO
 done:   rts
 .endproc
 
+;;; ============================================================
+
+        .define SP_ALTZP 1
+        .define SP_LCBANK1 1
+        .include "../lib/smartport.s"
 
 ;;; ============================================================
 
-        PAD_TO $1300
+        PAD_TO $1380
 
 .endscope
 
@@ -1277,7 +1175,7 @@ main__on_line_buffer            := main::on_line_buffer
 main__on_line_params2_unit_num  := main::on_line_params2::unit_num
 main__on_line_params_unit_num   := main::on_line_params::unit_num
 main__Quit                      := main::Quit
-main__UnitNumberToDriverAddress := main::UnitNumberToDriverAddress
+main__DeviceDriverAddress       := main::DeviceDriverAddress
 main__GetDeviceBlocksUsingDriver := main::GetDeviceBlocksUsingDriver
 main__on_line_buffer2           := main::on_line_buffer2
 main__ResetIIgsRGB              := main::ResetIIgsRGB

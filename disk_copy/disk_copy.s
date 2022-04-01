@@ -39,7 +39,7 @@ _segoffset .set 0
 ;;; Segments
         DEFSEG Loader,             DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
         DEFSEG OverlayDiskCopy3,   $D000, $2200
-        DEFSEG OverlayDiskCopy4,   $0800, $0B00
+        DEFSEG OverlayDiskCopy4,   $0800, $0B80
 
 ;;; ============================================================
 ;;; Disk Copy application

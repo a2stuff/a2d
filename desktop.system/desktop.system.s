@@ -817,7 +817,7 @@ devnum: .byte   0
 
 .params status_params
 param_count:    .byte   3
-unit_num:       .byte   1
+unit_num:       .byte   SELF_MODIFIED_BYTE
 list_ptr:       .addr   dib_buffer
 status_code:    .byte   3       ; Return Device Information Block (DIB)
 .endparams
@@ -2249,6 +2249,8 @@ supports_mousetext:
 
 ;;; ============================================================
 
+        .define SP_ALTZP 0
+        .define SP_LCBANK1 0
         .include "../lib/smartport.s"
         ADJUSTCASE_VOLPATH := $810
         ADJUSTCASE_VOLBUF  := $820
