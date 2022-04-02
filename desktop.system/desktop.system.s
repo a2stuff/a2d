@@ -912,21 +912,6 @@ str_slash_desktop:
 ;;; ============================================================
 
 .proc Start
-        sta     MIXCLR
-        sta     HIRES
-        sta     TXTCLR
-
-        ;; TODO: Why bother with this here?
-        ;; AppleColor Card - Mode 1 (Monochrome 560x192)
-        ;; Also: Video-7 and Le Chat Mauve Feline
-        sta     CLR80VID
-        sta     AN3_OFF
-        sta     AN3_ON
-        sta     AN3_OFF
-        sta     AN3_ON
-        sta     SET80VID
-        sta     AN3_OFF
-
         sta     TXTSET
 
         lda     MACHID

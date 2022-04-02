@@ -60,6 +60,16 @@ config="$tempdir/DESKTOP.CONFIG#F10000"
 
 for var in "$@"; do
     case "$var" in
+        "color")
+            offset=14
+            printf "\x80" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "mono")
+            offset=14
+            printf "\x00" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
         "sel")
             offset=16
             a=$(xxd -l 1 -seek $offset -p "$config")
