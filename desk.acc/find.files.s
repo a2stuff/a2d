@@ -974,6 +974,7 @@ ctlmax:         .byte   0
 
         ;; Left edges are adjusted dynamically based on label width
         DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
+        DEFINE_RECT input_clear_rect, kFindLeft + kLabelHOffset+1, kControlsTop+1, kDAWidth-250-1, kControlsTop + kTextBoxHeight-1
         DEFINE_POINT input_textpos, kTextBoxTextHOffset, kControlsTop + kTextBoxTextVOffset
 
         DEFINE_BUTTON search, res_string_button_search, kDAWidth-235, kControlsTop
@@ -1012,6 +1013,7 @@ top_row:        .byte   0
         param_call MeasureString, find_label_str
         addax   input_rect::x1
         add16   input_rect::x1, input_textpos::xcoord, input_textpos::xcoord
+        add16_8 input_rect::x1, #1, input_clear_rect::x1
 
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::OpenWindow, winfo_results
@@ -1398,9 +1400,7 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::GetWinPort, winport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, input_rect
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, input_rect
+        MGTK_CALL MGTK::PaintRect, input_clear_rect
 
         jsr     ShowIP
 

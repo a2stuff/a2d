@@ -2237,7 +2237,7 @@ ShowIPF1 := HideIPF1
 
         ;; jsr     HideIPF1        ; Redraw F1
 
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_clear_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
@@ -2534,9 +2534,7 @@ ret:    rts
 
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_rect
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_clear_rect
 
         jsr     ShowIPF1
         jsr     UpdateDirtyFlagF1
@@ -2767,7 +2765,7 @@ ShowIPF2 := HideIPF2
 
         ;; jsr     HideIPF2        ; Redraw F2
 
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_clear_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
@@ -3064,9 +3062,7 @@ ret:    rts
 
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_rect
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_clear_rect
 
         jsr     ShowIPF2
         jsr     UpdateDirtyFlagF2

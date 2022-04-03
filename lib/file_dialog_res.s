@@ -69,9 +69,11 @@ kCommonInputWidth = 435
 kCommonInputHeight = kTextBoxHeight
 
         DEFINE_RECT_SZ input1_rect, kControlsLeft, 113, kCommonInputWidth, kCommonInputHeight
+        DEFINE_RECT_SZ input1_clear_rect, kControlsLeft+1, 113+1, kCommonInputWidth-2, kCommonInputHeight-2
         DEFINE_POINT input1_textpos, kControlsLeft + kTextBoxTextHOffset, 113 + kTextBoxTextVOffset
 
         DEFINE_RECT_SZ input2_rect, kControlsLeft, 136, kCommonInputWidth, kCommonInputHeight
+        DEFINE_RECT_SZ input2_clear_rect, kControlsLeft+1, 136+1, kCommonInputWidth-2, kCommonInputHeight-2
         DEFINE_POINT input2_textpos, kControlsLeft + kTextBoxTextHOffset, 136 + kTextBoxTextVOffset
 
 
