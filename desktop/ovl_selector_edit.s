@@ -283,8 +283,7 @@ ok:     MGTK_CALL MGTK::InitPort, main_grafport
         MGTK_CALL MGTK::SetPort, main_grafport
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        ;; BUG: Missing lda #0 ?
-        sta     blink_ip_flag
+        copy    #0, blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         copy16  #file_dialog::NoOp, file_dialog::HandleKey::key_meta_digit+1
 

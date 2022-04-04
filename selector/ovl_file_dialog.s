@@ -160,8 +160,7 @@ start:  jsr     OpenWindow
         jsr     InitInput
         jsr     PrepPathF1
         jsr     RedrawInput
-        lda     #$FF
-        sta     blink_ip_flag
+        copy    #$FF, blink_ip_flag
         jmp     EventLoop
 
 ;;; ============================================================
@@ -208,8 +207,7 @@ start:  jsr     OpenWindow
 .proc HandleCancel
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        lda     #$00
-        sta     blink_ip_flag
+        copy    #0, blink_ip_flag
         jsr     UnsetCursorIBeam
         ldx     saved_stack
         txs

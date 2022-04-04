@@ -7008,8 +7008,7 @@ reserved_desktop_icons:
         lda     selected_window_id
         bne     :+
 
-        ;; BUG: This is passing a file icon to something assuming a
-        ;; volume icon!
+        ;; Volume icon - check that it's still valid.
         lda     icon_param
         sta     drive_to_refresh ; icon_number
         jsr     CmdCheckSingleDriveByIconNumber
