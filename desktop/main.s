@@ -11684,7 +11684,7 @@ no_change:
 
 .proc UpdatePrefix
         ptr := $06
-        path := src_path_buf
+        path := tmp_path_buf    ; depends on `src_path_buf`, `dst_path_buf`
 
         ;; ProDOS Prefix
         MLI_CALL GET_PREFIX, get_set_prefix_params
