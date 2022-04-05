@@ -65,12 +65,12 @@ finish: jsr     file_dialog::ReadDir
         lda     path_buf0
         bne     :+
         jsr     file_dialog::PrepPath
-:       copy    #0, path_buf2
+:       copy    #0, line_edit_res::buf_right
         jsr     file_dialog::RedrawInput
         jsr     file_dialog::RedrawF2
-        copy    #0, path_buf2
-        copy    #$FF, blink_ip_flag
-        copy    #0, input_allow_all_chars_flag
+        copy    #0, line_edit_res::buf_right
+        copy    #$FF, line_edit_res::blink_ip_flag
+        copy    #0, line_edit_res::allow_all_chars_flag
         jsr     file_dialog::InitDeviceNumber
         jmp     file_dialog::EventLoop
 
@@ -93,7 +93,7 @@ buffer: .res 16, 0
 
         copy    #0, file_dialog::focus_in_input2_flag
         copy    #$80, file_dialog::dual_inputs_flag
-        copy    #0, path_buf2
+        copy    #0, line_edit_res::buf_right
         lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         lda     which_run_list
@@ -219,10 +219,10 @@ jt_entry_name:
         lda     #$80
         sta     file_dialog::focus_in_input2_flag
         sta     file_dialog::listbox_disabled_flag
-        lda     input_dirty_flag
+        lda     line_edit_res::input_dirty_flag
         sta     input1_dirty_flag
         lda     #$00
-        sta     input_dirty_flag
+        sta     line_edit_res::input_dirty_flag
         lda     path_buf1
         bne     finish
         lda     #$00
@@ -246,7 +246,7 @@ found_slash:
         bne     :-
         sty     path_buf1
 
-finish: copy    #$80, input_allow_all_chars_flag
+finish: copy    #$80, line_edit_res::allow_all_chars_flag
         jsr     file_dialog::RedrawInput
         rts
 .endproc
@@ -283,7 +283,7 @@ ok:     MGTK_CALL MGTK::InitPort, main_grafport
         MGTK_CALL MGTK::SetPort, main_grafport
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, blink_ip_flag
+        copy    #0, line_edit_res::blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         copy16  #file_dialog::NoOp, file_dialog::HandleKey::key_meta_digit+1
 
@@ -315,7 +315,7 @@ found:  cpy     #2
         MGTK_CALL MGTK::SetPort, main_grafport
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, blink_ip_flag
+        copy    #0, line_edit_res::blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         copy16  #file_dialog::NoOp, file_dialog::HandleKey::key_meta_digit+1
         ldx     file_dialog::saved_stack
@@ -340,12 +340,12 @@ found:  cpy     #2
         dex
         bpl     :-
 
-        copy    #0, input_allow_all_chars_flag
+        copy    #0, line_edit_res::allow_all_chars_flag
         lda     #$00
         sta     file_dialog::listbox_disabled_flag
         sta     file_dialog::focus_in_input2_flag
         lda     input1_dirty_flag
-        sta     input_dirty_flag
+        sta     line_edit_res::input_dirty_flag
 
         jsr     file_dialog::ShowIPF1
         rts

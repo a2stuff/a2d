@@ -21,8 +21,8 @@
         jsr     file_dialog::PrepPath
         jsr     file_dialog::RedrawInput
 
-        copy    #$FF, blink_ip_flag
-        copy    #0, input_allow_all_chars_flag
+        copy    #$FF, line_edit_res::blink_ip_flag
+        copy    #0, line_edit_res::allow_all_chars_flag
         jmp     file_dialog::EventLoop
 .endproc
 
@@ -41,7 +41,7 @@
 
         lda     #0
         sta     path_buf0
-        sta     path_buf2
+        sta     line_edit_res::buf_right
         sta     file_dialog::focus_in_input2_flag
         rts
 .endproc
@@ -110,7 +110,7 @@ jt_destination_filename:
         dex
         bpl     :-
 
-        copy    #0, path_buf2
+        copy    #0, line_edit_res::buf_right
 
         ldx     path_buf0
         beq     done
@@ -122,25 +122,25 @@ jt_destination_filename:
         dex
         bne     :-
 :
-        ;; Copy filename into path_buf2
+        ;; Copy filename into `line_edit_res::buf_right`
         ldy     #1
         dex
 :       cpx     path_buf0
         beq     done
         inx
         lda     path_buf0,x
-        sta     path_buf2,y
-        inc     path_buf2
+        sta     line_edit_res::buf_right,y
+        inc     line_edit_res::buf_right
         iny
         jmp     :-
 
 done:   jsr     file_dialog::RedrawInput
 
         ;; Twiddle flags
-        lda     input_dirty_flag
+        lda     line_edit_res::input_dirty_flag
         sta     input1_dirty_flag
         lda     input2_dirty_flag
-        sta     input_dirty_flag
+        sta     line_edit_res::input_dirty_flag
         rts
 .endproc
 
@@ -162,7 +162,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, file_dialog::only_show_dirs_flag
-        copy    #0, blink_ip_flag
+        copy    #0, line_edit_res::blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         copy16  #path_buf0, $6
         copy16  #path_buf1, $8
@@ -176,7 +176,7 @@ err:    lda     #ERR_INVALID_PATHNAME
 .proc HandleCancel
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, blink_ip_flag
+        copy    #0, line_edit_res::blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         ldx     file_dialog::saved_stack
         txs
@@ -204,15 +204,15 @@ err:    lda     #ERR_INVALID_PATHNAME
         copy    #$FF, file_dialog_res::selected_index
         copy    #0, file_dialog::focus_in_input2_flag
 
-        lda     input_dirty_flag
+        lda     line_edit_res::input_dirty_flag
         sta     input2_dirty_flag
         lda     input1_dirty_flag
-        sta     input_dirty_flag
+        sta     line_edit_res::input_dirty_flag
 
         COPY_STRING path_buf0, file_dialog::path_buf
 
         jsr     file_dialog::StripPathBufSegment
-        bit     input_dirty_flag
+        bit     line_edit_res::input_dirty_flag
         bpl     L726D
 
         ;; TODO: Understand how these paths differ.

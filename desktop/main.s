@@ -11571,7 +11571,7 @@ wloop:  ldx     found_windows_count
 ;;; Assert: `src_path_buf` is a prefix of the path at $06!
 ;;; Inputs: $06 = path to update, `src_path_buf` and `dst_path_buf`,
 ;;; Outputs: Path at $06 updated.
-;;; Modifies `path_buf1` and `path_buf2`
+;;; Modifies `path_buf1` and `tmp_path_buf`
 
 .proc UpdateTargetPath
         dst := $06
@@ -11579,14 +11579,14 @@ wloop:  ldx     found_windows_count
         ;; Set `path_buf1` to the old path (should be `src_path_buf` + suffix)
         param_call CopyPtr1ToBuf, path_buf1
 
-        ;; Set `path_buf2` to the new prefix
+        ;; Set `tmp_path_buf` to the new prefix
         ldy     dst_path_buf
 :       lda     dst_path_buf,y
-        sta     path_buf2,y
+        sta     tmp_path_buf,y
         dey
         bpl     :-
 
-        ;; Copy the suffix from `path_buf1` to `path_buf2`
+        ;; Copy the suffix from `path_buf1` to `tmp_path_buf`
         ldx     src_path_buf
         cpx     path_buf1
         beq     assign          ; paths are equal, no copying needed
@@ -11595,14 +11595,14 @@ wloop:  ldx     found_windows_count
 :       inx                     ; advance into suffix
         iny
         lda     path_buf1,x
-        sta     path_buf2,y
+        sta     tmp_path_buf,y
         cpx     path_buf1
         bne     :-
-        sty     path_buf2
+        sty     tmp_path_buf
 
         ;; Assign the new window path
-assign: ldy     path_buf2
-:       lda     path_buf2,y
+assign: ldy     tmp_path_buf
+:       lda     tmp_path_buf,y
         sta     (dst),y
         dey
         bpl     :-
@@ -13845,17 +13845,17 @@ dialog_param_addr:
         copy16  dialog_proc_table,x, @jump_addr
 
         lda     #0
-        sta     prompt_ip_flag
-        sta     blink_ip_flag
-        sta     input_dirty_flag
+        sta     line_edit_res::ip_flag
+        sta     line_edit_res::blink_ip_flag
+        sta     line_edit_res::input_dirty_flag
         sta     input1_dirty_flag
         sta     input2_dirty_flag
         sta     has_input_field_flag
-        sta     input_allow_all_chars_flag
+        sta     line_edit_res::allow_all_chars_flag
         sta     format_erase_overlay_flag
         sta     cursor_ibeam_flag
 
-        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
 
         copy16  #rts1, jump_relay+1
         jsr     SetCursorPointer ; when opening dialog
@@ -13873,12 +13873,12 @@ dialog_param_addr:
         beq     :+
 
         ;; Blink the insertion point
-        dec16   prompt_ip_counter
-        lda     prompt_ip_counter
-        ora     prompt_ip_counter+1
+        dec16   line_edit_res::ip_counter
+        lda     line_edit_res::ip_counter
+        ora     line_edit_res::ip_counter+1
         bne     :+
         jsr     TogglePromptIP
-        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
 
         ;; Dispatch event types - mouse down, key press
 :       jsr     YieldLoop
@@ -14087,7 +14087,7 @@ no_mods:
         cmp     #CHAR_RETURN
         beq     do_yes
 
-:       bit     input_allow_all_chars_flag
+:       bit     line_edit_res::allow_all_chars_flag
         bmi     LA7C8
         cmp     #'.'
         beq     LA7D8
@@ -15093,7 +15093,7 @@ do_close:
 .endproc
 
 .proc Draw2SpacesString
-        param_jump DrawString, str_2_spaces
+        param_jump DrawString, line_edit_res::str_2_spaces
 .endproc
 
 ;;; ============================================================
@@ -15463,9 +15463,9 @@ done:   rts
 
 .proc TogglePromptIP
         ;; Toggle flag
-        lda     prompt_ip_flag
+        lda     line_edit_res::ip_flag
         eor     #$80
-        sta     prompt_ip_flag
+        sta     line_edit_res::ip_flag
         FALL_THROUGH_TO XDrawPromptIP
 .endproc
 
@@ -15494,7 +15494,7 @@ done:   rts
 .endproc
 
 .proc HidePromptIP
-        bit     prompt_ip_flag
+        bit     line_edit_res::ip_flag
         bmi     XDrawPromptIP
         rts
 .endproc
@@ -15513,7 +15513,7 @@ ShowPromptIP := HidePromptIP
         jsr     ClearNameInputRect
         MGTK_CALL MGTK::MoveTo, name_input_textpos
         param_call DrawString, path_buf1
-        param_call DrawString, path_buf2
+        param_call DrawString, line_edit_res::buf_right
         jsr     Draw2SpacesString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
@@ -15572,7 +15572,7 @@ width   .word
         END_PARAM_BLOCK
 
         buf_left := path_buf1
-        buf_right := path_buf2
+        buf_right := line_edit_res::buf_right
 
         ;; --------------------------------------------------
         ;; Click is to the right of IP
@@ -15718,7 +15718,7 @@ ip_pos: .word   0
         ;; Is there room?
         lda     path_buf1
         clc
-        adc     path_buf2
+        adc     line_edit_res::buf_right
         cmp     #kMaxFilenameLength
         bcs     ret
 
@@ -15730,7 +15730,7 @@ ip_pos: .word   0
         ldx     path_buf1
         inx
         sta     path_buf1,x
-        sta     str_1_char+1
+        sta     line_edit_res::str_1_char+1
 
         ;; Redraw string to right of IP
 
@@ -15745,8 +15745,8 @@ ip_pos: .word   0
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_CALL MGTK::MoveTo, point
         jsr     SetNameInputClipRect
-        param_call DrawString, str_1_char
-        param_call DrawString, path_buf2
+        param_call DrawString, line_edit_res::str_1_char
+        param_call DrawString, line_edit_res::buf_right
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 
@@ -15776,7 +15776,7 @@ ret:    rts
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_CALL MGTK::MoveTo, point
         jsr     SetNameInputClipRect
-        param_call DrawString, path_buf2
+        param_call DrawString, line_edit_res::buf_right
         jsr     Draw2SpacesString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
@@ -15790,7 +15790,7 @@ ret:    rts
 
 .proc InputFieldClear
         buf_left := path_buf1
-        buf_right := path_buf2
+        buf_right := line_edit_res::buf_right
 
         ;; Anything to delete?
         lda     buf_left
@@ -15818,7 +15818,7 @@ ret:    rts
 
 .proc InputFieldIPLeft
         buf_left := path_buf1
-        buf_right = path_buf2
+        buf_right := line_edit_res::buf_right
 
         ;; Any characters to left of IP?
         lda     buf_left
@@ -15853,7 +15853,7 @@ ret:    rts
 
 .proc InputFieldIPRight
         buf_left := path_buf1
-        buf_right := path_buf2
+        buf_right := line_edit_res::buf_right
 
         ;; Any characters to right of IP?
         lda     buf_right
@@ -15891,8 +15891,8 @@ ret:    rts
 ;;; Move IP to start of input field.
 
 .proc InputFieldIPStart
-        buf_left = path_buf1
-        buf_right = path_buf2
+        buf_left := path_buf1
+        buf_right := line_edit_res::buf_right
 
         ;; Any characters to left of IP?
         lda     buf_left
@@ -15935,7 +15935,7 @@ ret:    rts
 
 .proc InputFieldIPEnd
         buf_left := path_buf1
-        buf_right := path_buf2
+        buf_right := line_edit_res::buf_right
 
         lda     buf_right
         beq     ret
@@ -15992,7 +15992,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc ClearPathBuf2
-        copy    #0, path_buf2   ; length
+        copy    #0, line_edit_res::buf_right   ; length
         rts
 .endproc
 

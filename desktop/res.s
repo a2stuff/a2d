@@ -267,12 +267,9 @@ buf_text:
 ;;; In common dialog (copy/edit file, add/edit shortcut):
 ;;; * path_buf0 has the contents of the top input field
 ;;; * path_buf1 has the contents of the bottom input field
-;;; * path_buf2 has the contents of the focused field after insertion point
-;;;   (May have leading caret glyph $06)
 
 path_buf0:  .res    kPathBufferSize, 0
 path_buf1:  .res    kPathBufferSize, 0
-path_buf2:  .res    kPathBufferSize, 0
 
 ;;; ============================================================
 ;;; Dialog used for prompts (yes/no/all) and operation progress
@@ -487,41 +484,18 @@ prompt_button_flags:
 has_input_field_flag:
         .byte   0
 
-prompt_ip_counter:
-        .word   1             ; immediately decremented to 0 and reset
-
-prompt_ip_flag:
-        .byte   0
-
-blink_ip_flag:                ; when set, IP in file dialog blinks
-        .byte   0
-
 format_erase_overlay_flag:      ; set when prompt is showing device picker
         .byte   0
 
-;;; Flags that control the behavior of the file picker dialog.
 
-input_dirty_flag:               ; set when input has changed value
-        .byte   0
-input1_dirty_flag:              ; stash dirty flag when input2 is active
-        .byte   0
-input2_dirty_flag:              ; stash dirty flag when input1 is active
-        .byte   0
+;;; ============================================================
+;;; Resources used for line edit (text input) controls. Used
+;;; by both DeskTop's name prompt dialog (rename, duplicate,
+;;; format, erase, ...) and the common file picker dialog.
 
-        ;; If set, prompt is not limited to filename characters.
-        ;; (This is never set by DeskTop.)
-input_allow_all_chars_flag:
-        .byte   0
+        .include "../lib/line_edit_res.s"
 
-        ;; Used to draw/clear insertion point; overwritten with char
-        ;; to right of insertion point as needed.
-str_1_char:
-        PASCAL_STRING {0}       ; do not localize
-
-        ;; Used as suffix for text being edited to account for insertion
-        ;; point adding extra width.
-str_2_spaces:
-        PASCAL_STRING "  "      ; do not localize
+;;; ============================================================
 
 str_file_suffix:
         PASCAL_STRING res_string_file_suffix
@@ -589,6 +563,11 @@ kRadioControlHeight = 8         ; system font height - 1
         DEFINE_RECT_SZ rect_never_ctrl,              kRadioButtonLeft, 93, 0, kRadioControlHeight
 
 ;;; ============================================================
+
+input1_dirty_flag:              ; stash dirty flag when input2 is active
+        .byte   0
+input2_dirty_flag:              ; stash dirty flag when input1 is active
+        .byte   0
 
         FONT := DEFAULT_FONT
         .include "../lib/file_dialog_res.s"

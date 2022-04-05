@@ -55,7 +55,7 @@ kButtonHeight = 11
 ;;; Horizontal distance for label/control pairs
 kLabelHOffset = 3
 
-;;; Standard text input box metrics
+;;; Standard line edit (text input) control metrics
 kTextBoxHeight = 11
 kTextBoxTextHOffset = 5         ; from left edge of rect to text pos
 kTextBoxTextVOffset = 10        ; from top edge of rect to text pos

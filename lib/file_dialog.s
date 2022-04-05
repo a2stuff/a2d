@@ -3,6 +3,7 @@
 ;;;
 ;;; Required includes:
 ;;; * lib/file_dialog_res.s
+;;; * lib/line_edit_res.s
 ;;; * lib/event_params.s
 ;;; * lib/muldiv.s
 ;;; Requires the following proc definitions:
@@ -18,7 +19,6 @@
 ;;; Requires the following data definitions:
 ;;; * `buf_text`
 ;;; * `buf_input1_left`
-;;; * `buf_input_right`
 ;;; * `window_grafport`
 ;;; * `main_grafport`
 ;;; * `penXOR`
@@ -99,11 +99,11 @@ routine_table:  .addr   $7000, $7000, $7000
         lda     #0
         sta     file_dialog_res::type_down_buf
         sta     only_show_dirs_flag
-        sta     prompt_ip_flag
+        sta     line_edit_res::ip_flag
 .if FD_EXTENDED
-        sta     blink_ip_flag
+        sta     line_edit_res::blink_ip_flag
 .endif
-        sta     input_dirty_flag
+        sta     line_edit_res::input_dirty_flag
 .if FD_EXTENDED
         sta     input1_dirty_flag
         sta     input2_dirty_flag
@@ -115,7 +115,7 @@ routine_table:  .addr   $7000, $7000, $7000
         sta     extra_controls_flag
         sta     listbox_disabled_flag
 
-        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
         copy    #$FF, file_dialog_res::selected_index
 
 .if FD_EXTENDED
@@ -151,15 +151,15 @@ listbox_disabled_flag:  ; Set when the listbox is not active
 ;;; ============================================================
 
 .proc EventLoop
-        bit     blink_ip_flag
+        bit     line_edit_res::blink_ip_flag
         bpl     :+
 
-        dec16   prompt_ip_counter
-        lda     prompt_ip_counter
-        ora     prompt_ip_counter+1
+        dec16   line_edit_res::ip_counter
+        lda     line_edit_res::ip_counter
+        ora     line_edit_res::ip_counter+1
         bne     :+
         jsr     BlinkIP
-        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, prompt_ip_counter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
 
 :       jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
@@ -700,7 +700,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 ;;; ============================================================
 
 .proc ClearRight
-        copy    #0, buf_input_right
+        copy    #0, line_edit_res::buf_right
         rts
 .endproc
 
@@ -878,7 +878,7 @@ exit:   jsr     InitSetGrafport
 .if !FD_EXTENDED
         lda     file_dialog_res::selected_index
         bpl     :+
-        bit     input_dirty_flag
+        bit     line_edit_res::input_dirty_flag
         bmi     :+
         rts
 :
@@ -2191,9 +2191,9 @@ no_change:
         pt := $06
 
         ;; Toggle flag
-        lda     prompt_ip_flag
+        lda     line_edit_res::ip_flag
         eor     #$80
-        sta     prompt_ip_flag
+        sta     line_edit_res::ip_flag
 
         FALL_THROUGH_TO XDrawIPF1
 .endproc
@@ -2223,7 +2223,7 @@ no_change:
 .endproc
 
 .proc HideIPF1
-        bit     prompt_ip_flag
+        bit     line_edit_res::ip_flag
         bmi     XDrawIPF1
         rts
 .endproc
@@ -2242,8 +2242,8 @@ ShowIPF1 := HideIPF1
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
         param_call DrawString, buf_input1_left
-        param_call DrawString, buf_input_right
-        param_call DrawString, str_2_spaces
+        param_call DrawString, line_edit_res::buf_right
+        param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIPF1
 
@@ -2301,7 +2301,7 @@ width   .word
         END_PARAM_BLOCK
 
         buf_left := buf_input1_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         ;; --------------------------------------------------
         ;; Click is to the right of IP
@@ -2441,13 +2441,13 @@ ip_pos: .word   0
 
 .proc HandleOtherKeyF1
         buf_left := buf_input1_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         jsr     ObscureCursor
         sta     char
 
         ;; Is it allowed?
-        bit     input_allow_all_chars_flag
+        bit     line_edit_res::allow_all_chars_flag
         bmi     :+
         jsr     IsPathChar
         bcs     ret
@@ -2467,7 +2467,7 @@ ip_pos: .word   0
         ldx     buf_left
         inx
         sta     buf_left,x
-        sta     str_1_char+1
+        sta     line_edit_res::str_1_char+1
 
         ;; Redraw string to right of IP
 
@@ -2483,7 +2483,7 @@ ip_pos: .word   0
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::MoveTo, point
-        param_call DrawString, str_1_char
+        param_call DrawString, line_edit_res::str_1_char
         param_call DrawString, buf_right
 
         jsr     ShowIPF1
@@ -2507,8 +2507,8 @@ ret:    rts
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::MoveTo, $06
-        param_call DrawString, buf_input_right
-        param_call DrawString, str_2_spaces
+        param_call DrawString, line_edit_res::buf_right
+        param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIPF1
         jsr     UpdateDirtyFlagF1
@@ -2520,7 +2520,7 @@ ret:    rts
 
 .proc HandleClearKeyF1
         buf_left := buf_input1_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         lda     buf_left
         ora     buf_right
@@ -2548,7 +2548,7 @@ ret:    rts
         jsr     ObscureCursor
 
         buf_left := buf_input1_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         ;; Any characters to left of IP?
         lda     buf_left
@@ -2585,7 +2585,7 @@ ret:    rts
         jsr     ObscureCursor
 
         buf_left := buf_input1_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         ;; Any characters to right of IP?
         lda     buf_right
@@ -2625,7 +2625,7 @@ ret:    rts
         jsr     ObscureCursor
 
         buf_left := buf_input1_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         ;; Any characters to left of IP?
         lda     buf_left
@@ -2686,7 +2686,7 @@ ret:    rts
 
 .proc MoveIPToEndF1
         buf_left := buf_input1_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         lda     buf_right
         beq     ret
@@ -2720,9 +2720,9 @@ ret:    rts
         pt := $06
 
         ;; Toggle flag
-        lda     prompt_ip_flag
+        lda     line_edit_res::ip_flag
         eor     #$80
-        sta     prompt_ip_flag
+        sta     line_edit_res::ip_flag
 
         FALL_THROUGH_TO XDrawIPF2
 .endproc
@@ -2751,7 +2751,7 @@ ret:    rts
 .endproc
 
 .proc HideIPF2
-        bit     prompt_ip_flag
+        bit     line_edit_res::ip_flag
         bmi     XDrawIPF2
         rts
 .endproc
@@ -2770,8 +2770,8 @@ ShowIPF2 := HideIPF2
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
         param_call DrawString, buf_input2_left
-        param_call DrawString, buf_input_right
-        param_call DrawString, str_2_spaces
+        param_call DrawString, line_edit_res::buf_right
+        param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIPF2
 
@@ -2827,7 +2827,7 @@ width   .word
         END_PARAM_BLOCK
 
         buf_left := buf_input2_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         ;; --------------------------------------------------
         ;; Click is to the right of IP
@@ -2968,13 +2968,13 @@ HandleF2Click__ep2 := HandleClickF2::ep2
 
 .proc HandleOtherKeyF2
         buf_left := buf_input2_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         jsr     ObscureCursor
         sta     char
 
         ;; Is it allowed?
-        bit     input_allow_all_chars_flag
+        bit     line_edit_res::allow_all_chars_flag
         bmi     :+
         jsr     IsPathChar
         bcs     ret
@@ -2994,7 +2994,7 @@ HandleF2Click__ep2 := HandleClickF2::ep2
         ldx     buf_left
         inx
         sta     buf_left,x
-        sta     str_1_char+1
+        sta     line_edit_res::str_1_char+1
 
         ;; Redraw string to right of IP
 
@@ -3010,7 +3010,7 @@ HandleF2Click__ep2 := HandleClickF2::ep2
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::MoveTo, point
-        param_call DrawString, str_1_char
+        param_call DrawString, line_edit_res::str_1_char
         param_call DrawString, buf_right
 
         jsr     ShowIPF2
@@ -3035,8 +3035,8 @@ ret:    rts
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::MoveTo, $06
-        param_call DrawString, buf_input_right
-        param_call DrawString, str_2_spaces
+        param_call DrawString, line_edit_res::buf_right
+        param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIPF2
         jsr     UpdateDirtyFlagF2
@@ -3048,7 +3048,7 @@ ret:    rts
 
 .proc HandleClearKeyF2
         buf_left := buf_input2_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         lda     buf_left
         ora     buf_right
@@ -3077,7 +3077,7 @@ ret:    rts
         jsr     ObscureCursor
 
         buf_left := buf_input2_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         ;; Any characters to left of IP?
         lda     buf_left
@@ -3113,7 +3113,7 @@ ret:    rts
         jsr     ObscureCursor
 
         buf_left := buf_input2_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         ;; Any characters to right of IP?
         lda     buf_right
@@ -3153,7 +3153,7 @@ ret:    rts
         jsr     ObscureCursor
 
         buf_left = buf_input2_left
-        buf_right = buf_input_right
+        buf_right = line_edit_res::buf_right
 
         ;; Any characters to left of IP?
         lda     buf_left
@@ -3428,7 +3428,7 @@ flag:   .byte   0
 .if FD_EXTENDED
 .proc PrepPathF2
         buf_left := buf_input2_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         ;; Whenever the path is updated, preserve last segment of
         ;; the path (the filename) as a suffix. This is fairly
@@ -3525,7 +3525,7 @@ width   .word
 .if FD_EXTENDED
 .proc MoveIPToEndF2
         buf_left := buf_input2_left
-        buf_right := buf_input_right
+        buf_right := line_edit_res::buf_right
 
         lda     buf_right
         beq     ret
@@ -3548,7 +3548,7 @@ ret:    rts
 .endif
 
 ;;; ============================================================
-;;; Set the `input_dirty_flag`
+;;; Set the `line_edit_res::input_dirty_flag`
 ;;; Flag is set if:
 ;;; * Current text in active input field is case-sensitive match
 ;;;   for the current path (if no selection), or current
@@ -3616,7 +3616,7 @@ no_match:
         FALL_THROUGH_TO update_flag
 
 update_flag:
-        sta     input_dirty_flag
+        sta     line_edit_res::input_dirty_flag
 
         ;; Restore selection following `AppendToPathBuf` call above.
         lda     current_selection

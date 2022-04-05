@@ -21,8 +21,8 @@
         jsr     file_dialog::PrepPath
         jsr     file_dialog::RedrawInput
 
-        copy    #$FF, blink_ip_flag
-        copy    #0, input_allow_all_chars_flag
+        copy    #$FF, line_edit_res::blink_ip_flag
+        copy    #0, line_edit_res::allow_all_chars_flag
         jmp     file_dialog::EventLoop
 .endproc
 
@@ -41,7 +41,7 @@
         sta     path_buf0
         sta     file_dialog::focus_in_input2_flag
 
-        copy    #0, path_buf2
+        copy    #0, line_edit_res::buf_right
         rts
 .endproc
 
@@ -73,7 +73,7 @@ jt_filename:
 
 :       MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, blink_ip_flag
+        copy    #0, line_edit_res::blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         copy16  #path_buf0, $6
         ldx     file_dialog::saved_stack
@@ -88,7 +88,7 @@ jt_filename:
 .proc HandleCancel
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, blink_ip_flag
+        copy    #0, line_edit_res::blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
         ldx     file_dialog::saved_stack
         txs

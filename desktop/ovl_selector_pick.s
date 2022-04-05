@@ -551,6 +551,7 @@ xcoord: .byte   0
 
 ;;; ============================================================
 
+;;; Copy the string somewhere visible to MGTK in auxmem.
 .proc DrawString
         ptr := $06
 
@@ -559,12 +560,12 @@ xcoord: .byte   0
         lda     (ptr),y
         tay
 :       lda     (ptr),y
-        sta     path_buf2+2,y
+        sta     buf_text+2,y
         dey
         bpl     :-
 
-        copy16  #path_buf2+3, path_buf2
-        MGTK_CALL MGTK::DrawText, path_buf2
+        copy16  #buf_text+3, buf_text
+        MGTK_CALL MGTK::DrawText, buf_text
         rts
 .endproc
 

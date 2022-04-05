@@ -32,7 +32,6 @@ AdjustFileEntryCase     := main::AdjustFileEntryCase
 ;;; Required data definitions
 buf_input1_left := path_buf0
 buf_input2_left := path_buf1
-buf_input_right := path_buf2
 
 ;;; Required macro definitions
         .define FD_EXTENDED 1

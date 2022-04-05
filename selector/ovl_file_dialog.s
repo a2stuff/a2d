@@ -38,9 +38,6 @@ main_grafport:
 double_click_counter_init:
         .byte   $FF
 
-input_allow_all_chars_flag:
-        .byte   0
-
 pointer_cursor:
         .byte   PX(%0000000),PX(%0000000)
         .byte   PX(%0100000),PX(%0000000)
@@ -98,9 +95,8 @@ ibeam_cursor:
 ;;; Text Input Field
 buf_text:       .res    68, 0
 
-;;; String being edited:
+;;; String being edited
 buf_input_left:         .res    68, 0 ; left of IP
-buf_input_right:        .res    68, 0 ; IP and right
 
 ;;; ============================================================
 ;;; File Picker Dialog
@@ -108,38 +104,7 @@ buf_input_right:        .res    68, 0 ; IP and right
 
 ;;; ============================================================
 
-        .byte   $00
-        .byte   $00
-
-prompt_ip_counter:
-        .word   1             ; immediately decremented to 0 and reset
-
-        .byte   $00
-
-prompt_ip_flag:
-        .byte   $00
-blink_ip_flag:
-        .byte   $00
-        .byte   $00
-
-;;; Flags that control the behavior of the file picker dialog.
-
-input_dirty_flag:
-        .byte   $00
-
-        .byte   $00             ; TODO: Unused
-        .byte   $00             ; TODO: Unused
-        .byte   $00             ; TODO: Unused
-
-        ;; Used to draw/clear insertion point; overwritten with char
-        ;; to right of insertion point as needed.
-str_1_char:
-        PASCAL_STRING {0}       ; do not localize
-
-        ;; Used as suffix for text being edited to account for insertion
-        ;; point adding extra width.
-str_2_spaces:
-        PASCAL_STRING "  "      ; do not localize
+        .include "../lib/line_edit_res.s"
 
 ;;; ============================================================
 
@@ -160,7 +125,7 @@ start:  jsr     OpenWindow
         jsr     InitInput
         jsr     PrepPathF1
         jsr     RedrawInput
-        copy    #$FF, blink_ip_flag
+        copy    #$FF, line_edit_res::blink_ip_flag
         jmp     EventLoop
 
 ;;; ============================================================
@@ -169,7 +134,7 @@ start:  jsr     OpenWindow
         lda     #$00
         sta     buf_input1_left
         sta     focus_in_input2_flag
-        copy    #0, buf_input_right
+        copy    #0, line_edit_res::buf_right
         rts
 .endproc
 
@@ -207,7 +172,7 @@ start:  jsr     OpenWindow
 .proc HandleCancel
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, blink_ip_flag
+        copy    #0, line_edit_res::blink_ip_flag
         jsr     UnsetCursorIBeam
         ldx     saved_stack
         txs
