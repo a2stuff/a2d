@@ -318,7 +318,7 @@ l4:     lda     file_dialog_res::winfo::window_id
 
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
-        jsr     HandleMetaRightKey
+        jsr     MoveIPEnd
         jsr     HandleOk
 :       jmp     SetUpPorts
 .endproc
@@ -888,7 +888,7 @@ exit:   jsr     InitSetGrafport
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        jsr     HandleMetaRightKey
+        jsr     MoveIPEnd
         jsr     HandleOk
         jsr     InitSetGrafport
         rts
@@ -2188,8 +2188,6 @@ no_change:
 ;;; ============================================================
 
 .proc BlinkIPF1
-        pt := $06
-
         ;; Toggle flag
         lda     line_edit_res::ip_flag
         eor     #$80
@@ -2259,8 +2257,6 @@ ShowIPF1 := HideIPF1
         lda     file_dialog_res::winfo::window_id
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
         MGTK_CALL MGTK::MoveTo, click_coords
 
         ;; Inside input1 ?
@@ -2289,8 +2285,9 @@ ep2:
 .endif
         ;; Is click to left or right of insertion point?
         jsr     CalcInput1IPPos
-        stax    $06
-        cmp16   screentowindow_params::windowx, $06
+        width := $06
+        stax    width
+        cmp16   click_coords, width
         jcc     ToLeft
         FALL_THROUGH_TO ToRight
 
@@ -2330,7 +2327,7 @@ ret:    rts
         beq     ret
         cmp     buf_right
         bcc     :+
-        jmp     HandleMetaRightKeyF1
+        jmp     MoveIPEndF1
 :
         copy    tw_params::length, len
         jsr     HideIPF1        ; Click Right F1
@@ -2384,7 +2381,7 @@ ret:    rts
         lda     tw_params::length
         cmp     #1
         bcs     @loop
-        jmp     HandleMetaLeftKeyF1
+        jmp     MoveIPStartF1
 :
         lda     tw_params::length
         cmp     buf_left
@@ -2495,19 +2492,28 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleDeleteKeyF1
-        lda     buf_input1_left
+        buf_left := buf_input1_left
+        buf_right := line_edit_res::buf_right
+
+        ;; Anything to delete?
+        lda     buf_left
         beq     ret
 
         jsr     HideIPF1        ; Delete F1
 
-        dec     buf_input1_left
+        point := $6
+        xcoord := $6
+        ycoord := $8
+
+        ;; Decrease length of left string, measure and redraw right string
+        dec     buf_left
         jsr     CalcInput1IPPos
-        stax    $06
-        copy16  file_dialog_res::input1_textpos::ycoord, $08
+        stax    xcoord
+        copy16  file_dialog_res::input1_textpos::ycoord, ycoord
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        MGTK_CALL MGTK::MoveTo, $06
-        param_call DrawString, line_edit_res::buf_right
+        MGTK_CALL MGTK::MoveTo, point
+        param_call DrawString, buf_right
         param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIPF1
@@ -2522,6 +2528,7 @@ ret:    rts
         buf_left := buf_input1_left
         buf_right := line_edit_res::buf_right
 
+        ;; Anything to delete?
         lda     buf_left
         ora     buf_right
         beq     ret
@@ -2620,10 +2627,14 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Move IP to start of input field.
 
 .proc HandleMetaLeftKeyF1
         jsr     ObscureCursor
+        FALL_THROUGH_TO MoveIPStartF1
+.endproc
 
+.proc MoveIPStartF1
         buf_left := buf_input1_left
         buf_right := line_edit_res::buf_right
 
@@ -2669,6 +2680,10 @@ ret:    rts
 
 .proc HandleMetaRightKeyF1
         jsr     ObscureCursor
+        FALL_THROUGH_TO MoveIPEndF1
+.endproc
+
+.proc MoveIPEndF1
         jsr     HideIPF1        ; End F1
         jsr     MoveIPToEndF1
         jsr     ShowIPF1
@@ -2717,8 +2732,6 @@ ret:    rts
 ;;; ============================================================
 
 .proc BlinkIPF2
-        pt := $06
-
         ;; Toggle flag
         lda     line_edit_res::ip_flag
         eor     #$80
@@ -2788,8 +2801,6 @@ ShowIPF2 := HideIPF2
         lda     file_dialog_res::winfo::window_id
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
         MGTK_CALL MGTK::MoveTo, click_coords
 
         ;; Inside input2 ?
@@ -2812,9 +2823,7 @@ done:   rts
 ep2:
         ;; Is click to left or right of insertion point?
         jsr     CalcInput2IPPos
-
         width := $06
-
         stax    width
         cmp16   click_coords, width
         jcc     ToLeft
@@ -2856,7 +2865,7 @@ ret:    rts
         beq     ret
         cmp     buf_right
         bcc     :+
-        jmp     HandleMetaRightKeyF2
+        jmp     MoveIPEndF2
 :
         copy    tw_params::length, len
         jsr     HideIPF2        ; Click Right F2
@@ -2910,7 +2919,7 @@ ret:    rts
         lda     tw_params::length
         cmp     #1
         bcs     @loop
-        jmp     HandleMetaLeftKeyF2
+        jmp     MoveIPStartF2
 :
         lda     tw_params::length
         cmp     buf_left
@@ -3022,20 +3031,28 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleDeleteKeyF2
-        lda     buf_input2_left
+        buf_left := buf_input2_left
+        buf_right := line_edit_res::buf_right
+
+        ;; Anything to delete?
+        lda     buf_left
         bne     :+
         rts
 :
         jsr     HideIPF2        ; Delete F2
 
         dec     buf_input2_left
+        point := $6
+        xcoord := $6
+        ycoord := $8
+
         jsr     CalcInput2IPPos
-        stax    $06
-        copy16  file_dialog_res::input2_textpos::ycoord, $08
+        stax    xcoord
+        copy16  file_dialog_res::input2_textpos::ycoord, ycoord
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        MGTK_CALL MGTK::MoveTo, $06
-        param_call DrawString, line_edit_res::buf_right
+        MGTK_CALL MGTK::MoveTo, point
+        param_call DrawString, buf_right
         param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIPF2
@@ -3050,6 +3067,7 @@ ret:    rts
         buf_left := buf_input2_left
         buf_right := line_edit_res::buf_right
 
+        ;; Anything to delete?
         lda     buf_left
         ora     buf_right
         beq     ret
@@ -3151,7 +3169,10 @@ ret:    rts
 
 .proc HandleMetaLeftKeyF2
         jsr     ObscureCursor
+        FALL_THROUGH_TO MoveIPStartF2
+.endproc
 
+.proc MoveIPStartF2
         buf_left = buf_input2_left
         buf_right = line_edit_res::buf_right
 
@@ -3197,6 +3218,10 @@ ret:    rts
 
 .proc HandleMetaRightKeyF2
         jsr     ObscureCursor
+        FALL_THROUGH_TO MoveIPEndF2
+.endproc
+
+.proc MoveIPEndF2
         jsr     HideIPF2        ; End F2
         jsr     MoveIPToEndF2
         jsr     ShowIPF2
@@ -3217,6 +3242,7 @@ BlinkIP                 := BlinkIPF1
 RedrawInput             := RedrawF1
 HandleSelectionChange   := ListSelectionChange
 PrepPath                := PrepPathF1
+MoveIPEnd               := MoveIPEndF1
 HandleOtherKey          := HandleOtherKeyF1
 HandleDeleteKey         := HandleDeleteKeyF1
 HandleClearKey          := HandleClearKeyF1
@@ -3256,6 +3282,11 @@ PrepPath:
         bit     focus_in_input2_flag
         jpl     PrepPathF1
         jmp     PrepPathF2
+
+MoveIPEnd:
+        bit     focus_in_input2_flag
+        jpl     MoveIPEndF1
+        jmp     MoveIPEndF2
 
 HandleOtherKey:
         bit     focus_in_input2_flag

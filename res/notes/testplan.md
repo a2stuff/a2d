@@ -700,10 +700,10 @@ Repeat for each field:
    * Should move IP to end of string.
    * Mouse cursor should be hidden until moved.
    * Test at start, in middle, and at end of the string.
- * Click to left of string.
- * Click to left of IP, within the string.
- * Click to right string.
- * Click to right of IP, within the string.
+ * Click to left of string. Verify the mouse cursor is not obscured.
+ * Click to left of IP, within the string. Verify the mouse cursor is not obscured.
+ * Click to right string. Verify the mouse cursor is not obscured.
+ * Click to right of IP, within the string. Verify the mouse cursor is not obscured.
  * Place IP within string, click OK.
  * Place IP at start of string, click OK.
  * Place IP at end of string, click OK.

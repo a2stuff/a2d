@@ -14016,11 +14016,15 @@ check_button_cancel:
 
         ;; Modifier key down.
         lda     event_params::key
+
+        bit     has_input_field_flag
+    IF_NS
         cmp     #CHAR_LEFT
         jeq     LeftWithMod
 
         cmp     #CHAR_RIGHT
         jeq     RightWithMod
+    END_IF
 
 done:   return  #$FF
 
@@ -14028,19 +14032,23 @@ done:   return  #$FF
 no_mods:
         lda     event_params::key
 
+        bit     has_input_field_flag
+    IF_NS
         cmp     #CHAR_LEFT
         bne     :+
         bit     format_erase_overlay_flag
         jmi     format_erase_overlay__PromptHandleKeyLeft
         jmp     HandleKeyLeft
-
-:       cmp     #CHAR_RIGHT
+:
+        cmp     #CHAR_RIGHT
         bne     :+
         bit     format_erase_overlay_flag
         jmi     format_erase_overlay__PromptHandleKeyRight
         jmp     HandleKeyRight
+:
+    END_IF
 
-:       cmp     #CHAR_RETURN
+        cmp     #CHAR_RETURN
         bne     :+
         bit     prompt_button_flags
         bvs     done
@@ -14140,35 +14148,23 @@ do_all: jsr     SetPenModeXOR
         return  #PromptResult::all
 
 .proc LeftWithMod
-        lda     has_input_field_flag
-        beq     :+
-        jsr     ObscureCursor
-        jsr     InputFieldIPStart
-:       return  #$FF
+        jsr     InputFieldMetaLeft
+        return  #$FF
 .endproc
 
 .proc RightWithMod
-        lda     has_input_field_flag
-        beq     :+
-        jsr     ObscureCursor
-        jsr     InputFieldIPEnd
-:       return  #$FF
+        jsr     InputFieldMetaRight
+        return  #$FF
 .endproc
 
 .proc HandleKeyLeft
-        lda     has_input_field_flag
-        beq     :+
-        jsr     ObscureCursor
-        jsr     InputFieldIPLeft
-:       return  #$FF
+        jsr     InputFieldLeftKey
+        return  #$FF
 .endproc
 
 .proc HandleKeyRight
-        lda     has_input_field_flag
-        beq     :+
-        jsr     ObscureCursor
-        jsr     InputFieldIPRight
-:       return  #$FF
+        jsr     InputFieldRightKey
+        return  #$FF
 .endproc
 
 .proc HandleKeyOk
@@ -15543,8 +15539,6 @@ done:   rts
 ;;; ============================================================
 
 .proc HandleClickInTextbox
-        ptr := $6
-
         click_coords := screentowindow_params::windowx
 
         ;; Mouse coords to window coords; is click inside name field?
@@ -15557,9 +15551,7 @@ done:   rts
 
         ;; Is click to the left or right of insertion point?
 :       jsr     MeasurePathBuf1
-
         width := $06
-
         stax    width
         cmp16   click_coords, width
         jcc     ToLeft
@@ -15712,13 +15704,16 @@ ip_pos: .word   0
 ;;; When a non-control key is hit - insert the passed character
 
 .proc InputFieldInsertChar
+        buf_left := path_buf1
+        buf_right := line_edit_res::buf_right
+
         jsr     ObscureCursor
         sta     char
 
         ;; Is there room?
-        lda     path_buf1
+        lda     buf_left
         clc
-        adc     line_edit_res::buf_right
+        adc     buf_right
         cmp     #kMaxFilenameLength
         bcs     ret
 
@@ -15727,9 +15722,9 @@ ip_pos: .word   0
         ;; Insert, and redraw single char and right string
         char := *+1
         lda     #SELF_MODIFIED_BYTE
-        ldx     path_buf1
+        ldx     buf_left
         inx
-        sta     path_buf1,x
+        sta     buf_left,x
         sta     line_edit_res::str_1_char+1
 
         ;; Redraw string to right of IP
@@ -15739,14 +15734,14 @@ ip_pos: .word   0
         ycoord := $8
 
         jsr     MeasurePathBuf1 ; measure before updating length
-        inc     path_buf1
+        inc     buf_left
 
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_CALL MGTK::MoveTo, point
         jsr     SetNameInputClipRect
         param_call DrawString, line_edit_res::str_1_char
-        param_call DrawString, line_edit_res::buf_right
+        param_call DrawString, buf_right
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 
@@ -15759,8 +15754,11 @@ ret:    rts
 ;;; When delete (backspace) is hit - shrink left buffer by one
 
 .proc InputFieldDeleteChar
+        buf_left := path_buf1
+        buf_right := line_edit_res::buf_right
+
         ;; Anything to delete?
-        lda     path_buf1
+        lda     buf_left
         beq     ret
 
         jsr     HidePromptIP    ; Delete
@@ -15770,13 +15768,13 @@ ret:    rts
         ycoord := $8
 
         ;; Decrease length of left string, measure and redraw right string
-        dec     path_buf1
+        dec     buf_left
         jsr     MeasurePathBuf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_CALL MGTK::MoveTo, point
         jsr     SetNameInputClipRect
-        param_call DrawString, line_edit_res::buf_right
+        param_call DrawString, buf_right
         jsr     Draw2SpacesString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
@@ -15816,7 +15814,9 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character left.
 
-.proc InputFieldIPLeft
+.proc InputFieldLeftKey
+        jsr     ObscureCursor
+
         buf_left := path_buf1
         buf_right := line_edit_res::buf_right
 
@@ -15851,7 +15851,9 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character right.
 
-.proc InputFieldIPRight
+.proc InputFieldRightKey
+        jsr     ObscureCursor
+
         buf_left := path_buf1
         buf_right := line_edit_res::buf_right
 
@@ -15890,6 +15892,11 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP to start of input field.
 
+.proc InputFieldMetaLeft
+        jsr     ObscureCursor
+        FALL_THROUGH_TO InputFieldIPStart
+.endproc
+
 .proc InputFieldIPStart
         buf_left := path_buf1
         buf_right := line_edit_res::buf_right
@@ -15901,6 +15908,7 @@ ret:    rts
         jsr     HidePromptIP    ; Home
 
         ;; Shift right string up N
+        lda     buf_left
         clc
         adc     buf_right
         tay
@@ -15932,6 +15940,11 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+
+.proc InputFieldMetaRight
+        jsr     ObscureCursor
+        FALL_THROUGH_TO InputFieldIPEnd
+.endproc
 
 .proc InputFieldIPEnd
         buf_left := path_buf1
