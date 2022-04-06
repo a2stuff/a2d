@@ -67,7 +67,7 @@ finish: jsr     file_dialog::ReadDir
         jsr     file_dialog::PrepPath
 :       copy    #0, line_edit_res::buf_right
         jsr     file_dialog::RedrawInput
-        jsr     file_dialog::RedrawF2
+        jsr     file_dialog::f2::Redraw
         copy    #0, line_edit_res::buf_right
         copy    #$FF, line_edit_res::blink_ip_flag
         copy    #0, line_edit_res::allow_all_chars_flag
@@ -202,8 +202,8 @@ jt_entry_name:
 ;;; ============================================================
 
 .proc HandleOkFilename
-        jsr     file_dialog::HideIPF1 ; Switch
-        jsr     file_dialog::MoveIPToEndF1
+        jsr     file_dialog::f1::HideIP ; Switch
+        jsr     file_dialog::f1::MoveIPToEnd
 
         ;; install name field handlers
         ldx     jt_entry_name
@@ -326,8 +326,8 @@ found:  cpy     #2
 ;;; ============================================================
 
 .proc HandleCancelName
-        jsr     file_dialog::HideIPF2 ; Switch
-        jsr     file_dialog::MoveIPToEndF2
+        jsr     file_dialog::f2::HideIP ; Switch
+        jsr     file_dialog::f2::MoveIPToEnd
 
         ;; install pathname field handlers
         ldx     jt_pathname
@@ -347,7 +347,7 @@ found:  cpy     #2
         lda     input1_dirty_flag
         sta     line_edit_res::input_dirty_flag
 
-        jsr     file_dialog::ShowIPF1
+        jsr     file_dialog::f1::ShowIP
         rts
 .endproc
 

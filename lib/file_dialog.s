@@ -2187,16 +2187,20 @@ no_change:
 ;;; Text Input Field 1
 ;;; ============================================================
 
-.proc BlinkIPF1
+.scope f1
+        buf_left := buf_input1_left
+        buf_right := line_edit_res::buf_right
+
+.proc BlinkIP
         ;; Toggle flag
         lda     line_edit_res::ip_flag
         eor     #$80
         sta     line_edit_res::ip_flag
 
-        FALL_THROUGH_TO XDrawIPF1
+        FALL_THROUGH_TO XDrawIP
 .endproc
 
-.proc XDrawIPF1
+.proc XDrawIP
         point := $6
         xcoord := $6
         ycoord := $8
@@ -2220,31 +2224,31 @@ no_change:
         rts
 .endproc
 
-.proc HideIPF1
+.proc HideIP
         bit     line_edit_res::ip_flag
-        bmi     XDrawIPF1
+        bmi     XDrawIP
         rts
 .endproc
-ShowIPF1 := HideIPF1
+ShowIP := HideIP
 
 ;;; ============================================================
 
-.proc RedrawF1
+.proc Redraw
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
 
         ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     HideIPF1        ; Redraw F1
+        ;; jsr     HideIP        ; Redraw
 
         MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_clear_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
-        param_call DrawString, buf_input1_left
-        param_call DrawString, line_edit_res::buf_right
+        param_call DrawString, buf_left
+        param_call DrawString, buf_right
         param_call DrawString, line_edit_res::str_2_spaces
 
-        jsr     ShowIPF1
+        jsr     ShowIP
 
         rts
 .endproc
@@ -2252,7 +2256,7 @@ ShowIPF1 := HideIPF1
 ;;; ============================================================
 ;;; A click when f1 has focus (click may be elsewhere)
 
-.proc HandleClickF1
+.proc HandleClick
         click_coords := screentowindow_params::windowx
 
         ;; Inside input1 ?
@@ -2273,7 +2277,7 @@ ShowIPF1 := HideIPF1
         bne     done
         jsr     HandleOk    ; move focus to input2
         ;; NOTE: Assumes screentowindow_params::window* has not been changed.
-        jmp     HandleF2Click__ep2
+        jmp     f2__HandleClick__ep2
 
 done:   rts
 
@@ -2292,9 +2296,6 @@ data    .addr
 length  .byte
 width   .word
         END_PARAM_BLOCK
-
-        buf_left := buf_input1_left
-        buf_right := line_edit_res::buf_right
 
         ;; --------------------------------------------------
         ;; Click is to the right of IP
@@ -2323,10 +2324,10 @@ ret:    rts
         beq     ret
         cmp     buf_right
         bcc     :+
-        jmp     MoveIPEndF1
+        jmp     MoveIPEnd
 :
         copy    tw_params::length, len
-        jsr     HideIPF1        ; Click Right F1
+        jsr     HideIP        ; Click Right
 
         ;; Append from `buf_right` into `buf_left`
         ldx     #1
@@ -2377,14 +2378,14 @@ ret:    rts
         lda     tw_params::length
         cmp     #1
         bcs     @loop
-        jmp     MoveIPStartF1
+        jmp     MoveIPStart
 :
         lda     tw_params::length
         cmp     buf_left
         bcs     ret
         sta     len
 
-        jsr     HideIPF1        ; Click Left F1
+        jsr     HideIP        ; Click Left
         inc     len
 
         ;; Shift everything in `buf_right` up to make room
@@ -2424,19 +2425,16 @@ ret:    rts
         FALL_THROUGH_TO finish
 .endproc
 
-finish: jsr     ShowIPF1
+finish: jsr     ShowIP
         rts
 
 ip_pos: .word   0
-.endproc ; HandleClickF1
+.endproc ; HandleClick
 
 ;;; ============================================================
 ;;; When a non-control key is hit - insert the passed character
 
-.proc HandleOtherKeyF1
-        buf_left := buf_input1_left
-        buf_right := line_edit_res::buf_right
-
+.proc HandleOtherKey
         jsr     ObscureCursor
         sta     char
 
@@ -2453,7 +2451,7 @@ ip_pos: .word   0
         cmp     #kMaxInputLength ; TODO: Off-by-one now that IP is gone?
         bcs     ret
 
-        jsr     HideIPF1        ; Insert F1
+        jsr     HideIP        ; Insert
 
         ;; Insert, and redraw single char and right string
         char := *+1
@@ -2480,8 +2478,8 @@ ip_pos: .word   0
         param_call DrawString, line_edit_res::str_1_char
         param_call DrawString, buf_right
 
-        jsr     ShowIPF1
-        jsr     UpdateDirtyFlagF1
+        jsr     ShowIP
+        jsr     NotifyTextChanged
 
 ret:    rts
 .endproc
@@ -2489,15 +2487,12 @@ ret:    rts
 ;;; ============================================================
 ;;; When delete (backspace) is hit - shrink left buffer by one
 
-.proc HandleDeleteKeyF1
-        buf_left := buf_input1_left
-        buf_right := line_edit_res::buf_right
-
+.proc HandleDeleteKey
         ;; Anything to delete?
         lda     buf_left
         beq     ret
 
-        jsr     HideIPF1        ; Delete F1
+        jsr     HideIP        ; Delete
 
         point := $6
         xcoord := $6
@@ -2514,24 +2509,21 @@ ret:    rts
         param_call DrawString, buf_right
         param_call DrawString, line_edit_res::str_2_spaces
 
-        jsr     ShowIPF1
-        jsr     UpdateDirtyFlagF1
+        jsr     ShowIP
+        jsr     NotifyTextChanged
 
 ret:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc HandleClearKeyF1
-        buf_left := buf_input1_left
-        buf_right := line_edit_res::buf_right
-
+.proc HandleClearKey
         ;; Anything to delete?
         lda     buf_left
         ora     buf_right
         beq     ret
 
-        jsr     HideIPF1        ; Clear F1
+        jsr     HideIP        ; Clear
 
         lda     #0
         sta     buf_left
@@ -2541,8 +2533,8 @@ ret:    rts
         jsr     SetPortForWindow
         MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_clear_rect
 
-        jsr     ShowIPF1
-        jsr     UpdateDirtyFlagF1
+        jsr     ShowIP
+        jsr     NotifyTextChanged
 
 ret:    rts
 .endproc
@@ -2550,17 +2542,14 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character left.
 
-.proc HandleLeftKeyF1
+.proc HandleLeftKey
         jsr     ObscureCursor
-
-        buf_left := buf_input1_left
-        buf_right := line_edit_res::buf_right
 
         ;; Any characters to left of IP?
         lda     buf_left
         beq     ret
 
-        jsr     HideIPF1        ; Left F1
+        jsr     HideIP        ; Left
 
         ;; Shift right up by a character if needed.
         ldx     buf_right
@@ -2579,7 +2568,7 @@ ret:    rts
         inc     buf_right
 
         ;; Finish up
-        jsr     ShowIPF1
+        jsr     ShowIP
 
 ret:    rts
 .endproc
@@ -2587,17 +2576,14 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character right.
 
-.proc HandleRightKeyF1
+.proc HandleRightKey
         jsr     ObscureCursor
-
-        buf_left := buf_input1_left
-        buf_right := line_edit_res::buf_right
 
         ;; Any characters to right of IP?
         lda     buf_right
         beq     ret
 
-        jsr     HideIPF1        ; Right F1
+        jsr     HideIP        ; Right
 
         ;; Copy first char from right to left and adjust left length.
         lda     buf_right+1
@@ -2620,7 +2606,7 @@ ret:    rts
         dec     buf_right
 
         ;; Finish up
-        jsr     ShowIPF1
+        jsr     ShowIP
 
 ret:    rts
 .endproc
@@ -2628,20 +2614,17 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP to start of input field.
 
-.proc HandleMetaLeftKeyF1
+.proc HandleMetaLeftKey
         jsr     ObscureCursor
-        FALL_THROUGH_TO MoveIPStartF1
+        FALL_THROUGH_TO MoveIPStart
 .endproc
 
-.proc MoveIPStartF1
-        buf_left := buf_input1_left
-        buf_right := line_edit_res::buf_right
-
+.proc MoveIPStart
         ;; Any characters to left of IP?
         lda     buf_left
         beq     ret
 
-        jsr     HideIPF1        ; Home F1
+        jsr     HideIP        ; Home
 
         ;; Shift right string up N
         lda     buf_left
@@ -2670,38 +2653,35 @@ move:   ldx     buf_left
         copy    #0, buf_left
 
         ;; Finish up
-        jsr     ShowIPF1
+        jsr     ShowIP
 
 ret:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc HandleMetaRightKeyF1
+.proc HandleMetaRightKey
         jsr     ObscureCursor
-        FALL_THROUGH_TO MoveIPEndF1
+        FALL_THROUGH_TO MoveIPEnd
 .endproc
 
-.proc MoveIPEndF1
-        jsr     HideIPF1        ; End F1
-        jsr     MoveIPToEndF1
-        jsr     ShowIPF1
+.proc MoveIPEnd
+        jsr     HideIP        ; End
+        jsr     MoveIPToEnd
+        jsr     ShowIP
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc PrepPathF1
-        COPY_STRING path_buf, buf_input1_left
+.proc PrepPath
+        COPY_STRING path_buf, buf_left
         jmp     ClearRight
 .endproc
 
 ;;; ============================================================
 
-.proc MoveIPToEndF1
-        buf_left := buf_input1_left
-        buf_right := line_edit_res::buf_right
-
+.proc MoveIPToEnd
         lda     buf_right
         beq     ret
 
@@ -2722,24 +2702,33 @@ ret:    rts
 ret:    rts
 .endproc
 
+NotifyTextChanged := NotifyTextChangedF1
+
+.endscope ; f1
+f1__PrepPath := f1::PrepPath
+
 ;;; ============================================================
 ;;; Text Input Field 2
 ;;; ============================================================
 
 .if FD_EXTENDED
+.scope f2
+
+        buf_left := buf_input2_left
+        buf_right := line_edit_res::buf_right
 
 ;;; ============================================================
 
-.proc BlinkIPF2
+.proc BlinkIP
         ;; Toggle flag
         lda     line_edit_res::ip_flag
         eor     #$80
         sta     line_edit_res::ip_flag
 
-        FALL_THROUGH_TO XDrawIPF2
+        FALL_THROUGH_TO XDrawIP
 .endproc
 
-.proc XDrawIPF2
+.proc XDrawIP
         point := $6
         xcoord := $6
         ycoord := $8
@@ -2762,31 +2751,31 @@ ret:    rts
         rts
 .endproc
 
-.proc HideIPF2
+.proc HideIP
         bit     line_edit_res::ip_flag
-        bmi     XDrawIPF2
+        bmi     XDrawIP
         rts
 .endproc
-ShowIPF2 := HideIPF2
+ShowIP := HideIP
 
 ;;; ============================================================
 
-.proc RedrawF2
+.proc Redraw
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
 
         ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     HideIPF2        ; Redraw F2
+        ;; jsr     HideIP        ; Redraw
 
         MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_clear_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
         param_call DrawString, buf_input2_left
-        param_call DrawString, line_edit_res::buf_right
+        param_call DrawString, buf_right
         param_call DrawString, line_edit_res::str_2_spaces
 
-        jsr     ShowIPF2
+        jsr     ShowIP
 
         rts
 .endproc
@@ -2794,7 +2783,7 @@ ShowIPF2 := HideIPF2
 ;;; ============================================================
 ;;; A click when f2 has focus (click may be elsewhere)
 
-.proc HandleClickF2
+.proc HandleClick
         click_coords := screentowindow_params::windowx
 
         ;; Inside input2 ?
@@ -2810,7 +2799,7 @@ ShowIPF2 := HideIPF2
         bne     done
         jsr     HandleCancel ; Move focus to input1
         ;; NOTE: Assumes screentowindow_params::window* has not been changed.
-        jmp     HandleClickF1::ep2
+        jmp     f1::HandleClick::ep2
 
 done:   rts
 
@@ -2828,9 +2817,6 @@ data    .addr
 length  .byte
 width   .word
         END_PARAM_BLOCK
-
-        buf_left := buf_input2_left
-        buf_right := line_edit_res::buf_right
 
         ;; --------------------------------------------------
         ;; Click is to the right of IP
@@ -2859,10 +2845,10 @@ ret:    rts
         beq     ret
         cmp     buf_right
         bcc     :+
-        jmp     MoveIPEndF2
+        jmp     MoveIPEnd
 :
         copy    tw_params::length, len
-        jsr     HideIPF2        ; Click Right F2
+        jsr     HideIP        ; Click Right
 
         ;; Append from `buf_right` into `buf_left`
         ldx     #1
@@ -2913,14 +2899,14 @@ ret:    rts
         lda     tw_params::length
         cmp     #1
         bcs     @loop
-        jmp     MoveIPStartF2
+        jmp     MoveIPStart
 :
         lda     tw_params::length
         cmp     buf_left
         bcs     ret
         sta     len
 
-        jsr     HideIPF2        ; Click Left F2
+        jsr     HideIP        ; Click Left
         inc     len
 
         ;; Shift everything in `buf_right` up to make room
@@ -2960,20 +2946,17 @@ ret:    rts
         FALL_THROUGH_TO finish
 .endproc
 
-finish: jsr     ShowIPF2
+finish: jsr     ShowIP
         rts
 
 ip_pos: .word   0
 .endproc
-HandleF2Click__ep2 := HandleClickF2::ep2
+HandleClick__ep2 := HandleClick::ep2
 
 ;;; ============================================================
 ;;; When a non-control key is hit - insert the passed character
 
-.proc HandleOtherKeyF2
-        buf_left := buf_input2_left
-        buf_right := line_edit_res::buf_right
-
+.proc HandleOtherKey
         jsr     ObscureCursor
         sta     char
 
@@ -2990,7 +2973,7 @@ HandleF2Click__ep2 := HandleClickF2::ep2
         cmp     #kMaxInputLength ; TODO: Off-by-one now that IP is gone?
         bcs     ret
 
-        jsr     HideIPF2        ; Insert F2
+        jsr     HideIP        ; Insert
 
         ;; Insert, and redraw single char and right string
         char := *+1
@@ -3017,8 +3000,8 @@ HandleF2Click__ep2 := HandleClickF2::ep2
         param_call DrawString, line_edit_res::str_1_char
         param_call DrawString, buf_right
 
-        jsr     ShowIPF2
-        jsr     UpdateDirtyFlagF2
+        jsr     ShowIP
+        jsr     NotifyTextChanged
 
 ret:    rts
 .endproc
@@ -3026,16 +3009,13 @@ ret:    rts
 ;;; ============================================================
 ;;; When delete (backspace) is hit - shrink left buffer by one
 
-.proc HandleDeleteKeyF2
-        buf_left := buf_input2_left
-        buf_right := line_edit_res::buf_right
-
+.proc HandleDeleteKey
         ;; Anything to delete?
         lda     buf_left
         bne     :+
         rts
 :
-        jsr     HideIPF2        ; Delete F2
+        jsr     HideIP        ; Delete
 
         dec     buf_input2_left
         point := $6
@@ -3051,24 +3031,21 @@ ret:    rts
         param_call DrawString, buf_right
         param_call DrawString, line_edit_res::str_2_spaces
 
-        jsr     ShowIPF2
-        jsr     UpdateDirtyFlagF2
+        jsr     ShowIP
+        jsr     NotifyTextChanged
 
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc HandleClearKeyF2
-        buf_left := buf_input2_left
-        buf_right := line_edit_res::buf_right
-
+.proc HandleClearKey
         ;; Anything to delete?
         lda     buf_left
         ora     buf_right
         beq     ret
 
-        jsr     HideIPF2        ; Clear F2
+        jsr     HideIP        ; Clear
 
         lda     #0
         sta     buf_left
@@ -3078,8 +3055,8 @@ ret:    rts
         jsr     SetPortForWindow
         MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_clear_rect
 
-        jsr     ShowIPF2
-        jsr     UpdateDirtyFlagF2
+        jsr     ShowIP
+        jsr     NotifyTextChanged
 
 ret:    rts
 .endproc
@@ -3087,17 +3064,14 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character left.
 
-.proc HandleLeftKeyF2
+.proc HandleLeftKey
         jsr     ObscureCursor
-
-        buf_left := buf_input2_left
-        buf_right := line_edit_res::buf_right
 
         ;; Any characters to left of IP?
         lda     buf_left
         beq     ret
 
-        jsr     HideIPF2        ; Left F2
+        jsr     HideIP        ; Left
 
         ;; Shift right up by a character if needed.
         ldx     buf_right
@@ -3116,24 +3090,21 @@ ret:    rts
         inc     buf_right
 
         ;; Finish up
-        jsr     ShowIPF2
+        jsr     ShowIP
 
 ret:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc HandleRightKeyF2
+.proc HandleRightKey
         jsr     ObscureCursor
-
-        buf_left := buf_input2_left
-        buf_right := line_edit_res::buf_right
 
         ;; Any characters to right of IP?
         lda     buf_right
         beq     ret
 
-        jsr     HideIPF2        ; Right F2
+        jsr     HideIP        ; Right
 
         ;; Copy first char from right to left and adjust left length.
         lda     buf_right+1
@@ -3156,19 +3127,19 @@ ret:    rts
         dec     buf_right
 
         ;; Finish up
-        jsr     ShowIPF2
+        jsr     ShowIP
 
 ret:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc HandleMetaLeftKeyF2
+.proc HandleMetaLeftKey
         jsr     ObscureCursor
-        FALL_THROUGH_TO MoveIPStartF2
+        FALL_THROUGH_TO MoveIPStart
 .endproc
 
-.proc MoveIPStartF2
+.proc MoveIPStart
         buf_left = buf_input2_left
         buf_right = line_edit_res::buf_right
 
@@ -3176,7 +3147,7 @@ ret:    rts
         lda     buf_left
         beq     ret
 
-        jsr     HideIPF2        ; Home F2
+        jsr     HideIP        ; Home
 
         ;; Shift right string up N
         lda     buf_left
@@ -3205,26 +3176,34 @@ move:   ldx     buf_left
         copy    #0, buf_left
 
         ;; Finish up
-        jsr     ShowIPF2
+        jsr     ShowIP
 
 ret:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc HandleMetaRightKeyF2
+.proc HandleMetaRightKey
         jsr     ObscureCursor
-        FALL_THROUGH_TO MoveIPEndF2
+        FALL_THROUGH_TO MoveIPEnd
 .endproc
 
-.proc MoveIPEndF2
-        jsr     HideIPF2        ; End F2
-        jsr     MoveIPToEndF2
-        jsr     ShowIPF2
+.proc MoveIPEnd
+        jsr     HideIP        ; End
+        jsr     MoveIPToEnd
+        jsr     ShowIP
         rts
 .endproc
 
 ;;; ============================================================
+
+;;; TODO: Move those procs in here!
+PrepPath := PrepPathF2
+MoveIPToEnd := MoveIPToEndF2
+
+.endscope ; f2
+
+f2__HandleClick__ep2 := f2::HandleClick::ep2
 
 .endif ; FD_EXTENDED
 
@@ -3234,19 +3213,19 @@ ret:    rts
 
 ;;; Alias table - replaces jump table in hookable version
 
-BlinkIP                 := BlinkIPF1
-RedrawInput             := RedrawF1
+BlinkIP                 := f1::BlinkIP
+RedrawInput             := f1::Redraw
 HandleSelectionChange   := ListSelectionChange
-PrepPath                := PrepPathF1
-MoveIPEnd               := MoveIPEndF1
-HandleOtherKey          := HandleOtherKeyF1
-HandleDeleteKey         := HandleDeleteKeyF1
-HandleClearKey          := HandleClearKeyF1
-HandleLeftKey           := HandleLeftKeyF1
-HandleRightKey          := HandleRightKeyF1
-HandleMetaLeftKey       := HandleMetaLeftKeyF1
-HandleMetaRightKey      := HandleMetaRightKeyF1
-HandleClick             := HandleClickF1
+PrepPath                := f1::PrepPath
+MoveIPEnd               := f1::MoveIPEnd
+HandleOtherKey          := f1::HandleOtherKey
+HandleDeleteKey         := f1::HandleDeleteKey
+HandleClearKey          := f1::HandleClearKey
+HandleLeftKey           := f1::HandleLeftKey
+HandleRightKey          := f1::HandleRightKey
+HandleMetaLeftKey       := f1::HandleMetaLeftKey
+HandleMetaRightKey      := f1::HandleMetaRightKey
+HandleClick             := f1::HandleClick
 
 .else
 
@@ -3261,13 +3240,13 @@ HandleCancel:         jmp     0
 
 BlinkIP:
         bit     focus_in_input2_flag
-        jpl     BlinkIPF1
-        jmp     BlinkIPF2
+        jpl     f1::BlinkIP
+        jmp     f2::BlinkIP
 
 RedrawInput:
         bit     focus_in_input2_flag
-        jpl     RedrawF1
-        jmp     RedrawF2
+        jpl     f1::Redraw
+        jmp     f2::Redraw
 
 HandleSelectionChange:
         bit     focus_in_input2_flag
@@ -3276,53 +3255,53 @@ HandleSelectionChange:
 
 PrepPath:
         bit     focus_in_input2_flag
-        jpl     PrepPathF1
-        jmp     PrepPathF2
+        jpl     f1::PrepPath
+        jmp     f2::PrepPath
 
 MoveIPEnd:
         bit     focus_in_input2_flag
-        jpl     MoveIPEndF1
-        jmp     MoveIPEndF2
+        jpl     f1::MoveIPEnd
+        jmp     f2::MoveIPEnd
 
 HandleOtherKey:
         bit     focus_in_input2_flag
-        jpl     HandleOtherKeyF1
-        jmp     HandleOtherKeyF2
+        jpl     f1::HandleOtherKey
+        jmp     f2::HandleOtherKey
 
 HandleDeleteKey:
         bit     focus_in_input2_flag
-        jpl     HandleDeleteKeyF1
-        jmp     HandleDeleteKeyF2
+        jpl     f1::HandleDeleteKey
+        jmp     f2::HandleDeleteKey
 
 HandleClearKey:
         bit     focus_in_input2_flag
-        jpl     HandleClearKeyF1
-        jmp     HandleClearKeyF2
+        jpl     f1::HandleClearKey
+        jmp     f2::HandleClearKey
 
 HandleLeftKey:
         bit     focus_in_input2_flag
-        jpl     HandleLeftKeyF1
-        jmp     HandleLeftKeyF2
+        jpl     f1::HandleLeftKey
+        jmp     f2::HandleLeftKey
 
 HandleRightKey:
         bit     focus_in_input2_flag
-        jpl     HandleRightKeyF1
-        jmp     HandleRightKeyF2
+        jpl     f1::HandleRightKey
+        jmp     f2::HandleRightKey
 
 HandleMetaLeftKey:
         bit     focus_in_input2_flag
-        jpl     HandleMetaLeftKeyF1
-        jmp     HandleMetaLeftKeyF2
+        jpl     f1::HandleMetaLeftKey
+        jmp     f2::HandleMetaLeftKey
 
 HandleMetaRightKey:
         bit     focus_in_input2_flag
-        jpl     HandleMetaRightKeyF1
-        jmp     HandleMetaRightKeyF2
+        jpl     f1::HandleMetaRightKey
+        jmp     f2::HandleMetaRightKey
 
 HandleClick:
         bit     focus_in_input2_flag
-        jpl     HandleClickF1
-        jmp     HandleClickF2
+        jpl     f1::HandleClick
+        jmp     f2::HandleClick
 
 .endif
 
@@ -3415,13 +3394,13 @@ HandleSelectionChangeF2:
 
         ;; Reset path to current dir path
 .if !FD_EXTENDED
-        jsr     PrepPathF1
+        jsr     f1::PrepPath
 .else
         bit     flag
     IF_NC
-        jsr     PrepPathF1
+        jsr     f1::PrepPath
     ELSE
-        jsr     PrepPathF2
+        jsr     f2::PrepPath
     END_IF
 .endif
         ;; Find name of selected item
@@ -3586,12 +3565,12 @@ ret:    rts
 
 .if !FD_EXTENDED
 
-.proc UpdateDirtyFlagF1
+.proc NotifyTextChangedF1
         COPY_STRING buf_input1_left, buf_text
 
 .else
 
-.proc UpdateDirtyFlag
+.proc NotifyTextChanged
 
 f2:     lda     #$FF
         bmi     :+
@@ -3656,8 +3635,8 @@ current_selection:
         .byte   0
 .endproc
 .if FD_EXTENDED
-UpdateDirtyFlagF1 := UpdateDirtyFlag::f1
-UpdateDirtyFlagF2 := UpdateDirtyFlag::f2
+NotifyTextChangedF1 := NotifyTextChanged::f1
+NotifyTextChangedF2 := NotifyTextChanged::f2
 .endif
 
 ;;; ============================================================
