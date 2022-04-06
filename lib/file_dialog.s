@@ -2233,6 +2233,7 @@ ShowIPF1 := HideIPF1
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
 
+        ;; Unnecessary - the entire field will be repainted.
         ;; jsr     HideIPF1        ; Redraw F1
 
         MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_clear_rect
@@ -2253,11 +2254,6 @@ ShowIPF1 := HideIPF1
 
 .proc HandleClickF1
         click_coords := screentowindow_params::windowx
-
-        lda     file_dialog_res::winfo::window_id
-        sta     screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, click_coords
 
         ;; Inside input1 ?
         MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
@@ -2435,6 +2431,7 @@ ip_pos: .word   0
 .endproc ; HandleClickF1
 
 ;;; ============================================================
+;;; When a non-control key is hit - insert the passed character
 
 .proc HandleOtherKeyF1
         buf_left := buf_input1_left
@@ -2490,6 +2487,7 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; When delete (backspace) is hit - shrink left buffer by one
 
 .proc HandleDeleteKeyF1
         buf_left := buf_input1_left
@@ -2550,6 +2548,7 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Move IP one character left.
 
 .proc HandleLeftKeyF1
         jsr     ObscureCursor
@@ -2776,6 +2775,7 @@ ShowIPF2 := HideIPF2
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
 
+        ;; Unnecessary - the entire field will be repainted.
         ;; jsr     HideIPF2        ; Redraw F2
 
         MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_clear_rect
@@ -2796,12 +2796,6 @@ ShowIPF2 := HideIPF2
 
 .proc HandleClickF2
         click_coords := screentowindow_params::windowx
-
-        ;; Was click inside text box?
-        lda     file_dialog_res::winfo::window_id
-        sta     screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, click_coords
 
         ;; Inside input2 ?
         MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
@@ -2974,6 +2968,7 @@ ip_pos: .word   0
 HandleF2Click__ep2 := HandleClickF2::ep2
 
 ;;; ============================================================
+;;; When a non-control key is hit - insert the passed character
 
 .proc HandleOtherKeyF2
         buf_left := buf_input2_left
@@ -3029,6 +3024,7 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; When delete (backspace) is hit - shrink left buffer by one
 
 .proc HandleDeleteKeyF2
         buf_left := buf_input2_left

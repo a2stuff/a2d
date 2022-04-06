@@ -15470,7 +15470,8 @@ done:   rts
         xcoord := $6
         ycoord := $8
 
-        jsr     SetNameInputClipRect
+        lda     #winfo_prompt_dialog::kWindowId
+        jsr     SafeSetPortFromWindowId
 
         ;; TODO: Do this with a 1px rect instead of a line
         jsr     MeasurePathBuf1
@@ -15483,9 +15484,8 @@ done:   rts
         copy16  #0, xcoord
         copy16  #AS_WORD(-kSystemFontHeight), ycoord
         MGTK_CALL MGTK::Line, point
+        jsr     SetPenModeCopy
 
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
         rts
 .endproc
 
@@ -15499,20 +15499,19 @@ ShowPromptIP := HidePromptIP
 ;;; ============================================================
 
 .proc DrawFilenamePrompt
+        lda     #winfo_prompt_dialog::kWindowId
+        jsr     SafeSetPortFromWindowId
+
         ;; Unnecessary - the entire field will be repainted.
         ;; jsr     HidePromptIP    ; Redraw
 
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
         jsr     FrameNameInputRect
-        jsr     SetNameInputClipRect
         jsr     ClearNameInputRect
+
         MGTK_CALL MGTK::MoveTo, name_input_textpos
         param_call DrawString, path_buf1
         param_call DrawString, line_edit_res::buf_right
         jsr     Draw2SpacesString
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
 
         jsr     ShowPromptIP
 
@@ -15527,12 +15526,7 @@ done:   rts
 
 .proc ClearNameInputRect
         jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, name_input_rect
-        rts
-.endproc
-
-.proc SetNameInputClipRect
-        MGTK_CALL MGTK::SetPortBits, name_input_mapinfo
+        MGTK_CALL MGTK::PaintRect, name_input_erase_rect
         rts
 .endproc
 
@@ -15541,9 +15535,7 @@ done:   rts
 .proc HandleClickInTextbox
         click_coords := screentowindow_params::windowx
 
-        ;; Mouse coords to window coords; is click inside name field?
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, click_coords
+        ;; Was click inside text box?
         MGTK_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         beq     :+
@@ -15738,14 +15730,14 @@ ip_pos: .word   0
 
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
-        MGTK_CALL MGTK::MoveTo, point
-        jsr     SetNameInputClipRect
-        param_call DrawString, line_edit_res::str_1_char
-        param_call DrawString, buf_right
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
+        MGTK_CALL MGTK::MoveTo, point
+        param_call DrawString, line_edit_res::str_1_char
+        param_call DrawString, buf_right
 
         jsr     ShowPromptIP
+
 
 ret:    rts
 .endproc
@@ -15772,14 +15764,14 @@ ret:    rts
         jsr     MeasurePathBuf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
-        MGTK_CALL MGTK::MoveTo, point
-        jsr     SetNameInputClipRect
-        param_call DrawString, buf_right
-        jsr     Draw2SpacesString
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
+        MGTK_CALL MGTK::MoveTo, point
+        param_call DrawString, buf_right
+        jsr     Draw2SpacesString
 
         jsr     ShowPromptIP
+
 
 ret:    rts
 .endproc
@@ -15801,12 +15793,12 @@ ret:    rts
         sta     buf_left
         sta     buf_right
 
-        jsr     SetNameInputClipRect
-        jsr     ClearNameInputRect
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
+        jsr     ClearNameInputRect
 
         jsr     ShowPromptIP
+
 
 ret:    rts
 .endproc
