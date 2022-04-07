@@ -13877,7 +13877,7 @@ dialog_param_addr:
         lda     line_edit_res::ip_counter
         ora     line_edit_res::ip_counter+1
         bne     :+
-        jsr     TogglePromptIP
+        jsr     line_edit__TogglePromptIP
         copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
 
         ;; Dispatch event types - mouse down, key press
@@ -14004,8 +14004,12 @@ check_button_cancel:
         jmp     jump_relay
     END_IF
 
-        jsr     HandleClickInTextbox
-        return  #$FF
+        ;; Was click inside text box?
+        MGTK_CALL MGTK::InRect, name_input_rect
+        cmp     #MGTK::inrect_inside
+        bne     :+
+        jsr     line_edit__HandleClick
+:       return  #$FF
 .endproc
 
 ;;; Key handler for prompt dialog
@@ -14132,7 +14136,7 @@ LA7D8:  ldx     path_buf1
         beq     fail
 LA7DD:  ldx     has_input_field_flag
         beq     fail
-        jsr     InputFieldInsertChar
+        jsr     line_edit__HandleOtherKey
 fail:   return  #$FF
 
 do_yes: jsr     SetPenModeXOR
@@ -14148,22 +14152,22 @@ do_all: jsr     SetPenModeXOR
         return  #PromptResult::all
 
 .proc LeftWithMod
-        jsr     InputFieldMetaLeft
+        jsr     line_edit__HandleMetaLeftKey
         return  #$FF
 .endproc
 
 .proc RightWithMod
-        jsr     InputFieldMetaRight
+        jsr     line_edit__HandleMetaRightKey
         return  #$FF
 .endproc
 
 .proc HandleKeyLeft
-        jsr     InputFieldLeftKey
+        jsr     line_edit__HandleLeftKey
         return  #$FF
 .endproc
 
 .proc HandleKeyRight
-        jsr     InputFieldRightKey
+        jsr     line_edit__HandleRightKey
         return  #$FF
 .endproc
 
@@ -14189,7 +14193,7 @@ do_all: jsr     SetPenModeXOR
         lda     has_input_field_flag
         beq     :+
         jsr     ObscureCursor
-        jsr     InputFieldDeleteChar
+        jsr     line_edit__HandleDeleteKey
 :       return  #$FF
 .endproc
 
@@ -14197,7 +14201,7 @@ do_all: jsr     SetPenModeXOR
         lda     has_input_field_flag
         beq     :+
         jsr     ObscureCursor
-        jsr     InputFieldClear
+        jsr     line_edit__HandleClearKey
 :       return  #$FF
 .endproc
 
@@ -14633,7 +14637,7 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_new_folder
-        jsr     FrameNameInputRect
+        jsr     line_edit__FrameNameInputRect
         rts
 
         ;; --------------------------------------------------
@@ -14650,18 +14654,18 @@ do_run: copy    #$80, has_input_field_flag
         param_call DrawDialogLabel, 2, aux::str_in
         jsr     DrawDialogPathBuf0
         param_call DrawDialogLabel, 4, aux::str_enter_folder_name
-        jsr     DrawFilenamePrompt
+        jsr     line_edit__DrawFilenamePrompt
 LAEC6:  jsr     PromptInputLoop
         bmi     LAEC6
         bne     do_close
-        jsr     InputFieldIPEnd
+        jsr     line_edit__MoveIPEnd
         lda     path_buf1
         beq     LAEC6
         cmp     #kMaxFilenameLength+1
         bcc     LAEE1
 LAED6:  lda     #kErrNameTooLong
         jsr     ShowAlert
-        jsr     DrawFilenamePrompt
+        jsr     line_edit__DrawFilenamePrompt
         jmp     LAEC6
 
 LAEE1:  lda     path_buf0
@@ -14917,7 +14921,7 @@ UnlockDialogProc := LockDialogProc
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_rename_icon
-        jsr     FrameNameInputRect
+        jsr     line_edit__FrameNameInputRect
         jsr     CopyDialogParamAddrToPtr
         ldy     #rename_dialog_params::a_path - rename_dialog_params
         copy16in ($06),y, $08
@@ -14938,7 +14942,7 @@ UnlockDialogProc := LockDialogProc
         param_call DrawDialogLabel, 2, aux::str_rename_old
         param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_rename_new
-        jsr     DrawFilenamePrompt
+        jsr     line_edit__DrawFilenamePrompt
         rts
 
         ;; --------------------------------------------------
@@ -14953,7 +14957,7 @@ do_run:
 
         bne     do_close        ; canceled!
 
-        jsr     InputFieldIPEnd ; collapse name
+        jsr     line_edit__MoveIPEnd ; collapse name
 
         lda     path_buf1
         beq     :-              ; name is empty, retry
@@ -14995,7 +14999,7 @@ do_close:
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_duplicate_icon
-        jsr     FrameNameInputRect
+        jsr     line_edit__FrameNameInputRect
         jsr     CopyDialogParamAddrToPtr
         ldy     #duplicate_dialog_params::a_path - duplicate_dialog_params
         copy16in ($06),y, $08
@@ -15016,7 +15020,7 @@ do_close:
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
         param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_rename_new
-        jsr     DrawFilenamePrompt
+        jsr     line_edit__DrawFilenamePrompt
         rts
 
         ;; --------------------------------------------------
@@ -15031,7 +15035,7 @@ do_run:
 
         bne     do_close        ; canceled!
 
-        jsr     InputFieldIPEnd ; collapse name
+        jsr     line_edit__MoveIPEnd ; collapse name
 
         lda     path_buf1
         beq     :-              ; name is empty, retry
@@ -15457,6 +15461,14 @@ done:   rts
 
 ;;; ============================================================
 
+.scope line_edit
+        buf_left := path_buf1
+        buf_right := line_edit_res::buf_right
+        textpos := name_input_textpos
+        textpos_xcoord := name_input_textpos::xcoord
+        textpos_ycoord := name_input_textpos::ycoord
+
+
 .proc TogglePromptIP
         ;; Toggle flag
         lda     line_edit_res::ip_flag
@@ -15474,7 +15486,7 @@ done:   rts
         jsr     SafeSetPortFromWindowId
 
         ;; TODO: Do this with a 1px rect instead of a line
-        jsr     MeasurePathBuf1
+        jsr     CalcIPPos
         stax    xcoord
         dec16   xcoord
         copy16  name_input_textpos::ycoord, ycoord
@@ -15489,12 +15501,12 @@ done:   rts
         rts
 .endproc
 
-.proc HidePromptIP
+.proc HideIP
         bit     line_edit_res::ip_flag
         bmi     XDrawPromptIP
         rts
 .endproc
-ShowPromptIP := HidePromptIP
+ShowIP := HideIP
 
 ;;; ============================================================
 
@@ -15503,7 +15515,7 @@ ShowPromptIP := HidePromptIP
         jsr     SafeSetPortFromWindowId
 
         ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     HidePromptIP    ; Redraw
+        ;; jsr     HideIP    ; Redraw
 
         jsr     FrameNameInputRect
         jsr     ClearNameInputRect
@@ -15513,7 +15525,7 @@ ShowPromptIP := HidePromptIP
         param_call DrawString, line_edit_res::buf_right
         jsr     Draw2SpacesString
 
-        jsr     ShowPromptIP
+        jsr     ShowIP
 
 done:   rts
 .endproc
@@ -15532,17 +15544,11 @@ done:   rts
 
 ;;; ============================================================
 
-.proc HandleClickInTextbox
+.proc HandleClick
         click_coords := screentowindow_params::windowx
 
-        ;; Was click inside text box?
-        MGTK_CALL MGTK::InRect, name_input_rect
-        cmp     #MGTK::inrect_inside
-        beq     :+
-        rts
-
-        ;; Is click to the left or right of insertion point?
-:       jsr     MeasurePathBuf1
+        ;; Is click to left or right of insertion point?
+        jsr     CalcIPPos
         width := $06
         stax    width
         cmp16   click_coords, width
@@ -15555,9 +15561,6 @@ length  .byte
 width   .word
         END_PARAM_BLOCK
 
-        buf_left := path_buf1
-        buf_right := line_edit_res::buf_right
-
         ;; --------------------------------------------------
         ;; Click is to the right of IP
 
@@ -15565,7 +15568,7 @@ width   .word
         lda     buf_right
         beq     ret
 
-        jsr     MeasurePathBuf1
+        jsr     CalcIPPos
         stax    ip_pos
 
         ;; Iterate to find the position
@@ -15585,10 +15588,10 @@ ret:    rts
         beq     ret
         cmp     buf_right
         bcc     :+
-        jmp     InputFieldIPEnd
+        jmp     MoveIPEnd
 :
         copy    tw_params::length, len
-        jsr     HidePromptIP    ; Click Right
+        jsr     HideIP    ; Click Right
 
         ;; Append from `buf_right` into `buf_left`
         ldx     #1
@@ -15632,21 +15635,21 @@ ret:    rts
         copy16  #buf_left, tw_params::data
         copy    buf_left, tw_params::length
 @loop:  MGTK_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, name_input_textpos::xcoord, tw_params::width
+        add16   tw_params::width, textpos_xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
         dec     tw_params::length
         lda     tw_params::length
         cmp     #1
         bcs     @loop
-        jmp     InputFieldIPStart
+        jmp     MoveIPStart
 :
         lda     tw_params::length
         cmp     buf_left
         bcs     ret
         sta     len
 
-        jsr     HidePromptIP    ; Click Left
+        jsr     HideIP    ; Click Left
         inc     len
 
         ;; Shift everything in `buf_right` up to make room
@@ -15686,7 +15689,7 @@ ret:    rts
         FALL_THROUGH_TO finish
 .endproc
 
-finish: jsr     ShowPromptIP
+finish: jsr     ShowIP
         rts
 
 ip_pos: .word   0
@@ -15695,10 +15698,7 @@ ip_pos: .word   0
 ;;; ============================================================
 ;;; When a non-control key is hit - insert the passed character
 
-.proc InputFieldInsertChar
-        buf_left := path_buf1
-        buf_right := line_edit_res::buf_right
-
+.proc HandleOtherKey
         jsr     ObscureCursor
         sta     char
 
@@ -15709,7 +15709,7 @@ ip_pos: .word   0
         cmp     #kMaxFilenameLength
         bcs     ret
 
-        jsr     HidePromptIP    ; Insert
+        jsr     HideIP    ; Insert
 
         ;; Insert, and redraw single char and right string
         char := *+1
@@ -15725,18 +15725,18 @@ ip_pos: .word   0
         xcoord := $6
         ycoord := $8
 
-        jsr     MeasurePathBuf1 ; measure before updating length
+        jsr     CalcIPPos ; measure before updating length
         inc     buf_left
 
         stax    xcoord
-        copy16  name_input_textpos::ycoord, ycoord
+        copy16  textpos_ycoord, ycoord
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         MGTK_CALL MGTK::MoveTo, point
         param_call DrawString, line_edit_res::str_1_char
         param_call DrawString, buf_right
 
-        jsr     ShowPromptIP
+        jsr     ShowIP
 
 
 ret:    rts
@@ -15745,15 +15745,12 @@ ret:    rts
 ;;; ============================================================
 ;;; When delete (backspace) is hit - shrink left buffer by one
 
-.proc InputFieldDeleteChar
-        buf_left := path_buf1
-        buf_right := line_edit_res::buf_right
-
+.proc HandleDeleteKey
         ;; Anything to delete?
         lda     buf_left
         beq     ret
 
-        jsr     HidePromptIP    ; Delete
+        jsr     HideIP    ; Delete
 
         point := $6
         xcoord := $6
@@ -15761,16 +15758,16 @@ ret:    rts
 
         ;; Decrease length of left string, measure and redraw right string
         dec     buf_left
-        jsr     MeasurePathBuf1
+        jsr     CalcIPPos
         stax    xcoord
-        copy16  name_input_textpos::ycoord, ycoord
+        copy16  textpos_ycoord, ycoord
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         MGTK_CALL MGTK::MoveTo, point
         param_call DrawString, buf_right
         jsr     Draw2SpacesString
 
-        jsr     ShowPromptIP
+        jsr     ShowIP
 
 
 ret:    rts
@@ -15778,16 +15775,13 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc InputFieldClear
-        buf_left := path_buf1
-        buf_right := line_edit_res::buf_right
-
+.proc HandleClearKey
         ;; Anything to delete?
         lda     buf_left
         ora     buf_right
         beq     ret
 
-        jsr     HidePromptIP    ; Clear
+        jsr     HideIP    ; Clear
 
         lda     #0
         sta     buf_left
@@ -15797,7 +15791,7 @@ ret:    rts
         jsr     SafeSetPortFromWindowId
         jsr     ClearNameInputRect
 
-        jsr     ShowPromptIP
+        jsr     ShowIP
 
 
 ret:    rts
@@ -15806,17 +15800,14 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character left.
 
-.proc InputFieldLeftKey
+.proc HandleLeftKey
         jsr     ObscureCursor
-
-        buf_left := path_buf1
-        buf_right := line_edit_res::buf_right
 
         ;; Any characters to left of IP?
         lda     buf_left
         beq     ret
 
-        jsr     HidePromptIP    ; Left
+        jsr     HideIP    ; Left
 
         ;; Shift right up by a character if needed.
         ldx     buf_right
@@ -15835,7 +15826,7 @@ ret:    rts
         inc     buf_right
 
         ;; Finish up
-        jsr     ShowPromptIP
+        jsr     ShowIP
 
 ret:    rts
 .endproc
@@ -15843,17 +15834,14 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character right.
 
-.proc InputFieldRightKey
+.proc HandleRightKey
         jsr     ObscureCursor
-
-        buf_left := path_buf1
-        buf_right := line_edit_res::buf_right
 
         ;; Any characters to right of IP?
         lda     buf_right
         beq     ret
 
-        jsr     HidePromptIP    ; Right
+        jsr     HideIP    ; Right
 
         ;; Copy first char from right to left and adjust left length.
         lda     buf_right+1
@@ -15876,7 +15864,7 @@ ret:    rts
         dec     buf_right
 
         ;; Finish up
-        jsr     ShowPromptIP
+        jsr     ShowIP
 
 ret:    rts
 .endproc
@@ -15884,20 +15872,17 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP to start of input field.
 
-.proc InputFieldMetaLeft
+.proc HandleMetaLeftKey
         jsr     ObscureCursor
-        FALL_THROUGH_TO InputFieldIPStart
+        FALL_THROUGH_TO MoveIPStart
 .endproc
 
-.proc InputFieldIPStart
-        buf_left := path_buf1
-        buf_right := line_edit_res::buf_right
-
+.proc MoveIPStart
         ;; Any characters to left of IP?
         lda     buf_left
         beq     ret
 
-        jsr     HidePromptIP    ; Home
+        jsr     HideIP    ; Home
 
         ;; Shift right string up N
         lda     buf_left
@@ -15926,26 +15911,23 @@ move:   ldx     buf_left
         copy    #0, buf_left
 
         ;; Finish up
-        jsr     ShowPromptIP
+        jsr     ShowIP
 
 ret:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc InputFieldMetaRight
+.proc HandleMetaRightKey
         jsr     ObscureCursor
-        FALL_THROUGH_TO InputFieldIPEnd
+        FALL_THROUGH_TO MoveIPEnd
 .endproc
 
-.proc InputFieldIPEnd
-        buf_left := path_buf1
-        buf_right := line_edit_res::buf_right
-
+.proc MoveIPEnd
         lda     buf_right
         beq     ret
 
-        jsr     HidePromptIP    ; End
+        jsr     HideIP    ; End
 
         ;; Append right string to left
         ldx     #0
@@ -15961,38 +15943,53 @@ ret:    rts
         ;; Clear right string
         copy    #0, buf_right
 
-        jsr     ShowPromptIP
+        jsr     ShowIP
 
 ret:    rts
 .endproc
 
 ;;; ============================================================
-;;; Compute width of `path_buf1`, offset `name_input_textpos`, return x coord in (A,X)
+;;; Output: A,X = X coordinate of insertion point
 
-.proc MeasurePathBuf1
-        textwidth_params  := $6
-        textptr := $6
-        textlen := $8
-        result  := $9
+.proc CalcIPPos
+        PARAM_BLOCK params, $06
+data    .addr
+length  .byte
+width   .word
+        END_PARAM_BLOCK
 
-        copy16  #path_buf1+1, textptr
-        lda     path_buf1
-        sta     textlen
-        bne     :+
-        ldax    name_input_textpos::xcoord
-        rts
+        copy16  #0, params::width
+        lda     buf_left
+        beq     :+
 
-:       MGTK_CALL MGTK::TextWidth, textwidth_params
-        lda     result
+        sta     params::length
+        copy16  #buf_left+1, params::data
+        MGTK_CALL MGTK::TextWidth, params
+
+:       lda     params::width
         clc
-        adc     name_input_textpos::xcoord
+        adc     textpos_xcoord
         tay
-        lda     result+1
-        adc     name_input_textpos::xcoord+1
+        lda     params::width+1
+        adc     textpos_xcoord+1
         tax
         tya
         rts
 .endproc
+
+.endscope ; line_edit
+line_edit__HandleClick := line_edit::HandleClick
+line_edit__DrawFilenamePrompt := line_edit::DrawFilenamePrompt
+line_edit__FrameNameInputRect := line_edit::FrameNameInputRect
+line_edit__TogglePromptIP  := line_edit::TogglePromptIP
+line_edit__HandleOtherKey  := line_edit::HandleOtherKey
+line_edit__HandleDeleteKey  := line_edit::HandleDeleteKey
+line_edit__HandleClearKey  := line_edit::HandleClearKey
+line_edit__HandleLeftKey  := line_edit::HandleLeftKey
+line_edit__HandleRightKey  := line_edit::HandleRightKey
+line_edit__HandleMetaLeftKey  := line_edit::HandleMetaLeftKey
+line_edit__HandleMetaRightKey  := line_edit::HandleMetaRightKey
+line_edit__MoveIPEnd  := line_edit::MoveIPEnd
 
 ;;; ============================================================
 

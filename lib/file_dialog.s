@@ -3131,6 +3131,7 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Move IP one character right.
 
 .proc HandleRightKey
         jsr     ObscureCursor
@@ -3168,6 +3169,7 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Move IP to start of input field.
 
 .proc HandleMetaLeftKey
         jsr     ObscureCursor
