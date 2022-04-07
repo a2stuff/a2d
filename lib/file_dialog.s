@@ -341,8 +341,44 @@ l4:     lda     file_dialog_res::winfo::window_id
         bpl     :+
         jsr     click_handler_hook
         bmi     SetUpPorts
-:       jsr     HandleClick
-        rts
+:
+
+.if !FD_EXTENDED
+        ;; Single field only
+        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
+        cmp     #MGTK::inrect_inside
+        bne     done_click
+        jsr     f1__HandleClick
+.else
+        ;; Maybe dual fields
+        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
+        cmp     #MGTK::inrect_inside
+    IF_EQ
+        bit     focus_in_input2_flag
+      IF_NS
+        jsr     HandleCancel ; Move focus to input1
+        ;; NOTE: Assumes screentowindow_params::window* has not been changed.
+      END_IF
+        jsr     f1__HandleClick
+        jmp     done_click
+    END_IF
+
+        ;; Does the second field exist?
+        bit     dual_inputs_flag
+        bpl     done_click
+        MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
+        cmp     #MGTK::inrect_inside
+    IF_EQ
+        bit     focus_in_input2_flag
+      IF_NC
+        jsr     HandleOk    ; move focus to input2
+        ;; NOTE: Assumes screentowindow_params::window* has not been changed.
+      END_IF
+        jsr     f2__HandleClick
+    END_IF
+.endif
+done_click:
+        FALL_THROUGH_TO SetUpPorts
 .endproc
 
 .proc SetUpPorts
@@ -2266,30 +2302,6 @@ ShowIP := HideIP
 .proc HandleClick
         click_coords := screentowindow_params::windowx
 
-        ;; Inside input1 ?
-        MGTK_CALL MGTK::InRect, frame_rect
-        cmp     #MGTK::inrect_inside
-.if !FD_EXTENDED
-        beq     :+
-        rts
-:
-.else
-        beq     ep2
-
-        ;; Inside input2 ?
-        bit     dual_inputs_flag
-        bpl     done
-        MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
-        cmp     #MGTK::inrect_inside
-        bne     done
-        jsr     HandleOk    ; move focus to input2
-        ;; NOTE: Assumes screentowindow_params::window* has not been changed.
-        jmp     f2__HandleClick__ep2
-
-done:   rts
-
-ep2:
-.endif
         ;; Is click to left or right of insertion point?
         jsr     CalcIPPos
         width := $06
@@ -2734,6 +2746,8 @@ NotifyTextChanged := NotifyTextChangedF1
 
 .endscope ; f1
 
+f1__HandleClick := f1::HandleClick
+
 ;;; ============================================================
 
 .proc PrepPathF1
@@ -2826,24 +2840,6 @@ ShowIP := HideIP
 .proc HandleClick
         click_coords := screentowindow_params::windowx
 
-        ;; Inside input2 ?
-        MGTK_CALL MGTK::InRect, frame_rect
-        cmp     #MGTK::inrect_inside
-        beq     ep2
-
-        ;; Inside input1 ?
-        bit     dual_inputs_flag
-        bpl     done
-        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
-        cmp     #MGTK::inrect_inside
-        bne     done
-        jsr     HandleCancel ; Move focus to input1
-        ;; NOTE: Assumes screentowindow_params::window* has not been changed.
-        jmp     f1::HandleClick::ep2
-
-done:   rts
-
-ep2:
         ;; Is click to left or right of insertion point?
         jsr     CalcIPPos
         width := $06
@@ -3284,7 +3280,7 @@ width   .word
 
 .endscope ; f2
 
-f2__HandleClick__ep2 := f2::HandleClick::ep2
+f2__HandleClick := f2::HandleClick
 
 .endif ; FD_EXTENDED
 
