@@ -75,8 +75,8 @@ jt_destination_filename:
 ;;; ============================================================
 
 .proc HandleOkSource
+        jsr     file_dialog::f1::MoveIPEnd
         jsr     file_dialog::f1::HideIP ; Switch
-        jsr     file_dialog::f1::MoveIPToEnd
 
         ;; install destination field handlers
         ldx     jt_destination_filename
@@ -186,8 +186,8 @@ err:    lda     #ERR_INVALID_PATHNAME
 ;;; ============================================================
 
 .proc HandleCancelDestination
+        jsr     file_dialog::f2::MoveIPEnd
         jsr     file_dialog::f2::HideIP ; Switch
-        jsr     file_dialog::f2::MoveIPToEnd
 
         ;; install source field handlers
         ldx     jt_source_filename

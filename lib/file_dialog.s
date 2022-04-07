@@ -2346,7 +2346,7 @@ ret:    rts
         jmp     MoveIPEnd
 :
         copy    tw_params::length, len
-        jsr     HideIP        ; Click Right
+        jsr     HideIP          ; Click Right
 
         ;; Append from `buf_right` into `buf_left`
         ldx     #1
@@ -2404,7 +2404,7 @@ ret:    rts
         bcs     ret
         sta     len
 
-        jsr     HideIP        ; Click Left
+        jsr     HideIP          ; Click Left
         inc     len
 
         ;; Shift everything in `buf_right` up to make room
@@ -2470,7 +2470,7 @@ ip_pos: .word   0
         cmp     #kMaxInputLength ; TODO: Off-by-one now that IP is gone?
         bcs     ret
 
-        jsr     HideIP        ; Insert
+        jsr     HideIP          ; Insert
 
         ;; Insert, and redraw single char and right string
         char := *+1
@@ -2511,7 +2511,7 @@ ret:    rts
         lda     buf_left
         beq     ret
 
-        jsr     HideIP        ; Delete
+        jsr     HideIP          ; Delete
 
         point := $6
         xcoord := $6
@@ -2542,7 +2542,7 @@ ret:    rts
         ora     buf_right
         beq     ret
 
-        jsr     HideIP        ; Clear
+        jsr     HideIP          ; Clear
 
         lda     #0
         sta     buf_left
@@ -2568,7 +2568,7 @@ ret:    rts
         lda     buf_left
         beq     ret
 
-        jsr     HideIP        ; Left
+        jsr     HideIP          ; Left
 
         ;; Shift right up by a character if needed.
         ldx     buf_right
@@ -2602,7 +2602,7 @@ ret:    rts
         lda     buf_right
         beq     ret
 
-        jsr     HideIP        ; Right
+        jsr     HideIP          ; Right
 
         ;; Copy first char from right to left and adjust left length.
         lda     buf_right+1
@@ -2643,7 +2643,7 @@ ret:    rts
         lda     buf_left
         beq     ret
 
-        jsr     HideIP        ; Home
+        jsr     HideIP          ; Home
 
         ;; Shift right string up N
         lda     buf_left
@@ -2685,17 +2685,10 @@ ret:    rts
 .endproc
 
 .proc MoveIPEnd
-        jsr     HideIP        ; End
-        jsr     MoveIPToEnd
-        jsr     ShowIP
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc MoveIPToEnd
         lda     buf_right
         beq     ret
+
+        jsr     HideIP          ; End
 
         ;; Append right string to left
         ldx     #0
@@ -2708,7 +2701,11 @@ ret:    rts
         bne     :-
         sty     buf_left
 
+
         jsr     ClearRight
+
+
+        jsr     ShowIP
 
 ret:    rts
 .endproc
@@ -2884,7 +2881,7 @@ ret:    rts
         jmp     MoveIPEnd
 :
         copy    tw_params::length, len
-        jsr     HideIP        ; Click Right
+        jsr     HideIP          ; Click Right
 
         ;; Append from `buf_right` into `buf_left`
         ldx     #1
@@ -2942,7 +2939,7 @@ ret:    rts
         bcs     ret
         sta     len
 
-        jsr     HideIP        ; Click Left
+        jsr     HideIP          ; Click Left
         inc     len
 
         ;; Shift everything in `buf_right` up to make room
@@ -3008,7 +3005,7 @@ ip_pos: .word   0
         cmp     #kMaxInputLength ; TODO: Off-by-one now that IP is gone?
         bcs     ret
 
-        jsr     HideIP        ; Insert
+        jsr     HideIP          ; Insert
 
         ;; Insert, and redraw single char and right string
         char := *+1
@@ -3049,7 +3046,7 @@ ret:    rts
         lda     buf_left
         beq     ret
 
-        jsr     HideIP        ; Delete
+        jsr     HideIP          ; Delete
 
         point := $6
         xcoord := $6
@@ -3080,7 +3077,7 @@ ret:    rts
         ora     buf_right
         beq     ret
 
-        jsr     HideIP        ; Clear
+        jsr     HideIP          ; Clear
 
         lda     #0
         sta     buf_left
@@ -3106,7 +3103,7 @@ ret:    rts
         lda     buf_left
         beq     ret
 
-        jsr     HideIP        ; Left
+        jsr     HideIP          ; Left
 
         ;; Shift right up by a character if needed.
         ldx     buf_right
@@ -3140,7 +3137,7 @@ ret:    rts
         lda     buf_right
         beq     ret
 
-        jsr     HideIP        ; Right
+        jsr     HideIP          ; Right
 
         ;; Copy first char from right to left and adjust left length.
         lda     buf_right+1
@@ -3181,7 +3178,7 @@ ret:    rts
         lda     buf_left
         beq     ret
 
-        jsr     HideIP        ; Home
+        jsr     HideIP          ; Home
 
         ;; Shift right string up N
         lda     buf_left
@@ -3223,17 +3220,10 @@ ret:    rts
 .endproc
 
 .proc MoveIPEnd
-        jsr     HideIP        ; End
-        jsr     MoveIPToEnd
-        jsr     ShowIP
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc MoveIPToEnd
         lda     buf_right
         beq     ret
+
+        jsr     HideIP          ; End
 
         ;; Append right string to left
         ldx     #0
@@ -3246,12 +3236,14 @@ ret:    rts
         bne     :-
         sty     buf_left
 
+
         jsr     ClearRight
+
+        jsr     ShowIP
 
 ret:    rts
 .endproc
 
-;;; ============================================================
 ;;; Output: A,X = X coordinate of insertion point
 
 .proc CalcIPPos
@@ -3520,7 +3512,7 @@ flag:   .byte   0
         ;; specific to "Copy a File".
 
         ;; Collapse paths, search for last '/'
-        jsr     f2::MoveIPToEnd
+        jsr     f2::MoveIPEnd
         ldx     buf_left
         beq     finish
 :       lda     buf_left,x

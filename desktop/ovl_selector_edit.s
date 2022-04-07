@@ -202,8 +202,8 @@ jt_entry_name:
 ;;; ============================================================
 
 .proc HandleOkFilename
+        jsr     file_dialog::f1::MoveIPEnd
         jsr     file_dialog::f1::HideIP ; Switch
-        jsr     file_dialog::f1::MoveIPToEnd
 
         ;; install name field handlers
         ldx     jt_entry_name
@@ -326,8 +326,8 @@ found:  cpy     #2
 ;;; ============================================================
 
 .proc HandleCancelName
+        jsr     file_dialog::f2::MoveIPEnd
         jsr     file_dialog::f2::HideIP ; Switch
-        jsr     file_dialog::f2::MoveIPToEnd
 
         ;; install pathname field handlers
         ldx     jt_pathname

@@ -15591,7 +15591,7 @@ ret:    rts
         jmp     MoveIPEnd
 :
         copy    tw_params::length, len
-        jsr     HideIP    ; Click Right
+        jsr     HideIP          ; Click Right
 
         ;; Append from `buf_right` into `buf_left`
         ldx     #1
@@ -15649,7 +15649,7 @@ ret:    rts
         bcs     ret
         sta     len
 
-        jsr     HideIP    ; Click Left
+        jsr     HideIP          ; Click Left
         inc     len
 
         ;; Shift everything in `buf_right` up to make room
@@ -15709,7 +15709,7 @@ ip_pos: .word   0
         cmp     #kMaxFilenameLength
         bcs     ret
 
-        jsr     HideIP    ; Insert
+        jsr     HideIP          ; Insert
 
         ;; Insert, and redraw single char and right string
         char := *+1
@@ -15750,7 +15750,7 @@ ret:    rts
         lda     buf_left
         beq     ret
 
-        jsr     HideIP    ; Delete
+        jsr     HideIP          ; Delete
 
         point := $6
         xcoord := $6
@@ -15781,7 +15781,7 @@ ret:    rts
         ora     buf_right
         beq     ret
 
-        jsr     HideIP    ; Clear
+        jsr     HideIP          ; Clear
 
         lda     #0
         sta     buf_left
@@ -15807,7 +15807,7 @@ ret:    rts
         lda     buf_left
         beq     ret
 
-        jsr     HideIP    ; Left
+        jsr     HideIP          ; Left
 
         ;; Shift right up by a character if needed.
         ldx     buf_right
@@ -15841,7 +15841,7 @@ ret:    rts
         lda     buf_right
         beq     ret
 
-        jsr     HideIP    ; Right
+        jsr     HideIP          ; Right
 
         ;; Copy first char from right to left and adjust left length.
         lda     buf_right+1
@@ -15882,7 +15882,7 @@ ret:    rts
         lda     buf_left
         beq     ret
 
-        jsr     HideIP    ; Home
+        jsr     HideIP          ; Home
 
         ;; Shift right string up N
         lda     buf_left
@@ -15927,7 +15927,7 @@ ret:    rts
         lda     buf_right
         beq     ret
 
-        jsr     HideIP    ; End
+        jsr     HideIP          ; End
 
         ;; Append right string to left
         ldx     #0
