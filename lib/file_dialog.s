@@ -2190,6 +2190,13 @@ no_change:
 .scope f1
         buf_left := buf_input1_left
         buf_right := line_edit_res::buf_right
+        textpos := file_dialog_res::input1_textpos
+        textpos_xcoord := file_dialog_res::input1_textpos::xcoord
+        textpos_ycoord := file_dialog_res::input1_textpos::ycoord
+        clear_rect := file_dialog_res::input1_clear_rect
+        frame_rect := file_dialog_res::input1_rect
+
+;;; ============================================================
 
 .proc BlinkIP
         ;; Toggle flag
@@ -2209,10 +2216,10 @@ no_change:
         jsr     SetPortForWindow
 
         ;; TODO: Do this with a 1px rect instead of a line
-        jsr     CalcInput1IPPos
+        jsr     CalcIPPos
         stax    xcoord
         dec16   xcoord
-        copy16  file_dialog_res::input1_textpos::ycoord, ycoord
+        copy16  textpos_ycoord, ycoord
 
         MGTK_CALL MGTK::MoveTo, point
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -2240,10 +2247,10 @@ ShowIP := HideIP
         ;; Unnecessary - the entire field will be repainted.
         ;; jsr     HideIP        ; Redraw
 
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_clear_rect
+        MGTK_CALL MGTK::PaintRect, clear_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_textpos
+        MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::MoveTo, textpos
         param_call DrawString, buf_left
         param_call DrawString, buf_right
         param_call DrawString, line_edit_res::str_2_spaces
@@ -2260,7 +2267,7 @@ ShowIP := HideIP
         click_coords := screentowindow_params::windowx
 
         ;; Inside input1 ?
-        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::InRect, frame_rect
         cmp     #MGTK::inrect_inside
 .if !FD_EXTENDED
         beq     :+
@@ -2284,7 +2291,7 @@ done:   rts
 ep2:
 .endif
         ;; Is click to left or right of insertion point?
-        jsr     CalcInput1IPPos
+        jsr     CalcIPPos
         width := $06
         stax    width
         cmp16   click_coords, width
@@ -2304,7 +2311,7 @@ width   .word
         lda     buf_right
         beq     ret
 
-        jsr     CalcInput1IPPos
+        jsr     CalcIPPos
         stax    ip_pos
 
         ;; Iterate to find the position
@@ -2371,7 +2378,7 @@ ret:    rts
         copy16  #buf_left, tw_params::data
         copy    buf_left, tw_params::length
 @loop:  MGTK_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, file_dialog_res::input1_textpos::xcoord, tw_params::width
+        add16   tw_params::width, textpos_xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
         dec     tw_params::length
@@ -2467,11 +2474,11 @@ ip_pos: .word   0
         xcoord := $6
         ycoord := $8
 
-        jsr     CalcInput1IPPos ; measure before updating length
+        jsr     CalcIPPos ; measure before updating length
         inc     buf_left
 
         stax    xcoord
-        copy16  file_dialog_res::input1_textpos::ycoord, ycoord
+        copy16  textpos_ycoord, ycoord
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::MoveTo, point
@@ -2500,9 +2507,9 @@ ret:    rts
 
         ;; Decrease length of left string, measure and redraw right string
         dec     buf_left
-        jsr     CalcInput1IPPos
+        jsr     CalcIPPos
         stax    xcoord
-        copy16  file_dialog_res::input1_textpos::ycoord, ycoord
+        copy16  textpos_ycoord, ycoord
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::MoveTo, point
@@ -2531,7 +2538,7 @@ ret:    rts
 
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::input1_clear_rect
+        MGTK_CALL MGTK::PaintRect, clear_rect
 
         jsr     ShowIP
         jsr     NotifyTextChanged
@@ -2674,13 +2681,6 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc PrepPath
-        COPY_STRING path_buf, buf_left
-        jmp     ClearRight
-.endproc
-
-;;; ============================================================
-
 .proc MoveIPToEnd
         lda     buf_right
         beq     ret
@@ -2696,16 +2696,50 @@ ret:    rts
         bne     :-
         sty     buf_left
 
-        ;; Clear right string
         jsr     ClearRight
 
 ret:    rts
 .endproc
 
+;;; ============================================================
+;;; Output: A,X = X coordinate of insertion point
+
+.proc CalcIPPos
+        PARAM_BLOCK params, $06
+data    .addr
+length  .byte
+width   .word
+        END_PARAM_BLOCK
+
+        copy16  #0, params::width
+        lda     buf_left
+        beq     :+
+
+        sta     params::length
+        copy16  #buf_left+1, params::data
+        MGTK_CALL MGTK::TextWidth, params
+
+:       lda     params::width
+        clc
+        adc     textpos_xcoord
+        tay
+        lda     params::width+1
+        adc     textpos_xcoord+1
+        tax
+        tya
+        rts
+.endproc
+
 NotifyTextChanged := NotifyTextChangedF1
 
 .endscope ; f1
-f1__PrepPath := f1::PrepPath
+
+;;; ============================================================
+
+.proc PrepPathF1
+        COPY_STRING path_buf, buf_input1_left
+        jmp     ClearRight
+.endproc
 
 ;;; ============================================================
 ;;; Text Input Field 2
@@ -2716,6 +2750,11 @@ f1__PrepPath := f1::PrepPath
 
         buf_left := buf_input2_left
         buf_right := line_edit_res::buf_right
+        textpos := file_dialog_res::input2_textpos
+        textpos_xcoord := file_dialog_res::input2_textpos::xcoord
+        textpos_ycoord := file_dialog_res::input2_textpos::ycoord
+        clear_rect := file_dialog_res::input2_clear_rect
+        frame_rect := file_dialog_res::input2_rect
 
 ;;; ============================================================
 
@@ -2737,14 +2776,15 @@ f1__PrepPath := f1::PrepPath
         jsr     SetPortForWindow
 
         ;; TODO: Do this with a 1px rect instead of a line
-        jsr     CalcInput2IPPos
+        jsr     CalcIPPos
         stax    xcoord
-        copy16  file_dialog_res::input2_textpos::ycoord, ycoord
+        dec16   xcoord
+        copy16  textpos_ycoord, ycoord
 
         MGTK_CALL MGTK::MoveTo, point
         MGTK_CALL MGTK::SetPenMode, penXOR
         copy16  #0, xcoord
-        copy16  #AS_WORD(-9), ycoord
+        copy16  #AS_WORD(-kSystemFontHeight), ycoord
         MGTK_CALL MGTK::Line, point
         MGTK_CALL MGTK::SetPenMode, pencopy
 
@@ -2767,11 +2807,11 @@ ShowIP := HideIP
         ;; Unnecessary - the entire field will be repainted.
         ;; jsr     HideIP        ; Redraw
 
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_clear_rect
+        MGTK_CALL MGTK::PaintRect, clear_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_textpos
-        param_call DrawString, buf_input2_left
+        MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::MoveTo, textpos
+        param_call DrawString, buf_left
         param_call DrawString, buf_right
         param_call DrawString, line_edit_res::str_2_spaces
 
@@ -2787,7 +2827,7 @@ ShowIP := HideIP
         click_coords := screentowindow_params::windowx
 
         ;; Inside input2 ?
-        MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::InRect, frame_rect
         cmp     #MGTK::inrect_inside
         beq     ep2
 
@@ -2805,7 +2845,7 @@ done:   rts
 
 ep2:
         ;; Is click to left or right of insertion point?
-        jsr     CalcInput2IPPos
+        jsr     CalcIPPos
         width := $06
         stax    width
         cmp16   click_coords, width
@@ -2825,7 +2865,7 @@ width   .word
         lda     buf_right
         beq     ret
 
-        jsr     CalcInput2IPPos
+        jsr     CalcIPPos
         stax    ip_pos
 
         ;; Iterate to find the position
@@ -2892,7 +2932,7 @@ ret:    rts
         copy16  #buf_left, tw_params::data
         copy    buf_left, tw_params::length
 @loop:  MGTK_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, file_dialog_res::input2_textpos, tw_params::width
+        add16   tw_params::width, textpos_xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
         dec     tw_params::length
@@ -2951,7 +2991,6 @@ finish: jsr     ShowIP
 
 ip_pos: .word   0
 .endproc
-HandleClick__ep2 := HandleClick::ep2
 
 ;;; ============================================================
 ;;; When a non-control key is hit - insert the passed character
@@ -2989,11 +3028,11 @@ HandleClick__ep2 := HandleClick::ep2
         xcoord := $6
         ycoord := $8
 
-        jsr     CalcInput2IPPos ; measure before updating length
+        jsr     CalcIPPos ; measure before updating length
         inc     buf_left
 
         stax    xcoord
-        copy16  file_dialog_res::input2_textpos::ycoord, ycoord
+        copy16  textpos_ycoord, ycoord
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::MoveTo, point
@@ -3012,19 +3051,19 @@ ret:    rts
 .proc HandleDeleteKey
         ;; Anything to delete?
         lda     buf_left
-        bne     :+
-        rts
-:
+        beq     ret
+
         jsr     HideIP        ; Delete
 
-        dec     buf_input2_left
         point := $6
         xcoord := $6
         ycoord := $8
 
-        jsr     CalcInput2IPPos
+        ;; Decrease length of left string, measure and redraw right string
+        dec     buf_left
+        jsr     CalcIPPos
         stax    xcoord
-        copy16  file_dialog_res::input2_textpos::ycoord, ycoord
+        copy16  textpos_ycoord, ycoord
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::MoveTo, point
@@ -3034,7 +3073,7 @@ ret:    rts
         jsr     ShowIP
         jsr     NotifyTextChanged
 
-        rts
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -3053,7 +3092,7 @@ ret:    rts
 
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::input2_clear_rect
+        MGTK_CALL MGTK::PaintRect, clear_rect
 
         jsr     ShowIP
         jsr     NotifyTextChanged
@@ -3140,9 +3179,6 @@ ret:    rts
 .endproc
 
 .proc MoveIPStart
-        buf_left = buf_input2_left
-        buf_right = line_edit_res::buf_right
-
         ;; Any characters to left of IP?
         lda     buf_left
         beq     ret
@@ -3197,9 +3233,54 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; TODO: Move those procs in here!
-PrepPath := PrepPathF2
-MoveIPToEnd := MoveIPToEndF2
+.proc MoveIPToEnd
+        lda     buf_right
+        beq     ret
+
+        ;; Append right string to left
+        ldx     #0
+        ldy     buf_left
+:       inx
+        iny
+        lda     buf_right,x
+        sta     buf_left,y
+        cpx     buf_right
+        bne     :-
+        sty     buf_left
+
+        jsr     ClearRight
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+;;; Output: A,X = X coordinate of insertion point
+
+.proc CalcIPPos
+        PARAM_BLOCK params, $06
+data    .addr
+length  .byte
+width   .word
+        END_PARAM_BLOCK
+
+        copy16  #0, params::width
+        lda     buf_left
+        beq     :+
+
+        sta     params::length
+        copy16  #buf_left+1, params::data
+        MGTK_CALL MGTK::TextWidth, params
+
+:       lda     params::width
+        clc
+        adc     textpos_xcoord
+        tay
+        lda     params::width+1
+        adc     textpos_xcoord+1
+        tax
+        tya
+        rts
+.endproc
 
 .endscope ; f2
 
@@ -3216,7 +3297,7 @@ f2__HandleClick__ep2 := f2::HandleClick::ep2
 BlinkIP                 := f1::BlinkIP
 RedrawInput             := f1::Redraw
 HandleSelectionChange   := ListSelectionChange
-PrepPath                := f1::PrepPath
+PrepPath                := PrepPathF1
 MoveIPEnd               := f1::MoveIPEnd
 HandleOtherKey          := f1::HandleOtherKey
 HandleDeleteKey         := f1::HandleDeleteKey
@@ -3255,8 +3336,8 @@ HandleSelectionChange:
 
 PrepPath:
         bit     focus_in_input2_flag
-        jpl     f1::PrepPath
-        jmp     f2::PrepPath
+        jpl     PrepPathF1
+        jmp     PrepPathF2
 
 MoveIPEnd:
         bit     focus_in_input2_flag
@@ -3394,13 +3475,13 @@ HandleSelectionChangeF2:
 
         ;; Reset path to current dir path
 .if !FD_EXTENDED
-        jsr     f1::PrepPath
+        jsr     PrepPathF1
 .else
         bit     flag
     IF_NC
-        jsr     f1::PrepPath
+        jsr     PrepPathF1
     ELSE
-        jsr     f2::PrepPath
+        jsr     PrepPathF2
     END_IF
 .endif
         ;; Find name of selected item
@@ -3441,7 +3522,7 @@ flag:   .byte   0
         ;; specific to "Copy a File".
 
         ;; Collapse paths, search for last '/'
-        jsr     MoveIPToEndF2
+        jsr     f2::MoveIPToEnd
         ldx     buf_left
         beq     finish
 :       lda     buf_left,x
@@ -3467,91 +3548,9 @@ finish: COPY_STRING path_buf, buf_left
 .endproc
 .endif
 
-;;; ============================================================
-;;; Output: A,X = X coordinate of insertion point
-
-.proc CalcInput1IPPos
-        PARAM_BLOCK params, $06
-data    .addr
-length  .byte
-width   .word
-        END_PARAM_BLOCK
-
-        copy16  #0, params::width
-        lda     buf_input1_left
-        beq     :+
-
-        sta     params::length
-        copy16  #buf_input1_left+1, params::data
-        MGTK_CALL MGTK::TextWidth, params
-
-:       lda     params::width
-        clc
-        adc     file_dialog_res::input1_textpos::xcoord
-        tay
-        lda     params::width+1
-        adc     file_dialog_res::input1_textpos::xcoord+1
-        tax
-        tya
-        rts
-.endproc
 
 ;;; ============================================================
 
-.if FD_EXTENDED
-.proc CalcInput2IPPos
-        PARAM_BLOCK params, $06
-data    .addr
-length  .byte
-width   .word
-        END_PARAM_BLOCK
-
-        copy16  #0, params::width
-        lda     buf_input2_left
-        beq     :+
-
-        sta     params::length
-        copy16  #buf_input2_left+1, params::data
-        MGTK_CALL MGTK::TextWidth, params
-
-:       lda     params::width
-        clc
-        adc     file_dialog_res::input2_textpos
-        tay
-        lda     params::width+1
-        adc     file_dialog_res::input2_textpos+1
-        tax
-        tya
-        rts
-.endproc
-.endif
-
-;;; ============================================================
-
-.if FD_EXTENDED
-.proc MoveIPToEndF2
-        buf_left := buf_input2_left
-        buf_right := line_edit_res::buf_right
-
-        lda     buf_right
-        beq     ret
-
-        ;; Append right string to left
-        ldx     #0
-        ldy     buf_left
-:       inx
-        iny
-        lda     buf_right,x
-        sta     buf_left,y
-        cpx     buf_right
-        bne     :-
-        sty     buf_left
-
-        jsr     ClearRight
-
-ret:    rts
-.endproc
-.endif
 
 ;;; ============================================================
 ;;; Set the `line_edit_res::input_dirty_flag`

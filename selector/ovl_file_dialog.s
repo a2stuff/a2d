@@ -123,7 +123,7 @@ start:  jsr     OpenWindow
         jsr     UpdateDiskName
         jsr     DrawListEntries
         jsr     InitInput
-        jsr     f1__PrepPath
+        jsr     PrepPath
         jsr     RedrawInput
         copy    #$FF, line_edit_res::blink_ip_flag
         jmp     EventLoop
