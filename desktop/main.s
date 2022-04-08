@@ -13877,7 +13877,7 @@ dialog_param_addr:
         lda     line_edit_res::ip_counter
         ora     line_edit_res::ip_counter+1
         bne     :+
-        jsr     line_edit__TogglePromptIP
+        jsr     line_edit__BlinkIP
         copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
 
         ;; Dispatch event types - mouse down, key press
@@ -14637,7 +14637,6 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_new_folder
-        jsr     line_edit__FrameNameInputRect
         rts
 
         ;; --------------------------------------------------
@@ -14654,7 +14653,7 @@ do_run: copy    #$80, has_input_field_flag
         param_call DrawDialogLabel, 2, aux::str_in
         jsr     DrawDialogPathBuf0
         param_call DrawDialogLabel, 4, aux::str_enter_folder_name
-        jsr     line_edit__DrawFilenamePrompt
+        jsr     line_edit__Redraw
 LAEC6:  jsr     PromptInputLoop
         bmi     LAEC6
         bne     do_close
@@ -14665,7 +14664,7 @@ LAEC6:  jsr     PromptInputLoop
         bcc     LAEE1
 LAED6:  lda     #kErrNameTooLong
         jsr     ShowAlert
-        jsr     line_edit__DrawFilenamePrompt
+        jsr     line_edit__Redraw
         jmp     LAEC6
 
 LAEE1:  lda     path_buf0
@@ -14921,7 +14920,6 @@ UnlockDialogProc := LockDialogProc
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_rename_icon
-        jsr     line_edit__FrameNameInputRect
         jsr     CopyDialogParamAddrToPtr
         ldy     #rename_dialog_params::a_path - rename_dialog_params
         copy16in ($06),y, $08
@@ -14942,7 +14940,7 @@ UnlockDialogProc := LockDialogProc
         param_call DrawDialogLabel, 2, aux::str_rename_old
         param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_rename_new
-        jsr     line_edit__DrawFilenamePrompt
+        jsr     line_edit__Redraw
         rts
 
         ;; --------------------------------------------------
@@ -14999,7 +14997,6 @@ do_close:
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogTitle, aux::label_duplicate_icon
-        jsr     line_edit__FrameNameInputRect
         jsr     CopyDialogParamAddrToPtr
         ldy     #duplicate_dialog_params::a_path - duplicate_dialog_params
         copy16in ($06),y, $08
@@ -15020,7 +15017,7 @@ do_close:
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
         param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_rename_new
-        jsr     line_edit__DrawFilenamePrompt
+        jsr     line_edit__Redraw
         rts
 
         ;; --------------------------------------------------
@@ -15089,10 +15086,6 @@ do_close:
 .proc DrawFileCountWithTrailingSpaces
         jsr     ComposeFileCountString
         param_call DrawString, str_file_count
-        FALL_THROUGH_TO Draw2SpacesString
-.endproc
-
-.proc Draw2SpacesString
         param_jump DrawString, line_edit_res::str_2_spaces
 .endproc
 
@@ -15455,6 +15448,11 @@ done:   rts
 
 ;;; ============================================================
 
+.proc AnyChar
+        clc
+        FALL_THROUGH_TO NoOp
+.endproc
+
 .proc NoOp
         rts
 .endproc
@@ -15465,88 +15463,84 @@ done:   rts
         buf_left := path_buf1
         buf_right := line_edit_res::buf_right
         textpos := name_input_textpos
-        textpos_xcoord := name_input_textpos::xcoord
-        textpos_ycoord := name_input_textpos::ycoord
+        clear_rect := name_input_erase_rect
+        frame_rect := name_input_rect
+        kLineEditMaxLength := kMaxFilenameLength
+        NotifyTextChanged := NoOp
+        click_coords := screentowindow_params::windowx
+        IsAllowedChar := AnyChar
 
 
-.proc TogglePromptIP
+.proc SetPort
+        lda     #winfo_prompt_dialog::kWindowId
+        jmp     SafeSetPortFromWindowId
+.endproc
+
+;;; ============================================================
+
+.proc BlinkIP
         ;; Toggle flag
         lda     line_edit_res::ip_flag
         eor     #$80
         sta     line_edit_res::ip_flag
-        FALL_THROUGH_TO XDrawPromptIP
+        FALL_THROUGH_TO XDrawIP
 .endproc
 
-.proc XDrawPromptIP
+.proc XDrawIP
         point := $6
         xcoord := $6
         ycoord := $8
 
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
+        jsr     SetPort
 
         ;; TODO: Do this with a 1px rect instead of a line
         jsr     CalcIPPos
         stax    xcoord
         dec16   xcoord
-        copy16  name_input_textpos::ycoord, ycoord
+        copy16  textpos + MGTK::Point::ycoord, ycoord
 
         MGTK_CALL MGTK::MoveTo, point
-        jsr     SetPenModeXOR
+        MGTK_CALL MGTK::SetPenMode, penXOR
         copy16  #0, xcoord
         copy16  #AS_WORD(-kSystemFontHeight), ycoord
         MGTK_CALL MGTK::Line, point
-        jsr     SetPenModeCopy
+        MGTK_CALL MGTK::SetPenMode, pencopy
 
         rts
 .endproc
 
 .proc HideIP
         bit     line_edit_res::ip_flag
-        bmi     XDrawPromptIP
+        bmi     XDrawIP
         rts
 .endproc
 ShowIP := HideIP
 
 ;;; ============================================================
 
-.proc DrawFilenamePrompt
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
+.proc Redraw
+        jsr     SetPort
 
         ;; Unnecessary - the entire field will be repainted.
         ;; jsr     HideIP    ; Redraw
 
-        jsr     FrameNameInputRect
-        jsr     ClearNameInputRect
+        MGTK_CALL MGTK::PaintRect, clear_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, frame_rect
 
-        MGTK_CALL MGTK::MoveTo, name_input_textpos
-        param_call DrawString, path_buf1
-        param_call DrawString, line_edit_res::buf_right
-        jsr     Draw2SpacesString
+        MGTK_CALL MGTK::MoveTo, textpos
+        param_call DrawString, buf_left
+        param_call DrawString, buf_right
+        param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIP
 
-done:   rts
-.endproc
-
-.proc FrameNameInputRect
-        jsr     SetPenModeNotCopy
-        MGTK_CALL MGTK::FrameRect, name_input_rect
-        rts
-.endproc
-
-.proc ClearNameInputRect
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, name_input_erase_rect
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc HandleClick
-        click_coords := screentowindow_params::windowx
-
         ;; Is click to left or right of insertion point?
         jsr     CalcIPPos
         width := $06
@@ -15635,7 +15629,7 @@ ret:    rts
         copy16  #buf_left, tw_params::data
         copy    buf_left, tw_params::length
 @loop:  MGTK_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, textpos_xcoord, tw_params::width
+        add16   tw_params::width, textpos + MGTK::Point::xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
         dec     tw_params::length
@@ -15702,11 +15696,17 @@ ip_pos: .word   0
         jsr     ObscureCursor
         sta     char
 
+        ;; Is it allowed?
+        bit     line_edit_res::allow_all_chars_flag
+        bmi     :+
+        jsr     IsAllowedChar
+        bcs     ret
+:
         ;; Is there room?
         lda     buf_left
         clc
         adc     buf_right
-        cmp     #kMaxFilenameLength
+        cmp     #kLineEditMaxLength
         bcs     ret
 
         jsr     HideIP          ; Insert
@@ -15729,15 +15729,14 @@ ip_pos: .word   0
         inc     buf_left
 
         stax    xcoord
-        copy16  textpos_ycoord, ycoord
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
+        copy16  textpos + MGTK::Point::ycoord, ycoord
+        jsr     SetPort
         MGTK_CALL MGTK::MoveTo, point
         param_call DrawString, line_edit_res::str_1_char
         param_call DrawString, buf_right
 
         jsr     ShowIP
-
+        jsr     NotifyTextChanged
 
 ret:    rts
 .endproc
@@ -15760,15 +15759,14 @@ ret:    rts
         dec     buf_left
         jsr     CalcIPPos
         stax    xcoord
-        copy16  textpos_ycoord, ycoord
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
+        copy16  textpos + MGTK::Point::ycoord, ycoord
+        jsr     SetPort
         MGTK_CALL MGTK::MoveTo, point
         param_call DrawString, buf_right
-        jsr     Draw2SpacesString
+        param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIP
-
+        jsr     NotifyTextChanged
 
 ret:    rts
 .endproc
@@ -15787,12 +15785,11 @@ ret:    rts
         sta     buf_left
         sta     buf_right
 
-        lda     #winfo_prompt_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
-        jsr     ClearNameInputRect
+        jsr     SetPort
+        MGTK_CALL MGTK::PaintRect, clear_rect
 
         jsr     ShowIP
-
+        jsr     NotifyTextChanged
 
 ret:    rts
 .endproc
@@ -15968,10 +15965,10 @@ width   .word
 
 :       lda     params::width
         clc
-        adc     textpos_xcoord
+        adc     textpos + MGTK::Point::xcoord
         tay
         lda     params::width+1
-        adc     textpos_xcoord+1
+        adc     textpos + MGTK::Point::xcoord+1
         tax
         tya
         rts
@@ -15979,9 +15976,8 @@ width   .word
 
 .endscope ; line_edit
 line_edit__HandleClick := line_edit::HandleClick
-line_edit__DrawFilenamePrompt := line_edit::DrawFilenamePrompt
-line_edit__FrameNameInputRect := line_edit::FrameNameInputRect
-line_edit__TogglePromptIP  := line_edit::TogglePromptIP
+line_edit__Redraw := line_edit::Redraw
+line_edit__BlinkIP  := line_edit::BlinkIP
 line_edit__HandleOtherKey  := line_edit::HandleOtherKey
 line_edit__HandleDeleteKey  := line_edit::HandleDeleteKey
 line_edit__HandleClearKey  := line_edit::HandleClearKey

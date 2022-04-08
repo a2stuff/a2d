@@ -735,13 +735,6 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 ;;; ============================================================
 
-.proc ClearRight
-        copy    #0, line_edit_res::buf_right
-        rts
-.endproc
-
-;;; ============================================================
-
 .proc DoClose
         ;; Walk back looking for last '/'
         ldx     path_buf
@@ -2227,10 +2220,16 @@ no_change:
         buf_left := buf_input1_left
         buf_right := line_edit_res::buf_right
         textpos := file_dialog_res::input1_textpos
-        textpos_xcoord := file_dialog_res::input1_textpos::xcoord
-        textpos_ycoord := file_dialog_res::input1_textpos::ycoord
         clear_rect := file_dialog_res::input1_clear_rect
         frame_rect := file_dialog_res::input1_rect
+        kLineEditMaxLength := kMaxInputLength
+        click_coords := screentowindow_params::windowx
+        IsAllowedChar := IsPathChar
+
+.proc SetPort
+        lda     file_dialog_res::winfo::window_id
+        jmp     SetPortForWindow
+.endproc
 
 ;;; ============================================================
 
@@ -2248,14 +2247,13 @@ no_change:
         xcoord := $6
         ycoord := $8
 
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPort
 
         ;; TODO: Do this with a 1px rect instead of a line
         jsr     CalcIPPos
         stax    xcoord
         dec16   xcoord
-        copy16  textpos_ycoord, ycoord
+        copy16  textpos + MGTK::Point::ycoord, ycoord
 
         MGTK_CALL MGTK::MoveTo, point
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -2277,8 +2275,7 @@ ShowIP := HideIP
 ;;; ============================================================
 
 .proc Redraw
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPort
 
         ;; Unnecessary - the entire field will be repainted.
         ;; jsr     HideIP        ; Redraw
@@ -2300,8 +2297,6 @@ ShowIP := HideIP
 ;;; A click when f1 has focus (click may be elsewhere)
 
 .proc HandleClick
-        click_coords := screentowindow_params::windowx
-
         ;; Is click to left or right of insertion point?
         jsr     CalcIPPos
         width := $06
@@ -2390,7 +2385,7 @@ ret:    rts
         copy16  #buf_left, tw_params::data
         copy    buf_left, tw_params::length
 @loop:  MGTK_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, textpos_xcoord, tw_params::width
+        add16   tw_params::width, textpos + MGTK::Point::xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
         dec     tw_params::length
@@ -2460,14 +2455,14 @@ ip_pos: .word   0
         ;; Is it allowed?
         bit     line_edit_res::allow_all_chars_flag
         bmi     :+
-        jsr     IsPathChar
+        jsr     IsAllowedChar
         bcs     ret
 :
         ;; Is there room?
         lda     buf_left
         clc
         adc     buf_right
-        cmp     #kMaxInputLength ; TODO: Off-by-one now that IP is gone?
+        cmp     #kLineEditMaxLength ; TODO: Off-by-one now that IP is gone?
         bcs     ret
 
         jsr     HideIP          ; Insert
@@ -2490,9 +2485,8 @@ ip_pos: .word   0
         inc     buf_left
 
         stax    xcoord
-        copy16  textpos_ycoord, ycoord
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        copy16  textpos + MGTK::Point::ycoord, ycoord
+        jsr     SetPort
         MGTK_CALL MGTK::MoveTo, point
         param_call DrawString, line_edit_res::str_1_char
         param_call DrawString, buf_right
@@ -2521,9 +2515,8 @@ ret:    rts
         dec     buf_left
         jsr     CalcIPPos
         stax    xcoord
-        copy16  textpos_ycoord, ycoord
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        copy16  textpos + MGTK::Point::ycoord, ycoord
+        jsr     SetPort
         MGTK_CALL MGTK::MoveTo, point
         param_call DrawString, buf_right
         param_call DrawString, line_edit_res::str_2_spaces
@@ -2548,8 +2541,7 @@ ret:    rts
         sta     buf_left
         sta     buf_right
 
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPort
         MGTK_CALL MGTK::PaintRect, clear_rect
 
         jsr     ShowIP
@@ -2701,9 +2693,8 @@ ret:    rts
         bne     :-
         sty     buf_left
 
-
-        jsr     ClearRight
-
+        ;; Clear right string
+        copy    #0, buf_right
 
         jsr     ShowIP
 
@@ -2730,10 +2721,10 @@ width   .word
 
 :       lda     params::width
         clc
-        adc     textpos_xcoord
+        adc     textpos + MGTK::Point::xcoord
         tay
         lda     params::width+1
-        adc     textpos_xcoord+1
+        adc     textpos + MGTK::Point::xcoord+1
         tax
         tya
         rts
@@ -2749,7 +2740,8 @@ f1__HandleClick := f1::HandleClick
 
 .proc PrepPathF1
         COPY_STRING path_buf, buf_input1_left
-        jmp     ClearRight
+        copy    #0, line_edit_res::buf_right
+        rts
 .endproc
 
 ;;; ============================================================
@@ -2762,10 +2754,16 @@ f1__HandleClick := f1::HandleClick
         buf_left := buf_input2_left
         buf_right := line_edit_res::buf_right
         textpos := file_dialog_res::input2_textpos
-        textpos_xcoord := file_dialog_res::input2_textpos::xcoord
-        textpos_ycoord := file_dialog_res::input2_textpos::ycoord
         clear_rect := file_dialog_res::input2_clear_rect
         frame_rect := file_dialog_res::input2_rect
+        kLineEditMaxLength := kMaxInputLength
+        click_coords := screentowindow_params::windowx
+        IsAllowedChar := IsPathChar
+
+.proc SetPort
+        lda     file_dialog_res::winfo::window_id
+        jmp     SetPortForWindow
+.endproc
 
 ;;; ============================================================
 
@@ -2783,14 +2781,13 @@ f1__HandleClick := f1::HandleClick
         xcoord := $6
         ycoord := $8
 
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPort
 
         ;; TODO: Do this with a 1px rect instead of a line
         jsr     CalcIPPos
         stax    xcoord
         dec16   xcoord
-        copy16  textpos_ycoord, ycoord
+        copy16  textpos + MGTK::Point::ycoord, ycoord
 
         MGTK_CALL MGTK::MoveTo, point
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -2812,8 +2809,7 @@ ShowIP := HideIP
 ;;; ============================================================
 
 .proc Redraw
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPort
 
         ;; Unnecessary - the entire field will be repainted.
         ;; jsr     HideIP        ; Redraw
@@ -2821,6 +2817,7 @@ ShowIP := HideIP
         MGTK_CALL MGTK::PaintRect, clear_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, frame_rect
+
         MGTK_CALL MGTK::MoveTo, textpos
         param_call DrawString, buf_left
         param_call DrawString, buf_right
@@ -2835,8 +2832,6 @@ ShowIP := HideIP
 ;;; A click when f2 has focus (click may be elsewhere)
 
 .proc HandleClick
-        click_coords := screentowindow_params::windowx
-
         ;; Is click to left or right of insertion point?
         jsr     CalcIPPos
         width := $06
@@ -2925,7 +2920,7 @@ ret:    rts
         copy16  #buf_left, tw_params::data
         copy    buf_left, tw_params::length
 @loop:  MGTK_CALL MGTK::TextWidth, tw_params
-        add16   tw_params::width, textpos_xcoord, tw_params::width
+        add16   tw_params::width, textpos + MGTK::Point::xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
         bcc     :+
         dec     tw_params::length
@@ -2995,14 +2990,14 @@ ip_pos: .word   0
         ;; Is it allowed?
         bit     line_edit_res::allow_all_chars_flag
         bmi     :+
-        jsr     IsPathChar
+        jsr     IsAllowedChar
         bcs     ret
 :
         ;; Is there room?
         lda     buf_left
         clc
         adc     buf_right
-        cmp     #kMaxInputLength ; TODO: Off-by-one now that IP is gone?
+        cmp     #kLineEditMaxLength ; TODO: Off-by-one now that IP is gone?
         bcs     ret
 
         jsr     HideIP          ; Insert
@@ -3025,9 +3020,8 @@ ip_pos: .word   0
         inc     buf_left
 
         stax    xcoord
-        copy16  textpos_ycoord, ycoord
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        copy16  textpos + MGTK::Point::ycoord, ycoord
+        jsr     SetPort
         MGTK_CALL MGTK::MoveTo, point
         param_call DrawString, line_edit_res::str_1_char
         param_call DrawString, buf_right
@@ -3056,9 +3050,8 @@ ret:    rts
         dec     buf_left
         jsr     CalcIPPos
         stax    xcoord
-        copy16  textpos_ycoord, ycoord
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        copy16  textpos + MGTK::Point::ycoord, ycoord
+        jsr     SetPort
         MGTK_CALL MGTK::MoveTo, point
         param_call DrawString, buf_right
         param_call DrawString, line_edit_res::str_2_spaces
@@ -3083,8 +3076,7 @@ ret:    rts
         sta     buf_left
         sta     buf_right
 
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPort
         MGTK_CALL MGTK::PaintRect, clear_rect
 
         jsr     ShowIP
@@ -3236,8 +3228,8 @@ ret:    rts
         bne     :-
         sty     buf_left
 
-
-        jsr     ClearRight
+        ;; Clear right string
+        copy    #0, buf_right
 
         jsr     ShowIP
 
@@ -3263,10 +3255,10 @@ width   .word
 
 :       lda     params::width
         clc
-        adc     textpos_xcoord
+        adc     textpos + MGTK::Point::xcoord
         tay
         lda     params::width+1
-        adc     textpos_xcoord+1
+        adc     textpos + MGTK::Point::xcoord+1
         tax
         tya
         rts
