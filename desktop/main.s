@@ -14192,7 +14192,6 @@ do_all: jsr     SetPenModeXOR
 .proc HandleKeyDelete
         lda     has_input_field_flag
         beq     :+
-        jsr     ObscureCursor
         jsr     line_edit__HandleDeleteKey
 :       return  #$FF
 .endproc
@@ -14200,7 +14199,6 @@ do_all: jsr     SetPenModeXOR
 .proc HandleKeyClear
         lda     has_input_field_flag
         beq     :+
-        jsr     ObscureCursor
         jsr     line_edit__HandleClearKey
 :       return  #$FF
 .endproc
@@ -15470,7 +15468,6 @@ done:   rts
         click_coords := screentowindow_params::windowx
         IsAllowedChar := AnyChar
 
-
 .proc SetPort
         lda     #winfo_prompt_dialog::kWindowId
         jmp     SafeSetPortFromWindowId
@@ -15531,7 +15528,6 @@ ShowIP := HideIP
         MGTK_CALL MGTK::MoveTo, textpos
         param_call DrawString, buf_left
         param_call DrawString, buf_right
-        param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIP
 
@@ -15745,6 +15741,8 @@ ret:    rts
 ;;; When delete (backspace) is hit - shrink left buffer by one
 
 .proc HandleDeleteKey
+        jsr     ObscureCursor
+
         ;; Anything to delete?
         lda     buf_left
         beq     ret
@@ -15774,12 +15772,15 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleClearKey
+        jsr     ObscureCursor
+
         ;; Anything to delete?
         lda     buf_left
         ora     buf_right
         beq     ret
 
-        jsr     HideIP          ; Clear
+        ;; Unnecessary - the entire field will be repainted.
+        ;; jsr     HideIP          ; Clear
 
         lda     #0
         sta     buf_left

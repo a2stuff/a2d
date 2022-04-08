@@ -940,7 +940,6 @@ exit:   jsr     InitSetGrafport
 ;;; ============================================================
 
 .proc KeyDelete
-        jsr     ObscureCursor
         jsr     HandleDeleteKey
         rts
 .endproc
@@ -948,7 +947,6 @@ exit:   jsr     InitSetGrafport
 ;;; ============================================================
 
 .proc KeyClear
-        jsr     ObscureCursor
         jsr     HandleClearKey
         rts
 .endproc
@@ -2286,7 +2284,6 @@ ShowIP := HideIP
         MGTK_CALL MGTK::MoveTo, textpos
         param_call DrawString, buf_left
         param_call DrawString, buf_right
-        param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIP
 
@@ -2501,6 +2498,8 @@ ret:    rts
 ;;; When delete (backspace) is hit - shrink left buffer by one
 
 .proc HandleDeleteKey
+        jsr     ObscureCursor
+
         ;; Anything to delete?
         lda     buf_left
         beq     ret
@@ -2530,12 +2529,15 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleClearKey
+        jsr     ObscureCursor
+
         ;; Anything to delete?
         lda     buf_left
         ora     buf_right
         beq     ret
 
-        jsr     HideIP          ; Clear
+        ;; Unnecessary - the entire field will be repainted.
+        ;; jsr     HideIP          ; Clear
 
         lda     #0
         sta     buf_left
@@ -2821,7 +2823,6 @@ ShowIP := HideIP
         MGTK_CALL MGTK::MoveTo, textpos
         param_call DrawString, buf_left
         param_call DrawString, buf_right
-        param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIP
 
@@ -3036,6 +3037,8 @@ ret:    rts
 ;;; When delete (backspace) is hit - shrink left buffer by one
 
 .proc HandleDeleteKey
+        jsr     ObscureCursor
+
         ;; Anything to delete?
         lda     buf_left
         beq     ret
@@ -3065,12 +3068,15 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleClearKey
+        jsr     ObscureCursor
+
         ;; Anything to delete?
         lda     buf_left
         ora     buf_right
         beq     ret
 
-        jsr     HideIP          ; Clear
+        ;; Unnecessary - the entire field will be repainted.
+        ;; jsr     HideIP          ; Clear
 
         lda     #0
         sta     buf_left
