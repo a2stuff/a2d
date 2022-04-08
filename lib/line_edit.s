@@ -231,6 +231,9 @@ ip_pos: .word   0
         cmp     #CHAR_DELETE
         jeq     DeleteLeft
 
+        cmp     #CHAR_CTRL_F
+        jeq     DeleteRight
+
         cmp     #CHAR_CLEAR
         jeq     DeleteLine
 
@@ -315,6 +318,47 @@ ret:    rts
 
         ;; Decrease length of left string, measure and redraw right string
         dec     buf_left
+        jsr     CalcIPPos
+        stax    xcoord
+        copy16  textpos + MGTK::Point::ycoord, ycoord
+        jsr     SetPort
+        MGTK_CALL MGTK::MoveTo, point
+        param_call DrawString, buf_right
+        param_call DrawString, line_edit_res::str_2_spaces
+
+        jsr     ShowIP
+        jsr     NotifyTextChanged
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+;;; Forward-delete
+
+.proc DeleteRight
+        ;; Anything to delete?
+        lda     buf_right
+        beq     ret
+
+        jsr     HideIP          ; Delete
+
+        ;; Shift right string down
+        ldx     #1
+:       cpx     buf_right
+        beq     :+
+        lda     buf_right+1,x
+        sta     buf_right,x
+        inx
+        bne     :-              ; always
+
+:       dec     buf_right
+
+        ;; Redraw string to right of IP
+
+        point := $6
+        xcoord := $6
+        ycoord := $8
+
         jsr     CalcIPPos
         stax    xcoord
         copy16  textpos + MGTK::Point::ycoord, ycoord

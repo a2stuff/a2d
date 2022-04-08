@@ -677,7 +677,11 @@ Repeat for each field:
    * Mouse cursor should be hidden until moved.
    * Test with IP at start, in middle, and at end of the string.
  * Delete key
-   * Should delete character before IP, unless at start of string.
+   * Should delete character to left of IP, unless at start of string.
+   * Mouse cursor should be hidden until moved.
+   * Test with IP at start, in middle, and at end of the string.
+ * Control+F (Forward delete)
+   * Should delete character to right of IP, unless at end of string.
    * Mouse cursor should be hidden until moved.
    * Test with IP at start, in middle, and at end of the string.
  * Control+X (or Clear key on IIgs)

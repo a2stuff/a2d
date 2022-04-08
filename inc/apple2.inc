@@ -295,6 +295,7 @@ CHAR_MASK       = $7F
 CASE_MASK       = $DF
 
 CHAR_CTRL_C     = $03
+CHAR_CTRL_F     = $06
 CHAR_LEFT       = $08
 CHAR_TAB        = $09
 CHAR_DOWN       = $0A
