@@ -15431,15 +15431,6 @@ line_edit__MoveIPEnd  := line_edit::MoveIPEnd
 
 ;;; ============================================================
 
-.proc ObscureCursor
-        pha
-        MGTK_CALL MGTK::ObscureCursor
-        pla
-        rts
-.endproc
-
-;;; ============================================================
-
 ;;; Adjusted to point at file/files (singular/plural)
 ptr_str_files_suffix:
         .addr   str_files_suffix

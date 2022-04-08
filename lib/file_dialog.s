@@ -2560,12 +2560,3 @@ NotifyTextChangedF2 := NotifyTextChanged::f2
 .endif
 
 ;;; ============================================================
-
-.proc ObscureCursor
-        pha
-        MGTK_CALL MGTK::ObscureCursor
-        pla
-        rts
-.endproc
-
-;;; ============================================================

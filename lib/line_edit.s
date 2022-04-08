@@ -215,6 +215,8 @@ ip_pos: .word   0
 ;;; Handle a key. Requires `event_params` to be defined.
 
 .proc HandleKey
+        MGTK_CALL MGTK::ObscureCursor
+
         lda     event_params::key
 
         ldx     event_params::modifiers
@@ -250,7 +252,6 @@ ip_pos: .word   0
 ;;; When a non-control key is hit - insert the passed character
 
 .proc HandleOtherKey
-        jsr     ObscureCursor
         sta     char
 
         ;; Is it allowed?
@@ -302,8 +303,6 @@ ret:    rts
 ;;; When delete (backspace) is hit - shrink left buffer by one
 
 .proc HandleDeleteKey
-        jsr     ObscureCursor
-
         ;; Anything to delete?
         lda     buf_left
         beq     ret
@@ -333,8 +332,6 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleClearKey
-        jsr     ObscureCursor
-
         ;; Anything to delete?
         lda     buf_left
         ora     buf_right
@@ -360,8 +357,6 @@ ret:    rts
 ;;; Move IP one character left.
 
 .proc HandleLeftKey
-        jsr     ObscureCursor
-
         ;; Any characters to left of IP?
         lda     buf_left
         beq     ret
@@ -394,8 +389,6 @@ ret:    rts
 ;;; Move IP one character right.
 
 .proc HandleRightKey
-        jsr     ObscureCursor
-
         ;; Any characters to right of IP?
         lda     buf_right
         beq     ret
@@ -432,7 +425,6 @@ ret:    rts
 ;;; Move IP to start of input field.
 
 .proc HandleMetaLeftKey
-        jsr     ObscureCursor
         FALL_THROUGH_TO MoveIPStart
 .endproc
 
@@ -478,7 +470,6 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleMetaRightKey
-        jsr     ObscureCursor
         FALL_THROUGH_TO MoveIPEnd
 .endproc
 

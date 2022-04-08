@@ -1593,15 +1593,6 @@ line:   .byte   0
 
 ;;; ============================================================
 
-.proc ObscureCursor
-        pha
-        MGTK_CALL MGTK::ObscureCursor
-        pla
-        rts
-.endproc
-
-;;; ============================================================
-
         .include "../lib/drawstring.s"
         .include "../lib/measurestring.s"
 
