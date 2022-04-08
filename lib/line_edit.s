@@ -223,26 +223,26 @@ ip_pos: .word   0
     IF_ZERO
         ;; Not modified
         cmp     #CHAR_LEFT
-        jeq     HandleLeftKey
+        jeq     MoveIPLeft
 
         cmp     #CHAR_RIGHT
-        jeq     HandleRightKey
+        jeq     MoveIPRight
 
         cmp     #CHAR_DELETE
-        jeq     HandleDeleteKey
+        jeq     DeleteLeft
 
         cmp     #CHAR_CLEAR
-        jeq     HandleClearKey
+        jeq     DeleteLine
 
         cmp     #' '
-        jcs     HandleOtherKey
+        jcs     InsertChar
     ELSE
         ;; Modified
         cmp     #CHAR_LEFT
-        jeq     HandleMetaLeftKey
+        jeq     MoveIPStart
 
         cmp     #CHAR_RIGHT
-        jeq     HandleMetaRightKey
+        jeq     MoveIPEnd
     END_IF
 
         rts
@@ -251,7 +251,7 @@ ip_pos: .word   0
 ;;; ============================================================
 ;;; When a non-control key is hit - insert the passed character
 
-.proc HandleOtherKey
+.proc InsertChar
         sta     char
 
         ;; Is it allowed?
@@ -302,7 +302,7 @@ ret:    rts
 ;;; ============================================================
 ;;; When delete (backspace) is hit - shrink left buffer by one
 
-.proc HandleDeleteKey
+.proc DeleteLeft
         ;; Anything to delete?
         lda     buf_left
         beq     ret
@@ -331,7 +331,7 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc HandleClearKey
+.proc DeleteLine
         ;; Anything to delete?
         lda     buf_left
         ora     buf_right
@@ -356,7 +356,7 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character left.
 
-.proc HandleLeftKey
+.proc MoveIPLeft
         ;; Any characters to left of IP?
         lda     buf_left
         beq     ret
@@ -388,7 +388,7 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character right.
 
-.proc HandleRightKey
+.proc MoveIPRight
         ;; Any characters to right of IP?
         lda     buf_right
         beq     ret
@@ -423,10 +423,6 @@ ret:    rts
 
 ;;; ============================================================
 ;;; Move IP to start of input field.
-
-.proc HandleMetaLeftKey
-        FALL_THROUGH_TO MoveIPStart
-.endproc
 
 .proc MoveIPStart
         ;; Any characters to left of IP?
@@ -468,10 +464,6 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
-
-.proc HandleMetaRightKey
-        FALL_THROUGH_TO MoveIPEnd
-.endproc
 
 .proc MoveIPEnd
         lda     buf_right
