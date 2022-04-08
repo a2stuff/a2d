@@ -1063,7 +1063,6 @@ top_row:        .byte   0
         kLineEditMaxLength := kMaxFilenameLength
         NotifyTextChanged := NoOp
         click_coords := screentowindow_params::window
-        IsAllowedChar := AnyChar
 
 .proc SetPort
         copy    #kDAWindowID, winport_params::window_id
@@ -1072,9 +1071,32 @@ top_row:        .byte   0
         rts
 .endproc
 
-.proc AnyChar
-        clc
-        FALL_THROUGH_TO NoOp
+.proc IsAllowedChar
+        ;; Valid characters are . 0-9 A-Z a-z ? *
+        cmp     #'*'            ; Wildcard
+        beq     insert
+        cmp     #'?'            ; Wildcard
+        beq     insert
+        cmp     #'.'            ; Filename char (here and below)
+        beq     insert
+        cmp     #'0'
+        bcc     ignore
+        cmp     #'9'+1
+        bcc     insert
+        cmp     #'A'
+        bcc     ignore
+        cmp     #'Z'+1
+        bcc     insert
+        cmp     #'a'
+        bcc     ignore
+        cmp     #'z'+1
+        bcs     ignore
+
+insert: clc
+        rts
+
+ignore: sec
+        rts
 .endproc
 
 .proc NoOp
@@ -1090,122 +1112,55 @@ line_edit__Redraw := line_edit::Redraw
 ;;; ============================================================
 
 .proc HandleKey
-        lda     event_params::modifiers
-        beq     not_meta
-
         lda     event_params::key
 
-        cmp     #CHAR_LEFT
-        bne     :+
-        jsr     line_edit::HandleMetaLeftKey
-        jmp     InputLoop
-:
-        cmp     #CHAR_RIGHT
-        bne     :+
-        jsr     line_edit::HandleMetaRightKey
-        jmp     InputLoop
-:
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        ;; Modified
         cmp     #CHAR_UP
-    IF_EQ
+      IF_EQ
         copy    #MGTK::Part::page_up, findcontrol_params::which_part
         jmp     HandleScroll
-    END_IF
+     END_IF
+
         cmp     #CHAR_DOWN
-    IF_EQ
+      IF_EQ
         copy    #MGTK::Part::page_down, findcontrol_params::which_part
         jmp     HandleScroll
-    END_IF
-        jmp     ignore_char
+      END_IF
 
-not_meta:
-        lda     event_params::key
+        jsr     line_edit::HandleKey
+    ELSE
+        ;; Not modified
         cmp     #CHAR_ESCAPE
-        bne     :+
+      IF_EQ
         param_call FlashButton, cancel_button_rect
         jmp     Exit
-:
+      END_IF
+
         cmp     #CHAR_RETURN
-        bne     :+
+      IF_EQ
         param_call FlashButton, search_button_rect
         jmp     DoSearch
-:
-        cmp     #CHAR_LEFT
-        bne     :+
-        jsr     line_edit::HandleLeftKey
-        jmp     InputLoop
-:
-        cmp     #CHAR_RIGHT
-        bne     :+
-        jsr     line_edit::HandleRightKey
-        jmp     InputLoop
-:
-        cmp     #CHAR_DELETE
-        bne     :+
-        jsr     line_edit::HandleDeleteKey
-        jmp     InputLoop
-:
-        cmp     #CHAR_CLEAR
-        bne     :+
-        jsr     line_edit::HandleClearKey
-        jmp     InputLoop
-:
+      END_IF
+
         cmp     #CHAR_UP
-    IF_EQ
+      IF_EQ
         copy    #MGTK::Part::up_arrow, findcontrol_params::which_part
         jmp     HandleScroll
-    END_IF
+      END_IF
+
         cmp     #CHAR_DOWN
-    IF_EQ
+      IF_EQ
         copy    #MGTK::Part::down_arrow, findcontrol_params::which_part
         jmp     HandleScroll
+      END_IF
+
+        jsr     line_edit::HandleKey
     END_IF
 
-        ;; Valid characters are . 0-9 A-Z a-z ? *
-        cmp     #'*'            ; Wildcard
-        beq     insert
-        cmp     #'?'            ; Wildcard
-        beq     insert
-        cmp     #'.'            ; Filename char (here and below)
-        beq     insert
-        cmp     #'0'
-        bcc     ignore_char
-        cmp     #'9'+1
-        bcc     insert
-        cmp     #'A'
-        bcc     ignore_char
-        cmp     #'Z'+1
-        bcc     insert
-        cmp     #'a'
-        bcc     ignore_char
-        cmp     #'z'+1
-        bcs     ignore_char
-
-insert:
-        jsr     line_edit::HandleOtherKey
-
-ignore_char:
         jmp     InputLoop
-
-
 .endproc
-
-
-;;; ------------------------------------------------------------
-
-;;; ------------------------------------------------------------
-
-
-;;; ------------------------------------------------------------
-
-;;; ------------------------------------------------------------
-
-;;; ------------------------------------------------------------
-
-;;; ------------------------------------------------------------
-
-
-;;; ------------------------------------------------------------
-
 
 ;;; ============================================================
 

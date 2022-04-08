@@ -175,7 +175,7 @@ is_btn: jsr     HandleButtonDown
 
 :       cmp     #MGTK::EventKind::key_down
         bne     :+
-        jsr     HandleKey
+        jsr     HandleKeyEvent
         jmp     EventLoop
 
 :       jsr     CheckMouseMoved
@@ -780,10 +780,11 @@ ret:    rts
 ;;; ============================================================
 ;;; Key handler
 
-.proc HandleKey
-        lda     event_params::modifiers
-        beq     no_modifiers
+.proc HandleKeyEvent
+        lda     event_params::key
 
+        ldx     event_params::modifiers
+    IF_NE
         ;; With modifiers
         lda     event_params::key
 
@@ -794,42 +795,33 @@ ret:    rts
 :
         lda     event_params::key
         cmp     #CHAR_TAB
-        jeq     is_tab
-
-        cmp     #CHAR_LEFT
-        jeq     HandleMetaLeftKey ; start of line
-
-        cmp     #CHAR_RIGHT
-        jeq     HandleMetaRightKey ; end of line
+        jeq     KeyTab
 
         bit     listbox_disabled_flag
-        bmi     not_arrow
+      IF_NC
         cmp     #CHAR_DOWN
         jeq     ScrollListBottom ; end of list
 
         cmp     #CHAR_UP
         jeq     ScrollListTop   ; start of list
+      END_IF
 
-not_arrow:
+        ;; Hook for clients
         cmp     #'0'
         bcc     :+
         cmp     #'9'+1
-        bcs     jmp_exit
-        jmp     key_meta_digit
+        jcc     key_meta_digit
+:
+        ;; Delegate to active line edit
+        jsr     HandleKey
 
+    ELSE
         ;; --------------------------------------------------
         ;; No modifiers
 
-no_modifiers:
+        pha
         copy    #0, file_dialog_res::type_down_buf
-
-        lda     event_params::key
-
-        cmp     #CHAR_LEFT
-        jeq     HandleLeftKey
-
-        cmp     #CHAR_RIGHT
-        jeq     HandleRightKey
+        pla
 
         cmp     #CHAR_RETURN
         jeq     KeyReturn
@@ -837,48 +829,30 @@ no_modifiers:
         cmp     #CHAR_ESCAPE
         jeq     KeyEscape
 
-        cmp     #CHAR_DELETE
-        jeq     KeyDelete
-
-        cmp     #CHAR_CLEAR
-        jeq     KeyClear
-
         bit     listbox_disabled_flag
-        bpl     :+
-        jmp     finish
+      IF_NC
+        cmp     #CHAR_TAB
+        jeq     KeyTab
 
-:       cmp     #CHAR_TAB
-        bne     not_tab
-is_tab: lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
-        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
-        jsr     ChangeDrive
-jmp_exit:
-        jmp     exit
-
-not_tab:
         cmp     #CHAR_CTRL_O    ; Open
-        bne     not_ctrl_o
+        IF_EQ
         lda     file_dialog_res::selected_index
         bmi     exit
         tax
         lda     file_list_index,x
-        bmi     :+
-        jmp     exit
+        jpl     exit
 
-:       lda     file_dialog_res::winfo::window_id
+        lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
         jsr     OpenSelectedItem
         jmp     exit
+        END_IF
 
-not_ctrl_o:
         cmp     #CHAR_CTRL_C    ; Close
-        bne     :+
+        IF_EQ
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
@@ -886,17 +860,17 @@ not_ctrl_o:
         MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
         jsr     DoClose
         jmp     exit
+        END_IF
 
-:       cmp     #CHAR_DOWN
+        cmp     #CHAR_DOWN
         jeq     KeyDown
 
         cmp     #CHAR_UP
         jeq     KeyUp
+      END_IF
 
-finish: cmp     #' '
-        bcc     ret
-        jsr     HandleOtherKey
-ret:    rts
+        jsr     HandleKey
+    END_IF
 
 exit:   jsr     InitSetGrafport
         rts
@@ -925,7 +899,6 @@ exit:   jsr     InitSetGrafport
 
 ;;; ============================================================
 
-
 .proc KeyEscape
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
@@ -939,15 +912,14 @@ exit:   jsr     InitSetGrafport
 
 ;;; ============================================================
 
-.proc KeyDelete
-        jsr     HandleDeleteKey
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc KeyClear
-        jsr     HandleClearKey
+.proc KeyTab
+        lda     file_dialog_res::winfo::window_id
+        jsr     SetPortForWindow
+        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
+        jsr     ChangeDrive
+        jsr     InitSetGrafport
         rts
 .endproc
 
@@ -1092,7 +1064,7 @@ char:   .byte   0
 
 .endproc ; CheckAlpha
 
-.endproc ; HandleKey
+.endproc ; HandleKeyEvent
 
 ;;; ============================================================
 
@@ -2284,13 +2256,7 @@ RedrawInput             := f1::Redraw
 HandleSelectionChange   := ListSelectionChange
 PrepPath                := PrepPathF1
 MoveIPEnd               := f1::MoveIPEnd
-HandleOtherKey          := f1::HandleOtherKey
-HandleDeleteKey         := f1::HandleDeleteKey
-HandleClearKey          := f1::HandleClearKey
-HandleLeftKey           := f1::HandleLeftKey
-HandleRightKey          := f1::HandleRightKey
-HandleMetaLeftKey       := f1::HandleMetaLeftKey
-HandleMetaRightKey      := f1::HandleMetaRightKey
+HandleKey               := f1::HandleKey
 HandleClick             := f1::HandleClick
 
 .else
@@ -2329,40 +2295,10 @@ MoveIPEnd:
         jpl     f1::MoveIPEnd
         jmp     f2::MoveIPEnd
 
-HandleOtherKey:
+HandleKey:
         bit     focus_in_input2_flag
-        jpl     f1::HandleOtherKey
-        jmp     f2::HandleOtherKey
-
-HandleDeleteKey:
-        bit     focus_in_input2_flag
-        jpl     f1::HandleDeleteKey
-        jmp     f2::HandleDeleteKey
-
-HandleClearKey:
-        bit     focus_in_input2_flag
-        jpl     f1::HandleClearKey
-        jmp     f2::HandleClearKey
-
-HandleLeftKey:
-        bit     focus_in_input2_flag
-        jpl     f1::HandleLeftKey
-        jmp     f2::HandleLeftKey
-
-HandleRightKey:
-        bit     focus_in_input2_flag
-        jpl     f1::HandleRightKey
-        jmp     f2::HandleRightKey
-
-HandleMetaLeftKey:
-        bit     focus_in_input2_flag
-        jpl     f1::HandleMetaLeftKey
-        jmp     f2::HandleMetaLeftKey
-
-HandleMetaRightKey:
-        bit     focus_in_input2_flag
-        jpl     f1::HandleMetaRightKey
-        jmp     f2::HandleMetaRightKey
+        jpl     f1::HandleKey
+        jmp     f2::HandleKey
 
 HandleClick:
         bit     focus_in_input2_flag

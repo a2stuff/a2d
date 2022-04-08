@@ -14015,75 +14015,47 @@ check_button_cancel:
 ;;; Key handler for prompt dialog
 
 .proc PromptKeyHandler
-        lda     event_params::modifiers
-        beq     no_mods
-
-        ;; Modifier key down.
         lda     event_params::key
 
-        bit     has_input_field_flag
-    IF_NS
-        cmp     #CHAR_LEFT
-        jeq     LeftWithMod
-
-        cmp     #CHAR_RIGHT
-        jeq     RightWithMod
-    END_IF
-
-done:   return  #$FF
-
-        ;; No modifier key down.
-no_mods:
-        lda     event_params::key
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        ;; Modifiers
 
         bit     has_input_field_flag
-    IF_NS
+      IF_NS
+        jsr     line_edit__HandleKey
+      END_IF
+
+    ELSE
+        ;; No modifiers
+
+        bit     format_erase_overlay_flag
+      IF_NS
         cmp     #CHAR_LEFT
-        bne     :+
-        bit     format_erase_overlay_flag
-        jmi     format_erase_overlay__PromptHandleKeyLeft
-        jmp     HandleKeyLeft
-:
+        jeq     format_erase_overlay__PromptHandleKeyLeft
         cmp     #CHAR_RIGHT
-        bne     :+
-        bit     format_erase_overlay_flag
-        jmi     format_erase_overlay__PromptHandleKeyRight
-        jmp     HandleKeyRight
-:
-    END_IF
+        jeq     format_erase_overlay__PromptHandleKeyRight
+        cmp     #CHAR_UP
+        jeq     format_erase_overlay__PromptHandleKeyUp
+        cmp     #CHAR_DOWN
+        jeq     format_erase_overlay__PromptHandleKeyDown
+      END_IF
 
         cmp     #CHAR_RETURN
-        bne     :+
+      IF_EQ
         bit     prompt_button_flags
-        bvs     done
-        jmp     HandleKeyOk
+        jvc     HandleKeyOk
+      END_IF
 
-:       cmp     #CHAR_ESCAPE
-        bne     :+
+        cmp     #CHAR_ESCAPE
+      IF_EQ
         bit     prompt_button_flags
         jpl     HandleKeyCancel
         jmp     HandleKeyOk
+      END_IF
 
-:       cmp     #CHAR_DELETE
-        jeq     HandleKeyDelete
-
-        cmp     #CHAR_CLEAR
-        jeq     HandleKeyClear
-
-        cmp     #CHAR_UP
-        bne     :+
-        bit     format_erase_overlay_flag
-        jpl     done
-        jmp     format_erase_overlay__PromptHandleKeyUp
-
-:       cmp     #CHAR_DOWN
-        bne     :+
-        bit     format_erase_overlay_flag
-        jpl     done
-        jmp     format_erase_overlay__PromptHandleKeyDown
-
-:       bit     prompt_button_flags
-        bvc     :+
+        bit     prompt_button_flags
+      IF_VS
         cmp     #kShortcutYes
         beq     do_yes
         cmp     #TO_LOWER(kShortcutYes)
@@ -14098,46 +14070,18 @@ no_mods:
         beq     do_all
         cmp     #CHAR_RETURN
         beq     do_yes
+      END_IF
 
-:       bit     line_edit_res::allow_all_chars_flag
-        bmi     LA7C8
-        cmp     #'.'
-        beq     LA7D8
-        cmp     #'0'
-        bcs     LA7AB
-        jmp     done
+        bit     has_input_field_flag
+      IF_NS
+        jsr     line_edit__HandleKey
+      END_IF
 
-LA7AB:  cmp     #'z'+1
-        bcc     LA7B2
-        jmp     done
+    END_IF
 
-LA7B2:  cmp     #'9'+1
-        bcc     LA7D8
-        cmp     #'A'
-        bcs     LA7BD
-        jmp     done
+        return  #$FF
 
-LA7BD:  cmp     #'Z'+1
-        bcc     LA7DD
-        cmp     #'a'
-        bcs     LA7DD
-        jmp     done
-
-LA7C8:  cmp     #' '
-        bcs     LA7CF
-        jmp     done
-
-LA7CF:  cmp     #'~'
-        beq     LA7DD
-        bcc     LA7DD
-        jmp     done
-
-LA7D8:  ldx     path_buf1
-        beq     fail
-LA7DD:  ldx     has_input_field_flag
-        beq     fail
-        jsr     line_edit__HandleOtherKey
-fail:   return  #$FF
+        ;; --------------------------------------------------
 
 do_yes: jsr     SetPenModeXOR
         MGTK_CALL MGTK::PaintRect, aux::yes_button_rect
@@ -14150,26 +14094,6 @@ do_no:  jsr     SetPenModeXOR
 do_all: jsr     SetPenModeXOR
         MGTK_CALL MGTK::PaintRect, aux::all_button_rect
         return  #PromptResult::all
-
-.proc LeftWithMod
-        jsr     line_edit__HandleMetaLeftKey
-        return  #$FF
-.endproc
-
-.proc RightWithMod
-        jsr     line_edit__HandleMetaRightKey
-        return  #$FF
-.endproc
-
-.proc HandleKeyLeft
-        jsr     line_edit__HandleLeftKey
-        return  #$FF
-.endproc
-
-.proc HandleKeyRight
-        jsr     line_edit__HandleRightKey
-        return  #$FF
-.endproc
 
 .proc HandleKeyOk
         lda     #winfo_prompt_dialog::kWindowId
@@ -14187,20 +14111,6 @@ do_all: jsr     SetPenModeXOR
         MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
         MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
         return  #1
-.endproc
-
-.proc HandleKeyDelete
-        lda     has_input_field_flag
-        beq     :+
-        jsr     line_edit__HandleDeleteKey
-:       return  #$FF
-.endproc
-
-.proc HandleKeyClear
-        lda     has_input_field_flag
-        beq     :+
-        jsr     line_edit__HandleClearKey
-:       return  #$FF
 .endproc
 
 .endproc
@@ -15446,11 +15356,6 @@ done:   rts
 
 ;;; ============================================================
 
-.proc AnyChar
-        clc
-        FALL_THROUGH_TO NoOp
-.endproc
-
 .proc NoOp
         rts
 .endproc
@@ -15466,11 +15371,41 @@ done:   rts
         kLineEditMaxLength := kMaxFilenameLength
         NotifyTextChanged := NoOp
         click_coords := screentowindow_params::windowx
-        IsAllowedChar := AnyChar
 
 .proc SetPort
         lda     #winfo_prompt_dialog::kWindowId
         jmp     SafeSetPortFromWindowId
+.endproc
+
+.proc IsAllowedChar
+        cmp     #'.'
+        beq     allow_if_not_first
+
+        cmp     #'0'
+        bcc     ignore
+        cmp     #'9'+1
+        bcc     allow_if_not_first
+
+        cmp     #'A'
+        bcc     ignore
+        cmp     #'Z'+1
+        bcc     allow
+
+        cmp     #'a'
+        bcc     ignore
+        cmp     #'z'+1
+        bcc     allow
+        bcs     ignore          ; always
+
+allow_if_not_first:
+        ldx     path_buf1
+        beq     ignore
+
+allow:  clc
+        rts
+
+ignore: sec
+        rts
 .endproc
 
         .include "../lib/line_edit.s"
@@ -15479,13 +15414,7 @@ done:   rts
 line_edit__HandleClick := line_edit::HandleClick
 line_edit__Redraw := line_edit::Redraw
 line_edit__BlinkIP  := line_edit::BlinkIP
-line_edit__HandleOtherKey  := line_edit::HandleOtherKey
-line_edit__HandleDeleteKey  := line_edit::HandleDeleteKey
-line_edit__HandleClearKey  := line_edit::HandleClearKey
-line_edit__HandleLeftKey  := line_edit::HandleLeftKey
-line_edit__HandleRightKey  := line_edit::HandleRightKey
-line_edit__HandleMetaLeftKey  := line_edit::HandleMetaLeftKey
-line_edit__HandleMetaRightKey  := line_edit::HandleMetaRightKey
+line_edit__HandleKey  := line_edit::HandleKey
 line_edit__MoveIPEnd  := line_edit::MoveIPEnd
 
 ;;; ============================================================

@@ -212,6 +212,41 @@ ip_pos: .word   0
 .endproc ; HandleClick
 
 ;;; ============================================================
+;;; Handle a key. Requires `event_params` to be defined.
+
+.proc HandleKey
+        lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_ZERO
+        ;; Not modified
+        cmp     #CHAR_LEFT
+        jeq     HandleLeftKey
+
+        cmp     #CHAR_RIGHT
+        jeq     HandleRightKey
+
+        cmp     #CHAR_DELETE
+        jeq     HandleDeleteKey
+
+        cmp     #CHAR_CLEAR
+        jeq     HandleClearKey
+
+        cmp     #' '
+        jcs     HandleOtherKey
+    ELSE
+        ;; Modified
+        cmp     #CHAR_LEFT
+        jeq     HandleMetaLeftKey
+
+        cmp     #CHAR_RIGHT
+        jeq     HandleMetaRightKey
+    END_IF
+
+        rts
+.endproc
+
+;;; ============================================================
 ;;; When a non-control key is hit - insert the passed character
 
 .proc HandleOtherKey

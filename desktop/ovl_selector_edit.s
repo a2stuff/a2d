@@ -104,7 +104,7 @@ buffer: .res 16, 0
         jsr     DrawCopyWhenButton
         copy    #$80, file_dialog::extra_controls_flag
         copy16  #HandleClick, file_dialog::click_handler_hook+1
-        copy16  #HandleKey, file_dialog::HandleKey::key_meta_digit+1
+        copy16  #HandleKey, file_dialog::HandleKeyEvent::key_meta_digit+1
         rts
 .endproc
 
@@ -285,7 +285,7 @@ ok:     MGTK_CALL MGTK::InitPort, main_grafport
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, line_edit_res::blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
-        copy16  #file_dialog::NoOp, file_dialog::HandleKey::key_meta_digit+1
+        copy16  #file_dialog::NoOp, file_dialog::HandleKeyEvent::key_meta_digit+1
 
         ldx     file_dialog::saved_stack
         txs
@@ -317,7 +317,7 @@ found:  cpy     #2
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, line_edit_res::blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
-        copy16  #file_dialog::NoOp, file_dialog::HandleKey::key_meta_digit+1
+        copy16  #file_dialog::NoOp, file_dialog::HandleKeyEvent::key_meta_digit+1
         ldx     file_dialog::saved_stack
         txs
         return  #$FF
