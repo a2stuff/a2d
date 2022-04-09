@@ -1001,8 +1001,7 @@ top_row:        .byte   0
         ;; Prep input string
         copy    #0, buf_search
 
-        copy    #0, line_edit_res::ip_flag
-        copy    #$80, line_edit_res::blink_ip_flag
+        jsr     line_edit__Init
 
         param_call MeasureString, find_label_str
         addax   input_rect::x1
@@ -1106,6 +1105,7 @@ ignore: sec
         .include "../lib/line_edit.s"
 
 .endscope ; line_edit
+line_edit__Init := line_edit::Init
 line_edit__Idle := line_edit::Idle
 line_edit__Update := line_edit::Update
 

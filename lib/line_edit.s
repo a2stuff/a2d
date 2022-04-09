@@ -23,8 +23,18 @@
 ;;; * `IsAllowedChar` - filter, called if `line_edit_res::allow_all_chars_flag` is set
 ;;; * `line_edit_res::allow_all_chars_flag` - set if more than path chars allowed
 ;;; * `line_edit_res::blink_ip_flag` - set to enable blinking IP
-;;; * `line_edit_res::ip_pos` - IP position
 ;;; ============================================================
+
+.proc Init
+        lda     #0
+        sta     line_edit_res::blink_ip_flag
+        sta     line_edit_res::allow_all_chars_flag
+        sta     line_edit_res::input_dirty_flag
+        sta     line_edit_res::ip_flag
+        sta     line_edit_res::ip_pos
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
+        rts
+.endproc
 
 .proc Idle
         bit     line_edit_res::blink_ip_flag

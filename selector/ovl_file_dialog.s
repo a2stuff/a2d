@@ -134,7 +134,6 @@ start:  jsr     OpenWindow
         lda     #$00
         sta     buf_input1_left
         sta     focus_in_input2_flag
-        sta     line_edit_res::ip_pos
         rts
 .endproc
 

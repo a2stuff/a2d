@@ -13844,18 +13844,14 @@ dialog_param_addr:
         tax
         copy16  dialog_proc_table,x, @jump_addr
 
+        jsr     line_edit__Init
+
         lda     #0
-        sta     line_edit_res::ip_flag
-        sta     line_edit_res::blink_ip_flag
-        sta     line_edit_res::input_dirty_flag
         sta     input1_dirty_flag
         sta     input2_dirty_flag
         sta     has_input_field_flag
-        sta     line_edit_res::allow_all_chars_flag
         sta     format_erase_overlay_flag
         sta     cursor_ibeam_flag
-
-        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
 
         copy16  #rts1, jump_relay+1
         jsr     SetCursorPointer ; when opening dialog
@@ -14533,7 +14529,6 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         copy    #$80, has_input_field_flag
         copy    #$80, line_edit_res::blink_ip_flag
         jsr     ClearPathBuf1
-        jsr     MoveIPToEnd
         lda     #$00
         jsr     OpenPromptWindow
         lda     #winfo_prompt_dialog::kWindowId
@@ -14827,7 +14822,7 @@ UnlockDialogProc := LockDialogProc
         ldy     #rename_dialog_params::a_path - rename_dialog_params
         copy16in ($06),y, $08
 
-        ;; Populate filename field and input (before IP)
+        ;; Populate filename field and input
         ldy     #0
         lda     ($08),y
         tay
@@ -14836,9 +14831,6 @@ UnlockDialogProc := LockDialogProc
         sta     path_buf1,y
         dey
         bpl     :-
-
-        ;; Clear input (after IP)
-        jsr     MoveIPToEnd
 
         param_call DrawDialogLabel, 2, aux::str_rename_old
         param_call DrawString, buf_filename
@@ -14904,7 +14896,7 @@ do_close:
         ldy     #duplicate_dialog_params::a_path - duplicate_dialog_params
         copy16in ($06),y, $08
 
-        ;; Populate filename field and input (before IP)
+        ;; Populate filename field and input
         ldy     #0
         lda     ($08),y
         tay
@@ -14913,9 +14905,6 @@ do_close:
         sta     path_buf1,y
         dey
         bpl     :-
-
-        ;; Clear input (after IP)
-        jsr     MoveIPToEnd
 
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
         param_call DrawString, buf_filename
@@ -15404,17 +15393,13 @@ ignore: sec
         .include "../lib/line_edit.s"
 
 .endscope ; line_edit
+line_edit__Init  := line_edit::Init
 line_edit__Idle  := line_edit::Idle
 line_edit__Update := line_edit::Update
 line_edit__Click := line_edit::Click
 line_edit__Key  := line_edit::Key
 
 ;;; ============================================================
-
-.proc MoveIPToEnd
-        copy    path_buf1, line_edit_res::ip_pos
-        rts
-.endproc
 
 .proc ClearPathBuf1
         copy    #0, path_buf1   ; length

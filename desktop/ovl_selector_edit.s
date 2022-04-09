@@ -92,7 +92,6 @@ buffer: .res 16, 0
 
         copy    #0, file_dialog::focus_in_input2_flag
         copy    #$80, file_dialog::dual_inputs_flag
-        copy    path_buf0, line_edit_res::ip_pos
         lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         lda     which_run_list
@@ -245,7 +244,6 @@ found_slash:
         sty     path_buf1
 
 finish: copy    #$80, line_edit_res::allow_all_chars_flag
-        copy    path_buf1, line_edit_res::ip_pos
         jsr     file_dialog::RedrawInput
         rts
 .endproc
@@ -345,8 +343,7 @@ found:  cpy     #2
         lda     input1_dirty_flag
         sta     line_edit_res::input_dirty_flag
 
-        copy    path_buf0, line_edit_res::ip_pos
-        jsr     file_dialog::f1::ShowIP
+        jsr     file_dialog::f1::Update
         rts
 .endproc
 

@@ -96,26 +96,20 @@ routine_table:  .addr   $7000, $7000, $7000
 .endif
         copy    DEVCNT, device_num
 
+        jsr     LineEditInit
+
         lda     #0
         sta     file_dialog_res::type_down_buf
         sta     only_show_dirs_flag
-        sta     line_edit_res::ip_flag
-.if FD_EXTENDED
-        sta     line_edit_res::blink_ip_flag
-.endif
-        sta     line_edit_res::input_dirty_flag
+        sta     cursor_ibeam_flag
+        sta     extra_controls_flag
+        sta     listbox_disabled_flag
 .if FD_EXTENDED
         sta     input1_dirty_flag
         sta     input2_dirty_flag
-.endif
-        sta     cursor_ibeam_flag
-.if FD_EXTENDED
         sta     dual_inputs_flag
 .endif
-        sta     extra_controls_flag
-        sta     listbox_disabled_flag
 
-        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
         copy    #$FF, file_dialog_res::selected_index
 
 .if FD_EXTENDED
@@ -455,13 +449,8 @@ folder: and     #$7F
         jsr     AppendToPathBuf
         copy    #$FF, file_dialog_res::selected_index
 
+        jsr     UpdateListFromPath
 
-        jsr     ReadDir
-        jsr     UpdateScrollbar
-        lda     #0
-        jsr     ScrollClipRect
-        jsr     UpdateDiskName
-        jsr     DrawListEntries
         MGTK_CALL MGTK::InitPort, main_grafport
         MGTK_CALL MGTK::SetPort, window_grafport
         rts
@@ -489,6 +478,18 @@ different:
         jmp     open
 
 :       rts
+.endproc
+
+;;; ============================================================
+;;; Refresh the list view from the current path
+
+.proc UpdateListFromPath
+        jsr     ReadDir
+        jsr     UpdateScrollbar
+        lda     #0
+        jsr     ScrollClipRect
+        jsr     UpdateDiskName
+        jmp     DrawListEntries
 .endproc
 
 ;;; ============================================================
@@ -691,14 +692,9 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     AppendToPathBuf
         copy    #$FF, file_dialog_res::selected_index
         jsr     PrepPath
+        jsr     RedrawInput
 
-        jsr     ReadDir
-        jsr     UpdateScrollbar
-        lda     #0
-        jsr     ScrollClipRect
-        jsr     UpdateDiskName
-        jsr     DrawListEntries
-        rts
+        jmp     UpdateListFromPath
 .endproc
 
 ;;; ============================================================
@@ -715,12 +711,9 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
         jsr     NextDeviceNum
         jsr     DeviceOnLine
-        jsr     ReadDir
-        jsr     UpdateScrollbar
-        lda     #$00
-        jsr     ScrollClipRect
-        jsr     UpdateDiskName
-        jsr     DrawListEntries
+
+        jsr     UpdateListFromPath
+
         jsr     PrepPath
         jsr     RedrawInput
         rts
@@ -749,12 +742,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         lda     #$FF
         sta     file_dialog_res::selected_index
 
-        jsr     ReadDir
-        jsr     UpdateScrollbar
-        lda     #$00
-        jsr     ScrollClipRect
-        jsr     UpdateDiskName
-        jsr     DrawListEntries
+        jsr     UpdateListFromPath
 
         jsr     PrepPath
         jsr     RedrawInput
@@ -2182,7 +2170,6 @@ f1__Click := f1::Click
 
 .proc PrepPathF1
         COPY_STRING path_buf, buf_input1_left
-        copy    buf_input1_left, line_edit_res::ip_pos
         rts
 .endproc
 
@@ -2215,6 +2202,19 @@ f2__Click := f2::Click
 .endif ; FD_EXTENDED
 
 ;;; ============================================================
+
+.proc LineEditInit
+        ;; These init `line_edit_res` properties; the two
+        ;; calls here are redundant, but future-proof.
+        jsr     f1::Init
+.if FD_EXTENDED
+        jsr     f2::Init
+.endif
+        rts
+.endproc
+
+;;; ============================================================
+
 
 .if !FD_EXTENDED
 
@@ -2344,7 +2344,6 @@ do_copy:
 :       stx     buf_text
 
 finish:
-        copy    buf_text, line_edit_res::ip_pos
         rts
 .endproc
 .endif

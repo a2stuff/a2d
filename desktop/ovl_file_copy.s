@@ -41,7 +41,6 @@
 
         lda     #0
         sta     path_buf0
-        sta     line_edit_res::ip_pos
         sta     file_dialog::focus_in_input2_flag
         rts
 .endproc
@@ -134,8 +133,7 @@ jt_destination_filename:
         bne     :-
 :       sty     path_buf1
 
-done:   copy    path_buf1, line_edit_res::ip_pos
-        jsr     file_dialog::RedrawInput
+done:   jsr     file_dialog::RedrawInput
 
         ;; Twiddle flags
         lda     line_edit_res::input_dirty_flag
@@ -224,7 +222,6 @@ err:    lda     #ERR_INVALID_PATHNAME
         jsr     file_dialog::UpdateScrollbar
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
-        copy    path_buf0, line_edit_res::ip_pos
         jsr     file_dialog::RedrawInput
         rts
 
@@ -250,8 +247,7 @@ L7289:  sta     file_dialog_res::selected_index
 :       jsr     file_dialog::UpdateScrollbar2
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
-        copy    path_buf0, line_edit_res::ip_pos
-        jsr     file_dialog::f1::ShowIP
+        jsr     file_dialog::f1::Update
         rts
 .endproc
 
