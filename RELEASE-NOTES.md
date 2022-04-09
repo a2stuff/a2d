@@ -79,7 +79,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Arrow keys change selected icon. ([#274](https://github.com/a2stuff/a2d/issues/274))
   * **Tab** or **\`** changes selected icon in alphabetical order; **Shift+\`** (or **Shift+Tab**, when detectable) changes selected icon in reverse. ([#275](https://github.com/a2stuff/a2d/issues/275), [#671](https://github.com/a2stuff/a2d/issues/671))
   * Type-down selection is supported. ([#275](https://github.com/a2stuff/a2d/issues/275))
-  * In text input fields, **Control+X** (or **Clear** on IIgs) clears the text.
+  * In text input fields, **Control+X** (or **Clear** on IIgs) clears the text, **Control+F** deletes the character to the right of insertion point.
 
 ### Desk Accessory and Apple Menu Enhancements
 
