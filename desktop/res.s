@@ -1289,7 +1289,7 @@ portptr:        .addr   0
 
 ;;; ============================================================
 
-        PAD_TO $ED00
+        PAD_TO ::kSegmentDeskTopLC1AAddress + ::kSegmentDeskTopLC1ALength
 
 ;;; (there's enough room here for 128 files at up to 28 bytes each; index 0 not used)
 icon_entries:
@@ -1302,7 +1302,7 @@ icon_entries:
 ;;; Segment loaded into AUX $FB00-$FFFF
 ;;; ============================================================
 
-        .org $FB00
+        .org ::kSegmentDeskTopLC1BAddress
 
 ;;; Map ProDOS file type to string (for listings/Get Info).
 ;;; If not found, $XX is used (like CATALOG).
@@ -1596,4 +1596,5 @@ sys_mask:
         ASSERT_ADDRESS VECTORS
         .res    kIntVectorsSize, 0
 
+        ASSERT_ADDRESS ::kSegmentDeskTopLC1BAddress + ::kSegmentDeskTopLC1BLength
         ASSERT_ADDRESS $10000

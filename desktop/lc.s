@@ -8,7 +8,7 @@
 ;;; Segment loaded into AUX $D000-$D1FF
 ;;; ============================================================
 
-        .org $D000
+        .org ::kSegmentDeskTopLC1AAddress
 
 ;;; Various routines callable from MAIN
 

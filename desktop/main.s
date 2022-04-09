@@ -24,7 +24,7 @@ kShortcutScroll = res_char_scroll_shortcut
 src_path_buf    := INVOKER_PREFIX
 dst_path_buf    := $1F80
 
-        .org $4000
+        .org ::kSegmentDeskTopMainAddress
 
         ;; Jump table
         ;; Entries marked with * are used by DAs
@@ -15988,7 +15988,7 @@ str_volume:
 
 ;;; ============================================================
 
-        PAD_TO $BF00
+        PAD_TO ::kSegmentDeskTopMainAddress + ::kSegmentDeskTopMainLength
 
 .endscope ; main
         main__YieldLoop := main::YieldLoop

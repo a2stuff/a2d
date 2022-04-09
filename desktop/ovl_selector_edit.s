@@ -4,8 +4,8 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc SelectorOverlay
-        .org $7000
+.proc SelectorEditOverlay
+        .org ::kOverlaySelector2Address
 
         MGTKEntry := MGTKRelayImpl
 
@@ -537,5 +537,5 @@ draw:
 
 ;;; ============================================================
 
-        PAD_TO $7800
+        PAD_TO ::kOverlaySelector2Address + ::kOverlaySelector2Length
 .endproc ; SelectorOverlay

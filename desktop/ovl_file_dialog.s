@@ -6,7 +6,7 @@
 
 
 .scope file_dialog
-        .org $5000
+        .org ::kOverlayFileDialogAddress
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
@@ -40,7 +40,7 @@ buf_input2_left := path_buf1
 
 ;;; ============================================================
 
-        PAD_TO $7000
+        PAD_TO ::kOverlayFileDialogAddress + ::kOverlayFileDialogLength
 
 .endscope ; file_dialog
 

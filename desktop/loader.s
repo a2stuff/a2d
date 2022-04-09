@@ -13,7 +13,7 @@
 ;;; and invoke QUIT. Note that only $200 bytes are copied.
 
 .proc InstallAsQuit
-        .org $2000
+        .org ::kSegmentLoaderAddress
 
         src     := QuitRoutine
         dst     := SELECTOR
@@ -487,7 +487,7 @@ supports_mousetext:
 
 ;;; ============================================================
 
-        PAD_TO $2380
+        PAD_TO ::kSegmentLoaderAddress + ::kSegmentLoaderLength - $200
 .endproc ; InstallSegments
 
 ;;; ============================================================

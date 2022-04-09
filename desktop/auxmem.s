@@ -12,7 +12,7 @@
 
 .scope aux
 
-        .org $4000
+        .org ::kSegmentDeskTopAuxAddress
 
         MLIEntry := MLI ; this makes no sense
         MGTKEntry := *
@@ -3910,6 +3910,6 @@ app_mask:
 
 ;;; ============================================================
 
-        PAD_TO $C000
+        PAD_TO ::kSegmentDeskTopAuxAddress + ::kSegmentDeskTopAuxLength
 
 .endscope ; aux

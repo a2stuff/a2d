@@ -6,8 +6,8 @@
 
 ;;; See docs/Selector_List_Format.md for file format
 
-.proc SelectorOverlay2
-        .org $9000
+.proc SelectorPickOverlay
+        .org ::kOverlaySelector1Address
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
@@ -1725,8 +1725,8 @@ buf:    .res    ::kPathBufferSize
 
 ;;; ============================================================
 
-        PAD_TO $A000
+        PAD_TO ::kOverlaySelector1Address + ::kOverlaySelector1Length
 
-.endproc ; SelectorOverlay2
+.endproc ; SelectorPickOverlay
 
-selector_picker__Exec    := SelectorOverlay2::Exec
+selector_picker__Exec    := SelectorPickOverlay::Exec

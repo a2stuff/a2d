@@ -5,7 +5,7 @@
 ;;; ============================================================
 
 .proc FileDeleteOverlay
-        .org $7000
+        .org ::kOverlayFileDeleteAddress
 
         MGTKEntry := MGTKRelayImpl
 
@@ -97,5 +97,5 @@ jt_filename:
 
 ;;; ============================================================
 
-        PAD_TO $7800
+        PAD_TO ::kOverlayFileDeleteAddress + ::kOverlayFileDeleteLength
 .endproc ; FileDeleteOverlay

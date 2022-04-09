@@ -5,7 +5,7 @@
 ;;; ============================================================
 
 .scope format_erase_overlay
-        .org $800
+        .org ::kOverlayFormatEraseAddress
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
@@ -1333,7 +1333,7 @@ path:
 
 ;;; ============================================================
 
-        PAD_TO $1C00
+        PAD_TO ::kOverlayFormatEraseAddress + ::kOverlayFormatEraseLength
 
 .endscope ; format_erase_overlay
 

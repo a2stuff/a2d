@@ -5,7 +5,7 @@
 ;;; ============================================================
 
 .proc FileCopyOverlay
-        .org $7000
+        .org ::kOverlayFileCopyAddress
 
         MGTKEntry := MGTKRelayImpl
 
@@ -283,6 +283,6 @@ done:   rts
 
 ;;; ============================================================
 
-        PAD_TO $7800
+        PAD_TO ::kOverlayFileCopyAddress + ::kOverlayFileCopyLength
 
 .endproc ; FileCopyOverlay
