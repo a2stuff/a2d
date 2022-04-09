@@ -1265,23 +1265,20 @@ l1:     ldx     num_file_names
 .endproc
 
 ;;; ============================================================
+;;; Inputs: A,X = string
+;;; Output: Copied to `file_dialog_res::filename_buf`
+;;; Assert: 15 characters or less
 
-.if FD_EXTENDED
-.proc CopyStringToLcbuf
-        ptr := $06
-
+.proc CopyFilenameToBuf
         stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     buf_text,y
-        dey
+        ldx     #kMaxFilenameLength
+        ptr := *+1
+:       lda     SELF_MODIFIED,x
+        sta     file_dialog_res::filename_buf,x
+        dex
         bpl     :-
-        ldax    #buf_text
         rts
 .endproc
-.endif
 
 ;;; ============================================================
 
@@ -1289,9 +1286,6 @@ l1:     ldx     num_file_names
         ptr := $06
         params := $06
 
-.if FD_EXTENDED
-        jsr     CopyStringToLcbuf
-.endif
         stax    ptr
         ldy     #0
         lda     (ptr),y
@@ -1308,9 +1302,6 @@ ret:    rts
         ptr := $06
         params := $06
 
-.if FD_EXTENDED
-        jsr     CopyStringToLcbuf
-.endif
         stax    ptr
         ldy     #0
         lda     (ptr),y
@@ -1350,9 +1341,6 @@ ret:    rts
 ;;; ============================================================
 
 .proc DrawInput1Label
-.if FD_EXTENDED
-        jsr     CopyStringToLcbuf
-.endif
         stax    $06
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
         ldax    $06
@@ -1364,7 +1352,6 @@ ret:    rts
 
 .if FD_EXTENDED
 .proc DrawInput2Label
-        jsr     CopyStringToLcbuf
         stax    $06
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_label_pos
         ldax    $06
@@ -1673,7 +1660,8 @@ loop:   lda     index
         and     #$7F
 
         jsr     GetNthFilename
-        jsr     DrawString
+        jsr     CopyFilenameToBuf
+        param_call DrawString, file_dialog_res::filename_buf
         ldx     index
         lda     file_list_index,x
         bpl     :+
@@ -1760,24 +1748,21 @@ index:  .byte   0
         cmp     #'/'
         beq     finish
         iny
-        sta     INVOKER_PREFIX,y
+        sta     file_dialog_res::filename_buf,y
         cpx     path_buf
         beq     finish
         inx
         bne     :-
 
-finish: sty     INVOKER_PREFIX
+finish: sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         param_call DrawString, file_dialog_res::disk_label_str
-        param_call DrawString, INVOKER_PREFIX
+        param_call DrawString, file_dialog_res::filename_buf
 
         jsr     InitSetGrafport
         rts
 .endproc
-
-;;; ============================================================
-
 
 ;;; ============================================================
 
@@ -2466,6 +2451,7 @@ flag:   .byte   0
 :       sty     buf_right
 
 finish: COPY_STRING path_buf, buf_left
+        rts
 .endproc
 .endif
 

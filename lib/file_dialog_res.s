@@ -12,6 +12,9 @@
 type_down_buf:
         .res    16, 0
 
+filename_buf:
+        .res    16, 0
+
         DEFINE_POINT pos_title, 0, 14
 
         kListBoxWidth = 125
