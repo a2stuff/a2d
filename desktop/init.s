@@ -1133,8 +1133,8 @@ append: lda     unit_num
         bit     is_laser128_flag
     IF_NS
         lda     dispatch+1      ; $Cs
-        and     #%01110000      ; mask off slot
-        cmp     #$70            ; is it slot 7?
+        and     #%00001111      ; mask off slot
+        cmp     #$07            ; is it slot 7?
         beq     next            ; if so, skip it!
     END_IF
 
