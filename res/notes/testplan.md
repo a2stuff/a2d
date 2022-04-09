@@ -47,6 +47,7 @@
 * File > Quit - verify that there is no crash under ProDOS 8.
 
 * Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons.
+* Run on Laser 128, with a Floppy Emu. Select a volume icon. Special > Eject Disk. Verify that the Floppy Emu does not crash.
 * Run on system with realtime clock; verify that time shows in top-right of menu.
 
 * Open folder with new files. Use File > Get Info; verify dates after 1999 show correctly.

@@ -10927,6 +10927,18 @@ ret:    rts
 .proc SmartportEject
         ptr := $6
 
+PARAM_BLOCK dib_buffer, ::IO_BUFFER
+Device_Statbyte1        .byte
+Device_Size_Lo          .byte
+Device_Size_Med         .byte
+Device_Size_Hi          .byte
+ID_String_Length        .byte
+Device_Name             .res    16
+Device_Type_Code        .byte
+Device_Subtype_Code     .byte
+Version                 .word
+END_PARAM_BLOCK
+
         ;; Look up device index by icon number
         sta     @compare
         ldy     #0
@@ -10948,19 +10960,40 @@ found:  lda     DEVLST,y        ; unit_number
         ;; Compute SmartPort dispatch address
         jsr     FindSmartportDispatchAddress
         bcs     done            ; not SP
-        stax    dispatch
+        stax    status_dispatch
+        stax    control_dispatch
+        sty     status_unit_number
         sty     control_unit_number
 
         ;; Execute SmartPort call
-        dispatch := *+1
+        status_dispatch := *+1
+        jsr     SELF_MODIFIED
+        .byte   SPCall::Status
+        .addr   status_params
+        bcs     done            ; failure
+        lda     dib_buffer::Device_Type_Code
+        cmp     #SPDeviceType::Disk35
+        bne     done            ; not 3.5, don't issue command
+
+        ;; Execute SmartPort call
+        control_dispatch := *+1
         jsr     SELF_MODIFIED
         .byte   SPCall::Control
         .addr   control_params
+
 done:   rts
+
+.params status_params
+param_count:    .byte   3
+unit_num:       .byte   SELF_MODIFIED_BYTE
+list_ptr:       .addr   dib_buffer
+status_code:    .byte   3       ; Return Device Information Block (DIB)
+.endparams
+        status_unit_number := status_params::unit_num
 
 .params control_params
 param_count:    .byte   3
-unit_number:    .byte   0
+unit_number:    .byte   SELF_MODIFIED_BYTE
 control_list:   .addr   list
 control_code:   .byte   $04     ; For Apple/UniDisk 3.3: Eject disk
 .endparams
