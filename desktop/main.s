@@ -13871,17 +13871,10 @@ dialog_param_addr:
 .proc PromptInputLoop
         lda     has_input_field_flag
         beq     :+
-
-        ;; Blink the insertion point
-        dec16   line_edit_res::ip_counter
-        lda     line_edit_res::ip_counter
-        ora     line_edit_res::ip_counter+1
-        bne     :+
-        jsr     line_edit__BlinkIP
-        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
-
+        jsr     line_edit__Idle
+:
         ;; Dispatch event types - mouse down, key press
-:       jsr     YieldLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -14008,7 +14001,7 @@ check_button_cancel:
         MGTK_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         bne     :+
-        jsr     line_edit__HandleClick
+        jsr     line_edit__Click
 :       return  #$FF
 .endproc
 
@@ -14023,7 +14016,7 @@ check_button_cancel:
 
         bit     has_input_field_flag
       IF_NS
-        jsr     line_edit__HandleKey
+        jsr     line_edit__Key
       END_IF
 
     ELSE
@@ -14074,7 +14067,7 @@ check_button_cancel:
 
         bit     has_input_field_flag
       IF_NS
-        jsr     line_edit__HandleKey
+        jsr     line_edit__Key
       END_IF
 
     END_IF
@@ -14538,6 +14531,7 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         ;; --------------------------------------------------
         ;; NewFolderDialogState::open
         copy    #$80, has_input_field_flag
+        copy    #$80, line_edit_res::blink_ip_flag
         jsr     ClearPathBuf1
         jsr     MoveIPToEnd
         lda     #$00
@@ -14550,6 +14544,7 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         ;; --------------------------------------------------
         ;; NewFolderDialogState::run
 do_run: copy    #$80, has_input_field_flag
+        copy    #$80, line_edit_res::blink_ip_flag
         copy    #0, prompt_button_flags
         jsr     CopyDialogParamAddrToPtr
         ldy     #new_folder_dialog_params::a_path - new_folder_dialog_params
@@ -14561,18 +14556,17 @@ do_run: copy    #$80, has_input_field_flag
         param_call DrawDialogLabel, 2, aux::str_in
         jsr     DrawDialogPathBuf0
         param_call DrawDialogLabel, 4, aux::str_enter_folder_name
-        jsr     line_edit__Redraw
+        jsr     line_edit__Update
 LAEC6:  jsr     PromptInputLoop
         bmi     LAEC6
         bne     do_close
-        jsr     line_edit__MoveIPEnd
         lda     path_buf1
         beq     LAEC6
         cmp     #kMaxFilenameLength+1
         bcc     LAEE1
 LAED6:  lda     #kErrNameTooLong
         jsr     ShowAlert
-        jsr     line_edit__Redraw
+        jsr     line_edit__Update
         jmp     LAEC6
 
 LAEE1:  lda     path_buf0
@@ -14823,6 +14817,7 @@ UnlockDialogProc := LockDialogProc
 
         jsr     CopyDialogParamAddrToPtr
         copy    #$80, has_input_field_flag
+        copy    #$80, line_edit_res::blink_ip_flag
         lda     #$00
         jsr     OpenPromptWindow
         lda     #winfo_prompt_dialog::kWindowId
@@ -14848,7 +14843,7 @@ UnlockDialogProc := LockDialogProc
         param_call DrawDialogLabel, 2, aux::str_rename_old
         param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_rename_new
-        jsr     line_edit__Redraw
+        jsr     line_edit__Update
         rts
 
         ;; --------------------------------------------------
@@ -14856,14 +14851,13 @@ UnlockDialogProc := LockDialogProc
 do_run:
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
+        copy    #$80, line_edit_res::blink_ip_flag
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 :       jsr     PromptInputLoop
         bmi     :-              ; continue?
 
         bne     do_close        ; canceled!
-
-        jsr     line_edit__MoveIPEnd ; collapse name
 
         lda     path_buf1
         beq     :-              ; name is empty, retry
@@ -14900,6 +14894,7 @@ do_close:
 
         jsr     CopyDialogParamAddrToPtr
         copy    #$80, has_input_field_flag
+        copy    #$80, line_edit_res::blink_ip_flag
         lda     #$00
         jsr     OpenPromptWindow
         lda     #winfo_prompt_dialog::kWindowId
@@ -14925,7 +14920,7 @@ do_close:
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
         param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_rename_new
-        jsr     line_edit__Redraw
+        jsr     line_edit__Update
         rts
 
         ;; --------------------------------------------------
@@ -14933,14 +14928,13 @@ do_close:
 do_run:
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
+        copy    #$80, line_edit_res::blink_ip_flag
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 :       jsr     PromptInputLoop
         bmi     :-              ; continue?
 
         bne     do_close        ; canceled!
-
-        jsr     line_edit__MoveIPEnd ; collapse name
 
         lda     path_buf1
         beq     :-              ; name is empty, retry
@@ -15410,11 +15404,10 @@ ignore: sec
         .include "../lib/line_edit.s"
 
 .endscope ; line_edit
-line_edit__HandleClick := line_edit::HandleClick
-line_edit__Redraw := line_edit::Redraw
-line_edit__BlinkIP  := line_edit::BlinkIP
-line_edit__HandleKey  := line_edit::HandleKey
-line_edit__MoveIPEnd  := line_edit::MoveIPEnd
+line_edit__Idle  := line_edit::Idle
+line_edit__Update := line_edit::Update
+line_edit__Click := line_edit::Click
+line_edit__Key  := line_edit::Key
 
 ;;; ============================================================
 

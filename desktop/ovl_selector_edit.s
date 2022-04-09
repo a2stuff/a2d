@@ -63,11 +63,11 @@ finish: jsr     file_dialog::ReadDir
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         lda     path_buf0
-        bne     :+
+        bne     :+              ; already populated - preserve it!
         jsr     file_dialog::PrepPath
-:       copy    path_buf0, line_edit_res::ip_pos
-        jsr     file_dialog::RedrawInput
-        jsr     file_dialog::f2::Redraw
+:
+        jsr     file_dialog::f2::Update
+        jsr     file_dialog::f1::Update ; sets line_edit_res::ip_pos
         copy    #$FF, line_edit_res::blink_ip_flag
         copy    #0, line_edit_res::allow_all_chars_flag
         jsr     file_dialog::InitDeviceNumber
@@ -201,7 +201,6 @@ jt_entry_name:
 ;;; ============================================================
 
 .proc HandleOkFilename
-        jsr     file_dialog::f1::MoveIPEnd
         jsr     file_dialog::f1::HideIP ; Switch
 
         ;; install name field handlers
@@ -326,7 +325,6 @@ found:  cpy     #2
 ;;; ============================================================
 
 .proc HandleCancelName
-        jsr     file_dialog::f2::MoveIPEnd
         jsr     file_dialog::f2::HideIP ; Switch
 
         ;; install pathname field handlers

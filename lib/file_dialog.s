@@ -151,17 +151,8 @@ listbox_disabled_flag:  ; Set when the listbox is not active
 ;;; ============================================================
 
 .proc EventLoop
-        bit     line_edit_res::blink_ip_flag
-        bpl     :+
-
-        dec16   line_edit_res::ip_counter
-        lda     line_edit_res::ip_counter
-        ora     line_edit_res::ip_counter+1
-        bne     :+
-        jsr     BlinkIP
-        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
-
-:       jsr     YieldLoop
+        jsr     Idle
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
@@ -318,7 +309,6 @@ l4:     lda     file_dialog_res::winfo::window_id
 
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
-        jsr     MoveIPEnd
         jsr     HandleOk
 :       jmp     SetUpPorts
 .endproc
@@ -348,7 +338,7 @@ l4:     lda     file_dialog_res::winfo::window_id
         MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
         bne     done_click
-        jsr     f1__HandleClick
+        jsr     f1__Click
 .else
         ;; Maybe dual fields
         MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
@@ -359,7 +349,7 @@ l4:     lda     file_dialog_res::winfo::window_id
         jsr     HandleCancel ; Move focus to input1
         ;; NOTE: Assumes screentowindow_params::window* has not been changed.
       END_IF
-        jsr     f1__HandleClick
+        jsr     f1__Click
         jmp     done_click
     END_IF
 
@@ -374,7 +364,7 @@ l4:     lda     file_dialog_res::winfo::window_id
         jsr     HandleOk    ; move focus to input2
         ;; NOTE: Assumes screentowindow_params::window* has not been changed.
       END_IF
-        jsr     f2__HandleClick
+        jsr     f2__Click
     END_IF
 .endif
 done_click:
@@ -816,7 +806,7 @@ ret:    rts
         jcc     key_meta_digit
 :
         ;; Delegate to active line edit
-        jsr     HandleKey
+        jsr     Key
 
     ELSE
         ;; --------------------------------------------------
@@ -872,7 +862,7 @@ ret:    rts
         jeq     KeyUp
       END_IF
 
-        jsr     HandleKey
+        jsr     Key
     END_IF
 
 exit:   jsr     InitSetGrafport
@@ -894,7 +884,6 @@ exit:   jsr     InitSetGrafport
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        jsr     MoveIPEnd
         jsr     HandleOk
         jsr     InitSetGrafport
         rts
@@ -2187,7 +2176,7 @@ no_change:
 
 .endscope ; f1
 
-f1__HandleClick := f1::HandleClick
+f1__Click := f1::Click
 
 ;;; ============================================================
 
@@ -2221,7 +2210,7 @@ f1__HandleClick := f1::HandleClick
 
 .endscope ; f2
 
-f2__HandleClick := f2::HandleClick
+f2__Click := f2::Click
 
 .endif ; FD_EXTENDED
 
@@ -2231,12 +2220,11 @@ f2__HandleClick := f2::HandleClick
 
 ;;; Alias table - replaces jump table in hookable version
 
-BlinkIP                 := f1::BlinkIP
-RedrawInput             := f1::Redraw
-PrepPath                := PrepPathF1
-MoveIPEnd               := f1::MoveIPEnd
-HandleKey               := f1::HandleKey
-HandleClick             := f1::HandleClick
+PrepPath        := PrepPathF1
+Idle            := f1::Idle
+RedrawInput     := f1::Update
+Key             := f1::Key
+Click           := f1::Click
 
 .else
 
@@ -2249,35 +2237,30 @@ HandleOk:             jmp     0
 HandleCancel:         jmp     0
         .assert * - jump_table = kJumpTableSize, error, "Table size mismatch"
 
-BlinkIP:
+Idle:
         bit     focus_in_input2_flag
-        jpl     f1::BlinkIP
-        jmp     f2::BlinkIP
+        jpl     f1::Idle
+        jmp     f2::Idle
 
 RedrawInput:
         bit     focus_in_input2_flag
-        jpl     f1::Redraw
-        jmp     f2::Redraw
+        jpl     f1::Update
+        jmp     f2::Update
 
 PrepPath:
         bit     focus_in_input2_flag
         jpl     PrepPathF1
         jmp     PrepPathF2
 
-MoveIPEnd:
+Key:
         bit     focus_in_input2_flag
-        jpl     f1::MoveIPEnd
-        jmp     f2::MoveIPEnd
+        jpl     f1::Key
+        jmp     f2::Key
 
-HandleKey:
+Click:
         bit     focus_in_input2_flag
-        jpl     f1::HandleKey
-        jmp     f2::HandleKey
-
-HandleClick:
-        bit     focus_in_input2_flag
-        jpl     f1::HandleClick
-        jmp     f2::HandleClick
+        jpl     f1::Click
+        jmp     f2::Click
 
 .endif
 
@@ -2303,7 +2286,6 @@ HandleClick:
         jsr     StripPathBufSegment
 
         jsr     RedrawInput
-        jsr     MoveIPEnd       ; TODO: Rework to avoid flash in old pos?
 
         rts
 .endproc

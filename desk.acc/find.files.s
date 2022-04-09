@@ -991,8 +991,6 @@ cursor_ip_flag: .byte   0
 kBufSize = 16                       ; max length = 15, length
 buf_search:     .res    kBufSize, 0 ; search term
 
-        kPromptInsertionPointBlinkCount = $14
-
         .include "../lib/line_edit_res.s"
 
 top_row:        .byte   0
@@ -1004,7 +1002,7 @@ top_row:        .byte   0
         copy    #0, buf_search
 
         copy    #0, line_edit_res::ip_flag
-        copy    #kPromptInsertionPointBlinkCount, line_edit_res::ip_counter
+        copy    #$80, line_edit_res::blink_ip_flag
 
         param_call MeasureString, find_label_str
         addax   input_rect::x1
@@ -1015,7 +1013,7 @@ top_row:        .byte   0
         MGTK_CALL MGTK::OpenWindow, winfo_results
         MGTK_CALL MGTK::HideCursor
         jsr     DrawWindow
-        jsr     line_edit__Redraw
+        jsr     line_edit__Update
         jsr     DrawResults
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
@@ -1023,12 +1021,16 @@ top_row:        .byte   0
 .endproc
 
 .proc InputLoop
-        ;; TODO: Why isn't this 16 bits from SETTINGS?
-        dec     line_edit_res::ip_counter
-        bne     :+
-        jsr     line_edit__BlinkIP
-        copy    #kPromptInsertionPointBlinkCount, line_edit_res::ip_counter
-:
+        ;; Since ZP preservation is on for DAs, MGTK calls are much
+        ;; slower. Approximate normal IP blink speed by making multiple
+        ;; idle calls.
+        copy    #24, count
+:       jsr     line_edit__Idle
+        dec     count
+        count := *+1
+        lda     #SELF_MODIFIED_BYTE
+        bne     :-
+
         param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
@@ -1104,8 +1106,8 @@ ignore: sec
         .include "../lib/line_edit.s"
 
 .endscope ; line_edit
-line_edit__BlinkIP := line_edit::BlinkIP
-line_edit__Redraw := line_edit::Redraw
+line_edit__Idle := line_edit::Idle
+line_edit__Update := line_edit::Update
 
 ;;; ============================================================
 
@@ -1127,7 +1129,7 @@ line_edit__Redraw := line_edit::Redraw
         jmp     HandleScroll
       END_IF
 
-        jsr     line_edit::HandleKey
+        jsr     line_edit::Key
     ELSE
         ;; Not modified
         cmp     #CHAR_ESCAPE
@@ -1154,7 +1156,7 @@ line_edit__Redraw := line_edit::Redraw
         jmp     HandleScroll
       END_IF
 
-        jsr     line_edit::HandleKey
+        jsr     line_edit::Key
     END_IF
 
         jmp     InputLoop
@@ -1233,7 +1235,7 @@ finish: jmp     InputLoop
         MGTK_CALL MGTK::InRect, input_rect
         cmp     #MGTK::inrect_inside
         bne     done
-        jsr     line_edit::HandleClick
+        jsr     line_edit::Click
 
 done:   jmp     InputLoop
 

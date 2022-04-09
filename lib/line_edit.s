@@ -1,15 +1,50 @@
 ;;; ============================================================
+;;; API:
+;;; * `Idle` - call from event loop; blinks IP
+;;; * `Update` - call to repaint control entirely, IP moved to end
+;;; * `Click` - call with mapped `click_coords` populated
+;;; * `Key` - call with `event_params` populated
+;;; * `ShowIP` / `HideIP` - when changing focus
+;;; Internal procs are prefixed with `_`
+;;; TODO:
+;;; * Add Init the resets state
+;;; * Add Activate/Deactivate that handle showing/hiding/positioning IP
+;;;
+;;; Requirements:
+;;; * `buf_text` - string to edit
+;;; * `kLineEditMaxLength` - max length of string
+;;; * `frame_rect` - outline of control
+;;; * `clear_rect` - to erase contents of control
+;;; * `textpos` - position of text
+;;; * `SetPort` - called to set up GrafPort for drawing
+;;; * `NotifyTextChanged` - called when string changes
+;;; * `click_coords` - for `Click`, in window coords
+;;; * `event_params` - for `Key`
+;;; * `IsAllowedChar` - filter, called if `line_edit_res::allow_all_chars_flag` is set
+;;; * `line_edit_res::allow_all_chars_flag` - set if more than path chars allowed
+;;; * `line_edit_res::blink_ip_flag` - set to enable blinking IP
+;;; * `line_edit_res::ip_pos` - IP position
+;;; ============================================================
 
-.proc BlinkIP
-        ;; Toggle flag
+.proc Idle
+        bit     line_edit_res::blink_ip_flag
+        bmi     :+
+ret:    rts
+:
+        dec16   line_edit_res::ip_counter
+        lda     line_edit_res::ip_counter
+        ora     line_edit_res::ip_counter+1
+        bne     ret
+
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
         lda     line_edit_res::ip_flag
         eor     #$80
         sta     line_edit_res::ip_flag
 
-        FALL_THROUGH_TO XDrawIP
+        FALL_THROUGH_TO _XDrawIP
 .endproc
 
-.proc XDrawIP
+.proc _XDrawIP
         point := $6
         xcoord := $6
         ycoord := $8
@@ -17,9 +52,9 @@
         jsr     SetPort
 
         ;; TODO: Do this with a 1px rect instead of a line
-        jsr     CalcIPPos
+        jsr     _CalcIPPos
         stax    xcoord
-        dec16   xcoord
+        dec16   xcoord          ; between characters
         copy16  textpos + MGTK::Point::ycoord, ycoord
 
         MGTK_CALL MGTK::MoveTo, point
@@ -34,31 +69,32 @@
 
 .proc HideIP
         bit     line_edit_res::ip_flag
-        bmi     XDrawIP
+        bmi     _XDrawIP
         rts
 .endproc
 ShowIP := HideIP
 
 ;;; ============================================================
 
-.proc Redraw
+.proc Update
         jsr     SetPort
 
         ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     HideIP        ; Redraw
+        ;; jsr     HideIP
 
         MGTK_CALL MGTK::PaintRect, clear_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::MoveTo, textpos
         param_call DrawString, buf_text
+        copy    buf_text, line_edit_res::ip_pos
         jmp     ShowIP
 .endproc
 
 ;;; ============================================================
 ;;; Internal proc: used as part of insert/delete procs
 
-.proc RedrawRightOfIP
+.proc _RedrawRightOfIP
         jsr     SetPort
 
 PARAM_BLOCK point, $06
@@ -66,7 +102,7 @@ xcoord  .word
 ycoord  .word
 END_PARAM_BLOCK
 
-        jsr     CalcIPPos
+        jsr     _CalcIPPos
         stax    point::xcoord
         copy16  textpos + MGTK::Point::ycoord, point::ycoord
         MGTK_CALL MGTK::MoveTo, point
@@ -90,7 +126,7 @@ END_PARAM_BLOCK
 ;;; ============================================================
 ;;; A click when f1 has focus (click may be elsewhere)
 
-.proc HandleClick
+.proc Click
         lda     buf_text
         beq     ret
 
@@ -116,18 +152,18 @@ loop:   add16   tw_params::width, textpos + MGTK::Point::xcoord, tw_params::widt
 :
         lda     tw_params::length
         pha
-        jsr     HideIP          ; Click
+        jsr     HideIP
         pla
         sta     line_edit_res::ip_pos
         jsr     ShowIP
 
 ret:    rts
-.endproc ; HandleClick
+.endproc ; Click
 
 ;;; ============================================================
 ;;; Handle a key. Requires `event_params` to be defined.
 
-.proc HandleKey
+.proc Key
         MGTK_CALL MGTK::ObscureCursor
 
         lda     event_params::key
@@ -136,29 +172,29 @@ ret:    rts
     IF_ZERO
         ;; Not modified
         cmp     #CHAR_LEFT
-        jeq     MoveIPLeft
+        jeq     _MoveIPLeft
 
         cmp     #CHAR_RIGHT
-        jeq     MoveIPRight
+        jeq     _MoveIPRight
 
         cmp     #CHAR_DELETE
-        jeq     DeleteLeft
+        jeq     _DeleteLeft
 
         cmp     #CHAR_CTRL_F
-        jeq     DeleteRight
+        jeq     _DeleteRight
 
         cmp     #CHAR_CLEAR
-        jeq     DeleteLine
+        jeq     _DeleteLine
 
         cmp     #' '
-        jcs     InsertChar
+        jcs     _InsertChar
     ELSE
         ;; Modified
         cmp     #CHAR_LEFT
-        jeq     MoveIPStart
+        jeq     _MoveIPStart
 
         cmp     #CHAR_RIGHT
-        jeq     MoveIPEnd
+        jeq     _MoveIPEnd
     END_IF
 
         rts
@@ -167,7 +203,7 @@ ret:    rts
 ;;; ============================================================
 ;;; When a non-control key is hit - insert the passed character
 
-.proc InsertChar
+.proc _InsertChar
         sta     char
 
         ;; Is it allowed?
@@ -181,7 +217,7 @@ ret:    rts
         cmp     #kLineEditMaxLength ; TODO: Off-by-one now that IP is gone?
         bcs     ret
 
-        jsr     HideIP          ; Insert
+        jsr     HideIP
 
         ;; Move everything to right of IP up
         ldx     buf_text
@@ -200,7 +236,7 @@ ret:    rts
         inc     buf_text
 
         ;; Redraw string to right of old IP position
-        jsr     RedrawRightOfIP
+        jsr     _RedrawRightOfIP
 
         ;; Now move IP to new position
         inc     line_edit_res::ip_pos
@@ -214,16 +250,16 @@ ret:    rts
 ;;; ============================================================
 ;;; When delete (backspace) is hit
 
-.proc DeleteLeft
+.proc _DeleteLeft
         ;; Anything to delete?
         lda     line_edit_res::ip_pos
         beq     ret
 
-        jsr     HideIP          ; Delete
+        jsr     HideIP
 
         dec     line_edit_res::ip_pos
 
-        jsr     DeleteCharCommon
+        jsr     _DeleteCharCommon
 
 ret:    rts
 .endproc
@@ -231,15 +267,15 @@ ret:    rts
 ;;; ============================================================
 ;;; Forward-delete
 
-.proc DeleteRight
+.proc _DeleteRight
         ;; Anything to delete?
         lda     line_edit_res::ip_pos
         cmp     buf_text
         beq     ret
 
-        jsr     HideIP          ; Delete
+        jsr     HideIP
 
-        jsr     DeleteCharCommon
+        jsr     _DeleteCharCommon
 
 ret:    rts
 .endproc
@@ -247,7 +283,7 @@ ret:    rts
 ;;; ============================================================
 ;;; Common logic for DeleteLeft/DeleteRight
 
-.proc DeleteCharCommon
+.proc _DeleteCharCommon
         ;; Shrink buffer
         dec     buf_text
 
@@ -261,7 +297,7 @@ ret:    rts
         bne     :-              ; always
 :
         ;; Redraw everything to the right of the IP
-        jsr     RedrawRightOfIP
+        jsr     _RedrawRightOfIP
         param_call DrawString, line_edit_res::str_2_spaces
 
         jsr     ShowIP
@@ -270,13 +306,13 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc DeleteLine
+.proc _DeleteLine
         ;; Anything to delete?
         lda     buf_text
         beq     ret
 
         ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     HideIP          ; Clear
+        ;; jsr     HideIP
 
         lda     #0
         sta     buf_text
@@ -294,12 +330,12 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character left.
 
-.proc MoveIPLeft
+.proc _MoveIPLeft
         ;; Any characters to left of IP?
         lda     line_edit_res::ip_pos
         beq     ret
 
-        jsr     HideIP          ; Left
+        jsr     HideIP
         dec     line_edit_res::ip_pos
         jsr     ShowIP
 
@@ -309,13 +345,13 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP one character right.
 
-.proc MoveIPRight
+.proc _MoveIPRight
         ;; Any characters to right of IP?
         lda     line_edit_res::ip_pos
         cmp     buf_text
         beq     ret
 
-        jsr     HideIP          ; Right
+        jsr     HideIP
         inc     line_edit_res::ip_pos
         jsr     ShowIP
 
@@ -325,16 +361,16 @@ ret:    rts
 ;;; ============================================================
 ;;; Move IP to start of input field.
 
-.proc MoveIPStart
-        jsr     HideIP          ; Home
+.proc _MoveIPStart
+        jsr     HideIP
         copy    #0, line_edit_res::ip_pos
         jmp     ShowIP
 .endproc
 
 ;;; ============================================================
 
-.proc MoveIPEnd
-        jsr     HideIP          ; End
+.proc _MoveIPEnd
+        jsr     HideIP
         copy    buf_text, line_edit_res::ip_pos
         jmp     ShowIP
 .endproc
@@ -342,7 +378,7 @@ ret:    rts
 ;;; ============================================================
 ;;; Output: A,X = X coordinate of insertion point
 
-.proc CalcIPPos
+.proc _CalcIPPos
         PARAM_BLOCK params, $06
 data    .addr
 length  .byte
@@ -374,7 +410,7 @@ width   .word
 ;;; changed.
 
 .if 0
-.proc DebugText
+.proc _DebugText
 PARAM_BLOCK point, $06
 xcoord  .word
 ycoord  .word

@@ -102,8 +102,7 @@ l4:     jsr     main::PromptInputLoop
 l5:     jsr     Bell
         jmp     l4
 
-l6:     jsr     main::line_edit__MoveIPEnd
-        lda     path_buf1
+l6:     lda     path_buf1
         beq     l5              ; name is empty
         cmp     #kMaxFilenameLength+1
         bcs     l5              ; name > 15 characters
@@ -263,8 +262,7 @@ l3:     jsr     main::PromptInputLoop
 l4:     jsr     Bell
         jmp     l3
 
-l5:     jsr     main::line_edit__MoveIPEnd
-        lda     path_buf1
+l5:     lda     path_buf1
         beq     l4              ; name is empty
         cmp     #kMaxFilenameLength+1
         bcs     l4              ; name > 15 characters
