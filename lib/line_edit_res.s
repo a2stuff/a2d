@@ -13,6 +13,10 @@ blink_ip_flag:
 allow_all_chars_flag:
         .byte   0
 
+;;; Internal: Position of the insertion point
+ip_pos:
+        .byte   0
+
 ;;; Internal: counter for the IP blink cycle.
 ip_counter:
         .word   1             ; immediately decremented to 0 and reset
@@ -32,9 +36,5 @@ str_1_char:
 ;;; Internal: used to clear the end of the string when a character is deleted.
 str_2_spaces:
         PASCAL_STRING "  "
-
-;;; Internal: text after the insertion point.
-buf_right:
-        .res    ::kPathBufferSize, 0
 
 .endscope

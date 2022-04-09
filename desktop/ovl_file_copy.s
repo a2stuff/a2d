@@ -41,7 +41,7 @@
 
         lda     #0
         sta     path_buf0
-        sta     line_edit_res::buf_right
+        sta     line_edit_res::ip_pos
         sta     file_dialog::focus_in_input2_flag
         rts
 .endproc
@@ -104,13 +104,14 @@ jt_destination_filename:
 
         jsr     file_dialog::DrawListEntries
 
+        ;; Init destination path
         ldx     file_dialog::path_buf
 :       lda     file_dialog::path_buf,x
         sta     path_buf1,x
         dex
         bpl     :-
 
-        copy    #0, line_edit_res::buf_right
+        ;; Append filename from source to destination
 
         ldx     path_buf0
         beq     done
@@ -122,19 +123,20 @@ jt_destination_filename:
         dex
         bne     :-
 :
-        ;; Copy filename into `line_edit_res::buf_right`
-        ldy     #1
-        dex
-:       cpx     path_buf0
-        beq     done
-        inx
-        lda     path_buf0,x
-        sta     line_edit_res::buf_right,y
-        inc     line_edit_res::buf_right
+        ;; Append to destination
+        ldy     path_buf1
         iny
-        jmp     :-
+:       lda     path_buf0,x
+        sta     path_buf1,y
+        cpx     path_buf0
+        beq     :+
+        iny
+        inx
+        bne     :-
+:       sty     path_buf1
 
-done:   jsr     file_dialog::RedrawInput
+done:   copy    path_buf1, line_edit_res::ip_pos
+        jsr     file_dialog::RedrawInput
 
         ;; Twiddle flags
         lda     line_edit_res::input_dirty_flag
@@ -224,6 +226,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         jsr     file_dialog::UpdateScrollbar
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
+        copy    path_buf0, line_edit_res::ip_pos
         jsr     file_dialog::RedrawInput
         rts
 
@@ -249,7 +252,7 @@ L7289:  sta     file_dialog_res::selected_index
 :       jsr     file_dialog::UpdateScrollbar2
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
-
+        copy    path_buf0, line_edit_res::ip_pos
         jsr     file_dialog::f1::ShowIP
         rts
 .endproc

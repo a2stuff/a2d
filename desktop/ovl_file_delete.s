@@ -41,7 +41,7 @@
         sta     path_buf0
         sta     file_dialog::focus_in_input2_flag
 
-        copy    #0, line_edit_res::buf_right
+        copy    #0, line_edit_res::ip_pos
         rts
 .endproc
 

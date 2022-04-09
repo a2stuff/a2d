@@ -14539,7 +14539,7 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         ;; NewFolderDialogState::open
         copy    #$80, has_input_field_flag
         jsr     ClearPathBuf1
-        jsr     ClearPathBuf2
+        jsr     MoveIPToEnd
         lda     #$00
         jsr     OpenPromptWindow
         lda     #winfo_prompt_dialog::kWindowId
@@ -14843,7 +14843,7 @@ UnlockDialogProc := LockDialogProc
         bpl     :-
 
         ;; Clear input (after IP)
-        jsr     ClearPathBuf2
+        jsr     MoveIPToEnd
 
         param_call DrawDialogLabel, 2, aux::str_rename_old
         param_call DrawString, buf_filename
@@ -14920,7 +14920,7 @@ do_close:
         bpl     :-
 
         ;; Clear input (after IP)
-        jsr     ClearPathBuf2
+        jsr     MoveIPToEnd
 
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
         param_call DrawString, buf_filename
@@ -15363,8 +15363,7 @@ done:   rts
 ;;; ============================================================
 
 .scope line_edit
-        buf_left := path_buf1
-        buf_right := line_edit_res::buf_right
+        buf_text := path_buf1
         textpos := name_input_textpos
         clear_rect := name_input_erase_rect
         frame_rect := name_input_rect
@@ -15398,7 +15397,7 @@ done:   rts
         bcs     ignore          ; always
 
 allow_if_not_first:
-        ldx     path_buf1
+        ldx     buf_text
         beq     ignore
 
 allow:  clc
@@ -15419,8 +15418,8 @@ line_edit__MoveIPEnd  := line_edit::MoveIPEnd
 
 ;;; ============================================================
 
-.proc ClearPathBuf2
-        copy    #0, line_edit_res::buf_right   ; length
+.proc MoveIPToEnd
+        copy    path_buf1, line_edit_res::ip_pos
         rts
 .endproc
 

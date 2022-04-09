@@ -463,6 +463,8 @@ folder: and     #$7F
         pla                     ; A = index
         jsr     GetNthFilename
         jsr     AppendToPathBuf
+        copy    #$FF, file_dialog_res::selected_index
+
 
         jsr     ReadDir
         jsr     UpdateScrollbar
@@ -697,6 +699,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
         jsr     GetNthFilename
         jsr     AppendToPathBuf
+        copy    #$FF, file_dialog_res::selected_index
         jsr     PrepPath
 
         jsr     ReadDir
@@ -1380,6 +1383,7 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
         lda     #0
         sta     path_buf
         param_call AppendToPathBuf, on_line_buffer
+        copy    #$FF, file_dialog_res::selected_index
         rts
 .endproc
 
@@ -1432,8 +1436,6 @@ incr:   ldx     device_num
 last:   .byte   0
 .endproc
 .endif
-
-;;; ============================================================
 
 ;;; ============================================================
 
@@ -1508,17 +1510,12 @@ open_dir_flag:
 
         pla
         sta     path_buf
-        lda     #$FF
-        sta     file_dialog_res::selected_index
 
 .if FD_EXTENDED
         lda     #0
 .endif
         rts
 .endproc
-
-;;; ============================================================
-
 
 ;;; ============================================================
 
@@ -2172,8 +2169,7 @@ no_change:
 ;;; ============================================================
 
 .scope f1
-        buf_left := buf_input1_left
-        buf_right := line_edit_res::buf_right
+        buf_text := buf_input1_left
         textpos := file_dialog_res::input1_textpos
         clear_rect := file_dialog_res::input1_clear_rect
         frame_rect := file_dialog_res::input1_rect
@@ -2197,7 +2193,7 @@ f1__HandleClick := f1::HandleClick
 
 .proc PrepPathF1
         COPY_STRING path_buf, buf_input1_left
-        copy    #0, line_edit_res::buf_right
+        copy    buf_input1_left, line_edit_res::ip_pos
         rts
 .endproc
 
@@ -2208,8 +2204,7 @@ f1__HandleClick := f1::HandleClick
 .if FD_EXTENDED
 .scope f2
 
-        buf_left := buf_input2_left
-        buf_right := line_edit_res::buf_right
+        buf_text := buf_input2_left
         textpos := file_dialog_res::input2_textpos
         clear_rect := file_dialog_res::input2_clear_rect
         frame_rect := file_dialog_res::input2_rect
@@ -2238,7 +2233,6 @@ f2__HandleClick := f2::HandleClick
 
 BlinkIP                 := f1::BlinkIP
 RedrawInput             := f1::Redraw
-HandleSelectionChange   := ListSelectionChange
 PrepPath                := PrepPathF1
 MoveIPEnd               := f1::MoveIPEnd
 HandleKey               := f1::HandleKey
@@ -2265,11 +2259,6 @@ RedrawInput:
         jpl     f1::Redraw
         jmp     f2::Redraw
 
-HandleSelectionChange:
-        bit     focus_in_input2_flag
-        jpl     HandleSelectionChangeF1
-        jmp     HandleSelectionChangeF2
-
 PrepPath:
         bit     focus_in_input2_flag
         jpl     PrepPathF1
@@ -2293,103 +2282,10 @@ HandleClick:
 .endif
 
 ;;; ============================================================
-;;; Input: A,X = string address
 
-.proc AppendSegmentToInput1
+.proc HandleSelectionChange
         ptr := $06
 
-        stax    ptr
-
-        ldx     buf_input1_left
-        lda     #'/'
-        sta     buf_input1_left+1,x
-        inc     buf_input1_left
-
-        ldy     #0
-        lda     (ptr),y
-        tay
-        clc
-        adc     buf_input1_left
-        pha
-        tax
-
-:       lda     (ptr),y
-        sta     buf_input1_left,x
-        dey
-        dex
-        cpx     buf_input1_left
-        bne     :-
-
-        pla
-        sta     buf_input1_left
-        rts
-.endproc
-
-;;; ============================================================
-;;; Input: A,X = string address
-
-.if FD_EXTENDED
-.proc AppendSegmentToInput2
-        ptr := $06
-
-        stax    ptr
-
-        ldx     buf_input2_left
-        lda     #'/'
-        sta     buf_input2_left+1,x
-        inc     buf_input2_left
-
-        ldy     #$00
-        lda     (ptr),y
-        tay
-        clc
-        adc     buf_input2_left
-        pha
-        tax
-
-:       lda     (ptr),y
-        sta     buf_input2_left,x
-        dey
-        dex
-        cpx     buf_input2_left
-        bne     :-
-
-        pla
-        sta     buf_input2_left
-        rts
-.endproc
-.endif
-
-;;; ============================================================
-
-.if FD_EXTENDED
-HandleSelectionChangeF1:
-        lda     #$00
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-
-HandleSelectionChangeF2:
-        lda     #$80
-        FALL_THROUGH_TO ListSelectionChange
-.endif
-
-.proc ListSelectionChange
-        ptr := $06
-
-.if FD_EXTENDED
-        sta     flag
-.endif
-
-        ;; Reset path to current dir path
-.if !FD_EXTENDED
-        jsr     PrepPathF1
-.else
-        bit     flag
-    IF_NC
-        jsr     PrepPathF1
-    ELSE
-        jsr     PrepPathF2
-    END_IF
-.endif
         ;; Find name of selected item
         copy16  #file_names, ptr
         ldx     file_dialog_res::selected_index
@@ -2397,60 +2293,76 @@ HandleSelectionChangeF2:
         and     #$7F
         jsr     GetNthFilename
 
-        ;; Append selected name to text
-.if !FD_EXTENDED
-        jsr     AppendSegmentToInput1
-.else
-        bit     flag
-    IF_NC
-        jsr     AppendSegmentToInput1
-    ELSE
-        jsr     AppendSegmentToInput2
-    END_IF
-.endif
-        jsr     RedrawInput
-        rts
+        ;; Append selected name to path temporarily
+        jsr     AppendToPathBuf
 
-.if FD_EXTENDED
-flag:   .byte   0
-.endif
+        ;; Copy it into appropriate text buf
+        jsr     PrepPath
+
+        ;; And restore path
+        jsr     StripPathBufSegment
+
+        jsr     RedrawInput
+        jsr     MoveIPEnd       ; TODO: Rework to avoid flash in old pos?
+
+        rts
 .endproc
 
 ;;; ============================================================
 
 .if FD_EXTENDED
 .proc PrepPathF2
-        buf_left := buf_input2_left
-        buf_right := line_edit_res::buf_right
+        buf_text := buf_input2_left
 
         ;; Whenever the path is updated, preserve last segment of
         ;; the path (the filename) as a suffix. This is fairly
         ;; specific to "Copy a File".
 
-        ;; Collapse paths, search for last '/'
-        jsr     f2::MoveIPEnd
-        ldx     buf_left
-        beq     finish
-:       lda     buf_left,x
+        copy    #0, buf_filename
+
+        ;; Search for last '/'
+        ldx     buf_text
+        beq     do_copy
+:       lda     buf_text,x
         cmp     #'/'
         beq     :+
         dex
-        beq     finish
+        beq     do_copy
         bne     :-              ; always
 :
-        ;; Copy slash and last segment to right
+        ;; Copy slash and last segment to filename
         ldy     #1
-:       lda     buf_left,x
-        sta     buf_right,y
-        cpx     buf_input2_left
+:       lda     buf_text,x
+        sta     buf_filename,y
+        cpx     buf_text
         beq     :+
         iny
         inx
         bne     :-              ; always
 
-:       sty     buf_right
+:       sty     buf_filename
 
-finish: COPY_STRING path_buf, buf_left
+do_copy:
+        ;; Update the text with the new path
+        COPY_STRING path_buf, buf_text
+
+        ;; Append filename if not blank
+        lda     buf_filename
+        beq     finish
+        ldx     buf_text
+        inx
+        ldy     #1
+:       lda     buf_filename,y
+        sta     buf_text,x
+        cpy     buf_filename
+        beq     :+
+        iny
+        inx
+        bne     :-              ; always
+:       stx     buf_text
+
+finish:
+        copy    buf_text, line_edit_res::ip_pos
         rts
 .endproc
 .endif
@@ -2504,6 +2416,7 @@ common:
         and     #$7F            ; mask off "is folder?" bit
         jsr     GetNthFilename
         jsr     AppendToPathBuf
+        copy    #$FF, file_dialog_res::selected_index ; TODO: Remove?
 
         ;; Compare with path buf
         ;; NOTE: Case sensitive, since we're always comparing adjusted paths.

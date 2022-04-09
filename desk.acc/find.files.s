@@ -989,7 +989,6 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 cursor_ip_flag: .byte   0
 
 kBufSize = 16                       ; max length = 15, length
-buf_left:       .res    kBufSize, 0 ; input text before IP
 buf_search:     .res    kBufSize, 0 ; search term
 
         kPromptInsertionPointBlinkCount = $14
@@ -1002,8 +1001,7 @@ top_row:        .byte   0
 
 .proc Init
         ;; Prep input string
-        copy    #0, buf_left
-        copy    #0, line_edit_res::buf_right
+        copy    #0, buf_search
 
         copy    #0, line_edit_res::ip_flag
         copy    #kPromptInsertionPointBlinkCount, line_edit_res::ip_counter
@@ -1056,7 +1054,7 @@ top_row:        .byte   0
 ;;; Line Edit
 
 .scope line_edit
-        buf_right := line_edit_res::buf_right
+        buf_text := buf_search
         textpos := input_textpos
         clear_rect := input_clear_rect
         frame_rect := input_rect
@@ -1165,30 +1163,6 @@ line_edit__Redraw := line_edit::Redraw
 ;;; ============================================================
 
 .proc DoSearch
-        buf_right := line_edit_res::buf_right
-        ;; Concatenate left/right strings
-        ldx     buf_left
-        beq     right
-
-        ;; Copy left
-:       copy    buf_left,x, buf_search,x
-        dex
-        bpl     :-
-        ldx     buf_left
-
-        ;; Append right
-right:
-        ldy     #0
-:       cpy     buf_right
-        beq     done_concat
-        iny
-        inx
-        copy    buf_right,y, buf_search,x
-        bne     :-              ; always
-
-done_concat:
-        stx     buf_search
-
         param_call JTRelay, JUMP_TABLE_CUR_WATCH
 
         ;; Do the search

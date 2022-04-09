@@ -92,7 +92,7 @@ l3:     bit     selected_device_index
         jsr     main::ClearPathBuf1
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
-        jsr     main::ClearPathBuf2
+        jsr     main::MoveIPToEnd
         param_call main::DrawDialogLabel, 3, aux::str_new_volume
 l4:     jsr     main::PromptInputLoop
         bmi     l4              ; not done
@@ -253,7 +253,7 @@ l2:     bit     selected_device_index
         jsr     main::ClearPathBuf1
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
-        jsr     main::ClearPathBuf2
+        jsr     main::MoveIPToEnd
         param_call main::DrawDialogLabel, 3, aux::str_new_volume
 l3:     jsr     main::PromptInputLoop
         bmi     l3              ; not done

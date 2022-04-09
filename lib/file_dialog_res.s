@@ -13,7 +13,7 @@ type_down_buf:
         .res    16, 0
 
 filename_buf:
-        .res    16, 0
+        .res    17, 0           ; filename + length + slash (for some uses)
 
         DEFINE_POINT pos_title, 0, 14
 
