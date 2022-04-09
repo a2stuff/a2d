@@ -1120,32 +1120,35 @@ append: lda     unit_num
         and     #%01110000      ; mask off slot
         cmp     #$50            ; is it slot 5?
         beq     next            ; if so, ignore
-
-        ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
-        ;; hangs in some cases. https://github.com/a2stuff/a2d/issues/138
-:       bit     is_laser128_flag
-        bpl     :+
-        and     #%01110000      ; mask off slot
-        cmp     #$70            ; is it slot 7?
-        beq     next            ; if so, ignore
 :
         ;; Do SmartPort STATUS call to filter out 5.25 devices
         lda     unit_num
         jsr     main::FindSmartportDispatchAddress
-        bcs     :+              ; couldn't determine
+        bcs     next            ; can't determine address - skip it!
         stax    dispatch
         sty     status_params::unit_num
+
+        ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
+        ;; hangs in some cases. https://github.com/a2stuff/a2d/issues/138
+        bit     is_laser128_flag
+    IF_NS
+        lda     dispatch+1      ; $Cs
+        and     #%01110000      ; mask off slot
+        cmp     #$70            ; is it slot 7?
+        beq     next            ; if so, skip it!
+    END_IF
+
         dispatch := *+1
         jsr     SELF_MODIFIED
         .byte   SPCall::Status
         .addr   status_params
-        bcs     :+              ; call failed
+        bcs     next            ; call failed - skip it!
         lda     dib_buffer::Device_Type_Code
         cmp     #SPDeviceType::Disk525
         beq     next            ; is 5.25 - skip it!
 
         ;; Append the device
-:       inc     count
+        inc     count
         ldx     count
         lda     unit_num
         sta     main::removable_device_table,x
