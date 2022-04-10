@@ -2373,33 +2373,27 @@ finish:
 .if !FD_EXTENDED
 
 .proc NotifyTextChangedF1
-        COPY_STRING buf_input1, buf_text
+        ldax    #buf_input1
 
 .else
 
 .proc NotifyTextChanged
-
-f2:     lda     #$FF
-        bmi     :+
-
-f1:     lda     #$00
-
-:       bmi     :+
-        COPY_STRING buf_input1, buf_text
+f2:     ldax    #buf_input2
         jmp     common
 
-:       COPY_STRING buf_input2, buf_text
+f1:     ldax    #buf_input1
 
 common:
 
 .endif
+        ptr := $08
+        stax    ptr
 
         ;; Build full path (with seleciton or not) into `path_buf`
         lda     file_dialog_res::selected_index
         sta     current_selection
         bmi     compare_paths   ; no selection
 
-        ptr := $06
         tax
         lda     file_list_index,x
         and     #$7F            ; mask off "is folder?" bit
@@ -2410,14 +2404,15 @@ common:
         ;; Compare with path buf
         ;; NOTE: Case sensitive, since we're always comparing adjusted paths.
 compare_paths:
-        lda     buf_text
+        ldy     #0
+        lda     (ptr),y
         cmp     path_buf
         bne     no_match
-        tax
-:       lda     buf_text,x
-        cmp     path_buf,x
+        tay
+:       lda     (ptr),y
+        cmp     path_buf,y
         bne     no_match
-        dex
+        dey
         bne     :-
 
         ;; Matched

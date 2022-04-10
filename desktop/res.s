@@ -260,10 +260,6 @@ buf_filename2:  .res    16, 0
 buf_win_path:
         .res    kPathBufferSize, 0
 
-        ;; used when splitting string for text field
-buf_text:
-        .res    kPathBufferSize, 0
-
 ;;; In common dialog (copy/edit file, add/edit shortcut):
 ;;; * path_buf0 has the contents of the top input field
 ;;; * path_buf1 has the contents of the bottom input field

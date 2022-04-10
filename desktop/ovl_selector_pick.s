@@ -560,12 +560,11 @@ xcoord: .byte   0
         lda     (ptr),y
         tay
 :       lda     (ptr),y
-        sta     buf_text+2,y
+        sta     text_buffer2::length,y
         dey
         bpl     :-
 
-        copy16  #buf_text+3, buf_text
-        MGTK_CALL MGTK::DrawText, buf_text
+        MGTK_CALL MGTK::DrawText, text_buffer2
         rts
 .endproc
 
