@@ -30,8 +30,8 @@ AdjustVolumeNameCase    := main::AdjustVolumeNameCase
 AdjustFileEntryCase     := main::AdjustFileEntryCase
 
 ;;; Required data definitions
-buf_input1_left := path_buf0
-buf_input2_left := path_buf1
+buf_input1 := path_buf0
+buf_input2 := path_buf1
 
 ;;; Required macro definitions
         .define FD_EXTENDED 1

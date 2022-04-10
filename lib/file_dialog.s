@@ -18,7 +18,7 @@
 ;;; * `YieldLoop`
 ;;; Requires the following data definitions:
 ;;; * `buf_text`
-;;; * `buf_input1_left`
+;;; * `buf_input1`
 ;;; * `window_grafport`
 ;;; * `main_grafport`
 ;;; * `penXOR`
@@ -28,7 +28,7 @@
 ;;; If `FD_EXTENDED` is defined as 1:
 ;;; * two input fields are supported
 ;;; * title passed to `DrawTitleCentered` in aux, `AuxLoad` is used
-;;; * `buf_input2_left` must be defined
+;;; * `buf_input2` must be defined
 
 ;;; ============================================================
 
@@ -77,10 +77,16 @@ saved_stack:
 ;;; ============================================================
 
 .if FD_EXTENDED
-routine_table:  .addr   $7000, $7000, $7000
+routine_table:
+        .addr   kOverlayFileCopyAddress
+        .addr   kOverlayFileDeleteAddress
+        .addr   kOverlaySelector2Address
 .endif
 
 ;;; ============================================================
+
+;;; For FD_EXTENDED, A=routine to jump to from `routine_table`
+;;; Otherwise, jumps to label `start`.
 
 .proc Start
 .if FD_EXTENDED
@@ -91,9 +97,8 @@ routine_table:  .addr   $7000, $7000, $7000
         stx     saved_stack
 .if FD_EXTENDED
         pha
-.else
-        jsr     SetCursorPointer
 .endif
+        jsr     SetCursorPointer
         copy    DEVCNT, device_num
 
         jsr     LineEditInit
@@ -122,12 +127,13 @@ routine_table:  .addr   $7000, $7000, $7000
 
         @jump := *+1
         jmp     SELF_MODIFIED
+
+stash_x:        .byte   0
+stash_y:        .byte   0
 .else
         jmp     start
 .endif
 
-stash_x:        .byte   0
-stash_y:        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -211,8 +217,10 @@ l5:     MGTK_CALL MGTK::InitPort, main_grafport
         jmp     EventLoop
 .endproc
 
+.if FD_EXTENDED
 focus_in_input2_flag:
         .byte   0
+.endif
 
 ;;; ============================================================
 
@@ -2146,7 +2154,7 @@ no_change:
 ;;; ============================================================
 
 .scope f1
-        buf_text := buf_input1_left
+        buf_text := buf_input1
         textpos := file_dialog_res::input1_textpos
         clear_rect := file_dialog_res::input1_clear_rect
         frame_rect := file_dialog_res::input1_rect
@@ -2169,7 +2177,7 @@ f1__Click := f1::Click
 ;;; ============================================================
 
 .proc PrepPathF1
-        COPY_STRING path_buf, buf_input1_left
+        COPY_STRING path_buf, buf_input1
         rts
 .endproc
 
@@ -2180,7 +2188,7 @@ f1__Click := f1::Click
 .if FD_EXTENDED
 .scope f2
 
-        buf_text := buf_input2_left
+        buf_text := buf_input2
         textpos := file_dialog_res::input2_textpos
         clear_rect := file_dialog_res::input2_clear_rect
         frame_rect := file_dialog_res::input2_rect
@@ -2294,7 +2302,7 @@ Click:
 
 .if FD_EXTENDED
 .proc PrepPathF2
-        buf_text := buf_input2_left
+        buf_text := buf_input2
 
         ;; Whenever the path is updated, preserve last segment of
         ;; the path (the filename) as a suffix. This is fairly
@@ -2365,7 +2373,7 @@ finish:
 .if !FD_EXTENDED
 
 .proc NotifyTextChangedF1
-        COPY_STRING buf_input1_left, buf_text
+        COPY_STRING buf_input1, buf_text
 
 .else
 
@@ -2377,10 +2385,10 @@ f2:     lda     #$FF
 f1:     lda     #$00
 
 :       bmi     :+
-        COPY_STRING buf_input1_left, buf_text
+        COPY_STRING buf_input1, buf_text
         jmp     common
 
-:       COPY_STRING buf_input2_left, buf_text
+:       COPY_STRING buf_input2, buf_text
 
 common:
 

@@ -96,7 +96,7 @@ ibeam_cursor:
 buf_text:       .res    68, 0
 
 ;;; String being edited
-buf_input_left:         .res    68, 0 ; left of IP
+buf_input:         .res    68, 0 ; left of IP
 
 ;;; ============================================================
 ;;; File Picker Dialog
@@ -115,6 +115,7 @@ str_file_to_run:
 
 ;;; ============================================================
 
+;;; Called back from file dialog's `Start`
 start:  jsr     OpenWindow
         jsr     DrawWindow
         jsr     DeviceOnLine
@@ -132,8 +133,7 @@ start:  jsr     OpenWindow
 
 .proc InitInput
         lda     #$00
-        sta     buf_input1_left
-        sta     focus_in_input2_flag
+        sta     buf_input1
         rts
 .endproc
 
@@ -154,14 +154,14 @@ start:  jsr     OpenWindow
 ;;; ============================================================
 
 .proc HandleOk
-        param_call VerifyValidNonVolumePath, buf_input1_left
+        param_call VerifyValidNonVolumePath, buf_input1
         beq     :+
         rts
 
 :       ldx     saved_stack
         txs
-        ldy     #<buf_input1_left
-        ldx     #>buf_input1_left
+        ldy     #<buf_input1
+        ldx     #>buf_input1
         sta     $07
         return  #$00
 .endproc
@@ -188,7 +188,7 @@ ModifierDown            := app::ModifierDown
 ShiftDown               := app::ShiftDown
 
 ;;; Required data definitions:
-buf_input1_left := buf_input_left
+buf_input1 := buf_input
 
 ;;; Required macro definitions:
         .define FD_EXTENDED 0
