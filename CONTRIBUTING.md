@@ -70,14 +70,16 @@ modify. Here's a snapshot of the output for some files that could use
 attention:
 
 ```
-desktop/auxmem.s                unscoped:    0  scoped:   48  raw:    0  unrefed:    0
-desktop/main.s                  unscoped:    0  scoped:   66  raw:   15  unrefed:    0
-desktop/ovl_selector_pick.s     unscoped:   15  scoped:    1  raw:    0  unrefed:    1
-disk_copy/auxlc.s               unscoped:   79  scoped:   27  raw:    7  unrefed:    0
-lib/formatdiskii.s              unscoped:   43  scoped:   15  raw:    0  unrefed:    0
-mgtk/mgtk.s                     unscoped:    0  scoped:   10  raw:    8  unrefed:    0
-selector/app.s                  unscoped:    1  scoped:   32  raw:    1  unrefed:    0
-selector/ovl_file_copy.s        unscoped:   42  scoped:   37  raw:    0  unrefed:    0
+
+desktop/auxmem.s               unscoped:  0  scoped: 46  raw:  0
+desktop/main.s                 unscoped:  0  scoped: 28  raw: 12
+desktop/ovl_selector_pick.s    unscoped: 15  scoped:  1  raw:  0
+disk_copy/auxlc.s              unscoped: 66  scoped: 28  raw:  7
+lib/formatdiskii.s             unscoped: 43  scoped: 15  raw:  0
+mgtk/mgtk.s                    unscoped:  0  scoped: 10  raw:  8
+selector/app.s                 unscoped:  1  scoped: 32  raw:  1
+selector/ovl_file_copy.s       unscoped: 42  scoped: 37  raw:  0
+
 ```
 
 * **unscoped** counts the number of auto-generated labels like `L1234`
@@ -97,8 +99,3 @@ selector/ovl_file_copy.s        unscoped:   42  scoped:   37  raw:    0  unrefed
     these usually refer to routines, resources, or occasionally
     buffer locations that need to be understood and replaced with
     labels.
-
-* **unrefed** counts the number of auto-generated labels like `L1234`
-    that lack references within the source file. Early on, these often
-    hint at bogus disassembly but can also signal that the code to
-    use a routine or resource has not yet been identified.

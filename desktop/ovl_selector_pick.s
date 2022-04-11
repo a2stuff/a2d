@@ -115,7 +115,7 @@ L90D3:  lda     num_secondary_run_list_entries
 L90F1:  jmp     L900F
 
 L90F4:  lda     #kErrSelectorListFull
-L90F6:  jsr     ShowAlert
+        jsr     ShowAlert
         dec     clean_flag      ; reset to "clean"
         jmp     L9016
 
