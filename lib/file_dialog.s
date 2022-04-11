@@ -2195,6 +2195,7 @@ f1__Click := f1::Click
         kLineEditMaxLength := kMaxInputLength
         click_coords := screentowindow_params::windowx
         IsAllowedChar := IsPathChar
+        NotifyTextChanged := NotifyTextChangedF2
 
 .proc SetPort
         lda     file_dialog_res::winfo::window_id

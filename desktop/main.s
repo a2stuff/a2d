@@ -2608,7 +2608,6 @@ stashed_name:
         lda     icon_num
         jsr     IconWindowToScreen
 
-        jsr     PrepareHighlightGrafport
         jsr     ApplyActiveWinfoToWindowGrafport
 
         copy    #0, dirty
@@ -6307,7 +6306,7 @@ header_and_offset_flag:
         beq     use_win_port
 
         ;; Selection is in a non-active window
-        jsr     PrepareHighlightGrafport ; TODO: ends up being a null port???
+        jsr     PrepareNullGrafPort
         jmp     loop
 
         ;; Selection is in the active window
@@ -9396,19 +9395,18 @@ saved_portbits:
 .endproc
 
 ;;; ============================================================
-;;; Zero out and then select highlight_grafport. Used for setting
-;;; and clearing selections (since icons are in screen space).
+;;; Zero out and then select `null_grafport`.
 
-.proc PrepareHighlightGrafport
+.proc PrepareNullGrafPort
         lda     #0
         tax
-:       sta     highlight_grafport::cliprect::topleft,x
-        sta     highlight_grafport::viewloc::xcoord,x
-        sta     highlight_grafport::cliprect::bottomright,x
+:       sta     null_grafport::cliprect::topleft,x
+        sta     null_grafport::viewloc::xcoord,x
+        sta     null_grafport::cliprect::bottomright,x
         inx
         cpx     #.sizeof(MGTK::Point)
         bne     :-
-        MGTK_CALL MGTK::SetPort, highlight_grafport
+        MGTK_CALL MGTK::SetPort, null_grafport
         rts
 .endproc
 
@@ -11939,6 +11937,10 @@ file_entry_buf          .res    .sizeof(FileEntry)
 
 ;;; ============================================================
 
+op_jt1: jmp     (op_jt_addr1)
+op_jt2: jmp     (op_jt_addr2)
+op_jt3: jmp     (op_jt_addr3)
+
         ;; overlayed indirect jump table
         kOpJTAddrsSize = 6
 
@@ -12133,10 +12135,6 @@ end_dir:
 .endproc
 
 cancel_descent_flag:  .byte   0
-
-op_jt1: jmp     (op_jt_addr1)
-op_jt2: jmp     (op_jt_addr2)
-op_jt3: jmp     (op_jt_addr3)
 
 ;;; ============================================================
 ;;; "Copy" (including Drag/Drop/Move) files state and logic

@@ -68,16 +68,11 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endparams
-        main_grafport_viewloc_xcoord := main_grafport::viewloc::xcoord
-        main_grafport_cliprect_x1 := main_grafport::cliprect::x1
-        main_grafport_cliprect_x2 := main_grafport::cliprect::x2
-        main_grafport_cliprect_y2 := main_grafport::cliprect::y2
 
+;;; GrafPort used for icon operations in inactive windows, to
+;;; prevent any drawing.
 
-;;; GrafPort used specifically when setting/clearing icon highlights,
-;;; since icons are in screen space coordinates.
-
-.params highlight_grafport
+.params null_grafport
         DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
@@ -346,10 +341,8 @@ textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
-winfo_about_dialog_port    := winfo_about_dialog::port
 
 ;;; Dialog used for Edit/Delete/Run a Shortcut ...
-
 
 .params winfo_entry_picker
         kWindowId = $1B
