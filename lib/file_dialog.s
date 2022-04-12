@@ -525,14 +525,7 @@ different:
         rts
 
 :       lda     trackthumb_params::thumbpos
-        sta     updatethumb_params::thumbpos
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_params::stash
-        jsr     ScrollClipRect
-        jsr     DrawListEntries
-        rts
+        jmp     UpdateThumbCommon
 .endproc
 
 ;;; ============================================================
@@ -543,14 +536,8 @@ different:
         sbc     #kPageDelta
         bpl     :+
         lda     #0
-:       sta     updatethumb_params::thumbpos
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_params::thumbpos
-        jsr     ScrollClipRect
-        jsr     DrawListEntries
-        rts
+:
+        jmp     UpdateThumbCommon
 .endproc
 
 ;;; ============================================================
@@ -563,14 +550,8 @@ different:
         beq     :+
         bcc     :+
         lda     file_dialog_res::winfo_listbox::vthumbmax
-:       sta     updatethumb_params::thumbpos
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_params::thumbpos
-        jsr     ScrollClipRect
-        jsr     DrawListEntries
-        rts
+:
+        jmp     UpdateThumbCommon
 .endproc
 
 ;;; ============================================================
@@ -582,13 +563,7 @@ different:
 
 :       sec
         sbc     #kLineDelta
-        sta     updatethumb_params::thumbpos
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_params::thumbpos
-        jsr     ScrollClipRect
-        jsr     DrawListEntries
+        jsr     UpdateThumbCommon
         jsr     CheckArrowRepeat
         jmp     HandleLineUp
 .endproc
@@ -603,15 +578,21 @@ different:
 
 :       clc
         adc     #kLineDelta
+        jsr     UpdateThumbCommon
+        jsr     CheckArrowRepeat
+        jmp     HandleLineDown
+.endproc
+
+;;; ============================================================
+
+.proc UpdateThumbCommon
         sta     updatethumb_params::thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_params::thumbpos
         jsr     ScrollClipRect
-        jsr     DrawListEntries
-        jsr     CheckArrowRepeat
-        jmp     HandleLineDown
+        jmp     DrawListEntries
 .endproc
 
 ;;; ============================================================
