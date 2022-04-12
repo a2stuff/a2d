@@ -683,13 +683,21 @@ done:   rts
         ldy     #IconEntry::state ; valid icon?
         lda     (ptr),y
         bne     :+
-
         return  #2
+:
+        jsr     RemoveIconCommon
+        return  #0
+.endproc
+
+;;; ============================================================
+;;; Remove the icon at $06
+
+.proc RemoveIconCommon
+        ptr := $06              ; Overwrites params
 
         ;; Move it to the end of `icon_list`
-        ;;ldy     #IconEntry::id
-        .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
-:       dey
+        ldy     #IconEntry::id
+        dey
         lda     (ptr),y         ; icon num
         ldx     num_icons       ; new position
         jsr     ChangeIconIndex
@@ -711,7 +719,7 @@ done:   rts
         lda     #0              ; not allocated
         sta     (ptr),y
 
-        bcc     done            ; not highlighted
+        bcc     :+              ; not highlighted
 
         ;;ldy     #IconEntry::id
         .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
@@ -719,7 +727,7 @@ done:   rts
         lda     (ptr),y         ; A = icon id
         jsr     RemoveFromHighlightList
 
-done:   return  #0
+:       rts
 .endproc
 
 ;;; ============================================================
@@ -817,38 +825,9 @@ L96E5:  dec     count
         cmp     (params),y ; match?
         bne     loop                 ; nope
 
-        ;; Move to end of icon list
-        ldy     #IconEntry::id
-        lda     (ptr),y         ; icon num
-        ldx     num_icons       ; icon index
-        jsr     ChangeIconIndex
+        jsr     RemoveIconCommon
 
-        ;; Remove it from the icon list
-        dec     num_icons
-        lda     #0
-        ldx     num_icons
-        sta     icon_list,x
-
-        ;; Mark it as free
-        ldy     #IconEntry::state
-        lda     (ptr),y         ; A = state
-        ;; Was it highlighted?
-        ;;and     #kIconEntryStateHighlighted
-        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
-        asl
-        asl                     ; carry set if highlighted
-        lda     #0              ; not allocated
-        sta     (ptr),y
-
-        bcc     next            ; not highlighted
-
-        ;;ldy     #IconEntry::id
-        .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
-        dey
-        lda     (ptr),y         ; A = icon id
-        jsr     RemoveFromHighlightList
-
-next:   jmp     loop
+        jmp     loop
 .endproc
 
 ;;; ============================================================
