@@ -171,6 +171,70 @@ ret:    rts
 .endproc ; Click
 
 ;;; ============================================================
+;;; Move IP one character left.
+
+.proc _MoveIPLeft
+        ;; Any characters to left of IP?
+        lda     line_edit_res::ip_pos
+        beq     ret
+
+        jsr     HideIP
+        dec     line_edit_res::ip_pos
+        jsr     ShowIP
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+;;; Move IP one character right.
+
+.proc _MoveIPRight
+        ;; Any characters to right of IP?
+        lda     line_edit_res::ip_pos
+        cmp     buf_text
+        beq     ret
+
+        jsr     HideIP
+        inc     line_edit_res::ip_pos
+        jsr     ShowIP
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+;;; When delete (backspace) is hit
+
+.proc _DeleteLeft
+        ;; Anything to delete?
+        lda     line_edit_res::ip_pos
+        beq     ret
+
+        jsr     HideIP
+
+        dec     line_edit_res::ip_pos
+
+        jsr     _DeleteCharCommon
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+;;; Forward-delete
+
+.proc _DeleteRight
+        ;; Anything to delete?
+        lda     line_edit_res::ip_pos
+        cmp     buf_text
+        beq     ret
+
+        jsr     HideIP
+
+        jsr     _DeleteCharCommon
+
+ret:    rts
+.endproc
+
+;;; ============================================================
 ;;; Handle a key. Requires `event_params` to be defined.
 
 .proc Key
@@ -182,29 +246,29 @@ ret:    rts
     IF_ZERO
         ;; Not modified
         cmp     #CHAR_LEFT
-        jeq     _MoveIPLeft
+        beq     _MoveIPLeft
 
         cmp     #CHAR_RIGHT
-        jeq     _MoveIPRight
+        beq     _MoveIPRight
 
         cmp     #CHAR_DELETE
-        jeq     _DeleteLeft
+        beq     _DeleteLeft
 
         cmp     #CHAR_CTRL_F
-        jeq     _DeleteRight
+        beq     _DeleteRight
 
         cmp     #CHAR_CLEAR
-        jeq     _DeleteLine
+        beq     _DeleteLine
 
         cmp     #' '
-        jcs     _InsertChar
+        bcs     _InsertChar
     ELSE
         ;; Modified
         cmp     #CHAR_LEFT
-        jeq     _MoveIPStart
+        beq     _MoveIPStart
 
         cmp     #CHAR_RIGHT
-        jeq     _MoveIPEnd
+        beq     _MoveIPEnd
     END_IF
 
         rts
@@ -258,36 +322,43 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
-;;; When delete (backspace) is hit
 
-.proc _DeleteLeft
+.proc _DeleteLine
         ;; Anything to delete?
-        lda     line_edit_res::ip_pos
+        lda     buf_text
         beq     ret
 
-        jsr     HideIP
+        ;; Unnecessary - the entire field will be repainted.
+        ;; jsr     HideIP
 
-        dec     line_edit_res::ip_pos
+        lda     #0
+        sta     buf_text
+        sta     line_edit_res::ip_pos
 
-        jsr     _DeleteCharCommon
+        jsr     SetPort
+        MGTK_CALL MGTK::PaintRect, clear_rect
+
+        jsr     ShowIP
+        jsr     NotifyTextChanged
 
 ret:    rts
 .endproc
 
 ;;; ============================================================
-;;; Forward-delete
+;;; Move IP to start of input field.
 
-.proc _DeleteRight
-        ;; Anything to delete?
-        lda     line_edit_res::ip_pos
-        cmp     buf_text
-        beq     ret
-
+.proc _MoveIPStart
         jsr     HideIP
+        copy    #0, line_edit_res::ip_pos
+        jmp     ShowIP
+.endproc
 
-        jsr     _DeleteCharCommon
+;;; ============================================================
 
-ret:    rts
+.proc _MoveIPEnd
+        jsr     HideIP
+        copy    buf_text, line_edit_res::ip_pos
+        jmp     ShowIP
 .endproc
 
 ;;; ============================================================
@@ -312,77 +383,6 @@ ret:    rts
 
         jsr     ShowIP
         jmp     NotifyTextChanged
-.endproc
-
-;;; ============================================================
-
-.proc _DeleteLine
-        ;; Anything to delete?
-        lda     buf_text
-        beq     ret
-
-        ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     HideIP
-
-        lda     #0
-        sta     buf_text
-        sta     line_edit_res::ip_pos
-
-        jsr     SetPort
-        MGTK_CALL MGTK::PaintRect, clear_rect
-
-        jsr     ShowIP
-        jsr     NotifyTextChanged
-
-ret:    rts
-.endproc
-
-;;; ============================================================
-;;; Move IP one character left.
-
-.proc _MoveIPLeft
-        ;; Any characters to left of IP?
-        lda     line_edit_res::ip_pos
-        beq     ret
-
-        jsr     HideIP
-        dec     line_edit_res::ip_pos
-        jsr     ShowIP
-
-ret:    rts
-.endproc
-
-;;; ============================================================
-;;; Move IP one character right.
-
-.proc _MoveIPRight
-        ;; Any characters to right of IP?
-        lda     line_edit_res::ip_pos
-        cmp     buf_text
-        beq     ret
-
-        jsr     HideIP
-        inc     line_edit_res::ip_pos
-        jsr     ShowIP
-
-ret:    rts
-.endproc
-
-;;; ============================================================
-;;; Move IP to start of input field.
-
-.proc _MoveIPStart
-        jsr     HideIP
-        copy    #0, line_edit_res::ip_pos
-        jmp     ShowIP
-.endproc
-
-;;; ============================================================
-
-.proc _MoveIPEnd
-        jsr     HideIP
-        copy    buf_text, line_edit_res::ip_pos
-        jmp     ShowIP
 .endproc
 
 ;;; ============================================================
