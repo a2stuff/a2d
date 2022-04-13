@@ -13,7 +13,6 @@
 ;;; Requirements:
 ;;; * `buf_text` - string to edit
 ;;; * `kLineEditMaxLength` - max length of string
-;;; * `frame_rect` - outline of control
 ;;; * `clear_rect` - to erase contents of control
 ;;; * `textpos` - position of text
 ;;; * `SetPort` - called to set up GrafPort for drawing
@@ -93,8 +92,6 @@ ShowIP := HideIP
         ;; jsr     HideIP
 
         MGTK_CALL MGTK::PaintRect, clear_rect
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::MoveTo, textpos
         param_call DrawString, buf_text
         copy    buf_text, line_edit_res::ip_pos

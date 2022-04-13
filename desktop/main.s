@@ -13875,8 +13875,6 @@ dialog_param_addr:
         tax
         copy16  dialog_proc_table,x, @jump_addr
 
-        jsr     line_edit__Init
-
         lda     #0
         sta     input1_dirty_flag
         sta     input2_dirty_flag
@@ -14558,7 +14556,6 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         ;; --------------------------------------------------
         ;; NewFolderDialogState::open
         copy    #$80, has_input_field_flag
-        copy    #$80, line_edit_res::blink_ip_flag
         jsr     ClearPathBuf1
         lda     #$00
         jsr     OpenPromptWindow
@@ -14570,7 +14567,6 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         ;; --------------------------------------------------
         ;; NewFolderDialogState::run
 do_run: copy    #$80, has_input_field_flag
-        copy    #$80, line_edit_res::blink_ip_flag
         copy    #0, prompt_button_flags
         jsr     CopyDialogParamAddrToPtr
         ldy     #new_folder_dialog_params::a_path - new_folder_dialog_params
@@ -14582,18 +14578,20 @@ do_run: copy    #$80, has_input_field_flag
         param_call DrawDialogLabel, 2, aux::str_in
         jsr     DrawDialogPathBuf0
         param_call DrawDialogLabel, 4, aux::str_enter_folder_name
-        jsr     line_edit__Update
-LAEC6:  jsr     PromptInputLoop
-        bmi     LAEC6
+        jsr     InitNameInput
+
+loop:   jsr     PromptInputLoop
+        bmi     loop
         bne     do_close
         lda     path_buf1
-        beq     LAEC6
+        beq     loop
         cmp     #kMaxFilenameLength+1
         bcc     LAEE1
+
 LAED6:  lda     #kErrNameTooLong
         jsr     ShowAlert
         jsr     line_edit__Update
-        jmp     LAEC6
+        jmp     loop
 
 LAEE1:  lda     path_buf0
         clc
@@ -14843,7 +14841,6 @@ UnlockDialogProc := LockDialogProc
 
         jsr     CopyDialogParamAddrToPtr
         copy    #$80, has_input_field_flag
-        copy    #$80, line_edit_res::blink_ip_flag
         lda     #$00
         jsr     OpenPromptWindow
         lda     #winfo_prompt_dialog::kWindowId
@@ -14866,15 +14863,13 @@ UnlockDialogProc := LockDialogProc
         param_call DrawDialogLabel, 2, aux::str_rename_old
         param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_rename_new
-        jsr     line_edit__Update
-        rts
+        jmp     InitNameInput
 
         ;; --------------------------------------------------
         ;; RenameDialogState::run
 do_run:
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
-        copy    #$80, line_edit_res::blink_ip_flag
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 :       jsr     PromptInputLoop
@@ -14917,7 +14912,6 @@ do_close:
 
         jsr     CopyDialogParamAddrToPtr
         copy    #$80, has_input_field_flag
-        copy    #$80, line_edit_res::blink_ip_flag
         lda     #$00
         jsr     OpenPromptWindow
         lda     #winfo_prompt_dialog::kWindowId
@@ -14940,15 +14934,13 @@ do_close:
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
         param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_rename_new
-        jsr     line_edit__Update
-        rts
+        jmp     InitNameInput
 
         ;; --------------------------------------------------
         ;; DuplicateDialogState::run
 do_run:
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
-        copy    #$80, line_edit_res::blink_ip_flag
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
 :       jsr     PromptInputLoop
@@ -15380,7 +15372,6 @@ done:   rts
         buf_text := path_buf1
         textpos := name_input_textpos
         clear_rect := name_input_erase_rect
-        frame_rect := name_input_rect
         kLineEditMaxLength := kMaxFilenameLength
         NotifyTextChanged := NoOp
         click_coords := screentowindow_params::windowx
@@ -15435,6 +15426,19 @@ line_edit__Key  := line_edit::Key
 .proc ClearPathBuf1
         copy    #0, path_buf1   ; length
         rts
+.endproc
+
+;;; ============================================================
+;;; Frames and initializes the line edit control in the prompt
+;;; dialog. Call after `path_buf1` is populated so IP is set
+;;; correctly.
+
+.proc InitNameInput
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, name_input_rect
+        jsr     line_edit__Init
+        copy    #$80, line_edit_res::blink_ip_flag
+        jmp     line_edit__Update
 .endproc
 
 ;;; ============================================================

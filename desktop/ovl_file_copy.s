@@ -10,6 +10,8 @@
         MGTKEntry := MGTKRelayImpl
 
 .proc Init
+        copy    #$80, file_dialog::dual_inputs_flag
+
         jsr     file_dialog::OpenWindow
         jsr     DrawControls
         jsr     file_dialog::DeviceOnLine
@@ -37,8 +39,6 @@
         dex
         bpl     :-
 
-        copy    #$80, file_dialog::dual_inputs_flag
-
         lda     #0
         sta     path_buf0
         sta     file_dialog::focus_in_input2_flag
@@ -51,9 +51,6 @@
         param_call file_dialog::DrawTitleCentered, aux::label_copy_file
         param_call file_dialog::DrawInput1Label, source_filename_label
         param_call file_dialog::DrawInput2Label, destination_filename_label
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
         MGTK_CALL MGTK::InitPort, main_grafport
         MGTK_CALL MGTK::SetPort, main_grafport
         rts

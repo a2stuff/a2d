@@ -12,6 +12,7 @@
 .proc Init
         stx     which_run_list
         sty     copy_when
+        copy    #$80, file_dialog::dual_inputs_flag
         jsr     file_dialog::OpenWindow
         jsr     L7101
         jsr     L70AD
@@ -91,7 +92,6 @@ buffer: .res 16, 0
         bpl     :-
 
         copy    #0, file_dialog::focus_in_input2_flag
-        copy    #$80, file_dialog::dual_inputs_flag
         lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         lda     which_run_list
@@ -117,10 +117,7 @@ buffer: .res 16, 0
         jmp     common
 
 add:    param_call file_dialog::DrawTitleCentered, label_add
-common: MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
-        param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
+common: param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
         param_call file_dialog::DrawInput2Label, enter_the_name_to_appear_label
 
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos

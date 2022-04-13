@@ -1180,6 +1180,13 @@ l1:     ldx     num_file_names
         lda     file_dialog_res::winfo::window_id
         jsr     SetPortForWindow
         MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+.if FD_EXTENDED
+        bit     dual_inputs_flag
+    IF_NS
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
+    END_IF
+.endif
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_frame
         MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
@@ -2138,7 +2145,6 @@ no_change:
         buf_text := buf_input1
         textpos := file_dialog_res::input1_textpos
         clear_rect := file_dialog_res::input1_clear_rect
-        frame_rect := file_dialog_res::input1_rect
         kLineEditMaxLength := kMaxInputLength
         click_coords := screentowindow_params::windowx
         IsAllowedChar := IsPathChar
@@ -2172,7 +2178,6 @@ f1__Click := f1::Click
         buf_text := buf_input2
         textpos := file_dialog_res::input2_textpos
         clear_rect := file_dialog_res::input2_clear_rect
-        frame_rect := file_dialog_res::input2_rect
         kLineEditMaxLength := kMaxInputLength
         click_coords := screentowindow_params::windowx
         IsAllowedChar := IsPathChar
