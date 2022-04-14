@@ -667,7 +667,7 @@ done:   rts
         icon    .byte
 .endstruct
 
-        ptr := $06              ; Overwrites params
+        ptr := $08
 
         ;; Is it in `icon_list`?
         ldy     #RemoveIconParams::icon
@@ -690,14 +690,13 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Remove the icon at $06
+;;; Remove the icon at $08
 
 .proc RemoveIconCommon
-        ptr := $06              ; Overwrites params
+        ptr := $08
 
         ;; Move it to the end of `icon_list`
         ldy     #IconEntry::id
-        dey
         lda     (ptr),y         ; icon num
         ldx     num_icons       ; new position
         jsr     ChangeIconIndex
