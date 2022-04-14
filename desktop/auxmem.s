@@ -747,6 +747,7 @@ done:   rts
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         jsr     CalcIconPoly
+        lda     #$80            ; redraw highlighted
         jmp     erase_icon
 .endproc
 
@@ -1304,6 +1305,7 @@ L9BF3:  dex
         ldy     highlight_list,x
         copylohi  icon_ptrs_low,y, icon_ptrs_high,y, $06
         jsr     CalcIconPoly
+        lda     #0              ; don't redraw highlighted
         jsr     erase_icon
         pla
         tax
@@ -2352,10 +2354,14 @@ icon_num:       .byte   0
 ;;; Erase an icon; redraws overlapping icons as needed
 
 erase_icon:
+        sta     redraw_highlighted_flag
         MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport
         jmp     LA3B9
 
+        ;; For `RedrawIconsAfterErase`
+redraw_highlighted_flag:
+        .byte   0
 LA3AC:  .byte   0
 window_id:  .byte   0
 
@@ -2478,6 +2484,14 @@ LA466:  txa
         and     #kIconEntryWinIdMask
         cmp     window_id
         bne     next
+
+        bit     redraw_highlighted_flag
+    IF_NC
+        ldy     #IconEntry::state
+        lda     (ptr),y
+        and     #kIconEntryStateHighlighted
+        bne     next
+    END_IF
 
         ldy     #IconEntry::id ; icon num
         lda     (ptr),y

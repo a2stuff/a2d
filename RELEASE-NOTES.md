@@ -202,6 +202,7 @@ from the **Apple** menu.
 * Don't wait for possible double click when clicking scrollbars. ([#183](https://github.com/a2stuff/a2d/issues/183))
 * Conditionally restore `/RAM` after quitting Disk Copy. ([#333](https://github.com/a2stuff/a2d/issues/333))
 * Clip target icon rendering while dragging. ([#381](https://github.com/a2stuff/a2d/issues/381))
+* Fix repainting overlapped icons after dragging. ([#687](https://github.com/a2stuff/a2d/issues/687))
 * Fix various window sizing problems. ([#180](https://github.com/a2stuff/a2d/issues/180), [#514](https://github.com/a2stuff/a2d/issues/514))
 * Prevent duplicate windows for the same directory. ([#144](https://github.com/a2stuff/a2d/issues/144))
 * Fix **File > New Folder...** name field behavior when re-prompted. ([#127](https://github.com/a2stuff/a2d/issues/127))
