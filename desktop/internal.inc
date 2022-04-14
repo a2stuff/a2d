@@ -214,7 +214,7 @@ _segoffset .set 0
 ;;; Dynamically loaded overlays
         DEFSEG OverlayFormatErase, $0800, $1300
         DEFSEG OverlaySelector1,   $9000, $0D00
-        DEFSEG OverlayFileDialog,  $5000, $1700
+        DEFSEG OverlayFileDialog,  $5000, $1600
         DEFSEG OverlayFileCopy,    $7000, $0300
         DEFSEG OverlayFileDelete,  $7000, $0100
         DEFSEG OverlaySelector2,   $7000, $0600

@@ -6,7 +6,7 @@
 
         RESOURCE_FILE "alert_dialog.res"
 
-        .org $D000
+        .org kAlertSegmentAddress
 
 kShortcutTryAgain = res_char_button_try_again_shortcut
 
@@ -126,4 +126,4 @@ start:  pha                     ; alert number
 
 ;;; ============================================================
 
-        PAD_TO $D800
+        PAD_TO kAlertSegmentAddress + kAlertSegmentSize

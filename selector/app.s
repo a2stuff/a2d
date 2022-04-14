@@ -6,7 +6,7 @@
 
         RESOURCE_FILE "app.res"
 
-        .org $4000
+        .org kAppSegmentAddress
 
 .scope app
 
@@ -2547,4 +2547,5 @@ pb2_initial_state:
 
 .endscope
 
-        PAD_TO OVERLAY_ADDR
+        PAD_TO kAppSegmentAddress + kAppSegmentSize
+        ASSERT_ADDRESS OVERLAY_ADDR

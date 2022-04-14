@@ -35,16 +35,26 @@ kAlertResultTryAgain    = 0
 kAlertResultCancel      = 1
 kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 
+;;; ============================================================
 ;;; SELECTOR file structure
+;;; ============================================================
 
 kInvokerOffset          = $600
-kInvokerSegmentSize     = $160
-kAppSegmentSize         = $6400
-kAlertSegmentSize       = $800
-kOverlay1Offset         = kInvokerOffset + kInvokerSegmentSize + kAppSegmentSize + kAlertSegmentSize
-kOverlay1Size           = $1B00
-kOverlay2Offset         = kOverlay1Offset + kOverlay1Size
-kOverlay2Size           = $D00
+
+_segoffset .set 0
+.macro DEFSEG name, addr, len
+        .ident(.sprintf("k%sAddress", .string(name))) = addr
+        .ident(.sprintf("k%sSize", .string(name))) = len
+        .ident(.sprintf("k%sOffset", .string(name))) = _segoffset
+        _segoffset .set _segoffset + len
+.endmacro
+
+        _segoffset .set kInvokerOffset
+        DEFSEG InvokerSegment, INVOKER, $160
+        DEFSEG AppSegment, $4000, $6400
+        DEFSEG AlertSegment, $D000, $800
+        DEFSEG Overlay1, OVERLAY_ADDR, $1700
+        DEFSEG Overlay2, OVERLAY_ADDR, $D00
 
 ;;; ============================================================
 ;;; Selector application

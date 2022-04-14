@@ -13,7 +13,7 @@
         jmp     start
 
         alert_load_addr := $3400
-        alert_final_addr := $D000
+        alert_final_addr := kAlertSegmentAddress
 
         ;; ProDOS parameter blocks
 
@@ -21,7 +21,7 @@
 
         DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
         DEFINE_READ_PARAMS read_params1, INVOKER, kInvokerSegmentSize
-        DEFINE_READ_PARAMS read_params2, MGTKEntry, kAppSegmentSize
+        DEFINE_READ_PARAMS read_params2, kAppSegmentAddress, kAppSegmentSize
         DEFINE_READ_PARAMS read_params3, alert_load_addr, kAlertSegmentSize
 
         DEFINE_SET_MARK_PARAMS set_mark_params, kInvokerOffset

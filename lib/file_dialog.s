@@ -184,8 +184,7 @@ is_btn: jsr     HandleButtonDown
         jsr     UnsetCursorIBeam
         jmp     EventLoop
 
-l1:     lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+l1:     jsr     SetPortForDialog
         lda     file_dialog_res::winfo::window_id
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -212,9 +211,7 @@ l3:
         jmp     l5
 
 l4:     jsr     UnsetCursorIBeam
-l5:     MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
-        jmp     EventLoop
+l5:     jmp     EventLoop
 .endproc
 
 .if FD_EXTENDED
@@ -242,8 +239,7 @@ focus_in_input2_flag:
         beq     :+
         jmp     HandleListButtonDown
 
-:       lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+:       jsr     SetPortForDialog
         lda     file_dialog_res::winfo::window_id
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -266,8 +262,7 @@ l2:     tax
         bmi     l4
 l3:     jmp     SetUpPorts
 
-l4:     lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+l4:     jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         bmi     l3
         jsr     OpenSelectedItem
@@ -379,8 +374,6 @@ done_click:
         FALL_THROUGH_TO SetUpPorts
 
 SetUpPorts:
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, window_grafport
         rts
 
 .endproc ; HandleContentClick
@@ -438,8 +431,7 @@ open:   ldx     file_dialog_res::selected_index
         bmi     folder
 
         ;; File - select it.
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
@@ -450,8 +442,7 @@ open:   ldx     file_dialog_res::selected_index
 folder: and     #$7F
         pha                     ; A = index
 
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
@@ -463,8 +454,6 @@ folder: and     #$7F
 
         jsr     UpdateListFromPath
 
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, window_grafport
         rts
 
         ;; --------------------------------------------------
@@ -744,14 +733,6 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
-
-.proc InitSetGrafport
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Key handler
 
 .proc HandleKeyEvent
@@ -816,8 +797,7 @@ ret:    rts
         lda     file_list_index,x
         jpl     exit
 
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
@@ -827,8 +807,7 @@ ret:    rts
 
         cmp     #CHAR_CTRL_C    ; Close
         IF_EQ
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
@@ -846,8 +825,7 @@ ret:    rts
         jsr     Key
     END_IF
 
-exit:   jsr     InitSetGrafport
-        rts
+exit:   rts
 
 ;;; ============================================================
 
@@ -860,39 +838,33 @@ exit:   jsr     InitSetGrafport
         rts
 :
 .endif
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
         jsr     HandleOk
-        jsr     InitSetGrafport
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc KeyEscape
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
         jsr     HandleCancel
-        jsr     InitSetGrafport
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc KeyTab
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
         jsr     ChangeDrive
-        jsr     InitSetGrafport
         rts
 .endproc
 
@@ -1181,8 +1153,7 @@ l1:     ldx     num_file_names
 .proc OpenWindow
         MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo
         MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo_listbox
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
 .if FD_EXTENDED
@@ -1210,7 +1181,6 @@ l1:     ldx     num_file_names
         MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
         MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep_end
-        jsr     InitSetGrafport
         rts
 .endproc
 
@@ -1615,8 +1585,7 @@ d4:     .byte   0
 ;;; ============================================================
 
 .proc DrawListEntries
-        lda     file_dialog_res::winfo_listbox::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForList
         MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::cliprect
         copy    #kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
         copy16  #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
@@ -1625,7 +1594,6 @@ d4:     .byte   0
 loop:   lda     index
         cmp     num_file_names
         bne     :+
-        jsr     InitSetGrafport
         rts
 
 :       MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
@@ -1650,8 +1618,7 @@ loop:   lda     index
         cmp     file_dialog_res::selected_index
         bne     l2
         jsr     InvertEntry
-        lda     file_dialog_res::winfo_listbox::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForList
 l2:     inc     index
 
         add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
@@ -1710,8 +1677,7 @@ index:  .byte   0
 ;;; ============================================================
 
 .proc UpdateDiskName
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
         copy16  #path_buf, $06
 
@@ -1734,7 +1700,6 @@ finish: sty     file_dialog_res::filename_buf
         param_call DrawString, file_dialog_res::disk_label_str
         param_call DrawString, file_dialog_res::filename_buf
 
-        jsr     InitSetGrafport
         rts
 .endproc
 
@@ -1780,16 +1745,22 @@ tmp:    .byte   0
 
         add16_8 file_dialog_res::rect_selection::y1, #kListEntryHeight, file_dialog_res::rect_selection::y2
 
-        lda     file_dialog_res::winfo_listbox::window_id
-        jsr     SetPortForWindow
+        jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, file_dialog_res::rect_selection
-        jsr     InitSetGrafport
         rts
 .endproc
 
 ;;; ============================================================
 
+.proc SetPortForDialog
+        lda     #file_dialog_res::kFilePickerDlgWindowID
+        bne     SetPortForWindow ; always
+.endproc
+.proc SetPortForList
+        lda     #file_dialog_res::kEntryListCtlWindowID
+        FALL_THROUGH_TO SetPortForWindow
+.endproc
 .proc SetPortForWindow
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -2153,11 +2124,7 @@ no_change:
         click_coords := screentowindow_params::windowx
         IsAllowedChar := IsPathChar
         NotifyTextChanged := NotifyTextChangedF1
-
-.proc SetPort
-        lda     file_dialog_res::winfo::window_id
-        jmp     SetPortForWindow
-.endproc
+        SetPort := SetPortForDialog
 
         .include "../lib/line_edit.s"
 
@@ -2186,11 +2153,7 @@ f1__Click := f1::Click
         click_coords := screentowindow_params::windowx
         IsAllowedChar := IsPathChar
         NotifyTextChanged := NotifyTextChangedF2
-
-.proc SetPort
-        lda     file_dialog_res::winfo::window_id
-        jmp     SetPortForWindow
-.endproc
+        SetPort := SetPortForDialog
 
         .include "../lib/line_edit.s"
 
