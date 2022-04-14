@@ -250,11 +250,11 @@ focus_in_input2_flag:
         MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
 
         ;; --------------------------------------------------
-.proc CheckOpenButton
+        ;; Open button
+
         MGTK_CALL MGTK::InRect, file_dialog_res::open_button_rect
         cmp     #MGTK::inrect_inside
-        bne     CheckChangeDriveButton
-
+     IF_EQ
         bit     listbox_disabled_flag
         bmi     l1
         lda     file_dialog_res::selected_index
@@ -272,13 +272,14 @@ l4:     lda     file_dialog_res::winfo::window_id
         bmi     l3
         jsr     OpenSelectedItem
         jmp     SetUpPorts
-.endproc
+    END_IF
 
         ;; --------------------------------------------------
-.proc CheckChangeDriveButton
+        ;; Change Drive button
+
         MGTK_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
         cmp     #MGTK::inrect_inside
-        bne     CheckCloseButton
+    IF_EQ
         bit     listbox_disabled_flag
         bmi     :+
 
@@ -287,13 +288,14 @@ l4:     lda     file_dialog_res::winfo::window_id
         jsr     ChangeDrive
 :
         jmp     SetUpPorts
-.endproc
+    END_IF
 
         ;; --------------------------------------------------
-.proc CheckCloseButton
+        ;; Close button
+
         MGTK_CALL MGTK::InRect, file_dialog_res::close_button_rect
         cmp     #MGTK::inrect_inside
-        bne     CheckOkButton
+    IF_EQ
         bit     listbox_disabled_flag
         bmi     :+
 
@@ -301,39 +303,43 @@ l4:     lda     file_dialog_res::winfo::window_id
         bmi     :+
         jsr     DoClose
 :       jmp     SetUpPorts
-.endproc
+    END_IF
 
         ;; --------------------------------------------------
-.proc CheckOkButton
+        ;; OK button
+
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rect
         cmp     #MGTK::inrect_inside
-        bne     CheckCancelButton
-
+    IF_EQ
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
         jsr     HandleOk
 :       jmp     SetUpPorts
-.endproc
+    END_IF
 
         ;; --------------------------------------------------
-.proc CheckCancelButton
+        ;; Cancel button
+
         MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
         cmp     #MGTK::inrect_inside
-        bne     CheckOtherClick
-
+    IF_EQ
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
         jsr     HandleCancel
 :       jmp     SetUpPorts
-.endproc
+    END_IF
 
         ;; --------------------------------------------------
-.proc CheckOtherClick
+        ;; Extra controls
+
         bit     extra_controls_flag
-        bpl     :+
+    IF_NS
         jsr     click_handler_hook
-        bmi     SetUpPorts
-:
+        bmi     SetUpPorts      ; if consumed
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Text entry controls
 
 .if !FD_EXTENDED
         ;; Single field only
@@ -371,13 +377,11 @@ l4:     lda     file_dialog_res::winfo::window_id
 .endif
 done_click:
         FALL_THROUGH_TO SetUpPorts
-.endproc
 
-.proc SetUpPorts
+SetUpPorts:
         MGTK_CALL MGTK::InitPort, main_grafport
         MGTK_CALL MGTK::SetPort, window_grafport
         rts
-.endproc
 
 .endproc ; HandleContentClick
 
