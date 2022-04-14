@@ -660,24 +660,6 @@ unit_num:
         .byte   $00
 
 ;;; ============================================================
-
-.proc MLI_CALL
-        sty     call
-        stax    params
-        sta     ALTZPOFF
-        bit     ROMIN2
-        jsr     MLI
-call:   .byte   0
-params: .addr   0
-        sta     ALTZPON
-        php
-        bit     LCBANK1
-        bit     LCBANK1
-        plp
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Get driver address
 ;;; Input: A = unit number (no need to mask off low nibble)
 ;;; Output: A,X = driver address

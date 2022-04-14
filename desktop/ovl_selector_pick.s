@@ -1635,24 +1635,6 @@ hi:     .byte   0
 .endproc
 
 ;;; ============================================================
-
-.proc MLI_CALL
-        sty     call
-        stax    params
-        sta     ALTZPOFF
-        bit     ROMIN2
-        jsr     MLI
-call:   .byte   0
-params: .addr   0
-        sta     ALTZPON
-        php
-        bit     LCBANK1
-        bit     LCBANK1
-        plp
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Populate `get_file_info_params` with the info for the entry
 ;;; as copied to RAMCard.
 ;;; Input: A=entry number
