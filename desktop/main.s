@@ -3624,6 +3624,7 @@ ret:    rts
         copy    cached_window_entry_count, selected_icon_count
         copy    active_window_id, selected_window_id
         lda     selected_window_id
+        sta     err             ; zero if desktop; will overwrite if windowed
         beq     :+
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         sta     err
