@@ -29,25 +29,31 @@ Call from MAIN (RAMRDOFF/RAMWRTOFF); AUX language card RAM must be banked in. Ca
 ```
    jsr $xxxx
 ```
-Some calls take parameters in registers.
+Some calls take MLI-style parameters, or in registers.
 
 > Routines marked with * are used by Desk Accessories.
 
 #### `JUMP_TABLE_MGTK_CALL` *
 
-MouseGraphics ToolKit call (main>aux). Follow by call (`.byte`) and params (`.addr`).
+MouseGraphics ToolKit call (main>aux).
 
-(Params must reside in aux memory, lower 48k or LC banks.)
+Input: Follow `JSR` by call (`.byte`) and params (`.addr`), MLI-style.
+Output: A=result
 
-Use the `JUMP_TABLE_MGTK_CALL` macro for convenience.
+(Param data must reside in aux memory, lower 48k or LC banks.)
+
+Use the `JUMP_TABLE_MGTK_CALL` macro (yes, same name) for convenience.
 
 #### `JUMP_TABLE_MLI_CALL` *
 
-ProDOS MLI call. Follow by call (`.byte`) and params (`.addr`).
+ProDOS MLI call.
 
-(Params must reside in main memory, lower 48k.)
+Input: Follow `JSR` by call (`.byte`) and params (`.addr`), MLI-style.
+Output: C set on error, A = error code.
 
-Use the `JUMP_TABLE_MLI_CALL` macro for convenience.
+(Param data must reside in main memory, lower 48k.)
+
+Use the `JUMP_TABLE_MLI_CALL` macro (yes, same name) for convenience.
 
 #### `JUMP_TABLE_CLEAR_UPDATES` *
 
@@ -61,11 +67,11 @@ Desk Accessories should call this (from main!) from their event loop unless they
 
 Yielding during further nested loops (e.g. button tracking, etc) can be done but is not worth the effort.
 
-#### `JUMP_TABLE_SELECT_WINDOW`
+#### `JUMP_TABLE_SELECT_WINDOW` *
 
 Select and refresh the specified window (A = window id)
 
-#### `JUMP_TABLE_SHOW_ALERT`
+#### `JUMP_TABLE_SHOW_ALERT` *
 
 Show alert, with default button options for error number
 
@@ -87,11 +93,11 @@ NOTE: This will use Aux $800...$1AFF to save the alert background; be careful wh
 
 Launch file. Equivalent of **File > Open** command.
 
-#### `JUMP_TABLE_CUR_POINTER`
+#### `JUMP_TABLE_CUR_POINTER` *
 
 Changes mouse cursor to pointer.
 
-#### `JUMP_TABLE_CUR_WATCH`
+#### `JUMP_TABLE_CUR_WATCH` *
 
 Changes mouse cursor to watch.
 
@@ -99,7 +105,7 @@ Changes mouse cursor to watch.
 
 Changes mouse cursor to I-beam.
 
-#### `JUMP_TABLE_RESTORE_OVL`
+#### `JUMP_TABLE_RESTORE_OVL` *
 
 Restore from overlay routine
 
@@ -160,7 +166,7 @@ Returns Z=1/N=0 if DeskTop is running from its original location, and Z=0/N=1 if
 
 #### `JUMP_TABLE_GET_ORIG_PREFIX` *
 
-If DeskTop was copied to RAMCard, this populates the passed buffer with the original prefix path (with trailing `/`). Do not call if DeskTop was not copied to RAMCard.
+If DeskTop was copied to RAMCard, this populates the passed buffer with the original prefix path (with trailing `/`). Do not call unless DeskTop was copied to RAMCard.
 
 Input: A,X = Path buffer.
 
