@@ -1002,6 +1002,7 @@ top_row:        .byte   0
         copy    #0, buf_search
 
         jsr     line_edit__Init
+        copy    #$80, line_edit_res::blink_ip_flag
 
         param_call MeasureString, find_label_str
         addax   input_rect::x1
