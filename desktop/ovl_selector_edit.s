@@ -5,7 +5,7 @@
 ;;; ============================================================
 
 .proc SelectorEditOverlay
-        .org ::kOverlaySelector2Address
+        .org ::kOverlayShortcutEditAddress
 
         MGTKEntry := MGTKRelayImpl
 
@@ -520,5 +520,5 @@ draw:
 
 ;;; ============================================================
 
-        PAD_TO ::kOverlaySelector2Address + ::kOverlaySelector2Length
+        PAD_TO ::kOverlayShortcutEditAddress + ::kOverlayShortcutEditLength
 .endproc ; SelectorOverlay

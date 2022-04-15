@@ -18,11 +18,11 @@ The file is broken down into multiple segments:
 | Initializer   | Main    | A$0800  | `init.s`                       |
 | Invoker       | Main    | A$0290  | `../lib/invoker.s`             |
 | Format/Erase  | Main    | A$0800  | `ovl_format_erase.s`           |
-| Shortcuts 1/2 | Main    | A$9000  | `ovl_selector_pick.s`          |
+| Pick Shortcut | Main    | A$9000  | `ovl_selector_pick.s`          |
 | File Dialog   | Main    | A$5000  | `ovl_file_dialog.s`            |
 | File Copy     | Main    | A$7000  | `ovl_file_copy.s`              |
 | File Delete   | Main    | A$7000  | `ovl_file_delete.s`            |
-| Shortcuts 2/2 | Main    | A$7000  | `ovl_selector_edit.s`          |
+| Edit Shortcut | Main    | A$7000  | `ovl_selector_edit.s`          |
 
 Lengths/offsets are defined in `internal.inc`.
 

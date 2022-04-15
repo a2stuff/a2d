@@ -10255,25 +10255,25 @@ kNumOverlays = 8
 
 pos_table:
         .dword  kOverlayFormatEraseOffset
-        .dword  kOverlaySelector1Offset, kOverlayFileDialogOffset
+        .dword  kOverlayShortcutPickOffset, kOverlayFileDialogOffset
         .dword  kOverlayFileCopyOffset, kOverlayFileDeleteOffset
-        .dword  kOverlaySelector2Offset, kOverlayDeskTopRestore1Offset
+        .dword  kOverlayShortcutEditOffset, kOverlayDeskTopRestore1Offset
         .dword  kOverlayDeskTopRestore2Offset
         ASSERT_RECORD_TABLE_SIZE pos_table, kNumOverlays, 4
 
 len_table:
         .word   kOverlayFormatEraseLength
-        .word   kOverlaySelector1Length, kOverlayFileDialogLength
+        .word   kOverlayShortcutPickLength, kOverlayFileDialogLength
         .word   kOverlayFileCopyLength, kOverlayFileDeleteLength
-        .word   kOverlaySelector2Length, kOverlayDeskTopRestore1Length
+        .word   kOverlayShortcutEditLength, kOverlayDeskTopRestore1Length
         .word   kOverlayDeskTopRestore2Length
         ASSERT_RECORD_TABLE_SIZE len_table, kNumOverlays, 2
 
 addr_table:
         .word   kOverlayFormatEraseAddress
-        .word   kOverlaySelector1Address, kOverlayFileDialogAddress
+        .word   kOverlayShortcutPickAddress, kOverlayFileDialogAddress
         .word   kOverlayFileCopyAddress, kOverlayFileDeleteAddress
-        .word   kOverlaySelector2Address, kOverlayDeskTopRestore1Address
+        .word   kOverlayShortcutEditAddress, kOverlayDeskTopRestore1Address
         .word   kOverlayDeskTopRestore2Address
         ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
 

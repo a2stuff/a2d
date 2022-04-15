@@ -79,7 +79,7 @@ saved_stack:
 routine_table:
         .addr   kOverlayFileCopyAddress
         .addr   kOverlayFileDeleteAddress
-        .addr   kOverlaySelector2Address
+        .addr   kOverlayShortcutEditAddress
 .endif
 
 ;;; ============================================================
