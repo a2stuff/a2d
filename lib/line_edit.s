@@ -175,9 +175,7 @@ ret:    rts
         lda     line_edit_res::ip_pos
         beq     ret
 
-        jsr     HideIP
         dec     line_edit_res::ip_pos
-        jsr     ShowIP
 
 ret:    rts
 .endproc
@@ -191,9 +189,7 @@ ret:    rts
         cmp     buf_text
         beq     ret
 
-        jsr     HideIP
         inc     line_edit_res::ip_pos
-        jsr     ShowIP
 
 ret:    rts
 .endproc
@@ -205,8 +201,6 @@ ret:    rts
         ;; Anything to delete?
         lda     line_edit_res::ip_pos
         beq     ret
-
-        jsr     HideIP
 
         dec     line_edit_res::ip_pos
 
@@ -224,8 +218,6 @@ ret:    rts
         cmp     buf_text
         beq     ret
 
-        jsr     HideIP
-
         jsr     _DeleteCharCommon
 
 ret:    rts
@@ -236,8 +228,11 @@ ret:    rts
 
 .proc Key
         MGTK_CALL MGTK::ObscureCursor
+        jsr     HideIP
+        jsr     :+
+        jmp     ShowIP
 
-        lda     event_params::key
+:       lda     event_params::key
 
         ldx     event_params::modifiers
     IF_ZERO
@@ -269,7 +264,7 @@ ret:    rts
     END_IF
 
         rts
-.endproc
+.endproc ; Key
 
 ;;; ============================================================
 ;;; When a non-control key is hit - insert the passed character
@@ -287,8 +282,6 @@ ret:    rts
         lda     buf_text
         cmp     #kLineEditMaxLength ; TODO: Off-by-one now that IP is gone?
         bcs     ret
-
-        jsr     HideIP
 
         ;; Move everything to right of IP up
         ldx     buf_text
@@ -312,7 +305,6 @@ ret:    rts
         ;; Now move IP to new position
         inc     line_edit_res::ip_pos
 
-        jsr     ShowIP
         jsr     NotifyTextChanged
 
 ret:    rts
@@ -325,9 +317,6 @@ ret:    rts
         lda     buf_text
         beq     ret
 
-        ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     HideIP
-
         lda     #0
         sta     buf_text
         sta     line_edit_res::ip_pos
@@ -335,7 +324,6 @@ ret:    rts
         jsr     SetPort
         MGTK_CALL MGTK::PaintRect, clear_rect
 
-        jsr     ShowIP
         jsr     NotifyTextChanged
 
 ret:    rts
@@ -345,17 +333,15 @@ ret:    rts
 ;;; Move IP to start of input field.
 
 .proc _MoveIPStart
-        jsr     HideIP
         copy    #0, line_edit_res::ip_pos
-        jmp     ShowIP
+        rts
 .endproc
 
 ;;; ============================================================
 
 .proc _MoveIPEnd
-        jsr     HideIP
         copy    buf_text, line_edit_res::ip_pos
-        jmp     ShowIP
+        rts
 .endproc
 
 ;;; ============================================================
@@ -378,7 +364,6 @@ ret:    rts
         jsr     _RedrawRightOfIP
         param_call DrawString, line_edit_res::str_2_spaces
 
-        jsr     ShowIP
         jmp     NotifyTextChanged
 .endproc
 
