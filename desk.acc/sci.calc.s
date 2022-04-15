@@ -505,15 +505,11 @@ penmode:        .byte   0
 textback:       .byte   0
 textfont:       .addr   0
 .endparams
-        .assert * - grafport = 36, error
-
-        .byte   0               ; ???
+        .assert .sizeof(grafport) = .sizeof(MGTK::GrafPort), error
 
 .params penmode_normal
 penmode:   .byte   MGTK::pencopy
 .endparams
-
-        .byte   $01,$02         ; ??
 
 .params penmode_xor
 penmode:   .byte   MGTK::notpenXOR

@@ -1019,12 +1019,6 @@ entries_flag_table:
 .endproc
 
 ;;; ============================================================
-
-        rts                     ; ???
-
-        rts                     ; ???
-
-;;; ============================================================
 ;;; Assigns name, flags, and path to an entry in the file buffer
 ;;; and (if it's in the primary run list) also updates the
 ;;; resource data (used for menus, etc).

@@ -423,9 +423,7 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   0
 textfont:       .addr   0
 .endparams
-        .assert * - grafport = 36, error
-
-        .byte   0               ; ???
+        .assert .sizeof(grafport) = .sizeof(MGTK::GrafPort), error
 
         ;; params for MGTK::SetPortBits when decorating title bar
 .params screen_port
@@ -443,8 +441,6 @@ height:         .word   kScreenHeight - kMenuBarHeight - 2
 .params penmode_normal
 penmode:   .byte   MGTK::pencopy
 .endparams
-
-        .byte   $01,$02         ; ??
 
 .params penmode_xor
 penmode:   .byte   MGTK::notpenXOR

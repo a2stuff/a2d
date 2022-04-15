@@ -1166,8 +1166,6 @@ maybe_dos:
         COPY_STRING the_dos_33_disk_label, ovl_string_buf
         rts
 
-        .byte   0               ; Unused???
-
 .proc GetSlotChar
         and     #$70
         lsr     a

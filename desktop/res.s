@@ -827,15 +827,11 @@ saved_stack:
         .byte   0
 
 .params menu_click_params       ; used for MGTK::MenuKey as well
-menu_id:.byte   0
-item_num:.byte  0
+menu_id:        .byte   0
+item_num:       .byte   0
 which_key:      .byte   0
 key_mods:       .byte   0
 .endparams
-
-        ;; ???
-        .byte   $00,$00,$00,$00
-        .byte   $00,$04,$00,$00,$00
 
 .params checkitem_params
 menu_id:        .byte   kMenuIdView

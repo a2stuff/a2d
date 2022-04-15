@@ -177,9 +177,6 @@ common: param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
 
 ;;; ============================================================
 
-        ;; Unused
-        .byte   0
-
 jt_pathname:
         .byte file_dialog::kJumpTableSize-1
         jump_table_entry HandleOkFilename

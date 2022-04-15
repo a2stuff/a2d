@@ -77,9 +77,6 @@ jt_filename:
         rts
 .endproc
 
-        ;; Unused
-        .byte   0
-
 .proc HandleCancel
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
