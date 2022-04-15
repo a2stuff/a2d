@@ -3759,7 +3759,7 @@ start:
 ;;;    { .addr text, .byte AlertButtonOptions, .byte AlertOptions }
 
         AlertYieldLoop = YieldLoopFromAux
-        alert_grafport = main_grafport
+        alert_grafport = desktop_grafport
         .include "../lib/alert_dialog.s"
 
 ;;; ============================================================

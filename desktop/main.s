@@ -147,13 +147,11 @@ click:  jsr     HandleClick
 ;;; Caller already called GetEvent, no need to PeekEvent;
 ;;; just jump directly into the clearing loop.
 clear_no_peek:
-        jsr     ResetMainGrafport
         copy    active_window_id, saved_active_window_id
         jmp     handle_update   ; skip PeekEvent
 
 ;;; Clear any pending updates.
 clear:
-        jsr     ResetMainGrafport
         copy    active_window_id, saved_active_window_id
         FALL_THROUGH_TO loop
 
@@ -281,10 +279,7 @@ skip_adjust_port:
 done:
         ;; Restore window's port
         lda     active_window_id
-        jsr     SwapWindowPortbits
-
-        ;; Back to normal TODO: Is this needed??? Move to end of update loop?
-        jmp     ResetMainGrafport
+        jmp     SwapWindowPortbits
 
 yoff:   .word   0
 .endproc
@@ -650,7 +645,7 @@ done:   rts
 ;;;
 ;;; Inputs: A = icon id
 ;;; Outputs: sets `icon_param` to the icon id
-;;; Assert: `ResetMainGrafport` state is in effect (and restored)
+;;; Assert: `InitSetDesktopPort` state is in effect
 ;;; Assert: If windowed, the icon is in the active window.
 
 .proc DrawIcon
@@ -682,7 +677,6 @@ skip:   lda     win
         beq     :+
         lda     icon_param
         jsr     IconWindowToScreen
-        jsr     ResetMainGrafport
 :
         jsr     PopPointers
         rts
@@ -1626,8 +1620,7 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 str_desk_acc:
         PASCAL_STRING .concat(kFilenameDADir, "/") ; do not localize
 
-start:  jsr     ResetMainGrafport
-        jsr     SetCursorWatch  ; before loading DA
+start:  jsr     SetCursorWatch  ; before loading DA
 
         ;; Get current prefix
         MLI_CALL GET_PREFIX, get_prefix_params
@@ -1697,14 +1690,13 @@ CmdDeskAcc      := CmdDeskaccImpl::start
 
         ;; Invoke it
         jsr     SetCursorPointer ; before invoking DA
-        jsr     ResetMainGrafport
         MGTK_CALL MGTK::SetZP1, setzp_params_preserve
         jsr     DA_LOAD_ADDRESS
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
 
         ;; Restore state
+        jsr     InitSetDesktopPort ; DA's port destroyed, set something real as current
         jsr     ShowClockForceUpdate
-        jsr     ResetMainGrafport
 done:   jsr     SetCursorPointer ; after invoking DA
         rts
 
@@ -2911,8 +2903,7 @@ entry:
         inc     index
         jmp     :-
 
-:       jsr     ResetMainGrafport
-        jsr     CachedIconsWindowToScreen
+:       jsr     CachedIconsWindowToScreen
         jsr     StoreWindowEntryTable
 
         jsr     CachedIconsScreenToWindow
@@ -2970,7 +2961,6 @@ sort:   jsr     LoadActiveWindowEntryTable ; restored below
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         jsr     ClearWindowBackgroundIfNotObscured
-        jsr     ResetMainGrafport
 
         lda     #kDrawWindowEntriesContentOnly
         jsr     DrawWindowEntries
@@ -3665,9 +3655,6 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         dec     index
         bpl     loop
 
-        lda     selected_window_id
-        beq     finish
-        jsr     ResetMainGrafport
 finish: jmp     LoadDesktopEntryTable ; restore from above
 .endproc
 
@@ -3946,7 +3933,6 @@ vert_scroll_max:        .byte   0
         jsr     LoadDesktopEntryTable ; TODO: Needed???
         jsr     CmdCloseAll
         jsr     ClearSelection
-        jsr     ResetMainGrafport
 
         ;; --------------------------------------------------
         ;; Destroy existing volume icons
@@ -4172,7 +4158,6 @@ not_in_map:
         jsr     FreeIcon
         lda     icon_param
         jsr     FreeDesktopIconPosition
-        jsr     ResetMainGrafport
         ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
         ITK_CALL IconTK::RemoveIcon, icon_param
 
@@ -4601,7 +4586,6 @@ same_or_desktop:
 
         jsr     UpdateScrollbars
         jsr     CachedIconsWindowToScreen
-        jsr     ResetMainGrafport
         FALL_THROUGH_TO done_content_click
 
 ;;; Used as additional entry point
@@ -4849,7 +4833,7 @@ clear:  jsr     ClearSelection
     IF_NOT_ZERO
         jsr     UnsafeOffsetAndSetPortFromWindowId ; ASSERT: not obscured
     ELSE
-        jsr     ResetMainGrafport
+        jsr     InitSetDesktopPort
     END_IF
 
         jsr     FrameTmpRect
@@ -4868,13 +4852,8 @@ event_loop:
 iloop:  cpx     cached_window_entry_count
     IF_ZERO
         ;; Finished!
-        lda     window_id
-      IF_NOT_ZERO
-        jmp     ResetMainGrafport
-      ELSE
-        copy    #0, selected_window_id
+        copy    window_id, selected_window_id
         rts
-      END_IF
     END_IF
 
         ;; Check if icon should be selected
@@ -5031,8 +5010,7 @@ y_flag: .byte   0
         jsr     CachedIconsScreenToWindow
         jsr     UpdateScrollbars
         jsr     CachedIconsWindowToScreen
-        jsr     LoadDesktopEntryTable ; restore from above
-        jmp     ResetMainGrafport
+        jmp     LoadDesktopEntryTable ; restore from above
 .endproc
 
 ;;; ============================================================
@@ -5459,7 +5437,6 @@ delta:  .word   0
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         jsr     ClearWindowBackgroundIfNotObscured
-        jsr     ResetMainGrafport
 
         ;; Only draw content, not header
         lda     #kDrawWindowEntriesContentOnly
@@ -6023,8 +6000,7 @@ done:   copy    cached_window_id, active_window_id
         jsr     UpdateScrollbars
         jsr     CachedIconsWindowToScreen
         jsr     StoreWindowEntryTable
-        jsr     LoadDesktopEntryTable ; restore from above
-        jmp     ResetMainGrafport
+        jmp     LoadDesktopEntryTable ; restore from above
 
 ;;; Common code to update the dir (vol/folder) icon.
 ;;; * If `icon_param` is valid:
@@ -6275,7 +6251,6 @@ done_icons:
 
         ;; --------------------------------------------------
 done:
-        jsr     ResetMainGrafport
         jsr     PopPointers
         rts
 
@@ -6346,7 +6321,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 finish: lda     #0
         sta     selected_icon_count
         sta     selected_window_id
-        jmp     ResetMainGrafport
+        rts
 .endproc
 
 ;;; ============================================================
@@ -10163,7 +10138,7 @@ kMaxAnimationStep = 11
 
         lda     #0
         sta     step
-        jsr     ResetMainGrafport
+        jsr     InitSetDesktopPort
 
         ;; If N in 0..11, draw N
 loop:   lda     step            ; draw the Nth
@@ -10198,7 +10173,7 @@ next:   inc     step
 
         lda     #kMaxAnimationStep
         sta     step
-        jsr     ResetMainGrafport
+        jsr     InitSetDesktopPort
 
         ;; If N in 0..11, draw N
 loop:   lda     step
@@ -10584,7 +10559,6 @@ L8FE1:  lda     #$80            ; lock
 L8FEB:  tsx
         stx     stack_stash
         copy    #0, delete_skip_decrement_flag
-        jsr     ResetMainGrafport
         lda     operation_flags
         jne     BeginOperation  ; copy/delete
 
@@ -11040,7 +11014,6 @@ index:  .byte   0               ; index in selected icon list
         rts
 
 :       copy    #0, get_info_dialog_params::index
-        jsr     ResetMainGrafport
 loop:   ldx     get_info_dialog_params::index
         cpx     selected_icon_count
         jeq     done
@@ -11413,24 +11386,20 @@ finish: lda     #RenameDialogState::close
         lda     selected_icon_list,x
         sta     icon_param
 
-        jsr     ResetMainGrafport ; assumed for volume icons
-
         ;; Erase the icon, in case new name is shorter
 .scope
         lda     selected_window_id
-        beq     :+
+    IF_ZERO
+        jsr     InitSetDesktopPort ; for volume icons
+    ELSE
         ;; NOTE: EraseIcon operates with icons in screen space (?!?)
         ;; so no need to call `IconScreenToWindow` here
-        lda     selected_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         bne     skip            ; MGTK::Error::window_obscured
-:       ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED
-skip:   lda     selected_window_id
-        beq     :+
-        ;; NOTE: EraseIcon operates with icons in screen space (?!?)
+    END_IF
+        ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED
+skip:   ;; NOTE: EraseIcon operates with icons in screen space (?!?)
         ;; so no need to call `IconWindowToScreen` here
-        jsr     ResetMainGrafport
-:
 .endscope
 
         ;; Copy new string in
@@ -11937,19 +11906,19 @@ file_entry_buf          .res    .sizeof(FileEntry)
 
 ;;; ============================================================
 
-op_jt1: jmp     (op_jt_addr1)
-op_jt2: jmp     (op_jt_addr2)
-op_jt3: jmp     (op_jt_addr3)
-
-        ;; overlayed indirect jump table
-        kOpJTAddrsSize = 6
-
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
 op_jt_addrs:
 op_jt_addr1:  .addr   CopyProcessDirectoryEntry     ; defaults are for copy
 op_jt_addr2:  .addr   copy_pop_directory
 op_jt_addr3:  .addr   DoNothing
+
+op_jt1: jmp     (op_jt_addr1)
+op_jt2: jmp     (op_jt_addr2)
+op_jt3: jmp     (op_jt_addr3)
+
+        ;; overlayed indirect jump table
+        kOpJTAddrsSize = 6
 
 DoNothing:   rts
 
@@ -13935,8 +13904,7 @@ dialog_param_addr:
         jsr     SetCursorIBeamWithFlag ; toggling in prompt dialog
         jmp     done
 out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
-done:   jsr     ResetMainGrafport
-        jmp     PromptInputLoop
+done:   jmp     PromptInputLoop
 .endproc
 
 ;;; Click handler for prompt dialog
@@ -14682,7 +14650,7 @@ prepare_window:
         param_call DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
     END_IF
 
-        jmp     ResetMainGrafport
+        rts
 
         ;; --------------------------------------------------
         ;; GetInfoDialogState::* (name, type, etc)
@@ -15115,7 +15083,7 @@ params:  .res    3
 no_ok:  bit     prompt_button_flags
         bmi     done
         jsr     DrawCancelFrameAndLabel
-done:   jmp     ResetMainGrafport
+done:   rts
 .endproc
 
 ;;; ============================================================
@@ -15539,16 +15507,15 @@ ptr_str_files_suffix:
 
 ;;; ============================================================
 
-.proc ResetMainGrafport
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
+.proc InitSetDesktopPort
+        MGTK_CALL MGTK::InitPort, desktop_grafport
+        MGTK_CALL MGTK::SetPort, desktop_grafport
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc ClosePromptDialog
-        jsr     ResetMainGrafport
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jmp     ClearUpdates ; following CloseWindow
 .endproc

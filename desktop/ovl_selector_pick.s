@@ -414,8 +414,6 @@ l10:    iny
 ;;; ============================================================
 
 .proc CloseWindow
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
         MGTK_CALL MGTK::CloseWindow, winfo_entry_picker
         rts
 .endproc

@@ -32,8 +32,6 @@ a_grafport:    .addr   window_grafport
 
 window_grafport:
         .tag    MGTK::GrafPort
-main_grafport:
-        .tag    MGTK::GrafPort
 
 double_click_counter_init:
         .byte   $FF
@@ -144,8 +142,6 @@ start:  jsr     OpenWindow
         jsr     SetPortForWindow
         param_call DrawTitleCentered, app::str_run_a_program
         param_call DrawInput1Label, str_file_to_run
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 

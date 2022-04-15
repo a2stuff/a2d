@@ -198,7 +198,6 @@ l14:    jsr     main::PromptInputLoop
 
 l15:    pha
         jsr     main::SetCursorPointer
-        jsr     main::ResetMainGrafport
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
         ldx     d2
         pla
@@ -328,10 +327,9 @@ l9:     jsr     Bell
         param_call main::DrawDialogLabel, 6, aux::str_erasing_error
 l10:    jsr     main::PromptInputLoop
         bmi     l10             ; not done
-        beq     l7              ; pk
+        beq     l7              ; ok
 l11:    pha                     ; cancel
         jsr     main::SetCursorPointer
-        jsr     main::ResetMainGrafport
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
         ldx     d2
         pla

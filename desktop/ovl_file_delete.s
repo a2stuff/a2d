@@ -49,8 +49,6 @@
         jsr     file_dialog::SetPortForWindow
         param_call file_dialog::DrawTitleCentered, aux::label_delete_file
         param_call file_dialog::DrawInput1Label, file_to_delete_label
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 

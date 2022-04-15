@@ -53,7 +53,7 @@ fontptr:        .addr   0
 ;;; GrafPort used for nearly all operations. Usually re-initialized
 ;;; before use.
 
-.params main_grafport
+.params desktop_grafport
         DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   0
 mapwidth:       .byte   0

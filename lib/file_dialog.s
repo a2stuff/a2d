@@ -20,7 +20,6 @@
 ;;; * `buf_text`
 ;;; * `buf_input1`
 ;;; * `window_grafport`
-;;; * `main_grafport`
 ;;; * `penXOR`
 ;;; Requires the following macro definitions:
 ;;; * `MGTK_CALL`

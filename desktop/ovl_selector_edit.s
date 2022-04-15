@@ -172,8 +172,6 @@ common: param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
         clc
         jsr     DrawCopyWhenButton
 
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
@@ -273,9 +271,7 @@ too_long:
         lda     #kErrNameTooLong
         jmp     JUMP_TABLE_SHOW_ALERT
 
-ok:     MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+ok:     MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, line_edit_res::blink_ip_flag
         jsr     file_dialog::UnsetCursorIBeam
@@ -305,8 +301,6 @@ found:  cpy     #2
 ;;; ============================================================
 
 .proc HandleCancelFilename
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, line_edit_res::blink_ip_flag

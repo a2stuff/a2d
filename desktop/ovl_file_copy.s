@@ -51,8 +51,6 @@
         param_call file_dialog::DrawTitleCentered, aux::label_copy_file
         param_call file_dialog::DrawInput1Label, source_filename_label
         param_call file_dialog::DrawInput2Label, destination_filename_label
-        MGTK_CALL MGTK::InitPort, main_grafport
-        MGTK_CALL MGTK::SetPort, main_grafport
         rts
 .endproc
 
