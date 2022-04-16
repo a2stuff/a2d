@@ -1174,6 +1174,7 @@ icontype_table:
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_shk_suffix, 0, IconType::archive ; NuFX
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bny_suffix, 0, IconType::archive ; Binary II
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bxy_suffix, 0, IconType::archive ; NuFX in Binary II
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fc_suffix, 0, IconType::graphics ; Apple II Full Color
 
         ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
@@ -1226,6 +1227,9 @@ str_bny_suffix:                 ; Binary II files, which contain metadata as a h
 
 str_bxy_suffix:                 ; ShrinkIt NuFX files, in a Binary II package
         PASCAL_STRING ".BXY"    ; (pronounced "boxy", per A2-Central, Vol 5. No. 7, Aug 1989 )
+
+str_a2fc_suffix:                ; Double-hires ("Apple II Full Color")
+        PASCAL_STRING ".A2FC"
 
 ;;; --------------------------------------------------
 
