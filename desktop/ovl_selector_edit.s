@@ -9,6 +9,7 @@
 
         MGTKEntry := MGTKRelayImpl
 
+;;; Called back from file dialog's `Start`
 .proc Init
         stx     which_run_list
         sty     copy_when
@@ -70,7 +71,7 @@ finish: jsr     file_dialog::ReadDir
         jsr     file_dialog::f2::Update
         jsr     file_dialog::f1::Update ; sets line_edit_res::ip_pos
         copy    #$FF, line_edit_res::blink_ip_flag
-        copy    #0, file_dialog_res::allow_all_chars_flag
+        copy    #kMaxPathLength, line_edit_res::max_length
         jsr     file_dialog::InitDeviceNumber
         jmp     file_dialog::EventLoop
 
@@ -118,14 +119,12 @@ common: param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
         MGTK_CALL MGTK::MoveTo, primary_run_list_label_pos
         param_call file_dialog::DrawString, primary_run_list_label_str
         param_call file_dialog::MeasureString, primary_run_list_label_str
-        addax   rect_primary_run_list_ctrl::x1, rect_primary_run_list_ctrl::x2
-        add16_8 rect_primary_run_list_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
+        addax   rect_primary_run_list_ctrl::x2
 
         MGTK_CALL MGTK::MoveTo, secondary_run_list_label_pos
         param_call file_dialog::DrawString, secondary_run_list_label_str
         param_call file_dialog::MeasureString, secondary_run_list_label_str
-        addax   rect_secondary_run_list_ctrl::x1, rect_secondary_run_list_ctrl::x2
-        add16_8 rect_secondary_run_list_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
+        addax   rect_secondary_run_list_ctrl::x2
 
         MGTK_CALL MGTK::MoveTo, down_load_label_pos
         param_call file_dialog::DrawString, down_load_label_str
@@ -133,20 +132,17 @@ common: param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
         MGTK_CALL MGTK::MoveTo, at_first_boot_label_pos
         param_call file_dialog::DrawString, at_first_boot_label_str
         param_call file_dialog::MeasureString, at_first_boot_label_str
-        addax   rect_at_first_boot_ctrl::x1, rect_at_first_boot_ctrl::x2
-        add16_8 rect_at_first_boot_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
+        addax   rect_at_first_boot_ctrl::x2
 
         MGTK_CALL MGTK::MoveTo, at_first_use_label_pos
         param_call file_dialog::DrawString, at_first_use_label_str
         param_call file_dialog::MeasureString, at_first_use_label_str
-        addax   rect_at_first_use_ctrl::x1, rect_at_first_use_ctrl::x2
-        add16_8 rect_at_first_use_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
+        addax   rect_at_first_use_ctrl::x2
 
         MGTK_CALL MGTK::MoveTo, never_label_pos
         param_call file_dialog::DrawString, never_label_str
         param_call file_dialog::MeasureString, never_label_str
-        addax   rect_never_ctrl::x1, rect_never_ctrl::x2
-        add16_8 rect_never_ctrl::x2, #kRadioButtonWidth + kRadioButtonHOffset
+        addax   rect_never_ctrl::x2
 
         lda     #1
         clc
@@ -184,22 +180,27 @@ jt_entry_name:
 .proc HandleOkFilename
         jsr     file_dialog::f1::HideIP ; Switch
 
-        ;; install name field handlers
+        ;; Install name field handlers
         COPY_BYTES file_dialog::kJumpTableSize, jt_entry_name, file_dialog::jump_table
 
         lda     #$80
         sta     file_dialog::focus_in_input2_flag
         sta     file_dialog::listbox_disabled_flag
+
         lda     line_edit_res::input_dirty_flag
         sta     input1_dirty_flag
         lda     #$00
         sta     line_edit_res::input_dirty_flag
+
+        ;; Already have a name?
         lda     path_buf1
         bne     finish
-        lda     #$00
+
+        ;; Copy path after slash as name
+        lda     #0
         sta     path_buf1
         ldx     path_buf0
-        beq     finish
+        beq     finish          ; empty!
 :       lda     path_buf0,x
         cmp     #'/'
         beq     found_slash
@@ -215,9 +216,13 @@ found_slash:
         sta     path_buf1,y
         cpx     path_buf0
         bne     :-
-        sty     path_buf1
+        cpy     #kSelectorMaxNameLength+1 ; make sure it's not too long
+        bcc     :+
+        ldy     #kSelectorMaxNameLength
+:       sty     path_buf1
 
 finish: copy    #$80, file_dialog_res::allow_all_chars_flag
+        copy    #kSelectorMaxNameLength, line_edit_res::max_length
         jsr     file_dialog::RedrawInput
         rts
 .endproc
@@ -233,8 +238,6 @@ finish: copy    #$80, file_dialog_res::allow_all_chars_flag
         bne     invalid
         lda     path_buf1
         jeq     Bell            ; empty - give a subtle error
-        cmp     #14+1           ; Max selector name length
-        bcs     too_long
         jsr     IsVolPath
         bcs     ok              ; nope
         lda     copy_when       ; Disallow copying volume to ramcard
@@ -244,10 +247,6 @@ finish: copy    #$80, file_dialog_res::allow_all_chars_flag
 
 invalid:
         lda     #ERR_INVALID_PATHNAME
-        jmp     JUMP_TABLE_SHOW_ALERT
-
-too_long:
-        lda     #kErrNameTooLong
         jmp     JUMP_TABLE_SHOW_ALERT
 
 ok:     MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
@@ -299,6 +298,7 @@ found:  cpy     #2
         COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
 
         copy    #0, file_dialog_res::allow_all_chars_flag
+        copy    #kMaxPathLength, line_edit_res::max_length
         lda     #$00
         sta     file_dialog::listbox_disabled_flag
         sta     file_dialog::focus_in_input2_flag

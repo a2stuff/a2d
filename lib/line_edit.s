@@ -1,5 +1,6 @@
 ;;; ============================================================
 ;;; API:
+;;; * `Init` - init `line_edit_res` members
 ;;; * `Idle` - call from event loop; blinks IP
 ;;; * `Update` - call to repaint control entirely, IP moved to end
 ;;; * `Click` - call with mapped `click_coords` populated
@@ -11,7 +12,6 @@
 ;;;
 ;;; Requirements:
 ;;; * `buf_text` - string to edit
-;;; * `kLineEditMaxLength` - max length of string
 ;;; * `clear_rect` - to erase contents of control
 ;;; * `textpos` - position of text
 ;;; * `SetPort` - called to set up GrafPort for drawing
@@ -19,6 +19,7 @@
 ;;; * `click_coords` - for `Click`, in window coords
 ;;; * `event_params` - for `Key`
 ;;; * `line_edit_res::blink_ip_flag` - set to enable blinking IP
+;;; * `line_edit_res::max_length` - set to maximum length of string
 ;;; ============================================================
 
 .proc Init
@@ -27,6 +28,7 @@
         sta     line_edit_res::input_dirty_flag
         sta     line_edit_res::ip_flag
         sta     line_edit_res::ip_pos
+        sta     line_edit_res::max_length
         copy16  SETTINGS + DeskTopSettings::ip_blink_speed, line_edit_res::ip_counter
         rts
 .endproc
@@ -270,7 +272,7 @@ ret:    rts
 
         ;; Is there room?
         lda     buf_text
-        cmp     #kLineEditMaxLength ; TODO: Off-by-one now that IP is gone?
+        cmp     line_edit_res::max_length
         bcs     ret
 
         ;; Move everything to right of IP up

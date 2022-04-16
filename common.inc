@@ -74,6 +74,7 @@ kSelectorListNumSecondaryRunListEntries = 16
 kSelectorListNumEntries                 = kSelectorListNumPrimaryRunListEntries + kSelectorListNumSecondaryRunListEntries
 kSelectorListNameLength                 = 16 ; includes leading size byte and trailing flags byte
 kSelectorListPathLength                 = 64
+kSelectorMaxNameLength                  = 14
 
 kSelectorListNumPrimaryRunListOffset    = 0
 kSelectorListNumSecondaryRunListOffset  = 1

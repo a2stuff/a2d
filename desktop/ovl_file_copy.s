@@ -9,6 +9,7 @@
 
         MGTKEntry := MGTKRelayImpl
 
+;;; Called back from file dialog's `Start`
 .proc Init
         copy    #$80, file_dialog::dual_inputs_flag
 
@@ -24,7 +25,6 @@
         jsr     file_dialog::RedrawInput
 
         copy    #$FF, line_edit_res::blink_ip_flag
-        copy    #0, file_dialog_res::allow_all_chars_flag
         jmp     file_dialog::EventLoop
 .endproc
 

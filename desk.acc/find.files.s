@@ -1003,6 +1003,7 @@ top_row:        .byte   0
 
         jsr     line_edit__Init
         copy    #$80, line_edit_res::blink_ip_flag
+        copy    #kMaxFilenameLength, line_edit_res::max_length
 
         param_call MeasureString, find_label_str
         addax   input_rect::x1
@@ -1060,7 +1061,6 @@ top_row:        .byte   0
         textpos := input_textpos
         clear_rect := input_clear_rect
         frame_rect := input_rect
-        kLineEditMaxLength := kMaxFilenameLength
         NotifyTextChanged := NoOp
         click_coords := screentowindow_params::window
 

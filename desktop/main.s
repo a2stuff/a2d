@@ -14615,23 +14615,18 @@ delete_flag:                    ; set if trash, clear if delete
 loop:   jsr     PromptInputLoop
         bmi     loop
         bne     do_close
+
         lda     path_buf1
-        beq     loop
-        cmp     #kMaxFilenameLength+1
-        bcc     LAEE1
+        beq     loop            ; empty
 
-LAED6:  lda     #kErrNameTooLong
-        jsr     ShowAlert
-        jsr     line_edit__Update
-        jmp     loop
-
-LAEE1:  lda     path_buf0
+        lda     path_buf0       ; full path okay?
         clc
         adc     path_buf1
         clc
         adc     #1
         cmp     #::kPathBufferSize
-        bcs     LAED6
+        bcs     too_long
+
         inc     path_buf0
         ldx     path_buf0
         copy    #'/', path_buf0,x
@@ -14646,6 +14641,12 @@ LAEFF:  inx
         ldy     #<path_buf0
         ldx     #>path_buf0
         return  #0
+
+too_long:
+        lda     #kErrNameTooLong
+        jsr     ShowAlert
+        jmp     loop
+
 not_run:
 
         ;; --------------------------------------------------
@@ -15376,7 +15377,6 @@ done:   rts
         buf_text := path_buf1
         textpos := name_input_textpos
         clear_rect := name_input_erase_rect
-        kLineEditMaxLength := kMaxFilenameLength
         NotifyTextChanged := NoOp
         click_coords := screentowindow_params::windowx
 
@@ -15411,6 +15411,7 @@ line_edit__Key  := line_edit::Key
         MGTK_CALL MGTK::FrameRect, name_input_rect
         jsr     line_edit__Init
         copy    #$80, line_edit_res::blink_ip_flag
+        copy    #kMaxFilenameLength, line_edit_res::max_length
         jmp     line_edit__Update
 .endproc
 

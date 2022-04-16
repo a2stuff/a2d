@@ -101,9 +101,11 @@ routine_table:
         copy    DEVCNT, device_num
 
         jsr     LineEditInit
+        copy    #kMaxPathLength, line_edit_res::max_length
 
         lda     #0
         sta     file_dialog_res::type_down_buf
+        sta     file_dialog_res::allow_all_chars_flag
         sta     only_show_dirs_flag
         sta     cursor_ibeam_flag
         sta     extra_controls_flag
@@ -2145,7 +2147,6 @@ no_change:
         buf_text := buf_input1
         textpos := file_dialog_res::input1_textpos
         clear_rect := file_dialog_res::input1_clear_rect
-        kLineEditMaxLength := kMaxInputLength
         click_coords := screentowindow_params::windowx
         NotifyTextChanged := NotifyTextChangedF1
         SetPort := SetPortForDialog
@@ -2173,7 +2174,6 @@ f1__Click := f1::Click
         buf_text := buf_input2
         textpos := file_dialog_res::input2_textpos
         clear_rect := file_dialog_res::input2_clear_rect
-        kLineEditMaxLength := kMaxInputLength
         click_coords := screentowindow_params::windowx
         NotifyTextChanged := NotifyTextChangedF2
         SetPort := SetPortForDialog

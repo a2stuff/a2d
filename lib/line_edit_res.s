@@ -8,6 +8,10 @@
 blink_ip_flag:
         .byte   0
 
+;;; Set for the maximum length
+max_length:
+        .byte   0
+
 ;;; Internal: Position of the insertion point
 ip_pos:
         .byte   0

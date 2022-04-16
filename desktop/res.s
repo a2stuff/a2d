@@ -536,11 +536,11 @@ kRadioButtonHOffset = kLabelPadding
 kRadioControlHeight = 8         ; system font height - 1
 
         ;; Widths are dynamically computed based on label
-        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   kRadioButtonLeft, 41, 0, kRadioControlHeight
-        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, kRadioButtonLeft, 50, 0, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      kRadioButtonLeft, 75, 0, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_use_ctrl,       kRadioButtonLeft, 84, 0, kRadioControlHeight
-        DEFINE_RECT_SZ rect_never_ctrl,              kRadioButtonLeft, 93, 0, kRadioControlHeight
+        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   kRadioButtonLeft, 41, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, kRadioButtonLeft, 50, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      kRadioButtonLeft, 75, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_RECT_SZ rect_at_first_use_ctrl,       kRadioButtonLeft, 84, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_RECT_SZ rect_never_ctrl,              kRadioButtonLeft, 93, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
 
 ;;; ============================================================
 
