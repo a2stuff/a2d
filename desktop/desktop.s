@@ -32,11 +32,6 @@
 ;;; ============================================================
 ;;; Other Overlays
 
-.macro jump_table_entry addr
-        .byte 0
-        .addr addr
-.endmacro
-
         .include "ovl_format_erase.s"
         .include "ovl_selector_pick.s" ; Selector (1/2) @ $9000-$9FFF
         .include "ovl_file_dialog.s"   ; File Dialog    @ $5000-$6FFF

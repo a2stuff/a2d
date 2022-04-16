@@ -27,15 +27,7 @@
 .endproc
 
 .proc InstallCallbackTable
-        ldx     jt_filename
-:       lda     jt_filename+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        lda     jt_filename+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        dex
-        bpl     :-
+        COPY_BYTES file_dialog::kJumpTableSize, jt_filename, file_dialog::jump_table
 
         lda     #0
         sta     path_buf0
@@ -53,11 +45,9 @@
 .endproc
 
 jt_filename:
-        .byte file_dialog::kJumpTableSize-1
-        jump_table_entry HandleOk
-        jump_table_entry HandleCancel
-        .assert * - jt_filename = file_dialog::kJumpTableSize+1, error, "Table size error"
-
+        jmp     HandleOk
+        jmp     HandleCancel
+        .assert * - jt_filename = file_dialog::kJumpTableSize, error, "Table size error"
 
 .proc HandleOk
         param_call file_dialog::VerifyValidNonVolumePath, path_buf0

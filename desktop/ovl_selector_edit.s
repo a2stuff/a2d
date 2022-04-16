@@ -81,15 +81,7 @@ buffer: .res 16, 0
 ;;; ============================================================
 
 .proc L70AD
-        ldx     jt_pathname
-:       lda     jt_pathname+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        lda     jt_pathname+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        dex
-        bpl     :-
+        COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
 
         copy    #0, file_dialog::focus_in_input2_flag
         lda     file_dialog_res::winfo::window_id
@@ -178,16 +170,14 @@ common: param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
 ;;; ============================================================
 
 jt_pathname:
-        .byte file_dialog::kJumpTableSize-1
-        jump_table_entry HandleOkFilename
-        jump_table_entry HandleCancelFilename
-        .assert * - jt_pathname = file_dialog::kJumpTableSize+1, error, "Table size error"
+        jmp     HandleOkFilename
+        jmp     HandleCancelFilename
+        .assert * - jt_pathname = file_dialog::kJumpTableSize, error, "Table size error"
 
 jt_entry_name:
-        .byte file_dialog::kJumpTableSize-1
-        jump_table_entry HandleOkName
-        jump_table_entry HandleCancelName
-        .assert * - jt_entry_name = file_dialog::kJumpTableSize+1, error, "Table size error"
+        jmp     HandleOkName
+        jmp     HandleCancelName
+        .assert * - jt_entry_name = file_dialog::kJumpTableSize, error, "Table size error"
 
 ;;; ============================================================
 
@@ -195,15 +185,7 @@ jt_entry_name:
         jsr     file_dialog::f1::HideIP ; Switch
 
         ;; install name field handlers
-        ldx     jt_entry_name
-:       lda     jt_entry_name+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        lda     jt_entry_name+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        dex
-        bpl     :-
+        COPY_BYTES file_dialog::kJumpTableSize, jt_entry_name, file_dialog::jump_table
 
         lda     #$80
         sta     file_dialog::focus_in_input2_flag
@@ -314,15 +296,7 @@ found:  cpy     #2
         jsr     file_dialog::f2::HideIP ; Switch
 
         ;; install pathname field handlers
-        ldx     jt_pathname
-:       lda     jt_pathname+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        lda     jt_pathname+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        dex
-        bpl     :-
+        COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
 
         copy    #0, line_edit_res::allow_all_chars_flag
         lda     #$00

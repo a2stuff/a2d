@@ -29,15 +29,7 @@
 .endproc
 
 .proc InstallSourceCallbackTable
-        ldx     jt_source_filename
-:       lda     jt_source_filename+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        lda     jt_source_filename+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        dex
-        bpl     :-
+        COPY_BYTES file_dialog::kJumpTableSize, jt_source_filename, file_dialog::jump_table
 
         lda     #0
         sta     path_buf0
@@ -55,16 +47,14 @@
 .endproc
 
 jt_source_filename:
-        .byte file_dialog::kJumpTableSize-1
-        jump_table_entry HandleOkSource
-        jump_table_entry HandleCancel
-        .assert * - jt_source_filename = file_dialog::kJumpTableSize+1, error, "Table size error"
+        jmp     HandleOkSource
+        jmp     HandleCancel
+        .assert * - jt_source_filename = file_dialog::kJumpTableSize, error, "Table size error"
 
 jt_destination_filename:
-        .byte file_dialog::kJumpTableSize-1
-        jump_table_entry HandleOkDestination
-        jump_table_entry HandleCancelDestination
-        .assert * - jt_destination_filename = file_dialog::kJumpTableSize+1, error, "Table size error"
+        jmp     HandleOkDestination
+        jmp     HandleCancelDestination
+        .assert * - jt_destination_filename = file_dialog::kJumpTableSize, error, "Table size error"
 
 ;;; ============================================================
 
@@ -72,15 +62,7 @@ jt_destination_filename:
         jsr     file_dialog::f1::HideIP ; Switch
 
         ;; install destination field handlers
-        ldx     jt_destination_filename
-:       lda     jt_destination_filename+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        lda     jt_destination_filename+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        dex
-        bpl     :-
+        COPY_BYTES file_dialog::kJumpTableSize, jt_destination_filename, file_dialog::jump_table
 
         ;; set up flags for destination
         lda     #$80
@@ -183,15 +165,7 @@ err:    lda     #ERR_INVALID_PATHNAME
         jsr     file_dialog::f2::HideIP ; Switch
 
         ;; install source field handlers
-        ldx     jt_source_filename
-:       lda     jt_source_filename+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        lda     jt_source_filename+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        dex
-        bpl     :-
+        COPY_BYTES file_dialog::kJumpTableSize, jt_source_filename, file_dialog::jump_table
 
         copy    #0, file_dialog::only_show_dirs_flag
         copy    #$FF, file_dialog_res::selected_index
