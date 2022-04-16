@@ -1071,34 +1071,6 @@ top_row:        .byte   0
         rts
 .endproc
 
-.proc IsAllowedChar
-        ;; Valid characters are . 0-9 A-Z a-z ? *
-        cmp     #'*'            ; Wildcard
-        beq     insert
-        cmp     #'?'            ; Wildcard
-        beq     insert
-        cmp     #'.'            ; Filename char (here and below)
-        beq     insert
-        cmp     #'0'
-        bcc     ignore
-        cmp     #'9'+1
-        bcc     insert
-        cmp     #'A'
-        bcc     ignore
-        cmp     #'Z'+1
-        bcc     insert
-        cmp     #'a'
-        bcc     ignore
-        cmp     #'z'+1
-        bcs     ignore
-
-insert: clc
-        rts
-
-ignore: sec
-        rts
-.endproc
-
 .proc NoOp
         rts
 .endproc
@@ -1157,10 +1129,63 @@ line_edit__Update := line_edit::Update
         jmp     HandleScroll
       END_IF
 
-        jsr     line_edit::Key
+        jsr     IsControlChar
+        bcc     allow
+        jsr     IsSearchChar
+        bcs     ignore
+allow:  jsr     line_edit::Key
+ignore:
     END_IF
 
         jmp     InputLoop
+.endproc
+
+;;; ============================================================
+
+;;; Input: A=character
+;;; Output: C=0 if control, C=1 if not
+.proc IsControlChar
+        cmp     #CHAR_DELETE
+        bcs     yes
+
+        cmp     #' '
+        bcc     yes
+        rts                     ; C=1
+
+yes:    clc                     ; C=0
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Input: A=character
+;;; Output: C=0 if valid, C=1 otherwise
+.proc IsSearchChar
+        ;; Valid characters are . 0-9 A-Z a-z ? *
+        cmp     #'*'            ; Wildcard
+        beq     insert
+        cmp     #'?'            ; Wildcard
+        beq     insert
+        cmp     #'.'            ; Filename char (here and below)
+        beq     insert
+        cmp     #'0'
+        bcc     ignore
+        cmp     #'9'+1
+        bcc     insert
+        cmp     #'A'
+        bcc     ignore
+        cmp     #'Z'+1
+        bcc     insert
+        cmp     #'a'
+        bcc     ignore
+        cmp     #'z'+1
+        bcs     ignore
+
+insert: clc
+        rts
+
+ignore: sec
+        rts
 .endproc
 
 ;;; ============================================================

@@ -821,7 +821,15 @@ ret:    rts
         jeq     KeyUp
       END_IF
 
-        jsr     Key
+        jsr     IsControlChar ; pass through control characters
+        bcc     allow
+        bit     file_dialog_res::allow_all_chars_flag
+      IF_NC
+        jsr     IsPathChar
+        bcs     ignore
+      END_IF
+allow:  jsr     Key
+ignore:
     END_IF
 
 exit:   rts
@@ -1060,6 +1068,24 @@ done:   rts
 
 ;;; ============================================================
 
+;;; Input: A=character
+;;; Output: C=0 if control, C=1 if not
+.proc IsControlChar
+        cmp     #CHAR_DELETE
+        bcs     yes
+
+        cmp     #' '
+        bcc     yes
+        rts                     ; C=1
+
+yes:    clc                     ; C=0
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Input: A=character
+;;; Output: C=0 if valid path character, C=1 otherwise
 .proc IsPathChar
         jsr     UpcaseChar
         cmp     #'A'
@@ -2121,7 +2147,6 @@ no_change:
         clear_rect := file_dialog_res::input1_clear_rect
         kLineEditMaxLength := kMaxInputLength
         click_coords := screentowindow_params::windowx
-        IsAllowedChar := IsPathChar
         NotifyTextChanged := NotifyTextChangedF1
         SetPort := SetPortForDialog
 
@@ -2150,7 +2175,6 @@ f1__Click := f1::Click
         clear_rect := file_dialog_res::input2_clear_rect
         kLineEditMaxLength := kMaxInputLength
         click_coords := screentowindow_params::windowx
-        IsAllowedChar := IsPathChar
         NotifyTextChanged := NotifyTextChangedF2
         SetPort := SetPortForDialog
 

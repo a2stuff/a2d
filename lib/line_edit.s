@@ -3,11 +3,10 @@
 ;;; * `Idle` - call from event loop; blinks IP
 ;;; * `Update` - call to repaint control entirely, IP moved to end
 ;;; * `Click` - call with mapped `click_coords` populated
-;;; * `Key` - call with `event_params` populated
+;;; * `Key` - call with `event_params` populated; filter out undesired printable chars
 ;;; * `ShowIP` / `HideIP` - when changing focus
 ;;; Internal procs are prefixed with `_`
 ;;; TODO:
-;;; * Add Init the resets state
 ;;; * Add Activate/Deactivate that handle showing/hiding/positioning IP
 ;;;
 ;;; Requirements:
@@ -19,15 +18,12 @@
 ;;; * `NotifyTextChanged` - called when string changes
 ;;; * `click_coords` - for `Click`, in window coords
 ;;; * `event_params` - for `Key`
-;;; * `IsAllowedChar` - filter, called if `line_edit_res::allow_all_chars_flag` is set
-;;; * `line_edit_res::allow_all_chars_flag` - set if more than path chars allowed
 ;;; * `line_edit_res::blink_ip_flag` - set to enable blinking IP
 ;;; ============================================================
 
 .proc Init
         lda     #0
         sta     line_edit_res::blink_ip_flag
-        sta     line_edit_res::allow_all_chars_flag
         sta     line_edit_res::input_dirty_flag
         sta     line_edit_res::ip_flag
         sta     line_edit_res::ip_pos
@@ -272,12 +268,6 @@ ret:    rts
 .proc _InsertChar
         sta     char
 
-        ;; Is it allowed?
-        bit     line_edit_res::allow_all_chars_flag
-        bmi     :+
-        jsr     IsAllowedChar
-        bcs     ret
-:
         ;; Is there room?
         lda     buf_text
         cmp     #kLineEditMaxLength ; TODO: Off-by-one now that IP is gone?

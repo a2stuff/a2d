@@ -8,11 +8,6 @@
 blink_ip_flag:
         .byte   0
 
-;;; If set, control allows entering all printable characters.
-;;; The default is to only allow pathname characters.
-allow_all_chars_flag:
-        .byte   0
-
 ;;; Internal: Position of the insertion point
 ip_pos:
         .byte   0

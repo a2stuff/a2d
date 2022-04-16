@@ -7,6 +7,11 @@
 
 .scope file_dialog_res
 
+;;; If set, control allows entering all printable characters.
+;;; The default is to only allow pathname characters.
+allow_all_chars_flag:
+        .byte   0
+
 ;;; Buffer used when selecting filename by holding Apple key and typing name.
 ;;; Length-prefixed string, initialized to 0 when the dialog is shown.
 type_down_buf:

@@ -14072,12 +14072,15 @@ check_button_cancel:
 
         bit     has_input_field_flag
       IF_NS
-        jsr     line_edit__Key
+        jsr     IsControlChar ; pass through control characters
+        bcc     allow
+        jsr     IsFilenameChar
+        bcs     ignore
+allow:  jsr     line_edit__Key
+ignore:
       END_IF
 
     END_IF
-
-        return  #$FF
 
         ;; --------------------------------------------------
 
@@ -14115,6 +14118,57 @@ do_all: jsr     SetPenModeXOR
 
 rts1:
         rts
+
+;;; ============================================================
+
+;;; Input: A=character
+;;; Output: C=0 if control, C=1 if not
+.proc IsControlChar
+        cmp     #CHAR_DELETE
+        bcs     yes
+
+        cmp     #' '
+        bcc     yes
+        rts                     ; C=1
+
+yes:    clc                     ; C=0
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Input: A=character
+;;; Output: C=0 if valid filename character, C=1 otherwise
+.proc IsFilenameChar
+        cmp     #'.'
+        beq     allow_if_not_first
+
+        cmp     #'0'
+        bcc     ignore
+        cmp     #'9'+1
+        bcc     allow_if_not_first
+
+        cmp     #'A'
+        bcc     ignore
+        cmp     #'Z'+1
+        bcc     allow
+
+        cmp     #'a'
+        bcc     ignore
+        cmp     #'z'+1
+        bcc     allow
+        bcs     ignore          ; always
+
+allow_if_not_first:
+        ldx     path_buf1
+        beq     ignore
+
+allow:  clc
+        rts
+
+ignore: sec
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -15328,37 +15382,6 @@ done:   rts
 .proc SetPort
         lda     #winfo_prompt_dialog::kWindowId
         jmp     SafeSetPortFromWindowId
-.endproc
-
-.proc IsAllowedChar
-        cmp     #'.'
-        beq     allow_if_not_first
-
-        cmp     #'0'
-        bcc     ignore
-        cmp     #'9'+1
-        bcc     allow_if_not_first
-
-        cmp     #'A'
-        bcc     ignore
-        cmp     #'Z'+1
-        bcc     allow
-
-        cmp     #'a'
-        bcc     ignore
-        cmp     #'z'+1
-        bcc     allow
-        bcs     ignore          ; always
-
-allow_if_not_first:
-        ldx     buf_text
-        beq     ignore
-
-allow:  clc
-        rts
-
-ignore: sec
-        rts
 .endproc
 
         .include "../lib/line_edit.s"

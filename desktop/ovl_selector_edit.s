@@ -70,7 +70,7 @@ finish: jsr     file_dialog::ReadDir
         jsr     file_dialog::f2::Update
         jsr     file_dialog::f1::Update ; sets line_edit_res::ip_pos
         copy    #$FF, line_edit_res::blink_ip_flag
-        copy    #0, line_edit_res::allow_all_chars_flag
+        copy    #0, file_dialog_res::allow_all_chars_flag
         jsr     file_dialog::InitDeviceNumber
         jmp     file_dialog::EventLoop
 
@@ -217,7 +217,7 @@ found_slash:
         bne     :-
         sty     path_buf1
 
-finish: copy    #$80, line_edit_res::allow_all_chars_flag
+finish: copy    #$80, file_dialog_res::allow_all_chars_flag
         jsr     file_dialog::RedrawInput
         rts
 .endproc
@@ -298,7 +298,7 @@ found:  cpy     #2
         ;; install pathname field handlers
         COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
 
-        copy    #0, line_edit_res::allow_all_chars_flag
+        copy    #0, file_dialog_res::allow_all_chars_flag
         lda     #$00
         sta     file_dialog::listbox_disabled_flag
         sta     file_dialog::focus_in_input2_flag
