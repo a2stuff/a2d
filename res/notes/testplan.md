@@ -677,7 +677,10 @@ This covers:
 
 Repeat for each field:
  * Type a printable character.
-   * Should insert a character at IP, unless invalid in context or length limit reached.
+   * Should insert a character at IP, unless invalid in context or length limit reached. Length limits are:
+     * File path: 64 characters
+     * File name: 15 characters
+     * Shortcut name: 14 characters
    * Mouse cursor should be hidden until moved.
    * Test with IP at start, in middle, and at end of the string.
  * Delete key
