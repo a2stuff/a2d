@@ -446,51 +446,56 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, entry_picker_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
+
         MGTK_CALL MGTK::MoveTo, entry_picker_line1_start
         MGTK_CALL MGTK::LineTo, entry_picker_line1_end
         MGTK_CALL MGTK::MoveTo, entry_picker_line2_start
         MGTK_CALL MGTK::LineTo, entry_picker_line2_end
+
         MGTK_CALL MGTK::SetPenMode, penXOR
+
         MGTK_CALL MGTK::FrameRect, entry_picker_ok_rect
+        MGTK_CALL MGTK::MoveTo, entry_picker_ok_pos
+        param_call main::DrawString, aux::ok_button_label
+
         MGTK_CALL MGTK::FrameRect, entry_picker_cancel_rect
-        jsr     DrawOkLabel
-        jsr     DrawCancelLabel
+        MGTK_CALL MGTK::MoveTo, entry_picker_cancel_pos
+        param_call main::DrawString, aux::cancel_button_label
+
         lda     selector_action
         cmp     #SelectorAction::edit
-        bne     :+
-        param_call DrawTitleCentered, label_edit
-        rts
+    IF_EQ
+        param_jump DrawTitleCentered, label_edit
+    END_IF
 
-:       cmp     #SelectorAction::delete
-        bne     :+
-        param_call DrawTitleCentered, label_del
-        rts
+        cmp     #SelectorAction::delete
+    IF_EQ
+        param_jump DrawTitleCentered, label_del
+    END_IF
 
-:       param_call DrawTitleCentered, label_run
-        rts
+        param_jump DrawTitleCentered, label_run
 .endproc
 
 ;;; ============================================================
 
+;;; Inputs: A,X=string, Y=index
 .proc DrawEntry
-        stx     $07
-        sta     $06
-        lda     dialog_label_pos::xcoord
-        sta     xcoord
+        stax    $06
+
         tya
-        pha
+        pha                     ; A = index
+
         cmp     #16             ; 3rd column (16-24)
-        bcc     l1
+        bcc     :+
         sec
         sbc     #16
         jmp     l2
-
-        ;; 8 rows
-l1:     cmp     #8              ; 2nd column (8-15)
-        bcc     l2
+:
+        cmp     #8              ; 2nd column (8-15)
+        bcc     :+
         sec
         sbc     #8
-
+:
         ;; A has row
 l2:     ldx     #0
         ldy     #kEntryPickerItemHeight
@@ -501,49 +506,27 @@ l2:     ldx     #0
         txa
         adc     #0
         sta     dialog_label_pos::ycoord+1
-        pla
+
+        pla                     ; A = index
 
         cmp     #8
         bcs     :+
         ldax    #kEntryPickerCol1
         beq     l3              ; always
-
-:       cmp     #16
+:
+        cmp     #16
         bcs     :+
         ldax    #kEntryPickerCol2
         jmp     l3
+:
+        ldax    #kEntryPickerCol3
 
-:       ldax    #kEntryPickerCol3
-
-l3:     clc
-        adc     #10             ; text starts at +10 offset
-        sta     dialog_label_pos::xcoord
-        txa
-        adc     #0
-        sta     dialog_label_pos::xcoord+1
+l3:     addax   #10, dialog_label_pos::xcoord ; text starts at +10 offset
         MGTK_CALL MGTK::MoveTo, dialog_label_pos
         ldax    $06
         jsr     DrawString
-        lda     xcoord
-        sta     dialog_label_pos::xcoord
-        lda     #0
-        sta     dialog_label_pos::xcoord+1
-        rts
 
-xcoord: .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc DrawOkLabel
-        MGTK_CALL MGTK::MoveTo, entry_picker_ok_pos
-        param_call main::DrawString, aux::ok_button_label
-        rts
-.endproc
-
-.proc DrawCancelLabel
-        MGTK_CALL MGTK::MoveTo, entry_picker_cancel_pos
-        param_call main::DrawString, aux::cancel_button_label
+        copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
         rts
 .endproc
 
@@ -621,8 +604,6 @@ handle_button:
         return  #$FF
 
 :       lda     #winfo_entry_picker::kWindowId
-        jsr     main::SafeSetPortFromWindowId
-        lda     #winfo_entry_picker::kWindowId
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
@@ -1011,14 +992,6 @@ entries_flag_table:
         .res    ::kSelectorListNumEntries, 0
 
 ;;; ============================================================
-
-.proc DrawItemsRect
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, entry_picker_all_items_rect
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Assigns name, flags, and path to an entry in the file buffer
 ;;; and (if it's in the primary run list) also updates the
 ;;; resource data (used for menus, etc).
@@ -1324,7 +1297,7 @@ index:  .byte   0
 
 .proc GetFileEntryAddr
         addr := selector_list + kSelectorListEntriesOffset
-        jsr     Times16
+        jsr     main::ATimes16
         clc
         adc     #<addr
         tay
@@ -1343,7 +1316,7 @@ index:  .byte   0
 .proc GetFilePathAddr
         addr := selector_list + kSelectorListPathsOffset
 
-        jsr     Times64
+        jsr     main::ATimes64
         clc
         adc     #<addr
         tay
@@ -1360,7 +1333,7 @@ index:  .byte   0
 ;;; Output: A,X = Address
 
 .proc GetResourceEntryAddr
-        jsr     Times16
+        jsr     main::ATimes16
         clc
         adc     #<run_list_entries
         tay
@@ -1377,7 +1350,7 @@ index:  .byte   0
 ;;; Output: A,X = Address
 
 .proc GetResourcePathAddr
-        jsr     Times64
+        jsr     main::ATimes64
         clc
         adc     #<run_list_paths
         tay
@@ -1532,7 +1505,7 @@ close:  MLI_CALL CLOSE, close_params
 loop1:  lda     index
         cmp     num_primary_run_list_entries
         beq     secondary_run_list
-        jsr     Times16
+        jsr     main::ATimes16
         clc
         adc     #kSelectorListEntriesOffset
         pha
@@ -1557,7 +1530,7 @@ loop2:  lda     index
         beq     done
         clc
         adc     #8
-        jsr     Times16
+        jsr     main::ATimes16
         clc
         adc     #kSelectorListEntriesOffset
         pha
@@ -1576,54 +1549,6 @@ loop2:  lda     index
 done:   return  #0
 
 index:  .byte   0
-.endproc
-
-;;; ============================================================
-;;; Times 16 - for computing entry list offsets
-;;; Input: A = number
-;;; Output: A,X = result
-
-.proc Times16
-        ldx     #0
-        stx     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        ldx     hi
-        rts
-
-hi:     .byte   0
-.endproc
-
-;;; ============================================================
-;;; Times 64 - for computing path list offsets
-;;; Input: A = number
-;;; Output: A,X = result
-
-.proc Times64
-        ldx     #0
-        stx     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        ldx     hi
-        rts
-
-hi:     .byte   0
 .endproc
 
 ;;; ============================================================
