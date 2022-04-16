@@ -13016,7 +13016,7 @@ callbacks_for_lock:
 .enum LockDialogLifecycle
         open            = 0 ; opening window, initial label
         count           = 1 ; show operation details (e.g. file count)
-        prompt          = 2 ; draw buttons, input loop
+        confirm         = 2 ; draw buttons, input loop
         operation       = 3 ; performing operation
         close           = 4 ; destroy window
 .endenum
@@ -13060,7 +13060,7 @@ a_path: .addr   src_path_buf
 .endproc
 
 .proc LockDialogConfirmCallback
-        copy    #LockDialogLifecycle::prompt, lock_unlock_dialog_params::phase
+        copy    #LockDialogLifecycle::confirm, lock_unlock_dialog_params::phase
         jsr     RunLockDialogProc
         jne     CloseFilesCancelDialog
 
@@ -13068,7 +13068,7 @@ a_path: .addr   src_path_buf
 .endproc
 
 .proc UnlockDialogConfirmCallback
-        copy    #LockDialogLifecycle::prompt, lock_unlock_dialog_params::phase
+        copy    #LockDialogLifecycle::confirm, lock_unlock_dialog_params::phase
         jsr     RunUnlockDialogProc
         jne     CloseFilesCancelDialog
 
@@ -14155,19 +14155,9 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ldy     #copy_dialog_params::phase - copy_dialog_params
         lda     (ptr),y
 
-        cmp     #CopyDialogLifecycle::count
-        jeq     do1
-        cmp     #CopyDialogLifecycle::show
-        jeq     do2
-        cmp     #CopyDialogLifecycle::exists
-        jeq     do3
-        cmp     #CopyDialogLifecycle::too_large
-        jeq     do4
-        cmp     #CopyDialogLifecycle::close
-        jeq     do5
-
         ;; --------------------------------------------------
-        ;; CopyDialogLifecycle::open
+        cmp     #CopyDialogLifecycle::open
+    IF_EQ
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
 
@@ -14182,19 +14172,23 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
 :       param_call DrawDialogTitle, aux::str_move_title
         param_call DrawDialogLabel, 1, aux::str_move_moving
         param_jump DrawDialogLabel, 4, aux::str_move_remaining
+    END_IF
 
         ;; --------------------------------------------------
-        ;; CopyDialogLifecycle::count
-do1:    ldy     #copy_dialog_params::count - copy_dialog_params
+        cmp     #CopyDialogLifecycle::count
+    IF_EQ
+        ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos
         jmp     DrawFileCountWithSuffix
+    END_IF
 
         ;; --------------------------------------------------
-        ;; CopyDialogLifecycle::exists
-do2:    ldy     #copy_dialog_params::count - copy_dialog_params
+        cmp     #CopyDialogLifecycle::exists
+    IF_EQ
+        ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
@@ -14217,16 +14211,12 @@ do2:    ldy     #copy_dialog_params::count - copy_dialog_params
 
         MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         jmp     DrawFileCountWithTrailingSpaces
+    END_IF
 
         ;; --------------------------------------------------
-        ;; CopyDialogLifecycle::close
-do5:    jsr     ClosePromptDialog
-        jsr     SetCursorPointer ; when closing dialog
-        rts
-
-        ;; --------------------------------------------------
-        ;; CopyDialogLifecycle::exists
-do3:    lda     #winfo_prompt_dialog::kWindowId
+        cmp     #CopyDialogLifecycle::exists
+    IF_EQ
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 6, aux::str_exists_prompt
         jsr     DrawYesNoAllCancelButtons
@@ -14238,17 +14228,19 @@ do3:    lda     #winfo_prompt_dialog::kWindowId
         jsr     ErasePrompt
         pla
         rts
+    END_IF
 
         ;; --------------------------------------------------
-        ;; CopyDialogLifecycle::too_large
-do4:    lda     #winfo_prompt_dialog::kWindowId
+        cmp     #CopyDialogLifecycle::too_large
+    IF_EQ
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         bit     move_flag
-    IF_MINUS
+      IF_MINUS
         param_call      DrawDialogLabel, 6, aux::str_large_move_prompt
-    ELSE
+      ELSE
         param_call      DrawDialogLabel, 6, aux::str_large_copy_prompt
-    END_IF
+      END_IF
         jsr     DrawOkCancelButtons
         jsr     Bell
 :       jsr     PromptInputLoop
@@ -14258,6 +14250,12 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         jsr     ErasePrompt
         pla
         rts
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; CopyDialogLifecycle::close
+        jsr     ClosePromptDialog
+        jmp     SetCursorPointer ; when closing dialog
 .endproc
 
 ;;; ============================================================
@@ -14269,17 +14267,10 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::phase - copy_dialog_params
         lda     (ptr),y
-        cmp     #DownloadDialogLifecycle::count
-        jeq     do1
-        cmp     #DownloadDialogLifecycle::show
-        jeq     do2
-        cmp     #DownloadDialogLifecycle::close
-        jeq     do3
-        cmp     #DownloadDialogLifecycle::too_large
-        jeq     do4
 
         ;; --------------------------------------------------
-        ;; DownloadDialogLifecycle::open
+        cmp     #DownloadDialogLifecycle::open
+    IF_EQ
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::str_download
@@ -14287,19 +14278,23 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         param_call DrawDialogLabel, 2, aux::str_copy_from
         param_call DrawDialogLabel, 3, aux::str_copy_to
         param_jump DrawDialogLabel, 4, aux::str_copy_remaining
+    END_IF
 
         ;; --------------------------------------------------
-        ;; DownloadDialogLifecycle::count
-do1:    ldy     #copy_dialog_params::count - copy_dialog_params
+        cmp     #DownloadDialogLifecycle::count
+    IF_EQ
+        ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos
         jmp     DrawFileCountWithSuffix
+    END_IF
 
         ;; --------------------------------------------------
-        ;; DownloadDialogLifecycle::show
-do2:    ldy     #copy_dialog_params::count - copy_dialog_params
+        cmp     #DownloadDialogLifecycle::show
+    IF_EQ
+        ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
@@ -14312,16 +14307,12 @@ do2:    ldy     #copy_dialog_params::count - copy_dialog_params
         jsr     DrawDialogPathBuf0
         MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         jmp     DrawFileCountWithTrailingSpaces
+    END_IF
 
         ;; --------------------------------------------------
-        ;; DownloadDialogLifecycle::close
-do3:    jsr     ClosePromptDialog
-        jsr     SetCursorPointer ; when closing dialog
-        rts
-
-        ;; --------------------------------------------------
-        ;; DownloadDialogLifecycle::too_large
-do4:    lda     #winfo_prompt_dialog::kWindowId
+        cmp     #DownloadDialogLifecycle::too_large
+    IF_EQ
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 6, aux::str_ramcard_full
         jsr     DrawOkButton
@@ -14333,6 +14324,12 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         jsr     ErasePrompt
         pla
         rts
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; DownloadDialogLifecycle::close
+        jsr     ClosePromptDialog
+        jmp     SetCursorPointer ; when closing dialog
 .endproc
 
 ;;; ============================================================
@@ -14344,23 +14341,20 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         jsr     CopyDialogParamAddrToPtr
         ldy     #get_size_dialog_params::phase - get_size_dialog_params
         lda     (ptr),y
-        cmp     #GetSizeDialogLifecycle::count
-        jeq     do1
-        cmp     #GetSizeDialogLifecycle::prompt
-        jeq     do2
-        cmp     #GetSizeDialogLifecycle::close
-        jeq     do3
 
         ;; --------------------------------------------------
-        ;; GetSizeDialogLifecycle::open
+        cmp     #GetSizeDialogLifecycle::open
+    IF_EQ
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::label_get_size
         param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_size_number
         param_jump DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_size_blocks
+    END_IF
 
         ;; --------------------------------------------------
-        ;; GetSizeDialogLifecycle::count
-do1:
+        cmp     #GetSizeDialogLifecycle::count
+    IF_EQ
+GetSizeDialogProc::do_count := *
         ;; File Count
         ldy     #get_size_dialog_params::a_files - get_size_dialog_params
         jsr     DereferencePtrToAddr
@@ -14385,18 +14379,14 @@ do1:
         dec     str_file_count  ; remove trailing space
         param_call DrawDialogLabel, 2 | DDL_VALUE, str_file_count
         param_jump DrawString, str_kb_suffix
+    END_IF
 
         ;; --------------------------------------------------
-        ;; GetSizeDialogLifecycle::close
-do3:    jsr     ClosePromptDialog
-        jmp     SetCursorPointer ; when closing dialog
-
-        ;; --------------------------------------------------
-        ;; GetSizeDialogLifecycle::prompt
-do2:
-        ;; If no files were seen, `do1` was never executed and so the
+        cmp     #GetSizeDialogLifecycle::prompt
+    IF_EQ
+        ;; If no files were seen, `do_count` was never executed and so the
         ;; counts will not be shown. Update one last time, just in case.
-        jsr     do1
+        jsr     do_count
 
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
@@ -14406,6 +14396,12 @@ do2:
         jsr     EraseDialogLabels
         jsr     EraseOkButton
         return  #0
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; GetSizeDialogLifecycle::close
+        jsr     ClosePromptDialog
+        jmp     SetCursorPointer ; when closing dialog
 .endproc
 
 ;;; ============================================================
@@ -14418,44 +14414,40 @@ do2:
         ldy     #delete_dialog_params::phase - delete_dialog_params
         lda     (ptr),y         ; phase
 
-        cmp     #DeleteDialogLifecycle::count
-        jeq     do1
-        cmp     #DeleteDialogLifecycle::confirm
-        jeq     do2
-        cmp     #DeleteDialogLifecycle::show
-        jeq     do3
-        cmp     #DeleteDialogLifecycle::locked
-        jeq     do4
-        cmp     #DeleteDialogLifecycle::close
-        jeq     do5
+        cmp     #DeleteDialogLifecycle::trash
+        beq     do_open
 
         ;; --------------------------------------------------
-        ;; DeleteDialogLifecycle::open or trash
-        sta     delete_flag
+        cmp     #DeleteDialogLifecycle::open
+    IF_EQ
+DeleteDialogProc::do_open := *
+        sta     delete_flag     ; non-zero if trash (vs. delete)
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_jump DrawDialogTitle, aux::str_delete_title
-
-delete_flag:                    ; clear if trash, set if delete
-        .byte   0
+    END_IF
 
         ;; --------------------------------------------------
-        ;; DeleteDialogLifecycle::count
-do1:    ldy     #delete_dialog_params::count - delete_dialog_params
+        cmp     #DeleteDialogLifecycle::count
+    IF_EQ
+        ldy     #delete_dialog_params::count - delete_dialog_params
         copy16in (ptr),y, file_count
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
+
         lda     delete_flag
-        beq     :+
+      IF_NE
         param_call DrawDialogLabel, 4, aux::str_ok_empty
-        jmp     show_count
-:       param_call DrawDialogLabel, 4, aux::str_delete_ok
-show_count:
+      ELSE
+        param_call DrawDialogLabel, 4, aux::str_delete_ok
+      END_IF
         jmp     DrawFileCountWithSuffix
+    END_IF
 
         ;; --------------------------------------------------
-        ;; DeleteDialogLifecycle::show
-do3:    ldy     #delete_dialog_params::count - delete_dialog_params
+        cmp     #DeleteDialogLifecycle::show
+    IF_EQ
+        ldy     #delete_dialog_params::count - delete_dialog_params
         copy16in (ptr),y, file_count
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
@@ -14468,10 +14460,12 @@ do3:    ldy     #delete_dialog_params::count - delete_dialog_params
         jsr     DrawDialogPathBuf0
         MGTK_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
         jmp     DrawFileCountWithTrailingSpaces
+    END_IF
 
         ;; --------------------------------------------------
-        ;; DeleteDialogLifecycle::confirm
-do2:    lda     #winfo_prompt_dialog::kWindowId
+        cmp     #DeleteDialogLifecycle::confirm
+    IF_EQ
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkCancelButtons
         jsr     Bell
@@ -14484,16 +14478,12 @@ do2:    lda     #winfo_prompt_dialog::kWindowId
         param_call DrawDialogLabel, 4, aux::str_delete_remaining
         lda     #$00
 :       rts
+    END_IF
 
         ;; --------------------------------------------------
-        ;; DeleteDialogLifecycle::close
-do5:    jsr     ClosePromptDialog
-        jsr     SetCursorPointer ; when closing dialog
-        rts
-
-        ;; --------------------------------------------------
-        ;; DeleteDialogLifecycle::locked
-do4:    lda     #winfo_prompt_dialog::kWindowId
+        cmp     #DeleteDialogLifecycle::locked
+    IF_EQ
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         param_call DrawDialogLabel, 6, aux::str_delete_locked_file
         jsr     DrawYesNoAllCancelButtons
@@ -14504,6 +14494,15 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         jsr     ErasePrompt
         pla
         rts
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; DeleteDialogLifecycle::close
+        jsr     ClosePromptDialog
+        jmp     SetCursorPointer ; when closing dialog
+
+delete_flag:                    ; set if trash, clear if delete
+        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -14516,26 +14515,24 @@ do4:    lda     #winfo_prompt_dialog::kWindowId
         jsr     CopyDialogParamAddrToPtr
         ldy     #new_folder_dialog_params::phase - new_folder_dialog_params
         lda     ($06),y
-        cmp     #NewFolderDialogState::run
-        jeq     do_run
-
-        cmp     #NewFolderDialogState::close
-        jeq     do_close
 
         ;; --------------------------------------------------
-        ;; NewFolderDialogState::open
+        cmp     #NewFolderDialogState::open
+    IF_EQ
         copy    #$80, has_input_field_flag
         jsr     ClearPathBuf1
         lda     #$00
         jsr     OpenPromptWindow
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
-        param_call DrawDialogTitle, aux::label_new_folder
-        rts
+        param_jump DrawDialogTitle, aux::label_new_folder
+    END_IF
 
         ;; --------------------------------------------------
-        ;; NewFolderDialogState::run
-do_run: copy    #$80, has_input_field_flag
+        cmp     #NewFolderDialogState::run
+        jne     not_run
+
+        copy    #$80, has_input_field_flag
         copy    #0, prompt_button_flags
         jsr     CopyDialogParamAddrToPtr
         ldy     #new_folder_dialog_params::a_path - new_folder_dialog_params
@@ -14583,6 +14580,7 @@ LAEFF:  inx
         ldy     #<path_buf0
         ldx     #>path_buf0
         return  #0
+not_run:
 
         ;; --------------------------------------------------
         ;; NewFolderDialogState::close
@@ -14601,19 +14599,15 @@ do_close:
         jsr     CopyDialogParamAddrToPtr
         ldy     #get_info_dialog_params::state - get_info_dialog_params
         lda     (ptr),y
-        bmi     prepare_window
-
-        cmp     #GetInfoDialogState::prompt
-        jeq     do_prompt
-
-        jmp     populate_value
 
         ;; --------------------------------------------------
         ;; GetInfoDialogState::prepare_*
+    IF_NS
         ;; Draw the field labels (e.g. "Size:")
-prepare_window:
         copy    #0, has_input_field_flag
+        ;; ldy     #get_info_dialog_params::state - get_info_dialog_params
         lda     (ptr),y
+        pha
         lsr     a               ; bit 1 set if multiple
         lsr     a               ; so configure buttons appropriately
         ror     a
@@ -14623,41 +14617,32 @@ prepare_window:
         jsr     SafeSetPortFromWindowId
 
         param_call DrawDialogTitle, aux::label_get_info
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #get_info_dialog_params::state - get_info_dialog_params
-        lda     (ptr),y
-        and     #$7F
-        lsr     a
-        ror     a
-        sta     is_volume_flag
+        pla                     ; A = get_info_dialog_params::state
+        pha                     ; bit 0 set if volume
 
         ;; Draw labels
         param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_info_name
         param_call DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_info_type
-        ;; Blocks (file) or Size (volume)
-        bit     is_volume_flag
-    IF_NEG
-        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
-    ELSE
-        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
-    END_IF
         param_call DrawDialogLabel, 4 | DDL_LRIGHT, aux::str_info_create
         param_call DrawDialogLabel, 5 | DDL_LRIGHT, aux::str_info_mod
-        ;; Locked (file) or Protected (volume)
-        bit     is_volume_flag
-    IF_POS
-        param_call DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_locked
-    ELSE
-        param_call DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
-    END_IF
 
-        rts
+        pla                     ; bit 0 set if volume
+        and     #$01
+      IF_NOT_ZERO
+        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
+        param_jump DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
+      ELSE
+        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
+        param_jump DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_locked
+      END_IF
+    END_IF
 
         ;; --------------------------------------------------
         ;; GetInfoDialogState::* (name, type, etc)
         ;; Draw a specific value
 
-populate_value:
+        cmp     #GetInfoDialogState::prompt
+    IF_NE
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     CopyDialogParamAddrToPtr
@@ -14675,15 +14660,11 @@ populate_value:
         lda     (ptr),y
         row := *+1
         ldy     #SELF_MODIFIED_BYTE
-        jsr     DrawDialogLabel
-
-        rts
+        jmp     DrawDialogLabel
+    END_IF
 
         ;; --------------------------------------------------
         ;; GetInfoDialogState::prompt
-
-do_prompt:
-
 :       jsr     PromptInputLoop
         bmi     :-
 
@@ -14692,9 +14673,6 @@ do_prompt:
         jsr     SetCursorPointerWithFlag ; when closing dialog with prompt
         pla
         rts
-
-is_volume_flag:
-        .byte   0               ; high bit set if volume, clear if file
 .endproc
 
 ;;; ============================================================
@@ -14707,43 +14685,39 @@ is_volume_flag:
         ldy     #lock_unlock_dialog_params::phase - lock_unlock_dialog_params
         lda     (ptr),y
 
-        cmp     #LockDialogLifecycle::count
-        jeq     do1
-        cmp     #LockDialogLifecycle::prompt
-        jeq     do2
-        cmp     #LockDialogLifecycle::operation
-        jeq     do3
-        cmp     #LockDialogLifecycle::close
-        jeq     do4
-
         ;; --------------------------------------------------
-        ;; LockDialogLifecycle::open
+        cmp     #LockDialogLifecycle::open
+    IF_EQ
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         bit     unlock_flag
-    IF_NS
+      IF_NS
         param_jump DrawDialogTitle, aux::label_unlock
-    ELSE
+      ELSE
         param_jump DrawDialogTitle, aux::label_lock
+      END_IF
     END_IF
 
         ;; --------------------------------------------------
-        ;; LockDialogLifecycle::count
-do1:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
+        cmp     #LockDialogLifecycle::count
+    IF_EQ
+        ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         bit     unlock_flag
-    IF_NS
+      IF_NS
         param_call DrawDialogLabel, 4, aux::str_unlock_ok
-    ELSE
+      ELSE
         param_call DrawDialogLabel, 4, aux::str_lock_ok
-    END_IF
+      END_IF
         jmp     DrawFileCountWithSuffix
+    END_IF
 
         ;; --------------------------------------------------
-        ;; LockDialogLifecycle::operation
-do3:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
+        cmp     #LockDialogLifecycle::operation
+    IF_EQ
+        ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
         lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
@@ -14755,16 +14729,18 @@ do3:    ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
         bit     unlock_flag
-    IF_NS
+      IF_NS
         MGTK_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
-    ELSE
+      ELSE
         MGTK_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
-    END_IF
+      END_IF
         jmp     DrawFileCountWithTrailingSpaces
+    END_IF
 
         ;; --------------------------------------------------
-        ;; LockDialogLifecycle::prompt
-do2:    lda     #winfo_prompt_dialog::kWindowId
+        cmp     #LockDialogLifecycle::confirm
+    IF_EQ
+        lda     #winfo_prompt_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
         jsr     DrawOkCancelButtons
 :       jsr     PromptInputLoop
@@ -14774,19 +14750,20 @@ do2:    lda     #winfo_prompt_dialog::kWindowId
         jsr     EraseOkCancelButtons
         param_call DrawDialogLabel, 2, aux::str_file_colon
         bit     unlock_flag
-    IF_NS
+      IF_NS
         param_call DrawDialogLabel, 4, aux::str_unlock_remaining
-    ELSE
+      ELSE
         param_call DrawDialogLabel, 4, aux::str_lock_remaining
-    END_IF
+      END_IF
         lda     #$00
 :       rts
+    END_IF
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::close
-do4:    jsr     ClosePromptDialog
-        jsr     SetCursorPointer ; when closing dialog
-        rts
+do_close:
+        jsr     ClosePromptDialog
+        jmp     SetCursorPointer ; when closing dialog
 .endproc
 UnlockDialogProc := LockDialogProc
 
@@ -14799,16 +14776,10 @@ UnlockDialogProc := LockDialogProc
         jsr     CopyDialogParamAddrToPtr
         ldy     #rename_dialog_params::state - rename_dialog_params
         lda     (params_ptr),y
-        cmp     #RenameDialogState::run
-        jeq     do_run
-
-        cmp     #RenameDialogState::close
-        jeq     do_close
 
         ;; ----------------------------------------
-        ;; RenameDialogState::open
-
-        jsr     CopyDialogParamAddrToPtr
+        cmp     #RenameDialogState::open
+    IF_EQ
         copy    #$80, has_input_field_flag
         lda     #$00
         jsr     OpenPromptWindow
@@ -14817,7 +14788,7 @@ UnlockDialogProc := LockDialogProc
         param_call DrawDialogTitle, aux::label_rename_icon
         jsr     CopyDialogParamAddrToPtr
         ldy     #rename_dialog_params::a_path - rename_dialog_params
-        copy16in ($06),y, $08
+        copy16in (params_ptr),y, $08
 
         ;; Populate filename field and input
         ldy     #0
@@ -14833,10 +14804,11 @@ UnlockDialogProc := LockDialogProc
         param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_rename_new
         jmp     InitNameInput
+    END_IF
 
         ;; --------------------------------------------------
-        ;; RenameDialogState::run
-do_run:
+        cmp     #RenameDialogState::run
+    IF_EQ
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
         lda     #winfo_prompt_dialog::kWindowId
@@ -14852,6 +14824,7 @@ do_run:
         ldy     #<path_buf1
         ldx     #>path_buf1
         return  #0
+    END_IF
 
         ;; --------------------------------------------------
         ;; RenameDialogState::close
@@ -14870,16 +14843,10 @@ do_close:
         jsr     CopyDialogParamAddrToPtr
         ldy     #duplicate_dialog_params::state - duplicate_dialog_params
         lda     (params_ptr),y
-        cmp     #DuplicateDialogState::run
-        jeq     do_run
-
-        cmp     #DuplicateDialogState::close
-        jeq     do_close
 
         ;; --------------------------------------------------
-        ;; DuplicateDialogState::open
-
-        jsr     CopyDialogParamAddrToPtr
+        cmp     #DuplicateDialogState::open
+    IF_EQ
         copy    #$80, has_input_field_flag
         lda     #$00
         jsr     OpenPromptWindow
@@ -14888,7 +14855,7 @@ do_close:
         param_call DrawDialogTitle, aux::label_duplicate_icon
         jsr     CopyDialogParamAddrToPtr
         ldy     #duplicate_dialog_params::a_path - duplicate_dialog_params
-        copy16in ($06),y, $08
+        copy16in (params_ptr),y, $08
 
         ;; Populate filename field and input
         ldy     #0
@@ -14904,10 +14871,11 @@ do_close:
         param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_rename_new
         jmp     InitNameInput
+    END_IF
 
         ;; --------------------------------------------------
-        ;; DuplicateDialogState::run
-do_run:
+        cmp     #DuplicateDialogState::run
+    IF_EQ
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
         lda     #winfo_prompt_dialog::kWindowId
@@ -14923,9 +14891,10 @@ do_run:
         ldy     #<path_buf1
         ldx     #>path_buf1
         return  #0
+    END_IF
 
         ;; --------------------------------------------------
-        ;; DuplicateDialogState::run
+        ;; DuplicateDialogState::close
 do_close:
         jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
