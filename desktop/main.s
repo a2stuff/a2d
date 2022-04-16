@@ -4267,12 +4267,20 @@ active_window_view_by:
         ;; TODO: jmp here means `done_client_click` not called, callee responsible
         jeq     HandleContentClick ; 0 = ctl_not_a_control
 
-        cmp     #MGTK::Ctl::dead_zone
-        bne     :+
-        rts
-:       cmp     #MGTK::Ctl::vertical_scroll_bar
-        bne     horiz
+        ;; Ensure we call this when done
+        jsr     :+
+        jsr     StoreWindowEntryTable
+        jmp     LoadDesktopEntryTable ; restore from above
+:
+        ;; --------------------------------------------------
 
+        cmp     #MGTK::Ctl::dead_zone
+    IF_EQ
+        rts
+    END_IF
+
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+    IF_EQ
         ;; Vertical scrollbar
         lda     active_window_id
         jsr     WindowLookup
@@ -4280,94 +4288,95 @@ active_window_view_by:
         ldy     #MGTK::Winfo::vscroll
         lda     ($06),y
         and     #MGTK::Scroll::option_active
-        jeq     done_client_click
-
+        bne     :+
+        rts
+:
         jsr     GetActiveWindowScrollInfo
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
-        bne     :+
-        jsr     DoTrackThumb
-        jmp     done_client_click
+        jeq     DoTrackThumb
 
-:       cmp     #MGTK::Part::up_arrow
-        bne     :+
-up:     jsr     ScrollUp
+        cmp     #MGTK::Part::up_arrow
+      IF_EQ
+:       jsr     ScrollUp
         lda     #MGTK::Part::up_arrow
         jsr     CheckControlRepeat
-        bpl     up
-        jmp     done_client_click
+        bpl     :-
+        rts
+      END_IF
 
-:       cmp     #MGTK::Part::down_arrow
-        bne     :+
-down:   jsr     ScrollDown
+        cmp     #MGTK::Part::down_arrow
+      IF_EQ
+:       jsr     ScrollDown
         lda     #MGTK::Part::down_arrow
         jsr     CheckControlRepeat
-        bpl     down
-        jmp     done_client_click
+        bpl     :-
+        rts
+      END_IF
 
-:       cmp     #MGTK::Part::page_down
-        beq     pgdn
-pgup:   jsr     ScrollPageUp
+        cmp     #MGTK::Part::page_up
+      IF_EQ
+:       jsr     ScrollPageUp
         lda     #MGTK::Part::page_up
         jsr     CheckControlRepeat
-        bpl     pgup
-        jmp     done_client_click
+        bpl     :-
+        rts
+      END_IF
 
-pgdn:   jsr     ScrollPageDown
+:       jsr     ScrollPageDown
         lda     #MGTK::Part::page_down
         jsr     CheckControlRepeat
-        bpl     pgdn
-        jmp     done_client_click
+        bpl     :-
+        rts
+    END_IF
 
         ;; Horizontal scrollbar
-horiz:  lda     active_window_id
+        lda     active_window_id
         jsr     WindowLookup
         stax    $06
         ldy     #MGTK::Winfo::hscroll
         lda     ($06),y
         and     #MGTK::Scroll::option_active
-        jeq     done_client_click
-
+        bne     :+
+        rts
+:
         jsr     GetActiveWindowScrollInfo
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
-        bne     :+
-        jsr     DoTrackThumb
-        jmp     done_client_click
+        jeq     DoTrackThumb
 
-:       cmp     #MGTK::Part::left_arrow
-        bne     :+
-left:   jsr     ScrollLeft
+        cmp     #MGTK::Part::left_arrow
+      IF_EQ
+:       jsr     ScrollLeft
         lda     #MGTK::Part::left_arrow
         jsr     CheckControlRepeat
-        bpl     left
-        jmp     done_client_click
+        bpl     :-
+        rts
+      END_IF
 
-:       cmp     #MGTK::Part::right_arrow
-        bne     :+
-rght:   jsr     ScrollRight
+        cmp     #MGTK::Part::right_arrow
+      IF_EQ
+:       jsr     ScrollRight
         lda     #MGTK::Part::right_arrow
         jsr     CheckControlRepeat
-        bpl     rght
-        jmp     done_client_click
+        bpl     :-
+        rts
+      END_IF
 
-:       cmp     #MGTK::Part::page_right
-        beq     pgrt
-pglt:   jsr     ScrollPageLeft
+        cmp     #MGTK::Part::page_left
+      IF_EQ
+:       jsr     ScrollPageLeft
         lda     #MGTK::Part::page_left
         jsr     CheckControlRepeat
-        bpl     pglt
-        jmp     done_client_click
+        bpl     :-
+        rts
+      END_IF
 
-pgrt:   jsr     ScrollPageRight
+:       jsr     ScrollPageRight
         lda     #MGTK::Part::page_right
         jsr     CheckControlRepeat
-        bpl     pgrt
-        jmp     done_client_click
-
-done_client_click:
-        jsr     StoreWindowEntryTable
-        jmp     LoadDesktopEntryTable ; restore from above
+        bpl     :-
+        rts
 .endproc
 
 ;;; ============================================================
@@ -4433,6 +4442,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         lda     screentowindow_params::windowy
         cmp     #kWindowHeaderHeight + 1
         bcs     :+
+        ;; TODO: Skips `done_content_click` ?
         rts
 :
 
@@ -4546,7 +4556,7 @@ process_drop:
         txa
         jmp     SelectAndRefreshWindowOrClose
       END_IF
-        rts
+        rts                     ; TODO: Skips `done_content_click` ?
     END_IF
 
         ;; (4/4) Dropped on window!
@@ -4595,6 +4605,7 @@ done_content_click:     ; TODO: Obscures correct usage; remove?
         jmp     LoadDesktopEntryTable
 
 failure:
+        ;; TODO: Skips `done_content_click` ?
         ldx     saved_stack
         txs
         rts
