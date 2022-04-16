@@ -14,9 +14,12 @@
 
 ;;; ============================================================
 ;;; Common code for main>aux relays with MLI-style params
+;;; Inputs: A,X = target address
+;;; Uses $7E/$7F
 
 .proc ParamsRelayImpl
         params_src := $7E
+        stax    call_addr
 
         ;; Adjust return address on stack, compute
         ;; original params address.
@@ -51,7 +54,7 @@ params:  .res    3
 ;;; MGTK call from main>aux, MLI-style params
 
 .proc MGTKRelayImpl
-        copy16  #MGTKAuxEntry, ParamsRelayImpl::call_addr
+        ldax    #MGTKAuxEntry
         jmp     ParamsRelayImpl
 .endproc
 
@@ -59,7 +62,7 @@ params:  .res    3
 ;;; IconTK call from main>aux, MLI-style params
 
 .proc ITKRelayImpl
-        copy16  #IconTK::MLI, ParamsRelayImpl::call_addr
+        ldax    #IconTK::MLI
         jmp     ParamsRelayImpl
 .endproc
 
