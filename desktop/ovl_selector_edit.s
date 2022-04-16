@@ -18,42 +18,31 @@
         jsr     L7101
         jsr     L70AD
         jsr     file_dialog::DeviceOnLine
+
+        ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
         lda     path_buf0
         beq     finish
-        ldy     path_buf0
-:       lda     path_buf0,y
-        sta     file_dialog::path_buf,y
-        dey
-        bpl     :-
 
-        jsr     file_dialog::StripPathBufSegment
+        COPY_STRING path_buf0, file_dialog::path_buf
+
         ;; Was it just a volume name, e.g. "/VOL"?
-        lda     file_dialog::path_buf
-        bne     :+
-        copy    path_buf0, file_dialog::path_buf ; yes, restore it
-:
+        jsr     IsVolPath
+    IF_CS
+        ;; No, strip to parent directory
+        jsr     file_dialog::StripPathBufSegment
 
-        ldy     path_buf0
-:       lda     path_buf0,y
-        cmp     #'/'
-        beq     found_slash
-        dey
-        cpy     #$01
-        bne     :-
-
-        lda     #$00
-        sta     path_buf0
-        jmp     finish
-
-found_slash:
-        ldx     #$00
-:       iny
+        ;; And populate `buffer` with filename
+        ldx     file_dialog::path_buf
         inx
-        lda     path_buf0,y
-        sta     buffer,x
-        cpy     path_buf0
+        ldy     #0
+:       inx
+        iny
+        lda     path_buf0,x
+        sta     buffer,y
+        cpx     path_buf0
         bne     :-
-        stx     buffer
+        sty     buffer
+    END_IF
 
 finish: jsr     file_dialog::ReadDir
         lda     #$00
