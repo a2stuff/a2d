@@ -97,7 +97,9 @@ jt_destination_filename:
         beq     :+
         dex
         bne     :-
+        beq     done            ; always
 :
+
         ;; Append to destination
         ldy     path_buf1
         iny
