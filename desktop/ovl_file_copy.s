@@ -59,6 +59,12 @@ jt_destination_filename:
 ;;; ============================================================
 
 .proc HandleOkSource
+        param_call file_dialog::VerifyValidNonVolumePath, path_buf0
+    IF_NE
+        lda     #ERR_INVALID_PATHNAME
+        jmp     JUMP_TABLE_SHOW_ALERT
+    END_IF
+
         jsr     file_dialog::f1::HideIP ; Switch
 
         ;; install destination field handlers
@@ -125,18 +131,18 @@ done:   jsr     file_dialog::RedrawInput
 ;;; ============================================================
 
 .proc HandleOkDestination
-        param_call file_dialog::VerifyValidNonVolumePath, path_buf0
-        beq     :+
-err:    lda     #ERR_INVALID_PATHNAME
+        param_call file_dialog::VerifyValidNonVolumePath, path_buf1
+    IF_NE
+        lda     #ERR_INVALID_PATHNAME
         jmp     JUMP_TABLE_SHOW_ALERT
-:
+    END_IF
+
         jsr     ComparePathBufs
-        bne     :+
+    IF_EQ
         lda     #kErrBadReplacement
         jmp     JUMP_TABLE_SHOW_ALERT
-:
-        param_call file_dialog::VerifyValidNonVolumePath, path_buf1
-        bne     err
+    END_IF
+
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, file_dialog::only_show_dirs_flag

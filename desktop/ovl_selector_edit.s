@@ -167,6 +167,13 @@ jt_entry_name:
 ;;; ============================================================
 
 .proc HandleOkFilename
+        param_call file_dialog::VerifyValidPath, path_buf0
+    IF_NE
+        lda     #ERR_INVALID_PATHNAME
+        jmp     JUMP_TABLE_SHOW_ALERT
+    END_IF
+
+
         jsr     file_dialog::f1::HideIP ; Switch
 
         ;; Install name field handlers
@@ -223,8 +230,6 @@ finish: copy    #$80, file_dialog_res::allow_all_chars_flag
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
 .proc HandleOkName
-        param_call file_dialog::VerifyValidPath, path_buf0
-        bne     invalid
         lda     path_buf1
         jeq     Bell            ; empty - give a subtle error
         jsr     IsVolPath
