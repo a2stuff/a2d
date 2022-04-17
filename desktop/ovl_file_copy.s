@@ -143,11 +143,7 @@ done:   jsr     file_dialog::RedrawInput
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF
 
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, file_dialog::only_show_dirs_flag
-        copy    #0, line_edit_res::blink_ip_flag
-        jsr     file_dialog::UnsetCursorIBeam
+        jsr     file_dialog::CloseWindow
         copy16  #path_buf0, $6
         copy16  #path_buf1, $8
         ldx     file_dialog::saved_stack
@@ -158,10 +154,7 @@ done:   jsr     file_dialog::RedrawInput
 ;;; ============================================================
 
 .proc HandleCancel
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, line_edit_res::blink_ip_flag
-        jsr     file_dialog::UnsetCursorIBeam
+        jsr     file_dialog::CloseWindow
         ldx     file_dialog::saved_stack
         txs
         return  #$FF

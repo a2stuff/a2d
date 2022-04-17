@@ -15,8 +15,8 @@
         sty     copy_when
         copy    #$80, file_dialog::dual_inputs_flag
         jsr     file_dialog::OpenWindow
-        jsr     L7101
-        jsr     L70AD
+        jsr     DrawControls
+        jsr     InitControlsAndHooks
         jsr     file_dialog::DeviceOnLine
 
         ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
@@ -70,7 +70,7 @@ buffer: .res 16, 0
 
 ;;; ============================================================
 
-.proc L70AD
+.proc InitControlsAndHooks
         COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
 
         copy    #0, file_dialog::focus_in_input2_flag
@@ -90,7 +90,7 @@ buffer: .res 16, 0
 
 ;;; ============================================================
 
-.proc L7101
+.proc DrawControls
         lda     file_dialog_res::winfo::window_id
         jsr     file_dialog::SetPortForWindow
         lda     path_buf0
@@ -243,12 +243,8 @@ invalid:
         lda     #ERR_INVALID_PATHNAME
         jmp     JUMP_TABLE_SHOW_ALERT
 
-ok:     MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, line_edit_res::blink_ip_flag
-        jsr     file_dialog::UnsetCursorIBeam
+ok:     jsr     file_dialog::CloseWindow
         copy16  #file_dialog::NoOp, file_dialog::HandleKeyEvent::key_meta_digit+1
-
         ldx     file_dialog::saved_stack
         txs
         ldx     which_run_list
@@ -273,10 +269,7 @@ found:  cpy     #2
 ;;; ============================================================
 
 .proc HandleCancelFilename
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, line_edit_res::blink_ip_flag
-        jsr     file_dialog::UnsetCursorIBeam
+        jsr     file_dialog::CloseWindow
         copy16  #file_dialog::NoOp, file_dialog::HandleKeyEvent::key_meta_digit+1
         ldx     file_dialog::saved_stack
         txs

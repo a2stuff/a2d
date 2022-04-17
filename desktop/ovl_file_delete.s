@@ -55,11 +55,8 @@ jt_filename:
         lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_SHOW_ALERT
         rts
-
-:       MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, line_edit_res::blink_ip_flag
-        jsr     file_dialog::UnsetCursorIBeam
+:
+        jsr     file_dialog::CloseWindow
         copy16  #path_buf0, $6
         ldx     file_dialog::saved_stack
         txs
@@ -68,10 +65,7 @@ jt_filename:
 .endproc
 
 .proc HandleCancel
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, line_edit_res::blink_ip_flag
-        jsr     file_dialog::UnsetCursorIBeam
+        jsr     file_dialog::CloseWindow
         ldx     file_dialog::saved_stack
         txs
         return  #$FF

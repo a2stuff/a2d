@@ -1242,6 +1242,17 @@ l1:     ldx     num_file_names
 .endproc
 
 ;;; ============================================================
+
+.proc CloseWindow
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
+        copy    #0, file_dialog::only_show_dirs_flag
+        copy    #0, line_edit_res::blink_ip_flag
+        jsr     UnsetCursorIBeam
+        rts
+.endproc
+
+;;; ============================================================
 ;;; Inputs: A,X = string
 ;;; Output: Copied to `file_dialog_res::filename_buf`
 ;;; Assert: 15 characters or less
