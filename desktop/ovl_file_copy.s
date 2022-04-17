@@ -16,10 +16,7 @@
         jsr     file_dialog::OpenWindow
         jsr     DrawControls
         jsr     file_dialog::DeviceOnLine
-        jsr     file_dialog::ReadDir
-        jsr     file_dialog::UpdateScrollbar
-        jsr     file_dialog::UpdateDiskName
-        jsr     file_dialog::DrawListEntries
+        jsr     file_dialog::UpdateListFromPath
         jsr     InstallSourceCallbackTable
         jsr     file_dialog::PrepPath
         jsr     file_dialog::RedrawInput
@@ -79,11 +76,7 @@ jt_destination_filename:
         lda     #$FF
         sta     file_dialog_res::selected_index
         jsr     file_dialog::DeviceOnLine
-        jsr     file_dialog::ReadDir
-        jsr     file_dialog::UpdateScrollbar
-        jsr     file_dialog::UpdateDiskName
-
-        jsr     file_dialog::DrawListEntries
+        jsr     file_dialog::UpdateListFromPath
 
         ;; Init destination path
         ldx     file_dialog::path_buf
@@ -186,12 +179,7 @@ done:   jsr     file_dialog::RedrawInput
         ;; TODO: Understand how these paths differ.
         ;; If selection is "dirty", do this...
         jsr     file_dialog::DeviceOnLine
-        lda     #0
-        jsr     file_dialog::ScrollClipRect
-        jsr     file_dialog::ReadDir
-        jsr     file_dialog::UpdateScrollbar
-        jsr     file_dialog::UpdateDiskName
-        jsr     file_dialog::DrawListEntries
+        jsr     file_dialog::UpdateListFromPath
         jsr     file_dialog::RedrawInput
         rts
 
@@ -214,7 +202,7 @@ L7289:  sta     file_dialog_res::selected_index
         cmp     #$FF            ; if no selection...
         bne     :+              ; make scroll index 0
         lda     #$00
-:       jsr     file_dialog::UpdateScrollbar2
+:       jsr     file_dialog::UpdateScrollbarWithIndex
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         jsr     file_dialog::f1::Update

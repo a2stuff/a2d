@@ -14,10 +14,7 @@
         jsr     file_dialog::OpenWindow
         jsr     DrawControls
         jsr     file_dialog::DeviceOnLine
-        jsr     file_dialog::ReadDir
-        jsr     file_dialog::UpdateScrollbar
-        jsr     file_dialog::UpdateDiskName
-        jsr     file_dialog::DrawListEntries
+        jsr     file_dialog::UpdateListFromPath
         jsr     InstallCallbackTable
         jsr     file_dialog::PrepPath
         jsr     file_dialog::RedrawInput

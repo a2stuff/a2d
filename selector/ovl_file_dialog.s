@@ -117,10 +117,7 @@ str_file_to_run:
 start:  jsr     OpenWindow
         jsr     DrawWindow
         jsr     DeviceOnLine
-        jsr     ReadDir
-        jsr     UpdateScrollbar
-        jsr     UpdateDiskName
-        jsr     DrawListEntries
+        jsr     UpdateListFromPath
         jsr     InitInput
         jsr     PrepPath
         jsr     RedrawInput

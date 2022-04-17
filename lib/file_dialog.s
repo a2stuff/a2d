@@ -1161,7 +1161,7 @@ l1:     ldx     num_file_names
         beq     :+
 
         ;; View changed - redraw everything
-        jsr     UpdateScrollbar2
+        jsr     UpdateScrollbarWithIndex
         jmp     DrawListEntries
 :
         ;; No change - just adjust highlights
@@ -1670,7 +1670,7 @@ index:  .byte   0
 UpdateScrollbar:
         lda     #$00
 
-.proc UpdateScrollbar2
+.proc UpdateScrollbarWithIndex
         sta     index
         lda     num_file_names
         cmp     #kPageDelta + 1
