@@ -292,6 +292,9 @@
 * Launch DeskTop. Open a windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
 
+* Launch DeskTop. Create a shortcut, "menu and list" / "at boot". Create a second shortcut, "menu and list", "at first use". Create a third shortcut, "menu and list", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
+* Launch DeskTop. Create a shortcut, "list only" / "at boot". Create a second shortcut, "list only", "at first use". Create a third shortcut, "list only", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
+
 * Launch DeskTop. Open 3 windows. Close the top one. Verify that the repaint is correct.
 * Launch DeskTop. Close all windows. Press an arrow key multiple times. Verify that only one volume icon is highlighted at a time.
 

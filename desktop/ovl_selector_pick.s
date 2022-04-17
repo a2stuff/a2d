@@ -1117,39 +1117,8 @@ loop:   lda     index
         cmp     num_primary_run_list_entries
         beq     finish
 
-        ;; Copy entry (in file buffer) down by one
-        jsr     GetFileEntryAddr
-        stax    ptr1
-        add16   ptr1, #kSelectorListNameLength, ptr2
+        jsr     MoveEntryDown
 
-        ldy     #0
-        lda     (ptr2),y
-        tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
-        dey
-        bpl     :-
-
-        ;; And flags
-        ldy     #kSelectorEntryFlagsOffset
-        lda     (ptr2),y
-        sta     (ptr1),y
-
-        ;; Copy path (in file buffer) down by one
-        lda     index
-        jsr     GetFilePathAddr
-        stax    ptr1
-        add16   ptr1, #kSelectorListPathLength, ptr2
-
-        ldy     #0
-        lda     (ptr2),y
-        tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
-        dey
-        bpl     :-
-
-        ;; Next
         inc     index
         jmp     loop
 .endscope
@@ -1170,13 +1139,24 @@ loop:   lda     index
         sec
         sbc     #ptr2
         cmp     num_secondary_run_list_entries
-        bne     L9B84
+        bne     :+
+
         dec     selector_list + kSelectorListNumSecondaryRunListOffset
         dec     num_secondary_run_list_entries
         jmp     WriteFile
 
-L9B84:  lda     index
+:       lda     index
+        jsr     MoveEntryDown
 
+        inc     index
+        jmp     loop
+.endscope
+
+index:  .byte   0
+
+;;; Move an entry (in the file buffer) down by one.
+;;; A=entry index
+.proc MoveEntryDown
         ;; Copy entry (in file buffer) down by one
         jsr     GetFileEntryAddr
         stax    ptr1
@@ -1189,6 +1169,11 @@ L9B84:  lda     index
         sta     (ptr1),y
         dey
         bpl     :-
+
+        ;; And flags
+        ldy     #kSelectorEntryFlagsOffset
+        lda     (ptr2),y
+        sta     (ptr1),y
 
         ;; Copy path (in file buffer) down by one
         lda     index
@@ -1204,17 +1189,9 @@ L9B84:  lda     index
         dey
         bpl     :-
 
-        ;; And flags
-        ldy     #kSelectorEntryFlagsOffset
-        lda     (ptr2),y
-        sta     (ptr1),y
+        rts
+.endproc
 
-        ;; Next
-        inc     index
-        jmp     loop
-.endscope
-
-index:  .byte   0
 .endproc
 
 ;;; ============================================================
