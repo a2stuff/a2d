@@ -32,7 +32,7 @@ Exec:
         jsr     main::SetCursorPointer
         pla
         cmp     #$04
-        beq     FormatDisk
+        jeq     FormatDisk
         jmp     EraseDisk
 
 ;;; ============================================================
@@ -46,42 +46,50 @@ num_volumes:
         .byte   0
 
 ;;; ============================================================
-;;; Format Disk
+;;; Show the device prompt, name prompt, and confirmation.
+;;; Input: A=operation flag, high bit set=erase, clear=format
+;;; Output: C=0, A=unit_num on success, C=1 if canceled.
 
-.proc FormatDisk
+.proc PromptForDeviceAndName
+        sta     erase_flag
 
         ;; --------------------------------------------------
         ;; Prompt for device
-
+.scope
         copy    #$00, has_input_field_flag
         jsr     main::OpenPromptWindow
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
+        bit     erase_flag
+    IF_NC
         param_call main::DrawDialogTitle, aux::label_format_disk
         param_call main::DrawDialogLabel, 1, aux::str_select_format
+    ELSE
+        param_call main::DrawDialogTitle, aux::label_erase_disk
+        param_call main::DrawDialogLabel, 1, aux::str_select_erase
+    END_IF
         jsr     DrawVolumeLabels
         copy    #$FF, selected_device_index
-l1:     copy16  #HandleClick, main::jump_relay+1
+        copy16  #HandleClick, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
-l2:     jsr     main::PromptInputLoop
-        bmi     l2              ; not done
-        pha
-        copy16  #main::NoOp, main::jump_relay+1
-        lda     #$00
-        sta     format_erase_overlay_flag
-        pla
-        beq     l3              ; ok
-        jmp     l15             ; cancel
 
-l3:     bit     selected_device_index
-        bmi     l1
+loop1:
+        jsr     main::PromptInputLoop
+        bmi     loop1           ; not done
+        beq     :+              ; ok
+        jmp     cancel          ; cancel
+:
+        bit     selected_device_index
+        bmi     loop1
 
         jsr     GetSelectedUnitNum
-        sta     d2
         sta     unit_num
+.endscope
 
         ;; --------------------------------------------------
         ;; Prompt for name
+.scope
+        copy16  #main::NoOp, main::jump_relay+1
 
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
@@ -94,18 +102,20 @@ l3:     bit     selected_device_index
         copy    #$00, format_erase_overlay_flag
         jsr     main::InitNameInput
         param_call main::DrawDialogLabel, 3, aux::str_new_volume
-l4:     jsr     main::PromptInputLoop
-        bmi     l4              ; not done
-        beq     l6              ; ok
-        jmp     l15             ; cancel
 
-l5:     jsr     Bell
-        jmp     l4
+loop2:
+        jsr     main::PromptInputLoop
+        bmi     loop2           ; not done
+        beq     ok2             ; ok
+        jmp     cancel          ; cancel
 
-l6:     lda     path_buf1
-        beq     l5              ; name is empty
+err2:   jsr     Bell
+        jmp     loop2
+
+ok2:    lda     path_buf1
+        beq     err2            ; name is empty
         cmp     #kMaxFilenameLength+1
-        bcs     l5              ; name > 15 characters
+        bcs     err2            ; name > 15 characters
         jsr     main::SetCursorPointerWithFlag
 
         ;; Check for conflicting name
@@ -115,31 +125,71 @@ l6:     lda     path_buf1
         bne     :+
         lda     #ERR_DUPLICATE_FILENAME
         jsr     JUMP_TABLE_SHOW_ALERT
-        jmp     l4
+        jmp     loop2
 :
+.endscope
 
         ;; --------------------------------------------------
-        ;; Confirm format
-
+        ;; Confirm operation
+.scope
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
         copy    #0, has_input_field_flag
+        bit     erase_flag
+    IF_NC
         param_call main::DrawDialogLabel, 3, aux::str_confirm_format_prefix
+    ELSE
+        param_call main::DrawDialogLabel, 3, aux::str_confirm_erase_prefix
+    END_IF
         lda     unit_num
         jsr     GetVolName
         param_call main::DrawString, ovl_string_buf
+        bit     erase_flag
+    IF_NC
         param_call main::DrawString, aux::str_confirm_format_suffix
-l7:     jsr     main::PromptInputLoop
-        bmi     l7              ; not done
-        beq     l8              ; ok
-        jmp     l15             ; cancel
-l8:
+    ELSE
+        param_call main::DrawString, aux::str_confirm_erase_suffix
+    END_IF
+:       jsr     main::PromptInputLoop
+        bmi     :-              ; not done
+        beq     :+              ; ok
+        jmp     cancel          ; cancel
+:
+.endscope
+
+        ;; Confirmed!
+        lda     unit_num
+        clc
+        rts
+
+cancel:
+        sec
+        rts
+
+unit_num:
+        .byte   0
+
+;;; High bit set if erase, otherwise format.
+erase_flag:
+        .byte   0
+.endproc
+
+;;; ============================================================
+;;; Format Disk
+
+.proc FormatDisk
+        lda     #$00
+        jsr     PromptForDeviceAndName
+        jcs     cancel
+        sta     d2
+        sta     unit_num
+
         ;; --------------------------------------------------
         ;; Proceed with format
-
+l8:
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -168,12 +218,12 @@ l9:     lda     winfo_prompt_dialog::window_id
         pla
         bne     l10
         lda     #$00
-        jmp     l15
+        jmp     cancel
 
 l10:    cmp     #ERR_WRITE_PROTECTED
         bne     l11
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     l15             ; `kAlertResultCancel` = 1
+        bne     cancel          ; `kAlertResultCancel` = 1
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
 l11:    jsr     Bell
@@ -186,17 +236,18 @@ l12:    pha
         cmp     #ERR_WRITE_PROTECTED
         bne     l13
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     l15             ; `kAlertResultCancel` = 1
+        bne     cancel          ; `kAlertResultCancel` = 1
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
 l13:    jsr     Bell
         param_call main::DrawDialogLabel, 6, aux::str_formatting_error
 l14:    jsr     main::PromptInputLoop
         bmi     l14             ; not done
-        bne     l15             ; ok
+        bne     cancel          ; ok
         jmp     l8              ; cancel
 
-l15:    pha
+cancel:
+        pha
         jsr     main::SetCursorPointer
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
         ldx     d2
@@ -205,100 +256,22 @@ l15:    pha
 
 unit_num:
         .byte   0
-d2:     .byte   0
+d2:     .byte   0               ; ???
 .endproc
 
 ;;; ============================================================
 ;;; Erase Disk
 
 .proc EraseDisk
-        ;; --------------------------------------------------
-        ;; Prompt for device
-
-        lda     #$00
-        sta     has_input_field_flag
-        jsr     main::OpenPromptWindow
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::SafeSetPortFromWindowId
-        param_call main::DrawDialogTitle, aux::label_erase_disk
-        param_call main::DrawDialogLabel, 1, aux::str_select_erase
-        jsr     DrawVolumeLabels
-        copy    #$FF, selected_device_index
-        copy16  #HandleClick, main::jump_relay+1
-        copy    #$80, format_erase_overlay_flag
-l1:     jsr     main::PromptInputLoop
-        bmi     l1              ; not done
-        beq     l2              ; ok
-        jmp     l11             ; cancel
-
-l2:     bit     selected_device_index
-        bmi     l1
-
-        jsr     GetSelectedUnitNum
+        lda     #$80
+        jsr     PromptForDeviceAndName
+        bcs     cancel
         sta     d2
         sta     unit_num
 
         ;; --------------------------------------------------
-        ;; Prompt for name
-
-        copy16  #main::rts1, main::jump_relay+1
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::SafeSetPortFromWindowId
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, name_input_rect
-        jsr     main::ClearPathBuf1
-        copy    #$80, has_input_field_flag
-        copy    #$00, format_erase_overlay_flag
-        jsr     main::InitNameInput
-        param_call main::DrawDialogLabel, 3, aux::str_new_volume
-l3:     jsr     main::PromptInputLoop
-        bmi     l3              ; not done
-        beq     l5              ; ok
-        jmp     l11             ; cancel
-
-l4:     jsr     Bell
-        jmp     l3
-
-l5:     lda     path_buf1
-        beq     l4              ; name is empty
-        cmp     #kMaxFilenameLength+1
-        bcs     l4              ; name > 15 characters
-        jsr     main::SetCursorPointerWithFlag
-
-        ;; Check for conflicting name
-        ldxy    #path_buf1
-        lda     unit_num
-        jsr     CheckConflictingVolumeName
-        bne     :+
-        lda     #ERR_DUPLICATE_FILENAME
-        jsr     JUMP_TABLE_SHOW_ALERT
-        jmp     l3
-:
-
-        ;; --------------------------------------------------
-        ;; Confirm erase
-
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::SafeSetPortFromWindowId
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-
-        copy    #0, has_input_field_flag
-        param_call main::DrawDialogLabel, 3, aux::str_confirm_erase_prefix
-        lda     unit_num
-        jsr     GetVolName
-        param_call main::DrawString, ovl_string_buf
-        param_call main::DrawString, aux::str_confirm_erase_suffix
-l6:     jsr     main::PromptInputLoop
-        bmi     l6              ; not done
-        beq     l7              ; ok
-        jmp     l11             ; cancel
-l7:
-        ;; --------------------------------------------------
         ;; Proceed with erase
-
+l7:
         lda     winfo_prompt_dialog::window_id
         jsr     main::SafeSetPortFromWindowId
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -315,12 +288,12 @@ l7:
         pla
         bne     l8
         lda     #$00
-        jmp     l11
+        jmp     cancel
 
 l8:     cmp     #ERR_WRITE_PROTECTED
         bne     l9
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     l11             ; `kAlertResultCancel` = 1
+        bne     cancel          ; `kAlertResultCancel` = 1
         jmp     l7              ; `kAlertResultTryAgain` = 0
 
 l9:     jsr     Bell
@@ -328,7 +301,9 @@ l9:     jsr     Bell
 l10:    jsr     main::PromptInputLoop
         bmi     l10             ; not done
         beq     l7              ; ok
-l11:    pha                     ; cancel
+
+cancel:
+        pha                     ; cancel
         jsr     main::SetCursorPointer
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
         ldx     d2
@@ -337,7 +312,7 @@ l11:    pha                     ; cancel
 
 unit_num:
         .byte   0
-d2:     .byte   0
+d2:     .byte   0               ; ???
 .endproc
 
 ;;; ============================================================
@@ -640,7 +615,7 @@ setpos: stax    dialog_label_pos::xcoord
 vol:    .byte   0               ; volume being drawn
 .endproc
 
-        PAD_TO $E00
+        PAD_TO $D00
 
 ;;; ============================================================
 
