@@ -1,5 +1,4 @@
-
-# Disk Copy diassembly notes
+# Disk Copy
 
 Disk Copy relies on DeskTop for loading/invoking MGTK and the default
 font. Once running, it takes over all memory and functions as a

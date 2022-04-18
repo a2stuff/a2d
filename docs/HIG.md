@@ -44,6 +44,7 @@ Note that these are for inspiration, not to be dutifully followed.
   * Apple+Left Arrow - move IP to start of text.
   * Apple+Right Arrow - move IP to end of string.
   * Delete - erase character to the left of the IP.
+  * Control+F - erase character to the right of the IP.
   * Control+X - erase all text
 
 ## Keyboard

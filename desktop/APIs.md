@@ -215,6 +215,10 @@ Parameters: { byte icon }
 
 Redraws an icon by number.
 
+For windowed icons, the appropriate GrafPort must be selected, and the icons must be mapped into appropriate coordinates (i.e. mapped from screen space into window space). Windowed icons are not clipped, so must only be drawn during an update call or into the active window.
+
+For desktop icons, the icon is clipped against any open windows.
+
 ### `IconTK::RemoveIcon` ($04)
 
 Parameters: { byte icon }
@@ -275,7 +279,11 @@ Tests to see if the given icon (by number) overlaps the passed rect.
 
 Parameters: { byte icon }
 
-Erases the specified icon by number. No error checking is done.
+Erases the specified icon by number. No error checking is done. If the icon is in a window, it must be in the active window.
+
+Note that unlike `DrawIcon`, this call does _not_ require a GrafPort to be set by the caller. For icons in a window, the active window's GrafPort bounds (including scroll position and subtracting DeskTop's window header) will automatically be taken into account.
+
+For desktop icons, the icon is clipped against any open windows.
 
 ### IconEntry
 

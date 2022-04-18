@@ -1,3 +1,9 @@
+# Selector
+
+The Selector is an optional app that can be configured with shortcuts to launch other programs, without starting the full DeskTop.
+
+## File Structure
+
 
 The file is broken down into multiple segments:
 

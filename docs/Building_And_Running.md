@@ -38,7 +38,7 @@ make -C cadius && make -C cadius install
 
 Then run: `make package`
 
-This will generate: `A2DeskTop-..._800k.2mg` and `.hdv` (800ks image containing the full application) and `A2DeskTop-..._140k_disk1.po` and `A2DeskTop-..._140k_disk2.po` (the files split into two 140k images). The version (e.g. `alpha30`) and language (e.g. `en`) are defined in `config.inc`.
+This will generate: `A2DeskTop-..._800k.2mg` and `.hdv` (800k images containing the full application) and `A2DeskTop-..._140k_disk1.po` and `A2DeskTop-..._140k_disk2.po` (the files split into two 140k images). The version (e.g. `alpha30`) and language (e.g. `en`) are defined in `config.inc`.
 
 Mount these disk images in your emulator, or transfer them to real floppies with [ADTPro](http://adtpro.com/), then follow the install instructions below.
 
@@ -59,7 +59,7 @@ Then run: `make install`
 
 This will create the target ProDOS directory if necessary, then copy the built files in, overwriting an existing files.
 
-After building and installing, you can use `bin/setopt sel` and `bin/setopt sel` to toggle whether Selector starts or not. This can be controlled within DeskTop using the Startup Options control panel, but being able to toggle this on the command line is useful during development.
+After building and installing, you can use `bin/setopt sel` and `bin/setopt nosel` to toggle whether Selector starts or not, and `bin/setopt ram` and `bin/setopt noram` to toggle whether DeskTop is copied to a RAMCard or not. These can be controlled within DeskTop using the Startup Options control panel, but being able to toggle these on the command line is useful during development.
 
 ### Option #3: Mount Folder in Virtual ]\[
 

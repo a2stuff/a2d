@@ -1,10 +1,15 @@
+# DeskTop
 
-# DeskTop diassembly notes - DESKTOP2.$F1
+This is the main application, presenting a desktop and windows with
+icons for volumes and files, commands and gestures for moving and
+copying files and manipulating disks.
 
-This is large - 95k. It includes a loader and the DeskTop app with
-both main memory and aux memory segments, filling everything from
-$4000 to $FFFF (except for I/O space and ProDOS), and still having
-more code segments swapped in dynamically.
+The program file (`DESKTOP2`) is large - 89k. It includes a loader and
+the DeskTop app with both main memory and aux memory segments, filling
+everything from $4000 to $FFFF (except for I/O space and ProDOS), and
+still having more code segments swapped in dynamically.
+
+## File Structure
 
 The file is broken down into multiple segments:
 
@@ -37,7 +42,7 @@ segments.
 Note that Disk Copy (see `../disk_copy/`) used to be built into the
 DeskTop binary as well, but has been pulled out.
 
-## Structure
+## Segments and Overlays
 
 ### Loader
 
@@ -136,7 +141,7 @@ name) but is used for operations such as alternate view types.
 
 `ovl_*.s`
 
-Interactive commands including disk copy/format/erase, file
+Interactive commands including disk format/erase, file
 copy/delete, and Shortcuts add/edit/delete/run all dynamically load
 main memory code overlays. When complete, any original code above
 $4000 is reloaded (unless a full restart is required.)
@@ -147,6 +152,7 @@ Several of the overlays also use a common file selector dialog overlay
 #### Disk Format/Disk Erase
 
 Simple overlay: `ovl_format_erase.s`, loaded into Main A$0800-$1BFF.
+This re-uses much of DeskTop's dialog framework for prompts and progress.
 
 #### Shortcuts - Delete Entry / Run Entry
 
