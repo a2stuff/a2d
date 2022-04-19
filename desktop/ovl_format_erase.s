@@ -58,8 +58,7 @@ num_volumes:
 .scope
         copy    #$00, has_input_field_flag
         jsr     main::OpenPromptWindow
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::SafeSetPortFromWindowId
+        jsr     main::SetPortForDialogWindow
         bit     erase_flag
     IF_NC
         param_call main::DrawDialogTitle, aux::label_format_disk
@@ -91,8 +90,7 @@ loop1:
 .scope
         copy16  #main::NoOp, main::jump_relay+1
 
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::SafeSetPortFromWindowId
+        jsr     main::SetPortForDialogWindow
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -132,8 +130,7 @@ ok2:    lda     path_buf1
         ;; --------------------------------------------------
         ;; Confirm operation
 .scope
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::SafeSetPortFromWindowId
+        jsr     main::SetPortForDialogWindow
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
@@ -190,8 +187,7 @@ erase_flag:
         ;; --------------------------------------------------
         ;; Proceed with format
 l8:
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::SafeSetPortFromWindowId
+        jsr     main::SetPortForDialogWindow
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_formatting
@@ -203,8 +199,7 @@ l8:
         lda     unit_num
         jsr     FormatUnit
         bcs     l12
-l9:     lda     winfo_prompt_dialog::window_id
-        jsr     main::SafeSetPortFromWindowId
+l9:     jsr     main::SetPortForDialogWindow
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
@@ -272,8 +267,7 @@ d2:     .byte   0               ; ???
         ;; --------------------------------------------------
         ;; Proceed with erase
 l7:
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::SafeSetPortFromWindowId
+        jsr     main::SetPortForDialogWindow
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
