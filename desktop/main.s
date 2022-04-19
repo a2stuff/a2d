@@ -4864,7 +4864,10 @@ event_loop:
 iloop:  cpx     cached_window_entry_count
     IF_ZERO
         ;; Finished!
-        copy    window_id, selected_window_id
+        lda     window_id
+      IF_ZERO
+        sta     selected_window_id
+      END_IF
         rts
     END_IF
 
