@@ -2396,10 +2396,12 @@ window_id:      .byte   0
         lda     frontwindow_params::window_id
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
+        bne     ret             ; obscured!
         jsr     offset_icon_poly
         jsr     ShiftPortDown ; Further offset by window's items/used/free bar
         jsr     EraseWindowIcon
         jmp     RedrawIconsAfterErase
+ret:    rts
 
         ;; Volume (i.e. icon on desktop)
 volume:

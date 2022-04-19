@@ -11402,20 +11402,7 @@ finish: lda     #RenameDialogState::close
         sta     icon_param
 
         ;; Erase the icon, in case new name is shorter
-.scope
-        lda     selected_window_id
-    IF_ZERO
-        jsr     InitSetDesktopPort ; for volume icons
-    ELSE
-        ;; NOTE: EraseIcon operates with icons in screen space (?!?)
-        ;; so no need to call `IconScreenToWindow` here
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        bne     skip            ; MGTK::Error::window_obscured
-    END_IF
-        ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED
-skip:   ;; NOTE: EraseIcon operates with icons in screen space (?!?)
-        ;; so no need to call `IconWindowToScreen` here
-.endscope
+        ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED - takes care of ports
 
         ;; Copy new string in
         icon_name_ptr := $06
