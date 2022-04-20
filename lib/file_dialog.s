@@ -749,17 +749,29 @@ ret:    rts
         jsr     CheckTypeDown
         jeq     exit
 :
+        ldx     event_params::modifiers
         lda     event_params::key
         cmp     #CHAR_TAB
         jeq     KeyTab
 
         bit     listbox_disabled_flag
       IF_NC
+        cpx     #3
+       IF_EQ
+        ;; Double modifiers
         cmp     #CHAR_DOWN
         jeq     ScrollListBottom ; end of list
 
         cmp     #CHAR_UP
         jeq     ScrollListTop   ; start of list
+       ELSE
+        ;; Single modifier
+        cmp     #CHAR_DOWN
+        jeq     HandlePageDown
+
+        cmp     #CHAR_UP
+        jeq     HandlePageUp
+       END_IF
       END_IF
 
         ;; Hook for clients

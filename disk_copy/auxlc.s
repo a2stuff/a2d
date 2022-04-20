@@ -927,8 +927,43 @@ LD9D5:  lda     event_params::modifiers
         beq     :+
         jmp     dialog_shortcuts
 
-        ;; Keyboard-based menu selection
+        ;; Modifiers
 :       lda     event_params::key
+        ldx     event_params::modifiers
+        cpx     #3
+    IF_EQ
+        ;; Double modifiers
+        cmp     #CHAR_UP
+      IF_EQ
+        jsr     DoHome
+        return  #$FF
+      END_IF
+        cmp     #CHAR_DOWN
+      IF_EQ
+        jsr     DoEnd
+        return  #$FF
+      END_IF
+
+        return #$FF             ; ignore
+    ELSE
+        ;; Single modifier
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     #MGTK::Part::page_up
+        jsr     HandleScrollWithPart
+        return  #$FF
+      END_IF
+        cmp     #CHAR_DOWN
+      IF_EQ
+        lda     #MGTK::Part::page_down
+        jsr     HandleScrollWithPart
+        return  #$FF
+      END_IF
+        return #$FF             ; ignore
+    END_IF
+
+        ;; Keyboard-based menu selection
+        lda     event_params::key
         sta     menukey_params::which_key
         lda     event_params::modifiers
         beq     :+
@@ -1152,62 +1187,102 @@ LDC09:  lda     winfo_dialog::window_id
         return  #$01
 
 LDC2D:  cmp     #CHAR_RETURN
-        bne     LDC55
+    IF_EQ
         lda     winfo_dialog::window_id
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         return  #$00
+    END_IF
 
-LDC55:  bit     LD44C
-        bmi     CheckDown
-        jmp     LDCA9
+        bit     LD44C
+        jpl     LDCA9
 
-.proc CheckDown
         cmp     #CHAR_DOWN
-        bne     CheckUp
-        lda     winfo_drive_select::window_id
-        jsr     SetWinPort
+    IF_EQ
         lda     current_drive_selection
-        bmi     LDC6F
+      IF_MINUS
+        copy    #0, current_drive_selection
+      ELSE
+        tax
+        inx
+        cpx     num_drives
+        beq     LDCA9           ; no-op if last
         jsr     HighlightRow
-LDC6F:  inc     current_drive_selection
+        inc     current_drive_selection
+     END_IF
+
         lda     current_drive_selection
-        cmp     num_drives
-        bcc     LDC7F
-        lda     #$00
-        sta     current_drive_selection
-LDC7F:
         pha
         jsr     ScrollIntoView
         pla
         jsr     HighlightRow
         jmp     LDCA9
-.endproc
+    END_IF
 
-.proc CheckUp
         cmp     #CHAR_UP
-        bne     LDCA9
-        lda     winfo_drive_select::window_id
-        jsr     SetWinPort
+    IF_EQ
         lda     current_drive_selection
-        bmi     LDC9C
-        jsr     HighlightRow
-        dec     current_drive_selection
-        bpl     LDCA3
-LDC9C:  ldx     num_drives
+      IF_MINUS
+        ldx     num_drives
         dex
         stx     current_drive_selection
-LDCA3:  lda     current_drive_selection
+      ELSE
+        beq     LDCA9           ; no-op if first
+        jsr     HighlightRow
+        dec     current_drive_selection
+      END_IF
+
+        lda     current_drive_selection
         pha
         jsr     ScrollIntoView
         pla
         jsr     HighlightRow
+    END_IF
+
         FALL_THROUGH_TO LDCA9
-.endproc
 
 LDCA9:  return  #$FF
+
+;;; ============================================================
+
+.proc DoHome
+        lda     current_drive_selection
+        bmi     :+
+        beq     ret
+        jsr     HighlightRow
+:
+        lda     #0
+        sta     current_drive_selection
+        pha
+        jsr     ScrollIntoView
+        pla
+        jsr     HighlightRow
+
+ret:    rts
+.endproc
+
+.proc DoEnd
+        lda     current_drive_selection
+        bmi     :+
+        tax
+        dex
+        cpx     num_drives
+        beq     ret
+        jsr     HighlightRow
+:
+        ldx     num_drives
+        dex
+        stx     current_drive_selection
+        txa
+        pha
+        jsr     ScrollIntoView
+        pla
+        jsr     HighlightRow
+
+ret:    rts
+.endproc
 
 ;;; ============================================================
 
@@ -1632,6 +1707,9 @@ CheckAlpha:
         clc
         adc     #kListItemHeight - 1
         sta     rect_highlight_row::y2
+
+        lda     winfo_drive_select::window_id
+        jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_highlight_row
         rts
@@ -1670,6 +1748,11 @@ CheckAlpha:
 .endproc
 
 ;;; ============================================================
+
+.proc HandleScrollWithPart
+        sta     findcontrol_params::which_part
+        FALL_THROUGH_TO HandleScroll
+.endproc
 
 ;;; Assert: `top_row` is set.
 .proc HandleScroll

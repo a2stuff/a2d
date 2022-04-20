@@ -594,7 +594,6 @@
 * Configure a system with 9 or fewer drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is inactive.
 * Configure a system with 10 or more drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is active.
 
-
 # Alerts
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.
@@ -668,7 +667,6 @@ Repeat for each file picker:
 * Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, with the IP at the end. Click a folder. Verify that the path updates, with the file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.
 * Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, after the insertion point. Edit the file name. Click a folder. Verify that the path updates, with the edited file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the edited file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.
 
-
 # Text Input Fields
 
 This covers:
@@ -736,3 +734,34 @@ Watch out for:
  * Parts of the IP not erased.
  * Text being truncated when OK clicked.
  * IP being placed in the wrong place by a click.
+
+# List Boxes Controls
+
+This covers:
+* File Pickers (which support selection)
+* Disk Copy (which supports selection)
+* Sounds DA (which supports selection)
+* Find Files DA (which does not support selection)
+
+Repeat for each list box:
+* Verify the following keyboard shortcuts:
+  * Up Arrow
+    * If the control does not support selection, scrolls the view up by one line.
+    * Otherwise, if there is no selection, selects the last item and scrolls it into view.
+    * Otherwise, selects the previous item and scrolls it into view.
+  * Down Arrow
+    * If the control does not support selection, scrolls the view down by one line.
+    * Otherwise, if there is no selection, selects the first item and scrolls it into view.
+    * Otherwise, selects the next item and scrolls it into view.
+  * Apple+Up Arrow
+    * Scrolls one page up.
+    * If the control supports selection, selection is not changed.
+  * Apple+Down Arrow
+    * Scrolls one down up.
+    * If the control supports selection, selection is not changed.
+  * Open-Apple+Solid-Apple+Up Arrow
+    * Scrolls the view so that the first item is visible.
+    * If the control supports selection, selects the first item.
+  * Open-Apple+Solid-Apple+Down Arrow
+    * Scrolls the view so that the last item is visible.
+    * If the control supports selection, selects the last item.

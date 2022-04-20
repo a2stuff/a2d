@@ -1089,18 +1089,34 @@ line_edit__Update := line_edit::Update
 
         ldx     event_params::modifiers
     IF_NOT_ZERO
-        ;; Modified
+        cpx     #3              ; both?
+     IF_EQ
+        ;; Double modifier
         cmp     #CHAR_UP
       IF_EQ
-        copy    #MGTK::Part::page_up, findcontrol_params::which_part
-        jmp     HandleScroll
+        lda     #kPartHome
+        jmp     HandleScrollWithPart
+      END_IF
+
+        cmp     #CHAR_DOWN
+      IF_EQ
+        lda     #kPartEnd
+        jmp     HandleScrollWithPart
+      END_IF
+     ELSE
+        ;; Single modifier
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     #MGTK::Part::page_up
+        jmp     HandleScrollWithPart
      END_IF
 
         cmp     #CHAR_DOWN
       IF_EQ
-        copy    #MGTK::Part::page_down, findcontrol_params::which_part
-        jmp     HandleScroll
+        lda     #MGTK::Part::page_down
+        jmp     HandleScrollWithPart
       END_IF
+     END_IF
 
         jsr     line_edit::Key
     ELSE
@@ -1119,14 +1135,14 @@ line_edit__Update := line_edit::Update
 
         cmp     #CHAR_UP
       IF_EQ
-        copy    #MGTK::Part::up_arrow, findcontrol_params::which_part
-        jmp     HandleScroll
+        lda     #MGTK::Part::up_arrow
+        jmp     HandleScrollWithPart
       END_IF
 
         cmp     #CHAR_DOWN
       IF_EQ
-        copy    #MGTK::Part::down_arrow, findcontrol_params::which_part
-        jmp     HandleScroll
+        lda     #MGTK::Part::down_arrow
+        jmp     HandleScrollWithPart
       END_IF
 
         jsr     IsControlChar
@@ -1281,6 +1297,14 @@ results:
 ;;; ============================================================
 ;;; Handle scroll bar
 
+;;; Values not part of MGTK::Part enum, but used for keyboard shortcuts
+kPartHome = $80
+kPartEnd  = $81
+
+.proc HandleScrollWithPart
+        sta     findcontrol_params::which_part
+        FALL_THROUGH_TO HandleScroll
+.endproc
 
 .proc HandleScroll
         lda     num_entries
@@ -1290,31 +1314,53 @@ results:
 
         lda     findcontrol_params::which_part
 
+        ;; scroll to start
+        cmp     #kPartHome
+    IF_EQ
+        lda     top_row
+        cmp     #0
+        jeq     done
+
+        lda     #0
+        jmp     store
+    END_IF
+
+        ;; scroll to end
+        cmp     #kPartEnd
+    IF_EQ
+        lda     top_row
+        cmp     max_top
+        jcs     done
+
+        lda     max_top
+        jmp     store
+    END_IF
+
         ;; scroll up by one line
         cmp     #MGTK::Part::up_arrow
-        bne     try_down
+    IF_EQ
         lda     top_row
         cmp     #0
         jeq     done
 
         dec     top_row
-        bpl     update
+        bpl     update          ; always
+    END_IF
 
         ;; scroll down by one line
-try_down:
         cmp     #MGTK::Part::down_arrow
-        bne     try_pgup
+    IF_EQ
         lda     top_row
         cmp     max_top
         jcs     done
 
         inc     top_row
-        bpl     update
+        bpl     update          ; always
+    END_IF
 
         ;; scroll up by one page
-try_pgup:
         cmp     #MGTK::Part::page_up
-        bne     try_pgdn
+    IF_EQ
         lda     top_row
         cmp     #kResultsRows
         bcs     :+
@@ -1323,11 +1369,11 @@ try_pgup:
 :       sec
         sbc     #kResultsRows
         jmp     store
+    END_IF
 
         ;; scroll down by one page
-try_pgdn:
         cmp     #MGTK::Part::page_down
-        bne     try_thumb
+    IF_EQ
         lda     top_row
         clc
         adc     #kResultsRows
@@ -1335,8 +1381,8 @@ try_pgdn:
         bcc     store
         lda     max_top
         jmp     store
+    END_IF
 
-try_thumb:
         cmp     #MGTK::Part::thumb
         jne     done
 

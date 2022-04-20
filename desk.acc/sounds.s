@@ -463,18 +463,42 @@ textfont:       .addr   0
 modifiers:
         lda     event_params::key
 
+        ldx     event_params::modifiers
+        cpx     #3
+    IF_EQ
+        ;; Double modifiers
+
         ;; Select first
         cmp     #CHAR_UP
-    IF_EQ
+      IF_EQ
         lda     #0
         jmp     SetSelection
-    END_IF
+      END_IF
+
+        ;; Select last
+        cmp     #CHAR_DOWN
+      IF_EQ
+        lda     #kNumSounds-1
+        jmp     SetSelection
+      END_IF
+
+    ELSE
+        ;; Single modifier
+
+        ;; Select first
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     #MGTK::Part::page_up
+        jmp     HandleScrollWithPart
+      END_IF
 
         ;; Select last
         cmp     #CHAR_DOWN
     IF_EQ
-        lda     #kNumSounds-1
-        jmp     SetSelection
+        lda     #MGTK::Part::page_down
+        jmp     HandleScrollWithPart
+    END_IF
+
     END_IF
 
         jmp     InputLoop
@@ -579,6 +603,11 @@ tmp:    .word   0
 .endproc
 
 ;;; ============================================================
+
+.proc HandleScrollWithPart
+        sta     findcontrol_params::which_part
+        FALL_THROUGH_TO HandleScroll
+.endproc
 
 .proc HandleScroll
         lda     findcontrol_params::which_part
