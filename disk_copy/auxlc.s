@@ -3346,7 +3346,7 @@ ShowAlertDialog := alert_dialog::show_alert_dialog
 
 ;;; ============================================================
 
-        ASSERT_ADDRESS $F200
+        ASSERT_ADDRESS $F400
 
 .endscope
        auxlc__start := auxlc::start
