@@ -20,7 +20,7 @@ MGTKAuxEntry    := $4000
 DEFAULT_FONT    := $8800
 
 ;;; Settings - loaded over top of auxlc
-SETTINGS        := $F400 - .sizeof(DeskTopSettings)
+SETTINGS        := kOverlayDiskCopy3Address + kOverlayDiskCopy3Length - .sizeof(DeskTopSettings)
 
 ;;; Alert Sound - ditto
 BELLDATA        := SETTINGS - kBellProcLength
@@ -38,7 +38,7 @@ _segoffset .set 0
 
 ;;; Segments
         DEFSEG Loader,             DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
-        DEFSEG OverlayDiskCopy3,   $D000, $2200
+        DEFSEG OverlayDiskCopy3,   $D000, $2400
         DEFSEG OverlayDiskCopy4,   $0800, $0B80
 
 ;;; ============================================================
