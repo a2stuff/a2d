@@ -180,13 +180,13 @@ is_btn: jsr     HandleButtonDown
         jeq     EventLoop
 
         lda     findwindow_params::window_id
-        cmp     file_dialog_res::winfo::window_id
+        cmp     #file_dialog_res::kFilePickerDlgWindowID
         beq     l1
         jsr     UnsetCursorIBeam
         jmp     EventLoop
 
-l1:     jsr     SetPortForDialog
-        lda     file_dialog_res::winfo::window_id
+l1:
+        lda     #file_dialog_res::kFilePickerDlgWindowID
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
@@ -210,8 +210,8 @@ l3:
 
         jsr     SetCursorIBeam
         jmp     l5
-
-l4:     jsr     UnsetCursorIBeam
+l4:
+        jsr     UnsetCursorIBeam
 l5:     jmp     EventLoop
 .endproc
 
@@ -225,23 +225,16 @@ focus_in_input2_flag:
 .proc HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-        bne     :+
+        cmp     #MGTK::Area::content
+        beq     :+
         rts
-
-:       cmp     #MGTK::Area::content
-        jeq     HandleContentClick
-
-        rts
-.endproc
-
-.proc HandleContentClick
+:
         lda     findwindow_params::window_id
-        cmp     file_dialog_res::winfo::window_id
+        cmp     #file_dialog_res::kFilePickerDlgWindowID
         beq     :+
         jmp     HandleListButtonDown
-
-:       jsr     SetPortForDialog
-        lda     file_dialog_res::winfo::window_id
+:
+        lda     #file_dialog_res::kFilePickerDlgWindowID
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
@@ -256,18 +249,18 @@ focus_in_input2_flag:
         bmi     l1
         lda     file_dialog_res::selected_index
         bpl     l2
-l1:     jmp     SetUpPorts
+l1:     rts
 
 l2:     tax
         lda     file_list_index,x
         bmi     l4
-l3:     jmp     SetUpPorts
+l3:     rts
 
-l4:     jsr     SetPortForDialog
+l4:
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         bmi     l3
         jsr     OpenSelectedItem
-        jmp     SetUpPorts
+        rts
     END_IF
 
         ;; --------------------------------------------------
@@ -283,7 +276,7 @@ l4:     jsr     SetPortForDialog
         bmi     :+
         jsr     ChangeDrive
 :
-        jmp     SetUpPorts
+        rts
     END_IF
 
         ;; --------------------------------------------------
@@ -298,7 +291,7 @@ l4:     jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         bmi     :+
         jsr     DoClose
-:       jmp     SetUpPorts
+:       rts
     END_IF
 
         ;; --------------------------------------------------
@@ -310,7 +303,7 @@ l4:     jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
         jsr     HandleOk
-:       jmp     SetUpPorts
+:       rts
     END_IF
 
         ;; --------------------------------------------------
@@ -322,7 +315,7 @@ l4:     jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
         jsr     HandleCancel
-:       jmp     SetUpPorts
+:       rts
     END_IF
 
         ;; --------------------------------------------------
@@ -331,7 +324,9 @@ l4:     jsr     SetPortForDialog
         bit     extra_controls_flag
     IF_NS
         jsr     click_handler_hook
-        bmi     SetUpPorts      ; if consumed
+        bpl     :+
+        rts
+:
     END_IF
 
         ;; --------------------------------------------------
@@ -372,12 +367,9 @@ l4:     jsr     SetPortForDialog
     END_IF
 .endif
 done_click:
-        FALL_THROUGH_TO SetUpPorts
 
-SetUpPorts:
         rts
-
-.endproc ; HandleContentClick
+.endproc
 
 ;;; ============================================================
 ;;; This vector gets patched by overlays that add controls.
@@ -405,7 +397,7 @@ click_handler_hook:
 rts1:   rts
 
 in_list:
-        lda     file_dialog_res::winfo_listbox::window_id
+        lda     #file_dialog_res::kEntryListCtlWindowID
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::cliprect::y1, screentowindow_params::windowy
@@ -605,7 +597,7 @@ different:
 :       MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-        cmp     file_dialog_res::winfo_listbox::window_id
+        cmp     #file_dialog_res::kEntryListCtlWindowID
         beq     :+
         pla
         pla
@@ -1205,51 +1197,32 @@ l1:     ldx     num_file_names
         MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
         MGTK_CALL MGTK::SetPenMode, penXOR
+
         MGTK_CALL MGTK::FrameRect, file_dialog_res::ok_button_rect
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::ok_button_pos
+        param_call DrawString, file_dialog_res::ok_button_label
+
         MGTK_CALL MGTK::FrameRect, file_dialog_res::open_button_rect
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
+        param_call DrawString, file_dialog_res::open_button_label
+
         MGTK_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
+        param_call DrawString, file_dialog_res::close_button_label
+
         MGTK_CALL MGTK::FrameRect, file_dialog_res::cancel_button_rect
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::cancel_button_pos
+        param_call DrawString, file_dialog_res::cancel_button_label
+
         MGTK_CALL MGTK::FrameRect, file_dialog_res::change_drive_button_rect
-        jsr     DrawOkButtonLabel
-        jsr     DrawOpenButtonLabel
-        jsr     DrawCloseButtonLabel
-        jsr     DrawCancelButtonLabel
-        jsr     DrawChangeDriveButtonLabel
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
+        param_call DrawString, file_dialog_res::change_drive_button_label
+
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
         MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
         MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep_end
-        rts
-.endproc
-
-.proc DrawOkButtonLabel
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::ok_button_pos
-        param_call DrawString, file_dialog_res::ok_button_label
-        rts
-.endproc
-
-.proc DrawOpenButtonLabel
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
-        param_call DrawString, file_dialog_res::open_button_label
-        rts
-.endproc
-
-.proc DrawCloseButtonLabel
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
-        param_call DrawString, file_dialog_res::close_button_label
-        rts
-.endproc
-
-.proc DrawCancelButtonLabel
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::cancel_button_pos
-        param_call DrawString, file_dialog_res::cancel_button_label
-        rts
-.endproc
-
-.proc DrawChangeDriveButtonLabel
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
-        param_call DrawString, file_dialog_res::change_drive_button_label
         rts
 .endproc
 
@@ -1668,7 +1641,6 @@ loop:   lda     index
         cmp     file_dialog_res::selected_index
         bne     l2
         jsr     InvertEntry
-        jsr     SetPortForList
 l2:     inc     index
 
         add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
