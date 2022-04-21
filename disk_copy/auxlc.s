@@ -219,7 +219,7 @@ kListBoxOffsetTop = 30
 kListBoxLeft = kDialogLeft + kListBoxOffsetLeft
 kListBoxTop = kDialogTop + kListBoxOffsetTop
 kListBoxWidth = 150
-kListBoxHeight = kListItemHeight*kListRows-1
+kListBoxHeight = kListItemHeight*kListRows
 
 .params winfo_drive_select
         kWindowId = 2
@@ -260,7 +260,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME rect_frame, kDialogWidth, kDialogHeight
 
         ;; For erasing parts of the window
-        DEFINE_RECT_SZ rect_erase_dialog_upper, 8, 20, kDialogWidth-16, 82 ; under title to bottom of list
+        DEFINE_RECT_SZ rect_erase_dialog_upper, 8, 20, kDialogWidth-16, 83 ; under title to bottom of list
         DEFINE_RECT_SZ rect_erase_dialog_lower, 8, 103, kDialogWidth-16, 42 ; bottom of list to bottom of dialog
 
         DEFINE_BUTTON ok, res_string_button_ok, 350, 90
@@ -318,9 +318,9 @@ current_drive_selection:        ; $FF if no selection
 top_row:                        ; top row visible in list box
         .byte   0
 
-kListRows = 9                   ; number of visible rows
-kListItemHeight = 8             ; height of list item
-kListItemTextOffset = 8         ; top to baseline
+kListRows = 8                   ; number of visible rows
+kListItemHeight = kSystemFontHeight             ; height of list item
+kListItemTextOffset = kSystemFontHeight         ; top to baseline
 
 selection_mode:
         .byte   0               ; high bit clear = source; set = desination
@@ -1095,15 +1095,12 @@ handle_drive_select_button_down:
         cmp     #MGTK::Ctl::not_a_control
         jne     LDBCA
 
-        lda     winfo_drive_select::window_id
-        sta     screentowindow_params::window_id
-        jsr     SetWinPort
+        copy    winfo_drive_select::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
-        lsr16   screentowindow_params::windowy ; / 8 = kListItemHeight
-        lsr16   screentowindow_params::windowy
-        lsr16   screentowindow_params::windowy
-        lda     screentowindow_params::windowy
+        ldax    screentowindow_params::windowy
+        ldy     #kListItemHeight
+        jsr     Divide_16_8_16
         clc
         adc     top_row
         cmp     num_drives
@@ -1700,13 +1697,11 @@ CheckAlpha:
 
 ;;; A = row to highlight
 .proc HighlightRow
-        asl     a               ; * 8 = kListItemHeight
-        asl     a
-        asl     a
-        sta     rect_highlight_row::y1
-        clc
-        adc     #kListItemHeight - 1
-        sta     rect_highlight_row::y2
+        ldx     #0              ; hi (A=lo)
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        stax    rect_highlight_row::y1
+        addax   #kListItemHeight, rect_highlight_row::y2
 
         lda     winfo_drive_select::window_id
         jsr     SetWinPort
@@ -1885,12 +1880,12 @@ ret:    rts
 ;;; Assert: `top_row` is set.
 .proc UpdateViewport
         copy16  #0, winfo_drive_select::cliprect::y1
-        lda     top_row
-        asl     a               ; * 8 = kListItemHeight
-        asl     a
-        asl     a
-        sta     winfo_drive_select::cliprect::y1
-        add16   winfo_drive_select::cliprect::y1, #kListBoxHeight, winfo_drive_select::cliprect::y2
+        lda     top_row         ; lo
+        ldx     #0              ; hi
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        stax    winfo_drive_select::cliprect::y1
+        addax   #kListBoxHeight, winfo_drive_select::cliprect::y2
 
         rts
 .endproc
@@ -2229,11 +2224,10 @@ device_index:
 ;;; ============================================================
 
 .proc SetYCoord
-        asl     a               ; * 8 = kListItemHeight
-        asl     a
-        asl     a
-        adc     #kListItemTextOffset
-        sta     list_entry_pos::ycoord
+        ldx     #0              ; hi (A=lo)
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        addax   #kListItemTextOffset, list_entry_pos::ycoord
         rts
 .endproc
 
@@ -3333,6 +3327,7 @@ ShowAlertDialog := alert_dialog::show_alert_dialog
 .endproc
 
         .include "../lib/is_diskii.s"
+        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 ;;; Settings - modified by Control Panels
