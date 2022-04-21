@@ -943,8 +943,6 @@ LD9D5:  lda     event_params::modifiers
         jsr     DoEnd
         return  #$FF
       END_IF
-
-        return #$FF             ; ignore
     ELSE
         ;; Single modifier
         cmp     #CHAR_UP
@@ -959,7 +957,6 @@ LD9D5:  lda     event_params::modifiers
         jsr     HandleScrollWithPart
         return  #$FF
       END_IF
-        return #$FF             ; ignore
     END_IF
 
         ;; Keyboard-based menu selection
