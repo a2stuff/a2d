@@ -223,21 +223,50 @@ focus_in_input2_flag:
 ;;; ============================================================
 
 .proc HandleButtonDown
+        ;; We allow Apple+Click just for Change Drive button
+        ldx     #0
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::apple_key
+        bne     :+
+        ldx     #$80
+:       stx     is_apple_click_flag
+
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
         beq     :+
-        rts
+ret:    rts
 :
         lda     findwindow_params::window_id
         cmp     #file_dialog_res::kFilePickerDlgWindowID
         beq     :+
+        bit     is_apple_click_flag
+        bmi     ret             ; ignore except for Change Drive
         jmp     HandleListButtonDown
 :
         lda     #file_dialog_res::kFilePickerDlgWindowID
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+
+        ;; --------------------------------------------------
+        ;; Change Drive button
+
+        MGTK_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
+        cmp     #MGTK::inrect_inside
+    IF_EQ
+        bit     listbox_disabled_flag
+        bmi     :+
+
+        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
+        bmi     :+
+        jsr     ChangeDrive
+:
+        rts
+    END_IF
+
+        bit     is_apple_click_flag
+        bmi     ret             ; ignore except for Change Drive
 
         ;; --------------------------------------------------
         ;; Open button
@@ -260,22 +289,6 @@ l4:
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         bmi     l3
         jsr     OpenSelectedItem
-        rts
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; Change Drive button
-
-        MGTK_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
-        bit     listbox_disabled_flag
-        bmi     :+
-
-        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
-        bmi     :+
-        jsr     ChangeDrive
-:
         rts
     END_IF
 
@@ -369,6 +382,9 @@ l4:
 done_click:
 
         rts
+
+is_apple_click_flag:
+        .byte   0
 .endproc
 
 ;;; ============================================================
