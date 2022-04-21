@@ -20,7 +20,7 @@ MGTKAuxEntry    := $4000
 DEFAULT_FONT    := $8800
 
 ;;; Settings - loaded over top of auxlc
-SETTINGS        := kOverlayDiskCopy3Address + kOverlayDiskCopy3Length - .sizeof(DeskTopSettings)
+SETTINGS        := kSegmentAuxLCAddress + kSegmentAuxLCLength - .sizeof(DeskTopSettings)
 
 ;;; Alert Sound - ditto
 BELLDATA        := SETTINGS - kBellProcLength
@@ -37,9 +37,9 @@ _segoffset .set 0
 .endmacro
 
 ;;; Segments
-        DEFSEG Loader,             DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
-        DEFSEG OverlayDiskCopy3,   $D000, $2400
-        DEFSEG OverlayDiskCopy4,   $0800, $0B80
+        DEFSEG Loader,          DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
+        DEFSEG SegmentAuxLC,    $D000, $2400
+        DEFSEG SegmentMain,     $0800, $0B80
 
 ;;; ============================================================
 ;;; Disk Copy application

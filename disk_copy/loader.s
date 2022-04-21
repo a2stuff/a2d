@@ -21,17 +21,17 @@ load_buf := $4000
 filename:   PASCAL_STRING kFilenameDiskCopy
 
         DEFINE_READ_PARAMS read_params, 0, 0
-        DEFINE_SET_MARK_PARAMS set_mark_params, kOverlayDiskCopy3Offset
+        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentAuxLCOffset
         DEFINE_CLOSE_PARAMS close_params
 
         .byte   $00,$00
 
 buf1:   .addr   load_buf
-dest1:  .addr   kOverlayDiskCopy3Address
-len1:   .word   kOverlayDiskCopy3Length
+dest1:  .addr   kSegmentAuxLCAddress
+len1:   .word   kSegmentAuxLCLength
 
-buf2:   .addr   kOverlayDiskCopy4Address
-len2:   .word   kOverlayDiskCopy4Length
+buf2:   .addr   kSegmentMainAddress
+len2:   .word   kSegmentMainLength
 
 ;;; ============================================================
 

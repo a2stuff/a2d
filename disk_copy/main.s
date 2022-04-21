@@ -1,11 +1,11 @@
 ;;; ============================================================
-;;; Disk Copy - Main Memory Segment $0800 - $12FF
+;;; Disk Copy - Main Memory Segment $0800 - $137F
 ;;;
 ;;; Compiled as part of disk_copy.s
 ;;; ============================================================
 
 .scope main
-        .org $800
+        .org ::kSegmentMainAddress
 
         MLIEntry := MLIRelayImpl
 
@@ -19,7 +19,7 @@
 
         DEFINE_QUIT_PARAMS quit_params
 
-on_line_buffer2 := $1380
+on_line_buffer2 := ::kSegmentMainAddress + ::kSegmentMainLength
         DEFINE_ON_LINE_PARAMS on_line_params2,, on_line_buffer2
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
@@ -1152,7 +1152,7 @@ done:   rts
 
 ;;; ============================================================
 
-        PAD_TO $1380
+        PAD_TO ::kSegmentMainAddress + ::kSegmentMainLength
 
 .endscope
 

@@ -7,7 +7,7 @@
         RESOURCE_FILE "auxlc.res"
 
 .scope auxlc
-        .org $D000
+        .org ::kSegmentAuxLCAddress
 
         MGTKEntry := MGTKRelayImpl
 
@@ -46,7 +46,7 @@ kAlertResultNo          = 3
 
 ;;; ============================================================
 
-        ASSERT_ADDRESS $D000, "Entry point"
+        ASSERT_ADDRESS ::kSegmentAuxLCAddress, "Entry point"
 
 start:
         jmp     init
