@@ -14237,7 +14237,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
     END_IF
 
         ;; --------------------------------------------------
-        cmp     #CopyDialogLifecycle::exists
+        cmp     #CopyDialogLifecycle::show
     IF_EQ
         ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
