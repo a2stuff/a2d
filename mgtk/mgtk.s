@@ -4677,9 +4677,8 @@ no_mouse:
 
 no_irq: lda     VERSION
         pha
-
         lda     #F8VERSION           ; F8 ROM IIe ID byte
-        sta     VERSION
+        sta     VERSION              ; Mouse firmware inspects the byte!
 
         ldy     #SETMOUSE
         lda     #1
@@ -10325,8 +10324,17 @@ loop:   txa
         inx                     ; no mouse found
         rts
 
-found:  ldy     #INITMOUSE
+found:  lda     VERSION
+        pha
+        lda     #F8VERSION      ; F8 ROM IIe ID byte
+        sta     VERSION         ; Mouse firmware inspects the byte!
+
+        ldy     #INITMOUSE
         jsr     CallMouse
+
+        pla
+        sta     VERSION
+
         jsr     ScaleMouseImpl::set_clamps
         ldy     #HOMEMOUSE
         jsr     CallMouse
