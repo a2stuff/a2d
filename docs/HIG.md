@@ -32,11 +32,11 @@ Note that these are for inspiration, not to be dutifully followed.
 
 * Clicking on the text label should be equivalent to clicking on the control.
 
-## Text Input Boxes
+## Line Edit (Text Input) Controls
 
-* Height is 11 pixels.
+* Height is 12 pixels, counting the border.
 * Border is 1x1 pixels thick, drawn with solid pen black pen (not XOR).
-* Text baseline is 5x10 pixels from top left corner of rect.
+* Text baseline is 5x10 pixels from top left corner of border.
 * Insertion point (a.k.a. text caret) is the full height of field, XOR-drawn between text glyphs. Moving the insertion point does not cause the string to change.
 * The following keyboard shortcuts are supported:
   * Left Arrow - move IP one character left.
@@ -47,6 +47,15 @@ Note that these are for inspiration, not to be dutifully followed.
   * Control+F - erase character to the right of the IP.
   * Control+X - erase all text
 
+## List Box Controls
+
+* The following keyboard shortcuts are supported:
+  * Up/Down Arrow - move selection or scroll by one line.
+  * Apple+Up/Down - scroll by one page.
+  * Open-Apple+Solid-Apple+Up/Downshould - move selection or scroll to start/end.
+* Item height is 10 pixels.
+  * NOTE: Currently only 9 in most list boxes.
+
 ## Keyboard
 
 * For Apple+letter combinations, Open Apple or Solid Apple should be equivalent.
@@ -54,9 +63,5 @@ Note that these are for inspiration, not to be dutifully followed.
 * Apple+M is reserved for: move the active window with the keyboard.
 * Apple+X is reserved for: scroll the active window with the keyboard.
 * Apple+G is reserved for: grow the active window with the keyboard.
-
-* In scrollable regions:
-  * Apple+Up and Apple+Down should be treated as Page Up and Page Down.
-  * Apple+Left and Apple+Right should be treated as Home and End.
 
 * In modal dialogs with only a single action, Return and Escape should both dismiss.

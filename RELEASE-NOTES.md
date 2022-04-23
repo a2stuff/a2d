@@ -93,7 +93,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Expanded to include both date and time. ([#11](https://github.com/a2stuff/a2d/issues/11))
   * Shows 12/24hr setting. ([#220](https://github.com/a2stuff/a2d/issues/220))
 * Sort Directory: Support as many entries as DeskTop supports. ([#86](https://github.com/a2stuff/a2d/issues/86))
-* Show Text File: Keyboard support. **Esc** quits, arrows scroll, **Space** toggles modes. ([#4](https://github.com/a2stuff/a2d/issues/4), [#403](https://github.com/a2stuff/a2d/issues/403))
+* Show Text File: Keyboard support. **Esc** quits, arrows scroll, **Space** toggles modes. ([#4](https://github.com/a2stuff/a2d/issues/4), [#403](https://github.com/a2stuff/a2d/issues/403)) Improved scrollbar handling. ([#422](https://github.com/a2stuff/a2d/issues/422))
 
 ### Additional Desk Accessories
 
