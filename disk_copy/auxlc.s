@@ -260,7 +260,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME rect_frame, kDialogWidth, kDialogHeight
 
         ;; For erasing parts of the window
-        DEFINE_RECT_SZ rect_erase_dialog_upper, 8, 20, kDialogWidth-16, 83 ; under title to bottom of list
+        DEFINE_RECT_SZ rect_erase_dialog_upper, 8, 20, kDialogWidth-16, kListBoxHeight + 11 ; under title to bottom of list
         DEFINE_RECT_SZ rect_erase_dialog_lower, 8, 103, kDialogWidth-16, 42 ; bottom of list to bottom of dialog
 
         DEFINE_BUTTON ok, res_string_button_ok, 350, 90
@@ -319,8 +319,7 @@ top_row:                        ; top row visible in list box
         .byte   0
 
 kListRows = 8                   ; number of visible rows
-kListItemHeight = kSystemFontHeight             ; height of list item
-kListItemTextOffset = kSystemFontHeight         ; top to baseline
+kListItemHeight = kSystemFontHeight + 1         ; height of list item
 
 selection_mode:
         .byte   0               ; high bit clear = source; set = desination
@@ -2224,7 +2223,7 @@ device_index:
         ldx     #0              ; hi (A=lo)
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
-        addax   #kListItemTextOffset, list_entry_pos::ycoord
+        addax   #kListItemHeight, list_entry_pos::ycoord
         rts
 .endproc
 
