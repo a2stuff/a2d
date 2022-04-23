@@ -236,7 +236,6 @@ nextwinfo:      .addr   0
         kLabelWidth = 105
 
         kScrollBarWidth = 20
-        kListItemHeight = 10     ; default text size + 1
         kListRows = 6
         kListLeft = kMarginX + kLabelWidth
         kListTop = kMarginY

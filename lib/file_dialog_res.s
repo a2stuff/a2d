@@ -130,9 +130,15 @@ nextwinfo:      .addr   0
 
 kEntryListCtlWindowID = $3F
 
+kListEntryGlyphX = 1
+kListEntryNameX  = 16
+
+kLineDelta = 1
+kPageDelta = 7
+
 .params winfo_listbox
         kWidth = kListBoxWidth
-        kHeight = 70
+        kHeight = kListItemHeight * kPageDelta
         kLeft =   kFilePickerDlgLeft + kControlsLeft + 1 ; +1 for external border
         kTop =    kFilePickerDlgTop + 28
 

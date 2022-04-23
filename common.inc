@@ -38,6 +38,7 @@ kDirStackBufferSize = 170
 kMaxFilenameLength = 15
 
 ;;; ============================================================
+;;; Metrics
 
 kScreenWidth    = 560
 kScreenHeight   = 192
@@ -59,6 +60,9 @@ kLabelHOffset = 3
 kTextBoxHeight = 11
 kTextBoxTextHOffset = 5         ; from left edge of rect to text pos
 kTextBoxTextVOffset = 10        ; from top edge of rect to text pos
+
+;;; Standard list box control metrics
+kListItemHeight = 10
 
 ;;; Mouse threshold for double click detection.
 kDoubleClickDeltaX      = 5

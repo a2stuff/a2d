@@ -745,6 +745,7 @@ This covers:
 
 Repeat for each list box:
 * Verify the following keyboard shortcuts:
+  * If the scrollbar is not enabled, the view should not scroll.
   * Up Arrow
     * If the control does not support selection, scrolls the view up by one line.
     * Otherwise, if there is no selection, selects the last item and scrolls it into view.

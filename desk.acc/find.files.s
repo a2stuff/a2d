@@ -1303,6 +1303,12 @@ kPartEnd  = $81
 
 .proc HandleScrollWithPart
         sta     findcontrol_params::which_part
+
+        ;; Ignore unless vscroll is enabled
+        lda     winfo_results::vscroll
+        and     #MGTK::Scroll::option_active
+        jeq     InputLoop
+
         FALL_THROUGH_TO HandleScroll
 .endproc
 
@@ -1408,15 +1414,11 @@ max_top:        .byte   0
 
 ;;; Assumes `top_row` is set.
 .proc UpdateViewport
-        ;; Compute height of line (font height + 1)
-        copy16  #1, line_height
-        add16_8 line_height, DEFAULT_FONT+MGTK::Font::height, line_height
-
-        ;; Update top of maprect: 1 + top_row * line_height
+        ;; Update top of maprect: 1 + top_row * kListItemHeight
         copy16  #0, winfo_results::maprect::y1
         ldx     top_row
         beq     bottom
-:       add16   line_height, winfo_results::maprect::y1, winfo_results::maprect::y1
+:       add16   #kListItemHeight, winfo_results::maprect::y1, winfo_results::maprect::y1
         dex
         bne     :-
 
@@ -1424,8 +1426,6 @@ max_top:        .byte   0
 bottom: add16   winfo_results::maprect::y1, #kResultsHeight, winfo_results::maprect::y2
 
         rts
-
-line_height:    .word   0
 .endproc
 
 ;;; ============================================================
@@ -1581,9 +1581,6 @@ done:   rts
 ;;; ============================================================
 
 .proc DrawResults
-        copy    DEFAULT_FONT+MGTK::Font::height, line_height
-        inc     line_height
-
         copy    #kResultsWindowID, winport_params::window_id
         MGTK_CALL MGTK::GetWinPort, winport_params
         ;; No need to check results, since window is always visible.
@@ -1598,7 +1595,7 @@ done:   rts
 
         copy    #0, line
         copy16  #0, pos_ycoord
-loop:   add16_8   pos_ycoord, line_height, pos_ycoord
+loop:   add16_8   pos_ycoord, #kListItemHeight, pos_ycoord
         MGTK_CALL MGTK::MoveTo, pos
 
         lda     line
@@ -1612,9 +1609,6 @@ loop:   add16_8   pos_ycoord, line_height, pos_ycoord
 
 done:   MGTK_CALL MGTK::ShowCursor
         rts
-
-line_height:
-        .byte   0
 
 line:   .byte   0
         DEFINE_POINT pos, 5, 0

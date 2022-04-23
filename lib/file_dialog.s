@@ -40,13 +40,6 @@ num_file_names  := $177F
 ;;; Sequence of 16-byte records, filenames in current directory.
 file_names      := $1800
 
-kListEntryHeight = kSystemFontHeight+1
-kListEntryGlyphX = 1
-kListEntryNameX  = 16
-
-kLineDelta = 1
-kPageDelta = 7
-
 kMaxInputLength = $3F
 
 ;;; ============================================================
@@ -406,7 +399,7 @@ click_handler_hook:
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     rts1
         lda     file_dialog_res::winfo_listbox::vscroll
-        and     #MGTK::Ctl::vertical_scroll_bar ; vertical scroll enabled?
+        and     #MGTK::Scroll::option_active
         beq     rts1
         jmp     HandleVScrollClick
 
@@ -418,7 +411,7 @@ in_list:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::cliprect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
-        ldy     #kListEntryHeight
+        ldy     #kListItemHeight
         jsr     Divide_16_8_16
         new_index := screentowindow_params::windowy
         stax    screentowindow_params::windowy
@@ -533,9 +526,14 @@ different:
 ;;; ============================================================
 
 .proc HandlePageUp
+        lda     file_dialog_res::winfo_listbox::vscroll
+        and     #MGTK::Scroll::option_active
+        bne     :+
+        rts
+:
         lda     file_dialog_res::winfo_listbox::vthumbpos
         sec
-        sbc     #kPageDelta
+        sbc     #file_dialog_res::kPageDelta
         bpl     :+
         lda     #0
 :
@@ -545,9 +543,14 @@ different:
 ;;; ============================================================
 
 .proc HandlePageDown
+        lda     file_dialog_res::winfo_listbox::vscroll
+        and     #MGTK::Scroll::option_active
+        bne     :+
+        rts
+:
         lda     file_dialog_res::winfo_listbox::vthumbpos
         clc
-        adc     #kPageDelta
+        adc     #file_dialog_res::kPageDelta
         cmp     file_dialog_res::winfo_listbox::vthumbmax
         beq     :+
         bcc     :+
@@ -564,7 +567,7 @@ different:
         rts
 
 :       sec
-        sbc     #kLineDelta
+        sbc     #file_dialog_res::kLineDelta
         jsr     UpdateThumbCommon
         jsr     CheckArrowRepeat
         jmp     HandleLineUp
@@ -579,7 +582,7 @@ different:
         rts
 
 :       clc
-        adc     #kLineDelta
+        adc     #file_dialog_res::kLineDelta
         jsr     UpdateThumbCommon
         jsr     CheckArrowRepeat
         jmp     HandleLineDown
@@ -1626,8 +1629,8 @@ d4:     .byte   0
 .proc DrawListEntries
         jsr     SetPortForList
         MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::cliprect
-        copy    #kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
-        copy16  #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
+        copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
+        copy16  #kListItemHeight, file_dialog_res::picker_entry_pos::ycoord
         copy    #0, index
 
 loop:   lda     index
@@ -1648,10 +1651,10 @@ loop:   lda     index
         bpl     :+
 
         ;; Folder glyph
-        copy    #kListEntryGlyphX, file_dialog_res::picker_entry_pos::xcoord
+        copy    #file_dialog_res::kListEntryGlyphX, file_dialog_res::picker_entry_pos::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
         param_call DrawString, file_dialog_res::str_folder
-        copy    #kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord
+        copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord
 
 :       lda     index
         cmp     file_dialog_res::selected_index
@@ -1659,7 +1662,7 @@ loop:   lda     index
         jsr     InvertEntry
 l2:     inc     index
 
-        add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListEntryHeight, file_dialog_res::picker_entry_pos::ycoord
+        add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListItemHeight, file_dialog_res::picker_entry_pos::ycoord
         jmp     loop
 
 index:  .byte   0
@@ -1673,7 +1676,7 @@ UpdateScrollbar:
 .proc UpdateScrollbarWithIndex
         sta     index
         lda     num_file_names
-        cmp     #kPageDelta + 1
+        cmp     #file_dialog_res::kPageDelta + 1
         bcs     :+
         ;; Deactivate scrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
@@ -1686,7 +1689,7 @@ UpdateScrollbar:
         ;; Activate scrollbar
         lda     num_file_names
         sec
-        sbc     #kPageDelta
+        sbc     #file_dialog_res::kPageDelta
         cmp     file_dialog_res::winfo_listbox::vthumbmax
         beq     :+
         sta     file_dialog_res::winfo_listbox::vthumbmax
@@ -1746,7 +1749,7 @@ finish: sty     file_dialog_res::filename_buf
 .proc ScrollClipRect
         sta     tmp
         clc
-        adc     #kPageDelta
+        adc     #file_dialog_res::kPageDelta
         cmp     num_file_names
         beq     l1
         bcs     l2
@@ -1754,16 +1757,16 @@ l1:     lda     tmp
         jmp     l4
 
 l2:     lda     num_file_names
-        cmp     #kPageDelta+1
+        cmp     #file_dialog_res::kPageDelta+1
         bcs     l3
         lda     tmp
         jmp     l4
 
 l3:     sec
-        sbc     #kPageDelta
+        sbc     #file_dialog_res::kPageDelta
 
 l4:     ldx     #$00            ; A,X = line
-        ldy     #kListEntryHeight
+        ldy     #kListItemHeight
         jsr     Multiply_16_8_16
         stax    file_dialog_res::winfo_listbox::cliprect::y1
         add16_8 file_dialog_res::winfo_listbox::cliprect::y1, #file_dialog_res::winfo_listbox::kHeight, file_dialog_res::winfo_listbox::cliprect::y2
@@ -1777,11 +1780,11 @@ tmp:    .byte   0
 
 .proc InvertEntry
         ldx     #0              ; A,X = entry
-        ldy     #kListEntryHeight
+        ldy     #kListItemHeight
         jsr     Multiply_16_8_16
         stax    file_dialog_res::rect_selection::y1
 
-        add16_8 file_dialog_res::rect_selection::y1, #kListEntryHeight, file_dialog_res::rect_selection::y2
+        add16_8 file_dialog_res::rect_selection::y1, #kListItemHeight, file_dialog_res::rect_selection::y2
 
         jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -2137,7 +2140,7 @@ has_sel:
     END_IF
 
         sec
-        sbc     #kPageDelta-1
+        sbc     #file_dialog_res::kPageDelta-1
         bmi     no_change
         cmp     file_dialog_res::winfo_listbox::vthumbpos
         beq     no_change

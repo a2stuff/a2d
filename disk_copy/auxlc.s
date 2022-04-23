@@ -319,7 +319,6 @@ top_row:                        ; top row visible in list box
         .byte   0
 
 kListRows = 8                   ; number of visible rows
-kListItemHeight = kSystemFontHeight + 1         ; height of list item
 
 selection_mode:
         .byte   0               ; high bit clear = source; set = desination
