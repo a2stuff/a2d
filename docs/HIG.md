@@ -54,7 +54,6 @@ Note that these are for inspiration, not to be dutifully followed.
   * Apple+Up/Down - scroll by one page.
   * Open-Apple+Solid-Apple+Up/Downshould - move selection or scroll to start/end.
 * Item height is 10 pixels.
-  * NOTE: Currently only 9 in most list boxes.
 
 ## Keyboard
 

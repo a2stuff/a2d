@@ -35,7 +35,7 @@ selected_index:                 ; $FF if none
         .byte   0
 
         kControlsLeft = 28
-        kControlsTop  = 27
+        kControlsTop  = 26
         kButtonGap = 3
         kSep = kButtonGap + 1 + kButtonGap
 
@@ -132,7 +132,7 @@ kEntryListCtlWindowID = $3F
 
 .params winfo_listbox
         kWidth = kListBoxWidth
-        kHeight = 72
+        kHeight = 70
         kLeft =   kFilePickerDlgLeft + kControlsLeft + 1 ; +1 for external border
         kTop =    kFilePickerDlgTop + 28
 
