@@ -11,6 +11,7 @@
         MGTKEntry := MGTKRelayImpl
 
         block_buffer := $1A00
+        read_buffer := $1C00
 
         ovl_string_buf := path_buf0
 
@@ -123,7 +124,7 @@ ok2:    lda     path_buf1
         ldxy    #path_buf1
         lda     unit_num
         jsr     CheckConflictingVolumeName
-        bne     :+
+        bcc     :+
         lda     #ERR_DUPLICATE_FILENAME
         jsr     JUMP_TABLE_SHOW_ALERT
         jmp     loop2
@@ -161,16 +162,14 @@ ok2:    lda     path_buf1
 .endscope
 
         ;; Confirmed!
-        lda     unit_num
+        unit_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         clc
         rts
 
 cancel:
         sec
         rts
-
-unit_num:
-        .byte   0
 
 ;;; High bit set if erase, otherwise format.
 erase_flag:
@@ -194,7 +193,9 @@ l8:
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_formatting
-        lda     unit_num
+
+        unit_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     CheckSupportsFormat
         and     #$FF
         bne     l9
@@ -248,13 +249,11 @@ cancel:
         pha
         jsr     main::SetCursorPointer
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        ldx     d2
+
+        d2 := *+1               ; ???
+        ldx     #SELF_MODIFIED_BYTE
         pla
         rts
-
-unit_num:
-        .byte   0
-d2:     .byte   0               ; ???
 .endproc
 
 ;;; ============================================================
@@ -278,7 +277,8 @@ l7:
         jsr     main::SetCursorWatch
 
         ldxy    #path_buf1
-        lda     unit_num
+        unit_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     WriteHeaderBlocks
         pha
         jsr     main::SetCursorPointer
@@ -303,13 +303,11 @@ cancel:
         pha                     ; cancel
         jsr     main::SetCursorPointer
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        ldx     d2
+
+        d2 := *+1               ; ???
+        ldx     #SELF_MODIFIED_BYTE
         pla
         rts
-
-unit_num:
-        .byte   0
-d2:     .byte   0               ; ???
 .endproc
 
 ;;; ============================================================
@@ -436,8 +434,6 @@ update: pha                     ; A = new selection
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, select_volume_rect
         rts
-
-col:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -574,7 +570,9 @@ wrap:   ldx     num_volumes     ; go to last (num - 1)
 
         lda     #0
         sta     vol
-loop:   lda     vol
+
+        vol := *+1
+loop:   lda     #SELF_MODIFIED_BYTE
         cmp     num_volumes
         bne     :+
         copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
@@ -601,8 +599,6 @@ loop:   lda     vol
 
         inc     vol
         jmp     loop
-
-vol:    .byte   0               ; volume being drawn
 .endproc
 
 ;;; ============================================================
@@ -644,6 +640,50 @@ loop:   lda     (ptr),y
 .endproc
 
 ;;; ============================================================
+;;; Inputs: A = unit number (no need to mask off low nibble), X,Y = name
+;;; Outputs: C=1 if there's a duplicate, C=0 otherwise
+
+.proc CheckConflictingVolumeName
+        ptr := $06
+        stxy    ptr
+        and     #UNIT_NUM_MASK
+        sta     unit_num
+
+        ;; Copy name, prepending '/'
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     path+1,y
+        dey
+        bpl     :-
+        clc
+        adc     #1
+        sta     path
+        copy    #'/', path+1
+
+        MLI_CALL GET_FILE_INFO, get_file_info_params
+        bne     no_match
+
+        ;; A volume with that name exists... but is it the one
+        ;; we're about to format/erase?
+        lda     DEVNUM
+        and     #UNIT_NUM_MASK
+
+        unit_num := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        beq     no_match
+
+        ;; Not the same device, so a match. Return C=1
+        sec
+        rts
+
+        ;; No match we care about, so return C=0.
+no_match:
+        clc
+        rts
+.endproc
+;;; ============================================================
 
         ;; TODO: Minimize amount of padding here...
         PAD_TO $D00
@@ -653,14 +693,16 @@ loop:   lda     (ptr),y
 
 ;;; ============================================================
 
-        read_buffer := $1C00
-
         DEFINE_ON_LINE_PARAMS on_line_params,, $1C00
         DEFINE_READ_BLOCK_PARAMS read_block_params, read_buffer, 0
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
 
 unit_num:
         .byte   $00
+
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
+path:
+        .res    17,0              ; length + '/' + 15-char name
 
 ;;; ============================================================
 ;;; Get driver address
@@ -1224,57 +1266,6 @@ non_pro:
         rts
 .endproc
 
-;;; ============================================================
-;;; Inputs: A = unit number (no need to mask off low nibble), X,Y = name
-;;; Outputs: Z=1 if there's a duplicate, Z=0 otherwise
-
-.proc CheckConflictingVolumeName
-        ptr := $06
-        stxy    ptr
-        and     #UNIT_NUM_MASK
-        sta     unit_num
-
-        ;; Copy name, prepending '/'
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     path+1,y
-        dey
-        bpl     :-
-        clc
-        adc     #1
-        sta     path
-        copy    #'/', path+1
-
-        MLI_CALL GET_FILE_INFO, get_file_info_params
-        bne     no_match
-
-        ;; A volume with that name exists... but is it the one
-        ;; we're about to format/erase?
-        lda     DEVNUM
-        and     #UNIT_NUM_MASK
-        cmp     unit_num
-        beq     no_match
-
-        ;; Not the same device, so a match. Return Z=1
-        lda     #0
-        rts
-
-        ;; No match we care about, so return Z=0.
-no_match:
-        lda     #1
-        rts
-
-unit_num:
-        .byte   0
-
-path:
-        .res    17,0              ; length + '/' + 15-char name
-
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
-
-.endproc
 
 
 ;;; ============================================================
