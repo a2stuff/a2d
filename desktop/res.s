@@ -443,6 +443,16 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 ;;; ============================================================
 ;;; Format/Erase dialogs
 
+        kVolPickerVOffset = 44
+
+        ;; Line endpoints
+        DEFINE_POINT vol_picker_line1_start, 7, kVolPickerVOffset - 2
+        DEFINE_POINT vol_picker_line1_end, winfo_prompt_dialog::kWidth - 8, kVolPickerVOffset - 2
+
+        ;; Line endpoints
+        DEFINE_POINT vol_picker_line2_start, 7, winfo_prompt_dialog::kHeight-22
+        DEFINE_POINT vol_picker_line2_end, winfo_prompt_dialog::kWidth - 8, winfo_prompt_dialog::kHeight-22
+
         DEFINE_RECT select_volume_rect, 0, 0, 0, 0
 
 the_dos_33_disk_label:

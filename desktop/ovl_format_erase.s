@@ -14,8 +14,6 @@
 
         ovl_string_buf := path_buf0
 
-        kLabelsVOffset = 49
-
         kLabelWidth   = 127
         kLabelsCol1    = 11
         kLabelsCol2    = kLabelsCol1 + kLabelWidth
@@ -67,6 +65,13 @@ num_volumes:
         param_call main::DrawDialogTitle, aux::label_erase_disk
         param_call main::DrawDialogLabel, 1, aux::str_select_erase
     END_IF
+
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::MoveTo, vol_picker_line1_start
+        MGTK_CALL MGTK::LineTo, vol_picker_line1_end
+        MGTK_CALL MGTK::MoveTo, vol_picker_line2_start
+        MGTK_CALL MGTK::LineTo, vol_picker_line2_end
+
         jsr     DrawVolumeLabels
         copy    #$FF, selected_device_index
         copy16  #HandleClick, main::jump_relay+1
@@ -321,7 +326,7 @@ d2:     .byte   0               ; ???
         return  #$FF
 :       lda     screentowindow_params::windowy
         sec
-        sbc     #kLabelsVOffset
+        sbc     #kVolPickerVOffset
         sta     screentowindow_params::windowy
         lda     screentowindow_params::windowy+1
         sbc     #0
@@ -329,9 +334,9 @@ d2:     .byte   0               ; ???
         return  #$FF
 :       sta     screentowindow_params::windowy+1
 
-        ;; Divide by aux::kDialogLabelHeight
+        ;; Divide by kListItemHeight
         ldax    screentowindow_params::windowy
-        ldy     #aux::kDialogLabelHeight
+        ldy     #kListItemHeight
         jsr     Divide_16_8_16
         stax    screentowindow_params::windowy
 
@@ -412,13 +417,13 @@ col:    .byte   0
         sbc     L0CA9           ; entry % 4
         ldx     #0
 
-        ldy     #aux::kDialogLabelHeight
+        ldy     #kListItemHeight
         jsr     Multiply_16_8_16
         stax    select_volume_rect::y1
-        add16_8 select_volume_rect::y1, #kLabelsVOffset, select_volume_rect::y1
+        add16_8 select_volume_rect::y1, #kVolPickerVOffset, select_volume_rect::y1
 
         add16   select_volume_rect::x1, #kLabelWidth-1, select_volume_rect::x2
-        add16   select_volume_rect::y1, #aux::kDialogLabelHeight-1, select_volume_rect::y2
+        add16   select_volume_rect::y1, #kListItemHeight-1, select_volume_rect::y2
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, select_volume_rect
         rts
@@ -548,6 +553,14 @@ wrap:   ldx     num_volumes     ; go to last (num - 1)
 .endproc
 
 ;;; ============================================================
+
+        ;; TODO: Minimize amount of padding here...
+        PAD_TO $D00
+
+        ;; This must be page-aligned.
+        .include "../lib/formatdiskii.s"
+
+;;; ============================================================
 ;;; Draw volume labels
 
 .proc DrawVolumeLabels
@@ -563,6 +576,7 @@ wrap:   ldx     num_volumes     ; go to last (num - 1)
 loop:   lda     vol
         cmp     num_volumes
         bne     :+
+        copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
         rts
 
 :       cmp     #8              ; third column?
@@ -586,34 +600,31 @@ setpos: stax    dialog_label_pos::xcoord
         sbc     #1
         sbc     vol
         asl     a
-        tay
-
-        lda     device_name_table+1,y
-        tax
-        lda     device_name_table,y ; now A,X has pointer
-        pha                         ; save A
+        pha                     ; A = index
 
         ;; Compute label line into Y
         lda     vol
         and     #%00000011      ; %4
-        tay
-        iny                     ; +3
-        iny
-        iny
 
-        pla                     ; A,X has pointer again
-        jsr     main::DrawDialogLabel
+        ldx     #0              ; hi
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        addax   #kVolPickerVOffset + kListItemHeight - 1, dialog_label_pos::ycoord
+
+        MGTK_CALL MGTK::MoveTo, dialog_label_pos
+
+        pla                     ; A = index
+        tay
+        lda     device_name_table+1,y
+        tax
+        lda     device_name_table,y ; now A,X has pointer
+        jsr     main::DrawString
+
         inc     vol
         jmp     loop
 
 vol:    .byte   0               ; volume being drawn
 .endproc
-
-        PAD_TO $D00
-
-;;; ============================================================
-
-        .include "../lib/formatdiskii.s"
 
 ;;; ============================================================
 
