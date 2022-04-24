@@ -14,10 +14,8 @@
 
         ovl_string_buf := path_buf0
 
-        kLabelWidth   = 127
-        kLabelsCol1    = 11
-        kLabelsCol2    = kLabelsCol1 + kLabelWidth
-        kLabelsCol3    = kLabelsCol1 + kLabelWidth*2
+        kOptionWidth   = 127
+        kOptionTextHOffset = 1
 
         kDefaultFloppyBlocks = 280
 
@@ -316,79 +314,109 @@ d2:     .byte   0               ; ???
 
 ;;; ============================================================
 
-
 .proc HandleClick
-        cmp16   screentowindow_params::windowx, #kLabelsCol1
-        bpl     :+
-        return  #$FF
-:       cmp16   screentowindow_params::windowx, #kLabelsCol3 + kLabelWidth
-        bcc     :+
-        return  #$FF
-:       lda     screentowindow_params::windowy
-        sec
-        sbc     #kVolPickerVOffset
-        sta     screentowindow_params::windowy
-        lda     screentowindow_params::windowy+1
-        sbc     #0
-        bpl     :+
-        return  #$FF
-:       sta     screentowindow_params::windowy+1
+        ;; Row
+        sub16   screentowindow_params::windowy, #kVolPickerVOffset, screentowindow_params::windowy
+        bmi     done
 
-        ;; Divide by kListItemHeight
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
-        jsr     Divide_16_8_16
-        stax    screentowindow_params::windowy
+        jsr     Divide_16_8_16  ; A = col
 
         cmp     #4
-        bcc     l1
-        return  #$FF
+        bcs     done
+        sta     row
 
-l1:     copy    #2, col
-        cmp16   screentowindow_params::windowx, #kLabelsCol3
-        bcs     l2
-        dec     col
-        cmp16   screentowindow_params::windowx, #kLabelsCol2
-        bcs     l2
-        dec     col
-l2:     lda     col
-        asl     a
-        asl     a
-        clc
-        adc     screentowindow_params::windowy
+        ;; Column
+        sub16   screentowindow_params::windowx, #kVolPickerHOffset, screentowindow_params::windowx
+        bmi     done
+
+        ldax    screentowindow_params::windowx
+        ldy     #kOptionWidth
+        jsr     Divide_16_8_16  ; A = row
+
+        cmp     #3
+        bcs     done
+
+        ;; Index
+        asl
+        asl
+        row := *+1
+        ora     #SELF_MODIFIED_BYTE
+
+        ;; Is it valid?
         cmp     num_volumes
-        bcc     l4
-        lda     selected_device_index
-        bmi     l3
+        bcc     valid
+        lda     selected_device_index ; nope - clear selection if needed
+        bmi     done
         lda     selected_device_index
         jsr     HighlightVolumeLabel
         lda     #$FF
         sta     selected_device_index
-l3:     return  #$FF
+done:   return  #$FF
 
-l4:     cmp     selected_device_index
-        bne     l7
+        ;; Valid selection - has it changed?
+valid:  cmp     selected_device_index
+        bne     update
+
         jsr     main::StashCoordsAndDetectDoubleClick
         bmi     l6
+
+        ;; Activated by double-click
 l5:     MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
         MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
         lda     #$00
 l6:     rts
 
-l7:     sta     d1
+        ;; Update selection
+update: pha                     ; A = new selection
         lda     selected_device_index
-        bmi     l8
-        jsr     HighlightVolumeLabel
-l8:     lda     d1
+        bmi     :+
+        jsr     HighlightVolumeLabel ; unhighlight old
+:
+        pla                     ; A = new selection
         sta     selected_device_index
-        jsr     HighlightVolumeLabel
+        jsr     HighlightVolumeLabel ; highlight new
         jsr     main::StashCoordsAndDetectDoubleClick
         beq     l5
         rts
+.endproc
 
-d1:     .byte   0
-col:    .byte   0
+;;; ============================================================
+;;; Get the coordinates of an option by index.
+;;; Input: A = volume index
+;;; Output: A,X = x coordinate, Y = y coordinate
+.proc GetOptionPos
+        sta     index
+        lsr
+        lsr                     ; lo
+        ldx     #0              ; hi
+        ldy     #kOptionWidth
+        jsr     Multiply_16_8_16
+        clc
+        adc     #<kVolPickerHOffset
+        pha                     ; lo
+        txa
+        adc     #>kVolPickerHOffset
+        pha                     ; hi
+
+        ;; Y coordinate
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        and     #3              ; %= 4
+        ldx     #0              ; hi
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        clc
+        adc     #kVolPickerVOffset
+
+        tay                     ; Y coord
+        pla
+        tax                     ; X coord hi
+        pla                     ; X coord lo
+
+        rts
 .endproc
 
 ;;; ============================================================
@@ -396,39 +424,20 @@ col:    .byte   0
 ;;; Input: A = volume index
 
 .proc HighlightVolumeLabel
-        ldy     #<(kLabelsCol1-1)
-        sty     select_volume_rect::x1
-        ldy     #>(kLabelsCol1-1)
-        sty     select_volume_rect::x1+1
-        tax
-        lsr     a               ; / 4
-        lsr     a
-        sta     L0CA9           ; column (0, 1, or 2)
-        beq     :+
-        add16   select_volume_rect::x1, #kLabelWidth, select_volume_rect::x1
-        lda     L0CA9
-        cmp     #1
-        beq     :+
-        add16   select_volume_rect::x1, #kLabelWidth, select_volume_rect::x1
-:       asl     L0CA9           ; * 4
-        asl     L0CA9
-        txa
-        sec
-        sbc     L0CA9           ; entry % 4
+        jsr     GetOptionPos
+        stax    select_volume_rect::x1
+        addax   #kOptionWidth-1, select_volume_rect::x2
+
+        tya
         ldx     #0
-
-        ldy     #kListItemHeight
-        jsr     Multiply_16_8_16
         stax    select_volume_rect::y1
-        add16_8 select_volume_rect::y1, #kVolPickerVOffset, select_volume_rect::y1
+        addax   #kListItemHeight-1, select_volume_rect::y2
 
-        add16   select_volume_rect::x1, #kLabelWidth-1, select_volume_rect::x2
-        add16   select_volume_rect::y1, #kListItemHeight-1, select_volume_rect::y2
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, select_volume_rect
         rts
 
-L0CA9:  .byte   0
+col:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -553,14 +562,6 @@ wrap:   ldx     num_volumes     ; go to last (num - 1)
 .endproc
 
 ;;; ============================================================
-
-        ;; TODO: Minimize amount of padding here...
-        PAD_TO $D00
-
-        ;; This must be page-aligned.
-        .include "../lib/formatdiskii.s"
-
-;;; ============================================================
 ;;; Draw volume labels
 
 .proc DrawVolumeLabels
@@ -578,21 +579,13 @@ loop:   lda     vol
         bne     :+
         copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
         rts
-
-:       cmp     #8              ; third column?
-        bcc     :+
-        ldax    #kLabelsCol3
-        jmp     setpos
-
-:       cmp     #4              ; second column?
-        bcc     :+
-        ldax    #kLabelsCol2
-        jmp     setpos
-
-:       ldax    #kLabelsCol1
-        FALL_THROUGH_TO setpos
-
-setpos: stax    dialog_label_pos::xcoord
+:
+        jsr     GetOptionPos
+        addax   #kOptionTextHOffset, dialog_label_pos::xcoord
+        tya
+        ldx     #0
+        addax   #kListItemHeight-1, dialog_label_pos::ycoord
+        MGTK_CALL MGTK::MoveTo, dialog_label_pos
 
         ;; Reverse order, so boot volume is first
         lda     num_volumes
@@ -600,20 +593,6 @@ setpos: stax    dialog_label_pos::xcoord
         sbc     #1
         sbc     vol
         asl     a
-        pha                     ; A = index
-
-        ;; Compute label line into Y
-        lda     vol
-        and     #%00000011      ; %4
-
-        ldx     #0              ; hi
-        ldy     #kListItemHeight
-        jsr     Multiply_16_8_16
-        addax   #kVolPickerVOffset + kListItemHeight - 1, dialog_label_pos::ycoord
-
-        MGTK_CALL MGTK::MoveTo, dialog_label_pos
-
-        pla                     ; A = index
         tay
         lda     device_name_table+1,y
         tax
@@ -625,6 +604,52 @@ setpos: stax    dialog_label_pos::xcoord
 
 vol:    .byte   0               ; volume being drawn
 .endproc
+
+;;; ============================================================
+;;; Gets the selected unit number from `DEVLST`
+;;; Output: A = unit number (with low nibble intact)
+;;; Assert: `selected_device_index` is valid (i.e. not $FF)
+
+.proc GetSelectedUnitNum
+        ;; Reverse order, so boot volume is first
+        lda     num_volumes
+        sec
+        sbc     #1
+        sbc     selected_device_index
+        tax
+        lda     DEVLST,x
+        rts
+.endproc
+
+;;; ============================================================
+;;; A,X = string
+
+.proc UpcaseString
+        ptr := $06
+        stx     ptr+1
+        sta     ptr
+        ldy     #0
+        lda     (ptr),y
+        tay
+loop:   lda     (ptr),y
+        cmp     #'a'
+        bcc     :+
+        cmp     #'z'+1
+        bcs     :+
+        and     #CASE_MASK
+        sta     (ptr),y
+:       dey
+        bpl     loop
+        rts
+.endproc
+
+;;; ============================================================
+
+        ;; TODO: Minimize amount of padding here...
+        PAD_TO $D00
+
+        ;; This must be page-aligned.
+        .include "../lib/formatdiskii.s"
 
 ;;; ============================================================
 
@@ -1068,25 +1093,6 @@ prodos_loader_blocks:
 ;;; writing starts are placed here. The overlay will be reloaded
 ;;; for subsequent format/erase operations.
 
-.proc UpcaseString
-        ptr := $06
-        stx     ptr+1
-        sta     ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-loop:   lda     (ptr),y
-        cmp     #'a'
-        bcc     :+
-        cmp     #'z'+1
-        bcs     :+
-        and     #CASE_MASK
-        sta     (ptr),y
-:       dey
-        bpl     loop
-        rts
-.endproc
-
 ;;; ============================================================
 ;;; Get a volume name for a non-ProDOS disk given a unit number.
 ;;; Input: A = unit number
@@ -1215,22 +1221,6 @@ pascal_disk:
 non_pro:
         lda     on_line_params::unit_num
         jsr     GetNonprodosVolName
-        rts
-.endproc
-
-;;; ============================================================
-;;; Gets the selected unit number from `DEVLST`
-;;; Output: A = unit number (with low nibble intact)
-;;; Assert: `selected_device_index` is valid (i.e. not $FF)
-
-.proc GetSelectedUnitNum
-        ;; Reverse order, so boot volume is first
-        lda     num_volumes
-        sec
-        sbc     #1
-        sbc     selected_device_index
-        tax
-        lda     DEVLST,x
         rts
 .endproc
 

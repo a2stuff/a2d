@@ -444,6 +444,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 ;;; Format/Erase dialogs
 
         kVolPickerVOffset = 44
+        kVolPickerHOffset = 10
 
         ;; Line endpoints
         DEFINE_POINT vol_picker_line1_start, 7, kVolPickerVOffset - 2
