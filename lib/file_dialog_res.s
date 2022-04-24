@@ -53,7 +53,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_BUTTON ok,           res_string_button_ok,           195, kControlsTop + 4 * (kButtonHeight + kButtonGap) + kSep
 
 ;;; Dividing line
-        DEFINE_POINT dialog_sep_start, 315, kControlsTop + 1
+        DEFINE_POINT dialog_sep_start, 315, kControlsTop
         DEFINE_POINT dialog_sep_end,   315, 100
 
         kButtonSepY = kControlsTop + 3*kButtonHeight + 3*kButtonGap + 2

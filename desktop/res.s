@@ -302,6 +302,35 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
+        kDialogLabelDefaultX    =  40
+        kDialogLabelRightX      = 160
+        kDialogValueLeft        = 170
+
+        kNameInputLeft = kDialogLabelDefaultX
+        kNameInputTop = 67
+        kNameInputWidth = 320
+
+        DEFINE_RECT_SZ name_input_rect, kNameInputLeft, kNameInputTop, kNameInputWidth, kTextBoxHeight
+        DEFINE_RECT_SZ name_input_erase_rect, kNameInputLeft+1, kNameInputTop+1, kNameInputWidth-2, kTextBoxHeight-2
+        DEFINE_POINT name_input_textpos, kNameInputLeft + kTextBoxTextHOffset, kNameInputTop + kTextBoxTextVOffset
+        DEFINE_POINT pos_dialog_title, 0, 18
+
+        DEFINE_POINT dialog_label_base_pos, kDialogLabelDefaultX, 30
+
+        DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
+
+;;; $00 = ok/cancel
+;;; $80 = ok (only)
+;;; $40 = yes/no/all/cancel
+prompt_button_flags:
+        .byte   0
+has_input_field_flag:
+        .byte   0
+
+format_erase_overlay_flag:      ; set when prompt is showing device picker
+        .byte   0
+
+
 ;;; ============================================================
 ;;; "About Apple II DeskTop" Dialog
 
@@ -342,7 +371,8 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-;;; Dialog used for Edit/Delete/Run a Shortcut ...
+;;; ============================================================
+;;; Dialog for Edit/Delete/Run a Shortcut...
 
 .params winfo_entry_picker
         kWindowId = $1B
@@ -381,23 +411,6 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        kDialogLabelDefaultX    =  40
-        kDialogLabelRightX      = 160
-        kDialogValueLeft        = 170
-
-        kNameInputLeft = kDialogLabelDefaultX
-        kNameInputTop = 67
-        kNameInputWidth = 320
-
-        DEFINE_RECT_SZ name_input_rect, kNameInputLeft, kNameInputTop, kNameInputWidth, kTextBoxHeight
-        DEFINE_RECT_SZ name_input_erase_rect, kNameInputLeft+1, kNameInputTop+1, kNameInputWidth-2, kTextBoxHeight-2
-        DEFINE_POINT name_input_textpos, kNameInputLeft + kTextBoxTextHOffset, kNameInputTop + kTextBoxTextVOffset
-        DEFINE_POINT pos_dialog_title, 0, 18
-
-        DEFINE_POINT dialog_label_base_pos, kDialogLabelDefaultX, 30
-
-        DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
-
         kEntryPickerCol1 =  10
         kEntryPickerCol2 = 115
         kEntryPickerCol3 = 220
@@ -423,24 +436,13 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_POINT entry_picker_ok_pos, 215, winfo_entry_picker::kHeight-8
         DEFINE_POINT entry_picker_cancel_pos, 45, winfo_entry_picker::kHeight-8
 
-enter_the_full_pathname_label:
-        PASCAL_STRING res_string_selector_label_enter_pathname
-enter_the_name_to_appear_label:
-        PASCAL_STRING res_string_selector_label_enter_name
-
-        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 39
-        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},   kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 49
-        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 58
-        DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 73
-        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},      kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 83
-        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},       kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 92
-        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},              kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset,101
-
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
         DEFINE_RECT entry_picker_all_items_rect, 6, 23, 344, winfo_entry_picker::kHeight-23
 
-;;; Used in Format/Erase dialogs
+;;; ============================================================
+;;; Format/Erase dialogs
+
         DEFINE_RECT select_volume_rect, 0, 0, 0, 0
 
 the_dos_33_disk_label:
@@ -455,18 +457,6 @@ the_disk_in_slot_label:
 
 buf_filename:
         .res    16, 0
-
-;;; $00 = ok/cancel
-;;; $80 = ok (only)
-;;; $40 = yes/no/all/cancel
-prompt_button_flags:
-        .byte   0
-has_input_field_flag:
-        .byte   0
-
-format_erase_overlay_flag:      ; set when prompt is showing device picker
-        .byte   0
-
 
 ;;; ============================================================
 ;;; Resources used for line edit (text input) controls. Used
@@ -496,6 +486,12 @@ LD921:  .byte   0
 
 ;;; ============================================================
 ;;; Resources for Add/Edit a Shortcut dialog
+
+enter_the_full_pathname_label:
+        PASCAL_STRING res_string_selector_label_enter_pathname
+enter_the_name_to_appear_label:
+        PASCAL_STRING res_string_selector_label_enter_name
+
 
 ;;; Padding between radio/checkbox and label
 kLabelPadding = 5
@@ -535,12 +531,26 @@ kRadioButtonLeft  = 332
 kRadioButtonHOffset = kLabelPadding
 kRadioControlHeight = 8         ; system font height - 1
 
-        ;; Widths are dynamically computed based on label
-        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   kRadioButtonLeft, 41, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
-        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, kRadioButtonLeft, 50, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      kRadioButtonLeft, 75, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_use_ctrl,       kRadioButtonLeft, 84, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
-        DEFINE_RECT_SZ rect_never_ctrl,              kRadioButtonLeft, 93, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        ;; Rect widths are dynamically computed based on label
+
+        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 37
+
+        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   kRadioButtonLeft, 39, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},   kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 47
+
+        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, kRadioButtonLeft, 48, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 56
+
+        DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 71
+
+        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      kRadioButtonLeft, 73, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},      kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 81
+
+        DEFINE_RECT_SZ rect_at_first_use_ctrl,       kRadioButtonLeft, 82, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},       kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 90
+
+        DEFINE_RECT_SZ rect_never_ctrl,              kRadioButtonLeft, 91, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},              kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 99
 
 ;;; ============================================================
 
