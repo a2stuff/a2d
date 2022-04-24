@@ -219,7 +219,7 @@ kListBoxOffsetTop = 30
 kListBoxLeft = kDialogLeft + kListBoxOffsetLeft
 kListBoxTop = kDialogTop + kListBoxOffsetTop
 kListBoxWidth = 150
-kListBoxHeight = kListItemHeight*kListRows
+kListBoxHeight = kListItemHeight*kListRows-1
 
 .params winfo_drive_select
         kWindowId = 2
@@ -1696,7 +1696,7 @@ CheckAlpha:
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
         stax    rect_highlight_row::y1
-        addax   #kListItemHeight, rect_highlight_row::y2
+        addax   #kListItemHeight-1, rect_highlight_row::y2
 
         lda     winfo_drive_select::window_id
         jsr     SetWinPort
@@ -2222,7 +2222,7 @@ device_index:
         ldx     #0              ; hi (A=lo)
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
-        addax   #kListItemHeight, list_entry_pos::ycoord
+        addax   #kListItemHeight-1, list_entry_pos::ycoord
         rts
 .endproc
 

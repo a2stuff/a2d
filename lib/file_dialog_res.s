@@ -138,7 +138,7 @@ kPageDelta = 7
 
 .params winfo_listbox
         kWidth = kListBoxWidth
-        kHeight = kListItemHeight * kPageDelta
+        kHeight = kListItemHeight * kPageDelta - 1
         kLeft =   kFilePickerDlgLeft + kControlsLeft + 1 ; +1 for external border
         kTop =    kFilePickerDlgTop + 28
 

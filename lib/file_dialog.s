@@ -1630,7 +1630,7 @@ d4:     .byte   0
         jsr     SetPortForList
         MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::cliprect
         copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
-        copy16  #kListItemHeight, file_dialog_res::picker_entry_pos::ycoord
+        copy16  #kListItemHeight-1, file_dialog_res::picker_entry_pos::ycoord
         copy    #0, index
 
 loop:   lda     index
@@ -1783,8 +1783,7 @@ tmp:    .byte   0
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
         stax    file_dialog_res::rect_selection::y1
-
-        add16_8 file_dialog_res::rect_selection::y1, #kListItemHeight, file_dialog_res::rect_selection::y2
+        addax   #kListItemHeight-1, file_dialog_res::rect_selection::y2
 
         jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
