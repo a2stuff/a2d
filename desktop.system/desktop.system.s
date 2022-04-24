@@ -17,22 +17,23 @@
 ;;;          :             :
 ;;;          | ProDOS      |
 ;;;   $BF00  +-------------+
-;;;          |             |
-;;;          :             :
-;;;          |             |
-;;;          | Copy Buffer |
-;;;   $4000  +-------------+
+;;;          |.............|
+;;;          :.............:
+;;;          |.............|
+;;;          |.(buffer)....|    * data buffer for copies to RAMCard
+;;;   $3A00  +-------------+
+;;;          | Settings    |
+;;;   $3980  +-------------+
 ;;;          |             |
 ;;;          |             |
 ;;;          |             |
 ;;;          | Code        |
 ;;;   $2000  +-------------+
-;;;          | Settings    |
-;;;   $1F80  +-------------+
+;;;          |.............|
 ;;;          |.(unused)....|
 ;;;   $1E00  +-------------+
 ;;;          |             |
-;;;          | Sel List    |    * holds selector list
+;;;          | Sel List    |    * holds SELECTOR.LIST
 ;;;   $1600  +-------------+
 ;;;          |             |
 ;;;          | Dst IO Buf  |    * writing copied files, DESKTOP.SYSTEM
@@ -57,7 +58,7 @@ src_io_buffer   := $E00         ; 1024 bytes for I/O
 dst_io_buffer   := $1200        ; 1024 bytes for I/O
 selector_buffer := $1600        ; Room for kSelectorListBufSize
 
-copy_buffer     := $4000
+copy_buffer     := $3A00
 kCopyBufferSize = MLI - copy_buffer
 
 SETTINGS        := copy_buffer - .sizeof(DeskTopSettings)
@@ -2170,5 +2171,3 @@ PreserveQuitCode        := PreserveQuitCodeImpl::start
 ;;; ============================================================
 
         .include "../lib/default_settings.s"
-
-        PAD_TO copy_buffer
