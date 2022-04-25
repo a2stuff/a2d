@@ -571,6 +571,7 @@ input2_dirty_flag:              ; stash dirty flag when input1 is active
         .byte   0
 
         FONT := DEFAULT_FONT
+        .define FD_EXTENDED 1
         .include "../lib/file_dialog_res.s"
 
 file_to_delete_label:

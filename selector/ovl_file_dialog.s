@@ -106,6 +106,7 @@ buf_input:         .res    68, 0 ; left of IP
 
 ;;; ============================================================
 
+        .define FD_EXTENDED 0
         .include "../lib/file_dialog_res.s"
 
 str_file_to_run:
@@ -179,7 +180,6 @@ ShiftDown               := app::ShiftDown
 buf_input1 := buf_input
 
 ;;; Required macro definitions:
-        .define FD_EXTENDED 0
         .include "../lib/file_dialog.s"
 
 ;;; ============================================================

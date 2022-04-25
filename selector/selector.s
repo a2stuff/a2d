@@ -53,7 +53,7 @@ _segoffset .set 0
         DEFSEG InvokerSegment, INVOKER, $160
         DEFSEG AppSegment, $4000, $6400
         DEFSEG AlertSegment, $D000, $800
-        DEFSEG Overlay1, OVERLAY_ADDR, $1700
+        DEFSEG Overlay1, OVERLAY_ADDR, $1600
         DEFSEG Overlay2, OVERLAY_ADDR, $D00
 
 ;;; ============================================================

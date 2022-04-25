@@ -62,8 +62,6 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         DEFINE_LABEL disk, res_string_label_disk, kControlsLeft, 25
 
-        DEFINE_POINT input1_label_pos, kControlsLeft, 112
-        DEFINE_POINT input2_label_pos, kControlsLeft, 135
 
 textbg1:
         .byte   0
@@ -76,14 +74,19 @@ checkerboard_pattern:
 kCommonInputWidth = 435
 kCommonInputHeight = kTextBoxHeight
 
-        DEFINE_RECT_SZ input1_rect, kControlsLeft, 113, kCommonInputWidth, kCommonInputHeight
-        DEFINE_RECT_SZ input1_clear_rect, kControlsLeft+1, 113+1, kCommonInputWidth-2, kCommonInputHeight-2
-        DEFINE_POINT input1_textpos, kControlsLeft + kTextBoxTextHOffset, 113 + kTextBoxTextVOffset
+        kInput1Y = 111
+        DEFINE_POINT input1_label_pos, kControlsLeft, kInput1Y-1
+        DEFINE_RECT_SZ input1_rect, kControlsLeft, kInput1Y, kCommonInputWidth, kCommonInputHeight
+        DEFINE_RECT_SZ input1_clear_rect, kControlsLeft+1, kInput1Y+1, kCommonInputWidth-2, kCommonInputHeight-2
+        DEFINE_POINT input1_textpos, kControlsLeft + kTextBoxTextHOffset, kInput1Y + kTextBoxTextVOffset
 
-        DEFINE_RECT_SZ input2_rect, kControlsLeft, 136, kCommonInputWidth, kCommonInputHeight
-        DEFINE_RECT_SZ input2_clear_rect, kControlsLeft+1, 136+1, kCommonInputWidth-2, kCommonInputHeight-2
-        DEFINE_POINT input2_textpos, kControlsLeft + kTextBoxTextHOffset, 136 + kTextBoxTextVOffset
-
+.if FD_EXTENDED
+        kInput2Y = 135
+        DEFINE_POINT input2_label_pos, kControlsLeft, kInput2Y-1
+        DEFINE_RECT_SZ input2_rect, kControlsLeft, kInput2Y, kCommonInputWidth, kCommonInputHeight
+        DEFINE_RECT_SZ input2_clear_rect, kControlsLeft+1, kInput2Y+1, kCommonInputWidth-2, kCommonInputHeight-2
+        DEFINE_POINT input2_textpos, kControlsLeft + kTextBoxTextHOffset, kInput2Y + kTextBoxTextVOffset
+.endif
 
 kFilePickerDlgWindowID  = $3E
 kFilePickerDlgWidth     = 500
