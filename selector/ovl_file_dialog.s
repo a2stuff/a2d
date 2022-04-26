@@ -121,7 +121,7 @@ start:  jsr     OpenWindow
         jsr     UpdateListFromPath
         jsr     InitInput
         jsr     PrepPath
-        jsr     RedrawInput
+        jsr     Activate
         copy    #$FF, line_edit_res::blink_ip_flag
         jmp     EventLoop
 

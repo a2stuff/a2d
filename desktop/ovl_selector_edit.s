@@ -57,8 +57,8 @@ finish: jsr     file_dialog::ReadDir
         bne     :+              ; already populated - preserve it!
         jsr     file_dialog::PrepPath
 :
-        jsr     file_dialog::f2::Update
-        jsr     file_dialog::f1::Update ; sets line_edit_res::ip_pos
+        jsr     file_dialog::f2::Activate ; needed to populate second control
+        jsr     file_dialog::f1::Activate ; sets line_edit_res::ip_pos
         copy    #$FF, line_edit_res::blink_ip_flag
         copy    #kMaxPathLength, line_edit_res::max_length
         jsr     file_dialog::InitDeviceNumber
@@ -174,7 +174,7 @@ jt_entry_name:
     END_IF
 
 
-        jsr     file_dialog::f1::HideIP ; Switch
+        jsr     file_dialog::Deactivate
 
         ;; Install name field handlers
         COPY_BYTES file_dialog::kJumpTableSize, jt_entry_name, file_dialog::jump_table
@@ -219,7 +219,7 @@ found_slash:
 
 finish: copy    #$80, file_dialog_res::allow_all_chars_flag
         copy    #kSelectorMaxNameLength, line_edit_res::max_length
-        jsr     file_dialog::RedrawInput
+        jsr     file_dialog::Activate
         rts
 .endproc
 
@@ -279,7 +279,7 @@ found:  cpy     #2
 ;;; ============================================================
 
 .proc HandleCancelName
-        jsr     file_dialog::f2::HideIP ; Switch
+        jsr     file_dialog::Deactivate
 
         ;; install pathname field handlers
         COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
@@ -292,7 +292,7 @@ found:  cpy     #2
         lda     input1_dirty_flag
         sta     line_edit_res::input_dirty_flag
 
-        jsr     file_dialog::f1::Update
+        jsr     file_dialog::Activate
         rts
 .endproc
 

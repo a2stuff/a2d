@@ -17,7 +17,7 @@
         jsr     file_dialog::UpdateListFromPath
         jsr     InstallCallbackTable
         jsr     file_dialog::PrepPath
-        jsr     file_dialog::RedrawInput
+        jsr     file_dialog::Activate
 
         copy    #$FF, line_edit_res::blink_ip_flag
         jmp     file_dialog::EventLoop

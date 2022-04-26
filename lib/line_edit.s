@@ -2,10 +2,10 @@
 ;;; API:
 ;;; * `Init` - init `line_edit_res` members
 ;;; * `Idle` - call from event loop; blinks IP
-;;; * `Update` - call to repaint control entirely, IP moved to end
+;;; * `Activate` - call to repaint control entirely, IP moved to end
+;;; * `Deactivate` - call to hide IP
 ;;; * `Click` - call with mapped `click_coords` populated
 ;;; * `Key` - call with `event_params` populated; filter out undesired printable chars
-;;; * `ShowIP` / `HideIP` - when changing focus
 ;;; Internal procs are prefixed with `_`
 ;;; TODO:
 ;;; * Add Activate/Deactivate that handle showing/hiding/positioning IP
@@ -74,12 +74,14 @@ ret:    rts
         rts
 .endproc
 
-.proc HideIP
+.proc _HideIP
         bit     line_edit_res::ip_flag
         bmi     _XDrawIP
         rts
 .endproc
-ShowIP := HideIP
+_ShowIP := _HideIP
+
+Deactivate := _HideIP
 
 ;;; ============================================================
 
@@ -104,17 +106,17 @@ ShowIP := HideIP
 
 ;;; ============================================================
 
-.proc Update
+.proc Activate
         jsr     _SetPort
 
         ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     HideIP
+        ;; jsr     _HideIP
 
         MGTK_CALL MGTK::PaintRect, clear_rect
         MGTK_CALL MGTK::MoveTo, textpos
         param_call DrawString, buf_text
         copy    buf_text, line_edit_res::ip_pos
-        jmp     ShowIP
+        jmp     _ShowIP
 .endproc
 
 ;;; ============================================================
@@ -181,10 +183,10 @@ loop:   add16   tw_params::width, textpos + MGTK::Point::xcoord, tw_params::widt
 :
         lda     tw_params::length
         pha
-        jsr     HideIP
+        jsr     _HideIP
         pla
         sta     line_edit_res::ip_pos
-        jsr     ShowIP
+        jsr     _ShowIP
 
 ret:    rts
 .endproc ; Click
@@ -250,9 +252,9 @@ ret:    rts
 
 .proc Key
         MGTK_CALL MGTK::ObscureCursor
-        jsr     HideIP
+        jsr     _HideIP
         jsr     :+
-        jmp     ShowIP
+        jmp     _ShowIP
 
 :       lda     event_params::key
 

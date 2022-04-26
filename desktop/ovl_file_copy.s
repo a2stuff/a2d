@@ -19,7 +19,7 @@
         jsr     file_dialog::UpdateListFromPath
         jsr     InstallSourceCallbackTable
         jsr     file_dialog::PrepPath
-        jsr     file_dialog::RedrawInput
+        jsr     file_dialog::Activate
 
         copy    #$FF, line_edit_res::blink_ip_flag
         jmp     file_dialog::EventLoop
@@ -62,7 +62,7 @@ jt_destination_filename:
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF
 
-        jsr     file_dialog::f1::HideIP ; Switch
+        jsr     file_dialog::Deactivate
 
         ;; install destination field handlers
         COPY_BYTES file_dialog::kJumpTableSize, jt_destination_filename, file_dialog::jump_table
@@ -111,7 +111,7 @@ jt_destination_filename:
         bne     :-
 :       sty     path_buf1
 
-done:   jsr     file_dialog::RedrawInput
+done:   jsr     file_dialog::Activate
 
         ;; Twiddle flags
         lda     line_edit_res::input_dirty_flag
@@ -156,7 +156,7 @@ done:   jsr     file_dialog::RedrawInput
 ;;; ============================================================
 
 .proc HandleCancelDestination
-        jsr     file_dialog::f2::HideIP ; Switch
+        jsr     file_dialog::Deactivate
 
         ;; install source field handlers
         COPY_BYTES file_dialog::kJumpTableSize, jt_source_filename, file_dialog::jump_table
@@ -180,7 +180,7 @@ done:   jsr     file_dialog::RedrawInput
         ;; If selection is "dirty", do this...
         jsr     file_dialog::DeviceOnLine
         jsr     file_dialog::UpdateListFromPath
-        jsr     file_dialog::RedrawInput
+        jsr     file_dialog::Activate
         rts
 
         ;; Otherwise do this...
@@ -205,7 +205,7 @@ L7289:  sta     file_dialog_res::selected_index
 :       jsr     file_dialog::UpdateScrollbarWithIndex
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
-        jsr     file_dialog::f1::Update
+        jsr     file_dialog::Activate
         rts
 .endproc
 

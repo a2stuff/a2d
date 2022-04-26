@@ -686,7 +686,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     AppendToPathBuf
         copy    #$FF, file_dialog_res::selected_index
         jsr     PrepPath
-        jsr     RedrawInput
+        jsr     Activate
 
         jmp     UpdateListFromPath
 .endproc
@@ -709,7 +709,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     UpdateListFromPath
 
         jsr     PrepPath
-        jsr     RedrawInput
+        jsr     Activate
         rts
 .endproc
 
@@ -739,7 +739,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     UpdateListFromPath
 
         jsr     PrepPath
-        jsr     RedrawInput
+        jsr     Activate
 
 ret:    rts
 .endproc
@@ -2220,7 +2220,8 @@ f2__Click := f2::Click
 
 PrepPath        := PrepPathF1
 Idle            := f1::Idle
-RedrawInput     := f1::Update
+Activate        := f1::Activate
+Deactivate      := f1::Deactivate
 Key             := f1::Key
 Click           := f1::Click
 
@@ -2240,10 +2241,15 @@ Idle:
         jpl     f1::Idle
         jmp     f2::Idle
 
-RedrawInput:
+Activate:
         bit     focus_in_input2_flag
-        jpl     f1::Update
-        jmp     f2::Update
+        jpl     f1::Activate
+        jmp     f2::Activate
+
+Deactivate:
+        bit     focus_in_input2_flag
+        jpl     f1::Deactivate
+        jmp     f2::Deactivate
 
 PrepPath:
         bit     focus_in_input2_flag
@@ -2283,7 +2289,7 @@ Click:
         ;; And restore path
         jsr     StripPathBufSegment
 
-        jsr     RedrawInput
+        jsr     Activate
 
         rts
 .endproc

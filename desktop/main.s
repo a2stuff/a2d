@@ -15352,7 +15352,7 @@ done:   rts
 .endscope ; line_edit
 line_edit__Init  := line_edit::Init
 line_edit__Idle  := line_edit::Idle
-line_edit__Update := line_edit::Update
+line_edit__Activate := line_edit::Activate
 line_edit__Click := line_edit::Click
 line_edit__Key  := line_edit::Key
 
@@ -15374,7 +15374,7 @@ line_edit__Key  := line_edit::Key
         jsr     line_edit__Init
         copy    #$80, line_edit_res::blink_ip_flag
         copy    #kMaxFilenameLength, line_edit_res::max_length
-        jmp     line_edit__Update
+        jmp     line_edit__Activate
 .endproc
 
 ;;; ============================================================

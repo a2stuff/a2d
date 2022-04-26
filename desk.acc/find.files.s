@@ -1014,7 +1014,7 @@ top_row:        .byte   0
         MGTK_CALL MGTK::OpenWindow, winfo_results
         MGTK_CALL MGTK::HideCursor
         jsr     DrawWindow
-        jsr     line_edit__Update
+        jsr     line_edit__Activate
         jsr     DrawResults
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
@@ -1080,7 +1080,7 @@ top_row:        .byte   0
 .endscope ; line_edit
 line_edit__Init := line_edit::Init
 line_edit__Idle := line_edit::Idle
-line_edit__Update := line_edit::Update
+line_edit__Activate := line_edit::Activate
 
 ;;; ============================================================
 
