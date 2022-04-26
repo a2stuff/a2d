@@ -90,7 +90,13 @@ kCommonInputHeight = kTextBoxHeight
 
 kFilePickerDlgWindowID  = $3E
 kFilePickerDlgWidth     = 500
+
+.if FD_EXTENDED
 kFilePickerDlgHeight    = 153
+.else
+kFilePickerDlgHeight    = 129
+.endif
+
 kFilePickerDlgLeft      = (kScreenWidth - kFilePickerDlgWidth) / 2
 kFilePickerDlgTop       = (kScreenHeight - kFilePickerDlgHeight) / 2
 
