@@ -36,4 +36,13 @@ str_1_char:
 str_2_spaces:
         PASCAL_STRING "  "
 
+;;; Internal: MapInfo for setting a clipping rect
+.params clip
+        DEFINE_POINT viewloc, 0, 0
+        .addr   MGTK::screen_mapbits
+        .byte   MGTK::screen_mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT maprect, 0, 0, 0, 0
+.endparams
+
 .endscope

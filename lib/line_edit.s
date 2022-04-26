@@ -56,7 +56,7 @@ ret:    rts
         xcoord := $6
         ycoord := $8
 
-        jsr     SetPort
+        jsr     _SetPort
 
         ;; TODO: Do this with a 1px rect instead of a line
         jsr     _CalcIPPos
@@ -83,8 +83,29 @@ ShowIP := HideIP
 
 ;;; ============================================================
 
-.proc Update
+.proc _SetPort
+        ;; Set the port
         jsr     SetPort
+
+        ;; Calculate a clip rect, maintaining the same drawing coordinates.
+        ptr := $06
+        MGTK_CALL MGTK::GetPort, ptr
+
+        ldy     #MGTK::MapInfo::viewloc
+        add16in (ptr),y, clear_rect+MGTK::Rect::x1, line_edit_res::clip::viewloc+MGTK::Point::xcoord
+        iny
+        add16in (ptr),y, clear_rect+MGTK::Rect::y1, line_edit_res::clip::viewloc+MGTK::Point::ycoord
+        COPY_STRUCT MGTK::Rect, clear_rect, line_edit_res::clip::maprect
+
+        ;; And set the clipping rect
+        MGTK_CALL MGTK::SetPortBits, line_edit_res::clip
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc Update
+        jsr     _SetPort
 
         ;; Unnecessary - the entire field will be repainted.
         ;; jsr     HideIP
@@ -100,7 +121,8 @@ ShowIP := HideIP
 ;;; Internal proc: used as part of insert/delete procs
 
 .proc _RedrawRightOfIP
-        jsr     SetPort
+        jsr     _SetPort
+
 
 PARAM_BLOCK point, $06
 xcoord  .word
@@ -143,8 +165,10 @@ width   .word
 
         ;; Iterate to find the position
         copy16  #buf_text+1, tw_params::data
-        copy16  #0, tw_params::width
-        copy    #0, tw_params::length
+        lda     #0
+        sta     tw_params::width
+        sta     tw_params::width+1
+        sta     tw_params::length
 loop:   add16   tw_params::width, textpos + MGTK::Point::xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
         bpl     :+
@@ -233,7 +257,8 @@ ret:    rts
 :       lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_ZERO
+        bne     modified
+
         ;; Not modified
         cmp     #CHAR_LEFT
         beq     _MoveIPLeft
@@ -252,14 +277,16 @@ ret:    rts
 
         cmp     #' '
         bcs     _InsertChar
-    ELSE
+
+        rts
+
         ;; Modified
+modified:
         cmp     #CHAR_LEFT
         beq     _MoveIPStart
 
         cmp     #CHAR_RIGHT
         beq     _MoveIPEnd
-    END_IF
 
         rts
 .endproc ; Key
@@ -313,7 +340,7 @@ ret:    rts
         sta     buf_text
         sta     line_edit_res::ip_pos
 
-        jsr     SetPort
+        jsr     _SetPort
         MGTK_CALL MGTK::PaintRect, clear_rect
 
         jsr     NotifyTextChanged

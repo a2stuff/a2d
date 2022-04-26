@@ -336,10 +336,10 @@ str_desktop2:
 str_selector:
         PASCAL_STRING kFilenameSelector
 
-        DEFINE_SET_MARK_PARAMS set_mark_overlay1_params, kOverlay1Offset
-        DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, kOverlay2Offset
-        DEFINE_READ_PARAMS read_overlay1_params, OVERLAY_ADDR, kOverlay1Size
-        DEFINE_READ_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlay2Size
+        DEFINE_SET_MARK_PARAMS set_mark_overlay1_params, kOverlayFileDialogOffset
+        DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, kOverlayCopyDialogOffset
+        DEFINE_READ_PARAMS read_overlay1_params, OVERLAY_ADDR, kOverlayFileDialogSize
+        DEFINE_READ_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlayCopyDialogSize
         DEFINE_CLOSE_PARAMS close_params2
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_desktop2_params, str_desktop2_2
@@ -1408,7 +1408,7 @@ cache:  copy    selector_list + kSelectorListNumPrimaryRunListOffset, num_primar
 
 ;;; ============================================================
 
-.proc LoadOverlay2
+.proc LoadOverlayCopyDialog
 start:  MLI_CALL OPEN, open_selector_params
         bne     error
         lda     open_selector_params::ref_num
@@ -1972,7 +1972,7 @@ L9C32:  lda     selected_index
         bne     L9C6F
         jsr     GetSelectedIndexFileInfo
         beq     L9C6F
-        jsr     LoadOverlay2
+        jsr     LoadOverlayCopyDialog
         lda     selected_index
         jsr     file_copier__Exec
         pha
