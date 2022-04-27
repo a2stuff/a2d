@@ -248,14 +248,12 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        bit     listbox_disabled_flag
-        bmi     :+
-
+        jsr     IsChangeDriveAllowed
+        bcs     :+
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
         bmi     :+
-        jsr     ChangeDrive
-:
-        rts
+        jsr     DoChangeDrive
+:       rts
     END_IF
 
         bit     is_apple_click_flag
@@ -267,22 +265,12 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::open_button_rect
         cmp     #MGTK::inrect_inside
      IF_EQ
-        bit     listbox_disabled_flag
-        bmi     l1
-        lda     file_dialog_res::selected_index
-        bpl     l2
-l1:     rts
-
-l2:     tax
-        lda     file_list_index,x
-        bmi     l4
-l3:     rts
-
-l4:
+        jsr     IsOpenAllowed
+        bcs     :+
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
-        bmi     l3
-        jsr     OpenSelectedItem
-        rts
+        bmi     :+
+        jsr     DoOpen
+:       rts
     END_IF
 
         ;; --------------------------------------------------
@@ -291,9 +279,8 @@ l4:
         MGTK_CALL MGTK::InRect, file_dialog_res::close_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        bit     listbox_disabled_flag
-        bmi     :+
-
+        jsr     IsCloseAllowed
+        bcs     :+
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         bmi     :+
         jsr     DoClose
@@ -452,7 +439,6 @@ folder: and     #$7F
         pla                     ; A = index
         jsr     GetNthFilename
         jsr     AppendToPathBuf
-        copy    #$FF, file_dialog_res::selected_index
 
         jsr     UpdateListFromPath
 
@@ -472,7 +458,7 @@ different:
         lda     file_dialog_res::selected_index
         jsr     InvertEntry
 :       lda     new_index
-        sta     file_dialog_res::selected_index
+        jsr     SetSelectedIndex
         jsr     InvertEntry
         jsr     HandleSelectionChange
 
@@ -485,8 +471,11 @@ different:
 
 ;;; ============================================================
 ;;; Refresh the list view from the current path
+;;; Clears selection.
 
 .proc UpdateListFromPath
+        lda     #$FF
+        jsr     SetSelectedIndex
         jsr     ReadDir
         jsr     UpdateScrollbar
         lda     #0
@@ -677,14 +666,13 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 ;;; ============================================================
 
-.proc OpenSelectedItem
+.proc DoOpen
         ldx     file_dialog_res::selected_index
         lda     file_list_index,x
         and     #$7F
 
         jsr     GetNthFilename
         jsr     AppendToPathBuf
-        copy    #$FF, file_dialog_res::selected_index
         jsr     PrepPath
         jsr     Activate
 
@@ -693,10 +681,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 ;;; ============================================================
 
-.proc ChangeDrive
-        lda     #$FF
-        sta     file_dialog_res::selected_index
-
+.proc DoChangeDrive
         jsr     ModifierDown
         sta     drive_dir_flag
         jsr     ShiftDown
@@ -715,26 +700,75 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 ;;; ============================================================
 
-.proc DoClose
+;;; Output: C=0 if allowed, C=1 if not.
+.proc IsChangeDriveAllowed
+        bit     listbox_disabled_flag
+        bmi     no
+        lda     DEVCNT
+        beq     no
+
+        clc
+        rts
+
+no:     sec
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Output: C=0 if allowed, C=1 if not.
+.proc IsOpenAllowed
+        bit     listbox_disabled_flag
+        bmi     no
+        lda     file_dialog_res::selected_index
+        bmi     no              ; no selection
+        tax
+        lda     file_list_index,x
+        bpl     no              ; not a folder
+
+        clc
+        rts
+
+no:     sec
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Output: C=0 if allowed, C=1 if not.
+.proc IsCloseAllowed
+        bit     listbox_disabled_flag
+        bmi     no
+
         ;; Walk back looking for last '/'
         ldx     path_buf
-        beq     ret             ; no-op if empty
+        beq     no
 :       lda     path_buf,x
         cmp     #'/'
         beq     :+
         dex
         bpl     :-
-        bmi     ret             ; always
+        bmi     no
 
         ;; Volume?
 :       cpx     #1
-        beq     ret             ; no-op
+        beq     no
+
+        clc
+        rts
+
+no:     sec
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc DoClose
+        jsr     IsCloseAllowed
+        bcs     ret
 
         ;; Remove last segment
         jsr     StripPathBufSegment
-
-        lda     #$FF
-        sta     file_dialog_res::selected_index
 
         jsr     UpdateListFromPath
 
@@ -814,30 +848,10 @@ ret:    rts
         jeq     KeyTab
 
         cmp     #CHAR_CTRL_O    ; Open
-        IF_EQ
-        lda     file_dialog_res::selected_index
-        bmi     exit
-        tax
-        lda     file_list_index,x
-        jpl     exit
-
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-        jsr     OpenSelectedItem
-        jmp     exit
-        END_IF
+        jeq     KeyOpen
 
         cmp     #CHAR_CTRL_C    ; Close
-        IF_EQ
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
-        jsr     DoClose
-        jmp     exit
-        END_IF
+        jeq     KeyClose
 
         cmp     #CHAR_DOWN
         jeq     KeyDown
@@ -861,12 +875,42 @@ exit:   rts
 
 ;;; ============================================================
 
+.proc KeyOpen
+        jsr     IsOpenAllowed
+        bcs     ret
+
+        jsr     SetPortForDialog
+        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        jsr     DoOpen
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc KeyClose
+        jsr     IsCloseAllowed
+        bcs     ret
+
+        jsr     SetPortForDialog
+        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
+        jsr     DoClose
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+
 .proc KeyReturn
 .if !FD_EXTENDED
         lda     file_dialog_res::selected_index
-        bpl     :+
+        bpl     :+              ; has a selection
         bit     line_edit_res::input_dirty_flag
-        bmi     :+
+        bmi     :+              ; input is dirty
         rts
 :
 .endif
@@ -892,12 +936,15 @@ exit:   rts
 ;;; ============================================================
 
 .proc KeyTab
+        jsr     IsChangeDriveAllowed
+        bcs     ret
+
         jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
-        jsr     ChangeDrive
-        rts
+        jsr     DoChangeDrive
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -920,8 +967,9 @@ key_meta_digit:
 l1:     rts
 
 l2:     jsr     InvertEntry
-        inc     file_dialog_res::selected_index
-        lda     file_dialog_res::selected_index
+        ldx     file_dialog_res::selected_index
+        inx
+        txa
         jmp     UpdateListSelection
 
 l3:     lda     #0
@@ -939,8 +987,9 @@ l3:     lda     #0
 l1:     rts
 
 l2:     jsr     InvertEntry
-        dec     file_dialog_res::selected_index
-        lda     file_dialog_res::selected_index
+        ldx     file_dialog_res::selected_index
+        dex
+        txa
         jmp     UpdateListSelection
 
 l3:     ldx     num_file_names
@@ -1174,8 +1223,34 @@ l1:     ldx     num_file_names
 
 ;;; ============================================================
 
-.proc UpdateListSelection
+;;; Inputs: A=index
+;;; Outputs: A=index
+.proc SetSelectedIndex
+        pha
         sta     file_dialog_res::selected_index
+        jsr     UpdateDynamicButtons
+        pla
+        rts
+.endproc
+
+;;; Inputs: A=flag (high bit = listbox disabled)
+.proc SetListBoxDisabled
+        sta     listbox_disabled_flag
+        FALL_THROUGH_TO UpdateDynamicButtons
+.endproc
+
+.proc UpdateDynamicButtons
+        jsr     SetPortForDialog
+        jsr     DrawChangeDriveLabel
+        jsr     DrawOpenLabel
+        jmp     DrawCloseLabel
+.endproc
+
+;;; ============================================================
+
+;;; Inputs: A=index
+.proc UpdateListSelection
+        jsr     SetSelectedIndex
         jsr     HandleSelectionChange
 
         lda     file_dialog_res::selected_index
@@ -1218,30 +1293,81 @@ l1:     ldx     num_file_names
         MGTK_CALL MGTK::SetPenMode, penXOR
 
         MGTK_CALL MGTK::FrameRect, file_dialog_res::ok_button_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::cancel_button_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::change_drive_button_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::open_button_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
+
         MGTK_CALL MGTK::MoveTo, file_dialog_res::ok_button_pos
         param_call DrawString, file_dialog_res::ok_button_label
-
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::open_button_rect
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
-        param_call DrawString, file_dialog_res::open_button_label
-
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
-        param_call DrawString, file_dialog_res::close_button_label
-
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::cancel_button_rect
         MGTK_CALL MGTK::MoveTo, file_dialog_res::cancel_button_pos
         param_call DrawString, file_dialog_res::cancel_button_label
 
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::change_drive_button_rect
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
-        param_call DrawString, file_dialog_res::change_drive_button_label
+        jsr     DrawChangeDriveLabel
+        jsr     DrawOpenLabel
+        jsr     DrawCloseLabel
 
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPattern, file_dialog_res::winfo::penpattern
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
         MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
         MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep_end
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc DrawOpenLabel
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
+        param_call DrawString, file_dialog_res::open_button_label
+        jsr     IsOpenAllowed
+        bcc     :+
+        param_call DisableButton, file_dialog_res::open_button_rect
+:       rts
+.endproc
+
+;;; ============================================================
+
+.proc DrawCloseLabel
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
+        param_call DrawString, file_dialog_res::close_button_label
+        jsr     IsCloseAllowed
+        bcc     :+
+        param_call DisableButton, file_dialog_res::close_button_rect
+:       rts
+.endproc
+
+;;; ============================================================
+
+.proc DrawChangeDriveLabel
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
+        param_call DrawString, file_dialog_res::change_drive_button_label
+        jsr     IsChangeDriveAllowed
+        bcc     :+
+        param_call DisableButton, file_dialog_res::change_drive_button_rect
+:       rts
+.endproc
+
+;;; ============================================================
+
+.proc DisableButton
+        ptr := $06
+        stax    ptr
+
+        ldy     #0
+        add16in (ptr),y, #1, file_dialog_res::tmp_rect::x1
+        iny
+        add16in (ptr),y, #1, file_dialog_res::tmp_rect::y1
+        iny
+        sub16in (ptr),y, #1, file_dialog_res::tmp_rect::x2
+        iny
+        sub16in (ptr),y, #1, file_dialog_res::tmp_rect::y2
+
+        MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
+        MGTK_CALL MGTK::SetPenMode, penOR
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::tmp_rect
         rts
 .endproc
 
@@ -1372,7 +1498,8 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
         lda     #0
         sta     path_buf
         param_call AppendToPathBuf, on_line_buffer
-        copy    #$FF, file_dialog_res::selected_index
+        lda     #$FF
+        jsr     SetSelectedIndex
         rts
 .endproc
 
@@ -1441,7 +1568,7 @@ retry:
         beq     :+
         jsr     DeviceOnLine
         lda     #$FF
-        sta     file_dialog_res::selected_index
+        jsr     SetSelectedIndex
 .if !FD_EXTENDED
         lda     #$FF
 .endif
@@ -1455,7 +1582,7 @@ retry:
         beq     :+
         jsr     DeviceOnLine
         lda     #$FF
-        sta     file_dialog_res::selected_index
+        jsr     SetSelectedIndex
 .if FD_EXTENDED
         sta     open_dir_flag
 .endif
@@ -2387,7 +2514,7 @@ common:
 
         ;; Build full path (with seleciton or not) into `path_buf`
         lda     file_dialog_res::selected_index
-        sta     current_selection
+        pha
         bmi     compare_paths   ; no selection
 
         tax
@@ -2424,14 +2551,11 @@ update_flag:
         sta     line_edit_res::input_dirty_flag
 
         ;; Restore selection following `AppendToPathBuf` call above.
-        lda     current_selection
+        pla
         sta     file_dialog_res::selected_index
         bmi     :+
         jsr     StripPathBufSegment
 :       rts
-
-current_selection:
-        .byte   0
 .endproc
 .if FD_EXTENDED
 NotifyTextChangedF1 := NotifyTextChanged::f1

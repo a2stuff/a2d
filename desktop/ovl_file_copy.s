@@ -74,7 +74,7 @@ jt_destination_filename:
         lda     file_dialog_res::selected_index
         sta     LD921
         lda     #$FF
-        sta     file_dialog_res::selected_index
+        jsr     file_dialog::SetSelectedIndex
         jsr     file_dialog::DeviceOnLine
         jsr     file_dialog::UpdateListFromPath
 
@@ -162,7 +162,8 @@ done:   jsr     file_dialog::Activate
         COPY_BYTES file_dialog::kJumpTableSize, jt_source_filename, file_dialog::jump_table
 
         copy    #0, file_dialog::only_show_dirs_flag
-        copy    #$FF, file_dialog_res::selected_index
+        lda     #$FF
+        jsr     file_dialog::SetSelectedIndex
         copy    #0, file_dialog::focus_in_input2_flag
 
         lda     line_edit_res::input_dirty_flag
@@ -198,7 +199,8 @@ L7281:  jsr     file_dialog::ReadDir
         bcs     L7272
         lda     LD921
 
-L7289:  sta     file_dialog_res::selected_index
+L7289:
+        jsr     file_dialog::SetSelectedIndex
         cmp     #$FF            ; if no selection...
         bne     :+              ; make scroll index 0
         lda     #$00

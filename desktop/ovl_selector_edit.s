@@ -48,7 +48,7 @@ finish: jsr     file_dialog::ReadDir
         lda     #$00
         bcs     :+
         param_call file_dialog::FindFilenameIndex, buffer
-        sta     file_dialog_res::selected_index
+        jsr     file_dialog::SetSelectedIndex
         jsr     file_dialog::CalcTopIndex
 :       jsr     file_dialog::UpdateScrollbarWithIndex
         jsr     file_dialog::UpdateDiskName
@@ -181,7 +181,7 @@ jt_entry_name:
 
         lda     #$80
         sta     file_dialog::focus_in_input2_flag
-        sta     file_dialog::listbox_disabled_flag
+        jsr     file_dialog::SetListBoxDisabled
 
         lda     line_edit_res::input_dirty_flag
         sta     input1_dirty_flag
@@ -287,8 +287,8 @@ found:  cpy     #2
         copy    #0, file_dialog_res::allow_all_chars_flag
         copy    #kMaxPathLength, line_edit_res::max_length
         lda     #$00
-        sta     file_dialog::listbox_disabled_flag
         sta     file_dialog::focus_in_input2_flag
+        jsr     file_dialog::SetListBoxDisabled
         lda     input1_dirty_flag
         sta     line_edit_res::input_dirty_flag
 

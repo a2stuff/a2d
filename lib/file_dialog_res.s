@@ -68,6 +68,8 @@ textbg1:
 textbg2:
         .byte   $7F
 
+        DEFINE_RECT tmp_rect, 0, 0, 0, 0
+
 checkerboard_pattern:
         .byte   $55, $AA, $55, $AA, $55, $AA, $55, $AA
 

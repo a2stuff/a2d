@@ -62,9 +62,10 @@ Project Page: https://github.com/a2stuff/a2d
 * File Picker Dialogs:
   * Type-down selection (while holding **Apple**) is supported. ([#610](https://github.com/a2stuff/a2d/issues/610))
   * Pressing **Apple+Tab** (or **Shift+Tab**, when detectable), or holding **Apple** (or **Shift**, when detectable) while clicking Change Drive reverses the order in which the drive changes. ([#598](https://github.com/a2stuff/a2d/issues/598), [#605](https://github.com/a2stuff/a2d/issues/605))
+  * The Change Drive, Open and Close buttons are now dimmed when disabled.
 * Keyboard-related changes:
   * Holding **Solid-Apple** while double-clicking, or holding **Apple** while using **File > Open**, or **Open-Apple+Solid-Apple+O**, or **Open-Apple+Solid-Apple+Down** opens the selected items then closes parent window. ([#9](https://github.com/a2stuff/a2d/issues/9), [#625](https://github.com/a2stuff/a2d/issues/625), ([#660](https://github.com/a2stuff/a2d/issues/660))
-  * Holding **Apple** while clicking a window's close box, or pressing **Open-Apple+Solid-Apple+W**  closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266), [#626](https://github.com/a2stuff/a2d/issues/626))
+  * Holding **Apple** while clicking a window's close box, or pressing **Open-Apple+Solid-Apple+W** closes all windows. ([#266](https://github.com/a2stuff/a2d/issues/266), [#626](https://github.com/a2stuff/a2d/issues/626))
   * Holding **Open-Apple** on while clicking a selected file deselects it. ([#359](https://github.com/a2stuff/a2d/issues/359))
   * Holding **Open-Apple** while dragging a selection box around files extends selection. ([#546](https://github.com/a2stuff/a2d/issues/546))
   * **Shift** works as modifier to extend selection, on IIgs and systems with Shift key mod. ([#340](https://github.com/a2stuff/a2d/issues/340))
@@ -93,7 +94,9 @@ Project Page: https://github.com/a2stuff/a2d
   * Expanded to include both date and time. ([#11](https://github.com/a2stuff/a2d/issues/11))
   * Shows 12/24hr setting. ([#220](https://github.com/a2stuff/a2d/issues/220))
 * Sort Directory: Support as many entries as DeskTop supports. ([#86](https://github.com/a2stuff/a2d/issues/86))
-* Show Text File: Keyboard support. **Esc** quits, arrows scroll, **Space** toggles modes. ([#4](https://github.com/a2stuff/a2d/issues/4), [#403](https://github.com/a2stuff/a2d/issues/403)) Improved scrollbar handling. ([#422](https://github.com/a2stuff/a2d/issues/422))
+* Show Text File:
+  * Keyboard support. **Esc** quits, arrows scroll, **Space** toggles modes. ([#4](https://github.com/a2stuff/a2d/issues/4), [#403](https://github.com/a2stuff/a2d/issues/403))
+  * Improved scrollbar handling. ([#422](https://github.com/a2stuff/a2d/issues/422))
 
 ### Additional Desk Accessories
 

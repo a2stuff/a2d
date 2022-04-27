@@ -667,6 +667,23 @@ Repeat for each file picker:
 * Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, with the IP at the end. Click a folder. Verify that the path updates, with the file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.
 * Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, after the insertion point. Edit the file name. Click a folder. Verify that the path updates, with the edited file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the edited file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.
 
+Repeat for each file picker:
+* Configure a system with only one drive. Verify that the file picker's Change Drive button is dimmed.
+* While there is no selection in the list box, verify that the Open button is dimmed.
+* Select a folder in the list box. Verify that the Open button is not dimmed.
+* Select a non-folder in the list box. Verify that the Open button is dimmed.
+* Navigate to the root directory of a disk. Verify that the Close button is dimmed.
+* Open a folder. Verify that the Close button is dimmed, that there is no selection, and that Open is dimmed. Hit Close until at the root. Verify that Close is dimmed.
+* Verify that dimmed buttons don't respond to clicks.
+* Verify that dimmed buttons don't respond to keyboard shortcuts (Tab for Change Drive, Control+O for Open, Control+C for Close).
+
+For DeskTop's Add/Edit a Shortcut file picker:
+* Select a file and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close are dimmed. Click Cancel. Verify that the buttons return to their previous state.
+* Select a folder and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close are dimmed. Click Cancel. Verify that the buttons return to their previous state.
+
+For DeskTop's Copy a File file picker:
+* Select a file and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close remain active and initialize to the correct state based on the selection. Click Cancel. Verify that the buttons return to their previous state when selection is restored.
+
 # Text Input Fields
 
 This covers:

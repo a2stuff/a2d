@@ -20,6 +20,7 @@ ep_loop:
 ;;; ============================================================
 
 penXOR:         .byte   MGTK::penXOR
+penOR:          .byte   MGTK::penOR
 pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 
