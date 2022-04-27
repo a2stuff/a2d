@@ -492,9 +492,6 @@ str_kb_suffix:
 file_count:
         .word   0
 
-LD921:  .byte   0
-
-
 ;;; ============================================================
 ;;; Resources for Add/Edit a Shortcut dialog
 
@@ -568,6 +565,9 @@ kRadioControlHeight = 8         ; system font height - 1
 input1_dirty_flag:              ; stash dirty flag when input2 is active
         .byte   0
 input2_dirty_flag:              ; stash dirty flag when input1 is active
+        .byte   0
+
+saved_src_index:
         .byte   0
 
         FONT := DEFAULT_FONT

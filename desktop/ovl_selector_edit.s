@@ -173,7 +173,6 @@ jt_entry_name:
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF
 
-
         jsr     file_dialog::Deactivate
 
         ;; Install name field handlers

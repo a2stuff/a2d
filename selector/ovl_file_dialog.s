@@ -148,10 +148,12 @@ start:  jsr     OpenWindow
 
 .proc HandleOk
         param_call VerifyValidNonVolumePath, buf_input1
-        beq     :+
-        rts
+    IF_NE
+        lda     #AlertID::selector_unable_to_run
+        jmp     app::ShowAlert
+    END_IF
 
-:       ldx     saved_stack
+        ldx     saved_stack
         txs
         ldy     #<buf_input1
         ldx     #>buf_input1

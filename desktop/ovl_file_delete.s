@@ -48,11 +48,11 @@ jt_filename:
 
 .proc HandleOk
         param_call file_dialog::VerifyValidNonVolumePath, path_buf0
-        beq     :+
+    IF_NE
         lda     #ERR_INVALID_PATHNAME
-        jsr     JUMP_TABLE_SHOW_ALERT
-        rts
-:
+        jmp     JUMP_TABLE_SHOW_ALERT
+    END_IF
+
         jsr     file_dialog::CloseWindow
         copy16  #path_buf0, $6
         ldx     file_dialog::saved_stack

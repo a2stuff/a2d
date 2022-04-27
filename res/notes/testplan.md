@@ -677,12 +677,19 @@ Repeat for each file picker:
 * Verify that dimmed buttons don't respond to clicks.
 * Verify that dimmed buttons don't respond to keyboard shortcuts (Tab for Change Drive, Control+O for Open, Control+C for Close).
 
-For DeskTop's Add/Edit a Shortcut file picker:
+For DeskTop's Shortcuts > Add/Edit a Shortcut... file picker:
 * Select a file and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close are dimmed. Click Cancel. Verify that the buttons return to their previous state.
 * Select a folder and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close are dimmed. Click Cancel. Verify that the buttons return to their previous state.
 
-For DeskTop's Copy a File file picker:
+For DeskTop's File > Copy a File... file picker:
 * Select a file and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close remain active and initialize to the correct state based on the selection. Click Cancel. Verify that the buttons return to their previous state when selection is restored.
+
+For DeskTop's File > Delete a File... file picker:
+* Navigate to an empty volume and don't select anything. Click OK. Verify that an alert is shown.
+
+For Selector's File > Run a Program... file picker:
+* Navigate to an empty volume and don't select anything. Click OK. Verify that an alert is shown.
+
 
 # Text Input Fields
 

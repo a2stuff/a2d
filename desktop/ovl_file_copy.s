@@ -72,7 +72,7 @@ jt_destination_filename:
         sta     file_dialog::only_show_dirs_flag
         sta     file_dialog::focus_in_input2_flag
         lda     file_dialog_res::selected_index
-        sta     LD921
+        sta     saved_src_index
         lda     #$FF
         jsr     file_dialog::SetSelectedIndex
         jsr     file_dialog::DeviceOnLine
@@ -197,7 +197,7 @@ L7272:  jsr     file_dialog::DeviceOnLine
 
 L7281:  jsr     file_dialog::ReadDir
         bcs     L7272
-        lda     LD921
+        lda     saved_src_index
 
 L7289:
         jsr     file_dialog::SetSelectedIndex
