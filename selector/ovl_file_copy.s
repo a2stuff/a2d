@@ -906,7 +906,7 @@ str_space:
         lda     winfo::window_id
         jsr     app::GetWindowPort
 
-        MGTK_CALL MGTK::SetPenMode, app::notpencopy
+        MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::SetPenSize, app::pensize_frame
         MGTK_CALL MGTK::FrameRect, rect_frame
         MGTK_CALL MGTK::SetPenSize, app::pensize_normal
@@ -921,7 +921,7 @@ str_space:
 .proc DrawWindowContent
         lda     winfo::window_id
         jsr     app::GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, app::pencopy
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
 
 ep2:    dec     file_count
@@ -933,7 +933,7 @@ ep2:    dec     file_count
 
         jsr     PopulateCount
         MGTK_CALL MGTK::SetPortBits, setportbits_params
-        MGTK_CALL MGTK::SetPenMode, app::pencopy
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_count
         param_call app::AdjustPathCase, pathname1
         MGTK_CALL MGTK::MoveTo, pos_copying
@@ -975,13 +975,13 @@ ep2:    dec     file_count
 
 LAACB:  lda     winfo::window_id
         jsr     app::GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, app::pencopy
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_not_enough_room
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_click_ok
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call app::DrawString, app::ok_button_label
@@ -993,13 +993,13 @@ LAACB:  lda     winfo::window_id
 .proc HandleErrorCode
         lda     winfo::window_id
         jsr     app::GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, app::pencopy
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_error_download
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_copy_incomplete
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call app::DrawString, app::ok_button_label
@@ -1015,42 +1015,42 @@ SetPointerCursor:
 ;;; ============================================================
 
 event_loop:
-        MGTK_CALL MGTK::GetEvent, app::event_params
-        lda     app::event_params::kind
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         beq     HandleButtonDown
         cmp     #MGTK::EventKind::key_down
         bne     event_loop
-        lda     app::event_params::key
+        lda     event_params::key
         cmp     #CHAR_RETURN
         bne     event_loop
         lda     winfo::window_id
         jsr     app::GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     app::SetWatchCursor
         rts
 
 HandleButtonDown:
-        MGTK_CALL MGTK::FindWindow, app::findwindow_params
-        lda     app::findwindow_params::which_area
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
         beq     event_loop
         cmp     #MGTK::Area::content
         bne     event_loop
-        lda     app::findwindow_params::window_id
+        lda     findwindow_params::window_id
         cmp     winfo::window_id
         bne     event_loop
         lda     winfo::window_id
         jsr     app::GetWindowPort
         lda     winfo::window_id
-        sta     app::screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, app::screentowindow_params
-        MGTK_CALL MGTK::MoveTo, app::screentowindow_windowx
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     event_loop
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     LABE6
         bmi     event_loop
@@ -1059,14 +1059,14 @@ HandleButtonDown:
 
 LABE6:  lda     #$00
         sta     LAC53
-LABEB:  MGTK_CALL MGTK::GetEvent, app::event_params
-        lda     app::event_params::kind
+LABEB:  MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_up
         beq     LAC3C
         lda     winfo::window_id
-        sta     app::screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, app::screentowindow_params
-        MGTK_CALL MGTK::MoveTo, app::screentowindow_windowx
+        sta     screentowindow_window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     LAC1C
@@ -1078,7 +1078,7 @@ LAC1C:  lda     LAC53
         bne     LAC24
         jmp     LABEB
 
-LAC24:  MGTK_CALL MGTK::SetPenMode, app::penXOR
+LAC24:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         lda     LAC53
         clc
@@ -1090,7 +1090,7 @@ LAC3C:  lda     LAC53
         beq     LAC44
         return  #$FF
 
-LAC44:  MGTK_CALL MGTK::SetPenMode, app::penXOR
+LAC44:  MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
         return  #$00
 

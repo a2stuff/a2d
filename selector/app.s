@@ -8,6 +8,32 @@
 
         .org kAppSegmentAddress
 
+
+;;; ============================================================
+;;; MGTK library
+
+        ASSERT_ADDRESS ::MGTKEntry
+        .include "../mgtk/mgtk.s"
+
+;;; ============================================================
+;;; Generic Resources (outside scope for convenience)
+
+pencopy:        .byte   MGTK::pencopy
+penOR:          .byte   MGTK::penOR
+penXOR:         .byte   MGTK::penXOR
+penBIC:         .byte   MGTK::penBIC
+notpencopy:     .byte   MGTK::notpencopy
+notpenOR:       .byte   MGTK::notpenOR
+notpenXOR:      .byte   MGTK::notpenXOR
+notpenBIC:      .byte   MGTK::notpenBIC
+
+;;; ============================================================
+;;; Event Params (and overlapping param structs)
+
+        .include "../lib/event_params.s"
+
+;;; ============================================================
+
 .scope app
 
 ;;; See docs/Selector_List_Format.md for file format
@@ -20,22 +46,7 @@ kShortcutRunDeskTop = res_char_button_desktop_shortcut
 kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut
 
 ;;; ============================================================
-;;; MGTK library
-
-        ASSERT_ADDRESS ::MGTKEntry
-        .include "../mgtk/mgtk.s"
-
-;;; ============================================================
 ;;; Resources
-
-pencopy:        .byte   MGTK::pencopy
-penOR:          .byte   MGTK::penOR
-penXOR:         .byte   MGTK::penXOR
-penBIC:         .byte   MGTK::penBIC
-notpencopy:     .byte   MGTK::notpencopy
-notpenOR:       .byte   MGTK::notpenOR
-notpenXOR:      .byte   MGTK::notpenXOR
-notpenBIC:      .byte   MGTK::notpenBIC
 
 saved_stack:
         .byte   $00
@@ -199,12 +210,6 @@ watch_cursor:
         .byte   PX(%0011111),PX(%1100000)
         .byte   PX(%0000000),PX(%0000000)
         .byte   5, 5
-
-
-;;; ============================================================
-;;; Event Params (and overlapping param structs)
-
-        .include "../lib/event_params.s"
 
 ;;; ============================================================
 

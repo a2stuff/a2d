@@ -19,13 +19,6 @@ ep_loop:
 
 ;;; ============================================================
 
-penXOR:         .byte   MGTK::penXOR
-penOR:          .byte   MGTK::penOR
-pencopy:        .byte   MGTK::pencopy
-notpencopy:     .byte   MGTK::notpencopy
-
-        .include "../lib/event_params.s"
-
 .params getwinport_params
 window_id:     .byte   0
 a_grafport:    .addr   window_grafport
