@@ -44,3 +44,12 @@ This Code of Conduct is adapted from the [Contributor Covenant][homepage], versi
 
 [homepage]: http://contributor-covenant.org
 [version]: http://contributor-covenant.org/version/1/4/
+
+## Addendum
+
+Further examples of unacceptable behavior due to the burden on project maintainers and the noise created for other project participants:
+
+* Posting a large number of issues in a short time frame.
+* Posting multiple issues about closely related topics when one would suffice.
+* Excessively cross-linking issues.
+* Replying to closed issues asking for reconsideration, without providing additional data.
