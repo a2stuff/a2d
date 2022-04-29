@@ -111,6 +111,11 @@ routine_table:
 
         copy    #$FF, file_dialog_res::selected_index
 
+        lda     #$40            ; not $00 or $80
+        sta     open_button_dimmed_flag
+        sta     close_button_dimmed_flag
+        sta     change_drive_button_dimmed_flag
+
 .if FD_EXTENDED
         pla
         asl     a
@@ -250,6 +255,7 @@ ret:    rts
     IF_EQ
         jsr     IsChangeDriveAllowed
         bcs     :+
+        jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
         bmi     :+
         jsr     DoChangeDrive
@@ -267,6 +273,7 @@ ret:    rts
      IF_EQ
         jsr     IsOpenAllowed
         bcs     :+
+        jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         bmi     :+
         jsr     DoOpen
@@ -281,6 +288,7 @@ ret:    rts
     IF_EQ
         jsr     IsCloseAllowed
         bcs     :+
+        jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         bmi     :+
         jsr     DoClose
@@ -293,6 +301,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
+        jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
         jsr     HandleOk
@@ -305,6 +314,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
+        jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
         jsr     HandleCancel
@@ -316,6 +326,7 @@ ret:    rts
 
         bit     extra_controls_flag
     IF_NS
+        jsr     SetPortForDialog
         jsr     click_handler_hook
         bpl     :+
         rts
@@ -1319,35 +1330,68 @@ l1:     ldx     num_file_names
 
 ;;; ============================================================
 
+;;; bit 7 set = dimmed, $00 = not dimmed, anything else = ???
+open_button_dimmed_flag:
+        .byte   0
+close_button_dimmed_flag:
+        .byte   0
+change_drive_button_dimmed_flag:
+        .byte   0
+
+;;; ============================================================
+
 .proc DrawOpenLabel
+        jsr     IsOpenAllowed
+        lda     #0
+        ror                     ; C into high bit
+        cmp     open_button_dimmed_flag
+        beq     ret             ; no change
+
+        sta     open_button_dimmed_flag
         MGTK_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
         param_call DrawString, file_dialog_res::open_button_label
-        jsr     IsOpenAllowed
-        bcc     :+
+        bit     open_button_dimmed_flag
+        bpl     ret
         param_call DisableButton, file_dialog_res::open_button_rect
-:       rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
 
 .proc DrawCloseLabel
+        jsr     IsCloseAllowed
+        lda     #0
+        ror                     ; C into high bit
+        cmp     close_button_dimmed_flag
+        beq     ret             ; no change
+
+        sta     close_button_dimmed_flag
         MGTK_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
         param_call DrawString, file_dialog_res::close_button_label
-        jsr     IsCloseAllowed
-        bcc     :+
+        bit     close_button_dimmed_flag
+        bpl     ret
         param_call DisableButton, file_dialog_res::close_button_rect
-:       rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
 
 .proc DrawChangeDriveLabel
+        jsr     IsChangeDriveAllowed
+        lda     #0
+        ror                     ; C into high bit
+        cmp     change_drive_button_dimmed_flag
+        beq     ret             ; no change
+
+        sta     change_drive_button_dimmed_flag
         MGTK_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
         param_call DrawString, file_dialog_res::change_drive_button_label
-        jsr     IsChangeDriveAllowed
-        bcc     :+
+        bpl     ret
         param_call DisableButton, file_dialog_res::change_drive_button_rect
-:       rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
