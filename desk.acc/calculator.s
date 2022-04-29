@@ -646,21 +646,37 @@ exit := OnClick::exit
 .proc OnKeyPress
         lda     event_params::modifiers
         bne     bail
+
         lda     event_params::key
-        cmp     #CHAR_ESCAPE
-        bne     trydel
+
+        cmp     #CHAR_RETURN    ; Treat Return as Equals
+        bne     :+
+        lda     #'='
+        bne     process         ; always
+:
+        cmp     #CHAR_CLEAR     ; Treat Control+X as Clear
+        bne     :+
+        lda     #'C'
+        bne     process         ; always
+:
+        cmp     #CHAR_ESCAPE    ; Treat Escape as Clear *or* Close
+        bne     :+
         lda     calc_p
         bne     clear           ; empty state?
         lda     calc_l
         beq     exit            ; if so, exit DA
 clear:  lda     #'C'            ; otherwise turn Escape into Clear
 
-trydel: cmp     #CHAR_DELETE    ; Delete?
-        beq     :+
+:
+        cmp     #CHAR_DELETE    ; Delete?
+        beq     process
+
         cmp     #'`'            ; lowercase range?
-        bcc     :+
+        bcc     process
         and     #$5F            ; convert to uppercase
-:       jmp     ProcessKey
+
+process:
+        jmp     ProcessKey
 bail:
 .endproc
 

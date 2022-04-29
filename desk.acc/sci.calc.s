@@ -766,6 +766,12 @@ loop:   lda     text_buffer1,x
         jmp     DisplayBuffer1
     END_IF
 
+        cmp     #CHAR_CLEAR
+    IF_EQ
+        lda     #Function::clear
+        jmp     ProcessFunction
+    END_IF
+
         cmp     #CHAR_RETURN
     IF_EQ
         lda     #Function::equals
