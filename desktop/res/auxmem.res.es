@@ -2,7 +2,7 @@
 .define res_string_menu_bar_item_view "Listado"
 .define res_string_menu_bar_item_special "Especial"
 .define res_string_menu_bar_item_startup "Arranque"
-.define res_string_menu_bar_item_selector "Accesos directos"
+.define res_string_menu_bar_item_selector "Atajos"
 .define res_string_menu_item_new_folder "Nuevo Folder..."
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "Abrir"
@@ -13,7 +13,9 @@
 .define res_string_menu_item_select_all "Seleccionar Todo"
 .define res_char_menu_item_select_all_shortcut 'A'
 .define res_string_menu_item_copy_file "Copiar un Archivo..."
+.define res_string_menu_item_copy_selection "Copiar en..."
 .define res_string_menu_item_delete_file "Borrar un Archivo..."
+.define res_string_menu_item_delete_selection "Borrar"
 .define res_string_menu_item_eject "Expulsar Disco"
 .define res_char_menu_item_eject_shortcut 'E'
 .define res_string_menu_item_quit "Salir"
@@ -93,7 +95,7 @@
 .define res_string_download_dialog_title "Copiar a RAMDisk..."
 .define res_string_download_error_ramcard_full "La RAMDisk est\x10 llena. La copia no se ha finalizado."
 .define res_string_warning_insert_system_disk "Por favor introduzca un disco de sistema."
-.define res_string_warning_selector_list_full "La lista est\x10 llena. Debe borrar un acceso directo antes de agregar m\x10s."
+.define res_string_warning_selector_list_full "La lista est\x10 llena. Debe borrar un atajo antes de agregar m\x10s."
 .define res_string_warning_window_must_be_closed "Tiene que cerrar una ventana antes de abrir este \x12tem."
 .define res_string_warning_too_many_files "[Hay demasiados archivos para abrir este elemento!"
 .define res_string_warning_too_many_windows "[Hay demasiadas ventanas abiertas en el escritorio!"

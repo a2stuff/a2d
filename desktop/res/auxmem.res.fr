@@ -13,7 +13,9 @@
 .define res_string_menu_item_select_all "Tout s{lectionner"
 .define res_char_menu_item_select_all_shortcut 'A'
 .define res_string_menu_item_copy_file "Copier un fichier..."
+.define res_string_menu_item_copy_selection "Copier vers..."
 .define res_string_menu_item_delete_file "Effacer un fichier..."
+.define res_string_menu_item_delete_selection "Effacer"
 .define res_string_menu_item_eject "Ejecter"
 .define res_char_menu_item_eject_shortcut 'E'
 .define res_string_menu_item_quit "Quitter"

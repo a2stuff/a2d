@@ -2,7 +2,7 @@
 .define res_string_menu_bar_item_view "Inhalt"
 .define res_string_menu_bar_item_special "Spezial"
 .define res_string_menu_bar_item_startup "Neustart"
-.define res_string_menu_bar_item_selector "Verkn}pfungen"
+.define res_string_menu_bar_item_selector "Kurzbefehle"
 .define res_string_menu_item_new_folder "Ordner anlegen..."
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "\\ffnen"
@@ -13,7 +13,9 @@
 .define res_string_menu_item_select_all "Alles ausw{hlen"
 .define res_char_menu_item_select_all_shortcut 'A'
 .define res_string_menu_item_copy_file "Kopieren..."
+.define res_string_menu_item_copy_selection "Kopieren in..."
 .define res_string_menu_item_delete_file "L|schen..."
+.define res_string_menu_item_delete_selection "L|schen"
 .define res_string_menu_item_eject "Auswerfen"
 .define res_char_menu_item_eject_shortcut 'E'
 .define res_string_menu_item_quit "Beenden"
@@ -93,7 +95,7 @@
 .define res_string_download_dialog_title "Kopiere auf RAMCard..."
 .define res_string_download_error_ramcard_full "Die RAMCard ist voll. Kopieren nicht vollst{ndig."
 .define res_string_warning_insert_system_disk "Bitte Systemdiskette Einlegen."
-.define res_string_warning_selector_list_full "Der Liste ist voll. L|scht Verkn}pfung bevor ein neuer Verkn}pfung erfolgt."
+.define res_string_warning_selector_list_full "Die Liste ist voll. L|schen Sie eine Kurzbefehl, bevor eine neue Kurzbefehl erstellt wird."
 .define res_string_warning_window_must_be_closed "Ein Fenster mu~ geschlossen werden um diesen Katalog zu |ffnen."
 .define res_string_warning_too_many_files "Es sind zu viele Dateien vorhanden, um dieses Element zu |ffnen!"
 .define res_string_warning_too_many_windows "Zu viele Fenster auf dem Schreibtisch ge|ffnet!"
