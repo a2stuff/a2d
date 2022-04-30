@@ -500,11 +500,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 l2:     ldx     #0
         ldy     #kEntryPickerItemHeight
         jsr     Multiply_16_8_16 ; A,X = A,X * Y
-        clc
-        adc     #32
-        sta     dialog_label_pos::ycoord
-        txa
-        adc     #0
+        addax   #33, dialog_label_pos::ycoord
         sta     dialog_label_pos::ycoord+1
 
         pla                     ; A = index
@@ -630,9 +626,9 @@ not_cancel:
         return  #$FF            ; nothing selected, re-enter loop
 
         ;; Determine column
-:       cmp16   screentowindow_params::windowx, #110
+:       cmp16   screentowindow_params::windowx, #110-1
         bmi     l2
-        cmp16   screentowindow_params::windowx, #220
+        cmp16   screentowindow_params::windowx, #220-1
         bmi     l1
         lda     #2
         bne     l3

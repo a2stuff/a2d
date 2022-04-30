@@ -40,7 +40,7 @@ notpenBIC:      .byte   MGTK::notpenBIC
 selector_list   := $B300
 
 kEntryPickerItemWidth = 127
-kEntryPickerItemHeight = kSystemFontHeight
+kEntryPickerItemHeight = kListItemHeight
 
 kShortcutRunDeskTop = res_char_button_desktop_shortcut
 kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut
@@ -252,7 +252,7 @@ y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
 .params winfo
         kDialogId = 1
         kWidth = 460
-        kHeight = 118
+        kHeight = 124
 window_id:      .byte   kDialogId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -287,8 +287,8 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok,      res_string_button_ok, winfo::kWidth - kButtonWidth - 60, 100
-        DEFINE_BUTTON desktop, res_string_button_desktop,    60, 100
+        DEFINE_BUTTON ok,      res_string_button_ok, winfo::kWidth - kButtonWidth - 60, winfo::kHeight - 18
+        DEFINE_BUTTON desktop, res_string_button_desktop,                           60, winfo::kHeight - 18
 
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
@@ -299,7 +299,7 @@ str_selector_title:
         PASCAL_STRING res_string_selector_dialog_title ; dialog title
 
         kEntryPickerLeft = (winfo::kWidth - kEntryPickerItemWidth * 3) / 2
-        kEntryPickerTop  = 22
+        kEntryPickerTop  = 21
 
         DEFINE_POINT line1_pt1, kBorderDX*2, 19
         DEFINE_POINT line1_pt2, winfo::kWidth - kBorderDX*2, 19
@@ -307,7 +307,8 @@ str_selector_title:
         DEFINE_POINT line2_pt2, winfo::kWidth - kBorderDX*2, winfo::kHeight - 22
 
 ;;; Position of entries box
-        DEFINE_POINT pos_entry_base, kEntryPickerLeft + 4, kEntryPickerTop + 8
+        kPosEntryTextBaseX = kEntryPickerLeft + 4
+        kPosEntryTextBaseY = kEntryPickerTop + kSystemFontHeight
 
 ;;; Point used when rendering entries
         DEFINE_POINT pos_entry_str, 0, 0
@@ -955,7 +956,7 @@ check_entries:
         entry_click_x := screentowindow_params::windowx
         entry_click_y := screentowindow_params::windowy
 
-        sub16   entry_click_x, pos_entry_base::xcoord, entry_click_x
+        sub16   entry_click_x, #kEntryPickerLeft, entry_click_x
         sub16_8 entry_click_y, #kEntryPickerTop, entry_click_y
         lda     entry_click_y+1
         bpl     :+
@@ -1743,10 +1744,10 @@ hi:    .byte   0
         tay
         lda     tmp
         clc
-        adc     pos_entry_base::xcoord
+        adc     #<kPosEntryTextBaseX
         sta     pos_entry_str::xcoord
         tya
-        adc     pos_entry_base::xcoord+1
+        adc     #>kPosEntryTextBaseX
         sta     pos_entry_str::xcoord+1
 
         ;; Y coordinate
@@ -1763,7 +1764,7 @@ hi:    .byte   0
         ldx     #0
         ldy     #kEntryPickerItemHeight
         jsr     Multiply_16_8_16
-        addax   pos_entry_base::ycoord, pos_entry_str::ycoord
+        addax   #kPosEntryTextBaseY, pos_entry_str::ycoord
         rts
 
 tmp:    .byte   0

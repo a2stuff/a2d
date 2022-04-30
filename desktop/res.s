@@ -377,7 +377,7 @@ nextwinfo:      .addr   0
 .params winfo_entry_picker
         kWindowId = $1B
         kWidth = 350
-        kHeight = 118
+        kHeight = 126
 
 window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
@@ -415,7 +415,7 @@ nextwinfo:      .addr   0
         kEntryPickerCol2 = 115
         kEntryPickerCol3 = 220
         kEntryPickerItemWidth  = 104
-        kEntryPickerItemHeight = kSystemFontHeight
+        kEntryPickerItemHeight = kListItemHeight
 
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY

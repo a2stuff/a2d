@@ -51,9 +51,15 @@ Note that these are for inspiration, not to be dutifully followed.
 
 * The following keyboard shortcuts are supported:
   * Up/Down Arrow - move selection or scroll by one line.
-  * Apple+Up/Down - scroll by one page.
-  * Open-Apple+Solid-Apple+Up/Downshould - move selection or scroll to start/end.
+  * Apple+Up/Down Arrow - scroll by one page.
+  * Open-Apple+Solid-Apple+Up/Down Arrow - move selection or scroll to start/end.
 * Item height is 10 pixels.
+
+## Choice Dialogs
+
+* Item height is 10 pixels.
+* Left/Right Arrow keys should wrap selection to the previous/next row.
+* Up/Down Arrow keys should wrap selection to the previous/next column.
 
 ## Keyboard
 
