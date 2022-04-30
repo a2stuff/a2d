@@ -628,7 +628,7 @@ not_cancel:
         ;; Determine column
 :       cmp16   screentowindow_params::windowx, #110-1
         bmi     l2
-        cmp16   screentowindow_params::windowx, #220-1
+        cmp16   screentowindow_params::windowx, #215-1
         bmi     l1
         lda     #2
         bne     l3
