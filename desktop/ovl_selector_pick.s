@@ -628,39 +628,37 @@ not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_rect
 :       rts
 
 not_cancel:
-        sub16   screentowindow_params::windowx, #kEntryPickerLeft, screentowindow_params::windowx
+        ;; Row
         sub16   screentowindow_params::windowy, #kEntryPickerTop, screentowindow_params::windowy
-        bpl     :+
-        return  #$FF            ; nothing selected, re-enter loop
+        bmi     done
 
-        ;; Determine column
-:       cmp16   screentowindow_params::windowx, #kEntryPickerItemWidth
-        bmi     l2
-        cmp16   screentowindow_params::windowx, #kEntryPickerItemWidth*2
-        bmi     l1
-        lda     #2
-        bne     l3
-l1:     lda     #1
-        bne     l3
-l2:     lda     #0
-
-        ;; Determine row
-l3:     pha
         ldax    screentowindow_params::windowy
         ldy     #kEntryPickerItemHeight
-        jsr     Divide_16_8_16
-        stax    screentowindow_params::windowy
-        cmp     #8
-        bcc     :+
-        pla
-        return  #$FF            ; nothing selected, re-enter loop
+        jsr     Divide_16_8_16  ; A = col
 
-:       pla
-        asl     a
-        asl     a
-        asl     a
-        clc
-        adc     screentowindow_params::windowy
+        cmp     #8
+        bcs     done
+        sta     row
+
+        ;; Column
+        sub16   screentowindow_params::windowx, #kEntryPickerLeft, screentowindow_params::windowx
+        bmi     done
+
+        ldax    screentowindow_params::windowx
+        ldy     #kEntryPickerItemWidth
+        jsr     Divide_16_8_16  ; A = row
+
+        cmp     #3
+        bcs     done
+
+        ;; Index
+        asl
+        asl
+        asl
+        row := *+1
+        ora     #SELF_MODIFIED_BYTE
+
+        ;; Is it valid?
         sta     new_selection
         cmp     #8
         bcs     l5
@@ -688,7 +686,9 @@ l5:     sec
 l6:     lda     selected_index
         jsr     MaybeToggleEntryHilite
         copy    #$FF, selected_index ; nothing selected, re-enter loop
-        rts
+
+done:   return  #$FF
+
 
 new_selection:
         .byte   0

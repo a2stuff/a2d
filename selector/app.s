@@ -949,53 +949,52 @@ check_desktop_btn:
         ;; Entry selection?
 
 check_entries:
+        ;; Row
+        sub16   screentowindow_params::windowy, #kEntryPickerTop, screentowindow_params::windowy
+        bmi     done
 
-        entry_click_x := screentowindow_params::windowx
-        entry_click_y := screentowindow_params::windowy
-
-        sub16   entry_click_x, #kEntryPickerLeft, entry_click_x
-        sub16_8 entry_click_y, #kEntryPickerTop, entry_click_y
-        lda     entry_click_y+1
-        bpl     :+
-        lda     selected_index
-        jsr     MaybeToggleEntryHilite
-        copy    #$FF, selected_index
-        rts
-
-:       ldax    entry_click_y
+        ldax    screentowindow_params::windowy
         ldy     #kEntryPickerItemHeight
-        jsr     Divide_16_8_16
-        cmp     #8              ; only care about low byte in A
-        bcc     L954C
-        lda     selected_index
-        jsr     MaybeToggleEntryHilite
-        copy    #$FF, selected_index
-        rts
+        jsr     Divide_16_8_16  ; A = col
 
-L954C:  sta     L959D
-        lda     #$00
-        sta     L959F
-        asl16   entry_click_x
-        rol     L959F
-        lda     entry_click_x+1
-        asl     a               ; *= 8
-        asl     a
-        asl     a
-        clc
-        adc     L959D
-        sta     L959E
-        cmp     #$08
-        bcc     L9571
-        jmp     L9582
+        cmp     #8
+        bcs     done
+        sta     row
 
-L9571:  cmp     num_primary_run_list_entries
+        ;; Column
+        sub16   screentowindow_params::windowx, #kEntryPickerLeft, screentowindow_params::windowx
+        bmi     done
+
+        ldax    screentowindow_params::windowx
+        ldy     #kEntryPickerItemWidth
+        jsr     Divide_16_8_16  ; A = row
+
+        cmp     #3
+        bcs     done
+
+        ;; Index
+        asl
+        asl
+        asl
+        row := *+1
+        ora     #SELF_MODIFIED_BYTE
+
+        ;; Is it valid?
+        sta     index
+        cmp     #8
+        bcc     primary
+        bcs     secondary
+
+primary:
+        cmp     num_primary_run_list_entries
         bcc     finish
         lda     selected_index
         jsr     MaybeToggleEntryHilite
         copy    #$FF, selected_index
         rts
 
-L9582:  sec
+secondary:
+        sec
         sbc     #8
         cmp     num_secondary_run_list_entries
         bcc     finish
@@ -1004,12 +1003,12 @@ L9582:  sec
         copy    #$FF, selected_index
         rts
 
-finish: lda     L959E
+finish: lda     index
         jsr     HandleEntryClick
         rts
 
 L959D:  .byte   0
-L959E:  .byte   0
+index:  .byte   0
 L959F:  .byte   0
 
 .endproc
