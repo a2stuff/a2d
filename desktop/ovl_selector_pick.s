@@ -483,46 +483,54 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         stax    $06
 
         tya
-        pha                     ; A = index
+        jsr     GetOptionPos
+        addax   #kEntryPickerTextHOffset, dialog_label_pos::xcoord
+        tya
+        ldx     #0
+        addax   #kEntryPickerTextYOffset, dialog_label_pos::ycoord
 
-        cmp     #16             ; 3rd column (16-24)
-        bcc     :+
-        sec
-        sbc     #16
-        jmp     l2
-:
-        cmp     #8              ; 2nd column (8-15)
-        bcc     :+
-        sec
-        sbc     #8
-:
-        ;; A has row
-l2:     ldx     #0
-        ldy     #kEntryPickerItemHeight
-        jsr     Multiply_16_8_16 ; A,X = A,X * Y
-        addax   #33, dialog_label_pos::ycoord
-        sta     dialog_label_pos::ycoord+1
-
-        pla                     ; A = index
-
-        cmp     #8
-        bcs     :+
-        ldax    #kEntryPickerCol1
-        beq     l3              ; always
-:
-        cmp     #16
-        bcs     :+
-        ldax    #kEntryPickerCol2
-        jmp     l3
-:
-        ldax    #kEntryPickerCol3
-
-l3:     addax   #10, dialog_label_pos::xcoord ; text starts at +10 offset
         MGTK_CALL MGTK::MoveTo, dialog_label_pos
         ldax    $06
         jsr     DrawString
 
         copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
+        rts
+.endproc
+
+;;; ============================================================
+;;; Get the coordinates of an option by index.
+;;; Input: A = volume index
+;;; Output: A,X = x coordinate, Y = y coordinate
+.proc GetOptionPos
+        sta     index
+        lsr                     ; /= 8
+        lsr
+        lsr                     ; lo
+        ldx     #0              ; hi
+        ldy     #kEntryPickerItemWidth
+        jsr     Multiply_16_8_16
+        clc
+        adc     #<kEntryPickerLeft
+        pha                     ; lo
+        txa
+        adc     #>kEntryPickerLeft
+        pha                     ; hi
+
+        ;; Y coordinate
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        and     #7              ; %= 8
+        ldx     #0              ; hi
+        ldy     #kEntryPickerItemHeight
+        jsr     Multiply_16_8_16
+        clc
+        adc     #kEntryPickerTop
+
+        tay                     ; Y coord
+        pla
+        tax                     ; X coord hi
+        pla                     ; X coord lo
+
         rts
 .endproc
 
@@ -620,15 +628,15 @@ not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_rect
 :       rts
 
 not_cancel:
-        sub16   screentowindow_params::windowx, #10, screentowindow_params::windowx
-        sub16   screentowindow_params::windowy, #25, screentowindow_params::windowy
+        sub16   screentowindow_params::windowx, #kEntryPickerLeft, screentowindow_params::windowx
+        sub16   screentowindow_params::windowy, #kEntryPickerTop, screentowindow_params::windowy
         bpl     :+
         return  #$FF            ; nothing selected, re-enter loop
 
         ;; Determine column
-:       cmp16   screentowindow_params::windowx, #110-1
+:       cmp16   screentowindow_params::windowx, #kEntryPickerItemWidth
         bmi     l2
-        cmp16   screentowindow_params::windowx, #215-1
+        cmp16   screentowindow_params::windowx, #kEntryPickerItemWidth*2
         bmi     l1
         lda     #2
         bne     l3
@@ -689,56 +697,21 @@ new_selection:
 ;;; ============================================================
 
 .proc MaybeToggleEntryHilite
-        bpl     l1
-        rts
+        bmi     ret
 
-l1:     pha
-        lsr     a
-        lsr     a
-        lsr     a
-        bne     :+
-        ldax    #kEntryPickerCol1
-        jmp     l3
+        jsr     GetOptionPos
+        stax    entry_picker_item_rect::x1
+        addax   #kEntryPickerItemWidth-1, entry_picker_item_rect::x2
+        tya                     ; y lo
+        ldx     #0              ; y hi
+        stax    entry_picker_item_rect::y1
+        addax   #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
 
-:       cmp     #1
-        bne     :+
-        ldax    #kEntryPickerCol2
-        jmp     l3
-
-:       ldax    #kEntryPickerCol3
-
-l3:     clc
-        adc     #4              ; highlight starts at +4 offset
-        sta     entry_picker_item_rect::x1
-        txa
-        adc     #0
-        sta     entry_picker_item_rect::x1+1
-        pla
-        cmp     #8
-        bcc     l5
-        cmp     #16
-        bcs     l4
-        sec
-        sbc     #8
-        jmp     l5
-
-l4:     sec
-        sbc     #16
-l5:     ldx     #0
-        ldy     #kEntryPickerItemHeight
-        jsr     Multiply_16_8_16
-        clc
-        adc     #24
-        sta     entry_picker_item_rect::y1
-        txa
-        adc     #0
-        sta     entry_picker_item_rect::y1+1
-        add16   entry_picker_item_rect::x1, #kEntryPickerItemWidth-1, entry_picker_item_rect::x2
-        add16   entry_picker_item_rect::y1, #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, entry_picker_item_rect
         MGTK_CALL MGTK::SetPenMode, pencopy
-        rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================

@@ -411,11 +411,12 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        kEntryPickerCol1 =  10
-        kEntryPickerCol2 = 115
-        kEntryPickerCol3 = 220
+        kEntryPickerLeft = (winfo_entry_picker::kWidth - kEntryPickerItemWidth * 3) / 2
+        kEntryPickerTop  = 24
         kEntryPickerItemWidth  = 104
         kEntryPickerItemHeight = kListItemHeight
+        kEntryPickerTextHOffset = 10
+        kEntryPickerTextYOffset = kEntryPickerItemHeight - 1
 
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY

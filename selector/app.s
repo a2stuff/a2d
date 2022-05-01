@@ -39,9 +39,6 @@ notpenBIC:      .byte   MGTK::notpenBIC
 ;;; See docs/Selector_List_Format.md for file format
 selector_list   := $B300
 
-kEntryPickerItemWidth = 127
-kEntryPickerItemHeight = kListItemHeight
-
 kShortcutRunDeskTop = res_char_button_desktop_shortcut
 kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut
 
@@ -300,6 +297,10 @@ str_selector_title:
 
         kEntryPickerLeft = (winfo::kWidth - kEntryPickerItemWidth * 3) / 2
         kEntryPickerTop  = 21
+        kEntryPickerItemWidth = 127
+        kEntryPickerItemHeight = kListItemHeight
+        kEntryTextHOffset = 4
+        kEntryTextVOffset = kEntryPickerItemHeight-1
 
         DEFINE_POINT line1_pt1, kBorderDX*2, 19
         DEFINE_POINT line1_pt2, winfo::kWidth - kBorderDX*2, 19
@@ -307,13 +308,9 @@ str_selector_title:
         DEFINE_POINT line2_pt2, winfo::kWidth - kBorderDX*2, winfo::kHeight - 22
 
 ;;; Position of entries box
-        kPosEntryTextBaseX = kEntryPickerLeft + 4
-        kPosEntryTextBaseY = kEntryPickerTop + kSystemFontHeight
 
 ;;; Point used when rendering entries
         DEFINE_POINT pos_entry_str, 0, 0
-
-        DEFINE_RECT_SZ rect_entry_base, kEntryPickerLeft, kEntryPickerTop, kEntryPickerItemWidth, kEntryPickerItemHeight - 1
 
         DEFINE_RECT rect_entry, 0, 0, 0, 0
 
@@ -1727,47 +1724,40 @@ hi:    .byte   0
 .endproc
 
 ;;; ============================================================
-
-.proc SetEntryTextPos
-
-        pha                     ; stack has index
-        lsr     a
-        lsr     a
-        lsr     a
-        pha                     ; ... and index / 8 (= column)
-
-        ;; X coordinate
-        ldx     #0
-        stx     tmp
-        lsr     a
-        ror     tmp
-        tay
-        lda     tmp
+;;; Get the coordinates of an option by index.
+;;; Input: A = volume index
+;;; Output: A,X = x coordinate, Y = y coordinate
+.proc GetOptionPos
+        sta     index
+        lsr                     ; /= 8
+        lsr
+        lsr                     ; lo
+        ldx     #0              ; hi
+        ldy     #kEntryPickerItemWidth
+        jsr     Multiply_16_8_16
         clc
-        adc     #<kPosEntryTextBaseX
-        sta     pos_entry_str::xcoord
-        tya
-        adc     #>kPosEntryTextBaseX
-        sta     pos_entry_str::xcoord+1
+        adc     #<kEntryPickerLeft
+        pha                     ; lo
+        txa
+        adc     #>kEntryPickerLeft
+        pha                     ; hi
 
         ;; Y coordinate
-        pla                     ; A = column
-
-        asl     a
-        asl     a
-        asl     a
-        sta     tmp
-        pla                     ; A = index
-        sec
-        sbc     tmp             ; A = row
-
-        ldx     #0
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        and     #7              ; %= 8
+        ldx     #0              ; hi
         ldy     #kEntryPickerItemHeight
         jsr     Multiply_16_8_16
-        addax   #kPosEntryTextBaseY, pos_entry_str::ycoord
-        rts
+        clc
+        adc     #kEntryPickerTop
 
-tmp:    .byte   0
+        tay                     ; Y coord
+        pla
+        tax                     ; X coord hi
+        pla                     ; X coord lo
+
+        rts
 .endproc
 
 ;;; ============================================================
@@ -1822,7 +1812,11 @@ prefix: pla
 common: lda     winfo::window_id
         jsr     GetWindowPort
         pla
-        jsr     SetEntryTextPos
+        jsr     GetOptionPos
+        addax   #kEntryTextHOffset, pos_entry_str::xcoord
+        tya
+        ldx     #0
+        addax   #kEntryTextVOffset, pos_entry_str::ycoord
         MGTK_CALL MGTK::MoveTo, pos_entry_str
         param_call DrawString, entry_string_buf
         rts
@@ -1851,70 +1845,23 @@ common: lda     winfo::window_id
 
 ;;; ============================================================
 ;;; Toggle the highlight on an entry in the list
-;;; Input: A = entry number
+;;; Input: A = entry number (negative if no selection)
 
 .proc MaybeToggleEntryHilite
-        bpl     :+
-        rts
+        bmi     ret
 
-:       pha
-
-        lsr     a
-        lsr     a
-        lsr     a
-        sta     col      ; col
-
-        asl     a
-        asl     a
-        asl     a
-        sta     tmp
-
-        pla
-        sec
-        sbc     tmp
-        sta     row
-
-        lda     #0
-        sta     tmp
-        lda     col
-        lsr     a
-        ror     tmp
-        pha
-
-        ;; X coords
-        lda     tmp
-        clc
-        adc     rect_entry_base::x1
-        sta     rect_entry::x1
-        pla
-        pha
-        adc     rect_entry_base::x1+1
-        sta     rect_entry::x1+1
-        lda     tmp
-        clc
-        adc     rect_entry_base::x2
-        sta     rect_entry::x2
-        pla
-        adc     rect_entry_base::x2+1
-        sta     rect_entry::x2+1
-
-        ;; Y coords
-        lda     row
-        ldx     #0
-        ldy     #kEntryPickerItemHeight
-        jsr     Multiply_16_8_16
-        stax    tmp
-        addax   rect_entry_base::y1, rect_entry::y1
-        add16   tmp, rect_entry_base::y2, rect_entry::y2
+        jsr     GetOptionPos
+        stax    rect_entry::x1
+        addax   #kEntryPickerItemWidth-1, rect_entry::x2
+        tya                     ; y lo
+        ldx     #0              ; y hi
+        stax    rect_entry::y1
+        addax   #kEntryPickerItemHeight-1, rect_entry::y2
 
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_entry
 
-        rts
-
-tmp:    .word   0
-row:    .byte   0
-col:    .byte   0
+ret:    rts
 .endproc
 
 ;;; ============================================================
