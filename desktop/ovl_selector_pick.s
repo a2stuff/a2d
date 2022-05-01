@@ -484,17 +484,14 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 
         tya
         jsr     GetOptionPos
-        addax   #kEntryPickerTextHOffset, dialog_label_pos::xcoord
+        addax   #kShortcutPickerTextHOffset, entry_picker_item_rect::x1
         tya
         ldx     #0
-        addax   #kEntryPickerTextYOffset, dialog_label_pos::ycoord
+        addax   #kShortcutPickerTextYOffset, entry_picker_item_rect::y1
 
-        MGTK_CALL MGTK::MoveTo, dialog_label_pos
+        MGTK_CALL MGTK::MoveTo, entry_picker_item_rect::topleft
         ldax    $06
-        jsr     DrawString
-
-        copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
-        rts
+        jmp     DrawString
 .endproc
 
 ;;; ============================================================
@@ -503,28 +500,28 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 ;;; Output: A,X = x coordinate, Y = y coordinate
 .proc GetOptionPos
         sta     index
-        lsr                     ; /= 8
-        lsr
+        .repeat ::kShortcutPickerRowShift
         lsr                     ; lo
+        .endrepeat
         ldx     #0              ; hi
-        ldy     #kEntryPickerItemWidth
+        ldy     #kShortcutPickerItemWidth
         jsr     Multiply_16_8_16
         clc
-        adc     #<kEntryPickerLeft
+        adc     #<kShortcutPickerLeft
         pha                     ; lo
         txa
-        adc     #>kEntryPickerLeft
+        adc     #>kShortcutPickerLeft
         pha                     ; hi
 
         ;; Y coordinate
         index := *+1
         lda     #SELF_MODIFIED_BYTE
-        and     #7              ; %= 8
+        and     #kShortcutPickerRows-1
         ldx     #0              ; hi
-        ldy     #kEntryPickerItemHeight
+        ldy     #kShortcutPickerItemHeight
         jsr     Multiply_16_8_16
         clc
-        adc     #kEntryPickerTop
+        adc     #kShortcutPickerTop
 
         tay                     ; Y coord
         pla
@@ -532,6 +529,45 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         pla                     ; X coord lo
 
         rts
+.endproc
+
+;;; ============================================================
+
+;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
+;;; Outputs: A=index, N=1 if no match
+.proc GetOptionIndexFromCoords
+        ;; Row
+        sub16   screentowindow_params::windowy, #kShortcutPickerTop, screentowindow_params::windowy
+        bmi     done
+
+        ldax    screentowindow_params::windowy
+        ldy     #kShortcutPickerItemHeight
+        jsr     Divide_16_8_16  ; A = row
+
+        cmp     #kShortcutPickerRows
+        bcs     done
+        sta     row
+
+        ;; Column
+        sub16   screentowindow_params::windowx, #kShortcutPickerLeft, screentowindow_params::windowx
+        bmi     done
+
+        ldax    screentowindow_params::windowx
+        ldy     #kShortcutPickerItemWidth
+        jsr     Divide_16_8_16  ; A = col
+
+        cmp     #kShortcutPickerCols
+        bcs     done
+
+        ;; Index
+        .repeat ::kShortcutPickerRowShift
+        asl
+        .endrepeat
+        row := *+1
+        ora     #SELF_MODIFIED_BYTE
+        rts
+
+done:   return  #$FF
 .endproc
 
 ;;; ============================================================
@@ -628,35 +664,8 @@ not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_rect
 :       rts
 
 not_cancel:
-        ;; Row
-        sub16   screentowindow_params::windowy, #kEntryPickerTop, screentowindow_params::windowy
+        jsr     GetOptionIndexFromCoords
         bmi     done
-
-        ldax    screentowindow_params::windowy
-        ldy     #kEntryPickerItemHeight
-        jsr     Divide_16_8_16  ; A = col
-
-        cmp     #8
-        bcs     done
-        sta     row
-
-        ;; Column
-        sub16   screentowindow_params::windowx, #kEntryPickerLeft, screentowindow_params::windowx
-        bmi     done
-
-        ldax    screentowindow_params::windowx
-        ldy     #kEntryPickerItemWidth
-        jsr     Divide_16_8_16  ; A = row
-
-        cmp     #3
-        bcs     done
-
-        ;; Index
-        asl
-        asl
-        asl
-        row := *+1
-        ora     #SELF_MODIFIED_BYTE
 
         ;; Is it valid?
         sta     new_selection
@@ -701,11 +710,11 @@ new_selection:
 
         jsr     GetOptionPos
         stax    entry_picker_item_rect::x1
-        addax   #kEntryPickerItemWidth-1, entry_picker_item_rect::x2
+        addax   #kShortcutPickerItemWidth-1, entry_picker_item_rect::x2
         tya                     ; y lo
         ldx     #0              ; y hi
         stax    entry_picker_item_rect::y1
-        addax   #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
+        addax   #kShortcutPickerItemHeight-1, entry_picker_item_rect::y2
 
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, entry_picker_item_rect

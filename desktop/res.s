@@ -411,51 +411,59 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        kEntryPickerLeft = (winfo_entry_picker::kWidth - kEntryPickerItemWidth * 3) / 2
-        kEntryPickerTop  = 24
-        kEntryPickerItemWidth  = 104
-        kEntryPickerItemHeight = kListItemHeight
-        kEntryPickerTextHOffset = 10
-        kEntryPickerTextYOffset = kEntryPickerItemHeight - 1
-
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME entry_picker_frame_rect, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
 
-        ;; Line endpoints
-        DEFINE_POINT entry_picker_line1_start, 7, 22
-        DEFINE_POINT entry_picker_line1_end, 343, 22
+        ;; Options control metrics
+        kShortcutPickerCols = 3
+        kShortcutPickerRows = 8
+        kShortcutPickerRowShift = 3 ; log2(kShortcutPickerRows)
+        kShortcutPickerLeft = (winfo_entry_picker::kWidth - kShortcutPickerItemWidth * kShortcutPickerCols + 1) / 2
+        kShortcutPickerTop  = 24
+        kShortcutPickerItemWidth  = 104
+        kShortcutPickerItemHeight = kListItemHeight
+        kShortcutPickerTextHOffset = 10
+        kShortcutPickerTextYOffset = kShortcutPickerItemHeight - 1
 
         ;; Line endpoints
-        DEFINE_POINT entry_picker_line2_start, 7, winfo_entry_picker::kHeight-21
-        DEFINE_POINT entry_picker_line2_end, 343, winfo_entry_picker::kHeight-21
+        DEFINE_POINT entry_picker_line1_start, kBorderDX*2, 22
+        DEFINE_POINT entry_picker_line1_end, winfo_entry_picker::kWidth - kBorderDX*2, 22
+        DEFINE_POINT entry_picker_line2_start, kBorderDX*2, winfo_entry_picker::kHeight-21
+        DEFINE_POINT entry_picker_line2_end, winfo_entry_picker::kWidth - kBorderDX*2, winfo_entry_picker::kHeight-21
 
-        DEFINE_RECT_SZ entry_picker_ok_rect, 210, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
-
-        DEFINE_RECT_SZ entry_picker_cancel_rect, 40, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
-
-        DEFINE_POINT entry_picker_ok_pos, 215, winfo_entry_picker::kHeight-8
-        DEFINE_POINT entry_picker_cancel_pos, 45, winfo_entry_picker::kHeight-8
-
+        ;; Used when rendering entries
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
-        DEFINE_RECT entry_picker_all_items_rect, 6, 23, 344, winfo_entry_picker::kHeight-23
+        DEFINE_RECT_SZ entry_picker_ok_rect, 210, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
+        DEFINE_POINT entry_picker_ok_pos, 215, winfo_entry_picker::kHeight-8
+
+        DEFINE_RECT_SZ entry_picker_cancel_rect, 40, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
+        DEFINE_POINT entry_picker_cancel_pos, 45, winfo_entry_picker::kHeight-8
+
 
 ;;; ============================================================
 ;;; Format/Erase dialogs
 
-        kVolPickerVOffset = 44
-        kVolPickerHOffset = 10
+        ;; Options control metrics
+        kVolPickerCols = 3
+        kVolPickerRows = 4
+        kVolPickerRowShift = 2  ; log2(kVolPickerRows)
+        kVolPickerLeft = (winfo_prompt_dialog::kWidth - kVolPickerItemWidth * kVolPickerCols + 1) / 2
+        kVolPickerTop = 44
+        kVolPickerItemWidth = 127
+        kVolPickerItemHeight = kListItemHeight
+        kVolPickerTextHOffset = 1
+        kVolPickerTextVOffset = kVolPickerItemHeight-1
 
         ;; Line endpoints
-        DEFINE_POINT vol_picker_line1_start, 7, kVolPickerVOffset - 2
-        DEFINE_POINT vol_picker_line1_end, winfo_prompt_dialog::kWidth - 8, kVolPickerVOffset - 2
-
-        ;; Line endpoints
+        DEFINE_POINT vol_picker_line1_start, 7, kVolPickerTop - 2
+        DEFINE_POINT vol_picker_line1_end, winfo_prompt_dialog::kWidth - 8, kVolPickerTop - 2
         DEFINE_POINT vol_picker_line2_start, 7, winfo_prompt_dialog::kHeight-22
         DEFINE_POINT vol_picker_line2_end, winfo_prompt_dialog::kWidth - 8, winfo_prompt_dialog::kHeight-22
 
-        DEFINE_RECT select_volume_rect, 0, 0, 0, 0
+        ;; Used when rendering entries
+        DEFINE_RECT vol_picker_item_rect, 0, 0, 0, 0
 
 the_dos_33_disk_label:
         PASCAL_STRING res_string_the_dos_33_disk_suffix_pattern

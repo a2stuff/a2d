@@ -15,9 +15,6 @@
 
         ovl_string_buf := path_buf0
 
-        kOptionWidth   = 127
-        kOptionTextHOffset = 1
-
         kDefaultFloppyBlocks = 280
 
         kMaxVolumesInPicker = 12 ; 3 cols * 4 rows
@@ -313,34 +310,8 @@ cancel:
 ;;; ============================================================
 
 .proc HandleClick
-        ;; Row
-        sub16   screentowindow_params::windowy, #kVolPickerVOffset, screentowindow_params::windowy
+        jsr     GetOptionIndexFromCoords
         bmi     done
-
-        ldax    screentowindow_params::windowy
-        ldy     #kListItemHeight
-        jsr     Divide_16_8_16  ; A = col
-
-        cmp     #4
-        bcs     done
-        sta     row
-
-        ;; Column
-        sub16   screentowindow_params::windowx, #kVolPickerHOffset, screentowindow_params::windowx
-        bmi     done
-
-        ldax    screentowindow_params::windowx
-        ldy     #kOptionWidth
-        jsr     Divide_16_8_16  ; A = row
-
-        cmp     #3
-        bcs     done
-
-        ;; Index
-        asl
-        asl
-        row := *+1
-        ora     #SELF_MODIFIED_BYTE
 
         ;; Is it valid?
         cmp     num_volumes
@@ -387,27 +358,28 @@ update: pha                     ; A = new selection
 ;;; Output: A,X = x coordinate, Y = y coordinate
 .proc GetOptionPos
         sta     index
-        lsr
+        .repeat ::kVolPickerRowShift
         lsr                     ; lo
+        .endrepeat
         ldx     #0              ; hi
-        ldy     #kOptionWidth
+        ldy     #kVolPickerItemWidth
         jsr     Multiply_16_8_16
         clc
-        adc     #<kVolPickerHOffset
+        adc     #<kVolPickerLeft
         pha                     ; lo
         txa
-        adc     #>kVolPickerHOffset
+        adc     #>kVolPickerLeft
         pha                     ; hi
 
         ;; Y coordinate
         index := *+1
         lda     #SELF_MODIFIED_BYTE
-        and     #3              ; %= 4
+        and     #kVolPickerRows-1
         ldx     #0              ; hi
-        ldy     #kListItemHeight
+        ldy     #kVolPickerItemHeight
         jsr     Multiply_16_8_16
         clc
-        adc     #kVolPickerVOffset
+        adc     #kVolPickerTop
 
         tay                     ; Y coord
         pla
@@ -418,21 +390,60 @@ update: pha                     ; A = new selection
 .endproc
 
 ;;; ============================================================
+
+;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
+;;; Outputs: A=index, N=1 if no match
+.proc GetOptionIndexFromCoords
+        ;; Row
+        sub16   screentowindow_params::windowy, #kVolPickerTop, screentowindow_params::windowy
+        bmi     done
+
+        ldax    screentowindow_params::windowy
+        ldy     #kVolPickerItemHeight
+        jsr     Divide_16_8_16  ; A = row
+
+        cmp     #kVolPickerRows
+        bcs     done
+        sta     row
+
+        ;; Column
+        sub16   screentowindow_params::windowx, #kVolPickerLeft, screentowindow_params::windowx
+        bmi     done
+
+        ldax    screentowindow_params::windowx
+        ldy     #kVolPickerItemWidth
+        jsr     Divide_16_8_16  ; A = col
+
+        cmp     #kVolPickerCols
+        bcs     done
+
+        ;; Index
+        .repeat ::kVolPickerRowShift
+        asl
+        .endrepeat
+        row := *+1
+        ora     #SELF_MODIFIED_BYTE
+        rts
+
+done:   return  #$FF
+.endproc
+
+;;; ============================================================
 ;;; Hilight volume label
 ;;; Input: A = volume index
 
 .proc HighlightVolumeLabel
         jsr     GetOptionPos
-        stax    select_volume_rect::x1
-        addax   #kOptionWidth-1, select_volume_rect::x2
+        stax    vol_picker_item_rect::x1
+        addax   #kVolPickerItemWidth-1, vol_picker_item_rect::x2
 
         tya
         ldx     #0
-        stax    select_volume_rect::y1
-        addax   #kListItemHeight-1, select_volume_rect::y2
+        stax    vol_picker_item_rect::y1
+        addax   #kListItemHeight-1, vol_picker_item_rect::y2
 
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, select_volume_rect
+        MGTK_CALL MGTK::PaintRect, vol_picker_item_rect
         rts
 .endproc
 
@@ -575,15 +586,14 @@ wrap:   ldx     num_volumes     ; go to last (num - 1)
 loop:   lda     #SELF_MODIFIED_BYTE
         cmp     num_volumes
         bne     :+
-        copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
         rts
 :
         jsr     GetOptionPos
-        addax   #kOptionTextHOffset, dialog_label_pos::xcoord
+        addax   #kVolPickerTextHOffset, vol_picker_item_rect::x1
         tya
         ldx     #0
-        addax   #kListItemHeight-1, dialog_label_pos::ycoord
-        MGTK_CALL MGTK::MoveTo, dialog_label_pos
+        addax   #kVolPickerTextVOffset, vol_picker_item_rect::y1
+        MGTK_CALL MGTK::MoveTo, vol_picker_item_rect::topleft
 
         ;; Reverse order, so boot volume is first
         lda     num_volumes

@@ -295,24 +295,25 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 str_selector_title:
         PASCAL_STRING res_string_selector_dialog_title ; dialog title
 
-        kEntryPickerLeft = (winfo::kWidth - kEntryPickerItemWidth * 3) / 2
+        ;; Options control metrics
+        kEntryPickerCols = 3
+        kEntryPickerRows = 8
+        kEntryPickerRowShift = 3 ; log2(kEntryPickerRows)
+        kEntryPickerLeft = (winfo::kWidth - kEntryPickerItemWidth * kEntryPickerCols + 1) / 2
         kEntryPickerTop  = 21
         kEntryPickerItemWidth = 127
         kEntryPickerItemHeight = kListItemHeight
-        kEntryTextHOffset = 4
-        kEntryTextVOffset = kEntryPickerItemHeight-1
+        kEntryPickerTextHOffset = 4
+        kEntryPickerTextVOffset = kEntryPickerItemHeight-1
 
+        ;; Line endpoints
         DEFINE_POINT line1_pt1, kBorderDX*2, 19
         DEFINE_POINT line1_pt2, winfo::kWidth - kBorderDX*2, 19
         DEFINE_POINT line2_pt1, kBorderDX*2, winfo::kHeight - 22
         DEFINE_POINT line2_pt2, winfo::kWidth - kBorderDX*2, winfo::kHeight - 22
 
-;;; Position of entries box
-
-;;; Point used when rendering entries
-        DEFINE_POINT pos_entry_str, 0, 0
-
-        DEFINE_RECT rect_entry, 0, 0, 0, 0
+        ;; Used when rendering entries
+        DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
         io_buf_sl = $BB00
 
@@ -949,35 +950,8 @@ check_desktop_btn:
         ;; Entry selection?
 
 check_entries:
-        ;; Row
-        sub16   screentowindow_params::windowy, #kEntryPickerTop, screentowindow_params::windowy
+        jsr     GetOptionIndexFromCoords
         bmi     done
-
-        ldax    screentowindow_params::windowy
-        ldy     #kEntryPickerItemHeight
-        jsr     Divide_16_8_16  ; A = col
-
-        cmp     #8
-        bcs     done
-        sta     row
-
-        ;; Column
-        sub16   screentowindow_params::windowx, #kEntryPickerLeft, screentowindow_params::windowx
-        bmi     done
-
-        ldax    screentowindow_params::windowx
-        ldy     #kEntryPickerItemWidth
-        jsr     Divide_16_8_16  ; A = row
-
-        cmp     #3
-        bcs     done
-
-        ;; Index
-        asl
-        asl
-        asl
-        row := *+1
-        ora     #SELF_MODIFIED_BYTE
 
         ;; Is it valid?
         sta     index
@@ -1728,9 +1702,9 @@ hi:    .byte   0
 ;;; Output: A,X = x coordinate, Y = y coordinate
 .proc GetOptionPos
         sta     index
-        lsr                     ; /= 8
+        .repeat app::kEntryPickerRowShift
         lsr
-        lsr                     ; lo
+        .endrepeat
         ldx     #0              ; hi
         ldy     #kEntryPickerItemWidth
         jsr     Multiply_16_8_16
@@ -1744,7 +1718,7 @@ hi:    .byte   0
         ;; Y coordinate
         index := *+1
         lda     #SELF_MODIFIED_BYTE
-        and     #7              ; %= 8
+        and     #kEntryPickerRows-1
         ldx     #0              ; hi
         ldy     #kEntryPickerItemHeight
         jsr     Multiply_16_8_16
@@ -1757,6 +1731,45 @@ hi:    .byte   0
         pla                     ; X coord lo
 
         rts
+.endproc
+
+;;; ============================================================
+
+;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
+;;; Outputs: A=index, N=1 if no match
+.proc GetOptionIndexFromCoords
+        ;; Row
+        sub16   screentowindow_params::windowy, #kEntryPickerTop, screentowindow_params::windowy
+        bmi     done
+
+        ldax    screentowindow_params::windowy
+        ldy     #kEntryPickerItemHeight
+        jsr     Divide_16_8_16  ; A = row
+
+        cmp     #kEntryPickerRows
+        bcs     done
+        sta     row
+
+        ;; Column
+        sub16   screentowindow_params::windowx, #kEntryPickerLeft, screentowindow_params::windowx
+        bmi     done
+
+        ldax    screentowindow_params::windowx
+        ldy     #kEntryPickerItemWidth
+        jsr     Divide_16_8_16  ; A = col
+
+        cmp     #kEntryPickerCols
+        bcs     done
+
+        ;; Index
+        .repeat app::kEntryPickerRowShift
+        asl
+        .endrepeat
+        row := *+1
+        ora     #SELF_MODIFIED_BYTE
+        rts
+
+done:   return  #$FF
 .endproc
 
 ;;; ============================================================
@@ -1812,11 +1825,11 @@ common: lda     winfo::window_id
         jsr     GetWindowPort
         pla
         jsr     GetOptionPos
-        addax   #kEntryTextHOffset, pos_entry_str::xcoord
+        addax   #kEntryPickerTextHOffset, entry_picker_item_rect::x1
         tya
         ldx     #0
-        addax   #kEntryTextVOffset, pos_entry_str::ycoord
-        MGTK_CALL MGTK::MoveTo, pos_entry_str
+        addax   #kEntryPickerTextVOffset, entry_picker_item_rect::y1
+        MGTK_CALL MGTK::MoveTo, entry_picker_item_rect::topleft
         param_call DrawString, entry_string_buf
         rts
 .endproc
@@ -1850,15 +1863,15 @@ common: lda     winfo::window_id
         bmi     ret
 
         jsr     GetOptionPos
-        stax    rect_entry::x1
-        addax   #kEntryPickerItemWidth-1, rect_entry::x2
+        stax    entry_picker_item_rect::x1
+        addax   #kEntryPickerItemWidth-1, entry_picker_item_rect::x2
         tya                     ; y lo
         ldx     #0              ; y hi
-        stax    rect_entry::y1
-        addax   #kEntryPickerItemHeight-1, rect_entry::y2
+        stax    entry_picker_item_rect::y1
+        addax   #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
 
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_entry
+        MGTK_CALL MGTK::PaintRect, entry_picker_item_rect
 
 ret:    rts
 .endproc
