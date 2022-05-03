@@ -100,6 +100,7 @@ loop1:
         copy    #$80, has_input_field_flag
         copy    #$00, format_erase_overlay_flag
         jsr     main::InitNameInput
+        jsr     main::SetPortForDialogWindow
         param_call main::DrawDialogLabel, 3, aux::str_new_volume
 
 loop2:
