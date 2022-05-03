@@ -180,7 +180,7 @@ win:    MGTK_CALL MGTK::BeginUpdate, event_params::window_id
         MGTK_CALL MGTK::EndUpdate
 :       jmp     loop
 
-finish: jsr     LoadDesktopEntryTable ; restore after `UpdateWindow`
+finish:
         saved_active_window_id := *+1
         lda     #SELF_MODIFIED_BYTE
         sta     active_window_id
@@ -218,7 +218,7 @@ ClearUpdates := ClearUpdatesImpl::clear
         rts
 
 :       sta     active_window_id
-        jsr     LoadActiveWindowEntryTable ; restored in `ClearUpdates`
+        jsr     LoadActiveWindowEntryTable
 
         ;; This correctly uses the clipped port provided by BeginUpdate.
 
@@ -582,10 +582,9 @@ not_menu:
         ;; Make the window active.
         MGTK_CALL MGTK::SelectWindow, findwindow_params::window_id
         copy    findwindow_params::window_id, active_window_id
-        jsr     LoadActiveWindowEntryTable ; restored below
+        jsr     LoadActiveWindowEntryTable
         lda     #kDrawWindowEntriesHeaderAndContent
         jsr     DrawWindowEntries
-        jsr     LoadDesktopEntryTable ; restore from above
 
         ;; Update menu items
         jsr     UncheckViewMenuItem
@@ -2381,10 +2380,8 @@ CmdNewFolder    := CmdNewFolderImpl::start
 
         pha
         jsr     SelectFileIcon
-        jsr     LoadActiveWindowEntryTable ; restored below
         pla
         jsr     ScrollIconIntoView
-        jsr     LoadDesktopEntryTable ; restore from above
 
 ret:    rts
 .endproc
@@ -2393,7 +2390,7 @@ ret:    rts
 ;;; Find an icon by name in the given window.
 ;;; Inputs: Y = window id, A,X = name
 ;;; Outputs: Z=0, A = icon id (or Z=1, A=0 if not found)
-;;; Assert: Desktop icon table cached in (and restored)
+;;; NOTE: Modifies `cached_window_id`
 
 .proc FindIconByName
         ptr_icon := $06
@@ -2414,7 +2411,7 @@ ret:    rts
 
         copy16  tmp, ptr_name
         sty     cached_window_id
-        jsr     LoadWindowEntryTable ; restored below
+        jsr     LoadWindowEntryTable
 
         ;; Iterate icons
         copy    #0, icon
@@ -2459,8 +2456,7 @@ cloop:  lda     (ptr_icon),y
         lda     cached_window_entry_list,x
         sta     icon
 
-done:   jsr     LoadDesktopEntryTable ; restore from above
-        jsr     PopPointers
+done:   jsr     PopPointers
         lda     icon
         rts
 
@@ -2504,7 +2500,9 @@ done:   rts
 
 ;;; Outputs: `drag_drop_params::result` updated if needed
 ;;; Assert: `MaybeStashDropTargetName` was previously called
+;;; NOTE: Preserves `cached_window_id`
 ;;; Trashes $06
+
 .proc MaybeUpdateDropTargetFromName
         ;; Did we previously stash an icon's name?
         lda     stashed_name
@@ -2513,14 +2511,16 @@ done:   rts
         ;; Try to find the icon by name.
         lda     cached_window_id
         sta     prev_cached_window_id
-        jsr     LoadDesktopEntryTable ; expected by `FindIconByName`
+
         ldy     active_window_id
         ldax    #stashed_name
-        jsr     FindIconByName
+        jsr     FindIconByName  ; modifies `cached_window_id`
         pha
+
         prev_cached_window_id := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     LoadWindowEntryTable ; restore previous state
+
         pla                          ; A = `FindIconByName` result
         beq     done                 ; no match
 
@@ -2581,11 +2581,15 @@ stashed_name:
 .endproc
 
 ;;; ============================================================
-;;; Input: Icon number in A. Must be in active window.
+;;; Input: Icon number in A.
+;;; Assert: Icon in active window.
 
 .proc ScrollIconIntoView
         icon_ptr := $06
 
+        pha
+        jsr     LoadActiveWindowEntryTable
+        pla
         sta     icon_num
 
         ;; Map coordinates to window
@@ -2830,7 +2834,7 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 
         ;; View by icon
 entry:
-:       jsr     LoadActiveWindowEntryTable ; restored below
+:       jsr     LoadActiveWindowEntryTable
 
         ldx     #$00
         txa
@@ -2910,7 +2914,7 @@ entry:
         jsr     UpdateScrollbars
         jsr     CachedIconsWindowToScreen
 
-finish: jmp     LoadDesktopEntryTable ; restore from above
+finish: rts
 
 win_width:
         .word   0
@@ -2953,7 +2957,7 @@ win_height:
         sta     selected_window_id
 
         ;; Sort the records
-sort:   jsr     LoadActiveWindowEntryTable ; restored below
+sort:   jsr     LoadActiveWindowEntryTable
         jsr     SortRecords
         jsr     StoreWindowEntryTable
 
@@ -2967,7 +2971,6 @@ sort:   jsr     LoadActiveWindowEntryTable ; restored below
 
         jsr     UpdateScrollbars
 
-done:   jsr     LoadDesktopEntryTable ; restored from above
 ret:    rts
 .endproc
 
@@ -3012,7 +3015,6 @@ ret:    rts
 
 ;;; ============================================================
 ;;; Destroy all of the icons in the active window.
-;;; Assert: DesktopEntryTable is cached (and this is restored)
 
 .proc DestroyIconsInActiveWindow
         ITK_CALL IconTK::CloseWindow, active_window_id
@@ -3024,8 +3026,7 @@ ret:    rts
 
         jsr     FreeCachedWindowIcons
 
-done:   jsr     StoreWindowEntryTable
-        jmp     LoadDesktopEntryTable ; restore from above
+        jmp     StoreWindowEntryTable
 .endproc
 
 ;;; ============================================================
@@ -3059,15 +3060,13 @@ done:   rts
 
 ;;; ============================================================
 ;;; Clear active window entry count
-;;; Assert: DesktopEntryTable is cached (and this is restored)
 
 .proc ClearActiveWindowEntryCount
-        jsr     LoadActiveWindowEntryTable ; restored below
+        jsr     LoadActiveWindowEntryTable
 
         copy    #0, cached_window_entry_count
 
-        jsr     StoreWindowEntryTable
-        jmp     LoadDesktopEntryTable ; restore from above
+        jmp     StoreWindowEntryTable
 .endproc
 
 ;;; ============================================================
@@ -3406,7 +3405,7 @@ typedown_buf:
         ;; --------------------------------------------------
         ;; Icons in active window
 
-        jsr     LoadActiveWindowEntryTable ; restored below
+        jsr     LoadActiveWindowEntryTable
 
         ldx     #0              ; index in buffer and icon list
 win_loop:
@@ -3419,12 +3418,13 @@ win_loop:
         inx
         jmp     win_loop
 :
-        jsr     LoadDesktopEntryTable ; restore from above
 
         ;; --------------------------------------------------
         ;; Desktop (volume) icons
 
 volumes:
+        jsr     LoadDesktopEntryTable
+
         ldx     buffer
         ldy     #0
 vol_loop:
@@ -3586,10 +3586,8 @@ ret:    rts
         ;; If windowed, ensure it is visible
         lda     selected_window_id
         beq     :+
-        jsr     LoadActiveWindowEntryTable ; restored below
         lda     selected_icon_list
         jsr     ScrollIconIntoView
-        jsr     LoadDesktopEntryTable ; restore from above
 :
 
         lda     selected_icon_list
@@ -3611,7 +3609,7 @@ ret:    rts
         bpl     :+              ; view by icons
         rts
 
-:       jsr     LoadActiveWindowEntryTable ; restored below
+:       jsr     LoadActiveWindowEntryTable
         lda     cached_window_entry_count
         jeq     finish          ; nothing to select!
 
@@ -3656,7 +3654,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         dec     index
         bpl     loop
 
-finish: jmp     LoadDesktopEntryTable ; restore from above
+finish: rts
 .endproc
 
 
@@ -3749,7 +3747,7 @@ loop:   jsr     GetEvent
         cmp     #CHAR_ESCAPE
         bne     :+
 
-done:   jmp     LoadDesktopEntryTable ; restore from `GetActiveWindowScrollInfo`
+done:   rts
 
         ;; Horizontal ok?
 :       bit     horiz_scroll_flag
@@ -3784,7 +3782,7 @@ vertical:
 ;;; ============================================================
 
 .proc GetActiveWindowScrollInfo
-        jsr     LoadActiveWindowEntryTable ; restored in `CmdScroll` and `HandleClientClick`
+        jsr     LoadActiveWindowEntryTable
         jsr     GetActiveWindowViewBy
         sta     active_window_view_by
         jsr     GetActiveWindowHScrollInfo
@@ -3931,7 +3929,7 @@ vert_scroll_max:        .byte   0
 
 .proc CmdCheckDrives
         copy    #0, pending_alert
-        jsr     LoadDesktopEntryTable ; TODO: Needed???
+        jsr     LoadDesktopEntryTable
         jsr     CmdCloseAll
         jsr     ClearSelection
 
@@ -4051,7 +4049,6 @@ by_unit_number:
         lda     #$80
 
         sta     check_drive_flags
-        jsr     LoadDesktopEntryTable ; TODO: Needed???
         bit     check_drive_flags
         bpl     explicit_command
         bvc     after_format_erase
@@ -4143,7 +4140,7 @@ close_loop:
 not_in_map:
 
         jsr     ClearSelection
-        jsr     LoadDesktopEntryTable ; TODO: Needed???
+        jsr     LoadDesktopEntryTable
 
         lda     devlst_index
         tay
@@ -4258,20 +4255,14 @@ active_window_view_by:
         .byte   0
 
 .proc HandleClientClick
-        jsr     LoadActiveWindowEntryTable ; restored below or in `HandleContentClick`
+        jsr     LoadActiveWindowEntryTable
         jsr     GetActiveWindowViewBy
         sta     active_window_view_by
 
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
-        ;; TODO: jmp here means `done_client_click` not called, callee responsible
         jeq     HandleContentClick ; 0 = ctl_not_a_control
 
-        ;; Ensure we call this when done
-        jsr     :+
-        jsr     StoreWindowEntryTable
-        jmp     LoadDesktopEntryTable ; restore from above
-:
         ;; --------------------------------------------------
 
         cmp     #MGTK::Ctl::dead_zone
@@ -4442,7 +4433,6 @@ bail:   return  #$FF            ; high bit set = not repeating
         lda     screentowindow_params::windowy
         cmp     #kWindowHeaderHeight + 1
         bcs     :+
-        ;; TODO: Skips `done_content_click` ?
         rts
 :
 
@@ -4456,8 +4446,7 @@ bail:   return  #$FF            ; high bit set = not repeating
 
         ;; Not an icon - maybe a drag?
         lda     active_window_id
-        jsr     DragSelect
-        jmp     done_content_click ; restore from `HandleClientClick`
+        jmp     DragSelect
 .endproc
 
 ;;; ============================================================
@@ -4475,8 +4464,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         ;; Modifier down - remove from selection
         icon_num := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     DeselectFileIcon ; deselect, nothing further
-        jmp     done_content_click ; restore from `HandleClientClick`
+        jmp     DeselectFileIcon ; deselect, nothing further
 
         ;; Double click or drag?
 :       jmp     check_double_click
@@ -4493,8 +4481,7 @@ not_selected:
         beq     :+               ; if so, retain selection
         jsr     ClearSelection
 :       lda     icon_num
-        jsr     SelectFileIcon ; select, nothing further
-        jmp     done_content_click ; restore from `HandleClientClick`
+        jmp     SelectFileIcon ; select, nothing further
 
 replace_selection:
         jsr     ClearSelection
@@ -4505,10 +4492,8 @@ replace_selection:
         ;; --------------------------------------------------
 check_double_click:
         jsr     StashCoordsAndDetectDoubleClick
-        bmi     :+
-        jsr     done_content_click ; restore from `HandleClientClick`
-        jmp     CmdOpenFromDoubleClick
-:
+        jpl     CmdOpenFromDoubleClick
+
         ;; --------------------------------------------------
         ;; Drag of file icon
         copy    icon_num, drag_drop_params::icon
@@ -4523,7 +4508,7 @@ process_drop:
         ;; (1/4) Canceled?
         cmp     #kOperationCanceled
         ;; TODO: Refresh source/dest if partial success
-        jeq     done_content_click ; restore from `HandleClientClick`
+        jeq     ignore
 
         ;; Was a move?
         bit     move_flag
@@ -4556,7 +4541,7 @@ process_drop:
         txa
         jmp     SelectAndRefreshWindowOrClose
       END_IF
-        rts                     ; TODO: Skips `done_content_click` ?
+        rts
     END_IF
 
         ;; (4/4) Dropped on window!
@@ -4570,7 +4555,7 @@ process_drop:
 
 same_or_desktop:
         cpx     #2              ; file icon dragged to desktop?
-        jeq     done_content_click ; restore from `HandleClientClick`
+        jeq     ignore
 
         cpx     #$FF
         beq     failure
@@ -4597,15 +4582,10 @@ same_or_desktop:
 
         jsr     UpdateScrollbars
         jsr     CachedIconsWindowToScreen
-        FALL_THROUGH_TO done_content_click
 
-;;; Used as additional entry point
-done_content_click:     ; TODO: Obscures correct usage; remove?
-        jsr     StoreWindowEntryTable
-        jmp     LoadDesktopEntryTable
+ignore: rts
 
 failure:
-        ;; TODO: Skips `done_content_click` ?
         ldx     saved_stack
         txs
         rts
@@ -4620,7 +4600,6 @@ failure:
 .endproc
 
 .endproc
-        done_content_click := HandleFileIconClick::done_content_click
         ;; Used for delete shortcut; set `drag_drop_params::icon` first
         process_drop := HandleFileIconClick::process_drop
 
@@ -4761,15 +4740,13 @@ exception_flag:
 
         ;; Create icons and draw contents
         jsr     CmdViewByIcon::entry
-        jsr     StoreWindowEntryTable ; TODO: above leaves Desktop; remove?
 
         ;; Draw header
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
     IF_ZERO                     ; Skip drawing if obscured
-        jsr     LoadActiveWindowEntryTable ; restored below
+        jsr     LoadActiveWindowEntryTable
         jsr     DrawWindowHeader
-        jsr     LoadDesktopEntryTable ; restore from above
     END_IF
 
         ;; Set view state and update menu
@@ -4798,6 +4775,7 @@ exception_flag:
 ;;; ============================================================
 ;;; Drag Selection
 ;;; Inputs: A = window_id (0 for desktop)
+;;; Assert: `cached_window_id` == A
 
 .proc DragSelect
         sta     window_id
@@ -5002,17 +4980,20 @@ y_flag: .byte   0
         ptr := $06
 
         copy    active_window_id, event_params
+
         jsr     GetActiveWindowViewBy
         bmi     :+
-        jsr     LoadActiveWindowEntryTable ; restored below
+        jsr     LoadActiveWindowEntryTable
         jsr     CachedIconsScreenToWindow
-:       MGTK_CALL MGTK::DragWindow, event_params
+:
+        MGTK_CALL MGTK::DragWindow, event_params
+
         jsr     GetActiveWindowViewBy
         bmi     :+
         jsr     CachedIconsWindowToScreen
         jsr     StoreWindowEntryTable
-        jsr     LoadDesktopEntryTable ; restore from above
-:       rts
+:
+        rts
 
 .endproc
 
@@ -5021,11 +5002,10 @@ y_flag: .byte   0
 .proc HandleResizeClick
         copy    active_window_id, event_params
         MGTK_CALL MGTK::GrowWindow, event_params
-        jsr     LoadActiveWindowEntryTable ; restored below
+        jsr     LoadActiveWindowEntryTable
         jsr     CachedIconsScreenToWindow
         jsr     UpdateScrollbars
-        jsr     CachedIconsWindowToScreen
-        jmp     LoadDesktopEntryTable ; restore from above
+        jmp     CachedIconsWindowToScreen
 .endproc
 
 ;;; ============================================================
@@ -5047,7 +5027,7 @@ y_flag: .byte   0
 .proc CloseWindow
         icon_ptr := $06
 
-        jsr     LoadActiveWindowEntryTable ; restored below
+        jsr     LoadActiveWindowEntryTable
 
         jsr     ClearSelection
 
@@ -5104,7 +5084,7 @@ cont:   sta     cached_window_entry_count
         sta     win_view_by_table-1,x
 
         MGTK_CALL MGTK::FrontWindow, active_window_id
-        jsr     LoadDesktopEntryTable ; restore from above
+
         jsr     UncheckViewMenuItem
         jsr     UpdateWindowMenuItems
 
@@ -5866,8 +5846,6 @@ ret:    rts
         ptr := $06
 
         sta     icon_param
-        jsr     StoreWindowEntryTable
-        lda     icon_param
 
         ;; Already an open window for the icon?
         ldx     #kMaxNumWindows-1
@@ -5951,7 +5929,7 @@ no_win:
         inx                     ; 0-based to 1-based
 
         stx     cached_window_id
-        jsr     LoadWindowEntryTable ; restored below
+        jsr     LoadWindowEntryTable
 
         ;; Update View and other menus
         inc     num_open_windows
@@ -6014,8 +5992,7 @@ update_view:
 done:   copy    cached_window_id, active_window_id
         jsr     UpdateScrollbars
         jsr     CachedIconsWindowToScreen
-        jsr     StoreWindowEntryTable
-        jmp     LoadDesktopEntryTable ; restore from above
+        jmp     StoreWindowEntryTable
 
 ;;; Common code to update the dir (vol/folder) icon.
 ;;; * If `icon_param` is valid:
@@ -9660,6 +9637,7 @@ GetBlockCount   := GetBlockCountImpl::start
 ;;; Create Volume Icon
 ;;; Input: A = unit number, Y = index in DEVLST
 ;;; Output: 0 on success, ProDOS error code on failure
+;;; Assert: `cached_window_id` == 0
 ;;;
 ;;; NOTE: Called from Initializer (init) which resides in $800-$1200
 
