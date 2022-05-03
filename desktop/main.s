@@ -13776,10 +13776,6 @@ appleworks:
 .endproc
 
 ;;; ============================================================
-
-        PAD_TO $A500
-
-;;; ============================================================
 ;;; Dialog Proc Invocation
 
 kNumDialogTypes = 11
@@ -13797,7 +13793,6 @@ kIndexGetSizeDialog     = 9
 kIndexDuplicateDialog   = 10
 
 invoke_dialog_proc:
-        ASSERT_ADDRESS $A500, "Overlay entry point"
         jmp     InvokeDialogProcImpl
 
 dialog_proc_table:
