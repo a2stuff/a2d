@@ -1128,7 +1128,7 @@ LAC53:  .byte   0
 loop:   lda     #0
         sta     digit
 sloop:  cmp16   value, powers,x
-        bpl     subtract
+        bcs     subtract
         lda     digit
         bne     not_pad
         bit     nonzero_flag

@@ -304,7 +304,7 @@ test:
         bpl     :+
         sub16   #0, delta, delta ; negate
 :       cmp16   delta, #kMoveThresholdX
-        bpl     moved
+        bcs     moved
 
         ;; Compute absolute Y delta
         sub16   event_params::ycoord, screentowindow_params::screen::ycoord, delta
@@ -312,7 +312,7 @@ test:
         bpl     :+
         sub16   #0, delta, delta ; negate
 :       cmp16   delta, #kMoveThresholdY
-        bpl     moved
+        bcs     moved
 
         ;; Hasn't moved enough
         jmp     done
@@ -558,9 +558,9 @@ loop:
         copy16  yy, rect+MGTK::Rect::y2
 
         cmp16   yy, inner_oval+OvalRec::top
-        bmi     outer_only
+        bcc     outer_only
         cmp16   yy, inner_oval+OvalRec::bottom
-        bpl     outer_only
+        bcs     outer_only
 
         ;; Need to draw the left and right edges
         copy16  outer_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x1
@@ -768,7 +768,7 @@ oval:   .tag    OvalRec
         ;; if (ovalWidth [16.0] > d0 [16.0])
         ;;   ovalWidth [16.0] = d0 [16.0]
         cmp16   ovalWidth, d0
-        bpl     :+
+        bcs     :+
         copy16  d0, ovalWidth
 :
 
@@ -778,7 +778,7 @@ oval:   .tag    OvalRec
         ;; if (ovalHeight [16.0] > d0 [16.0])
         ;;   ovalHeight [16.0] = rect.bottom [16.0] - rect.top [16.0]
         cmp16   ovalHeight, d0
-        bpl     :+
+        bcs     :+
         copy16  d0, ovalHeight
 :
 
@@ -974,14 +974,14 @@ product:                        ; [32.32]
         ;; if (vert [16.0] < oval.top [16.0])
         ;;   return;
         cmp16   vert, oval+OvalRec::top
-        bpl     :+
+        bcs     :+
         rts
 :
 
         ;; if (vert [16.0] >= oval.bottom [16.0])
         ;;   return;
         cmp16   vert, oval+OvalRec::bottom
-        bmi     :+
+        bcc     :+
         rts
 :
 
@@ -997,7 +997,7 @@ product:                        ; [32.32]
 loop1:
         ;; while (oval.square [16.16] < oval.rSqYSq [32.0] ) {
         cmp16   oval+OvalRec::square+2, oval+OvalRec::rSqYSq
-        jpl     endloop1
+        jcs     endloop1
 
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] + oval.oneHalf [16.16];
         add32   oval+OvalRec::rightEdge, oval+OvalRec::oneHalf, oval+OvalRec::rightEdge
@@ -1021,7 +1021,7 @@ endloop1:
 loop2:
         ;; while (oval.square [16.16] > oval.rSqYSq [32.0]) {
         cmp16   oval+OvalRec::square+2, oval+OvalRec::rSqYSq
-        jmi     endloop2
+        jcc     endloop2
 
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] - oval.oneHalf [16.16];
         sub32   oval+OvalRec::rightEdge, oval+OvalRec::oneHalf, oval+OvalRec::rightEdge

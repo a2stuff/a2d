@@ -348,7 +348,7 @@ datetime:
         copy    #12, datetime + ParsedDateTime::month
 year:   dec16   datetime + ParsedDateTime::year
         cmp16   datetime + ParsedDateTime::year, #1901
-        bpl     fin
+        bcs     fin
         copy16  #2155, datetime + ParsedDateTime::year
 
 fin:    jsr     UpdateWindow
@@ -383,7 +383,7 @@ fin:    jsr     UpdateWindow
         copy    #1, datetime + ParsedDateTime::month
 year:   inc16   datetime + ParsedDateTime::year
         cmp16   datetime + ParsedDateTime::year, #2155
-        bmi     fin
+        bcc     fin
         copy16  #1901, datetime + ParsedDateTime::year
 
 fin:    jsr     UpdateWindow

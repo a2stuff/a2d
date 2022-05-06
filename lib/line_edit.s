@@ -173,7 +173,7 @@ width   .word
         sta     tw_params::length
 loop:   add16   tw_params::width, textpos + MGTK::Point::xcoord, tw_params::width
         cmp16   tw_params::width, click_coords
-        bpl     :+
+        bcs     :+
         inc     tw_params::length
         lda     tw_params::length
         cmp     buf_text

@@ -273,7 +273,7 @@ advance:
 test:   sty     textwidth_params::length
         MGTK_CALL MGTK::TextWidth, textwidth_params
         cmp16   textwidth_params::width, #kWrapWidth
-        bpl     split           ; no! so we know where to split now
+        bcs     split           ; no! so we know where to split now
 
         ;; Yes, record possible split position, maybe continue.
         ldy     textwidth_params::length
