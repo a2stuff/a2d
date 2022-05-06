@@ -473,13 +473,24 @@
 
 # Preview
 
-* Preview a text file; verify that up/down arrow keys scroll.
-* Preview a text file; verify that Open-Apple plus up/down arrow keys scroll by page.
-* Preview a text file; verify that Solid-Apple plus up/down arrow keys scroll by page.
-* Preview a text file; verify that Escape key exits.
-* Preview an image file; verify that Escape key exits.
-* Preview an image file on IIgs or with RGB card; verify that space bar toggles color/mono.
+Text File:
+* Verify that Escape key exits.
+* Verify that Space toggles Proportional/Fixed mode.
+* Verify that DeskTop's selection is not cleared on exit.
+* Preview a text file that can be displayed entirely within the window. Verify that the scrollbar is inactive.
+* Preview a text file that is longer than one screen.
+  * Verify that the scrollbar is active.
+  * Verify that Up/Down Arrow keys scroll by one line.
+  * Verify that Open-Apple plus Up/Down Arrow keys scroll by page.
+  * Verify that Solid-Apple plus Up/Down Arrow keys scroll by page.
+  * Verify that Open-Apple plus Solid-Apple plus Up/Down Arrow keys scroll to start/end.
+  * Click the Proportional/Fixed button on the title bar. Verify that the view is scrolled to the top.
+* Preview a long text file, e.g. 2000 lines. Verify that dragging the scroll thumb to the middle shows approximately the middle of the file.
+* Preview a text file with a tab character in the first line. Verify that the file displays all lines correctly.
 
+Image File:
+* Verify that Escape key exits.
+* On a IIgs or with RGB card; verify that space bar toggles color/mono.
 * Configure a system with a realtime clock. Launch DeskTop. Preview an image file. Exit the preview. Verify that the menu bar clock reappears immediately.
 
 # Desk Accessories

@@ -70,13 +70,10 @@
         bne     :-
         stx     titlebuf
 
-        jmp     Copy2Aux
+        FALL_THROUGH_TO Copy2Aux
 .endproc
 
-
-save_stack:.byte   0
-
-;;; Copy $800 through $13FF (the DA) to aux
+;;; Copy the DA to aux
 .proc Copy2Aux
         tsx
         stx     save_stack
@@ -93,42 +90,9 @@ dst:    sta     Start,y         ; self-modified
         lda     dst+2
         cmp     #.hibyte(da_end)+1
         bne     src
+
+        FALL_THROUGH_TO CallInit
 .endproc
-
-call_main_trampoline   := $20 ; installed on ZP, turns off auxmem and calls...
-call_main_addr         := call_main_trampoline+7        ; address patched in here
-
-;;; Copy the following "CallMainTemplate" routine to $20
-.scope
-        sta     RAMWRTON
-        sta     RAMRDON
-        COPY_BYTES sizeof_CallMainTemplate+1, CallMainTemplate, call_main_trampoline
-        jmp     CallInit
-.endscope
-
-.proc CallMainTemplate
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     SELF_MODIFIED   ; overwritten (in zp version)
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-        sizeof_CallMainTemplate = .sizeof(CallMainTemplate)
-
-.macro TRAMP_CALL addr
-        copy16  #addr, call_main_addr
-        jsr     call_main_trampoline
-.endmacro
-
-.macro TRAMP_CALL_WITH_A addr
-        pha
-        copy16  #addr, call_main_addr
-        pla
-        jsr     call_main_trampoline
-.endmacro
-
-;;; ============================================================
 
 .proc CallInit
         ;; run the DA
@@ -141,6 +105,8 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
         txs
         rts
 .endproc
+
+save_stack:.byte   0
 
 ;;; ============================================================
 ;;; ProDOS MLI calls
@@ -206,8 +172,8 @@ loop:   lda     params_start - 1,y
 
 ;;; Copies param blocks from Main to Aux
 .proc CopyParamsMainToAux
-        pha
         php
+        pha
         sta     RAMWRTON
         ldy     #(params_end - params_start + 1)
 loop:   lda     params_start - 1,y
@@ -215,8 +181,8 @@ loop:   lda     params_start - 1,y
         dey
         bne     loop
         sta     RAMRDON
-        plp
         pla
+        plp
         rts
 .endproc
 
@@ -245,10 +211,13 @@ pathbuf:        .res    kPathBufferSize, 0
 
 L0945:  .byte   $00
 L0946:  .byte   $00
-L0947:  .byte   $00
+
+read_flag:                      ; set when the file is successfully read
+        .byte   0
 visible_flag:                   ; clear until text that should be visible is in view
         .byte   0
-L0949:  .byte   $00
+view_dirty_flag:                ; clear until text is drawn
+        .byte   0
 
 params_end := * + 4       ; bug in original? (harmless as this is static)
 ;;; ----------------------------------------
@@ -274,31 +243,32 @@ left:   .word   0
 base:   .word   0
 .endparams
 
-window_width:   .word   0
-window_height:  .word   0
-
 y_remaining:    .word   0
 
 ;;; Height of a line of text
 kLineHeight = kSystemFontHeight + 1
 
+kLinesPerPage = kDAHeight / kLineHeight
+
+
 ;;; Number of lines per scroll tick
-kScrollDelta = 1
+kLineScrollDelta = 1
+
+;;; Scroll by this number of lines when doing page up/down
+kPageScrollDelta = kLinesPerPage - 1
 
 ;;; Farthest offset into the file that `DrawContent` made it
 buf_mark:
         .word   0
 
-last_visible_line:
-        .word   0
-first_visible_line:
-        .word   0
-current_line:
+;;; Approximated on load: max = (LinesPerPage * EOF / BytesShown) - LinesPerPage
+;;; Assert: max_visible_line + kPageScrollDelta <= $FFFF
+max_visible_line:
         .word   0
 
-;;; Scroll by this number of ticks when doing page up/down
-page_scroll_delta:
-        .byte   0
+;;; Scroll position in document
+first_visible_line:
+        .word   0
 
 fixed_mode_flag:
         .byte   0               ; 0 = proportional, otherwise = fixed
@@ -318,43 +288,47 @@ mousey  := *+2
         .res    4               ; space for both
 .endparams
 
+.assert findwindow_params = event_params+5, error, "param alignment"
 .params findwindow_params       ; TODO: Make this address correct, via union
-which_area:   .byte   0
-window_id:    .byte   0
+which_area:     .byte   0
+window_id:      .byte   0
 .endparams
 
 .params growwindow_params
-window_id:     .byte   kDAWindowId
-mousex: .word   0
-mousey: .word   0
+window_id:      .byte   kDAWindowId
+mousex:         .word   0
+mousey:         .word   0
 it_grew:        .byte   0
 .endparams
 
-.params trackgoaway_params ; queried after close clicked to see if aborted/finished
-goaway: .byte   0        ; 0 = aborted, 1 = clicked
+.params trackgoaway_params      ; queried after close clicked to see if aborted/finished
+goaway:         .byte   0       ; 0 = aborted, 1 = clicked
 .endparams
 
-        .byte   0,0             ; ???
-
-.params findcontrol_params        ; queried after a client click to identify target
-mousex: .word   0
-mousey: .word   0
+.params findcontrol_params      ; queried after a client click to identify target
+mousex:         .word   0
+mousey:         .word   0
 which_ctl:      .byte   0       ; 0 = client, 1 = vscroll, 2 = hscroll
 which_part:     .byte   0       ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
 .endparams
 
 .params updatethumb_params      ; called to update scroll bar position
-which_ctl:   .byte   0               ; 1 = vscroll, 2 = hscroll
-thumbpos:    .byte   0               ; new position
+which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
+thumbpos:       .byte   0       ; new position
+.endparams
+
+.params activatectl_params
+which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
+activate:       .byte   0
 .endparams
 
 ;;; Used when dragging vscroll thumb
 .params trackthumb_params
-which_ctl:   .byte   0               ; 1 = vscroll, 2 = hscroll
-mousex: .word   0
-mousey: .word   0
-thumbpos:    .byte   0               ; position
-thumbmoved:  .byte   0               ; 0 if not moved, 1 if moved
+which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
+mousex:         .word   0
+mousey:         .word   0
+thumbpos:       .byte   0       ; position
+thumbmoved:     .byte   0       ; 0 if not moved, 1 if moved
 .endparams
 
 .params drawtext_params
@@ -362,10 +336,10 @@ textptr:        .addr   0       ; address
 textlen:        .byte   0       ; length
 .endparams
 
-kDefaultLeft    = 10
-kDefaultTop     = 28
-kDefaultWidth   = 512
-kDefaultHeight  = 150
+kDALeft    = 10
+kDATop     = 28
+kDAWidth   = 512
+kDAHeight  = 150
 
 titlebuf:
         .res    16, 0
@@ -378,7 +352,7 @@ options:        .byte   MGTK::Option::go_away_box ; window flags (2=include clos
 title:          .addr   titlebuf
 hscroll:        .byte   MGTK::Scroll::option_none
 vscroll:        .byte   MGTK::Scroll::option_normal
-hthumbmax:      .byte   32
+hthumbmax:      .byte   32      ; unused
 hthumbpos:      .byte   0
 vthumbmax:      .byte   kVScrollMax
 vthumbpos:      .byte   0
@@ -386,14 +360,14 @@ status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   200
 mincontlength:  .word   51
-maxcontwidth:   .word   kDefaultWidth
-maxcontlength:  .word   kDefaultHeight
+maxcontwidth:   .word   kDAWidth
+maxcontlength:  .word   kDAHeight
 port:
-        DEFINE_POINT viewloc, kDefaultLeft, kDefaultTop
+        DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT maprect, 0, 0, kDefaultWidth, kDefaultHeight
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $00
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -408,12 +382,15 @@ nextwinfo:      .addr   0
 
         ;; gets copied over winfo::port after mode is drawn
 .params default_port
-        DEFINE_POINT viewloc, kDefaultLeft, kDefaultTop
+        DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kDefaultWidth, kDefaultHeight
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 .endparams
+
+;;; ============================================================
+;;; Open the file and create the DA window
 
 .proc Init
         lda     #0
@@ -434,8 +411,6 @@ reserved:       .byte   0
         ;; create window
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::SetPort, winfo::port
-        jsr     CalcWindowSize
-        jsr     CalcPageScrollDelta
         jsr     CalcAndDrawMode
         jsr     DrawContent
         jsr     InitScrollBar
@@ -455,6 +430,12 @@ reserved:       .byte   0
         cmp     #MGTK::EventKind::button_down ; was clicked?
         bne     InputLoop      ; nope, keep waiting
 
+        FALL_THROUGH_TO OnButtonDown
+.endproc
+
+;;; ============================================================
+
+.proc OnButtonDown
         MGTK_CALL MGTK::FindWindow, event_params::coords
         lda     findwindow_params::window_id ; in our window?
         cmp     #kDAWindowId
@@ -466,6 +447,7 @@ reserved:       .byte   0
         jeq     OnCloseClick
 
         ;; title and resize clicks need mouse location
+        ;; TODO: use lib/event_params.s
         ldx     event_params::mousex
         stx     growwindow_params::mousex
         stx     findcontrol_params::mousex
@@ -485,6 +467,17 @@ reserved:       .byte   0
 
 title:  jsr     OnTitleBarClick
         jmp     InputLoop
+.endproc
+
+;;; ============================================================
+
+.proc ClearUpdates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 .proc YieldLoop
@@ -522,13 +515,13 @@ title:  jsr     OnTitleBarClick
       END_IF
     ELSE
         ;; Single modifier
-        cmp     #CHAR_UP        ; Apple-Up = Page Up
+        cmp     #CHAR_UP        ; Apple+Up = Page Up
       IF_EQ
         jsr     PageUp
         jmp     InputLoop
       END_IF
 
-        cmp     #CHAR_DOWN      ; Apple-Down = Page Down
+        cmp     #CHAR_DOWN      ; Apple+Down = Page Down
       IF_EQ
         jsr     PageDown
         ;; jmp     InputLoop
@@ -566,7 +559,7 @@ no_mod:
 .endproc
 
 ;;; ============================================================
-;;; Close Button
+;;; Click on Close Button
 
 .proc OnCloseClick
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
@@ -583,7 +576,7 @@ no_mod:
 .endproc
 
 ;;; ============================================================
-;;; Client Area
+;;; Click on Client Area
 
 ;;; Non-title (client) area clicked
 .proc OnClientClick
@@ -596,12 +589,9 @@ end:    rts
 .endproc
 
 ;;; ============================================================
-;;; Vertical Scroll Bar
+;;; Click on Vertical Scroll Bar
 
 .proc OnVScrollClick
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     trackthumb_params::which_ctl
-        sta     updatethumb_params::which_ctl
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
         beq     OnVScrollThumbClick
@@ -612,205 +602,209 @@ end:    rts
         cmp     #MGTK::Part::up_arrow
         beq     OnVScrollUpClick
         cmp     #MGTK::Part::down_arrow
-        jeq     OnVScrollDownClick
+        beq     OnVScrollDownClick
         rts
 .endproc
 
 .proc OnVScrollThumbClick
-        jsr     DoTrackthumb
+        copy16  event_params::mousex, trackthumb_params::mousex
+        copy    event_params::mousey, trackthumb_params::mousey
+        MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         beq     end
-        lda     trackthumb_params::thumbpos
-        sta     updatethumb_params::thumbpos
-        jsr     UpdateVOffset
-        jsr     UpdateVThumb
-        jsr     DrawContent
-        lda     L0947
+
+        ;; `first_visible_line` = `trackthumb_params::thumbpos` * `max_visible_line` / 256
+        ;; [16] = ( [8] * [16] ) >> 8
+        copy    trackthumb_params::thumbpos, multiplier ; lo
+        copy    #0, multiplier+1                        ; hi
+        copy16  max_visible_line, multiplicand
+        jsr     Mul_16_16
+        copy16  product+1, first_visible_line
+
+        jsr     UpdateScrollPos
+
+        ;; Clear the window if the view wasn't drawn to
+        ;; TODO: Maybe this is no longer necessary?
+        lda     read_flag
         beq     end
-        lda     L0949
+        lda     view_dirty_flag
         bne     end
         jsr     ClearWindow
 end:    rts
+.endproc
+
+.proc OnVScrollBelowClick
+loop:   jsr     PageDown
+        jsr     CheckButtonRelease
+        bcc     loop            ; repeat while button down
+        rts
 .endproc
 
 .proc OnVScrollAboveClick
 loop:   jsr     PageUp
         jsr     CheckButtonRelease
         bcc     loop            ; repeat while button down
-end:    rts
-.endproc
-
-.proc PageUp
-        lda     winfo::vthumbpos
-        beq     end
-        sec
-        lda     winfo::vthumbpos
-        sbc     page_scroll_delta
-        bcs     store
-        lda     #0              ; underflow
-store:  sta     updatethumb_params::thumbpos
-        jsr     UpdateScrollPos
-end:    rts
-.endproc
-
-.proc OnVScrollUpClick
-loop:   jsr     ScrollUp
-        jsr     CheckButtonRelease
-        bcc     loop            ; repeat while button down
-end:    rts
-.endproc
-
-.proc ScrollUp
-        lda     winfo::vthumbpos
-        beq     end
-        sec
-        sbc     #1
-        sta     updatethumb_params::thumbpos
-        jsr     UpdateScrollPos
-end:    rts
-.endproc
-
-.proc ScrollTop
-        lda     winfo::vthumbpos
-        beq     end
-force:  copy    #0, updatethumb_params::thumbpos
-        jsr     UpdateScrollPos
-end:    rts
-.endproc
-ForceScrollTop := ScrollTop::force
-
-.proc OnVScrollBelowClick
-loop:   jsr     PageDown
-        jsr     CheckButtonRelease
-        bcc     loop            ; repeat while button down
-end:    rts
-.endproc
-
-.proc PageDown
-        lda     winfo::vthumbpos
-        cmp     winfo::vthumbmax ; pos == max ?
-        beq     end
-        clc
-        lda     winfo::vthumbpos
-        adc     page_scroll_delta ; pos + delta
-        bcs     overflow
-        cmp     winfo::vthumbmax ; >= max ?
-        bcc     store            ; nope, it's good
-overflow:
-        lda     winfo::vthumbmax ; set to max
-store:  sta     updatethumb_params::thumbpos
-        jsr     UpdateScrollPos
-end:    rts
+        rts
 .endproc
 
 .proc OnVScrollDownClick
 loop:   jsr     ScrollDown
         jsr     CheckButtonRelease
         bcc     loop            ; repeat while button down
-end:    rts
-.endproc
-
-.proc ScrollDown
-        lda     winfo::vthumbpos
-        cmp     winfo::vthumbmax
-        beq     end
-        clc
-        adc     #1
-        sta     updatethumb_params::thumbpos
-        jsr     UpdateScrollPos
-end:    rts
-.endproc
-
-.proc ScrollBottom
-        lda     winfo::vthumbpos
-        cmp     winfo::vthumbmax
-        beq     end
-        copy    winfo::vthumbmax, updatethumb_params::thumbpos
-        jsr     UpdateScrollPos
-end:    rts
-.endproc
-
-.proc UpdateScrollPos       ; Returns with carry set if mouse released
-        jsr     UpdateVOffset
-        jsr     UpdateVThumb
-        jsr     DrawContent
         rts
 .endproc
 
+.proc OnVScrollUpClick
+loop:   jsr     ScrollUp
+        jsr     CheckButtonRelease
+        bcc     loop            ; repeat while button down
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Returns Z=1 if at top, Z=0 otherwise
+.proc IsAtTop
+        lda     first_visible_line
+        bne     ret
+        lda     first_visible_line+1
+ret:    rts
+.endproc
+
+;;; Returns Z=1 if at bottom, Z=0 otherwise
+.proc IsAtBottom
+        lda     first_visible_line
+        cmp     max_visible_line
+        bne     ret
+        lda     first_visible_line+1
+        cmp     max_visible_line+1
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc ScrollUp
+        jsr     IsAtTop
+        beq     ret
+
+        cmp16   first_visible_line, #kLineScrollDelta ; would be too far?
+        bcc     ForceScrollTop                        ; yes, clamp to top
+        sub16   first_visible_line, #kLineScrollDelta, first_visible_line
+        jsr     UpdateScrollPos
+
+ret:    rts
+.endproc
+
+.proc PageUp
+        jsr     IsAtTop
+        beq     ret
+
+        cmp16   first_visible_line, #kPageScrollDelta ; would be too far?
+        bcc     ForceScrollTop                        ; yes, clamp to top
+        sub16   first_visible_line, #kPageScrollDelta, first_visible_line
+        jsr     UpdateScrollPos
+
+ret:    rts
+.endproc
+
+.proc ScrollTop
+        jsr     IsAtTop
+        beq     ret
+
+force:  copy16  #0, first_visible_line
+        jsr     UpdateScrollPos
+
+ret:    rts
+.endproc
+ForceScrollTop := ScrollTop::force
+
+.proc ScrollDown
+        jsr     IsAtBottom
+        beq     ret
+
+        add16   first_visible_line, #kLineScrollDelta, first_visible_line
+        cmp16   first_visible_line, max_visible_line ; too far down?
+        bcs     ForceScrollBottom                    ; yes, clamp to bottom
+        jsr     UpdateScrollPos
+
+ret:    rts
+.endproc
+
+.proc PageDown
+        jsr     IsAtBottom
+        beq     ret
+
+        add16   first_visible_line, #kPageScrollDelta, first_visible_line
+        cmp16   first_visible_line, max_visible_line ; too far down?
+        bcs     ForceScrollBottom                    ; yes, clamp to bottom
+        jsr     UpdateScrollPos
+
+ret:    rts
+.endproc
+
+.proc ScrollBottom
+        jsr     IsAtBottom
+        beq     ret
+
+force:  copy16  max_visible_line, first_visible_line
+        jsr     UpdateScrollPos
+
+ret:    rts
+.endproc
+ForceScrollBottom := ScrollBottom::force
+
+;;; ============================================================
+
+.proc UpdateScrollPos
+        ;; Update viewport
+        copy16  first_visible_line, multiplier
+        copy16  #kLineScrollDelta * kLineHeight, multiplicand
+        jsr     Mul_16_16
+        ldax    product
+        stax    winfo::maprect::y1
+        addax   #kDAHeight, winfo::maprect::y2
+
+        ;; Update thumb position
+
+        ;; `updatethumb_params::thumbpos` = `first_visible_line` * 256 / `max_visible_line`
+        ;; [8] = ([16] << 8) / [16]
+        lda     #0              ; zero everything
+        ldx     #3
+:       sta     numerator,x
+        sta     denominator,x
+        dex
+        bpl     :-
+        copy16  first_visible_line, numerator+1 ; = `first_visible_line` * 256
+        copy16  max_visible_line, denominator   ; = `max_visible_line`
+        jsr     Div_32_32
+        lda     quotient+1
+    IF_NOT_ZERO
+        lda     #kVScrollMax
+    ELSE
+        lda     quotient
+    END_IF
+        sta     updatethumb_params::thumbpos
+
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        jmp     DrawContent
+.endproc
+
+;;; ============================================================
+
+;;; Returns with carry set if button was released
 .proc CheckButtonRelease
-        jsr     WasButtonReleased
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params
+        cmp     #MGTK::EventKind::button_up
         clc
         bne     end
         sec
 end:    rts
 .endproc
 
-.proc CalcPageScrollDelta
-        ldax    window_height
-        ldy     #kScrollDelta * kLineHeight
-        jsr     Divide_16_8_16
-        sta     page_scroll_delta
-        dec     page_scroll_delta ; leave some overlap
-        rts
-.endproc
-
 ;;; ============================================================
 ;;; UI Helpers
-
-        ;; Used at start of thumb EventKind::drag
-.proc DoTrackthumb
-        copy16  event_params::mousex, trackthumb_params::mousex
-        lda     event_params::mousey
-        sta     trackthumb_params::mousey
-        MGTK_CALL MGTK::TrackThumb, trackthumb_params
-        rts
-.endproc
-
-;;; Checks button state; z clear if button was released, set otherwise
-.proc WasButtonReleased
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params
-        cmp     #2
-        rts
-.endproc
-
-.proc UpdateVOffset
-        lda     updatethumb_params::thumbpos ; lo
-        ldx     #0                           ; hi
-        ldy     #kScrollDelta * kLineHeight
-        jsr     Multiply_16_8_16
-        stax    winfo::maprect::y1
-        addax   window_height, winfo::maprect::y2
-
-        jsr     CalcLinePosition
-
-        lda     updatethumb_params::thumbpos ; lo
-        ldx     #0                           ; hi
-        ldy     #kScrollDelta
-        jsr     Multiply_16_8_16
-        stax    first_visible_line
-
-        rts
-.endproc
-
-.proc UpdateHScroll
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     updatethumb_params::which_ctl
-
-        val := $06
-        copy16  winfo::maprect::x1, val
-        jsr     DivBy16
-        sta     updatethumb_params::thumbpos
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        rts
-.endproc
-
-.proc UpdateVThumb       ; updatethumb_params::thumbpos set by caller
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        rts
-.endproc
 
 .proc ClearWindow
         MGTK_CALL MGTK::SetPattern, white_pattern
@@ -826,7 +820,7 @@ end:    rts
         ptr := $06
 
         lda     #0
-        sta     L0949
+        sta     view_dirty_flag
 
         sta     buf_mark
         sta     buf_mark+1
@@ -848,13 +842,14 @@ end:    rts
         lda     #0
         sta     L0945
         sta     L0946
-        sta     L0947
+        sta     read_flag
         sta     line_pos::base+1
         sta     current_line
         sta     current_line+1
         sta     visible_flag
-        lda     #kLineSpacing
-        sta     line_pos::base
+
+        add16   first_visible_line, #kLinesPerPage - 1, last_visible_line
+        copy    #kLineSpacing, line_pos::base
         jsr     ResetLine
 
 do_line:
@@ -924,6 +919,14 @@ done:   MGTK_CALL MGTK::SetFont, DEFAULT_FONT
         sub16   ptr, #default_buffer, ptr
         add16   ptr, buf_mark, buf_mark
         rts
+
+
+;;; `first_visible_line` + `kLinesPerPage`
+last_visible_line:
+        .word   0
+
+current_line:
+        .word   0
 .endproc
 
 ;;; ============================================================
@@ -966,7 +969,7 @@ done:   MGTK_CALL MGTK::SetFont, DEFAULT_FONT
 
 loop:   lda     L0945
         bne     more
-        lda     L0947
+        lda     read_flag
         beq     :+
         jsr     DrawTextRun
         sec
@@ -1082,7 +1085,7 @@ times70:.word   70
         beq     end
         MGTK_CALL MGTK::DrawText, drawtext_params
         lda     #1
-        sta     L0949
+        sta     view_dirty_flag
 end:    rts
 .endproc
 
@@ -1134,7 +1137,7 @@ store:  sta     default_buffer,x         ; self-modified
 
         sta     RAMWRTON        ; read file chunk
         lda     #0
-        sta     L0947
+        sta     read_flag
         jsr     ReadFile
 
         pha                     ; copy read buffer main>aux
@@ -1156,113 +1159,59 @@ store:  sta     default_buffer,x         ; self-modified
         beq     done
         brk                     ; crash on other error
 done:   lda     #1
-        sta     L0947
+        sta     read_flag
 end:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc CalcWindowSize
-        sub16   winfo::maprect::x2, winfo::maprect::x1, window_width
-        sub16   winfo::maprect::y2, winfo::maprect::y1, window_height
-        FALL_THROUGH_TO CalcLinePosition
-.endproc
-
-;;; ============================================================
-
-.proc CalcLinePosition
-        copy16  winfo::maprect::y2, y_remaining
-        copy16  #0, last_visible_line
-
-loop:   lda     y_remaining+1
-        bne     :+
-        lda     y_remaining
-        cmp     #kLineSpacing
-        bcc     end
-
-:       sec
-        lda     y_remaining
-        sbc     #kLineSpacing
-        sta     y_remaining
-        bcs     :+
-        dec     y_remaining+1
-:       inc     last_visible_line
-        bne     loop
-        inc     last_visible_line+1
-        jmp     loop
-
-end:    rts
-.endproc
-
-;;; ============================================================
 ;;; Assumes `buf_mark` represents the amount of file read for
 ;;; filling the first screen, and `get_eof_params::eof` is the
 ;;; file size.
 
-.params setctlmax_params
-which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
-ctlmax:         .byte   0
-.endparams
-
-.params activatectl_params
-which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
-activate:       .byte   0
-.endparams
-
 .proc InitScrollBar
         lda     get_eof_params::eof+2
     IF_NE
-        ;; File is > 64k, just use max scrollbar
-        copy    #kVScrollMax, setctlmax_params::ctlmax
-        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
-        copy    #1, activatectl_params::activate
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
-        rts
+        ;; File is > 64k, cap to 64k (and ignore bankbyte)
+        lda     #$FF
+        sta     get_eof_params::eof
+        sta     get_eof_params::eof+1
     END_IF
+        ;; Treat get_eof_params::eof as 16 bit from here.
 
         cmp16   buf_mark, get_eof_params::eof
-    IF_POS
+    IF_GE
         ;; File entirely fit; deactivate scrollbar
         copy    #0, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
     END_IF
 
-        ;; Use fraction of document shown (`eof` / `buf_mark`) and
-        ;; the number of lines on a page (`page_scroll_delta`+1)
+        ;; Use fraction of document shown (`buf_mark` / `eof`) and
+        ;; the number of lines on a page (`kLinesPerPage`)
         ;; to guestimate the number of lines in the file.
-        lda     get_eof_params::eof+1 ; lo
-        ldx     #0                    ; hi
-        ldy     buf_mark+1
-        jsr     Divide_16_8_16
-        ldy     page_scroll_delta
-        jsr     Multiply_16_8_16
-        sta     setctlmax_params::ctlmax
-        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+        ;; num_lines = `kFudgePercent` * `kLinesPerPage` * ( `eof` / `buf_mark` )
+        ;; `max_visible_line` = num_lines - `kLinesPerPage`
+        kFudgePercent = 15      ; over-estimate by 15%
+        copy16  #(kLinesPerPage * (kFudgePercent+100) / 100), multiplier
+        copy16  get_eof_params::eof, multiplicand
+        jsr     Mul_16_16
+        copy32  product, numerator
+        copy16  buf_mark, denominator
+        copy16  #0, denominator+2
+        jsr     Div_32_32
+
+        lda     quotient+2
+        ora     quotient+3
+    IF_NOT_ZERO
+        ;; Maxed out
+        copy16  #($FFFF - kLinesPerPage), max_visible_line
+    ELSE
+        sub16   quotient, #kLinesPerPage, max_visible_line
+    END_IF
+
         copy    #1, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc DivBy16                   ; input in $06/$07, output in a
-        val := $06
-
-        ldx     #4
-loop:   clc
-        ror     val+1
-        ror     val
-        dex
-        bne     loop
-        lda     val
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc ClearUpdates
-        TRAMP_CALL JUMP_TABLE_CLEAR_UPDATES
         rts
 .endproc
 
@@ -1310,7 +1259,6 @@ reserved:       .byte   0
 mode_mapinfo_viewloc_xcoord := mode_mapinfo::viewloc::xcoord
 
         DEFINE_POINT mode_pos, 0, 9
-        DEFINE_RECT mode_rect, 0, 0, kLabelWidth, kLabelHeight
 
 .params winframerect_params
 window_id:      .byte   kDAWindowId
@@ -1335,7 +1283,7 @@ window_id:      .byte   kDAWindowId
 
         ;; Clear background
         MGTK_CALL MGTK::SetPattern, white_pattern
-        MGTK_CALL MGTK::PaintRect, mode_rect
+        MGTK_CALL MGTK::PaintRect, mode_mapinfo::maprect
 
         ;; Center string
         text_params     := $6
@@ -1368,7 +1316,103 @@ window_id:      .byte   kDAWindowId
         rts
 .endproc
 
-        .include "../lib/muldiv.s"
+;;; ============================================================
+;;; 32 bit by 32 bit division with 32 bit result
+;;; Based on: https://www.reddit.com/r/asm/comments/nbu2dj/32_bit_division_subroutine_on_the_6502/gy21eog/
+
+numerator       := $10
+denominator     := $14
+quotient        := numerator
+
+.proc Div_32_32
+remainder       := $18
+temp            := $1C
+
+        ldx     #4-1
+        lda     #0
+:       sta     remainder,x
+        dex
+        bpl     :-
+
+        ldx     #32             ; bits
+divloop:
+        asl     numerator+0
+        rol     numerator+1
+        rol     numerator+2
+        rol     numerator+3
+
+        rol     remainder+0
+        rol     remainder+1
+        rol     remainder+2
+        rol     remainder+3
+
+        sec
+subtract:
+        lda     remainder+0
+        sbc     denominator+0
+        sta     temp+0
+
+        lda     remainder+1
+        sbc     denominator+1
+        sta     temp+1
+
+        lda     remainder+2
+        sbc     denominator+2
+        sta     temp+2
+
+        lda     remainder+3
+        sbc     denominator+3
+        sta     temp+3
+
+        bcc     next            ; remainder > divisor?
+        inc     numerator       ; yes
+
+        ldy     #4-1            ; remainder = temp
+:       lda     temp,y
+        sta     remainder,y
+        dey
+        bpl     :-
+
+next:   dex
+        bne     divloop
+
+        rts
+.endproc
+
+;;; ============================================================
+;;; 16 bit by 16 bit multiply with 32 bit product
+
+multiplier      := $10
+multiplicand    := $12
+product         := $14
+
+.proc Mul_16_16
+        lda     #0
+        sta     product+2
+        sta     product+3
+
+        ldx     #16
+shift:
+        lsr     multiplier+1
+        ror     multiplier
+        bcc     rotate
+        lda     product+2
+        clc
+        adc     multiplicand
+        sta     product+2
+        lda     product+3
+        adc     multiplicand+1
+rotate:
+        ror     a
+        sta     product+3
+        ror     product+2
+        ror     product+1
+        ror     product
+        dex
+        bne     shift
+
+        rts
+.endproc
 
 ;;; ============================================================
 
