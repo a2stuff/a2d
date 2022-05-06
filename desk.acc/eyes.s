@@ -582,7 +582,7 @@ outer_only:
 next:
         inc16   yy
         cmp16   yy, outer_oval+OvalRec::bottom
-        jne     loop
+        jcc     loop
 
         rts
 

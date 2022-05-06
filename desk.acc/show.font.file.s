@@ -119,7 +119,11 @@ kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
         bcs     exit
 
         jsr     CalcFontSize
-        cmp16   expected_size, read_params::trans_count
+        lda     expected_size
+        cmp     read_params::trans_count
+        bne     exit
+        lda     expected_size+1
+        cmp     read_params::trans_count+1
         bne     exit
 
         ;; --------------------------------------------------

@@ -232,7 +232,7 @@ eof:    return  #$FF
 
 .proc AdvanceToTargetEntry
 :       cmp16   entry_index_in_dir, target_index
-        beq     :+
+        bcs     :+
         jsr     ReadFileEntry
         jmp     :-
 

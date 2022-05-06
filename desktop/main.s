@@ -12041,7 +12041,7 @@ eof:    return  #$FF
         jmp     op_jt2          ; second - called when exited dir
 
 sub:    cmp16   entries_read, entries_to_skip
-        beq     done
+        bcs     done
         jsr     ReadFileEntry
         jmp     sub
 done:   rts
