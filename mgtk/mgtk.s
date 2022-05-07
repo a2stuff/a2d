@@ -8781,14 +8781,9 @@ no_hthumb:
         jsr     GetThumbRect
         pla
         tax
-        lda     current_penloc_x+1
-        cmp     winrect::x1+1
-        bcc     hscrollbar
-        bne     :+
-        lda     current_penloc_x
-        cmp     winrect::x1
-        bcc     hscrollbar
-:       inx
+        scmp16  current_penloc_x, winrect::x1
+        bmi     hscrollbar
+        inx
 
 hscrollbar:
         lda     #MGTK::Ctl::horizontal_scroll_bar

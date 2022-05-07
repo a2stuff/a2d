@@ -150,6 +150,7 @@
 
 * Launch DeskTop. Open a volume window with icons. Drag leftmost icon to the left to make horizontal scrollbar activate. Click horizontal scrollbar so viewport shifts left. Verify dragged icon still renders.
 * Launch DeskTop. Open a volume window with icons. Drag leftmost icon to the left to make horizontal scrollbar activate. Click horizontal scrollbar so viewport shifts left. Drag window to the right so it overlaps desktop icons. Verify DeskTop doesn't lock up.
+* Launch DeskTop. Open a volume window with icons. Resize the window so that the horizontal scrollbar is active. Drag the window so the left edge of the scrollbar thumb is offscreen to the left. Click on the right arrow, and verify that the window scrolls correctly. Repeat for the page right region.
 
 * Launch DeskTop. Open a volume window with icons. Drag window so only header is visible. Verify that DeskTop doesn't render garbage or lock up.
 
