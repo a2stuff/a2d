@@ -242,7 +242,7 @@ ClearUpdates := ClearUpdatesImpl::clear
         stax    winfo_ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         sub16in (winfo_ptr),y, window_grafport::viewloc::ycoord, yoff
-        cmp16   yoff, #kWindowHeaderHeight+1
+        scmp16  yoff, #kWindowHeaderHeight+1
         bpl     skip_adjust_port
 
         ;; Adjust grafport to account for header
@@ -252,7 +252,7 @@ ClearUpdates := ClearUpdatesImpl::clear
         ;; nothing to draw, skip drawing!
         ;; https://github.com/a2stuff/a2d/issues/369
         ldx     #MGTK::GrafPort::viewloc + MGTK::Point::ycoord
-        cmp16   window_grafport,x, #kScreenHeight
+        scmp16  window_grafport,x, #kScreenHeight
         bpl     done
 
         ;; Apply the computed grafport to the Winfo
@@ -5263,7 +5263,7 @@ aa:     .byte   0               ; A
         sta     useful_height
 
         sub16_8 window_grafport::cliprect::y1, useful_height, delta
-        cmp16   delta, iconbb_rect+MGTK::Rect::y1
+        scmp16  delta, iconbb_rect+MGTK::Rect::y1
         bmi     clamp
         ldax    delta
         jmp     adjust
@@ -5289,7 +5289,7 @@ delta:  .word   0
         sta     useful_height
 
         add16_8 window_grafport::cliprect::y2, useful_height, delta
-        cmp16   delta, iconbb_rect+MGTK::Rect::y2
+        scmp16  delta, iconbb_rect+MGTK::Rect::y2
         bpl     clamp
         ldax    delta
         jmp     adjust
@@ -5324,7 +5324,7 @@ delta:  .word   0
         stax    width
 
         sub16   window_grafport::cliprect::x1, width, delta
-        cmp16   delta, iconbb_rect+MGTK::Rect::x1
+        scmp16  delta, iconbb_rect+MGTK::Rect::x1
         bmi     clamp
 
         ldax    delta
@@ -5347,7 +5347,7 @@ delta:  .word   0
         stax    width
 
         add16   window_grafport::cliprect::x2, width, delta
-        cmp16   delta, iconbb_rect+MGTK::Rect::x2
+        scmp16  delta, iconbb_rect+MGTK::Rect::x2
         bpl     clamp
         ldax    delta
         jmp     adjust
@@ -5466,7 +5466,7 @@ delta:  .word   0
         lda     #0              ; content near edge within window; clamp
         beq     calc            ; always
 
-:       cmp16   window_grafport::cliprect::x2, iconbb_rect+MGTK::Rect::x2
+:       scmp16  window_grafport::cliprect::x2, iconbb_rect+MGTK::Rect::x2
         bmi     :+              ; content far edge within window? no
         tya                     ; yes; skip calculation
         jmp     skip
@@ -5524,7 +5524,7 @@ size:   .word   0
         lda     #0              ; content near edge within window; clamp
         beq     calc            ; always
 
-:       cmp16   window_grafport::cliprect::y2, iconbb_rect+MGTK::Rect::y2
+:       scmp16  window_grafport::cliprect::y2, iconbb_rect+MGTK::Rect::y2
         bmi     neg             ; content far edge within window? no
         tya                     ; yes; skip calculation
         jmp     skip
@@ -6344,9 +6344,9 @@ config_port:
         jsr     ApplyActiveWinfoToWindowGrafport
 
         ;; check horizontal bounds
-        cmp16   iconbb_rect+MGTK::Rect::x1, window_grafport::cliprect::x1
+        scmp16  iconbb_rect+MGTK::Rect::x1, window_grafport::cliprect::x1
         bmi     activate_hscroll
-        cmp16   window_grafport::cliprect::x2, iconbb_rect+MGTK::Rect::x2
+        scmp16  window_grafport::cliprect::x2, iconbb_rect+MGTK::Rect::x2
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
@@ -6369,9 +6369,9 @@ activate_hscroll:
 
 check_vscroll:
         ;; check vertical bounds
-        cmp16   iconbb_rect+MGTK::Rect::y1, window_grafport::cliprect::y1
+        scmp16  iconbb_rect+MGTK::Rect::y1, window_grafport::cliprect::y1
         bmi     activate_vscroll
-        cmp16   window_grafport::cliprect::y2, iconbb_rect+MGTK::Rect::y2
+        scmp16  window_grafport::cliprect::y2, iconbb_rect+MGTK::Rect::y2
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar
@@ -7516,9 +7516,9 @@ common: sta     preserve_window_size_flag
 
         ;; Check if width is < min or > max
         cmp16   iconbb_rect+MGTK::Rect::x2, #kMinWindowWidth
-        bmi     use_minw
+        bcc     use_minw
         cmp16   iconbb_rect+MGTK::Rect::x2, #kMaxWindowWidth
-        bpl     use_maxw
+        bcs     use_maxw
         ldax    iconbb_rect+MGTK::Rect::x2
         jmp     assign_width
 
@@ -7544,9 +7544,9 @@ assign_width:
         ;; Check if height is < min or > max
 
         cmp16   iconbb_rect+MGTK::Rect::y2, #kMinWindowHeight
-        bmi     use_minh
+        bcc     use_minh
         cmp16   iconbb_rect+MGTK::Rect::y2, #kMaxWindowHeight
-        bpl     use_maxh
+        bcs     use_maxh
         ldax    iconbb_rect+MGTK::Rect::y2
         jmp     assign_height
 
@@ -8524,7 +8524,7 @@ found:  txa
         bit     LCBANK1
 
         ;; Below bottom?
-        cmp16   pos_col_name::ycoord, window_grafport::cliprect::y2
+        scmp16  pos_col_name::ycoord, window_grafport::cliprect::y2
         bpl     ret
 
         add16_8 pos_col_icon::ycoord, #kRowHeight
@@ -8534,7 +8534,7 @@ found:  txa
         add16_8 pos_col_date::ycoord, #kRowHeight
 
         ;; Above top?
-        cmp16   pos_col_name::ycoord, window_grafport::cliprect::y1
+        scmp16  pos_col_name::ycoord, window_grafport::cliprect::y1
         bpl     in_range
 ret:    rts
 

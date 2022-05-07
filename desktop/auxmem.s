@@ -1571,8 +1571,8 @@ L9D7C:  stx     rect3_y1
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         add16in (win_ptr),y, #kWindowHeaderHeight + 1, headery
         cmp16   findwindow_params::mousey, headery
-        bmi     done
-        bpl     find_icon       ; always
+        bcc     done
+        bcs     find_icon       ; always
 
         ;; --------------------------------------------------
         ;; On desktop - A=0, note that as window_id
@@ -1786,37 +1786,37 @@ start:  ldy     #IconInRectParams::icon
         ;; Bitmap's bbox: v0-v1-v2-v7
 
         ;; top of bitmap > bottom of rect --> outside
-        cmp16   rect::y2, poly::v0::ycoord
+        scmp16  rect::y2, poly::v0::ycoord
         bmi     :+
 
         ;; left of bitmap > right of rect --> outside
-        cmp16   rect::x2, poly::v0::xcoord
+        scmp16  rect::x2, poly::v0::xcoord
         bmi     :+
 
         ;; bottom of bitmap < top of rect --> outside
-        cmp16   poly::v2::ycoord, rect::y1
+        scmp16  poly::v2::ycoord, rect::y1
         bmi     :+
 
         ;; right of bitmap < left of rect --> outside
-        cmp16   poly::v1::xcoord, rect::x1
+        scmp16  poly::v1::xcoord, rect::x1
         bpl     inside
 
         ;; Text's bbox: v6-v3-v4-v5
 :
         ;; top of text > bottom of rect --> outside
-        cmp16   rect::y2, poly::v6::ycoord
+        scmp16  rect::y2, poly::v6::ycoord
         bmi     outside
 
         ;; left of text > right of rect --> outside
-        cmp16   rect::x2, poly::v6::xcoord
+        scmp16  rect::x2, poly::v6::xcoord
         bmi     outside
 
         ;; bottom of text < top of rect --> outside
-        cmp16   poly::v4::ycoord, rect::y1
+        scmp16  poly::v4::ycoord, rect::y1
         bmi     outside
 
         ;; right of text < left of rect --> outside
-        cmp16   poly::v3::xcoord, rect::x1
+        scmp16  poly::v3::xcoord, rect::x1
         bpl     inside
 
 outside:
@@ -2923,7 +2923,7 @@ do_pt:  lda     pt_num
         ;; Cases 1/2/3 (and continue below)
         ;; if (cr_r > win_r)
         ;; . cr_r = win_r + 1
-        cmp16   cr_r, win_r
+        scmp16  cr_r, win_r
         bmi     case789
 
         ldx     win_r
@@ -2939,7 +2939,7 @@ do_pt:  lda     pt_num
         ;; if (win_l > cr_l)
         ;; . cr_r = win_l
 case789:
-        cmp16   win_l, cr_l
+        scmp16  win_l, cr_l
         bmi     vert
 
         copy16  win_l, cr_r
@@ -2948,7 +2948,7 @@ case789:
         ;; Cases 3/6 (and done)
         ;; if (win_t > cr_t)
         ;; . cr_b = win_t
-vert:   cmp16   win_t, cr_t
+vert:   scmp16  win_t, cr_t
         bmi     :+
 
         copy16  win_t, cr_b
@@ -2959,7 +2959,7 @@ vert:   cmp16   win_t, cr_t
         ;; if (win_b < cr_b)
         ;; . cr_t = win_b + 2
         ;; . vy   = win_b + 2
-:       cmp16   win_b, cr_b
+:       scmp16  win_b, cr_b
         bpl     case2
 
         ldx     win_b
@@ -2980,7 +2980,7 @@ vert:   cmp16   win_t, cr_t
         ;; . vx   = win_r + 2
         ;; . cr_r = stash_r + 2 (workaround for https://github.com/a2stuff/a2d/issues/153)
 case2:
-        cmp16   win_r, stash_r
+        scmp16  win_r, stash_r
         bpl     :+
 
         lda     win_r
