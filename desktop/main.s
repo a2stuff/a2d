@@ -4794,6 +4794,7 @@ exception_flag:
 :       lda     event_params::coords,x
         sta     tmp_rect::topleft,x
         sta     tmp_rect::bottomright,x
+        sta     initial_pos,x
         dex
         bpl     :-
 
@@ -4932,31 +4933,26 @@ update: lda     window_id
 
         ;; --------------------------------------------------
         ;; Figure out coords for rect's left/top/bottom/right
-        cmp16   event_params::xcoord, tmp_rect::x2
-        bpl     l12
-        cmp16   event_params::xcoord, tmp_rect::x1
-        bmi     l11
-        bit     x_flag
-        bpl     l12
-l11:    copy16  event_params::xcoord, tmp_rect::x1
-        copy    #$80, x_flag
-        jmp     do_y
-l12:    copy16  event_params::xcoord, tmp_rect::x2
-        copy    #0, x_flag
 
-do_y:   cmp16   event_params::ycoord, tmp_rect::y2
-        bpl     l15
-        cmp16   event_params::ycoord, tmp_rect::y1
-        bmi     l14
-        bit     y_flag
-        bpl     l15
-l14:    copy16  event_params::ycoord, tmp_rect::y1
-        copy    #$80, y_flag
-        jmp     draw
-l15:    copy16  event_params::ycoord, tmp_rect::y2
-        copy    #0, y_flag
+        scmp16  event_params::xcoord, initial_pos+MGTK::Point::xcoord
+    IF_NEG
+        copy16  event_params::xcoord, tmp_rect::x1
+        copy16  initial_pos+MGTK::Point::xcoord, tmp_rect::x2
+    ELSE
+        copy16  initial_pos+MGTK::Point::xcoord, tmp_rect::x1
+        copy16  event_params::xcoord, tmp_rect::x2
+    END_IF
 
-draw:   jsr     FrameTmpRect
+        scmp16  event_params::ycoord, initial_pos+MGTK::Point::ycoord
+    IF_NEG
+        copy16  event_params::ycoord, tmp_rect::y1
+        copy16  initial_pos+MGTK::Point::ycoord, tmp_rect::y2
+    ELSE
+        copy16  initial_pos+MGTK::Point::ycoord, tmp_rect::y1
+        copy16  event_params::ycoord, tmp_rect::y2
+    END_IF
+
+        jsr     FrameTmpRect
         jmp     event_loop
 
 window_id:                      ; 0 = desktop, assumed to be active otherwise
@@ -4964,10 +4960,10 @@ window_id:                      ; 0 = desktop, assumed to be active otherwise
 
 deltax: .word   0
 deltay: .word   0
+initial_pos:
+        .tag    MGTK::Point
 last_pos:
         .tag    MGTK::Point
-x_flag: .byte   0
-y_flag: .byte   0
 
 .proc CoordsScreenToWindow
         jsr     PushPointers

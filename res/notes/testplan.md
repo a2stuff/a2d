@@ -145,6 +145,7 @@
 
 * Launch DeskTop. Open a volume window. Click in the header area (items/use/etc). On the desktop, drag a selection rectangle around the window. Verify that nothing is selected, and that file icons don't paint onto the desktop.
 * Launch DeskTop. Open a volume window. Adjust the window so that the scrollbars are active. Scroll the window. On the desktop, drag a selection rectangle around the window. Verify that nothing is selected, and that file icons don't paint onto the desktop.
+* Launch DeskTop. Open a volume window. Adjust the window so it is small and roughly centered on the screen. In the middle of the window, start a drag-selection. Move the mouse cursor in circles around the outside of the window and within the window. Verify that one corner of the selection rectangle remains fixed where the drag-selection was started.
 
 * Launch DeskTop. Open a window with only one icon. Drag icon so name is to left of window bounds. Ensure icon name renders.
 
