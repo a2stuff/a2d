@@ -204,7 +204,9 @@ from the **Apple** menu.
 * Prevent copying a folder or volume into itself. ([#495](https://github.com/a2stuff/a2d/issues/495))
 * Don't clear selection when clicking on a window's header. ([#362](https://github.com/a2stuff/a2d/issues/362))
 * Don't initiate drag-select after a double-click. ([#545](https://github.com/a2stuff/a2d/issues/545))
+* Prevent drag rectangle from wandering when moving cursor outside window.
 * Don't wait for possible double click when clicking scrollbars. ([#183](https://github.com/a2stuff/a2d/issues/183))
+* Fix horizontal scroll behavior when scroll thumb is offscreen.
 * Conditionally restore `/RAM` after quitting Disk Copy. ([#333](https://github.com/a2stuff/a2d/issues/333))
 * Clip target icon rendering while dragging. ([#381](https://github.com/a2stuff/a2d/issues/381))
 * Fix repainting overlapped icons after dragging. ([#687](https://github.com/a2stuff/a2d/issues/687))
