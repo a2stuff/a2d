@@ -526,6 +526,7 @@ window_open_flag := HandleKeydownImpl::window_open_flag
         lda     findicon_params::which_icon
         jne     HandleVolumeIconClick
 
+        jsr     LoadDesktopEntryTable
         lda     #0
         jmp     DragSelect
 

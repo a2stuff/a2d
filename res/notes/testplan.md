@@ -143,6 +143,9 @@
 
 * Launch DeskTop. Open a volume window. Select an icon. Click in the header area (items/use/etc). Verify that selection is not cleared.
 
+* Launch DeskTop. Open a volume window. Click in the header area (items/use/etc). On the desktop, drag a selection rectangle around the window. Verify that nothing is selected, and that file icons don't paint onto the desktop.
+* Launch DeskTop. Open a volume window. Adjust the window so that the scrollbars are active. Scroll the window. On the desktop, drag a selection rectangle around the window. Verify that nothing is selected, and that file icons don't paint onto the desktop.
+
 * Launch DeskTop. Open a window with only one icon. Drag icon so name is to left of window bounds. Ensure icon name renders.
 
 * Launch DeskTop. Open a volume window with icons. Drag leftmost icon to the left to make horizontal scrollbar activate. Click horizontal scrollbar so viewport shifts left. Verify dragged icon still renders.
