@@ -2636,118 +2636,11 @@ done:   rts
 
 ;;; ============================================================
 
-.scope alert_dialog
 
-question_bitmap:
-        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%1111111),PX(%1100000),PX(%0000000)
-        .byte   PX(%0111100),PX(%1111100),PX(%0000111),PX(%1111111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0111100),PX(%1111100),PX(%0001111),PX(%0000000),PX(%0011110),PX(%0000000)
-        .byte   PX(%0111100),PX(%1111100),PX(%0011110),PX(%0000000),PX(%0001111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011110),PX(%0011111),PX(%0001111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011110),PX(%0011111),PX(%0001111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111111),PX(%0001111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111110),PX(%0011111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111100),PX(%0111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111000),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1110001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100011),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100011),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111110),PX(%0000000),PX(%0011111),PX(%1111111),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%0011111),PX(%1100011),PX(%1111110),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%0111111),PX(%1100011),PX(%1111100),PX(%0000000)
-        .byte   PX(%0111000),PX(%0000011),PX(%1111111),PX(%1111111),PX(%1100000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+.proc ShowAlertDialog
+        jmp     start
 
-exclamation_bitmap:
-        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%1111111),PX(%1100000),PX(%0000000)
-        .byte   PX(%0111100),PX(%1111100),PX(%0000111),PX(%1111111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0111100),PX(%1111100),PX(%0001111),PX(%1100001),PX(%1111110),PX(%0000000)
-        .byte   PX(%0111100),PX(%1111100),PX(%0011111),PX(%1100001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1100001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111111),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111110),PX(%0000000),PX(%0011111),PX(%1100001),PX(%1111111),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%0011111),PX(%1100001),PX(%1111110),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%0111111),PX(%1111111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0111000),PX(%0000011),PX(%1111111),PX(%1111111),PX(%1100000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-
-.params alert_bitmap_params
-        DEFINE_POINT viewloc, 20, 8
-mapbits:        .addr   SELF_MODIFIED
-mapwidth:       .byte   6
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 36, 23
-.endparams
-
-kAlertRectWidth         = 420
-kAlertRectHeight        = 55
-kAlertRectLeft          = (::kScreenWidth - kAlertRectWidth)/2
-kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
-
-;;; Window frame is outside the rect proper
-kAlertFrameLeft = kAlertRectLeft - 1
-kAlertFrameTop = kAlertRectTop - 1
-kAlertFrameWidth = kAlertRectWidth + 2
-kAlertFrameHeight = kAlertRectHeight + 2
-        DEFINE_RECT_SZ alert_rect, kAlertFrameLeft, kAlertFrameTop, kAlertFrameWidth, kAlertFrameHeight
-
-pensize_normal:  .byte   1, 1
-pensize_frame:    .byte   kBorderDX, kBorderDY
-        DEFINE_RECT_FRAME alert_inner_frame_rect, kAlertRectWidth, kAlertRectHeight
-
-.params portmap
-        DEFINE_POINT viewloc, kAlertRectLeft, kAlertRectTop
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
-.endparams
-
-;;; TODO: Move out of alert scope
-.params portbits2
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
-.endparams
-
-        DEFINE_BUTTON ok,        res_string_button_ok,          300, 37
-        DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
-        DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
-
-        DEFINE_BUTTON yes, res_string_button_yes, 250, 37, 50, kButtonHeight
-        DEFINE_BUTTON no,  res_string_button_no,  350, 37, 50, kButtonHeight
-
-        DEFINE_POINT pos_prompt, 75, 29
-
-;;; %0....... = OK
-;;; %10..0000 = Cancel, Try Again
-;;; %10..XXXX = Cancel, Yes, No
-;;; %11...... = Cancel, OK
-alert_options:  .byte   0
-prompt_addr:    .addr   0
-
-;;; ============================================================
+;;; --------------------------------------------------
 ;;; Messages
 
 str_insert_source:
@@ -2812,19 +2705,7 @@ message_table:
         .addr   str_insert_dest_or_cancel
         ASSERT_ADDRESS_TABLE_SIZE message_table, auxlc::kNumAlertMessages
 
-        ;; $C0 (%11xxxxxx) = Cancel + Ok
-        ;; $81 (%10xxxxx1) = Cancel + Yes + No
-        ;; $80 (%10xx0000) = Cancel + Try Again
-        ;; $00 (%0xxxxxxx) = Ok
-
-.enum AlertButtonOptions
-        OkCancel = $C0
-        YesNoCancel = $81
-        TryAgainCancel = $80
-        Ok = $00
-.endenum
-
-alert_options_table:
+alert_button_options_table:
         .byte   AlertButtonOptions::OkCancel    ; kAlertMsgInsertSource
         .byte   AlertButtonOptions::OkCancel    ; kAlertMsgInsertDestination
         .byte   AlertButtonOptions::YesNoCancel ; kAlertMsgConfirmErase
@@ -2836,22 +2717,38 @@ alert_options_table:
         .byte   AlertButtonOptions::Ok          ; kAlertMsgCopyFailure
         .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertSourceOrCancel
         .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertDestionationOrCancel
+        ASSERT_TABLE_SIZE alert_button_options_table, auxlc::kNumAlertMessages
+
+alert_options_table:
+        .byte   0                       ; kAlertMsgInsertSource
+        .byte   0                       ; kAlertMsgInsertDestination
+        .byte   0                       ; kAlertMsgConfirmErase
+        .byte   AlertOptions::Beep      ; kAlertMsgDestinationFormatFail
+        .byte   AlertOptions::Beep      ; kAlertMsgFormatError
+        .byte   AlertOptions::Beep      ; kAlertMsgDestinationProtected
+        .byte   0                       ; kAlertMsgConfirmEraseSlotDrive
+        .byte   0                       ; kAlertMsgCopySuccessful
+        .byte   0                       ; kAlertMsgCopyFailure
+        .byte   0                       ; kAlertMsgInsertSourceOrCancel
+        .byte   0                       ; kAlertMsgInsertDestionationOrCancel
         ASSERT_TABLE_SIZE alert_options_table, auxlc::kNumAlertMessages
 
-message_num:
-        .byte   0
+.params alert_params
+text:           .addr   0
+buttons:        .byte   0       ; AlertButtonOptions
+options:        .byte   0       ; AlertOptions
+.endparams
 
-show_alert_dialog:
-        sta     message_num
+start:
+        pha                     ; A = alert id
+        copy    #0, ejectable_flag
 
         ;; --------------------------------------------------
         ;; Determine alert options
 
-        copy    #0, ejectable_flag
-
-        lda     message_num
-    IF_EQ                       ; kAlertMsgInsertSource
+        pla                     ; A = alert id
         .assert kAlertMsgInsertSource = 0, error, "enum mismatch"
+    IF_EQ                       ; kAlertMsgInsertSource
         cpx     #0
         beq     find_in_alert_table
         jsr     IsDriveEjectable
@@ -2883,306 +2780,34 @@ show_alert_dialog:
     IF_EQ
         jsr     SetConfirmEraseSdSlotDrive
         lda     #kAlertMsgConfirmEraseSlotDrive
-        bne     find_in_alert_table ; always
+        FALL_THROUGH_TO find_in_alert_table
     END_IF
 
 find_in_alert_table:
-
+        ;; A = alert id; search table to determine index
         ldy     #0
 :       cmp     alert_table,y
         beq     :+
         iny
         cpy     #kNumAlertMessages
         bne     :-
-
         ldy     #0              ; default
+
+        ;; Y = index
 :       tya
         asl     a
         tay
-        copy16  message_table,y, prompt_addr
+        copy16  message_table,y, alert_params::text
         tya
         lsr     a
         tay
-        copy    alert_options_table,y, alert_options
+        copy    alert_button_options_table,y, alert_params::buttons
+        copy    alert_options_table,y, alert_params::options
 
-        ;; --------------------------------------------------
-        ;; Draw alert
+        ldax    #alert_params
+        jmp     Alert
 
-        MGTK_CALL MGTK::HideCursor
-
-        MGTK_CALL MGTK::InitPort, grafport
-        MGTK_CALL MGTK::SetPort, grafport
-
-        ;; Draw alert box and bitmap - coordinates are in screen space
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, alert_rect ; alert background
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, alert_rect ; alert outline
-
-        MGTK_CALL MGTK::SetPortBits, portmap ; viewport for remaining operations
-
-        ;; Draw rect of alert - coordinates are relative to portmap
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect
-
-        ldax    #exclamation_bitmap
-        ldy     alert_options
-    IF_NOT_ZERO
-        ldax    #question_bitmap
-    END_IF
-        stax    alert_bitmap_params::mapbits
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintBits, alert_bitmap_params
-
-        ;; Draw appropriate buttons
-        bit     ejectable_flag
-        bpl     :+
-        jmp     done_buttons
-
-:       jsr     SetPenXOR
-        MGTK_CALL MGTK::SetPenSize, pensize_normal
-        bit     alert_options
-        bpl     draw_ok_btn
-
-        ;; Cancel button
-        MGTK_CALL MGTK::FrameRect, cancel_button_rect
-        MGTK_CALL MGTK::MoveTo, cancel_button_pos
-        param_call DrawString, cancel_button_label
-
-        bit     alert_options
-        bvs     draw_ok_btn
-
-        lda     alert_options
-        and     #$0F
-        beq     draw_try_again_btn
-
-        MGTK_CALL MGTK::FrameRect, yes_button_rect
-        MGTK_CALL MGTK::MoveTo, yes_button_pos
-        param_call DrawString, yes_button_label
-
-        MGTK_CALL MGTK::FrameRect, no_button_rect
-        MGTK_CALL MGTK::MoveTo, no_button_pos
-        param_call DrawString, no_button_label
-        jmp     done_buttons
-
-draw_try_again_btn:
-        MGTK_CALL MGTK::FrameRect, try_again_button_rect
-        MGTK_CALL MGTK::MoveTo, try_again_button_pos
-        param_call DrawString, try_again_button_label
-        jmp     done_buttons
-
-        ;; OK button
-draw_ok_btn:
-        MGTK_CALL MGTK::FrameRect, ok_button_rect
-        MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call DrawString, ok_button_label
-
-done_buttons:
-
-        ;; Prompt string
-        MGTK_CALL MGTK::MoveTo, pos_prompt
-        param_call_indirect DrawString, prompt_addr
-
-        MGTK_CALL MGTK::ShowCursor
-
-        ;; --------------------------------------------------
-        ;; Play bell
-
-        lda     message_num
-        jsr     MaybeBell
-
-        ;; --------------------------------------------------
-        ;; Event Loop
-
-EventLoop:
-        bit     ejectable_flag
-        bpl     LED45
-        jsr     WaitForDiskOrEsc
-        bne     :+
-        jmp     finish_ok
-:       jmp     finish_cancel
-
-LED45:
-        jsr     YieldLoop
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        bne     :+
-        jmp     HandleButtonDown
-
-:       cmp     #MGTK::EventKind::key_down
-        bne     EventLoop
-
-        ;; --------------------------------------------------
-        ;; Key Down
-        lda     event_params::key
-        bit     alert_options   ; has Cancel?
-        bmi     :+              ; yes
-        jmp     check_only_ok   ; nope
-
-:       cmp     #CHAR_ESCAPE
-        bne     :+
-
-DoCancel:
-        jsr     SetPenXOR
-        MGTK_CALL MGTK::PaintRect, cancel_button_rect
-finish_cancel:
-        lda     #kAlertResultCancel
-        jmp     finish
-
-:       bit     alert_options   ; has Try Again?
-        bvs     check_ok        ; nope
-        pha
-        lda     alert_options
-        and     #$0F
-        beq     check_try_again
-
-        pla
-        cmp     #kShortcutNo
-        beq     do_no
-        cmp     #TO_LOWER(kShortcutNo)
-        beq     do_no
-        cmp     #kShortcutYes
-        beq     do_yes
-        cmp     #TO_LOWER(kShortcutYes)
-        beq     do_yes
-        jmp     EventLoop
-
-do_no:  jsr     SetPenXOR
-        MGTK_CALL MGTK::PaintRect, no_button_rect
-        lda     #kAlertResultNo
-        jmp     finish
-
-do_yes: jsr     SetPenXOR
-        MGTK_CALL MGTK::PaintRect, yes_button_rect
-        lda     #kAlertResultYes
-        jmp     finish
-
-check_try_again:
-        pla
-        cmp     #TO_LOWER(kShortcutTryAgain)
-        bne     :+
-
-do_try_again:
-        jsr     SetPenXOR
-        MGTK_CALL MGTK::PaintRect, try_again_button_rect
-        lda     #kAlertResultTryAgain
-        jmp     finish
-
-:       cmp     #kShortcutTryAgain
-        beq     do_try_again
-        cmp     #CHAR_RETURN    ; also allow Return as default
-        beq     do_try_again
-        jmp     EventLoop
-
-check_only_ok:
-        cmp     #CHAR_ESCAPE    ; also allow Escape as default
-        beq     do_ok
-check_ok:
-        cmp     #CHAR_RETURN
-        bne     :+
-
-do_ok:  jsr     SetPenXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-finish_ok:
-        lda     #kAlertResultOK
-        jmp     finish
-
-:       jmp     EventLoop
-
-        ;; --------------------------------------------------
-        ;; Buttons
-
-HandleButtonDown:
-        jsr     MapEventCoords
-        MGTK_CALL MGTK::MoveTo, event_params::coords
-
-        bit     alert_options   ; Anything but OK?
-        bpl     check_ok_rect   ; nope
-
-        MGTK_CALL MGTK::InRect, cancel_button_rect
-        cmp     #MGTK::inrect_inside
-        bne     :+
-        param_call AlertButtonEventLoop, cancel_button_rect
-        bne     no_button
-        lda     #kAlertResultCancel
-        jmp     finish
-
-:       bit     alert_options
-        bvs     check_ok_rect   ; Just Cancel/OK
-        lda     alert_options
-        and     #$0F            ;
-        beq     LEE47           ; Just Cancel/Try Again
-
-        ;; Yes & No
-        MGTK_CALL MGTK::InRect, no_button_rect
-        cmp     #MGTK::inrect_inside
-        bne     :+
-        param_call AlertButtonEventLoop, no_button_rect
-        bne     no_button
-        lda     #kAlertResultNo
-        jmp     finish
-
-:       MGTK_CALL MGTK::InRect, yes_button_rect
-        cmp     #MGTK::inrect_inside
-        bne     no_button
-        param_call AlertButtonEventLoop, yes_button_rect
-        bne     no_button
-        lda     #kAlertResultYes
-        jmp     finish
-
-        ;; Try Again
-LEE47:  MGTK_CALL MGTK::InRect, try_again_button_rect
-        cmp     #MGTK::inrect_inside
-        bne     no_button
-        param_call AlertButtonEventLoop, try_again_button_rect
-        bne     no_button
-        lda     #kAlertResultTryAgain
-        jmp     finish
-
-        ;; OK
-check_ok_rect:
-        MGTK_CALL MGTK::InRect, ok_button_rect
-        cmp     #MGTK::inrect_inside
-        bne     no_button
-        param_call AlertButtonEventLoop, ok_button_rect
-        bne     no_button
-        lda     #kAlertResultOK
-        jmp     finish
-
-no_button:
-        jmp     EventLoop
-
-;;; ============================================================
-
-finish: pha
-        MGTK_CALL MGTK::SetPortBits, portbits2
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, alert_rect
-        pla
-        rts
-
-;;; ============================================================
-
-        .include "../lib/alertbuttonloop.s"
-
-;;; ============================================================
-
-.proc MapEventCoords
-        sub16   event_params::xcoord, portmap::viewloc::xcoord, event_params::xcoord
-        sub16   event_params::ycoord, portmap::viewloc::ycoord, event_params::ycoord
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc SetPenXOR
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        rts
-.endproc
-
-;;; ============================================================
+;;; --------------------------------------------------
 ;;; Inputs: X,Y = volume name
 
 .proc AppendToConfirmErase
@@ -3213,7 +2838,7 @@ finish: pha
         rts
 .endproc
 
-;;; ============================================================
+;;; --------------------------------------------------
 ;;; Inputs: X = %DSSSxxxx
 
 .proc SetConfirmEraseSdSlotDrive
@@ -3234,7 +2859,7 @@ finish: pha
         rts
 .endproc
 
-;;; ============================================================
+;;; --------------------------------------------------
 
 ;;; Y = unit number
 ;;; If ejectable, sets `ejectable_flag`
@@ -3246,6 +2871,22 @@ finish: pha
         sta     ejectable_flag
 :       rts
 .endproc
+
+.endproc
+
+;;; ============================================================
+
+.scope alert_dialog
+
+        alert_grafport := grafport
+        AlertYieldLoop := YieldLoop
+
+        .define AD_YESNO 1
+        .define AD_SAVEBG 0
+        .define AD_WRAP 0
+        .define AD_EJECTABLE 1
+
+        .include "../lib/alert_dialog.s"
 
 ;;; ============================================================
 ;;; Poll the drive in `unit_num` until a disk is inserted, or
@@ -3269,13 +2910,13 @@ finish: pha
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
 
-        jsr     YieldLoop
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        jsr     AlertYieldLoop
+        MGTK_CALL MGTK::GetEvent, Alert::event_params
+        lda     Alert::event_kind
         cmp     #MGTK::EventKind::key_down
         bne     @retry
 
-        lda     event_params::key
+        lda     Alert::event_key
         cmp     #CHAR_ESCAPE
         bne     @retry
         return  #$80
@@ -3283,21 +2924,8 @@ finish: pha
 done:   return  #$00
 .endproc
 
-;;; ============================================================
-
-.proc MaybeBell
-        ;; TODO: Use a table of flags instead of this range test
-        cmp     #kAlertMsgDestinationFormatFail
-        bcc     done
-        cmp     #kAlertMsgConfirmEraseSlotDrive
-        bcs     done
-        jsr     Bell
-done:   rts
-.endproc
-
-.endscope
-
-ShowAlertDialog := alert_dialog::show_alert_dialog
+.endscope ; alert_dialog
+Alert := alert_dialog::Alert
 
 ;;; ============================================================
 ;;; Called by main and nested event loops to do periodic tasks.

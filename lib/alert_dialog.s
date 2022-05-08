@@ -10,6 +10,12 @@
 ;;; * `alert_grafport`
 ;;; Requires the following macro definitions:
 ;;; * `MGTK_CALL`
+;;; Requires the following defines:
+;;; * AD_YESNO (if true, yes/no buttons supported)
+;;; * AD_SAVEBG (if true, background saved/restored)
+;;; * AD_WRAP (if true, message is wrapped)
+;;; * AD_EJECTABLE (if true, polls for certain messages)
+;;; If AD_EJECTABLE. requires `WaitForDiskOrEsc` and `ejectable_flag`
 ;;; ============================================================
 
 .proc Alert
@@ -104,6 +110,7 @@ pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME alert_inner_frame_rect, kAlertRectWidth, kAlertRectHeight
 
+.if AD_SAVEBG
 .params screen_portbits
         DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
@@ -111,6 +118,7 @@ mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
 .endparams
+.endif ; AD_SAVEBG
 
 .params portmap
         DEFINE_POINT viewloc, kAlertRectLeft, kAlertRectTop
@@ -120,14 +128,31 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
+.if !AD_SAVEBG
+;;; TODO: Move out of alert scope
+.params portbits2
+        DEFINE_POINT viewloc, 0, 0
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+        DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
+.endparams
+.endif ; AD_SAVEBG
+
         DEFINE_BUTTON ok,        res_string_button_ok,          300, 37
         DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
         DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
+
+.if AD_YESNO
+        DEFINE_BUTTON yes, res_string_button_yes, 250, 37, 50, kButtonHeight
+        DEFINE_BUTTON no,  res_string_button_no,  350, 37, 50, kButtonHeight
+.endif ; AD_YESNO
 
         kTextLeft = 75
         kTextRight = kAlertRectWidth - kAlertXMargin
         kWrapWidth = kTextRight - kTextLeft
 
+.if AD_WRAP
         DEFINE_POINT pos_prompt1, kTextLeft, 29-11
         DEFINE_POINT pos_prompt2, kTextLeft, 29
 
@@ -139,6 +164,9 @@ width:  .word   0
 len:    .byte   0               ; total string length
 split_pos:                      ; last known split position
         .byte   0
+.else
+        DEFINE_POINT pos_prompt, kTextLeft, 29
+.endif ; AD_WRAP
 
 .params alert_params
 text:           .addr   0
@@ -164,6 +192,7 @@ start:
 
         MGTK_CALL MGTK::HideCursor
 
+.if AD_SAVEBG
         bit     alert_params::options
     IF_VS                       ; V = use save area
         ;; Compute save bounds
@@ -184,12 +213,16 @@ start:
 
         jsr     DialogBackgroundSave
     END_IF
+.endif ; AD_SAVEBG
 
         ;; Set up GrafPort
         MGTK_CALL MGTK::InitPort, alert_grafport
         MGTK_CALL MGTK::SetPort, alert_grafport
 
+.if AD_SAVEBG
+        ;; TODO: Is this needed?
         MGTK_CALL MGTK::SetPortBits, screen_portbits ; viewport for screen
+.endif
 
         ;; Draw alert box and bitmap - coordinates are in screen space
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -214,11 +247,16 @@ start:
         MGTK_CALL MGTK::PaintBits, alert_bitmap_params
 
         ;; Draw appropriate buttons
+.if AD_EJECTABLE
+        bit     ejectable_flag
+        jmi     done_buttons
+.endif
+
+        jsr     SetPenXOR
         MGTK_CALL MGTK::SetPenSize, pensize_normal
-        MGTK_CALL MGTK::SetPenMode, penXOR
 
         bit     alert_params::buttons ; high bit clear = Cancel
-        bpl     ok_button
+        bpl     draw_ok_btn
 
         ;; Cancel button
         MGTK_CALL MGTK::FrameRect, cancel_button_rect
@@ -226,23 +264,44 @@ start:
         param_call DrawString, cancel_button_label
 
         bit     alert_params::buttons
-        bvs     ok_button
+        bvs     draw_ok_btn
+
+.if AD_YESNO
+        ;; Yes/No or Try Again?
+        lda     alert_params::buttons
+        and     #$0F
+        beq     draw_try_again_btn
+
+        ;; Yes button
+        MGTK_CALL MGTK::FrameRect, yes_button_rect
+        MGTK_CALL MGTK::MoveTo, yes_button_pos
+        param_call DrawString, yes_button_label
+
+        ;; No button
+        MGTK_CALL MGTK::FrameRect, no_button_rect
+        MGTK_CALL MGTK::MoveTo, no_button_pos
+        param_call DrawString, no_button_label
+        jmp     done_buttons
+draw_try_again_btn:
+.endif
 
         ;; Try Again button
         MGTK_CALL MGTK::FrameRect, try_again_button_rect
         MGTK_CALL MGTK::MoveTo, try_again_button_pos
         param_call DrawString, try_again_button_label
 
-        jmp     draw_prompt
+        jmp     done_buttons
 
         ;; OK button
-ok_button:
+draw_ok_btn:
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call DrawString, ok_button_label
 
+done_buttons:
+
         ;; Prompt string
-draw_prompt:
+.if AD_WRAP
 .scope
         ;; Measure for splitting
         ldx     alert_params::text
@@ -306,6 +365,10 @@ split:  copy    split_pos, textwidth_params::length
 
 done:
 .endscope
+.else
+        MGTK_CALL MGTK::MoveTo, pos_prompt
+        param_call_indirect DrawString, alert_params::text
+.endif  ; AD_WRAP
 
         MGTK_CALL MGTK::ShowCursor
 
@@ -321,11 +384,21 @@ done:
         ;; Event Loop
 
 event_loop:
+.if AD_EJECTABLE
+        bit     ejectable_flag
+    IF_NS
+        jsr     WaitForDiskOrEsc
+        bne     :+
+        jmp     finish_ok
+:       jmp     finish_cancel
+    END_IF
+.endif ; AD_EJECTABLE
+
         jsr     AlertYieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
-        beq     HandleButtonDown
+        jeq     HandleButtonDown
 
         cmp     #MGTK::EventKind::key_down
         bne     event_loop
@@ -339,19 +412,52 @@ event_loop:
         cmp     #CHAR_ESCAPE
         bne     :+
 
-do_cancel:
-        MGTK_CALL MGTK::SetPenMode, penXOR
+        ;; Cancel
+        jsr     SetPenXOR
         MGTK_CALL MGTK::PaintRect, cancel_button_rect
+finish_cancel:
         lda     #kAlertResultCancel
         jmp     finish
 
 :       bit     alert_params::buttons ; has Try Again?
         bvs     check_ok        ; nope
+
+.if AD_YESNO
+        pha
+        lda     alert_params::buttons
+        and     #$0F
+        beq     check_try_again
+
+        pla
+        cmp     #kShortcutNo
+        beq     do_no
+        cmp     #TO_LOWER(kShortcutNo)
+        beq     do_no
+        cmp     #kShortcutYes
+        beq     do_yes
+        cmp     #TO_LOWER(kShortcutYes)
+        beq     do_yes
+        jmp     event_loop
+
+do_no:  jsr     SetPenXOR
+        MGTK_CALL MGTK::PaintRect, no_button_rect
+        lda     #kAlertResultNo
+        jmp     finish
+
+do_yes: jsr     SetPenXOR
+        MGTK_CALL MGTK::PaintRect, yes_button_rect
+        lda     #kAlertResultYes
+        jmp     finish
+
+check_try_again:
+        pla
+.endif ; AD_YESNO
+
         cmp     #TO_LOWER(kShortcutTryAgain)
         bne     :+
 
 do_try_again:
-        MGTK_CALL MGTK::SetPenMode, penXOR
+        jsr     SetPenXOR
         MGTK_CALL MGTK::PaintRect, try_again_button_rect
         lda     #kAlertResultTryAgain
         jmp     finish
@@ -360,17 +466,18 @@ do_try_again:
         beq     do_try_again
         cmp     #CHAR_RETURN    ; also allow Return as default
         beq     do_try_again
-        bne     event_loop
+        jmp     event_loop
 
 check_only_ok:
         cmp     #CHAR_ESCAPE    ; also allow Escape as default
         beq     do_ok
 check_ok:
         cmp     #CHAR_RETURN
-        bne     event_loop
+        jne     event_loop
 
-do_ok:  MGTK_CALL MGTK::SetPenMode, penXOR
+do_ok:  jsr     SetPenXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
+finish_ok:
         lda     #kAlertResultOK
         jmp     finish          ; not a fixed value, cannot BNE/BEQ
 
@@ -381,10 +488,11 @@ HandleButtonDown:
         jsr     MapEventCoords
         MGTK_CALL MGTK::MoveTo, event_coords
 
-        bit     alert_params::buttons ; Cancel showing?
+        bit     alert_params::buttons ; Anything but OK?
         bpl     check_ok_rect   ; nope
 
-        MGTK_CALL MGTK::InRect, cancel_button_rect ; Cancel?
+        ;; Cancel
+        MGTK_CALL MGTK::InRect, cancel_button_rect
         cmp     #MGTK::inrect_inside
         bne     :+
         param_call AlertButtonEventLoop, cancel_button_rect
@@ -393,10 +501,35 @@ HandleButtonDown:
         .assert kAlertResultCancel <> 0, error, "kAlertResultCancel must be non-zero"
         bne     finish          ; always
 
-:       bit     alert_params::buttons ; Try Again showing?
+:       bit     alert_params::buttons ; any other buttons?
         bvs     check_ok_rect   ; nope
 
-        MGTK_CALL MGTK::InRect, try_again_button_rect ; Try Again?
+.if AD_YESNO
+        lda     alert_params::buttons
+        and     #$0F            ;
+        beq     LEE47           ; Just Cancel/Try Again
+
+        ;; Yes & No
+        MGTK_CALL MGTK::InRect, no_button_rect
+        cmp     #MGTK::inrect_inside
+        bne     :+
+        param_call AlertButtonEventLoop, no_button_rect
+        bne     no_button
+        lda     #kAlertResultNo
+        jmp     finish
+
+:       MGTK_CALL MGTK::InRect, yes_button_rect
+        cmp     #MGTK::inrect_inside
+        bne     no_button
+        param_call AlertButtonEventLoop, yes_button_rect
+        bne     no_button
+        lda     #kAlertResultYes
+        jmp     finish
+LEE47:
+.endif
+
+        ;; Try Again
+        MGTK_CALL MGTK::InRect, try_again_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
         param_call AlertButtonEventLoop, try_again_button_rect
@@ -405,8 +538,9 @@ HandleButtonDown:
         .assert kAlertResultTryAgain = 0, error, "kAlertResultTryAgain must be non-zero"
         beq     finish          ; always
 
+        ;; OK
 check_ok_rect:
-        MGTK_CALL MGTK::InRect, ok_button_rect ; OK?
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     no_button
         param_call AlertButtonEventLoop, ok_button_rect
@@ -420,7 +554,7 @@ no_button:
 ;;; ============================================================
 
 finish:
-
+.if AD_SAVEBG
         bit     alert_params::options
     IF_VS                       ; V = use save area
         pha
@@ -429,7 +563,13 @@ finish:
         MGTK_CALL MGTK::ShowCursor
         pla
     END_IF
-
+.else
+        pha
+        MGTK_CALL MGTK::SetPortBits, portbits2
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, alert_rect
+        pla
+.endif ; AD_SAVEBG
         rts
 
 ;;; ============================================================
@@ -440,9 +580,20 @@ finish:
         rts
 .endproc
 
+;;; ============================================================
+
+.proc SetPenXOR
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        rts
+.endproc
+
+;;; ============================================================
+
         .include "alertbuttonloop.s"
+.if AD_SAVEBG
         .include "savedialogbackground.s"
         DialogBackgroundSave := dialog_background::Save
         DialogBackgroundRestore := dialog_background::Restore
+.endif ; AD_SAVEBG
 
 .endproc
