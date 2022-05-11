@@ -36,7 +36,11 @@ da_start:
         ;; Run the DA
         sta     RAMRDON
         sta     RAMWRTON
+
+        ;; Mostly use ZP preservation mode, since we use ROM FP routines.
+        MGTK_CALL MGTK::SetZP1, setzp_params_preserve
         jsr     Init
+        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
 
         ;; Back to main for exit
         sta     RAMRDOFF
@@ -175,10 +179,10 @@ grow_box_bitmap:
         .byte   PX(%1000000),PX(%0000000),PX(%0000001)
         .byte   PX(%1111111),PX(%1111111),PX(%1111111)
 
-setzp_params_nopreserve:           ; performance over convenience
+setzp_params_nopreserve:        ; performance over convenience
         .byte   MGTK::zp_overwrite
 
-setzp_params_preserve:            ; convenience over performance
+setzp_params_preserve:          ; convenience over performance
         .byte   MGTK::zp_preserve
 
 ;;; ============================================================

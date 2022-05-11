@@ -52,11 +52,16 @@ save_stack:  .byte   0
         sta     RAMRDON
         sta     RAMWRTON
 
+        ;; Mostly use ZP preservation mode, since we use ROM FP routines.
+        MGTK_CALL MGTK::SetZP1, setzp_params_preserve
+
         jmp     init
 .endproc
 
 
 .proc ExitDA
+        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
+
         ;; Return to DeskTop running in Main
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -80,6 +85,12 @@ window_id:     .byte   kDAWindowId
         .addr   grafport
 .endparams
         getwinport_params_window_id := getwinport_params::window_id
+
+setzp_params_nopreserve:        ; performance over convenience
+        .byte   MGTK::zp_overwrite
+
+setzp_params_preserve:          ; convenience over performance
+        .byte   MGTK::zp_preserve
 
 ;;; ============================================================
 ;;; Button Definitions

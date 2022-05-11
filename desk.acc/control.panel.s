@@ -1733,11 +1733,8 @@ next:   dex
 .proc ResetIPBlinkCounter
         copy16  SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_counter
         ;; Scale it because it's much slower in the DA than in DeskTop
-        ;; prompts. This is 1/32 speed, which is slightly too slow.
-        ldx     #4
-:       lsr16   ipblink_counter
-        dex
-        bpl     :-
+        ;; prompts, due to more hit testing, etc.  1/2 speed seems okay.
+        lsr16   ipblink_counter
         rts
 .endproc
 

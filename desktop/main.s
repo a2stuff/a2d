@@ -1690,9 +1690,7 @@ CmdDeskAcc      := CmdDeskaccImpl::start
 
         ;; Invoke it
         jsr     SetCursorPointer ; before invoking DA
-        MGTK_CALL MGTK::SetZP1, setzp_params_preserve
         jsr     DA_LOAD_ADDRESS
-        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
 
         ;; Restore state
         jsr     InitSetDesktopPort ; DA's port destroyed, set something real as current

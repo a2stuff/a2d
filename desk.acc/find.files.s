@@ -56,14 +56,11 @@ entry:
 
 ;;; Copy the DA to AUX for easy bank switching
 .scope
-        bit     ROMIN2
         copy16  #entry, STARTLO
         copy16  #da_end, ENDLO
         copy16  #entry, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
-        bit     LCBANK1
-        bit     LCBANK1
 .endscope
 
 .scope
@@ -894,6 +891,7 @@ modifiers       := * + 1
 ;;; EventKind::update
 window_id       := *
 ;;; otherwise
+coords          := *
 xcoord          := *
 ycoord          := * + 2
         .res    4
@@ -1022,16 +1020,7 @@ top_row:        .byte   0
 .endproc
 
 .proc InputLoop
-        ;; Since ZP preservation is on for DAs, MGTK calls are much
-        ;; slower. Approximate normal IP blink speed by making multiple
-        ;; idle calls.
-        copy    #24, count
-:       jsr     line_edit__Idle
-        dec     count
-        count := *+1
-        lda     #SELF_MODIFIED_BYTE
-        bne     :-
-
+        jsr     line_edit__Idle
         param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
@@ -1040,8 +1029,10 @@ top_row:        .byte   0
         cmp     #MGTK::EventKind::key_down
         jeq     HandleKey
         cmp     #MGTK::EventKind::no_event
-        jeq     HandleNoEvent
-        jmp     InputLoop
+        bne     InputLoop
+        jsr     CheckMouseMoved
+        bcc     InputLoop
+        jmp     HandleMouseMove
 .endproc
 
 .proc Exit
@@ -1515,12 +1506,30 @@ sub:    MGTK_CALL MGTK::PaintRect, 0, fillrect_addr
 .endproc
 
 ;;; ============================================================
+;;; Determine if mouse moved (returns w/ carry set if moved)
+;;; Used in dialogs to possibly change cursor
 
+.proc CheckMouseMoved
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     event_params::coords,x
+        cmp     coords,x
+        bne     diff
+        dex
+        bpl     :-
+        clc
+        rts
+
+diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
+        sec
+        rts
+
+        DEFINE_POINT coords, 0, 0
+
+.endproc
 
 ;;; ============================================================
 
-
-.proc HandleNoEvent
+.proc HandleMouseMove
         copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
