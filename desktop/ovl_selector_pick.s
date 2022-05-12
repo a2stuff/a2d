@@ -1382,6 +1382,7 @@ write:  lda     open_origpfx_params::ref_num
 @retry: MLI_CALL WRITE, write_params
         beq     close
         jsr     JUMP_TABLE_SHOW_ALERT
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
 
 close:  MLI_CALL CLOSE, close_params
@@ -1433,6 +1434,7 @@ write:  lda     open_curpfx_params::ref_num
 @retry: MLI_CALL WRITE, write_params
         beq     close
         jsr     JUMP_TABLE_SHOW_ALERT
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
 
 close:  MLI_CALL CLOSE, close_params

@@ -696,6 +696,7 @@ quick_boot_slot:
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     EventLoop      ; `kAlertResultCancel` = 1
         beq     @retry          ; `kAlertResultTryAgain` = 0
 :       jmp     RunDesktop
@@ -876,6 +877,7 @@ L943F:  jsr     LoadSelectorList
 
 L9443:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     :+           ; `kAlertResultCancel` = 1
         jsr     SetWatchCursor
         jmp     L93FF
@@ -943,6 +945,7 @@ check_desktop_btn:
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     done            ; `kAlertResultCancel` = 1
         beq     @retry          ; `kAlertResultTryAgain` = 0
 :       jmp     RunDesktop
@@ -1397,6 +1400,7 @@ start:  MLI_CALL OPEN, open_selector_params
 
 error:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert       ; `kAlertResultCancel` = 1
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     start           ; `kAlertResultTryAgain` = 0
         rts
 .endproc
@@ -1981,6 +1985,7 @@ L9C87:  lda     ($06),y
         cmp     #ERR_VOL_NOT_FOUND
         bne     fail
         txa
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     fail            ; `kAlertResultCancel` = 1
         jsr     SetWatchCursor
         jmp     L9C78
@@ -2031,6 +2036,7 @@ check_path:
         bne     :-
         lda     #AlertID::insert_source_disk
         jsr     ShowAlert
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     ClearSelectedIndex ; `kAlertResultCancel` = 1
         jmp     try
 

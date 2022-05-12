@@ -964,6 +964,7 @@ ep2:    dec     file_count
 .proc ShowInsertSourceDiskAlert
         lda     #AlertID::insert_source_disk
         jsr     app::ShowAlert
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     :+              ; `kAlertResultCancel` = 1
         jsr     app::SetWatchCursor ; try again
         rts

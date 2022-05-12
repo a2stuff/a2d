@@ -11022,6 +11022,7 @@ loop:   ldx     get_info_dialog_params::index
 common: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     common
 :
         lda     selected_window_id
@@ -11360,6 +11361,7 @@ no_change:
         beq     finish
         ;; Failed, maybe retry
         jsr     ShowAlert       ; Alert options depend on specific ProDOS error
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         jeq     retry           ; `kAlertResultTryAgain` = 0
         lda     #RenameDialogState::close
         jsr     RunDialogProc
@@ -11935,6 +11937,7 @@ do_op_flag:
         beq     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialog
 
@@ -11946,6 +11949,7 @@ do_op_flag:
         beq     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry2         ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialog
 
@@ -11959,6 +11963,7 @@ do_op_flag:
         beq     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialog
 
@@ -11975,6 +11980,7 @@ do_op_flag:
         beq     eof
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialog
 
@@ -13694,6 +13700,7 @@ flag_clear:
         beq     not_found
 
         jsr     ShowAlert
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         bne     close           ; not kAlertResultTryAgain = 0
         rts
 
@@ -13705,6 +13712,7 @@ not_found:
 
 :       lda     #kErrInsertSrcDisk
 show:   jsr     ShowAlert
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         bne     close           ; not kAlertResultTryAgain = 0
         jmp     do_on_line
 

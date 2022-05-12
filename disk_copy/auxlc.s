@@ -627,6 +627,7 @@ LD6F9:  lda     current_drive_selection
 LD734:  ldx     #0
         lda     #kAlertMsgInsertSource ; X=0 means just show alert
         jsr     ShowAlertDialog
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     :+              ; OK
         jmp     InitDialog      ; Cancel
 
@@ -678,6 +679,7 @@ LD7AD:  lda     source_drive_index
         ldx     #0
         lda     #kAlertMsgInsertDestination ; X=0 means just show alert
         jsr     ShowAlertDialog
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     :+              ; OK
         jmp     InitDialog      ; Cancel
 
@@ -775,11 +777,13 @@ format: MGTK_CALL MGTK::MoveTo, point_formatting
 
         lda     #kAlertMsgFormatError ; no args
         jsr     ShowAlertDialog
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     LD852           ; Try Again
         jmp     InitDialog      ; Cancel
 
 LD89F:  lda     #kAlertMsgDestinationProtected ; no args
         jsr     ShowAlertDialog
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     LD852           ; Try Again
         jmp     InitDialog      ; Cancel
 
@@ -801,6 +805,7 @@ LD8A9:  lda     winfo_dialog::window_id
         ldx     #$80
         lda     #kAlertMsgInsertSource ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     LD8DF           ; OK
         jmp     InitDialog      ; Cancel
 
@@ -832,6 +837,7 @@ LD8FB:  jsr     LE4A8
         ldx     #$80
         lda     #kAlertMsgInsertDestination ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     LD928           ; OK
         jmp     InitDialog      ; Cancel
 
@@ -855,6 +861,7 @@ LD928:  jsr     LE491
         ldx     #$80
         lda     #kAlertMsgInsertSource ; X !=0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     LD8FB           ; OK
         jmp     InitDialog      ; Cancel
 
@@ -2521,6 +2528,7 @@ flag:   .byte   0
         jsr     Bell
         lda     #kAlertMsgDestinationProtected ; no args
         jsr     ShowAlertDialog
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     :+              ; Cancel
         jsr     LE491           ; Try Again
         return  #1

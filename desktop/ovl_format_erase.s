@@ -220,6 +220,7 @@ l9:     jsr     main::SetPortForDialogWindow
 l10:    cmp     #ERR_WRITE_PROTECTED
         bne     l11
         jsr     JUMP_TABLE_SHOW_ALERT
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     cancel          ; `kAlertResultCancel` = 1
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
@@ -233,6 +234,7 @@ l12:    pha
         cmp     #ERR_WRITE_PROTECTED
         bne     l13
         jsr     JUMP_TABLE_SHOW_ALERT
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     cancel          ; `kAlertResultCancel` = 1
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
@@ -288,6 +290,7 @@ l7:
 l8:     cmp     #ERR_WRITE_PROTECTED
         bne     l9
         jsr     JUMP_TABLE_SHOW_ALERT
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     cancel          ; `kAlertResultCancel` = 1
         jmp     l7              ; `kAlertResultTryAgain` = 0
 
