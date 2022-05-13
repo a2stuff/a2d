@@ -272,7 +272,7 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 0, 0
 .endparams
 
-        DEFINE_RECT rect_opendir, 0, 0, 0, 0
+        DEFINE_RECT rect_dimmed, 0, 0, 0, 0
 
 .params textwidth_params
 textptr:        .addr   text_buffer
@@ -1834,7 +1834,7 @@ inside:
 icon_flags: ; bit 7 = highlighted, bit 6 = volume icon
         .byte   0
 
-open_flag:  ; non-zero if open volume/dir
+dimmed_flag:  ; non-zero if dimmed volume/dir
         .byte   0
 
 more_drawing_needed_flag:
@@ -1856,11 +1856,11 @@ highlighted:
         copy    #$80, icon_flags ; is highlighted
 
 common:
-        ;; Test if icon is open volume/folder
+        ;; Test if icon is dimmed volume/folder
         ldy     #IconEntry::win_flags
         lda     ($06),y
-        and     #kIconEntryFlagsOpen
-        sta     open_flag
+        and     #kIconEntryFlagsDimmed
+        sta     dimmed_flag
 
         lda     ($06),y
         and     #kIconEntryWinIdMask
@@ -1969,9 +1969,9 @@ common:
         ;; Icon
 
         ;; Shade (XORs background)
-        lda     open_flag
+        lda     dimmed_flag
         beq     :+
-        jsr     CalcRectOpendir
+        jsr     CalcDimmedRect
         jsr     Shade
 
         ;; Mask (cleared to white or black)
@@ -1982,7 +1982,7 @@ common:
 :       MGTK_CALL MGTK::PaintBits, mask_paintbits_params
 
         ;; Shade again (restores background)
-        lda     open_flag
+        lda     dimmed_flag
         beq     :+
         jsr     Shade
 
@@ -2017,7 +2017,7 @@ setbg:  sta     settextbg_params
 .proc Shade
         MGTK_CALL MGTK::SetPattern, dark_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_opendir
+        MGTK_CALL MGTK::PaintRect, rect_dimmed
 
 done:   rts
 .endproc
@@ -2026,10 +2026,10 @@ done:   rts
 
 ;;; ============================================================
 
-.proc CalcRectOpendir
+.proc CalcDimmedRect
         ldx     #0
-:       add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::topleft,x, rect_opendir::topleft,x
-        add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::bottomright,x, rect_opendir::bottomright,x
+:       add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::topleft,x, rect_dimmed::topleft,x
+        add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::bottomright,x, rect_dimmed::bottomright,x
         inx
         inx
         cpx     #.sizeof(MGTK::Point)

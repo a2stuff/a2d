@@ -615,10 +615,10 @@ not_menu:
         jsr     IconEntryLookup
         stax    ptr
 
-        ldy     #IconEntry::state ; set state to open
+        ldy     #IconEntry::state ; set state to dimmed
         lda     (ptr),y
         beq     done
-        ora     #kIconEntryFlagsOpen
+        ora     #kIconEntryFlagsDimmed
         sta     (ptr),y
 
         iny                     ; IconEntry::win_flags
@@ -5096,9 +5096,9 @@ cont:   sta     cached_window_entry_count
         jsr     IconEntryLookup
         stax    icon_ptr
 
-        ldy     #IconEntry::win_flags ; clear open state
+        ldy     #IconEntry::win_flags ; clear dimmed state
         lda     (icon_ptr),y
-        and     #AS_BYTE(~kIconEntryFlagsOpen)
+        and     #AS_BYTE(~kIconEntryFlagsDimmed)
         sta     (icon_ptr),y
         and     #kIconEntryWinIdMask ; which window?
         beq     :+              ; desktop, can draw/select
@@ -6037,10 +6037,10 @@ num:    .byte   0
         jsr     IconEntryLookup
         stax    ptr
 
-        ;; Set open flag
+        ;; Set dimmed flag
         ldy     #IconEntry::win_flags
         lda     (ptr),y
-        ora     #kIconEntryFlagsOpen
+        ora     #kIconEntryFlagsDimmed
         sta     (ptr),y
 
         ;; Only draw to desktop or active window
@@ -6769,7 +6769,7 @@ too_many_files:
 no_win: lda     #kErrTooManyFiles ; too many files to show
 show:   jsr     ShowAlert
 
-        jsr     MarkIconNotOpened
+        jsr     MarkIconNotDimmed
         dec     num_open_windows
 
         jsr     SetCursorPointer ; after loading directory (failed)
@@ -6965,7 +6965,7 @@ reserved_desktop_icons:
 :       bit     icon_param      ; Were we opening a path?
         bmi     :+              ; Yes, no icons to twiddle.
 
-        jsr     remove_filerecords_and_mark_icon_not_opened
+        jsr     remove_filerecords_and_mark_icon_not_dimmed
         lda     selected_window_id
         bne     :+
 
@@ -7229,7 +7229,7 @@ has_parent:
     IF_GE
         lda     #ERR_INVALID_PATHNAME
         jsr     ShowAlert
-        jsr     remove_filerecords_and_mark_icon_not_opened
+        jsr     remove_filerecords_and_mark_icon_not_dimmed
         dec     num_open_windows
         ldx     saved_stack
         txs
@@ -7726,9 +7726,9 @@ L7870:  lda     cached_window_id
         lda     icon_num
         sta     window_to_dir_icon_table-1,x
 
-        ldy     #IconEntry::win_flags ; mark as open
+        ldy     #IconEntry::win_flags ; mark as dimmed
         lda     (icon_entry),y
-        ora     #kIconEntryFlagsOpen
+        ora     #kIconEntryFlagsDimmed
         sta     (icon_entry),y
 :
         add16   file_record, #.sizeof(FileRecord), file_record
@@ -9906,7 +9906,7 @@ done:   rts
 ;;; Inputs: `icon_param` points at icon
 ;;; Assert: If windowed, icon is in the active window.
 
-.proc MarkIconNotOpened
+.proc MarkIconNotDimmed
         ptr := $6
 
         ;; Primary entry point.
@@ -9943,7 +9943,7 @@ start:  lda     icon_param
         stax    ptr
         ldy     #IconEntry::win_flags
         lda     (ptr),y
-        and     #AS_BYTE(~kIconEntryFlagsOpen) ; clear open_flag
+        and     #AS_BYTE(~kIconEntryFlagsDimmed)
         sta     (ptr),y
 
         lda     icon_param
@@ -9953,7 +9953,7 @@ start:  lda     icon_param
 
 ret:    rts
 .endproc
-        remove_filerecords_and_mark_icon_not_opened := MarkIconNotOpened::remove_filerecords
+        remove_filerecords_and_mark_icon_not_dimmed := MarkIconNotDimmed::remove_filerecords
 
 ;;; ============================================================
 

@@ -73,7 +73,7 @@ label   := *
 ;;;                      bits 0-3 = window_id
 ;;;                      bits 4,5 = unused
 ;;;                      bit 6 = drop target flag (trash, folder, dir)
-;;;                      bit 7 = open flag
+;;;                      bit 7 = dimmed flag
 ;;;      .word iconx     (pixels)
 ;;;      .word icony     (pixels)
 ;;;      .addr iconbits  (addr of IconDefinition)
@@ -100,7 +100,7 @@ kMaxIconCount   = 127
 kIconEntryStateHighlighted = %01000000
 
 ;;; Masks for IconEntry::win_flags
-kIconEntryFlagsOpen             = %10000000
+kIconEntryFlagsDimmed           = %10000000
 kIconEntryFlagsDropTarget       = %01000000
 kIconEntryWinIdMask             = %00001111
 
