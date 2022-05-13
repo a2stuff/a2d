@@ -6490,7 +6490,7 @@ next:   ldx     menu_item_index
         lda     menu_item_y_table+1,x
         sta     fill_rect_params3_bottom
 
-        MGTK_CALL MGTK::SetPattern, light_speckle_pattern
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
 
         lda     #MGTK::penOR
 ep2:    jsr     SetFillMode
