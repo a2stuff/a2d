@@ -579,7 +579,7 @@ LD687:  lda     current_drive_selection
         lda     current_drive_selection
         sta     source_drive_index
 
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_select_src
@@ -611,7 +611,7 @@ LD6F9:  lda     current_drive_selection
         sta     dest_drive_index
         lda     #$00
         sta     LD44C
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
@@ -645,7 +645,7 @@ LD734:  ldx     #0
         jsr     DrawSourceDriveInfo
         jmp     LD7AD
 
-LD763:  lda     winfo_dialog::window_id
+LD763:  lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_D42A
@@ -787,7 +787,7 @@ LD89F:  lda     #kAlertMsgDestinationProtected ; no args
         beq     LD852           ; Try Again
         jmp     InitDialog      ; Cancel
 
-LD8A9:  lda     winfo_dialog::window_id
+LD8A9:  lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
@@ -1013,7 +1013,7 @@ LDA42:  copy    #0, checkitem_params::check
         copy    #1, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    #0, disk_copy_flag
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         param_call DrawTitleText, str_quick_copy_padded
         rts
@@ -1029,10 +1029,12 @@ LDA7D:  copy    #0, checkitem_params::check
         copy    #1, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    #1, disk_copy_flag
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         param_call DrawTitleText, str_disk_copy_padded
         rts
+
+;;; ============================================================
 
 HandleButtonDown:
         MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -1044,49 +1046,46 @@ HandleButtonDown:
         MGTK_CALL MGTK::MenuSelect, menuselect_params
         jmp     handle_menu_selection
 :       cmp     #MGTK::Area::content
-        bne     :+
-        jmp     handle_content_button_down
-:       return  #$FF
-
-handle_content_button_down:
+        beq     :+
+        return  #$FF
+:
         lda     findwindow_params::window_id
-        cmp     winfo_dialog::window_id
-        bne     check_drive_select
-        jmp     handle_dialog_button_down
-
-check_drive_select:
+        cmp     #winfo_dialog::kWindowId
+        beq     handle_dialog_button_down
         cmp     winfo_drive_select
-        bne     :+
-        jmp     handle_drive_select_button_down
-:       rts
+        jeq     handle_drive_select_button_down
+        rts
 
+        ;; --------------------------------------------------
+        ;; Dialog window
 handle_dialog_button_down:
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         sta     screentowindow_params::window_id
         jsr     SetWinPort
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-CheckOkButton:
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
-        beq     :+
-        jmp     check_read_drive_button
-:       MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        jsr     HandleOkButtonDown
-        rts
+    IF_EQ
+        param_call ButtonEventLoop, winfo_dialog::kWindowId, ok_button_rect
+        bmi     :+
+        lda     #$00
+:       rts
+    END_IF
 
-check_read_drive_button:
         MGTK_CALL MGTK::InRect, read_drive_button_rect
         cmp     #MGTK::inrect_inside
-        bne     :+
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, read_drive_button_rect
-        jsr     HandleReadDriveButtonDown
+    IF_EQ
+        param_call ButtonEventLoop, winfo_dialog::kWindowId, read_drive_button_rect
+        bmi     :+
+        lda     #$01
+:
+    END_IF
         rts
 
-:       return  #$FF
+        ;; --------------------------------------------------
+        ;; Drive select window
 
 handle_drive_select_button_down:
         MGTK_CALL MGTK::FindControl, findcontrol_params
@@ -1097,7 +1096,7 @@ handle_drive_select_button_down:
         cmp     #MGTK::Ctl::not_a_control
         jne     LDBCA
 
-        copy    winfo_drive_select::window_id, screentowindow_params::window_id
+        copy    #winfo_drive_select::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         ldax    screentowindow_params::windowy
@@ -1178,7 +1177,7 @@ dialog_shortcuts:
         beq     LDC09
         cmp     #TO_LOWER(kShortcutReadDisk)
         bne     LDC2D
-LDC09:  lda     winfo_dialog::window_id
+LDC09:  lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, read_drive_button_rect
@@ -1187,7 +1186,7 @@ LDC09:  lda     winfo_dialog::window_id
 
 LDC2D:  cmp     #CHAR_RETURN
     IF_EQ
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, ok_button_rect
@@ -1281,96 +1280,6 @@ ret:    rts
         jsr     HighlightRow
 
 ret:    rts
-.endproc
-
-;;; ============================================================
-
-.proc HandleReadDriveButtonDown
-        lda     #$00
-        sta     state
-loop:   MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_up
-        beq     LDD14
-        lda     winfo_dialog::window_id
-        sta     screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, read_drive_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     LDCEE
-        lda     state
-        beq     LDCF6
-        jmp     loop
-
-LDCEE:  lda     state
-        bne     LDCF6
-        jmp     loop
-
-LDCF6:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, read_drive_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-LDD14:  lda     state
-        beq     LDD1C
-        return  #$FF
-
-LDD1C:  lda     winfo_dialog::window_id
-        jsr     SetWinPort
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, read_drive_button_rect
-        return  #$01
-
-state:  .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc HandleOkButtonDown
-        lda     #$00
-        sta     state
-loop:   MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_up
-        beq     LDDA0
-        lda     winfo_dialog::window_id
-        sta     screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, ok_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     LDD7A
-        lda     state
-        beq     LDD82
-        jmp     loop
-
-LDD7A:  lda     state
-        bne     LDD82
-        jmp     loop
-
-LDD82:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-LDDA0:  lda     state
-        beq     LDDA8
-        return  #$FF
-
-LDDA8:  lda     winfo_dialog::window_id
-        jsr     SetWinPort
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        return  #$00
-
-state:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1507,6 +1416,7 @@ l3:     lda     #$3A
 
 ;;; ============================================================
 
+        .include "../lib/buttonloop.s"
         .include "../lib/inttostring.s"
         .include "../lib/bell.s"
 
@@ -1556,7 +1466,7 @@ saved_ram_unitnum:
 
 .proc OpenDialog
         MGTK_CALL MGTK::OpenWindow, winfo_dialog
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
@@ -1568,7 +1478,7 @@ saved_ram_unitnum:
 .endproc
 
 .proc DrawDialog
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
@@ -1705,7 +1615,7 @@ CheckAlpha:
         stax    rect_highlight_row::y1
         addax   #kListItemHeight-1, rect_highlight_row::y2
 
-        lda     winfo_drive_select::window_id
+        lda     #winfo_drive_select::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_highlight_row
@@ -2054,7 +1964,7 @@ match:  lda     DEVLST,x
 ;;; ============================================================
 
 .proc DrawDeviceListEntries
-        lda     winfo_drive_select::window_id
+        lda     #winfo_drive_select::kWindowId
         jsr     SetWinPort
 
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -2137,7 +2047,7 @@ src_block_count:
 ;;; ============================================================
 
 .proc DrawDestinationListEntries
-        lda     winfo_drive_select::window_id
+        lda     #winfo_drive_select::kWindowId
         jsr     SetWinPort
 
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -2310,19 +2220,19 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-LE491:  lda     winfo_dialog::window_id
+LE491:  lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::MoveTo, point_writing
         param_call DrawString, str_writing
         rts
 
-LE4A8:  lda     winfo_dialog::window_id
+LE4A8:  lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::MoveTo, point_reading
         param_call DrawString, str_reading
         rts
 
-LE4BF:  lda     winfo_dialog::window_id
+LE4BF:  lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         lda     source_drive_index
         asl     a
@@ -2350,7 +2260,7 @@ LE507:  jsr     LE522
         param_call DrawString, str_2_spaces
         rts
 
-LE522:  lda     winfo_dialog::window_id
+LE522:  lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         lda     block_num_div8+1
         sta     LE558
@@ -2379,7 +2289,7 @@ LE558:  .byte   0
 ;;; ============================================================
 
 .proc DrawSourceDriveInfo
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::MoveTo, point_source2
         param_call DrawString, str_source
@@ -2423,7 +2333,7 @@ LE5C6:  param_call DrawString, str_2_spaces
 ;;; ============================================================
 
 .proc DrawDestinationDriveInfo
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::MoveTo, point_destination
         param_call DrawString, str_destination
@@ -2454,7 +2364,7 @@ LE5C6:  param_call DrawString, str_2_spaces
 
 ;;; ============================================================
 
-LE63F:  lda     winfo_dialog::window_id
+LE63F:  lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::MoveTo, point_disk_copy
         bit     LD44D
@@ -2475,13 +2385,13 @@ LE673:  rts
 LE674:  lda     LD44D
         cmp     #$C0
         beq     LE693
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_D483
 LE693:  rts
 
-LE694:  lda     winfo_dialog::window_id
+LE694:  lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         MGTK_CALL MGTK::MoveTo, point_escape_stop_copy
         param_call DrawString, str_escape_stop_copy
@@ -2491,7 +2401,7 @@ LE694:  lda     winfo_dialog::window_id
 ;;; Flash the message when escape is pressed
 
 .proc FlashEscapeMessage
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         copy    #10, count
         copy    #$80, flag
@@ -2537,7 +2447,7 @@ flag:   .byte   0
         return  #$80
 
 l2:     jsr     Bell
-        lda     winfo_dialog::window_id
+        lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
         lda     main__block_params_block_num
         ldx     main__block_params_block_num+1
@@ -2972,7 +2882,7 @@ Alert := alert_dialog::Alert
 
 ;;; ============================================================
 
-        ASSERT_ADDRESS $F400
+        ASSERT_ADDRESS ::kSegmentAuxLCAddress + ::kSegmentAuxLCLength
 
 .endscope
        auxlc__start := auxlc::start
