@@ -63,7 +63,7 @@ Note that these are for inspiration, not to be dutifully followed.
 
 ## Keyboard
 
-* For Apple+letter combinations, Open Apple or Solid Apple should be equivalent.
+* For Apple+letter combinations, Open-Apple or Solid-Apple should be equivalent.
 
 * Apple+M is reserved for: move the active window with the keyboard.
 * Apple+X is reserved for: scroll the active window with the keyboard.
