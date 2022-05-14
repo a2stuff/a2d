@@ -67,7 +67,7 @@ windowy := * + 7
 .endproc
 ;;; Needed for case where this file appears after code:
 screentowindow_window_id := screentowindow_params::window_id
-screentowindow_windowx := screentowindow_params::windowx
+screentowindow_window := screentowindow_params::window
 
 .params dragwindow_params
 window_id      := *

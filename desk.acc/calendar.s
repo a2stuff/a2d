@@ -433,9 +433,9 @@ common: bit     dragwindow_params::moved
 ;;; ============================================================
 
 .proc HandleClick
-        copy    winfo::window_id, screentowindow_window_id
+        copy    winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, left_button_rect
         cmp     #MGTK::inrect_inside

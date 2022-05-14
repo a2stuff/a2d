@@ -187,7 +187,7 @@ l1:
         lda     #file_dialog_res::kFilePickerDlgWindowID
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
 .if FD_EXTENDED
         bit     focus_in_input2_flag
@@ -245,7 +245,7 @@ ret:    rts
         lda     #file_dialog_res::kFilePickerDlgWindowID
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         ;; --------------------------------------------------
         ;; Change Drive button
@@ -2331,7 +2331,7 @@ no_change:
         buf_text := buf_input1
         textpos := file_dialog_res::input1_textpos
         clear_rect := file_dialog_res::input1_clear_rect
-        click_coords := screentowindow_params::windowx
+        click_coords := screentowindow_params::window
         NotifyTextChanged := NotifyTextChangedF1
         SetPort := SetPortForDialog
 
@@ -2358,7 +2358,7 @@ f1__Click := f1::Click
         buf_text := buf_input2
         textpos := file_dialog_res::input2_textpos
         clear_rect := file_dialog_res::input2_clear_rect
-        click_coords := screentowindow_params::windowx
+        click_coords := screentowindow_params::window
         NotifyTextChanged := NotifyTextChangedF2
         SetPort := SetPortForDialog
 

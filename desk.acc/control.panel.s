@@ -151,8 +151,6 @@ penheight:      .byte   2
 ;;; ============================================================
 
         .include "../lib/event_params.s"
-mx := screentowindow_params::windowx
-my := screentowindow_params::windowy
 
 .params trackgoaway_params
 clicked:        .byte   0
@@ -629,9 +627,9 @@ ipblink_ip_bitmap:
 ;;; ============================================================
 
 .proc HandleMove
-        copy    winfo::window_id, screentowindow_window_id
+        copy    winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, anim_cursor_rect
         sta     cursor_flag
         jmp     InputLoop
@@ -695,12 +693,12 @@ ipblink_ip_bitmap:
 ;;; ============================================================
 
 .proc HandleClick
-        copy    winfo::window_id, screentowindow_window_id
+        copy    winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, fatbits_rect
         cmp     #MGTK::inrect_inside
         jeq     HandleBitsClick
@@ -833,8 +831,8 @@ ipblink_ip_bitmap:
 
         ;; Determine sense flag (0=clear, $FF=set)
         jsr     MapCoords
-        ldx     mx
-        ldy     my
+        ldx     screentowindow_params::windowx
+        ldy     screentowindow_params::windowy
 
         stx     lastx
         sty     lasty
@@ -848,8 +846,8 @@ ipblink_ip_bitmap:
 @store: sta     flag
 
         ;; Toggle pattern bit
-loop:   ldx     mx
-        ldy     my
+loop:   ldx     screentowindow_params::windowx
+        ldy     screentowindow_params::windowy
         lda     pattern,y
         bit     flag
         bpl     :+
@@ -860,8 +858,8 @@ loop:   ldx     mx
         beq     event
         sta     pattern,y
 
-        ldx     mx
-        ldy     my
+        ldx     screentowindow_params::windowx
+        ldy     screentowindow_params::windowy
         lda     flag
         jsr     DrawBit
 
@@ -873,17 +871,17 @@ event:  MGTK_CALL MGTK::GetEvent, event_params
         cmp     #MGTK::EventKind::button_up
         jeq     InputLoop
 
-        copy    winfo::window_id, screentowindow_window_id
+        copy    winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, fatbits_rect
         cmp     #MGTK::inrect_inside
         bne     event
 
         jsr     MapCoords
-        ldx     mx
-        ldy     my
+        ldx     screentowindow_params::windowx
+        ldy     screentowindow_params::windowy
         cpx     lastx
         bne     moved
         cpy     lasty
@@ -904,16 +902,16 @@ lasty:  .byte   0
 
 ;;; Assumes click is within fatbits_rect
 .proc MapCoords
-        sub16   mx, fatbits_rect::x1, mx
-        sub16   my, fatbits_rect::y1, my
+        sub16   screentowindow_params::windowx, fatbits_rect::x1, screentowindow_params::windowx
+        sub16   screentowindow_params::windowy, fatbits_rect::y1, screentowindow_params::windowy
 
         ldy     #kFatBitWidthShift
-:       lsr16   mx
+:       lsr16   screentowindow_params::windowx
         dey
         bne     :-
 
         ldy     #kFatBitHeightShift
-:       lsr16   my
+:       lsr16   screentowindow_params::windowy
         dey
         bne     :-
 

@@ -550,14 +550,14 @@ modifiers:
 
 .proc HandleClick
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         ;; ----------------------------------------
 
         lda     winfo::window_id
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
@@ -589,7 +589,7 @@ modifiers:
         lda     winfo_listbox::window_id
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         add16   screentowindow_params::windowy, winfo_listbox::cliprect::y1, tmp
         ldax    tmp

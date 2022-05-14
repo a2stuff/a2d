@@ -910,9 +910,9 @@ L9443:  lda     #AlertID::insert_system_disk
 :       lda     winfo::window_id
         jsr     GetWindowPort
         lda     winfo::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         ;; OK button?
 

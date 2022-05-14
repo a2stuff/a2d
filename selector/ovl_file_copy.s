@@ -1045,9 +1045,9 @@ HandleButtonDown:
         lda     winfo::window_id
         jsr     app::GetWindowPort
         lda     winfo::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     event_loop
@@ -1065,9 +1065,9 @@ LABEB:  MGTK_CALL MGTK::GetEvent, event_params
         cmp     #MGTK::EventKind::button_up
         beq     LAC3C
         lda     winfo::window_id
-        sta     screentowindow_window_id
+        sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     LAC1C

@@ -1065,7 +1065,7 @@ handle_dialog_button_down:
         sta     screentowindow_params::window_id
         jsr     SetWinPort
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
 CheckOkButton:
         MGTK_CALL MGTK::InRect, ok_button_rect
@@ -1099,7 +1099,7 @@ handle_drive_select_button_down:
 
         copy    winfo_drive_select::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
@@ -1295,7 +1295,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     winfo_dialog::window_id
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, read_drive_button_rect
         cmp     #MGTK::inrect_inside
         beq     LDCEE
@@ -1340,7 +1340,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     winfo_dialog::window_id
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     LDD7A

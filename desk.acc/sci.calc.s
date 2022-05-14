@@ -804,7 +804,7 @@ ret:    rts
         lda     #kDAWindowId
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         ptr := $FA
 
@@ -1336,7 +1336,7 @@ check_button:
         sta     screentowindow_params::window_id
 
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, 0, inrect_params
         bne     inside
 

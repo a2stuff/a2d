@@ -13874,7 +13874,7 @@ dialog_param_addr:
         ;; Is over this window... but where?
         copy    winfo_prompt_dialog, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         bne     out
@@ -13903,7 +13903,7 @@ content:
 :       jsr     SetPortForDialogWindow
         copy    winfo_prompt_dialog, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         bit     prompt_button_flags
         jvs     check_button_yes
 
@@ -15320,7 +15320,7 @@ done:   rts
         textpos := name_input_textpos
         clear_rect := name_input_erase_rect
         NotifyTextChanged := NoOp
-        click_coords := screentowindow_params::windowx
+        click_coords := screentowindow_params::window
         SetPort := SetPortForDialogWindow
 
         .include "../lib/line_edit.s"

@@ -24,7 +24,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     window_id
         sta     screentowindow_window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_window
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr1
 
         cmp     #MGTK::inrect_inside
