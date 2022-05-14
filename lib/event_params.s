@@ -56,8 +56,10 @@ stash := * + 5 ; not part of struct
 
 .params screentowindow_params
 window_id := * + 0
+screen  := * + 1
 screenx := * + 1
 screeny := * + 3
+window  := * + 5
 windowx := * + 5
 windowy := * + 7
         .assert screenx = event_params::xcoord, error, "param mismatch"

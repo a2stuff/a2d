@@ -883,59 +883,12 @@ nextwinfo:      .addr   0
 
 ;;; ============================================================
 
-.params event_params
-kind:  .byte   0
-;;; EventKind::key_down
-key             := *
-modifiers       := * + 1
-;;; EventKind::update
-window_id       := *
-;;; otherwise
-coords          := *
-xcoord          := *
-ycoord          := * + 2
-        .res    4
-.endparams
-
-.params findwindow_params
-mousex:         .word   0
-mousey:         .word   0
-which_area:     .byte   0
-window_id:      .byte   0
-.endparams
-
-.params findcontrol_params
-mousex:         .word   0
-mousey:         .word   0
-which_ctl:      .byte   0
-which_part:     .byte   0
-.endparams
-
-.params trackthumb_params
-which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
-mousex:         .word   0
-mousey:         .word   0
-thumbpos:       .byte   0
-thumbmoved:     .byte   0
-.endparams
-
-.params updatethumb_params
-which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
-thumbpos:       .byte   0
-.endparams
+        .include "../lib/event_params.s"
 
 .params winport_params
 window_id:      .byte   0
 port:           .addr   grafport
 .endparams
-
-.params screentowindow_params
-window_id:      .byte   kDAWindowID
-        DEFINE_POINT screen, 0, 0
-        DEFINE_POINT window, 0, 0
-.endparams
-        mx := screentowindow_params::window::xcoord
-        my := screentowindow_params::window::ycoord
 
 .params grafport
         DEFINE_POINT viewloc, 0, 0
@@ -950,16 +903,6 @@ penheight:      .byte   0
 penmode:        .byte   MGTK::pencopy
 textback:       .byte   0
 textfont:       .addr   0
-.endparams
-
-.params activatectl_params
-which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
-activate:       .byte   0
-.endparams
-
-.params setctlmax_params
-which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
-ctlmax:         .byte   0
 .endparams
 
 ;;; ============================================================
@@ -1240,8 +1183,6 @@ finish: jmp     InputLoop
 ;;; ============================================================
 
 .proc HandleDown
-        copy16  event_params::xcoord, findwindow_params::mousex
-        copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
@@ -1253,6 +1194,9 @@ finish: jmp     InputLoop
         bne     done
 
         ;; Click in DA content area
+        copy    #kDAWindowID, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+
         param_call ButtonPress, search_button_rect
         beq     :+
         bmi     done
@@ -1263,7 +1207,6 @@ finish: jmp     InputLoop
         bmi     done
         jmp     Exit
 :
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, input_rect
         cmp     #MGTK::inrect_inside
@@ -1274,8 +1217,6 @@ done:   jmp     InputLoop
 
         ;; Click in Results content area
 results:
-        copy16  event_params::xcoord, findcontrol_params::mousex
-        copy16  event_params::ycoord, findcontrol_params::mousey
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
@@ -1383,8 +1324,6 @@ kPartEnd  = $81
         cmp     #MGTK::Part::thumb
         jne     done
 
-        copy16  event_params::xcoord, trackthumb_params::mousex
-        copy16  event_params::ycoord, trackthumb_params::mousey
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         beq     done
@@ -1429,63 +1368,19 @@ bottom: add16   winfo_results::maprect::y1, #kResultsHeight, winfo_results::mapr
         kClicked         = 1
 
         stax    inrect_addr
-        stax    fillrect_addr
-        jsr     TestRect
-        beq     :+
-        return  #kOutside
-
-:       jsr     InvertRect
-
-        copy    #0, down_flag
-
-loop:   MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_up
-        beq     exit
-
-        jsr     TestRect
-        beq     inside
-
-        lda     down_flag       ; outside but was inside?
-        beq     invert
-        jmp     loop
-
-inside: lda     down_flag       ; already depressed?
-        bne     invert
-        jmp     loop
-
-invert: jsr     InvertRect
-        lda     down_flag
-        clc
-        adc     #$80
-        sta     down_flag
-        jmp     loop
-
-exit:   lda     down_flag       ; was depressed?
-        beq     :+
-        return  #kCanceled
-:       jsr     InvertRect     ; invert one last time
-        return  #kClicked
-
-down_flag:
-        .byte   0
-
-TestRect:
-        copy16  event_params::xcoord, screentowindow_params::screen::xcoord
-        copy16  event_params::ycoord, screentowindow_params::screen::ycoord
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, 0, inrect_addr
         cmp     #MGTK::inrect_inside
+        beq     :+
+        lda     #kOutside
         rts
-
-InvertRect:
-        copy    #kDAWindowID, winport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, winport_params
-        MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, 0, fillrect_addr
-        rts
+:
+        ldax    inrect_addr
+        ldy     #kDAWindowID
+        jsr     ButtonEventLoop
+        bmi     :+
+        lda     #kClicked
+:       rts
 .endproc
 
 ;;; ============================================================
@@ -1530,8 +1425,7 @@ diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
 ;;; ============================================================
 
 .proc HandleMouseMove
-        copy16  event_params::xcoord, screentowindow_params::screen::xcoord
-        copy16  event_params::ycoord, screentowindow_params::screen::ycoord
+        copy    #kDAWindowID, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -1644,6 +1538,7 @@ line:   .byte   0
 
 ;;; ============================================================
 
+        .include "../lib/buttonloop.s"
         .include "../lib/drawstring.s"
         .include "../lib/measurestring.s"
 
