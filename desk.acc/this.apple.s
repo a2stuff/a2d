@@ -579,6 +579,7 @@ str_network:    PASCAL_STRING res_string_card_type_network
 str_mockingboard: PASCAL_STRING res_string_card_type_mockingboard
 str_z80:        PASCAL_STRING res_string_card_type_z80
 str_uthernet2:  PASCAL_STRING res_string_card_type_uthernet2
+str_lcmeve:     PASCAL_STRING res_string_card_type_lcmeve
 str_vidhd:      PASCAL_STRING res_string_card_type_vidhd
 str_unknown:    PASCAL_STRING res_string_unknown
 str_empty:      PASCAL_STRING res_string_empty
@@ -1181,11 +1182,23 @@ draw:   php
         lda     slot
         cmp     #3
     IF_EQ
+        bit     ROMIN2
+        jsr     DetectLeChatMauveEve
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
+      IF_NE
+        param_call DrawString, str_list_separator
+        param_call DrawString, str_lcmeve
+      ELSE
+        lda     slot
         jsr     SetSlotPtr
         param_call WithInterruptsDisabled, DetectUthernet2
-      IF_CS
+       IF_CS
         param_call DrawString, str_list_separator
         param_call DrawString, str_uthernet2
+       END_IF
       END_IF
     END_IF
 
@@ -2060,6 +2073,7 @@ nope:   lda     #$FF
 
 ;;; ============================================================
 
+        .include  "../lib/detect_lcmeve.s"
         .include  "../lib/drawstring.s"
 
 ;;; ============================================================
