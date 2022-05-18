@@ -38,6 +38,7 @@
         sta     TEXT16_OFF      ; TEXT16 off
         sta     PAGE2ON         ; access PAGE1X
 
+        lda     #kSentinelValue
         eor     $400            ; did the value change?
         sta     result          ; if non-zero, Eve was shadowing
 
