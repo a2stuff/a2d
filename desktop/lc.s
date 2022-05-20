@@ -68,18 +68,6 @@ params:  .res    3
 
 
 ;;; ============================================================
-;;; SET_POS with params at (X,A) followed by DRAW_TEXT call
-
-.proc SetPosDrawText
-        stax    addr
-        jsr     BankInAux
-        MGTKEntry := aux::MGTKEntry
-        MGTK_CALL MGTK::MoveTo, 0, addr
-        MGTK_CALL MGTK::DrawText, text_buffer2
-        jmp     BankInMain
-.endproc
-
-;;; ============================================================
 ;;; Used/Free icon map (Aux $1F80 - $1FFF)
 
         free_icon_map := $1F80

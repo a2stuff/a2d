@@ -8538,16 +8538,29 @@ ret:    rts
 
         ;; Draw it!
 in_range:
+        MGTK_CALL MGTK::MoveTo, pos_col_icon
         jsr     PrepareColGlyph
-        param_call SetPosDrawText, pos_col_icon
+        jsr     draw_text
+
+        MGTK_CALL MGTK::MoveTo, pos_col_name
         jsr     PrepareColName
-        param_call SetPosDrawText, pos_col_name
+        jsr     draw_text
+
+        MGTK_CALL MGTK::MoveTo, pos_col_type
         jsr     PrepareColType
-        param_call SetPosDrawText, pos_col_type
+        jsr     draw_text
+
+        MGTK_CALL MGTK::MoveTo, pos_col_size
         jsr     PrepareColSize
-        param_call SetPosDrawText, pos_col_size
+        jsr     draw_text
+
+        MGTK_CALL MGTK::MoveTo, pos_col_date
         jsr     ComposeDateString
-        param_jump SetPosDrawText, pos_col_date
+        FALL_THROUGH_TO draw_text
+
+draw_text:
+        MGTK_CALL MGTK::DrawText, text_buffer2
+        rts
 .endproc
 
 ;;; ============================================================
