@@ -424,7 +424,7 @@ entry:
         ror     not_iigs_flag   ; rotate C into high bit
 
         jsr     DetectLeChatMauveEve
-        bne     :+
+        beq     :+              ; Z=1 means no LCMEve
         copy    #$80, lcm_eve_flag
 :
 

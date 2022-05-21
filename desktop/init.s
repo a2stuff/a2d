@@ -191,7 +191,7 @@ end:
         bit     LCBANK1
         bit     LCBANK1
         pla
-        bne     :+
+        beq     :+              ; Z=1 means no LCMEve
         copy    #$80, machine_config::lcm_eve_flag
 :
 .endscope
