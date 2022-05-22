@@ -84,9 +84,8 @@ fallback:
         and     #NAME_LENGTH_MASK
         beq     done
 
-        ;; Walk backwards through string. At char N, check char N-1
-        ;; to see if it is a '.'. If it isn't, and char N is a letter,
-        ;; lower-case it.
+        ;; Walk backwards through string. At char N, check char N-1; if
+        ;; it is a letter, and char N is also a letter, lower-case it.
         tay
 
 loop:   dey
@@ -95,8 +94,8 @@ loop:   dey
 done:   rts
 
 :       lda     (ptr),y
-        cmp     #'.'
-        bne     check_alpha
+        cmp     #'A'
+        bcs     check_alpha
         dey
         bpl     loop            ; always
 
