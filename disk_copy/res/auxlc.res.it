@@ -5,8 +5,6 @@
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "Copia rapida"
 .define res_string_dc_menu_item_disk_copy "Copia volume"
-.define res_string_disk_copy_padded_dialog_title "    Copia volume    "
-.define res_string_quick_copy_padded_dialog_title "    Copia rapida    "
 .define res_string_button_read_drive "Volumi collegati V"
 .define res_char_button_read_drive_shortcut 'V'
 .define res_string_label_slot_drive_name "Slot, Lettore, Nome"

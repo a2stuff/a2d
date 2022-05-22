@@ -5,8 +5,6 @@
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "Copia R\x10pida"
 .define res_string_dc_menu_item_disk_copy "Copiar Disco"
-.define res_string_disk_copy_padded_dialog_title "    Copiar Disco    "
-.define res_string_quick_copy_padded_dialog_title "    Copia R\x10pida    "
 .define res_string_button_read_drive "Leer Unidad   D"
 .define res_char_button_read_drive_shortcut 'D'
 .define res_string_label_slot_drive_name "Ranura, Unidad, Nombre"

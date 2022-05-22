@@ -265,12 +265,9 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         DEFINE_BUTTON ok, res_string_button_ok, 350, 90
 
-;;; Label positions
+        ;; For drawing/updating the dialog title
         DEFINE_POINT point_title, 0, 15
-str_disk_copy_padded:
-        PASCAL_STRING res_string_disk_copy_padded_dialog_title ; dialog title (padded to overwrite when swapping)
-str_quick_copy_padded:
-        PASCAL_STRING res_string_quick_copy_padded_dialog_title ; dialog title (padded to overwrite when swapping)
+        DEFINE_RECT rect_title, 8, 4, kDialogWidth-8, 15
 
         DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
 
@@ -1015,7 +1012,8 @@ LDA42:  copy    #0, checkitem_params::check
         copy    #0, disk_copy_flag
         lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
-        param_call DrawTitleText, str_quick_copy_padded
+        MGTK_CALL MGTK::PaintRect, rect_title
+        param_call DrawTitleText, label_quick_copy
         rts
 
 CmdDiskCopy:
@@ -1031,7 +1029,8 @@ LDA7D:  copy    #0, checkitem_params::check
         copy    #1, disk_copy_flag
         lda     #winfo_dialog::kWindowId
         jsr     SetWinPort
-        param_call DrawTitleText, str_disk_copy_padded
+        MGTK_CALL MGTK::PaintRect, rect_title
+        param_call DrawTitleText, label_disk_copy
         rts
 
 ;;; ============================================================
@@ -1485,9 +1484,9 @@ saved_ram_unitnum:
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_lower
         lda     disk_copy_flag
         bne     :+
-        param_call DrawTitleText, str_quick_copy_padded
+        param_call DrawTitleText, label_quick_copy
         jmp     draw_buttons
-:       param_call DrawTitleText, str_disk_copy_padded
+:       param_call DrawTitleText, label_disk_copy
 
 draw_buttons:
         MGTK_CALL MGTK::SetPenMode, penXOR
