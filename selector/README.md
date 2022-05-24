@@ -50,7 +50,7 @@ appropriate IO buffer location based on load address.
 ### MGTK and Selector App - `app.s`
 
 * A copy of MGTK resides at $4000.
-* The font is at $8800.
+* The font is at $8600.
 * The application entry point is $8E00.
 
 ### Alert Dialog - `alert_dialog.s`
@@ -95,8 +95,9 @@ $B300 + - - - - - - +       |             |
       | Overlays    |       |             |
       |             |       |             |
       |             |       |             |
-      |             |       |             |
 $A400 +-------------+       |             |
+      | Settings    |       |             |
+$A300 +-------------+       |             |
       | Selector    |       |             |
       | App Code    |       |             |
       |             |       |             |
@@ -104,14 +105,11 @@ $A400 +-------------+       |             |
       |             |       |             |
       |             |       |             |
       |             |       |             |
-      |             |       |             |
 $8E00 +-------------+       |             |
-      | Settings    |       |             |
-      |             |       |             |
+      | Resources   |       |             |
       |             |       |   Unused    |
       |             |       |             |
-$8800 | Font        |       |             |
-      |             |       |             |
+      | Font        |       |             |
 $8600 +-------------+       |             |
       | MGTK        |       |             |
       |             |       |             |

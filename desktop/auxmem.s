@@ -20,6 +20,13 @@
 
 ;;; ============================================================
 
+        ASSERT_ADDRESS ::DEFAULT_FONT
+        .incbin .concat("../mgtk/fonts/A2D.FONT.", kBuildLang)
+
+        font_height     := DEFAULT_FONT+2
+
+;;; ============================================================
+
 graphics_icon:
         .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
         .byte   PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000001)
@@ -137,19 +144,6 @@ iigs_file_icon:
         .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111110)
         ;; shares `generic_mask`
-
-        PAD_TO $8800
-
-;;; ============================================================
-
-        ASSERT_ADDRESS ::DEFAULT_FONT
-        .incbin .concat("../mgtk/fonts/A2D.FONT.", kBuildLang)
-
-        font_height     := DEFAULT_FONT+2
-
-;;; ============================================================
-
-        ASSERT_ADDRESS $8D03
 
 font_icon:
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%0000000)

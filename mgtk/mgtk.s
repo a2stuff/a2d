@@ -10459,4 +10459,4 @@ rect       .tag MGTK::Rect
 .endscope  ; mgtk
 
         ;; Room for future expansion
-        PAD_TO $8640
+        PAD_TO $8600

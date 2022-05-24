@@ -11,7 +11,7 @@
 SAVE_AREA_BUFFER:= $0800
 LOADER          := $2000
 MGTKEntry       := $4000
-FONT            := $8800
+FONT            := $8600
 START           := $8E00
 
 OVERLAY_ADDR    := MGTKEntry + kAppSegmentSize

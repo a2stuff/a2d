@@ -16,6 +16,12 @@
         .include "../mgtk/mgtk.s"
 
 ;;; ============================================================
+;;; Font
+
+        PAD_TO ::FONT
+        .incbin .concat("../mgtk/fonts/A2D.FONT.", kBuildLang)
+
+;;; ============================================================
 ;;; Generic Resources (outside scope for convenience)
 
 pencopy:        .byte   MGTK::pencopy
@@ -144,12 +150,6 @@ slot_x5:        .byte   0
 slot_x6:        .byte   0
 slot_x7:        .byte   0
 
-
-;;; ============================================================
-;;; Font
-
-        PAD_TO ::FONT
-        .incbin .concat("../mgtk/fonts/A2D.FONT.", kBuildLang)
 
 ;;; ============================================================
 ;;; More Resources

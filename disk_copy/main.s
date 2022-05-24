@@ -1077,7 +1077,7 @@ memory_bitmap:
         .byte   %00000000       ; $50-$5F - MGTK code
         .byte   %00000000       ; $60-$6F - MGTK code
         .byte   %00000000       ; $70-$7F - MGTK code
-        .byte   %00000000       ; $80-$8F - MGTK, font
+        .byte   %00000011       ; $80-$8F - MGTK, font (but $8C-$8F free)
         .byte   %11111111       ; $90-$9F - free
         .byte   %11111111       ; $A0-$AF - free
         .byte   %11111111       ; $B0-$BF - free

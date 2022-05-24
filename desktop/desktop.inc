@@ -25,7 +25,7 @@ kDAMaxSize      = DA_IO_BUFFER - DA_LOAD_ADDRESS
 WINDOW_ENTRY_TABLES      := $1B00
 
 ;;; Used by DAs for window definitions
-DEFAULT_FONT    := $8800
+DEFAULT_FONT    := $8600
 
 ;;; Settings loaded from disk on startup.
 SETTINGS        := $FF80 - kIntVectorsSize
