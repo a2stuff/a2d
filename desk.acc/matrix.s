@@ -56,7 +56,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         ;; Set BASL/H
 rloop:  jsr     VTAB
         add16   BASL, #save_buffer-$400, ptr1
-        add16   ptr2, $400, ptr2
+        add16   ptr1, #$400, ptr2
         ldy     #39
         ldx     #0
 
@@ -99,7 +99,7 @@ cloop:
         ;; Set BASL/H
 rloop:  jsr     VTAB
         add16   BASL, #save_buffer-$400, ptr1
-        add16   ptr1, $400, ptr2
+        add16   ptr1, #$400, ptr2
         ldy     #39
 
 cloop:
