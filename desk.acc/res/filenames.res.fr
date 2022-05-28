@@ -4,7 +4,7 @@
 .define res_filename_sort_directory repertoire.tri
 .define res_filename_this_apple cet.apple
 .define res_filename_eyes yeux
-.define res_filename_screen_dump imprimer.lecran
+.define res_filename_screen_dump imprimer.ecran
 .define res_filename_run_basic_here basic.ici
 .define res_filename_key_caps touches
 .define res_filename_find_files recherche.fich
