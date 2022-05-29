@@ -1246,7 +1246,7 @@ end:    rts
 
 fixed_str:      PASCAL_STRING res_string_button_fixed
 prop_str:       PASCAL_STRING res_string_button_prop
-        kLabelWidth = 80
+        kLabelWidth = 110
         kLabelHeight = 10
 
 .params mode_mapinfo                  ; bounding port for mode label
@@ -1417,7 +1417,7 @@ rotate:
 ;;; ============================================================
 
 fixed_font:
-        .incbin "../mgtk/fonts/fixed_width"
+        .incbin .concat("../mgtk/fonts/Monaco.", kBuildLang)
 
 ;;; ============================================================
 
