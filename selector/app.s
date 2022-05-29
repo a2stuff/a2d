@@ -19,7 +19,7 @@
 ;;; Font
 
         PAD_TO ::FONT
-        .incbin .concat("../mgtk/fonts/A2D.FONT.", kBuildLang)
+        .incbin .concat("../mgtk/fonts/System.", kBuildLang)
 
 ;;; ============================================================
 ;;; Generic Resources (outside scope for convenience)

@@ -21,7 +21,7 @@
 ;;; ============================================================
 
         ASSERT_ADDRESS ::DEFAULT_FONT
-        .incbin .concat("../mgtk/fonts/A2D.FONT.", kBuildLang)
+        .incbin .concat("../mgtk/fonts/System.", kBuildLang)
 
         font_height     := DEFAULT_FONT+2
 
