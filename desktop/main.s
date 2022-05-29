@@ -10353,24 +10353,26 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 .endproc
 
 .proc SetColorMode
-        ;; IIgs?
         bit     machine_config::iigs_flag
         bmi     iigs
+
+        bit     machine_config::lcm_eve_flag
+        bmi     lcmeve
 
         ;; AppleColor Card - Mode 2 (Color 140x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
         sta     SET80VID        ; set register to 1
-        lda     AN3_OFF
-        lda     AN3_ON          ; shift in 1 as first bit
-        lda     AN3_OFF
-        lda     AN3_ON          ; shift in 1 as second bit
-        lda     DHIRESON        ; re-enable DHR
+        sta     AN3_OFF
+        sta     AN3_ON          ; shift in 1 as first bit
+        sta     AN3_OFF
+        sta     AN3_ON          ; shift in 1 as second bit
+        sta     DHIRESON        ; re-enable DHR
+        rts
 
         ;; Le Chat Mauve Eve - COL140 mode
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
-        ;; lda AN3_OFF a.k.a. DHIRESON; already done above
-        bit     machine_config::lcm_eve_flag
-        bpl     done
+lcmeve: sta     AN3_OFF
+        sta     HR1_OFF
         sta     HR2_OFF
         sta     HR3_OFF
         rts
@@ -10381,30 +10383,31 @@ iigs:   lda     NEWVIDEO
         sta     NEWVIDEO
         lda     #$00            ; Color
         sta     MONOCOLOR
-
-done:   rts
+        rts
 .endproc
 
 .proc SetMonoMode
-        ;; IIgs?
         bit     machine_config::iigs_flag
         bmi     iigs
+
+        bit     machine_config::lcm_eve_flag
+        bmi     lcmeve
 
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
         sta     CLR80VID        ; set register to 0
-        lda     AN3_OFF
-        lda     AN3_ON          ; shift in 0 as first bit
-        lda     AN3_OFF
-        lda     AN3_ON          ; shift in 0 as second bit
+        sta     AN3_OFF
+        sta     AN3_ON          ; shift in 0 as first bit
+        sta     AN3_OFF
+        sta     AN3_ON          ; shift in 0 as second bit
         sta     SET80VID        ; re-enable DHR
-        lda     DHIRESON
+        sta     DHIRESON
+        rts
 
         ;; Le Chat Mauve Eve - BW560 mode
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
-        ;; lda AN3_OFF a.k.a. DHIRESON; already done above
-        bit     machine_config::lcm_eve_flag
-        bpl     done
+lcmeve: sta     AN3_OFF
+        sta     HR1_OFF
         sta     HR2_ON
         sta     HR3_ON
         rts
