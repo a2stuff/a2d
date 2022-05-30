@@ -2101,8 +2101,9 @@ CmdOpenFromKeyboard := CmdOpen::from_keyboard
 
         pha
         sta     findwindow_params::window_id
-        jsr     HandleInactiveWindowClick
+        MGTK_CALL MGTK::SelectWindow, findwindow_params::window_id
         pla
+        sta     active_window_id
         jsr     CloseWindow
 
 done:   rts
