@@ -2099,12 +2099,7 @@ CmdOpenFromKeyboard := CmdOpen::from_keyboard
         lda     window_id_to_close
         beq     done
 
-        pha
-        sta     findwindow_params::window_id
-        MGTK_CALL MGTK::SelectWindow, findwindow_params::window_id
-        pla
-        sta     active_window_id
-        jsr     CloseWindow
+        jsr     CloseSpecifiedWindow
 
 done:   rts
 .endproc
@@ -2206,7 +2201,7 @@ done:   rts
 
 volume: lda     window_id_to_close
         beq     :+
-        jsr     CloseWindow
+        jsr     CloseActiveWindow
 :       jsr     ClearSelection
         ldx     src_path_buf ; Strip '/'
         dex
@@ -2230,16 +2225,16 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
         bne     :+
         rts
 
-:       jmp     CloseWindow
+:       jmp     CloseActiveWindow
 .endproc
 
 ;;; ============================================================
 
 .proc CmdCloseAll
-        lda     active_window_id   ; current window
-        beq     done            ; nope, done!
-        jsr     CloseWindow    ; close it...
-        jmp     CmdCloseAll   ; and try again
+        lda     active_window_id  ; current window
+        beq     done              ; nope, done!
+        jsr     CloseActiveWindow ; close it...
+        jmp     CmdCloseAll       ; and try again
 done:   rts
 .endproc
 
@@ -4128,12 +4123,7 @@ close_loop:
         beq     not_in_map
         dex
         lda     found_windows_list,x
-        cmp     active_window_id
-        beq     :+
-        sta     findwindow_params::window_id
-        jsr     HandleInactiveWindowClick
-
-:       jsr     CloseWindow
+        jsr     CloseSpecifiedWindow
         dec     found_windows_count
         jmp     close_loop
 
@@ -4679,8 +4669,7 @@ failure:
         return  #0
 
 :       inc     num_open_windows ; was decremented on failure
-        sta     active_window_id ; expected by CloseWindow
-        jsr     CloseWindow
+        jsr     CloseSpecifiedWindow
         return  #$FF
 
 .proc TrySelectAndRefreshWindow
@@ -5017,29 +5006,38 @@ last_pos:
 :       jsr     ModifierDown
         jmi     CmdCloseAll
 
-        FALL_THROUGH_TO CloseWindow
+        FALL_THROUGH_TO CloseActiveWindow
 .endproc
 
-.proc CloseWindow
+;;; Close the active window
+.proc CloseActiveWindow
+        lda     active_window_id
+        FALL_THROUGH_TO CloseSpecifiedWindow
+.endproc
+
+;;; Inputs: A = window_id
+.proc CloseSpecifiedWindow
         icon_ptr := $06
 
-        jsr     LoadActiveWindowEntryTable
+        sta     cached_window_id
+        jsr     LoadWindowEntryTable
 
         jsr     ClearSelection
 
-        jsr     GetActiveWindowViewBy
-        bmi     iter            ; list view, not icons
-
+        jsr     GetCachedWindowViewBy
+    IF_NC
+        ;; Icon view
         lda     icon_count
         sec
         sbc     cached_window_entry_count
         sta     icon_count
 
-        ITK_CALL IconTK::CloseWindow, active_window_id
+        ITK_CALL IconTK::CloseWindow, cached_window_id
 
         jsr     FreeCachedWindowIcons
+    END_IF
 
-iter:   dec     num_open_windows
+        dec     num_open_windows
         ldx     #0
         txa
 :       sta     cached_window_entry_list,x
@@ -5051,38 +5049,43 @@ iter:   dec     num_open_windows
 cont:   sta     cached_window_entry_count
         jsr     StoreWindowEntryTable
 
-        MGTK_CALL MGTK::CloseWindow, active_window_id
+        MGTK_CALL MGTK::CloseWindow, cached_window_id
 
         ;; --------------------------------------------------
         ;; Do we have a parent icon for this window?
 
         copy    #0, icon
-        ldx     active_window_id
+        ldx     cached_window_id
         lda     window_to_dir_icon_table-1,x
         bmi     :+              ; $FF = dir icon freed
 
         sta     icon
 
         ;; Animate closing into dir (vol/folder) icon
-        ldx     active_window_id
+        ldx     cached_window_id
         lda     window_to_dir_icon_table-1,x
         jsr     AnimateWindowClose ; A = icon id, X = window id
 :
         ;; --------------------------------------------------
         ;; Tidy up after closing window
 
-        lda     active_window_id
+        lda     cached_window_id
         jsr     RemoveWindowFilerecordEntries
 
-        ldx     active_window_id
+        ldx     cached_window_id
         lda     #0
         sta     window_to_dir_icon_table-1,x ; 0 = window free
         sta     win_view_by_table-1,x
 
+        ;; Was it the active window?
+        lda     cached_window_id
+        cmp     active_window_id
+    IF_EQ
+        ;; Yes, update all the things
         MGTK_CALL MGTK::FrontWindow, active_window_id
-
         jsr     UncheckViewMenuItem
         jsr     UpdateWindowMenuItems
+    END_IF
 
         jsr     ClearUpdates ; following CloseWindow above
 
@@ -5152,11 +5155,7 @@ loop:
 
         ;; Nope - close the window
         lda     window_id
-        pha
-        sta     findwindow_params::window_id
-        jsr     HandleInactiveWindowClick
-        pla
-        jsr     CloseWindow
+        jsr     CloseSpecifiedWindow
 
 next:   dec     window_id
         bne     loop
