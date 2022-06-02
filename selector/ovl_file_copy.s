@@ -851,8 +851,7 @@ textfont:       .addr   FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT_SZ ok_button_rect, winfo::kWidth-20-kButtonWidth, 49, kButtonWidth, kButtonHeight
-        DEFINE_POINT ok_button_pos, winfo::kWidth-20-kButtonWidth+4, 59
+        DEFINE_BUTTON ok, res_string_button_ok, winfo::kWidth-20-kButtonWidth, 49
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
@@ -986,7 +985,7 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call app::DrawString, app::ok_button_label
+        param_call app::DrawString, ok_button_label
         jsr     SetPointerCursor
         jmp     RestoreStackAndReturn
 
@@ -1004,7 +1003,7 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call app::DrawString, app::ok_button_label
+        param_call app::DrawString, ok_button_label
         jsr     SetPointerCursor
         jmp     RestoreStackAndReturn
 .endproc
@@ -1048,51 +1047,10 @@ HandleButtonDown:
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     event_loop
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        jsr     LABE6
+        param_call app::ButtonEventLoop, winfo::kWindowId, ok_button_rect
         bmi     event_loop
         jsr     app::SetWatchCursor
         rts
-
-LABE6:  lda     #$00
-        sta     LAC53
-LABEB:  MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_up
-        beq     LAC3C
-        lda     winfo::window_id
-        sta     screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, ok_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     LAC1C
-        lda     LAC53
-        beq     LAC24
-        jmp     LABEB
-
-LAC1C:  lda     LAC53
-        bne     LAC24
-        jmp     LABEB
-
-LAC24:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        lda     LAC53
-        clc
-        adc     #$80
-        sta     LAC53
-        jmp     LABEB
-
-LAC3C:  lda     LAC53
-        beq     LAC44
-        return  #$FF
-
-LAC44:  MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        return  #$00
-
-LAC53:  .byte   0
 
 ;;; ============================================================
 

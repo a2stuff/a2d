@@ -435,12 +435,8 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         ;; Used when rendering entries
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
-        DEFINE_RECT_SZ entry_picker_ok_rect, 210, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
-        DEFINE_POINT entry_picker_ok_pos, 215, winfo_entry_picker::kHeight-8
-
-        DEFINE_RECT_SZ entry_picker_cancel_rect, 40, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
-        DEFINE_POINT entry_picker_cancel_pos, 45, winfo_entry_picker::kHeight-8
-
+        DEFINE_BUTTON entry_picker_ok, res_string_button_ok, 210, winfo_entry_picker::kHeight-18
+        DEFINE_BUTTON entry_picker_cancel, res_string_button_cancel, 40, winfo_entry_picker::kHeight-18
 
 ;;; ============================================================
 ;;; Format/Erase dialogs
